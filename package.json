@@ -1,0 +1,48 @@
+{
+    "name": "vtk.js",
+    "version": "0.0.0-semantically-release",
+    "description": "Visualization Toolkit for the Web",
+    "repository": {
+        "type": "git",
+        "url": "git+https://github.com/kitware/vtk-js.git"
+    },
+    "license": "BSD-3-Clause",
+    "bugs": { "url": "https://github.com/kitware/vtk-js/issues" },
+    "homepage": "https://github.com/kitware/vtk-js#readme",
+    "main": "./Sources/index.js",
+    "dependencies": {
+        "commander": "2.9.0",
+        "shelljs": "0.5.3",
+        "gh-pages": "0.10.0"
+    },
+    "devDependencies": {
+        "gl-matrix": "2.3.1",
+        "hammerjs": "2.0.6",
+        "monologue.js": "0.3.4",
+        "mout": "0.11.1",
+        "kw-web-suite": "1.1.1",
+        "kw-doc": "1.0.1"
+    },
+    "scripts": {
+        "postinstall": "fix-kw-web-suite || true",
+        "install:global": "npm install -g commitizen@2.5.0",
+
+        "doc"           : "kw-doc -c ./Documentation/config.js",
+        "doc:www"       : "kw-doc -c ./Documentation/config.js -s",
+        "doc:publish"   : "kw-doc -c ./Documentation/config.js -p",
+
+        "build"         : "webpack --progress --colors",
+        "build:release" : "export NODE_ENV=production && npm run build -- -p",
+
+        "commit"        : "git cz",
+        "semantic-release": "semantic-release pre && npm publish && semantic-release post"
+    },
+    "config": {
+        "commitizen": {
+            "path": "node_modules/cz-conventional-changelog"
+        }
+    },
+    "bin": {
+        "vtk-doc": "./tools/doc-generator/doc-generator-cli.js"
+    }
+}

@@ -1,0 +1,7 @@
+.DS_Store
+.gitmodules
+.npmrc
+.sass-cache
+.travis.yml
+Documentation/www
+npm-debug.log

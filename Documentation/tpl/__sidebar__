@@ -1,0 +1,13 @@
+docs:
+  getting_started:
+    overview: /vtk-js/docs/index.html
+    setup: /vtk-js/docs/setup.html
+  miscellaneous:
+    tools: /vtk-js/docs/tools.html
+    troubleshooting: /vtk-js/docs/troubleshooting.html
+    contributing: /vtk-js/docs/contributing.html
+  data_format:
+    structures: /vtk-js/docs/structures/index.html
+    data_array: /vtk-js/docs/structures/DataArray.html
+    poly_data: /vtk-js/docs/structures/PolyData.html
+
