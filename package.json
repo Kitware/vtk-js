@@ -43,6 +43,6 @@
         }
     },
     "bin": {
-        "vtk-doc": "./tools/doc-generator/doc-generator-cli.js"
+        "vtkDataConverter": "./Utilities/DataGenerator/convert-cli.js"
     }
 }
