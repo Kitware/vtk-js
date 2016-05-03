@@ -1,8 +1,9 @@
+const vtkLoaders = require('../Utilities/config/webpack.loaders.js');
+
 module.exports = {
   cname: 'kitware.github.io',
   baseUrl: '/vtk-js',
   work: './build-tmp',
-  target: './www',
   api: ['../Sources'],
   examples: ['../Sources'],
   config: {
@@ -15,4 +16,12 @@ module.exports = {
     root: '/vtk-js/',
     github: 'kitware/vtk-js',
   },
+  webpack: {
+    module: {
+      loaders: vtkLoaders,
+    },
+  },
+  copy: [
+    { src: '../Data/*', dest: './build-tmp/public/data' },
+  ],
 };

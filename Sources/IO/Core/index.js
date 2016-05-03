@@ -1,5 +1,5 @@
-import HttpArrayDataReader from './HttpArrayDataReader';
+import HttpDataSetReader from './HttpDataSetReader';
 
 export default {
-  HttpArrayDataReader,
+  HttpDataSetReader,
 };
