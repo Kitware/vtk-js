@@ -22,7 +22,7 @@
         "monologue.js": "0.3.4",
         "mout": "0.11.1",
         "kw-web-suite": "1.1.2",
-        "kw-doc": "1.0.1"
+        "kw-doc": "1.0.3"
     },
     "scripts": {
         "postinstall": "fix-kw-web-suite || true",

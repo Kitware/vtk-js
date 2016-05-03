@@ -1,0 +1,23 @@
+language: node_js
+sudo: false
+notifications:
+  email:
+    recipients:
+      - sebastien.jourdain@kitware.com
+    on_success: change
+    on_failure: always
+cache:
+  directories:
+    - node_modules
+    - Documentation/build-tmp
+node_js:
+  - "4.1"
+script:
+  - npm run build:release
+  - git config --global user.name "Travis CI"
+  - git config --global user.email "sebastien.jourdain@kitware.com"
+  - export GIT_PUBLISH_URL=https://${GH_TOKEN}@github.com/Kitware/vtk-js.git
+  - if [ "$TRAVIS_BRANCH" == "master" ]; then npm run doc:publish; fi
+branches:
+  except:
+    - "/^v\\d+\\.\\d+\\.\\d+$/"
