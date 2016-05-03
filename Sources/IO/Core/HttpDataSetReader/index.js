@@ -1,6 +1,31 @@
 import Monologue from 'monologue.js';
 import pako from 'pako';
 
+function getEndianness() {
+  const a = new ArrayBuffer(4);
+  const b = new Uint8Array(a);
+  const c = new Uint32Array(a);
+  b[0] = 0xa1;
+  b[1] = 0xb2;
+  b[2] = 0xc3;
+  b[3] = 0xd4;
+  if (c[0] === 0xd4c3b2a1) return 'LittleEndian';
+  if (c[0] === 0xa1b2c3d4) return 'BigEndian';
+  return null;
+}
+
+const ENDIANNESS = getEndianness();
+const TYPE_BYTES = {
+  Int8Array: 1,
+  Uint8Array: 1,
+  Uint8ClampedArray: 1,
+  Int16Array: 2,
+  Uint16Array: 2,
+  Int32Array: 4,
+  Uint32Array: 4,
+  Float32Array: 4,
+  Float64Array: 8,
+};
 const BUSY = 'HttpDataSetReader.busy';
 const LOCATIONS = ['PointData', 'CellData', 'FieldData'];
 
@@ -30,6 +55,25 @@ function busyUpdate(instance, delta) {
   }
 }
 
+function swapBytes(buffer, wordSize) {
+  if (wordSize < 2) {
+    return;
+  }
+
+  const bytes = new Int8Array(buffer);
+  const size = bytes.length;
+  const tempBuffer = [];
+
+  for (let i = 0; i < size; i += wordSize) {
+    for (let j = 0; j < wordSize; j++) {
+      tempBuffer.push(bytes[i + j]);
+    }
+    for (let j = 0; j < wordSize; j++) {
+      bytes[i + j] = tempBuffer.pop();
+    }
+  }
+}
+
 function fetchArray(instance, array, fetchGzip = false) {
   if (array.ref) {
     return new Promise((resolve, reject) => {
@@ -47,10 +91,17 @@ function fetchArray(instance, array, fetchGzip = false) {
             array.buffer = xhr.response;
 
             if (fetchGzip) {
-              array.values = new window[array.dataType](pako.inflate(new Uint8Array(array.buffer)).buffer);
-            } else {
-              array.values = new window[array.dataType](array.buffer);
+              array.buffer = pako.inflate(new Uint8Array(array.buffer)).buffer;
+              array.values = new window[array.dataType]();
             }
+
+            if (ENDIANNESS !== array.ref.encode && ENDIANNESS) {
+              // Need to swap bytes
+              console.log('Swap bytes of', array.name);
+              swapBytes(array.buffer, TYPE_BYTES[array.dataType]);
+            }
+
+            array.values = new window[array.dataType](array.buffer);
 
             if (array.values.length !== array.size) {
               console.error('Error in FetchArray:', array.name, 'does not have the proper array size. Got', array.values.length, 'instead of', array.size);
