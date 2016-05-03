@@ -1,10 +1,11 @@
-import json, os, math, gzip, shutil, argparse, hashlib
+import sys, json, os, math, gzip, shutil, argparse, hashlib
 
 from paraview import simple
+from paraview.vtk import *
 
 # -----------------------------------------------------------------------------
 
-arrayTypesMapping = '  bBhHiIlLfdl' # last one is idtype (32/64 bit signed int)
+arrayTypesMapping = '  bBhHiIlLfdL' # last one is idtype
 
 jsMapping = {
     'b': 'Int8Array',
@@ -34,8 +35,8 @@ def getRangeInfo(array, component):
 def getRef(destDirectory, md5):
   ref = {}
   ref['id'] = md5
-  ref['encode'] = 'LittleEndian' # FIXME properly figure it out
-  ref['basepath'] = destDirectory # FIXME extract just the subset
+  ref['encode'] = 'BigEndian' if sys.byteorder == 'big' else 'LittleEndian'
+  ref['basepath'] = destDirectory
   return ref
 
 # -----------------------------------------------------------------------------
@@ -44,10 +45,17 @@ def writeDataArray(destDirectory, array, basepath = None, compress = True):
   if not array:
     return None
 
-  if array.GetClassName() == 'vtkCharArray':
-    return None
+  if array.GetDataType() == 12:
+    # IdType need to be converted to Uint32
+    arraySize = array.GetNumberOfTuples() * array.GetNumberOfComponents()
+    newArray = vtkTypeUInt32Array()
+    newArray.SetNumberOfTuples(arraySize)
+    for i in range(arraySize):
+      newArray.SetValue(i, -1 if array.GetValue(i) < 0 else array.GetValue(i))
+    pBuffer = buffer(newArray)
+  else:
+    pBuffer = buffer(array)
 
-  pBuffer = buffer(array)
   pMd5 = hashlib.md5(pBuffer).hexdigest()
   pPath = os.path.join(destDirectory, pMd5)
   with open(pPath, 'wb') as f:
