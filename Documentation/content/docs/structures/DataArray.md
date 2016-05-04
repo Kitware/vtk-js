@@ -1,8 +1,9 @@
-# DataArray
+title: DataArray
+---
 
 A data array is meant to keep track of numerical values while providing associated metadata such as size, tupleSize, data type, array name, component names and so on.
 
-# Structure
+## Structure
 
 The possible dataType are the one available in the language itself as typed array:
 

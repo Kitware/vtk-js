@@ -9,5 +9,10 @@ docs:
   data_format:
     structures: /vtk-js/docs/structures/index.html
     data_array: /vtk-js/docs/structures/DataArray.html
+    string_array: /vtk-js/docs/structures/StringArray.html
+    table: /vtk-js/docs/structures/Table.html
     poly_data: /vtk-js/docs/structures/PolyData.html
+    unstructured_grid: /vtk-js/docs/structures/UnstructuredGrid.html
+    multi_block: /vtk-js/docs/structures/MultiBlock.html
+    parametric_dataset: /vtk-js/docs/structures/ParametricDataset.html
 

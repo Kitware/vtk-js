@@ -1,10 +1,9 @@
 title: Contributing
 ---
-## Development
 
 We welcome you to join the development of VTK-js. This document will help you through the process.
 
-### Before You Start
+## Before You Start
 
 Please follow the coding style:
 
@@ -12,7 +11,7 @@ Please follow the coding style:
 - Use soft-tabs with a two space indent.
 - Don't put commas first.
 
-### Workflow
+## Workflow
 
 1. Fork [kitware/vtk-js].
 2. Clone the repository to your computer and install dependencies.
@@ -45,7 +44,7 @@ Please follow the coding style:
 
 6. Create a pull request and describe the change.
 
-### Notice
+## Notice
 
 - Don't modify version number in `package.json`.
 - Your pull request will only get merged when tests passed. Don't forget to run tests before submission.

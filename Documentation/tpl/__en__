@@ -29,5 +29,9 @@ sidebar:
     structures: Introduction
     data_array: DataArray
     poly_data: PolyData
-
+    string_array: StringArray
+    table: Table
+    unstructured_grid: UnstructuredGrid
+    multi_block: MultiBlock
+    parametric_dataset: ParametricDataset
 

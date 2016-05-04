@@ -1,18 +1,18 @@
-title: PolyData
+title: UnstructuredGrid
 ---
 
-A PolyData is a surface mesh structure that can hold data arrays either on points, cells or on the dataset itself.
+An UnstructuredGrid is a mesh structure that can hold data arrays either on points, cells or on the dataset itself. The mesh can be composed of several cells which could be either 2D or 3D.
 
 ## Structure
 
 ```js
 {
-  type: 'PolyData',
+  type: 'UnstructuredGrid',
   metadata: {
-    name: 'example.vtk',
+    name: 'data.vtu',
     size: 2345,
   },
-  PolyData: {
+  UnstructuredGrid: {
     Points: {
       type: 'DataArray',
       name: '_points',
@@ -28,39 +28,22 @@ A PolyData is a surface mesh structure that can hold data arrays either on point
       ],
     },
     Cells: {
-      Verts: {
-        type: 'DataArray',
-        name: '_verts',
-        tuple: 1,
-        size: 123,
-        dataType: 'Uint32Array', // or Uint16Array
-        buffer: new ArrayBuffer(),
-        values: new Uint32Array(this.buffer), // Follow the CellArray Mapping [{nbPoints}, {pointIdx...}]
-      },
-      Lines: {
-        type: 'DataArray',
-        name: '_lines',
-        tuple: 1,
-        size: 0,
-        dataType: 'Uint32Array', // or Uint16Array
-        values: null,
-      },
-      Polys: {
-        type: 'DataArray',
-        name: '_lines',
-        tuple: 1,
-        size: 8,
-        dataType: 'Uint32Array', // or Uint16Array
-        values: new Uint32Array([3, 0, 1, 2, 3, 3, 4, 5]), // 2 triangles (0,1,2)+(3,4,5)
-      },
-      Strips: {
-        type: 'DataArray',
-        name: '_lines',
-        tuple: 1,
-        size: 0,
-        dataType: 'Uint32Array', // or Uint16Array
-        values: null,
-      },
+      type: 'DataArray',
+      name: '_cells',
+      tuple: 1,
+      size: 123,
+      dataType: 'Uint32Array', // or Uint16Array
+      buffer: new ArrayBuffer(),
+      values: new Uint32Array(this.buffer), // Follow the CellArray Mapping [{nbPoints}, {pointIdx...}]
+    },
+    CellTypes: {
+      type: 'DataArray',
+      name: '_cells',
+      tuple: 1,
+      size: 10,
+      dataType: 'Uint8Array',
+      buffer: new ArrayBuffer(),
+      values: new Uint8Array(this.buffer), // CellTypes
     },
     PointData: {
       Temperature: {
@@ -98,6 +81,6 @@ A PolyData is a surface mesh structure that can hold data arrays either on point
         values: ['Some string', [1, 2, 3], { ex: 'obj' }],
       }
     },
-  }
+  },
 }
 ```

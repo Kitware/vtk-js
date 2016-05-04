@@ -1,4 +1,5 @@
-# VTK.js structures
+title: VTK data structures
+---
 
 The JavaScript language is obviously less rigid than C++. Therefore instead
 of following a one to one class mapping between C++ and JavaScript,

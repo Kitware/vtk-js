@@ -1,5 +1,6 @@
 title: Setup
 ---
+
 This documentation will explain how to create a new Web project that can leverage vtk-js.
 
 ``` bash
@@ -10,7 +11,7 @@ $ npm install vtk.js --save-dev
 $ npm install kw-web-suite --save-dev
 ```
 
-### Webpack config
+## Webpack config
 
 ``` js webpack.config.js
 var path = require('path'),
@@ -54,7 +55,7 @@ module.exports = {
 
 ```
 
-### package.json
+## package.json
 
 You should extend the generated **package.json** file with the following set of scripts.
 
