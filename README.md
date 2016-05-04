@@ -1,6 +1,6 @@
 ## [VTK-JS - The Visualization Toolkit for JavaScript](http://kitware.github.io/vtk-js/)
 
-[![Build Status](https://travis-ci.org/Kitware/vtk.js.svg)](https://travis-ci.org/Kitware/vtk.js)
+[![Build Status](https://travis-ci.org/Kitware/vtk-js.svg)](https://travis-ci.org/Kitware/vtk.js)
 [![Dependency Status](https://david-dm.org/kitware/vtk.js.svg)](https://david-dm.org/kitware/vtk.js)
 [![semantic-release](https://img.shields.io/badge/%20%20%F0%9F%93%A6%F0%9F%9A%80-semantic--release-e10079.svg)](https://github.com/semantic-release/semantic-release)
 ![npm-download](https://img.shields.io/npm/dm/vtk.js.svg)
@@ -50,10 +50,12 @@ Requirements
 In general VTK tries to be as portable as possible; the specific configurations below are known to work and tested.
 
 VTK-JS supports the following development environments:
+
 1. Node 5+
 2. NPM 3+
 
 VTK supports the following browsers:
+
 1. Firefox 45+
 2. Chrome 50+
 3. Safari 9.1+
