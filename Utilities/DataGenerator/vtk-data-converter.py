@@ -20,6 +20,8 @@ jsMapping = {
     'd': 'Float64Array'
 }
 
+writerMapping = {}
+
 # -----------------------------------------------------------------------------
 
 def getRangeInfo(array, component):
@@ -41,7 +43,7 @@ def getRef(destDirectory, md5):
 
 # -----------------------------------------------------------------------------
 
-def writeDataArray(destDirectory, array, basepath = None, compress = True):
+def dumpDataArray(datasetDir, dataDir, array, root = {}, compress = True):
   if not array:
     return None
 
@@ -57,158 +59,239 @@ def writeDataArray(destDirectory, array, basepath = None, compress = True):
     pBuffer = buffer(array)
 
   pMd5 = hashlib.md5(pBuffer).hexdigest()
-  pPath = os.path.join(destDirectory, pMd5)
+  pPath = os.path.join(dataDir, pMd5)
   with open(pPath, 'wb') as f:
     f.write(pBuffer)
 
   if compress:
-    with open(pPath, 'rb') as f_in, gzip.open(os.path.join(destDirectory, pMd5 + '.gz'), 'wb') as f_out:
+    with open(pPath, 'rb') as f_in, gzip.open(os.path.join(dataDir, pMd5 + '.gz'), 'wb') as f_out:
         shutil.copyfileobj(f_in, f_out)
         os.remove(pPath)
 
   # print array
   # print array.GetName(), '=>', jsMapping[arrayTypesMapping[array.GetDataType()]]
 
-  metadata = {}
-  metadata['ref'] = getRef(os.path.relpath(destDirectory, basepath), pMd5)
-  metadata['type'] = 'DataArray'
-  metadata['name'] = array.GetName()
-  metadata['dataType'] = jsMapping[arrayTypesMapping[array.GetDataType()]]
-  metadata['tuple'] = array.GetNumberOfComponents()
-  metadata['size'] = array.GetNumberOfComponents() * array.GetNumberOfTuples()
-  metadata['ranges'] = []
-  if metadata['tuple'] > 1:
-    for i in range(metadata['tuple']):
-      metadata['ranges'].append(getRangeInfo(array, i))
-    metadata['ranges'].append(getRangeInfo(array, -1))
+  root['ref'] = getRef(os.path.relpath(dataDir, datasetDir), pMd5)
+  root['type'] = 'DataArray'
+  root['name'] = array.GetName()
+  root['dataType'] = jsMapping[arrayTypesMapping[array.GetDataType()]]
+  root['tuple'] = array.GetNumberOfComponents()
+  root['size'] = array.GetNumberOfComponents() * array.GetNumberOfTuples()
+  root['ranges'] = []
+  if root['tuple'] > 1:
+    for i in range(root['tuple']):
+      root['ranges'].append(getRangeInfo(array, i))
+    root['ranges'].append(getRangeInfo(array, -1))
   else:
-    metadata['ranges'].append(getRangeInfo(array, 0))
+    root['ranges'].append(getRangeInfo(array, 0))
 
-  return metadata
+  return root
 
 # -----------------------------------------------------------------------------
 
-def writePolyData(input, data, outputDir):
-  datasetDir = os.path.join(outputDir, os.path.basename(input));
-  dataDir = os.path.join(datasetDir, 'data');
-  if not os.path.exists(dataDir):
-    os.makedirs(dataDir)
+def dumpAttributes(datasetDir, dataDir, dataset, root = {}, compress = True):
+  # PointData
+  _pointData = root['PointData'] = {}
+  _nbFields = dataset.GetPointData().GetNumberOfArrays()
+  for i in range(_nbFields):
+    array = dumpDataArray(datasetDir, dataDir, dataset.GetPointData().GetArray(i), {}, compress)
+    if array:
+      _pointData[array['name']] = array
 
-  polyData = {}
-  polyData['type'] = 'PolyData'
-  polyData['PolyData'] = {}
-  polyData['metadata'] = {}
-  polyData['metadata']['name'] = os.path.basename(input)
+  # CellData
+  _cellData = root['CellData'] = {}
+  _nbFields = dataset.GetCellData().GetNumberOfArrays()
+  for i in range(_nbFields):
+    array = dumpDataArray(datasetDir, dataDir, dataset.GetCellData().GetArray(i), {}, compress)
+    if array:
+      _cellData[array['name']] = array
+
+  # FieldData
+  _fieldData = root['FieldData'] = {}
+  _nbFields = dataset.GetFieldData().GetNumberOfArrays()
+  for i in range(_nbFields):
+    array = dumpDataArray(datasetDir, dataDir, dataset.GetFieldData().GetArray(i), {}, compress)
+    if array:
+      _fieldData[array['name']] = array
+
+  return root
+
+# -----------------------------------------------------------------------------
+
+def dumpPolyData(datasetDir, dataDir, dataset, root = {}, compress = True):
+  root['type'] = 'PolyData'
+  container = root['PolyData'] = {}
 
   # Points
-  points = writeDataArray(dataDir, data.GetPoints().GetData(), datasetDir)
+  points = dumpDataArray(datasetDir, dataDir, dataset.GetPoints().GetData(), {}, compress)
   points['name'] = '_points'
-  polyData['PolyData']['Points'] = points
+  container['Points'] = points
   # FIXME range...
 
   # Cells
-  _cells = polyData['PolyData']['Cells'] = {}
+  _cells = container['Cells'] = {}
 
   ## Verts
-  if data.GetVerts():
-    _verts = writeDataArray(dataDir, data.GetVerts().GetData(), datasetDir)
+  if dataset.GetVerts():
+    _verts = dumpDataArray(datasetDir, dataDir, dataset.GetVerts().GetData(), {}, compress)
     _verts['name'] = '_verts'
     _cells['Verts'] = _verts
 
   ## Lines
-  if data.GetLines():
-    _lines = writeDataArray(dataDir, data.GetLines().GetData(), datasetDir)
+  if dataset.GetLines():
+    _lines = dumpDataArray(datasetDir, dataDir, dataset.GetLines().GetData(), {}, compress)
     _lines['name'] = '_lines'
     _cells['Lines'] = _lines
 
   ## Polys
-  if data.GetPolys():
-    _polys = writeDataArray(dataDir, data.GetPolys().GetData(), datasetDir)
+  if dataset.GetPolys():
+    _polys = dumpDataArray(datasetDir, dataDir, dataset.GetPolys().GetData(), {}, compress)
     _polys['name'] = '_polys'
     _cells['Polys'] = _polys
 
   ## Strips
-  if data.GetStrips():
-    _strips = writeDataArray(dataDir, data.GetStrips().GetData(), datasetDir)
+  if dataset.GetStrips():
+    _strips = dumpDataArray(datasetDir, dataDir, dataset.GetStrips().GetData(), {}, compress)
     _strips['name'] = '_strips'
     _cells['Strips'] = _strips
 
-  # PointData
-  _pointData = polyData['PolyData']['PointData'] = {}
-  _nbFields = data.GetPointData().GetNumberOfArrays()
+  # Attributes (PointData, CellData, FieldData)
+  dumpAttributes(datasetDir, dataDir, dataset, container, compress)
+
+  return root
+
+# -----------------------------------------------------------------------------
+writerMapping['vtkPolyData'] = dumpPolyData
+# -----------------------------------------------------------------------------
+
+def dumpUnstructuredGrid(datasetDir, dataDir, dataset, root = {}, compress = True):
+  root['type'] = 'UnstructuredGrid'
+  container = root['UnstructuredGrid'] = {}
+
+  # Points
+  points = dumpDataArray(datasetDir, dataDir, dataset.GetPoints().GetData(), {}, compress)
+  points['name'] = '_points'
+  container['Points'] = points
+  # FIXME range...
+
+  # Cells
+  container['Cells'] = dumpDataArray(datasetDir, dataDir, dataset.GetCells().GetData(), {}, compress)
+
+  # CellTypes
+  container['CellTypes'] = dumpDataArray(datasetDir, dataDir, dataset.GetCellTypesArray(), {}, compress)
+
+  # Attributes (PointData, CellData, FieldData)
+  dumpAttributes(datasetDir, dataDir, dataset, container, compress)
+
+  return root
+
+# -----------------------------------------------------------------------------
+writerMapping['vtkUnstructuredGrid'] = dumpUnstructuredGrid
+# -----------------------------------------------------------------------------
+
+def dumpImageData(datasetDir, dataDir, dataset, root = {}, compress = True):
+  root['type'] = 'ImageData'
+  container = root['ImageData'] = {}
+
+  # Origin / Spacing / Dimension
+  container['Origin'] = tuple(dataset.GetOrigin())
+  container['Spacing'] = tuple(dataset.GetSpacing())
+  container['Dimensions'] = tuple(dataset.GetDimensions())
+
+  # Attributes (PointData, CellData, FieldData)
+  dumpAttributes(datasetDir, dataDir, dataset, container, compress)
+
+  return root
+
+# -----------------------------------------------------------------------------
+writerMapping['vtkImageData'] = dumpImageData
+# -----------------------------------------------------------------------------
+
+def dumpRectilinearGrid(datasetDir, dataDir, dataset, root = {}, compress = True):
+  root['type'] = 'RectilinearGrid'
+  container = root['RectilinearGrid'] = {}
+
+  # Dimensions
+  container['Dimensions'] = tuple(dataset.GetDimensions())
+
+  # X, Y, Z
+  container['XCoordinates'] = dumpDataArray(datasetDir, dataDir, dataset.GetXCoordinates(), {}, compress)
+  container['YCoordinates'] = dumpDataArray(datasetDir, dataDir, dataset.GetYCoordinates(), {}, compress)
+  container['ZCoordinates'] = dumpDataArray(datasetDir, dataDir, dataset.GetZCoordinates(), {}, compress)
+
+  # Attributes (PointData, CellData, FieldData)
+  dumpAttributes(datasetDir, dataDir, dataset, container, compress)
+
+  return root
+
+# -----------------------------------------------------------------------------
+writerMapping['vtkRectilinearGrid'] = dumpRectilinearGrid
+# -----------------------------------------------------------------------------
+
+def dumpTable(datasetDir, dataDir, dataset, root = {}, compress = True):
+  root['type'] = 'Table'
+  container = root['Table'] = {}
+
+  # Columns
+  _columns = container['Columns'] = {}
+  _nbFields = dataset.GetNumberOfColumns()
   for i in range(_nbFields):
-    array = writeDataArray(dataDir, data.GetPointData().GetArray(i), datasetDir)
+    array = dumpDataArray(datasetDir, dataDir, dataset.GetColumn(i), {}, compress)
     if array:
-      _pointData[array['name']] = array
+      _columns[array['name']] = array
 
-  # CellData
-  _cellData = polyData['PolyData']['CellData'] = {}
-  _nbFields = data.GetCellData().GetNumberOfArrays()
-  for i in range(_nbFields):
-    array = writeDataArray(dataDir, data.GetCellData().GetArray(i), datasetDir)
-    if array:
-      _cellData[array['name']] = array
+  return root
 
-  # FieldData
-  _fieldData = polyData['PolyData']['FieldData'] = {}
-  _nbFields = data.GetFieldData().GetNumberOfArrays()
-  for i in range(_nbFields):
-    array = writeDataArray(dataDir, data.GetFieldData().GetArray(i), datasetDir)
-    if array:
-      _fieldData[array['name']] = array
+# -----------------------------------------------------------------------------
+writerMapping['vtkTable'] = dumpTable
+# -----------------------------------------------------------------------------
 
-  # Write polydata
-  with open(os.path.join(datasetDir, "index.json"), 'w') as f:
-    f.write(json.dumps(polyData, indent=2))
+def dumpMultiBlock(datasetDir, dataDir, dataset, root = {}, compress = True):
+  root['type'] = 'MultiBlock'
+  container = root['MultiBlock'] = {}
 
-def writeImageData(input, data, outputDir):
-  datasetDir = os.path.join(outputDir, os.path.basename(input));
-  dataDir = os.path.join(datasetDir, 'data');
+  _blocks = container['Blocks'] = {}
+  _nbBlocks = dataset.GetNumberOfBlocks()
+  for i in range(_nbBlocks):
+    name = dataset.GetMetaData(i).Get(vtkCompositeDataSet.NAME())
+    blockDataset = dataset.GetBlock(i)
+    if blockDataset:
+      writer = writerMapping[blockDataset.GetClassName()]
+      if writer:
+        _blocks[name] = writer(datasetDir, dataDir, blockDataset, {}, compress)
+      else:
+        _blocks[name] = blockDataset.GetClassName()
+
+  return root
+
+# -----------------------------------------------------------------------------
+writerMapping['vtkMultiBlockDataSet'] = dumpMultiBlock
+# -----------------------------------------------------------------------------
+
+def writeDataSet(filePath, dataset, outputDir, newDSName = None, compress = True):
+  fileName = newDSName if newDSName else os.path.basename(filePath)
+  datasetDir = os.path.join(outputDir, fileName)
+  dataDir = os.path.join(datasetDir, 'data')
+
   if not os.path.exists(dataDir):
     os.makedirs(dataDir)
 
-  imageData = {}
-  imageData['type'] = 'ImageData'
-  imageData['ImageData'] = {}
-  imageData['metadata'] = {}
-  imageData['metadata']['name'] = os.path.basename(input)
+  root = {}
+  root['metadata'] = {}
+  root['metadata']['name'] = fileName
 
-  # Origin / Spacing / Dimension
-  imageData['ImageData']['Origin'] = tuple(data.GetOrigin())
-  imageData['ImageData']['Spacing'] = tuple(data.GetSpacing())
-  imageData['ImageData']['Dimensions'] = tuple(data.GetDimensions())
+  writer = writerMapping[dataset.GetClassName()]
+  if writer:
+    writer(datasetDir, dataDir, dataset, root, compress)
+  else:
+    print dataObject.GetClassName(), 'is not supported'
 
-  # PointData
-  _pointData = imageData['ImageData']['PointData'] = {}
-  _nbFields = data.GetPointData().GetNumberOfArrays()
-  for i in range(_nbFields):
-    array = writeDataArray(dataDir, data.GetPointData().GetArray(i), datasetDir)
-    if array:
-      _pointData[array['name']] = array
-
-  # CellData
-  _cellData = imageData['ImageData']['CellData'] = {}
-  _nbFields = data.GetCellData().GetNumberOfArrays()
-  for i in range(_nbFields):
-    array = writeDataArray(dataDir, data.GetCellData().GetArray(i), datasetDir)
-    if array:
-      _cellData[array['name']] = array
-
-  # FieldData
-  _fieldData = imageData['ImageData']['FieldData'] = {}
-  _nbFields = data.GetFieldData().GetNumberOfArrays()
-  for i in range(_nbFields):
-    array = writeDataArray(dataDir, data.GetFieldData().GetArray(i), datasetDir)
-    if array:
-      _fieldData[array['name']] = array
-
-  # Write polydata
   with open(os.path.join(datasetDir, "index.json"), 'w') as f:
-    f.write(json.dumps(imageData, indent=2))
+    f.write(json.dumps(root, indent=2))
 
 # -----------------------------------------------------------------------------
 
-def convert(inputFile, outputDir, merge = False, extract = False):
+def convert(inputFile, outputDir, merge = False, extract = False, newName = None):
   print inputFile, outputDir
   reader = simple.OpenDataFile(inputFile)
   activeSource = reader
@@ -222,23 +305,35 @@ def convert(inputFile, outputDir, merge = False, extract = False):
   activeSource.UpdatePipeline()
   dataObject = activeSource.GetClientSideObject().GetOutputDataObject(0)
 
-  if dataObject.GetClassName() == 'vtkPolyData':
-    writePolyData(inputFile, dataObject, outputDir);
-  else:
-    print dataObject.GetClassName(), 'is not supported'
+  writeDataSet(inputFile, dataObject, outputDir, newName)
 
 # -----------------------------------------------------------------------------
 
 def sample(dataDir, outputDir):
   convert(os.path.join(dataDir, 'Data/bot2.wrl'), outputDir, True, True)
-  convert(os.path.join(dataDir, 'Data/can.ex2'), outputDir, True, True)
-  convert(os.path.join(dataDir, 'Data/disk_out_ref.ex2'), outputDir, True, True)
+  convert(os.path.join(dataDir, 'Data/can.ex2'), outputDir)
+  convert(os.path.join(dataDir, 'Data/can.ex2'), outputDir, True, True, 'can_MS.ex2')
+  convert(os.path.join(dataDir, 'Data/can.ex2'), outputDir, True, False, 'can_M.ex2')
+  convert(os.path.join(dataDir, 'Data/can.ex2'), outputDir, False, True, 'can_S.ex2')
+  convert(os.path.join(dataDir, 'Data/disk_out_ref.ex2'), outputDir, True, False, 'disk_out_ref_M.ex2')
+  convert(os.path.join(dataDir, 'Data/disk_out_ref.ex2'), outputDir)
+  convert(os.path.join(dataDir, 'Data/RectGrid2.vtk'), outputDir)
 
   # Create image data based on the Wavelet source
   wavelet = simple.Wavelet()
   wavelet.UpdatePipeline()
   imageData = wavelet.GetClientSideObject().GetOutputDataObject(0)
-  writeImageData('Wavelet.vti', imageData, outputDir)
+  writeDataSet('Wavelet.vti', imageData, outputDir)
+
+  # Create a table based on the disk_out_ref
+  diskout = simple.ExtractSurface(simple.MergeBlocks(simple.OpenDataFile(os.path.join(dataDir, 'Data/disk_out_ref.ex2'))))
+  diskout.UpdatePipeline()
+  unstructuredGrid = diskout.GetClientSideObject().GetOutputDataObject(0)
+  table = vtkTable()
+  _nbFields = unstructuredGrid.GetPointData().GetNumberOfArrays()
+  for i in range(_nbFields):
+    table.AddColumn(unstructuredGrid.GetPointData().GetArray(i))
+  writeDataSet('table', table, outputDir)
 
 # =============================================================================
 # Main: Parse args and start data conversion
