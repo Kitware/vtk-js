@@ -60,6 +60,43 @@ Load all data arrays that have been enabled unsing the __enableArray__ method.
 
 Return the list of available array with their location and if they are enable or not for download using the __updateData()__ method.
 
+### listBlocks(): { BlockName: { type: 'MultiBlock', enable: true, SubBlockName: { type: 'UnstructuredGrid', enable: true }}}
+
+List the blocks and their state for data loading. Each hierachy have its state.
+
+```js
+{
+  "Element Blocks": {
+    "Unnamed block ID: 1 Type: HEX8": {
+      "type": "UnstructuredGrid",
+      "enable": true
+    },
+    "enable": true
+  },
+  "Node Sets": {
+    "enable": true
+  },
+  "Element Sets": {
+    "enable": true
+  },
+  "Edge Blocks": {
+    "enable": true
+  },
+  "Edge Sets": {
+    "enable": true
+  },
+  "Face Blocks": {
+    "enable": true
+  },
+  "Face Sets": {
+    "enable": true
+  },
+  "Side Sets": {
+    "enable": true
+  }
+}
+```
+
 ### enableArray(location, name, enable = true)
 
 Enable or disable a given array.
@@ -71,6 +108,15 @@ reader.enableArray('CellData', 'CellId', true);
 reader.enableArray('FieldData', 'labels', true);
 ```
 
+### enableBlock(blockPath, enable = true, pathSeparator = '.') 
+
+Enable or disable a given block.
+
+```js
+reader.enableBlock('Element Blocks.Unnamed block ID: 1 Type: HEX8');
+reader.enableBlock('Face Sets', false);
+reader.enableBlock('Edge Sets', false);
+```
 
 ### getOutput() : {}
 

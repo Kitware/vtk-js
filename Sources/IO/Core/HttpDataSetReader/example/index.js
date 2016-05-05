@@ -27,6 +27,7 @@ function loadDataSet(url) {
       r.updateData().then(
         ok => {
           console.log('all data downloaded', reader.getOutput());
+          console.log('blocks', reader.listBlocks());
           if (datasetToLoad.length) {
             loadDataSet(datasetToLoad.pop());
           }

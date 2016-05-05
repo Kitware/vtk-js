@@ -167,6 +167,7 @@ function fillBlocks(dataset, block, arraysToList, enable) {
   if (dataset.type === 'MultiBlock') {
     Object.keys(dataset.MultiBlock.Blocks).forEach(blockName => {
       block[blockName] = fillBlocks(dataset.MultiBlock.Blocks[blockName], {}, arraysToList, enable);
+      block[blockName].enable = enable;
     });
   } else {
     block.type = dataset.type;
@@ -184,6 +185,7 @@ function fillBlocks(dataset, block, arraysToList, enable) {
       }
     });
   }
+
   return block;
 }
 
@@ -202,6 +204,11 @@ function isDatasetEnable(root, blockState, dataset) {
 
       const subRoot = root.MultiBlock.Blocks[blockName];
       const subState = blockState[blockName];
+
+      if (!subState.enable) {
+        return;
+      }
+
       if (isDatasetEnable(subRoot, subState, dataset)) {
         enable = true;
       }
