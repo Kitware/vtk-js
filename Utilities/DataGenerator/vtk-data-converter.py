@@ -320,6 +320,23 @@ def dumpMultiBlock(datasetDir, dataDir, dataset, root = {}, compress = True):
 writerMapping['vtkMultiBlockDataSet'] = dumpMultiBlock
 # -----------------------------------------------------------------------------
 
+def dumpParametricDataSet(datasetDir, dataDir, dataset, root = {}, compress = True):
+
+  root = {}
+  root['metadata'] = {}
+  root['metadata']['name'] = fileName
+
+  writer = writerMapping[dataset.GetClassName()]
+  if writer:
+    writer(datasetDir, dataDir, dataset, root, compress)
+  else:
+    print dataObject.GetClassName(), 'is not supported'
+
+  with open(os.path.join(datasetDir, "index.json"), 'w') as f:
+    f.write(json.dumps(root, indent=2))
+
+# -----------------------------------------------------------------------------
+
 def writeDataSet(filePath, dataset, outputDir, newDSName = None, compress = True):
   fileName = newDSName if newDSName else os.path.basename(filePath)
   datasetDir = os.path.join(outputDir, fileName)
@@ -343,6 +360,44 @@ def writeDataSet(filePath, dataset, outputDir, newDSName = None, compress = True
 
 # -----------------------------------------------------------------------------
 
+def writeTimeDataSource(filePath, datasource, sourceToExport, outputDir, newDSName = None, compress = True):
+  fileName = newDSName if newDSName else os.path.basename(filePath)
+  datasetDir = os.path.join(outputDir, fileName)
+  dataDir = os.path.join(datasetDir, 'data')
+
+  if not os.path.exists(dataDir):
+    os.makedirs(dataDir)
+
+  root = {}
+  root['metadata'] = {}
+  root['metadata']['name'] = fileName
+  root['type'] = 'Parametric'
+  container = root['Parametric'] = {}
+  _params = container['parameters'] = { 'time': [ '%02d' % idx for idx in range(len(datasource.TimestepValues))] }
+  _refs = container['refs'] = { 'dataset': { 'id': '{time}/index.json', 'pattern': True, 'basepath': '', 'encode': 'JSON' } }
+
+
+  for idx in range(len(datasource.TimestepValues)):
+    t = datasource.TimestepValues[idx]
+    sourceToExport.UpdatePipeline(t)
+    ds = sourceToExport.GetClientSideObject().GetOutputDataObject(0)
+    writer = writerMapping[ds.GetClassName()]
+    if writer:
+      dsDir = os.path.join(datasetDir, "%02d" % idx)
+      dsFileName = os.path.join(dsDir, "index.json")
+      if not os.path.exists(dsDir):
+        os.makedirs(dsDir)
+      with open(dsFileName, 'w') as f:
+        f.write(json.dumps(writer(dsDir, dataDir, ds, {}, compress), indent=2))
+    else:
+      print dataObject.GetClassName(), 'is not supported'
+
+
+  with open(os.path.join(datasetDir, "index.json"), 'w') as f:
+    f.write(json.dumps(root, indent=2))
+
+# -----------------------------------------------------------------------------
+
 def convert(inputFile, outputDir, merge = False, extract = False, newName = None):
   print inputFile, outputDir
   reader = simple.OpenDataFile(inputFile)
@@ -357,7 +412,14 @@ def convert(inputFile, outputDir, merge = False, extract = False, newName = None
   activeSource.UpdatePipeline()
   dataObject = activeSource.GetClientSideObject().GetOutputDataObject(0)
 
-  writeDataSet(inputFile, dataObject, outputDir, newName)
+  if 'TimestepValues' in reader.ListProperties():
+    if len(reader.TimestepValues) == 0:
+      writeDataSet(inputFile, dataObject, outputDir, newName)
+    else:
+      writeTimeDataSource(inputFile, reader, activeSource, outputDir, newName)
+  else:
+    writeDataSet(inputFile, dataObject, outputDir, newName)
+
 
 # -----------------------------------------------------------------------------
 
