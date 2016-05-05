@@ -43,6 +43,38 @@ def getRef(destDirectory, md5):
 
 # -----------------------------------------------------------------------------
 
+def dumpStringArray(datasetDir, dataDir, array, root = {}, compress = True):
+  if not array:
+    return None
+
+  stringArray = []
+  arraySize = array.GetNumberOfTuples()
+  for i in range(arraySize):
+    stringArray.append(array.GetValue(i))
+
+  strData = json.dumps(stringArray)
+
+  pMd5 = hashlib.md5(strData).hexdigest()
+  pPath = os.path.join(dataDir, pMd5)
+  with open(pPath, 'wb') as f:
+    f.write(strData)
+
+  if compress:
+    with open(pPath, 'rb') as f_in, gzip.open(os.path.join(dataDir, pMd5 + '.gz'), 'wb') as f_out:
+      shutil.copyfileobj(f_in, f_out)
+      os.remove(pPath)
+
+  root['ref'] = getRef(os.path.relpath(dataDir, datasetDir), pMd5)
+  root['type'] = 'StringArray'
+  root['name'] = array.GetName()
+  root['dataType'] = 'JSON'
+  root['tuple'] = array.GetNumberOfComponents()
+  root['size'] = array.GetNumberOfComponents() * array.GetNumberOfTuples()
+
+  return root
+
+# -----------------------------------------------------------------------------
+
 def dumpDataArray(datasetDir, dataDir, array, root = {}, compress = True):
   if not array:
     return None
@@ -94,26 +126,46 @@ def dumpAttributes(datasetDir, dataDir, dataset, root = {}, compress = True):
   _pointData = root['PointData'] = {}
   _nbFields = dataset.GetPointData().GetNumberOfArrays()
   for i in range(_nbFields):
-    array = dumpDataArray(datasetDir, dataDir, dataset.GetPointData().GetArray(i), {}, compress)
+    array = dataset.GetPointData().GetArray(i)
+    abstractArray = dataset.GetPointData().GetAbstractArray(i)
     if array:
-      _pointData[array['name']] = array
+      _array = dumpDataArray(datasetDir, dataDir, array, {}, compress)
+      if _array:
+        _pointData[_array['name']] = _array
+    elif abstractArray:
+      _array = dumpStringArray(datasetDir, dataDir, abstractArray, {}, compress)
+      if _array:
+        _pointData[_array['name']] = _array
 
   # CellData
   _cellData = root['CellData'] = {}
   _nbFields = dataset.GetCellData().GetNumberOfArrays()
   for i in range(_nbFields):
-    array = dumpDataArray(datasetDir, dataDir, dataset.GetCellData().GetArray(i), {}, compress)
+    array = dataset.GetCellData().GetArray(i)
+    abstractArray = dataset.GetCellData().GetAbstractArray(i)
     if array:
-      _cellData[array['name']] = array
+      _array = dumpDataArray(datasetDir, dataDir, array, {}, compress)
+      if _array:
+        _cellData[_array['name']] = _array
+    elif abstractArray:
+      _array = dumpStringArray(datasetDir, dataDir, abstractArray, {}, compress)
+      if _array:
+        _cellData[_array['name']] = _array
 
   # FieldData
   _fieldData = root['FieldData'] = {}
   _nbFields = dataset.GetFieldData().GetNumberOfArrays()
   for i in range(_nbFields):
-    array = dumpDataArray(datasetDir, dataDir, dataset.GetFieldData().GetArray(i), {}, compress)
+    array = dataset.GetFieldData().GetArray(i)
+    abstractArray = dataset.GetFieldData().GetAbstractArray(i)
     if array:
-      _fieldData[array['name']] = array
-
+      _array = dumpDataArray(datasetDir, dataDir, array, {}, compress)
+      if _array:
+        _fieldData[_array['name']] = _array
+    elif abstractArray:
+      _array = dumpStringArray(datasetDir, dataDir, abstractArray, {}, compress)
+      if _array:
+        _fieldData[_array['name']] = _array
   return root
 
 # -----------------------------------------------------------------------------
