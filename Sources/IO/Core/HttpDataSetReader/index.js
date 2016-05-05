@@ -14,6 +14,8 @@ function getEndianness() {
   return null;
 }
 
+const BUSY = 'HttpDataSetReader.busy';
+const LOCATIONS = ['PointData', 'CellData', 'FieldData'];
 const ENDIANNESS = getEndianness();
 const TYPE_BYTES = {
   Int8Array: 1,
@@ -26,14 +28,11 @@ const TYPE_BYTES = {
   Float32Array: 4,
   Float64Array: 8,
 };
-const BUSY = 'HttpDataSetReader.busy';
-const LOCATIONS = ['PointData', 'CellData', 'FieldData'];
 
 const GEOMETRY_ARRAYS = {
   PolyData(dataset) {
     const arrayToDownload = [];
     arrayToDownload.push(dataset.PolyData.Points);
-
     Object.keys(dataset.PolyData.Cells).forEach(cellName => {
       if (dataset.PolyData.Cells[cellName]) {
         arrayToDownload.push(dataset.PolyData.Cells[cellName]);
@@ -45,6 +44,36 @@ const GEOMETRY_ARRAYS = {
 
   ImageData(dataset) {
     return [];
+  },
+
+  UnstructuredGrid(dataset) {
+    const arrayToDownload = [];
+    arrayToDownload.push(dataset.UnstructuredGrid.Points);
+    arrayToDownload.push(dataset.UnstructuredGrid.Cells);
+    arrayToDownload.push(dataset.UnstructuredGrid.CellTypes);
+
+    return arrayToDownload;
+  },
+
+  RectilinearGrid(dataset) {
+    const arrayToDownload = [];
+    arrayToDownload.push(dataset.RectilinearGrid.XCoordinates);
+    arrayToDownload.push(dataset.RectilinearGrid.YCoordinates);
+    arrayToDownload.push(dataset.RectilinearGrid.ZCoordinates);
+
+    return arrayToDownload;
+  },
+
+  MultiBlock(dataset) {
+    let arrayToDownload = [];
+    Object.keys(dataset.MultiBlock.Blocks).forEach(blockName => {
+      const fn = GEOMETRY_ARRAYS[dataset.MultiBlock.Blocks[blockName].type];
+      if (fn) {
+        arrayToDownload = [].concat(arrayToDownload, fn(dataset.MultiBlock.Blocks[blockName]));
+      }
+    });
+
+    return arrayToDownload;
   },
 };
 
@@ -91,17 +120,24 @@ function fetchArray(instance, array, fetchGzip = false) {
             array.buffer = xhr.response;
 
             if (fetchGzip) {
-              array.buffer = pako.inflate(new Uint8Array(array.buffer)).buffer;
-              array.values = new window[array.dataType]();
+              if (array.dataType === 'JSON') {
+                array.buffer = pako.inflate(new Uint8Array(array.buffer), { to: 'string' });
+              } else {
+                array.buffer = pako.inflate(new Uint8Array(array.buffer)).buffer;
+              }
             }
 
-            if (ENDIANNESS !== array.ref.encode && ENDIANNESS) {
-              // Need to swap bytes
-              console.log('Swap bytes of', array.name);
-              swapBytes(array.buffer, TYPE_BYTES[array.dataType]);
-            }
+            if (array.dataType === 'JSON') {
+              array.values = JSON.parse(array.buffer);
+            } else {
+              if (ENDIANNESS !== array.ref.encode && ENDIANNESS) {
+                // Need to swap bytes
+                console.log('Swap bytes of', array.name);
+                swapBytes(array.buffer, TYPE_BYTES[array.dataType]);
+              }
 
-            array.values = new window[array.dataType](array.buffer);
+              array.values = new window[array.dataType](array.buffer);
+            }
 
             if (array.values.length !== array.size) {
               console.error('Error in FetchArray:', array.name, 'does not have the proper array size. Got', array.values.length, 'instead of', array.size);
@@ -117,7 +153,7 @@ function fetchArray(instance, array, fetchGzip = false) {
 
       // Make request
       xhr.open('GET', url, true);
-      xhr.responseType = 'arraybuffer';
+      xhr.responseType = (fetchGzip || array.dataType !== 'JSON') ? 'arraybuffer' : 'text';
       xhr.send();
     });
   }
@@ -127,9 +163,58 @@ function fetchArray(instance, array, fetchGzip = false) {
   });
 }
 
+function fillBlocks(dataset, block, arraysToList, enable) {
+  if (dataset.type === 'MultiBlock') {
+    Object.keys(dataset.MultiBlock.Blocks).forEach(blockName => {
+      block[blockName] = fillBlocks(dataset.MultiBlock.Blocks[blockName], {}, arraysToList, enable);
+    });
+  } else {
+    block.type = dataset.type;
+    block.enable = enable;
+    const container = dataset[dataset.type];
+    LOCATIONS.forEach(location => {
+      if (container[location]) {
+        Object.keys(container[location]).forEach(name => {
+          if (arraysToList[`${location}_:|:_${name}`]) {
+            arraysToList[`${location}_:|:_${name}`].ds.push(container);
+          } else {
+            arraysToList[`${location}_:|:_${name}`] = { name, enable, location, ds: [container] };
+          }
+        });
+      }
+    });
+  }
+  return block;
+}
+
+function isDatasetEnable(root, blockState, dataset) {
+  let enable = false;
+  if (root[root.type] === dataset) {
+    return blockState ? blockState.enable : true;
+  }
+
+  // Find corresponding datasetBlock
+  if (root.MultiBlock && root.MultiBlock.Blocks) {
+    Object.keys(root.MultiBlock.Blocks).forEach(blockName => {
+      if (enable) {
+        return;
+      }
+
+      const subRoot = root.MultiBlock.Blocks[blockName];
+      const subState = blockState[blockName];
+      if (isDatasetEnable(subRoot, subState, dataset)) {
+        enable = true;
+      }
+    });
+  }
+
+  return enable;
+}
+
 export default class HttpDataSetReader {
   constructor(enableAllArrays = true, fetchGzip = false) {
     this.arrays = [];
+    this.blocks = null;
     this.dataset = null;
     this.url = null;
     this.enableArray = !!enableAllArrays;
@@ -169,13 +254,23 @@ export default class HttpDataSetReader {
             this.arrays = [];
             const container = this.dataset[this.dataset.type];
             const enable = this.enableArray;
-            LOCATIONS.forEach(location => {
-              if (container[location]) {
-                Object.keys(container[location]).forEach(name => {
-                  this.arrays.push({ name, enable, location });
-                });
-              }
-            });
+            if (container.Blocks) {
+              this.blocks = {};
+              const arraysToList = {};
+              fillBlocks(this.dataset, this.blocks, arraysToList, enable);
+              Object.keys(arraysToList).forEach(id => {
+                this.arrays.push(arraysToList[id]);
+              });
+            } else {
+              // Regular dataset
+              LOCATIONS.forEach(location => {
+                if (container[location]) {
+                  Object.keys(container[location]).forEach(name => {
+                    this.arrays.push({ name, enable, location, ds: [container] });
+                  });
+                }
+              });
+            }
 
             // Fetch geometry arrays
             const pendingPromises = [];
@@ -215,7 +310,11 @@ export default class HttpDataSetReader {
     this.arrays
       .filter(array => array.enable)
       .forEach(array => {
-        arrayToFecth.push(this.dataset[this.dataset.type][array.location][array.name]);
+        array.ds.forEach(ds => {
+          if (isDatasetEnable(this.dataset, this.blocks, ds)) {
+            arrayToFecth.push(ds[array.location][array.name]);
+          }
+        });
       });
 
     return new Promise((resolve, reject) => {
@@ -236,6 +335,10 @@ export default class HttpDataSetReader {
     });
   }
 
+  listBlocks() {
+    return this.blocks;
+  }
+
   listArrays() {
     return this.arrays;
   }
@@ -247,6 +350,19 @@ export default class HttpDataSetReader {
     }
   }
 
+  enableBlock(blockPath, enable = true, pathSeparator = '.') {
+    let container = this.blocks;
+    const path = blockPath.split(pathSeparator);
+
+    while (container && path.length > 1) {
+      container = container[path.shift];
+    }
+
+    if (container && path.length === 1) {
+      container[path[0]].enable = enable;
+    }
+  }
+
   getOutput() {
     return this.dataset;
   }
@@ -254,6 +370,7 @@ export default class HttpDataSetReader {
   destroy() {
     this.off();
     this.arrays = null;
+    this.block = null;
     this.dataset = null;
     this.url = null;
   }

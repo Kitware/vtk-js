@@ -2,7 +2,7 @@
 import HttpDataSetReader from '..';
 
 const datasetToLoad = [
-  `${__BASE_PATH__}/data/can.ex2`,
+  // `${__BASE_PATH__}/data/can.ex2`,
   `${__BASE_PATH__}/data/bot2.wrl`,
   `${__BASE_PATH__}/data/disk_out_ref.ex2`,
   `${__BASE_PATH__}/data/Wavelet.vti`,

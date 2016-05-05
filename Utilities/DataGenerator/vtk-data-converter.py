@@ -320,23 +320,6 @@ def dumpMultiBlock(datasetDir, dataDir, dataset, root = {}, compress = True):
 writerMapping['vtkMultiBlockDataSet'] = dumpMultiBlock
 # -----------------------------------------------------------------------------
 
-def dumpParametricDataSet(datasetDir, dataDir, dataset, root = {}, compress = True):
-
-  root = {}
-  root['metadata'] = {}
-  root['metadata']['name'] = fileName
-
-  writer = writerMapping[dataset.GetClassName()]
-  if writer:
-    writer(datasetDir, dataDir, dataset, root, compress)
-  else:
-    print dataObject.GetClassName(), 'is not supported'
-
-  with open(os.path.join(datasetDir, "index.json"), 'w') as f:
-    f.write(json.dumps(root, indent=2))
-
-# -----------------------------------------------------------------------------
-
 def writeDataSet(filePath, dataset, outputDir, newDSName = None, compress = True):
   fileName = newDSName if newDSName else os.path.basename(filePath)
   datasetDir = os.path.join(outputDir, fileName)
