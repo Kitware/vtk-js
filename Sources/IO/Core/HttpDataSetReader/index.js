@@ -1,22 +1,8 @@
-import Monologue from 'monologue.js';
+import * as macro from '../../../macro';
+import Endian from '../../../Common/Core/Endian';
 import pako from 'pako';
 
-function getEndianness() {
-  const a = new ArrayBuffer(4);
-  const b = new Uint8Array(a);
-  const c = new Uint32Array(a);
-  b[0] = 0xa1;
-  b[1] = 0xb2;
-  b[2] = 0xc3;
-  b[3] = 0xd4;
-  if (c[0] === 0xd4c3b2a1) return 'LittleEndian';
-  if (c[0] === 0xa1b2c3d4) return 'BigEndian';
-  return null;
-}
-
-const BUSY = 'HttpDataSetReader.busy';
 const LOCATIONS = ['PointData', 'CellData', 'FieldData'];
-const ENDIANNESS = getEndianness();
 const TYPE_BYTES = {
   Int8Array: 1,
   Uint8Array: 1,
@@ -77,203 +63,175 @@ const GEOMETRY_ARRAYS = {
   },
 };
 
-function busyUpdate(instance, delta) {
-  instance.requestCount += delta;
-  if (instance.requestCount === 1 || instance.requestCount === 0) {
-    instance.emit(BUSY, !!instance.requestCount);
-  }
-}
 
-function swapBytes(buffer, wordSize) {
-  if (wordSize < 2) {
-    return;
-  }
+// ----------------------------------------------------------------------------
+// HttpDataSetReader methods
+// ----------------------------------------------------------------------------
 
-  const bytes = new Int8Array(buffer);
-  const size = bytes.length;
-  const tempBuffer = [];
+export function httpDataSetReader(publicAPI, model) {
+  // Internal method to fetch Array
+  function fetchArray(array, fetchGzip = false) {
+    if (array.ref && !array.ref.pending) {
+      return new Promise((resolve, reject) => {
+        const xhr = new XMLHttpRequest();
+        const url = [model.baseURL, array.ref.basepath, fetchGzip ? `${array.ref.id}.gz` : array.ref.id].join('/');
 
-  for (let i = 0; i < size; i += wordSize) {
-    for (let j = 0; j < wordSize; j++) {
-      tempBuffer.push(bytes[i + j]);
-    }
-    for (let j = 0; j < wordSize; j++) {
-      bytes[i + j] = tempBuffer.pop();
-    }
-  }
-}
+        xhr.onreadystatechange = e => {
+          if (xhr.readyState === 1) {
+            array.ref.pending = true;
+            if (++model.requestCount === 1) {
+              publicAPI.fireBusy(true);
+            }
+          }
+          if (xhr.readyState === 4) {
+            array.ref.pending = false;
+            if (xhr.status === 200) {
+              array.buffer = xhr.response;
 
-function fetchArray(instance, array, fetchGzip = false) {
-  if (array.ref) {
-    return new Promise((resolve, reject) => {
-      const xhr = new XMLHttpRequest();
-      const url = [instance.getBaseURL(), array.ref.basepath, fetchGzip ? `${array.ref.id}.gz` : array.ref.id].join('/');
+              if (fetchGzip) {
+                if (array.dataType === 'JSON') {
+                  array.buffer = pako.inflate(new Uint8Array(array.buffer), { to: 'string' });
+                } else {
+                  array.buffer = pako.inflate(new Uint8Array(array.buffer)).buffer;
+                }
+              }
 
-      xhr.onreadystatechange = e => {
-        if (xhr.readyState === 1) {
-          busyUpdate(instance, +1);
-        }
-        if (xhr.readyState === 4) {
-          busyUpdate(instance, -1);
-
-          if (xhr.status === 200) {
-            array.buffer = xhr.response;
-
-            if (fetchGzip) {
               if (array.dataType === 'JSON') {
-                array.buffer = pako.inflate(new Uint8Array(array.buffer), { to: 'string' });
+                array.values = JSON.parse(array.buffer);
               } else {
-                array.buffer = pako.inflate(new Uint8Array(array.buffer)).buffer;
-              }
-            }
+                if (Endian.ENDIANNESS !== array.ref.encode && Endian.ENDIANNESS) {
+                  // Need to swap bytes
+                  console.log('Swap bytes of', array.name);
+                  Endian.swapBytes(array.buffer, TYPE_BYTES[array.dataType]);
+                }
 
-            if (array.dataType === 'JSON') {
-              array.values = JSON.parse(array.buffer);
+                array.values = new window[array.dataType](array.buffer);
+              }
+
+              if (array.values.length !== array.size) {
+                console.error('Error in FetchArray:', array.name, 'does not have the proper array size. Got', array.values.length, 'instead of', array.size);
+              }
+
+              // Done with the ref and work
+              delete array.ref;
+              if (--model.requestCount === 0) {
+                publicAPI.fireBusy(false);
+              }
+              publicAPI.modified();
+              resolve(array);
             } else {
-              if (ENDIANNESS !== array.ref.encode && ENDIANNESS) {
-                // Need to swap bytes
-                console.log('Swap bytes of', array.name);
-                swapBytes(array.buffer, TYPE_BYTES[array.dataType]);
-              }
-
-              array.values = new window[array.dataType](array.buffer);
+              reject(xhr, e);
             }
-
-            if (array.values.length !== array.size) {
-              console.error('Error in FetchArray:', array.name, 'does not have the proper array size. Got', array.values.length, 'instead of', array.size);
-            }
-
-            delete array.ref;
-            resolve(instance, instance.dataset);
-          } else {
-            reject(xhr, e);
           }
-        }
-      };
+        };
 
-      // Make request
-      xhr.open('GET', url, true);
-      xhr.responseType = (fetchGzip || array.dataType !== 'JSON') ? 'arraybuffer' : 'text';
-      xhr.send();
-    });
-  }
-
-  return new Promise((resolve, reject) => {
-    resolve(instance, instance.dataset);
-  });
-}
-
-function fillBlocks(dataset, block, arraysToList, enable) {
-  if (dataset.type === 'MultiBlock') {
-    Object.keys(dataset.MultiBlock.Blocks).forEach(blockName => {
-      block[blockName] = fillBlocks(dataset.MultiBlock.Blocks[blockName], {}, arraysToList, enable);
-      block[blockName].enable = enable;
-    });
-  } else {
-    block.type = dataset.type;
-    block.enable = enable;
-    const container = dataset[dataset.type];
-    LOCATIONS.forEach(location => {
-      if (container[location]) {
-        Object.keys(container[location]).forEach(name => {
-          if (arraysToList[`${location}_:|:_${name}`]) {
-            arraysToList[`${location}_:|:_${name}`].ds.push(container);
-          } else {
-            arraysToList[`${location}_:|:_${name}`] = { name, enable, location, ds: [container] };
-          }
-        });
-      }
-    });
-  }
-
-  return block;
-}
-
-function isDatasetEnable(root, blockState, dataset) {
-  let enable = false;
-  if (root[root.type] === dataset) {
-    return blockState ? blockState.enable : true;
-  }
-
-  // Find corresponding datasetBlock
-  if (root.MultiBlock && root.MultiBlock.Blocks) {
-    Object.keys(root.MultiBlock.Blocks).forEach(blockName => {
-      if (enable) {
-        return;
-      }
-
-      const subRoot = root.MultiBlock.Blocks[blockName];
-      const subState = blockState[blockName];
-
-      if (!subState.enable) {
-        return;
-      }
-
-      if (isDatasetEnable(subRoot, subState, dataset)) {
-        enable = true;
-      }
-    });
-  }
-
-  return enable;
-}
-
-export default class HttpDataSetReader {
-  constructor(enableAllArrays = true, fetchGzip = false) {
-    this.arrays = [];
-    this.blocks = null;
-    this.dataset = null;
-    this.url = null;
-    this.enableArray = !!enableAllArrays;
-    this.requestCount = 0;
-    this.fetchGzip = fetchGzip;
-  }
-
-  setURL(url) {
-    if (url.indexOf('index.json') === -1) {
-      this.baseURL = url;
-      this.url = `${url}/index.json`;
-    } else {
-      this.url = url;
-
-      // Remove the file in the URL
-      const path = url.split('/');
-      path.pop();
-      this.baseURL = path.join('/');
+        // Make request
+        xhr.open('GET', url, true);
+        xhr.responseType = (fetchGzip || array.dataType !== 'JSON') ? 'arraybuffer' : 'text';
+        xhr.send();
+      });
     }
+
+    return new Promise((resolve, reject) => {
+      resolve(array);
+    });
   }
 
-  update() {
-    return new Promise((resolve, reject) => {
+  // Internal method to fill block information and state
+  function fillBlocks(dataset, block, arraysToList, enable) {
+    if (dataset.type === 'MultiBlock') {
+      Object.keys(dataset.MultiBlock.Blocks).forEach(blockName => {
+        block[blockName] = fillBlocks(dataset.MultiBlock.Blocks[blockName], {}, arraysToList, enable);
+        block[blockName].enable = enable;
+      });
+    } else {
+      block.type = dataset.type;
+      block.enable = enable;
+      const container = dataset[dataset.type];
+      LOCATIONS.forEach(location => {
+        if (container[location]) {
+          Object.keys(container[location]).forEach(name => {
+            if (arraysToList[`${location}_:|:_${name}`]) {
+              arraysToList[`${location}_:|:_${name}`].ds.push(container);
+            } else {
+              arraysToList[`${location}_:|:_${name}`] = { name, enable, location, ds: [container] };
+            }
+          });
+        }
+      });
+    }
+
+    return block;
+  }
+
+  // Internal method to test if a dataset should be fetched
+  function isDatasetEnable(root, blockState, dataset) {
+    let enable = false;
+    if (root[root.type] === dataset) {
+      return blockState ? blockState.enable : true;
+    }
+
+    // Find corresponding datasetBlock
+    if (root.MultiBlock && root.MultiBlock.Blocks) {
+      Object.keys(root.MultiBlock.Blocks).forEach(blockName => {
+        if (enable) {
+          return;
+        }
+
+        const subRoot = root.MultiBlock.Blocks[blockName];
+        const subState = blockState[blockName];
+
+        if (!subState.enable) {
+          return;
+        }
+
+        if (isDatasetEnable(subRoot, subState, dataset)) {
+          enable = true;
+        }
+      });
+    }
+
+    return enable;
+  }
+
+  // Fetch dataset (metadata)
+  publicAPI.updateMetadata = () =>
+    new Promise((resolve, reject) => {
       const xhr = new XMLHttpRequest();
+      let dataset = model.output[0];
 
       xhr.onreadystatechange = e => {
         if (xhr.readyState === 1) {
-          busyUpdate(this, +1);
+          if (++model.requestCount === 1) {
+            publicAPI.fireBusy(true);
+          }
         }
         if (xhr.readyState === 4) {
-          busyUpdate(this, -1);
+          if (--model.requestCount === 0) {
+            publicAPI.fireBusy(false);
+          }
 
           if (xhr.status === 200) {
-            this.dataset = JSON.parse(xhr.responseText);
+            dataset = JSON.parse(xhr.responseText);
+            model.output[0] = dataset;
 
             // Generate array list
-            this.arrays = [];
-            const container = this.dataset[this.dataset.type];
-            const enable = this.enableArray;
+            model.arrays = [];
+            const container = dataset[dataset.type];
+            const enable = model.enableArray;
             if (container.Blocks) {
-              this.blocks = {};
+              model.blocks = {};
               const arraysToList = {};
-              fillBlocks(this.dataset, this.blocks, arraysToList, enable);
+              fillBlocks(dataset, model.blocks, arraysToList, enable);
               Object.keys(arraysToList).forEach(id => {
-                this.arrays.push(arraysToList[id]);
+                model.arrays.push(arraysToList[id]);
               });
             } else {
               // Regular dataset
               LOCATIONS.forEach(location => {
                 if (container[location]) {
                   Object.keys(container[location]).forEach(name => {
-                    this.arrays.push({ name, enable, location, ds: [container] });
+                    model.arrays.push({ name, enable, location, ds: [container] });
                   });
                 }
               });
@@ -281,8 +239,8 @@ export default class HttpDataSetReader {
 
             // Fetch geometry arrays
             const pendingPromises = [];
-            GEOMETRY_ARRAYS[this.dataset.type](this.dataset).forEach(array => {
-              pendingPromises.push(fetchArray(this, array, this.fetchGzip));
+            GEOMETRY_ARRAYS[dataset.type](dataset).forEach(array => {
+              pendingPromises.push(fetchArray(array, model.fetchGzip));
             });
 
             // Wait for all geometry array to be fetched
@@ -290,14 +248,14 @@ export default class HttpDataSetReader {
               Promise.all(pendingPromises)
                 .then(
                   ok => {
-                    resolve(this, this.dataset);
+                    resolve(publicAPI, dataset);
                   },
                   err => {
                     reject(err);
                   }
                 );
             } else {
-              resolve(this, this.dataset);
+              resolve(publicAPI, dataset);
             }
           } else {
             reject(xhr, e);
@@ -306,19 +264,38 @@ export default class HttpDataSetReader {
       };
 
       // Make request
-      xhr.open('GET', this.url, true);
+      xhr.open('GET', model.url, true);
       xhr.responseType = 'text';
       xhr.send();
     });
-  }
 
-  updateData() {
+  // Set DataSet url
+  publicAPI.setUrl = url => {
+    if (url.indexOf('index.json') === -1) {
+      model.baseURL = url;
+      model.url = `${url}/index.json`;
+    } else {
+      model.url = url;
+
+      // Remove the file in the URL
+      const path = url.split('/');
+      path.pop();
+      model.baseURL = path.join('/');
+    }
+
+    // Fetch metadata
+    return publicAPI.updateMetadata();
+  };
+
+  // Fetch the actual data arrays
+  publicAPI.update = () => {
+    const dataset = model.output[0];
     const arrayToFecth = [];
-    this.arrays
+    model.arrays
       .filter(array => array.enable)
       .forEach(array => {
         array.ds.forEach(ds => {
-          if (isDatasetEnable(this.dataset, this.blocks, ds)) {
+          if (isDatasetEnable(dataset, model.blocks, ds)) {
             arrayToFecth.push(ds[array.location][array.name]);
           }
         });
@@ -331,34 +308,28 @@ export default class HttpDataSetReader {
 
       const processNext = () => {
         if (arrayToFecth.length) {
-          fetchArray(this, arrayToFecth.pop(), this.fetchGzip).then(processNext, error);
+          fetchArray(arrayToFecth.pop(), model.fetchGzip).then(processNext, error);
         } else {
-          resolve(this, this.dataset);
+          resolve(publicAPI, dataset);
         }
       };
 
       // Start processing queue
       processNext();
     });
-  }
+  };
 
-  listBlocks() {
-    return this.blocks;
-  }
-
-  listArrays() {
-    return this.arrays;
-  }
-
-  enableArray(location, name, enable = true) {
-    const activeArray = this.arrays.filter(array => array.name === name && array.location === location);
+  // Toggle arrays to load
+  publicAPI.enableArray = (location, name, enable = true) => {
+    const activeArray = model.arrays.filter(array => array.name === name && array.location === location);
     if (activeArray.length === 1) {
       activeArray[0].enable = enable;
     }
-  }
+  };
 
-  enableBlock(blockPath, enable = true, pathSeparator = '.') {
-    let container = this.blocks;
+  // Toggle blocks to load
+  publicAPI.enableBlock = (blockPath, enable = true, pathSeparator = '.') => {
+    let container = model.blocks;
     const path = blockPath.split(pathSeparator);
 
     while (container && path.length > 1) {
@@ -368,31 +339,48 @@ export default class HttpDataSetReader {
     if (container && path.length === 1) {
       container[path[0]].enable = enable;
     }
-  }
+  };
 
-  getOutput() {
-    return this.dataset;
-  }
-
-  destroy() {
-    this.off();
-    this.arrays = null;
-    this.block = null;
-    this.dataset = null;
-    this.url = null;
-  }
-
-  onBusy(callback) {
-    return this.on(BUSY, callback);
-  }
-
-  isBusy() {
-    return !!this.requestCount;
-  }
-
-  getBaseURL() {
-    return this.baseURL;
-  }
+  // return Busy state
+  publicAPI.isBusy = () => !!model.requestCount;
 }
 
-Monologue.mixInto(HttpDataSetReader);
+// ----------------------------------------------------------------------------
+// Object factory
+// ----------------------------------------------------------------------------
+
+const DEFAULT_VALUES = {
+  enableArray: true,
+  fetchGzip: false,
+  arrays: [],
+  blocks: null,
+  url: null,
+  baseURL: null,
+  requestCount: 0,
+};
+
+const STD_FIELDS = ['enableArray', 'fetchGzip', 'blocks', 'url', 'baseURL'];
+const ARRAY_FIELDS = ['arrays'];
+
+// ----------------------------------------------------------------------------
+
+function newInstance(initialValues = {}) {
+  const model = Object.assign({}, DEFAULT_VALUES, initialValues);
+  const publicAPI = {};
+
+  // Build VTK API
+  macro.obj(publicAPI, model);
+  macro.get(publicAPI, model, STD_FIELDS);
+  macro.getArray(publicAPI, model, ARRAY_FIELDS);
+  macro.algo(publicAPI, model, 0, 1);
+  macro.event(publicAPI, model, 'busy');
+
+  // Object methods
+  httpDataSetReader(publicAPI, model);
+
+  return Object.freeze(publicAPI);
+}
+
+// ----------------------------------------------------------------------------
+
+export default { newInstance };
