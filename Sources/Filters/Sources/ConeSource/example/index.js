@@ -3,7 +3,7 @@ import ConeSource from '..';
 // Create cone source instance
 const coneSource = ConeSource.newInstance({ height: 2.0 });
 
-coneSource.onModified(s => {
+let subscription = coneSource.onModified(s => {
   console.log('source modified', s.getOutput().metadata.state);
 });
 
@@ -17,6 +17,11 @@ console.log('Output (height:2)', coneSource.getOutput());
 
 coneSource.setResolution(10);
 coneSource.setResolution(20);
+
+console.log('unsubscribe');
+subscription.unsubscribe();
+subscription = null;
+
 coneSource.setResolution(30);
 coneSource.setResolution(10);
 console.log('resolution', coneSource.getResolution());

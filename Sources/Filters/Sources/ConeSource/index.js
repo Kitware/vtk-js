@@ -9,7 +9,7 @@ const ARRAY_FIELDS_3 = ['center', 'direction'];
 // ConeSource methods
 // ----------------------------------------------------------------------------
 
-function coneSource(publicAPI, model) {
+export function coneSource(publicAPI, model) {
   function update() {
     if (model.deleted) {
       return;
@@ -43,7 +43,7 @@ function coneSource(publicAPI, model) {
         },
       };
 
-      // Add parameter used to create dataset
+      // Add parameter used to create dataset as metadata.state[*]
       STD_FIELDS.forEach(field => {
         state[field] = model[field];
       });
