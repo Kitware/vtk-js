@@ -17,11 +17,8 @@
     },
     "devDependencies": {
         "pako": "1.0.1",
-        "gl-matrix": "2.3.1",
-        "hammerjs": "2.0.6",
-        "monologue.js": "0.3.4",
-        "mout": "0.11.1",
-        "kw-web-suite": "1.1.2",
+        "gl-matrix": "2.3.2",
+        "kw-web-suite": "2.0.0",
         "kw-doc": "1.0.4"
     },
     "scripts": {

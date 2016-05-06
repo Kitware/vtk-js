@@ -1,6 +1,14 @@
+// ----------------------------------------------------------------------------
+// capitilze provided string
+// ----------------------------------------------------------------------------
+
 export function capitalize(str) {
   return str.charAt(0).toUpperCase() + str.slice(1);
 }
+
+// ----------------------------------------------------------------------------
+// vtkObject: modified(), onModified(callback), delete()
+// ----------------------------------------------------------------------------
 
 export function obj(publicAPI, model) {
   const callbacks = [];
@@ -48,6 +56,8 @@ export function obj(publicAPI, model) {
 }
 
 // ----------------------------------------------------------------------------
+// getXXX: add getters
+// ----------------------------------------------------------------------------
 
 export function get(publicAPI, model, fieldNames) {
   fieldNames.forEach(field => {
@@ -55,6 +65,8 @@ export function get(publicAPI, model, fieldNames) {
   });
 }
 
+// ----------------------------------------------------------------------------
+// setXXX: add setters
 // ----------------------------------------------------------------------------
 
 export function set(publicAPI, model, fieldNames) {
@@ -78,12 +90,16 @@ export function set(publicAPI, model, fieldNames) {
 }
 
 // ----------------------------------------------------------------------------
+// set/get XXX: add both setters and getters
+// ----------------------------------------------------------------------------
 
 export function setGet(publicAPI, model, fieldNames) {
   get(publicAPI, model, fieldNames);
   set(publicAPI, model, fieldNames);
 }
 
+// ----------------------------------------------------------------------------
+// getXXX: add getters for object of type array
 // ----------------------------------------------------------------------------
 
 export function getArray(publicAPI, model, fieldNames) {
@@ -92,6 +108,8 @@ export function getArray(publicAPI, model, fieldNames) {
   });
 }
 
+// ----------------------------------------------------------------------------
+// setXXX: add setter for object of type array
 // ----------------------------------------------------------------------------
 
 export function setArray(publicAPI, model, fieldNames, size) {
@@ -121,12 +139,16 @@ export function setArray(publicAPI, model, fieldNames, size) {
 }
 
 // ----------------------------------------------------------------------------
+// set/get XXX: add setter and getter for object of type array
+// ----------------------------------------------------------------------------
 
 export function setGetArray(publicAPI, model, fieldNames, size) {
   getArray(publicAPI, model, fieldNames);
   setArray(publicAPI, model, fieldNames, size);
 }
 
+// ----------------------------------------------------------------------------
+// vtkAlgorithm: setInputData(), setInputConnection(), getOutput(), getOutputPort()
 // ----------------------------------------------------------------------------
 
 export function algo(publicAPI, model, numberOfInputs, numberOfOutputs) {
@@ -184,4 +206,49 @@ export function algo(publicAPI, model, numberOfInputs, numberOfOutputs) {
     publicAPI.getOutput = getOutput;
     publicAPI.getOutputPort = getOutputPort;
   }
+}
+
+// ----------------------------------------------------------------------------
+// Event handling: onXXX(callback), fireXXX(args...)
+// ----------------------------------------------------------------------------
+
+export function event(publicAPI, model, eventName) {
+  const callbacks = [];
+  const previousDelete = publicAPI.delete;
+
+  function off(index) {
+    callbacks[index] = null;
+  }
+
+  function on(index) {
+    function unsubscribe() {
+      off(index);
+    }
+    return Object.freeze({ unsubscribe });
+  }
+
+  publicAPI[`fire${capitalize(eventName)}`] = (...args) => {
+    if (model.deleted) {
+      console.log('instance deleted - can not call any method');
+      return;
+    }
+
+    callbacks.forEach(callback => callback && callback.apply(publicAPI, args));
+  };
+
+  publicAPI[`on${capitalize(eventName)}`] = callback => {
+    if (model.deleted) {
+      console.log('instance deleted - can not call any method');
+      return null;
+    }
+
+    const index = callbacks.length;
+    callbacks.push(callback);
+    return on(index);
+  };
+
+  publicAPI.delete = () => {
+    previousDelete();
+    callbacks.forEach((el, index) => off(index));
+  };
 }
