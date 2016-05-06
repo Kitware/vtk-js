@@ -18,8 +18,6 @@ reader.update().then((reader, dataset) => {
       console.log('dataset fully loaded', dataset);
     });
 });
-
-
 ```
 
 ### constructor(enableAllArrays = true)

@@ -1,0 +1,34 @@
+import ConeSource from '..';
+
+// Create cone source instance
+const coneSource = ConeSource.newInstance({ height: 2.0 });
+
+coneSource.onModified(s => {
+  console.log('source modified', s.getOutput().metadata.state);
+});
+
+console.log('height', coneSource.getHeight());
+console.log('resolution', coneSource.getResolution());
+console.log('radius', coneSource.getRadius());
+console.log('center', coneSource.getCenter());
+
+// Create dataset
+console.log('Output (height:2)', coneSource.getOutput());
+
+coneSource.setResolution(10);
+coneSource.setResolution(20);
+coneSource.setResolution(30);
+coneSource.setResolution(10);
+console.log('resolution', coneSource.getResolution());
+console.log('Output (resolution:10)', coneSource.getOutput());
+
+// Delete source
+coneSource.delete();
+
+// Ask for dataset => should fail
+console.log('after delete ------------');
+console.log('output (delete)', coneSource.getOutput());
+console.log('height (delete)', coneSource.getHeight());
+console.log('resolution (delete)', coneSource.getResolution());
+console.log('radius (delete)', coneSource.getRadius());
+console.log('center (delete)', coneSource.getCenter());
