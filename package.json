@@ -29,6 +29,8 @@
         "doc:www"       : "kw-doc -c ./Documentation/config.js -s",
         "doc:publish"   : "kw-doc -c ./Documentation/config.js -p",
 
+        "example:PolyDataViewer": "webpack-dev-server --progress --open --config ./Examples/WebGL/PolyDataViewer/webpack.config.js",
+
         "build"         : "webpack --progress --colors",
         "build:release" : "export NODE_ENV=production && npm run build -- -p",
 
