@@ -6,17 +6,9 @@ interface where renderers draw their images. Methods are provided to
 synchronize the rendering process, set window size, and control double
 buffering.
 
-### addRenderer(renderer)
+### addRenderer(renderer)/ removeRenderer(renderer) / hasRenderer() : Boolean
 
-Add a renderer.
-
-### removeRenderer(renderer)
-
-Remove renderer.
-
-### hasRenderer() : Boolean
-
-Return true if one or more renderer have been added to the render window.
+Manage associated renderers.
 
 ### render()
 
