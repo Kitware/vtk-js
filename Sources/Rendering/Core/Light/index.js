@@ -84,7 +84,7 @@ export function light(publicAPI, model) {
 // Object factory
 // ----------------------------------------------------------------------------
 
-const DEFAULT_VALUES = {
+export const DEFAULT_VALUES = {
   switch: true,
   intensity: 1,
   ambientColor: [0, 0, 0],
@@ -108,7 +108,7 @@ function newInstance(initialValues = {}) {
   const publicAPI = {};
 
   // Build VTK API
-  macro.obj(publicAPI, model);
+  macro.obj(publicAPI, model, 'vtkLight');
   macro.setGet(publicAPI, model, SET_GET_FIELDS);
   macro.setGetArray(publicAPI, model, SET_GET_ARRAY_3, 3);
 
@@ -120,4 +120,4 @@ function newInstance(initialValues = {}) {
 
 // ----------------------------------------------------------------------------
 
-export default { newInstance };
+export default { newInstance, DEFAULT_VALUES, light };

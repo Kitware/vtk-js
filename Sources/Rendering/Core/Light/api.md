@@ -1,3 +1,5 @@
+## Introduction
+
 vtkLight is a virtual light for 3D rendering. It provides methods to locate
 and point the light, turn it on and off, and set its brightness and color.
 In addition to the basic infinite distance point light source attributes,
@@ -19,7 +21,7 @@ they are positioned.  A light's world space position and focal point
 are defined by their local position and focal point, transformed by
 their transformation matrix (if it exists).
 
-### newInstance()
+## newInstance()
 
 Create a light with the focal point at the origin and its position
 set to (0,0,1). The light is a SceneLight, its color is white

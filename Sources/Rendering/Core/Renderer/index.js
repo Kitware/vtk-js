@@ -62,7 +62,7 @@ export function renderer(publicAPI, model) {
 // Object factory
 // ----------------------------------------------------------------------------
 
-const DEFAULT_VALUES = {
+export const DEFAULT_VALUES = {
   actors: [],
   volumes: [],
   light: [],
@@ -90,7 +90,7 @@ function newInstance(initialValues = {}) {
   const publicAPI = {};
 
   // Build VTK API
-  macro.obj(publicAPI, model);
+  macro.obj(publicAPI, model, 'vtkRenderer');
   macro.setGet(publicAPI, model, SET_GET_FIELDS);
   macro.get(publicAPI, model, GET_ONLY);
   macro.getArray(publicAPI, model, GET_ARRAY_ONLY);
@@ -104,4 +104,4 @@ function newInstance(initialValues = {}) {
 
 // ----------------------------------------------------------------------------
 
-export default { newInstance };
+export default { newInstance, DEFAULT_VALUES, renderer };

@@ -18,7 +18,7 @@ reader.setURL('/Data/can.ex2/index.json').then((reader, dataset) => {
 });
 ```
 
-### newInstance({ enableArray = true, fetchGzip = false })
+## newInstance({ enableArray = true, fetchGzip = false })
 
 Create a reader instance while enabeling a default behavior regarding the
 data array and the way they should be fetched from the server.

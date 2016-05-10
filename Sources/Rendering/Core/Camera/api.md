@@ -1,4 +1,4 @@
-camera for 3D rendering
+## Introduction
 
 vtkCamera is a virtual camera for 3D rendering. It provides methods
 to position and orient the view point and focal point. Convenience
@@ -7,7 +7,7 @@ complex methods allow the manipulation of the computer graphics
 model including view up vector, clipping planes, and
 camera perspective.
 
-### newInstance()
+## newInstance()
 
 Construct camera instance with its focal point at the origin, and position=(0,0,1). The
 view up is along the y-axis, view angle is 30 degrees, and the clipping range is (.1,1000).

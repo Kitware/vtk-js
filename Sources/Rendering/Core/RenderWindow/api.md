@@ -1,3 +1,5 @@
+## newInstance()
+
 create a window for renderers to draw into
 
 RenderWindow is an object that specify the behavior of a

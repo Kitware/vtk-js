@@ -104,7 +104,7 @@ export function renderWindow(publicAPI, model) {
 // Object factory
 // ----------------------------------------------------------------------------
 
-const DEFAULT_VALUES = {
+export const DEFAULT_VALUES = {
   renderers: [],
   cursor: 'pointer',
   cursorVisibility: true,
@@ -126,7 +126,7 @@ function newInstance(initialValues = {}) {
   const publicAPI = {};
 
   // Build VTK API
-  macro.obj(publicAPI, model);
+  macro.obj(publicAPI, model, 'vtkRenderWindow');
   macro.setGet(publicAPI, model, SET_GET_FIELDS);
   macro.get(publicAPI, model, GET_ONLY);
   macro.getArray(publicAPI, model, ['renderers']);
@@ -140,4 +140,4 @@ function newInstance(initialValues = {}) {
 
 // ----------------------------------------------------------------------------
 
-export default { newInstance };
+export default { newInstance, DEFAULT_VALUES, renderWindow };

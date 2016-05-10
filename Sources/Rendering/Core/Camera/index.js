@@ -212,7 +212,7 @@ export function camera(publicAPI, model) {
 // Object factory
 // ----------------------------------------------------------------------------
 
-const DEFAULT_VALUES = {
+export const DEFAULT_VALUES = {
   position: [0, 0, 1],
   focalPoint: [0, 0, 0],
   viewUp: [0, 1, 0],
@@ -251,7 +251,7 @@ function newInstance(initialValues = {}) {
   const publicAPI = {};
 
   // Build VTK API
-  macro.obj(publicAPI, model);
+  macro.obj(publicAPI, model, 'vtkCamera');
   macro.get(publicAPI, model, GET_FIELDS);
   macro.setGet(publicAPI, model, SET_GET_FIELDS);
   macro.getArray(publicAPI, model, GET_ARRAY);
@@ -266,4 +266,4 @@ function newInstance(initialValues = {}) {
 
 // ----------------------------------------------------------------------------
 
-export default { newInstance };
+export default { newInstance, DEFAULT_VALUES, camera };
