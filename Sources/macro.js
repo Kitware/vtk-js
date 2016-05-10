@@ -10,7 +10,7 @@ export function capitalize(str) {
 // vtkObject: modified(), onModified(callback), delete()
 // ----------------------------------------------------------------------------
 
-export function obj(publicAPI, model) {
+export function obj(publicAPI, model, type = 'vtkObject', implementations = []) {
   const callbacks = [];
   model.mtime = 1;
 
@@ -44,6 +44,19 @@ export function obj(publicAPI, model) {
     const index = callbacks.length;
     callbacks.push(callback);
     return on(index);
+  };
+
+  publicAPI.getMTime = () => model.mtime;
+
+  publicAPI.isA = t => (type === t);
+
+  publicAPI.getClassName = () => type;
+
+  publicAPI.getImplements = map => {
+    if (map) {
+      return implementations.filter(name => !!map[name]);
+    }
+    return implementations;
   };
 
   publicAPI.delete = () => {
