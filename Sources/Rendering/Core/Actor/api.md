@@ -1,0 +1,132 @@
+vtkActor is used to represent an entity in a rendering scene.  It inherits
+functions related to the actors position, and orientation from
+vtkProp. The actor also has scaling and maintains a reference to the
+defining geometry (i.e., the mapper), rendering properties, and possibly a
+texture map. vtkActor combines these instance variables into one 4x4
+transformation matrix as follows: [x y z 1] = [x y z 1] Translate(-origin)
+Scale(scale) Rot(y) Rot(x) Rot (z) Trans(origin) Trans(position)
+
+## See Also
+
+Property Texture Mapper Assembly Follower LODActor
+
+## newInstance()
+
+Create an actor with the following defaults:
+origin(0,0,0)
+position=(0,0,0)
+scale=(1,1,1)
+visibility=1
+pickable=1
+dragable=1
+orientation=(0,0,0).
+No user defined matrix and no texture map.
+
+## getActors() TBD
+
+For some exporters and other other operations we must be
+able to collect all the actors or volumes. These methods
+are used in that process.
+
+```
+virtual void GetActors(vtkPropCollection *);
+```
+
+## renderOpaqueGeometry(viewport)
+
+Support the standard render methods.
+Returns 0 on success, 1 on failure.
+
+## renderTranslucentPolygonalGeometry(viewport)
+
+Support the standard render methods.
+
+## hasTranslucentPolygonalGeometry()
+
+Does this prop have some translucent polygonal geometry?
+
+## render(renderer, mapper)
+
+This causes the actor to be rendered. It in turn will render the actor's
+property, texture map and then mapper. If a property hasn't been
+assigned, then the actor will create one automatically. Note that a side
+effect of this method is that the pipeline will be updated.
+
+## releaseGraphicsResources(window)
+
+Release any graphics resources that are being consumed by this actor.
+The parameter window could be used to determine which graphic
+resources to release.
+
+## property
+
+Set/Get the property object that controls this actors surface
+properties.  This should be an instance of a vtkProperty object.  Every
+actor must have a property associated with it.  If one isn't specified,
+then one will be generated automatically. Multiple actors can share one
+property object.
+
+## makeProperty()
+
+Create a new property suitable for use with this type of Actor.
+For example, a vtkMesaActor should create a vtkMesaProperty
+in this function.   The default is to just call vtkProperty::New.
+
+## backfaceProperty
+
+Set/Get the property object that controls this actors backface surface
+properties.  This should be an instance of a vtkProperty object. If one
+isn't specified, then the front face properties will be used.  Multiple
+actors can share one property object.
+
+## texture TBD
+
+Set/Get the texture object to control rendering texture maps.  This will
+be a vtkTexture object. An actor does not need to have an associated
+texture map and multiple actors can share one texture.
+
+## mapper
+
+This is the method that is used to connect an actor to the end of a
+visualization pipeline, i.e. the mapper. This should be a subclass
+of vtkMapper. Typically vtkPolyDataMapper and vtkDataSetMapper will
+be used.
+
+## bounds()
+
+Get the bounds for this Actor as (Xmin,Xmax,Ymin,Ymax,Zmin,Zmax).
+
+## applyProperties()
+
+Apply the current properties to all parts that compose this actor.
+This method is overloaded in vtkAssembly to apply the assemblies'
+properties to all its parts in a recursive manner. Typically the
+use of this method is to set the desired properties in the assembly,
+and then push the properties down to the assemblies parts with
+applyProperties().
+
+## getMTime()
+
+Get the newest "modification time" of the actor, its properties, and texture (if set).
+
+## getRedrawMTime()
+
+Return the mtime of anything that would cause the rendered image to
+appear differently. Usually this involves checking the mtime of the
+prop plus anything else it depends on such as properties, textures,
+etc.
+
+## forceOpaque and forceTranslucent
+
+Force the actor to be treated as opaque or translucent
+
+
+  // is this actor opaque
+  int GetIsOpaque();
+  bool ForceOpaque;
+  bool ForceTranslucent;
+
+  // Bounds are cached in an actor - the MapperBounds are also cache to
+  // help know when the Bounds need to be recomputed.
+  double MapperBounds[6];
+  vtkTimeStamp BoundsMTime;

@@ -1,5 +1,6 @@
 import * as macro from '../../../macro';
 import { mat4 } from 'gl-matrix';
+import Prop from '../Prop';
 
 // ----------------------------------------------------------------------------
 
@@ -19,7 +20,7 @@ const GET_ARRAY = [
 ];
 
 // ----------------------------------------------------------------------------
-// prop3D methods
+// Property methods
 // ----------------------------------------------------------------------------
 
 function prop3D(publicAPI, model) {
@@ -118,6 +119,9 @@ const DEFAULT_VALUES = {
 
 export function extend(publicAPI, initialValues = {}) {
   const model = Object.assign(initialValues, DEFAULT_VALUES);
+
+  // Inheritance
+  Prop.extend(publicAPI, model);
 
   // Build VTK API
   macro.get(publicAPI, model, GET_FIELDS);
