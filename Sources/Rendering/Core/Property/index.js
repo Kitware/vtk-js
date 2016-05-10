@@ -37,7 +37,7 @@ const FIELD_ARRAY_3 = [
 // Property methods
 // ----------------------------------------------------------------------------
 
-export function property(publicAPI, model) {
+function property(publicAPI, model) {
   publicAPI.setInterpolationToFlat = () => publicAPI.setInterpolation(0);
   publicAPI.setInterpolationToGouraud = () => publicAPI.setInterpolation(1);
   publicAPI.setInterpolationToPhong = () => publicAPI.setInterpolation(2);
@@ -87,7 +87,7 @@ export function property(publicAPI, model) {
 // Object factory
 // ----------------------------------------------------------------------------
 
-export const DEFAULT_VALUES = {
+const DEFAULT_VALUES = {
   lighting: true,
   interpolation: 0,
   color: [1, 1, 1],
@@ -102,34 +102,44 @@ export const DEFAULT_VALUES = {
   edgeVisibility: false,
   edgeColor: [0, 0, 0],
   lineWidth: 1,
-  lineStipplePattern: new Uint8Array(2),
   lineStippleRepeatFactor: 1,
   pointSize: 1,
   backfaceCulling: false,
   frontfaceCulling: false,
 };
 
-DEFAULT_VALUES.lineStipplePattern[0] = 255;
-DEFAULT_VALUES.lineStipplePattern[1] = 255;
-
 // ----------------------------------------------------------------------------
 
-function newInstance(initialValues = {}) {
-  const model = Object.assign({}, DEFAULT_VALUES, initialValues);
-  const publicAPI = {};
+export function extend(publicAPI, initialValues = {}) {
+  const model = Object.assign(initialValues, DEFAULT_VALUES);
+
+  // Internal object
+  model.lineStipplePattern = new Uint8Array(2);
+  model.lineStipplePattern[0] = 255;
+  model.lineStipplePattern[1] = 255;
 
   // Build VTK API
-  macro.obj(publicAPI, model, 'vtkProperty');
   macro.get(publicAPI, model, GET_FIELDS);
   macro.setGet(publicAPI, model, SET_GET_FIELDS);
   macro.setGetArray(publicAPI, model, FIELD_ARRAY_3, 3);
 
   // Object methods
   property(publicAPI, model);
+}
+
+// ----------------------------------------------------------------------------
+
+function newInstance(initialValues = {}) {
+  const model = Object.assign({}, initialValues);
+  const publicAPI = {};
+
+  // vtkObject
+  macro.obj(publicAPI, model, 'vtkProperty');
+  extend(publicAPI, model);
 
   return Object.freeze(publicAPI);
 }
 
 // ----------------------------------------------------------------------------
 
-export default { newInstance, DEFAULT_VALUES, property };
+export default { newInstance, extend };

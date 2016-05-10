@@ -115,9 +115,26 @@ export const DEFAULT_VALUES = {
   numberOfLayers: 1,
   width: 400,
   height: 400,
-  canvas: document.createElement('canvas'),
   useOffScreen: false,
 };
+
+// ----------------------------------------------------------------------------
+
+export function extend(publicAPI, initialValues = {}) {
+  const model = Object.assign(initialValues, DEFAULT_VALUES);
+
+  // Create internal objects
+  model.canvas = document.createElement('canvas');
+
+  // Build VTK API
+  macro.setGet(publicAPI, model, SET_GET_FIELDS);
+  macro.get(publicAPI, model, GET_ONLY);
+  macro.getArray(publicAPI, model, ['renderers']);
+  macro.event(publicAPI, model, 'completion');
+
+  // Object methods
+  renderWindow(publicAPI, model);
+}
 
 // ----------------------------------------------------------------------------
 
@@ -127,17 +144,11 @@ function newInstance(initialValues = {}) {
 
   // Build VTK API
   macro.obj(publicAPI, model, 'vtkRenderWindow');
-  macro.setGet(publicAPI, model, SET_GET_FIELDS);
-  macro.get(publicAPI, model, GET_ONLY);
-  macro.getArray(publicAPI, model, ['renderers']);
-  macro.event(publicAPI, model, 'completion');
-
-  // Object methods
-  renderWindow(publicAPI, model);
+  extend(publicAPI, model);
 
   return Object.freeze(publicAPI);
 }
 
 // ----------------------------------------------------------------------------
 
-export default { newInstance, DEFAULT_VALUES, renderWindow };
+export default { newInstance, extend };

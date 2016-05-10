@@ -246,12 +246,10 @@ export const DEFAULT_VALUES = {
 
 // ----------------------------------------------------------------------------
 
-function newInstance(initialValues = {}) {
-  const model = Object.assign({}, DEFAULT_VALUES, initialValues);
-  const publicAPI = {};
+export function extend(publicAPI, initialValues = {}) {
+  const model = Object.assign(initialValues, DEFAULT_VALUES);
 
   // Build VTK API
-  macro.obj(publicAPI, model, 'vtkCamera');
   macro.get(publicAPI, model, GET_FIELDS);
   macro.setGet(publicAPI, model, SET_GET_FIELDS);
   macro.getArray(publicAPI, model, GET_ARRAY);
@@ -260,10 +258,21 @@ function newInstance(initialValues = {}) {
 
   // Object methods
   camera(publicAPI, model);
+}
+
+// ----------------------------------------------------------------------------
+
+function newInstance(initialValues = {}) {
+  const model = Object.assign({}, DEFAULT_VALUES, initialValues);
+  const publicAPI = {};
+
+  // Build VTK API
+  macro.obj(publicAPI, model, 'vtkCamera');
+  extend(publicAPI, model);
 
   return Object.freeze(publicAPI);
 }
 
 // ----------------------------------------------------------------------------
 
-export default { newInstance, DEFAULT_VALUES, camera };
+export default { newInstance, extend };

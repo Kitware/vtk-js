@@ -103,21 +103,30 @@ export const DEFAULT_VALUES = {
 
 // ----------------------------------------------------------------------------
 
+export function extend(publicAPI, initialValues = {}) {
+  const model = Object.assign(initialValues, DEFAULT_VALUES);
+
+  // Build VTK API
+  macro.setGet(publicAPI, model, SET_GET_FIELDS);
+  macro.setGetArray(publicAPI, model, SET_GET_ARRAY_3, 3);
+
+  // Object methods
+  light(publicAPI, model);
+}
+
+// ----------------------------------------------------------------------------
+
 function newInstance(initialValues = {}) {
   const model = Object.assign({}, DEFAULT_VALUES, initialValues);
   const publicAPI = {};
 
   // Build VTK API
   macro.obj(publicAPI, model, 'vtkLight');
-  macro.setGet(publicAPI, model, SET_GET_FIELDS);
-  macro.setGetArray(publicAPI, model, SET_GET_ARRAY_3, 3);
-
-  // Object methods
-  light(publicAPI, model);
+  extend(publicAPI, model);
 
   return Object.freeze(publicAPI);
 }
 
 // ----------------------------------------------------------------------------
 
-export default { newInstance, DEFAULT_VALUES, light };
+export default { newInstance, extend };

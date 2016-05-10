@@ -17,7 +17,7 @@ const SET_GET_ARRAY_3 = ['ambiant'];
 // Renderer methods
 // ----------------------------------------------------------------------------
 
-export function renderer(publicAPI, model) {
+function renderer(publicAPI, model) {
   publicAPI.addActor = actor => {
     model.actors = [].concat(model.actors, actor);
     publicAPI.modified();
@@ -62,7 +62,7 @@ export function renderer(publicAPI, model) {
 // Object factory
 // ----------------------------------------------------------------------------
 
-export const DEFAULT_VALUES = {
+const DEFAULT_VALUES = {
   actors: [],
   volumes: [],
   light: [],
@@ -85,12 +85,10 @@ export const DEFAULT_VALUES = {
 
 // ----------------------------------------------------------------------------
 
-function newInstance(initialValues = {}) {
-  const model = Object.assign({}, DEFAULT_VALUES, initialValues);
-  const publicAPI = {};
+export function extend(publicAPI, initialValues = {}) {
+  const model = Object.assign(initialValues, DEFAULT_VALUES);
 
   // Build VTK API
-  macro.obj(publicAPI, model, 'vtkRenderer');
   macro.setGet(publicAPI, model, SET_GET_FIELDS);
   macro.get(publicAPI, model, GET_ONLY);
   macro.getArray(publicAPI, model, GET_ARRAY_ONLY);
@@ -98,10 +96,21 @@ function newInstance(initialValues = {}) {
 
   // Object methods
   renderer(publicAPI, model);
+}
+
+// ----------------------------------------------------------------------------
+
+function newInstance(initialValues = {}) {
+  const model = Object.assign({}, DEFAULT_VALUES, initialValues);
+  const publicAPI = {};
+
+  // Build VTK API
+  macro.obj(publicAPI, model, 'vtkRenderer');
+  extend(publicAPI, model);
 
   return Object.freeze(publicAPI);
 }
 
 // ----------------------------------------------------------------------------
 
-export default { newInstance, DEFAULT_VALUES, renderer };
+export default { newInstance, extend };
