@@ -1,0 +1,203 @@
+import * as CoincidentTopologyHelper              from './CoincidentTopologyHelper';
+import * as macro                                 from '../../../macro';
+import LookupTable                                from '../../../Common/Core/LookupTable';
+import otherStaticMethods                         from './Static';
+import { COLOR_MODE, SCALAR_MODE, MATERIAL_MODE } from './Constants';
+
+// CoincidentTopology static methods ------------------------------------------
+/* eslint-disable arrow-body-style */
+
+const staticOffsetModel = {};
+const staticOffsetAPI = {};
+
+CoincidentTopologyHelper.addCoincidentTopologyMethods(
+  staticOffsetAPI,
+  staticOffsetModel,
+  CoincidentTopologyHelper.CATEGORIES
+    .map(key => {
+      return { key, method: `ResolveCoincidentTopology${key}OffsetParameters` };
+    })
+);
+
+// ----------------------------------------------------------------------------
+// Property methods
+// ----------------------------------------------------------------------------
+
+function mapper(publicAPI, model) {
+  // Set our className
+  model.classHierarchy.push('vtkMapper');
+
+  publicAPI.createDefaultLookupTable = () => {
+    console.log('vtkMapper::createDefaultLookupTable - NOT IMPLEMENTED');
+    model.lookupTable = LookupTable.newInstance();
+  };
+
+  publicAPI.getColorModeAsString = () => COLOR_MODE[model.colorMode];
+
+  publicAPI.setColorModeToDefault = () => publicAPI.setColorMode(0);
+  publicAPI.setColorModeToMapScalars = () => publicAPI.setColorMode(1);
+  publicAPI.setColorModeToDirectScalars = () => publicAPI.setColorMode(2);
+
+  publicAPI.getScalarModeAsString = () => SCALAR_MODE[model.scalarMode];
+
+  publicAPI.setScalarModeToDefault = () => publicAPI.setScalarMode(0);
+  publicAPI.setScalarModeToUsePointData = () => publicAPI.setScalarMode(1);
+  publicAPI.setScalarModeToUseCellData = () => publicAPI.setScalarMode(2);
+  publicAPI.setScalarModeToUsePointFieldData = () => publicAPI.setScalarMode(3);
+  publicAPI.setScalarModeToUseCellFieldData = () => publicAPI.setScalarMode(4);
+  publicAPI.setScalarModeToUseFieldData = () => publicAPI.setScalarMode(5);
+
+  // Add Static methods to our instance
+  Object.keys(otherStaticMethods).forEach(methodName => {
+    publicAPI[methodName] = otherStaticMethods[methodName];
+  });
+  Object.keys(staticOffsetAPI).forEach(methodName => {
+    publicAPI[methodName] = staticOffsetAPI[methodName];
+  });
+
+  // Relative metods
+  /* eslint-disable arrow-body-style */
+  model.topologyOffset = {};
+  CoincidentTopologyHelper.addCoincidentTopologyMethods(
+    publicAPI,
+    model.topologyOffset,
+    CoincidentTopologyHelper.CATEGORIES
+      .map(key => {
+        // GetRelativeCoincidentTopologyPolygon
+        return { key, method: `RelativeCoincidentTopology${key}OffsetParameters` };
+      })
+  );
+  /* eslint-enable arrow-body-style */
+
+  publicAPI.getCoincidentTopologyPolygonOffsetParameters = () => {
+    const globalValue = staticOffsetAPI.getResolveCoincidentTopologyPolygonOffsetParameters();
+    const localValue = publicAPI.getRelativeCoincidentTopologyPolygonOffsetParameters();
+    return {
+      factor: globalValue.factor + localValue.factor,
+      units: globalValue.units + localValue.units,
+    };
+  };
+
+  publicAPI.getCoincidentTopologyLineOffsetParameters = () => {
+    const globalValue = staticOffsetAPI.getResolveCoincidentTopologyLineOffsetParameters();
+    const localValue = publicAPI.getRelativeCoincidentTopologyLineOffsetParameters();
+    return {
+      factor: globalValue.factor + localValue.factor,
+      units: globalValue.units + localValue.units,
+    };
+  };
+
+  publicAPI.getCoincidentTopologyPointOffsetParameter = () => {
+    const globalValue = staticOffsetAPI.getResolveCoincidentTopologyPointOffsetParameters();
+    const localValue = publicAPI.getRelativeCoincidentTopologyPointOffsetParameters();
+    return {
+      factor: globalValue.factor + localValue.factor,
+      units: globalValue.units + localValue.units,
+    };
+  };
+
+  publicAPI.getBounds = () => {
+    console.log('vtkMapper::getBounds - NOT IMPLEMENTED');
+    return null;
+  };
+
+  publicAPI.mapScalars = (input, alpha) => {
+    console.log('vtkMapper::mapScalars - NOT IMPLEMENTED');
+    const cellFlag = false;
+    const rgba = new Uint8Array(10);
+    return { rgba, cellFlag };
+  };
+
+  publicAPI.setScalarMaterialModeToDefault = () => publicAPI.setScalarMaterialMode(0);
+  publicAPI.setScalarMaterialModeToAmbient = () => publicAPI.setScalarMaterialMode(1);
+  publicAPI.setScalarMaterialModeToDiffuse = () => publicAPI.setScalarMaterialMode(2);
+  publicAPI.setScalarMaterialModeToAmbientAndDiffuse = () => publicAPI.setScalarMaterialMode(3);
+  publicAPI.getScalarMaterialModeAsString = () => MATERIAL_MODE[model.scalarMaterialMode];
+
+  publicAPI.getIsOpaque = () => {
+    const lut = publicAPI.getLookupTable();
+    if (lut) {
+      // Ensure that the lookup table is built
+      lut.build();
+      return lut.isOpaque();
+    }
+    return true;
+  };
+
+  publicAPI.canUseTextureMapForColoring = input => {
+    console.log('vtkMapper::canUseTextureMapForColoring - NOT IMPLEMENTED');
+    return false;
+  };
+
+  publicAPI.clearColorArrays = () => {
+    model.colorMapColors = null;
+    model.colorCoordinates = null;
+    model.colorTextureMap = null;
+  };
+}
+
+// ----------------------------------------------------------------------------
+// Object factory
+// ----------------------------------------------------------------------------
+
+const DEFAULT_VALUES = {
+  lookupTable: null,
+  scalarVisibility: true,
+  static: false,
+  colorMode: 0,
+  interpolateScalarsBeforeMapping: false,
+  useLookupTableScalarRange: false,
+  scalarRange: [0, 1],
+  scalarMode: 0,
+  colorByArrayName: null,
+  colorByArrayComponent: -1,
+  fieldDataTupleId: -1,
+  renderTime: 0,
+  scalarMaterialMode: 0,
+
+  colorMapColors: null,
+  colorCoordinates: null,
+  colorTextureMap: null,
+};
+
+// ----------------------------------------------------------------------------
+
+export function extend(publicAPI, initialValues = {}) {
+  const model = Object.assign(initialValues, DEFAULT_VALUES);
+
+  // Build VTK API
+  macro.obj(publicAPI, model); // FIXME parent is not vtkObject
+  macro.algo(publicAPI, model, 1, 0);
+  macro.get(publicAPI, model, [
+    'colorMapColors',
+    'colorCoordinates',
+    'colorTextureMap',
+  ]);
+  macro.setGet(publicAPI, model, [
+    'lookupTable',
+    'scalarVisibility',
+    'static',
+    'colorMode',
+    'interpolateScalarsBeforeMapping',
+    'useLookupTableScalarRange',
+    'fieldDataTupleId',
+    'renderTime',
+    'colorByArrayName',
+    'colorByArrayComponent',
+    'scalarMaterialMode',
+  ]);
+  macro.setGetArray(publicAPI, model, [
+    'scalarRange',
+  ], 2);
+
+  // Object methods
+  mapper(publicAPI, model);
+}
+
+// ----------------------------------------------------------------------------
+
+export const newInstance = macro.newInstance(extend);
+
+// ----------------------------------------------------------------------------
+
+export default Object.assign({ newInstance, extend }, staticOffsetAPI, otherStaticMethods);

@@ -1,29 +1,13 @@
 import * as macro from '../../../macro';
 
 // ----------------------------------------------------------------------------
-
-const SET_GET_FIELDS = [
-  'cursor',
-  'cursorVisibility',
-  'swapBuffers',
-  'multiSamples',
-  'interactor',
-  'numberOfLayers',
-  'width',
-  'height',
-  'useOffScreen',
-];
-
-const GET_ONLY = [
-  'neverRendered',
-  'canvas',
-];
-
-// ----------------------------------------------------------------------------
-// RenderWindow methods
+// vtkRenderWindow methods
 // ----------------------------------------------------------------------------
 
 export function renderWindow(publicAPI, model) {
+  // Set our className
+  model.classHierarchy.push('vtkRenderWindow');
+
   // Auto update style
   function updateWindow() {
     // Canvas size
@@ -74,30 +58,6 @@ export function renderWindow(publicAPI, model) {
   publicAPI.frame = () => {
     // FIXME
   };
-
-  publicAPI.setContainer = el => {
-    if (model.el && model.el !== el) {
-      // Remove canvas from previous container
-      if (model.canvas.parentNode === model.el) {
-        model.el.removeChild(model.canvas);
-      } else {
-        console.log('Error: canvas parent node does not match container');
-      }
-    }
-
-    if (model.el !== el) {
-      model.el = el;
-      model.el.appendChild(model.canvas);
-
-      // Trigger modified()
-      publicAPI.modified();
-    }
-  };
-
-  publicAPI.get2DContext = () => model.canvas.getContext('2d');
-
-  publicAPI.get3DContext = (options = { preserveDrawingBuffer: true, premultipliedAlpha: false }) =>
-    model.canvas.getContext('webgl', options) || model.canvas.getContext('experimental-webgl', options);
 }
 
 // ----------------------------------------------------------------------------
@@ -115,29 +75,39 @@ export const DEFAULT_VALUES = {
   numberOfLayers: 1,
   width: 400,
   height: 400,
-  canvas: document.createElement('canvas'),
   useOffScreen: false,
 };
 
 // ----------------------------------------------------------------------------
 
-function newInstance(initialValues = {}) {
-  const model = Object.assign({}, DEFAULT_VALUES, initialValues);
-  const publicAPI = {};
+export function extend(publicAPI, initialValues = {}) {
+  const model = Object.assign(initialValues, DEFAULT_VALUES);
 
   // Build VTK API
-  macro.obj(publicAPI, model, 'vtkRenderWindow');
-  macro.setGet(publicAPI, model, SET_GET_FIELDS);
-  macro.get(publicAPI, model, GET_ONLY);
+  macro.obj(publicAPI, model);
+  macro.setGet(publicAPI, model, [
+    'cursor',
+    'cursorVisibility',
+    'swapBuffers',
+    'multiSamples',
+    'interactor',
+    'numberOfLayers',
+    'width',
+    'height',
+    'useOffScreen',
+  ]);
+  macro.get(publicAPI, model, ['neverRendered']);
   macro.getArray(publicAPI, model, ['renderers']);
   macro.event(publicAPI, model, 'completion');
 
   // Object methods
   renderWindow(publicAPI, model);
-
-  return Object.freeze(publicAPI);
 }
 
 // ----------------------------------------------------------------------------
 
-export default { newInstance, DEFAULT_VALUES, renderWindow };
+export const newInstance = macro.newInstance(extend);
+
+// ----------------------------------------------------------------------------
+
+export default { newInstance, extend };

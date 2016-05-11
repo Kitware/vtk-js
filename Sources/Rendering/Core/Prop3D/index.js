@@ -1,28 +1,15 @@
 import * as macro from '../../../macro';
 import { mat4 } from 'gl-matrix';
+import Prop from '../Prop';
 
 // ----------------------------------------------------------------------------
-
-const GET_FIELDS = [
-  'isIdentity',
-];
-
-const ARRAY_3 = [
-  'origin',
-  'position',
-  'orientation',
-  'scale',
-];
-
-const GET_ARRAY = [
-  'center',
-];
-
-// ----------------------------------------------------------------------------
-// Property methods
+// vtkProp3D methods
 // ----------------------------------------------------------------------------
 
-export function prop(publicAPI, model) {
+function prop3D(publicAPI, model) {
+  // Set our className
+  model.classHierarchy.push('vtkProp3D');
+
   function updateIdentityFlag() {
     if (!model.isIdentity) {
       return;
@@ -103,7 +90,7 @@ export function prop(publicAPI, model) {
 // Object factory
 // ----------------------------------------------------------------------------
 
-export const DEFAULT_VALUES = {
+const DEFAULT_VALUES = {
   matrix: null,
   origin: [0, 0, 0],
   position: [0, 0, 0],
@@ -116,24 +103,33 @@ export const DEFAULT_VALUES = {
 
 // ----------------------------------------------------------------------------
 
-function newInstance(initialValues = {}) {
-  const model = Object.assign({}, DEFAULT_VALUES, initialValues);
-  const publicAPI = {};
+export function extend(publicAPI, initialValues = {}) {
+  const model = Object.assign(initialValues, DEFAULT_VALUES);
+
+  // Inheritance
+  Prop.extend(publicAPI, model);
 
   // Build VTK API
-  macro.obj(publicAPI, model, 'vtkProp3D');
-  macro.get(publicAPI, model, GET_FIELDS);
-  macro.getArray(publicAPI, model, GET_ARRAY);
-  macro.setGetArray(publicAPI, model, ARRAY_3, 3);
+  macro.get(publicAPI, model, ['isIdentity']);
+  macro.getArray(publicAPI, model, ['center']);
+  macro.setGetArray(publicAPI, model, [
+    'origin',
+    'position',
+    'orientation',
+    'scale',
+  ], 3);
 
+  // Object internal instance
   model.matrix = mat4.create();
 
   // Object methods
-  prop(publicAPI, model);
-
-  return Object.freeze(publicAPI);
+  prop3D(publicAPI, model);
 }
 
 // ----------------------------------------------------------------------------
 
-export default { newInstance, DEFAULT_VALUES, prop };
+export const newInstance = macro.newInstance(extend);
+
+// ----------------------------------------------------------------------------
+
+export default { newInstance, extend };

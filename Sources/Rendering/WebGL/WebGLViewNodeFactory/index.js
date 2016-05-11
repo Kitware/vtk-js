@@ -6,12 +6,12 @@ import WebGLActor from '../WebGLActor';
 import WebGLPolyDataMapper from '../WebGLPolyDataMapper';
 
 // ----------------------------------------------------------------------------
-
-// ----------------------------------------------------------------------------
-// Light methods
+// vtkWebGLViewNodeFactory methods
 // ----------------------------------------------------------------------------
 
 export function webGLViewNodeFactory(publicAPI, model) {
+  // Set our className
+  model.classHierarchy.push('vtkWebGLViewNodeFactory');
 }
 
 // ----------------------------------------------------------------------------
@@ -23,26 +23,27 @@ const DEFAULT_VALUES = {
 
 // ----------------------------------------------------------------------------
 
-function newInstance(initialValues = {}) {
-  const model = Object.assign({}, ViewNodeFactory.DEFAULT_VALUES, DEFAULT_VALUES, initialValues);
-  const publicAPI = {};
+export function extend(publicAPI, initialValues = {}) {
+  const model = Object.assign(initialValues, DEFAULT_VALUES);
 
-  // Build VTK API
-  macro.obj(publicAPI, model);
+  // Inheritance
+  ViewNodeFactory.extend(publicAPI, model);
 
   // Object methods
-  ViewNodeFactory.viewNodeFactory(publicAPI, model);
-
   webGLViewNodeFactory(publicAPI, model);
 
+  // Initialization
   publicAPI.registerOverride('vtkWebGLRenderWindow', WebGLRenderWindow.newInstance);
   publicAPI.registerOverride('vtkWebGLRenderer', WebGLRenderer.newInstance);
   publicAPI.registerOverride('vtkWebGLActor', WebGLActor.newInstance);
   publicAPI.registerOverride('vtkWebGLPolyDataMapper', WebGLPolyDataMapper.newInstance);
-
-  return Object.freeze(publicAPI);
 }
 
 // ----------------------------------------------------------------------------
 
-export default { newInstance };
+export const newInstance = macro.newInstance(extend);
+
+// ----------------------------------------------------------------------------
+
+export default { newInstance, extend };
+

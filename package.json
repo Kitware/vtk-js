@@ -23,7 +23,6 @@
         "kw-doc": "1.0.4"
     },
     "scripts": {
-        "postinstall": "fix-kw-web-suite || true",
         "install:global": "npm install -g commitizen@2.5.0",
 
         "doc"           : "kw-doc -c ./Documentation/config.js",
@@ -33,6 +32,7 @@
         "example:PolyDataViewer": "webpack-dev-server --progress --open --config ./Examples/WebGL/PolyDataViewer/webpack.config.js",
 
         "build"         : "webpack --progress --colors",
+        "build:debug"   : "webpack --progress --colors --display-modules",
         "build:release" : "export NODE_ENV=production && npm run build -- -p",
 
         "commit"        : "git cz",

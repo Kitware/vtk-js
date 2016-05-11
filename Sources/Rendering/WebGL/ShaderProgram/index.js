@@ -2,20 +2,7 @@ import * as macro from '../../../macro';
 import Shader from '../Shader';
 
 // ----------------------------------------------------------------------------
-
-const SET_GET_FIELDS = [
-  'error',
-  'handle',
-  'compiled',
-  'bound',
-  'linked',
-  'md5Hash',
-  'vertexShader',
-  'fragmentShader',
-  'geometryShader',
-];
-
-// ----------------------------------------------------------------------------
+// vtkShaderProgram methods
 // ----------------------------------------------------------------------------
 
   // perform in place string substitutions, indicate if a substitution was done
@@ -36,6 +23,9 @@ export function substitute(source, search, replace, all = true) {
 }
 
 export function shaderProgram(publicAPI, model) {
+  // Set our className
+  model.classHierarchy.push('vtkShaderProgram');
+
   publicAPI.compileShader = () => {
     if (!model.vertexShader.compile()) {
       console.log(model.vertexShader.getSource().split('\n').map((line, index) => `${index}: ${line}`).join('\n'));
@@ -274,19 +264,30 @@ const DEFAULT_VALUES = {
 
 // ----------------------------------------------------------------------------
 
-function newInstance(initialValues = {}) {
+export function newInstance(initialValues = {}) {
   const model = Object.assign({}, DEFAULT_VALUES, initialValues);
+  const publicAPI = {};
+
+  // Instanciate internal objects
   model.attributesLocs = {};
   model.uniformLocs = {};
   model.vertexShader = Shader.newInstance();
   model.fragmentShader = Shader.newInstance();
   model.geometryShader = Shader.newInstance();
 
-  const publicAPI = {};
-
   // Build VTK API
   macro.obj(publicAPI, model);
-  macro.setGet(publicAPI, model, SET_GET_FIELDS);
+  macro.setGet(publicAPI, model, [
+    'error',
+    'handle',
+    'compiled',
+    'bound',
+    'linked',
+    'md5Hash',
+    'vertexShader',
+    'fragmentShader',
+    'geometryShader',
+  ]);
 
   // Object methods
   shaderProgram(publicAPI, model);

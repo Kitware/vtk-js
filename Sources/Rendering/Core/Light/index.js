@@ -1,38 +1,18 @@
 import * as macro from '../../../macro';
-
-function radiansFromDegrees(deg) {
-  return deg / 180 * Math.PI;
-}
+import { radiansFromDegrees } from './../../../Common/Core/Math';
 
 // ----------------------------------------------------------------------------
 
-export const types = ['HeadLight', 'CameraLight', 'SceneLight'];
-
-const SET_GET_FIELDS = [
-  'intensity',
-  'switch',
-  'positional',
-  'exponent',
-  'coneAngle',
-  'transformMatrix',
-  'lightType',
-  'shadowAttenuation',
-];
-
-const SET_GET_ARRAY_3 = [
-  'ambientColor',
-  'diffuseColor',
-  'specularColor',
-  'position',
-  'focalPoint',
-  'attenuationValues',
-];
+export const LIGHT_TYPES = ['HeadLight', 'CameraLight', 'SceneLight'];
 
 // ----------------------------------------------------------------------------
 // Light methods
 // ----------------------------------------------------------------------------
 
 export function light(publicAPI, model) {
+  // Set our className
+  model.classHierarchy.push('vtkLight');
+
   publicAPI.getTransformedPosition = () => {
     if (model.transformMatrix) {
       return []; // FIXME !!!!
@@ -84,7 +64,7 @@ export function light(publicAPI, model) {
 // Object factory
 // ----------------------------------------------------------------------------
 
-export const DEFAULT_VALUES = {
+const DEFAULT_VALUES = {
   switch: true,
   intensity: 1,
   ambientColor: [0, 0, 0],
@@ -103,21 +83,38 @@ export const DEFAULT_VALUES = {
 
 // ----------------------------------------------------------------------------
 
-function newInstance(initialValues = {}) {
-  const model = Object.assign({}, DEFAULT_VALUES, initialValues);
-  const publicAPI = {};
+export function extend(publicAPI, initialValues = {}) {
+  const model = Object.assign(initialValues, DEFAULT_VALUES);
 
   // Build VTK API
-  macro.obj(publicAPI, model, 'vtkLight');
-  macro.setGet(publicAPI, model, SET_GET_FIELDS);
-  macro.setGetArray(publicAPI, model, SET_GET_ARRAY_3, 3);
+  macro.obj(publicAPI, model);
+  macro.setGet(publicAPI, model, [
+    'intensity',
+    'switch',
+    'positional',
+    'exponent',
+    'coneAngle',
+    'transformMatrix',
+    'lightType',
+    'shadowAttenuation',
+  ]);
+  macro.setGetArray(publicAPI, model, [
+    'ambientColor',
+    'diffuseColor',
+    'specularColor',
+    'position',
+    'focalPoint',
+    'attenuationValues',
+  ], 3);
 
   // Object methods
   light(publicAPI, model);
-
-  return Object.freeze(publicAPI);
 }
 
 // ----------------------------------------------------------------------------
 
-export default { newInstance, DEFAULT_VALUES, light };
+export const newInstance = macro.newInstance(extend);
+
+// ----------------------------------------------------------------------------
+
+export default { newInstance, extend, LIGHT_TYPES };

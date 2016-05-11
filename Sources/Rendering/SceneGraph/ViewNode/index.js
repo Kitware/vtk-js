@@ -1,22 +1,15 @@
 import * as macro from '../../../macro';
 
-// ----------------------------------------------------------------------------
-
-export const types = ['Build', 'Render'];
-
-const SET_GET_FIELDS = [
-  'parent',
-  'renderable',
-  'myFactory',
-];
-
-const GET_ARRAY_ONLY = ['children'];
-
+export const PASS_TYPES = ['Build', 'Render'];
 
 // ----------------------------------------------------------------------------
+// vtkViewNode methods
 // ----------------------------------------------------------------------------
 
-export function viewNode(publicAPI, model) {
+function viewNode(publicAPI, model) {
+  // Set our className
+  model.classHierarchy.push('vtkViewNode');
+
   // Builds myself.
   publicAPI.build = (prepass) => {
   };
@@ -59,7 +52,6 @@ export function viewNode(publicAPI, model) {
 
     publicAPI.apply(operation, false);
   };
-
 
   publicAPI.traverseAllPasses = () => {
     publicAPI.traverse('Build');
@@ -139,21 +131,26 @@ const DEFAULT_VALUES = {
 
 // ----------------------------------------------------------------------------
 
-function newInstance(initialValues = {}) {
-  const model = Object.assign({}, DEFAULT_VALUES, initialValues);
-  const publicAPI = {};
+export function extend(publicAPI, initialValues = {}) {
+  const model = Object.assign(initialValues, DEFAULT_VALUES);
 
   // Build VTK API
   macro.obj(publicAPI, model);
-  macro.setGet(publicAPI, model, SET_GET_FIELDS);
-  macro.getArray(publicAPI, model, GET_ARRAY_ONLY);
+  macro.setGet(publicAPI, model, [
+    'parent',
+    'renderable',
+    'myFactory',
+  ]);
+  macro.getArray(publicAPI, model, ['children']);
 
   // Object methods
   viewNode(publicAPI, model);
-
-  return Object.freeze(publicAPI);
 }
 
 // ----------------------------------------------------------------------------
 
-export default { newInstance, viewNode, DEFAULT_VALUES };
+export const newInstance = macro.newInstance(extend);
+
+// ----------------------------------------------------------------------------
+
+export default { newInstance, extend, PASS_TYPES };

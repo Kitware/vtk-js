@@ -1,13 +1,14 @@
 import * as macro from '../../../macro';
 import ViewNode from '../../SceneGraph/ViewNode';
 
-const GET_FIELDS = [
-  'shaderCache',
-];
-
+// ----------------------------------------------------------------------------
+// vtkWebGLRenderWindow methods
 // ----------------------------------------------------------------------------
 
 export function webGLRenderWindow(publicAPI, model) {
+  // Set our className
+  model.classHierarchy.push('vtkWebGLRenderWindow');
+
   // Builds myself.
   publicAPI.build = (prepass) => {
     if (prepass) {
@@ -74,26 +75,31 @@ const DEFAULT_VALUES = {
   shaderCache: null,
   initialized: false,
   context: null,
-  canvas: document.createElement('canvas'),
+  canvas: null,
 };
 
 // ----------------------------------------------------------------------------
 
-function newInstance(initialValues = {}) {
-  const model = Object.assign({}, ViewNode.DEFAULT_VALUES, DEFAULT_VALUES, initialValues);
-  const publicAPI = {};
+export function extend(publicAPI, initialValues = {}) {
+  const model = Object.assign(initialValues, DEFAULT_VALUES);
+
+  // Create internal instances
+  model.canvas = document.createElement('canvas');
+
+  // Inheritance
+  ViewNode.extend(publicAPI, model);
 
   // Build VTK API
-  macro.obj(publicAPI, model);
-  macro.get(publicAPI, model, GET_FIELDS);
+  macro.get(publicAPI, model, ['shaderCache']);
 
   // Object methods
-  ViewNode.viewNode(publicAPI, model);
   webGLRenderWindow(publicAPI, model);
-
-  return Object.freeze(publicAPI);
 }
 
 // ----------------------------------------------------------------------------
 
-export default { newInstance };
+export const newInstance = macro.newInstance(extend);
+
+// ----------------------------------------------------------------------------
+
+export default { newInstance, extend };

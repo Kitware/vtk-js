@@ -216,13 +216,17 @@ eyes. This will be used only for offaxis frustum calculation. Default is identit
 Set/Get model transformation matrix. This matrix could be used for model related transformations
 such as scale, shear, roations and translations.
 
-### getModelViewTransformMatrix()
+### getViewTransformMatrix()
 
-Return the model view matrix of model view transform.
+Return the matrix of the view transform. The ViewTransform depends on only three ivars:  the
+Position, the FocalPoint, and the ViewUp vector.  All the other methods are there simply for
+the sake of the users' convenience.
 
-### getModelViewTransformObject()
+### getViewTransformObject()
 
-Return the model view transform.
+Return the view transform. The ViewTransform depends on only three ivars: the Position, the
+FocalPoint, and the ViewUp vector. All the other methods are there simply for the sake of the
+users' convenience.
 
 ### getProjectionTransformMatrix(aspect, nearz, farz)
 

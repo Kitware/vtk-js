@@ -1,25 +1,27 @@
 import * as macro from '../../../macro';
 
-// ----------------------------------------------------------------------------
-// vtkProp methods
-// ----------------------------------------------------------------------------
-
-function prop(publicAPI, model) {
-  // Set our className
-  model.classHierarchy.push('vtkProp');
-
-  publicAPI.getRedrawMTime = () => model.mtime;
+function evaluate(normal, origin, x) {
+  return normal[0] * (x[0] - origin[0])
+       + normal[1] * (x[1] - origin[1])
+       + normal[2] * (x[2] - origin[2]);
 }
 
 // ----------------------------------------------------------------------------
-// Object factory
+
+export const STATIC = {
+  evaluate,
+};
+
+// ----------------------------------------------------------------------------
+
+function plane(publicAPI, model) {
+
+}
+
 // ----------------------------------------------------------------------------
 
 const DEFAULT_VALUES = {
-  visibility: true,
-  pickable: true,
-  dragable: true,
-  useBounds: true,
+
 };
 
 // ----------------------------------------------------------------------------
@@ -27,18 +29,24 @@ const DEFAULT_VALUES = {
 export function extend(publicAPI, initialValues = {}) {
   const model = Object.assign(initialValues, DEFAULT_VALUES);
 
-  // Build VTK API
-  macro.obj(publicAPI, model);
-  macro.setGet(publicAPI, model, Object.keys(DEFAULT_VALUES));
-
   // Object methods
-  prop(publicAPI, model);
+  macro.setGet(publicAPI, model, ['bounds']);
+  plane(publicAPI, model);
 }
 
 // ----------------------------------------------------------------------------
 
-export const newInstance = macro.newInstance(extend);
+export function newInstance(initialValues = {}) {
+  const model = Object.assign({}, DEFAULT_VALUES, initialValues);
+  const publicAPI = {};
+
+  // Build VTK API
+  macro.obj(publicAPI, model, 'vtkPlane');
+  extend(publicAPI, model);
+
+  return Object.freeze(publicAPI);
+}
 
 // ----------------------------------------------------------------------------
 
-export default { newInstance, extend };
+export default Object.assign({ newInstance, extend }, STATIC);

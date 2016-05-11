@@ -1,5 +1,7 @@
-import DataSet from './DataSet';
+import BoundingBox from './BoundingBox';
+import Plane from './Plane';
 
 export default {
-  DataSet,
+  BoundingBox,
+  Plane,
 };
