@@ -18,6 +18,23 @@ const SET_GET_FIELDS = [
 // ----------------------------------------------------------------------------
 // ----------------------------------------------------------------------------
 
+  // perform in place string substitutions, indicate if a substitution was done
+  // this is useful for building up shader strings which typically involve
+  // lots of string substitutions. Return true if a substitution was done.
+export function substitute(source, search, replace, all = true) {
+  let replaced = false;
+  if (source.search(search) !== -1) {
+    replaced = true;
+  }
+  let gflag = '';
+  if (all) {
+    gflag = 'g';
+  }
+  const regex = `/${search}/${gflag}`;
+  const resultstr = source.replace(regex, replace);
+  return { replace: replaced, result: resultstr };
+}
+
 export function shaderProgram(publicAPI, model) {
   publicAPI.compileShader = () => {
     if (!model.vertexShader.compile()) {
@@ -229,6 +246,7 @@ export function shaderProgram(publicAPI, model) {
         return false;
     }
   };
+
 }
 
 // ----------------------------------------------------------------------------
@@ -278,4 +296,4 @@ function newInstance(initialValues = {}) {
 
 // ----------------------------------------------------------------------------
 
-export default { newInstance };
+export default { newInstance, substitute };
