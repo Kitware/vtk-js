@@ -1,10 +1,74 @@
 import * as macro from '../../../macro';
-import Light from '../Light';
+import * as vtkMath from '../../../Common/Core/Math';
 import Camera from '../Camera';
+import Light from '../Light';
 import TimerLog from '../../../Common/System/TimerLog';
 import { INIT_BOUNDS } from '../../../Common/DataModel/BoundingBox';
-import { areBoundsInitialized, uninitializeBounds, radiansFromDegrees } from '../../../Common/Core/Math';
+import { vec4 } from 'gl-matrix';
+
+// ----------------------------------------------------------------------------
+// Global methods
+// ----------------------------------------------------------------------------
+
 function noOp() {}
+
+function expandBounds(bounds, matrix) {
+  if (!bounds) {
+    vtkErrorMacro('ERROR: Invalid bounds');
+    return;
+  }
+
+  if (!matrix) {
+    vtkErrorMacro('ERROR: Invalid matrix');
+    return;
+  }
+
+  // Expand the bounding box by model view transform matrix.
+  const pt = [
+    vec4.fromValues(bounds[0], bounds[2], bounds[5], 1.0),
+    vec4.fromValues(bounds[1], bounds[2], bounds[5], 1.0),
+    vec4.fromValues(bounds[1], bounds[2], bounds[4], 1.0),
+    vec4.fromValues(bounds[0], bounds[2], bounds[4], 1.0),
+    vec4.fromValues(bounds[0], bounds[3], bounds[5], 1.0),
+    vec4.fromValues(bounds[1], bounds[3], bounds[5], 1.0),
+    vec4.fromValues(bounds[1], bounds[3], bounds[4], 1.0),
+    vec4.fromValues(bounds[0], bounds[3], bounds[4], 1.0),
+  ];
+
+  // \note: Assuming that matrix does not have projective component. Hence not
+  // dividing by the homogeneous coordinate after multiplication
+  for (let i = 0; i < 8; ++i) {
+    vec4.transformMat4(pt[i], pt[i], matrix);
+  }
+
+  // min = mpx = pt[0]
+  const min = [];
+  const max = [];
+  for (let i = 0; i < 4; ++i) {
+    min[i] = pt[0][i];
+    max[i] = pt[0][i];
+  }
+
+  for (let i = 1; i < 8; ++i) {
+    for (let j = 0; j < 3; ++j) {
+      if (min[j] > pt[i][j]) {
+        min[j] = pt[i][j];
+      }
+      if (max[j] < pt[i][j]) {
+        max[j] = pt[i][j];
+      }
+    }
+  }
+
+  // Copy values back to bounds.
+  bounds[0] = min[0];
+  bounds[2] = min[1];
+  bounds[4] = min[2];
+
+  bounds[1] = max[0];
+  bounds[3] = max[1];
+  bounds[5] = max[2];
+}
 
 // ----------------------------------------------------------------------------
 // vtkRenderer methods
@@ -239,7 +303,7 @@ function renderer(publicAPI, model) {
       .filter(prop => prop.getVisibility() && prop.getUseBounds())
       .forEach(prop => {
         const bounds = prop.getBounds();
-        if (bounds && areBoundsInitialized(bounds)) {
+        if (bounds && vtkMath.areBoundsInitialized(bounds)) {
           nothingVisible = false;
 
           if (bounds[0] < allBounds[0]) {
@@ -264,7 +328,7 @@ function renderer(publicAPI, model) {
       });
 
     if (nothingVisible) {
-      uninitializeBounds(allBounds);
+      vtkMath.uninitializeBounds(allBounds);
       vtkDebugMacro('Can\'t compute bounds, no 3D props are visible');
     }
 
@@ -274,7 +338,7 @@ function renderer(publicAPI, model) {
   publicAPI.resetCameraClippingRange = (bounds = null) => {
     const boundsToUse = bounds || publicAPI.computeVisiblePropBounds();
 
-    if (!areBoundsInitialized(boundsToUse)) {
+    if (!vtkMath.areBoundsInitialized(boundsToUse)) {
       vtkDebugMacro('Cannot reset camera clipping range!');
       return false;
     }
@@ -290,11 +354,11 @@ function renderer(publicAPI, model) {
     if (!model.activeCamera.getUseOffAxisProjection()) {
       vn = model.activeCamera.getViewPlaneNormal();
       position = model.activeCamera.getPosition();
-      publicAPI.expandBounds(boundsToUse, model.activeCamera.getModelTransformMatrix());
+      expandBounds(boundsToUse, model.activeCamera.getModelTransformMatrix());
     } else {
       position = model.activeCamera.getEyePosition();
       vn = model.activeCamera.getEyePlaneNormal();
-      publicAPI.expandBounds(boundsToUse, model.activeCamera.getModelViewTransformMatrix());
+      expandBounds(boundsToUse, model.activeCamera.getModelViewTransformMatrix());
     }
 
     const a = -vn[0];
@@ -303,13 +367,13 @@ function renderer(publicAPI, model) {
     const d = -(a * position[0] + b * position[1] + c * position[2]);
 
     // Set the max near clipping plane and the min far clipping plane
-    const range = [a * bounds[0] + b * bounds[2] + c * bounds[4] + d, 1e-18];
+    const range = [a * boundsToUse[0] + b * boundsToUse[2] + c * boundsToUse[4] + d, 1e-18];
 
     // Find the closest / farthest bounding box vertex
     for (let k = 0; k < 2; k++) {
       for (let j = 0; j < 2; j++) {
         for (let i = 0; i < 2; i++) {
-          const dist = a * bounds[i] + b * bounds[2 + j] + c * bounds[4 + k] + d;
+          const dist = a * boundsToUse[i] + b * boundsToUse[2 + j] + c * boundsToUse[4 + k] + d;
           range[0] = (dist < range[0]) ? (dist) : (range[0]);
           range[1] = (dist > range[1]) ? (dist) : (range[1]);
         }
@@ -322,7 +386,7 @@ function renderer(publicAPI, model) {
     if (model.activeCamera.getParallelProjection()) {
       minGap = 0.1 * model.activeCamera.getParallelScale();
     } else {
-      const angle = radiansFromDegrees(model.activeCamera.getViewAngle());
+      const angle = vtkMath.radiansFromDegrees(model.activeCamera.getViewAngle());
       minGap = 0.2 * Math.tan(angle / 2.0) * range[1];
     }
 
@@ -370,6 +434,110 @@ function renderer(publicAPI, model) {
     publicAPI.fireEvent({ type: 'ResetCameraClippingRangeEvent', renderer: publicAPI });
     return false;
   };
+
+  publicAPI.resetCamera = (bounds = null) => {
+    const boundsToUse = bounds || publicAPI.computeVisiblePropBounds();
+    const center = [0, 0, 0];
+
+    if (!vtkMath.areBoundsInitialized(boundsToUse)) {
+      vtkDebugMacro('Cannot reset camera!');
+      return false;
+    }
+
+    let vn = null;
+
+    if (publicAPI.getActiveCamera()) {
+      vn = model.activeCamera.getViewPlaneNormal();
+    } else {
+      vtkErrorMacro('Trying to reset non-existant camera');
+      return false;
+    }
+
+    // Reset the perspective zoom factors, otherwise subsequent zooms will cause
+    // the view angle to become very small and cause bad depth sorting.
+    model.activeCamera.setViewAngle(30.0);
+
+    expandBounds(boundsToUse, model.activeCamera.getModelTransformMatrix());
+
+    center[0] = (boundsToUse[0] + boundsToUse[1]) / 2.0;
+    center[1] = (boundsToUse[2] + boundsToUse[3]) / 2.0;
+    center[2] = (boundsToUse[4] + boundsToUse[5]) / 2.0;
+
+    let w1 = boundsToUse[1] - boundsToUse[0];
+    let w2 = boundsToUse[3] - boundsToUse[2];
+    let w3 = boundsToUse[5] - boundsToUse[4];
+    w1 *= w1;
+    w2 *= w2;
+    w3 *= w3;
+    let radius = w1 + w2 + w3;
+
+    // If we have just a single point, pick a radius of 1.0
+    radius = (radius === 0) ? (1.0) : (radius);
+
+    // compute the radius of the enclosing sphere
+    radius = Math.sqrt(radius) * 0.5;
+
+    // default so that the bounding sphere fits within the view fustrum
+
+    // compute the distance from the intersection of the view frustum with the
+    // bounding sphere. Basically in 2D draw a circle representing the bounding
+    // sphere in 2D then draw a horizontal line going out from the center of
+    // the circle. That is the camera view. Then draw a line from the camera
+    // position to the point where it intersects the circle. (it will be tangent
+    // to the circle at this point, this is important, only go to the tangent
+    // point, do not draw all the way to the view plane). Then draw the radius
+    // from the tangent point to the center of the circle. You will note that
+    // this forms a right triangle with one side being the radius, another being
+    // the target distance for the camera, then just find the target dist using
+    // a sin.
+    let angle = vtkMath.radiansFromDegrees(model.activeCamera.getViewAngle());
+    let parallelScale = radius;
+
+    publicAPI.computeAspect();
+    const aspect = publicAPI.getAspect();
+
+    if (aspect[0] >= 1.0) {
+      // horizontal window, deal with vertical angle|scale
+      if (model.activeCamera.getUseHorizontalViewAngle()) {
+        angle = 2.0 * Math.atan(Math.tan(angle * 0.5) / aspect[0]);
+      }
+    } else {
+      // vertical window, deal with horizontal angle|scale
+      if (!model.activeCamera.getUseHorizontalViewAngle()) {
+        angle = 2.0 * Math.atan(Math.tan(angle * 0.5) * aspect[0]);
+      }
+      parallelScale = parallelScale / aspect[0];
+    }
+
+    const distance = radius / Math.sin(angle * 0.5);
+
+    // check view-up vector against view plane normal
+    const vup = model.activeCamera.getViewUp();
+    if (Math.abs(vtkMath.dot(vup, vn)) > 0.999) {
+      vtkWarningMacro('Resetting view-up since view plane normal is parallel');
+      model.activeCamera.setViewUp(-vup[2], vup[0], vup[1]);
+    }
+
+    // update the camera
+    model.activeCamera.setFocalPoint(center[0], center[1], center[2]);
+    model.activeCamera.setPosition(
+      center[0] + distance * vn[0],
+      center[1] + distance * vn[1],
+      center[2] + distance * vn[2]);
+
+    publicAPI.resetCameraClippingRange(boundsToUse);
+
+    // setup default parallel scale
+    model.activeCamera.setParallelScale(parallelScale);
+
+    // Here to let parallel/distributed compositing intercept
+    // and do the right thing.
+    publicAPI.fireEvent({ type: 'ResetCameraEvent', renderer: publicAPI });
+
+    return true;
+  };
+
+  publicAPI.transparent = () => !!model.preserveColorBuffer;
 }
 
 // ----------------------------------------------------------------------------
@@ -401,8 +569,10 @@ const DEFAULT_VALUES = {
   allocatedRenderTime: 100,
   timeFactor: 1,
   delegate: null,
+  lastRenderTimeInSeconds: 0.001,
   numberOfPropsRendered: 0,
   nearClippingPlaneTolerance: 0,
+  clippingRangeExpansion: 0.5,
 };
 
 // ----------------------------------------------------------------------------
@@ -413,7 +583,7 @@ export function extend(publicAPI, model, initialValues = {}) {
   // Build VTK API
   macro.obj(publicAPI, model);
   macro.event(publicAPI, model, 'event');
-  macro.get(publicAPI, model, ['timeFactor']);
+  macro.get(publicAPI, model, ['timeFactor', 'numberOfPropsRendered', 'lastRenderTimeInSeconds']);
   macro.setGet(publicAPI, model, [
     'twoSidedLighting',
     'lightFollowCamera',
@@ -433,9 +603,13 @@ export function extend(publicAPI, model, initialValues = {}) {
     'allocatedRenderTime',
     'delegate',
     'nearClippingPlaneTolerance',
+    'clippingRangeExpansion',
   ]);
   macro.getArray(publicAPI, model, ['actors', 'volumes', 'lights']);
   macro.setGetArray(publicAPI, model, ['background'], 3);
+
+  // Similar returned value
+  publicAPI.getVTKWindow = publicAPI.getRenderWindow;
 
   // Object methods
   renderer(publicAPI, model);

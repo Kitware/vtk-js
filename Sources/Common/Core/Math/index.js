@@ -15,4 +15,13 @@ export function uninitializeBounds(bounds) {
   bounds[5] = -1.0;
 }
 
-export default { uninitializeBounds, radiansFromDegrees, areBoundsInitialized };
+export function dot(x, y) {
+  return x[0] * y[0] + x[1] * y[1] + x[2] * y[2];
+}
+
+export default {
+  uninitializeBounds,
+  radiansFromDegrees,
+  areBoundsInitialized,
+  dot,
+};

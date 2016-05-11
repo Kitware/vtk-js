@@ -13,6 +13,7 @@ if (process.env.NODE_ENV === 'production') {
     },
     vtkDebugMacro: 'console.info',
     vtkErrorMacro: 'console.error',
+    vtkWarningMacro: 'console.warn',
   }));
 }
 

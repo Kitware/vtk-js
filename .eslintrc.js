@@ -10,5 +10,6 @@ module.exports = {
   globals: {
     vtkDebugMacro: false,
     vtkErrorMacro: false,
+    vtkWarningMacro: false,
   }
 };
