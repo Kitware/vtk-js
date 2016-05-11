@@ -1,3 +1,4 @@
+let globalMTime = 0;
 // ----------------------------------------------------------------------------
 // capitilze provided string
 // ----------------------------------------------------------------------------
@@ -12,7 +13,7 @@ export function capitalize(str) {
 
 export function obj(publicAPI, model, type = 'vtkObject', implementations = []) {
   const callbacks = [];
-  model.mtime = 1;
+  model.mtime = globalMTime;
 
   function off(index) {
     callbacks[index] = null;
@@ -31,7 +32,7 @@ export function obj(publicAPI, model, type = 'vtkObject', implementations = []) 
       return;
     }
 
-    ++model.mtime;
+    model.mtime = ++globalMTime;
     callbacks.forEach(callback => callback && callback(publicAPI));
   };
 
