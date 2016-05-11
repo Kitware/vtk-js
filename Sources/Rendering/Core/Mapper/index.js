@@ -1,127 +1,32 @@
-import * as macro from '../../../macro';
-import LookupTable from '../../../Common/Core/LookupTable';
+import * as CoincidentTopologyHelper              from './CoincidentTopologyHelper';
+import * as macro                                 from '../../../macro';
+import LookupTable                                from '../../../Common/Core/LookupTable';
+import otherStaticMethods                         from './Static';
+import { COLOR_MODE, SCALAR_MODE, MATERIAL_MODE } from './Constants';
 
-// ---- STATIC -----
-
-export const RESOLVE_COINCIDENT_TOPOLOGY_MODE = [
-  'VTK_RESOLVE_OFF',
-  'VTK_RESOLVE_POLYGON_OFFSET',
-];
-
-const COINCIDENT_TOPOLOGY_OFFSETS = ['Polygon', 'Line', 'Point'];
-const offsetModel = {};
-const offsetAPI = {};
-
-function addCoincidentTopologyMethods(publicAPI, model, nameList) {
-  nameList.forEach(item => {
-    publicAPI[`get${item.method}`] = () => model[item.key];
-    publicAPI[`set${item.method}`] = (factor, unit) => {
-      model[item.key] = { factor, unit };
-    };
-  });
-}
-
-// Add static methods
+// CoincidentTopology static methods ------------------------------------------
 /* eslint-disable arrow-body-style */
-addCoincidentTopologyMethods(
-  offsetAPI,
-  offsetModel,
-  COINCIDENT_TOPOLOGY_OFFSETS
+
+const staticOffsetModel = {};
+const staticOffsetAPI = {};
+
+CoincidentTopologyHelper.addCoincidentTopologyMethods(
+  staticOffsetAPI,
+  staticOffsetModel,
+  CoincidentTopologyHelper.CATEGORIES
     .map(key => {
       return { key, method: `ResolveCoincidentTopology${key}OffsetParameters` };
     })
 );
-
-let resolveCoincidentTopologyPolygonOffsetFaces = 1;
-let resolveCoincidentTopology = 0;
-
-export function getResolveCoincidentTopologyPolygonOffsetFaces() {
-  return resolveCoincidentTopologyPolygonOffsetFaces;
-}
-
-export function setResolveCoincidentTopologyPolygonOffsetFaces(value) {
-  resolveCoincidentTopologyPolygonOffsetFaces = value;
-}
-
-export function getResolveCoincidentTopology() {
-  return resolveCoincidentTopology;
-}
-
-export function setResolveCoincidentTopology(mode = 0) {
-  resolveCoincidentTopology = mode;
-}
-
-export function setResolveCoincidentTopologyToDefault() {
-  setResolveCoincidentTopology(0); // VTK_RESOLVE_OFF
-}
-
-export function setResolveCoincidentTopologyToOff() {
-  setResolveCoincidentTopology(0); // VTK_RESOLVE_OFF
-}
-
-export function setResolveCoincidentTopologyToPolygonOffset() {
-  setResolveCoincidentTopology(1); // VTK_RESOLVE_POLYGON_OFFSET
-}
-
-export function getResolveCoincidentTopologyAsString() {
-  return RESOLVE_COINCIDENT_TOPOLOGY_MODE[resolveCoincidentTopology];
-}
-
-// ----------------------------------------------------------------------------
-
-export const COLOR_MODE = [
-  'VTK_COLOR_MODE_DEFAULT',
-  'VTK_COLOR_MODE_MAP_SCALARS',
-  'VTK_COLOR_MODE_DIRECT_SCALARS',
-];
-
-export const SCALAR_MODE = [
-  'VTK_SCALAR_MODE_DEFAULT',
-  'VTK_SCALAR_MODE_USE_POINT_DATA',
-  'VTK_SCALAR_MODE_USE_CELL_DATA',
-  'VTK_SCALAR_MODE_USE_POINT_FIELD_DATA',
-  'VTK_SCALAR_MODE_USE_CELL_FIELD_DATA',
-  'VTK_SCALAR_MODE_USE_FIELD_DATA',
-];
-
-export const MATERIAL_MODE = [
-  'VTK_MATERIALMODE_DEFAULT',
-  'VTK_MATERIALMODE_AMBIENT',
-  'VTK_MATERIALMODE_DIFFUSE',
-  'VTK_MATERIALMODE_AMBIENT_AND_DIFFUSE',
-];
-
-// ----------------------------------------------------------------------------
-
-const FIELDS = [
-  'lookupTable',
-  'scalarVisibility',
-  'static',
-  'colorMode',
-  'interpolateScalarsBeforeMapping',
-  'useLookupTableScalarRange',
-  'fieldDataTupleId',
-  'renderTime',
-  'colorByArrayName',
-  'colorByArrayComponent',
-  'scalarMaterialMode',
-];
-
-const GET_FIELDS = [
-  'colorMapColors',
-  'colorCoordinates',
-  'colorTextureMap',
-];
-
-const ARRAY_2 = [
-  'scalarRange',
-];
 
 // ----------------------------------------------------------------------------
 // Property methods
 // ----------------------------------------------------------------------------
 
 function mapper(publicAPI, model) {
+  // Set our className
+  model.classHierarchy.push('vtkMapper');
+
   publicAPI.createDefaultLookupTable = () => {
     console.log('vtkMapper::createDefaultLookupTable - NOT IMPLEMENTED');
     model.lookupTable = LookupTable.newInstance();
@@ -142,28 +47,21 @@ function mapper(publicAPI, model) {
   publicAPI.setScalarModeToUseCellFieldData = () => publicAPI.setScalarMode(4);
   publicAPI.setScalarModeToUseFieldData = () => publicAPI.setScalarMode(5);
 
-  // Static methods
-  publicAPI.getResolveCoincidentTopology = getResolveCoincidentTopology;
-  publicAPI.setResolveCoincidentTopology = setResolveCoincidentTopology;
-  publicAPI.setResolveCoincidentTopologyToDefault = setResolveCoincidentTopologyToDefault;
-  publicAPI.setResolveCoincidentTopologyToOff = setResolveCoincidentTopologyToOff;
-  publicAPI.setResolveCoincidentTopologyToPolygonOffset = setResolveCoincidentTopologyToPolygonOffset;
-  publicAPI.getResolveCoincidentTopologyAsString = getResolveCoincidentTopologyAsString;
-
-  publicAPI.getResolveCoincidentTopologyPolygonOffsetFaces = getResolveCoincidentTopologyPolygonOffsetFaces;
-  publicAPI.setResolveCoincidentTopologyPolygonOffsetFaces = setResolveCoincidentTopologyPolygonOffsetFaces;
-
-  offsetAPI.forEach(name => {
-    publicAPI[name] = offsetAPI[name];
+  // Add Static methods to our instance
+  Object.keys(otherStaticMethods).forEach(methodName => {
+    publicAPI[methodName] = otherStaticMethods[methodName];
+  });
+  Object.keys(staticOffsetAPI).forEach(methodName => {
+    publicAPI[methodName] = staticOffsetAPI[methodName];
   });
 
   // Relative metods
   /* eslint-disable arrow-body-style */
   model.topologyOffset = {};
-  addCoincidentTopologyMethods(
+  CoincidentTopologyHelper.addCoincidentTopologyMethods(
     publicAPI,
     model.topologyOffset,
-    COINCIDENT_TOPOLOGY_OFFSETS
+    CoincidentTopologyHelper.CATEGORIES
       .map(key => {
         // GetRelativeCoincidentTopologyPolygon
         return { key, method: `RelativeCoincidentTopology${key}OffsetParameters` };
@@ -172,7 +70,7 @@ function mapper(publicAPI, model) {
   /* eslint-enable arrow-body-style */
 
   publicAPI.getCoincidentTopologyPolygonOffsetParameters = () => {
-    const globalValue = offsetAPI.getResolveCoincidentTopologyPolygonOffsetParameters();
+    const globalValue = staticOffsetAPI.getResolveCoincidentTopologyPolygonOffsetParameters();
     const localValue = publicAPI.getRelativeCoincidentTopologyPolygonOffsetParameters();
     return {
       factor: globalValue.factor + localValue.factor,
@@ -181,7 +79,7 @@ function mapper(publicAPI, model) {
   };
 
   publicAPI.getCoincidentTopologyLineOffsetParameters = () => {
-    const globalValue = offsetAPI.getResolveCoincidentTopologyLineOffsetParameters();
+    const globalValue = staticOffsetAPI.getResolveCoincidentTopologyLineOffsetParameters();
     const localValue = publicAPI.getRelativeCoincidentTopologyLineOffsetParameters();
     return {
       factor: globalValue.factor + localValue.factor,
@@ -190,7 +88,7 @@ function mapper(publicAPI, model) {
   };
 
   publicAPI.getCoincidentTopologyPointOffsetParameter = () => {
-    const globalValue = offsetAPI.getResolveCoincidentTopologyPointOffsetParameters();
+    const globalValue = staticOffsetAPI.getResolveCoincidentTopologyPointOffsetParameters();
     const localValue = publicAPI.getRelativeCoincidentTopologyPointOffsetParameters();
     return {
       factor: globalValue.factor + localValue.factor,
@@ -268,10 +166,29 @@ export function extend(publicAPI, initialValues = {}) {
   const model = Object.assign(initialValues, DEFAULT_VALUES);
 
   // Build VTK API
+  macro.obj(publicAPI, model); // FIXME parent is not vtkObject
   macro.algo(publicAPI, model, 1, 0);
-  macro.get(publicAPI, model, GET_FIELDS);
-  macro.setGet(publicAPI, model, FIELDS);
-  macro.setGetArray(publicAPI, model, ARRAY_2, 2);
+  macro.get(publicAPI, model, [
+    'colorMapColors',
+    'colorCoordinates',
+    'colorTextureMap',
+  ]);
+  macro.setGet(publicAPI, model, [
+    'lookupTable',
+    'scalarVisibility',
+    'static',
+    'colorMode',
+    'interpolateScalarsBeforeMapping',
+    'useLookupTableScalarRange',
+    'fieldDataTupleId',
+    'renderTime',
+    'colorByArrayName',
+    'colorByArrayComponent',
+    'scalarMaterialMode',
+  ]);
+  macro.setGetArray(publicAPI, model, [
+    'scalarRange',
+  ], 2);
 
   // Object methods
   mapper(publicAPI, model);
@@ -279,32 +196,8 @@ export function extend(publicAPI, initialValues = {}) {
 
 // ----------------------------------------------------------------------------
 
-export function newInstance(initialValues = {}) {
-  const model = Object.assign({}, DEFAULT_VALUES, initialValues);
-  const publicAPI = {};
-
-  // Build VTK API
-  macro.obj(publicAPI, model, 'vtkMapper');
-  extend(publicAPI, model);
-
-  return Object.freeze(publicAPI);
-}
+export const newInstance = macro.newInstance(extend);
 
 // ----------------------------------------------------------------------------
 
-export default Object.assign({
-  newInstance,
-  extend,
-
-  // Static methods
-  getResolveCoincidentTopology,
-  setResolveCoincidentTopology,
-  setResolveCoincidentTopologyToDefault,
-  setResolveCoincidentTopologyToOff,
-  setResolveCoincidentTopologyToPolygonOffset,
-  getResolveCoincidentTopologyAsString,
-
-  getResolveCoincidentTopologyPolygonOffsetFaces,
-  setResolveCoincidentTopologyPolygonOffsetFaces,
-
-}, offsetAPI);
+export default Object.assign({ newInstance, extend }, staticOffsetAPI, otherStaticMethods);

@@ -1,8 +1,13 @@
 import * as macro from '../../../macro';
 
 // ----------------------------------------------------------------------------
+// vtkViewNodeFactory methods
+// ----------------------------------------------------------------------------
 
-export function viewNodeFactory(publicAPI, model) {
+function viewNodeFactory(publicAPI, model) {
+  // Set our className
+  model.classHierarchy.push('vtkViewNodeFactory');
+
   publicAPI.createNode = (dataObject) => {
     if (model.overrides.indexOf(dataObject) !== -1) {
       return null;
@@ -27,19 +32,20 @@ const DEFAULT_VALUES = {
 
 // ----------------------------------------------------------------------------
 
-function newInstance(initialValues = {}) {
-  const model = Object.assign({}, DEFAULT_VALUES, initialValues);
-  const publicAPI = {};
+export function extend(publicAPI, initialValues = {}) {
+  const model = Object.assign(initialValues, DEFAULT_VALUES);
 
   // Build VTK API
   macro.obj(publicAPI, model);
 
   // Object methods
   viewNodeFactory(publicAPI, model);
-
-  return Object.freeze(publicAPI);
 }
 
 // ----------------------------------------------------------------------------
 
-export default { newInstance, viewNodeFactory, DEFAULT_VALUES };
+export const newInstance = macro.newInstance(extend);
+
+// ----------------------------------------------------------------------------
+
+export default { newInstance, extend };

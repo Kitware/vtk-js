@@ -1,13 +1,14 @@
 import * as macro from '../../../macro';
 import ViewNode from '../../SceneGraph/ViewNode';
 
-const GET_FIELDS = [
-  'shaderCache',
-];
-
+// ----------------------------------------------------------------------------
+// vtkWebGLActor methods
 // ----------------------------------------------------------------------------
 
 export function webGLActor(publicAPI, model) {
+  // Set our className
+  model.classHierarchy.push('vtkWebGLActor');
+
   // Builds myself.
   publicAPI.build = (prepass) => {
     if (prepass) {
@@ -20,7 +21,6 @@ export function webGLActor(publicAPI, model) {
       publicAPI.removeUnusedNodes();
     }
   };
-
 
   // Renders myself
   publicAPI.render = (prepass) => {
@@ -41,21 +41,23 @@ const DEFAULT_VALUES = {
 
 // ----------------------------------------------------------------------------
 
-function newInstance(initialValues = {}) {
-  const model = Object.assign({}, ViewNode.DEFAULT_VALUES, DEFAULT_VALUES, initialValues);
-  const publicAPI = {};
+export function extend(publicAPI, initialValues = {}) {
+  const model = Object.assign(initialValues, DEFAULT_VALUES);
+
+  // Inheritance
+  ViewNode.extend(publicAPI, model);
 
   // Build VTK API
-  macro.obj(publicAPI, model);
-  macro.get(publicAPI, model, GET_FIELDS);
+  macro.get(publicAPI, model, ['shaderCache']);
 
   // Object methods
-  ViewNode.viewNode(publicAPI, model);
   webGLActor(publicAPI, model);
-
-  return Object.freeze(publicAPI);
 }
 
 // ----------------------------------------------------------------------------
 
-export default { newInstance };
+export const newInstance = macro.newInstance(extend);
+
+// ----------------------------------------------------------------------------
+
+export default { newInstance, extend };

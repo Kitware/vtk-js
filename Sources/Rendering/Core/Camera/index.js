@@ -1,51 +1,8 @@
 import * as macro from '../../../macro';
 import { vec3, vec4, mat4 } from 'gl-matrix';
+import { radiansFromDegrees } from './../../../Common/Core/Math';
 
 /* eslint-disable new-cap */
-
-// ----------------------------------------------------------------------------
-
-const SET_GET_FIELDS = [
-  'parallelProjection',
-  'useHorizontalViewAngle',
-  'viewAngle',
-  'parallelScale',
-  'eyeAngle',
-  'focalDisk',
-  'useOffAxisProjection',
-  'eyeSeparation',
-  'eyeTransformMatrix',
-  'modelTransformMatrix',
-  'leftEye',
-  'freezeFocalPoint',
-  'useScissor',
-];
-
-const GET_FIELDS = [
-  'thickness',
-  'userViewTransform',
-  'userTransform',
-];
-
-const GET_ARRAY = [
-  'directionOfProjection',
-  'windowCenter',
-  'viewPlaneNormal',
-];
-
-const SET_GET_ARRAY_2 = [
-  'clippingRange',
-];
-
-const SET_GET_ARRAY_3 = [
-  'position',
-  'focalPoint',
-  'viewUp',
-  'viewShear',
-  'screenBottomLeft',
-  'screenBottomRight',
-  'screenTopRight',
-];
 
 /*
  * Convenience function to access elements of a gl-matrix.  If it turns
@@ -57,15 +14,14 @@ const SET_GET_ARRAY_3 = [
 //   return matrix[idx];
 // }
 
-function radiansFromDegrees(deg) {
-  return deg / 180 * Math.PI;
-}
-
 // ----------------------------------------------------------------------------
-// Camera methods
+// vtkCamera methods
 // ----------------------------------------------------------------------------
 
-export function camera(publicAPI, model) {
+function camera(publicAPI, model) {
+  // Set our className
+  model.classHierarchy.push('vtkCamera');
+
   // Set up private variables and methods
   const viewMatrix = mat4.create();
   const projectionMatrix = mat4.create();
@@ -351,11 +307,48 @@ export function extend(publicAPI, initialValues = {}) {
   model.modelTransformMatrix = mat4.create();
 
   // Build VTK API
-  macro.get(publicAPI, model, GET_FIELDS);
-  macro.setGet(publicAPI, model, SET_GET_FIELDS);
-  macro.getArray(publicAPI, model, GET_ARRAY);
-  macro.setGetArray(publicAPI, model, SET_GET_ARRAY_2, 2);
-  macro.setGetArray(publicAPI, model, SET_GET_ARRAY_3, 3);
+  macro.obj(publicAPI, model);
+  macro.get(publicAPI, model, [
+    'thickness',
+    'userViewTransform',
+    'userTransform',
+  ]);
+
+  macro.setGet(publicAPI, model, [
+    'parallelProjection',
+    'useHorizontalViewAngle',
+    'viewAngle',
+    'parallelScale',
+    'eyeAngle',
+    'focalDisk',
+    'useOffAxisProjection',
+    'eyeSeparation',
+    'eyeTransformMatrix',
+    'modelTransformMatrix',
+    'leftEye',
+    'freezeFocalPoint',
+    'useScissor',
+  ]);
+
+  macro.getArray(publicAPI, model, [
+    'directionOfProjection',
+    'windowCenter',
+    'viewPlaneNormal',
+  ]);
+
+  macro.setGetArray(publicAPI, model, [
+    'clippingRange',
+  ], 2);
+
+  macro.setGetArray(publicAPI, model, [
+    'position',
+    'focalPoint',
+    'viewUp',
+    'viewShear',
+    'screenBottomLeft',
+    'screenBottomRight',
+    'screenTopRight',
+  ], 3);
 
   // Object methods
   camera(publicAPI, model);
@@ -363,19 +356,8 @@ export function extend(publicAPI, initialValues = {}) {
 
 // ----------------------------------------------------------------------------
 
-function newInstance(initialValues = {}) {
-  const model = Object.assign({}, DEFAULT_VALUES, initialValues);
-  const publicAPI = {};
-
-  // Build VTK API
-  macro.obj(publicAPI, model, 'vtkCamera');
-  extend(publicAPI, model);
-
-  return Object.freeze(publicAPI);
-}
+export const newInstance = macro.newInstance(extend);
 
 // ----------------------------------------------------------------------------
-
-/* eslint-enable new-cap */
 
 export default { newInstance, extend };

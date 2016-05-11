@@ -1,10 +1,13 @@
 import * as macro from '../../../macro';
 
 // ----------------------------------------------------------------------------
-// Property methods
+// vtkProp methods
 // ----------------------------------------------------------------------------
 
 function prop(publicAPI, model) {
+  // Set our className
+  model.classHierarchy.push('vtkProp');
+
   publicAPI.getRedrawMTime = () => model.mtime;
 }
 
@@ -25,6 +28,7 @@ export function extend(publicAPI, initialValues = {}) {
   const model = Object.assign(initialValues, DEFAULT_VALUES);
 
   // Build VTK API
+  macro.obj(publicAPI, model);
   macro.setGet(publicAPI, model, Object.keys(DEFAULT_VALUES));
 
   // Object methods
@@ -33,16 +37,7 @@ export function extend(publicAPI, initialValues = {}) {
 
 // ----------------------------------------------------------------------------
 
-function newInstance(initialValues = {}) {
-  const model = Object.assign({}, initialValues);
-  const publicAPI = {};
-
-  // Build VTK API
-  macro.obj(publicAPI, model, 'vtkProp');
-  extend(publicAPI, model);
-
-  return Object.freeze(publicAPI);
-}
+export const newInstance = macro.newInstance(extend);
 
 // ----------------------------------------------------------------------------
 

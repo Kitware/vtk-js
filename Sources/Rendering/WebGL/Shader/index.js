@@ -1,21 +1,15 @@
 import * as macro from '../../../macro';
 
-// ----------------------------------------------------------------------------
-
-const SET_GET_FIELDS = [
-  'type',
-  'source',
-  'error',
-  'handle',
-];
-
-export const types = ['Vertex', 'Fragment', 'Geometry', 'Unknown'];
-
+export const SHADER_TYPES = ['Vertex', 'Fragment', 'Geometry', 'Unknown'];
 
 // ----------------------------------------------------------------------------
+// vtkShader methods
 // ----------------------------------------------------------------------------
 
 export function shader(publicAPI, model) {
+  // Set our className
+  model.classHierarchy.push('vtkShader');
+
   publicAPI.compile = () => {
     let stype = model.context.VERTEX_SHADER;
 
@@ -89,7 +83,12 @@ function newInstance(initialValues = {}) {
 
   // Build VTK API
   macro.obj(publicAPI, model);
-  macro.setGet(publicAPI, model, SET_GET_FIELDS);
+  macro.setGet(publicAPI, model, [
+    'type',
+    'source',
+    'error',
+    'handle',
+  ]);
 
   // Object methods
   shader(publicAPI, model);

@@ -3,27 +3,13 @@ import { mat4 } from 'gl-matrix';
 import Prop from '../Prop';
 
 // ----------------------------------------------------------------------------
-
-const GET_FIELDS = [
-  'isIdentity',
-];
-
-const ARRAY_3 = [
-  'origin',
-  'position',
-  'orientation',
-  'scale',
-];
-
-const GET_ARRAY = [
-  'center',
-];
-
-// ----------------------------------------------------------------------------
-// Property methods
+// vtkProp3D methods
 // ----------------------------------------------------------------------------
 
 function prop3D(publicAPI, model) {
+  // Set our className
+  model.classHierarchy.push('vtkProp3D');
+
   function updateIdentityFlag() {
     if (!model.isIdentity) {
       return;
@@ -124,9 +110,14 @@ export function extend(publicAPI, initialValues = {}) {
   Prop.extend(publicAPI, model);
 
   // Build VTK API
-  macro.get(publicAPI, model, GET_FIELDS);
-  macro.getArray(publicAPI, model, GET_ARRAY);
-  macro.setGetArray(publicAPI, model, ARRAY_3, 3);
+  macro.get(publicAPI, model, ['isIdentity']);
+  macro.getArray(publicAPI, model, ['center']);
+  macro.setGetArray(publicAPI, model, [
+    'origin',
+    'position',
+    'orientation',
+    'scale',
+  ], 3);
 
   // Object internal instance
   model.matrix = mat4.create();
@@ -137,16 +128,7 @@ export function extend(publicAPI, initialValues = {}) {
 
 // ----------------------------------------------------------------------------
 
-function newInstance(initialValues = {}) {
-  const model = Object.assign({}, DEFAULT_VALUES, initialValues);
-  const publicAPI = {};
-
-  // Build VTK API
-  macro.obj(publicAPI, model, 'vtkProp3D');
-  extend(publicAPI, model);
-
-  return Object.freeze(publicAPI);
-}
+export const newInstance = macro.newInstance(extend);
 
 // ----------------------------------------------------------------------------
 

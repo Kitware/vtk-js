@@ -11,9 +11,10 @@ export function capitalize(str) {
 // vtkObject: modified(), onModified(callback), delete()
 // ----------------------------------------------------------------------------
 
-export function obj(publicAPI, model, type = 'vtkObject', implementations = []) {
+export function obj(publicAPI, model) {
   const callbacks = [];
   model.mtime = globalMTime;
+  model.classHierarchy = ['vtkObject'];
 
   function off(index) {
     callbacks[index] = null;
@@ -49,16 +50,9 @@ export function obj(publicAPI, model, type = 'vtkObject', implementations = []) 
 
   publicAPI.getMTime = () => model.mtime;
 
-  publicAPI.isA = t => (type === t);
+  publicAPI.isA = className => (model.classHierarchy.indexOf(className) !== -1);
 
-  publicAPI.getClassName = () => type;
-
-  publicAPI.getImplements = map => {
-    if (map) {
-      return implementations.filter(name => !!map[name]);
-    }
-    return implementations;
-  };
+  publicAPI.getClassName = () => model.classHierarchy.slice(-1)[0];
 
   publicAPI.delete = () => {
     Object.keys(model).forEach(field => delete model[field]);
@@ -273,3 +267,17 @@ export function event(publicAPI, model, eventName) {
     callbacks.forEach((el, index) => off(index));
   };
 }
+
+// ----------------------------------------------------------------------------
+// newInstance
+// ----------------------------------------------------------------------------
+
+export function newInstance(extend) {
+  return (initialValues = {}) => {
+    const model = Object.assign({}, initialValues);
+    const publicAPI = {};
+    extend(publicAPI, model);
+    return Object.freeze(publicAPI);
+  };
+}
+

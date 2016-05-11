@@ -6,23 +6,14 @@ import { vec3 } from 'gl-matrix';
 
 export const types = ['Actor'];
 
-const SET_FIELDS = [
-  'property',
-];
+// ----------------------------------------------------------------------------
+// vtkActor methods
+// ----------------------------------------------------------------------------
 
-const SET_GET_FIELDS = [
-  'backfaceProperty',
-  // 'texture', // Actor should have an array of textures
-  'mapper',
-  'forceOpaque',
-  'forceTranslucent',
-];
+function actor(publicAPI, model) {
+  // Set our className
+  model.classHierarchy.push('vtkActor');
 
-const SET_ARRAY_6 = [
-  'bounds',
-];
-
-export function actor(publicAPI, model) {
   publicAPI.renderOpaqueGeometry = (viewport) => {
     let renderedSomething = false;
 
@@ -217,7 +208,7 @@ export function actor(publicAPI, model) {
   };
 }
 
-export const DEFAULT_VALUES = {
+const DEFAULT_VALUES = {
   bounds: [1, -1, 1, -1, 1, -1],
   backfaceProperty: null,
   mapper: null,
@@ -227,6 +218,10 @@ export const DEFAULT_VALUES = {
   forceTranslucent: false,
 };
 
+// ----------------------------------------------------------------------------
+// Object factory
+// ----------------------------------------------------------------------------
+
 export function extend(publicAPI, initialValues = {}) {
   const model = Object.assign(initialValues, DEFAULT_VALUES);
 
@@ -234,23 +229,24 @@ export function extend(publicAPI, initialValues = {}) {
   Prop3D.extend(publicAPI, model);
 
   // Build VTK API
-  macro.set(publicAPI, model, SET_FIELDS);
-  macro.setGet(publicAPI, model, SET_GET_FIELDS);
-  macro.getArray(publicAPI, model, SET_ARRAY_6, 6);
+  macro.set(publicAPI, model, ['property']);
+  macro.setGet(publicAPI, model, [
+    'backfaceProperty',
+    'forceOpaque',
+    'forceTranslucent',
+    'mapper',
+    // 'texture', // Actor should have an array of textures
+  ]);
+  macro.getArray(publicAPI, model, ['bounds'], 6);
 
   // Object methods
   actor(publicAPI, model);
 }
 
-function newInstance(initialValues = {}) {
-  const model = Object.assign({}, DEFAULT_VALUES, initialValues);
-  const publicAPI = {};
+// ----------------------------------------------------------------------------
 
-  // Build VTK API
-  macro.obj(publicAPI, model, 'vtkActor');
-  extend(publicAPI, model);
+export const newInstance = macro.newInstance(extend);
 
-  return Object.freeze(publicAPI);
-}
+// ----------------------------------------------------------------------------
 
 export default { newInstance, extend };

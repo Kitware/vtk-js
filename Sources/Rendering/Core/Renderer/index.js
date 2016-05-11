@@ -1,23 +1,13 @@
 import * as macro from '../../../macro';
 
 // ----------------------------------------------------------------------------
-
-const SET_GET_FIELDS = [
-  'twoSidedLighting', 'lightFollowCamera', 'activeCamera',
-  'erase', 'draw', 'layer', 'interactive',
-  'renderWindow', 'preserveColorBuffer', 'preserveDepthBuffer',
-  'useDepthPeeling', 'occlusionRatio', 'maximumNumberOfPeels',
-  'useShadows',
-];
-const GET_ONLY = [];
-const GET_ARRAY_ONLY = ['actors', 'volumes', 'lights'];
-const SET_GET_ARRAY_3 = ['ambiant'];
-
-// ----------------------------------------------------------------------------
-// Renderer methods
+// vtkRenderer methods
 // ----------------------------------------------------------------------------
 
 function renderer(publicAPI, model) {
+  // Set our className
+  model.classHierarchy.push('vtkRenderer');
+
   publicAPI.addActor = actor => {
     model.actors = [].concat(model.actors, actor);
     publicAPI.modified();
@@ -89,10 +79,25 @@ export function extend(publicAPI, initialValues = {}) {
   const model = Object.assign(initialValues, DEFAULT_VALUES);
 
   // Build VTK API
-  macro.setGet(publicAPI, model, SET_GET_FIELDS);
-  macro.get(publicAPI, model, GET_ONLY);
-  macro.getArray(publicAPI, model, GET_ARRAY_ONLY);
-  macro.setGetArray(publicAPI, model, SET_GET_ARRAY_3, 3);
+  macro.obj(publicAPI, model);
+  macro.setGet(publicAPI, model, [
+    'twoSidedLighting',
+    'lightFollowCamera',
+    'activeCamera',
+    'erase',
+    'draw',
+    'layer',
+    'interactive',
+    'renderWindow',
+    'preserveColorBuffer',
+    'preserveDepthBuffer',
+    'useDepthPeeling',
+    'occlusionRatio',
+    'maximumNumberOfPeels',
+    'useShadows',
+  ]);
+  macro.getArray(publicAPI, model, ['actors', 'volumes', 'lights']);
+  macro.setGetArray(publicAPI, model, ['ambiant'], 3);
 
   // Object methods
   renderer(publicAPI, model);
@@ -100,16 +105,7 @@ export function extend(publicAPI, initialValues = {}) {
 
 // ----------------------------------------------------------------------------
 
-function newInstance(initialValues = {}) {
-  const model = Object.assign({}, DEFAULT_VALUES, initialValues);
-  const publicAPI = {};
-
-  // Build VTK API
-  macro.obj(publicAPI, model, 'vtkRenderer');
-  extend(publicAPI, model);
-
-  return Object.freeze(publicAPI);
-}
+export const newInstance = macro.newInstance(extend);
 
 // ----------------------------------------------------------------------------
 

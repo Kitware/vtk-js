@@ -1,48 +1,19 @@
 import * as macro from '../../../macro';
+import { SHADING_MODEL } from './Constants';
 
 // ----------------------------------------------------------------------------
-
-export const ShadingModel = ['VTK_FLAT', 'VTK_GOURAUD', 'VTK_PHONG'];
-export const RepresentationModel = ['VTK_POINTS', 'VTK_WIREFRAME', 'VTK_SURFACE'];
-
-const SET_GET_FIELDS = [
-  'lighting',
-  'interpolation',
-  'ambient',
-  'diffuse',
-  'specular',
-  'specularPower',
-  'opacity',
-  'edgeVisibility',
-  'lineWidth',
-  'lineStipplePattern',
-  'lineStippleRepeatFactor',
-  'pointSize',
-  'backfaceCulling',
-  'frontfaceCulling',
-];
-
-const GET_FIELDS = [
-  'lineStipplePattern',
-];
-
-const FIELD_ARRAY_3 = [
-  'ambientColor',
-  'specularColor',
-  'diffuseColor',
-  'edgeColor',
-];
-
-// ----------------------------------------------------------------------------
-// Property methods
+// vtkProperty methods
 // ----------------------------------------------------------------------------
 
 function property(publicAPI, model) {
+  // Set our className
+  model.classHierarchy.push('vtkProperty');
+
   publicAPI.setInterpolationToFlat = () => publicAPI.setInterpolation(0);
   publicAPI.setInterpolationToGouraud = () => publicAPI.setInterpolation(1);
   publicAPI.setInterpolationToPhong = () => publicAPI.setInterpolation(2);
 
-  publicAPI.getInterpolationAsString = () => ShadingModel[model.interpolation];
+  publicAPI.getInterpolationAsString = () => SHADING_MODEL[model.interpolation];
 
   publicAPI.setColor = (r, g, b) => {
     if (model.color[0] !== r || model.color[1] !== g || model.color[2] !== b) {
@@ -119,9 +90,32 @@ export function extend(publicAPI, initialValues = {}) {
   model.lineStipplePattern[1] = 255;
 
   // Build VTK API
-  macro.get(publicAPI, model, GET_FIELDS);
-  macro.setGet(publicAPI, model, SET_GET_FIELDS);
-  macro.setGetArray(publicAPI, model, FIELD_ARRAY_3, 3);
+  macro.obj(publicAPI, model);
+  macro.get(publicAPI, model, [
+    'lineStipplePattern',
+  ]);
+  macro.setGet(publicAPI, model, [
+    'lighting',
+    'interpolation',
+    'ambient',
+    'diffuse',
+    'specular',
+    'specularPower',
+    'opacity',
+    'edgeVisibility',
+    'lineWidth',
+    'lineStipplePattern',
+    'lineStippleRepeatFactor',
+    'pointSize',
+    'backfaceCulling',
+    'frontfaceCulling',
+  ]);
+  macro.setGetArray(publicAPI, model, [
+    'ambientColor',
+    'specularColor',
+    'diffuseColor',
+    'edgeColor',
+  ], 3);
 
   // Object methods
   property(publicAPI, model);
@@ -129,16 +123,7 @@ export function extend(publicAPI, initialValues = {}) {
 
 // ----------------------------------------------------------------------------
 
-function newInstance(initialValues = {}) {
-  const model = Object.assign({}, initialValues);
-  const publicAPI = {};
-
-  // vtkObject
-  macro.obj(publicAPI, model, 'vtkProperty');
-  extend(publicAPI, model);
-
-  return Object.freeze(publicAPI);
-}
+export const newInstance = macro.newInstance(extend);
 
 // ----------------------------------------------------------------------------
 
