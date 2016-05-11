@@ -43,7 +43,7 @@ export function webGLRenderer(publicAPI, model) {
 
     if (! model.renderable.getTransparent()) {
       const background = model.renderable.getBackground();
-      model.context.clearColor(background[0], background[1], background[2], 0.0);
+      model.context.clearColor(background[0], background[1], background[2], 1.0);
       clearMask |= gl.COLOR_BUFFER_BIT;
     }
 
