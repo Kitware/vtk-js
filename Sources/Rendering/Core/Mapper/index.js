@@ -32,7 +32,16 @@ addCoincidentTopologyMethods(
     })
 );
 
+let resolveCoincidentTopologyPolygonOffsetFaces = 1;
 let resolveCoincidentTopology = 0;
+
+export function getResolveCoincidentTopologyPolygonOffsetFaces() {
+  return resolveCoincidentTopologyPolygonOffsetFaces;
+}
+
+export function setResolveCoincidentTopologyPolygonOffsetFaces(value) {
+  resolveCoincidentTopologyPolygonOffsetFaces = value;
+}
 
 export function getResolveCoincidentTopology() {
   return resolveCoincidentTopology;
@@ -75,6 +84,15 @@ export const SCALAR_MODE = [
   'VTK_SCALAR_MODE_USE_FIELD_DATA',
 ];
 
+export const MATERIAL_MODE = [
+  'VTK_MATERIALMODE_DEFAULT',
+  'VTK_MATERIALMODE_AMBIENT',
+  'VTK_MATERIALMODE_DIFFUSE',
+  'VTK_MATERIALMODE_AMBIENT_AND_DIFFUSE',
+];
+
+// ----------------------------------------------------------------------------
+
 const FIELDS = [
   'lookupTable',
   'scalarVisibility',
@@ -83,11 +101,16 @@ const FIELDS = [
   'interpolateScalarsBeforeMapping',
   'useLookupTableScalarRange',
   'fieldDataTupleId',
+  'renderTime',
+  'colorByArrayName',
+  'colorByArrayComponent',
+  'scalarMaterialMode',
 ];
 
 const GET_FIELDS = [
-  'arrayName',
-  'arrayComponent',
+  'colorMapColors',
+  'colorCoordinates',
+  'colorTextureMap',
 ];
 
 const ARRAY_2 = [
@@ -100,7 +123,7 @@ const ARRAY_2 = [
 
 function mapper(publicAPI, model) {
   publicAPI.createDefaultLookupTable = () => {
-    console.log('Not implemented createDefaultLookupTable');
+    console.log('vtkMapper::createDefaultLookupTable - NOT IMPLEMENTED');
     model.lookupTable = LookupTable.newInstance();
   };
 
@@ -119,12 +142,6 @@ function mapper(publicAPI, model) {
   publicAPI.setScalarModeToUseCellFieldData = () => publicAPI.setScalarMode(4);
   publicAPI.setScalarModeToUseFieldData = () => publicAPI.setScalarMode(5);
 
-  publicAPI.selectColorArray = (name, component = -1) => {
-    model.arrayName = name;
-    model.arrayComponent = component;
-    publicAPI.modified();
-  };
-
   // Static methods
   publicAPI.getResolveCoincidentTopology = getResolveCoincidentTopology;
   publicAPI.setResolveCoincidentTopology = setResolveCoincidentTopology;
@@ -132,6 +149,9 @@ function mapper(publicAPI, model) {
   publicAPI.setResolveCoincidentTopologyToOff = setResolveCoincidentTopologyToOff;
   publicAPI.setResolveCoincidentTopologyToPolygonOffset = setResolveCoincidentTopologyToPolygonOffset;
   publicAPI.getResolveCoincidentTopologyAsString = getResolveCoincidentTopologyAsString;
+
+  publicAPI.getResolveCoincidentTopologyPolygonOffsetFaces = getResolveCoincidentTopologyPolygonOffsetFaces;
+  publicAPI.setResolveCoincidentTopologyPolygonOffsetFaces = setResolveCoincidentTopologyPolygonOffsetFaces;
 
   offsetAPI.forEach(name => {
     publicAPI[name] = offsetAPI[name];
@@ -177,6 +197,45 @@ function mapper(publicAPI, model) {
       units: globalValue.units + localValue.units,
     };
   };
+
+  publicAPI.getBounds = () => {
+    console.log('vtkMapper::getBounds - NOT IMPLEMENTED');
+    return null;
+  };
+
+  publicAPI.mapScalars = (input, alpha) => {
+    console.log('vtkMapper::mapScalars - NOT IMPLEMENTED');
+    const cellFlag = false;
+    const rgba = new Uint8Array(10);
+    return { rgba, cellFlag };
+  };
+
+  publicAPI.setScalarMaterialModeToDefault = () => publicAPI.setScalarMaterialMode(0);
+  publicAPI.setScalarMaterialModeToAmbient = () => publicAPI.setScalarMaterialMode(1);
+  publicAPI.setScalarMaterialModeToDiffuse = () => publicAPI.setScalarMaterialMode(2);
+  publicAPI.setScalarMaterialModeToAmbientAndDiffuse = () => publicAPI.setScalarMaterialMode(3);
+  publicAPI.getScalarMaterialModeAsString = () => MATERIAL_MODE[model.scalarMaterialMode];
+
+  publicAPI.getIsOpaque = () => {
+    const lut = publicAPI.getLookupTable();
+    if (lut) {
+      // Ensure that the lookup table is built
+      lut.build();
+      return lut.isOpaque();
+    }
+    return true;
+  };
+
+  publicAPI.canUseTextureMapForColoring = input => {
+    console.log('vtkMapper::canUseTextureMapForColoring - NOT IMPLEMENTED');
+    return false;
+  };
+
+  publicAPI.clearColorArrays = () => {
+    model.colorMapColors = null;
+    model.colorCoordinates = null;
+    model.colorTextureMap = null;
+  };
 }
 
 // ----------------------------------------------------------------------------
@@ -192,9 +251,15 @@ const DEFAULT_VALUES = {
   useLookupTableScalarRange: false,
   scalarRange: [0, 1],
   scalarMode: 0,
-  arrayName: null,
-  arrayComponent: -1,
+  colorByArrayName: null,
+  colorByArrayComponent: -1,
   fieldDataTupleId: -1,
+  renderTime: 0,
+  scalarMaterialMode: 0,
+
+  colorMapColors: null,
+  colorCoordinates: null,
+  colorTextureMap: null,
 };
 
 // ----------------------------------------------------------------------------
@@ -203,6 +268,7 @@ export function extend(publicAPI, initialValues = {}) {
   const model = Object.assign(initialValues, DEFAULT_VALUES);
 
   // Build VTK API
+  macro.algo(publicAPI, model, 1, 0);
   macro.get(publicAPI, model, GET_FIELDS);
   macro.setGet(publicAPI, model, FIELDS);
   macro.setGetArray(publicAPI, model, ARRAY_2, 2);
@@ -237,5 +303,8 @@ export default Object.assign({
   setResolveCoincidentTopologyToOff,
   setResolveCoincidentTopologyToPolygonOffset,
   getResolveCoincidentTopologyAsString,
+
+  getResolveCoincidentTopologyPolygonOffsetFaces,
+  setResolveCoincidentTopologyPolygonOffsetFaces,
 
 }, offsetAPI);

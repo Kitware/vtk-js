@@ -164,13 +164,13 @@ with SelectColorArray as having a scalar value for each cell.
 Indices of 0 or higher mean to use the tuple at the given index
 for coloring the entire data set.
 
-### getArrayName() 
+### colorByArrayName
 
-Get the array name to color by.
+Set/Get the array name to color by.
 
-### getArrayComponent() 
+### colorByArrayComponent 
 
-Get the array component to color by.
+Set/Get the array component to color by.
 
 ### resolveCoincidentTopology (STATIC)
 
@@ -274,201 +274,99 @@ the global values with the relative values.
 Get the net paramters for handlig coincident topology obtained by summing
 the global values with the relative values.
 
- // -------------------------
+### resolveCoincidentTopologyPolygonOffsetFaces
 
-  // Description:
-  // Used when ResolveCoincidentTopology is set to PolygonOffset. The polygon
-  // offset can be applied either to the solid polygonal faces or the
-  // lines/vertices. When set (default), the offset is applied to the faces
-  // otherwise it is applied to lines and vertices.
-  // This is a global variable.
-  static void SetResolveCoincidentTopologyPolygonOffsetFaces(int faces);
-  static int GetResolveCoincidentTopologyPolygonOffsetFaces();
+Used when ResolveCoincidentTopology is set to PolygonOffset. The polygon
+offset can be applied either to the solid polygonal faces or the
+lines/vertices. When set (default), the offset is applied to the faces
+otherwise it is applied to lines and vertices.
+This is a global variable.
 
-  // Description:
-  // Return bounding box (array of six doubles) of data expressed as
-  // (xmin,xmax, ymin,ymax, zmin,zmax).
-  virtual double *GetBounds();
-  virtual void GetBounds(double bounds[6])
-    { this->vtkAbstractMapper3D::GetBounds(bounds); }
+### getBounds() : Array(6)
 
-  // Description:
-  // This instance variable is used by vtkLODActor to determine which
-  // mapper to use.  It is an estimate of the time necessary to render.
-  // Setting the render time does not modify the mapper.
-  void SetRenderTime(double time) {this->RenderTime = time;}
-  vtkGetMacro(RenderTime, double);
+Return bounding box (array of six doubles) of data expressed as
+(xmin,xmax, ymin,ymax, zmin,zmax).
 
-  //BTX
-  // Description:
-  // Get the input as a vtkDataSet.  This method is overridden in
-  // the specialized mapper classes to return more specific data types.
-  vtkDataSet *GetInput();
-  //ETX
+### renderTime (set/get)
 
-  // Description:
-  // Get the input to this mapper as a vtkDataSet, instead of as a
-  // more specialized data type that the subclass may return from
-  // GetInput().  This method is provided for use in the wrapper languages,
-  // C++ programmers should use GetInput() instead.
-  vtkDataSet *GetInputAsDataSet()
-    { return this->GetInput(); }
+This instance variable is used by vtkLODActor to determine which
+mapper to use.  It is an estimate of the time necessary to render.
+Setting the render time does not modify the mapper.
 
-  // Description:
-  // Map the scalars (if there are any scalars and ScalarVisibility is on)
-  // through the lookup table, returning an unsigned char RGBA array. This is
-  // typically done as part of the rendering process. The alpha parameter
-  // allows the blending of the scalars with an additional alpha (typically
-  // which comes from a vtkActor, etc.)
-  virtual vtkUnsignedCharArray *MapScalars(double alpha);
-  virtual vtkUnsignedCharArray *MapScalars(double alpha,
-                                           int &cellFlag);
-  virtual vtkUnsignedCharArray *MapScalars(vtkDataSet *input,
-                                           double alpha);
-  virtual vtkUnsignedCharArray *MapScalars(vtkDataSet *input,
-                                           double alpha,
-                                           int &cellFlag);
+### mapScalars(input, alpha) => { rgba, cellFlag }
 
-  // Description:
-  // Set/Get the light-model color mode.
-  vtkSetMacro(ScalarMaterialMode,int);
-  vtkGetMacro(ScalarMaterialMode,int);
-  void SetScalarMaterialModeToDefault()
-    { this->SetScalarMaterialMode(VTK_MATERIALMODE_DEFAULT); }
-  void SetScalarMaterialModeToAmbient()
-    { this->SetScalarMaterialMode(VTK_MATERIALMODE_AMBIENT); }
-  void SetScalarMaterialModeToDiffuse()
-    { this->SetScalarMaterialMode(VTK_MATERIALMODE_DIFFUSE); }
-  void SetScalarMaterialModeToAmbientAndDiffuse()
-    { this->SetScalarMaterialMode(VTK_MATERIALMODE_AMBIENT_AND_DIFFUSE); }
+Map the scalars (if there are any scalars and ScalarVisibility is on)
+through the lookup table, returning an unsigned char RGBA array. This is
+typically done as part of the rendering process. The alpha parameter
+allows the blending of the scalars with an additional alpha (typically
+which comes from a vtkActor, etc.)
 
-  // Description:
-  // Return the light-model color mode.
-  const char *GetScalarMaterialModeAsString();
+```js
+{
+  rgba: Uint8Array(),
+  location: 0/1/2, // Points/Cells/Fields
+}
+```
 
-  // Description:
-  // Returns if the mapper does not expect to have translucent geometry. This
-  // may happen when using ColorMode is set to not map scalars i.e. render the
-  // scalar array directly as colors and the scalar array has opacity i.e. alpha
-  // component.  Default implementation simply returns true. Note that even if
-  // this method returns true, an actor may treat the geometry as translucent
-  // since a constant translucency is set on the property, for example.
-  virtual bool GetIsOpaque();
+### scalarMaterialMode
 
-  // Description:
-  // WARNING: INTERNAL METHOD - NOT INTENDED FOR GENERAL USE
-  // DO NOT USE THIS METHOD OUTSIDE OF THE RENDERING PROCESS
-  // Used by vtkHardwareSelector to determine if the prop supports hardware
-  // selection.
-  virtual bool GetSupportsSelection()
-    { return false; }
+Set/Get the light-model color mode.
 
-  // Description:
-  // Returns if we can use texture maps for scalar coloring. Note this doesn't
-  // say we "will" use scalar coloring. It says, if we do use scalar coloring,
-  // we will use a texture.
-  // When rendering multiblock datasets, if any 2 blocks provide different
-  // lookup tables for the scalars, then also we cannot use textures. This case
-  // can be handled if required.
-  virtual int CanUseTextureMapForColoring(vtkDataObject* input);
+```js 
+// Other helper methods
+setScalarMaterialModeToDefault();
+setScalarMaterialModeToAmbient();
+setScalarMaterialModeToDiffuse();
+setScalarMaterialModeToAmbientAndDiffuse();
+```
 
-  // Description:
-  // Used internally by vtkValuePass
-  void UseInvertibleColorFor(int scalarMode,
-    int arrayAccessMode,
-    int arrayId,
-    const char *arrayName,
-    int arrayComponent,
-    double *scalarRange);
+### getScalarMaterialModeAsString() : String
 
-  // Description:
-  // Used internally by vtkValuePass.
-  void ClearInvertibleColor();
+Return the light-model color mode.
 
-  // Description:
-  // Convert a floating point value to an RGB triplet.
-  static void ValueToColor(double value, double min, double scale,
-    unsigned char *color);
+```js
+const MATERIAL_MODE = [
+  'VTK_MATERIALMODE_DEFAULT',
+  'VTK_MATERIALMODE_AMBIENT',
+  'VTK_MATERIALMODE_DIFFUSE',
+  'VTK_MATERIALMODE_AMBIENT_AND_DIFFUSE',
+];
 
-  // Description:
-  // Convert an RGB triplet to a floating point value.
-  static void ColorToValue(unsigned char *color, double min, double scale,
-    double &value);
+console.log(MATERIAL_MODE[getScalarMaterialMode()]);
+```
 
-  // Description:
-  // Call to force a rebuild of color result arrays on next MapScalars.
-  // Necessary when using arrays in the case of multiblock data.
-  void ClearColorArrays();
+### getIsOpaque() : Boolean
 
-  // Description:
-  // Provide read access to the color array
-  vtkUnsignedCharArray *GetColorMapColors();
+Returns if the mapper does not expect to have translucent geometry. This
+may happen when using ColorMode is set to not map scalars i.e. render the
+scalar array directly as colors and the scalar array has opacity i.e. alpha
+component.  Default implementation simply returns true. Note that even if
+this method returns true, an actor may treat the geometry as translucent
+since a constant translucency is set on the property, for example.
 
-  // Description:
-  // Provide read access to the color texture coordinate array
-  vtkFloatArray *GetColorCoordinates();
+### canUseTextureMapForColoring(input)
 
-  // Description:
-  // Provide read access to the color texture array
-  vtkImageData* GetColorTextureMap();
+Returns if we can use texture maps for scalar coloring. Note this doesn't
+say we "will" use scalar coloring. It says, if we do use scalar coloring,
+we will use a texture.
+When rendering multiblock datasets, if any 2 blocks provide different
+lookup tables for the scalars, then also we cannot use textures. This case
+can be handled if required.
 
-protected:
-  vtkMapper();
-  ~vtkMapper();
+### clearColorArrays()
+ 
+Call to force a rebuild of color result arrays on next MapScalars.
+Necessary when using arrays in the case of multiblock data.
 
-  // color mapped colors
-  vtkUnsignedCharArray *Colors;
+### getColorMapColors() : Uint8Array()
 
-  // Use texture coordinates for coloring.
-  int InterpolateScalarsBeforeMapping;
-  // Coordinate for each point.
-  vtkFloatArray *ColorCoordinates;
-  // 1D ColorMap used for the texture image.
-  vtkImageData* ColorTextureMap;
-  void MapScalarsToTexture(vtkAbstractArray* scalars, double alpha);
+Provide read access to the color array.
 
-  // Makes a lookup table that can be used for deferred colormaps
-  void AcquireInvertibleLookupTable();
-  bool UseInvertibleColors;
-  static vtkScalarsToColors *InvertibleLookupTable;
+### getColorCoordinates() : Float32Array()
 
-  vtkScalarsToColors *LookupTable;
-  int ScalarVisibility;
-  vtkTimeStamp BuildTime;
-  double ScalarRange[2];
-  int UseLookupTableScalarRange;
-  int ImmediateModeRendering;
-  int ColorMode;
-  int ScalarMode;
-  int ScalarMaterialMode;
+Provide read access to the color texture coordinate array
 
-  double RenderTime;
+### getColorTextureMap() : ?? ImageData ??
 
-  // for coloring by a component of a field data array
-  int ArrayId;
-  char ArrayName[256];
-  int ArrayComponent;
-  int ArrayAccessMode;
+Provide read access to the color texture array
 
-  // If coloring by field data, which tuple to use to color the entire
-  // data set. If -1, treat array values as cell data.
-  vtkIdType FieldDataTupleId;
-
-  int Static;
-
-  int ForceCompileOnly;
-
-  vtkAbstractArray *InvertibleScalars;
-
-  double CoincidentPolygonFactor;
-  double CoincidentPolygonOffset;
-  double CoincidentLineFactor;
-  double CoincidentLineOffset;
-  double CoincidentPointOffset;
-
-private:
-  vtkMapper(const vtkMapper&);  // Not implemented.
-  void operator=(const vtkMapper&);  // Not implemented.
-};
-
-#endif

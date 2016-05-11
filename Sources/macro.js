@@ -87,13 +87,15 @@ export function set(publicAPI, model, fieldNames) {
     function setter(value) {
       if (model.deleted) {
         console.log('instance deleted - can not call any method');
-        return;
+        return false;
       }
 
       if (model[field] !== value) {
         model[field] = value;
         publicAPI.modified();
+        return true;
       }
+      return false;
     }
 
     publicAPI[`set${capitalize(field)}`] = setter;
@@ -179,6 +181,10 @@ export function algo(publicAPI, model, numberOfInputs, numberOfOutputs) {
     model.inputConnection[port] = null;
   }
 
+  function getInputData(port = 0) {
+    return model.inputData[port] || model.inputConnection[port]();
+  }
+
   function setInputConnection(outputPort, port = 0) {
     if (model.deleted) {
       console.log('instance deleted - can not call any method');
@@ -213,6 +219,7 @@ export function algo(publicAPI, model, numberOfInputs, numberOfOutputs) {
     // Expose public methods
     publicAPI.setInputData = setInputData;
     publicAPI.setInputConnection = setInputConnection;
+    publicAPI.getInputData = getInputData;
   }
 
   if (numberOfOutputs) {
