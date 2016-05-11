@@ -17,12 +17,12 @@ export function webGLRenderer(publicAPI, model) {
       }
 
       // make sure we have a camera
-      if (!model.renderable.isActiveCameraCreated()) {
-        model.renderable.resetCamera();
-      }
+      // if (!model.renderable.isActiveCameraCreated()) {
+      //   model.renderable.resetCamera();
+      // }
 
       publicAPI.prepareNodes();
-      publicAPI.addMissingNodes(model.renderble.getActors());
+      publicAPI.addMissingNodes(model.renderable.getActors());
       publicAPI.removeUnusedNodes();
     }
   };
@@ -31,9 +31,9 @@ export function webGLRenderer(publicAPI, model) {
   // Renders myself
   publicAPI.render = (prepass) => {
     if (prepass) {
-      // make current
+      publicAPI.clear();
     } else {
-      model.clear();
+      // else
     }
   };
 
@@ -50,10 +50,10 @@ export function webGLRenderer(publicAPI, model) {
     if (!model.renderable.getPreserveDepthBuffer()) {
       gl.clearDepth(1.0);
       clearMask |= gl.DEPTH_BUFFER_BIT;
-      gl.depthMask(gl.TRUE);
+      gl.depthMask(true);
     }
 
-    gl.colorMask(gl.TRUE, gl.TRUE, gl.TRUE, gl.TRUE);
+    gl.colorMask(true, true, true, true);
     gl.clear(clearMask);
 
     gl.enable(gl.DEPTH_TEST);
@@ -65,6 +65,7 @@ export function webGLRenderer(publicAPI, model) {
 // ----------------------------------------------------------------------------
 
 const DEFAULT_VALUES = {
+  context: null,
 };
 
 // ----------------------------------------------------------------------------
@@ -77,6 +78,10 @@ export function extend(publicAPI, model, initialValues = {}) {
 
   // Build VTK API
   macro.get(publicAPI, model, ['shaderCache']);
+
+  macro.setGet(publicAPI, model, [
+    'context',
+  ]);
 
   // Object methods
   webGLRenderer(publicAPI, model);

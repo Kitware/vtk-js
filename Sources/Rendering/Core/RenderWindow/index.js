@@ -8,22 +8,6 @@ export function renderWindow(publicAPI, model) {
   // Set our className
   model.classHierarchy.push('vtkRenderWindow');
 
-  // Auto update style
-  function updateWindow() {
-    // Canvas size
-    model.canvas.setAttribute('width', model.width);
-    model.canvas.setAttribute('height', model.height);
-
-    // Offscreen ?
-    model.canvas.style.display = model.useOffScreen ? 'none' : 'block';
-
-    // Cursor type
-    if (model.el) {
-      model.el.style.cursor = model.cursorVisibility ? model.cursor : 'none';
-    }
-  }
-  publicAPI.onModified(updateWindow);
-
   // Add renderer
   publicAPI.addRenderer = renderer => {
     model.renderers.push(renderer);

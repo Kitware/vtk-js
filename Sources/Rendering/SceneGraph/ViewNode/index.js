@@ -76,18 +76,28 @@ function viewNode(publicAPI, model) {
   };
 
   publicAPI.addMissingNodes = (dataObjs) => {
-    model.preparedNodes.add(dataObjs);
+    model.preparedNodes = model.preparedNodes.concat(dataObjs);
 
-    model.children.concat(dataObjs.filter(node => {
-      if (model.children.indexOf(node) === -1) {
-        const newNode = publicAPI.createViewNode(node);
-        if (newNode) {
-          newNode.setParent(model);
+    // if any dataObj is not a renderable of a child
+    // then create child for that dataObj with renderable set to the
+    // dataObj
+
+    const childDOs = model.children.map(node => node.getRenderable());
+
+    const newNodes =
+      dataObjs
+        .filter(node => (childDOs.indexOf(node) === -1))
+        .map(node => {
+          const newNode = publicAPI.createViewNode(node);
+          if (newNode) {
+            newNode.setParent(publicAPI);
+            newNode.setRenderable(node);
+          }
+          return newNode;
         }
-        return newNode;
-      }
-      return null;
-    }));
+      );
+
+    model.children = model.children.concat(newNodes);
   };
 
   publicAPI.prepareNodes = () => {
@@ -95,12 +105,9 @@ function viewNode(publicAPI, model) {
   };
 
   publicAPI.removeUnusedNodes = () => {
-    model.children.filter(node => {
-      if (model.preparedNodes.indexOf(node.getRenderable()) !== -1) {
-        return true;
-      }
-      return false;
-    });
+    model.children = model.children.filter(node =>
+      (model.preparedNodes.indexOf(node.getRenderable()) !== -1)
+    );
     publicAPI.prepareNodes();
   };
 
@@ -111,7 +118,7 @@ function viewNode(publicAPI, model) {
     }
     const ret = model.myFactory.createNode(dataObj);
     if (ret) {
-      ret.renderable = dataObj;
+      ret.setRenderable(dataObj);
     }
     return ret;
   };

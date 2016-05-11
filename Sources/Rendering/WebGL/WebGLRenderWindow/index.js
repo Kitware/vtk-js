@@ -1,5 +1,6 @@
 import * as macro from '../../../macro';
 import ViewNode from '../../SceneGraph/ViewNode';
+import WebGLViewNodeFactory from '../WebGLViewNodeFactory';
 
 // ----------------------------------------------------------------------------
 // vtkWebGLRenderWindow methods
@@ -9,6 +10,23 @@ export function webGLRenderWindow(publicAPI, model) {
   // Set our className
   model.classHierarchy.push('vtkWebGLRenderWindow');
 
+  // Auto update style
+  function updateWindow() {
+    // Canvas size
+    if (model.renderable) {
+      model.canvas.setAttribute('width', model.renderable.getWidth());
+      model.canvas.setAttribute('height', model.renderable.getHeight());
+    }
+    // Offscreen ?
+    model.canvas.style.display = model.useOffScreen ? 'none' : 'block';
+
+    // Cursor type
+    if (model.el) {
+      model.el.style.cursor = model.cursorVisibility ? model.cursor : 'none';
+    }
+  }
+  publicAPI.onModified(updateWindow);
+
   // Builds myself.
   publicAPI.build = (prepass) => {
     if (prepass) {
@@ -17,28 +35,34 @@ export function webGLRenderWindow(publicAPI, model) {
       }
 
       publicAPI.prepareNodes();
-      publicAPI.addMissingNodes(model.renderble.getRenderers());
+      publicAPI.addMissingNodes(model.renderable.getRenderers());
       publicAPI.removeUnusedNodes();
     }
   };
 
   publicAPI.initialize = () => {
-    model.context = model.get3DContext();
+    if (!model.initialized) {
+      model.context = publicAPI.get3DContext();
+      model.initialized = true;
+    }
   };
 
   publicAPI.makeCurrent = () => {
     model.context.makeCurrent();
   };
 
-  publicAPI.swap = () => {
+  publicAPI.frame = () => {
   };
 
   // Renders myself
   publicAPI.render = (prepass) => {
     if (prepass) {
-      // make current
+      publicAPI.initialize();
+      model.children.forEach(child => {
+        child.setContext(model.context);
+      });
     } else {
-      // else
+      publicAPI.frame();
     }
   };
 
@@ -89,8 +113,14 @@ export function extend(publicAPI, model, initialValues = {}) {
   // Inheritance
   ViewNode.extend(publicAPI, model);
 
+  model.myFactory = WebGLViewNodeFactory.newInstance();
+
   // Build VTK API
   macro.get(publicAPI, model, ['shaderCache']);
+  macro.setGet(publicAPI, model, [
+    'initialized',
+  ]);
+
 
   // Object methods
   webGLRenderWindow(publicAPI, model);

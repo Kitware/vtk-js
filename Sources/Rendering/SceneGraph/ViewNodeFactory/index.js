@@ -9,7 +9,7 @@ function viewNodeFactory(publicAPI, model) {
   model.classHierarchy.push('vtkViewNodeFactory');
 
   publicAPI.createNode = (dataObject) => {
-    if (model.overrides.indexOf(dataObject) !== -1) {
+    if (Object.keys(model.overrides).indexOf(dataObject.getClassName()) === -1) {
       return null;
     }
     const vn = model.overrides[dataObject.getClassName()]();

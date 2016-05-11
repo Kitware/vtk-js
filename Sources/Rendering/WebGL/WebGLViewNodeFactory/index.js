@@ -33,10 +33,10 @@ export function extend(publicAPI, model, initialValues = {}) {
   webGLViewNodeFactory(publicAPI, model);
 
   // Initialization
-  publicAPI.registerOverride('vtkWebGLRenderWindow', WebGLRenderWindow.newInstance);
-  publicAPI.registerOverride('vtkWebGLRenderer', WebGLRenderer.newInstance);
-  publicAPI.registerOverride('vtkWebGLActor', WebGLActor.newInstance);
-  publicAPI.registerOverride('vtkWebGLPolyDataMapper', WebGLPolyDataMapper.newInstance);
+  publicAPI.registerOverride('vtkRenderWindow', WebGLRenderWindow.newInstance);
+  publicAPI.registerOverride('vtkRenderer', WebGLRenderer.newInstance);
+  publicAPI.registerOverride('vtkActor', WebGLActor.newInstance);
+  publicAPI.registerOverride('vtkPolyDataMapper', WebGLPolyDataMapper.newInstance);
 }
 
 // ----------------------------------------------------------------------------

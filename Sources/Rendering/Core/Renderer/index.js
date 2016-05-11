@@ -45,6 +45,9 @@ function renderer(publicAPI, model) {
     renderWindow.addRenderer(publicAPI);
   };
 
+  publicAPI.isActiveCameraCreated = () => {
+  };
+
   // FIXME resetCamera... resetCameraClippingRange...
 }
 
@@ -62,7 +65,6 @@ const DEFAULT_VALUES = {
   activeCamera: null, // FIXME create one by default
   erase: true,
   draw: true,
-  ambiant: [1, 1, 1],
   interactive: false,
   layer: 1,
   preserveColorBuffer: false,
@@ -71,6 +73,8 @@ const DEFAULT_VALUES = {
   occlusionRatio: 0,
   maximumNumberOfPeels: 4,
   useShadows: false,
+  background: [0.2, 0.3, 0.4],
+  transparent: false,
 };
 
 // ----------------------------------------------------------------------------
@@ -95,9 +99,10 @@ export function extend(publicAPI, model, initialValues = {}) {
     'occlusionRatio',
     'maximumNumberOfPeels',
     'useShadows',
+    'transparent',
   ]);
   macro.getArray(publicAPI, model, ['actors', 'volumes', 'lights']);
-  macro.setGetArray(publicAPI, model, ['ambiant'], 3);
+  macro.setGetArray(publicAPI, model, ['background'], 3);
 
   // Object methods
   renderer(publicAPI, model);
