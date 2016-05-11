@@ -13,7 +13,7 @@ export function substitute(source, search, replace, all = true) {
   if (all) {
     gflag = 'g';
   }
-  const regex = `/${search}/${gflag}`;
+  const regex = new RegExp(search, gflag);
   const resultstr = source.replace(regex, replace);
   return { replace: replaced, result: resultstr };
 }
