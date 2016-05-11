@@ -1,19 +1,11 @@
 import * as macro from '../../../macro';
 import Endian from '../../../Common/Core/Endian';
 import pako from 'pako';
+import { TYPE_BYTES, LOCATIONS } from './Constants';
 
-const LOCATIONS = ['PointData', 'CellData', 'FieldData'];
-const TYPE_BYTES = {
-  Int8Array: 1,
-  Uint8Array: 1,
-  Uint8ClampedArray: 1,
-  Int16Array: 2,
-  Uint16Array: 2,
-  Int32Array: 4,
-  Uint32Array: 4,
-  Float32Array: 4,
-  Float64Array: 8,
-};
+// ----------------------------------------------------------------------------
+// Global methods
+// ----------------------------------------------------------------------------
 
 const GEOMETRY_ARRAYS = {
   PolyData(dataset) {
@@ -65,10 +57,13 @@ const GEOMETRY_ARRAYS = {
 
 
 // ----------------------------------------------------------------------------
-// HttpDataSetReader methods
+// vtkHttpDataSetReader methods
 // ----------------------------------------------------------------------------
 
 export function httpDataSetReader(publicAPI, model) {
+  // Set our className
+  model.classHierarchy.push('vtkHttpDataSetReader');
+
   // Internal method to fetch Array
   function fetchArray(array, fetchGzip = false) {
     if (array.ref && !array.ref.pending) {
@@ -359,28 +354,33 @@ const DEFAULT_VALUES = {
   requestCount: 0,
 };
 
-const STD_FIELDS = ['enableArray', 'fetchGzip', 'blocks', 'url', 'baseURL'];
-const ARRAY_FIELDS = ['arrays'];
-
 // ----------------------------------------------------------------------------
 
-function newInstance(initialValues = {}) {
-  const model = Object.assign({}, DEFAULT_VALUES, initialValues);
-  const publicAPI = {};
+
+export function extend(publicAPI, model, initialValues = {}) {
+  Object.assign(model, DEFAULT_VALUES, initialValues);
 
   // Build VTK API
   macro.obj(publicAPI, model);
-  macro.get(publicAPI, model, STD_FIELDS);
-  macro.getArray(publicAPI, model, ARRAY_FIELDS);
+  macro.get(publicAPI, model, [
+    'enableArray',
+    'fetchGzip',
+    'blocks',
+    'url',
+    'baseURL',
+  ]);
+  macro.getArray(publicAPI, model, ['arrays']);
   macro.algo(publicAPI, model, 0, 1);
   macro.event(publicAPI, model, 'busy');
 
   // Object methods
   httpDataSetReader(publicAPI, model);
-
-  return Object.freeze(publicAPI);
 }
 
 // ----------------------------------------------------------------------------
 
-export default { newInstance };
+export const newInstance = macro.newInstance(extend);
+
+// ----------------------------------------------------------------------------
+
+export default { newInstance, extend };

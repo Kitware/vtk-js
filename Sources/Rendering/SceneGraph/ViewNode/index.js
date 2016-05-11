@@ -131,8 +131,8 @@ const DEFAULT_VALUES = {
 
 // ----------------------------------------------------------------------------
 
-export function extend(publicAPI, initialValues = {}) {
-  const model = Object.assign(initialValues, DEFAULT_VALUES);
+export function extend(publicAPI, model, initialValues = {}) {
+  Object.assign(model, DEFAULT_VALUES, initialValues);
 
   // Build VTK API
   macro.obj(publicAPI, model);

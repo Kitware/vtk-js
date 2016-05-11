@@ -1,25 +1,13 @@
 import * as macro from '../../../macro';
 
 // ----------------------------------------------------------------------------
-
-const STD_FIELDS = [
-  'radius',
-  'latLongTessellation',
-  'thetaResolution',
-  'startTheta',
-  'endTheta',
-  'phiResolution',
-  'startPhi',
-  'endPhi',
-];
-
-const ARRAY_FIELDS_3 = ['center'];
-
-// ----------------------------------------------------------------------------
-// SphereSource methods
+// vtkSphereSource methods
 // ----------------------------------------------------------------------------
 
 export function sphereSource(publicAPI, model) {
+  // Set our className
+  model.classHierarchy.push('vtkSphereSource');
+
   function update() {
     if (model.deleted) {
       return;
@@ -62,10 +50,10 @@ export function sphereSource(publicAPI, model) {
       };
 
       // Add parameter used to create dataset as metadata.state[*]
-      STD_FIELDS.forEach(field => {
+      ['radius', 'latLongTessellation', 'thetaResolution', 'startTheta', 'endTheta', 'phiResolution', 'startPhi', 'endPhi'].forEach(field => {
         state[field] = model[field];
       });
-      ARRAY_FIELDS_3.forEach(field => {
+      ['center'].forEach(field => {
         state[field] = [].concat(model[field]);
       });
 
@@ -266,22 +254,30 @@ const DEFAULT_VALUES = {
 
 // ----------------------------------------------------------------------------
 
-function newInstance(initialValues = {}) {
-  const model = Object.assign({}, DEFAULT_VALUES, initialValues);
-  const publicAPI = {};
+export function extend(publicAPI, model, initialValues = {}) {
+  Object.assign(model, DEFAULT_VALUES, initialValues);
 
   // Build VTK API
   macro.obj(publicAPI, model);
-  macro.setGet(publicAPI, model, STD_FIELDS);
-  macro.setGetArray(publicAPI, model, ARRAY_FIELDS_3, 3);
+  macro.setGet(publicAPI, model, [
+    'radius',
+    'latLongTessellation',
+    'thetaResolution',
+    'startTheta',
+    'endTheta',
+    'phiResolution',
+    'startPhi',
+    'endPhi',
+  ]);
+  macro.setGetArray(publicAPI, model, ['center'], 3);
   macro.algo(publicAPI, model, 0, 1);
-
-  // Object methods
   sphereSource(publicAPI, model);
-
-  return Object.freeze(publicAPI);
 }
 
 // ----------------------------------------------------------------------------
 
-export default { newInstance };
+export const newInstance = macro.newInstance(extend);
+
+// ----------------------------------------------------------------------------
+
+export default { newInstance, extend };
