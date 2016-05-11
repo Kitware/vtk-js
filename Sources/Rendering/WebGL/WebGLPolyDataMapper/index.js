@@ -110,7 +110,7 @@ export function webGLPolyDataMapper(publicAPI, model) {
         break;
 
       case 3: // positional
-        FSSource = ShaderProgram.substitute(FSSource,'//VTK::Light::Dec', [
+        FSSource = ShaderProgram.substitute(FSSource, '//VTK::Light::Dec', [
           // only allow for up to 6 active lights
           'uniform int numberOfLights;',
           // intensity weighted color
@@ -123,7 +123,7 @@ export function webGLPolyDataMapper(publicAPI, model) {
           'uniform float lightExponent[6];',
           'uniform int lightPositional[6];']
         ).result;
-        FSSource = ShaderProgram.substitute(FSSource,'//VTK::Light::Impl', [
+        FSSource = ShaderProgram.substitute(FSSource, '//VTK::Light::Impl', [
           '  vec3 diffuse = vec3(0,0,0);',
           '  vec3 specular = vec3(0,0,0);',
           '  vec3 vertLightDirectionVC;',
@@ -365,7 +365,7 @@ export function webGLPolyDataMapper(publicAPI, model) {
         if (lightComplexity === 1
             && (numberOfLights > 1
               || light.getIntensity() !== 1.0
-              || light.getLightType() !== VTK_LIGHT_TYPE_HEADLIGHT)) {
+              || !light.lightTypeIsHeadlight())) {
           lightComplexity = 2;
         }
         if (lightComplexity < 3
@@ -404,7 +404,7 @@ export function webGLPolyDataMapper(publicAPI, model) {
 
     // has something changed that would require us to recreate the shader?
     if (publicAPI.getNeedToRebuildShaders(cellBO, ren, actor)) {
-      let shaders = {Vertex: null, Fragment: null, Geometry: null };
+      const shaders = { Vertex: null, Fragment: null, Geometry: null };
 
       publicAPI.buildShaders(shaders, ren, actor);
 
@@ -812,8 +812,13 @@ export function webGLPolyDataMapper(publicAPI, model) {
       // First we do the triangles, update the shader, set uniforms, etc.
       publicAPI.updateShaders(model.Tris, ren, actor);
       model.tris.IBO.bind();
-      const mode = (representation === REPRESENTATIONS.VTK_POINTS) ? gl.POINTS :
-        (representation === REPRESENTATIONS.VTK_WIREFRAME) ? gl.LINES : gl.TRIANGLES;
+      let mode = gl.Points;
+      if (representation === REPRESENTATIONS.VTK_WIREFRAME) {
+        mode = gl.Lines;
+      }
+      if (representation === REPRESENTATIONS.VTK_SURFACE) {
+        mode = gl.TRIANGLES;
+      }
       gl.drawElements(mode,
         model.tris.IBO.IndexCount,
         gl.UNSIGNED_SHORT,

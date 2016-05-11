@@ -119,6 +119,7 @@ export function extend(publicAPI, model, initialValues = {}) {
   macro.get(publicAPI, model, ['shaderCache']);
   macro.setGet(publicAPI, model, [
     'initialized',
+    'context',
   ]);
 
 
