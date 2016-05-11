@@ -81,10 +81,10 @@ const DEFAULT_VALUES = {
 
 // ----------------------------------------------------------------------------
 
-export function extend(publicAPI, initialValues = {}) {
-  const model = Object.assign(initialValues, DEFAULT_VALUES);
+export function extend(publicAPI, model, initialValues = {}) {
+  Object.assign(model, DEFAULT_VALUES, initialValues);
 
-  // Internal object
+  // Internal objects
   model.lineStipplePattern = new Uint8Array(2);
   model.lineStipplePattern[0] = 255;
   model.lineStipplePattern[1] = 255;

@@ -274,9 +274,9 @@ export function event(publicAPI, model, eventName) {
 
 export function newInstance(extend) {
   return (initialValues = {}) => {
-    const model = Object.assign({}, initialValues);
+    const model = {};
     const publicAPI = {};
-    extend(publicAPI, model);
+    extend(publicAPI, model, initialValues);
     return Object.freeze(publicAPI);
   };
 }

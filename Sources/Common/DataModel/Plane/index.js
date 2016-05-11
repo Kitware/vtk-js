@@ -1,5 +1,9 @@
 import * as macro from '../../../macro';
 
+// ----------------------------------------------------------------------------
+// Global methods
+// ----------------------------------------------------------------------------
+
 function evaluate(normal, origin, x) {
   return normal[0] * (x[0] - origin[0])
        + normal[1] * (x[1] - origin[1])
@@ -7,45 +11,44 @@ function evaluate(normal, origin, x) {
 }
 
 // ----------------------------------------------------------------------------
+// Static API
+// ----------------------------------------------------------------------------
 
 export const STATIC = {
   evaluate,
 };
 
+
+// ----------------------------------------------------------------------------
+// vtkPlane methods
 // ----------------------------------------------------------------------------
 
 function plane(publicAPI, model) {
-
+  // Set our className
+  model.classHierarchy.push('vtkPlane');
 }
 
 // ----------------------------------------------------------------------------
+// Object factory
+// ----------------------------------------------------------------------------
 
 const DEFAULT_VALUES = {
-
 };
 
 // ----------------------------------------------------------------------------
 
-export function extend(publicAPI, initialValues = {}) {
-  const model = Object.assign(initialValues, DEFAULT_VALUES);
+export function extend(publicAPI, model, initialValues = {}) {
+  Object.assign(model, DEFAULT_VALUES, initialValues);
 
   // Object methods
+  macro.obj(publicAPI, model);
   macro.setGet(publicAPI, model, ['bounds']);
   plane(publicAPI, model);
 }
 
 // ----------------------------------------------------------------------------
 
-export function newInstance(initialValues = {}) {
-  const model = Object.assign({}, DEFAULT_VALUES, initialValues);
-  const publicAPI = {};
-
-  // Build VTK API
-  macro.obj(publicAPI, model, 'vtkPlane');
-  extend(publicAPI, model);
-
-  return Object.freeze(publicAPI);
-}
+export const newInstance = macro.newInstance(extend);
 
 // ----------------------------------------------------------------------------
 

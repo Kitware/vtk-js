@@ -1,6 +1,6 @@
 import ConeSource from '../../../Sources/Filters/Sources/ConeSource';
-import WebGlUtil from '../../../Sources/Rendering/WebGL/Utilities/WebGLUtils.js';
-import CanvasOffscreenBuffer from '../../../Sources/Rendering/WebGL/Utilities/CanvasOffscreenBuffer.js';
+import WebGlUtil from './WebGLUtils.js';
+import CanvasOffscreenBuffer from './CanvasOffscreenBuffer.js';
 import Camera from '../../../Sources/Rendering/Core/Camera';
 import { mat4 } from 'gl-matrix';
 

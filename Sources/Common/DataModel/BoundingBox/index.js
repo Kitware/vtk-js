@@ -1,6 +1,16 @@
 import * as macro from '../../../macro';
 import Plane from '../Plane';
 
+const INIT_BOUNDS = [
+  Number.MAX_VALUE, Number.MIN_VALUE, // X
+  Number.MAX_VALUE, Number.MIN_VALUE, // Y
+  Number.MAX_VALUE, Number.MIN_VALUE, // Z
+];
+
+// ----------------------------------------------------------------------------
+// Global methods
+// ----------------------------------------------------------------------------
+
 function isValid(bounds) {
   return bounds[0] <= bounds[1]
     && bounds[2] <= bounds[3]
@@ -52,6 +62,10 @@ function oppositeSign(a, b) {
   return (a <= 0 && b >= 0) || (a >= 0 && b <= 0);
 }
 
+// ----------------------------------------------------------------------------
+// Static API
+// ----------------------------------------------------------------------------
+
 export const STATIC = {
   isValid,
   getCenter,
@@ -61,17 +75,14 @@ export const STATIC = {
   getDiagonalLength,
 };
 
-const DEFAULT_VALUES = {
-  bounds: [
-    Number.MAX_VALUE, Number.MIN_VALUE, // X
-    Number.MAX_VALUE, Number.MIN_VALUE, // Y
-    Number.MAX_VALUE, Number.MIN_VALUE, // Z
-  ],
-};
-
+// ----------------------------------------------------------------------------
+// vtkBoundingBox methods
 // ----------------------------------------------------------------------------
 
 function boundingBox(publicAPI, model) {
+  // Set our className
+  model.classHierarchy.push('vtkBoundingBox');
+
   publicAPI.clone = () => {
     const bounds = [].concat(model.bounds);
     /* eslint-disable no-use-before-define */
@@ -319,7 +330,7 @@ function boundingBox(publicAPI, model) {
   publicAPI.getMaxLength = () => getMaxLength(model.bounds);
   publicAPI.getDiagonalLength = () => getDiagonalLength(model.bounds);
 
-  publicAPI.reset = () => publicAPI.setBounds(DEFAULT_VALUES.bounds);
+  publicAPI.reset = () => publicAPI.setBounds([].concat(INIT_BOUNDS));
 
   publicAPI.inflate = delta => {
     model.bounds = model.bounds.map((value, index) => {
@@ -365,27 +376,27 @@ function boundingBox(publicAPI, model) {
 }
 
 // ----------------------------------------------------------------------------
+// Object factory
+// ----------------------------------------------------------------------------
 
-export function extend(publicAPI, initialValues = {}) {
-  const model = Object.assign(initialValues, DEFAULT_VALUES);
+const DEFAULT_VALUES = {
+  bounds: [].concat(INIT_BOUNDS),
+};
+
+// ----------------------------------------------------------------------------
+
+export function extend(publicAPI, model, initialValues = {}) {
+  Object.assign(model, DEFAULT_VALUES, initialValues);
 
   // Object methods
+  macro.obj(publicAPI, model);
   macro.setGet(publicAPI, model, ['bounds']);
   boundingBox(publicAPI, model);
 }
 
 // ----------------------------------------------------------------------------
 
-export function newInstance(initialValues = {}) {
-  const model = Object.assign({}, DEFAULT_VALUES, initialValues);
-  const publicAPI = {};
-
-  // Build VTK API
-  macro.obj(publicAPI, model, 'vtkBoundingBox');
-  extend(publicAPI, model);
-
-  return Object.freeze(publicAPI);
-}
+export const newInstance = macro.newInstance(extend);
 
 // ----------------------------------------------------------------------------
 

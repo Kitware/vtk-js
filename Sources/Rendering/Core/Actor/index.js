@@ -208,6 +208,10 @@ function actor(publicAPI, model) {
   };
 }
 
+// ----------------------------------------------------------------------------
+// Object factory
+// ----------------------------------------------------------------------------
+
 const DEFAULT_VALUES = {
   bounds: [1, -1, 1, -1, 1, -1],
   backfaceProperty: null,
@@ -219,11 +223,9 @@ const DEFAULT_VALUES = {
 };
 
 // ----------------------------------------------------------------------------
-// Object factory
-// ----------------------------------------------------------------------------
 
-export function extend(publicAPI, initialValues = {}) {
-  const model = Object.assign(initialValues, DEFAULT_VALUES);
+export function extend(publicAPI, model, initialValues = {}) {
+  Object.assign(model, DEFAULT_VALUES, initialValues);
 
   // Inheritance
   Prop3D.extend(publicAPI, model);

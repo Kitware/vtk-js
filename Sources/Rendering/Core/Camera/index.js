@@ -299,8 +299,8 @@ export const DEFAULT_VALUES = {
 
 // ----------------------------------------------------------------------------
 
-export function extend(publicAPI, initialValues = {}) {
-  const model = Object.assign(initialValues, DEFAULT_VALUES);
+export function extend(publicAPI, model, initialValues = {}) {
+  Object.assign(model, DEFAULT_VALUES, initialValues);
 
   // Make sure we have our own objects
   model.eyeTransformMatrix = mat4.create();

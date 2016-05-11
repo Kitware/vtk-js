@@ -18,7 +18,7 @@
     "devDependencies": {
         "pako": "1.0.1",
         "js-md5": "0.4.1",
-        "gl-matrix": "2.3.2",
+        "gl-matrix": "2.3.1",
         "kw-web-suite": "2.0.0",
         "kw-doc": "1.0.4"
     },

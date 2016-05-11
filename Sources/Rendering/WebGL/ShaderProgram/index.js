@@ -1,13 +1,9 @@
 import * as macro from '../../../macro';
 import Shader from '../Shader';
 
-// ----------------------------------------------------------------------------
-// vtkShaderProgram methods
-// ----------------------------------------------------------------------------
-
-  // perform in place string substitutions, indicate if a substitution was done
-  // this is useful for building up shader strings which typically involve
-  // lots of string substitutions. Return true if a substitution was done.
+// perform in place string substitutions, indicate if a substitution was done
+// this is useful for building up shader strings which typically involve
+// lots of string substitutions. Return true if a substitution was done.
 export function substitute(source, search, replace, all = true) {
   let replaced = false;
   if (source.search(search) !== -1) {
@@ -17,10 +13,14 @@ export function substitute(source, search, replace, all = true) {
   if (all) {
     gflag = 'g';
   }
-  const regex = `/${search}/${gflag}`;
+  const regex = new RegExp(search, gflag);
   const resultstr = source.replace(regex, replace);
   return { replace: replaced, result: resultstr };
 }
+
+// ----------------------------------------------------------------------------
+// vtkShaderProgram methods
+// ----------------------------------------------------------------------------
 
 export function shaderProgram(publicAPI, model) {
   // Set our className
@@ -236,7 +236,6 @@ export function shaderProgram(publicAPI, model) {
         return false;
     }
   };
-
 }
 
 // ----------------------------------------------------------------------------
@@ -264,9 +263,8 @@ const DEFAULT_VALUES = {
 
 // ----------------------------------------------------------------------------
 
-export function newInstance(initialValues = {}) {
-  const model = Object.assign({}, DEFAULT_VALUES, initialValues);
-  const publicAPI = {};
+export function extend(publicAPI, model, initialValues = {}) {
+  Object.assign(model, DEFAULT_VALUES, initialValues);
 
   // Instanciate internal objects
   model.attributesLocs = {};
@@ -291,10 +289,12 @@ export function newInstance(initialValues = {}) {
 
   // Object methods
   shaderProgram(publicAPI, model);
-
-  return Object.freeze(publicAPI);
 }
 
 // ----------------------------------------------------------------------------
 
-export default { newInstance, substitute };
+export const newInstance = macro.newInstance(extend);
+
+// ----------------------------------------------------------------------------
+
+export default { newInstance, extend };

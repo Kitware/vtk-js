@@ -10,9 +10,13 @@ const SET_GET_FIELDS = [
 ];
 
 // ----------------------------------------------------------------------------
+// vtkShader methods
 // ----------------------------------------------------------------------------
 
-export function shaderCache(publicAPI, model) {
+function shaderCache(publicAPI, model) {
+  // Set our className
+  model.classHierarchy.push('vtkShader');
+
   publicAPI.replaceShaderValues = (VSSource, FSSource, GSSource) => {
     // first handle renaming any Fragment shader inputs
     // if we have a geometry shader. By deafult fragment shaders
@@ -141,15 +145,15 @@ const DEFAULT_VALUES = {
 
 // ----------------------------------------------------------------------------
 
-function newInstance(initialValues = {}) {
-  const model = Object.assign({}, DEFAULT_VALUES, initialValues);
+export function extend(publicAPI, model, initialValues = {}) {
+  Object.assign(model, DEFAULT_VALUES, initialValues);
+
+  // Internal objects
   model.attributesLocs = {};
   model.uniformLocs = {};
   model.vertexShader = Shader.newInstance();
   model.fragmentShader = Shader.newInstance();
   model.geometryShader = Shader.newInstance();
-
-  const publicAPI = {};
 
   // Build VTK API
   macro.obj(publicAPI, model);
@@ -163,4 +167,8 @@ function newInstance(initialValues = {}) {
 
 // ----------------------------------------------------------------------------
 
-export default { newInstance };
+export const newInstance = macro.newInstance(extend);
+
+// ----------------------------------------------------------------------------
+
+export default { newInstance, extend };
