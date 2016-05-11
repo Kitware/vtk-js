@@ -1,7 +1,7 @@
 import * as macro from '../../../macro';
 import Plane from '../Plane';
 
-const INIT_BOUNDS = [
+export const INIT_BOUNDS = [
   Number.MAX_VALUE, Number.MIN_VALUE, // X
   Number.MAX_VALUE, Number.MIN_VALUE, // Y
   Number.MAX_VALUE, Number.MIN_VALUE, // Z

@@ -40,11 +40,83 @@ behavior is enabled by default. To disable this mode, turn the
 interactor's LightFollowCamera flag OFF, and leave the renderer's
 LightFollowCamera flag ON.)
 
+### updateLightsGeometryToFollowCamera()
+
+Ask the lights in the scene that are not in world space
+(for instance, Headlights or CameraLights that are attached to the
+camera) to update their geometry to match the active camera.
+
 ### activeCamera (set/get Camera)
 
 Get the current camera. If there is not camera assigned to the
 renderer already, a new one is created automatically.
 This does *not* reset the camera.
+
+### makeCamera()
+
+Create a new Camera sutible for use with this type of Renderer.
+For example, a vtkMesaRenderer should create a vtkMesaCamera
+in this function.   The default is to just call vtkCamera::New.
+
+### allocatedRenderTime
+
+Set/Get the amount of time this renderer is allowed to spend
+rendering its scene. This is used by vtkLODActor's.
+
+### getTimeFactor()
+
+Get the ratio between allocated time and actual render time.
+TimeFactor has been taken out of the render process.
+It is still computed in case someone finds it useful.
+It may be taken away in the future.
+
+### render()
+
+CALLED BY vtkRenderWindow ONLY. End-user pass your way and call
+vtkRenderWindow::Render().
+Create an image. This is a superclass method which will in turn
+call the DeviceRender method of Subclasses of vtkRenderer.
+
+### deviceRender() (NoOp)
+
+Create an image. Subclasses of vtkRenderer must implement this method.
+
+### deviceRenderTranslucentPolygonalGeometry()
+
+Render translucent polygonal geometry. Default implementation just call
+UpdateTranslucentPolygonalGeometry().
+Subclasses of vtkRenderer that can deal with depth peeling must
+override this method.
+It updates boolean ivar LastRenderingUsedDepthPeeling.
+
+### clearLights() (NoOp)
+
+Internal method temporarily removes lights before reloading
+them into graphics pipeline.
+
+### clear() (NoOp)
+
+Clear the image to the background color.
+
+### visibleActorCount() / visibleVolumeCount()
+
+Returns the number of visible actors.
+
+### computeVisiblePropBounds() : bounds[6]
+
+Compute the bounding box of all the visible props
+Used in ResetCamera() and ResetCameraClippingRange()
+
+### resetCameraClippingRange( bounds = null )
+
+Reset the camera clipping range based on the bounds of the
+visible actors. This ensures that no props are cut off
+
+If bounds is provided, then Reset the camera clipping range
+based on that bounding box.
+This method is called from ResetCameraClippingRange()
+If Deering frustrum is used then the bounds get expanded
+by the camera's modelview matrix.
 
 ### erase  (set/get Boolean)
 
@@ -113,6 +185,13 @@ If UseDepthPeeling is on and the GPU supports it, depth peeling is used
 for rendering translucent materials.
 If UseDepthPeeling is off, alpha blending is used.
 Initial value is off.
+
+### delegate
+
+Set/Get a custom Render call. Allows to hook a Render call from an
+external project.It will be used in place of vtkRenderer::Render() if it
+is not NULL and its Used ivar is set to true.
+Initial value is NULL.
 
 ### occlusionRatio (set/get Number)
 
