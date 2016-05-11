@@ -16,6 +16,11 @@ export function webGLRenderer(publicAPI, model) {
         return;
       }
 
+      // make sure we have a camera
+      if (!model.renderable.isActiveCameraCreated()) {
+        model.renderable.resetCamera();
+      }
+
       publicAPI.prepareNodes();
       publicAPI.addMissingNodes(model.renderble.getActors());
       publicAPI.removeUnusedNodes();
@@ -28,8 +33,30 @@ export function webGLRenderer(publicAPI, model) {
     if (prepass) {
       // make current
     } else {
-      // else
+      model.clear();
     }
+  };
+
+  publicAPI.clear = () => {
+    let clearMask = 0;
+    const gl = model.context;
+
+    if (! model.renderable.getTransparent()) {
+      const background = model.renderable.getBackground();
+      model.context.clearColor(background[0], background[1], background[2], 0.0);
+      clearMask |= gl.COLOR_BUFFER_BIT;
+    }
+
+    if (!model.renderable.getPreserveDepthBuffer()) {
+      gl.clearDepth(1.0);
+      clearMask |= gl.DEPTH_BUFFER_BIT;
+      gl.depthMask(gl.TRUE);
+    }
+
+    gl.colorMask(gl.TRUE, gl.TRUE, gl.TRUE, gl.TRUE);
+    gl.clear(clearMask);
+
+    gl.enable(gl.DEPTH_TEST);
   };
 }
 
