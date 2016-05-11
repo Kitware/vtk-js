@@ -54,6 +54,27 @@ export function obj(publicAPI, model) {
 
   publicAPI.getClassName = () => model.classHierarchy.slice(-1)[0];
 
+  publicAPI.set = (map = {}) => {
+    Object.keys(map).forEach(name => {
+      if (Array.isArray(map[name])) {
+        publicAPI[`set${capitalize(name)}`](...map[name]);
+      } else {
+        publicAPI[`set${capitalize(name)}`](map[name]);
+      }
+    });
+  };
+
+  publicAPI.get = (list) => {
+    if (!list) {
+      return model;
+    }
+    const subset = {};
+    list.forEach(name => {
+      subset[name] = model[name];
+    });
+    return subset;
+  };
+
   publicAPI.delete = () => {
     Object.keys(model).forEach(field => delete model[field]);
     callbacks.forEach((el, index) => off(index));
@@ -77,9 +98,49 @@ export function get(publicAPI, model, fieldNames) {
 // setXXX: add setters
 // ----------------------------------------------------------------------------
 
-export function set(publicAPI, model, fieldNames) {
-  function createSetter(field) {
-    function setter(value) {
+const objectSetterMap = {
+  enum(publicAPI, model, field) {
+    return value => {
+      if (typeof value === 'string') {
+        if (model.enum[value] !== undefined) {
+          if (model[field.name] !== model.enum[value]) {
+            model[field.name] = model.enum[value];
+            publicAPI.modified();
+            return true;
+          }
+          return false;
+        }
+        console.log('Set Enum with invalid argument', field, value);
+        return null;
+      }
+      if (typeof value === 'number') {
+        if (model[field.name] !== value) {
+          if (Object.keys(field.enum).map(key => field.enum[key]).indexOf(value) !== -1) {
+            model[field.name] = value;
+            publicAPI.modified();
+            return true;
+          }
+          console.log('Set Enum outside range', field, value);
+        }
+        return false;
+      }
+      console.log('Set Enum with invalid argument (String/Number)', field, value);
+      return null;
+    };
+  },
+};
+
+function findSetter(field) {
+  if (typeof field === 'object') {
+    const fn = objectSetterMap[field.type];
+    if (fn) {
+      return (publicAPI, model) => fn(publicAPI, model, field);
+    }
+
+    console.error('No setter for field', field);
+  }
+  return function getSetter(publicAPI, model) {
+    return function setter(value) {
       if (model.deleted) {
         console.log('instance deleted - can not call any method');
         return false;
@@ -91,12 +152,14 @@ export function set(publicAPI, model, fieldNames) {
         return true;
       }
       return false;
-    }
+    };
+  };
+}
 
-    publicAPI[`set${capitalize(field)}`] = setter;
-  }
-
-  fieldNames.forEach(createSetter);
+export function set(publicAPI, model, fields) {
+  fields.forEach(field => {
+    publicAPI[`set${capitalize(field)}`] = findSetter(field)(publicAPI, model);
+  });
 }
 
 // ----------------------------------------------------------------------------
@@ -124,7 +187,7 @@ export function getArray(publicAPI, model, fieldNames) {
 
 export function setArray(publicAPI, model, fieldNames, size) {
   fieldNames.forEach(field => {
-    publicAPI[`set${capitalize(field)}`] = array => {
+    publicAPI[`set${capitalize(field)}`] = (...array) => {
       if (model.deleted) {
         console.log('instance deleted - can not call any method');
         return;

@@ -5,6 +5,7 @@ Here is an example of how to get started writing a new class for vtk.js
 
 ```js
 import * as macro from '../../../macro';
+import { MY_ENUM_OBJECT } from './Constants';  // { ENUM_1: 0, ENUM_2: 1, ... }
 
 // ----------------------------------------------------------------------------
 // Global methods
@@ -53,6 +54,7 @@ const DEFAULT_VALUES = {
   myProp3: true,
   myProp4: 6,
   myProp5: [1, 2, 3, 4],
+  myProp6: myEnumType,
 };
 
 // ----------------------------------------------------------------------------
@@ -77,6 +79,11 @@ export function extend(publicAPI, model, initialValues = {}) {
 
   // Create get macros for array
   macro.getArray(publicAPI, model, ['myProp1', 'myProp5']);
+
+  // Create get-set macros for enum type
+  macro.getSet(publicAPI, model, [
+    { name: 'myEnumType', enum: MY_ENUM_OBJECT, type: 'enum' },
+  ]);
 
   // For more macro methods, see "Sources/macro.js"
 

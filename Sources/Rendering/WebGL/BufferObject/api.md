@@ -1,101 +1,43 @@
 
-  /** Get the type of the buffer object. */
-  ObjectType GetType() const;
+### getType()
 
-  /** Set the type of the buffer object. */
-  void SetType(ObjectType value);
+Get the type of the buffer object.
 
-  /** Get the handle of the buffer object. */
-  int GetHandle() const;
+### setType(type)
 
-  /** Determine if the buffer object is ready to be used. */
-  bool IsReady() const { return this->Dirty == false; }
+Set the type of the buffer object.
 
-  /** Generate the the opengl buffer for this Handle */
-  bool GenerateBuffer(ObjectType type);
+### getHandle()
 
-  /**
-   * Upload data to the buffer object. The BufferObject::type() must match
-   * @a type or be uninitialized.
-   *
-   * The T type must have tightly packed values of T::value_type accessible by
-   * reference via T::operator[]. Additionally, the standard size() and empty()
-   * methods must be implemented. The std::vector class is an example of such a
-   * supported containers.
-   */
-  template <class T>
-  bool Upload(const T &array, ObjectType type);
+Get the handle of the buffer object (actual buffer object returned by WebGL).
 
-  // non vector version
-  template <class T>
-  bool Upload(const T *array, size_t numElements, ObjectType type);
+### isReady()
 
-  /**
-   * Bind the buffer object ready for rendering.
-   * @note Only one ARRAY_BUFFER and one ELEMENT_ARRAY_BUFFER may be bound at
-   * any time.
-   */
-  bool Bind();
+Determine if the buffer object is ready to be used.
 
-  /**
-   * Release the buffer. This should be done after rendering is complete.
-   */
-  bool Release();
+### generateBuffer
 
+Generate the the opengl buffer for this handle.
 
-  // Description:
-  // Release any graphics resources that are being consumed by this class.
-  void ReleaseGraphicsResources();
+### upload(data, type)
 
-  /**
-   * Return a string describing errors.
-   */
-  std::string GetError() const { return Error; }
+Upload data to the buffer object. The internal buffer object type must match the type or be
+uninitialized.  The data param must be a typed array and contain tightly packed values
+accessible by the index operator ([]).
 
-protected:
-  vtkOpenGLBufferObject();
-  ~vtkOpenGLBufferObject();
-  bool  Dirty;
-  std::string Error;
+### bind()
 
-  bool UploadInternal(const void *buffer, size_t size, ObjectType objectType);
+Bind the buffer object ready for rendering.  Note: Only one ARRAY_BUFFER and one
+ELEMENT_ARRAY_BUFFER may be bound at any time.
 
-private:
-  vtkOpenGLBufferObject(const vtkOpenGLBufferObject&); // Not implemented
-  void operator=(const vtkOpenGLBufferObject&); // Not implemented
-  struct Private;
-  Private *Internal;
-};
+### release()
 
-template <class T>
-inline bool vtkOpenGLBufferObject::Upload(
-  const T &array,
-  vtkOpenGLBufferObject::ObjectType objectType)
-{
-  if (array.empty())
-    {
-    this->Error = "Refusing to upload empty array.";
-    return false;
-    }
+Release the buffer. This should be done after rendering is complete.
 
-  return this->UploadInternal(&array[0],
-            array.size() * sizeof(typename T::value_type),
-            objectType);
-}
+### releaseGraphicsResources()
 
-template <class T>
-inline bool vtkOpenGLBufferObject::Upload(
-  const T *array, size_t numElements,
-  vtkOpenGLBufferObject::ObjectType objectType)
-{
-  if (!array)
-    {
-    this->Error = "Refusing to upload empty array.";
-    return false;
-    }
-  return this->UploadInternal(array,
-                              numElements * sizeof(T),
-                              objectType);
-}
+Release any graphics resources that are being consumed by this class.
 
-#endif
+### getError()
+
+Return a string describing errors.
