@@ -84,7 +84,7 @@ const glResources = WebGlUtil.createGLResources(gl, glConfig);
 
 const camera = Camera.newInstance({
   position: [0, 0, 4],
-  parallelProjection: true,
+  parallelProjection: false,
   parallelScale: 2,
 });
 
@@ -113,6 +113,7 @@ button.addEventListener('click', () => {
   animating = !animating;
   button.innerHTML = animating ? 'stop' : 'start';
   if (animating) {
+    camera.set({ position: [0, 0, 2 + Math.random() * 2] });
     window.requestAnimationFrame(animate);
   }
 });
