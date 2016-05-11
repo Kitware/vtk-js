@@ -1,0 +1,101 @@
+
+  /** Get the type of the buffer object. */
+  ObjectType GetType() const;
+
+  /** Set the type of the buffer object. */
+  void SetType(ObjectType value);
+
+  /** Get the handle of the buffer object. */
+  int GetHandle() const;
+
+  /** Determine if the buffer object is ready to be used. */
+  bool IsReady() const { return this->Dirty == false; }
+
+  /** Generate the the opengl buffer for this Handle */
+  bool GenerateBuffer(ObjectType type);
+
+  /**
+   * Upload data to the buffer object. The BufferObject::type() must match
+   * @a type or be uninitialized.
+   *
+   * The T type must have tightly packed values of T::value_type accessible by
+   * reference via T::operator[]. Additionally, the standard size() and empty()
+   * methods must be implemented. The std::vector class is an example of such a
+   * supported containers.
+   */
+  template <class T>
+  bool Upload(const T &array, ObjectType type);
+
+  // non vector version
+  template <class T>
+  bool Upload(const T *array, size_t numElements, ObjectType type);
+
+  /**
+   * Bind the buffer object ready for rendering.
+   * @note Only one ARRAY_BUFFER and one ELEMENT_ARRAY_BUFFER may be bound at
+   * any time.
+   */
+  bool Bind();
+
+  /**
+   * Release the buffer. This should be done after rendering is complete.
+   */
+  bool Release();
+
+
+  // Description:
+  // Release any graphics resources that are being consumed by this class.
+  void ReleaseGraphicsResources();
+
+  /**
+   * Return a string describing errors.
+   */
+  std::string GetError() const { return Error; }
+
+protected:
+  vtkOpenGLBufferObject();
+  ~vtkOpenGLBufferObject();
+  bool  Dirty;
+  std::string Error;
+
+  bool UploadInternal(const void *buffer, size_t size, ObjectType objectType);
+
+private:
+  vtkOpenGLBufferObject(const vtkOpenGLBufferObject&); // Not implemented
+  void operator=(const vtkOpenGLBufferObject&); // Not implemented
+  struct Private;
+  Private *Internal;
+};
+
+template <class T>
+inline bool vtkOpenGLBufferObject::Upload(
+  const T &array,
+  vtkOpenGLBufferObject::ObjectType objectType)
+{
+  if (array.empty())
+    {
+    this->Error = "Refusing to upload empty array.";
+    return false;
+    }
+
+  return this->UploadInternal(&array[0],
+            array.size() * sizeof(typename T::value_type),
+            objectType);
+}
+
+template <class T>
+inline bool vtkOpenGLBufferObject::Upload(
+  const T *array, size_t numElements,
+  vtkOpenGLBufferObject::ObjectType objectType)
+{
+  if (!array)
+    {
+    this->Error = "Refusing to upload empty array.";
+    return false;
+    }
+  return this->UploadInternal(array,
+                              numElements * sizeof(T),
+                              objectType);
+}
+
+#endif

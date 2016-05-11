@@ -83,9 +83,9 @@ const glConfig = {
 const glResources = WebGlUtil.createGLResources(gl, glConfig);
 
 const camera = Camera.newInstance({
-  position: [0, 0, 2],
-  // parallelProjection: true,
-  // parallelScale: 2,
+  position: [0, 0, 4],
+  parallelProjection: true,
+  parallelScale: 2,
 });
 
 let viewMatrix = null;
@@ -110,7 +110,6 @@ button.setAttribute('type', 'input');
 button.innerHTML = 'start';
 document.getElementsByTagName('body')[0].appendChild(button);
 button.addEventListener('click', () => {
-  console.log('Boo');
   animating = !animating;
   button.innerHTML = animating ? 'stop' : 'start';
   if (animating) {

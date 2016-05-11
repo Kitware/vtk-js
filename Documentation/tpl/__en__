@@ -34,4 +34,4 @@ sidebar:
     unstructured_grid: UnstructuredGrid
     multi_block: MultiBlock
     parametric_dataset: ParametricDataset
-
+    class: VTK Class
