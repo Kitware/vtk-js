@@ -23,6 +23,9 @@ module.exports = [
     test: /\.c$/i,
     loader: 'shader',
   }, {
+    test: /\.glsl$/i,
+    loader: 'shader',
+  }, {
     test: /\.json$/,
     loader: 'json-loader',
   }, {

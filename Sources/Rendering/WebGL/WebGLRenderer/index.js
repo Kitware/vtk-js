@@ -31,6 +31,7 @@ export function webGLRenderer(publicAPI, model) {
   // Renders myself
   publicAPI.render = (prepass) => {
     if (prepass) {
+      model.context = publicAPI.getFirstAncestorOfType('vtkWebGLRenderWindow').getContext();
       publicAPI.clear();
     } else {
       // else

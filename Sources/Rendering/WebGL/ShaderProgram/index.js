@@ -5,6 +5,7 @@ import Shader from '../Shader';
 // this is useful for building up shader strings which typically involve
 // lots of string substitutions. Return true if a substitution was done.
 export function substitute(source, search, replace, all = true) {
+  const replaceStr = Array.isArray(replace) ? replace.join('\n') : replace;
   let replaced = false;
   if (source.search(search) !== -1) {
     replaced = true;
@@ -14,7 +15,7 @@ export function substitute(source, search, replace, all = true) {
     gflag = 'g';
   }
   const regex = new RegExp(search, gflag);
-  const resultstr = source.replace(regex, replace);
+  const resultstr = source.replace(regex, replaceStr);
   return { replace: replaced, result: resultstr };
 }
 

@@ -17,7 +17,7 @@ export function webGLActor(publicAPI, model) {
       }
 
       publicAPI.prepareNodes();
-      publicAPI.addMissingNode(model.renderble.getMapper());
+      publicAPI.addMissingNode(model.renderable.getMapper());
       publicAPI.removeUnusedNodes();
     }
   };
@@ -25,9 +25,23 @@ export function webGLActor(publicAPI, model) {
   // Renders myself
   publicAPI.render = (prepass) => {
     if (prepass) {
-      // make current
+      model.context = publicAPI.getFirstAncestorOfType('vtkWebGLRenderWindow').getContext();
+      publicAPI.preRender();
     } else {
-    // post
+      const opaque = (model.renderable.getIsOpaque() !== 0);
+      if (!opaque) {
+        model.context.depthMask(true);
+      }
+    }
+  };
+
+  publicAPI.preRrender = (prepass) => {
+    // get opacity
+    const opaque = (model.renderable.getIsOpaque() !== 0);
+    if (opaque) {
+      model.context.depthMask(true);
+    } else {
+      model.context.depthMask(false);
     }
   };
 }
@@ -37,6 +51,7 @@ export function webGLActor(publicAPI, model) {
 // ----------------------------------------------------------------------------
 
 const DEFAULT_VALUES = {
+  context: null,
 };
 
 // ----------------------------------------------------------------------------
@@ -48,7 +63,9 @@ export function extend(publicAPI, model, initialValues = {}) {
   ViewNode.extend(publicAPI, model);
 
   // Build VTK API
-  macro.get(publicAPI, model, ['shaderCache']);
+  macro.setGet(publicAPI, model, [
+    'context',
+  ]);
 
   // Object methods
   webGLActor(publicAPI, model);
