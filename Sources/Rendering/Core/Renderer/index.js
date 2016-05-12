@@ -106,7 +106,7 @@ function renderer(publicAPI, model) {
     }
 
     const t1 = TimerLog.getUniversalTime();
-    publicAPI.fireEvent({ type: 'StartEvent' });
+    publicAPI.invokeEvent({ type: 'StartEvent' });
 
     // Create the initial list of visible props
     // This will be passed through AllocateTime(), where
@@ -158,7 +158,7 @@ function renderer(publicAPI, model) {
       model.timeFactor = model.allocatedRenderTime / model.lastRenderTimeInSeconds;
     }
 
-    publicAPI.fireEvent({ type: 'EndEvent' });
+    publicAPI.invokeEvent({ type: 'EndEvent' });
   };
 
   publicAPI.deviceRenderTranslucentPolygonalGeometry = () => {
@@ -257,13 +257,13 @@ function renderer(publicAPI, model) {
 
     model.activeCamera = camera;
     publicAPI.modified();
-    publicAPI.fireEvent({ type: 'ActiveCameraEvent', camera });
+    publicAPI.invokeEvent({ type: 'ActiveCameraEvent', camera });
     return true;
   };
 
   publicAPI.makeCamera = () => {
     const camera = Camera.newInstance();
-    publicAPI.fireEvent({ type: 'CreateCameraEvent', camera });
+    publicAPI.invokeEvent({ type: 'CreateCameraEvent', camera });
     return camera;
   };
 
@@ -363,7 +363,7 @@ function renderer(publicAPI, model) {
     const allBounds = [].concat(INIT_BOUNDS);
     let nothingVisible = true;
 
-    publicAPI.fireEvent({ type: 'ComputeVisiblePropBoundsEvent', renderer: publicAPI });
+    publicAPI.invokeEvent({ type: 'ComputeVisiblePropBoundsEvent', renderer: publicAPI });
 
     // loop through all props
     model.props
@@ -499,7 +499,7 @@ function renderer(publicAPI, model) {
 
     // Here to let parallel/distributed compositing intercept
     // and do the right thing.
-    publicAPI.fireEvent({ type: 'ResetCameraEvent', renderer: publicAPI });
+    publicAPI.invokeEvent({ type: 'ResetCameraEvent', renderer: publicAPI });
 
     return true;
   };
@@ -600,7 +600,7 @@ function renderer(publicAPI, model) {
 
     // Here to let parallel/distributed compositing intercept
     // and do the right thing.
-    publicAPI.fireEvent({ type: 'ResetCameraClippingRangeEvent', renderer: publicAPI });
+    publicAPI.invokeEvent({ type: 'ResetCameraClippingRangeEvent', renderer: publicAPI });
     return false;
   };
 

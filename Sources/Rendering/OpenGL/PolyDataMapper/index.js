@@ -877,11 +877,11 @@ export function webGLPolyDataMapper(publicAPI, model) {
       return;
     }
 
-    publicAPI.fireEvent({ type: 'StartEvent' });
+    publicAPI.invokeEvent({ type: 'StartEvent' });
     if (!model.Static) {
       this.getInputAlgorithm().update();
     }
-    publicAPI.fireEvent({ type: 'EndEvent' });
+    publicAPI.invokeEvent({ type: 'EndEvent' });
 
     // if there are no points then we are done
     if (!model.currentInput.getPoints()) {

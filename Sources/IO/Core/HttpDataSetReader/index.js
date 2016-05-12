@@ -75,7 +75,7 @@ export function httpDataSetReader(publicAPI, model) {
           if (xhr.readyState === 1) {
             array.ref.pending = true;
             if (++model.requestCount === 1) {
-              publicAPI.fireBusy(true);
+              publicAPI.invokeBusy(true);
             }
           }
           if (xhr.readyState === 4) {
@@ -110,7 +110,7 @@ export function httpDataSetReader(publicAPI, model) {
               // Done with the ref and work
               delete array.ref;
               if (--model.requestCount === 0) {
-                publicAPI.fireBusy(false);
+                publicAPI.invokeBusy(false);
               }
               publicAPI.modified();
               resolve(array);
@@ -198,12 +198,12 @@ export function httpDataSetReader(publicAPI, model) {
       xhr.onreadystatechange = e => {
         if (xhr.readyState === 1) {
           if (++model.requestCount === 1) {
-            publicAPI.fireBusy(true);
+            publicAPI.invokeBusy(true);
           }
         }
         if (xhr.readyState === 4) {
           if (--model.requestCount === 0) {
-            publicAPI.fireBusy(false);
+            publicAPI.invokeBusy(false);
           }
 
           if (xhr.status === 200) {

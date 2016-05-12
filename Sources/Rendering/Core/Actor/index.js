@@ -213,13 +213,15 @@ function actor(publicAPI, model) {
 // ----------------------------------------------------------------------------
 
 const DEFAULT_VALUES = {
-  bounds: [1, -1, 1, -1, 1, -1],
-  backfaceProperty: null,
   mapper: null,
   property: null,
+  backfaceProperty: null,
   // texture: null, // TODO: Handle array of textures
+
   forceOpaque: false,
   forceTranslucent: false,
+
+  bounds: [1, -1, 1, -1, 1, -1],
 };
 
 // ----------------------------------------------------------------------------

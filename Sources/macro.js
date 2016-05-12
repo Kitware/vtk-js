@@ -11,7 +11,7 @@ export function capitalize(str) {
 // vtkObject: modified(), onModified(callback), delete()
 // ----------------------------------------------------------------------------
 
-export function obj(publicAPI, model) {
+export function obj(publicAPI, model = {}) {
   const callbacks = [];
   model.mtime = globalMTime;
   model.classHierarchy = ['vtkObject'];
@@ -287,7 +287,7 @@ export function algo(publicAPI, model, numberOfInputs, numberOfOutputs) {
 }
 
 // ----------------------------------------------------------------------------
-// Event handling: onXXX(callback), fireXXX(args...)
+// Event handling: onXXX(callback), invokeXXX(args...)
 // ----------------------------------------------------------------------------
 
 export function event(publicAPI, model, eventName) {
@@ -305,7 +305,7 @@ export function event(publicAPI, model, eventName) {
     return Object.freeze({ unsubscribe });
   }
 
-  publicAPI[`fire${capitalize(eventName)}`] = (...args) => {
+  publicAPI[`invoke${capitalize(eventName)}`] = (...args) => {
     if (model.deleted) {
       console.log('instance deleted - can not call any method');
       return;
