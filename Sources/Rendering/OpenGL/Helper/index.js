@@ -10,6 +10,12 @@ import ShaderProgram from '../ShaderProgram';
 export function helper(publicAPI, model) {
   // Set our className
   model.classHierarchy.push('vtkOpenGLHelper');
+
+  publicAPI.setContext = (ctx) => {
+    model.program.setContext(ctx);
+    model.VAO.setContext(ctx);
+    model.IBO.setContext(ctx);
+  };
 }
 
 // ----------------------------------------------------------------------------

@@ -73,6 +73,7 @@ const DEFAULT_VALUES = {
   error: '',
   handle: 0,
   dirty: false,
+  context: null,
 };
 
 // ----------------------------------------------------------------------------
@@ -87,6 +88,7 @@ export function extend(publicAPI, model, initialValues = {}) {
     'source',
     'error',
     'handle',
+    'context',
   ]);
 
   // Object methods

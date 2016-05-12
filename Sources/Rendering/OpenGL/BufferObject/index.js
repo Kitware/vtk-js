@@ -107,6 +107,7 @@ function bufferObject(publicAPI, model) {
 
 const DEFAULT_VALUES = {
   objectType: OBJECT_TYPE.ARRAY_BUFFER,
+  context: null,
 };
 
 // ----------------------------------------------------------------------------
@@ -116,6 +117,11 @@ export function extend(publicAPI, model, initialValues = {}) {
 
   // Object methods
   macro.obj(publicAPI, model);
+
+  macro.setGet(publicAPI, model, [
+    'context',
+  ]);
+
   bufferObject(publicAPI, model);
 }
 

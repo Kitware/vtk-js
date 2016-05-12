@@ -238,6 +238,12 @@ export function shaderProgram(publicAPI, model) {
     }
   };
 
+  publicAPI.setContext = (ctx) => {
+    model.vertexShader.setContext(ctx);
+    model.fragmentShader.setContext(ctx);
+    model.geometryShader.setContext(ctx);
+  };
+
   // publicAPI.enableAttributeArray = (name) => {
   //   const location = publicAPI.findAttributeArray(name);
   //   if (location === -1) {
@@ -280,6 +286,7 @@ const DEFAULT_VALUES = {
   attributesLocs: null,
   uniformLocs: null,
   md5Hash: 0,
+  context: null,
 };
 
 // ----------------------------------------------------------------------------
