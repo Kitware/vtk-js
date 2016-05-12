@@ -4,3 +4,4 @@ export const OBJECT_TYPE = {
   TEXTURE_BUFFER: 2,
 };
 
+export default { OBJECT_TYPE };

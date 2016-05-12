@@ -17,9 +17,9 @@ export function webGLRenderer(publicAPI, model) {
       }
 
       // make sure we have a camera
-      // if (!model.renderable.isActiveCameraCreated()) {
-      //   model.renderable.resetCamera();
-      // }
+      if (!model.renderable.isActiveCameraCreated()) {
+        model.renderable.resetCamera();
+      }
 
       publicAPI.prepareNodes();
       publicAPI.addMissingNodes(model.renderable.getActors());
