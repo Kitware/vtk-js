@@ -237,6 +237,26 @@ export function shaderProgram(publicAPI, model) {
         return false;
     }
   };
+
+  // publicAPI.enableAttributeArray = (name) => {
+  //   const location = publicAPI.findAttributeArray(name);
+  //   if (location === -1) {
+  //     model.error = `Could not enable attribute ${name} No such attribute.`;
+  //     return false;
+  //   }
+  //   model.context.enableVertexAttribArray(location);
+  //   return true;
+  // };
+
+  // publicAPI.disableAttributeArray = (name) => {
+  //   const location = publicAPI.findAttributeArray(name);
+  //   if (location === -1) {
+  //     model.error = `Could not enable attribute ${name} No such attribute.`;
+  //     return false;
+  //   }
+  //   model.context.disableVertexAttribArray(location);
+  //   return true;
+  // };
 }
 
 // ----------------------------------------------------------------------------
