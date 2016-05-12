@@ -3,6 +3,8 @@ import * as macro                                 from '../../../macro';
 import LookupTable                                from '../../../Common/Core/LookupTable';
 import otherStaticMethods                         from './Static';
 import { COLOR_MODE, SCALAR_MODE, MATERIAL_MODE } from './Constants';
+import vtkMath from '../../../Common/Core/Math';
+import vtkDataSet from '../../../Common/DataModel/Dataset';
 
 // CoincidentTopology static methods ------------------------------------------
 /* eslint-disable arrow-body-style */
@@ -26,6 +28,26 @@ CoincidentTopologyHelper.addCoincidentTopologyMethods(
 function mapper(publicAPI, model) {
   // Set our className
   model.classHierarchy.push('vtkMapper');
+
+  publicAPI.getBounds = () => {
+    const input = publicAPI.getInput();
+    if (!input) {
+      model.bounds = vtkMath.createUninitializedBouds();
+    } else {
+      if (!model.static) {
+        publicAPI.update();
+      }
+      model.bounds = vtkDataSet.getBounds(input);
+    }
+    return model.bounds;
+  };
+
+  publicAPI.getInput = () => publicAPI.getInputData;
+
+  publicAPI.setForceCompileOnly = v => {
+    model.forceCompileOnly = v;
+    // make sure we do NOT call modified()
+  };
 
   publicAPI.createDefaultLookupTable = () => {
     console.log('vtkMapper::createDefaultLookupTable - NOT IMPLEMENTED');
@@ -96,11 +118,6 @@ function mapper(publicAPI, model) {
     };
   };
 
-  publicAPI.getBounds = () => {
-    console.log('vtkMapper::getBounds - NOT IMPLEMENTED');
-    return null;
-  };
-
   publicAPI.mapScalars = (input, alpha) => {
     console.log('vtkMapper::mapScalars - NOT IMPLEMENTED');
     const cellFlag = false;
@@ -141,23 +158,37 @@ function mapper(publicAPI, model) {
 // ----------------------------------------------------------------------------
 
 const DEFAULT_VALUES = {
-  lookupTable: null,
-  scalarVisibility: true,
+  colorMapColors: null, // Same as this->Colors
+
   static: false,
-  colorMode: 0,
-  interpolateScalarsBeforeMapping: false,
-  useLookupTableScalarRange: false,
+  lookupTable: null,
+
+  scalarVisibility: true,
   scalarRange: [0, 1],
+  useLookupTableScalarRange: false,
+
+  colorMode: 0,
   scalarMode: 0,
-  colorByArrayName: null,
-  colorByArrayComponent: -1,
-  fieldDataTupleId: -1,
-  renderTime: 0,
   scalarMaterialMode: 0,
 
-  colorMapColors: null,
+  bounds: [1, -1, 1, -1, 1, -1],
+  center: [0, 0],
+
+  renderTime: 0,
+
+  colorByArrayName: null,
+  colorByArrayComponent: -1,
+
+  fieldDataTupleId: -1,
+
+  interpolateScalarsBeforeMapping: false,
   colorCoordinates: null,
   colorTextureMap: null,
+
+  forceCompileOnly: 0,
+
+  useInvertibleColors: false,
+  invertibleScalars: null,
 };
 
 // ----------------------------------------------------------------------------
