@@ -37,6 +37,18 @@ function getLengths(bounds) {
   ];
 }
 
+function getXRange(bounds) {
+  return bounds.slice(0, 2);
+}
+
+function getYRange(bounds) {
+  return bounds.slice(2, 4);
+}
+
+function getZRange(bounds) {
+  return bounds.slice(4, 6);
+}
+
 function getMaxLength(bounds) {
   const l = getLengths(bounds);
   if (l[0] > l[1]) {
@@ -73,6 +85,9 @@ export const STATIC = {
   getLengths,
   getMaxLength,
   getDiagonalLength,
+  getXRange,
+  getYRange,
+  getZRange,
 };
 
 // ----------------------------------------------------------------------------

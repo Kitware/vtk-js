@@ -1,6 +1,12 @@
 import * as macro from '../../../macro';
 import { mat4 } from 'gl-matrix';
 import Prop from '../Prop';
+import BoundingBox from '../../../Common/DataModel/BoundingBox';
+
+
+function notImplemented(method) {
+  return () => console.log('vtkProp3D::${method} - NOT IMPLEMENTED');
+}
 
 // ----------------------------------------------------------------------------
 // vtkProp3D methods
@@ -9,6 +15,49 @@ import Prop from '../Prop';
 function prop3D(publicAPI, model) {
   // Set our className
   model.classHierarchy.push('vtkProp3D');
+
+  publicAPI.getMTime = () => Math.max(
+    model.mtime,
+    publicAPI.getUserTransformMatrixMTime());
+
+  publicAPI.getUserTransformMatrixMTime = () => Math.max(
+    model.userMatrix ? model.userMatrix.getMTime() : 0,
+    model.userTransform ? model.userTransform.getMTime() : 0);
+
+  publicAPI.addPosition = (deltaXYZ) => {
+    model.position = model.position.map((value, index) => value + deltaXYZ[index]);
+    publicAPI.modified();
+  };
+
+  // FIXME
+  publicAPI.setOrientation = notImplemented('setOrientation');
+  publicAPI.getOrientation = notImplemented('getOrientation');
+  publicAPI.getOrientationWXYZ = notImplemented('GetOrientationWXYZ');
+  publicAPI.AddOrientation = notImplemented('AddOrientation');
+  publicAPI.RotateX = notImplemented('RotateX');
+  publicAPI.RotateY = notImplemented('RotateY');
+  publicAPI.RotateZ = notImplemented('RotateZ');
+  publicAPI.RotateWXYZ = notImplemented('RotateWXYZ');
+  publicAPI.SetUserTransform = notImplemented('SetUserTransform');
+  publicAPI.SetUserMatrix = notImplemented('SetUserMatrix');
+
+  publicAPI.getMatrix = () => {
+    publicAPI.computeMatrix();
+    return model.matrix;
+  };
+
+  publicAPI.computeMatrix = notImplemented('computeMatrix');
+
+  // getBounds (macro)
+
+  publicAPI.getCenter = () => BoundingBox.getCenter(model.bounds);
+  publicAPI.getLength = () => BoundingBox.getLength(model.bounds);
+  publicAPI.getXRange = () => BoundingBox.getXRange(model.bounds);
+  publicAPI.getYRange = () => BoundingBox.getYRange(model.bounds);
+  publicAPI.getZRange = () => BoundingBox.getZRange(model.bounds);
+
+  publicAPI.pokeMatrix = notImplemented('pokeMatrix');
+  publicAPI.getUserMatrix = notImplemented('GetUserMatrix');
 
   function updateIdentityFlag() {
     if (!model.isIdentity) {
@@ -37,53 +86,6 @@ function prop3D(publicAPI, model) {
   }
 
   publicAPI.onModified(updateIdentityFlag);
-
-  publicAPI.addPosition = (deltaXYZ) => {
-    model.position = model.position.map((value, index) => value + deltaXYZ[index]);
-    publicAPI.modified();
-  };
-
-  publicAPI.getBounds = () => model.bounds;
-
-  publicAPI.computeMatrix = () => {
-    console.log('Not implemented computeMatrix');
-  };
-
-  publicAPI.getMatrix = () => {
-    publicAPI.computeMatrix();
-    return model.matrix;
-  };
-
-  publicAPI.getXRange = () => model.bounds.filter((value, index) => index < 2);
-  publicAPI.getYRange = () => model.bounds.filter((value, index) => index > 1 && index < 4);
-  publicAPI.getZRange = () => model.bounds.filter((value, index) => index > 3);
-
-  publicAPI.getLength = () => {
-    const dx = model.bounds[1] - model.bounds[0];
-    const dy = model.bounds[3] - model.bounds[2];
-    const dz = model.bounds[5] - model.bounds[4];
-    return Math.sqrt(dx * dx + dy * dy + dz * dz);
-  };
-
-  publicAPI.rotateX = angle => {
-    console.log('Not implemented rotateX');
-  };
-
-  publicAPI.rotateY = angle => {
-    console.log('Not implemented rotateY');
-  };
-
-  publicAPI.rotateZ = angle => {
-    console.log('Not implemented rotateZ');
-  };
-
-  publicAPI.rotateWXYZ = (w, x, y, z) => {
-    console.log('Not implemented rotateWXYZ');
-  };
-
-  publicAPI.addOrientation = xyz => {
-    console.log('Not implemented addOrientation');
-  };
 }
 
 // ----------------------------------------------------------------------------
@@ -91,13 +93,16 @@ function prop3D(publicAPI, model) {
 // ----------------------------------------------------------------------------
 
 const DEFAULT_VALUES = {
-  matrix: null,
   origin: [0, 0, 0],
   position: [0, 0, 0],
   orientation: [0, 0, 0],
   scale: [1, 1, 1],
-  center: [0, 0, 0],
   bounds: [1, -1, 1, -1, 1, -1],
+
+  userMatrix: null,
+  userTransform: null,
+
+  cachedProp3D: null,
   isIdentity: true,
 };
 
@@ -110,8 +115,10 @@ export function extend(publicAPI, model, initialValues = {}) {
   Prop.extend(publicAPI, model);
 
   // Build VTK API
-  macro.get(publicAPI, model, ['isIdentity']);
-  macro.getArray(publicAPI, model, ['center']);
+  macro.get(publicAPI, model, [
+    'bounds',
+    'isIdentity',
+  ]);
   macro.setGetArray(publicAPI, model, [
     'origin',
     'position',
@@ -121,6 +128,7 @@ export function extend(publicAPI, model, initialValues = {}) {
 
   // Object internal instance
   model.matrix = mat4.create();
+  model.transform = null; // FIXME
 
   // Object methods
   prop3D(publicAPI, model);

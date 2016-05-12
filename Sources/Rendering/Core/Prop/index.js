@@ -1,5 +1,9 @@
 import * as macro from '../../../macro';
 
+function notImplemented(method) {
+  return () => console.log('vtkProp::${method} - NOT IMPLEMENTED');
+}
+
 // ----------------------------------------------------------------------------
 // vtkProp methods
 // ----------------------------------------------------------------------------
@@ -8,7 +12,59 @@ function prop(publicAPI, model) {
   // Set our className
   model.classHierarchy.push('vtkProp');
 
+  publicAPI.pick = notImplemented('pick');
+  publicAPI.hasKey = notImplemented('hasKey');
+
+  publicAPI.renderFilteredOpaqueGeometry = (viewport, requiredKeys) => {
+    if (publicAPI.hasKey(requiredKeys)) {
+      return !!publicAPI.renderOpaqueGeometry(viewport);
+    }
+    return false;
+  };
+
+  publicAPI.renderFilteredTranslucentPolygonalGeometry = (viewport, requiredKeys) => {
+    if (publicAPI.hasKey(requiredKeys)) {
+      return !!publicAPI.renderTranslucentPolygonalGeometry(viewport);
+    }
+    return false;
+  };
+
+  publicAPI.renderFilteredVolumetricGeometry = (viewport, requiredKeys) => {
+    if (publicAPI.hasKey(requiredKeys)) {
+      return !!publicAPI.renderVolumetricGeometry(viewport);
+    }
+    return false;
+  };
+
+  publicAPI.renderFilteredOverlay = (viewport, requiredKeys) => {
+    if (publicAPI.hasKey(requiredKeys)) {
+      return !!publicAPI.renderOverlay(viewport);
+    }
+    return false;
+  };
+
   publicAPI.getRedrawMTime = () => model.mtime;
+
+  publicAPI.setEstimatedRenderTime = t => {
+    model.estimatedRenderTime = t;
+    model.savedEstimatedRenderTime = t;
+  };
+
+  publicAPI.restoreEstimatedRenderTime = () => {
+    model.estimatedRenderTime = model.savedEstimatedRenderTime;
+  };
+
+  publicAPI.addEstimatedRenderTime = t => {
+    model.estimatedRenderTime += t;
+  };
+
+  publicAPI.setAllocatedRenderTime = t => {
+    model.allocatedRenderTime = t;
+    model.savedEstimatedRenderTime = model.estimatedRenderTime;
+    model.estimatedRenderTime = 0;
+  };
+
+  publicAPI.getSupportsSelection = () => false;
 }
 
 // ----------------------------------------------------------------------------
@@ -20,6 +76,11 @@ const DEFAULT_VALUES = {
   pickable: true,
   dragable: true,
   useBounds: true,
+  allocatedRenderTime: 10,
+  estimatedRenderTime: 0,
+  savedEstimatedRenderTime: 0,
+  renderTimeMultiplier: 1,
+  paths: null,
 };
 
 // ----------------------------------------------------------------------------
@@ -29,7 +90,17 @@ export function extend(publicAPI, model, initialValues = {}) {
 
   // Build VTK API
   macro.obj(publicAPI, model);
-  macro.setGet(publicAPI, model, Object.keys(DEFAULT_VALUES));
+  macro.get(publicAPI, model, [
+    'estimatedRenderTime',
+    'allocatedRenderTime',
+  ]);
+  macro.setGet(publicAPI, model, [
+    'visibility',
+    'pickable',
+    'dragable',
+    'useBounds',
+    'renderTimeMultiplier',
+  ]);
 
   // Object methods
   prop(publicAPI, model);

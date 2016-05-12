@@ -1,7 +1,8 @@
 import * as macro from '../../../macro';
-import * as vtkMath from '../../../Common/Core/Math';
+import vtkMath from '../../../Common/Core/Math';
 import Camera from '../Camera';
 import Light from '../Light';
+import Viewport from '../Viewport';
 import TimerLog from '../../../Common/System/TimerLog';
 import { INIT_BOUNDS } from '../../../Common/DataModel/BoundingBox';
 import { vec4 } from 'gl-matrix';
@@ -10,7 +11,9 @@ import { vec4 } from 'gl-matrix';
 // Global methods
 // ----------------------------------------------------------------------------
 
-function noOp() {}
+function notImplemented(method) {
+  return () => console.log('vtkRenderer::${method} - NOT IMPLEMENTED');
+}
 
 function expandBounds(bounds, matrix) {
   if (!bounds) {
@@ -78,119 +81,16 @@ function renderer(publicAPI, model) {
   // Set our className
   model.classHierarchy.push('vtkRenderer');
 
-  publicAPI.addActor = actor => {
-    model.actors = [].concat(model.actors, actor);
-    publicAPI.modified();
-  };
-
-  publicAPI.removeActor = actor => {
-    model.actors = model.actors.filter(a => a !== actor);
-    publicAPI.modified();
-  };
-
-  publicAPI.addVolume = volume => {
-    model.volumes = [].concat(model.volumes, volume);
-    publicAPI.modified();
-  };
-
-  publicAPI.removeVolume = volume => {
-    model.volumes = model.volumes.filter(v => v !== volume);
-    publicAPI.modified();
-  };
-
-  publicAPI.addLight = light => {
-    model.lights = [].concat(model.lights, light);
-    publicAPI.modified();
-  };
-
-  publicAPI.removeLight = light => {
-    model.lights = model.lights.filter(l => l !== light);
-    publicAPI.modified();
-  };
-
-  publicAPI.removeAllLights = () => { model.lights = []; };
-
-  publicAPI.createLight = () => {
-    if (!model.automaticLightCreation) {
-      return;
+  publicAPI.releaseGraphicsResources = vtkWindow => {
+    if (model.backgroundTexture) {
+      model.backgroundTexture.releaseGraphicsResources(vtkWindow);
     }
 
-    if (model.createdLight) {
-      publicAPI.removeLight(model.createdLight);
-      model.createdLight.delete();
-      model.createdLight = null;
-    }
-
-    model.createdLight = publicAPI.makeLight();
-    publicAPI.addLight(model.createdLight);
-
-    model.createdLight.setLightTypeToHeadlight();
-
-    // set these values just to have a good default should LightFollowCamera
-    // be turned off.
-    model.createdLight.setPosition(publicAPI.getActiveCamera().getPosition());
-    model.createdLight.setFocalPoint(publicAPI.getActiveCamera().getFocalPoint());
-  };
-
-  publicAPI.makeLight = Light.newInstance;
-
-  publicAPI.setRenderWindow = renderWindow => {
-    model.renderWindow = renderWindow;
-    renderWindow.addRenderer(publicAPI);
-  };
-
-  publicAPI.isActiveCameraCreated = () => !!model.activeCamera;
-
-  publicAPI.updateLightsGeometryToFollowCamera = () => {
-    // only update the light's geometry if this Renderer is tracking
-    // this lights.  That allows one renderer to view the lights that
-    // another renderer is setting up.
-    const camera = publicAPI.getActiveCameraAndResetIfCreated();
-    const lightMatrix = camera.getCameraLightTransformMatrix();
-
-    model.lights.forEach(light => {
-      if (light.lightTypeIsSceneLight()) {
-        // Do nothing. Don't reset the transform matrix because applications
-        // may have set a custom matrix. Only reset the transform matrix in
-        // vtkLight::SetLightTypeToSceneLight()
-      } else if (light.lightTypeIsHeadlight()) {
-        // update position and orientation of light to match camera.
-        light.setPosition(camera.getPosition());
-        light.setFocalPoint(camera.getFocalPoint());
-      } else if (light.lightTypeIsCameraLight()) {
-        light.setTransformMatrix(lightMatrix);
-      } else {
-        console.log('light has unknown light type', light);
+    model.props.forEach(prop => {
+      if (prop) {
+        prop.releaseGraphicsResources(vtkWindow);
       }
     });
-  };
-
-  publicAPI.makeCamera = () => {
-    const camera = Camera.newInstance();
-    publicAPI.fireEvent({ type: 'CreateCameraEvent', camera });
-    return camera;
-  };
-
-  // Replace the set/get macro method
-  publicAPI.getActiveCamera = () => {
-    if (!model.activeCamera) {
-      model.activeCamera = publicAPI.makeCamera();
-    }
-
-    return model.activeCamera;
-  };
-
-  publicAPI.getActiveCameraAndResetIfCreated = () => {
-    if (!model.activeCamera) {
-      publicAPI.getActiveCamera();
-      publicAPI.resetCamera();
-    }
-
-    return model.activeCamera;
-  };
-
-  publicAPI.getTimeFactor = () => {
-    console.log('vtkRenderer::getTimeFactor() - NOT IMPLEMENTED');
   };
 
   publicAPI.render = () => {
@@ -261,17 +161,71 @@ function renderer(publicAPI, model) {
     publicAPI.fireEvent({ type: 'EndEvent' });
   };
 
-  // NoOp: Should be overriden
-  publicAPI.deviceRender = noOp;
-
   publicAPI.deviceRenderTranslucentPolygonalGeometry = () => {
     model.lastRenderingUsedDepthPeeling = false;
     publicAPI.updateTranslucentPolygonalGeometry();
   };
 
-  // -------- PROTECTED API ----------
-  /* eslint-disable no-underscore-dangle */
-  publicAPI.__updateTranslucentPolygonalGeometry = () => {
+  // macro
+  // - getAllocatedRenderTime
+  // - getTimeFactor
+
+  publicAPI.updateCamera = () => {
+    if (!model.activeCamera) {
+      vtkDebugMacro('No cameras are on, creating one.');
+      // the get method will automagically create a camera
+      // and reset it since one hasn't been specified yet.
+      // If is very unlikely that this can occur - if this
+      // renderer is part of a vtkRenderWindow, the camera
+      // will already have been created as part of the
+      // DoStereoRender() method.
+      publicAPI.getActiveCameraAndResetIfCreated();
+    }
+
+    // update the viewing transformation
+    model.activeCamera.render(publicAPI);
+
+    return true;
+  };
+
+  publicAPI.updateLightsGeometryToFollowCamera = () => {
+    // only update the light's geometry if this Renderer is tracking
+    // this lights.  That allows one renderer to view the lights that
+    // another renderer is setting up.
+    const camera = publicAPI.getActiveCameraAndResetIfCreated();
+    const lightMatrix = camera.getCameraLightTransformMatrix();
+
+    model.lights.forEach(light => {
+      if (light.lightTypeIsSceneLight()) {
+        // Do nothing. Don't reset the transform matrix because applications
+        // may have set a custom matrix. Only reset the transform matrix in
+        // vtkLight::SetLightTypeToSceneLight()
+      } else if (light.lightTypeIsHeadlight()) {
+        // update position and orientation of light to match camera.
+        light.setPosition(camera.getPosition());
+        light.setFocalPoint(camera.getFocalPoint());
+      } else if (light.lightTypeIsCameraLight()) {
+        light.setTransformMatrix(lightMatrix);
+      } else {
+        vtkErrorMacro('light has unknown light type', light);
+      }
+    });
+  };
+
+  publicAPI.updateLightGeometry = () => {
+    if (model.lightFollowCamera) {
+      // only update the light's geometry if this Renderer is tracking
+      // this lights.  That allows one renderer to view the lights that
+      // another renderer is setting up.
+      return publicAPI.updateLightsGeometryToFollowCamera();
+    }
+    return true;
+  };
+
+  publicAPI.allocateTime = notImplemented('allocateTime');
+  publicAPI.updateGeometry = notImplemented('updateGeometry');
+
+  publicAPI.updateTranslucentPolygonalGeometry = () => {
     let result = 0;
 
     // loop through props and give them a chance to
@@ -284,13 +238,126 @@ function renderer(publicAPI, model) {
 
     return result;
   };
-  /* eslint-enable no-underscore-dangle */
 
-  publicAPI.clearLights = noOp;
-  publicAPI.clear = noOp;
+  publicAPI.getVTKWindow = () => model.renderWindow;
 
-  publicAPI.visibleActorCount = () => model.props.filter(prop => prop.getVisibility()).length;
-  publicAPI.visibleVolumeCount = publicAPI.visibleActorCount;
+  publicAPI.setLayer = layer => {
+    vtkDebugMacro(publicAPI.getClassName(), publicAPI, 'setting Layer to ', layer);
+    if (model.layer !== layer) {
+      model.layer = layer;
+      publicAPI.modified();
+    }
+    publicAPI.setPreserveColorBuffer(!!layer);
+  };
+
+  publicAPI.setActiveCamera = camera => {
+    if (model.activeCamera === camera) {
+      return false;
+    }
+
+    model.activeCamera = camera;
+    publicAPI.modified();
+    publicAPI.fireEvent({ type: 'ActiveCameraEvent', camera });
+    return true;
+  };
+
+  publicAPI.makeCamera = () => {
+    const camera = Camera.newInstance();
+    publicAPI.fireEvent({ type: 'CreateCameraEvent', camera });
+    return camera;
+  };
+
+  // Replace the set/get macro method
+  publicAPI.getActiveCamera = () => {
+    if (!model.activeCamera) {
+      model.activeCamera = publicAPI.makeCamera();
+    }
+
+    return model.activeCamera;
+  };
+
+  publicAPI.getActiveCameraAndResetIfCreated = () => {
+    if (!model.activeCamera) {
+      publicAPI.getActiveCamera();
+      publicAPI.resetCamera();
+    }
+
+    return model.activeCamera;
+  };
+
+  publicAPI.addActor = publicAPI.addViewProp;
+  publicAPI.addVolume = publicAPI.addViewProp;
+
+  publicAPI.removeActor = actor => {
+    model.actors = model.actors.filter(a => a !== actor);
+    publicAPI.removeViewProp(actor);
+  };
+
+  publicAPI.removeVolume = volume => {
+    model.volumes = model.volumes.filter(v => v !== volume);
+    publicAPI.removeViewProp(volume);
+  };
+
+  publicAPI.addLight = light => {
+    model.lights = [].concat(model.lights, light);
+    publicAPI.modified();
+  };
+
+  publicAPI.getActors = () => {
+    model.actors = [];
+    model.props.forEach(prop => {
+      model.actors = model.actors.concat(prop.getActors());
+    });
+    return model.actors;
+  };
+
+  publicAPI.getVolumes = () => {
+    model.volumes = [];
+    model.props.forEach(prop => {
+      model.volumes = model.volumes.concat(prop.getVolumes());
+    });
+    return model.volumes;
+  };
+
+  publicAPI.removeLight = light => {
+    model.lights = model.lights.filter(l => l !== light);
+    publicAPI.modified();
+  };
+
+  publicAPI.removeAllLights = () => { model.lights = []; };
+
+  // FIXME
+  publicAPI.addCuller = notImplemented('addCuller');
+  publicAPI.removeCuller = notImplemented('removeCuller');
+
+  publicAPI.setLightCollection = (lights) => {
+    model.lights = lights;
+    publicAPI.modified();
+  };
+
+  publicAPI.makeLight = Light.newInstance;
+
+  publicAPI.createLight = () => {
+    if (!model.automaticLightCreation) {
+      return;
+    }
+
+    if (model.createdLight) {
+      publicAPI.removeLight(model.createdLight);
+      model.createdLight.delete();
+      model.createdLight = null;
+    }
+
+    model.createdLight = publicAPI.makeLight();
+    publicAPI.addLight(model.createdLight);
+
+    model.createdLight.setLightTypeToHeadlight();
+
+    // set these values just to have a good default should LightFollowCamera
+    // be turned off.
+    model.createdLight.setPosition(publicAPI.getActiveCamera().getPosition());
+    model.createdLight.setFocalPoint(publicAPI.getActiveCamera().getFocalPoint());
+  };
 
   publicAPI.computeVisiblePropBounds = () => {
     const allBounds = [].concat(INIT_BOUNDS);
@@ -333,106 +400,6 @@ function renderer(publicAPI, model) {
     }
 
     return allBounds;
-  };
-
-  publicAPI.resetCameraClippingRange = (bounds = null) => {
-    const boundsToUse = bounds || publicAPI.computeVisiblePropBounds();
-
-    if (!vtkMath.areBoundsInitialized(boundsToUse)) {
-      vtkDebugMacro('Cannot reset camera clipping range!');
-      return false;
-    }
-
-    // Make sure we have an active camera
-    publicAPI.getActiveCameraAndResetIfCreated();
-    if (!model.activeCamera) {
-      vtkErrorMacro('Trying to reset clipping range of non-existant camera');
-      return false;
-    }
-
-    let vn = null; let position = null;
-    if (!model.activeCamera.getUseOffAxisProjection()) {
-      vn = model.activeCamera.getViewPlaneNormal();
-      position = model.activeCamera.getPosition();
-      expandBounds(boundsToUse, model.activeCamera.getModelTransformMatrix());
-    } else {
-      position = model.activeCamera.getEyePosition();
-      vn = model.activeCamera.getEyePlaneNormal();
-      expandBounds(boundsToUse, model.activeCamera.getModelViewTransformMatrix());
-    }
-
-    const a = -vn[0];
-    const b = -vn[1];
-    const c = -vn[2];
-    const d = -(a * position[0] + b * position[1] + c * position[2]);
-
-    // Set the max near clipping plane and the min far clipping plane
-    const range = [a * boundsToUse[0] + b * boundsToUse[2] + c * boundsToUse[4] + d, 1e-18];
-
-    // Find the closest / farthest bounding box vertex
-    for (let k = 0; k < 2; k++) {
-      for (let j = 0; j < 2; j++) {
-        for (let i = 0; i < 2; i++) {
-          const dist = a * boundsToUse[i] + b * boundsToUse[2 + j] + c * boundsToUse[4 + k] + d;
-          range[0] = (dist < range[0]) ? (dist) : (range[0]);
-          range[1] = (dist > range[1]) ? (dist) : (range[1]);
-        }
-      }
-    }
-
-    // do not let far - near be less than 0.1 of the window height
-    // this is for cases such as 2D images which may have zero range
-    let minGap = 0.0;
-    if (model.activeCamera.getParallelProjection()) {
-      minGap = 0.1 * model.activeCamera.getParallelScale();
-    } else {
-      const angle = vtkMath.radiansFromDegrees(model.activeCamera.getViewAngle());
-      minGap = 0.2 * Math.tan(angle / 2.0) * range[1];
-    }
-
-    if (range[1] - range[0] < minGap) {
-      minGap = minGap - range[1] + range[0];
-      range[1] += minGap / 2.0;
-      range[0] -= minGap / 2.0;
-    }
-
-    // Do not let the range behind the camera throw off the calculation.
-    if (range[0] < 0.0) {
-      range[0] = 0.0;
-    }
-
-    // Give ourselves a little breathing room
-    range[0] = 0.99 * range[0] - (range[1] - range[0]) * model.clippingRangeExpansion;
-    range[1] = 1.01 * range[1] + (range[1] - range[0]) * model.clippingRangeExpansion;
-
-    // Make sure near is not bigger than far
-    range[0] = (range[0] >= range[1]) ? (0.01 * range[1]) : (range[0]);
-
-    // Make sure near is at least some fraction of far - this prevents near
-    // from being behind the camera or too close in front. How close is too
-    // close depends on the resolution of the depth buffer
-    if (!model.nearClippingPlaneTolerance) {
-      model.nearClippingPlaneTolerance = 0.01;
-      if (model.renderWindow) {
-        const ZBufferDepth = model.renderWindow.getDepthBufferSize();
-        if (ZBufferDepth > 16) {
-          model.nearClippingPlaneTolerance = 0.001;
-        }
-      }
-    }
-
-    // make sure the front clipping range is not too far from the far clippnig
-    // range, this is to make sure that the zbuffer resolution is effectively
-    // used
-    if (range[0] < model.nearClippingPlaneTolerance * range[1]) {
-      range[0] = model.nearClippingPlaneTolerance * range[1];
-    }
-    model.activeCamera.setClippingRange(range);
-
-    // Here to let parallel/distributed compositing intercept
-    // and do the right thing.
-    publicAPI.fireEvent({ type: 'ResetCameraClippingRangeEvent', renderer: publicAPI });
-    return false;
   };
 
   publicAPI.resetCamera = (bounds = null) => {
@@ -537,7 +504,157 @@ function renderer(publicAPI, model) {
     return true;
   };
 
+  publicAPI.resetCameraClippingRange = (bounds = null) => {
+    const boundsToUse = bounds || publicAPI.computeVisiblePropBounds();
+
+    if (!vtkMath.areBoundsInitialized(boundsToUse)) {
+      vtkDebugMacro('Cannot reset camera clipping range!');
+      return false;
+    }
+
+    // Make sure we have an active camera
+    publicAPI.getActiveCameraAndResetIfCreated();
+    if (!model.activeCamera) {
+      vtkErrorMacro('Trying to reset clipping range of non-existant camera');
+      return false;
+    }
+
+    let vn = null; let position = null;
+    if (!model.activeCamera.getUseOffAxisProjection()) {
+      vn = model.activeCamera.getViewPlaneNormal();
+      position = model.activeCamera.getPosition();
+      expandBounds(boundsToUse, model.activeCamera.getModelTransformMatrix());
+    } else {
+      position = model.activeCamera.getEyePosition();
+      vn = model.activeCamera.getEyePlaneNormal();
+      expandBounds(boundsToUse, model.activeCamera.getModelViewTransformMatrix());
+    }
+
+    const a = -vn[0];
+    const b = -vn[1];
+    const c = -vn[2];
+    const d = -(a * position[0] + b * position[1] + c * position[2]);
+
+    // Set the max near clipping plane and the min far clipping plane
+    const range = [a * boundsToUse[0] + b * boundsToUse[2] + c * boundsToUse[4] + d, 1e-18];
+
+    // Find the closest / farthest bounding box vertex
+    for (let k = 0; k < 2; k++) {
+      for (let j = 0; j < 2; j++) {
+        for (let i = 0; i < 2; i++) {
+          const dist = a * boundsToUse[i] + b * boundsToUse[2 + j] + c * boundsToUse[4 + k] + d;
+          range[0] = (dist < range[0]) ? (dist) : (range[0]);
+          range[1] = (dist > range[1]) ? (dist) : (range[1]);
+        }
+      }
+    }
+
+    // do not let far - near be less than 0.1 of the window height
+    // this is for cases such as 2D images which may have zero range
+    let minGap = 0.0;
+    if (model.activeCamera.getParallelProjection()) {
+      minGap = 0.1 * model.activeCamera.getParallelScale();
+    } else {
+      const angle = vtkMath.radiansFromDegrees(model.activeCamera.getViewAngle());
+      minGap = 0.2 * Math.tan(angle / 2.0) * range[1];
+    }
+
+    if (range[1] - range[0] < minGap) {
+      minGap = minGap - range[1] + range[0];
+      range[1] += minGap / 2.0;
+      range[0] -= minGap / 2.0;
+    }
+
+    // Do not let the range behind the camera throw off the calculation.
+    if (range[0] < 0.0) {
+      range[0] = 0.0;
+    }
+
+    // Give ourselves a little breathing room
+    range[0] = 0.99 * range[0] - (range[1] - range[0]) * model.clippingRangeExpansion;
+    range[1] = 1.01 * range[1] + (range[1] - range[0]) * model.clippingRangeExpansion;
+
+    // Make sure near is not bigger than far
+    range[0] = (range[0] >= range[1]) ? (0.01 * range[1]) : (range[0]);
+
+    // Make sure near is at least some fraction of far - this prevents near
+    // from being behind the camera or too close in front. How close is too
+    // close depends on the resolution of the depth buffer
+    if (!model.nearClippingPlaneTolerance) {
+      model.nearClippingPlaneTolerance = 0.01;
+      if (model.renderWindow) {
+        const ZBufferDepth = model.renderWindow.getDepthBufferSize();
+        if (ZBufferDepth > 16) {
+          model.nearClippingPlaneTolerance = 0.001;
+        }
+      }
+    }
+
+    // make sure the front clipping range is not too far from the far clippnig
+    // range, this is to make sure that the zbuffer resolution is effectively
+    // used
+    if (range[0] < model.nearClippingPlaneTolerance * range[1]) {
+      range[0] = model.nearClippingPlaneTolerance * range[1];
+    }
+    model.activeCamera.setClippingRange(range);
+
+    // Here to let parallel/distributed compositing intercept
+    // and do the right thing.
+    publicAPI.fireEvent({ type: 'ResetCameraClippingRangeEvent', renderer: publicAPI });
+    return false;
+  };
+
+  publicAPI.setRenderWindow = renderWindow => {
+    if (renderWindow !== model.renderWindow) {
+      // This renderer is be dis-associated with its previous render window.
+      // this information needs to be passed to the renderer's actors and
+      // volumes so they can release and render window specific (or graphics
+      // context specific) information (such as display lists and texture ids)
+      model.props.forEach(prop => {
+        prop.releaseGraphicsResources(model.renderWindow);
+      });
+      // what about lights?
+      // what about cullers?
+      publicAPI.releaseGraphicsResources(model.renderWindow);
+
+      if (model.backgroundTexture && model.renderWindow) {
+        model.backgroundTexture.releaseGraphicsResources(model.renderWindow);
+      }
+
+      model.vtkWindow = renderWindow;
+      model.renderWindow = renderWindow;
+    }
+  };
+
+  // FIXME
+  publicAPI.getZ = notImplemented('getZ');
+  publicAPI.viewToWorld = notImplemented('ViewToWorld');
+  publicAPI.WorldToView = notImplemented('WorldToView');
+
+  publicAPI.visibleActorCount = () => model.props.filter(prop => prop.getVisibility()).length;
+  publicAPI.visibleVolumeCount = publicAPI.visibleActorCount;
+
+  publicAPI.getMTime = () =>
+    Math.max(
+      model.mtime,
+      model.activeCamera ? model.activeCamera.getMTime() : 0,
+      model.createdLight ? model.createdLight.getMTime() : 0);
+
+
+  // FIXME
+  publicAPI.pickProp = notImplemented('pickProp');
+  publicAPI.pickRender = notImplemented('PickRender');
+  publicAPI.pickGeometry = notImplemented('PickGeometry');
+
+  // ExpandBounds => global
+
   publicAPI.transparent = () => !!model.preserveColorBuffer;
+
+  // FIXME
+  publicAPI.getTiledAspectRatio = notImplemented('GetTiledAspectRatio');
+  publicAPI.captureGL2PSSpecialProp = notImplemented('CaptureGL2PSSpecialProp');
+
+  publicAPI.isActiveCameraCreated = () => !!model.activeCamera;
 }
 
 // ----------------------------------------------------------------------------
@@ -545,34 +662,60 @@ function renderer(publicAPI, model) {
 // ----------------------------------------------------------------------------
 
 const DEFAULT_VALUES = {
+  pickedProp: null,
+  activeCamera: null,
+
+  ambient: [1, 1, 1],
+
+  allocatedRenderTime: 100,
+  timeFactor: 1,
+
+  createdLight: null,
+  automaticLightCreation: true,
+
+  twoSidedLighting: true,
+  lastRenderTimeInSeconds: -1,
+
+  renderWindow: null,
+  light: [],
   actors: [],
   volumes: [],
-  light: [],
-  twoSidedLighting: true,
+
   lightFollowCamera: true,
-  renderWindow: null,
-  activeCamera: null, // FIXME create one by default
-  erase: true,
-  draw: true,
-  interactive: false,
+
+  numberOfPropsRendered: 0,
+
+  propArray: null,
+
+  pathArray: null,
+
   layer: 1,
   preserveColorBuffer: false,
   preserveDepthBuffer: false,
+
+  computeVisiblePropBounds: vtkMath.createUninitializedBouds(),
+
+  interactive: true,
+
+  nearClippingPlaneTolerance: 0,
+  clippingRangeExpansion: 0.5,
+
+  erase: true,
+  draw: true,
+
+  useShadows: false,
+
   useDepthPeeling: false,
   occlusionRatio: 0,
   maximumNumberOfPeels: 4,
-  useShadows: false,
-  background: [0.2, 0.3, 0.4],
-  transparent: false,
-  automaticLightCreation: true,
-  createdLight: null,
-  allocatedRenderTime: 100,
-  timeFactor: 1,
+
+  selector: null,
   delegate: null,
-  lastRenderTimeInSeconds: 0.001,
-  numberOfPropsRendered: 0,
-  nearClippingPlaneTolerance: 0,
-  clippingRangeExpansion: 0.5,
+
+  texturedBackground: false,
+  backgroundTexture: null,
+
+  pass: 0,
 };
 
 // ----------------------------------------------------------------------------
@@ -580,36 +723,46 @@ const DEFAULT_VALUES = {
 export function extend(publicAPI, model, initialValues = {}) {
   Object.assign(model, DEFAULT_VALUES, initialValues);
 
+  // Inheritance
+  Viewport.extend(publicAPI, model);
+
   // Build VTK API
-  macro.obj(publicAPI, model);
-  macro.event(publicAPI, model, 'event');
-  macro.get(publicAPI, model, ['timeFactor', 'numberOfPropsRendered', 'lastRenderTimeInSeconds']);
+  macro.get(publicAPI, model, [
+    'renderWindow',
+
+    'allocatedRenderTime',
+    'timeFactor',
+
+    'lastRenderTimeInSeconds',
+    'numberOfPropsRendered',
+    'lastRenderingUsedDepthPeeling',
+
+    'selector',
+  ]);
   macro.setGet(publicAPI, model, [
     'twoSidedLighting',
     'lightFollowCamera',
-    'activeCamera',
+    'automaticLightCreation',
     'erase',
     'draw',
-    'layer',
+    'nearClippingPlaneTolerance',
+    'clippingRangeExpansion',
+    'backingStore',
     'interactive',
-    'renderWindow',
+    'layer',
     'preserveColorBuffer',
     'preserveDepthBuffer',
     'useDepthPeeling',
     'occlusionRatio',
     'maximumNumberOfPeels',
-    'useShadows',
-    'transparent',
-    'allocatedRenderTime',
     'delegate',
-    'nearClippingPlaneTolerance',
-    'clippingRangeExpansion',
+    'backgroundTexture',
+    'texturedBackground',
+    'useShadows',
+    'pass',
   ]);
   macro.getArray(publicAPI, model, ['actors', 'volumes', 'lights']);
   macro.setGetArray(publicAPI, model, ['background'], 3);
-
-  // Similar returned value
-  publicAPI.getVTKWindow = publicAPI.getRenderWindow;
 
   // Object methods
   renderer(publicAPI, model);

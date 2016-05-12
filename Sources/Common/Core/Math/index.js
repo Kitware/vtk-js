@@ -15,6 +15,14 @@ export function uninitializeBounds(bounds) {
   bounds[5] = -1.0;
 }
 
+export function createUninitializedBouds() {
+  return [].concat([
+    Number.MAX_VALUE, Number.MIN_VALUE, // X
+    Number.MAX_VALUE, Number.MIN_VALUE, // Y
+    Number.MAX_VALUE, Number.MIN_VALUE, // Z
+  ]);
+}
+
 export function dot(x, y) {
   return x[0] * y[0] + x[1] * y[1] + x[2] * y[2];
 }
@@ -24,4 +32,5 @@ export default {
   radiansFromDegrees,
   areBoundsInitialized,
   dot,
+  createUninitializedBouds,
 };

@@ -7,6 +7,7 @@ import Prop3D       from './Prop3D';
 import Property     from './Property';
 import Renderer     from './Renderer';
 import RenderWindow from './RenderWindow';
+import Viewport     from './Viewport';
 
 export default {
   Actor,
@@ -18,4 +19,5 @@ export default {
   Property,
   Renderer,
   RenderWindow,
+  Viewport,
 };
