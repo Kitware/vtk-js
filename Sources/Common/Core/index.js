@@ -3,7 +3,6 @@ import vtkDynamicTypedArray from './DynamicTypedArray';
 import vtkEndian from './Endian';
 import vtkLookupTable from './LookupTable';
 import vtkMath from './Math';
-import vtkPoints from './Points';
 
 export default {
   vtkDataArray,
@@ -11,5 +10,4 @@ export default {
   vtkEndian,
   vtkLookupTable,
   vtkMath,
-  vtkPoints,
 };
