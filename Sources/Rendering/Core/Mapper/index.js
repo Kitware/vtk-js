@@ -3,8 +3,8 @@ import * as macro                                 from '../../../macro';
 import LookupTable                                from '../../../Common/Core/LookupTable';
 import otherStaticMethods                         from './Static';
 import { COLOR_MODE, SCALAR_MODE, MATERIAL_MODE } from './Constants';
-import vtkMath from '../../../Common/Core/Math';
-import vtkDataSet from '../../../Common/DataModel/Dataset';
+import vtkMath                                    from '../../../Common/Core/Math';
+import vtkDataSet                                 from '../../../Common/DataModel/DataSet';
 
 // CoincidentTopology static methods ------------------------------------------
 /* eslint-disable arrow-body-style */
