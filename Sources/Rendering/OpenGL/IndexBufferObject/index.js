@@ -22,17 +22,15 @@ function indexBufferObject(publicAPI, model) {
   model.classHierarchy.push('vtkOpenGLIndexBufferObject');
 
   // Sizes/offsets are all in bytes as OpenGL API expects them.
-  let indexCount = 0; // Number of indices in the VBO
-
   publicAPI.createTriangleIndexBuffer = (cells, points) => {
     const dynArray = new DynamicTypedArray();
     publicAPI.appendTriangleIndexBuffer(dynArray, cells, points, 0);
     const indexArray = dynArray.getFrozenArray();
-    indexCount = indexArray.length;
-    if (indexCount > 0) {
+    model.indexCount = indexArray.length;
+    if (model.indexCount > 0) {
       publicAPI.upload(indexArray, OBJECT_TYPE.ELEMENT_ARRAY_BUFFER);
     }
-    return indexCount;
+    return model.indexCount;
   };
 
   publicAPI.appendTriangleIndexBuffer = (indexArray, cells, points, vOffset) => {
@@ -121,11 +119,11 @@ function indexBufferObject(publicAPI, model) {
     const dynArray = new DynamicTypedArray();
     publicAPI.appendLineIndexBuffer(dynArray, cells, 0);
     const indexArray = dynArray.getFrozenArray();
-    indexCount = indexArray.length;
-    if (indexCount > 0) {
+    model.indexCount = indexArray.length;
+    if (model.indexCount > 0) {
       publicAPI.upload(indexArray, OBJECT_TYPE.ELEMENT_ARRAY_BUFFER);
     }
-    return indexCount;
+    return model.indexCount;
   };
 
   publicAPI.appendLineIndexBuffer = (indexArray, cells, vOffset) => {
@@ -149,11 +147,11 @@ function indexBufferObject(publicAPI, model) {
     const dynArray = new DynamicTypedArray();
     publicAPI.appendTriangleLineIndexBuffer(dynArray, cells, 0);
     const indexArray = dynArray.getFrozenArray();
-    indexCount = indexArray.length;
-    if (indexCount > 0) {
+    model.indexCount = indexArray.length;
+    if (model.indexCount > 0) {
       publicAPI.upload(indexArray, OBJECT_TYPE.ELEMENT_ARRAY_BUFFER);
     }
-    return indexCount;
+    return model.indexCount;
   };
 
   publicAPI.appendTriangleLineIndexBuffer = (indexArray, cells, vOffset) => {
@@ -177,11 +175,11 @@ function indexBufferObject(publicAPI, model) {
     const dynArray = new DynamicTypedArray();
     publicAPI.appendPointIndexBuffer(dynArray, cells, 0);
     const indexArray = dynArray.getFrozenArray();
-    indexCount = indexArray.length;
-    if (indexCount > 0) {
+    model.indexCount = indexArray.length;
+    if (model.indexCount > 0) {
       publicAPI.upload(indexArray, OBJECT_TYPE.ELEMENT_ARRAY_BUFFER);
     }
-    return indexCount;
+    return model.indexCount;
   };
 
   publicAPI.appendPointIndexBuffer = (indexArray, cells, vOffset) => {
@@ -242,11 +240,11 @@ function indexBufferObject(publicAPI, model) {
     }
 
     const indexArray = dynArray.getFrozenArray();
-    indexCount = indexArray.length;
-    if (indexCount > 0) {
+    model.indexCount = indexArray.length;
+    if (model.indexCount > 0) {
       publicAPI.upload(indexArray, OBJECT_TYPE.ELEMENT_ARRAY_BUFFER);
     }
-    return indexCount;
+    return model.indexCount;
   };
 
   publicAPI.createEdgeFlagIndexBuffer = (cells, ef) => {
@@ -255,10 +253,10 @@ function indexBufferObject(publicAPI, model) {
     //   // vtkDataArray *ef)
     //   const info = computeIndexBufferInfo(cells);
     //   if (info.numberOfCells === 0) {
-    //     indexCount = 0;
+    //     model.indexCount = 0;
     //     return 0;
     //   }
-    //   indexCount = info.numberOfVertices;
+    //   model.indexCount = info.numberOfVertices;
 
     //   vtkIdType      *pts = 0;
     //   vtkIdType      npts = 0;
@@ -394,7 +392,9 @@ function indexBufferObject(publicAPI, model) {
 // Object factory
 // ----------------------------------------------------------------------------
 
-const DEFAULT_VALUES = {};
+const DEFAULT_VALUES = {
+  indexCount: 0,
+};
 
 // ----------------------------------------------------------------------------
 
@@ -403,6 +403,8 @@ export function extend(publicAPI, model, initialValues = {}) {
 
   // Inheritance
   BufferObject.extend(publicAPI, model);
+
+  macro.get(publicAPI, model, ['indexCount']);
 
   // Object specific methods
   indexBufferObject(publicAPI, model);

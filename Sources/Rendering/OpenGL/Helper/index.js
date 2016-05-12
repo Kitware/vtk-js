@@ -38,15 +38,11 @@ export function extend(publicAPI, model, initialValues = {}) {
   // Build VTK API
   macro.obj(publicAPI, model);
 
-  model.program = ShaderProgram.newInstance();
-  model.VAO = VertexArrayObject.newInstance();
-  model.IBO = IndexBufferObject.newInstance();
-
   model.shaderSourceTime = {};
   macro.obj(model.shaderSourceTime);
 
-  model.shaderSourceTime = {};
-  macro.obj(model.shaderSourceTime);
+  model.attributeUpdateTime = {};
+  macro.obj(model.attributeUpdateTime);
 
 
   macro.setGet(publicAPI, model, [
@@ -56,6 +52,10 @@ export function extend(publicAPI, model, initialValues = {}) {
     'attributeUpdateTime',
     'IBO',
   ]);
+
+  model.program = ShaderProgram.newInstance();
+  model.VAO = VertexArrayObject.newInstance();
+  model.IBO = IndexBufferObject.newInstance();
 
   // Object methods
   helper(publicAPI, model);

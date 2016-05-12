@@ -1,5 +1,5 @@
 import * as macro from '../../../macro';
-import { SHADING_MODEL } from './Constants';
+import { SHADING_MODEL, REPRESENTATIONS } from './Constants';
 
 // ----------------------------------------------------------------------------
 // vtkProperty methods
@@ -77,6 +77,7 @@ const DEFAULT_VALUES = {
   pointSize: 1,
   backfaceCulling: false,
   frontfaceCulling: false,
+  representation: REPRESENTATIONS.VTK_SURFACE,
 };
 
 // ----------------------------------------------------------------------------
@@ -109,6 +110,7 @@ export function extend(publicAPI, model, initialValues = {}) {
     'pointSize',
     'backfaceCulling',
     'frontfaceCulling',
+    'representation',
   ]);
   macro.setGetArray(publicAPI, model, [
     'ambientColor',

@@ -441,7 +441,7 @@ export function webGLPolyDataMapper(publicAPI, model) {
     // cellBO.Program.SetUniformi('PrimitiveIDOffset',
     //   model.primitiveIDOffset);
 
-    // if (cellBO.IBO.IndexCount && (model.VBOBuildTime > cellBO.AttributeUpdateTime ||
+    // if (cellBO.getIBO().getIndexCount() && (model.VBOBuildTime > cellBO.AttributeUpdateTime ||
     //     cellBO.ShaderSourceTime > cellBO.AttributeUpdateTime))
     //   {
     //   cellBO.VAO.Bind();
@@ -781,42 +781,42 @@ export function webGLPolyDataMapper(publicAPI, model) {
     const gl = model.context;
 
     // draw points
-    if (model.points.IBO.IndexCount) {
+    if (model.points.getIBO().getIndexCount()) {
       // Update/build/etc the shader.
       publicAPI.updateShaders(model.points, ren, actor);
-      model.points.IBO.bind();
+      model.points.getIBO().bind();
       gl.drawElements(gl.POINTS,
-        model.Points.IBO.IndexCount,
+        model.Points.getIBO().getIndexCount(),
         gl.UNSIGNED_SHORT,
         0);
-      model.Points.IBO.release();
-      model.primitiveIDOffset += model.Points.IBO.IndexCount;
+      model.Points.getIBO().release();
+      model.primitiveIDOffset += model.Points.getIBO().getIndexCount();
     }
 
     // draw lines
-    if (model.lines.IBO.IndexCount) {
+    if (model.lines.getIBO().getIndexCount()) {
       publicAPI.updateShaders(model.lines, ren, actor);
-      model.lines.IBO.bind();
+      model.lines.getIBO().bind();
       if (representation === REPRESENTATIONS.VTK_POINTS) {
         gl.drawElements(gl.POINTS,
-          model.Lines.IBO.IndexCount,
+          model.Lines.getIBO().getIndexCount(),
           gl.UNSIGNED_SHORT,
           0);
       } else {
         gl.drawElements(gl.LINES,
-          model.Lines.IBO.IndexCount,
+          model.Lines.getIBO().getIndexCount(),
           gl.UNSIGNED_SHORT,
           0);
       }
-      model.lines.IBO.release();
-      model.primitiveIDOffset += model.lines.IBO.IndexCount / 2;
+      model.lines.getIBO().release();
+      model.primitiveIDOffset += model.lines.getIBO().getIndexCount() / 2;
     }
 
     // draw polygons
-    if (model.tris.IBO.IndexCount) {
+    if (model.tris.getIBO().getIndexCount()) {
       // First we do the triangles, update the shader, set uniforms, etc.
       publicAPI.updateShaders(model.tris, ren, actor);
-      model.tris.IBO.bind();
+      model.tris.getIBO().bind();
       let mode = gl.POINTS;
       if (representation === REPRESENTATIONS.VTK_WIREFRAME) {
         mode = gl.LINES;
@@ -825,39 +825,39 @@ export function webGLPolyDataMapper(publicAPI, model) {
         mode = gl.TRIANGLES;
       }
       gl.drawElements(mode,
-        model.tris.IBO.IndexCount,
+        model.tris.getIBO().getIndexCount(),
         gl.UNSIGNED_SHORT,
         0);
-      model.tris.IBO.release();
-      model.primitiveIDOffset += model.tris.IBO.IndexCount / 3;
+      model.tris.getIBO().release();
+      model.primitiveIDOffset += model.tris.getIBO().getIndexCount() / 3;
     }
 
     // draw strips
-    if (model.triStrips.IBO.IndexCount) {
+    if (model.triStrips.getIBO().getIndexCount()) {
       // Use the tris shader program/VAO, but triStrips ibo.
       model.updateShaders(model.triStrips, ren, actor);
-      model.triStrips.IBO.bind();
+      model.triStrips.getIBO().bind();
       if (representation === REPRESENTATIONS.VTK_POINTS) {
         gl.drawRangeElements(gl.POINTS,
-          model.triStrips.IBO.IndexCount,
+          model.triStrips.getIBO().getIndexCount(),
           gl.UNSIGNED_SHORT,
           0);
       }
       if (representation === REPRESENTATIONS.VTK_WIREFRAME) {
         gl.drawRangeElements(gl.LINES,
-                            model.triStrips.IBO.IndexCount,
+                            model.triStrips.getIBO().getIndexCount(),
                             gl.UNSIGNED_SHORT,
                             0);
       }
       if (representation === REPRESENTATIONS.VTK_SURFACE) {
         gl.drawRangeElements(gl.TRIANGLES,
-                            model.triStrips.IBO.IndexCount,
+                            model.triStrips.getIBO().getIndexCount(),
                             gl.UNSIGNED_SHORT,
                             0);
       }
-      model.triStrips.IBO.release();
+      model.triStrips.getIBO().release();
       // just be safe and divide by 3
-      model.primitiveIDOffset += model.triStrips.IBO.IndexCount / 3;
+      model.primitiveIDOffset += model.triStrips.getIBO().getIndexCount() / 3;
     }
   };
 
@@ -895,7 +895,7 @@ export function webGLPolyDataMapper(publicAPI, model) {
 
     publicAPI.renderPieceStart(ren, actor);
     publicAPI.renderPieceDraw(ren, actor);
-    publicAPI.renderEdges(ren, actor);
+    // publicAPI.renderEdges(ren, actor);
     publicAPI.renderPieceFinish(ren, actor);
   };
 
@@ -916,9 +916,9 @@ export function webGLPolyDataMapper(publicAPI, model) {
 
   publicAPI.getNeedToRebuildBufferObjects = (ren, actor) => {
     // first do a coarse check
-    if (model.VBOBuildTime < publicAPI.getMTime() ||
-        model.VBOBuildTime < actor.getMTime() ||
-        model.VBOBuildTime < model.currentInput.mtime) {
+    if (model.VBOBuildTime.getMTime() < publicAPI.getMTime() ||
+        model.VBOBuildTime.getMTime() < actor.getMTime() ||
+        model.VBOBuildTime.getMTime() < model.currentInput.mtime) {
       return true;
     }
     return false;
@@ -935,32 +935,26 @@ export function webGLPolyDataMapper(publicAPI, model) {
     const n =
       (actor.getProperty().getInterpolation() !== SHADINGS.VTK_FLAT) ? poly.getPointData().getNormals() : null;
 
-    const prims = [];
-    prims[0] = poly.getVerts();
-    prims[1] = poly.getLines();
-    prims[2] = poly.getPolys();
-    prims[3] = poly.getStrips();
-
     // rebuild the VBO if the data has changed we create a string for the VBO what
     // can change the VBO? points normals tcoords colors so what can change those?
     // the input data is clearly one as it can change all four items tcoords may
     // haveTextures or not colors may change based on quite a few mapping
     // parameters in the mapper
 
-    const toString = `${poly.getMTime()}AB${(n ? n.getMTime() : 1)}C`;
+    const toString = `${poly.mTime}AB${(n ? n.getMTime() : 1)}C`;
 
     const tcoords = null;
     const c = null;
     if (model.VBOBuildString !== toString) {
       // Build the VBO
-      model.VBO.createVBO(poly.Points,
-          poly.Points.length,
+      model.VBO.createVBO(poly.PolyData.Points,
+          poly.PolyData.Points.values.length / 3,
           n, tcoords,
           c ? c.getVoidPointer(0) : null,
           c ? c.getNumberOfComponents() : 0);
 
       model.VBOBuildTime.modified();
-      model.VBOBuildString = toString.str();
+      model.VBOBuildString = toString;
     }
 
     // now create the IBOs
@@ -969,10 +963,18 @@ export function webGLPolyDataMapper(publicAPI, model) {
 
   publicAPI.buildIBO = (ren, actor, poly) => {
     const prims = [];
-    prims[0] = poly.getVerts();
-    prims[1] = poly.getLines();
-    prims[2] = poly.getPolys();
-    prims[3] = poly.getStrips();
+    // prims[0] = poly.getVerts();
+    // prims[1] = poly.getLines();
+    // prims[2] = poly.getPolys();
+    // prims[3] = poly.getStrips();
+    // prims[0] = poly.PolyData.Cells.Verts.values;
+    // prims[1] = poly.PolyData.Cells.Lines.values;
+    // prims[2] = poly.PolyData.Cells.Polys.values;
+    // prims[3] = poly.PolyData.Cells.Strips.values;
+    prims[0] = null;
+    prims[1] = null;
+    prims[2] = poly.PolyData.Cells.Polys.values;
+    prims[3] = null;
     const representation = actor.getProperty().getRepresentation();
 
     // do we realy need to rebuild the IBO? Since the operation is costly we
@@ -980,28 +982,30 @@ export function webGLPolyDataMapper(publicAPI, model) {
     // changed
 
     // So...polydata can return a dummy CellArray when there are no lines
-    const toString = `${(prims[0].getNumberOfCells() ? prims[0].getMTime() : 0)}
-      A${(prims[1].getNumberOfCells() ? prims[1].getMTime() : 0)}
-      B${(prims[2].getNumberOfCells() ? prims[2].getMTime() : 0)}
-      C${(prims[3].getNumberOfCells() ? prims[3].getMTime() : 0)}
-      D${representation}`;
+    // const toString = `${(prims[0].getNumberOfCells() ? prims[0].getMTime() : 0)}
+    //   A${(prims[1].getNumberOfCells() ? prims[1].getMTime() : 0)}
+    //   B${(prims[2].getNumberOfCells() ? prims[2].getMTime() : 0)}
+    //   C${(prims[3].getNumberOfCells() ? prims[3].getMTime() : 0)}
+    //   D${representation}`;
+
+    const toString = 'B';
 
     if (model.IBOBuildString !== toString) {
-      model.points.IBO.createPointIndexBuffer(prims[0]);
+      model.points.getIBO().createPointIndexBuffer(prims[0]);
 
       if (representation === REPRESENTATIONS.VTK_POINTS) {
-        model.lines.IBO.createPointIndexBuffer(prims[1]);
-        model.tris.IBO.createPointIndexBuffer(prims[2]);
-        model.triStrips.IBO.createPointIndexBuffer(prims[3]);
+        model.lines.getIBO().createPointIndexBuffer(prims[1]);
+        model.tris.getIBO().createPointIndexBuffer(prims[2]);
+        model.triStrips.getIBO().createPointIndexBuffer(prims[3]);
       } else {
-        model.lines.IBO.createLineIndexBuffer(prims[1]);
+        model.lines.getIBO().createLineIndexBuffer(prims[1]);
 
         if (representation === REPRESENTATIONS.VTK_WIREFRAME) {
-          model.tris.IBO.createTriangleLineIndexBuffer(prims[2]);
-          model.triStrips.IBO.createStripIndexBuffer(prims[3], true);
+          model.tris.getIBO().createTriangleLineIndexBuffer(prims[2]);
+          model.triStrips.getIBO().createStripIndexBuffer(prims[3], true);
         } else {
-          model.tris.IBO.createTriangleIndexBuffer(prims[2], poly.getPoints());
-          model.triStrips.IBO.createStripIndexBuffer(prims[3], false);
+          model.tris.getIBO().createTriangleIndexBuffer(prims[2], poly.getPoints());
+          model.triStrips.getIBO().createStripIndexBuffer(prims[3], false);
         }
       }
 
@@ -1016,6 +1020,9 @@ export function webGLPolyDataMapper(publicAPI, model) {
 
 const DEFAULT_VALUES = {
   context: null,
+  VBOBuildTime: 0,
+  VBOBuildString: null,
+  IBOBuildString: null,
 };
 
 // ----------------------------------------------------------------------------
@@ -1037,6 +1044,9 @@ export function extend(publicAPI, model, initialValues = {}) {
   macro.setGet(publicAPI, model, [
     'context',
   ]);
+
+  model.VBOBuildTime = {};
+  macro.obj(model.VBOBuildTime);
 
   // Object methods
   webGLPolyDataMapper(publicAPI, model);
