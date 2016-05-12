@@ -44,7 +44,6 @@ export function extend(publicAPI, model, initialValues = {}) {
   model.attributeUpdateTime = {};
   macro.obj(model.attributeUpdateTime);
 
-
   macro.setGet(publicAPI, model, [
     'program',
     'shaderSourceTime',

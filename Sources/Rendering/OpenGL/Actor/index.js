@@ -5,7 +5,7 @@ import ViewNode from '../../SceneGraph/ViewNode';
 // vtkOpenGLActor methods
 // ----------------------------------------------------------------------------
 
-export function webGLActor(publicAPI, model) {
+function openglActor(publicAPI, model) {
   // Set our className
   model.classHierarchy.push('vtkOpenGLActor');
 
@@ -35,7 +35,7 @@ export function webGLActor(publicAPI, model) {
     }
   };
 
-  publicAPI.preRender = (prepass) => {
+  publicAPI.preRender = () => {
     // get opacity
     const opaque = (model.renderable.getIsOpaque() !== 0);
     if (opaque) {
@@ -68,7 +68,7 @@ export function extend(publicAPI, model, initialValues = {}) {
   ]);
 
   // Object methods
-  webGLActor(publicAPI, model);
+  openglActor(publicAPI, model);
 }
 
 // ----------------------------------------------------------------------------

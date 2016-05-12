@@ -3,6 +3,7 @@ import ViewNodeFactory from '../../SceneGraph/ViewNodeFactory';
 import OpenGLRenderWindow from '../RenderWindow';
 import OpenGLRenderer from '../Renderer';
 import OpenGLActor from '../Actor';
+import OpenGLCamera from '../Camera';
 import OpenGLPolyDataMapper from '../PolyDataMapper';
 
 // ----------------------------------------------------------------------------
@@ -37,6 +38,7 @@ export function extend(publicAPI, model, initialValues = {}) {
   publicAPI.registerOverride('vtkRenderer', OpenGLRenderer.newInstance);
   publicAPI.registerOverride('vtkActor', OpenGLActor.newInstance);
   publicAPI.registerOverride('vtkMapper', OpenGLPolyDataMapper.newInstance);
+  publicAPI.registerOverride('vtkCamera', OpenGLCamera.newInstance);
 }
 
 // ----------------------------------------------------------------------------
