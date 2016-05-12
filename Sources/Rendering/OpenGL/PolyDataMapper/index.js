@@ -4,6 +4,7 @@ import ShaderProgram from '../ShaderProgram';
 import Math from '../../../Common/Core/Math';
 import { REPRESENTATIONS, SHADINGS } from '../../Core/Property/Constants';
 import Helper from '../Helper';
+import VertexBufferObject from '../VertexBufferObject';
 
 import vtkPolyDataVS from '../glsl/vtkPolyDataVS.glsl';
 import vtkPolyDataFS from '../glsl/vtkPolyDataFS.glsl';
@@ -29,6 +30,11 @@ export function webGLPolyDataMapper(publicAPI, model) {
   publicAPI.render = (prepass) => {
     if (prepass) {
       model.context = publicAPI.getFirstAncestorOfType('vtkOpenGLRenderWindow').getContext();
+      model.points.setContext(model.context);
+      model.lines.setContext(model.context);
+      model.tris.setContext(model.context);
+      model.triStrips.setContext(model.context);
+      model.VBO.setContext(model.context);
       const actor = publicAPI.getFirstAncestorOfType('vtkOpenGLActor').getRenderable();
       const ren = publicAPI.getFirstAncestorOfType('vtkOpenGLRenderer').getRenderable();
       publicAPI.renderPiece(ren, actor);
@@ -1024,6 +1030,7 @@ export function extend(publicAPI, model, initialValues = {}) {
   model.lines = Helper.newInstance();
   model.tris = Helper.newInstance();
   model.triStrips = Helper.newInstance();
+  model.VBO = VertexBufferObject.newInstance();
 
   // Build VTK API
   macro.get(publicAPI, model, ['shaderCache']);
