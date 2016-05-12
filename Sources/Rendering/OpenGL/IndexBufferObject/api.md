@@ -1,6 +1,6 @@
-## OpenGL vertex buffer object
+## OpenGL index buffer object
 
-OpenGL buffer object to store geometry and/or attribute data on the GPU.
+OpenGL buffer object to store index data on the GPU.
 
 ### createTriangleIndexBuffer(cellArray, points)
 

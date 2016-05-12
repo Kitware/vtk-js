@@ -1,4 +1,5 @@
 import * as macro from '../../../macro';
+import BoundingBox from '../../../../Sources/Common/DataModel/BoundingBox';
 
 // ----------------------------------------------------------------------------
 // vtkConeSource methods
@@ -65,10 +66,14 @@ export function coneSource(publicAPI, model) {
       const polys = new window[dataset.PolyData.Cells.Polys.dataType](cellArraySize);
       dataset.PolyData.Cells.Polys.values = polys;
 
+      const bbox = BoundingBox.newInstance();
+
       // Add summit point
       points[0] = model.height / 2.0;
       points[1] = 0.0;
       points[2] = 0.0;
+
+      bbox.addPoint(points[0], points[1], points[2]);
 
       // Create bottom cell
       if (model.capping) {
@@ -81,6 +86,8 @@ export function coneSource(publicAPI, model) {
         points[pointIdx * 3 + 0] = xbot;
         points[pointIdx * 3 + 1] = model.radius * Math.cos(i * angle);
         points[pointIdx * 3 + 2] = model.radius * Math.sin(i * angle);
+
+        bbox.addPoint(points[pointIdx * 3 + 0], points[pointIdx * 3 + 1], points[pointIdx * 3 + 2]);
 
         // Add points to bottom cell in reverse order
         if (model.capping) {
@@ -95,6 +102,10 @@ export function coneSource(publicAPI, model) {
         polys[cellLocation++] = i + 1;
         polys[cellLocation++] = i + 2 > model.resolution ? 1 : i + 2;
       }
+
+      console.log('setting the bounding box');
+      dataset.PolyData.Points.bounds = bbox.getBounds();
+      bbox.delete();
 
       // FIXME apply tranform
 

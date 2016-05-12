@@ -177,6 +177,7 @@ def dumpPolyData(datasetDir, dataDir, dataset, root = {}, compress = True):
   # Points
   points = dumpDataArray(datasetDir, dataDir, dataset.GetPoints().GetData(), {}, compress)
   points['name'] = '_points'
+  points['bounds'] = dataset.GetPoints().GetBounds()
   container['Points'] = points
   # FIXME range...
 

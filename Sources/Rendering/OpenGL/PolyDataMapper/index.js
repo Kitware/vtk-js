@@ -947,8 +947,8 @@ export function webGLPolyDataMapper(publicAPI, model) {
     const c = null;
     if (model.VBOBuildString !== toString) {
       // Build the VBO
-      model.VBO.createVBO(poly.getPoints(),
-          poly.getPoints().getNumberOfPoints(),
+      model.VBO.createVBO(poly.Points,
+          poly.Points.length,
           n, tcoords,
           c ? c.getVoidPointer(0) : null,
           c ? c.getNumberOfComponents() : 0);

@@ -4,8 +4,8 @@ import CanvasOffscreenBuffer from './CanvasOffscreenBuffer.js';
 import Camera from '../../../Sources/Rendering/Core/Camera';
 import { mat4 } from 'gl-matrix';
 
-import vertexShaderString from './basicVertex.glsl';
-import framentShaderString from './basicFragment.glsl';
+import vertexShaderString from './basicVertex.c';
+import framentShaderString from './basicFragment.c';
 
 const mvp = mat4.create();
 let numberOfPoints = 6;
