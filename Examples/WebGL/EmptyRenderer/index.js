@@ -1,4 +1,4 @@
-import WebGLRenderWindow from '../../../Sources/Rendering/WebGL/WebGLRenderWindow';
+import WebGLRenderWindow from '../../../Sources/Rendering/OpenGL/RenderWindow';
 import RenderWindow from '../../../Sources/Rendering/Core/RenderWindow';
 import Renderer from '../../../Sources/Rendering/Core/Renderer';
 
