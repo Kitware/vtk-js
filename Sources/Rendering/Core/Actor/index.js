@@ -14,6 +14,32 @@ function actor(publicAPI, model) {
   // Set our className
   model.classHierarchy.push('vtkActor');
 
+  publicAPI.getActors = () => publicAPI;
+
+  publicAPI.getIsOpaque = () => {
+    if (model.forceOpaque) {
+      return true;
+    }
+    if (model.forceTranslucent) {
+      return false;
+    }
+    // make sure we have a property
+    if (!model.property) {
+      // force creation of a property
+      publicAPI.getProperty();
+    }
+
+    let isOpaque = (model.property.getOpacity() >= 1.0);
+
+    // are we using an opaque texture, if any?
+    isOpaque = isOpaque && (!model.texture || !model.texture.isTranslucent());
+
+    // are we using an opaque scalar array, if any?
+    isOpaque = isOpaque && (!model.mapper || model.mapper.getIsOpaque());
+
+    return isOpaque;
+  };
+
   publicAPI.renderOpaqueGeometry = (viewport) => {
     let renderedSomething = false;
 
@@ -135,9 +161,9 @@ function actor(publicAPI, model) {
 
     // Check for the special case when the actor is empty.
     if (bds[0] > bds[1]) {
-      model.mapperBounds = bds.map(x => x); // copy the mapper's bounds
+      model.mapperBounds = bds.concat(); // copy the mapper's bounds
       model.bounds = [1, -1, 1, -1, 1, -1];
-      ++model.boundsMTime;
+      model.boundsMTime.modified();
       return bds;
     }
 
@@ -150,7 +176,7 @@ function actor(publicAPI, model) {
     if (
       zip([bds, model.bounds]).reduce((a, b) => (a && b[0] === b[1]), true) ||
       publicAPI.getMTime() > model.boundsMTime) {
-      console.log('Recomputing bounds...');
+      vtkDebugMacro('Recomputing bounds...');
       model.mapperBounds = bds.map(x => x);
       const bbox = [
         vec3.fromValues(bds[1], bds[3], bds[5]),
@@ -171,13 +197,13 @@ function actor(publicAPI, model) {
       model.bounds = model.bounds.map((d, i) => ((i % 2 === 0) ?
         bbox.reduce((a, b) => (a > b[i] ? b[i] : a), d) :
         bbox.reduce((a, b) => (a < b[i] ? b[i] : a), d)));
-      ++model.boundsMTime;
+      model.boundsMTime.modified();
     }
     return model.bounds;
   };
 
   publicAPI.getMTime = () => {
-    let mt = model.getMTime();
+    let mt = model.mtime;
     if (model.property !== null) {
       const time = model.property.getMTime();
       mt = (time > mt ? time : mt);
@@ -194,11 +220,12 @@ function actor(publicAPI, model) {
   };
 
   publicAPI.getRedrawMTime = () => {
-    let mt = model.getMTime();
+    let mt = model.mtime;
     if (model.mapper !== null) {
       let time = model.mapper.getMTime();
       mt = (time > mt ? time : mt);
       if (model.mapper.getInput() !== null) {
+        // FIXME !!! getInputAlgorithm / getInput
         model.mapper.getInputAlgorithm().update();
         time = model.mapper.getInput().getMTime();
         mt = (time > mt ? time : mt);
@@ -206,6 +233,8 @@ function actor(publicAPI, model) {
     }
     return mt;
   };
+
+  publicAPI.getSupportsSelection = () => (model.mapper ? model.mapper.getSupportsSelection() : false);
 }
 
 // ----------------------------------------------------------------------------
@@ -231,6 +260,10 @@ export function extend(publicAPI, model, initialValues = {}) {
 
   // Inheritance
   Prop3D.extend(publicAPI, model);
+
+  // vtkTimeStamp
+  model.boundsMTime = {};
+  macro.obj(model.boundsMTime);
 
   // Build VTK API
   macro.set(publicAPI, model, ['property']);
