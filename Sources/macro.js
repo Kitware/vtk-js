@@ -90,7 +90,11 @@ export function obj(publicAPI, model = {}) {
 
 export function get(publicAPI, model, fieldNames) {
   fieldNames.forEach(field => {
-    publicAPI[`get${capitalize(field)}`] = () => model[field];
+    if (typeof field === 'object') {
+      publicAPI[`get${capitalize(field.name)}`] = () => model[field];
+    } else {
+      publicAPI[`get${capitalize(field)}`] = () => model[field];
+    }
   });
 }
 
