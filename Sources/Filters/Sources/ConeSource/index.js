@@ -1,5 +1,6 @@
 import * as macro from '../../../macro';
-import BoundingBox from '../../../../Sources/Common/DataModel/BoundingBox';
+import BoundingBox from '../../../Common/DataModel/BoundingBox';
+import vtkDataSet from '../../../Common/DataModel/DataSet';
 
 // ----------------------------------------------------------------------------
 // vtkConeSource methods
@@ -15,7 +16,7 @@ export function coneSource(publicAPI, model) {
     }
 
     let dataset = model.output[0];
-    if (!dataset || dataset.mtime !== model.mtime) {
+    if (!dataset || dataset.getMTime() < model.mtime) {
       const state = {};
       dataset = {
         type: 'PolyData',
@@ -110,7 +111,7 @@ export function coneSource(publicAPI, model) {
       // FIXME apply tranform
 
       // Update output
-      model.output[0] = dataset;
+      model.output[0] = vtkDataSet.newInstance(dataset);
     }
   }
 
