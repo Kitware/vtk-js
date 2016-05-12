@@ -1,8 +1,8 @@
 var replaceConfig = JSON.stringify({
   multiple: [
-     { search: 'vtkDebugMacro', replace: 'console.debug' },
-     { search: 'vtkErrorMacro', replace: 'console.error' },
-     { search: 'vtkWarningMacro', replace: 'console.warn' },
+     { search: 'vtkDebugMacro', replace: 'console.debug', flags: 'g' },
+     { search: 'vtkErrorMacro', replace: 'console.error', flags: 'g' },
+     { search: 'vtkWarningMacro', replace: 'console.warn', flags: 'g' },
   ],
 });
 
