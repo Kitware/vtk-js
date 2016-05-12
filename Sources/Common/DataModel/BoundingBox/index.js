@@ -145,7 +145,7 @@ function boundingBox(publicAPI, model) {
   };
 
   publicAPI.addPoint = (...xyz) => {
-    model.bounds.map((value, index) => {
+    model.bounds = model.bounds.map((value, index) => {
       if (index % 2 === 0) {
         const idx = index / 2;
         return value < xyz[idx] ? value : xyz[idx];
