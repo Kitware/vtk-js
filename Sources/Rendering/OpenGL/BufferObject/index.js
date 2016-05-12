@@ -43,18 +43,10 @@ function bufferObject(publicAPI, model) {
   let error = '';
 
   // Public API methods
-  publicAPI.getType = () => {
-    if (internalType === model.context.ARRAY_BUFFER) {
-      return OBJECT_TYPE.ARRAY_BUFFER;
-    }
-    if (internalType === model.context.ELEMENT_ARRAY_BUFFER) {
-      return OBJECT_TYPE.ELEMENT_ARRAY_BUFFER;
-    }
-    return OBJECT_TYPE.TEXTURE_BUFFER;
-  };
+  publicAPI.getType = () => internalType;
 
   publicAPI.setType = value => {
-    internalType = convertType(value);
+    internalType = value;
   };
 
   publicAPI.getHandle = () => internalHandle;
@@ -64,9 +56,9 @@ function bufferObject(publicAPI, model) {
     const objectTypeGL = convertType(type);
     if (internalHandle === null) {
       internalHandle = model.context.createBuffer();
-      internalType = objectTypeGL;
+      internalType = type;
     }
-    return (internalType === objectTypeGL);
+    return (convertType(internalType) === objectTypeGL);
   };
 
   publicAPI.upload = (data, type) => {
@@ -76,8 +68,8 @@ function bufferObject(publicAPI, model) {
       error = 'Trying to upload array buffer to incompatible buffer.';
       return false;
     }
-    model.context.bindBuffer(internalType, internalHandle);
-    model.context.bufferData(internalType, data, model.context.STATIC_DRAW);
+    model.context.bindBuffer(convertType(internalType), internalHandle);
+    model.context.bufferData(convertType(internalType), data, model.context.STATIC_DRAW);
     dirty = false;
     return true;
   };
@@ -86,7 +78,7 @@ function bufferObject(publicAPI, model) {
     if (!internalHandle) {
       return false;
     }
-    model.context.bindBuffer(internalType, internalHandle);
+    model.context.bindBuffer(convertType(internalType), internalHandle);
     return true;
   };
 
@@ -94,13 +86,13 @@ function bufferObject(publicAPI, model) {
     if (!internalHandle) {
       return false;
     }
-    model.context.bindBuffer(internalType, null);
+    model.context.bindBuffer(convertType(internalType), null);
     return true;
   };
 
   publicAPI.releaseGraphicsResources = () => {
     if (internalHandle !== null) {
-      model.context.bindBuffer(internalType, null);
+      model.context.bindBuffer(convertType(internalType), null);
       model.context.deleteBuffers(internalHandle);
       internalHandle = null;
     }

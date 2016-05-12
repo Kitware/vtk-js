@@ -32,6 +32,7 @@ function vertexBufferObject(publicAPI, model) {
   // let numColorComponents;       // Number of color components
   // std::vector<float> PackedVBO; // the data
 
+
   publicAPI.setType(OBJECT_TYPE.ARRAY_BUFFER);
 
   publicAPI.createVBO = (points, numPts, normals, tcoords, colors, colorComponents) => {
