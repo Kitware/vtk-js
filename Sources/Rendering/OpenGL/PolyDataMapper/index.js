@@ -402,7 +402,7 @@ export function webGLPolyDataMapper(publicAPI, model) {
   };
 
   publicAPI.updateShaders = (cellBO, ren, actor) => {
-    cellBO.VAO.bind();
+    cellBO.getVAO().bind();
     model.lastBoundBO = cellBO;
 
     const renWin = ren.getWindow();
@@ -421,7 +421,7 @@ export function webGLPolyDataMapper(publicAPI, model) {
       if (newShader !== cellBO.program) {
         cellBO.program = newShader;
         // reset the VAO as the shader has changed
-        cellBO.VAO.releaseGraphicsResources();
+        cellBO.getVAO().releaseGraphicsResources();
       }
 
       cellBO.shaderSourceTime.modified();
@@ -444,10 +444,10 @@ export function webGLPolyDataMapper(publicAPI, model) {
     // if (cellBO.getIBO().getIndexCount() && (model.VBOBuildTime > cellBO.AttributeUpdateTime ||
     //     cellBO.ShaderSourceTime > cellBO.AttributeUpdateTime))
     //   {
-    //   cellBO.VAO.Bind();
+    //   cellBO.getVAO().Bind();
     //   if (cellBO.Program.IsAttributeUsed('vertexMC'))
     //     {
-    //     if (!cellBO.VAO.AddAttributeArray(cellBO.Program, model.VBO,
+    //     if (!cellBO.getVAO().AddAttributeArray(cellBO.Program, model.VBO,
     //                                        'vertexMC', model.VBO.VertexOffset,
     //                                        model.VBO.Stride, VTK_FLOAT, 3,
     //                                        false))
@@ -458,7 +458,7 @@ export function webGLPolyDataMapper(publicAPI, model) {
     //   if (model.VBO.NormalOffset && model.LastLightComplexity[&cellBO] > 0 &&
     //       cellBO.Program.IsAttributeUsed('normalMC'))
     //     {
-    //     if (!cellBO.VAO.AddAttributeArray(cellBO.Program, model.VBO,
+    //     if (!cellBO.getVAO().AddAttributeArray(cellBO.Program, model.VBO,
     //                                     'normalMC', model.VBO.NormalOffset,
     //                                     model.VBO.Stride, VTK_FLOAT, 3, false))
     //       {
@@ -468,7 +468,7 @@ export function webGLPolyDataMapper(publicAPI, model) {
     //   if (model.VBO.TCoordComponents && !model.DrawingEdges &&
     //       cellBO.Program.IsAttributeUsed('tcoordMC'))
     //     {
-    //     if (!cellBO.VAO.AddAttributeArray(cellBO.Program, model.VBO,
+    //     if (!cellBO.getVAO().AddAttributeArray(cellBO.Program, model.VBO,
     //                                     'tcoordMC', model.VBO.TCoordOffset,
     //                                     model.VBO.Stride, VTK_FLOAT, model.VBO.TCoordComponents, false))
     //       {
@@ -478,7 +478,7 @@ export function webGLPolyDataMapper(publicAPI, model) {
     //   if (model.VBO.ColorComponents != 0 && !model.DrawingEdges &&
     //       cellBO.Program.IsAttributeUsed('scalarColor'))
     //     {
-    //     if (!cellBO.VAO.AddAttributeArray(cellBO.Program, model.VBO,
+    //     if (!cellBO.getVAO().AddAttributeArray(cellBO.Program, model.VBO,
     //                                     'scalarColor', model.VBO.ColorOffset,
     //                                     model.VBO.Stride, VTK_UNSIGNED_CHAR,
     //                                     model.VBO.ColorComponents, true))
@@ -863,7 +863,7 @@ export function webGLPolyDataMapper(publicAPI, model) {
 
   publicAPI.renderPieceFinish = (ren, actor) => {
     if (model.LastBoundBO) {
-      model.LastBoundBO.VAO.release();
+      model.LastBoundBO.getVAO().release();
     }
 
     model.VBO.release();
@@ -1004,7 +1004,7 @@ export function webGLPolyDataMapper(publicAPI, model) {
           model.tris.getIBO().createTriangleLineIndexBuffer(prims[2]);
           model.triStrips.getIBO().createStripIndexBuffer(prims[3], true);
         } else {
-          model.tris.getIBO().createTriangleIndexBuffer(prims[2], poly.getPoints());
+          model.tris.getIBO().createTriangleIndexBuffer(prims[2], poly.PolyData.Points);
           model.triStrips.getIBO().createStripIndexBuffer(prims[3], false);
         }
       }

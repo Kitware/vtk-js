@@ -1,6 +1,6 @@
 
 export class DynamicTypedArray {
-  constructor({ chunkSize = 65536, arrayType = 'Int32Array' }) {
+  constructor({ chunkSize = 65536, arrayType = 'Int32Array' } = {}) {
     this.chunkContainer = [];
     this.ArrayConstructor = window[arrayType];
     this.chunkSize = chunkSize;

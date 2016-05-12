@@ -23,6 +23,10 @@ function indexBufferObject(publicAPI, model) {
 
   // Sizes/offsets are all in bytes as OpenGL API expects them.
   publicAPI.createTriangleIndexBuffer = (cells, points) => {
+    if (cells === null) {
+      model.indexCount = 0;
+      return 0;
+    }
     const dynArray = new DynamicTypedArray();
     publicAPI.appendTriangleIndexBuffer(dynArray, cells, points, 0);
     const indexArray = dynArray.getFrozenArray();
@@ -116,6 +120,10 @@ function indexBufferObject(publicAPI, model) {
   };
 
   publicAPI.createLineIndexBuffer = (cells) => {
+    if (cells === null) {
+      model.indexCount = 0;
+      return 0;
+    }
     const dynArray = new DynamicTypedArray();
     publicAPI.appendLineIndexBuffer(dynArray, cells, 0);
     const indexArray = dynArray.getFrozenArray();
@@ -144,6 +152,10 @@ function indexBufferObject(publicAPI, model) {
   };
 
   publicAPI.createTriangleLineIndexBuffer = cells => {
+    if (cells === null) {
+      model.indexCount = 0;
+      return 0;
+    }
     const dynArray = new DynamicTypedArray();
     publicAPI.appendTriangleLineIndexBuffer(dynArray, cells, 0);
     const indexArray = dynArray.getFrozenArray();
@@ -172,6 +184,10 @@ function indexBufferObject(publicAPI, model) {
   };
 
   publicAPI.createPointIndexBuffer = (cells) => {
+    if (cells === null) {
+      model.indexCount = 0;
+      return 0;
+    }
     const dynArray = new DynamicTypedArray();
     publicAPI.appendPointIndexBuffer(dynArray, cells, 0);
     const indexArray = dynArray.getFrozenArray();
@@ -199,6 +215,11 @@ function indexBufferObject(publicAPI, model) {
   };
 
   publicAPI.createStripIndexBuffer = (cells, wireframeTriStrips) => {
+    if (cells === null) {
+      model.indexCount = 0;
+      return 0;
+    }
+
     const dynArray = new DynamicTypedArray();
 
     if (wireframeTriStrips) {
@@ -249,6 +270,10 @@ function indexBufferObject(publicAPI, model) {
 
   publicAPI.createEdgeFlagIndexBuffer = (cells, ef) => {
     console.log('edge flag index buffer is not yet implemented.');
+    // if (cells === null) {
+    //   model.indexCount = 0;
+    //   return 0;
+    // }
     //   // vtkCellArray *cells,
     //   // vtkDataArray *ef)
     //   const info = computeIndexBufferInfo(cells);

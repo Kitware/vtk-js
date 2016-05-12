@@ -29,3 +29,18 @@ for (let i = 0; i < 30; ++i) {
 
 console.log('Full array:');
 console.log(bArray1.getFrozenArray());
+
+ /*
+  * Test 3
+  */
+
+const bArray2 = new DynamicTypedArray();
+
+console.log(bArray2);
+
+for (let i = 0; i < 100000; ++i) {
+  bArray2.push(i);
+}
+
+const frozenB = bArray2.getFrozenArray();
+console.log(`Full array length: ${frozenB.length}`);
