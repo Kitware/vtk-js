@@ -251,7 +251,7 @@ export function extend(publicAPI, model, initialValues = {}) {
   macro.get(publicAPI, model, ['supported']);
 
   // Create get-set macros
-  macro.getSet(publicAPI, model, ['context', 'forceEmulation']);
+  macro.setGet(publicAPI, model, ['context', 'forceEmulation']);
 
   // For more macro methods, see "Sources/macro.js"
 

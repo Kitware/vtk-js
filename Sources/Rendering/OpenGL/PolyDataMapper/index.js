@@ -3,6 +3,7 @@ import ViewNode from '../../SceneGraph/ViewNode';
 import ShaderProgram from '../ShaderProgram';
 import Math from '../../../Common/Core/Math';
 import { REPRESENTATIONS, SHADINGS } from '../../Core/Property/Constants';
+import Helper from '../Helper';
 
 import vtkPolyDataVS from '../glsl/vtkPolyDataVS.glsl';
 import vtkPolyDataFS from '../glsl/vtkPolyDataFS.glsl';
@@ -28,14 +29,12 @@ export function webGLPolyDataMapper(publicAPI, model) {
   publicAPI.render = (prepass) => {
     if (prepass) {
       model.context = publicAPI.getFirstAncestorOfType('vtkOpenGLRenderWindow').getContext();
-      publicAPI.preRender();
+      const actor = publicAPI.getFirstAncestorOfType('vtkOpenGLActor').getRenderable();
+      const ren = publicAPI.getFirstAncestorOfType('vtkOpenGLRenderer').getRenderable();
+      publicAPI.renderPiece(ren, actor);
     } else {
       // something
     }
-  };
-
-  publicAPI.prerender = (prepass) => {
-
   };
 
   publicAPI.buildShaders = (shaders, ren, actor) => {
@@ -388,7 +387,7 @@ export function webGLPolyDataMapper(publicAPI, model) {
     if (cellBO.Program === 0 ||
         cellBO.ShaderSourceTime < publicAPI.getMTime() ||
         cellBO.ShaderSourceTime < actor.getMTime() ||
-        cellBO.ShaderSourceTime < model.CurrentInput.getMTime() ||
+        cellBO.ShaderSourceTime < model.currentInput.mtime ||
         cellBO.ShaderSourceTime < model.lightComplexityChanged[cellBO]) {
       return true;
     }
@@ -810,11 +809,11 @@ export function webGLPolyDataMapper(publicAPI, model) {
     // draw polygons
     if (model.tris.IBO.IndexCount) {
       // First we do the triangles, update the shader, set uniforms, etc.
-      publicAPI.updateShaders(model.Tris, ren, actor);
+      publicAPI.updateShaders(model.tris, ren, actor);
       model.tris.IBO.bind();
-      let mode = gl.Points;
+      let mode = gl.POINTS;
       if (representation === REPRESENTATIONS.VTK_WIREFRAME) {
-        mode = gl.Lines;
+        mode = gl.LINES;
       }
       if (representation === REPRESENTATIONS.VTK_SURFACE) {
         mode = gl.TRIANGLES;
@@ -824,7 +823,7 @@ export function webGLPolyDataMapper(publicAPI, model) {
         gl.UNSIGNED_SHORT,
         0);
       model.tris.IBO.release();
-      model.primitiveIDOffset += model.Tris.IBO.IndexCount / 3;
+      model.primitiveIDOffset += model.tris.IBO.IndexCount / 3;
     }
 
     // draw strips
@@ -866,11 +865,11 @@ export function webGLPolyDataMapper(publicAPI, model) {
 
   publicAPI.renderPiece = (ren, actor) => {
     // Make sure that we have been properly initialized.
-    if (ren.getRenderWindow().checkAbortStatus()) {
-      return;
-    }
+    // if (ren.getRenderWindow().checkAbortStatus()) {
+    //   return;
+    // }
 
-    model.currentInput = this.getInputData();
+    model.currentInput = model.renderable.getInputData();
 
     if (model.currentInput === null) {
       vtkErrorMacro('No input!');
@@ -878,13 +877,13 @@ export function webGLPolyDataMapper(publicAPI, model) {
     }
 
     publicAPI.invokeEvent({ type: 'StartEvent' });
-    if (!model.Static) {
-      this.getInputAlgorithm().update();
-    }
+    // if (!model.Static) {
+    //   this.getInputAlgorithm().update();
+    // }
     publicAPI.invokeEvent({ type: 'EndEvent' });
 
     // if there are no points then we are done
-    if (!model.currentInput.getPoints()) {
+    if (!model.currentInput.PolyData.Points.values) {
       return;
     }
 
@@ -895,25 +894,25 @@ export function webGLPolyDataMapper(publicAPI, model) {
   };
 
   publicAPI.computeBounds = (ren, actor) => {
-    if (!this.getInput()) {
+    if (!publicAPI.getInput()) {
       Math.uninitializeBounds(model.Bounds);
       return;
     }
-    model.bounnds = this.getInput().getBounds();
+    model.bounnds = publicAPI.getInput().getBounds();
   };
 
   publicAPI.updateBufferObjects = (ren, actor) => {
     // Rebuild buffers if needed
-    if (this.getNeedToRebuildBufferObjects(ren, actor)) {
+    if (publicAPI.getNeedToRebuildBufferObjects(ren, actor)) {
       publicAPI.buildBufferObjects(ren, actor);
     }
   };
 
-  publicAPI.getNeedToToRebuildBufferObjects = (ren, actor) => {
+  publicAPI.getNeedToRebuildBufferObjects = (ren, actor) => {
     // first do a coarse check
-    if (model.VBOBuildTime < this.getMTime() ||
+    if (model.VBOBuildTime < publicAPI.getMTime() ||
         model.VBOBuildTime < actor.getMTime() ||
-        model.VBOBuildTime < model.CurrentInput.getMTime()) {
+        model.VBOBuildTime < model.currentInput.mtime) {
       return true;
     }
     return false;
@@ -1020,6 +1019,11 @@ export function extend(publicAPI, model, initialValues = {}) {
 
   // Inheritance
   ViewNode.extend(publicAPI, model);
+
+  model.points = Helper.newInstance();
+  model.lines = Helper.newInstance();
+  model.tris = Helper.newInstance();
+  model.triStrips = Helper.newInstance();
 
   // Build VTK API
   macro.get(publicAPI, model, ['shaderCache']);

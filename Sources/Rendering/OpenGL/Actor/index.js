@@ -35,7 +35,7 @@ export function webGLActor(publicAPI, model) {
     }
   };
 
-  publicAPI.preRrender = (prepass) => {
+  publicAPI.preRender = (prepass) => {
     // get opacity
     const opaque = (model.renderable.getIsOpaque() !== 0);
     if (opaque) {

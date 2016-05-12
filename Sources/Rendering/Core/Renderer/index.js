@@ -648,7 +648,7 @@ function renderer(publicAPI, model) {
 
   // ExpandBounds => global
 
-  publicAPI.transparent = () => !!model.preserveColorBuffer;
+  publicAPI.getTransparent = () => !!model.preserveColorBuffer;
 
   // FIXME
   publicAPI.getTiledAspectRatio = notImplemented('GetTiledAspectRatio');

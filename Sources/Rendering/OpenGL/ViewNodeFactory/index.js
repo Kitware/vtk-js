@@ -36,7 +36,7 @@ export function extend(publicAPI, model, initialValues = {}) {
   publicAPI.registerOverride('vtkRenderWindow', OpenGLRenderWindow.newInstance);
   publicAPI.registerOverride('vtkRenderer', OpenGLRenderer.newInstance);
   publicAPI.registerOverride('vtkActor', OpenGLActor.newInstance);
-  publicAPI.registerOverride('vtkPolyDataMapper', OpenGLPolyDataMapper.newInstance);
+  publicAPI.registerOverride('vtkMapper', OpenGLPolyDataMapper.newInstance);
 }
 
 // ----------------------------------------------------------------------------

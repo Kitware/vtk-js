@@ -4,6 +4,7 @@ import Renderer from '../../../Sources/Rendering/Core/Renderer';
 import ConeSource from '../../../Sources/Filters/Sources/ConeSource';
 import Actor from '../../../Sources/Rendering/Core/Actor';
 import Mapper from '../../../Sources/Rendering/Core/Mapper';
+import Camera from '../../../Sources/Rendering/Core/Camera';
 
 const renWin = RenderWindow.newInstance();
 const ren = Renderer.newInstance();
@@ -11,8 +12,12 @@ renWin.addRenderer(ren);
 ren.setBackground(0.7, 1.0, 0.7);
 
 const actor = Actor.newInstance();
+ren.addActor(actor);
 const mapper = Mapper.newInstance();
 actor.setMapper(mapper);
+
+const cam = Camera.newInstance();
+ren.setActiveCamera(cam);
 
 const coneSource = ConeSource.newInstance({ height: 2.0 });
 mapper.setInputData(coneSource.getOutput());

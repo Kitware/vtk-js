@@ -143,6 +143,7 @@ export function extend(publicAPI, model, initialValues = {}) {
 
   // Build VTK API
   macro.obj(publicAPI, model);
+  macro.event(publicAPI, model, 'event');
   macro.setGet(publicAPI, model, [
     'parent',
     'renderable',
