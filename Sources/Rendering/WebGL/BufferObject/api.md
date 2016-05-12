@@ -1,3 +1,6 @@
+## OpenGL buffer object
+
+OpenGL buffer object to store index, geometry and/or attribute data on the GPU.
 
 ### getType()
 

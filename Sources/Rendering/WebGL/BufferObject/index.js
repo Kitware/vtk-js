@@ -125,11 +125,6 @@ export function extend(publicAPI, model, initialValues = {}) {
 
   // Object methods
   macro.obj(publicAPI, model);
-
-  macro.getSet(publicAPI, model, [
-    { name: 'objectType', enum: OBJECT_TYPE, type: 'enum' },
-  ]);
-
   bufferObject(publicAPI, model);
 }
 
