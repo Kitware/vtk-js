@@ -1,17 +1,17 @@
-import Shader               from './Shader';
-import ShaderProgram        from './ShaderProgram';
-import WebGLActor           from './WebGLActor';
-import WebGLPolyDataMapper  from './WebGLPolyDataMapper';
-import WebGLRenderer        from './WebGLRenderer';
-import WebGLRenderWindow    from './WebGLRenderWindow';
-import WebGLViewNodeFactory from './WebGLViewNodeFactory';
+import Shader          from './Shader';
+import ShaderProgram   from './ShaderProgram';
+import Actor           from './Actor';
+import PolyDataMapper  from './PolyDataMapper';
+import Renderer        from './Renderer';
+import RenderWindow    from './RenderWindow';
+import ViewNodeFactory from './ViewNodeFactory';
 
 export default {
   Shader,
   ShaderProgram,
-  WebGLActor,
-  WebGLPolyDataMapper,
-  WebGLRenderer,
-  WebGLRenderWindow,
-  WebGLViewNodeFactory,
+  Actor,
+  PolyDataMapper,
+  Renderer,
+  RenderWindow,
+  ViewNodeFactory,
 };

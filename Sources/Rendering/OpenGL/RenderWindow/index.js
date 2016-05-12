@@ -1,6 +1,6 @@
 import * as macro from '../../../macro';
 import ViewNode from '../../SceneGraph/ViewNode';
-import WebGLViewNodeFactory from '../WebGLViewNodeFactory';
+import WebGLViewNodeFactory from '../ViewNodeFactory';
 
 // ----------------------------------------------------------------------------
 // vtkWebGLRenderWindow methods

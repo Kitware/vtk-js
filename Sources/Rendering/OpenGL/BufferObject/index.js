@@ -1,4 +1,3 @@
-
 import * as macro from '../../../macro';
 import { OBJECT_TYPE } from './Constants';
 

@@ -1,9 +1,9 @@
 import * as macro from '../../../macro';
 import ViewNodeFactory from '../../SceneGraph/ViewNodeFactory';
-import WebGLRenderWindow from '../WebGLRenderWindow';
-import WebGLRenderer from '../WebGLRenderer';
-import WebGLActor from '../WebGLActor';
-import WebGLPolyDataMapper from '../WebGLPolyDataMapper';
+import WebGLRenderWindow from '../RenderWindow';
+import WebGLRenderer from '../Renderer';
+import WebGLActor from '../Actor';
+import WebGLPolyDataMapper from '../PolyDataMapper';
 
 // ----------------------------------------------------------------------------
 // vtkWebGLViewNodeFactory methods
