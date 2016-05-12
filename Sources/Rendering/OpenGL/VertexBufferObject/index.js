@@ -32,6 +32,7 @@ function vertexBufferObject(publicAPI, model) {
   // let numColorComponents;       // Number of color components
   // std::vector<float> PackedVBO; // the data
 
+
   publicAPI.setType(OBJECT_TYPE.ARRAY_BUFFER);
 
   publicAPI.createVBO = (points, numPts, normals, tcoords, colors, colorComponents) => {
@@ -71,7 +72,7 @@ function vertexBufferObject(publicAPI, model) {
     // fast path
     if (model.coordShiftAndScaleEnabled === false && tcoords === null && normals === null &&
         colors === null && points.dataType === 'Float32Array') {
-      const blockSize = 3;
+      // const blockSize = 3;
       // vertexOffset = 0;
       // normalOffset = 0;
       // tCoordOffset = 0;
