@@ -8,12 +8,12 @@ import vtkPolyDataVS from '../glsl/vtkPolyDataVS.glsl';
 import vtkPolyDataFS from '../glsl/vtkPolyDataFS.glsl';
 
 // ----------------------------------------------------------------------------
-// vtkWebGLPolyDataMapper methods
+// vtkOpenGLPolyDataMapper methods
 // ----------------------------------------------------------------------------
 
 export function webGLPolyDataMapper(publicAPI, model) {
   // Set our className
-  model.classHierarchy.push('vtkWebGLPolyDataMapper');
+  model.classHierarchy.push('vtkOpenGLPolyDataMapper');
 
   // Builds myself.
   publicAPI.build = (prepass) => {
@@ -27,7 +27,7 @@ export function webGLPolyDataMapper(publicAPI, model) {
   // Renders myself
   publicAPI.render = (prepass) => {
     if (prepass) {
-      model.context = publicAPI.getFirstAncestorOfType('vtkWebGLRenderWindow').getContext();
+      model.context = publicAPI.getFirstAncestorOfType('vtkOpenGLRenderWindow').getContext();
       publicAPI.preRender();
     } else {
       // something

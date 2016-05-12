@@ -10,7 +10,7 @@ import { OBJECT_TYPE } from '../BufferObject/Constants';
 // ----------------------------------------------------------------------------
 
 // ----------------------------------------------------------------------------
-// vtkMyClass methods
+// vtkOpenGLVertexArrayObject methods
 // ----------------------------------------------------------------------------
 
 function vertexArrayObject(publicAPI, model) {

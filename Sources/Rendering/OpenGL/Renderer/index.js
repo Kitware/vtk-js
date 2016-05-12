@@ -2,12 +2,12 @@ import * as macro from '../../../macro';
 import ViewNode from '../../SceneGraph/ViewNode';
 
 // ----------------------------------------------------------------------------
-// vtkWebGLPolyDataMapper methods
+// vtkOpenGLRenderer methods
 // ----------------------------------------------------------------------------
 
 export function webGLRenderer(publicAPI, model) {
   // Set our className
-  model.classHierarchy.push('vtkWebGLRenderer');
+  model.classHierarchy.push('vtkOpenGLRenderer');
 
   // Builds myself.
   publicAPI.build = (prepass) => {
@@ -31,7 +31,7 @@ export function webGLRenderer(publicAPI, model) {
   // Renders myself
   publicAPI.render = (prepass) => {
     if (prepass) {
-      model.context = publicAPI.getFirstAncestorOfType('vtkWebGLRenderWindow').getContext();
+      model.context = publicAPI.getFirstAncestorOfType('vtkOpenGLRenderWindow').getContext();
       publicAPI.clear();
     } else {
       // else

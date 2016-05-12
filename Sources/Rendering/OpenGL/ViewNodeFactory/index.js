@@ -1,17 +1,17 @@
 import * as macro from '../../../macro';
 import ViewNodeFactory from '../../SceneGraph/ViewNodeFactory';
-import WebGLRenderWindow from '../RenderWindow';
-import WebGLRenderer from '../Renderer';
-import WebGLActor from '../Actor';
-import WebGLPolyDataMapper from '../PolyDataMapper';
+import OpenGLRenderWindow from '../RenderWindow';
+import OpenGLRenderer from '../Renderer';
+import OpenGLActor from '../Actor';
+import OpenGLPolyDataMapper from '../PolyDataMapper';
 
 // ----------------------------------------------------------------------------
-// vtkWebGLViewNodeFactory methods
+// vtkOpenGLViewNodeFactory methods
 // ----------------------------------------------------------------------------
 
-export function webGLViewNodeFactory(publicAPI, model) {
+export function openGLViewNodeFactory(publicAPI, model) {
   // Set our className
-  model.classHierarchy.push('vtkWebGLViewNodeFactory');
+  model.classHierarchy.push('vtkOpenGLViewNodeFactory');
 }
 
 // ----------------------------------------------------------------------------
@@ -30,13 +30,13 @@ export function extend(publicAPI, model, initialValues = {}) {
   ViewNodeFactory.extend(publicAPI, model);
 
   // Object methods
-  webGLViewNodeFactory(publicAPI, model);
+  openGLViewNodeFactory(publicAPI, model);
 
   // Initialization
-  publicAPI.registerOverride('vtkRenderWindow', WebGLRenderWindow.newInstance);
-  publicAPI.registerOverride('vtkRenderer', WebGLRenderer.newInstance);
-  publicAPI.registerOverride('vtkActor', WebGLActor.newInstance);
-  publicAPI.registerOverride('vtkPolyDataMapper', WebGLPolyDataMapper.newInstance);
+  publicAPI.registerOverride('vtkRenderWindow', OpenGLRenderWindow.newInstance);
+  publicAPI.registerOverride('vtkRenderer', OpenGLRenderer.newInstance);
+  publicAPI.registerOverride('vtkActor', OpenGLActor.newInstance);
+  publicAPI.registerOverride('vtkPolyDataMapper', OpenGLPolyDataMapper.newInstance);
 }
 
 // ----------------------------------------------------------------------------

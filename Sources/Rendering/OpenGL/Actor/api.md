@@ -1,6 +1,6 @@
-WebGL actor
+OpenGL actor
 
-vtkWebGLRenderer is designed to view/render a vtkActor
+vtkOpenGLRenderer is designed to view/render a vtkActor
 
 ### build(prepass)
 

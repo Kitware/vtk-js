@@ -2,12 +2,12 @@ import * as macro from '../../../macro';
 import ViewNode from '../../SceneGraph/ViewNode';
 
 // ----------------------------------------------------------------------------
-// vtkWebGLActor methods
+// vtkOpenGLActor methods
 // ----------------------------------------------------------------------------
 
 export function webGLActor(publicAPI, model) {
   // Set our className
-  model.classHierarchy.push('vtkWebGLActor');
+  model.classHierarchy.push('vtkOpenGLActor');
 
   // Builds myself.
   publicAPI.build = (prepass) => {
@@ -25,7 +25,7 @@ export function webGLActor(publicAPI, model) {
   // Renders myself
   publicAPI.render = (prepass) => {
     if (prepass) {
-      model.context = publicAPI.getFirstAncestorOfType('vtkWebGLRenderWindow').getContext();
+      model.context = publicAPI.getFirstAncestorOfType('vtkOpenGLRenderWindow').getContext();
       publicAPI.preRender();
     } else {
       const opaque = (model.renderable.getIsOpaque() !== 0);

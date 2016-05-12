@@ -1,14 +1,14 @@
 import * as macro from '../../../macro';
 import ViewNode from '../../SceneGraph/ViewNode';
-import WebGLViewNodeFactory from '../ViewNodeFactory';
+import OpenGLViewNodeFactory from '../ViewNodeFactory';
 
 // ----------------------------------------------------------------------------
-// vtkWebGLRenderWindow methods
+// vtkOpenGLRenderWindow methods
 // ----------------------------------------------------------------------------
 
-export function webGLRenderWindow(publicAPI, model) {
+export function openGLRenderWindow(publicAPI, model) {
   // Set our className
-  model.classHierarchy.push('vtkWebGLRenderWindow');
+  model.classHierarchy.push('vtkOpenGLRenderWindow');
 
   // Auto update style
   function updateWindow() {
@@ -113,7 +113,7 @@ export function extend(publicAPI, model, initialValues = {}) {
   // Inheritance
   ViewNode.extend(publicAPI, model);
 
-  model.myFactory = WebGLViewNodeFactory.newInstance();
+  model.myFactory = OpenGLViewNodeFactory.newInstance();
 
   // Build VTK API
   macro.get(publicAPI, model, ['shaderCache']);
@@ -124,7 +124,7 @@ export function extend(publicAPI, model, initialValues = {}) {
 
 
   // Object methods
-  webGLRenderWindow(publicAPI, model);
+  openGLRenderWindow(publicAPI, model);
 }
 
 // ----------------------------------------------------------------------------
