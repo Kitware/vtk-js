@@ -1,3 +1,11 @@
+var replaceConfig = JSON.stringify({
+  multiple: [
+     { search: 'vtkDebugMacro', replace: 'console.debug' },
+     { search: 'vtkErrorMacro', replace: 'console.error' },
+     { search: 'vtkWarningMacro', replace: 'console.warn' },
+  ],
+});
+
 module.exports = [
   {
     test: /\.svg$/,
@@ -34,10 +42,10 @@ module.exports = [
   }, {
     test: /\.js$/,
     include: /node_modules\/|\\vtk.js\/|\\/,
-    loader: 'babel?presets[]=es2015,presets[]=react',
+    loader: 'babel?presets[]=es2015,presets[]=react!string-replace?' + replaceConfig,
   }, {
     test: /\.js$/,
     exclude: /node_modules/,
-    loader: 'babel?presets[]=es2015,presets[]=react',
+    loader: 'babel?presets[]=es2015,presets[]=react!string-replace?' + replaceConfig,
   },
 ];

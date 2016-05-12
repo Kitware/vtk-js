@@ -16,6 +16,7 @@
         "gh-pages": "0.10.0"
     },
     "devDependencies": {
+        "string-replace-loader": "1.0.0",
         "pako": "1.0.1",
         "js-md5": "0.4.1",
         "gl-matrix": "2.3.1",
