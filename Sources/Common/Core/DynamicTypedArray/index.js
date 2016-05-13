@@ -1,19 +1,23 @@
 
 export class DynamicTypedArray {
   constructor({ chunkSize = 65536, arrayType = 'Int32Array' } = {}) {
-    this.chunkContainer = [];
     this.ArrayConstructor = window[arrayType];
     this.chunkSize = chunkSize;
-    this.chunkContainer.push(new this.ArrayConstructor(chunkSize));
+    this.reset();
+  }
+
+  reset() {
+    this.chunkContainer = [];
+    this.chunkContainer.push(new this.ArrayConstructor(this.chunkSize));
     this.lastChunkItemCount = 0;
   }
 
-  push(int32) {
+  push(value) {
     if (this.lastChunkItemCount === this.chunkSize) {
       this.chunkContainer.push(new this.ArrayConstructor(this.chunkSize));
       this.lastChunkItemCount = 0;
     }
-    this.chunkContainer[this.chunkContainer.length - 1][this.lastChunkItemCount] = int32;
+    this.chunkContainer[this.chunkContainer.length - 1][this.lastChunkItemCount] = value;
     this.lastChunkItemCount += 1;
   }
 

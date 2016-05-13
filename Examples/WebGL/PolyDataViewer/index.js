@@ -38,7 +38,7 @@ const height = 500;
 
 const glCanvas = new CanvasOffscreenBuffer(width, height);
 glCanvas.el.style.display = 'block';
-const pointsArray = polydata.PolyData.Points.values;
+const pointsArray = polydata.getPoints().getData();
 numberOfPoints = pointsArray.length / 3;
 
 // Inialize GL context

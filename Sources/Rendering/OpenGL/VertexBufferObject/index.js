@@ -1,5 +1,6 @@
 import * as macro from '../../../macro';
 import BufferObject from '../BufferObject';
+import DynamicTypedArray from '../../../Common/Core/DynamicTypedArray';
 import { SHIFT_SCALE_METHOD } from './Constants';
 import { OBJECT_TYPE } from '../BufferObject/Constants';
 
@@ -21,34 +22,11 @@ function vertexBufferObject(publicAPI, model) {
   // Set our className
   model.classHierarchy.push('vtkOpenGLVertexBufferObject');
 
-  // Sizes/offsets are all in bytes as OpenGL API expects them.
-  // let vertexCount = 0;          // Number of vertices in the VBO
-  // let stride = 0;               // The size of a complete vertex + attributes
-  // let vertexOffset = 0;         // Offset of the vertex
-  // let normalOffset = 0;         // Offset of the normal
-  // let tCoordOffset = 0;         // Offset of the texture coordinates
-  // let tCoordComponents = 0;     // Number of texture dimensions
-  // let colorOffset;              // Offset of the color
-  // let numColorComponents;       // Number of color components
-  // std::vector<float> PackedVBO; // the data
-
+  const packedVBO = new DynamicTypedArray(); // the data
 
   publicAPI.setType(OBJECT_TYPE.ARRAY_BUFFER);
 
   publicAPI.createVBO = (points, numPts, normals, tcoords, colors, colorComponents) => {
-    // points: {
-    //   dataType: "Float32Array",
-    //   name: "_points",
-    //   tuple: 3,
-    //   type: "DataArray",
-    //   values: Float32Array[21],
-    // }
-    // numPts: number,
-    // normals: TypedArray,
-    // tcoords: TypedArray,
-    // colors: TypedArray,
-    // colorComponents: number)
-
     if (model.coordShiftAndScaleMethod === SHIFT_SCALE_METHOD.AUTO_SHIFT_SCALE) {
       const bds = points.bounds;
       const shift = [0, 0, 0];
@@ -72,198 +50,112 @@ function vertexBufferObject(publicAPI, model) {
     // fast path
     if (model.coordShiftAndScaleEnabled === false && tcoords === null && normals === null &&
         colors === null && points.dataType === 'Float32Array') {
-      // const blockSize = 3;
-      // vertexOffset = 0;
-      // normalOffset = 0;
-      // tCoordOffset = 0;
-      // tCoordComponents = 0;
-      // // colorComponents = 0;
-      // colorOffset = 0;
-      // stride = 4 * blockSize;   // FIXME: Do we need to worry about hard-coded float size here
-      // vertexCount = numPts;
+      const blockSize = 3;
+      model.vertexOffset = 0;
+      model.normalOffset = 0;
+      model.tCoordOffset = 0;
+      model.tCoordComponents = 0;
+      // colorComponents = 0;
+      model.colorOffset = 0;
+      model.stride = 4 * blockSize;   // FIXME: Do we need to worry about hard-coded float size here
+      model.vertexCount = numPts;
       publicAPI.upload(points.values, OBJECT_TYPE.ARRAY_BUFFER);
       return;
     }
 
-    // // slower path
-    // this->VertexCount = 0;
-    // this->AppendVBO(points, numPts, normals, tcoords, colors, colorComponents);
-    // this->Upload(this->PackedVBO, vtkOpenGLBufferObject::ArrayBuffer);
-    // this->PackedVBO.resize(0);
+    // slower path
+    model.vertexCount = 0;
+    publicAPI.appendVBO(points, numPts, normals, tcoords, colors, colorComponents);
+    publicAPI.upload(packedVBO, OBJECT_TYPE.ARRAY_BUFFER);
+    packedVBO.reset();
   };
 
   publicAPI.appendVBO = (points, numPoints, normals, tcoords, colors, colorComponents) => {
-    // vtkPoints *points, unsigned int numPts,
-    // vtkDataArray *normals,
-    // vtkDataArray *tcoords,
-    // unsigned char *colors, int colorComponents)
+    // Figure out how big each block will be, currently 6 or 7 floats.
+    let blockSize = 3;
+    model.vertexOffset = 0;
+    model.normalOffset = 0;
+    model.tCoordOffset = 0;
+    model.tCoordComponents = 0;
+    model.colorComponents = 0;
+    model.colorOffset = 0;
 
-    // if (this->CoordShiftAndScaleEnabled)
-    //   {
-    //   switch(points->GetDataType())
-    //     {
-    //     vtkTemplateMacro(
-    //       TemplatedAppendVBOShiftScale(
-    //         this, static_cast<VTK_TT*>(points->GetVoidPointer(0)),
-    //         normals, numPts, tcoords, colors, colorComponents,
-    //         this->CoordShift, this->CoordScale));
-    //     }
-    //   }
-    // else
-    //   {
-    //   switch(points->GetDataType())
-    //     {
-    //     vtkTemplateMacro(
-    //       TemplatedAppendVBO(
-    //         this, static_cast<VTK_TT*>(points->GetVoidPointer(0)),
-    //         normals, numPts, tcoords, colors, colorComponents));
-    //     }
-    //   }
+    const pointData = points.getData();
+    let normalData = null;
+    let tcoordData = null;
+    let colorData = null;
+
+    const textureComponents = tcoords.getNumberOfComponents();
+
+    if (normals !== null) {
+      model.normalOffset = /* sizeof(float) */ 4 * blockSize;
+      blockSize += 3;
+      normalData = normals.getData();
+    }
+
+    if (tcoords !== null) {
+      model.tCoordOffset = /* sizeof(float) */ 4 * blockSize;
+      model.tCoordComponents = textureComponents;
+      blockSize += textureComponents;
+      tcoordData = tcoords.getData();
+    }
+
+    if (colors !== null) {
+      model.colorComponents = colorComponents;
+      model.colorOffset = /* sizeof(float) */ 4 * blockSize;
+      blockSize += 1;
+      colorData = colors.getData();
+    }
+    model.stride = /* sizeof(float) */ 4 * blockSize;
+
+    let pointIdx = 0;
+    let normalIdx = 0;
+    let tcoordIdx = 0;
+    let colorIdx = 0;
+
+    const colorHolder = new Uint8Array(4);
+
+    // TODO: optimize this somehow, lots of if statements in here
+    for (let i = 0; i < numPoints; ++i) {
+      pointIdx = i * 3;
+      normalIdx = i * 3;
+      tcoordIdx = i * textureComponents;
+      colorIdx = i * colorComponents;
+
+      // Vertices
+      packedVBO.push(pointData[pointIdx++]);
+      packedVBO.push(pointData[pointIdx++]);
+      packedVBO.push(pointData[pointIdx++]);
+
+      if (normalData !== null) {
+        packedVBO.push(normalData[normalIdx++]);
+        packedVBO.push(normalData[normalIdx++]);
+        packedVBO.push(normalData[normalIdx++]);
+      }
+
+      if (tcoordData !== null) {
+        for (let j = 0; j < textureComponents; ++j) {
+          packedVBO.push(tcoordData[tcoordIdx++]);
+        }
+      }
+
+      if (colorData !== null) {
+        colorHolder[0] = colorData[colorIdx++];
+        colorHolder[1] = colorData[colorIdx++];
+        colorHolder[2] = colorData[colorIdx++];
+
+        if (colorComponents === 4) {
+          colorHolder[3] = colorData[colorIdx++];
+        } else {  // must be 3 color components then
+          colorHolder[3] = 255;
+        }
+
+        packedVBO.push(new Float32Array(colorHolder.buffer)[0]);
+      }
+    }
+
+    model.vertexCount += numPoints;
   };
-
-  /*
-template<typename T>
-void TemplatedAppendVBO(vtkOpenGLVertexBufferObject* self,
-  T* points, vtkDataArray* normals, vtkIdType numPts,
-  vtkDataArray* tcoords,
-  unsigned char *colors, int colorComponents)
-{
-  if (normals)
-    {
-    switch(normals->GetDataType())
-      {
-      vtkFloatDoubleTemplateMacro(
-        TemplatedAppendVBO2(self, points,
-                  static_cast<VTK_TT*>(normals->GetVoidPointer(0)),
-                  numPts, tcoords, colors, colorComponents));
-      }
-    }
-  else
-    {
-    TemplatedAppendVBO2(self, points,
-                        (float *)NULL,
-                        numPts, tcoords, colors, colorComponents);
-    }
-}
-  */
-
-/*
-template<typename T, typename T2>
-void TemplatedAppendVBO2(vtkOpenGLVertexBufferObject *self,
-  T* points, T2 *normals, vtkIdType numPts,
-  vtkDataArray *tcoords,
-  unsigned char *colors, int colorComponents)
-{
-  if (tcoords)
-    {
-    switch(tcoords->GetDataType())
-      {
-      vtkFloatDoubleTemplateMacro(
-        TemplatedAppendVBO3(self, points, normals,
-                  numPts,
-                  static_cast<VTK_TT*>(tcoords->GetVoidPointer(0)),
-                  tcoords->GetNumberOfComponents(),
-                  colors, colorComponents));
-      }
-    }
-  else
-    {
-    TemplatedAppendVBO3(self, points, normals,
-                        numPts, (float *)NULL, 0,
-                        colors, colorComponents);
-    }
-}
-*/
-
-/*
-template<typename T, typename T2, typename T3>
-void TemplatedAppendVBO3(vtkOpenGLVertexBufferObject *self,
-  T* points, T2* normals, vtkIdType numPts,
-  T3* tcoords, int textureComponents,
-  unsigned char *colors, int colorComponents)
-{
-  // Figure out how big each block will be, currently 6 or 7 floats.
-  int blockSize = 3;
-  self->VertexOffset = 0;
-  self->NormalOffset = 0;
-  self->TCoordOffset = 0;
-  self->TCoordComponents = 0;
-  self->ColorComponents = 0;
-  self->ColorOffset = 0;
-  if (normals)
-    {
-    self->NormalOffset = sizeof(float) * blockSize;
-    blockSize += 3;
-    }
-  if (tcoords)
-    {
-    self->TCoordOffset = sizeof(float) * blockSize;
-    self->TCoordComponents = textureComponents;
-    blockSize += textureComponents;
-    }
-  if (colors)
-    {
-    self->ColorComponents = colorComponents;
-    self->ColorOffset = sizeof(float) * blockSize;
-    ++blockSize;
-    }
-  self->Stride = sizeof(float) * blockSize;
-
-  // Create a buffer, and copy the data over.
-  self->PackedVBO.resize(blockSize * (numPts + self->VertexCount));
-  std::vector<float>::iterator it = self->PackedVBO.begin()
-    + (self->VertexCount*self->Stride/sizeof(float));
-
-  T *pointPtr;
-  T2 *normalPtr;
-  T3 *tcoordPtr;
-  unsigned char *colorPtr;
-
-  // TODO: optimize this somehow, lots of if statements in here
-  for (vtkIdType i = 0; i < numPts; ++i)
-    {
-    pointPtr = points + i*3;
-    normalPtr = normals + i*3;
-    tcoordPtr = tcoords + i*textureComponents;
-    colorPtr = colors + i*colorComponents;
-
-    // Vertices
-    *(it++) = *(pointPtr++);
-    *(it++) = *(pointPtr++);
-    *(it++) = *(pointPtr++);
-    if (normals)
-      {
-      *(it++) = *(normalPtr++);
-      *(it++) = *(normalPtr++);
-      *(it++) = *(normalPtr++);
-      }
-    if (tcoords)
-      {
-      for (int j = 0; j < textureComponents; ++j)
-        {
-        *(it++) = *(tcoordPtr++);
-        }
-      }
-    if (colors)
-      {
-      if (colorComponents == 4)
-        {
-        *(it++) = *reinterpret_cast<float *>(colorPtr);
-        }
-      else
-        {
-        vtkucfloat c;
-        c.c[0] = *(colorPtr++);
-        c.c[1] = *(colorPtr++);
-        c.c[2] = *(colorPtr);
-        c.c[3] =  255;
-        *(it++) = c.f;
-        }
-      }
-    }
-  self->VertexCount += numPts;
-}
-*/
 
   publicAPI.setCoordShiftAndScaleMethod = shiftScaleMethod => {
     console.log('coordinate shift and scale not yet implemented');
@@ -287,6 +179,14 @@ const DEFAULT_VALUES = {
   coordScale: [1, 1, 1],
   shiftScaleMethod: SHIFT_SCALE_METHOD.DISABLE_SHIFT_SCALE,
   coordShiftAndScaleEnabled: false,
+  vertexCount: 0,
+  stride: 0,
+  vertexOffset: 0,
+  normalOffset: 0,
+  tCoordOffset: 0,
+  tCoordComponents: 0,
+  colorOffset: 0,
+  numColorComponents: 0,
 };
 
 // ----------------------------------------------------------------------------
@@ -299,6 +199,14 @@ export function extend(publicAPI, model, initialValues = {}) {
 
   macro.get(publicAPI, model, [
     'coordShiftAndScaleEnabled',
+    'vertexCount',
+    'stride',
+    'vertexOffset',
+    'normalOffset',
+    'tCoordOffset',
+    'tCoordComponents',
+    'colorOffset',
+    'numColorComponents',
   ]);
 
   // macro.get(publicAPI, model, [
