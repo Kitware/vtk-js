@@ -44,9 +44,9 @@ function vertexArrayObject(publicAPI, model) {
     }
     if (publicAPI.isReady() && model.supported) {
       model.context.bindVertexArray(model.handleVAO);
-    } else if (model.isReady()) {
+    } else if (publicAPI.isReady()) {
       const gl = model.context;
-      model.buffers.forEach(buff => {
+      Object.keys(model.buffers).map(key => model.buffers[key]).forEach(buff => {
         model.context.bindBuffer(gl.ARRAY_BUFFER, buff.buffer);
         buff.attributes.forEach(attrIt => {
           const matrixCount = attrIt.isMatrix ? attrIt.size : 1;
@@ -69,9 +69,9 @@ function vertexArrayObject(publicAPI, model) {
     // Either simply release the VAO, or emulate behavior by releasing all attributes.
     if (publicAPI.isReady() && model.supported) {
       model.context.bindVertexArray(0);
-    } else if (model.isReady()) {
+    } else if (publicAPI.isReady()) {
       const gl = model.context;
-      model.buffers.forEach(buff => {
+      Object.keys(model.buffers).map(key => model.buffers[key]).forEach(buff => {
         buff.attributes.forEach(attrIt => {
           const matrixCount = attrIt.isMatrix ? attrIt.size : 1;
           for (let i = 0; i < matrixCount; ++i) {
@@ -123,7 +123,7 @@ function vertexArrayObject(publicAPI, model) {
     if (model.handleProgram === 0) {
       model.handleProgram = program.getHandle();
     }
-    if (!model.isReady() || model.handleProgram !== program.getHandle()) {
+    if (!publicAPI.isReady() || model.handleProgram !== program.getHandle()) {
       return false;
     }
 
@@ -200,7 +200,7 @@ function vertexArrayObject(publicAPI, model) {
   };
 
   publicAPI.removeAttributeArray = (name) => {
-    if (!model.isReady() || model.handleProgram === 0) {
+    if (!publicAPI.isReady() || model.handleProgram === 0) {
       return false;
     }
 
@@ -214,7 +214,7 @@ function vertexArrayObject(publicAPI, model) {
     gl.disableVertexAttribArray(location);
     // If we don't have real VAOs find the entry and remove it too.
     if (!model.supported) {
-      model.buffers.forEach(buff => {
+      Object.keys(model.buffers).map(key => model.buffers[key]).forEach(buff => {
         delete buff.attributes[location];
       });
     }

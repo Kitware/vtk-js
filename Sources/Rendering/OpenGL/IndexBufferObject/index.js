@@ -22,13 +22,14 @@ function indexBufferObject(publicAPI, model) {
   model.classHierarchy.push('vtkOpenGLIndexBufferObject');
 
   // Sizes/offsets are all in bytes as OpenGL API expects them.
-  publicAPI.createTriangleIndexBuffer = (cells, points) => {
-    if (cells === null) {
+  publicAPI.createTriangleIndexBuffer = (cellData, points) => {
+    if (cellData === null) {
       model.indexCount = 0;
       return 0;
     }
+
     const dynArray = new DynamicTypedArray();
-    publicAPI.appendTriangleIndexBuffer(dynArray, cells, points, 0);
+    publicAPI.appendTriangleIndexBuffer(dynArray, cellData, points, 0);
     const indexArray = dynArray.getFrozenArray();
     model.indexCount = indexArray.length;
     if (model.indexCount > 0) {
@@ -37,7 +38,9 @@ function indexBufferObject(publicAPI, model) {
     return model.indexCount;
   };
 
-  publicAPI.appendTriangleIndexBuffer = (indexArray, cells, points, vOffset) => {
+  publicAPI.appendTriangleIndexBuffer = (indexArray, cellData, points, vOffset) => {
+    const cells = cellData.getData();
+
     let currentCellOffset = 0;
     // const polygon = null;
 
@@ -119,13 +122,14 @@ function indexBufferObject(publicAPI, model) {
     // }
   };
 
-  publicAPI.createLineIndexBuffer = (cells) => {
-    if (cells === null) {
+  publicAPI.createLineIndexBuffer = (cellData) => {
+    if (cellData === null) {
       model.indexCount = 0;
       return 0;
     }
+
     const dynArray = new DynamicTypedArray();
-    publicAPI.appendLineIndexBuffer(dynArray, cells, 0);
+    publicAPI.appendLineIndexBuffer(dynArray, cellData, 0);
     const indexArray = dynArray.getFrozenArray();
     model.indexCount = indexArray.length;
     if (model.indexCount > 0) {
@@ -134,7 +138,9 @@ function indexBufferObject(publicAPI, model) {
     return model.indexCount;
   };
 
-  publicAPI.appendLineIndexBuffer = (indexArray, cells, vOffset) => {
+  publicAPI.appendLineIndexBuffer = (indexArray, cellData, vOffset) => {
+    const cells = cellData.getData();
+
     let currentCellOffset = 0;
 
     while (currentCellOffset < cells.length) {
@@ -151,13 +157,13 @@ function indexBufferObject(publicAPI, model) {
     }
   };
 
-  publicAPI.createTriangleLineIndexBuffer = cells => {
-    if (cells === null) {
+  publicAPI.createTriangleLineIndexBuffer = cellData => {
+    if (cellData === null) {
       model.indexCount = 0;
       return 0;
     }
     const dynArray = new DynamicTypedArray();
-    publicAPI.appendTriangleLineIndexBuffer(dynArray, cells, 0);
+    publicAPI.appendTriangleLineIndexBuffer(dynArray, cellData, 0);
     const indexArray = dynArray.getFrozenArray();
     model.indexCount = indexArray.length;
     if (model.indexCount > 0) {
@@ -166,7 +172,9 @@ function indexBufferObject(publicAPI, model) {
     return model.indexCount;
   };
 
-  publicAPI.appendTriangleLineIndexBuffer = (indexArray, cells, vOffset) => {
+  publicAPI.appendTriangleLineIndexBuffer = (indexArray, cellData, vOffset) => {
+    const cells = cellData.getData();
+
     let currentCellOffset = 0;
 
     while (currentCellOffset < cells.length) {
@@ -183,13 +191,13 @@ function indexBufferObject(publicAPI, model) {
     }
   };
 
-  publicAPI.createPointIndexBuffer = (cells) => {
-    if (cells === null) {
+  publicAPI.createPointIndexBuffer = (cellData) => {
+    if (cellData === null) {
       model.indexCount = 0;
       return 0;
     }
     const dynArray = new DynamicTypedArray();
-    publicAPI.appendPointIndexBuffer(dynArray, cells, 0);
+    publicAPI.appendPointIndexBuffer(dynArray, cellData, 0);
     const indexArray = dynArray.getFrozenArray();
     model.indexCount = indexArray.length;
     if (model.indexCount > 0) {
@@ -198,7 +206,9 @@ function indexBufferObject(publicAPI, model) {
     return model.indexCount;
   };
 
-  publicAPI.appendPointIndexBuffer = (indexArray, cells, vOffset) => {
+  publicAPI.appendPointIndexBuffer = (indexArray, cellData, vOffset) => {
+    const cells = cellData.getData();
+
     let currentCellOffset = 0;
 
     while (currentCellOffset < cells.length) {
@@ -214,11 +224,13 @@ function indexBufferObject(publicAPI, model) {
     }
   };
 
-  publicAPI.createStripIndexBuffer = (cells, wireframeTriStrips) => {
-    if (cells === null) {
+  publicAPI.createStripIndexBuffer = (cellData, wireframeTriStrips) => {
+    if (cellData === null) {
       model.indexCount = 0;
       return 0;
     }
+
+    const cells = cellData.getData();
 
     const dynArray = new DynamicTypedArray();
 
@@ -268,9 +280,9 @@ function indexBufferObject(publicAPI, model) {
     return model.indexCount;
   };
 
-  publicAPI.createEdgeFlagIndexBuffer = (cells, ef) => {
+  publicAPI.createEdgeFlagIndexBuffer = (cellData, ef) => {
     console.log('edge flag index buffer is not yet implemented.');
-    // if (cells === null) {
+    // if (cellData === null) {
     //   model.indexCount = 0;
     //   return 0;
     // }
