@@ -15,7 +15,7 @@ export const STATIC = {};
 // vtkOpenGLBufferObject methods
 // ----------------------------------------------------------------------------
 
-function bufferObject(publicAPI, model) {
+function vtkOpenGLBufferObject(publicAPI, model) {
   // Set our className
   model.classHierarchy.push('vtkOpenGLBufferObject');
 
@@ -122,7 +122,7 @@ export function extend(publicAPI, model, initialValues = {}) {
     'context',
   ]);
 
-  bufferObject(publicAPI, model);
+  vtkOpenGLBufferObject(publicAPI, model);
 }
 
 // ----------------------------------------------------------------------------
