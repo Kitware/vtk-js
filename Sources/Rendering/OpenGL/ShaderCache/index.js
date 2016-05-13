@@ -1,7 +1,7 @@
 import * as macro from '../../../macro';
 import ShaderProgram from '../ShaderProgram';
 import Shader from '../Shader';
-import md5 from 'js-md5';
+import md5 from 'blueimp-md5';
 
 // ----------------------------------------------------------------------------
 
