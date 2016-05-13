@@ -53,7 +53,7 @@ export function light(publicAPI, model) {
     publicAPI.setLightType('SceneLight');
   };
 
-  publicAPI.lightTypeIsHeadlight = () => model.lightType === 'HeadLight';
+  publicAPI.lightTypeIsHeadLight = () => model.lightType === 'HeadLight';
 
   publicAPI.lightTypeIsSceneLight = () => model.lightType === 'SceneLight';
 

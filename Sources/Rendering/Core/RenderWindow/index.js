@@ -10,7 +10,19 @@ export function renderWindow(publicAPI, model) {
 
   // Add renderer
   publicAPI.addRenderer = renderer => {
+    if (publicAPI.hasRenderer(renderer)) {
+      return;
+    }
+    renderer.setRenderWindow(publicAPI);
     model.renderers.push(renderer);
+
+    // for (this->Renderers->InitTraversal(rsit);
+    //      (aren = this->Renderers->GetNextRenderer(rsit)); )
+    //   {
+    //   aren->SetAllocatedRenderTime
+    //     (1.0/(this->DesiredUpdateRate*this->Renderers->GetNumberOfItems()));
+    //   }
+
     publicAPI.modified();
   };
 
@@ -20,7 +32,7 @@ export function renderWindow(publicAPI, model) {
     publicAPI.modified();
   };
 
-  publicAPI.hasRenderer = () => !!model.renderers.length;
+  publicAPI.hasRenderer = ren => model.renderers.indexOf(ren) !== -1;
 
   publicAPI.render = () => {
     // FIXME

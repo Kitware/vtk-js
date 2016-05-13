@@ -20,13 +20,29 @@ export function webGLRenderer(publicAPI, model) {
       if (!model.renderable.isActiveCameraCreated()) {
         model.renderable.resetCamera();
       }
-
+      publicAPI.updateLights();
       publicAPI.prepareNodes();
       publicAPI.addMissingNodes(model.renderable.getActors());
       publicAPI.removeUnusedNodes();
     }
   };
 
+  publicAPI.updateLights = () => {
+    let count = 0;
+
+    model.renderable.getLights().forEach(light => {
+      if (light.getSwitch() > 0.0) {
+        count++;
+      }
+    });
+
+    if (!count) {
+      vtkDebugMacro('No lights are on, creating one.');
+      model.renderable.createLight();
+    }
+
+    return count;
+  };
 
   // Renders myself
   publicAPI.render = (prepass) => {

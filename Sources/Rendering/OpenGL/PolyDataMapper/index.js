@@ -65,7 +65,7 @@ export function webGLPolyDataMapper(publicAPI, model) {
     // check for shadow maps
     const shadowFactor = '';
 
-    const lastLightComplexity = model.lastLightComplexity[model.lastBoundBO];
+    const lastLightComplexity = model.lastLightComplexity.get(model.lastBoundBO);
 
     switch (lastLightComplexity) {
       case 0: // no lighting or RENDER_VALUES
@@ -188,7 +188,7 @@ export function webGLPolyDataMapper(publicAPI, model) {
   };
 
   publicAPI.replaceShaderNormal = (shaders, ren, actor) => {
-    if (model.lastLightComplexity[model.lastBoundBO] > 0) {
+    if (model.lastLightComplexity.get(model.lastBoundBO) > 0) {
       let VSSource = shaders.Vertex;
       let GSSource = shaders.Geometry;
       let FSSource = shaders.Fragment;
@@ -291,7 +291,7 @@ export function webGLPolyDataMapper(publicAPI, model) {
     let FSSource = shaders.Fragment;
 
      // do we need the vertex in the shader in View Coordinates
-    if (model.lastLightComplexity[model.lastBoundBO] > 0) {
+    if (model.lastLightComplexity.get(model.lastBoundBO) > 0) {
       VSSource = ShaderProgram.substitute(VSSource,
         '//VTK::PositionVC::Dec', [
           'varying vec4 vertexVCVSOutput;']).result;
@@ -344,7 +344,7 @@ export function webGLPolyDataMapper(publicAPI, model) {
     // three that mix in a complex way are representation POINT, Interpolation FLAT
     // and having normals or not.
     let needLighting = false;
-    const haveNormals = (model.currentInput.getPointData().getNormals() != null);
+    const haveNormals = false; // (model.currentInput.getPointData().getNormals() != null);
     if (actor.getProperty().getRepresentation() === REPRESENTATIONS.VTK_POINTS) {
       needLighting = (actor.getProperty().getInterpolation() !== SHADINGS.VTK_FLAT && haveNormals);
     } else {
@@ -372,7 +372,7 @@ export function webGLPolyDataMapper(publicAPI, model) {
         if (lightComplexity === 1
             && (numberOfLights > 1
               || light.getIntensity() !== 1.0
-              || !light.lightTypeIsHeadlight())) {
+              || !light.lightTypeIsHeadLight())) {
           lightComplexity = 2;
         }
         if (lightComplexity < 3
@@ -382,9 +382,9 @@ export function webGLPolyDataMapper(publicAPI, model) {
       });
     }
 
-    if (model.lastLightComplexity[cellBO] !== lightComplexity) {
-      model.lightComplexityChanged[cellBO].modified();
-      model.lastLightComplexity[cellBO] = lightComplexity;
+    if (model.lastLightComplexity.get(cellBO) !== lightComplexity) {
+      model.lightComplexityChanged.get(cellBO).modified();
+      model.lastLightComplexity.set(cellBO, lightComplexity);
     }
 
     // has something changed that would require us to recreate the shader?
@@ -407,7 +407,7 @@ export function webGLPolyDataMapper(publicAPI, model) {
     cellBO.getVAO().bind();
     model.lastBoundBO = cellBO;
 
-    const renWin = ren.getWindow();
+    const renWin = ren.getRenderWindow();
 
     // has something changed that would require us to recreate the shader?
     if (publicAPI.getNeedToRebuildShaders(cellBO, ren, actor)) {
@@ -492,7 +492,7 @@ export function webGLPolyDataMapper(publicAPI, model) {
 
   publicAPI.setLightingShaderParameters = (cellBO, ren, actor) => {
     // for unlit and headlight there are no lighting parameters
-    if (model.lastLightComplexity[cellBO] < 2) {
+    if (model.lastLightComplexity.get(cellBO) < 2) {
       return;
     }
 
@@ -508,7 +508,8 @@ export function webGLPolyDataMapper(publicAPI, model) {
     const lightColor = [];
     // const lightDirection = [];
     // const lightHalfAngle = [];
-    ren.getLights().forEach(light => {
+    const lights = ren.getLights();
+    Object.keys(lights).map(key => lights[key]).forEach(light => {
       const status = light.getSwitch();
       if (status > 0.0) {
         const dColor = light.getDiffuseColor();
@@ -543,7 +544,7 @@ export function webGLPolyDataMapper(publicAPI, model) {
     program.setUniformi('numberOfLights', numberOfLights);
 
     // // we are done unless we have positional lights
-    if (model.lastLightComplexity[cellBO] < 3) {
+    if (model.lastLightComplexity.get(cellBO) < 3) {
       return;
     }
 
@@ -846,8 +847,9 @@ export function webGLPolyDataMapper(publicAPI, model) {
     }
 
     // Do we have normals?
-    const n =
-      (actor.getProperty().getInterpolation() !== SHADINGS.VTK_FLAT) ? poly.getPointData().getNormals() : null;
+    const n = null;
+
+//      (actor.getProperty().getInterpolation() !== SHADINGS.VTK_FLAT) ? poly.getPointData().getNormals() : null;
 
     // rebuild the VBO if the data has changed we create a string for the VBO what
     // can change the VBO? points normals tcoords colors so what can change those?
@@ -930,6 +932,8 @@ const DEFAULT_VALUES = {
   VBOBuildTime: 0,
   VBOBuildString: null,
   IBOBuildString: null,
+  lightComplexityChanged: null,
+  lastLightComplexity: null,
 };
 
 // ----------------------------------------------------------------------------
@@ -954,6 +958,22 @@ export function extend(publicAPI, model, initialValues = {}) {
 
   model.VBOBuildTime = {};
   macro.obj(model.VBOBuildTime);
+
+  model.lightComplexityChanged = new Map();
+  model.lightComplexityChanged.set(model.points, {});
+  macro.obj(model.lightComplexityChanged.get(model.points));
+  model.lightComplexityChanged.set(model.lines, {});
+  macro.obj(model.lightComplexityChanged.get(model.lines));
+  model.lightComplexityChanged.set(model.tris, {});
+  macro.obj(model.lightComplexityChanged.get(model.tris));
+  model.lightComplexityChanged.set(model.triStrips, {});
+  macro.obj(model.lightComplexityChanged.get(model.triStrips));
+
+  model.lastLightComplexity = new Map();
+  model.lastLightComplexity.set(model.points, 0);
+  model.lastLightComplexity.set(model.lines, 0);
+  model.lastLightComplexity.set(model.tris, 0);
+  model.lastLightComplexity.set(model.triStrips, 0);
 
   // Object methods
   webGLPolyDataMapper(publicAPI, model);

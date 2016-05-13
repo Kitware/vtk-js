@@ -200,7 +200,7 @@ function renderer(publicAPI, model) {
         // Do nothing. Don't reset the transform matrix because applications
         // may have set a custom matrix. Only reset the transform matrix in
         // vtkLight::SetLightTypeToSceneLight()
-      } else if (light.lightTypeIsHeadlight()) {
+      } else if (light.lightTypeIsHeadLight()) {
         // update position and orientation of light to match camera.
         light.setPosition(camera.getPosition());
         light.setFocalPoint(camera.getFocalPoint());
@@ -351,7 +351,7 @@ function renderer(publicAPI, model) {
     model.createdLight = publicAPI.makeLight();
     publicAPI.addLight(model.createdLight);
 
-    model.createdLight.setLightTypeToHeadlight();
+    model.createdLight.setLightTypeToHeadLight();
 
     // set these values just to have a good default should LightFollowCamera
     // be turned off.
@@ -677,7 +677,7 @@ const DEFAULT_VALUES = {
   lastRenderTimeInSeconds: -1,
 
   renderWindow: null,
-  light: [],
+  lights: [],
   actors: [],
   volumes: [],
 
