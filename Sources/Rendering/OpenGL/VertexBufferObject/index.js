@@ -1,6 +1,6 @@
 import * as macro from '../../../macro';
 import BufferObject from '../BufferObject';
-import DynamicTypedArray from '../../../Common/Core/DynamicTypedArray';
+import { DynamicTypedArray } from '../../../Common/Core/DynamicTypedArray';
 import { SHIFT_SCALE_METHOD } from './Constants';
 import { OBJECT_TYPE } from '../BufferObject/Constants';
 
@@ -49,7 +49,7 @@ function vertexBufferObject(publicAPI, model) {
     }
     // fast path
     if (model.coordShiftAndScaleEnabled === false && tcoords === null && normals === null &&
-        colors === null && points.dataType === 'Float32Array') {
+        colors === null && points.getDataType() === 'Float32Array') {
       const blockSize = 3;
       model.vertexOffset = 0;
       model.normalOffset = 0;
