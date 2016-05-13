@@ -1,6 +1,7 @@
 import * as macro from '../../../macro';
 import ViewNode from '../../SceneGraph/ViewNode';
 import OpenGLViewNodeFactory from '../ViewNodeFactory';
+import ShaderCache from '../ShaderCache';
 
 // ----------------------------------------------------------------------------
 // vtkOpenGLRenderWindow methods
@@ -114,6 +115,7 @@ export function extend(publicAPI, model, initialValues = {}) {
   ViewNode.extend(publicAPI, model);
 
   model.myFactory = OpenGLViewNodeFactory.newInstance();
+  model.shaderCache = ShaderCache.newInstance();
 
   // Build VTK API
   macro.get(publicAPI, model, ['shaderCache']);

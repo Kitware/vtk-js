@@ -29,16 +29,17 @@ export function webGLPolyDataMapper(publicAPI, model) {
   // Renders myself
   publicAPI.render = (prepass) => {
     if (prepass) {
-      model.context = publicAPI.getFirstAncestorOfType('vtkOpenGLRenderWindow').getContext();
+      model.openglRenderWindow = publicAPI.getFirstAncestorOfType('vtkOpenGLRenderWindow');
+      model.context = model.openglRenderWindow.getContext();
       model.points.setContext(model.context);
       model.lines.setContext(model.context);
       model.tris.setContext(model.context);
       model.triStrips.setContext(model.context);
       model.VBO.setContext(model.context);
       const actor = publicAPI.getFirstAncestorOfType('vtkOpenGLActor').getRenderable();
-      const oglren = publicAPI.getFirstAncestorOfType('vtkOpenGLRenderer');
-      const ren = oglren.getRenderable();
-      model.oglcam = oglren.getViewNodeFor(ren.getActiveCamera());
+      const openglRenderer = publicAPI.getFirstAncestorOfType('vtkOpenGLRenderer');
+      const ren = openglRenderer.getRenderable();
+      model.oglcam = openglRenderer.getViewNodeFor(ren.getActiveCamera());
       publicAPI.renderPiece(ren, actor);
     } else {
       // something
@@ -407,8 +408,6 @@ export function webGLPolyDataMapper(publicAPI, model) {
     cellBO.getVAO().bind();
     model.lastBoundBO = cellBO;
 
-    const renWin = ren.getRenderWindow();
-
     // has something changed that would require us to recreate the shader?
     if (publicAPI.getNeedToRebuildShaders(cellBO, ren, actor)) {
       const shaders = { Vertex: null, Fragment: null, Geometry: null };
@@ -417,7 +416,7 @@ export function webGLPolyDataMapper(publicAPI, model) {
 
       // compile and bind the program if needed
       const newShader =
-        renWin.getShaderCache().readyShaderProgram(shaders);
+        model.openglRenderWindow.getShaderCache().readyShaderProgram(shaders);
 
       // if the shader changed reinitialize the VAO
       if (newShader !== cellBO.program) {
@@ -428,7 +427,7 @@ export function webGLPolyDataMapper(publicAPI, model) {
 
       cellBO.shaderSourceTime.modified();
     } else {
-      renWin.getShaderCache().readyShaderProgram(cellBO.Program);
+      model.openglRenderWindow.getShaderCache().readyShaderProgram(cellBO.Program);
     }
 
     publicAPI.setMapperShaderParameters(cellBO, ren, actor);
