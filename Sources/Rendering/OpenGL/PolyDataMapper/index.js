@@ -36,7 +36,9 @@ export function webGLPolyDataMapper(publicAPI, model) {
       model.triStrips.setContext(model.context);
       model.VBO.setContext(model.context);
       const actor = publicAPI.getFirstAncestorOfType('vtkOpenGLActor').getRenderable();
-      const ren = publicAPI.getFirstAncestorOfType('vtkOpenGLRenderer').getRenderable();
+      const oglren = publicAPI.getFirstAncestorOfType('vtkOpenGLRenderer');
+      const ren = oglren.getRenderable();
+      model.oglcam = oglren.getViewNodeFor(ren.getActiveCamera());
       publicAPI.renderPiece(ren, actor);
     } else {
       // something
@@ -494,75 +496,56 @@ export function webGLPolyDataMapper(publicAPI, model) {
       return;
     }
 
-  //  const program = cellBO.Program;
+    const program = cellBO.program;
 
     // for lightkit case there are some parameters to set
-  //  const cam = ren.getActiveCamera();
-    // vtkTransform* viewTF = cam.getModelViewTransformObject();
+    // const cam = ren.getActiveCamera();
+    // const viewTF = cam.getModelViewTransformObject();
 
-    // // bind some light settings
-    // int numberOfLights = 0;
-    // vtkLightCollection *lc = ren.getLights();
-    // vtkLight *light;
+    // bind some light settings
+    let numberOfLights = 0;
 
-    // bool renderLuminance = info &&
-    //   info.Has(vtkLightingMapPass::RENDER_LUMINANCE());
+    const lightColor = [];
+    // const lightDirection = [];
+    // const lightHalfAngle = [];
+    ren.getLights().forEach(light => {
+      const status = light.getSwitch();
+      if (status > 0.0) {
+        const dColor = light.getDiffuseColor();
+        const intensity = light.getIntensity();
+        lightColor[numberOfLights][0] = dColor[0] * intensity;
+        lightColor[numberOfLights][1] = dColor[1] * intensity;
+        lightColor[numberOfLights][2] = dColor[2] * intensity;
+        // get required info from light
+        // double *lfp = light.getTransformedFocalPoint();
+        // double *lp = light.getTransformedPosition();
+        // double lightDir[3];
+        // vtkMath::Subtract(lfp,lp,lightDir);
+        // vtkMath::Normalize(lightDir);
+        // double *tDir = viewTF.TransformNormal(lightDir);
+        // lightDirection[numberOfLights][0] = tDir[0];
+        // lightDirection[numberOfLights][1] = tDir[1];
+        // lightDirection[numberOfLights][2] = tDir[2];
+        // lightDir[0] = -tDir[0];
+        // lightDir[1] = -tDir[1];
+        // lightDir[2] = -tDir[2]+1.0;
+        // vtkMath::Normalize(lightDir);
+        // lightHalfAngle[numberOfLights][0] = lightDir[0];
+        // lightHalfAngle[numberOfLights][1] = lightDir[1];
+        // lightHalfAngle[numberOfLights][2] = lightDir[2];
+        numberOfLights++;
+      }
+    });
 
-    // vtkCollectionSimpleIterator sit;
-    // let lightColor[6][3];
-    // let lightDirection[6][3];
-    // let lightHalfAngle[6][3];
-    // for(lc.InitTraversal(sit);
-    //     (light = lc.getNextLight(sit)); )
-    //   {
-    //   let status = light.getSwitch();
-    //   if (status > 0.0)
-    //     {
-    //     double *dColor = light.getDiffuseColor();
-    //     double intensity = light.getIntensity();
-    //     if (renderLuminance)
-    //       {
-    //       lightColor[numberOfLights][0] = intensity;
-    //       lightColor[numberOfLights][1] = intensity;
-    //       lightColor[numberOfLights][2] = intensity;
-    //       }
-    //     else
-    //       {
-    //       lightColor[numberOfLights][0] = dColor[0] * intensity;
-    //       lightColor[numberOfLights][1] = dColor[1] * intensity;
-    //       lightColor[numberOfLights][2] = dColor[2] * intensity;
-    //       }
-    //     // get required info from light
-    //     double *lfp = light.getTransformedFocalPoint();
-    //     double *lp = light.getTransformedPosition();
-    //     double lightDir[3];
-    //     vtkMath::Subtract(lfp,lp,lightDir);
-    //     vtkMath::Normalize(lightDir);
-    //     double *tDir = viewTF.TransformNormal(lightDir);
-    //     lightDirection[numberOfLights][0] = tDir[0];
-    //     lightDirection[numberOfLights][1] = tDir[1];
-    //     lightDirection[numberOfLights][2] = tDir[2];
-    //     lightDir[0] = -tDir[0];
-    //     lightDir[1] = -tDir[1];
-    //     lightDir[2] = -tDir[2]+1.0;
-    //     vtkMath::Normalize(lightDir);
-    //     lightHalfAngle[numberOfLights][0] = lightDir[0];
-    //     lightHalfAngle[numberOfLights][1] = lightDir[1];
-    //     lightHalfAngle[numberOfLights][2] = lightDir[2];
-    //     numberOfLights++;
-    //     }
-    //   }
-
-    // program.SetUniform3fv('lightColor', numberOfLights, lightColor);
-    // program.SetUniform3fv('lightDirectionVC', numberOfLights, lightDirection);
-    // program.SetUniform3fv('lightHalfAngleVC', numberOfLights, lightHalfAngle);
-    // program.SetUniformi('numberOfLights', numberOfLights);
+    program.setUniform3fv('lightColor', numberOfLights, lightColor);
+    // program.setUniform3fv('lightDirectionVC', numberOfLights, lightDirection);
+    // program.setUniform3fv('lightHalfAngleVC', numberOfLights, lightHalfAngle);
+    program.setUniformi('numberOfLights', numberOfLights);
 
     // // we are done unless we have positional lights
-    // if (model.LastLightComplexity[&cellBO] < 3)
-    //   {
-    //   return;
-    //   }
+    if (model.lastLightComplexity[cellBO] < 3) {
+      return;
+    }
 
     // // if positional lights pass down more parameters
     // let lightAttenuation[6][3];
@@ -600,93 +583,24 @@ export function webGLPolyDataMapper(publicAPI, model) {
   };
 
   publicAPI.setCameraShaderParameters = (cellBO, ren, actor) => {
-  //  const program = cellBO.Program;
+    const program = cellBO.Program;
 
-  //  const cam = ren.getActiveCamera();
+    const keyMats = model.oglcam.getKeyMatrices(ren);
+    const cam = ren.getActiveCamera();
 
     // // [WMVD]C == {world, model, view, display} coordinates
     // // E.g., WCDC == world to display coordinate transformation
-    // vtkMatrix4x4* wcdc;
-    // vtkMatrix4x4* wcvc;
-    // vtkMatrix3x3* norms;
-    // vtkMatrix4x4* vcdc;
-    // cam.getKeyMatrices(ren, wcvc, norms, vcdc, wcdc);
+    program.setUniformMatrix('MCDCMatrix', keyMats.wcdc);
+    if (program.isUniformUsed('MCVCMatrix')) {
+      program.setUniformMatrix('MCVCMatrix', keyMats.wcvc);
+    }
+    if (program.isUniformUsed('normalMatrix')) {
+      program.setUniformMatrix('normalMatrix', keyMats.norms);
+    }
 
-    // if (model.VBO.getCoordShiftAndScaleEnabled())
-    //   {
-    //   if (!actor.getIsIdentity())
-    //     {
-    //     vtkMatrix4x4* mcwc;
-    //     vtkMatrix3x3* anorms;
-    //     ((vtkOpenGLActor*)actor).getKeyMatrices(mcwc,anorms);
-    //     vtkMatrix4x4::Multiply4x4(model.VBOShiftScale.GetPointer(), mcwc, model.TempMatrix4);
-    //     vtkMatrix4x4::Multiply4x4(model.TempMatrix4, wcdc, model.TempMatrix4);
-    //     program.SetUniformMatrix('MCDCMatrix', model.TempMatrix4);
-    //     if (program.IsUniformUsed('MCVCMatrix'))
-    //       {
-    //       vtkMatrix4x4::Multiply4x4(model.VBOShiftScale.GetPointer(), mcwc, model.TempMatrix4);
-    //       vtkMatrix4x4::Multiply4x4(model.TempMatrix4, wcvc, model.TempMatrix4);
-    //       program.SetUniformMatrix('MCVCMatrix', model.TempMatrix4);
-    //       }
-    //     if (program.IsUniformUsed('normalMatrix'))
-    //       {
-    //       vtkMatrix3x3::Multiply3x3(anorms, norms, model.TempMatrix3);
-    //       program.SetUniformMatrix('normalMatrix', model.TempMatrix3);
-    //       }
-    //     }
-    //   else
-    //     {
-    //     vtkMatrix4x4::Multiply4x4(model.VBOShiftScale.GetPointer(), wcdc, model.TempMatrix4);
-    //     program.SetUniformMatrix('MCDCMatrix', model.TempMatrix4);
-    //     if (program.IsUniformUsed('MCVCMatrix'))
-    //       {
-    //       vtkMatrix4x4::Multiply4x4(model.VBOShiftScale.GetPointer(), wcvc, model.TempMatrix4);
-    //       program.SetUniformMatrix('MCVCMatrix', model.TempMatrix4);
-    //       }
-    //     if (program.IsUniformUsed('normalMatrix'))
-    //       {
-    //       program.SetUniformMatrix('normalMatrix', norms);
-    //       }
-    //     }
-    //   }
-    // else
-    //   {
-    //   if (!actor.getIsIdentity())
-    //     {
-    //     vtkMatrix4x4 *mcwc;
-    //     vtkMatrix3x3 *anorms;
-    //     ((vtkOpenGLActor *)actor).getKeyMatrices(mcwc,anorms);
-    //     vtkMatrix4x4::Multiply4x4(mcwc, wcdc, model.TempMatrix4);
-    //     program.SetUniformMatrix('MCDCMatrix', model.TempMatrix4);
-    //     if (program.IsUniformUsed('MCVCMatrix'))
-    //       {
-    //       vtkMatrix4x4::Multiply4x4(mcwc, wcvc, model.TempMatrix4);
-    //       program.SetUniformMatrix('MCVCMatrix', model.TempMatrix4);
-    //       }
-    //     if (program.IsUniformUsed('normalMatrix'))
-    //       {
-    //       vtkMatrix3x3::Multiply3x3(anorms, norms, model.TempMatrix3);
-    //       program.SetUniformMatrix('normalMatrix', model.TempMatrix3);
-    //       }
-    //     }
-    //   else
-    //     {
-    //     program.SetUniformMatrix('MCDCMatrix', wcdc);
-    //     if (program.IsUniformUsed('MCVCMatrix'))
-    //       {
-    //       program.SetUniformMatrix('MCVCMatrix', wcvc);
-    //       }
-    //     if (program.IsUniformUsed('normalMatrix'))
-    //       {
-    //       program.SetUniformMatrix('normalMatrix', norms);
-    //       }
-    //     }
-    //   }
-
-    // if (program.IsUniformUsed('cameraParallel'))
-    //   {
-    //   program.SetUniformi('cameraParallel', cam.getParallelProjection());
-    //   }
+    if (program.isUniformUsed('cameraParallel')) {
+      program.setUniformi('cameraParallel', cam.getParallelProjection());
+    }
   };
 
   publicAPI.setPropertyShaderParameters = (cellBO, ren, actor) => {

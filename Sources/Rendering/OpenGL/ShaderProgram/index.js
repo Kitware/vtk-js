@@ -108,13 +108,43 @@ export function shaderProgram(publicAPI, model) {
     return true;
   };
 
-  publicAPI.setUniform1f = (name, v) => {
+  publicAPI.setUniformf = (name, v) => {
     const location = model.findUniform(name);
     if (location === -1) {
       model.error = `Could not set uniform ${name} . No such uniform.`;
       return false;
     }
     model.context.uniform1f(location, v);
+    return true;
+  };
+
+  publicAPI.setUniformi = (name, v) => {
+    const location = model.findUniform(name);
+    if (location === -1) {
+      model.error = `Could not set uniform ${name} . No such uniform.`;
+      return false;
+    }
+    model.context.uniform1i(location, v);
+    return true;
+  };
+
+  publicAPI.setUniformMatrix = (name, v) => {
+    const location = model.findUniform(name);
+    if (location === -1) {
+      model.error = `Could not set uniform ${name} . No such uniform.`;
+      return false;
+    }
+    model.context.uniformMatrix4fv(location, 1, model.context.FALSE, v);
+    return true;
+  };
+
+  publicAPI.setUniform3fv = (name, count, v) => {
+    const location = model.findUniform(name);
+    if (location === -1) {
+      model.error = `Could not set uniform ${name} . No such uniform.`;
+      return false;
+    }
+    model.context.uniform3fv(location, count, v);
     return true;
   };
 

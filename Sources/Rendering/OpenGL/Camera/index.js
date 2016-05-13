@@ -40,9 +40,9 @@ function openglCamera(publicAPI, model) {
   publicAPI.getKeyMatrices = (ren) => {
     // has the camera changed?
     if (ren !== model.lastRenderer ||
-        publicAPI.getMTime() > model.keyMatrixTime.getMTime() ||
-        ren.getMTime() > model.keyMatrixTime.getMTime()) {
-      // model.WCVCMatrix->DeepCopy(this->GetModelViewTransformMatrix());
+      publicAPI.getMTime() > model.keyMatrixTime.getMTime() ||
+      ren.getMTime() > model.keyMatrixTime.getMTime()) {
+      model.WCVCMatrix = model.renderable.getModelViewTransformMatrix();
 
       // for(int i = 0; i < 3; ++i)
       //   {
