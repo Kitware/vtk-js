@@ -143,9 +143,7 @@ export function extend(publicAPI, model, initialValues = {}) {
     throw Error('Can not create DataArray object without: size > 0, values or type = DataArray');
   }
 
-  if (model.values) {
-    model.dataType = model.values.name;
-  } else {
+  if (!model.values) {
     model.values = new window[model.dataType](model.size);
   }
 
