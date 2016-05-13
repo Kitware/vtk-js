@@ -1,5 +1,6 @@
 import * as macro from '../../../macro';
 import ViewNode from '../../SceneGraph/ViewNode';
+import { mat4 } from 'gl-matrix';
 
 // ----------------------------------------------------------------------------
 // vtkOpenGLCamera methods
@@ -53,12 +54,13 @@ function openglCamera(publicAPI, model) {
       //   }
       // this->NormalMatrix->Invert();
 
-      // this->WCVCMatrix->Transpose();
+      mat4.transpose(model.WCVCMatrix, model.WCVCMatrix);
 
       // double aspect[2];
       // int  lowerLeft[2];
-      // int usize, vsize;
-      // ren->GetTiledSizeAndOrigin(&usize, &vsize, lowerLeft, lowerLeft+1);
+      let usize;
+      let vsize;
+      //  ren.getTiledSizeAndOrigin(&usize, &vsize, lowerLeft, lowerLeft+1);
 
       // ren->ComputeAspect();
       // ren->GetAspect(aspect);
@@ -67,14 +69,14 @@ function openglCamera(publicAPI, model) {
       // ren->vtkViewport::GetAspect(aspect2);
       // double aspectModification = aspect[0] * aspect2[1] / (aspect[1] * aspect2[0]);
 
-      // if (usize && vsize)
-      //   {
-      //   this->VCDCMatrix->DeepCopy(this->GetProjectionTransformMatrix(
-      //                      aspectModification * usize / vsize, -1, 1));
-      //   this->VCDCMatrix->Transpose();
-      //   }
+      if (usize && vsize) {
+        model.VCDCMatrix = model.renderable.getProjectionTransformMatrix(
+//                           aspectModification * usize / vsize, -1, 1);
+                           1.0, -1, 1);
+        mat4.transpose(model.VCDCMatrix, model.VCDCMatrix);
+      }
 
-      // vtkMatrix4x4::Multiply4x4(this->WCVCMatrix, this->VCDCMatrix, this->WCDCMatrix);
+      mat4.multiply(model.WCVCMatrix, model.VCDCMatrix, model.WCDCMatrix);
 
       model.keyMatrixTime.modified();
       model.lastRenderer = ren;
