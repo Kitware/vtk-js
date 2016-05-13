@@ -1,9 +1,11 @@
 import vtkBoundingBox from './BoundingBox';
-import vtkPlane from './Plane';
 import vtkDataSet from './DataSet';
+import vtkDataSetAttributes from './DataSetAttributes';
+import vtkPlane from './Plane';
 
 export default {
   vtkBoundingBox,
-  vtkPlane,
   vtkDataSet,
+  vtkDataSetAttributes,
+  vtkPlane,
 };

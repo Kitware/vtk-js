@@ -6,10 +6,18 @@ import { COLOR_MODE, SCALAR_MODE, MATERIAL_MODE } from './Constants';
 import vtkMath                                    from '../../../Common/Core/Math';
 import vtkDataSet                                 from '../../../Common/DataModel/DataSet';
 
+function notImplemented(method) {
+  return () => console.log('vtkMapper::${method} - NOT IMPLEMENTED');
+}
+
 // CoincidentTopology static methods ------------------------------------------
 /* eslint-disable arrow-body-style */
 
-const staticOffsetModel = {};
+const staticOffsetModel = {
+  Polygon: { factor: 2, unit: 2 },
+  Line: { factor: 1, unit: 1 },
+  Point: { factor: 0, unit: 0 },
+};
 const staticOffsetAPI = {};
 
 CoincidentTopologyHelper.addCoincidentTopologyMethods(
@@ -79,7 +87,11 @@ function mapper(publicAPI, model) {
 
   // Relative metods
   /* eslint-disable arrow-body-style */
-  model.topologyOffset = {};
+  model.topologyOffset = {
+    Polygon: { factor: 0, unit: 0 },
+    Line: { factor: 0, unit: 0 },
+    Point: { factor: 0, unit: 0 },
+  };
   CoincidentTopologyHelper.addCoincidentTopologyMethods(
     publicAPI,
     model.topologyOffset,
@@ -118,12 +130,13 @@ function mapper(publicAPI, model) {
     };
   };
 
-  publicAPI.mapScalars = (input, alpha) => {
-    console.log('vtkMapper::mapScalars - NOT IMPLEMENTED');
-    const cellFlag = false;
-    const rgba = new Uint8Array(10);
-    return { rgba, cellFlag };
-  };
+  publicAPI.mapScalars = notImplemented('mapScalars');
+  // (input, alpha) => {
+  //   console.log('vtkMapper::mapScalars - NOT IMPLEMENTED');
+  //   const cellFlag = false;
+  //   const rgba = new Uint8Array(10);
+  //   return { rgba, cellFlag };
+  // };
 
   publicAPI.setScalarMaterialModeToDefault = () => publicAPI.setScalarMaterialMode(0);
   publicAPI.setScalarMaterialModeToAmbient = () => publicAPI.setScalarMaterialMode(1);
@@ -151,6 +164,26 @@ function mapper(publicAPI, model) {
     model.colorCoordinates = null;
     model.colorTextureMap = null;
   };
+
+  publicAPI.getLookupTable = () => {
+    if (!model.lookupTable) {
+      publicAPI.createDefaultLookupTable();
+    }
+    return model.lookupTable;
+  };
+
+  publicAPI.createDefaultLookupTable = notImplemented('createDefaultLookupTable');
+  publicAPI.acquireInvertibleLookupTable = notImplemented('AcquireInvertibleLookupTable');
+  publicAPI.valueToColor = notImplemented('ValueToColor');
+  publicAPI.colorToValue = notImplemented('ColorToValue');
+  publicAPI.useInvertibleColorFor = notImplemented('UseInvertibleColorFor');
+  publicAPI.clearInvertibleColor = notImplemented('ClearInvertibleColor');
+  publicAPI.getColorModeAsString = notImplemented('getColorModeAsString');
+  publicAPI.getScalarModeAsString = notImplemented('GetScalarModeAsString');
+  publicAPI.getScalarMaterialModeAsString = notImplemented('GetScalarMaterialModeAsString');
+  publicAPI.scalarToTextureCoordinate = notImplemented('ScalarToTextureCoordinate');
+  publicAPI.createColorTextureCoordinates = notImplemented('CreateColorTextureCoordinates');
+  publicAPI.mapScalarsToTexture = notImplemented('MapScalarsToTexture');
 }
 
 // ----------------------------------------------------------------------------

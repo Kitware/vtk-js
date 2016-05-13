@@ -1,7 +1,8 @@
-import vtkMath from '../../Core/Math';
+import * as macro from '../../../macro';
 import vtkBoundingBox from '../BoundingBox';
 import vtkDataArray from '../../Core/DataArray';
-import * as macro from '../../../macro';
+import vtkDataSetAttributes from '../DataSetAttributes';
+import vtkMath from '../../Core/Math';
 
 // ----------------------------------------------------------------------------
 // Global methods
@@ -47,7 +48,7 @@ export const STATIC = {
 // vtkDataArray methods
 // ----------------------------------------------------------------------------
 
-function dataSet(publicAPI, model) {
+function vtkDataSet(publicAPI, model) {
   // Set our className
   model.classHierarchy.push('vtkDataSet');
 
@@ -62,23 +63,19 @@ function dataSet(publicAPI, model) {
   }
 
   ['PointData', 'CellData', 'FieldData'].forEach(dataCategoryName => {
+    const arrays = {};
     if (dataset[dataCategoryName]) {
-      const container = {};
-
       Object.keys(dataset[dataCategoryName]).forEach(name => {
         if (dataset[dataCategoryName][name].type === 'DataArray') {
-          container[name] = vtkDataArray.newInstance(dataset[dataCategoryName][name]);
+          arrays[name] = vtkDataArray.newInstance(dataset[dataCategoryName][name]);
         }
       });
-
-      if (dataCategoryName === 'PointData' && dataset[dataCategoryName].Normals) {
-        container.getNormals = () => container.Normals;
-      }
-
-      publicAPI[`get${dataCategoryName}`] = () => container;
     }
+    // FIXME: missing active arrays...
+    publicAPI[`get${dataCategoryName}`] = () => vtkDataSetAttributes.newInstance({ arrays });
   });
 
+  // UnstructuredGrid Cells + Types
   if (model.type === 'UnstructuredGrid') {
     ['Cells', 'CellsTypes'].forEach(arrayName => {
       if (dataset[arrayName].type === 'DataArray') {
@@ -115,7 +112,7 @@ export function extend(publicAPI, model, initialValues = {}) {
   macro.obj(publicAPI, model);
 
   // Object specific methods
-  dataSet(publicAPI, model);
+  vtkDataSet(publicAPI, model);
 }
 
 // ----------------------------------------------------------------------------
