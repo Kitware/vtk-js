@@ -21,7 +21,7 @@
         "js-md5": "0.4.1",
         "gl-matrix": "2.3.1",
         "kw-web-suite": "2.0.0",
-        "kw-doc": "1.0.5"
+        "kw-doc": "1.0.6"
     },
     "scripts": {
         "install:global": "npm install -g commitizen@2.5.0",
