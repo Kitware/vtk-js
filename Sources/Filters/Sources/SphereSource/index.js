@@ -4,7 +4,7 @@ import * as macro from '../../../macro';
 // vtkSphereSource methods
 // ----------------------------------------------------------------------------
 
-export function sphereSource(publicAPI, model) {
+export function vtkSphereSource(publicAPI, model) {
   // Set our className
   model.classHierarchy.push('vtkSphereSource');
 
@@ -271,7 +271,7 @@ export function extend(publicAPI, model, initialValues = {}) {
   ]);
   macro.setGetArray(publicAPI, model, ['center'], 3);
   macro.algo(publicAPI, model, 0, 1);
-  sphereSource(publicAPI, model);
+  vtkSphereSource(publicAPI, model);
 }
 
 // ----------------------------------------------------------------------------

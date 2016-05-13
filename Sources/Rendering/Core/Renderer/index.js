@@ -1,19 +1,19 @@
 import * as macro from '../../../macro';
+import vtkCamera from '../Camera';
+import vtkLight from '../Light';
 import vtkMath from '../../../Common/Core/Math';
-import Camera from '../Camera';
-import Light from '../Light';
-import Viewport from '../Viewport';
-import TimerLog from '../../../Common/System/TimerLog';
+import vtkTimerLog from '../../../Common/System/TimerLog';
+import vtkViewport from '../Viewport';
 import { INIT_BOUNDS } from '../../../Common/DataModel/BoundingBox';
 import { vec4 } from 'gl-matrix';
-
-// ----------------------------------------------------------------------------
-// Global methods
-// ----------------------------------------------------------------------------
 
 function notImplemented(method) {
   return () => console.log('vtkRenderer::${method} - NOT IMPLEMENTED');
 }
+
+// ----------------------------------------------------------------------------
+// Global methods
+// ----------------------------------------------------------------------------
 
 function expandBounds(bounds, matrix) {
   if (!bounds) {
@@ -77,7 +77,7 @@ function expandBounds(bounds, matrix) {
 // vtkRenderer methods
 // ----------------------------------------------------------------------------
 
-function renderer(publicAPI, model) {
+function vtkRenderer(publicAPI, model) {
   // Set our className
   model.classHierarchy.push('vtkRenderer');
 
@@ -105,7 +105,7 @@ function renderer(publicAPI, model) {
       return;
     }
 
-    const t1 = TimerLog.getUniversalTime();
+    const t1 = vtkTimerLog.getUniversalTime();
     publicAPI.invokeEvent({ type: 'StartEvent' });
 
     // Create the initial list of visible props
@@ -149,7 +149,7 @@ function renderer(publicAPI, model) {
     // estimates with the TimeFactor.
     if (!model.renderWindow.getAbortRender()) {
       // Measure the actual RenderTime
-      model.lastRenderTimeInSeconds = (TimerLog.getUniversalTime() - t1) / 1000;
+      model.lastRenderTimeInSeconds = (vtkTimerLog.getUniversalTime() - t1) / 1000;
 
       if (model.lastRenderTimeInSeconds === 0.0) {
         model.lastRenderTimeInSeconds = 0.0001;
@@ -262,7 +262,7 @@ function renderer(publicAPI, model) {
   };
 
   publicAPI.makeCamera = () => {
-    const camera = Camera.newInstance();
+    const camera = vtkCamera.newInstance();
     publicAPI.invokeEvent({ type: 'CreateCameraEvent', camera });
     return camera;
   };
@@ -335,7 +335,7 @@ function renderer(publicAPI, model) {
     publicAPI.modified();
   };
 
-  publicAPI.makeLight = Light.newInstance;
+  publicAPI.makeLight = vtkLight.newInstance;
 
   publicAPI.createLight = () => {
     if (!model.automaticLightCreation) {
@@ -724,7 +724,7 @@ export function extend(publicAPI, model, initialValues = {}) {
   Object.assign(model, DEFAULT_VALUES, initialValues);
 
   // Inheritance
-  Viewport.extend(publicAPI, model);
+  vtkViewport.extend(publicAPI, model);
 
   // Build VTK API
   macro.get(publicAPI, model, [
@@ -765,7 +765,7 @@ export function extend(publicAPI, model, initialValues = {}) {
   macro.setGetArray(publicAPI, model, ['background'], 3);
 
   // Object methods
-  renderer(publicAPI, model);
+  vtkRenderer(publicAPI, model);
 }
 
 // ----------------------------------------------------------------------------

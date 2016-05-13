@@ -4,7 +4,7 @@ import * as macro from '../../../macro';
 // vtkRenderWindow methods
 // ----------------------------------------------------------------------------
 
-export function renderWindow(publicAPI, model) {
+export function vtkRenderWindow(publicAPI, model) {
   // Set our className
   model.classHierarchy.push('vtkRenderWindow');
 
@@ -97,7 +97,7 @@ export function extend(publicAPI, model, initialValues = {}) {
   macro.event(publicAPI, model, 'completion');
 
   // Object methods
-  renderWindow(publicAPI, model);
+  vtkRenderWindow(publicAPI, model);
 }
 
 // ----------------------------------------------------------------------------

@@ -66,7 +66,7 @@ export const STATIC = {
 // vtkDataArray methods
 // ----------------------------------------------------------------------------
 
-function dataArray(publicAPI, model) {
+function vtkDataArray(publicAPI, model) {
   // Set our className
   model.classHierarchy.push('vtkDataArray');
 
@@ -192,7 +192,7 @@ export function extend(publicAPI, model, initialValues = {}) {
   macro.setGet(publicAPI, model, ['name']);
 
   // Object specific methods
-  dataArray(publicAPI, model);
+  vtkDataArray(publicAPI, model);
 }
 
 // ----------------------------------------------------------------------------

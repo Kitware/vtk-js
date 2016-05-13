@@ -60,7 +60,7 @@ const GEOMETRY_ARRAYS = {
 // vtkHttpDataSetReader methods
 // ----------------------------------------------------------------------------
 
-export function httpDataSetReader(publicAPI, model) {
+export function vtkHttpDataSetReader(publicAPI, model) {
   // Set our className
   model.classHierarchy.push('vtkHttpDataSetReader');
 
@@ -374,7 +374,7 @@ export function extend(publicAPI, model, initialValues = {}) {
   macro.event(publicAPI, model, 'busy');
 
   // Object methods
-  httpDataSetReader(publicAPI, model);
+  vtkHttpDataSetReader(publicAPI, model);
 }
 
 // ----------------------------------------------------------------------------

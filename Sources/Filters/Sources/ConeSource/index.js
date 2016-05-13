@@ -1,12 +1,12 @@
 import * as macro from '../../../macro';
-import BoundingBox from '../../../Common/DataModel/BoundingBox';
+import vtkBoundingBox from '../../../Common/DataModel/BoundingBox';
 import vtkDataSet from '../../../Common/DataModel/DataSet';
 
 // ----------------------------------------------------------------------------
 // vtkConeSource methods
 // ----------------------------------------------------------------------------
 
-export function coneSource(publicAPI, model) {
+export function vtkConeSource(publicAPI, model) {
   // Set our className
   model.classHierarchy.push('vtkConeSource');
 
@@ -67,7 +67,7 @@ export function coneSource(publicAPI, model) {
       const polys = new window[dataset.PolyData.Cells.Polys.dataType](cellArraySize);
       dataset.PolyData.Cells.Polys.values = polys;
 
-      const bbox = BoundingBox.newInstance();
+      const bbox = vtkBoundingBox.newInstance();
 
       // Add summit point
       points[0] = model.height / 2.0;
@@ -151,7 +151,7 @@ export function extend(publicAPI, model, initialValues = {}) {
     'direction',
   ], 3);
   macro.algo(publicAPI, model, 0, 1);
-  coneSource(publicAPI, model);
+  vtkConeSource(publicAPI, model);
 }
 
 // ----------------------------------------------------------------------------

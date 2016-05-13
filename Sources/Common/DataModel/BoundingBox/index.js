@@ -1,5 +1,5 @@
 import * as macro from '../../../macro';
-import Plane from '../Plane';
+import vtkPlane from '../Plane';
 
 export const INIT_BOUNDS = [
   Number.MAX_VALUE, Number.MIN_VALUE, // X
@@ -94,7 +94,7 @@ export const STATIC = {
 // vtkBoundingBox methods
 // ----------------------------------------------------------------------------
 
-function boundingBox(publicAPI, model) {
+function vtkBoundingBox(publicAPI, model) {
   // Set our className
   model.classHierarchy.push('vtkBoundingBox');
 
@@ -253,7 +253,7 @@ function boundingBox(publicAPI, model) {
       for (let iy = 2; iy < 4; iy++) {
         for (let iz = 4; iz < 6; iz++) {
           const x = [model.bounds[ix], model.bounds[iy], model.bounds[iz]];
-          d[idx++] = Plane.evaluate(normal, origin, x);
+          d[idx++] = vtkPlane.evaluate(normal, origin, x);
         }
       }
     }
@@ -406,7 +406,7 @@ export function extend(publicAPI, model, initialValues = {}) {
   // Object methods
   macro.obj(publicAPI, model);
   macro.setGet(publicAPI, model, ['bounds']);
-  boundingBox(publicAPI, model);
+  vtkBoundingBox(publicAPI, model);
 }
 
 // ----------------------------------------------------------------------------
