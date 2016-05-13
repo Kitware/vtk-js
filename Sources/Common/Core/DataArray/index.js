@@ -101,6 +101,10 @@ function dataArray(publicAPI, model) {
       publicAPI.getRange(0),
       publicAPI.getRange(1),
       publicAPI.getRange(2));
+
+  publicAPI.getNumberOfComponents = () => model.tuple;
+  publicAPI.getNumberOfValues = () => model.values.length;
+  publicAPI.getNumberOfTuples = () => model.values.length / model.tuple;
 }
 
 // ----------------------------------------------------------------------------

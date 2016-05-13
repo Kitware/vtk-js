@@ -803,7 +803,7 @@ export function webGLPolyDataMapper(publicAPI, model) {
     publicAPI.invokeEvent({ type: 'EndEvent' });
 
     // if there are no points then we are done
-    if (!model.currentInput.PolyData.Points.values) {
+    if (!model.currentInput.getPoints || !model.currentInput.getPoints().getNumberOfValues()) {
       return;
     }
 
@@ -861,8 +861,9 @@ export function webGLPolyDataMapper(publicAPI, model) {
     const c = null;
     if (model.VBOBuildString !== toString) {
       // Build the VBO
-      model.VBO.createVBO(poly.PolyData.Points,
-          poly.PolyData.Points.values.length / 3,
+      const points = poly.getPoints();
+      model.VBO.createVBO(points,
+          points.getNumberOfTuples(),
           n, tcoords,
           c ? c.getVoidPointer(0) : null,
           c ? c.getNumberOfComponents() : 0);
@@ -877,18 +878,10 @@ export function webGLPolyDataMapper(publicAPI, model) {
 
   publicAPI.buildIBO = (ren, actor, poly) => {
     const prims = [];
-    // prims[0] = poly.getVerts();
-    // prims[1] = poly.getLines();
-    // prims[2] = poly.getPolys();
-    // prims[3] = poly.getStrips();
-    // prims[0] = poly.PolyData.Cells.Verts.values;
-    // prims[1] = poly.PolyData.Cells.Lines.values;
-    // prims[2] = poly.PolyData.Cells.Polys.values;
-    // prims[3] = poly.PolyData.Cells.Strips.values;
-    prims[0] = null;
-    prims[1] = null;
-    prims[2] = poly.PolyData.Cells.Polys.values;
-    prims[3] = null;
+    prims[0] = poly.getVerts ? poly.getVerts() : null;
+    prims[1] = poly.getLines ? poly.getLines() : null;
+    prims[2] = poly.getPolys ? poly.getPolys() : null;
+    prims[3] = poly.getStrips ? poly.getStrips() : null;
     const representation = actor.getProperty().getRepresentation();
 
     // do we realy need to rebuild the IBO? Since the operation is costly we
@@ -918,7 +911,7 @@ export function webGLPolyDataMapper(publicAPI, model) {
           model.tris.getIBO().createTriangleLineIndexBuffer(prims[2]);
           model.triStrips.getIBO().createStripIndexBuffer(prims[3], true);
         } else {
-          model.tris.getIBO().createTriangleIndexBuffer(prims[2], poly.PolyData.Points);
+          model.tris.getIBO().createTriangleIndexBuffer(prims[2], poly.getPoints());
           model.triStrips.getIBO().createStripIndexBuffer(prims[3], false);
         }
       }

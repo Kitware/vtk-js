@@ -70,6 +70,11 @@ function dataSet(publicAPI, model) {
           container[name] = vtkDataArray.newInstance(dataset[dataCategoryName][name]);
         }
       });
+
+      if (dataCategoryName === 'PointData' && dataset[dataCategoryName].Normals) {
+        container.getNormals = () => container.Normals;
+      }
+
       publicAPI[`get${dataCategoryName}`] = () => container;
     }
   });
