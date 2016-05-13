@@ -64,7 +64,7 @@ export function obj(publicAPI, model = {}) {
     });
   };
 
-  publicAPI.get = (list) => {
+  publicAPI.get = (...list) => {
     if (!list) {
       return model;
     }

@@ -20,7 +20,7 @@ function computeRange(values, component = 0, tuple = 1) {
     if (range.min > value) {
       range.min = value;
     }
-    if (range.max > value) {
+    if (range.max < value) {
       range.max = value;
     }
   }
@@ -28,7 +28,8 @@ function computeRange(values, component = 0, tuple = 1) {
   return range;
 }
 
-function insureRangeSize(ranges = [], size) {
+function insureRangeSize(rangeArray, size = 0) {
+  const ranges = rangeArray || [];
   // Pad ranges with null value to get the
   while (ranges.length <= size) {
     ranges.push(null);
@@ -52,12 +53,12 @@ function dataArray(publicAPI, model) {
   // Set our className
   model.classHierarchy.push('vtkDataArray');
 
-  publicAPI.getElementComponentSize = () => VTK.BYTE_SIZE[model.dataType];
+  publicAPI.getElementComponentSize = () => model.values.BYTES_PER_ELEMENT;
 
   // Description:
   // Return the data component at the location specified by tupleIdx and
   // compIdx.
-  publicAPI.getComponent = (tupleIdx, compIdx) => model.values[tupleIdx * model.tuple + compIdx];
+  publicAPI.getComponent = (tupleIdx, compIdx = 0) => model.values[tupleIdx * model.tuple + compIdx];
 
   // Description:
   // Set the data component at the location specified by tupleIdx and compIdx

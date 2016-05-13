@@ -74,20 +74,24 @@ function dataSet(publicAPI, model) {
     }
   });
 
-  ['Cells', 'CellsTypes'].forEach(arrayName => {
-    if (dataset[arrayName].type === 'DataArray') {
-      const dataArray = vtkDataArray.newInstance(dataset[arrayName]);
-      publicAPI[`get${arrayName}`] = () => dataArray;
-    }
-  });
+  if (model.type === 'UnstructuredGrid') {
+    ['Cells', 'CellsTypes'].forEach(arrayName => {
+      if (dataset[arrayName].type === 'DataArray') {
+        const dataArray = vtkDataArray.newInstance(dataset[arrayName]);
+        publicAPI[`get${arrayName}`] = () => dataArray;
+      }
+    });
+  }
 
   // PolyData Cells
-  Object.keys(dataset.Cells).forEach(arrayName => {
-    if (dataset[arrayName].type === 'DataArray') {
-      const dataArray = vtkDataArray.newInstance(dataset.Cells[arrayName]);
-      publicAPI[`get${arrayName}`] = () => dataArray;
-    }
-  });
+  if (model.type === 'PolyData') {
+    Object.keys(dataset.Cells).forEach(arrayName => {
+      if (dataset.Cells[arrayName].type === 'DataArray') {
+        const dataArray = vtkDataArray.newInstance(dataset.Cells[arrayName]);
+        publicAPI[`get${arrayName}`] = () => dataArray;
+      }
+    });
+  }
 }
 
 // ----------------------------------------------------------------------------

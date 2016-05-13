@@ -4,7 +4,7 @@ import ConeSource from '..';
 const coneSource = ConeSource.newInstance({ height: 2.0 });
 
 let subscription = coneSource.onModified(s => {
-  console.log('source modified', s.getOutput().metadata.state);
+  console.log('source modified', s.getOutput().get('metadata').metadata.state);
 });
 
 console.log('height', coneSource.getHeight());
@@ -27,6 +27,8 @@ coneSource.setResolution(10);
 console.log('resolution', coneSource.getResolution());
 console.log('Output (resolution:10)', coneSource.getOutput());
 
+window.ds = coneSource.getOutput();
+
 // Delete source
 coneSource.delete();
 
@@ -37,3 +39,5 @@ console.log('height (delete)', coneSource.getHeight());
 console.log('resolution (delete)', coneSource.getResolution());
 console.log('radius (delete)', coneSource.getRadius());
 console.log('center (delete)', coneSource.getCenter());
+
+
