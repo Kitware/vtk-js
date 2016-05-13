@@ -96,11 +96,23 @@ function dataArray(publicAPI, model) {
 
   publicAPI.getTupleLocation = (idx = 1) => idx * model.tuple;
 
-  publicAPI.getBounds = () =>
-    [].concat(
-      publicAPI.getRange(0),
-      publicAPI.getRange(1),
-      publicAPI.getRange(2));
+  publicAPI.getBounds = () => {
+    if (model.tuple === 3) {
+      return [].concat(
+        publicAPI.getRange(0),
+        publicAPI.getRange(1),
+        publicAPI.getRange(2));
+    }
+
+    if (model.tuple !== 2) {
+      console.error('getBounds called on an array of tuple size', model.tuple, model);
+      return [1, -1, 1, -1, 1, -1];
+    }
+
+    return [].concat(
+        publicAPI.getRange(0),
+        publicAPI.getRange(1));
+  };
 
   publicAPI.getNumberOfComponents = () => model.tuple;
   publicAPI.getNumberOfValues = () => model.values.length;
