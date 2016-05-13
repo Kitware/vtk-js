@@ -1,11 +1,11 @@
 import * as macro from '../../../macro';
-import { SHADING_MODEL, REPRESENTATIONS } from './Constants';
+import { SHADING_MODEL, REPRESENTATIONS, INTERPOLATIONS } from './Constants';
 
 // ----------------------------------------------------------------------------
 // vtkProperty methods
 // ----------------------------------------------------------------------------
 
-function property(publicAPI, model) {
+function vtkProperty(publicAPI, model) {
   // Set our className
   model.classHierarchy.push('vtkProperty');
 
@@ -59,25 +59,30 @@ function property(publicAPI, model) {
 // ----------------------------------------------------------------------------
 
 const DEFAULT_VALUES = {
-  lighting: true,
-  interpolation: 0,
   color: [1, 1, 1],
   ambientColor: [1, 1, 1],
   diffuseColor: [1, 1, 1],
   specularColor: [1, 1, 1],
+  edgeColor: [0, 0, 0],
+
   ambient: 0,
   diffuse: 1,
   specular: 0,
   specularPower: 1,
   opacity: 1,
+  interpolation: INTERPOLATIONS.VTK_GOURAUD,
+  representation: REPRESENTATIONS.VTK_SURFACE,
   edgeVisibility: false,
-  edgeColor: [0, 0, 0],
-  lineWidth: 1,
-  lineStippleRepeatFactor: 1,
-  pointSize: 1,
   backfaceCulling: false,
   frontfaceCulling: false,
-  representation: REPRESENTATIONS.VTK_SURFACE,
+  pointSize: 1,
+  lineWidth: 1,
+  lineStipplePattern: null,
+  lineStippleRepeatFactor: 1,
+  lighting: true,
+
+  shading: false,
+  materialName: null,
 };
 
 // ----------------------------------------------------------------------------
@@ -120,7 +125,7 @@ export function extend(publicAPI, model, initialValues = {}) {
   ], 3);
 
   // Object methods
-  property(publicAPI, model);
+  vtkProperty(publicAPI, model);
 }
 
 // ----------------------------------------------------------------------------
