@@ -1,24 +1,14 @@
 import * as macro from '../../../macro';
-import BufferObject from '../BufferObject';
+import vtkBufferObject from '../BufferObject';
 import { DynamicTypedArray } from '../../../Common/Core/DynamicTypedArray';
 import { SHIFT_SCALE_METHOD } from './Constants';
 import { OBJECT_TYPE } from '../BufferObject/Constants';
 
 // ----------------------------------------------------------------------------
-// Global methods
-// ----------------------------------------------------------------------------
-
-// ----------------------------------------------------------------------------
-// Static API
-// ----------------------------------------------------------------------------
-
-export const STATIC = {};
-
-// ----------------------------------------------------------------------------
 // vtkOpenGLVertexBufferObject methods
 // ----------------------------------------------------------------------------
 
-function vertexBufferObject(publicAPI, model) {
+function vtkOpenGLVertexBufferObject(publicAPI, model) {
   // Set our className
   model.classHierarchy.push('vtkOpenGLVertexBufferObject');
 
@@ -195,7 +185,7 @@ export function extend(publicAPI, model, initialValues = {}) {
   Object.assign(model, DEFAULT_VALUES, initialValues);
 
   // Inheritance
-  BufferObject.extend(publicAPI, model);
+  vtkBufferObject.extend(publicAPI, model);
 
   macro.get(publicAPI, model, [
     'coordShiftAndScaleEnabled',
@@ -219,7 +209,7 @@ export function extend(publicAPI, model, initialValues = {}) {
   ]);
 
   // Object specific methods
-  vertexBufferObject(publicAPI, model);
+  vtkOpenGLVertexBufferObject(publicAPI, model);
 }
 
 // ----------------------------------------------------------------------------
@@ -228,4 +218,4 @@ export const newInstance = macro.newInstance(extend);
 
 // ----------------------------------------------------------------------------
 
-export default Object.assign({ newInstance, extend }, STATIC);
+export default { newInstance, extend };

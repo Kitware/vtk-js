@@ -1,13 +1,13 @@
 import * as macro from '../../../macro';
-import ViewNode from '../../SceneGraph/ViewNode';
-import OpenGLViewNodeFactory from '../ViewNodeFactory';
-import ShaderCache from '../ShaderCache';
+import vtkOpenGLViewNodeFactory from '../ViewNodeFactory';
+import vtkShaderCache from '../ShaderCache';
+import vtkViewNode from '../../SceneGraph/ViewNode';
 
 // ----------------------------------------------------------------------------
 // vtkOpenGLRenderWindow methods
 // ----------------------------------------------------------------------------
 
-export function openGLRenderWindow(publicAPI, model) {
+export function vtkOpenGLRenderWindow(publicAPI, model) {
   // Set our className
   model.classHierarchy.push('vtkOpenGLRenderWindow');
 
@@ -112,10 +112,10 @@ export function extend(publicAPI, model, initialValues = {}) {
   model.canvas = document.createElement('canvas');
 
   // Inheritance
-  ViewNode.extend(publicAPI, model);
+  vtkViewNode.extend(publicAPI, model);
 
-  model.myFactory = OpenGLViewNodeFactory.newInstance();
-  model.shaderCache = ShaderCache.newInstance();
+  model.myFactory = vtkOpenGLViewNodeFactory.newInstance();
+  model.shaderCache = vtkShaderCache.newInstance();
 
   // Build VTK API
   macro.get(publicAPI, model, ['shaderCache']);
@@ -126,7 +126,7 @@ export function extend(publicAPI, model, initialValues = {}) {
 
 
   // Object methods
-  openGLRenderWindow(publicAPI, model);
+  vtkOpenGLRenderWindow(publicAPI, model);
 }
 
 // ----------------------------------------------------------------------------

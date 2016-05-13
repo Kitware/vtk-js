@@ -4,7 +4,7 @@ import * as macro from '../../../macro';
 // vtkViewNodeFactory methods
 // ----------------------------------------------------------------------------
 
-function viewNodeFactory(publicAPI, model) {
+function vtkViewNodeFactory(publicAPI, model) {
   // Set our className
   model.classHierarchy.push('vtkViewNodeFactory');
 
@@ -39,7 +39,7 @@ export function extend(publicAPI, model, initialValues = {}) {
   macro.obj(publicAPI, model);
 
   // Object methods
-  viewNodeFactory(publicAPI, model);
+  vtkViewNodeFactory(publicAPI, model);
 }
 
 // ----------------------------------------------------------------------------

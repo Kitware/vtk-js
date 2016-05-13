@@ -6,7 +6,7 @@ export const PASS_TYPES = ['Build', 'Render'];
 // vtkViewNode methods
 // ----------------------------------------------------------------------------
 
-function viewNode(publicAPI, model) {
+function vtkViewNode(publicAPI, model) {
   // Set our className
   model.classHierarchy.push('vtkViewNode');
 
@@ -152,7 +152,7 @@ export function extend(publicAPI, model, initialValues = {}) {
   macro.getArray(publicAPI, model, ['children']);
 
   // Object methods
-  viewNode(publicAPI, model);
+  vtkViewNode(publicAPI, model);
 }
 
 // ----------------------------------------------------------------------------

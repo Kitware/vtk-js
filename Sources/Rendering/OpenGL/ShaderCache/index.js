@@ -1,6 +1,6 @@
 import * as macro from '../../../macro';
-import ShaderProgram from '../ShaderProgram';
-import Shader from '../Shader';
+import vtkShaderProgram from '../ShaderProgram';
+import vtkShader from '../Shader';
 import md5 from 'blueimp-md5';
 
 // ----------------------------------------------------------------------------
@@ -10,12 +10,12 @@ const SET_GET_FIELDS = [
 ];
 
 // ----------------------------------------------------------------------------
-// vtkShader methods
+// vtkShaderCache methods
 // ----------------------------------------------------------------------------
 
-function shaderCache(publicAPI, model) {
+function vtkShaderCache(publicAPI, model) {
   // Set our className
-  model.classHierarchy.push('vtkShader');
+  model.classHierarchy.push('vtkShaderCache');
 
   publicAPI.replaceShaderValues = (VSSource, FSSource, GSSource) => {
     // first handle renaming any Fragment shader inputs
@@ -26,18 +26,18 @@ function shaderCache(publicAPI, model) {
 
     let nFSSource = FSSource;
     if (GSSource.length > 0) {
-      nFSSource = ShaderProgram.substitute(nFSSource, 'VSOut', 'GSOut').result;
+      nFSSource = vtkShaderProgram.substitute(nFSSource, 'VSOut', 'GSOut').result;
     }
 
     const version = '#version 100\n';
 
-    const nVSSource = ShaderProgram.substitute(VSSource, '//VTK::System::Dec',
+    const nVSSource = vtkShaderProgram.substitute(VSSource, '//VTK::System::Dec',
       version).result;
 
-    nFSSource = ShaderProgram.substitute(nFSSource, '//VTK::System::Dec',
+    nFSSource = vtkShaderProgram.substitute(nFSSource, '//VTK::System::Dec',
       version);
 
-    const nGSSource = ShaderProgram.substitute(GSSource, '//VTK::System::Dec',
+    const nGSSource = vtkShaderProgram.substitute(GSSource, '//VTK::System::Dec',
       version);
 
     return { VSSource: nVSSource, FSSource: nFSSource, GSSource: nGSSource };
@@ -82,7 +82,7 @@ function shaderCache(publicAPI, model) {
 
     if (loc === -1) {
       // create one
-      const sps = ShaderProgram.newInstance();
+      const sps = vtkShaderProgram.newInstance();
       sps.getVertexShader().setSource(vertexCode);
       sps.getFragmentShader().setSource(fragmentCode);
       if (geometryCode) {
@@ -151,16 +151,16 @@ export function extend(publicAPI, model, initialValues = {}) {
   // Internal objects
   model.attributesLocs = {};
   model.uniformLocs = {};
-  model.vertexShader = Shader.newInstance();
-  model.fragmentShader = Shader.newInstance();
-  model.geometryShader = Shader.newInstance();
+  model.vertexShader = vtkShader.newInstance();
+  model.fragmentShader = vtkShader.newInstance();
+  model.geometryShader = vtkShader.newInstance();
 
   // Build VTK API
   macro.obj(publicAPI, model);
   macro.setGet(publicAPI, model, SET_GET_FIELDS);
 
   // Object methods
-  shaderCache(publicAPI, model);
+  vtkShaderCache(publicAPI, model);
 
   return Object.freeze(publicAPI);
 }
