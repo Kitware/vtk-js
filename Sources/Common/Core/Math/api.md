@@ -1,110 +1,89 @@
-// ----------------------------------------------------------------------------
-/* eslint-disable camelcase                                                  */
-/* eslint-disable no-cond-assign                                             */
-// ----------------------------------------------------------------------------
-const VTK_MAX_ROTATIONS = 20;
-const VTK_SMALL_NUMBER = 1.0e-12;
+### Pi() : Math.PI;
 
-function notImplemented(method) {
-  return () => console.log('vtkMath::${method} - NOT IMPLEMENTED');
-}
+Return PI.
 
-function vtkSwapVectors3(v1, v2) {
-  for (let i = 0; i < 3; i++) {
-    const tmp = v1[i];
-    v1[i] = v2[i];
-    v2[i] = tmp;
-  }
-}
+### radiansFromDegrees(degree) : radian
 
-function createArray(size = 3) {
-  const array = [];
-  while (array.length < size) {
-    array.push(0);
-  }
-  return array;
-}
+Convert degrees to radians.
 
-// ----------------------------------------------------------------------------
-// Global methods
-// ----------------------------------------------------------------------------
+### degreesFromRadians(radian) : degree
 
-const Pi = () => Math.PI;
-const radiansFromDegrees = deg => deg / 180 * Math.PI;
-const degreesFromRadians = rad => rad * 180 / Math.PI;
-const round = Math.round;
-const floor = Math.floor;
-const ceil = Math.ceil;
-const ceilLog2 = notImplemented('ceilLog2');
-const min = Math.min;
-const max = Math.max;
-const isPowerOfTwo = notImplemented('isPowerOfTwo');
-const nearestPowerOfTwo = notImplemented('nearestPowerOfTwo');
-const factorial = notImplemented('factorial');
+Convert radians to degrees.
 
-function binomial(m, n) {
-  let r = 1;
-  for (let i = 1; i <= n; ++i) {
-    r *= (m - i + 1) / i;
-  }
-  return Math.floor(r);
-}
+### round(float): int
 
-function beginCombination(m, n) {
-  if (m < n) {
-    return 0;
-  }
+Same as Math.round().
 
-  const r = createArray(n);
-  for (let i = 0; i < n; ++i) {
-    r[i] = i;
-  }
-  return r;
-}
+### floor(float) : int
 
-function nextCombination(m, n, r) {
-  let status = 0;
-  for (let i = n - 1; i >= 0; --i) {
-    if (r[i] < m - n + i) {
-      let j = r[i] + 1;
-      while (i < n) {
-        r[i++] = j++;
-      }
-      status = 1;
-      break;
-    }
-  }
-  return status;
-}
+Same as Math.floor().
 
-const randomSeed = notImplemented('randomSeed');
-const getSeed = notImplemented('getSeed');
+### ceil(float) : int
 
-function random(minValue = 0, maxValue = 1) {
-  const delta = maxValue - minValue;
-  return minValue + (delta * Math.random());
-}
+Same as Math.ceil().
 
-const gaussian = notImplemented('gaussian');
+### ceilLog2()
 
-// Vect3 operations
-function add(a, b, out) {
-  out[0] = a[0] + b[0];
-  out[1] = a[1] + b[1];
-  out[2] = a[2] + b[2];
-}
+NOT IMPLEMENTED
 
-function subtract(a, b, out) {
-  out[0] = a[0] - b[0];
-  out[1] = a[1] - b[1];
-  out[2] = a[2] - b[2];
-}
+### min(a, b)
 
-function multiplyScalar(vec, scalar) {
-  vec[0] *= scalar;
-  vec[1] *= scalar;
-  vec[2] *= scalar;
-}
+Same as Math.min().
+
+### max(a, b)
+
+Same as Math.max().
+
+### isPowerOfTwo(number) : Boolean
+
+NOT IMPLEMENTED
+
+### nearestPowerOfTwo(number) : int
+
+NOT IMPLEMENTED
+
+### factorial(n) : number
+
+NOT IMPLEMENTED
+
+### binomial(m, n) : int
+
+### beginCombination(m, n) : Array or null
+
+
+### nextCombination(m, n, r) : Boolean
+
+### randomSeed()
+
+NOT IMPLEMENTED
+
+### getSeed()
+
+NOT IMPLEMENTED
+
+### random(minValue = 0, maxValue = 1) : Number
+
+### gaussian()
+
+NOT IMPLEMENTED
+
+### add(a, b, out) 
+
+```js
+a[3] + b[3] => out[3]
+```
+
+### subtract(a, b, out) 
+
+```js
+a[3] - b[3] => out[3]
+```
+
+### multiplyScalar(vec, scalar) {
+
+```js
+vec[3] * scalar => vec[3]
+```
 
 function multiplyScalar2D(vec, scalar) {
   vec[0] *= scalar;
