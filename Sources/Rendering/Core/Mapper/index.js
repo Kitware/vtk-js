@@ -1,10 +1,10 @@
 import * as CoincidentTopologyHelper              from './CoincidentTopologyHelper';
 import * as macro                                 from '../../../macro';
-import LookupTable                                from '../../../Common/Core/LookupTable';
 import otherStaticMethods                         from './Static';
-import { COLOR_MODE, SCALAR_MODE, MATERIAL_MODE } from './Constants';
-import vtkMath                                    from '../../../Common/Core/Math';
 import vtkDataSet                                 from '../../../Common/DataModel/DataSet';
+import vtkLookupTable                             from '../../../Common/Core/LookupTable';
+import vtkMath                                    from '../../../Common/Core/Math';
+import { COLOR_MODE, SCALAR_MODE, MATERIAL_MODE } from './Constants';
 
 function notImplemented(method) {
   return () => console.log('vtkMapper::${method} - NOT IMPLEMENTED');
@@ -33,7 +33,7 @@ CoincidentTopologyHelper.addCoincidentTopologyMethods(
 // vtkMapper methods
 // ----------------------------------------------------------------------------
 
-function mapper(publicAPI, model) {
+function vtkMapper(publicAPI, model) {
   // Set our className
   model.classHierarchy.push('vtkMapper');
 
@@ -59,7 +59,7 @@ function mapper(publicAPI, model) {
 
   publicAPI.createDefaultLookupTable = () => {
     console.log('vtkMapper::createDefaultLookupTable - NOT IMPLEMENTED');
-    model.lookupTable = LookupTable.newInstance();
+    model.lookupTable = vtkLookupTable.newInstance();
   };
 
   publicAPI.getColorModeAsString = () => COLOR_MODE[model.colorMode];
@@ -255,7 +255,7 @@ export function extend(publicAPI, model, initialValues = {}) {
   ], 2);
 
   // Object methods
-  mapper(publicAPI, model);
+  vtkMapper(publicAPI, model);
 }
 
 // ----------------------------------------------------------------------------

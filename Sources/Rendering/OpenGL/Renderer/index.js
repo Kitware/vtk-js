@@ -1,11 +1,11 @@
 import * as macro from '../../../macro';
-import ViewNode from '../../SceneGraph/ViewNode';
+import vtkViewNode from '../../SceneGraph/ViewNode';
 
 // ----------------------------------------------------------------------------
 // vtkOpenGLRenderer methods
 // ----------------------------------------------------------------------------
 
-export function webGLRenderer(publicAPI, model) {
+export function vtkOpenGLRenderer(publicAPI, model) {
   // Set our className
   model.classHierarchy.push('vtkOpenGLRenderer');
 
@@ -92,7 +92,7 @@ export function extend(publicAPI, model, initialValues = {}) {
   Object.assign(model, DEFAULT_VALUES, initialValues);
 
   // Inheritance
-  ViewNode.extend(publicAPI, model);
+  vtkViewNode.extend(publicAPI, model);
 
   // Build VTK API
   macro.get(publicAPI, model, ['shaderCache']);
@@ -102,7 +102,7 @@ export function extend(publicAPI, model, initialValues = {}) {
   ]);
 
   // Object methods
-  webGLRenderer(publicAPI, model);
+  vtkOpenGLRenderer(publicAPI, model);
 }
 
 // ----------------------------------------------------------------------------

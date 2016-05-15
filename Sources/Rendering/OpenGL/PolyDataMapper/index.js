@@ -1,10 +1,10 @@
 import * as macro from '../../../macro';
-import ViewNode from '../../SceneGraph/ViewNode';
-import ShaderProgram from '../ShaderProgram';
-import Math from '../../../Common/Core/Math';
+import vtkHelper from '../Helper';
+import vtkMath from '../../../Common/Core/Math';
+import vtkShaderProgram from '../ShaderProgram';
+import vtkVertexBufferObject from '../VertexBufferObject';
+import vtkViewNode from '../../SceneGraph/ViewNode';
 import { REPRESENTATIONS, SHADINGS } from '../../Core/Property/Constants';
-import Helper from '../Helper';
-import VertexBufferObject from '../VertexBufferObject';
 
 import vtkPolyDataVS from '../glsl/vtkPolyDataVS.c';
 import vtkPolyDataFS from '../glsl/vtkPolyDataFS.c';
@@ -13,7 +13,7 @@ import vtkPolyDataFS from '../glsl/vtkPolyDataFS.c';
 // vtkOpenGLPolyDataMapper methods
 // ----------------------------------------------------------------------------
 
-export function webGLPolyDataMapper(publicAPI, model) {
+export function vtkOpenGLPolyDataMapper(publicAPI, model) {
   // Set our className
   model.classHierarchy.push('vtkOpenGLPolyDataMapper');
 
@@ -74,7 +74,7 @@ export function webGLPolyDataMapper(publicAPI, model) {
         'uniform vec3 specularColorUniform; // intensity weighted color',
         'uniform float specularPowerUniform;']);
     }
-    FSSource = ShaderProgram.substitute(FSSource, '//VTK::Color::Dec',
+    FSSource = vtkShaderProgram.substitute(FSSource, '//VTK::Color::Dec',
       colorDec).result;
 
     // now handle the more complex fragment shader implementation
@@ -99,7 +99,7 @@ export function webGLPolyDataMapper(publicAPI, model) {
         '  specularPower = specularPowerUniform;']);
     }
 
-    FSSource = ShaderProgram.substitute(FSSource, '//VTK::Color::Impl', colorImpl).result;
+    FSSource = vtkShaderProgram.substitute(FSSource, '//VTK::Color::Impl', colorImpl).result;
 
     shaders.Fragment = FSSource;
   };
@@ -114,7 +114,7 @@ export function webGLPolyDataMapper(publicAPI, model) {
 
     switch (lastLightComplexity) {
       case 0: // no lighting or RENDER_VALUES
-        FSSource = ShaderProgram.substitute(FSSource, '//VTK::Light::Impl', [
+        FSSource = vtkShaderProgram.substitute(FSSource, '//VTK::Light::Impl', [
           '  gl_FragData[0] = vec4(ambientColor + diffuseColor, opacity);',
           '  //VTK::Light::Impl'],
         false
@@ -122,7 +122,7 @@ export function webGLPolyDataMapper(publicAPI, model) {
         break;
 
       case 1:  // headlight
-        FSSource = ShaderProgram.substitute(FSSource, '//VTK::Light::Impl', [
+        FSSource = vtkShaderProgram.substitute(FSSource, '//VTK::Light::Impl', [
           '  float df = max(0.0, normalVCVSOutput.z);',
           '  float sf = pow(df, specularPower);',
           '  vec3 diffuse = df * diffuseColor;',
@@ -133,14 +133,14 @@ export function webGLPolyDataMapper(publicAPI, model) {
         break;
 
       case 2: // light kit
-        FSSource = ShaderProgram.substitute(FSSource, '//VTK::Light::Dec', [
+        FSSource = vtkShaderProgram.substitute(FSSource, '//VTK::Light::Dec', [
           // only allow for up to 6 active lights
           'uniform int numberOfLights;',
           // intensity weighted color
           'uniform vec3 lightColor[6];',
           'uniform vec3 lightDirectionVC[6]; // normalized',
           'uniform vec3 lightHalfAngleVC[6]; // normalized']).result;
-        FSSource = ShaderProgram.substitute(FSSource, '//VTK::Light::Impl', [
+        FSSource = vtkShaderProgram.substitute(FSSource, '//VTK::Light::Impl', [
           'vec3 diffuse = vec3(0,0,0);',
           '  vec3 specular = vec3(0,0,0);',
           '  for (int lightNum = 0; lightNum < numberOfLights; lightNum++)',
@@ -162,7 +162,7 @@ export function webGLPolyDataMapper(publicAPI, model) {
         break;
 
       case 3: // positional
-        FSSource = ShaderProgram.substitute(FSSource, '//VTK::Light::Dec', [
+        FSSource = vtkShaderProgram.substitute(FSSource, '//VTK::Light::Dec', [
           // only allow for up to 6 active lights
           'uniform int numberOfLights;',
           // intensity weighted color
@@ -175,7 +175,7 @@ export function webGLPolyDataMapper(publicAPI, model) {
           'uniform float lightExponent[6];',
           'uniform int lightPositional[6];']
         ).result;
-        FSSource = ShaderProgram.substitute(FSSource, '//VTK::Light::Impl', [
+        FSSource = vtkShaderProgram.substitute(FSSource, '//VTK::Light::Impl', [
           '  vec3 diffuse = vec3(0,0,0);',
           '  vec3 specular = vec3(0,0,0);',
           '  vec3 vertLightDirectionVC;',
@@ -239,25 +239,25 @@ export function webGLPolyDataMapper(publicAPI, model) {
       let FSSource = shaders.Fragment;
 
       if (model.VBO.getNormalOffset()) {
-        VSSource = ShaderProgram.substitute(VSSource,
+        VSSource = vtkShaderProgram.substitute(VSSource,
           '//VTK::Normal::Dec', [
             'attribute vec3 normalMC;',
             'uniform mat3 normalMatrix;',
             'varying vec3 normalVCVSOutput;']).result;
-        VSSource = ShaderProgram.substitute(VSSource,
+        VSSource = vtkShaderProgram.substitute(VSSource,
           '//VTK::Normal::Impl', [
             'normalVCVSOutput = normalMatrix * normalMC;'].result);
-        GSSource = ShaderProgram.substitute(GSSource,
+        GSSource = vtkShaderProgram.substitute(GSSource,
           '//VTK::Normal::Dec', [
             'in vec3 normalVCVSOutput[];',
             'out vec3 normalVCGSOutput;']).result;
-        GSSource = ShaderProgram.substitute(GSSource,
+        GSSource = vtkShaderProgram.substitute(GSSource,
           '//VTK::Normal::Impl', [
             'normalVCGSOutput = normalVCVSOutput[i];']).result;
-        FSSource = ShaderProgram.substitute(FSSource,
+        FSSource = vtkShaderProgram.substitute(FSSource,
           '//VTK::Normal::Dec', [
             'varying vec3 normalVCVSOutput;']).result;
-        FSSource = ShaderProgram.substitute(FSSource,
+        FSSource = vtkShaderProgram.substitute(FSSource,
           '//VTK::Normal::Impl', [
             'vec3 normalVCVSOutput = normalize(normalVCVSOutput);',
             //  if (!gl_FrontFacing) does not work in intel hd4000 mac
@@ -266,11 +266,11 @@ export function webGLPolyDataMapper(publicAPI, model) {
           ).result;
       } else {
         if (model.haveCellNormals) {
-          FSSource = ShaderProgram.substitute(FSSource,
+          FSSource = vtkShaderProgram.substitute(FSSource,
             '//VTK::Normal::Dec', [
               'uniform mat3 normalMatrix;',
               'uniform samplerBuffer textureN;']).result;
-          FSSource = ShaderProgram.substitute(FSSource,
+          FSSource = vtkShaderProgram.substitute(FSSource,
             '//VTK::Normal::Impl', [
               'vec3 normalVCVSOutput = normalize(normalMatrix *',
               '    texelFetchBuffer(textureN, gl_PrimitiveID + PrimitiveIDOffset).xyz);',
@@ -289,12 +289,12 @@ export function webGLPolyDataMapper(publicAPI, model) {
             // view are probably not orthogonal. Which is why when we cross result that with
             // the line gradient again we get a reasonable normal. It will be othogonal to
             // the line (which is a plane but maximally aligned with the camera view.
-            FSSource = ShaderProgram.substitute(FSSource, '//VTK::UniformFlow::Impl', [
+            FSSource = vtkShaderProgram.substitute(FSSource, '//VTK::UniformFlow::Impl', [
               '  vec3 fdx = vec3(dFdx(vertexVC.x),dFdx(vertexVC.y),dFdx(vertexVC.z));',
               '  vec3 fdy = vec3(dFdy(vertexVC.x),dFdy(vertexVC.y),dFdy(vertexVC.z));',
               '  //VTK::UniformFlow::Impl'] // For further replacements
               ).result;
-            FSSource = ShaderProgram.substitute(FSSource, '//VTK::Normal::Impl', [
+            FSSource = vtkShaderProgram.substitute(FSSource, '//VTK::Normal::Impl', [
               'vec3 normalVCVSOutput;',
               '  fdx = normalize(fdx);',
               '  fdy = normalize(fdy);',
@@ -303,18 +303,18 @@ export function webGLPolyDataMapper(publicAPI, model) {
               '  else { normalVCVSOutput = normalize(cross(vec3(fdy.y, -fdy.x, 0.0), fdy));}']
               ).result;
           } else {
-            FSSource = ShaderProgram.substitute(FSSource,
+            FSSource = vtkShaderProgram.substitute(FSSource,
               '//VTK::Normal::Dec', [
                 'uniform int cameraParallel;']).result;
 
-            FSSource = ShaderProgram.substitute(FSSource, '//VTK::UniformFlow::Impl', [
+            FSSource = vtkShaderProgram.substitute(FSSource, '//VTK::UniformFlow::Impl', [
               // '  vec3 fdx = vec3(dFdx(vertexVC.x),dFdx(vertexVC.y),dFdx(vertexVC.z));',
               // '  vec3 fdy = vec3(dFdy(vertexVC.x),dFdy(vertexVC.y),dFdy(vertexVC.z));',
               '  vec3 fdx = dFdx(vertexVC.xyz);',
               '  vec3 fdy = dFdy(vertexVC.xyz);',
               '  //VTK::UniformFlow::Impl'] // For further replacements
               ).result;
-            FSSource = ShaderProgram.substitute(FSSource, '//VTK::Normal::Impl', [
+            FSSource = vtkShaderProgram.substitute(FSSource, '//VTK::Normal::Impl', [
               '  fdx = normalize(fdx);',
               '  fdy = normalize(fdy);',
               '  vec3 normalVCVSOutput = normalize(cross(fdx,fdy));',
@@ -339,35 +339,35 @@ export function webGLPolyDataMapper(publicAPI, model) {
 
      // do we need the vertex in the shader in View Coordinates
     if (model.lastLightComplexity.get(model.lastBoundBO) > 0) {
-      VSSource = ShaderProgram.substitute(VSSource,
+      VSSource = vtkShaderProgram.substitute(VSSource,
         '//VTK::PositionVC::Dec', [
           'varying vec4 vertexVCVSOutput;']).result;
-      VSSource = ShaderProgram.substitute(VSSource,
+      VSSource = vtkShaderProgram.substitute(VSSource,
         '//VTK::PositionVC::Impl', [
           'vertexVCVSOutput = MCVCMatrix * vertexMC;',
           '  gl_Position = MCDCMatrix * vertexMC;']).result;
-      VSSource = ShaderProgram.substitute(VSSource,
+      VSSource = vtkShaderProgram.substitute(VSSource,
         '//VTK::Camera::Dec', [
           'uniform mat4 MCDCMatrix;',
           'uniform mat4 MCVCMatrix;']).result;
-      GSSource = ShaderProgram.substitute(GSSource,
+      GSSource = vtkShaderProgram.substitute(GSSource,
         '//VTK::PositionVC::Dec', [
           'in vec4 vertexVCVSOutput[];',
           'out vec4 vertexVCGSOutput;']).result;
-      GSSource = ShaderProgram.substitute(GSSource,
+      GSSource = vtkShaderProgram.substitute(GSSource,
         '//VTK::PositionVC::Impl', [
           'vertexVCGSOutput = vertexVCVSOutput[i];']).result;
-      FSSource = ShaderProgram.substitute(FSSource,
+      FSSource = vtkShaderProgram.substitute(FSSource,
         '//VTK::PositionVC::Dec', [
           'varying vec4 vertexVCVSOutput;']).result;
-      FSSource = ShaderProgram.substitute(FSSource,
+      FSSource = vtkShaderProgram.substitute(FSSource,
         '//VTK::PositionVC::Impl', [
           'vec4 vertexVC = vertexVCVSOutput;']).result;
     } else {
-      VSSource = ShaderProgram.substitute(VSSource,
+      VSSource = vtkShaderProgram.substitute(VSSource,
         '//VTK::Camera::Dec', [
           'uniform mat4 MCDCMatrix;']).result;
-      VSSource = ShaderProgram.substitute(VSSource,
+      VSSource = vtkShaderProgram.substitute(VSSource,
         '//VTK::PositionVC::Impl', [
           '  gl_Position = MCDCMatrix * vertexMC;']).result;
     }
@@ -851,7 +851,7 @@ export function webGLPolyDataMapper(publicAPI, model) {
 
   publicAPI.computeBounds = (ren, actor) => {
     if (!publicAPI.getInput()) {
-      Math.uninitializeBounds(model.Bounds);
+      vtkMath.uninitializeBounds(model.Bounds);
       return;
     }
     model.bounnds = publicAPI.getInput().getBounds();
@@ -977,13 +977,13 @@ export function extend(publicAPI, model, initialValues = {}) {
   Object.assign(model, DEFAULT_VALUES, initialValues);
 
   // Inheritance
-  ViewNode.extend(publicAPI, model);
+  vtkViewNode.extend(publicAPI, model);
 
-  model.points = Helper.newInstance();
-  model.lines = Helper.newInstance();
-  model.tris = Helper.newInstance();
-  model.triStrips = Helper.newInstance();
-  model.VBO = VertexBufferObject.newInstance();
+  model.points = vtkHelper.newInstance();
+  model.lines = vtkHelper.newInstance();
+  model.tris = vtkHelper.newInstance();
+  model.triStrips = vtkHelper.newInstance();
+  model.VBO = vtkVertexBufferObject.newInstance();
 
   // Build VTK API
   macro.get(publicAPI, model, ['shaderCache']);
@@ -1011,7 +1011,7 @@ export function extend(publicAPI, model, initialValues = {}) {
   model.lastLightComplexity.set(model.triStrips, 0);
 
   // Object methods
-  webGLPolyDataMapper(publicAPI, model);
+  vtkOpenGLPolyDataMapper(publicAPI, model);
 }
 
 // ----------------------------------------------------------------------------

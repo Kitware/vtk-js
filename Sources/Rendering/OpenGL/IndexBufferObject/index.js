@@ -1,7 +1,7 @@
 import * as macro from '../../../macro';
-import BufferObject from '../BufferObject';
-import { OBJECT_TYPE } from '../BufferObject/Constants';
+import vtkBufferObject from '../BufferObject';
 import { DynamicTypedArray } from '../../../../Sources/Common/Core/DynamicTypedArray';
+import { OBJECT_TYPE } from '../BufferObject/Constants';
 
 /* eslint-disable no-multi-spaces */
 
@@ -17,7 +17,7 @@ import { DynamicTypedArray } from '../../../../Sources/Common/Core/DynamicTypedA
 // vtkOpenGLIndexBufferObject methods
 // ----------------------------------------------------------------------------
 
-function indexBufferObject(publicAPI, model) {
+function vtkOpenGLIndexBufferObject(publicAPI, model) {
   // Set our className
   model.classHierarchy.push('vtkOpenGLIndexBufferObject');
 
@@ -439,12 +439,12 @@ export function extend(publicAPI, model, initialValues = {}) {
   Object.assign(model, DEFAULT_VALUES, initialValues);
 
   // Inheritance
-  BufferObject.extend(publicAPI, model);
+  vtkBufferObject.extend(publicAPI, model);
 
   macro.get(publicAPI, model, ['indexCount']);
 
   // Object specific methods
-  indexBufferObject(publicAPI, model);
+  vtkOpenGLIndexBufferObject(publicAPI, model);
 }
 
 // ----------------------------------------------------------------------------

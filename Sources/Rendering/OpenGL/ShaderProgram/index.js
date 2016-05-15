@@ -1,5 +1,5 @@
 import * as macro from '../../../macro';
-import Shader from '../Shader';
+import vtkShader from '../Shader';
 
 // perform in place string substitutions, indicate if a substitution was done
 // this is useful for building up shader strings which typically involve
@@ -23,7 +23,7 @@ export function substitute(source, search, replace, all = true) {
 // vtkShaderProgram methods
 // ----------------------------------------------------------------------------
 
-export function shaderProgram(publicAPI, model) {
+export function vtkShaderProgram(publicAPI, model) {
   // Set our className
   model.classHierarchy.push('vtkShaderProgram');
 
@@ -371,11 +371,11 @@ export function extend(publicAPI, model, initialValues = {}) {
   // Instanciate internal objects
   model.attributesLocs = {};
   model.uniformLocs = {};
-  model.vertexShader = Shader.newInstance();
+  model.vertexShader = vtkShader.newInstance();
   model.vertexShader.setShaderType('Vertex');
-  model.fragmentShader = Shader.newInstance();
+  model.fragmentShader = vtkShader.newInstance();
   model.fragmentShader.setShaderType('Fragment');
-  model.geometryShader = Shader.newInstance();
+  model.geometryShader = vtkShader.newInstance();
   model.geometryShader.setShaderType('Geometry');
 
   // Build VTK API
@@ -393,7 +393,7 @@ export function extend(publicAPI, model, initialValues = {}) {
   ]);
 
   // Object methods
-  shaderProgram(publicAPI, model);
+  vtkShaderProgram(publicAPI, model);
 }
 
 // ----------------------------------------------------------------------------

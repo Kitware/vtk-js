@@ -1,6 +1,10 @@
 import * as macro from '../../../macro';
 import { SHADING_MODEL, REPRESENTATIONS, INTERPOLATIONS } from './Constants';
 
+function notImplemented(method) {
+  return () => console.log('vtkProperty::${method} - NOT IMPLEMENTED');
+}
+
 // ----------------------------------------------------------------------------
 // vtkProperty methods
 // ----------------------------------------------------------------------------
@@ -8,12 +12,6 @@ import { SHADING_MODEL, REPRESENTATIONS, INTERPOLATIONS } from './Constants';
 function vtkProperty(publicAPI, model) {
   // Set our className
   model.classHierarchy.push('vtkProperty');
-
-  publicAPI.setInterpolationToFlat = () => publicAPI.setInterpolation(0);
-  publicAPI.setInterpolationToGouraud = () => publicAPI.setInterpolation(1);
-  publicAPI.setInterpolationToPhong = () => publicAPI.setInterpolation(2);
-
-  publicAPI.getInterpolationAsString = () => SHADING_MODEL[model.interpolation];
 
   publicAPI.setColor = (r, g, b) => {
     if (model.color[0] !== r || model.color[1] !== g || model.color[2] !== b) {
@@ -28,7 +26,9 @@ function vtkProperty(publicAPI, model) {
     publicAPI.setSpecularColor(model.color);
   };
 
+  publicAPI.computeCompositeColor = notImplemented('ComputeCompositeColor');
   publicAPI.getColor = () => {
+    // Inline computeCompositeColor
     let norm = 0.0;
     if ((model.ambient + model.diffuse + model.specular) > 0) {
       norm = 1.0 / (model.ambient + model.diffuse + model.specular);
@@ -43,6 +43,24 @@ function vtkProperty(publicAPI, model) {
 
     return [].concat(model.color);
   };
+
+  publicAPI.setTexture = notImplemented('SetTexture');
+  publicAPI.getTexture = notImplemented('getTexture');
+  publicAPI.getNumberOfTextures = notImplemented('getNumberOfTextures');
+  publicAPI.removeTexture = notImplemented('removeTexture');
+  publicAPI.removeAllTextures = notImplemented('RemoveAllTextures');
+  publicAPI.getTextureAtIndex = notImplemented('getTextureAtIndex');
+  publicAPI.getTextureUnitAtIndex = notImplemented('getTextureUnitAtIndex');
+  publicAPI.getTextureUnit = notImplemented('getTextureUnit');
+  publicAPI.render = notImplemented('render');
+  publicAPI.postRender = notImplemented('postRender');
+  publicAPI.addShaderVariable = notImplemented('AddShaderVariable');
+
+  publicAPI.setInterpolationToFlat = () => publicAPI.setInterpolation(0);
+  publicAPI.setInterpolationToGouraud = () => publicAPI.setInterpolation(1);
+  publicAPI.setInterpolationToPhong = () => publicAPI.setInterpolation(2);
+
+  publicAPI.getInterpolationAsString = () => SHADING_MODEL[model.interpolation];
 
   publicAPI.setLineStipplePattern = (b0, b1) => {
     model.lineStipplePattern[0] = b0;

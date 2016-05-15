@@ -1,5 +1,7 @@
-import ConeSource from './ConeSource';
+import vtkConeSource from './ConeSource';
+import vtkSphereSource from './SphereSource';
 
 export default {
-  ConeSource,
+  vtkConeSource,
+  vtkSphereSource,
 };

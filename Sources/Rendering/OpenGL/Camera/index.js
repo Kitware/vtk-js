@@ -1,12 +1,12 @@
 import * as macro from '../../../macro';
-import ViewNode from '../../SceneGraph/ViewNode';
+import vtkViewNode from '../../SceneGraph/ViewNode';
 import { mat4 } from 'gl-matrix';
 
 // ----------------------------------------------------------------------------
 // vtkOpenGLCamera methods
 // ----------------------------------------------------------------------------
 
-function openglCamera(publicAPI, model) {
+function vtkOpenGLCamera(publicAPI, model) {
   // Set our className
   model.classHierarchy.push('vtkOpenGLCamera');
 
@@ -99,7 +99,7 @@ export function extend(publicAPI, model, initialValues = {}) {
   Object.assign(model, DEFAULT_VALUES, initialValues);
 
   // Inheritance
-  ViewNode.extend(publicAPI, model);
+  vtkViewNode.extend(publicAPI, model);
 
   model.keyMatrixTime = {};
   macro.obj(model.keyMatrixTime);
@@ -111,7 +111,7 @@ export function extend(publicAPI, model, initialValues = {}) {
   ]);
 
   // Object methods
-  openglCamera(publicAPI, model);
+  vtkOpenGLCamera(publicAPI, model);
 }
 
 // ----------------------------------------------------------------------------

@@ -1,9 +1,9 @@
 import Core from './Core';
 import DataModel from './DataModel';
-import Transforms from './Transforms';
+import System from './System';
 
 export default {
   Core,
   DataModel,
-  Transforms,
+  System,
 };

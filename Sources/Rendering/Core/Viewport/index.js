@@ -8,7 +8,7 @@ function notImplemented(method) {
 // vtkViewport methods
 // ----------------------------------------------------------------------------
 
-function viewport(publicAPI, model) {
+function vtkViewport(publicAPI, model) {
   // Set our className
   model.classHierarchy.push('vtkViewport');
 
@@ -146,7 +146,7 @@ export function extend(publicAPI, model, initialValues = {}) {
   // Build VTK API
   macro.obj(publicAPI, model);
   macro.event(publicAPI, model, 'event');
-  viewport(publicAPI, model);
+  vtkViewport(publicAPI, model);
 }
 
 // ----------------------------------------------------------------------------

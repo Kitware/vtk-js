@@ -1,7 +1,7 @@
 import * as macro from '../../../macro';
+import vtkBoundingBox from '../../../Common/DataModel/BoundingBox';
+import vtkProp from '../Prop';
 import { mat4 } from 'gl-matrix';
-import Prop from '../Prop';
-import BoundingBox from '../../../Common/DataModel/BoundingBox';
 
 
 function notImplemented(method) {
@@ -12,7 +12,7 @@ function notImplemented(method) {
 // vtkProp3D methods
 // ----------------------------------------------------------------------------
 
-function prop3D(publicAPI, model) {
+function vtkProp3D(publicAPI, model) {
   // Set our className
   model.classHierarchy.push('vtkProp3D');
 
@@ -50,11 +50,11 @@ function prop3D(publicAPI, model) {
 
   // getBounds (macro)
 
-  publicAPI.getCenter = () => BoundingBox.getCenter(model.bounds);
-  publicAPI.getLength = () => BoundingBox.getLength(model.bounds);
-  publicAPI.getXRange = () => BoundingBox.getXRange(model.bounds);
-  publicAPI.getYRange = () => BoundingBox.getYRange(model.bounds);
-  publicAPI.getZRange = () => BoundingBox.getZRange(model.bounds);
+  publicAPI.getCenter = () => vtkBoundingBox.getCenter(model.bounds);
+  publicAPI.getLength = () => vtkBoundingBox.getLength(model.bounds);
+  publicAPI.getXRange = () => vtkBoundingBox.getXRange(model.bounds);
+  publicAPI.getYRange = () => vtkBoundingBox.getYRange(model.bounds);
+  publicAPI.getZRange = () => vtkBoundingBox.getZRange(model.bounds);
 
   publicAPI.pokeMatrix = notImplemented('pokeMatrix');
   publicAPI.getUserMatrix = notImplemented('GetUserMatrix');
@@ -112,7 +112,7 @@ export function extend(publicAPI, model, initialValues = {}) {
   Object.assign(model, DEFAULT_VALUES, initialValues);
 
   // Inheritance
-  Prop.extend(publicAPI, model);
+  vtkProp.extend(publicAPI, model);
 
   // Build VTK API
   macro.get(publicAPI, model, [
@@ -131,7 +131,7 @@ export function extend(publicAPI, model, initialValues = {}) {
   model.transform = null; // FIXME
 
   // Object methods
-  prop3D(publicAPI, model);
+  vtkProp3D(publicAPI, model);
 }
 
 // ----------------------------------------------------------------------------

@@ -2,18 +2,10 @@ import * as macro from '../../../macro';
 import { OBJECT_TYPE } from '../BufferObject/Constants';
 
 // ----------------------------------------------------------------------------
-// Global methods
-// ----------------------------------------------------------------------------
-
-// ----------------------------------------------------------------------------
-// Static API
-// ----------------------------------------------------------------------------
-
-// ----------------------------------------------------------------------------
 // vtkOpenGLVertexArrayObject methods
 // ----------------------------------------------------------------------------
 
-function vertexArrayObject(publicAPI, model) {
+function vtkOpenGLVertexArrayObject(publicAPI, model) {
   // Set our className
   model.classHierarchy.push('vtkOpenGLVertexArrayObject');
 
@@ -260,7 +252,7 @@ export function extend(publicAPI, model, initialValues = {}) {
   // For more macro methods, see "Sources/macro.js"
 
   // Object specific methods
-  vertexArrayObject(publicAPI, model);
+  vtkOpenGLVertexArrayObject(publicAPI, model);
 }
 
 // ----------------------------------------------------------------------------

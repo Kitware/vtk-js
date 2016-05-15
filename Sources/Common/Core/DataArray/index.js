@@ -37,19 +37,36 @@ function insureRangeSize(rangeArray, size = 0) {
   return ranges;
 }
 
+function extractCellSizes(cellArray) {
+  let currentIdx = 0;
+  return cellArray.filter((value, index) => {
+    if (index === currentIdx) {
+      currentIdx += value + 1;
+      return true;
+    }
+    return false;
+  });
+}
+
+function getNumberOfCells(cellArray) {
+  return extractCellSizes(cellArray).length;
+}
+
 // ----------------------------------------------------------------------------
 // Static API
 // ----------------------------------------------------------------------------
 
 export const STATIC = {
   computeRange,
+  extractCellSizes,
+  getNumberOfCells,
 };
 
 // ----------------------------------------------------------------------------
 // vtkDataArray methods
 // ----------------------------------------------------------------------------
 
-function dataArray(publicAPI, model) {
+function vtkDataArray(publicAPI, model) {
   // Set our className
   model.classHierarchy.push('vtkDataArray');
 
@@ -118,6 +135,25 @@ function dataArray(publicAPI, model) {
   publicAPI.getNumberOfValues = () => model.values.length;
   publicAPI.getNumberOfTuples = () => model.values.length / model.tuple;
   publicAPI.getDataType = () => model.dataType;
+
+  publicAPI.getNumberOfCells = () => {
+    if (model.numberOfCells !== undefined) {
+      return model.numberOfCells;
+    }
+
+    model.cellSizes = extractCellSizes(model.values);
+    model.numberOfCells = model.cellSizes.length;
+    return model.numberOfCells;
+  };
+
+  publicAPI.getCellSizes = () => {
+    if (model.cellSizes !== undefined) {
+      return model.cellSizes;
+    }
+
+    model.cellSizes = extractCellSizes(model.values);
+    return model.cellSizes;
+  };
 }
 
 // ----------------------------------------------------------------------------
@@ -128,7 +164,7 @@ const DEFAULT_VALUES = {
   type: 'DataArray',
   name: '',
   tuple: 1,
-  size: 1024,
+  size: 0,
   dataType: VTK.DEFAULT_DATATYPE,
   values: null,
   ranges: null,
@@ -139,7 +175,11 @@ const DEFAULT_VALUES = {
 export function extend(publicAPI, model, initialValues = {}) {
   Object.assign(model, DEFAULT_VALUES, initialValues);
 
-  if (!model.values || !model.size || model.type !== 'DataArray') {
+  if (model.values) {
+    model.size = model.values.length;
+  }
+
+  if (!model.empty && (!model.values || !model.size) || model.type !== 'DataArray') {
     throw Error('Can not create DataArray object without: size > 0, values or type = DataArray');
   }
 
@@ -152,7 +192,7 @@ export function extend(publicAPI, model, initialValues = {}) {
   macro.setGet(publicAPI, model, ['name']);
 
   // Object specific methods
-  dataArray(publicAPI, model);
+  vtkDataArray(publicAPI, model);
 }
 
 // ----------------------------------------------------------------------------

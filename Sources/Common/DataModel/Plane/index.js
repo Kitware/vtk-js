@@ -23,7 +23,7 @@ export const STATIC = {
 // vtkPlane methods
 // ----------------------------------------------------------------------------
 
-function plane(publicAPI, model) {
+function vtkPlane(publicAPI, model) {
   // Set our className
   model.classHierarchy.push('vtkPlane');
 }
@@ -43,7 +43,7 @@ export function extend(publicAPI, model, initialValues = {}) {
   // Object methods
   macro.obj(publicAPI, model);
   macro.setGet(publicAPI, model, ['bounds']);
-  plane(publicAPI, model);
+  vtkPlane(publicAPI, model);
 }
 
 // ----------------------------------------------------------------------------

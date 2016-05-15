@@ -1,16 +1,16 @@
 import * as macro from '../../../macro';
-import ViewNodeFactory from '../../SceneGraph/ViewNodeFactory';
-import OpenGLRenderWindow from '../RenderWindow';
-import OpenGLRenderer from '../Renderer';
-import OpenGLActor from '../Actor';
-import OpenGLCamera from '../Camera';
-import OpenGLPolyDataMapper from '../PolyDataMapper';
+import vtkViewNodeFactory from '../../SceneGraph/ViewNodeFactory';
+import vtkOpenGLRenderWindow from '../RenderWindow';
+import vtkOpenGLRenderer from '../Renderer';
+import vtkOpenGLActor from '../Actor';
+import vtkOpenGLCamera from '../Camera';
+import vtkOpenGLPolyDataMapper from '../PolyDataMapper';
 
 // ----------------------------------------------------------------------------
 // vtkOpenGLViewNodeFactory methods
 // ----------------------------------------------------------------------------
 
-export function openGLViewNodeFactory(publicAPI, model) {
+export function vtkOpenGLViewNodeFactory(publicAPI, model) {
   // Set our className
   model.classHierarchy.push('vtkOpenGLViewNodeFactory');
 }
@@ -28,17 +28,17 @@ export function extend(publicAPI, model, initialValues = {}) {
   Object.assign(model, DEFAULT_VALUES, initialValues);
 
   // Inheritance
-  ViewNodeFactory.extend(publicAPI, model);
+  vtkViewNodeFactory.extend(publicAPI, model);
 
   // Object methods
-  openGLViewNodeFactory(publicAPI, model);
+  vtkOpenGLViewNodeFactory(publicAPI, model);
 
   // Initialization
-  publicAPI.registerOverride('vtkRenderWindow', OpenGLRenderWindow.newInstance);
-  publicAPI.registerOverride('vtkRenderer', OpenGLRenderer.newInstance);
-  publicAPI.registerOverride('vtkActor', OpenGLActor.newInstance);
-  publicAPI.registerOverride('vtkMapper', OpenGLPolyDataMapper.newInstance);
-  publicAPI.registerOverride('vtkCamera', OpenGLCamera.newInstance);
+  publicAPI.registerOverride('vtkRenderWindow', vtkOpenGLRenderWindow.newInstance);
+  publicAPI.registerOverride('vtkRenderer', vtkOpenGLRenderer.newInstance);
+  publicAPI.registerOverride('vtkActor', vtkOpenGLActor.newInstance);
+  publicAPI.registerOverride('vtkMapper', vtkOpenGLPolyDataMapper.newInstance);
+  publicAPI.registerOverride('vtkCamera', vtkOpenGLCamera.newInstance);
 }
 
 // ----------------------------------------------------------------------------

@@ -1,13 +1,13 @@
 import * as macro from '../../../macro';
-import VertexArrayObject from '../VertexArrayObject';
-import IndexBufferObject from '../IndexBufferObject';
-import ShaderProgram from '../ShaderProgram';
+import vtkIndexBufferObject from '../IndexBufferObject';
+import vtkShaderProgram from '../ShaderProgram';
+import vtkVertexArrayObject from '../VertexArrayObject';
 
 // ----------------------------------------------------------------------------
 // vtkOpenGLHelper methods
 // ----------------------------------------------------------------------------
 
-export function helper(publicAPI, model) {
+export function vtkOpenGLHelper(publicAPI, model) {
   // Set our className
   model.classHierarchy.push('vtkOpenGLHelper');
 
@@ -52,12 +52,12 @@ export function extend(publicAPI, model, initialValues = {}) {
     'IBO',
   ]);
 
-  model.program = ShaderProgram.newInstance();
-  model.VAO = VertexArrayObject.newInstance();
-  model.IBO = IndexBufferObject.newInstance();
+  model.program = vtkShaderProgram.newInstance();
+  model.VAO = vtkVertexArrayObject.newInstance();
+  model.IBO = vtkIndexBufferObject.newInstance();
 
   // Object methods
-  helper(publicAPI, model);
+  vtkOpenGLHelper(publicAPI, model);
 }
 
 // ----------------------------------------------------------------------------

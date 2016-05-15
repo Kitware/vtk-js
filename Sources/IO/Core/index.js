@@ -1,5 +1,5 @@
-import HttpDataSetReader from './HttpDataSetReader';
+import vtkHttpDataSetReader from './HttpDataSetReader';
 
 export default {
-  HttpDataSetReader,
+  vtkHttpDataSetReader,
 };

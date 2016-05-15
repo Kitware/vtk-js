@@ -1,5 +1,5 @@
 import * as macro from '../../../macro';
-import ShaderProgram from '../ShaderProgram';
+import vtkShaderProgram from '../ShaderProgram';
 import md5 from 'blueimp-md5';
 
 // ----------------------------------------------------------------------------
@@ -10,12 +10,12 @@ const SET_GET_FIELDS = [
 ];
 
 // ----------------------------------------------------------------------------
-// vtkShader methods
+// vtkShaderCache methods
 // ----------------------------------------------------------------------------
 
-function shaderCache(publicAPI, model) {
+function vtkShaderCache(publicAPI, model) {
   // Set our className
-  model.classHierarchy.push('vtkShader');
+  model.classHierarchy.push('vtkShaderCache');
 
   publicAPI.replaceShaderValues = (VSSource, FSSource, GSSource) => {
     // first handle renaming any Fragment shader inputs
@@ -27,15 +27,15 @@ function shaderCache(publicAPI, model) {
     model.context.getExtension('OES_standard_derivatives');
     let nFSSource = FSSource;
     if (GSSource.length > 0) {
-      nFSSource = ShaderProgram.substitute(nFSSource, 'VSOut', 'GSOut').result;
+      nFSSource = vtkShaderProgram.substitute(nFSSource, 'VSOut', 'GSOut').result;
     }
 
     const version = '#version 100\n';
 
-    const nVSSource = ShaderProgram.substitute(VSSource, '//VTK::System::Dec',
+    const nVSSource = vtkShaderProgram.substitute(VSSource, '//VTK::System::Dec',
       version).result;
 
-    nFSSource = ShaderProgram.substitute(nFSSource, '//VTK::System::Dec', [
+    nFSSource = vtkShaderProgram.substitute(nFSSource, '//VTK::System::Dec', [
       `${version}\n#extension GL_OES_standard_derivatives : enable\n`,
       '#ifdef GL_FRAGMENT_PRECISION_HIGH',
       'precision highp float;',
@@ -47,7 +47,7 @@ function shaderCache(publicAPI, model) {
     // nFSSource = ShaderProgram.substitute(nFSSource, 'gl_FragData\\[0\\]',
     //   'gl_FragColor').result;
 
-    const nGSSource = ShaderProgram.substitute(GSSource, '//VTK::System::Dec',
+    const nGSSource = vtkShaderProgram.substitute(GSSource, '//VTK::System::Dec',
       version).result;
 
     return { VSSource: nVSSource, FSSource: nFSSource, GSSource: nGSSource };
@@ -92,7 +92,7 @@ function shaderCache(publicAPI, model) {
 
     if (loc === -1) {
       // create one
-      const sps = ShaderProgram.newInstance();
+      const sps = vtkShaderProgram.newInstance();
       sps.setContext(model.context);
       sps.getVertexShader().setSource(vertexCode);
       sps.getFragmentShader().setSource(fragmentCode);
@@ -169,7 +169,7 @@ export function extend(publicAPI, model, initialValues = {}) {
   macro.setGet(publicAPI, model, SET_GET_FIELDS);
 
   // Object methods
-  shaderCache(publicAPI, model);
+  vtkShaderCache(publicAPI, model);
 
   return Object.freeze(publicAPI);
 }

@@ -1,11 +1,11 @@
 import * as macro from '../../../macro';
-import ViewNode from '../../SceneGraph/ViewNode';
+import vtkViewNode from '../../SceneGraph/ViewNode';
 
 // ----------------------------------------------------------------------------
 // vtkOpenGLActor methods
 // ----------------------------------------------------------------------------
 
-function openglActor(publicAPI, model) {
+function vtkOpenGLActor(publicAPI, model) {
   // Set our className
   model.classHierarchy.push('vtkOpenGLActor');
 
@@ -60,7 +60,7 @@ export function extend(publicAPI, model, initialValues = {}) {
   Object.assign(model, DEFAULT_VALUES, initialValues);
 
   // Inheritance
-  ViewNode.extend(publicAPI, model);
+  vtkViewNode.extend(publicAPI, model);
 
   // Build VTK API
   macro.setGet(publicAPI, model, [
@@ -68,7 +68,7 @@ export function extend(publicAPI, model, initialValues = {}) {
   ]);
 
   // Object methods
-  openglActor(publicAPI, model);
+  vtkOpenGLActor(publicAPI, model);
 }
 
 // ----------------------------------------------------------------------------

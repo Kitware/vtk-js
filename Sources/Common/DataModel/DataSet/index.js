@@ -87,10 +87,13 @@ function vtkDataSet(publicAPI, model) {
 
   // PolyData Cells
   if (model.type === 'PolyData') {
-    Object.keys(dataset.Cells).forEach(arrayName => {
-      if (dataset.Cells[arrayName].type === 'DataArray') {
-        const dataArray = vtkDataArray.newInstance(dataset.Cells[arrayName]);
-        publicAPI[`get${arrayName}`] = () => dataArray;
+    ['Verts', 'Lines', 'Polys', 'Strips'].forEach(cellName => {
+      if (dataset.Cells[cellName]) {
+        const dataArray = vtkDataArray.newInstance(dataset.Cells[cellName]);
+        publicAPI[`get${cellName}`] = () => dataArray;
+      } else {
+        const dataArray = vtkDataArray.newInstance({ empty: true });
+        publicAPI[`get${cellName}`] = () => dataArray;
       }
     });
   }

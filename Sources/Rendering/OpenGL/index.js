@@ -1,29 +1,29 @@
-import Actor               from './Actor';
-import BufferObject        from './BufferObject';
-import Helper              from './Helper';
-import IndexBufferObject   from './IndexBufferObject';
-import PolyDataMapper      from './PolyDataMapper';
-import Renderer            from './Renderer';
-import RenderWindow        from './RenderWindow';
-import Shader              from './Shader';
-import ShaderCache         from './ShaderCache';
-import ShaderProgram       from './ShaderProgram';
-import VertexArrayObject   from './VertexArrayObject';
-import VertexBufferObject  from './VertexBufferObject';
-import ViewNodeFactory     from './ViewNodeFactory';
+import vtkActor               from './Actor';
+import vtkBufferObject        from './BufferObject';
+import vtkHelper              from './Helper';
+import vtkIndexBufferObject   from './IndexBufferObject';
+import vtkPolyDataMapper      from './PolyDataMapper';
+import vtkRenderer            from './Renderer';
+import vtkRenderWindow        from './RenderWindow';
+import vtkShader              from './Shader';
+import vtkShaderCache         from './ShaderCache';
+import vtkShaderProgram       from './ShaderProgram';
+import vtkVertexArrayObject   from './VertexArrayObject';
+import vtkVertexBufferObject  from './VertexBufferObject';
+import vtkViewNodeFactory     from './ViewNodeFactory';
 
 export default {
-  Actor,
-  BufferObject,
-  Helper,
-  IndexBufferObject,
-  PolyDataMapper,
-  Renderer,
-  RenderWindow,
-  Shader,
-  ShaderCache,
-  ShaderProgram,
-  VertexArrayObject,
-  VertexBufferObject,
-  ViewNodeFactory,
+  vtkActor,
+  vtkBufferObject,
+  vtkHelper,
+  vtkIndexBufferObject,
+  vtkPolyDataMapper,
+  vtkRenderer,
+  vtkRenderWindow,
+  vtkShader,
+  vtkShaderCache,
+  vtkShaderProgram,
+  vtkVertexArrayObject,
+  vtkVertexBufferObject,
+  vtkViewNodeFactory,
 };

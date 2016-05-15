@@ -8,7 +8,7 @@ function notImplemented(method) {
 // vtkProp methods
 // ----------------------------------------------------------------------------
 
-function prop(publicAPI, model) {
+function vtkProp(publicAPI, model) {
   // Set our className
   model.classHierarchy.push('vtkProp');
 
@@ -103,7 +103,7 @@ export function extend(publicAPI, model, initialValues = {}) {
   ]);
 
   // Object methods
-  prop(publicAPI, model);
+  vtkProp(publicAPI, model);
 }
 
 // ----------------------------------------------------------------------------

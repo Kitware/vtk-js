@@ -1,12 +1,12 @@
 import * as macro from '../../../macro';
 
-export const SHADER_TYPES = ['Vertex', 'Fragment', 'Geometry', 'Unknown'];
+// export const SHADER_TYPES = ['Vertex', 'Fragment', 'Geometry', 'Unknown'];
 
 // ----------------------------------------------------------------------------
 // vtkShader methods
 // ----------------------------------------------------------------------------
 
-export function shader(publicAPI, model) {
+export function vtkShader(publicAPI, model) {
   // Set our className
   model.classHierarchy.push('vtkShader');
 
@@ -92,7 +92,7 @@ export function extend(publicAPI, model, initialValues = {}) {
   ]);
 
   // Object methods
-  shader(publicAPI, model);
+  vtkShader(publicAPI, model);
 }
 
 // ----------------------------------------------------------------------------

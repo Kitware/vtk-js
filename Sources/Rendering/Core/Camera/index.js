@@ -1,6 +1,6 @@
 import * as macro from '../../../macro';
+import vtkMath from './../../../Common/Core/Math';
 import { vec3, vec4, mat4 } from 'gl-matrix';
-import { radiansFromDegrees } from './../../../Common/Core/Math';
 
 /* eslint-disable new-cap */
 
@@ -18,7 +18,7 @@ import { radiansFromDegrees } from './../../../Common/Core/Math';
 // vtkCamera methods
 // ----------------------------------------------------------------------------
 
-function camera(publicAPI, model) {
+function vtkCamera(publicAPI, model) {
   // Set our className
   model.classHierarchy.push('vtkCamera');
 
@@ -86,7 +86,7 @@ function camera(publicAPI, model) {
 
     const rotateMatrix = mat4.create();   // FIXME: don't create a new one each time?
     const viewDir = vec3.fromValues((at[0] - eye[0]), (at[1] - eye[1]), (at[2] - eye[2]));
-    mat4.rotate(rotateMatrix, rotateMatrix, radiansFromDegrees(angle), viewDir);
+    mat4.rotate(rotateMatrix, rotateMatrix, vtkMath.radiansFromDegrees(angle), viewDir);
     vec4.transformMat4(viewUpVec4, viewUpVec4, rotateMatrix);
 
     model.viewUp[0] = viewUpVec4[0];
@@ -351,7 +351,7 @@ export function extend(publicAPI, model, initialValues = {}) {
   ], 3);
 
   // Object methods
-  camera(publicAPI, model);
+  vtkCamera(publicAPI, model);
 }
 
 // ----------------------------------------------------------------------------

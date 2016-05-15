@@ -1,7 +1,7 @@
-import ViewNode        from './ViewNode';
-import ViewNodeFactory from './ViewNodeFactory';
+import vtkViewNode        from './ViewNode';
+import vtkViewNodeFactory from './ViewNodeFactory';
 
 export default {
-  ViewNode,
-  ViewNodeFactory,
+  vtkViewNode,
+  vtkViewNodeFactory,
 };

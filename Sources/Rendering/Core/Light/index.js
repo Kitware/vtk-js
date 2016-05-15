@@ -1,5 +1,5 @@
 import * as macro from '../../../macro';
-import { radiansFromDegrees } from './../../../Common/Core/Math';
+import vtkMath from './../../../Common/Core/Math';
 
 // ----------------------------------------------------------------------------
 
@@ -9,7 +9,7 @@ export const LIGHT_TYPES = ['HeadLight', 'CameraLight', 'SceneLight'];
 // vtkLight methods
 // ----------------------------------------------------------------------------
 
-export function light(publicAPI, model) {
+export function vtkLight(publicAPI, model) {
   // Set our className
   model.classHierarchy.push('vtkLight');
 
@@ -28,8 +28,8 @@ export function light(publicAPI, model) {
   };
 
   publicAPI.setDirectionAngle = (elevation, azimuth) => {
-    const elevationRadians = radiansFromDegrees(elevation);
-    const azimuthRadians = radiansFromDegrees(azimuth);
+    const elevationRadians = vtkMath.radiansFromDegrees(elevation);
+    const azimuthRadians = vtkMath.radiansFromDegrees(azimuth);
 
     publicAPI.setPosition(
       Math.cos(elevationRadians) * Math.sin(azimuthRadians),
@@ -108,7 +108,7 @@ export function extend(publicAPI, model, initialValues = {}) {
   ], 3);
 
   // Object methods
-  light(publicAPI, model);
+  vtkLight(publicAPI, model);
 }
 
 // ----------------------------------------------------------------------------

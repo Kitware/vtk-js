@@ -1,16 +1,13 @@
 import * as macro from '../../../macro';
-import Prop3D from '../Prop3D';
-import Property from '../Property';
-
+import vtkProp3D from '../Prop3D';
+import vtkProperty from '../Property';
 import { vec3 } from 'gl-matrix';
-
-export const types = ['Actor'];
 
 // ----------------------------------------------------------------------------
 // vtkActor methods
 // ----------------------------------------------------------------------------
 
-function actor(publicAPI, model) {
+function vtkActor(publicAPI, model) {
   // Set our className
   model.classHierarchy.push('vtkActor');
 
@@ -139,7 +136,7 @@ function actor(publicAPI, model) {
     }
   };
 
-  publicAPI.makeProperty = Property.newInstance;
+  publicAPI.makeProperty = vtkProperty.newInstance;
 
   publicAPI.getProperty = () => {
     if (model.property === null) {
@@ -259,7 +256,7 @@ export function extend(publicAPI, model, initialValues = {}) {
   Object.assign(model, DEFAULT_VALUES, initialValues);
 
   // Inheritance
-  Prop3D.extend(publicAPI, model);
+  vtkProp3D.extend(publicAPI, model);
 
   // vtkTimeStamp
   model.boundsMTime = {};
@@ -277,7 +274,7 @@ export function extend(publicAPI, model, initialValues = {}) {
   macro.getArray(publicAPI, model, ['bounds'], 6);
 
   // Object methods
-  actor(publicAPI, model);
+  vtkActor(publicAPI, model);
 }
 
 // ----------------------------------------------------------------------------
