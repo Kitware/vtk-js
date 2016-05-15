@@ -20,17 +20,13 @@ function viewNode(publicAPI, model) {
 
   publicAPI.getViewNodeFor = (dataObject) => {
     if (model.renderable === dataObject) {
-      return model;
+      return publicAPI;
     }
 
-    model.children.find(child => {
+    return model.children.find(child => {
       const vn = child.getViewNodeFor(dataObject);
-      if (vn) {
-        return vn;
-      }
-      return null;
+      return !!vn;
     });
-    return null;
   };
 
   publicAPI.getFirstAncestorOfType = (type) => {

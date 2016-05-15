@@ -44,6 +44,7 @@ export function openGLRenderWindow(publicAPI, model) {
   publicAPI.initialize = () => {
     if (!model.initialized) {
       model.context = publicAPI.get3DContext();
+      model.shaderCache.setContext(model.context);
       model.initialized = true;
     }
   };

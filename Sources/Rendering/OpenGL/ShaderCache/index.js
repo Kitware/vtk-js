@@ -1,12 +1,12 @@
 import * as macro from '../../../macro';
 import ShaderProgram from '../ShaderProgram';
-import Shader from '../Shader';
 import md5 from 'blueimp-md5';
 
 // ----------------------------------------------------------------------------
 
 const SET_GET_FIELDS = [
   'lastShaderBound',
+  'context',
 ];
 
 // ----------------------------------------------------------------------------
@@ -24,6 +24,7 @@ function shaderCache(publicAPI, model) {
     // have a Geometry shader we rename the frament shader inputs
     // to come from the geometry shader
 
+    model.context.getExtension('OES_standard_derivatives');
     let nFSSource = FSSource;
     if (GSSource.length > 0) {
       nFSSource = ShaderProgram.substitute(nFSSource, 'VSOut', 'GSOut').result;
@@ -34,24 +35,33 @@ function shaderCache(publicAPI, model) {
     const nVSSource = ShaderProgram.substitute(VSSource, '//VTK::System::Dec',
       version).result;
 
-    nFSSource = ShaderProgram.substitute(nFSSource, '//VTK::System::Dec',
-      version);
+    nFSSource = ShaderProgram.substitute(nFSSource, '//VTK::System::Dec', [
+      `${version}\n#extension GL_OES_standard_derivatives : enable\n`,
+      '#ifdef GL_FRAGMENT_PRECISION_HIGH',
+      'precision highp float;',
+      '#else',
+      'precision mediump float;',
+      '#endif',
+    ]).result;
+
+    // nFSSource = ShaderProgram.substitute(nFSSource, 'gl_FragData\\[0\\]',
+    //   'gl_FragColor').result;
 
     const nGSSource = ShaderProgram.substitute(GSSource, '//VTK::System::Dec',
-      version);
+      version).result;
 
     return { VSSource: nVSSource, FSSource: nFSSource, GSSource: nGSSource };
   };
 
   // return NULL if there is an issue
-  publicAPI.readyShaderProgram = (vertexCode, fragmentCode, geometryCode) => {
-    const data = model.replaceShaderValues(vertexCode, fragmentCode, geometryCode);
+  publicAPI.readyShaderProgramArray = (vertexCode, fragmentCode, geometryCode) => {
+    const data = publicAPI.replaceShaderValues(vertexCode, fragmentCode, geometryCode);
 
     const shader =
-      model.getShaderProgram(
+      publicAPI.getShaderProgram(
         data.VSSource, data.FSSource, data.GSSource);
 
-    return model.readyShaderProgram(shader);
+    return publicAPI.readyShaderProgram(shader);
   };
 
   publicAPI.readyShaderProgram = (shader) => {
@@ -65,7 +75,7 @@ function shaderCache(publicAPI, model) {
     }
 
     // bind if needed
-    if (!model.bindShader(shader)) {
+    if (!publicAPI.bindShader(shader)) {
       return null;
     }
 
@@ -83,12 +93,13 @@ function shaderCache(publicAPI, model) {
     if (loc === -1) {
       // create one
       const sps = ShaderProgram.newInstance();
+      sps.setContext(model.context);
       sps.getVertexShader().setSource(vertexCode);
       sps.getFragmentShader().setSource(fragmentCode);
       if (geometryCode) {
         sps.getGeometryShader().setSource(geometryCode);
       }
-      sps.setMD5Hash(result);
+      sps.setMd5Hash(result);
       model.shaderPrograms[result] = sps;
       return sps;
     }
@@ -105,9 +116,9 @@ function shaderCache(publicAPI, model) {
     // have to loop over all the programs were in use and invoke
     // release graphics resources individually.
 
-    model.releaseCurrentShader();
+    publicAPI.releaseCurrentShader();
 
-    Object.values(model.shaderPrograms).forEach(sp => {
+    Object.keys(model.shaderPrograms).map(key => model.shaderPrograms[key]).forEach(sp => {
       sp.releaseGraphicsResources(win);
     });
   };
@@ -141,6 +152,8 @@ function shaderCache(publicAPI, model) {
 
 const DEFAULT_VALUES = {
   lastShaderBound: null,
+  shaderPrograms: null,
+  context: null,
 };
 
 // ----------------------------------------------------------------------------
@@ -149,11 +162,7 @@ export function extend(publicAPI, model, initialValues = {}) {
   Object.assign(model, DEFAULT_VALUES, initialValues);
 
   // Internal objects
-  model.attributesLocs = {};
-  model.uniformLocs = {};
-  model.vertexShader = Shader.newInstance();
-  model.fragmentShader = Shader.newInstance();
-  model.geometryShader = Shader.newInstance();
+  model.shaderPrograms = {};
 
   // Build VTK API
   macro.obj(publicAPI, model);

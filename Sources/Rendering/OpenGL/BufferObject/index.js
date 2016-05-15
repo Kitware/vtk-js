@@ -64,7 +64,7 @@ function bufferObject(publicAPI, model) {
   publicAPI.upload = (data, type) => {
     // buffer, size, type
     const alreadyGenerated = publicAPI.generateBuffer(type);
-    if (alreadyGenerated) {
+    if (!alreadyGenerated) {
       error = 'Trying to upload array buffer to incompatible buffer.';
       return false;
     }

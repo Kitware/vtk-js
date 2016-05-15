@@ -68,7 +68,7 @@ export function shader(publicAPI, model) {
 // ----------------------------------------------------------------------------
 
 const DEFAULT_VALUES = {
-  type: 'Unknown',
+  shaderType: 'Unknown',
   source: '',
   error: '',
   handle: 0,
@@ -84,7 +84,7 @@ export function extend(publicAPI, model, initialValues = {}) {
   // Build VTK API
   macro.obj(publicAPI, model);
   macro.setGet(publicAPI, model, [
-    'type',
+    'shaderType',
     'source',
     'error',
     'handle',

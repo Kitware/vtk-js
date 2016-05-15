@@ -6,8 +6,8 @@ import { REPRESENTATIONS, SHADINGS } from '../../Core/Property/Constants';
 import Helper from '../Helper';
 import VertexBufferObject from '../VertexBufferObject';
 
-import vtkPolyDataVS from '../glsl/vtkPolyDataVS.glsl';
-import vtkPolyDataFS from '../glsl/vtkPolyDataFS.glsl';
+import vtkPolyDataVS from '../glsl/vtkPolyDataVS.c';
+import vtkPolyDataFS from '../glsl/vtkPolyDataFS.c';
 
 // ----------------------------------------------------------------------------
 // vtkOpenGLPolyDataMapper methods
@@ -39,7 +39,7 @@ export function webGLPolyDataMapper(publicAPI, model) {
       const actor = publicAPI.getFirstAncestorOfType('vtkOpenGLActor').getRenderable();
       const openglRenderer = publicAPI.getFirstAncestorOfType('vtkOpenGLRenderer');
       const ren = openglRenderer.getRenderable();
-      model.oglcam = openglRenderer.getViewNodeFor(ren.getActiveCamera());
+      model.openglCamera = openglRenderer.getViewNodeFor(ren.getActiveCamera());
       publicAPI.renderPiece(ren, actor);
     } else {
       // something
@@ -58,6 +58,50 @@ export function webGLPolyDataMapper(publicAPI, model) {
   };
 
   publicAPI.replaceShaderColor = (shaders, ren, actor) => {
+    let FSSource = shaders.Fragment;
+
+    const lastLightComplexity = model.lastLightComplexity.get(model.lastBoundBO);
+
+    // create the material/color property declarations, and VS implementation
+    // these are always defined
+    let colorDec = [
+      'uniform float opacityUniform; // the fragment opacity',
+      'uniform vec3 ambientColorUniform; // intensity weighted color',
+      'uniform vec3 diffuseColorUniform; // intensity weighted color'];
+    // add more for specular
+    if (lastLightComplexity) {
+      colorDec = colorDec.concat([
+        'uniform vec3 specularColorUniform; // intensity weighted color',
+        'uniform float specularPowerUniform;']);
+    }
+    FSSource = ShaderProgram.substitute(FSSource, '//VTK::Color::Dec',
+      colorDec).result;
+
+    // now handle the more complex fragment shader implementation
+    // the following are always defined variables.  We start
+    // by assiging a default value from the uniform
+    let colorImpl = [
+      'vec3 ambientColor;',
+      '  vec3 diffuseColor;',
+      '  float opacity;'];
+    if (lastLightComplexity) {
+      colorImpl = colorImpl.concat([
+        '  vec3 specularColor;',
+        '  float specularPower;']);
+    }
+    colorImpl = colorImpl.concat([
+      '  ambientColor = ambientColorUniform;',
+      '  diffuseColor = diffuseColorUniform;',
+      '  opacity = opacityUniform;']);
+    if (lastLightComplexity) {
+      colorImpl = colorImpl.concat([
+        '  specularColor = specularColorUniform;',
+        '  specularPower = specularPowerUniform;']);
+    }
+
+    FSSource = ShaderProgram.substitute(FSSource, '//VTK::Color::Impl', colorImpl).result;
+
+    shaders.Fragment = FSSource;
   };
 
   publicAPI.replaceShaderLight = (shaders, ren, actor) => {
@@ -79,8 +123,8 @@ export function webGLPolyDataMapper(publicAPI, model) {
 
       case 1:  // headlight
         FSSource = ShaderProgram.substitute(FSSource, '//VTK::Light::Impl', [
-          '  let df = max(0.0, normalVCVSOutput.z);',
-          '  let sf = pow(df, specularPower);',
+          '  float df = max(0.0, normalVCVSOutput.z);',
+          '  float sf = pow(df, specularPower);',
           '  vec3 diffuse = df * diffuseColor;',
           '  vec3 specular = sf * specularColor;',
           '  gl_FragData[0] = vec4(ambientColor + diffuse + specular, opacity);',
@@ -101,11 +145,11 @@ export function webGLPolyDataMapper(publicAPI, model) {
           '  vec3 specular = vec3(0,0,0);',
           '  for (int lightNum = 0; lightNum < numberOfLights; lightNum++)',
           '    {',
-          '    let df = max(0.0, dot(normalVCVSOutput, -lightDirectionVC[lightNum]));',
+          '    float df = max(0.0, dot(normalVCVSOutput, -lightDirectionVC[lightNum]));',
           `    diffuse += ((df${shadowFactor}) * lightColor[lightNum]);`,
           '    if (dot(normalVCVSOutput, lightDirectionVC[lightNum]) < 0.0)',
           '      {',
-          '      let sf = pow( max(0.0, dot(lightHalfAngleVC[lightNum],normalVCVSOutput)), specularPower);',
+          '      float sf = pow( max(0.0, dot(lightHalfAngleVC[lightNum],normalVCVSOutput)), specularPower);',
           `      specular += ((sf${shadowFactor}) * lightColor[lightNum]);`,
           '      }',
           '    }',
@@ -137,7 +181,7 @@ export function webGLPolyDataMapper(publicAPI, model) {
           '  vec3 vertLightDirectionVC;',
           '  for (int lightNum = 0; lightNum < numberOfLights; lightNum++)',
           '    {',
-          '    let attenuation = 1.0;',
+          '    float attenuation = 1.0;',
           '    if (lightPositional[lightNum] == 0)',
           '      {',
           '      vertLightDirectionVC = lightDirectionVC[lightNum];',
@@ -145,7 +189,7 @@ export function webGLPolyDataMapper(publicAPI, model) {
           '    else',
           '      {',
           '      vertLightDirectionVC = vertexVC.xyz - lightPositionVC[lightNum];',
-          '      let distanceVC = length(vertLightDirectionVC);',
+          '      float distanceVC = length(vertLightDirectionVC);',
           '      vertLightDirectionVC = normalize(vertLightDirectionVC);',
           '      attenuation = 1.0 /',
           '        (lightAttenuation[lightNum].x',
@@ -154,7 +198,7 @@ export function webGLPolyDataMapper(publicAPI, model) {
           '      // per OpenGL standard cone angle is 90 or less for a spot light',
           '      if (lightConeAngle[lightNum] <= 90.0)',
           '        {',
-          '        let coneDot = dot(vertLightDirectionVC, lightDirectionVC[lightNum]);',
+          '        float coneDot = dot(vertLightDirectionVC, lightDirectionVC[lightNum]);',
           '        // if inside the cone',
           '        if (coneDot >= cos(radians(lightConeAngle[lightNum])))',
           '          {',
@@ -166,11 +210,11 @@ export function webGLPolyDataMapper(publicAPI, model) {
           '          }',
           '        }',
           '      }',
-          '    let df = max(0.0, attenuation*dot(normalVCVSOutput, -vertLightDirectionVC));',
+          '    float df = max(0.0, attenuation*dot(normalVCVSOutput, -vertLightDirectionVC));',
           `    diffuse += ((df${shadowFactor}) * lightColor[lightNum]);`,
           '    if (dot(normalVCVSOutput, vertLightDirectionVC) < 0.0)',
           '      {',
-          '      let sf = attenuation*pow( max(0.0, dot(lightHalfAngleVC[lightNum],normalVCVSOutput)), specularPower);',
+          '      float sf = attenuation*pow( max(0.0, dot(lightHalfAngleVC[lightNum],normalVCVSOutput)), specularPower);',
           `      specular += ((sf${shadowFactor}) * lightColor[lightNum]);`,
           '      }',
           '    }',
@@ -264,8 +308,10 @@ export function webGLPolyDataMapper(publicAPI, model) {
                 'uniform int cameraParallel;']).result;
 
             FSSource = ShaderProgram.substitute(FSSource, '//VTK::UniformFlow::Impl', [
-              'vec3 fdx = vec3(dFdx(vertexVC.x),dFdx(vertexVC.y),dFdx(vertexVC.z));',
-              '  vec3 fdy = vec3(dFdy(vertexVC.x),dFdy(vertexVC.y),dFdy(vertexVC.z));',
+              // '  vec3 fdx = vec3(dFdx(vertexVC.x),dFdx(vertexVC.y),dFdx(vertexVC.z));',
+              // '  vec3 fdy = vec3(dFdy(vertexVC.x),dFdy(vertexVC.y),dFdy(vertexVC.z));',
+              '  vec3 fdx = dFdx(vertexVC.xyz);',
+              '  vec3 fdy = dFdy(vertexVC.xyz);',
               '  //VTK::UniformFlow::Impl'] // For further replacements
               ).result;
             FSSource = ShaderProgram.substitute(FSSource, '//VTK::Normal::Impl', [
@@ -275,8 +321,8 @@ export function webGLPolyDataMapper(publicAPI, model) {
               // the code below is faster, but does not work on some devices
               // 'vec3 normalVC = normalize(cross(dFdx(vertexVC.xyz), dFdy(vertexVC.xyz)));',
               '  if (cameraParallel == 1 && normalVCVSOutput.z < 0.0) { normalVCVSOutput = -1.0*normalVCVSOutput; }',
-              '  if (cameraParallel == 0 && dot(normalVCVSOutput,vertexVC.xyz) > 0.0) { normalVCVSOutput = -1.0*normalVCVSOutput; }']
-              ).result;
+            //  '  if (cameraParallel == 0 && dot(normalVCVSOutput,vertexVC.xyz) > 0.0) { normalVCVSOutput = -1.0*normalVCVSOutput; }',
+            ]).result;
           }
         }
       }
@@ -393,11 +439,11 @@ export function webGLPolyDataMapper(publicAPI, model) {
     // property modified (representation interpolation and lighting)
     // input modified
     // light complexity changed
-    if (cellBO.Program === 0 ||
-        cellBO.ShaderSourceTime < publicAPI.getMTime() ||
-        cellBO.ShaderSourceTime < actor.getMTime() ||
-        cellBO.ShaderSourceTime < model.currentInput.mtime ||
-        cellBO.ShaderSourceTime < model.lightComplexityChanged[cellBO]) {
+    if (cellBO.getProgram() === 0 ||
+        cellBO.getShaderSourceTime().getMTime() < publicAPI.getMTime() ||
+        cellBO.getShaderSourceTime().getMTime() < actor.getMTime() ||
+        cellBO.getShaderSourceTime().getMTime() < model.currentInput.getMTime() ||
+        cellBO.getShaderSourceTime().getMTime() < model.lightComplexityChanged.get(cellBO).getMTime()) {
       return true;
     }
 
@@ -416,18 +462,18 @@ export function webGLPolyDataMapper(publicAPI, model) {
 
       // compile and bind the program if needed
       const newShader =
-        model.openglRenderWindow.getShaderCache().readyShaderProgram(shaders);
+        model.openglRenderWindow.getShaderCache().readyShaderProgramArray(shaders.Vertex, shaders.Fragment, shaders.Geometry);
 
       // if the shader changed reinitialize the VAO
-      if (newShader !== cellBO.program) {
-        cellBO.program = newShader;
+      if (newShader !== cellBO.getProgram()) {
+        cellBO.setProgram(newShader);
         // reset the VAO as the shader has changed
         cellBO.getVAO().releaseGraphicsResources();
       }
 
-      cellBO.shaderSourceTime.modified();
+      cellBO.getShaderSourceTime().modified();
     } else {
-      model.openglRenderWindow.getShaderCache().readyShaderProgram(cellBO.Program);
+      model.openglRenderWindow.getShaderCache().readyShaderProgram(cellBO.getProgram());
     }
 
     publicAPI.setMapperShaderParameters(cellBO, ren, actor);
@@ -437,25 +483,21 @@ export function webGLPolyDataMapper(publicAPI, model) {
   };
 
   publicAPI.setMapperShaderParameters = (cellBO, ren, actor) => {
+    // Now to update the VAO too, if necessary.
+    cellBO.getProgram().setUniformi('PrimitiveIDOffset',
+      model.primitiveIDOffset);
 
-    // // Now to update the VAO too, if necessary.
-    // cellBO.Program.SetUniformi('PrimitiveIDOffset',
-    //   model.primitiveIDOffset);
-
-    // if (cellBO.getIBO().getIndexCount() && (model.VBOBuildTime > cellBO.AttributeUpdateTime ||
-    //     cellBO.ShaderSourceTime > cellBO.AttributeUpdateTime))
-    //   {
-    //   cellBO.getVAO().Bind();
-    //   if (cellBO.Program.IsAttributeUsed('vertexMC'))
-    //     {
-    //     if (!cellBO.getVAO().AddAttributeArray(cellBO.Program, model.VBO,
-    //                                        'vertexMC', model.VBO.VertexOffset,
-    //                                        model.VBO.Stride, VTK_FLOAT, 3,
-    //                                        false))
-    //       {
-    //       vtkErrorMacro(<< 'Error setting 'vertexMC' in shader VAO.');
-    //       }
-    //     }
+    if (cellBO.getIBO().getIndexCount() && (model.VBOBuildTime > cellBO.getAttributeUpdateTime().getMTime() ||
+        cellBO.getShaderSourceTime().getMTime() > cellBO.getAttributeUpdateTime().getMTime())) {
+      cellBO.getVAO().bind();
+      if (cellBO.getProgram().isAttributeUsed('vertexMC')) {
+        if (!cellBO.getVAO().addAttributeArray(cellBO.getProgram(), model.VBO,
+                                           'vertexMC', model.VBO.getVertexOffset(),
+                                           model.VBO.getStride(), model.context.FLOAT, 3,
+                                           model.context.FALSE)) {
+          vtkErrorMacro('Error setting vertexMC in shader VAO.');
+        }
+      }
     //   if (model.VBO.NormalOffset && model.LastLightComplexity[&cellBO] > 0 &&
     //       cellBO.Program.IsAttributeUsed('normalMC'))
     //     {
@@ -486,7 +528,7 @@ export function webGLPolyDataMapper(publicAPI, model) {
     //       {
     //       vtkErrorMacro(<< 'Error setting 'scalarColor' in shader VAO.');
     //       }
-    //     }
+    }
   };
 
   publicAPI.setLightingShaderParameters = (cellBO, ren, actor) => {
@@ -495,7 +537,7 @@ export function webGLPolyDataMapper(publicAPI, model) {
       return;
     }
 
-    const program = cellBO.program;
+    const program = cellBO.getProgram();
 
     // for lightkit case there are some parameters to set
     // const cam = ren.getActiveCamera();
@@ -583,9 +625,9 @@ export function webGLPolyDataMapper(publicAPI, model) {
   };
 
   publicAPI.setCameraShaderParameters = (cellBO, ren, actor) => {
-    const program = cellBO.Program;
+    const program = cellBO.getProgram();
 
-    const keyMats = model.oglcam.getKeyMatrices(ren);
+    const keyMats = model.openglCamera.getKeyMatrices(ren);
     const cam = ren.getActiveCamera();
 
     // // [WMVD]C == {world, model, view, display} coordinates
@@ -604,42 +646,37 @@ export function webGLPolyDataMapper(publicAPI, model) {
   };
 
   publicAPI.setPropertyShaderParameters = (cellBO, ren, actor) => {
-  //  const program = cellBO.Program;
+    const program = cellBO.getProgram();
 
-  //  const ppty = actor.getProperty();
+    const ppty = actor.getProperty();
 
-    // {
-    // // Query the property for some of the properties that can be applied.
-    // let opacity = static_cast<float>(ppty.getOpacity());
-    // double *aColor = model.DrawingEdges ?
-    //   ppty.getEdgeColor() : ppty.getAmbientColor();
-    // double aIntensity = model.DrawingEdges ? 1.0 : ppty.getAmbient();
-    // let ambientColor[3] = {static_cast<float>(aColor[0] * aIntensity),
-    //   static_cast<float>(aColor[1] * aIntensity),
-    //   static_cast<float>(aColor[2] * aIntensity)};
-    // double *dColor = ppty.getDiffuseColor();
-    // double dIntensity = model.DrawingEdges ? 0.0 : ppty.getDiffuse();
-    // let diffuseColor[3] = {static_cast<float>(dColor[0] * dIntensity),
-    //   static_cast<float>(dColor[1] * dIntensity),
-    //   static_cast<float>(dColor[2] * dIntensity)};
-    // double *sColor = ppty.getSpecularColor();
-    // double sIntensity = model.DrawingEdges ? 0.0 : ppty.getSpecular();
-    // let specularColor[3] = {static_cast<float>(sColor[0] * sIntensity),
-    //   static_cast<float>(sColor[1] * sIntensity),
-    //   static_cast<float>(sColor[2] * sIntensity)};
-    // double specularPower = ppty.getSpecularPower();
+    const opacity = ppty.getOpacity();
+    const aColor = ppty.getAmbientColor();
+    const aIntensity = ppty.getAmbient();
+    const ambientColor = [aColor[0] * aIntensity,
+      aColor[1] * aIntensity,
+      aColor[2] * aIntensity];
+    const dColor = ppty.getDiffuseColor();
+    const dIntensity = ppty.getDiffuse();
+    const diffuseColor = [dColor[0] * dIntensity,
+      dColor[1] * dIntensity,
+      dColor[2] * dIntensity];
 
-    // program.SetUniformf('opacityUniform', opacity);
-    // program.SetUniform3f('ambientColorUniform', ambientColor);
-    // program.SetUniform3f('diffuseColorUniform', diffuseColor);
-    // // we are done unless we have lighting
-    // if (model.LastLightComplexity[&cellBO] < 1)
-    //   {
-    //   return;
-    //   }
-    // program.SetUniform3f('specularColorUniform', specularColor);
-    // program.SetUniformf('specularPowerUniform', specularPower);
-    // }
+    program.setUniformf('opacityUniform', opacity);
+    program.setUniform3f('ambientColorUniform', ambientColor);
+    program.setUniform3f('diffuseColorUniform', diffuseColor);
+    // we are done unless we have lighting
+    if (model.lastLightComplexity.get(cellBO) < 1) {
+      return;
+    }
+    const sColor = ppty.getSpecularColor();
+    const sIntensity = ppty.getSpecular();
+    const specularColor = [sColor[0] * sIntensity,
+      sColor[1] * sIntensity,
+      sColor[2] * sIntensity];
+    program.setUniform3f('specularColorUniform', specularColor);
+    const specularPower = ppty.getSpecularPower();
+    program.setUniformf('specularPowerUniform', specularPower);
 
     // // now set the backface properties if we have them
     // if (actor.getBackfaceProperty() && !model.DrawingEdges)
@@ -675,7 +712,6 @@ export function webGLPolyDataMapper(publicAPI, model) {
     //   program.SetUniform3f('specularColorUniformBF', specularColor);
     //   program.SetUniformf('specularPowerUniformBF', specularPower);
     //   }
-
   };
 
   publicAPI.renderPieceStart = (ren, actor) => {

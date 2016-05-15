@@ -16,10 +16,6 @@ function openglCamera(publicAPI, model) {
       if (!model.renderable) {
         return;
       }
-
-      publicAPI.prepareNodes();
-      publicAPI.addMissingNode(model.renderable.getMapper());
-      publicAPI.removeUnusedNodes();
     }
   };
 
@@ -43,7 +39,7 @@ function openglCamera(publicAPI, model) {
     if (ren !== model.lastRenderer ||
       publicAPI.getMTime() > model.keyMatrixTime.getMTime() ||
       ren.getMTime() > model.keyMatrixTime.getMTime()) {
-      model.WCVCMatrix = model.renderable.getModelViewTransformMatrix();
+      model.WCVCMatrix = model.renderable.getViewTransformMatrix();
 
       // for(int i = 0; i < 3; ++i)
       //   {
@@ -58,8 +54,8 @@ function openglCamera(publicAPI, model) {
 
       // double aspect[2];
       // int  lowerLeft[2];
-      let usize;
-      let vsize;
+      // let usize;
+      // let vsize;
       //  ren.getTiledSizeAndOrigin(&usize, &vsize, lowerLeft, lowerLeft+1);
 
       // ren->ComputeAspect();
@@ -69,14 +65,15 @@ function openglCamera(publicAPI, model) {
       // ren->vtkViewport::GetAspect(aspect2);
       // double aspectModification = aspect[0] * aspect2[1] / (aspect[1] * aspect2[0]);
 
-      if (usize && vsize) {
-        model.VCDCMatrix = model.renderable.getProjectionTransformMatrix(
+    //  if (usize && vsize) {
+      model.VCDCMatrix = model.renderable.getProjectionTransformMatrix(
 //                           aspectModification * usize / vsize, -1, 1);
                            1.0, -1, 1);
-        mat4.transpose(model.VCDCMatrix, model.VCDCMatrix);
-      }
+      mat4.transpose(model.VCDCMatrix, model.VCDCMatrix);
+    //  }
 
-      mat4.multiply(model.WCVCMatrix, model.VCDCMatrix, model.WCDCMatrix);
+      model.WCDCMatrix = mat4.create();
+      mat4.multiply(model.WCDCMatrix, model.WCVCMatrix, model.VCDCMatrix);
 
       model.keyMatrixTime.modified();
       model.lastRenderer = ren;

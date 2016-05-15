@@ -13,6 +13,9 @@ ren.setBackground(0.7, 1.0, 0.7);
 
 const actor = Actor.newInstance();
 ren.addActor(actor);
+// actor.getProperty().setAmbient(1.0);
+// actor.getProperty().setAmbientColor(1.0, 0.5, 0.0);
+
 const mapper = Mapper.newInstance();
 actor.setMapper(mapper);
 
@@ -31,6 +34,7 @@ let animating = false;
 
 function animate() {
   glwindow.traverseAllPasses();
+  cam.roll(1.0);
 
   if (animating) {
     window.requestAnimationFrame(animate);

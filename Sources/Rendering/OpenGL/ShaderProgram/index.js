@@ -53,7 +53,7 @@ export function shaderProgram(publicAPI, model) {
       return 0;
     }
 
-    model.setCompiled(true);
+    publicAPI.setCompiled(true);
     return 1;
   };
 
@@ -72,13 +72,21 @@ export function shaderProgram(publicAPI, model) {
     }
 
     model.context.useProgram(model.handle);
-    model.setBound(true);
+    publicAPI.setBound(true);
     return true;
   };
 
+  publicAPI.isBound = () => !!model.bound;
+
   publicAPI.release = () => {
     model.context.useProgram(0);
-    model.setBound(false);
+    publicAPI.setBound(false);
+  };
+
+  publicAPI.setContext = (ctx) => {
+    model.vertexShader.setContext(ctx);
+    model.fragmentShader.setContext(ctx);
+    model.geometryShader.setContext(ctx);
   };
 
   publicAPI.link = () => {
@@ -103,13 +111,13 @@ export function shaderProgram(publicAPI, model) {
       return false;
     }
 
-    model.setLinked(true);
+    publicAPI.setLinked(true);
     model.attributeLocs = {};
     return true;
   };
 
   publicAPI.setUniformf = (name, v) => {
-    const location = model.findUniform(name);
+    const location = publicAPI.findUniform(name);
     if (location === -1) {
       model.error = `Could not set uniform ${name} . No such uniform.`;
       return false;
@@ -119,7 +127,7 @@ export function shaderProgram(publicAPI, model) {
   };
 
   publicAPI.setUniformi = (name, v) => {
-    const location = model.findUniform(name);
+    const location = publicAPI.findUniform(name);
     if (location === -1) {
       model.error = `Could not set uniform ${name} . No such uniform.`;
       return false;
@@ -129,17 +137,27 @@ export function shaderProgram(publicAPI, model) {
   };
 
   publicAPI.setUniformMatrix = (name, v) => {
-    const location = model.findUniform(name);
+    const location = publicAPI.findUniform(name);
     if (location === -1) {
       model.error = `Could not set uniform ${name} . No such uniform.`;
       return false;
     }
-    model.context.uniformMatrix4fv(location, 1, model.context.FALSE, v);
+    model.context.uniformMatrix4fv(location, false, v);
+    return true;
+  };
+
+  publicAPI.setUniform3f = (name, v) => {
+    const location = publicAPI.findUniform(name);
+    if (location === -1) {
+      model.error = `Could not set uniform ${name} . No such uniform.`;
+      return false;
+    }
+    model.context.uniform3f(location, v[0], v[1], v[2]);
     return true;
   };
 
   publicAPI.setUniform3fv = (name, count, v) => {
-    const location = model.findUniform(name);
+    const location = publicAPI.findUniform(name);
     if (location === -1) {
       model.error = `Could not set uniform ${name} . No such uniform.`;
       return false;
@@ -160,7 +178,7 @@ export function shaderProgram(publicAPI, model) {
     }
 
     loc = model.context.getUniformLocation(model.handle, name);
-    if (loc === -1) {
+    if (loc === null) {
       model.error = `Uniform ${name} not found in current shader program.`;
     }
     model.uniformLocs[name] = loc;
@@ -185,10 +203,35 @@ export function shaderProgram(publicAPI, model) {
     }
 
     loc = model.context.getUniformLocation(model.handle, name);
-    if (loc === -1) {
+    if (loc === null) {
       return false;
     }
     model.uniformLocs[name] = loc;
+
+    return true;
+  };
+
+  publicAPI.isAttributeUsed = (name) => {
+    if (!name) {
+      return false;
+    }
+
+    // see if we have cached the result
+    let loc = Object.keys(model.attributeLocs).indexOf(name);
+    if (loc !== -1) {
+      return true;
+    }
+
+    if (!model.linked) {
+      console.log('attempt to find uniform when the shader program is not linked');
+      return false;
+    }
+
+    loc = model.context.getAttribLocation(model.handle, name);
+    if (loc === -1) {
+      return false;
+    }
+    model.attributeLocs[name] = loc;
 
     return true;
   };
@@ -198,7 +241,7 @@ export function shaderProgram(publicAPI, model) {
       model.error = 'Shader object was not initialized, cannot attach it.';
       return false;
     }
-    if (shader.getType() === 'Unknown') {
+    if (shader.getShaderType() === 'Unknown') {
       model.error = 'Shader object is of type Unknown and cannot be used.';
       return false;
     }
@@ -213,13 +256,13 @@ export function shaderProgram(publicAPI, model) {
       model.linked = false;
     }
 
-    if (shader.getType() === 'Vertex') {
+    if (shader.getShaderType() === 'Vertex') {
       if (model.vertexShaderHandle !== 0) {
         model.comntext.detachShader(model.handle, model.vertexShaderHandle);
       }
       model.vertexShaderHandle = shader.getHandle();
     }
-    if (shader.getType() === 'Fragment') {
+    if (shader.getShaderType() === 'Fragment') {
       if (model.fragmentShaderHandle !== 0) {
         model.context.detachShader(model.handle, model.fragmentShaderHandle);
       }
@@ -227,7 +270,7 @@ export function shaderProgram(publicAPI, model) {
     }
 
     model.context.attachShader(model.handle, shader.getHandle());
-    model.setLinked(false);
+    publicAPI.setLinked(false);
     return true;
   };
 
@@ -236,7 +279,7 @@ export function shaderProgram(publicAPI, model) {
       model.error = 'shader object was not initialized, cannot attach it.';
       return false;
     }
-    if (shader.getType() === 'Unknown') {
+    if (shader.getShaderType() === 'Unknown') {
       model.error = 'Shader object is of type Unknown and cannot be used.';
       return false;
     }
@@ -244,7 +287,7 @@ export function shaderProgram(publicAPI, model) {
       model.errror = 'This shader prorgram has not been initialized yet.';
     }
 
-    switch (shader.getType()) {
+    switch (shader.getShaderType()) {
       case 'Vertex':
         if (model.vertexShaderHandle !== shader.getHandle()) {
           model.error = 'The supplied shader was not attached to this program.';
@@ -269,6 +312,7 @@ export function shaderProgram(publicAPI, model) {
   };
 
   publicAPI.setContext = (ctx) => {
+    model.context = ctx;
     model.vertexShader.setContext(ctx);
     model.fragmentShader.setContext(ctx);
     model.geometryShader.setContext(ctx);
@@ -328,8 +372,11 @@ export function extend(publicAPI, model, initialValues = {}) {
   model.attributesLocs = {};
   model.uniformLocs = {};
   model.vertexShader = Shader.newInstance();
+  model.vertexShader.setShaderType('Vertex');
   model.fragmentShader = Shader.newInstance();
+  model.fragmentShader.setShaderType('Fragment');
   model.geometryShader = Shader.newInstance();
+  model.geometryShader.setShaderType('Geometry');
 
   // Build VTK API
   macro.obj(publicAPI, model);
@@ -338,11 +385,11 @@ export function extend(publicAPI, model, initialValues = {}) {
     'handle',
     'compiled',
     'bound',
-    'linked',
     'md5Hash',
     'vertexShader',
     'fragmentShader',
     'geometryShader',
+    'linked',
   ]);
 
   // Object methods
@@ -355,4 +402,4 @@ export const newInstance = macro.newInstance(extend);
 
 // ----------------------------------------------------------------------------
 
-export default { newInstance, extend };
+export default { newInstance, extend, substitute };

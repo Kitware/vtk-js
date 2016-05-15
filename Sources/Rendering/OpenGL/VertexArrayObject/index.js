@@ -48,11 +48,11 @@ function vertexArrayObject(publicAPI, model) {
       const gl = model.context;
       Object.keys(model.buffers).map(key => model.buffers[key]).forEach(buff => {
         model.context.bindBuffer(gl.ARRAY_BUFFER, buff.buffer);
-        buff.attributes.forEach(attrIt => {
+        Object.keys(buff.attributes).map(key => buff.attributes[key]).forEach(attrIt => {
           const matrixCount = attrIt.isMatrix ? attrIt.size : 1;
           for (let i = 0; i < matrixCount; ++i) {
             gl.enableVertexAttribArray(attrIt.index + i);
-            gl.vertexAttribPointer(attrIt.index + i, attrIt.size, attrIt.Type,
+            gl.vertexAttribPointer(attrIt.index + i, attrIt.size, attrIt.type,
                                   attrIt.normalize, attrIt.stride,
                                   attrIt.offset + attrIt.stride * i / attrIt.size);
             if (attrIt.divisor > 0) {
@@ -60,7 +60,7 @@ function vertexArrayObject(publicAPI, model) {
             }
           }
         });
-        gl.bindBuffer(gl.ARRAY_BUFFER, 0);
+        // gl.bindBuffer(gl.ARRAY_BUFFER, 0);
       });
     }
   };
@@ -72,7 +72,7 @@ function vertexArrayObject(publicAPI, model) {
     } else if (publicAPI.isReady()) {
       const gl = model.context;
       Object.keys(model.buffers).map(key => model.buffers[key]).forEach(buff => {
-        buff.attributes.forEach(attrIt => {
+        Object.keys(buff.attributes).map(key => buff.attributes[key]).forEach(attrIt => {
           const matrixCount = attrIt.isMatrix ? attrIt.size : 1;
           for (let i = 0; i < matrixCount; ++i) {
             gl.enableVertexAttribArray(attrIt.index + i);
@@ -108,7 +108,10 @@ function vertexArrayObject(publicAPI, model) {
     model.handleProgram = 0;
   };
 
-  publicAPI.AddAttributeArrayWithDivisor = (program, buffer, name, offset, stride, elementType, elementTupleSize, normalize, divisor, isMatrix) => {
+  publicAPI.addAttributeArray = (program, buffer, name, offset, stride, elementType, elementTupleSize, normalize) =>
+    publicAPI.addAttributeArrayWithDivisor(program, buffer, name, offset, stride, elementType, elementTupleSize, normalize, 0, false);
+
+  publicAPI.addAttributeArrayWithDivisor = (program, buffer, name, offset, stride, elementType, elementTupleSize, normalize, divisor, isMatrix) => {
     if (!program) {
       return false;
     }
@@ -163,9 +166,10 @@ function vertexArrayObject(publicAPI, model) {
       // find the buffer
       if (Object.keys(model.buffers).indexOf(handleBuffer) !== -1) {
         model.buffers[handleBuffer].attributes[attribs.index] = attribs;
+        model.buffers[handleBuffer].buffer = handleBuffer;
       } else {
         // a single handle can have multiple attribs
-        model.buffers[handleBuffer] = { attributes: { [attribs.index]: attribs } };
+        model.buffers[handleBuffer] = { buffer: handleBuffer, attributes: { [attribs.index]: attribs } };
       }
     }
     return true;

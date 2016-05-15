@@ -22,6 +22,7 @@ export function webGLRenderer(publicAPI, model) {
       }
       publicAPI.updateLights();
       publicAPI.prepareNodes();
+      publicAPI.addMissingNode(model.renderable.getActiveCamera());
       publicAPI.addMissingNodes(model.renderable.getActors());
       publicAPI.removeUnusedNodes();
     }

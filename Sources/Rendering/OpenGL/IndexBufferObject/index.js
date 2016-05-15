@@ -28,7 +28,7 @@ function indexBufferObject(publicAPI, model) {
       return 0;
     }
 
-    const dynArray = new DynamicTypedArray();
+    const dynArray = new DynamicTypedArray({ chunkSize: 65500, arrayType: 'Uint16Array' });
     publicAPI.appendTriangleIndexBuffer(dynArray, cellData, points, 0);
     const indexArray = dynArray.getFrozenArray();
     model.indexCount = indexArray.length;

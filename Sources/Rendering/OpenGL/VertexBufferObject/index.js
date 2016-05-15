@@ -59,7 +59,7 @@ function vertexBufferObject(publicAPI, model) {
       model.colorOffset = 0;
       model.stride = 4 * blockSize;   // FIXME: Do we need to worry about hard-coded float size here
       model.vertexCount = numPts;
-      publicAPI.upload(points.values, OBJECT_TYPE.ARRAY_BUFFER);
+      publicAPI.upload(points.getData(), OBJECT_TYPE.ARRAY_BUFFER);
       return;
     }
 
