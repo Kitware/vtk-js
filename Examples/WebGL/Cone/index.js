@@ -28,6 +28,10 @@ cam.setClippingRange(0.1, 50.0);
 const coneSource = ConeSource.newInstance({ height: 2.0 });
 mapper.setInputData(coneSource.getOutput());
 
+function updateMapper() {
+  mapper.setInputData(coneSource.getOutput());
+}
+
 const glwindow = WebGLRenderWindow.newInstance();
 glwindow.setContainer(document.querySelector('body'));
 glwindow.setRenderable(renWin);
@@ -57,3 +61,6 @@ button.addEventListener('click', () => {
 });
 
 animate();
+
+window.coneSource = coneSource;
+window.updateMapper = updateMapper;

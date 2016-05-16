@@ -7,7 +7,7 @@ import vtkMath                                    from '../../../Common/Core/Mat
 import { COLOR_MODE, SCALAR_MODE, MATERIAL_MODE } from './Constants';
 
 function notImplemented(method) {
-  return () => console.log('vtkMapper::${method} - NOT IMPLEMENTED');
+  return () => console.log(`vtkMapper::${method} - NOT IMPLEMENTED`);
 }
 
 // CoincidentTopology static methods ------------------------------------------
