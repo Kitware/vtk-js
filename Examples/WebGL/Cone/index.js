@@ -21,6 +21,9 @@ actor.setMapper(mapper);
 
 const cam = Camera.newInstance();
 ren.setActiveCamera(cam);
+cam.setFocalPoint(0, 0, 0);
+cam.setPosition(0, 0, 2);
+cam.setClippingRange(0.1, 50.0);
 
 const coneSource = ConeSource.newInstance({ height: 2.0 });
 mapper.setInputData(coneSource.getOutput());
