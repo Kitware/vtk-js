@@ -244,7 +244,7 @@ export function vtkOpenGLPolyDataMapper(publicAPI, model) {
             'varying vec3 normalVCVSOutput;']).result;
         VSSource = vtkShaderProgram.substitute(VSSource,
           '//VTK::Normal::Impl', [
-            'normalVCVSOutput = normalMatrix * normalMC;'].result);
+            'normalVCVSOutput = normalMatrix * normalMC;']).result;
         GSSource = vtkShaderProgram.substitute(GSSource,
           '//VTK::Normal::Dec', [
             'in vec3 normalVCVSOutput[];',
@@ -496,16 +496,15 @@ export function vtkOpenGLPolyDataMapper(publicAPI, model) {
           vtkErrorMacro('Error setting vertexMC in shader VAO.');
         }
       }
-    //   if (model.VBO.NormalOffset && model.LastLightComplexity[&cellBO] > 0 &&
-    //       cellBO.Program.IsAttributeUsed('normalMC'))
-    //     {
-    //     if (!cellBO.getVAO().AddAttributeArray(cellBO.Program, model.VBO,
-    //                                     'normalMC', model.VBO.NormalOffset,
-    //                                     model.VBO.Stride, VTK_FLOAT, 3, false))
-    //       {
-    //       vtkErrorMacro(<< 'Error setting 'normalMC' in shader VAO.');
-    //       }
-    //     }
+      if (cellBO.getProgram().isAttributeUsed('normalMC') &&
+          cellBO.getCABO().getNormalOffset() && model.lastLightComplexity.get(cellBO) > 0) {
+        if (!cellBO.getVAO().addAttributeArray(cellBO.getProgram(), cellBO.getCABO(),
+                                           'normalMC', cellBO.getCABO().getNormalOffset(),
+                                           cellBO.getCABO().getStride(), model.context.FLOAT, 3,
+                                           model.context.FALSE)) {
+          vtkErrorMacro('Error setting normalMC in shader VAO.');
+        }
+      }
     //   if (model.VBO.TCoordComponents && !model.DrawingEdges &&
     //       cellBO.Program.IsAttributeUsed('tcoordMC'))
     //     {
@@ -635,7 +634,7 @@ export function vtkOpenGLPolyDataMapper(publicAPI, model) {
       program.setUniformMatrix('MCVCMatrix', keyMats.wcvc);
     }
     if (program.isUniformUsed('normalMatrix')) {
-      program.setUniformMatrix('normalMatrix', keyMats.norms);
+      program.setUniformMatrix3x3('normalMatrix', keyMats.normalMatrix);
     }
 
     if (program.isUniformUsed('cameraParallel')) {
@@ -855,9 +854,7 @@ export function vtkOpenGLPolyDataMapper(publicAPI, model) {
     }
 
     // Do we have normals?
-    const n = null;
-
-//      (actor.getProperty().getInterpolation() !== SHADINGS.VTK_FLAT) ? poly.getPointData().getNormals() : null;
+    const n = (actor.getProperty().getInterpolation() !== SHADINGS.VTK_FLAT) ? poly.getPointData().getNormals() : null;
 
     // rebuild the VBO if the data has changed we create a string for the VBO what
     // can change the VBO? points normals tcoords colors so what can change those?

@@ -1,6 +1,6 @@
 import * as macro from '../../../macro';
 import vtkViewNode from '../../SceneGraph/ViewNode';
-import { mat4 } from 'gl-matrix';
+import { mat3, mat4 } from 'gl-matrix';
 
 // ----------------------------------------------------------------------------
 // vtkOpenGLCamera methods
@@ -41,15 +41,8 @@ function vtkOpenGLCamera(publicAPI, model) {
       ren.getMTime() > model.keyMatrixTime.getMTime()) {
       model.WCVCMatrix = model.renderable.getViewTransformMatrix();
 
-      // for(int i = 0; i < 3; ++i)
-      //   {
-      //   for (int j = 0; j < 3; ++j)
-      //     {
-      //     this->NormalMatrix->SetElement(i, j, this->WCVCMatrix->GetElement(i, j));
-      //     }
-      //   }
-      // this->NormalMatrix->Invert();
-
+      mat3.fromMat4(model.normalMatrix, model.WCVCMatrix);
+      mat3.invert(model.normalMatrix, model.normalMatrix);
       mat4.transpose(model.WCVCMatrix, model.WCVCMatrix);
 
       // double aspect[2];
@@ -79,7 +72,7 @@ function vtkOpenGLCamera(publicAPI, model) {
       model.lastRenderer = ren;
     }
 
-    return { wcvc: model.WCVCMatrix, normMat: model.normalMatrix, vcdc: model.VCDCMatrix, wcdc: model.WCDCMatrix };
+    return { wcvc: model.WCVCMatrix, normalMatrix: model.normalMatrix, vcdc: model.VCDCMatrix, wcdc: model.WCDCMatrix };
   };
 }
 
@@ -91,6 +84,7 @@ const DEFAULT_VALUES = {
   context: null,
   lastRenderer: null,
   keyMatrixTime: null,
+  normalMatrix: null,
 };
 
 // ----------------------------------------------------------------------------
@@ -102,6 +96,8 @@ export function extend(publicAPI, model, initialValues = {}) {
   vtkViewNode.extend(publicAPI, model);
 
   model.keyMatrixTime = {};
+  model.normalMatrix = mat3.create();
+
   macro.obj(model.keyMatrixTime);
 
   // Build VTK API

@@ -1,4 +1,5 @@
 import * as macro from '../../../macro';
+import vtkDataSet from '../../../Common/DataModel/DataSet';
 
 // ----------------------------------------------------------------------------
 // vtkSphereSource methods
@@ -59,7 +60,6 @@ export function vtkSphereSource(publicAPI, model) {
 
       // ----------------------------------------------------------------------
       let numPoles = 0;
-      const deltaTheta = (model.endTheta - model.startTheta) / model.thetaResolution;
       const numPts = model.phiResolution * model.thetaResolution + 2;
       const numPolys = model.phiResolution * 2 * model.thetaResolution;
 
@@ -122,9 +122,10 @@ export function vtkSphereSource(publicAPI, model) {
       const phiResolution = model.phiResolution - numPoles;
       const deltaPhi = (endPhi - startPhi) / (model.phiResolution - 1);
 
-      if (Math.abs(startTheta - endTheta) < 360.0) {
+      if (Math.abs(startTheta - endTheta) < 2.0 * Math.PI) {
         ++thetaResolution;
       }
+      const deltaTheta = (model.endTheta - model.startTheta) / thetaResolution * (Math.PI / 180.0);
 
       const jStart = (model.startPhi <= 0.0 ? 1 : 0);
       const jEnd = model.phiResolution + (model.endPhi >= 180.0 ? -1 : 0);
@@ -161,7 +162,7 @@ export function vtkSphereSource(publicAPI, model) {
       // Generate mesh connectivity
       const base = phiResolution * thetaResolution;
 
-      if (Math.abs(startTheta - endTheta) < 360.0) {
+      if (Math.abs(startTheta - endTheta) < 2.0 * Math.PI) {
         --thetaResolution;
       }
 
@@ -182,8 +183,8 @@ export function vtkSphereSource(publicAPI, model) {
         for (let i = 0; i < thetaResolution; i++) {
           polys[cellLocation++] = 3;
           polys[cellLocation++] = phiResolution * i + numOffset;
-          polys[cellLocation++] = ((phiResolution * (i + 1)) % base) + numOffset;
           polys[cellLocation++] = numPoles - 1;
+          polys[cellLocation++] = ((phiResolution * (i + 1)) % base) + numOffset;
         }
       }
 
@@ -227,7 +228,7 @@ export function vtkSphereSource(publicAPI, model) {
       dataset.PolyData.Cells.Polys.size = cellLocation;
 
       // Update output
-      model.output[0] = dataset;
+      model.output[0] = vtkDataSet.newInstance(dataset);
     }
   }
 
@@ -247,7 +248,7 @@ const DEFAULT_VALUES = {
   endTheta: 360.0,
   phiResolution: 8,
   startPhi: 0.0,
-  endPhi: 360.0,
+  endPhi: 180.0,
   center: [0, 0, 0],
   pointType: 'Float32Array',
 };

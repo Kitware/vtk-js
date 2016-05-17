@@ -1,7 +1,8 @@
 import WebGLRenderWindow from '../../../Sources/Rendering/OpenGL/RenderWindow';
 import RenderWindow from '../../../Sources/Rendering/Core/RenderWindow';
 import Renderer from '../../../Sources/Rendering/Core/Renderer';
-import ConeSource from '../../../Sources/Filters/Sources/ConeSource';
+// import ConeSource from '../../../Sources/Filters/Sources/ConeSource';
+import SphereSource from '../../../Sources/Filters/Sources/SphereSource';
 import Actor from '../../../Sources/Rendering/Core/Actor';
 import Mapper from '../../../Sources/Rendering/Core/Mapper';
 import Camera from '../../../Sources/Rendering/Core/Camera';
@@ -13,7 +14,7 @@ ren.setBackground(0.7, 1.0, 0.7);
 
 const actor = Actor.newInstance();
 ren.addActor(actor);
-actor.getProperty().setRepresentationToWireframe();
+// actor.getProperty().setRepresentationToWireframe();
 // actor.getProperty().setAmbient(1.0);
 // actor.getProperty().setAmbientColor(1.0, 0.5, 0.0);
 
@@ -26,7 +27,7 @@ cam.setFocalPoint(0, 0, 0);
 cam.setPosition(0, 0, 2);
 cam.setClippingRange(0.1, 50.0);
 
-const coneSource = ConeSource.newInstance({ height: 1.0 });
+const coneSource = SphereSource.newInstance({ height: 1.0 });
 mapper.setInputData(coneSource.getOutput());
 
 function updateMapper() {

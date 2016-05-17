@@ -150,6 +150,13 @@ function vtkOpenGLCellArrayBufferObject(publicAPI, model) {
           }
         }
       },
+      stripsToSurface: function stripsToSurface(npts, cellPts) {
+        for (let i = 0; i < npts - 2; i++) {
+          addAPoint(cellPts[i]);
+          addAPoint(cellPts[i + 1 + i % 2]);
+          addAPoint(cellPts[i + 1 + (i + 1) % 2]);
+        }
+      },
     };
 
     let func = null;

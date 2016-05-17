@@ -146,6 +146,16 @@ export function vtkShaderProgram(publicAPI, model) {
     return true;
   };
 
+  publicAPI.setUniformMatrix3x3 = (name, v) => {
+    const location = publicAPI.findUniform(name);
+    if (location === -1) {
+      model.error = `Could not set uniform ${name} . No such uniform.`;
+      return false;
+    }
+    model.context.uniformMatrix3fv(location, false, v);
+    return true;
+  };
+
   publicAPI.setUniform3f = (name, v) => {
     const location = publicAPI.findUniform(name);
     if (location === -1) {
