@@ -118,6 +118,9 @@ function vtkOpenGLVertexArrayObject(publicAPI, model) {
     if (model.handleProgram === 0) {
       model.handleProgram = program.getHandle();
     }
+    if (!publicAPI.isReady()) {
+      publicAPI.initialize();
+    }
     if (!publicAPI.isReady() || model.handleProgram !== program.getHandle()) {
       return false;
     }

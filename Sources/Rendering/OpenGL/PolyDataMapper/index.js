@@ -2,7 +2,6 @@ import * as macro from '../../../macro';
 import vtkHelper from '../Helper';
 import vtkMath from '../../../Common/Core/Math';
 import vtkShaderProgram from '../ShaderProgram';
-import vtkVertexBufferObject from '../VertexBufferObject';
 import vtkViewNode from '../../SceneGraph/ViewNode';
 import { REPRESENTATIONS, SHADINGS } from '../../Core/Property/Constants';
 
@@ -35,7 +34,6 @@ export function vtkOpenGLPolyDataMapper(publicAPI, model) {
       model.lines.setContext(model.context);
       model.tris.setContext(model.context);
       model.triStrips.setContext(model.context);
-      model.VBO.setContext(model.context);
       const actor = publicAPI.getFirstAncestorOfType('vtkOpenGLActor').getRenderable();
       const openglRenderer = publicAPI.getFirstAncestorOfType('vtkOpenGLRenderer');
       const ren = openglRenderer.getRenderable();
@@ -238,7 +236,7 @@ export function vtkOpenGLPolyDataMapper(publicAPI, model) {
       let GSSource = shaders.Geometry;
       let FSSource = shaders.Fragment;
 
-      if (model.VBO.getNormalOffset()) {
+      if (model.lastBoundBO.getCABO().getNormalOffset()) {
         VSSource = vtkShaderProgram.substitute(VSSource,
           '//VTK::Normal::Dec', [
             'attribute vec3 normalMC;',
@@ -487,13 +485,13 @@ export function vtkOpenGLPolyDataMapper(publicAPI, model) {
     cellBO.getProgram().setUniformi('PrimitiveIDOffset',
       model.primitiveIDOffset);
 
-    if (cellBO.getIBO().getIndexCount() && (model.VBOBuildTime > cellBO.getAttributeUpdateTime().getMTime() ||
+    if (cellBO.getCABO().getElementCount() && (model.VBOBuildTime > cellBO.getAttributeUpdateTime().getMTime() ||
         cellBO.getShaderSourceTime().getMTime() > cellBO.getAttributeUpdateTime().getMTime())) {
-      cellBO.getVAO().bind();
+      cellBO.getCABO().bind();
       if (cellBO.getProgram().isAttributeUsed('vertexMC')) {
-        if (!cellBO.getVAO().addAttributeArray(cellBO.getProgram(), model.VBO,
-                                           'vertexMC', model.VBO.getVertexOffset(),
-                                           model.VBO.getStride(), model.context.FLOAT, 3,
+        if (!cellBO.getVAO().addAttributeArray(cellBO.getProgram(), cellBO.getCABO(),
+                                           'vertexMC', cellBO.getCABO().getVertexOffset(),
+                                           cellBO.getCABO().getStride(), model.context.FLOAT, 3,
                                            model.context.FALSE)) {
           vtkErrorMacro('Error setting vertexMC in shader VAO.');
         }
@@ -721,7 +719,6 @@ export function vtkOpenGLPolyDataMapper(publicAPI, model) {
     publicAPI.updateBufferObjects(ren, actor);
 
     // Bind the OpenGL, this is shared between the different primitive/cell types.
-    model.VBO.bind();
     model.lastBoundBO = null;
   };
 
@@ -731,42 +728,40 @@ export function vtkOpenGLPolyDataMapper(publicAPI, model) {
     const gl = model.context;
 
     // draw points
-    if (model.points.getIBO().getIndexCount()) {
+    if (model.points.getCABO().getElementCount()) {
       // Update/build/etc the shader.
       publicAPI.updateShaders(model.points, ren, actor);
-      model.points.getIBO().bind();
-      gl.drawElements(gl.POINTS,
-        model.Points.getIBO().getIndexCount(),
-        gl.UNSIGNED_SHORT,
-        0);
-      model.Points.getIBO().release();
-      model.primitiveIDOffset += model.Points.getIBO().getIndexCount();
+//      model.points.getCABO().bind();
+      gl.drawArray(gl.POINTS, 0,
+        model.Points.getCABO().getElementCount());
+//      model.Points.getCABO().release();
+      model.primitiveIDOffset += model.Points.getCABO().getElementCount();
     }
 
     // draw lines
-    if (model.lines.getIBO().getIndexCount()) {
+    if (model.lines.getCABO().getElementCount()) {
       publicAPI.updateShaders(model.lines, ren, actor);
-      model.lines.getIBO().bind();
+      model.lines.getCABO().bind();
       if (representation === REPRESENTATIONS.VTK_POINTS) {
         gl.drawElements(gl.POINTS,
-          model.Lines.getIBO().getIndexCount(),
+          model.Lines.getCABO().getElementCount(),
           gl.UNSIGNED_SHORT,
           0);
       } else {
         gl.drawElements(gl.LINES,
-          model.Lines.getIBO().getIndexCount(),
+          model.Lines.getCABO().getElementCount(),
           gl.UNSIGNED_SHORT,
           0);
       }
-      model.lines.getIBO().release();
-      model.primitiveIDOffset += model.lines.getIBO().getIndexCount() / 2;
+      model.lines.getCABO().release();
+      model.primitiveIDOffset += model.lines.getCABO().getElementCount() / 2;
     }
 
     // draw polygons
-    if (model.tris.getIBO().getIndexCount()) {
+    if (model.tris.getCABO().getElementCount()) {
       // First we do the triangles, update the shader, set uniforms, etc.
       publicAPI.updateShaders(model.tris, ren, actor);
-      model.tris.getIBO().bind();
+      model.tris.getCABO().bind();
       let mode = gl.POINTS;
       if (representation === REPRESENTATIONS.VTK_WIREFRAME) {
         mode = gl.LINES;
@@ -774,40 +769,38 @@ export function vtkOpenGLPolyDataMapper(publicAPI, model) {
       if (representation === REPRESENTATIONS.VTK_SURFACE) {
         mode = gl.TRIANGLES;
       }
-      gl.drawElements(mode,
-        model.tris.getIBO().getIndexCount(),
-        gl.UNSIGNED_SHORT,
-        0);
-      model.tris.getIBO().release();
-      model.primitiveIDOffset += model.tris.getIBO().getIndexCount() / 3;
+      gl.drawArrays(mode, 0,
+        model.tris.getCABO().getElementCount());
+      model.tris.getCABO().release();
+      model.primitiveIDOffset += model.tris.getCABO().getElementCount() / 3;
     }
 
     // draw strips
-    if (model.triStrips.getIBO().getIndexCount()) {
+    if (model.triStrips.getCABO().getElementCount()) {
       // Use the tris shader program/VAO, but triStrips ibo.
       model.updateShaders(model.triStrips, ren, actor);
-      model.triStrips.getIBO().bind();
+      model.triStrips.getCABO().bind();
       if (representation === REPRESENTATIONS.VTK_POINTS) {
         gl.drawRangeElements(gl.POINTS,
-          model.triStrips.getIBO().getIndexCount(),
+          model.triStrips.getCABO().getElementCount(),
           gl.UNSIGNED_SHORT,
           0);
       }
       if (representation === REPRESENTATIONS.VTK_WIREFRAME) {
         gl.drawRangeElements(gl.LINES,
-                            model.triStrips.getIBO().getIndexCount(),
+                            model.triStrips.getCABO().getElementCount(),
                             gl.UNSIGNED_SHORT,
                             0);
       }
       if (representation === REPRESENTATIONS.VTK_SURFACE) {
         gl.drawRangeElements(gl.TRIANGLES,
-                            model.triStrips.getIBO().getIndexCount(),
+                            model.triStrips.getCABO().getElementCount(),
                             gl.UNSIGNED_SHORT,
                             0);
       }
-      model.triStrips.getIBO().release();
+      model.triStrips.getCABO().release();
       // just be safe and divide by 3
-      model.primitiveIDOffset += model.triStrips.getIBO().getIndexCount() / 3;
+      model.primitiveIDOffset += model.triStrips.getCABO().getElementCount() / 3;
     }
   };
 
@@ -815,8 +808,6 @@ export function vtkOpenGLPolyDataMapper(publicAPI, model) {
     if (model.LastBoundBO) {
       model.LastBoundBO.getVAO().release();
     }
-
-    model.VBO.release();
   };
 
   publicAPI.renderPiece = (ren, actor) => {
@@ -892,68 +883,26 @@ export function vtkOpenGLPolyDataMapper(publicAPI, model) {
     // haveTextures or not colors may change based on quite a few mapping
     // parameters in the mapper
 
-    const toString = `${poly.mTime}AB${(n ? n.getMTime() : 1)}C`;
+    const toString = `${poly.getMTime()}AB${(n ? n.getMTime() : 1)}C`;
 
     const tcoords = null;
     const c = null;
     if (model.VBOBuildString !== toString) {
-      // Build the VBO
+      // Build the VBOs
       const points = poly.getPoints();
-      model.VBO.createVBO(points,
-          points.getNumberOfTuples(),
-          n, tcoords,
-          c ? c.getVoidPointer(0) : null,
-          c ? c.getNumberOfComponents() : 0);
+
+      const representation = actor.getProperty().getRepresentation();
+      model.points.getCABO().createVBO(poly.getVerts(), 'verts', representation, points,
+          n, tcoords, c);
+      model.lines.getCABO().createVBO(poly.getLines(), 'lines', representation, points,
+          n, tcoords, c);
+      model.tris.getCABO().createVBO(poly.getPolys(), 'polys', representation, points,
+          n, tcoords, c);
+      model.triStrips.getCABO().createVBO(poly.getStrips(), 'strips', representation, points,
+          n, tcoords, c);
 
       model.VBOBuildTime.modified();
       model.VBOBuildString = toString;
-    }
-
-    // now create the IBOs
-    publicAPI.buildIBO(ren, actor, poly);
-  };
-
-  publicAPI.buildIBO = (ren, actor, poly) => {
-    const prims = [];
-    prims[0] = poly.getVerts ? poly.getVerts() : null;
-    prims[1] = poly.getLines ? poly.getLines() : null;
-    prims[2] = poly.getPolys ? poly.getPolys() : null;
-    prims[3] = poly.getStrips ? poly.getStrips() : null;
-    const representation = actor.getProperty().getRepresentation();
-
-    // do we realy need to rebuild the IBO? Since the operation is costly we
-    // construst a string of values that impact the IBO and see if that string has
-    // changed
-
-    // So...polydata can return a dummy CellArray when there are no lines
-    // const toString = `${(prims[0].getNumberOfCells() ? prims[0].getMTime() : 0)}
-    //   A${(prims[1].getNumberOfCells() ? prims[1].getMTime() : 0)}
-    //   B${(prims[2].getNumberOfCells() ? prims[2].getMTime() : 0)}
-    //   C${(prims[3].getNumberOfCells() ? prims[3].getMTime() : 0)}
-    //   D${representation}`;
-
-    const toString = 'B';
-
-    if (model.IBOBuildString !== toString) {
-      model.points.getIBO().createPointIndexBuffer(prims[0]);
-
-      if (representation === REPRESENTATIONS.VTK_POINTS) {
-        model.lines.getIBO().createPointIndexBuffer(prims[1]);
-        model.tris.getIBO().createPointIndexBuffer(prims[2]);
-        model.triStrips.getIBO().createPointIndexBuffer(prims[3]);
-      } else {
-        model.lines.getIBO().createLineIndexBuffer(prims[1]);
-
-        if (representation === REPRESENTATIONS.VTK_WIREFRAME) {
-          model.tris.getIBO().createTriangleLineIndexBuffer(prims[2]);
-          model.triStrips.getIBO().createStripIndexBuffer(prims[3], true);
-        } else {
-          model.tris.getIBO().createTriangleIndexBuffer(prims[2], poly.getPoints());
-          model.triStrips.getIBO().createStripIndexBuffer(prims[3], false);
-        }
-      }
-
-      model.IBOBuildString = toString;
     }
   };
 }
@@ -966,7 +915,6 @@ const DEFAULT_VALUES = {
   context: null,
   VBOBuildTime: 0,
   VBOBuildString: null,
-  IBOBuildString: null,
   lightComplexityChanged: null,
   lastLightComplexity: null,
 };
@@ -983,7 +931,6 @@ export function extend(publicAPI, model, initialValues = {}) {
   model.lines = vtkHelper.newInstance();
   model.tris = vtkHelper.newInstance();
   model.triStrips = vtkHelper.newInstance();
-  model.VBO = vtkVertexBufferObject.newInstance();
 
   // Build VTK API
   macro.get(publicAPI, model, ['shaderCache']);

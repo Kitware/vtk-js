@@ -1,5 +1,5 @@
 import * as macro from '../../../macro';
-import vtkIndexBufferObject from '../IndexBufferObject';
+import vtkCellArrayBufferObject from '../CellArrayBufferObject';
 import vtkShaderProgram from '../ShaderProgram';
 import vtkVertexArrayObject from '../VertexArrayObject';
 
@@ -14,7 +14,7 @@ export function vtkOpenGLHelper(publicAPI, model) {
   publicAPI.setContext = (ctx) => {
     model.program.setContext(ctx);
     model.VAO.setContext(ctx);
-    model.IBO.setContext(ctx);
+    model.CABO.setContext(ctx);
   };
 }
 
@@ -28,6 +28,7 @@ const DEFAULT_VALUES = {
   VAO: null,
   attributeUpdateTime: null,
   IBO: null,
+  CABO: null,
 };
 
 // ----------------------------------------------------------------------------
@@ -49,12 +50,12 @@ export function extend(publicAPI, model, initialValues = {}) {
     'shaderSourceTime',
     'VAO',
     'attributeUpdateTime',
-    'IBO',
+    'CABO',
   ]);
 
   model.program = vtkShaderProgram.newInstance();
   model.VAO = vtkVertexArrayObject.newInstance();
-  model.IBO = vtkIndexBufferObject.newInstance();
+  model.CABO = vtkCellArrayBufferObject.newInstance();
 
   // Object methods
   vtkOpenGLHelper(publicAPI, model);
