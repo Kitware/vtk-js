@@ -13,6 +13,7 @@ ren.setBackground(0.7, 1.0, 0.7);
 
 const actor = Actor.newInstance();
 ren.addActor(actor);
+actor.getProperty().setRepresentationToWireframe();
 // actor.getProperty().setAmbient(1.0);
 // actor.getProperty().setAmbientColor(1.0, 0.5, 0.0);
 

@@ -68,6 +68,10 @@ function vtkProperty(publicAPI, model) {
     publicAPI.modified();
   };
 
+  publicAPI.setRepresentationToWireframe = () => publicAPI.setRepresentation(REPRESENTATIONS.VTK_WIREFRAME);
+  publicAPI.setRepresentationToSurface = () => publicAPI.setRepresentation(REPRESENTATIONS.VTK_SURFACE);
+  publicAPI.setRepresentationToPoints = () => publicAPI.setRepresentation(REPRESENTATIONS.VTK_POINTS);
+
   // NoOp here
   publicAPI.releaseGraphicsResources = () => {};
 }

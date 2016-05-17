@@ -731,29 +731,21 @@ export function vtkOpenGLPolyDataMapper(publicAPI, model) {
     if (model.points.getCABO().getElementCount()) {
       // Update/build/etc the shader.
       publicAPI.updateShaders(model.points, ren, actor);
-//      model.points.getCABO().bind();
-      gl.drawArray(gl.POINTS, 0,
+      gl.drawArrays(gl.POINTS, 0,
         model.Points.getCABO().getElementCount());
-//      model.Points.getCABO().release();
       model.primitiveIDOffset += model.Points.getCABO().getElementCount();
     }
 
     // draw lines
     if (model.lines.getCABO().getElementCount()) {
       publicAPI.updateShaders(model.lines, ren, actor);
-      model.lines.getCABO().bind();
       if (representation === REPRESENTATIONS.VTK_POINTS) {
-        gl.drawElements(gl.POINTS,
-          model.Lines.getCABO().getElementCount(),
-          gl.UNSIGNED_SHORT,
-          0);
+        gl.drawArrays(gl.POINTS, 0,
+          model.Lines.getCABO().getElementCount());
       } else {
-        gl.drawElements(gl.LINES,
-          model.Lines.getCABO().getElementCount(),
-          gl.UNSIGNED_SHORT,
-          0);
+        gl.drawArrays(gl.LINES, 0,
+          model.Lines.getCABO().getElementCount());
       }
-      model.lines.getCABO().release();
       model.primitiveIDOffset += model.lines.getCABO().getElementCount() / 2;
     }
 
@@ -761,7 +753,6 @@ export function vtkOpenGLPolyDataMapper(publicAPI, model) {
     if (model.tris.getCABO().getElementCount()) {
       // First we do the triangles, update the shader, set uniforms, etc.
       publicAPI.updateShaders(model.tris, ren, actor);
-      model.tris.getCABO().bind();
       let mode = gl.POINTS;
       if (representation === REPRESENTATIONS.VTK_WIREFRAME) {
         mode = gl.LINES;
@@ -771,7 +762,6 @@ export function vtkOpenGLPolyDataMapper(publicAPI, model) {
       }
       gl.drawArrays(mode, 0,
         model.tris.getCABO().getElementCount());
-      model.tris.getCABO().release();
       model.primitiveIDOffset += model.tris.getCABO().getElementCount() / 3;
     }
 
@@ -779,26 +769,18 @@ export function vtkOpenGLPolyDataMapper(publicAPI, model) {
     if (model.triStrips.getCABO().getElementCount()) {
       // Use the tris shader program/VAO, but triStrips ibo.
       model.updateShaders(model.triStrips, ren, actor);
-      model.triStrips.getCABO().bind();
       if (representation === REPRESENTATIONS.VTK_POINTS) {
-        gl.drawRangeElements(gl.POINTS,
-          model.triStrips.getCABO().getElementCount(),
-          gl.UNSIGNED_SHORT,
-          0);
+        gl.drawArrays(gl.POINTS, 0,
+          model.triStrips.getCABO().getElementCount());
       }
       if (representation === REPRESENTATIONS.VTK_WIREFRAME) {
-        gl.drawRangeElements(gl.LINES,
-                            model.triStrips.getCABO().getElementCount(),
-                            gl.UNSIGNED_SHORT,
-                            0);
+        gl.drawArays(gl.LINES, 0,
+          model.triStrips.getCABO().getElementCount());
       }
       if (representation === REPRESENTATIONS.VTK_SURFACE) {
-        gl.drawRangeElements(gl.TRIANGLES,
-                            model.triStrips.getCABO().getElementCount(),
-                            gl.UNSIGNED_SHORT,
-                            0);
+        gl.drawArrays(gl.TRIANGLES, 0,
+         model.triStrips.getCABO().getElementCount());
       }
-      model.triStrips.getCABO().release();
       // just be safe and divide by 3
       model.primitiveIDOffset += model.triStrips.getCABO().getElementCount() / 3;
     }

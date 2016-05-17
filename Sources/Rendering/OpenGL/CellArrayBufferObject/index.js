@@ -122,9 +122,9 @@ function vtkOpenGLCellArrayBufferObject(publicAPI, model) {
       },
       polysToWireframe: function polysToWireframe(numPoints, cellPts) {
         // for polys we add a bunch of segments and close it
-        for (let i = 0; i < numPoints - 1; ++i) {
+        for (let i = 0; i < numPoints; ++i) {
           addAPoint(cellPts[i]);
-          addAPoint(cellPts[(i + 1) % (numPoints - 1)]);
+          addAPoint(cellPts[(i + 1) % numPoints]);
         }
       },
       stripsToWireframe: function stripsToWireframe(numPoints, cellPts) {
