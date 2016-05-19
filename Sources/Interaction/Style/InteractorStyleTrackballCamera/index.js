@@ -1,5 +1,6 @@
 import * as macro from '../../../macro';
 import vtkInteractorStyle from '../../../Rendering/Core/InteractorStyle';
+import vtkMath from './../../../Common/Core/Math';
 import { STATES } from '../../../Rendering/Core/InteractorStyle/Constants';
 
 // ----------------------------------------------------------------------------
@@ -38,23 +39,24 @@ function vtkInteractorStyleTrackballCamera(publicAPI, model) {
       //   this->InvokeEvent(vtkCommand::InteractionEvent, NULL);
       //   break;
 
-      // case STATES.VTKIS_DOLLY:
-      //   this->FindPokedRenderer(x, y);
-      //   this->Dolly();
-      //   this->InvokeEvent(vtkCommand::InteractionEvent, NULL);
-      //   break;
+      case STATES.VTKIS_DOLLY:
+        publicAPI.findPokedRenderer(pos.x, pos.y);
+        publicAPI.dolly();
+        publicAPI.invokeInteractionEvent({ type: 'InteractionEvent' });
+        break;
 
-      // case STATES.VTKIS_SPIN:
-      //   this->FindPokedRenderer(x, y);
-      //   this->Spin();
-      //   this->InvokeEvent(vtkCommand::InteractionEvent, NULL);
-      //   break;
+      case STATES.VTKIS_SPIN:
+        publicAPI.findPokedRenderer(pos.x, pos.y);
+        publicAPI.spin();
+        publicAPI.invokeInteractionEvent({ type: 'InteractionEvent' });
+        break;
+
       default:
         break;
     }
   };
 
-//----------------------------------------------------------------------------
+  //----------------------------------------------------------------------------
   publicAPI.handleLeftButtonPress = () => {
     const pos = model.interactor.getEventPosition(model.interactor.getPointerIndex());
     publicAPI.findPokedRenderer(pos.x, pos.y);
@@ -106,6 +108,33 @@ function vtkInteractorStyleTrackballCamera(publicAPI, model) {
     }
   };
 
+  //----------------------------------------------------------------------------
+  publicAPI.handleRightButtonPress = () => {
+    const pos = model.interactor.getEventPosition(model.interactor.getPointerIndex());
+    publicAPI.findPokedRenderer(pos.x, pos.y);
+    if (model.currentRenderer === null) {
+      return;
+    }
+
+    publicAPI.grabFocus(model.eventCallbackCommand);
+    publicAPI.startDolly();
+  };
+
+  //--------------------------------------------------------------------------
+  publicAPI.handleRightButtonRelease = () => {
+    switch (model.state) {
+      case STATES.VTKIS_DOLLY:
+        publicAPI.endDolly();
+        break;
+      default:
+        break;
+    }
+
+    if (model.interactor) {
+      publicAPI.releaseFocus();
+    }
+  };
+
   //--------------------------------------------------------------------------
   publicAPI.rotate = () => {
     if (model.currentRenderer === null) {
@@ -136,6 +165,77 @@ function vtkInteractorStyleTrackballCamera(publicAPI, model) {
 
     if (model.autoAdjustCameraClippingRange) {
       model.currentRenderer.resetCameraClippingRange();
+    }
+
+    if (rwi.getLightFollowCamera()) {
+      model.currentRenderer.updateLightsGeometryToFollowCamera();
+    }
+
+    rwi.render();
+  };
+
+  //--------------------------------------------------------------------------
+  publicAPI.spin = () => {
+    if (model.currentRenderer === null) {
+      return;
+    }
+
+    const rwi = model.interactor;
+
+    const lastPtr = model.interactor.getPointerIndex();
+    const pos = model.interactor.getEventPosition(lastPtr);
+    const lastPos = model.interactor.getLastEventPosition(lastPtr);
+
+    const camera = model.currentRenderer.getActiveCamera();
+    const center = model.currentRenderer.getCenter();
+
+    const newAngle =
+      vtkMath.degreesFromRadians(Math.atan2(pos.y - center[1],
+                                          pos.x - center[0]));
+
+    const oldAngle =
+      vtkMath.degreesFromRadians(Math.atan2(lastPos.y - center[1],
+                                          lastPos.x - center[0]));
+
+    camera.roll(newAngle - oldAngle);
+    camera.orthogonalizeViewUp();
+
+    rwi.render();
+  };
+
+  //----------------------------------------------------------------------------
+  publicAPI.dolly = () => {
+    if (model.currentRenderer === null) {
+      return;
+    }
+
+    const lastPtr = model.interactor.getPointerIndex();
+    const pos = model.interactor.getEventPosition(lastPtr);
+    const lastPos = model.interactor.getLastEventPosition(lastPtr);
+
+    const dy = pos.y - lastPos.y;
+    const center = model.currentRenderer.getCenter();
+    const dyf = model.motionFactor * dy / center[1];
+
+    publicAPI.dollyByFactor(Math.pow(1.1, dyf));
+  };
+
+  //----------------------------------------------------------------------------
+  publicAPI.dollyByFactor = (factor) => {
+    if (model.currentRenderer === null) {
+      return;
+    }
+
+    const rwi = model.interactor;
+
+    const camera = model.currentRenderer.getActiveCamera();
+    if (camera.getParallelProjection()) {
+      camera.setParallelScale(camera.getParallelScale() / factor);
+    } else {
+      camera.dolly(factor);
+      if (model.autoAdjustCameraClippingRange) {
+        model.currentRenderer.resetCameraClippingRange();
+      }
     }
 
     if (rwi.getLightFollowCamera()) {

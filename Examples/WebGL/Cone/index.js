@@ -42,37 +42,3 @@ renWin.addView(glwindow);
 iren.initialize();
 iren.bindEvents(document.querySelector('body'), document);
 iren.start();
-
-// function updateMapper() {
-//   mapper.setInputData(coneSource.getOutput());
-// }
-
-// glwindow.traverseAllPasses();
-
-// let animating = false;
-
-// function animate() {
-//   glwindow.traverseAllPasses();
-//   cam.roll(1.0);
-
-//   if (animating) {
-//     window.requestAnimationFrame(animate);
-//   }
-// }
-
-// const button = document.createElement('button');
-// button.setAttribute('type', 'input');
-// button.innerHTML = 'start';
-// document.getElementsByTagName('body')[0].appendChild(button);
-// button.addEventListener('click', () => {
-//   animating = !animating;
-//   button.innerHTML = animating ? 'stop' : 'start';
-//   if (animating) {
-//     window.requestAnimationFrame(animate);
-//   }
-// });
-
-// animate();
-
-// window.coneSource = coneSource;
-// window.updateMapper = updateMapper;

@@ -122,10 +122,17 @@ function vtkRenderWindowInteractor(publicAPI, model) {
 
   publicAPI.handleMouseDown = (event) => {
     publicAPI.setEventPosition(event.clientX, model.canvas.clientHeight - event.clientY + 1, 0, 0);
+    model.controlKey = event.ctrlKey;
+    model.altKey = event.altKey;
+    model.shiftKey = event.shiftKey;
     switch (event.which) {
       case 1:
         publicAPI.leftButtonPressEvent();
         break;
+      // case 3:
+      //   publicAPI.rightButtonPressEvent();
+      //   event.preventDefault();
+      //   break;
       default:
         break;
     }
@@ -142,6 +149,10 @@ function vtkRenderWindowInteractor(publicAPI, model) {
       case 1:
         publicAPI.leftButtonReleaseEvent();
         break;
+      // case 3:
+      //   publicAPI.rightButtonReleaseEvent();
+      //   event.preventDefault();
+      //   break;
       default:
         break;
     }

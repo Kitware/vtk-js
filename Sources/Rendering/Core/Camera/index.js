@@ -29,11 +29,48 @@ function vtkCamera(publicAPI, model) {
   // let distance = 0.0002;
 
   publicAPI.orthogonalizeViewUp = () => {
-    // viewUp[0] = getMatrixElement(viewMatrix, 1, 0);
-    // viewUp[1] = getMatrixElement(viewMatrix, 1, 1);
-    // viewUp[2] = getMatrixElement(viewMatrix, 1, 2);
+    const vt = publicAPI.getViewTransformMatrix();
+    model.viewUp[0] = vt[4];
+    model.viewUp[1] = vt[5];
+    model.viewUp[2] = vt[6];
 
-    // publicAPI.modified();
+    publicAPI.modified();
+  };
+
+  publicAPI.setPosition = (x, y, z) => {
+    if (x === model.position[0] &&
+        y === model.position[1] &&
+        z === model.position[2]) {
+      return;
+    }
+
+    model.position[0] = x;
+    model.position[1] = y;
+    model.position[2] = z;
+
+    // recompute the focal distance
+    publicAPI.computeDistance();
+    // publicAPI.computeCameraLightTransform();
+
+    publicAPI.modified();
+  };
+
+  publicAPI.setFocalPoint = (x, y, z) => {
+    if (x === model.focalPoint[0] &&
+        y === model.focalPoint[1] &&
+        z === model.focalPoint[2]) {
+      return;
+    }
+
+    model.focalPoint[0] = x;
+    model.focalPoint[1] = y;
+    model.focalPoint[2] = z;
+
+    // recompute the focal distance
+    publicAPI.computeDistance();
+    // publicAPI.computeCameraLightTransform();
+
+    publicAPI.modified();
   };
 
   publicAPI.setDistance = d => {
@@ -66,8 +103,57 @@ function vtkCamera(publicAPI, model) {
 
   };
 
-  publicAPI.dolly = angle => {
+  //----------------------------------------------------------------------------
+  // This method must be called when the focal point or camera position changes
+  publicAPI.computeDistance = () => {
+    const dx = model.focalPoint[0] - model.position[0];
+    const dy = model.focalPoint[1] - model.position[1];
+    const dz = model.focalPoint[2] - model.position[2];
 
+    model.distance = Math.sqrt(dx * dx + dy * dy + dz * dz);
+
+    if (model.distance < 1e-20) {
+      model.distance = 1e-20;
+      vtkDebugMacro('Distance is set to minimum.');
+
+      const vec = model.DirectionOfProjection;
+
+      // recalculate FocalPoint
+      model.focalPoint[0] = model.position[0] + vec[0] * model.distance;
+      model.focalPoint[1] = model.position[1] + vec[1] * model.distance;
+      model.focalPoint[2] = model.position[2] + vec[2] * model.distance;
+    }
+
+    model.directionOfProjection[0] = dx / model.distance;
+    model.directionOfProjection[1] = dy / model.distance;
+    model.directionOfProjection[2] = dz / model.distance;
+
+    publicAPI.computeViewPlaneNormal();
+  };
+
+//----------------------------------------------------------------------------
+  publicAPI.computeViewPlaneNormal = () => {
+    // VPN is -DOP
+    model.viewPlaneNormal[0] = -model.directionOfProjection[0];
+    model.viewPlaneNormal[1] = -model.directionOfProjection[1];
+    model.viewPlaneNormal[2] = -model.directionOfProjection[2];
+  };
+
+  //----------------------------------------------------------------------------
+  // Move the position of the camera along the view plane normal. Moving
+  // towards the focal point (e.g., > 1) is a dolly-in, moving away
+  // from the focal point (e.g., < 1) is a dolly-out.
+  publicAPI.dolly = amount => {
+    if (amount <= 0.0) {
+      return;
+    }
+
+    // dolly moves the camera towards the focus
+    const d = model.distance / amount;
+
+    publicAPI.setPosition(model.focalPoint[0] - d * model.directionOfProjection[0],
+      model.focalPoint[1] - d * model.directionOfProjection[1],
+      model.focalPoint[2] - d * model.directionOfProjection[2]);
   };
 
   publicAPI.setRoll = roll => {
@@ -375,6 +461,8 @@ export function extend(publicAPI, model, initialValues = {}) {
     'directionOfProjection',
     'windowCenter',
     'viewPlaneNormal',
+    'position',
+    'focalPoint',
   ]);
 
   macro.setGetArray(publicAPI, model, [
@@ -382,8 +470,6 @@ export function extend(publicAPI, model, initialValues = {}) {
   ], 2);
 
   macro.setGetArray(publicAPI, model, [
-    'position',
-    'focalPoint',
     'viewUp',
     'viewShear',
     'screenBottomLeft',
