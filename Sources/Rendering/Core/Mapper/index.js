@@ -43,7 +43,8 @@ function vtkMapper(publicAPI, model) {
       model.bounds = vtkMath.createUninitializedBouds();
     } else {
       if (!model.static) {
-        publicAPI.update();
+        // publicAPI.update();
+        console.log('implement update');
       }
       model.bounds = vtkDataSet.getBounds(input);
     }

@@ -34,10 +34,29 @@ export function vtkRenderWindow(publicAPI, model) {
 
   publicAPI.hasRenderer = ren => model.renderers.indexOf(ren) !== -1;
 
-  publicAPI.render = () => {
-    // FIXME
-    model.renderers.forEach(renderer => renderer.render());
+  // Add renderer
+  publicAPI.addView = view => {
+    if (publicAPI.hasView(view)) {
+      return;
+    }
+    view.setRenderable(publicAPI);
+    model.views.push(view);
+    publicAPI.modified();
   };
+
+  // Remove renderer
+  publicAPI.removeView = view => {
+    model.views = model.views.filter(r => r !== view);
+    publicAPI.modified();
+  };
+
+  publicAPI.hasView = view => model.views.indexOf(view) !== -1;
+
+  publicAPI.render = () => {
+    model.views.forEach(view => view.traverseAllPasses());
+  };
+
+  publicAPI.getSize = () => [model.width, model.height];
 
   // Initialize the rendering process.
   publicAPI.start = () => {
@@ -62,6 +81,7 @@ export function vtkRenderWindow(publicAPI, model) {
 
 export const DEFAULT_VALUES = {
   renderers: [],
+  views: [],
   cursor: 'pointer',
   cursorVisibility: true,
   swapBuffers: false,
@@ -91,6 +111,7 @@ export function extend(publicAPI, model, initialValues = {}) {
     'width',
     'height',
     'useOffScreen',
+    'views',
   ]);
   macro.get(publicAPI, model, ['neverRendered']);
   macro.getArray(publicAPI, model, ['renderers']);

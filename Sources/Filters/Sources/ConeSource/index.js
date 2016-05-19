@@ -92,7 +92,7 @@ export function vtkConeSource(publicAPI, model) {
 
         // Add points to bottom cell in reverse order
         if (model.capping) {
-          polys[model.resolution - cellLocation++] = pointIdx;
+          polys[model.resolution - cellLocation++ + 1] = pointIdx;
         }
       }
 

@@ -7,6 +7,7 @@ import vtkProp3D       from './Prop3D';
 import vtkProperty     from './Property';
 import vtkRenderer     from './Renderer';
 import vtkRenderWindow from './RenderWindow';
+import vtkRenderWindowInteractor from './RenderWindowInteractor';
 import vtkViewport     from './Viewport';
 
 export default {
@@ -19,5 +20,6 @@ export default {
   vtkProperty,
   vtkRenderer,
   vtkRenderWindow,
+  vtkRenderWindowInteractor,
   vtkViewport,
 };

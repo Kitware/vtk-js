@@ -72,7 +72,7 @@ export function extend(publicAPI, model, initialValues = {}) {
   macro.get(publicAPI, model, ['myProp2', 'myProp4']);
 
   // Create get-set macros
-  macro.getSet(publicAPI, model, ['myProp3']);
+  macro.setGet(publicAPI, model, ['myProp3']);
 
   // Create set macros for array (needs to know size)
   macro.setArray(publicAPI, model, ['myProp5'], 4);

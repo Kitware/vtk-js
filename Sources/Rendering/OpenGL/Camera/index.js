@@ -66,7 +66,8 @@ function vtkOpenGLCamera(publicAPI, model) {
     //  }
 
       model.WCDCMatrix = mat4.create();
-      mat4.multiply(model.WCDCMatrix, model.WCVCMatrix, model.VCDCMatrix);
+      mat4.multiply(model.WCDCMatrix, model.VCDCMatrix, model.WCVCMatrix);
+//      mat4.multiply(model.WCDCMatrix, model.WCVCMatrix, model.VCDCMatrix);
 
       model.keyMatrixTime.modified();
       model.lastRenderer = ren;

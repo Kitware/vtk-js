@@ -97,7 +97,22 @@ function vtkCamera(publicAPI, model) {
   };
 
   publicAPI.azimuth = angle => {
+    const newPosition = vec3.create();
+    const fp = model.focalPoint;
 
+    const trans = mat4.create();
+    mat4.identity(trans);
+
+    // translate the focal point to the origin,
+    // rotate about view up,
+    // translate back again
+    mat4.translate(trans, trans, vec3.fromValues(fp[0], fp[1], fp[2]));
+    mat4.rotate(trans, trans, vtkMath.radiansFromDegrees(angle), vec3.fromValues(model.viewUp[0], model.viewUp[1], model.viewUp[2]));
+    mat4.translate(trans, trans, vec3.fromValues(-fp[0], -fp[1], -fp[2]));
+
+    // apply the transform to the position
+    vec3.transformMat4(newPosition, vec3.fromValues(model.position[0], model.position[1], model.position[2]), trans);
+    publicAPI.setPosition(newPosition[0], newPosition[1], newPosition[2]);
   };
 
   publicAPI.yaw = angle => {
@@ -105,7 +120,25 @@ function vtkCamera(publicAPI, model) {
   };
 
   publicAPI.elevation = angle => {
+    const newPosition = vec3.create();
+    const fp = model.focalPoint;
 
+    const vt = publicAPI.getViewTransformMatrix();
+    const axis = [-vt[0], -vt[1], -vt[2]];
+
+    const trans = mat4.create();
+    mat4.identity(trans);
+
+    // translate the focal point to the origin,
+    // rotate about view up,
+    // translate back again
+    mat4.translate(trans, trans, vec3.fromValues(fp[0], fp[1], fp[2]));
+    mat4.rotate(trans, trans, vtkMath.radiansFromDegrees(angle), vec3.fromValues(axis[0], axis[1], axis[2]));
+    mat4.translate(trans, trans, vec3.fromValues(-fp[0], -fp[1], -fp[2]));
+
+    // apply the transform to the position
+    vec3.transformMat4(newPosition, vec3.fromValues(model.position[0], model.position[1], model.position[2]), trans);
+    publicAPI.setPosition(newPosition[0], newPosition[1], newPosition[2]);
   };
 
   publicAPI.pitch = angle => {
@@ -149,10 +182,13 @@ function vtkCamera(publicAPI, model) {
     const at = model.focalPoint;
     const up = model.viewUp;
 
-    return mat4.lookAt(viewMatrix,
-        vec3.fromValues(eye[0], eye[1], eye[2]),  // eye
-        vec3.fromValues(at[0], at[1], at[2]),     // at
-        vec3.fromValues(up[0], up[1], up[2]));    // up
+    const result = mat4.lookAt(viewMatrix,
+      vec3.fromValues(eye[0], eye[1], eye[2]),  // eye
+      vec3.fromValues(at[0], at[1], at[2]),     // at
+      vec3.fromValues(up[0], up[1], up[2]));    // up
+
+    mat4.transpose(result, result);
+    return result;
   };
 
   publicAPI.getViewTransformObject = () => {
@@ -165,6 +201,10 @@ function vtkCamera(publicAPI, model) {
     // FIXME: Not sure what to do about adjust z buffer here
     // adjust Z-buffer range
     // this->ProjectionTransform->AdjustZBuffer( -1, +1, nearz, farz );
+    const cWidth = model.clippingRange[1] - model.clippingRange[0];
+    const cRange = [
+      model.clippingRange[0] + (nearz + 1) * cWidth / 2.0,
+      model.clippingRange[0] + (farz + 1) * cWidth / 2.0];
 
     if (model.parallelProjection) {
       // set up a rectangular parallelipiped
@@ -186,11 +226,12 @@ function vtkCamera(publicAPI, model) {
       if (model.useHorizontalViewAngle === true) {
         fovy = model.viewAngle / aspect;
       }
-      mat4.perspective(projectionMatrix, fovy, aspect, nearz, farz);
+      mat4.perspective(projectionMatrix, vtkMath.radiansFromDegrees(fovy), aspect, cRange[0], cRange[1]);
     }
 
     // No stereo, no view shear at the current time
 
+    mat4.transpose(projectionMatrix, projectionMatrix);
     return projectionMatrix;
   };
 
