@@ -15,8 +15,8 @@ export function vtkOpenGLRenderWindow(publicAPI, model) {
   function updateWindow() {
     // Canvas size
     if (model.renderable) {
-      model.canvas.setAttribute('width', model.renderable.getWidth());
-      model.canvas.setAttribute('height', model.renderable.getHeight());
+      model.canvas.setAttribute('width', model.size[0]);
+      model.canvas.setAttribute('height', model.size[1]);
     }
     // Offscreen ?
     model.canvas.style.display = model.useOffScreen ? 'none' : 'block';
@@ -87,6 +87,35 @@ export function vtkOpenGLRenderWindow(publicAPI, model) {
     }
   };
 
+  publicAPI.isInViewport = (x, y, viewport) => {
+    const vCoords = viewport.getViewport();
+    const size = model.size;
+    if ((vCoords[0] * size[0] <= x) &&
+        (vCoords[2] * size[0] >= x) &&
+        (vCoords[1] * size[1] <= y) &&
+        (vCoords[3] * size[1] >= y)) {
+      return true;
+    }
+    return false;
+  };
+
+  publicAPI.getViewportSize = viewport => {
+    const vCoords = viewport.getViewport();
+    const size = model.size;
+    return [(vCoords[2] - vCoords[0]) * size[0], (vCoords[3] - vCoords[1]) * size[1]];
+  };
+
+  publicAPI.getViewportCenter = viewport => {
+    const size = publicAPI.getViewportSize(viewport);
+    return [size[0] * 0.5, size[1] * 0.5];
+  };
+
+  publicAPI.displayToNormalizedDisplay = (x, y, z) =>
+    [x / (model.size[0] - 1), y / (model.size[1] - 1), z];
+
+  publicAPI.normalizedDisplayToDisplay = (x, y, z) =>
+    [x * (model.size[0] - 1), y * (model.size[1] - 1), z];
+
   publicAPI.get2DContext = () => model.canvas.getContext('2d');
 
   publicAPI.get3DContext = (options = { preserveDrawingBuffer: true, premultipliedAlpha: false }) =>
@@ -102,6 +131,7 @@ const DEFAULT_VALUES = {
   initialized: false,
   context: null,
   canvas: null,
+  size: [300, 300],
 };
 
 // ----------------------------------------------------------------------------
@@ -125,6 +155,9 @@ export function extend(publicAPI, model, initialValues = {}) {
     'context',
   ]);
 
+  macro.setGetArray(publicAPI, model, [
+    'size',
+  ], 2);
 
   // Object methods
   vtkOpenGLRenderWindow(publicAPI, model);

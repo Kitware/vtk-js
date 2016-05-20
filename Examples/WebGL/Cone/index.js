@@ -6,16 +6,18 @@ import vtkActor from '../../../Sources/Rendering/Core/Actor';
 import vtkMapper from '../../../Sources/Rendering/Core/Mapper';
 import vtkCamera from '../../../Sources/Rendering/Core/Camera';
 import vtkRenderWindowInteractor from '../../../Sources/Rendering/Core/RenderWindowInteractor';
-import vtkInteractorStyleTrackballCamera from '../../../Sources/Interaction/Style/InteractorStyleTrackballCamera';
 
 const renWin = vtkRenderWindow.newInstance();
 const ren = vtkRenderer.newInstance();
 renWin.addRenderer(ren);
 ren.setBackground(0.7, 1.0, 0.7);
+
+const glwindow = vtkOpenGLRenderWindow.newInstance();
+glwindow.setContainer(document.querySelector('body'));
+renWin.addView(glwindow);
+
 const iren = vtkRenderWindowInteractor.newInstance();
-iren.setRenderWindow(renWin);
-const style = vtkInteractorStyleTrackballCamera.newInstance();
-iren.setInteractorStyle(style);
+iren.setView(glwindow);
 
 const actor = vtkActor.newInstance();
 ren.addActor(actor);
@@ -34,10 +36,6 @@ cam.setClippingRange(0.1, 50.0);
 
 const coneSource = vtkConeSource.newInstance({ height: 1.0 });
 mapper.setInputData(coneSource.getOutput());
-
-const glwindow = vtkOpenGLRenderWindow.newInstance();
-glwindow.setContainer(document.querySelector('body'));
-renWin.addView(glwindow);
 
 iren.initialize();
 iren.bindEvents(document.querySelector('body'), document);

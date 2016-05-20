@@ -1,4 +1,5 @@
 import * as macro from '../../../macro';
+import vtkInteractorStyleTrackballCamera from '../../../Interaction/Style/InteractorStyleTrackballCamera';
 
 // ----------------------------------------------------------------------------
 // Global methods
@@ -68,14 +69,15 @@ function vtkRenderWindowInteractor(publicAPI, model) {
 
   //----------------------------------------------------------------------
   publicAPI.setRenderWindow = (aren) => {
-    if (model.renderWindow !== aren) {
-      model.renderWindow = aren;
-      if (model.renderWindow != null) {
-        if (model.renderWindow.getInteractor() !== publicAPI) {
-          model.renderWindow.setInteractor(publicAPI);
-        }
-      }
-    }
+    vtkErrorMacro('you want to call setView(view) instead of setRenderWindow on a vtk.js  interactor');
+    // if (model.renderWindow !== aren) {
+    //   model.renderWindow = aren;
+    //   if (model.renderWindow != null) {
+    //     if (model.renderWindow.getInteractor() !== publicAPI) {
+    //       model.renderWindow.setInteractor(publicAPI);
+    //     }
+    //   }
+    // }
   };
 
   //----------------------------------------------------------------------
@@ -159,13 +161,13 @@ function vtkRenderWindowInteractor(publicAPI, model) {
   };
 
   publicAPI.findPokedRenderer = (x, y) => {
-    const rc = model.renderWindow.getRenderers();
+    const rc = model.view.getRenderable().getRenderers();
     let interactiveren = null;
     let viewportren = null;
     let currentRenderer = null;
 
     rc.forEach(aren => {
-      if (aren.isInViewport(x, y) && aren.getInteractive()) {
+      if (model.view.isInViewport(x, y, aren) && aren.getInteractive()) {
         currentRenderer = aren;
       }
 
@@ -174,7 +176,7 @@ function vtkRenderWindowInteractor(publicAPI, model) {
         // is interactive.
         interactiveren = aren;
       }
-      if (viewportren === null && aren.isInViewport(x, y)) {
+      if (viewportren === null && model.view.isInViewport(x, y, aren)) {
         // Save this renderer in case we can't find one in the viewport that
         // is interactive.
         viewportren = aren;
@@ -204,8 +206,11 @@ function vtkRenderWindowInteractor(publicAPI, model) {
 
   //----------------------------------------------------------------------
   publicAPI.render = () => {
-    if (model.renderWindow && model.enabled && model.enableRender) {
-      model.renderWindow.render();
+    // if (model.renderWindow && model.enabled && model.enableRender) {
+    //   model.renderWindow.render();
+    // }
+    if (model.view && model.enabled && model.enableRender) {
+      model.view.traverseAllPasses();
     }
     // outside the above test so that third-party code can redirect
     // the render to the appropriate class
@@ -246,6 +251,7 @@ const DEFAULT_VALUES = {
   altKey: false,
   controlKey: false,
   canvas: null,
+  view: null,
 };
 
 // ----------------------------------------------------------------------------
@@ -279,12 +285,15 @@ export function extend(publicAPI, model, initialValues = {}) {
     'shiftKey',
     'controlKey',
     'altKey',
+    'view',
   ]);
 
   // For more macro methods, see "Sources/macro.js"
 
   // Object specific methods
   vtkRenderWindowInteractor(publicAPI, model);
+
+  publicAPI.setInteractorStyle(vtkInteractorStyleTrackballCamera.newInstance());
 }
 
 // ----------------------------------------------------------------------------

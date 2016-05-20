@@ -326,7 +326,10 @@ function vtkCamera(publicAPI, model) {
   };
 
   publicAPI.getCompositeProjectionTransformMatrix = (aspect, nearz, farz) => {
-    // return glmatrix object
+    const vMat = publicAPI.getViewTransformMatrix();
+    const pMat = publicAPI.getProjectionTransformMatrix(aspect, nearz, farz);
+    mat4.multiply(pMat, vMat, pMat);
+    return pMat;
   };
 
   // publicAPI.getProjectionTransformMatrix = renderer => {

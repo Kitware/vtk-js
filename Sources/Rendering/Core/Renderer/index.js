@@ -5,7 +5,7 @@ import vtkMath from '../../../Common/Core/Math';
 import vtkTimerLog from '../../../Common/System/TimerLog';
 import vtkViewport from '../Viewport';
 import { INIT_BOUNDS } from '../../../Common/DataModel/BoundingBox';
-import { vec4 } from 'gl-matrix';
+import { mat4, vec4, vec3 } from 'gl-matrix';
 
 function notImplemented(method) {
   return () => console.log('vtkRenderer::${method} - NOT IMPLEMENTED');
@@ -359,6 +359,59 @@ function vtkRenderer(publicAPI, model) {
     model.createdLight.setFocalPoint(publicAPI.getActiveCamera().getFocalPoint());
   };
 
+  publicAPI.normalizedDisplayToWorld = (x, y, z) => {
+    const vpd = publicAPI.normalizedDisplayToView(x, y, z);
+
+    return publicAPI.viewToWorld(vpd[0], vpd[1], vpd[2]);
+  };
+
+  publicAPI.worldToNormalizedDisplay = (x, y, z) => {
+    const vpd = publicAPI.worldToView(x, y, z);
+
+    return publicAPI.viewToNormalizedDisplay(vpd[0], vpd[1], vpd[2]);
+  };
+
+
+  publicAPI.viewToWorld = (x, y, z) => {
+    if (model.activeCamera === null) {
+      vtkErrorMacro('ViewToWorld: no active camera, cannot compute view to world, returning 0,0,0');
+      return [0, 0, 0];
+    }
+
+    // get the perspective transformation from the active camera
+    const matrix = model.activeCamera.
+                  getCompositeProjectionTransformMatrix(
+                    1.0, 0, 1);
+//                    publicAPI.getTiledAspectRatio(), 0, 1);
+
+    mat4.invert(matrix, matrix);
+    mat4.transpose(matrix, matrix);
+
+    // Transform point to world coordinates
+    const result = vec3.fromValues(x, y, z);
+    vec3.transformMat4(result, result, matrix);
+    return [result[0], result[1], result[2]];
+  };
+
+  // Convert world point coordinates to view coordinates.
+  publicAPI.worldToView = (x, y, z) => {
+    if (model.activeCamera === null) {
+      vtkErrorMacro('ViewToWorld: no active camera, cannot compute view to world, returning 0,0,0');
+      return [0, 0, 0];
+    }
+
+    // get the perspective transformation from the active camera
+    const matrix = model.activeCamera.
+                  getCompositeProjectionTransformMatrix(
+                    1.0, 0, 1);
+//                    publicAPI.getTiledAspectRatio(), 0, 1);
+    mat4.transpose(matrix, matrix);
+
+    const result = vec3.fromValues(x, y, z);
+    vec3.transformMat4(result, result, matrix);
+    return [result[0], result[1], result[2]];
+  };
+
   publicAPI.computeVisiblePropBounds = () => {
     const allBounds = [].concat(INIT_BOUNDS);
     let nothingVisible = true;
@@ -625,11 +678,6 @@ function vtkRenderer(publicAPI, model) {
       model.renderWindow = renderWindow;
     }
   };
-
-  // FIXME
-  publicAPI.getZ = notImplemented('getZ');
-  publicAPI.viewToWorld = notImplemented('ViewToWorld');
-  publicAPI.WorldToView = notImplemented('WorldToView');
 
   publicAPI.visibleActorCount = () => model.props.filter(prop => prop.getVisibility()).length;
   publicAPI.visibleVolumeCount = publicAPI.visibleActorCount;

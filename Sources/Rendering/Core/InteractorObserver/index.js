@@ -60,6 +60,33 @@ function vtkInteractorObserver(publicAPI, model) {
   };
 
   //----------------------------------------------------------------------------
+  // Description:
+  // Transform from display to world coordinates.
+  publicAPI.computeDisplayToWorld = (x, y, z) => {
+    if (!model.currentRenderer) {
+      return null;
+    }
+
+    const ndp =
+      model.interactor.getView().displayToNormalizedDisplay(x, y, z);
+
+    return model.currentRenderer.normalizedDisplayToWorld(ndp[0], ndp[1], ndp[2]);
+  };
+
+  //----------------------------------------------------------------------------
+  // Description:
+  // Transform from world to display coordinates.
+  publicAPI.computeWorldToDisplay = (x, y, z) => {
+    if (!model.currentRenderer) {
+      return null;
+    }
+
+    const ndp = model.currentRenderer.worldToNormalizedDisplay(x, y, z);
+
+    return model.interactor.getView().normalizedDisplayToDisplay(ndp[0], ndp[1], ndp[2]);
+  };
+
+  //----------------------------------------------------------------------------
   publicAPI.grabFocus = () => {
   // void vtkInteractorObserver::GrabFocus(vtkCommand *mouseEvents, vtkCommand *keypressEvents)
   // {

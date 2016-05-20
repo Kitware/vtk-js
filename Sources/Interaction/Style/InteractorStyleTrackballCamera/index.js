@@ -33,11 +33,11 @@ function vtkInteractorStyleTrackballCamera(publicAPI, model) {
         publicAPI.invokeInteractionEvent({ type: 'InteractionEvent' });
         break;
 
-      // case STATES.VTKIS_PAN:
-      //   this->FindPokedRenderer(x, y);
-      //   this->Pan();
-      //   this->InvokeEvent(vtkCommand::InteractionEvent, NULL);
-      //   break;
+      case STATES.VTKIS_PAN:
+        publicAPI.findPokedRenderer(pos.x, pos.y);
+        publicAPI.pan();
+        publicAPI.invokeInteractionEvent({ type: 'InteractionEvent' });
+        break;
 
       case STATES.VTKIS_DOLLY:
         publicAPI.findPokedRenderer(pos.x, pos.y);
@@ -150,7 +150,7 @@ function vtkInteractorStyleTrackballCamera(publicAPI, model) {
     const dx = pos.x - lastPos.x;
     const dy = pos.y - lastPos.y;
 
-    const size = model.currentRenderer.getRenderWindow().getSize();
+    const size = rwi.getView().getViewportSize(model.currentRenderer);
 
     const deltaElevation = -20.0 / size[1];
     const deltaAzimuth = -20.0 / size[0];
@@ -187,7 +187,7 @@ function vtkInteractorStyleTrackballCamera(publicAPI, model) {
     const lastPos = model.interactor.getLastEventPosition(lastPtr);
 
     const camera = model.currentRenderer.getActiveCamera();
-    const center = model.currentRenderer.getCenter();
+    const center = rwi.getView().getViewportCenter(model.currentRenderer);
 
     const newAngle =
       vtkMath.degreesFromRadians(Math.atan2(pos.y - center[1],
@@ -199,6 +199,56 @@ function vtkInteractorStyleTrackballCamera(publicAPI, model) {
 
     camera.roll(newAngle - oldAngle);
     camera.orthogonalizeViewUp();
+
+    rwi.render();
+  };
+
+  publicAPI.pan = () => {
+    if (model.currentRenderer === null) {
+      return;
+    }
+
+    const rwi = model.interactor;
+
+    const lastPtr = model.interactor.getPointerIndex();
+    const pos = model.interactor.getEventPosition(lastPtr);
+    const lastPos = model.interactor.getLastEventPosition(lastPtr);
+
+    const camera = model.currentRenderer.getActiveCamera();
+
+    // Calculate the focal depth since we'll be using it a lot
+    let viewFocus = camera.getFocalPoint();
+    viewFocus = publicAPI.computeWorldToDisplay(viewFocus[0], viewFocus[1], viewFocus[2]);
+    const focalDepth = viewFocus[2];
+
+    const newPickPoint = publicAPI.computeDisplayToWorld(pos.x, pos.y,
+                                focalDepth);
+
+    // Has to recalc old mouse point since the viewport has moved,
+    // so can't move it outside the loop
+    const oldPickPoint = publicAPI.computeDisplayToWorld(lastPos.x,
+                                lastPos.y,
+                                focalDepth);
+
+    // Camera motion is reversed
+    const motionVector = [];
+    motionVector[0] = oldPickPoint[0] - newPickPoint[0];
+    motionVector[1] = oldPickPoint[1] - newPickPoint[1];
+    motionVector[2] = oldPickPoint[2] - newPickPoint[2];
+
+    viewFocus = camera.getFocalPoint();
+    const viewPoint = camera.getPosition();
+    camera.setFocalPoint(motionVector[0] + viewFocus[0],
+                          motionVector[1] + viewFocus[1],
+                          motionVector[2] + viewFocus[2]);
+
+    camera.setPosition(motionVector[0] + viewPoint[0],
+                        motionVector[1] + viewPoint[1],
+                        motionVector[2] + viewPoint[2]);
+
+    if (rwi.getLightFollowCamera()) {
+      model.currentRenderer.updateLightsGeometryToFollowCamera();
+    }
 
     rwi.render();
   };

@@ -49,67 +49,44 @@ function vtkViewport(publicAPI, model) {
     });
   };
 
-  // FIXME ?
-  publicAPI.displayToView = notImplemented('displayToView');
-  publicAPI.viewToDisplay = notImplemented('viewToDisplay');
-  publicAPI.viewToWorld = notImplemented('viewToWorld');
-  publicAPI.worldToView = notImplemented('worldToView');
-  publicAPI.getSize = notImplemented('getSize');
+  publicAPI.displayToView = () => vtkErrorMacro('call displayToView on your view instead');
+  publicAPI.viewToDisplay = () => vtkErrorMacro('callviewtodisplay on your view instead');
+  publicAPI.getSize = () => vtkErrorMacro('call getSize on your View instead');
 
-  publicAPI.getOrigin = () => {
-    if (model.vtkWindow) {
-      const size = model.vtkWindow.getSize();
-      // Round the origin up a pixel
-      model.origin = [
-        Math.floor(model.viewport[0] * (size[0] + 0.5)),
-        Math.floor(model.viewport[1] * (size[1] + 0.5)),
-      ];
-    } else {
-      model.origin = [0, 0];
-    }
-    return model.origin;
+  publicAPI.normalizedDisplayToView = (x, y, z) => {
+    // first to normalized viewport
+    const nvp = publicAPI.normalizedDisplayToNormalizedViewport(x, y, z);
+
+    // then to view
+    return publicAPI.normalizedViewportToView(nvp[0], nvp[1], nvp[2]);
   };
 
-  publicAPI.getCenter = () => {
-    if (model.vtkWindow) {
-      const size = model.vtkWindow.getSize();
-      if (size && size[0] && size[1]) {
-        model.center = [
-          0.5 * (model.viewport[2] + model.viewport[0]) * size[0],
-          0.5 * (model.viewport[3] + model.viewport[1]) * size[1],
-        ];
-      }
-    } else {
-      model.center = [0, 0];
-    }
-    return model.center;
+  publicAPI.normalizedDisplayToNormalizedViewport = (x, y, z) => {
+    const scale = [model.viewport[2] - model.viewport[0],
+      model.viewport[3] - model.viewport[1]];
+    return [(x - model.viewport[0]) / scale[0], (y - model.viewport[1]) / scale[1], z];
   };
 
-  publicAPI.isInViewport = (x, y) => {
-    if (model.vtkWindow) {
-      // get physical window dimensions
-      const size = model.vtkWindow.getSize();
-      if ((model.viewport[0] * size[0] <= x) &&
-          (model.viewport[2] * size[0] >= x) &&
-          (model.viewport[1] * size[1] <= y) &&
-          (model.viewport[3] * size[1] >= y)) {
-        return true;
-      }
-    }
-    return false;
+  publicAPI.normalizedViewportToView = (x, y, z) =>
+    [x * 2.0 - 1.0, y * 2.0 - 1.0, z * 2.0 - 1.0];
+
+  publicAPI.viewToNormalizedDisplay = (x, y, z) => {
+    // first to nvp
+    const nvp = publicAPI.viewToNormalizedViewport(x, y, z);
+
+    // then to ndp
+    return publicAPI.normalizedViewportToNormalizedDisplay(nvp[0], nvp[1], nvp[2]);
   };
 
-  // FIXME ?
-  publicAPI.localDisplayToDisplay = notImplemented('localDisplayToDisplay');
-  publicAPI.displayToLocalDisplay = notImplemented('DisplayToLocalDisplay');
-  publicAPI.displayToNormalizedDisplay = notImplemented('DisplayToNormalizedDisplay');
-  publicAPI.normalizedDisplayToViewport = notImplemented('NormalizedDisplayToViewport');
-  publicAPI.viewportToNormalizedViewport = notImplemented('ViewportToNormalizedViewport');
-  publicAPI.normalizedViewportToView = notImplemented('NormalizedViewportToView');
-  publicAPI.normalizedDisplayToDisplay = notImplemented('NormalizedDisplayToDisplay');
-  publicAPI.viewportToNormalizedDisplay = notImplemented('ViewportToNormalizedDisplay');
-  publicAPI.NormalizedViewportToViewport = notImplemented('NormalizedViewportToViewport');
-  publicAPI.ViewToNormalizedViewport = notImplemented('ViewToNormalizedViewport');
+  publicAPI.normalizedViewportToNormalizedDisplay = (x, y, z) => {
+    const scale = [model.viewport[2] - model.viewport[0],
+      model.viewport[3] - model.viewport[1]];
+    return [(x - model.viewport[0]) / scale[0], (y - model.viewport[1]) / scale[1], z];
+  };
+
+  publicAPI.viewToNormalizedViewport = (x, y, z) =>
+    [(x + 1.0) * 0.5, (y + 1.0) * 0.5, (z + 1.0) * 0.5];
+
   publicAPI.ComputeAspect = notImplemented('ComputeAspect');
   publicAPI.PickPropFrom = notImplemented('PickPropFrom');
   publicAPI.GetTiledSize = notImplemented('GetTiledSize');
@@ -126,14 +103,8 @@ const DEFAULT_VALUES = {
   background2: [0.2, 0.2, 0.2],
   gradientBackground: false,
   viewport: [0, 0, 1, 1],
-  worldPoint: [0, 0, 0, 0],
-  displayPoint: [0, 0, 0],
-  viewPoint: [0, 0, 0],
   aspect: [1, 1],
   pixelAspect: [1, 1],
-  center: [0, 0],
-  size: [0, 0],
-  origin: [0, 0],
   props: [],
   actors2D: [],
 };
@@ -146,6 +117,15 @@ export function extend(publicAPI, model, initialValues = {}) {
   // Build VTK API
   macro.obj(publicAPI, model);
   macro.event(publicAPI, model, 'event');
+
+  macro.setGetArray(publicAPI, model, [
+    'viewport',
+  ], 4);
+
+  macro.setGetArray(publicAPI, model, [
+    'background',
+    'background2',
+  ], 3);
 
   vtkViewport(publicAPI, model);
 }
