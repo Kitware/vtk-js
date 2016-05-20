@@ -1,11 +1,10 @@
 const vtkLoaders = require('../Utilities/config/webpack.loaders.js');
 
 module.exports = {
-  cname: 'kitware.github.io',
   baseUrl: '/vtk-js',
   work: './build-tmp',
   api: ['../Sources'],
-  examples: ['../Sources', '../Examples'],
+  examples: ['../Sources', { path: '../Examples', regexp: 'index.js' }],
   config: {
     title: 'VTK.js',
     description: '"Visualization Toolkit for the Web."',
