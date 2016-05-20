@@ -7,13 +7,26 @@ import vtkMapper from '../../../Sources/Rendering/Core/Mapper';
 import vtkCamera from '../../../Sources/Rendering/Core/Camera';
 import vtkRenderWindowInteractor from '../../../Sources/Rendering/Core/RenderWindowInteractor';
 
+import controlPanel from './controller.html';
+
+// Create some control UI
+const container = document.querySelector('body');
+const controlContainer = document.createElement('div');
+const renderWindowContainer = document.createElement('div');
+container.appendChild(controlContainer);
+container.appendChild(renderWindowContainer);
+controlContainer.innerHTML = controlPanel;
+
+const representationSelector = document.querySelector('.representations');
+const resolutionChange = document.querySelector('.resolution');
+
 const renWin = vtkRenderWindow.newInstance();
 const ren = vtkRenderer.newInstance();
 renWin.addRenderer(ren);
-ren.setBackground(0.7, 1.0, 0.7);
+ren.setBackground(0.32, 0.34, 0.43);
 
 const glwindow = vtkOpenGLRenderWindow.newInstance();
-glwindow.setContainer(document.querySelector('body'));
+glwindow.setContainer(renderWindowContainer);
 renWin.addView(glwindow);
 
 const iren = vtkRenderWindowInteractor.newInstance();
@@ -38,5 +51,21 @@ const coneSource = vtkConeSource.newInstance({ height: 1.0 });
 mapper.setInputData(coneSource.getOutput());
 
 iren.initialize();
-iren.bindEvents(document.querySelector('body'), document);
+iren.bindEvents(renderWindowContainer, document);
 iren.start();
+
+// ----------------
+
+representationSelector.addEventListener('change', e => {
+  const newRepValue = Number(e.target.value);
+  actor.getProperty().setRepresentation(newRepValue);
+  renWin.render();
+});
+
+resolutionChange.addEventListener('change', e => {
+  const resolution = Number(e.target.value);
+  coneSource.setResolution(resolution);
+  mapper.setInputData(coneSource.getOutput());
+  renWin.render();
+});
+

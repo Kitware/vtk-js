@@ -132,6 +132,8 @@ const DEFAULT_VALUES = {
   context: null,
   canvas: null,
   size: [300, 300],
+  cursorVisibility: true,
+  cursor: 'pointer',
 };
 
 // ----------------------------------------------------------------------------
