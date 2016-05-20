@@ -48,7 +48,7 @@ cam.setPosition(0, 0, 3);
 cam.setClippingRange(0.1, 50.0);
 
 const coneSource = vtkConeSource.newInstance({ height: 1.0 });
-mapper.setInputData(coneSource.getOutput());
+mapper.setInputConnection(coneSource.getOutputPort());
 
 iren.initialize();
 iren.bindEvents(renderWindowContainer, document);
@@ -65,7 +65,10 @@ representationSelector.addEventListener('change', e => {
 resolutionChange.addEventListener('change', e => {
   const resolution = Number(e.target.value);
   coneSource.setResolution(resolution);
-  mapper.setInputData(coneSource.getOutput());
   renWin.render();
 });
+
+global.source = coneSource;
+global.mapper = mapper;
+global.actor = actor;
 
