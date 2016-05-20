@@ -51,7 +51,7 @@ function vtkMapper(publicAPI, model) {
     return model.bounds;
   };
 
-  publicAPI.getInput = () => publicAPI.getInputData;
+  publicAPI.getInput = () => publicAPI.getInputData();
 
   publicAPI.setForceCompileOnly = v => {
     model.forceCompileOnly = v;

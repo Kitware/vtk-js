@@ -30,21 +30,21 @@ const events = [
   'MiddleButtonRelease',
   'RightButtonPress',
   'RightButtonRelease',
-  'MouseWheelForwardEvent',
-  'MouseWheelBackwardEvent',
-  'ExposeEvent',
-  'ConfigureEvent',
-  'TimerEvent',
-  'KeyPressEvent',
-  'KeyReleaseEvent',
-  'CharEvent',
-  'DeleteEvent',
-  'PinchEvent',
-  'PanEvent',
-  'RotateEvent',
-  'TapEvent',
-  'LongTapEvent',
-  'SwipeEvent',
+  'MouseWheelForward',
+  'MouseWheelBackward',
+  'Expose',
+  'Configure',
+  'Timer',
+  'KeyPress',
+  'KeyRelease',
+  'Char',
+  'Delete',
+  'Pinch',
+  'Pan',
+  'Rotate',
+  'Tap',
+  'LongTap',
+  'Swipe',
 ];
 
 // ----------------------------------------------------------------------------
@@ -100,6 +100,60 @@ function vtkInteractorStyle(publicAPI, model) {
       publicAPI.stopState();
     };
   });
+
+  //----------------------------------------------------------------------------
+  publicAPI.handleChar = () => {
+    const rwi = model.interactor;
+
+    let pos = null;
+
+    switch (rwi.getKeyCode()) {
+      case 'r' :
+      case 'R' :
+        pos = model.interactor.getEventPosition(rwi.getPointerIndex());
+        publicAPI.findPokedRenderer(pos.x, pos.y);
+        if (model.currentRenderer !== 0) {
+          model.currentRenderer.resetCamera();
+        } else {
+          vtkWarningMacro('no current renderer on the interactor style.');
+        }
+        rwi.render();
+        break;
+
+      case 'w' :
+      case 'W' :
+        pos = model.interactor.getEventPosition(rwi.getPointerIndex());
+        publicAPI.findPokedRenderer(pos.x, pos.y);
+        if (model.currentRenderer !== 0) {
+          const ac = model.currentRenderer.getActors();
+          ac.forEach(anActor => {
+            anActor.getProperty().setRepresentationToWireframe();
+          });
+        } else {
+          vtkWarningMacro('no current renderer on the interactor style.');
+        }
+        rwi.render();
+        break;
+
+      case 's' :
+      case 'S' :
+        pos = model.interactor.getEventPosition(rwi.getPointerIndex());
+        publicAPI.findPokedRenderer(pos.x, pos.y);
+        if (model.currentRenderer !== 0) {
+          const ac = model.currentRenderer.getActors();
+          ac.forEach(anActor => {
+            anActor.getProperty().setRepresentationToSurface();
+          });
+        } else {
+          vtkWarningMacro('no current renderer on the interactor style.');
+        }
+        rwi.render();
+        break;
+
+      default:
+        break;
+    }
+  };
 
   //----------------------------------------------------------------------------
   publicAPI.findPokedRenderer = (x, y) => {

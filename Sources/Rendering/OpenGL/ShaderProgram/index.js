@@ -79,7 +79,7 @@ export function vtkShaderProgram(publicAPI, model) {
   publicAPI.isBound = () => !!model.bound;
 
   publicAPI.release = () => {
-    model.context.useProgram(0);
+    model.context.useProgram(null);
     publicAPI.setBound(false);
   };
 

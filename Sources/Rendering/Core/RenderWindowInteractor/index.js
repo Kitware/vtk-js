@@ -15,21 +15,21 @@ const eventsWeHandle = [
   'MiddleButtonRelease',
   'RightButtonPress',
   'RightButtonRelease',
-  'MouseWheelForwardEvent',
-  'MouseWheelBackwardEvent',
-  'ExposeEvent',
-  'ConfigureEvent',
-  'TimerEvent',
-  'KeyPressEvent',
-  'KeyReleaseEvent',
-  'CharEvent',
-  'DeleteEvent',
-  'PinchEvent',
-  'PanEvent',
-  'RotateEvent',
-  'TapEvent',
-  'LongTapEvent',
-  'SwipeEvent',
+  'MouseWheelForward',
+  'MouseWheelBackward',
+  'Expose',
+  'Configure',
+  'Timer',
+  'KeyPress',
+  'KeyRelease',
+  'Char',
+  'Delete',
+  'Pinch',
+  'Pan',
+  'Rotate',
+  'Tap',
+  'LongTap',
+  'Swipe',
 ];
 
 // ----------------------------------------------------------------------------
@@ -118,8 +118,18 @@ function vtkRenderWindowInteractor(publicAPI, model) {
   publicAPI.bindEvents = (canvas, document) => {
     model.canvas = canvas;
     canvas.onmousedown = publicAPI.handleMouseDown;
+    canvas.onkeypress = publicAPI.handleKeyPress;
     document.onmouseup = publicAPI.handleMouseUp;
     document.onmousemove = publicAPI.handleMouseMove;
+  };
+
+  publicAPI.handleKeyPress = (event) => {
+    publicAPI.setEventPosition(event.clientX, model.canvas.clientHeight - event.clientY + 1, 0, 0);
+    model.controlKey = event.ctrlKey;
+    model.altKey = event.altKey;
+    model.shiftKey = event.shiftKey;
+    model.keyCode = String.fromCharCode(event.charCode);
+    publicAPI.charEvent();
   };
 
   publicAPI.handleMouseDown = (event) => {
@@ -250,6 +260,7 @@ const DEFAULT_VALUES = {
   shiftKey: false,
   altKey: false,
   controlKey: false,
+  keyCode: 0,
   canvas: null,
   view: null,
 };
@@ -285,6 +296,7 @@ export function extend(publicAPI, model, initialValues = {}) {
     'shiftKey',
     'controlKey',
     'altKey',
+    'keyCode',
     'view',
   ]);
 
