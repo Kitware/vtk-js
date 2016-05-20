@@ -841,7 +841,7 @@ export function vtkOpenGLPolyDataMapper(publicAPI, model) {
     if (model.VBOBuildTime.getMTime() < publicAPI.getMTime() ||
         model.VBOBuildTime.getMTime() < actor.getMTime() ||
         model.VBOBuildTime.getMTime() < actor.getProperty().getMTime() ||
-        model.VBOBuildTime.getMTime() < model.currentInput.mtime) {
+        model.VBOBuildTime.getMTime() < model.currentInput.getMTime()) {
       return true;
     }
     return false;
@@ -864,7 +864,7 @@ export function vtkOpenGLPolyDataMapper(publicAPI, model) {
     // parameters in the mapper
 
     const representation = actor.getProperty().getRepresentation();
-    const toString = `${poly.getMTime()}A${representation}B${(n ? n.getMTime() : 1)}C`;
+    const toString = `${poly.getMTime()}A${representation}B${poly.getMTime()}C${(n ? n.getMTime() : 1)}C`;
 
     const tcoords = null;
     const c = null;
