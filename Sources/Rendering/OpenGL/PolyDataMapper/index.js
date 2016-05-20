@@ -840,6 +840,7 @@ export function vtkOpenGLPolyDataMapper(publicAPI, model) {
     // first do a coarse check
     if (model.VBOBuildTime.getMTime() < publicAPI.getMTime() ||
         model.VBOBuildTime.getMTime() < actor.getMTime() ||
+        model.VBOBuildTime.getMTime() < actor.getProperty().getMTime() ||
         model.VBOBuildTime.getMTime() < model.currentInput.mtime) {
       return true;
     }
@@ -862,7 +863,8 @@ export function vtkOpenGLPolyDataMapper(publicAPI, model) {
     // haveTextures or not colors may change based on quite a few mapping
     // parameters in the mapper
 
-    const toString = `${poly.getMTime()}AB${(n ? n.getMTime() : 1)}C`;
+    const representation = actor.getProperty().getRepresentation();
+    const toString = `${poly.getMTime()}A${representation}B${(n ? n.getMTime() : 1)}C`;
 
     const tcoords = null;
     const c = null;
@@ -870,7 +872,6 @@ export function vtkOpenGLPolyDataMapper(publicAPI, model) {
       // Build the VBOs
       const points = poly.getPoints();
 
-      const representation = actor.getProperty().getRepresentation();
       model.points.getCABO().createVBO(poly.getVerts(), 'verts', representation, points,
           n, tcoords, c);
       model.lines.getCABO().createVBO(poly.getLines(), 'lines', representation, points,
