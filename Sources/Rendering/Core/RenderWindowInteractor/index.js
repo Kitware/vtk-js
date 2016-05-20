@@ -118,14 +118,14 @@ function vtkRenderWindowInteractor(publicAPI, model) {
   publicAPI.bindEvents = (canvas, document) => {
     model.canvas = canvas;
     canvas.addEventListener('mousedown', publicAPI.handleMouseDown);
-    canvas.addEventListener('keypress', publicAPI.handleKeyPress);
+    document.querySelector('body').addEventListener('keypress', publicAPI.handleKeyPress);
     canvas.addEventListener('mouseup', publicAPI.handleMouseUp);
     canvas.addEventListener('mousemove', publicAPI.handleMouseMove);
   };
 
   publicAPI.unbindEvents = (canvas, document) => {
     canvas.removeEventListener('mousedown', publicAPI.handleMouseDown);
-    canvas.removeEventListener('keypress', publicAPI.handleKeyPress);
+    document.querySelector('body').removeEventListener('keypress', publicAPI.handleKeyPress);
     canvas.removeEventListener('mouseup', publicAPI.handleMouseUp);
     canvas.removeEventListener('mousemove', publicAPI.handleMouseMove);
   };
