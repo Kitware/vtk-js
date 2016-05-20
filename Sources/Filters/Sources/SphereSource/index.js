@@ -192,7 +192,7 @@ export function vtkSphereSource(publicAPI, model) {
       for (let i = 0; i < thetaResolution; i++) {
         for (let j = 0; j < (phiResolution - 1); j++) {
           const a = phiResolution * i + j + numPoles;
-          const b = points[pointIdx * 3 + 0] + 1;
+          const b = a + 1;
           const c = ((phiResolution * (i + 1) + j) % base) + numPoles + 1;
 
           if (!model.latLongTessellation) {
