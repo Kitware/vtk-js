@@ -1,43 +1,64 @@
-import ConeSource from '..';
+import vtkActor                   from '../../../../../Sources/Rendering/Core/Actor';
+import vtkCamera                  from '../../../../../Sources/Rendering/Core/Camera';
+import vtkConeSource              from '../../../../../Sources/Filters/Sources/ConeSource';
+import vtkMapper                  from '../../../../../Sources/Rendering/Core/Mapper';
+import vtkOpenGLRenderWindow      from '../../../../../Sources/Rendering/OpenGL/RenderWindow';
+import vtkRenderer                from '../../../../../Sources/Rendering/Core/Renderer';
+import vtkRenderWindow            from '../../../../../Sources/Rendering/Core/RenderWindow';
+import vtkRenderWindowInteractor  from '../../../../../Sources/Rendering/Core/RenderWindowInteractor';
 
-// Create cone source instance
-const coneSource = ConeSource.newInstance({ height: 2.0 });
+import controlPanel from './controlPanel.html';
 
-let subscription = coneSource.onModified(s => {
-  console.log('source modified', s.getOutput().get('metadata').metadata.state);
+// Create some control UI
+const rootContainer = document.querySelector('body');
+rootContainer.innerHTML = controlPanel;
+const renderWindowContainer = document.querySelector('.renderwidow');
+// ----------------------
+
+const ren = vtkRenderer.newInstance();
+ren.setBackground(0.32, 0.34, 0.43);
+
+const renWin = vtkRenderWindow.newInstance();
+renWin.addRenderer(ren);
+
+const glwindow = vtkOpenGLRenderWindow.newInstance();
+glwindow.setContainer(renderWindowContainer);
+renWin.addView(glwindow);
+
+const iren = vtkRenderWindowInteractor.newInstance();
+iren.setView(glwindow);
+
+const actor = vtkActor.newInstance();
+ren.addActor(actor);
+
+const mapper = vtkMapper.newInstance();
+actor.setMapper(mapper);
+
+const cam = vtkCamera.newInstance();
+ren.setActiveCamera(cam);
+cam.setFocalPoint(0, 0, 0);
+cam.setPosition(0, 0, 4);
+cam.setClippingRange(0.1, 50.0);
+
+const coneSource = vtkConeSource.newInstance();
+mapper.setInputConnection(coneSource.getOutputPort());
+
+iren.initialize();
+iren.bindEvents(renderWindowContainer, document);
+iren.start();
+
+// ----- JavaScript UI -----
+
+['height', 'radius', 'resolution'].forEach(propertyName => {
+  document.querySelector(`.${propertyName}`).addEventListener('input', e => {
+    const value = Number(e.target.value);
+    coneSource.set({ [propertyName]: value });
+    renWin.render();
+  });
 });
 
-console.log('height', coneSource.getHeight());
-console.log('resolution', coneSource.getResolution());
-console.log('radius', coneSource.getRadius());
-console.log('center', coneSource.getCenter());
-
-// Create dataset
-console.log('Output (height:2)', coneSource.getOutput());
-
-coneSource.setResolution(10);
-coneSource.setResolution(20);
-
-console.log('unsubscribe');
-subscription.unsubscribe();
-subscription = null;
-
-coneSource.setResolution(30);
-coneSource.setResolution(10);
-console.log('resolution', coneSource.getResolution());
-console.log('Output (resolution:10)', coneSource.getOutput());
-
-window.ds = coneSource.getOutput();
-
-// Delete source
-coneSource.delete();
-
-// Ask for dataset => should fail
-console.log('after delete ------------');
-console.log('output (delete)', coneSource.getOutput());
-console.log('height (delete)', coneSource.getHeight());
-console.log('resolution (delete)', coneSource.getResolution());
-console.log('radius (delete)', coneSource.getRadius());
-console.log('center (delete)', coneSource.getCenter());
-
-
+document.querySelector('.capping').addEventListener('change', e => {
+  const capping = !!(e.target.checked);
+  coneSource.set({ capping });
+  renWin.render();
+});
