@@ -108,53 +108,53 @@ function vtkOpenGLCellArrayBufferObject(publicAPI, model) {
 
     const cellBuilders = {
       // easy, every input point becomes an output point
-      anythingToPoints: function anythingToPoints(numPoints, cellPts) {
+      anythingToPoints(numPoints, cellPts, offset) {
         for (let i = 0; i < numPoints; ++i) {
-          addAPoint(cellPts[i]);
+          addAPoint(cellPts[offset + i]);
         }
       },
-      linesToWireframe: function linesToWireframe(numPoints, cellPts) {
+      linesToWireframe(numPoints, cellPts, offset) {
         // for lines we add a bunch of segments
         for (let i = 0; i < numPoints - 1; ++i) {
-          addAPoint(cellPts[i]);
-          addAPoint(cellPts[i + 1]);
+          addAPoint(cellPts[offset + i]);
+          addAPoint(cellPts[offset + i + 1]);
         }
       },
-      polysToWireframe: function polysToWireframe(numPoints, cellPts) {
+      polysToWireframe(numPoints, cellPts, offset) {
         // for polys we add a bunch of segments and close it
         for (let i = 0; i < numPoints; ++i) {
-          addAPoint(cellPts[i]);
-          addAPoint(cellPts[(i + 1) % numPoints]);
+          addAPoint(cellPts[offset + i]);
+          addAPoint(cellPts[offset + (i + 1) % numPoints]);
         }
       },
-      stripsToWireframe: function stripsToWireframe(numPoints, cellPts) {
+      stripsToWireframe(numPoints, cellPts, offset) {
         // for strips we add a bunch of segments and close it
         for (let i = 0; i < numPoints - 1; ++i) {
-          addAPoint(cellPts[i]);
-          addAPoint(cellPts[i + 1]);
+          addAPoint(cellPts[offset + i]);
+          addAPoint(cellPts[offset + i + 1]);
         }
         for (let i = 0; i < numPoints - 2; i++) {
-          addAPoint(cellPts[i]);
-          addAPoint(cellPts[i + 2]);
+          addAPoint(cellPts[offset + i]);
+          addAPoint(cellPts[offset + i + 2]);
         }
       },
-      polysToSurface: function polysToSurface(npts, cellPts) {
+      polysToSurface(npts, cellPts, offset) {
         if (npts < 3) {
           // ignore degenerate triangles
           console.log('skipping degenerate triangle');
         } else {
           for (let i = 0; i < npts - 2; i++) {
-            addAPoint(cellPts[0]);
-            addAPoint(cellPts[i + 1]);
-            addAPoint(cellPts[i + 2]);
+            addAPoint(cellPts[offset + 0]);
+            addAPoint(cellPts[offset + i + 1]);
+            addAPoint(cellPts[offset + i + 2]);
           }
         }
       },
-      stripsToSurface: function stripsToSurface(npts, cellPts) {
+      stripsToSurface(npts, cellPts, offset) {
         for (let i = 0; i < npts - 2; i++) {
-          addAPoint(cellPts[i]);
-          addAPoint(cellPts[i + 1 + i % 2]);
-          addAPoint(cellPts[i + 1 + (i + 1) % 2]);
+          addAPoint(cellPts[offset + i]);
+          addAPoint(cellPts[offset + i + 1 + i % 2]);
+          addAPoint(cellPts[offset + i + 1 + (i + 1) % 2]);
         }
       },
     };
@@ -169,12 +169,14 @@ function vtkOpenGLCellArrayBufferObject(publicAPI, model) {
     }
 
     let currentIndex = 0;
-    cellArray.getData().forEach((value, index, array) => {
+    const array = cellArray.getData();
+    const size = array.length;
+    for (let index = 0; index < size; index++) {
       if (index === currentIndex) {
-        func(value, array.slice(currentIndex + 1, currentIndex + value + 1));
-        currentIndex += value + 1;
+        func(array[index], array, currentIndex + 1);
+        currentIndex += array[index] + 1;
       }
-    });
+    }
     model.elementCount = packedVBO.getNumberOfElements() / model.blockSize;
     const vboArray = packedVBO.getFrozenArray();
     publicAPI.upload(vboArray, OBJECT_TYPE.ARRAY_BUFFER);
