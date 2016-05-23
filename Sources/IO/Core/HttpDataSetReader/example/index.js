@@ -1,48 +1,56 @@
-/* global __BASE_PATH__ */
-import HttpDataSetReader from '..';
+import vtkActor                   from '../../../../../Sources/Rendering/Core/Actor';
+import vtkCamera                  from '../../../../../Sources/Rendering/Core/Camera';
+import vtkDataSet                 from '../../../../../Sources/Common/DataModel/DataSet';
+import vtkHttpDataSetReader       from '../../../../../Sources/IO/Core/HttpDataSetReader';
+import vtkMapper                  from '../../../../../Sources/Rendering/Core/Mapper';
+import vtkOpenGLRenderWindow      from '../../../../../Sources/Rendering/OpenGL/RenderWindow';
+import vtkRenderer                from '../../../../../Sources/Rendering/Core/Renderer';
+import vtkRenderWindow            from '../../../../../Sources/Rendering/Core/RenderWindow';
+import vtkRenderWindowInteractor  from '../../../../../Sources/Rendering/Core/RenderWindowInteractor';
 
-const datasetToLoad = [
-  // `${__BASE_PATH__}/data/can.ex2`, // !!! Parametric Dataset not yet supported
-  `${__BASE_PATH__}/data/bot2.wrl`,
-  `${__BASE_PATH__}/data/disk_out_ref.ex2`,
-  `${__BASE_PATH__}/data/Wavelet.vti`,
-];
+/* global __BASE_PATH__ */
+const datasetToLoad = `${__BASE_PATH__}/data/cow.vtp`;
+
+// Create some control UI
+const renderWindowContainer = document.querySelector('body');
+// ----------------------
+
+const ren = vtkRenderer.newInstance();
+ren.setBackground(0.32, 0.34, 0.43);
+
+const renWin = vtkRenderWindow.newInstance();
+renWin.addRenderer(ren);
+
+const glwindow = vtkOpenGLRenderWindow.newInstance();
+glwindow.setContainer(renderWindowContainer);
+renWin.addView(glwindow);
+
+const iren = vtkRenderWindowInteractor.newInstance();
+iren.setView(glwindow);
+
+const actor = vtkActor.newInstance();
+ren.addActor(actor);
+
+const mapper = vtkMapper.newInstance();
+actor.setMapper(mapper);
+
+const cam = vtkCamera.newInstance();
+ren.setActiveCamera(cam);
+cam.setFocalPoint(0, 0, 0);
+cam.setPosition(0, 0, 25);
+cam.setClippingRange(0.1, 50.0);
 
 // Server is not sending the .gz and whith the compress header
 // Need to fetch the true file name and uncompress it locally
-const reader = HttpDataSetReader.newInstance({ fetchGzip: true });
+const reader = vtkHttpDataSetReader.newInstance({ fetchGzip: true });
+reader.setUrl(datasetToLoad).then(() => {
+  reader.update().then(() => {
+    // FIXME the reader should provide a proper vtkDataSet
+    const polydata = vtkDataSet.newInstance(reader.getOutput());
+    mapper.setInputData(polydata);
 
-reader.onBusy(busy => {
-  console.log('reader is', busy ? 'busy' : 'idle');
+    iren.initialize();
+    iren.bindEvents(renderWindowContainer, document);
+    iren.start();
+  });
 });
-
-function loadDataSet(url) {
-  console.log('## Downloading', url, '--------------------------------------');
-  reader.setUrl(url).then(
-    (r, ds) => {
-      console.log('dataset successfuly downloaded', reader.getOutput());
-
-      reader.getArrays().forEach(array => {
-        console.log('-', array.name, array.location, ':', array.enable);
-      });
-
-      r.update().then(
-        ok => {
-          console.log('all data downloaded', reader.getOutput());
-          console.log('blocks', reader.getBlocks());
-          if (datasetToLoad.length) {
-            loadDataSet(datasetToLoad.pop());
-          }
-        },
-        err => {
-          console.log('error downloading data', err);
-        }
-      );
-    },
-    (xhr, e) => {
-      console.log('error fetching dataset', xhr, e);
-    });
-}
-
-// Main
-loadDataSet(datasetToLoad.pop());

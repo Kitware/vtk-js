@@ -1,0 +1,74 @@
+{
+  "PolyData": {
+    "PointData": {},
+    "Cells": {
+      "Polys": {
+        "name": "_polys",
+        "tuple": 1,
+        "dataType": "Uint32Array",
+        "ref": {
+          "encode": "LittleEndian",
+          "basepath": "data",
+          "id": "ee87874a384348c49955d2f13819469c"
+        },
+        "ranges": [
+          {
+            "max": 2902.0,
+            "component": null,
+            "min": 0.0
+          }
+        ],
+        "type": "DataArray",
+        "size": 15593
+      }
+    },
+    "Points": {
+      "name": "_points",
+      "tuple": 3,
+      "dataType": "Float32Array",
+      "ref": {
+        "encode": "LittleEndian",
+        "basepath": "data",
+        "id": "5ab532bd952db1f3d2b7a5e2c1ffca47"
+      },
+      "bounds": [
+        -4.445835113525391,
+        5.9980878829956055,
+        -3.637036085128784,
+        2.7597200870513916,
+        -1.7014050483703613,
+        1.7014050483703613
+      ],
+      "ranges": [
+        {
+          "max": 5.9980878829956055,
+          "component": null,
+          "min": -4.445835113525391
+        },
+        {
+          "max": 2.7597200870513916,
+          "component": null,
+          "min": -3.637036085128784
+        },
+        {
+          "max": 1.7014050483703613,
+          "component": null,
+          "min": -1.7014050483703613
+        },
+        {
+          "max": 6.125802124829696,
+          "component": null,
+          "min": 1.3772239035575602
+        }
+      ],
+      "type": "DataArray",
+      "size": 8709
+    },
+    "CellData": {},
+    "FieldData": {}
+  },
+  "type": "PolyData",
+  "metadata": {
+    "name": "cow.vtp"
+  }
+}
