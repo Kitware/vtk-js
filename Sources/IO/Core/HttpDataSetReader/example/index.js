@@ -1,6 +1,5 @@
 import vtkActor                   from '../../../../../Sources/Rendering/Core/Actor';
 import vtkCamera                  from '../../../../../Sources/Rendering/Core/Camera';
-import vtkDataSet                 from '../../../../../Sources/Common/DataModel/DataSet';
 import vtkHttpDataSetReader       from '../../../../../Sources/IO/Core/HttpDataSetReader';
 import vtkMapper                  from '../../../../../Sources/Rendering/Core/Mapper';
 import vtkOpenGLRenderWindow      from '../../../../../Sources/Rendering/OpenGL/RenderWindow';
@@ -40,17 +39,20 @@ cam.setFocalPoint(0, 0, 0);
 cam.setPosition(0, 0, 25);
 cam.setClippingRange(0.1, 50.0);
 
+const reader = vtkHttpDataSetReader.newInstance({ fetchGzip: true });
+mapper.setInputConnection(reader.getOutputPort());
+
+iren.initialize();
+iren.bindEvents(renderWindowContainer, document);
+iren.start();
+
+// ---- Fetch geometry ----------
 // Server is not sending the .gz and whith the compress header
 // Need to fetch the true file name and uncompress it locally
-const reader = vtkHttpDataSetReader.newInstance({ fetchGzip: true });
 reader.setUrl(datasetToLoad).then(() => {
   reader.update().then(() => {
-    // FIXME the reader should provide a proper vtkDataSet
-    const polydata = vtkDataSet.newInstance(reader.getOutput());
-    mapper.setInputData(polydata);
-
-    iren.initialize();
-    iren.bindEvents(renderWindowContainer, document);
-    iren.start();
+    renWin.render();
   });
 });
+
+global.reader = reader;

@@ -1,6 +1,6 @@
-import * as macro from '../../../macro';
+import * as macro     from '../../../macro';
+import vtkPolyData    from '../../../Common/DataModel/PolyData';
 import vtkBoundingBox from '../../../Common/DataModel/BoundingBox';
-import vtkDataSet from '../../../Common/DataModel/DataSet';
 
 // ----------------------------------------------------------------------------
 // vtkConeSource methods
@@ -19,26 +19,24 @@ export function vtkConeSource(publicAPI, model) {
     if (!dataset || dataset.getMTime() < model.mtime) {
       const state = {};
       dataset = {
-        type: 'PolyData',
+        type: 'vtkPolyData',
         mtime: model.mtime,
         metadata: {
           source: 'ConeSource',
           state,
         },
-        PolyData: {
+        vtkPolyData: {
           Points: {
-            type: 'DataArray',
+            type: 'vtkDataArray',
             name: '_points',
             tuple: 3,
             dataType: model.pointType,
           },
-          Cells: {
-            Polys: {
-              type: 'DataArray',
-              name: '_polys',
-              tuple: 1,
-              dataType: 'Uint32Array',
-            },
+          Polys: {
+            type: 'vtkDataArray',
+            name: '_polys',
+            tuple: 1,
+            dataType: 'Uint32Array',
           },
         },
       };
@@ -59,13 +57,13 @@ export function vtkConeSource(publicAPI, model) {
 
       // Points
       let pointIdx = 0;
-      const points = new window[dataset.PolyData.Points.dataType](numberOfPoints * 3);
-      dataset.PolyData.Points.values = points;
+      const points = new window[dataset.vtkPolyData.Points.dataType](numberOfPoints * 3);
+      dataset.vtkPolyData.Points.values = points;
 
       // Cells
       let cellLocation = 0;
-      const polys = new window[dataset.PolyData.Cells.Polys.dataType](cellArraySize);
-      dataset.PolyData.Cells.Polys.values = polys;
+      const polys = new window[dataset.vtkPolyData.Polys.dataType](cellArraySize);
+      dataset.vtkPolyData.Polys.values = polys;
 
       const bbox = vtkBoundingBox.newInstance();
 
@@ -105,13 +103,13 @@ export function vtkConeSource(publicAPI, model) {
       }
 
       console.log('setting the bounding box');
-      dataset.PolyData.Points.bounds = bbox.getBounds();
+      dataset.vtkPolyData.Points.bounds = bbox.getBounds();
       bbox.delete();
 
       // FIXME apply tranform
 
       // Update output
-      model.output[0] = vtkDataSet.newInstance(dataset);
+      model.output[0] = vtkPolyData.newInstance(dataset);
     }
   }
 

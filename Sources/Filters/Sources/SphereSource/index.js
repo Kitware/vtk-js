@@ -1,5 +1,5 @@
-import * as macro from '../../../macro';
-import vtkDataSet from '../../../Common/DataModel/DataSet';
+import * as macro  from '../../../macro';
+import vtkPolyData from '../../../Common/DataModel/PolyData';
 
 // ----------------------------------------------------------------------------
 // vtkSphereSource methods
@@ -18,30 +18,28 @@ export function vtkSphereSource(publicAPI, model) {
     if (!dataset || dataset.mtime !== model.mtime) {
       const state = {};
       dataset = {
-        type: 'PolyData',
+        type: 'vtkPolyData',
         mtime: model.mtime,
         metadata: {
           source: 'SphereSource',
           state,
         },
-        PolyData: {
+        vtkPolyData: {
           Points: {
-            type: 'DataArray',
+            type: 'vtkDataArray',
             name: '_points',
             tuple: 3,
             dataType: model.pointType,
           },
-          Cells: {
-            Polys: {
-              type: 'DataArray',
-              name: '_polys',
-              tuple: 1,
-              dataType: 'Uint32Array',
-            },
+          Polys: {
+            type: 'vtkDataArray',
+            name: '_polys',
+            tuple: 1,
+            dataType: 'Uint32Array',
           },
           PointData: {
             Normals: {
-              type: 'DataArray',
+              type: 'vtkDataArray',
               name: 'Normals',
               tuple: 3,
               dataType: 'Float32Array',
@@ -65,19 +63,19 @@ export function vtkSphereSource(publicAPI, model) {
 
       // Points
       let pointIdx = 0;
-      let points = new window[dataset.PolyData.Points.dataType](numPts * 3);
-      dataset.PolyData.Points.values = points;
-      dataset.PolyData.Points.size = numPts * 3;
+      let points = new window[dataset.vtkPolyData.Points.dataType](numPts * 3);
+      dataset.vtkPolyData.Points.values = points;
+      dataset.vtkPolyData.Points.size = numPts * 3;
 
       // Normals
       let normals = new Float32Array(numPts * 3);
-      dataset.PolyData.PointData.Normals.values = normals;
-      dataset.PolyData.PointData.Normals.size = numPts * 3;
+      dataset.vtkPolyData.PointData.Normals.values = normals;
+      dataset.vtkPolyData.PointData.Normals.size = numPts * 3;
 
       // Cells
       let cellLocation = 0;
-      let polys = new window[dataset.PolyData.Cells.Polys.dataType](numPolys * 5); // FIXME array size
-      dataset.PolyData.Cells.Polys.values = polys;
+      let polys = new window[dataset.vtkPolyData.Polys.dataType](numPolys * 5); // FIXME array size
+      dataset.vtkPolyData.Polys.values = polys;
 
       // Create north pole if needed
       if (model.startPhi <= 0.0) {
@@ -216,19 +214,19 @@ export function vtkSphereSource(publicAPI, model) {
 
       // Squeeze
       points = points.subarray(0, pointIdx * 3);
-      dataset.PolyData.Points.values = points;
-      dataset.PolyData.Points.size = pointIdx * 3;
+      dataset.vtkPolyData.Points.values = points;
+      dataset.vtkPolyData.Points.size = pointIdx * 3;
 
       normals = normals.subarray(0, pointIdx * 3);
-      dataset.PolyData.PointData.Normals.values = normals;
-      dataset.PolyData.PointData.Normals.size = pointIdx * 3;
+      dataset.vtkPolyData.PointData.Normals.values = normals;
+      dataset.vtkPolyData.PointData.Normals.size = pointIdx * 3;
 
       polys = polys.subarray(0, cellLocation);
-      dataset.PolyData.Cells.Polys.values = polys;
-      dataset.PolyData.Cells.Polys.size = cellLocation;
+      dataset.vtkPolyData.Polys.values = polys;
+      dataset.vtkPolyData.Polys.size = cellLocation;
 
       // Update output
-      model.output[0] = vtkDataSet.newInstance(dataset);
+      model.output[0] = vtkPolyData.newInstance(dataset);
     }
   }
 

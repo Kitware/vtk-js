@@ -1,6 +1,8 @@
 import * as macro from '../../../macro';
+import vtk from '../../../vtk';
 import Endian from '../../../Common/Core/Endian';
 import pako from 'pako';
+import vtkPolyData from '../../../Common/DataModel/PolyData';
 import { TYPE_BYTES, LOCATIONS } from './Constants';
 
 // ----------------------------------------------------------------------------
@@ -8,46 +10,46 @@ import { TYPE_BYTES, LOCATIONS } from './Constants';
 // ----------------------------------------------------------------------------
 
 const GEOMETRY_ARRAYS = {
-  PolyData(dataset) {
+  vtkPolyData(dataset) {
     const arrayToDownload = [];
-    arrayToDownload.push(dataset.PolyData.Points);
-    Object.keys(dataset.PolyData.Cells).forEach(cellName => {
-      if (dataset.PolyData.Cells[cellName]) {
-        arrayToDownload.push(dataset.PolyData.Cells[cellName]);
+    arrayToDownload.push(dataset.vtkPolyData.Points);
+    Object.keys(dataset.vtkPolyData).forEach(cellName => {
+      if (dataset.vtkPolyData[cellName]) {
+        arrayToDownload.push(dataset.vtkPolyData[cellName]);
       }
     });
 
     return arrayToDownload;
   },
 
-  ImageData(dataset) {
+  vtkImageData(dataset) {
     return [];
   },
 
-  UnstructuredGrid(dataset) {
+  vtkUnstructuredGrid(dataset) {
     const arrayToDownload = [];
-    arrayToDownload.push(dataset.UnstructuredGrid.Points);
-    arrayToDownload.push(dataset.UnstructuredGrid.Cells);
-    arrayToDownload.push(dataset.UnstructuredGrid.CellTypes);
+    arrayToDownload.push(dataset.vtkUnstructuredGrid.Points);
+    arrayToDownload.push(dataset.vtkUnstructuredGrid.Cells);
+    arrayToDownload.push(dataset.vtkUnstructuredGrid.CellTypes);
 
     return arrayToDownload;
   },
 
-  RectilinearGrid(dataset) {
+  vtkRectilinearGrid(dataset) {
     const arrayToDownload = [];
-    arrayToDownload.push(dataset.RectilinearGrid.XCoordinates);
-    arrayToDownload.push(dataset.RectilinearGrid.YCoordinates);
-    arrayToDownload.push(dataset.RectilinearGrid.ZCoordinates);
+    arrayToDownload.push(dataset.vtkRectilinearGrid.XCoordinates);
+    arrayToDownload.push(dataset.vtkRectilinearGrid.YCoordinates);
+    arrayToDownload.push(dataset.vtkRectilinearGrid.ZCoordinates);
 
     return arrayToDownload;
   },
 
-  MultiBlock(dataset) {
+  vtkMultiBlock(dataset) {
     let arrayToDownload = [];
-    Object.keys(dataset.MultiBlock.Blocks).forEach(blockName => {
-      const fn = GEOMETRY_ARRAYS[dataset.MultiBlock.Blocks[blockName].type];
+    Object.keys(dataset.vtkMultiBlock.Blocks).forEach(blockName => {
+      const fn = GEOMETRY_ARRAYS[dataset.vtkMultiBlock.Blocks[blockName].type];
       if (fn) {
-        arrayToDownload = [].concat(arrayToDownload, fn(dataset.MultiBlock.Blocks[blockName]));
+        arrayToDownload = [].concat(arrayToDownload, fn(dataset.vtkMultiBlock.Blocks[blockName]));
       }
     });
 
@@ -63,6 +65,9 @@ const GEOMETRY_ARRAYS = {
 export function vtkHttpDataSetReader(publicAPI, model) {
   // Set our className
   model.classHierarchy.push('vtkHttpDataSetReader');
+
+  // Empty output by default
+  model.output[0] = vtkPolyData.newInstance();
 
   // Internal method to fetch Array
   function fetchArray(array, fetchGzip = false) {
@@ -134,7 +139,7 @@ export function vtkHttpDataSetReader(publicAPI, model) {
 
   // Internal method to fill block information and state
   function fillBlocks(dataset, block, arraysToList, enable) {
-    if (dataset.type === 'MultiBlock') {
+    if (dataset.type === 'vtkMultiBlock') {
       Object.keys(dataset.MultiBlock.Blocks).forEach(blockName => {
         block[blockName] = fillBlocks(dataset.MultiBlock.Blocks[blockName], {}, arraysToList, enable);
         block[blockName].enable = enable;
@@ -193,7 +198,7 @@ export function vtkHttpDataSetReader(publicAPI, model) {
   publicAPI.updateMetadata = () =>
     new Promise((resolve, reject) => {
       const xhr = new XMLHttpRequest();
-      let dataset = model.output[0];
+      let dataset = model.dataset;
 
       xhr.onreadystatechange = e => {
         if (xhr.readyState === 1) {
@@ -208,10 +213,11 @@ export function vtkHttpDataSetReader(publicAPI, model) {
 
           if (xhr.status === 200) {
             dataset = JSON.parse(xhr.responseText);
-            model.output[0] = dataset;
+            model.dataset = dataset;
 
             // Generate array list
             model.arrays = [];
+
             const container = dataset[dataset.type];
             const enable = model.enableArray;
             if (container.Blocks) {
@@ -243,14 +249,16 @@ export function vtkHttpDataSetReader(publicAPI, model) {
               Promise.all(pendingPromises)
                 .then(
                   ok => {
-                    resolve(publicAPI, dataset);
+                    model.output[0] = vtk(dataset);
+                    resolve(publicAPI, model.output[0]);
                   },
                   err => {
                     reject(err);
                   }
                 );
             } else {
-              resolve(publicAPI, dataset);
+              model.output[0] = vtk(dataset);
+              resolve(publicAPI, model.output[0]);
             }
           } else {
             reject(xhr, e);
@@ -284,28 +292,40 @@ export function vtkHttpDataSetReader(publicAPI, model) {
 
   // Fetch the actual data arrays
   publicAPI.update = () => {
-    const dataset = model.output[0];
+    const datasetStruct = model.dataset;
+    const datasetObj = model.output[0];
     const arrayToFecth = [];
+    const arrayMappingFunc = [];
     model.arrays
       .filter(array => array.enable)
       .forEach(array => {
         array.ds.forEach(ds => {
-          if (isDatasetEnable(dataset, model.blocks, ds)) {
-            arrayToFecth.push(ds[array.location][array.name]);
+          if (isDatasetEnable(datasetStruct, model.blocks, ds)) {
+            if (ds[array.location][array.name].ref) {
+              arrayToFecth.push(ds[array.location][array.name]);
+              arrayMappingFunc.push(datasetObj[`get${array.location}`]().addArray);
+            }
           }
         });
       });
 
     return new Promise((resolve, reject) => {
+      let lastArray = null;
       const error = (xhr, e) => {
         reject(xhr, e);
       };
 
       const processNext = () => {
+        if (lastArray) {
+          arrayMappingFunc.pop()(vtk(lastArray));
+        }
+
         if (arrayToFecth.length) {
-          fetchArray(arrayToFecth.pop(), model.fetchGzip).then(processNext, error);
+          lastArray = arrayToFecth.pop();
+          fetchArray(lastArray, model.fetchGzip).then(processNext, error);
         } else {
-          resolve(publicAPI, dataset);
+          datasetObj.modified();
+          resolve(publicAPI, datasetObj);
         }
       };
 

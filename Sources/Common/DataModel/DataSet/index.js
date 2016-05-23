@@ -1,6 +1,5 @@
-import * as macro from '../../../macro';
+import * as macro     from '../../../macro';
 import vtkBoundingBox from '../BoundingBox';
-import vtkDataArray from '../../Core/DataArray';
 import vtkDataSetAttributes from '../DataSetAttributes';
 import vtkMath from '../../Core/Math';
 
@@ -45,7 +44,7 @@ export const STATIC = {
 };
 
 // ----------------------------------------------------------------------------
-// vtkDataArray methods
+// vtkDataSet methods
 // ----------------------------------------------------------------------------
 
 function vtkDataSet(publicAPI, model) {
@@ -53,55 +52,12 @@ function vtkDataSet(publicAPI, model) {
   model.classHierarchy.push('vtkDataSet');
 
   // Expose dataset
-  const dataset = model[model.type];
+  const dataset = model.type ? model[model.type] || {} : {};
   publicAPI.dataset = dataset;
 
-  // Provide getPoints() if available
-  if (dataset.Points) {
-    const points = vtkDataArray.newInstance(dataset.Points);
-    publicAPI.getPoints = () => points;
-  }
-
-  ['PointData', 'CellData', 'FieldData'].forEach(dataCategoryName => {
-    const arrays = {};
-    if (dataset[dataCategoryName]) {
-      Object.keys(dataset[dataCategoryName]).forEach(name => {
-        if (dataset[dataCategoryName][name].type === 'DataArray') {
-          arrays[name] = vtkDataArray.newInstance(dataset[dataCategoryName][name]);
-        }
-      });
-    }
-    // FIXME: missing active arrays...
-    publicAPI[`get${dataCategoryName}`] = () => vtkDataSetAttributes.newInstance({ arrays });
-  });
-
-  // UnstructuredGrid Cells + Types
-  if (model.type === 'UnstructuredGrid') {
-    ['Cells', 'CellsTypes'].forEach(arrayName => {
-      if (dataset[arrayName].type === 'DataArray') {
-        const dataArray = vtkDataArray.newInstance(dataset[arrayName]);
-        publicAPI[`get${arrayName}`] = () => dataArray;
-      }
-    });
-  }
-
-  // PolyData Cells
-  if (model.type === 'PolyData') {
-    ['Verts', 'Lines', 'Polys', 'Strips'].forEach(cellName => {
-      if (dataset.Cells[cellName]) {
-        const dataArray = vtkDataArray.newInstance(dataset.Cells[cellName]);
-        publicAPI[`get${cellName}`] = () => dataArray;
-      } else {
-        const dataArray = vtkDataArray.newInstance({ empty: true });
-        publicAPI[`get${cellName}`] = () => dataArray;
-      }
-    });
-  }
-
-  // Push getBounds on root API
-  if (publicAPI.getPoints) {
-    publicAPI.getBounds = publicAPI.getPoints().getBounds;
-  }
+  model.pointData = vtkDataSetAttributes.newInstance({ dataArrays: dataset.PointData });
+  model.cellData = vtkDataSetAttributes.newInstance({ dataArrays: dataset.CellData });
+  model.fieldData = vtkDataSetAttributes.newInstance({ dataArrays: dataset.FieldData });
 }
 
 // ----------------------------------------------------------------------------
@@ -118,6 +74,7 @@ export function extend(publicAPI, model, initialValues = {}) {
 
   // Object methods
   macro.obj(publicAPI, model);
+  macro.get(publicAPI, model, ['pointData', 'cellData', 'fieldData']);
 
   // Object specific methods
   vtkDataSet(publicAPI, model);
@@ -125,7 +82,7 @@ export function extend(publicAPI, model, initialValues = {}) {
 
 // ----------------------------------------------------------------------------
 
-export const newInstance = macro.newInstance(extend);
+export const newInstance = macro.newInstance(extend, 'vtkDataSet');
 
 // ----------------------------------------------------------------------------
 

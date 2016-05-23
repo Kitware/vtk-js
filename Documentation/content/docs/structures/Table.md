@@ -7,15 +7,15 @@ A Table is a structure that gather DataArray with the same number of tuples.
 
 ```js
 {
-  type: 'Table',
+  type: 'vtkTable',
   metadata: {
     name: 'data.csv',
     size: 2345,
   },
-  Table: {
+  vtkTable: {
     Columns: {
       Temperature: {
-        type: 'DataArray',
+        type: 'vtkDataArray',
         name: 'Temperature',
         tuple: 1,
         size: 300,
@@ -27,7 +27,7 @@ A Table is a structure that gather DataArray with the same number of tuples.
         ],
       },
       Pressure: {
-        type: 'DataArray',
+        type: 'vtkDataArray',
         name: 'Pressure',
         tuple: 1,
         size: 300,

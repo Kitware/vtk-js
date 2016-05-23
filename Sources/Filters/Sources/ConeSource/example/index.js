@@ -62,3 +62,11 @@ document.querySelector('.capping').addEventListener('change', e => {
   coneSource.set({ capping });
   renWin.render();
 });
+
+// ----- Console play ground -----
+
+global.coneSource = coneSource;
+global.mapper = mapper;
+global.actor = actor;
+global.renderer = ren;
+global.renderWindow = renWin;

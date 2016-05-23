@@ -7,14 +7,14 @@ A PolyData is a surface mesh structure that can hold data arrays either on point
 
 ```js
 {
-  type: 'PolyData',
+  type: 'vtkPolyData',
   metadata: {
     name: 'example.vtk',
     size: 2345,
   },
-  PolyData: {
+  vtkPolyData: {
     Points: {
-      type: 'DataArray',
+      type: 'vtkDataArray',
       name: '_points',
       tuple: 3,
       size: 300,
@@ -27,44 +27,42 @@ A PolyData is a surface mesh structure that can hold data arrays either on point
         { min: -1, max: 1, component: 2, name: 'Z' },
       ],
     },
-    Cells: {
-      Verts: {
-        type: 'DataArray',
-        name: '_verts',
-        tuple: 1,
-        size: 123,
-        dataType: 'Uint32Array', // or Uint16Array
-        buffer: new ArrayBuffer(),
-        values: new Uint32Array(this.buffer), // Follow the CellArray Mapping [{nbPoints}, {pointIdx...}]
-      },
-      Lines: {
-        type: 'DataArray',
-        name: '_lines',
-        tuple: 1,
-        size: 0,
-        dataType: 'Uint32Array', // or Uint16Array
-        values: null,
-      },
-      Polys: {
-        type: 'DataArray',
-        name: '_lines',
-        tuple: 1,
-        size: 8,
-        dataType: 'Uint32Array', // or Uint16Array
-        values: new Uint32Array([3, 0, 1, 2, 3, 3, 4, 5]), // 2 triangles (0,1,2)+(3,4,5)
-      },
-      Strips: {
-        type: 'DataArray',
-        name: '_lines',
-        tuple: 1,
-        size: 0,
-        dataType: 'Uint32Array', // or Uint16Array
-        values: null,
-      },
+    Verts: {
+      type: 'vtkDataArray',
+      name: '_verts',
+      tuple: 1,
+      size: 123,
+      dataType: 'Uint32Array', // or Uint16Array
+      buffer: new ArrayBuffer(),
+      values: new Uint32Array(this.buffer), // Follow the CellArray Mapping [{nbPoints}, {pointIdx...}]
+    },
+    Lines: {
+      type: 'vtkDataArray',
+      name: '_lines',
+      tuple: 1,
+      size: 0,
+      dataType: 'Uint32Array', // or Uint16Array
+      values: null,
+    },
+    Polys: {
+      type: 'vtkDataArray',
+      name: '_lines',
+      tuple: 1,
+      size: 8,
+      dataType: 'Uint32Array', // or Uint16Array
+      values: new Uint32Array([3, 0, 1, 2, 3, 3, 4, 5]), // 2 triangles (0,1,2)+(3,4,5)
+    },
+    Strips: {
+      type: 'vtkDataArray',
+      name: '_lines',
+      tuple: 1,
+      size: 0,
+      dataType: 'Uint32Array', // or Uint16Array
+      values: null,
     },
     PointData: {
       Temperature: {
-        type: 'DataArray',
+        type: 'vtkDataArray',
         name: 'Temperature',
         tuple: 1,
         size: 300,
@@ -78,7 +76,7 @@ A PolyData is a surface mesh structure that can hold data arrays either on point
     },
     CellData: {
       CellId: {
-        type: 'DataArray',
+        type: 'vtkDataArray',
         name: 'CellId',
         tuple: 1,
         size: 132,

@@ -7,7 +7,7 @@ A MultiBlock is a set of other VTK data structures.
 
 ```js
 {
-  "MultiBlock": {
+  "vtkMultiBlock": {
     "Blocks": {
       "Element Blocks": {
         "MultiBlock": {
@@ -24,7 +24,7 @@ A MultiBlock is a set of other VTK data structures.
                       "component": null,
                       "min": 1
                     }],
-                    "type": "DataArray",
+                    "type": "vtkDataArray",
                     "size": 7472,
                     "values": Uint32Array[...],
                   },
@@ -37,7 +37,7 @@ A MultiBlock is a set of other VTK data structures.
                       "component": null,
                       "min": 1
                     }],
-                    "type": "DataArray",
+                    "type": "vtkDataArray",
                     "size": 7472,
                     "values": Int32Array[...],
                   }
@@ -52,7 +52,7 @@ A MultiBlock is a set of other VTK data structures.
                       "component": null,
                       "min": 1
                     }],
-                    "type": "DataArray",
+                    "type": "vtkDataArray",
                     "size": 1,
                     "values": Int32Array[],
                   },
@@ -389,7 +389,7 @@ A MultiBlock is a set of other VTK data structures.
                       "component": null,
                       "min": 245.55243839147678
                     }],
-                    "type": "DataArray",
+                    "type": "vtkDataArray",
                     "size": 810,
                     "buffer": {},
                     "values": Int8Array[],
@@ -535,7 +535,7 @@ A MultiBlock is a set of other VTK data structures.
                       "component": null,
                       "min": 143.55138452832838
                     }],
-                    "type": "DataArray",
+                    "type": "vtkDataArray",
                     "size": 396,
                     "buffer": {},
                     "values": Int8Array[],
@@ -564,7 +564,7 @@ A MultiBlock is a set of other VTK data structures.
                     "component": null,
                     "min": 0
                   }],
-                  "type": "DataArray",
+                  "type": "vtkDataArray",
                   "size": 67248
                 },
                 "PointData": {
@@ -577,7 +577,7 @@ A MultiBlock is a set of other VTK data structures.
                       "component": null,
                       "min": 1
                     }],
-                    "type": "DataArray",
+                    "type": "vtkDataArray",
                     "size": 8499,
                     "buffer": {},
                     "values": Uint32Array[],
@@ -591,7 +591,7 @@ A MultiBlock is a set of other VTK data structures.
                       "component": null,
                       "min": 293.1499938964844
                     }],
-                    "type": "DataArray",
+                    "type": "vtkDataArray",
                     "size": 8499,
                     "buffer": {},
                     "values": Float64Array[],
@@ -605,7 +605,7 @@ A MultiBlock is a set of other VTK data structures.
                       "component": null,
                       "min": 0
                     }],
-                    "type": "DataArray",
+                    "type": "vtkDataArray",
                     "size": 8499,
                     "buffer": {},
                     "values": Float64Array[],
@@ -631,7 +631,7 @@ A MultiBlock is a set of other VTK data structures.
                       "component": null,
                       "min": 0
                     }],
-                    "type": "DataArray",
+                    "type": "vtkDataArray",
                     "size": 25497,
                     "buffer": {},
                     "values": Float64Array[],
@@ -645,7 +645,7 @@ A MultiBlock is a set of other VTK data structures.
                       "component": null,
                       "min": 0.08047682046890259
                     }],
-                    "type": "DataArray",
+                    "type": "vtkDataArray",
                     "size": 8499,
                     "buffer": {},
                     "values": Float64Array[],
@@ -664,7 +664,7 @@ A MultiBlock is a set of other VTK data structures.
                     "component": null,
                     "min": 12
                   }],
-                  "type": "DataArray",
+                  "type": "vtkDataArray",
                   "size": 7472
                 },
                 "Points": {
@@ -693,7 +693,7 @@ A MultiBlock is a set of other VTK data structures.
                     "component": null,
                     "min": 4.440892098500626e-16
                   }],
-                  "type": "DataArray",
+                  "type": "vtkDataArray",
                   "size": 25497
                 }
               },
@@ -747,7 +747,7 @@ A MultiBlock is a set of other VTK data structures.
       }
     }
   },
-  "type": "MultiBlock",
+  "type": "vtkMultiBlock",
   "metadata": {
     "name": "disk_out_ref.ex2"
   }

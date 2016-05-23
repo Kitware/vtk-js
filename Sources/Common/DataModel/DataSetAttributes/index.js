@@ -1,5 +1,12 @@
 import * as macro from '../../../macro';
 
+/* eslint-disable no-unused-vars */
+// Needed so the VTK factory is filled with them
+import vtkDataArray from '../../../Common/Core/DataArray';
+// import vtkStringArray from '../../../Common/Core/vtkStringArray';
+
+import vtk from '../../../vtk';
+
 // ----------------------------------------------------------------------------
 // vtkDataSetAttributes methods
 // ----------------------------------------------------------------------------
@@ -61,16 +68,27 @@ function vtkDataSetAttributes(publicAPI, model) {
       throw new Error('Array with same name already exist', array, model.arrays);
     }
     model.arrays[array.getName()] = array;
+    publicAPI.modified();
   };
 
   publicAPI.removeArray = (name) => {
     const array = model.arrays[name];
     delete model.arrays[name];
+    publicAPI.modified();
     return array;
   };
 
   publicAPI.getArrayNames = () => Object.keys(model.arrays);
   publicAPI.getArray = name => model.arrays[name];
+
+  // Process dataArrays if any
+  if (model.dataArrays && Object.keys(model.dataArrays).length) {
+    Object.keys(model.dataArrays).forEach(name => {
+      if (!model.dataArrays[name].ref && model.dataArrays[name].dataType === 'vtkDataArray') {
+        publicAPI.addArray(vtkDataArray.newInstance(model.dataArrays[name]));
+      }
+    });
+  }
 }
 
 // ----------------------------------------------------------------------------
@@ -111,7 +129,7 @@ export function extend(publicAPI, model, initialValues = {}) {
 
 // ----------------------------------------------------------------------------
 
-export const newInstance = macro.newInstance(extend);
+export const newInstance = macro.newInstance(extend, 'vtkDataSetAttributes');
 
 // ----------------------------------------------------------------------------
 

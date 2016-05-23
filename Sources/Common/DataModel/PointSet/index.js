@@ -1,31 +1,34 @@
-import * as macro from '../../../macro';
+import * as macro   from '../../../macro';
+import vtkDataSet   from '../DataSet';
+import vtkDataArray from '../../Core/DataArray';
 
 // ----------------------------------------------------------------------------
 // Global methods
 // ----------------------------------------------------------------------------
-
-function evaluate(normal, origin, x) {
-  return normal[0] * (x[0] - origin[0])
-       + normal[1] * (x[1] - origin[1])
-       + normal[2] * (x[2] - origin[2]);
-}
 
 // ----------------------------------------------------------------------------
 // Static API
 // ----------------------------------------------------------------------------
 
 export const STATIC = {
-  evaluate,
 };
 
-
 // ----------------------------------------------------------------------------
-// vtkPlane methods
+// vtkPointSet methods
 // ----------------------------------------------------------------------------
 
-function vtkPlane(publicAPI, model) {
+function vtkPointSet(publicAPI, model) {
   // Set our className
-  model.classHierarchy.push('vtkPlane');
+  model.classHierarchy.push('vtkPointSet');
+
+  // Create empty points
+  model.points = vtkDataArray.newInstance({ empty: true });
+
+  publicAPI.getBounds = () => model.points.getBounds;
+
+  publicAPI.computeBounds = () => {
+    publicAPI.getBounds();
+  };
 }
 
 // ----------------------------------------------------------------------------
@@ -33,7 +36,7 @@ function vtkPlane(publicAPI, model) {
 // ----------------------------------------------------------------------------
 
 const DEFAULT_VALUES = {
-  type: 'vtkPlane',
+  points: null,
 };
 
 // ----------------------------------------------------------------------------
@@ -41,15 +44,17 @@ const DEFAULT_VALUES = {
 export function extend(publicAPI, model, initialValues = {}) {
   Object.assign(model, DEFAULT_VALUES, initialValues);
 
-  // Object methods
-  macro.obj(publicAPI, model);
-  macro.setGet(publicAPI, model, ['bounds']);
-  vtkPlane(publicAPI, model);
+  // Inheritance
+  vtkDataSet.extend(publicAPI, model);
+  macro.get(publicAPI, model, ['points']);
+
+  // Object specific methods
+  vtkPointSet(publicAPI, model);
 }
 
 // ----------------------------------------------------------------------------
 
-export const newInstance = macro.newInstance(extend, 'vtkPlane');
+export const newInstance = macro.newInstance(extend, 'vtkPointSet');
 
 // ----------------------------------------------------------------------------
 

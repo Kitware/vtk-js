@@ -24,7 +24,7 @@ The possible dataType are the one available in the language itself as typed arra
 
 ```js
 {
-  type: 'DataArray',
+  type: 'vtkDataArray',
   name: 'Temperature',
   tuple: 1,
   size: 1024,
@@ -41,7 +41,7 @@ The possible dataType are the one available in the language itself as typed arra
 
 ```js
 {
-  type: 'DataArray',
+  type: 'vtkDataArray',
   name: 'Velocity',
   tuple: 3,
   size: 3072,
@@ -65,7 +65,7 @@ it in memory like the previously described ones.
 
 ```js
 {
-  type: 'DataArray',
+  type: 'vtkDataArray',
   name: 'Velocity',
   tuple: 3,
   size: 3072,

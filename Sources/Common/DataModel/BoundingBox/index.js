@@ -395,6 +395,7 @@ function vtkBoundingBox(publicAPI, model) {
 // ----------------------------------------------------------------------------
 
 const DEFAULT_VALUES = {
+  type: 'vtkBoundingBox',
   bounds: [].concat(INIT_BOUNDS),
 };
 
@@ -411,7 +412,7 @@ export function extend(publicAPI, model, initialValues = {}) {
 
 // ----------------------------------------------------------------------------
 
-export const newInstance = macro.newInstance(extend);
+export const newInstance = macro.newInstance(extend, 'vtkBoundingBox');
 
 // ----------------------------------------------------------------------------
 

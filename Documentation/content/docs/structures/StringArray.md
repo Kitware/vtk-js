@@ -7,7 +7,7 @@ A String array is meant to keep track of String values. It is basically a standa
 
 ```js
 {
-  type: 'StringArray',
+  type: 'vtkStringArray',
   name: 'Players',
   tuple: 1,
   size: 1024,
@@ -24,7 +24,7 @@ it in memory like the previously described ones.
 
 ```js
 {
-  type: 'StringArray',
+  type: 'vtkStringArray',
   name: 'Players',
   tuple: 1,
   size: 1024,

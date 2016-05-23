@@ -65,7 +65,7 @@ def dumpStringArray(datasetDir, dataDir, array, root = {}, compress = True):
       os.remove(pPath)
 
   root['ref'] = getRef(os.path.relpath(dataDir, datasetDir), pMd5)
-  root['type'] = 'StringArray'
+  root['type'] = 'vtkStringArray'
   root['name'] = array.GetName()
   root['dataType'] = 'JSON'
   root['tuple'] = array.GetNumberOfComponents()
@@ -104,7 +104,7 @@ def dumpDataArray(datasetDir, dataDir, array, root = {}, compress = True):
   # print array.GetName(), '=>', jsMapping[arrayTypesMapping[array.GetDataType()]]
 
   root['ref'] = getRef(os.path.relpath(dataDir, datasetDir), pMd5)
-  root['type'] = 'DataArray'
+  root['type'] = 'vtkDataArray'
   root['name'] = array.GetName()
   root['dataType'] = jsMapping[arrayTypesMapping[array.GetDataType()]]
   root['tuple'] = array.GetNumberOfComponents()
@@ -171,8 +171,8 @@ def dumpAttributes(datasetDir, dataDir, dataset, root = {}, compress = True):
 # -----------------------------------------------------------------------------
 
 def dumpPolyData(datasetDir, dataDir, dataset, root = {}, compress = True):
-  root['type'] = 'PolyData'
-  container = root['PolyData'] = {}
+  root['type'] = 'vtkPolyData'
+  container = root['vtkPolyData'] = {}
 
   # Points
   points = dumpDataArray(datasetDir, dataDir, dataset.GetPoints().GetData(), {}, compress)
@@ -182,28 +182,28 @@ def dumpPolyData(datasetDir, dataDir, dataset, root = {}, compress = True):
   # FIXME range...
 
   # Cells
-  _cells = container['Cells'] = {}
+  _cells = container
 
   ## Verts
-  if dataset.GetVerts():
+  if dataset.GetVerts() and dataset.GetVerts().GetData().GetNumberOfTuples() > 0:
     _verts = dumpDataArray(datasetDir, dataDir, dataset.GetVerts().GetData(), {}, compress)
     _verts['name'] = '_verts'
     _cells['Verts'] = _verts
 
   ## Lines
-  if dataset.GetLines():
+  if dataset.GetLines() and dataset.GetLines().GetData().GetNumberOfTuples() > 0:
     _lines = dumpDataArray(datasetDir, dataDir, dataset.GetLines().GetData(), {}, compress)
     _lines['name'] = '_lines'
     _cells['Lines'] = _lines
 
   ## Polys
-  if dataset.GetPolys():
+  if dataset.GetPolys() and dataset.GetPolys().GetData().GetNumberOfTuples() > 0:
     _polys = dumpDataArray(datasetDir, dataDir, dataset.GetPolys().GetData(), {}, compress)
     _polys['name'] = '_polys'
     _cells['Polys'] = _polys
 
   ## Strips
-  if dataset.GetStrips():
+  if dataset.GetStrips() and dataset.GetStrips().GetData().GetNumberOfTuples() > 0:
     _strips = dumpDataArray(datasetDir, dataDir, dataset.GetStrips().GetData(), {}, compress)
     _strips['name'] = '_strips'
     _cells['Strips'] = _strips
@@ -218,8 +218,8 @@ writerMapping['vtkPolyData'] = dumpPolyData
 # -----------------------------------------------------------------------------
 
 def dumpUnstructuredGrid(datasetDir, dataDir, dataset, root = {}, compress = True):
-  root['type'] = 'UnstructuredGrid'
-  container = root['UnstructuredGrid'] = {}
+  root['type'] = 'vtkUnstructuredGrid'
+  container = root['vtkUnstructuredGrid'] = {}
 
   # Points
   points = dumpDataArray(datasetDir, dataDir, dataset.GetPoints().GetData(), {}, compress)
@@ -243,8 +243,8 @@ writerMapping['vtkUnstructuredGrid'] = dumpUnstructuredGrid
 # -----------------------------------------------------------------------------
 
 def dumpImageData(datasetDir, dataDir, dataset, root = {}, compress = True):
-  root['type'] = 'ImageData'
-  container = root['ImageData'] = {}
+  root['type'] = 'vtkImageData'
+  container = root['vtkImageData'] = {}
 
   # Origin / Spacing / Dimension
   container['Origin'] = tuple(dataset.GetOrigin())
@@ -261,8 +261,8 @@ writerMapping['vtkImageData'] = dumpImageData
 # -----------------------------------------------------------------------------
 
 def dumpRectilinearGrid(datasetDir, dataDir, dataset, root = {}, compress = True):
-  root['type'] = 'RectilinearGrid'
-  container = root['RectilinearGrid'] = {}
+  root['type'] = 'vtkRectilinearGrid'
+  container = root['vtkRectilinearGrid'] = {}
 
   # Dimensions
   container['Dimensions'] = tuple(dataset.GetDimensions())
@@ -282,8 +282,8 @@ writerMapping['vtkRectilinearGrid'] = dumpRectilinearGrid
 # -----------------------------------------------------------------------------
 
 def dumpTable(datasetDir, dataDir, dataset, root = {}, compress = True):
-  root['type'] = 'Table'
-  container = root['Table'] = {}
+  root['type'] = 'vtkTable'
+  container = root['vtkTable'] = {}
 
   # Columns
   _columns = container['Columns'] = {}
@@ -300,8 +300,8 @@ writerMapping['vtkTable'] = dumpTable
 # -----------------------------------------------------------------------------
 
 def dumpMultiBlock(datasetDir, dataDir, dataset, root = {}, compress = True):
-  root['type'] = 'MultiBlock'
-  container = root['MultiBlock'] = {}
+  root['type'] = 'vtkMultiBlock'
+  container = root['vtkMultiBlock'] = {}
 
   _blocks = container['Blocks'] = {}
   _nbBlocks = dataset.GetNumberOfBlocks()

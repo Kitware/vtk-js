@@ -29,12 +29,18 @@ export function vtkShaderProgram(publicAPI, model) {
 
   publicAPI.compileShader = () => {
     if (!model.vertexShader.compile()) {
-      console.log(model.vertexShader.getSource().split('\n').map((line, index) => `${index}: ${line}`).join('\n'));
+      console.log(model.vertexShader.getSource()
+        .split('\n')
+        .map((line, index) => `${index}: ${line}`)
+        .join('\n'));
       console.log(model.vertexShader.getError());
       return 0;
     }
     if (!model.fragmentShader.compile()) {
-      console.log(model.fragmentShader.getSource().split('\n').map((line, index) => `${index}: ${line}`).join('\n'));
+      console.log(model.fragmentShader.getSource()
+        .split('\n')
+        .map((line, index) => `${index}: ${line}`)
+        .join('\n'));
       console.log(model.fragmentShader.getError());
       return 0;
     }

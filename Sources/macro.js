@@ -1,3 +1,5 @@
+import vtk from './vtk';
+
 let globalMTime = 0;
 // ----------------------------------------------------------------------------
 // capitilze provided string
@@ -339,12 +341,19 @@ export function event(publicAPI, model, eventName) {
 // newInstance
 // ----------------------------------------------------------------------------
 
-export function newInstance(extend) {
-  return (initialValues = {}) => {
+export function newInstance(extend, className) {
+  const constructor = (initialValues = {}) => {
     const model = {};
     const publicAPI = {};
     extend(publicAPI, model, initialValues);
     return Object.freeze(publicAPI);
   };
+
+  // Register constructor to factory
+  if (className) {
+    vtk.register(className, constructor);
+  }
+
+  return constructor;
 }
 

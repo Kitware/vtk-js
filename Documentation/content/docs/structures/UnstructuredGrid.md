@@ -7,14 +7,14 @@ An UnstructuredGrid is a mesh structure that can hold data arrays either on poin
 
 ```js
 {
-  type: 'UnstructuredGrid',
+  type: 'vtkUnstructuredGrid',
   metadata: {
     name: 'data.vtu',
     size: 2345,
   },
-  UnstructuredGrid: {
+  vtkUnstructuredGrid: {
     Points: {
-      type: 'DataArray',
+      type: 'vtkDataArray',
       name: '_points',
       tuple: 3,
       size: 300,
@@ -28,7 +28,7 @@ An UnstructuredGrid is a mesh structure that can hold data arrays either on poin
       ],
     },
     Cells: {
-      type: 'DataArray',
+      type: 'vtkDataArray',
       name: '_cells',
       tuple: 1,
       size: 123,
@@ -37,7 +37,7 @@ An UnstructuredGrid is a mesh structure that can hold data arrays either on poin
       values: new Uint32Array(this.buffer), // Follow the CellArray Mapping [{nbPoints}, {pointIdx...}]
     },
     CellTypes: {
-      type: 'DataArray',
+      type: 'vtkDataArray',
       name: '_cells',
       tuple: 1,
       size: 10,
@@ -47,7 +47,7 @@ An UnstructuredGrid is a mesh structure that can hold data arrays either on poin
     },
     PointData: {
       Temperature: {
-        type: 'DataArray',
+        type: 'vtkDataArray',
         name: 'Temperature',
         tuple: 1,
         size: 300,
@@ -61,7 +61,7 @@ An UnstructuredGrid is a mesh structure that can hold data arrays either on poin
     },
     CellData: {
       CellId: {
-        type: 'DataArray',
+        type: 'vtkDataArray',
         name: 'CellId',
         tuple: 1,
         size: 132,
