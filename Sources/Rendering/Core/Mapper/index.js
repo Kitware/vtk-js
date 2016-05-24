@@ -59,7 +59,6 @@ function vtkMapper(publicAPI, model) {
   };
 
   publicAPI.createDefaultLookupTable = () => {
-    console.log('vtkMapper::createDefaultLookupTable - NOT IMPLEMENTED');
     model.lookupTable = vtkLookupTable.newInstance();
   };
 
@@ -131,13 +130,14 @@ function vtkMapper(publicAPI, model) {
     };
   };
 
-  publicAPI.mapScalars = notImplemented('mapScalars');
-  // (input, alpha) => {
-  //   console.log('vtkMapper::mapScalars - NOT IMPLEMENTED');
-  //   const cellFlag = false;
-  //   const rgba = new Uint8Array(10);
-  //   return { rgba, cellFlag };
-  // };
+  publicAPI.mapScalars = (input, alpha) => {
+    const lut = publicAPI.getLookupTable();
+    if (lut) {
+      // Ensure that the lookup table is built
+      lut.build();
+      model.colorMapColors = lut.mapScalars(input.getPointData().getScalars(), model.colorMode, 0);
+    }
+  };
 
   publicAPI.setScalarMaterialModeToDefault = () => publicAPI.setScalarMaterialMode(0);
   publicAPI.setScalarMaterialModeToAmbient = () => publicAPI.setScalarMaterialMode(1);
@@ -173,7 +173,6 @@ function vtkMapper(publicAPI, model) {
     return model.lookupTable;
   };
 
-  publicAPI.createDefaultLookupTable = notImplemented('createDefaultLookupTable');
   publicAPI.acquireInvertibleLookupTable = notImplemented('AcquireInvertibleLookupTable');
   publicAPI.valueToColor = notImplemented('ValueToColor');
   publicAPI.colorToValue = notImplemented('ColorToValue');

@@ -6,6 +6,7 @@ import vtkActor from '../../../Sources/Rendering/Core/Actor';
 import vtkMapper from '../../../Sources/Rendering/Core/Mapper';
 import vtkCamera from '../../../Sources/Rendering/Core/Camera';
 import vtkRenderWindowInteractor from '../../../Sources/Rendering/Core/RenderWindowInteractor';
+import vtkDataArray from '../../../Sources/Common/Core/DataArray';
 
 import controlPanel from './controller.html';
 
@@ -48,7 +49,9 @@ cam.setPosition(0, 0, 3);
 cam.setClippingRange(0.1, 50.0);
 
 const coneSource = vtkConeSource.newInstance({ height: 1.0 });
-mapper.setInputConnection(coneSource.getOutputPort());
+
+// mapper.setInputConnection(coneSource.getOutputPort());
+mapper.setInputData(coneData);
 
 iren.initialize();
 iren.bindEvents(renderWindowContainer, document);

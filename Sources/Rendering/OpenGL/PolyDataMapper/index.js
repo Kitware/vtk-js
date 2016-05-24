@@ -854,6 +854,9 @@ export function vtkOpenGLPolyDataMapper(publicAPI, model) {
       return;
     }
 
+    model.renderable.mapScalars(poly, 1.0);
+    const c = model.renderable.getColorMapColors();
+
     // Do we have normals?
     const n = (actor.getProperty().getInterpolation() !== SHADINGS.VTK_FLAT) ? poly.getPointData().getNormals() : null;
 
@@ -864,10 +867,9 @@ export function vtkOpenGLPolyDataMapper(publicAPI, model) {
     // parameters in the mapper
 
     const representation = actor.getProperty().getRepresentation();
-    const toString = `${poly.getMTime()}A${representation}B${poly.getMTime()}C${(n ? n.getMTime() : 1)}C`;
+    const toString = `${poly.getMTime()}A${representation}B${poly.getMTime()}C${(n ? n.getMTime() : 1)}C${(model.colors ? model.colors.getMTime() : 1)}`;
 
     const tcoords = null;
-    const c = null;
     if (model.VBOBuildString !== toString) {
       // Build the VBOs
       const points = poly.getPoints();
