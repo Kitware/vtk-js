@@ -50,6 +50,29 @@ cam.setClippingRange(0.1, 50.0);
 
 const coneSource = vtkConeSource.newInstance({ height: 1.0 });
 
+
+const scalars = {
+  type: 'vtkDataArray',
+  name: 'temp',
+  tuple: 1,
+  dataType: 'Float32Array',
+};
+
+const s = new window[scalars.dataType](coneSource.getResolution() + 1);
+for (let i = 0; i < s.length; i++) {
+  s[i] = Math.random();
+}
+scalars.values = s;
+scalars.size = s.length;
+
+const da = vtkDataArray.newInstance(scalars);
+da.setName('temp');
+
+const coneData = coneSource.getOutput();
+const cpd = coneData.getPointData();
+cpd.addArray(da);
+cpd.setActiveScalars(da.getName());
+
 // mapper.setInputConnection(coneSource.getOutputPort());
 mapper.setInputData(coneData);
 

@@ -4,6 +4,7 @@ import vtkMath from '../../../Common/Core/Math';
 import vtkShaderProgram from '../ShaderProgram';
 import vtkViewNode from '../../SceneGraph/ViewNode';
 import { REPRESENTATIONS, SHADINGS } from '../../Core/Property/Constants';
+import { MATERIAL_MODE_VALUES } from '../../Core/Mapper/Constants';
 
 import vtkPolyDataVS from '../glsl/vtkPolyDataVS.c';
 import vtkPolyDataFS from '../glsl/vtkPolyDataFS.c';
@@ -56,6 +57,8 @@ export function vtkOpenGLPolyDataMapper(publicAPI, model) {
   };
 
   publicAPI.replaceShaderColor = (shaders, ren, actor) => {
+    let VSSource = shaders.Vertex;
+    let GSSource = shaders.Geometry;
     let FSSource = shaders.Fragment;
 
     const lastLightComplexity = model.lastLightComplexity.get(model.lastBoundBO);
@@ -72,8 +75,6 @@ export function vtkOpenGLPolyDataMapper(publicAPI, model) {
         'uniform vec3 specularColorUniform; // intensity weighted color',
         'uniform float specularPowerUniform;']);
     }
-    FSSource = vtkShaderProgram.substitute(FSSource, '//VTK::Color::Dec',
-      colorDec).result;
 
     // now handle the more complex fragment shader implementation
     // the following are always defined variables.  We start
@@ -97,8 +98,56 @@ export function vtkOpenGLPolyDataMapper(publicAPI, model) {
         '  specularPower = specularPowerUniform;']);
     }
 
-    FSSource = vtkShaderProgram.substitute(FSSource, '//VTK::Color::Impl', colorImpl).result;
+    // add scalar vertex coloring
+    if (model.lastBoundBO.getCABO().getColorComponents() !== 0) {
+      colorDec = colorDec.concat(['varying vec4 vertexColorVSOutput;']);
+      VSSource = vtkShaderProgram.substitute(VSSource, '//VTK::Color::Dec', [
+        'attribute vec4 scalarColor;',
+        'varying vec4 vertexColorVSOutput;']).result;
+      VSSource = vtkShaderProgram.substitute(VSSource, '//VTK::Color::Impl', [
+        'vertexColorVSOutput =  scalarColor;']).result;
+      GSSource = vtkShaderProgram.substitute(GSSource,
+        '//VTK::Color::Dec', [
+          'in vec4 vertexColorVSOutput[];',
+          'out vec4 vertexColorGSOutput;']).result;
+      GSSource = vtkShaderProgram.substitute(GSSource,
+        '//VTK::Color::Impl', [
+          'vertexColorGSOutput = vertexColorVSOutput[i];']).result;
+    }
 
+    const scalarMatMode = model.renderable.getScalarMaterialMode();
+
+    if (model.lastBoundBO.getCABO().getColorComponents() !== 0) {
+      if (scalarMatMode === MATERIAL_MODE_VALUES.VTK_MATERIALMODE_AMBIENT ||
+          (scalarMatMode === MATERIAL_MODE_VALUES.VTK_MATERIALMODE_DEFAULT &&
+            actor.getProperty().getAmbient() > actor.getProperty().getDiffuse())) {
+        FSSource = vtkShaderProgram.substitute(FSSource, '//VTK::Color::Impl',
+          colorImpl.concat([
+            '  ambientColor = vertexColorVSOutput.rgb;',
+            '  opacity = opacity*vertexColorVSOutput.a;'])).result;
+      } else if (scalarMatMode === MATERIAL_MODE_VALUES.VTK_MATERIALMODE_DIFFUSE ||
+          (scalarMatMode === MATERIAL_MODE_VALUES.VTK_MATERIALMODE_DEFAULT &&
+            actor.getProperty().getAmbient() <= actor.getProperty().getDiffuse())) {
+        FSSource = vtkShaderProgram.substitute(FSSource, '//VTK::Color::Impl',
+          colorImpl.concat([
+            '  diffuseColor = vertexColorVSOutput.rgb;',
+            '  opacity = opacity*vertexColorVSOutput.a;'])).result;
+      } else {
+        FSSource = vtkShaderProgram.substitute(FSSource, '//VTK::Color::Impl',
+          colorImpl.concat([
+            '  diffuseColor = vertexColorVSOutput.rgb;',
+            '  ambientColor = vertexColorVSOutput.rgb;',
+            '  opacity = opacity*vertexColorVSOutput.a;'])).result;
+      }
+    } else {
+      FSSource = vtkShaderProgram.substitute(FSSource, '//VTK::Color::Impl', colorImpl).result;
+    }
+
+    FSSource = vtkShaderProgram.substitute(FSSource, '//VTK::Color::Dec',
+      colorDec).result;
+
+    shaders.Vertex = VSSource;
+    shaders.Geometry = GSSource;
     shaders.Fragment = FSSource;
   };
 
@@ -515,16 +564,16 @@ export function vtkOpenGLPolyDataMapper(publicAPI, model) {
     //       vtkErrorMacro(<< 'Error setting 'tcoordMC' in shader VAO.');
     //       }
     //     }
-    //   if (model.VBO.ColorComponents != 0 && !model.DrawingEdges &&
-    //       cellBO.Program.IsAttributeUsed('scalarColor'))
-    //     {
-    //     if (!cellBO.getVAO().AddAttributeArray(cellBO.Program, model.VBO,
-    //                                     'scalarColor', model.VBO.ColorOffset,
-    //                                     model.VBO.Stride, VTK_UNSIGNED_CHAR,
-    //                                     model.VBO.ColorComponents, true))
-    //       {
-    //       vtkErrorMacro(<< 'Error setting 'scalarColor' in shader VAO.');
-    //       }
+      if (cellBO.getProgram().isAttributeUsed('scalarColor') &&
+          cellBO.getCABO().getColorComponents()) {
+        if (!cellBO.getVAO().addAttributeArray(cellBO.getProgram(), cellBO.getCABO(),
+                                           'scalarColor', cellBO.getCABO().getColorOffset(),
+                                           cellBO.getCABO().getStride(), model.context.FLOAT /* BYTE */,
+                                           cellBO.getCABO().getColorComponents(),
+                                           true)) {
+          vtkErrorMacro('Error setting scalarColor in shader VAO.');
+        }
+      }
     }
   };
 

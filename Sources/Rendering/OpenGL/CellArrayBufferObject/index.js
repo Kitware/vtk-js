@@ -56,7 +56,8 @@ function vtkOpenGLCellArrayBufferObject(publicAPI, model) {
     if (colors !== null) {
       model.colorComponents = colors.getNumberOfComponents();
       model.colorOffset = /* sizeof(float) */ 4 * model.blockSize;
-      model.blockSize += 1;
+//      model.blockSize += 1;
+      model.blockSize += model.colorComponents;
       colorData = colors.getData();
     }
     model.stride = /* sizeof(float) */ 4 * model.blockSize;
@@ -66,7 +67,7 @@ function vtkOpenGLCellArrayBufferObject(publicAPI, model) {
     let tcoordIdx = 0;
     let colorIdx = 0;
 
-    const colorHolder = new Uint8Array(4);
+    // const colorHolder = new Uint8Array(4);
 
     const addAPoint = function addAPoint(i) {
       // Vertices
@@ -92,18 +93,23 @@ function vtkOpenGLCellArrayBufferObject(publicAPI, model) {
       }
 
       if (colorData !== null) {
-        colorHolder[0] = colorData[colorIdx++];
-        colorHolder[1] = colorData[colorIdx++];
-        colorHolder[2] = colorData[colorIdx++];
-
-        if (colorComponents === 4) {
-          colorHolder[3] = colorData[colorIdx++];
-        } else {  // must be 3 color components then
-          colorHolder[3] = 255;
+        for (let j = 0; j < colorComponents; ++j) {
+          packedVBO.push(colorData[colorIdx++] / 255.5);
         }
-
-        packedVBO.push(new Float32Array(colorHolder.buffer)[0]);
       }
+      // if (colorData !== null) {
+      //   colorHolder[0] = colorData[colorIdx++];
+      //   colorHolder[1] = colorData[colorIdx++];
+      //   colorHolder[2] = colorData[colorIdx++];
+
+      //   if (colorComponents === 4) {
+      //     colorHolder[3] = colorData[colorIdx++];
+      //   } else {  // must be 3 color components then
+      //     colorHolder[3] = 255;
+      //   }
+
+      //   packedVBO.push(new Float32Array(colorHolder.buffer)[0]);
+      // }
     };
 
     const cellBuilders = {
@@ -208,7 +214,7 @@ const DEFAULT_VALUES = {
   tCoordOffset: 0,
   tCoordComponents: 0,
   colorOffset: 0,
-  numColorComponents: 0,
+  colorComponents: 0,
 };
 
 // ----------------------------------------------------------------------------
@@ -227,7 +233,7 @@ export function extend(publicAPI, model, initialValues = {}) {
     'tCoordOffset',
     'tCoordComponents',
     'colorOffset',
-    'numColorComponents',
+    'colorComponents',
   ]);
 
   // Object specific methods

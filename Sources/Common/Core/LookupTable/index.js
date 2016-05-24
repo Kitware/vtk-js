@@ -49,7 +49,7 @@ function vtkLookupTable(publicAPI, model) {
 
   //----------------------------------------------------------------------------
   // Apply shift/scale to the scalar value v and return the index.
-  publicAPI.linearIndexLookupMain = (v, p) => {
+  publicAPI.linearIndexLookup = (v, p) => {
     let dIndex = 0;
 
     if (v < p.range[0]) {
@@ -68,9 +68,9 @@ function vtkLookupTable(publicAPI, model) {
     return Math.floor(dIndex);
   };
 
-  publicAPI.linearLookupMain = (v, table, p) => {
-    const index = publicAPI.linearIndexLookupMain(v, p);
-    return table[4 * index];
+  publicAPI.linearLookup = (v, table, p) => {
+    const index = publicAPI.linearIndexLookup(v, p);
+    return [table[4 * index], table[4 * index + 1], table[4 * index + 2], table[4 * index + 3]];
   };
 
   //----------------------------------------------------------------------------
@@ -98,24 +98,27 @@ function vtkLookupTable(publicAPI, model) {
     const length = input.getNumberOfTuples();
     const inIncr = input.getNumberOfComponents();
 
+    const outputV = output.getData();
+    const inputV = input.getData();
+
     if (alpha >= 1.0) {
       if (outFormat === 'VTK_RGBA') {
         for (let i = 0; i < length; i++) {
-          const cptr = publicAPI.linearLookup(input[i * inIncr], model.table, p);
-          output[i * 4] = cptr[0];
-          output[i * 4 + 1] = cptr[1];
-          output[i * 4 + 2] = cptr[2];
-          output[i * 4 + 3] = cptr[3];
+          const cptr = publicAPI.linearLookup(inputV[i * inIncr], model.table, p);
+          outputV[i * 4] = cptr[0];
+          outputV[i * 4 + 1] = cptr[1];
+          outputV[i * 4 + 2] = cptr[2];
+          outputV[i * 4 + 3] = cptr[3];
         }
       }
     } else {
       if (outFormat === 'VTK_RGBA') {
         for (let i = 0; i < length; i++) {
-          const cptr = publicAPI.linearLookup(input[i * inIncr], model.table, p);
-          output[i * 4] = cptr[0];
-          output[i * 4 + 1] = cptr[1];
-          output[i * 4 + 2] = cptr[2];
-          output[i * 4 + 3] = Math.floor(cptr[3] * alpha + 0.5);
+          const cptr = publicAPI.linearLookup(inputV[i * inIncr], model.table, p);
+          outputV[i * 4] = cptr[0];
+          outputV[i * 4 + 1] = cptr[1];
+          outputV[i * 4 + 2] = cptr[2];
+          outputV[i * 4 + 3] = Math.floor(cptr[3] * alpha + 0.5);
         }
       }
     } // alpha blending
@@ -148,9 +151,9 @@ function vtkLookupTable(publicAPI, model) {
 
       //  case VTK_RAMP_LINEAR:
       model.table[i * 4] = rgba[0] * 255.0 + 0.5;
-      model.table[i * 4 + 1] = rgba[0] * 255.0 + 0.5;
-      model.table[i * 4 + 2] = rgba[0] * 255.0 + 0.5;
-      model.table[i * 4 + 3] = rgba[0] * 255.0 + 0.5;
+      model.table[i * 4 + 1] = rgba[1] * 255.0 + 0.5;
+      model.table[i * 4 + 2] = rgba[2] * 255.0 + 0.5;
+      model.table[i * 4 + 3] = rgba[3] * 255.0 + 0.5;
     }
 
     publicAPI.buildSpecialColors();
@@ -260,7 +263,9 @@ export function extend(publicAPI, model, initialValues = {}) {
   ]);
 
   // Create get-set macros
-  // macro.setGet(publicAPI, model, ['myProp3']);
+  macro.setGet(publicAPI, model, [
+    'numberOfColors',
+  ]);
 
   // Create set macros for array (needs to know size)
   macro.setArray(publicAPI, model, [

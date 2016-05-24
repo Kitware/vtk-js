@@ -54,9 +54,21 @@ function vtkScalarsToColors(publicAPI, model) {
       newColors = publicAPI.convertToRGBA(scalars, numberOfComponents,
                         scalars.getNumberOfTuples());
     } else {
-      newColors = vtkDataArray.newInstance({ dataType: DATATYPES.VTK_UNSIGNED_CHAR });
-      newColors.setNumberOfComponents(4);
-      newColors.setNumberOfTuples(scalars.getNumberOfTuples());
+      const newscalars = {
+        type: 'vtkDataArray',
+        name: 'temp',
+        tuple: 4,
+        dataType: 'Uint8ClampedArray',
+      };
+
+      const s = new window[newscalars.dataType](4 * scalars.getNumberOfTuples());
+      for (let i = 0; i < s.length; i++) {
+        s[i] = Math.random();
+      }
+      newscalars.values = s;
+      newscalars.size = s.length;
+//      newColors = vtkDataArray.newInstance({ size: 4 * scalars.getNumberOfTuples(), dataType: DATATYPES.VTK_UNSIGNED_CHAR });
+      newColors = vtkDataArray.newInstance(newscalars);
 
       // let component = componentIn;
 
