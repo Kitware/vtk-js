@@ -131,6 +131,10 @@ function vtkMapper(publicAPI, model) {
   };
 
   publicAPI.mapScalars = (input, alpha) => {
+    if (input.getPointData().getScalars() === null) {
+      model.colorMapColors = null;
+      return;
+    }
     const lut = publicAPI.getLookupTable();
     if (lut) {
       // Ensure that the lookup table is built
