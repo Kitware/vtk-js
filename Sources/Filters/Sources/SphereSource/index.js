@@ -130,7 +130,7 @@ export function vtkSphereSource(publicAPI, model) {
 
       // Create intermediate points
       for (let i = 0; i < thetaResolution; i++) {
-        const theta = startTheta * Math.PI / 180.0 + i * deltaTheta;
+        const theta = startTheta + i * deltaTheta;
         for (let j = jStart; j < jEnd; j++) {
           const phi = startPhi + j * deltaPhi;
           const radius = model.radius * Math.sin(phi);

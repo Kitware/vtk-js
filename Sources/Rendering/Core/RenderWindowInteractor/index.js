@@ -121,6 +121,10 @@ function vtkRenderWindowInteractor(publicAPI, model) {
     document.querySelector('body').addEventListener('keypress', publicAPI.handleKeyPress);
     canvas.addEventListener('mouseup', publicAPI.handleMouseUp);
     canvas.addEventListener('mousemove', publicAPI.handleMouseMove);
+    // canvas.addEventListener('touchstart', publicAPI.handleTouchStart, false);
+    // canvas.addEventListener('touchend', publicAPI.handleTouchEnd, false);
+    // canvas.addEventListener('touchcancel', publicAPI.handleTouchEnd, false);
+    // canvas.addEventListener('touchmove', publicAPI.handleTouchMove, false);
   };
 
   publicAPI.unbindEvents = (canvas, document) => {
@@ -175,6 +179,42 @@ function vtkRenderWindowInteractor(publicAPI, model) {
       default:
         break;
     }
+  };
+
+  publicAPI.handleTouchStart = (event) => {
+    event.stopPropagation();
+    event.preventDefault();
+
+    const touches = event.changedTouches;
+    touches.forEach(touch => {
+      publicAPI.setEventPosition(touch.clientX, model.canvas.clientHeight - touch.clientY + 1, 0, touch.identifier);
+      publicAPI.setPointerIndex(touch.identifier);
+      publicAPI.leftButtonPressEvent();
+    });
+  };
+
+  publicAPI.handleTouchMove = (event) => {
+    event.stopPropagation();
+    event.preventDefault();
+
+    const touches = event.changedTouches;
+    touches.forEach(touch => {
+      publicAPI.setEventPosition(touch.clientX, model.canvas.clientHeight - touch.clientY + 1, 0, touch.identifier);
+      publicAPI.setPointerIndex(touch.identifier);
+      publicAPI.mouseMoveEvent();
+    });
+  };
+
+  publicAPI.handleTouchEnd = (event) => {
+    event.stopPropagation();
+    event.preventDefault();
+
+    const touches = event.changedTouches;
+    touches.forEach(touch => {
+      publicAPI.setEventPosition(touch.clientX, model.canvas.clientHeight - touch.clientY + 1, 0, touch.identifier);
+      publicAPI.setPointerIndex(touch.identifier);
+      publicAPI.leftButtonReleaseEvent();
+    });
   };
 
   publicAPI.findPokedRenderer = (x, y) => {
