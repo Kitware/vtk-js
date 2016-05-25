@@ -15,12 +15,15 @@ function vtkOpenGLVertexArrayObject(publicAPI, model) {
   };
 
   publicAPI.initialize = () => {
-    // if (!model.forceEmulation && false) {
-    //   model.supported = true;
-    //   model.context.genVertexArrays(1, model.handleVAO);
-    // } else {
-    model.supported = false;
-    // }
+    model.extension = model.context.getExtension('OES_vertex_array_object');
+
+  // Start setting up VAO
+    if (!model.forceEmulation && model.extension) {
+      model.supported = true;
+      model.handleVAO = model.extension.createVertexArrayOES();
+    } else {
+      model.supported = false;
+    }
   };
 
   publicAPI.isReady = () =>
@@ -35,7 +38,7 @@ function vtkOpenGLVertexArrayObject(publicAPI, model) {
       publicAPI.initialize();
     }
     if (publicAPI.isReady() && model.supported) {
-      model.context.bindVertexArray(model.handleVAO);
+      model.extension.bindVertexArrayOES(model.handleVAO);
     } else if (publicAPI.isReady()) {
       const gl = model.context;
       Object.keys(model.buffers).map(key => model.buffers[key]).forEach(buff => {
@@ -60,7 +63,7 @@ function vtkOpenGLVertexArrayObject(publicAPI, model) {
   publicAPI.release = () => {
     // Either simply release the VAO, or emulate behavior by releasing all attributes.
     if (publicAPI.isReady() && model.supported) {
-      model.context.bindVertexArray(0);
+      model.extension.bindVertexArrayOES(null);
     } else if (publicAPI.isReady()) {
       const gl = model.context;
       Object.keys(model.buffers).map(key => model.buffers[key]).forEach(buff => {
@@ -84,7 +87,7 @@ function vtkOpenGLVertexArrayObject(publicAPI, model) {
   publicAPI.shaderProgramChanged = () => {
     publicAPI.release();
     if (model.handleVAO) {
-      model.context.deleteVertexArrays(1, this.handleVAO);
+      model.extension.deleteVertexArrayOES(model.handleVAO);
     }
     model.handleVAO = 0;
     model.handleProgram = 0;
@@ -93,7 +96,7 @@ function vtkOpenGLVertexArrayObject(publicAPI, model) {
   publicAPI.releaseGraphicsResources = () => {
     publicAPI.shaderProgramChanged();
     if (model.handleVAO) {
-      model.context.deleteVertexArrays(1, model.handleVAO);
+      model.extension.deleteVertexArrayOES(model.handleVAO);
     }
     model.handleVAO = 0;
     model.supported = true;
