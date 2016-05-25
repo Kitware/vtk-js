@@ -123,7 +123,7 @@ export function vtkSphereSource(publicAPI, model) {
       if (Math.abs(startTheta - endTheta) < 2.0 * Math.PI) {
         ++thetaResolution;
       }
-      const deltaTheta = (model.endTheta - model.startTheta) / thetaResolution * (Math.PI / 180.0);
+      const deltaTheta = (endTheta - startTheta) / model.thetaResolution;
 
       const jStart = (model.startPhi <= 0.0 ? 1 : 0);
       const jEnd = model.phiResolution + (model.endPhi >= 180.0 ? -1 : 0);
