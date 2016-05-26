@@ -58,7 +58,32 @@ export function vtkSphereSource(publicAPI, model) {
 
       // ----------------------------------------------------------------------
       let numPoles = 0;
-      const numPts = model.phiResolution * model.thetaResolution + 2;
+
+
+      // Check data, determine increments, and convert to radians
+      let thetaResolution = model.thetaResolution;
+      let startTheta = (model.startTheta < model.endTheta ? model.startTheta : model.endTheta);
+      startTheta *= Math.PI / 180.0;
+      let endTheta = (model.endTheta > model.startTheta ? model.endTheta : model.startTheta);
+      endTheta *= Math.PI / 180.0;
+
+      let startPhi = (model.startPhi < model.endPhi ? model.startPhi : model.endPhi);
+      startPhi *= Math.PI / 180.0;
+      let endPhi = (model.endPhi > model.startPhi ? model.endPhi : model.startPhi);
+      endPhi *= Math.PI / 180.0;
+
+      const phiResolution = model.phiResolution - numPoles;
+      const deltaPhi = (endPhi - startPhi) / (model.phiResolution - 1);
+
+      if (Math.abs(startTheta - endTheta) < 2.0 * Math.PI) {
+        ++thetaResolution;
+      }
+      const deltaTheta = (endTheta - startTheta) / model.thetaResolution;
+
+      const jStart = (model.startPhi <= 0.0 ? 1 : 0);
+      const jEnd = model.phiResolution + (model.endPhi >= 180.0 ? -1 : 0);
+
+      const numPts = model.phiResolution * thetaResolution + 2;
       const numPolys = model.phiResolution * 2 * model.thetaResolution;
 
       // Points
@@ -104,29 +129,6 @@ export function vtkSphereSource(publicAPI, model) {
         pointIdx++;
         numPoles++;
       }
-
-      // Check data, determine increments, and convert to radians
-      let thetaResolution = model.thetaResolution;
-      let startTheta = (model.startTheta < model.endTheta ? model.startTheta : model.endTheta);
-      startTheta *= Math.PI / 180.0;
-      let endTheta = (model.endTheta > model.startTheta ? model.endTheta : model.startTheta);
-      endTheta *= Math.PI / 180.0;
-
-      let startPhi = (model.startPhi < model.endPhi ? model.startPhi : model.endPhi);
-      startPhi *= Math.PI / 180.0;
-      let endPhi = (model.endPhi > model.startPhi ? model.endPhi : model.startPhi);
-      endPhi *= Math.PI / 180.0;
-
-      const phiResolution = model.phiResolution - numPoles;
-      const deltaPhi = (endPhi - startPhi) / (model.phiResolution - 1);
-
-      if (Math.abs(startTheta - endTheta) < 2.0 * Math.PI) {
-        ++thetaResolution;
-      }
-      const deltaTheta = (endTheta - startTheta) / model.thetaResolution;
-
-      const jStart = (model.startPhi <= 0.0 ? 1 : 0);
-      const jEnd = model.phiResolution + (model.endPhi >= 180.0 ? -1 : 0);
 
       // Create intermediate points
       for (let i = 0; i < thetaResolution; i++) {
