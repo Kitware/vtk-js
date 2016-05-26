@@ -72,9 +72,6 @@ export function vtkSphereSource(publicAPI, model) {
       let endPhi = (model.endPhi > model.startPhi ? model.endPhi : model.startPhi);
       endPhi *= Math.PI / 180.0;
 
-      const phiResolution = model.phiResolution - numPoles;
-      const deltaPhi = (endPhi - startPhi) / (model.phiResolution - 1);
-
       if (Math.abs(startTheta - endTheta) < 2.0 * Math.PI) {
         ++thetaResolution;
       }
@@ -129,6 +126,9 @@ export function vtkSphereSource(publicAPI, model) {
         pointIdx++;
         numPoles++;
       }
+
+      const phiResolution = model.phiResolution - numPoles;
+      const deltaPhi = (endPhi - startPhi) / (model.phiResolution - 1);
 
       // Create intermediate points
       for (let i = 0; i < thetaResolution; i++) {
