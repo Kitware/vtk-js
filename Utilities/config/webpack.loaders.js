@@ -41,7 +41,7 @@ module.exports = [
     loader: 'html-loader',
   }, {
     test: /\.js$/,
-    include: /node_modules\/|\\vtk.js\/|\\/,
+    include: /node_modules(\/|\\)vtk\.js(\/|\\)/,
     loader: 'babel?presets[]=es2015,presets[]=react!string-replace?' + replaceConfig,
   }, {
     test: /\.js$/,
