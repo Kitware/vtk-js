@@ -135,6 +135,106 @@ function vtkInteractorStyleTrackballCamera(publicAPI, model) {
     }
   };
 
+  //----------------------------------------------------------------------------
+  publicAPI.handlePinch = () => {
+    const pos = model.interactor.getEventPosition(model.interactor.getPointerIndex());
+    publicAPI.findPokedRenderer(pos.x, pos.y);
+    if (model.currentRenderer === null) {
+      return;
+    }
+
+    const camera = model.currentRenderer.getActiveCamera();
+
+    const dyf = model.interactor.getScale() / model.interactor.getLastScale();
+    if (camera.getParallelProjection()) {
+      camera.setParallelScale(camera.getParallelScale() / dyf);
+    } else {
+      camera.dolly(dyf);
+      if (model.autoAdjustCameraClippingRange) {
+        model.currentRenderer.resetCameraClippingRange();
+      }
+    }
+
+    if (model.interactor.getLightFollowCamera()) {
+      model.currentRenderer.updateLightsGeometryToFollowCamera();
+    }
+    model.interactor.render();
+  };
+
+  //----------------------------------------------------------------------------
+  publicAPI.handlePan = () => {
+    const pos = model.interactor.getEventPosition(model.interactor.getPointerIndex());
+    publicAPI.findPokedRenderer(pos.x, pos.y);
+    if (model.currentRenderer === null) {
+      return;
+    }
+
+    const camera = model.currentRenderer.getActiveCamera();
+
+    const rwi = model.interactor;
+
+    // Calculate the focal depth since we'll be using it a lot
+    let viewFocus = camera.getFocalPoint();
+
+    viewFocus = publicAPI.computeWorldToDisplay(viewFocus[0], viewFocus[1], viewFocus[2]);
+    const focalDepth = viewFocus[2];
+
+    let newPickPoint = publicAPI.computeDisplayToWorld(pos.x, pos.y,
+                                focalDepth);
+
+    const trans = rwi.getTranslation();
+    const lastTrans = rwi.getLastTranslation();
+    newPickPoint = publicAPI.computeDisplayToWorld(viewFocus[0] + trans[0] - lastTrans[0],
+                                viewFocus[1] + trans[1] - lastTrans[1],
+                                focalDepth);
+
+    // Has to recalc old mouse point since the viewport has moved,
+    // so can't move it outside the loop
+    const oldPickPoint = publicAPI.computeDisplayToWorld(viewFocus[0],
+                                viewFocus[1],
+                                focalDepth);
+
+    // Camera motion is reversed
+    const motionVector = [];
+    motionVector[0] = oldPickPoint[0] - newPickPoint[0];
+    motionVector[1] = oldPickPoint[1] - newPickPoint[1];
+    motionVector[2] = oldPickPoint[2] - newPickPoint[2];
+
+    viewFocus = camera.getFocalPoint();
+    const viewPoint = camera.getPosition();
+    camera.setFocalPoint(motionVector[0] + viewFocus[0],
+                          motionVector[1] + viewFocus[1],
+                          motionVector[2] + viewFocus[2]);
+
+    camera.setPosition(motionVector[0] + viewPoint[0],
+                        motionVector[1] + viewPoint[1],
+                        motionVector[2] + viewPoint[2]);
+
+    if (model.interactor.getLightFollowCamera()) {
+      model.currentRenderer.updateLightsGeometryToFollowCamera();
+    }
+
+    camera.orthogonalizeViewUp();
+    model.interactor.render();
+  };
+
+  publicAPI.handleRotate = () => {
+    const pos = model.interactor.getEventPosition(model.interactor.getPointerIndex());
+    publicAPI.findPokedRenderer(pos.x, pos.y);
+    if (model.currentRenderer === null) {
+      return;
+    }
+
+    const camera = model.currentRenderer.getActiveCamera();
+
+
+    camera.roll(model.interactor.getRotation() - model.interactor.getLastRotation());
+
+    camera.orthogonalizeViewUp();
+    model.interactor.render();
+  };
+
+
   //--------------------------------------------------------------------------
   publicAPI.rotate = () => {
     if (model.currentRenderer === null) {

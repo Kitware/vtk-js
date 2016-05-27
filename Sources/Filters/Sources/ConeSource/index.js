@@ -10,12 +10,12 @@ export function vtkConeSource(publicAPI, model) {
   // Set our className
   model.classHierarchy.push('vtkConeSource');
 
-  function update() {
+  function requestData(inData, outData) {
     if (model.deleted) {
       return;
     }
 
-    let dataset = model.output[0];
+    let dataset = outData[0];
     if (!dataset || dataset.getMTime() < model.mtime) {
       const state = {};
       dataset = {
@@ -109,12 +109,12 @@ export function vtkConeSource(publicAPI, model) {
       // FIXME apply tranform
 
       // Update output
-      model.output[0] = vtkPolyData.newInstance(dataset);
+      outData[0] = vtkPolyData.newInstance(dataset);
     }
   }
 
   // Expose methods
-  publicAPI.update = update;
+  publicAPI.requestData = requestData;
 }
 
 // ----------------------------------------------------------------------------

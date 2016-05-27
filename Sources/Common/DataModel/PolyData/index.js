@@ -26,33 +26,22 @@ function vtkPolyData(publicAPI, model) {
     model.points = vtkDataArray.newInstance(model.vtkPolyData.Points);
   }
 
-  // Concreate Verts
-  if (model.vtkPolyData && model.vtkPolyData.Verts) {
-    model.verts = vtkDataArray.newInstance(model.vtkPolyData.Verts);
-  } else {
-    model.verts = vtkDataArray.newInstance({ empty: true });
-  }
-
-  // Concreate Lines
-  if (model.vtkPolyData && model.vtkPolyData.Lines) {
-    model.lines = vtkDataArray.newInstance(model.vtkPolyData.Lines);
-  } else {
-    model.lines = vtkDataArray.newInstance({ empty: true });
-  }
-
-  // Concreate Polys
-  if (model.vtkPolyData && model.vtkPolyData.Polys) {
-    model.polys = vtkDataArray.newInstance(model.vtkPolyData.Polys);
-  } else {
-    model.polys = vtkDataArray.newInstance({ empty: true });
-  }
-
-  // Concreate Strips
-  if (model.vtkPolyData && model.vtkPolyData.Strips) {
-    model.strips = vtkDataArray.newInstance(model.vtkPolyData.Strips);
-  } else {
-    model.strips = vtkDataArray.newInstance({ empty: true });
-  }
+  // build empty cell arrays and set methods
+  ['Verts', 'Lines', 'Polys', 'Strips'].forEach(type => {
+    const lowerType = type.toLowerCase();
+    if (model.vtkPolyData && model.vtkPolyData[type]) {
+      model[lowerType] = vtkDataArray.newInstance(model.vtkPolyData[type]);
+    } else {
+      model[lowerType] = vtkDataArray.newInstance({ empty: true });
+    }
+    // publicAPI[`set${type}`] = obj => {
+    //   if (model[lowerType] === obj) {
+    //     return;
+    //   }
+    //   model[lowerType] = obj;
+    //   publicAPI.modified();
+    // };
+  });
 }
 
 // ----------------------------------------------------------------------------
@@ -74,7 +63,7 @@ export function extend(publicAPI, model, initialValues = {}) {
 
   // Inheritance
   vtkPointSet.extend(publicAPI, model);
-  macro.get(publicAPI, model, ['verts', 'lines', 'polys', 'strips']);
+  macro.setGet(publicAPI, model, ['verts', 'lines', 'polys', 'strips']);
 
   // Object specific methods
   vtkPolyData(publicAPI, model);

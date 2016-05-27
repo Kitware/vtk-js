@@ -46,7 +46,7 @@ export function extend(publicAPI, model, initialValues = {}) {
 
   // Inheritance
   vtkDataSet.extend(publicAPI, model);
-  macro.get(publicAPI, model, ['points']);
+  macro.setGet(publicAPI, model, ['points']);
 
   // Object specific methods
   vtkPointSet(publicAPI, model);

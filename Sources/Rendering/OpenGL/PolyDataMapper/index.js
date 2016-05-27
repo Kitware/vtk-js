@@ -846,18 +846,19 @@ export function vtkOpenGLPolyDataMapper(publicAPI, model) {
     //   return;
     // }
 
+
+    publicAPI.invokeEvent({ type: 'StartEvent' });
     model.currentInput = model.renderable.getInputData();
+    if (!model.renderable.getStatic()) {
+      model.renderable.update();
+      model.currentInput = model.renderable.getInputData();
+    }
+    publicAPI.invokeEvent({ type: 'EndEvent' });
 
     if (model.currentInput === null) {
       vtkErrorMacro('No input!');
       return;
     }
-
-    publicAPI.invokeEvent({ type: 'StartEvent' });
-    // if (!model.Static) {
-    //   this.getInputAlgorithm().update();
-    // }
-    publicAPI.invokeEvent({ type: 'EndEvent' });
 
     // if there are no points then we are done
     if (!model.currentInput.getPoints || !model.currentInput.getPoints().getNumberOfValues()) {

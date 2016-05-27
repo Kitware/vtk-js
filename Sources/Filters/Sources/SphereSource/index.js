@@ -9,12 +9,12 @@ export function vtkSphereSource(publicAPI, model) {
   // Set our className
   model.classHierarchy.push('vtkSphereSource');
 
-  function update() {
+  function requestData(inData, outData) {
     if (model.deleted) {
       return;
     }
 
-    let dataset = model.output[0];
+    let dataset = outData[0];
     if (!dataset || dataset.mtime !== model.mtime) {
       const state = {};
       dataset = {
@@ -228,12 +228,12 @@ export function vtkSphereSource(publicAPI, model) {
       dataset.vtkPolyData.Polys.size = cellLocation;
 
       // Update output
-      model.output[0] = vtkPolyData.newInstance(dataset);
+      outData[0] = vtkPolyData.newInstance(dataset);
     }
   }
 
   // Expose methods
-  publicAPI.update = update;
+  publicAPI.requestData = requestData;
 }
 
 // ----------------------------------------------------------------------------

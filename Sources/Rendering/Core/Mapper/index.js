@@ -38,20 +38,24 @@ function vtkMapper(publicAPI, model) {
   model.classHierarchy.push('vtkMapper');
 
   publicAPI.getBounds = () => {
-    const input = publicAPI.getInput();
+    const input = publicAPI.getInputData();
     if (!input) {
       model.bounds = vtkMath.createUninitializedBouds();
     } else {
       if (!model.static) {
-        // publicAPI.update();
-        console.log('implement update');
+        publicAPI.update();
       }
       model.bounds = vtkDataSet.getBounds(input);
     }
     return model.bounds;
   };
 
-  publicAPI.getInput = () => publicAPI.getInputData();
+  publicAPI.update = () => {
+    if (!model.static) {
+      model.inputData[0] = null;
+    }
+    publicAPI.getInputData();
+  };
 
   publicAPI.setForceCompileOnly = v => {
     model.forceCompileOnly = v;

@@ -291,9 +291,9 @@ export function vtkHttpDataSetReader(publicAPI, model) {
   };
 
   // Fetch the actual data arrays
-  publicAPI.update = () => {
+  publicAPI.requestData = (inData, outData) => {
     const datasetStruct = model.dataset;
-    const datasetObj = model.output[0];
+    const datasetObj = outData[0];
     const arrayToFecth = [];
     const arrayMappingFunc = [];
     model.arrays
