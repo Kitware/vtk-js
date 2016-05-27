@@ -30,7 +30,7 @@
         "doc:www"       : "kw-doc -c ./Documentation/config.js -s",
         "doc:publish"   : "kw-doc -c ./Documentation/config.js -p",
 
-        "example:PolyDataViewer": "webpack-dev-server --progress --open --config ./Examples/WebGL/PolyDataViewer/webpack.config.js",
+        "example:Filter": "webpack-dev-server --progress --open --config ./Examples/WebGL/Filter/webpack.config.js",
         "example:EmptyRenderer": "webpack-dev-server --progress --open --config ./Examples/WebGL/EmptyRenderer/webpack.config.js",
         "example:Cone": "webpack-dev-server --progress --open --config ./Examples/WebGL/Cone/webpack.config.js",
 
