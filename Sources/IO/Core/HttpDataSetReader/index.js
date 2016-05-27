@@ -291,9 +291,9 @@ export function vtkHttpDataSetReader(publicAPI, model) {
   };
 
   // Fetch the actual data arrays
-  publicAPI.requestData = (inData, outData) => {
+  publicAPI.loadData = () => {
     const datasetStruct = model.dataset;
-    const datasetObj = outData[0];
+    const datasetObj = model.output[0];
     const arrayToFecth = [];
     const arrayMappingFunc = [];
     model.arrays
@@ -332,6 +332,11 @@ export function vtkHttpDataSetReader(publicAPI, model) {
       // Start processing queue
       processNext();
     });
+  };
+
+
+  publicAPI.requestData = (inData, outData) => {
+    // do nothing loadData will eventually load up the data
   };
 
   // Toggle arrays to load
