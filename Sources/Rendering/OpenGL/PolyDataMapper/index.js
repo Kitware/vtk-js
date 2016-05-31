@@ -922,7 +922,12 @@ export function vtkOpenGLPolyDataMapper(publicAPI, model) {
     }
 
     // Do we have normals?
-    const n = (actor.getProperty().getInterpolation() !== SHADINGS.VTK_FLAT) ? poly.getPointData().getNormals() : null;
+    let n = (actor.getProperty().getInterpolation() !== SHADINGS.VTK_FLAT) ? poly.getPointData().getNormals() : null;
+    if (n === null && poly.getCellData().getNormals()) {
+      model.haveCellNormals = true;
+      n = poly.getCelData().getNormals();
+    }
+
 
     // rebuild the VBO if the data has changed we create a string for the VBO what
     // can change the VBO? points normals tcoords colors so what can change those?
@@ -940,13 +945,17 @@ export function vtkOpenGLPolyDataMapper(publicAPI, model) {
 
       let cellOffset = 0;
       cellOffset += model.points.getCABO().createVBO(poly.getVerts(), 'verts', representation,
-        { points, normals: n, tcoords, colors: c, cellOffset, haveCellScalars: model.haveCellScalars });
+        { points, normals: n, tcoords, colors: c, cellOffset,
+          haveCellScalars: model.haveCellScalars, haveCellNormals: model.haveCellNormals });
       cellOffset += model.lines.getCABO().createVBO(poly.getLines(), 'lines', representation,
-        { points, normals: n, tcoords, colors: c, cellOffset, haveCellScalars: model.haveCellScalars });
+        { points, normals: n, tcoords, colors: c, cellOffset,
+          haveCellScalars: model.haveCellScalars, haveCellNormals: model.haveCellNormals });
       cellOffset += model.tris.getCABO().createVBO(poly.getPolys(), 'polys', representation,
-        { points, normals: n, tcoords, colors: c, cellOffset, haveCellScalars: model.haveCellScalars });
+        { points, normals: n, tcoords, colors: c, cellOffset,
+          haveCellScalars: model.haveCellScalars, haveCellNormals: model.haveCellNormals });
       cellOffset += model.triStrips.getCABO().createVBO(poly.getStrips(), 'strips', representation,
-        { points, normals: n, tcoords, colors: c, cellOffset, haveCellScalars: model.haveCellScalars });
+        { points, normals: n, tcoords, colors: c, cellOffset,
+          haveCellScalars: model.haveCellScalars, haveCellNormals: model.haveCellNormals });
 
       model.VBOBuildTime.modified();
       model.VBOBuildString = toString;
