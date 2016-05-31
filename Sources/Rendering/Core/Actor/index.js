@@ -170,9 +170,9 @@ function vtkActor(publicAPI, model) {
     // the modified time of this class is newer than the cached time,
     // then we need to rebuild.
     const zip = rows => rows[0].map((_, c) => rows.map(row => row[c]));
-    if (
-      zip([bds, model.bounds]).reduce((a, b) => (a && b[0] === b[1]), true) ||
-      publicAPI.getMTime() > model.boundsMTime) {
+    if (!model.mapperBounds ||
+      !zip([bds, model.mapperBounds]).reduce((a, b) => (a && b[0] === b[1]), true) ||
+      publicAPI.getMTime() > model.boundsMTime.getMTime()) {
       vtkDebugMacro('Recomputing bounds...');
       model.mapperBounds = bds.map(x => x);
       const bbox = [
@@ -192,8 +192,8 @@ function vtkActor(publicAPI, model) {
       model.bounds[0] = model.bounds[2] = model.bounds[4] = Number.MAX_VALUE;
       model.bounds[1] = model.bounds[3] = model.bounds[5] = - Number.MAX_VALUE;
       model.bounds = model.bounds.map((d, i) => ((i % 2 === 0) ?
-        bbox.reduce((a, b) => (a > b[i] ? b[i] : a), d) :
-        bbox.reduce((a, b) => (a < b[i] ? b[i] : a), d)));
+        bbox.reduce((a, b) => (a > b[i / 2] ? b[i / 2] : a), d) :
+        bbox.reduce((a, b) => (a < b[(i - 1) / 2] ? b[(i - 1) / 2] : a), d)));
       model.boundsMTime.modified();
     }
     return model.bounds;

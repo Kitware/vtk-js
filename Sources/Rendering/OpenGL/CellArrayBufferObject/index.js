@@ -17,10 +17,10 @@ function vtkOpenGLCellArrayBufferObject(publicAPI, model) {
 
   publicAPI.setType(OBJECT_TYPE.ARRAY_BUFFER);
 
-  publicAPI.createVBO = (cellArray, inRep, outRep, points, normals, tcoords, colors) => {
+  publicAPI.createVBO = (cellArray, inRep, outRep, options) => {
     if (!cellArray.getData() || !cellArray.getData().length) {
       model.elementCount = 0;
-      return;
+      return 0;
     }
 
     // Figure out how big each block will be, currently 6 or 7 floats.
@@ -32,33 +32,33 @@ function vtkOpenGLCellArrayBufferObject(publicAPI, model) {
     model.colorComponents = 0;
     model.colorOffset = 0;
 
-    const pointData = points.getData();
+    const pointData = options.points.getData();
     let normalData = null;
     let tcoordData = null;
     let colorData = null;
 
-    const colorComponents = (colors ? colors.getNumberOfComponents() : 0);
-    const textureComponents = (tcoords ? tcoords.getNumberOfComponents() : 0);
+    const colorComponents = (options.colors ? options.colors.getNumberOfComponents() : 0);
+    const textureComponents = (options.tcoords ? options.tcoords.getNumberOfComponents() : 0);
 
-    if (normals !== null) {
+    if (options.normals !== null) {
       model.normalOffset = /* sizeof(float) */ 4 * model.blockSize;
       model.blockSize += 3;
-      normalData = normals.getData();
+      normalData = options.normals.getData();
     }
 
-    if (tcoords !== null) {
+    if (options.tcoords !== null) {
       model.tCoordOffset = /* sizeof(float) */ 4 * model.blockSize;
       model.tCoordComponents = textureComponents;
       model.blockSize += textureComponents;
-      tcoordData = tcoords.getData();
+      tcoordData = options.tcoords.getData();
     }
 
-    if (colors !== null) {
-      model.colorComponents = colors.getNumberOfComponents();
+    if (options.colors !== null) {
+      model.colorComponents = options.colors.getNumberOfComponents();
       model.colorOffset = /* sizeof(float) */ 4 * model.blockSize;
 //      model.blockSize += 1;
       model.blockSize += model.colorComponents;
-      colorData = colors.getData();
+      colorData = options.colors.getData();
     }
     model.stride = /* sizeof(float) */ 4 * model.blockSize;
 
@@ -66,6 +66,7 @@ function vtkOpenGLCellArrayBufferObject(publicAPI, model) {
     let normalIdx = 0;
     let tcoordIdx = 0;
     let colorIdx = 0;
+    let cellCount = 0;
 
     // const colorHolder = new Uint8Array(4);
 
@@ -74,7 +75,12 @@ function vtkOpenGLCellArrayBufferObject(publicAPI, model) {
       pointIdx = i * 3;
       normalIdx = i * 3;
       tcoordIdx = i * textureComponents;
-      colorIdx = i * colorComponents;
+
+      if (options.haveCellScalars) {
+        colorIdx = (cellCount + options.cellOffset) * colorComponents;
+      } else {
+        colorIdx = i * colorComponents;
+      }
 
       packedVBO.push(pointData[pointIdx++]);
       packedVBO.push(pointData[pointIdx++]);
@@ -181,12 +187,14 @@ function vtkOpenGLCellArrayBufferObject(publicAPI, model) {
       if (index === currentIndex) {
         func(array[index], array, currentIndex + 1);
         currentIndex += array[index] + 1;
+        cellCount++;
       }
     }
     model.elementCount = packedVBO.getNumberOfElements() / model.blockSize;
     const vboArray = packedVBO.getFrozenArray();
     publicAPI.upload(vboArray, OBJECT_TYPE.ARRAY_BUFFER);
     packedVBO.reset();
+    return cellCount;
   };
 
   publicAPI.setCoordShiftAndScaleMethod = shiftScaleMethod => {

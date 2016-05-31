@@ -9,6 +9,10 @@ export function capitalize(str) {
   return str.charAt(0).toUpperCase() + str.slice(1);
 }
 
+export function enumToString(e, value) {
+  return Object.keys(e).find(key => e[key] === value);
+}
+
 // ----------------------------------------------------------------------------
 // vtkObject: modified(), onModified(callback), delete()
 // ----------------------------------------------------------------------------

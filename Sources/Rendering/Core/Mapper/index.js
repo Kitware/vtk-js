@@ -1,10 +1,9 @@
 import * as CoincidentTopologyHelper              from './CoincidentTopologyHelper';
 import * as macro                                 from '../../../macro';
 import otherStaticMethods                         from './Static';
-import vtkDataSet                                 from '../../../Common/DataModel/DataSet';
 import vtkLookupTable                             from '../../../Common/Core/LookupTable';
 import vtkMath                                    from '../../../Common/Core/Math';
-import { COLOR_MODE, SCALAR_MODE, MATERIAL_MODE } from './Constants';
+import { VTK_COLOR_MODE, VTK_SCALAR_MODE, VTK_MATERIALMODE, VTK_GET_ARRAY } from './Constants';
 
 function notImplemented(method) {
   return () => console.log(`vtkMapper::${method} - NOT IMPLEMENTED`);
@@ -45,7 +44,7 @@ function vtkMapper(publicAPI, model) {
       if (!model.static) {
         publicAPI.update();
       }
-      model.bounds = vtkDataSet.getBounds(input);
+      model.bounds = input.getBounds();
     }
     return model.bounds;
   };
@@ -66,13 +65,13 @@ function vtkMapper(publicAPI, model) {
     model.lookupTable = vtkLookupTable.newInstance();
   };
 
-  publicAPI.getColorModeAsString = () => COLOR_MODE[model.colorMode];
+  publicAPI.getColorModeAsString = () => macro.enumToString(VTK_COLOR_MODE, model.colorMode);
 
   publicAPI.setColorModeToDefault = () => publicAPI.setColorMode(0);
   publicAPI.setColorModeToMapScalars = () => publicAPI.setColorMode(1);
   publicAPI.setColorModeToDirectScalars = () => publicAPI.setColorMode(2);
 
-  publicAPI.getScalarModeAsString = () => SCALAR_MODE[model.scalarMode];
+  publicAPI.getScalarModeAsString = () => macro.enumToString(VTK_SCALAR_MODE, model.scalarMode);
 
   publicAPI.setScalarModeToDefault = () => publicAPI.setScalarMode(0);
   publicAPI.setScalarModeToUsePointData = () => publicAPI.setScalarMode(1);
@@ -134,8 +133,56 @@ function vtkMapper(publicAPI, model) {
     };
   };
 
+  publicAPI.getAbstractScalars = (input, scalarMode, arrayAccessMode,
+    arrayId, arrayName) => {
+    // make sure we have an input
+    if (!input) {
+      return null;
+    }
+
+    let scalars = null;
+
+    // get and scalar data according to scalar mode
+    if (scalarMode === VTK_SCALAR_MODE.DEFAULT) {
+      scalars = input.getPointData().getScalars();
+      if (!scalars) {
+        scalars = input.getCellData().getScalars();
+      }
+    } else if (scalarMode === VTK_SCALAR_MODE.USE_POINT_DATA) {
+      scalars = input.getPointData().getScalars();
+    } else if (scalarMode === VTK_SCALAR_MODE.USE_CELL_DATA) {
+      scalars = input.getCellData().getScalars();
+    } else if (scalarMode === VTK_SCALAR_MODE.USE_POINT_FIELD_DATA) {
+      const pd = input.getPointData();
+      if (arrayAccessMode === VTK_GET_ARRAY.BY_ID) {
+        scalars = pd.getAbstractArray(arrayId);
+      } else {
+        scalars = pd.getAbstractArray(arrayName);
+      }
+    } else if (scalarMode === VTK_SCALAR_MODE.USE_CELL_FIELD_DATA) {
+      const cd = input.getCellData();
+      if (arrayAccessMode === VTK_GET_ARRAY.BY_ID) {
+        scalars = cd.getAbstractArray(arrayId);
+      } else {
+        scalars = cd.getAbstractArray(arrayName);
+      }
+    } else if (scalarMode === VTK_SCALAR_MODE.USE_FIELD_DATA) {
+      const fd = input.getFieldData();
+      if (arrayAccessMode === VTK_GET_ARRAY.BY_ID) {
+        scalars = fd.getAbstractArray(arrayId);
+      } else {
+        scalars = fd.getAbstractArray(arrayName);
+      }
+    }
+
+    return scalars;
+  };
+
   publicAPI.mapScalars = (input, alpha) => {
-    if (input.getPointData().getScalars() === null) {
+    const scalars = publicAPI.getAbstractScalars(input, model.scalarMode,
+      model.arrayAccessMode, model.arrayId, model.colorByArrayName);
+
+    if (scalars === null) {
       model.colorMapColors = null;
       return;
     }
@@ -143,15 +190,15 @@ function vtkMapper(publicAPI, model) {
     if (lut) {
       // Ensure that the lookup table is built
       lut.build();
-      model.colorMapColors = lut.mapScalars(input.getPointData().getScalars(), model.colorMode, 0);
+      model.colorMapColors = lut.mapScalars(scalars, model.colorMode, 0);
     }
   };
 
-  publicAPI.setScalarMaterialModeToDefault = () => publicAPI.setScalarMaterialMode(0);
-  publicAPI.setScalarMaterialModeToAmbient = () => publicAPI.setScalarMaterialMode(1);
-  publicAPI.setScalarMaterialModeToDiffuse = () => publicAPI.setScalarMaterialMode(2);
-  publicAPI.setScalarMaterialModeToAmbientAndDiffuse = () => publicAPI.setScalarMaterialMode(3);
-  publicAPI.getScalarMaterialModeAsString = () => MATERIAL_MODE[model.scalarMaterialMode];
+  publicAPI.setScalarMaterialModeToDefault = () => publicAPI.setScalarMaterialMode(VTK_MATERIALMODE.DEFAULT);
+  publicAPI.setScalarMaterialModeToAmbient = () => publicAPI.setScalarMaterialMode(VTK_MATERIALMODE.AMBIENT);
+  publicAPI.setScalarMaterialModeToDiffuse = () => publicAPI.setScalarMaterialMode(VTK_MATERIALMODE.DIFFUSE);
+  publicAPI.setScalarMaterialModeToAmbientAndDiffuse = () => publicAPI.setScalarMaterialMode(VTK_MATERIALMODE.AMBIENT_AND_DIFFUSE);
+  publicAPI.getScalarMaterialModeAsString = () => macro.enumToString(VTK_MATERIALMODE, model.scalarMaterialMode);
 
   publicAPI.getIsOpaque = () => {
     const lut = publicAPI.getLookupTable();
@@ -244,6 +291,7 @@ export function extend(publicAPI, model, initialValues = {}) {
     'colorMapColors',
     'colorCoordinates',
     'colorTextureMap',
+    'scalarMode',
   ]);
   macro.setGet(publicAPI, model, [
     'lookupTable',

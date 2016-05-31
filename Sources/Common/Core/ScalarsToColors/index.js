@@ -1,6 +1,6 @@
 import * as macro from '../../../macro';
 import { VECTOR_MODE } from './Constants';  // { ENUM_1: 0, ENUM_2: 1, ... }
-import { COLOR_MODE } from '../../../Rendering/Core/Mapper/Constants';
+import { VTK_COLOR_MODE } from '../../../Rendering/Core/Mapper/Constants';
 import { DATATYPES } from '../DataArray/Constants';
 import vtkDataArray from '../DataArray';
 
@@ -48,9 +48,9 @@ function vtkScalarsToColors(publicAPI, model) {
     let newColors = null;
 
     // map scalars through lookup table only if needed
-    if ((colorMode === COLOR_MODE.VTK_COLOR_MODE_DEFAULT &&
+    if ((colorMode === VTK_COLOR_MODE.DEFAULT &&
          scalars.getDataType() === DATATYPES.VTK_UNSIGNED_CHAR) ||
-        (colorMode === COLOR_MODE.VTK_COLOR_MODE_DIRECT_SCALARS && scalars)) {
+        (colorMode === VTK_COLOR_MODE.DIRECT_SCALARS && scalars)) {
       newColors = publicAPI.convertToRGBA(scalars, numberOfComponents,
                         scalars.getNumberOfTuples());
     } else {

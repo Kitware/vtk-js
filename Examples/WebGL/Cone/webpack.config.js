@@ -33,6 +33,7 @@ module.exports = {
   devServer: {
     contentBase: './dist/Cone',
     port: 9999,
+    host: '0.0.0.0',
     hot: true,
     quiet: false,
     noInfo: false,

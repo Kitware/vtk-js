@@ -46,7 +46,16 @@ function vtkProp3D(publicAPI, model) {
     return model.matrix;
   };
 
-  publicAPI.computeMatrix = notImplemented('computeMatrix');
+  publicAPI.computeMatrix = () => {
+    if (model.isIdentity) {
+      return;
+    }
+
+    // check whether or not need to rebuild the matrix
+    if (publicAPI.getMTime() > model.matrixMTime.getMTime()) {
+      model.matrixMTime.modified();
+    }
+  };
 
   // getBounds (macro)
 
@@ -104,6 +113,7 @@ const DEFAULT_VALUES = {
 
   cachedProp3D: null,
   isIdentity: true,
+  matrixMTime: null,
 };
 
 // ----------------------------------------------------------------------------
@@ -113,6 +123,9 @@ export function extend(publicAPI, model, initialValues = {}) {
 
   // Inheritance
   vtkProp.extend(publicAPI, model);
+
+  model.matrixMTime = {};
+  macro.obj(model.matrixMTime);
 
   // Build VTK API
   macro.get(publicAPI, model, [

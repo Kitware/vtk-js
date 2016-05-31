@@ -635,12 +635,6 @@ function vtkRenderer(publicAPI, model) {
     // close depends on the resolution of the depth buffer
     if (!model.nearClippingPlaneTolerance) {
       model.nearClippingPlaneTolerance = 0.01;
-      if (model.renderWindow) {
-        const ZBufferDepth = model.renderWindow.getDepthBufferSize();
-        if (ZBufferDepth > 16) {
-          model.nearClippingPlaneTolerance = 0.001;
-        }
-      }
     }
 
     // make sure the front clipping range is not too far from the far clippnig
@@ -649,7 +643,7 @@ function vtkRenderer(publicAPI, model) {
     if (range[0] < model.nearClippingPlaneTolerance * range[1]) {
       range[0] = model.nearClippingPlaneTolerance * range[1];
     }
-    model.activeCamera.setClippingRange(range);
+    model.activeCamera.setClippingRange(range[0], range[1]);
 
     // Here to let parallel/distributed compositing intercept
     // and do the right thing.
@@ -746,7 +740,7 @@ const DEFAULT_VALUES = {
   interactive: true,
 
   nearClippingPlaneTolerance: 0,
-  clippingRangeExpansion: 0.5,
+  clippingRangeExpansion: 0.05,
 
   erase: true,
   draw: true,

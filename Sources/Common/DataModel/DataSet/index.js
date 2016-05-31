@@ -58,6 +58,8 @@ function vtkDataSet(publicAPI, model) {
   model.pointData = vtkDataSetAttributes.newInstance({ dataArrays: dataset.PointData });
   model.cellData = vtkDataSetAttributes.newInstance({ dataArrays: dataset.CellData });
   model.fieldData = vtkDataSetAttributes.newInstance({ dataArrays: dataset.FieldData });
+
+  publicAPI.getBounds = () => getBounds(publicAPI.dataset);
 }
 
 // ----------------------------------------------------------------------------

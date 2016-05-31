@@ -24,7 +24,7 @@ function vtkPointSet(publicAPI, model) {
   // Create empty points
   model.points = vtkDataArray.newInstance({ empty: true });
 
-  publicAPI.getBounds = () => model.points.getBounds;
+  publicAPI.getBounds = () => model.points.getBounds();
 
   publicAPI.computeBounds = () => {
     publicAPI.getBounds();

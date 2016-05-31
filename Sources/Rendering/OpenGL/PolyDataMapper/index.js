@@ -4,7 +4,7 @@ import vtkMath from '../../../Common/Core/Math';
 import vtkShaderProgram from '../ShaderProgram';
 import vtkViewNode from '../../SceneGraph/ViewNode';
 import { REPRESENTATIONS, SHADINGS } from '../../Core/Property/Constants';
-import { MATERIAL_MODE_VALUES } from '../../Core/Mapper/Constants';
+import { VTK_MATERIALMODE, VTK_SCALAR_MODE } from '../../Core/Mapper/Constants';
 
 import vtkPolyDataVS from '../glsl/vtkPolyDataVS.c';
 import vtkPolyDataFS from '../glsl/vtkPolyDataFS.c';
@@ -118,15 +118,15 @@ export function vtkOpenGLPolyDataMapper(publicAPI, model) {
     const scalarMatMode = model.renderable.getScalarMaterialMode();
 
     if (model.lastBoundBO.getCABO().getColorComponents() !== 0) {
-      if (scalarMatMode === MATERIAL_MODE_VALUES.VTK_MATERIALMODE_AMBIENT ||
-          (scalarMatMode === MATERIAL_MODE_VALUES.VTK_MATERIALMODE_DEFAULT &&
+      if (scalarMatMode === VTK_MATERIALMODE.AMBIENT ||
+          (scalarMatMode === VTK_MATERIALMODE.DEFAULT &&
             actor.getProperty().getAmbient() > actor.getProperty().getDiffuse())) {
         FSSource = vtkShaderProgram.substitute(FSSource, '//VTK::Color::Impl',
           colorImpl.concat([
             '  ambientColor = vertexColorVSOutput.rgb;',
             '  opacity = opacity*vertexColorVSOutput.a;'])).result;
-      } else if (scalarMatMode === MATERIAL_MODE_VALUES.VTK_MATERIALMODE_DIFFUSE ||
-          (scalarMatMode === MATERIAL_MODE_VALUES.VTK_MATERIALMODE_DEFAULT &&
+      } else if (scalarMatMode === VTK_MATERIALMODE.DIFFUSE ||
+          (scalarMatMode === VTK_MATERIALMODE.DEFAULT &&
             actor.getProperty().getAmbient() <= actor.getProperty().getDiffuse())) {
         FSSource = vtkShaderProgram.substitute(FSSource, '//VTK::Color::Impl',
           colorImpl.concat([
@@ -907,6 +907,20 @@ export function vtkOpenGLPolyDataMapper(publicAPI, model) {
     model.renderable.mapScalars(poly, 1.0);
     const c = model.renderable.getColorMapColors();
 
+    model.haveCellScalars = false;
+    const scalarMode = model.renderable.getScalarMode();
+    if (model.renderable.getScalarVisibility()) {
+      // We must figure out how the scalars should be mapped to the polydata.
+      if ((scalarMode === VTK_SCALAR_MODE.USE_CELL_DATA ||
+            scalarMode === VTK_SCALAR_MODE.USE_CELL_FIELD_DATA ||
+            scalarMode === VTK_SCALAR_MODE.USE_FIELD_DATA ||
+            !poly.getPointData().getScalars())
+           && scalarMode !== VTK_SCALAR_MODE.USE_POINT_FIELD_DATA
+           && c) {
+        model.haveCellScalars = true;
+      }
+    }
+
     // Do we have normals?
     const n = (actor.getProperty().getInterpolation() !== SHADINGS.VTK_FLAT) ? poly.getPointData().getNormals() : null;
 
@@ -924,14 +938,15 @@ export function vtkOpenGLPolyDataMapper(publicAPI, model) {
       // Build the VBOs
       const points = poly.getPoints();
 
-      model.points.getCABO().createVBO(poly.getVerts(), 'verts', representation, points,
-          n, tcoords, c);
-      model.lines.getCABO().createVBO(poly.getLines(), 'lines', representation, points,
-          n, tcoords, c);
-      model.tris.getCABO().createVBO(poly.getPolys(), 'polys', representation, points,
-          n, tcoords, c);
-      model.triStrips.getCABO().createVBO(poly.getStrips(), 'strips', representation, points,
-          n, tcoords, c);
+      let cellOffset = 0;
+      cellOffset += model.points.getCABO().createVBO(poly.getVerts(), 'verts', representation,
+        { points, normals: n, tcoords, colors: c, cellOffset, haveCellScalars: model.haveCellScalars });
+      cellOffset += model.lines.getCABO().createVBO(poly.getLines(), 'lines', representation,
+        { points, normals: n, tcoords, colors: c, cellOffset, haveCellScalars: model.haveCellScalars });
+      cellOffset += model.tris.getCABO().createVBO(poly.getPolys(), 'polys', representation,
+        { points, normals: n, tcoords, colors: c, cellOffset, haveCellScalars: model.haveCellScalars });
+      cellOffset += model.triStrips.getCABO().createVBO(poly.getStrips(), 'strips', representation,
+        { points, normals: n, tcoords, colors: c, cellOffset, haveCellScalars: model.haveCellScalars });
 
       model.VBOBuildTime.modified();
       model.VBOBuildString = toString;

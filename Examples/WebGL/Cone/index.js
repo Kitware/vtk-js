@@ -68,7 +68,8 @@ const randFilter = macro.newInstance((publicAPI, model) => {
       const pd = vtkPolyData.newInstance();
       pd.setPolys(inData[0].getPolys());
       pd.setPoints(inData[0].getPoints());
-      const cpd = pd.getPointData();
+      // const cpd = pd.getPointData();
+      const cpd = pd.getCellData();
       cpd.addArray(da);
       cpd.setActiveScalars(da.getName());
       outData[0] = pd;
