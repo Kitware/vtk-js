@@ -1,37 +1,23 @@
-export const SHADING_MODEL = [
-  'VTK_FLAT',    // 0
-  'VTK_GOURAUD', // 1
-  'VTK_PHONG',   // 2
-];
-
-export const SHADINGS = {
-  VTK_FLAT: 0,
-  VTK_GOURAUD: 1,
-  VTK_PHONG: 2,
+export const VTK_SHADING = {
+  FLAT: 0,
+  GOURAUD: 1,
+  PHONG: 2,
 };
 
-export const REPRESENTATION_MODEL = [
-  'VTK_POINTS',    // 0
-  'VTK_WIREFRAME', // 1
-  'VTK_SURFACE',   // 2
-];
-
-export const REPRESENTATIONS = {
-  VTK_POINTS: 0,
-  VTK_WIREFRAME: 1,
-  VTK_SURFACE: 2,
+export const VTK_REPRESENTATION = {
+  POINTS: 0,
+  WIREFRAME: 1,
+  SURFACE: 2,
 };
 
-export const INTERPOLATIONS = {
-  VTK_FLAT: 0,
-  VTK_GOURAUD: 1,
-  VTK_PHONG: 2,
+export const VTK_INTERPOLATION = {
+  FLAT: 0,
+  GOURAUD: 1,
+  PHONG: 2,
 };
 
 export default {
-  SHADINGS,
-  SHADING_MODEL,
-  REPRESENTATIONS,
-  INTERPOLATIONS,
-  REPRESENTATION_MODEL,
+  VTK_SHADING,
+  VTK_REPRESENTATION,
+  VTK_INTERPOLATION,
 };

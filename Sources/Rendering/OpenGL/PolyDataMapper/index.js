@@ -3,7 +3,7 @@ import vtkHelper from '../Helper';
 import vtkMath from '../../../Common/Core/Math';
 import vtkShaderProgram from '../ShaderProgram';
 import vtkViewNode from '../../SceneGraph/ViewNode';
-import { REPRESENTATIONS, SHADINGS } from '../../Core/Property/Constants';
+import { VTK_REPRESENTATION, VTK_SHADING } from '../../Core/Property/Constants';
 import { VTK_MATERIALMODE, VTK_SCALAR_MODE } from '../../Core/Mapper/Constants';
 
 import vtkPolyDataVS from '../glsl/vtkPolyDataVS.c';
@@ -324,7 +324,7 @@ export function vtkOpenGLPolyDataMapper(publicAPI, model) {
               '  if (gl_FrontFacing == false) { normalVCVSOutput = -normalVCVSOutput; }']
             ).result;
         } else {
-          if (actor.getProperty().getRepresentation() === REPRESENTATIONS.VTK_WIREFRAME) {
+          if (actor.getProperty().getRepresentation() === VTK_REPRESENTATION.WIREFRAME) {
             // generate a normal for lines, it will be perpendicular to the line
             // and maximally aligned with the camera view direction
             // no clue if this is the best way to do this.
@@ -439,12 +439,12 @@ export function vtkOpenGLPolyDataMapper(publicAPI, model) {
     // and having normals or not.
     let needLighting = false;
     const haveNormals = false; // (model.currentInput.getPointData().getNormals() != null);
-    if (actor.getProperty().getRepresentation() === REPRESENTATIONS.VTK_POINTS) {
-      needLighting = (actor.getProperty().getInterpolation() !== SHADINGS.VTK_FLAT && haveNormals);
+    if (actor.getProperty().getRepresentation() === VTK_REPRESENTATION.POINTS) {
+      needLighting = (actor.getProperty().getInterpolation() !== VTK_SHADING.FLAT && haveNormals);
     } else {
       const isTrisOrStrips = (cellBO === model.tris || cellBO === model.triStrips);
       needLighting = (isTrisOrStrips ||
-        (!isTrisOrStrips && actor.getProperty().getInterpolation() !== SHADINGS.VTK_FLAT && haveNormals));
+        (!isTrisOrStrips && actor.getProperty().getInterpolation() !== VTK_SHADING.FLAT && haveNormals));
     }
 
     // do we need lighting?
@@ -787,7 +787,7 @@ export function vtkOpenGLPolyDataMapper(publicAPI, model) {
     // draw lines
     if (model.lines.getCABO().getElementCount()) {
       publicAPI.updateShaders(model.lines, ren, actor);
-      if (representation === REPRESENTATIONS.VTK_POINTS) {
+      if (representation === VTK_REPRESENTATION.POINTS) {
         gl.drawArrays(gl.POINTS, 0,
           model.Lines.getCABO().getElementCount());
       } else {
@@ -802,10 +802,10 @@ export function vtkOpenGLPolyDataMapper(publicAPI, model) {
       // First we do the triangles, update the shader, set uniforms, etc.
       publicAPI.updateShaders(model.tris, ren, actor);
       let mode = gl.POINTS;
-      if (representation === REPRESENTATIONS.VTK_WIREFRAME) {
+      if (representation === VTK_REPRESENTATION.WIREFRAME) {
         mode = gl.LINES;
       }
-      if (representation === REPRESENTATIONS.VTK_SURFACE) {
+      if (representation === VTK_REPRESENTATION.SURFACE) {
         mode = gl.TRIANGLES;
       }
       gl.drawArrays(mode, 0,
@@ -817,15 +817,15 @@ export function vtkOpenGLPolyDataMapper(publicAPI, model) {
     if (model.triStrips.getCABO().getElementCount()) {
       // Use the tris shader program/VAO, but triStrips ibo.
       model.updateShaders(model.triStrips, ren, actor);
-      if (representation === REPRESENTATIONS.VTK_POINTS) {
+      if (representation === VTK_REPRESENTATION.POINTS) {
         gl.drawArrays(gl.POINTS, 0,
           model.triStrips.getCABO().getElementCount());
       }
-      if (representation === REPRESENTATIONS.VTK_WIREFRAME) {
+      if (representation === VTK_REPRESENTATION.WIREFRAME) {
         gl.drawArays(gl.LINES, 0,
           model.triStrips.getCABO().getElementCount());
       }
-      if (representation === REPRESENTATIONS.VTK_SURFACE) {
+      if (representation === VTK_REPRESENTATION.SURFACE) {
         gl.drawArrays(gl.TRIANGLES, 0,
          model.triStrips.getCABO().getElementCount());
       }
@@ -922,7 +922,7 @@ export function vtkOpenGLPolyDataMapper(publicAPI, model) {
     }
 
     // Do we have normals?
-    let n = (actor.getProperty().getInterpolation() !== SHADINGS.VTK_FLAT) ? poly.getPointData().getNormals() : null;
+    let n = (actor.getProperty().getInterpolation() !== VTK_SHADING.FLAT) ? poly.getPointData().getNormals() : null;
     if (n === null && poly.getCellData().getNormals()) {
       model.haveCellNormals = true;
       n = poly.getCelData().getNormals();

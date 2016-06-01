@@ -2,7 +2,7 @@ import * as macro from '../../../macro';
 import vtkBufferObject from '../BufferObject';
 import { DynamicTypedArray } from '../../../Common/Core/DynamicTypedArray';
 import { OBJECT_TYPE } from '../BufferObject/Constants';
-import { REPRESENTATIONS } from '../../Core/Property/Constants';
+import { VTK_REPRESENTATION } from '../../Core/Property/Constants';
 
 
 // ----------------------------------------------------------------------------
@@ -176,9 +176,9 @@ function vtkOpenGLCellArrayBufferObject(publicAPI, model) {
     };
 
     let func = null;
-    if (outRep === REPRESENTATIONS.VTK_POINTS || inRep === 'Verts') {
+    if (outRep === VTK_REPRESENTATION.POINTS || inRep === 'Verts') {
       func = cellBuilders.anythingToPoints;
-    } else if (outRep === REPRESENTATIONS.VTK_WIREFRAME || inRep === 'Lines') {
+    } else if (outRep === VTK_REPRESENTATION.WIREFRAME || inRep === 'Lines') {
       func = cellBuilders[`${inRep}ToWireframe`];
     } else {
       func = cellBuilders[`${inRep}ToSurface`];
