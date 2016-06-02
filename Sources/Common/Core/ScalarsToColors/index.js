@@ -1,7 +1,7 @@
 import * as macro from '../../../macro';
 import { VECTOR_MODE } from './Constants';  // { ENUM_1: 0, ENUM_2: 1, ... }
 import { VTK_COLOR_MODE } from '../../../Rendering/Core/Mapper/Constants';
-import { DATATYPES } from '../DataArray/Constants';
+import { VTK_DATATYPES } from '../DataArray/Constants';
 import vtkDataArray from '../DataArray';
 
 // ----------------------------------------------------------------------------
@@ -49,7 +49,7 @@ function vtkScalarsToColors(publicAPI, model) {
 
     // map scalars through lookup table only if needed
     if ((colorMode === VTK_COLOR_MODE.DEFAULT &&
-         scalars.getDataType() === DATATYPES.VTK_UNSIGNED_CHAR) ||
+         scalars.getDataType() === VTK_DATATYPES.UNSIGNED_CHAR) ||
         (colorMode === VTK_COLOR_MODE.DIRECT_SCALARS && scalars)) {
       newColors = publicAPI.convertToRGBA(scalars, numberOfComponents,
                         scalars.getNumberOfTuples());
@@ -67,7 +67,6 @@ function vtkScalarsToColors(publicAPI, model) {
       }
       newscalars.values = s;
       newscalars.size = s.length;
-//      newColors = vtkDataArray.newInstance({ size: 4 * scalars.getNumberOfTuples(), dataType: DATATYPES.VTK_UNSIGNED_CHAR });
       newColors = vtkDataArray.newInstance(newscalars);
 
       // let component = componentIn;
@@ -166,11 +165,11 @@ function vtkScalarsToColors(publicAPI, model) {
   //----------------------------------------------------------------------------
   publicAPI.convertToRGBA = (colors, numComp, numTuples) => {
     if (numComp === 4 && model.alpha >= 1.0 &&
-        colors.getDataType() === DATATYPES.VTK_UNSIGNED_CHAR) {
+        colors.getDataType() === VTK_DATATYPES.UNSIGNED_CHAR) {
       return colors;
     }
 
-    const newColors = vtkDataArray.newInstance({ dataType: DATATYPES.VTK_UNSIGNED_CHAR });
+    const newColors = vtkDataArray.newInstance({ dataType: VTK_DATATYPES.UNSIGNED_CHAR });
     newColors.setNumberOfComponents(4);
     newColors.setNumberOfTuples(numTuples);
 
@@ -183,8 +182,8 @@ function vtkScalarsToColors(publicAPI, model) {
     alpha = (alpha < 1 ? alpha : 1);
 
     let convtFun = intColorToUChar;
-    if ((colors.getDataType() === DATATYPES.VTK_FLOAT) ||
-      colors.getDataType() === DATATYPES.VTK_DOUBLE) {
+    if ((colors.getDataType() === VTK_DATATYPES.FLOAT) ||
+      colors.getDataType() === VTK_DATATYPES.DOUBLE) {
       convtFun = floatColorToUChar;
     }
 

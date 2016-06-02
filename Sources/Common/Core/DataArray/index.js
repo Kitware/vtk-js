@@ -1,5 +1,5 @@
 import * as macro from '../../../macro';
-import VTK from './Constants';
+import { VTK_DEFAULT_DATATYPE } from './Constants';
 
 // ----------------------------------------------------------------------------
 // Global methods
@@ -187,7 +187,7 @@ const DEFAULT_VALUES = {
   name: '',
   tuple: 1,
   size: 0,
-  dataType: VTK.DEFAULT_DATATYPE,
+  dataType: VTK_DEFAULT_DATATYPE,
   values: null,
   ranges: null,
 };
