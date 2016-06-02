@@ -87,7 +87,6 @@ function vtkViewport(publicAPI, model) {
   publicAPI.viewToNormalizedViewport = (x, y, z) =>
     [(x + 1.0) * 0.5, (y + 1.0) * 0.5, (z + 1.0) * 0.5];
 
-  publicAPI.ComputeAspect = notImplemented('ComputeAspect');
   publicAPI.PickPropFrom = notImplemented('PickPropFrom');
   publicAPI.GetTiledSize = notImplemented('GetTiledSize');
   publicAPI.GetTiledSizeAndOrigin = notImplemented('GetTiledSizeAndOrigin');

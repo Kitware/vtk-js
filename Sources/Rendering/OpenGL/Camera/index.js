@@ -45,25 +45,12 @@ function vtkOpenGLCamera(publicAPI, model) {
       mat3.invert(model.normalMatrix, model.normalMatrix);
       mat4.transpose(model.WCVCMatrix, model.WCVCMatrix);
 
-      // double aspect[2];
-      // int  lowerLeft[2];
-      // let usize;
-      // let vsize;
-      //  ren.getTiledSizeAndOrigin(&usize, &vsize, lowerLeft, lowerLeft+1);
+      const oglren = publicAPI.getFirstAncestorOfType('vtkOpenGLRenderer');
+      const aspectRatio = oglren.getAspectRatio();
 
-      // ren->ComputeAspect();
-      // ren->GetAspect(aspect);
-      // double aspect2[2];
-      // ren->vtkViewport::ComputeAspect();
-      // ren->vtkViewport::GetAspect(aspect2);
-      // double aspectModification = aspect[0] * aspect2[1] / (aspect[1] * aspect2[0]);
-
-    //  if (usize && vsize) {
       model.VCDCMatrix = model.renderable.getProjectionTransformMatrix(
-//                           aspectModification * usize / vsize, -1, 1);
-                           1.0, -1, 1);
+                           aspectRatio, -1, 1);
       mat4.transpose(model.VCDCMatrix, model.VCDCMatrix);
-    //  }
 
       model.WCDCMatrix = mat4.create();
       mat4.multiply(model.WCDCMatrix, model.VCDCMatrix, model.WCVCMatrix);

@@ -513,20 +513,9 @@ function vtkRenderer(publicAPI, model) {
     let angle = vtkMath.radiansFromDegrees(model.activeCamera.getViewAngle());
     let parallelScale = radius;
 
-    publicAPI.computeAspect();
-    const aspect = publicAPI.getAspect();
-
-    if (aspect[0] >= 1.0) {
-      // horizontal window, deal with vertical angle|scale
-      if (model.activeCamera.getUseHorizontalViewAngle()) {
-        angle = 2.0 * Math.atan(Math.tan(angle * 0.5) / aspect[0]);
-      }
-    } else {
-      // vertical window, deal with horizontal angle|scale
-      if (!model.activeCamera.getUseHorizontalViewAngle()) {
-        angle = 2.0 * Math.atan(Math.tan(angle * 0.5) * aspect[0]);
-      }
-      parallelScale = parallelScale / aspect[0];
+    // horizontal window, deal with vertical angle|scale
+    if (model.activeCamera.getUseHorizontalViewAngle()) {
+      angle = 2.0 * Math.atan(Math.tan(angle * 0.5) / aspect[0]);
     }
 
     const distance = radius / Math.sin(angle * 0.5);

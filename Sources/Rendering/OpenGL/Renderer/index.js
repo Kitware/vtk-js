@@ -55,6 +55,12 @@ export function vtkOpenGLRenderer(publicAPI, model) {
     }
   };
 
+  publicAPI.getAspectRatio = () => {
+    const size = model.parent.getSize();
+    const viewport = model.renderable.getViewport();
+    return size[0] * (viewport[2] - viewport[0]) / ((viewport[3] - viewport[1]) * size[1]);
+  };
+
   publicAPI.clear = () => {
     let clearMask = 0;
     const gl = model.context;

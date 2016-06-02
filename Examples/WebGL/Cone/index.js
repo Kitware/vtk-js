@@ -4,7 +4,6 @@ import vtkRenderer from '../../../Sources/Rendering/Core/Renderer';
 import vtkConeSource from '../../../Sources/Filters/Sources/ConeSource';
 import vtkActor from '../../../Sources/Rendering/Core/Actor';
 import vtkMapper from '../../../Sources/Rendering/Core/Mapper';
-import vtkCamera from '../../../Sources/Rendering/Core/Camera';
 import vtkRenderWindowInteractor from '../../../Sources/Rendering/Core/RenderWindowInteractor';
 import vtkDataArray from '../../../Sources/Common/Core/DataArray';
 import vtkPolyData from '../../../Sources/Common/DataModel/PolyData';
@@ -23,18 +22,11 @@ controlContainer.innerHTML = controlPanel;
 const representationSelector = document.querySelector('.representations');
 const resolutionChange = document.querySelector('.resolution');
 
+// create what we will view
 const renWin = vtkRenderWindow.newInstance();
 const ren = vtkRenderer.newInstance();
 renWin.addRenderer(ren);
 ren.setBackground(0.32, 0.34, 0.43);
-
-const glwindow = vtkOpenGLRenderWindow.newInstance();
-glwindow.setSize(500, 500);
-glwindow.setContainer(renderWindowContainer);
-renWin.addView(glwindow);
-
-const iren = vtkRenderWindowInteractor.newInstance();
-iren.setView(glwindow);
 
 const actor = vtkActor.newInstance();
 ren.addActor(actor);
@@ -42,16 +34,11 @@ ren.addActor(actor);
 const mapper = vtkMapper.newInstance();
 actor.setMapper(mapper);
 
-const cam = vtkCamera.newInstance();
-ren.setActiveCamera(cam);
-cam.setFocalPoint(0, 0, 0);
-cam.setPosition(0, 0, 3);
-cam.setClippingRange(0.1, 50.0);
-
 const coneSource = vtkConeSource.newInstance({ height: 1.0 });
 
 // create a filter on the fly, sort of cool, this is a random scalars
-// filter we create inline
+// filter we create inline, for a simple cone you would not need
+// this
 const randFilter = macro.newInstance((publicAPI, model) => {
   macro.obj(publicAPI, model); // make it an object
   macro.algo(publicAPI, model, 1, 1); // mixin algorithm code 1 in, 1 out
@@ -80,9 +67,20 @@ const randFilter = macro.newInstance((publicAPI, model) => {
 randFilter.setInputConnection(coneSource.getOutputPort());
 mapper.setInputConnection(randFilter.getOutputPort());
 
+// now create something to view it, in this case webgl
+// with mouse/touch interaction
+const glwindow = vtkOpenGLRenderWindow.newInstance();
+glwindow.setSize(500, 400);
+glwindow.setContainer(renderWindowContainer);
+renWin.addView(glwindow);
+
+const iren = vtkRenderWindowInteractor.newInstance();
+iren.setView(glwindow);
+
+// initialize the interaction and bind event handlers
+// to the HTML elements
 iren.initialize();
 iren.bindEvents(renderWindowContainer, document);
-iren.start();
 
 // ----------------
 
@@ -101,4 +99,3 @@ resolutionChange.addEventListener('change', e => {
 global.source = coneSource;
 global.mapper = mapper;
 global.actor = actor;
-
