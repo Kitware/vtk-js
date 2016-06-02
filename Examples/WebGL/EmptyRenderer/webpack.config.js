@@ -20,12 +20,7 @@ module.exports = {
       loader: 'eslint-loader',
       exclude: /node_modules/,
     }],
-    loaders: [
-      {
-        test: /\.glsl$/i,
-        loader: 'shader',
-      },
-    ].concat(loaders),
+    loaders: loaders,
   },
   eslint: {
     configFile: '.eslintrc.js',

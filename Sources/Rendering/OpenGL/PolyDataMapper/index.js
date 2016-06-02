@@ -6,8 +6,8 @@ import vtkViewNode from '../../SceneGraph/ViewNode';
 import { VTK_REPRESENTATION, VTK_SHADING } from '../../Core/Property/Constants';
 import { VTK_MATERIALMODE, VTK_SCALAR_MODE } from '../../Core/Mapper/Constants';
 
-import vtkPolyDataVS from '../glsl/vtkPolyDataVS.c';
-import vtkPolyDataFS from '../glsl/vtkPolyDataFS.c';
+import vtkPolyDataVS from '../glsl/vtkPolyDataVS.glsl';
+import vtkPolyDataFS from '../glsl/vtkPolyDataFS.glsl';
 
 // ----------------------------------------------------------------------------
 // vtkOpenGLPolyDataMapper methods

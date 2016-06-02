@@ -90,7 +90,7 @@ representationSelector.addEventListener('change', e => {
   renWin.render();
 });
 
-resolutionChange.addEventListener('change', e => {
+resolutionChange.addEventListener('input', e => {
   const resolution = Number(e.target.value);
   coneSource.setResolution(resolution);
   renWin.render();
