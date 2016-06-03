@@ -1,5 +1,4 @@
 import * as macro from '../../../macro';
-import vtkPolyData from '../../../Common/DataModel/PolyData';
 import vtkDataArray from '../../../Common/Core/DataArray';
 
 // ----------------------------------------------------------------------------
@@ -14,39 +13,12 @@ import vtkDataArray from '../../../Common/Core/DataArray';
 // vtkWarpScalar methods
 // ----------------------------------------------------------------------------
 
-function warpScalar(publicAPI, model) {
+function vtkWarpScalar(publicAPI, model) {
   // Set our className
   model.classHierarchy.push('vtkWarpScalar');
 
-  let inputArrayName = null;
-  let shouldAbort = false;
-
-  /** *************************************************************
-   * FIXME: Some functions needed by vtkAlgorithm instances could
-   * be moved to a higher level
-   * *************************************************************/
-  publicAPI.setInputArrayToProcess = arrayName => {
-    inputArrayName = arrayName;
-  };
-
-  publicAPI.getInputArrayToProcess = (idx, inputVector) => {
-    const input = inputVector[0];
-    const pointData = input.getPointData();
-    return pointData.getArray(inputArrayName);
-  };
-
-  publicAPI.updateProgress = completeRatio => {
-    console.log(`vtkWarpScalars is ${completeRatio} percent complete`);
-  };
-
-  publicAPI.setAbortExecute = abort => {
-    shouldAbort = abort;
-  };
-
-  publicAPI.getAbortExecute = () => shouldAbort;
-
   publicAPI.requestData = (inData, outData) => { // implement requestData
-    if (!outData[0] || inData[0].getMTime() > outData[0].getMTime()) {
+    if (!outData[0] || inData[0].getMTime() > outData[0].getMTime() || publicAPI.getMTime() > outData[0].getMTime()) {
       const input = inData[0];
 
       // if (!input)
@@ -86,8 +58,8 @@ function warpScalar(publicAPI, model) {
       const inPts = input.getPoints();
       const pd = input.getPointData();
       const inNormals = pd.getNormals();
+      const inScalars = publicAPI.getInputArrayToProcess(0);
 
-      const inScalars = publicAPI.getInputArrayToProcess(0, inData);
       if (!inPts || !inScalars) {
         vtkDebugMacro('No data to warp');
         outData[0] = inData[0];
@@ -98,20 +70,22 @@ function warpScalar(publicAPI, model) {
 
       let pointNormal = null;
 
-      if (inNormals && !model.getUseNormal()) {
-        pointNormal = (id, normals) => normals.getTuple(id);
-        vtkDebugMacro('Using data normals');
-      } else if (model.getXyPlane()) {
-        const normal = [0, 0, 1];
+      const normal = [0, 0, 1];
+      if (inNormals && !model.useNormal) {
+        pointNormal = (id, array) => [
+          array.getData()[id * 3],
+          array.getData()[id * 3 + 1],
+          array.getData()[id * 3 + 2],
+        ];
+        // vtkDebugMacro('Using data normals');
+      } else if (publicAPI.getXyPlane()) {
         pointNormal = (id, array) => normal;
-        vtkDebugMacro('Using x-y plane normal');
+        // vtkDebugMacro('Using x-y plane normal');
       } else {
-        pointNormal = (id, array) => model.getNormal();
-        vtkDebugMacro('Using Normal instance variable');
+        pointNormal = (id, array) => model.normal;
+        // vtkDebugMacro('Using Normal instance variable');
       }
 
-      // newPts = vtkPoints::New();
-      // newPts->SetNumberOfPoints(numPts);
       const newPtsData = new Float32Array(numPts * 3);
       const inPoints = inPts.getData();
       let ptOffset = 0;
@@ -119,44 +93,26 @@ function warpScalar(publicAPI, model) {
       let s = 1;
 
       // Loop over all points, adjusting locations
+      const scalarDataArray = inScalars.getData();
       for (let ptId = 0; ptId < numPts; ++ptId) {
-        if (!(ptId % 10000)) {
-          publicAPI.updateProgress(ptId / numPts);
-          if (publicAPI.getAbortExecute()) {
-            break;
-          }
-        }
-
         ptOffset = ptId * 3;
         n = pointNormal(ptId, inNormals);
 
-        if (model.getXyPlane()) {
+        if (model.xyPlane) {
           s = inPoints[ptOffset + 2];
         } else {
-          s = inScalars.getComponent(ptId, 0);
+          s = scalarDataArray[ptId];
         }
 
-        newPtsData[ptOffset] = inPoints[ptOffset] + model.getScaleFactor() * s * n[0];
-        newPtsData[ptOffset + 1] = inPoints[ptOffset + 1] + model.getScaleFactor() * s * n[1];
-        newPtsData[ptOffset + 2] = inPoints[ptOffset + 2] + model.getScaleFactor() * s * n[2];
+        newPtsData[ptOffset] = inPoints[ptOffset] + model.scaleFactor * s * n[0];
+        newPtsData[ptOffset + 1] = inPoints[ptOffset + 1] + model.scaleFactor * s * n[1];
+        newPtsData[ptOffset + 2] = inPoints[ptOffset + 2] + model.scaleFactor * s * n[2];
       }
-
-      const newPts = vtkDataArray.newInstance();
-      newPts.setData(newPtsData);
-
-      // Update ourselves and release memory
-
-      // output->GetPointData()->CopyNormalsOff(); // distorted geometry
-      // output->GetPointData()->PassData(input->GetPointData());
-      // output->GetCellData()->CopyNormalsOff(); // distorted geometry
-      // output->GetCellData()->PassData(input->GetCellData());
-
-      const newPolyData = vtkPolyData.newInstance();
-      newPolyData.setPoints(newPts);
-      newPolyData.setPolys(inData[0].getPolys());
-      outData[0] = newPolyData;
-
-      // newPts->Delete();
+      const newPts = vtkDataArray.newInstance({ values: newPtsData, tuple: 3 });
+      const newDataSet = input.shallowCopy();
+      newDataSet.setPoints(newPts);
+      newDataSet.modified();
+      outData[0] = newDataSet;
     }
 
     return 1;
@@ -197,7 +153,7 @@ export function extend(publicAPI, model, initialValues = {}) {
   ], 3);
 
   // Object specific methods
-  warpScalar(publicAPI, model);
+  vtkWarpScalar(publicAPI, model);
 }
 
 // ----------------------------------------------------------------------------

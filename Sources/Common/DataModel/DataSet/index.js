@@ -55,11 +55,15 @@ function vtkDataSet(publicAPI, model) {
   const dataset = model.type ? model[model.type] || {} : {};
   publicAPI.dataset = dataset;
 
-  model.pointData = vtkDataSetAttributes.newInstance({ dataArrays: dataset.PointData });
-  model.cellData = vtkDataSetAttributes.newInstance({ dataArrays: dataset.CellData });
-  model.fieldData = vtkDataSetAttributes.newInstance({ dataArrays: dataset.FieldData });
-
-  publicAPI.getBounds = () => getBounds(publicAPI.dataset);
+  if (!model.pointData) {
+    model.pointData = vtkDataSetAttributes.newInstance({ dataArrays: dataset.PointData });
+  }
+  if (!model.cellData) {
+    model.cellData = vtkDataSetAttributes.newInstance({ dataArrays: dataset.CellData });
+  }
+  if (!model.fieldData) {
+    model.fieldData = vtkDataSetAttributes.newInstance({ dataArrays: dataset.FieldData });
+  }
 }
 
 // ----------------------------------------------------------------------------

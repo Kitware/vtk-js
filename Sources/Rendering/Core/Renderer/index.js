@@ -512,7 +512,6 @@ function vtkRenderer(publicAPI, model) {
     // a sin.
     const angle = vtkMath.radiansFromDegrees(model.activeCamera.getViewAngle());
     const parallelScale = radius;
-
     const distance = radius / Math.sin(angle * 0.5);
 
     // check view-up vector against view plane normal
@@ -750,7 +749,7 @@ export function extend(publicAPI, model, initialValues = {}) {
   Object.assign(model, DEFAULT_VALUES, initialValues);
 
   // Inheritance
-  vtkViewport.extend(publicAPI, model);
+  vtkViewport.extend(publicAPI, model, initialValues);
 
   // Build VTK API
   macro.get(publicAPI, model, [

@@ -84,11 +84,28 @@ function vtkDataSetAttributes(publicAPI, model) {
   // Process dataArrays if any
   if (model.dataArrays && Object.keys(model.dataArrays).length) {
     Object.keys(model.dataArrays).forEach(name => {
-      if (!model.dataArrays[name].ref && model.dataArrays[name].dataType === 'vtkDataArray') {
+      if (!model.dataArrays[name].ref && model.dataArrays[name].type === 'vtkDataArray') {
         publicAPI.addArray(vtkDataArray.newInstance(model.dataArrays[name]));
       }
     });
   }
+
+  /* eslint-disable no-use-before-define */
+  publicAPI.shallowCopy = () => {
+    const newIntsanceModel = Object.assign({}, model, { arrays: null, dataArrays: null });
+    const copyInst = newInstance(newIntsanceModel);
+
+    // Shallow copy each array
+    publicAPI.getArrayNames().forEach(name => {
+      copyInst.addArray(publicAPI.getArray(name).shallowCopy());
+    });
+
+    // Reset mtime to original value
+    copyInst.set({ mtime: model.mtime });
+
+    return copyInst;
+  };
+  /* eslint-enable no-use-before-define */
 }
 
 // ----------------------------------------------------------------------------

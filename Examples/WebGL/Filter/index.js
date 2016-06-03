@@ -1,24 +1,22 @@
-import vtkOpenGLRenderWindow from '../../../Sources/Rendering/OpenGL/RenderWindow';
-import vtkRenderWindow from '../../../Sources/Rendering/Core/RenderWindow';
-import vtkRenderer from '../../../Sources/Rendering/Core/Renderer';
-import vtkSphereSource from '../../../Sources/Filters/Sources/SphereSource';
 import vtkActor from '../../../Sources/Rendering/Core/Actor';
-import vtkMapper from '../../../Sources/Rendering/Core/Mapper';
 import vtkCamera from '../../../Sources/Rendering/Core/Camera';
+import vtkDataArray from '../../../Sources/Common/Core/DataArray';
+import vtkMapper from '../../../Sources/Rendering/Core/Mapper';
+import vtkOpenGLRenderWindow from '../../../Sources/Rendering/OpenGL/RenderWindow';
+import vtkRenderer from '../../../Sources/Rendering/Core/Renderer';
+import vtkRenderWindow from '../../../Sources/Rendering/Core/RenderWindow';
 import vtkRenderWindowInteractor from '../../../Sources/Rendering/Core/RenderWindowInteractor';
+import vtkSphereSource from '../../../Sources/Filters/Sources/SphereSource';
 import vtkWarpScalar from '../../../Sources/Filters/General/WarpScalar';
+
+import * as macro     from '../../../Sources/macro';
 
 import controlPanel from './controller.html';
 
 // Create some control UI
-const container = document.querySelector('body');
-const controlContainer = document.createElement('div');
-const renderWindowContainer = document.createElement('div');
-container.appendChild(controlContainer);
-container.appendChild(renderWindowContainer);
-controlContainer.innerHTML = controlPanel;
-
-const scaleFactorInput = document.querySelector('.scale-factor');
+const rootContainer = document.querySelector('body');
+rootContainer.innerHTML = controlPanel;
+const renderWindowContainer = document.querySelector('.renderwidow');
 
 const renWin = vtkRenderWindow.newInstance();
 const ren = vtkRenderer.newInstance();
@@ -42,15 +40,44 @@ actor.setMapper(mapper);
 const cam = vtkCamera.newInstance();
 ren.setActiveCamera(cam);
 cam.setFocalPoint(0, 0, 0);
-cam.setPosition(0, 0, 3);
+cam.setPosition(0, 0, 10);
 cam.setClippingRange(0.1, 50.0);
 
 // Build pipeline
-const sphereSource = vtkSphereSource.newInstance();
-const filter = vtkWarpScalar.newInstance();
+const sphereSource = vtkSphereSource.newInstance({ thetaResolution: 40, phiResolution: 41 });
+const filter = vtkWarpScalar.newInstance({ scaleFactor: 0, useNormal: false });
 
-filter.setInputConnection(sphereSource.getOutputPort());
+// create a filter on the fly, sort of cool, this is a random scalars
+// filter we create inline, for a simple cone you would not need
+// this
+const randFilter = macro.newInstance((publicAPI, model) => {
+  macro.obj(publicAPI, model); // make it an object
+  macro.algo(publicAPI, model, 1, 1); // mixin algorithm code 1 in, 1 out
+  publicAPI.requestData = (inData, outData) => { // implement requestData
+    if (!outData[0] || inData[0].getMTime() > outData[0].getMTime()) {
+      const newArray = new Float32Array(inData[0].getPoints().getNumberOfTuples());
+      for (let i = 0; i < newArray.length; i++) {
+        newArray[i] = i % 2 ? 1 : 0;
+      }
+
+      const da = vtkDataArray.newInstance({ values: newArray });
+      da.setName('spike');
+
+      const outDS = inData[0].shallowCopy();
+      outDS.getPointData().addArray(da);
+      outDS.getPointData().setActiveScalars(da.getName());
+
+      outData[0] = outDS;
+    }
+  };
+})();
+
+randFilter.setInputConnection(sphereSource.getOutputPort());
+filter.setInputConnection(randFilter.getOutputPort());
 mapper.setInputConnection(filter.getOutputPort());
+
+// Select array to process
+filter.setInputArrayToProcess(0, 'spike', 'PointData', 'Scalars');
 
 // Initialize interactor and start
 iren.initialize();
@@ -59,13 +86,31 @@ iren.start();
 
 // ----------------
 
-scaleFactorInput.addEventListener('change', e => {
-  const scaleFactor = Number(e.target.value);
-  // coneSource.setResolution(resolution);
-  console.log(`New scale factor: ${scaleFactor}`);
+// Warp setup
+['scaleFactor'].forEach(propertyName => {
+  document.querySelector(`.${propertyName}`).addEventListener('input', e => {
+    const value = Number(e.target.value);
+    filter.set({ [propertyName]: value });
+    renWin.render();
+  });
+});
+
+document.querySelector('.useNormal').addEventListener('change', e => {
+  const useNormal = !!(e.target.checked);
+  filter.set({ useNormal });
   renWin.render();
 });
 
+// Sphere setup
+['radius', 'thetaResolution', 'phiResolution'].forEach(propertyName => {
+  document.querySelector(`.${propertyName}`).addEventListener('input', e => {
+    const value = Number(e.target.value);
+    sphereSource.set({ [propertyName]: value });
+    renWin.render();
+  });
+});
+
 global.source = sphereSource;
+global.filter = filter;
 global.mapper = mapper;
 global.actor = actor;

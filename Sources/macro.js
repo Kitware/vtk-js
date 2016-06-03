@@ -19,7 +19,7 @@ export function enumToString(e, value) {
 
 export function obj(publicAPI, model = {}) {
   const callbacks = [];
-  model.mtime = globalMTime;
+  model.mtime = model.mtime || globalMTime;
   model.classHierarchy = ['vtkObject'];
 
   function off(index) {
@@ -64,8 +64,14 @@ export function obj(publicAPI, model = {}) {
     Object.keys(map).forEach(name => {
       if (Array.isArray(map[name])) {
         publicAPI[`set${capitalize(name)}`](...map[name]);
-      } else {
+      } else if (publicAPI[`set${capitalize(name)}`]) {
         publicAPI[`set${capitalize(name)}`](map[name]);
+      } else {
+        // Set data on model directly
+        if (['mtime'].indexOf(name) === -1) {
+          console.log('Warning: Set value to model directly', name, map[name]);
+        }
+        model[name] = map[name];
       }
     });
   };
@@ -238,6 +244,7 @@ export function algo(publicAPI, model, numberOfInputs, numberOfOutputs) {
   model.inputData = [];
   model.inputConnection = [];
   model.output = [];
+  model.inputArrayToProcess = [];
 
   // Methods
   function setInputData(dataset, port = 0) {
@@ -310,6 +317,24 @@ export function algo(publicAPI, model, numberOfInputs, numberOfOutputs) {
       }
     }
     publicAPI.requestData(ins, model.output);
+  };
+
+  publicAPI.getNumberOfInputPorts = () => numberOfInputs;
+  publicAPI.getNumberOfOutputPorts = () => numberOfOutputs;
+
+  publicAPI.getInputArrayToProcess = inputPort => {
+    const arrayDesc = model.inputArrayToProcess[inputPort];
+    const ds = model.inputData[inputPort];
+    if (arrayDesc && ds) {
+      return ds[`get${arrayDesc.fieldAssociation}`]().getArray(arrayDesc.arrayName);
+    }
+    return null;
+  };
+  publicAPI.setInputArrayToProcess = (inputPort, arrayName, fieldAssociation, attributeType = 'Scalars') => {
+    while (model.inputArrayToProcess.length < inputPort) {
+      model.inputArrayToProcess.push(null);
+    }
+    model.inputArrayToProcess[inputPort] = { arrayName, fieldAssociation, attributeType };
   };
 }
 

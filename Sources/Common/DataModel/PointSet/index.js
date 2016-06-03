@@ -22,7 +22,9 @@ function vtkPointSet(publicAPI, model) {
   model.classHierarchy.push('vtkPointSet');
 
   // Create empty points
-  model.points = vtkDataArray.newInstance({ empty: true });
+  if (!model.points) {
+    model.points = vtkDataArray.newInstance({ empty: true });
+  }
 
   publicAPI.getBounds = () => model.points.getBounds();
 
@@ -45,7 +47,7 @@ export function extend(publicAPI, model, initialValues = {}) {
   Object.assign(model, DEFAULT_VALUES, initialValues);
 
   // Inheritance
-  vtkDataSet.extend(publicAPI, model);
+  vtkDataSet.extend(publicAPI, model, initialValues);
   macro.setGet(publicAPI, model, ['points']);
 
   // Object specific methods
