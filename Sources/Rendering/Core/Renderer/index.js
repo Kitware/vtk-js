@@ -510,13 +510,8 @@ function vtkRenderer(publicAPI, model) {
     // this forms a right triangle with one side being the radius, another being
     // the target distance for the camera, then just find the target dist using
     // a sin.
-    let angle = vtkMath.radiansFromDegrees(model.activeCamera.getViewAngle());
-    let parallelScale = radius;
-
-    // horizontal window, deal with vertical angle|scale
-    if (model.activeCamera.getUseHorizontalViewAngle()) {
-      angle = 2.0 * Math.atan(Math.tan(angle * 0.5) / aspect[0]);
-    }
+    const angle = vtkMath.radiansFromDegrees(model.activeCamera.getViewAngle());
+    const parallelScale = radius;
 
     const distance = radius / Math.sin(angle * 0.5);
 
