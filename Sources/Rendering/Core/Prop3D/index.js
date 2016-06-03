@@ -53,11 +53,16 @@ function vtkProp3D(publicAPI, model) {
 
     // check whether or not need to rebuild the matrix
     if (publicAPI.getMTime() > model.matrixMTime.getMTime()) {
+      mat4.identity(model.matrix);
+      mat4.translate(model.matrix, model.matrix, [-model.origin[0], -model.origin[1], -model.origin[2]]);
+      mat4.scale(model.matrix, model.matrix, model.scale);
+      mat4.translate(model.matrix, model.matrix, model.position);
+      mat4.translate(model.matrix, model.matrix, model.origin);
+      mat4.transpose(model.matrix, model.matrix);
+
       model.matrixMTime.modified();
     }
   };
-
-  // getBounds (macro)
 
   publicAPI.getCenter = () => vtkBoundingBox.getCenter(model.bounds);
   publicAPI.getLength = () => vtkBoundingBox.getLength(model.bounds);
@@ -69,14 +74,7 @@ function vtkProp3D(publicAPI, model) {
   publicAPI.getUserMatrix = notImplemented('GetUserMatrix');
 
   function updateIdentityFlag() {
-    if (!model.isIdentity) {
-      return;
-    }
-
     [model.origin, model.position, model.orientation].forEach(array => {
-      if (model.isIdentity) {
-        return;
-      }
       if (array.filter(v => v !== 0).length) {
         model.isIdentity = false;
         return;

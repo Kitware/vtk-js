@@ -1,7 +1,7 @@
 import * as macro from '../../../macro';
 import vtkProp3D from '../Prop3D';
 import vtkProperty from '../Property';
-import { vec3 } from 'gl-matrix';
+import { vec3, mat4 } from 'gl-matrix';
 
 // ----------------------------------------------------------------------------
 // vtkActor methods
@@ -187,7 +187,9 @@ function vtkActor(publicAPI, model) {
       ];
 
       publicAPI.computeMatrix();
-      bbox.forEach(pt => vec3.transformMat4(pt, pt, model.matrix));
+      const tmp4 = mat4.create();
+      mat4.transpose(tmp4, model.matrix);
+      bbox.forEach(pt => vec3.transformMat4(pt, pt, tmp4));
 
       model.bounds[0] = model.bounds[2] = model.bounds[4] = Number.MAX_VALUE;
       model.bounds[1] = model.bounds[3] = model.bounds[5] = - Number.MAX_VALUE;

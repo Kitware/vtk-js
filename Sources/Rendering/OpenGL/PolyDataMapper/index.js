@@ -5,6 +5,7 @@ import vtkShaderProgram from '../ShaderProgram';
 import vtkViewNode from '../../SceneGraph/ViewNode';
 import { VTK_REPRESENTATION, VTK_SHADING } from '../../Core/Property/Constants';
 import { VTK_MATERIALMODE, VTK_SCALAR_MODE } from '../../Core/Mapper/Constants';
+import { mat3, mat4 } from 'gl-matrix';
 
 import vtkPolyDataVS from '../glsl/vtkPolyDataVS.glsl';
 import vtkPolyDataFS from '../glsl/vtkPolyDataFS.glsl';
@@ -35,7 +36,8 @@ export function vtkOpenGLPolyDataMapper(publicAPI, model) {
       model.lines.setContext(model.context);
       model.tris.setContext(model.context);
       model.triStrips.setContext(model.context);
-      const actor = publicAPI.getFirstAncestorOfType('vtkOpenGLActor').getRenderable();
+      model.openglActor = publicAPI.getFirstAncestorOfType('vtkOpenGLActor');
+      const actor = model.openglActor.getRenderable();
       const openglRenderer = publicAPI.getFirstAncestorOfType('vtkOpenGLRenderer');
       const ren = openglRenderer.getRenderable();
       model.openglCamera = openglRenderer.getViewNodeFor(ren.getActiveCamera());
@@ -673,17 +675,33 @@ export function vtkOpenGLPolyDataMapper(publicAPI, model) {
   publicAPI.setCameraShaderParameters = (cellBO, ren, actor) => {
     const program = cellBO.getProgram();
 
+    // // [WMVD]C == {world, model, view, display} coordinates
+    // // E.g., WCDC == world to display coordinate transformation
     const keyMats = model.openglCamera.getKeyMatrices(ren);
     const cam = ren.getActiveCamera();
 
-    // // [WMVD]C == {world, model, view, display} coordinates
-    // // E.g., WCDC == world to display coordinate transformation
-    program.setUniformMatrix('MCDCMatrix', keyMats.wcdc);
-    if (program.isUniformUsed('MCVCMatrix')) {
-      program.setUniformMatrix('MCVCMatrix', keyMats.wcvc);
-    }
-    if (program.isUniformUsed('normalMatrix')) {
-      program.setUniformMatrix3x3('normalMatrix', keyMats.normalMatrix);
+    if (actor.getIsIdentity()) {
+      program.setUniformMatrix('MCDCMatrix', keyMats.wcdc);
+      if (program.isUniformUsed('MCVCMatrix')) {
+        program.setUniformMatrix('MCVCMatrix', keyMats.wcvc);
+      }
+      if (program.isUniformUsed('normalMatrix')) {
+        program.setUniformMatrix3x3('normalMatrix', keyMats.normalMatrix);
+      }
+    } else {
+      const actMats = model.openglActor.getKeyMatrices();
+      if (program.isUniformUsed('normalMatrix')) {
+        const anorms = mat3.create();
+        mat3.multiply(anorms, keyMats.normalMatrix, actMats.normalMatrix);
+        program.setUniformMatrix3x3('normalMatrix', anorms);
+      }
+      const tmp4 = mat4.create();
+      mat4.multiply(tmp4, keyMats.wcdc, actMats.mcwc);
+      program.setUniformMatrix('MCDCMatrix', tmp4);
+      if (program.isUniformUsed('MCVCMatrix')) {
+        mat4.multiply(tmp4, keyMats.wcvc, actMats.mcwc);
+        program.setUniformMatrix('MCVCMatrix', tmp4);
+      }
     }
 
     if (program.isUniformUsed('cameraParallel')) {

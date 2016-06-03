@@ -85,7 +85,6 @@ export function extend(publicAPI, model, initialValues = {}) {
 
   model.keyMatrixTime = {};
   model.normalMatrix = mat3.create();
-
   macro.obj(model.keyMatrixTime);
 
   // Build VTK API

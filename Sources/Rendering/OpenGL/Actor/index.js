@@ -1,5 +1,6 @@
 import * as macro from '../../../macro';
 import vtkViewNode from '../../SceneGraph/ViewNode';
+import { mat3, mat4 } from 'gl-matrix';
 
 // ----------------------------------------------------------------------------
 // vtkOpenGLActor methods
@@ -44,6 +45,25 @@ function vtkOpenGLActor(publicAPI, model) {
       model.context.depthMask(false);
     }
   };
+
+  publicAPI.getKeyMatrices = () => {
+    // has the actor changed?
+    if (model.renderable.getMTime() > model.keyMatrixTime.getMTime()) {
+      model.renderable.computeMatrix();
+      mat4.copy(model.MCWCMatrix, model.renderable.getMatrix());
+      mat4.transpose(model.MCWCMatrix, model.MCWCMatrix);
+
+      if (model.renderable.getIsIdentity()) {
+        mat3.identity(model.normalMatrix);
+      } else {
+        mat3.fromMat4(model.normalMatrix, model.MCWCMatrix);
+        mat3.invert(model.normalMatrix, model.normalMatrix);
+      }
+      model.keyMatrixTime.modified();
+    }
+
+    return { mcwc: model.MCWCMatrix, normalMatrix: model.normalMatrix };
+  };
 }
 
 // ----------------------------------------------------------------------------
@@ -52,6 +72,9 @@ function vtkOpenGLActor(publicAPI, model) {
 
 const DEFAULT_VALUES = {
   context: null,
+  keyMatrixTime: null,
+  normalMatrix: null,
+  MCWCMatrix: null,
 };
 
 // ----------------------------------------------------------------------------
@@ -61,6 +84,11 @@ export function extend(publicAPI, model, initialValues = {}) {
 
   // Inheritance
   vtkViewNode.extend(publicAPI, model);
+
+  model.keyMatrixTime = {};
+  macro.obj(model.keyMatrixTime);
+  model.normalMatrix = mat3.create();
+  model.MCWCMatrix = mat4.create();
 
   // Build VTK API
   macro.setGet(publicAPI, model, [
