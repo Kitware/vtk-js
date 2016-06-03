@@ -1,15 +1,14 @@
-import vtkActor from '../../../Sources/Rendering/Core/Actor';
-import vtkCamera from '../../../Sources/Rendering/Core/Camera';
-import vtkDataArray from '../../../Sources/Common/Core/DataArray';
-import vtkMapper from '../../../Sources/Rendering/Core/Mapper';
-import vtkOpenGLRenderWindow from '../../../Sources/Rendering/OpenGL/RenderWindow';
-import vtkRenderer from '../../../Sources/Rendering/Core/Renderer';
-import vtkRenderWindow from '../../../Sources/Rendering/Core/RenderWindow';
-import vtkRenderWindowInteractor from '../../../Sources/Rendering/Core/RenderWindowInteractor';
-import vtkSphereSource from '../../../Sources/Filters/Sources/SphereSource';
-import vtkWarpScalar from '../../../Sources/Filters/General/WarpScalar';
-
-import * as macro     from '../../../Sources/macro';
+import * as macro                 from '../../../../macro';
+import vtkActor                   from '../../../../Rendering/Core/Actor';
+import vtkCamera                  from '../../../../Rendering/Core/Camera';
+import vtkDataArray               from '../../../../Common/Core/DataArray';
+import vtkMapper                  from '../../../../Rendering/Core/Mapper';
+import vtkOpenGLRenderWindow      from '../../../../Rendering/OpenGL/RenderWindow';
+import vtkRenderer                from '../../../../Rendering/Core/Renderer';
+import vtkRenderWindow            from '../../../../Rendering/Core/RenderWindow';
+import vtkRenderWindowInteractor  from '../../../../Rendering/Core/RenderWindowInteractor';
+import vtkSphereSource            from '../../../../Filters/Sources/SphereSource';
+import vtkWarpScalar              from '../../../../Filters/General/WarpScalar';
 
 import controlPanel from './controller.html';
 
