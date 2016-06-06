@@ -67,11 +67,6 @@ const randFilter = macro.newInstance((publicAPI, model) => {
 randFilter.setInputConnection(coneSource.getOutputPort());
 mapper.setInputConnection(randFilter.getOutputPort());
 
-const actor2 = vtkActor.newInstance();
-ren.addActor(actor2);
-actor2.setMapper(mapper);
-actor2.setPosition(1.0, 1.0, 0.0);
-
 // now create something to view it, in this case webgl
 // with mouse/touch interaction
 const glwindow = vtkOpenGLRenderWindow.newInstance();
