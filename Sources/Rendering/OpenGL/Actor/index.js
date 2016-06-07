@@ -18,6 +18,7 @@ function vtkOpenGLActor(publicAPI, model) {
       }
 
       publicAPI.prepareNodes();
+      publicAPI.addMissingNodes(model.renderable.getTextures());
       publicAPI.addMissingNode(model.renderable.getMapper());
       publicAPI.removeUnusedNodes();
     }

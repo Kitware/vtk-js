@@ -32,7 +32,7 @@ function vtkDataSetAttributes(publicAPI, model) {
   };
 
   publicAPI.getNormals = () => {
-    const array = model.arrays.Normals;
+    const array = model.arrays[model.activeNormals];
     if (array) {
       return array;
     }
@@ -40,7 +40,7 @@ function vtkDataSetAttributes(publicAPI, model) {
   };
 
   publicAPI.getTCoords = () => {
-    const array = model.arrays.TCoords; // FIXME is it the right array name?
+    const array = model.arrays[model.activeTCoords];
     if (array) {
       return array;
     }
@@ -116,6 +116,8 @@ const DEFAULT_VALUES = {
   activeScalars: '',
   activeVectors: '',
   activeTensors: '',
+  activeNormals: '',
+  activeTCoords: '',
   activeGlobalIds: '',
   activePedigreeIds: '',
   arrays: null,
@@ -130,6 +132,8 @@ export function extend(publicAPI, model, initialValues = {}) {
   macro.obj(publicAPI, model);
   macro.setGet(publicAPI, model, [
     'activeScalars',
+    'activeNormals',
+    'activeTCoords',
     'activeVectors',
     'activeTensors',
     'activeGlobalIds',

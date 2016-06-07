@@ -8,6 +8,7 @@ import vtkProperty     from './Property';
 import vtkRenderer     from './Renderer';
 import vtkRenderWindow from './RenderWindow';
 import vtkRenderWindowInteractor from './RenderWindowInteractor';
+import vtkTexture      from './Texture';
 import vtkViewport     from './Viewport';
 
 export default {
@@ -21,5 +22,6 @@ export default {
   vtkRenderer,
   vtkRenderWindow,
   vtkRenderWindowInteractor,
+  vtkTexture,
   vtkViewport,
 };

@@ -433,10 +433,64 @@ export function vtkOpenGLPolyDataMapper(publicAPI, model) {
     shaders.Fragment = FSSource;
   };
 
+  publicAPI.replaceShaderTCoord = (shaders, ren, actor) => {
+    if (model.lastBoundBO.getCABO().getTCoordOffset()) {
+      let VSSource = shaders.Vertex;
+      let GSSource = shaders.Geometry;
+      let FSSource = shaders.Fragment;
+
+      VSSource = vtkShaderProgram.substitute(VSSource,
+        '//VTK::TCoord::Impl',
+        'tcoordVCVSOutput = tcoordMC;').result;
+
+      const tNumComp = model.lastBoundBO.getCABO().getTCoordComponents();
+
+      VSSource = vtkShaderProgram.substitute(VSSource,
+        '//VTK::TCoord::Dec',
+        'attribute vec2 tcoordMC; varying vec2 tcoordVCVSOutput;').result;
+      GSSource = vtkShaderProgram.substitute(GSSource,
+        '//VTK::TCoord::Dec', [
+          'in vec2 tcoordVCVSOutput[];',
+          'out vec2 tcoordVCGSOutput;']).result;
+      GSSource = vtkShaderProgram.substitute(GSSource,
+        '//VTK::TCoord::Impl',
+        'tcoordVCGSOutput = tcoordVCVSOutput[i];').result;
+      FSSource = vtkShaderProgram.substitute(FSSource,
+        '//VTK::TCoord::Dec', [
+          'varying vec2 tcoordVCVSOutput;',
+          'uniform sampler2D texture1;']).result;
+      switch (tNumComp) {
+        case 1:
+          FSSource = vtkShaderProgram.substitute(FSSource,
+            '//VTK::TCoord::Impl', [
+              'vec4 tcolor = texture2D(texture1, tcoordVCVSOutput);',
+              'gl_FragData[0] = clamp(gl_FragData[0],0.0,1.0)*',
+              '  vec4(tcolor.r,tcolor.r,tcolor.r,1.0);']).result;
+          break;
+        case 2:
+          FSSource = vtkShaderProgram.substitute(FSSource,
+            '//VTK::TCoord::Impl', [
+              'vec4 tcolor = texture2D(texture1, tcoordVCVSOutput);',
+              'gl_FragData[0] = clamp(gl_FragData[0],0.0,1.0)*',
+              '  vec4(tcolor.r,tcolor.r,tcolor.r,tcolor.g);']).result;
+          break;
+        default:
+          FSSource = vtkShaderProgram.substitute(FSSource,
+            '//VTK::TCoord::Impl',
+            'gl_FragData[0] = clamp(gl_FragData[0],0.0,1.0)*texture2D(texture1, tcoordVCVSOutput.st);').result;
+      }
+      shaders.Vertex = VSSource;
+      shaders.Geometry = GSSource;
+      shaders.Fragment = FSSource;
+    }
+  };
+
+
   publicAPI.replaceShaderValues = (shaders, ren, actor) => {
     publicAPI.replaceShaderColor(shaders, ren, actor);
     publicAPI.replaceShaderNormal(shaders, ren, actor);
     publicAPI.replaceShaderLight(shaders, ren, actor);
+    publicAPI.replaceShaderTCoord(shaders, ren, actor);
     publicAPI.replaceShaderPositionVC(shaders, ren, actor);
   };
 
@@ -564,16 +618,16 @@ export function vtkOpenGLPolyDataMapper(publicAPI, model) {
           vtkErrorMacro('Error setting normalMC in shader VAO.');
         }
       }
-    //   if (model.VBO.TCoordComponents && !model.DrawingEdges &&
-    //       cellBO.Program.IsAttributeUsed('tcoordMC'))
-    //     {
-    //     if (!cellBO.getVAO().AddAttributeArray(cellBO.Program, model.VBO,
-    //                                     'tcoordMC', model.VBO.TCoordOffset,
-    //                                     model.VBO.Stride, VTK_FLOAT, model.VBO.TCoordComponents, false))
-    //       {
-    //       vtkErrorMacro(<< 'Error setting 'tcoordMC' in shader VAO.');
-    //       }
-    //     }
+      if (cellBO.getProgram().isAttributeUsed('tcoordMC') &&
+          cellBO.getCABO().getTCoordOffset()) {
+        if (!cellBO.getVAO().addAttributeArray(cellBO.getProgram(), cellBO.getCABO(),
+                                           'tcoordMC', cellBO.getCABO().getTCoordOffset(),
+                                           cellBO.getCABO().getStride(), model.context.FLOAT,
+                                           cellBO.getCABO().getTCoordComponents(),
+                                           model.context.FALSE)) {
+          vtkErrorMacro('Error setting tcoordMC in shader VAO.');
+        }
+      }
       if (cellBO.getProgram().isAttributeUsed('scalarColor') &&
           cellBO.getCABO().getColorComponents()) {
         if (!cellBO.getVAO().addAttributeArray(cellBO.getProgram(), cellBO.getCABO(),
@@ -964,7 +1018,7 @@ export function vtkOpenGLPolyDataMapper(publicAPI, model) {
     const representation = actor.getProperty().getRepresentation();
     const toString = `${poly.getMTime()}A${representation}B${poly.getMTime()}C${(n ? n.getMTime() : 1)}C${(model.colors ? model.colors.getMTime() : 1)}`;
 
-    const tcoords = null;
+    const tcoords = poly.getPointData().getTCoords();
     if (model.VBOBuildString !== toString) {
       // Build the VBOs
       const points = poly.getPoints();

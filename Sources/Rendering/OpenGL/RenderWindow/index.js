@@ -2,6 +2,7 @@ import * as macro from '../../../macro';
 import vtkOpenGLViewNodeFactory from '../ViewNodeFactory';
 import vtkShaderCache from '../ShaderCache';
 import vtkViewNode from '../../SceneGraph/ViewNode';
+import vtkOpenGLTextureUnitManager from '../TextureUnitManager';
 
 // ----------------------------------------------------------------------------
 // vtkOpenGLRenderWindow methods
@@ -44,6 +45,8 @@ export function vtkOpenGLRenderWindow(publicAPI, model) {
   publicAPI.initialize = () => {
     if (!model.initialized) {
       model.context = publicAPI.get3DContext();
+      model.textureUnitManager = vtkOpenGLTextureUnitManager.newInstance();
+      model.textureUnitManager.setContext(model.context);
       model.shaderCache.setContext(model.context);
       model.initialized = true;
     }
@@ -120,6 +123,52 @@ export function vtkOpenGLRenderWindow(publicAPI, model) {
 
   publicAPI.get3DContext = (options = { preserveDrawingBuffer: true, premultipliedAlpha: false }) =>
     model.canvas.getContext('webgl', options) || model.canvas.getContext('experimental-webgl', options);
+
+  publicAPI.activateTexture = texture => {
+    // Only add if it isn't already there
+    if (Object.keys(model.textureResourceIds).find(key => key === texture)) {
+      const activeUnit = model.textureResourceIds[texture];
+      model.context.activeTexture(model.comntext.TEXTURE0 + activeUnit);
+    }
+
+    const activeUnit = publicAPI.getTextureUnitManager().allocate();
+    if (activeUnit < 0) {
+      vtkErrorMacro('Hardware does not support the number of textures defined.');
+      return;
+    }
+
+    model.textureResourceIds[texture] = activeUnit;
+    model.context.activeTexture(model.context.TEXTURE0 + activeUnit);
+  };
+
+  publicAPI.deactivateTexture = texture => {
+    // Only deactivate if it isn't already there
+    if (Object.keys(model.textureResourceIds).find(key => key === texture)) {
+      const activeUnit = model.textureResourceIds[texture];
+      model.context.activeTexture(model.comntext.TEXTURE0 + activeUnit);
+      publicAPI.getTextureUnitManager().free(activeUnit);
+      delete model.textureResourceIds[texture];
+    }
+  };
+
+  publicAPI.getTextureUnitForTexture = texture => {
+    if (Object.keys(model.textureResourceIds).find(key => key === texture)) {
+      return model.textureResourceIds[texture];
+    }
+    return -1;
+  };
+
+  publicAPI.getDefaultTextureInternalFormat = (vtktype, numComps, useFloat) => {
+    // currently only supports four types
+    switch (numComps) {
+      case 1: return model.context.LUMINANCE;
+      case 2: return model.context.LUMINANCE_ALPHA;
+      case 3: return model.context.RGB;
+      case 4:
+      default:
+        return model.context.RGBA;
+    }
+  };
 }
 
 // ----------------------------------------------------------------------------
@@ -134,6 +183,7 @@ const DEFAULT_VALUES = {
   size: [300, 300],
   cursorVisibility: true,
   cursor: 'pointer',
+  textureUnitManager: null,
 };
 
 // ----------------------------------------------------------------------------
@@ -151,7 +201,11 @@ export function extend(publicAPI, model, initialValues = {}) {
   model.shaderCache = vtkShaderCache.newInstance();
 
   // Build VTK API
-  macro.get(publicAPI, model, ['shaderCache']);
+  macro.get(publicAPI, model, [
+    'shaderCache',
+    'textureUnitManager',
+  ]);
+
   macro.setGet(publicAPI, model, [
     'initialized',
     'context',

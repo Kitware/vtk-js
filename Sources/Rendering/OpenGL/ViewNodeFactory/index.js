@@ -1,10 +1,11 @@
 import * as macro from '../../../macro';
 import vtkViewNodeFactory from '../../SceneGraph/ViewNodeFactory';
-import vtkOpenGLRenderWindow from '../RenderWindow';
-import vtkOpenGLRenderer from '../Renderer';
 import vtkOpenGLActor from '../Actor';
 import vtkOpenGLCamera from '../Camera';
 import vtkOpenGLPolyDataMapper from '../PolyDataMapper';
+import vtkOpenGLRenderWindow from '../RenderWindow';
+import vtkOpenGLRenderer from '../Renderer';
+import vtkOpenGLTexture from '../Texture';
 
 // ----------------------------------------------------------------------------
 // vtkOpenGLViewNodeFactory methods
@@ -39,6 +40,7 @@ export function extend(publicAPI, model, initialValues = {}) {
   publicAPI.registerOverride('vtkActor', vtkOpenGLActor.newInstance);
   publicAPI.registerOverride('vtkMapper', vtkOpenGLPolyDataMapper.newInstance);
   publicAPI.registerOverride('vtkCamera', vtkOpenGLCamera.newInstance);
+  publicAPI.registerOverride('vtkTexture', vtkOpenGLTexture.newInstance);
 }
 
 // ----------------------------------------------------------------------------

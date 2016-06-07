@@ -229,6 +229,7 @@ export function vtkSphereSource(publicAPI, model) {
 
       // Update output
       outData[0] = vtkPolyData.newInstance(dataset);
+      outData[0].getPointData().setActiveNormals('Normals');
     }
   }
 

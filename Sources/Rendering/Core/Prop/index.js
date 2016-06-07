@@ -65,6 +65,29 @@ function vtkProp(publicAPI, model) {
   };
 
   publicAPI.getSupportsSelection = () => false;
+
+  publicAPI.getTextures = () => model.textures;
+  publicAPI.hasTexture = (texture) => !!model.textures.filter(item => item === texture).length;
+  publicAPI.addTexture = (texture) => {
+    if (texture && !publicAPI.hasTexture(texture)) {
+      model.textures = model.props.concat(texture);
+    }
+  };
+
+  publicAPI.removeTexture = (texture) => {
+    const newTextureList = model.textures.filter(item => item === texture);
+    if (model.texture.length !== newTextureList.length) {
+      texture.releaseGraphicsResources(model.vtkWindow);
+      model.textures = newTextureList;
+    }
+  };
+
+  publicAPI.removeAllTextures = () => {
+    model.textures.forEach(texture => {
+      texture.releaseGraphicsResources(model.vtkWindow);
+    });
+    model.textures = [];
+  };
 }
 
 // ----------------------------------------------------------------------------
@@ -81,6 +104,7 @@ const DEFAULT_VALUES = {
   savedEstimatedRenderTime: 0,
   renderTimeMultiplier: 1,
   paths: null,
+  textures: [],
 };
 
 // ----------------------------------------------------------------------------
