@@ -30,17 +30,17 @@ export function vtkOpenGLPolyDataMapper(publicAPI, model) {
   // Renders myself
   publicAPI.render = (prepass) => {
     if (prepass) {
-      model.openglRenderWindow = publicAPI.getFirstAncestorOfType('vtkOpenGLRenderWindow');
-      model.context = model.openglRenderWindow.getContext();
+      model.openGLRenderWindow = publicAPI.getFirstAncestorOfType('vtkOpenGLRenderWindow');
+      model.context = model.openGLRenderWindow.getContext();
       model.points.setContext(model.context);
       model.lines.setContext(model.context);
       model.tris.setContext(model.context);
       model.triStrips.setContext(model.context);
-      model.openglActor = publicAPI.getFirstAncestorOfType('vtkOpenGLActor');
-      const actor = model.openglActor.getRenderable();
-      const openglRenderer = publicAPI.getFirstAncestorOfType('vtkOpenGLRenderer');
-      const ren = openglRenderer.getRenderable();
-      model.openglCamera = openglRenderer.getViewNodeFor(ren.getActiveCamera());
+      model.openGLActor = publicAPI.getFirstAncestorOfType('vtkOpenGLActor');
+      const actor = model.openGLActor.getRenderable();
+      const openGLRenderer = publicAPI.getFirstAncestorOfType('vtkOpenGLRenderer');
+      const ren = openGLRenderer.getRenderable();
+      model.openGLCamera = openGLRenderer.getViewNodeFor(ren.getActiveCamera());
       publicAPI.renderPiece(ren, actor);
     } else {
       // something
@@ -443,7 +443,12 @@ export function vtkOpenGLPolyDataMapper(publicAPI, model) {
         '//VTK::TCoord::Impl',
         'tcoordVCVSOutput = tcoordMC;').result;
 
-      const tNumComp = model.lastBoundBO.getCABO().getTCoordComponents();
+      // we only handle the first texture by default
+      // additional textures are activated and we set the uniform
+      // for the texture unit they are assigned to, but you have to
+      // add in the shader code to do something with them
+      const tus = model.openGLActor.getActiveTextures();
+      const tNumComp = tus[0].getComponents();
 
       VSSource = vtkShaderProgram.substitute(VSSource,
         '//VTK::TCoord::Dec',
@@ -573,7 +578,7 @@ export function vtkOpenGLPolyDataMapper(publicAPI, model) {
 
       // compile and bind the program if needed
       const newShader =
-        model.openglRenderWindow.getShaderCache().readyShaderProgramArray(shaders.Vertex, shaders.Fragment, shaders.Geometry);
+        model.openGLRenderWindow.getShaderCache().readyShaderProgramArray(shaders.Vertex, shaders.Fragment, shaders.Geometry);
 
       // if the shader changed reinitialize the VAO
       if (newShader !== cellBO.getProgram()) {
@@ -584,7 +589,7 @@ export function vtkOpenGLPolyDataMapper(publicAPI, model) {
 
       cellBO.getShaderSourceTime().modified();
     } else {
-      model.openglRenderWindow.getShaderCache().readyShaderProgram(cellBO.getProgram());
+      model.openGLRenderWindow.getShaderCache().readyShaderProgram(cellBO.getProgram());
     }
 
     publicAPI.setMapperShaderParameters(cellBO, ren, actor);
@@ -639,6 +644,15 @@ export function vtkOpenGLPolyDataMapper(publicAPI, model) {
         }
       }
     }
+
+    const tus = model.openGLActor.getActiveTextures();
+    tus.forEach(tex => {
+      const texUnit = tex.getTextureUnit();
+      const tname = `texture${texUnit + 1}`;
+      if (cellBO.getProgram().isUniformUsed(tname)) {
+        cellBO.getProgram().setUniformi(tname, texUnit);
+      }
+    });
   };
 
   publicAPI.setLightingShaderParameters = (cellBO, ren, actor) => {
@@ -739,7 +753,7 @@ export function vtkOpenGLPolyDataMapper(publicAPI, model) {
 
     // // [WMVD]C == {world, model, view, display} coordinates
     // // E.g., WCDC == world to display coordinate transformation
-    const keyMats = model.openglCamera.getKeyMatrices(ren);
+    const keyMats = model.openGLCamera.getKeyMatrices(ren);
     const cam = ren.getActiveCamera();
 
     if (actor.getIsIdentity()) {
@@ -751,7 +765,7 @@ export function vtkOpenGLPolyDataMapper(publicAPI, model) {
         program.setUniformMatrix3x3('normalMatrix', keyMats.normalMatrix);
       }
     } else {
-      const actMats = model.openglActor.getKeyMatrices();
+      const actMats = model.openGLActor.getKeyMatrices();
       if (program.isUniformUsed('normalMatrix')) {
         const anorms = mat3.create();
         mat3.multiply(anorms, keyMats.normalMatrix, actMats.normalMatrix);
@@ -1018,7 +1032,11 @@ export function vtkOpenGLPolyDataMapper(publicAPI, model) {
     const representation = actor.getProperty().getRepresentation();
     const toString = `${poly.getMTime()}A${representation}B${poly.getMTime()}C${(n ? n.getMTime() : 1)}C${(model.colors ? model.colors.getMTime() : 1)}`;
 
-    const tcoords = poly.getPointData().getTCoords();
+    let tcoords = poly.getPointData().getTCoords();
+    if (!model.openGLActor.getActiveTextures().length) {
+      tcoords = null;
+    }
+
     if (model.VBOBuildString !== toString) {
       // Build the VBOs
       const points = poly.getPoints();

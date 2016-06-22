@@ -24,19 +24,28 @@ function vtkOpenGLTexture(publicAPI, model) {
   publicAPI.render = (prepass) => {
     if (prepass) {
       model.window = publicAPI.getFirstAncestorOfType('vtkOpenGLRenderWindow');
-      model.context = window.getContext();
+      model.context = model.window.getContext();
       const ren = publicAPI.getFirstAncestorOfType('vtkOpenGLRenderer');
       publicAPI.preRender(ren);
-    } else {
-      publicAPI.deactivate();
     }
   };
 
   publicAPI.preRender = (ren) => {
+    // sync renderable properties
+    if (model.renderable.getInterpolate()) {
+      publicAPI.setMinificationFilter(VTK_FILTER.LINEAR);
+      publicAPI.setMagnificationFilter(VTK_FILTER.LINEAR);
+    } else {
+      publicAPI.setMinificationFilter(VTK_FILTER.NEAREST);
+      publicAPI.setMagnificationFilter(VTK_FILTER.NEAREST);
+    }
     // create the texture if it is not done already
     if (!model.handle) {
-      // const input = model.renderable.getInputData();
-      // publicAPI.create2DFromRaw( width, height, numComps, dataType, data);
+      const input = model.renderable.getInputData();
+      const ext = input.getExtent();
+      const inScalars = input.getPointData().getScalars();
+      publicAPI.create2DFromRaw(ext[1] - ext[0] + 1, ext[3] - ext[2] + 1,
+        inScalars.getNumberOfComponents(), inScalars.getDataType(), inScalars.getData());
     }
     publicAPI.activate();
   };
@@ -72,14 +81,14 @@ function vtkOpenGLTexture(publicAPI, model) {
         // turn off mip map filter or set the base and max level correctly. here
         // both are done.
         model.context.texParameteri(model.target, model.context.TEXTURE_MIN_FILTER,
-                        publicAPI.getMinificationFilterMode(model.minificationFilter));
+                        publicAPI.getOpenGLFilterMode(model.minificationFilter));
         model.context.texParameteri(model.target, model.context.TEXTURE_MAG_FILTER,
-                        publicAPI.getMagnificationFilterMode(model.magnificationFilter));
+                        publicAPI.getOpenGLFilterMode(model.magnificationFilter));
 
         model.context.texParameteri(model.target, model.context.TEXTURE_WRAP_S,
-                        publicAPI.getWrapSMode(model.wrapS));
+                        publicAPI.getOpenGLWrapMode(model.wrapS));
         model.context.texParameteri(model.target, model.context.TEXTURE_WRAP_T,
-                        publicAPI.getWrapTMode(model.wrapT));
+                        publicAPI.getOpenGLWrapMode(model.wrapT));
 
         model.context.bindTexture(model.target, null);
       }
@@ -88,7 +97,7 @@ function vtkOpenGLTexture(publicAPI, model) {
 
   //---------------------------------------------------------------------------
   publicAPI.getTextureUnit = () => {
-    if (model.context) {
+    if (model.window) {
       return model.window.getTextureUnitForTexture(publicAPI);
     }
     return -1;
@@ -103,7 +112,7 @@ function vtkOpenGLTexture(publicAPI, model) {
 
   //---------------------------------------------------------------------------
   publicAPI.deactivate = () => {
-    if (model.context) {
+    if (model.window) {
       model.window.activateTexture(publicAPI);
       publicAPI.unBind();
       model.window.deactivateTexture(publicAPI);
@@ -173,24 +182,24 @@ function vtkOpenGLTexture(publicAPI, model) {
   //----------------------------------------------------------------------------
   publicAPI.sendParameters = () => {
     model.context.texParameteri(model.target, model.context.TEXTURE_WRAP_S,
-      publicAPI.getOpenGLWrap(model.wrapS));
+      publicAPI.getOpenGLWrapMode(model.wrapS));
     model.context.texParameteri(model.target, model.context.TEXTURE_WRAP_T,
-      publicAPI.getOpenGLWrap(model.wrapT));
+      publicAPI.getOpenGLWrapMode(model.wrapT));
 
     model.context.texParameteri(
       model.target,
       model.context.TEXTURE_MIN_FILTER,
-      publicAPI.getOpenGLFilter(model.minificationFilter));
+      publicAPI.getOpenGLFilterMode(model.minificationFilter));
 
     model.context.texParameteri(
       model.target,
       model.context.TEXTURE_MAG_FILTER,
-      publicAPI.getOpenGLFilter(model.magnificationFilter));
+      publicAPI.getOpenGLFilterMode(model.magnificationFilter));
 
-    model.context.texParameterf(model.target, model.context.TEXTURE_MIN_LOD, model.minLOD);
-    model.context.texParameterf(model.target, model.context.TEXTURE_MAX_LOD, model.maxLOD);
-    model.context.texParameteri(model.target, model.context.TEXTURE_BASE_LEVEL, model.baseLevel);
-    model.context.texParameteri(model.target, model.context.TEXTURE_MAX_LEVEL, model.maxLevel);
+    // model.context.texParameterf(model.target, model.context.TEXTURE_MIN_LOD, model.minLOD);
+    // model.context.texParameterf(model.target, model.context.TEXTURE_MAX_LOD, model.maxLOD);
+    // model.context.texParameteri(model.target, model.context.TEXTURE_BASE_LEVEL, model.baseLevel);
+    // model.context.texParameteri(model.target, model.context.TEXTURE_MAX_LEVEL, model.maxLevel);
 
     model.sendParametersTime.modified();
   };
@@ -343,7 +352,7 @@ function vtkOpenGLTexture(publicAPI, model) {
   //----------------------------------------------------------------------------
   publicAPI.create2DFromRaw = (width, height, numComps, dataType, data) => {
     // Now determine the texture parameters using the arguments.
-    publicAPI.getDataType(dataType);
+    publicAPI.getOpenGLDataType(dataType);
     publicAPI.getInternalFormat(dataType, numComps);
     publicAPI.getFormat(dataType, numComps);
 
@@ -358,11 +367,12 @@ function vtkOpenGLTexture(publicAPI, model) {
     model.height = height;
     model.depth = 1;
     model.numberOfDimensions = 2;
-    model.context.activateTexture(publicAPI);
+    model.window.activateTexture(publicAPI);
     publicAPI.createTexture();
     publicAPI.bind();
 
     // Source texture data from the PBO.
+    // model.context.pixelStorei(gl.UNPACK_FLIP_Y_WEBGL, true);
     model.context.pixelStorei(model.context.UNPACK_ALIGNMENT, 1);
 
     model.context.texImage2D(
@@ -438,6 +448,12 @@ export function extend(publicAPI, model, initialValues = {}) {
   macro.setGet(publicAPI, model, [
     'context',
     'keyMatrixTime',
+    'minificationFilter',
+    'magnificationFilter',
+  ]);
+
+  macro.get(publicAPI, model, [
+    'components',
   ]);
 
   // Object methods

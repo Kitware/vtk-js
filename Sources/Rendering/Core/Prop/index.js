@@ -70,7 +70,7 @@ function vtkProp(publicAPI, model) {
   publicAPI.hasTexture = (texture) => !!model.textures.filter(item => item === texture).length;
   publicAPI.addTexture = (texture) => {
     if (texture && !publicAPI.hasTexture(texture)) {
-      model.textures = model.props.concat(texture);
+      model.textures = model.textures.concat(texture);
     }
   };
 

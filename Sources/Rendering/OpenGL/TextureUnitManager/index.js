@@ -51,7 +51,7 @@ function vtkOpenGLTextureUnitManager(publicAPI, model) {
     return -1;
   };
 
-  publicAPI.allocate = unit => {
+  publicAPI.allocateUnit = unit => {
     if (publicAPI.isAllocated(unit)) {
       return -1;
     }

@@ -13,7 +13,7 @@ export const VTK_BYTE_SIZE = {
 export const VTK_DATATYPES = {
   CHAR: 'Int8Array',
   SIGNED_CHAR: 'Int8Array',
-  UNSIGNED_CHAR: 'Uint8ClampedArray',
+  UNSIGNED_CHAR: 'Uint8Array',
   SHORT: 'Int16Array',
   UNSIGNED_SHORT: 'Uint16Array',
   INT: 'Int32Array',

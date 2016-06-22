@@ -126,9 +126,10 @@ export function vtkOpenGLRenderWindow(publicAPI, model) {
 
   publicAPI.activateTexture = texture => {
     // Only add if it isn't already there
-    if (Object.keys(model.textureResourceIds).find(key => key === texture)) {
-      const activeUnit = model.textureResourceIds[texture];
-      model.context.activeTexture(model.comntext.TEXTURE0 + activeUnit);
+    const result = model.textureResourceIds.get(texture);
+    if (result !== undefined) {
+      model.context.activeTexture(model.context.TEXTURE0 + result);
+      return;
     }
 
     const activeUnit = publicAPI.getTextureUnitManager().allocate();
@@ -137,23 +138,23 @@ export function vtkOpenGLRenderWindow(publicAPI, model) {
       return;
     }
 
-    model.textureResourceIds[texture] = activeUnit;
+    model.textureResourceIds.set(texture, activeUnit);
     model.context.activeTexture(model.context.TEXTURE0 + activeUnit);
   };
 
   publicAPI.deactivateTexture = texture => {
     // Only deactivate if it isn't already there
-    if (Object.keys(model.textureResourceIds).find(key => key === texture)) {
-      const activeUnit = model.textureResourceIds[texture];
-      model.context.activeTexture(model.comntext.TEXTURE0 + activeUnit);
-      publicAPI.getTextureUnitManager().free(activeUnit);
-      delete model.textureResourceIds[texture];
+    const result = model.textureResourceIds.get(texture);
+    if (result !== undefined) {
+      publicAPI.getTextureUnitManager().free(result);
+      delete model.textureResourceIds.delete(texture);
     }
   };
 
   publicAPI.getTextureUnitForTexture = texture => {
-    if (Object.keys(model.textureResourceIds).find(key => key === texture)) {
-      return model.textureResourceIds[texture];
+    const result = model.textureResourceIds.get(texture);
+    if (result !== undefined) {
+      return result;
     }
     return -1;
   };
@@ -184,6 +185,7 @@ const DEFAULT_VALUES = {
   cursorVisibility: true,
   cursor: 'pointer',
   textureUnitManager: null,
+  textureResourceIds: null,
 };
 
 // ----------------------------------------------------------------------------
@@ -193,6 +195,8 @@ export function extend(publicAPI, model, initialValues = {}) {
 
   // Create internal instances
   model.canvas = document.createElement('canvas');
+
+  model.textureResourceIds = new Map();
 
   // Inheritance
   vtkViewNode.extend(publicAPI, model);

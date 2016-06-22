@@ -24,12 +24,37 @@ function vtkOpenGLActor(publicAPI, model) {
     }
   };
 
+  // we draw textures, then mapper, then post pass textures
+  publicAPI.traverse = operation => {
+    publicAPI.apply(operation, true);
+
+    model.activeTextures = [];
+    model.children.forEach(child => {
+      child.apply(operation, true);
+      if (child.isA('vtkOpenGLTexture') && operation === 'Render') {
+        model.activeTextures.push(child);
+      }
+    });
+
+    model.children.forEach(child => {
+      child.apply(operation, false);
+    });
+
+    publicAPI.apply(operation, false);
+  };
+
   // Renders myself
   publicAPI.render = (prepass) => {
     if (prepass) {
       model.context = publicAPI.getFirstAncestorOfType('vtkOpenGLRenderWindow').getContext();
       publicAPI.preRender();
     } else {
+      // deactivate textures
+      model.children.forEach(child => {
+        if (child.isA('vtkOpenGLTexture')) {
+          child.deactivate();
+        }
+      });
       const opaque = (model.renderable.getIsOpaque() !== 0);
       if (!opaque) {
         model.context.depthMask(true);
@@ -76,6 +101,7 @@ const DEFAULT_VALUES = {
   keyMatrixTime: null,
   normalMatrix: null,
   MCWCMatrix: null,
+  activeTextures: [],
 };
 
 // ----------------------------------------------------------------------------
@@ -94,6 +120,10 @@ export function extend(publicAPI, model, initialValues = {}) {
   // Build VTK API
   macro.setGet(publicAPI, model, [
     'context',
+  ]);
+
+  macro.get(publicAPI, model, [
+    'activeTextures',
   ]);
 
   // Object methods
