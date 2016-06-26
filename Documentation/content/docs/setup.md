@@ -7,6 +7,49 @@ This documentation will explain how to create a new Web project that can leverag
 $ mkdir MyWebProject
 $ cd MyWebProject
 $ npm init
+
+  This utility will walk you through creating a package.json file.
+  It only covers the most common items, and tries to guess sensible defaults.
+  
+  See `npm help json` for definitive documentation on these fields
+  and exactly what they do.
+  
+  Use `npm install <pkg> --save` afterwards to install a package and
+  save it as a dependency in the package.json file.
+  
+  Press ^C at any time to quit.
+  name: (MyWebProject) your-project-name
+  version: (1.0.0) 0.0.1
+  description: vtk.js application
+  entry point: (index.js) src/index.js
+  test command: 
+  git repository: 
+  keywords: Web visualization using VTK
+  author: 
+  license: (ISC) BSD-2-Clause
+  About to write to /Users/seb/MyWebProject/package.json:
+  
+  {
+    "name": "your-project-name",
+    "version": "0.0.1",
+    "description": "vtk.js application",
+    "main": "src/index.js",
+    "scripts": {
+      "test": "echo \"Error: no test specified\" && exit 1"
+    },
+    "keywords": [
+      "Web",
+      "visualization",
+      "using",
+      "VTK"
+    ],
+    "author": "",
+    "license": "BSD-2-Clause"
+  }
+  
+  
+  Is this ok? (yes) 
+
 $ npm install kitware/vtk-js --save-dev
 $ npm install kw-web-suite --save-dev
 ```
