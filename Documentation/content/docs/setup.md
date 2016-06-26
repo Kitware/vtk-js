@@ -7,7 +7,7 @@ This documentation will explain how to create a new Web project that can leverag
 $ mkdir MyWebProject
 $ cd MyWebProject
 $ npm init
-$ npm install vtk.js --save-dev
+$ npm install kitware/vtk-js --save-dev
 $ npm install kw-web-suite --save-dev
 ```
 
