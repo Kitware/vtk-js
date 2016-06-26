@@ -23,7 +23,7 @@ Installing vtk-js as a dependency inside your Web project is quite easy. However
 If your computer already has these, congratulations! Just install vtk-js with npm:
 
 ``` bash
-$ npm install vtk.js --save
+$ npm install kitware/vtk-js --save
 ```
 
 If not, please follow the following instructions to install all the requirements.
@@ -66,7 +66,7 @@ Alternatively, download and run [the installer](http://nodejs.org/).
 ### Install vtk-js
 
 ``` bash
-$ npm install vtk.js --save
+$ npm install kitware/vtk-js --save
 ```
 
 ### Getting vtk-js source code for contributing
