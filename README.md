@@ -42,6 +42,8 @@ If you have found a bug:
 3. Finally, if the issue is not resolved by the above steps, open
    an entry in the [VTK Issue Tracker][].
 
+[CONTRIBUTING.md]: CONTRIBUTING.md
+[VTK Mailing Lists]: http://www.vtk.org/mailing-lists/
 [VTK Issue Tracker]: https://github.com/Kitware/vtk-js/issues
 
 Requirements
