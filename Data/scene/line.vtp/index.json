@@ -1,0 +1,72 @@
+{
+  "vtkPolyData": {
+    "PointData": {},
+    "CellData": {},
+    "Points": {
+      "name": "_points",
+      "tuple": 3,
+      "dataType": "Float32Array",
+      "ref": {
+        "encode": "LittleEndian",
+        "basepath": "data",
+        "id": "722192b9a5c8a757565e112e4978b3d5"
+      },
+      "bounds": [
+        -5.75,
+        5.75,
+        -5.75,
+        5.75,
+        -10.0,
+        10.15999984741211
+      ],
+      "ranges": [
+        {
+          "max": 5.75,
+          "component": null,
+          "min": -5.75
+        },
+        {
+          "max": 5.75,
+          "component": null,
+          "min": -5.75
+        },
+        {
+          "max": 10.15999984741211,
+          "component": null,
+          "min": -10.0
+        },
+        {
+          "max": 13.013477509851626,
+          "component": null,
+          "min": 0.07999999821186066
+        }
+      ],
+      "type": "vtkDataArray",
+      "size": 153
+    },
+    "Lines": {
+      "name": "_lines",
+      "tuple": 1,
+      "dataType": "Uint32Array",
+      "ref": {
+        "encode": "LittleEndian",
+        "basepath": "data",
+        "id": "962613d4cfcfc19402386d5537812df6"
+      },
+      "ranges": [
+        {
+          "max": 51.0,
+          "component": null,
+          "min": 0.0
+        }
+      ],
+      "type": "vtkDataArray",
+      "size": 52
+    },
+    "FieldData": {}
+  },
+  "type": "vtkPolyData",
+  "metadata": {
+    "name": "line.vtp"
+  }
+}

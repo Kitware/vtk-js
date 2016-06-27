@@ -1,0 +1,70 @@
+{
+  "background": [0.32, 0.34, 0.43],
+  "camera": {
+    "focalPoint": [0, 0, 0],
+    "position": [0, 0, 50],
+    "clippingRange": [0.1, 50.0]
+  },
+  "scene": [
+    {
+      "type": "httpDataSetReader",
+      "httpDataSetReader": {
+        "url": "clipSurface.vtp"
+      },
+      "mapper": {
+        "colorByArrayName": "Temp",
+        "colorMode": 1,
+        "scalarMode": 3
+      },
+      "lookupTable": {
+        "tableRange": [293.1499938964844, 913.1500244140625],
+        "hueRange": [0.66667, 0.0]
+      }
+    },{
+      "type": "httpDataSetReader",
+      "httpDataSetReader": {
+        "url": "fullSurface.vtp"
+      },
+      "property": {
+        "representation": 1,
+        "lineWidth": 1
+      },
+      "mapper": {
+        "colorByArrayName": "H2",
+        "colorMode": 1,
+        "scalarMode": 3
+      },
+      "lookupTable": {
+        "tableRange": [0.8076131343841553, 0.9176878929138184],
+        "hueRange": [0.66667, 0.0]
+      }
+    },{
+      "type": "httpDataSetReader",
+      "httpDataSetReader": {
+        "url": "line.vtp"
+      },
+      "property": {
+        "representation": 0,
+        "pointSize": 5,
+        "diffuseColor": [0, 0, 1]
+      }
+    },{
+      "type": "httpDataSetReader",
+      "httpDataSetReader": {
+        "url": "streamline.vtp"
+      },
+      "property": {
+        "lineWidth": 3
+      },
+      "mapper": {
+        "colorByArrayName": "Temp",
+        "colorMode": 1,
+        "scalarMode": 3
+      },
+      "lookupTable": {
+        "tableRange": [293.1499938964844, 913.1500244140625],
+        "hueRange": [0.66667, 0.0]
+      }
+    }
+  ]
+}

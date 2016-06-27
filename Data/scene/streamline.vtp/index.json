@@ -1,0 +1,385 @@
+{
+  "vtkPolyData": {
+    "PointData": {
+      "Vorticity": {
+        "name": "Vorticity", 
+        "tuple": 3, 
+        "dataType": "Float64Array", 
+        "ref": {
+          "encode": "LittleEndian", 
+          "basepath": "data", 
+          "id": "8a7cfe2ae10564340dbc4413c47eac38"
+        }, 
+        "ranges": [
+          {
+            "max": 34.64181825763671, 
+            "component": null, 
+            "min": -21.811928173930614
+          }, 
+          {
+            "max": 38.098264471262674, 
+            "component": null, 
+            "min": -27.015671631745345
+          }, 
+          {
+            "max": 10.412254788110197, 
+            "component": null, 
+            "min": -10.31637761244161
+          }, 
+          {
+            "max": 43.09069955069427, 
+            "component": null, 
+            "min": 0.03230030223044699
+          }
+        ], 
+        "type": "vtkDataArray", 
+        "size": 5739
+      }, 
+      "Temp": {
+        "name": "Temp", 
+        "tuple": 1, 
+        "dataType": "Float64Array", 
+        "ref": {
+          "encode": "LittleEndian", 
+          "basepath": "data", 
+          "id": "45b6a9b2efcca66f7dae103727cf4382"
+        }, 
+        "ranges": [
+          {
+            "max": 912.1864070796067, 
+            "component": null, 
+            "min": 293.5901423415007
+          }
+        ], 
+        "type": "vtkDataArray", 
+        "size": 1913
+      }, 
+      "H2": {
+        "name": "H2", 
+        "tuple": 1, 
+        "dataType": "Float64Array", 
+        "ref": {
+          "encode": "LittleEndian", 
+          "basepath": "data", 
+          "id": "881e8422a6b693cb424b5fc9fd871576"
+        }, 
+        "ranges": [
+          {
+            "max": 0.9123491617299038, 
+            "component": null, 
+            "min": 0.815950365943764
+          }
+        ], 
+        "type": "vtkDataArray", 
+        "size": 1913
+      }, 
+      "Normals": {
+        "name": "Normals", 
+        "tuple": 3, 
+        "dataType": "Float64Array", 
+        "ref": {
+          "encode": "LittleEndian", 
+          "basepath": "data", 
+          "id": "a0cbbb379513655ea930d4c3bd9e79c2"
+        }, 
+        "ranges": [
+          {
+            "max": 1.0, 
+            "component": null, 
+            "min": -0.9986487220186512
+          }, 
+          {
+            "max": 0.9989631091815574, 
+            "component": null, 
+            "min": -0.9999553422654157
+          }, 
+          {
+            "max": 0.9999382347005149, 
+            "component": null, 
+            "min": -0.9999401375418976
+          }, 
+          {
+            "max": 1.0000000000000004, 
+            "component": null, 
+            "min": 0.9999999999999996
+          }
+        ], 
+        "type": "vtkDataArray", 
+        "size": 5739
+      }, 
+      "AngularVelocity": {
+        "name": "AngularVelocity", 
+        "tuple": 1, 
+        "dataType": "Float64Array", 
+        "ref": {
+          "encode": "LittleEndian", 
+          "basepath": "data", 
+          "id": "656c55eceb22e18c8a1c81cd53cd64dd"
+        }, 
+        "ranges": [
+          {
+            "max": 23.597385026977136, 
+            "component": null, 
+            "min": -2.8590636597523154
+          }
+        ], 
+        "type": "vtkDataArray", 
+        "size": 1913
+      }, 
+      "CH4": {
+        "name": "CH4", 
+        "tuple": 1, 
+        "dataType": "Float64Array", 
+        "ref": {
+          "encode": "LittleEndian", 
+          "basepath": "data", 
+          "id": "2c5942ca9eb9f71729f16f813e3b461f"
+        }, 
+        "ranges": [
+          {
+            "max": 0.0011436690687750672, 
+            "component": null, 
+            "min": 1.5261669833337717e-07
+          }
+        ], 
+        "type": "vtkDataArray", 
+        "size": 1913
+      }, 
+      "IntegrationTime": {
+        "name": "IntegrationTime", 
+        "tuple": 1, 
+        "dataType": "Float64Array", 
+        "ref": {
+          "encode": "LittleEndian", 
+          "basepath": "data", 
+          "id": "eb6cf0771913b9e2f63f22363f836337"
+        }, 
+        "ranges": [
+          {
+            "max": 11.152469810300556, 
+            "component": null, 
+            "min": -8.916214267417448
+          }
+        ], 
+        "type": "vtkDataArray", 
+        "size": 1913
+      }, 
+      "V": {
+        "name": "V", 
+        "tuple": 3, 
+        "dataType": "Float64Array", 
+        "ref": {
+          "encode": "LittleEndian", 
+          "basepath": "data", 
+          "id": "872ebb42380504d3b8a2c7f90cfbb371"
+        }, 
+        "ranges": [
+          {
+            "max": 18.844710649128558, 
+            "component": null, 
+            "min": -14.682682316128753
+          }, 
+          {
+            "max": 13.909958181731485, 
+            "component": null, 
+            "min": -19.1972526190213
+          }, 
+          {
+            "max": 6.711381912812971, 
+            "component": null, 
+            "min": -20.63067125195708
+          }, 
+          {
+            "max": 22.14594992217599, 
+            "component": null, 
+            "min": 0.06795133306083768
+          }
+        ], 
+        "type": "vtkDataArray", 
+        "size": 5739
+      }, 
+      "GaMe3": {
+        "name": "GaMe3", 
+        "tuple": 1, 
+        "dataType": "Float64Array", 
+        "ref": {
+          "encode": "LittleEndian", 
+          "basepath": "data", 
+          "id": "368fb76bcd97a32da65eb522ad21de99"
+        }, 
+        "ranges": [
+          {
+            "max": 0.007051497930752001, 
+            "component": null, 
+            "min": 0.00026597794462162374
+          }
+        ], 
+        "type": "vtkDataArray", 
+        "size": 1913
+      }, 
+      "Rotation": {
+        "name": "Rotation", 
+        "tuple": 1, 
+        "dataType": "Float64Array", 
+        "ref": {
+          "encode": "LittleEndian", 
+          "basepath": "data", 
+          "id": "d4da97ea2ad92a611f708623baa35db8"
+        }, 
+        "ranges": [
+          {
+            "max": 87.66408596291366, 
+            "component": null, 
+            "min": -27.939175931232487
+          }
+        ], 
+        "type": "vtkDataArray", 
+        "size": 1913
+      }, 
+      "Pres": {
+        "name": "Pres", 
+        "tuple": 1, 
+        "dataType": "Float64Array", 
+        "ref": {
+          "encode": "LittleEndian", 
+          "basepath": "data", 
+          "id": "46b1b187c440f8bf81f1954e658d7abe"
+        }, 
+        "ranges": [
+          {
+            "max": 0.0284964811951099, 
+            "component": null, 
+            "min": 0.0068426632495396525
+          }
+        ], 
+        "type": "vtkDataArray", 
+        "size": 1913
+      }, 
+      "AsH3": {
+        "name": "AsH3", 
+        "tuple": 1, 
+        "dataType": "Float64Array", 
+        "ref": {
+          "encode": "LittleEndian", 
+          "basepath": "data", 
+          "id": "503adc528fc12fbadf36e6a126724e9b"
+        }, 
+        "ranges": [
+          {
+            "max": 0.176889546997602, 
+            "component": null, 
+            "min": 0.08632729109071242
+          }
+        ], 
+        "type": "vtkDataArray", 
+        "size": 1913
+      }
+    }, 
+    "CellData": {
+      "SeedIds": {
+        "name": "SeedIds", 
+        "tuple": 1, 
+        "dataType": "Int32Array", 
+        "ref": {
+          "encode": "LittleEndian", 
+          "basepath": "data", 
+          "id": "19ec1f45028a318fb9955dc0ad2874dd"
+        }, 
+        "ranges": [
+          {
+            "max": 42.0, 
+            "component": null, 
+            "min": 8.0
+          }
+        ], 
+        "type": "vtkDataArray", 
+        "size": 47
+      }, 
+      "ReasonForTermination": {
+        "name": "ReasonForTermination", 
+        "tuple": 1, 
+        "dataType": "Int32Array", 
+        "ref": {
+          "encode": "LittleEndian", 
+          "basepath": "data", 
+          "id": "14f333558ff45c505d2a50d8bdb858fb"
+        }, 
+        "ranges": [
+          {
+            "max": 4.0, 
+            "component": null, 
+            "min": 1.0
+          }
+        ], 
+        "type": "vtkDataArray", 
+        "size": 47
+      }
+    }, 
+    "Points": {
+      "name": "_points", 
+      "tuple": 3, 
+      "dataType": "Float32Array", 
+      "ref": {
+        "encode": "LittleEndian", 
+        "basepath": "data", 
+        "id": "e8c59edeb0da6340ee208279fe755d3c"
+      }, 
+      "bounds": [
+        -5.300082206726074, 
+        3.99807071685791, 
+        -4.644326686859131, 
+        5.426513671875, 
+        -9.78089714050293, 
+        10.145727157592773
+      ], 
+      "ranges": [
+        {
+          "max": 3.99807071685791, 
+          "component": null, 
+          "min": -5.300082206726074
+        }, 
+        {
+          "max": 5.426513671875, 
+          "component": null, 
+          "min": -4.644326686859131
+        }, 
+        {
+          "max": 10.145727157592773, 
+          "component": null, 
+          "min": -9.78089714050293
+        }, 
+        {
+          "max": 11.458663059359278, 
+          "component": null, 
+          "min": 0.07999992370605469
+        }
+      ], 
+      "type": "vtkDataArray", 
+      "size": 5739
+    }, 
+    "Lines": {
+      "name": "_lines", 
+      "tuple": 1, 
+      "dataType": "Uint32Array", 
+      "ref": {
+        "encode": "LittleEndian", 
+        "basepath": "data", 
+        "id": "568762fcd4ca4ae3b142e09a0fa87633"
+      }, 
+      "ranges": [
+        {
+          "max": 1912.0, 
+          "component": null, 
+          "min": 0.0
+        }
+      ], 
+      "type": "vtkDataArray", 
+      "size": 1959
+    }, 
+    "FieldData": {}
+  }, 
+  "type": "vtkPolyData", 
+  "metadata": {
+    "name": "streamline.vtp"
+  }
+}
