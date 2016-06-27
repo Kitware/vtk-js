@@ -176,9 +176,9 @@ function vtkOpenGLCellArrayBufferObject(publicAPI, model) {
     };
 
     let func = null;
-    if (outRep === VTK_REPRESENTATION.POINTS || inRep === 'Verts') {
+    if (outRep === VTK_REPRESENTATION.POINTS || inRep === 'verts') {
       func = cellBuilders.anythingToPoints;
-    } else if (outRep === VTK_REPRESENTATION.WIREFRAME || inRep === 'Lines') {
+    } else if (outRep === VTK_REPRESENTATION.WIREFRAME || inRep === 'lines') {
       func = cellBuilders[`${inRep}ToWireframe`];
     } else {
       func = cellBuilders[`${inRep}ToSurface`];

@@ -288,23 +288,23 @@ export function extend(publicAPI, model, initialValues = {}) {
   macro.obj(publicAPI, model); // FIXME parent is not vtkObject
   macro.algo(publicAPI, model, 1, 0);
   macro.get(publicAPI, model, [
-    'colorMapColors',
     'colorCoordinates',
+    'colorMapColors',
     'colorTextureMap',
-    'scalarMode',
   ]);
   macro.setGet(publicAPI, model, [
+    'colorByArrayComponent',
+    'colorByArrayName',
+    'colorMode',
+    'fieldDataTupleId',
+    'interpolateScalarsBeforeMapping',
     'lookupTable',
+    'renderTime',
+    'scalarMaterialMode',
+    'scalarMode',
     'scalarVisibility',
     'static',
-    'colorMode',
-    'interpolateScalarsBeforeMapping',
     'useLookupTableScalarRange',
-    'fieldDataTupleId',
-    'renderTime',
-    'colorByArrayName',
-    'colorByArrayComponent',
-    'scalarMaterialMode',
   ]);
   macro.setGetArray(publicAPI, model, [
     'scalarRange',

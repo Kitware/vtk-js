@@ -79,6 +79,7 @@ function vtkDataSetAttributes(publicAPI, model) {
   };
 
   publicAPI.getArrayNames = () => Object.keys(model.arrays);
+  publicAPI.getAbstractArray = name => model.arrays[name];
   publicAPI.getArray = name => model.arrays[name];
 
   // Process dataArrays if any

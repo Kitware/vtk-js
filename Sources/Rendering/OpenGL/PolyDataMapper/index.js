@@ -857,6 +857,9 @@ export function vtkOpenGLPolyDataMapper(publicAPI, model) {
   publicAPI.renderPieceStart = (ren, actor) => {
     model.primitiveIDOffset = 0;
 
+    // Line Width setting (FIXME Ken)
+    model.context.lineWidth(actor.getProperty().getLineWidth());
+
     // make sure the BOs are up to date
     publicAPI.updateBufferObjects(ren, actor);
 
