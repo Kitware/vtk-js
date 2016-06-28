@@ -33,7 +33,11 @@ function vtkOpenGLTexture(publicAPI, model) {
   publicAPI.preRender = (ren) => {
     // sync renderable properties
     if (model.renderable.getInterpolate()) {
-      publicAPI.setMinificationFilter(VTK_FILTER.LINEAR);
+      if (model.generateMipmap) {
+        publicAPI.setMinificationFilter(VTK_FILTER.LINEAR_MIPMAP_LINEAR);
+      } else {
+        publicAPI.setMinificationFilter(VTK_FILTER.LINEAR);
+      }
       publicAPI.setMagnificationFilter(VTK_FILTER.LINEAR);
     } else {
       publicAPI.setMinificationFilter(VTK_FILTER.NEAREST);
@@ -44,10 +48,17 @@ function vtkOpenGLTexture(publicAPI, model) {
       const input = model.renderable.getInputData();
       const ext = input.getExtent();
       const inScalars = input.getPointData().getScalars();
+      if (model.renderable.getInterpolate()) {
+        model.generateMipmap = true;
+        publicAPI.setMinificationFilter(VTK_FILTER.LINEAR_MIPMAP_LINEAR);
+      }
       publicAPI.create2DFromRaw(ext[1] - ext[0] + 1, ext[3] - ext[2] + 1,
         inScalars.getNumberOfComponents(), inScalars.getDataType(), inScalars.getData());
+      publicAPI.activate();
+      publicAPI.sendParameters();
+    } else {
+      publicAPI.activate();
     }
-    publicAPI.activate();
   };
 
   //----------------------------------------------------------------------------
@@ -384,6 +395,10 @@ function vtkOpenGLTexture(publicAPI, model) {
           model.format,
           model.openGLDataType,
           data);
+
+    if (model.generateMipmap) {
+      model.context.generateMipmap(model.target);
+    }
 
     publicAPI.deactivate();
     return true;
