@@ -6,7 +6,7 @@ module.exports = {
   api: ['../Sources'],
   examples: ['../Sources', { path: '../Examples', regexp: 'index.js' }],
   config: {
-    title: 'VTK.js',
+    title: 'vtk.js',
     description: '"Visualization Toolkit for the Web."',
     subtitle: '"Enable scientific visualization to the Web."',
     author: 'Kitware Inc.',
