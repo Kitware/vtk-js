@@ -4,6 +4,8 @@
 [![Dependency Status](https://david-dm.org/kitware/vtk.js.svg)](https://david-dm.org/kitware/vtk.js)
 [![semantic-release](https://img.shields.io/badge/%20%20%F0%9F%93%A6%F0%9F%9A%80-semantic--release-e10079.svg)](https://github.com/semantic-release/semantic-release)
 ![npm-download](https://img.shields.io/npm/dm/vtk.js.svg)
+![npm-version-requirement](https://img.shields.io/badge/npm->=3.0.0-brightgreen.svg)
+![node-version-requirement](https://img.shields.io/badge/node->=5.0.0-brightgreen.svg)
 
 Introduction
 ============
