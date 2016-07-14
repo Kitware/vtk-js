@@ -32,7 +32,7 @@ function getBounds(dataset) {
       return ds.Points.bounds;
     }
   }
-  return vtkMath.createUninitializedBouds();
+  return vtkMath.createUninitializedBounds();
 }
 
 // ----------------------------------------------------------------------------

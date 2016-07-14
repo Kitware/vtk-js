@@ -21,6 +21,17 @@ function vtkImageData(publicAPI, model) {
   // Set our className
   model.classHierarchy.push('vtkImageData');
 
+  publicAPI.getBounds = () => {
+    const res = [];
+    res[0] = model.origin[0] + model.extent[0] * model.spacing[0];
+    res[1] = model.origin[0] + model.extent[1] * model.spacing[0];
+    res[2] = model.origin[1] + model.extent[2] * model.spacing[1];
+    res[3] = model.origin[1] + model.extent[3] * model.spacing[1];
+    res[4] = model.origin[2] + model.extent[4] * model.spacing[2];
+    res[5] = model.origin[2] + model.extent[5] * model.spacing[2];
+    return res;
+  };
+
   /* eslint-disable no-use-before-define */
   publicAPI.shallowCopy = () => {
     const modelInstance = {};

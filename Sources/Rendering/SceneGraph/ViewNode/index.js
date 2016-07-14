@@ -68,10 +68,15 @@ function vtkViewNode(publicAPI, model) {
   };
 
   publicAPI.addMissingNode = (dataObj) => {
-    publicAPI.addMissingNodes([dataObj]);
+    if (dataObj) {
+      publicAPI.addMissingNodes([dataObj]);
+    }
   };
 
   publicAPI.addMissingNodes = (dataObjs) => {
+    if (!dataObjs || !dataObjs.length) {
+      return;
+    }
     model.preparedNodes = model.preparedNodes.concat(dataObjs);
 
     // if any dataObj is not a renderable of a child
@@ -82,7 +87,7 @@ function vtkViewNode(publicAPI, model) {
 
     const newNodes =
       dataObjs
-        .filter(node => (childDOs.indexOf(node) === -1))
+        .filter(node => (node && childDOs.indexOf(node) === -1))
         .map(node => {
           const newNode = publicAPI.createViewNode(node);
           if (newNode) {

@@ -40,20 +40,20 @@ function vtkOpenGLCellArrayBufferObject(publicAPI, model) {
     const colorComponents = (options.colors ? options.colors.getNumberOfComponents() : 0);
     const textureComponents = (options.tcoords ? options.tcoords.getNumberOfComponents() : 0);
 
-    if (options.normals !== null) {
+    if (options.normals) {
       model.normalOffset = /* sizeof(float) */ 4 * model.blockSize;
       model.blockSize += 3;
       normalData = options.normals.getData();
     }
 
-    if (options.tcoords !== null) {
+    if (options.tcoords) {
       model.tCoordOffset = /* sizeof(float) */ 4 * model.blockSize;
       model.tCoordComponents = textureComponents;
       model.blockSize += textureComponents;
       tcoordData = options.tcoords.getData();
     }
 
-    if (options.colors !== null) {
+    if (options.colors) {
       model.colorComponents = options.colors.getNumberOfComponents();
       model.colorOffset = /* sizeof(float) */ 4 * model.blockSize;
 //      model.blockSize += 1;

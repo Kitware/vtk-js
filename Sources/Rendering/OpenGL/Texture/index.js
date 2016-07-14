@@ -23,15 +23,15 @@ function vtkOpenGLTexture(publicAPI, model) {
   // Renders myself
   publicAPI.render = (prepass) => {
     if (prepass) {
-      model.window = publicAPI.getFirstAncestorOfType('vtkOpenGLRenderWindow');
-      model.context = model.window.getContext();
-      const ren = publicAPI.getFirstAncestorOfType('vtkOpenGLRenderer');
-      publicAPI.preRender(ren);
+      const oglren = publicAPI.getFirstAncestorOfType('vtkOpenGLRenderer');
+      publicAPI.preRender(oglren);
     }
   };
 
-  publicAPI.preRender = (ren) => {
+  publicAPI.preRender = (oglren) => {
     // sync renderable properties
+    model.window = oglren.getParent();
+    model.context = model.window.getContext();
     if (model.renderable.getInterpolate()) {
       if (model.generateMipmap) {
         publicAPI.setMinificationFilter(VTK_FILTER.LINEAR_MIPMAP_LINEAR);
@@ -324,6 +324,43 @@ function vtkOpenGLTexture(publicAPI, model) {
     }
 
     return model.openGLDataType;
+  };
+
+  publicAPI.getShiftAndScale = () => {
+    let shift = 0.0;
+    let scale = 1.0;
+
+    // for all float type internal formats
+    switch (model.openGLDataType) {
+      case model.context.BYTE:
+        scale = 127.5;
+        shift = scale - 128.0;
+        break;
+      case model.context.UNSIGNED_BYTE:
+        scale = 255.0;
+        shift = 0.0;
+        break;
+      case model.context.SHORT:
+        scale = 32767.5;
+        shift = scale - 32768.0;
+        break;
+      case model.context.UNSIGNED_SHORT:
+        scale = 65536.0;
+        shift = 0.0;
+        break;
+      case model.context.INT:
+        scale = 2147483647.5;
+        shift = scale - 2147483648.0;
+        break;
+      case model.context.UNSIGNED_INT:
+        scale = 4294967295.0;
+        shift = 0.0;
+        break;
+      case model.context.FLOAT:
+      default:
+        break;
+    }
+    return { shift, scale };
   };
 
   //----------------------------------------------------------------------------

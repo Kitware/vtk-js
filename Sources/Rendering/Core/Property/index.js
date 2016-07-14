@@ -44,14 +44,6 @@ function vtkProperty(publicAPI, model) {
     return [].concat(model.color);
   };
 
-  publicAPI.setTexture = notImplemented('SetTexture');
-  publicAPI.getTexture = notImplemented('getTexture');
-  publicAPI.getNumberOfTextures = notImplemented('getNumberOfTextures');
-  publicAPI.removeTexture = notImplemented('removeTexture');
-  publicAPI.removeAllTextures = notImplemented('RemoveAllTextures');
-  publicAPI.getTextureAtIndex = notImplemented('getTextureAtIndex');
-  publicAPI.getTextureUnitAtIndex = notImplemented('getTextureUnitAtIndex');
-  publicAPI.getTextureUnit = notImplemented('getTextureUnit');
   publicAPI.render = notImplemented('render');
   publicAPI.postRender = notImplemented('postRender');
   publicAPI.addShaderVariable = notImplemented('AddShaderVariable');
@@ -71,9 +63,6 @@ function vtkProperty(publicAPI, model) {
   publicAPI.setRepresentationToWireframe = () => publicAPI.setRepresentation(VTK_REPRESENTATION.WIREFRAME);
   publicAPI.setRepresentationToSurface = () => publicAPI.setRepresentation(VTK_REPRESENTATION.SURFACE);
   publicAPI.setRepresentationToPoints = () => publicAPI.setRepresentation(VTK_REPRESENTATION.POINTS);
-
-  // NoOp here
-  publicAPI.releaseGraphicsResources = () => {};
 }
 
 // ----------------------------------------------------------------------------

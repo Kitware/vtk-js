@@ -1090,7 +1090,6 @@ export function extend(publicAPI, model, initialValues = {}) {
   model.triStrips = vtkHelper.newInstance();
 
   // Build VTK API
-  macro.get(publicAPI, model, ['shaderCache']);
   macro.setGet(publicAPI, model, [
     'context',
   ]);

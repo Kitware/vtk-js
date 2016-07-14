@@ -90,6 +90,9 @@ function vtkRenderWindowInteractor(publicAPI, model) {
   //----------------------------------------------------------------------
   publicAPI.setInteractorStyle = (style) => {
     if (model.interactorStyle !== style) {
+      if (model.interactorStyle != null) {
+        model.interactorStyle.setInteractor(null);
+      }
       model.interactorStyle = style;
       if (model.interactorStyle != null) {
         if (model.interactorStyle.getInteractor() !== publicAPI) {

@@ -15,6 +15,10 @@ export const STATES = {
 
   VTKIS_ANIM_OFF: 0,
   VTKIS_ANIM_ON: 1,
+
+  VTKIS_WINDOW_LEVEL: 1024,
+  VTKIS_PICK: 1025,
+  VTKIS_SLICE: 1026,
 };
 
 export default {

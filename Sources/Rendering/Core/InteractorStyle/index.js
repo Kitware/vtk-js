@@ -61,26 +61,26 @@ function vtkInteractorStyle(publicAPI, model) {
 
   // Public API methods
   publicAPI.setInteractor = (i) => {
-    if (i === model.nteractor) {
+    if (i === model.interactor) {
       return;
     }
 
     // if we already have an Interactor then stop observing it
     if (model.interactor) {
-      model.unsubscribes.forEach(val => val());
-      model.unsubscribes = [];
+      model.unsubscribes.forEach(val => val.unsubscribe());
+      model.unsubscribes.clear();
     }
 
     model.interactor = i;
 
     if (i) {
       events.forEach(eventName => {
-        model.unsubscribes[eventName] =
+        model.unsubscribes.set(eventName,
         i[`on${eventName}`](() => {
           if (publicAPI[`handle${eventName}`]) {
             publicAPI[`handle${eventName}`]();
           }
-        });
+        }));
       });
     }
   };
@@ -205,7 +205,7 @@ const DEFAULT_VALUES = {
   animState: STATES.VTKIS_ANIM_OFF,
   handleObservers: 1,
   autoAdjustCameraClippingRange: 1,
-  unsubscribes: [],
+  unsubscribes: null,
 };
 
 // ----------------------------------------------------------------------------
@@ -218,6 +218,8 @@ export function extend(publicAPI, model, initialValues = {}) {
 
   // Object methods
   macro.obj(publicAPI, model);
+
+  model.unsubscribes = new Map();
 
   // Create get-only macros
   // macro.get(publicAPI, model, ['myProp2', 'myProp4']);

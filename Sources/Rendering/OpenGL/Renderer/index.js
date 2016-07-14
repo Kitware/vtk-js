@@ -24,6 +24,8 @@ export function vtkOpenGLRenderer(publicAPI, model) {
       publicAPI.prepareNodes();
       publicAPI.addMissingNode(model.renderable.getActiveCamera());
       publicAPI.addMissingNodes(model.renderable.getActors());
+      publicAPI.addMissingNodes(model.renderable.getActors2D());
+      publicAPI.addMissingNodes(model.renderable.getVolumes());
       publicAPI.removeUnusedNodes();
     }
   };

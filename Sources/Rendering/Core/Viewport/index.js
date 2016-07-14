@@ -42,11 +42,12 @@ function vtkViewport(publicAPI, model) {
     publicAPI.removeViewProp(prop);
   };
 
-  publicAPI.getActor2D = () => {
+  publicAPI.getActors2D = () => {
     model.actors2D = [];
     model.props.forEach(prop => {
-      model.actors2D = model.actors2D.concat(prop.getActor2D());
+      model.actors2D = model.actors2D.concat(prop.getActors2D());
     });
+    return model.actors2D;
   };
 
   publicAPI.displayToView = () => vtkErrorMacro('call displayToView on your view instead');

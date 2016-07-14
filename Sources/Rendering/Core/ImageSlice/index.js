@@ -1,74 +1,29 @@
 import * as macro from '../../../macro';
 import vtkProp3D from '../Prop3D';
-import vtkProperty from '../Property';
+import vtkImageProperty from '../ImageProperty';
 import { vec3, mat4 } from 'gl-matrix';
 
 // ----------------------------------------------------------------------------
 // vtkActor methods
 // ----------------------------------------------------------------------------
 
-function vtkActor(publicAPI, model) {
+function vtkImageSlice(publicAPI, model) {
   // Set our className
-  model.classHierarchy.push('vtkActor');
+  model.classHierarchy.push('vtkImageSlice');
 
   publicAPI.getActors = () => publicAPI;
+  publicAPI.getImages = () => publicAPI;
 
-  publicAPI.getIsOpaque = () => {
-    if (model.forceOpaque) {
-      return true;
-    }
-    if (model.forceTranslucent) {
-      return false;
-    }
-    // make sure we have a property
-    if (!model.property) {
-      // force creation of a property
-      publicAPI.getProperty();
-    }
+  publicAPI.getIsOpaque = () => true;
 
-    let isOpaque = (model.property.getOpacity() >= 1.0);
+  // Always render during opaque pass, to keep the behavior
+  // predictable and because depth-peeling kills alpha-blending.
+  // In the future, the Renderer should render images in layers,
+  // i.e. where each image will have a layer number assigned to it,
+  // and the Renderer will do the images in their own pass.
+  publicAPI.hasTranslucentPolygonalGeometry = () => false;
 
-    // are we using an opaque texture, if any?
-    isOpaque = isOpaque && (!model.texture || !model.texture.isTranslucent());
-
-    // are we using an opaque scalar array, if any?
-    isOpaque = isOpaque && (!model.mapper || model.mapper.getIsOpaque());
-
-    return isOpaque;
-  };
-
-  publicAPI.hasTranslucentPolygonalGeometry = () => {
-    if (model.mapper === null) {
-      return false;
-    }
-    // make sure we have a property
-    if (model.property === null) {
-      // force creation of a property
-      publicAPI.setProperty(publicAPI.makeProperty());
-    }
-
-    // is this actor opaque ?
-    return !publicAPI.getIsOpaque();
-  };
-
-  publicAPI.releaseGraphicsResources = (win) => {
-    // pass this information onto the mapper
-    if (model.mapper) {
-      model.mapper.releaseGraphicsResources(win);
-    }
-
-    // TBD: pass this information onto the texture(s)
-
-    // pass this information to the properties
-    if (model.property) {
-      model.property.releaseGraphicsResources(win);
-    }
-    if (model.backfaceProperty) {
-      model.backfaceProperty.releaseGraphicsResources(win);
-    }
-  };
-
-  publicAPI.makeProperty = vtkProperty.newInstance;
+  publicAPI.makeProperty = vtkImageProperty.newInstance;
 
   publicAPI.getProperty = () => {
     if (model.property === null) {
@@ -133,19 +88,49 @@ function vtkActor(publicAPI, model) {
     return model.bounds;
   };
 
+  //----------------------------------------------------------------------------
+  // Get the minimum X bound
+  publicAPI.getMinXBound = () => {
+    publicAPI.getBounds();
+    return model.bounds[0];
+  };
+
+  // Get the maximum X bound
+  publicAPI.getMaxXBound = () => {
+    publicAPI.getBounds();
+    return model.bounds[1];
+  };
+
+  // Get the minimum Y bound
+  publicAPI.getMinYBound = () => {
+    publicAPI.getBounds();
+    return model.bounds[2];
+  };
+
+  // Get the maximum Y bound
+  publicAPI.getMaxYBound = () => {
+    publicAPI.getBounds();
+    return model.bounds[3];
+  };
+
+  // Get the minimum Z bound
+  publicAPI.getMinZBound = () => {
+    publicAPI.getBounds();
+    return model.bounds[4];
+  };
+
+  // Get the maximum Z bound
+  publicAPI.getMaxZBound = () => {
+    publicAPI.getBounds();
+    return model.bounds[5];
+  };
+
   publicAPI.getMTime = () => {
     let mt = model.mtime;
     if (model.property !== null) {
       const time = model.property.getMTime();
       mt = (time > mt ? time : mt);
     }
-
-    if (model.backfaceProperty !== null) {
-      const time = model.backfaceProperty.getMTime();
-      mt = (time > mt ? time : mt);
-    }
-
-    // TBD: Handle array of textures here.
 
     return mt;
   };
@@ -175,11 +160,6 @@ function vtkActor(publicAPI, model) {
 const DEFAULT_VALUES = {
   mapper: null,
   property: null,
-  backfaceProperty: null,
-  // texture: null, // TODO: Handle array of textures
-
-  forceOpaque: false,
-  forceTranslucent: false,
 
   bounds: [1, -1, 1, -1, 1, -1],
 };
@@ -199,16 +179,12 @@ export function extend(publicAPI, model, initialValues = {}) {
   // Build VTK API
   macro.set(publicAPI, model, ['property']);
   macro.setGet(publicAPI, model, [
-    'backfaceProperty',
-    'forceOpaque',
-    'forceTranslucent',
     'mapper',
-    // 'texture', // Actor should have an array of textures
   ]);
   macro.getArray(publicAPI, model, ['bounds'], 6);
 
   // Object methods
-  vtkActor(publicAPI, model);
+  vtkImageSlice(publicAPI, model);
 }
 
 // ----------------------------------------------------------------------------

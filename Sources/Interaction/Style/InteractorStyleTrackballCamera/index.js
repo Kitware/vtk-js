@@ -109,33 +109,6 @@ function vtkInteractorStyleTrackballCamera(publicAPI, model) {
   };
 
   //----------------------------------------------------------------------------
-  publicAPI.handleRightButtonPress = () => {
-    const pos = model.interactor.getEventPosition(model.interactor.getPointerIndex());
-    publicAPI.findPokedRenderer(pos.x, pos.y);
-    if (model.currentRenderer === null) {
-      return;
-    }
-
-    publicAPI.grabFocus(model.eventCallbackCommand);
-    publicAPI.startDolly();
-  };
-
-  //--------------------------------------------------------------------------
-  publicAPI.handleRightButtonRelease = () => {
-    switch (model.state) {
-      case STATES.VTKIS_DOLLY:
-        publicAPI.endDolly();
-        break;
-      default:
-        break;
-    }
-
-    if (model.interactor) {
-      publicAPI.releaseFocus();
-    }
-  };
-
-  //----------------------------------------------------------------------------
   publicAPI.handlePinch = () => {
     const pos = model.interactor.getEventPosition(model.interactor.getPointerIndex());
     publicAPI.findPokedRenderer(pos.x, pos.y);

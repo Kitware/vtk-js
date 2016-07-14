@@ -12,6 +12,10 @@ function vtkProp(publicAPI, model) {
   // Set our className
   model.classHierarchy.push('vtkProp');
 
+  publicAPI.getActors = () => null;
+  publicAPI.getActors2D = () => null;
+  publicAPI.getVolumes = () => null;
+
   publicAPI.pick = notImplemented('pick');
   publicAPI.hasKey = notImplemented('hasKey');
 
