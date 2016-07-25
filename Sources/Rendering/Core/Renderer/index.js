@@ -152,20 +152,6 @@ function vtkRenderer(publicAPI, model) {
   publicAPI.allocateTime = notImplemented('allocateTime');
   publicAPI.updateGeometry = notImplemented('updateGeometry');
 
-  publicAPI.updateTranslucentPolygonalGeometry = () => {
-    let result = 0;
-
-    // loop through props and give them a chance to
-    // render themselves as translucent geometry
-    model.propArray.forEach(prop => {
-      const rendered = prop.renderTranslucentPolygonalGeometry(publicAPI);
-      model.numberOfPropsRendered += rendered;
-      result += rendered;
-    });
-
-    return result;
-  };
-
   publicAPI.getVTKWindow = () => model.renderWindow;
 
   publicAPI.setLayer = layer => {
@@ -604,7 +590,6 @@ function vtkRenderer(publicAPI, model) {
 
   // FIXME
   publicAPI.getTiledAspectRatio = notImplemented('GetTiledAspectRatio');
-  publicAPI.captureGL2PSSpecialProp = notImplemented('CaptureGL2PSSpecialProp');
 
   publicAPI.isActiveCameraCreated = () => !!model.activeCamera;
 }

@@ -19,34 +19,6 @@ function vtkProp(publicAPI, model) {
   publicAPI.pick = notImplemented('pick');
   publicAPI.hasKey = notImplemented('hasKey');
 
-  publicAPI.renderFilteredOpaqueGeometry = (viewport, requiredKeys) => {
-    if (publicAPI.hasKey(requiredKeys)) {
-      return !!publicAPI.renderOpaqueGeometry(viewport);
-    }
-    return false;
-  };
-
-  publicAPI.renderFilteredTranslucentPolygonalGeometry = (viewport, requiredKeys) => {
-    if (publicAPI.hasKey(requiredKeys)) {
-      return !!publicAPI.renderTranslucentPolygonalGeometry(viewport);
-    }
-    return false;
-  };
-
-  publicAPI.renderFilteredVolumetricGeometry = (viewport, requiredKeys) => {
-    if (publicAPI.hasKey(requiredKeys)) {
-      return !!publicAPI.renderVolumetricGeometry(viewport);
-    }
-    return false;
-  };
-
-  publicAPI.renderFilteredOverlay = (viewport, requiredKeys) => {
-    if (publicAPI.hasKey(requiredKeys)) {
-      return !!publicAPI.renderOverlay(viewport);
-    }
-    return false;
-  };
-
   publicAPI.getRedrawMTime = () => model.mtime;
 
   publicAPI.setEstimatedRenderTime = t => {
