@@ -14,9 +14,6 @@ function vtkImageMapper(publicAPI, model) {
     publicAPI.getInputData();
   };
 
-  publicAPI.getColorShift = () => model.colorWindow / 2.0 - model.colorLevel;
-  publicAPI.getColorScale = () => 1.0 / model.colorWindow;
-
   publicAPI.getBounds = () => {
     const image = publicAPI.getInputData();
     if (!image) {
@@ -45,8 +42,6 @@ function vtkImageMapper(publicAPI, model) {
 // Object factory
 // ----------------------------------------------------------------------------
 const DEFAULT_VALUES = {
-  colorWindow: 2000,
-  colorLevel: 1000,
   displayExtent: [0, 0, 0, 0, 0, 0],
   customDisplayExtent: [0, 0, 0, 0],
   useCustomExtents: false,
@@ -64,8 +59,6 @@ export function extend(publicAPI, model, initialValues = {}) {
   macro.algo(publicAPI, model, 1, 0);
 
   macro.setGet(publicAPI, model, [
-    'colorWindow',
-    'colorLevel',
     'zSlice',
     'useCustomExtents',
     'renderToRectangle',

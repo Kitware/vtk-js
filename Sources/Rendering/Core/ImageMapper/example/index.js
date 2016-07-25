@@ -29,8 +29,8 @@ const actor = vtkImageSlice.newInstance();
 ren.addActor(actor);
 
 const mapper = vtkImageMapper.newInstance();
-mapper.setColorWindow(-255.0);
-mapper.setColorLevel(127.5);
+actor.getProperty().setColorWindow(255);
+actor.getProperty().setColorLevel(127);
 actor.setMapper(mapper);
 
 const gridSource = vtkImageGridSource.newInstance();

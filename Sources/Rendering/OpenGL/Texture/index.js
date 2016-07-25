@@ -298,22 +298,25 @@ function vtkOpenGLTexture(publicAPI, model) {
   publicAPI.getDefaultDataType = vtkScalarType => {
     // DON'T DEAL with VTK_CHAR as this is platform dependent.
     switch (vtkScalarType) {
-      case VTK_DATATYPES.SIGNED_CHAR:
-        return model.context.BYTE;
+      // case VTK_DATATYPES.SIGNED_CHAR:
+      //   return model.context.BYTE;
       case VTK_DATATYPES.UNSIGNED_CHAR:
         return model.context.UNSIGNED_BYTE;
-      case VTK_DATATYPES.SHORT:
-        return model.context.SHORT;
-      case VTK_DATATYPES.UNSIGNED_SHORT:
-        return model.context.UNSIGNED_SHORT;
-      case VTK_DATATYPES.INT:
-        return model.context.INT;
-      case VTK_DATATYPES.UNSIGNED_INT:
-        return model.context.UNSIGNED_INT;
+      // case VTK_DATATYPES.SHORT:
+      //   return model.context.SHORT;
+      // case VTK_DATATYPES.UNSIGNED_SHORT:
+      //   return model.context.UNSIGNED_SHORT;
+      // case VTK_DATATYPES.INT:
+      //   return model.context.INT;
+      // case VTK_DATATYPES.UNSIGNED_INT:
+      //   return model.context.UNSIGNED_INT;
       case VTK_DATATYPES.FLOAT:
       case VTK_DATATYPES.VOID: // used for depth component textures.
       default:
-        return model.context.FLOAT;
+        if (model.context.getExtension('OES_texture_float')) {
+          return model.context.FLOAT;
+        }
+        return model.context.UNSIGNED_BYTE;
     }
   };
 
@@ -419,6 +422,30 @@ function vtkOpenGLTexture(publicAPI, model) {
     publicAPI.createTexture();
     publicAPI.bind();
 
+    let pixData = data;
+
+    // if the opengl data type is float
+    // then the data array must be float
+    if (dataType !== VTK_DATATYPES.FLOAT && model.openGLDataType === model.context.FLOAT) {
+      const pixCount = model.width * model.height * model.components;
+      const newArray = new Float32Array(pixCount);
+      for (let i = 0; i < pixCount; i++) {
+        newArray[i] = data[i];
+      }
+      pixData = newArray;
+    }
+    // if the opengl data type is ubyte
+    // then the data array must be u8, we currently simply truncate the data
+    if (dataType !== VTK_DATATYPES.UNSIGNED_CHAR && model.openGLDataType === model.context.UNSIGNED_BYTE) {
+      const pixCount = model.width * model.height * model.components;
+      const newArray = new Uint8Array(pixCount);
+      for (let i = 0; i < pixCount; i++) {
+        newArray[i] = data[i];
+      }
+      pixData = newArray;
+    }
+
+
     // Source texture data from the PBO.
     // model.context.pixelStorei(gl.UNPACK_FLIP_Y_WEBGL, true);
     model.context.pixelStorei(model.context.UNPACK_ALIGNMENT, 1);
@@ -431,7 +458,7 @@ function vtkOpenGLTexture(publicAPI, model) {
           0,
           model.format,
           model.openGLDataType,
-          data);
+          pixData);
 
     if (model.generateMipmap) {
       model.context.generateMipmap(model.target);
