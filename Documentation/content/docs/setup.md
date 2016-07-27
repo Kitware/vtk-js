@@ -1,7 +1,10 @@
 title: Setup
 ---
 
-This documentation will explain how to create a new Web project that can leverage vtk-js.
+This documentation will explain how to create a new Web project that can leverage vtk-js
+using Webpack and npm.
+
+## Creation of the Project structure
 
 ``` bash
 $ mkdir MyWebProject
@@ -79,21 +82,13 @@ module.exports = {
     filename: 'MyWebApp.js',
   },
   module: {
-        preLoaders: [{
-            test: /\.js$/,
-            loader: "eslint-loader",
-            exclude: /node_modules/,
-        }],
-        loaders: [
-            { test: require.resolve("./src/index.js"), loader: "expose?MyWebApp" },
-        ].concat(loaders),
+      loaders: [
+          { test: require.resolve("./src/index.js"), loader: "expose?MyWebApp" },
+      ].concat(loaders),
     },
     postcss: [
-        require('autoprefixer')({ browsers: ['last 2 versions'] }),
+      require('autoprefixer')({ browsers: ['last 2 versions'] }),
     ],
-    eslint: {
-        configFile: '.eslintrc.js',
-    },
 };
 
 ```
@@ -109,6 +104,7 @@ You should extend the generated **package.json** file with the following set of 
     "build": "webpack",
     "build:debug": "webpack --display-modules",
     "build:release": "export NODE_ENV=production && webpack -p",
+    "start": "webpack-dev-server --content-base ./dist",
 
     "commit": "git cz",
     "semantic-release": "semantic-release pre && npm publish && semantic-release post"
@@ -283,3 +279,17 @@ The main web page loading the generated application.
   <script type="text/javascript" src="MyWebApp.js"></script></body>
 </html>
 ```
+## Build the application
+
+```sh
+$ npm run build
+```
+
+## Start a dev WebServer
+
+```sh
+$ npm start
+```
+
+Open your browser at `http://localhost:8080/`
+
