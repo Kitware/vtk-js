@@ -13,7 +13,7 @@ function loadJSON(url) {
 
     xhr.onreadystatechange = e => {
       if (xhr.readyState === 4) {
-        if (xhr.status === 200) {
+        if (xhr.status === 200 || xhr.status === 0) {
           const data = JSON.parse(xhr.responseText);
           resolve(data);
         } else {
