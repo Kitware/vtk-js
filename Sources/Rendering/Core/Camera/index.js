@@ -232,7 +232,15 @@ function vtkCamera(publicAPI, model) {
   };
 
   publicAPI.zoom = factor => {
-
+    if (factor <= 0) {
+      return;
+    }
+    if (model.parallelProjection) {
+      model.parallelScale /= factor;
+    } else {
+      model.viewAngle /= factor;
+    }
+    publicAPI.modified();
   };
 
   publicAPI.setThickness = thickness => {
