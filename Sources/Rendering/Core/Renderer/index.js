@@ -2,7 +2,6 @@ import * as macro from '../../../macro';
 import vtkCamera from '../Camera';
 import vtkLight from '../Light';
 import vtkMath from '../../../Common/Core/Math';
-import vtkTimerLog from '../../../Common/System/TimerLog';
 import vtkViewport from '../Viewport';
 import { INIT_BOUNDS } from '../../../Common/DataModel/BoundingBox';
 import { mat4, vec4, vec3 } from 'gl-matrix';
