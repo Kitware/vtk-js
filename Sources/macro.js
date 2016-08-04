@@ -257,7 +257,7 @@ export function algo(publicAPI, model, numberOfInputs, numberOfOutputs) {
   }
 
   function getInputData(port = 0) {
-    if (!model.inputData[port]) {
+    if (model.inputConnection[port]) {
       model.inputData[port] = model.inputConnection[port]();
     }
     return model.inputData[port];
@@ -310,8 +310,6 @@ export function algo(publicAPI, model, numberOfInputs, numberOfOutputs) {
     if (numberOfInputs) {
       let count = 0;
       while (count < numberOfInputs) {
-        // for static you would not set the input to null first
-        model.inputData[count] = null;
         ins[count] = publicAPI.getInputData(count);
         count++;
       }

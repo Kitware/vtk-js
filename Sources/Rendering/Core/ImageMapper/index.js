@@ -10,7 +10,6 @@ function vtkImageMapper(publicAPI, model) {
   model.classHierarchy.push('vtkImageMapper');
 
   publicAPI.update = () => {
-    model.inputData[0] = null;
     publicAPI.getInputData();
   };
 
