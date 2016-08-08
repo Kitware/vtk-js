@@ -14,7 +14,7 @@ function vtkTexture(publicAPI, model) {
 // ----------------------------------------------------------------------------
 
 const DEFAULT_VALUES = {
-  repeat: true,
+  repeat: false,
   interpolate: false,
   edgeClamp: false,
 };
