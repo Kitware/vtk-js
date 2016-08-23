@@ -18,6 +18,8 @@ page:
 
 sidebar:
   docs:
+    testing: Testing
+    coverage: Coverage
     getting_started: Getting Started
     overview: Overview
     setup: Setup

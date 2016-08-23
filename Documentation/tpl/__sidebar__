@@ -2,6 +2,8 @@ docs:
   getting_started:
     overview: /vtk-js/docs/index.html
     setup: /vtk-js/docs/setup.html
+  testing:
+    coverage: /vtk-js/coverage/home.html
   miscellaneous:
     tools: /vtk-js/docs/tools.html
     troubleshooting: /vtk-js/docs/troubleshooting.html
