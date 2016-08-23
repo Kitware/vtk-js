@@ -49,7 +49,7 @@ function vtkOpenGLVertexArrayObject(publicAPI, model) {
             gl.enableVertexAttribArray(attrIt.index + i);
             gl.vertexAttribPointer(attrIt.index + i, attrIt.size, attrIt.type,
                                   attrIt.normalize, attrIt.stride,
-                                  attrIt.offset + attrIt.stride * i / attrIt.size);
+                                  attrIt.offset + ((attrIt.stride * i) / attrIt.size));
             if (attrIt.divisor > 0) {
               gl.vertexAttribDivisor(attrIt.index + i, 1);
             }
@@ -73,7 +73,7 @@ function vtkOpenGLVertexArrayObject(publicAPI, model) {
             gl.enableVertexAttribArray(attrIt.index + i);
             gl.vertexAttribPointer(attrIt.index + i, attrIt.size, attrIt.type,
                                   attrIt.normalize, attrIt.stride,
-                                  attrIt.offset + attrIt.stride * i / attrIt.size);
+                                  attrIt.offset + ((attrIt.stride * i) / attrIt.size));
             if (attrIt.divisor > 0) {
               gl.vertexAttribDivisor(attrIt.index + i, 0);
             }
@@ -192,7 +192,7 @@ function vtkOpenGLVertexArrayObject(publicAPI, model) {
 //      gl.vertexAttribPointer(index + i, elementTupleSize, convertTypeToGL(elementType),
       gl.vertexAttribPointer(index + i, elementTupleSize, elementType,
                             normalize, stride,
-                            offset + stride * i / elementTupleSize);
+                            offset + ((stride * i) / elementTupleSize));
       if (divisor > 0) {
         gl.vertexAttribDivisor(index + i, 1);
       }

@@ -24,7 +24,7 @@ function vtkOpenGLVertexBufferObject(publicAPI, model) {
       let needed = false;
       for (let i = 0; i < 3; ++i) {
         shift[i] = bds[2 * i]; // -0.5 * (bds[2 * i + 1] + bds[2 * i]);
-        const delta = bds[2 * i + 1] - bds[2 * i];
+        const delta = bds[(2 * i) + 1] - bds[2 * i];
         if (delta > 0.0 && Math.abs(shift[i]) / delta > 1.0e4) {
           needed = true;
           scale[i] = 1.0 / delta;

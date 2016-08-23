@@ -20,8 +20,8 @@
         "gl-matrix": "2.3.1"
     },
     "devDependencies": {
-        "kw-web-suite": "2.0.1",
-        "kw-doc": "1.0.12"
+        "kw-web-suite": "2.1.0",
+        "kw-doc": "1.0.13"
     },
     "scripts": {
         "install:global": "npm install -g commitizen@2.5.0",

@@ -366,11 +366,11 @@ function vtkRenderWindowInteractor(publicAPI, model) {
     if (event === 'MouseMove') {
       // calculate the distances
       const originalDistance = Math.sqrt(
-          (startVals[0].x - startVals[1].x) * (startVals[0].x - startVals[1].x)
-          + (startVals[0].y - startVals[1].y) * (startVals[0].y - startVals[1].y));
+          ((startVals[0].x - startVals[1].x) * (startVals[0].x - startVals[1].x))
+          + ((startVals[0].y - startVals[1].y) * (startVals[0].y - startVals[1].y)));
       const newDistance = Math.sqrt(
-          (posVals[0].x - posVals[1].x) * (posVals[0].x - posVals[1].x)
-          + (posVals[0].y - posVals[1].y) * (posVals[0].y - posVals[1].y));
+          ((posVals[0].x - posVals[1].x) * (posVals[0].x - posVals[1].x))
+          + ((posVals[0].y - posVals[1].y) * (posVals[0].y - posVals[1].y)));
 
       // calculate rotations
       let originalAngle =
@@ -407,13 +407,14 @@ function vtkRenderWindowInteractor(publicAPI, model) {
         // compute the distance along each of these axes in pixels
         // the first to break thresh wins
         let thresh = 0.01 * Math.sqrt(
-          model.canvas.clientWidth * model.canvas.clientWidth + model.canvas.clientHeight * model.canvas.clientHeight);
+          (model.canvas.clientWidth * model.canvas.clientWidth)
+          + (model.canvas.clientHeight * model.canvas.clientHeight));
         if (thresh < 15.0) {
           thresh = 15.0;
         }
         const pinchDistance = Math.abs(newDistance - originalDistance);
         const rotateDistance = newDistance * 3.1415926 * Math.abs(angleDeviation) / 360.0;
-        const panDistance = Math.sqrt(trans[0] * trans[0] + trans[1] * trans[1]);
+        const panDistance = Math.sqrt((trans[0] * trans[0]) + (trans[1] * trans[1]));
         if (pinchDistance > thresh
             && pinchDistance > rotateDistance
             && pinchDistance > panDistance) {

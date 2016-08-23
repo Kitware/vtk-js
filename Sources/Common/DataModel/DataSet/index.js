@@ -26,7 +26,7 @@ function getBounds(dataset) {
       const size = array.length;
       const delta = ds.Points.tuple ? ds.Points.tuple : 3;
       for (let idx = 0; idx < size; idx += delta) {
-        bbox.addPoint(array[idx * delta], array[idx * delta + 1], array[idx * delta + 2]);
+        bbox.addPoint(array[idx * delta], array[(idx * delta) + 1], array[(idx * delta) + 2]);
       }
       ds.Points.bounds = bbox.getBounds();
       return ds.Points.bounds;

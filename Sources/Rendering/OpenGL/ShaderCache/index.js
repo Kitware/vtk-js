@@ -1,6 +1,7 @@
+import md5 from 'blueimp-md5';
+
 import * as macro from '../../../macro';
 import vtkShaderProgram from '../ShaderProgram';
-import md5 from 'blueimp-md5';
 
 // ----------------------------------------------------------------------------
 

@@ -1,6 +1,8 @@
 import * as macro from '../../../macro';
 import { VTK_DEFAULT_DATATYPE } from './Constants';
 
+/* global window */
+
 // ----------------------------------------------------------------------------
 // Global methods
 // ----------------------------------------------------------------------------
@@ -85,7 +87,7 @@ function vtkDataArray(publicAPI, model) {
   // Description:
   // Return the data component at the location specified by tupleIdx and
   // compIdx.
-  publicAPI.getComponent = (tupleIdx, compIdx = 0) => model.values[tupleIdx * model.tuple + compIdx];
+  publicAPI.getComponent = (tupleIdx, compIdx = 0) => model.values[(tupleIdx * model.tuple) + compIdx];
 
   // Description:
   // Set the data component at the location specified by tupleIdx and compIdx
@@ -94,8 +96,8 @@ function vtkDataArray(publicAPI, model) {
   //  NumberOfComponents. Make sure enough memory has been allocated
   // (use SetNumberOfTuples() and SetNumberOfComponents()).
   publicAPI.setComponent = (tupleIdx, compIdx, value) => {
-    if (value !== model.values[tupleIdx * model.tuple + compIdx]) {
-      model.values[tupleIdx * model.tuple + compIdx] = value;
+    if (value !== model.values[(tupleIdx * model.tuple) + compIdx]) {
+      model.values[(tupleIdx * model.tuple) + compIdx] = value;
       dataChange();
     }
   };
@@ -206,7 +208,7 @@ export function extend(publicAPI, model, initialValues = {}) {
     model.dataType = getDataType(model.values);
   }
 
-  if (!model.empty && (!model.values || !model.size) || model.type !== 'vtkDataArray') {
+  if ((!model.empty && (!model.values || !model.size)) || model.type !== 'vtkDataArray') {
     throw Error('Can not create vtkDataArray object without: size > 0, values or type = vtkDataArray');
   }
 

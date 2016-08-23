@@ -1,10 +1,11 @@
+import { mat4, vec4, vec3 } from 'gl-matrix';
+
 import * as macro from '../../../macro';
 import vtkCamera from '../Camera';
 import vtkLight from '../Light';
 import vtkMath from '../../../Common/Core/Math';
 import vtkViewport from '../Viewport';
 import { INIT_BOUNDS } from '../../../Common/DataModel/BoundingBox';
-import { mat4, vec4, vec3 } from 'gl-matrix';
 
 function notImplemented(method) {
   return () => console.log('vtkRenderer::${method} - NOT IMPLEMENTED');
@@ -291,9 +292,8 @@ function vtkRenderer(publicAPI, model) {
     }
 
     // get the perspective transformation from the active camera
-    const matrix = model.activeCamera.
-                  getCompositeProjectionTransformMatrix(
-                    1.0, 0, 1);
+    const matrix = model.activeCamera
+      .getCompositeProjectionTransformMatrix(1.0, 0, 1);
 //                    publicAPI.getTiledAspectRatio(), 0, 1);
 
     mat4.invert(matrix, matrix);
@@ -313,9 +313,8 @@ function vtkRenderer(publicAPI, model) {
     }
 
     // get the perspective transformation from the active camera
-    const matrix = model.activeCamera.
-                  getCompositeProjectionTransformMatrix(
-                    1.0, 0, 1);
+    const matrix = model.activeCamera
+      .getCompositeProjectionTransformMatrix(1.0, 0, 1);
 //                    publicAPI.getTiledAspectRatio(), 0, 1);
     mat4.transpose(matrix, matrix);
 
@@ -436,9 +435,9 @@ function vtkRenderer(publicAPI, model) {
     // update the camera
     model.activeCamera.setFocalPoint(center[0], center[1], center[2]);
     model.activeCamera.setPosition(
-      center[0] + distance * vn[0],
-      center[1] + distance * vn[1],
-      center[2] + distance * vn[2]);
+      center[0] + (distance * vn[0]),
+      center[1] + (distance * vn[1]),
+      center[2] + (distance * vn[2]));
 
     publicAPI.resetCameraClippingRange(boundsToUse);
 
@@ -481,16 +480,16 @@ function vtkRenderer(publicAPI, model) {
     const a = -vn[0];
     const b = -vn[1];
     const c = -vn[2];
-    const d = -(a * position[0] + b * position[1] + c * position[2]);
+    const d = -((a * position[0]) + (b * position[1]) + (c * position[2]));
 
     // Set the max near clipping plane and the min far clipping plane
-    const range = [a * boundsToUse[0] + b * boundsToUse[2] + c * boundsToUse[4] + d, 1e-18];
+    const range = [(a * boundsToUse[0]) + (b * boundsToUse[2]) + (c * boundsToUse[4]) + d, 1e-18];
 
     // Find the closest / farthest bounding box vertex
     for (let k = 0; k < 2; k++) {
       for (let j = 0; j < 2; j++) {
         for (let i = 0; i < 2; i++) {
-          const dist = a * boundsToUse[i] + b * boundsToUse[2 + j] + c * boundsToUse[4 + k] + d;
+          const dist = (a * boundsToUse[i]) + (b * boundsToUse[2 + j]) + (c * boundsToUse[4 + k]) + d;
           range[0] = (dist < range[0]) ? (dist) : (range[0]);
           range[1] = (dist > range[1]) ? (dist) : (range[1]);
         }
@@ -519,8 +518,8 @@ function vtkRenderer(publicAPI, model) {
     }
 
     // Give ourselves a little breathing room
-    range[0] = 0.99 * range[0] - (range[1] - range[0]) * model.clippingRangeExpansion;
-    range[1] = 1.01 * range[1] + (range[1] - range[0]) * model.clippingRangeExpansion;
+    range[0] = (0.99 * range[0]) - ((range[1] - range[0]) * model.clippingRangeExpansion);
+    range[1] = (1.01 * range[1]) + ((range[1] - range[0]) * model.clippingRangeExpansion);
 
     // Make sure near is not bigger than far
     range[0] = (range[0] >= range[1]) ? (0.01 * range[1]) : (range[0]);

@@ -3,6 +3,8 @@ import vtkInteractorStyle from '../../../Rendering/Core/InteractorStyle';
 import vtkMath from './../../../Common/Core/Math';
 import { STATES } from '../../../Rendering/Core/InteractorStyle/Constants';
 
+/* eslint-disable no-lonely-if */
+
 // ----------------------------------------------------------------------------
 // Global methods
 // ----------------------------------------------------------------------------

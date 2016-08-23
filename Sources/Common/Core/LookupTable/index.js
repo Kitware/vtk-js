@@ -70,7 +70,7 @@ function vtkLookupTable(publicAPI, model) {
 
   publicAPI.linearLookup = (v, table, p) => {
     const index = publicAPI.linearIndexLookup(v, p);
-    return [table[4 * index], table[4 * index + 1], table[4 * index + 2], table[4 * index + 3]];
+    return [table[4 * index], table[(4 * index) + 1], table[(4 * index) + 2], table[(4 * index) + 3]];
   };
 
   //----------------------------------------------------------------------------
@@ -105,20 +105,21 @@ function vtkLookupTable(publicAPI, model) {
       if (outFormat === 'VTK_RGBA') {
         for (let i = 0; i < length; i++) {
           const cptr = publicAPI.linearLookup(inputV[i * inIncr], model.table, p);
-          outputV[i * 4] = cptr[0];
-          outputV[i * 4 + 1] = cptr[1];
-          outputV[i * 4 + 2] = cptr[2];
-          outputV[i * 4 + 3] = cptr[3];
+          outputV[(i * 4)] = cptr[0];
+          outputV[(i * 4) + 1] = cptr[1];
+          outputV[(i * 4) + 2] = cptr[2];
+          outputV[(i * 4) + 3] = cptr[3];
         }
       }
     } else {
+      /* eslint-disable no-lonely-if */
       if (outFormat === 'VTK_RGBA') {
         for (let i = 0; i < length; i++) {
           const cptr = publicAPI.linearLookup(inputV[i * inIncr], model.table, p);
-          outputV[i * 4] = cptr[0];
-          outputV[i * 4 + 1] = cptr[1];
-          outputV[i * 4 + 2] = cptr[2];
-          outputV[i * 4 + 3] = Math.floor(cptr[3] * alpha + 0.5);
+          outputV[(i * 4)] = cptr[0];
+          outputV[(i * 4) + 1] = cptr[1];
+          outputV[(i * 4) + 2] = cptr[2];
+          outputV[(i * 4) + 3] = Math.floor((cptr[3] * alpha) + 0.5);
         }
       }
     } // alpha blending
@@ -142,18 +143,18 @@ function vtkLookupTable(publicAPI, model) {
     const hsv = [];
     const rgba = [];
     for (let i = 0; i <= maxIndex; i++) {
-      hsv[0] = model.hueRange[0] + i * hinc;
-      hsv[1] = model.saturationRange[0] + i * sinc;
-      hsv[2] = model.valueRange[0] + i * vinc;
+      hsv[0] = model.hueRange[0] + (i * hinc);
+      hsv[1] = model.saturationRange[0] + (i * sinc);
+      hsv[2] = model.valueRange[0] + (i * vinc);
 
       vtkMath.hsv2rgb(hsv, rgba);
-      rgba[3] = model.alphaRange[0] + i * ainc;
+      rgba[3] = model.alphaRange[0] + (i * ainc);
 
       //  case VTK_RAMP_LINEAR:
-      model.table[i * 4] = rgba[0] * 255.0 + 0.5;
-      model.table[i * 4 + 1] = rgba[1] * 255.0 + 0.5;
-      model.table[i * 4 + 2] = rgba[2] * 255.0 + 0.5;
-      model.table[i * 4 + 3] = rgba[3] * 255.0 + 0.5;
+      model.table[(i * 4)] = (rgba[0] * 255.0) + 0.5;
+      model.table[(i * 4) + 1] = (rgba[1] * 255.0) + 0.5;
+      model.table[(i * 4) + 2] = (rgba[2] * 255.0) + 0.5;
+      model.table[(i * 4) + 3] = (rgba[3] * 255.0) + 0.5;
     }
 
     publicAPI.buildSpecialColors();

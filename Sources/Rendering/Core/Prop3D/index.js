@@ -1,8 +1,8 @@
+import { mat4 } from 'gl-matrix';
+
 import * as macro from '../../../macro';
 import vtkBoundingBox from '../../../Common/DataModel/BoundingBox';
 import vtkProp from '../Prop';
-import { mat4 } from 'gl-matrix';
-
 
 function notImplemented(method) {
   return () => console.log('vtkProp3D::${method} - NOT IMPLEMENTED');

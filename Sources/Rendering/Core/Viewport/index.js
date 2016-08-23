@@ -69,7 +69,7 @@ function vtkViewport(publicAPI, model) {
   };
 
   publicAPI.normalizedViewportToView = (x, y, z) =>
-    [x * 2.0 - 1.0, y * 2.0 - 1.0, z * 2.0 - 1.0];
+    [(x * 2.0) - 1.0, (y * 2.0) - 1.0, (z * 2.0) - 1.0];
 
   publicAPI.viewToNormalizedDisplay = (x, y, z) => {
     // first to nvp

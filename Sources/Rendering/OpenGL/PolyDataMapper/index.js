@@ -1,3 +1,5 @@
+import { mat3, mat4 } from 'gl-matrix';
+
 import * as macro from '../../../macro';
 import vtkHelper from '../Helper';
 import vtkMath from '../../../Common/Core/Math';
@@ -5,10 +7,11 @@ import vtkShaderProgram from '../ShaderProgram';
 import vtkViewNode from '../../SceneGraph/ViewNode';
 import { VTK_REPRESENTATION, VTK_SHADING } from '../../Core/Property/Constants';
 import { VTK_MATERIALMODE, VTK_SCALAR_MODE } from '../../Core/Mapper/Constants';
-import { mat3, mat4 } from 'gl-matrix';
 
 import vtkPolyDataVS from '../glsl/vtkPolyDataVS.glsl';
 import vtkPolyDataFS from '../glsl/vtkPolyDataFS.glsl';
+
+/* eslint-disable no-lonely-if */
 
 // ----------------------------------------------------------------------------
 // vtkOpenGLPolyDataMapper methods
@@ -1046,17 +1049,48 @@ export function vtkOpenGLPolyDataMapper(publicAPI, model) {
 
       let cellOffset = 0;
       cellOffset += model.points.getCABO().createVBO(poly.getVerts(), 'verts', representation,
-        { points, normals: n, tcoords, colors: c, cellOffset,
-          haveCellScalars: model.haveCellScalars, haveCellNormals: model.haveCellNormals });
+        {
+          points,
+          normals: n,
+          tcoords,
+          colors: c,
+          cellOffset,
+          haveCellScalars: model.haveCellScalars,
+          haveCellNormals: model.haveCellNormals,
+        });
       cellOffset += model.lines.getCABO().createVBO(poly.getLines(), 'lines', representation,
-        { points, normals: n, tcoords, colors: c, cellOffset,
-          haveCellScalars: model.haveCellScalars, haveCellNormals: model.haveCellNormals });
+        {
+          points,
+          normals: n,
+          tcoords,
+          colors: c,
+          cellOffset,
+          haveCellScalars: model.haveCellScalars,
+          haveCellNormals: model.haveCellNormals,
+        });
       cellOffset += model.tris.getCABO().createVBO(poly.getPolys(), 'polys', representation,
-        { points, normals: n, tcoords, colors: c, cellOffset,
-          haveCellScalars: model.haveCellScalars, haveCellNormals: model.haveCellNormals });
+        {
+          points,
+          normals: n,
+          tcoords,
+          colors: c,
+          cellOffset,
+          haveCellScalars: model.haveCellScalars,
+          haveCellNormals: model.haveCellNormals,
+        });
       cellOffset += model.triStrips.getCABO().createVBO(poly.getStrips(), 'strips', representation,
-        { points, normals: n, tcoords, colors: c, cellOffset,
-          haveCellScalars: model.haveCellScalars, haveCellNormals: model.haveCellNormals });
+        {
+          points,
+          normals: n,
+          tcoords,
+          colors: c,
+          cellOffset,
+          haveCellScalars: model.haveCellScalars,
+          haveCellNormals: model.haveCellNormals,
+        });
+
+      // FIXME: cellOffset not used... (Ken?)
+      console.log('FIXME(Ken):', cellOffset);
 
       model.VBOBuildTime.modified();
       model.VBOBuildString = toString;

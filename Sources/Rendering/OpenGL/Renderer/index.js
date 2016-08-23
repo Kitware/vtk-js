@@ -67,7 +67,7 @@ export function vtkOpenGLRenderer(publicAPI, model) {
     let clearMask = 0;
     const gl = model.context;
 
-    if (! model.renderable.getTransparent()) {
+    if (!model.renderable.getTransparent()) {
       const background = model.renderable.getBackground();
       model.context.clearColor(background[0], background[1], background[2], 1.0);
       clearMask |= gl.COLOR_BUFFER_BIT;

@@ -5,9 +5,9 @@ import * as macro from '../../../macro';
 // ----------------------------------------------------------------------------
 
 function evaluate(normal, origin, x) {
-  return normal[0] * (x[0] - origin[0])
-       + normal[1] * (x[1] - origin[1])
-       + normal[2] * (x[2] - origin[2]);
+  return (normal[0] * (x[0] - origin[0]))
+       + (normal[1] * (x[1] - origin[1]))
+       + (normal[2] * (x[2] - origin[2]));
 }
 
 // ----------------------------------------------------------------------------

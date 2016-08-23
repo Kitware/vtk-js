@@ -2,6 +2,8 @@ import * as macro     from '../../../macro';
 import vtkPolyData    from '../../../Common/DataModel/PolyData';
 import vtkBoundingBox from '../../../Common/DataModel/BoundingBox';
 
+/* global window */
+
 // ----------------------------------------------------------------------------
 // vtkConeSource methods
 // ----------------------------------------------------------------------------
@@ -53,7 +55,7 @@ export function vtkConeSource(publicAPI, model) {
       const angle = 2 * Math.PI / model.resolution;
       const xbot = -model.height / 2.0;
       const numberOfPoints = model.resolution + 1;
-      const cellArraySize = 4 * model.resolution + 1 + model.resolution;
+      const cellArraySize = (4 * model.resolution) + 1 + model.resolution;
 
       // Points
       let pointIdx = 0;
@@ -82,11 +84,11 @@ export function vtkConeSource(publicAPI, model) {
       // Add all points
       for (let i = 0; i < model.resolution; i++) {
         pointIdx++;
-        points[pointIdx * 3 + 0] = xbot;
-        points[pointIdx * 3 + 1] = model.radius * Math.cos(i * angle);
-        points[pointIdx * 3 + 2] = model.radius * Math.sin(i * angle);
+        points[(pointIdx * 3) + 0] = xbot;
+        points[(pointIdx * 3) + 1] = model.radius * Math.cos(i * angle);
+        points[(pointIdx * 3) + 2] = model.radius * Math.sin(i * angle);
 
-        bbox.addPoint(points[pointIdx * 3 + 0], points[pointIdx * 3 + 1], points[pointIdx * 3 + 2]);
+        bbox.addPoint(points[(pointIdx * 3) + 0], points[(pointIdx * 3) + 1], points[(pointIdx * 3) + 2]);
 
         // Add points to bottom cell in reverse order
         if (model.capping) {

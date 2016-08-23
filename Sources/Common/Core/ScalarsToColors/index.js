@@ -8,6 +8,8 @@ import vtkDataArray from '../DataArray';
 // Global methods
 // ----------------------------------------------------------------------------
 
+/* global window */
+
 // Add module-level functions or api that you want to expose statically via
 // the next section...
 
@@ -16,7 +18,7 @@ import vtkDataArray from '../DataArray';
 // ----------------------------------------------------------------------------
 
 function intColorToUChar(c) { return c; }
-function floatColorToUChar(c) { return Math.floor(c * 255.0 + 0.5); }
+function floatColorToUChar(c) { return Math.floor((c * 255.0) + 0.5); }
 
 // ----------------------------------------------------------------------------
 // vtkMyClass methods
@@ -103,10 +105,10 @@ function vtkScalarsToColors(publicAPI, model) {
     let count = 0;
     for (let i = component; i < size; i += tuple) {
       const l = convtFun(values[i]);
-      newColors[count * 4] = l;
-      newColors[count * 4 + 1] = l;
-      newColors[count * 4 + 2] = l;
-      newColors[count * 4 + 3] = a;
+      newColors[(count * 4)] = l;
+      newColors[(count * 4) + 1] = l;
+      newColors[(count * 4) + 2] = l;
+      newColors[(count * 4) + 3] = a;
       count++;
     }
   };
@@ -138,10 +140,10 @@ function vtkScalarsToColors(publicAPI, model) {
 
     let count = 0;
     for (let i = component; i < size; i += tuple) {
-      newColors[count * 4] = convtFun(values[i]);
-      newColors[count * 4 + 1] = convtFun(values[i + 1]);
-      newColors[count * 4 + 2] = convtFun(values[i + 2]);
-      newColors[count * 4 + 3] = a;
+      newColors[(count * 4)] = convtFun(values[i]);
+      newColors[(count * 4) + 1] = convtFun(values[i + 1]);
+      newColors[(count * 4) + 2] = convtFun(values[i + 2]);
+      newColors[(count * 4) + 3] = a;
       count++;
     }
   };
@@ -154,10 +156,10 @@ function vtkScalarsToColors(publicAPI, model) {
 
     let count = 0;
     for (let i = component; i < size; i += tuple) {
-      newColors[count * 4] = convtFun(values[i]);
-      newColors[count * 4 + 1] = convtFun(values[i + 1]);
-      newColors[count * 4 + 2] = convtFun(values[i + 2]);
-      newColors[count * 4 + 3] = convtFun(values[i + 3]) * alpha;
+      newColors[(count * 4)] = convtFun(values[i]);
+      newColors[(count * 4) + 1] = convtFun(values[i + 1]);
+      newColors[(count * 4) + 2] = convtFun(values[i + 2]);
+      newColors[(count * 4) + 3] = convtFun(values[i + 3]) * alpha;
       count++;
     }
   };

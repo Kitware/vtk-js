@@ -187,7 +187,7 @@ export function vtkOpenGLImageMapper(publicAPI, model) {
     const oglShiftScale = model.openGLTexture.getShiftAndScale();
 
     const scale = oglShiftScale.scale / cw;
-    const shift = (oglShiftScale.shift - cl) / cw + 0.5;
+    const shift = ((oglShiftScale.shift - cl) / cw) + 0.5;
 
     cellBO.getProgram().setUniformf('shift', shift);
     cellBO.getProgram().setUniformf('scale', scale);
@@ -329,11 +329,11 @@ export function vtkOpenGLImageMapper(publicAPI, model) {
       const ptsArray = new Float32Array(12);
       const tcoordArray = new Float32Array(8);
       for (let i = 0; i < 4; i++) {
-        ptsArray[i * 3] = bounds[i % 2];
-        ptsArray[i * 3 + 1] = bounds[((i > 1) ? 1 : 0) + 2];
-        ptsArray[i * 3 + 2] = bounds[4];
-        tcoordArray[i * 2] = (i % 2) ? 1.0 : 0.0;
-        tcoordArray[i * 2 + 1] = (i > 1) ? 1.0 : 0.0;
+        ptsArray[(i * 3)] = bounds[i % 2];
+        ptsArray[(i * 3) + 1] = bounds[((i > 1) ? 1 : 0) + 2];
+        ptsArray[(i * 3) + 2] = bounds[4];
+        tcoordArray[(i * 2)] = (i % 2) ? 1.0 : 0.0;
+        tcoordArray[(i * 2) + 1] = (i > 1) ? 1.0 : 0.0;
       }
 
       const points = vtkDataArray.newInstance({ tuple: 3, values: ptsArray });
@@ -356,6 +356,7 @@ export function vtkOpenGLImageMapper(publicAPI, model) {
       cellOffset += model.tris.getCABO().createVBO(cells,
         'polys', VTK_REPRESENTATION.SURFACE,
         { points, tcoords, cellOffset });
+      console.log('FIXME(Ken) - unused', cellOffset);
       model.VBOBuildTime.modified();
       model.VBOBuildString = toString;
     }

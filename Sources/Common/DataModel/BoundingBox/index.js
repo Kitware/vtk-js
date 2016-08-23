@@ -26,7 +26,7 @@ function getCenter(bounds) {
 }
 
 function getLength(bounds, index) {
-  return bounds[index * 2 + 1] - bounds[index * 2];
+  return bounds[(index * 2) + 1] - bounds[index * 2];
 }
 
 function getLengths(bounds) {
@@ -65,7 +65,7 @@ function getMaxLength(bounds) {
 function getDiagonalLength(bounds) {
   if (isValid(bounds)) {
     const l = getLengths(bounds);
-    return Math.sqrt(l[0] * l[0] + l[1] * l[1] + l[2] * l[2]);
+    return Math.sqrt((l[0] * l[0]) + (l[1] * l[1]) + (l[2] * l[2]));
   }
   return null;
 }
@@ -181,23 +181,23 @@ function vtkBoundingBox(publicAPI, model) {
     for (let i = 0; i < 3; i++) {
       intersects = false;
       if ((bBounds[i * 2] >= model.bounds[i * 2]) &&
-          (bBounds[i * 2] <= model.bounds[i * 2 + 1])) {
+          (bBounds[i * 2] <= model.bounds[(i * 2) + 1])) {
         intersects = true;
         newBounds[i * 2] = bBounds[i * 2];
       } else if ((model.bounds[i * 2] >= bBounds[i * 2]) &&
-             (model.bounds[i * 2] <= bBounds[i * 2 + 1])) {
+             (model.bounds[i * 2] <= bBounds[(i * 2) + 1])) {
         intersects = true;
         newBounds[i * 2] = model.bounds[i * 2];
       }
 
-      if ((bBounds[i * 2 + 1] >= model.bounds[i * 2]) &&
-          (bBounds[i * 2 + 1] <= model.bounds[i * 2 + 1])) {
+      if ((bBounds[(i * 2) + 1] >= model.bounds[i * 2]) &&
+          (bBounds[(i * 2) + 1] <= model.bounds[(i * 2) + 1])) {
         intersects = true;
-        newBounds[i * 2 + 1] = bbox.MaxPnt[i];
-      } else if ((model.bounds[i * 2 + 1] >= bbox.MinPnt[i * 2]) &&
-               (model.bounds[i * 2 + 1] <= bbox.MaxPnt[i * 2 + 1])) {
+        newBounds[(i * 2) + 1] = bbox.MaxPnt[i];
+      } else if ((model.bounds[(i * 2) + 1] >= bbox.MinPnt[i * 2]) &&
+               (model.bounds[(i * 2) + 1] <= bbox.MaxPnt[(i * 2) + 1])) {
         intersects = true;
-        newBounds[i * 2 + 1] = model.bounds[i * 2 + 1];
+        newBounds[(i * 2) + 1] = model.bounds[(i * 2) + 1];
       }
 
       if (!intersects) {
@@ -215,24 +215,26 @@ function vtkBoundingBox(publicAPI, model) {
       return false;
     }
     const bBounds = bbox.getBounds();
+    /* eslint-disable no-continue */
     for (let i = 0; i < 3; i++) {
       if ((bBounds[i * 2] >= model.bounds[i * 2]) &&
-          (bBounds[i * 2] <= model.bounds[i * 2 + 1])) {
+          (bBounds[i * 2] <= model.bounds[(i * 2) + 1])) {
         continue;
       } else if ((model.bounds[i * 2] >= bBounds[i * 2]) &&
-             (model.bounds[i * 2] <= bBounds[i * 2 + 1])) {
+             (model.bounds[i * 2] <= bBounds[(i * 2) + 1])) {
         continue;
       }
 
-      if ((bBounds[i * 2 + 1] >= model.bounds[i * 2]) &&
-          (bBounds[i * 2 + 1] <= model.bounds[i * 2 + 1])) {
+      if ((bBounds[(i * 2) + 1] >= model.bounds[i * 2]) &&
+          (bBounds[(i * 2) + 1] <= model.bounds[(i * 2) + 1])) {
         continue;
-      } else if ((model.bounds[i * 2 + 1] >= bbox.MinPnt[i * 2]) &&
-               (model.bounds[i * 2 + 1] <= bbox.MaxPnt[i * 2 + 1])) {
+      } else if ((model.bounds[(i * 2) + 1] >= bbox.MinPnt[i * 2]) &&
+               (model.bounds[(i * 2) + 1] <= bbox.MaxPnt[(i * 2) + 1])) {
         continue;
       }
       return false;
     }
+    /* eslint-enable no-continue */
 
     return true;
   };
@@ -276,8 +278,9 @@ function vtkBoundingBox(publicAPI, model) {
     }
 
     const sign = Math.sign(normal[dir]);
-    const size = Math.abs((model.bounds[dir * 2 + 1] - model.bounds[dir * 2]) * normal[dir]);
+    const size = Math.abs((model.bounds[(dir * 2) + 1] - model.bounds[dir * 2]) * normal[dir]);
     let t = sign > 0 ? 1 : 0;
+    /* eslint-disable no-continue */
     for (let i = 0; i < 4; i++) {
       if (size === 0) {
         continue; // shouldn't happen
@@ -291,12 +294,13 @@ function vtkBoundingBox(publicAPI, model) {
         t = ti;
       }
     }
-    const bound = (1.0 - t) * model.bounds[dir * 2] + t * model.bounds[dir * 2 + 1];
+    /* eslint-enable no-continue */
+    const bound = ((1.0 - t) * model.bounds[dir * 2]) + (t * model.bounds[(dir * 2) + 1]);
 
     if (sign > 0) {
       model.bounds[dir * 2] = bound;
     } else {
-      model.bounds[dir * 2 + 1] = bound;
+      model.bounds[(dir * 2) + 1] = bound;
     }
 
     return true;

@@ -1,9 +1,12 @@
+import pako from 'pako';
+
 import * as macro from '../../../macro';
 import vtk from '../../../vtk';
 import Endian from '../../../Common/Core/Endian';
-import pako from 'pako';
 import vtkPolyData from '../../../Common/DataModel/PolyData';
 import { TYPE_BYTES, LOCATIONS } from './Constants';
+
+/* global XMLHttpRequest window */
 
 // ----------------------------------------------------------------------------
 // Global methods

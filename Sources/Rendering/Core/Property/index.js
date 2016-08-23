@@ -34,11 +34,11 @@ function vtkProperty(publicAPI, model) {
       norm = 1.0 / (model.ambient + model.diffuse + model.specular);
     }
 
-    for (let i = 0; i < 3; i ++) {
+    for (let i = 0; i < 3; i++) {
       model.color[i] = norm * (
-        model.ambient * model.ambientColor[i] +
-        model.diffuse * model.diffuseColor[i] +
-        model.specular * model.specularColor[i]);
+        (model.ambient * model.ambientColor[i]) +
+        (model.diffuse * model.diffuseColor[i]) +
+        (model.specular * model.specularColor[i]));
     }
 
     return [].concat(model.color);

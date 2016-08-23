@@ -1,6 +1,8 @@
 import * as macro  from '../../../macro';
 import vtkPolyData from '../../../Common/DataModel/PolyData';
 
+/* global window */
+
 // ----------------------------------------------------------------------------
 // vtkSphereSource methods
 // ----------------------------------------------------------------------------
@@ -80,7 +82,7 @@ export function vtkSphereSource(publicAPI, model) {
       const jStart = (model.startPhi <= 0.0 ? 1 : 0);
       const jEnd = model.phiResolution + (model.endPhi >= 180.0 ? -1 : 0);
 
-      const numPts = model.phiResolution * thetaResolution + 2;
+      const numPts = (model.phiResolution * thetaResolution) + 2;
       const numPolys = model.phiResolution * 2 * model.thetaResolution;
 
       // Points
@@ -101,13 +103,13 @@ export function vtkSphereSource(publicAPI, model) {
 
       // Create north pole if needed
       if (model.startPhi <= 0.0) {
-        points[pointIdx * 3 + 0] = model.center[0];
-        points[pointIdx * 3 + 1] = model.center[1];
-        points[pointIdx * 3 + 2] = model.center[2] + model.radius;
+        points[(pointIdx * 3) + 0] = model.center[0];
+        points[(pointIdx * 3) + 1] = model.center[1];
+        points[(pointIdx * 3) + 2] = model.center[2] + model.radius;
 
-        normals[pointIdx * 3 + 0] = 0;
-        normals[pointIdx * 3 + 1] = 0;
-        normals[pointIdx * 3 + 2] = 1;
+        normals[(pointIdx * 3) + 0] = 0;
+        normals[(pointIdx * 3) + 1] = 0;
+        normals[(pointIdx * 3) + 2] = 1;
 
         pointIdx++;
         numPoles++;
@@ -115,13 +117,13 @@ export function vtkSphereSource(publicAPI, model) {
 
       // Create south pole if needed
       if (model.endPhi >= 180.0) {
-        points[pointIdx * 3 + 0] = model.center[0];
-        points[pointIdx * 3 + 1] = model.center[1];
-        points[pointIdx * 3 + 2] = model.center[2] - model.radius;
+        points[(pointIdx * 3) + 0] = model.center[0];
+        points[(pointIdx * 3) + 1] = model.center[1];
+        points[(pointIdx * 3) + 2] = model.center[2] - model.radius;
 
-        normals[pointIdx * 3 + 0] = 0;
-        normals[pointIdx * 3 + 1] = 0;
-        normals[pointIdx * 3 + 2] = -1;
+        normals[(pointIdx * 3) + 0] = 0;
+        normals[(pointIdx * 3) + 1] = 0;
+        normals[(pointIdx * 3) + 2] = -1;
 
         pointIdx++;
         numPoles++;
@@ -132,28 +134,28 @@ export function vtkSphereSource(publicAPI, model) {
 
       // Create intermediate points
       for (let i = 0; i < thetaResolution; i++) {
-        const theta = startTheta + i * deltaTheta;
+        const theta = startTheta + (i * deltaTheta);
         for (let j = jStart; j < jEnd; j++) {
-          const phi = startPhi + j * deltaPhi;
+          const phi = startPhi + (j * deltaPhi);
           const radius = model.radius * Math.sin(phi);
 
-          normals[pointIdx * 3 + 0] = radius * Math.cos(theta);
-          normals[pointIdx * 3 + 1] = radius * Math.sin(theta);
-          normals[pointIdx * 3 + 2] = model.radius * Math.cos(phi);
+          normals[(pointIdx * 3) + 0] = radius * Math.cos(theta);
+          normals[(pointIdx * 3) + 1] = radius * Math.sin(theta);
+          normals[(pointIdx * 3) + 2] = model.radius * Math.cos(phi);
 
-          points[pointIdx * 3 + 0] = normals[pointIdx * 3 + 0] + model.center[0];
-          points[pointIdx * 3 + 1] = normals[pointIdx * 3 + 1] + model.center[1];
-          points[pointIdx * 3 + 2] = normals[pointIdx * 3 + 2] + model.center[2];
+          points[(pointIdx * 3) + 0] = normals[(pointIdx * 3) + 0] + model.center[0];
+          points[(pointIdx * 3) + 1] = normals[(pointIdx * 3) + 1] + model.center[1];
+          points[(pointIdx * 3) + 2] = normals[(pointIdx * 3) + 2] + model.center[2];
 
           let norm = Math.sqrt(
-            normals[pointIdx * 3 + 0] * normals[pointIdx * 3 + 0] +
-            normals[pointIdx * 3 + 1] * normals[pointIdx * 3 + 1] +
-            normals[pointIdx * 3 + 2] * normals[pointIdx * 3 + 2]);
+            (normals[(pointIdx * 3) + 0] * normals[(pointIdx * 3) + 0]) +
+            (normals[(pointIdx * 3) + 1] * normals[(pointIdx * 3) + 1]) +
+            (normals[(pointIdx * 3) + 2] * normals[(pointIdx * 3) + 2]));
 
           norm = (norm === 0) ? 1 : norm;
-          normals[pointIdx * 3 + 0] /= norm;
-          normals[pointIdx * 3 + 1] /= norm;
-          normals[pointIdx * 3 + 2] /= norm;
+          normals[(pointIdx * 3) + 0] /= norm;
+          normals[(pointIdx * 3) + 1] /= norm;
+          normals[(pointIdx * 3) + 2] /= norm;
 
           pointIdx++;
         }
@@ -170,7 +172,7 @@ export function vtkSphereSource(publicAPI, model) {
       if (model.startPhi <= 0.0) {
         for (let i = 0; i < thetaResolution; i++) {
           polys[cellLocation++] = 3;
-          polys[cellLocation++] = phiResolution * i + numPoles;
+          polys[cellLocation++] = (phiResolution * i) + numPoles;
           polys[cellLocation++] = (phiResolution * (i + 1) % base) + numPoles;
           polys[cellLocation++] = 0;
         }
@@ -182,7 +184,7 @@ export function vtkSphereSource(publicAPI, model) {
 
         for (let i = 0; i < thetaResolution; i++) {
           polys[cellLocation++] = 3;
-          polys[cellLocation++] = phiResolution * i + numOffset;
+          polys[cellLocation++] = (phiResolution * i) + numOffset;
           polys[cellLocation++] = numPoles - 1;
           polys[cellLocation++] = ((phiResolution * (i + 1)) % base) + numOffset;
         }
@@ -191,9 +193,9 @@ export function vtkSphereSource(publicAPI, model) {
       // bands in-between poles
       for (let i = 0; i < thetaResolution; i++) {
         for (let j = 0; j < (phiResolution - 1); j++) {
-          const a = phiResolution * i + j + numPoles;
+          const a = (phiResolution * i) + j + numPoles;
           const b = a + 1;
-          const c = ((phiResolution * (i + 1) + j) % base) + numPoles + 1;
+          const c = (((phiResolution * (i + 1)) + j) % base) + numPoles + 1;
 
           if (!model.latLongTessellation) {
             polys[cellLocation++] = 3;

@@ -57,6 +57,7 @@ function vtkOpenGLIndexBufferObject(publicAPI, model) {
         indexArray.push(cells[idxOffset + 2] + vOffset);
       } else {  // triangulate needed
         // special cases for quads, penta, hex which are common
+        /* eslint-disable no-lonely-if */
         if (npts === 4) {
           indexArray.push(cells[idxOffset]     + vOffset);
           indexArray.push(cells[idxOffset + 1] + vOffset);
@@ -263,8 +264,8 @@ function vtkOpenGLIndexBufferObject(publicAPI, model) {
 
         for (let i = 0; i < npts - 2; ++i) {
           dynArray.push(cells[idxOffset + i]);
-          dynArray.push(cells[idxOffset + i + 1 + i % 2]);
-          dynArray.push(cells[idxOffset + i + 1 + (i + 1) % 2]);
+          dynArray.push(cells[idxOffset + i + 1 + (i % 2)]);
+          dynArray.push(cells[idxOffset + i + 1 + ((i + 1) % 2)]);
         }
 
         // move to next cell

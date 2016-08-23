@@ -73,9 +73,9 @@ function vtkWarpScalar(publicAPI, model) {
       const normal = [0, 0, 1];
       if (inNormals && !model.useNormal) {
         pointNormal = (id, array) => [
-          array.getData()[id * 3],
-          array.getData()[id * 3 + 1],
-          array.getData()[id * 3 + 2],
+          array.getData()[(id * 3)],
+          array.getData()[(id * 3) + 1],
+          array.getData()[(id * 3) + 2],
         ];
         // vtkDebugMacro('Using data normals');
       } else if (publicAPI.getXyPlane()) {
@@ -104,9 +104,9 @@ function vtkWarpScalar(publicAPI, model) {
           s = scalarDataArray[ptId];
         }
 
-        newPtsData[ptOffset] = inPoints[ptOffset] + model.scaleFactor * s * n[0];
-        newPtsData[ptOffset + 1] = inPoints[ptOffset + 1] + model.scaleFactor * s * n[1];
-        newPtsData[ptOffset + 2] = inPoints[ptOffset + 2] + model.scaleFactor * s * n[2];
+        newPtsData[ptOffset] = inPoints[ptOffset] + (model.scaleFactor * s * n[0]);
+        newPtsData[ptOffset + 1] = inPoints[ptOffset + 1] + (model.scaleFactor * s * n[1]);
+        newPtsData[ptOffset + 2] = inPoints[ptOffset + 2] + (model.scaleFactor * s * n[2]);
       }
       const newPts = vtkDataArray.newInstance({ values: newPtsData, tuple: 3 });
       const newDataSet = input.shallowCopy();

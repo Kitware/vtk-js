@@ -140,7 +140,7 @@ function vtkOpenGLCellArrayBufferObject(publicAPI, model) {
         // for polys we add a bunch of segments and close it
         for (let i = 0; i < numPoints; ++i) {
           addAPoint(cellPts[offset + i]);
-          addAPoint(cellPts[offset + (i + 1) % numPoints]);
+          addAPoint(cellPts[offset + ((i + 1) % numPoints)]);
         }
       },
       stripsToWireframe(numPoints, cellPts, offset) {
@@ -169,8 +169,8 @@ function vtkOpenGLCellArrayBufferObject(publicAPI, model) {
       stripsToSurface(npts, cellPts, offset) {
         for (let i = 0; i < npts - 2; i++) {
           addAPoint(cellPts[offset + i]);
-          addAPoint(cellPts[offset + i + 1 + i % 2]);
-          addAPoint(cellPts[offset + i + 1 + (i + 1) % 2]);
+          addAPoint(cellPts[offset + i + 1 + (i % 2)]);
+          addAPoint(cellPts[offset + i + 1 + ((i + 1) % 2)]);
         }
       },
     };

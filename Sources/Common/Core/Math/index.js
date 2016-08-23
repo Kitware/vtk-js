@@ -112,7 +112,9 @@ function multiplyScalar2D(vec, scalar) {
 }
 
 function dot(x, y) {
-  return x[0] * y[0] + x[1] * y[1] + x[2] * y[2];
+  return (x[0] * y[0])
+    + (x[1] * y[1])
+    + (x[2] * y[2]);
 }
 
 function outer(x, y, out_3x3) {
@@ -124,9 +126,9 @@ function outer(x, y, out_3x3) {
 }
 
 function cross(x, y, out) {
-  const Zx = x[1] * y[2] - x[2] * y[1];
-  const Zy = x[2] * y[0] - x[0] * y[2];
-  const Zz = x[0] * y[1] - x[1] * y[0];
+  const Zx = (x[1] * y[2]) - (x[2] * y[1]);
+  const Zy = (x[2] * y[0]) - (x[0] * y[2]);
+  const Zz = (x[0] * y[1]) - (x[1] * y[0]);
   out[0] = Zx;
   out[1] = Zy;
   out[2] = Zz;
@@ -137,9 +139,9 @@ function norm(x, n = 3) {
     case 1:
       return Math.abs(x);
     case 2:
-      return Math.sqrt(x[0] * x[0] + x[1] * x[1]);
+      return Math.sqrt((x[0] * x[0]) + (x[1] * x[1]));
     case 3:
-      return Math.sqrt(x[0] * x[0] + x[1] * x[1] + x[2] * x[2]);
+      return Math.sqrt((x[0] * x[0]) + (x[1] * x[1]) + (x[2] * x[2]));
     default:
       {
         let sum = 0;
@@ -189,22 +191,22 @@ function perpendiculars(x, y, z, theta) {
   const a = x[dx] / r;
   const b = x[dy] / r;
   const c = x[dz] / r;
-  const tmp = Math.sqrt(a * a + c * c);
+  const tmp = Math.sqrt((a * a) + (c * c));
 
   if (theta !== 0) {
     const sintheta = Math.sin(theta);
     const costheta = Math.cos(theta);
 
     if (y) {
-      y[dx] = (c * costheta - a * b * sintheta) / tmp;
+      y[dx] = ((c * costheta) - (a * b * sintheta)) / tmp;
       y[dy] = sintheta * tmp;
-      y[dz] = (-a * costheta - b * c * sintheta) / tmp;
+      y[dz] = (-(a * costheta) - (b * c * sintheta)) / tmp;
     }
 
     if (z) {
-      z[dx] = (-c * sintheta - a * b * costheta) / tmp;
+      z[dx] = (-(c * sintheta) - (a * b * costheta)) / tmp;
       z[dy] = costheta * tmp;
-      z[dz] = (a * sintheta - b * c * costheta) / tmp;
+      z[dz] = ((a * sintheta) - (b * c * costheta)) / tmp;
     }
   } else {
     if (y) {
@@ -242,7 +244,7 @@ function projectVector(a, b, projection) {
 }
 
 function dot2D(x, y) {
-  return x[0] * y[0] + x[1] * y[1];
+  return (x[0] * y[0]) + (x[1] * y[1]);
 }
 
 function projectVector2D(a, b, projection) {
@@ -265,7 +267,9 @@ function projectVector2D(a, b, projection) {
 }
 
 function distance2BetweenPoints(x, y) {
-  return ((x[0] - y[0]) * (x[0] - y[0]) + (x[1] - y[1]) * (x[1] - y[1]) + (x[2] - y[2]) * (x[2] - y[2]));
+  return ((x[0] - y[0]) * (x[0] - y[0]))
+    + ((x[1] - y[1]) * (x[1] - y[1]))
+    + ((x[2] - y[2]) * (x[2] - y[2]));
 }
 
 function angleBetweenVectors(v1, v2) {
@@ -293,7 +297,7 @@ function outer2D(x, y, out_2x2) {
 }
 
 function norm2D(x2D) {
-  return Math.sqrt(x2D[0] * x2D[0] + x2D[1] * x2D[1]);
+  return Math.sqrt((x2D[0] * x2D[0]) + (x2D[1] * x2D[1]));
 }
 
 function normalize2D(x) {
@@ -306,7 +310,7 @@ function normalize2D(x) {
 }
 
 function determinant2x2(c1, c2) {
-  return (c1[0] * c2[1] - c2[0] * c1[1]);
+  return ((c1[0] * c2[1]) - (c2[0] * c1[1]));
 }
 
 function LUFactor3x3(mat_3x3, index_3) {
@@ -363,7 +367,7 @@ function LUFactor3x3(mat_3x3, index_3) {
 
   // third column
   mat_3x3[1][2] -= mat_3x3[1][0] * mat_3x3[0][2];
-  mat_3x3[2][2] -= mat_3x3[2][0] * mat_3x3[0][2] + mat_3x3[2][1] * mat_3x3[1][2];
+  mat_3x3[2][2] -= (mat_3x3[2][0] * mat_3x3[0][2]) + (mat_3x3[2][1] * mat_3x3[1][2]);
   index_3[2] = 2;
 }
 
@@ -375,16 +379,16 @@ function LUSolve3x3(mat_3x3, index_3, x_3) {
 
   sum = x_3[index_3[1]];
   x_3[index_3[1]] = x_3[1];
-  x_3[1] = sum - mat_3x3[1][0] * x_3[0];
+  x_3[1] = sum - (mat_3x3[1][0] * x_3[0]);
 
   sum = x_3[index_3[2]];
   x_3[index_3[2]] = x_3[2];
-  x_3[2] = sum - mat_3x3[2][0] * x_3[0] - mat_3x3[2][1] * x_3[1];
+  x_3[2] = sum - (mat_3x3[2][0] * x_3[0]) - (mat_3x3[2][1] * x_3[1]);
 
   // back substitution
-  x_3[2] = x_3[2] / mat_3x3[2][2];
-  x_3[1] = (x_3[1] - mat_3x3[1][2] * x_3[2]) / mat_3x3[1][1];
-  x_3[0] = (x_3[0] - mat_3x3[0][1] * x_3[1] - mat_3x3[0][2] * x_3[2]) / mat_3x3[0][0];
+  x_3[2] /= mat_3x3[2][2];
+  x_3[1] = (x_3[1] - (mat_3x3[1][2] * x_3[2])) / mat_3x3[1][1];
+  x_3[0] = (x_3[0] - (mat_3x3[0][1] * x_3[1]) - (mat_3x3[0][2] * x_3[2])) / mat_3x3[0][0];
 }
 
 function linearSolve3x3(mat_3x3, x_3, y_3) {
@@ -412,12 +416,12 @@ function linearSolve3x3(mat_3x3, x_3, y_3) {
   const f3 = +determinant2x2(a1, a2, b1, b2);
 
   // Compute the determinant
-  const det = a1 * d1 + b1 * d2 + c1 * d3;
+  const det = (a1 * d1) + (b1 * d2) + (c1 * d3);
 
   // Multiply by the adjoint
-  const v1 = d1 * x_3[0] + e1 * x_3[1] + f1 * x_3[2];
-  const v2 = d2 * x_3[0] + e2 * x_3[1] + f2 * x_3[2];
-  const v3 = d3 * x_3[0] + e3 * x_3[1] + f3 * x_3[2];
+  const v1 = (d1 * x_3[0]) + (e1 * x_3[1]) + (f1 * x_3[2]);
+  const v2 = (d2 * x_3[0]) + (e2 * x_3[1]) + (f2 * x_3[2]);
+  const v3 = (d3 * x_3[0]) + (e3 * x_3[1]) + (f3 * x_3[2]);
 
   // Divide by the determinant
   y_3[0] = v1 / det;
@@ -426,9 +430,9 @@ function linearSolve3x3(mat_3x3, x_3, y_3) {
 }
 
 function multiply3x3_vect3(mat_3x3, in_3, out_3) {
-  const x = mat_3x3[0][0] * in_3[0] + mat_3x3[0][1] * in_3[1] + mat_3x3[0][2] * in_3[2];
-  const y = mat_3x3[1][0] * in_3[0] + mat_3x3[1][1] * in_3[1] + mat_3x3[1][2] * in_3[2];
-  const z = mat_3x3[2][0] * in_3[0] + mat_3x3[2][1] * in_3[1] + mat_3x3[2][2] * in_3[2];
+  const x = (mat_3x3[0][0] * in_3[0]) + (mat_3x3[0][1] * in_3[1]) + (mat_3x3[0][2] * in_3[2]);
+  const y = (mat_3x3[1][0] * in_3[0]) + (mat_3x3[1][1] * in_3[1]) + (mat_3x3[1][2] * in_3[2]);
+  const z = (mat_3x3[2][0] * in_3[0]) + (mat_3x3[2][1] * in_3[1]) + (mat_3x3[2][2] * in_3[2]);
 
   out_3[0] = x;
   out_3[1] = y;
@@ -443,9 +447,9 @@ function multiply3x3_mat3(a_3x3, b_3x3, out_3x3) {
   ];
 
   for (let i = 0; i < 3; i++) {
-    tmp[0][i] = a_3x3[0][0] * b_3x3[0][i] + a_3x3[0][1] * b_3x3[1][i] + a_3x3[0][2] * b_3x3[2][i];
-    tmp[1][i] = a_3x3[1][0] * b_3x3[0][i] + a_3x3[1][1] * b_3x3[1][i] + a_3x3[1][2] * b_3x3[2][i];
-    tmp[2][i] = a_3x3[2][0] * b_3x3[0][i] + a_3x3[2][1] * b_3x3[1][i] + a_3x3[2][2] * b_3x3[2][i];
+    tmp[0][i] = (a_3x3[0][0] * b_3x3[0][i]) + (a_3x3[0][1] * b_3x3[1][i]) + (a_3x3[0][2] * b_3x3[2][i]);
+    tmp[1][i] = (a_3x3[1][0] * b_3x3[0][i]) + (a_3x3[1][1] * b_3x3[1][i]) + (a_3x3[1][2] * b_3x3[2][i]);
+    tmp[2][i] = (a_3x3[2][0] * b_3x3[0][i]) + (a_3x3[2][1] * b_3x3[1][i]) + (a_3x3[2][2] * b_3x3[2][i]);
   }
 
   for (let j = 0; j < 3; j++) {
@@ -517,7 +521,7 @@ function invert3x3(in_3x3, outI_3x3) {
   const f3 = +determinant2x2(a1, a2, b1, b2);
 
   // Divide by the determinant
-  const det = a1 * d1 + b1 * d2 + c1 * d3;
+  const det = (a1 * d1) + (b1 * d2) + (c1 * d3);
 
   outI_3x3[0][0] = d1 / det;
   outI_3x3[1][0] = d2 / det;
@@ -540,9 +544,12 @@ function identity3x3(mat_3x3) {
 }
 
 function determinant3x3(mat_3x3) {
-  return mat_3x3[0][0] * mat_3x3[1][1] * mat_3x3[2][2] + mat_3x3[1][0] * mat_3x3[2][1] * mat_3x3[0][2] +
-    mat_3x3[2][0] * mat_3x3[0][1] * mat_3x3[1][2] - mat_3x3[0][0] * mat_3x3[2][1] * mat_3x3[1][2] -
-    mat_3x3[1][0] * mat_3x3[0][1] * mat_3x3[2][2] - mat_3x3[2][0] * mat_3x3[1][1] * mat_3x3[0][2];
+  return (mat_3x3[0][0] * mat_3x3[1][1] * mat_3x3[2][2])
+    + (mat_3x3[1][0] * mat_3x3[2][1] * mat_3x3[0][2])
+    + (mat_3x3[2][0] * mat_3x3[0][1] * mat_3x3[1][2])
+    - (mat_3x3[0][0] * mat_3x3[2][1] * mat_3x3[1][2])
+    - (mat_3x3[1][0] * mat_3x3[0][1] * mat_3x3[2][2])
+    - (mat_3x3[2][0] * mat_3x3[1][1] * mat_3x3[0][2]);
 }
 
 function quaternionToMatrix3x3(quat_4, mat_3x3) {
@@ -565,17 +572,17 @@ function quaternionToMatrix3x3(quat_4, mat_3x3) {
   const s = (ww - rr) * f;
   f *= 2;
 
-  mat_3x3[0][0] = xx * f + s;
+  mat_3x3[0][0] = (xx * f) + s;
   mat_3x3[1][0] = (xy + wz) * f;
   mat_3x3[2][0] = (xz - wy) * f;
 
   mat_3x3[0][1] = (xy - wz) * f;
-  mat_3x3[1][1] = yy * f + s;
+  mat_3x3[1][1] = (yy * f) + s;
   mat_3x3[2][1] = (yz + wx) * f;
 
   mat_3x3[0][2] = (xz + wy) * f;
   mat_3x3[1][2] = (yz - wx) * f;
-  mat_3x3[2][2] = zz * f + s;
+  mat_3x3[2][2] = (zz * f) + s;
 }
 
 function jacobiN(a, n, w, v) {
@@ -601,8 +608,8 @@ function jacobiN(a, n, w, v) {
   const vtkROTATE = (aa, ii, jj, kk, ll) => {
     g = aa[ii][jj];
     h = aa[kk][ll];
-    a[ii][jj] = g - s * (h + g * tau);
-    a[kk][ll] = h + s * (g - h * tau);
+    a[ii][jj] = g - (s * (h + (g * tau)));
+    a[kk][ll] = h + (s * (g - (h * tau)));
   };
 
   // initialize
@@ -649,12 +656,12 @@ function jacobiN(a, n, w, v) {
             t = (a[ip][iq]) / h;
           } else {
             theta = 0.5 * h / (a[ip][iq]);
-            t = 1.0 / (Math.abs(theta) + Math.sqrt(1.0 + theta * theta));
+            t = 1.0 / (Math.abs(theta) + Math.sqrt(1.0 + (theta * theta)));
             if (theta < 0.0) {
               t = -t;
             }
           }
-          c = 1.0 / Math.sqrt(1 + t * t);
+          c = 1.0 / Math.sqrt(1 + (t * t));
           s = t * c;
           tau = s / (1.0 + c);
           h = t * a[ip][iq];
@@ -1209,8 +1216,8 @@ function solveLinearSystem(A, x, size) {
       return 0;
     }
 
-    y[0] = (A[1][1] * x[0] - A[0][1] * x[1]) / det;
-    y[1] = (-A[1][0] * x[0] + A[0][0] * x[1]) / det;
+    y[0] = ((A[1][1] * x[0]) - (A[0][1] * x[1])) / det;
+    y[1] = (-(A[1][0] * x[0]) + (A[0][0] * x[1])) / det;
 
     x[0] = y[0];
     x[1] = y[1];
@@ -1535,9 +1542,9 @@ function rgb2hsv(rgb, hsv) {
     if (r === cmax) {
       h = onesixth * (g - b) / (cmax - cmin);
     } else if (g === cmax) {
-      h = onethird + onesixth * (b - r) / (cmax - cmin);
+      h = onethird + ((onesixth * (b - r)) / (cmax - cmin));
     } else {
-      h = twothird + onesixth * (r - g) / (cmax - cmin);
+      h = twothird + ((onesixth * (r - g)) / (cmax - cmin));
     }
     if (h < 0.0) {
       h += 1.0;
@@ -1593,9 +1600,9 @@ function hsv2rgb(hsv, rgb) {
   }
 
   // add Saturation to the equation.
-  r = (s * r + (1.0 - s));
-  g = (s * g + (1.0 - s));
-  b = (s * b + (1.0 - s));
+  r = ((s * r) + (1.0 - s));
+  g = ((s * g) + (1.0 - s));
+  b = ((s * b) + (1.0 - s));
 
   r *= v;
   g *= v;
@@ -1611,25 +1618,25 @@ function lab2xyz(lab, xyz) {
   // LAB to XYZ
   const [L, a, b] = lab;
   let var_Y = (L + 16) / 116;
-  let var_X = a / 500 + var_Y;
-  let var_Z = var_Y - b / 200;
+  let var_X = (a / 500) + var_Y;
+  let var_Z = var_Y - (b / 200);
 
   if (Math.pow(var_Y, 3) > 0.008856) {
     var_Y = Math.pow(var_Y, 3);
   } else {
-    var_Y = (var_Y - 16.0 / 116.0) / 7.787;
+    var_Y = (var_Y - (16.0 / 116.0)) / 7.787;
   }
 
   if (Math.pow(var_X, 3) > 0.008856) {
     var_X = Math.pow(var_X, 3);
   } else {
-    var_X = (var_X - 16.0 / 116.0) / 7.787;
+    var_X = (var_X - (16.0 / 116.0)) / 7.787;
   }
 
   if (Math.pow(var_Z, 3) > 0.008856) {
     var_Z = Math.pow(var_Z, 3);
   } else {
-    var_Z = (var_Z - 16.0 / 116.0) / 7.787;
+    var_Z = (var_Z - (16.0 / 116.0)) / 7.787;
   }
   const ref_X = 0.9505;
   const ref_Y = 1.000;
@@ -1662,9 +1669,9 @@ function xyz2lab(xyz, lab) {
 
 function xyz2rgb(xyz, rgb) {
   const [x, y, z] = xyz;
-  let r = x * 3.2406 + y * -1.5372 + z * -0.4986;
-  let g = x * -0.9689 + y * 1.8758 + z * 0.0415;
-  let b = x * 0.0557 + y * -0.2040 + z * 1.0570;
+  let r = (x * 3.2406) + (y * -1.5372) + (z * -0.4986);
+  let g = (x * -0.9689) + (y * 1.8758) + (z * 0.0415);
+  let b = (x * 0.0557) + (y * -0.2040) + (z * 1.0570);
 
   // The following performs a "gamma correction" specified by the sRGB color
   // space.  sRGB is defined by a canonical definition of a display monitor and
@@ -1674,12 +1681,12 @@ function xyz2rgb(xyz, rgb) {
   // several applications including Adobe Photoshop and Microsoft Windows color
   // management.  OpenGL is agnostic on its RGB color space, but it is reasonable
   // to assume it is close to this one.
-  if (r > 0.0031308) r = 1.055 * (Math.pow(r, (1 / 2.4))) - 0.055;
-  else r = 12.92 * r;
-  if (g > 0.0031308) g = 1.055 * (Math.pow(g, (1 / 2.4))) - 0.055;
-  else g = 12.92 * g;
-  if (b > 0.0031308) b = 1.055 * (Math.pow(b, (1 / 2.4))) - 0.055;
-  else b = 12.92 * b;
+  if (r > 0.0031308) r = (1.055 * Math.pow(r, (1 / 2.4))) - 0.055;
+  else r *= 12.92;
+  if (g > 0.0031308) g = (1.055 * Math.pow(g, (1 / 2.4))) - 0.055;
+  else g *= 12.92;
+  if (b > 0.0031308) b = (1.055 * Math.pow(b, (1 / 2.4))) - 0.055;
+  else b *= 12.92;
 
   // Clip colors. ideally we would do something that is perceptually closest
   // (since we can see colors outside of the display gamut), but this seems to
@@ -1713,16 +1720,16 @@ function rgb2xyz(rgb, xyz) {
   // management.  OpenGL is agnostic on its RGB color space, but it is reasonable
   // to assume it is close to this one.
   if (r > 0.04045) r = Math.pow((r + 0.055) / 1.055, 2.4);
-  else r = r / 12.92;
+  else r /= 12.92;
   if (g > 0.04045) g = Math.pow((g + 0.055) / 1.055, 2.4);
-  else g = g / 12.92;
+  else g /= 12.92;
   if (b > 0.04045) b = Math.pow((b + 0.055) / 1.055, 2.4);
-  else b = b / 12.92;
+  else b /= 12.92;
 
   // Observer. = 2 deg, Illuminant = D65
-  xyz[0] = r * 0.4124 + g * 0.3576 + b * 0.1805;
-  xyz[1] = r * 0.2126 + g * 0.7152 + b * 0.0722;
-  xyz[2] = r * 0.0193 + g * 0.1192 + b * 0.9505;
+  xyz[0] = (r * 0.4124) + (g * 0.3576) + (b * 0.1805);
+  xyz[1] = (r * 0.2126) + (g * 0.7152) + (b * 0.0722);
+  xyz[2] = (r * 0.0193) + (g * 0.1192) + (b * 0.9505);
 }
 
 function rgb2lab(rgb, lab) {
@@ -1766,12 +1773,10 @@ function clampAndNormalizeValue(value, range) {
     // clamp
     if (value < range[0]) {
       result = range[0];
+    } else if (value > range[1]) {
+      result = range[1];
     } else {
-      if (value > range[1]) {
-        result = range[1];
-      } else {
-        result = value;
-      }
+      result = value;
     }
     // normalize
     result = (result - range[0]) / (range[1] - range[0]);
@@ -1818,7 +1823,7 @@ function pointIsWithinBounds(point_3, bounds_6, delta_3) {
     return 0;
   }
   for (let i = 0; i < 3; i++) {
-    if (point_3[i] + delta_3[i] < bounds_6[2 * i] || point_3[i] - delta_3[i] > bounds_6[2 * i + 1]) {
+    if (point_3[i] + delta_3[i] < bounds_6[2 * i] || point_3[i] - delta_3[i] > bounds_6[(2 * i) + 1]) {
       return 0;
     }
   }
@@ -1858,7 +1863,7 @@ function solve3PointCircle(p1, p2, p3, center) {
   const gamma = ((norm12 * norm12) * dot(v13, v23)) / normCross22;
 
   for (let i = 0; i < 3; ++i) {
-    center[i] = alpha * p1[i] + beta * p2[i] + gamma * p3[i];
+    center[i] = (alpha * p1[i]) + (beta * p2[i]) + (gamma * p3[i]);
   }
   return radius;
 }

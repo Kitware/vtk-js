@@ -1,6 +1,7 @@
+import { vec3, vec4, mat4 } from 'gl-matrix';
+
 import * as macro from '../../../macro';
 import vtkMath from './../../../Common/Core/Math';
-import { vec3, vec4, mat4 } from 'gl-matrix';
 
 /* eslint-disable new-cap */
 
@@ -110,7 +111,7 @@ function vtkCamera(publicAPI, model) {
     const dy = model.focalPoint[1] - model.position[1];
     const dz = model.focalPoint[2] - model.position[2];
 
-    model.distance = Math.sqrt(dx * dx + dy * dy + dz * dz);
+    model.distance = Math.sqrt((dx * dx) + (dy * dy) + (dz * dz));
 
     if (model.distance < 1e-20) {
       model.distance = 1e-20;
@@ -119,9 +120,9 @@ function vtkCamera(publicAPI, model) {
       const vec = model.DirectionOfProjection;
 
       // recalculate FocalPoint
-      model.focalPoint[0] = model.position[0] + vec[0] * model.distance;
-      model.focalPoint[1] = model.position[1] + vec[1] * model.distance;
-      model.focalPoint[2] = model.position[2] + vec[2] * model.distance;
+      model.focalPoint[0] = model.position[0] + (vec[0] * model.distance);
+      model.focalPoint[1] = model.position[1] + (vec[1] * model.distance);
+      model.focalPoint[2] = model.position[2] + (vec[2] * model.distance);
     }
 
     model.directionOfProjection[0] = dx / model.distance;
@@ -151,9 +152,10 @@ function vtkCamera(publicAPI, model) {
     // dolly moves the camera towards the focus
     const d = model.distance / amount;
 
-    publicAPI.setPosition(model.focalPoint[0] - d * model.directionOfProjection[0],
-      model.focalPoint[1] - d * model.directionOfProjection[1],
-      model.focalPoint[2] - d * model.directionOfProjection[2]);
+    publicAPI.setPosition(
+      model.focalPoint[0] - (d * model.directionOfProjection[0]),
+      model.focalPoint[1] - (d * model.directionOfProjection[1]),
+      model.focalPoint[2] - (d * model.directionOfProjection[2]));
   };
 
   publicAPI.setRoll = roll => {
@@ -297,8 +299,8 @@ function vtkCamera(publicAPI, model) {
     // this->ProjectionTransform->AdjustZBuffer( -1, +1, nearz, farz );
     const cWidth = model.clippingRange[1] - model.clippingRange[0];
     const cRange = [
-      model.clippingRange[0] + (nearz + 1) * cWidth / 2.0,
-      model.clippingRange[0] + (farz + 1) * cWidth / 2.0];
+      model.clippingRange[0] + (((nearz + 1) * cWidth) / 2.0),
+      model.clippingRange[0] + (((farz + 1) * cWidth) / 2.0)];
 
     if (model.parallelProjection) {
       // set up a rectangular parallelipiped
