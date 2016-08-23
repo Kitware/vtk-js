@@ -21,13 +21,26 @@
     },
     "devDependencies": {
         "kw-web-suite": "2.1.0",
-        "kw-doc": "1.0.13"
+        "kw-doc": "1.0.13",
+
+        "babel-plugin-istanbul": "2.0.0",
+        "karma": "1.2.0",
+        "karma-chrome-launcher": "2.0.0",
+        "karma-coverage": "1.1.1",
+        "karma-phantomjs-launcher": "1.0.1",
+        "karma-tap": "2.1.4",
+        "karma-webpack": "1.8.0",
+        "tap-spec": "4.1.1",
+        "karma-tap-pretty-reporter": "1.1.0",
+        "tape-catch": "1.0.6",
+        "tape": "4.6.0",
+        "babel-polyfill": "6.13.0"
     },
     "scripts": {
         "install:global": "npm install -g commitizen@2.5.0",
 
         "doc"           : "kw-doc -c ./Documentation/config.js",
-        "doc:www"       : "kw-doc -c ./Documentation/config.js -s",
+        "doc:www"       : "npm t -- --single-run && kw-doc -c ./Documentation/config.js -s",
         "doc:publish"   : "kw-doc -c ./Documentation/config.js -p",
 
         "example:EmptyRenderer": "webpack-dev-server --progress --open --config ./Examples/WebGL/EmptyRenderer/webpack.config.js",
@@ -37,6 +50,9 @@
         "build"         : "webpack --progress --colors",
         "build:debug"   : "webpack --progress --colors --display-modules",
         "build:release" : "export NODE_ENV=production && npm run build -- -p",
+
+        "test": "karma start ./karma.conf.js",
+        "test:travis": "karma start ./karma.conf.js --browsers PhantomJS --single-run",
 
         "commit"        : "git cz",
         "semantic-release": "semantic-release pre && npm publish && semantic-release post"
@@ -48,5 +64,13 @@
     },
     "bin": {
         "vtkDataConverter": "./Utilities/DataGenerator/convert-cli.js"
+    },
+    "nyc": {
+      "include": [
+        "Sources/**/*.js"
+      ],
+      "exclude": [
+        "Sources/**/test/*.js"
+      ]
     }
 }
