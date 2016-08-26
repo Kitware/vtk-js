@@ -20,7 +20,7 @@
         "gl-matrix": "2.3.1"
     },
     "devDependencies": {
-        "kw-web-suite": "2.1.0",
+        "kw-web-suite": "2.1.1",
         "kw-doc": "1.0.13",
 
         "babel-plugin-istanbul": "2.0.0",
