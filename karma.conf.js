@@ -46,7 +46,8 @@ module.exports = function init(config) {
     ],
 
     tapReporter: {
-      prettifier: 'tap-spec',
+      outputFile: 'Documentation/content/coverage/tests.md',
+      prettifier: 'tap-markdown',
       separator: '\n=========================================================\n=========================================================\n',
     },
 
@@ -55,6 +56,10 @@ module.exports = function init(config) {
       reporters: [
         { type: 'html', subdir: 'coverage' },
       ],
+    },
+
+    client: {
+      useIframe: false,
     },
 
     port: 9876,

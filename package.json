@@ -39,6 +39,7 @@
         "resemblejs": "2.2.1",
 
         "tap-spec": "4.1.1",
+        "tap-markdown": "1.2.1",
         "tape": "4.6.0",
         "tape-catch": "1.0.6"
     },
