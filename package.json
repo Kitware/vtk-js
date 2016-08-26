@@ -29,10 +29,12 @@
         "karma": "1.2.0",
         "karma-chrome-launcher": "2.0.0",
         "karma-coverage": "1.1.1",
-        "karma-phantomjs-launcher": "1.0.1",
+        "karma-electron": "4.1.0",
         "karma-tap": "2.1.4",
         "karma-tap-pretty-reporter": "1.1.0",
         "karma-webpack": "1.8.0",
+
+        "electron": "1.3.4",
 
         "resemblejs": "2.2.1",
 
@@ -56,7 +58,7 @@
         "build:release" : "export NODE_ENV=production && npm run build -- -p",
 
         "test": "karma start ./karma.conf.js",
-        "test:travis": "karma start ./karma.conf.js --browsers PhantomJS --single-run",
+        "test:travis": "karma start ./karma.conf.js --browsers Electron --single-run",
 
         "commit"        : "git cz",
         "semantic-release": "semantic-release pre && npm publish && semantic-release post"

@@ -7,8 +7,8 @@ import vtkConeSource from '../../../../Filters/Sources/ConeSource';
 import vtkActor from '../../../../Rendering/Core/Actor';
 import vtkMapper from '../../../../Rendering/Core/Mapper';
 
-import resemble from 'resemblejs';
 import baseline from './baseline.png';
+import testUtils from '../../../../Testing/testUtils';
 
 /* global document */
 
@@ -44,10 +44,5 @@ test('Test vtkConeSource Rendering', (t) => {
   const images = renderWindow.captureImages();
   t.equal(images.length, 1, 'Should only have 1 captured image');
 
-  resemble(baseline).compareTo(images[0]).onComplete(data => {
-    console.log(data);
-    t.ok(data.misMatchPercentage < 1, `Matching image - delta ${data.misMatchPercentage}%`);
-    t.ok(data.isSameDimensions, 'Image match resolution');
-    t.end();
-  });
+  testUtils.compareImages(images[0], [baseline], 'Filters/Sources/ConeSource/', t);
 });
