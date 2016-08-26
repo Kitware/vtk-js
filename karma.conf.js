@@ -20,11 +20,11 @@ module.exports = function init(config) {
     frameworks: ['tap'],
     files: [
       './node_modules/babel-polyfill/dist/polyfill.min.js',
-      'Sources/**/test/*.js',
+      'Sources/tests.js',
     ],
 
     preprocessors: {
-      'Sources/**/test/*.js': ['webpack'],
+      'Sources/tests.js': ['webpack'],
     },
 
     webpack: {
@@ -62,6 +62,6 @@ module.exports = function init(config) {
     logLevel: config.LOG_INFO,
     autoWatch: true,
     browsers: ['Chrome'],
-    singleRun: true,
+    singleRun: false,
   });
 };
