@@ -172,6 +172,10 @@ export function vtkOpenGLRenderWindow(publicAPI, model) {
         return model.context.RGBA;
     }
   };
+
+  publicAPI.captureImage = (format = 'image/png') => {
+    return model.canvas.toDataURL(format);
+  };
 }
 
 // ----------------------------------------------------------------------------

@@ -1,6 +1,6 @@
 import * as macro from '../../../macro';
 import vtkBufferObject from '../BufferObject';
-import { DynamicTypedArray } from '../../../../Sources/Common/Core/DynamicTypedArray';
+import DynamicTypedArray from '../../../../Sources/Common/Core/DynamicTypedArray';
 import { OBJECT_TYPE } from '../BufferObject/Constants';
 
 /* eslint-disable no-multi-spaces */

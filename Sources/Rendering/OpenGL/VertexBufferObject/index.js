@@ -1,6 +1,6 @@
 import * as macro from '../../../macro';
 import vtkBufferObject from '../BufferObject';
-import { DynamicTypedArray } from '../../../Common/Core/DynamicTypedArray';
+import DynamicTypedArray from '../../../Common/Core/DynamicTypedArray';
 import { SHIFT_SCALE_METHOD } from './Constants';
 import { OBJECT_TYPE } from '../BufferObject/Constants';
 

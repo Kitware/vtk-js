@@ -55,6 +55,13 @@ export function vtkRenderWindow(publicAPI, model) {
   publicAPI.render = () => {
     model.views.forEach(view => view.traverseAllPasses());
   };
+
+  publicAPI.captureImages = (format = 'image/png') => {
+    publicAPI.render();
+    return model.views
+      .map(view => (view.captureImage ? view.captureImage(format) : undefined))
+      .filter(i => !!i);
+  };
 }
 
 // ----------------------------------------------------------------------------
