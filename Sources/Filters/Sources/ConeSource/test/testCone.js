@@ -10,9 +10,9 @@ import vtkMapper from '../../../../Rendering/Core/Mapper';
 import baseline from './baseline.png';
 import testUtils from '../../../../Testing/testUtils';
 
-/* global document test_IF_WEBGL */
+/* global document */
 
-test_IF_WEBGL('Test vtkConeSource Rendering', (t) => {
+test.onlyIfWebGL('Test vtkConeSource Rendering', (t) => {
   t.ok('rendering', 'vtkConeSource Rendering');
 
   // Create some control UI

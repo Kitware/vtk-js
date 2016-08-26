@@ -15,7 +15,7 @@ function compareImages(image, baselines, testName, tapeContext, threshold = 5, n
 
 
   if (minDelta >= threshold) {
-    console.log(testName, image);
+    tapeContext.fail(`<img src="${image}" width="100" /> vs <img src="${baselines[0]}" width="100" />`);
   }
 
   if (nextCallback) {
