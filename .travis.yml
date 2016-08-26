@@ -1,5 +1,7 @@
 language: node_js
-sudo: false
+node_js:
+  - "5.1"
+
 notifications:
   email:
     recipients:
@@ -8,12 +10,15 @@ notifications:
       - scott.wittenburg@kitware.com
     on_success: change
     on_failure: always
+
 cache:
   directories:
     - node_modules
     - Documentation/build-tmp
+
 env:
   - CXX=g++-4.8
+
 addons:
   sources:
     - ubuntu-toolchain-r-test
@@ -27,8 +32,7 @@ addons:
       - libosmesa6
 before_script:
   - export DISPLAY=:99.0; sh -e /etc/init.d/xvfb start
-node_js:
-  - "5.1"
+
 script:
   - npm install
   - npm run build:release
@@ -37,6 +41,7 @@ script:
   - git config --global user.email "sebastien.jourdain@kitware.com"
   - export GIT_PUBLISH_URL=https://${GH_TOKEN}@github.com/Kitware/vtk-js.git
   - if [ "$TRAVIS_BRANCH" == "master" ]; then npm run doc:publish; fi
+
 branches:
   except:
     - "/^v\\d+\\.\\d+\\.\\d+$/"
