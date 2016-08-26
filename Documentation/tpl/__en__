@@ -19,6 +19,7 @@ page:
 sidebar:
   docs:
     testing: Testing
+    tests: Tests
     coverage: Coverage
     getting_started: Getting Started
     overview: Overview

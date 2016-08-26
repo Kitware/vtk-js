@@ -3,6 +3,7 @@ docs:
     overview: /vtk-js/docs/index.html
     setup: /vtk-js/docs/setup.html
   testing:
+    tests: /vtk-js/coverage/tests.html
     coverage: /vtk-js/coverage/home.html
   miscellaneous:
     tools: /vtk-js/docs/tools.html
