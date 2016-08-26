@@ -67,6 +67,6 @@ module.exports = function init(config) {
     logLevel: config.LOG_INFO,
     autoWatch: true,
     browsers: ['Chrome'],
-    singleRun: false,
+    singleRun: true,
   });
 };
