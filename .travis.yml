@@ -22,6 +22,7 @@ install:
 node_js:
   - "5.1"
 script:
+  - npm install
   - npm run build:release
   - npm run test:travis
   - git config --global user.name "Travis CI"
