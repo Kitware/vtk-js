@@ -1,6 +1,26 @@
 language: node_js
+os: linux
+sudo: required
+dist: trusty
+addons:
+  sources:
+    - ubuntu-toolchain-r-test
+  apt:
+    packages:
+      - gcc-4.8
+      - g++-4.8
+      - mesa-utils
+      - xvfb
+      - libgl1-mesa-dri
+      - libglapi-mesa
+      - libosmesa6
 node_js:
-  - "5.1"
+  - '6'
+before_script:
+  - export DISPLAY=:99.0; sh -e /etc/init.d/xvfb start
+
+env:
+  - CXX=g++-4.8
 
 notifications:
   email:
@@ -15,23 +35,6 @@ cache:
   directories:
     - node_modules
     - Documentation/build-tmp
-
-env:
-  - CXX=g++-4.8
-
-addons:
-  sources:
-    - ubuntu-toolchain-r-test
-  apt:
-    packages:
-      - g++-4.8
-      - mesa-utils
-      - xvfb
-      - libgl1-mesa-dri
-      - libglapi-mesa
-      - libosmesa6
-before_script:
-  - export DISPLAY=:99.0; sh -e /etc/init.d/xvfb start
 
 script:
   - npm install
