@@ -11,6 +11,8 @@ import * as macro     from '../../../Sources/macro';
 
 import controlPanel from './controller.html';
 
+/* global document */
+
 // Create some control UI
 const container = document.querySelector('body');
 const controlContainer = document.createElement('div');
