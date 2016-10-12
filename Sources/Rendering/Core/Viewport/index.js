@@ -1,7 +1,7 @@
 import * as macro from '../../../macro';
 
 function notImplemented(method) {
-  return () => console.log('vtkViewport::${method} - NOT IMPLEMENTED');
+  return () => console.log(`vtkViewport::${method} - NOT IMPLEMENTED`);
 }
 
 // ----------------------------------------------------------------------------
@@ -14,7 +14,7 @@ function vtkViewport(publicAPI, model) {
 
   // Public API methods
   publicAPI.getViewProps = () => model.props;
-  publicAPI.hasViewProp = (prop) => !!model.props.filter(item => item === prop).length;
+  publicAPI.hasViewProp = prop => !!model.props.filter(item => item === prop).length;
   publicAPI.addViewProp = (prop) => {
     if (prop && !publicAPI.hasViewProp(prop)) {
       model.props = model.props.concat(prop);
@@ -40,7 +40,7 @@ function vtkViewport(publicAPI, model) {
 
   publicAPI.getActors2D = () => {
     model.actors2D = [];
-    model.props.forEach(prop => {
+    model.props.forEach((prop) => {
       model.actors2D = model.actors2D.concat(prop.getActors2D());
     });
     return model.actors2D;

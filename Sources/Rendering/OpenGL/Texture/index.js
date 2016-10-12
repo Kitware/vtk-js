@@ -295,7 +295,7 @@ function vtkOpenGLTexture(publicAPI, model) {
   };
 
   //----------------------------------------------------------------------------
-  publicAPI.getDefaultDataType = vtkScalarType => {
+  publicAPI.getDefaultDataType = (vtkScalarType) => {
     // DON'T DEAL with VTK_CHAR as this is platform dependent.
     switch (vtkScalarType) {
       // case VTK_DATATYPES.SIGNED_CHAR:
@@ -321,7 +321,7 @@ function vtkOpenGLTexture(publicAPI, model) {
   };
 
   //----------------------------------------------------------------------------
-  publicAPI.getOpenGLDataType = vtkScalarType => {
+  publicAPI.getOpenGLDataType = (vtkScalarType) => {
     if (!model.openGLDataType) {
       model.openGLDataType = publicAPI.getDefaultDataType(vtkScalarType);
     }

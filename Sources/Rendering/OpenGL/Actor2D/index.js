@@ -24,18 +24,18 @@ function vtkOpenGLActor2D(publicAPI, model) {
   };
 
   // we draw textures, then mapper, then post pass textures
-  publicAPI.traverse = operation => {
+  publicAPI.traverse = (operation) => {
     publicAPI.apply(operation, true);
 
     model.activeTextures = [];
-    model.children.forEach(child => {
+    model.children.forEach((child) => {
       child.apply(operation, true);
       if (child.isA('vtkOpenGLTexture') && operation === 'Render') {
         model.activeTextures.push(child);
       }
     });
 
-    model.children.forEach(child => {
+    model.children.forEach((child) => {
       child.apply(operation, false);
     });
 
@@ -49,7 +49,7 @@ function vtkOpenGLActor2D(publicAPI, model) {
       publicAPI.preRender();
     } else {
       // deactivate textures
-      model.children.forEach(child => {
+      model.children.forEach((child) => {
         if (child.isA('vtkOpenGLTexture')) {
           child.deactivate();
         }

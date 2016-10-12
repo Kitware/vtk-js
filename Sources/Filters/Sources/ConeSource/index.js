@@ -44,10 +44,10 @@ export function vtkConeSource(publicAPI, model) {
       };
 
       // Add parameter used to create dataset as metadata.state[*]
-      ['height', 'radius', 'resolution', 'capping'].forEach(field => {
+      ['height', 'radius', 'resolution', 'capping'].forEach((field) => {
         state[field] = model[field];
       });
-      ['center', 'direction'].forEach(field => {
+      ['center', 'direction'].forEach((field) => {
         state[field] = [].concat(model[field]);
       });
 

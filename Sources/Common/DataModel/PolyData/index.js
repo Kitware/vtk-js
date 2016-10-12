@@ -27,7 +27,7 @@ function vtkPolyData(publicAPI, model) {
   }
 
   // build empty cell arrays and set methods
-  ['Verts', 'Lines', 'Polys', 'Strips'].forEach(type => {
+  ['Verts', 'Lines', 'Polys', 'Strips'].forEach((type) => {
     const lowerType = type.toLowerCase();
     // Don't create array if already available
     if (model[lowerType]) {
@@ -50,7 +50,7 @@ function vtkPolyData(publicAPI, model) {
     ];
 
     // Start to shallow copy each piece
-    fieldList.forEach(field => {
+    fieldList.forEach((field) => {
       modelInstance[field] = model[field].shallowCopy();
     });
 

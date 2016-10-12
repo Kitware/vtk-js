@@ -51,10 +51,10 @@ export function vtkSphereSource(publicAPI, model) {
       };
 
       // Add parameter used to create dataset as metadata.state[*]
-      ['radius', 'latLongTessellation', 'thetaResolution', 'startTheta', 'endTheta', 'phiResolution', 'startPhi', 'endPhi'].forEach(field => {
+      ['radius', 'latLongTessellation', 'thetaResolution', 'startTheta', 'endTheta', 'phiResolution', 'startPhi', 'endPhi'].forEach((field) => {
         state[field] = model[field];
       });
-      ['center'].forEach(field => {
+      ['center'].forEach((field) => {
         state[field] = [].concat(model[field]);
       });
 

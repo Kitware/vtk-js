@@ -12,16 +12,15 @@
     "main": "./Sources/index.js",
     "dependencies": {
         "commander": "2.9.0",
-        "shelljs": "0.5.3",
+        "shelljs": "0.7.4",
         "gh-pages": "0.10.0",
-        "string-replace-loader": "1.0.0",
         "pako": "1.0.1",
         "blueimp-md5": "2.3.0",
         "gl-matrix": "2.3.1"
     },
     "devDependencies": {
-        "kw-web-suite": "2.1.1",
-        "kw-doc": "1.0.13",
+        "kw-web-suite": "2.2.1",
+        "kw-doc": "1.0.15",
 
         "babel-plugin-istanbul": "2.0.0",
         "babel-polyfill": "6.13.0",

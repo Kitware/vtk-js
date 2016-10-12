@@ -41,9 +41,9 @@ function vtkOpenGLVertexArrayObject(publicAPI, model) {
       model.extension.bindVertexArrayOES(model.handleVAO);
     } else if (publicAPI.isReady()) {
       const gl = model.context;
-      Object.keys(model.buffers).map(key => model.buffers[key]).forEach(buff => {
+      Object.keys(model.buffers).map(key => model.buffers[key]).forEach((buff) => {
         model.context.bindBuffer(gl.ARRAY_BUFFER, buff.buffer);
-        Object.keys(buff.attributes).map(key => buff.attributes[key]).forEach(attrIt => {
+        Object.keys(buff.attributes).map(key => buff.attributes[key]).forEach((attrIt) => {
           const matrixCount = attrIt.isMatrix ? attrIt.size : 1;
           for (let i = 0; i < matrixCount; ++i) {
             gl.enableVertexAttribArray(attrIt.index + i);
@@ -66,8 +66,8 @@ function vtkOpenGLVertexArrayObject(publicAPI, model) {
       model.extension.bindVertexArrayOES(null);
     } else if (publicAPI.isReady()) {
       const gl = model.context;
-      Object.keys(model.buffers).map(key => model.buffers[key]).forEach(buff => {
-        Object.keys(buff.attributes).map(key => buff.attributes[key]).forEach(attrIt => {
+      Object.keys(model.buffers).map(key => model.buffers[key]).forEach((buff) => {
+        Object.keys(buff.attributes).map(key => buff.attributes[key]).forEach((attrIt) => {
           const matrixCount = attrIt.isMatrix ? attrIt.size : 1;
           for (let i = 0; i < matrixCount; ++i) {
             gl.enableVertexAttribArray(attrIt.index + i);
@@ -216,7 +216,7 @@ function vtkOpenGLVertexArrayObject(publicAPI, model) {
     gl.disableVertexAttribArray(location);
     // If we don't have real VAOs find the entry and remove it too.
     if (!model.supported) {
-      Object.keys(model.buffers).map(key => model.buffers[key]).forEach(buff => {
+      Object.keys(model.buffers).map(key => model.buffers[key]).forEach((buff) => {
         delete buff.attributes[location];
       });
     }

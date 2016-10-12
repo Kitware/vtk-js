@@ -9,7 +9,7 @@ export function vtkRenderWindow(publicAPI, model) {
   model.classHierarchy.push('vtkRenderWindow');
 
   // Add renderer
-  publicAPI.addRenderer = renderer => {
+  publicAPI.addRenderer = (renderer) => {
     if (publicAPI.hasRenderer(renderer)) {
       return;
     }
@@ -27,7 +27,7 @@ export function vtkRenderWindow(publicAPI, model) {
   };
 
   // Remove renderer
-  publicAPI.removeRenderer = renderer => {
+  publicAPI.removeRenderer = (renderer) => {
     model.renderers = model.renderers.filter(r => r !== renderer);
     publicAPI.modified();
   };
@@ -35,7 +35,7 @@ export function vtkRenderWindow(publicAPI, model) {
   publicAPI.hasRenderer = ren => model.renderers.indexOf(ren) !== -1;
 
   // Add renderer
-  publicAPI.addView = view => {
+  publicAPI.addView = (view) => {
     if (publicAPI.hasView(view)) {
       return;
     }
@@ -45,7 +45,7 @@ export function vtkRenderWindow(publicAPI, model) {
   };
 
   // Remove renderer
-  publicAPI.removeView = view => {
+  publicAPI.removeView = (view) => {
     model.views = model.views.filter(r => r !== view);
     publicAPI.modified();
   };

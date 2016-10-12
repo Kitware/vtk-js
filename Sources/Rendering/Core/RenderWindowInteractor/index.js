@@ -104,9 +104,9 @@ function vtkRenderWindowInteractor(publicAPI, model) {
     model.eventPositions[pointer] = { x: xv, y: yv, z: zv };
   };
 
-  publicAPI.getEventPosition = (pointer) => model.eventPositions[pointer];
+  publicAPI.getEventPosition = pointer => model.eventPositions[pointer];
 
-  publicAPI.getLastEventPosition = (pointer) => model.lastEventPositions[pointer];
+  publicAPI.getLastEventPosition = pointer => model.lastEventPositions[pointer];
 
   publicAPI.bindEvents = (canvas, document) => {
     model.canvas = canvas;
@@ -224,7 +224,7 @@ function vtkRenderWindowInteractor(publicAPI, model) {
     let viewportren = null;
     let currentRenderer = null;
 
-    rc.forEach(aren => {
+    rc.forEach((aren) => {
       if (model.view.isInViewport(x, y, aren) && aren.getInteractive()) {
         currentRenderer = aren;
       }
@@ -276,7 +276,7 @@ function vtkRenderWindowInteractor(publicAPI, model) {
   };
 
   // create the generic Event methods
-  eventsWeHandle.forEach(eventName => {
+  eventsWeHandle.forEach((eventName) => {
     const lowerFirst = eventName.charAt(0).toLowerCase() + eventName.slice(1);
     publicAPI[`${lowerFirst}Event`] = () => {
       if (!model.enabled) {
@@ -309,7 +309,7 @@ function vtkRenderWindowInteractor(publicAPI, model) {
 
     // store the initial positions
     if (event === 'LeftButtonPress') {
-      Object.keys(model.pointersDown).forEach(key => {
+      Object.keys(model.pointersDown).forEach((key) => {
         model.startingEventPositions[key] =
           model.eventPositions[key];
       });
@@ -337,7 +337,7 @@ function vtkRenderWindowInteractor(publicAPI, model) {
     let count = 0;
     const posVals = [];
     const startVals = [];
-    Object.keys(model.pointersDown).forEach(key => {
+    Object.keys(model.pointersDown).forEach((key) => {
       posVals[count] = model.eventPositions[key];
       startVals[count] = model.startingEventPositions[key];
       count++;
@@ -436,7 +436,7 @@ function vtkRenderWindowInteractor(publicAPI, model) {
     }
   };
 
-  publicAPI.setScale = scale => {
+  publicAPI.setScale = (scale) => {
     model.lastScale = model.scale;
     if (model.scale !== scale) {
       model.scale = scale;
@@ -444,7 +444,7 @@ function vtkRenderWindowInteractor(publicAPI, model) {
     }
   };
 
-  publicAPI.setRotation = rot => {
+  publicAPI.setRotation = (rot) => {
     model.lastRotation = model.rotation;
     if (model.rotation !== rot) {
       model.rotation = rot;
@@ -452,7 +452,7 @@ function vtkRenderWindowInteractor(publicAPI, model) {
     }
   };
 
-  publicAPI.setTranslation = trans => {
+  publicAPI.setTranslation = (trans) => {
     model.lastTranslation = model.translation;
     if (model.translation !== trans) {
       model.translation = trans;

@@ -65,7 +65,7 @@ export function vtkOpenGLRenderWindow(publicAPI, model) {
   publicAPI.render = (prepass) => {
     if (prepass) {
       publicAPI.initialize();
-      model.children.forEach(child => {
+      model.children.forEach((child) => {
         child.setContext(model.context);
       });
     } else {
@@ -73,7 +73,7 @@ export function vtkOpenGLRenderWindow(publicAPI, model) {
     }
   };
 
-  publicAPI.setContainer = el => {
+  publicAPI.setContainer = (el) => {
     if (model.el && model.el !== el) {
       // Remove canvas from previous container
       if (model.canvas.parentNode === model.el) {
@@ -104,13 +104,13 @@ export function vtkOpenGLRenderWindow(publicAPI, model) {
     return false;
   };
 
-  publicAPI.getViewportSize = viewport => {
+  publicAPI.getViewportSize = (viewport) => {
     const vCoords = viewport.getViewport();
     const size = model.size;
     return [(vCoords[2] - vCoords[0]) * size[0], (vCoords[3] - vCoords[1]) * size[1]];
   };
 
-  publicAPI.getViewportCenter = viewport => {
+  publicAPI.getViewportCenter = (viewport) => {
     const size = publicAPI.getViewportSize(viewport);
     return [size[0] * 0.5, size[1] * 0.5];
   };
@@ -126,7 +126,7 @@ export function vtkOpenGLRenderWindow(publicAPI, model) {
   publicAPI.get3DContext = (options = { preserveDrawingBuffer: true, premultipliedAlpha: false }) =>
     model.canvas.getContext('webgl', options) || model.canvas.getContext('experimental-webgl', options);
 
-  publicAPI.activateTexture = texture => {
+  publicAPI.activateTexture = (texture) => {
     // Only add if it isn't already there
     const result = model.textureResourceIds.get(texture);
     if (result !== undefined) {
@@ -144,7 +144,7 @@ export function vtkOpenGLRenderWindow(publicAPI, model) {
     model.context.activeTexture(model.context.TEXTURE0 + activeUnit);
   };
 
-  publicAPI.deactivateTexture = texture => {
+  publicAPI.deactivateTexture = (texture) => {
     // Only deactivate if it isn't already there
     const result = model.textureResourceIds.get(texture);
     if (result !== undefined) {
@@ -153,7 +153,7 @@ export function vtkOpenGLRenderWindow(publicAPI, model) {
     }
   };
 
-  publicAPI.getTextureUnitForTexture = texture => {
+  publicAPI.getTextureUnitForTexture = (texture) => {
     const result = model.textureResourceIds.get(texture);
     if (result !== undefined) {
       return result;

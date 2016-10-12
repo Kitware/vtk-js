@@ -16,7 +16,7 @@ const GEOMETRY_ARRAYS = {
   vtkPolyData(dataset) {
     const arrayToDownload = [];
     arrayToDownload.push(dataset.vtkPolyData.Points);
-    Object.keys(dataset.vtkPolyData).forEach(cellName => {
+    Object.keys(dataset.vtkPolyData).forEach((cellName) => {
       if (dataset.vtkPolyData[cellName]) {
         arrayToDownload.push(dataset.vtkPolyData[cellName]);
       }
@@ -49,7 +49,7 @@ const GEOMETRY_ARRAYS = {
 
   vtkMultiBlock(dataset) {
     let arrayToDownload = [];
-    Object.keys(dataset.vtkMultiBlock.Blocks).forEach(blockName => {
+    Object.keys(dataset.vtkMultiBlock.Blocks).forEach((blockName) => {
       const fn = GEOMETRY_ARRAYS[dataset.vtkMultiBlock.Blocks[blockName].type];
       if (fn) {
         arrayToDownload = [].concat(arrayToDownload, fn(dataset.vtkMultiBlock.Blocks[blockName]));
@@ -79,7 +79,7 @@ export function vtkHttpDataSetReader(publicAPI, model) {
         const xhr = new XMLHttpRequest();
         const url = [model.baseURL, array.ref.basepath, fetchGzip ? `${array.ref.id}.gz` : array.ref.id].join('/');
 
-        xhr.onreadystatechange = e => {
+        xhr.onreadystatechange = (e) => {
           if (xhr.readyState === 1) {
             array.ref.pending = true;
             if (++model.requestCount === 1) {
@@ -143,7 +143,7 @@ export function vtkHttpDataSetReader(publicAPI, model) {
   // Internal method to fill block information and state
   function fillBlocks(dataset, block, arraysToList, enable) {
     if (dataset.type === 'vtkMultiBlock') {
-      Object.keys(dataset.MultiBlock.Blocks).forEach(blockName => {
+      Object.keys(dataset.MultiBlock.Blocks).forEach((blockName) => {
         block[blockName] = fillBlocks(dataset.MultiBlock.Blocks[blockName], {}, arraysToList, enable);
         block[blockName].enable = enable;
       });
@@ -151,9 +151,9 @@ export function vtkHttpDataSetReader(publicAPI, model) {
       block.type = dataset.type;
       block.enable = enable;
       const container = dataset[dataset.type];
-      LOCATIONS.forEach(location => {
+      LOCATIONS.forEach((location) => {
         if (container[location]) {
-          Object.keys(container[location]).forEach(name => {
+          Object.keys(container[location]).forEach((name) => {
             if (arraysToList[`${location}_:|:_${name}`]) {
               arraysToList[`${location}_:|:_${name}`].ds.push(container);
             } else {
@@ -176,7 +176,7 @@ export function vtkHttpDataSetReader(publicAPI, model) {
 
     // Find corresponding datasetBlock
     if (root.MultiBlock && root.MultiBlock.Blocks) {
-      Object.keys(root.MultiBlock.Blocks).forEach(blockName => {
+      Object.keys(root.MultiBlock.Blocks).forEach((blockName) => {
         if (enable) {
           return;
         }
@@ -203,7 +203,7 @@ export function vtkHttpDataSetReader(publicAPI, model) {
       const xhr = new XMLHttpRequest();
       let dataset = model.dataset;
 
-      xhr.onreadystatechange = e => {
+      xhr.onreadystatechange = (e) => {
         if (xhr.readyState === 1) {
           if (++model.requestCount === 1) {
             publicAPI.invokeBusy(true);
@@ -227,14 +227,14 @@ export function vtkHttpDataSetReader(publicAPI, model) {
               model.blocks = {};
               const arraysToList = {};
               fillBlocks(dataset, model.blocks, arraysToList, enable);
-              Object.keys(arraysToList).forEach(id => {
+              Object.keys(arraysToList).forEach((id) => {
                 model.arrays.push(arraysToList[id]);
               });
             } else {
               // Regular dataset
-              LOCATIONS.forEach(location => {
+              LOCATIONS.forEach((location) => {
                 if (container[location]) {
-                  Object.keys(container[location]).forEach(name => {
+                  Object.keys(container[location]).forEach((name) => {
                     model.arrays.push({ name, enable, location, ds: [container] });
                   });
                 }
@@ -243,7 +243,7 @@ export function vtkHttpDataSetReader(publicAPI, model) {
 
             // Fetch geometry arrays
             const pendingPromises = [];
-            GEOMETRY_ARRAYS[dataset.type](dataset).forEach(array => {
+            GEOMETRY_ARRAYS[dataset.type](dataset).forEach((array) => {
               pendingPromises.push(fetchArray(array, model.fetchGzip));
             });
 
@@ -251,11 +251,11 @@ export function vtkHttpDataSetReader(publicAPI, model) {
             if (pendingPromises.length) {
               Promise.all(pendingPromises)
                 .then(
-                  ok => {
+                  (ok) => {
                     model.output[0] = vtk(dataset);
                     resolve(publicAPI, model.output[0]);
                   },
-                  err => {
+                  (err) => {
                     reject(err);
                   }
                 );
@@ -276,7 +276,7 @@ export function vtkHttpDataSetReader(publicAPI, model) {
     });
 
   // Set DataSet url
-  publicAPI.setUrl = url => {
+  publicAPI.setUrl = (url) => {
     if (url.indexOf('index.json') === -1) {
       model.baseURL = url;
       model.url = `${url}/index.json`;
@@ -301,8 +301,8 @@ export function vtkHttpDataSetReader(publicAPI, model) {
     const arrayMappingFunc = [];
     model.arrays
       .filter(array => array.enable)
-      .forEach(array => {
-        array.ds.forEach(ds => {
+      .forEach((array) => {
+        array.ds.forEach((ds) => {
           if (isDatasetEnable(datasetStruct, model.blocks, ds)) {
             if (ds[array.location][array.name].ref) {
               arrayToFecth.push(ds[array.location][array.name]);

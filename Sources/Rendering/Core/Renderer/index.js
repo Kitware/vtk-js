@@ -1,4 +1,4 @@
-import { mat4, vec4, vec3 } from 'gl-matrix';
+import { mat4, vec3 } from 'gl-matrix';
 
 import * as macro from '../../../macro';
 import vtkCamera from '../Camera';
@@ -8,70 +8,70 @@ import vtkViewport from '../Viewport';
 import { INIT_BOUNDS } from '../../../Common/DataModel/BoundingBox';
 
 function notImplemented(method) {
-  return () => console.log('vtkRenderer::${method} - NOT IMPLEMENTED');
+  return () => console.log(`vtkRenderer::${method} - NOT IMPLEMENTED`);
 }
 
 // ----------------------------------------------------------------------------
 // Global methods
 // ----------------------------------------------------------------------------
 
-function expandBounds(bounds, matrix) {
-  if (!bounds) {
-    vtkErrorMacro('ERROR: Invalid bounds');
-    return;
-  }
+// function expandBounds(bounds, matrix) {
+//   if (!bounds) {
+//     vtkErrorMacro('ERROR: Invalid bounds');
+//     return;
+//   }
 
-  if (!matrix) {
-    vtkErrorMacro('ERROR: Invalid matrix');
-    return;
-  }
+//   if (!matrix) {
+//     vtkErrorMacro('ERROR: Invalid matrix');
+//     return;
+//   }
 
-  // Expand the bounding box by model view transform matrix.
-  const pt = [
-    vec4.fromValues(bounds[0], bounds[2], bounds[5], 1.0),
-    vec4.fromValues(bounds[1], bounds[2], bounds[5], 1.0),
-    vec4.fromValues(bounds[1], bounds[2], bounds[4], 1.0),
-    vec4.fromValues(bounds[0], bounds[2], bounds[4], 1.0),
-    vec4.fromValues(bounds[0], bounds[3], bounds[5], 1.0),
-    vec4.fromValues(bounds[1], bounds[3], bounds[5], 1.0),
-    vec4.fromValues(bounds[1], bounds[3], bounds[4], 1.0),
-    vec4.fromValues(bounds[0], bounds[3], bounds[4], 1.0),
-  ];
+//   // Expand the bounding box by model view transform matrix.
+//   const pt = [
+//     vec4.fromValues(bounds[0], bounds[2], bounds[5], 1.0),
+//     vec4.fromValues(bounds[1], bounds[2], bounds[5], 1.0),
+//     vec4.fromValues(bounds[1], bounds[2], bounds[4], 1.0),
+//     vec4.fromValues(bounds[0], bounds[2], bounds[4], 1.0),
+//     vec4.fromValues(bounds[0], bounds[3], bounds[5], 1.0),
+//     vec4.fromValues(bounds[1], bounds[3], bounds[5], 1.0),
+//     vec4.fromValues(bounds[1], bounds[3], bounds[4], 1.0),
+//     vec4.fromValues(bounds[0], bounds[3], bounds[4], 1.0),
+//   ];
 
-  // \note: Assuming that matrix does not have projective component. Hence not
-  // dividing by the homogeneous coordinate after multiplication
-  for (let i = 0; i < 8; ++i) {
-    vec4.transformMat4(pt[i], pt[i], matrix);
-  }
+//   // \note: Assuming that matrix does not have projective component. Hence not
+//   // dividing by the homogeneous coordinate after multiplication
+//   for (let i = 0; i < 8; ++i) {
+//     vec4.transformMat4(pt[i], pt[i], matrix);
+//   }
 
-  // min = mpx = pt[0]
-  const min = [];
-  const max = [];
-  for (let i = 0; i < 4; ++i) {
-    min[i] = pt[0][i];
-    max[i] = pt[0][i];
-  }
+//   // min = mpx = pt[0]
+//   const min = [];
+//   const max = [];
+//   for (let i = 0; i < 4; ++i) {
+//     min[i] = pt[0][i];
+//     max[i] = pt[0][i];
+//   }
 
-  for (let i = 1; i < 8; ++i) {
-    for (let j = 0; j < 3; ++j) {
-      if (min[j] > pt[i][j]) {
-        min[j] = pt[i][j];
-      }
-      if (max[j] < pt[i][j]) {
-        max[j] = pt[i][j];
-      }
-    }
-  }
+//   for (let i = 1; i < 8; ++i) {
+//     for (let j = 0; j < 3; ++j) {
+//       if (min[j] > pt[i][j]) {
+//         min[j] = pt[i][j];
+//       }
+//       if (max[j] < pt[i][j]) {
+//         max[j] = pt[i][j];
+//       }
+//     }
+//   }
 
-  // Copy values back to bounds.
-  bounds[0] = min[0];
-  bounds[2] = min[1];
-  bounds[4] = min[2];
+//   // Copy values back to bounds.
+//   bounds[0] = min[0];
+//   bounds[2] = min[1];
+//   bounds[4] = min[2];
 
-  bounds[1] = max[0];
-  bounds[3] = max[1];
-  bounds[5] = max[2];
-}
+//   bounds[1] = max[0];
+//   bounds[3] = max[1];
+//   bounds[5] = max[2];
+// }
 
 // ----------------------------------------------------------------------------
 // vtkRenderer methods
@@ -106,7 +106,7 @@ function vtkRenderer(publicAPI, model) {
     const camera = publicAPI.getActiveCameraAndResetIfCreated();
     const lightMatrix = camera.getCameraLightTransformMatrix();
 
-    model.lights.forEach(light => {
+    model.lights.forEach((light) => {
       if (light.lightTypeIsSceneLight()) {
         // Do nothing. Don't reset the transform matrix because applications
         // may have set a custom matrix. Only reset the transform matrix in
@@ -138,7 +138,7 @@ function vtkRenderer(publicAPI, model) {
 
   publicAPI.getVTKWindow = () => model.renderWindow;
 
-  publicAPI.setLayer = layer => {
+  publicAPI.setLayer = (layer) => {
     vtkDebugMacro(publicAPI.getClassName(), publicAPI, 'setting Layer to ', layer);
     if (model.layer !== layer) {
       model.layer = layer;
@@ -147,7 +147,7 @@ function vtkRenderer(publicAPI, model) {
     publicAPI.setPreserveColorBuffer(!!layer);
   };
 
-  publicAPI.setActiveCamera = camera => {
+  publicAPI.setActiveCamera = (camera) => {
     if (model.activeCamera === camera) {
       return false;
     }
@@ -185,24 +185,24 @@ function vtkRenderer(publicAPI, model) {
   publicAPI.addActor = publicAPI.addViewProp;
   publicAPI.addVolume = publicAPI.addViewProp;
 
-  publicAPI.removeActor = actor => {
+  publicAPI.removeActor = (actor) => {
     model.actors = model.actors.filter(a => a !== actor);
     publicAPI.removeViewProp(actor);
   };
 
-  publicAPI.removeVolume = volume => {
+  publicAPI.removeVolume = (volume) => {
     model.volumes = model.volumes.filter(v => v !== volume);
     publicAPI.removeViewProp(volume);
   };
 
-  publicAPI.addLight = light => {
+  publicAPI.addLight = (light) => {
     model.lights = [].concat(model.lights, light);
     publicAPI.modified();
   };
 
   publicAPI.getActors = () => {
     model.actors = [];
-    model.props.forEach(prop => {
+    model.props.forEach((prop) => {
       model.actors = model.actors.concat(prop.getActors());
     });
     return model.actors;
@@ -210,13 +210,13 @@ function vtkRenderer(publicAPI, model) {
 
   publicAPI.getVolumes = () => {
     model.volumes = [];
-    model.props.forEach(prop => {
+    model.props.forEach((prop) => {
       model.volumes = model.volumes.concat(prop.getVolumes());
     });
     return model.volumes;
   };
 
-  publicAPI.removeLight = light => {
+  publicAPI.removeLight = (light) => {
     model.lights = model.lights.filter(l => l !== light);
     publicAPI.modified();
   };
@@ -316,7 +316,7 @@ function vtkRenderer(publicAPI, model) {
     // loop through all props
     model.props
       .filter(prop => prop.getVisibility() && prop.getUseBounds())
-      .forEach(prop => {
+      .forEach((prop) => {
         const bounds = prop.getBounds();
         if (bounds && vtkMath.areBoundsInitialized(bounds)) {
           nothingVisible = false;
@@ -520,7 +520,7 @@ function vtkRenderer(publicAPI, model) {
     return false;
   };
 
-  publicAPI.setRenderWindow = renderWindow => {
+  publicAPI.setRenderWindow = (renderWindow) => {
     if (renderWindow !== model.renderWindow) {
       model.vtkWindow = renderWindow;
       model.renderWindow = renderWindow;

@@ -105,7 +105,7 @@ function vtkBoundingBox(publicAPI, model) {
     /* eslint-enable no-use-before-define */
   };
 
-  publicAPI.equals = other => {
+  publicAPI.equals = (other) => {
     const a = model.bounds;
     const b = other.getBounds();
     return a[0] === b[0]
@@ -164,13 +164,13 @@ function vtkBoundingBox(publicAPI, model) {
     ];
   };
 
-  publicAPI.addBox = other => {
+  publicAPI.addBox = (other) => {
     publicAPI.addBounds(...other.getBounds());
   };
 
   publicAPI.isValid = () => isValid(model.bounds);
 
-  publicAPI.intersect = bbox => {
+  publicAPI.intersect = (bbox) => {
     if (!(publicAPI.isValid() && bbox.isValid())) {
       return false;
     }
@@ -210,7 +210,7 @@ function vtkBoundingBox(publicAPI, model) {
     return true;
   };
 
-  publicAPI.intersects = bbox => {
+  publicAPI.intersects = (bbox) => {
     if (!(publicAPI.isValid() && bbox.isValid())) {
       return false;
     }
@@ -326,7 +326,7 @@ function vtkBoundingBox(publicAPI, model) {
   publicAPI.getMaxPoint = () => [model.bounds[1], model.bounds[3], model.bounds[5]];
   publicAPI.getBound = index => model.bound[index];
 
-  publicAPI.contains = bbox => {
+  publicAPI.contains = (bbox) => {
     // if either box is not valid or they don't intersect
     if (!publicAPI.intersects(bbox)) {
       return false;
@@ -351,7 +351,7 @@ function vtkBoundingBox(publicAPI, model) {
 
   publicAPI.reset = () => publicAPI.setBounds([].concat(INIT_BOUNDS));
 
-  publicAPI.inflate = delta => {
+  publicAPI.inflate = (delta) => {
     model.bounds = model.bounds.map((value, index) => {
       if (index % 2 === 0) {
         return value - delta;

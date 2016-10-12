@@ -187,15 +187,15 @@ function vtkOpenGLCellArrayBufferObject(publicAPI, model) {
     return cellCount;
   };
 
-  publicAPI.setCoordShiftAndScaleMethod = shiftScaleMethod => {
+  publicAPI.setCoordShiftAndScaleMethod = (shiftScaleMethod) => {
     console.log('coordinate shift and scale not yet implemented');
   };
 
-  publicAPI.setCoordShift = shiftArray => {
+  publicAPI.setCoordShift = (shiftArray) => {
     console.log('coordinate shift and scale not yet implemented');
   };
 
-  publicAPI.setCoordScale = scaleArray => {
+  publicAPI.setCoordScale = (scaleArray) => {
     console.log('coordinate shift and scale not yet implemented');
   };
 }
