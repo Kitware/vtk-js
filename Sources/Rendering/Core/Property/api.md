@@ -17,21 +17,6 @@ specular color, and edge color white; ambient coefficient=0; diffuse
 coefficient=0; specular coefficient=0; specular power=1; Gouraud shading;
 and surface representation. Backface and frontface culling are off.
 
-### render(actor, renderer)
-
-This method causes the property to set up whatever is required for
-its instance variables. This is actually handled by a subclass of
-vtkProperty, which is created automatically. This
-method includes the invoking actor as an argument which can
-be used by property devices that require the actor.
-
-### backfaceRender(actor, renderer)
-
-This method renders the property as a backface property. TwoSidedLighting
-must be turned off to see any backface properties. Note that only
-colors and opacity are used for backface properties. Other properties
-such as Representation, Culling are specified by the Property.
-
 ### lighting
 
 Set/Get lighting flag for an object. Initial value is true.
@@ -141,23 +126,6 @@ Set/Get the color of primitive edges (if edge visibility is enabled).
 Set/Get the width of a Line. The width is expressed in screen units.
 This is only implemented for OpenGL. The default is 1.0.
 
-### lineStipplePattern
-
-Set/Get the stippling pattern of a Line, as a 16-bit binary pattern
-(1 = pixel on, 0 = pixel off).
-This is only implemented for OpenGL. The default is 0xFFFF.
-
-```js
-property.setLineStipplePattern(b0, b1);
-const uint8Array = property.getLineStipplePattern();
-```
-
-### lineStippleRepeatFactor
-
-Set/Get the stippling repeat factor of a Line, which specifies how
-many times each bit in the pattern is to be repeated.
-This is only implemented for OpenGL. The default is 1.
-
 ### pointSize
 
 Set/Get the diameter of a point. The size is expressed in screen units.
@@ -174,9 +142,3 @@ away from camera are not drawn.
 Turn on/off fast culling of polygons based on orientation of normal
 with respect to camera. If frontface culling is on, polygons facing
 towards camera are not drawn.
-
-### releaseGraphicsResources(win)
-
-Release any graphics resources that are being consumed by this
-property. The parameter window could be used to determine which graphic
-resources to release.

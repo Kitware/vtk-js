@@ -52,23 +52,6 @@ function vtkActor(publicAPI, model) {
     return !publicAPI.getIsOpaque();
   };
 
-  publicAPI.releaseGraphicsResources = (win) => {
-    // pass this information onto the mapper
-    if (model.mapper) {
-      model.mapper.releaseGraphicsResources(win);
-    }
-
-    // TBD: pass this information onto the texture(s)
-
-    // pass this information to the properties
-    if (model.property) {
-      model.property.releaseGraphicsResources(win);
-    }
-    if (model.backfaceProperty) {
-      model.backfaceProperty.releaseGraphicsResources(win);
-    }
-  };
-
   publicAPI.makeProperty = vtkProperty.newInstance;
 
   publicAPI.getProperty = () => {

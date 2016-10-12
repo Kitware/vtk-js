@@ -53,15 +53,11 @@ function vtkProp(publicAPI, model) {
   publicAPI.removeTexture = (texture) => {
     const newTextureList = model.textures.filter(item => item === texture);
     if (model.texture.length !== newTextureList.length) {
-      texture.releaseGraphicsResources(model.vtkWindow);
       model.textures = newTextureList;
     }
   };
 
   publicAPI.removeAllTextures = () => {
-    model.textures.forEach(texture => {
-      texture.releaseGraphicsResources(model.vtkWindow);
-    });
     model.textures = [];
   };
 }

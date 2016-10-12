@@ -26,8 +26,6 @@ function vtkCamera(publicAPI, model) {
   // Set up private variables and methods
   const viewMatrix = mat4.create();
   const projectionMatrix = mat4.create();
-  // let viewUp = new vec3.fromValues(0, 1, 0);
-  // let distance = 0.0002;
 
   publicAPI.orthogonalizeViewUp = () => {
     const vt = publicAPI.getViewTransformMatrix();
@@ -261,18 +259,6 @@ function vtkCamera(publicAPI, model) {
 
   };
 
-  publicAPI.setEyePosition = eyePosition => {
-
-  };
-
-  publicAPI.getEyePosition = () => {
-
-  };
-
-  publicAPI.getEyePlaneNormal = () => {
-
-  };
-
   publicAPI.getViewTransformMatrix = () => {
     const eye = model.position;
     const at = model.focalPoint;
@@ -324,8 +310,6 @@ function vtkCamera(publicAPI, model) {
       }
       mat4.perspective(projectionMatrix, vtkMath.radiansFromDegrees(fovy), aspect, cRange[0], cRange[1]);
     }
-
-    // No stereo, no view shear at the current time
 
     mat4.transpose(projectionMatrix, projectionMatrix);
     return projectionMatrix;
@@ -420,19 +404,13 @@ export const DEFAULT_VALUES = {
   thickness: 1000,
   windowCenter: [0, 0],
   viewPlaneNormal: [0, 0, 1],
-  viewShear: [0, 0, 1],
-  eyeAngle: 2,
   focalDisk: 1,
   useOffAxisProjection: false,
   screenBottomLeft: [-0.5, -0.5, -0.5],
   screenBottomRight: [0.5, -0.5, -0.5],
   screenTopRight: [0.5, 0.5, -0.5],
-  eyeSeparation: 0.06,
-  // eyeTransformMatrix: mat4.create(),     // can't do these here, or else
-  // modelTransformMatrix: mat4.create(),   // every instance shares same default
   userViewTransform: null,
   userTransform: null,
-  leftEye: 1,
   freezeFocalPoint: false,
   useScissor: false,
 };
@@ -443,8 +421,6 @@ export function extend(publicAPI, model, initialValues = {}) {
   Object.assign(model, DEFAULT_VALUES, initialValues);
 
   // Make sure we have our own objects
-  model.eyeTransformMatrix = mat4.create();
-  model.modelTransformMatrix = mat4.create();
 
   // Build VTK API
   macro.obj(publicAPI, model);
@@ -459,13 +435,8 @@ export function extend(publicAPI, model, initialValues = {}) {
     'useHorizontalViewAngle',
     'viewAngle',
     'parallelScale',
-    'eyeAngle',
     'focalDisk',
     'useOffAxisProjection',
-    'eyeSeparation',
-    'eyeTransformMatrix',
-    'modelTransformMatrix',
-    'leftEye',
     'freezeFocalPoint',
     'useScissor',
   ]);
@@ -484,7 +455,6 @@ export function extend(publicAPI, model, initialValues = {}) {
 
   macro.setGetArray(publicAPI, model, [
     'viewUp',
-    'viewShear',
     'screenBottomLeft',
     'screenBottomRight',
     'screenTopRight',

@@ -39,15 +39,6 @@ const eventsWeHandle = [
   'Swipe',
 ];
 
-// ----------------------------------------------------------------------------
-// Static API
-// ----------------------------------------------------------------------------
-
-
-// ----------------------------------------------------------------------------
-// vtkMyClass methods
-// ----------------------------------------------------------------------------
-
 function vtkRenderWindowInteractor(publicAPI, model) {
   // Set our className
   model.classHierarchy.push('vtkRenderWindowInteractor');
@@ -77,14 +68,6 @@ function vtkRenderWindowInteractor(publicAPI, model) {
   //----------------------------------------------------------------------
   publicAPI.setRenderWindow = (aren) => {
     vtkErrorMacro('you want to call setView(view) instead of setRenderWindow on a vtk.js  interactor');
-    // if (model.renderWindow !== aren) {
-    //   model.renderWindow = aren;
-    //   if (model.renderWindow != null) {
-    //     if (model.renderWindow.getInteractor() !== publicAPI) {
-    //       model.renderWindow.setInteractor(publicAPI);
-    //     }
-    //   }
-    // }
   };
 
   //----------------------------------------------------------------------

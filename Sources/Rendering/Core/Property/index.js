@@ -44,8 +44,6 @@ function vtkProperty(publicAPI, model) {
     return [].concat(model.color);
   };
 
-  publicAPI.render = notImplemented('render');
-  publicAPI.postRender = notImplemented('postRender');
   publicAPI.addShaderVariable = notImplemented('AddShaderVariable');
 
   publicAPI.setInterpolationToFlat = () => publicAPI.setInterpolation(VTK_INTERPOLATION.FLAT);
@@ -53,12 +51,6 @@ function vtkProperty(publicAPI, model) {
   publicAPI.setInterpolationToPhong = () => publicAPI.setInterpolation(VTK_INTERPOLATION.PHONG);
 
   publicAPI.getInterpolationAsString = () => VTK_SHADING_MODEL[model.interpolation];
-
-  publicAPI.setLineStipplePattern = (b0, b1) => {
-    model.lineStipplePattern[0] = b0;
-    model.lineStipplePattern[1] = b1;
-    publicAPI.modified();
-  };
 
   publicAPI.setRepresentationToWireframe = () => publicAPI.setRepresentation(VTK_REPRESENTATION.WIREFRAME);
   publicAPI.setRepresentationToSurface = () => publicAPI.setRepresentation(VTK_REPRESENTATION.SURFACE);
@@ -88,8 +80,6 @@ const DEFAULT_VALUES = {
   frontfaceCulling: false,
   pointSize: 1,
   lineWidth: 1,
-  lineStipplePattern: null,
-  lineStippleRepeatFactor: 1,
   lighting: true,
 
   shading: false,
@@ -101,16 +91,9 @@ const DEFAULT_VALUES = {
 export function extend(publicAPI, model, initialValues = {}) {
   Object.assign(model, DEFAULT_VALUES, initialValues);
 
-  // Internal objects
-  model.lineStipplePattern = new Uint8Array(2);
-  model.lineStipplePattern[0] = 255;
-  model.lineStipplePattern[1] = 255;
-
   // Build VTK API
   macro.obj(publicAPI, model);
-  macro.get(publicAPI, model, [
-    'lineStipplePattern',
-  ]);
+
   macro.setGet(publicAPI, model, [
     'lighting',
     'interpolation',
@@ -121,8 +104,6 @@ export function extend(publicAPI, model, initialValues = {}) {
     'opacity',
     'edgeVisibility',
     'lineWidth',
-    'lineStipplePattern',
-    'lineStippleRepeatFactor',
     'pointSize',
     'backfaceCulling',
     'frontfaceCulling',

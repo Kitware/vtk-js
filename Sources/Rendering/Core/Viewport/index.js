@@ -24,15 +24,11 @@ function vtkViewport(publicAPI, model) {
   publicAPI.removeViewProp = (prop) => {
     const newPropList = model.props.filter(item => item === prop);
     if (model.props.length !== newPropList.length) {
-      prop.releaseGraphicsResources(model.vtkWindow);
       model.props = newPropList;
     }
   };
 
   publicAPI.removeAllViewProps = () => {
-    model.props.forEach(prop => {
-      prop.releaseGraphicsResources(model.vtkWindow);
-    });
     model.props = [];
   };
 

@@ -70,7 +70,7 @@ Rotate the focal point about the view up vector, using the camera's position as 
 rotation. Note that the view up vector is whatever was set via SetViewUp, and is not necessarily
 perpendicular to the direction of projection.  The result is a horizontal rotation of the scene.
 
- ### elevation(angle)
+### elevation(angle)
 
 Rotate the camera about the cross product of the negative of the direction of projection and the
 view up vector, using the focal point as the center of rotation.  The result is a vertical rotation
@@ -121,7 +121,7 @@ of these values must be positive. How the clipping planes are set can have a lar
 well z-buffering works.  In particular the front clipping plane can make a very big difference.
 Setting it to 0.01 when it really could be 1.0 can have a big impact on your z-buffer resolution
 farther away.  The default clipping range is (0.1,1000). Clipping distance is measured in world
-coordinate unless a scale factor exists in camera's ModelTransformMatrix.
+coordinates.
 
 ### thickness
 
@@ -153,16 +153,6 @@ using the transform's matrix to multiply the old points by the new transform.
 Get the ViewPlaneNormal.  This vector will point opposite to the direction of projection, unless
 you have created a sheared output view using SetViewShear/SetObliqueAngles.
 
-### viewShear
-
-Set/get the shear transform of the viewing frustum.  Parameters are dx/dz, dy/dz, and center.
-center is a factor that describes where to shear around. The distance dshear from the camera
-where no shear occurs is given by (dshear = center * FocalDistance).
-
-### eyeAngle
-
-Set/Get the separation between eyes (in degrees). This is used when generating stereo images.
-
 ### focalDisk
 
 Set the size of the cameras lens in world coordinates. This is only used when the renderer is
@@ -189,32 +179,6 @@ calculation. Default is (0.5, -0.5, -0.5).
 
 Set/Get top right corner point of the screen. This will be used only for offaxis frustum
 calculation. Default is (0.5, 0.5, -0.5).
-
-### eyeSeparation
-
-Set/Get distance between the eyes. This will be used only for offaxis frustum calculation.
-Default is 0.06.
-
-### eyePosition
-
-Set/Get the eye position (center point between two eyes). This is a convenience function that
-sets the translation component of EyeTransformMatrix. This will be used only for offaxis
-frustum calculation.
-
-### getEyePlaneNormal()
-
-Get normal vector from eye to screen rotated by EyeTransformMatrix. This will be used only for
-offaxis frustum calculation.
-
-### eyeTransformMatrix
-
-Set/Get eye transformation matrix. This is the transformation matrix for the point between
-eyes. This will be used only for offaxis frustum calculation. Default is identity.
-
-### modelTransformMatrix
-
-Set/Get model transformation matrix. This matrix could be used for model related transformations
-such as scale, shear, roations and translations.
 
 ### getViewTransformMatrix()
 

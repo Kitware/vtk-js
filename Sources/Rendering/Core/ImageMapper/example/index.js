@@ -34,7 +34,7 @@ actor.getProperty().setColorLevel(127);
 actor.setMapper(mapper);
 
 const gridSource = vtkImageGridSource.newInstance();
-gridSource.setDataExtent(0, 511, 0, 511, 0, 0);
+gridSource.setDataExtent(0, 200, 0, 200, 0, 0);
 gridSource.setGridSpacing(16, 16, 0);
 gridSource.setGridOrigin(8, 8, 0);
 mapper.setInputConnection(gridSource.getOutputPort());

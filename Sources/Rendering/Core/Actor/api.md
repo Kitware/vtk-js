@@ -1,6 +1,6 @@
 vtkActor is used to represent an entity in a rendering scene.  It inherits
 functions related to the actors position, and orientation from
-vtkProp. The actor also has scaling and maintains a reference to the
+vtkProp3D. The actor also has scaling and maintains a reference to the
 defining geometry (i.e., the mapper), rendering properties, and possibly a
 texture map. vtkActor combines these instance variables into one 4x4
 transformation matrix as follows: [x y z 1] = [x y z 1] Translate(-origin)
@@ -8,7 +8,7 @@ Scale(scale) Rot(y) Rot(x) Rot (z) Trans(origin) Trans(position)
 
 ## See Also
 
-Property Texture Mapper Assembly Follower LODActor
+Property Mapper
 
 ## newInstance()
 
@@ -32,31 +32,9 @@ are used in that process.
 virtual void GetActors(vtkPropCollection *);
 ```
 
-## renderOpaqueGeometry(viewport)
-
-Support the standard render methods.
-Returns 0 on success, 1 on failure.
-
-## renderTranslucentPolygonalGeometry(viewport)
-
-Support the standard render methods.
-
 ## hasTranslucentPolygonalGeometry()
 
 Does this prop have some translucent polygonal geometry?
-
-## render(renderer, mapper)
-
-This causes the actor to be rendered. It in turn will render the actor's
-property, texture map and then mapper. If a property hasn't been
-assigned, then the actor will create one automatically. Note that a side
-effect of this method is that the pipeline will be updated.
-
-## releaseGraphicsResources(window)
-
-Release any graphics resources that are being consumed by this actor.
-The parameter window could be used to determine which graphic
-resources to release.
 
 ## property
 
@@ -70,7 +48,7 @@ property object.
 
 Create a new property suitable for use with this type of Actor.
 For example, a vtkMesaActor should create a vtkMesaProperty
-in this function.   The default is to just call vtkProperty::New.
+in this function.   The default is to create a vtkProperty.
 
 ## backfaceProperty
 

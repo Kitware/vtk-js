@@ -30,13 +30,6 @@ intensity=1, the light is turned on, positional lighting is off,
 ConeAngle=30, AttenuationValues=(1,0,0), Exponent=1 and the
 TransformMatrix is NULL.
 
-### render(renderer, int)
-
-Abstract interface to renderer. Each concrete subclass of vtkLight
-will load its data into the graphics system in response to this method
-invocation. The actual loading is performed by a vtkLightDevice
-subclass, which will get created automatically.
-
 ### ambientColor, diffuseColor, specularColor
 
 Set/Get the color of the light. It is possible to set the ambient,

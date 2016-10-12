@@ -1,10 +1,6 @@
 import * as macro from '../../../macro';
 import vtkMath from '../../../Common/Core/Math';
 
-// ----------------------------------------------------------------------------
-// vtkProperty2D methods
-// ----------------------------------------------------------------------------
-
 function vtkImageMapper(publicAPI, model) {
   // Set our className
   model.classHierarchy.push('vtkImageMapper');

@@ -16,16 +16,11 @@ to save memory resources.)
 Currently only 2D texture maps are supported, even though the data pipeline
 supports 1,2, and 3D texture coordinates.
 
-Some renderers such as old OpenGL require that the texture map dimensions
-are a power of two in each direction. If a non-power of two texture map is
-used, it is automatically resampled to a power of two in one or more
-directions, at the cost of an expensive computation. If the OpenGL
-implementation is recent enough (OpenGL>=2.0 or
-extension GL_ARB_texture_non_power_of_two exists) there is no such
-restriction and no extra computational cost.
+Some systems require that the texture map dimensions
+are a power of two in each direction.
 
 ### See Also
-vtkProp vtkRenderer vtkOpenGLTexture
+vtkProp vtkRenderer
 
 ### Repeat
 

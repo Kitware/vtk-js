@@ -166,15 +166,6 @@ function vtkInteractorStyle(publicAPI, model) {
       const rwi = model.interactor;
       rwi.getRenderWindow().setDesiredUpdateRate(rwi.getDesiredUpdateRate());
       model.invokeStartInteractionEvent({ type: 'StartInteractionEvent' });
-      // if (model.seTimers &&
-      //      !(model.timerId = rwi.createRepeatingTimer(model.timerDuration)) ) {
-      //   // vtkTestingInteractor cannot create timers
-      //   if (std::string(rwi->GetClassName()) != "vtkTestingInteractor")
-      //     {
-      //     vtkErrorMacro(<< "Timer start failed");
-      //     }
-      //   this->State = VTKIS_NONE;
-      //   }
     }
   };
 
@@ -183,13 +174,6 @@ function vtkInteractorStyle(publicAPI, model) {
     if (model.animationState === STATES.VTKIS_ANIM_OFF) {
       const rwi = model.interactor;
       rwi.getRenderWindow().setDesiredUpdateRate(rwi.getStillUpdateRate());
-      // if (this->UseTimers &&
-      //     // vtkTestingInteractor cannot create timers
-      //     std::string(rwi->GetClassName()) != "vtkTestingInteractor" &&
-      //     !rwi->DestroyTimer(this->TimerId))
-      //   {
-      //   vtkErrorMacro(<< "Timer stop failed");
-      //   }
       publicAPI.invokeEndInteractionEvent({ type: 'EndInteractionEvent' });
       rwi.render();
     }
@@ -220,20 +204,6 @@ export function extend(publicAPI, model, initialValues = {}) {
   macro.obj(publicAPI, model);
 
   model.unsubscribes = new Map();
-
-  // Create get-only macros
-  // macro.get(publicAPI, model, ['myProp2', 'myProp4']);
-
-  // Create get-set macros
-  // macro.getSet(publicAPI, model, ['myProp3']);
-
-  // Create set macros for array (needs to know size)
-  // macro.setArray(publicAPI, model, ['myProp5'], 4);
-
-  // Create get macros for array
-  // macro.getArray(publicAPI, model, ['myProp1', 'myProp5']);
-
-  // For more macro methods, see "Sources/macro.js"
 
   // Object specific methods
   vtkInteractorStyle(publicAPI, model);

@@ -40,14 +40,16 @@ function vtkOpenGLCellArrayBufferObject(publicAPI, model) {
     const colorComponents = (options.colors ? options.colors.getNumberOfComponents() : 0);
     const textureComponents = (options.tcoords ? options.tcoords.getNumberOfComponents() : 0);
 
+    // the values of 4 below are because floats are 4 bytes
+
     if (options.normals) {
-      model.normalOffset = /* sizeof(float) */ 4 * model.blockSize;
+      model.normalOffset = 4 * model.blockSize;
       model.blockSize += 3;
       normalData = options.normals.getData();
     }
 
     if (options.tcoords) {
-      model.tCoordOffset = /* sizeof(float) */ 4 * model.blockSize;
+      model.tCoordOffset = 4 * model.blockSize;
       model.tCoordComponents = textureComponents;
       model.blockSize += textureComponents;
       tcoordData = options.tcoords.getData();
@@ -55,20 +57,17 @@ function vtkOpenGLCellArrayBufferObject(publicAPI, model) {
 
     if (options.colors) {
       model.colorComponents = options.colors.getNumberOfComponents();
-      model.colorOffset = /* sizeof(float) */ 4 * model.blockSize;
-//      model.blockSize += 1;
+      model.colorOffset = 4 * model.blockSize;
       model.blockSize += model.colorComponents;
       colorData = options.colors.getData();
     }
-    model.stride = /* sizeof(float) */ 4 * model.blockSize;
+    model.stride = 4 * model.blockSize;
 
     let pointIdx = 0;
     let normalIdx = 0;
     let tcoordIdx = 0;
     let colorIdx = 0;
     let cellCount = 0;
-
-    // const colorHolder = new Uint8Array(4);
 
     const addAPoint = function addAPoint(i) {
       // Vertices
@@ -107,19 +106,6 @@ function vtkOpenGLCellArrayBufferObject(publicAPI, model) {
           packedVBO.push(colorData[colorIdx++] / 255.5);
         }
       }
-      // if (colorData !== null) {
-      //   colorHolder[0] = colorData[colorIdx++];
-      //   colorHolder[1] = colorData[colorIdx++];
-      //   colorHolder[2] = colorData[colorIdx++];
-
-      //   if (colorComponents === 4) {
-      //     colorHolder[3] = colorData[colorIdx++];
-      //   } else {  // must be 3 color components then
-      //     colorHolder[3] = 255;
-      //   }
-
-      //   packedVBO.push(new Float32Array(colorHolder.buffer)[0]);
-      // }
     };
 
     const cellBuilders = {

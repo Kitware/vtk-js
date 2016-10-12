@@ -1,3 +1,14 @@
+## Introduction
+
+vtkViewport represents part or all of a RenderWindow. It holds a
+colleciton of props that will be rendered into the area it represents.
+This class also contains methods to convert between coordinate systems
+commonly used in rendering.
+
+## See Also
+
+vtkActor vtkRenderer vtkRenderWindow vtkCoordinate vtkProp
+
 ### addViewProp(prop)
 
 Add a prop to the list of props. Does nothing if the prop is
@@ -26,3 +37,12 @@ Remove all props from the list of props.
 Add/Remove different types of props to the renderer.
 These methods are all synonyms to AddViewProp and RemoveViewProp.
 They are here for convenience and backwards compatibility.
+
+### normalizedDisplayToNormalizedViewport (x, y, z)
+### normalizedViewportToView (x, y, z)
+### viewToNormalizedDisplay (x, y, z)
+### normalizedViewportToNormalizedDisplay (x, y, z) 
+### viewToNormalizedViewport (x, y, z) 
+
+See vtkCoordinate for the definition of these coordinate systems.
+

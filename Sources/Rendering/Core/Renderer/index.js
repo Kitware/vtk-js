@@ -81,22 +81,6 @@ function vtkRenderer(publicAPI, model) {
   // Set our className
   model.classHierarchy.push('vtkRenderer');
 
-  publicAPI.releaseGraphicsResources = vtkWindow => {
-    if (model.backgroundTexture) {
-      model.backgroundTexture.releaseGraphicsResources(vtkWindow);
-    }
-
-    model.props.forEach(prop => {
-      if (prop) {
-        prop.releaseGraphicsResources(vtkWindow);
-      }
-    });
-  };
-
-  // macro
-  // - getAllocatedRenderTime
-  // - getTimeFactor
-
   publicAPI.updateCamera = () => {
     if (!model.activeCamera) {
       vtkDebugMacro('No cameras are on, creating one.');
@@ -388,8 +372,6 @@ function vtkRenderer(publicAPI, model) {
     // the view angle to become very small and cause bad depth sorting.
     model.activeCamera.setViewAngle(30.0);
 
-    expandBounds(boundsToUse, model.activeCamera.getModelTransformMatrix());
-
     center[0] = (boundsToUse[0] + boundsToUse[1]) / 2.0;
     center[1] = (boundsToUse[2] + boundsToUse[3]) / 2.0;
     center[2] = (boundsToUse[4] + boundsToUse[5]) / 2.0;
@@ -467,15 +449,8 @@ function vtkRenderer(publicAPI, model) {
     }
 
     let vn = null; let position = null;
-    if (!model.activeCamera.getUseOffAxisProjection()) {
-      vn = model.activeCamera.getViewPlaneNormal();
-      position = model.activeCamera.getPosition();
-      expandBounds(boundsToUse, model.activeCamera.getModelTransformMatrix());
-    } else {
-      position = model.activeCamera.getEyePosition();
-      vn = model.activeCamera.getEyePlaneNormal();
-      expandBounds(boundsToUse, model.activeCamera.getModelViewTransformMatrix());
-    }
+    vn = model.activeCamera.getViewPlaneNormal();
+    position = model.activeCamera.getPosition();
 
     const a = -vn[0];
     const b = -vn[1];
@@ -547,21 +522,6 @@ function vtkRenderer(publicAPI, model) {
 
   publicAPI.setRenderWindow = renderWindow => {
     if (renderWindow !== model.renderWindow) {
-      // This renderer is be dis-associated with its previous render window.
-      // this information needs to be passed to the renderer's actors and
-      // volumes so they can release and render window specific (or graphics
-      // context specific) information (such as display lists and texture ids)
-      model.props.forEach(prop => {
-        prop.releaseGraphicsResources(model.renderWindow);
-      });
-      // what about lights?
-      // what about cullers?
-      publicAPI.releaseGraphicsResources(model.renderWindow);
-
-      if (model.backgroundTexture && model.renderWindow) {
-        model.backgroundTexture.releaseGraphicsResources(model.renderWindow);
-      }
-
       model.vtkWindow = renderWindow;
       model.renderWindow = renderWindow;
     }

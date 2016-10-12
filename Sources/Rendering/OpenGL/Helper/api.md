@@ -12,9 +12,9 @@ The shader program
 
 The VertexArrayObject
 
-### IBO
+### CABO
 
-The index buffer object
+The cell array buffer object. See vtkCellArrayBufferObject
 
 ### shaderSourceTime
 

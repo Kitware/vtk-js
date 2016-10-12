@@ -27,7 +27,6 @@ const DEFAULT_VALUES = {
   shaderSourceTime: null,
   VAO: null,
   attributeUpdateTime: null,
-  IBO: null,
   CABO: null,
 };
 

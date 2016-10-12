@@ -32,17 +32,6 @@ draw a mesh with some edges a different color, and the edges lie on the
 mesh, this feature can be useful to get nice looking lines. (See the
 ResolveCoincidentTopology-related methods.)
 
-### render(renderer, actor) (VIRTUAL)
-
-Method initiates the mapping process. Generally sent by the actor
-as each frame is rendered.
-
-### releaseGraphicsResources(win) (VIRTUAL)
-
-Release any graphics resources that are being consumed by this mapper.
-The parameter window could be used to determine which graphic
-resources to release.
-
 ### lookupTable
 
 Set/Get a lookup table for the mapper to use.

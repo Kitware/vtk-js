@@ -1,11 +1,10 @@
-Renderer provides an abstract specification for renderers. A renderer
-is an object that controls the rendering process for objects. Rendering
-is the process of converting geometry, a specification for lights, and
-a camera view into an image. vtkRenderer also performs coordinate
-transformation between world coordinates, view coordinates (the computer
-graphics rendering coordinate system), and display coordinates (the
-actual screen coordinates on the display device). Certain advanced
-rendering features such as two-sided lighting can also be controlled.
+## Introduction
+
+Renderer is a Viewport designed to hold 3D props. As such it contains
+an instance of vtkCamera, a collection of vtkLights, and vtkActors. It exists 
+within a RenderWindow. A RenderWindow may have multiple Renderers 
+representing different viewports of the Window and Renderers can be layered
+on top of each other as well.
 
 ### addActor(actor) / removeActor(actor) / getActors() : []
 
@@ -70,34 +69,6 @@ TimeFactor has been taken out of the render process.
 It is still computed in case someone finds it useful.
 It may be taken away in the future.
 
-### render()
-
-CALLED BY vtkRenderWindow ONLY. End-user pass your way and call
-vtkRenderWindow::Render().
-Create an image. This is a superclass method which will in turn
-call the DeviceRender method of Subclasses of vtkRenderer.
-
-### deviceRender() (NoOp)
-
-Create an image. Subclasses of vtkRenderer must implement this method.
-
-### deviceRenderTranslucentPolygonalGeometry()
-
-Render translucent polygonal geometry. Default implementation just call
-UpdateTranslucentPolygonalGeometry().
-Subclasses of vtkRenderer that can deal with depth peeling must
-override this method.
-It updates boolean ivar LastRenderingUsedDepthPeeling.
-
-### clearLights() (NoOp)
-
-Internal method temporarily removes lights before reloading
-them into graphics pipeline.
-
-### clear() (NoOp)
-
-Clear the image to the background color.
-
 ### visibleActorCount() / visibleVolumeCount()
 
 Returns the number of visible actors.
@@ -130,10 +101,6 @@ for the camera to clear the renderer.  By default, Erase is on.
 When this flag is off, render commands are ignored.  It is used to either
 multiplex a vtkRenderWindow or render only part of a vtkRenderWindow.
 By default, Draw is on.
-
-### ambiant (set/get Number 0 to 1)
-
-Intensity of ambient lighting.
 
 ### interactive (set/get Boolean)
 
