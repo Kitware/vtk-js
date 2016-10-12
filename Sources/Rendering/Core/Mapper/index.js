@@ -23,9 +23,7 @@ CoincidentTopologyHelper.addCoincidentTopologyMethods(
   staticOffsetAPI,
   staticOffsetModel,
   CoincidentTopologyHelper.CATEGORIES
-    .map(key => {
-      return { key, method: `ResolveCoincidentTopology${key}OffsetParameters` };
-    })
+    .map(key => ({ key, method: `ResolveCoincidentTopology${key}OffsetParameters` }))
 );
 
 // ----------------------------------------------------------------------------
@@ -56,7 +54,7 @@ function vtkMapper(publicAPI, model) {
     publicAPI.getInputData();
   };
 
-  publicAPI.setForceCompileOnly = v => {
+  publicAPI.setForceCompileOnly = (v) => {
     model.forceCompileOnly = v;
     // make sure we do NOT call modified()
   };
@@ -81,10 +79,10 @@ function vtkMapper(publicAPI, model) {
   publicAPI.setScalarModeToUseFieldData = () => publicAPI.setScalarMode(5);
 
   // Add Static methods to our instance
-  Object.keys(otherStaticMethods).forEach(methodName => {
+  Object.keys(otherStaticMethods).forEach((methodName) => {
     publicAPI[methodName] = otherStaticMethods[methodName];
   });
-  Object.keys(staticOffsetAPI).forEach(methodName => {
+  Object.keys(staticOffsetAPI).forEach((methodName) => {
     publicAPI[methodName] = staticOffsetAPI[methodName];
   });
 
@@ -99,10 +97,7 @@ function vtkMapper(publicAPI, model) {
     publicAPI,
     model.topologyOffset,
     CoincidentTopologyHelper.CATEGORIES
-      .map(key => {
-        // GetRelativeCoincidentTopologyPolygon
-        return { key, method: `RelativeCoincidentTopology${key}OffsetParameters` };
-      })
+      .map(key => ({ key, method: `RelativeCoincidentTopology${key}OffsetParameters` }))
   );
   /* eslint-enable arrow-body-style */
 
@@ -210,7 +205,7 @@ function vtkMapper(publicAPI, model) {
     return true;
   };
 
-  publicAPI.canUseTextureMapForColoring = input => {
+  publicAPI.canUseTextureMapForColoring = (input) => {
     console.log('vtkMapper::canUseTextureMapForColoring - NOT IMPLEMENTED');
     return false;
   };

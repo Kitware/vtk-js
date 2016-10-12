@@ -45,14 +45,14 @@ function vtkOpenGLBufferObject(publicAPI, model) {
   // Public API methods
   publicAPI.getType = () => internalType;
 
-  publicAPI.setType = value => {
+  publicAPI.setType = (value) => {
     internalType = value;
   };
 
   publicAPI.getHandle = () => internalHandle;
   publicAPI.isReady = () => dirty === false;
 
-  publicAPI.generateBuffer = type => {
+  publicAPI.generateBuffer = (type) => {
     const objectTypeGL = convertType(type);
     if (internalHandle === null) {
       internalHandle = model.context.createBuffer();

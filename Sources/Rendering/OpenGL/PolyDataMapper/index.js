@@ -526,7 +526,7 @@ export function vtkOpenGLPolyDataMapper(publicAPI, model) {
       lightComplexity = 0;
       let numberOfLights = 0;
 
-      ren.getLights().forEach(light => {
+      ren.getLights().forEach((light) => {
         const status = light.getSwitch();
         if (status > 0) {
           numberOfLights++;
@@ -649,7 +649,7 @@ export function vtkOpenGLPolyDataMapper(publicAPI, model) {
     }
 
     const tus = model.openGLActor.getActiveTextures();
-    tus.forEach(tex => {
+    tus.forEach((tex) => {
       const texUnit = tex.getTextureUnit();
       const tname = `texture${texUnit + 1}`;
       if (cellBO.getProgram().isUniformUsed(tname)) {
@@ -677,7 +677,7 @@ export function vtkOpenGLPolyDataMapper(publicAPI, model) {
     // const lightDirection = [];
     // const lightHalfAngle = [];
     const lights = ren.getLights();
-    Object.keys(lights).map(key => lights[key]).forEach(light => {
+    Object.keys(lights).map(key => lights[key]).forEach((light) => {
       const status = light.getSwitch();
       if (status > 0.0) {
         const dColor = light.getDiffuseColor();

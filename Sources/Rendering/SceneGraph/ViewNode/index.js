@@ -23,7 +23,7 @@ function vtkViewNode(publicAPI, model) {
       return publicAPI;
     }
 
-    return model.children.find(child => {
+    return model.children.find((child) => {
       const vn = child.getViewNodeFor(dataObject);
       return !!vn;
     });
@@ -42,7 +42,7 @@ function vtkViewNode(publicAPI, model) {
   publicAPI.traverse = (operation) => {
     publicAPI.apply(operation, true);
 
-    model.children.forEach(child => {
+    model.children.forEach((child) => {
       child.traverse(operation);
     });
 
@@ -88,7 +88,7 @@ function vtkViewNode(publicAPI, model) {
     const newNodes =
       dataObjs
         .filter(node => (node && childDOs.indexOf(node) === -1))
-        .map(node => {
+        .map((node) => {
           const newNode = publicAPI.createViewNode(node);
           if (newNode) {
             newNode.setParent(publicAPI);

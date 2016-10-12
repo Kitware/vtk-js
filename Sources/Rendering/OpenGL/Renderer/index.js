@@ -33,7 +33,7 @@ export function vtkOpenGLRenderer(publicAPI, model) {
   publicAPI.updateLights = () => {
     let count = 0;
 
-    model.renderable.getLights().forEach(light => {
+    model.renderable.getLights().forEach((light) => {
       if (light.getSwitch() > 0.0) {
         count++;
       }
@@ -64,6 +64,7 @@ export function vtkOpenGLRenderer(publicAPI, model) {
   };
 
   publicAPI.clear = () => {
+    /* eslint-disable no-bitwise */
     let clearMask = 0;
     const gl = model.context;
 
@@ -83,6 +84,7 @@ export function vtkOpenGLRenderer(publicAPI, model) {
     gl.clear(clearMask);
 
     gl.enable(gl.DEPTH_TEST);
+    /* eslint-enable no-bitwise */
   };
 }
 

@@ -1,7 +1,7 @@
 import * as macro from '../../../macro';
 
 function notImplemented(method) {
-  return () => console.log('vtkProp::${method} - NOT IMPLEMENTED');
+  return () => console.log(`vtkProp::${method} - NOT IMPLEMENTED`);
 }
 
 // ----------------------------------------------------------------------------
@@ -21,7 +21,7 @@ function vtkProp(publicAPI, model) {
 
   publicAPI.getRedrawMTime = () => model.mtime;
 
-  publicAPI.setEstimatedRenderTime = t => {
+  publicAPI.setEstimatedRenderTime = (t) => {
     model.estimatedRenderTime = t;
     model.savedEstimatedRenderTime = t;
   };
@@ -30,11 +30,11 @@ function vtkProp(publicAPI, model) {
     model.estimatedRenderTime = model.savedEstimatedRenderTime;
   };
 
-  publicAPI.addEstimatedRenderTime = t => {
+  publicAPI.addEstimatedRenderTime = (t) => {
     model.estimatedRenderTime += t;
   };
 
-  publicAPI.setAllocatedRenderTime = t => {
+  publicAPI.setAllocatedRenderTime = (t) => {
     model.allocatedRenderTime = t;
     model.savedEstimatedRenderTime = model.estimatedRenderTime;
     model.estimatedRenderTime = 0;
@@ -43,7 +43,7 @@ function vtkProp(publicAPI, model) {
   publicAPI.getSupportsSelection = () => false;
 
   publicAPI.getTextures = () => model.textures;
-  publicAPI.hasTexture = (texture) => !!model.textures.filter(item => item === texture).length;
+  publicAPI.hasTexture = texture => !!model.textures.filter(item => item === texture).length;
   publicAPI.addTexture = (texture) => {
     if (texture && !publicAPI.hasTexture(texture)) {
       model.textures = model.textures.concat(texture);

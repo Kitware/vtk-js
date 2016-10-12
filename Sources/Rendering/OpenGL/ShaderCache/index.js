@@ -119,9 +119,9 @@ function vtkShaderCache(publicAPI, model) {
 
     publicAPI.releaseCurrentShader();
 
-    Object.keys(model.shaderPrograms).map(key => model.shaderPrograms[key]).forEach(sp => {
-      sp.releaseGraphicsResources(win);
-    });
+    Object.keys(model.shaderPrograms)
+      .map(key => model.shaderPrograms[key])
+      .forEach(sp => sp.releaseGraphicsResources(win));
   };
 
   publicAPI.releaseGraphicsResources = () => {

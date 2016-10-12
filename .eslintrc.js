@@ -19,6 +19,7 @@ module.exports = {
     // Not for us ;-)
     'jsx-a11y/label-has-for': 0,
     'no-console': 0,
+    'no-plusplus': 0,
 
     // Not for vtk.js
     'import/no-named-as-default': 0,

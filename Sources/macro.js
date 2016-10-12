@@ -43,7 +43,7 @@ export function obj(publicAPI, model = {}) {
     callbacks.forEach(callback => callback && callback(publicAPI));
   };
 
-  publicAPI.onModified = callback => {
+  publicAPI.onModified = (callback) => {
     if (model.deleted) {
       console.log('instance deleted - can not call any method');
       return null;
@@ -61,7 +61,7 @@ export function obj(publicAPI, model = {}) {
   publicAPI.getClassName = () => model.classHierarchy.slice(-1)[0];
 
   publicAPI.set = (map = {}) => {
-    Object.keys(map).forEach(name => {
+    Object.keys(map).forEach((name) => {
       if (Array.isArray(map[name])) {
         publicAPI[`set${capitalize(name)}`](...map[name]);
       } else if (publicAPI[`set${capitalize(name)}`]) {
@@ -81,7 +81,7 @@ export function obj(publicAPI, model = {}) {
       return model;
     }
     const subset = {};
-    list.forEach(name => {
+    list.forEach((name) => {
       subset[name] = model[name];
     });
     return subset;
@@ -101,7 +101,7 @@ export function obj(publicAPI, model = {}) {
 // ----------------------------------------------------------------------------
 
 export function get(publicAPI, model, fieldNames) {
-  fieldNames.forEach(field => {
+  fieldNames.forEach((field) => {
     if (typeof field === 'object') {
       publicAPI[`get${capitalize(field.name)}`] = () => model[field];
     } else {
@@ -116,7 +116,7 @@ export function get(publicAPI, model, fieldNames) {
 
 const objectSetterMap = {
   enum(publicAPI, model, field) {
-    return value => {
+    return (value) => {
       if (typeof value === 'string') {
         if (model.enum[value] !== undefined) {
           if (model[field.name] !== model.enum[value]) {
@@ -173,7 +173,7 @@ function findSetter(field) {
 }
 
 export function set(publicAPI, model, fields) {
-  fields.forEach(field => {
+  fields.forEach((field) => {
     publicAPI[`set${capitalize(field)}`] = findSetter(field)(publicAPI, model);
   });
 }
@@ -192,7 +192,7 @@ export function setGet(publicAPI, model, fieldNames) {
 // ----------------------------------------------------------------------------
 
 export function getArray(publicAPI, model, fieldNames) {
-  fieldNames.forEach(field => {
+  fieldNames.forEach((field) => {
     publicAPI[`get${capitalize(field)}`] = () => [].concat(model[field]);
   });
 }
@@ -202,7 +202,7 @@ export function getArray(publicAPI, model, fieldNames) {
 // ----------------------------------------------------------------------------
 
 export function setArray(publicAPI, model, fieldNames, size) {
-  fieldNames.forEach(field => {
+  fieldNames.forEach((field) => {
     publicAPI[`set${capitalize(field)}`] = (...array) => {
       if (model.deleted) {
         console.log('instance deleted - can not call any method');
@@ -320,7 +320,7 @@ export function algo(publicAPI, model, numberOfInputs, numberOfOutputs) {
   publicAPI.getNumberOfInputPorts = () => numberOfInputs;
   publicAPI.getNumberOfOutputPorts = () => numberOfOutputs;
 
-  publicAPI.getInputArrayToProcess = inputPort => {
+  publicAPI.getInputArrayToProcess = (inputPort) => {
     const arrayDesc = model.inputArrayToProcess[inputPort];
     const ds = model.inputData[inputPort];
     if (arrayDesc && ds) {
@@ -364,7 +364,7 @@ export function event(publicAPI, model, eventName) {
     callbacks.forEach(callback => callback && callback.apply(publicAPI, args));
   };
 
-  publicAPI[`on${capitalize(eventName)}`] = callback => {
+  publicAPI[`on${capitalize(eventName)}`] = (callback) => {
     if (model.deleted) {
       console.log('instance deleted - can not call any method');
       return null;

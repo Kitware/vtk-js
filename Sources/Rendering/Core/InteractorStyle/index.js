@@ -74,7 +74,7 @@ function vtkInteractorStyle(publicAPI, model) {
     model.interactor = i;
 
     if (i) {
-      events.forEach(eventName => {
+      events.forEach((eventName) => {
         model.unsubscribes.set(eventName,
         i[`on${eventName}`](() => {
           if (publicAPI[`handle${eventName}`]) {
@@ -86,7 +86,7 @@ function vtkInteractorStyle(publicAPI, model) {
   };
 
   // create bunch of Start/EndState methods
-  Object.keys(stateNames).forEach(key => {
+  Object.keys(stateNames).forEach((key) => {
     publicAPI[`start${key}`] = () => {
       if (model.state !== STATES.VTKIS_NONE) {
         return;
@@ -126,7 +126,7 @@ function vtkInteractorStyle(publicAPI, model) {
         publicAPI.findPokedRenderer(pos.x, pos.y);
         if (model.currentRenderer !== 0) {
           const ac = model.currentRenderer.getActors();
-          ac.forEach(anActor => {
+          ac.forEach((anActor) => {
             anActor.getProperty().setRepresentationToWireframe();
           });
         } else {
@@ -141,7 +141,7 @@ function vtkInteractorStyle(publicAPI, model) {
         publicAPI.findPokedRenderer(pos.x, pos.y);
         if (model.currentRenderer !== 0) {
           const ac = model.currentRenderer.getActors();
-          ac.forEach(anActor => {
+          ac.forEach((anActor) => {
             anActor.getProperty().setRepresentationToSurface();
           });
         } else {

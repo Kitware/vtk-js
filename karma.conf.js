@@ -1,6 +1,5 @@
 /* eslint-disable global-require */
 /* eslint-disable react/require-extension */
-// => | awk -F': ' '{print $2}' | sed \"s/^'\\(.*\\)'$/\\1/\" | tap-spec",
 var loaders = require('./Utilities/config/webpack.loaders.js');
 
 if (!process.env.NODE_ENV) process.env.NODE_ENV = 'test';

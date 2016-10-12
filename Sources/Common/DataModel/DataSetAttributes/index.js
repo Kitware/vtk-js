@@ -63,7 +63,7 @@ function vtkDataSetAttributes(publicAPI, model) {
     return null;
   };
 
-  publicAPI.addArray = array => {
+  publicAPI.addArray = (array) => {
     if (model.arrays[array.getName()]) {
       throw new Error('Array with same name already exist', array, model.arrays);
     }
@@ -84,7 +84,7 @@ function vtkDataSetAttributes(publicAPI, model) {
 
   // Process dataArrays if any
   if (model.dataArrays && Object.keys(model.dataArrays).length) {
-    Object.keys(model.dataArrays).forEach(name => {
+    Object.keys(model.dataArrays).forEach((name) => {
       if (!model.dataArrays[name].ref && model.dataArrays[name].type === 'vtkDataArray') {
         publicAPI.addArray(vtkDataArray.newInstance(model.dataArrays[name]));
       }
@@ -97,7 +97,7 @@ function vtkDataSetAttributes(publicAPI, model) {
     const copyInst = newInstance(newIntsanceModel);
 
     // Shallow copy each array
-    publicAPI.getArrayNames().forEach(name => {
+    publicAPI.getArrayNames().forEach((name) => {
       copyInst.addArray(publicAPI.getArray(name).shallowCopy());
     });
 

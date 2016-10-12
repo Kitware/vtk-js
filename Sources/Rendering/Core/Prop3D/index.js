@@ -5,7 +5,7 @@ import vtkBoundingBox from '../../../Common/DataModel/BoundingBox';
 import vtkProp from '../Prop';
 
 function notImplemented(method) {
-  return () => console.log('vtkProp3D::${method} - NOT IMPLEMENTED');
+  return () => console.log(`vtkProp3D::${method} - NOT IMPLEMENTED`);
 }
 
 // ----------------------------------------------------------------------------
@@ -74,7 +74,7 @@ function vtkProp3D(publicAPI, model) {
   publicAPI.getUserMatrix = notImplemented('GetUserMatrix');
 
   function updateIdentityFlag() {
-    [model.origin, model.position, model.orientation].forEach(array => {
+    [model.origin, model.position, model.orientation].forEach((array) => {
       if (array.filter(v => v !== 0).length) {
         model.isIdentity = false;
         return;

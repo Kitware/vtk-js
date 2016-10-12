@@ -72,7 +72,7 @@ function vtkCamera(publicAPI, model) {
     publicAPI.modified();
   };
 
-  publicAPI.setDistance = d => {
+  publicAPI.setDistance = (d) => {
     // if (distance === d) {
     //   return;
     // }
@@ -142,7 +142,7 @@ function vtkCamera(publicAPI, model) {
   // Move the position of the camera along the view plane normal. Moving
   // towards the focal point (e.g., > 1) is a dolly-in, moving away
   // from the focal point (e.g., < 1) is a dolly-out.
-  publicAPI.dolly = amount => {
+  publicAPI.dolly = (amount) => {
     if (amount <= 0.0) {
       return;
     }
@@ -156,7 +156,7 @@ function vtkCamera(publicAPI, model) {
       model.focalPoint[2] - (d * model.directionOfProjection[2]));
   };
 
-  publicAPI.setRoll = roll => {
+  publicAPI.setRoll = (roll) => {
 
   };
 
@@ -164,7 +164,7 @@ function vtkCamera(publicAPI, model) {
 
   };
 
-  publicAPI.roll = angle => {
+  publicAPI.roll = (angle) => {
     const eye = model.position;
     const at = model.focalPoint;
     const up = model.viewUp;
@@ -182,7 +182,7 @@ function vtkCamera(publicAPI, model) {
     publicAPI.modified();
   };
 
-  publicAPI.azimuth = angle => {
+  publicAPI.azimuth = (angle) => {
     const newPosition = vec3.create();
     const fp = model.focalPoint;
 
@@ -201,11 +201,11 @@ function vtkCamera(publicAPI, model) {
     publicAPI.setPosition(newPosition[0], newPosition[1], newPosition[2]);
   };
 
-  publicAPI.yaw = angle => {
+  publicAPI.yaw = (angle) => {
 
   };
 
-  publicAPI.elevation = angle => {
+  publicAPI.elevation = (angle) => {
     const newPosition = vec3.create();
     const fp = model.focalPoint;
 
@@ -227,11 +227,11 @@ function vtkCamera(publicAPI, model) {
     publicAPI.setPosition(newPosition[0], newPosition[1], newPosition[2]);
   };
 
-  publicAPI.pitch = angle => {
+  publicAPI.pitch = (angle) => {
 
   };
 
-  publicAPI.zoom = factor => {
+  publicAPI.zoom = (factor) => {
     if (factor <= 0) {
       return;
     }
@@ -243,7 +243,7 @@ function vtkCamera(publicAPI, model) {
     publicAPI.modified();
   };
 
-  publicAPI.setThickness = thickness => {
+  publicAPI.setThickness = (thickness) => {
 
   };
 
@@ -255,7 +255,7 @@ function vtkCamera(publicAPI, model) {
 
   };
 
-  publicAPI.applyTransform = transform => {
+  publicAPI.applyTransform = (transform) => {
 
   };
 
@@ -330,15 +330,15 @@ function vtkCamera(publicAPI, model) {
   //   // return glmatrix object
   // };
 
-  publicAPI.setUserViewTransform = transform => {
+  publicAPI.setUserViewTransform = (transform) => {
     // transform is a vtkHomogeneousTransform
   };
 
-  publicAPI.setUserTransform = transform => {
+  publicAPI.setUserTransform = (transform) => {
     // transform is a vtkHomogeneousTransform
   };
 
-  publicAPI.render = renderer => {
+  publicAPI.render = (renderer) => {
 
   };
 
@@ -350,7 +350,7 @@ function vtkCamera(publicAPI, model) {
 
   };
 
-  publicAPI.getFrustumPlanes = aspect => {
+  publicAPI.getFrustumPlanes = (aspect) => {
     // Return array of 24 params (4 params for each of 6 plane equations)
   };
 
@@ -370,15 +370,15 @@ function vtkCamera(publicAPI, model) {
 
   };
 
-  publicAPI.shallowCopy = sourceCamera => {
+  publicAPI.shallowCopy = (sourceCamera) => {
 
   };
 
-  publicAPI.deepCopy = sourceCamera => {
+  publicAPI.deepCopy = (sourceCamera) => {
 
   };
 
-  publicAPI.setScissorRect = rect => {
+  publicAPI.setScissorRect = (rect) => {
     // rect is a vtkRect
   };
 

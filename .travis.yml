@@ -41,6 +41,8 @@ script:
   - git config --global user.email "sebastien.jourdain@kitware.com"
   - export GIT_PUBLISH_URL=https://${GH_TOKEN}@github.com/Kitware/vtk-js.git
   - if [ "$TRAVIS_BRANCH" == "master" ]; then npm run doc:publish; fi
+after_success:
+  - npm run semantic-release
 
 branches:
   except:

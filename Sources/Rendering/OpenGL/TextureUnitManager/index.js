@@ -21,7 +21,7 @@ function vtkOpenGLTextureUnitManager(publicAPI, model) {
   };
 
   // ----------------------------------------------------------------------------
-  publicAPI.setContext = ctx => {
+  publicAPI.setContext = (ctx) => {
     if (model.context !== ctx) {
       if (model.context !== 0) {
         publicAPI.deleteTable();
@@ -51,7 +51,7 @@ function vtkOpenGLTextureUnitManager(publicAPI, model) {
     return -1;
   };
 
-  publicAPI.allocateUnit = unit => {
+  publicAPI.allocateUnit = (unit) => {
     if (publicAPI.isAllocated(unit)) {
       return -1;
     }
@@ -71,7 +71,7 @@ function vtkOpenGLTextureUnitManager(publicAPI, model) {
   // Release a texture unit.
   // \pre valid_id: textureUnitId>=0 && textureUnitId<this->GetNumberOfTextureUnits()
   // \pre allocated_id: this->IsAllocated(textureUnitId)
-  publicAPI.free = val => {
+  publicAPI.free = (val) => {
     const newList = model.textureUnits.filter(item => item === val);
     if (model.textureUnits.length !== newList.length) {
       model.textureUnits = newList;

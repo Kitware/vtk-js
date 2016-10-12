@@ -2,7 +2,7 @@ import * as macro from '../../../macro';
 import { VTK_SHADING_MODEL, VTK_REPRESENTATION, VTK_INTERPOLATION } from './Constants';
 
 function notImplemented(method) {
-  return () => console.log('vtkProperty::${method} - NOT IMPLEMENTED');
+  return () => console.log(`vtkProperty::${method} - NOT IMPLEMENTED`);
 }
 
 // ----------------------------------------------------------------------------
