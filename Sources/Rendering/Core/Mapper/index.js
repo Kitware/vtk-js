@@ -177,7 +177,7 @@ function vtkMapper(publicAPI, model) {
     const scalars = publicAPI.getAbstractScalars(input, model.scalarMode,
       model.arrayAccessMode, model.arrayId, model.colorByArrayName);
 
-    if (scalars === null) {
+    if (!scalars) {
       model.colorMapColors = null;
       return;
     }
