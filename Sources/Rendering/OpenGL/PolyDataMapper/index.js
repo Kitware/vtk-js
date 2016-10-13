@@ -922,7 +922,7 @@ export function vtkOpenGLPolyDataMapper(publicAPI, model) {
           model.triStrips.getCABO().getElementCount());
       }
       if (representation === VTK_REPRESENTATION.WIREFRAME) {
-        gl.drawArays(gl.LINES, 0,
+        gl.drawArrays(gl.LINES, 0,
           model.triStrips.getCABO().getElementCount());
       }
       if (representation === VTK_REPRESENTATION.SURFACE) {
