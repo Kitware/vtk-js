@@ -6,6 +6,10 @@ import pako from 'pako';
 import Endian from '../../../Common/Core/Endian';
 import { TYPE_BYTES } from './Constants';
 
+function removeLeadingSlash(str) {
+  return (str[0] === '/') ? str.substr(1) : str;
+}
+
 function create(options) {
   let ready = false;
   let requestCount = 0;
@@ -13,6 +17,9 @@ function create(options) {
   zip.loadAsync(options.zipContent)
     .then(() => {
       ready = true;
+      if (options.callback) {
+        options.callback();
+      }
     });
   return {
     fetchArray(instance = {}, baseURL, array, fetchGzip = false) {
@@ -20,8 +27,7 @@ function create(options) {
         if (!ready) {
           console.log('ERROR!!! zip not ready...');
         }
-        const url = [baseURL, array.ref.basepath, fetchGzip ? `${array.ref.id}.gz` : array.ref.id].join('/');
-        console.log('fetchArray', baseURL, url);
+        const url = removeLeadingSlash([baseURL, array.ref.basepath, fetchGzip ? `${array.ref.id}.gz` : array.ref.id].join('/'));
 
         if (++requestCount === 1 && instance.invokeBusy) {
           instance.invokeBusy(true);
@@ -29,8 +35,12 @@ function create(options) {
 
         zip.file(url)
           .async('uint8array')
-          .then((buffer) => {
-            array.buffer = buffer;
+          .then((uint8array) => {
+            array.buffer = new ArrayBuffer(uint8array.length);
+
+            // copy uint8array to buffer
+            const view = new Uint8Array(array.buffer);
+            view.set(uint8array);
 
             if (fetchGzip) {
               if (array.dataType === 'JSON') {
@@ -70,11 +80,12 @@ function create(options) {
     },
 
     fetchJSON(instance = {}, url) {
-      console.log('fetchJSON', url);
+      const path = removeLeadingSlash(url);
       if (!ready) {
         console.log('ERROR!!! zip not ready...');
       }
-      return zip.file(url).async('string');
+
+      return zip.file(path).async('string').then(str => new Promise(ok => ok(JSON.parse(str))));
     },
   };
 }
