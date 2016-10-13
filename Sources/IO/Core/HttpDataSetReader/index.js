@@ -13,7 +13,7 @@ const GEOMETRY_ARRAYS = {
   vtkPolyData(dataset) {
     const arrayToDownload = [];
     arrayToDownload.push(dataset.vtkPolyData.Points);
-    Object.keys(dataset.vtkPolyData).forEach((cellName) => {
+    ['Verts', 'Lines', 'Polys', 'Strips'].forEach((cellName) => {
       if (dataset.vtkPolyData[cellName]) {
         arrayToDownload.push(dataset.vtkPolyData[cellName]);
       }
