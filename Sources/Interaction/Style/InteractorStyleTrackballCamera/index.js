@@ -68,13 +68,13 @@ function vtkInteractorStyleTrackballCamera(publicAPI, model) {
 
     publicAPI.grabFocus(model.eventCallbackCommand);
     if (model.interactor.getShiftKey()) {
-      if (model.interactor.getControlKey()) {
+      if (model.interactor.getControlKey() || model.interactor.getAltKey()) {
         publicAPI.startDolly();
       } else {
         publicAPI.startPan();
       }
     } else {
-      if (model.interactor.getControlKey()) {
+      if (model.interactor.getControlKey() || model.interactor.getAltKey()) {
         publicAPI.startSpin();
       } else {
         publicAPI.startRotate();
