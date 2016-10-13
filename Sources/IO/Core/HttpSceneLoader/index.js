@@ -85,6 +85,9 @@ export function vtkHttpSceneLoader(publicAPI, model) {
     model.dataAccessHelper.fetchJSON(publicAPI, model.url)
       .then(
         (data) => {
+          if ('fetchGzip' in data) {
+            model.fetchGzip = data.fetchGzip;
+          }
           if (data.background) {
             model.renderer.setBackground(...data.background);
           }
