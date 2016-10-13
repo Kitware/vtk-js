@@ -98,6 +98,7 @@ function vtkScalarsToColors(publicAPI, model) {
     const a = convtFun(alpha);
 
     const values = colors.getData();
+    const newValues = newColors.getData();
     const size = values.length;
     const component = 0;
     const tuple = 1;
@@ -105,16 +106,17 @@ function vtkScalarsToColors(publicAPI, model) {
     let count = 0;
     for (let i = component; i < size; i += tuple) {
       const l = convtFun(values[i]);
-      newColors[(count * 4)] = l;
-      newColors[(count * 4) + 1] = l;
-      newColors[(count * 4) + 2] = l;
-      newColors[(count * 4) + 3] = a;
+      newValues[(count * 4)] = l;
+      newValues[(count * 4) + 1] = l;
+      newValues[(count * 4) + 2] = l;
+      newValues[(count * 4) + 3] = a;
       count++;
     }
   };
 
   publicAPI.luminanceAlphaToRGBA = (newColors, colors, alpha, convtFun) => {
     const values = colors.getData();
+    const newValues = newColors.getData();
     const size = values.length;
     const component = 0;
     const tuple = 2;
@@ -122,43 +124,45 @@ function vtkScalarsToColors(publicAPI, model) {
     let count = 0;
     for (let i = component; i < size; i += tuple) {
       const l = convtFun(values[i]);
-      newColors[count] = l;
-      newColors[count + 1] = l;
-      newColors[count + 2] = l;
-      newColors[count + 3] = convtFun(values[i + 1]);
+      newValues[count] = l;
+      newValues[count + 1] = l;
+      newValues[count + 2] = l;
+      newValues[count + 3] = convtFun(values[i + 1]) * alpha;
       count += 4;
     }
   };
 
   publicAPI.rGBToRGBA = (newColors, colors, alpha, convtFun) => {
-    const a = convtFun(alpha);
+    const a = floatColorToUChar(alpha);
 
     const values = colors.getData();
+    const newValues = newColors.getData();
     const size = values.length;
     const component = 0;
     const tuple = 3;
 
     let count = 0;
     for (let i = component; i < size; i += tuple) {
-      newColors[(count * 4)] = convtFun(values[i]);
-      newColors[(count * 4) + 1] = convtFun(values[i + 1]);
-      newColors[(count * 4) + 2] = convtFun(values[i + 2]);
-      newColors[(count * 4) + 3] = a;
+      newValues[(count * 4)] = convtFun(values[i]);
+      newValues[(count * 4) + 1] = convtFun(values[i + 1]);
+      newValues[(count * 4) + 2] = convtFun(values[i + 2]);
+      newValues[(count * 4) + 3] = a;
       count++;
     }
   };
 
   publicAPI.rGBAToRGBA = (newColors, colors, alpha, convtFun) => {
     const values = colors.getData();
+    const newValues = newColors.getData();
     const size = values.length;
     const component = 0;
     const tuple = 4;
 
     let count = 0;
     for (let i = component; i < size; i += tuple) {
-      newColors[(count * 4)] = convtFun(values[i]);
-      newColors[(count * 4) + 1] = convtFun(values[i + 1]);
-      newColors[(count * 4) + 2] = convtFun(values[i + 2]);
+      newValues[(count * 4)] = convtFun(values[i]);
+      newValues[(count * 4) + 1] = convtFun(values[i + 1]);
+      newValues[(count * 4) + 2] = convtFun(values[i + 2]);
       newColors[(count * 4) + 3] = convtFun(values[i + 3]) * alpha;
       count++;
     }
@@ -171,9 +175,7 @@ function vtkScalarsToColors(publicAPI, model) {
       return colors;
     }
 
-    const newColors = vtkDataArray.newInstance({ dataType: VTK_DATATYPES.UNSIGNED_CHAR });
-    newColors.setNumberOfComponents(4);
-    newColors.setNumberOfTuples(numTuples);
+    const newColors = vtkDataArray.newInstance({ tuple: 4, empty: true, size: 4 * numTuples, dataType: VTK_DATATYPES.UNSIGNED_CHAR });
 
     if (numTuples <= 0) {
       return newColors;
