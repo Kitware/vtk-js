@@ -80,6 +80,17 @@ export function vtkHttpSceneLoader(publicAPI, model) {
   // Set our className
   model.classHierarchy.push('vtkHttpSceneLoader');
 
+  const originalSceneParameters = {};
+
+  function setCameraParameters(params) {
+    const camera = model.renderer.getActiveCamera();
+    if (camera) {
+      camera.set(params);
+    } else {
+      console.log('No active camera to update');
+    }
+  }
+
   publicAPI.update = () => {
     if (!model.renderer) {
       console.log('No renderer provided, skip update process');
@@ -93,12 +104,8 @@ export function vtkHttpSceneLoader(publicAPI, model) {
             model.renderer.setBackground(...data.background);
           }
           if (data.camera) {
-            const camera = model.renderer.getActiveCamera();
-            if (camera) {
-              camera.set(data.camera);
-            } else {
-              console.log('No active camera to update');
-            }
+            originalSceneParameters.camera = data.camera;
+            setCameraParameters(data.camera);
           }
           if (data.scene) {
             data.scene.forEach(item => {
@@ -112,6 +119,12 @@ export function vtkHttpSceneLoader(publicAPI, model) {
         error => {
           console.log('Error fetching scene', error);
         });
+  };
+
+  publicAPI.resetScene = () => {
+    if ('camera' in originalSceneParameters) {
+      setCameraParameters(originalSceneParameters.camera);
+    }
   };
 
   // Set DataSet url
