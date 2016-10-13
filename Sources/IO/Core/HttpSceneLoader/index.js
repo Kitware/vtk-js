@@ -1,35 +1,13 @@
-/* global XMLHttpRequest */
-
 import * as macro from '../../../macro';
 import vtkActor from '../../../../Sources/Rendering/Core/Actor';
 import vtkMapper from '../../../../Sources/Rendering/Core/Mapper';
 import vtkHttpDataSetReader from '../../../../Sources/IO/Core/HttpDataSetReader';
 
+import dataAccessHelper from '../DataAccessHelper';
+
 // ----------------------------------------------------------------------------
 // Global methods
 // ----------------------------------------------------------------------------
-
-function loadJSON(url) {
-  return new Promise((resolve, reject) => {
-    const xhr = new XMLHttpRequest();
-
-    xhr.onreadystatechange = (e) => {
-      if (xhr.readyState === 4) {
-        if (xhr.status === 200 || xhr.status === 0) {
-          const data = JSON.parse(xhr.responseText);
-          resolve(data);
-        } else {
-          reject(xhr, e);
-        }
-      }
-    };
-
-    // Make request
-    xhr.open('GET', url, true);
-    xhr.responseType = 'text';
-    xhr.send();
-  });
-}
 
 function loadHttpDataSetReader(item, model, publicAPI) {
   const reader = vtkHttpDataSetReader.newInstance({ fetchGzip: model.fetchGzip });
@@ -79,10 +57,10 @@ const TYPE_MAPPING = {
 // ----------------------------------------------------------------------------
 
 export function vtkHttpSceneLoader(publicAPI, model) {
+  const originalSceneParameters = {};
+
   // Set our className
   model.classHierarchy.push('vtkHttpSceneLoader');
-
-  const originalSceneParameters = {};
 
   function setCameraParameters(params) {
     const camera = model.renderer.getActiveCamera();
@@ -93,13 +71,18 @@ export function vtkHttpSceneLoader(publicAPI, model) {
     }
   }
 
+  // Create default dataAccessHelper if not available
+  if (!model.dataAccessHelper) {
+    model.dataAccessHelper = dataAccessHelper('http');
+  }
+
   publicAPI.update = () => {
     if (!model.renderer) {
       console.log('No renderer provided, skip update process');
       return;
     }
 
-    loadJSON(model.url)
+    model.dataAccessHelper.fetchJSON(publicAPI, model.url)
       .then(
         (data) => {
           if (data.background) {
@@ -124,7 +107,7 @@ export function vtkHttpSceneLoader(publicAPI, model) {
   };
 
   publicAPI.resetScene = () => {
-    if ('camera' in originalSceneParameters) {
+    if (originalSceneParameters.camera) {
       setCameraParameters(originalSceneParameters.camera);
     }
   };
