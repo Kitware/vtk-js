@@ -1,3 +1,5 @@
+/* global XMLHttpRequest */
+
 import * as macro from '../../../macro';
 import vtkActor from '../../../../Sources/Rendering/Core/Actor';
 import vtkMapper from '../../../../Sources/Rendering/Core/Mapper';
@@ -11,7 +13,7 @@ function loadJSON(url) {
   return new Promise((resolve, reject) => {
     const xhr = new XMLHttpRequest();
 
-    xhr.onreadystatechange = e => {
+    xhr.onreadystatechange = (e) => {
       if (xhr.readyState === 4) {
         if (xhr.status === 200 || xhr.status === 0) {
           const data = JSON.parse(xhr.responseText);
@@ -99,7 +101,7 @@ export function vtkHttpSceneLoader(publicAPI, model) {
 
     loadJSON(model.url)
       .then(
-        data => {
+        (data) => {
           if (data.background) {
             model.renderer.setBackground(...data.background);
           }
@@ -108,7 +110,7 @@ export function vtkHttpSceneLoader(publicAPI, model) {
             setCameraParameters(data.camera);
           }
           if (data.scene) {
-            data.scene.forEach(item => {
+            data.scene.forEach((item) => {
               const builder = TYPE_MAPPING[item.type];
               if (builder) {
                 builder(item, model, publicAPI);
@@ -116,7 +118,7 @@ export function vtkHttpSceneLoader(publicAPI, model) {
             });
           }
         },
-        error => {
+        (error) => {
           console.log('Error fetching scene', error);
         });
   };
@@ -128,7 +130,7 @@ export function vtkHttpSceneLoader(publicAPI, model) {
   };
 
   // Set DataSet url
-  publicAPI.setUrl = url => {
+  publicAPI.setUrl = (url) => {
     if (url.indexOf('index.json') === -1) {
       model.baseURL = url;
       model.url = `${url}/index.json`;
