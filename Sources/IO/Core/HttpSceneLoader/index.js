@@ -10,7 +10,7 @@ import dataAccessHelper from '../DataAccessHelper';
 // ----------------------------------------------------------------------------
 
 function loadHttpDataSetReader(item, model, publicAPI) {
-  const reader = vtkHttpDataSetReader.newInstance({ fetchGzip: model.fetchGzip });
+  const reader = vtkHttpDataSetReader.newInstance({ fetchGzip: model.fetchGzip, dataAccessHelper: model.dataAccessHelper });
   const actor = vtkActor.newInstance();
   model.renderer.addActor(actor);
   const mapper = vtkMapper.newInstance();
@@ -85,7 +85,7 @@ export function vtkHttpSceneLoader(publicAPI, model) {
     model.dataAccessHelper.fetchJSON(publicAPI, model.url)
       .then(
         (data) => {
-          if ('fetchGzip' in data) {
+          if (data.fetchGzip !== undefined) {
             model.fetchGzip = data.fetchGzip;
           }
           if (data.background) {
