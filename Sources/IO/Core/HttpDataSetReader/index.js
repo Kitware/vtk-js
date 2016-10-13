@@ -1,12 +1,9 @@
-import pako from 'pako';
-
 import * as macro from '../../../macro';
 import vtk from '../../../vtk';
-import Endian from '../../../Common/Core/Endian';
 import vtkPolyData from '../../../Common/DataModel/PolyData';
-import { TYPE_BYTES, LOCATIONS } from './Constants';
+import { LOCATIONS } from './Constants';
 
-/* global XMLHttpRequest window */
+import dataAccessHelper from '../DataAccessHelper';
 
 // ----------------------------------------------------------------------------
 // Global methods
@@ -16,7 +13,7 @@ const GEOMETRY_ARRAYS = {
   vtkPolyData(dataset) {
     const arrayToDownload = [];
     arrayToDownload.push(dataset.vtkPolyData.Points);
-    Object.keys(dataset.vtkPolyData).forEach((cellName) => {
+    ['Verts', 'Lines', 'Polys', 'Strips'].forEach((cellName) => {
       if (dataset.vtkPolyData[cellName]) {
         arrayToDownload.push(dataset.vtkPolyData[cellName]);
       }
@@ -72,72 +69,14 @@ export function vtkHttpDataSetReader(publicAPI, model) {
   // Empty output by default
   model.output[0] = vtkPolyData.newInstance();
 
+  // Create default dataAccessHelper if not available
+  if (!model.dataAccessHelper) {
+    model.dataAccessHelper = dataAccessHelper('http');
+  }
+
   // Internal method to fetch Array
   function fetchArray(array, fetchGzip = false) {
-    if (array.ref && !array.ref.pending) {
-      return new Promise((resolve, reject) => {
-        const xhr = new XMLHttpRequest();
-        const url = [model.baseURL, array.ref.basepath, fetchGzip ? `${array.ref.id}.gz` : array.ref.id].join('/');
-
-        xhr.onreadystatechange = (e) => {
-          if (xhr.readyState === 1) {
-            array.ref.pending = true;
-            if (++model.requestCount === 1) {
-              publicAPI.invokeBusy(true);
-            }
-          }
-          if (xhr.readyState === 4) {
-            array.ref.pending = false;
-            if (xhr.status === 200 || xhr.status === 0) {
-              array.buffer = xhr.response;
-
-              if (fetchGzip) {
-                if (array.dataType === 'JSON') {
-                  array.buffer = pako.inflate(new Uint8Array(array.buffer), { to: 'string' });
-                } else {
-                  array.buffer = pako.inflate(new Uint8Array(array.buffer)).buffer;
-                }
-              }
-
-              if (array.dataType === 'JSON') {
-                array.values = JSON.parse(array.buffer);
-              } else {
-                if (Endian.ENDIANNESS !== array.ref.encode && Endian.ENDIANNESS) {
-                  // Need to swap bytes
-                  console.log('Swap bytes of', array.name);
-                  Endian.swapBytes(array.buffer, TYPE_BYTES[array.dataType]);
-                }
-
-                array.values = new window[array.dataType](array.buffer);
-              }
-
-              if (array.values.length !== array.size) {
-                console.error('Error in FetchArray:', array.name, 'does not have the proper array size. Got', array.values.length, 'instead of', array.size);
-              }
-
-              // Done with the ref and work
-              delete array.ref;
-              if (--model.requestCount === 0) {
-                publicAPI.invokeBusy(false);
-              }
-              publicAPI.modified();
-              resolve(array);
-            } else {
-              reject(xhr, e);
-            }
-          }
-        };
-
-        // Make request
-        xhr.open('GET', url, true);
-        xhr.responseType = (fetchGzip || array.dataType !== 'JSON') ? 'arraybuffer' : 'text';
-        xhr.send();
-      });
-    }
-
-    return new Promise((resolve, reject) => {
-      resolve(array);
-    });
+    return model.dataAccessHelper.fetchArray(publicAPI, model.baseURL, array, fetchGzip);
   }
 
   // Internal method to fill block information and state
@@ -200,22 +139,10 @@ export function vtkHttpDataSetReader(publicAPI, model) {
   // Fetch dataset (metadata)
   publicAPI.updateMetadata = () =>
     new Promise((resolve, reject) => {
-      const xhr = new XMLHttpRequest();
-      let dataset = model.dataset;
-
-      xhr.onreadystatechange = (e) => {
-        if (xhr.readyState === 1) {
-          if (++model.requestCount === 1) {
-            publicAPI.invokeBusy(true);
-          }
-        }
-        if (xhr.readyState === 4) {
-          if (--model.requestCount === 0) {
-            publicAPI.invokeBusy(false);
-          }
-
-          if (xhr.status === 200) {
-            dataset = JSON.parse(xhr.responseText);
+      model.dataAccessHelper
+        .fetchJSON(publicAPI, model.url)
+        .then(
+          (dataset) => {
             model.dataset = dataset;
 
             // Generate array list
@@ -263,16 +190,11 @@ export function vtkHttpDataSetReader(publicAPI, model) {
               model.output[0] = vtk(dataset);
               resolve(publicAPI, model.output[0]);
             }
-          } else {
+          },
+          (xhr, e) => {
             reject(xhr, e);
           }
-        }
-      };
-
-      // Make request
-      xhr.open('GET', model.url, true);
-      xhr.responseType = 'text';
-      xhr.send();
+        );
     });
 
   // Set DataSet url
@@ -380,6 +302,7 @@ const DEFAULT_VALUES = {
   url: null,
   baseURL: null,
   requestCount: 0,
+  // dataAccessHelper: null,
 };
 
 // ----------------------------------------------------------------------------
@@ -396,7 +319,9 @@ export function extend(publicAPI, model, initialValues = {}) {
     'blocks',
     'url',
     'baseURL',
+    'dataAccessHelper',
   ]);
+  macro.set(publicAPI, model, ['dataAccessHelper']);
   macro.getArray(publicAPI, model, ['arrays']);
   macro.algo(publicAPI, model, 0, 1);
   macro.event(publicAPI, model, 'busy');

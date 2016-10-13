@@ -1,27 +1,40 @@
-import vtkActor                 from './Actor';
-import vtkBufferObject          from './BufferObject';
+import vtkActor from './Actor';
+import vtkActor2D from './Actor2D';
+import vtkBufferObject from './BufferObject';
+import vtkCamera from './Camera';
 import vtkCellArrayBufferObject from './CellArrayBufferObject';
-import vtkHelper                from './Helper';
-import vtkPolyDataMapper        from './PolyDataMapper';
-import vtkRenderer              from './Renderer';
-import vtkRenderWindow          from './RenderWindow';
-import vtkShader                from './Shader';
-import vtkShaderCache           from './ShaderCache';
-import vtkShaderProgram         from './ShaderProgram';
-import vtkVertexArrayObject     from './VertexArrayObject';
-import vtkViewNodeFactory       from './ViewNodeFactory';
+import vtkHelper from './Helper';
+import vtkImageMapper from './ImageMapper';
+import vtkImageSlice from './ImageSlice';
+import vtkPolyDataMapper from './PolyDataMapper';
+import vtkRenderer from './Renderer';
+import vtkRenderWindow from './RenderWindow';
+import vtkShader from './Shader';
+import vtkShaderCache from './ShaderCache';
+import vtkShaderProgram from './ShaderProgram';
+import vtkTexture from './Texture';
+import vtkTextureUnitManager from './TextureUnitManager';
+import vtkVertexArrayObject from './VertexArrayObject';
+import vtkViewNodeFactory from './ViewNodeFactory';
+
 
 export default {
   vtkActor,
+  vtkActor2D,
   vtkBufferObject,
+  vtkCamera,
   vtkCellArrayBufferObject,
   vtkHelper,
+  vtkImageMapper,
+  vtkImageSlice,
   vtkPolyDataMapper,
   vtkRenderer,
   vtkRenderWindow,
   vtkShader,
   vtkShaderCache,
   vtkShaderProgram,
+  vtkTexture,
+  vtkTextureUnitManager,
   vtkVertexArrayObject,
   vtkViewNodeFactory,
 };

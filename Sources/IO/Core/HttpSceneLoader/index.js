@@ -3,34 +3,14 @@ import vtkActor from '../../../../Sources/Rendering/Core/Actor';
 import vtkMapper from '../../../../Sources/Rendering/Core/Mapper';
 import vtkHttpDataSetReader from '../../../../Sources/IO/Core/HttpDataSetReader';
 
+import dataAccessHelper from '../DataAccessHelper';
+
 // ----------------------------------------------------------------------------
 // Global methods
 // ----------------------------------------------------------------------------
 
-function loadJSON(url) {
-  return new Promise((resolve, reject) => {
-    const xhr = new XMLHttpRequest();
-
-    xhr.onreadystatechange = e => {
-      if (xhr.readyState === 4) {
-        if (xhr.status === 200 || xhr.status === 0) {
-          const data = JSON.parse(xhr.responseText);
-          resolve(data);
-        } else {
-          reject(xhr, e);
-        }
-      }
-    };
-
-    // Make request
-    xhr.open('GET', url, true);
-    xhr.responseType = 'text';
-    xhr.send();
-  });
-}
-
 function loadHttpDataSetReader(item, model, publicAPI) {
-  const reader = vtkHttpDataSetReader.newInstance({ fetchGzip: model.fetchGzip });
+  const reader = vtkHttpDataSetReader.newInstance({ fetchGzip: model.fetchGzip, dataAccessHelper: model.dataAccessHelper });
   const actor = vtkActor.newInstance();
   model.renderer.addActor(actor);
   const mapper = vtkMapper.newInstance();
@@ -77,8 +57,24 @@ const TYPE_MAPPING = {
 // ----------------------------------------------------------------------------
 
 export function vtkHttpSceneLoader(publicAPI, model) {
+  const originalSceneParameters = {};
+
   // Set our className
   model.classHierarchy.push('vtkHttpSceneLoader');
+
+  function setCameraParameters(params) {
+    const camera = model.renderer.getActiveCamera();
+    if (camera) {
+      camera.set(params);
+    } else {
+      console.log('No active camera to update');
+    }
+  }
+
+  // Create default dataAccessHelper if not available
+  if (!model.dataAccessHelper) {
+    model.dataAccessHelper = dataAccessHelper('http');
+  }
 
   publicAPI.update = () => {
     if (!model.renderer) {
@@ -86,22 +82,21 @@ export function vtkHttpSceneLoader(publicAPI, model) {
       return;
     }
 
-    loadJSON(model.url)
+    model.dataAccessHelper.fetchJSON(publicAPI, model.url)
       .then(
-        data => {
+        (data) => {
+          if (data.fetchGzip !== undefined) {
+            model.fetchGzip = data.fetchGzip;
+          }
           if (data.background) {
             model.renderer.setBackground(...data.background);
           }
           if (data.camera) {
-            const camera = model.renderer.getActiveCamera();
-            if (camera) {
-              camera.set(data.camera);
-            } else {
-              console.log('No active camera to update');
-            }
+            originalSceneParameters.camera = data.camera;
+            setCameraParameters(data.camera);
           }
           if (data.scene) {
-            data.scene.forEach(item => {
+            data.scene.forEach((item) => {
               const builder = TYPE_MAPPING[item.type];
               if (builder) {
                 builder(item, model, publicAPI);
@@ -109,13 +104,19 @@ export function vtkHttpSceneLoader(publicAPI, model) {
             });
           }
         },
-        error => {
+        (error) => {
           console.log('Error fetching scene', error);
         });
   };
 
+  publicAPI.resetScene = () => {
+    if (originalSceneParameters.camera) {
+      setCameraParameters(originalSceneParameters.camera);
+    }
+  };
+
   // Set DataSet url
-  publicAPI.setUrl = url => {
+  publicAPI.setUrl = (url) => {
     if (url.indexOf('index.json') === -1) {
       model.baseURL = url;
       model.url = `${url}/index.json`;
