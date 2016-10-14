@@ -6,6 +6,8 @@
   left: 0;
   overflow: hidden;
   background: black;
+  margin: 0;
+  padding: 0;
 }
 
 .fullParentSize {

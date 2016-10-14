@@ -1,7 +1,8 @@
-/* global window document */
+/* global window document XMLHttpRequest */
 /* eslint-disable import/prefer-default-export */
+/* eslint-disable import/no-extraneous-dependencies */
 
-import 'normalize.css';
+// import 'normalize.css';
 import 'babel-polyfill';
 
 import vtkOpenGLRenderWindow      from '../../../Sources/Rendering/OpenGL/RenderWindow';
@@ -23,9 +24,37 @@ if (iOS) {
   document.querySelector('body').classList.add('is-ios-device');
 }
 
+function emptyContainer(container) {
+  while (container.firstChild) {
+    container.removeChild(container.firstChild);
+  }
+}
+
+function downloadZipFile(url) {
+  return new Promise((resolve, reject) => {
+    const xhr = new XMLHttpRequest();
+
+    xhr.onreadystatechange = (e) => {
+      if (xhr.readyState === 4) {
+        if (xhr.status === 200 || xhr.status === 0) {
+          resolve(xhr.response);
+        } else {
+          reject(xhr, e);
+        }
+      }
+    };
+
+    // Make request
+    xhr.open('GET', url, true);
+    xhr.responseType = 'arraybuffer';
+    xhr.send();
+  });
+}
+
 export function load(container, options) {
   autoInit = false;
   let dims = container.getBoundingClientRect();
+  emptyContainer(container);
 
   // Create some control UI
   const renderWindowContainer = document.createElement('div');
@@ -70,7 +99,19 @@ export function load(container, options) {
     sceneImporter.setUrl(options.url);
     onReady(sceneImporter);
   } else if (options.fileURL) {
-    console.log('need to download zip file and process it...');
+    downloadZipFile(options.fileURL)
+      .then((zipContent) => {
+        const dataAccessHelper = DataAccessHelper.get(
+          'zip',
+          {
+            zipContent,
+            callback: (zip) => {
+              const sceneImporter = vtkHttpSceneLoader.newInstance({ renderer, dataAccessHelper });
+              sceneImporter.setUrl('index.json');
+              onReady(sceneImporter);
+            },
+          });
+      });
   } else if (options.file) {
     const dataAccessHelper = DataAccessHelper.get(
       'zip',
