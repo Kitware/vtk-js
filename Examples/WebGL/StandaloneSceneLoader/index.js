@@ -72,7 +72,7 @@ export function load(container, options) {
 
   window.addEventListener('resize', () => {
     dims = container.getBoundingClientRect();
-    renWin.setSize(dims.width, dims.height);
+    glwindow.setSize(dims.width, dims.height);
     renWin.render();
   });
 
