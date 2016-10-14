@@ -21,7 +21,7 @@
     },
     "devDependencies": {
         "kw-web-suite": "2.2.1",
-        "kw-doc": "1.0.15",
+        "kw-doc": "1.0.16",
 
         "babel-plugin-istanbul": "2.0.0",
         "babel-polyfill": "6.13.0",
