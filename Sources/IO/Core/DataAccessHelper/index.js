@@ -6,6 +6,10 @@ const TYPE_MAPPING = {
   zip: options => JSZipDataAccessHelper.create(options),
 };
 
-export default function getDataAccessHelper(type = 'http', options = {}) {
+function get(type = 'http', options = {}) {
   return TYPE_MAPPING[type](options);
 }
+
+export default {
+  get,
+};

@@ -14,11 +14,27 @@ function create(options) {
   let ready = false;
   let requestCount = 0;
   const zip = new JSZip();
+  let zipRoot = zip;
   zip.loadAsync(options.zipContent)
     .then(() => {
       ready = true;
+
+      // Find root index.json
+      const metaFiles = [];
+      zip.forEach((relativePath, zipEntry) => {
+        if (relativePath.indexOf('index.json') !== -1) {
+          metaFiles.push(relativePath);
+        }
+      });
+      metaFiles.sort((a, b) => a.length > b.length);
+      const fullRootPath = metaFiles[0].split('/');
+      while (fullRootPath.length > 1) {
+        const dirName = fullRootPath.shift();
+        zipRoot = zipRoot.folder(dirName);
+      }
+
       if (options.callback) {
-        options.callback();
+        options.callback(zip);
       }
     });
   return {
@@ -33,7 +49,7 @@ function create(options) {
           instance.invokeBusy(true);
         }
 
-        zip.file(url)
+        zipRoot.file(url)
           .async('uint8array')
           .then((uint8array) => {
             array.buffer = new ArrayBuffer(uint8array.length);
@@ -85,7 +101,7 @@ function create(options) {
         console.log('ERROR!!! zip not ready...');
       }
 
-      return zip.file(path).async('string').then(str => new Promise(ok => ok(JSON.parse(str))));
+      return zipRoot.file(path).async('string').then(str => new Promise(ok => ok(JSON.parse(str))));
     },
   };
 }

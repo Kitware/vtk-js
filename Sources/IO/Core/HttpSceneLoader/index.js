@@ -3,7 +3,7 @@ import vtkActor from '../../../../Sources/Rendering/Core/Actor';
 import vtkMapper from '../../../../Sources/Rendering/Core/Mapper';
 import vtkHttpDataSetReader from '../../../../Sources/IO/Core/HttpDataSetReader';
 
-import dataAccessHelper from '../DataAccessHelper';
+import DataAccessHelper from '../DataAccessHelper';
 
 // ----------------------------------------------------------------------------
 // Global methods
@@ -73,7 +73,7 @@ export function vtkHttpSceneLoader(publicAPI, model) {
 
   // Create default dataAccessHelper if not available
   if (!model.dataAccessHelper) {
-    model.dataAccessHelper = dataAccessHelper('http');
+    model.dataAccessHelper = DataAccessHelper.get('http');
   }
 
   publicAPI.update = () => {

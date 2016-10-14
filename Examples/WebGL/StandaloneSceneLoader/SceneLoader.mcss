@@ -1,0 +1,32 @@
+.fullScreen {
+  position: absolute;
+  width: 100vw;
+  height: 100vh;
+  top: 0;
+  left: 0;
+  overflow: hidden;
+  background: black;
+  margin: 0;
+  padding: 0;
+}
+
+.fullParentSize {
+  position: absolute;
+  width: 100%;
+  height: 100%;
+  top: 0;
+  left: 0;
+  overflow: hidden;
+}
+
+.bigFileDrop {
+  position: absolute;
+  left: 50%;
+  top: 50%;
+  transform: translate(-50%, -50%);
+  background: lightgray;
+  border-radius: 10px;
+  width: 300px;
+  padding: calc(50vh - 2em) calc(50vw - 150px - 1em);
+  background: lightgray;
+}

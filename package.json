@@ -21,10 +21,12 @@
     },
     "devDependencies": {
         "kw-web-suite": "2.2.1",
-        "kw-doc": "1.0.15",
+        "kw-doc": "1.0.17",
 
         "babel-plugin-istanbul": "2.0.0",
         "babel-polyfill": "6.13.0",
+
+        "normalize.css": "5.0.0",
 
         "karma": "1.2.0",
         "karma-chrome-launcher": "2.0.0",
