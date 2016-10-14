@@ -5,6 +5,7 @@
   top: 0;
   left: 0;
   overflow: hidden;
+  background: black;
 }
 
 .fullParentSize {
@@ -24,5 +25,6 @@
   background: lightgray;
   border-radius: 10px;
   width: 300px;
-  padding: calc(50vh - 2em) calc(50vw - 150px - 1em),
+  padding: calc(50vh - 2em) calc(50vw - 150px - 1em);
+  background: lightgray;
 }

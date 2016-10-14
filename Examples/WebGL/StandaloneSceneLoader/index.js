@@ -15,7 +15,7 @@ import DataAccessHelper           from '../../../Sources/IO/Core/DataAccessHelpe
 import style from './SceneLoader.mcss';
 
 const iOS = /iPad|iPhone|iPod/.test(window.navigator.platform);
-let autoInit = false;
+let autoInit = true;
 
 // Add class to body if iOS device --------------------------------------------
 
@@ -69,23 +69,16 @@ export function load(container, options) {
     const sceneImporter = vtkHttpSceneLoader.newInstance({ renderer });
     sceneImporter.setUrl(options.url);
     onReady(sceneImporter);
+  } else if (options.fileURL) {
+    console.log('need to download zip file and process it...');
   } else if (options.file) {
     const dataAccessHelper = DataAccessHelper.get(
       'zip',
       {
         zipContent: options.file,
         callback: (zip) => {
-          // Find root index.json
-          const metaFiles = [];
-          zip.forEach((relativePath, zipEntry) => {
-            if (relativePath.indexOf('index.json') !== -1) {
-              metaFiles.push(relativePath);
-            }
-          });
-          metaFiles.sort();
-
           const sceneImporter = vtkHttpSceneLoader.newInstance({ renderer, dataAccessHelper });
-          sceneImporter.setUrl(metaFiles[0]);
+          sceneImporter.setUrl('index.json');
           onReady(sceneImporter);
         },
       });
@@ -99,16 +92,20 @@ export function initLocalFileLoader(container) {
   const myContainer = container || exampleContainer || rootBody;
 
   const fileSelector = document.createElement('input');
-  fileSelector.setAttribute('class', style.fullParentSize);
+  fileSelector.setAttribute('type', 'file');
+  fileSelector.setAttribute('class', style.bigFileDrop);
   myContainer.appendChild(fileSelector);
+  myContainer.setAttribute('class', style.fullScreen);
 
-  fileSelector.onchange = (e) => {
+  function handleFile(e) {
     var files = this.files;
     if (files.length === 1) {
       myContainer.removeChild(fileSelector);
       load(myContainer, { file: files[0] });
     }
-  };
+  }
+
+  fileSelector.onchange = handleFile;
 }
 
 // Auto setup if no method get called within 100ms
