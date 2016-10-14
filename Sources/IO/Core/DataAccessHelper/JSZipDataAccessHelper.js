@@ -18,7 +18,7 @@ function create(options) {
     .then(() => {
       ready = true;
       if (options.callback) {
-        options.callback();
+        options.callback(zip);
       }
     });
   return {

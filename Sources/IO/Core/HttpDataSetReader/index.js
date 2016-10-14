@@ -3,7 +3,7 @@ import vtk from '../../../vtk';
 import vtkPolyData from '../../../Common/DataModel/PolyData';
 import { LOCATIONS } from './Constants';
 
-import dataAccessHelper from '../DataAccessHelper';
+import DataAccessHelper from '../DataAccessHelper';
 
 // ----------------------------------------------------------------------------
 // Global methods
@@ -71,7 +71,7 @@ export function vtkHttpDataSetReader(publicAPI, model) {
 
   // Create default dataAccessHelper if not available
   if (!model.dataAccessHelper) {
-    model.dataAccessHelper = dataAccessHelper('http');
+    model.dataAccessHelper = DataAccessHelper.get('http');
   }
 
   // Internal method to fetch Array
