@@ -247,9 +247,11 @@ scDirs = []
 sceneComponents = []
 componentIndex = 0
 
-for renderer in renderers:
+for rIdx in xrange(renderers.GetNumberOfItems()):
+  renderer = renderers.GetItemAsObject(rIdx)
   renProps = renderer.GetViewProps()
-  for renProp in renProps:
+  for rpIdx in xrange(renProps.GetNumberOfItems()):
+    renProp = renProps.GetItemAsObject(rpIdx)
     if not renProp.GetVisibility():
       continue
     if hasattr(renProp, 'GetMapper'):
