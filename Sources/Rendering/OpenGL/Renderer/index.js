@@ -1,5 +1,6 @@
 import * as macro from '../../../macro';
 import vtkViewNode from '../../SceneGraph/ViewNode';
+import vtkMath from '../../../Common/Core/Math';
 
 // ----------------------------------------------------------------------------
 // vtkOpenGLRenderer methods
@@ -61,6 +62,50 @@ export function vtkOpenGLRenderer(publicAPI, model) {
     const size = model.parent.getSize();
     const viewport = model.renderable.getViewport();
     return size[0] * (viewport[2] - viewport[0]) / ((viewport[3] - viewport[1]) * size[1]);
+  };
+
+  publicAPI.getTiledSizeAndOrigin = () => {
+    const vport = model.renderable.getViewport();
+
+    // if there is no window assume 0 1
+    const tileViewPort = [0.0, 0.0, 1.0, 1.0];
+
+    // find the lower left corner of the viewport, taking into account the
+    // lower left boundary of this tile
+    const vpu = vtkMath.clampValue(vport[0] - tileViewPort[0], 0.0, 1.0);
+    const vpv = vtkMath.clampValue(vport[1] - tileViewPort[1], 0.0, 1.0);
+
+    // store the result as a pixel value
+    const ndvp = model.parent.normalizedDisplayToDisplay(vpu, vpv);
+    const lowerLeftU = Math.round(ndvp[0]);
+    const lowerLeftV = Math.round(ndvp[1]);
+
+    // find the upper right corner of the viewport, taking into account the
+    // lower left boundary of this tile
+    let vpu2 = vtkMath.clampValue(vport[2] - tileViewPort[0], 0.0, 1.0);
+    let vpv2 = vtkMath.clampValue(vport[3] - tileViewPort[1], 0.0, 1.0);
+    // also watch for the upper right boundary of the tile
+    if (vpu2 > (tileViewPort[2] - tileViewPort[0])) {
+      vpu2 = tileViewPort[2] - tileViewPort[0];
+    }
+    if (vpv2 > (tileViewPort[3] - tileViewPort[1])) {
+      vpv2 = tileViewPort[3] - tileViewPort[1];
+    }
+    const ndvp2 = model.parent.normalizedDisplayToDisplay(vpu2, vpv2);
+
+    // now compute the size of the intersection of the viewport with the
+    // current tile
+    let usize = Math.round(ndvp2[0]) - lowerLeftU;
+    let vsize = Math.round(ndvp2[1]) - lowerLeftV;
+
+    if (usize < 0) {
+      usize = 0;
+    }
+    if (vsize < 0) {
+      vsize = 0;
+    }
+
+    return {usize, vsize, lowerLeftU, lowerLeftV};
   };
 
   publicAPI.clear = () => {
