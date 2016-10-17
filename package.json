@@ -21,7 +21,7 @@
     },
     "devDependencies": {
         "kw-web-suite": "2.2.1",
-        "kw-doc": "1.0.17",
+        "kw-doc": "1.0.18",
 
         "babel-plugin-istanbul": "2.0.0",
         "babel-polyfill": "6.13.0",
@@ -50,7 +50,7 @@
 
         "doc"           : "kw-doc -c ./Documentation/config.js",
         "doc:www"       : "npm t -- --single-run && kw-doc -c ./Documentation/config.js -s",
-        "doc:publish"   : "kw-doc -c ./Documentation/config.js -p",
+        "doc:publish"   : "kw-doc -c ./Documentation/config.js -mp",
 
         "example:EmptyRenderer": "webpack-dev-server --progress --open --config ./Examples/WebGL/EmptyRenderer/webpack.config.js",
         "example:Cone": "webpack-dev-server --progress --open --config ./Examples/WebGL/Cone/webpack.config.js",
