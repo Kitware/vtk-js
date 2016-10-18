@@ -85,8 +85,6 @@ function vtkViewport(publicAPI, model) {
     [(x + 1.0) * 0.5, (y + 1.0) * 0.5, (z + 1.0) * 0.5];
 
   publicAPI.PickPropFrom = notImplemented('PickPropFrom');
-  publicAPI.GetTiledSize = notImplemented('GetTiledSize');
-  publicAPI.GetTiledSizeAndOrigin = notImplemented('GetTiledSizeAndOrigin');
 }
 
 // ----------------------------------------------------------------------------

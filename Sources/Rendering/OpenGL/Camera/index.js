@@ -30,14 +30,14 @@ function vtkOpenGLCamera(publicAPI, model) {
   };
 
   publicAPI.preRender = (ren) => {
-    // ren.getTiledSizeAndOrigin(&usize, &vsize, lowerLeft, lowerLeft+1);
-    // sconst gl = model.context;
-    // gl.viewport(lowerLeft[0], lowerLeft[1], usize, vsize);
+    const tsize = ren.getTiledSizeAndOrigin();
+    model.context.viewport(tsize.lowerLeftU, tsize.lowerLeftV, tsize.usize, tsize.vsize);
   };
 
   publicAPI.getKeyMatrices = (ren) => {
     // has the camera changed?
     if (ren !== model.lastRenderer ||
+      publicAPI.getFirstAncestorOfType('vtkOpenGLRenderWindow').getMTime() > model.keyMatrixTime.getMTime() ||
       publicAPI.getMTime() > model.keyMatrixTime.getMTime() ||
       ren.getMTime() > model.keyMatrixTime.getMTime()) {
       model.WCVCMatrix = model.renderable.getViewTransformMatrix();
