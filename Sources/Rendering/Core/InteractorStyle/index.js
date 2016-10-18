@@ -150,6 +150,21 @@ function vtkInteractorStyle(publicAPI, model) {
         rwi.render();
         break;
 
+      case 'v' :
+      case 'V' :
+        pos = model.interactor.getEventPosition(rwi.getPointerIndex());
+        publicAPI.findPokedRenderer(pos.x, pos.y);
+        if (model.currentRenderer !== 0) {
+          const ac = model.currentRenderer.getActors();
+          ac.forEach((anActor) => {
+            anActor.getProperty().setRepresentationToPoints();
+          });
+        } else {
+          vtkWarningMacro('no current renderer on the interactor style.');
+        }
+        rwi.render();
+        break;
+
       default:
         break;
     }
