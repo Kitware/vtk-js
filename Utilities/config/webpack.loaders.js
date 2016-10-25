@@ -22,7 +22,11 @@ module.exports = [
     include: /fonts/,
   }, {
     test: /\.(png|jpg)$/,
+    exclude: /baseline/,
     loader: 'url-loader?limit=8192',
+  }, {
+    test: /baseline[^\.]*\.(png|jpg)$/,
+    loader: 'url-loader?limit=1048576',
   }, {
     test: /\.css$/,
     loader: 'style!css!postcss',
