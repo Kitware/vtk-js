@@ -223,8 +223,10 @@ export function extend(publicAPI, model, initialValues = {}) {
   // Inheritance
   vtkBufferObject.extend(publicAPI, model);
 
-  macro.get(publicAPI, model, [
+  macro.setGet(publicAPI, model, [
     'elementCount',
+  ]);
+  macro.get(publicAPI, model, [
     'stride',
     'vertexOffset',
     'normalOffset',

@@ -16,6 +16,12 @@ export function vtkOpenGLHelper(publicAPI, model) {
     model.VAO.setContext(ctx);
     model.CABO.setContext(ctx);
   };
+
+  publicAPI.releaseGraphicsResources = (oglwin) => {
+    model.VAO.releaseGraphicsResources();
+    model.CABO.releaseGraphicsResources();
+    model.CABO.setElementCount(0);
+  };
 }
 
 // ----------------------------------------------------------------------------
@@ -28,6 +34,7 @@ const DEFAULT_VALUES = {
   VAO: null,
   attributeUpdateTime: null,
   CABO: null,
+  primitiveType: 0,
 };
 
 // ----------------------------------------------------------------------------
@@ -50,6 +57,7 @@ export function extend(publicAPI, model, initialValues = {}) {
     'VAO',
     'attributeUpdateTime',
     'CABO',
+    'primitiveType',
   ]);
 
   model.program = vtkShaderProgram.newInstance();

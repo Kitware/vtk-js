@@ -13,6 +13,17 @@ import vtkPolyDataFS from '../glsl/vtkPolyDataFS.glsl';
 
 /* eslint-disable no-lonely-if */
 
+const primTypes = {
+  Start: 0,
+  Points: 0,
+  Lines: 1,
+  Tris: 2,
+  TriStrips: 3,
+  TrisEdges: 4,
+  TriStripsEdges: 5,
+  End: 6,
+};
+
 // ----------------------------------------------------------------------------
 // vtkOpenGLPolyDataMapper methods
 // ----------------------------------------------------------------------------
@@ -35,10 +46,9 @@ export function vtkOpenGLPolyDataMapper(publicAPI, model) {
     if (prepass) {
       model.openGLRenderWindow = publicAPI.getFirstAncestorOfType('vtkOpenGLRenderWindow');
       model.context = model.openGLRenderWindow.getContext();
-      model.points.setContext(model.context);
-      model.lines.setContext(model.context);
-      model.tris.setContext(model.context);
-      model.triStrips.setContext(model.context);
+      for (let i = primTypes.Start; i < primTypes.End; i++) {
+        model.primitives[i].setContext(model.context);
+      }
       model.openGLActor = publicAPI.getFirstAncestorOfType('vtkOpenGLActor');
       const actor = model.openGLActor.getRenderable();
       const openGLRenderer = publicAPI.getFirstAncestorOfType('vtkOpenGLRenderer');
@@ -66,7 +76,8 @@ export function vtkOpenGLPolyDataMapper(publicAPI, model) {
     let GSSource = shaders.Geometry;
     let FSSource = shaders.Fragment;
 
-    const lastLightComplexity = model.lastLightComplexity.get(model.lastBoundBO);
+    const lastLightComplexity =
+      model.lastLightComplexity.get(model.lastBoundBO.getPrimitiveType());
 
     // create the material/color property declarations, and VS implementation
     // these are always defined
@@ -104,7 +115,8 @@ export function vtkOpenGLPolyDataMapper(publicAPI, model) {
     }
 
     // add scalar vertex coloring
-    if (model.lastBoundBO.getCABO().getColorComponents() !== 0) {
+    if (model.lastBoundBO.getCABO().getColorComponents() !== 0 &&
+        !model.drawingEdges) {
       colorDec = colorDec.concat(['varying vec4 vertexColorVSOutput;']);
       VSSource = vtkShaderProgram.substitute(VSSource, '//VTK::Color::Dec', [
         'attribute vec4 scalarColor;',
@@ -122,7 +134,8 @@ export function vtkOpenGLPolyDataMapper(publicAPI, model) {
 
     const scalarMatMode = model.renderable.getScalarMaterialMode();
 
-    if (model.lastBoundBO.getCABO().getColorComponents() !== 0) {
+    if (model.lastBoundBO.getCABO().getColorComponents() !== 0 &&
+        !model.drawingEdges) {
       if (scalarMatMode === VTK_MATERIALMODE.AMBIENT ||
           (scalarMatMode === VTK_MATERIALMODE.DEFAULT &&
             actor.getProperty().getAmbient() > actor.getProperty().getDiffuse())) {
@@ -162,7 +175,8 @@ export function vtkOpenGLPolyDataMapper(publicAPI, model) {
     // check for shadow maps
     const shadowFactor = '';
 
-    const lastLightComplexity = model.lastLightComplexity.get(model.lastBoundBO);
+    const lastLightComplexity =
+      model.lastLightComplexity.get(model.lastBoundBO.getPrimitiveType());
 
     switch (lastLightComplexity) {
       case 0: // no lighting or RENDER_VALUES
@@ -285,7 +299,7 @@ export function vtkOpenGLPolyDataMapper(publicAPI, model) {
   };
 
   publicAPI.replaceShaderNormal = (shaders, ren, actor) => {
-    if (model.lastLightComplexity.get(model.lastBoundBO) > 0) {
+    if (model.lastLightComplexity.get(model.lastBoundBO.getPrimitiveType()) > 0) {
       let VSSource = shaders.Vertex;
       let GSSource = shaders.Geometry;
       let FSSource = shaders.Fragment;
@@ -398,7 +412,7 @@ export function vtkOpenGLPolyDataMapper(publicAPI, model) {
     }
 
     // do we need the vertex in the shader in View Coordinates
-    if (model.lastLightComplexity.get(model.lastBoundBO) > 0) {
+    if (model.lastLightComplexity.get(model.lastBoundBO.getPrimitiveType()) > 0) {
       VSSource = vtkShaderProgram.substitute(VSSource,
         '//VTK::PositionVC::Dec', [
           'varying vec4 vertexVCVSOutput;']).result;
@@ -441,6 +455,10 @@ export function vtkOpenGLPolyDataMapper(publicAPI, model) {
       let VSSource = shaders.Vertex;
       let GSSource = shaders.Geometry;
       let FSSource = shaders.Fragment;
+
+      if (model.drawingEdges) {
+        return;
+      }
 
       VSSource = vtkShaderProgram.substitute(VSSource,
         '//VTK::TCoord::Impl',
@@ -493,30 +511,95 @@ export function vtkOpenGLPolyDataMapper(publicAPI, model) {
     }
   };
 
+  publicAPI.getCoincidentParameters = (ren, actor) => {
+    // 1. ResolveCoincidentTopology is On and non zero for this primitive
+    // type
+    let cp = null;
+    const prop = actor.getProperty();
+    if (model.renderable.getResolveCoincidentTopology() ||
+        (prop.getEdgeVisibility() &&
+          prop.getRepresentation() === VTK_REPRESENTATION.SURFACE)) {
+      const primType = model.lastBoundBO.getPrimitiveType();
+      if (primType === primTypes.Points ||
+          prop.getRepresentation() === VTK_REPRESENTATION.POINTS) {
+        cp = model.renderable.getCoincidentTopologyPointOffsetParameter();
+      } else if (primType === primTypes.Lines ||
+          prop.getRepresentation() === VTK_REPRESENTATION.WIREFRAME) {
+        cp = model.renderable.getCoincidentTopologyLineOffsetParameters();
+      } else if (primType === primTypes.Tris || primType === primTypes.TriStrips) {
+        cp = model.renderable.getCoincidentTopologyPolygonOffsetParameters();
+      }
+      if (primType === primTypes.TrisEdges ||
+          primType === primTypes.TriStripsEdges) {
+        cp = model.renderable.getCoincidentTopologyPolygonOffsetParameters();
+        cp.factor /= 2.0;
+        cp.units /= 2.0;
+      }
+    }
+
+  // hardware picking always offset due to saved zbuffer
+  // This gets you above the saved surface depth buffer.
+  // vtkHardwareSelector* selector = ren->GetSelector();
+  // if (selector &&
+  //     selector->GetFieldAssociation() == vtkDataObject::FIELD_ASSOCIATION_POINTS)
+  // {
+  //   offset -= 2.0;
+  //   return;
+  // }
+    return cp;
+  };
+
+  publicAPI.replaceShaderCoincidentOffset = (shaders, ren, actor) => {
+    const cp = publicAPI.getCoincidentParameters(ren, actor);
+
+    // if we need an offset handle it here
+    // The value of .000016 is suitable for depth buffers
+    // of at least 16 bit depth. We do not query the depth
+    // right now because we would need some mechanism to
+    // cache the result taking into account FBO changes etc.
+    if (cp && (cp.factor !== 0.0 || cp.offset !== 0.0)) {
+      let FSSource = shaders.Fragment;
+
+      FSSource = vtkShaderProgram.substitute(FSSource,
+        '//VTK::Coincident::Dec', [
+          'uniform float cfactor;',
+          'uniform float coffset;']).result;
+
+      if (cp.factor !== 0.0) {
+        FSSource = vtkShaderProgram.substitute(FSSource,
+          '//VTK::UniformFlow::Impl', [
+            'float cscale = length(vec2(dFdx(gl_FragCoord.z),dFdy(gl_FragCoord.z)));',
+            '//VTK::UniformFlow::Impl'], false).result;
+        FSSource = vtkShaderProgram.substitute(FSSource,
+          '//VTK::Depth::Impl',
+          'gl_FragDepth = gl_FragCoord.z + cfactor*cscale + 0.000016*coffset;').result;
+      } else {
+        FSSource = vtkShaderProgram.substitute(FSSource,
+          '//VTK::Depth::Impl',
+          'gl_FragDepth = gl_FragCoord.z + 0.000016*coffset;').result;
+      }
+      shaders.Fragment = FSSource;
+    }
+  };
 
   publicAPI.replaceShaderValues = (shaders, ren, actor) => {
     publicAPI.replaceShaderColor(shaders, ren, actor);
     publicAPI.replaceShaderNormal(shaders, ren, actor);
     publicAPI.replaceShaderLight(shaders, ren, actor);
     publicAPI.replaceShaderTCoord(shaders, ren, actor);
+    publicAPI.replaceShaderCoincidentOffset(shaders, ren, actor);
     publicAPI.replaceShaderPositionVC(shaders, ren, actor);
   };
 
   publicAPI.getNeedToRebuildShaders = (cellBO, ren, actor) => {
     let lightComplexity = 0;
 
-    // wacky backwards compatibility with old VTK lighting
-    // soooo there are many factors that determine if a primative is lit or not.
-    // three that mix in a complex way are representation POINT, Interpolation FLAT
-    // and having normals or not.
-    let needLighting = false;
+    const primType = cellBO.getPrimitiveType();
+
+    let needLighting = true;
     const haveNormals = false; // (model.currentInput.getPointData().getNormals() != null);
     if (actor.getProperty().getRepresentation() === VTK_REPRESENTATION.POINTS) {
-      needLighting = (actor.getProperty().getInterpolation() !== VTK_SHADING.FLAT && haveNormals);
-    } else {
-      const isTrisOrStrips = (cellBO === model.tris || cellBO === model.triStrips);
-      needLighting = (isTrisOrStrips ||
-        (!isTrisOrStrips && actor.getProperty().getInterpolation() !== VTK_SHADING.FLAT && haveNormals));
+      needLighting = haveNormals;
     }
 
     // do we need lighting?
@@ -548,9 +631,9 @@ export function vtkOpenGLPolyDataMapper(publicAPI, model) {
       });
     }
 
-    if (model.lastLightComplexity.get(cellBO) !== lightComplexity) {
-      model.lightComplexityChanged.get(cellBO).modified();
-      model.lastLightComplexity.set(cellBO, lightComplexity);
+    if (model.lastLightComplexity.get(primType) !== lightComplexity) {
+      model.lightComplexityChanged.get(primType).modified();
+      model.lastLightComplexity.set(primType, lightComplexity);
     }
 
     // has something changed that would require us to recreate the shader?
@@ -562,7 +645,7 @@ export function vtkOpenGLPolyDataMapper(publicAPI, model) {
         cellBO.getShaderSourceTime().getMTime() < publicAPI.getMTime() ||
         cellBO.getShaderSourceTime().getMTime() < actor.getMTime() ||
         cellBO.getShaderSourceTime().getMTime() < model.currentInput.getMTime() ||
-        cellBO.getShaderSourceTime().getMTime() < model.lightComplexityChanged.get(cellBO).getMTime()) {
+        cellBO.getShaderSourceTime().getMTime() < model.lightComplexityChanged.get(primType).getMTime()) {
       return true;
     }
 
@@ -618,7 +701,8 @@ export function vtkOpenGLPolyDataMapper(publicAPI, model) {
         }
       }
       if (cellBO.getProgram().isAttributeUsed('normalMC') &&
-          cellBO.getCABO().getNormalOffset() && model.lastLightComplexity.get(cellBO) > 0) {
+          cellBO.getCABO().getNormalOffset() &&
+          model.lastLightComplexity.get(cellBO.getPrimitiveType()) > 0) {
         if (!cellBO.getVAO().addAttributeArray(cellBO.getProgram(), cellBO.getCABO(),
                                            'normalMC', cellBO.getCABO().getNormalOffset(),
                                            cellBO.getCABO().getStride(), model.context.FLOAT, 3,
@@ -660,7 +744,7 @@ export function vtkOpenGLPolyDataMapper(publicAPI, model) {
 
   publicAPI.setLightingShaderParameters = (cellBO, ren, actor) => {
     // for unlit and headlight there are no lighting parameters
-    if (model.lastLightComplexity.get(cellBO) < 2) {
+    if (model.lastLightComplexity.get(cellBO.getPrimitiveType()) < 2) {
       return;
     }
 
@@ -712,7 +796,7 @@ export function vtkOpenGLPolyDataMapper(publicAPI, model) {
     program.setUniformi('numberOfLights', numberOfLights);
 
     // // we are done unless we have positional lights
-    if (model.lastLightComplexity.get(cellBO) < 3) {
+    if (model.lastLightComplexity.get(cellBO.getPrimitiveType()) < 3) {
       return;
     }
 
@@ -794,12 +878,14 @@ export function vtkOpenGLPolyDataMapper(publicAPI, model) {
     const ppty = actor.getProperty();
 
     const opacity = ppty.getOpacity();
-    const aColor = ppty.getAmbientColor();
+    const aColor = model.drawingEdges ? ppty.getEdgeColor()
+      : ppty.getAmbientColor();
     const aIntensity = ppty.getAmbient();
     const ambientColor = [aColor[0] * aIntensity,
       aColor[1] * aIntensity,
       aColor[2] * aIntensity];
-    const dColor = ppty.getDiffuseColor();
+    const dColor = model.drawingEdges ? ppty.getEdgeColor()
+      : ppty.getDiffuseColor();
     const dIntensity = ppty.getDiffuse();
     const diffuseColor = [dColor[0] * dIntensity,
       dColor[1] * dIntensity,
@@ -809,7 +895,7 @@ export function vtkOpenGLPolyDataMapper(publicAPI, model) {
     program.setUniform3f('ambientColorUniform', ambientColor);
     program.setUniform3f('diffuseColorUniform', diffuseColor);
     // we are done unless we have lighting
-    if (model.lastLightComplexity.get(cellBO) < 1) {
+    if (model.lastLightComplexity.get(cellBO.getPrimitiveType()) < 1) {
       return;
     }
     const sColor = ppty.getSpecularColor();
@@ -875,63 +961,41 @@ export function vtkOpenGLPolyDataMapper(publicAPI, model) {
 
     const gl = model.context;
 
-    // draw points
-    if (model.points.getCABO().getElementCount()) {
-      // Update/build/etc the shader.
-      publicAPI.updateShaders(model.points, ren, actor);
-      gl.drawArrays(gl.POINTS, 0,
-        model.points.getCABO().getElementCount());
-      model.primitiveIDOffset += model.points.getCABO().getElementCount();
-    }
+    const drawSurfaceWithEdges =
+      (actor.getProperty().getEdgeVisibility() &&
+        representation === VTK_REPRESENTATION.SURFACE);
 
-    // draw lines
-    if (model.lines.getCABO().getElementCount()) {
-      publicAPI.updateShaders(model.lines, ren, actor);
-      if (representation === VTK_REPRESENTATION.POINTS) {
-        gl.drawArrays(gl.POINTS, 0,
-          model.lines.getCABO().getElementCount());
-      } else {
-        gl.drawArrays(gl.LINES, 0,
-          model.lines.getCABO().getElementCount());
-      }
-      model.primitiveIDOffset += model.lines.getCABO().getElementCount() / 2;
-    }
+    // for every primitive type
+    for (let i = primTypes.Start; i < primTypes.End; i++) {
+      // if there are entries
+      const cabo = model.primitives[i].getCABO();
+      if (cabo.getElementCount()) {
+        // are we drawing edges
+        model.drawingEdges =
+          drawSurfaceWithEdges && (i === primTypes.TrisEdges
+          || i === primTypes.TriStripsEdges);
+        publicAPI.updateShaders(model.primitives[i], ren, actor);
+        const mode = publicAPI.getOpenGLMode(representation, i);
+        gl.drawArrays(mode, 0, cabo.getElementCount());
 
-    // draw polygons
-    if (model.tris.getCABO().getElementCount()) {
-      // First we do the triangles, update the shader, set uniforms, etc.
-      publicAPI.updateShaders(model.tris, ren, actor);
-      let mode = gl.POINTS;
-      if (representation === VTK_REPRESENTATION.WIREFRAME) {
-        mode = gl.LINES;
+        const stride = (mode === gl.POINTS ? 1 : (mode === gl.LINES ? 2 : 3));
+        model.primitiveIDOffset += cabo.getElementCount() / stride;
       }
-      if (representation === VTK_REPRESENTATION.SURFACE) {
-        mode = gl.TRIANGLES;
-      }
-      gl.drawArrays(mode, 0,
-        model.tris.getCABO().getElementCount());
-      model.primitiveIDOffset += model.tris.getCABO().getElementCount() / 3;
     }
+  };
 
-    // draw strips
-    if (model.triStrips.getCABO().getElementCount()) {
-      // Use the tris shader program/VAO, but triStrips ibo.
-      publicAPI.updateShaders(model.triStrips, ren, actor);
-      if (representation === VTK_REPRESENTATION.POINTS) {
-        gl.drawArrays(gl.POINTS, 0,
-          model.triStrips.getCABO().getElementCount());
-      }
-      if (representation === VTK_REPRESENTATION.WIREFRAME) {
-        gl.drawArrays(gl.LINES, 0,
-          model.triStrips.getCABO().getElementCount());
-      }
-      if (representation === VTK_REPRESENTATION.SURFACE) {
-        gl.drawArrays(gl.TRIANGLES, 0,
-         model.triStrips.getCABO().getElementCount());
-      }
-      // just be safe and divide by 3
-      model.primitiveIDOffset += model.triStrips.getCABO().getElementCount() / 3;
+  publicAPI.getOpenGLMode = (rep, type) => {
+    if (rep === VTK_REPRESENTATION.POINTS ||
+      type === primTypes.Points) {
+      return model.context.POINTS;
     }
+    if (rep === VTK_REPRESENTATION.WIREFRAME ||
+      type === primTypes.Lines ||
+      type === primTypes.TrisEdges ||
+      type === primTypes.TriStripsEdges) {
+      return model.context.LINES;
+    }
+    return model.context.TRIANGLES;
   };
 
   publicAPI.renderPieceFinish = (ren, actor) => {
@@ -967,7 +1031,6 @@ export function vtkOpenGLPolyDataMapper(publicAPI, model) {
 
     publicAPI.renderPieceStart(ren, actor);
     publicAPI.renderPieceDraw(ren, actor);
-    // publicAPI.renderEdges(ren, actor);
     publicAPI.renderPieceFinish(ren, actor);
   };
 
@@ -1048,7 +1111,8 @@ export function vtkOpenGLPolyDataMapper(publicAPI, model) {
       const points = poly.getPoints();
 
       let cellOffset = 0;
-      cellOffset += model.points.getCABO().createVBO(poly.getVerts(), 'verts', representation,
+      cellOffset += model.primitives[primTypes.Points].getCABO()
+        .createVBO(poly.getVerts(), 'verts', representation,
         {
           points,
           normals: n,
@@ -1058,7 +1122,8 @@ export function vtkOpenGLPolyDataMapper(publicAPI, model) {
           haveCellScalars: model.haveCellScalars,
           haveCellNormals: model.haveCellNormals,
         });
-      cellOffset += model.lines.getCABO().createVBO(poly.getLines(), 'lines', representation,
+      cellOffset += model.primitives[primTypes.Lines].getCABO()
+        .createVBO(poly.getLines(), 'lines', representation,
         {
           points,
           normals: n,
@@ -1068,7 +1133,8 @@ export function vtkOpenGLPolyDataMapper(publicAPI, model) {
           haveCellScalars: model.haveCellScalars,
           haveCellNormals: model.haveCellNormals,
         });
-      cellOffset += model.tris.getCABO().createVBO(poly.getPolys(), 'polys', representation,
+      cellOffset += model.primitives[primTypes.Tris].getCABO()
+        .createVBO(poly.getPolys(), 'polys', representation,
         {
           points,
           normals: n,
@@ -1078,7 +1144,8 @@ export function vtkOpenGLPolyDataMapper(publicAPI, model) {
           haveCellScalars: model.haveCellScalars,
           haveCellNormals: model.haveCellNormals,
         });
-      cellOffset += model.triStrips.getCABO().createVBO(poly.getStrips(), 'strips', representation,
+      cellOffset += model.primitives[primTypes.TriStrips].getCABO()
+        .createVBO(poly.getStrips(), 'strips', representation,
         {
           points,
           normals: n,
@@ -1088,6 +1155,36 @@ export function vtkOpenGLPolyDataMapper(publicAPI, model) {
           haveCellScalars: model.haveCellScalars,
           haveCellNormals: model.haveCellNormals,
         });
+      // if we have edge visibility build the edge VBOs
+      if (actor.getProperty().getEdgeVisibility()) {
+        model.primitives[primTypes.TrisEdges].getCABO()
+          .createVBO(poly.getPolys(), 'polys', VTK_REPRESENTATION.WIREFRAME,
+          {
+            points,
+            normals: n,
+            tcoords: null,
+            colors: null,
+            cellOffset: 0,
+            haveCellScalars: false,
+            haveCellNormals: false,
+          });
+        model.primitives[primTypes.TriStripsEdges].getCABO()
+          .createVBO(poly.getStrips(), 'strips', VTK_REPRESENTATION.WIREFRAME,
+          {
+            points,
+            normals: n,
+            tcoords: null,
+            colors: null,
+            cellOffset: 0,
+            haveCellScalars: false,
+            haveCellNormals: false,
+          });
+      } else { // otherwise free them
+        model.primitives[primTypes.TrisEdges]
+          .releaseGraphicsResources(model.openGLRenderWindow);
+        model.primitives[primTypes.TriStripsEdges]
+          .releaseGraphicsResources(model.openGLRenderWindow);
+      }
 
       // FIXME: cellOffset not used... (Ken?)
       console.log('FIXME(Ken):', cellOffset);
@@ -1108,6 +1205,7 @@ const DEFAULT_VALUES = {
   VBOBuildString: null,
   lightComplexityChanged: null,
   lastLightComplexity: null,
+  primitives: null,
 };
 
 // ----------------------------------------------------------------------------
@@ -1118,10 +1216,18 @@ export function extend(publicAPI, model, initialValues = {}) {
   // Inheritance
   vtkViewNode.extend(publicAPI, model);
 
-  model.points = vtkHelper.newInstance();
-  model.lines = vtkHelper.newInstance();
-  model.tris = vtkHelper.newInstance();
-  model.triStrips = vtkHelper.newInstance();
+  model.lightComplexityChanged = new Map();
+  model.lastLightComplexity = new Map();
+
+  model.primitives = [];
+
+  for (let i = primTypes.Start; i < primTypes.End; i++) {
+    model.primitives[i] = vtkHelper.newInstance();
+    model.primitives[i].setPrimitiveType(i);
+    model.lightComplexityChanged.set(i, {});
+    macro.obj(model.lightComplexityChanged.get(i));
+    model.lastLightComplexity.set(i, 0);
+  }
 
   // Build VTK API
   macro.setGet(publicAPI, model, [
@@ -1130,22 +1236,6 @@ export function extend(publicAPI, model, initialValues = {}) {
 
   model.VBOBuildTime = {};
   macro.obj(model.VBOBuildTime);
-
-  model.lightComplexityChanged = new Map();
-  model.lightComplexityChanged.set(model.points, {});
-  macro.obj(model.lightComplexityChanged.get(model.points));
-  model.lightComplexityChanged.set(model.lines, {});
-  macro.obj(model.lightComplexityChanged.get(model.lines));
-  model.lightComplexityChanged.set(model.tris, {});
-  macro.obj(model.lightComplexityChanged.get(model.tris));
-  model.lightComplexityChanged.set(model.triStrips, {});
-  macro.obj(model.lightComplexityChanged.get(model.triStrips));
-
-  model.lastLightComplexity = new Map();
-  model.lastLightComplexity.set(model.points, 0);
-  model.lastLightComplexity.set(model.lines, 0);
-  model.lastLightComplexity.set(model.tris, 0);
-  model.lastLightComplexity.set(model.triStrips, 0);
 
   // Object methods
   vtkOpenGLPolyDataMapper(publicAPI, model);

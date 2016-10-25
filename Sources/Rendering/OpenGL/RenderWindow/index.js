@@ -173,7 +173,10 @@ export function vtkOpenGLRenderWindow(publicAPI, model) {
     }
   };
 
-  publicAPI.captureImage = (format = 'image/png') => model.canvas.toDataURL(format);
+  publicAPI.captureImage = (format = 'image/png') => {
+    publicAPI.traverseAllPasses();
+    return model.canvas.toDataURL(format);
+  };
 }
 
 // ----------------------------------------------------------------------------
