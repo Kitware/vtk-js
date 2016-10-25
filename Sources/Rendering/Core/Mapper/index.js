@@ -272,6 +272,7 @@ const DEFAULT_VALUES = {
 
   useInvertibleColors: false,
   invertibleScalars: null,
+  resolveCoincidentTopology: false,
 };
 
 // ----------------------------------------------------------------------------
@@ -295,6 +296,7 @@ export function extend(publicAPI, model, initialValues = {}) {
     'interpolateScalarsBeforeMapping',
     'lookupTable',
     'renderTime',
+    'resolveCoincidentTopology',
     'scalarMaterialMode',
     'scalarMode',
     'scalarVisibility',
