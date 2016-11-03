@@ -24,8 +24,12 @@ import zipfile
 from paraview import simple
 from paraview.vtk import *
 
-from vtkFiltersGeometryPython import vtkCompositeDataGeometryFilter
-from vtkCommonCorePython import vtkUnsignedCharArray
+try:
+  from vtk.vtkFiltersGeometryPython import vtkCompositeDataGeometryFilter
+  from vtk.vtkCommonCorePython import vtkUnsignedCharArray
+except:
+  from vtkFiltersGeometryPython import vtkCompositeDataGeometryFilter
+  from vtkCommonCorePython import vtkUnsignedCharArray
 
 USER_HOME = os.path.expanduser('~')
 ROOT_OUTPUT_DIRECTORY = EXPORT_DIRECTORY.replace('${USER_HOME}', USER_HOME)
