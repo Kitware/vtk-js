@@ -62,6 +62,7 @@ def dumpStringArray(datasetDir, dataDir, array, root = {}, compress = True):
   if compress:
     with open(pPath, 'rb') as f_in, gzip.open(os.path.join(dataDir, pMd5 + '.gz'), 'wb') as f_out:
       shutil.copyfileobj(f_in, f_out)
+      f_in.close()
       os.remove(pPath)
 
   root['ref'] = getRef(os.path.relpath(dataDir, datasetDir), pMd5)
@@ -98,6 +99,7 @@ def dumpDataArray(datasetDir, dataDir, array, root = {}, compress = True):
   if compress:
     with open(pPath, 'rb') as f_in, gzip.open(os.path.join(dataDir, pMd5 + '.gz'), 'wb') as f_out:
         shutil.copyfileobj(f_in, f_out)
+        f_in.close()
         os.remove(pPath)
 
   # print array
