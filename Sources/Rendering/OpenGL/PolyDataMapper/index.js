@@ -1085,7 +1085,8 @@ export function vtkOpenGLPolyDataMapper(publicAPI, model) {
     }
 
     // Do we have normals?
-    let n = (actor.getProperty().getInterpolation() !== VTK_SHADING.FLAT) ? poly.getPointData().getNormals() : null;
+    let n = (actor.getProperty().getInterpolation() !== VTK_SHADING.FLAT)
+      ? poly.getPointData().getNormals() : null;
     if (n === null && poly.getCellData().getNormals()) {
       model.haveCellNormals = true;
       n = poly.getCelData().getNormals();
@@ -1099,7 +1100,9 @@ export function vtkOpenGLPolyDataMapper(publicAPI, model) {
     // parameters in the mapper
 
     const representation = actor.getProperty().getRepresentation();
-    const toString = `${poly.getMTime()}A${representation}B${poly.getMTime()}C${(n ? n.getMTime() : 1)}C${(model.colors ? model.colors.getMTime() : 1)}`;
+    const toString = `${poly.getMTime()}A${representation}B${poly.getMTime()}`
+      + `C${(n ? n.getMTime() : 1)}D${(model.colors ? model.colors.getMTime() : 1)}`
+      + `E${actor.getProperty().getEdgeVisibility()}`;
 
     let tcoords = poly.getPointData().getTCoords();
     if (!model.openGLActor.getActiveTextures().length) {

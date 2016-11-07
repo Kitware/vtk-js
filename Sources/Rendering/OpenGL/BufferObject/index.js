@@ -93,7 +93,7 @@ function vtkOpenGLBufferObject(publicAPI, model) {
   publicAPI.releaseGraphicsResources = () => {
     if (internalHandle !== null) {
       model.context.bindBuffer(convertType(internalType), null);
-      model.context.deleteBuffers(internalHandle);
+      model.context.deleteBuffer(internalHandle);
       internalHandle = null;
     }
   };
