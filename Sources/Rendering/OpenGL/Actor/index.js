@@ -14,10 +14,6 @@ function vtkOpenGLActor(publicAPI, model) {
   // Builds myself.
   publicAPI.build = (prepass) => {
     if (prepass) {
-      if (!model.renderable) {
-        return;
-      }
-
       publicAPI.prepareNodes();
       publicAPI.addMissingNodes(model.renderable.getTextures());
       publicAPI.addMissingNode(model.renderable.getMapper());
@@ -27,6 +23,9 @@ function vtkOpenGLActor(publicAPI, model) {
 
   // we draw textures, then mapper, then post pass textures
   publicAPI.traverse = (operation) => {
+    if (!model.renderable || !model.renderable.getVisibility()) {
+      return;
+    }
     publicAPI.apply(operation, true);
 
     model.activeTextures = [];
