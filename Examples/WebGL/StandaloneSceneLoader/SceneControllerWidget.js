@@ -80,6 +80,7 @@ export default function addWidget(container, sceneItems, render) {
   listContainer.style.borderRadius = '5px';
   listContainer.style.listStyle = 'none';
   listContainer.style.padding = '5px 10px';
+  listContainer.style.margin = '0';
   listContainer.style.display = 'none';
 
   container.appendChild(listContainer);
