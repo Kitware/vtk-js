@@ -25,6 +25,9 @@ function vtkOpenGLActor2D(publicAPI, model) {
 
   // we draw textures, then mapper, then post pass textures
   publicAPI.traverse = (operation) => {
+    if (!model.renderable || !model.renderable.getVisibility()) {
+      return;
+    }
     publicAPI.apply(operation, true);
 
     model.activeTextures = [];
