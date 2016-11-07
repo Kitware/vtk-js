@@ -5,47 +5,67 @@ import vtkHttpDataSetReader from '../../../../Sources/IO/Core/HttpDataSetReader'
 
 import DataAccessHelper from '../DataAccessHelper';
 
+let itemCount = 1;
+
+function applySettings(sceneItem, settings) {
+  if (settings.actor) {
+    console.log('actor', settings.actor);
+    sceneItem.actor.set(settings.actor);
+  }
+
+  if (settings.property) {
+    console.log('property', settings.property);
+    sceneItem.actor.getProperty().set(settings.property);
+  }
+
+  if (settings.mapper) {
+    console.log('mapper', settings.mapper);
+    if (settings.mapper.colorByArrayName) {
+      sceneItem.source.enableArray(settings.mapper.colorByArrayName, settings.mapper.colorByArrayName);
+      sceneItem.source.loadData();
+    }
+
+    sceneItem.mapper.set(settings.mapper);
+  }
+
+  if (settings.lookupTable) {
+    sceneItem.mapper.getLookupTable().set(settings.lookupTable);
+    sceneItem.mapper.getLookupTable().build();
+  }
+}
+
 // ----------------------------------------------------------------------------
 // Global methods
 // ----------------------------------------------------------------------------
 
 function loadHttpDataSetReader(item, model, publicAPI) {
-  const reader = vtkHttpDataSetReader.newInstance({ fetchGzip: model.fetchGzip, dataAccessHelper: model.dataAccessHelper });
+  const source = vtkHttpDataSetReader.newInstance({ fetchGzip: model.fetchGzip, dataAccessHelper: model.dataAccessHelper });
   const actor = vtkActor.newInstance();
-  model.renderer.addActor(actor);
   const mapper = vtkMapper.newInstance();
-  actor.setMapper(mapper);
-  mapper.setInputConnection(reader.getOutputPort());
+  const sceneItem = {
+    name: item.name || `Item ${itemCount++}`,
+    source,
+    mapper,
+    actor,
+    defaultSettings: item,
+  };
 
-  reader
+  model.renderer.addActor(actor);
+  actor.setMapper(mapper);
+  mapper.setInputConnection(source.getOutputPort());
+
+  source
     .setUrl([model.baseURL, item.httpDataSetReader.url].join('/'))
     .then(() => {
-      reader.loadData().then(() => {
+      source.loadData().then(() => {
         publicAPI.invokeReady();
       });
     });
 
-  if (item.actor) {
-    actor.set(item.actor);
-  }
+  applySettings(sceneItem, item);
+  model.scene.push(sceneItem);
 
-  if (item.property) {
-    actor.getProperty().set(item.property);
-  }
-
-  if (item.mapper) {
-    if (item.mapper.colorByArrayName) {
-      reader.enableArray(item.mapper.colorByArrayName, item.mapper.colorByArrayName);
-      reader.loadData();
-    }
-
-    mapper.set(item.mapper);
-  }
-
-  if (item.lookupTable) {
-    mapper.getLookupTable().set(item.lookupTable);
-    mapper.getLookupTable().build();
-  }
+  return sceneItem;
 }
 
 const TYPE_MAPPING = {
@@ -61,6 +81,11 @@ export function vtkHttpSceneLoader(publicAPI, model) {
 
   // Set our className
   model.classHierarchy.push('vtkHttpSceneLoader');
+
+  // Create scene container
+  if (!model.scene) {
+    model.scene = [];
+  }
 
   function setCameraParameters(params) {
     const camera = model.renderer.getActiveCamera();
@@ -156,6 +181,7 @@ export function extend(publicAPI, model, initialValues = {}) {
     'fetchGzip',
     'url',
     'baseURL',
+    'scene',
   ]);
   macro.setGet(publicAPI, model, [
     'renderer',
@@ -172,4 +198,4 @@ export const newInstance = macro.newInstance(extend);
 
 // ----------------------------------------------------------------------------
 
-export default { newInstance, extend };
+export default { newInstance, extend, applySettings };

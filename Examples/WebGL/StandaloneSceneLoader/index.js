@@ -13,10 +13,12 @@ import vtkHttpSceneLoader         from '../../../Sources/IO/Core/HttpSceneLoader
 
 import DataAccessHelper           from '../../../Sources/IO/Core/DataAccessHelper';
 
+import controlWidget from './SceneControllerWidget';
 import style from './SceneLoader.mcss';
 
 const iOS = /iPad|iPhone|iPod/.test(window.navigator.platform);
 let autoInit = true;
+let widgetCreated = false;
 
 // Add class to body if iOS device --------------------------------------------
 
@@ -86,6 +88,12 @@ export function load(container, options) {
   function onReady(sceneImporter) {
     sceneImporter.onReady(() => {
       renWin.render();
+
+      // Add UI to dynamically change rendering settings
+      if (!widgetCreated) {
+        widgetCreated = true;
+        controlWidget(document.querySelector('body'), sceneImporter.getScene(), renWin.render);
+      }
     });
 
     window.addEventListener('dblclick', () => {
