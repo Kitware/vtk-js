@@ -13,6 +13,9 @@ function vtkOpenGLImageSlice(publicAPI, model) {
 
   // Builds myself.
   publicAPI.build = (prepass) => {
+    if (!model.renderable || !model.renderable.getVisibility()) {
+      return;
+    }
     if (prepass) {
       if (!model.renderable) {
         return;
@@ -26,6 +29,9 @@ function vtkOpenGLImageSlice(publicAPI, model) {
 
   // Renders myself
   publicAPI.render = (prepass) => {
+    if (!model.renderable || !model.renderable.getVisibility()) {
+      return;
+    }
     if (prepass) {
       model.context = publicAPI.getFirstAncestorOfType('vtkOpenGLRenderWindow').getContext();
       publicAPI.preRender();
