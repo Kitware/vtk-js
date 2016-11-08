@@ -55,7 +55,6 @@ const OPTIONS_HTML_STR = Object.keys(SETTINGS_OPTIONS).map(name => `<option valu
 
 export default function addWidget(container, sceneItems, render) {
   function handleChange(e) {
-    console.log('handleChange', e);
     const itemIdx = Number(e.target.name);
     const value = e.target.value;
     if (sceneItems[itemIdx][value]) {
