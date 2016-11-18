@@ -50,6 +50,11 @@ export function vtkOpenGLRenderWindow(publicAPI, model) {
       model.textureUnitManager = vtkOpenGLTextureUnitManager.newInstance();
       model.textureUnitManager.setContext(model.context);
       model.shaderCache.setContext(model.context);
+      // initialize blending for transparency
+      const gl = model.context;
+      gl.blendFuncSeparate(gl.SRC_ALPHA, gl.ONE_MINUS_SRC_ALPHA,
+                       gl.ONE, gl.ONE_MINUS_SRC_ALPHA);
+      gl.enable(gl.BLEND);
       model.initialized = true;
     }
   };

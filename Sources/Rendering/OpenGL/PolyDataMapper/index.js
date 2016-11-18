@@ -597,8 +597,19 @@ export function vtkOpenGLPolyDataMapper(publicAPI, model) {
     const primType = cellBO.getPrimitiveType();
 
     let needLighting = true;
-    const haveNormals = false; // (model.currentInput.getPointData().getNormals() != null);
-    if (actor.getProperty().getRepresentation() === VTK_REPRESENTATION.POINTS) {
+
+    const poly = model.currentInput;
+
+    let n = (actor.getProperty().getInterpolation() !== VTK_SHADING.FLAT)
+      ? poly.getPointData().getNormals() : null;
+    if (n === null && poly.getCellData().getNormals()) {
+      n = poly.getCelData().getNormals();
+    }
+
+    const haveNormals = (n !== null);
+
+    if (actor.getProperty().getRepresentation() === VTK_REPRESENTATION.POINTS ||
+        primType === primTypes.Points) {
       needLighting = haveNormals;
     }
 
