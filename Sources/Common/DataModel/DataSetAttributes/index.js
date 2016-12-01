@@ -15,53 +15,22 @@ function vtkDataSetAttributes(publicAPI, model) {
   // Set our className
   model.classHierarchy.push('vtkDataSetAttributes');
 
-  publicAPI.getScalars = () => {
-    const array = model.arrays[model.activeScalars];
-    if (array) {
-      return array;
-    }
-    return null;
-  };
+  const attrTypes = ['Scalars', 'Vectors', 'Normals',
+    'TCoords', 'Tensors', 'GlobalIds', 'PedigreeIds'];
 
-  publicAPI.getVectors = () => {
-    const array = model.arrays[model.activeVectors];
-    if (array) {
-      return array;
-    }
-    return null;
-  };
-
-  publicAPI.getNormals = () => {
-    const array = model.arrays[model.activeNormals];
-    if (array) {
-      return array;
-    }
-    return null;
-  };
-
-  publicAPI.getTCoords = () => {
-    const array = model.arrays[model.activeTCoords];
-    if (array) {
-      return array;
-    }
-    return null;
-  };
-
-  publicAPI.getGlobalIds = () => {
-    const array = model.arrays[model.activeGlobalIds];
-    if (array) {
-      return array;
-    }
-    return null;
-  };
-
-  publicAPI.getPedigreeIds = () => {
-    const array = model.arrays[model.activePedigreeIds];
-    if (array) {
-      return array;
-    }
-    return null;
-  };
+  attrTypes.forEach((value) => {
+    publicAPI[`get${value}`] = () => {
+      const array = model.arrays[model[`active${value}`]];
+      if (array) {
+        return array;
+      }
+      return null;
+    };
+    publicAPI[`set${value}`] = (da) => {
+      model.arrays[da.getName()] = da;
+      model[`active${value}`] = da.getName();
+    };
+  });
 
   publicAPI.addArray = (array) => {
     if (model.arrays[array.getName()]) {

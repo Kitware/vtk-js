@@ -26,3 +26,16 @@ table.
 
 ### See Also
 vtkLookupTable vtkColorTransferFunction
+
+### VectorComponent
+
+If the mapper does not select which component of a vector
+to map to colors, you can specify it here.
+
+### VectorSize
+
+When mapping vectors, consider only the number of components selected
+by VectorSize to be part of the vector, and ignore any other
+components.  Set to -1 to map all components.  If this is not set
+to -1, then you can use SetVectorComponent to set which scalar
+component will be the first component in the vector to be mapped.

@@ -15,7 +15,7 @@ import vtkMath from '../Math';
 
 const BELOW_RANGE_COLOR_INDEX = 0;
 const ABOVE_RANGE_COLOR_INDEX = 1;
-// const NUMBER_OF_SPECIAL_COLORS = ABOVE_RANGE_COLOR_INDEX + 1;
+const NAN_COLOR_INDEX = 2;
 
 // ----------------------------------------------------------------------------
 // vtkMyClass methods
@@ -32,9 +32,9 @@ function vtkLookupTable(publicAPI, model) {
   publicAPI.isOpaque = () => {
     if (model.opaqueFlagBuildTime.getMTime() < publicAPI.getMTime()) {
       let opaque = true;
-      // if (model.NanColor[3] < 1.0) { opaque = 0; }
-      // if (this->UseBelowRangeColor && this->BelowRangeColor[3] < 1.0) { opaque = 0; }
-      // if (this->UseAboveRangeColor && this->AboveRangeColor[3] < 1.0) { opaque = 0; }
+      if (model.nanColor[3] < 1.0) { opaque = 0; }
+      if (model.useBelowRangeColor && model.belowRangeColor[3] < 1.0) { opaque = 0; }
+      if (model.useAboveRangeColor && model.aboveRangeColor[3] < 1.0) { opaque = 0; }
       for (let i = 3; i < model.table.length && opaque; i += 4) {
         if (model.table[i] < 255) {
           opaque = false;
@@ -46,6 +46,11 @@ function vtkLookupTable(publicAPI, model) {
 
     return model.opaqueFlag;
   };
+
+  publicAPI.usingLogScale = () => false;
+
+  //----------------------------------------------------------------------------
+  publicAPI.getNumberOfAvailableColors = () => model.table.length;
 
   //----------------------------------------------------------------------------
   // Apply shift/scale to the scalar value v and return the index.
@@ -69,7 +74,12 @@ function vtkLookupTable(publicAPI, model) {
   };
 
   publicAPI.linearLookup = (v, table, p) => {
-    const index = publicAPI.linearIndexLookup(v, p);
+    let index = 0;
+    if (vtkMath.isNan(v)) {
+      index = Math.floor(p.maxIndex + 1.5 + NAN_COLOR_INDEX);
+    } else {
+      index = publicAPI.linearIndexLookup(v, p);
+    }
     return [table[4 * index], table[(4 * index) + 1], table[(4 * index) + 2], table[(4 * index) + 3]];
   };
 
@@ -83,7 +93,7 @@ function vtkLookupTable(publicAPI, model) {
   };
 
   // Public API methods
-  publicAPI.mapScalarsThroughTable = (input, output, outFormat) => {
+  publicAPI.mapScalarsThroughTable = (input, output, outFormat, inputOffset) => {
     const trange = publicAPI.getTableRange();
 
     const p = {
@@ -104,7 +114,9 @@ function vtkLookupTable(publicAPI, model) {
     if (alpha >= 1.0) {
       if (outFormat === 'VTK_RGBA') {
         for (let i = 0; i < length; i++) {
-          const cptr = publicAPI.linearLookup(inputV[i * inIncr], model.table, p);
+          const cptr =
+            publicAPI.linearLookup(inputV[(i * inIncr) + inputOffset],
+              model.table, p);
           outputV[(i * 4)] = cptr[0];
           outputV[(i * 4) + 1] = cptr[1];
           outputV[(i * 4) + 2] = cptr[2];
@@ -115,7 +127,8 @@ function vtkLookupTable(publicAPI, model) {
       /* eslint-disable no-lonely-if */
       if (outFormat === 'VTK_RGBA') {
         for (let i = 0; i < length; i++) {
-          const cptr = publicAPI.linearLookup(inputV[i * inIncr], model.table, p);
+          const cptr =
+            publicAPI.linearLookup(inputV[(i * inIncr) + inputOffset], model.table, p);
           outputV[(i * 4)] = cptr[0];
           outputV[(i * 4) + 1] = cptr[1];
           outputV[(i * 4) + 2] = cptr[2];
@@ -163,52 +176,47 @@ function vtkLookupTable(publicAPI, model) {
   };
 
   publicAPI.buildSpecialColors = () => {
-    // // Add "special" colors (NaN, below range, above range) to table here.
-    // const numberOfColors = model.table.length;
+    // Add "special" colors (NaN, below range, above range) to table here.
+    const numberOfColors = model.numberOfColors;
 
-    // // Below range color
-    // if (publicAPI.getUseBelowRangeColor() || numberOfColors === 0) {
-    //   vtkLookupTable::GetColorAsUnsignedChars(this->GetBelowRangeColor(), color);
-    //   tptr[0] = color[0];
-    //   tptr[1] = color[1];
-    //   tptr[2] = color[2];
-    //   tptr[3] = color[3];
-    //   }
-    // else
-    //   {
-    //   // Duplicate the first color in the table.
-    //   tptr[0] = table[0];
-    //   tptr[1] = table[1];
-    //   tptr[2] = table[2];
-    //   tptr[3] = table[3];
-    //   }
+    const tptr = model.table;
+    let base = (model.numberOfColors + BELOW_RANGE_COLOR_INDEX) * 4;
 
-    // // Above range color
-    // tptr = table + 4*(numberOfColors + vtkLookupTable::ABOVE_RANGE_COLOR_INDEX);
-    // if (this->GetUseAboveRangeColor() || numberOfColors == 0)
-    //   {
-    //   vtkLookupTable::GetColorAsUnsignedChars(this->GetAboveRangeColor(), color);
-    //   tptr[0] = color[0];
-    //   tptr[1] = color[1];
-    //   tptr[2] = color[2];
-    //   tptr[3] = color[3];
-    //   }
-    // else
-    //   {
-    //   // Duplicate the last color in the table.
-    //   tptr[0] = table[4*(numberOfColors-1) + 0];
-    //   tptr[1] = table[4*(numberOfColors-1) + 1];
-    //   tptr[2] = table[4*(numberOfColors-1) + 2];
-    //   tptr[3] = table[4*(numberOfColors-1) + 3];
-    //   }
+    // Below range color
+    if (model.useBelowRangeColor || numberOfColors === 0) {
+      tptr[base] = (model.belowRangeColor[0] * 255.0) + 0.5;
+      tptr[base + 1] = (model.belowRangeColor[1] * 255.0) + 0.5;
+      tptr[base + 2] = (model.belowRangeColor[2] * 255.0) + 0.5;
+      tptr[base + 3] = (model.belowRangeColor[3] * 255.0) + 0.5;
+    } else {
+      // Duplicate the first color in the table.
+      tptr[base] = tptr[0];
+      tptr[base + 1] = tptr[1];
+      tptr[base + 2] = tptr[2];
+      tptr[base + 3] = tptr[3];
+    }
 
-    // // Always use NanColor
-    // vtkLookupTable::GetColorAsUnsignedChars(this->GetNanColor(), color);
-    // tptr = table + 4*(numberOfColors + vtkLookupTable::NAN_COLOR_INDEX);
-    // tptr[0] = color[0];
-    // tptr[1] = color[1];
-    // tptr[2] = color[2];
-    // tptr[3] = color[3];
+    // Above range color
+    base = (model.numberOfColors + ABOVE_RANGE_COLOR_INDEX) * 4;
+    if (model.useAboveRangeColor || numberOfColors === 0) {
+      tptr[base] = (model.aboveRangeColor[0] * 255.0) + 0.5;
+      tptr[base + 1] = (model.aboveRangeColor[1] * 255.0) + 0.5;
+      tptr[base + 2] = (model.aboveRangeColor[2] * 255.0) + 0.5;
+      tptr[base + 3] = (model.aboveRangeColor[3] * 255.0) + 0.5;
+    } else {
+      // Duplicate the last color in the table.
+      tptr[base] = tptr[(4 * (numberOfColors - 1)) + 0];
+      tptr[base + 1] = tptr[(4 * (numberOfColors - 1)) + 1];
+      tptr[base + 2] = tptr[(4 * (numberOfColors - 1)) + 2];
+      tptr[base + 3] = tptr[(4 * (numberOfColors - 1)) + 3];
+    }
+
+    // Always use NanColor
+    base = (model.numberOfColors + NAN_COLOR_INDEX) * 4;
+    tptr[base] = (model.nanColor[0] * 255.0) + 0.5;
+    tptr[base + 1] = (model.nanColor[1] * 255.0) + 0.5;
+    tptr[base + 2] = (model.nanColor[2] * 255.0) + 0.5;
+    tptr[base + 3] = (model.nanColor[3] * 255.0) + 0.5;
   };
 
   publicAPI.build = () => {
@@ -232,6 +240,12 @@ const DEFAULT_VALUES = {
   valueRange: [1.0, 1.0],
   alphaRange: [1.0, 1.0],
   tableRange: [0.0, 1.0],
+
+  nanColor: [0.5, 0.0, 0.0, 1.0],
+  belowRangeColor: [0.0, 0.0, 0.0, 1.0],
+  aboveRangeColor: [1.0, 1.0, 1.0, 1.0],
+  useAboveRangeColor: false,
+  useBelowRangeColor: false,
 
   alpha: 1.0,
   buildTime: null,
@@ -266,6 +280,8 @@ export function extend(publicAPI, model, initialValues = {}) {
   // Create get-set macros
   macro.setGet(publicAPI, model, [
     'numberOfColors',
+    'useAboveRangeColor',
+    'useBelowRangeColor',
   ]);
 
   // Create set macros for array (needs to know size)
@@ -277,6 +293,12 @@ export function extend(publicAPI, model, initialValues = {}) {
     'tableRange',
   ], 2);
 
+  macro.setArray(publicAPI, model, [
+    'nanColor',
+    'belowRangeColor',
+    'aboveRangeColor',
+  ], 4);
+
   // Create get macros for array
   macro.getArray(publicAPI, model, [
     'hueRange',
@@ -284,6 +306,9 @@ export function extend(publicAPI, model, initialValues = {}) {
     'valueRange',
     'tableRange',
     'alphaRange',
+    'nanColor',
+    'belowRangeColor',
+    'aboveRangeColor',
   ]);
 
   // For more macro methods, see "Sources/macro.js"
