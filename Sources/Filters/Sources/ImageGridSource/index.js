@@ -73,8 +73,7 @@ export function vtkImageGridSource(publicAPI, model) {
       da.setName('scalars');
 
       const cpd = id.getPointData();
-      cpd.addArray(da);
-      cpd.setActiveScalars(da.getName());
+      cpd.setScalars(da);
 
       // Update output
       outData[0] = id;

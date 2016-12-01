@@ -483,6 +483,7 @@ function vtkOpenGLTexture(publicAPI, model) {
 // ----------------------------------------------------------------------------
 
 const DEFAULT_VALUES = {
+  window: null,
   context: null,
   handle: 0,
   sendParametersTime: null,
@@ -525,10 +526,14 @@ export function extend(publicAPI, model, initialValues = {}) {
   ]);
 
   macro.setGet(publicAPI, model, [
+    'window',
     'context',
     'keyMatrixTime',
     'minificationFilter',
     'magnificationFilter',
+    'wrapS',
+    'wrapT',
+    'wrapR',
   ]);
 
   macro.get(publicAPI, model, [

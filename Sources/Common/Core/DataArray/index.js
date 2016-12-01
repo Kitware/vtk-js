@@ -166,6 +166,14 @@ function vtkDataArray(publicAPI, model) {
     return model.cellSizes;
   };
 
+  publicAPI.getName = () => {
+    if (!model.name) {
+      publicAPI.modified();
+      model.name = `vtkDataArray${publicAPI.getMTime()}`;
+    }
+    return model.name;
+  };
+
   publicAPI.setData = (typedArray, numberOfComponents) => {
     model.values = typedArray;
     model.size = typedArray.length;
@@ -218,7 +226,7 @@ export function extend(publicAPI, model, initialValues = {}) {
 
   // Object methods
   macro.obj(publicAPI, model);
-  macro.setGet(publicAPI, model, ['name']);
+  macro.set(publicAPI, model, ['name']);
 
   // Object specific methods
   vtkDataArray(publicAPI, model);

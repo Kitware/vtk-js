@@ -1,5 +1,5 @@
 import * as macro from '../../../macro';
-import { VECTOR_MODE } from './Constants';  // { ENUM_1: 0, ENUM_2: 1, ... }
+import { VTK_VECTOR_MODE } from './Constants';
 import { VTK_COLOR_MODE } from '../../../Rendering/Core/Mapper/Constants';
 import { VTK_DATATYPES } from '../DataArray/Constants';
 import vtkDataArray from '../DataArray';
@@ -27,6 +27,11 @@ function floatColorToUChar(c) { return Math.floor((c * 255.0) + 0.5); }
 function vtkScalarsToColors(publicAPI, model) {
   // Set our className
   model.classHierarchy.push('vtkScalarsToColors');
+
+  publicAPI.setVectorModeToMagnitude = () => publicAPI.setVectorMode(VTK_VECTOR_MODE.MAGNITUDE);
+  publicAPI.setVectorModeToComponent = () => publicAPI.setVectorMode(VTK_VECTOR_MODE.COMPONENT);
+  publicAPI.setVectorModeToRGBColors = () => publicAPI.setVectorMode(VTK_VECTOR_MODE.RGBCOLORS);
+
 
   // Description:
   // Internal methods that map a data array into a 4-component,
@@ -60,7 +65,7 @@ function vtkScalarsToColors(publicAPI, model) {
         type: 'vtkDataArray',
         name: 'temp',
         tuple: 4,
-        dataType: 'Uint8ClampedArray',
+        dataType: VTK_DATATYPES.UNSIGNED_CHAR,
       };
 
       const s = new window[newscalars.dataType](4 * scalars.getNumberOfTuples());
@@ -71,27 +76,126 @@ function vtkScalarsToColors(publicAPI, model) {
       newscalars.size = s.length;
       newColors = vtkDataArray.newInstance(newscalars);
 
-      // let component = componentIn;
+      let component = componentIn;
 
-      // // If mapper did not specify a component, use the VectorMode
-      // if (component < 0 && numberOfComponents > 1) {
-      //   publicAPI.mapVectorsThroughTable(scalars,
-      //                                newColors,
-      //                                VTK_RGBA);
-      // } else {
-      //   if (component < 0) {
-      //     component = 0;
-      //   }
-      //   if (component >= numberOfComponents) {
-      //     component = numberOfComponents - 1;
-      //   }
+      // If mapper did not specify a component, use the VectorMode
+      if (component < 0 && numberOfComponents > 1) {
+        publicAPI.mapVectorsThroughTable(scalars, newColors, 'VTK_RGBA', -1, -1);
+      } else {
+        if (component < 0) {
+          component = 0;
+        }
+        if (component >= numberOfComponents) {
+          component = numberOfComponents - 1;
+        }
 
-      // Map the scalars to colors
-      publicAPI.mapScalarsThroughTable(scalars, newColors, 'VTK_RGBA');
-      // }
+        // Map the scalars to colors
+        publicAPI.mapScalarsThroughTable(scalars, newColors, 'VTK_RGBA', component);
+      }
     }
 
     return newColors;
+  };
+
+  publicAPI.mapVectorsToMagnitude = (input, output, compsToUse) => {
+    const length = input.getNumberOfTuples();
+    const inIncr = input.getNumberOfComponents();
+
+    const outputV = output.getData();
+    const inputV = input.getData();
+
+    for (let i = 0; i < length; i++) {
+      let sum = 0.0;
+      for (let j = 0; j < compsToUse; j++) {
+        sum += inputV[(i * inIncr) + j];
+      }
+      outputV[i] = Math.sqrt(sum);
+    }
+  };
+
+  //----------------------------------------------------------------------------
+  // Map a set of vector values through the table
+  publicAPI.mapVectorsThroughTable = (
+    input, output,
+    outputFormat,
+    vectorComponentIn,
+    vectorSizeIn) => {
+    let vectorMode = publicAPI.getVectorMode();
+    let vectorSize = vectorSizeIn;
+    let vectorComponent = vectorComponentIn;
+    const inComponents = input.getNumberOfComponents();
+
+    if (vectorMode === VTK_VECTOR_MODE.COMPONENT) {
+      // make sure vectorComponent is within allowed range
+      if (vectorComponent === -1) {
+        // if set to -1, use default value provided by table
+        vectorComponent = publicAPI.getVectorComponent();
+      }
+      if (vectorComponent < 0) {
+        vectorComponent = 0;
+      }
+      if (vectorComponent >= inComponents) {
+        vectorComponent = inComponents - 1;
+      }
+    } else {
+      // make sure vectorSize is within allowed range
+      if (vectorSize === -1) {
+        // if set to -1, use default value provided by table
+        vectorSize = publicAPI.getVectorSize();
+      }
+      if (vectorSize <= 0) {
+        vectorComponent = 0;
+        vectorSize = inComponents;
+      } else {
+        if (vectorComponent < 0) {
+          vectorComponent = 0;
+        }
+        if (vectorComponent >= inComponents) {
+          vectorComponent = inComponents - 1;
+        }
+        if (vectorComponent + vectorSize > inComponents) {
+          vectorSize = inComponents - vectorComponent;
+        }
+      }
+
+      if (vectorMode === VTK_VECTOR_MODE.MAGNITUDE &&
+          (inComponents === 1 || vectorSize === 1)) {
+        vectorMode = VTK_VECTOR_MODE.COMPONENT;
+      }
+    }
+
+    // increment input pointer to the first component to map
+    let inputOffset = 0;
+    if (vectorComponent > 0) {
+      inputOffset = vectorComponent;
+    }
+
+    // map according to the current vector mode
+    switch (vectorMode) {
+      case VTK_VECTOR_MODE.COMPONENT: {
+        publicAPI.mapScalarsThroughTable(
+          input, output, outputFormat, inputOffset);
+        break;
+      }
+
+      default:
+      case VTK_VECTOR_MODE.MAGNITUDE: {
+        const magValues =
+          vtkDataArray.newInstance({ tuple: 1, values: new Float32Array(input.getNumberOfTuples()) });
+
+        publicAPI.mapVectorsToMagnitude(input, magValues, vectorSize);
+        publicAPI.mapScalarsThroughTable(
+          magValues, output, outputFormat, 0);
+        break;
+      }
+
+      case VTK_VECTOR_MODE.RGBCOLORS: {
+        // publicAPI.mapColorsToColors(
+        //   input, output, inComponents, vectorSize,
+        //   outputFormat);
+        break;
+      }
+    }
   };
 
   publicAPI.luminanceToRGBA = (newColors, colors, alpha, convtFun) => {
@@ -216,6 +320,8 @@ function vtkScalarsToColors(publicAPI, model) {
     return newColors;
   };
 
+  publicAPI.usingLogScale = () => false;
+
   publicAPI.setRange = (min, max) => publicAPI.setInputRange(min, max);
 }
 
@@ -227,7 +333,7 @@ const DEFAULT_VALUES = {
   alpha: 1.0,
   vectorComponent: 0,
   vectorSize: -1,
-  vectorMode: VECTOR_MODE.COMPONENT,
+  vectorMode: VTK_VECTOR_MODE.COMPONENT,
   inputRange: [0, 255],
 };
 
@@ -247,13 +353,15 @@ export function extend(publicAPI, model, initialValues = {}) {
 
   // Create get-set macros
   macro.setGet(publicAPI, model, [
+    'vectorSize',
     'vectorComponent',
+    'vectorMode',
     'alpha',
   ]);
 
   // Create get-set macros for enum type
   // macro.setGet(publicAPI, model, [
-  //   { name: 'vectorMode', enum: VECTOR_MODE, type: 'enum' },
+  //   { name: 'vectorMode', enum: VTK_VECTOR_MODE, type: 'enum' },
   // ]);
 
   // For more macro methods, see "Sources/macro.js"
