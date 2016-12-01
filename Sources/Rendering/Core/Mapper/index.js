@@ -359,7 +359,7 @@ function vtkMapper(publicAPI, model) {
       model.colorTextureMap.setExtent(
         0, numberOfColors - 1, 0, 1, 0, 0);
 
-      const tmp = vtkDataArray.newInstance({ tuple: 1, values: newArray });
+      const tmp = vtkDataArray.newInstance({ numberOfComponents: 1, values: newArray });
 
       model.colorTextureMap.getPointData().setScalars(
            model.lookupTable.mapScalars(tmp, model.colorMode, 0));
@@ -382,7 +382,7 @@ function vtkMapper(publicAPI, model) {
 
       // const fArray = new FloatArray(num * 2);
       model.colorCoordinates =
-        vtkDataArray.newInstance({ tuple: 2, values: new Float32Array(num * 2) });
+        vtkDataArray.newInstance({ numberOfComponents: 2, values: new Float32Array(num * 2) });
 
       let scalarComponent = model.lookupTable.getVectorComponent();
       // Although I like the feature of applying magnitude to single component

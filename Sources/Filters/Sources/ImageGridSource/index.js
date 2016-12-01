@@ -69,7 +69,7 @@ export function vtkImageGridSource(publicAPI, model) {
         }
       }
 
-      const da = vtkDataArray.newInstance({ tuple: 1, values: newArray });
+      const da = vtkDataArray.newInstance({ numberOfComponents: 1, values: newArray });
       da.setName('scalars');
 
       const cpd = id.getPointData();

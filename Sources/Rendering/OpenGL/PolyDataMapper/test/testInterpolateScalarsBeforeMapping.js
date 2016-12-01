@@ -88,7 +88,7 @@ test.onlyIfWebGL('Test Interpolate Scalars Before Colors', (t) => {
     }
   }
 
-  const da = vtkDataArray.newInstance({ tuple: 1, values: scalars });
+  const da = vtkDataArray.newInstance({ numberOfComponents: 1, values: scalars });
   pd.getPointData().setScalars(da);
 
   mapper.setInputData(pd);

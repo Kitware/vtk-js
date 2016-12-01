@@ -24,7 +24,7 @@ function getBounds(dataset) {
       const array = ds.Points.values;
       const bbox = vtkBoundingBox.newInstance();
       const size = array.length;
-      const delta = ds.Points.tuple ? ds.Points.tuple : 3;
+      const delta = ds.Points.numberOfComponents ? ds.Points.numberOfComponents : 3;
       for (let idx = 0; idx < size; idx += delta) {
         bbox.addPoint(array[idx * delta], array[(idx * delta) + 1], array[(idx * delta) + 2]);
       }

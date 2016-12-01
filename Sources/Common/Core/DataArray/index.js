@@ -87,7 +87,8 @@ function vtkDataArray(publicAPI, model) {
   // Description:
   // Return the data component at the location specified by tupleIdx and
   // compIdx.
-  publicAPI.getComponent = (tupleIdx, compIdx = 0) => model.values[(tupleIdx * model.tuple) + compIdx];
+  publicAPI.getComponent = (tupleIdx, compIdx = 0) =>
+    model.values[(tupleIdx * model.numberOfComponents) + compIdx];
 
   // Description:
   // Set the data component at the location specified by tupleIdx and compIdx
@@ -96,8 +97,8 @@ function vtkDataArray(publicAPI, model) {
   //  NumberOfComponents. Make sure enough memory has been allocated
   // (use SetNumberOfTuples() and SetNumberOfComponents()).
   publicAPI.setComponent = (tupleIdx, compIdx, value) => {
-    if (value !== model.values[(tupleIdx * model.tuple) + compIdx]) {
-      model.values[(tupleIdx * model.tuple) + compIdx] = value;
+    if (value !== model.values[(tupleIdx * model.numberOfComponents) + compIdx]) {
+      model.values[(tupleIdx * model.numberOfComponents) + compIdx] = value;
       dataChange();
     }
   };
@@ -105,11 +106,11 @@ function vtkDataArray(publicAPI, model) {
   publicAPI.getData = () => model.values;
 
   publicAPI.getRange = (componentIndex = 0) => {
-    const rangeIdx = componentIndex < 0 ? model.tuple : componentIndex;
+    const rangeIdx = componentIndex < 0 ? model.numberOfComponents : componentIndex;
     let range = null;
 
     if (!model.ranges) {
-      model.ranges = insureRangeSize(model.ranges, model.tuple);
+      model.ranges = insureRangeSize(model.ranges, model.numberOfComponents);
     }
     range = model.ranges[rangeIdx];
 
@@ -125,15 +126,16 @@ function vtkDataArray(publicAPI, model) {
   publicAPI.getTupleLocation = (idx = 1) => idx * model.tuple;
 
   publicAPI.getBounds = () => {
-    if (model.tuple === 3) {
+    if (model.numberOfComponents === 3) {
       return [].concat(
         publicAPI.getRange(0),
         publicAPI.getRange(1),
         publicAPI.getRange(2));
     }
 
-    if (model.tuple !== 2) {
-      console.error('getBounds called on an array of tuple size', model.tuple, model);
+    if (model.numberOfComponents !== 2) {
+      console.error('getBounds called on an array with components of ',
+        model.numberOfComponents, model);
       return [1, -1, 1, -1, 1, -1];
     }
 
@@ -142,9 +144,9 @@ function vtkDataArray(publicAPI, model) {
         publicAPI.getRange(1));
   };
 
-  publicAPI.getNumberOfComponents = () => model.tuple;
+  publicAPI.getNumberOfComponents = () => model.numberOfComponents;
   publicAPI.getNumberOfValues = () => model.values.length;
-  publicAPI.getNumberOfTuples = () => model.values.length / model.tuple;
+  publicAPI.getNumberOfTuples = () => model.values.length / model.numberOfComponents;
   publicAPI.getDataType = () => model.dataType;
 
   publicAPI.getNumberOfCells = () => {
@@ -179,10 +181,10 @@ function vtkDataArray(publicAPI, model) {
     model.size = typedArray.length;
     model.dataType = getDataType(typedArray);
     if (numberOfComponents) {
-      model.tuple = numberOfComponents;
+      model.numberOfComponents = numberOfComponents;
     }
-    if (model.size % model.tuple !== 0) {
-      model.tuple = 1;
+    if (model.size % model.numberOfComponents !== 0) {
+      model.numberOfComponents = 1;
     }
     dataChange();
   };
@@ -199,7 +201,7 @@ function vtkDataArray(publicAPI, model) {
 const DEFAULT_VALUES = {
   type: 'vtkDataArray',
   name: '',
-  tuple: 1,
+  numberOfComponents: 1,
   size: 0,
   dataType: VTK_DEFAULT_DATATYPE,
   values: null,
