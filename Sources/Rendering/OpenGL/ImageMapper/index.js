@@ -336,9 +336,9 @@ export function vtkOpenGLImageMapper(publicAPI, model) {
         tcoordArray[(i * 2) + 1] = (i > 1) ? 1.0 : 0.0;
       }
 
-      const points = vtkDataArray.newInstance({ tuple: 3, values: ptsArray });
+      const points = vtkDataArray.newInstance({ numberOfComponents: 3, values: ptsArray });
       points.setName('points');
-      const tcoords = vtkDataArray.newInstance({ tuple: 2, values: tcoordArray });
+      const tcoords = vtkDataArray.newInstance({ numberOfComponents: 2, values: tcoordArray });
       tcoords.setName('tcoords');
 
       const cellArray = new Uint16Array(8);
@@ -350,7 +350,7 @@ export function vtkOpenGLImageMapper(publicAPI, model) {
       cellArray[5] = 0;
       cellArray[6] = 3;
       cellArray[7] = 2;
-      const cells = vtkDataArray.newInstance({ tuple: 1, values: cellArray });
+      const cells = vtkDataArray.newInstance({ numberOfComponents: 1, values: cellArray });
 
       let cellOffset = 0;
       cellOffset += model.tris.getCABO().createVBO(cells,

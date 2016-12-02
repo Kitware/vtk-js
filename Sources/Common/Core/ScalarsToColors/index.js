@@ -64,7 +64,7 @@ function vtkScalarsToColors(publicAPI, model) {
       const newscalars = {
         type: 'vtkDataArray',
         name: 'temp',
-        tuple: 4,
+        numberOfComponents: 4,
         dataType: VTK_DATATYPES.UNSIGNED_CHAR,
       };
 
@@ -181,7 +181,7 @@ function vtkScalarsToColors(publicAPI, model) {
       default:
       case VTK_VECTOR_MODE.MAGNITUDE: {
         const magValues =
-          vtkDataArray.newInstance({ tuple: 1, values: new Float32Array(input.getNumberOfTuples()) });
+          vtkDataArray.newInstance({numberOfComponents: 1, values: new Float32Array(input.getNumberOfTuples()) });
 
         publicAPI.mapVectorsToMagnitude(input, magValues, vectorSize);
         publicAPI.mapScalarsThroughTable(
@@ -279,7 +279,12 @@ function vtkScalarsToColors(publicAPI, model) {
       return colors;
     }
 
-    const newColors = vtkDataArray.newInstance({ tuple: 4, empty: true, size: 4 * numTuples, dataType: VTK_DATATYPES.UNSIGNED_CHAR });
+    const newColors = vtkDataArray.newInstance({
+      numberOfComponents: 4,
+      empty: true,
+      size: 4 * numTuples,
+      dataType: VTK_DATATYPES.UNSIGNED_CHAR,
+    });
 
     if (numTuples <= 0) {
       return newColors;

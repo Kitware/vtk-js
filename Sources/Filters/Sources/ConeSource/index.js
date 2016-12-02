@@ -31,13 +31,13 @@ export function vtkConeSource(publicAPI, model) {
           Points: {
             type: 'vtkDataArray',
             name: '_points',
-            tuple: 3,
+            numberOfComponents: 3,
             dataType: model.pointType,
           },
           Polys: {
             type: 'vtkDataArray',
             name: '_polys',
-            tuple: 1,
+            numberOfComponents: 1,
             dataType: 'Uint32Array',
           },
         },
