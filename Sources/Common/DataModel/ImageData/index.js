@@ -40,7 +40,7 @@ function vtkImageData(publicAPI, model) {
     ];
 
     // Start to shallow copy each piece
-    fieldList.forEach(field => {
+    fieldList.forEach((field) => {
       modelInstance[field] = model[field].shallowCopy();
     });
 
