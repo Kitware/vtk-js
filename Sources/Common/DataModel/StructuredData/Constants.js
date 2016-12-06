@@ -1,0 +1,16 @@
+export const VTK_STRUCTURED_TYPE = {
+  VTK_UNCHANGED: 0,
+  VTK_SINGLE_POINT: 1,
+  VTK_X_LINE: 2,
+  VTK_Y_LINE: 3,
+  VTK_Z_LINE: 4,
+  VTK_XY_PLANE: 5,
+  VTK_YZ_PLANE: 6,
+  VTK_XZ_PLANE: 7,
+  VTK_XYZ_GRID: 8,
+  VTK_EMPTY: 9,
+};
+
+export default {
+  VTK_STRUCTURED_TYPE,
+};
