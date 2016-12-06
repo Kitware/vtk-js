@@ -48,7 +48,7 @@ test.onlyIfWebGL('Test Interpolate Scalars Before Colors', (t) => {
 
   // Points
   const points = new Float32Array(res * res * 3);
-  pd.getPoints().setData(points, 3);
+  pd.getPoints().setDataValues(points, 3);
 
   // Cells
   let cellLocation = 0;
