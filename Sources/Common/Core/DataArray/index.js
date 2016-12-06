@@ -1,6 +1,28 @@
 import * as macro from '../../../macro';
 import { VTK_DEFAULT_DATATYPE } from './Constants';
 
+const TUPLE_HOLDER = {
+  Int8Array: {},
+  Uint8Array: {},
+  Uint8ClampedArray: {},
+  Int16Array: {},
+  Uint16Array: {},
+  Int32Array: {},
+  Uint32Array: {},
+  Float32Array: {},
+  Float64Array: {},
+};
+
+function getTupleHolder(type, size) {
+  if (TUPLE_HOLDER[type][size]) {
+    return TUPLE_HOLDER[type][size];
+  }
+
+  const tuple = new window[type](size);
+  TUPLE_HOLDER[type][size] = tuple;
+  return tuple;
+}
+
 // ----------------------------------------------------------------------------
 // Global methods
 // ----------------------------------------------------------------------------
@@ -119,6 +141,16 @@ function vtkDataArray(publicAPI, model) {
     // Need to compute ranges...
     range = model.ranges[rangeIdx] = computeRange(model.values, componentIndex);
     return [range.min, range.max];
+  };
+
+  publicAPI.getTuple = (idx) => {
+    const numberOfComponents = model.numberOfComponents || 1;
+    const tuple = getTupleHolder(model.dataType, numberOfComponents);
+    const offset = idx * numberOfComponents;
+    for (let i = 0; i < numberOfComponents; i++) {
+      tuple[i] = model.values[offset + i];
+    }
+    return tuple;
   };
 
   publicAPI.getTupleLocation = (idx = 1) => idx * model.numberOfComponents;
