@@ -1,5 +1,7 @@
 ## vtkScalarsToColors - Superclass for mapping scalar values to colors
 
+### Description
+
 vtkScalarsToColors is a general-purpose base class for objects that
 convert scalars to colors. This include vtkLookupTable classes and
 color transfer functions. By itself, this class will simply rescale
@@ -24,7 +26,8 @@ index in the list of annotations with the number of colors in the
 table.
 
 ## See Also
-vtkLookupTable, vtkColorTransferFunction
+
+vtkLookupTable vtkColorTransferFunction
 
 ## VectorComponent
 
