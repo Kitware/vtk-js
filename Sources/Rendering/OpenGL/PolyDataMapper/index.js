@@ -1203,7 +1203,7 @@ export function vtkOpenGLPolyDataMapper(publicAPI, model) {
 
     if (model.VBOBuildString !== toString) {
       // Build the VBOs
-      const points = poly.getPoints();
+      const points = poly.getPoints().getData();
 
       let cellOffset = 0;
       cellOffset += model.primitives[primTypes.Points].getCABO()
