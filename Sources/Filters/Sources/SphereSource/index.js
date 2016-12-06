@@ -1,7 +1,7 @@
 import * as macro  from '../../../macro';
 import vtkPolyData from '../../../Common/DataModel/PolyData';
-
-/* global window */
+import vtkPoints from '../../../Common/Core/Points';
+import vtkDataArray from '../../../Common/Core/DataArray';
 
 // ----------------------------------------------------------------------------
 // vtkSphereSource methods
@@ -17,50 +17,12 @@ export function vtkSphereSource(publicAPI, model) {
     }
 
     let dataset = outData[0];
-    if (!dataset || dataset.mtime !== model.mtime) {
-      const state = {};
-      dataset = {
-        type: 'vtkPolyData',
-        mtime: model.mtime,
-        metadata: {
-          source: 'SphereSource',
-          state,
-        },
-        vtkPolyData: {
-          Points: {
-            type: 'vtkDataArray',
-            name: '_points',
-            numberOfComponents: 3,
-            dataType: model.pointType,
-          },
-          Polys: {
-            type: 'vtkDataArray',
-            name: '_polys',
-            numberOfComponents: 1,
-            dataType: 'Uint32Array',
-          },
-          PointData: {
-            Normals: {
-              type: 'vtkDataArray',
-              name: 'Normals',
-              numberOfComponents: 3,
-              dataType: 'Float32Array',
-            },
-          },
-        },
-      };
-
-      // Add parameter used to create dataset as metadata.state[*]
-      ['radius', 'latLongTessellation', 'thetaResolution', 'startTheta', 'endTheta', 'phiResolution', 'startPhi', 'endPhi'].forEach((field) => {
-        state[field] = model[field];
-      });
-      ['center'].forEach((field) => {
-        state[field] = [].concat(model[field]);
-      });
+    const pointDataType = dataset ? dataset.getPoints().getData().getDataType() : 'Float32Array';
+    if (!dataset || dataset.getMTime() !== model.mtime) {
+      dataset = vtkPolyData.newInstance();
 
       // ----------------------------------------------------------------------
       let numPoles = 0;
-
 
       // Check data, determine increments, and convert to radians
       let thetaResolution = model.thetaResolution;
@@ -87,19 +49,14 @@ export function vtkSphereSource(publicAPI, model) {
 
       // Points
       let pointIdx = 0;
-      let points = new window[dataset.vtkPolyData.Points.dataType](numPts * 3);
-      dataset.vtkPolyData.Points.values = points;
-      dataset.vtkPolyData.Points.size = numPts * 3;
+      let points = new window[pointDataType](numPts * 3);
 
       // Normals
       let normals = new Float32Array(numPts * 3);
-      dataset.vtkPolyData.PointData.Normals.values = normals;
-      dataset.vtkPolyData.PointData.Normals.size = numPts * 3;
 
       // Cells
       let cellLocation = 0;
-      let polys = new window[dataset.vtkPolyData.Polys.dataType](numPolys * 5); // FIXME array size
-      dataset.vtkPolyData.Polys.values = polys;
+      let polys = new Uint32Array(numPolys * 5); // FIXME array size
 
       // Create north pole if needed
       if (model.startPhi <= 0.0) {
@@ -218,19 +175,19 @@ export function vtkSphereSource(publicAPI, model) {
 
       // Squeeze
       points = points.subarray(0, pointIdx * 3);
-      dataset.vtkPolyData.Points.values = points;
-      dataset.vtkPolyData.Points.size = pointIdx * 3;
+      const pointsArray = vtkDataArray.newInstance({ values: points, numberOfComponents: 3 });
+      dataset.getPoints().setData(pointsArray);
 
       normals = normals.subarray(0, pointIdx * 3);
-      dataset.vtkPolyData.PointData.Normals.values = normals;
-      dataset.vtkPolyData.PointData.Normals.size = pointIdx * 3;
+      const normalArray = vtkDataArray.newInstance({ name: 'Normals', values: normals, numberOfComponents: 3 });
+      dataset.getPointData().addArray(normalArray);
 
       polys = polys.subarray(0, cellLocation);
-      dataset.vtkPolyData.Polys.values = polys;
-      dataset.vtkPolyData.Polys.size = cellLocation;
+      const polysArray = vtkDataArray.newInstance({ name: '_polys', values: polys });
+      dataset.setPolys(polysArray);
 
       // Update output
-      outData[0] = vtkPolyData.newInstance(dataset);
+      outData[0] = dataset;
       outData[0].getPointData().setActiveNormals('Normals');
     }
   }
