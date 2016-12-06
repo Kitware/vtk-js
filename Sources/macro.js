@@ -17,7 +17,7 @@ export function enumToString(e, value) {
 // vtkObject: modified(), onModified(callback), delete()
 // ----------------------------------------------------------------------------
 
-export function obj(publicAPI, model = {}) {
+export function obj(publicAPI = {}, model = {}) {
   const callbacks = [];
   model.mtime = model.mtime || globalMTime;
   model.classHierarchy = ['vtkObject'];
@@ -93,6 +93,28 @@ export function obj(publicAPI, model = {}) {
 
     // Flag the instance beeing deleted
     model.deleted = true;
+  };
+
+  // Add serialization support
+  publicAPI.getState = () => {
+    const jsonArchive = Object.assign({}, model, { vtkClass: publicAPI.getClassName() });
+
+    // Convert every vtkObject to its serializable form
+    Object.keys(jsonArchive).forEach((keyName) => {
+      if (jsonArchive[keyName] === null || jsonArchive[keyName] === undefined) {
+        delete jsonArchive[keyName];
+      } else if (jsonArchive[keyName].isA) {
+        jsonArchive[keyName] = jsonArchive[keyName].getState();
+      }
+    });
+
+    // Sort resulting object by key name
+    const sortedObj = {};
+    Object.keys(jsonArchive).sort().forEach((name) => {
+      sortedObj[name] = jsonArchive[name];
+    });
+
+    return sortedObj;
   };
 }
 
@@ -401,3 +423,27 @@ export function newInstance(extend, className) {
   return constructor;
 }
 
+// ----------------------------------------------------------------------------
+// shallowCopy
+// ----------------------------------------------------------------------------
+
+export function shallowCopyBuilder(model, constructor) {
+  return () => {
+    const modelInstance = {};
+
+    // Start to shallow copy each piece
+    Object.keys(model).forEach((fieldName) => {
+      if (modelInstance[fieldName]) {
+        modelInstance[fieldName] = model[fieldName].shallowCopy ? model[fieldName].shallowCopy() : model[fieldName];
+      }
+    });
+
+    // Create instance
+    const newInst = constructor(modelInstance);
+
+    // Reset mtime to original value
+    newInst.set({ mtime: model.mtime });
+
+    return newInst;
+  };
+}

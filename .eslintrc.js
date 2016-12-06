@@ -33,5 +33,8 @@ module.exports = {
     vtkDebugMacro: false,
     vtkErrorMacro: false,
     vtkWarningMacro: false,
-  }
+  },
+  env: {
+    browser: true,
+  },
 };

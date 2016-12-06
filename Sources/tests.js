@@ -1,4 +1,5 @@
-import './Filters/General/WarpScalar/test/testWarp.js';
-import './Filters/Sources/ConeSource/test/testCone.js';
-import './Rendering/Core/Mapper/test/testEdgeVisibility.js';
-import './Rendering/OpenGL/PolyDataMapper/test/testInterpolateScalarsBeforeMapping.js';
+import './Filters/General/WarpScalar/test/testWarp';
+import './Filters/Sources/ConeSource/test/testCone';
+import './Rendering/Core/Mapper/test/testEdgeVisibility';
+import './Rendering/OpenGL/PolyDataMapper/test/testInterpolateScalarsBeforeMapping';
+import './Testing/testSerialization';

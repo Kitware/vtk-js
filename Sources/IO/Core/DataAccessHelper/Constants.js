@@ -9,3 +9,7 @@ export const TYPE_BYTES = {
   Float32Array: 4,
   Float64Array: 8,
 };
+
+export default {
+  TYPE_BYTES,
+};

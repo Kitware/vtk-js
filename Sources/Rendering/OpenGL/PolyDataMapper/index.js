@@ -1203,7 +1203,7 @@ export function vtkOpenGLPolyDataMapper(publicAPI, model) {
 
     if (model.VBOBuildString !== toString) {
       // Build the VBOs
-      const points = poly.getPoints();
+      const points = poly.getPoints().getData();
       const options = {
         points,
         normals: n,
@@ -1221,6 +1221,7 @@ export function vtkOpenGLPolyDataMapper(publicAPI, model) {
         .createVBO(poly.getPolys(), 'polys', representation, options);
       options.cellOffset += model.primitives[primTypes.TriStrips].getCABO()
         .createVBO(poly.getStrips(), 'strips', representation, options);
+
       // if we have edge visibility build the edge VBOs
       if (actor.getProperty().getEdgeVisibility()) {
         model.primitives[primTypes.TrisEdges].getCABO()

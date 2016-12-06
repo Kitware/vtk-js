@@ -27,9 +27,13 @@ test('Test vtkWarpScalar execution', (t) => {
   filter.update();
   const input = source.getOutputData();
   const output = filter.getOutputData();
+
   t.ok(output, 'Output dataset exist');
   t.equal(output.isA('vtkPolyData'), true, 'The output dataset should be a vtkPolydata');
-  t.equal(input.getPoints().getNumberOfTuples(), output.getPoints().getNumberOfTuples(), 'The number of points do not change between input and output');
+  t.equal(
+    input.getPoints().getData().getNumberOfTuples(),
+    output.getPoints().getData().getNumberOfTuples(),
+    'The number of points do not change between input and output');
 
   t.end();
 });

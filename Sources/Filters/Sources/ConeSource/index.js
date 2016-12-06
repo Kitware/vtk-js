@@ -1,8 +1,5 @@
-import * as macro     from '../../../macro';
-import vtkPolyData    from '../../../Common/DataModel/PolyData';
-import vtkBoundingBox from '../../../Common/DataModel/BoundingBox';
-
-/* global window */
+import * as macro   from '../../../macro';
+import vtkPolyData  from '../../../Common/DataModel/PolyData';
 
 // ----------------------------------------------------------------------------
 // vtkConeSource methods
@@ -18,40 +15,10 @@ export function vtkConeSource(publicAPI, model) {
     }
 
     let dataset = outData[0];
+    const pointDataType = dataset ? dataset.getPoints().getData().getDataType() : 'Float32Array';
+
     if (!dataset || dataset.getMTime() < model.mtime) {
-      const state = {};
-      dataset = {
-        type: 'vtkPolyData',
-        mtime: model.mtime,
-        metadata: {
-          source: 'ConeSource',
-          state,
-        },
-        vtkPolyData: {
-          Points: {
-            type: 'vtkDataArray',
-            name: '_points',
-            numberOfComponents: 3,
-            dataType: model.pointType,
-          },
-          Polys: {
-            type: 'vtkDataArray',
-            name: '_polys',
-            numberOfComponents: 1,
-            dataType: 'Uint32Array',
-          },
-        },
-      };
-
-      // Add parameter used to create dataset as metadata.state[*]
-      ['height', 'radius', 'resolution', 'capping'].forEach((field) => {
-        state[field] = model[field];
-      });
-      ['center', 'direction'].forEach((field) => {
-        state[field] = [].concat(model[field]);
-      });
-
-      // ----------------------------------------------------------------------
+      console.log('exec cone');
       const angle = 2 * Math.PI / model.resolution;
       const xbot = -model.height / 2.0;
       const numberOfPoints = model.resolution + 1;
@@ -59,22 +26,16 @@ export function vtkConeSource(publicAPI, model) {
 
       // Points
       let pointIdx = 0;
-      const points = new window[dataset.vtkPolyData.Points.dataType](numberOfPoints * 3);
-      dataset.vtkPolyData.Points.values = points;
+      const points = new window[pointDataType](numberOfPoints * 3);
 
       // Cells
       let cellLocation = 0;
-      const polys = new window[dataset.vtkPolyData.Polys.dataType](cellArraySize);
-      dataset.vtkPolyData.Polys.values = polys;
-
-      const bbox = vtkBoundingBox.newInstance();
+      const polys = new Uint32Array(cellArraySize);
 
       // Add summit point
       points[0] = model.height / 2.0;
       points[1] = 0.0;
       points[2] = 0.0;
-
-      bbox.addPoint(points[0], points[1], points[2]);
 
       // Create bottom cell
       if (model.capping) {
@@ -87,8 +48,6 @@ export function vtkConeSource(publicAPI, model) {
         points[(pointIdx * 3) + 0] = xbot;
         points[(pointIdx * 3) + 1] = model.radius * Math.cos(i * angle);
         points[(pointIdx * 3) + 2] = model.radius * Math.sin(i * angle);
-
-        bbox.addPoint(points[(pointIdx * 3) + 0], points[(pointIdx * 3) + 1], points[(pointIdx * 3) + 2]);
 
         // Add points to bottom cell in reverse order
         if (model.capping) {
@@ -104,14 +63,13 @@ export function vtkConeSource(publicAPI, model) {
         polys[cellLocation++] = i + 2 > model.resolution ? 1 : i + 2;
       }
 
-      console.log('setting the bounding box');
-      dataset.vtkPolyData.Points.bounds = bbox.getBounds();
-      bbox.delete();
-
       // FIXME apply tranform
+      dataset = vtkPolyData.newInstance();
+      dataset.getPoints().getData().setData(points, 3);
+      dataset.getPolys().setData(polys, 1);
 
       // Update output
-      outData[0] = vtkPolyData.newInstance(dataset);
+      outData[0] = dataset;
     }
   }
 

@@ -1,17 +1,12 @@
 import * as macro from '../../../macro';
+import vtk from '../../../vtk';
+
 import vtkPointSet from '../PointSet';
 import vtkDataArray from '../../Core/DataArray';
 
 // ----------------------------------------------------------------------------
-// Global methods
-// ----------------------------------------------------------------------------
 
-// ----------------------------------------------------------------------------
-// Static API
-// ----------------------------------------------------------------------------
-
-export const STATIC = {
-};
+const POLYDATA_FIELDS = ['verts', 'lines', 'polys', 'strips'];
 
 // ----------------------------------------------------------------------------
 // vtkPolyData methods
@@ -21,47 +16,17 @@ function vtkPolyData(publicAPI, model) {
   // Set our className
   model.classHierarchy.push('vtkPolyData');
 
-  // Concreate Points
-  if (model.vtkPolyData && model.vtkPolyData.Points) {
-    model.points = vtkDataArray.newInstance(model.vtkPolyData.Points);
-  }
-
   // build empty cell arrays and set methods
-  ['Verts', 'Lines', 'Polys', 'Strips'].forEach((type) => {
-    const lowerType = type.toLowerCase();
-    // Don't create array if already available
-    if (model[lowerType]) {
-      return;
-    }
-    if (model.vtkPolyData && model.vtkPolyData[type]) {
-      model[lowerType] = vtkDataArray.newInstance(model.vtkPolyData[type]);
+  POLYDATA_FIELDS.forEach((type) => {
+    if (!model[type]) {
+      model[type] = vtkDataArray.newInstance({ empty: true });
     } else {
-      model[lowerType] = vtkDataArray.newInstance({ empty: true });
+      model[type] = vtk(model[type]);
     }
   });
 
   /* eslint-disable no-use-before-define */
-  publicAPI.shallowCopy = () => {
-    const modelInstance = {};
-    const fieldList = [
-      'pointData', 'cellData', 'fieldData', // Dataset
-      'points',                             // PointSet
-      'verts', 'lines', 'polys', 'strips',  // PolyData
-    ];
-
-    // Start to shallow copy each piece
-    fieldList.forEach((field) => {
-      modelInstance[field] = model[field].shallowCopy();
-    });
-
-    // Create instance
-    const newPoly = newInstance(modelInstance);
-
-    // Reset mtime to original value
-    newPoly.set({ mtime: model.mtime });
-
-    return newPoly;
-  };
+  publicAPI.shallowCopy = macro.shallowCopyBuilder(model, newInstance);
   /* eslint-enable no-use-before-define */
 }
 
@@ -70,11 +35,10 @@ function vtkPolyData(publicAPI, model) {
 // ----------------------------------------------------------------------------
 
 const DEFAULT_VALUES = {
-  PolyData: null,
-  verts: null,
-  lines: null,
-  polys: null,
-  strips: null,
+  // verts: null,
+  // lines: null,
+  // polys: null,
+  // strips: null,
 };
 
 // ----------------------------------------------------------------------------
@@ -96,4 +60,4 @@ export const newInstance = macro.newInstance(extend, 'vtkPolyData');
 
 // ----------------------------------------------------------------------------
 
-export default Object.assign({ newInstance, extend }, STATIC);
+export default { newInstance, extend };
