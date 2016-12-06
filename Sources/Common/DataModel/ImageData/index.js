@@ -1,5 +1,6 @@
 import * as macro from '../../../macro';
 import vtkDataSet from '../DataSet';
+import vtkStructuredData from '../StructuredData';
 import { VTK_STRUCTURED_TYPE } from '../StructuredData/Constants';
 
 // ----------------------------------------------------------------------------
@@ -9,6 +10,33 @@ import { VTK_STRUCTURED_TYPE } from '../StructuredData/Constants';
 function vtkImageData(publicAPI, model) {
   // Set our className
   model.classHierarchy.push('vtkImageData');
+
+  publicAPI.setExtent = (...inExtent) => {
+    if (model.deleted) {
+      console.log('instance deleted - can not call any method');
+      return;
+    }
+
+    if (!inExtent || inExtent.length !== 6) {
+      return;
+    }
+
+    let changeDetected = false;
+    model.extent.forEach((item, index) => {
+      if (item !== inExtent[index]) {
+        if (changeDetected) {
+          return;
+        }
+        changeDetected = true;
+      }
+    });
+
+    if (changeDetected) {
+      model.extent = [].concat(inExtent);
+      model.dataDescription = vtkStructuredData.getDataDescriptionFromExtent(model.extent);
+      publicAPI.modified();
+    }
+  };
 
   publicAPI.setDimensions = (i, j, k) => publicAPI.setExtent(0, i - 1, 0, j - 1, 0, k - 1);
 
@@ -39,8 +67,68 @@ function vtkImageData(publicAPI, model) {
     return dims[0] * dims[1] * dims[2];
   };
 
-  // double *GetPoint(vtkIdType ptId) VTK_OVERRIDE;
-  // void GetPoint(vtkIdType id, double x[3]) VTK_OVERRIDE;
+  publicAPI.getPoint = (index) => {
+    const dims = publicAPI.getDimensions();
+    const ijk = [0, 0, 0];
+    const coords = [0, 0, 0];
+
+    if (dims[0] === 0 || dims[1] === 0 || dims[2] === 0) {
+      vtkErrorMacro('Requesting a point from an empty image.');
+      return null;
+    }
+
+    switch (model.dataDescription) {
+      case VTK_STRUCTURED_TYPE.VTK_EMPTY:
+        return null;
+
+      case VTK_STRUCTURED_TYPE.VTK_SINGLE_POINT:
+        break;
+
+      case VTK_STRUCTURED_TYPE.VTK_X_LINE:
+        ijk[0] = index;
+        break;
+
+      case VTK_STRUCTURED_TYPE.VTK_Y_LINE:
+        ijk[1] = index;
+        break;
+
+      case VTK_STRUCTURED_TYPE.VTK_Z_LINE:
+        ijk[2] = index;
+        break;
+
+      case VTK_STRUCTURED_TYPE.VTK_XY_PLANE:
+        ijk[0] = index % dims[0];
+        ijk[1] = index / dims[0];
+        break;
+
+      case VTK_STRUCTURED_TYPE.VTK_YZ_PLANE:
+        ijk[1] = index % dims[1];
+        ijk[2] = index / dims[1];
+        break;
+
+      case VTK_STRUCTURED_TYPE.VTK_XZ_PLANE:
+        ijk[0] = index % dims[0];
+        ijk[2] = index / dims[0];
+        break;
+
+      case VTK_STRUCTURED_TYPE.VTK_XYZ_GRID:
+        ijk[0] = index % dims[0];
+        ijk[1] = (index / dims[0]) % dims[1];
+        ijk[2] = index / (dims[0] * dims[1]);
+        break;
+
+      default:
+        vtkErrorMacro('Invalid dataDescription');
+        break;
+    }
+
+    for (let i = 0; i < 3; i++) {
+      coords[i] = model.origin[i] + ((ijk[i] + model.extent[i * 2]) * model.spacing[i]);
+    }
+
+    return coords;
+  };
+
   // vtkCell *GetCell(vtkIdType cellId) VTK_OVERRIDE;
   // void GetCell(vtkIdType cellId, vtkGenericCell *cell) VTK_OVERRIDE;
   // void GetCellBounds(vtkIdType cellId, double bounds[6]) VTK_OVERRIDE;
@@ -68,16 +156,14 @@ function vtkImageData(publicAPI, model) {
   // void ComputeBounds() VTK_OVERRIDE;
   // int GetMaxCellSize() VTK_OVERRIDE {return 8;}; //voxel is the largest
 
-  publicAPI.getBounds = () => {
-    const res = [];
-    res[0] = model.origin[0] + (model.extent[0] * model.spacing[0]);
-    res[1] = model.origin[0] + (model.extent[1] * model.spacing[0]);
-    res[2] = model.origin[1] + (model.extent[2] * model.spacing[1]);
-    res[3] = model.origin[1] + (model.extent[3] * model.spacing[1]);
-    res[4] = model.origin[2] + (model.extent[4] * model.spacing[2]);
-    res[5] = model.origin[2] + (model.extent[5] * model.spacing[2]);
-    return res;
-  };
+  publicAPI.getBounds = () => [
+    model.origin[0] + (model.extent[0] * model.spacing[0]),
+    model.origin[0] + (model.extent[1] * model.spacing[0]),
+    model.origin[1] + (model.extent[2] * model.spacing[1]),
+    model.origin[1] + (model.extent[3] * model.spacing[1]),
+    model.origin[2] + (model.extent[4] * model.spacing[2]),
+    model.origin[2] + (model.extent[5] * model.spacing[2]),
+  ];
 
   /* eslint-disable no-use-before-define */
   publicAPI.shallowCopy = macro.shallowCopyBuilder(model, newInstance);
@@ -105,7 +191,7 @@ export function extend(publicAPI, model, initialValues = {}) {
 
   // Set/Get methods
   macro.setGetArray(publicAPI, model, ['origin', 'spacing'], 3);
-  macro.setGetArray(publicAPI, model, ['extent'], 6);
+  macro.getArray(publicAPI, model, ['extent'], 6);
 
   // Object specific methods
   vtkImageData(publicAPI, model);
