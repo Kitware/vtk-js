@@ -1,3 +1,5 @@
+/* eslint-disable import/prefer-default-export */
+
 export const TYPE_BYTES = {
   Int8Array: 1,
   Uint8Array: 1,
