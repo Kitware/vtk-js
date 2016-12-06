@@ -175,16 +175,14 @@ export function vtkSphereSource(publicAPI, model) {
 
       // Squeeze
       points = points.subarray(0, pointIdx * 3);
-      const pointsArray = vtkDataArray.newInstance({ values: points, numberOfComponents: 3 });
-      dataset.getPoints().setData(pointsArray);
+      dataset.getPoints().getData().setData(points, 3);
 
       normals = normals.subarray(0, pointIdx * 3);
       const normalArray = vtkDataArray.newInstance({ name: 'Normals', values: normals, numberOfComponents: 3 });
       dataset.getPointData().addArray(normalArray);
 
       polys = polys.subarray(0, cellLocation);
-      const polysArray = vtkDataArray.newInstance({ name: '_polys', values: polys });
-      dataset.setPolys(polysArray);
+      dataset.getPolys().setData(polys, 1);
 
       // Update output
       outData[0] = dataset;
