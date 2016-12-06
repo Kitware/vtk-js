@@ -1,20 +1,33 @@
-const factoryMapping = {};
+const factoryMapping = {
+  vtkObject: () => null,
+};
 
 export default function vtk(obj) {
   if (obj.isA) {
     return obj;
   }
-  if (!obj.type) {
+  if (!obj.vtkClass) {
     console.log('Invalid VTK object');
     return null;
   }
-  const constructor = factoryMapping[obj.type];
+  const constructor = factoryMapping[obj.vtkClass];
   if (!constructor) {
-    console.log('No vtk class found for Object of type', obj.type);
+    console.log('No vtk class found for Object of type', obj.vtkClass);
     return null;
   }
 
-  return constructor(obj);
+  // Shallow copy object
+  const model = Object.assign({}, obj);
+
+  // Convert into vtkObject any nested key
+  Object.keys(model).forEach((keyName) => {
+    if (typeof model[keyName] === 'object' && model[keyName].vtkClass) {
+      model[keyName] = vtk(model[keyName]);
+    }
+  });
+
+  // Return the root
+  return constructor(model);
 }
 
 export function register(vtkClassName, constructor) {
