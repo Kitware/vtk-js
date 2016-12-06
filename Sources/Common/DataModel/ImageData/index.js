@@ -1,6 +1,6 @@
 import * as macro from '../../../macro';
 import vtkDataSet from '../DataSet';
-import { VTK_STRUCTURED_TYPE } from '../StructuredData';
+import { VTK_STRUCTURED_TYPE } from '../StructuredData/Constants';
 
 // ----------------------------------------------------------------------------
 // vtkImageData methods
