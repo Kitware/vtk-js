@@ -233,7 +233,7 @@ function vtkLookupTable(publicAPI, model) {
 
 const DEFAULT_VALUES = {
   numberOfColors: 256,
-  table: null,
+  // table: null,
 
   hueRange: [0.0, 0.66667],
   saturationRange: [1.0, 1.0],
@@ -248,8 +248,8 @@ const DEFAULT_VALUES = {
   useBelowRangeColor: false,
 
   alpha: 1.0,
-  buildTime: null,
-  opaqueFlagBuildTime: null,
+  // buildTime: null,
+  // opaqueFlagBuildTime: null,
 };
 
 // ----------------------------------------------------------------------------
@@ -262,7 +262,10 @@ export function extend(publicAPI, model, initialValues = {}) {
   vtkScalarsToColors.extend(publicAPI, model);
 
   // Internal objects initialization
-  model.table = [];
+  if (!model.table) {
+    model.table = [];
+  }
+
 
   model.buildTime = {};
   macro.obj(model.buildTime);
@@ -319,7 +322,7 @@ export function extend(publicAPI, model, initialValues = {}) {
 
 // ----------------------------------------------------------------------------
 
-export const newInstance = macro.newInstance(extend);
+export const newInstance = macro.newInstance(extend, 'vtkLookupTable');
 
 // ----------------------------------------------------------------------------
 
