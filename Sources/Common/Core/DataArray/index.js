@@ -121,7 +121,7 @@ function vtkDataArray(publicAPI, model) {
     return [range.min, range.max];
   };
 
-  publicAPI.getTupleLocation = (idx = 1) => idx * model.tuple;
+  publicAPI.getTupleLocation = (idx = 1) => idx * model.numberOfComponents;
   publicAPI.getNumberOfComponents = () => model.numberOfComponents;
   publicAPI.getNumberOfValues = () => model.values.length;
   publicAPI.getNumberOfTuples = () => model.values.length / model.numberOfComponents;
