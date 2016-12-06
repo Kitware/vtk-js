@@ -1,8 +1,6 @@
 import * as macro from '../../../macro';
 import { VTK_DEFAULT_DATATYPE } from './Constants';
 
-/* global window */
-
 // ----------------------------------------------------------------------------
 // Global methods
 // ----------------------------------------------------------------------------
@@ -124,26 +122,6 @@ function vtkDataArray(publicAPI, model) {
   };
 
   publicAPI.getTupleLocation = (idx = 1) => idx * model.tuple;
-
-  publicAPI.getBounds = () => {
-    if (model.numberOfComponents === 3) {
-      return [].concat(
-        publicAPI.getRange(0),
-        publicAPI.getRange(1),
-        publicAPI.getRange(2));
-    }
-
-    if (model.numberOfComponents !== 2) {
-      console.error('getBounds called on an array with components of ',
-        model.numberOfComponents, model);
-      return [1, -1, 1, -1, 1, -1];
-    }
-
-    return [].concat(
-        publicAPI.getRange(0),
-        publicAPI.getRange(1));
-  };
-
   publicAPI.getNumberOfComponents = () => model.numberOfComponents;
   publicAPI.getNumberOfValues = () => model.values.length;
   publicAPI.getNumberOfTuples = () => model.values.length / model.numberOfComponents;
@@ -192,6 +170,30 @@ function vtkDataArray(publicAPI, model) {
   /* eslint-disable no-use-before-define */
   publicAPI.shallowCopy = () => newInstance(Object.assign({}, model));
   /* eslint-enable no-use-before-define */
+
+  // Override serialization support
+  publicAPI.getState = () => {
+    const jsonArchive = Object.assign({}, model, { vtkClass: publicAPI.getClassName() });
+
+    // Convert typed array to regular array
+    jsonArchive.values = Array.from(jsonArchive.values);
+    delete jsonArchive.buffer;
+
+    // Clean any empty data
+    Object.keys(jsonArchive).forEach((keyName) => {
+      if (!jsonArchive[keyName]) {
+        delete jsonArchive[keyName];
+      }
+    });
+
+    // Sort resulting object by key name
+    const sortedObj = {};
+    Object.keys(jsonArchive).sort().forEach((name) => {
+      sortedObj[name] = jsonArchive[name];
+    });
+
+    return sortedObj;
+  };
 }
 
 // ----------------------------------------------------------------------------
@@ -199,13 +201,12 @@ function vtkDataArray(publicAPI, model) {
 // ----------------------------------------------------------------------------
 
 const DEFAULT_VALUES = {
-  type: 'vtkDataArray',
   name: '',
   numberOfComponents: 1,
   size: 0,
   dataType: VTK_DEFAULT_DATATYPE,
-  values: null,
-  ranges: null,
+  // values: null,
+  // ranges: null,
 };
 
 // ----------------------------------------------------------------------------
@@ -213,17 +214,19 @@ const DEFAULT_VALUES = {
 export function extend(publicAPI, model, initialValues = {}) {
   Object.assign(model, DEFAULT_VALUES, initialValues);
 
-  if (model.values) {
-    model.size = model.values.length;
-    model.dataType = getDataType(model.values);
-  }
-
-  if ((!model.empty && (!model.values || !model.size)) || model.type !== 'vtkDataArray') {
-    throw Error('Can not create vtkDataArray object without: size > 0, values or type = vtkDataArray');
+  if ((!model.empty && !model.values && !model.size)) {
+    throw Error('Can not create vtkDataArray object without: size > 0, values');
   }
 
   if (!model.values) {
     model.values = new window[model.dataType](model.size);
+  } else if (Array.isArray(model.values)) {
+    model.values = window[model.dataType].from(model.values);
+  }
+
+  if (model.values) {
+    model.size = model.values.length;
+    model.dataType = getDataType(model.values);
   }
 
   // Object methods
