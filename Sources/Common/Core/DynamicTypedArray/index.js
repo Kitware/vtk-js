@@ -1,5 +1,3 @@
-/* global window */
-
 export default class DynamicTypedArray {
   constructor({ chunkSize = 65536, arrayType = 'Int32Array' } = {}) {
     this.ArrayConstructor = window[arrayType];
