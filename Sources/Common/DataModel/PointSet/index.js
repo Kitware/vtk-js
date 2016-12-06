@@ -1,17 +1,12 @@
 import * as macro   from '../../../macro';
-import vtkDataSet   from '../DataSet';
-import vtkDataArray from '../../Core/DataArray';
+import vtk   from '../../../vtk';
+
+import vtkDataSet from '../DataSet';
+import vtkPoints from '../../Core/Points';
 
 // ----------------------------------------------------------------------------
 // Global methods
 // ----------------------------------------------------------------------------
-
-// ----------------------------------------------------------------------------
-// Static API
-// ----------------------------------------------------------------------------
-
-export const STATIC = {
-};
 
 // ----------------------------------------------------------------------------
 // vtkPointSet methods
@@ -23,7 +18,9 @@ function vtkPointSet(publicAPI, model) {
 
   // Create empty points
   if (!model.points) {
-    model.points = vtkDataArray.newInstance({ empty: true });
+    model.points = vtkPoints.newInstance();
+  } else {
+    model.points = vtk(model.points);
   }
 
   publicAPI.getBounds = () => model.points.getBounds();
@@ -38,7 +35,7 @@ function vtkPointSet(publicAPI, model) {
 // ----------------------------------------------------------------------------
 
 const DEFAULT_VALUES = {
-  points: null,
+  // points: null,
 };
 
 // ----------------------------------------------------------------------------
@@ -60,4 +57,4 @@ export const newInstance = macro.newInstance(extend, 'vtkPointSet');
 
 // ----------------------------------------------------------------------------
 
-export default Object.assign({ newInstance, extend }, STATIC);
+export default { newInstance, extend };
