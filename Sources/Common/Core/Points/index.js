@@ -10,6 +10,12 @@ function vtkPoints(publicAPI, model) {
   // Set our className
   model.classHierarchy.push('vtkPoints');
 
+  // Forwarding methods
+  publicAPI.getNumberOfTuples = () => model.data.getNumberOfTuples();
+  publicAPI.getNumberOfValues = () => model.data.getNumberOfValues();
+  publicAPI.getDataType = () => model.data.getDataType();
+  publicAPI.setDataValues = (typedArray, size) => model.data.setData(typedArray, size);
+
   publicAPI.getNumberOfPoints = () => model.data.getNumberOfTuples();
 
   publicAPI.setNumberOfPoints = (nbPoints, dimension = 3) => {
@@ -25,9 +31,9 @@ function vtkPoints(publicAPI, model) {
   publicAPI.getBounds = () => {
     if (model.data.getNumberOfComponents() === 3) {
       return [].concat(
-        publicAPI.data.getRange(0),
-        publicAPI.data.getRange(1),
-        publicAPI.data.getRange(2));
+        model.data.getRange(0),
+        model.data.getRange(1),
+        model.data.getRange(2));
     }
 
     if (model.data.getNumberOfComponents() !== 2) {
@@ -37,8 +43,8 @@ function vtkPoints(publicAPI, model) {
     }
 
     return [].concat(
-      publicAPI.data.getRange(0),
-      publicAPI.data.getRange(1));
+      model.data.getRange(0),
+      model.data.getRange(1));
   };
 
   // Trigger the computation of bounds
