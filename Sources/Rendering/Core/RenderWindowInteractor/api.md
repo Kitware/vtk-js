@@ -17,6 +17,6 @@ Initialize/Start/Enable/Disable.
 ### Caveats
 vtkRenderWindowInteractor routes events through VTK's command/observer
 design pattern. That is, when vtkRenderWindowInteractor (actually, one of
-its subclasses) sees a event, it translates this into
-a VTK event using the InvokeEvent() method. Then any vtkInteractorObservers
-registered for that event are expected to respond as appropriate.
+its subclasses) sees an event, it translates it into
+a VTK event using the InvokeEvent() method. Afterward, any vtkInteractorObservers
+registered for that event are expected to respond appropriately.
