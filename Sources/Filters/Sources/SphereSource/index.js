@@ -1,6 +1,5 @@
 import * as macro  from '../../../macro';
 import vtkPolyData from '../../../Common/DataModel/PolyData';
-import vtkPoints from '../../../Common/Core/Points';
 import vtkDataArray from '../../../Common/Core/DataArray';
 
 // ----------------------------------------------------------------------------
