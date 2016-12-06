@@ -2,6 +2,7 @@ import * as macro                 from '../../../../macro';
 import vtkActor                   from '../../../../Rendering/Core/Actor';
 import vtkCamera                  from '../../../../Rendering/Core/Camera';
 import vtkDataArray               from '../../../../Common/Core/DataArray';
+import vtkPolyData                from '../../../../Common/DataModel/PolyData';
 import vtkMapper                  from '../../../../Rendering/Core/Mapper';
 import vtkOpenGLRenderWindow      from '../../../../Rendering/OpenGL/RenderWindow';
 import vtkRenderer                from '../../../../Rendering/Core/Renderer';
@@ -62,11 +63,20 @@ const randFilter = macro.newInstance((publicAPI, model) => {
       const da = vtkDataArray.newInstance({ values: newArray });
       da.setName('spike');
 
-      const outDS = inData[0].shallowCopy();
-      outDS.getPointData().addArray(da);
-      outDS.getPointData().setActiveScalars(da.getName());
+      // const outDS = inData[0].shallowCopy();
+      // outDS.getPointData().addArray(da);
+      // outDS.getPointData().setActiveScalars(da.getName());
 
-      outData[0] = outDS;
+
+      const pd = vtkPolyData.newInstance();
+      pd.setPolys(inData[0].getPolys());
+      pd.setPoints(inData[0].getPoints());
+      pd.getPointData().addArray(da);
+      pd.getPointData().setActiveScalars(da.getName());
+
+      console.log(pd.getState());
+
+      outData[0] = pd;
     }
   };
 })();
@@ -86,23 +96,23 @@ iren.start();
 // ----------------
 
 // Warp setup
-['scaleFactor'].forEach(propertyName => {
-  document.querySelector(`.${propertyName}`).addEventListener('input', e => {
+['scaleFactor'].forEach((propertyName) => {
+  document.querySelector(`.${propertyName}`).addEventListener('input', (e) => {
     const value = Number(e.target.value);
     filter.set({ [propertyName]: value });
     renWin.render();
   });
 });
 
-document.querySelector('.useNormal').addEventListener('change', e => {
+document.querySelector('.useNormal').addEventListener('change', (e) => {
   const useNormal = !!(e.target.checked);
   filter.set({ useNormal });
   renWin.render();
 });
 
 // Sphere setup
-['radius', 'thetaResolution', 'phiResolution'].forEach(propertyName => {
-  document.querySelector(`.${propertyName}`).addEventListener('input', e => {
+['radius', 'thetaResolution', 'phiResolution'].forEach((propertyName) => {
+  document.querySelector(`.${propertyName}`).addEventListener('input', (e) => {
     const value = Number(e.target.value);
     sphereSource.set({ [propertyName]: value });
     renWin.render();
