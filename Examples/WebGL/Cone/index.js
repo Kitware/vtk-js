@@ -86,13 +86,13 @@ iren.bindEvents(renderWindowContainer, document);
 
 // ----------------
 
-representationSelector.addEventListener('change', e => {
+representationSelector.addEventListener('change', (e) => {
   const newRepValue = Number(e.target.value);
   actor.getProperty().setRepresentation(newRepValue);
   renWin.render();
 });
 
-resolutionChange.addEventListener('input', e => {
+resolutionChange.addEventListener('input', (e) => {
   const resolution = Number(e.target.value);
   coneSource.setResolution(resolution);
   renWin.render();
