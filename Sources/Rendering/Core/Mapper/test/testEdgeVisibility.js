@@ -7,7 +7,7 @@ import vtkSphereSource from '../../../../Filters/Sources/SphereSource';
 import vtkActor from '../../../../Rendering/Core/Actor';
 import vtkMapper from '../../../../Rendering/Core/Mapper';
 
-import baseline from './baseline.png';
+import baseline from './testEdgeVisibility.png';
 import testUtils from '../../../../Testing/testUtils';
 
 /* global document */

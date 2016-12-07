@@ -7,7 +7,7 @@ import vtkPlaneSource from '../../../../Filters/Sources/PlaneSource';
 import vtkActor from '../../../../Rendering/Core/Actor';
 import vtkMapper from '../../../../Rendering/Core/Mapper';
 
-import baseline from './baseline.png';
+import baseline from './testPlane.png';
 import testUtils from '../../../../Testing/testUtils';
 
 /* global document */
