@@ -91,16 +91,26 @@ test('Macro methods array tests', (t) => {
   t.ok(myTestClass.setMyProp5(...myArray), 'Array spread set OK');
   t.deepEqual(myTestClass.getMyProp5(), myArray, 'Array spread set should match get');
 
+  const mtime1 = myTestClass.getMTime();
   myArray[0] = 99.9;
   t.ok(myTestClass.setMyProp5(myArray), 'OK to set a single array argument');
   t.deepEqual(myTestClass.getMyProp5(), myArray, 'Array set should match get');
 
+  const mtime2 = myTestClass.getMTime();
+  t.ok(mtime2 > mtime1, 'mtime should increase after set');
   // set a too-short array, separate args
   t.throws(() => myTestClass.setMyProp6(1, 2, 3), /RangeError/, 'Invalid number of values should throw');
   t.deepEqual(myTestClass.getMyProp6(), DEFAULT_VALUES.myProp6, 'Keep default value after illegal set');
 
+  const mtime3 = myTestClass.getMTime();
+  t.ok(mtime3 === mtime2, 'mtime should not increase after idempotent set');
+
   // set a too-long array, single array arg
   t.throws(() => myTestClass.setMyProp5([].concat(myArray, 555)), /RangeError/, 'Invalid number of values should throw');
+  t.deepEqual(myTestClass.getMyProp5(), myArray, 'Keep value after illegal set');
+
+  // set an string
+  t.throws(() => myTestClass.setMyProp5('a string, really'), /RangeError/, 'Invalid set with string should throw');
   t.deepEqual(myTestClass.getMyProp5(), myArray, 'Keep value after illegal set');
 
   t.end();
@@ -116,11 +126,48 @@ test('Macro methods enum tests', (t) => {
   t.ok(myTestClass.setMyProp7(2));
   t.equal(myTestClass.getMyProp7(), MY_ENUM.SECOND, 'Enum set by index should get matching enum value');
 
-  t.notOk(myTestClass.setMyProp7(42));
+  t.notOk(myTestClass.setMyProp7(2), 'Setting idempotent value should return false');
+
+  t.throws(() => myTestClass.setMyProp7(42), /RangeError/, 'Invalid enum index should throw');
   t.equal(myTestClass.getMyProp7(), MY_ENUM.SECOND, 'Enum set out of range should be rejected');
 
-  t.notOk(myTestClass.setMyProp7('FORTH'));
+  t.throws(() => myTestClass.setMyProp7('FORTH'), /RangeError/, 'Invalid enum string should throw');
   t.equal(myTestClass.getMyProp7(), MY_ENUM.SECOND, 'Enum set string out of range should be rejected');
+
+  t.throws(() => myTestClass.setMyProp7([2]), /TypeError/, 'Invalid enum set with array/object should throw');
+  t.equal(myTestClass.getMyProp7(), MY_ENUM.SECOND, 'Enum set string out of range should be rejected');
+
+  t.end();
+});
+
+test('Macro methods object tests', (t) => {
+  const myTestClass = newInstance();
+
+  t.ok(myTestClass.get(), 'Get entire model');
+  t.deepEqual(myTestClass.get(...Object.keys(DEFAULT_VALUES)), DEFAULT_VALUES, 'Get defaults back test');
+
+  t.throws(() => { myTestClass.getMyProp1 = () => ('42'); }, /TypeError/, 'Object should be frozen');
+
+  t.ok(myTestClass.set({ changeWhenModified: 'foo' }));
+  const off = myTestClass.onModified((publicAPI) => { publicAPI.set({ changeWhenModified: 'bar' }); });
+  t.ok(myTestClass.setMyProp3(false));
+  t.deepEqual(myTestClass.get('changeWhenModified'), { changeWhenModified: 'bar' }, 'Object modified fires');
+  off.unsubscribe();
+  myTestClass.set({ changeWhenModified: 'foobaz' });
+  myTestClass.setMyProp3(true);
+  t.deepEqual(myTestClass.get('changeWhenModified'), { changeWhenModified: 'foobaz' }, 'Object modified does not fire after unsubscribe');
+
+  t.ok(myTestClass.set({ myProp4: 99.9, myProp5: [1, 1, 1, 1] }), 'Test mult-set');
+  t.equal(myTestClass.getMyProp4(), 99.9, 'Float get should match multi-set');
+  t.deepEqual(myTestClass.getMyProp5(), [1, 1, 1, 1], 'Array multi-set should match get');
+
+  t.ok(myTestClass.isA('vtkMyClass'));
+  t.ok(myTestClass.isA('vtkObject'));
+  t.notOk(myTestClass.isA('vtkPoint'));
+  t.equal(myTestClass.getClassName(), 'vtkMyClass');
+
+  t.doesNotThrow(() => myTestClass.delete());
+  t.notOk(myTestClass.getMyProp4(), 'All calls should do nothing after delete');
 
   t.end();
 });

@@ -68,19 +68,22 @@ export function obj(publicAPI = {}, model = {}) {
   publicAPI.getClassName = () => model.classHierarchy.slice(-1)[0];
 
   publicAPI.set = (map = {}) => {
+    let ret = false;
     Object.keys(map).forEach((name) => {
       if (Array.isArray(map[name])) {
-        publicAPI[`set${capitalize(name)}`](...map[name]);
+        ret = publicAPI[`set${capitalize(name)}`](...map[name]) || ret;
       } else if (publicAPI[`set${capitalize(name)}`]) {
-        publicAPI[`set${capitalize(name)}`](map[name]);
+        ret = publicAPI[`set${capitalize(name)}`](map[name]) || ret;
       } else {
         // Set data on model directly
         if (['mtime'].indexOf(name) === -1) {
           console.log('Warning: Set value to model directly', name, map[name]);
         }
         model[name] = map[name];
+        ret = true;
       }
     });
+    return ret;
   };
 
   publicAPI.get = (...list) => {
@@ -98,7 +101,7 @@ export function obj(publicAPI = {}, model = {}) {
     Object.keys(model).forEach(field => delete model[field]);
     callbacks.forEach((el, index) => off(index));
 
-    // Flag the instance beeing deleted
+    // Flag the instance being deleted
     model.deleted = true;
   };
 
@@ -158,7 +161,7 @@ const objectSetterMap = {
           return false;
         }
         console.error('Set Enum with invalid argument', field, value);
-        return null;
+        throw new RangeError('Set Enum with invalid string argument');
       }
       if (typeof value === 'number') {
         if (model[field.name] !== value) {
@@ -167,12 +170,13 @@ const objectSetterMap = {
             publicAPI.modified();
             return true;
           }
-          console.error('Set Enum outside range', field, value);
+          console.error('Set Enum outside numeric range', field, value);
+          throw new RangeError('Set Enum outside numeric range');
         }
         return false;
       }
       console.error('Set Enum with invalid argument (String/Number)', field, value);
-      return null;
+      throw new TypeError('Set Enum with invalid argument (String/Number)');
     };
   },
 };
@@ -185,7 +189,7 @@ function findSetter(field) {
     }
 
     console.error('No setter for field', field);
-    return null;
+    throw new TypeError('No setter for field');
   }
   return function getSetter(publicAPI, model) {
     return function setter(value) {
