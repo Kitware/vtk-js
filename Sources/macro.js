@@ -134,7 +134,7 @@ export function obj(publicAPI = {}, model = {}) {
 export function get(publicAPI, model, fieldNames) {
   fieldNames.forEach((field) => {
     if (typeof field === 'object') {
-      publicAPI[`get${capitalize(field.name)}`] = () => model[field];
+      publicAPI[`get${capitalize(field.name)}`] = () => model[field.name];
     } else {
       publicAPI[`get${capitalize(field)}`] = () => model[field];
     }
@@ -149,15 +149,15 @@ const objectSetterMap = {
   enum(publicAPI, model, field) {
     return (value) => {
       if (typeof value === 'string') {
-        if (model.enum[value] !== undefined) {
-          if (model[field.name] !== model.enum[value]) {
-            model[field.name] = model.enum[value];
+        if (field.enum[value] !== undefined) {
+          if (model[field.name] !== field.enum[value]) {
+            model[field.name] = field.enum[value];
             publicAPI.modified();
             return true;
           }
           return false;
         }
-        console.log('Set Enum with invalid argument', field, value);
+        console.error('Set Enum with invalid argument', field, value);
         return null;
       }
       if (typeof value === 'number') {
@@ -167,11 +167,11 @@ const objectSetterMap = {
             publicAPI.modified();
             return true;
           }
-          console.log('Set Enum outside range', field, value);
+          console.error('Set Enum outside range', field, value);
         }
         return false;
       }
-      console.log('Set Enum with invalid argument (String/Number)', field, value);
+      console.error('Set Enum with invalid argument (String/Number)', field, value);
       return null;
     };
   },
@@ -185,6 +185,7 @@ function findSetter(field) {
     }
 
     console.error('No setter for field', field);
+    return null;
   }
   return function getSetter(publicAPI, model) {
     return function setter(value) {
@@ -205,7 +206,11 @@ function findSetter(field) {
 
 export function set(publicAPI, model, fields) {
   fields.forEach((field) => {
-    publicAPI[`set${capitalize(field)}`] = findSetter(field)(publicAPI, model);
+    if (typeof field === 'object') {
+      publicAPI[`set${capitalize(field.name)}`] = findSetter(field)(publicAPI, model);
+    } else {
+      publicAPI[`set${capitalize(field)}`] = findSetter(field)(publicAPI, model);
+    }
   });
 }
 
