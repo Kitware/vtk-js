@@ -84,7 +84,7 @@ export function obj(publicAPI = {}, model = {}) {
   };
 
   publicAPI.get = (...list) => {
-    if (!list) {
+    if (!list.length) {
       return model;
     }
     const subset = {};
@@ -239,12 +239,21 @@ export function getArray(publicAPI, model, fieldNames) {
 
 export function setArray(publicAPI, model, fieldNames, size) {
   fieldNames.forEach((field) => {
-    publicAPI[`set${capitalize(field)}`] = (...array) => {
+    publicAPI[`set${capitalize(field)}`] = (...args) => {
       if (model.deleted) {
         console.log('instance deleted - can not call any method');
-        return;
+        return false;
       }
 
+      let array = args;
+      // allow an array passed as a single arg.
+      if (array.length === 1 && Array.isArray(array[0])) {
+        array = array[0];
+      }
+
+      if (array.length !== size) {
+        throw new RangeError('Invalid number of values for array setter');
+      }
       let changeDetected = false;
       model[field].forEach((item, index) => {
         if (item !== array[index]) {
@@ -259,6 +268,7 @@ export function setArray(publicAPI, model, fieldNames, size) {
         model[field] = [].concat(array);
         publicAPI.modified();
       }
+      return true;
     };
   });
 }
