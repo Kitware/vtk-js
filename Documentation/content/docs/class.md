@@ -5,6 +5,7 @@ Here is an example of how to get started writing a new class for vtk.js
 
 ```js
 import * as macro from '../../../macro';
+import parentClass from '../../../Some/Parent/Class';
 import { MY_ENUM_OBJECT } from './Constants';  // { ENUM_1: 0, ENUM_2: 1, ... }
 
 // ----------------------------------------------------------------------------
@@ -38,9 +39,16 @@ function myClass(publicAPI, model) {
   // Set our className
   model.classHierarchy.push('vtkMyClass');
 
+  // Capture "parentClass" api for internal use
+  const superClass = Object.assign({}, publicAPI);
+
   // Public API methods
   publicAPI.exposedMethod = () => {
     // This is a publicly exposed method of this object
+  };
+
+  publicAPI.overriddenMethod = () => {
+    // Still have access to super implementation via: superClass.overriddenMethod();
   };
 }
 
@@ -61,6 +69,9 @@ const DEFAULT_VALUES = {
 
 export function extend(publicAPI, model, initialValues = {}) {
   Object.assign(model, DEFAULT_VALUES, initialValues);
+
+  // Inheritance
+  parentClass.extend(publicAPI, model);
 
   // Internal objects initialization
   model.myProp2 = new Thing() || {};
