@@ -1,6 +1,6 @@
 import vtkActor                   from '../../../../../Sources/Rendering/Core/Actor';
 import vtkCamera                  from '../../../../../Sources/Rendering/Core/Camera';
-import vtkConeSource              from '../../../../../Sources/Filters/Sources/ConeSource';
+import vtkLineSource              from '../../../../../Sources/Filters/Sources/LineSource';
 import vtkMapper                  from '../../../../../Sources/Rendering/Core/Mapper';
 import vtkOpenGLRenderWindow      from '../../../../../Sources/Rendering/OpenGL/RenderWindow';
 import vtkRenderer                from '../../../../../Sources/Rendering/Core/Renderer';
@@ -29,6 +29,7 @@ const iren = vtkRenderWindowInteractor.newInstance();
 iren.setView(glwindow);
 
 const actor = vtkActor.newInstance();
+actor.getProperty().setEdgeVisibility(true);
 ren.addActor(actor);
 
 const mapper = vtkMapper.newInstance();
@@ -40,32 +41,39 @@ cam.setFocalPoint(0, 0, 0);
 cam.setPosition(0, 0, 4);
 cam.setClippingRange(0.1, 50.0);
 
-const coneSource = vtkConeSource.newInstance();
-mapper.setInputConnection(coneSource.getOutputPort());
+const lineSource = vtkLineSource.newInstance();
+mapper.setInputConnection(lineSource.getOutputPort());
 
 iren.initialize();
 iren.bindEvents(renderWindowContainer, document);
+ren.resetCamera();
+renWin.render();
 iren.start();
 
 // ----- JavaScript UI -----
 
-['height', 'radius', 'resolution'].forEach((propertyName) => {
+['resolution'].forEach((propertyName) => {
   document.querySelector(`.${propertyName}`).addEventListener('input', (e) => {
     const value = Number(e.target.value);
-    coneSource.set({ [propertyName]: value });
+    lineSource.set({ [propertyName]: value });
+    renWin.render();
+  });
+});
+const mapping = 'xyz';
+const points = [[0, 0, 0], [0, 0, 0]];
+['x1', 'y1', 'z1', 'x2', 'y2', 'z2'].forEach((propertyName) => {
+  document.querySelector(`.${propertyName}`).addEventListener('input', (e) => {
+    const value = Number(e.target.value);
+    const pointIdx = Number(propertyName[1]);
+    points[pointIdx - 1][mapping.indexOf(propertyName[0])] = value;
+    lineSource.set({ [`point${pointIdx}`]: points[pointIdx - 1] });
     renWin.render();
   });
 });
 
-document.querySelector('.capping').addEventListener('change', (e) => {
-  const capping = !!(e.target.checked);
-  coneSource.set({ capping });
-  renWin.render();
-});
-
 // ----- Console play ground -----
 
-global.coneSource = coneSource;
+global.lineSource = lineSource;
 global.mapper = mapper;
 global.actor = actor;
 global.renderer = ren;
