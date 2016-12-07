@@ -12,10 +12,10 @@ import DataAccessHelper from '../DataAccessHelper';
 const GEOMETRY_ARRAYS = {
   vtkPolyData(dataset) {
     const arrayToDownload = [];
-    arrayToDownload.push(dataset.vtkPolyData.Points);
-    ['Verts', 'Lines', 'Polys', 'Strips'].forEach((cellName) => {
-      if (dataset.vtkPolyData[cellName]) {
-        arrayToDownload.push(dataset.vtkPolyData[cellName]);
+    arrayToDownload.push(dataset.points.data);
+    ['verts', 'lines', 'polys', 'strips'].forEach((cellName) => {
+      if (dataset[cellName]) {
+        arrayToDownload.push(dataset[cellName]);
       }
     });
 
@@ -28,18 +28,18 @@ const GEOMETRY_ARRAYS = {
 
   vtkUnstructuredGrid(dataset) {
     const arrayToDownload = [];
-    arrayToDownload.push(dataset.vtkUnstructuredGrid.Points);
-    arrayToDownload.push(dataset.vtkUnstructuredGrid.Cells);
-    arrayToDownload.push(dataset.vtkUnstructuredGrid.CellTypes);
+    arrayToDownload.push(dataset.points.data);
+    arrayToDownload.push(dataset.cells);
+    arrayToDownload.push(dataset.cellTypes);
 
     return arrayToDownload;
   },
 
   vtkRectilinearGrid(dataset) {
     const arrayToDownload = [];
-    arrayToDownload.push(dataset.vtkRectilinearGrid.XCoordinates);
-    arrayToDownload.push(dataset.vtkRectilinearGrid.YCoordinates);
-    arrayToDownload.push(dataset.vtkRectilinearGrid.ZCoordinates);
+    arrayToDownload.push(dataset.xCoordinates);
+    arrayToDownload.push(dataset.yCoordinates);
+    arrayToDownload.push(dataset.zCoordinates);
 
     return arrayToDownload;
   },
@@ -81,15 +81,15 @@ export function vtkHttpDataSetReader(publicAPI, model) {
 
   // Internal method to fill block information and state
   function fillBlocks(dataset, block, arraysToList, enable) {
-    if (dataset.type === 'vtkMultiBlock') {
+    if (dataset.vtkClass === 'vtkMultiBlock') {
       Object.keys(dataset.MultiBlock.Blocks).forEach((blockName) => {
         block[blockName] = fillBlocks(dataset.MultiBlock.Blocks[blockName], {}, arraysToList, enable);
         block[blockName].enable = enable;
       });
     } else {
-      block.type = dataset.type;
+      block.type = dataset.vtkClass;
       block.enable = enable;
-      const container = dataset[dataset.type];
+      const container = dataset;
       LOCATIONS.forEach((location) => {
         if (container[location]) {
           Object.keys(container[location]).forEach((name) => {
@@ -148,7 +148,7 @@ export function vtkHttpDataSetReader(publicAPI, model) {
             // Generate array list
             model.arrays = [];
 
-            const container = dataset[dataset.type];
+            const container = dataset;
             const enable = model.enableArray;
             if (container.Blocks) {
               model.blocks = {};
@@ -170,7 +170,7 @@ export function vtkHttpDataSetReader(publicAPI, model) {
 
             // Fetch geometry arrays
             const pendingPromises = [];
-            GEOMETRY_ARRAYS[dataset.type](dataset).forEach((array) => {
+            GEOMETRY_ARRAYS[dataset.vtkClass](dataset).forEach((array) => {
               pendingPromises.push(fetchArray(array, model.fetchGzip));
             });
 
