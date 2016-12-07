@@ -23,12 +23,10 @@ function vtkInteractorStyleImage(publicAPI, model) {
     if (model.handleObservers &&
         typeof publicAPI.invokeStartWindowLevelEvent === 'function') {
       publicAPI.invokeStartWindowLevelEvent({ type: 'StartWindowLevelEvent', style: publicAPI });
-    } else {
-      if (model.currentImageProperty) {
-        const property = model.currentImageProperty;
-        model.windowLevelInitial[0] = property.getColorWindow();
-        model.windowLevelInitial[1] = property.getColorLevel();
-      }
+    } else if (model.currentImageProperty) {
+      const property = model.currentImageProperty;
+      model.windowLevelInitial[0] = property.getColorWindow();
+      model.windowLevelInitial[1] = property.getColorLevel();
     }
   };
 
@@ -150,7 +148,7 @@ function vtkInteractorStyleImage(publicAPI, model) {
     } else if (model.currentImageProperty) {
       const size = rwi.getView().getViewportSize(model.currentRenderer);
 
-      const window = model.windowLevelInitial[0];
+      const mWindow = model.windowLevelInitial[0];
       const level = model.windowLevelInitial[1];
 
       // Compute normalized delta
@@ -160,27 +158,27 @@ function vtkInteractorStyleImage(publicAPI, model) {
                    model.windowLevelCurrentPosition[1]) * 4.0 / size[1];
 
       // Scale by current values
-      if (Math.abs(window) > 0.01) {
-        dx = dx * window;
+      if (Math.abs(mWindow) > 0.01) {
+        dx *= mWindow;
       } else {
-        dx = dx * (window < 0 ? -0.01 : 0.01);
+        dx *= (mWindow < 0 ? -0.01 : 0.01);
       }
       if (Math.abs(level) > 0.01) {
-        dy = dy * level;
+        dy *= level;
       } else {
-        dy = dy * (level < 0 ? -0.01 : 0.01);
+        dy *= (level < 0 ? -0.01 : 0.01);
       }
 
       // Abs so that direction does not flip
-      if (window < 0.0) {
-        dx = -1 * dx;
+      if (mWindow < 0.0) {
+        dx *= -1;
       }
       if (level < 0.0) {
-        dy = -1 * dy;
+        dy *= -1;
       }
 
-      // Compute new window level
-      let newWindow = dx + window;
+      // Compute new mWindow level
+      let newWindow = dx + mWindow;
       const newLevel = level - dy;
 
       if (newWindow < 0.01) {
@@ -227,10 +225,10 @@ function vtkInteractorStyleImage(publicAPI, model) {
 
     // clamp the distance to the clipping range
     if (distance < range[0]) {
-      distance = range[0] + viewportHeight * 1e-3;
+      distance = range[0] + (viewportHeight * 1e-3);
     }
     if (distance > range[1]) {
-      distance = range[1] - viewportHeight * 1e-3;
+      distance = range[1] - (viewportHeight * 1e-3);
     }
     camera.setDistance(distance);
 
@@ -244,7 +242,7 @@ function vtkInteractorStyleImage(publicAPI, model) {
   // interactor ivars from the Nth image that it finds.  You can
   // also use negative numbers, i.e. -1 will return the last image,
   // -2 will return the second-to-last image, etc.
-  publicAPI.setCurrentImageNumber = i => {
+  publicAPI.setCurrentImageNumber = (i) => {
     model.currentImageNumber = i;
 
     if (!model.currentRenderer) {
