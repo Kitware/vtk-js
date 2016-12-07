@@ -14,10 +14,6 @@ const MY_ENUM = {
 function myClass(publicAPI, model) {
   // Set our className
   model.classHierarchy.push('vtkMyClass');
-  // Public API methods
-  publicAPI.exposedMethod = () => {
-    // This is a publicly exposed method of this object
-  };
 }
 
 // ----------------------------------------------------------------------------
@@ -52,9 +48,9 @@ function extend(publicAPI, model, initialValues = {}) {
   macro.getArray(publicAPI, model, ['myProp1', 'myProp5']);
   macro.setGetArray(publicAPI, model, ['myProp6'], 5);
 
-  // macro.setGet(publicAPI, model, [
-  //   { name: 'myProp7', enum: MY_ENUM, type: 'enum' },
-  // ]);
+  macro.setGet(publicAPI, model, [
+    { name: 'myProp7', enum: MY_ENUM, type: 'enum' },
+  ]);
   // Object specific methods
   myClass(publicAPI, model);
 }
@@ -91,9 +87,36 @@ test('Macro methods array tests', (t) => {
   // we must wrap the non-existent call inside another function to avoid test program exiting, and tape-catch generating error.
   t.throws(() => myTestClass.setMyProp1(1, 1, 1), /TypeError/, 'Throw if no set method declared');
 
+  const myArray = [10, 20, 30, 40];
+  t.ok(myTestClass.setMyProp5(...myArray), 'Array spread set OK');
+  t.deepEqual(myTestClass.getMyProp5(), myArray, 'Array spread set should match get');
+
+  myArray[0] = 99.9;
+  // t.ok(myTestClass.setMyProp5(myArray), 'OK to set a single array argument');
+  // t.deepEqual(myTestClass.getMyProp5(), myArray, 'Array set should match get');
+
   // set a too-short array.
-  myTestClass.setMyProp6(1, 2, 3);
+  // myTestClass.setMyProp6(1, 2, 3);
   // t.deepEqual(myTestClass.getMyProp6(), DEFAULT_VALUES.myProp6, 'Keep default value after illegal set');
+
+  t.end();
+});
+
+test('Macro methods enum tests', (t) => {
+  const myTestClass = newInstance();
+
+  t.equal(myTestClass.getMyProp7(), DEFAULT_VALUES.myProp7, 'Initial gets should match defaults');
+  myTestClass.setMyProp7(MY_ENUM.THIRD);
+  t.equal(myTestClass.getMyProp7(), MY_ENUM.THIRD, 'Enum set should match get');
+
+  t.ok(myTestClass.setMyProp7(2));
+  t.equal(myTestClass.getMyProp7(), MY_ENUM.SECOND, 'Enum set by index should get matching enum value');
+
+  t.notOk(myTestClass.setMyProp7(42));
+  t.equal(myTestClass.getMyProp7(), MY_ENUM.SECOND, 'Enum set out of range should be rejected');
+
+  t.notOk(myTestClass.setMyProp7('FORTH'));
+  t.equal(myTestClass.getMyProp7(), MY_ENUM.SECOND, 'Enum set string out of range should be rejected');
 
   t.end();
 });
