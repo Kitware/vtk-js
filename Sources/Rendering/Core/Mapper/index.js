@@ -150,23 +150,23 @@ function vtkMapper(publicAPI, model) {
     } else if (scalarMode === VTK_SCALAR_MODE.USE_POINT_FIELD_DATA) {
       const pd = input.getPointData();
       if (arrayAccessMode === VTK_GET_ARRAY.BY_ID) {
-        scalars = pd.getAbstractArray(arrayId);
+        scalars = pd.getArrayByIndex(arrayId);
       } else {
-        scalars = pd.getAbstractArray(arrayName);
+        scalars = pd.getArrayByName(arrayName);
       }
     } else if (scalarMode === VTK_SCALAR_MODE.USE_CELL_FIELD_DATA) {
       const cd = input.getCellData();
       if (arrayAccessMode === VTK_GET_ARRAY.BY_ID) {
-        scalars = cd.getAbstractArray(arrayId);
+        scalars = cd.getArrayByIndex(arrayId);
       } else {
-        scalars = cd.getAbstractArray(arrayName);
+        scalars = cd.getArrayByName(arrayName);
       }
     } else if (scalarMode === VTK_SCALAR_MODE.USE_FIELD_DATA) {
       const fd = input.getFieldData();
       if (arrayAccessMode === VTK_GET_ARRAY.BY_ID) {
-        scalars = fd.getAbstractArray(arrayId);
+        scalars = fd.getArrayByIndex(arrayId);
       } else {
-        scalars = fd.getAbstractArray(arrayName);
+        scalars = fd.getArrayByName(arrayName);
       }
     }
 

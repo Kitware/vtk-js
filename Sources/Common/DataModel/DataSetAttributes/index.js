@@ -17,7 +17,7 @@ function vtkDataSetAttributes(publicAPI, model) {
   // Set our className
   model.classHierarchy.push('vtkDataSetAttributes');
 
-  publicAPI.checkNumberOfComponents = x => true;
+  publicAPI.checkNumberOfComponents = x => true; // TODO
 
   publicAPI.setAttribute = (arr, attType) => {
     if (arr && attType.toUpperCase() === 'PEDIGREEIDS' && !arr.isA('vtkDataArray')) {
@@ -107,23 +107,6 @@ function vtkDataSetAttributes(publicAPI, model) {
       }
     });
   }
-
-  /* eslint-disable no-use-before-define */
-  publicAPI.shallowCopy = () => {
-    const newIntsanceModel = Object.assign({}, model, { arrays: null, dataArrays: null });
-    const copyInst = newInstance(newIntsanceModel);
-
-    // Shallow copy each array
-    publicAPI.getArrayNames().forEach((name) => {
-      copyInst.addArray(publicAPI.getArray(name).shallowCopy());
-    });
-
-    // Reset mtime to original value
-    copyInst.set({ mtime: model.mtime });
-
-    return copyInst;
-  };
-  /* eslint-enable no-use-before-define */
 }
 
 // ----------------------------------------------------------------------------
