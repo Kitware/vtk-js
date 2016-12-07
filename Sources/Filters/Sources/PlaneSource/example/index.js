@@ -1,6 +1,6 @@
 import vtkActor                   from '../../../../../Sources/Rendering/Core/Actor';
 import vtkCamera                  from '../../../../../Sources/Rendering/Core/Camera';
-import vtkPlaneSource              from '../../../../../Sources/Filters/Sources/PlaneSource';
+import vtkPlaneSource             from '../../../../../Sources/Filters/Sources/PlaneSource';
 import vtkMapper                  from '../../../../../Sources/Rendering/Core/Mapper';
 import vtkOpenGLRenderWindow      from '../../../../../Sources/Rendering/OpenGL/RenderWindow';
 import vtkRenderer                from '../../../../../Sources/Rendering/Core/Renderer';
@@ -29,6 +29,7 @@ const iren = vtkRenderWindowInteractor.newInstance();
 iren.setView(glwindow);
 
 const actor = vtkActor.newInstance();
+actor.getProperty().setEdgeVisibility(true);
 ren.addActor(actor);
 
 const mapper = vtkMapper.newInstance();
@@ -45,6 +46,8 @@ mapper.setInputConnection(planeSource.getOutputPort());
 
 iren.initialize();
 iren.bindEvents(renderWindowContainer, document);
+ren.resetCamera();
+renWin.render();
 iren.start();
 
 // ----- JavaScript UI -----

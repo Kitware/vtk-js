@@ -19,6 +19,12 @@ export function vtkPlaneSource(publicAPI, model) {
       return;
     }
 
+    let dataset = outData[0];
+
+    if (dataset && dataset.getMTime() > model.mtime) {
+      return;
+    }
+
     // Check input
     const pd = vtkPolyData.newInstance();
     let v10 = new Float32Array(3);
@@ -40,7 +46,7 @@ export function vtkPlaneSource(publicAPI, model) {
 
     // Points
     const points = new Float32Array(numPts * 3);
-    pd.getPoints().setData(points, 3);
+    pd.getPoints().getData().setData(points, 3);
 
     // Cells
     const polys = new Uint32Array(5 * numPolys);
@@ -73,18 +79,21 @@ export function vtkPlaneSource(publicAPI, model) {
     // Generate polygon connectivity
     //
     idx = 0;
-    for (let j=0; j < yres; j++)
-    {
-      for (let i=0; i < xres; i++)
-      {
+    for (let j=0; j < yres; j++) {
+      for (let i=0; i < xres; i++) {
         polys[(idx * 5) + 0] = 4;
         polys[(idx * 5) + 1] = i + j * (xres + 1);
         polys[(idx * 5) + 2] = polys[(idx * 5) + 1] + 1;
         polys[(idx * 5) + 3] = polys[(idx * 5) + 1] + xres + 2;
         polys[(idx * 5) + 4] = polys[(idx * 5) + 1] + xres + 1;
+
+        idx++;
       }
     }
-}
+
+    // Update output
+    outData[0] = pd;
+  }
 
   // Expose methods
   publicAPI.requestData = requestData;
@@ -98,8 +107,8 @@ const DEFAULT_VALUES = {
   xResolution: 10,
   yResolution: 10,
   origin: [0, 0, 0],
-  point1: [1.0, 0.0, 0.0],
-  point2: [0.0, 1.0, 0.0],
+  point1: [1, 0, 0],
+  point2: [0, 1, 0],
 };
 
 // ----------------------------------------------------------------------------
@@ -124,7 +133,7 @@ export function extend(publicAPI, model, initialValues = {}) {
 
 // ----------------------------------------------------------------------------
 
-export const newInstance = macro.newInstance(extend);
+export const newInstance = macro.newInstance(extend,'vtkPlaneSource');
 
 // ----------------------------------------------------------------------------
 
