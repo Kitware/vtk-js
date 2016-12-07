@@ -219,6 +219,9 @@ function vtkLookupTable(publicAPI, model) {
     tptr[base + 3] = (model.nanColor[3] * 255.0) + 0.5;
   };
 
+  publicAPI.setRange = (min, max) => publicAPI.setTableRange(min, max);
+  publicAPI.getRange = () => publicAPI.getTableRange();
+
   publicAPI.build = () => {
     if (model.table.length < 1 ||
         publicAPI.getMTime() > model.buildTime.getMTime()) {
