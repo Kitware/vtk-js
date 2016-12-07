@@ -15,10 +15,8 @@ export function vtkConeSource(publicAPI, model) {
     }
 
     let dataset = outData[0];
-    const pointDataType = dataset ? dataset.getPoints().getData().getDataType() : 'Float32Array';
 
     if (!dataset || dataset.getMTime() < model.mtime) {
-      console.log('exec cone');
       const angle = 2 * Math.PI / model.resolution;
       const xbot = -model.height / 2.0;
       const numberOfPoints = model.resolution + 1;
@@ -26,7 +24,7 @@ export function vtkConeSource(publicAPI, model) {
 
       // Points
       let pointIdx = 0;
-      const points = new window[pointDataType](numberOfPoints * 3);
+      const points = new window[model.pointType](numberOfPoints * 3);
 
       // Cells
       let cellLocation = 0;
@@ -114,7 +112,7 @@ export function extend(publicAPI, model, initialValues = {}) {
 
 // ----------------------------------------------------------------------------
 
-export const newInstance = macro.newInstance(extend);
+export const newInstance = macro.newInstance(extend, 'vtkConeSource');
 
 // ----------------------------------------------------------------------------
 
