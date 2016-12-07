@@ -185,7 +185,7 @@ function vtkMapper(publicAPI, model) {
     }
 
     if (!model.useLookupTableScalarRange) {
-      model.lookupTable.setTableRange(
+      model.lookupTable.setRange(
         model.scalarRange[0], model.scalarRange[1]);
     }
 
@@ -311,7 +311,7 @@ function vtkMapper(publicAPI, model) {
   };
 
   publicAPI.mapScalarsToTexture = (scalars, alpha) => {
-    const range = model.lookupTable.getTableRange();
+    const range = model.lookupTable.getRange();
     const useLogScale = model.lookupTable.usingLogScale();
     if (useLogScale) {
       // convert range to log.
@@ -338,7 +338,10 @@ function vtkMapper(publicAPI, model) {
       // Create a dummy ramp of scalars.
       // In the future, we could extend vtkScalarsToColors.
       model.lookupTable.build();
-      let numberOfColors = model.lookupTable.getNumberOfColors();
+      let numberOfColors = model.lookupTable.getNumberOfAvailableColors();
+      if (numberOfColors > 4096) {
+        numberOfColors = 4096;
+      }
       numberOfColors += 2;
       const k = (range[1] - range[0]) / (numberOfColors - 1 - 2);
 
@@ -397,7 +400,7 @@ function vtkMapper(publicAPI, model) {
         model.colorCoordinates,
         num, numComps,
         scalarComponent, range,
-        model.lookupTable.getTableRange(),
+        model.lookupTable.getRange(),
         model.lookupTable.getNumberOfAvailableColors(),
         useLogScale);
     }

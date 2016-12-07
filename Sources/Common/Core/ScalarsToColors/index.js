@@ -32,6 +32,9 @@ function vtkScalarsToColors(publicAPI, model) {
   publicAPI.setVectorModeToComponent = () => publicAPI.setVectorMode(VTK_VECTOR_MODE.COMPONENT);
   publicAPI.setVectorModeToRGBColors = () => publicAPI.setVectorMode(VTK_VECTOR_MODE.RGBCOLORS);
 
+  publicAPI.build = () => {};
+
+  publicAPI.isOpaque = () => true;
 
   // Description:
   // Internal methods that map a data array into a 4-component,
@@ -327,7 +330,10 @@ function vtkScalarsToColors(publicAPI, model) {
 
   publicAPI.usingLogScale = () => false;
 
+  publicAPI.getNumberOfAvailableColors = () => 256 * 256 * 256;
+
   publicAPI.setRange = (min, max) => publicAPI.setInputRange(min, max);
+  publicAPI.getRange = (min, max) => publicAPI.getInputRange();
 }
 
 // ----------------------------------------------------------------------------
@@ -347,14 +353,8 @@ const DEFAULT_VALUES = {
 export function extend(publicAPI, model, initialValues = {}) {
   Object.assign(model, DEFAULT_VALUES, initialValues);
 
-  // Internal objects initialization
-  // model.myProp2 = new Thing() || {};
-
   // Object methods
   macro.obj(publicAPI, model);
-
-  // Create get-only macros
-  // macro.get(publicAPI, model, ['myProp2', 'myProp4']);
 
   // Create get-set macros
   macro.setGet(publicAPI, model, [
@@ -364,10 +364,15 @@ export function extend(publicAPI, model, initialValues = {}) {
     'alpha',
   ]);
 
-  // Create get-set macros for enum type
-  // macro.setGet(publicAPI, model, [
-  //   { name: 'vectorMode', enum: VTK_VECTOR_MODE, type: 'enum' },
-  // ]);
+  // Create set macros for array (needs to know size)
+  macro.setArray(publicAPI, model, [
+    'inputRange',
+  ], 2);
+
+  // Create get macros for array
+  macro.getArray(publicAPI, model, [
+    'inputRange',
+  ]);
 
   // For more macro methods, see "Sources/macro.js"
 
