@@ -19,14 +19,19 @@ program.version('1.0.0')
 // Need argument otherwise print help/usage
 // ----------------------------------------------------------------------------
 
-if (!process.argv.slice(2).length) {
-  program.outputHelp();
-  return 0;
-}
+// Try to find a paraview directory inside /Applications or /opt
+const pvPossibleBasePath = [];
+['/Applications', '/opt', '/usr/local/opt/'].forEach(function (directoryPath) {
+  shell.ls(directoryPath).forEach(function (fileName) {
+    if (fileName.toLowerCase().indexOf('paraview') !== -1) {
+      pvPossibleBasePath.push(path.join(directoryPath, fileName));
+    }
+  });
+});
 
 if(!paraview) {
     paraview = [];
-    [ program.paraview, '/Applications/paraview.app/Contents', '/opt/paraview'].forEach(function(directory){
+    [program.paraview].concat(pvPossibleBasePath).forEach(function(directory){
         try {
             if(fs.statSync(directory).isDirectory()) {
                 paraview.push(directory);
@@ -35,6 +40,11 @@ if(!paraview) {
             // skip
         }
     });
+}
+
+if (!process.argv.slice(2).length || !program.help || paraview.length === 0) {
+  program.outputHelp();
+  process.exit(0);
 }
 
 var pvPythonExecs = shell.find(paraview).filter(function(file) { return file.match(/pvpython$/) || file.match(/pvpython.exe$/); });
