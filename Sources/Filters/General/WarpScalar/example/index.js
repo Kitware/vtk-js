@@ -15,7 +15,9 @@ import controlPanel from './controller.html';
 
 // Create some control UI
 const rootContainer = document.querySelector('body');
-rootContainer.innerHTML = controlPanel;
+const controlPanelContainer = document.createElement('div');
+controlPanelContainer.innerHTML = controlPanel;
+rootContainer.appendChild(controlPanelContainer);
 const renderWindowContainer = document.querySelector('.renderwidow');
 
 const renWin = vtkRenderWindow.newInstance();
