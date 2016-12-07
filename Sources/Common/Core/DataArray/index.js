@@ -30,7 +30,7 @@ function computeRange(values, component = 0, tuple = 1) {
   return range;
 }
 
-function insureRangeSize(rangeArray, size = 0) {
+function ensureRangeSize(rangeArray, size = 0) {
   const ranges = rangeArray || [];
   // Pad ranges with null value to get the
   while (ranges.length <= size) {
@@ -110,7 +110,7 @@ function vtkDataArray(publicAPI, model) {
     let range = null;
 
     if (!model.ranges) {
-      model.ranges = insureRangeSize(model.ranges, model.numberOfComponents);
+      model.ranges = ensureRangeSize(model.ranges, model.numberOfComponents);
     }
     range = model.ranges[rangeIdx];
 
