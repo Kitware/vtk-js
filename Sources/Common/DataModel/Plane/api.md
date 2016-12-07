@@ -40,7 +40,7 @@ public:
 
   // Description:
   // Translate the plane in the direction of the normal by the
-  // distance specified.  Negative values move the plane in the
+  // distance specified. Negative values move the plane in the
   // opposite direction.
   void Push(double distance);
 

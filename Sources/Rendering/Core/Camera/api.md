@@ -14,15 +14,15 @@ view up is along the y-axis, view angle is 30 degrees, and the clipping range is
 
 ### position
 
-Set/Get the position of the camera in world coordinates.  The default position is (0,0,1).
+Set/Get the position of the camera in world coordinates. The default position is (0,0,1).
 
 ### focalPoint
 
-Set/Get the focal of the camera in world coordinates.  The default focal point is the origin.
+Set/Get the focal of the camera in world coordinates. The default focal point is the origin.
 
 ### viewUp
 
-Set/Get the view up direction for the camera.  The default is (0,1,0).
+Set/Get the view up direction for the camera. The default is (0,1,0).
 
 ### orthogonalizeViewUp()
 
@@ -31,22 +31,22 @@ Unless you are going to use Yaw or Azimuth on the camera, there is no need to do
 
 ### setDistance(dist)
 
-Move the focal point so that it is the specified distance from the camera position.  This
+Move the focal point so that it is the specified distance from the camera position. This
 distance must be positive.
 
 ### getDistance()
 
-Return the distance from the camera position to the focal point.  This distance is positive.
+Return the distance from the camera position to the focal point. This distance is positive.
 
 ### getDirectionOfProjection()
 
-Get the vector in the direction from the camera position to the focal point.  This is usually
+Get the vector in the direction from the camera position to the focal point. This is usually
 the opposite of the ViewPlaneNormal, the vector perpendicular to the screen, unless the view
 is oblique.
 
 ### dolly(value)
 
-Divide the camera's distance from the focal point by the given dolly value.  Use a value
+Divide the camera's distance from the focal point by the given dolly value. Use a value
 greater than one to dolly-in toward the focal point, and use a value less than one to dolly-out
 away from the focal point.
 
@@ -56,30 +56,30 @@ Get/Set the roll angle of the camera about the direction of projection.
 
 ### roll(angle)
 
-Rotate the camera about the direction of projection.  This will spin the camera about its axis.
+Rotate the camera about the direction of projection. This will spin the camera about its axis.
 
 ### azimuth(angle)
 
-Rotate the camera about the view up vector centered at the focal point.  Note that the view up
+Rotate the camera about the view up vector centered at the focal point. Note that the view up
 vector is whatever was set via SetViewUp, and is not necessarily perpendicular to the direction
-of projection.  The result is a horizontal rotation of the camera.
+of projection. The result is a horizontal rotation of the camera.
 
 ### yaw(angle)
 
 Rotate the focal point about the view up vector, using the camera's position as the center of
 rotation. Note that the view up vector is whatever was set via SetViewUp, and is not necessarily
-perpendicular to the direction of projection.  The result is a horizontal rotation of the scene.
+perpendicular to the direction of projection. The result is a horizontal rotation of the scene.
 
 ### elevation(angle)
 
 Rotate the camera about the cross product of the negative of the direction of projection and the
-view up vector, using the focal point as the center of rotation.  The result is a vertical rotation
+view up vector, using the focal point as the center of rotation. The result is a vertical rotation
 of the scene.
 
 ### pitch(angle)
 
 Rotate the focal point about the cross product of the view up vector and the direction of projection,
-using the camera's position as the center of rotation.  The result is a vertical rotation of the camera.
+using the camera's position as the center of rotation. The result is a vertical rotation of the camera.
 
 ### parallelProjection
 
@@ -116,41 +116,41 @@ the parallel scale by the specified factor. A value greater than 1 is a zoom-in,
 
 ### clippingRange
 
-Set/Get the location of the near and far clipping planes along the direction of projection.  Both
+Set/Get the location of the near and far clipping planes along the direction of projection. Both
 of these values must be positive. How the clipping planes are set can have a large impact on how
-well z-buffering works.  In particular the front clipping plane can make a very big difference.
-Setting it to 0.01 when it really could be 1.0 can have a big impact on your z-buffer resolution
-farther away.  The default clipping range is (0.1,1000). Clipping distance is measured in world
+well Z-buffering works. In particular the front clipping plane can make a very big difference.
+Setting it to 0.01 when it really could be 1.0 can have a big impact on your Z-buffer resolution
+farther away. The default clipping range is (0.1,1000). Clipping distance is measured in world
 coordinates.
 
 ### thickness
 
-Set/Get the distance between clipping planes.  This method adjusts the far clipping plane to be
+Set/Get the distance between clipping planes. This method adjusts the far clipping plane to be
 set a distance 'thickness' beyond the near clipping plane.
 
 ### windowCenter
 
 Set/Get the center of the window in viewport coordinates. The viewport coordinate range is
-([-1,+1],[-1,+1]).  This method is for if you have one window which consists of several viewports,
+([-1,+1],[-1,+1]). This method is for if you have one window which consists of several viewports,
 or if you have several screens which you want to act together as one large screen.
 
 ### setObliqueAngles(alpha, beta)
 
-Set the oblique viewing angles.  The first angle, alpha, is the angle (measured from the horizontal)
+Set the oblique viewing angles. The first angle, alpha, is the angle (measured from the horizontal)
 that rays along the direction of projection will follow once projected onto the 2D screen. The
-second angle, beta, is the angle between the view plane and the direction of projection.  This
+second angle, beta, is the angle between the view plane and the direction of projection. This
 creates a shear transform x' = x + dz*cos(alpha)/tan(beta), y' = dz*sin(alpha)/tan(beta) where
-dz is the distance of the point from the focal plane. The angles are (45,90) by default.  Oblique
+dz is the distance of the point from the focal plane. The angles are (45,90) by default. Oblique
 projections commonly use (30,63.435).
 
 ### applyTransform(transform)
 
-Apply a transform to the camera.  The camera position, focal-point, and view-up are re-calculated
+Apply a transform to the camera. The camera position, focal-point, and view-up are re-calculated
 using the transform's matrix to multiply the old points by the new transform.
 
 ### viewPlaneNormal
 
-Get the ViewPlaneNormal.  This vector will point opposite to the direction of projection, unless
+Get the ViewPlaneNormal. This vector will point opposite to the direction of projection, unless
 you have created a sheared output view using SetViewShear/SetObliqueAngles.
 
 ### focalDisk
@@ -183,7 +183,7 @@ calculation. Default is (0.5, 0.5, -0.5).
 ### getViewTransformMatrix()
 
 Return the matrix of the view transform. The ViewTransform depends on only three ivars:  the
-Position, the FocalPoint, and the ViewUp vector.  All the other methods are there simply for
+Position, the FocalPoint, and the ViewUp vector. All the other methods are there simply for
 the sake of the users' convenience.
 
 ### getViewTransformObject()
@@ -195,7 +195,7 @@ users' convenience.
 ### getProjectionTransformMatrix(aspect, nearz, farz)
 
 Return the projection transform matrix, which converts from camera coordinates to viewport
-coordinates.  The 'aspect' is the width/height for the viewport, and the nearz and farz are
+coordinates. The 'aspect' is the width/height for the viewport, and the nearz and farz are
 the Z-buffer values that map to the near and far clipping planes. The viewport coordinates of
 a point located inside the frustum are in the range ([-1,+1],[-1,+1],[nearz,farz]).
 
@@ -223,7 +223,7 @@ then calls the more specific signature of GetCompositeProjectionTransformMatrix.
 ### userViewTransform
 
 In addition to the instance variables such as position and orientation, you can add an
-additional transformation for your own use.  This transformation is concatenated to the
+additional transformation for your own use. This transformation is concatenated to the
 camera's ViewTransform.
 
 ### userTransform
@@ -277,12 +277,12 @@ Set/Get the Left Eye setting.
 
 ### shallowCopy(sourceCamera)
 
-Copy the properties of `source' into `this'.  Copy pointers of matrices.  Do not pass
+Copy the properties of `source' into `this'. Copy pointers of matrices. Do not pass
 null source camera or this camera.
 
 ### deepCopy(sourceCamera)
 
-Copy the properties of `source' into `this'.  Copy the contents of the matrices. Do not pass
+Copy the properties of `source' into `this'. Copy the contents of the matrices. Do not pass
 null source camera or this camera.
 
 ### freezeFocalPoint

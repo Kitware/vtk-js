@@ -16,8 +16,8 @@ make sure the specified shaders are compiled, linked, and bound
 
 ### releaseCurrentShader()
 
-Release the current shader.  Basically go back to
-having no shaders loaded.  This is useful for old
+Release the current shader. Basically go back to
+having no shaders loaded. This is useful for old
 legacy code that relies on no shaders being loaded.
 
 ###  releaseGraphicsResources(window)

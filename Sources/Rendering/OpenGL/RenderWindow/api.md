@@ -28,7 +28,7 @@ Returns an Shader Cache object
 
 ### Initialize();
 
-Initialize the rendering window.  This will setup all system-specific
-resources.  This method and Finalize() must be symmetric and it
+Initialize the rendering window. This will setup all system-specific
+resources. This method and Finalize() must be symmetric and it
 should be possible to call them multiple times, even changing WindowId
-in-between.  This is what WindowRemap does.
+in-between. This is what WindowRemap does.

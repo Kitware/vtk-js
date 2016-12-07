@@ -1,7 +1,7 @@
 title: Setup
 ---
 
-This documentation will explain how to create a new Web project that can leverage vtk-js
+This documentation will explain how to create a new Web project that can leverage vtk.js
 using Webpack and npm.
 
 ## Creation of the Project structure

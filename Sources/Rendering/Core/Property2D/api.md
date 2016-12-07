@@ -1,6 +1,6 @@
 ## Introduction
 
-represent surface properties of a 2D geometric object
+Represent surface properties of a 2D geometric object
 
 vtkProperty2D is an object that represents lighting and other surface
 properties of a 2D geometric object. The primary properties that can be
@@ -23,17 +23,17 @@ Set the color of the object. Has the side effect of setting the
 ambient diffuse and specular colors as well. This is basically
 a quick overall color setting method.
 
-### opacity
+### setOpacity(Number) / getOpacity() : Number
 
 Set/Get the object's opacity. 1.0 is totally opaque and 0.0 is completely
 transparent.
 
-### lineWidth
+### getLineWidth(Number) / getLineWidth(): Number
 
 Set/Get the width of a Line. The width is expressed in screen units.
 This is only implemented for OpenGL. The default is 1.0.
 
-### pointSize
+### getPointSize(Number) / getPointSize(): Number
 
 Set/Get the diameter of a point. The size is expressed in screen units.
 This is only implemented for OpenGL. The default is 1.0.
