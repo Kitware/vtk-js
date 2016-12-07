@@ -119,7 +119,7 @@ function vtkDataArray(publicAPI, model) {
     }
 
     // Need to compute ranges...
-    range = model.ranges[rangeIdx] = computeRange(model.values, componentIndex);
+    range = model.ranges[rangeIdx] = computeRange(model.values, componentIndex, model.numberOfComponents);
     return [range.min, range.max];
   };
 
