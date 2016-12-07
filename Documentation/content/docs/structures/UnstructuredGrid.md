@@ -7,13 +7,13 @@ An UnstructuredGrid is a mesh structure that can hold data arrays either on poin
 
 ```js
 {
-  type: 'vtkUnstructuredGrid',
+  vtkClass: 'vtkUnstructuredGrid',
   metadata: {
     name: 'data.vtu',
     size: 2345,
   },
-  vtkUnstructuredGrid: {
-    Points: {
+  points: {
+    data: {
       type: 'vtkDataArray',
       name: '_points',
       tuple: 3,
@@ -26,25 +26,27 @@ An UnstructuredGrid is a mesh structure that can hold data arrays either on poin
         { min: -1, max: 1, component: 1, name: 'Y' },
         { min: -1, max: 1, component: 2, name: 'Z' },
       ],
-    },
-    Cells: {
-      type: 'vtkDataArray',
-      name: '_cells',
-      tuple: 1,
-      size: 123,
-      dataType: 'Uint32Array', // or Uint16Array
-      buffer: new ArrayBuffer(),
-      values: new Uint32Array(this.buffer), // Follow the CellArray Mapping [{nbPoints}, {pointIdx...}]
-    },
-    CellTypes: {
-      type: 'vtkDataArray',
-      name: '_cells',
-      tuple: 1,
-      size: 10,
-      dataType: 'Uint8Array',
-      buffer: new ArrayBuffer(),
-      values: new Uint8Array(this.buffer), // CellTypes
-    },
+    }
+  },
+  cells: {
+    type: 'vtkDataArray',
+    name: '_cells',
+    tuple: 1,
+    size: 123,
+    dataType: 'Uint32Array', // or Uint16Array
+    buffer: new ArrayBuffer(),
+    values: new Uint32Array(this.buffer), // Follow the CellArray Mapping [{nbPoints}, {pointIdx...}]
+  },
+  cellTypes: {
+    type: 'vtkDataArray',
+    name: '_cells',
+    tuple: 1,
+    size: 10,
+    dataType: 'Uint8Array',
+    buffer: new ArrayBuffer(),
+    values: new Uint8Array(this.buffer), // CellTypes
+  },
+  
     PointData: {
       Temperature: {
         type: 'vtkDataArray',
