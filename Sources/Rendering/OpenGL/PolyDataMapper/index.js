@@ -374,7 +374,8 @@ export function vtkOpenGLPolyDataMapper(publicAPI, model) {
               '  if (gl_FrontFacing == false) { normalVCVSOutput = -normalVCVSOutput; }']
             ).result;
         } else {
-          if (actor.getProperty().getRepresentation() === VTK_REPRESENTATION.WIREFRAME) {
+          if (model.lastBoundBO.getPrimitiveType() === primTypes.Lines ||
+              actor.getProperty().getRepresentation() === VTK_REPRESENTATION.WIREFRAME) {
             // generate a normal for lines, it will be perpendicular to the line
             // and maximally aligned with the camera view direction
             // no clue if this is the best way to do this.
