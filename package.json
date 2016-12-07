@@ -63,6 +63,7 @@
 
         "test": "karma start ./karma.conf.js",
         "test:travis": "karma start ./karma.conf.js --browsers Electron --single-run",
+        "test:debug": "karma start ./karma.conf.js --no-single-run",
 
         "commit"        : "git cz",
         "semantic-release": "semantic-release pre && npm publish && semantic-release post"
