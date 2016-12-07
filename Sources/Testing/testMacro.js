@@ -92,12 +92,16 @@ test('Macro methods array tests', (t) => {
   t.deepEqual(myTestClass.getMyProp5(), myArray, 'Array spread set should match get');
 
   myArray[0] = 99.9;
-  // t.ok(myTestClass.setMyProp5(myArray), 'OK to set a single array argument');
-  // t.deepEqual(myTestClass.getMyProp5(), myArray, 'Array set should match get');
+  t.ok(myTestClass.setMyProp5(myArray), 'OK to set a single array argument');
+  t.deepEqual(myTestClass.getMyProp5(), myArray, 'Array set should match get');
 
-  // set a too-short array.
-  // myTestClass.setMyProp6(1, 2, 3);
-  // t.deepEqual(myTestClass.getMyProp6(), DEFAULT_VALUES.myProp6, 'Keep default value after illegal set');
+  // set a too-short array, separate args
+  t.throws(() => myTestClass.setMyProp6(1, 2, 3), /RangeError/, 'Invalid number of values should throw');
+  t.deepEqual(myTestClass.getMyProp6(), DEFAULT_VALUES.myProp6, 'Keep default value after illegal set');
+
+  // set a too-long array, single array arg
+  t.throws(() => myTestClass.setMyProp5([].concat(myArray, 555)), /RangeError/, 'Invalid number of values should throw');
+  t.deepEqual(myTestClass.getMyProp5(), myArray, 'Keep value after illegal set');
 
   t.end();
 });
