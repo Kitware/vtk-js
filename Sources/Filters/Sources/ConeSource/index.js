@@ -16,59 +16,62 @@ export function vtkConeSource(publicAPI, model) {
 
     let dataset = outData[0];
 
-    if (!dataset || dataset.getMTime() < model.mtime) {
-      const angle = 2 * Math.PI / model.resolution;
-      const xbot = -model.height / 2.0;
-      const numberOfPoints = model.resolution + 1;
-      const cellArraySize = (4 * model.resolution) + 1 + model.resolution;
-
-      // Points
-      let pointIdx = 0;
-      const points = new window[model.pointType](numberOfPoints * 3);
-
-      // Cells
-      let cellLocation = 0;
-      const polys = new Uint32Array(cellArraySize);
-
-      // Add summit point
-      points[0] = model.height / 2.0;
-      points[1] = 0.0;
-      points[2] = 0.0;
-
-      // Create bottom cell
-      if (model.capping) {
-        polys[cellLocation++] = model.resolution;
-      }
-
-      // Add all points
-      for (let i = 0; i < model.resolution; i++) {
-        pointIdx++;
-        points[(pointIdx * 3) + 0] = xbot;
-        points[(pointIdx * 3) + 1] = model.radius * Math.cos(i * angle);
-        points[(pointIdx * 3) + 2] = model.radius * Math.sin(i * angle);
-
-        // Add points to bottom cell in reverse order
-        if (model.capping) {
-          polys[model.resolution - cellLocation++ + 1] = pointIdx;
-        }
-      }
-
-      // Add all triangle cells
-      for (let i = 0; i < model.resolution; i++) {
-        polys[cellLocation++] = 3;
-        polys[cellLocation++] = 0;
-        polys[cellLocation++] = i + 1;
-        polys[cellLocation++] = i + 2 > model.resolution ? 1 : i + 2;
-      }
-
-      // FIXME apply tranform
-      dataset = vtkPolyData.newInstance();
-      dataset.getPoints().getData().setData(points, 3);
-      dataset.getPolys().setData(polys, 1);
-
-      // Update output
-      outData[0] = dataset;
+    if (dataset && dataset.getMTime() > model.mtime) {
+      return;
     }
+
+
+    const angle = 2 * Math.PI / model.resolution;
+    const xbot = -model.height / 2.0;
+    const numberOfPoints = model.resolution + 1;
+    const cellArraySize = (4 * model.resolution) + 1 + model.resolution;
+
+    // Points
+    let pointIdx = 0;
+    const points = new window[model.pointType](numberOfPoints * 3);
+
+    // Cells
+    let cellLocation = 0;
+    const polys = new Uint32Array(cellArraySize);
+
+    // Add summit point
+    points[0] = model.height / 2.0;
+    points[1] = 0.0;
+    points[2] = 0.0;
+
+    // Create bottom cell
+    if (model.capping) {
+      polys[cellLocation++] = model.resolution;
+    }
+
+    // Add all points
+    for (let i = 0; i < model.resolution; i++) {
+      pointIdx++;
+      points[(pointIdx * 3) + 0] = xbot;
+      points[(pointIdx * 3) + 1] = model.radius * Math.cos(i * angle);
+      points[(pointIdx * 3) + 2] = model.radius * Math.sin(i * angle);
+
+      // Add points to bottom cell in reverse order
+      if (model.capping) {
+        polys[model.resolution - cellLocation++ + 1] = pointIdx;
+      }
+    }
+
+    // Add all triangle cells
+    for (let i = 0; i < model.resolution; i++) {
+      polys[cellLocation++] = 3;
+      polys[cellLocation++] = 0;
+      polys[cellLocation++] = i + 1;
+      polys[cellLocation++] = i + 2 > model.resolution ? 1 : i + 2;
+    }
+
+    // FIXME apply tranform
+    dataset = vtkPolyData.newInstance();
+    dataset.getPoints().getData().setData(points, 3);
+    dataset.getPolys().setData(polys, 1);
+
+    // Update output
+    outData[0] = dataset;
   }
 
   // Expose methods

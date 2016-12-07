@@ -1,4 +1,5 @@
 import './Filters/Sources/ConeSource/test/testCone';
+import './Filters/Sources/LineSource/test/testLine';
 import './Filters/Sources/PlaneSource/test/testPlane';
 import './Filters/General/WarpScalar/test/testWarp';
 import './Rendering/Core/ColorTransferFunction/test/testColorTransferFunction';

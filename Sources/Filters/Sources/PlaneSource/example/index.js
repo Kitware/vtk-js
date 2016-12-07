@@ -52,8 +52,8 @@ iren.start();
 
 // ----- JavaScript UI -----
 
-['xResolution', 'yResolution'].forEach(propertyName => {
-  document.querySelector(`.${propertyName}`).addEventListener('input', e => {
+['xResolution', 'yResolution'].forEach((propertyName) => {
+  document.querySelector(`.${propertyName}`).addEventListener('input', (e) => {
     const value = Number(e.target.value);
     planeSource.set({ [propertyName]: value });
     renWin.render();
