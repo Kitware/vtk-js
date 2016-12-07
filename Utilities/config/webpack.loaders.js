@@ -22,10 +22,10 @@ module.exports = [
     include: /fonts/,
   }, {
     test: /\.(png|jpg)$/,
-    exclude: /baseline/,
+    exclude: /test[^\.]*\.(png|jpg)$/,
     loader: 'url-loader?limit=8192',
   }, {
-    test: /baseline[^\.]*\.(png|jpg)$/,
+    test: /test[^\.]*\.(png|jpg)$/,
     loader: 'url-loader?limit=1048576',
   }, {
     test: /\.css$/,
