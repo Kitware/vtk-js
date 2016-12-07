@@ -25,12 +25,12 @@ Generate the the opengl buffer for this handle.
 ### upload(data, type)
 
 Upload data to the buffer object. The internal buffer object type must match the type or be
-uninitialized.  The data param must be a typed array and contain tightly packed values
+uninitialized. The data param must be a typed array and contain tightly packed values
 accessible by the index operator ([]).
 
 ### bind()
 
-Bind the buffer object ready for rendering.  Note: Only one ARRAY_BUFFER and one
+Bind the buffer object ready for rendering. Note: Only one ARRAY_BUFFER and one
 ELEMENT_ARRAY_BUFFER may be bound at any time.
 
 ### release()

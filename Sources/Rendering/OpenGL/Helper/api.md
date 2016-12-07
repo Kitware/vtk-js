@@ -1,7 +1,7 @@
 vtkOpenGLHelper
 
 Store the shaders, program, and ibo in a common place
-as they are used together frequently.  This is just
+as they are used together frequently. This is just
 a convenience class.
 
 ### program

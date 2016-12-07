@@ -1,5 +1,5 @@
-vtkBoundingBox maintains a 3D axis aligned bounding box.  
-It is very lite weight and many of the member functions are in-lined so its 
+vtkBoundingBox maintains a 3D axis aligned bounding box.
+It is very lite weight and many of the member functions are in-lined so its
 very fast. It is not derived from vtkObject so it can be allocated on the stack
 
 ## newInstance({ bounds: [xMin, xMax, yMin, yMax, zMin, zMax]})
@@ -72,7 +72,7 @@ Get the minimum point of the bounding box.
 ### getMaxPoint() : [xMax, yMax, zMax]
 
 Get the maximum point of the bounding box;
-  
+
 ### containsPoint(x, y, z) : Boolean
 
 Returns true if the point is contained in the box else false.
@@ -92,7 +92,7 @@ Return the length in the ith direction.
 ### getMaxLength() : Number
 
 Return the Max Length of the box
-  
+
 ### getDiagonalLength() : Number
 
 Return the length of the diagonal or null if not valid.

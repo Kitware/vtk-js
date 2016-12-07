@@ -27,7 +27,7 @@ of display lists is that they require additionally memory which may affect
 the performance of the system.
 
 Another important feature of the mapper is the ability to shift the
-z-buffer to resolve coincident topology. For example, if you'd like to
+Z-buffer to resolve coincident topology. For example, if you'd like to
 draw a mesh with some edges a different color, and the edges lie on the
 mesh, this feature can be useful to get nice looking lines. (See the
 ResolveCoincidentTopology-related methods.)
@@ -54,19 +54,19 @@ used if the data never changes.
 
 ### colorMode
 
-Description: Control how the scalar data is mapped to colors.  By
+Description: Control how the scalar data is mapped to colors. By
 default (ColorModeToDefault), unsigned char scalars are treated
 as colors, and NOT mapped through the lookup table, while
-everything else is.  ColorModeToDirectScalar extends
+everything else is. ColorModeToDirectScalar extends
 ColorModeToDefault such that all integer types are treated as
 colors with values in the range 0-255 and floating types are
-treated as colors with values in the range 0.0-1.0.  Setting
+treated as colors with values in the range 0.0-1.0. Setting
 ColorModeToMapScalars means that all scalar data will be mapped
-through the lookup table.  (Note that for multi-component
+through the lookup table. (Note that for multi-component
 scalars, the particular component to use for mapping can be
 specified using the SelectColorArray() method.)
 
-```js 
+```js
 
 // Helper methods
 instance.setColorModeToDefault();
@@ -103,13 +103,13 @@ UseLookupTableScalarRange is true.
 ### scalarMode
 
 Control how the filter works with scalar point data and cell attribute
-data.  By default (ScalarModeToDefault), the filter will use point data,
+data. By default (ScalarModeToDefault), the filter will use point data,
 and if no point data is available, then cell data is used. Alternatively
 you can explicitly set the filter to use point data
 (ScalarModeToUsePointData) or cell data (ScalarModeToUseCellData).
 You can also choose to get the scalars from an array in point field
 data (ScalarModeToUsePointFieldData) or cell field data
-(ScalarModeToUseCellFieldData).  If scalars are coming from a field
+(ScalarModeToUseCellFieldData). If scalars are coming from a field
 data array, you must call SelectColorArray before you call
 GetColors.
 
@@ -120,7 +120,7 @@ treat the field data tuples as being associated with cells. If
 the poly data contains triangle strips, the array is expected to
 contain the cell data for each mini-cell formed by any triangle
 strips in the poly data as opposed to treating them as a single
-tuple that applies to the entire strip.  This mode can also be
+tuple that applies to the entire strip. This mode can also be
 used to color the entire poly data by a single color obtained by
 mapping the tuple at a given index in the field data array
 through the color map. Use SetFieldDataTupleId() to specify
@@ -157,18 +157,18 @@ for coloring the entire data set.
 
 Set/Get the array name to color by.
 
-### colorByArrayComponent 
+### colorByArrayComponent
 
 Set/Get the array component to color by.
 
 ### resolveCoincidentTopology (STATIC)
 
 Set/Get a global flag that controls whether coincident topology (e.g., a
-line on top of a polygon) is shifted to avoid z-buffer resolution (and
+line on top of a polygon) is shifted to avoid Z-buffer resolution (and
 hence rendering problems). If not off, there are two methods to choose
 from. PolygonOffset uses graphics systems calls to shift polygons, but
 does not distinguish vertices and lines from one another. ShiftZBuffer
-remaps the z-buffer to distinguish vertices, lines, and polygons, but
+remaps the Z-buffer to distinguish vertices, lines, and polygons, but
 does not always produce acceptable results. If you use the ShiftZBuffer
 approach, you may also want to set the ResolveCoincidentTopologyZShift
 value. (Note: not all mappers/graphics systems implement this
@@ -223,7 +223,7 @@ Used when ResolveCoincidentTopology is set to PolygonOffset.
 
 ```js
 instance.setRelativeCoincidentTopologyLineOffsetParameters(factor, unit)
-instance.getRelativeCoincidentTopologyLineOffsetParameters() => { factor, unit 
+instance.getRelativeCoincidentTopologyLineOffsetParameters() => { factor, unit
 ```
 
 ### resolveCoincidentTopologyPointOffsetParameter (STATIC)
@@ -279,7 +279,7 @@ Return bounding box (array of six doubles) of data expressed as
 ### renderTime (set/get)
 
 This instance variable is used by vtkLODActor to determine which
-mapper to use.  It is an estimate of the time necessary to render.
+mapper to use. It is an estimate of the time necessary to render.
 Setting the render time does not modify the mapper.
 
 ### mapScalars(input, alpha) => { rgba, cellFlag }
@@ -301,7 +301,7 @@ which comes from a vtkActor, etc.)
 
 Set/Get the light-model color mode.
 
-```js 
+```js
 // Other helper methods
 setScalarMaterialModeToDefault();
 setScalarMaterialModeToAmbient();
@@ -329,7 +329,7 @@ console.log(MATERIAL_MODE[getScalarMaterialMode()]);
 Returns if the mapper does not expect to have translucent geometry. This
 may happen when using ColorMode is set to not map scalars i.e. render the
 scalar array directly as colors and the scalar array has opacity i.e. alpha
-component.  Default implementation simply returns true. Note that even if
+component. Default implementation simply returns true. Note that even if
 this method returns true, an actor may treat the geometry as translucent
 since a constant translucency is set on the property, for example.
 
@@ -343,7 +343,7 @@ lookup tables for the scalars, then also we cannot use textures. This case
 can be handled if required.
 
 ### clearColorArrays()
- 
+
 Call to force a rebuild of color result arrays on next MapScalars.
 Necessary when using arrays in the case of multiblock data.
 

@@ -9,7 +9,7 @@ messages to vtkInteractorObserver and its subclasses. vtkRenderWindowInteractor
 also provides controls for picking, rendering frame rate.
 
 vtkRenderWindowInteractor serves to hold user preferences and route messages to
-vtkInteractorStyle. Callbacks are available for many events.  Platform
+vtkInteractorStyle. Callbacks are available for many events. Platform
 specific subclasses should provide methods for manipulating timers,
 TerminateApp, and an event loop if required via
 Initialize/Start/Enable/Disable.

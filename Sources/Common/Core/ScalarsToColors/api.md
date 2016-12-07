@@ -3,7 +3,7 @@
 ### Description
 vtkScalarsToColors is a general-purpose base class for objects that
 convert scalars to colors. This include vtkLookupTable classes and
-color transfer functions.  By itself, this class will simply rescale
+color transfer functions. By itself, this class will simply rescale
 the scalars.
 
 The scalar-to-color mapping can be augmented with an additional
@@ -36,6 +36,6 @@ to map to colors, you can specify it here.
 
 When mapping vectors, consider only the number of components selected
 by VectorSize to be part of the vector, and ignore any other
-components.  Set to -1 to map all components.  If this is not set
+components. Set to -1 to map all components. If this is not set
 to -1, then you can use SetVectorComponent to set which scalar
 component will be the first component in the vector to be mapped.

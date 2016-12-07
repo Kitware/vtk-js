@@ -125,7 +125,7 @@ return false if the attribute array does not exist.
 
   // Description:
   // methods to inquire as to what uniforms/attributes are used by
-  // this shader.  This can save some compute time if the uniforms
+  // this shader. This can save some compute time if the uniforms
   // or attributes are expensive to compute
   bool IsUniformUsed(const char *);
 

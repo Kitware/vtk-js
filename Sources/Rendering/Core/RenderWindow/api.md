@@ -4,7 +4,7 @@ Create a window for renderers to be placed into
 
 RenderWindow is an object that specify the behavior of a
 rendering window. A rendering window is a window in a graphical user
-interface where renderers draw their images. 
+interface where renderers draw their images.
 
 ### addRenderer(renderer)/ removeRenderer(renderer) / hasRenderer() : Boolean
 
@@ -36,8 +36,8 @@ The number of multisamples to use for hardware antialiasing.
 The interactor associated with this render window.
 
 ### setNumberOfLayers(int) / getNumberOfLayers() : Integer
- 
-Get the number of layers for renderers.  Each renderer should have
-its layer set individually.  Some algorithms iterate through all layers,
+
+Get the number of layers for renderers. Each renderer should have
+its layer set individually. Some algorithms iterate through all layers,
 so it is not wise to set the number of layers to be exorbitantly large
 (say bigger than 100).

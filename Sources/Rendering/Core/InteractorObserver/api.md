@@ -16,7 +16,7 @@ Initial value is 0.
 
 To support interactive manipulation of objects, this class (and
 subclasses) invoke the events StartInteractionEvent, InteractionEvent, and
-EndInteractionEvent.  These events are invoked when the
+EndInteractionEvent. These events are invoked when the
 vtkInteractorObserver enters a state where rapid response is desired:
 mouse motion, etc. The events can be used, for example, to set the desired
 update frame rate (StartInteractionEvent), operate on data or update a

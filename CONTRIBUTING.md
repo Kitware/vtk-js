@@ -6,12 +6,12 @@ Please check our [developer instructions] for a more detailed guide to
 developing and contributing to the project, and our [VTK-JS Git README]
 for additional information.
 
-1.  The VTK-JS source is maintained on Github 
+1. The VTK-JS source is maintained on Github
     at https://github.com/kitware/vtk-js<br/>
 
-2.  [Fork VTK] into your user's namespace on Github.
+2. [Fork VTK] into your user's namespace on Github.
 
-3.  Follow the [download instructions] to create a
+3. Follow the [download instructions] to create a
     local clone of the main VTK repository:
 
         $ git clone https://github.com/kitware/vtk-js.git VTK
@@ -20,11 +20,11 @@ for additional information.
 
     For more information see: [Setup]
 
-4.  Run the [developer setup script] to prepare your VTK-JS work tree:
+4. Run the [developer setup script] to prepare your VTK-JS work tree:
 
         $ npm install
 
-5.  Edit files and create commits (repeat as needed):
+5. Edit files and create commits (repeat as needed):
 
         $ edit file1 file2 file3
         $ git add file1 file2 file3
@@ -32,13 +32,13 @@ for additional information.
 
     For more information see: [Create a Topic]
 
-6.  Push commits in your topic branch to your fork in Github:
+6. Push commits in your topic branch to your fork in Github:
 
         $ git push
 
     For more information see: [Share a Topic]
 
-7.  Visit your fork in Github, browse to the "**Merge Requests**" link on the
+7. Visit your fork in Github, browse to the "**Merge Requests**" link on the
     left, and use the "**New Merge Request**" button in the upper right to
     create a Merge Request.
 

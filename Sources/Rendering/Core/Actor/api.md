@@ -1,4 +1,4 @@
-vtkActor is used to represent an entity in a rendering scene.  It inherits
+vtkActor is used to represent an entity in a rendering scene. It inherits
 functions related to the actors position, and orientation from
 vtkProp3D. The actor also has scaling and maintains a reference to the
 defining geometry (i.e., the mapper), rendering properties, and possibly a
@@ -39,8 +39,8 @@ Does this prop have some translucent polygonal geometry?
 ## property
 
 Set/Get the property object that controls this actors surface
-properties.  This should be an instance of a vtkProperty object.  Every
-actor must have a property associated with it.  If one isn't specified,
+properties. This should be an instance of a vtkProperty object. Every
+actor must have a property associated with it. If one isn't specified,
 then one will be generated automatically. Multiple actors can share one
 property object.
 
@@ -48,18 +48,18 @@ property object.
 
 Create a new property suitable for use with this type of Actor.
 For example, a vtkMesaActor should create a vtkMesaProperty
-in this function.   The default is to create a vtkProperty.
+in this function.  The default is to create a vtkProperty.
 
 ## backfaceProperty
 
 Set/Get the property object that controls this actors backface surface
-properties.  This should be an instance of a vtkProperty object. If one
-isn't specified, then the front face properties will be used.  Multiple
+properties. This should be an instance of a vtkProperty object. If one
+isn't specified, then the front face properties will be used. Multiple
 actors can share one property object.
 
 ## texture TBD
 
-Set/Get the texture object to control rendering texture maps.  This will
+Set/Get the texture object to control rendering texture maps. This will
 be a vtkTexture object. An actor does not need to have an associated
 texture map and multiple actors can share one texture.
 
