@@ -272,10 +272,29 @@ export function setGetArray(publicAPI, model, fieldNames, size) {
 // ----------------------------------------------------------------------------
 
 export function algo(publicAPI, model, numberOfInputs, numberOfOutputs) {
-  model.inputData = [];
-  model.inputConnection = [];
-  model.output = [];
-  model.inputArrayToProcess = [];
+  if (model.inputData) {
+    model.inputData = model.inputData.map(vtk);
+  } else {
+    model.inputData = [];
+  }
+
+  if (model.inputConnection) {
+    model.inputConnection = model.inputConnection.map(vtk);
+  } else {
+    model.inputConnection = [];
+  }
+
+  if (model.output) {
+    model.output = model.output.map(vtk);
+  } else {
+    model.output = [];
+  }
+
+  if (model.inputArrayToProcess) {
+    model.inputArrayToProcess = model.inputArrayToProcess.map(vtk);
+  } else {
+    model.inputArrayToProcess = [];
+  }
 
   // Methods
   function setInputData(dataset, port = 0) {

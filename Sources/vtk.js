@@ -3,6 +3,9 @@ const factoryMapping = {
 };
 
 export default function vtk(obj) {
+  if (obj === null || obj === undefined) {
+    return obj;
+  }
   if (obj.isA) {
     return obj;
   }
