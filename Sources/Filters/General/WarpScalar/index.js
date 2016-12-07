@@ -1,5 +1,4 @@
 import * as macro from '../../../macro';
-import vtkDataArray from '../../../Common/Core/DataArray';
 
 // ----------------------------------------------------------------------------
 // Global methods
