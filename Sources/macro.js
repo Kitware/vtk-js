@@ -474,14 +474,14 @@ export function newInstance(extend, className) {
 // shallowCopy
 // ----------------------------------------------------------------------------
 
-export function shallowCopyBuilder(model, constructor) {
+export function createShallowCopyBuilder(model, constructor) {
   return () => {
     const modelInstance = {};
 
     // Start to shallow copy each piece
     Object.keys(model).forEach((fieldName) => {
       if (modelInstance[fieldName]) {
-        modelInstance[fieldName] = model[fieldName].shallowCopy ? model[fieldName].shallowCopy() : model[fieldName];
+        modelInstance[fieldName] = model[fieldName].createShallowCopy ? model[fieldName].createShallowCopy() : model[fieldName];
       }
     });
 

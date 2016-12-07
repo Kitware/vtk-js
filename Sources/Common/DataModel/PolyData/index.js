@@ -26,7 +26,7 @@ function vtkPolyData(publicAPI, model) {
   });
 
   /* eslint-disable no-use-before-define */
-  publicAPI.shallowCopy = macro.shallowCopyBuilder(model, newInstance);
+  publicAPI.createShallowCopy = macro.createShallowCopyBuilder(model, newInstance);
   /* eslint-enable no-use-before-define */
 }
 
