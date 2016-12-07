@@ -33,7 +33,7 @@ test('Test vtkWarpScalar execution', (t) => {
   t.equal(
     input.getPoints().getData().getNumberOfTuples(),
     output.getPoints().getData().getNumberOfTuples(),
-    'The number of points do not change between input and output');
+    `The number of points do not change between input ${input.getPoints().getData().getNumberOfTuples()} and output ${output.getPoints().getData().getNumberOfTuples()}`);
 
   t.end();
 });
