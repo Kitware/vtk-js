@@ -66,7 +66,7 @@ def dumpStringArray(datasetDir, dataDir, array, root = {}, compress = True):
       os.remove(pPath)
 
   root['ref'] = getRef(os.path.relpath(dataDir, datasetDir), pMd5)
-  root['type'] = 'vtkStringArray'
+  root['vtkClass'] = 'vtkStringArray'
   root['name'] = array.GetName()
   root['dataType'] = 'JSON'
   root['tuple'] = array.GetNumberOfComponents()
@@ -106,7 +106,7 @@ def dumpDataArray(datasetDir, dataDir, array, root = {}, compress = True):
   # print array.GetName(), '=>', jsMapping[arrayTypesMapping[array.GetDataType()]]
 
   root['ref'] = getRef(os.path.relpath(dataDir, datasetDir), pMd5)
-  root['type'] = 'vtkDataArray'
+  root['vtkClass'] = 'vtkDataArray'
   root['name'] = array.GetName()
   root['dataType'] = jsMapping[arrayTypesMapping[array.GetDataType()]]
   root['tuple'] = array.GetNumberOfComponents()
@@ -172,16 +172,12 @@ def dumpAttributes(datasetDir, dataDir, dataset, root = {}, compress = True):
 
 # -----------------------------------------------------------------------------
 
-def dumpPolyData(datasetDir, dataDir, dataset, root = {}, compress = True):
-  root['type'] = 'vtkPolyData'
-  container = root['vtkPolyData'] = {}
+def dumpPolyData(datasetDir, dataDir, dataset, container = {}, compress = True):
+  container['vtkClass'] = 'vtkPolyData'
 
   # Points
   points = dumpDataArray(datasetDir, dataDir, dataset.GetPoints().GetData(), {}, compress)
-  points['name'] = '_points'
-  points['bounds'] = dataset.GetPoints().GetBounds()
-  container['Points'] = points
-  # FIXME range...
+  container['points'] = { 'vtkClass': 'vtkPoints', 'data': points }
 
   # Cells
   _cells = container
@@ -190,102 +186,98 @@ def dumpPolyData(datasetDir, dataDir, dataset, root = {}, compress = True):
   if dataset.GetVerts() and dataset.GetVerts().GetData().GetNumberOfTuples() > 0:
     _verts = dumpDataArray(datasetDir, dataDir, dataset.GetVerts().GetData(), {}, compress)
     _verts['name'] = '_verts'
-    _cells['Verts'] = _verts
+    _cells['verts'] = _verts
 
   ## Lines
   if dataset.GetLines() and dataset.GetLines().GetData().GetNumberOfTuples() > 0:
     _lines = dumpDataArray(datasetDir, dataDir, dataset.GetLines().GetData(), {}, compress)
     _lines['name'] = '_lines'
-    _cells['Lines'] = _lines
+    _cells['lines'] = _lines
 
   ## Polys
   if dataset.GetPolys() and dataset.GetPolys().GetData().GetNumberOfTuples() > 0:
     _polys = dumpDataArray(datasetDir, dataDir, dataset.GetPolys().GetData(), {}, compress)
     _polys['name'] = '_polys'
-    _cells['Polys'] = _polys
+    _cells['polys'] = _polys
 
   ## Strips
   if dataset.GetStrips() and dataset.GetStrips().GetData().GetNumberOfTuples() > 0:
     _strips = dumpDataArray(datasetDir, dataDir, dataset.GetStrips().GetData(), {}, compress)
     _strips['name'] = '_strips'
-    _cells['Strips'] = _strips
+    _cells['strips'] = _strips
 
   # Attributes (PointData, CellData, FieldData)
   dumpAttributes(datasetDir, dataDir, dataset, container, compress)
 
-  return root
+  return container
 
 # -----------------------------------------------------------------------------
 writerMapping['vtkPolyData'] = dumpPolyData
 # -----------------------------------------------------------------------------
 
-def dumpUnstructuredGrid(datasetDir, dataDir, dataset, root = {}, compress = True):
-  root['type'] = 'vtkUnstructuredGrid'
-  container = root['vtkUnstructuredGrid'] = {}
+def dumpUnstructuredGrid(datasetDir, dataDir, dataset, container = {}, compress = True):
+  container['vtkClass'] = 'vtkUnstructuredGrid'
 
   # Points
   points = dumpDataArray(datasetDir, dataDir, dataset.GetPoints().GetData(), {}, compress)
   points['name'] = '_points'
-  container['Points'] = points
+  container['points'] = { 'vtkClass': 'vtkPoints', 'data': points }
   # FIXME range...
 
   # Cells
-  container['Cells'] = dumpDataArray(datasetDir, dataDir, dataset.GetCells().GetData(), {}, compress)
+  container['cells'] = dumpDataArray(datasetDir, dataDir, dataset.GetCells().GetData(), {}, compress)
 
   # CellTypes
-  container['CellTypes'] = dumpDataArray(datasetDir, dataDir, dataset.GetCellTypesArray(), {}, compress)
+  container['cellTypes'] = dumpDataArray(datasetDir, dataDir, dataset.GetCellTypesArray(), {}, compress)
 
   # Attributes (PointData, CellData, FieldData)
   dumpAttributes(datasetDir, dataDir, dataset, container, compress)
 
-  return root
+  return container
 
 # -----------------------------------------------------------------------------
 writerMapping['vtkUnstructuredGrid'] = dumpUnstructuredGrid
 # -----------------------------------------------------------------------------
 
-def dumpImageData(datasetDir, dataDir, dataset, root = {}, compress = True):
-  root['type'] = 'vtkImageData'
-  container = root['vtkImageData'] = {}
+def dumpImageData(datasetDir, dataDir, dataset, container = {}, compress = True):
+  container['vtkClass'] = 'vtkImageData'
 
   # Origin / Spacing / Dimension
-  container['Origin'] = tuple(dataset.GetOrigin())
-  container['Spacing'] = tuple(dataset.GetSpacing())
-  container['Dimensions'] = tuple(dataset.GetDimensions())
+  container['origin'] = tuple(dataset.GetOrigin())
+  container['spacing'] = tuple(dataset.GetSpacing())
+  container['extent'] = tuple(dataset.GetExtent())
 
   # Attributes (PointData, CellData, FieldData)
   dumpAttributes(datasetDir, dataDir, dataset, container, compress)
 
-  return root
+  return container
 
 # -----------------------------------------------------------------------------
 writerMapping['vtkImageData'] = dumpImageData
 # -----------------------------------------------------------------------------
 
-def dumpRectilinearGrid(datasetDir, dataDir, dataset, root = {}, compress = True):
-  root['type'] = 'vtkRectilinearGrid'
-  container = root['vtkRectilinearGrid'] = {}
+def dumpRectilinearGrid(datasetDir, dataDir, dataset, container = {}, compress = True):
+  container['vtkClass'] = 'vtkRectilinearGrid'
 
   # Dimensions
-  container['Dimensions'] = tuple(dataset.GetDimensions())
+  container['dimensions'] = tuple(dataset.GetDimensions())
 
   # X, Y, Z
-  container['XCoordinates'] = dumpDataArray(datasetDir, dataDir, dataset.GetXCoordinates(), {}, compress)
-  container['YCoordinates'] = dumpDataArray(datasetDir, dataDir, dataset.GetYCoordinates(), {}, compress)
-  container['ZCoordinates'] = dumpDataArray(datasetDir, dataDir, dataset.GetZCoordinates(), {}, compress)
+  container['xCoordinates'] = dumpDataArray(datasetDir, dataDir, dataset.GetXCoordinates(), {}, compress)
+  container['yCoordinates'] = dumpDataArray(datasetDir, dataDir, dataset.GetYCoordinates(), {}, compress)
+  container['zCoordinates'] = dumpDataArray(datasetDir, dataDir, dataset.GetZCoordinates(), {}, compress)
 
   # Attributes (PointData, CellData, FieldData)
   dumpAttributes(datasetDir, dataDir, dataset, container, compress)
 
-  return root
+  return container
 
 # -----------------------------------------------------------------------------
 writerMapping['vtkRectilinearGrid'] = dumpRectilinearGrid
 # -----------------------------------------------------------------------------
 
-def dumpTable(datasetDir, dataDir, dataset, root = {}, compress = True):
-  root['type'] = 'vtkTable'
-  container = root['vtkTable'] = {}
+def dumpTable(datasetDir, dataDir, dataset, container = {}, compress = True):
+  container['vtkClass'] = 'vtkTable'
 
   # Columns
   _columns = container['Columns'] = {}
@@ -295,15 +287,14 @@ def dumpTable(datasetDir, dataDir, dataset, root = {}, compress = True):
     if array:
       _columns[array['name']] = array
 
-  return root
+  return container
 
 # -----------------------------------------------------------------------------
 writerMapping['vtkTable'] = dumpTable
 # -----------------------------------------------------------------------------
 
-def dumpMultiBlock(datasetDir, dataDir, dataset, root = {}, compress = True):
-  root['type'] = 'vtkMultiBlock'
-  container = root['vtkMultiBlock'] = {}
+def dumpMultiBlock(datasetDir, dataDir, dataset, container = {}, compress = True):
+  container['vtkClass'] = 'vtkMultiBlock'
 
   _blocks = container['Blocks'] = {}
   _nbBlocks = dataset.GetNumberOfBlocks()
@@ -317,7 +308,7 @@ def dumpMultiBlock(datasetDir, dataDir, dataset, root = {}, compress = True):
       else:
         _blocks[name] = blockDataset.GetClassName()
 
-  return root
+  return container
 
 # -----------------------------------------------------------------------------
 writerMapping['vtkMultiBlockDataSet'] = dumpMultiBlock
