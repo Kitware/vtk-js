@@ -34,7 +34,7 @@ function vtkFieldData(publicAPI, model) {
 
   publicAPI.getNumberOfArrays = () => model.arrays.length;
   publicAPI.getNumberOfActiveArrays = () => model.arrays.length;
-  publicAPI.addArray = arr => model.arrays.push({ data: arr }) - 1;
+  publicAPI.addArray = (arr) => { model.arrays = [].concat(model.arrays, { data: arr }); return model.arrays.length - 1; };
   publicAPI.removeArray = (arrayName) => {
     model.arrays = model.arrays.filter(entry => arrayName === entry.data.getName());
   };
@@ -42,9 +42,13 @@ function vtkFieldData(publicAPI, model) {
     model.arrays = model.arrays.filter((entry, idx) => idx === arrayIdx);
   };
   publicAPI.getArrays = () => model.arrays.map(entry => entry.data);
-  publicAPI.getArray = arrayName => model.arrays.reduce((a, b, i) => (b.data.getName() === arrayName ? b.data : a), null);
+  publicAPI.getArray = arraySpec =>
+    (typeof arraySpec === 'number' ?
+      publicAPI.getArrayByName(arraySpec) :
+      publicAPI.getArrayByIndex(arraySpec));
+  publicAPI.getArrayByName = arrayName => model.arrays.reduce((a, b, i) => (b.data.getName() === arrayName ? b.data : a), null);
   publicAPI.getArrayWithIndex = arrayName => model.arrays.reduce(
-    (a, b, i) => (b.data.getName() === arrayName ? { array: b.data, index: i } : a), { array: null, index: -1 });
+    (a, b, i) => (b.data && b.data.getName() === arrayName ? { array: b.data, index: i } : a), { array: null, index: -1 });
   publicAPI.getArrayByIndex = idx => (idx >= 0 && idx < model.arrays.length ? model.arrays[idx].data : null);
   publicAPI.hasArray = arrayName => publicAPI.getArrayWithIndex(arrayName).index >= 0;
   publicAPI.getArrayName = (idx) => {
@@ -87,10 +91,10 @@ function vtkFieldData(publicAPI, model) {
       return { data: arrNew };
     });
   };
-  publicAPI.shallowCopy = (other) => {
-    model.arrays = other.getArrays().map(arr => ({ data: arr }));
-    publicAPI.copyFlags(other);
-    model.copyFieldFlags = other.getCopyFieldFlags().map(x => x);
+  publicAPI.createShallowCopy = () => {
+    const other = publicAPI.newInstance();
+    model.arrays.forEach((arr) => { other.addArray(arr); });
+    other.copyFlags(publicAPI);
   };
   publicAPI.copyFlags = other => other.getCopyFieldFlags().map(x => x);
   // TODO: publicAPI.squeeze = () => model.arrays.forEach(entry => entry.data.squeeze());
