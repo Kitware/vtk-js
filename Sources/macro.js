@@ -490,3 +490,11 @@ export function shallowCopyBuilder(model, constructor) {
     return newInst;
   };
 }
+
+// ----------------------------------------------------------------------------
+// Chain function calls
+// ----------------------------------------------------------------------------
+
+export function chain(...fn) {
+  return (...args) => fn.filter(i => !!i).forEach(i => i(...args));
+}

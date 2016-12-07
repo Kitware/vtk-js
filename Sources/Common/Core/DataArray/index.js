@@ -138,6 +138,14 @@ function vtkDataArray(publicAPI, model) {
   publicAPI.getNumberOfValues = () => model.values.length;
   publicAPI.getNumberOfTuples = () => model.values.length / model.numberOfComponents;
   publicAPI.getDataType = () => model.dataType;
+  /* eslint-disable no-use-before-define */
+  publicAPI.newClone = () => newInstance({
+    empty: true,
+    name: model.name,
+    dataType: model.dataType,
+    numberOfComponents: model.numberOfComponents,
+  });
+  /* eslint-enable no-use-before-define */
 
   publicAPI.getNumberOfCells = () => {
     if (model.numberOfCells !== undefined) {

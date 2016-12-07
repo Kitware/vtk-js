@@ -2,6 +2,8 @@ import * as macro from '../../../macro';
 
 /* eslint-disable no-unused-vars */
 // Needed so the VTK factory is filled with them
+import vtkFieldData from './FieldData';
+import { AttributeTypes, AttributeCopyOperations } from './Constants';
 import vtkDataArray from '../../../Common/Core/DataArray';
 // import vtkStringArray from '../../../Common/Core/vtkStringArray';
 
@@ -15,41 +17,87 @@ function vtkDataSetAttributes(publicAPI, model) {
   // Set our className
   model.classHierarchy.push('vtkDataSetAttributes');
 
+  publicAPI.checkNumberOfComponents = x => true;
+
+  publicAPI.setAttribute = (arr, attType) => {
+    if (arr && attType.toUpperCase() === 'PEDIGREEIDS' && !arr.isA('vtkDataArray')) {
+      vtkWarningMacro(`Can not set attribute ${attType}. The attribute must be a vtkDataArray.`);
+      return -1;
+    }
+    if (arr && !publicAPI.checkNumberOfComponents(arr, attType)) {
+      vtkWarningMacro(`Can not set attribute ${attType}. Incorrect number of components.`);
+      return -1;
+    }
+    let currentAttribute = model[`active${attType}`];
+    if ((currentAttribute >= 0) && (currentAttribute < model.arrays.length)) {
+      if (model.arrays[currentAttribute] === arr) {
+        return currentAttribute;
+      }
+      publicAPI.removeArrayByIndex(currentAttribute);
+    }
+
+    if (arr) {
+      currentAttribute = publicAPI.addArray(arr);
+      model[`active${attType}`] = currentAttribute;
+    } else {
+      model[`active${attType}`] = -1;
+    }
+    publicAPI.modified();
+    return model[`active${attType}`];
+  };
+
+  publicAPI.setActiveAttributeByName = (arrayName, attType) =>
+    publicAPI.setActiveAttributeByIndex(
+      publicAPI.getArrayWithIndex(arrayName).index, attType);
+
+  publicAPI.setActiveAttributeByIndex = (arrayIdx, attType) => {
+    if (arrayIdx >= 0 && arrayIdx < model.arrays.length) {
+      if (attType.toUpperCase() !== 'PEDIGREEIDS') {
+        const arr = publicAPI.getArrayByIndex(arrayIdx);
+        if (!arr.isA('vtkDataArray')) {
+          vtkWarningMacro(`Can not set attribute ${attType}. Only vtkDataArray subclasses can be set as active attributes.`);
+          return -1;
+        }
+        if (!publicAPI.checkNumberOfComponents(arr, attType)) {
+          vtkWarningMacro(`Can not set attribute ${attType}. Incorrect number of components.`);
+          return -1;
+        }
+      }
+      model[`active${attType}`] = arrayIdx;
+      publicAPI.modified();
+      return arrayIdx;
+    } else if (arrayIdx === -1) {
+      model[`active${attType}`] = arrayIdx;
+      publicAPI.modified();
+    }
+    return -1;
+  };
+
   const attrTypes = ['Scalars', 'Vectors', 'Normals',
     'TCoords', 'Tensors', 'GlobalIds', 'PedigreeIds'];
 
   attrTypes.forEach((value) => {
-    publicAPI[`get${value}`] = () => {
-      const array = model.arrays[model[`active${value}`]];
-      if (array) {
-        return array;
-      }
-      return null;
-    };
-    publicAPI[`set${value}`] = (da) => {
-      model.arrays[da.getName()] = da;
-      model[`active${value}`] = da.getName();
-    };
+    publicAPI[`get${value}`] = () => publicAPI.getArrayByIndex(model[`active${value}`]);
+    publicAPI[`set${value}`] = da => publicAPI.setAttribute(da, value);
+    publicAPI[`setActive${value}`] =
+      arrayName => publicAPI.setActiveAttributeByIndex(
+        publicAPI.getArrayWithIndex(arrayName).index, value);
   });
 
-  publicAPI.addArray = (array) => {
-    if (model.arrays[array.getName()]) {
-      throw new Error('Array with same name already exist', array, model.arrays);
-    }
-    model.arrays[array.getName()] = array;
-    publicAPI.modified();
-  };
-
-  publicAPI.removeArray = (name) => {
-    const array = model.arrays[name];
-    delete model.arrays[name];
-    publicAPI.modified();
-    return array;
-  };
-
-  publicAPI.getArrayNames = () => Object.keys(model.arrays);
-  publicAPI.getAbstractArray = name => model.arrays[name];
-  publicAPI.getArray = name => model.arrays[name];
+  publicAPI.initialize = macro.chain(publicAPI.initialize, () => {
+    // Default to copying all attributes in every circumstance:
+    model.copyAttributeFlags = [];
+    Object.keys(AttributeCopyOperations)
+      .filter(op => op !== 'ALLCOPY').forEach((attCopyOp) => {
+        model.copyAttributeFlags[AttributeCopyOperations[attCopyOp]] =
+          Object.keys(AttributeTypes).filter(ty => ty !== 'NUM_ATTRIBUTES').reduce(
+            (a, b) => { a[AttributeTypes[b]] = true; return a; }, []);
+      });
+    // Override some operations where we don't want to copy:
+    model.copyAttributeFlags[AttributeCopyOperations.COPYTUPLE][AttributeTypes.GLOBALIDS] = false;
+    model.copyAttributeFlags[AttributeCopyOperations.INTERPOLATE][AttributeTypes.GLOBALIDS] = false;
+    model.copyAttributeFlags[AttributeCopyOperations.COPYTUPLE][AttributeTypes.PEDIGREEIDS] = false;
+  });
 
   // Process dataArrays if any
   if (model.dataArrays && Object.keys(model.dataArrays).length) {
@@ -83,14 +131,13 @@ function vtkDataSetAttributes(publicAPI, model) {
 // ----------------------------------------------------------------------------
 
 const DEFAULT_VALUES = {
-  activeScalars: '',
-  activeVectors: '',
-  activeTensors: '',
-  activeNormals: '',
-  activeTCoords: '',
-  activeGlobalIds: '',
-  activePedigreeIds: '',
-  arrays: null,
+  activeScalars: -1,
+  activeVectors: -1,
+  activeTensors: -1,
+  activeNormals: -1,
+  activeTCoords: -1,
+  activeGlobalIds: -1,
+  activePedigreeIds: -1,
 };
 
 // ----------------------------------------------------------------------------
@@ -99,7 +146,7 @@ export function extend(publicAPI, model, initialValues = {}) {
   Object.assign(model, DEFAULT_VALUES, initialValues);
 
   // Object methods
-  macro.obj(publicAPI, model);
+  vtkFieldData.extend(publicAPI, model, initialValues);
   macro.setGet(publicAPI, model, [
     'activeScalars',
     'activeNormals',
