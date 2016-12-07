@@ -13,6 +13,13 @@ export function enumToString(e, value) {
   return Object.keys(e).find(key => e[key] === value);
 }
 
+export function getStateArrayMapFunc(item) {
+  if (item.isA) {
+    return item.getState();
+  }
+  return item;
+}
+
 // ----------------------------------------------------------------------------
 // vtkObject: modified(), onModified(callback), delete()
 // ----------------------------------------------------------------------------
@@ -105,6 +112,8 @@ export function obj(publicAPI = {}, model = {}) {
         delete jsonArchive[keyName];
       } else if (jsonArchive[keyName].isA) {
         jsonArchive[keyName] = jsonArchive[keyName].getState();
+      } else if (Array.isArray(jsonArchive[keyName])) {
+        jsonArchive[keyName] = jsonArchive[keyName].map(getStateArrayMapFunc);
       }
     });
 
