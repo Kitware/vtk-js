@@ -3,24 +3,24 @@ title: Documentation
 
 The Visualization Toolkit (VTK) is an open-source, freely available software system for 3D computer graphics, image processing, and visualization. Its JS implementation consists of a ES6 JavaScript class library which can be integrated into any Web application. VTK supports a wide variety of visualization algorithms including scalar, vector, tensor, texture, and volumetric methods. The toolkit leverage WebGL and WebGL2 for volume rendering. VTK is part of Kitware’s collection of commercially supported open-source platforms for software development.
 
-Welcome to the vtk-js documentation. If you encounter any problems when using vtk-js, have a look at the  [troubleshooting guide](troubleshooting.html), raise an issue on [GitHub](https://github.com/kitware/vtk-js/issues) or start a topic on the [Mailing list](http://www.vtk.org/mailman/listinfo/vtk).
+Welcome to the vtk.js documentation. If you encounter any problems when using vtk.js, have a look at the  [troubleshooting guide](troubleshooting.html), raise an issue on [GitHub](https://github.com/kitware/vtk-js/issues) or start a topic on the [Mailing list](http://www.vtk.org/mailman/listinfo/vtk).
 
-## What is vtk-js?
+## What is vtk.js?
 
-vtk-js is a rendering library made for Scientific Visualization on the Web. It leverages VTK structure and expertise to bring high performance rendering into your browser.
+vtk.js is a rendering library made for Scientific Visualization on the Web. It leverages VTK structure and expertise to bring high performance rendering into your browser.
 
 ## Installation
 
-It only takes few minutes to set up VTK-js. If you encounter a problem and can't find the solution here, please [submit a GitHub issue](https://github.com/kitware/vtk-js/issues) and I'll try to solve it.
+It only takes few minutes to set up vtk.js. If you encounter a problem and can't find the solution here, please [submit a GitHub issue](https://github.com/kitware/vtk-js/issues) and I'll try to solve it.
 
 ### Requirements
 
-Installing vtk-js as a dependency inside your Web project is quite easy. However, you do need to have a couple of other things installed first:
+Installing vtk.js as a dependency inside your Web project is quite easy. However, you do need to have a couple of other things installed first:
 
 - [Node.js](http://nodejs.org/)
 - [Git](http://git-scm.com/)
 
-If your computer already has these, congratulations! Just install vtk-js with npm:
+If your computer already has these, congratulations! Just install vtk.js with npm:
 
 ``` bash
 $ npm install kitware/vtk-js --save
@@ -63,13 +63,13 @@ $ nvm install 4
 
 Alternatively, download and run [the installer](http://nodejs.org/).
 
-### Install vtk-js
+### Install vtk.js
 
 ``` bash
 $ npm install kitware/vtk-js --save
 ```
 
-### Getting vtk-js source code for contributing
+### Getting vtk.js source code for contributing
 
 ``` bash
 $ git clone https://github.com/kitware/vtk-js.git

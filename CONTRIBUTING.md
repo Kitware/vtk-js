@@ -1,12 +1,12 @@
-Contributing to VTK-JS
+Contributing to vtk.js
 ======================
 
-This page documents at a very high level how to contribute to VTK-JS.
+This page documents at a very high level how to contribute to vtk.js.
 Please check our [developer instructions] for a more detailed guide to
-developing and contributing to the project, and our [VTK-JS Git README]
+developing and contributing to the project, and our [vtk.js Git README](README.md)
 for additional information.
 
-1. The VTK-JS source is maintained on Github
+1. The vtk.js source is maintained on Github
     at https://github.com/kitware/vtk-js<br/>
 
 2. [Fork VTK] into your user's namespace on Github.
@@ -20,7 +20,7 @@ for additional information.
 
     For more information see: [Setup]
 
-4. Run the [developer setup script] to prepare your VTK-JS work tree:
+4. Run the [developer setup script] to prepare your vtk.js work tree:
 
         $ npm install
 

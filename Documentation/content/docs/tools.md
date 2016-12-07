@@ -1,7 +1,7 @@
 title: Tools
 ---
 
-VTK-js is meant to be an Open Source Framework for building
+vtk.js is an Open Source Framework for building
 Web application for Scientific Visualization.
 
 The following guide explain our software process and tools use to
