@@ -102,11 +102,11 @@ def dumpDataArray(datasetDir, dataDir, array, root = {}, compress = True):
   root['vtkClass'] = 'vtkDataArray'
   root['name'] = array.GetName()
   root['dataType'] = jsMapping[arrayTypesMapping[array.GetDataType()]]
-  root['tuple'] = array.GetNumberOfComponents()
+  root['numberOfComponents'] = array.GetNumberOfComponents()
   root['size'] = array.GetNumberOfComponents() * array.GetNumberOfTuples()
   root['ranges'] = []
-  if root['tuple'] > 1:
-    for i in range(root['tuple']):
+  if root['numberOfComponents'] > 1:
+    for i in range(root['numberOfComponents']):
       root['ranges'].append(getRangeInfo(array, i))
     root['ranges'].append(getRangeInfo(array, -1))
   else:
