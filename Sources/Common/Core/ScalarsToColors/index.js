@@ -181,7 +181,7 @@ function vtkScalarsToColors(publicAPI, model) {
       default:
       case VTK_VECTOR_MODE.MAGNITUDE: {
         const magValues =
-          vtkDataArray.newInstance({numberOfComponents: 1, values: new Float32Array(input.getNumberOfTuples()) });
+          vtkDataArray.newInstance({ numberOfComponents: 1, values: new Float32Array(input.getNumberOfTuples()) });
 
         publicAPI.mapVectorsToMagnitude(input, magValues, vectorSize);
         publicAPI.mapScalarsThroughTable(

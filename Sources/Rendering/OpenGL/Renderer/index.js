@@ -105,7 +105,7 @@ export function vtkOpenGLRenderer(publicAPI, model) {
       vsize = 0;
     }
 
-    return {usize, vsize, lowerLeftU, lowerLeftV};
+    return { usize, vsize, lowerLeftU, lowerLeftV };
   };
 
   publicAPI.clear = () => {
