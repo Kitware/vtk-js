@@ -1,5 +1,5 @@
 // Specify how data arrays can be used by data objects
-const FieldDataTypes = {
+export const FieldDataTypes = {
   UNIFORM: 0,              // data that does not vary over points/cells/etc.
   DATA_OBJECT_FIELD: 0,    // to match VTK
 
@@ -22,4 +22,4 @@ const FieldDataTypes = {
   ROW_DATA: 6,             // to match VTK
 };
 
-export { FieldDataTypes as default };
+export default { FieldDataTypes };
