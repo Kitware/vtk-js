@@ -62,13 +62,11 @@ const randFilter = macro.newInstance((publicAPI, model) => {
         newArray[i] = i % 2 ? 1 : 0;
       }
 
-      const da = vtkDataArray.newInstance({ values: newArray });
-      da.setName('spike');
+      const da = vtkDataArray.newInstance({ name: 'spike', values: newArray });
 
       // const outDS = inData[0].shallowCopy();
       // outDS.getPointData().addArray(da);
       // outDS.getPointData().setActiveScalars(da.getName());
-
 
       const pd = vtkPolyData.newInstance();
       pd.setPolys(inData[0].getPolys());
