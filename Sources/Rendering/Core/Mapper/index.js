@@ -429,10 +429,10 @@ function vtkMapper(publicAPI, model) {
     }
 
     // index color does not use textures
-    // if (model.lookupTable &&
-    //     model.lookupTable.getIndexedLookup()) {
-    //   return false;
-    // }
+    if (model.lookupTable &&
+        model.lookupTable.getIndexedLookup()) {
+      return false;
+    }
 
     return true;
   };
