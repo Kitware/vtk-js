@@ -53,16 +53,16 @@ Requirements
 
 In general VTK tries to be as portable as possible; the specific configurations below are known to work and tested.
 
-VTK-JS supports the following development environments:
+vtk.js supports the following development environments:
 
-1. Node 5+
-2. NPM 3+
+- Node 5+
+- NPM 3+
 
-VTK supports the following browsers:
+and the following browsers:
 
-1. Firefox 45+
-2. Chrome 50+
-3. Safari 9.1+
+- Firefox 45+
+- Chrome 50+
+- Safari 9.1+
 
 Documentation
 =============
@@ -73,9 +73,7 @@ getting started guide, advanced documentation, and API descriptions.
 Contributing
 ============
 
-See [CONTRIBUTING.md][] for instructions to contribute.
-
-[CONTRIBUTING.md]: CONTRIBUTING.md
+See [CONTRIBUTING.md](CONTRIBUTING.md) for instructions to contribute.
 
 License
 =======
