@@ -63,14 +63,14 @@ function vtkActor2D(publicAPI, model) {
   };
 
   //----------------------------------------------------------------------------
-  publicAPI.setWidth = w => {
+  publicAPI.setWidth = (w) => {
     const pos = model.position2Coordinate.getValue();
     model.position2Coordinate.setCoordinateSystemToNormalizedViewport();
     model.position2Coordinate.setValue(w, pos[1]);
   };
 
   //----------------------------------------------------------------------------
-  publicAPI.setHeight = w => {
+  publicAPI.setHeight = (w) => {
     const pos = model.position2Coordinate.getValue();
     model.position2Coordinate.setCoordinateSystemToNormalizedViewport();
     model.position2Coordinate.setValue(pos[0], w);

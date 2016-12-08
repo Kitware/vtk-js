@@ -48,10 +48,10 @@ module.exports = [
   }, {
     test: /\.js$/,
     include: /node_modules(\/|\\)vtk\.js(\/|\\)/,
-    loader: 'babel?presets[]=es2015,presets[]=react!string-replace?' + replaceConfig,
+    loader: `babel?presets[]=es2015,presets[]=react!string-replace?${replaceConfig}`,
   }, {
     test: /\.js$/,
     exclude: /node_modules/,
-    loader: 'babel?presets[]=es2015,presets[]=react!string-replace?' + replaceConfig,
+    loader: `babel?presets[]=es2015,presets[]=react!string-replace?${replaceConfig}`,
   },
 ];
