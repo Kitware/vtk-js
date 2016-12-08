@@ -13,13 +13,13 @@ Property Mapper
 ## newInstance()
 
 Create an actor with the following defaults:
-origin(0,0,0)
-position=(0,0,0)
-scale=(1,1,1)
-visibility=1
-pickable=1
-dragable=1
-orientation=(0,0,0).
+- origin = (0,0,0)
+- position = (0,0,0)
+- scale = (1,1,1)
+- visibility = 1
+- pickable = 1
+- dragable = 1
+- orientation = (0,0,0).
 No user defined matrix and no texture map.
 
 ## getActors() TBD
@@ -48,7 +48,7 @@ property object.
 
 Create a new property suitable for use with this type of Actor.
 For example, a vtkMesaActor should create a vtkMesaProperty
-in this function.  The default is to create a vtkProperty.
+in this function. The default is to create a vtkProperty.
 
 ## backfaceProperty
 

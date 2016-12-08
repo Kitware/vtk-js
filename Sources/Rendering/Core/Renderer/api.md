@@ -55,7 +55,7 @@ This does *not* reset the camera.
 
 Create a new Camera sutible for use with this type of Renderer.
 For example, a vtkMesaRenderer should create a vtkMesaCamera
-in this function.  The default is to just call vtkCamera::New.
+in this function. The default is to just call vtkCamera::New.
 
 ### allocatedRenderTime
 
