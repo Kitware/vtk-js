@@ -128,6 +128,34 @@ export function obj(publicAPI = {}, model = {}) {
 
     return sortedObj;
   };
+
+  // Add shallowCopy(otherInstance) support
+  publicAPI.shallowCopy = (other, debug = false) => {
+    if (other.getClassName() !== publicAPI.getClassName()) {
+      throw new Error(`Can not ShallowCopy ${other.getClassName()} into ${publicAPI.getClassName()}`);
+    }
+    const otherModel = other.get();
+
+    const keyList = Object.keys(model).sort();
+    const otherKeyList = Object.keys(otherModel).sort();
+
+    otherKeyList.forEach((key) => {
+      const keyIdx = keyList.indexOf(key);
+      if (keyIdx === -1) {
+        if (debug) {
+          console.log(`add ${key} in shallowCopy`);
+        }
+      } else {
+        keyList.splice(keyIdx, 1);
+      }
+      model[key] = otherModel[key];
+    });
+    if (keyList.length && debug) {
+      console.log(`Untouched keys: ${keyList.join(', ')}`);
+    }
+
+    publicAPI.modified();
+  };
 }
 
 // ----------------------------------------------------------------------------
