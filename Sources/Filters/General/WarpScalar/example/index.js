@@ -1,8 +1,8 @@
 import * as macro                 from '../../../../macro';
+import vtk                        from '../../../../vtk';
 import vtkActor                   from '../../../../Rendering/Core/Actor';
 import vtkCamera                  from '../../../../Rendering/Core/Camera';
 import vtkDataArray               from '../../../../Common/Core/DataArray';
-import vtkPolyData                from '../../../../Common/DataModel/PolyData';
 import vtkMapper                  from '../../../../Rendering/Core/Mapper';
 import vtkOpenGLRenderWindow      from '../../../../Rendering/OpenGL/RenderWindow';
 import vtkRenderer                from '../../../../Rendering/Core/Renderer';
@@ -63,20 +63,10 @@ const randFilter = macro.newInstance((publicAPI, model) => {
       }
 
       const da = vtkDataArray.newInstance({ name: 'spike', values: newArray });
-
-      // const outDS = inData[0].shallowCopy();
-      // outDS.getPointData().addArray(da);
-      // outDS.getPointData().setActiveScalars(da.getName());
-
-      const pd = vtkPolyData.newInstance();
-      pd.setPolys(inData[0].getPolys());
-      pd.setPoints(inData[0].getPoints());
-      pd.getPointData().addArray(da);
-      pd.getPointData().setActiveScalars(da.getName());
-
-      console.log(pd.getState());
-
-      outData[0] = pd;
+      const newDataSet = vtk({ vtkClass: inData[0].getClassName() });
+      newDataSet.shallowCopy(inData[0]);
+      newDataSet.getPointData().setScalars(da);
+      outData[0] = newDataSet;
     }
   };
 })();
