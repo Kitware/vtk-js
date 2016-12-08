@@ -21,7 +21,9 @@ function vtkCalculator(publicAPI, model) {
     if (!outData[0] || inData[0].getMTime() > outData[0].getMTime()) {
       const newArray = new Float32Array(inData[0].getPoints().getNumberOfTuples());
 
-      const func = new Funtion('index','points', 'pd', `return ${model.function}`);
+      /* eslint-disable no-new-func */
+      const func = new Function('index', 'points', 'pd', `return ${model.function}`);
+      /* eslint-enable no-new-func */
       const points = inData[0].getPoints();
       const pointData = inData[0].getPointsData();
       for (let i = 0; i < newArray.length; i++) {
