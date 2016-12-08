@@ -71,9 +71,12 @@ const vecSource = macro.newInstance((publicAPI, model) => {
   };
 })();
 
+const planeSource = vtkPlaneSource.newInstance();
+
 const sline = vtkImageStreamline.newInstance();
 sline.setIntegrationStep(0.01);
 sline.setInputConnection(vecSource.getOutputPort());
+sline.setInputConnection(1, planeSource.getOutputPort());
 
 mapper.setInputConnection(sline.getOutputPort());
 

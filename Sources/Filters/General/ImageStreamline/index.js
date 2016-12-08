@@ -206,9 +206,16 @@ function vtkImageStreamline(publicAPI, model) {
   publicAPI.requestData = (inData, outData) => { // implement requestData
     if (!outData[0] || inData[0].getMTime() > outData[0].getMTime() || publicAPI.getMTime() > outData[0].getMTime()) {
       const input = inData[0];
+      const seeds = inData[1];
 
+      console.log(seeds);
       if (!input) {
         vtkErrorMacro('Invalid or missing input');
+        return 1;
+      }
+
+      if (!seeds) {
+        vtkErrorMacro('Invalid or missing seeds');
         return 1;
       }
 
