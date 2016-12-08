@@ -8,6 +8,7 @@ docs:
   miscellaneous:
     tools: /vtk-js/docs/tools.html
     troubleshooting: /vtk-js/docs/troubleshooting.html
+    debugging: /vtk-js/docs/debugging.html
     contributing: /vtk-js/docs/contributing.html
     class: /vtk-js/docs/class.html
   data_format:
