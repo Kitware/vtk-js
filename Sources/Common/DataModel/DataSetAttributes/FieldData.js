@@ -44,8 +44,8 @@ function vtkFieldData(publicAPI, model) {
   publicAPI.getArrays = () => model.arrays.map(entry => entry.data);
   publicAPI.getArray = arraySpec =>
     (typeof arraySpec === 'number' ?
-      publicAPI.getArrayByName(arraySpec) :
-      publicAPI.getArrayByIndex(arraySpec));
+      publicAPI.getArrayByIndex(arraySpec) :
+      publicAPI.getArrayByName(arraySpec));
   publicAPI.getArrayByName = arrayName => model.arrays.reduce((a, b, i) => (b.data.getName() === arrayName ? b.data : a), null);
   publicAPI.getArrayWithIndex = arrayName => model.arrays.reduce(
     (a, b, i) => (b.data && b.data.getName() === arrayName ? { array: b.data, index: i } : a), { array: null, index: -1 });
