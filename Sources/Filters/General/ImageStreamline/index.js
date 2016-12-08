@@ -189,9 +189,6 @@ function vtkImageStreamline(publicAPI, model) {
 
     const points = new Float32Array(pointsBuffer);
 
-    // const pointsArray = vtkDataArray.newInstance({ values: points, numberOfComponents: 3 });
-    // pointsArray.setName('points');
-
     pd.getPoints().getData().setData(points, 3);
 
     const npts = points.length / 3;
@@ -202,7 +199,6 @@ function vtkImageStreamline(publicAPI, model) {
     }
 
     pd.getLines().setData(line);
-    console.log(pd.getBounds());
 
     return pd;
   };
@@ -246,7 +242,7 @@ export function extend(publicAPI, model, initialValues = {}) {
   macro.obj(publicAPI, model);
 
   // Also make it an algorithm with one input and one output
-  macro.algo(publicAPI, model, 1, 1);
+  macro.algo(publicAPI, model, 2, 1);
 
   // Generate macros for properties
   macro.setGet(publicAPI, model, [

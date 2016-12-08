@@ -2,6 +2,7 @@ import vtkOpenGLRenderWindow from '../../../Sources/Rendering/OpenGL/RenderWindo
 import vtkRenderWindow from '../../../Sources/Rendering/Core/RenderWindow';
 import vtkRenderer from '../../../Sources/Rendering/Core/Renderer';
 import vtkOutlineFilter from '../../../Sources/Filters/General/OutlineFilter';
+import vtkPlaneSource from '../../../Sources/Filters/Sources/PlaneSource';
 import vtkImageStreamline from '../../../Sources/Filters/General/ImageStreamline';
 import vtkActor from '../../../Sources/Rendering/Core/Actor';
 import vtkMapper from '../../../Sources/Rendering/Core/Mapper';
