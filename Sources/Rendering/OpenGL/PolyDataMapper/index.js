@@ -436,7 +436,8 @@ export function vtkOpenGLPolyDataMapper(publicAPI, model) {
     let FSSource = shaders.Fragment;
 
     // for points make sure to add in the point size
-    if (actor.getProperty().getRepresentation() === VTK_REPRESENTATION.POINTS) {
+    if (actor.getProperty().getRepresentation() === VTK_REPRESENTATION.POINTS
+      || model.lastBoundBO.getPrimitiveType() === primTypes.Points) {
       VSSource = vtkShaderProgram.substitute(VSSource,
         '//VTK::PositionVC::Impl', [
           '//VTK::PositionVC::Impl',
