@@ -347,7 +347,7 @@ function vtkColorTransferFunction(publicAPI, model) {
     if (model.indexedLookup) {
       const numNodes = publicAPI.getSize();
       // todo
-      const idx = 0; // publicAPI.getAnnotatedValueIndexInternal(xv);
+      const idx = publicAPI.getAnnotatedValueIndexInternal(x);
       if (idx < 0 || numNodes === 0) {
         publicAPI.getNanColor(rgb);
       } else {

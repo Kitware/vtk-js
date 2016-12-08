@@ -36,6 +36,138 @@ function vtkScalarsToColors(publicAPI, model) {
 
   publicAPI.isOpaque = () => true;
 
+  //----------------------------------------------------------------------------
+  publicAPI.setAnnotations = (values, annotations) => {
+    if ((values && !annotations) ||
+      (!values && annotations)) {
+      return;
+    }
+
+    if (values && annotations &&
+      values.getNumberOfTuples() !== annotations.getNumberOfTuples()) {
+      vtkErrorMacro(
+        'Values and annotations do not have the same number of tuples so ignoring');
+      return;
+    }
+
+    model.annotationArray = [];
+
+    if (annotations && values) {
+      const num = annotations.getNumberOfTuples();
+      for (let i = 0; i < num; i++) {
+        model.annotationArray.push({ value: values[i], annotation: annotations[i] });
+      }
+    }
+
+    publicAPI.updateAnnotatedValueMap();
+    publicAPI.modified();
+  };
+
+  //----------------------------------------------------------------------------
+  publicAPI.setAnnotation = (value, annotation) => {
+    let i = publicAPI.checkForAnnotatedValue(value);
+    let modified = false;
+    if (i >= 0) {
+      if (model.annotationArray[i].annotation !== annotation) {
+        model.annotationArray.setValue(i, value, annotation);
+        modified = true;
+      }
+    } else {
+      model.annotationArray.push({ value, annotation });
+      i = model.annotationArray.length - 1;
+      modified = true;
+    }
+    if (modified) {
+      publicAPI.updateAnnotatedValueMap();
+      publicAPI.modified();
+    }
+    return i;
+  };
+
+  //----------------------------------------------------------------------------
+  publicAPI.getNumberOfAnnotatedValues = () =>
+      (model.annotatedArray ? model.annotatedArray.length : 0);
+
+  //----------------------------------------------------------------------------
+  publicAPI.getAnnotatedValue = (idx) => {
+    if (!model.annotatedArray ||
+      idx < 0 || idx >= model.annotatedArray.length) {
+      return null;
+    }
+    return model.annotatedArray[idx].value;
+  };
+
+  //----------------------------------------------------------------------------
+  publicAPI.getAnnotation = (idx) => {
+    if (model.annotationArray[idx] === undefined) {
+      return null;
+    }
+    return model.annotationArray[idx].annotation;
+  };
+
+  //----------------------------------------------------------------------------
+  publicAPI.getAnnotatedValueIndex = val =>
+    (model.annotatedArray.length ? publicAPI.checkForAnnotatedValue(val) : -1);
+
+  //----------------------------------------------------------------------------
+  publicAPI.removeAnnotation = (value) => {
+    const i = publicAPI.checkForAnnotatedValue(value);
+    const needToRemove = (i >= 0);
+    if (needToRemove) {
+      model.annotatedArray = model.annotatedArray.splice(i, 1);
+      publicAPI.updateAnnotatedValueMap();
+      publicAPI.modified();
+    }
+    return needToRemove;
+  };
+
+  //----------------------------------------------------------------------------
+  publicAPI.resetAnnotations = () => {
+    model.annotationArray = [];
+    publicAPI.modified();
+  };
+
+  //----------------------------------------------------------------------------
+  publicAPI.getAnnotationColor = (val, rgba) => {
+    if (model.indexedLookup) {
+      const i = publicAPI.getAnnotatedValueIndex(val);
+      publicAPI.getIndexedColor(i, rgba);
+    } else {
+      publicAPI.getColor(parseFloat(val), rgba);
+      rgba[3] = 1.0;
+    }
+  };
+
+  //----------------------------------------------------------------------------
+  publicAPI.checkForAnnotatedValue = value =>
+    publicAPI.getAnnotatedValueIndexInternal(value);
+
+  //----------------------------------------------------------------------------
+  // An unsafe version of vtkScalarsToColors::CheckForAnnotatedValue for
+  // internal use (no pointer checks performed)
+  publicAPI.getAnnotatedValueIndexInternal = (value) => {
+    if (model.annotatedValueMap[value] !== undefined) {
+      const na = model.annotatedArray.length;
+      return model.annotatedValueMap[value] % na;
+    }
+    return -1;
+  };
+
+  //----------------------------------------------------------------------------
+  publicAPI.getIndexedColor = (val, rgba) => {
+    rgba[0] = rgba[1] = rgba[2] = rgba[3] = 0.0;
+  };
+
+  //----------------------------------------------------------------------------
+  publicAPI.updateAnnotatedValueMap = () => {
+    model.annotatedValueMap = [];
+
+    const na = model.annotatedArray.length;
+    for (let i = 0; i < na; ++i) {
+      model.annotatedValueMap[model.annotationArray[i].value] = i;
+    }
+  };
+
   // Description:
   // Internal methods that map a data array into a 4-component,
   // unsigned char RGBA array. The color mode determines the behavior
@@ -346,6 +478,8 @@ const DEFAULT_VALUES = {
   vectorSize: -1,
   vectorMode: VTK_VECTOR_MODE.COMPONENT,
   inputRange: [0, 255],
+  annotationArray: [],
+  annotatedValueMap: [],
 };
 
 // ----------------------------------------------------------------------------
