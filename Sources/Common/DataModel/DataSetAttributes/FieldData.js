@@ -12,6 +12,12 @@ import vtk from '../../../vtk';
 
 function vtkFieldData(publicAPI, model) {
   model.classHierarchy.push('vtkFieldData');
+  const superGetState = publicAPI.getState;
+
+  // Decode serialized data if any
+  if (model.arrays) {
+    model.arrays = model.arrays.map(item => ({ data: vtk(item.data) }));
+  }
 
   publicAPI.initialize = () => {
     publicAPI.initializeFields();
@@ -105,6 +111,12 @@ function vtkFieldData(publicAPI, model) {
   // TODO: publicAPI.getArrayContainingComponent = (component) => ...
   publicAPI.getNumberOfComponents = () => model.arrays.reduce((a, b) => a + b.data.getNumberOfComponents(), 0);
   publicAPI.getNumberOfTuples = () => (model.arrays.length > 0 ? model.arrays[0].getNumberOfTuples() : 0);
+
+  publicAPI.getState = () => {
+    const result = superGetState();
+    result.arrays = model.arrays.map(item => ({ data: item.data.getState() }));
+    return result;
+  };
 }
 
 const DEFAULT_VALUES = {
