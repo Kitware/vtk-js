@@ -123,14 +123,14 @@ function vtkDataArray(publicAPI, model) {
     return [range.min, range.max];
   };
 
-  publicAPI.getTuple = (idx) => {
+  publicAPI.getTuple = (idx, tupleToFill = TUPLE_HOLDER) => {
     const numberOfComponents = model.numberOfComponents || 1;
-    TUPLE_HOLDER.length = numberOfComponents;
+    tupleToFill.length = numberOfComponents;
     const offset = idx * numberOfComponents;
     for (let i = 0; i < numberOfComponents; i++) {
-      TUPLE_HOLDER[i] = model.values[offset + i];
+      tupleToFill[i] = model.values[offset + i];
     }
-    return TUPLE_HOLDER;
+    return tupleToFill;
   };
 
   publicAPI.getTupleLocation = (idx = 1) => idx * model.numberOfComponents;
