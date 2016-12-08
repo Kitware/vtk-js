@@ -369,7 +369,7 @@ export function algo(publicAPI, model, numberOfInputs, numberOfOutputs) {
     model.inputConnection[port] = outputPort;
   }
 
-  function getOutput(port = 0) {
+  function getOutputData(port = 0) {
     if (model.deleted) {
       console.log('instance deleted - can not call any method');
       return null;
@@ -379,7 +379,7 @@ export function algo(publicAPI, model, numberOfInputs, numberOfOutputs) {
   }
 
   function getOutputPort(port = 0) {
-    return () => getOutput(port);
+    return () => getOutputData(port);
   }
 
   // Handle input if needed
@@ -398,7 +398,7 @@ export function algo(publicAPI, model, numberOfInputs, numberOfOutputs) {
   }
 
   if (numberOfOutputs) {
-    publicAPI.getOutput = getOutput;
+    publicAPI.getOutputData = getOutputData;
     publicAPI.getOutputPort = getOutputPort;
   }
 

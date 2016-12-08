@@ -25,8 +25,8 @@ test('Test vtkWarpScalar execution', (t) => {
   filter.setInputConnection(source.getOutputPort());
   source.update();
   filter.update();
-  const input = source.getOutput();
-  const output = filter.getOutput();
+  const input = source.getOutputData();
+  const output = filter.getOutputData();
 
   t.ok(output, 'Output dataset exist');
   t.equal(output.isA('vtkPolyData'), true, 'The output dataset should be a vtkPolydata');
