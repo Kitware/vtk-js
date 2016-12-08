@@ -16,14 +16,23 @@ function vtkPolyData(publicAPI, model) {
   // Set our className
   model.classHierarchy.push('vtkPolyData');
 
+  function camelize(str) {
+    return str.replace(/(?:^\w|[A-Z]|\b\w)/g, (letter, index) =>
+      (index === 0 ? letter.toLowerCase() : letter.toUpperCase())).replace(/\s+/g, '');
+  }
+
   // build empty cell arrays and set methods
   POLYDATA_FIELDS.forEach((type) => {
+    publicAPI[`getNumberOf${camelize(type)}`] = () => model[type].getNumberOfCells();
     if (!model[type]) {
       model[type] = vtkDataArray.newInstance({ empty: true });
     } else {
       model[type] = vtk(model[type]);
     }
   });
+
+  publicAPI.getNumberOfCells = () => POLYDATA_FIELDS.reduce(
+    (num, cellType) => num + model[cellType].getNumberOfCells(), 0);
 
   /* eslint-disable no-use-before-define */
   publicAPI.createShallowCopy = macro.createShallowCopyBuilder(model, newInstance);
