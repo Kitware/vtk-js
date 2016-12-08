@@ -13,6 +13,10 @@ import '../../../Sources/Common/Core/DataArray';
 import '../../../Sources/Common/Core/Points';
 import '../../../Sources/Common/DataModel/PolyData';
 
+// ----------------------------------------------------------------------------
+// Standard rendering code setup
+// ----------------------------------------------------------------------------
+
 // Create some control UI
 const container = document.querySelector('body');
 const renderWindowContainer = document.createElement('div');
@@ -23,12 +27,6 @@ const renWin = vtkRenderWindow.newInstance();
 const ren = vtkRenderer.newInstance();
 renWin.addRenderer(ren);
 ren.setBackground(0.32, 0.34, 0.43);
-
-const actor = vtk(actorJSON);
-
-global.actor = actor;
-
-ren.addActor(actor);
 
 // now create something to view it, in this case webgl
 // with mouse/touch interaction
@@ -44,4 +42,14 @@ iren.setView(glwindow);
 // to the HTML elements
 iren.initialize();
 iren.bindEvents(renderWindowContainer, document);
+
+// ----------------------------------------------------------------------------
+// Add actor with its pipeline into renderer
+// ----------------------------------------------------------------------------
+
+const actor = vtk(actorJSON);
+ren.addActor(actor);
+
+ren.resetCamera();
+renWin.render();
 
