@@ -24,7 +24,7 @@ export default function vtk(obj) {
 
   // Convert into vtkObject any nested key
   Object.keys(model).forEach((keyName) => {
-    if (typeof model[keyName] === 'object' && model[keyName].vtkClass) {
+    if (model[keyName] && typeof model[keyName] === 'object' && model[keyName].vtkClass) {
       model[keyName] = vtk(model[keyName]);
     }
   });
