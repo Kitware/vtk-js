@@ -182,14 +182,13 @@ export function vtkSphereSource(publicAPI, model) {
 
     normals = normals.subarray(0, pointIdx * 3);
     const normalArray = vtkDataArray.newInstance({ name: 'Normals', values: normals, numberOfComponents: 3 });
-    dataset.getPointData().addArray(normalArray);
+    dataset.getPointData().setNormals(normalArray);
 
     polys = polys.subarray(0, cellLocation);
     dataset.getPolys().setData(polys, 1);
 
     // Update output
     outData[0] = dataset;
-    outData[0].getPointData().setActiveNormals('Normals');
   }
 
   // Expose methods
