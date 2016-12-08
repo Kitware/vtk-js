@@ -83,6 +83,11 @@ function vtkLookupTable(publicAPI, model) {
     return [table[4 * index], table[(4 * index) + 1], table[(4 * index) + 2], table[(4 * index) + 3]];
   };
 
+  publicAPI.indexedLookupFunction = (v, table, p) => {
+    const index = publicAPI.getAnnotatedValueIndexInternal(v);
+    return [table[4 * index], table[(4 * index) + 1], table[(4 * index) + 2], table[(4 * index) + 3]];
+  };
+
   //----------------------------------------------------------------------------
   publicAPI.lookupShiftAndScale = (range, p) => {
     p.shift = -range[0];
@@ -94,6 +99,11 @@ function vtkLookupTable(publicAPI, model) {
 
   // Public API methods
   publicAPI.mapScalarsThroughTable = (input, output, outFormat, inputOffset) => {
+    let lookupFunc = publicAPI.linearLookup;
+    if (model.indexedLookup) {
+      lookupFunc = publicAPI.indexedLookupFunction;
+    }
+
     const trange = publicAPI.getTableRange();
 
     const p = {
@@ -115,7 +125,7 @@ function vtkLookupTable(publicAPI, model) {
       if (outFormat === 'VTK_RGBA') {
         for (let i = 0; i < length; i++) {
           const cptr =
-            publicAPI.linearLookup(inputV[(i * inIncr) + inputOffset],
+            lookupFunc(inputV[(i * inIncr) + inputOffset],
               model.table, p);
           outputV[(i * 4)] = cptr[0];
           outputV[(i * 4) + 1] = cptr[1];
@@ -128,7 +138,7 @@ function vtkLookupTable(publicAPI, model) {
       if (outFormat === 'VTK_RGBA') {
         for (let i = 0; i < length; i++) {
           const cptr =
-            publicAPI.linearLookup(inputV[(i * inIncr) + inputOffset], model.table, p);
+            lookupFunc(inputV[(i * inIncr) + inputOffset], model.table, p);
           outputV[(i * 4)] = cptr[0];
           outputV[(i * 4) + 1] = cptr[1];
           outputV[(i * 4) + 2] = cptr[2];
