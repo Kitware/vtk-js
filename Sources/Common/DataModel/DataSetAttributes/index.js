@@ -14,12 +14,30 @@ import vtk from '../../../vtk';
 // ----------------------------------------------------------------------------
 
 function vtkDataSetAttributes(publicAPI, model) {
+  const attrTypes = ['Scalars', 'Vectors', 'Normals',
+    'TCoords', 'Tensors', 'GlobalIds', 'PedigreeIds'];
+
+  function cleanAttributeType(attType) {
+    // Given an integer or string, convert the result to one of the
+    // strings in the "attrTypes" array above or null (if
+    // no match is found)
+    let cleanAttType = attrTypes.find(
+      ee => (
+        AttributeTypes[ee.toUpperCase()] === attType ||
+        (typeof attType !== 'number' && ee.toLowerCase() === attType.toLowerCase())));
+    if (typeof cleanAttType === 'undefined') {
+      cleanAttType = null;
+    }
+    return cleanAttType;
+  }
+
   // Set our className
   model.classHierarchy.push('vtkDataSetAttributes');
 
   publicAPI.checkNumberOfComponents = x => true; // TODO
 
-  publicAPI.setAttribute = (arr, attType) => {
+  publicAPI.setAttribute = (arr, uncleanAttType) => {
+    const attType = cleanAttributeType(uncleanAttType);
     if (arr && attType.toUpperCase() === 'PEDIGREEIDS' && !arr.isA('vtkDataArray')) {
       vtkWarningMacro(`Can not set attribute ${attType}. The attribute must be a vtkDataArray.`);
       return -1;
@@ -50,7 +68,8 @@ function vtkDataSetAttributes(publicAPI, model) {
     publicAPI.setActiveAttributeByIndex(
       publicAPI.getArrayWithIndex(arrayName).index, attType);
 
-  publicAPI.setActiveAttributeByIndex = (arrayIdx, attType) => {
+  publicAPI.setActiveAttributeByIndex = (arrayIdx, uncleanAttType) => {
+    const attType = cleanAttributeType(uncleanAttType);
     if (arrayIdx >= 0 && arrayIdx < model.arrays.length) {
       if (attType.toUpperCase() !== 'PEDIGREEIDS') {
         const arr = publicAPI.getArrayByIndex(arrayIdx);
@@ -73,8 +92,12 @@ function vtkDataSetAttributes(publicAPI, model) {
     return -1;
   };
 
-  const attrTypes = ['Scalars', 'Vectors', 'Normals',
-    'TCoords', 'Tensors', 'GlobalIds', 'PedigreeIds'];
+  publicAPI.getActiveAttribute = (attType) => {
+    // Given an integer enum value or a string (with random capitalization),
+    // find the matching string in attrTypes.
+    const cleanAttType = cleanAttributeType(attType);
+    return publicAPI[`get${cleanAttType}`]();
+  };
 
   attrTypes.forEach((value) => {
     publicAPI[`get${value}`] = () => publicAPI.getArrayByIndex(model[`active${value}`]);
