@@ -1,4 +1,7 @@
 import * as macro from '../../../macro';
+import vtk from '../../../vtk';
+
+import vtkPoints from '../../../Common/Core/Points';
 
 // ----------------------------------------------------------------------------
 // Global methods
@@ -108,12 +111,12 @@ function vtkWarpScalar(publicAPI, model) {
         newPtsData[ptOffset + 2] = inPoints[ptOffset + 2] + (model.scaleFactor * s * n[2]);
       }
 
-      const newDataSet = input.shallowCopy();
-      newDataSet.getPoints().getData().setData(newPtsData, 3);
-      newDataSet.modified();
+      const newDataSet = vtk({ vtkClass: input.getClassName() });
+      newDataSet.shallowCopy(input);
+      const points = vtkPoints.newInstance();
+      points.getData().setData(newPtsData, 3);
+      newDataSet.setPoints(points);
       outData[0] = newDataSet;
-
-      console.log('bounds', newDataSet.getBounds());
     }
 
     return 1;
