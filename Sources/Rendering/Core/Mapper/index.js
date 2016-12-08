@@ -474,6 +474,7 @@ const DEFAULT_VALUES = {
   colorMode: 0,
   scalarMode: 0,
   scalarMaterialMode: 0,
+  arrayAccessMode: 1, // By_NAME
 
   bounds: [1, -1, 1, -1, 1, -1],
   center: [0, 0],
@@ -512,6 +513,7 @@ export function extend(publicAPI, model, initialValues = {}) {
   macro.setGet(publicAPI, model, [
     'colorByArrayComponent',
     'colorByArrayName',
+    'arrayAccessMode',
     'colorMode',
     'fieldDataTupleId',
     'interpolateScalarsBeforeMapping',
