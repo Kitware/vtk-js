@@ -57,6 +57,7 @@
         "example:Cone": "webpack-dev-server --progress --open --config ./Examples/WebGL/Cone/webpack.config.js",
         "example:Texture": "webpack-dev-server --progress --open --config ./Examples/WebGL/Texture/webpack.config.js",
         "example:JSON": "webpack-dev-server --progress --open --config ./Examples/Serialization/Actor/webpack.config.js",
+        "example:JSON2": "webpack-dev-server --progress --open --config ./Examples/Serialization/RGBAActors/webpack.config.js",
 
         "build"         : "webpack --progress --colors",
         "build:debug"   : "webpack --progress --colors --display-modules",
