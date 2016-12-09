@@ -30,7 +30,11 @@ export default function vtk(obj) {
   });
 
   // Return the root
-  return constructor(model);
+  const newInst = constructor(model);
+  if (newInst && newInst.modified) {
+    newInst.modified();
+  }
+  return newInst;
 }
 
 export function register(vtkClassName, constructor) {
