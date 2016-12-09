@@ -8,16 +8,16 @@ These attributes are only used if the light is a positional light.
 The default is a directional light (e.g. infinite point light source).
 
 Lights have a type that describes how the light should move with respect
-to the camera.  A Headlight is always located at the current camera position
-and shines on the camera's focal point.  A CameraLight also moves with
-the camera, but may not be coincident to it.  CameraLights are defined
+to the camera. A Headlight is always located at the current camera position
+and shines on the camera's focal point. A CameraLight also moves with
+the camera, but may not be coincident to it. CameraLights are defined
 in a normalized coordinate space where the camera is located at (0, 0, 1),
-the camera is looking at (0, 0, 0), and up is (0, 1, 0).  Finally, a
+the camera is looking at (0, 0, 0), and up is (0, 1, 0). Finally, a
 SceneLight is part of the scene itself and does not move with the camera.
 (Renderers are responsible for moving the light based on its type.)
 
 Lights have a transformation matrix that describes the space in which
-they are positioned.  A light's world space position and focal point
+they are positioned. A light's world space position and focal point
 are defined by their local position and focal point, transformed by
 their transformation matrix (if it exists).
 
@@ -82,7 +82,7 @@ constant, linear, and quadratic, in that order.
 
 ### transformMatrix
 
-Set/Get the light's transformation matrix.  If a matrix is set for
+Set/Get the light's transformation matrix. If a matrix is set for
 a light, the light's parameters (position and focal point) are
 transformed by the matrix before being rendered.
 
@@ -101,22 +101,22 @@ Get the focal point of the light, modified by the transformation matrix
 ### setDirectionAngle(elevation, azimuth)
 
 Set the position and focal point of a light based on elevation and
-azimuth.  The light is moved so it is shining from the given angle.
-Angles are given in degrees.  If the light is a
+azimuth. The light is moved so it is shining from the given angle.
+Angles are given in degrees. If the light is a
 positional light, it is made directional instead.
 
 ### lightType ('HeadLight', 'CameraLight', 'SceneLight')
 
 Set/Get the type of the light.
-A SceneLight is a light located in the world coordinate space.  A light
+A SceneLight is a light located in the world coordinate space. A light
 is initially created as a scene light.
 
 A Headlight is always located at the camera and is pointed at the
-camera's focal point.  The renderer is free to modify the position and
+camera's focal point. The renderer is free to modify the position and
 focal point of the camera at any time.
 
 A CameraLight is also attached to the camera, but is not necessarily
-located at the camera's position.  CameraLights are defined in a
+located at the camera's position. CameraLights are defined in a
 coordinate space where the camera is located at (0, 0, 1), looking
 towards (0, 0, 0) at a distance of 1, with up being (0, 1, 0).
 

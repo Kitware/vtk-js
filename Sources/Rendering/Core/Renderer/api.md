@@ -1,8 +1,8 @@
 ## Introduction
 
-Renderer is a Viewport designed to hold 3D props. As such it contains
-an instance of vtkCamera, a collection of vtkLights, and vtkActors. It exists 
-within a RenderWindow. A RenderWindow may have multiple Renderers 
+Renderer is a Viewport designed to hold 3D properties. It contains
+an instance of vtkCamera, a collection of vtkLights, and vtkActors. It exists
+within a RenderWindow. A RenderWindow may have multiple Renderers
 representing different viewports of the Window and Renderers can be layered
 on top of each other as well.
 
@@ -55,7 +55,7 @@ This does *not* reset the camera.
 
 Create a new Camera sutible for use with this type of Renderer.
 For example, a vtkMesaRenderer should create a vtkMesaCamera
-in this function.   The default is to just call vtkCamera::New.
+in this function. The default is to just call vtkCamera::New.
 
 ### allocatedRenderTime
 
@@ -71,7 +71,7 @@ It may be taken away in the future.
 
 ### visibleActorCount() / visibleVolumeCount()
 
-Returns the number of visible actors.
+Returns the number of visible actors or volumes respectively.
 
 ### computeVisiblePropBounds() : bounds[6]
 
@@ -83,34 +83,34 @@ Used in ResetCamera() and ResetCameraClippingRange()
 Reset the camera clipping range based on the bounds of the
 visible actors. This ensures that no props are cut off
 
-If bounds is provided, then Reset the camera clipping range
-based on that bounding box.
-This method is called from ResetCameraClippingRange()
-If Deering frustrum is used then the bounds get expanded
+If `bounds` is provided, then reset the camera clipping range
+based on the bounding box.
+This method is called from `resetCameraClippingRange()`
+If Deering frustum field of view is used then the bounds get expanded
 by the camera's modelview matrix.
 
 ### erase  (set/get Boolean)
 
 When this flag is off, the renderer will not erase the background
-or the Zbuffer.  It is used to have overlapping renderers.
+or the Z-buffer. It is used to have overlapping renderers.
 Both the RenderWindow Erase and Render Erase must be on
-for the camera to clear the renderer.  By default, Erase is on.
+for the camera to clear the renderer. By default, Erase is on.
 
 ### draw (set/get Boolean)
 
-When this flag is off, render commands are ignored.  It is used to either
+When this flag is off, render commands are ignored. It is used to either
 multiplex a vtkRenderWindow or render only part of a vtkRenderWindow.
 By default, Draw is on.
 
 ### interactive (set/get Boolean)
 
-Turn on/off interactive status.  An interactive renderer is one that
-can receive events from an interactor.  Should only be set if
+Turn on/off interactive status. An interactive renderer is one that
+can receive events from an interactor. Should only be set if
 there are multiple renderers in the same section of the viewport.
 
 ### layer (set/get Integer)
 
-Set/Get the layer that this renderer belongs to.  This is only used if
+Set/Get the layer that this renderer belongs to. This is only used if
 there are layered renderers.
 
 Note: Changing the layer will update the PreserveColorBuffer setting. If
@@ -123,11 +123,10 @@ the layer is set.
 ### renderWindow (set/get RenderWindow)
 
 Specify the rendering window in which to draw. This is automatically set
-when the renderer is created by MakeRenderer.  The user probably
-shouldn't ever need to call this method.
+when the renderer is created by MakeRenderer. The user should never need to call this method.
 
 ### preserveColorBuffer (set/get Boolean)
-  
+
 By default, the renderer at layer 0 is opaque, and all non-zero layer
 renderers are transparent. This flag allows this behavior to be overridden.
 If true, this setting will force the renderer to preserve the existing
@@ -145,9 +144,9 @@ true, this renderer will use the existing depth buffer for its rendering.
 ### useDepthPeeling (set/get Boolean)
 
 Turn on/off rendering of translucent material with depth peeling
-technique. The render window must have alpha bits (ie call
-SetAlphaBitPlanes(1)) and no multisample buffer (ie call
-SetMultiSamples(0) ) to support depth peeling.
+technique. The render window must have alpha bits (i.e., call
+`SetAlphaBitPlanes(1)`) and no multisample buffer (i.e. call
+`SetMultiSamples(0)`) to support depth peeling.
 If UseDepthPeeling is on and the GPU supports it, depth peeling is used
 for rendering translucent materials.
 If UseDepthPeeling is off, alpha blending is used.
@@ -180,4 +179,3 @@ It has to be a positive value.
 
 Turn on/off rendering of shadows if supported
 Initial value is off.
-

@@ -1,8 +1,8 @@
-vtkActor2D is used to represent a 2D entity in a rendering scene.  It inherits
+vtkActor2D is used to represent a 2D entity in a rendering scene. It inherits
 functions related to the actors position, and orientation from
 vtkProp. The actor also has scaling and maintains a reference to the
 defining geometry (i.e., the mapper), rendering properties, and possibly a
-texture map. 
+texture map.
 
 ## See Also
 
@@ -25,8 +25,8 @@ Does this prop have some translucent polygonal geometry?
 ## property
 
 Set/Get the property object that controls this actors surface
-properties.  This should be an instance of a vtkProperty object.  Every
-actor must have a property associated with it.  If one isn't specified,
+properties. This should be an instance of a vtkProperty object. Every
+actor must have a property associated with it. If one isn't specified,
 then one will be generated automatically. Multiple actors can share one
 property object.
 

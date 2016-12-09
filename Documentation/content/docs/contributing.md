@@ -1,7 +1,7 @@
 title: Contributing
 ---
 
-We welcome you to join the development of VTK-js. This document will help you through the process.
+We welcome you to join the development of vtk.js. This document will help you through the process.
 
 ## Before You Start
 
