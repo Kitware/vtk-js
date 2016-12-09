@@ -346,6 +346,7 @@ for rIdx in xrange(renderers.GetNumberOfItems()):
             colorToUse = renProp.GetProperty().GetColor() if hasattr(renProp, 'GetProperty') else [1, 1, 1]
         pointSize = renProp.GetProperty().GetPointSize() if hasattr(renProp, 'GetProperty') else 1.0
         opacity = renProp.GetProperty().GetOpacity() if hasattr(renProp, 'GetProperty') else 1.0
+        edgeVisibility = renProp.GetProperty().GetEdgeVisibility() if hasattr(renProp, 'GetProperty') else false
 
         sceneComponents.append({
           "type": "httpDataSetReader",
@@ -359,6 +360,7 @@ for rIdx in xrange(renderers.GetNumberOfItems()):
           },
           "property": {
             "representation": representation,
+            "edgeVisibility": edgeVisibility,
             "diffuseColor": colorToUse,
             "pointSize": pointSize,
             "opacity": opacity
