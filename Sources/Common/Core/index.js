@@ -5,6 +5,8 @@ import vtkLookupTable from './LookupTable';
 import vtkMath from './Math';
 import vtkPoints from './Points';
 import vtkScalarsToColors from './ScalarsToColors';
+import vtkStringArray from './StringArray';
+import vtkVariantArray from './VariantArray';
 
 export default {
   vtkDataArray,
@@ -14,4 +16,6 @@ export default {
   vtkMath,
   vtkPoints,
   vtkScalarsToColors,
+  vtkStringArray,
+  vtkVariantArray,
 };
