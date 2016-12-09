@@ -7,10 +7,11 @@ A String array is meant to keep track of String values. It is basically a standa
 
 ```js
 {
-  type: 'vtkStringArray',
+  vtkClass: 'vtkStringArray',
   name: 'Players',
-  tuple: 1,
+  numberOfComponents: 1,
   size: 1024,
+  dataType: 'string',
   values: [ 'Player 1', 'Player 2', 'Palyer 3', ...],
 }
 ``` 
@@ -26,9 +27,10 @@ it in memory like the previously described ones.
 {
   type: 'vtkStringArray',
   name: 'Players',
-  tuple: 1,
+  numberOfComponents: 1,
   size: 1024,
   values: null,
+  dataType: 'string',
   ref: {
     id: '57b161d50afcda9eee221d6a5190075e',
     basepath: 'data',
