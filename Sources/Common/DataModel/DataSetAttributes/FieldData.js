@@ -97,11 +97,6 @@ function vtkFieldData(publicAPI, model) {
       return { data: arrNew };
     });
   };
-  publicAPI.createShallowCopy = () => {
-    const other = publicAPI.newInstance();
-    model.arrays.forEach((arr) => { other.addArray(arr); });
-    other.copyFlags(publicAPI);
-  };
   publicAPI.copyFlags = other => other.getCopyFieldFlags().map(x => x);
   // TODO: publicAPI.squeeze = () => model.arrays.forEach(entry => entry.data.squeeze());
   publicAPI.reset = () => model.arrays.forEach(entry => entry.data.reset());

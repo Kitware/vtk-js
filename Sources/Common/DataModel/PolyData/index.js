@@ -33,10 +33,6 @@ function vtkPolyData(publicAPI, model) {
 
   publicAPI.getNumberOfCells = () => POLYDATA_FIELDS.reduce(
     (num, cellType) => num + model[cellType].getNumberOfCells(), 0);
-
-  /* eslint-disable no-use-before-define */
-  publicAPI.createShallowCopy = macro.createShallowCopyBuilder(model, newInstance);
-  /* eslint-enable no-use-before-define */
 }
 
 // ----------------------------------------------------------------------------

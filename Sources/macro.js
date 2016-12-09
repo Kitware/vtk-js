@@ -499,31 +499,6 @@ export function newInstance(extend, className) {
 }
 
 // ----------------------------------------------------------------------------
-// shallowCopy
-// ----------------------------------------------------------------------------
-
-export function createShallowCopyBuilder(model, constructor) {
-  return () => {
-    const modelInstance = {};
-
-    // Start to shallow copy each piece
-    Object.keys(model).forEach((fieldName) => {
-      if (modelInstance[fieldName]) {
-        modelInstance[fieldName] = model[fieldName].createShallowCopy ? model[fieldName].createShallowCopy() : model[fieldName];
-      }
-    });
-
-    // Create instance
-    const newInst = constructor(modelInstance);
-
-    // Reset mtime to original value
-    newInst.set({ mtime: model.mtime });
-
-    return newInst;
-  };
-}
-
-// ----------------------------------------------------------------------------
 // Chain function calls
 // ----------------------------------------------------------------------------
 

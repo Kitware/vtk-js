@@ -52,10 +52,6 @@ function vtkPoints(publicAPI, model) {
 
   // Overide mtime
   publicAPI.getMTime = () => Math.max(model.mtime, model.data.getMTime());
-
-  /* eslint-disable no-use-before-define */
-  publicAPI.createShallowCopy = macro.createShallowCopyBuilder(model, newInstance);
-  /* eslint-enable no-use-before-define */
 }
 
 // ----------------------------------------------------------------------------
