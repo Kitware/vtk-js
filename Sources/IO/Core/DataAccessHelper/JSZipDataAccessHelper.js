@@ -59,14 +59,14 @@ function create(options) {
             view.set(uint8array);
 
             if (fetchGzip) {
-              if (array.dataType === 'JSON') {
+              if (array.dataType === 'string' || array.dataType === 'JSON') {
                 array.buffer = pako.inflate(new Uint8Array(array.buffer), { to: 'string' });
               } else {
                 array.buffer = pako.inflate(new Uint8Array(array.buffer)).buffer;
               }
             }
 
-            if (array.dataType === 'JSON') {
+            if (array.ref.encode === 'JSON') {
               array.values = JSON.parse(array.buffer);
             } else {
               if (Endian.ENDIANNESS !== array.ref.encode && Endian.ENDIANNESS) {
