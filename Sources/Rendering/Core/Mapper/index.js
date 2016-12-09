@@ -131,7 +131,7 @@ function vtkMapper(publicAPI, model) {
   publicAPI.getAbstractScalars = (input, scalarMode, arrayAccessMode,
     arrayId, arrayName) => {
     // make sure we have an input
-    if (!input) {
+    if (!input || !model.scalarVisibility) {
       return null;
     }
 
