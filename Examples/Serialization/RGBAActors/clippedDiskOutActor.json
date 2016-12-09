@@ -327,7 +327,7 @@
     "diffuse": 1,
     "diffuseColor": [1, 1, 1],
     "edgeColor": [0, 0, 0],
-    "edgeVisibility": false,
+    "edgeVisibility": true,
     "frontfaceCulling": false,
     "interpolation": 1,
     "lighting": true,
