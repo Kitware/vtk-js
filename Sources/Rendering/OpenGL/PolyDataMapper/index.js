@@ -696,6 +696,7 @@ export function vtkOpenGLPolyDataMapper(publicAPI, model) {
     if (cellBO.getProgram() === 0 ||
         cellBO.getShaderSourceTime().getMTime() < publicAPI.getMTime() ||
         cellBO.getShaderSourceTime().getMTime() < actor.getMTime() ||
+        cellBO.getShaderSourceTime().getMTime() < model.renderable.getMTime() ||
         cellBO.getShaderSourceTime().getMTime() < model.currentInput.getMTime() ||
         cellBO.getShaderSourceTime().getMTime() < model.lightComplexityChanged.get(primType).getMTime()) {
       return true;
@@ -1168,7 +1169,7 @@ export function vtkOpenGLPolyDataMapper(publicAPI, model) {
 
     const representation = actor.getProperty().getRepresentation();
     const toString = `${poly.getMTime()}A${representation}B${poly.getMTime()}`
-      + `C${(n ? n.getMTime() : 1)}D${(model.colors ? model.colors.getMTime() : 1)}`
+      + `C${(n ? n.getMTime() : 1)}D${(c ? c.getMTime() : 1)}`
       + `E${actor.getProperty().getEdgeVisibility()}`;
 
     let tcoords = poly.getPointData().getTCoords();
