@@ -7,7 +7,7 @@ import vtkConeSource from '../../../../Filters/Sources/ConeSource';
 import vtkActor from '../../../../Rendering/Core/Actor';
 import vtkMapper from '../../../../Rendering/Core/Mapper';
 
-import baseline from './baseline.png';
+import baseline from './testCone.png';
 import testUtils from '../../../../Testing/testUtils';
 
 /* global document */

@@ -1,71 +1,64 @@
 {
-  "vtkPolyData": {
-    "Polys": {
-      "name": "_polys", 
-      "tuple": 1, 
-      "dataType": "Uint32Array", 
-      "ref": {
-        "encode": "LittleEndian", 
-        "basepath": "data", 
-        "id": "ee87874a384348c49955d2f13819469c"
-      }, 
+  "CellData": {},
+  "FieldData": {},
+  "vtkClass": "vtkPolyData",
+  "polys": {
+    "name": "_polys",
+    "numberOfComponents": 1,
+    "dataType": "Uint32Array",
+    "vtkClass": "vtkDataArray",
+    "ranges": [
+      {
+        "max": 2902.0,
+        "component": null,
+        "min": 0.0
+      }
+    ],
+    "ref": {
+      "encode": "LittleEndian",
+      "basepath": "data",
+      "id": "ee87874a384348c49955d2f13819469c"
+    },
+    "size": 15593
+  },
+  "PointData": {},
+  "points": {
+    "data": {
+      "name": "Points",
+      "numberOfComponents": 3,
+      "dataType": "Float32Array",
+      "vtkClass": "vtkDataArray",
       "ranges": [
         {
-          "max": 2902.0, 
-          "component": null, 
-          "min": 0.0
-        }
-      ], 
-      "type": "vtkDataArray", 
-      "size": 15593
-    }, 
-    "PointData": {}, 
-    "Points": {
-      "name": "_points", 
-      "tuple": 3, 
-      "dataType": "Float32Array", 
-      "ref": {
-        "encode": "LittleEndian", 
-        "basepath": "data", 
-        "id": "5ab532bd952db1f3d2b7a5e2c1ffca47"
-      }, 
-      "bounds": [
-        -4.445835113525391, 
-        5.9980878829956055, 
-        -3.637036085128784, 
-        2.7597200870513916, 
-        -1.7014050483703613, 
-        1.7014050483703613
-      ], 
-      "ranges": [
-        {
-          "max": 5.9980878829956055, 
-          "component": null, 
+          "max": 5.9980878829956055,
+          "component": null,
           "min": -4.445835113525391
-        }, 
+        },
         {
-          "max": 2.7597200870513916, 
-          "component": null, 
+          "max": 2.7597200870513916,
+          "component": null,
           "min": -3.637036085128784
-        }, 
+        },
         {
-          "max": 1.7014050483703613, 
-          "component": null, 
+          "max": 1.7014050483703613,
+          "component": null,
           "min": -1.7014050483703613
-        }, 
+        },
         {
-          "max": 6.125802124829696, 
-          "component": null, 
+          "max": 6.125802124829696,
+          "component": null,
           "min": 1.3772239035575602
         }
-      ], 
-      "type": "vtkDataArray", 
+      ],
+      "ref": {
+        "encode": "LittleEndian",
+        "basepath": "data",
+        "id": "5ab532bd952db1f3d2b7a5e2c1ffca47"
+      },
       "size": 8709
-    }, 
-    "CellData": {}, 
-    "FieldData": {}
-  }, 
-  "type": "vtkPolyData", 
+    },
+    "vtkClass": "vtkPoints"
+  },
   "metadata": {
     "name": "cow.vtp"
   }

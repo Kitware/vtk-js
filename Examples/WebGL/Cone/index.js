@@ -86,18 +86,20 @@ iren.bindEvents(renderWindowContainer, document);
 
 // ----------------
 
-representationSelector.addEventListener('change', e => {
+representationSelector.addEventListener('change', (e) => {
   const newRepValue = Number(e.target.value);
   actor.getProperty().setRepresentation(newRepValue);
   renWin.render();
 });
 
-resolutionChange.addEventListener('input', e => {
+resolutionChange.addEventListener('input', (e) => {
   const resolution = Number(e.target.value);
   coneSource.setResolution(resolution);
   renWin.render();
 });
 
+// Make some variables global so that you can inspect and
+// modify objects in your browser's developer console:
 global.source = coneSource;
 global.mapper = mapper;
 global.actor = actor;

@@ -1,70 +1,121 @@
 {
-  "background": [0.32, 0.34, 0.43],
+  "fetchGzip": true,
+  "centerOfRotation": [
+    0.0,
+    0.0,
+    0.07999992370605469
+  ],
   "camera": {
-    "focalPoint": [0, 0, 0],
-    "position": [0, 0, 50],
-    "clippingRange": [0.1, 50.0]
+    "position": [-38.22043969032694,
+      21.43561298650569, -24.078660844399703
+    ],
+    "viewUp": [
+      0.5312954092134865, -0.00745293742397654, -0.8471538478177553
+    ],
+    "clippingRange": [
+      26.130367059621925,
+      80.19376763710218
+    ],
+    "focalPoint": [
+      0.0,
+      0.0,
+      0.07999992370605469
+    ]
   },
-  "scene": [
-    {
-      "type": "httpDataSetReader",
-      "httpDataSetReader": {
-        "url": "clipSurface.vtp"
-      },
-      "mapper": {
-        "colorByArrayName": "Temp",
-        "colorMode": 1,
-        "scalarMode": 3
-      },
-      "lookupTable": {
-        "tableRange": [293.1499938964844, 913.1500244140625],
-        "hueRange": [0.66667, 0.0]
-      }
-    },{
-      "type": "httpDataSetReader",
-      "httpDataSetReader": {
-        "url": "fullSurface.vtp"
-      },
-      "property": {
-        "representation": 1,
-        "lineWidth": 1
-      },
-      "mapper": {
-        "colorByArrayName": "H2",
-        "colorMode": 1,
-        "scalarMode": 3
-      },
-      "lookupTable": {
-        "tableRange": [0.8076131343841553, 0.9176878929138184],
-        "hueRange": [0.66667, 0.0]
-      }
-    },{
-      "type": "httpDataSetReader",
-      "httpDataSetReader": {
-        "url": "line.vtp"
-      },
-      "property": {
-        "representation": 0,
-        "pointSize": 5,
-        "diffuseColor": [0, 0, 1]
-      }
-    },{
-      "type": "httpDataSetReader",
-      "httpDataSetReader": {
-        "url": "streamline.vtp"
-      },
-      "property": {
-        "lineWidth": 3
-      },
-      "mapper": {
-        "colorByArrayName": "Temp",
-        "colorMode": 1,
-        "scalarMode": 3
-      },
-      "lookupTable": {
-        "tableRange": [293.1499938964844, 913.1500244140625],
-        "hueRange": [0.66667, 0.0]
-      }
+  "background": [
+    0.32,
+    0.34,
+    0.43
+  ],
+  "scene": [{
+    "httpDataSetReader": {
+      "url": "0"
+    },
+    "mapper": {
+      "colorByArrayName": "",
+      "colorMode": 1,
+      "scalarMode": 5
+    },
+    "property": {
+      "opacity": 1.0,
+      "representation": 1,
+      "pointSize": 2.0,
+      "diffuseColor": [
+        1.0,
+        1.0,
+        1.0
+      ]
+    },
+    "type": "httpDataSetReader",
+    "lookupTable": {
+      "tableRange": [
+        0.0,
+        1.0
+      ],
+      "hueRange": [
+        0.5,
+        0
+      ]
     }
-  ]
+  }, {
+    "httpDataSetReader": {
+      "url": "1"
+    },
+    "mapper": {
+      "colorByArrayName": "__CustomRGBColorArray__",
+      "colorMode": 0,
+      "scalarMode": 3
+    },
+    "property": {
+      "opacity": 1.0,
+      "representation": 2,
+      "pointSize": 2.0,
+      "diffuseColor": [
+        1.0,
+        1.0,
+        1.0
+      ]
+    },
+    "type": "httpDataSetReader",
+    "lookupTable": {
+      "tableRange": [
+        293.1499938964844,
+        913.1500244140625
+      ],
+      "hueRange": [
+        0.5,
+        0
+      ]
+    }
+  }, {
+    "httpDataSetReader": {
+      "url": "2"
+    },
+    "mapper": {
+      "colorByArrayName": "__CustomRGBColorArray__",
+      "colorMode": 0,
+      "scalarMode": 3
+    },
+    "property": {
+      "opacity": 1.0,
+      "representation": 2,
+      "pointSize": 2.0,
+      "diffuseColor": [
+        1.0,
+        1.0,
+        1.0
+      ]
+    },
+    "type": "httpDataSetReader",
+    "lookupTable": {
+      "tableRange": [
+        0.06795133306083768,
+        22.221139038251316
+      ],
+      "hueRange": [
+        0.5,
+        0
+      ]
+    }
+  }]
 }

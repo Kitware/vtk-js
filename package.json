@@ -17,6 +17,7 @@
         "pako": "1.0.1",
         "jszip": "3.1.3",
         "blueimp-md5": "2.3.0",
+        "seedrandom": "2.4.2",
         "gl-matrix": "2.3.1"
     },
     "devDependencies": {
@@ -55,6 +56,7 @@
         "example:EmptyRenderer": "webpack-dev-server --progress --open --config ./Examples/WebGL/EmptyRenderer/webpack.config.js",
         "example:Cone": "webpack-dev-server --progress --open --config ./Examples/WebGL/Cone/webpack.config.js",
         "example:Texture": "webpack-dev-server --progress --open --config ./Examples/WebGL/Texture/webpack.config.js",
+        "example:JSON": "webpack-dev-server --progress --open --config ./Examples/Serialization/Actor/webpack.config.js",
 
         "build"         : "webpack --progress --colors",
         "build:debug"   : "webpack --progress --colors --display-modules",
@@ -62,6 +64,7 @@
 
         "test": "karma start ./karma.conf.js",
         "test:travis": "karma start ./karma.conf.js --browsers Electron --single-run",
+        "test:debug": "karma start ./karma.conf.js --no-single-run",
 
         "commit"        : "git cz",
         "semantic-release": "semantic-release pre && npm publish && semantic-release post"

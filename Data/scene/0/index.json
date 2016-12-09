@@ -1,0 +1,95 @@
+{
+  "cellData": {
+    "activeTCoords": -1,
+    "activeScalars": -1,
+    "vtkClass": "vtkDataSetAttributes",
+    "arrays": [],
+    "activeNormals": -1,
+    "activeGlobalIds": -1,
+    "activeTensors": -1,
+    "activePedigreeIds": -1,
+    "activeVectors": -1
+  },
+  "fieldData": {
+    "activeTCoords": -1,
+    "activeScalars": -1,
+    "vtkClass": "vtkDataSetAttributes",
+    "arrays": [],
+    "activeNormals": -1,
+    "activeGlobalIds": -1,
+    "activeTensors": -1,
+    "activePedigreeIds": -1,
+    "activeVectors": -1
+  },
+  "vtkClass": "vtkPolyData",
+  "pointData": {
+    "activeTCoords": -1,
+    "activeScalars": -1,
+    "vtkClass": "vtkDataSetAttributes",
+    "arrays": [],
+    "activeNormals": -1,
+    "activeGlobalIds": -1,
+    "activeTensors": -1,
+    "activePedigreeIds": -1,
+    "activeVectors": -1
+  },
+  "lines": {
+    "name": null,
+    "numberOfComponents": 1,
+    "dataType": "Uint32Array",
+    "vtkClass": "vtkDataArray",
+    "ranges": [
+      {
+        "max": 7.0,
+        "component": null,
+        "min": 0.0
+      }
+    ],
+    "ref": {
+      "encode": "LittleEndian",
+      "basepath": "data",
+      "id": "69ed98973df6a126eb0545fae2c84c2b"
+    },
+    "size": 36
+  },
+  "points": {
+    "data": {
+      "name": "Points",
+      "numberOfComponents": 3,
+      "dataType": "Float32Array",
+      "vtkClass": "vtkDataArray",
+      "ranges": [
+        {
+          "max": 5.75,
+          "component": null,
+          "min": -5.75
+        },
+        {
+          "max": 5.75,
+          "component": null,
+          "min": -5.75
+        },
+        {
+          "max": 10.15999984741211,
+          "component": null,
+          "min": -10.0
+        },
+        {
+          "max": 13.013477509851626,
+          "component": null,
+          "min": 12.888948754650242
+        }
+      ],
+      "ref": {
+        "encode": "LittleEndian",
+        "basepath": "data",
+        "id": "ac0640cd20d7b4621db9b18980f4df60"
+      },
+      "size": 24
+    },
+    "vtkClass": "vtkPoints"
+  },
+  "metadata": {
+    "name": "0"
+  }
+}

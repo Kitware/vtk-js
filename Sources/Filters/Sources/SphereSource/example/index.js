@@ -49,8 +49,8 @@ iren.start();
 
 // ----- JavaScript UI -----
 
-['radius', 'thetaResolution', 'startTheta', 'endTheta', 'phiResolution', 'startPhi', 'endPhi'].forEach(propertyName => {
-  document.querySelector(`.${propertyName}`).addEventListener('input', e => {
+['radius', 'thetaResolution', 'startTheta', 'endTheta', 'phiResolution', 'startPhi', 'endPhi'].forEach((propertyName) => {
+  document.querySelector(`.${propertyName}`).addEventListener('input', (e) => {
     const value = Number(e.target.value);
     sphereSource.set({ [propertyName]: value });
     renWin.render();

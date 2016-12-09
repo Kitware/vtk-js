@@ -1,1 +1,5 @@
-export const LOCATIONS = ['PointData', 'CellData', 'FieldData'];
+export const LOCATIONS = ['pointData', 'cellData', 'fieldData'];
+
+export default {
+  LOCATIONS,
+};

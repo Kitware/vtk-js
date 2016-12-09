@@ -1,7 +1,7 @@
 import * as macro from '../../../macro';
 import { VTK_DEFAULT_DATATYPE } from './Constants';
 
-/* global window */
+const TUPLE_HOLDER = [];
 
 // ----------------------------------------------------------------------------
 // Global methods
@@ -30,7 +30,7 @@ function computeRange(values, component = 0, tuple = 1) {
   return range;
 }
 
-function insureRangeSize(rangeArray, size = 0) {
+function ensureRangeSize(rangeArray, size = 0) {
   const ranges = rangeArray || [];
   // Pad ranges with null value to get the
   while (ranges.length <= size) {
@@ -110,7 +110,7 @@ function vtkDataArray(publicAPI, model) {
     let range = null;
 
     if (!model.ranges) {
-      model.ranges = insureRangeSize(model.ranges, model.numberOfComponents);
+      model.ranges = ensureRangeSize(model.ranges, model.numberOfComponents);
     }
     range = model.ranges[rangeIdx];
 
@@ -119,35 +119,35 @@ function vtkDataArray(publicAPI, model) {
     }
 
     // Need to compute ranges...
-    range = model.ranges[rangeIdx] = computeRange(model.values, componentIndex);
+    range = model.ranges[rangeIdx] = computeRange(model.values, componentIndex, model.numberOfComponents);
     return [range.min, range.max];
   };
 
-  publicAPI.getTupleLocation = (idx = 1) => idx * model.tuple;
-
-  publicAPI.getBounds = () => {
-    if (model.numberOfComponents === 3) {
-      return [].concat(
-        publicAPI.getRange(0),
-        publicAPI.getRange(1),
-        publicAPI.getRange(2));
+  publicAPI.getTuple = (idx, tupleToFill = TUPLE_HOLDER) => {
+    const numberOfComponents = model.numberOfComponents || 1;
+    if (tupleToFill.length) {
+      tupleToFill.length = numberOfComponents;
     }
-
-    if (model.numberOfComponents !== 2) {
-      console.error('getBounds called on an array with components of ',
-        model.numberOfComponents, model);
-      return [1, -1, 1, -1, 1, -1];
+    const offset = idx * numberOfComponents;
+    for (let i = 0; i < numberOfComponents; i++) {
+      tupleToFill[i] = model.values[offset + i];
     }
-
-    return [].concat(
-        publicAPI.getRange(0),
-        publicAPI.getRange(1));
+    return tupleToFill;
   };
 
+  publicAPI.getTupleLocation = (idx = 1) => idx * model.numberOfComponents;
   publicAPI.getNumberOfComponents = () => model.numberOfComponents;
   publicAPI.getNumberOfValues = () => model.values.length;
   publicAPI.getNumberOfTuples = () => model.values.length / model.numberOfComponents;
   publicAPI.getDataType = () => model.dataType;
+  /* eslint-disable no-use-before-define */
+  publicAPI.newClone = () => newInstance({
+    empty: true,
+    name: model.name,
+    dataType: model.dataType,
+    numberOfComponents: model.numberOfComponents,
+  });
+  /* eslint-enable no-use-before-define */
 
   publicAPI.getNumberOfCells = () => {
     if (model.numberOfCells !== undefined) {
@@ -192,6 +192,30 @@ function vtkDataArray(publicAPI, model) {
   /* eslint-disable no-use-before-define */
   publicAPI.shallowCopy = () => newInstance(Object.assign({}, model));
   /* eslint-enable no-use-before-define */
+
+  // Override serialization support
+  publicAPI.getState = () => {
+    const jsonArchive = Object.assign({}, model, { vtkClass: publicAPI.getClassName() });
+
+    // Convert typed array to regular array
+    jsonArchive.values = Array.from(jsonArchive.values);
+    delete jsonArchive.buffer;
+
+    // Clean any empty data
+    Object.keys(jsonArchive).forEach((keyName) => {
+      if (!jsonArchive[keyName]) {
+        delete jsonArchive[keyName];
+      }
+    });
+
+    // Sort resulting object by key name
+    const sortedObj = {};
+    Object.keys(jsonArchive).sort().forEach((name) => {
+      sortedObj[name] = jsonArchive[name];
+    });
+
+    return sortedObj;
+  };
 }
 
 // ----------------------------------------------------------------------------
@@ -199,13 +223,12 @@ function vtkDataArray(publicAPI, model) {
 // ----------------------------------------------------------------------------
 
 const DEFAULT_VALUES = {
-  type: 'vtkDataArray',
   name: '',
   numberOfComponents: 1,
   size: 0,
   dataType: VTK_DEFAULT_DATATYPE,
-  values: null,
-  ranges: null,
+  // values: null,
+  // ranges: null,
 };
 
 // ----------------------------------------------------------------------------
@@ -213,17 +236,19 @@ const DEFAULT_VALUES = {
 export function extend(publicAPI, model, initialValues = {}) {
   Object.assign(model, DEFAULT_VALUES, initialValues);
 
-  if (model.values) {
-    model.size = model.values.length;
-    model.dataType = getDataType(model.values);
-  }
-
-  if ((!model.empty && (!model.values || !model.size)) || model.type !== 'vtkDataArray') {
-    throw Error('Can not create vtkDataArray object without: size > 0, values or type = vtkDataArray');
+  if ((!model.empty && !model.values && !model.size)) {
+    throw new TypeError('Can not create vtkDataArray object without: size > 0, values');
   }
 
   if (!model.values) {
     model.values = new window[model.dataType](model.size);
+  } else if (Array.isArray(model.values)) {
+    model.values = window[model.dataType].from(model.values);
+  }
+
+  if (model.values) {
+    model.size = model.values.length;
+    model.dataType = getDataType(model.values);
   }
 
   // Object methods

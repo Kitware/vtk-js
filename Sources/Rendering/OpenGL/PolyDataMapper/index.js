@@ -374,7 +374,8 @@ export function vtkOpenGLPolyDataMapper(publicAPI, model) {
               '  if (gl_FrontFacing == false) { normalVCVSOutput = -normalVCVSOutput; }']
             ).result;
         } else {
-          if (actor.getProperty().getRepresentation() === VTK_REPRESENTATION.WIREFRAME) {
+          if (model.lastBoundBO.getPrimitiveType() === primTypes.Lines ||
+              actor.getProperty().getRepresentation() === VTK_REPRESENTATION.WIREFRAME) {
             // generate a normal for lines, it will be perpendicular to the line
             // and maximally aligned with the camera view direction
             // no clue if this is the best way to do this.
@@ -435,7 +436,8 @@ export function vtkOpenGLPolyDataMapper(publicAPI, model) {
     let FSSource = shaders.Fragment;
 
     // for points make sure to add in the point size
-    if (actor.getProperty().getRepresentation() === VTK_REPRESENTATION.POINTS) {
+    if (actor.getProperty().getRepresentation() === VTK_REPRESENTATION.POINTS
+      || model.lastBoundBO.getPrimitiveType() === primTypes.Points) {
       VSSource = vtkShaderProgram.substitute(VSSource,
         '//VTK::PositionVC::Impl', [
           '//VTK::PositionVC::Impl',
@@ -694,6 +696,7 @@ export function vtkOpenGLPolyDataMapper(publicAPI, model) {
     if (cellBO.getProgram() === 0 ||
         cellBO.getShaderSourceTime().getMTime() < publicAPI.getMTime() ||
         cellBO.getShaderSourceTime().getMTime() < actor.getMTime() ||
+        cellBO.getShaderSourceTime().getMTime() < model.renderable.getMTime() ||
         cellBO.getShaderSourceTime().getMTime() < model.currentInput.getMTime() ||
         cellBO.getShaderSourceTime().getMTime() < model.lightComplexityChanged.get(primType).getMTime()) {
       return true;
@@ -1166,7 +1169,7 @@ export function vtkOpenGLPolyDataMapper(publicAPI, model) {
 
     const representation = actor.getProperty().getRepresentation();
     const toString = `${poly.getMTime()}A${representation}B${poly.getMTime()}`
-      + `C${(n ? n.getMTime() : 1)}D${(model.colors ? model.colors.getMTime() : 1)}`
+      + `C${(n ? n.getMTime() : 1)}D${(c ? c.getMTime() : 1)}`
       + `E${actor.getProperty().getEdgeVisibility()}`;
 
     let tcoords = poly.getPointData().getTCoords();
@@ -1203,53 +1206,25 @@ export function vtkOpenGLPolyDataMapper(publicAPI, model) {
 
     if (model.VBOBuildString !== toString) {
       // Build the VBOs
-      const points = poly.getPoints();
+      const points = poly.getPoints().getData();
+      const options = {
+        points,
+        normals: n,
+        tcoords,
+        colors: c,
+        cellOffset: 0,
+        haveCellScalars: model.haveCellScalars,
+        haveCellNormals: model.haveCellNormals,
+      };
+      options.cellOffset += model.primitives[primTypes.Points].getCABO()
+        .createVBO(poly.getVerts(), 'verts', representation, options);
+      options.cellOffset += model.primitives[primTypes.Lines].getCABO()
+        .createVBO(poly.getLines(), 'lines', representation, options);
+      options.cellOffset += model.primitives[primTypes.Tris].getCABO()
+        .createVBO(poly.getPolys(), 'polys', representation, options);
+      options.cellOffset += model.primitives[primTypes.TriStrips].getCABO()
+        .createVBO(poly.getStrips(), 'strips', representation, options);
 
-      let cellOffset = 0;
-      cellOffset += model.primitives[primTypes.Points].getCABO()
-        .createVBO(poly.getVerts(), 'verts', representation,
-        {
-          points,
-          normals: n,
-          tcoords,
-          colors: c,
-          cellOffset,
-          haveCellScalars: model.haveCellScalars,
-          haveCellNormals: model.haveCellNormals,
-        });
-      cellOffset += model.primitives[primTypes.Lines].getCABO()
-        .createVBO(poly.getLines(), 'lines', representation,
-        {
-          points,
-          normals: n,
-          tcoords,
-          colors: c,
-          cellOffset,
-          haveCellScalars: model.haveCellScalars,
-          haveCellNormals: model.haveCellNormals,
-        });
-      cellOffset += model.primitives[primTypes.Tris].getCABO()
-        .createVBO(poly.getPolys(), 'polys', representation,
-        {
-          points,
-          normals: n,
-          tcoords,
-          colors: c,
-          cellOffset,
-          haveCellScalars: model.haveCellScalars,
-          haveCellNormals: model.haveCellNormals,
-        });
-      cellOffset += model.primitives[primTypes.TriStrips].getCABO()
-        .createVBO(poly.getStrips(), 'strips', representation,
-        {
-          points,
-          normals: n,
-          tcoords,
-          colors: c,
-          cellOffset,
-          haveCellScalars: model.haveCellScalars,
-          haveCellNormals: model.haveCellNormals,
-        });
       // if we have edge visibility build the edge VBOs
       if (actor.getProperty().getEdgeVisibility()) {
         model.primitives[primTypes.TrisEdges].getCABO()
@@ -1280,9 +1255,6 @@ export function vtkOpenGLPolyDataMapper(publicAPI, model) {
         model.primitives[primTypes.TriStripsEdges]
           .releaseGraphicsResources(model.openGLRenderWindow);
       }
-
-      // FIXME: cellOffset not used... (Ken?)
-      console.log('FIXME(Ken):', cellOffset);
 
       model.VBOBuildTime.modified();
       model.VBOBuildString = toString;

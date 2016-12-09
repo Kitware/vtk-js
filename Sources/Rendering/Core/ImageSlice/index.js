@@ -1,7 +1,7 @@
+import { vec3, mat4 } from 'gl-matrix';
 import * as macro from '../../../macro';
 import vtkProp3D from '../Prop3D';
 import vtkImageProperty from '../ImageProperty';
-import { vec3, mat4 } from 'gl-matrix';
 
 // ----------------------------------------------------------------------------
 // vtkActor methods
@@ -79,7 +79,7 @@ function vtkImageSlice(publicAPI, model) {
       bbox.forEach(pt => vec3.transformMat4(pt, pt, tmp4));
 
       model.bounds[0] = model.bounds[2] = model.bounds[4] = Number.MAX_VALUE;
-      model.bounds[1] = model.bounds[3] = model.bounds[5] = - Number.MAX_VALUE;
+      model.bounds[1] = model.bounds[3] = model.bounds[5] = -Number.MAX_VALUE;
       model.bounds = model.bounds.map((d, i) => ((i % 2 === 0) ?
         bbox.reduce((a, b) => (a > b[i / 2] ? b[i / 2] : a), d) :
         bbox.reduce((a, b) => (a < b[(i - 1) / 2] ? b[(i - 1) / 2] : a), d)));
@@ -189,7 +189,7 @@ export function extend(publicAPI, model, initialValues = {}) {
 
 // ----------------------------------------------------------------------------
 
-export const newInstance = macro.newInstance(extend);
+export const newInstance = macro.newInstance(extend, 'vtkImageSlice');
 
 // ----------------------------------------------------------------------------
 

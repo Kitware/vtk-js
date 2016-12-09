@@ -352,11 +352,9 @@ export function vtkOpenGLImageMapper(publicAPI, model) {
       cellArray[7] = 2;
       const cells = vtkDataArray.newInstance({ numberOfComponents: 1, values: cellArray });
 
-      let cellOffset = 0;
-      cellOffset += model.tris.getCABO().createVBO(cells,
+      model.tris.getCABO().createVBO(cells,
         'polys', VTK_REPRESENTATION.SURFACE,
-        { points, tcoords, cellOffset });
-      console.log('FIXME(Ken) - unused', cellOffset);
+        { points, tcoords, cellOffset: 0 });
       model.VBOBuildTime.modified();
       model.VBOBuildString = toString;
     }

@@ -24,9 +24,9 @@ The possible dataType are the one available in the language itself as typed arra
 
 ```js
 {
-  type: 'vtkDataArray',
+  vtkClass: 'vtkDataArray',
   name: 'Temperature',
-  tuple: 1,
+  numberOfComponents: 1,
   size: 1024,
   dataType: 'Float32Array',
   buffer: new ArrayBuffer(), // Optional: Available if fetch from Network
@@ -41,9 +41,9 @@ The possible dataType are the one available in the language itself as typed arra
 
 ```js
 {
-  type: 'vtkDataArray',
+  vtkClass: 'vtkDataArray',
   name: 'Velocity',
-  tuple: 3,
+  numberOfComponents: 3,
   size: 3072,
   dataType: 'Float64Array',
   values: new Float64Array([...]),
@@ -65,9 +65,9 @@ it in memory like the previously described ones.
 
 ```js
 {
-  type: 'vtkDataArray',
+  vtkClass: 'vtkDataArray',
   name: 'Velocity',
-  tuple: 3,
+  numberOfComponents: 3,
   size: 3072,
   dataType: 'Float64Array',
   values: null,

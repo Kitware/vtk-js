@@ -1,0 +1,137 @@
+{
+  "cellData": {
+    "activeTCoords": -1,
+    "activeScalars": -1,
+    "vtkClass": "vtkDataSetAttributes",
+    "arrays": [],
+    "activeNormals": -1,
+    "activeGlobalIds": -1,
+    "activeTensors": -1,
+    "activePedigreeIds": -1,
+    "activeVectors": -1
+  },
+  "fieldData": {
+    "activeTCoords": -1,
+    "activeScalars": -1,
+    "vtkClass": "vtkDataSetAttributes",
+    "arrays": [],
+    "activeNormals": -1,
+    "activeGlobalIds": -1,
+    "activeTensors": -1,
+    "activePedigreeIds": -1,
+    "activeVectors": -1
+  },
+  "vtkClass": "vtkPolyData",
+  "polys": {
+    "name": null,
+    "numberOfComponents": 1,
+    "dataType": "Uint32Array",
+    "vtkClass": "vtkDataArray",
+    "ranges": [
+      {
+        "max": 1903.0,
+        "component": null,
+        "min": 0.0
+      }
+    ],
+    "ref": {
+      "encode": "LittleEndian",
+      "basepath": "data",
+      "id": "da4c96bc5b98e10c7d81e28b8916afd2"
+    },
+    "size": 9510
+  },
+  "pointData": {
+    "activeTCoords": -1,
+    "activeScalars": 0,
+    "vtkClass": "vtkDataSetAttributes",
+    "arrays": [
+      {
+        "data": {
+          "name": "__CustomRGBColorArray__",
+          "numberOfComponents": 4,
+          "dataType": "Uint8Array",
+          "vtkClass": "vtkDataArray",
+          "ranges": [
+            {
+              "max": 247.0,
+              "component": null,
+              "min": 59.0
+            },
+            {
+              "max": 220.0,
+              "component": null,
+              "min": 4.0
+            },
+            {
+              "max": 255.0,
+              "component": null,
+              "min": 38.0
+            },
+            {
+              "max": 255.0,
+              "component": null,
+              "min": 255.0
+            },
+            {
+              "max": 459.54216346272295,
+              "component": null,
+              "min": 314.45985435346114
+            }
+          ],
+          "ref": {
+            "encode": "LittleEndian",
+            "basepath": "data",
+            "id": "f252b2232999f175a954efc61fe9f7da"
+          },
+          "size": 7616
+        }
+      }
+    ],
+    "activeNormals": -1,
+    "activeGlobalIds": -1,
+    "activeTensors": -1,
+    "activePedigreeIds": -1,
+    "activeVectors": -1
+  },
+  "points": {
+    "data": {
+      "name": "Points",
+      "numberOfComponents": 3,
+      "dataType": "Float32Array",
+      "vtkClass": "vtkDataArray",
+      "ranges": [
+        {
+          "max": 5.75,
+          "component": null,
+          "min": -5.403232574462891
+        },
+        {
+          "max": 5.75,
+          "component": null,
+          "min": -5.75
+        },
+        {
+          "max": 10.15999984741211,
+          "component": null,
+          "min": -10.0
+        },
+        {
+          "max": 11.674249364964295,
+          "component": null,
+          "min": 4.440892098500626e-16
+        }
+      ],
+      "ref": {
+        "encode": "LittleEndian",
+        "basepath": "data",
+        "id": "94c54fcd6de99bacae9f8914b29deff7"
+      },
+      "size": 5712
+    },
+    "vtkClass": "vtkPoints"
+  },
+  "metadata": {
+    "name": "1"
+  }
+}

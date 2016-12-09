@@ -1,8 +1,11 @@
+import seedrandom from 'seedrandom';
+
 // ----------------------------------------------------------------------------
 /* eslint-disable camelcase                                                  */
 /* eslint-disable no-cond-assign                                             */
 /* eslint-disable no-bitwise                                                 */
 // ----------------------------------------------------------------------------
+let randomSeedValue = 0;
 const VTK_MAX_ROTATIONS = 20;
 const VTK_SMALL_NUMBER = 1.0e-12;
 
@@ -78,8 +81,12 @@ function nextCombination(m, n, r) {
   return status;
 }
 
-const randomSeed = notImplemented('randomSeed');
-const getSeed = notImplemented('getSeed');
+const randomSeed = (seed) => {
+  seedrandom(`${seed}`, { global: true });
+  randomSeedValue = seed;
+};
+
+const getSeed = () => randomSeedValue;
 
 function random(minValue = 0, maxValue = 1) {
   const delta = maxValue - minValue;
@@ -727,7 +734,7 @@ function jacobiN(a, n, w, v) {
       }
     }
   }
-  // insure eigenvector consistency (i.e., Jacobi can compute vectors that
+  // ensure eigenvector consistency (i.e., Jacobi can compute vectors that
   // are negative of one another (.707,.707,0) and (-.707,-.707,0). This can
   // reek havoc in hyperstreamline/other stuff. We will select the most
   // positive eigenvector.

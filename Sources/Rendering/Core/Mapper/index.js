@@ -131,7 +131,7 @@ function vtkMapper(publicAPI, model) {
   publicAPI.getAbstractScalars = (input, scalarMode, arrayAccessMode,
     arrayId, arrayName) => {
     // make sure we have an input
-    if (!input) {
+    if (!input || !model.scalarVisibility) {
       return null;
     }
 
@@ -150,23 +150,23 @@ function vtkMapper(publicAPI, model) {
     } else if (scalarMode === VTK_SCALAR_MODE.USE_POINT_FIELD_DATA) {
       const pd = input.getPointData();
       if (arrayAccessMode === VTK_GET_ARRAY.BY_ID) {
-        scalars = pd.getAbstractArray(arrayId);
+        scalars = pd.getArrayByIndex(arrayId);
       } else {
-        scalars = pd.getAbstractArray(arrayName);
+        scalars = pd.getArrayByName(arrayName);
       }
     } else if (scalarMode === VTK_SCALAR_MODE.USE_CELL_FIELD_DATA) {
       const cd = input.getCellData();
       if (arrayAccessMode === VTK_GET_ARRAY.BY_ID) {
-        scalars = cd.getAbstractArray(arrayId);
+        scalars = cd.getArrayByIndex(arrayId);
       } else {
-        scalars = cd.getAbstractArray(arrayName);
+        scalars = cd.getArrayByName(arrayName);
       }
     } else if (scalarMode === VTK_SCALAR_MODE.USE_FIELD_DATA) {
       const fd = input.getFieldData();
       if (arrayAccessMode === VTK_GET_ARRAY.BY_ID) {
-        scalars = fd.getAbstractArray(arrayId);
+        scalars = fd.getArrayByIndex(arrayId);
       } else {
-        scalars = fd.getAbstractArray(arrayName);
+        scalars = fd.getArrayByName(arrayName);
       }
     }
 
@@ -185,7 +185,7 @@ function vtkMapper(publicAPI, model) {
     }
 
     if (!model.useLookupTableScalarRange) {
-      model.lookupTable.setTableRange(
+      model.lookupTable.setRange(
         model.scalarRange[0], model.scalarRange[1]);
     }
 
@@ -311,7 +311,7 @@ function vtkMapper(publicAPI, model) {
   };
 
   publicAPI.mapScalarsToTexture = (scalars, alpha) => {
-    const range = model.lookupTable.getTableRange();
+    const range = model.lookupTable.getRange();
     const useLogScale = model.lookupTable.usingLogScale();
     if (useLogScale) {
       // convert range to log.
@@ -338,7 +338,10 @@ function vtkMapper(publicAPI, model) {
       // Create a dummy ramp of scalars.
       // In the future, we could extend vtkScalarsToColors.
       model.lookupTable.build();
-      let numberOfColors = model.lookupTable.getNumberOfColors();
+      let numberOfColors = model.lookupTable.getNumberOfAvailableColors();
+      if (numberOfColors > 4096) {
+        numberOfColors = 4096;
+      }
       numberOfColors += 2;
       const k = (range[1] - range[0]) / (numberOfColors - 1 - 2);
 
@@ -397,7 +400,7 @@ function vtkMapper(publicAPI, model) {
         model.colorCoordinates,
         num, numComps,
         scalarComponent, range,
-        model.lookupTable.getTableRange(),
+        model.lookupTable.getRange(),
         model.lookupTable.getNumberOfAvailableColors(),
         useLogScale);
     }
@@ -426,10 +429,10 @@ function vtkMapper(publicAPI, model) {
     }
 
     // index color does not use textures
-    // if (model.lookupTable &&
-    //     model.lookupTable.getIndexedLookup()) {
-    //   return false;
-    // }
+    if (model.lookupTable &&
+        model.lookupTable.getIndexedLookup()) {
+      return false;
+    }
 
     return true;
   };
@@ -471,6 +474,7 @@ const DEFAULT_VALUES = {
   colorMode: 0,
   scalarMode: 0,
   scalarMaterialMode: 0,
+  arrayAccessMode: 1, // By_NAME
 
   bounds: [1, -1, 1, -1, 1, -1],
   center: [0, 0],
@@ -509,6 +513,7 @@ export function extend(publicAPI, model, initialValues = {}) {
   macro.setGet(publicAPI, model, [
     'colorByArrayComponent',
     'colorByArrayName',
+    'arrayAccessMode',
     'colorMode',
     'fieldDataTupleId',
     'interpolateScalarsBeforeMapping',
@@ -531,7 +536,7 @@ export function extend(publicAPI, model, initialValues = {}) {
 
 // ----------------------------------------------------------------------------
 
-export const newInstance = macro.newInstance(extend);
+export const newInstance = macro.newInstance(extend, 'vtkMapper');
 
 // ----------------------------------------------------------------------------
 

@@ -49,15 +49,15 @@ iren.start();
 
 // ----- JavaScript UI -----
 
-['height', 'radius', 'resolution'].forEach(propertyName => {
-  document.querySelector(`.${propertyName}`).addEventListener('input', e => {
+['height', 'radius', 'resolution'].forEach((propertyName) => {
+  document.querySelector(`.${propertyName}`).addEventListener('input', (e) => {
     const value = Number(e.target.value);
     coneSource.set({ [propertyName]: value });
     renWin.render();
   });
 });
 
-document.querySelector('.capping').addEventListener('change', e => {
+document.querySelector('.capping').addEventListener('change', (e) => {
   const capping = !!(e.target.checked);
   coneSource.set({ capping });
   renWin.render();

@@ -22,10 +22,10 @@ module.exports = [
     include: /fonts/,
   }, {
     test: /\.(png|jpg)$/,
-    exclude: /baseline/,
+    exclude: /test[^\.]*\.(png|jpg)$/,
     loader: 'url-loader?limit=8192',
   }, {
-    test: /baseline[^\.]*\.(png|jpg)$/,
+    test: /test[^\.]*\.(png|jpg)$/,
     loader: 'url-loader?limit=1048576',
   }, {
     test: /\.css$/,
@@ -48,10 +48,10 @@ module.exports = [
   }, {
     test: /\.js$/,
     include: /node_modules(\/|\\)vtk\.js(\/|\\)/,
-    loader: 'babel?presets[]=es2015,presets[]=react!string-replace?' + replaceConfig,
+    loader: `babel?presets[]=es2015,presets[]=react!string-replace?${replaceConfig}`,
   }, {
     test: /\.js$/,
     exclude: /node_modules/,
-    loader: 'babel?presets[]=es2015,presets[]=react!string-replace?' + replaceConfig,
+    loader: `babel?presets[]=es2015,presets[]=react!string-replace?${replaceConfig}`,
   },
 ];

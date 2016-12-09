@@ -27,7 +27,7 @@ export function vtkImageGridSource(publicAPI, model) {
       };
 
       // Add parameter used to create dataset as metadata.state[*]
-      ['gridSpacing', 'gridOrigin', 'dataSpacing', 'dataOrigin'].forEach(field => {
+      ['gridSpacing', 'gridOrigin', 'dataSpacing', 'dataOrigin'].forEach((field) => {
         state[field] = [].concat(model[field]);
       });
 
@@ -37,7 +37,7 @@ export function vtkImageGridSource(publicAPI, model) {
       id.setExtent.apply(this, model.dataExtent);
 
       let dims = [0, 0, 0];
-      dims = dims.map((_, i) => model.dataExtent[i * 2 + 1] - model.dataExtent[i * 2] + 1);
+      dims = dims.map((_, i) => model.dataExtent[(i * 2) + 1] - model.dataExtent[i * 2] + 1);
 
       const newArray = new Uint8Array(dims[0] * dims[1] * dims[2]);
 
@@ -128,7 +128,7 @@ export function extend(publicAPI, model, initialValues = {}) {
 
 // ----------------------------------------------------------------------------
 
-export const newInstance = macro.newInstance(extend);
+export const newInstance = macro.newInstance(extend, 'vtkImageGridSource');
 
 // ----------------------------------------------------------------------------
 

@@ -1,5 +1,7 @@
 import * as macro from '../../../macro';
-import vtkDataArray from '../../../Common/Core/DataArray';
+import vtk from '../../../vtk';
+
+import vtkPoints from '../../../Common/Core/Points';
 
 // ----------------------------------------------------------------------------
 // Global methods
@@ -55,13 +57,13 @@ function vtkWarpScalar(publicAPI, model) {
       // First, copy the input to the output as a starting point
       // output->CopyStructure( input );
 
-      const inPts = input.getPoints();
+      const inPts = input.getPoints().getData();
       const pd = input.getPointData();
       const inNormals = pd.getNormals();
       const inScalars = publicAPI.getInputArrayToProcess(0);
 
       if (!inPts || !inScalars) {
-        vtkDebugMacro('No data to warp');
+        vtkDebugMacro('No data to warp', !!inPts, !!inScalars);
         outData[0] = inData[0];
         return 1;
       }
@@ -108,10 +110,12 @@ function vtkWarpScalar(publicAPI, model) {
         newPtsData[ptOffset + 1] = inPoints[ptOffset + 1] + (model.scaleFactor * s * n[1]);
         newPtsData[ptOffset + 2] = inPoints[ptOffset + 2] + (model.scaleFactor * s * n[2]);
       }
-      const newPts = vtkDataArray.newInstance({ values: newPtsData, numberOfComponents: 3 });
-      const newDataSet = input.shallowCopy();
-      newDataSet.setPoints(newPts);
-      newDataSet.modified();
+
+      const newDataSet = vtk({ vtkClass: input.getClassName() });
+      newDataSet.shallowCopy(input);
+      const points = vtkPoints.newInstance();
+      points.getData().setData(newPtsData, 3);
+      newDataSet.setPoints(points);
       outData[0] = newDataSet;
     }
 

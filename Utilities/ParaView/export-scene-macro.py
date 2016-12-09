@@ -99,14 +99,14 @@ def dumpDataArray(datasetDir, dataDir, array, root = {}, compress = True):
         os.remove(pPath)
 
   root['ref'] = getRef(os.path.relpath(dataDir, datasetDir), pMd5)
-  root['type'] = 'vtkDataArray'
+  root['vtkClass'] = 'vtkDataArray'
   root['name'] = array.GetName()
   root['dataType'] = jsMapping[arrayTypesMapping[array.GetDataType()]]
-  root['tuple'] = array.GetNumberOfComponents()
+  root['numberOfComponents'] = array.GetNumberOfComponents()
   root['size'] = array.GetNumberOfComponents() * array.GetNumberOfTuples()
   root['ranges'] = []
-  if root['tuple'] > 1:
-    for i in range(root['tuple']):
+  if root['numberOfComponents'] > 1:
+    for i in range(root['numberOfComponents']):
       root['ranges'].append(getRangeInfo(array, i))
     root['ranges'].append(getRangeInfo(array, -1))
   else:
@@ -117,9 +117,39 @@ def dumpDataArray(datasetDir, dataDir, array, root = {}, compress = True):
 # -----------------------------------------------------------------------------
 
 def dumpColorArray(datasetDir, dataDir, colorArrayInfo, root = {}, compress = True):
-  root['PointData'] = {}
-  root['CellData'] = {}
-  root['FieldData'] = {}
+  root['pointData'] = {
+    'vtkClass': 'vtkDataSetAttributes',
+    "activeGlobalIds": -1,
+    "activeNormals": -1,
+    "activePedigreeIds": -1,
+    "activeScalars": -1,
+    "activeTCoords": -1,
+    "activeTensors": -1,
+    "activeVectors": -1,
+    "arrays": []
+  }
+  root['cellData'] = {
+    'vtkClass': 'vtkDataSetAttributes',
+    "activeGlobalIds": -1,
+    "activeNormals": -1,
+    "activePedigreeIds": -1,
+    "activeScalars": -1,
+    "activeTCoords": -1,
+    "activeTensors": -1,
+    "activeVectors": -1,
+    "arrays": []
+  }
+  root['fieldData'] = {
+    'vtkClass': 'vtkDataSetAttributes',
+    "activeGlobalIds": -1,
+    "activeNormals": -1,
+    "activePedigreeIds": -1,
+    "activeScalars": -1,
+    "activeTCoords": -1,
+    "activeTensors": -1,
+    "activeVectors": -1,
+    "arrays": []
+  }
 
   colorArray = colorArrayInfo['colorArray']
   location = colorArrayInfo['location']
@@ -127,22 +157,20 @@ def dumpColorArray(datasetDir, dataDir, colorArrayInfo, root = {}, compress = Tr
   dumpedArray = dumpDataArray(datasetDir, dataDir, colorArray, {}, compress)
 
   if dumpedArray:
-    root[location][dumpedArray['name']] = dumpedArray
+    root[location]['activeScalars'] = 0
+    root[location]['arrays'].append({ 'data': dumpedArray })
 
   return root
 
 # -----------------------------------------------------------------------------
 
 def dumpPolyData(datasetDir, dataDir, dataset, colorArrayInfo, root = {}, compress = True):
-  root['type'] = 'vtkPolyData'
-  container = root['vtkPolyData'] = {}
+  root['vtkClass'] = 'vtkPolyData'
+  container = root
 
   # Points
   points = dumpDataArray(datasetDir, dataDir, dataset.GetPoints().GetData(), {}, compress)
-  points['name'] = '_points'
-  points['bounds'] = dataset.GetPoints().GetBounds()
-  container['Points'] = points
-  # FIXME range...
+  container['points'] = { 'vtkClass': 'vtkPoints', 'data': points }
 
   # Cells
   _cells = container
@@ -150,26 +178,22 @@ def dumpPolyData(datasetDir, dataDir, dataset, colorArrayInfo, root = {}, compre
   ## Verts
   if dataset.GetVerts() and dataset.GetVerts().GetData().GetNumberOfTuples() > 0:
     _verts = dumpDataArray(datasetDir, dataDir, dataset.GetVerts().GetData(), {}, compress)
-    _verts['name'] = '_verts'
-    _cells['Verts'] = _verts
+    _cells['verts'] = _verts
 
   ## Lines
   if dataset.GetLines() and dataset.GetLines().GetData().GetNumberOfTuples() > 0:
     _lines = dumpDataArray(datasetDir, dataDir, dataset.GetLines().GetData(), {}, compress)
-    _lines['name'] = '_lines'
-    _cells['Lines'] = _lines
+    _cells['lines'] = _lines
 
   ## Polys
   if dataset.GetPolys() and dataset.GetPolys().GetData().GetNumberOfTuples() > 0:
     _polys = dumpDataArray(datasetDir, dataDir, dataset.GetPolys().GetData(), {}, compress)
-    _polys['name'] = '_polys'
-    _cells['Polys'] = _polys
+    _cells['polys'] = _polys
 
   ## Strips
   if dataset.GetStrips() and dataset.GetStrips().GetData().GetNumberOfTuples() > 0:
     _strips = dumpDataArray(datasetDir, dataDir, dataset.GetStrips().GetData(), {}, compress)
-    _strips['name'] = '_strips'
-    _cells['Strips'] = _strips
+    _cells['strips'] = _strips
 
   dumpColorArray(datasetDir, dataDir, colorArrayInfo, container, compress)
 
@@ -288,10 +312,10 @@ for rIdx in xrange(renderers.GetNumberOfItems()):
         if scalarVisibility:
           if scalarMode == 3 or scalarMode == 1: # VTK_SCALAR_MODE_USE_POINT_FIELD_DATA or VTK_SCALAR_MODE_USE_POINT_DATA
             dsAttrs = dataset.GetPointData()
-            arrayLocation = 'PointData'
+            arrayLocation = 'pointData'
           elif scalarMode == 4 or scalarMode == 2: # VTK_SCALAR_MODE_USE_CELL_FIELD_DATA or VTK_SCALAR_MODE_USE_CELL_DATA
             dsAttrs = dataset.GetCellData()
-            arrayLocation = 'CellData'
+            arrayLocation = 'cellData'
 
         colorArray = None
         dataArray = None
@@ -322,6 +346,7 @@ for rIdx in xrange(renderers.GetNumberOfItems()):
             colorToUse = renProp.GetProperty().GetColor() if hasattr(renProp, 'GetProperty') else [1, 1, 1]
         pointSize = renProp.GetProperty().GetPointSize() if hasattr(renProp, 'GetProperty') else 1.0
         opacity = renProp.GetProperty().GetOpacity() if hasattr(renProp, 'GetProperty') else 1.0
+        edgeVisibility = renProp.GetProperty().GetEdgeVisibility() if hasattr(renProp, 'GetProperty') else false
 
         sceneComponents.append({
           "type": "httpDataSetReader",
@@ -335,6 +360,7 @@ for rIdx in xrange(renderers.GetNumberOfItems()):
           },
           "property": {
             "representation": representation,
+            "edgeVisibility": edgeVisibility,
             "diffuseColor": colorToUse,
             "pointSize": pointSize,
             "opacity": opacity

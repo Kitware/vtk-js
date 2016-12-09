@@ -32,6 +32,140 @@ function vtkScalarsToColors(publicAPI, model) {
   publicAPI.setVectorModeToComponent = () => publicAPI.setVectorMode(VTK_VECTOR_MODE.COMPONENT);
   publicAPI.setVectorModeToRGBColors = () => publicAPI.setVectorMode(VTK_VECTOR_MODE.RGBCOLORS);
 
+  publicAPI.build = () => {};
+
+  publicAPI.isOpaque = () => true;
+
+  //----------------------------------------------------------------------------
+  publicAPI.setAnnotations = (values, annotations) => {
+    if ((values && !annotations) ||
+      (!values && annotations)) {
+      return;
+    }
+
+    if (values && annotations &&
+      values.getNumberOfTuples() !== annotations.getNumberOfTuples()) {
+      vtkErrorMacro(
+        'Values and annotations do not have the same number of tuples so ignoring');
+      return;
+    }
+
+    model.annotationArray = [];
+
+    if (annotations && values) {
+      const num = annotations.getNumberOfTuples();
+      for (let i = 0; i < num; i++) {
+        model.annotationArray.push({ value: values[i], annotation: annotations[i] });
+      }
+    }
+
+    publicAPI.updateAnnotatedValueMap();
+    publicAPI.modified();
+  };
+
+  //----------------------------------------------------------------------------
+  publicAPI.setAnnotation = (value, annotation) => {
+    let i = publicAPI.checkForAnnotatedValue(value);
+    let modified = false;
+    if (i >= 0) {
+      if (model.annotationArray[i].annotation !== annotation) {
+        model.annotationArray[i].annotation = annotation;
+        modified = true;
+      }
+    } else {
+      model.annotationArray.push({ value, annotation });
+      i = model.annotationArray.length - 1;
+      modified = true;
+    }
+    if (modified) {
+      publicAPI.updateAnnotatedValueMap();
+      publicAPI.modified();
+    }
+    return i;
+  };
+
+  //----------------------------------------------------------------------------
+  publicAPI.getNumberOfAnnotatedValues = () => model.annotationArray.length;
+
+  //----------------------------------------------------------------------------
+  publicAPI.getAnnotatedValue = (idx) => {
+    if (idx < 0 || idx >= model.annotationArray.length) {
+      return null;
+    }
+    return model.annotationArray[idx].value;
+  };
+
+  //----------------------------------------------------------------------------
+  publicAPI.getAnnotation = (idx) => {
+    if (model.annotationArray[idx] === undefined) {
+      return null;
+    }
+    return model.annotationArray[idx].annotation;
+  };
+
+  //----------------------------------------------------------------------------
+  publicAPI.getAnnotatedValueIndex = val =>
+    (model.annotationArray.length ? publicAPI.checkForAnnotatedValue(val) : -1);
+
+  //----------------------------------------------------------------------------
+  publicAPI.removeAnnotation = (value) => {
+    const i = publicAPI.checkForAnnotatedValue(value);
+    const needToRemove = (i >= 0);
+    if (needToRemove) {
+      model.annotationArray.splice(i, 1);
+      publicAPI.updateAnnotatedValueMap();
+      publicAPI.modified();
+    }
+    return needToRemove;
+  };
+
+  //----------------------------------------------------------------------------
+  publicAPI.resetAnnotations = () => {
+    model.annotationArray = [];
+    model.annotatedValueMap = [];
+    publicAPI.modified();
+  };
+
+  //----------------------------------------------------------------------------
+  publicAPI.getAnnotationColor = (val, rgba) => {
+    if (model.indexedLookup) {
+      const i = publicAPI.getAnnotatedValueIndex(val);
+      publicAPI.getIndexedColor(i, rgba);
+    } else {
+      publicAPI.getColor(parseFloat(val), rgba);
+      rgba[3] = 1.0;
+    }
+  };
+
+  //----------------------------------------------------------------------------
+  publicAPI.checkForAnnotatedValue = value =>
+    publicAPI.getAnnotatedValueIndexInternal(value);
+
+  //----------------------------------------------------------------------------
+  // An unsafe version of vtkScalarsToColors::CheckForAnnotatedValue for
+  // internal use (no pointer checks performed)
+  publicAPI.getAnnotatedValueIndexInternal = (value) => {
+    if (model.annotatedValueMap[value] !== undefined) {
+      const na = model.annotationArray.length;
+      return model.annotatedValueMap[value] % na;
+    }
+    return -1;
+  };
+
+  //----------------------------------------------------------------------------
+  publicAPI.getIndexedColor = (val, rgba) => {
+    rgba[0] = rgba[1] = rgba[2] = rgba[3] = 0.0;
+  };
+
+  //----------------------------------------------------------------------------
+  publicAPI.updateAnnotatedValueMap = () => {
+    model.annotatedValueMap = [];
+
+    const na = model.annotationArray.length;
+    for (let i = 0; i < na; ++i) {
+      model.annotatedValueMap[model.annotationArray[i].value] = i;
+    }
+  };
 
   // Description:
   // Internal methods that map a data array into a 4-component,
@@ -181,7 +315,7 @@ function vtkScalarsToColors(publicAPI, model) {
       default:
       case VTK_VECTOR_MODE.MAGNITUDE: {
         const magValues =
-          vtkDataArray.newInstance({numberOfComponents: 1, values: new Float32Array(input.getNumberOfTuples()) });
+          vtkDataArray.newInstance({ numberOfComponents: 1, values: new Float32Array(input.getNumberOfTuples()) });
 
         publicAPI.mapVectorsToMagnitude(input, magValues, vectorSize);
         publicAPI.mapScalarsThroughTable(
@@ -327,7 +461,10 @@ function vtkScalarsToColors(publicAPI, model) {
 
   publicAPI.usingLogScale = () => false;
 
+  publicAPI.getNumberOfAvailableColors = () => 256 * 256 * 256;
+
   publicAPI.setRange = (min, max) => publicAPI.setInputRange(min, max);
+  publicAPI.getRange = (min, max) => publicAPI.getInputRange();
 }
 
 // ----------------------------------------------------------------------------
@@ -340,6 +477,9 @@ const DEFAULT_VALUES = {
   vectorSize: -1,
   vectorMode: VTK_VECTOR_MODE.COMPONENT,
   inputRange: [0, 255],
+  annotationArray: [],
+  annotatedValueMap: [],
+  indexedLookup: false,
 };
 
 // ----------------------------------------------------------------------------
@@ -347,14 +487,8 @@ const DEFAULT_VALUES = {
 export function extend(publicAPI, model, initialValues = {}) {
   Object.assign(model, DEFAULT_VALUES, initialValues);
 
-  // Internal objects initialization
-  // model.myProp2 = new Thing() || {};
-
   // Object methods
   macro.obj(publicAPI, model);
-
-  // Create get-only macros
-  // macro.get(publicAPI, model, ['myProp2', 'myProp4']);
 
   // Create get-set macros
   macro.setGet(publicAPI, model, [
@@ -362,12 +496,18 @@ export function extend(publicAPI, model, initialValues = {}) {
     'vectorComponent',
     'vectorMode',
     'alpha',
+    'indexedLookup',
   ]);
 
-  // Create get-set macros for enum type
-  // macro.setGet(publicAPI, model, [
-  //   { name: 'vectorMode', enum: VTK_VECTOR_MODE, type: 'enum' },
-  // ]);
+  // Create set macros for array (needs to know size)
+  macro.setArray(publicAPI, model, [
+    'inputRange',
+  ], 2);
+
+  // Create get macros for array
+  macro.getArray(publicAPI, model, [
+    'inputRange',
+  ]);
 
   // For more macro methods, see "Sources/macro.js"
 
@@ -377,7 +517,7 @@ export function extend(publicAPI, model, initialValues = {}) {
 
 // ----------------------------------------------------------------------------
 
-export const newInstance = macro.newInstance(extend);
+export const newInstance = macro.newInstance(extend, 'vtkScalarsToColors');
 
 // ----------------------------------------------------------------------------
 
