@@ -16,7 +16,7 @@ A PolyData is a surface mesh structure that can hold data arrays either on point
     data: {
       vtkClass: 'vtkDataArray',
       name: '_points',
-      tuple: 3,
+      numberOfComponents: 3,
       size: 300,
       dataType: 'Float32Array',
       buffer: new ArrayBuffer(),
@@ -31,7 +31,7 @@ A PolyData is a surface mesh structure that can hold data arrays either on point
   verts: {
     vtkClass: 'vtkDataArray',
     name: '_verts',
-    tuple: 1,
+    numberOfComponents: 1,
     size: 123,
     dataType: 'Uint32Array', // or Uint16Array
     buffer: new ArrayBuffer(),
@@ -40,7 +40,7 @@ A PolyData is a surface mesh structure that can hold data arrays either on point
   lines: {
     vtkClass: 'vtkDataArray',
     name: '_lines',
-    tuple: 1,
+    numberOfComponents: 1,
     size: 0,
     dataType: 'Uint32Array', // or Uint16Array
     values: null,
@@ -48,7 +48,7 @@ A PolyData is a surface mesh structure that can hold data arrays either on point
   polys: {
     vtkClass: 'vtkDataArray',
     name: '_lines',
-    tuple: 1,
+    numberOfComponents: 1,
     size: 8,
     dataType: 'Uint32Array', // or Uint16Array
     values: new Uint32Array([3, 0, 1, 2, 3, 3, 4, 5]), // 2 triangles (0,1,2)+(3,4,5)
@@ -56,47 +56,85 @@ A PolyData is a surface mesh structure that can hold data arrays either on point
   strips: {
     vtkClass: 'vtkDataArray',
     name: '_lines',
-    tuple: 1,
+    numberOfComponents: 1,
     size: 0,
     dataType: 'Uint32Array', // or Uint16Array
     values: null,
   },
-    
-  PointData: {
-    Temperature: {
-      type: 'vtkDataArray',
-      name: 'Temperature',
-      tuple: 1,
-      size: 300,
-      dataType: 'Float32Array',
-      buffer: new ArrayBuffer(), // Optional: Available if fetch from Network
-      values: new Float32Array(this.buffer),
-      ranges: [
-        { min: -5.23, max: 25.7, component: 0, name: 'Scalar' },
-      ],
-    },
+  pointData: {
+    "vtkClass": "vtkDataSetAttributes",
+    "activeGlobalIds": -1,
+    "activeNormals": -1,
+    "activePedigreeIds": -1,
+    "activeScalars": 0,
+    "activeTCoords": -1,
+    "activeTensors": -1,
+    "activeVectors": -1,
+    "copyFieldFlags": [],
+    "doCopyAllOff": false,
+    "doCopyAllOn": true,
+    "arrays": [
+      {
+        "data": {
+          vtkClass: 'vtkDataArray',
+          name: 'Temperature',
+          numberOfComponents: 1,
+          size: 300,
+          dataType: 'Float32Array',
+          buffer: new ArrayBuffer(), // Optional: Available if fetch from Network
+          values: new Float32Array(this.buffer)
+        }
+      }
+    ],
   },
-  CellData: {
-    CellId: {
-      type: 'vtkDataArray',
-      name: 'CellId',
-      tuple: 1,
-      size: 132,
-      dataType: 'Uint32Array',
-      values: new Uint32Array(this.buffer),
-      ranges: [
-        { min: 0, max: 131, component: 0, name: 'Scalar' },
-      ],
-    },
+  cellData: {
+    "vtkClass": "vtkDataSetAttributes",
+    "activeGlobalIds": -1,
+    "activeNormals": -1,
+    "activePedigreeIds": -1,
+    "activeScalars": 0,
+    "activeTCoords": -1,
+    "activeTensors": -1,
+    "activeVectors": -1,
+    "copyFieldFlags": [],
+    "doCopyAllOff": false,
+    "doCopyAllOn": true,
+    "arrays": [
+      {
+        "data": {
+          type: 'vtkDataArray',
+          name: 'CellId',
+          numberOfComponents: 1,
+          size: 132,
+          dataType: 'Uint32Array',
+          values: new Uint32Array(this.buffer)
+        }
+      }
+    ]
   },
-  FieldData: {
-    Meta: {
-      type: 'VariantArray',
-      name: 'Meta',
-      size: 3,
-      dataType: 'JSON',
-      values: ['Some string', [1, 2, 3], { ex: 'obj' }],
-    }
+  fieldData: {
+    "vtkClass": "vtkDataSetAttributes",
+    "activeGlobalIds": -1,
+    "activeNormals": -1,
+    "activePedigreeIds": -1,
+    "activeScalars": -1,
+    "activeTCoords": -1,
+    "activeTensors": -1,
+    "activeVectors": -1,
+    "copyFieldFlags": [],
+    "doCopyAllOff": false,
+    "doCopyAllOn": true,
+    "arrays": [
+      {
+        "data": {
+          vtkClass: 'vtkVariantArray',
+          name: 'Meta',
+          size: 3,
+          dataType: 'JSON',
+          values: ['Some string', [1, 2, 3], { ex: 'obj' }],
+        }
+      }
+    ]
   }
 }
 ```

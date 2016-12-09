@@ -47,42 +47,80 @@ An UnstructuredGrid is a mesh structure that can hold data arrays either on poin
     values: new Uint8Array(this.buffer), // CellTypes
   },
   
-    PointData: {
-      Temperature: {
-        type: 'vtkDataArray',
-        name: 'Temperature',
-        tuple: 1,
-        size: 300,
-        dataType: 'Float32Array',
-        buffer: new ArrayBuffer(), // Optional: Available if fetch from Network
-        values: new Float32Array(this.buffer),
-        ranges: [
-          { min: -5.23, max: 25.7, component: 0, name: 'Scalar' },
-        ],
-      },
-    },
-    CellData: {
-      CellId: {
-        type: 'vtkDataArray',
-        name: 'CellId',
-        tuple: 1,
-        size: 132,
-        dataType: 'Uint32Array',
-        values: new Uint32Array(this.buffer),
-        ranges: [
-          { min: 0, max: 131, component: 0, name: 'Scalar' },
-        ],
-      },
-    },
-    FieldData: {
-      Meta: {
-        type: 'VariantArray',
-        name: 'Meta',
-        size: 3,
-        dataType: 'JSON',
-        values: ['Some string', [1, 2, 3], { ex: 'obj' }],
+  pointData: {
+    "vtkClass": "vtkDataSetAttributes",
+    "activeGlobalIds": -1,
+    "activeNormals": -1,
+    "activePedigreeIds": -1,
+    "activeScalars": 0,
+    "activeTCoords": -1,
+    "activeTensors": -1,
+    "activeVectors": -1,
+    "copyFieldFlags": [],
+    "doCopyAllOff": false,
+    "doCopyAllOn": true,
+    "arrays": [
+      {
+        "data": {
+          vtkClass: 'vtkDataArray',
+          name: 'Temperature',
+          numberOfComponents: 1,
+          size: 300,
+          dataType: 'Float32Array',
+          buffer: new ArrayBuffer(), // Optional: Available if fetch from Network
+          values: new Float32Array(this.buffer)
+        }
       }
-    },
+    ],
   },
+  cellData: {
+    "vtkClass": "vtkDataSetAttributes",
+    "activeGlobalIds": -1,
+    "activeNormals": -1,
+    "activePedigreeIds": -1,
+    "activeScalars": 0,
+    "activeTCoords": -1,
+    "activeTensors": -1,
+    "activeVectors": -1,
+    "copyFieldFlags": [],
+    "doCopyAllOff": false,
+    "doCopyAllOn": true,
+    "arrays": [
+      {
+        "data": {
+          type: 'vtkDataArray',
+          name: 'CellId',
+          numberOfComponents: 1,
+          size: 132,
+          dataType: 'Uint32Array',
+          values: new Uint32Array(this.buffer)
+        }
+      }
+    ]
+  },
+  fieldData: {
+    "vtkClass": "vtkDataSetAttributes",
+    "activeGlobalIds": -1,
+    "activeNormals": -1,
+    "activePedigreeIds": -1,
+    "activeScalars": -1,
+    "activeTCoords": -1,
+    "activeTensors": -1,
+    "activeVectors": -1,
+    "copyFieldFlags": [],
+    "doCopyAllOff": false,
+    "doCopyAllOn": true,
+    "arrays": [
+      {
+        "data": {
+          vtkClass: 'vtkVariantArray',
+          name: 'Meta',
+          size: 3,
+          dataType: 'JSON',
+          values: ['Some string', [1, 2, 3], { ex: 'obj' }],
+        }
+      }
+    ]
+  }
 }
 ```
