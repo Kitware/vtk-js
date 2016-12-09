@@ -61,7 +61,7 @@ There are two methods provided for configuring the filter:
           // point-data array and set the uniform array's value:
           glob[0] = sine.reduce((result, value) => result + value, 0);
           // Mark the output vtkDataArray as modified
-          arraysOut.forEach(x => { x.modified(); });
+          arraysOut.forEach(x => x.modified());
         }
       });
   ```

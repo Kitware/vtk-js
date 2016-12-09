@@ -28,8 +28,13 @@ test('Test vtkCalculator execution', (t) => {
         const [coords] = arraysIn.map(d => d.getData());
         const [sine, glob] = arraysOut.map(d => d.getData());
 
-        coords.forEach((xyz, i) => { sine[i] = (xyz[0] + xyz[1]) * xyz[2]; });
+        for (let i = 0, sz = coords.length / 3; i < sz; ++i) {
+          const dx = (coords[3 * i] - 0.5);
+          const dy = (coords[(3 * i) + 1] - 0.5);
+          sine[i] = dx * dx + dy * dy + 0.125;
+        }
         glob[0] = sine.reduce((result, value) => result + value, 0);
+        arraysOut.forEach(arr => arr.modified());
       }
     });
 
@@ -46,8 +51,11 @@ test('Test vtkCalculator execution', (t) => {
       `The number of points did not change between input ${
       input.getPoints().getData().getNumberOfTuples()} and output ${
       output.getPoints().getData().getNumberOfTuples()}`);
-    console.log('point arrays ', output.getPointData().getArrays().map(x => x.getName()));
-    console.log('point scalars ', output.getPointData().getScalars().getName());
+    t.ok(output.getPointData().getScalars(), 'Output point-scalars array exists.');
+    t.equal(output.getPointData().getScalars().getName(), 'sine wave', 'Output point-scalars is "sine wave".');
+    t.ok(output.getFieldData().getArray('global'), 'Output field-data array exists.');
+    const uniform = output.getFieldData().getArray('global').getData();
+    t.ok(Math.abs(uniform[0] - 22.55) < 1e-6, `The uniform result variable should be 22.55; got ${uniform[0]}.`);
 
     t.end();
 });

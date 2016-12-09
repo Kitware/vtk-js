@@ -72,11 +72,9 @@ filter.setFormula({
       const dx = (coords[3 * i] - 0.5);
       const dy = (coords[(3 * i) + 1] - 0.5);
       sine[i] = dx * dx + dy * dy + 0.125;
-      //console.log(i, sine[i], coords[3 * i], coords[(3 * i) + 1], coords[(3 * i) + 2]);
     }
-    arraysOut[0].modified();
-    //console.log('Range of output ', arraysOut[0].getRange());
     glob[0] = sine.reduce((result, value) => result + value, 0);
+    arraysOut.forEach(arr => arr.modified());
   }
 });
 planeMapper.setInputConnection(filter.getOutputPort());
