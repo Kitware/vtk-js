@@ -109,18 +109,18 @@ export function vtkHttpDataSetReader(publicAPI, model) {
   // Internal method to test if a dataset should be fetched
   function isDatasetEnable(root, blockState, dataset) {
     let enable = false;
-    if (root[root.type] === dataset) {
+    if (root === dataset) {
       return blockState ? blockState.enable : true;
     }
 
     // Find corresponding datasetBlock
-    if (root.MultiBlock && root.MultiBlock.Blocks) {
-      Object.keys(root.MultiBlock.Blocks).forEach((blockName) => {
+    if (root && root.Blocks) {
+      Object.keys(root.Blocks).forEach((blockName) => {
         if (enable) {
           return;
         }
 
-        const subRoot = root.MultiBlock.Blocks[blockName];
+        const subRoot = root.Blocks[blockName];
         const subState = blockState[blockName];
 
         if (!subState.enable) {
@@ -161,8 +161,8 @@ export function vtkHttpDataSetReader(publicAPI, model) {
               // Regular dataset
               LOCATIONS.forEach((location) => {
                 if (container[location]) {
-                  Object.keys(container[location]).forEach((name) => {
-                    model.arrays.push({ name, enable, location, ds: [container] });
+                  container[location].arrays.map(i => i.data).forEach((array) => {
+                    model.arrays.push({ name: array.name, enable, location, ds: [container] });
                   });
                 }
               });
@@ -226,10 +226,15 @@ export function vtkHttpDataSetReader(publicAPI, model) {
       .forEach((array) => {
         array.ds.forEach((ds) => {
           if (isDatasetEnable(datasetStruct, model.blocks, ds)) {
-            if (ds[array.location][array.name].ref) {
-              arrayToFecth.push(ds[array.location][array.name]);
-              arrayMappingFunc.push(datasetObj[`get${array.location}`]().addArray);
-            }
+            ds[array.location]
+              .arrays
+              .map(i => i.data)
+              .filter(i => (i.name === array.name))
+              .filter(i => i.ref)
+              .forEach((dataArray) => {
+                arrayToFecth.push(dataArray);
+                arrayMappingFunc.push(datasetObj[`get${macro.capitalize(array.location)}`]().addArray);
+              });
           }
         });
       });
