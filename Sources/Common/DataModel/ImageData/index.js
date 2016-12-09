@@ -164,10 +164,6 @@ function vtkImageData(publicAPI, model) {
     model.origin[2] + (model.extent[4] * model.spacing[2]),
     model.origin[2] + (model.extent[5] * model.spacing[2]),
   ];
-
-  /* eslint-disable no-use-before-define */
-  publicAPI.createShallowCopy = macro.createShallowCopyBuilder(model, newInstance);
-  /* eslint-enable no-use-before-define */
 }
 
 // ----------------------------------------------------------------------------
