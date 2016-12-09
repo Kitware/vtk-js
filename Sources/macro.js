@@ -26,7 +26,7 @@ export function getStateArrayMapFunc(item) {
 
 export function obj(publicAPI = {}, model = {}) {
   const callbacks = [];
-  model.mtime = model.mtime || globalMTime;
+  model.mtime = model.mtime || ++globalMTime;
   model.classHierarchy = ['vtkObject'];
 
   function off(index) {
