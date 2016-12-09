@@ -131,7 +131,6 @@ function vtkCalculator(publicAPI, model) {
             arraysOut.push(null);
           } else if (dsa) {
             fullSpec.size = ncomp * tuples;
-            console.log('    Create data array ', fullSpec);
             const arrOut = vtkDataArray.newInstance(fullSpec);
             const arrIdx = dsa.addArray(arrOut);
             if ('attribute' in fullSpec && spec.location !== FieldDataTypes.UNIFORM) {
