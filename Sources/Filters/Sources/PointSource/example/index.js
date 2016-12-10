@@ -1,69 +1,54 @@
+import vtkFullScreenRenderWindow  from '../../../../../Sources/Testing/FullScreenRenderWindow';
+
 import vtkActor                   from '../../../../../Sources/Rendering/Core/Actor';
-import vtkCamera                  from '../../../../../Sources/Rendering/Core/Camera';
 import vtkPointSource             from '../../../../../Sources/Filters/Sources/PointSource';
 import vtkMapper                  from '../../../../../Sources/Rendering/Core/Mapper';
-import vtkOpenGLRenderWindow      from '../../../../../Sources/Rendering/OpenGL/RenderWindow';
-import vtkRenderer                from '../../../../../Sources/Rendering/Core/Renderer';
-import vtkRenderWindow            from '../../../../../Sources/Rendering/Core/RenderWindow';
-import vtkRenderWindowInteractor  from '../../../../../Sources/Rendering/Core/RenderWindowInteractor';
 import vtkMath                    from '../../../../../Sources/Common/Core/Math';
 
 import controlPanel from './controlPanel.html';
 
-// Create some control UI
-const rootContainer = document.querySelector('body');
-rootContainer.innerHTML = controlPanel;
-const renderWindowContainer = document.querySelector('.renderwidow');
-// ----------------------
+// ----------------------------------------------------------------------------
+// Standard rendering code setup
+// ----------------------------------------------------------------------------
 
-const ren = vtkRenderer.newInstance();
-ren.setBackground(0.32, 0.34, 0.43);
+const fullScreenRenderer = vtkFullScreenRenderWindow.newInstance({ background: [0, 0, 0] });
+const renderer = fullScreenRenderer.getRenderer();
+const renderWindow = fullScreenRenderer.getRenderWindow();
 
-const renWin = vtkRenderWindow.newInstance();
-renWin.addRenderer(ren);
+// ----------------------------------------------------------------------------
+// Example code
+// ----------------------------------------------------------------------------
 
-const glwindow = vtkOpenGLRenderWindow.newInstance();
-glwindow.setContainer(renderWindowContainer);
-renWin.addView(glwindow);
+vtkMath.randomSeed(141592);
 
-const iren = vtkRenderWindowInteractor.newInstance();
-iren.setView(glwindow);
+const pointSource = vtkPointSource.newInstance({ numberOfPoints: 25, radius: 0.25 });
+// pointSource.setNumberOfPoints(25);
+// pointSource.setRadius(0.25);
+
+const mapper = vtkMapper.newInstance();
 
 const actor = vtkActor.newInstance();
 actor.getProperty().setEdgeVisibility(true);
 actor.getProperty().setPointSize(5);
-ren.addActor(actor);
 
-const mapper = vtkMapper.newInstance();
+mapper.setInputConnection(pointSource.getOutputPort());
 actor.setMapper(mapper);
 
-const cam = vtkCamera.newInstance();
-ren.setActiveCamera(cam);
-cam.setFocalPoint(0, 0, 0);
-cam.setPosition(0, 0, 4);
-cam.setClippingRange(0.1, 50.0);
+renderer.addActor(actor);
+renderer.resetCamera();
+renderWindow.render();
 
-const pointSource = vtkPointSource.newInstance();
-pointSource.setNumberOfPoints(25);
-pointSource.setRadius(0.75);
-vtkMath.randomSeed(141592);
-pointSource.update();
-mapper.setInputConnection(pointSource.getOutputPort());
+// -----------------------------------------------------------
+// UI control handling
+// -----------------------------------------------------------
 
-iren.initialize();
-iren.bindEvents(renderWindowContainer, document);
-ren.resetCamera();
-renWin.render();
-console.log(actor.getBounds());
-iren.start();
-
-// ----- JavaScript UI -----
+fullScreenRenderer.addController(controlPanel);
 
 ['numberOfPoints', 'radius'].forEach((propertyName) => {
   document.querySelector(`.${propertyName}`).addEventListener('input', (e) => {
     const value = Number(e.target.value);
     pointSource.set({ [propertyName]: value });
-    renWin.render();
+    renderWindow.render();
   });
 });
 
@@ -71,5 +56,5 @@ iren.start();
 global.pointSource = pointSource;
 global.mapper = mapper;
 global.actor = actor;
-global.renderer = ren;
-global.renderWindow = renWin;
+global.renderer = renderer;
+global.renderWindow = renderWindow;
