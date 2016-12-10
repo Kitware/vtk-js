@@ -75,8 +75,11 @@ resolutionChange.addEventListener('input', (e) => {
   renderWindow.render();
 });
 
+// -----------------------------------------------------------
 // Make some variables global so that you can inspect and
 // modify objects in your browser's developer console:
+// -----------------------------------------------------------
+
 global.source = coneSource;
 global.mapper = mapper;
 global.actor = actor;
