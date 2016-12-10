@@ -1,34 +1,28 @@
-import vtkOpenGLRenderWindow from '../../../Sources/Rendering/OpenGL/RenderWindow';
-import vtkRenderWindow from '../../../Sources/Rendering/Core/RenderWindow';
-import vtkRenderer from '../../../Sources/Rendering/Core/Renderer';
-import vtkSphereSource from '../../../Sources/Filters/Sources/SphereSource';
-import vtkImageGridSource from '../../../Sources/Filters/Sources/ImageGridSource';
-import vtkActor from '../../../Sources/Rendering/Core/Actor';
-import vtkTexture from '../../../Sources/Rendering/Core/Texture';
-import vtkMapper from '../../../Sources/Rendering/Core/Mapper';
-import vtkRenderWindowInteractor from '../../../Sources/Rendering/Core/RenderWindowInteractor';
-import vtkDataArray from '../../../Sources/Common/Core/DataArray';
-import vtkPolyData from '../../../Sources/Common/DataModel/PolyData';
-import * as macro     from '../../../Sources/macro';
+import vtkFullScreenRenderWindow from '../../../Sources/Testing/FullScreenRenderWindow';
 
-import controlPanel from './controller.html';
+import * as macro           from '../../../Sources/macro';
+import vtkActor             from '../../../Sources/Rendering/Core/Actor';
+import vtkDataArray         from '../../../Sources/Common/Core/DataArray';
+import vtkImageGridSource   from '../../../Sources/Filters/Sources/ImageGridSource';
+import vtkMapper            from '../../../Sources/Rendering/Core/Mapper';
+import vtkPolyData          from '../../../Sources/Common/DataModel/PolyData';
+import vtkSphereSource      from '../../../Sources/Filters/Sources/SphereSource';
+import vtkTexture           from '../../../Sources/Rendering/Core/Texture';
 
-// Create some control UI
-const container = document.querySelector('body');
-const controlContainer = document.createElement('div');
-const renderWindowContainer = document.createElement('div');
-container.appendChild(controlContainer);
-container.appendChild(renderWindowContainer);
-controlContainer.innerHTML = controlPanel;
+// ----------------------------------------------------------------------------
+// Standard rendering code setup
+// ----------------------------------------------------------------------------
 
-// create what we will view
-const renWin = vtkRenderWindow.newInstance();
-const ren = vtkRenderer.newInstance();
-renWin.addRenderer(ren);
-ren.setBackground(0.32, 0.34, 0.43);
+const fullScreenRenderer = vtkFullScreenRenderWindow.newInstance({ background: [0, 0, 0] });
+const renderer = fullScreenRenderer.getRenderer();
+const renderWindow = fullScreenRenderer.getRenderWindow();
+
+// ----------------------------------------------------------------------------
+// Example code
+// ----------------------------------------------------------------------------
 
 const actor = vtkActor.newInstance();
-ren.addActor(actor);
+renderer.addActor(actor);
 
 const mapper = vtkMapper.newInstance();
 actor.setMapper(mapper);
@@ -49,8 +43,8 @@ const tcoordFilter = macro.newInstance((publicAPI, model) => {
       const newArray = new Float32Array(norms.getNumberOfTuples() * 2);
       const ndata = norms.getData();
       for (let i = 0; i < newArray.length; i += 2) {
-        newArray[i] = Math.abs(Math.atan2(ndata[i / 2 * 3], ndata[i / 2 * 3 + 1])) / 3.1415927;
-        newArray[i + 1] = Math.asin(ndata[i / 2 * 3 + 2]) / 3.1415927 + 0.5;
+        newArray[i] = Math.abs(Math.atan2(ndata[i / 2 * 3], ndata[(i / 2 * 3) + 1])) / 3.1415927;
+        newArray[i + 1] = Math.asin((ndata[(i / 2 * 3) + 2]) / 3.1415927) + 0.5;
       }
 
       const da = vtkDataArray.newInstance({ tuple: 2, values: newArray });
@@ -74,22 +68,12 @@ const gridSource = vtkImageGridSource.newInstance();
 gridSource.setDataExtent(0, 511, 0, 511, 0, 0);
 gridSource.setGridSpacing(16, 16, 0);
 gridSource.setGridOrigin(8, 8, 0);
+
 const texture = vtkTexture.newInstance();
 texture.setInterpolate(true);
 texture.setInputConnection(gridSource.getOutputPort());
 actor.addTexture(texture);
 
-// now create something to view it, in this case webgl
-// with mouse/touch interaction
-const glwindow = vtkOpenGLRenderWindow.newInstance();
-glwindow.setSize(500, 400);
-glwindow.setContainer(renderWindowContainer);
-renWin.addView(glwindow);
-
-const iren = vtkRenderWindowInteractor.newInstance();
-iren.setView(glwindow);
-
-// initialize the interaction and bind event handlers
-// to the HTML elements
-iren.initialize();
-iren.bindEvents(renderWindowContainer, document);
+// Re-render
+renderer.resetCamera();
+renderWindow.render();

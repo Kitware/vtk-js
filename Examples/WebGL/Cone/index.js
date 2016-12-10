@@ -3,9 +3,7 @@ import vtkFullScreenRenderWindow from '../../../Sources/Testing/FullScreenRender
 import vtkActor           from '../../../Sources/Rendering/Core/Actor';
 import vtkCalculator      from '../../../Sources/Filters/General/Calculator';
 import vtkConeSource      from '../../../Sources/Filters/Sources/ConeSource';
-import vtkDataArray       from '../../../Sources/Common/Core/DataArray';
 import vtkMapper          from '../../../Sources/Rendering/Core/Mapper';
-import vtkPolyData        from '../../../Sources/Common/DataModel/PolyData';
 import { AttributeTypes } from '../../../Sources/Common/DataModel/DataSetAttributes/Constants';
 import { FieldDataTypes } from '../../../Sources/Common/DataModel/DataSet/Constants';
 
@@ -15,7 +13,7 @@ import controlPanel from './controller.html';
 // Standard rendering code setup
 // ----------------------------------------------------------------------------
 
-const fullScreenRenderer = vtkFullScreenRenderWindow.newInstance();
+const fullScreenRenderer = vtkFullScreenRenderWindow.newInstance({ background: [0, 0, 0] });
 const renderer = fullScreenRenderer.getRenderer();
 const renderWindow = fullScreenRenderer.getRenderWindow();
 
@@ -77,8 +75,11 @@ resolutionChange.addEventListener('input', (e) => {
   renderWindow.render();
 });
 
+// -----------------------------------------------------------
 // Make some variables global so that you can inspect and
 // modify objects in your browser's developer console:
+// -----------------------------------------------------------
+
 global.source = coneSource;
 global.mapper = mapper;
 global.actor = actor;
