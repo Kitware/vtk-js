@@ -39,6 +39,23 @@ function vtkFullScreenRenderWindow(publicAPI, model) {
   // Expose background
   publicAPI.setBackground = model.renderer.setBackground;
 
+  publicAPI.addController = (html) => {
+    model.controlContainer = document.createElement('div');
+    model.controlContainer.className = style.controlPanel;
+    document.querySelector('body').appendChild(model.controlContainer);
+    model.controlContainer.innerHTML = html;
+
+    document.querySelector('body').addEventListener('keypress', (e) => {
+      if (String.fromCharCode(e.charCode) === 'c') {
+        if (model.controlContainer.style.display === 'none') {
+          model.controlContainer.style.display = 'block';
+        } else {
+          model.controlContainer.style.display = 'none';
+        }
+      }
+    });
+  };
+
   // Update BG color
   publicAPI.setBackground(...model.background);
 
@@ -74,6 +91,7 @@ export function extend(publicAPI, model, initialValues = {}) {
     'openGlRenderWindow',
     'interactor',
     'container',
+    'controlContainer',
   ]);
 
   // Object specific methods

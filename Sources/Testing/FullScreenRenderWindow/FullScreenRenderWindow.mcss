@@ -9,10 +9,15 @@
   overflow: hidden;
 }
 
-.openControl {
+.controlPanel {
+  position: absolute;
+  left: 25px;
+  top: 25px;
+  background-color: white;
+  border-radius: 5px;
+  list-style: none;
+  padding: 5px 10px;
+  margin: 0;
   display: block;
-}
-
-.closeControl {
-  display: none;
+  border: solid 1px black;
 }
