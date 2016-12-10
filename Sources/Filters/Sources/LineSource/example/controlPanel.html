@@ -1,45 +1,38 @@
-<table style="width: 400px;">
+<table>
   <tr>
     <td>Resolution</td>
-    <td>
-      <input class='resolution' type="range" min="1" max="25" step="1" value="10" />
+    <td colspan="3">
+      <input style="width: 100%" class='resolution' type="range" min="1" max="25" step="1" value="10" />
     </td>
+  </tr>
+  <tr style="text-align: center;">
+    <td></td>
+    <td>X</td>
+    <td>Y</td>
+    <td>Z</td>
   </tr>
   <tr>
     <td>Point  1</td>
     <td>
-      <input class='x1' type="range" min="-1" max="1" step="0.1" value="-1" />
+      <input style="width: 50px" class='x1' type="range" min="-1" max="1" step="0.1" value="-1" />
+    </td>
+    <td>
+      <input style="width: 50px" class='y1' type="range" min="-1" max="1" step="0.1" value="0" />
+    </td>
+    <td>
+      <input style="width: 50px" class='z1' type="range" min="-1" max="1" step="0.1" value="0" />
     </td>
   </tr>
   <tr>
-    <td></td>
-    <td>
-      <input class='y1' type="range" min="-1" max="1" step="0.1" value="0" />
-    </td>
-  </tr>
-  <tr>
-    <td></td>
-    <td>
-      <input class='z1' type="range" min="-1" max="1" step="0.1" value="0" />
-    </td>
-  </tr>
-    <tr>
     <td>Point  2</td>
     <td>
-      <input class='x2' type="range" min="-1" max="1" step="0.1" value="1" />
+      <input style="width: 50px" class='x2' type="range" min="-1" max="1" step="0.1" value="1" />
     </td>
-  </tr>
-  <tr>
-    <td></td>
     <td>
-      <input class='y2' type="range" min="-1" max="1" step="0.1" value="0" />
+      <input style="width: 50px" class='y2' type="range" min="-1" max="1" step="0.1" value="0" />
     </td>
-  </tr>
-  <tr>
-    <td></td>
     <td>
-      <input class='z2' type="range" min="-1" max="1" step="0.1" value="0" />
+      <input style="width: 50px" class='z2' type="range" min="-1" max="1" step="0.1" value="0" />
     </td>
   </tr>
 </table>
-<div class='renderwidow' style="width: 400px;"></div>
