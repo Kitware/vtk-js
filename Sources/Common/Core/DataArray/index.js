@@ -123,6 +123,13 @@ function vtkDataArray(publicAPI, model) {
     return [range.min, range.max];
   };
 
+  publicAPI.setTuple = (idx, tuple) => {
+    const offset = idx * model.numberOfComponents;
+    for (let i = 0; i < model.numberOfComponents; i++) {
+      model.values[offset + i] = tuple[i];
+    }
+  };
+
   publicAPI.getTuple = (idx, tupleToFill = TUPLE_HOLDER) => {
     const numberOfComponents = model.numberOfComponents || 1;
     if (tupleToFill.length) {
@@ -213,6 +220,11 @@ function vtkDataArray(publicAPI, model) {
     Object.keys(jsonArchive).sort().forEach((name) => {
       sortedObj[name] = jsonArchive[name];
     });
+
+    // Remove mtime
+    if (sortedObj.mtime) {
+      delete sortedObj.mtime;
+    }
 
     return sortedObj;
   };
