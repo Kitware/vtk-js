@@ -2,6 +2,7 @@ import * as macro from '../../../macro';
 import vtkDataArray from '../../../Common/Core/DataArray';
 import vtkPoints from '../../../Common/Core/Points';
 import { FieldDataTypes } from '../../../Common/DataModel/DataSet/Constants';
+import { AttributeTypes } from '../../../Common/DataModel/DataSetAttributes/Constants';
 import vtk from '../../../vtk';
 
 // ----------------------------------------------------------------------------
@@ -22,33 +23,26 @@ function vtkCalculator(publicAPI, model) {
 
   publicAPI.setFormula = (formula) => {
     if (formula === model.formula) {
-      return;
+      return false;
     }
     model.formula = formula;
     publicAPI.modified();
+    return true;
   };
 
-  /** Accept a simple one-line format for the calculator. For example:
-    *
-    *     calc.setFormulaSimple(
-    *       FieldDataTypes.POINT,                      // Operate on point data
-    *       ['temp', 'press', 'nR'],                   // Require these point-data arrays as input
-    *       'rho',                                     // Name the output array 'rho'
-    *       (temp, press, nR) => press / nR / temp);   // Apply this formula to each point to compute rho.
-    *
-    * Caveats:
-    * + No way to get point coordinates
-    * + Output required to be a single array of 1 component
-    */
+  publicAPI.getFormula = () => model.formula;
+
   publicAPI.setFormulaSimple = (locn, arrNames, resultName, singleValueFormula) =>
     publicAPI.setFormula({
       getArrays: () => ({
         input: arrNames.map(x => ({ location: locn, name: x })),
-        output: [{ location: locn, name: resultName }],
+        output: [{ location: locn, name: resultName, attribute: AttributeTypes.SCALARS }],
       }),
       evaluate: (arraysIn, arraysOut) => {
-        arraysOut[0].forEach((xxx, ii) => {
-          arraysOut[ii] = singleValueFormula(...arraysIn.map(x => x[ii]));
+        const arraysInRaw = arraysIn.map(x => x.getData());
+        const arrayOutRaw = arraysOut[0].getData();
+        arrayOutRaw.forEach((xxx, ii) => {
+          arrayOutRaw[ii] = singleValueFormula(...arraysInRaw.map(x => x[ii]), ii);
         });
       },
     });
@@ -57,7 +51,10 @@ function vtkCalculator(publicAPI, model) {
     if (!model.formula) {
       return 0;
     }
-    if (!outData[0] || inData[0].getMTime() > outData[0].getMTime()) {
+    if (
+      !outData[0] ||
+      inData[0].getMTime() > outData[0].getMTime() ||
+      publicAPI.getMTime() > outData[0].getMTime()) {
       const arraySpec = model.formula.getArrays(inData);
       const arraysIn = [];
       const arraysOut = [];
@@ -155,8 +152,10 @@ function vtkCalculator(publicAPI, model) {
 // ----------------------------------------------------------------------------
 
 const DEFAULT_VALUES = {
-  arrayName: 'Result',
-  function: '0',
+  formula: {
+    getArrays: () => ({ input: [], output: [] }),
+    evaluate: () => null
+  },
 };
 
 // ----------------------------------------------------------------------------
@@ -169,12 +168,6 @@ export function extend(publicAPI, model, initialValues = {}) {
 
   // Also make it an algorithm with one input and one output
   macro.algo(publicAPI, model, 1, 1);
-
-  // Generate macros for properties
-  macro.setGet(publicAPI, model, [
-    'arrayName',
-    'function',
-  ]);
 
   // Object specific methods
   vtkCalculator(publicAPI, model);

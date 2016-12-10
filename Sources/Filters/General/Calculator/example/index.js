@@ -21,7 +21,7 @@ const renderWindowContainer = document.querySelector('.renderwidow');
 // ----------------------
 
 const ren = vtkRenderer.newInstance();
-ren.setBackground(0.32, 0.34, 0.43);
+ren.setBackground(1.00, 1.00, 1.00);
 
 const renWin = vtkRenderWindow.newInstance();
 renWin.addRenderer(ren);
@@ -54,33 +54,39 @@ cam.setViewUp(0, 0, 1);
 cam.setClippingRange(0.1, 50.0);
 
 const planeSource = vtkPlaneSource.newInstance({ xResolution: 15, yResolution: 15 });
-const filter = vtkCalculator.newInstance();
-filter.setInputConnection(planeSource.getOutputPort());
-filter.setFormula({
-  getArrays: (inputDataSets) => ({
-    input: [
-      { location: FieldDataTypes.COORDINATE }],
-    output: [
-      { location: FieldDataTypes.POINT, name: 'sine wave', dataType: 'Float64Array', attribute: AttributeTypes.SCALARS },
-      { location: FieldDataTypes.UNIFORM, name: 'global', dataType: 'Float32Array', tuples: 1 },
-    ]}),
-  evaluate: (arraysIn, arraysOut) => {
-    const [coords] = arraysIn.map(d => d.getData());
-    const [sine, glob] = arraysOut.map(d => d.getData());
+const coordFilter = vtkCalculator.newInstance({
+  formula: {
+    getArrays: (inputDataSets) => ({
+      input: [
+        { location: FieldDataTypes.COORDINATE }],
+      output: [
+        { location: FieldDataTypes.POINT, name: 'x' },
+        { location: FieldDataTypes.POINT, name: 'y', attribute: AttributeTypes.SCALARS },
+      ]}),
+    evaluate: (arraysIn, arraysOut) => {
+      const [coords] = arraysIn.map(d => d.getData());
+      const [x, y] = arraysOut.map(d => d.getData());
 
-    for (let i = 0, sz = coords.length / 3; i < sz; ++i) {
-      const dx = (coords[3 * i] - 0.5);
-      const dy = (coords[(3 * i) + 1] - 0.5);
-      sine[i] = dx * dx + dy * dy + 0.125;
-    }
-    glob[0] = sine.reduce((result, value) => result + value, 0);
-    arraysOut.forEach(arr => arr.modified());
-  }
+      for (let i = 0, sz = coords.length / 3; i < sz; ++i) {
+        x[i] = coords[3 * i];
+        y[i] = coords[3 * i + 1];
+      }
+      arraysOut.forEach(arr => arr.modified());
+    },
+  },
 });
-planeMapper.setInputConnection(filter.getOutputPort());
+coordFilter.setInputConnection(planeSource.getOutputPort());
+const simpleFilter = vtkCalculator.newInstance();
+simpleFilter.setInputConnection(coordFilter.getOutputPort());
+simpleFilter.setFormulaSimple(
+  FieldDataTypes.POINT,
+  ['x', 'y'],
+  'z',
+  (x, y) => ((x - 0.5) * (x - 0.5)) + ((y - 0.5) * (y - 0.5)) + 0.125);
+planeMapper.setInputConnection(simpleFilter.getOutputPort());
 const warpScalar = vtkWarpScalar.newInstance();
-warpScalar.setInputConnection(filter.getOutputPort());
-warpScalar.setInputArrayToProcess(0, 'sine wave', 'PointData', 'Scalars');
+warpScalar.setInputConnection(simpleFilter.getOutputPort());
+warpScalar.setInputArrayToProcess(0, 'z', 'PointData', 'Scalars');
 warpMapper.setInputConnection(warpScalar.getOutputPort());
 
 iren.initialize();
@@ -107,11 +113,34 @@ iren.start();
   });
 });
 
+document.querySelector('.formula').addEventListener('input', (e) => {
+  let fn = null;
+  try {
+    fn = new Function('x,y', `return ${e.target.value}`);
+  } catch (exc) {
+    if (!('name' in exc && exc.name === 'SyntaxError')) {
+      console.log('Unexpected exception ', exc);
+      e.target.style.background = '#fbb';
+      return;
+    }
+  }
+  if (fn) {
+    e.target.style.background = '#fff';
+    const didChange = simpleFilter.setFormulaSimple(
+      FieldDataTypes.POINT, ['x', 'y'], 'z', fn);
+    renWin.render();
+  } else {
+    e.target.style.background = '#ffb';
+  }
+});
+
 // ----- Console play ground -----
 
 global.planeSource = planeSource;
 global.planeMapper = planeMapper;
 global.planeActor = planeActor;
+global.coordFilter = coordFilter;
+global.simpleFilter = simpleFilter;
 global.warpMapper = warpMapper;
 global.warpActor = warpActor;
 global.renderer = ren;
