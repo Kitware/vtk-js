@@ -1,46 +1,36 @@
-import * as macro                 from '../../../../macro';
-import vtk                        from '../../../../vtk';
-import vtkActor                   from '../../../../Rendering/Core/Actor';
-import vtkCamera                  from '../../../../Rendering/Core/Camera';
-import vtkDataArray               from '../../../../Common/Core/DataArray';
-import vtkMapper                  from '../../../../Rendering/Core/Mapper';
-import vtkOpenGLRenderWindow      from '../../../../Rendering/OpenGL/RenderWindow';
-import vtkRenderer                from '../../../../Rendering/Core/Renderer';
-import vtkRenderWindow            from '../../../../Rendering/Core/RenderWindow';
-import vtkRenderWindowInteractor  from '../../../../Rendering/Core/RenderWindowInteractor';
-import vtkSphereSource            from '../../../../Filters/Sources/SphereSource';
-import vtkWarpScalar              from '../../../../Filters/General/WarpScalar';
+import vtkFullScreenRenderWindow  from '../../../../../Sources/Testing/FullScreenRenderWindow';
+
+import * as macro      from '../../../../macro';
+import vtk             from '../../../../vtk';
+import vtkActor        from '../../../../Rendering/Core/Actor';
+import vtkCamera       from '../../../../Rendering/Core/Camera';
+import vtkDataArray    from '../../../../Common/Core/DataArray';
+import vtkMapper       from '../../../../Rendering/Core/Mapper';
+import vtkSphereSource from '../../../../Filters/Sources/SphereSource';
+import vtkWarpScalar   from '../../../../Filters/General/WarpScalar';
 
 import controlPanel from './controller.html';
 
-// Create some control UI
-const rootContainer = document.querySelector('body');
-const controlPanelContainer = document.createElement('div');
-controlPanelContainer.innerHTML = controlPanel;
-rootContainer.appendChild(controlPanelContainer);
-const renderWindowContainer = document.querySelector('.renderwidow');
+// ----------------------------------------------------------------------------
+// Standard rendering code setup
+// ----------------------------------------------------------------------------
 
-const renWin = vtkRenderWindow.newInstance();
-const ren = vtkRenderer.newInstance();
-renWin.addRenderer(ren);
-ren.setBackground(0.32, 0.34, 0.43);
+const fullScreenRenderer = vtkFullScreenRenderWindow.newInstance({ background: [0, 0, 0] });
+const renderer = fullScreenRenderer.getRenderer();
+const renderWindow = fullScreenRenderer.getRenderWindow();
 
-const glwindow = vtkOpenGLRenderWindow.newInstance();
-glwindow.setSize(500, 500);
-glwindow.setContainer(renderWindowContainer);
-renWin.addView(glwindow);
-
-const iren = vtkRenderWindowInteractor.newInstance();
-iren.setView(glwindow);
+// ----------------------------------------------------------------------------
+// Example code
+// ----------------------------------------------------------------------------
 
 const actor = vtkActor.newInstance();
-ren.addActor(actor);
+renderer.addActor(actor);
 
-const mapper = vtkMapper.newInstance();
+const mapper = vtkMapper.newInstance({ interpolateScalarBeforeMapping: true });
 actor.setMapper(mapper);
 
 const cam = vtkCamera.newInstance();
-ren.setActiveCamera(cam);
+renderer.setActiveCamera(cam);
 cam.setFocalPoint(0, 0, 0);
 cam.setPosition(0, 0, 10);
 cam.setClippingRange(0.1, 50.0);
@@ -78,26 +68,26 @@ mapper.setInputConnection(filter.getOutputPort());
 // Select array to process
 filter.setInputArrayToProcess(0, 'spike', 'PointData', 'Scalars');
 
-// Initialize interactor and start
-iren.initialize();
-iren.bindEvents(renderWindowContainer, document);
-iren.start();
+// ----------------------------------------------------------------------------
+// UI control handling
+// ----------------------------------------------------------------------------
 
-// ----------------
+fullScreenRenderer.addController(controlPanel);
 
 // Warp setup
 ['scaleFactor'].forEach((propertyName) => {
   document.querySelector(`.${propertyName}`).addEventListener('input', (e) => {
     const value = Number(e.target.value);
     filter.set({ [propertyName]: value });
-    renWin.render();
+    renderWindow.render();
   });
 });
 
+// Checkbox
 document.querySelector('.useNormal').addEventListener('change', (e) => {
   const useNormal = !!(e.target.checked);
   filter.set({ useNormal });
-  renWin.render();
+  renderWindow.render();
 });
 
 // Sphere setup
@@ -105,9 +95,19 @@ document.querySelector('.useNormal').addEventListener('change', (e) => {
   document.querySelector(`.${propertyName}`).addEventListener('input', (e) => {
     const value = Number(e.target.value);
     sphereSource.set({ [propertyName]: value });
-    renWin.render();
+    renderWindow.render();
   });
 });
+
+// -----------------------------------------------------------
+
+renderer.resetCamera();
+renderWindow.render();
+
+// -----------------------------------------------------------
+// Make some variables global so that you can inspect and
+// modify objects in your browser's developer console:
+// -----------------------------------------------------------
 
 global.source = sphereSource;
 global.filter = filter;
