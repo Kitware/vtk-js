@@ -126,6 +126,11 @@ export function obj(publicAPI = {}, model = {}) {
       sortedObj[name] = jsonArchive[name];
     });
 
+    // Remove mtime
+    if (sortedObj.mtime) {
+      delete sortedObj.mtime;
+    }
+
     return sortedObj;
   };
 
