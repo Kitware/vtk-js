@@ -4,8 +4,6 @@ import vtkShaderCache from '../ShaderCache';
 import vtkViewNode from '../../SceneGraph/ViewNode';
 import vtkOpenGLTextureUnitManager from '../TextureUnitManager';
 
-/* global document */
-
 // ----------------------------------------------------------------------------
 // vtkOpenGLRenderWindow methods
 // ----------------------------------------------------------------------------

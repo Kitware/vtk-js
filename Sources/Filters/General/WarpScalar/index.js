@@ -96,6 +96,7 @@ function vtkWarpScalar(publicAPI, model) {
 
       // Loop over all points, adjusting locations
       const scalarDataArray = inScalars.getData();
+      const nc = inScalars.getNumberOfComponents();
       for (let ptId = 0; ptId < numPts; ++ptId) {
         ptOffset = ptId * 3;
         n = pointNormal(ptId, inNormals);
@@ -103,7 +104,8 @@ function vtkWarpScalar(publicAPI, model) {
         if (model.xyPlane) {
           s = inPoints[ptOffset + 2];
         } else {
-          s = scalarDataArray[ptId];
+          // Use component 0 of array if there are multiple components
+          s = scalarDataArray[ptId * nc];
         }
 
         newPtsData[ptOffset] = inPoints[ptOffset] + (model.scaleFactor * s * n[0]);

@@ -12,8 +12,6 @@ import vtkPolyData from '../../../../Common/DataModel/PolyData';
 import baseline from './testColorTransferFunction.png';
 import testUtils from '../../../../Testing/testUtils';
 
-/* global document */
-
 test.onlyIfWebGL('Test Interpolate Scalars Before Colors', (t) => {
   t.ok('rendering', 'vtkOpenGLPolyDataMapper ColorTransferFunction');
 

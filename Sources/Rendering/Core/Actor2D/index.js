@@ -2,7 +2,7 @@ import * as macro from '../../../macro';
 import vtkCoordinate from '../Coordinate';
 import vtkProp from '../Prop';
 import vtkProperty2D from '../Property2D';
-import { VTK_COORDINATE } from '../Coordinate/Constants';
+import { Coordinate } from '../Coordinate/Constants';
 
 // ----------------------------------------------------------------------------
 // vtkActor methods
@@ -58,7 +58,7 @@ function vtkActor2D(publicAPI, model) {
   //----------------------------------------------------------------------------
   // Set the Prop2D's position in display coordinates.
   publicAPI.setDisplayPosition = (XPos, YPos) => {
-    model.positionCoordinate.setCoordinateSystem(VTK_COORDINATE.DISPLAY);
+    model.positionCoordinate.setCoordinateSystem(Coordinate.DISPLAY);
     model.positionCoordinate.setValue(XPos, YPos, 0.0);
   };
 

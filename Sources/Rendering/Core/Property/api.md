@@ -27,22 +27,22 @@ Set the shading interpolation method for an object.
 
 ### setInterpolationToFlat() 
 
-Set interpolation to 0 => 'VTK_FLAT';
+Set interpolation to 0 => 'FLAT';
 
 ### setInterpolationToGouraud() 
 
-Set interpolation to 1 => 'VTK_GOURAUD';
+Set interpolation to 1 => 'GOURAUD';
 
 ### setInterpolationToPhong() 
 
-Set interpolation to 2 => 'VTK_PHONG';
+Set interpolation to 2 => 'PHONG';
 
 ### getInterpolationAsString() : String
 
 Map the interpolation integer to the corresponding ShadingModel.
 
 ```js
-const ShadingModel = ['VTK_FLAT', 'VTK_GOURAUD', 'VTK_PHONG'];
+const ShadingModel = ['FLAT', 'GOURAUD', 'PHONG'];
 ```
 
 ### representation
@@ -51,22 +51,22 @@ Control the surface geometry representation for the object.
 
 ### setRepresentationToPoints()
 
-Set representation to 0 => 'VTK_POINTS'
+Set representation to 0 => 'POINTS'
 
 ### setRepresentationToWireframe()
 
-Set representation to 1 => 'VTK_WIREFRAME'
+Set representation to 1 => 'WIREFRAME'
 
 ### setRepresentationToSurface()
 
-Set representation to 2 => 'VTK_SURFACE'
+Set representation to 2 => 'SURFACE'
 
 ### getRepresentationAsString() : String
 
 Map the representation integer to the corresponding RepresentationModel.
 
 ```js
-const RepresentationModel = ['VTK_POINTS', 'VTK_WIREFRAME', 'VTK_SURFACE'];
+const RepresentationModel = ['POINTS', 'WIREFRAME', 'SURFACE'];
 ```
 
 ### setColor(r, g, b) / getColor() : [r, g, b]

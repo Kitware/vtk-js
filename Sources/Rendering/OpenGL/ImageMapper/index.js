@@ -6,7 +6,7 @@ import vtkOpenGLTexture from '../Texture';
 import vtkShaderProgram from '../ShaderProgram';
 import vtkTexture from '../../Core/Texture';
 import vtkViewNode from '../../SceneGraph/ViewNode';
-import { VTK_REPRESENTATION } from '../../Core/Property/Constants';
+import { Representation } from '../../Core/Property/Constants';
 // import { mat4 } from 'gl-matrix';
 
 import vtkPolyDataVS from '../glsl/vtkPolyDataVS.glsl';
@@ -353,7 +353,7 @@ export function vtkOpenGLImageMapper(publicAPI, model) {
       const cells = vtkDataArray.newInstance({ numberOfComponents: 1, values: cellArray });
 
       model.tris.getCABO().createVBO(cells,
-        'polys', VTK_REPRESENTATION.SURFACE,
+        'polys', Representation.SURFACE,
         { points, tcoords, cellOffset: 0 });
       model.VBOBuildTime.modified();
       model.VBOBuildString = toString;

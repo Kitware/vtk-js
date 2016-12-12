@@ -1,6 +1,6 @@
 import * as macro from '../../../macro';
-import { VTK_WRAP, VTK_FILTER } from './Constants';
-import { VTK_DATATYPES } from '../../../Common/Core/DataArray/Constants';
+import { Wrap, Filter } from './Constants';
+import { VtkDataTypes } from '../../../Common/Core/DataArray/Constants';
 import vtkViewNode from '../../SceneGraph/ViewNode';
 
 // ----------------------------------------------------------------------------
@@ -34,14 +34,14 @@ function vtkOpenGLTexture(publicAPI, model) {
     model.context = model.window.getContext();
     if (model.renderable.getInterpolate()) {
       if (model.generateMipmap) {
-        publicAPI.setMinificationFilter(VTK_FILTER.LINEAR_MIPMAP_LINEAR);
+        publicAPI.setMinificationFilter(Filter.LINEAR_MIPMAP_LINEAR);
       } else {
-        publicAPI.setMinificationFilter(VTK_FILTER.LINEAR);
+        publicAPI.setMinificationFilter(Filter.LINEAR);
       }
-      publicAPI.setMagnificationFilter(VTK_FILTER.LINEAR);
+      publicAPI.setMagnificationFilter(Filter.LINEAR);
     } else {
-      publicAPI.setMinificationFilter(VTK_FILTER.NEAREST);
-      publicAPI.setMagnificationFilter(VTK_FILTER.NEAREST);
+      publicAPI.setMinificationFilter(Filter.NEAREST);
+      publicAPI.setMagnificationFilter(Filter.NEAREST);
     }
     // create the texture if it is not done already
     if (!model.handle) {
@@ -50,7 +50,7 @@ function vtkOpenGLTexture(publicAPI, model) {
       const inScalars = input.getPointData().getScalars();
       if (model.renderable.getInterpolate()) {
         model.generateMipmap = true;
-        publicAPI.setMinificationFilter(VTK_FILTER.LINEAR_MIPMAP_LINEAR);
+        publicAPI.setMinificationFilter(Filter.LINEAR_MIPMAP_LINEAR);
       }
       publicAPI.create2DFromRaw(ext[1] - ext[0] + 1, ext[3] - ext[2] + 1,
         inScalars.getNumberOfComponents(), inScalars.getDataType(), inScalars.getData());
@@ -298,20 +298,20 @@ function vtkOpenGLTexture(publicAPI, model) {
   publicAPI.getDefaultDataType = (vtkScalarType) => {
     // DON'T DEAL with VTK_CHAR as this is platform dependent.
     switch (vtkScalarType) {
-      // case VTK_DATATYPES.SIGNED_CHAR:
+      // case VtkDataTypes.SIGNED_CHAR:
       //   return model.context.BYTE;
-      case VTK_DATATYPES.UNSIGNED_CHAR:
+      case VtkDataTypes.UNSIGNED_CHAR:
         return model.context.UNSIGNED_BYTE;
-      // case VTK_DATATYPES.SHORT:
+      // case VtkDataTypes.SHORT:
       //   return model.context.SHORT;
-      // case VTK_DATATYPES.UNSIGNED_SHORT:
+      // case VtkDataTypes.UNSIGNED_SHORT:
       //   return model.context.UNSIGNED_SHORT;
-      // case VTK_DATATYPES.INT:
+      // case VtkDataTypes.INT:
       //   return model.context.INT;
-      // case VTK_DATATYPES.UNSIGNED_INT:
+      // case VtkDataTypes.UNSIGNED_INT:
       //   return model.context.UNSIGNED_INT;
-      case VTK_DATATYPES.FLOAT:
-      case VTK_DATATYPES.VOID: // used for depth component textures.
+      case VtkDataTypes.FLOAT:
+      case VtkDataTypes.VOID: // used for depth component textures.
       default:
         if (model.context.getExtension('OES_texture_float')) {
           return model.context.FLOAT;
@@ -369,17 +369,17 @@ function vtkOpenGLTexture(publicAPI, model) {
   //----------------------------------------------------------------------------
   publicAPI.getOpenGLFilterMode = (emode) => {
     switch (emode) {
-      case VTK_FILTER.NEAREST:
+      case Filter.NEAREST:
         return model.context.NEAREST;
-      case VTK_FILTER.LINEAR:
+      case Filter.LINEAR:
         return model.context.LINEAR;
-      case VTK_FILTER.NEAREST_MIPMAP_NEAREST:
+      case Filter.NEAREST_MIPMAP_NEAREST:
         return model.context.NEAREST_MIPMAP_NEAREST;
-      case VTK_FILTER.NEAREST_MIPMAP_LINEAR:
+      case Filter.NEAREST_MIPMAP_LINEAR:
         return model.context.NEAREST_MIPMAP_LINEAR;
-      case VTK_FILTER.LINEAR_MIPMAP_NEAREST:
+      case Filter.LINEAR_MIPMAP_NEAREST:
         return model.context.LINEAR_MIPMAP_NEAREST;
-      case VTK_FILTER.LINEAR_MIPMAP_LINEAR:
+      case Filter.LINEAR_MIPMAP_LINEAR:
         return model.context.LINEAR_MIPMAP_LINEAR;
       default:
         return model.context.NEAREST;
@@ -389,11 +389,11 @@ function vtkOpenGLTexture(publicAPI, model) {
   //----------------------------------------------------------------------------
   publicAPI.getOpenGLWrapMode = (vtktype) => {
     switch (vtktype) {
-      case VTK_WRAP.CLAMP_TO_EDGE:
+      case Wrap.CLAMP_TO_EDGE:
         return model.context.CLAMP_TO_EDGE;
-      case VTK_WRAP.REPEAT:
+      case Wrap.REPEAT:
         return model.context.REPEAT;
-      case VTK_WRAP.MIRRORED_REPEAT:
+      case Wrap.MIRRORED_REPEAT:
         return model.context.MIRRORED_REPEAT;
       default:
         return model.context.CLAMP_TO_EDGE;
@@ -426,7 +426,7 @@ function vtkOpenGLTexture(publicAPI, model) {
 
     // if the opengl data type is float
     // then the data array must be float
-    if (dataType !== VTK_DATATYPES.FLOAT && model.openGLDataType === model.context.FLOAT) {
+    if (dataType !== VtkDataTypes.FLOAT && model.openGLDataType === model.context.FLOAT) {
       const pixCount = model.width * model.height * model.components;
       const newArray = new Float32Array(pixCount);
       for (let i = 0; i < pixCount; i++) {
@@ -436,7 +436,7 @@ function vtkOpenGLTexture(publicAPI, model) {
     }
     // if the opengl data type is ubyte
     // then the data array must be u8, we currently simply truncate the data
-    if (dataType !== VTK_DATATYPES.UNSIGNED_CHAR && model.openGLDataType === model.context.UNSIGNED_BYTE) {
+    if (dataType !== VtkDataTypes.UNSIGNED_CHAR && model.openGLDataType === model.context.UNSIGNED_BYTE) {
       const pixCount = model.width * model.height * model.components;
       const newArray = new Uint8Array(pixCount);
       for (let i = 0; i < pixCount; i++) {
@@ -496,11 +496,11 @@ const DEFAULT_VALUES = {
   height: 0,
   depth: 0,
   autoParameters: true,
-  wrapS: VTK_WRAP.CLAMP_TO_EDGE,
-  wrapT: VTK_WRAP.CLAMP_TO_EDGE,
-  wrapR: VTK_WRAP.CLAMP_TO_EDGE,
-  minificationFilter: VTK_FILTER.NEAREST,
-  magnificationFilter: VTK_FILTER.NEAREST,
+  wrapS: Wrap.CLAMP_TO_EDGE,
+  wrapT: Wrap.CLAMP_TO_EDGE,
+  wrapR: Wrap.CLAMP_TO_EDGE,
+  minificationFilter: Filter.NEAREST,
+  magnificationFilter: Filter.NEAREST,
   minLOD: -1000.0,
   maxLOD: 1000.0,
   baseLevel: 0,

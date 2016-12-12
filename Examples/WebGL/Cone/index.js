@@ -1,4 +1,4 @@
-import vtkFullScreenRenderWindow from '../../../Sources/Testing/FullScreenRenderWindow';
+import vtkFullScreenRenderWindow from '../../../Sources/Rendering/Misc/FullScreenRenderWindow';
 
 import vtkActor           from '../../../Sources/Rendering/Core/Actor';
 import vtkCalculator      from '../../../Sources/Filters/General/Calculator';
@@ -83,3 +83,5 @@ resolutionChange.addEventListener('input', (e) => {
 global.source = coneSource;
 global.mapper = mapper;
 global.actor = actor;
+global.renderer = renderer;
+global.renderWindow = renderWindow;

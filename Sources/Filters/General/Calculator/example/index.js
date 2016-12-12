@@ -1,103 +1,129 @@
+import vtkFullScreenRenderWindow  from '../../../../../Sources/Rendering/Misc/FullScreenRenderWindow';
+
 import vtkActor                   from '../../../../../Sources/Rendering/Core/Actor';
-import vtkCamera                  from '../../../../../Sources/Rendering/Core/Camera';
-import vtkPlaneSource             from '../../../../../Sources/Filters/Sources/PlaneSource';
 import vtkCalculator              from '../../../../../Sources/Filters/General/Calculator';
-import vtkWarpScalar              from '../../../../../Sources/Filters/General/WarpScalar';
+import vtkDataArray               from '../../../../../Sources/Common/Core/DataArray';
 import vtkMapper                  from '../../../../../Sources/Rendering/Core/Mapper';
-import { VTK_COLOR_MODE, VTK_SCALAR_MODE } from '../../../../../Sources/Rendering/Core/Mapper/Constants';
-import vtkOpenGLRenderWindow      from '../../../../../Sources/Rendering/OpenGL/RenderWindow';
-import vtkRenderer                from '../../../../../Sources/Rendering/Core/Renderer';
-import vtkRenderWindow            from '../../../../../Sources/Rendering/Core/RenderWindow';
-import vtkRenderWindowInteractor  from '../../../../../Sources/Rendering/Core/RenderWindowInteractor';
-import { AttributeTypes }         from '../../../../../Sources/Common/DataModel/DataSetAttributes/Constants';
+import vtkPlaneSource             from '../../../../../Sources/Filters/Sources/PlaneSource';
+import vtkPoints                  from '../../../../../Sources/Common/Core/Points';
+import vtkPolyData                from '../../../../../Sources/Common/DataModel/PolyData';
+import vtkWarpScalar              from '../../../../../Sources/Filters/General/WarpScalar';
+import { ColorMode, ScalarMode }  from '../../../../../Sources/Rendering/Core/Mapper/Constants';
 import { FieldDataTypes }         from '../../../../../Sources/Common/DataModel/DataSet/Constants';
 
 import controlPanel from './controlPanel.html';
 
-// Create some control UI
-const rootContainer = document.querySelector('body');
-rootContainer.innerHTML = controlPanel;
-const renderWindowContainer = document.querySelector('.renderwidow');
-// ----------------------
+let formulaIdx = 0;
+const FORMULA = [
+  '((x[0] - 0.5) * (x[0] - 0.5)) + ((x[1] - 0.5) * (x[1] - 0.5)) + 0.125',
+  '0.25 * Math.sin(Math.sqrt(((x[0] - 0.5) * (x[0] - 0.5)) + ((x[1] - 0.5) * (x[1] - 0.5)))*50)',
+];
 
-const ren = vtkRenderer.newInstance();
-ren.setBackground(0.32, 0.34, 0.43);
+// ----------------------------------------------------------------------------
+// Standard rendering code setup
+// ----------------------------------------------------------------------------
 
-const renWin = vtkRenderWindow.newInstance();
-renWin.addRenderer(ren);
+const fullScreenRenderer = vtkFullScreenRenderWindow.newInstance({ background: [0.9, 0.9, 0.9] });
+const renderer = fullScreenRenderer.getRenderer();
+const renderWindow = fullScreenRenderer.getRenderWindow();
 
-const glwindow = vtkOpenGLRenderWindow.newInstance();
-glwindow.setContainer(renderWindowContainer);
-renWin.addView(glwindow);
+// ----------------------------------------------------------------------------
+// Example code
+// ----------------------------------------------------------------------------
 
-const iren = vtkRenderWindowInteractor.newInstance();
-iren.setView(glwindow);
-
+const planeSource = vtkPlaneSource.newInstance({ xResolution: 25, yResolution: 25 });
+const planeMapper = vtkMapper.newInstance({ colorMode: ColorMode.DEFAULT, scalarMode: ScalarMode.DEFAULT });
 const planeActor = vtkActor.newInstance();
 planeActor.getProperty().setEdgeVisibility(true);
-ren.addActor(planeActor);
 
-const planeMapper = vtkMapper.newInstance({ colorMode: VTK_COLOR_MODE.DEFAULT, scalarMode: VTK_SCALAR_MODE.DEFAULT });
+const simpleFilter = vtkCalculator.newInstance();
+simpleFilter.setFormulaSimple(
+  FieldDataTypes.POINT, // Generate an output array defined over points.
+  [],  // We don't request any point-data arrays because point coordinates are made available by default.
+  'z', // Name the output array "z"
+  x => ((x[0] - 0.5) * (x[0] - 0.5)) + ((x[1] - 0.5) * (x[1] - 0.5)) + 0.125
+); // Our formula for z
+
+const warpScalar = vtkWarpScalar.newInstance();
+const warpMapper = vtkMapper.newInstance();
+const warpActor = vtkActor.newInstance();
+
+// The generated 'z' array will become the default scalars, so the plane mapper will color by 'z':
+simpleFilter.setInputConnection(planeSource.getOutputPort());
+
+// We will also generate a surface whose points are displaced from the plane by 'z':
+warpScalar.setInputConnection(simpleFilter.getOutputPort());
+warpScalar.setInputArrayToProcess(0, 'z', 'PointData', 'Scalars');
+
+planeMapper.setInputConnection(simpleFilter.getOutputPort());
 planeActor.setMapper(planeMapper);
 
-const warpActor = vtkActor.newInstance();
-ren.addActor(warpActor);
-
-const warpMapper = vtkMapper.newInstance({ scalarVisibility: false });
+warpMapper.setInputConnection(warpScalar.getOutputPort());
 warpActor.setMapper(warpMapper);
 
-const cam = vtkCamera.newInstance();
-ren.setActiveCamera(cam);
-cam.setFocalPoint(0.5, 0.5, 0.5);
-cam.setPosition(4, 4, 4);
-cam.setViewUp(0, 0, 1);
-cam.setClippingRange(0.1, 50.0);
+renderer.addActor(planeActor);
+renderer.addActor(warpActor);
 
-const planeSource = vtkPlaneSource.newInstance({ xResolution: 15, yResolution: 15 });
-const filter = vtkCalculator.newInstance();
-filter.setInputConnection(planeSource.getOutputPort());
-filter.setFormula({
-  getArrays: (inputDataSets) => ({
-    input: [
-      { location: FieldDataTypes.COORDINATE }],
-    output: [
-      { location: FieldDataTypes.POINT, name: 'sine wave', dataType: 'Float64Array', attribute: AttributeTypes.SCALARS },
-      { location: FieldDataTypes.UNIFORM, name: 'global', dataType: 'Float32Array', tuples: 1 },
-    ]}),
-  evaluate: (arraysIn, arraysOut) => {
-    const [coords] = arraysIn.map(d => d.getData());
-    const [sine, glob] = arraysOut.map(d => d.getData());
+renderer.resetCamera();
+renderWindow.render();
 
-    for (let i = 0, sz = coords.length / 3; i < sz; ++i) {
-      const dx = (coords[3 * i] - 0.5);
-      const dy = (coords[(3 * i) + 1] - 0.5);
-      sine[i] = dx * dx + dy * dy + 0.125;
-      //console.log(i, sine[i], coords[3 * i], coords[(3 * i) + 1], coords[(3 * i) + 2]);
+// ----------------------------------------------------------------------------
+// UI control handling
+// ----------------------------------------------------------------------------
+
+fullScreenRenderer.addController(controlPanel);
+
+function applyFormula() {
+  const el = document.querySelector('.formula');
+  let fn = null;
+  try {
+    /* eslint-disable no-new-func */
+    fn = new Function('x,y', `return ${el.value}`);
+    /* eslint-enable no-new-func */
+  } catch (exc) {
+    if (!('name' in exc && exc.name === 'SyntaxError')) {
+      console.log('Unexpected exception ', exc);
+      el.style.background = '#fbb';
+      return;
     }
-    arraysOut[0].modified();
-    //console.log('Range of output ', arraysOut[0].getRange());
-    glob[0] = sine.reduce((result, value) => result + value, 0);
   }
-});
-planeMapper.setInputConnection(filter.getOutputPort());
-const warpScalar = vtkWarpScalar.newInstance();
-warpScalar.setInputConnection(filter.getOutputPort());
-warpScalar.setInputArrayToProcess(0, 'sine wave', 'PointData', 'Scalars');
-warpMapper.setInputConnection(warpScalar.getOutputPort());
+  if (fn) {
+    el.style.background = '#fff';
+    const formulaObj = simpleFilter.createSimpleFormulaObject(
+      FieldDataTypes.POINT, [], 'z', fn);
 
-iren.initialize();
-iren.bindEvents(renderWindowContainer, document);
-ren.resetCamera();
-renWin.render();
-iren.start();
+    // See if the formula is actually valid by invoking "formulaObj" on
+    // a dataset containing a single point.
+    planeSource.update();
+    const arraySpec = formulaObj.getArrays(planeSource.getOutputData());
+    const testData = vtkPolyData.newInstance();
+    const testPts = vtkPoints.newInstance();
+    testPts.setData(
+      vtkDataArray.newInstance({ name: 'coords', numberOfComponents: 3, size: 3, values: [0, 0, 0] }));
+    testData.setPoints(testPts);
+    const testOut = vtkPolyData.newInstance();
+    testOut.shallowCopy(testData);
+    const testArrays = simpleFilter.prepareArrays(arraySpec, testData, testOut);
+    try {
+      formulaObj.evaluate(testArrays.arraysIn, testArrays.arraysOut);
 
-// ----- JavaScript UI -----
+      // We evaluated 1 point without exception... it's safe to update the
+      // filter and re-render.
+      simpleFilter.setFormula(formulaObj);
+      renderWindow.render();
+      return;
+    } catch (exc) {
+      console.log('Unexpected exception ', exc);
+    }
+  }
+  el.style.background = '#ffb';
+}
 
 ['xResolution', 'yResolution'].forEach((propertyName) => {
   document.querySelector(`.${propertyName}`).addEventListener('input', (e) => {
     const value = Number(e.target.value);
     planeSource.set({ [propertyName]: value });
-    renWin.render();
+    renderWindow.render();
   });
 });
 
@@ -105,16 +131,29 @@ iren.start();
   document.querySelector(`.${propertyName}`).addEventListener('input', (e) => {
     const value = Number(e.target.value);
     warpScalar.set({ [propertyName]: value });
-    renWin.render();
+    renderWindow.render();
   });
 });
 
-// ----- Console play ground -----
+document.querySelector('.formula').addEventListener('input', applyFormula);
+
+document.querySelector('.next').addEventListener('click', (e) => {
+  formulaIdx = (formulaIdx + 1) % FORMULA.length;
+  document.querySelector('.formula').value = FORMULA[formulaIdx];
+  applyFormula();
+  renderWindow.render();
+});
+
+// -----------------------------------------------------------
+// Make some variables global so that you can inspect and
+// modify objects in your browser's developer console:
+// -----------------------------------------------------------
 
 global.planeSource = planeSource;
 global.planeMapper = planeMapper;
 global.planeActor = planeActor;
+global.simpleFilter = simpleFilter;
 global.warpMapper = warpMapper;
 global.warpActor = warpActor;
-global.renderer = ren;
-global.renderWindow = renWin;
+global.renderer = renderer;
+global.renderWindow = renderWindow;

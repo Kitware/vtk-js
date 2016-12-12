@@ -1,5 +1,5 @@
 import * as macro from '../../../macro';
-import { VTK_DEFAULT_DATATYPE } from './Constants';
+import { DefaultDataType } from './Constants';
 
 const TUPLE_HOLDER = [];
 
@@ -238,7 +238,7 @@ const DEFAULT_VALUES = {
   name: '',
   numberOfComponents: 1,
   size: 0,
-  dataType: VTK_DEFAULT_DATATYPE,
+  dataType: DefaultDataType,
   // values: null,
   // ranges: null,
 };

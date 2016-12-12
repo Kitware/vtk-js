@@ -10,8 +10,6 @@ import vtkMapper from '../../../../Rendering/Core/Mapper';
 import baseline from './testPlane.png';
 import testUtils from '../../../../Testing/testUtils';
 
-/* global document */
-
 test.onlyIfWebGL('Test vtkPlaneSource Rendering', (t) => {
   t.ok('rendering', 'vtkPlaneSource Rendering');
 

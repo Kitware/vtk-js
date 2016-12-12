@@ -53,10 +53,7 @@
         "doc:www"       : "npm t -- --single-run && kw-doc -c ./Documentation/config.js -s",
         "doc:publish"   : "kw-doc -c ./Documentation/config.js -mp",
 
-        "example:EmptyRenderer": "webpack-dev-server --progress --open --config ./Examples/WebGL/EmptyRenderer/webpack.config.js",
-        "example:Cone": "webpack-dev-server --progress --open --config ./Examples/WebGL/Cone/webpack.config.js",
-        "example:Texture": "webpack-dev-server --progress --open --config ./Examples/WebGL/Texture/webpack.config.js",
-        "example:JSON": "webpack-dev-server --progress --open --config ./Examples/Serialization/Actor/webpack.config.js",
+        "example": "node ./Utilities/ExampleRunner/example-runner-cli.js -c ./Documentation/config.js",
 
         "build"         : "webpack --progress --colors",
         "build:debug"   : "webpack --progress --colors --display-modules",

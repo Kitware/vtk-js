@@ -1,9 +1,10 @@
 import * as macro from '../../../macro';
 import vtk from '../../../vtk';
 import vtkPolyData from '../../../Common/DataModel/PolyData';
-import { LOCATIONS } from './Constants';
 
 import DataAccessHelper from '../DataAccessHelper';
+
+const fieldDataLocations = ['pointData', 'cellData', 'fieldData'];
 
 // ----------------------------------------------------------------------------
 // Global methods
@@ -90,7 +91,7 @@ export function vtkHttpDataSetReader(publicAPI, model) {
       block.type = dataset.vtkClass;
       block.enable = enable;
       const container = dataset;
-      LOCATIONS.forEach((location) => {
+      fieldDataLocations.forEach((location) => {
         if (container[location]) {
           Object.keys(container[location]).forEach((name) => {
             if (arraysToList[`${location}_:|:_${name}`]) {
@@ -159,7 +160,7 @@ export function vtkHttpDataSetReader(publicAPI, model) {
               });
             } else {
               // Regular dataset
-              LOCATIONS.forEach((location) => {
+              fieldDataLocations.forEach((location) => {
                 if (container[location]) {
                   container[location].arrays.map(i => i.data).forEach((array) => {
                     model.arrays.push({ name: array.name, enable, location, ds: [container] });

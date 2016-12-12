@@ -1,4 +1,4 @@
-import { VTK_STRUCTURED_TYPE } from './Constants';
+import { StructuredType } from './Constants';
 
 export function getDataDescriptionFromExtent(inExt) {
   let dataDim = 0;
@@ -9,28 +9,28 @@ export function getDataDescriptionFromExtent(inExt) {
   }
 
   if (inExt[0] > inExt[1] || inExt[2] > inExt[3] || inExt[4] > inExt[5]) {
-    return VTK_STRUCTURED_TYPE.VTK_EMPTY;
+    return StructuredType.EMPTY;
   }
 
   if (dataDim === 3) {
-    return VTK_STRUCTURED_TYPE.VTK_XYZ_GRID;
+    return StructuredType.XYZ_GRID;
   } else if (dataDim === 2) {
     if (inExt[0] === inExt[1]) {
-      return VTK_STRUCTURED_TYPE.VTK_YZ_PLANE;
+      return StructuredType.YZ_PLANE;
     } else if (inExt[2] === inExt[3]) {
-      return VTK_STRUCTURED_TYPE.VTK_XZ_PLANE;
+      return StructuredType.XZ_PLANE;
     }
-    return VTK_STRUCTURED_TYPE.VTK_XY_PLANE;
+    return StructuredType.XY_PLANE;
   } else if (dataDim === 1) {
     if (inExt[0] < inExt[1]) {
-      return VTK_STRUCTURED_TYPE.VTK_X_LINE;
+      return StructuredType.X_LINE;
     } else if (inExt[2] < inExt[3]) {
-      return VTK_STRUCTURED_TYPE.VTK_Y_LINE;
+      return StructuredType.Y_LINE;
     }
-    return VTK_STRUCTURED_TYPE.VTK_Z_LINE;
+    return StructuredType.Z_LINE;
   }
 
-  return VTK_STRUCTURED_TYPE.VTK_SINGLE_POINT;
+  return StructuredType.SINGLE_POINT;
 }
 
 export default {

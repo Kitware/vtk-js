@@ -3,8 +3,8 @@ import resemble from 'resemblejs';
 function compareImages(image, baselines, testName, tapeContext, threshold = 5, nextCallback = null) {
   let minDelta = 100;
   let isSameDimensions = false;
-  baselines.forEach(baseline => {
-    resemble(baseline).compareTo(image).onComplete(data => {
+  baselines.forEach((baseline) => {
+    resemble(baseline).compareTo(image).onComplete((data) => {
       minDelta = (minDelta < data.misMatchPercentage) ? minDelta : data.misMatchPercentage;
       isSameDimensions = isSameDimensions || data.isSameDimensions;
     });

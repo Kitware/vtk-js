@@ -33,6 +33,7 @@ module.exports = {
     vtkDebugMacro: false,
     vtkErrorMacro: false,
     vtkWarningMacro: false,
+    __BASE_PATH__: false,
   },
   env: {
     browser: true,

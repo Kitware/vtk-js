@@ -1,5 +1,5 @@
 import * as macro from '../../../macro';
-import { VTK_COORDINATE } from './Constants';
+import { Coordinate } from './Constants';
 
 // ----------------------------------------------------------------------------
 // vtkActor methods
@@ -10,30 +10,30 @@ function vtkCoordinate(publicAPI, model) {
   model.classHierarchy.push('vtkCoordinate');
 
   publicAPI.setCoordinateSystemToDisplay = () => {
-    publicAPI.setCoordinateSystem(VTK_COORDINATE.DISPLAY);
+    publicAPI.setCoordinateSystem(Coordinate.DISPLAY);
   };
 
   publicAPI.setCoordinateSystemToNormalizedDisplay = () => {
-    publicAPI.setCoordinateSystem(VTK_COORDINATE.NORMALIZED_DISPLAY);
+    publicAPI.setCoordinateSystem(Coordinate.NORMALIZED_DISPLAY);
   };
 
   publicAPI.setCoordinateSystemToViewport = () => {
-    publicAPI.setCoordinateSystem(VTK_COORDINATE.VIEWPORT);
+    publicAPI.setCoordinateSystem(Coordinate.VIEWPORT);
   };
 
   publicAPI.setCoordinateSystemToNormalizedViewport = () => {
-    publicAPI.setCoordinateSystem(VTK_COORDINATE.NORMALIZED_VIEWPORT);
+    publicAPI.setCoordinateSystem(Coordinate.NORMALIZED_VIEWPORT);
   };
 
   publicAPI.setCoordinateSystemToView = () => {
-    publicAPI.setCoordinateSystem(VTK_COORDINATE.VIEW);
+    publicAPI.setCoordinateSystem(Coordinate.VIEW);
   };
 
   publicAPI.setCoordinateSystemToWorld = () => {
-    publicAPI.setCoordinateSystem(VTK_COORDINATE.WORLD);
+    publicAPI.setCoordinateSystem(Coordinate.WORLD);
   };
 
-  publicAPI.getCoordinateSystemAsString = () => macro.enumToString(VTK_COORDINATE, model.coordinateSystem);
+  publicAPI.getCoordinateSystemAsString = () => macro.enumToString(Coordinate, model.coordinateSystem);
 }
 
 // ----------------------------------------------------------------------------
@@ -41,7 +41,7 @@ function vtkCoordinate(publicAPI, model) {
 // ----------------------------------------------------------------------------
 
 const DEFAULT_VALUES = {
-  coordinateSystem: VTK_COORDINATE.WORLD,
+  coordinateSystem: Coordinate.WORLD,
   value: [0.0, 0.0, 0.0],
   viewport: null,
   referenceCoordinate: null,

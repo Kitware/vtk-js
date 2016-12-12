@@ -1,6 +1,6 @@
 import * as macro from '../../../macro';
 import vtk from '../../../vtk';
-import { VTK_DATATYPES } from '../DataArray/Constants';
+import { VtkDataTypes } from '../DataArray/Constants';
 import vtkDataArray from '../DataArray';
 // ----------------------------------------------------------------------------
 // vtkPoints methods
@@ -60,7 +60,7 @@ function vtkPoints(publicAPI, model) {
 
 const DEFAULT_VALUES = {
   // data: null,
-  dataType: VTK_DATATYPES.Float64Array,
+  dataType: VtkDataTypes.FLOAT,
 };
 
 // ----------------------------------------------------------------------------
