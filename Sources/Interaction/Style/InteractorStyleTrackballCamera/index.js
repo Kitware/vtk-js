@@ -1,7 +1,7 @@
 import * as macro from '../../../macro';
 import vtkInteractorStyle from '../../../Rendering/Core/InteractorStyle';
 import vtkMath from './../../../Common/Core/Math';
-import { STATES } from '../../../Rendering/Core/InteractorStyle/Constants';
+import { States } from '../../../Rendering/Core/InteractorStyle/Constants';
 
 /* eslint-disable no-lonely-if */
 
@@ -29,25 +29,25 @@ function vtkInteractorStyleTrackballCamera(publicAPI, model) {
     const pos = model.interactor.getEventPosition(model.interactor.getPointerIndex());
 
     switch (model.state) {
-      case STATES.VTKIS_ROTATE:
+      case States.IS_ROTATE:
         publicAPI.findPokedRenderer(pos.x, pos.y);
         publicAPI.rotate();
         publicAPI.invokeInteractionEvent({ type: 'InteractionEvent' });
         break;
 
-      case STATES.VTKIS_PAN:
+      case States.IS_PAN:
         publicAPI.findPokedRenderer(pos.x, pos.y);
         publicAPI.pan();
         publicAPI.invokeInteractionEvent({ type: 'InteractionEvent' });
         break;
 
-      case STATES.VTKIS_DOLLY:
+      case States.IS_DOLLY:
         publicAPI.findPokedRenderer(pos.x, pos.y);
         publicAPI.dolly();
         publicAPI.invokeInteractionEvent({ type: 'InteractionEvent' });
         break;
 
-      case STATES.VTKIS_SPIN:
+      case States.IS_SPIN:
         publicAPI.findPokedRenderer(pos.x, pos.y);
         publicAPI.spin();
         publicAPI.invokeInteractionEvent({ type: 'InteractionEvent' });
@@ -85,19 +85,19 @@ function vtkInteractorStyleTrackballCamera(publicAPI, model) {
   //--------------------------------------------------------------------------
   publicAPI.handleLeftButtonRelease = () => {
     switch (model.state) {
-      case STATES.VTKIS_DOLLY:
+      case States.IS_DOLLY:
         publicAPI.endDolly();
         break;
 
-      case STATES.VTKIS_PAN:
+      case States.IS_PAN:
         publicAPI.endPan();
         break;
 
-      case STATES.VTKIS_SPIN:
+      case States.IS_SPIN:
         publicAPI.endSpin();
         break;
 
-      case STATES.VTKIS_ROTATE:
+      case States.IS_ROTATE:
         publicAPI.endRotate();
         break;
 

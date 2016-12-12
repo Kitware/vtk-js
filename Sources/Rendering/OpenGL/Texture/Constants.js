@@ -1,10 +1,10 @@
-export const VTK_WRAP = {
+export const Wrap = {
   CLAMP_TO_EDGE: 0,
   REPEAT: 1,
   MIRRORED_REPEAT: 2,
 };
 
-export const VTK_FILTER = {
+export const Filter = {
   NEAREST: 0,
   LINEAR: 1,
   NEAREST_MIPMAP_NEAREST: 2,
@@ -14,6 +14,6 @@ export const VTK_FILTER = {
 };
 
 export default {
-  VTK_WRAP,
-  VTK_FILTER,
+  Wrap,
+  Filter,
 };

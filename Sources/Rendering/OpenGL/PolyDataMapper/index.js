@@ -6,9 +6,9 @@ import vtkMath from '../../../Common/Core/Math';
 import vtkShaderProgram from '../ShaderProgram';
 import vtkOpenGLTexture from '../Texture';
 import vtkViewNode from '../../SceneGraph/ViewNode';
-import { VTK_REPRESENTATION, VTK_SHADING } from '../../Core/Property/Constants';
-import { VTK_MATERIALMODE, VTK_SCALAR_MODE } from '../../Core/Mapper/Constants';
-import { VTK_FILTER, VTK_WRAP } from '../Texture/Constants';
+import { Representation, Shading } from '../../Core/Property/Constants';
+import { MaterialMode, ScalarMode } from '../../Core/Mapper/Constants';
+import { Filter, Wrap } from '../Texture/Constants';
 
 import vtkPolyDataVS from '../glsl/vtkPolyDataVS.glsl';
 import vtkPolyDataFS from '../glsl/vtkPolyDataFS.glsl';
@@ -138,15 +138,15 @@ export function vtkOpenGLPolyDataMapper(publicAPI, model) {
 
     if (model.lastBoundBO.getCABO().getColorComponents() !== 0 &&
         !model.drawingEdges) {
-      if (scalarMatMode === VTK_MATERIALMODE.AMBIENT ||
-          (scalarMatMode === VTK_MATERIALMODE.DEFAULT &&
+      if (scalarMatMode === MaterialMode.AMBIENT ||
+          (scalarMatMode === MaterialMode.DEFAULT &&
             actor.getProperty().getAmbient() > actor.getProperty().getDiffuse())) {
         FSSource = vtkShaderProgram.substitute(FSSource, '//VTK::Color::Impl',
           colorImpl.concat([
             '  ambientColor = vertexColorVSOutput.rgb;',
             '  opacity = opacity*vertexColorVSOutput.a;'])).result;
-      } else if (scalarMatMode === VTK_MATERIALMODE.DIFFUSE ||
-          (scalarMatMode === VTK_MATERIALMODE.DEFAULT &&
+      } else if (scalarMatMode === MaterialMode.DIFFUSE ||
+          (scalarMatMode === MaterialMode.DEFAULT &&
             actor.getProperty().getAmbient() <= actor.getProperty().getDiffuse())) {
         FSSource = vtkShaderProgram.substitute(FSSource, '//VTK::Color::Impl',
           colorImpl.concat([
@@ -163,16 +163,16 @@ export function vtkOpenGLPolyDataMapper(publicAPI, model) {
       if (model.renderable.getInterpolateScalarsBeforeMapping()
          && model.renderable.getColorCoordinates()
          && !model.drawingEdges) {
-        if (scalarMatMode === VTK_MATERIALMODE.AMBIENT ||
-          (scalarMatMode === VTK_MATERIALMODE.DEFAULT &&
+        if (scalarMatMode === MaterialMode.AMBIENT ||
+          (scalarMatMode === MaterialMode.DEFAULT &&
             actor.getProperty().getAmbient() > actor.getProperty().getDiffuse())) {
           FSSource = vtkShaderProgram.substitute(FSSource, '//VTK::Color::Impl',
             colorImpl.concat([
               '  vec4 texColor = texture2D(texture1, tcoordVCVSOutput.st);',
               '  ambientColor = texColor.rgb;',
               '  opacity = opacity*texColor.a;'])).result;
-        } else if (scalarMatMode === VTK_MATERIALMODE.DIFFUSE ||
-            (scalarMatMode === VTK_MATERIALMODE.DEFAULT &&
+        } else if (scalarMatMode === MaterialMode.DIFFUSE ||
+            (scalarMatMode === MaterialMode.DEFAULT &&
               actor.getProperty().getAmbient() <= actor.getProperty().getDiffuse())) {
           FSSource = vtkShaderProgram.substitute(FSSource, '//VTK::Color::Impl',
             colorImpl.concat([
@@ -375,7 +375,7 @@ export function vtkOpenGLPolyDataMapper(publicAPI, model) {
             ).result;
         } else {
           if (model.lastBoundBO.getPrimitiveType() === primTypes.Lines ||
-              actor.getProperty().getRepresentation() === VTK_REPRESENTATION.WIREFRAME) {
+              actor.getProperty().getRepresentation() === Representation.WIREFRAME) {
             // generate a normal for lines, it will be perpendicular to the line
             // and maximally aligned with the camera view direction
             // no clue if this is the best way to do this.
@@ -436,7 +436,7 @@ export function vtkOpenGLPolyDataMapper(publicAPI, model) {
     let FSSource = shaders.Fragment;
 
     // for points make sure to add in the point size
-    if (actor.getProperty().getRepresentation() === VTK_REPRESENTATION.POINTS
+    if (actor.getProperty().getRepresentation() === Representation.POINTS
       || model.lastBoundBO.getPrimitiveType() === primTypes.Points) {
       VSSource = vtkShaderProgram.substitute(VSSource,
         '//VTK::PositionVC::Impl', [
@@ -559,13 +559,13 @@ export function vtkOpenGLPolyDataMapper(publicAPI, model) {
     const prop = actor.getProperty();
     if (model.renderable.getResolveCoincidentTopology() ||
         (prop.getEdgeVisibility() &&
-          prop.getRepresentation() === VTK_REPRESENTATION.SURFACE)) {
+          prop.getRepresentation() === Representation.SURFACE)) {
       const primType = model.lastBoundBO.getPrimitiveType();
       if (primType === primTypes.Points ||
-          prop.getRepresentation() === VTK_REPRESENTATION.POINTS) {
+          prop.getRepresentation() === Representation.POINTS) {
         cp = model.renderable.getCoincidentTopologyPointOffsetParameter();
       } else if (primType === primTypes.Lines ||
-          prop.getRepresentation() === VTK_REPRESENTATION.WIREFRAME) {
+          prop.getRepresentation() === Representation.WIREFRAME) {
         cp = model.renderable.getCoincidentTopologyLineOffsetParameters();
       } else if (primType === primTypes.Tris || primType === primTypes.TriStrips) {
         cp = model.renderable.getCoincidentTopologyPolygonOffsetParameters();
@@ -641,7 +641,7 @@ export function vtkOpenGLPolyDataMapper(publicAPI, model) {
 
     const poly = model.currentInput;
 
-    let n = (actor.getProperty().getInterpolation() !== VTK_SHADING.FLAT)
+    let n = (actor.getProperty().getInterpolation() !== Shading.FLAT)
       ? poly.getPointData().getNormals() : null;
     if (n === null && poly.getCellData().getNormals()) {
       n = poly.getCelData().getNormals();
@@ -649,7 +649,7 @@ export function vtkOpenGLPolyDataMapper(publicAPI, model) {
 
     const haveNormals = (n !== null);
 
-    if (actor.getProperty().getRepresentation() === VTK_REPRESENTATION.POINTS ||
+    if (actor.getProperty().getRepresentation() === Representation.POINTS ||
         primType === primTypes.Points) {
       needLighting = haveNormals;
     }
@@ -1027,7 +1027,7 @@ export function vtkOpenGLPolyDataMapper(publicAPI, model) {
 
     const drawSurfaceWithEdges =
       (actor.getProperty().getEdgeVisibility() &&
-        representation === VTK_REPRESENTATION.SURFACE);
+        representation === Representation.SURFACE);
 
     // for every primitive type
     for (let i = primTypes.Start; i < primTypes.End; i++) {
@@ -1049,11 +1049,11 @@ export function vtkOpenGLPolyDataMapper(publicAPI, model) {
   };
 
   publicAPI.getOpenGLMode = (rep, type) => {
-    if (rep === VTK_REPRESENTATION.POINTS ||
+    if (rep === Representation.POINTS ||
       type === primTypes.Points) {
       return model.context.POINTS;
     }
-    if (rep === VTK_REPRESENTATION.WIREFRAME ||
+    if (rep === Representation.WIREFRAME ||
       type === primTypes.Lines ||
       type === primTypes.TrisEdges ||
       type === primTypes.TriStripsEdges) {
@@ -1142,18 +1142,18 @@ export function vtkOpenGLPolyDataMapper(publicAPI, model) {
     const scalarMode = model.renderable.getScalarMode();
     if (model.renderable.getScalarVisibility()) {
       // We must figure out how the scalars should be mapped to the polydata.
-      if ((scalarMode === VTK_SCALAR_MODE.USE_CELL_DATA ||
-            scalarMode === VTK_SCALAR_MODE.USE_CELL_FIELD_DATA ||
-            scalarMode === VTK_SCALAR_MODE.USE_FIELD_DATA ||
+      if ((scalarMode === ScalarMode.USE_CELL_DATA ||
+            scalarMode === ScalarMode.USE_CELL_FIELD_DATA ||
+            scalarMode === ScalarMode.USE_FIELD_DATA ||
             !poly.getPointData().getScalars())
-           && scalarMode !== VTK_SCALAR_MODE.USE_POINT_FIELD_DATA
+           && scalarMode !== ScalarMode.USE_POINT_FIELD_DATA
            && c) {
         model.haveCellScalars = true;
       }
     }
 
     // Do we have normals?
-    let n = (actor.getProperty().getInterpolation() !== VTK_SHADING.FLAT)
+    let n = (actor.getProperty().getInterpolation() !== Shading.FLAT)
       ? poly.getPointData().getNormals() : null;
     if (n === null && poly.getCellData().getNormals()) {
       model.haveCellNormals = true;
@@ -1185,10 +1185,10 @@ export function vtkOpenGLPolyDataMapper(publicAPI, model) {
       }
       const tex = model.internalColorTexture;
       // the following 4 lines allow for NPOT textures
-      tex.setMinificationFilter(VTK_FILTER.NEAREST);
-      tex.setMagnificationFilter(VTK_FILTER.NEAREST);
-      tex.setWrapS(VTK_WRAP.CLAMP_TO_EDGE);
-      tex.setWrapT(VTK_WRAP.CLAMP_TO_EDGE);
+      tex.setMinificationFilter(Filter.NEAREST);
+      tex.setMagnificationFilter(Filter.NEAREST);
+      tex.setWrapS(Wrap.CLAMP_TO_EDGE);
+      tex.setWrapT(Wrap.CLAMP_TO_EDGE);
       tex.setWindow(model.openGLRenderWindow);
       tex.setContext(model.openGLRenderWindow.getContext());
 
@@ -1228,7 +1228,7 @@ export function vtkOpenGLPolyDataMapper(publicAPI, model) {
       // if we have edge visibility build the edge VBOs
       if (actor.getProperty().getEdgeVisibility()) {
         model.primitives[primTypes.TrisEdges].getCABO()
-          .createVBO(poly.getPolys(), 'polys', VTK_REPRESENTATION.WIREFRAME,
+          .createVBO(poly.getPolys(), 'polys', Representation.WIREFRAME,
           {
             points,
             normals: n,
@@ -1239,7 +1239,7 @@ export function vtkOpenGLPolyDataMapper(publicAPI, model) {
             haveCellNormals: false,
           });
         model.primitives[primTypes.TriStripsEdges].getCABO()
-          .createVBO(poly.getStrips(), 'strips', VTK_REPRESENTATION.WIREFRAME,
+          .createVBO(poly.getStrips(), 'strips', Representation.WIREFRAME,
           {
             points,
             normals: n,

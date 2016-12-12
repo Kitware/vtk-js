@@ -1,7 +1,7 @@
 import * as macro from '../../../macro';
 import vtkDataSet from '../DataSet';
 import vtkStructuredData from '../StructuredData';
-import { VTK_STRUCTURED_TYPE } from '../StructuredData/Constants';
+import { StructuredType } from '../StructuredData/Constants';
 
 // ----------------------------------------------------------------------------
 // vtkImageData methods
@@ -78,40 +78,40 @@ function vtkImageData(publicAPI, model) {
     }
 
     switch (model.dataDescription) {
-      case VTK_STRUCTURED_TYPE.VTK_EMPTY:
+      case StructuredType.EMPTY:
         return null;
 
-      case VTK_STRUCTURED_TYPE.VTK_SINGLE_POINT:
+      case StructuredType.SINGLE_POINT:
         break;
 
-      case VTK_STRUCTURED_TYPE.VTK_X_LINE:
+      case StructuredType.X_LINE:
         ijk[0] = index;
         break;
 
-      case VTK_STRUCTURED_TYPE.VTK_Y_LINE:
+      case StructuredType.Y_LINE:
         ijk[1] = index;
         break;
 
-      case VTK_STRUCTURED_TYPE.VTK_Z_LINE:
+      case StructuredType.Z_LINE:
         ijk[2] = index;
         break;
 
-      case VTK_STRUCTURED_TYPE.VTK_XY_PLANE:
+      case StructuredType.XY_PLANE:
         ijk[0] = index % dims[0];
         ijk[1] = index / dims[0];
         break;
 
-      case VTK_STRUCTURED_TYPE.VTK_YZ_PLANE:
+      case StructuredType.YZ_PLANE:
         ijk[1] = index % dims[1];
         ijk[2] = index / dims[1];
         break;
 
-      case VTK_STRUCTURED_TYPE.VTK_XZ_PLANE:
+      case StructuredType.XZ_PLANE:
         ijk[0] = index % dims[0];
         ijk[2] = index / dims[0];
         break;
 
-      case VTK_STRUCTURED_TYPE.VTK_XYZ_GRID:
+      case StructuredType.XYZ_GRID:
         ijk[0] = index % dims[0];
         ijk[1] = (index / dims[0]) % dims[1];
         ijk[2] = index / (dims[0] * dims[1]);
@@ -174,7 +174,7 @@ const DEFAULT_VALUES = {
   spacing: [1.0, 1.0, 1.0],
   origin: [0.0, 0.0, 0.0],
   extent: [0, -1, 0, -1, 0, -1],
-  dataDescription: VTK_STRUCTURED_TYPE.VTK_EMPTY,
+  dataDescription: StructuredType.EMPTY,
 };
 
 // ----------------------------------------------------------------------------

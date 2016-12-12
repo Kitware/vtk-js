@@ -1,10 +1,8 @@
-/* global window */
-
 import JSZip from 'jszip';
 import pako from 'pako';
 
 import Endian from '../../../Common/Core/Endian';
-import { TYPE_BYTES } from './Constants';
+import { DataTypeByteSize } from '../../../Common/Core/DataArray/Constants';
 
 function removeLeadingSlash(str) {
   return (str[0] === '/') ? str.substr(1) : str;
@@ -72,7 +70,7 @@ function create(options) {
               if (Endian.ENDIANNESS !== array.ref.encode && Endian.ENDIANNESS) {
                 // Need to swap bytes
                 console.log('Swap bytes of', array.name);
-                Endian.swapBytes(array.buffer, TYPE_BYTES[array.dataType]);
+                Endian.swapBytes(array.buffer, DataTypeByteSize[array.dataType]);
               }
 
               array.values = new window[array.dataType](array.buffer);

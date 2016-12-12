@@ -1,7 +1,7 @@
 import * as macro from '../../../macro';
-import { VTK_VECTOR_MODE } from './Constants';
-import { VTK_COLOR_MODE } from '../../../Rendering/Core/Mapper/Constants';
-import { VTK_DATATYPES } from '../DataArray/Constants';
+import { VectorMode } from './Constants';
+import { ColorMode } from '../../../Rendering/Core/Mapper/Constants';
+import { VtkDataTypes } from '../DataArray/Constants';
 import vtkDataArray from '../DataArray';
 
 // ----------------------------------------------------------------------------
@@ -28,9 +28,9 @@ function vtkScalarsToColors(publicAPI, model) {
   // Set our className
   model.classHierarchy.push('vtkScalarsToColors');
 
-  publicAPI.setVectorModeToMagnitude = () => publicAPI.setVectorMode(VTK_VECTOR_MODE.MAGNITUDE);
-  publicAPI.setVectorModeToComponent = () => publicAPI.setVectorMode(VTK_VECTOR_MODE.COMPONENT);
-  publicAPI.setVectorModeToRGBColors = () => publicAPI.setVectorMode(VTK_VECTOR_MODE.RGBCOLORS);
+  publicAPI.setVectorModeToMagnitude = () => publicAPI.setVectorMode(VectorMode.MAGNITUDE);
+  publicAPI.setVectorModeToComponent = () => publicAPI.setVectorMode(VectorMode.COMPONENT);
+  publicAPI.setVectorModeToRGBColors = () => publicAPI.setVectorMode(VectorMode.RGBCOLORS);
 
   publicAPI.build = () => {};
 
@@ -170,9 +170,9 @@ function vtkScalarsToColors(publicAPI, model) {
   // Description:
   // Internal methods that map a data array into a 4-component,
   // unsigned char RGBA array. The color mode determines the behavior
-  // of mapping. If VTK_COLOR_MODE_DEFAULT is set, then unsigned char
+  // of mapping. If ColorMode.DEFAULT is set, then unsigned char
   // data arrays are treated as colors (and converted to RGBA if
-  // necessary); If VTK_COLOR_MODE_DIRECT_SCALARS is set, then all arrays
+  // necessary); If ColorMode.DIRECT_SCALARS is set, then all arrays
   // are treated as colors (integer types are clamped in the range 0-255,
   // floating point arrays are clamped in the range 0.0-1.0. Note 'char' does
   // not have enough values to represent a color so mapping this type is
@@ -189,9 +189,9 @@ function vtkScalarsToColors(publicAPI, model) {
     let newColors = null;
 
     // map scalars through lookup table only if needed
-    if ((colorMode === VTK_COLOR_MODE.DEFAULT &&
-         scalars.getDataType() === VTK_DATATYPES.UNSIGNED_CHAR) ||
-        (colorMode === VTK_COLOR_MODE.DIRECT_SCALARS && scalars)) {
+    if ((colorMode === ColorMode.DEFAULT &&
+         scalars.getDataType() === VtkDataTypes.UNSIGNED_CHAR) ||
+        (colorMode === ColorMode.DIRECT_SCALARS && scalars)) {
       newColors = publicAPI.convertToRGBA(scalars, numberOfComponents,
                         scalars.getNumberOfTuples());
     } else {
@@ -199,7 +199,7 @@ function vtkScalarsToColors(publicAPI, model) {
         type: 'vtkDataArray',
         name: 'temp',
         numberOfComponents: 4,
-        dataType: VTK_DATATYPES.UNSIGNED_CHAR,
+        dataType: VtkDataTypes.UNSIGNED_CHAR,
       };
 
       const s = new window[newscalars.dataType](4 * scalars.getNumberOfTuples());
@@ -259,7 +259,7 @@ function vtkScalarsToColors(publicAPI, model) {
     let vectorComponent = vectorComponentIn;
     const inComponents = input.getNumberOfComponents();
 
-    if (vectorMode === VTK_VECTOR_MODE.COMPONENT) {
+    if (vectorMode === VectorMode.COMPONENT) {
       // make sure vectorComponent is within allowed range
       if (vectorComponent === -1) {
         // if set to -1, use default value provided by table
@@ -292,9 +292,9 @@ function vtkScalarsToColors(publicAPI, model) {
         }
       }
 
-      if (vectorMode === VTK_VECTOR_MODE.MAGNITUDE &&
+      if (vectorMode === VectorMode.MAGNITUDE &&
           (inComponents === 1 || vectorSize === 1)) {
-        vectorMode = VTK_VECTOR_MODE.COMPONENT;
+        vectorMode = VectorMode.COMPONENT;
       }
     }
 
@@ -306,14 +306,14 @@ function vtkScalarsToColors(publicAPI, model) {
 
     // map according to the current vector mode
     switch (vectorMode) {
-      case VTK_VECTOR_MODE.COMPONENT: {
+      case VectorMode.COMPONENT: {
         publicAPI.mapScalarsThroughTable(
           input, output, outputFormat, inputOffset);
         break;
       }
 
       default:
-      case VTK_VECTOR_MODE.MAGNITUDE: {
+      case VectorMode.MAGNITUDE: {
         const magValues =
           vtkDataArray.newInstance({ numberOfComponents: 1, values: new Float32Array(input.getNumberOfTuples()) });
 
@@ -323,7 +323,7 @@ function vtkScalarsToColors(publicAPI, model) {
         break;
       }
 
-      case VTK_VECTOR_MODE.RGBCOLORS: {
+      case VectorMode.RGBCOLORS: {
         // publicAPI.mapColorsToColors(
         //   input, output, inComponents, vectorSize,
         //   outputFormat);
@@ -409,7 +409,7 @@ function vtkScalarsToColors(publicAPI, model) {
   //----------------------------------------------------------------------------
   publicAPI.convertToRGBA = (colors, numComp, numTuples) => {
     if (numComp === 4 && model.alpha >= 1.0 &&
-        colors.getDataType() === VTK_DATATYPES.UNSIGNED_CHAR) {
+        colors.getDataType() === VtkDataTypes.UNSIGNED_CHAR) {
       return colors;
     }
 
@@ -417,7 +417,7 @@ function vtkScalarsToColors(publicAPI, model) {
       numberOfComponents: 4,
       empty: true,
       size: 4 * numTuples,
-      dataType: VTK_DATATYPES.UNSIGNED_CHAR,
+      dataType: VtkDataTypes.UNSIGNED_CHAR,
     });
 
     if (numTuples <= 0) {
@@ -429,8 +429,8 @@ function vtkScalarsToColors(publicAPI, model) {
     alpha = (alpha < 1 ? alpha : 1);
 
     let convtFun = intColorToUChar;
-    if ((colors.getDataType() === VTK_DATATYPES.FLOAT) ||
-      colors.getDataType() === VTK_DATATYPES.DOUBLE) {
+    if ((colors.getDataType() === VtkDataTypes.FLOAT) ||
+      colors.getDataType() === VtkDataTypes.DOUBLE) {
       convtFun = floatColorToUChar;
     }
 
@@ -475,7 +475,7 @@ const DEFAULT_VALUES = {
   alpha: 1.0,
   vectorComponent: 0,
   vectorSize: -1,
-  vectorMode: VTK_VECTOR_MODE.COMPONENT,
+  vectorMode: VectorMode.COMPONENT,
   inputRange: [0, 255],
   annotationArray: [],
   annotatedValueMap: [],

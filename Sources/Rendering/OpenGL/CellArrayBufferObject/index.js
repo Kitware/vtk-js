@@ -1,8 +1,8 @@
 import * as macro from '../../../macro';
 import vtkBufferObject from '../BufferObject';
 import DynamicTypedArray from '../../../Common/Core/DynamicTypedArray';
-import { OBJECT_TYPE } from '../BufferObject/Constants';
-import { VTK_REPRESENTATION } from '../../Core/Property/Constants';
+import { ObjectType } from '../BufferObject/Constants';
+import { Representation } from '../../Core/Property/Constants';
 
 
 // ----------------------------------------------------------------------------
@@ -15,7 +15,7 @@ function vtkOpenGLCellArrayBufferObject(publicAPI, model) {
 
   const packedVBO = new DynamicTypedArray({ chunkSize: 65500, arrayType: 'Float32Array' }); // the data
 
-  publicAPI.setType(OBJECT_TYPE.ARRAY_BUFFER);
+  publicAPI.setType(ObjectType.ARRAY_BUFFER);
 
   publicAPI.createVBO = (cellArray, inRep, outRep, options) => {
     if (!cellArray.getData() || !cellArray.getData().length) {
@@ -162,9 +162,9 @@ function vtkOpenGLCellArrayBufferObject(publicAPI, model) {
     };
 
     let func = null;
-    if (outRep === VTK_REPRESENTATION.POINTS || inRep === 'verts') {
+    if (outRep === Representation.POINTS || inRep === 'verts') {
       func = cellBuilders.anythingToPoints;
-    } else if (outRep === VTK_REPRESENTATION.WIREFRAME || inRep === 'lines') {
+    } else if (outRep === Representation.WIREFRAME || inRep === 'lines') {
       func = cellBuilders[`${inRep}ToWireframe`];
     } else {
       func = cellBuilders[`${inRep}ToSurface`];
@@ -182,7 +182,7 @@ function vtkOpenGLCellArrayBufferObject(publicAPI, model) {
     }
     model.elementCount = packedVBO.getNumberOfElements() / model.blockSize;
     const vboArray = packedVBO.getFrozenArray();
-    publicAPI.upload(vboArray, OBJECT_TYPE.ARRAY_BUFFER);
+    publicAPI.upload(vboArray, ObjectType.ARRAY_BUFFER);
     packedVBO.reset();
     return cellCount;
   };

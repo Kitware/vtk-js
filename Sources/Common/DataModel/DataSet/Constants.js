@@ -22,4 +22,6 @@ export const FieldDataTypes = {
   ROW_DATA: 6,             // to match VTK
 };
 
-export default { FieldDataTypes };
+export default {
+  FieldDataTypes,
+};

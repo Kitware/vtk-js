@@ -1,5 +1,5 @@
 import * as macro from '../../../macro';
-import { OBJECT_TYPE } from '../BufferObject/Constants';
+import { ObjectType } from '../BufferObject/Constants';
 
 // ----------------------------------------------------------------------------
 // vtkOpenGLVertexArrayObject methods
@@ -113,7 +113,7 @@ function vtkOpenGLVertexArrayObject(publicAPI, model) {
 
     // Check the program is bound, and the buffer is valid.
     if (!program.isBound() || buffer.getHandle() === 0 ||
-         buffer.getType() !== OBJECT_TYPE.ARRAY_BUFFER) {
+         buffer.getType() !== ObjectType.ARRAY_BUFFER) {
       return false;
     }
 

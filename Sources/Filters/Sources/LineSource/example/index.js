@@ -4,7 +4,7 @@ import vtkActor                   from '../../../../../Sources/Rendering/Core/Ac
 import vtkLineSource              from '../../../../../Sources/Filters/Sources/LineSource';
 import vtkMapper                  from '../../../../../Sources/Rendering/Core/Mapper';
 
-import { VTK_REPRESENTATION }     from '../../../../../Sources/Rendering/Core/Property/Constants';
+import { Representation }     from '../../../../../Sources/Rendering/Core/Property/Constants';
 
 import controlPanel from './controlPanel.html';
 
@@ -25,7 +25,7 @@ const actor = vtkActor.newInstance();
 const mapper = vtkMapper.newInstance();
 
 actor.getProperty().setPointSize(10);
-actor.getProperty().setRepresentation(VTK_REPRESENTATION.POINTS);
+actor.getProperty().setRepresentation(Representation.POINTS);
 
 actor.setMapper(mapper);
 mapper.setInputConnection(lineSource.getOutputPort());

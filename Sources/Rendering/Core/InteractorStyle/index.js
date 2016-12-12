@@ -1,6 +1,6 @@
 import * as macro from '../../../macro';
 import vtkInteractorObserver from '../InteractorObserver';
-import { STATES } from './Constants';  // { ENUM_1: 0, ENUM_2: 1, ... }
+import { States } from './Constants';  // { ENUM_1: 0, ENUM_2: 1, ... }
 
 // ----------------------------------------------------------------------------
 // Global methods
@@ -10,14 +10,14 @@ import { STATES } from './Constants';  // { ENUM_1: 0, ENUM_2: 1, ... }
 // the next section...
 
 const stateNames = {
-  Rotate: STATES.VTKIS_ROTATE,
-  Pan: STATES.VTKIS_PAN,
-  Spin: STATES.VTKIS_SPIN,
-  Dolly: STATES.VTKIS_DOLLY,
-  Zoom: STATES.VTKIS_ZOOM,
-  Timer: STATES.VTKIS_TIMER,
-  TwoPointer: STATES.VTKIS_TWO_POINTER,
-  UniformScale: STATES.VTKIS_USCALE,
+  Rotate: States.IS_ROTATE,
+  Pan: States.IS_PAN,
+  Spin: States.IS_SPIN,
+  Dolly: States.IS_DOLLY,
+  Zoom: States.IS_ZOOM,
+  Timer: States.IS_TIMER,
+  TwoPointer: States.IS_TWO_POINTER,
+  UniformScale: States.IS_USCALE,
 };
 
 const events = [
@@ -88,7 +88,7 @@ function vtkInteractorStyle(publicAPI, model) {
   // create bunch of Start/EndState methods
   Object.keys(stateNames).forEach((key) => {
     publicAPI[`start${key}`] = () => {
-      if (model.state !== STATES.VTKIS_NONE) {
+      if (model.state !== States.IS_NONE) {
         return;
       }
       publicAPI.startState(stateNames[key]);
@@ -177,7 +177,7 @@ function vtkInteractorStyle(publicAPI, model) {
 
   publicAPI.startState = (state) => {
     model.state = state;
-    if (model.animationState === STATES.VTKIS_ANIM_OFF) {
+    if (model.animationState === States.IS_ANIM_OFF) {
       const rwi = model.interactor;
       rwi.getRenderWindow().setDesiredUpdateRate(rwi.getDesiredUpdateRate());
       model.invokeStartInteractionEvent({ type: 'StartInteractionEvent' });
@@ -185,8 +185,8 @@ function vtkInteractorStyle(publicAPI, model) {
   };
 
   publicAPI.stopState = () => {
-    model.state = STATES.VTKIS_NONE;
-    if (model.animationState === STATES.VTKIS_ANIM_OFF) {
+    model.state = States.IS_NONE;
+    if (model.animationState === States.IS_ANIM_OFF) {
       const rwi = model.interactor;
       rwi.getRenderWindow().setDesiredUpdateRate(rwi.getStillUpdateRate());
       publicAPI.invokeEndInteractionEvent({ type: 'EndInteractionEvent' });
@@ -200,8 +200,8 @@ function vtkInteractorStyle(publicAPI, model) {
 // ----------------------------------------------------------------------------
 
 const DEFAULT_VALUES = {
-  state: STATES.VTKIS_NONE,
-  animState: STATES.VTKIS_ANIM_OFF,
+  state: States.IS_NONE,
+  animState: States.IS_ANIM_OFF,
   handleObservers: 1,
   autoAdjustCameraClippingRange: 1,
   unsubscribes: null,

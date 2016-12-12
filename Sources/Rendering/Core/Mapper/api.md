@@ -314,14 +314,14 @@ setScalarMaterialModeToAmbientAndDiffuse();
 Return the light-model color mode.
 
 ```js
-const MATERIAL_MODE = [
-  'VTK_MATERIALMODE_DEFAULT',
-  'VTK_MATERIALMODE_AMBIENT',
-  'VTK_MATERIALMODE_DIFFUSE',
-  'VTK_MATERIALMODE_AMBIENT_AND_DIFFUSE',
-];
+const MaterialMode = {
+  DEFAULT: 0,
+  AMBIENT: 1,
+  DIFFUSE: 2,
+  AMBIENT_AND_DIFFUSE: 3,
+};
 
-console.log(MATERIAL_MODE[getScalarMaterialMode()]);
+console.log(getScalarMaterialModeAsString(3));
 ```
 
 ### getIsOpaque() : Boolean

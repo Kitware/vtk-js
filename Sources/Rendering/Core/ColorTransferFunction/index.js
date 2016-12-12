@@ -1,5 +1,5 @@
 import * as macro from '../../../macro';
-import { VTK_CTF_COLOR_SPACE, VTK_CTF_SCALE } from './Constants';
+import { ColorSpace, Scale } from './Constants';
 import vtkScalarsToColors from '../../../Common/Core/ScalarsToColors';
 import vtkMath from '../../../Common/Core/Math';
 
@@ -427,7 +427,7 @@ function vtkColorTransferFunction(publicAPI, model) {
     const tmpVec = [];
 
     // If the scale is logarithmic, make sure the range is valid.
-    let usingLogScale = (model.scale === VTK_CTF_SCALE.LOG10);
+    let usingLogScale = (model.scale === Scale.LOG10);
     if (usingLogScale) {
       // Note: This requires range[0] <= range[1].
       usingLogScale = (model.range[0] > 0.0);
@@ -592,11 +592,11 @@ function vtkColorTransferFunction(publicAPI, model) {
         // In this case we want piecewise linear
         if (sharpness < 0.01) {
           // Simple linear interpolation
-          if (model.colorSpace === VTK_CTF_COLOR_SPACE.RGB) {
+          if (model.colorSpace === ColorSpace.RGB) {
             table[tidx] = ((1 - s) * rgb1[0]) + (s * rgb2[0]);
             table[tidx + 1] = ((1 - s) * rgb1[1]) + (s * rgb2[1]);
             table[tidx + 2] = ((1 - s) * rgb1[2]) + (s * rgb2[2]);
-          } else if (model.colorSpace === VTK_CTF_COLOR_SPACE.HSV) {
+          } else if (model.colorSpace === ColorSpace.HSV) {
             const hsv1 = [];
             const hsv2 = [];
             vtkMath.rGBToHSV(rgb1, hsv1);
@@ -625,7 +625,7 @@ function vtkColorTransferFunction(publicAPI, model) {
             table[tidx] = tmpVec[0];
             table[tidx + 1] = tmpVec[1];
             table[tidx + 2] = tmpVec[2];
-          } else if (model.colorSpace === VTK_CTF_COLOR_SPACE.LAB) {
+          } else if (model.colorSpace === ColorSpace.LAB) {
             const lab1 = [];
             const lab2 = [];
             vtkMath.rGBToLab(rgb1, lab1);
@@ -641,7 +641,7 @@ function vtkColorTransferFunction(publicAPI, model) {
             table[tidx] = tmpVec[0];
             table[tidx + 1] = tmpVec[1];
             table[tidx + 2] = tmpVec[2];
-          } else if (model.colorSpace === VTK_CTF_COLOR_SPACE.DIVERGING) {
+          } else if (model.colorSpace === ColorSpace.DIVERGING) {
             vtkColorTransferFunctionInterpolateDiverging(s, rgb1, rgb2, tmpVec);
             table[tidx] = tmpVec[0];
             table[tidx + 1] = tmpVec[1];
@@ -677,7 +677,7 @@ function vtkColorTransferFunction(publicAPI, model) {
         let slope;
         let t;
 
-        if (model.colorSpace === VTK_CTF_COLOR_SPACE.RGB) {
+        if (model.colorSpace === ColorSpace.RGB) {
           for (let j = 0; j < 3; j++) {
             // Use one slope for both end points
             slope = rgb2[j] - rgb1[j];
@@ -686,7 +686,7 @@ function vtkColorTransferFunction(publicAPI, model) {
             // Compute the value
             table[tidx + j] = (h1 * rgb1[j]) + (h2 * rgb2[j]) + (h3 * t) + (h4 * t);
           }
-        } else if (model.colorSpace === VTK_CTF_COLOR_SPACE.HSV) {
+        } else if (model.colorSpace === ColorSpace.HSV) {
           const hsv1 = [];
           const hsv2 = [];
           vtkMath.rGBToHSV(rgb1, hsv1);
@@ -720,7 +720,7 @@ function vtkColorTransferFunction(publicAPI, model) {
           table[tidx] = tmpVec[0];
           table[tidx + 1] = tmpVec[1];
           table[tidx + 2] = tmpVec[2];
-        } else if (model.colorSpace === VTK_CTF_COLOR_SPACE.LAB) {
+        } else if (model.colorSpace === ColorSpace.LAB) {
           const lab1 = [];
           const lab2 = [];
           vtkMath.rGBToLab(rgb1, lab1);
@@ -740,7 +740,7 @@ function vtkColorTransferFunction(publicAPI, model) {
           table[tidx] = tmpVec[0];
           table[tidx + 1] = tmpVec[1];
           table[tidx + 2] = tmpVec[2];
-        } else if (model.colorSpace === VTK_CTF_COLOR_SPACE.DIVERGING) {
+        } else if (model.colorSpace === ColorSpace.DIVERGING) {
           // I have not implemented proper interpolation by a hermite curve for
           // the diverging color map, but I cannot think of a good use case for
           // that anyway.
@@ -1046,9 +1046,9 @@ const DEFAULT_VALUES = {
   range: [0, 0],
 
   clamping: true,
-  colorSpace: VTK_CTF_COLOR_SPACE.RGB,
+  colorSpace: ColorSpace.RGB,
   hSVWrap: true,
-  scale: VTK_CTF_SCALE.LINEAR,
+  scale: Scale.LINEAR,
 
   nanColor: [0.5, 0.0, 0.0, 1.0],
   belowRangeColor: [0.0, 0.0, 0.0, 1.0],

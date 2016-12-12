@@ -1,5 +1,5 @@
 import * as macro from '../../../macro';
-import { VTK_SHADING_MODEL, VTK_REPRESENTATION, VTK_INTERPOLATION } from './Constants';
+import { Representation, Interpolation } from './Constants';
 
 function notImplemented(method) {
   return () => console.log(`vtkProperty::${method} - NOT IMPLEMENTED`);
@@ -46,15 +46,15 @@ function vtkProperty(publicAPI, model) {
 
   publicAPI.addShaderVariable = notImplemented('AddShaderVariable');
 
-  publicAPI.setInterpolationToFlat = () => publicAPI.setInterpolation(VTK_INTERPOLATION.FLAT);
-  publicAPI.setInterpolationToGouraud = () => publicAPI.setInterpolation(VTK_INTERPOLATION.GOURAUD);
-  publicAPI.setInterpolationToPhong = () => publicAPI.setInterpolation(VTK_INTERPOLATION.PHONG);
+  publicAPI.setInterpolationToFlat = () => publicAPI.setInterpolation(Interpolation.FLAT);
+  publicAPI.setInterpolationToGouraud = () => publicAPI.setInterpolation(Interpolation.GOURAUD);
+  publicAPI.setInterpolationToPhong = () => publicAPI.setInterpolation(Interpolation.PHONG);
+  publicAPI.getInterpolationAsString = () => macro.enumToString(Interpolation, model.interpolation);
 
-  publicAPI.getInterpolationAsString = () => VTK_SHADING_MODEL[model.interpolation];
-
-  publicAPI.setRepresentationToWireframe = () => publicAPI.setRepresentation(VTK_REPRESENTATION.WIREFRAME);
-  publicAPI.setRepresentationToSurface = () => publicAPI.setRepresentation(VTK_REPRESENTATION.SURFACE);
-  publicAPI.setRepresentationToPoints = () => publicAPI.setRepresentation(VTK_REPRESENTATION.POINTS);
+  publicAPI.setRepresentationToWireframe = () => publicAPI.setRepresentation(Representation.WIREFRAME);
+  publicAPI.setRepresentationToSurface = () => publicAPI.setRepresentation(Representation.SURFACE);
+  publicAPI.setRepresentationToPoints = () => publicAPI.setRepresentation(Representation.POINTS);
+  publicAPI.getRepresentationAsString = () => macro.enumToString(Representation, model.representation);
 }
 
 // ----------------------------------------------------------------------------
@@ -73,8 +73,8 @@ const DEFAULT_VALUES = {
   specular: 0,
   specularPower: 1,
   opacity: 1,
-  interpolation: VTK_INTERPOLATION.GOURAUD,
-  representation: VTK_REPRESENTATION.SURFACE,
+  interpolation: Interpolation.GOURAUD,
+  representation: Representation.SURFACE,
   edgeVisibility: false,
   backfaceCulling: false,
   frontfaceCulling: false,

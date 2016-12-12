@@ -1,10 +1,10 @@
-export const VTK_COLOR_MODE = {
+export const ColorMode = {
   DEFAULT: 0,
   MAP_SCALARS: 1,
   DIRECT_SCALARS: 2,
 };
 
-export const VTK_SCALAR_MODE = {
+export const ScalarMode = {
   DEFAULT: 0,
   USE_POINT_DATA: 1,
   USE_CELL_DATA: 2,
@@ -13,16 +13,21 @@ export const VTK_SCALAR_MODE = {
   USE_FIELD_DATA: 5,
 };
 
-export const VTK_MATERIALMODE = {
+export const MaterialMode = {
   DEFAULT: 0,
   AMBIENT: 1,
   DIFFUSE: 2,
   AMBIENT_AND_DIFFUSE: 3,
 };
 
-export const VTK_GET_ARRAY = {
+export const GetArray = {
   BY_ID: 0,
   BY_NAME: 1,
 };
 
-export default { VTK_COLOR_MODE, VTK_MATERIALMODE, VTK_GET_ARRAY, VTK_SCALAR_MODE };
+export default {
+  ColorMode,
+  GetArray,
+  MaterialMode,
+  ScalarMode,
+};

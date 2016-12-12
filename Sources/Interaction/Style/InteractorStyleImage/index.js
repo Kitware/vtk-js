@@ -1,7 +1,7 @@
 import * as macro from '../../../macro';
 import vtkInteractorStyleTrackballCamera from '../InteractorStyleTrackballCamera';
 import vtkMath from './../../../Common/Core/Math';
-import { STATES } from '../../../Rendering/Core/InteractorStyle/Constants';
+import { States } from '../../../Rendering/Core/InteractorStyle/Constants';
 
 // ----------------------------------------------------------------------------
 // ----------------------------------------------------------------------------
@@ -12,10 +12,10 @@ function vtkInteractorStyleImage(publicAPI, model) {
 
   //----------------------------------------------------------------------------
   publicAPI.startWindowLevel = () => {
-    if (model.state !== STATES.VTKIS_NONE) {
+    if (model.state !== States.IS_NONE) {
       return;
     }
-    publicAPI.startState(STATES.VTKIS_WINDOW_LEVEL);
+    publicAPI.startState(States.IS_WINDOW_LEVEL);
 
     // Get the last (the topmost) image
     publicAPI.setCurrentImageNumber(model.currentImageNumber);
@@ -32,7 +32,7 @@ function vtkInteractorStyleImage(publicAPI, model) {
 
   //----------------------------------------------------------------------------
   publicAPI.endWindowLevel = () => {
-    if (model.state !== STATES.VTKIS_WINDOW_LEVEL) {
+    if (model.state !== States.IS_WINDOW_LEVEL) {
       return;
     }
     if (model.handleObservers &&
@@ -44,15 +44,15 @@ function vtkInteractorStyleImage(publicAPI, model) {
 
   //----------------------------------------------------------------------------
   publicAPI.startSlice = () => {
-    if (model.state !== STATES.VTKIS_NONE) {
+    if (model.state !== States.IS_NONE) {
       return;
     }
-    publicAPI.startState(STATES.VTKIS_SLICE);
+    publicAPI.startState(States.IS_SLICE);
   };
 
   //----------------------------------------------------------------------------
   publicAPI.endSlice = () => {
-    if (model.state !== STATES.VTKIS_SLICE) {
+    if (model.state !== States.IS_SLICE) {
       return;
     }
     publicAPI.stopState();
@@ -64,13 +64,13 @@ function vtkInteractorStyleImage(publicAPI, model) {
     const pos = model.interactor.getEventPosition(model.interactor.getPointerIndex());
 
     switch (model.state) {
-      case STATES.VTKIS_WINDOW_LEVEL:
+      case States.IS_WINDOW_LEVEL:
         publicAPI.findPokedRenderer(pos.x, pos.y);
         publicAPI.windowLevel();
         publicAPI.invokeInteractionEvent({ type: 'InteractionEvent' });
         break;
 
-      case STATES.VTKIS_SLICE:
+      case States.IS_SLICE:
         publicAPI.findPokedRenderer(pos.x, pos.y);
         publicAPI.slice();
         publicAPI.invokeInteractionEvent({ type: 'InteractionEvent' });
@@ -114,14 +114,14 @@ function vtkInteractorStyleImage(publicAPI, model) {
   publicAPI.superHandleLeftButtonRelease = publicAPI.handleLeftButtonRelease;
   publicAPI.handleLeftButtonRelease = () => {
     switch (model.state) {
-      case STATES.VTKIS_WINDOW_LEVEL:
+      case States.IS_WINDOW_LEVEL:
         publicAPI.endWindowLevel();
         if (model.interactor) {
           publicAPI.releaseFocus();
         }
         break;
 
-      case STATES.VTKIS_SLICE:
+      case States.IS_SLICE:
         publicAPI.endSlice();
         if (model.interactor) {
           publicAPI.releaseFocus();

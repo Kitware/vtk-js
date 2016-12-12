@@ -1,4 +1,4 @@
-export const VTK_COORDINATE = {
+export const Coordinate = {
   DISPLAY: 0,
   NORMALIZED_DISPLAY: 1,
   VIEWPORT: 2,
@@ -9,5 +9,5 @@ export const VTK_COORDINATE = {
 };
 
 export default {
-  VTK_COORDINATE,
+  Coordinate,
 };

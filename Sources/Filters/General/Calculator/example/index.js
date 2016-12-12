@@ -7,7 +7,7 @@ import vtkPlaneSource             from '../../../../../Sources/Filters/Sources/P
 import vtkCalculator              from '../../../../../Sources/Filters/General/Calculator';
 import vtkWarpScalar              from '../../../../../Sources/Filters/General/WarpScalar';
 import vtkMapper                  from '../../../../../Sources/Rendering/Core/Mapper';
-import { VTK_COLOR_MODE, VTK_SCALAR_MODE } from '../../../../../Sources/Rendering/Core/Mapper/Constants';
+import { ColorMode, ScalarMode } from '../../../../../Sources/Rendering/Core/Mapper/Constants';
 import vtkOpenGLRenderWindow      from '../../../../../Sources/Rendering/OpenGL/RenderWindow';
 import vtkRenderer                from '../../../../../Sources/Rendering/Core/Renderer';
 import vtkRenderWindow            from '../../../../../Sources/Rendering/Core/RenderWindow';
@@ -41,7 +41,7 @@ const planeActor = vtkActor.newInstance();
 planeActor.getProperty().setEdgeVisibility(true);
 ren.addActor(planeActor);
 
-const planeMapper = vtkMapper.newInstance({ colorMode: VTK_COLOR_MODE.DEFAULT, scalarMode: VTK_SCALAR_MODE.DEFAULT });
+const planeMapper = vtkMapper.newInstance({ colorMode: ColorMode.DEFAULT, scalarMode: ScalarMode.DEFAULT });
 planeActor.setMapper(planeMapper);
 
 const warpActor = vtkActor.newInstance();

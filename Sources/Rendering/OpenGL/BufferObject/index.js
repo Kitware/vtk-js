@@ -1,5 +1,5 @@
 import * as macro from '../../../macro';
-import { OBJECT_TYPE } from './Constants';
+import { ObjectType } from './Constants';
 
 // ----------------------------------------------------------------------------
 // Global methods
@@ -22,9 +22,9 @@ function vtkOpenGLBufferObject(publicAPI, model) {
   // Class-specific private functions
   function convertType(type) {
     switch (type) {
-      case OBJECT_TYPE.ELEMENT_ARRAY_BUFFER:
+      case ObjectType.ELEMENT_ARRAY_BUFFER:
         return model.context.ELEMENT_ARRAY_BUFFER;
-      case OBJECT_TYPE.TEXTURE_BUFFER:
+      case ObjectType.TEXTURE_BUFFER:
         if ('TEXTURE_BUFFER' in model.context) {
           return model.context.TEXTURE_BUFFER;
         }
@@ -32,7 +32,7 @@ function vtkOpenGLBufferObject(publicAPI, model) {
       // Intentional fallthrough in case there is no TEXTURE_BUFFER in WebGL
       default:
       /* eslint-enable no-fallthrough */
-      case OBJECT_TYPE.ARRAY_BUFFER:
+      case ObjectType.ARRAY_BUFFER:
         return model.context.ARRAY_BUFFER;
     }
   }
@@ -106,7 +106,7 @@ function vtkOpenGLBufferObject(publicAPI, model) {
 // ----------------------------------------------------------------------------
 
 const DEFAULT_VALUES = {
-  objectType: OBJECT_TYPE.ARRAY_BUFFER,
+  objectType: ObjectType.ARRAY_BUFFER,
   context: null,
 };
 
