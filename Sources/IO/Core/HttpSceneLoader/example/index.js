@@ -30,8 +30,6 @@ iren.initialize();
 iren.bindEvents(renderWindowContainer, document);
 
 // ----------------------------------------------------------------------------
-/* global __BASE_PATH__ */
-// ----------------------------------------------------------------------------
 
 const sceneImporter = vtkHttpSceneLoader.newInstance({ renderer, fetchGzip: true });
 sceneImporter.setUrl(`${__BASE_PATH__}/data/scene`);
