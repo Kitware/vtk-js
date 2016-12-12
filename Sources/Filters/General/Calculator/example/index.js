@@ -1,65 +1,42 @@
+import vtkFullScreenRenderWindow  from '../../../../../Sources/Rendering/Misc/FullScreenRenderWindow';
+
 import vtkActor                   from '../../../../../Sources/Rendering/Core/Actor';
-import vtkCamera                  from '../../../../../Sources/Rendering/Core/Camera';
+import vtkCalculator              from '../../../../../Sources/Filters/General/Calculator';
 import vtkDataArray               from '../../../../../Sources/Common/Core/DataArray';
+import vtkMapper                  from '../../../../../Sources/Rendering/Core/Mapper';
+import vtkPlaneSource             from '../../../../../Sources/Filters/Sources/PlaneSource';
 import vtkPoints                  from '../../../../../Sources/Common/Core/Points';
 import vtkPolyData                from '../../../../../Sources/Common/DataModel/PolyData';
-import vtkPlaneSource             from '../../../../../Sources/Filters/Sources/PlaneSource';
-import vtkCalculator              from '../../../../../Sources/Filters/General/Calculator';
 import vtkWarpScalar              from '../../../../../Sources/Filters/General/WarpScalar';
-import vtkMapper                  from '../../../../../Sources/Rendering/Core/Mapper';
-import { ColorMode, ScalarMode } from '../../../../../Sources/Rendering/Core/Mapper/Constants';
-import vtkOpenGLRenderWindow      from '../../../../../Sources/Rendering/OpenGL/RenderWindow';
-import vtkRenderer                from '../../../../../Sources/Rendering/Core/Renderer';
-import vtkRenderWindow            from '../../../../../Sources/Rendering/Core/RenderWindow';
-import vtkRenderWindowInteractor  from '../../../../../Sources/Rendering/Core/RenderWindowInteractor';
-import { AttributeTypes }         from '../../../../../Sources/Common/DataModel/DataSetAttributes/Constants';
+import { ColorMode, ScalarMode }  from '../../../../../Sources/Rendering/Core/Mapper/Constants';
 import { FieldDataTypes }         from '../../../../../Sources/Common/DataModel/DataSet/Constants';
 
 import controlPanel from './controlPanel.html';
 
-// Create some control UI
-const rootContainer = document.querySelector('body');
-rootContainer.innerHTML = controlPanel;
-const renderWindowContainer = document.querySelector('.renderwidow');
-// ----------------------
+let formulaIdx = 0;
+const FORMULA = [
+  '((x[0] - 0.5) * (x[0] - 0.5)) + ((x[1] - 0.5) * (x[1] - 0.5)) + 0.125',
+  '0.25 * Math.sin(Math.sqrt(((x[0] - 0.5) * (x[0] - 0.5)) + ((x[1] - 0.5) * (x[1] - 0.5)))*50)',
+];
 
-const ren = vtkRenderer.newInstance();
-ren.setBackground(1.00, 1.00, 1.00);
+// ----------------------------------------------------------------------------
+// Standard rendering code setup
+// ----------------------------------------------------------------------------
 
-const renWin = vtkRenderWindow.newInstance();
-renWin.addRenderer(ren);
+const fullScreenRenderer = vtkFullScreenRenderWindow.newInstance({ background: [0.9, 0.9, 0.9] });
+const renderer = fullScreenRenderer.getRenderer();
+const renderWindow = fullScreenRenderer.getRenderWindow();
 
-const glwindow = vtkOpenGLRenderWindow.newInstance();
-glwindow.setContainer(renderWindowContainer);
-renWin.addView(glwindow);
-glwindow.setSize(600,400);
+// ----------------------------------------------------------------------------
+// Example code
+// ----------------------------------------------------------------------------
 
-const iren = vtkRenderWindowInteractor.newInstance();
-iren.setView(glwindow);
-
+const planeSource = vtkPlaneSource.newInstance({ xResolution: 25, yResolution: 25 });
+const planeMapper = vtkMapper.newInstance({ colorMode: ColorMode.DEFAULT, scalarMode: ScalarMode.DEFAULT });
 const planeActor = vtkActor.newInstance();
 planeActor.getProperty().setEdgeVisibility(true);
-ren.addActor(planeActor);
 
-const planeMapper = vtkMapper.newInstance({ colorMode: ColorMode.DEFAULT, scalarMode: ScalarMode.DEFAULT });
-planeActor.setMapper(planeMapper);
-
-const warpActor = vtkActor.newInstance();
-ren.addActor(warpActor);
-
-const warpMapper = vtkMapper.newInstance({ scalarVisibility: false });
-warpActor.setMapper(warpMapper);
-
-const cam = vtkCamera.newInstance();
-ren.setActiveCamera(cam);
-cam.setFocalPoint(0.5, 0.5, 0.5);
-cam.setPosition(4, 4, 4);
-cam.setViewUp(0, 0, 1);
-cam.setClippingRange(0.1, 50.0);
-
-const planeSource = vtkPlaneSource.newInstance({ xResolution: 15, yResolution: 15 });
 const simpleFilter = vtkCalculator.newInstance();
-simpleFilter.setInputConnection(planeSource.getOutputPort());
 simpleFilter.setFormulaSimple(
   FieldDataTypes.POINT, // Generate an output array defined over points.
   [],  // We don't request any point-data arrays because point coordinates are made available by default.
@@ -67,52 +44,51 @@ simpleFilter.setFormulaSimple(
   x => ((x[0] - 0.5) * (x[0] - 0.5)) + ((x[1] - 0.5) * (x[1] - 0.5)) + 0.125
 ); // Our formula for z
 
+const warpScalar = vtkWarpScalar.newInstance();
+const warpMapper = vtkMapper.newInstance();
+const warpActor = vtkActor.newInstance();
+
 // The generated 'z' array will become the default scalars, so the plane mapper will color by 'z':
-planeMapper.setInputConnection(simpleFilter.getOutputPort());
+simpleFilter.setInputConnection(planeSource.getOutputPort());
 
 // We will also generate a surface whose points are displaced from the plane by 'z':
-const warpScalar = vtkWarpScalar.newInstance();
 warpScalar.setInputConnection(simpleFilter.getOutputPort());
 warpScalar.setInputArrayToProcess(0, 'z', 'PointData', 'Scalars');
+
+planeMapper.setInputConnection(simpleFilter.getOutputPort());
+planeActor.setMapper(planeMapper);
+
 warpMapper.setInputConnection(warpScalar.getOutputPort());
+warpActor.setMapper(warpMapper);
 
-iren.initialize();
-iren.bindEvents(renderWindowContainer, document);
-ren.resetCamera();
-renWin.render();
-iren.start();
+renderer.addActor(planeActor);
+renderer.addActor(warpActor);
 
-// ----- JavaScript UI -----
+renderer.resetCamera();
+renderWindow.render();
 
-['xResolution', 'yResolution'].forEach((propertyName) => {
-  document.querySelector(`.${propertyName}`).addEventListener('input', (e) => {
-    const value = Number(e.target.value);
-    planeSource.set({ [propertyName]: value });
-    renWin.render();
-  });
-});
+// ----------------------------------------------------------------------------
+// UI control handling
+// ----------------------------------------------------------------------------
 
-['scaleFactor'].forEach((propertyName) => {
-  document.querySelector(`.${propertyName}`).addEventListener('input', (e) => {
-    const value = Number(e.target.value);
-    warpScalar.set({ [propertyName]: value });
-    renWin.render();
-  });
-});
+fullScreenRenderer.addController(controlPanel);
 
-document.querySelector('.formula').addEventListener('input', (e) => {
+function applyFormula() {
+  const el = document.querySelector('.formula');
   let fn = null;
   try {
-    fn = new Function('x,y', `return ${e.target.value}`);
+    /* eslint-disable no-new-func */
+    fn = new Function('x,y', `return ${el.value}`);
+    /* eslint-enable no-new-func */
   } catch (exc) {
     if (!('name' in exc && exc.name === 'SyntaxError')) {
       console.log('Unexpected exception ', exc);
-      e.target.style.background = '#fbb';
+      el.style.background = '#fbb';
       return;
     }
   }
   if (fn) {
-    e.target.style.background = '#fff';
+    el.style.background = '#fff';
     const formulaObj = simpleFilter.createSimpleFormulaObject(
       FieldDataTypes.POINT, [], 'z', fn);
 
@@ -123,7 +99,7 @@ document.querySelector('.formula').addEventListener('input', (e) => {
     const testData = vtkPolyData.newInstance();
     const testPts = vtkPoints.newInstance();
     testPts.setData(
-      vtkDataArray.newInstance({ name: 'coords', numberOfComponents: 3, size:3, values: [0,0,0] }));
+      vtkDataArray.newInstance({ name: 'coords', numberOfComponents: 3, size: 3, values: [0, 0, 0] }));
     testData.setPoints(testPts);
     const testOut = vtkPolyData.newInstance();
     testOut.shallowCopy(testData);
@@ -134,16 +110,44 @@ document.querySelector('.formula').addEventListener('input', (e) => {
       // We evaluated 1 point without exception... it's safe to update the
       // filter and re-render.
       simpleFilter.setFormula(formulaObj);
-      renWin.render();
+      renderWindow.render();
       return;
     } catch (exc) {
       console.log('Unexpected exception ', exc);
     }
   }
-  e.target.style.background = '#ffb';
+  el.style.background = '#ffb';
+}
+
+['xResolution', 'yResolution'].forEach((propertyName) => {
+  document.querySelector(`.${propertyName}`).addEventListener('input', (e) => {
+    const value = Number(e.target.value);
+    planeSource.set({ [propertyName]: value });
+    renderWindow.render();
+  });
 });
 
-// ----- Console play ground -----
+['scaleFactor'].forEach((propertyName) => {
+  document.querySelector(`.${propertyName}`).addEventListener('input', (e) => {
+    const value = Number(e.target.value);
+    warpScalar.set({ [propertyName]: value });
+    renderWindow.render();
+  });
+});
+
+document.querySelector('.formula').addEventListener('input', applyFormula);
+
+document.querySelector('.next').addEventListener('click', (e) => {
+  formulaIdx = (formulaIdx + 1) % FORMULA.length;
+  document.querySelector('.formula').value = FORMULA[formulaIdx];
+  applyFormula();
+  renderWindow.render();
+});
+
+// -----------------------------------------------------------
+// Make some variables global so that you can inspect and
+// modify objects in your browser's developer console:
+// -----------------------------------------------------------
 
 global.planeSource = planeSource;
 global.planeMapper = planeMapper;
@@ -151,5 +155,5 @@ global.planeActor = planeActor;
 global.simpleFilter = simpleFilter;
 global.warpMapper = warpMapper;
 global.warpActor = warpActor;
-global.renderer = ren;
-global.renderWindow = renWin;
+global.renderer = renderer;
+global.renderWindow = renderWindow;
