@@ -1,6 +1,7 @@
 import * as macro from '../../../macro';
 import { ColorSpace, Scale } from './Constants';
 import vtkScalarsToColors from '../../../Common/Core/ScalarsToColors';
+import { ScalarMappingTarget } from '../../../Common/Core/ScalarsToColors/Constants';
 import vtkMath from '../../../Common/Core/Math';
 
 // ----------------------------------------------------------------------------
@@ -994,7 +995,7 @@ function vtkColorTransferFunction(publicAPI, model) {
     const inputV = input.getData();
     const rgb = [];
 
-    if (outFormat === 'VTK_RGBA') {
+    if (outFormat === ScalarMappingTarget.RGBA) {
       for (let i = 0; i < length; i++) {
         const x = inputV[(i * inIncr) + inputOffset];
         publicAPI.getColor(x, rgb);
@@ -1005,7 +1006,7 @@ function vtkColorTransferFunction(publicAPI, model) {
       }
     }
 
-    if (outFormat === 'VTK_RGB') {
+    if (outFormat === ScalarMappingTarget.RGB) {
       for (let i = 0; i < length; i++) {
         const x = inputV[(i * inIncr) + inputOffset];
         publicAPI.getColor(x, rgb);
@@ -1015,7 +1016,7 @@ function vtkColorTransferFunction(publicAPI, model) {
       }
     }
 
-    if (outFormat === 'VTK_LUMINANCE') {
+    if (outFormat === ScalarMappingTarget.LUMINANCE) {
       for (let i = 0; i < length; i++) {
         const x = inputV[(i * inIncr) + inputOffset];
         publicAPI.getColor(x, rgb);
@@ -1025,7 +1026,7 @@ function vtkColorTransferFunction(publicAPI, model) {
       }
     }
 
-    if (outFormat === 'VTK_LUMINANCE_ALPHA') {
+    if (outFormat === ScalarMappingTarget.LUMINANCE_ALPHA) {
       for (let i = 0; i < length; i++) {
         const x = inputV[(i * inIncr) + inputOffset];
         publicAPI.getColor(x, rgb);

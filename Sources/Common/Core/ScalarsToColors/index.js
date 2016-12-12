@@ -1,5 +1,5 @@
 import * as macro from '../../../macro';
-import { VectorMode } from './Constants';
+import { ScalarMappingTarget, VectorMode } from './Constants';
 import { ColorMode } from '../../../Rendering/Core/Mapper/Constants';
 import { VtkDataTypes } from '../DataArray/Constants';
 import vtkDataArray from '../DataArray';
@@ -212,7 +212,7 @@ function vtkScalarsToColors(publicAPI, model) {
 
       // If mapper did not specify a component, use the VectorMode
       if (component < 0 && numberOfComponents > 1) {
-        publicAPI.mapVectorsThroughTable(scalars, newColors, 'VTK_RGBA', -1, -1);
+        publicAPI.mapVectorsThroughTable(scalars, newColors, ScalarMappingTarget.RGBA, -1, -1);
       } else {
         if (component < 0) {
           component = 0;
@@ -222,7 +222,7 @@ function vtkScalarsToColors(publicAPI, model) {
         }
 
         // Map the scalars to colors
-        publicAPI.mapScalarsThroughTable(scalars, newColors, 'VTK_RGBA', component);
+        publicAPI.mapScalarsThroughTable(scalars, newColors, ScalarMappingTarget.RGBA, component);
       }
     }
 

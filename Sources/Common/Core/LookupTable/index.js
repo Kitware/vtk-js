@@ -1,5 +1,6 @@
 import * as macro from '../../../macro';
 import vtkScalarsToColors from '../ScalarsToColors';
+import { ScalarMappingTarget } from '../ScalarsToColors/Constants';
 import vtkMath from '../Math';
 
 // ----------------------------------------------------------------------------
@@ -122,7 +123,7 @@ function vtkLookupTable(publicAPI, model) {
     const inputV = input.getData();
 
     if (alpha >= 1.0) {
-      if (outFormat === 'VTK_RGBA') {
+      if (outFormat === ScalarMappingTarget.RGBA) {
         for (let i = 0; i < length; i++) {
           const cptr =
             lookupFunc(inputV[(i * inIncr) + inputOffset],
@@ -135,7 +136,7 @@ function vtkLookupTable(publicAPI, model) {
       }
     } else {
       /* eslint-disable no-lonely-if */
-      if (outFormat === 'VTK_RGBA') {
+      if (outFormat === ScalarMappingTarget.RGBA) {
         for (let i = 0; i < length; i++) {
           const cptr =
             lookupFunc(inputV[(i * inIncr) + inputOffset], model.table, p);
