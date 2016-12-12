@@ -83,3 +83,5 @@ resolutionChange.addEventListener('input', (e) => {
 global.source = coneSource;
 global.mapper = mapper;
 global.actor = actor;
+global.renderer = renderer;
+global.renderWindow = renderWindow;
