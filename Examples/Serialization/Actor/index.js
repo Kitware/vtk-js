@@ -1,4 +1,4 @@
-import vtkFullScreenRenderWindow from '../../../Sources/Testing/FullScreenRenderWindow';
+import vtkFullScreenRenderWindow from '../../../Sources/Rendering/Misc/FullScreenRenderWindow';
 import vtk                       from '../../../Sources/vtk';
 
 import actorJSON                 from './actor.json';

@@ -1,15 +1,15 @@
-import * as macro                 from '../../../Sources/macro';
-import vtkOpenGLRenderWindow      from '../../../Sources/Rendering/OpenGL/RenderWindow';
-import vtkRenderer                from '../../../Sources/Rendering/Core/Renderer';
-import vtkRenderWindow            from '../../../Sources/Rendering/Core/RenderWindow';
-import vtkRenderWindowInteractor  from '../../../Sources/Rendering/Core/RenderWindowInteractor';
+import * as macro                 from '../../../../Sources/macro';
+import vtkOpenGLRenderWindow      from '../../../../Sources/Rendering/OpenGL/RenderWindow';
+import vtkRenderer                from '../../../../Sources/Rendering/Core/Renderer';
+import vtkRenderWindow            from '../../../../Sources/Rendering/Core/RenderWindow';
+import vtkRenderWindowInteractor  from '../../../../Sources/Rendering/Core/RenderWindowInteractor';
 
 // Load basic classes for vtk() factory
-import '../../../Sources/Common/Core/Points';
-import '../../../Sources/Common/Core/DataArray';
-import '../../../Sources/Common/DataModel/PolyData';
-import '../../../Sources/Rendering/Core/Actor';
-import '../../../Sources/Rendering/Core/Mapper';
+import '../../../../Sources/Common/Core/Points';
+import '../../../../Sources/Common/Core/DataArray';
+import '../../../../Sources/Common/DataModel/PolyData';
+import '../../../../Sources/Rendering/Core/Actor';
+import '../../../../Sources/Rendering/Core/Mapper';
 
 // Load style
 import style from './FullScreenRenderWindow.mcss';

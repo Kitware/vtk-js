@@ -1,4 +1,4 @@
-import vtkFullScreenRenderWindow  from '../../../../../Sources/Testing/FullScreenRenderWindow';
+import vtkFullScreenRenderWindow  from '../../../../../Sources/Rendering/Misc/FullScreenRenderWindow';
 
 import vtkActor                   from '../../../../../Sources/Rendering/Core/Actor';
 import vtkSphereSource            from '../../../../../Sources/Filters/Sources/SphereSource';

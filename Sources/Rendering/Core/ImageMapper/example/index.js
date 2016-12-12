@@ -1,4 +1,4 @@
-import vtkFullScreenRenderWindow from '../../../../../Sources/Testing/FullScreenRenderWindow';
+import vtkFullScreenRenderWindow from '../../../../../Sources/Rendering/Misc/FullScreenRenderWindow';
 
 import vtkImageGridSource         from '../../../../../Sources/Filters/Sources/ImageGridSource';
 import vtkImageMapper             from '../../../../../Sources/Rendering/Core/ImageMapper';

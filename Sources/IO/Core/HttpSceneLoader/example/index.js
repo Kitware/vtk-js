@@ -1,4 +1,4 @@
-import vtkFullScreenRenderWindow from '../../../../../Sources/Testing/FullScreenRenderWindow';
+import vtkFullScreenRenderWindow from '../../../../../Sources/Rendering/Misc/FullScreenRenderWindow';
 import vtkHttpSceneLoader        from '../../../../../Sources/IO/Core/HttpSceneLoader';
 
 // ----------------------------------------------------------------------------
