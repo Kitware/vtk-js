@@ -3,9 +3,6 @@ import vtkPolyData    from '../../../Common/DataModel/PolyData';
 import vtkDataArray   from '../../../Common/Core/DataArray';
 import vtkMath        from '../../../Common/Core/Math';
 
-
-/* global window */
-
 // ----------------------------------------------------------------------------
 // vtkPlaneSource methods
 // ----------------------------------------------------------------------------

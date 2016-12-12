@@ -8,8 +8,6 @@ import vtkDataArray from '../DataArray';
 // Global methods
 // ----------------------------------------------------------------------------
 
-/* global window */
-
 // Add module-level functions or api that you want to expose statically via
 // the next section...
 

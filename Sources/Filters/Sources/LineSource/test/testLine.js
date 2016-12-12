@@ -10,8 +10,6 @@ import vtkMapper from '../../../../Rendering/Core/Mapper';
 import baseline from './baseline.png';
 import testUtils from '../../../../Testing/testUtils';
 
-/* global document */
-
 test.onlyIfWebGL('Test vtkLineSource Rendering', (t) => {
   t.ok('rendering', 'vtkLineSource Rendering');
 

@@ -8,6 +8,7 @@ import vtkRenderWindow            from '../../../../../Sources/Rendering/Core/Re
 import vtkRenderWindowInteractor  from '../../../../../Sources/Rendering/Core/RenderWindowInteractor';
 
 /* global __BASE_PATH__ */
+
 const datasetToLoad = `${__BASE_PATH__}/data/cow.vtp`;
 
 // Create some control UI

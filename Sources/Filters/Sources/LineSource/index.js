@@ -2,9 +2,6 @@ import * as macro     from '../../../macro';
 import vtkPolyData    from '../../../Common/DataModel/PolyData';
 import vtkMath        from '../../../Common/Core/Math';
 
-
-/* global window */
-
 // ----------------------------------------------------------------------------
 // vtkLineSource methods
 // ----------------------------------------------------------------------------

@@ -10,8 +10,6 @@ import vtkMapper from '../../../../Rendering/Core/Mapper';
 import baseline from './testEdgeVisibility.png';
 import testUtils from '../../../../Testing/testUtils';
 
-/* global document */
-
 test.onlyIfWebGL('Test Edge Visibility', (t) => {
   t.ok('rendering', 'vtkMapper EdgeVisibility');
 

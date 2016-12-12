@@ -10,8 +10,6 @@ import vtkMapper from '../../../../Rendering/Core/Mapper';
 import baseline from './testCone.png';
 import testUtils from '../../../../Testing/testUtils';
 
-/* global document */
-
 test.onlyIfWebGL('Test vtkConeSource Rendering', (t) => {
   t.ok('rendering', 'vtkConeSource Rendering');
 
