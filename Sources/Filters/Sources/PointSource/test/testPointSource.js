@@ -8,10 +8,8 @@ import vtkActor from '../../../../Rendering/Core/Actor';
 import vtkMapper from '../../../../Rendering/Core/Mapper';
 import vtkMath from '../../../../Common/Core/Math';
 
-import basepoint from './basepoint.png';
+import basepoint from './testPointSource.png';
 import testUtils from '../../../../Testing/testUtils';
-
-/* global document */
 
 test.onlyIfWebGL('Test vtkPointSource Rendering', (t) => {
   t.ok('rendering', 'vtkPointSource Rendering');
@@ -28,12 +26,13 @@ test.onlyIfWebGL('Test vtkPointSource Rendering', (t) => {
   renderer.setBackground(0.32, 0.34, 0.43);
 
   const actor = vtkActor.newInstance();
+  actor.getProperty().setPointSize(5);
   renderer.addActor(actor);
 
   const mapper = vtkMapper.newInstance();
   actor.setMapper(mapper);
 
-  const PointSource = vtkPointSource.newInstance({ numberOfPoints: 25, radius: 0.75 });
+  const PointSource = vtkPointSource.newInstance({ numberOfPoints: 125, radius: 0.75 });
   vtkMath.randomSeed(141592);
   PointSource.update();
   mapper.setInputConnection(PointSource.getOutputPort());
@@ -46,5 +45,5 @@ test.onlyIfWebGL('Test vtkPointSource Rendering', (t) => {
 
   const image = glwindow.captureImage();
 
-  testUtils.compareImages(image, [basepoint], 'Filters/Sources/PointSource/', t);
+  testUtils.compareImages(image, [basepoint], 'Filters/Sources/PointSource/', t, 0.001);
 });
