@@ -1,5 +1,8 @@
 import vtkActor                   from '../../../../../Sources/Rendering/Core/Actor';
 import vtkCamera                  from '../../../../../Sources/Rendering/Core/Camera';
+import vtkDataArray               from '../../../../../Sources/Common/Core/DataArray';
+import vtkPoints                  from '../../../../../Sources/Common/Core/Points';
+import vtkPolyData                from '../../../../../Sources/Common/DataModel/PolyData';
 import vtkPlaneSource             from '../../../../../Sources/Filters/Sources/PlaneSource';
 import vtkCalculator              from '../../../../../Sources/Filters/General/Calculator';
 import vtkWarpScalar              from '../../../../../Sources/Filters/General/WarpScalar';
@@ -29,6 +32,7 @@ renWin.addRenderer(ren);
 const glwindow = vtkOpenGLRenderWindow.newInstance();
 glwindow.setContainer(renderWindowContainer);
 renWin.addView(glwindow);
+glwindow.setSize(600,400);
 
 const iren = vtkRenderWindowInteractor.newInstance();
 iren.setView(glwindow);
@@ -54,36 +58,19 @@ cam.setViewUp(0, 0, 1);
 cam.setClippingRange(0.1, 50.0);
 
 const planeSource = vtkPlaneSource.newInstance({ xResolution: 15, yResolution: 15 });
-const coordFilter = vtkCalculator.newInstance({
-  formula: {
-    getArrays: (inputDataSets) => ({
-      input: [
-        { location: FieldDataTypes.COORDINATE }],
-      output: [
-        { location: FieldDataTypes.POINT, name: 'x' },
-        { location: FieldDataTypes.POINT, name: 'y', attribute: AttributeTypes.SCALARS },
-      ]}),
-    evaluate: (arraysIn, arraysOut) => {
-      const [coords] = arraysIn.map(d => d.getData());
-      const [x, y] = arraysOut.map(d => d.getData());
-
-      for (let i = 0, sz = coords.length / 3; i < sz; ++i) {
-        x[i] = coords[3 * i];
-        y[i] = coords[3 * i + 1];
-      }
-      arraysOut.forEach(arr => arr.modified());
-    },
-  },
-});
-coordFilter.setInputConnection(planeSource.getOutputPort());
 const simpleFilter = vtkCalculator.newInstance();
-simpleFilter.setInputConnection(coordFilter.getOutputPort());
+simpleFilter.setInputConnection(planeSource.getOutputPort());
 simpleFilter.setFormulaSimple(
-  FieldDataTypes.POINT,
-  ['x', 'y'],
-  'z',
-  (x, y) => ((x - 0.5) * (x - 0.5)) + ((y - 0.5) * (y - 0.5)) + 0.125);
+  FieldDataTypes.POINT, // Generate an output array defined over points.
+  [],  // We don't request any point-data arrays because point coordinates are made available by default.
+  'z', // Name the output array "z"
+  x => ((x[0] - 0.5) * (x[0] - 0.5)) + ((x[1] - 0.5) * (x[1] - 0.5)) + 0.125
+); // Our formula for z
+
+// The generated 'z' array will become the default scalars, so the plane mapper will color by 'z':
 planeMapper.setInputConnection(simpleFilter.getOutputPort());
+
+// We will also generate a surface whose points are displaced from the plane by 'z':
 const warpScalar = vtkWarpScalar.newInstance();
 warpScalar.setInputConnection(simpleFilter.getOutputPort());
 warpScalar.setInputArrayToProcess(0, 'z', 'PointData', 'Scalars');
@@ -126,12 +113,34 @@ document.querySelector('.formula').addEventListener('input', (e) => {
   }
   if (fn) {
     e.target.style.background = '#fff';
-    const didChange = simpleFilter.setFormulaSimple(
-      FieldDataTypes.POINT, ['x', 'y'], 'z', fn);
-    renWin.render();
-  } else {
-    e.target.style.background = '#ffb';
+    const formulaObj = simpleFilter.createSimpleFormulaObject(
+      FieldDataTypes.POINT, [], 'z', fn);
+
+    // See if the formula is actually valid by invoking "formulaObj" on
+    // a dataset containing a single point.
+    planeSource.update();
+    const arraySpec = formulaObj.getArrays(planeSource.getOutputData());
+    const testData = vtkPolyData.newInstance();
+    const testPts = vtkPoints.newInstance();
+    testPts.setData(
+      vtkDataArray.newInstance({ name: 'coords', numberOfComponents: 3, size:3, values: [0,0,0] }));
+    testData.setPoints(testPts);
+    const testOut = vtkPolyData.newInstance();
+    testOut.shallowCopy(testData);
+    const testArrays = simpleFilter.prepareArrays(arraySpec, testData, testOut);
+    try {
+      formulaObj.evaluate(testArrays.arraysIn, testArrays.arraysOut);
+
+      // We evaluated 1 point without exception... it's safe to update the
+      // filter and re-render.
+      simpleFilter.setFormula(formulaObj);
+      renWin.render();
+      return;
+    } catch (exc) {
+      console.log('Unexpected exception ', exc);
+    }
   }
+  e.target.style.background = '#ffb';
 });
 
 // ----- Console play ground -----
@@ -139,7 +148,6 @@ document.querySelector('.formula').addEventListener('input', (e) => {
 global.planeSource = planeSource;
 global.planeMapper = planeMapper;
 global.planeActor = planeActor;
-global.coordFilter = coordFilter;
 global.simpleFilter = simpleFilter;
 global.warpMapper = warpMapper;
 global.warpActor = warpActor;

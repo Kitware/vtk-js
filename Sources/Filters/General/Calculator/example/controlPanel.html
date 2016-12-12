@@ -1,27 +1,28 @@
-<table style="width: 600px;">
+<table>
   <tr>
     <td>X Resolution</td>
     <td>
-      <input class='xResolution' type="range" min="1" max="31" step="1" value="15" style="width: 400px;"/>
+      <input class="xResolution" type="range" min="1" max="31" step="1" value="15"/>
     </td>
   </tr>
   <tr>
     <td>Y Resolution</td>
     <td>
-      <input class='yResolution' type="range" min="1" max="31" step="1" value="15" style="width: 400px;"/>
+      <input class="yResolution" type="range" min="1" max="31" step="1" value="15"/>
     </td>
   </tr>
   <tr>
     <td>Displacement Scale</td>
     <td>
-      <input class='scaleFactor' type="range" min="0" max="2" step="0.1" value="1" style="width: 400px;"/>
+      <input class="scaleFactor" type="range" min="0" max="2" step="0.1" value="1"/>
     </td>
   </tr>
   <tr>
     <td>Formula</td>
     <td>
-      <input class='formula' type="text" value="((x - 0.5) * (x - 0.5)) + ((y - 0.5) * (y - 0.5)) + 0.125" style="width: 400px;"/>
+      <input class="formula" type="text" style="width: 400px;"
+        value="((x[0] - 0.5) * (x[0] - 0.5)) + ((x[1] - 0.5) * (x[1] - 0.5)) + 0.125"/>
     </td>
   </tr>
 </table>
-<div class='renderwidow' style="width: 600px;"></div>
+<div class="renderwidow"></div>
