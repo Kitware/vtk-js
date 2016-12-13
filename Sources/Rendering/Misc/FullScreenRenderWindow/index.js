@@ -34,7 +34,7 @@ function vtkFullScreenRenderWindow(publicAPI, model) {
   model.interactor = vtkRenderWindowInteractor.newInstance();
   model.interactor.setView(model.openGlRenderWindow);
   model.interactor.initialize();
-  model.interactor.bindEvents(model.container, document);
+  model.interactor.bindEvents(model.container);
 
   // Expose background
   publicAPI.setBackground = model.renderer.setBackground;
