@@ -9,7 +9,7 @@
     "license": "BSD-3-Clause",
     "bugs": { "url": "https://github.com/kitware/vtk-js/issues" },
     "homepage": "https://github.com/kitware/vtk-js#readme",
-    "main": "./Sources/index.js",
+    "main": "./dist/vtk.js",
     "dependencies": {
         "commander": "2.9.0",
         "shelljs": "0.7.4",
