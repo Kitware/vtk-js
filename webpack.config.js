@@ -1,5 +1,4 @@
 var entry = require.resolve('./Sources/index.js');
-var vtkEntry = require.resolve('./Sources/vtk.js');
 
 var path = require('path');
 var webpack = require('webpack');
@@ -29,8 +28,7 @@ module.exports = {
       exclude: /node_modules/,
     }],
     loaders: [
-      { test: entry, loader: 'expose?vtk.pkg' },
-      { test: vtkEntry, loader: 'expose?vtk' },
+      { test: entry, loader: 'expose?vtk' },
     ].concat(loaders),
   },
   postcss: [

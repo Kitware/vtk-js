@@ -1,13 +1,11 @@
 title: Tools
 ---
 
-vtk.js is an Open Source Framework for building
-Web application for Scientific Visualization.
+vtk.js is an Open Source Framework for building Web application for Scientific Visualization.
 
-The following guide explain our software process and tools use to
-build and develop this framework.
+The following guide explain our software process and tools use to build and develop this framework.
 
-## Software process
+## Commitizen
 
 We rely on Semantic-release to manage our change log, tagging and publishing
 to NPM via Travis.
@@ -17,11 +15,11 @@ formatting. To ensure that formating, we use Commitizen which can be triggered
 via the following command line. Additional information can be found 
 [here](https://gist.github.com/stephenparish/9941e89d80e2bc58a153).
 
-    $ git cz
+    $ npm run commit
 
 Then a set of questions will be presented to you like the following ones:
 
-    $ git cz
+    $ npm run commit
     cz-cli@2.4.6, cz-conventional-changelog@1.1.5
 
     Line 1 will be cropped at 100 characters. All other lines will be wrapped
@@ -78,7 +76,7 @@ This plugin adds proper syntax highlighting to your ES6/2015 and React JSX code.
 Once installed, to use JSFormat, go to your JS file and hit Ctrl + Alt + f on
 Windows/Linux or Ctrl + ⌥ + f on Mac. Alternatively, use the context menu.
 
-### Sublime-Linter + SublimeLinter-eslint
+### SublimeLinter + SublimeLinter-contrib-eslint
 
 [More information available here](https://github.com/roadhump/SublimeLinter-eslint).
 

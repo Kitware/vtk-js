@@ -1,0 +1,30 @@
+<!DOCTYPE html>
+<html>
+<body>
+<script type="text/javascript" src="https://unpkg.com/vtk.js"></script>
+<script type="text/javascript">
+  var vtkFullScreenRenderWindow = vtk.Rendering.Misc.vtkFullScreenRenderWindow;
+  var vtkConeSource             = vtk.Filters.Sources.vtkConeSource;
+  var vtkMapper                 = vtk.Rendering.Core.vtkMapper;
+  var vtkActor                  = vtk.Rendering.Core.vtkActor;
+
+  // --------------------------------------------------------------------------
+  // Standard rendering code setup
+  // --------------------------------------------------------------------------
+  var fullScreenRenderer = vtkFullScreenRenderWindow.newInstance();
+  var renderer = fullScreenRenderer.getRenderer();
+  var renderWindow = fullScreenRenderer.getRenderWindow();
+  // --------------------------------------------------------------------------
+  // Example code
+  // --------------------------------------------------------------------------
+  var cone = vtkConeSource.newInstance();
+  var actor = vtkActor.newInstance();
+  var mapper = vtkMapper.newInstance();
+  actor.setMapper(mapper);
+  mapper.setInputConnection(coneSource.getOutputPort());
+  renderer.addActor(actor);
+  renderer.resetCamera();
+  renderWindow.render();
+</script>
+</body>
+</html>

@@ -18,24 +18,30 @@ page:
 
 sidebar:
   docs:
-    testing: Testing
-    tests: Tests
-    coverage: Coverage
     getting_started: Getting Started
     overview: Overview
-    setup: Setup
+    external: Script usage
+    es6_dep: ES6 usage
+    develop: Development
+    requirement: Requirements
+    class: Create class
+    example: Create example
+    test: Create test
+    build: Build library
     miscellaneous: Miscellaneous
-    debugging: Debugging
     tools: Tools
     troubleshooting: Troubleshooting
+    debugging: Debugging
     contributing: Contributing
     data_format: Data format
     structures: Introduction
     data_array: DataArray
-    poly_data: PolyData
     string_array: StringArray
     table: Table
+    poly_data: PolyData
     unstructured_grid: UnstructuredGrid
     multi_block: MultiBlock
     parametric_dataset: ParametricDataset
-    class: VTK Class
+    testing: Testing
+    tests: Tests
+    coverage: Coverage

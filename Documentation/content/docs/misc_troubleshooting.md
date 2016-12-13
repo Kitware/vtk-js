@@ -1,6 +1,6 @@
 title: Troubleshooting
 ---
-In case you're experiencing problems with using ParaViewWeb, here is a list of solutions to some frequently encountered issues. If this page doesn't help you solve your problem, try doing a search on [GitHub](https://github.com/kitware/paraviewweb/issues) or our [Mailing list](http://www.paraview.org/mailman/listinfo/paraview).
+In case you're experiencing problems with using vtk.js, here is a list of solutions to some frequently encountered issues. If this page doesn't help you solve your problem, try doing a search on [GitHub](https://github.com/kitware/vtk-js/issues) or our [Mailing list](http://www.paraview.org/mailman/listinfo/vtk).
 
 ## Can't find application
 
