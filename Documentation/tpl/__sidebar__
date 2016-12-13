@@ -1,23 +1,30 @@
 docs:
   getting_started:
-    overview: /vtk-js/docs/index.html
-    setup: /vtk-js/docs/setup.html
+    overview: index.html
+    external: intro_vtk_as_external_script.html
+    es6_dep: intro_vtk_as_es6_dependency.html
+
+  develop:
+    class: develop_class.html
+    example: develop_example.html
+    test: develop_test.html
+
+  miscellaneous:
+    tools: misc_tools.html
+    troubleshooting: misc_troubleshooting.html
+    debugging: misc_debugging.html
+    contributing: misc_contributing.html
+
+  data_format:
+    structures: structures.html
+    data_array: structures_DataArray.html
+    string_array: structures_StringArray.html
+    table: structures_Table.html
+    poly_data: structures_PolyData.html
+    unstructured_grid: structures_UnstructuredGrid.html
+    multi_block: structures_MultiBlock.html
+    parametric_dataset: structures_ParametricDataset.html
+
   testing:
     tests: /vtk-js/coverage/tests.html
     coverage: /vtk-js/coverage/home.html
-  miscellaneous:
-    tools: /vtk-js/docs/tools.html
-    troubleshooting: /vtk-js/docs/troubleshooting.html
-    debugging: /vtk-js/docs/debugging.html
-    contributing: /vtk-js/docs/contributing.html
-    class: /vtk-js/docs/class.html
-  data_format:
-    structures: /vtk-js/docs/structures/index.html
-    data_array: /vtk-js/docs/structures/DataArray.html
-    string_array: /vtk-js/docs/structures/StringArray.html
-    table: /vtk-js/docs/structures/Table.html
-    poly_data: /vtk-js/docs/structures/PolyData.html
-    unstructured_grid: /vtk-js/docs/structures/UnstructuredGrid.html
-    multi_block: /vtk-js/docs/structures/MultiBlock.html
-    parametric_dataset: /vtk-js/docs/structures/ParametricDataset.html
-
