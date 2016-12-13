@@ -39,6 +39,12 @@ const eventsWeHandle = [
   'Swipe',
 ];
 
+function preventDefault(event) {
+  event.stopPropagation();
+  event.preventDefault();
+  return false;
+}
+
 function vtkRenderWindowInteractor(publicAPI, model) {
   // Set our className
   model.classHierarchy.push('vtkRenderWindowInteractor');
@@ -108,8 +114,13 @@ function vtkRenderWindowInteractor(publicAPI, model) {
 
   publicAPI.getLastEventPosition = pointer => model.lastEventPositions[pointer];
 
-  publicAPI.bindEvents = (canvas, document) => {
+  publicAPI.bindEvents = (canvas) => {
     model.canvas = canvas;
+    canvas.addEventListener('contextmenu', preventDefault);
+    canvas.addEventListener('click', preventDefault);
+    canvas.addEventListener('mousewheel', publicAPI.handleWheel);
+    canvas.addEventListener('DOMMouseScroll', publicAPI.handleWheel);
+
     canvas.addEventListener('mousedown', publicAPI.handleMouseDown);
     document.querySelector('body').addEventListener('keypress', publicAPI.handleKeyPress);
     canvas.addEventListener('mouseup', publicAPI.handleMouseUp);
@@ -120,7 +131,12 @@ function vtkRenderWindowInteractor(publicAPI, model) {
     canvas.addEventListener('touchmove', publicAPI.handleTouchMove, false);
   };
 
-  publicAPI.unbindEvents = (canvas, document) => {
+  publicAPI.unbindEvents = (canvas) => {
+    canvas.removeEventListener('contextmenu', preventDefault);
+    canvas.removeEventListener('click', preventDefault);
+    canvas.removeEventListener('mousewheel', publicAPI.handleWheel);
+    canvas.removeEventListener('DOMMouseScroll', publicAPI.handleWheel);
+
     canvas.removeEventListener('mousedown', publicAPI.handleMouseDown);
     document.querySelector('body').removeEventListener('keypress', publicAPI.handleKeyPress);
     canvas.removeEventListener('mouseup', publicAPI.handleMouseUp);
@@ -132,6 +148,9 @@ function vtkRenderWindowInteractor(publicAPI, model) {
   };
 
   publicAPI.handleKeyPress = (event) => {
+    event.stopPropagation();
+    event.preventDefault();
+
     publicAPI.setEventPosition(event.clientX, model.canvas.clientHeight - event.clientY + 1, 0, 0);
     model.controlKey = event.ctrlKey;
     model.altKey = event.altKey;
@@ -141,6 +160,9 @@ function vtkRenderWindowInteractor(publicAPI, model) {
   };
 
   publicAPI.handleMouseDown = (event) => {
+    event.stopPropagation();
+    event.preventDefault();
+
     publicAPI.setEventPosition(event.clientX, model.canvas.clientHeight - event.clientY + 1, 0, 0);
     model.controlKey = event.ctrlKey;
     model.altKey = event.altKey;
@@ -159,11 +181,35 @@ function vtkRenderWindowInteractor(publicAPI, model) {
   };
 
   publicAPI.handleMouseMove = (event) => {
+    event.stopPropagation();
+    event.preventDefault();
+
     publicAPI.setEventPosition(event.clientX, model.canvas.clientHeight - event.clientY + 1, 0, 0);
     publicAPI.mouseMoveEvent();
   };
 
+  publicAPI.handleWheel = (event) => {
+    event.stopPropagation();
+    event.preventDefault();
+
+    let wheelDelta = 0;
+    let mode = '';
+    if (event.wheelDeltaX === undefined) {
+      mode = 'detail';
+      wheelDelta = -event.detail * 2;
+    } else {
+      mode = 'wheelDeltaY';
+      wheelDelta = event.wheelDeltaY;
+    }
+
+    // FIXME do something with it...
+    console.log(mode, wheelDelta);
+  };
+
   publicAPI.handleMouseUp = (event) => {
+    event.stopPropagation();
+    event.preventDefault();
+
     publicAPI.setEventPosition(event.clientX, model.canvas.clientHeight - event.clientY + 1, 0, 0);
     switch (event.which) {
       case 1:
