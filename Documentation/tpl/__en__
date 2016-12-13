@@ -23,9 +23,11 @@ sidebar:
     external: Script usage
     es6_dep: ES6 usage
     develop: Development
+    requirement: Requirements
     class: Create class
     example: Create example
     test: Create test
+    build: Build library
     miscellaneous: Miscellaneous
     tools: Tools
     troubleshooting: Troubleshooting
