@@ -31,7 +31,7 @@ Below you can find an [html](https://raw.githubusercontent.com/Kitware/vtk-js/ma
   var mapper = vtkMapper.newInstance();
 
   actor.setMapper(mapper);
-  mapper.setInputConnection(coneSource.getOutputPort());
+  mapper.setInputConnection(cone.getOutputPort());
   renderer.addActor(actor);
 
   renderer.resetCamera();

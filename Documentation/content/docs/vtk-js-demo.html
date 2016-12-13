@@ -21,7 +21,7 @@
   var actor = vtkActor.newInstance();
   var mapper = vtkMapper.newInstance();
   actor.setMapper(mapper);
-  mapper.setInputConnection(coneSource.getOutputPort());
+  mapper.setInputConnection(cone.getOutputPort());
   renderer.addActor(actor);
   renderer.resetCamera();
   renderWindow.render();
