@@ -45,7 +45,7 @@ simpleFilter.setFormulaSimple(
 ); // Our formula for z
 
 const warpScalar = vtkWarpScalar.newInstance();
-const warpMapper = vtkMapper.newInstance();
+const warpMapper = vtkMapper.newInstance({ interpolateScalarBeforeMapping: true });
 const warpActor = vtkActor.newInstance();
 
 // The generated 'z' array will become the default scalars, so the plane mapper will color by 'z':
