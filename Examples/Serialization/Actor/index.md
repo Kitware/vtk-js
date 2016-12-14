@@ -1,0 +1,1 @@
+This example convert a JSON structure into an actual vtk class hierachy. The JSON file that get loaded can be seen [here](https://github.com/Kitware/vtk-js/blob/master/Examples/Serialization/Actor/actor.json) while the `vtk()` function expect an actual object not a String so you may need to convert a JSON string via the `JSON.parse(string)` method first.
