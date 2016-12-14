@@ -65,7 +65,7 @@ const polydata = vtk({
   },
 });
 
-const mapper = vtkMapper.newInstance({ interpolateScalarBeforeMapping: true });
+const mapper = vtkMapper.newInstance({ interpolateScalarsBeforeMapping: true });
 mapper.setInputData(polydata);
 
 const lut = mapper.getLookupTable();
