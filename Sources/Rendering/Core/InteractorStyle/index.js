@@ -215,9 +215,6 @@ export function extend(publicAPI, model, initialValues = {}) {
   // Inheritance
   vtkInteractorObserver.extend(publicAPI, model);
 
-  // Object methods
-  macro.obj(publicAPI, model);
-
   model.unsubscribes = new Map();
 
   // Object specific methods
