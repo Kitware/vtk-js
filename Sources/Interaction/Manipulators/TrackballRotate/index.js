@@ -1,0 +1,94 @@
+import { vec3, mat4 } from 'gl-matrix';
+import * as macro from '../../../macro';
+import vtkCameraManipulator from '../CameraManipulator';
+import vtkMath from '../../../Common/Core/Math';
+
+// ----------------------------------------------------------------------------
+// vtkTrackballRotate methods
+// ----------------------------------------------------------------------------
+
+function vtkTrackballRotate(publicAPI, model) {
+  // Set our className
+  model.classHierarchy.push('vtkTrackballRotate');
+
+  publicAPI.onMouseMove = (x, y, ren, rwi) => {
+    if (model.currentRenderer === null) {
+      return;
+    }
+
+    const lastPos = rwi.getLastEventPosition(rwi.getPointerIndex());
+
+    const camera = ren.getActiveCamera();
+    const cameraPos = camera.getPosition();
+    const cameraFp = camera.getFocalPoint();
+
+    const trans = mat4.create();
+    mat4.identity(trans);
+
+    const center = model.center;
+    const rotationFactor = model.rotationFactor;
+
+    // Translate to center
+    mat4.translate(trans, trans, vec3.fromValues(center[0], center[1], center[2]));
+
+    const dx = lastPos.x - x;
+    const dy = lastPos.y - y;
+
+    const size = rwi.getView().getSize();
+
+    // Azimuth
+    const viewUp = camera.getViewUp();
+    mat4.rotate(trans, trans, vtkMath.radiansFromDegrees(((360.0 * dx) / size[0]) * rotationFactor), vec3.fromValues(viewUp[0], viewUp[1], viewUp[2]));
+
+    // Elevation
+    const v2 = [0, 0, 0];
+    vtkMath.cross(camera.getDirectionOfProjection(), viewUp, v2);
+    mat4.rotate(trans, trans, vtkMath.radiansFromDegrees(((-360.0 * dy) / size[1]) * rotationFactor), vec3.fromValues(v2[0], v2[1], v2[2]));
+
+    // Translate back
+    mat4.translate(trans, trans, vec3.fromValues(-center[0], -center[1], -center[2]));
+
+    const newCamPos = vec3.create();
+    const newFp = vec3.create();
+    const newViewUp = vec3.create();
+
+    // Apply transformation to camera position, focal point, and view up
+    vec3.transformMat4(newCamPos, vec3.fromValues(cameraPos[0], cameraPos[1], cameraPos[2]), trans);
+    vec3.transformMat4(newFp, vec3.fromValues(cameraFp[0], cameraFp[1], cameraFp[2]), trans);
+    vec3.transformMat4(newViewUp, vec3.fromValues(viewUp[0] + cameraPos[0], viewUp[1] + cameraPos[1], viewUp[2] + cameraPos[2]), trans);
+
+    camera.setPosition(newCamPos[0], newCamPos[1], newCamPos[2]);
+    camera.setFocalPoint(newFp[0], newFp[1], newFp[2]);
+    camera.setViewUp(newViewUp[0] - newCamPos[0], newViewUp[1] - newCamPos[1], newViewUp[2] - newCamPos[2]);
+    camera.orthogonalizeViewUp();
+
+    ren.resetCameraClippingRange();
+    rwi.render();
+  };
+}
+
+// ----------------------------------------------------------------------------
+// Object factory
+// ----------------------------------------------------------------------------
+
+const DEFAULT_VALUES = {};
+
+// ----------------------------------------------------------------------------
+
+export function extend(publicAPI, model, initialValues = {}) {
+  Object.assign(model, DEFAULT_VALUES, initialValues);
+
+  // Inheritance
+  vtkCameraManipulator.extend(publicAPI, model);
+
+  // Object specific methods
+  vtkTrackballRotate(publicAPI, model);
+}
+
+// ----------------------------------------------------------------------------
+
+export const newInstance = macro.newInstance(extend);
+
+// ----------------------------------------------------------------------------
+
+export default Object.assign({ newInstance, extend });
