@@ -47,7 +47,7 @@ const polydata = vtk({
         vtkClass: 'vtkDataArray',
         name: 'pointScalars',
         dataType: 'Float32Array',
-        values: [0, 1, 0, 2],
+        values: [0, 1, 0, 1],
       },
     }],
   },
