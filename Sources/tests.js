@@ -1,4 +1,4 @@
-// import './Common/Core/LookupTable/test/testCategoricalColors';
+import './Common/Core/LookupTable/test/testCategoricalColors';
 import './Common/DataModel/DataSetAttributes/test/testDataSetAttributes';
 import './Filters/General/Calculator/test/testCalculator';
 import './Filters/General/WarpScalar/test/testWarp';
