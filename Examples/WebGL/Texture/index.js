@@ -47,7 +47,7 @@ const tcoordFilter = macro.newInstance((publicAPI, model) => {
         newArray[i + 1] = Math.asin((ndata[(i / 2 * 3) + 2]) / 3.1415927) + 0.5;
       }
 
-      const da = vtkDataArray.newInstance({ tuple: 2, values: newArray });
+      const da = vtkDataArray.newInstance({ numberOfComponents: 2, values: newArray });
       da.setName('tcoord');
 
       const pd = vtkPolyData.newInstance();
