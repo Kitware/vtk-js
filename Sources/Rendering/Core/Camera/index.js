@@ -115,7 +115,7 @@ function vtkCamera(publicAPI, model) {
       model.distance = 1e-20;
       vtkDebugMacro('Distance is set to minimum.');
 
-      const vec = model.DirectionOfProjection;
+      const vec = model.directionOfProjection;
 
       // recalculate FocalPoint
       model.focalPoint[0] = model.position[0] + (vec[0] * model.distance);

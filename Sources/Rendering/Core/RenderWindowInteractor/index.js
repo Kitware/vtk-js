@@ -171,11 +171,14 @@ function vtkRenderWindowInteractor(publicAPI, model) {
       case 1:
         publicAPI.leftButtonPressEvent();
         break;
-      // case 3:
-      //   publicAPI.rightButtonPressEvent();
-      //   event.preventDefault();
-      //   break;
+      case 2:
+        publicAPI.middleButtonPressEvent();
+        break;
+      case 3:
+        publicAPI.rightButtonPressEvent();
+        break;
       default:
+        vtkErrorMacro(`Unknown mouse button pressed: ${event.which}`);
         break;
     }
   };
@@ -215,11 +218,14 @@ function vtkRenderWindowInteractor(publicAPI, model) {
       case 1:
         publicAPI.leftButtonReleaseEvent();
         break;
-      // case 3:
-      //   publicAPI.rightButtonReleaseEvent();
-      //   event.preventDefault();
-      //   break;
+      case 2:
+        publicAPI.middleButtonReleaseEvent();
+        break;
+      case 3:
+        publicAPI.rightButtonReleaseEvent();
+        break;
       default:
+        vtkErrorMacro(`Unknown mouse button released: ${event.which}`);
         break;
     }
   };
@@ -630,6 +636,7 @@ export function extend(publicAPI, model, initialValues = {}) {
     'lastScale',
     'rotation',
     'lastRotation',
+    'interactorStyle',
   ]);
 
   // Create get-set macros
