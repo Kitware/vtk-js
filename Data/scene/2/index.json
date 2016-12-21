@@ -3,7 +3,7 @@
     "name": null,
     "numberOfComponents": 1,
     "dataType": "Uint32Array",
-    "vtkClass": "vtkDataArray",
+    "vtkClass": "vtkCellArray",
     "ranges": [
       {
         "max": 24719.0,

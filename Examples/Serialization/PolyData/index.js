@@ -29,7 +29,7 @@ const polydata = vtk({
     ],
   },
   polys: {
-    vtkClass: 'vtkDataArray',
+    vtkClass: 'vtkCellArray',
     dataType: 'Uint16Array',
     values: [
       3, 0, 1, 2,
