@@ -92,7 +92,7 @@ function vtkCalculator(publicAPI, model) {
     const arraysOut = [];
     arraySpec.input.forEach((spec) => {
       if (spec.location === FieldDataTypes.COORDINATE) {
-        arraysIn.push(inData.getPoints().getData());
+        arraysIn.push(inData.getPoints());
       } else {
         const fetchArrayContainer = [
           [FieldDataTypes.UNIFORM, x => x.getFieldData()],
@@ -128,13 +128,11 @@ function vtkCalculator(publicAPI, model) {
         fullSpec.size = ncomp * fullSpec.tuples;
       }
       if (spec.location === FieldDataTypes.COORDINATE) {
-        const pts = vtkPoints.newInstance();
-        fullSpec.numberOfComponents = 3;
-        fullSpec.size = 3 * pts.getNumberOfPoints();
-        const newPoints = vtkDataArray.newInstance(fullSpec);
-        pts.setData(newPoints);
+        const inPts = inData.getPoints();
+        const pts = vtkPoints.newInstance({ dataType: inPts.getDataType() });
+        pts.setNumberOfPoints(inPts.getNumberOfPoints(), inPts.getNumberOfComponents());
         outData.setPoints(pts);
-        arraysOut.push(newPoints);
+        arraysOut.push(pts);
       } else {
         const fetchArrayContainer = [
           [FieldDataTypes.UNIFORM, x => x.getFieldData(), (x, y) => ('tuples' in y ? y.tuples : 0)],

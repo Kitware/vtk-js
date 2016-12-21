@@ -67,7 +67,7 @@ export function vtkConeSource(publicAPI, model) {
 
     // FIXME apply tranform
     dataset = vtkPolyData.newInstance();
-    dataset.getPoints().getData().setData(points, 3);
+    dataset.getPoints().setData(points, 3);
     dataset.getPolys().setData(polys, 1);
 
     // Update output

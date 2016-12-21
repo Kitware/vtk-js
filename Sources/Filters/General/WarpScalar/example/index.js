@@ -47,7 +47,7 @@ const randFilter = macro.newInstance((publicAPI, model) => {
   macro.algo(publicAPI, model, 1, 1); // mixin algorithm code 1 in, 1 out
   publicAPI.requestData = (inData, outData) => { // implement requestData
     if (!outData[0] || inData[0].getMTime() > outData[0].getMTime()) {
-      const newArray = new Float32Array(inData[0].getPoints().getNumberOfTuples());
+      const newArray = new Float32Array(inData[0].getPoints().getNumberOfPoints());
       for (let i = 0; i < newArray.length; i++) {
         newArray[i] = i % 2 ? 1 : 0;
       }

@@ -57,7 +57,7 @@ function vtkWarpScalar(publicAPI, model) {
       // First, copy the input to the output as a starting point
       // output->CopyStructure( input );
 
-      const inPts = input.getPoints().getData();
+      const inPts = input.getPoints();
       const pd = input.getPointData();
       const inNormals = pd.getNormals();
       const inScalars = publicAPI.getInputArrayToProcess(0);
@@ -68,7 +68,7 @@ function vtkWarpScalar(publicAPI, model) {
         return 1;
       }
 
-      const numPts = inPts.getNumberOfValues();
+      const numPts = inPts.getNumberOfPoints();
 
       let pointNormal = null;
 
@@ -116,7 +116,7 @@ function vtkWarpScalar(publicAPI, model) {
       const newDataSet = vtk({ vtkClass: input.getClassName() });
       newDataSet.shallowCopy(input);
       const points = vtkPoints.newInstance();
-      points.getData().setData(newPtsData, 3);
+      points.setData(newPtsData, 3);
       newDataSet.setPoints(points);
       outData[0] = newDataSet;
     }

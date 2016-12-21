@@ -170,7 +170,8 @@ def dumpPolyData(datasetDir, dataDir, dataset, colorArrayInfo, root = {}, compre
 
   # Points
   points = dumpDataArray(datasetDir, dataDir, dataset.GetPoints().GetData(), {}, compress)
-  container['points'] = { 'vtkClass': 'vtkPoints', 'data': points }
+  points['vtkClass'] = 'vtkPoints'
+  container['points'] = points
 
   # Cells
   _cells = container

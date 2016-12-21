@@ -2,7 +2,6 @@ import vtkFullScreenRenderWindow  from '../../../../../Sources/Rendering/Misc/Fu
 
 import vtkActor                   from '../../../../../Sources/Rendering/Core/Actor';
 import vtkCalculator              from '../../../../../Sources/Filters/General/Calculator';
-import vtkDataArray               from '../../../../../Sources/Common/Core/DataArray';
 import vtkMapper                  from '../../../../../Sources/Rendering/Core/Mapper';
 import vtkPlaneSource             from '../../../../../Sources/Filters/Sources/PlaneSource';
 import vtkPoints                  from '../../../../../Sources/Common/Core/Points';
@@ -97,9 +96,7 @@ function applyFormula() {
     planeSource.update();
     const arraySpec = formulaObj.getArrays(planeSource.getOutputData());
     const testData = vtkPolyData.newInstance();
-    const testPts = vtkPoints.newInstance();
-    testPts.setData(
-      vtkDataArray.newInstance({ name: 'coords', numberOfComponents: 3, size: 3, values: [0, 0, 0] }));
+    const testPts = vtkPoints.newInstance({ name: 'coords', numberOfComponents: 3, size: 3, values: [0, 0, 0] });
     testData.setPoints(testPts);
     const testOut = vtkPolyData.newInstance();
     testOut.shallowCopy(testData);
