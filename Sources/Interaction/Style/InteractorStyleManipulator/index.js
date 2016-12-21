@@ -309,7 +309,7 @@ export function extend(publicAPI, model, initialValues = {}) {
   Object.assign(model, DEFAULT_VALUES, initialValues);
 
   // Inheritance
-  vtkInteractorStyleTrackballCamera.extend(publicAPI, model);
+  vtkInteractorStyleTrackballCamera.extend(publicAPI, model, initialValues);
 
   // Create get-set macros
   macro.setGet(publicAPI, model, ['rotationFactor']);

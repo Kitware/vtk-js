@@ -79,7 +79,7 @@ export function extend(publicAPI, model, initialValues = {}) {
   Object.assign(model, DEFAULT_VALUES, initialValues);
 
   // Inheritance
-  vtkCameraManipulator.extend(publicAPI, model);
+  vtkCameraManipulator.extend(publicAPI, model, initialValues);
 
   // Object specific methods
   vtkTrackballRotate(publicAPI, model);

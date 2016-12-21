@@ -170,7 +170,7 @@ export function extend(publicAPI, model, initialValues = {}) {
   Object.assign(model, DEFAULT_VALUES, initialValues);
 
   // Inheritance
-  vtkProp3D.extend(publicAPI, model);
+  vtkProp3D.extend(publicAPI, model, initialValues);
 
   // vtkTimeStamp
   model.boundsMTime = {};

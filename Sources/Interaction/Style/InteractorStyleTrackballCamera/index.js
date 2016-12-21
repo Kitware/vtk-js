@@ -386,7 +386,7 @@ export function extend(publicAPI, model, initialValues = {}) {
   Object.assign(model, DEFAULT_VALUES, initialValues);
 
   // Inheritance
-  vtkInteractorStyle.extend(publicAPI, model);
+  vtkInteractorStyle.extend(publicAPI, model, initialValues);
 
   // Create get-set macros
   macro.setGet(publicAPI, model, ['motionFactor']);

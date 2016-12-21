@@ -221,7 +221,7 @@ export function extend(publicAPI, model, initialValues = {}) {
   Object.assign(model, DEFAULT_VALUES, initialValues);
 
   // Inheritance
-  vtkBufferObject.extend(publicAPI, model);
+  vtkBufferObject.extend(publicAPI, model, initialValues);
 
   macro.setGet(publicAPI, model, [
     'elementCount',

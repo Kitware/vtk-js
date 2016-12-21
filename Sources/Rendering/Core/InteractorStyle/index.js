@@ -213,7 +213,7 @@ export function extend(publicAPI, model, initialValues = {}) {
   Object.assign(model, DEFAULT_VALUES, initialValues);
 
   // Inheritance
-  vtkInteractorObserver.extend(publicAPI, model);
+  vtkInteractorObserver.extend(publicAPI, model, initialValues);
 
   model.unsubscribes = new Map();
 

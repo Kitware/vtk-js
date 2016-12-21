@@ -1281,7 +1281,7 @@ export function extend(publicAPI, model, initialValues = {}) {
   Object.assign(model, DEFAULT_VALUES, initialValues);
 
   // Inheritance
-  vtkViewNode.extend(publicAPI, model);
+  vtkViewNode.extend(publicAPI, model, initialValues);
 
   model.lightComplexityChanged = new Map();
   model.lastLightComplexity = new Map();

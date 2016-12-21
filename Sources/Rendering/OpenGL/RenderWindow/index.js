@@ -209,7 +209,7 @@ export function extend(publicAPI, model, initialValues = {}) {
   model.textureResourceIds = new Map();
 
   // Inheritance
-  vtkViewNode.extend(publicAPI, model);
+  vtkViewNode.extend(publicAPI, model, initialValues);
 
   model.myFactory = vtkOpenGLViewNodeFactory.newInstance();
   model.shaderCache = vtkShaderCache.newInstance();

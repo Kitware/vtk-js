@@ -84,7 +84,7 @@ export function extend(publicAPI, model, initialValues = {}) {
   Object.assign(model, DEFAULT_VALUES, initialValues);
 
   // Inheritance
-  vtkViewNode.extend(publicAPI, model);
+  vtkViewNode.extend(publicAPI, model, initialValues);
 
   // Build VTK API
   macro.setGet(publicAPI, model, [

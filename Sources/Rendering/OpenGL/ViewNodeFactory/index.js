@@ -32,7 +32,7 @@ export function extend(publicAPI, model, initialValues = {}) {
   Object.assign(model, DEFAULT_VALUES, initialValues);
 
   // Inheritance
-  vtkViewNodeFactory.extend(publicAPI, model);
+  vtkViewNodeFactory.extend(publicAPI, model, initialValues);
 
   // Object methods
   vtkOpenGLViewNodeFactory(publicAPI, model);
