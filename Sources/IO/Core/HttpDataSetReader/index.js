@@ -13,7 +13,7 @@ const fieldDataLocations = ['pointData', 'cellData', 'fieldData'];
 const GEOMETRY_ARRAYS = {
   vtkPolyData(dataset) {
     const arrayToDownload = [];
-    arrayToDownload.push(dataset.points.data);
+    arrayToDownload.push(dataset.points);
     ['verts', 'lines', 'polys', 'strips'].forEach((cellName) => {
       if (dataset[cellName]) {
         arrayToDownload.push(dataset[cellName]);
@@ -29,7 +29,7 @@ const GEOMETRY_ARRAYS = {
 
   vtkUnstructuredGrid(dataset) {
     const arrayToDownload = [];
-    arrayToDownload.push(dataset.points.data);
+    arrayToDownload.push(dataset.points);
     arrayToDownload.push(dataset.cells);
     arrayToDownload.push(dataset.cellTypes);
 
