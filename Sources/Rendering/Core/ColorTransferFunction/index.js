@@ -1073,7 +1073,7 @@ export function extend(publicAPI, model, initialValues = {}) {
 
 
   // Inheritance
-  vtkScalarsToColors.extend(publicAPI, model);
+  vtkScalarsToColors.extend(publicAPI, model, initialValues);
 
   // Internal objects initialization
   model.table = [];
@@ -1081,9 +1081,6 @@ export function extend(publicAPI, model, initialValues = {}) {
 
   model.buildTime = {};
   macro.obj(model.buildTime);
-
-  // Object methods
-  macro.obj(publicAPI, model);
 
   // Create get-only macros
   macro.get(publicAPI, model, [

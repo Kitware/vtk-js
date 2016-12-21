@@ -305,12 +305,6 @@ export function extend(publicAPI, model, initialValues = {}) {
   // Inheritance
   vtkInteractorStyleTrackballCamera.extend(publicAPI, model);
 
-  // Object methods
-  macro.obj(publicAPI, model);
-
-  // Create get-only macros
-  // macro.get(publicAPI, model, ['myProp2', 'myProp4']);
-
   // Create get-set macros
   macro.setGet(publicAPI, model, ['motionFactor']);
 
