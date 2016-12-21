@@ -31,22 +31,22 @@ function vtkPoints(publicAPI, model) {
   publicAPI.getPoint = publicAPI.getTuple;
 
   publicAPI.getBounds = () => {
-    if (model.data.getNumberOfComponents() === 3) {
+    if (publicAPI.getNumberOfComponents() === 3) {
       return [].concat(
-        model.data.getRange(0),
-        model.data.getRange(1),
-        model.data.getRange(2));
+        publicAPI.getRange(0),
+        publicAPI.getRange(1),
+        publicAPI.getRange(2));
     }
 
-    if (model.data.getNumberOfComponents() !== 2) {
+    if (publicAPI.getNumberOfComponents() !== 2) {
       console.error('getBounds called on an array with components of ',
-        model.data.getNumberOfComponents());
+        publicAPI.getNumberOfComponents());
       return [1, -1, 1, -1, 1, -1];
     }
 
     return [].concat(
-      model.data.getRange(0),
-      model.data.getRange(1));
+      publicAPI.getRange(0),
+      publicAPI.getRange(1));
   };
 
   // Trigger the computation of bounds
@@ -58,6 +58,7 @@ function vtkPoints(publicAPI, model) {
 // ----------------------------------------------------------------------------
 
 const DEFAULT_VALUES = {
+  empty: true,
   numberOfComponents: 3,
   dataType: VtkDataTypes.FLOAT,
 };
