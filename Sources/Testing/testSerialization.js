@@ -24,12 +24,7 @@ const SERIALIZABLE_CLASSES = {
   vtkPoints: {
     class: vtkPoints,
     data: {
-      data: {
-        vtkClass: 'vtkDataArray',
-        numberOfComponents: 3,
-        dataType: 'Float64Array',
-        values: [0, 0, 0, 1, 0, 0, 0, 1, 0],
-      },
+      values: [0, 0, 0, 1, 0, 0, 0, 1, 0],
     },
   },
   vtkLookupTable,
@@ -37,7 +32,7 @@ const SERIALIZABLE_CLASSES = {
   vtkPolyData: {
     class: vtkPolyData,
     data: {
-      points: { vtkClass: 'vtkDataArray', values: [0, 0, 0, 1, 1, 1, 2, 2, 2], numberOfComponents: 3 },
+      points: { vtkClass: 'vtkPoints', values: [0, 0, 0, 1, 1, 1, 2, 2, 2], numberOfComponents: 3 },
       polys: { vtkClass: 'vtkDataArray', values: [1, 0, 1, 2], dataType: 'Uint32Array' },
     },
   },
