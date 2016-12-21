@@ -23,7 +23,7 @@ export function vtkPlaneSource(publicAPI, model) {
     }
 
     // Check input
-    const pointDataType = dataset ? dataset.getPoints().getData().getDataType() : 'Float32Array';
+    const pointDataType = dataset ? dataset.getPoints().getDataType() : 'Float32Array';
     const pd = vtkPolyData.newInstance();
     const v10 = new Float32Array(3);
     const v20 = new Float32Array(3);
@@ -44,7 +44,7 @@ export function vtkPlaneSource(publicAPI, model) {
 
     // Points
     const points = new window[pointDataType](numPts * 3);
-    pd.getPoints().getData().setData(points, 3);
+    pd.getPoints().setData(points, 3);
 
     // Cells
     const polys = new Uint32Array(5 * numPolys);

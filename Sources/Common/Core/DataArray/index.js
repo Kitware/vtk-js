@@ -39,21 +39,6 @@ function ensureRangeSize(rangeArray, size = 0) {
   return ranges;
 }
 
-function extractCellSizes(cellArray) {
-  let currentIdx = 0;
-  return cellArray.filter((value, index) => {
-    if (index === currentIdx) {
-      currentIdx += value + 1;
-      return true;
-    }
-    return false;
-  });
-}
-
-function getNumberOfCells(cellArray) {
-  return extractCellSizes(cellArray).length;
-}
-
 function getDataType(typedArray) {
   return Object.prototype.toString.call(typedArray).split(' ')[1].slice(0, -1);
 }
@@ -64,8 +49,6 @@ function getDataType(typedArray) {
 
 export const STATIC = {
   computeRange,
-  extractCellSizes,
-  getNumberOfCells,
   getDataType,
 };
 
@@ -155,25 +138,6 @@ function vtkDataArray(publicAPI, model) {
     numberOfComponents: model.numberOfComponents,
   });
   /* eslint-enable no-use-before-define */
-
-  publicAPI.getNumberOfCells = () => {
-    if (model.numberOfCells !== undefined) {
-      return model.numberOfCells;
-    }
-
-    model.cellSizes = extractCellSizes(model.values);
-    model.numberOfCells = model.cellSizes.length;
-    return model.numberOfCells;
-  };
-
-  publicAPI.getCellSizes = () => {
-    if (model.cellSizes !== undefined) {
-      return model.cellSizes;
-    }
-
-    model.cellSizes = extractCellSizes(model.values);
-    return model.cellSizes;
-  };
 
   publicAPI.getName = () => {
     if (!model.name) {

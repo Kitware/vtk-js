@@ -177,7 +177,8 @@ def dumpPolyData(datasetDir, dataDir, dataset, container = {}, compress = True):
 
   # Points
   points = dumpDataArray(datasetDir, dataDir, dataset.GetPoints().GetData(), {}, compress)
-  container['points'] = { 'vtkClass': 'vtkPoints', 'data': points }
+  container['points'] = points
+  container['points']['vtkClass'] = 'vtkPoints'
 
   # Cells
   _cells = container
@@ -187,24 +188,28 @@ def dumpPolyData(datasetDir, dataDir, dataset, container = {}, compress = True):
     _verts = dumpDataArray(datasetDir, dataDir, dataset.GetVerts().GetData(), {}, compress)
     _verts['name'] = '_verts'
     _cells['verts'] = _verts
+    _cells['verts']['vtkClass'] = 'vtkCellArray'
 
   ## Lines
   if dataset.GetLines() and dataset.GetLines().GetData().GetNumberOfTuples() > 0:
     _lines = dumpDataArray(datasetDir, dataDir, dataset.GetLines().GetData(), {}, compress)
     _lines['name'] = '_lines'
     _cells['lines'] = _lines
+    _cells['lines']['vtkClass'] = 'vtkCellArray'
 
   ## Polys
   if dataset.GetPolys() and dataset.GetPolys().GetData().GetNumberOfTuples() > 0:
     _polys = dumpDataArray(datasetDir, dataDir, dataset.GetPolys().GetData(), {}, compress)
     _polys['name'] = '_polys'
     _cells['polys'] = _polys
+    _cells['polys']['vtkClass'] = 'vtkCellArray'
 
   ## Strips
   if dataset.GetStrips() and dataset.GetStrips().GetData().GetNumberOfTuples() > 0:
     _strips = dumpDataArray(datasetDir, dataDir, dataset.GetStrips().GetData(), {}, compress)
     _strips['name'] = '_strips'
     _cells['strips'] = _strips
+    _cells['strips']['vtkClass'] = 'vtkCellArray'
 
   # Attributes (PointData, CellData, FieldData)
   dumpAttributes(datasetDir, dataDir, dataset, container, compress)
@@ -221,11 +226,12 @@ def dumpUnstructuredGrid(datasetDir, dataDir, dataset, container = {}, compress 
   # Points
   points = dumpDataArray(datasetDir, dataDir, dataset.GetPoints().GetData(), {}, compress)
   points['name'] = '_points'
-  container['points'] = { 'vtkClass': 'vtkPoints', 'data': points }
-  # FIXME range...
+  container['points'] = points
+  container['points']['vtkClass'] = 'vtkPoints'
 
   # Cells
   container['cells'] = dumpDataArray(datasetDir, dataDir, dataset.GetCells().GetData(), {}, compress)
+  container['cells']['vtkClass'] = 'vtkCellArray'
 
   # CellTypes
   container['cellTypes'] = dumpDataArray(datasetDir, dataDir, dataset.GetCellTypesArray(), {}, compress)

@@ -1,5 +1,4 @@
 import * as macro from '../../../macro';
-import vtk from '../../../vtk';
 import { VtkDataTypes } from '../DataArray/Constants';
 import vtkDataArray from '../DataArray';
 // ----------------------------------------------------------------------------
@@ -11,47 +10,47 @@ function vtkPoints(publicAPI, model) {
   model.classHierarchy.push('vtkPoints');
 
   // Forwarding methods
-  publicAPI.getNumberOfTuples = () => model.data.getNumberOfTuples();
-  publicAPI.getNumberOfValues = () => model.data.getNumberOfValues();
-  publicAPI.getDataType = () => model.data.getDataType();
-  publicAPI.setDataValues = (typedArray, size) => model.data.setData(typedArray, size);
-
-  publicAPI.getNumberOfPoints = () => model.data.getNumberOfTuples();
+  publicAPI.getNumberOfPoints = publicAPI.getNumberOfTuples;
 
   publicAPI.setNumberOfPoints = (nbPoints, dimension = 3) => {
     if (publicAPI.getNumberOfPoints() !== nbPoints) {
-      publicAPI.setData(vtkDataArray.newInstance({
-        dataType: model.dataType,
-        numberOfComponents: dimension,
-        size: nbPoints * dimension,
-      }));
+      model.size = nbPoints * dimension;
+      model.values = new window[model.dataType](model.size);
+      publicAPI.setNumberOfComponents(dimension);
+      publicAPI.modified();
     }
   };
 
+  publicAPI.setPoint = (idx, ...xyz) => {
+    const offset = idx * model.numberOfComponents;
+    for (let i = 0; i < model.numberOfComponents; i++) {
+      model.values[offset + i] = xyz[i];
+    }
+  };
+
+  publicAPI.getPoint = publicAPI.getTuple;
+
   publicAPI.getBounds = () => {
-    if (model.data.getNumberOfComponents() === 3) {
+    if (publicAPI.getNumberOfComponents() === 3) {
       return [].concat(
-        model.data.getRange(0),
-        model.data.getRange(1),
-        model.data.getRange(2));
+        publicAPI.getRange(0),
+        publicAPI.getRange(1),
+        publicAPI.getRange(2));
     }
 
-    if (model.data.getNumberOfComponents() !== 2) {
+    if (publicAPI.getNumberOfComponents() !== 2) {
       console.error('getBounds called on an array with components of ',
-        model.data.getNumberOfComponents());
+        publicAPI.getNumberOfComponents());
       return [1, -1, 1, -1, 1, -1];
     }
 
     return [].concat(
-      model.data.getRange(0),
-      model.data.getRange(1));
+      publicAPI.getRange(0),
+      publicAPI.getRange(1));
   };
 
   // Trigger the computation of bounds
   publicAPI.computeBounds = publicAPI.getBounds;
-
-  // Overide mtime
-  publicAPI.getMTime = () => Math.max(model.mtime, model.data.getMTime());
 }
 
 // ----------------------------------------------------------------------------
@@ -59,7 +58,8 @@ function vtkPoints(publicAPI, model) {
 // ----------------------------------------------------------------------------
 
 const DEFAULT_VALUES = {
-  // data: null,
+  empty: true,
+  numberOfComponents: 3,
   dataType: VtkDataTypes.FLOAT,
 };
 
@@ -68,18 +68,7 @@ const DEFAULT_VALUES = {
 export function extend(publicAPI, model, initialValues = {}) {
   Object.assign(model, DEFAULT_VALUES, initialValues);
 
-  // Object methods
-  macro.obj(publicAPI, model);
-  macro.setGet(publicAPI, model, ['data']);
-
-  // Create dataArray if provided
-  if (!model.data) {
-    model.data = vtkDataArray.newInstance({ numberOfComponents: 3, empty: true });
-  } else {
-    model.data = vtk(model.data);
-  }
-
-  // Object specific methods
+  vtkDataArray.extend(publicAPI, model, initialValues);
   vtkPoints(publicAPI, model);
 }
 

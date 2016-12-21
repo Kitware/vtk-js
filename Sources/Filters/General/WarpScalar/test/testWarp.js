@@ -31,9 +31,9 @@ test('Test vtkWarpScalar execution', (t) => {
   t.ok(output, 'Output dataset exist');
   t.equal(output.isA('vtkPolyData'), true, 'The output dataset should be a vtkPolydata');
   t.equal(
-    input.getPoints().getData().getNumberOfTuples(),
-    output.getPoints().getData().getNumberOfTuples(),
-    `The number of points do not change between input ${input.getPoints().getData().getNumberOfTuples()} and output ${output.getPoints().getData().getNumberOfTuples()}`);
+    input.getPoints().getNumberOfPoints(),
+    output.getPoints().getNumberOfPoints(),
+    `The number of points do not change between input ${input.getPoints().getNumberOfPoints()} and output ${output.getPoints().getNumberOfPoints()}`);
 
   t.end();
 });

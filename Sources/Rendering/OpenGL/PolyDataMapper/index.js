@@ -1206,7 +1206,7 @@ export function vtkOpenGLPolyDataMapper(publicAPI, model) {
 
     if (model.VBOBuildString !== toString) {
       // Build the VBOs
-      const points = poly.getPoints().getData();
+      const points = poly.getPoints();
       const options = {
         points,
         normals: n,

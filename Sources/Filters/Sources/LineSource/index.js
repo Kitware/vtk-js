@@ -22,7 +22,7 @@ export function vtkLineSource(publicAPI, model) {
     }
 
     // Check input
-    const pointDataType = dataset ? dataset.getPoints().getData().getDataType() : 'Float32Array';
+    const pointDataType = dataset ? dataset.getPoints().getDataType() : 'Float32Array';
     const pd = vtkPolyData.newInstance();
     const v21 = new Float32Array(3);
     vtkMath.subtract(model.point2, model.point1, v21);
@@ -37,7 +37,7 @@ export function vtkLineSource(publicAPI, model) {
 
     // Points
     const points = new window[pointDataType](numPts * 3);
-    pd.getPoints().getData().setData(points, 3);
+    pd.getPoints().setData(points, 3);
 
     // Cells
     const lines = new Uint32Array(numPts + 1);

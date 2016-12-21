@@ -170,7 +170,8 @@ def dumpPolyData(datasetDir, dataDir, dataset, colorArrayInfo, root = {}, compre
 
   # Points
   points = dumpDataArray(datasetDir, dataDir, dataset.GetPoints().GetData(), {}, compress)
-  container['points'] = { 'vtkClass': 'vtkPoints', 'data': points }
+  points['vtkClass'] = 'vtkPoints'
+  container['points'] = points
 
   # Cells
   _cells = container
@@ -179,21 +180,25 @@ def dumpPolyData(datasetDir, dataDir, dataset, colorArrayInfo, root = {}, compre
   if dataset.GetVerts() and dataset.GetVerts().GetData().GetNumberOfTuples() > 0:
     _verts = dumpDataArray(datasetDir, dataDir, dataset.GetVerts().GetData(), {}, compress)
     _cells['verts'] = _verts
+    _cells['verts']['vtkClass'] = 'vtkCellArray'
 
   ## Lines
   if dataset.GetLines() and dataset.GetLines().GetData().GetNumberOfTuples() > 0:
     _lines = dumpDataArray(datasetDir, dataDir, dataset.GetLines().GetData(), {}, compress)
     _cells['lines'] = _lines
+    _cells['lines']['vtkClass'] = 'vtkCellArray'
 
   ## Polys
   if dataset.GetPolys() and dataset.GetPolys().GetData().GetNumberOfTuples() > 0:
     _polys = dumpDataArray(datasetDir, dataDir, dataset.GetPolys().GetData(), {}, compress)
     _cells['polys'] = _polys
+    _cells['polys']['vtkClass'] = 'vtkCellArray'
 
   ## Strips
   if dataset.GetStrips() and dataset.GetStrips().GetData().GetNumberOfTuples() > 0:
     _strips = dumpDataArray(datasetDir, dataDir, dataset.GetStrips().GetData(), {}, compress)
     _cells['strips'] = _strips
+    _cells['strips']['vtkClass'] = 'vtkCellArray'
 
   dumpColorArray(datasetDir, dataDir, colorArrayInfo, container, compress)
 

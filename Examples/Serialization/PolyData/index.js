@@ -19,20 +19,17 @@ const polydata = vtk({
   vtkClass: 'vtkPolyData',
   points: {
     vtkClass: 'vtkPoints',
-    data: {
-      vtkClass: 'vtkDataArray',
-      dataType: 'Float32Array',
-      numberOfComponents: 3,
-      values: [
-        0, 0, 0,
-        1, 0, 0.25,
-        1, 1, 0,
-        0, 1, 0.25,
-      ],
-    },
+    dataType: 'Float32Array',
+    numberOfComponents: 3,
+    values: [
+      0, 0, 0,
+      1, 0, 0.25,
+      1, 1, 0,
+      0, 1, 0.25,
+    ],
   },
   polys: {
-    vtkClass: 'vtkDataArray',
+    vtkClass: 'vtkCellArray',
     dataType: 'Uint16Array',
     values: [
       3, 0, 1, 2,

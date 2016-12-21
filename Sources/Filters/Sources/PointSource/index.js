@@ -22,7 +22,7 @@ export function vtkPointSource(publicAPI, model) {
     }
 
     // Check input
-    const pointDataType = dataset ? dataset.getPoints().getData().getDataType() : 'Float32Array';
+    const pointDataType = dataset ? dataset.getPoints().getDataType() : 'Float32Array';
     const pd = vtkPolyData.newInstance();
 
     // hand create a point cloud
@@ -30,7 +30,7 @@ export function vtkPointSource(publicAPI, model) {
 
     // Points
     const points = new window[pointDataType](numPts * 3);
-    pd.getPoints().getData().setData(points, 3);
+    pd.getPoints().setData(points, 3);
 
     // Cells
     const verts = new Uint32Array(numPts + 1);

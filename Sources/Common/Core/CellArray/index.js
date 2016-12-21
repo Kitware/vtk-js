@@ -1,0 +1,88 @@
+import * as macro from '../../../macro';
+import { VtkDataTypes } from '../DataArray/Constants';
+import vtkDataArray from '../DataArray';
+
+
+// ----------------------------------------------------------------------------
+// Global methods
+// ----------------------------------------------------------------------------
+
+function extractCellSizes(cellArray) {
+  let currentIdx = 0;
+  return cellArray.filter((value, index) => {
+    if (index === currentIdx) {
+      currentIdx += value + 1;
+      return true;
+    }
+    return false;
+  });
+}
+
+function getNumberOfCells(cellArray) {
+  return extractCellSizes(cellArray).length;
+}
+
+
+// ----------------------------------------------------------------------------
+// Static API
+// ----------------------------------------------------------------------------
+
+export const STATIC = {
+  extractCellSizes,
+  getNumberOfCells,
+};
+
+// ----------------------------------------------------------------------------
+// vtkCellArray methods
+// ----------------------------------------------------------------------------
+
+function vtkCellArray(publicAPI, model) {
+  // Set our className
+  model.classHierarchy.push('vtkCellArray');
+
+  publicAPI.getNumberOfCells = (recompute) => {
+    if (model.numberOfCells !== undefined && !recompute) {
+      return model.numberOfCells;
+    }
+
+    model.cellSizes = extractCellSizes(model.values);
+    model.numberOfCells = model.cellSizes.length;
+    return model.numberOfCells;
+  };
+
+  publicAPI.getCellSizes = (recompute) => {
+    if (model.cellSizes !== undefined && !recompute) {
+      return model.cellSizes;
+    }
+
+    model.cellSizes = extractCellSizes(model.values);
+    return model.cellSizes;
+  };
+}
+
+// ----------------------------------------------------------------------------
+// Object factory
+// ----------------------------------------------------------------------------
+
+const DEFAULT_VALUES = {
+  empty: true,
+  numberOfComponents: 1,
+  dataType: VtkDataTypes.UNSIGNED_INT,
+};
+
+// ----------------------------------------------------------------------------
+
+export function extend(publicAPI, model, initialValues = {}) {
+  Object.assign(model, DEFAULT_VALUES, initialValues);
+
+  vtkDataArray.extend(publicAPI, model, initialValues);
+  vtkCellArray(publicAPI, model);
+}
+
+// ----------------------------------------------------------------------------
+
+export const newInstance = macro.newInstance(extend, 'vtkCellArray');
+
+// ----------------------------------------------------------------------------
+
+export default Object.assign({ newInstance, extend }, STATIC);

@@ -3,7 +3,7 @@
     "name": null,
     "numberOfComponents": 1,
     "dataType": "Uint32Array",
-    "vtkClass": "vtkDataArray",
+    "vtkClass": "vtkCellArray",
     "ranges": [
       {
         "max": 24719.0,
@@ -95,41 +95,16 @@
     "activeVectors": -1
   },
   "points": {
-    "data": {
-      "name": "Points",
-      "numberOfComponents": 3,
-      "dataType": "Float32Array",
-      "vtkClass": "vtkDataArray",
-      "ranges": [
-        {
-          "max": 4.220292568206787,
-          "component": null,
-          "min": -5.483729362487793
-        },
-        {
-          "max": 5.627532482147217,
-          "component": null,
-          "min": -4.8994574546813965
-        },
-        {
-          "max": 10.151244163513184,
-          "component": null,
-          "min": -10.114646911621094
-        },
-        {
-          "max": 11.542742421568043,
-          "component": null,
-          "min": 0.07671435431689132
-        }
-      ],
-      "ref": {
-        "encode": "LittleEndian",
-        "basepath": "data",
-        "id": "9dad7a7a1a98ce645e5f2cedcfad12e9"
-      },
-      "size": 74160
+    "name": "Points",
+    "numberOfComponents": 3,
+    "dataType": "Float32Array",
+    "vtkClass": "vtkPoints",
+    "ref": {
+      "encode": "LittleEndian",
+      "basepath": "data",
+      "id": "9dad7a7a1a98ce645e5f2cedcfad12e9"
     },
-    "vtkClass": "vtkPoints"
+    "size": 74160
   },
   "metadata": {
     "name": "2"

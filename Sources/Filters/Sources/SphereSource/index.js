@@ -20,7 +20,7 @@ export function vtkSphereSource(publicAPI, model) {
     if (dataset && dataset.getMTime() > model.mtime) {
       return;
     }
-    const pointDataType = dataset ? dataset.getPoints().getData().getDataType() : 'Float32Array';
+    const pointDataType = dataset ? dataset.getPoints().getDataType() : 'Float32Array';
 
     dataset = vtkPolyData.newInstance();
 
@@ -178,7 +178,7 @@ export function vtkSphereSource(publicAPI, model) {
 
     // Squeeze
     points = points.subarray(0, pointIdx * 3);
-    dataset.getPoints().getData().setData(points, 3);
+    dataset.getPoints().setData(points, 3);
 
     normals = normals.subarray(0, pointIdx * 3);
     const normalArray = vtkDataArray.newInstance({ name: 'Normals', values: normals, numberOfComponents: 3 });
