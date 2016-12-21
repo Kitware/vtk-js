@@ -2,7 +2,7 @@ import * as macro from '../../../macro';
 import vtk from '../../../vtk';
 
 import vtkPointSet from '../PointSet';
-import vtkDataArray from '../../Core/DataArray';
+import vtkCellArray from '../../Core/CellArray';
 
 // ----------------------------------------------------------------------------
 
@@ -25,7 +25,7 @@ function vtkPolyData(publicAPI, model) {
   POLYDATA_FIELDS.forEach((type) => {
     publicAPI[`getNumberOf${camelize(type)}`] = () => model[type].getNumberOfCells();
     if (!model[type]) {
-      model[type] = vtkDataArray.newInstance({ empty: true });
+      model[type] = vtkCellArray.newInstance();
     } else {
       model[type] = vtk(model[type]);
     }

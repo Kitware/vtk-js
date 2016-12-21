@@ -65,6 +65,7 @@ function vtkCellArray(publicAPI, model) {
 // ----------------------------------------------------------------------------
 
 const DEFAULT_VALUES = {
+  empty: true,
   numberOfComponents: 1,
   dataType: VtkDataTypes.UNSIGNED_INT,
 };
