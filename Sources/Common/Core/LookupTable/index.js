@@ -273,7 +273,7 @@ export function extend(publicAPI, model, initialValues = {}) {
 
 
   // Inheritance
-  vtkScalarsToColors.extend(publicAPI, model);
+  vtkScalarsToColors.extend(publicAPI, model, initialValues);
 
   // Internal objects initialization
   if (!model.table) {

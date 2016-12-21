@@ -150,7 +150,7 @@ export function extend(publicAPI, model, initialValues = {}) {
   Object.assign(model, DEFAULT_VALUES, initialValues);
 
   // Inheritance
-  vtkProp.extend(publicAPI, model);
+  vtkProp.extend(publicAPI, model, initialValues);
 
   model.positionCoordinate = vtkCoordinate.newInstance();
   model.positionCoordinate.setCoordinateSystemToViewport();

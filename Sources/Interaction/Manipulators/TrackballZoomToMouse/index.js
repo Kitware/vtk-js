@@ -40,7 +40,7 @@ export function extend(publicAPI, model, initialValues = {}) {
   Object.assign(model, DEFAULT_VALUES, initialValues);
 
   // Inheritance
-  vtkTrackballZoom.extend(publicAPI, model);
+  vtkTrackballZoom.extend(publicAPI, model, initialValues);
 
   // Object specific methods
   vtkTrackballZoomToMouse(publicAPI, model);
