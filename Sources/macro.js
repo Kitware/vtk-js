@@ -379,12 +379,45 @@ export function algo(publicAPI, model, numberOfInputs, numberOfOutputs) {
       console.log('instance deleted - can not call any method');
       return null;
     }
-    publicAPI.update();
+    if (publicAPI.shouldUpdate()) {
+      // console.log('update filter', publicAPI.getClassName());
+      publicAPI.update();
+    }
     return model.output[port];
   }
 
+  publicAPI.shouldUpdate = () => {
+    const localMTime = publicAPI.getMTime();
+    let count = numberOfOutputs;
+    while (count--) {
+      if (!model.output[count] || model.output[count].getMTime() < localMTime) {
+        return true;
+      }
+    }
+
+    count = numberOfInputs;
+    while (count--) {
+      if (model.inputConnection[count] && model.inputConnection[count].filter.shouldUpdate()) {
+        return true;
+      }
+    }
+
+    const maxOutputMTime = Math.max(...model.output.filter(i => !!i).map(i => i.getMTime()));
+    count = numberOfInputs;
+    while (count--) {
+      if (model.inputData[count] && model.inputData[count].getMTime() > maxOutputMTime) {
+        return true;
+      }
+    }
+
+    return false;
+  };
+
   function getOutputPort(port = 0) {
-    return () => getOutputData(port);
+    const outputPortAccess = () => getOutputData(port);
+    // Add reference to filter
+    outputPortAccess.filter = publicAPI;
+    return outputPortAccess;
   }
 
   // Handle input if needed
