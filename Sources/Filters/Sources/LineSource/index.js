@@ -10,16 +10,12 @@ export function vtkLineSource(publicAPI, model) {
   // Set our className
   model.classHierarchy.push('vtkLineSource');
 
-  function requestData(inData, outData) {
+  publicAPI.requestData = (inData, outData) => {
     if (model.deleted) {
       return;
     }
 
     const dataset = outData[0];
-
-    if (dataset && dataset.getMTime() > model.mtime) {
-      return;
-    }
 
     // Check input
     const pointDataType = dataset ? dataset.getPoints().getDataType() : 'Float32Array';
@@ -66,10 +62,7 @@ export function vtkLineSource(publicAPI, model) {
 
     // Update output
     outData[0] = pd;
-  }
-
-  // Expose methods
-  publicAPI.requestData = requestData;
+  };
 }
 
 // ----------------------------------------------------------------------------

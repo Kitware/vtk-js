@@ -10,18 +10,13 @@ export function vtkSphereSource(publicAPI, model) {
   // Set our className
   model.classHierarchy.push('vtkSphereSource');
 
-  function requestData(inData, outData) {
+  publicAPI.requestData = (inData, outData) => {
     if (model.deleted) {
       return;
     }
 
     let dataset = outData[0];
-
-    if (dataset && dataset.getMTime() > model.mtime) {
-      return;
-    }
     const pointDataType = dataset ? dataset.getPoints().getDataType() : 'Float32Array';
-
     dataset = vtkPolyData.newInstance();
 
     // ----------------------------------------------------------------------
@@ -189,10 +184,7 @@ export function vtkSphereSource(publicAPI, model) {
 
     // Update output
     outData[0] = dataset;
-  }
-
-  // Expose methods
-  publicAPI.requestData = requestData;
+  };
 }
 
 // ----------------------------------------------------------------------------

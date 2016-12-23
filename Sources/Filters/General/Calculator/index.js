@@ -172,19 +172,15 @@ function vtkCalculator(publicAPI, model) {
     if (!model.formula) {
       return 0;
     }
-    if (
-      !outData[0] ||
-      inData[0].getMTime() > outData[0].getMTime() ||
-      publicAPI.getMTime() > outData[0].getMTime()) {
-      const arraySpec = model.formula.getArrays(inData);
 
-      const newDataSet = vtk({ vtkClass: inData[0].getClassName() });
-      newDataSet.shallowCopy(inData[0]);
-      outData[0] = newDataSet;
+    const arraySpec = model.formula.getArrays(inData);
 
-      const arrays = publicAPI.prepareArrays(arraySpec, inData[0], outData[0]);
-      model.formula.evaluate(arrays.arraysIn, arrays.arraysOut);
-    }
+    const newDataSet = vtk({ vtkClass: inData[0].getClassName() });
+    newDataSet.shallowCopy(inData[0]);
+    outData[0] = newDataSet;
+
+    const arrays = publicAPI.prepareArrays(arraySpec, inData[0], outData[0]);
+    model.formula.evaluate(arrays.arraysIn, arrays.arraysOut);
 
     return 1;
   };
