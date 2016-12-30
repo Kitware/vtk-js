@@ -132,6 +132,12 @@ function applyFormula() {
   });
 });
 
+// Checkbox
+document.querySelector('.visibility').addEventListener('change', (e) => {
+  planeActor.setVisibility(!!e.target.checked);
+  renderWindow.render();
+});
+
 document.querySelector('.formula').addEventListener('input', applyFormula);
 
 document.querySelector('.next').addEventListener('click', (e) => {
