@@ -1,6 +1,11 @@
 import vtk from './vtk';
 
 let globalMTime = 0;
+
+export function getCurrentGlobalMTime() {
+  return globalMTime;
+}
+
 // ----------------------------------------------------------------------------
 // capitilze provided string
 // ----------------------------------------------------------------------------
