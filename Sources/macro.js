@@ -399,6 +399,8 @@ export function algo(publicAPI, model, numberOfInputs, numberOfOutputs) {
     while (count--) {
       if (model.inputConnection[count] && model.inputConnection[count].filter.shouldUpdate()) {
         return true;
+      } else if (model.inputConnection[count] && model.inputConnection[count]() && model.inputConnection[count]().getMTime() > localMTime) {
+        return true;
       }
     }
 
@@ -409,7 +411,6 @@ export function algo(publicAPI, model, numberOfInputs, numberOfOutputs) {
         return true;
       }
     }
-
     return false;
   };
 
