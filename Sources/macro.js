@@ -404,15 +404,13 @@ export function algo(publicAPI, model, numberOfInputs, numberOfOutputs) {
     while (count--) {
       if (model.inputConnection[count] && model.inputConnection[count].filter.shouldUpdate()) {
         return true;
-      } else if (model.inputConnection[count] && model.inputConnection[count]() && model.inputConnection[count]().getMTime() > localMTime) {
-        return true;
       }
     }
 
-    const maxOutputMTime = Math.max(...model.output.filter(i => !!i).map(i => i.getMTime()));
+    const minOutputMTime = Math.min(...model.output.filter(i => !!i).map(i => i.getMTime()));
     count = numberOfInputs;
     while (count--) {
-      if (model.inputData[count] && model.inputData[count].getMTime() > maxOutputMTime) {
+      if (publicAPI.getInputData(count) && publicAPI.getInputData(count).getMTime() > minOutputMTime) {
         return true;
       }
     }
@@ -455,7 +453,9 @@ export function algo(publicAPI, model, numberOfInputs, numberOfOutputs) {
         count++;
       }
     }
-    publicAPI.requestData(ins, model.output);
+    if (publicAPI.shouldUpdate()) {
+      publicAPI.requestData(ins, model.output);
+    }
   };
 
   publicAPI.getNumberOfInputPorts = () => numberOfInputs;
