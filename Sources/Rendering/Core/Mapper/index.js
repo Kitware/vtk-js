@@ -450,6 +450,15 @@ function vtkMapper(publicAPI, model) {
     return model.lookupTable;
   };
 
+  publicAPI.getMTime = () => {
+    let mt = model.mtime;
+    if (model.lookupTable !== null) {
+      const time = model.lookupTable.getMTime();
+      mt = (time > mt ? time : mt);
+    }
+    return mt;
+  };
+
   publicAPI.acquireInvertibleLookupTable = notImplemented('AcquireInvertibleLookupTable');
   publicAPI.valueToColor = notImplemented('ValueToColor');
   publicAPI.colorToValue = notImplemented('ColorToValue');
