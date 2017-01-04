@@ -2,6 +2,7 @@ import vtkFullScreenRenderWindow  from '../../../../../Sources/Rendering/Misc/Fu
 
 import vtkActor                   from '../../../../../Sources/Rendering/Core/Actor';
 import vtkCalculator              from '../../../../../Sources/Filters/General/Calculator';
+import vtkLookupTable             from '../../../../../Sources/Common/Core/LookupTable';
 import vtkMapper                  from '../../../../../Sources/Rendering/Core/Mapper';
 import vtkPlaneSource             from '../../../../../Sources/Filters/Sources/PlaneSource';
 import vtkPoints                  from '../../../../../Sources/Common/Core/Points';
@@ -30,8 +31,16 @@ const renderWindow = fullScreenRenderer.getRenderWindow();
 // Example code
 // ----------------------------------------------------------------------------
 
+const lookupTable = vtkLookupTable.newInstance({ hueRange: [0.666, 0] });
+
 const planeSource = vtkPlaneSource.newInstance({ xResolution: 25, yResolution: 25 });
-const planeMapper = vtkMapper.newInstance({ colorMode: ColorMode.DEFAULT, scalarMode: ScalarMode.DEFAULT });
+const planeMapper = vtkMapper.newInstance({
+  interpolateScalarsBeforeMapping: true,
+  colorMode: ColorMode.DEFAULT,
+  scalarMode: ScalarMode.DEFAULT,
+  useLookupTableScalarRange: true,
+  lookupTable,
+});
 const planeActor = vtkActor.newInstance();
 planeActor.getProperty().setEdgeVisibility(true);
 
@@ -44,7 +53,11 @@ simpleFilter.setFormulaSimple(
 ); // Our formula for z
 
 const warpScalar = vtkWarpScalar.newInstance();
-const warpMapper = vtkMapper.newInstance({ interpolateScalarBeforeMapping: true });
+const warpMapper = vtkMapper.newInstance({
+  interpolateScalarsBeforeMapping: true,
+  useLookupTableScalarRange: true,
+  lookupTable,
+});
 const warpActor = vtkActor.newInstance();
 
 // The generated 'z' array will become the default scalars, so the plane mapper will color by 'z':
@@ -71,6 +84,15 @@ renderWindow.render();
 // ----------------------------------------------------------------------------
 
 fullScreenRenderer.addController(controlPanel);
+
+function updateScalarRange() {
+  const min = Number(document.querySelector('.min').value);
+  const max = Number(document.querySelector('.max').value);
+  if (!isNaN(min) && !isNaN(max)) {
+    lookupTable.setTableRange(min, max);
+    renderWindow.render();
+  }
+}
 
 function applyFormula() {
   const el = document.querySelector('.formula');
@@ -107,6 +129,15 @@ function applyFormula() {
       // We evaluated 1 point without exception... it's safe to update the
       // filter and re-render.
       simpleFilter.setFormula(formulaObj);
+
+      simpleFilter.update();
+
+      // Update UI with new range
+      const [min, max] = simpleFilter.getOutputData().getPointData().getScalars().getRange();
+      document.querySelector('.min').value = min;
+      document.querySelector('.max').value = max;
+      lookupTable.setTableRange(min, max);
+
       renderWindow.render();
       return;
     } catch (exc) {
@@ -140,12 +171,20 @@ document.querySelector('.visibility').addEventListener('change', (e) => {
 
 document.querySelector('.formula').addEventListener('input', applyFormula);
 
+['min', 'max'].forEach((selector) => {
+  document.querySelector(`.${selector}`).addEventListener('input', updateScalarRange);
+});
+
 document.querySelector('.next').addEventListener('click', (e) => {
   formulaIdx = (formulaIdx + 1) % FORMULA.length;
   document.querySelector('.formula').value = FORMULA[formulaIdx];
   applyFormula();
   renderWindow.render();
 });
+
+
+// Eecompute scalar range
+applyFormula();
 
 // -----------------------------------------------------------
 // Make some variables global so that you can inspect and
@@ -160,3 +199,4 @@ global.warpMapper = warpMapper;
 global.warpActor = warpActor;
 global.renderer = renderer;
 global.renderWindow = renderWindow;
+global.lookupTable = lookupTable;
