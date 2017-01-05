@@ -1168,9 +1168,6 @@ export function vtkOpenGLPolyDataMapper(publicAPI, model) {
     // parameters in the mapper
 
     const representation = actor.getProperty().getRepresentation();
-    const toString = `${poly.getMTime()}A${representation}B${poly.getMTime()}`
-      + `C${(n ? n.getMTime() : 1)}D${(c ? c.getMTime() : 1)}`
-      + `E${actor.getProperty().getEdgeVisibility()}`;
 
     let tcoords = poly.getPointData().getTCoords();
     if (!model.openGLActor.getActiveTextures().length) {
@@ -1204,6 +1201,10 @@ export function vtkOpenGLPolyDataMapper(publicAPI, model) {
       tex.deactivate();
     }
 
+    const toString = `${poly.getMTime()}A${representation}B${poly.getMTime()}`
+      + `C${(n ? n.getMTime() : 1)}D${(c ? c.getMTime() : 1)}`
+      + `E${actor.getProperty().getEdgeVisibility()}`
+      + `F${(tcoords ? tcoords.getMTime() : 1)}`;
     if (model.VBOBuildString !== toString) {
       // Build the VBOs
       const points = poly.getPoints();
