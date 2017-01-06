@@ -5,13 +5,11 @@
 // import 'normalize.css';
 import 'babel-polyfill';
 
-import vtkOpenGLRenderWindow      from '../../../Sources/Rendering/OpenGL/RenderWindow';
-import vtkRenderWindow            from '../../../Sources/Rendering/Core/RenderWindow';
-import vtkRenderer                from '../../../Sources/Rendering/Core/Renderer';
-import vtkRenderWindowInteractor  from '../../../Sources/Rendering/Core/RenderWindowInteractor';
-import vtkHttpSceneLoader         from '../../../Sources/IO/Core/HttpSceneLoader';
+import vtkFullScreenRenderWindow  from '../../../Sources/Rendering/Misc/FullScreenRenderWindow';
 
+import vtkHttpSceneLoader         from '../../../Sources/IO/Core/HttpSceneLoader';
 import DataAccessHelper           from '../../../Sources/IO/Core/DataAccessHelper';
+import vtkURLExtract              from '../../../Sources/Common/Core/URLExtract';
 
 import controlWidget from './SceneControllerWidget';
 import style from './SceneLoader.mcss';
@@ -55,50 +53,26 @@ function downloadZipFile(url) {
 
 export function load(container, options) {
   autoInit = false;
-  let dims = container.getBoundingClientRect();
   emptyContainer(container);
 
-  // Create some control UI
-  const renderWindowContainer = document.createElement('div');
-  container.appendChild(renderWindowContainer);
-  // create what we will view
-  const renWin = vtkRenderWindow.newInstance();
-  const renderer = vtkRenderer.newInstance();
-  renWin.addRenderer(renderer);
-  // now create something to view it, in this case webgl
-  // with mouse/touch interaction
-  const glwindow = vtkOpenGLRenderWindow.newInstance();
-  glwindow.setSize(dims.width, dims.height);
-  glwindow.setContainer(renderWindowContainer);
-  renWin.addView(glwindow);
-
-  window.addEventListener('resize', () => {
-    dims = container.getBoundingClientRect();
-    glwindow.setSize(dims.width, dims.height);
-    renWin.render();
-  });
-
-  const iren = vtkRenderWindowInteractor.newInstance();
-  iren.setView(glwindow);
-  // initialize the interaction and bind event handlers
-  // to the HTML elements
-  iren.initialize();
-  iren.bindEvents(renderWindowContainer, document);
+  const fullScreenRenderer = vtkFullScreenRenderWindow.newInstance();
+  const renderer = fullScreenRenderer.getRenderer();
+  const renderWindow = fullScreenRenderer.getRenderWindow();
 
   function onReady(sceneImporter) {
     sceneImporter.onReady(() => {
-      renWin.render();
+      renderWindow.render();
 
       // Add UI to dynamically change rendering settings
       if (!widgetCreated) {
         widgetCreated = true;
-        controlWidget(document.querySelector('body'), sceneImporter.getScene(), renWin.render);
+        controlWidget(document.querySelector('body'), sceneImporter.getScene(), renderWindow.render);
       }
     });
 
     window.addEventListener('dblclick', () => {
       sceneImporter.resetScene();
-      renWin.render();
+      renderWindow.render();
     });
   }
 
@@ -155,6 +129,17 @@ export function initLocalFileLoader(container) {
   }
 
   fileSelector.onchange = handleFile;
+}
+
+// Look at URL an see if we should load a file
+// ?fileURL=https://data.kitware.com/api/v1/item/587003d08d777f05f44a5c98/download?contentDisposition=inline
+const userParams = vtkURLExtract.extractURLParameters();
+
+if (userParams.url || userParams.fileURL) {
+  const exampleContainer = document.querySelector('.content');
+  const rootBody = document.querySelector('body');
+  const myContainer = exampleContainer || rootBody;
+  load(myContainer, userParams);
 }
 
 // Auto setup if no method get called within 100ms
