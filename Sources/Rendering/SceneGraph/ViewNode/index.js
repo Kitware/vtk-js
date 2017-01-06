@@ -114,7 +114,7 @@ function vtkViewNode(publicAPI, model) {
 
   publicAPI.createViewNode = (dataObj) => {
     if (!model.myFactory) {
-      console.log('Can not create view nodes without my own factory');
+      console.log('Cannot create view nodes without my own factory');
       return null;
     }
     const ret = model.myFactory.createNode(dataObj);

@@ -13,7 +13,7 @@ function vtkImageData(publicAPI, model) {
 
   publicAPI.setExtent = (...inExtent) => {
     if (model.deleted) {
-      console.log('instance deleted - can not call any method');
+      console.log('instance deleted - cannot call any method');
       return;
     }
 

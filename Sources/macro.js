@@ -47,7 +47,7 @@ export function obj(publicAPI = {}, model = {}) {
 
   publicAPI.modified = () => {
     if (model.deleted) {
-      console.log('instance deleted - can not call any method');
+      console.log('instance deleted - cannot call any method');
       return;
     }
 
@@ -57,7 +57,7 @@ export function obj(publicAPI = {}, model = {}) {
 
   publicAPI.onModified = (callback) => {
     if (model.deleted) {
-      console.log('instance deleted - can not call any method');
+      console.log('instance deleted - cannot call any method');
       return null;
     }
 
@@ -142,7 +142,7 @@ export function obj(publicAPI = {}, model = {}) {
   // Add shallowCopy(otherInstance) support
   publicAPI.shallowCopy = (other, debug = false) => {
     if (other.getClassName() !== publicAPI.getClassName()) {
-      throw new Error(`Can not ShallowCopy ${other.getClassName()} into ${publicAPI.getClassName()}`);
+      throw new Error(`Cannot ShallowCopy ${other.getClassName()} into ${publicAPI.getClassName()}`);
     }
     const otherModel = other.get();
 
@@ -232,7 +232,7 @@ function findSetter(field) {
   return function getSetter(publicAPI, model) {
     return function setter(value) {
       if (model.deleted) {
-        console.log('instance deleted - can not call any method');
+        console.log('instance deleted - cannot call any method');
         return false;
       }
 
@@ -283,7 +283,7 @@ export function setArray(publicAPI, model, fieldNames, size) {
   fieldNames.forEach((field) => {
     publicAPI[`set${capitalize(field)}`] = (...args) => {
       if (model.deleted) {
-        console.log('instance deleted - can not call any method');
+        console.log('instance deleted - cannot call any method');
         return false;
       }
 
@@ -356,7 +356,7 @@ export function algo(publicAPI, model, numberOfInputs, numberOfOutputs) {
   // Methods
   function setInputData(dataset, port = 0) {
     if (model.deleted) {
-      console.log('instance deleted - can not call any method');
+      console.log('instance deleted - cannot call any method');
       return;
     }
     model.inputData[port] = dataset;
@@ -372,7 +372,7 @@ export function algo(publicAPI, model, numberOfInputs, numberOfOutputs) {
 
   function setInputConnection(outputPort, port = 0) {
     if (model.deleted) {
-      console.log('instance deleted - can not call any method');
+      console.log('instance deleted - cannot call any method');
       return;
     }
     model.inputData[port] = null;
@@ -381,7 +381,7 @@ export function algo(publicAPI, model, numberOfInputs, numberOfOutputs) {
 
   function getOutputData(port = 0) {
     if (model.deleted) {
-      console.log('instance deleted - can not call any method');
+      console.log('instance deleted - cannot call any method');
       return null;
     }
     if (publicAPI.shouldUpdate()) {
@@ -498,7 +498,7 @@ export function event(publicAPI, model, eventName) {
 
   publicAPI[`invoke${capitalize(eventName)}`] = (...args) => {
     if (model.deleted) {
-      console.log('instance deleted - can not call any method');
+      console.log('instance deleted - cannot call any method');
       return;
     }
 
@@ -507,7 +507,7 @@ export function event(publicAPI, model, eventName) {
 
   publicAPI[`on${capitalize(eventName)}`] = (callback) => {
     if (model.deleted) {
-      console.log('instance deleted - can not call any method');
+      console.log('instance deleted - cannot call any method');
       return null;
     }
 
