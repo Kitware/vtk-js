@@ -148,7 +148,6 @@ function vtkRenderWindowInteractor(publicAPI, model) {
   };
 
   publicAPI.handleKeyPress = (event) => {
-    publicAPI.setEventPosition(event.clientX, model.canvas.clientHeight - event.clientY + 1, 0, 0);
     model.controlKey = event.ctrlKey;
     model.altKey = event.altKey;
     model.shiftKey = event.shiftKey;
