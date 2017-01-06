@@ -40,7 +40,7 @@ function vtkOpenGLCamera(publicAPI, model) {
       publicAPI.getFirstAncestorOfType('vtkOpenGLRenderWindow').getMTime() > model.keyMatrixTime.getMTime() ||
       publicAPI.getMTime() > model.keyMatrixTime.getMTime() ||
       ren.getMTime() > model.keyMatrixTime.getMTime()) {
-      model.WCVCMatrix = model.renderable.getViewTransformMatrix();
+      mat4.copy(model.WCVCMatrix, model.renderable.getViewTransformMatrix());
 
       mat3.fromMat4(model.normalMatrix, model.WCVCMatrix);
       mat3.invert(model.normalMatrix, model.normalMatrix);
@@ -49,11 +49,10 @@ function vtkOpenGLCamera(publicAPI, model) {
       const oglren = publicAPI.getFirstAncestorOfType('vtkOpenGLRenderer');
       const aspectRatio = oglren.getAspectRatio();
 
-      model.VCDCMatrix = model.renderable.getProjectionTransformMatrix(
-                           aspectRatio, -1, 1);
+      mat4.copy(model.VCDCMatrix, model.renderable.getProjectionTransformMatrix(
+                           aspectRatio, -1, 1));
       mat4.transpose(model.VCDCMatrix, model.VCDCMatrix);
 
-      model.WCDCMatrix = mat4.create();
       mat4.multiply(model.WCDCMatrix, model.VCDCMatrix, model.WCVCMatrix);
 //      mat4.multiply(model.WCDCMatrix, model.WCVCMatrix, model.VCDCMatrix);
 
@@ -74,6 +73,9 @@ const DEFAULT_VALUES = {
   lastRenderer: null,
   keyMatrixTime: null,
   normalMatrix: null,
+  VCDCMatrix: null,
+  WCVCMatrix: null,
+  WCDCMatrix: null,
 };
 
 // ----------------------------------------------------------------------------
@@ -86,6 +88,9 @@ export function extend(publicAPI, model, initialValues = {}) {
 
   model.keyMatrixTime = {};
   model.normalMatrix = mat3.create();
+  model.VCDCMatrix = mat4.create();
+  model.WCVCMatrix = mat4.create();
+  model.WCDCMatrix = mat4.create();
   macro.obj(model.keyMatrixTime);
 
   // Build VTK API
