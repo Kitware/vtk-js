@@ -227,16 +227,22 @@ function vtkInteractorStyleTrackballCamera(publicAPI, model) {
 
     const size = rwi.getView().getViewportSize(model.currentRenderer);
 
-    const deltaElevation = -20.0 / size[1];
-    const deltaAzimuth = -20.0 / size[0];
+    let deltaElevation = -0.1;
+    let deltaAzimuth = -0.1;
+    if (size[0] && size[1]) {
+      deltaElevation = -20.0 / size[1];
+      deltaAzimuth = -20.0 / size[0];
+    }
 
     const rxf = dx * deltaAzimuth * model.motionFactor;
     const ryf = dy * deltaElevation * model.motionFactor;
 
     const camera = model.currentRenderer.getActiveCamera();
-    camera.azimuth(rxf);
-    camera.elevation(ryf);
-    camera.orthogonalizeViewUp();
+    if (!isNaN(rxf) && !isNaN(ryf)) {
+      camera.azimuth(rxf);
+      camera.elevation(ryf);
+      camera.orthogonalizeViewUp();
+    }
 
     if (model.autoAdjustCameraClippingRange) {
       model.currentRenderer.resetCameraClippingRange();
@@ -264,16 +270,17 @@ function vtkInteractorStyleTrackballCamera(publicAPI, model) {
     const camera = model.currentRenderer.getActiveCamera();
     const center = rwi.getView().getViewportCenter(model.currentRenderer);
 
-    const newAngle =
-      vtkMath.degreesFromRadians(Math.atan2(pos.y - center[1],
-                                          pos.x - center[0]));
-
     const oldAngle =
       vtkMath.degreesFromRadians(Math.atan2(lastPos.y - center[1],
                                           lastPos.x - center[0]));
+    const newAngle =
+      vtkMath.degreesFromRadians(Math.atan2(pos.y - center[1],
+                                          pos.x - center[0])) - oldAngle;
 
-    camera.roll(newAngle - oldAngle);
-    camera.orthogonalizeViewUp();
+    if (!isNaN(newAngle)) {
+      camera.roll(newAngle);
+      camera.orthogonalizeViewUp();
+    }
 
     rwi.render();
   };
@@ -348,7 +355,7 @@ function vtkInteractorStyleTrackballCamera(publicAPI, model) {
 
   //----------------------------------------------------------------------------
   publicAPI.dollyByFactor = (factor) => {
-    if (model.currentRenderer === null) {
+    if (model.currentRenderer === null || isNaN(factor)) {
       return;
     }
 
