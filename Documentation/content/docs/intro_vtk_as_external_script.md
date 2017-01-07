@@ -1,9 +1,9 @@
 title: Importing vtk.js as an external script
 ---
 
-This guide illustrate how to build an application using vtk.js as a pre-build script file. This is not the recommended way but that enable quick prototyping and easy access without any tools or infrastructure needed.
+This guide illustrates how to build an application using vtk.js as a pre-built script file. This is not the recommended way of building vtk.js applications but enables quick prototyping and easy access without any tools or infrastructure needed.
 
-Below you can find an [html](https://raw.githubusercontent.com/Kitware/vtk-js/master/Documentation/content/docs/vtk-js-demo.html) file example that leverage the vtk.js library and build a visualization with it. You can see its ES6 example counter part [here](https://kitware.github.io/vtk-js/examples/ConeSource.html).
+Below you can find an [html](https://raw.githubusercontent.com/Kitware/vtk-js/master/Documentation/content/docs/vtk-js-demo.html) file example that leverages vtk.js and builds a visualization with it. You can see its ES6 example counter part [here](https://kitware.github.io/vtk-js/examples/ConeSource.html).
 
 ```html vtk-js-demo.html
 <!DOCTYPE html>
