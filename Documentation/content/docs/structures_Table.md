@@ -1,7 +1,7 @@
 title: Table
 ---
 
-A Table is a structure that gather DataArray with the same number of tuples.
+A Table is a structure that gathers DataArray's with the same number of tuples.
 
 ## Structure
 

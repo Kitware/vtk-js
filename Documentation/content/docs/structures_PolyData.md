@@ -1,7 +1,7 @@
 title: PolyData
 ---
 
-A PolyData is a surface mesh structure that can hold data arrays either on points, cells or on the dataset itself.
+A PolyData is a surface mesh structure that can hold data arrays in points, cells or in the dataset itself.
 
 ## Structure
 

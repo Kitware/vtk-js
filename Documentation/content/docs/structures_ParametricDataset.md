@@ -1,7 +1,7 @@
 title: ParametricDataset
 ---
 
-A ParametricDataset is a set of datasets which may change based on a set of Parameters.
+A ParametricDataset is a set of datasets which may change based on a set of parameters.
 
 ## Structure 
 

@@ -1,7 +1,7 @@
 title: UnstructuredGrid
 ---
 
-An UnstructuredGrid is a mesh structure that can hold data arrays either on points, cells or on the dataset itself. The mesh can be composed of several cells which could be either 2D or 3D.
+An UnstructuredGrid is a mesh structure that can hold data arrays in points, cells or in the dataset itself. The mesh can be composed of several cells which can be either 2D or 3D.
 
 ## Structure
 
