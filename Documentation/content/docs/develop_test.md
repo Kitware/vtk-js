@@ -1,7 +1,7 @@
 title: Creating a test in vtk.js
 ---
 
-This guide illustrate how to add tests to the vtk.js repository and how to run and debug them.
+This guide illustrates how to add tests to the vtk.js repository and how to run and debug them.
 
 First each VTK class can have several tests spread among several files but we also have infrastructure for global tests which live inside __Sources/Testing/test*.js__.
 
@@ -13,7 +13,7 @@ That __test__ directory should contain as many test file as you like with their 
 
 ## Testing plain JavaScript
 
-Some vtkClass don't necessarely involve rendering and can be tested without a WebGL environment. In which case a plain JavaScript test could be as follow and additional test() function could be added within the same file:
+Some vtkClass'es don't necessarily involve rendering and can be tested without a WebGL environment. In which case a plain JavaScript test could be written as follows and an additional test() function could be added within the same file:
 
 ```js ClassName/test/testExample.js
 import test from 'tape-catch';
@@ -89,30 +89,26 @@ test.onlyIfWebGL('Test vtkClassName Rendering', (t) => {
 
 ## Registering a test
 
-As opposed to examples and api documentation, tests won't be picked up automatically and it is the responsability of the person that add a test to register it on the test suite.
-This may change as the project evolve.
+As opposed to examples and api documentation, tests won't be picked up automatically and it is the responsability of the author to register it on the test suite.
+_This may change as the project evolves._
 
-To add a test to the suite, you just need to import it inside `Sources/tests.js`.
+To add a test to the suite, you need to import it inside `Sources/tests.js`.
 
 ## Running all the tests
 
-In order to run all the registered test, run the following command line:
+In order to run all the registered test, run the following command:
 
 ```sh
 $ npm run test
 ```
 
-or 
-
-```sh
-$ npm t
-```
+That command can also be written as `npm t` or `npm test` however it will run all tests.
 
 ## Running a single test for debugging
 
-Since we have a single entry points for all the test we run, you can easily comment every files except the one you want to run inside `Sources/tests.js`.
+Since we have single entry points for all the tests we run, you can comment out every file except the one you want to run inside `Sources/tests.js`.
 
-Then executing `npm t` will only run that file. But if you want to open a browser and debug the actual code, you can do it with the following command line:
+Then executing `npm t` will only run that file, but if you want to open a browser and debug the actual code, you can do it with the following command:
 
 ```sh
 $ npm run test:debug

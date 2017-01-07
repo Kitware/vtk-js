@@ -1,18 +1,20 @@
 title: Requirements
 ---
 
-Installing or developing vtk.js is quite easy. However, you do need to have a couple of other things installed first:
+Installing and developing vtk.js is quite easy, there are just two dependencies: 
 
 - [Node.js](http://nodejs.org/)
-- [Git](http://git-scm.com/)
+- [Git](http://git-scm.com/) - only necessary for developing and committing to the library.
 
-If your computer already has these, congratulations! Just install vtk.js with npm within your project:
+Instructions for installing these are located at the bottom of this page. If your computer already has these, congratulations! 
+
+To install vtk.js within your project:
 
 ```sh
 $ npm install vtk.js --save
 ```
 
-or if that's for developing vtk.js, then clone the repository using git:
+If you're developing for vtk.js, then clone the repository using git:
 
 ```sh
 $ git clone https://github.com/kitware/vtk-js.git
@@ -20,11 +22,7 @@ $ cd vtk-js
 $ npm install
 ```
 
-If not, please follow the following instructions to install all the requirements.
-
-{% note warn For Mac users %}
-You may encounter some problems when compiling. Please install Xcode from App Store first. After Xcode is installed, open Xcode and go to **Preferences -> Download -> Command Line Tools -> Install** to install command line tools.
-{% endnote %}
+Further instructions on vtk.js development can be found on the [contributing page](https://kitware.github.io/vtk-js/docs/misc_contributing.html). 
 
 ### Git
 
@@ -33,7 +31,10 @@ You may encounter some problems when compiling. Please install Xcode from App St
 - Linux (Ubuntu, Debian): `sudo apt-get install git-core`
 - Linux (Fedora, Red Hat, CentOS): `sudo yum install git-core`
 
+{% note warn For Mac users %}
+You may encounter some problems when compiling. Please install Xcode from App Store first. After Xcode is installed, open Xcode and go to **Preferences -> Download -> Command Line Tools -> Install** to install command line tools.
+{% endnote %}
+
 ### Node.js
 
 The best way to install Node.js is with [nvm](https://github.com/creationix/nvm).
-

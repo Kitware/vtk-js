@@ -55,8 +55,8 @@ Please follow the coding style:
 
 ## Updating Documentation
 
-The VTK.js documentation is part of the code repository.
+The vtk.js documentation is part of the code repository and is entirely written in [markdown](https://daringfireball.net/projects/markdown/). The source for this page for example is located at [`Documentation/content/docs/misc_contributing.md`](https://github.com/Kitware/vtk-js/blob/master/Documentation/content/docs/misc_contributing.md).
 
 ## Reporting Issues
 
-When you encounter some problems when using ParaViewWeb, you can find the solutions in [Troubleshooting](troubleshooting.html) or ask me on [GitHub](https://github.com/kitware/vtk-js/issues) or [Mailing list](http://www.vtk.org/mailman/listinfo/vtk). If you can't find the answer, please report it on GitHub.
+When you encounter problems using vtk.js you may be able to find the solutions in [Troubleshooting](troubleshooting.html), on[GitHub](https://github.com/kitware/vtk-js/issues), or via the [Mailing list](http://www.vtk.org/mailman/listinfo/vtk). If you can't find the answer, please report it on GitHub.

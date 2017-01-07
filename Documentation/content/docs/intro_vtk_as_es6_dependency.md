@@ -1,7 +1,7 @@
 title: Using vtk.js as an ES6 dependency
 ---
 
-This guide illustrate how to build an application using vtk.js as a dependency using a modern toolsets such as Webpack, NPM. 
+This guide illustrates how to build an application using vtk.js as a dependency using a modern toolsets such as Webpack, NPM. 
 
 ## Creation of the Project structure
 
@@ -99,10 +99,10 @@ module.exports = {
 
 You should extend the generated **package.json** file with the following set of scripts.
 
-``` json package.json
+```json package.json
 {
-  [...]
-  ,"scripts": {
+  [...],
+  "scripts": {
     "build": "webpack",
     "build:release": "export NODE_ENV=production && webpack -p",
     "start": "webpack-dev-server --content-base ./dist",
@@ -115,7 +115,7 @@ You should extend the generated **package.json** file with the following set of 
 
 ## Application
 
-Here is an example of a vtk.js application similar to that [example](https://kitware.github.io/vtk-js/examples/ConeSource.html) available within the source code.
+Here is an example of a vtk.js application similar to an [example](https://kitware.github.io/vtk-js/examples/ConeSource.html) available within the source code.
 
 ```js src/index.js
 import vtkFullScreenRenderWindow from 'vtk.js/Sources/Rendering/Misc/FullScreenRenderWindow';

@@ -5,7 +5,7 @@ A data array is meant to keep track of numerical values while providing associat
 
 ## Structure
 
-The possible dataType are the one available in the language itself as typed array:
+The possible data types are only available in the language itself as typed arrays:
 
 | Type              | Bytes    | C type   |
 | ----------------- | -------- | -------- |
@@ -58,10 +58,10 @@ The possible dataType are the one available in the language itself as typed arra
 
 ## Scalar array reference
 
-Reference array are used within dataset that needs to be fetch on the network
-or that written on disk.
-The __ref__ section provide the information needed to download the array and fill
-it in memory like the previously described ones.
+Reference arrays are used within datasets that need to be fetched on the network
+or written on disk.
+The __ref__ section provides the information needed to download the array and fill
+it in memory.
 
 ```js
 {

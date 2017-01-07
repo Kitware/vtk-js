@@ -94,7 +94,7 @@ export function extend(publicAPI, model, initialValues = {}) {
   Object.assign(model, DEFAULT_VALUES, initialValues);
 
   if ((!model.empty && !model.values && !model.size)) {
-    throw new TypeError('Can not create vtkStringArray object without: size > 0, values');
+    throw new TypeError('Cannot create vtkStringArray object without: size > 0, values');
   }
 
   if (!model.values) {

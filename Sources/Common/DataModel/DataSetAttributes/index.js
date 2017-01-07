@@ -39,11 +39,11 @@ function vtkDataSetAttributes(publicAPI, model) {
   publicAPI.setAttribute = (arr, uncleanAttType) => {
     const attType = cleanAttributeType(uncleanAttType);
     if (arr && attType.toUpperCase() === 'PEDIGREEIDS' && !arr.isA('vtkDataArray')) {
-      vtkWarningMacro(`Can not set attribute ${attType}. The attribute must be a vtkDataArray.`);
+      vtkWarningMacro(`Cannot set attribute ${attType}. The attribute must be a vtkDataArray.`);
       return -1;
     }
     if (arr && !publicAPI.checkNumberOfComponents(arr, attType)) {
-      vtkWarningMacro(`Can not set attribute ${attType}. Incorrect number of components.`);
+      vtkWarningMacro(`Cannot set attribute ${attType}. Incorrect number of components.`);
       return -1;
     }
     let currentAttribute = model[`active${attType}`];
@@ -74,11 +74,11 @@ function vtkDataSetAttributes(publicAPI, model) {
       if (attType.toUpperCase() !== 'PEDIGREEIDS') {
         const arr = publicAPI.getArrayByIndex(arrayIdx);
         if (!arr.isA('vtkDataArray')) {
-          vtkWarningMacro(`Can not set attribute ${attType}. Only vtkDataArray subclasses can be set as active attributes.`);
+          vtkWarningMacro(`Cannot set attribute ${attType}. Only vtkDataArray subclasses can be set as active attributes.`);
           return -1;
         }
         if (!publicAPI.checkNumberOfComponents(arr, attType)) {
-          vtkWarningMacro(`Can not set attribute ${attType}. Incorrect number of components.`);
+          vtkWarningMacro(`Cannot set attribute ${attType}. Incorrect number of components.`);
           return -1;
         }
       }
