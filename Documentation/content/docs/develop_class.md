@@ -1,23 +1,23 @@
 title: Creating a new class in vtk.js
 ---
 
-This guide illustrate how to add new classes to the vtk.js repository and what are the concept behind the infrastructure we use.
+This guide illustrates how to add new classes to the vtk.js repository and the concepts behind the infrastructure we use.
 
-First of all, vtk.js do not rely on the class definition that was brought in with the ES6 specification. Instead, vtk.js provides a closure based infrastructure which let us compose methods into specific instances without any hierarchical constraint.
-On top of that, methods can be used outside of their instance context and can be directly be passed as callback due to our closure paradigm and our absence of usage of "this". 
+First of all, vtk.js does not rely on the class definition that was brought in with the ES6 specification. Instead, vtk.js provides a closure based infrastructure which lets us compose methods into specific instances without any hierarchical constraint.
+Due to our closure paradigm methods can be used outside of their instance context and can be directly be passed as callbacks. Therefore their usage does not require `this` to be referenced each time. 
 
-By convention, we create a directory for each of our class. The name of that directory must be the name of the class capitalized without its "vtk" prefix. Although when importing a class, we will add that "vtk" prefix back like below and the definition of that class should be held in an "index.js" file within that directory.
+By convention, we create a directory for each of our class. The name of the directory must be the name of the class capitalized without its "vtk" prefix (although when importing a class, we will readd the "vtk" prefix). The definition of that class should be held in an "index.js" file within that directory.
 
 ```js
 import vtkDataSet from 'vtk.js/Sources/Common/DataModel/DataSet';
 ```
 
-The reason to use a directory instead of a simple JavaScript file is to enable the association of several resources to a specific class like a "Constants.js" file, several tests, an example or additional documentation.
+The reason to use a directory instead of a simple JavaScript file is to enable the association of several resources to a specific class like a constants file, several tests, an example, and/or additional documentation.
 
-Then that class should belong to a __module__ while that module should be owned by a __kit__.
+That class should belong to a __module__ and that module should be owned by a __kit__.
 __Kits__ correspond to the root directories underneath the __Sources__ directory of the repository.
-Then each __kits__ contains several modules which are the directory right after the __kit__.
-Then within each __module__ you find its class definitions.
+Each __kit__ contains several __modules__ which are the immediate child directories within.
+Within each __module__ you find its class definitions.
 
 For instance, vtk.js currently have the following set of **kits** in bold and *modules* in italic.
 
@@ -178,8 +178,8 @@ export default {
 
 ## API documentation
 
-If you want to go beyond having the code being the source of documentation, you add your own markdown to document it with code snippet and so on.
-For that you just need to add an __api.md__ within the class directory like the following one.
+If you want to go beyond the code being the sole source of documentation, you can add your own markdown file to further document it with code snippets, member variables, and method usage.
+For that you need to add an __api.md__ within the class directory like the following one:
 
 ```md
 ## Usage
