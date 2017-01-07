@@ -12,12 +12,12 @@ to NPM via Travis.
 
 In order to maintain that process each commit message should follow a specific
 formatting. To ensure that formating, we use Commitizen which can be triggered
-via the following command line. Additional information can be found 
+via the following command. Additional information can be found
 [here](https://gist.github.com/stephenparish/9941e89d80e2bc58a153).
 
     $ npm run commit
 
-Then a set of questions will be presented to you like the following ones:
+Then a set of questions will be presented to you:
 
     $ npm run commit
     cz-cli@2.4.6, cz-conventional-changelog@1.1.5
@@ -45,7 +45,7 @@ Then a set of questions will be presented to you like the following ones:
 
     ? List any breaking changes or issues closed by this change:
 
-Will generate the following commit message:
+This process will generate the following commit message:
 
     commit 1a31ecfcc2f6f4283e51187a24ce0e9d9c17ae54
     Author: Sebastien Jourdain <sebastien.jourdain@kitware.com>
@@ -54,14 +54,16 @@ Will generate the following commit message:
         style(ESLint): Update code formatting to comply with our ESLint specification
 
 
-[Full convention](https://gist.github.com/stephenparish/9941e89d80e2bc58a153) 
+[Full convention](https://gist.github.com/stephenparish/9941e89d80e2bc58a153)
 
 ## Code editing
 
-[Sublime Text 3](http://www.sublimetext.com) with the following set of plugins.
-To install plugins you will have to first install the [Package constrol](https://packagecontrol.io/installation).
+Any code editor should be more than sufficient, however the recommended plugins listed below may not be as well supported or you may have to find alternative workarounds. The most important ones such as [ES6/Babel syntax highlighting](https://babeljs.io/docs/editors), [ESLint](http://eslint.org/docs/user-guide/integrations) are supported by multiple code editors which you may already use.
 
-Then installing new plugin should start with: ```Ctrl/Cmd + Shift + p``` Install
+Otherwise, we highly recommend [Sublime Text 3](http://www.sublimetext.com) with the following set of plugins.
+To install plugins you will have to first install [Package control](https://packagecontrol.io/installation).
+
+Then installing new plugins should start with: `Ctrl/Cmd + Shift + p` > Install Package
 
 ### Git + GitGutter
 
@@ -73,8 +75,7 @@ This plugin adds proper syntax highlighting to your ES6/2015 and React JSX code.
 
 ### JsFormat
 
-Once installed, to use JSFormat, go to your JS file and hit Ctrl + Alt + f on
-Windows/Linux or Ctrl + ⌥ + f on Mac. Alternatively, use the context menu.
+Once installed, to use JSFormat, go to your JS file and hit Ctrl/Cmd + Alt + f. Alternatively, use the context menu.
 
 ### SublimeLinter + SublimeLinter-contrib-eslint
 
