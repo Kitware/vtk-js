@@ -16,6 +16,10 @@ And viewed with the links below:
 - [MetalicStructure](https://kitware.github.io/vtk-js/examples/StandaloneSceneLoader/index.html?fileURL=https://data.kitware.com/api/v1/file/587003cf8d777f05f44a5c96/download) 6.3 MB
 - [Ettenheim-GIS-05-11-2006](https://kitware.github.io/vtk-js/examples/StandaloneSceneLoader/index.html?fileURL=https://data.kitware.com/api/v1/file/587003c38d777f05f44a5c93/download) 1.7 MB
 
+Other CAD models
+- [MoyeuExpensible](https://kitware.github.io/vtk-js/examples/StandaloneSceneLoader/index.html?fileURL=https://data.kitware.com/api/v1/file/5878eb978d777f05f44b1427/download) 35.29 kB
+- [TBarAssembly](https://kitware.github.io/vtk-js/examples/StandaloneSceneLoader/index.html?fileURL=https://data.kitware.com/api/v1/file/5878eb978d777f05f44b142a/download) 71.70 kB
+
 [HTML]: https://kitware.github.io/vtk-js/examples/StandaloneSceneLoader/StandaloneSceneLoader.html
 [macro]: https://raw.githubusercontent.com/Kitware/vtk-js/master/Utilities/ParaView/export-scene-macro.py
 [Dragon]: https://raw.githubusercontent.com/Kitware/vtk-js/master/Data/StanfordDragon.vtkjs
