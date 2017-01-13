@@ -53,7 +53,7 @@ const vecSource = macro.newInstance((publicAPI, model) => {
           for (let x = 0; x <= 9; x++) {
             newArray[i++] = 0.1 * x;
             const v = 0.1 * y;
-            newArray[i++] = (v * v) * 10.0;
+            newArray[i++] = (v * v);
             newArray[i++] = 0;
           }
         }
@@ -72,12 +72,22 @@ const vecSource = macro.newInstance((publicAPI, model) => {
 })();
 
 const planeSource = vtkPlaneSource.newInstance();
+// planeSource.setOrigin(0.05, 0.05, 0.05);
+// planeSource.setPoint1(0.05, 0.85, 0.05);
+// planeSource.setPoint2(0.05, 0.05, 0.85);
+planeSource.setOrigin(0.05, 0.05, 0.05);
+planeSource.setPoint1(0.05, 0.06, 0.05);
+planeSource.setPoint2(0.05, 0.05, 0.06);
+planeSource.setXResolution(1);
+planeSource.setYResolution(1);
 
 const sline = vtkImageStreamline.newInstance();
-sline.setIntegrationStep(0.01);
+sline.setIntegrationStep(0.1);
 sline.setInputConnection(vecSource.getOutputPort());
-sline.setInputConnection(1, planeSource.getOutputPort());
+sline.setInputConnection(planeSource.getOutputPort(), 1);
 
+sline.update();
+console.log('>>', sline.getOutputData());
 mapper.setInputConnection(sline.getOutputPort());
 
 const outlineFilter = vtkOutlineFilter.newInstance();
@@ -94,7 +104,7 @@ mapper2.setInputConnection(outlineFilter.getOutputPort());
 // now create something to view it, in this case webgl
 // with mouse/touch interaction
 const glwindow = vtkOpenGLRenderWindow.newInstance();
-glwindow.setSize(500, 400);
+glwindow.setSize(800, 600);
 glwindow.setContainer(renderWindowContainer);
 renWin.addView(glwindow);
 
@@ -105,6 +115,18 @@ iren.setView(glwindow);
 // to the HTML elements
 iren.initialize();
 iren.bindEvents(renderWindowContainer, document);
+
+// ----- JavaScript UI -----
+
+['xResolution', 'yResolution'].forEach((propertyName) => {
+  document.querySelector(`.${propertyName}`).addEventListener('input', (e) => {
+    const value = Number(e.target.value);
+    planeSource.set({ [propertyName]: value });
+    console.log(planeSource.getXResolution());
+    console.log(planeSource.getYResolution());
+    renWin.render();
+  });
+});
 
 global.mapper = mapper;
 global.actor = actor;

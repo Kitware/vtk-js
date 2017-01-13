@@ -1,43 +1,25 @@
 ## Introduction
 
-vtkWarpScalar - deform geometry with scalar data
+vtkImageStreamline - integrate streamlines in a vtkImageData
 
-vtkWarpScalar is a filter that modifies point coordinates by moving
-points along point normals by the scalar amount times the scale factor.
-Useful for creating carpet or x-y-z plots.
+vtkImageStreamline is a filter that generates streamlines from a
+vtkImageData input over which a vector field is defined. This filter
+will look for vectors (i.e. getVectors()) in the input. It will then
+integrate these vectors, using Runge-Kutta 2, from a starting set of
+seeds defined by the points of the 2nd input until a specified maximum
+number of steps is reached or until the streamline leaves the domain.
 
-If normals are not present in data, the Normal instance variable will
-be used as the direction along which to warp the geometry. If normals are
-present but you would like to use the Normal instance variable, set the
-UseNormal boolean to true.
-
-If XYPlane boolean is set true, then the z-value is considered to be
-a scalar value (still scaled by scale factor), and the displacement is
-along the z-axis. If scalars are also present, these are copied through
-and can be used to color the surface.
-
-Note that the filter passes both its point data and cell data to
-its output, except for normals, since these are distorted by the
-warping.
+The output will be a vtkPolyData which contains a polyline for each
+streamline. Currently, this filter does not interpolate any
+input fields to the points of the streamline.
 
 ## Public API
 
-### scaleFactor
+### integrationStep
 
-Set/Get the value to scale displacement.
+Set/Get the step length (delT) used during integration.
 
-### useNormal
+### maximumNumberOfSteps
 
-Turn on/off use of user specified normal. If on, data normals will be ignored
-and instance variable Normal will be used instead.
-
-### normal
-
-Set/Get then normal (i.e., direction) along which to warp geometry. Only used
-if useNormal boolean set to true or no normals available in data.
-
-### xyPlane
-
-Turn on/off flag specifying that input data is x-y plane. If x-y plane, then
-the z value is used to warp the surface in the z-axis direction (times the scale
-factor) and scalars are used to color the surface.
+Set/Get the number of steps to be used in the integration. Integration
+can terminal earlier if the streamline leaves the domain.

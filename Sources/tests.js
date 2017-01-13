@@ -1,6 +1,7 @@
 import './Common/Core/LookupTable/test/testCategoricalColors';
 import './Common/DataModel/DataSetAttributes/test/testDataSetAttributes';
 import './Filters/General/Calculator/test/testCalculator';
+import './Filters/General/ImageStreamline/test/testStreamline';
 import './Filters/General/WarpScalar/test/testWarp';
 import './Filters/Sources/ConeSource/test/testCone';
 import './Filters/Sources/LineSource/test/testLine';
@@ -12,3 +13,4 @@ import './Rendering/OpenGL/PolyDataMapper/test/testInterpolateScalarsBeforeMappi
 import './Testing/testAlgorithm';
 import './Testing/testMacro';
 import './Testing/testSerialization';
+

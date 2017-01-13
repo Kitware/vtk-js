@@ -165,8 +165,10 @@ function vtkImageStreamline(publicAPI, model) {
     return true;
   };
 
-  publicAPI.streamIntegrate = (velArray, image, seed) => {
-    const maxSteps = 1000;
+  publicAPI.streamIntegrate = (velArray, image, seed, offset) => {
+    const retVal = [];
+
+    const maxSteps = model.maximumNumberOfSteps;
     const delT = model.integrationStep;
     const xyz = new Float32Array(3);
     xyz[0] = seed[0];
@@ -188,6 +190,7 @@ function vtkImageStreamline(publicAPI, model) {
     const pd = vtkPolyData.newInstance();
 
     const points = new Float32Array(pointsBuffer);
+    retVal[0] = points;
 
     pd.getPoints().getData().setData(points, 3);
 
@@ -195,20 +198,22 @@ function vtkImageStreamline(publicAPI, model) {
     const line = new Uint32Array(npts + 1);
     line[0] = npts;
     for (let i = 0; i < npts; i++) {
-      line[i + 1] = i;
+      line[i + 1] = i + offset;
     }
+    retVal[1] = line;
 
     pd.getLines().setData(line);
 
-    return pd;
+    return retVal;
   };
 
   publicAPI.requestData = (inData, outData) => { // implement requestData
-    if (!outData[0] || inData[0].getMTime() > outData[0].getMTime() || publicAPI.getMTime() > outData[0].getMTime()) {
+    if (!outData[0] || inData[0].getMTime() > outData[0].getMTime() ||
+        inData[1].getMTime() > outData[0].getMTime() ||
+        publicAPI.getMTime() > outData[0].getMTime()) {
       const input = inData[0];
       const seeds = inData[1];
 
-      console.log(seeds);
       if (!input) {
         vtkErrorMacro('Invalid or missing input');
         return 1;
@@ -219,13 +224,42 @@ function vtkImageStreamline(publicAPI, model) {
         return 1;
       }
 
-      const coords = new Float32Array(3);
-      coords[0] = 0.05;
-      coords[1] = 0.05;
-      coords[2] = 0.05;
+      const seedPts = seeds.getPoints().getData();
+      const nSeeds = seedPts.getNumberOfTuples();
 
+      let offset = 0;
+      const datas = [];
       const vectors = input.getPointData().getVectors();
-      outData[0] = publicAPI.streamIntegrate(vectors, input, coords);
+      for (let i = 0; i < nSeeds; i++) {
+        const retVal = publicAPI.streamIntegrate(vectors, input, seedPts.getTuple(i), offset);
+        offset += retVal[0].length / 3;
+        datas.push(retVal);
+      }
+
+      let cellArrayLength = 0;
+      let pointArrayLength = 0;
+      datas.forEach((data) => {
+        cellArrayLength += data[1].length;
+        pointArrayLength += data[0].length;
+      });
+      offset = 0;
+      let offset2 = 0;
+      const cellArray = new Uint32Array(cellArrayLength);
+      const pointArray = new Float32Array(pointArrayLength);
+      datas.forEach((data) => {
+        cellArray.set(data[1], offset);
+        offset += data[1].length;
+        pointArray.set(data[0], offset2);
+        offset2 += data[0].length;
+      });
+
+      const output = vtkPolyData.newInstance();
+      output.getPoints().getData().setData(pointArray);
+      output.getLines().setData(cellArray);
+
+      console.log(output.getMTime());
+
+      outData[0] = output;
     }
 
     return 1;
@@ -238,6 +272,7 @@ function vtkImageStreamline(publicAPI, model) {
 
 const DEFAULT_VALUES = {
   integrationStep: 1,
+  maximumNumberOfSteps: 1000,
 };
 
 // ----------------------------------------------------------------------------
@@ -254,6 +289,7 @@ export function extend(publicAPI, model, initialValues = {}) {
   // Generate macros for properties
   macro.setGet(publicAPI, model, [
     'integrationStep',
+    'maximumNumberOfSteps',
   ]);
 
   // Object specific methods
