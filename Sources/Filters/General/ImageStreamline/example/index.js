@@ -1,36 +1,30 @@
-import vtkOpenGLRenderWindow from '../../../../../Sources/Rendering/OpenGL/RenderWindow';
-import vtkRenderWindow from '../../../../../Sources/Rendering/Core/RenderWindow';
-import vtkRenderer from '../../../../../Sources/Rendering/Core/Renderer';
-import vtkOutlineFilter from '../../../../../Sources/Filters/General/OutlineFilter';
-import vtkPlaneSource from '../../../../../Sources/Filters/Sources/PlaneSource';
+import vtkFullScreenRenderWindow  from '../../../../../Sources/Rendering/Misc/FullScreenRenderWindow';
+
+import vtkOutlineFilter   from '../../../../../Sources/Filters/General/OutlineFilter';
+import vtkPlaneSource     from '../../../../../Sources/Filters/Sources/PlaneSource';
 import vtkImageStreamline from '../../../../../Sources/Filters/General/ImageStreamline';
-import vtkActor from '../../../../../Sources/Rendering/Core/Actor';
-import vtkMapper from '../../../../../Sources/Rendering/Core/Mapper';
-import vtkRenderWindowInteractor from '../../../../../Sources/Rendering/Core/RenderWindowInteractor';
-import vtkDataArray from '../../../../../Sources/Common/Core/DataArray';
-import vtkImageData from '../../../../../Sources/Common/DataModel/ImageData';
-import * as macro     from '../../../../../Sources/macro';
+import vtkActor           from '../../../../../Sources/Rendering/Core/Actor';
+import vtkMapper          from '../../../../../Sources/Rendering/Core/Mapper';
+import vtkDataArray       from '../../../../../Sources/Common/Core/DataArray';
+import vtkImageData       from '../../../../../Sources/Common/DataModel/ImageData';
+import * as macro         from '../../../../../Sources/macro';
 
 import controlPanel from './controller.html';
 
-/* global document */
+// ----------------------------------------------------------------------------
+// Standard rendering code setup
+// ----------------------------------------------------------------------------
 
-// Create some control UI
-const container = document.querySelector('body');
-const controlContainer = document.createElement('div');
-const renderWindowContainer = document.createElement('div');
-container.appendChild(controlContainer);
-container.appendChild(renderWindowContainer);
-controlContainer.innerHTML = controlPanel;
+const fullScreenRenderer = vtkFullScreenRenderWindow.newInstance({ background: [0.9, 0.9, 0.9] });
+const renderer = fullScreenRenderer.getRenderer();
+const renderWindow = fullScreenRenderer.getRenderWindow();
 
-// create what we will view
-const renWin = vtkRenderWindow.newInstance();
-const ren = vtkRenderer.newInstance();
-renWin.addRenderer(ren);
-ren.setBackground(0.32, 0.34, 0.43);
+// ----------------------------------------------------------------------------
+// Example code
+// ----------------------------------------------------------------------------
 
 const actor = vtkActor.newInstance();
-ren.addActor(actor);
+renderer.addActor(actor);
 
 const mapper = vtkMapper.newInstance();
 actor.setMapper(mapper);
@@ -87,29 +81,18 @@ const outlineFilter = vtkOutlineFilter.newInstance();
 outlineFilter.setInputConnection(vecSource.getOutputPort());
 
 const actor2 = vtkActor.newInstance();
-ren.addActor(actor2);
+renderer.addActor(actor2);
 
 const mapper2 = vtkMapper.newInstance();
 actor2.setMapper(mapper2);
 
 mapper2.setInputConnection(outlineFilter.getOutputPort());
 
-// now create something to view it, in this case webgl
-// with mouse/touch interaction
-const glwindow = vtkOpenGLRenderWindow.newInstance();
-glwindow.setSize(800, 600);
-glwindow.setContainer(renderWindowContainer);
-renWin.addView(glwindow);
+// ----------------------------------------------------------------------------
+// UI control handling
+// ----------------------------------------------------------------------------
 
-const iren = vtkRenderWindowInteractor.newInstance();
-iren.setView(glwindow);
-
-// initialize the interaction and bind event handlers
-// to the HTML elements
-iren.initialize();
-iren.bindEvents(renderWindowContainer, document);
-
-// ----- JavaScript UI -----
+fullScreenRenderer.addController(controlPanel);
 
 ['xResolution', 'yResolution'].forEach((propertyName) => {
   document.querySelector(`.${propertyName}`).addEventListener('input', (e) => {
@@ -117,7 +100,7 @@ iren.bindEvents(renderWindowContainer, document);
     planeSource.set({ [propertyName]: value });
     console.log(planeSource.getXResolution());
     console.log(planeSource.getYResolution());
-    renWin.render();
+    renderWindow.render();
   });
 });
 

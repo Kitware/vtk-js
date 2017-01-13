@@ -70,7 +70,7 @@ function vtkOutlineFilter(publicAPI, model) {
       pts[22] = bounds[3];
       pts[23] = bounds[5];
 
-      output.getPoints().getData().setData(pts, 3);
+      output.getPoints().setData(pts, 3);
 
       const lines = new Uint32Array(12 * 3);
 

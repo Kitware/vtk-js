@@ -192,7 +192,7 @@ function vtkImageStreamline(publicAPI, model) {
     const points = new Float32Array(pointsBuffer);
     retVal[0] = points;
 
-    pd.getPoints().getData().setData(points, 3);
+    pd.getPoints().setData(points, 3);
 
     const npts = points.length / 3;
     const line = new Uint32Array(npts + 1);
@@ -224,8 +224,8 @@ function vtkImageStreamline(publicAPI, model) {
         return 1;
       }
 
-      const seedPts = seeds.getPoints().getData();
-      const nSeeds = seedPts.getNumberOfTuples();
+      const seedPts = seeds.getPoints();
+      const nSeeds = seedPts.getNumberOfPoints();
 
       let offset = 0;
       const datas = [];
@@ -254,7 +254,7 @@ function vtkImageStreamline(publicAPI, model) {
       });
 
       const output = vtkPolyData.newInstance();
-      output.getPoints().getData().setData(pointArray);
+      output.getPoints().setData(pointArray);
       output.getLines().setData(cellArray);
 
       console.log(output.getMTime());
