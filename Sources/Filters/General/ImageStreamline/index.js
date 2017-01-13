@@ -2,14 +2,6 @@ import * as macro from '../../../macro';
 import vtkPolyData from '../../../Common/DataModel/PolyData';
 
 // ----------------------------------------------------------------------------
-// Global methods
-// ----------------------------------------------------------------------------
-
-// ----------------------------------------------------------------------------
-// Static API
-// ----------------------------------------------------------------------------
-
-// ----------------------------------------------------------------------------
 // vtkImageStreamline methods
 // ----------------------------------------------------------------------------
 
@@ -101,16 +93,14 @@ function vtkImageStreamline(publicAPI, model) {
   };
 
   publicAPI.getVoxelIndices = (ijk, dims, ids) => {
-    /* eslint-disable no-mixed-operators */
-    ids[0] = ijk[2] * dims[0] * dims[1] + ijk[1] * dims[0] + ijk[0];
+    ids[0] = (ijk[2] * dims[0] * dims[1]) + (ijk[1] * dims[0]) + ijk[0];
     ids[1] = ids[0] + 1; // i+1, j, k
     ids[2] = ids[0] + dims[0]; // i, j+1, k
     ids[3] = ids[2] + 1; // i+1, j+1, k
-    ids[4] = ids[0] + dims[0] * dims[1]; // i, j, k+1
+    ids[4] = ids[0] + (dims[0] * dims[1]); // i, j, k+1
     ids[5] = ids[4] + 1; // i+1, j, k+1
     ids[6] = ids[4] + dims[0]; // i, j+1, k+1
     ids[7] = ids[6] + 1; // i+1, j+1, k+1
-    /* eslint-enable no-mixed-operators */
   };
 
   publicAPI.vectorAt = (xyz, velArray, image, velAtArg) => {
@@ -208,61 +198,53 @@ function vtkImageStreamline(publicAPI, model) {
   };
 
   publicAPI.requestData = (inData, outData) => { // implement requestData
-    if (!outData[0] || inData[0].getMTime() > outData[0].getMTime() ||
-        inData[1].getMTime() > outData[0].getMTime() ||
-        publicAPI.getMTime() > outData[0].getMTime()) {
-      const input = inData[0];
-      const seeds = inData[1];
+    const input = inData[0];
+    const seeds = inData[1];
 
-      if (!input) {
-        vtkErrorMacro('Invalid or missing input');
-        return 1;
-      }
-
-      if (!seeds) {
-        vtkErrorMacro('Invalid or missing seeds');
-        return 1;
-      }
-
-      const seedPts = seeds.getPoints();
-      const nSeeds = seedPts.getNumberOfPoints();
-
-      let offset = 0;
-      const datas = [];
-      const vectors = input.getPointData().getVectors();
-      for (let i = 0; i < nSeeds; i++) {
-        const retVal = publicAPI.streamIntegrate(vectors, input, seedPts.getTuple(i), offset);
-        offset += retVal[0].length / 3;
-        datas.push(retVal);
-      }
-
-      let cellArrayLength = 0;
-      let pointArrayLength = 0;
-      datas.forEach((data) => {
-        cellArrayLength += data[1].length;
-        pointArrayLength += data[0].length;
-      });
-      offset = 0;
-      let offset2 = 0;
-      const cellArray = new Uint32Array(cellArrayLength);
-      const pointArray = new Float32Array(pointArrayLength);
-      datas.forEach((data) => {
-        cellArray.set(data[1], offset);
-        offset += data[1].length;
-        pointArray.set(data[0], offset2);
-        offset2 += data[0].length;
-      });
-
-      const output = vtkPolyData.newInstance();
-      output.getPoints().setData(pointArray);
-      output.getLines().setData(cellArray);
-
-      console.log(output.getMTime());
-
-      outData[0] = output;
+    if (!input) {
+      vtkErrorMacro('Invalid or missing input');
+      return;
     }
 
-    return 1;
+    if (!seeds) {
+      vtkErrorMacro('Invalid or missing seeds');
+      return;
+    }
+
+    const seedPts = seeds.getPoints();
+    const nSeeds = seedPts.getNumberOfPoints();
+
+    let offset = 0;
+    const datas = [];
+    const vectors = input.getPointData().getVectors();
+    for (let i = 0; i < nSeeds; i++) {
+      const retVal = publicAPI.streamIntegrate(vectors, input, seedPts.getTuple(i), offset);
+      offset += retVal[0].length / 3;
+      datas.push(retVal);
+    }
+
+    let cellArrayLength = 0;
+    let pointArrayLength = 0;
+    datas.forEach((data) => {
+      cellArrayLength += data[1].length;
+      pointArrayLength += data[0].length;
+    });
+    offset = 0;
+    let offset2 = 0;
+    const cellArray = new Uint32Array(cellArrayLength);
+    const pointArray = new Float32Array(pointArrayLength);
+    datas.forEach((data) => {
+      cellArray.set(data[1], offset);
+      offset += data[1].length;
+      pointArray.set(data[0], offset2);
+      offset2 += data[0].length;
+    });
+
+    const output = vtkPolyData.newInstance();
+    output.getPoints().setData(pointArray, 3);
+    output.getLines().setData(cellArray);
+
+    outData[0] = output;
   };
 }
 
