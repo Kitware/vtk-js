@@ -5,6 +5,7 @@ import vtkPlaneSource     from '../../../../../Sources/Filters/Sources/PlaneSour
 import vtkImageStreamline from '../../../../../Sources/Filters/General/ImageStreamline';
 import vtkActor           from '../../../../../Sources/Rendering/Core/Actor';
 import vtkMapper          from '../../../../../Sources/Rendering/Core/Mapper';
+import { Representation } from '../../../../../Sources/Rendering/Core/Property/Constants';
 import vtkDataArray       from '../../../../../Sources/Common/Core/DataArray';
 import vtkImageData       from '../../../../../Sources/Common/DataModel/ImageData';
 import * as macro         from '../../../../../Sources/macro';
@@ -23,13 +24,20 @@ const renderWindow = fullScreenRenderer.getRenderWindow();
 // Example code
 // ----------------------------------------------------------------------------
 
-const actor = vtkActor.newInstance();
-actor.getProperty().setDiffuseColor(0, 1, 1);
-actor.getProperty().setLineWidth(2);
-renderer.addActor(actor);
+function addRepresentation(name, filter, props = {}) {
+  const mapper = vtkMapper.newInstance();
+  mapper.setInputConnection(filter.getOutputPort());
 
-const mapper = vtkMapper.newInstance();
-actor.setMapper(mapper);
+  const actor = vtkActor.newInstance();
+  actor.setMapper(mapper);
+  actor.getProperty().set(props);
+  renderer.addActor(actor);
+
+  global[`${name}Actor`] = actor;
+  global[`${name}Mapper`] = mapper;
+}
+
+// ----------------------------------------------------------------------------
 
 const vecSource = macro.newInstance((publicAPI, model) => {
   macro.obj(publicAPI, model); // make it an object
@@ -77,20 +85,12 @@ sline.setIntegrationStep(0.01);
 sline.setInputConnection(vecSource.getOutputPort());
 sline.setInputConnection(planeSource.getOutputPort(), 1);
 
-mapper.setInputConnection(sline.getOutputPort());
-
 const outlineFilter = vtkOutlineFilter.newInstance();
 outlineFilter.setInputConnection(vecSource.getOutputPort());
 
-const actor2 = vtkActor.newInstance();
-actor2.getProperty().setDiffuseColor(1, 0, 0);
-actor2.getProperty().setLineWidth(2);
-renderer.addActor(actor2);
-
-const mapper2 = vtkMapper.newInstance();
-actor2.setMapper(mapper2);
-
-mapper2.setInputConnection(outlineFilter.getOutputPort());
+addRepresentation('streamLine', sline, { diffuseColor: [0, 1, 1], lineWidth: 5 });
+addRepresentation('outline', outlineFilter, { diffuseColor: [1, 0, 0], lineWidth: 3 });
+addRepresentation('seed', planeSource, { representation: Representation.POINTS, pointSize: 10 });
 
 // -----------------------------------------------------------
 
@@ -107,11 +107,14 @@ fullScreenRenderer.addController(controlPanel);
   document.querySelector(`.${propertyName}`).addEventListener('input', (e) => {
     const value = Number(e.target.value);
     planeSource.set({ [propertyName]: value });
-    console.log(planeSource.getXResolution());
-    console.log(planeSource.getYResolution());
     renderWindow.render();
   });
 });
 
-global.mapper = mapper;
-global.actor = actor;
+// -----------------------------------------------------------
+// Make some variables global so that you can inspect and
+// modify objects in your browser's developer console:
+// -----------------------------------------------------------
+
+global.renderer = renderer;
+global.renderWindow = renderWindow;
