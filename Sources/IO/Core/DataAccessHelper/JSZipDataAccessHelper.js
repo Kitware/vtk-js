@@ -101,6 +101,15 @@ function create(options) {
 
       return zipRoot.file(path).async('string').then(str => new Promise(ok => ok(JSON.parse(str))));
     },
+
+    fetchText(instance = {}, url) {
+      const path = removeLeadingSlash(url);
+      if (!ready) {
+        console.log('ERROR!!! zip not ready...');
+      }
+
+      return zipRoot.file(path).async('string').then(str => new Promise(ok => ok(str)));
+    },
   };
 }
 

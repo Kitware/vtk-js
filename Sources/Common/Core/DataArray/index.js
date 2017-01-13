@@ -229,7 +229,7 @@ export function extend(publicAPI, model, initialValues = {}) {
 
   // Object methods
   macro.obj(publicAPI, model);
-  macro.set(publicAPI, model, ['name']);
+  macro.set(publicAPI, model, ['name', 'numberOfComponents']);
 
   // Object specific methods
   vtkDataArray(publicAPI, model);

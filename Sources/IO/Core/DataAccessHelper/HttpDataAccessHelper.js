@@ -106,10 +106,42 @@ function fetchJSON(instance = {}, url) {
   });
 }
 
+// ----------------------------------------------------------------------------
+
+function fetchText(instance = {}, url) {
+  return new Promise((resolve, reject) => {
+    const xhr = new XMLHttpRequest();
+
+    xhr.onreadystatechange = (e) => {
+      if (xhr.readyState === 1) {
+        if (++requestCount === 1 && instance.invokeBusy) {
+          instance.invokeBusy(true);
+        }
+      }
+      if (xhr.readyState === 4) {
+        if (--requestCount === 0 && instance.invokeBusy) {
+          instance.invokeBusy(false);
+        }
+        if (xhr.status === 200 || xhr.status === 0) {
+          resolve(xhr.responseText);
+        } else {
+          reject(xhr, e);
+        }
+      }
+    };
+
+    // Make request
+    xhr.open('GET', url, true);
+    xhr.responseType = 'text';
+    xhr.send();
+  });
+}
+
 
 // ----------------------------------------------------------------------------
 
 export default {
   fetchArray,
   fetchJSON,
+  fetchText,
 };
