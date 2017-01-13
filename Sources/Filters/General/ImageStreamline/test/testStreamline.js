@@ -1,9 +1,10 @@
-import test from 'tape-catch';
+import test               from 'tape-catch';
+
+import * as macro         from '../../../../macro';
+import vtkDataArray       from '../../../../Common/Core/DataArray';
+import vtkImageData       from '../../../../Common/DataModel/ImageData';
 import vtkImageStreamline from '..';
-import vtkPlaneSource from '../../../Sources/PlaneSource';
-import vtkImageData from '../../../../Common/DataModel/ImageData';
-import vtkDataArray from '../../../../Common/Core/DataArray';
-import * as macro     from '../../../../macro';
+import vtkPlaneSource     from '../../../Sources/PlaneSource';
 
 const vecSource = macro.newInstance((publicAPI, model) => {
   macro.obj(publicAPI, model); // make it an object
@@ -59,14 +60,16 @@ test('Test vtkImageStreamline instance', (t) => {
 test('Test vtkImageStreamline execution', (t) => {
   const planeSource = vtkPlaneSource.newInstance();
   planeSource.setOrigin(0.05, 0.05, 0.05);
-  planeSource.setPoint1(0.05, 0.05, 0.05);
-  planeSource.setPoint2(0.05, 0.05, 0.05);
-  planeSource.setXResolution(1);
-  planeSource.setYResolution(1);
+  planeSource.setPoint1(0.05, 0.85, 0.05);
+  planeSource.setPoint2(0.05, 0.05, 0.85);
+  planeSource.setXResolution(3);
+  planeSource.setYResolution(3);
 
   const filter = vtkImageStreamline.newInstance();
+  filter.setIntegrationStep(0.01);
   filter.setInputConnection(vecSource.getOutputPort());
   filter.setInputConnection(planeSource.getOutputPort(), 1);
+
   filter.update();
 
   const output = filter.getOutputData();
@@ -74,9 +77,9 @@ test('Test vtkImageStreamline execution', (t) => {
   t.ok(output, 'Output dataset exist');
   t.equal(output.isA('vtkPolyData'), true, 'The output dataset should be a vtkPolydata');
   t.equal(
-    output.getPoints().getData().getNumberOfTuples(),
-    10,
-    'The number of points should be XXX');
+    output.getPoints().getNumberOfPoints(),
+    2228,
+    'The number of points should be 2228');
 
   t.end();
 });

@@ -116,5 +116,8 @@ fullScreenRenderer.addController(controlPanel);
 // modify objects in your browser's developer console:
 // -----------------------------------------------------------
 
+global.planeSource = planeSource;
+global.sline = sline;
+global.outlineFilter = outlineFilter;
 global.renderer = renderer;
 global.renderWindow = renderWindow;
