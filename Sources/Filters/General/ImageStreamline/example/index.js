@@ -15,7 +15,7 @@ import controlPanel from './controller.html';
 // Standard rendering code setup
 // ----------------------------------------------------------------------------
 
-const fullScreenRenderer = vtkFullScreenRenderWindow.newInstance({ background: [0.9, 0.9, 0.9] });
+const fullScreenRenderer = vtkFullScreenRenderWindow.newInstance({ background: [0, 0, 0] });
 const renderer = fullScreenRenderer.getRenderer();
 const renderWindow = fullScreenRenderer.getRenderWindow();
 
@@ -24,6 +24,8 @@ const renderWindow = fullScreenRenderer.getRenderWindow();
 // ----------------------------------------------------------------------------
 
 const actor = vtkActor.newInstance();
+actor.getProperty().setDiffuseColor(0, 1, 1);
+actor.getProperty().setLineWidth(2);
 renderer.addActor(actor);
 
 const mapper = vtkMapper.newInstance();
@@ -81,12 +83,19 @@ const outlineFilter = vtkOutlineFilter.newInstance();
 outlineFilter.setInputConnection(vecSource.getOutputPort());
 
 const actor2 = vtkActor.newInstance();
+actor2.getProperty().setDiffuseColor(1, 0, 0);
+actor2.getProperty().setLineWidth(2);
 renderer.addActor(actor2);
 
 const mapper2 = vtkMapper.newInstance();
 actor2.setMapper(mapper2);
 
 mapper2.setInputConnection(outlineFilter.getOutputPort());
+
+// -----------------------------------------------------------
+
+renderer.resetCamera();
+renderWindow.render();
 
 // ----------------------------------------------------------------------------
 // UI control handling
