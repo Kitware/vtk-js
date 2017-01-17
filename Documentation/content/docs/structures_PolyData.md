@@ -13,23 +13,21 @@ A PolyData is a surface mesh structure that can hold data arrays in points, cell
     size: 2345,
   },
   points: {
-    data: {
-      vtkClass: 'vtkDataArray',
-      name: '_points',
-      numberOfComponents: 3,
-      size: 300,
-      dataType: 'Float32Array',
-      buffer: new ArrayBuffer(),
-      values: new Float32Array(this.buffer),
-      ranges: [
-        { min: -1, max: 1, component: 0, name: 'X' },
-        { min: -1, max: 1, component: 1, name: 'Y' },
-        { min: -1, max: 1, component: 2, name: 'Z' },
-      ],
-    },
+    vtkClass: 'vtkPoints',
+    name: '_points',
+    numberOfComponents: 3,
+    size: 300,
+    dataType: 'Float32Array',
+    buffer: new ArrayBuffer(),
+    values: new Float32Array(this.buffer),
+    ranges: [
+      { min: -1, max: 1, component: 0, name: 'X' },
+      { min: -1, max: 1, component: 1, name: 'Y' },
+      { min: -1, max: 1, component: 2, name: 'Z' },
+    ],
   },
   verts: {
-    vtkClass: 'vtkDataArray',
+    vtkClass: 'vtkCellArray',
     name: '_verts',
     numberOfComponents: 1,
     size: 123,
@@ -38,7 +36,7 @@ A PolyData is a surface mesh structure that can hold data arrays in points, cell
     values: new Uint32Array(this.buffer), // Follow the CellArray Mapping [{nbPoints}, {pointIdx...}]
   },
   lines: {
-    vtkClass: 'vtkDataArray',
+    vtkClass: 'vtkCellArray',
     name: '_lines',
     numberOfComponents: 1,
     size: 0,
@@ -46,7 +44,7 @@ A PolyData is a surface mesh structure that can hold data arrays in points, cell
     values: null,
   },
   polys: {
-    vtkClass: 'vtkDataArray',
+    vtkClass: 'vtkCellArray',
     name: '_lines',
     numberOfComponents: 1,
     size: 8,
@@ -54,7 +52,7 @@ A PolyData is a surface mesh structure that can hold data arrays in points, cell
     values: new Uint32Array([3, 0, 1, 2, 3, 3, 4, 5]), // 2 triangles (0,1,2)+(3,4,5)
   },
   strips: {
-    vtkClass: 'vtkDataArray',
+    vtkClass: 'vtkCellArray',
     name: '_lines',
     numberOfComponents: 1,
     size: 0,
