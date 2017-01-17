@@ -9,6 +9,7 @@ import vtkOpenGLPolyDataMapper from '../PolyDataMapper';
 import vtkOpenGLRenderWindow from '../RenderWindow';
 import vtkOpenGLRenderer from '../Renderer';
 import vtkOpenGLSphereMapper from '../SphereMapper';
+import vtkOpenGLStickMapper from '../StickMapper';
 import vtkOpenGLTexture from '../Texture';
 
 // ----------------------------------------------------------------------------
@@ -48,6 +49,7 @@ export function extend(publicAPI, model, initialValues = {}) {
   publicAPI.registerOverride('vtkRenderWindow', vtkOpenGLRenderWindow.newInstance);
   publicAPI.registerOverride('vtkRenderer', vtkOpenGLRenderer.newInstance);
   publicAPI.registerOverride('vtkSphereMapper', vtkOpenGLSphereMapper.newInstance);
+  publicAPI.registerOverride('vtkStickMapper', vtkOpenGLStickMapper.newInstance);
   publicAPI.registerOverride('vtkTexture', vtkOpenGLTexture.newInstance);
 }
 

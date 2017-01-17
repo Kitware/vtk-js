@@ -11,6 +11,7 @@ import './Rendering/Core/ColorTransferFunction/test/testColorTransferFunction';
 import './Rendering/Core/Mapper/test/testEdgeVisibility';
 import './Rendering/OpenGL/PolyDataMapper/test/testInterpolateScalarsBeforeMapping';
 import './Rendering/OpenGL/SphereMapper/test/testSphere';
+import './Rendering/OpenGL/StickMapper/test/testStick';
 import './Testing/testAlgorithm';
 import './Testing/testMacro';
 import './Testing/testSerialization';

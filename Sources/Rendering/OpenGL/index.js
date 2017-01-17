@@ -13,6 +13,7 @@ import vtkShader from './Shader';
 import vtkShaderCache from './ShaderCache';
 import vtkShaderProgram from './ShaderProgram';
 import vtkSphereMapper from './SphereMapper';
+import vtkStickMapper from './StickMapper';
 import vtkTexture from './Texture';
 import vtkTextureUnitManager from './TextureUnitManager';
 import vtkVertexArrayObject from './VertexArrayObject';
@@ -35,6 +36,7 @@ export default {
   vtkShaderCache,
   vtkShaderProgram,
   vtkSphereMapper,
+  vtkStickMapper,
   vtkTexture,
   vtkTextureUnitManager,
   vtkVertexArrayObject,
