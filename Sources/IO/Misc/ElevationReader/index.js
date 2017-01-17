@@ -1,4 +1,5 @@
 import * as macro from '../../../macro';
+import vtkDataArray from '../../../Common/Core/DataArray';
 import vtkPolyData from '../../../Common/DataModel/PolyData';
 import vtkCellArray from '../../../Common/Core/CellArray';
 import DataAccessHelper from '../../Core/DataAccessHelper';
@@ -77,6 +78,11 @@ export function vtkElevationReader(publicAPI, model) {
       const polysValues = polys.getData();
       let cellOffset = 0;
 
+      // Texture coords
+      const tcData = new Float32Array(iSize * jSize * 2);
+      const tcoords = vtkDataArray.newInstance({ numberOfComponents: 2, values: tcData, name: 'TextureCoordinates' });
+      polydata.getPointData().setTCoords(tcoords);
+
       for (let j = 0; j < jSize; j++) {
         for (let i = 0; i < iSize; i++) {
           const offsetIdx = ((j * iSize) + i);
@@ -86,6 +92,10 @@ export function vtkElevationReader(publicAPI, model) {
           pointValues[offsetPt + 0] = model.origin[0] + (i * model.xSpacing);
           pointValues[offsetPt + 1] = model.origin[1] + (j * model.ySpacing);
           pointValues[offsetPt + 2] = model.origin[2] + (model.elevation[j][i] * model.zScaling);
+
+          // fill in tcoords
+          tcData[(offsetIdx * 2)] = i / (iSize - 1.0);
+          tcData[(offsetIdx * 2) + 1] = 1.0 - j / (jSize - 1.0);
 
           // Fill polys
           if (i > 0 && j > 0) {
@@ -97,9 +107,6 @@ export function vtkElevationReader(publicAPI, model) {
           }
         }
       }
-
-      // Add TCoords
-      // FIXME Ken ?
     }
 
     model.output[0] = polydata;

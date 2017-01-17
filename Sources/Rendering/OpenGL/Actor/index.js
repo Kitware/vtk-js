@@ -30,12 +30,17 @@ function vtkOpenGLActor(publicAPI, model) {
 
     model.activeTextures = [];
     model.children.forEach((child) => {
-      child.apply(operation, true);
       if (child.isA('vtkOpenGLTexture') && operation === 'Render') {
+        child.apply(operation, true);
         model.activeTextures.push(child);
       }
     });
 
+    model.children.forEach((child) => {
+      if (!child.isA('vtkOpenGLTexture') || operation !== 'Render') {
+        child.apply(operation, true);
+      }
+    });
     model.children.forEach((child) => {
       child.apply(operation, false);
     });

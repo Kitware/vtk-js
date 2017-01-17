@@ -129,8 +129,6 @@ function vtkActor(publicAPI, model) {
       mt = (time > mt ? time : mt);
     }
 
-    // TBD: Handle array of textures here.
-
     return mt;
   };
 
@@ -160,7 +158,6 @@ const DEFAULT_VALUES = {
   mapper: null,
   property: null,
   backfaceProperty: null,
-  // texture: null, // TODO: Handle array of textures
 
   forceOpaque: false,
   forceTranslucent: false,
@@ -187,7 +184,6 @@ export function extend(publicAPI, model, initialValues = {}) {
     'forceOpaque',
     'forceTranslucent',
     'mapper',
-    // 'texture', // Actor should have an array of textures
   ]);
   macro.getArray(publicAPI, model, ['bounds'], 6);
 
