@@ -12,6 +12,7 @@ import vtkRenderWindow from './RenderWindow';
 import vtkShader from './Shader';
 import vtkShaderCache from './ShaderCache';
 import vtkShaderProgram from './ShaderProgram';
+import vtkSphereMapper from './SphereMapper';
 import vtkTexture from './Texture';
 import vtkTextureUnitManager from './TextureUnitManager';
 import vtkVertexArrayObject from './VertexArrayObject';
@@ -33,6 +34,7 @@ export default {
   vtkShader,
   vtkShaderCache,
   vtkShaderProgram,
+  vtkSphereMapper,
   vtkTexture,
   vtkTextureUnitManager,
   vtkVertexArrayObject,
