@@ -606,18 +606,20 @@ export function vtkOpenGLPolyDataMapper(publicAPI, model) {
           'uniform float cfactor;',
           'uniform float coffset;']).result;
 
-      if (cp.factor !== 0.0) {
-        FSSource = vtkShaderProgram.substitute(FSSource,
-          '//VTK::UniformFlow::Impl', [
-            'float cscale = length(vec2(dFdx(gl_FragCoord.z),dFdy(gl_FragCoord.z)));',
-            '//VTK::UniformFlow::Impl'], false).result;
-        FSSource = vtkShaderProgram.substitute(FSSource,
-          '//VTK::Depth::Impl',
-          'gl_FragDepth = gl_FragCoord.z + cfactor*cscale + 0.000016*coffset;').result;
-      } else {
-        FSSource = vtkShaderProgram.substitute(FSSource,
-          '//VTK::Depth::Impl',
-          'gl_FragDepth = gl_FragCoord.z + 0.000016*coffset;').result;
+      if (model.context.getExtension('GL_EXT_frag_depth')) {
+        if (cp.factor !== 0.0) {
+          FSSource = vtkShaderProgram.substitute(FSSource,
+            '//VTK::UniformFlow::Impl', [
+              'float cscale = length(vec2(dFdx(gl_FragCoord.z),dFdy(gl_FragCoord.z)));',
+              '//VTK::UniformFlow::Impl'], false).result;
+          FSSource = vtkShaderProgram.substitute(FSSource,
+            '//VTK::Depth::Impl',
+            'gl_FragDepthEXT = gl_FragCoord.z + cfactor*cscale + 0.000016*coffset;').result;
+        } else {
+          FSSource = vtkShaderProgram.substitute(FSSource,
+            '//VTK::Depth::Impl',
+            'gl_FragDepthEXT = gl_FragCoord.z + 0.000016*coffset;').result;
+        }
       }
       shaders.Fragment = FSSource;
     }
