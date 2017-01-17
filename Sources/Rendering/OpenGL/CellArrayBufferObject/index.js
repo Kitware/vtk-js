@@ -225,8 +225,6 @@ export function extend(publicAPI, model, initialValues = {}) {
 
   macro.setGet(publicAPI, model, [
     'elementCount',
-  ]);
-  macro.get(publicAPI, model, [
     'stride',
     'vertexOffset',
     'normalOffset',
