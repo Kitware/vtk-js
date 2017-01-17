@@ -3,6 +3,7 @@ import vtkFullScreenRenderWindow  from '../../../../../Sources/Rendering/Misc/Fu
 import vtkActor                   from '../../../../../Sources/Rendering/Core/Actor';
 import vtkElevationReader         from '../../../../../Sources/IO/Misc/ElevationReader';
 import vtkMapper                  from '../../../../../Sources/Rendering/Core/Mapper';
+import vtkTexture                 from '../../../../../Sources/Rendering/Core/Texture';
 
 // ----------------------------------------------------------------------------
 // Standard rendering code setup
@@ -23,6 +24,17 @@ const actor = vtkActor.newInstance();
 mapper.setInputConnection(reader.getOutputPort());
 actor.setMapper(mapper);
 
+// Texture is `${__BASE_PATH__}/data/elevation/dem.jpg`
+const img = new Image();
+img.onload = function textureLoaded() {
+  const texture = vtkTexture.newInstance();
+  texture.setInterpolate(true);
+  texture.setImage(img);
+  actor.addTexture(texture);
+  renderWindow.render();
+};
+img.src = `${__BASE_PATH__}/data/elevation/dem.jpg`;
+
 renderer.addActor(actor);
 renderer.resetCamera();
 renderWindow.render();
@@ -31,8 +43,6 @@ reader.setUrl(`${__BASE_PATH__}/data/elevation/dem.csv`).then(() => {
   renderer.resetCamera();
   renderWindow.render();
 });
-
-// Texture is `${__BASE_PATH__}/data/elevation/dem.jpg`
 
 // -----------------------------------------------------------
 // Make some variables global so that you can inspect and

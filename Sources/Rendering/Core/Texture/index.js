@@ -17,6 +17,7 @@ const DEFAULT_VALUES = {
   repeat: false,
   interpolate: false,
   edgeClamp: false,
+  image: null,
 };
 
 // ----------------------------------------------------------------------------
@@ -32,6 +33,7 @@ export function extend(publicAPI, model, initialValues = {}) {
     'repeat',
     'edgeClamp',
     'interpolate',
+    'image',
   ]);
 
   vtkTexture(publicAPI, model);

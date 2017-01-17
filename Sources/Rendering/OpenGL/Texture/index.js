@@ -45,15 +45,23 @@ function vtkOpenGLTexture(publicAPI, model) {
     }
     // create the texture if it is not done already
     if (!model.handle) {
-      const input = model.renderable.getInputData();
-      const ext = input.getExtent();
-      const inScalars = input.getPointData().getScalars();
-      if (model.renderable.getInterpolate()) {
-        model.generateMipmap = true;
-        publicAPI.setMinificationFilter(Filter.LINEAR_MIPMAP_LINEAR);
+      if (model.renderable.getImage() !== null) {
+        if (model.renderable.getInterpolate()) {
+          model.generateMipmap = true;
+          publicAPI.setMinificationFilter(Filter.LINEAR_MIPMAP_LINEAR);
+        }
+        publicAPI.create2DFromImage(model.renderable.getImage());
+      } else {
+        const input = model.renderable.getInputData();
+        const ext = input.getExtent();
+        const inScalars = input.getPointData().getScalars();
+        if (model.renderable.getInterpolate()) {
+          model.generateMipmap = true;
+          publicAPI.setMinificationFilter(Filter.LINEAR_MIPMAP_LINEAR);
+        }
+        publicAPI.create2DFromRaw(ext[1] - ext[0] + 1, ext[3] - ext[2] + 1,
+          inScalars.getNumberOfComponents(), inScalars.getDataType(), inScalars.getData());
       }
-      publicAPI.create2DFromRaw(ext[1] - ext[0] + 1, ext[3] - ext[2] + 1,
-        inScalars.getNumberOfComponents(), inScalars.getDataType(), inScalars.getData());
       publicAPI.activate();
       publicAPI.sendParameters();
     } else {
@@ -459,6 +467,48 @@ function vtkOpenGLTexture(publicAPI, model) {
           model.format,
           model.openGLDataType,
           pixData);
+
+    if (model.generateMipmap) {
+      model.context.generateMipmap(model.target);
+    }
+
+    publicAPI.deactivate();
+    return true;
+  };
+
+  //----------------------------------------------------------------------------
+  publicAPI.create2DFromImage = (image) => {
+    // Now determine the texture parameters using the arguments.
+    publicAPI.getOpenGLDataType(VtkDataTypes.UNSIGNED_CHAR);
+    publicAPI.getInternalFormat(VtkDataTypes.UNSIGNED_CHAR, 4);
+    publicAPI.getFormat(VtkDataTypes.UNSIGNED_CHAR, 4);
+
+    if (!model.internalFormat || !model.format || !model.openGLDataType) {
+      vtkErrorMacro('Failed to determine texture parameters.');
+      return false;
+    }
+
+    model.target = model.context.TEXTURE_2D;
+    model.components = 4;
+    model.width = image.width;
+    model.height = image.height;
+    model.depth = 1;
+    model.numberOfDimensions = 2;
+    model.window.activateTexture(publicAPI);
+    publicAPI.createTexture();
+    publicAPI.bind();
+
+    // Source texture data from the PBO.
+    // model.context.pixelStorei(gl.UNPACK_FLIP_Y_WEBGL, true);
+    model.context.pixelStorei(model.context.UNPACK_ALIGNMENT, 1);
+
+    model.context.texImage2D(
+          model.target,
+          0,
+          model.internalFormat,
+          model.format,
+          model.openGLDataType,
+          image);
 
     if (model.generateMipmap) {
       model.context.generateMipmap(model.target);

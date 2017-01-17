@@ -47,6 +47,7 @@ function vtkProp(publicAPI, model) {
   publicAPI.addTexture = (texture) => {
     if (texture && !publicAPI.hasTexture(texture)) {
       model.textures = model.textures.concat(texture);
+      publicAPI.modified();
     }
   };
 
@@ -54,11 +55,13 @@ function vtkProp(publicAPI, model) {
     const newTextureList = model.textures.filter(item => item === texture);
     if (model.texture.length !== newTextureList.length) {
       model.textures = newTextureList;
+      publicAPI.modified();
     }
   };
 
   publicAPI.removeAllTextures = () => {
     model.textures = [];
+    publicAPI.modified();
   };
 }
 
