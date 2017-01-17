@@ -1276,6 +1276,7 @@ const DEFAULT_VALUES = {
   lightComplexityChanged: null,
   lastLightComplexity: null,
   primitives: null,
+  primTypes: null,
 };
 
 // ----------------------------------------------------------------------------
@@ -1290,6 +1291,7 @@ export function extend(publicAPI, model, initialValues = {}) {
   model.lastLightComplexity = new Map();
 
   model.primitives = [];
+  model.primTypes = primTypes;
 
   for (let i = primTypes.Start; i < primTypes.End; i++) {
     model.primitives[i] = vtkHelper.newInstance();

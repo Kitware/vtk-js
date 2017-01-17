@@ -11,16 +11,6 @@ import vtkPolyDataFS            from '../glsl/vtkPolyDataFS.glsl';
 import vtkShaderProgram         from '../ShaderProgram';
 import vtkOpenGLPolyDataMapper  from '../PolyDataMapper';
 
-const primTypes = {
-  Start: 0,
-  Points: 0,
-  Lines: 1,
-  Tris: 2,
-  TriStrips: 3,
-  TrisEdges: 4,
-  TriStripsEdges: 5,
-  End: 6,
-};
 
 // ----------------------------------------------------------------------------
 // vtkOpenGLStickMapper methods
@@ -293,7 +283,7 @@ export function vtkOpenGLStickMapper(publicAPI, model) {
     model.renderable.mapScalars(poly, 1.0);
     const c = model.renderable.getColorMapColors();
 
-    const vbo = model.primitives[primTypes.Tris].getCABO();
+    const vbo = model.primitives[model.primTypes.Tris].getCABO();
 
     const pointData = poly.getPointData();
     const points = poly.getPoints();

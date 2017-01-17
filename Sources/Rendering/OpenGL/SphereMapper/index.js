@@ -12,16 +12,6 @@ import vtkOpenGLPolyDataMapper  from '../PolyDataMapper';
 import vtkSphereMapperVS        from '../glsl/vtkSphereMapperVS.glsl';
 import vtkPolyDataFS            from '../glsl/vtkPolyDataFS.glsl';
 
-const primTypes = {
-  Start: 0,
-  Points: 0,
-  Lines: 1,
-  Tris: 2,
-  TriStrips: 3,
-  TrisEdges: 4,
-  TriStripsEdges: 5,
-  End: 6,
-};
 
 // ----------------------------------------------------------------------------
 // vtkOpenGLSphereMapper methods
@@ -181,7 +171,7 @@ export function vtkOpenGLSphereMapper(publicAPI, model) {
     model.renderable.mapScalars(poly, 1.0);
     const c = model.renderable.getColorMapColors();
 
-    const vbo = model.primitives[primTypes.Tris].getCABO();
+    const vbo = model.primitives[model.primTypes.Tris].getCABO();
 
     const packedVBO = new DynamicTypedArray({ chunkSize: 65500, arrayType: 'Float32Array' });
     const pointData = poly.getPointData();
