@@ -20,6 +20,26 @@ export default class DynamicTypedArray {
     this.lastChunkItemCount += 1;
   }
 
+  pushBytes(srcview, srcoffset, numbytes) {
+    // numBytes must match ther underlying data type size
+    if (numbytes !== this.chunkContainer[0].BYTES_PER_ELEMENT) {
+      return;
+    }
+    if (this.lastChunkItemCount === this.chunkSize) {
+      this.chunkContainer.push(new this.ArrayConstructor(this.chunkSize));
+      this.lastChunkItemCount = 0;
+    }
+
+    const view = new DataView(
+      this.chunkContainer[this.chunkContainer.length - 1].buffer,
+      this.chunkContainer[0].BYTES_PER_ELEMENT * this.lastChunkItemCount,
+      this.chunkContainer[0].BYTES_PER_ELEMENT);
+    for (let j = 0; j < numbytes; j++) {
+      view.setUint8(j, srcview.getUint8(srcoffset + j));
+    }
+    this.lastChunkItemCount += 1;
+  }
+
   getNumberOfElements() {
     return ((this.chunkContainer.length - 1) * this.chunkSize) + this.lastChunkItemCount;
   }

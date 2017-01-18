@@ -751,7 +751,7 @@ export function vtkOpenGLPolyDataMapper(publicAPI, model) {
         if (!cellBO.getVAO().addAttributeArray(cellBO.getProgram(), cellBO.getCABO(),
                                            'vertexMC', cellBO.getCABO().getVertexOffset(),
                                            cellBO.getCABO().getStride(), model.context.FLOAT, 3,
-                                           model.context.FALSE)) {
+                                           false)) {
           vtkErrorMacro('Error setting vertexMC in shader VAO.');
         }
       }
@@ -761,7 +761,7 @@ export function vtkOpenGLPolyDataMapper(publicAPI, model) {
         if (!cellBO.getVAO().addAttributeArray(cellBO.getProgram(), cellBO.getCABO(),
                                            'normalMC', cellBO.getCABO().getNormalOffset(),
                                            cellBO.getCABO().getStride(), model.context.FLOAT, 3,
-                                           model.context.FALSE)) {
+                                           false)) {
           vtkErrorMacro('Error setting normalMC in shader VAO.');
         }
       }
@@ -771,7 +771,7 @@ export function vtkOpenGLPolyDataMapper(publicAPI, model) {
                                            'tcoordMC', cellBO.getCABO().getTCoordOffset(),
                                            cellBO.getCABO().getStride(), model.context.FLOAT,
                                            cellBO.getCABO().getTCoordComponents(),
-                                           model.context.FALSE)) {
+                                           false)) {
           vtkErrorMacro('Error setting tcoordMC in shader VAO.');
         }
       }
@@ -779,8 +779,8 @@ export function vtkOpenGLPolyDataMapper(publicAPI, model) {
           cellBO.getCABO().getColorComponents()) {
         if (!cellBO.getVAO().addAttributeArray(cellBO.getProgram(), cellBO.getCABO(),
                                            'scalarColor', cellBO.getCABO().getColorOffset(),
-                                           cellBO.getCABO().getStride(), model.context.FLOAT /* BYTE */,
-                                           cellBO.getCABO().getColorComponents(),
+                                           cellBO.getCABO().getStride(), model.context.UNSIGNED_BYTE,
+                                           4,
                                            true)) {
           vtkErrorMacro('Error setting scalarColor in shader VAO.');
         }
