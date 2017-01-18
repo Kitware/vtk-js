@@ -89,13 +89,13 @@ export function vtkElevationReader(publicAPI, model) {
           const offsetPt = 3 * offsetIdx;
 
           // Fill points coordinates
-          pointValues[offsetPt + 0] = model.origin[0] + (i * model.xSpacing);
-          pointValues[offsetPt + 1] = model.origin[1] + (j * model.ySpacing);
+          pointValues[offsetPt + 0] = model.origin[0] + (i * model.xSpacing * model.xDirection);
+          pointValues[offsetPt + 1] = model.origin[1] + (j * model.ySpacing * model.yDirection);
           pointValues[offsetPt + 2] = model.origin[2] + (model.elevation[j][i] * model.zScaling);
 
           // fill in tcoords
           tcData[(offsetIdx * 2)] = i / (iSize - 1.0);
-          tcData[(offsetIdx * 2) + 1] = 1.0 - j / (jSize - 1.0);
+          tcData[(offsetIdx * 2) + 1] = 1.0 - (j / (jSize - 1.0));
 
           // Fill polys
           if (i > 0 && j > 0) {
@@ -125,6 +125,8 @@ const DEFAULT_VALUES = {
   xSpacing: 1,
   ySpacing: 1,
   zScaling: 1,
+  xDirection: 1,
+  yDirection: -1,
   requestCount: 0,
   // baseURL: null,
   // dataAccessHelper: null,
@@ -148,6 +150,8 @@ export function extend(publicAPI, model, initialValues = {}) {
     'xSpacing',
     'ySpacing',
     'zScaling',
+    'xDirection',
+    'yDirection',
   ]);
   macro.algo(publicAPI, model, 0, 1);
   macro.event(publicAPI, model, 'busy');

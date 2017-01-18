@@ -24,7 +24,11 @@ const actor = vtkActor.newInstance();
 mapper.setInputConnection(reader.getOutputPort());
 actor.setMapper(mapper);
 
-// Texture is `${__BASE_PATH__}/data/elevation/dem.jpg`
+renderer.addActor(actor);
+renderer.resetCamera();
+renderWindow.render();
+
+// Download and apply Texture
 const img = new Image();
 img.onload = function textureLoaded() {
   const texture = vtkTexture.newInstance();
@@ -35,10 +39,7 @@ img.onload = function textureLoaded() {
 };
 img.src = `${__BASE_PATH__}/data/elevation/dem.jpg`;
 
-renderer.addActor(actor);
-renderer.resetCamera();
-renderWindow.render();
-
+// Download elevation and render when ready
 reader.setUrl(`${__BASE_PATH__}/data/elevation/dem.csv`).then(() => {
   renderer.resetCamera();
   renderWindow.render();
