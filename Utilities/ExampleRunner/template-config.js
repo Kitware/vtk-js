@@ -2,11 +2,15 @@ module.exports = function buildConfig(name, relPath, destPath, root) {
   return `
 var loaders = require('../config/webpack.loaders.js');
 var HtmlWebpackPlugin = require('html-webpack-plugin');
+var webpack = require('webpack');
 
 module.exports = {
   plugins: [
     new HtmlWebpackPlugin({
       inject: 'body',
+    }),
+    new webpack.DefinePlugin({
+      __BASE_PATH__: "''",
     }),
   ],
   entry: '${relPath}',
@@ -25,8 +29,9 @@ module.exports = {
   eslint: {
     configFile: '${root}/.eslintrc.js',
   },
+
   devServer: {
-    contentBase: '${destPath}',
+    contentBase: '${root}',
     port: 9999,
     host: '0.0.0.0',
     hot: true,
@@ -34,6 +39,14 @@ module.exports = {
     noInfo: false,
     stats: {
       colors: true,
+    },
+    proxy: {
+      '/data/**': {
+        target: 'http://0.0.0.0:9999/Data',
+        pathRewrite: {
+          '^/data': ''
+        },
+      },
     },
   },
 };
