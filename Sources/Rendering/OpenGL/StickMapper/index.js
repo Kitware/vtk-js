@@ -191,27 +191,27 @@ export function vtkOpenGLStickMapper(publicAPI, model) {
       if (cellBO.getProgram().isAttributeUsed('orientMC')) {
         if (!cellBO.getVAO().addAttributeArray(cellBO.getProgram(), cellBO.getCABO(),
                                            'orientMC',
-                                           12, // cellBO.getCABO().getColorOffset() + sizeof(float)
+                                           12, // after X Y Z
                                            cellBO.getCABO().getStride(), model.context.FLOAT, 3,
-                                           model.context.FALSE)) {
+                                           false)) {
           vtkErrorMacro('Error setting \'orientMC\' in shader VAO.');
         }
       }
       if (cellBO.getProgram().isAttributeUsed('offsetMC')) {
         if (!cellBO.getVAO().addAttributeArray(cellBO.getProgram(), cellBO.getCABO(),
                                            'offsetMC',
-                                           24, // this->VBO->ColorOffset+4*sizeof(float),
-                                           cellBO.getCABO().getStride(), model.context.FLOAT,
-                                           3, model.context.FALSE)) {
+                                           24, // after X Y Z OX OY OZ
+                                           cellBO.getCABO().getStride(), model.context.UNSIGNED_BYTE,
+                                           3, true)) {
           vtkErrorMacro('Error setting \'offsetMC\' in shader VAO.');
         }
       }
       if (cellBO.getProgram().isAttributeUsed('radiusMC')) {
         if (!cellBO.getVAO().addAttributeArray(cellBO.getProgram(), cellBO.getCABO(),
                                            'radiusMC',
-                                           36, // this->VBO->ColorOffset+5*sizeof(float),
+                                           28, // X Y Z OX OY OZ OFFSET
                                            cellBO.getCABO().getStride(), model.context.FLOAT, 1,
-                                           model.context.FALSE)) {
+                                           false)) {
           vtkErrorMacro('Error setting \'radiusMC\' in shader VAO.');
         }
       }
@@ -221,9 +221,9 @@ export function vtkOpenGLStickMapper(publicAPI, model) {
           cellBO.getProgram().isAttributeUsed('selectionId')) {
         if (!cellBO.getVAO().addAttributeArray(cellBO.getProgram(), cellBO.getCABO(),
                                            'selectionId',
-                                           48, // this->VBO->ColorOffset+6*sizeof(float),
+                                           32, // this->VBO->ColorOffset+6*sizeof(float),
                                            cellBO.getCABO().getStride(), model.context.FLOAT,
-                                           4, model.context.TRUE)) {
+                                           4, true)) {
           vtkErrorMacro('Error setting \'selectionId\' in shader VAO.');
         }
       } else {
@@ -291,8 +291,8 @@ export function vtkOpenGLStickMapper(publicAPI, model) {
     const pointArray = points.getData();
     let pointSize = 3; // x,y,z
 
-    // three more floats for orientation + 3 for offset + 1 for radius
-    pointSize += 7;
+    // three more floats for orientation + 1 for offset + 1 for radius
+    pointSize += 5;
 
     let colorData = null;
     let colorComponents = 0;
@@ -300,7 +300,7 @@ export function vtkOpenGLStickMapper(publicAPI, model) {
       colorComponents = c.getNumberOfComponents();
       vbo.setColorComponents(colorComponents);
       vbo.setColorOffset(4 * pointSize);
-      pointSize += colorComponents;
+      pointSize += 1;
       colorData = c.getData();
     }
 
@@ -329,11 +329,11 @@ export function vtkOpenGLStickMapper(publicAPI, model) {
 
 
     // Vertices
-    // 012 - 230 - 324 - 453
+    // 013 - 032 - 324 - 453
     //
-    //       _.5---_.4
+    //       _.4---_.5
     //    .-*   .-*
-    //   3-----2
+    //   2-----3
     //   |    /|
     //   |   / |
     //   |  /  |
@@ -344,32 +344,27 @@ export function vtkOpenGLStickMapper(publicAPI, model) {
     // coord for each points
     // 0: 000
     // 1: 100
-    // 2: 101
-    // 3: 001
-    // 4: 111
-    // 5: 011
+    // 2: 001
+    // 3: 101
+    // 4: 011
+    // 5: 111
 
-    const verticesData = new DynamicTypedArray({ chunkSize: 65500, arrayType: 'Float32Array' });
-    verticesData.push(0);
-    verticesData.push(1);
-    verticesData.push(2);
-
-    verticesData.push(2);
-    verticesData.push(3);
-    verticesData.push(0);
-
-    verticesData.push(3);
-    verticesData.push(2);
-    verticesData.push(4);
-
-    verticesData.push(4);
-    verticesData.push(5);
-    verticesData.push(3);
-    const verticesArray = verticesData.getFrozenArray();
-
+    const verticesArray = [
+      0, 1, 3,
+      0, 3, 2,
+      2, 3, 5,
+      2, 5, 4];
 
     let pointIdx = 0;
     let colorIdx = 0;
+    let colorView = null;
+    if (colorData) {
+      colorView = new DataView(colorData.buffer, 0);
+    }
+
+    const offsetHelper = new ArrayBuffer(4);
+    const offsetHelperView = new DataView(offsetHelper, 0);
+
     for (let i = 0; i < numPoints; ++i) {
       let length = model.renderable.getLength();
       let radius = model.renderable.getRadius();
@@ -378,7 +373,7 @@ export function vtkOpenGLStickMapper(publicAPI, model) {
         radius = scales[(i * 2) + 1];
       }
 
-      for (let j = 0; j < verticesData.getNumberOfElements(); ++j) {
+      for (let j = 0; j < verticesArray.length; ++j) {
         pointIdx = i * 3;
         packedVBO.push(pointArray[pointIdx++]);
         packedVBO.push(pointArray[pointIdx++]);
@@ -388,30 +383,15 @@ export function vtkOpenGLStickMapper(publicAPI, model) {
         packedVBO.push(orientationArray[pointIdx++] * length);
         packedVBO.push(orientationArray[pointIdx++] * length);
 
-        if (verticesArray[j] === 0 || verticesArray[j] === 3 || verticesArray[j] === 5) {
-          packedVBO.push(0);
-        } else {
-          packedVBO.push(1);
-        }
-
-        if (verticesArray[j] === 4 || verticesArray[j] === 5) {
-          packedVBO.push(1);
-        } else {
-          packedVBO.push(0);
-        }
-
-        if (verticesArray[j] === 0 || verticesArray[j] === 1) {
-          packedVBO.push(0);
-        } else {
-          packedVBO.push(1);
-        }
+        offsetHelperView.setUint8(0, 255 * (verticesArray[j] % 2));
+        offsetHelperView.setUint8(1, (verticesArray[j] >= 4 ? 255 : 0));
+        offsetHelperView.setUint8(2, (verticesArray[j] >= 2 ? 255 : 0));
+        packedVBO.pushBytes(offsetHelperView, 0, 4);
 
         packedVBO.push(radius);
         colorIdx = i * colorComponents;
         if (colorData) {
-          for (let k = 0; k < colorComponents; ++k) {
-            packedVBO.push(colorData[colorIdx++] / 255.5);
-          }
+          packedVBO.pushBytes(colorView, colorIdx, 4);
         }
       }
     }

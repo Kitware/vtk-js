@@ -58,7 +58,7 @@ function vtkOpenGLCellArrayBufferObject(publicAPI, model) {
     if (options.colors) {
       model.colorComponents = options.colors.getNumberOfComponents();
       model.colorOffset = 4 * model.blockSize;
-      model.blockSize += model.colorComponents;
+      model.blockSize += 1;
       colorData = options.colors.getData();
     }
     model.stride = 4 * model.blockSize;
@@ -68,6 +68,9 @@ function vtkOpenGLCellArrayBufferObject(publicAPI, model) {
     let tcoordIdx = 0;
     let colorIdx = 0;
     let cellCount = 0;
+    const dataHelper = new ArrayBuffer(4);
+    const dataHelperView = new DataView(dataHelper, 0);
+    dataHelperView.setUint8(3, 255); // default alpha
 
     const addAPoint = function addAPoint(i) {
       // Vertices
@@ -101,10 +104,10 @@ function vtkOpenGLCellArrayBufferObject(publicAPI, model) {
         } else {
           colorIdx = i * colorComponents;
         }
-
         for (let j = 0; j < colorComponents; ++j) {
-          packedVBO.push(colorData[colorIdx++] / 255.5);
+          dataHelperView.setUint8(j, colorData[colorIdx++]);
         }
+        packedVBO.pushBytes(dataHelperView, 0, 4);
       }
     };
 

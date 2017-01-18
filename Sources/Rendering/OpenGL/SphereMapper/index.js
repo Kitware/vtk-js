@@ -121,7 +121,7 @@ export function vtkOpenGLSphereMapper(publicAPI, model) {
       cellBO.getCABO().bind();
       if (!cellBO.getVAO().addAttributeArray(cellBO.getProgram(), cellBO.getCABO(),
           'offsetMC', 12, // 12:this->VBO->ColorOffset+sizeof(float)
-          cellBO.getCABO().getStride(), model.context.FLOAT, 2, model.context.FALSE)) {
+          cellBO.getCABO().getStride(), model.context.FLOAT, 2, false)) {
         vtkErrorMacro('Error setting \'offsetMC\' in shader VAO.');
       }
     }
@@ -193,7 +193,7 @@ export function vtkOpenGLSphereMapper(publicAPI, model) {
       colorComponents = c.getNumberOfComponents();
       vbo.setColorComponents(colorComponents);
       vbo.setColorOffset(4 * pointSize);
-      pointSize += colorComponents;
+      pointSize += 1;
       colorData = c.getData();
     }
 
@@ -202,6 +202,11 @@ export function vtkOpenGLSphereMapper(publicAPI, model) {
     const cos30 = Math.cos(vtkMath.radiansFromDegrees(30.0));
     let pointIdx = 0;
     let colorIdx = 0;
+    let colorView = null;
+    if (colorData) {
+      colorView = new DataView(colorData.buffer, 0);
+    }
+
   //
   // Generate points and point data for sides
   //
@@ -210,17 +215,16 @@ export function vtkOpenGLSphereMapper(publicAPI, model) {
       if (scales) {
         radius = scales[i];
       }
+
       pointIdx = i * 3;
       packedVBO.push(pointArray[pointIdx++]);
       packedVBO.push(pointArray[pointIdx++]);
       packedVBO.push(pointArray[pointIdx++]);
       packedVBO.push(-2.0 * radius * cos30);
       packedVBO.push(-radius);
-      colorIdx = i * colorComponents;
       if (colorData) {
-        for (let j = 0; j < colorComponents; ++j) {
-          packedVBO.push(colorData[colorIdx++] / 255.5);
-        }
+        colorIdx = i * colorComponents;
+        packedVBO.pushBytes(colorView, colorIdx, 4);
       }
 
       pointIdx = i * 3;
@@ -229,11 +233,8 @@ export function vtkOpenGLSphereMapper(publicAPI, model) {
       packedVBO.push(pointArray[pointIdx++]);
       packedVBO.push(2.0 * radius * cos30);
       packedVBO.push(-radius);
-      colorIdx = i * colorComponents;
       if (colorData) {
-        for (let j = 0; j < colorComponents; ++j) {
-          packedVBO.push(colorData[colorIdx++] / 255.5);
-        }
+        packedVBO.pushBytes(colorView, colorIdx, 4);
       }
 
       pointIdx = i * 3;
@@ -242,11 +243,8 @@ export function vtkOpenGLSphereMapper(publicAPI, model) {
       packedVBO.push(pointArray[pointIdx++]);
       packedVBO.push(0.0);
       packedVBO.push(2.0 * radius);
-      colorIdx = i * colorComponents;
       if (colorData) {
-        for (let j = 0; j < colorComponents; ++j) {
-          packedVBO.push(colorData[colorIdx++] / 255.5);
-        }
+        packedVBO.pushBytes(colorView, colorIdx, 4);
       }
     }
 
