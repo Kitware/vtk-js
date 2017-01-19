@@ -23,6 +23,7 @@
     "devDependencies": {
         "kw-web-suite": "2.2.1",
         "kw-doc": "1.0.18",
+        "xml2js": "0.4.17",
 
         "babel-plugin-istanbul": "2.0.0",
         "babel-polyfill": "6.13.0",
@@ -72,7 +73,8 @@
         }
     },
     "bin": {
-        "vtkDataConverter": "./Utilities/DataGenerator/convert-cli.js"
+        "vtkDataConverter": "./Utilities/DataGenerator/convert-cli.js",
+        "xml2json": "./Utilities/XMLConverter/xml2json-cli.js"
     },
     "nyc": {
       "include": [
