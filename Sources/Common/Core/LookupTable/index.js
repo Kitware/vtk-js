@@ -105,7 +105,7 @@ function vtkLookupTable(publicAPI, model) {
       lookupFunc = publicAPI.indexedLookupFunction;
     }
 
-    const trange = publicAPI.getTableRange();
+    const trange = publicAPI.getMappingRange();
 
     const p = {
       maxIndex: publicAPI.getNumberOfColors() - 1,
@@ -230,9 +230,6 @@ function vtkLookupTable(publicAPI, model) {
     tptr[base + 3] = (model.nanColor[3] * 255.0) + 0.5;
   };
 
-  publicAPI.setRange = (min, max) => publicAPI.setTableRange(min, max);
-  publicAPI.getRange = () => publicAPI.getTableRange();
-
   publicAPI.build = () => {
     if (model.table.length < 1 ||
         publicAPI.getMTime() > model.buildTime.getMTime()) {
@@ -253,7 +250,6 @@ const DEFAULT_VALUES = {
   saturationRange: [1.0, 1.0],
   valueRange: [1.0, 1.0],
   alphaRange: [1.0, 1.0],
-  tableRange: [0.0, 1.0],
 
   nanColor: [0.5, 0.0, 0.0, 1.0],
   belowRangeColor: [0.0, 0.0, 0.0, 1.0],
@@ -305,7 +301,6 @@ export function extend(publicAPI, model, initialValues = {}) {
     'hueRange',
     'saturationRange',
     'valueRange',
-    'tableRange',
   ], 2);
 
   macro.setArray(publicAPI, model, [
@@ -319,7 +314,6 @@ export function extend(publicAPI, model, initialValues = {}) {
     'hueRange',
     'saturationRange',
     'valueRange',
-    'tableRange',
     'alphaRange',
     'nanColor',
     'belowRangeColor',

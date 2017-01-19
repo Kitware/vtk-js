@@ -461,8 +461,8 @@ function vtkScalarsToColors(publicAPI, model) {
 
   publicAPI.getNumberOfAvailableColors = () => 256 * 256 * 256;
 
-  publicAPI.setRange = (min, max) => publicAPI.setInputRange(min, max);
-  publicAPI.getRange = (min, max) => publicAPI.getInputRange();
+  publicAPI.setRange = (min, max) => publicAPI.setMappingRange(min, max);
+  publicAPI.getRange = (min, max) => publicAPI.getMappingRange();
 }
 
 // ----------------------------------------------------------------------------
@@ -474,7 +474,7 @@ const DEFAULT_VALUES = {
   vectorComponent: 0,
   vectorSize: -1,
   vectorMode: VectorMode.COMPONENT,
-  inputRange: [0, 255],
+  mappingRange: [0, 255],
   annotationArray: [],
   annotatedValueMap: [],
   indexedLookup: false,
@@ -499,12 +499,12 @@ export function extend(publicAPI, model, initialValues = {}) {
 
   // Create set macros for array (needs to know size)
   macro.setArray(publicAPI, model, [
-    'inputRange',
+    'mappingRange',
   ], 2);
 
   // Create get macros for array
   macro.getArray(publicAPI, model, [
-    'inputRange',
+    'mappingRange',
   ]);
 
   // For more macro methods, see "Sources/macro.js"

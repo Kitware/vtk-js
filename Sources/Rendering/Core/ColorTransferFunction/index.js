@@ -220,20 +220,20 @@ function vtkColorTransferFunction(publicAPI, model) {
   //----------------------------------------------------------------------------
   publicAPI.updateRange = () => {
     const oldRange = [2];
-    oldRange[0] = model.range[0];
-    oldRange[1] = model.range[1];
+    oldRange[0] = model.mappingRange[0];
+    oldRange[1] = model.mappingRange[1];
 
     const size = model.nodes.length;
     if (size) {
-      model.range[0] = model.nodes[0].x;
-      model.range[1] = model.nodes[size - 1].x;
+      model.mappingRange[0] = model.nodes[0].x;
+      model.mappingRange[1] = model.nodes[size - 1].x;
     } else {
-      model.range[0] = 0;
-      model.range[1] = 0;
+      model.mappingRange[0] = 0;
+      model.mappingRange[1] = 0;
     }
 
     // If the range is the same, then no need to call Modified()
-    if (oldRange[0] === model.range[0] && oldRange[1] === model.range[1]) {
+    if (oldRange[0] === model.mappingRange[0] && oldRange[1] === model.mappingRange[1]) {
       return false;
     }
 
@@ -431,7 +431,7 @@ function vtkColorTransferFunction(publicAPI, model) {
     let usingLogScale = (model.scale === Scale.LOG10);
     if (usingLogScale) {
       // Note: This requires range[0] <= range[1].
-      usingLogScale = (model.range[0] > 0.0);
+      usingLogScale = (model.mappingRange[0] > 0.0);
     }
 
     let logStart = 0.0;
@@ -509,7 +509,7 @@ function vtkColorTransferFunction(publicAPI, model) {
       }
 
       // Are we at or past the end? If so, just use the last value
-      if (x > model.range[1]) {
+      if (x > model.mappingRange[1]) {
         table[tidx] = 0.0;
         table[tidx + 1] = 0.0;
         table[tidx + 2] = 0.0;
@@ -524,7 +524,7 @@ function vtkColorTransferFunction(publicAPI, model) {
             table[tidx + 2] = lastB;
           }
         }
-      } else if (x < model.range[0] || (vtkMath.isInf(x) && x < 0)) {
+      } else if (x < model.mappingRange[0] || (vtkMath.isInf(x) && x < 0)) {
         // we are before the first node? If so, duplicate this node's values.
         // We have to deal with -inf here
         table[tidx] = 0.0;
@@ -1093,11 +1093,6 @@ export function extend(publicAPI, model, initialValues = {}) {
     'useBelowRangeColor',
   ]);
 
-  // Create set macros for array (needs to know size)
-  macro.setArray(publicAPI, model, [
-    'range',
-  ], 2);
-
   macro.setArray(publicAPI, model, [
     'nanColor',
     'belowRangeColor',
@@ -1106,7 +1101,6 @@ export function extend(publicAPI, model, initialValues = {}) {
 
   // Create get macros for array
   macro.getArray(publicAPI, model, [
-    'range',
     'nanColor',
     'belowRangeColor',
     'aboveRangeColor',
