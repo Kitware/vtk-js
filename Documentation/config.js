@@ -14,6 +14,7 @@ module.exports = {
     url: 'https://kitware.github.io/vtk-js',
     root: '/vtk-js/',
     github: 'kitware/vtk-js',
+    google_analytics: 'UA-90338862-1',
   },
   webpack: {
     module: {
