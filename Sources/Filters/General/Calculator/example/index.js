@@ -89,7 +89,7 @@ function updateScalarRange() {
   const min = Number(document.querySelector('.min').value);
   const max = Number(document.querySelector('.max').value);
   if (!isNaN(min) && !isNaN(max)) {
-    lookupTable.setTableRange(min, max);
+    lookupTable.setMappingRange(min, max);
     renderWindow.render();
   }
 }
@@ -136,7 +136,7 @@ function applyFormula() {
       const [min, max] = simpleFilter.getOutputData().getPointData().getScalars().getRange();
       document.querySelector('.min').value = min;
       document.querySelector('.max').value = max;
-      lookupTable.setTableRange(min, max);
+      lookupTable.setMappingRange(min, max);
 
       renderWindow.render();
       return;

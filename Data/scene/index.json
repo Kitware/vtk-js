@@ -48,7 +48,7 @@
     },
     "type": "httpDataSetReader",
     "lookupTable": {
-      "tableRange": [
+      "mappingRange": [
         0.0,
         1.0
       ],
@@ -78,7 +78,7 @@
     },
     "type": "httpDataSetReader",
     "lookupTable": {
-      "tableRange": [
+      "mappingRange": [
         293.1499938964844,
         913.1500244140625
       ],
@@ -108,7 +108,7 @@
     },
     "type": "httpDataSetReader",
     "lookupTable": {
-      "tableRange": [
+      "mappingRange": [
         0.06795133306083768,
         22.221139038251316
       ],
