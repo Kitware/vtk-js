@@ -3,16 +3,10 @@ import * as macro           from '../../../macro';
 import vtkPolyData          from '../../../Common/DataModel/PolyData';
 import vtkDataArray         from '../../../Common/Core/DataArray';
 
-import atomElem from '../../../../Utilities/XMLConverter/chemistry/elements.json';
 import DataAccessHelper     from '../../Core/DataAccessHelper';
 
+import ATOMS                from '../../../../Utilities/XMLConverter/chemistry-mapper/elements.json';
 
-// ----
-// Globals
-// ----
-
-const ATOMS = {};
-atomElem.atoms.forEach((a) => { ATOMS[a.id] = a; });
 
 // ----------------------------------------------------------------------------
 // vtkPDBReader methods
@@ -139,17 +133,20 @@ export function vtkPDBReader(publicAPI, model) {
             pointValues.push(y * model.ySpacing);
             pointValues.push(z * model.zSpacing);
 
+            // fetch data from the element database elements.json
+            const [radiusCovalentData, radiusVDWData, colorData] = ATOMS[elem];
+
             // atoms radius
-            radiusCovalent.push(ATOMS[elem].radiusCovalent);
-            radiusVDW.push(ATOMS[elem].radiusVDW);
+            radiusCovalent.push(radiusCovalentData);
+            radiusVDW.push(radiusVDWData);
 
             // atoms color
-            color.push(ATOMS[elem].elementColor[0]);
-            color.push(ATOMS[elem].elementColor[1]);
-            color.push(ATOMS[elem].elementColor[2]);
+            color.push(colorData[0]);
+            color.push(colorData[1]);
+            color.push(colorData[2]);
 
             // atoms mass
-            mass.push(ATOMS[elem].mass);
+            // mass.push(ATOMS[elem].mass);
 
             // residue.push(resi);
             // chain.push(chain);
