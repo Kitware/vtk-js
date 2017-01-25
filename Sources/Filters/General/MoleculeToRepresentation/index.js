@@ -34,18 +34,20 @@ export function vtkMoleculeToRepresentation(publicAPI, model) {
 
     const pointdata = polydata.getPointData();
     let radiusCovalent = null;
+    let scaleData = null;
     let elementColor = null;
+    let colorData = null;
 
     if (pointdata.hasArray('radiusCovalent')) {
       radiusCovalent = pointdata.getArray('radiusCovalent').getData();
+      scaleData = new Float32Array(numPts);
     }
     if (pointdata.hasArray('elementColor')) {
       elementColor = pointdata.getArray('elementColor').getData();
+      colorData = new Uint8Array(numPts * 3);
     }
 
     const pos = new Float32Array(numPts * 3);
-    const scaleData = new Float32Array(numPts);
-    const colorData = new Uint8Array(numPts * 3);
 
     // go trhough each points
     let ptsIdx = 0;
@@ -72,11 +74,15 @@ export function vtkMoleculeToRepresentation(publicAPI, model) {
 
     SphereData.getPoints().setData(pos, 3);
 
-    const scales = vtkDataArray.newInstance({ numberOfComponents: 1, values: scaleData, name: publicAPI.getSphereScaleArrayName() });
-    SphereData.getPointData().addArray(scales);
+    if (radiusCovalent) {
+      const scales = vtkDataArray.newInstance({ numberOfComponents: 1, values: scaleData, name: publicAPI.getSphereScaleArrayName() });
+      SphereData.getPointData().addArray(scales);
+    }
 
-    const colors = vtkDataArray.newInstance({ numberOfComponents: 3, values: colorData, name: 'colors' });
-    SphereData.getPointData().setScalars(colors);
+    if (elementColor) {
+      const colors = vtkDataArray.newInstance({ numberOfComponents: 3, values: colorData, name: 'colors' });
+      SphereData.getPointData().setScalars(colors);
+    }
 
     // Update output
     outData[0] = SphereData;
