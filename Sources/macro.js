@@ -75,10 +75,11 @@ export function obj(publicAPI = {}, model = {}) {
   publicAPI.set = (map = {}) => {
     let ret = false;
     Object.keys(map).forEach((name) => {
-      if (Array.isArray(map[name])) {
-        ret = publicAPI[`set${capitalize(name)}`](...map[name]) || ret;
-      } else if (publicAPI[`set${capitalize(name)}`]) {
-        ret = publicAPI[`set${capitalize(name)}`](map[name]) || ret;
+      const fn = publicAPI[`set${capitalize(name)}`];
+      if (fn && Array.isArray(map[name])) {
+        ret = fn(...map[name]) || ret;
+      } else if (fn) {
+        ret = fn(map[name]) || ret;
       } else {
         // Set data on model directly
         if (['mtime'].indexOf(name) === -1) {
