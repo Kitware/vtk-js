@@ -97,10 +97,10 @@ List the blocks and their state for data loading. Each hierachy have its state.
 Enable or disable a given array.
 
 ```js
-reader.enableArray('PointData', 'Temperature');
-reader.enableArray('PointData', 'Pressure', false);
-reader.enableArray('CellData', 'CellId', true);
-reader.enableArray('FieldData', 'labels', true);
+reader.enableArray('pointData', 'Temperature');
+reader.enableArray('pointData', 'Pressure', false);
+reader.enableArray('cellData', 'CellId', true);
+reader.enableArray('fieldData', 'labels', true);
 ```
 
 ### enableBlock(blockPath, enable = true, pathSeparator = '.') 

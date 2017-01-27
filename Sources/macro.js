@@ -72,7 +72,7 @@ export function obj(publicAPI = {}, model = {}) {
 
   publicAPI.getClassName = () => model.classHierarchy.slice(-1)[0];
 
-  publicAPI.set = (map = {}) => {
+  publicAPI.set = (map = {}, noWarning = false) => {
     let ret = false;
     Object.keys(map).forEach((name) => {
       const fn = publicAPI[`set${capitalize(name)}`];
@@ -82,7 +82,7 @@ export function obj(publicAPI = {}, model = {}) {
         ret = fn(map[name]) || ret;
       } else {
         // Set data on model directly
-        if (['mtime'].indexOf(name) === -1) {
+        if (['mtime'].indexOf(name) === -1 && !noWarning) {
           console.log('Warning: Set value to model directly', name, map[name]);
         }
         model[name] = map[name];
