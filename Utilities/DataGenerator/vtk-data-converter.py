@@ -125,7 +125,7 @@ def dumpDataArray(datasetDir, dataDir, array, root = {}, compress = True):
 
 def dumpAttributes(datasetDir, dataDir, dataset, root = {}, compress = True):
   # PointData
-  _pointData = root['PointData'] = {}
+  _pointData = root['pointData'] = { "vtkClass": "vtkDataSetAttributes", "arrays": [] }
   _nbFields = dataset.GetPointData().GetNumberOfArrays()
   for i in range(_nbFields):
     array = dataset.GetPointData().GetArray(i)
@@ -133,14 +133,14 @@ def dumpAttributes(datasetDir, dataDir, dataset, root = {}, compress = True):
     if array:
       _array = dumpDataArray(datasetDir, dataDir, array, {}, compress)
       if _array:
-        _pointData[_array['name']] = _array
+        _pointData['arrays'].append({ "data": _array })
     elif abstractArray:
       _array = dumpStringArray(datasetDir, dataDir, abstractArray, {}, compress)
       if _array:
-        _pointData[_array['name']] = _array
+        _pointData['arrays'].append({ "data": _array })
 
   # CellData
-  _cellData = root['CellData'] = {}
+  _cellData = root['cellData'] = { "vtkClass": "vtkDataSetAttributes", "arrays": [] }
   _nbFields = dataset.GetCellData().GetNumberOfArrays()
   for i in range(_nbFields):
     array = dataset.GetCellData().GetArray(i)
@@ -148,14 +148,14 @@ def dumpAttributes(datasetDir, dataDir, dataset, root = {}, compress = True):
     if array:
       _array = dumpDataArray(datasetDir, dataDir, array, {}, compress)
       if _array:
-        _cellData[_array['name']] = _array
+        _cellData['arrays'].append({ "data": _array })
     elif abstractArray:
       _array = dumpStringArray(datasetDir, dataDir, abstractArray, {}, compress)
       if _array:
-        _cellData[_array['name']] = _array
+        _cellData['arrays'].append({ "data": _array })
 
   # FieldData
-  _fieldData = root['FieldData'] = {}
+  _fieldData = root['FieldData'] = { "vtkClass": "vtkDataSetAttributes", "arrays": [] }
   _nbFields = dataset.GetFieldData().GetNumberOfArrays()
   for i in range(_nbFields):
     array = dataset.GetFieldData().GetArray(i)
@@ -163,11 +163,11 @@ def dumpAttributes(datasetDir, dataDir, dataset, root = {}, compress = True):
     if array:
       _array = dumpDataArray(datasetDir, dataDir, array, {}, compress)
       if _array:
-        _fieldData[_array['name']] = _array
+        _fieldData['arrays'].append({ "data": _array })
     elif abstractArray:
       _array = dumpStringArray(datasetDir, dataDir, abstractArray, {}, compress)
       if _array:
-        _fieldData[_array['name']] = _array
+        _fieldData['arrays'].append({ "data": _array })
   return root
 
 # -----------------------------------------------------------------------------
