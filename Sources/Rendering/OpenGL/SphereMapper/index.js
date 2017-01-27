@@ -60,7 +60,7 @@ export function vtkOpenGLSphereMapper(publicAPI, model) {
     FSSource = vtkShaderProgram.substitute(FSSource, '//VTK::Normal::Dec', replacement).result;
 
     let fragString = '';
-    if (model.context.getExtension('GL_EXT_frag_depth')) {
+    if (model.context.getExtension('EXT_frag_depth')) {
       fragString = 'gl_FragDepthEXT = (pos.z / pos.w + 1.0) / 2.0;\n';
     }
     FSSource = vtkShaderProgram.substitute(FSSource, '//VTK::Depth::Impl', [

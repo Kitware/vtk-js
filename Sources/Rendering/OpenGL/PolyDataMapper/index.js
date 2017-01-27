@@ -606,7 +606,7 @@ export function vtkOpenGLPolyDataMapper(publicAPI, model) {
           'uniform float cfactor;',
           'uniform float coffset;']).result;
 
-      if (model.context.getExtension('GL_EXT_frag_depth')) {
+      if (model.context.getExtension('EXT_frag_depth')) {
         if (cp.factor !== 0.0) {
           FSSource = vtkShaderProgram.substitute(FSSource,
             '//VTK::UniformFlow::Impl', [
@@ -800,6 +800,16 @@ export function vtkOpenGLPolyDataMapper(publicAPI, model) {
         cellBO.getProgram().setUniformi(tname, texUnit);
       }
     });
+
+    // handle coincident
+    if (cellBO.getProgram().isUniformUsed('coffset')) {
+      const cp = publicAPI.getCoincidentParameters(ren, actor);
+      cellBO.getProgram().setUniformf('coffset', cp.offset);
+      // cfactor isn't always used when coffset is.
+      if (cellBO.getProgram().isUniformUsed('cfactor')) {
+        cellBO.getProgram().setUniformf('cfactor', cp.factor);
+      }
+    }
   };
 
   publicAPI.setLightingShaderParameters = (cellBO, ren, actor) => {
