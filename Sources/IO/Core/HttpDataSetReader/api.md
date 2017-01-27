@@ -7,7 +7,7 @@ const reader = HttpDataSetReader.newInstance();
 reader.setURL('/Data/can.ex2/index.json').then((reader, dataset) => {
   console.log('Metadata loaded with the geometry', dataset);
 
-  reader.listArrays.forEach(array => {
+  reader.getArrays.forEach(array => {
     console.log('-', array.name, array.location, ':', array.enable);
   });
 
