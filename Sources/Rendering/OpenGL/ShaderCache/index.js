@@ -31,10 +31,16 @@ function vtkShaderCache(publicAPI, model) {
       nFSSource = vtkShaderProgram.substitute(nFSSource, 'VSOut', 'GSOut').result;
     }
 
+    let fragDepthString = '\n';
+    if (model.context.getExtension('EXT_frag_depth')) {
+      fragDepthString = '#extension GL_EXT_frag_depth : enable\n';
+    }
+
     const version = '#version 100\n';
 
     nFSSource = vtkShaderProgram.substitute(nFSSource, '//VTK::System::Dec', [
       `${version}\n#extension GL_OES_standard_derivatives : enable\n`,
+      fragDepthString,
       '#ifdef GL_FRAGMENT_PRECISION_HIGH',
       'precision highp float;',
       'precision highp int;',

@@ -3,7 +3,7 @@ import vtkFullScreenRenderWindow    from '../../../../../Sources/Rendering/Misc/
 import vtkActor                     from '../../../../../Sources/Rendering/Core/Actor';
 import vtkPDBReader                 from '../../../../../Sources/IO/Misc/PDBReader';
 import vtkSphereMapper              from '../../../../../Sources/Rendering/Core/SphereMapper';
-// import vtkStickMapper               from '../../../../../Sources/Rendering/Core/StickMapper';
+import vtkStickMapper               from '../../../../../Sources/Rendering/Core/StickMapper';
 import vtkMoleculeToRepresentation  from '../../../../../Sources/Filters/General/MoleculeToRepresentation';
 
 // ----------------------------------------------------------------------------
@@ -21,9 +21,9 @@ const renderWindow = fullScreenRenderer.getRenderWindow();
 const reader = vtkPDBReader.newInstance();
 const filter = vtkMoleculeToRepresentation.newInstance();
 const sphereMapper = vtkSphereMapper.newInstance();
-// const stickMapper = vtkStickMapper.newInstance();
+const stickMapper = vtkStickMapper.newInstance();
 const sphereActor = vtkActor.newInstance();
-// const stickActor = vtkActor.newInstance();
+const stickActor = vtkActor.newInstance();
 
 filter.setInputConnection(reader.getOutputPort());
 
@@ -32,20 +32,20 @@ sphereMapper.setInputConnection(filter.getOutputPort(0));
 sphereMapper.setScaleArray(filter.getSphereScaleArrayName());
 sphereActor.setMapper(sphereMapper);
 
-// // render sticks
-// stickMapper.setInputConnection(filter.getOutputPort(1));
-// stickMapper.setScaleArray(filter.getStickScaleArrayName());
-// stickMapper.setOrientationArray(filter.getStickOrientationArrayName());
-// stickActor.setMapper(stickMapper);
+// render sticks
+stickMapper.setInputConnection(filter.getOutputPort(1));
+stickMapper.setScaleArray('stickScales');
+stickMapper.setOrientationArray('orientation');
+stickActor.setMapper(stickMapper);
 
-reader.setUrl(`${__BASE_PATH__}/data/pdb/caffeine.pdb`).then(() => {
-// reader.setUrl(`${__BASE_PATH__}/data/pdb/2LYZ.pdb`).then(() => {
+// reader.setUrl(`${__BASE_PATH__}/data/pdb/caffeine.pdb`).then(() => {
+reader.setUrl(`${__BASE_PATH__}/data/pdb/2LYZ.pdb`).then(() => {
   renderer.resetCamera();
   renderWindow.render();
 });
 
 renderer.addActor(sphereActor);
-// renderer.addActor(stickActor);
+renderer.addActor(stickActor);
 renderer.resetCamera();
 renderWindow.render();
 
@@ -58,8 +58,8 @@ renderWindow.render();
 global.reader = reader;
 global.filter = filter;
 global.sphereMapper = sphereMapper;
-// global.stickMapper = stickMapper;
+global.stickMapper = stickMapper;
 global.sphereActor = sphereActor;
-// global.stickActor = stickActor;
+global.stickActor = stickActor;
 global.renderer = renderer;
 global.renderWindow = renderWindow;

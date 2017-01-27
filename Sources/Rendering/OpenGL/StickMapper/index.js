@@ -60,7 +60,7 @@ export function vtkOpenGLStickMapper(publicAPI, model) {
     FSSource = vtkShaderProgram.substitute(FSSource, '//VTK::Normal::Dec', replacement).result;
 
     let fragString = '';
-    if (model.context.getExtension('GL_EXT_frag_depth')) {
+    if (model.context.getExtension('EXT_frag_depth')) {
       fragString = '  gl_FragDepthEXT = (pos.z / pos.w + 1.0) / 2.0;\n';
     }
     // see https://www.cl.cam.ac.uk/teaching/1999/AGraphHCI/SMAG/node2.html
@@ -155,7 +155,7 @@ export function vtkOpenGLStickMapper(publicAPI, model) {
           '//VTK::Picking::Dec',
           'varying vec4 selectionIdVSOutput;').result;
 
-        if (model.context.getExtension('GL_EXT_frag_depth')) {
+        if (model.context.getExtension('EXT_frag_depth')) {
           fragString = '    gl_FragData[0] = vec4(selectionIdVSOutput.rgb, 1.0);\n';
         }
         FSSource = vtkShaderProgram.substitute(FSSource,
@@ -166,7 +166,7 @@ export function vtkOpenGLStickMapper(publicAPI, model) {
           '//VTK::Picking::Dec',
           'uniform vec3 mapperIndex;').result;
 
-        if (model.context.getExtension('GL_EXT_frag_depth')) {
+        if (model.context.getExtension('EXT_frag_depth')) {
           fragString = '  gl_FragData[0] = vec4(mapperIndex,1.0);\n';
         }
         FSSource = vtkShaderProgram.substitute(FSSource,

@@ -5,7 +5,7 @@ import vtkMoleculeToRepresentation      from '../../../../../Sources/Filters/Gen
 import vtkOpenGLRenderWindow            from '../../../../Rendering/OpenGL/RenderWindow';
 import vtkPDBReader                     from '../../../../../Sources/IO/Misc/PDBReader';
 import vtkSphereMapper                  from '../../../../../Sources/Rendering/Core/SphereMapper';
-// import vtkStickMapper                   from '../../../../../Sources/Rendering/Core/StickMapper';
+import vtkStickMapper                   from '../../../../../Sources/Rendering/Core/StickMapper';
 import vtkRenderer                      from '../../../../Rendering/Core/Renderer';
 import vtkRenderWindow                  from '../../../../Rendering/Core/RenderWindow';
 
@@ -13,7 +13,8 @@ import { AttributeTypes }               from '../../../../../Sources/Common/Data
 import { FieldDataTypes }               from '../../../../../Sources/Common/DataModel/DataSet/Constants';
 import { Representation }               from '../../../../../Sources/Rendering/Core/Property/Constants';
 
-import baseline                         from './testMolecule.png';
+// import baseline                         from './testMolecule.png';
+import baseline                         from './testMolecule_with_bonds.png';
 import testUtils                        from '../../../../Testing/testUtils';
 
 
@@ -38,27 +39,28 @@ test.onlyIfWebGL('Test MoleculeMapper', (t) => {
   const reader = vtkPDBReader.newInstance();
   const filter = vtkMoleculeToRepresentation.newInstance();
   const sphereMapper = vtkSphereMapper.newInstance();
-  // const stickMapper = vtkStickMapper.newInstance();
+  const stickMapper = vtkStickMapper.newInstance();
   const sphereActor = vtkActor.newInstance();
-  // const stickActor = vtkActor.newInstance();
+  const stickActor = vtkActor.newInstance();
 
   reader.setHideHydrogen(false);
 
   filter.setInputConnection(reader.getOutputPort());
+  filter.setRadiusType('radiusCovalent');
 
   // render sphere
   sphereMapper.setInputConnection(filter.getOutputPort(0));
   sphereMapper.setScaleArray(filter.getSphereScaleArrayName());
   sphereActor.setMapper(sphereMapper);
 
-  // // render sticks
-  // stickMapper.setInputConnection(filter.getOutputPort(1));
-  // stickMapper.setScaleArray(filter.getStickScaleArrayName());
-  // stickMapper.setOrientationArray(filter.getStickOrientationArrayName());
-  // stickActor.setMapper(stickMapper);
+  // render sticks
+  stickMapper.setInputConnection(filter.getOutputPort(1));
+  stickMapper.setScaleArray('stickScales');
+  stickMapper.setOrientationArray('orientation');
+  stickActor.setMapper(stickMapper);
 
   renderer.addActor(sphereActor);
-  // renderer.addActor(stickActor);
+  renderer.addActor(stickActor);
   renderer.resetCamera();
   renderWindow.render();
 
