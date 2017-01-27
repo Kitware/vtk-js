@@ -477,6 +477,50 @@ function vtkOpenGLTexture(publicAPI, model) {
   };
 
   //----------------------------------------------------------------------------
+  publicAPI.createDepthFromRaw = (width, height, dataType, data) => {
+    // Now determine the texture parameters using the arguments.
+    publicAPI.getOpenGLDataType(dataType);
+    model.format = model.context.DEPTH_COMPONENT;
+    model.internalFormat = model.context.DEPTH_COMPONENT;
+
+    if (!model.internalFormat || !model.format || !model.openGLDataType) {
+      vtkErrorMacro('Failed to determine texture parameters.');
+      return false;
+    }
+
+    model.target = model.context.TEXTURE_2D;
+    model.components = 1;
+    model.width = width;
+    model.height = height;
+    model.depth = 1;
+    model.numberOfDimensions = 2;
+    model.window.activateTexture(publicAPI);
+    publicAPI.createTexture();
+    publicAPI.bind();
+
+    // Source texture data from the PBO.
+    // model.context.pixelStorei(gl.UNPACK_FLIP_Y_WEBGL, true);
+    model.context.pixelStorei(model.context.UNPACK_ALIGNMENT, 1);
+
+    model.context.texImage2D(
+          model.target,
+          0,
+          model.internalFormat,
+          model.width, model.height,
+          0,
+          model.format,
+          model.openGLDataType,
+          data);
+
+    if (model.generateMipmap) {
+      model.context.generateMipmap(model.target);
+    }
+
+    publicAPI.deactivate();
+    return true;
+  };
+
+  //----------------------------------------------------------------------------
   publicAPI.create2DFromImage = (image) => {
     // Now determine the texture parameters using the arguments.
     publicAPI.getOpenGLDataType(VtkDataTypes.UNSIGNED_CHAR);
@@ -588,6 +632,7 @@ export function extend(publicAPI, model, initialValues = {}) {
 
   macro.get(publicAPI, model, [
     'components',
+    'handle',
   ]);
 
   // Object methods

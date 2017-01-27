@@ -118,7 +118,7 @@ export function extend(publicAPI, model, initialValues = {}) {
   vtkViewNode.extend(publicAPI, model, initialValues);
 
   model.keyMatrixTime = {};
-  macro.obj(model.keyMatrixTime);
+  macro.obj(model.keyMatrixTime, { mtime: 0 });
   model.normalMatrix = mat3.create();
   model.MCWCMatrix = mat4.create();
 

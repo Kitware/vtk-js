@@ -10,6 +10,7 @@ import './Filters/Sources/PointSource/test/testPointSource';
 import './IO/Misc/PDBReader/test/testMolecule';
 import './Rendering/Core/ColorTransferFunction/test/testColorTransferFunction';
 import './Rendering/Core/Mapper/test/testEdgeVisibility';
+import './Rendering/OpenGL/HardwareSelector/test/testHardwareSelector';
 import './Rendering/OpenGL/PolyDataMapper/test/testInterpolateScalarsBeforeMapping';
 import './Rendering/OpenGL/SphereMapper/test/testSphere';
 import './Rendering/OpenGL/StickMapper/test/testStick';

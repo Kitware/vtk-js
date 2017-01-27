@@ -139,6 +139,7 @@ export function vtkOpenGLRenderer(publicAPI, model) {
 
 const DEFAULT_VALUES = {
   context: null,
+  selector: null,
 };
 
 // ----------------------------------------------------------------------------
@@ -154,6 +155,7 @@ export function extend(publicAPI, model, initialValues = {}) {
 
   macro.setGet(publicAPI, model, [
     'context',
+    'selector',
   ]);
 
   // Object methods
@@ -162,7 +164,7 @@ export function extend(publicAPI, model, initialValues = {}) {
 
 // ----------------------------------------------------------------------------
 
-export const newInstance = macro.newInstance(extend);
+export const newInstance = macro.newInstance(extend, 'vtkOpenGLRenderer');
 
 // ----------------------------------------------------------------------------
 
