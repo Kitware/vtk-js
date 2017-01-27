@@ -124,6 +124,16 @@ export function vtkOpenGLRenderWindow(publicAPI, model) {
   publicAPI.normalizedDisplayToDisplay = (x, y, z) =>
     [x * (model.size[0] - 1), y * (model.size[1] - 1), z];
 
+  publicAPI.getPixelData = (x1, y1, x2, y2) => {
+    const pixels = new Uint8Array((x2 - x1 + 1) * (y2 - y1 + 1) * 4);
+    model.context.readPixels(
+      x1, y1, x2 - x1 + 1, y2 - y1 + 1,
+      model.context.RGBA,
+      model.context.UNSIGNED_BYTE,
+      pixels);
+    return pixels;
+  };
+
   publicAPI.get2DContext = () => model.canvas.getContext('2d');
 
   publicAPI.get3DContext = (options = { preserveDrawingBuffer: true, premultipliedAlpha: false }) =>
@@ -235,7 +245,7 @@ export function extend(publicAPI, model, initialValues = {}) {
 
 // ----------------------------------------------------------------------------
 
-export const newInstance = macro.newInstance(extend);
+export const newInstance = macro.newInstance(extend, 'vtkOpenGLRenderWindow');
 
 // ----------------------------------------------------------------------------
 

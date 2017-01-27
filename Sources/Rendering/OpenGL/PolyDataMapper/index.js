@@ -9,6 +9,7 @@ import vtkViewNode from '../../SceneGraph/ViewNode';
 import { Representation, Shading } from '../../Core/Property/Constants';
 import { MaterialMode, ScalarMode } from '../../Core/Mapper/Constants';
 import { Filter, Wrap } from '../Texture/Constants';
+import { PassTypes } from '../HardwareSelector/Constants';
 
 import vtkPolyDataVS from '../glsl/vtkPolyDataVS.glsl';
 import vtkPolyDataFS from '../glsl/vtkPolyDataFS.glsl';
@@ -53,9 +54,9 @@ export function vtkOpenGLPolyDataMapper(publicAPI, model) {
       }
       model.openGLActor = publicAPI.getFirstAncestorOfType('vtkOpenGLActor');
       const actor = model.openGLActor.getRenderable();
-      const openGLRenderer = publicAPI.getFirstAncestorOfType('vtkOpenGLRenderer');
-      const ren = openGLRenderer.getRenderable();
-      model.openGLCamera = openGLRenderer.getViewNodeFor(ren.getActiveCamera());
+      model.openGLRenderer = publicAPI.getFirstAncestorOfType('vtkOpenGLRenderer');
+      const ren = model.openGLRenderer.getRenderable();
+      model.openGLCamera = model.openGLRenderer.getViewNodeFor(ren.getActiveCamera());
       publicAPI.renderPiece(ren, actor);
     } else {
       // something
@@ -79,7 +80,7 @@ export function vtkOpenGLPolyDataMapper(publicAPI, model) {
     let FSSource = shaders.Fragment;
 
     const lastLightComplexity =
-      model.lastLightComplexity.get(model.lastBoundBO.getPrimitiveType());
+      model.lastBoundBO.get('lastLightComplexity').lastLightComplexity;
 
     // create the material/color property declarations, and VS implementation
     // these are always defined
@@ -207,7 +208,7 @@ export function vtkOpenGLPolyDataMapper(publicAPI, model) {
     const shadowFactor = '';
 
     const lastLightComplexity =
-      model.lastLightComplexity.get(model.lastBoundBO.getPrimitiveType());
+      model.lastBoundBO.get('lastLightComplexity').lastLightComplexity;
 
     switch (lastLightComplexity) {
       case 0: // no lighting or RENDER_VALUES
@@ -330,7 +331,10 @@ export function vtkOpenGLPolyDataMapper(publicAPI, model) {
   };
 
   publicAPI.replaceShaderNormal = (shaders, ren, actor) => {
-    if (model.lastLightComplexity.get(model.lastBoundBO.getPrimitiveType()) > 0) {
+    const lastLightComplexity =
+      model.lastBoundBO.get('lastLightComplexity').lastLightComplexity;
+
+    if (lastLightComplexity > 0) {
       let VSSource = shaders.Vertex;
       let GSSource = shaders.Geometry;
       let FSSource = shaders.Fragment;
@@ -445,7 +449,9 @@ export function vtkOpenGLPolyDataMapper(publicAPI, model) {
     }
 
     // do we need the vertex in the shader in View Coordinates
-    if (model.lastLightComplexity.get(model.lastBoundBO.getPrimitiveType()) > 0) {
+    const lastLightComplexity =
+      model.lastBoundBO.get('lastLightComplexity').lastLightComplexity;
+    if (lastLightComplexity > 0) {
       VSSource = vtkShaderProgram.substitute(VSSource,
         '//VTK::PositionVC::Dec', [
           'varying vec4 vertexVCVSOutput;']).result;
@@ -625,11 +631,35 @@ export function vtkOpenGLPolyDataMapper(publicAPI, model) {
     }
   };
 
+  publicAPI.replaceShaderPicking = (shaders, ren, actor) => {
+    if (model.openGLRenderer.getSelector()) {
+      let FSSource = shaders.Fragment;
+      switch (model.openGLRenderer.getSelector().getCurrentPass()) {
+        case PassTypes.ID_LOW24:
+          // FSSource = vtkShaderProgram.substitute(FSSource,
+          //   '//VTK::Picking::Impl', [
+          //     '  int idx = gl_PrimitiveID + 1 + PrimitiveIDOffset;',
+          //     '  gl_FragData[0] = vec4(float(idx%256)/255.0, float((idx/256)%256)/255.0, float((idx/65536)%256)/255.0, 1.0);',
+          //   ], false).result;
+          break;
+        default:
+          FSSource = vtkShaderProgram.substitute(FSSource,
+            '//VTK::Picking::Dec',
+            'uniform vec3 mapperIndex;').result;
+          FSSource = vtkShaderProgram.substitute(FSSource,
+            '//VTK::Picking::Impl',
+            '  gl_FragData[0] = vec4(mapperIndex,1.0);').result;
+      }
+      shaders.Fragment = FSSource;
+    }
+  };
+
   publicAPI.replaceShaderValues = (shaders, ren, actor) => {
     publicAPI.replaceShaderColor(shaders, ren, actor);
     publicAPI.replaceShaderNormal(shaders, ren, actor);
     publicAPI.replaceShaderLight(shaders, ren, actor);
     publicAPI.replaceShaderTCoord(shaders, ren, actor);
+    publicAPI.replaceShaderPicking(shaders, ren, actor);
     publicAPI.replaceShaderCoincidentOffset(shaders, ren, actor);
     publicAPI.replaceShaderPositionVC(shaders, ren, actor);
   };
@@ -685,9 +715,20 @@ export function vtkOpenGLPolyDataMapper(publicAPI, model) {
       });
     }
 
-    if (model.lastLightComplexity.get(primType) !== lightComplexity) {
-      model.lightComplexityChanged.get(primType).modified();
-      model.lastLightComplexity.set(primType, lightComplexity);
+    let needRebuild = false;
+    const lastLightComplexity =
+      model.lastBoundBO.get('lastLightComplexity').lastLightComplexity;
+    if (lastLightComplexity !== lightComplexity) {
+      model.lastBoundBO.set({ lastLightComplexity: lightComplexity }, true);
+      needRebuild = true;
+    }
+
+    const selector = model.openGLRenderer.getSelector();
+    const selectionPass = (selector === null ? -1 : selector.getCurrentPass());
+    if (model.lastBoundBO.get('lastSelectionPass').lastSelectionPass !==
+        selectionPass) {
+      model.lastBoundBO.set({ lastSelectionPass: selectionPass }, true);
+      needRebuild = true;
     }
 
     // has something changed that would require us to recreate the shader?
@@ -700,7 +741,7 @@ export function vtkOpenGLPolyDataMapper(publicAPI, model) {
         cellBO.getShaderSourceTime().getMTime() < actor.getMTime() ||
         cellBO.getShaderSourceTime().getMTime() < model.renderable.getMTime() ||
         cellBO.getShaderSourceTime().getMTime() < model.currentInput.getMTime() ||
-        cellBO.getShaderSourceTime().getMTime() < model.lightComplexityChanged.get(primType).getMTime()) {
+        needRebuild) {
       return true;
     }
 
@@ -747,6 +788,9 @@ export function vtkOpenGLPolyDataMapper(publicAPI, model) {
     if (cellBO.getCABO().getElementCount() && (model.VBOBuildTime > cellBO.getAttributeUpdateTime().getMTime() ||
         cellBO.getShaderSourceTime().getMTime() > cellBO.getAttributeUpdateTime().getMTime())) {
       cellBO.getCABO().bind();
+      const lastLightComplexity =
+        model.lastBoundBO.get('lastLightComplexity').lastLightComplexity;
+
       if (cellBO.getProgram().isAttributeUsed('vertexMC')) {
         if (!cellBO.getVAO().addAttributeArray(cellBO.getProgram(), cellBO.getCABO(),
                                            'vertexMC', cellBO.getCABO().getVertexOffset(),
@@ -757,7 +801,7 @@ export function vtkOpenGLPolyDataMapper(publicAPI, model) {
       }
       if (cellBO.getProgram().isAttributeUsed('normalMC') &&
           cellBO.getCABO().getNormalOffset() &&
-          model.lastLightComplexity.get(cellBO.getPrimitiveType()) > 0) {
+          lastLightComplexity > 0) {
         if (!cellBO.getVAO().addAttributeArray(cellBO.getProgram(), cellBO.getCABO(),
                                            'normalMC', cellBO.getCABO().getNormalOffset(),
                                            cellBO.getCABO().getStride(), model.context.FLOAT, 3,
@@ -810,11 +854,20 @@ export function vtkOpenGLPolyDataMapper(publicAPI, model) {
         cellBO.getProgram().setUniformf('cfactor', cp.factor);
       }
     }
+
+    const selector = model.openGLRenderer.getSelector();
+    if (selector && cellBO.getProgram().isUniformUsed('mapperIndex')) {
+      if (selector.getCurrentPass() < PassTypes.ID_LOW24) {
+        cellBO.getProgram().setUniform3f('mapperIndex', selector.getPropColorValue());
+      }
+    }
   };
 
   publicAPI.setLightingShaderParameters = (cellBO, ren, actor) => {
     // for unlit and headlight there are no lighting parameters
-    if (model.lastLightComplexity.get(cellBO.getPrimitiveType()) < 2) {
+    const lastLightComplexity =
+      model.lastBoundBO.get('lastLightComplexity').lastLightComplexity;
+    if (lastLightComplexity < 2) {
       return;
     }
 
@@ -866,7 +919,7 @@ export function vtkOpenGLPolyDataMapper(publicAPI, model) {
     program.setUniformi('numberOfLights', numberOfLights);
 
     // // we are done unless we have positional lights
-    if (model.lastLightComplexity.get(cellBO.getPrimitiveType()) < 3) {
+    if (lastLightComplexity < 3) {
       return;
     }
 
@@ -965,7 +1018,9 @@ export function vtkOpenGLPolyDataMapper(publicAPI, model) {
     program.setUniform3f('ambientColorUniform', ambientColor);
     program.setUniform3f('diffuseColorUniform', diffuseColor);
     // we are done unless we have lighting
-    if (model.lastLightComplexity.get(cellBO.getPrimitiveType()) < 1) {
+    const lastLightComplexity =
+      model.lastBoundBO.get('lastLightComplexity').lastLightComplexity;
+    if (lastLightComplexity < 1) {
       return;
     }
     const sColor = ppty.getSpecularColor();
@@ -1016,6 +1071,12 @@ export function vtkOpenGLPolyDataMapper(publicAPI, model) {
   publicAPI.renderPieceStart = (ren, actor) => {
     model.primitiveIDOffset = 0;
 
+    if (model.openGLRenderer.getSelector()) {
+      switch (model.openGLRenderer.getSelector().getCurrentPass()) {
+        default:
+          model.openGLRenderer.getSelector().renderProp(actor);
+      }
+    }
     // Line Width setting (FIXME Ken)
     model.context.lineWidth(actor.getProperty().getLineWidth());
 
@@ -1283,8 +1344,6 @@ const DEFAULT_VALUES = {
   context: null,
   VBOBuildTime: 0,
   VBOBuildString: null,
-  lightComplexityChanged: null,
-  lastLightComplexity: null,
   primitives: null,
   primTypes: null,
 };
@@ -1297,18 +1356,14 @@ export function extend(publicAPI, model, initialValues = {}) {
   // Inheritance
   vtkViewNode.extend(publicAPI, model, initialValues);
 
-  model.lightComplexityChanged = new Map();
-  model.lastLightComplexity = new Map();
-
   model.primitives = [];
   model.primTypes = primTypes;
 
   for (let i = primTypes.Start; i < primTypes.End; i++) {
     model.primitives[i] = vtkHelper.newInstance();
     model.primitives[i].setPrimitiveType(i);
-    model.lightComplexityChanged.set(i, {});
-    macro.obj(model.lightComplexityChanged.get(i));
-    model.lastLightComplexity.set(i, 0);
+    model.primitives[i].set(
+      { lastLightComplexity: 0, lastSelectionPass: -1 }, true);
   }
 
   // Build VTK API

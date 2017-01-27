@@ -22,6 +22,18 @@ export const FieldDataTypes = {
   ROW_DATA: 6,             // to match VTK
 };
 
+export const FieldAssociations = {
+  FIELD_ASSOCIATION_POINTS: 0,
+  FIELD_ASSOCIATION_CELLS: 1,
+  FIELD_ASSOCIATION_NONE: 2,
+  FIELD_ASSOCIATION_POINTS_THEN_CELLS: 3,
+  FIELD_ASSOCIATION_VERTICES: 4,
+  FIELD_ASSOCIATION_EDGES: 5,
+  FIELD_ASSOCIATION_ROWS: 6,
+  NUMBER_OF_ASSOCIATIONS: 7,
+};
+
 export default {
   FieldDataTypes,
+  FieldAssociations,
 };
