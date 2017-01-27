@@ -83,8 +83,11 @@ export function vtkPDBReader(publicAPI, model) {
       // color coords
       const color = [];
 
-      // mass coords
-      const mass = [];
+      // atomicNumber
+      const atomicNumber = [];
+
+      // // mass coords
+      // const mass = [];
 
       model.numberOfAtoms = 0;
 
@@ -119,22 +122,16 @@ export function vtkPDBReader(publicAPI, model) {
           // skip hydrogen by default
           // model.hideHydrogen = false; // show hydrogen
           if (!(elem === 'H' || elem === 'h') || !model.hideHydrogen) {
-            // // atoms id
-            // id.push(ATOMS[elem].id);
-            // // atoms atomicNumber
-            // atomicNumber.push(ATOMS[elem].atomicNumber);
-            // // atoms symbol
-            // symbol.push(ATOMS[elem].symbol);
-            // // atoms name
-            // atomName.push(ATOMS[elem].name);
-
             // atoms position
             pointValues.push(x * model.xSpacing);
             pointValues.push(y * model.ySpacing);
             pointValues.push(z * model.zSpacing);
 
             // fetch data from the element database elements.json
-            const [radiusCovalentData, radiusVDWData, colorData] = ATOMS[elem];
+            const [atomicNumberData, radiusCovalentData, radiusVDWData, colorData] = ATOMS[elem];
+
+            // atoms atomicNumber
+            atomicNumber.push(atomicNumberData);
 
             // atoms radius
             radiusCovalent.push(radiusCovalentData);
@@ -145,7 +142,13 @@ export function vtkPDBReader(publicAPI, model) {
             color.push(colorData[1]);
             color.push(colorData[2]);
 
-            // atoms mass
+            // // atoms id
+            // id.push(ATOMS[elem].id);
+            // // atoms symbol
+            // symbol.push(ATOMS[elem].symbol);
+            // // atoms name
+            // atomName.push(ATOMS[elem].name);
+            // // atoms mass
             // mass.push(ATOMS[elem].mass);
 
             // residue.push(resi);
@@ -190,8 +193,8 @@ export function vtkPDBReader(publicAPI, model) {
       const colorArray = vtkDataArray.newInstance({ numberOfComponents: 3, values: Float32Array.from(color), name: 'elementColor' });
       pointdata.addArray(colorArray);
 
-      const massArray = vtkDataArray.newInstance({ numberOfComponents: 1, values: Float32Array.from(mass), name: 'mass' });
-      pointdata.addArray(massArray);
+      const atomicNumberArray = vtkDataArray.newInstance({ numberOfComponents: 1, values: Float32Array.from(atomicNumber), name: 'atomicNumber' });
+      pointdata.addArray(atomicNumberArray);
     } // if model.molecule
 
     model.output[0] = polydata;
