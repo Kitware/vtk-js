@@ -179,6 +179,7 @@ def dumpPolyData(datasetDir, dataDir, dataset, container = {}, compress = True):
   points = dumpDataArray(datasetDir, dataDir, dataset.GetPoints().GetData(), {}, compress)
   container['points'] = points
   container['points']['vtkClass'] = 'vtkPoints'
+  container['points']['numberOfComponents'] = 3
 
   # Cells
   _cells = container
