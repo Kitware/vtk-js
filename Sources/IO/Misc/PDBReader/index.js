@@ -1,6 +1,5 @@
 import macro            from 'vtk.js/Sources/macro';
-import vtkPolyData      from 'vtk.js/Sources/Common/DataModel/PolyData';
-import vtkDataArray     from 'vtk.js/Sources/Common/Core/DataArray';
+import vtkMolecule      from 'vtk.js/Sources/Common/DataModel/Molecule';
 import DataAccessHelper from 'vtk.js/Sources/IO/Core/DataAccessHelper';
 
 import ATOMS            from 'vtk.js/Utilities/XMLConverter/chemistry-mapper/elements.json';
@@ -60,31 +59,16 @@ export function vtkPDBReader(publicAPI, model) {
   };
 
   publicAPI.requestData = (inData, outData) => {
-    const polydata = vtkPolyData.newInstance();
+    const moleculedata = vtkMolecule.newInstance();
 
     if (model.molecule) {
       const jSize = model.molecule.length;
 
-      const points = polydata.getPoints();
-      const pointdata = polydata.getPointData();
-
       // atom position
       const pointValues = [];
 
-      // radiusVDW coords
-      const radiusVDW = [];
-
-      // radiusCovalent coords
-      const radiusCovalent = [];
-
-      // color coords
-      const color = [];
-
       // atomicNumber
       const atomicNumber = [];
-
-      // // mass coords
-      // const mass = [];
 
       model.numberOfAtoms = 0;
 
@@ -125,28 +109,10 @@ export function vtkPDBReader(publicAPI, model) {
             pointValues.push(z * model.zSpacing);
 
             // fetch data from the element database elements.json
-            const [atomicNumberData, radiusCovalentData, radiusVDWData, colorData] = ATOMS[elem];
+            const [atomicNumberData] = ATOMS[elem];
 
             // atoms atomicNumber
             atomicNumber.push(atomicNumberData);
-
-            // atoms radius
-            radiusCovalent.push(radiusCovalentData);
-            radiusVDW.push(radiusVDWData);
-
-            // atoms color
-            color.push(colorData[0]);
-            color.push(colorData[1]);
-            color.push(colorData[2]);
-
-            // // atoms id
-            // id.push(ATOMS[elem].id);
-            // // atoms symbol
-            // symbol.push(ATOMS[elem].symbol);
-            // // atoms name
-            // atomName.push(ATOMS[elem].name);
-            // // atoms mass
-            // mass.push(ATOMS[elem].mass);
 
             // residue.push(resi);
             // chain.push(chain);
@@ -179,22 +145,14 @@ export function vtkPDBReader(publicAPI, model) {
         j++;
       } // lines loop (j)
 
-      points.setData(Float32Array.from(pointValues), 3);
-
-      const radiusCovalentArray = vtkDataArray.newInstance({ numberOfComponents: 1, values: Float32Array.from(radiusCovalent), name: 'radiusCovalent' });
-      pointdata.addArray(radiusCovalentArray);
-
-      const radiusVDWArray = vtkDataArray.newInstance({ numberOfComponents: 1, values: Float32Array.from(radiusVDW), name: 'radiusVDW' });
-      pointdata.addArray(radiusVDWArray);
-
-      const colorArray = vtkDataArray.newInstance({ numberOfComponents: 3, values: Float32Array.from(color), name: 'elementColor' });
-      pointdata.addArray(colorArray);
-
-      const atomicNumberArray = vtkDataArray.newInstance({ numberOfComponents: 1, values: Float32Array.from(atomicNumber), name: 'atomicNumber' });
-      pointdata.addArray(atomicNumberArray);
+      // fill molecule class
+      moleculedata.getAtoms().elements = {};
+      moleculedata.getAtoms().elements.number = Int8Array.from(atomicNumber);
+      moleculedata.getAtoms().coords = {};
+      moleculedata.getAtoms().coords['3d'] = Float32Array.from(pointValues);
     } // if model.molecule
 
-    model.output[0] = polydata;
+    model.output[0] = moleculedata;
   };
 
   // return Busy state

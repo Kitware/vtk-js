@@ -1,6 +1,6 @@
 var preProcessing = require('../chemistry/post-process.js');
 
-const valueToExtract = ['atomicNumber', 'radiusCovalent', 'radiusVDW', 'elementColor'];
+const valueToExtract = ['atomicNumber'];
 
 module.exports = function (xml) {
   var atoms = {};

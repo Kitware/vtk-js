@@ -1,8 +1,20 @@
-import  macro       from 'vtk.js/Sources/macro';
+import macro        from 'vtk.js/Sources/macro';
 import vtkPolyData  from 'vtk.js/Sources/Common/DataModel/PolyData';
 import vtkDataArray from 'vtk.js/Sources/Common/Core/DataArray';
+import vtkMath      from 'vtk.js/Sources/Common/Core/Math';
 
-const { vtkDebugMacro, vtkErrorMacro } = macro;
+import atomElem     from 'vtk.js/Utilities/XMLConverter/chemistry/elements.json';
+
+const { vtkErrorMacro } = macro;
+
+
+// ----------------------------------------------------------------------------
+// Globals
+// ----------------------------------------------------------------------------
+
+const ATOMS = {};
+atomElem.atoms.forEach((a) => { ATOMS[a.atomicNumber] = a; });
+
 
 // ----------------------------------------------------------------------------
 // vtkMoleculeToRepresentation methods
@@ -14,9 +26,9 @@ export function vtkMoleculeToRepresentation(publicAPI, model) {
 
   publicAPI.requestData = (inData, outData) => {
     // input
-    const polydata = inData[0];
+    const moleculedata = inData[0];
 
-    if (!polydata) {
+    if (!moleculedata) {
       vtkErrorMacro('Invalid or missing input');
       return 1;
     }
@@ -25,51 +37,70 @@ export function vtkMoleculeToRepresentation(publicAPI, model) {
     const SphereData = vtkPolyData.newInstance();
     const StickData = vtkPolyData.newInstance();
 
-
-    // First, copy the input to the output as a starting point
-    // output->CopyStructure( input );
-    const points = polydata.getPoints();
-    const pointsArray = points.getData();
-    const numPts = points.getNumberOfPoints();
-
-    const pointdata = polydata.getPointData();
-    let radiusArray = null;
-    let scaleData = null;
-    let covalentArray = null;
-    let elementColor = null;
-    let colorData = null;
+    // Fetch from input molecule data
+    let numPts = 0;
+    let numBonds = 0;
+    let pointsArray = null;
     let atomicNumber = null;
+    let bondIndex = null;
+    let bondOrder = null;
 
+    if (moleculedata.getAtoms()) {
+      if (moleculedata.getAtoms().coords !== undefined) {
+        if (moleculedata.getAtoms().coords['3d'] !== undefined) {
+          pointsArray = moleculedata.getAtoms().coords['3d'];
+          numPts = pointsArray.length / 3;
+        }
+      }
+      if (moleculedata.getAtoms().elements !== undefined) {
+        if (moleculedata.getAtoms().elements.number !== undefined) {
+          atomicNumber = moleculedata.getAtoms().elements.number;
+        }
+      }
+    }
+    if (moleculedata.getBonds()) {
+      if (moleculedata.getBonds().connections !== undefined) {
+        if (moleculedata.getBonds().connections.index !== undefined) {
+          bondIndex = moleculedata.getBonds().connections.index;
+          numBonds = bondIndex.length / 2;
+        }
+      }
+      if (moleculedata.getBonds().order !== undefined) {
+        bondOrder = moleculedata.getBonds().order;
+      }
+    }
+
+    const pointsData = new Float32Array(numPts * 3);
+    const scaleData = new Float32Array(numPts);
+    const colorData = new Uint8Array(numPts * 3);
+
+    const radiusArray = [];
+    const covalentArray = [];
+    const colorArray = [];
+
+    const bondPositionData = [];
     const bondScaleData = [];
     const bondOrientationData = [];
-    const bondPosition = [];
-    if (pointdata.hasArray('atomicNumber')) {
-      atomicNumber = pointdata.getArray('atomicNumber').getData();
-    }
-    if (pointdata.hasArray(model.radiusType)) {
-      radiusArray = pointdata.getArray(model.radiusType).getData();
-      scaleData = new Float32Array(numPts);
-    }
-    if (pointdata.hasArray('radiusCovalent')) {
-      covalentArray = pointdata.getArray('radiusCovalent').getData();
-    }
-    if (pointdata.hasArray('elementColor')) {
-      elementColor = pointdata.getArray('elementColor').getData();
-      colorData = new Uint8Array(numPts * 3);
-    }
-
-    const pos = new Float32Array(numPts * 3);
 
     vtkDebugMacro('Checking for bonds with tolerance ', model.tolerance);
 
-    // go trhough each points
+    // go through each points and fill from elements.json
     let ptsIdx = 0;
     for (let i = 0; i < numPts; i++) {
       // points
       ptsIdx = i * 3;
-      pos[ptsIdx] = pointsArray[ptsIdx];
-      pos[ptsIdx + 1] = pointsArray[ptsIdx + 1];
-      pos[ptsIdx + 2] = pointsArray[ptsIdx + 2];
+      pointsData[ptsIdx] = pointsArray[ptsIdx];
+      pointsData[ptsIdx + 1] = pointsArray[ptsIdx + 1];
+      pointsData[ptsIdx + 2] = pointsArray[ptsIdx + 2];
+
+      // fetch from elements.json
+      if (atomicNumber) {
+        radiusArray.push(ATOMS[atomicNumber[i]][model.radiusType]);
+        covalentArray.push(ATOMS[atomicNumber[i]].radiusCovalent);
+        colorArray.push(ATOMS[atomicNumber[i]].elementColor[0]);
+        colorArray.push(ATOMS[atomicNumber[i]].elementColor[1]);
+        colorArray.push(ATOMS[atomicNumber[i]].elementColor[2]);
+      }
 
       // radius
       if (radiusArray) {
@@ -77,77 +108,109 @@ export function vtkMoleculeToRepresentation(publicAPI, model) {
       }
 
       // colors
-      if (elementColor) {
+      if (colorArray) {
         ptsIdx = i * 3;
-        colorData[ptsIdx] = elementColor[ptsIdx] * 255;
-        colorData[ptsIdx + 1] = elementColor[ptsIdx + 1] * 255;
-        colorData[ptsIdx + 2] = elementColor[ptsIdx + 2] * 255;
-      }
-
-      // check for bonds
-      /* eslint-disable no-continue */
-      for (let j = i + 1; j < numPts; j++) {
-        const cutoff = covalentArray[i] + covalentArray[j] + model.tolerance;
-        const jPtsIdx = j * 3;
-        const iPtsIdx = i * 3;
-        const diff = [pointsArray[jPtsIdx],
-          pointsArray[jPtsIdx + 1],
-          pointsArray[jPtsIdx + 2]];
-        diff[0] -= pointsArray[iPtsIdx];
-        diff[1] -= pointsArray[iPtsIdx + 1];
-        diff[2] -= pointsArray[iPtsIdx + 2];
-
-        if (Math.abs(diff[0]) > cutoff ||
-            Math.abs(diff[1]) > cutoff ||
-            Math.abs(diff[2]) > cutoff ||
-            (atomicNumber[i] === 1 && atomicNumber[j] === 1)) {
-          continue;
-        }
-      // Check radius and add bond if needed
-        const cutoffSq = cutoff * cutoff;
-        const diffsq = (diff[0] * diff[0]) + (diff[1] * diff[1]) + (diff[2] * diff[2]);
-        if (diffsq < cutoffSq && diffsq > 0.1) {
-          // appendBond between i and j
-
-          // offset between center of SphereJ (resp. SphereI) and the start of the bond
-          const bondRadiusSq = model.bondRadius * model.bondRadius;
-          const radiusJsq = radiusArray[j] * model.atomicRadiusScaleFactor * radiusArray[j] * model.atomicRadiusScaleFactor;
-          const radiusIsq = radiusArray[i] * model.atomicRadiusScaleFactor * radiusArray[i] * model.atomicRadiusScaleFactor;
-          const offsetJ = Math.sqrt(radiusJsq - bondRadiusSq);
-          const offsetI = Math.sqrt(radiusIsq - bondRadiusSq);
-
-          bondScaleData.push(Math.sqrt(diffsq) - offsetJ - offsetI);
-          bondScaleData.push(model.bondRadius);
-
-          const vectUnitJI = [diff[0] / Math.sqrt(diffsq),
-            diff[1] / Math.sqrt(diffsq),
-            diff[2] / Math.sqrt(diffsq)];
-
-          bondOrientationData.push(vectUnitJI[0]);
-          bondOrientationData.push(vectUnitJI[1]);
-          bondOrientationData.push(vectUnitJI[2]);
-
-          bondPosition.push(pointsArray[jPtsIdx] - (((offsetJ - offsetI) * vectUnitJI[0]) / 2.0) - (diff[0] / 2.0));
-          bondPosition.push(pointsArray[jPtsIdx + 1] - (((offsetJ - offsetI) * vectUnitJI[1]) / 2.0) - (diff[1] / 2.0));
-          bondPosition.push(pointsArray[jPtsIdx + 2] - (((offsetJ - offsetI) * vectUnitJI[2]) / 2.0) - (diff[2] / 2.0));
-        }
+        colorData[ptsIdx] = colorArray[ptsIdx] * 255;
+        colorData[ptsIdx + 1] = colorArray[ptsIdx + 1] * 255;
+        colorData[ptsIdx + 2] = colorArray[ptsIdx + 2] * 255;
       }
     }
 
-    SphereData.getPoints().setData(pos, 3);
+    // if we don't have Bonds provided
+    // we fill up a bondIndex and a bondOrder
+    if (!bondIndex) {
+      bondIndex = [];
+      bondOrder = [];
+      // default bond display
+      /* eslint-disable no-continue */
+      for (let i = 0; i < numPts; i++) {
+        for (let j = i + 1; j < numPts; j++) {
+          const cutoff = covalentArray[i] + covalentArray[j] + model.tolerance;
+          const jPtsIdx = j * 3;
+          const iPtsIdx = i * 3;
+          const diff = [pointsArray[jPtsIdx],
+            pointsArray[jPtsIdx + 1],
+            pointsArray[jPtsIdx + 2]];
+          diff[0] -= pointsArray[iPtsIdx];
+          diff[1] -= pointsArray[iPtsIdx + 1];
+          diff[2] -= pointsArray[iPtsIdx + 2];
+
+          if (Math.abs(diff[0]) > cutoff ||
+              Math.abs(diff[1]) > cutoff ||
+              Math.abs(diff[2]) > cutoff ||
+              (atomicNumber[i] === 1 && atomicNumber[j] === 1)) {
+            continue;
+          }
+
+          // Check radius and add bond if needed
+          const cutoffSq = cutoff * cutoff;
+          const diffsq = (diff[0] * diff[0]) + (diff[1] * diff[1]) + (diff[2] * diff[2]);
+          if (diffsq < cutoffSq && diffsq > 0.1) {
+            // appendBond between i and j
+            bondIndex.push(i);
+            bondIndex.push(j);
+            bondOrder.push(1);
+          }
+        }
+      }
+      numBonds = bondIndex.length / 2;
+    }
+
+    for (let index = 0; index < numBonds; index++) {
+      // appendBond between i and j
+      const i = bondIndex[index * 2];
+      const j = bondIndex[(index * 2) + 1];
+
+      const jPtsIdx = j * 3;
+      const iPtsIdx = i * 3;
+      const diff = [pointsArray[jPtsIdx],
+        pointsArray[jPtsIdx + 1],
+        pointsArray[jPtsIdx + 2]];
+      diff[0] -= pointsArray[iPtsIdx];
+      diff[1] -= pointsArray[iPtsIdx + 1];
+      diff[2] -= pointsArray[iPtsIdx + 2];
+      const diffsq = (diff[0] * diff[0]) + (diff[1] * diff[1]) + (diff[2] * diff[2]);
+
+      // offset between center of SphereJ (resp. SphereI) and the start of the bond
+      const bondRadiusSq = model.bondRadius * model.bondRadius;
+      const radiusJsq = radiusArray[j] * model.atomicRadiusScaleFactor * radiusArray[j] * model.atomicRadiusScaleFactor;
+      const radiusIsq = radiusArray[i] * model.atomicRadiusScaleFactor * radiusArray[i] * model.atomicRadiusScaleFactor;
+      const offsetJ = Math.sqrt(radiusJsq - bondRadiusSq);
+      const offsetI = Math.sqrt(radiusIsq - bondRadiusSq);
+
+      // Display one bond
+      if (bondOrder[index] >= 1) {
+        bondScaleData.push(Math.sqrt(diffsq) - offsetJ - offsetI);
+        bondScaleData.push(model.bondRadius);
+
+        const vectUnitJI = [diff[0] / Math.sqrt(diffsq),
+          diff[1] / Math.sqrt(diffsq),
+          diff[2] / Math.sqrt(diffsq)];
+
+        bondOrientationData.push(vectUnitJI[0]);
+        bondOrientationData.push(vectUnitJI[1]);
+        bondOrientationData.push(vectUnitJI[2]);
+
+        bondPositionData.push(pointsArray[jPtsIdx] - (((offsetJ - offsetI) * vectUnitJI[0]) / 2.0) - (diff[0] / 2.0));
+        bondPositionData.push(pointsArray[jPtsIdx + 1] - (((offsetJ - offsetI) * vectUnitJI[1]) / 2.0) - (diff[1] / 2.0));
+        bondPositionData.push(pointsArray[jPtsIdx + 2] - (((offsetJ - offsetI) * vectUnitJI[2]) / 2.0) - (diff[2] / 2.0));
+      }
+    }
+
+    SphereData.getPoints().setData(pointsData, 3);
 
     if (radiusArray) {
       const scales = vtkDataArray.newInstance({ numberOfComponents: 1, values: scaleData, name: publicAPI.getSphereScaleArrayName() });
       SphereData.getPointData().addArray(scales);
     }
 
-    if (elementColor) {
+    if (colorArray) {
       const colors = vtkDataArray.newInstance({ numberOfComponents: 3, values: colorData, name: 'colors' });
       SphereData.getPointData().setScalars(colors);
     }
 
 
-    StickData.getPoints().setData(bondPosition, 3);
+    StickData.getPoints().setData(bondPositionData, 3);
 
     const test = true;
     if (test) {
