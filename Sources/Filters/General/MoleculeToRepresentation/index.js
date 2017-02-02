@@ -70,9 +70,9 @@ export function vtkMoleculeToRepresentation(publicAPI, model) {
       }
     }
 
-    const pointsData = new Float32Array(numPts * 3);
-    const scaleData = new Float32Array(numPts);
-    const colorData = new Uint8Array(numPts * 3);
+    const pointsData = [];
+    const scaleData = [];
+    const colorData = [];
 
     const radiusArray = [];
     const covalentArray = [];
@@ -85,14 +85,9 @@ export function vtkMoleculeToRepresentation(publicAPI, model) {
     vtkDebugMacro('Checking for bonds with tolerance ', model.tolerance);
 
     // go through each points and fill from elements.json
+    /* eslint-disable no-continue */
     let ptsIdx = 0;
     for (let i = 0; i < numPts; i++) {
-      // points
-      ptsIdx = i * 3;
-      pointsData[ptsIdx] = pointsArray[ptsIdx];
-      pointsData[ptsIdx + 1] = pointsArray[ptsIdx + 1];
-      pointsData[ptsIdx + 2] = pointsArray[ptsIdx + 2];
-
       // fetch from elements.json
       if (atomicNumber) {
         radiusArray.push(ATOMS[atomicNumber[i]][model.radiusType]);
@@ -102,17 +97,29 @@ export function vtkMoleculeToRepresentation(publicAPI, model) {
         colorArray.push(ATOMS[atomicNumber[i]].elementColor[2]);
       }
 
+      // skip atoms specified by hideElement
+      // model.hideHydrogen = false; // show hydrogen
+      if (model.hideElement.includes(ATOMS[atomicNumber[i]].id)) {
+        continue;
+      }
+
+      // points
+      ptsIdx = i * 3;
+      pointsData.push(pointsArray[ptsIdx]);
+      pointsData.push(pointsArray[ptsIdx + 1]);
+      pointsData.push(pointsArray[ptsIdx + 2]);
+
       // radius
       if (radiusArray) {
-        scaleData[i] = radiusArray[i] * model.atomicRadiusScaleFactor;
+        scaleData.push(radiusArray[i] * model.atomicRadiusScaleFactor);
       }
 
       // colors
       if (colorArray) {
         ptsIdx = i * 3;
-        colorData[ptsIdx] = colorArray[ptsIdx] * 255;
-        colorData[ptsIdx + 1] = colorArray[ptsIdx + 1] * 255;
-        colorData[ptsIdx + 2] = colorArray[ptsIdx + 2] * 255;
+        colorData.push(colorArray[ptsIdx] * 255);
+        colorData.push(colorArray[ptsIdx + 1] * 255);
+        colorData.push(colorArray[ptsIdx + 2] * 255);
       }
     }
 
@@ -137,8 +144,7 @@ export function vtkMoleculeToRepresentation(publicAPI, model) {
 
           if (Math.abs(diff[0]) > cutoff ||
               Math.abs(diff[1]) > cutoff ||
-              Math.abs(diff[2]) > cutoff ||
-              (atomicNumber[i] === 1 && atomicNumber[j] === 1)) {
+              Math.abs(diff[2]) > cutoff) {
             continue;
           }
 
@@ -156,10 +162,17 @@ export function vtkMoleculeToRepresentation(publicAPI, model) {
       numBonds = bondIndex.length / 2;
     }
 
+    // now we have the bonds, draw them
     for (let index = 0; index < numBonds; index++) {
       // appendBond between i and j
       const i = bondIndex[index * 2];
       const j = bondIndex[(index * 2) + 1];
+
+      // Do not append if i or j belong to element to not display
+      if (model.hideElement.includes(ATOMS[atomicNumber[i]].id) ||
+        model.hideElement.includes(ATOMS[atomicNumber[j]].id)) {
+        continue;
+      }
 
       const jPtsIdx = j * 3;
       const iPtsIdx = i * 3;
@@ -205,7 +218,7 @@ export function vtkMoleculeToRepresentation(publicAPI, model) {
     }
 
     if (colorArray) {
-      const colors = vtkDataArray.newInstance({ numberOfComponents: 3, values: colorData, name: 'colors' });
+      const colors = vtkDataArray.newInstance({ numberOfComponents: 3, values: Uint8Array.from(colorData), name: 'colors' });
       SphereData.getPointData().setScalars(colors);
     }
 
@@ -241,6 +254,7 @@ const DEFAULT_VALUES = {
   atomicRadiusScaleFactor: 0.3,
   bondRadius: 0.075,
   radiusType: 'radiusVDW',
+  hideElement: [],
 };
 
 // ----------------------------------------------------------------------------
@@ -253,6 +267,7 @@ export function extend(publicAPI, model, initialValues = {}) {
   macro.setGet(publicAPI, model, [
     'sphereScaleArrayName',
     'radiusType',
+    'hideElement',
   ]);
   macro.algo(publicAPI, model, 1, 2);
   vtkMoleculeToRepresentation(publicAPI, model);

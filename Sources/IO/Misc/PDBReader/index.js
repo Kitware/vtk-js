@@ -100,28 +100,24 @@ export function vtkPDBReader(publicAPI, model) {
           }
 
           // fill polydata
-          // skip hydrogen by default
-          // model.hideHydrogen = false; // show hydrogen
-          if (!(elem === 'H' || elem === 'h') || !model.hideHydrogen) {
-            // atoms position
-            pointValues.push(x * model.xSpacing);
-            pointValues.push(y * model.ySpacing);
-            pointValues.push(z * model.zSpacing);
+          // atoms position
+          pointValues.push(x * model.xSpacing);
+          pointValues.push(y * model.ySpacing);
+          pointValues.push(z * model.zSpacing);
 
-            // fetch data from the element database elements.json
-            const [atomicNumberData] = ATOMS[elem];
+          // fetch data from the element database elements.json
+          const [atomicNumberData] = ATOMS[elem];
 
-            // atoms atomicNumber
-            atomicNumber.push(atomicNumberData);
+          // atoms atomicNumber
+          atomicNumber.push(atomicNumberData);
 
-            // residue.push(resi);
-            // chain.push(chain);
-            // atomType.push(elem);
-            // atomTypeStrings.push(dum1);
-            // isHetatm.push(command === 'HETATM');
+          // residue.push(resi);
+          // chain.push(chain);
+          // atomType.push(elem);
+          // atomTypeStrings.push(dum1);
+          // isHetatm.push(command === 'HETATM');
 
-            model.numberOfAtoms++;
-          }
+          model.numberOfAtoms++;
         } // if atom or hetatm
 
         /*
@@ -168,7 +164,6 @@ const DEFAULT_VALUES = {
   xSpacing: 1,
   ySpacing: 1,
   zSpacing: 1,
-  hideHydrogen: true,
   requestCount: 0,
   // baseURL: null,
   // dataAccessHelper: null,
@@ -192,7 +187,6 @@ export function extend(publicAPI, model, initialValues = {}) {
     'xSpacing',
     'ySpacing',
     'zScaling',
-    'hideHydrogen',
   ]);
   macro.algo(publicAPI, model, 0, 1);
   macro.event(publicAPI, model, 'busy');

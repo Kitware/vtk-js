@@ -37,8 +37,6 @@ test.onlyIfWebGL('Test MoleculeMapper', (t) => {
   const sphereActor = vtkActor.newInstance();
   const stickActor = vtkActor.newInstance();
 
-  reader.setHideHydrogen(false);
-
   filter.setInputConnection(reader.getOutputPort());
   filter.setRadiusType('radiusCovalent');
 

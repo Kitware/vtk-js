@@ -25,6 +25,7 @@ const sphereActor = vtkActor.newInstance();
 const stickActor = vtkActor.newInstance();
 
 filter.setInputConnection(reader.getOutputPort());
+filter.setHideElements(['H']);
 
 // render sphere
 sphereMapper.setInputConnection(filter.getOutputPort(0));
