@@ -10,6 +10,9 @@ import vtkFullScreenRenderWindow  from '../../../Sources/Rendering/Misc/FullScre
 import vtkHttpSceneLoader         from '../../../Sources/IO/Core/HttpSceneLoader';
 import DataAccessHelper           from '../../../Sources/IO/Core/DataAccessHelper';
 import vtkURLExtract              from '../../../Sources/Common/Core/URLExtract';
+import vtkObjReader               from '../../../Sources/IO/Misc/ObjReader';
+import vtkMapper                  from '../../../Sources/Rendering/Core/Mapper';
+import vtkActor                   from '../../../Sources/Rendering/Core/Actor';
 
 import controlWidget from './SceneControllerWidget';
 import style from './SceneLoader.mcss';
@@ -95,16 +98,50 @@ export function load(container, options) {
           });
       });
   } else if (options.file) {
-    const dataAccessHelper = DataAccessHelper.get(
-      'zip',
-      {
-        zipContent: options.file,
-        callback: (zip) => {
-          const sceneImporter = vtkHttpSceneLoader.newInstance({ renderer, dataAccessHelper });
-          sceneImporter.setUrl('index.json');
-          onReady(sceneImporter);
-        },
-      });
+    if (options.ext === 'obj') {
+      const scene = [];
+      const reader = new FileReader();
+      reader.onload = function onLoad(e) {
+        const objReader = vtkObjReader.newInstance();
+        objReader.parse(reader.result);
+        const nbOutputs = objReader.getNumberOfOutputPorts();
+        for (let idx = 0; idx < nbOutputs; idx++) {
+          const source = objReader.getOutputData(idx);
+          const mapper = vtkMapper.newInstance();
+          const actor = vtkActor.newInstance();
+          actor.setMapper(mapper);
+          mapper.setInputData(source);
+          renderer.addActor(actor);
+          scene.push({
+            name: source.get('name').name,
+            source,
+            mapper,
+            actor,
+          });
+        }
+        onReady({
+          getScene() { return scene; },
+          resetScene() { renderer.resetCamera(); },
+          onReady(fn) {
+            renderer.resetCamera();
+            renderWindow.render();
+            fn();
+          },
+        });
+      };
+      reader.readAsText(options.file);
+    } else {
+      const dataAccessHelper = DataAccessHelper.get(
+        'zip',
+        {
+          zipContent: options.file,
+          callback: (zip) => {
+            const sceneImporter = vtkHttpSceneLoader.newInstance({ renderer, dataAccessHelper });
+            sceneImporter.setUrl('index.json');
+            onReady(sceneImporter);
+          },
+        });
+    }
   }
 }
 
@@ -124,7 +161,8 @@ export function initLocalFileLoader(container) {
     var files = this.files;
     if (files.length === 1) {
       myContainer.removeChild(fileSelector);
-      load(myContainer, { file: files[0] });
+      const ext = files[0].name.split('.').slice(-1)[0];
+      load(myContainer, { file: files[0], ext });
     }
   }
 
