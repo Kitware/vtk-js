@@ -1,5 +1,6 @@
 import * as macro from '../../../macro';
 import vtkPolyData from '../../../Common/DataModel/PolyData';
+import vtkPoints from '../../../Common/Core/Points';
 import DataAccessHelper from '../../Core/DataAccessHelper';
 
 // ----------------------------------------------------------------------------
@@ -9,18 +10,17 @@ const data = {};
 // ----------------------------------------------------------------------------
 
 function begin() {
+  data.g = [];
   data.o = [];
   data.v = [];
   data.f = [];
-  data.pointCounts = [];
-  data.cellOffset = 1;
   data.size = 0;
 }
 
 // ----------------------------------------------------------------------------
 
 function vertexIndex(str) {
-  return Number(str.split('//')[0]) - data.cellOffset;
+  return Number(str.split('//')[0]) - 1;
 }
 
 // ----------------------------------------------------------------------------
@@ -32,31 +32,22 @@ function parseLine(line) {
   const tokens = line.split(' ');
   if (tokens[0] === 'o') {
     data.o.push(tokens[1]);
-    data.v.push([]);
     data.f.push([]);
-    data.pointCounts.push(0);
     data.size++;
-    data.cellOffset = 1;
-    data.pointCounts.forEach((v) => {
-      data.cellOffset += v;
-    });
+  } else if (tokens[0] === 'g') {
+    data.g.push(tokens[1]);
+    if (data.g.length > 1) {
+      data.f.push([]);
+      data.size++;
+    }
   } else if (tokens[0] === 'v') {
-    if (data.size === data.o.length && data.size > 0) {
-      const points = data.v[data.size - 1];
-      data.pointCounts[data.size - 1]++;
-      points.push(Number(tokens[1]));
-      points.push(Number(tokens[2]));
-      points.push(Number(tokens[3]));
-    } else {
+    data.v.push(Number(tokens[1]));
+    data.v.push(Number(tokens[2]));
+    data.v.push(Number(tokens[3]));
+    if (data.size === 0) {
       data.size++;
       data.o.push(`Geometry ${data.size}`);
-      data.v.push([]);
       data.f.push([]);
-      data.pointCounts.push(0);
-      data.cellOffset = 1;
-      data.pointCounts.forEach((v) => {
-        data.cellOffset += v;
-      });
     }
   } else if (tokens[0] === 'f') {
     // Handle triangles for now
@@ -71,13 +62,25 @@ function parseLine(line) {
 // ----------------------------------------------------------------------------
 
 function end(model) {
-  model.numberOfOutputs = data.size;
-  for (let idx = 0; idx < data.size; idx++) {
+
+  const points = vtkPoints.newInstance();
+  points.setData(Float32Array.from(data.v), 3);
+
+  if (model.splitGroup) {
+    model.numberOfOutputs = data.size;
+    for (let idx = 0; idx < data.size; idx++) {
+      const polydata = vtkPolyData.newInstance();
+      polydata.setPoints(points);
+      polydata.getPolys().setData(Uint32Array.from(data.f[idx]));
+      polydata.set({ name: data.g[idx] || data.o[idx] });
+      model.output[idx] = polydata;
+    }
+  } else {
+    model.numberOfOutputs = 1;
     const polydata = vtkPolyData.newInstance();
-    polydata.getPoints().setData(Float32Array.from(data.v[idx]), 3);
-    polydata.getPolys().setData(Uint32Array.from(data.f[idx]));
-    polydata.set({ name: data.o[idx] });
-    model.output[idx] = polydata;
+    polydata.setPoints(points);
+    polydata.getPolys().setData(Uint32Array.from([].concat(...data.f)));
+    model.output[0] = polydata;
   }
 }
 
@@ -149,6 +152,7 @@ export function vtkObjReader(publicAPI, model) {
 const DEFAULT_VALUES = {
   numberOfOutputs: 1,
   requestCount: 0,
+  splitGroup: false,
   // baseURL: null,
   // dataAccessHelper: null,
   // url: null,
@@ -168,6 +172,7 @@ export function extend(publicAPI, model, initialValues = {}) {
   ]);
   macro.setGet(publicAPI, model, [
     'dataAccessHelper',
+    'splitGroup',
   ]);
   macro.algo(publicAPI, model, 0, 1);
   macro.event(publicAPI, model, 'busy');
