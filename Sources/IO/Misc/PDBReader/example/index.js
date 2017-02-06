@@ -38,8 +38,8 @@ stickMapper.setScaleArray('stickScales');
 stickMapper.setOrientationArray('orientation');
 stickActor.setMapper(stickMapper);
 
-// reader.setUrl(`${__BASE_PATH__}/data/pdb/caffeine.pdb`).then(() => {
-reader.setUrl(`${__BASE_PATH__}/data/pdb/2LYZ.pdb`).then(() => {
+// reader.setUrl(`${__BASE_PATH__}/data/molecule/pdb/caffeine.pdb`).then(() => {
+reader.setUrl(`${__BASE_PATH__}/data/molecule/pdb/2LYZ.pdb`).then(() => {
   renderer.resetCamera();
   renderWindow.render();
 });
