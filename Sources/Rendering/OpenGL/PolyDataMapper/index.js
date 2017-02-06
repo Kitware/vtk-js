@@ -378,8 +378,9 @@ export function vtkOpenGLPolyDataMapper(publicAPI, model) {
               '  if (gl_FrontFacing == false) { normalVCVSOutput = -normalVCVSOutput; }']
             ).result;
         } else {
-          if (model.lastBoundBO.getPrimitiveType() === primTypes.Lines ||
-              actor.getProperty().getRepresentation() === Representation.WIREFRAME) {
+          if (publicAPI.getOpenGLMode(
+            actor.getProperty().getRepresentation(),
+            model.lastBoundBO.getPrimitiveType()) === model.context.LINES) {
             // generate a normal for lines, it will be perpendicular to the line
             // and maximally aligned with the camera view direction
             // no clue if this is the best way to do this.
@@ -580,7 +581,7 @@ export function vtkOpenGLPolyDataMapper(publicAPI, model) {
           primType === primTypes.TriStripsEdges) {
         cp = model.renderable.getCoincidentTopologyPolygonOffsetParameters();
         cp.factor /= 2.0;
-        cp.units /= 2.0;
+        cp.offset /= 2.0;
       }
     }
 

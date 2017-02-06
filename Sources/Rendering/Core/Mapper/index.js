@@ -16,9 +16,9 @@ function notImplemented(method) {
 /* eslint-disable arrow-body-style */
 
 const staticOffsetModel = {
-  Polygon: { factor: 2, unit: 2 },
-  Line: { factor: 1, unit: 1 },
-  Point: { factor: 0, unit: 0 },
+  Polygon: { factor: 2, offset: 0 },
+  Line: { factor: 1, offset: -1 },
+  Point: { factor: 0, offset: -2 },
 };
 const staticOffsetAPI = {};
 
@@ -89,9 +89,9 @@ function vtkMapper(publicAPI, model) {
   // Relative metods
   /* eslint-disable arrow-body-style */
   model.topologyOffset = {
-    Polygon: { factor: 0, unit: 0 },
-    Line: { factor: 0, unit: 0 },
-    Point: { factor: 0, unit: 0 },
+    Polygon: { factor: 0, offset: 0 },
+    Line: { factor: 0, offset: 0 },
+    Point: { factor: 0, offset: 0 },
   };
   CoincidentTopologyHelper.addCoincidentTopologyMethods(
     publicAPI,
@@ -106,7 +106,7 @@ function vtkMapper(publicAPI, model) {
     const localValue = publicAPI.getRelativeCoincidentTopologyPolygonOffsetParameters();
     return {
       factor: globalValue.factor + localValue.factor,
-      units: globalValue.units + localValue.units,
+      offset: globalValue.offset + localValue.offset,
     };
   };
 
@@ -115,7 +115,7 @@ function vtkMapper(publicAPI, model) {
     const localValue = publicAPI.getRelativeCoincidentTopologyLineOffsetParameters();
     return {
       factor: globalValue.factor + localValue.factor,
-      units: globalValue.units + localValue.units,
+      offset: globalValue.offset + localValue.offset,
     };
   };
 
@@ -124,7 +124,7 @@ function vtkMapper(publicAPI, model) {
     const localValue = publicAPI.getRelativeCoincidentTopologyPointOffsetParameters();
     return {
       factor: globalValue.factor + localValue.factor,
-      units: globalValue.units + localValue.units,
+      offset: globalValue.offset + localValue.offset,
     };
   };
 
