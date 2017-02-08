@@ -4,7 +4,7 @@ module.exports = {
   baseUrl: '/vtk-js',
   work: './build-tmp',
   api: ['../Sources'],
-  examples: ['../Sources', { path: '../Examples', regexp: 'index.js' }],
+  examples: [{ path: '../Examples', regexp: 'index.js' }, '../Sources'],
   config: {
     title: 'vtk.js',
     description: '"Visualization Toolkit for the Web."',
