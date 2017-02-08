@@ -1,9 +1,9 @@
 import vtkElevationReader    from './ElevationReader';
-import vtkObjReader          from './ObjReader';
+import vtkOBJReader          from './OBJReader';
 import vtkPDBReader          from './PDBReader';
 
 export default {
   vtkElevationReader,
-  vtkObjReader,
+  vtkOBJReader,
   vtkPDBReader,
 };
