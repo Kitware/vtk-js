@@ -1,0 +1,76 @@
+<div data-style="container" class="style">
+  <div data-style="lineContainer" class="style">
+    <label data-style="title" class="style">Wind</label>
+    <div data-style="itemContainer" class="style">
+      <label data-style="itemName" class="style">Direction</label>
+      <div data-style="itemAxis" class="style">
+        <span data-style="itemButton" class="style click" data-click="direction:0:x">X</span>
+        <span data-style="itemButton" class="style click" data-click="direction:0:y">Y</span>
+        <span data-style="itemButton" class="style click" data-click="direction:0:z">Z</span>
+      </div>
+      <div data-style="itemOrientation" class="style">
+        <span data-style="itemButton" class="style click" data-click="direction:1:-">-</span>
+        <span data-style="itemButton" class="style click" data-click="direction:1:+">+</span>
+      </div>
+    </div>
+    <div data-style="itemContainer" class="style">
+      <label data-style="itemName" class="style">Orientation</label>
+      <div data-style="itemAxis" class="style">
+        <span data-style="itemButton" class="style click" data-click="orientation:0:x">X</span>
+        <span data-style="itemButton" class="style click" data-click="orientation:0:y">Y</span>
+        <span data-style="itemButton" class="style click" data-click="orientation:0:z">Z</span>
+      </div>
+      <div data-style="itemOrientation" class="style">
+        <span data-style="itemButton" class="style click" data-click="orientation:1:-">-</span>
+        <span data-style="itemButton" class="style click" data-click="orientation:1:+">+</span>
+      </div>
+    </div>
+    <div data-style="itemContainer" class="style">
+      <label data-style="itemName" class="style">Speed</label>
+      <input type="text" class="style speed change" data-style="speedInput" name="speed" value="20"/>
+      <label data-style="speedUnits" class="style">m/s</label>
+    </div>
+  </div>
+  <div data-style="separator" class="style"></div>
+  <div data-style="lineContainer" class="style">
+    <label data-style="title" class="style">Size</label>
+    <table data-style="table" class="style">
+      <tr>
+        <td></td>
+        <td data-style="tableTitle" class="style">X</td>
+        <td data-style="tableTitle" class="style">Y</td>
+        <td data-style="tableTitle" class="style">Z</td>
+      </tr>
+      <tr data-style="tableLine" class="style">
+        <td data-style="itemName" class="style">Object</td>
+        <td>
+          <input type="text" data-style="half" class="style ox0" name="ox0" value="0" disabled/>
+          <input type="text" data-style="half" class="style ox1" name="ox1" value="1" disabled/>
+        </td>
+        <td>
+          <input type="text" data-style="half" class="style oy0" name="oy0" value="0" disabled/>
+          <input type="text" data-style="half" class="style oy1" name="oy1" value="1" disabled/>
+        </td>
+        <td>
+          <input type="text" data-style="half" class="style oz0" name="oz0" value="0" disabled/>
+          <input type="text" data-style="half" class="style oz1" name="oz1" value="1" disabled/>
+        </td>
+      </tr>
+      <tr data-style="tableLine" class="style">
+        <td data-style="itemName" class="style">Tunnel</td>
+        <td>
+          <input type="text" data-style="half" class="style change tx0" name="bounds:0" value="0"/>
+          <input type="text" data-style="half" class="style change tx1" name="bounds:1" value="1"/>
+        </td>
+        <td>
+          <input type="text" data-style="half" class="style change ty0" name="bounds:2" value="0"/>
+          <input type="text" data-style="half" class="style change ty1" name="bounds:3" value="1"/>
+        </td>
+        <td>
+          <input type="text" data-style="half" class="style change tz0" name="bounds:4" value="0"/>
+          <input type="text" data-style="half" class="style change tz1" name="bounds:5" value="1"/>
+        </td>
+      </tr>
+    </table>
+  </div>
+</div>
