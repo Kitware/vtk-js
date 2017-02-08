@@ -93,19 +93,39 @@ function create(options) {
       });
     },
 
-    fetchJSON(instance = {}, url) {
+    fetchJSON(instance = {}, url, compression) {
       const path = removeLeadingSlash(url);
       if (!ready) {
         console.log('ERROR!!! zip not ready...');
       }
 
+      if (compression) {
+        if (compression === 'gz') {
+          return zipRoot.file(path).async('uint8array').then((uint8array) => {
+            const str = pako.inflate(uint8array, { to: 'string' });
+            return new Promise(ok => ok(JSON.parse(str)));
+          });
+        }
+        return new Promise((a, r) => r('Invalid compression'));
+      }
+
       return zipRoot.file(path).async('string').then(str => new Promise(ok => ok(JSON.parse(str))));
     },
 
-    fetchText(instance = {}, url) {
+    fetchText(instance = {}, url, compression) {
       const path = removeLeadingSlash(url);
       if (!ready) {
         console.log('ERROR!!! zip not ready...');
+      }
+
+      if (compression) {
+        if (compression === 'gz') {
+          return zipRoot.file(path).async('uint8array').then((uint8array) => {
+            const str = pako.inflate(uint8array, { to: 'string' });
+            return new Promise(ok => ok(str));
+          });
+        }
+        return new Promise((a, r) => r('Invalid compression'));
       }
 
       return zipRoot.file(path).async('string').then(str => new Promise(ok => ok(str)));
