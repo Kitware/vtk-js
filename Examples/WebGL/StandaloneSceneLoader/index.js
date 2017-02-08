@@ -10,7 +10,7 @@ import vtkFullScreenRenderWindow  from '../../../Sources/Rendering/Misc/FullScre
 import vtkHttpSceneLoader         from '../../../Sources/IO/Core/HttpSceneLoader';
 import DataAccessHelper           from '../../../Sources/IO/Core/DataAccessHelper';
 import vtkURLExtract              from '../../../Sources/Common/Core/URLExtract';
-import vtkObjReader               from '../../../Sources/IO/Misc/ObjReader';
+import vtkOBJReader               from '../../../Sources/IO/Misc/OBJReader';
 import vtkMapper                  from '../../../Sources/Rendering/Core/Mapper';
 import vtkActor                   from '../../../Sources/Rendering/Core/Actor';
 
@@ -102,7 +102,7 @@ export function load(container, options) {
       const scene = [];
       const reader = new FileReader();
       reader.onload = function onLoad(e) {
-        const objReader = vtkObjReader.newInstance();
+        const objReader = vtkOBJReader.newInstance();
         objReader.parse(reader.result);
         const nbOutputs = objReader.getNumberOfOutputPorts();
         for (let idx = 0; idx < nbOutputs; idx++) {

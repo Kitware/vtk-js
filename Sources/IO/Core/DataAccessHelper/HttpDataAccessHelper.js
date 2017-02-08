@@ -76,7 +76,7 @@ function fetchArray(instance = {}, baseURL, array, fetchGzip = false) {
 
 // ----------------------------------------------------------------------------
 
-function fetchJSON(instance = {}, url) {
+function fetchJSON(instance = {}, url, compression) {
   return new Promise((resolve, reject) => {
     const xhr = new XMLHttpRequest();
 
@@ -91,8 +91,11 @@ function fetchJSON(instance = {}, url) {
           instance.invokeBusy(false);
         }
         if (xhr.status === 200 || xhr.status === 0) {
-          const data = JSON.parse(xhr.responseText);
-          resolve(data);
+          if (compression) {
+            resolve(JSON.parse(pako.inflate(new Uint8Array(xhr.response), { to: 'string' })));
+          } else {
+            resolve(JSON.parse(xhr.responseText));
+          }
         } else {
           reject(xhr, e);
         }
@@ -101,14 +104,19 @@ function fetchJSON(instance = {}, url) {
 
     // Make request
     xhr.open('GET', url, true);
-    xhr.responseType = 'text';
+    xhr.responseType = compression ? 'arraybuffer' : 'text';
     xhr.send();
   });
 }
 
 // ----------------------------------------------------------------------------
 
-function fetchText(instance = {}, url) {
+function fetchText(instance = {}, url, compression) {
+  if (compression && compression !== 'gz') {
+    console.error('Supported algorithms are: [gz]');
+    console.error('Unkown compression algorithm:', compression);
+  }
+
   return new Promise((resolve, reject) => {
     const xhr = new XMLHttpRequest();
 
@@ -123,7 +131,11 @@ function fetchText(instance = {}, url) {
           instance.invokeBusy(false);
         }
         if (xhr.status === 200 || xhr.status === 0) {
-          resolve(xhr.responseText);
+          if (compression) {
+            resolve(pako.inflate(new Uint8Array(xhr.response), { to: 'string' }));
+          } else {
+            resolve(xhr.responseText);
+          }
         } else {
           reject(xhr, e);
         }
@@ -132,7 +144,7 @@ function fetchText(instance = {}, url) {
 
     // Make request
     xhr.open('GET', url, true);
-    xhr.responseType = 'text';
+    xhr.responseType = compression ? 'arraybuffer' : 'text';
     xhr.send();
   });
 }

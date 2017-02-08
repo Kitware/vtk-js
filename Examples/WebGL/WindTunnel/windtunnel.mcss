@@ -1,0 +1,115 @@
+.container {
+  display: flex;
+  flex-direction: column;
+  max-width: 400px;
+}
+
+.lineContainer {
+  flex: 1;
+  display: flex;
+  flex-direction: column;
+  align-items: stretch;
+}
+
+.title {
+  flex: none;
+  font-weight: bold;
+  text-align: center;
+  border-bottom: 1px solid lightgray;
+}
+
+.itemContainer {
+  flex: 1;
+  display: flex;
+  flex-direction: row;
+  line-height: 35px;
+  height: 35px;
+  align-items: center;
+}
+
+.itemName {
+  flex: none;
+  font-weight: bold;
+  width: 100px;
+}
+
+.itemAxis {
+  flex: 1;
+  display: flex;
+  flex-direction: row;
+}
+
+.itemButton {
+  flex: none;
+  cursor: pointer;
+  margin: 0 2px;
+  border: solid 1px black;
+  border-radius: 2px;
+  width: 25px;
+  line-height: 25px;
+  text-align: center;
+}
+
+.itemOrientation {
+  flex: 1;
+  display: flex;
+  flex-direction: row;
+}
+
+.speedInput {
+  flex: none;
+  width: 84px;
+  line-height: 25px;
+  margin: 0 2px;
+  border-radius: 2px;
+  border: solid 1px black;
+  padding: 0 2px;
+}
+
+.speedUnits {
+  flex: 1;
+  padding-left: 15px;
+}
+
+.table {
+  flex: 1;
+  text-align: center;
+}
+
+.table input {
+  line-height: 25px;
+  border-radius: 2px;
+  border: solid 1px black;
+  padding: 0 2px;
+  text-align: center;
+}
+
+.half {
+  width: 40%;
+}
+
+.separator {
+  flex: none;
+  width: 1px;
+  height: 10px;
+}
+
+.tableLine {
+  line-height: 35px;
+  height: 35px;
+}
+
+.tableTitle {
+  font-weight: bold;
+  text-align: center;
+  border-bottom: solid 1px lightgray;
+  line-height: 15px;
+}
+
+.active {
+  background: lightgray;
+}
+
+.hidden {
+  display: none;
+}

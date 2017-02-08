@@ -62,7 +62,6 @@ function parseLine(line) {
 // ----------------------------------------------------------------------------
 
 function end(model) {
-
   const points = vtkPoints.newInstance();
   points.setData(Float32Array.from(data.v), 3);
 
@@ -99,12 +98,12 @@ export function vtkObjReader(publicAPI, model) {
 
   // Internal method to fetch Array
   function fetchData(url) {
-    return model.dataAccessHelper.fetchText(publicAPI, url);
+    return model.dataAccessHelper.fetchText(publicAPI, url, model.compression);
   }
 
   // Set DataSet url
-  publicAPI.setUrl = (url) => {
-    if (url.indexOf('.obj') === -1) {
+  publicAPI.setUrl = (url, option = {}) => {
+    if (url.indexOf('.obj') === -1 && !option.fullpath) {
       model.baseURL = url;
       model.url = `${url}/index.obj`;
     } else {
@@ -115,6 +114,8 @@ export function vtkObjReader(publicAPI, model) {
       path.pop();
       model.baseURL = path.join('/');
     }
+
+    model.compression = option.compression;
 
     // Fetch metadata
     return publicAPI.loadData();
