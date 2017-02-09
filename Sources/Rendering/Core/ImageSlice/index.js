@@ -3,6 +3,8 @@ import * as macro from '../../../macro';
 import vtkProp3D from '../Prop3D';
 import vtkImageProperty from '../ImageProperty';
 
+const { vtkDebugMacro } = macro;
+
 // ----------------------------------------------------------------------------
 // vtkActor methods
 // ----------------------------------------------------------------------------

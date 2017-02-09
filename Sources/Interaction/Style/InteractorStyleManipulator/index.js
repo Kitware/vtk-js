@@ -1,6 +1,8 @@
 import * as macro from '../../../macro';
 import vtkInteractorStyleTrackballCamera from '../../../Interaction/Style/InteractorStyleTrackballCamera';
 
+const { vtkDebugMacro } = macro;
+
 // ----------------------------------------------------------------------------
 // Global methods
 // ----------------------------------------------------------------------------

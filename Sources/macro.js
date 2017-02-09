@@ -550,3 +550,33 @@ export function newInstance(extend, className) {
 export function chain(...fn) {
   return (...args) => fn.filter(i => !!i).forEach(i => i(...args));
 }
+
+// ----------------------------------------------------------------------------
+// Loggins function calls
+// ----------------------------------------------------------------------------
+
+const loggerFunctions = {
+  debug: console.debug,
+  error: console.error,
+  warn: console.warn,
+};
+
+function noOp() {}
+
+export function setLoggerFunction(name, fn) {
+  if (loggerFunctions[name]) {
+    loggerFunctions[name] = fn || noOp;
+  }
+}
+
+export function vtkDebugMacro(...args) {
+  loggerFunctions.debug(...args);
+}
+
+export function vtkErrorMacro(...args) {
+  loggerFunctions.error(...args);
+}
+
+export function vtkWarningMacro(...args) {
+  loggerFunctions.warn(...args);
+}
