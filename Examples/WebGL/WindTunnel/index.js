@@ -1,13 +1,12 @@
-import vtkFullScreenRenderWindow from '../../../Sources/Rendering/Misc/FullScreenRenderWindow';
-
-import vtkActor           from '../../../Sources/Rendering/Core/Actor';
-import vtkMapper          from '../../../Sources/Rendering/Core/Mapper';
-import vtkOBJReader       from '../../../Sources/IO/Misc/OBJReader';
-import vtkPolyData        from '../../../Sources/Common/DataModel/PolyData';
-import vtkOutlineFilter   from '../../../Sources/Filters/General/OutlineFilter';
+import vtkActor                  from 'vtk.js/Sources/Rendering/Core/Actor';
+import vtkFullScreenRenderWindow from 'vtk.js/Sources/Rendering/Misc/FullScreenRenderWindow';
+import vtkMapper                 from 'vtk.js/Sources/Rendering/Core/Mapper';
+import vtkOBJReader              from 'vtk.js/Sources/IO/Misc/OBJReader';
+import vtkOutlineFilter          from 'vtk.js/Sources/Filters/General/OutlineFilter';
+import vtkPolyData               from 'vtk.js/Sources/Common/DataModel/PolyData';
 
 import controlPanel from './controller.html';
-import style from './windtunnel.mcss';
+import style        from './windtunnel.mcss';
 
 // ----------------------------------------------------------------------------
 // Standard rendering code setup

@@ -1,17 +1,17 @@
-import vtkFullScreenRenderWindow from '../../../Sources/Rendering/Misc/FullScreenRenderWindow';
+import vtkFullScreenRenderWindow     from 'vtk.js/Sources/Rendering/Misc/FullScreenRenderWindow';
 
-import vtkActor                      from '../../../Sources/Rendering/Core/Actor';
-import vtkConeSource                 from '../../../Sources/Filters/Sources/ConeSource';
-import vtkMapper                     from '../../../Sources/Rendering/Core/Mapper';
-import vtkInteractorStyleManipulator from '../../../Sources/Interaction/Style/InteractorStyleManipulator';
+import vtkActor                      from 'vtk.js/Sources/Rendering/Core/Actor';
+import vtkConeSource                 from 'vtk.js/Sources/Filters/Sources/ConeSource';
+import vtkMapper                     from 'vtk.js/Sources/Rendering/Core/Mapper';
+import vtkInteractorStyleManipulator from 'vtk.js/Sources/Interaction/Style/InteractorStyleManipulator';
 
-import vtkCameraManipulator          from '../../../Sources/Interaction/Manipulators/CameraManipulator';
-import vtkTrackballMultiRotate       from '../../../Sources/Interaction/Manipulators/TrackballMultiRotate';
-import vtkTrackballPan               from '../../../Sources/Interaction/Manipulators/TrackballPan';
-import vtkTrackballRoll              from '../../../Sources/Interaction/Manipulators/TrackballRoll';
-import vtkTrackballRotate            from '../../../Sources/Interaction/Manipulators/TrackballRotate';
-import vtkTrackballZoom              from '../../../Sources/Interaction/Manipulators/TrackballZoom';
-import vtkTrackballZoomToMouse       from '../../../Sources/Interaction/Manipulators/TrackballZoomToMouse';
+import vtkCameraManipulator          from 'vtk.js/Sources/Interaction/Manipulators/CameraManipulator';
+import vtkTrackballMultiRotate       from 'vtk.js/Sources/Interaction/Manipulators/TrackballMultiRotate';
+import vtkTrackballPan               from 'vtk.js/Sources/Interaction/Manipulators/TrackballPan';
+import vtkTrackballRoll              from 'vtk.js/Sources/Interaction/Manipulators/TrackballRoll';
+import vtkTrackballRotate            from 'vtk.js/Sources/Interaction/Manipulators/TrackballRotate';
+import vtkTrackballZoom              from 'vtk.js/Sources/Interaction/Manipulators/TrackballZoom';
+import vtkTrackballZoomToMouse       from 'vtk.js/Sources/Interaction/Manipulators/TrackballZoomToMouse';
 
 import controlPanel from './controller.html';
 

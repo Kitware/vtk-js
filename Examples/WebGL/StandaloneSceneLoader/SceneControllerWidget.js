@@ -1,4 +1,4 @@
-import vtkHttpSceneLoader from '../../../Sources/IO/Core/HttpSceneLoader';
+import vtkHttpSceneLoader from 'vtk.js/Sources/IO/Core/HttpSceneLoader';
 
 /* global document */
 

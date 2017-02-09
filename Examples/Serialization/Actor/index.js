@@ -1,5 +1,5 @@
-import vtkFullScreenRenderWindow from '../../../Sources/Rendering/Misc/FullScreenRenderWindow';
-import vtk                       from '../../../Sources/vtk';
+import vtkFullScreenRenderWindow from 'vtk.js/Sources/Rendering/Misc/FullScreenRenderWindow';
+import vtk                       from 'vtk.js/Sources/vtk';
 
 import actorJSON                 from './actor.json';
 
