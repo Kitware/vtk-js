@@ -1,9 +1,9 @@
-import vtkConeSource from './ConeSource';
+import vtkConeSource      from './ConeSource';
 import vtkImageGridSource from './ImageGridSource';
-import vtkLineSource from './LineSource';
-import vtkPlaneSource from './PlaneSource';
-import vtkPointSource from './PointSource';
-import vtkSphereSource from './SphereSource';
+import vtkLineSource      from './LineSource';
+import vtkPlaneSource     from './PlaneSource';
+import vtkPointSource     from './PointSource';
+import vtkSphereSource    from './SphereSource';
 
 export default {
   vtkConeSource,

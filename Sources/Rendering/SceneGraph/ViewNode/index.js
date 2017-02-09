@@ -1,4 +1,4 @@
-import * as macro from '../../../macro';
+import macro from 'vtk.js/Sources/macro';
 
 export const PASS_TYPES = ['Build', 'Render'];
 
@@ -158,7 +158,7 @@ export function extend(publicAPI, model, initialValues = {}) {
 
 // ----------------------------------------------------------------------------
 
-export const newInstance = macro.newInstance(extend);
+export const newInstance = macro.newInstance(extend, 'vtkViewNode');
 
 // ----------------------------------------------------------------------------
 

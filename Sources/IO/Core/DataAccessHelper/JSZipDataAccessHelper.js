@@ -1,8 +1,8 @@
-import JSZip from 'jszip';
-import pako from 'pako';
+import JSZip  from 'jszip';
+import pako   from 'pako';
 
-import Endian from '../../../Common/Core/Endian';
-import { DataTypeByteSize } from '../../../Common/Core/DataArray/Constants';
+import Endian               from 'vtk.js/Sources/Common/Core/Endian';
+import { DataTypeByteSize } from 'vtk.js/Sources/Common/Core/DataArray/Constants';
 
 function removeLeadingSlash(str) {
   return (str[0] === '/') ? str.substr(1) : str;

@@ -1,5 +1,5 @@
-import * as macro from '../../../macro';
-import vtkInteractorStyleTrackballCamera from '../../../Interaction/Style/InteractorStyleTrackballCamera';
+import macro                             from 'vtk.js/Sources/macro';
+import vtkInteractorStyleTrackballCamera from 'vtk.js/Sources/Interaction/Style/InteractorStyleTrackballCamera';
 
 const { vtkDebugMacro } = macro;
 
@@ -89,7 +89,7 @@ export const STATIC = {
 };
 
 // ----------------------------------------------------------------------------
-// vtkMyClass methods
+// vtkInteractorStyleManipulator methods
 // ----------------------------------------------------------------------------
 
 function vtkInteractorStyleManipulator(publicAPI, model) {
@@ -326,7 +326,7 @@ export function extend(publicAPI, model, initialValues = {}) {
 
 // ----------------------------------------------------------------------------
 
-export const newInstance = macro.newInstance(extend);
+export const newInstance = macro.newInstance(extend, 'vtkInteractorStyleManipulator');
 
 // ----------------------------------------------------------------------------
 

@@ -1,7 +1,7 @@
-import * as macro from '../../../macro';
-import vtkPolyData from '../../../Common/DataModel/PolyData';
-import vtkPoints from '../../../Common/Core/Points';
-import DataAccessHelper from '../../Core/DataAccessHelper';
+import macro            from 'vtk.js/Sources/macro';
+import vtkPolyData      from 'vtk.js/Sources/Common/DataModel/PolyData';
+import vtkPoints        from 'vtk.js/Sources/Common/Core/Points';
+import DataAccessHelper from 'vtk.js/Sources/IO/Core/DataAccessHelper';
 
 // ----------------------------------------------------------------------------
 
@@ -84,12 +84,12 @@ function end(model) {
 }
 
 // ----------------------------------------------------------------------------
-// vtkElevationReader methods
+// vtkOBJReader methods
 // ----------------------------------------------------------------------------
 
-export function vtkObjReader(publicAPI, model) {
+export function vtkOBJReader(publicAPI, model) {
   // Set our className
-  model.classHierarchy.push('vtkObjReader');
+  model.classHierarchy.push('vtkOBJReader');
 
   // Create default dataAccessHelper if not available
   if (!model.dataAccessHelper) {
@@ -179,12 +179,12 @@ export function extend(publicAPI, model, initialValues = {}) {
   macro.event(publicAPI, model, 'busy');
 
   // Object methods
-  vtkObjReader(publicAPI, model);
+  vtkOBJReader(publicAPI, model);
 }
 
 // ----------------------------------------------------------------------------
 
-export const newInstance = macro.newInstance(extend, 'vtkObjReader');
+export const newInstance = macro.newInstance(extend, 'vtkOBJReader');
 
 // ----------------------------------------------------------------------------
 

@@ -1,8 +1,7 @@
-import * as macro from '../../../macro';
-import vtk from '../../../vtk';
-import vtkPolyData from '../../../Common/DataModel/PolyData';
-
-import DataAccessHelper from '../DataAccessHelper';
+import vtk              from 'vtk.js/Sources/vtk';
+import macro            from 'vtk.js/Sources/macro';
+import vtkPolyData      from 'vtk.js/Sources/Common/DataModel/PolyData';
+import DataAccessHelper from 'vtk.js/Sources/IO/Core/DataAccessHelper';
 
 const fieldDataLocations = ['pointData', 'cellData', 'fieldData'];
 
@@ -338,7 +337,7 @@ export function extend(publicAPI, model, initialValues = {}) {
 
 // ----------------------------------------------------------------------------
 
-export const newInstance = macro.newInstance(extend);
+export const newInstance = macro.newInstance(extend, 'vtkHttpDataSetReader');
 
 // ----------------------------------------------------------------------------
 

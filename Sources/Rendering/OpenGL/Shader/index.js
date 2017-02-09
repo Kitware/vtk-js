@@ -1,4 +1,4 @@
-import * as macro from '../../../macro';
+import macro from 'vtk.js/Sources/macro';
 
 // export const SHADER_TYPES = ['Vertex', 'Fragment', 'Geometry', 'Unknown'];
 

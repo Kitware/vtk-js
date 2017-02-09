@@ -1,18 +1,18 @@
 import { mat3, mat4 } from 'gl-matrix';
 
-import * as macro from '../../../macro';
-import vtkHelper from '../Helper';
-import vtkMath from '../../../Common/Core/Math';
-import vtkShaderProgram from '../ShaderProgram';
-import vtkOpenGLTexture from '../Texture';
-import vtkViewNode from '../../SceneGraph/ViewNode';
-import { Representation, Shading } from '../../Core/Property/Constants';
-import { MaterialMode, ScalarMode } from '../../Core/Mapper/Constants';
-import { Filter, Wrap } from '../Texture/Constants';
-import { PassTypes } from '../HardwareSelector/Constants';
+import macro                        from 'vtk.js/Sources/macro';
+import vtkHelper                    from 'vtk.js/Sources/Rendering/OpenGL/Helper';
+import vtkMath                      from 'vtk.js/Sources/Common/Core/Math';
+import vtkShaderProgram             from 'vtk.js/Sources/Rendering/OpenGL/ShaderProgram';
+import vtkOpenGLTexture             from 'vtk.js/Sources/Rendering/OpenGL/Texture';
+import vtkViewNode                  from 'vtk.js/Sources/Rendering/SceneGraph/ViewNode';
+import { Representation, Shading }  from 'vtk.js/Sources/Rendering/Core/Property/Constants';
+import { MaterialMode, ScalarMode } from 'vtk.js/Sources/Rendering/Core/Mapper/Constants';
+import { Filter, Wrap }             from 'vtk.js/Sources/Rendering/OpenGL/Texture/Constants';
+import { PassTypes }                from 'vtk.js/Sources/Rendering/OpenGL/HardwareSelector/Constants';
 
-import vtkPolyDataVS from '../glsl/vtkPolyDataVS.glsl';
-import vtkPolyDataFS from '../glsl/vtkPolyDataFS.glsl';
+import vtkPolyDataVS                from 'vtk.js/Sources/Rendering/OpenGL/glsl/vtkPolyDataVS.glsl';
+import vtkPolyDataFS                from 'vtk.js/Sources/Rendering/OpenGL/glsl/vtkPolyDataFS.glsl';
 
 /* eslint-disable no-lonely-if */
 
@@ -1383,7 +1383,7 @@ export function extend(publicAPI, model, initialValues = {}) {
 
 // ----------------------------------------------------------------------------
 
-export const newInstance = macro.newInstance(extend);
+export const newInstance = macro.newInstance(extend, 'vtkOpenGLPolyDataMapper');
 
 // ----------------------------------------------------------------------------
 

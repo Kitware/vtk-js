@@ -1,13 +1,8 @@
-import * as macro from '../../../macro';
-
-/* eslint-disable no-unused-vars */
-// Needed so the VTK factory is filled with them
-import vtkDataArray from '../../../Common/Core/DataArray';
-
-import vtk from '../../../vtk';
+import vtk   from 'vtk.js/Sources/vtk';
+import macro from 'vtk.js/Sources/macro';
 
 // ----------------------------------------------------------------------------
-// vtkDataSetAttributes methods
+// vtkFieldData methods
 // ----------------------------------------------------------------------------
 
 function vtkFieldData(publicAPI, model) {

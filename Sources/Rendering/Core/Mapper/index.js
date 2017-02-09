@@ -1,12 +1,17 @@
-import * as CoincidentTopologyHelper              from './CoincidentTopologyHelper';
-import * as macro                                 from '../../../macro';
-import otherStaticMethods                         from './Static';
-import vtkDataArray                               from '../../../Common/Core/DataArray';
-import vtkImageData                               from '../../../Common/DataModel/ImageData';
-import vtkLookupTable                             from '../../../Common/Core/LookupTable';
-import vtkMath                                    from '../../../Common/Core/Math';
-import { VectorMode } from '../../../Common/Core/ScalarsToColors/Constants';
-import { ColorMode, ScalarMode, MaterialMode, GetArray } from './Constants';
+import macro                    from 'vtk.js/Sources/macro';
+import vtkDataArray             from 'vtk.js/Sources/Common/Core/DataArray';
+import vtkImageData             from 'vtk.js/Sources/Common/DataModel/ImageData';
+import vtkLookupTable           from 'vtk.js/Sources/Common/Core/LookupTable';
+import vtkMath                  from 'vtk.js/Sources/Common/Core/Math';
+import { VectorMode }           from 'vtk.js/Sources/Common/Core/ScalarsToColors/Constants';
+
+import CoincidentTopologyHelper from 'vtk.js/Sources/Rendering/Core/Mapper/CoincidentTopologyHelper';
+import otherStaticMethods       from 'vtk.js/Sources/Rendering/Core/Mapper/Static';
+import Constants                from 'vtk.js/Sources/Rendering/Core/Mapper/Constants';
+
+const { ColorMode, ScalarMode, MaterialMode, GetArray } = Constants;
+
+// ----------------------------------------------------------------------------
 
 function notImplemented(method) {
   return () => console.log(`vtkMapper::${method} - NOT IMPLEMENTED`);

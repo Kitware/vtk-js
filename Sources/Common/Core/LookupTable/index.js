@@ -1,7 +1,7 @@
-import * as macro from '../../../macro';
-import vtkScalarsToColors from '../ScalarsToColors';
-import { ScalarMappingTarget } from '../ScalarsToColors/Constants';
-import vtkMath from '../Math';
+import macro                    from 'vtk.js/Sources/macro';
+import vtkMath                  from 'vtk.js/Sources/Common/Core/Math';
+import vtkScalarsToColors       from 'vtk.js/Sources/Common/Core/ScalarsToColors';
+import { ScalarMappingTarget }  from 'vtk.js/Sources/Common/Core/ScalarsToColors/Constants';
 
 // ----------------------------------------------------------------------------
 // Global methods

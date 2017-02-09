@@ -1,5 +1,5 @@
-import * as macro from '../../../macro';
-import { ObjectType } from '../BufferObject/Constants';
+import macro          from 'vtk.js/Sources/macro';
+import { ObjectType } from 'vtk.js/Sources/Rendering/OpenGL/BufferObject/Constants';
 
 // ----------------------------------------------------------------------------
 // vtkOpenGLVertexArrayObject methods
@@ -263,7 +263,7 @@ export function extend(publicAPI, model, initialValues = {}) {
 
 // ----------------------------------------------------------------------------
 
-export const newInstance = macro.newInstance(extend);
+export const newInstance = macro.newInstance(extend, 'vtkOpenGLVertexArrayObject');
 
 // ----------------------------------------------------------------------------
 

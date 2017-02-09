@@ -1,6 +1,5 @@
 import seedrandom from 'seedrandom';
-
-import * as macro from '../../../macro';
+import macro      from 'vtk.js/Sources/macro';
 
 const { vtkErrorMacro, vtkWarningMacro } = macro;
 

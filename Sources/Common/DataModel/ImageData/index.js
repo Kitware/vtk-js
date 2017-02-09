@@ -1,7 +1,7 @@
-import * as macro from '../../../macro';
-import vtkDataSet from '../DataSet';
-import vtkStructuredData from '../StructuredData';
-import { StructuredType } from '../StructuredData/Constants';
+import macro              from 'vtk.js/Sources/macro';
+import vtkDataSet         from 'vtk.js/Sources/Common/DataModel/DataSet';
+import vtkStructuredData  from 'vtk.js/Sources/Common/DataModel/StructuredData';
+import { StructuredType } from 'vtk.js/Sources/Common/DataModel/StructuredData/Constants';
 
 const { vtkErrorMacro } = macro;
 

@@ -1,16 +1,16 @@
-import * as macro from '../../../macro';
-import vtkViewNodeFactory from '../../SceneGraph/ViewNodeFactory';
-import vtkOpenGLActor from '../Actor';
-import vtkOpenGLActor2D from '../Actor2D';
-import vtkOpenGLCamera from '../Camera';
-import vtkOpenGLImageMapper from '../ImageMapper';
-import vtkOpenGLImageSlice from '../ImageSlice';
-import vtkOpenGLPolyDataMapper from '../PolyDataMapper';
-import vtkOpenGLRenderWindow from '../RenderWindow';
-import vtkOpenGLRenderer from '../Renderer';
-import vtkOpenGLSphereMapper from '../SphereMapper';
-import vtkOpenGLStickMapper from '../StickMapper';
-import vtkOpenGLTexture from '../Texture';
+import macro                   from 'vtk.js/Sources/macro';
+import vtkViewNodeFactory      from 'vtk.js/Sources/Rendering/SceneGraph/ViewNodeFactory';
+import vtkOpenGLActor          from 'vtk.js/Sources/Rendering/OpenGL/Actor';
+import vtkOpenGLActor2D        from 'vtk.js/Sources/Rendering/OpenGL/Actor2D';
+import vtkOpenGLCamera         from 'vtk.js/Sources/Rendering/OpenGL/Camera';
+import vtkOpenGLImageMapper    from 'vtk.js/Sources/Rendering/OpenGL/ImageMapper';
+import vtkOpenGLImageSlice     from 'vtk.js/Sources/Rendering/OpenGL/ImageSlice';
+import vtkOpenGLPolyDataMapper from 'vtk.js/Sources/Rendering/OpenGL/PolyDataMapper';
+import vtkOpenGLRenderWindow   from 'vtk.js/Sources/Rendering/OpenGL/RenderWindow';
+import vtkOpenGLRenderer       from 'vtk.js/Sources/Rendering/OpenGL/Renderer';
+import vtkOpenGLSphereMapper   from 'vtk.js/Sources/Rendering/OpenGL/SphereMapper';
+import vtkOpenGLStickMapper    from 'vtk.js/Sources/Rendering/OpenGL/StickMapper';
+import vtkOpenGLTexture        from 'vtk.js/Sources/Rendering/OpenGL/Texture';
 
 // ----------------------------------------------------------------------------
 // vtkOpenGLViewNodeFactory methods
@@ -55,7 +55,7 @@ export function extend(publicAPI, model, initialValues = {}) {
 
 // ----------------------------------------------------------------------------
 
-export const newInstance = macro.newInstance(extend);
+export const newInstance = macro.newInstance(extend, 'vtkOpenGLViewNodeFactory');
 
 // ----------------------------------------------------------------------------
 

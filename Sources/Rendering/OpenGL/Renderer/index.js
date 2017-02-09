@@ -1,6 +1,6 @@
-import * as macro from '../../../macro';
-import vtkViewNode from '../../SceneGraph/ViewNode';
-import vtkMath from '../../../Common/Core/Math';
+import macro        from 'vtk.js/Sources/macro';
+import vtkViewNode  from 'vtk.js/Sources/Rendering/SceneGraph/ViewNode';
+import vtkMath      from 'vtk.js/Sources/Common/Core/Math';
 
 const { vtkDebugMacro } = macro;
 

@@ -1,5 +1,7 @@
-import * as macro from '../../../macro';
-import vtkPolyData from '../../../Common/DataModel/PolyData';
+import macro       from 'vtk.js/Sources/macro';
+import vtkPolyData from 'vtk.js/Sources/Common/DataModel/PolyData';
+
+const { vtkErrorMacro } = macro;
 
 const BOUNDS_MAP = [
   0, 2, 4, // pt 0

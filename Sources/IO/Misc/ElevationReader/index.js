@@ -1,8 +1,8 @@
-import * as macro from '../../../macro';
-import vtkDataArray from '../../../Common/Core/DataArray';
-import vtkPolyData from '../../../Common/DataModel/PolyData';
-import vtkCellArray from '../../../Common/Core/CellArray';
-import DataAccessHelper from '../../Core/DataAccessHelper';
+import macro            from 'vtk.js/Sources/macro';
+import vtkDataArray     from 'vtk.js/Sources/Common/Core/DataArray';
+import vtkPolyData      from 'vtk.js/Sources/Common/DataModel/PolyData';
+import vtkCellArray     from 'vtk.js/Sources/Common/Core/CellArray';
+import DataAccessHelper from 'vtk.js/Sources/IO/Core/DataAccessHelper';
 
 // ----------------------------------------------------------------------------
 // vtkElevationReader methods

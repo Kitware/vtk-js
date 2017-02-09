@@ -17,6 +17,8 @@ import vtkProperty2D              from './Property2D';
 import vtkRenderer                from './Renderer';
 import vtkRenderWindow            from './RenderWindow';
 import vtkRenderWindowInteractor  from './RenderWindowInteractor';
+import vtkSphereMapper            from './SphereMapper';
+import vtkStickMapper             from './StickMapper';
 import vtkTexture                 from './Texture';
 import vtkViewport                from './Viewport';
 
@@ -40,6 +42,8 @@ export default {
   vtkRenderer,
   vtkRenderWindow,
   vtkRenderWindowInteractor,
+  vtkSphereMapper,
+  vtkStickMapper,
   vtkTexture,
   vtkViewport,
 };

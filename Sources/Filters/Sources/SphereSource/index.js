@@ -1,6 +1,6 @@
-import * as macro  from '../../../macro';
-import vtkPolyData from '../../../Common/DataModel/PolyData';
-import vtkDataArray from '../../../Common/Core/DataArray';
+import macro        from 'vtk.js/Sources/macro';
+import vtkPolyData  from 'vtk.js/Sources/Common/DataModel/PolyData';
+import vtkDataArray from 'vtk.js/Sources/Common/Core/DataArray';
 
 // ----------------------------------------------------------------------------
 // vtkSphereSource methods

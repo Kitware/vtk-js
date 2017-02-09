@@ -1,11 +1,14 @@
-import * as macro                                 from '../../../macro';
-import vtkMapper                                  from '../Mapper';
+import macro     from 'vtk.js/Sources/macro';
+import vtkMapper from 'vtk.js/Sources/Rendering/Core/Mapper';
+
+// ----------------------------------------------------------------------------
+// vtkStickMapper methods
+// ----------------------------------------------------------------------------
 
 export function vtkStickMapper(publicAPI, model) {
   // Set our className
   model.classHierarchy.push('vtkStickMapper');
 }
-
 
 // ----------------------------------------------------------------------------
 // Object factory

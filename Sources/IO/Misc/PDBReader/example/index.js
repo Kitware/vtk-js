@@ -1,10 +1,9 @@
-import vtkFullScreenRenderWindow    from '../../../../../Sources/Rendering/Misc/FullScreenRenderWindow';
-
-import vtkActor                     from '../../../../../Sources/Rendering/Core/Actor';
-import vtkPDBReader                 from '../../../../../Sources/IO/Misc/PDBReader';
-import vtkSphereMapper              from '../../../../../Sources/Rendering/Core/SphereMapper';
-import vtkStickMapper               from '../../../../../Sources/Rendering/Core/StickMapper';
-import vtkMoleculeToRepresentation  from '../../../../../Sources/Filters/General/MoleculeToRepresentation';
+import vtkFullScreenRenderWindow    from 'vtk.js/Sources/Rendering/Misc/FullScreenRenderWindow';
+import vtkActor                     from 'vtk.js/Sources/Rendering/Core/Actor';
+import vtkPDBReader                 from 'vtk.js/Sources/IO/Misc/PDBReader';
+import vtkSphereMapper              from 'vtk.js/Sources/Rendering/Core/SphereMapper';
+import vtkStickMapper               from 'vtk.js/Sources/Rendering/Core/StickMapper';
+import vtkMoleculeToRepresentation  from 'vtk.js/Sources/Filters/General/MoleculeToRepresentation';
 
 // ----------------------------------------------------------------------------
 // Standard rendering code setup

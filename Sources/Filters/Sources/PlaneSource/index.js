@@ -1,7 +1,7 @@
-import * as macro     from '../../../macro';
-import vtkPolyData    from '../../../Common/DataModel/PolyData';
-import vtkDataArray   from '../../../Common/Core/DataArray';
-import vtkMath        from '../../../Common/Core/Math';
+import macro          from 'vtk.js/Sources/macro';
+import vtkDataArray   from 'vtk.js/Sources/Common/Core/DataArray';
+import vtkMath        from 'vtk.js/Sources/Common/Core/Math';
+import vtkPolyData    from 'vtk.js/Sources/Common/DataModel/PolyData';
 
 const { vtkWarningMacro } = macro;
 

@@ -1,10 +1,10 @@
 import { mat3, mat4 } from 'gl-matrix';
 
-import * as macro from '../../../macro';
-import vtkViewNode from '../../SceneGraph/ViewNode';
+import macro       from 'vtk.js/Sources/macro';
+import vtkViewNode from 'vtk.js/Sources/Rendering/SceneGraph/ViewNode';
 
 // ----------------------------------------------------------------------------
-// vtkOpenGLActor methods
+// vtkOpenGLImageSlice methods
 // ----------------------------------------------------------------------------
 
 function vtkOpenGLImageSlice(publicAPI, model) {
@@ -108,7 +108,7 @@ export function extend(publicAPI, model, initialValues = {}) {
 
 // ----------------------------------------------------------------------------
 
-export const newInstance = macro.newInstance(extend);
+export const newInstance = macro.newInstance(extend, 'vtkOpenGLImageSlice');
 
 // ----------------------------------------------------------------------------
 

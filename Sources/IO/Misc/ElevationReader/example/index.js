@@ -1,9 +1,8 @@
-import vtkFullScreenRenderWindow  from '../../../../../Sources/Rendering/Misc/FullScreenRenderWindow';
-
-import vtkActor                   from '../../../../../Sources/Rendering/Core/Actor';
-import vtkElevationReader         from '../../../../../Sources/IO/Misc/ElevationReader';
-import vtkMapper                  from '../../../../../Sources/Rendering/Core/Mapper';
-import vtkTexture                 from '../../../../../Sources/Rendering/Core/Texture';
+import vtkFullScreenRenderWindow  from 'vtk.js/Sources/Rendering/Misc/FullScreenRenderWindow';
+import vtkActor                   from 'vtk.js/Sources/Rendering/Core/Actor';
+import vtkElevationReader         from 'vtk.js/Sources/IO/Misc/ElevationReader';
+import vtkMapper                  from 'vtk.js/Sources/Rendering/Core/Mapper';
+import vtkTexture                 from 'vtk.js/Sources/Rendering/Core/Texture';
 
 // ----------------------------------------------------------------------------
 // Standard rendering code setup

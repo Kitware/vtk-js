@@ -1,14 +1,14 @@
-import vtkActor                         from '../../../../../Sources/Rendering/Core/Actor';
-import vtkCalculator                    from '../../../../../Sources/Filters/General/Calculator';
-import vtkFullScreenRenderWindow        from '../../../../../Sources/Rendering/Misc/FullScreenRenderWindow';
-import vtkPlaneSource                   from '../../../../../Sources/Filters/Sources/PlaneSource';
-import vtkStickMapper                   from '../../../../../Sources/Rendering/Core/StickMapper';
+import vtkActor                  from 'vtk.js/Sources/Rendering/Core/Actor';
+import vtkCalculator             from 'vtk.js/Sources/Filters/General/Calculator';
+import vtkFullScreenRenderWindow from 'vtk.js/Sources/Rendering/Misc/FullScreenRenderWindow';
+import vtkPlaneSource            from 'vtk.js/Sources/Filters/Sources/PlaneSource';
+import vtkStickMapper            from 'vtk.js/Sources/Rendering/Core/StickMapper';
 
-import { AttributeTypes }               from '../../../../../Sources/Common/DataModel/DataSetAttributes/Constants';
-import { FieldDataTypes }               from '../../../../../Sources/Common/DataModel/DataSet/Constants';
-import { Representation }               from '../../../../../Sources/Rendering/Core/Property/Constants';
+import { AttributeTypes }        from 'vtk.js/Sources/Common/DataModel/DataSetAttributes/Constants';
+import { FieldDataTypes }        from 'vtk.js/Sources/Common/DataModel/DataSet/Constants';
+import { Representation }        from 'vtk.js/Sources/Rendering/Core/Property/Constants';
 
-import controlPanel                     from './controlPanel.html';
+import controlPanel from './controlPanel.html';
 
 
 // ----------------------------------------------------------------------------

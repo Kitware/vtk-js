@@ -1,17 +1,8 @@
-import * as macro from '../../../macro';
-import vtk from '../../../vtk';
-
-import vtkPoints from '../../../Common/Core/Points';
+import vtk       from 'vtk.js/Sources/vtk';
+import macro     from 'vtk.js/Sources/macro';
+import vtkPoints from 'vtk.js/Sources/Common/Core/Points';
 
 const { vtkDebugMacro, vtkErrorMacro } = macro;
-
-// ----------------------------------------------------------------------------
-// Global methods
-// ----------------------------------------------------------------------------
-
-// ----------------------------------------------------------------------------
-// Static API
-// ----------------------------------------------------------------------------
 
 // ----------------------------------------------------------------------------
 // vtkWarpScalar methods

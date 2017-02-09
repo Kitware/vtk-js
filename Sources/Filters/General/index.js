@@ -1,9 +1,13 @@
-import Calculator                 from './Calculator';
-import MoleculeToRepresentation   from './MoleculeToRepresentation';
-import WarpScalar                 from './WarpScalar';
+import vtkCalculator               from './Calculator';
+import vtkImageStreamline          from './ImageStreamline';
+import vtkMoleculeToRepresentation from './MoleculeToRepresentation';
+import vtkOutlineFilter            from './OutlineFilter';
+import vtkWarpScalar               from './WarpScalar';
 
 export default {
-  Calculator,
-  MoleculeToRepresentation,
-  WarpScalar,
+  vtkCalculator,
+  vtkImageStreamline,
+  vtkMoleculeToRepresentation,
+  vtkOutlineFilter,
+  vtkWarpScalar,
 };

@@ -1,9 +1,9 @@
-import * as macro from '../../../macro';
-import vtkActor from '../../../../Sources/Rendering/Core/Actor';
-import vtkMapper from '../../../../Sources/Rendering/Core/Mapper';
-import vtkHttpDataSetReader from '../../../../Sources/IO/Core/HttpDataSetReader';
+import macro                from 'vtk.js/Sources/macro';
+import vtkActor             from 'vtk.js/Sources/Rendering/Core/Actor';
+import vtkMapper            from 'vtk.js/Sources/Rendering/Core/Mapper';
+import vtkHttpDataSetReader from 'vtk.js/Sources/IO/Core/HttpDataSetReader';
 
-import DataAccessHelper from '../DataAccessHelper';
+import DataAccessHelper     from 'vtk.js/Sources/IO/Core/DataAccessHelper';
 
 let itemCount = 1;
 
@@ -195,7 +195,7 @@ export function extend(publicAPI, model, initialValues = {}) {
 
 // ----------------------------------------------------------------------------
 
-export const newInstance = macro.newInstance(extend);
+export const newInstance = macro.newInstance(extend, 'vtkHttpSceneLoader');
 
 // ----------------------------------------------------------------------------
 

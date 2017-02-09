@@ -1,15 +1,15 @@
 import { mat3, mat4 }           from 'gl-matrix';
-import { ObjectType }           from '../BufferObject/Constants';
+import { ObjectType }           from 'vtk.js/Sources/Rendering/OpenGL/BufferObject/Constants';
 
-import * as macro               from '../../../macro';
+import * as macro               from 'vtk.js/Sources/macro';
 
-import DynamicTypedArray        from '../../../Common/Core/DynamicTypedArray';
+import DynamicTypedArray        from 'vtk.js/Sources/Common/Core/DynamicTypedArray';
 
-import vtkStickMapperVS         from '../glsl/vtkStickMapperVS.glsl';
-import vtkPolyDataFS            from '../glsl/vtkPolyDataFS.glsl';
+import vtkStickMapperVS         from 'vtk.js/Sources/Rendering/OpenGL/glsl/vtkStickMapperVS.glsl';
+import vtkPolyDataFS            from 'vtk.js/Sources/Rendering/OpenGL/glsl/vtkPolyDataFS.glsl';
 
-import vtkShaderProgram         from '../ShaderProgram';
-import vtkOpenGLPolyDataMapper  from '../PolyDataMapper';
+import vtkShaderProgram         from 'vtk.js/Sources/Rendering/OpenGL/ShaderProgram';
+import vtkOpenGLPolyDataMapper  from 'vtk.js/Sources/Rendering/OpenGL/PolyDataMapper';
 
 const { vtkErrorMacro } = macro;
 

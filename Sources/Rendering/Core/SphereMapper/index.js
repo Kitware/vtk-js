@@ -1,11 +1,14 @@
-import * as macro                                 from '../../../macro';
-import vtkMapper                                  from '../Mapper';
+import macro     from 'vtk.js/Sources/macro';
+import vtkMapper from 'vtk.js/Sources/Rendering/Core/Mapper';
+
+// ----------------------------------------------------------------------------
+// vtkSphereMapper methods
+// ----------------------------------------------------------------------------
 
 export function vtkSphereMapper(publicAPI, model) {
   // Set our className
   model.classHierarchy.push('vtkSphereMapper');
 }
-
 
 // ----------------------------------------------------------------------------
 // Object factory

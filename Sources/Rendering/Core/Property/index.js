@@ -1,5 +1,7 @@
-import * as macro from '../../../macro';
-import { Representation, Interpolation } from './Constants';
+import macro     from 'vtk.js/Sources/macro';
+import Constants from 'vtk.js/Sources/Rendering/Core/Property/Constants';
+
+const { Representation, Interpolation } = Constants;
 
 function notImplemented(method) {
   return () => console.log(`vtkProperty::${method} - NOT IMPLEMENTED`);

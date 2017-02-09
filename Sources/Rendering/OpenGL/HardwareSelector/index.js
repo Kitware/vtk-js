@@ -1,10 +1,16 @@
-import * as macro from '../../../macro';
-import { PassTypes } from './Constants';
-import vtkOpenGLFramebuffer from '../../../Rendering/OpenGL/Framebuffer';
-import vtkSelectionNode from '../../../Common/DataModel/SelectionNode';
-import { SelectionContent, SelectionField } from '../../../Common/DataModel/SelectionNode/Constants';
-import { FieldAssociations } from '../../../Common/DataModel/DataSet/Constants';
+import macro                  from 'vtk.js/Sources/macro';
+import { PassTypes }          from 'vtk.js/Sources/Rendering/OpenGL/HardwareSelector/Constants';
+import vtkOpenGLFramebuffer   from 'vtk.js/Sources/Rendering/OpenGL/Framebuffer';
+import vtkSelectionNode       from 'vtk.js/Sources/Common/DataModel/SelectionNode';
+import SelectionNodeConstants from 'vtk.js/Sources/Common/DataModel/SelectionNode/Constants';
+import DataSetConstants       from 'vtk.js/Sources/Common/DataModel/DataSet/Constants';
 
+const { SelectionContent, SelectionField } = SelectionNodeConstants;
+const { FieldAssociations } = DataSetConstants;
+const { vtkErrorMacro } = macro;
+
+// ----------------------------------------------------------------------------
+// vtkOpenGLHardwareSelector methods
 // ----------------------------------------------------------------------------
 
 export function vtkOpenGLHardwareSelector(publicAPI, model) {

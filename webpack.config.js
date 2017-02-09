@@ -37,4 +37,9 @@ module.exports = {
   eslint: {
     configFile: '.eslintrc.js',
   },
+  resolve: {
+    alias: {
+      'vtk.js': path.resolve('.'),
+    },
+  },
 };

@@ -1,7 +1,7 @@
-import * as macro from '../../../macro';
-import { Wrap, Filter } from './Constants';
-import { VtkDataTypes } from '../../../Common/Core/DataArray/Constants';
-import vtkViewNode from '../../SceneGraph/ViewNode';
+import macro            from 'vtk.js/Sources/macro';
+import { Wrap, Filter } from 'vtk.js/Sources/Rendering/OpenGL/Texture/Constants';
+import { VtkDataTypes } from 'vtk.js/Sources/Common/Core/DataArray/Constants';
+import vtkViewNode      from 'vtk.js/Sources/Rendering/SceneGraph/ViewNode';
 
 const { vtkDebugMacro, vtkErrorMacro, vtkWarningMacro } = macro;
 
@@ -643,7 +643,7 @@ export function extend(publicAPI, model, initialValues = {}) {
 
 // ----------------------------------------------------------------------------
 
-export const newInstance = macro.newInstance(extend);
+export const newInstance = macro.newInstance(extend, 'vtkOpenGLTexture');
 
 // ----------------------------------------------------------------------------
 

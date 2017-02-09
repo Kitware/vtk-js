@@ -1,8 +1,8 @@
-import * as macro from '../../../macro';
-import { ScalarMappingTarget, VectorMode } from './Constants';
-import { ColorMode } from '../../../Rendering/Core/Mapper/Constants';
-import { VtkDataTypes } from '../DataArray/Constants';
-import vtkDataArray from '../DataArray';
+import macro                                from 'vtk.js/Sources/macro';
+import vtkDataArray                         from 'vtk.js/Sources/Common/Core/DataArray';
+import { VtkDataTypes }                     from 'vtk.js/Sources/Common/Core/DataArray/Constants';
+import { ScalarMappingTarget, VectorMode }  from 'vtk.js/Sources/Common/Core/ScalarsToColors/Constants';
+import { ColorMode }                        from 'vtk.js/Sources/Rendering/Core/Mapper/Constants';
 
 const { vtkErrorMacro } = macro;
 

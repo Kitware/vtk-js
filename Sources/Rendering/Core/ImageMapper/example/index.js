@@ -1,8 +1,7 @@
-import vtkFullScreenRenderWindow from '../../../../../Sources/Rendering/Misc/FullScreenRenderWindow';
-
-import vtkImageGridSource         from '../../../../../Sources/Filters/Sources/ImageGridSource';
-import vtkImageMapper             from '../../../../../Sources/Rendering/Core/ImageMapper';
-import vtkImageSlice              from '../../../../../Sources/Rendering/Core/ImageSlice';
+import vtkFullScreenRenderWindow  from 'vtk.js/Sources/Rendering/Misc/FullScreenRenderWindow';
+import vtkImageGridSource         from 'vtk.js/Sources/Filters/Sources/ImageGridSource';
+import vtkImageMapper             from 'vtk.js/Sources/Rendering/Core/ImageMapper';
+import vtkImageSlice              from 'vtk.js/Sources/Rendering/Core/ImageSlice';
 
 // ----------------------------------------------------------------------------
 // Standard rendering code setup

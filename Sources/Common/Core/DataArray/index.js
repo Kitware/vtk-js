@@ -1,5 +1,5 @@
-import * as macro from '../../../macro';
-import { DefaultDataType } from './Constants';
+import macro               from 'vtk.js/Sources/macro';
+import { DefaultDataType } from 'vtk.js/Sources/Common/Core/DataArray/Constants';
 
 const TUPLE_HOLDER = [];
 

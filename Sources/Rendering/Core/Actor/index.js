@@ -1,8 +1,7 @@
 import { vec3, mat4 } from 'gl-matrix';
-
-import * as macro from '../../../macro';
-import vtkProp3D from '../Prop3D';
-import vtkProperty from '../Property';
+import macro          from 'vtk.js/Sources/macro';
+import vtkProp3D      from 'vtk.js/Sources/Rendering/Core/Prop3D';
+import vtkProperty    from 'vtk.js/Sources/Rendering/Core/Property';
 
 const { vtkDebugMacro } = macro;
 

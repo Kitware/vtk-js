@@ -1,10 +1,8 @@
-import vtkFullScreenRenderWindow  from '../../../../../Sources/Rendering/Misc/FullScreenRenderWindow';
-
-import vtkActor                   from '../../../../../Sources/Rendering/Core/Actor';
-import vtkLineSource              from '../../../../../Sources/Filters/Sources/LineSource';
-import vtkMapper                  from '../../../../../Sources/Rendering/Core/Mapper';
-
-import { Representation }     from '../../../../../Sources/Rendering/Core/Property/Constants';
+import vtkFullScreenRenderWindow  from 'vtk.js/Sources/Rendering/Misc/FullScreenRenderWindow';
+import vtkActor                   from 'vtk.js/Sources/Rendering/Core/Actor';
+import vtkLineSource              from 'vtk.js/Sources/Filters/Sources/LineSource';
+import vtkMapper                  from 'vtk.js/Sources/Rendering/Core/Mapper';
+import { Representation }         from 'vtk.js/Sources/Rendering/Core/Property/Constants';
 
 import controlPanel from './controlPanel.html';
 

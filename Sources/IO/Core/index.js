@@ -1,6 +1,6 @@
-import DataAccessHelper from './DataAccessHelper';
+import DataAccessHelper     from './DataAccessHelper';
 import vtkHttpDataSetReader from './HttpDataSetReader';
-import vtkHttpSceneLoader from './HttpSceneLoader';
+import vtkHttpSceneLoader   from './HttpSceneLoader';
 
 export default {
   DataAccessHelper,

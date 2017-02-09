@@ -1,19 +1,11 @@
-import * as macro from '../../../macro';
-import vtkDataArray from '../../../Common/Core/DataArray';
-import vtkPoints from '../../../Common/Core/Points';
-import { FieldDataTypes } from '../../../Common/DataModel/DataSet/Constants';
-import { AttributeTypes } from '../../../Common/DataModel/DataSetAttributes/Constants';
-import vtk from '../../../vtk';
+import vtk                from 'vtk.js/Sources/vtk';
+import macro              from 'vtk.js/Sources/macro';
+import vtkDataArray       from 'vtk.js/Sources/Common/Core/DataArray';
+import vtkPoints          from 'vtk.js/Sources/Common/Core/Points';
+import { FieldDataTypes } from 'vtk.js/Sources/Common/DataModel/DataSet/Constants';
+import { AttributeTypes } from 'vtk.js/Sources/Common/DataModel/DataSetAttributes/Constants';
 
 const { vtkWarningMacro } = macro;
-
-// ----------------------------------------------------------------------------
-// Global methods
-// ----------------------------------------------------------------------------
-
-// ----------------------------------------------------------------------------
-// Static API
-// ----------------------------------------------------------------------------
 
 // ----------------------------------------------------------------------------
 // vtkCalculator methods
@@ -216,7 +208,7 @@ export function extend(publicAPI, model, initialValues = {}) {
 
 // ----------------------------------------------------------------------------
 
-export const newInstance = macro.newInstance(extend, 'vtkWarpScalar');
+export const newInstance = macro.newInstance(extend, 'vtkCalculator');
 
 // ----------------------------------------------------------------------------
 
