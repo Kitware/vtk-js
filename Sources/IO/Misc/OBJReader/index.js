@@ -1,7 +1,8 @@
 import macro            from 'vtk.js/Sources/macro';
-import vtkPolyData      from 'vtk.js/Sources/Common/DataModel/PolyData';
-import vtkPoints        from 'vtk.js/Sources/Common/Core/Points';
 import DataAccessHelper from 'vtk.js/Sources/IO/Core/DataAccessHelper';
+import vtkDataArray     from 'vtk.js/Sources/Common/Core/DataArray';
+import vtkPoints        from 'vtk.js/Sources/Common/Core/Points';
+import vtkPolyData      from 'vtk.js/Sources/Common/DataModel/PolyData';
 
 // ----------------------------------------------------------------------------
 
@@ -9,10 +10,11 @@ const data = {};
 
 // ----------------------------------------------------------------------------
 
-function begin() {
-  data.g = [];
-  data.o = [];
+function begin(splitMode) {
+  data.splitOn = splitMode;
+  data.pieces = [];
   data.v = [];
+  data.vt = [];
   data.f = [];
   data.size = 0;
 }
@@ -20,7 +22,7 @@ function begin() {
 // ----------------------------------------------------------------------------
 
 function vertexIndex(str) {
-  return Number(str.split('//')[0]) - 1;
+  return Number(str.split('/')[0]) - 1;
 }
 
 // ----------------------------------------------------------------------------
@@ -30,32 +32,29 @@ function parseLine(line) {
     return;
   }
   const tokens = line.split(' ');
-  if (tokens[0] === 'o') {
-    data.o.push(tokens[1]);
+  if (tokens[0] === data.splitOn) {
+    data.pieces.push(tokens[1]);
     data.f.push([]);
     data.size++;
-  } else if (tokens[0] === 'g') {
-    data.g.push(tokens[1]);
-    if (data.g.length > 1) {
-      data.f.push([]);
-      data.size++;
-    }
   } else if (tokens[0] === 'v') {
     data.v.push(Number(tokens[1]));
     data.v.push(Number(tokens[2]));
     data.v.push(Number(tokens[3]));
     if (data.size === 0) {
       data.size++;
-      data.o.push(`Geometry ${data.size}`);
       data.f.push([]);
     }
+  } else if (tokens[0] === 'vt') {
+    data.vt.push(Number(tokens[1]));
+    data.vt.push(Number(tokens[2]));
   } else if (tokens[0] === 'f') {
     // Handle triangles for now
     const cells = data.f[data.size - 1];
-    cells.push(3);
-    cells.push(vertexIndex(tokens[1]));
-    cells.push(vertexIndex(tokens[2]));
-    cells.push(vertexIndex(tokens[3]));
+    const size = tokens.length - 1;
+    cells.push(size);
+    for (let i = 0; i < size; i++) {
+      cells.push(vertexIndex(tokens[i + 1]));
+    }
   }
 }
 
@@ -64,15 +63,27 @@ function parseLine(line) {
 function end(model) {
   const points = vtkPoints.newInstance();
   points.setData(Float32Array.from(data.v), 3);
+  let tcoords = null;
+  if (data.vt.length) {
+    tcoords = vtkDataArray.newInstance({ numberOfComponents: 2, values: Float32Array.from(data.vt), name: 'TextureCoordinates' });
+  }
 
-  if (model.splitGroup) {
+  while (data.pieces.length < data.f.length) {
+    data.pieces.push(`Geometry #${data.pieces.length}`);
+  }
+
+  if (model.splitMode) {
     model.numberOfOutputs = data.size;
     for (let idx = 0; idx < data.size; idx++) {
       const polydata = vtkPolyData.newInstance();
       polydata.setPoints(points);
       polydata.getPolys().setData(Uint32Array.from(data.f[idx]));
-      polydata.set({ name: data.g[idx] || data.o[idx] });
+      polydata.set({ name: data.pieces[idx] }, true);
       model.output[idx] = polydata;
+
+      if (tcoords) {
+        polydata.getPointData().setTCoords(tcoords);
+      }
     }
   } else {
     model.numberOfOutputs = 1;
@@ -80,6 +91,10 @@ function end(model) {
     polydata.setPoints(points);
     polydata.getPolys().setData(Uint32Array.from([].concat(...data.f)));
     model.output[0] = polydata;
+
+    if (tcoords) {
+      polydata.getPointData().setTCoords(tcoords);
+    }
   }
 }
 
@@ -129,15 +144,21 @@ export function vtkOBJReader(publicAPI, model) {
   };
 
   publicAPI.parse = (content) => {
-    publicAPI.modified();
+    if (!content) {
+      return;
+    }
+    if (content !== model.parseData) {
+      publicAPI.modified();
+    }
+    model.parseData = content;
     model.numberOfOutputs = 0;
-    begin();
+    begin(model.splitMode);
     content.split('\n').forEach(parseLine);
     end(model);
   };
 
   publicAPI.requestData = (inData, outData) => {
-    // Nothing to do
+    publicAPI.parse(model.parseData);
   };
 
   // return Busy state
@@ -153,7 +174,7 @@ export function vtkOBJReader(publicAPI, model) {
 const DEFAULT_VALUES = {
   numberOfOutputs: 1,
   requestCount: 0,
-  splitGroup: false,
+  splitMode: null,
   // baseURL: null,
   // dataAccessHelper: null,
   // url: null,
@@ -173,7 +194,7 @@ export function extend(publicAPI, model, initialValues = {}) {
   ]);
   macro.setGet(publicAPI, model, [
     'dataAccessHelper',
-    'splitGroup',
+    'splitMode',
   ]);
   macro.algo(publicAPI, model, 0, 1);
   macro.event(publicAPI, model, 'busy');
