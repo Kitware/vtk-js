@@ -1,6 +1,5 @@
-import test from 'tape-catch';
-
-import * as macro from '../macro';
+import test  from 'tape-catch';
+import macro from 'vtk.js/Sources/macro';
 
 const MY_ENUM = {
   ZERO: 0,

@@ -1,5 +1,6 @@
 /* eslint-disable global-require */
 /* eslint-disable react/require-extension */
+var path = require('path');
 var loaders = require('./Utilities/config/webpack.loaders.js');
 
 if (!process.env.NODE_ENV) process.env.NODE_ENV = 'test';
@@ -32,6 +33,11 @@ module.exports = function init(config) {
       },
       module: {
         loaders: [].concat(loaders),
+      },
+      resolve: {
+        alias: {
+          'vtk.js': path.resolve('.'),
+        },
       },
     },
 

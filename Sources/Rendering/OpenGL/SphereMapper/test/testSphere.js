@@ -1,20 +1,18 @@
-import test from 'tape-catch';
+import test      from 'tape-catch';
+import testUtils from 'vtk.js/Sources/Testing/testUtils';
 
-import vtkActor                         from '../../../../../Sources/Rendering/Core/Actor';
-import vtkCalculator                    from '../../../../../Sources/Filters/General/Calculator';
-import vtkOpenGLRenderWindow            from '../../../../Rendering/OpenGL/RenderWindow';
-import vtkPlaneSource                   from '../../../../../Sources/Filters/Sources/PlaneSource';
-import vtkSphereMapper                  from '../../../../../Sources/Rendering/Core/SphereMapper';
-import vtkRenderer                      from '../../../../Rendering/Core/Renderer';
-import vtkRenderWindow                  from '../../../../Rendering/Core/RenderWindow';
+import vtkActor              from 'vtk.js/Sources/Rendering/Core/Actor';
+import vtkCalculator         from 'vtk.js/Sources/Filters/General/Calculator';
+import vtkOpenGLRenderWindow from 'vtk.js/Sources/Rendering/OpenGL/RenderWindow';
+import vtkPlaneSource        from 'vtk.js/Sources/Filters/Sources/PlaneSource';
+import vtkSphereMapper       from 'vtk.js/Sources/Rendering/Core/SphereMapper';
+import vtkRenderer           from 'vtk.js/Sources/Rendering/Core/Renderer';
+import vtkRenderWindow       from 'vtk.js/Sources/Rendering/Core/RenderWindow';
 
-import { AttributeTypes }               from '../../../../../Sources/Common/DataModel/DataSetAttributes/Constants';
-import { FieldDataTypes }               from '../../../../../Sources/Common/DataModel/DataSet/Constants';
-import { Representation }               from '../../../../../Sources/Rendering/Core/Property/Constants';
+import { AttributeTypes }    from 'vtk.js/Sources/Common/DataModel/DataSetAttributes/Constants';
+import { FieldDataTypes }    from 'vtk.js/Sources/Common/DataModel/DataSet/Constants';
 
-import baseline                         from './testSphere.png';
-import testUtils                        from '../../../../Testing/testUtils';
-
+import baseline from './testSphere.png';
 
 test.onlyIfWebGL('Test SphereMapper', (t) => {
   t.ok('rendering', 'vtkOpenGLSphereMapper testSphere');
@@ -40,7 +38,7 @@ test.onlyIfWebGL('Test SphereMapper', (t) => {
   const actor = vtkActor.newInstance();
 
   simpleFilter.setFormula({
-    getArrays: (inputDataSets) => ({
+    getArrays: inputDataSets => ({
       input: [
         { location: FieldDataTypes.COORDINATE }], // Require point coordinates as input
       output: [ // Generate two output arrays:
@@ -49,15 +47,16 @@ test.onlyIfWebGL('Test SphereMapper', (t) => {
           name: 'pressure',                // ... with the given name ...
           dataType: 'Float32Array',         // ... of this type ...
           numberOfComponents: 1,            // ... with this many components ...
-          },
+        },
         {
           location: FieldDataTypes.POINT, // This array will be field data ...
           name: 'temperature',                   // ... with the given name ...
           dataType: 'Float32Array',         // ... of this type ...
           attribute: AttributeTypes.SCALARS, // ... and will be marked as the default scalars.
           numberOfComponents: 1,            // ... with this many components ...
-          },
-      ]}),
+        },
+      ],
+    }),
     evaluate: (arraysIn, arraysOut) => {
       // Convert in the input arrays of vtkDataArrays into variables
       // referencing the underlying JavaScript typed-data arrays:
@@ -72,7 +71,7 @@ test.onlyIfWebGL('Test SphereMapper', (t) => {
       }
       // Mark the output vtkDataArray as modified
       arraysOut.forEach(x => x.modified());
-    }
+    },
   });
 
   // The generated 'temperature' array will become the default scalars, so the plane mapper will color by 'temperature':

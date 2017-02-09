@@ -1,6 +1,7 @@
 import test from 'tape-catch';
-import vtkDataSetAttributes from '..';
-import vtkDataArray from '../../../Core/DataArray';
+
+import vtkDataSetAttributes from 'vtk.js/Sources/Common/DataModel/DataSetAttributes';
+import vtkDataArray         from 'vtk.js/Sources/Common/Core/DataArray';
 
 const attrTypes = ['Scalars', 'Vectors', 'Normals',
   'TCoords', 'Tensors', 'GlobalIds', 'PedigreeIds'];
@@ -19,15 +20,15 @@ test('Test vtkDataSetAttributes instance', (t) => {
     const testArray = vtkDataArray.newInstance({ name: `Foo${attType}`, numberOfComponents: 1, values: new Float32Array(ntuples) });
     t.equal(instance.addArray(testArray), numArrs, `Adding ${attType.toLowerCase()} empty DSA should return index of ${numArrs}`);
     t.equal(instance[`setActive${attType}`](`Foo${attType}`), numArrs, `Setting ${attType.toLowerCase()} should return ${numArrs} (the index of the array).`);
-    t.equal(instance[`setActive${attType}`](`xxx`), -1, `Setting ${attType.toLowerCase()} with an invalid name should return -1.`);
+    t.equal(instance[`setActive${attType}`]('xxx'), -1, `Setting ${attType.toLowerCase()} with an invalid name should return -1.`);
     t.equal(instance[`get${attType}`](), null, `Setting ${attType.toLowerCase()} with an invalid name should reset the attribute.`);
     ++numArrs;
   });
 
-  //const foo = vtkDataArray.newInstance({ name: 'Foo', numberOfComponents: 1, values: new Float32Array(ntuples) });
-  //t.equal(instance.addArray(foo), 0, `Adding ${attType.toLowerCase()} empty DSA should return index of 0`);
-  //t.equal(instance.setScalars('Foo'), 0, 'Setting scalars should return index of array');
-  //instance.addArray(vtkDataArray.newInstance({ name: 'Bar', numberOfComponents: 3, values: new Float32Array(3 * ntuples) }));
+  // const foo = vtkDataArray.newInstance({ name: 'Foo', numberOfComponents: 1, values: new Float32Array(ntuples) });
+  // t.equal(instance.addArray(foo), 0, `Adding ${attType.toLowerCase()} empty DSA should return index of 0`);
+  // t.equal(instance.setScalars('Foo'), 0, 'Setting scalars should return index of array');
+  // instance.addArray(vtkDataArray.newInstance({ name: 'Bar', numberOfComponents: 3, values: new Float32Array(3 * ntuples) }));
 
   t.end();
 });

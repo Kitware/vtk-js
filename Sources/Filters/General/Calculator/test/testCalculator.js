@@ -1,8 +1,9 @@
 import test from 'tape-catch';
-import vtkCalculator from '..';
-import vtkPlaneSource from '../../../Sources/PlaneSource';
-import { AttributeTypes } from '../../../../Common/DataModel/DataSetAttributes/Constants';
-import { FieldDataTypes } from '../../../../Common/DataModel/DataSet/Constants';
+
+import vtkCalculator      from 'vtk.js/Sources/Filters/General/Calculator';
+import vtkPlaneSource     from 'vtk.js/Sources/Filters/Sources/PlaneSource';
+import { AttributeTypes } from 'vtk.js/Sources/Common/DataModel/DataSetAttributes/Constants';
+import { FieldDataTypes } from 'vtk.js/Sources/Common/DataModel/DataSet/Constants';
 
 test('Test vtkCalculator instance', (t) => {
   t.ok(vtkCalculator, 'Make sure the class definition exists.');

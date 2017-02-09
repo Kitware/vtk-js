@@ -1,22 +1,16 @@
-import test from 'tape-catch';
+import test      from 'tape-catch';
+import testUtils from 'vtk.js/Sources/Testing/testUtils';
 
-import vtkActor                         from '../../../../../Sources/Rendering/Core/Actor';
-import vtkMoleculeToRepresentation      from '../../../../../Sources/Filters/General/MoleculeToRepresentation';
-import vtkOpenGLRenderWindow            from '../../../../Rendering/OpenGL/RenderWindow';
-import vtkPDBReader                     from '../../../../../Sources/IO/Misc/PDBReader';
-import vtkSphereMapper                  from '../../../../../Sources/Rendering/Core/SphereMapper';
-import vtkStickMapper                   from '../../../../../Sources/Rendering/Core/StickMapper';
-import vtkRenderer                      from '../../../../Rendering/Core/Renderer';
-import vtkRenderWindow                  from '../../../../Rendering/Core/RenderWindow';
+import vtkActor                    from 'vtk.js/Sources/Rendering/Core/Actor';
+import vtkMoleculeToRepresentation from 'vtk.js/Sources/Filters/General/MoleculeToRepresentation';
+import vtkOpenGLRenderWindow       from 'vtk.js/Sources/Rendering/OpenGL/RenderWindow';
+import vtkPDBReader                from 'vtk.js/Sources/IO/Misc/PDBReader';
+import vtkSphereMapper             from 'vtk.js/Sources/Rendering/Core/SphereMapper';
+import vtkStickMapper              from 'vtk.js/Sources/Rendering/Core/StickMapper';
+import vtkRenderer                 from 'vtk.js/Sources/Rendering/Core/Renderer';
+import vtkRenderWindow             from 'vtk.js/Sources/Rendering/Core/RenderWindow';
 
-import { AttributeTypes }               from '../../../../../Sources/Common/DataModel/DataSetAttributes/Constants';
-import { FieldDataTypes }               from '../../../../../Sources/Common/DataModel/DataSet/Constants';
-import { Representation }               from '../../../../../Sources/Rendering/Core/Property/Constants';
-
-// import baseline                         from './testMolecule.png';
-import baseline                         from './testMolecule_with_bonds.png';
-import testUtils                        from '../../../../Testing/testUtils';
-
+import baseline from './testMolecule_with_bonds.png';
 
 test.onlyIfWebGL('Test MoleculeMapper', (t) => {
   t.ok('IO: PDBReader', 'Filter: MoleculeToRepresentation');

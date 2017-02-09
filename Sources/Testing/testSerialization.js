@@ -1,12 +1,12 @@
 import test from 'tape-catch';
-import vtk from '../vtk';
+import vtk  from 'vtk.js/Sources/vtk';
 
-import vtkDataArray       from '../Common/Core/DataArray';
-import vtkPoints          from '../Common/Core/Points';
-import vtkLookupTable     from '../Common/Core/LookupTable';
-import vtkScalarsToColors from '../Common/Core/ScalarsToColors';
+import vtkDataArray       from 'vtk.js/Sources/Common/Core/DataArray';
+import vtkPoints          from 'vtk.js/Sources/Common/Core/Points';
+import vtkLookupTable     from 'vtk.js/Sources/Common/Core/LookupTable';
+import vtkScalarsToColors from 'vtk.js/Sources/Common/Core/ScalarsToColors';
 
-import vtkPolyData from '../Common/DataModel/PolyData';
+import vtkPolyData        from 'vtk.js/Sources/Common/DataModel/PolyData';
 
 const classToTest = [
   'vtkDataArray',

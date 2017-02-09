@@ -1,14 +1,14 @@
-import test from 'tape-catch';
+import test      from 'tape-catch';
+import testUtils from 'vtk.js/Sources/Testing/testUtils';
 
-import vtkOpenGLRenderWindow from '../../../../Rendering/OpenGL/RenderWindow';
-import vtkRenderWindow from '../../../../Rendering/Core/RenderWindow';
-import vtkRenderer from '../../../../Rendering/Core/Renderer';
-import vtkConeSource from '../../../../Filters/Sources/ConeSource';
-import vtkActor from '../../../../Rendering/Core/Actor';
-import vtkMapper from '../../../../Rendering/Core/Mapper';
+import vtkOpenGLRenderWindow  from 'vtk.js/Sources/Rendering/OpenGL/RenderWindow';
+import vtkRenderWindow        from 'vtk.js/Sources/Rendering/Core/RenderWindow';
+import vtkRenderer            from 'vtk.js/Sources/Rendering/Core/Renderer';
+import vtkConeSource          from 'vtk.js/Sources/Filters/Sources/ConeSource';
+import vtkActor               from 'vtk.js/Sources/Rendering/Core/Actor';
+import vtkMapper              from 'vtk.js/Sources/Rendering/Core/Mapper';
 
 import baseline from './testCone.png';
-import testUtils from '../../../../Testing/testUtils';
 
 test.onlyIfWebGL('Test vtkConeSource Rendering', (t) => {
   t.ok('rendering', 'vtkConeSource Rendering');
