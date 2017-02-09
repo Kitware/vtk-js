@@ -1,4 +1,5 @@
 const vtkLoaders = require('../Utilities/config/webpack.loaders.js');
+const path = require('path');
 
 module.exports = {
   baseUrl: '/vtk-js',
@@ -19,6 +20,11 @@ module.exports = {
   webpack: {
     module: {
       loaders: vtkLoaders,
+    },
+    resolve: {
+      alias: {
+        'vtk.js': path.resolve('.'),
+      },
     },
   },
   copy: [

@@ -43,12 +43,13 @@ For instance, vtk.js currently have the following set of **kits** in bold and *m
 Here is an example of how to get started writing a new class for vtk.js
 
 ```js MyClass/index.js
-import * as macro     from '../../../macro';
-import vtk            from '../../../vtk';
-import vtkParentClass from '../../../Kit/Module/ParentClass';
-import vtkOtherClass  from '../../../Kit/Module/OtherClass';
+import macro          from 'vtk.js/macro';
+import vtk            from 'vtk.js/vtk';
+import vtkParentClass from 'vtk.js/Kit/Module/ParentClass';
+import vtkOtherClass  from 'vtk.js/Kit/Module/OtherClass';
+import Constants      from 'vtk.js/Kit/Module/MyClass/Constants';
 
-import { Representation } from './Constants';  // { POINT: 0, WIREFRAME: 1, ... }
+const { Representation } = Constants;  // { POINT: 0, WIREFRAME: 1, ... }
 
 // ----------------------------------------------------------------------------
 // Global methods

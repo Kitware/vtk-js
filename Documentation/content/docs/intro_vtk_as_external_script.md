@@ -11,30 +11,22 @@ Below you can find an [html](https://raw.githubusercontent.com/Kitware/vtk-js/ma
 <body>
 <script type="text/javascript" src="https://unpkg.com/vtk.js"></script>
 <script type="text/javascript">
-  var vtkFullScreenRenderWindow = vtk.Rendering.Misc.vtkFullScreenRenderWindow;
-  var vtkConeSource             = vtk.Filters.Sources.vtkConeSource;
-  var vtkMapper                 = vtk.Rendering.Core.vtkMapper;
-  var vtkActor                  = vtk.Rendering.Core.vtkActor;
-  
-  // --------------------------------------------------------------------------
-  // Standard rendering code setup
-  // --------------------------------------------------------------------------
-  var fullScreenRenderer = vtkFullScreenRenderWindow.newInstance();
-  var renderer = fullScreenRenderer.getRenderer();
-  var renderWindow = fullScreenRenderer.getRenderWindow();
-
   // --------------------------------------------------------------------------
   // Example code
   // --------------------------------------------------------------------------
-  var cone = vtkConeSource.newInstance();
-  var actor = vtkActor.newInstance();
-  var mapper = vtkMapper.newInstance();
+  var fullScreenRenderer = vtk.Rendering.Misc.vtkFullScreenRenderWindow.newInstance();
+  var actor              = vtk.Rendering.Core.vtkActor.newInstance();
+  var mapper             = vtk.Rendering.Core.vtkMapper.newInstance();
+  var cone               = vtk.Filters.Sources.vtkConeSource.newInstance();
 
   actor.setMapper(mapper);
   mapper.setInputConnection(cone.getOutputPort());
-  renderer.addActor(actor);
 
+  var renderer = fullScreenRenderer.getRenderer();
+  renderer.addActor(actor);
   renderer.resetCamera();
+
+  var renderWindow = fullScreenRenderer.getRenderWindow();
   renderWindow.render();
 </script>
 </body>
