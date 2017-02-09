@@ -7,6 +7,8 @@ import vtkMath from '../../../Common/Core/Math';
 import vtkViewport from '../Viewport';
 import { INIT_BOUNDS } from '../../../Common/DataModel/BoundingBox';
 
+const { vtkDebugMacro } = macro;
+
 function notImplemented(method) {
   return () => console.log(`vtkRenderer::${method} - NOT IMPLEMENTED`);
 }

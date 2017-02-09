@@ -4,6 +4,8 @@ import * as macro from '../../../macro';
 import vtkProp3D from '../Prop3D';
 import vtkProperty from '../Property';
 
+const { vtkDebugMacro } = macro;
+
 // ----------------------------------------------------------------------------
 // vtkActor methods
 // ----------------------------------------------------------------------------

@@ -3,6 +3,8 @@ import vtk from '../../../vtk';
 
 import vtkPoints from '../../../Common/Core/Points';
 
+const { vtkDebugMacro } = macro;
+
 // ----------------------------------------------------------------------------
 // Global methods
 // ----------------------------------------------------------------------------
@@ -52,13 +54,13 @@ function vtkWarpScalar(publicAPI, model) {
         array.getData()[(id * 3) + 1],
         array.getData()[(id * 3) + 2],
       ];
-      // vtkDebugMacro('Using data normals');
+      vtkDebugMacro('Using data normals');
     } else if (publicAPI.getXyPlane()) {
       pointNormal = (id, array) => normal;
-      // vtkDebugMacro('Using x-y plane normal');
+      vtkDebugMacro('Using x-y plane normal');
     } else {
       pointNormal = (id, array) => model.normal;
-      // vtkDebugMacro('Using Normal instance variable');
+      vtkDebugMacro('Using Normal instance variable');
     }
 
     const newPtsData = new Float32Array(numPts * 3);

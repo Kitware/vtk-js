@@ -3,6 +3,7 @@ import * as macro     from '../../../macro';
 import vtkPolyData    from '../../../Common/DataModel/PolyData';
 import vtkDataArray   from '../../../Common/Core/DataArray';
 
+const { vtkDebugMacro } = macro;
 
 // ----------------------------------------------------------------------------
 // vtkMoleculeToRepresentation methods
@@ -60,7 +61,7 @@ export function vtkMoleculeToRepresentation(publicAPI, model) {
 
     const pos = new Float32Array(numPts * 3);
 
-    // vtkDebugMacro(['Checking for bonds with tolerance ', model.tolerance]);
+    vtkDebugMacro('Checking for bonds with tolerance ', model.tolerance);
 
     // go trhough each points
     let ptsIdx = 0;

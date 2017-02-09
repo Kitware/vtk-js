@@ -2,6 +2,8 @@ import * as macro from '../../../macro';
 import vtkViewNode from '../../SceneGraph/ViewNode';
 import vtkMath from '../../../Common/Core/Math';
 
+const { vtkDebugMacro } = macro;
+
 // ----------------------------------------------------------------------------
 // vtkOpenGLRenderer methods
 // ----------------------------------------------------------------------------

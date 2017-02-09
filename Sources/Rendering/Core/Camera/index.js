@@ -3,6 +3,8 @@ import { vec3, vec4, mat4 } from 'gl-matrix';
 import * as macro from '../../../macro';
 import vtkMath from './../../../Common/Core/Math';
 
+const { vtkDebugMacro } = macro;
+
 /* eslint-disable new-cap */
 
 /*

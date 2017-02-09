@@ -1,9 +1,6 @@
 
 var replaceConfig = JSON.stringify({
   multiple: [
-     { search: 'vtkDebugMacro', replace: 'console.debug', flags: 'g' },
-     { search: 'vtkErrorMacro', replace: 'console.error', flags: 'g' },
-     { search: 'vtkWarningMacro', replace: 'console.warn', flags: 'g' },
      { search: 'test.onlyIfWebGL', replace: process.env.TRAVIS ? 'test.skip' : 'test', flags: 'g' },
   ],
 });
