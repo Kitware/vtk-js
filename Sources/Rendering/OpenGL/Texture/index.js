@@ -3,7 +3,7 @@ import { Wrap, Filter } from './Constants';
 import { VtkDataTypes } from '../../../Common/Core/DataArray/Constants';
 import vtkViewNode from '../../SceneGraph/ViewNode';
 
-const { vtkDebugMacro } = macro;
+const { vtkDebugMacro, vtkErrorMacro, vtkWarningMacro } = macro;
 
 // ----------------------------------------------------------------------------
 // vtkOpenGLTexture methods

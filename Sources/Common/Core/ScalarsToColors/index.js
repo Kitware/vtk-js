@@ -4,6 +4,8 @@ import { ColorMode } from '../../../Rendering/Core/Mapper/Constants';
 import { VtkDataTypes } from '../DataArray/Constants';
 import vtkDataArray from '../DataArray';
 
+const { vtkErrorMacro } = macro;
+
 // ----------------------------------------------------------------------------
 // Global methods
 // ----------------------------------------------------------------------------

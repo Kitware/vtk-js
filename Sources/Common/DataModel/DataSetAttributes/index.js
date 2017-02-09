@@ -9,6 +9,8 @@ import vtkDataArray from '../../../Common/Core/DataArray';
 
 import vtk from '../../../vtk';
 
+const { vtkWarningMacro } = macro;
+
 // ----------------------------------------------------------------------------
 // vtkDataSetAttributes methods
 // ----------------------------------------------------------------------------

@@ -2,6 +2,8 @@ import * as macro from '../../../macro';
 import vtkInteractorObserver from '../InteractorObserver';
 import { States } from './Constants';  // { ENUM_1: 0, ENUM_2: 1, ... }
 
+const { vtkWarningMacro } = macro;
+
 // ----------------------------------------------------------------------------
 // Global methods
 // ----------------------------------------------------------------------------

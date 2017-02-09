@@ -5,6 +5,8 @@ import { FieldDataTypes } from '../../../Common/DataModel/DataSet/Constants';
 import { AttributeTypes } from '../../../Common/DataModel/DataSetAttributes/Constants';
 import vtk from '../../../vtk';
 
+const { vtkWarningMacro } = macro;
+
 // ----------------------------------------------------------------------------
 // Global methods
 // ----------------------------------------------------------------------------

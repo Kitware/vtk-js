@@ -4,7 +4,7 @@ import vtkScalarsToColors from '../../../Common/Core/ScalarsToColors';
 import { ScalarMappingTarget } from '../../../Common/Core/ScalarsToColors/Constants';
 import vtkMath from '../../../Common/Core/Math';
 
-const { vtkDebugMacro } = macro;
+const { vtkDebugMacro, vtkErrorMacro, vtkWarningMacro } = macro;
 
 // ----------------------------------------------------------------------------
 // Global methods
