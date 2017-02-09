@@ -1,5 +1,9 @@
 import seedrandom from 'seedrandom';
 
+import * as macro from '../../../macro';
+
+const { vtkErrorMacro, vtkWarningMacro } = macro;
+
 // ----------------------------------------------------------------------------
 /* eslint-disable camelcase                                                  */
 /* eslint-disable no-cond-assign                                             */

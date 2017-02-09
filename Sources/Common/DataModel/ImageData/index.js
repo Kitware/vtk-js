@@ -3,6 +3,8 @@ import vtkDataSet from '../DataSet';
 import vtkStructuredData from '../StructuredData';
 import { StructuredType } from '../StructuredData/Constants';
 
+const { vtkErrorMacro } = macro;
+
 // ----------------------------------------------------------------------------
 // vtkImageData methods
 // ----------------------------------------------------------------------------

@@ -4,6 +4,8 @@ import vtkShaderCache from '../ShaderCache';
 import vtkViewNode from '../../SceneGraph/ViewNode';
 import vtkOpenGLTextureUnitManager from '../TextureUnitManager';
 
+const { vtkErrorMacro } = macro;
+
 // ----------------------------------------------------------------------------
 // vtkOpenGLRenderWindow methods
 // ----------------------------------------------------------------------------

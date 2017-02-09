@@ -11,6 +11,7 @@ import vtkPolyDataFS            from '../glsl/vtkPolyDataFS.glsl';
 import vtkShaderProgram         from '../ShaderProgram';
 import vtkOpenGLPolyDataMapper  from '../PolyDataMapper';
 
+const { vtkErrorMacro } = macro;
 
 // ----------------------------------------------------------------------------
 // vtkOpenGLStickMapper methods

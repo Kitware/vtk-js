@@ -3,7 +3,7 @@ import vtk from '../../../vtk';
 
 import vtkPoints from '../../../Common/Core/Points';
 
-const { vtkDebugMacro } = macro;
+const { vtkDebugMacro, vtkErrorMacro } = macro;
 
 // ----------------------------------------------------------------------------
 // Global methods

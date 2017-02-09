@@ -3,7 +3,7 @@ import * as macro     from '../../../macro';
 import vtkPolyData    from '../../../Common/DataModel/PolyData';
 import vtkDataArray   from '../../../Common/Core/DataArray';
 
-const { vtkDebugMacro } = macro;
+const { vtkDebugMacro, vtkErrorMacro } = macro;
 
 // ----------------------------------------------------------------------------
 // vtkMoleculeToRepresentation methods

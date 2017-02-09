@@ -12,6 +12,8 @@ import { Representation } from '../../Core/Property/Constants';
 import vtkPolyDataVS from '../glsl/vtkPolyDataVS.glsl';
 import vtkPolyDataFS from '../glsl/vtkPolyDataFS.glsl';
 
+const { vtkErrorMacro } = macro;
+
 // ----------------------------------------------------------------------------
 // vtkOpenGLImageMapper methods
 // ----------------------------------------------------------------------------

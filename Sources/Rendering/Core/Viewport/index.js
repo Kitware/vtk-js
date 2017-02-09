@@ -1,5 +1,7 @@
 import * as macro from '../../../macro';
 
+const { vtkErrorMacro } = macro;
+
 function notImplemented(method) {
   return () => console.log(`vtkViewport::${method} - NOT IMPLEMENTED`);
 }

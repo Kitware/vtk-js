@@ -3,6 +3,8 @@ import vtkPolyData    from '../../../Common/DataModel/PolyData';
 import vtkDataArray   from '../../../Common/Core/DataArray';
 import vtkMath        from '../../../Common/Core/Math';
 
+const { vtkWarningMacro } = macro;
+
 // ----------------------------------------------------------------------------
 // vtkPlaneSource methods
 // ----------------------------------------------------------------------------

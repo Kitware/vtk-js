@@ -12,6 +12,7 @@ import vtkOpenGLPolyDataMapper  from '../PolyDataMapper';
 import vtkSphereMapperVS        from '../glsl/vtkSphereMapperVS.glsl';
 import vtkPolyDataFS            from '../glsl/vtkPolyDataFS.glsl';
 
+const { vtkErrorMacro } = macro;
 
 // ----------------------------------------------------------------------------
 // vtkOpenGLSphereMapper methods
