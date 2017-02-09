@@ -3,6 +3,7 @@ import Filters      from './Filters';
 import Interaction  from './Interaction';
 import IO           from './IO';
 import Rendering    from './Rendering';
+import Representation from './Representation';
 
 import { getCurrentGlobalMTime } from './macro';
 
@@ -13,6 +14,8 @@ vtk.Filters = Filters;
 vtk.Interaction = Interaction;
 vtk.IO = IO;
 vtk.Rendering = Rendering;
+vtk.Representation = Representation;
+
 vtk.mtime = getCurrentGlobalMTime;
 
 /* eslint-disable */
