@@ -1,8 +1,8 @@
-import * as macro from '../../../macro';
-import { ColorSpace, Scale } from './Constants';
-import vtkScalarsToColors from '../../../Common/Core/ScalarsToColors';
-import { ScalarMappingTarget } from '../../../Common/Core/ScalarsToColors/Constants';
-import vtkMath from '../../../Common/Core/Math';
+import macro                    from 'vtk.js/Sources/macro';
+import vtkMath                  from 'vtk.js/Sources/Common/Core/Math';
+import vtkScalarsToColors       from 'vtk.js/Sources/Common/Core/ScalarsToColors';
+import { ColorSpace, Scale }    from 'vtk.js/Sources/Rendering/Core/ColorTransferFunction/Constants';
+import { ScalarMappingTarget }  from 'vtk.js/Sources/Common/Core/ScalarsToColors/Constants';
 
 const { vtkDebugMacro, vtkErrorMacro, vtkWarningMacro } = macro;
 

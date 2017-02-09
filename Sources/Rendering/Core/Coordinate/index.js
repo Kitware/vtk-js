@@ -1,5 +1,5 @@
-import * as macro from '../../../macro';
-import { Coordinate } from './Constants';
+import macro          from 'vtk.js/Sources/macro';
+import { Coordinate } from 'vtk.js/Sources/Rendering/Core/Coordinate/Constants';
 
 // ----------------------------------------------------------------------------
 // vtkActor methods

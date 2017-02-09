@@ -1,6 +1,6 @@
-import Core from './Core';
-import DataModel from './DataModel';
-import System from './System';
+import Core       from './Core';
+import DataModel  from './DataModel';
+import System     from './System';
 
 export default {
   Core,

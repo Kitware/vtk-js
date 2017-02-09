@@ -85,13 +85,18 @@ module.exports = {
     filename: 'MyWebApp.js',
   },
   module: {
-      loaders: [
-          { test: require.resolve("./src/index.js"), loader: "expose?MyWebApp" },
-      ].concat(loaders),
+    loaders: [
+        { test: require.resolve("./src/index.js"), loader: "expose?MyWebApp" },
+    ].concat(loaders),
+  },
+  postcss: [
+    require('autoprefixer')({ browsers: ['last 2 versions'] }),
+  ],
+  resolve: {
+    alias: {
+      'vtk.js': path.resolve('./node_modules/vtk.js'),
     },
-    postcss: [
-      require('autoprefixer')({ browsers: ['last 2 versions'] }),
-    ],
+  },
 };
 ```
 

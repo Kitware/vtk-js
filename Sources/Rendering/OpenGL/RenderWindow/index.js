@@ -1,8 +1,8 @@
-import * as macro from '../../../macro';
-import vtkOpenGLViewNodeFactory from '../ViewNodeFactory';
-import vtkShaderCache from '../ShaderCache';
-import vtkViewNode from '../../SceneGraph/ViewNode';
-import vtkOpenGLTextureUnitManager from '../TextureUnitManager';
+import macro                        from 'vtk.js/Sources/macro';
+import vtkOpenGLViewNodeFactory     from 'vtk.js/Sources/Rendering/OpenGL/ViewNodeFactory';
+import vtkShaderCache               from 'vtk.js/Sources/Rendering/OpenGL/ShaderCache';
+import vtkViewNode                  from 'vtk.js/Sources/Rendering/SceneGraph/ViewNode';
+import vtkOpenGLTextureUnitManager  from 'vtk.js/Sources/Rendering/OpenGL/TextureUnitManager';
 
 const { vtkErrorMacro } = macro;
 

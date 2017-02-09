@@ -1,5 +1,5 @@
-import vtkFullScreenRenderWindow from '../../../../../Sources/Rendering/Misc/FullScreenRenderWindow';
-import vtkHttpSceneLoader        from '../../../../../Sources/IO/Core/HttpSceneLoader';
+import vtkFullScreenRenderWindow from 'vtk.js/Sources/Rendering/Misc/FullScreenRenderWindow';
+import vtkHttpSceneLoader        from 'vtk.js/Sources/IO/Core/HttpSceneLoader';
 
 // ----------------------------------------------------------------------------
 // Standard rendering code setup

@@ -1,6 +1,6 @@
-import * as macro     from '../../../macro';
-import vtkPolyData    from '../../../Common/DataModel/PolyData';
-import vtkMath        from '../../../Common/Core/Math';
+import macro       from 'vtk.js/Sources/macro';
+import vtkPolyData from 'vtk.js/Sources/Common/DataModel/PolyData';
+import vtkMath     from 'vtk.js/Sources/Common/Core/Math';
 
 const { vtkWarningMacro } = macro;
 

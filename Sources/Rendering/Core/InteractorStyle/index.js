@@ -1,6 +1,6 @@
-import * as macro from '../../../macro';
-import vtkInteractorObserver from '../InteractorObserver';
-import { States } from './Constants';  // { ENUM_1: 0, ENUM_2: 1, ... }
+import macro                 from 'vtk.js/Sources/macro';
+import vtkInteractorObserver from 'vtk.js/Sources/Rendering/Core/InteractorObserver';
+import { States }            from 'vtk.js/Sources/Rendering/Core/InteractorStyle/Constants';  // { ENUM_1: 0, ENUM_2: 1, ... }
 
 const { vtkWarningMacro } = macro;
 
@@ -50,11 +50,7 @@ const events = [
 ];
 
 // ----------------------------------------------------------------------------
-// Static API
-// ----------------------------------------------------------------------------
-
-// ----------------------------------------------------------------------------
-// vtkMyClass methods
+// vtkInteractorStyle methods
 // ----------------------------------------------------------------------------
 
 function vtkInteractorStyle(publicAPI, model) {

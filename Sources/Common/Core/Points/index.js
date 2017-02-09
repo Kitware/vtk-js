@@ -1,6 +1,6 @@
-import * as macro from '../../../macro';
-import { VtkDataTypes } from '../DataArray/Constants';
-import vtkDataArray from '../DataArray';
+import macro            from 'vtk.js/Sources/macro';
+import vtkDataArray     from 'vtk.js/Sources/Common/Core/DataArray';
+import { VtkDataTypes } from 'vtk.js/Sources/Common/Core/DataArray/Constants';
 // ----------------------------------------------------------------------------
 // vtkPoints methods
 // ----------------------------------------------------------------------------

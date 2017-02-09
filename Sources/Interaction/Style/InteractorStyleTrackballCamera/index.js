@@ -1,23 +1,12 @@
-import * as macro from '../../../macro';
-import vtkInteractorStyle from '../../../Rendering/Core/InteractorStyle';
-import vtkMath from './../../../Common/Core/Math';
-import { States } from '../../../Rendering/Core/InteractorStyle/Constants';
+import macro              from 'vtk.js/Sources/macro';
+import vtkInteractorStyle from 'vtk.js/Sources/Rendering/Core/InteractorStyle';
+import vtkMath            from 'vtk.js/Sources/Common/Core/Math';
+import { States }         from 'vtk.js/Sources/Rendering/Core/InteractorStyle/Constants';
 
 /* eslint-disable no-lonely-if */
 
 // ----------------------------------------------------------------------------
-// Global methods
-// ----------------------------------------------------------------------------
-
-// Add module-level functions or api that you want to expose statically via
-// the next section...
-
-// ----------------------------------------------------------------------------
-// Static API
-// ----------------------------------------------------------------------------
-
-// ----------------------------------------------------------------------------
-// vtkMyClass methods
+// vtkInteractorStyleTrackballCamera methods
 // ----------------------------------------------------------------------------
 
 function vtkInteractorStyleTrackballCamera(publicAPI, model) {
@@ -406,7 +395,7 @@ export function extend(publicAPI, model, initialValues = {}) {
 
 // ----------------------------------------------------------------------------
 
-export const newInstance = macro.newInstance(extend);
+export const newInstance = macro.newInstance(extend, 'vtkInteractorStyleTrackballCamera');
 
 // ----------------------------------------------------------------------------
 

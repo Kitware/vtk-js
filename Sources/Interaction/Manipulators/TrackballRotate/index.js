@@ -1,7 +1,7 @@
-import { vec3, mat4 } from 'gl-matrix';
-import * as macro from '../../../macro';
-import vtkCameraManipulator from '../CameraManipulator';
-import vtkMath from '../../../Common/Core/Math';
+import { vec3, mat4 }       from 'gl-matrix';
+import macro                from 'vtk.js/Sources/macro';
+import vtkCameraManipulator from 'vtk.js/Sources/Interaction/Manipulators/CameraManipulator';
+import vtkMath              from 'vtk.js/Sources/Common/Core/Math';
 
 // ----------------------------------------------------------------------------
 // vtkTrackballRotate methods
@@ -87,7 +87,7 @@ export function extend(publicAPI, model, initialValues = {}) {
 
 // ----------------------------------------------------------------------------
 
-export const newInstance = macro.newInstance(extend);
+export const newInstance = macro.newInstance(extend, 'vtkTrackballRotate');
 
 // ----------------------------------------------------------------------------
 

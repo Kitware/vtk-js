@@ -1,8 +1,7 @@
-import * as macro   from '../../../macro';
-import vtk          from '../../../vtk';
-
-import vtkCellArray from '../../../Common/Core/CellArray';
-import vtkPointSet  from '../../../Common/DataModel/PointSet';
+import macro        from 'vtk.js/Sources/macro';
+import vtk          from 'vtk.js/Sources/vtk';
+import vtkCellArray from 'vtk.js/Sources/Common/Core/CellArray';
+import vtkPointSet  from 'vtk.js/Sources/Common/DataModel/PointSet';
 
 
 const POLYDATA_FIELDS = ['verts', 'lines', 'polys', 'strips'];

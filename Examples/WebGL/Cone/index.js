@@ -1,11 +1,10 @@
-import vtkFullScreenRenderWindow from '../../../Sources/Rendering/Misc/FullScreenRenderWindow';
-
-import vtkActor           from '../../../Sources/Rendering/Core/Actor';
-import vtkCalculator      from '../../../Sources/Filters/General/Calculator';
-import vtkConeSource      from '../../../Sources/Filters/Sources/ConeSource';
-import vtkMapper          from '../../../Sources/Rendering/Core/Mapper';
-import { AttributeTypes } from '../../../Sources/Common/DataModel/DataSetAttributes/Constants';
-import { FieldDataTypes } from '../../../Sources/Common/DataModel/DataSet/Constants';
+import vtkActor                  from 'vtk.js/Sources/Rendering/Core/Actor';
+import vtkCalculator             from 'vtk.js/Sources/Filters/General/Calculator';
+import vtkConeSource             from 'vtk.js/Sources/Filters/Sources/ConeSource';
+import vtkFullScreenRenderWindow from 'vtk.js/Sources/Rendering/Misc/FullScreenRenderWindow';
+import vtkMapper                 from 'vtk.js/Sources/Rendering/Core/Mapper';
+import { AttributeTypes }        from 'vtk.js/Sources/Common/DataModel/DataSetAttributes/Constants';
+import { FieldDataTypes }        from 'vtk.js/Sources/Common/DataModel/DataSet/Constants';
 
 import controlPanel from './controller.html';
 

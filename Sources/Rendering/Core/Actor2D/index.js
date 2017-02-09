@@ -1,11 +1,11 @@
-import * as macro from '../../../macro';
-import vtkCoordinate from '../Coordinate';
-import vtkProp from '../Prop';
-import vtkProperty2D from '../Property2D';
-import { Coordinate } from '../Coordinate/Constants';
+import macro          from 'vtk.js/Sources/macro';
+import vtkCoordinate  from 'vtk.js/Sources/Rendering/Core/Coordinate';
+import vtkProp        from 'vtk.js/Sources/Rendering/Core/Prop';
+import vtkProperty2D  from 'vtk.js/Sources/Rendering/Core/Property2D';
+import { Coordinate } from 'vtk.js/Sources/Rendering/Core/Coordinate/Constants';
 
 // ----------------------------------------------------------------------------
-// vtkActor methods
+// vtkActor2D methods
 // ----------------------------------------------------------------------------
 
 function vtkActor2D(publicAPI, model) {

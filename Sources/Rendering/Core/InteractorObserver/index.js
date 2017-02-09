@@ -1,4 +1,8 @@
-import * as macro from '../../../macro';
+import macro from 'vtk.js/Sources/macro';
+
+// ----------------------------------------------------------------------------
+// vtkInteractorObserver methods
+// ----------------------------------------------------------------------------
 
 function vtkInteractorObserver(publicAPI, model) {
   // Set our className

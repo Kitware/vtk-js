@@ -1,8 +1,9 @@
-import * as macro   from '../../../macro';
-import vtkImageData from '../../../Common/DataModel/ImageData';
-import vtkDataArray from '../../../Common/Core/DataArray';
+import macro        from 'vtk.js/Sources/macro';
+import vtkImageData from 'vtk.js/Sources/Common/DataModel/ImageData';
+import vtkDataArray from 'vtk.js/Sources/Common/Core/DataArray';
 
 // ----------------------------------------------------------------------------
+// vtkImageGridSource methods
 // ----------------------------------------------------------------------------
 
 export function vtkImageGridSource(publicAPI, model) {

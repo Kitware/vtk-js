@@ -1,14 +1,9 @@
-import * as macro from '../../../macro';
+import macro        from 'vtk.js/Sources/macro';
+import vtkFieldData from 'vtk.js/Sources/Common/DataModel/DataSetAttributes/FieldData';
+import Constants    from 'vtk.js/Sources/Common/DataModel/DataSetAttributes/Constants';
+import vtkDataArray from 'vtk.js/Sources/Common/Core/DataArray';
 
-/* eslint-disable no-unused-vars */
-// Needed so the VTK factory is filled with them
-import vtkFieldData from './FieldData';
-import { AttributeTypes, AttributeCopyOperations } from './Constants';
-import vtkDataArray from '../../../Common/Core/DataArray';
-// import vtkStringArray from '../../../Common/Core/vtkStringArray';
-
-import vtk from '../../../vtk';
-
+const { AttributeTypes, AttributeCopyOperations } = Constants;
 const { vtkWarningMacro } = macro;
 
 // ----------------------------------------------------------------------------

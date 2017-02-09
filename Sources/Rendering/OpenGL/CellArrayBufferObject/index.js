@@ -1,9 +1,8 @@
-import * as macro from '../../../macro';
-import vtkBufferObject from '../BufferObject';
-import DynamicTypedArray from '../../../Common/Core/DynamicTypedArray';
-import { ObjectType } from '../BufferObject/Constants';
-import { Representation } from '../../Core/Property/Constants';
-
+import macro              from 'vtk.js/Sources/macro';
+import DynamicTypedArray  from 'vtk.js/Sources/Common/Core/DynamicTypedArray';
+import vtkBufferObject    from 'vtk.js/Sources/Rendering/OpenGL/BufferObject';
+import { ObjectType }     from 'vtk.js/Sources/Rendering/OpenGL/BufferObject/Constants';
+import { Representation } from 'vtk.js/Sources/Rendering/Core/Property/Constants';
 
 // ----------------------------------------------------------------------------
 // vtkOpenGLCellArrayBufferObject methods

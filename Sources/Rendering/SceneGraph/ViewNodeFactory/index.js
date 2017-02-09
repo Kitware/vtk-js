@@ -1,4 +1,4 @@
-import * as macro from '../../../macro';
+import macro from 'vtk.js/Sources/macro';
 
 // ----------------------------------------------------------------------------
 // vtkViewNodeFactory methods
@@ -44,7 +44,7 @@ export function extend(publicAPI, model, initialValues = {}) {
 
 // ----------------------------------------------------------------------------
 
-export const newInstance = macro.newInstance(extend);
+export const newInstance = macro.newInstance(extend, 'vtkViewNodeFactory');
 
 // ----------------------------------------------------------------------------
 

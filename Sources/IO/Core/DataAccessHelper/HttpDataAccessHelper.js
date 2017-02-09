@@ -1,7 +1,7 @@
 import pako from 'pako';
 
-import Endian from '../../../Common/Core/Endian';
-import { DataTypeByteSize } from '../../../Common/Core/DataArray/Constants';
+import Endian               from 'vtk.js/Sources/Common/Core/Endian';
+import { DataTypeByteSize } from 'vtk.js/Sources/Common/Core/DataArray/Constants';
 
 let requestCount = 0;
 

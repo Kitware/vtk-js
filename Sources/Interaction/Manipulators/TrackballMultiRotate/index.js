@@ -1,7 +1,7 @@
-import * as macro           from '../../../macro';
-import vtkCameraManipulator from '../CameraManipulator';
-import vtkTrackballRotate   from '../TrackballRotate';
-import vtkTrackballRoll     from '../TrackballRoll';
+import macro                from 'vtk.js/Sources/macro';
+import vtkCameraManipulator from 'vtk.js/Sources/Interaction/Manipulators/CameraManipulator';
+import vtkTrackballRotate   from 'vtk.js/Sources/Interaction/Manipulators/TrackballRotate';
+import vtkTrackballRoll     from 'vtk.js/Sources/Interaction/Manipulators/TrackballRoll';
 
 function max(x, y) {
   return x < y ? y : x;
@@ -76,7 +76,7 @@ export function extend(publicAPI, model, initialValues = {}) {
 
 // ----------------------------------------------------------------------------
 
-export const newInstance = macro.newInstance(extend);
+export const newInstance = macro.newInstance(extend, 'vtkTrackballMultiRotate');
 
 // ----------------------------------------------------------------------------
 

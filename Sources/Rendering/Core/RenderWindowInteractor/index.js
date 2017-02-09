@@ -1,6 +1,6 @@
-import * as macro from '../../../macro';
-import vtkMath from '../../../Common/Core/Math';
-import vtkInteractorStyleTrackballCamera from '../../../Interaction/Style/InteractorStyleTrackballCamera';
+import macro                             from 'vtk.js/Sources/macro';
+import vtkMath                           from 'vtk.js/Sources/Common/Core/Math';
+import vtkInteractorStyleTrackballCamera from 'vtk.js/Sources/Interaction/Style/InteractorStyleTrackballCamera';
 
 const { vtkErrorMacro } = macro;
 
@@ -46,6 +46,10 @@ function preventDefault(event) {
   event.preventDefault();
   return false;
 }
+
+// ----------------------------------------------------------------------------
+// vtkRenderWindowInteractor methods
+// ----------------------------------------------------------------------------
 
 function vtkRenderWindowInteractor(publicAPI, model) {
   // Set our className

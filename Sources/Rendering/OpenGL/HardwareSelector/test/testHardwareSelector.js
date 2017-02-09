@@ -1,14 +1,14 @@
 import test from 'tape-catch';
 
-import vtkOpenGLRenderWindow from '../../../../Rendering/OpenGL/RenderWindow';
-import vtkOpenGLHardwareSelector from '../../../../Rendering/OpenGL/HardwareSelector';
-import vtkRenderWindow from '../../../../Rendering/Core/RenderWindow';
-import vtkRenderer from '../../../../Rendering/Core/Renderer';
-import vtkActor from '../../../../Rendering/Core/Actor';
-import vtkMapper from '../../../../Rendering/Core/Mapper';
-import vtkPlaneSource from '../../../../Filters/Sources/PlaneSource';
-import vtkSphereSource from '../../../../Filters/Sources/SphereSource';
-import { FieldAssociations } from '../../../../Common/DataModel/DataSet/Constants';
+import vtkOpenGLRenderWindow      from 'vtk.js/Sources/Rendering/OpenGL/RenderWindow';
+import vtkOpenGLHardwareSelector  from 'vtk.js/Sources/Rendering/OpenGL/HardwareSelector';
+import vtkRenderWindow            from 'vtk.js/Sources/Rendering/Core/RenderWindow';
+import vtkRenderer                from 'vtk.js/Sources/Rendering/Core/Renderer';
+import vtkActor                   from 'vtk.js/Sources/Rendering/Core/Actor';
+import vtkMapper                  from 'vtk.js/Sources/Rendering/Core/Mapper';
+import vtkPlaneSource             from 'vtk.js/Sources/Filters/Sources/PlaneSource';
+import vtkSphereSource            from 'vtk.js/Sources/Filters/Sources/SphereSource';
+import { FieldAssociations }      from 'vtk.js/Sources/Common/DataModel/DataSet/Constants';
 
 test.onlyIfWebGL('Test HardwareSelector', (tapeContext) => {
   tapeContext.ok('rendering', 'vtkOpenGLHardwareSelector TestHardwareSelector');

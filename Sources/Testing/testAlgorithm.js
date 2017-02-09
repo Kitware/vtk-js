@@ -1,7 +1,5 @@
-import test from 'tape-catch';
-
-import * as macro from '../macro';
-// import vtkDataArray               from '../Common/Core/DataArray';
+import test  from 'tape-catch';
+import macro from 'vtk.js/Sources/macro';
 
 const model = {};
 const publicAPI = {};

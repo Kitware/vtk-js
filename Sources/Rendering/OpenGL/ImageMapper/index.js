@@ -1,16 +1,15 @@
-import * as macro from '../../../macro';
-import vtkHelper from '../Helper';
-import vtkMath from '../../../Common/Core/Math';
-import vtkDataArray from '../../../Common/Core/DataArray';
-import vtkOpenGLTexture from '../Texture';
-import vtkShaderProgram from '../ShaderProgram';
-import vtkTexture from '../../Core/Texture';
-import vtkViewNode from '../../SceneGraph/ViewNode';
-import { Representation } from '../../Core/Property/Constants';
-// import { mat4 } from 'gl-matrix';
+import macro              from 'vtk.js/Sources/macro';
+import vtkDataArray       from 'vtk.js/Sources/Common/Core/DataArray';
+import vtkHelper          from 'vtk.js/Sources/Rendering/OpenGL/Helper';
+import vtkMath            from 'vtk.js/Sources/Common/Core/Math';
+import vtkOpenGLTexture   from 'vtk.js/Sources/Rendering/OpenGL/Texture';
+import vtkShaderProgram   from 'vtk.js/Sources/Rendering/OpenGL/ShaderProgram';
+import vtkTexture         from 'vtk.js/Sources/Rendering/Core/Texture';
+import vtkViewNode        from 'vtk.js/Sources/Rendering/SceneGraph/ViewNode';
+import { Representation } from 'vtk.js/Sources/Rendering/Core/Property/Constants';
 
-import vtkPolyDataVS from '../glsl/vtkPolyDataVS.glsl';
-import vtkPolyDataFS from '../glsl/vtkPolyDataFS.glsl';
+import vtkPolyDataVS      from 'vtk.js/Sources/Rendering/OpenGL/glsl/vtkPolyDataVS.glsl';
+import vtkPolyDataFS      from 'vtk.js/Sources/Rendering/OpenGL/glsl/vtkPolyDataFS.glsl';
 
 const { vtkErrorMacro } = macro;
 
@@ -403,7 +402,7 @@ export function extend(publicAPI, model, initialValues = {}) {
 
 // ----------------------------------------------------------------------------
 
-export const newInstance = macro.newInstance(extend);
+export const newInstance = macro.newInstance(extend, 'vtkOpenGLImageMapper');
 
 // ----------------------------------------------------------------------------
 

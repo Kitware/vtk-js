@@ -1,12 +1,9 @@
-import * as macro           from '../../../macro';
+import macro            from 'vtk.js/Sources/macro';
+import vtkPolyData      from 'vtk.js/Sources/Common/DataModel/PolyData';
+import vtkDataArray     from 'vtk.js/Sources/Common/Core/DataArray';
+import DataAccessHelper from 'vtk.js/Sources/IO/Core/DataAccessHelper';
 
-import vtkPolyData          from '../../../Common/DataModel/PolyData';
-import vtkDataArray         from '../../../Common/Core/DataArray';
-
-import DataAccessHelper     from '../../Core/DataAccessHelper';
-
-import ATOMS                from '../../../../Utilities/XMLConverter/chemistry-mapper/elements.json';
-
+import ATOMS            from 'vtk.js/Utilities/XMLConverter/chemistry-mapper/elements.json';
 
 // ----------------------------------------------------------------------------
 // vtkPDBReader methods
@@ -222,7 +219,6 @@ const DEFAULT_VALUES = {
 
 // ----------------------------------------------------------------------------
 
-
 export function extend(publicAPI, model, initialValues = {}) {
   Object.assign(model, DEFAULT_VALUES, initialValues);
 
@@ -249,7 +245,7 @@ export function extend(publicAPI, model, initialValues = {}) {
 
 // ----------------------------------------------------------------------------
 
-export const newInstance = macro.newInstance(extend);
+export const newInstance = macro.newInstance(extend, 'vtkPDBReader');
 
 // ----------------------------------------------------------------------------
 

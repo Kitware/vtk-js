@@ -1,5 +1,5 @@
-import HttpDataAccessHelper from './HttpDataAccessHelper';
-import JSZipDataAccessHelper from './JSZipDataAccessHelper';
+import HttpDataAccessHelper   from './HttpDataAccessHelper';
+import JSZipDataAccessHelper  from './JSZipDataAccessHelper';
 
 const TYPE_MAPPING = {
   http: options => HttpDataAccessHelper,

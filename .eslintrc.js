@@ -1,7 +1,6 @@
 module.exports = {
   extends: 'airbnb',
   rules: {
-    'import/no-extraneous-dependencies': ["error", { "devDependencies": true }],
     'max-len': ["warn", 160, 4, {"ignoreUrls": true}],
     'no-multi-spaces': ["error", { exceptions: { "ImportDeclaration": true } }],
     'no-param-reassign': ["error", { props: false }],
@@ -22,6 +21,10 @@ module.exports = {
     'no-plusplus': 0,
 
     // Not for vtk.js
+    // 'import/no-extraneous-dependencies': ["error", { "devDependencies": true }],
+    'import/no-extraneous-dependencies': 0,
+    'import/no-unresolved': 0,
+    'import/extensions': 0,
     'import/no-named-as-default': 0,
     'import/no-named-as-default-member': 0,
 
@@ -30,10 +33,10 @@ module.exports = {
     "no-unsafe-negation": 0,
   },
   globals: {
-    vtkDebugMacro: false,
-    vtkErrorMacro: false,
-    vtkWarningMacro: false,
     __BASE_PATH__: false,
+  },
+  'settings': {
+    'import/resolver': 'webpack'
   },
   env: {
     browser: true,

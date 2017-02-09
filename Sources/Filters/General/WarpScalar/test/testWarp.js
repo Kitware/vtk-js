@@ -1,6 +1,7 @@
 import test from 'tape-catch';
-import vtkWarpScalar from '..';
-import vtkSphereSource from '../../../Sources/SphereSource';
+
+import vtkWarpScalar   from 'vtk.js/Sources/Filters/General/WarpScalar';
+import vtkSphereSource from 'vtk.js/Sources/Filters/Sources/SphereSource';
 
 test('Test vtkWarpScalar instance', (t) => {
   t.ok(vtkWarpScalar, 'Make sure the class definition exist');

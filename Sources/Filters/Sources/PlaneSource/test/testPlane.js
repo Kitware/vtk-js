@@ -1,14 +1,14 @@
-import test from 'tape-catch';
+import test      from 'tape-catch';
+import testUtils from 'vtk.js/Sources/Testing/testUtils';
 
-import vtkOpenGLRenderWindow from '../../../../Rendering/OpenGL/RenderWindow';
-import vtkRenderWindow from '../../../../Rendering/Core/RenderWindow';
-import vtkRenderer from '../../../../Rendering/Core/Renderer';
-import vtkPlaneSource from '../../../../Filters/Sources/PlaneSource';
-import vtkActor from '../../../../Rendering/Core/Actor';
-import vtkMapper from '../../../../Rendering/Core/Mapper';
+import vtkOpenGLRenderWindow  from 'vtk.js/Sources/Rendering/OpenGL/RenderWindow';
+import vtkRenderWindow        from 'vtk.js/Sources/Rendering/Core/RenderWindow';
+import vtkRenderer            from 'vtk.js/Sources/Rendering/Core/Renderer';
+import vtkPlaneSource         from 'vtk.js/Sources/Filters/Sources/PlaneSource';
+import vtkActor               from 'vtk.js/Sources/Rendering/Core/Actor';
+import vtkMapper              from 'vtk.js/Sources/Rendering/Core/Mapper';
 
 import baseline from './testPlane.png';
-import testUtils from '../../../../Testing/testUtils';
 
 test.onlyIfWebGL('Test vtkPlaneSource Rendering', (t) => {
   t.ok('rendering', 'vtkPlaneSource Rendering');

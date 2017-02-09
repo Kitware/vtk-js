@@ -1,9 +1,10 @@
-import * as macro from '../../../macro';
-import vtkInteractorStyleTrackballCamera from '../InteractorStyleTrackballCamera';
-import vtkMath from './../../../Common/Core/Math';
-import { States } from '../../../Rendering/Core/InteractorStyle/Constants';
+import macro                             from 'vtk.js/Sources/macro';
+import vtkInteractorStyleTrackballCamera from 'vtk.js/Sources/Interaction/Style/InteractorStyleTrackballCamera';
+import vtkMath                           from 'vtk.js/Sources/Common/Core/Math';
+import { States }                        from 'vtk.js/Sources/Rendering/Core/InteractorStyle/Constants';
 
 // ----------------------------------------------------------------------------
+// vtkInteractorStyleImage methods
 // ----------------------------------------------------------------------------
 
 function vtkInteractorStyleImage(publicAPI, model) {
@@ -316,7 +317,7 @@ export function extend(publicAPI, model, initialValues = {}) {
 
 // ----------------------------------------------------------------------------
 
-export const newInstance = macro.newInstance(extend);
+export const newInstance = macro.newInstance(extend, 'vtkInteractorStyleImage');
 
 // ----------------------------------------------------------------------------
 

@@ -1,15 +1,15 @@
-import * as macro                 from '../../../../Sources/macro';
-import vtkOpenGLRenderWindow      from '../../../../Sources/Rendering/OpenGL/RenderWindow';
-import vtkRenderer                from '../../../../Sources/Rendering/Core/Renderer';
-import vtkRenderWindow            from '../../../../Sources/Rendering/Core/RenderWindow';
-import vtkRenderWindowInteractor  from '../../../../Sources/Rendering/Core/RenderWindowInteractor';
+import macro                      from 'vtk.js/Sources/macro';
+import vtkOpenGLRenderWindow      from 'vtk.js/Sources/Rendering/OpenGL/RenderWindow';
+import vtkRenderer                from 'vtk.js/Sources/Rendering/Core/Renderer';
+import vtkRenderWindow            from 'vtk.js/Sources/Rendering/Core/RenderWindow';
+import vtkRenderWindowInteractor  from 'vtk.js/Sources/Rendering/Core/RenderWindowInteractor';
 
 // Load basic classes for vtk() factory
-import '../../../../Sources/Common/Core/Points';
-import '../../../../Sources/Common/Core/DataArray';
-import '../../../../Sources/Common/DataModel/PolyData';
-import '../../../../Sources/Rendering/Core/Actor';
-import '../../../../Sources/Rendering/Core/Mapper';
+import 'vtk.js/Sources/Common/Core/Points';
+import 'vtk.js/Sources/Common/Core/DataArray';
+import 'vtk.js/Sources/Common/DataModel/PolyData';
+import 'vtk.js/Sources/Rendering/Core/Actor';
+import 'vtk.js/Sources/Rendering/Core/Mapper';
 
 // Load style
 import style from './FullScreenRenderWindow.mcss';

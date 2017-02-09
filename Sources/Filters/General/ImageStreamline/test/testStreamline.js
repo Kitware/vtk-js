@@ -1,10 +1,10 @@
-import test               from 'tape-catch';
+import test from 'tape-catch';
 
-import * as macro         from '../../../../macro';
-import vtkDataArray       from '../../../../Common/Core/DataArray';
-import vtkImageData       from '../../../../Common/DataModel/ImageData';
-import vtkImageStreamline from '..';
-import vtkPlaneSource     from '../../../Sources/PlaneSource';
+import macro              from 'vtk.js/Sources/macro';
+import vtkDataArray       from 'vtk.js/Sources/Common/Core/DataArray';
+import vtkImageData       from 'vtk.js/Sources/Common/DataModel/ImageData';
+import vtkImageStreamline from 'vtk.js/Sources/Filters/General/ImageStreamline';
+import vtkPlaneSource     from 'vtk.js/Sources/Filters/Sources/PlaneSource';
 
 const vecSource = macro.newInstance((publicAPI, model) => {
   macro.obj(publicAPI, model); // make it an object

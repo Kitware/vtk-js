@@ -8,3 +8,8 @@ export function addCoincidentTopologyMethods(publicAPI, model, nameList) {
 }
 
 export const CATEGORIES = ['Polygon', 'Line', 'Point'];
+
+export default {
+  addCoincidentTopologyMethods,
+  CATEGORIES,
+};

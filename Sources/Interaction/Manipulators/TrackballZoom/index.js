@@ -1,5 +1,5 @@
-import * as macro from '../../../macro';
-import vtkCameraManipulator from '../CameraManipulator';
+import macro                from 'vtk.js/Sources/macro';
+import vtkCameraManipulator from 'vtk.js/Sources/Interaction/Manipulators/CameraManipulator';
 
 // ----------------------------------------------------------------------------
 // vtkTrackballZoom methods
@@ -83,7 +83,7 @@ export function extend(publicAPI, model, initialValues = {}) {
 
 // ----------------------------------------------------------------------------
 
-export const newInstance = macro.newInstance(extend);
+export const newInstance = macro.newInstance(extend, 'vtkTrackballZoom');
 
 // ----------------------------------------------------------------------------
 

@@ -1,79 +1,17 @@
 import { mat4, vec3 } from 'gl-matrix';
 
-import * as macro from '../../../macro';
-import vtkCamera from '../Camera';
-import vtkLight from '../Light';
-import vtkMath from '../../../Common/Core/Math';
-import vtkViewport from '../Viewport';
-import { INIT_BOUNDS } from '../../../Common/DataModel/BoundingBox';
+import macro            from 'vtk.js/Sources/macro';
+import vtkCamera        from 'vtk.js/Sources/Rendering/Core/Camera';
+import vtkLight         from 'vtk.js/Sources/Rendering/Core/Light';
+import vtkMath          from 'vtk.js/Sources/Common/Core/Math';
+import vtkViewport      from 'vtk.js/Sources/Rendering/Core/Viewport';
+import { INIT_BOUNDS }  from 'vtk.js/Sources/Common/DataModel/BoundingBox';
 
 const { vtkDebugMacro, vtkErrorMacro, vtkWarningMacro } = macro;
 
 function notImplemented(method) {
   return () => console.log(`vtkRenderer::${method} - NOT IMPLEMENTED`);
 }
-
-// ----------------------------------------------------------------------------
-// Global methods
-// ----------------------------------------------------------------------------
-
-// function expandBounds(bounds, matrix) {
-//   if (!bounds) {
-//     vtkErrorMacro('ERROR: Invalid bounds');
-//     return;
-//   }
-
-//   if (!matrix) {
-//     vtkErrorMacro('ERROR: Invalid matrix');
-//     return;
-//   }
-
-//   // Expand the bounding box by model view transform matrix.
-//   const pt = [
-//     vec4.fromValues(bounds[0], bounds[2], bounds[5], 1.0),
-//     vec4.fromValues(bounds[1], bounds[2], bounds[5], 1.0),
-//     vec4.fromValues(bounds[1], bounds[2], bounds[4], 1.0),
-//     vec4.fromValues(bounds[0], bounds[2], bounds[4], 1.0),
-//     vec4.fromValues(bounds[0], bounds[3], bounds[5], 1.0),
-//     vec4.fromValues(bounds[1], bounds[3], bounds[5], 1.0),
-//     vec4.fromValues(bounds[1], bounds[3], bounds[4], 1.0),
-//     vec4.fromValues(bounds[0], bounds[3], bounds[4], 1.0),
-//   ];
-
-//   // \note: Assuming that matrix does not have projective component. Hence not
-//   // dividing by the homogeneous coordinate after multiplication
-//   for (let i = 0; i < 8; ++i) {
-//     vec4.transformMat4(pt[i], pt[i], matrix);
-//   }
-
-//   // min = mpx = pt[0]
-//   const min = [];
-//   const max = [];
-//   for (let i = 0; i < 4; ++i) {
-//     min[i] = pt[0][i];
-//     max[i] = pt[0][i];
-//   }
-
-//   for (let i = 1; i < 8; ++i) {
-//     for (let j = 0; j < 3; ++j) {
-//       if (min[j] > pt[i][j]) {
-//         min[j] = pt[i][j];
-//       }
-//       if (max[j] < pt[i][j]) {
-//         max[j] = pt[i][j];
-//       }
-//     }
-//   }
-
-//   // Copy values back to bounds.
-//   bounds[0] = min[0];
-//   bounds[2] = min[1];
-//   bounds[4] = min[2];
-
-//   bounds[1] = max[0];
-//   bounds[3] = max[1];
-//   bounds[5] = max[2];
-// }
 
 // ----------------------------------------------------------------------------
 // vtkRenderer methods

@@ -1,12 +1,12 @@
-import { vec3, mat4 } from 'gl-matrix';
-import * as macro from '../../../macro';
-import vtkProp3D from '../Prop3D';
-import vtkImageProperty from '../ImageProperty';
+import { vec3, mat4 }   from 'gl-matrix';
+import macro            from 'vtk.js/Sources/macro';
+import vtkProp3D        from 'vtk.js/Sources/Rendering/Core/Prop3D';
+import vtkImageProperty from 'vtk.js/Sources/Rendering/Core/ImageProperty';
 
 const { vtkDebugMacro } = macro;
 
 // ----------------------------------------------------------------------------
-// vtkActor methods
+// vtkImageSlice methods
 // ----------------------------------------------------------------------------
 
 function vtkImageSlice(publicAPI, model) {

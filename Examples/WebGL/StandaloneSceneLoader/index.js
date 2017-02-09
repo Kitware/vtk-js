@@ -2,17 +2,16 @@
 /* eslint-disable import/prefer-default-export */
 /* eslint-disable import/no-extraneous-dependencies */
 
-// import 'normalize.css';
 import 'babel-polyfill';
 
-import vtkFullScreenRenderWindow  from '../../../Sources/Rendering/Misc/FullScreenRenderWindow';
+import vtkFullScreenRenderWindow  from 'vtk.js/Sources/Rendering/Misc/FullScreenRenderWindow';
 
-import vtkHttpSceneLoader         from '../../../Sources/IO/Core/HttpSceneLoader';
-import DataAccessHelper           from '../../../Sources/IO/Core/DataAccessHelper';
-import vtkURLExtract              from '../../../Sources/Common/Core/URLExtract';
-import vtkOBJReader               from '../../../Sources/IO/Misc/OBJReader';
-import vtkMapper                  from '../../../Sources/Rendering/Core/Mapper';
-import vtkActor                   from '../../../Sources/Rendering/Core/Actor';
+import vtkHttpSceneLoader         from 'vtk.js/Sources/IO/Core/HttpSceneLoader';
+import DataAccessHelper           from 'vtk.js/Sources/IO/Core/DataAccessHelper';
+import vtkURLExtract              from 'vtk.js/Sources/Common/Core/URLExtract';
+import vtkOBJReader               from 'vtk.js/Sources/IO/Misc/OBJReader';
+import vtkMapper                  from 'vtk.js/Sources/Rendering/Core/Mapper';
+import vtkActor                   from 'vtk.js/Sources/Rendering/Core/Actor';
 
 import controlWidget from './SceneControllerWidget';
 import style from './SceneLoader.mcss';

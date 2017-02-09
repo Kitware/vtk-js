@@ -1,13 +1,12 @@
-import vtkFullScreenRenderWindow  from '../../../../../Sources/Rendering/Misc/FullScreenRenderWindow';
-
-import * as macro      from '../../../../macro';
-import vtk             from '../../../../vtk';
-import vtkActor        from '../../../../Rendering/Core/Actor';
-import vtkCamera       from '../../../../Rendering/Core/Camera';
-import vtkDataArray    from '../../../../Common/Core/DataArray';
-import vtkMapper       from '../../../../Rendering/Core/Mapper';
-import vtkSphereSource from '../../../../Filters/Sources/SphereSource';
-import vtkWarpScalar   from '../../../../Filters/General/WarpScalar';
+import vtkFullScreenRenderWindow  from 'vtk.js/Sources/Rendering/Misc/FullScreenRenderWindow';
+import macro                      from 'vtk.js/Sources/macro';
+import vtk                        from 'vtk.js/Sources/vtk';
+import vtkActor                   from 'vtk.js/Sources/Rendering/Core/Actor';
+import vtkCamera                  from 'vtk.js/Sources/Rendering/Core/Camera';
+import vtkDataArray               from 'vtk.js/Sources/Common/Core/DataArray';
+import vtkMapper                  from 'vtk.js/Sources/Rendering/Core/Mapper';
+import vtkSphereSource            from 'vtk.js/Sources/Filters/Sources/SphereSource';
+import vtkWarpScalar              from 'vtk.js/Sources/Filters/General/WarpScalar';
 
 import controlPanel from './controller.html';
 

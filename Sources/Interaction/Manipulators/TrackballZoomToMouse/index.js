@@ -1,6 +1,6 @@
-import * as macro from '../../../macro';
-import interactorStyleManipulator from '../../Style/InteractorStyleManipulator';
-import vtkTrackballZoom from '../TrackballZoom';
+import macro                         from 'vtk.js/Sources/macro';
+import vtkInteractorStyleManipulator from 'vtk.js/Sources/Interaction/Style/InteractorStyleManipulator';
+import vtkTrackballZoom              from 'vtk.js/Sources/Interaction/Manipulators/TrackballZoom';
 
 // ----------------------------------------------------------------------------
 // vtkTrackballZoomToMouse methods
@@ -21,7 +21,7 @@ function vtkTrackballZoomToMouse(publicAPI, model) {
     const lastPos = rwi.getLastEventPosition(rwi.getPointerIndex());
     const dy = lastPos.y - y;
     const k = dy * model.zoomScale;
-    interactorStyleManipulator.dollyToPosition((1.0 - k), model.zoomPosition, ren, rwi);
+    vtkInteractorStyleManipulator.dollyToPosition((1.0 - k), model.zoomPosition, ren, rwi);
     rwi.render();
   };
 }
@@ -48,7 +48,7 @@ export function extend(publicAPI, model, initialValues = {}) {
 
 // ----------------------------------------------------------------------------
 
-export const newInstance = macro.newInstance(extend);
+export const newInstance = macro.newInstance(extend, 'vtkTrackballZoomToMouse');
 
 // ----------------------------------------------------------------------------
 

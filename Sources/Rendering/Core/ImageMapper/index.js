@@ -1,5 +1,9 @@
-import * as macro from '../../../macro';
-import vtkMath from '../../../Common/Core/Math';
+import macro   from 'vtk.js/Sources/macro';
+import vtkMath from 'vtk.js/Sources/Common/Core/Math';
+
+// ----------------------------------------------------------------------------
+// vtkImageMapper methods
+// ----------------------------------------------------------------------------
 
 function vtkImageMapper(publicAPI, model) {
   // Set our className
@@ -36,6 +40,7 @@ function vtkImageMapper(publicAPI, model) {
 // ----------------------------------------------------------------------------
 // Object factory
 // ----------------------------------------------------------------------------
+
 const DEFAULT_VALUES = {
   displayExtent: [0, 0, 0, 0, 0, 0],
   customDisplayExtent: [0, 0, 0, 0],

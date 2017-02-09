@@ -1,8 +1,11 @@
+var vtkBasePath = require('path').resolve('.');
+
 module.exports = function buildConfig(name, relPath, destPath, root) {
   return `
 var loaders = require('../config/webpack.loaders.js');
 var HtmlWebpackPlugin = require('html-webpack-plugin');
 var webpack = require('webpack');
+var path = require('path');
 
 module.exports = {
   plugins: [
@@ -25,6 +28,11 @@ module.exports = {
       exclude: /node_modules/,
     }],
     loaders: loaders,
+  },
+  resolve: {
+    alias: {
+      'vtk.js': '${vtkBasePath}',
+    },
   },
   eslint: {
     configFile: '${root}/.eslintrc.js',

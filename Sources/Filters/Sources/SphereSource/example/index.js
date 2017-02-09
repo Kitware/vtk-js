@@ -1,8 +1,7 @@
-import vtkFullScreenRenderWindow  from '../../../../../Sources/Rendering/Misc/FullScreenRenderWindow';
-
-import vtkActor                   from '../../../../../Sources/Rendering/Core/Actor';
-import vtkSphereSource            from '../../../../../Sources/Filters/Sources/SphereSource';
-import vtkMapper                  from '../../../../../Sources/Rendering/Core/Mapper';
+import vtkFullScreenRenderWindow  from 'vtk.js/Sources/Rendering/Misc/FullScreenRenderWindow';
+import vtkActor                   from 'vtk.js/Sources/Rendering/Core/Actor';
+import vtkSphereSource            from 'vtk.js/Sources/Filters/Sources/SphereSource';
+import vtkMapper                  from 'vtk.js/Sources/Rendering/Core/Mapper';
 
 import controlPanel from './controlPanel.html';
 

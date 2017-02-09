@@ -1,5 +1,5 @@
-import * as macro from '../../../macro';
-import vtkShader from '../Shader';
+import macro     from 'vtk.js/Sources/macro';
+import vtkShader from 'vtk.js/Sources/Rendering/OpenGL/Shader';
 
 // perform in place string substitutions, indicate if a substitution was done
 // this is useful for building up shader strings which typically involve
@@ -414,7 +414,7 @@ export function extend(publicAPI, model, initialValues = {}) {
 
 // ----------------------------------------------------------------------------
 
-export const newInstance = macro.newInstance(extend, 'vtkShaderprogram');
+export const newInstance = macro.newInstance(extend, 'vtkShaderProgram');
 
 // ----------------------------------------------------------------------------
 

@@ -1,14 +1,13 @@
-import vtkFullScreenRenderWindow  from '../../../../../Sources/Rendering/Misc/FullScreenRenderWindow';
-
-import vtkOutlineFilter   from '../../../../../Sources/Filters/General/OutlineFilter';
-import vtkPlaneSource     from '../../../../../Sources/Filters/Sources/PlaneSource';
-import vtkImageStreamline from '../../../../../Sources/Filters/General/ImageStreamline';
-import vtkActor           from '../../../../../Sources/Rendering/Core/Actor';
-import vtkMapper          from '../../../../../Sources/Rendering/Core/Mapper';
-import { Representation } from '../../../../../Sources/Rendering/Core/Property/Constants';
-import vtkDataArray       from '../../../../../Sources/Common/Core/DataArray';
-import vtkImageData       from '../../../../../Sources/Common/DataModel/ImageData';
-import * as macro         from '../../../../../Sources/macro';
+import vtkFullScreenRenderWindow  from 'vtk.js/Sources/Rendering/Misc/FullScreenRenderWindow';
+import vtkOutlineFilter           from 'vtk.js/Sources/Filters/General/OutlineFilter';
+import vtkPlaneSource             from 'vtk.js/Sources/Filters/Sources/PlaneSource';
+import vtkImageStreamline         from 'vtk.js/Sources/Filters/General/ImageStreamline';
+import vtkActor                   from 'vtk.js/Sources/Rendering/Core/Actor';
+import vtkMapper                  from 'vtk.js/Sources/Rendering/Core/Mapper';
+import { Representation }         from 'vtk.js/Sources/Rendering/Core/Property/Constants';
+import vtkDataArray               from 'vtk.js/Sources/Common/Core/DataArray';
+import vtkImageData               from 'vtk.js/Sources/Common/DataModel/ImageData';
+import macro                      from 'vtk.js/Sources/macro';
 
 import controlPanel from './controller.html';
 

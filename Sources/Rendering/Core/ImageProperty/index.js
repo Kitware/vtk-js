@@ -1,7 +1,7 @@
-import * as macro from '../../../macro';
+import macro from 'vtk.js/Sources/macro';
 
 // ----------------------------------------------------------------------------
-// vtkProperty2D methods
+// vtkImageProperty methods
 // ----------------------------------------------------------------------------
 
 function vtkImageProperty(publicAPI, model) {

@@ -580,3 +580,29 @@ export function vtkErrorMacro(...args) {
 export function vtkWarningMacro(...args) {
   loggerFunctions.warn(...args);
 }
+
+// ----------------------------------------------------------------------------
+// Default export
+// ----------------------------------------------------------------------------
+
+export default {
+  getCurrentGlobalMTime,
+  capitalize,
+  enumToString,
+  getStateArrayMapFunc,
+  obj,
+  get,
+  set,
+  setGet,
+  getArray,
+  setArray,
+  setGetArray,
+  algo,
+  event,
+  newInstance,
+  chain,
+  setLoggerFunction,
+  vtkDebugMacro,
+  vtkErrorMacro,
+  vtkWarningMacro,
+};

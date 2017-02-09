@@ -1,4 +1,4 @@
-import { StructuredType } from './Constants';
+import { StructuredType } from 'vtk.js/Sources/Common/DataModel/StructuredData/Constants';
 
 export function getDataDescriptionFromExtent(inExt) {
   let dataDim = 0;

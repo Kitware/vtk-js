@@ -1,9 +1,8 @@
-import vtkFullScreenRenderWindow  from '../../../../../Sources/Rendering/Misc/FullScreenRenderWindow';
-
-import vtkActor                   from '../../../../../Sources/Rendering/Core/Actor';
-import vtkPointSource             from '../../../../../Sources/Filters/Sources/PointSource';
-import vtkMapper                  from '../../../../../Sources/Rendering/Core/Mapper';
-import vtkMath                    from '../../../../../Sources/Common/Core/Math';
+import vtkFullScreenRenderWindow  from 'vtk.js/Sources/Rendering/Misc/FullScreenRenderWindow';
+import vtkActor                   from 'vtk.js/Sources/Rendering/Core/Actor';
+import vtkPointSource             from 'vtk.js/Sources/Filters/Sources/PointSource';
+import vtkMapper                  from 'vtk.js/Sources/Rendering/Core/Mapper';
+import vtkMath                    from 'vtk.js/Sources/Common/Core/Math';
 
 import controlPanel from './controlPanel.html';
 
