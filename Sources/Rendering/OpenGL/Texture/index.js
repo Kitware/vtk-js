@@ -610,7 +610,7 @@ function vtkOpenGLTexture(publicAPI, model) {
       canvas.width = vtkMath.nearestPowerOfTwo(image.width);
       canvas.height = vtkMath.nearestPowerOfTwo(image.height);
       const ctx = canvas.getContext('2d');
-      ctx.drawImage(image, 0, 0, image.width, image.height);
+      ctx.drawImage(image, 0, 0, image.width, image.height, 0, 0, canvas.width, canvas.height);
       safeImage = canvas;
     }
 
