@@ -71,7 +71,7 @@ function end(model) {
   if (model.splitMode) {
     model.numberOfOutputs = data.size;
     for (let idx = 0; idx < data.size; idx++) {
-      const ptIdxMapping = [];
+      const ctMapping = {};
       const polydata = vtkPolyData.newInstance({ name: data.pieces[idx] });
       const pts = [];
       const tc = [];
@@ -85,15 +85,15 @@ function end(model) {
         polys.push(cellSize);
         for (let pIdx = 0; pIdx < cellSize; pIdx++) {
           const [vIdx, tcIdx] = polyIn[offset + pIdx + 1];
-          if (ptIdxMapping[vIdx] === undefined) {
-            ptIdxMapping[vIdx] = pts.length / 3;
+          const key = `${vIdx}/${tcIdx}`;
+          if (ctMapping[key] === undefined) {
+            ctMapping[key] = pts.length / 3;
             pushVector(data.v, vIdx * 3, pts, 3);
-
             if (hasTcoords) {
               pushVector(data.vt, tcIdx * 2, tc, 2);
             }
           }
-          polys.push(ptIdxMapping[vIdx]);
+          polys.push(ctMapping[key]);
         }
         offset += cellSize + 1;
       }
