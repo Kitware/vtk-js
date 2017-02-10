@@ -70,11 +70,19 @@ export function vtkMTLReader(publicAPI, model) {
   };
 
   // Fetch the actual data arrays
-  publicAPI.loadData = () => {
-    const promise = fetchData(model.url);
-    promise.then(publicAPI.parse);
-    return promise;
-  };
+  publicAPI.loadData = () =>
+    new Promise((resolve, reject) => {
+      fetchData(model.url)
+        .then(
+          (content) => {
+            publicAPI.parse(content);
+            resolve();
+          },
+          (err) => {
+            console.log('err', err);
+            reject();
+          });
+    });
 
   publicAPI.parse = (content) => {
     publicAPI.modified();

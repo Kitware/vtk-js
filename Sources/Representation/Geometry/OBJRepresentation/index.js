@@ -35,6 +35,9 @@ export function vtkOBJRepresentation(publicAPI, model) {
     return new Promise((resolve, reject) => {
       model.scene = [];
 
+      let hasTextures = false;
+      let textureCount = 0;
+      let actorCount = model.input.getNumberOfOutputPorts();
       const actors = {};
       const textures = {};
       const actorProps = {};
@@ -52,19 +55,41 @@ export function vtkOBJRepresentation(publicAPI, model) {
           ['ambient', 'diffuse', 'specular'].forEach((k, idx) => {
             actorProp[k] = (idx <= illum) ? 1.0 : 0.0;
           });
-          actorProps[name] = actorProp;
-
 
           if (material.image) {
-            material.image.onload = () => {
-              const texture = vtkTexture.newInstance({ interpolate: true, repeat: false, edgeClamp: false });
+            hasTextures = true;
+            textureCount++;
+            const onLoad = () => {
+              const texture = vtkTexture.newInstance({ interpolate: true });
               textures[name] = texture;
               texture.setImage(material.image);
               texture.modified();
               if (actors[name]) {
                 actors[name].addTexture(texture);
+                textureCount--;
+                if (textureCount === 0) {
+                  console.log('text2 resolve');
+                  resolve();
+                }
               }
             };
+            if (material.image.complete) {
+              onLoad();
+            } else {
+              material.image.onload = onLoad;
+            }
+          }
+
+          if (actors[name]) {
+            actorCount--;
+            console.log('set actor prop (text)', name);
+            actors[name].getProperty().set(actorProp);
+            if (actorCount === 0 && !hasTextures) {
+              console.log('resolve from texture (actor set)');
+              resolve();
+            }
+          } else {
+            actorProps[name] = actorProp;
           }
         });
       }
@@ -75,18 +100,32 @@ export function vtkOBJRepresentation(publicAPI, model) {
         const mapper = vtkMapper.newInstance();
         const actor = vtkActor.newInstance();
         const name = source.get('name').name;
-        if (name && textures[name]) {
-          actor.addTexture(textures[name]);
-        }
-        if (name && actorProps[name]) {
-          actor.getProperty().set(actorProps[name]);
-        }
 
         actors[name] = actor;
         actor.setMapper(mapper);
         mapper.setInputData(source);
         model.scene.push({ source, mapper, actor, name });
         publicAPI.addActor(actor);
+
+        if (name && actorProps[name]) {
+          actorCount--;
+          console.log('set actor prop (mesh)', name, JSON.stringify(actorProps[name]));
+          actor.getProperty().set(actorProps[name]);
+          if (actorCount === 0 && !hasTextures) {
+            console.log('set actor prop (mesh)', name);
+            resolve();
+          }
+        }
+
+        if (name && textures[name]) {
+          actor.addTexture(textures[name]);
+          textureCount--;
+          if (textureCount === 0) {
+            console.log('text from mesh resolve');
+
+            resolve();
+          }
+        }
       }
     });
   };

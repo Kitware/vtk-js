@@ -36,26 +36,30 @@ function onClick(event) {
 representation.setOBJReader(reader);
 representation.setMaterialsReader(materialsReader);
 
-materialsReader.setUrl(`${__BASE_PATH__}/data/obj/${fileName}.mtl`);
-reader.setUrl(`${__BASE_PATH__}/data/obj/${fileName}.obj`).then(() => {
-  representation.update();
-  fullScreenRenderer.addRepresentation(representation);
-  fullScreenRenderer.getRenderer().resetCamera();
-  fullScreenRenderer.getRenderWindow().render();
+materialsReader.setUrl(`${__BASE_PATH__}/data/obj/${fileName}.mtl`).then(() => {
+  console.log('got mat');
+  reader.setUrl(`${__BASE_PATH__}/data/obj/${fileName}.obj`).then(() => {
+    console.log('got mesh');
+    representation.update().then(() => {
+      fullScreenRenderer.addRepresentation(representation);
+      fullScreenRenderer.getRenderer().resetCamera();
+      fullScreenRenderer.getRenderWindow().render();
+    });
 
-  // Build control ui
-  const size = reader.getNumberOfOutputPorts();
-  const htmlBuffer = ['<style>.visible { font-weight: bold; } .click { cursor: pointer; min-width: 150px;}</style>'];
-  for (let i = 0; i < size; i++) {
-    const name = reader.getOutputData(i).get('name').name;
-    htmlBuffer.push(`<div class="click visible" data-index="${i}">${name}</div>`);
-  }
-  fullScreenRenderer.addController(htmlBuffer.join('\n'));
-  const nodes = document.querySelectorAll('.click');
-  for (let i = 0; i < nodes.length; i++) {
-    const el = nodes[i];
-    el.onclick = onClick;
-  }
+    // Build control ui
+    const size = reader.getNumberOfOutputPorts();
+    const htmlBuffer = ['<style>.visible { font-weight: bold; } .click { cursor: pointer; min-width: 150px;}</style>'];
+    for (let i = 0; i < size; i++) {
+      const name = reader.getOutputData(i).get('name').name;
+      htmlBuffer.push(`<div class="click visible" data-index="${i}">${name}</div>`);
+    }
+    fullScreenRenderer.addController(htmlBuffer.join('\n'));
+    const nodes = document.querySelectorAll('.click');
+    for (let i = 0; i < nodes.length; i++) {
+      const el = nodes[i];
+      el.onclick = onClick;
+    }
+  });
 });
 
 // -----------------------------------------------------------
