@@ -101,9 +101,9 @@ export function vtkPDBReader(publicAPI, model) {
 
           // fill polydata
           // atoms position
-          pointValues.push(x * model.xSpacing);
-          pointValues.push(y * model.ySpacing);
-          pointValues.push(z * model.zSpacing);
+          pointValues.push(x);
+          pointValues.push(y);
+          pointValues.push(z);
 
           // fetch data from the element database elements.json
           const [atomicNumberData] = ATOMS[elem];
@@ -161,9 +161,6 @@ export function vtkPDBReader(publicAPI, model) {
 
 const DEFAULT_VALUES = {
   numberOfAtoms: 0,
-  xSpacing: 1,
-  ySpacing: 1,
-  zSpacing: 1,
   requestCount: 0,
   // baseURL: null,
   // dataAccessHelper: null,
@@ -181,12 +178,10 @@ export function extend(publicAPI, model, initialValues = {}) {
     'url',
     'baseURL',
     'numberOfAtoms',
+    'requestCount',
   ]);
   macro.setGet(publicAPI, model, [
     'dataAccessHelper',
-    'xSpacing',
-    'ySpacing',
-    'zScaling',
   ]);
   macro.algo(publicAPI, model, 0, 1);
   macro.event(publicAPI, model, 'busy');
