@@ -3,7 +3,7 @@ import { ObjectType }           from 'vtk.js/Sources/Rendering/OpenGL/BufferObje
 
 import * as macro               from 'vtk.js/Sources/macro';
 
-import DynamicTypedArray        from 'vtk.js/Sources/Common/Core/DynamicTypedArray';
+import DynamicFloat32Array      from 'vtk.js/Sources/Rendering/OpenGL/DynamicFloat32Array';
 
 import vtkStickMapperVS         from 'vtk.js/Sources/Rendering/OpenGL/glsl/vtkStickMapperVS.glsl';
 import vtkPolyDataFS            from 'vtk.js/Sources/Rendering/OpenGL/glsl/vtkPolyDataFS.glsl';
@@ -308,7 +308,7 @@ export function vtkOpenGLStickMapper(publicAPI, model) {
     vbo.setStride(pointSize * 4);
 
     // Create a buffer, and copy the data over.
-    const packedVBO = new DynamicTypedArray({ chunkSize: 65500, arrayType: 'Float32Array' });
+    const packedVBO = new DynamicFloat32Array();
 
     let scales = null;
     let orientationArray = null;
@@ -358,13 +358,6 @@ export function vtkOpenGLStickMapper(publicAPI, model) {
 
     let pointIdx = 0;
     let colorIdx = 0;
-    let colorView = null;
-    if (colorData) {
-      colorView = new DataView(colorData.buffer, 0);
-    }
-
-    const offsetHelper = new ArrayBuffer(4);
-    const offsetHelperView = new DataView(offsetHelper, 0);
 
     for (let i = 0; i < numPoints; ++i) {
       let length = model.renderable.getLength();
@@ -384,15 +377,16 @@ export function vtkOpenGLStickMapper(publicAPI, model) {
         packedVBO.push(orientationArray[pointIdx++] * length);
         packedVBO.push(orientationArray[pointIdx++] * length);
 
-        offsetHelperView.setUint8(0, 255 * (verticesArray[j] % 2));
-        offsetHelperView.setUint8(1, (verticesArray[j] >= 4 ? 255 : 0));
-        offsetHelperView.setUint8(2, (verticesArray[j] >= 2 ? 255 : 0));
-        packedVBO.pushBytes(offsetHelperView, 0, 4);
+        packedVBO.pushBytes(
+          255 * (verticesArray[j] % 2),
+          (verticesArray[j] >= 4 ? 255 : 0),
+          (verticesArray[j] >= 2 ? 255 : 0),
+          255);
 
         packedVBO.push(radius);
         colorIdx = i * colorComponents;
         if (colorData) {
-          packedVBO.pushBytes(colorView, colorIdx, 4);
+          packedVBO.pushBytesFromArray(colorData, colorIdx, 4);
         }
       }
     }

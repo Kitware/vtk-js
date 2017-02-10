@@ -1,8 +1,8 @@
-import macro              from 'vtk.js/Sources/macro';
-import DynamicTypedArray  from 'vtk.js/Sources/Common/Core/DynamicTypedArray';
-import vtkBufferObject    from 'vtk.js/Sources/Rendering/OpenGL/BufferObject';
-import { ObjectType }     from 'vtk.js/Sources/Rendering/OpenGL/BufferObject/Constants';
-import { Representation } from 'vtk.js/Sources/Rendering/Core/Property/Constants';
+import macro               from 'vtk.js/Sources/macro';
+import DynamicFloat32Array from 'vtk.js/Sources/Rendering/OpenGL/DynamicFloat32Array';
+import vtkBufferObject     from 'vtk.js/Sources/Rendering/OpenGL/BufferObject';
+import { ObjectType }      from 'vtk.js/Sources/Rendering/OpenGL/BufferObject/Constants';
+import { Representation }  from 'vtk.js/Sources/Rendering/Core/Property/Constants';
 
 // ----------------------------------------------------------------------------
 // vtkOpenGLCellArrayBufferObject methods
@@ -12,7 +12,7 @@ function vtkOpenGLCellArrayBufferObject(publicAPI, model) {
   // Set our className
   model.classHierarchy.push('vtkOpenGLCellArrayBufferObject');
 
-  const packedVBO = new DynamicTypedArray({ chunkSize: 65500, arrayType: 'Float32Array' }); // the data
+  const packedVBO = new DynamicFloat32Array(); // the data
 
   publicAPI.setType(ObjectType.ARRAY_BUFFER);
 
@@ -67,9 +67,6 @@ function vtkOpenGLCellArrayBufferObject(publicAPI, model) {
     let tcoordIdx = 0;
     let colorIdx = 0;
     let cellCount = 0;
-    const dataHelper = new ArrayBuffer(4);
-    const dataHelperView = new DataView(dataHelper, 0);
-    dataHelperView.setUint8(3, 255); // default alpha
 
     const addAPoint = function addAPoint(i) {
       // Vertices
@@ -103,10 +100,8 @@ function vtkOpenGLCellArrayBufferObject(publicAPI, model) {
         } else {
           colorIdx = i * colorComponents;
         }
-        for (let j = 0; j < colorComponents; ++j) {
-          dataHelperView.setUint8(j, colorData[colorIdx++]);
-        }
-        packedVBO.pushBytes(dataHelperView, 0, 4);
+        packedVBO.pushBytesFromArray(colorData, colorIdx, colorComponents, 255);
+        colorIdx += colorComponents;
       }
     };
 
