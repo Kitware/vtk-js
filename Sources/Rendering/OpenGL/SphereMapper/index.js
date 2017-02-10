@@ -3,7 +3,7 @@ import { ObjectType }           from 'vtk.js/Sources/Rendering/OpenGL/BufferObje
 
 import macro                    from 'vtk.js/Sources/macro';
 
-import DynamicTypedArray        from 'vtk.js/Sources/Common/Core/DynamicTypedArray';
+import DynamicFloat32Array      from 'vtk.js/Sources/Rendering/OpenGL/DynamicFloat32Array';
 import vtkMath                  from 'vtk.js/Sources/Common/Core/Math';
 
 import vtkShaderProgram         from 'vtk.js/Sources/Rendering/OpenGL/ShaderProgram';
@@ -174,7 +174,7 @@ export function vtkOpenGLSphereMapper(publicAPI, model) {
 
     const vbo = model.primitives[model.primTypes.Tris].getCABO();
 
-    const packedVBO = new DynamicTypedArray({ chunkSize: 65500, arrayType: 'Float32Array' });
+    const packedVBO = new DynamicFloat32Array();
     const pointData = poly.getPointData();
     const points = poly.getPoints();
     const numPoints = points.getNumberOfPoints();
@@ -203,10 +203,6 @@ export function vtkOpenGLSphereMapper(publicAPI, model) {
     const cos30 = Math.cos(vtkMath.radiansFromDegrees(30.0));
     let pointIdx = 0;
     let colorIdx = 0;
-    let colorView = null;
-    if (colorData) {
-      colorView = new DataView(colorData.buffer, 0);
-    }
 
   //
   // Generate points and point data for sides
@@ -225,7 +221,7 @@ export function vtkOpenGLSphereMapper(publicAPI, model) {
       packedVBO.push(-radius);
       if (colorData) {
         colorIdx = i * colorComponents;
-        packedVBO.pushBytes(colorView, colorIdx, 4);
+        packedVBO.pushBytesFromArray(colorData, colorIdx, 4);
       }
 
       pointIdx = i * 3;
@@ -235,7 +231,7 @@ export function vtkOpenGLSphereMapper(publicAPI, model) {
       packedVBO.push(2.0 * radius * cos30);
       packedVBO.push(-radius);
       if (colorData) {
-        packedVBO.pushBytes(colorView, colorIdx, 4);
+        packedVBO.pushBytesFromArray(colorData, colorIdx, 4);
       }
 
       pointIdx = i * 3;
@@ -245,7 +241,7 @@ export function vtkOpenGLSphereMapper(publicAPI, model) {
       packedVBO.push(0.0);
       packedVBO.push(2.0 * radius);
       if (colorData) {
-        packedVBO.pushBytes(colorView, colorIdx, 4);
+        packedVBO.pushBytesFromArray(colorData, colorIdx, 4);
       }
     }
 
