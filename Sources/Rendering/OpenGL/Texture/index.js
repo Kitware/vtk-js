@@ -1,6 +1,7 @@
 import macro            from 'vtk.js/Sources/macro';
 import { Wrap, Filter } from 'vtk.js/Sources/Rendering/OpenGL/Texture/Constants';
 import { VtkDataTypes } from 'vtk.js/Sources/Common/Core/DataArray/Constants';
+import vtkMath          from 'vtk.js/Sources/Common/Core/Math';
 import vtkViewNode      from 'vtk.js/Sources/Rendering/SceneGraph/ViewNode';
 
 const { vtkDebugMacro, vtkErrorMacro, vtkWarningMacro } = macro;
@@ -455,6 +456,60 @@ function vtkOpenGLTexture(publicAPI, model) {
       pixData = newArray;
     }
 
+    if (pixData && (!vtkMath.isPowerOfTwo(width) || !vtkMath.isPowerOfTwo(height))) {
+      // Scale up the texture to the next highest power of two dimensions.
+      const newWidth = vtkMath.nearestPowerOfTwo(width);
+      const newHeight = vtkMath.nearestPowerOfTwo(height);
+      const pixCount = newWidth * newHeight * model.components;
+      let newArray = null;
+      switch (model.openGLDataType) {
+        case model.context.FLOAT:
+          newArray = new Float32Array(pixCount);
+          break;
+        default:
+        case model.context.UNSIGNED_BYTE:
+          newArray = new Uint8Array(pixCount);
+          break;
+      }
+      const jFactor = height / newHeight;
+      const iFactor = width / newWidth;
+      for (let j = 0; j < newHeight; j++) {
+        const joff = j * newWidth * numComps;
+        const jidx = j * jFactor;
+        let jlow = Math.floor(jidx);
+        let jhi = Math.ceil(jidx);
+        if (jhi >= height) {
+          jhi = height - 1;
+        }
+        const jmix = jidx - jlow;
+        const jmix1 = 1.0 - jmix;
+        jlow = jlow * width * numComps;
+        jhi = jhi * width * numComps;
+        for (let i = 0; i < newWidth; i++) {
+          const ioff = i * numComps;
+          const iidx = i * iFactor;
+          let ilow = Math.floor(iidx);
+          let ihi = Math.ceil(iidx);
+          if (ihi >= width) {
+            ihi = width - 1;
+          }
+          const imix = iidx - ilow;
+          ilow *= numComps;
+          ihi *= numComps;
+          for (let c = 0; c < numComps; c++) {
+            newArray[joff + ioff + c] =
+              (pixData[jlow + ilow + c] * jmix1 * (1.0 - imix)) +
+              (pixData[jlow + ihi + c] * jmix1 * imix) +
+              (pixData[jhi + ilow + c] * jmix * (1.0 - imix)) +
+              (pixData[jhi + ihi + c] * jmix * imix);
+          }
+        }
+      }
+      pixData = newArray;
+      model.width = newWidth;
+      model.height = newHeight;
+    }
+
 
     // Source texture data from the PBO.
     // model.context.pixelStorei(gl.UNPACK_FLIP_Y_WEBGL, true);
@@ -548,13 +603,24 @@ function vtkOpenGLTexture(publicAPI, model) {
     // model.context.pixelStorei(gl.UNPACK_FLIP_Y_WEBGL, true);
     model.context.pixelStorei(model.context.UNPACK_ALIGNMENT, 1);
 
+    let safeImage = image;
+    if (!vtkMath.isPowerOfTwo(image.width) || !vtkMath.isPowerOfTwo(image.height)) {
+      // Scale up the texture to the next highest power of two dimensions.
+      const canvas = document.createElement('canvas');
+      canvas.width = vtkMath.nearestPowerOfTwo(image.width);
+      canvas.height = vtkMath.nearestPowerOfTwo(image.height);
+      const ctx = canvas.getContext('2d');
+      ctx.drawImage(image, 0, 0, image.width, image.height);
+      safeImage = canvas;
+    }
+
     model.context.texImage2D(
           model.target,
           0,
           model.internalFormat,
           model.format,
           model.openGLDataType,
-          image);
+          safeImage);
 
     if (model.generateMipmap) {
       model.context.generateMipmap(model.target);

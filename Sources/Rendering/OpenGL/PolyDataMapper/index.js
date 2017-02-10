@@ -1302,8 +1302,12 @@ export function vtkOpenGLPolyDataMapper(publicAPI, model) {
       options.cellOffset += model.primitives[primTypes.TriStrips].getCABO()
         .createVBO(poly.getStrips(), 'strips', representation, options);
 
+      const drawSurfaceWithEdges =
+        (actor.getProperty().getEdgeVisibility() &&
+          representation === Representation.SURFACE);
+
       // if we have edge visibility build the edge VBOs
-      if (actor.getProperty().getEdgeVisibility()) {
+      if (drawSurfaceWithEdges) {
         model.primitives[primTypes.TrisEdges].getCABO()
           .createVBO(poly.getPolys(), 'polys', Representation.WIREFRAME,
           {
