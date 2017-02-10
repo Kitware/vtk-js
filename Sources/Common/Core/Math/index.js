@@ -45,9 +45,19 @@ const ceil = Math.ceil;
 const ceilLog2 = notImplemented('ceilLog2');
 const min = Math.min;
 const max = Math.max;
-const isPowerOfTwo = notImplemented('isPowerOfTwo');
-const nearestPowerOfTwo = notImplemented('nearestPowerOfTwo');
 const factorial = notImplemented('factorial');
+
+function nearestPowerOfTwo(xi) {
+  let v = 1;
+  while (v < xi) {
+    v *= 2;
+  }
+  return v;
+}
+
+function isPowerOfTwo(x) {
+  return (x === nearestPowerOfTwo(x));
+}
 
 function binomial(m, n) {
   let r = 1;

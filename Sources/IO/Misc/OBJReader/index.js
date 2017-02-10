@@ -1,7 +1,6 @@
 import macro            from 'vtk.js/Sources/macro';
 import DataAccessHelper from 'vtk.js/Sources/IO/Core/DataAccessHelper';
 import vtkDataArray     from 'vtk.js/Sources/Common/Core/DataArray';
-import vtkPoints        from 'vtk.js/Sources/Common/Core/Points';
 import vtkPolyData      from 'vtk.js/Sources/Common/DataModel/PolyData';
 
 // ----------------------------------------------------------------------------
@@ -10,19 +9,30 @@ const data = {};
 
 // ----------------------------------------------------------------------------
 
+function pushVector(src, srcOffset, dst, vectorSize) {
+  for (let i = 0; i < vectorSize; i++) {
+    dst.push(src[srcOffset + i]);
+  }
+}
+
+// ----------------------------------------------------------------------------
+
 function begin(splitMode) {
   data.splitOn = splitMode;
   data.pieces = [];
   data.v = [];
   data.vt = [];
-  data.f = [];
+  data.f = [[]];
   data.size = 0;
 }
 
 // ----------------------------------------------------------------------------
 
-function vertexIndex(str) {
-  return Number(str.split('/')[0]) - 1;
+function faceMap(str) {
+  const idxs = str.split('/').map(i => Number(i));
+  const vertexIdx = idxs[0] - 1;
+  const textCoordIdx = idxs[1] ? (idxs[1] - 1) : vertexIdx;
+  return [vertexIdx, textCoordIdx];
 }
 
 // ----------------------------------------------------------------------------
@@ -40,10 +50,6 @@ function parseLine(line) {
     data.v.push(Number(tokens[1]));
     data.v.push(Number(tokens[2]));
     data.v.push(Number(tokens[3]));
-    if (data.size === 0) {
-      data.size++;
-      data.f.push([]);
-    }
   } else if (tokens[0] === 'vt') {
     data.vt.push(Number(tokens[1]));
     data.vt.push(Number(tokens[2]));
@@ -53,7 +59,7 @@ function parseLine(line) {
     const size = tokens.length - 1;
     cells.push(size);
     for (let i = 0; i < size; i++) {
-      cells.push(vertexIndex(tokens[i + 1]));
+      cells.push(faceMap(tokens[i + 1]));
     }
   }
 }
@@ -61,40 +67,72 @@ function parseLine(line) {
 // ----------------------------------------------------------------------------
 
 function end(model) {
-  const points = vtkPoints.newInstance();
-  points.setData(Float32Array.from(data.v), 3);
-  let tcoords = null;
-  if (data.vt.length) {
-    tcoords = vtkDataArray.newInstance({ numberOfComponents: 2, values: Float32Array.from(data.vt), name: 'TextureCoordinates' });
-  }
-
-  while (data.pieces.length < data.f.length) {
-    data.pieces.push(`Geometry #${data.pieces.length}`);
-  }
-
+  const hasTcoords = !!(data.vt.length);
   if (model.splitMode) {
     model.numberOfOutputs = data.size;
     for (let idx = 0; idx < data.size; idx++) {
-      const polydata = vtkPolyData.newInstance();
-      polydata.setPoints(points);
-      polydata.getPolys().setData(Uint32Array.from(data.f[idx]));
-      polydata.set({ name: data.pieces[idx] }, true);
-      model.output[idx] = polydata;
+      const ctMapping = {};
+      const polydata = vtkPolyData.newInstance({ name: data.pieces[idx] });
+      const pts = [];
+      const tc = [];
+      const polys = [];
 
-      if (tcoords) {
+      const polyIn = data.f[idx];
+      const nbElems = polyIn.length;
+      let offset = 0;
+      while (offset < nbElems) {
+        const cellSize = polyIn[offset];
+        polys.push(cellSize);
+        for (let pIdx = 0; pIdx < cellSize; pIdx++) {
+          const [vIdx, tcIdx] = polyIn[offset + pIdx + 1];
+          const key = `${vIdx}/${tcIdx}`;
+          if (ctMapping[key] === undefined) {
+            ctMapping[key] = pts.length / 3;
+            pushVector(data.v, vIdx * 3, pts, 3);
+            if (hasTcoords) {
+              pushVector(data.vt, tcIdx * 2, tc, 2);
+            }
+          }
+          polys.push(ctMapping[key]);
+        }
+        offset += cellSize + 1;
+      }
+
+      polydata.getPoints().setData(Float32Array.from(pts), 3);
+      polydata.getPolys().setData(Uint32Array.from(polys));
+
+      if (hasTcoords) {
+        const tcoords = vtkDataArray.newInstance({ numberOfComponents: 2, values: Float32Array.from(tc), name: 'TextureCoordinates' });
         polydata.getPointData().setTCoords(tcoords);
       }
+
+      // register in output
+      model.output[idx] = polydata;
     }
   } else {
     model.numberOfOutputs = 1;
     const polydata = vtkPolyData.newInstance();
-    polydata.setPoints(points);
-    polydata.getPolys().setData(Uint32Array.from([].concat(...data.f)));
-    model.output[0] = polydata;
-
-    if (tcoords) {
+    polydata.getPoints().setData(Float32Array.from(data.v), 3);
+    if (hasTcoords && (data.v.length / 3) === (data.vt.length / 2)) {
+      const tcoords = vtkDataArray.newInstance({ numberOfComponents: 2, values: Float32Array.from(data.vt), name: 'TextureCoordinates' });
       polydata.getPointData().setTCoords(tcoords);
     }
+
+    const polys = [];
+    const polyIn = data.f[0];
+    const nbElems = polyIn.length;
+    let offset = 0;
+    while (offset < nbElems) {
+      const cellSize = polyIn[offset];
+      polys.push(cellSize);
+      for (let pIdx = 0; pIdx < cellSize; pIdx++) {
+        const [vIdx] = polyIn[offset + pIdx + 1];
+        polys.push(vIdx);
+      }
+      offset += cellSize + 1;
+    }
+    polydata.getPolys().setData(Uint32Array.from(polys));
+    model.output[0] = polydata;
   }
 }
 
