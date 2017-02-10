@@ -1,19 +1,21 @@
-import test      from 'tape-catch';
-import testUtils from 'vtk.js/Sources/Testing/testUtils';
+import test                             from 'tape-catch';
+import testUtils                        from 'vtk.js/Sources/Testing/testUtils';
 
-import vtkActor                    from 'vtk.js/Sources/Rendering/Core/Actor';
-import vtkMoleculeToRepresentation from 'vtk.js/Sources/Filters/General/MoleculeToRepresentation';
-import vtkOpenGLRenderWindow       from 'vtk.js/Sources/Rendering/OpenGL/RenderWindow';
-import vtkPDBReader                from 'vtk.js/Sources/IO/Misc/PDBReader';
-import vtkSphereMapper             from 'vtk.js/Sources/Rendering/Core/SphereMapper';
-import vtkStickMapper              from 'vtk.js/Sources/Rendering/Core/StickMapper';
-import vtkRenderer                 from 'vtk.js/Sources/Rendering/Core/Renderer';
-import vtkRenderWindow             from 'vtk.js/Sources/Rendering/Core/RenderWindow';
+import vtkActor                         from 'vtk.js/Sources/Rendering/Core/Actor';
+import vtkMolecule                      from 'vtk.js/Sources/Common/DataModel/Molecule';
+import vtkMoleculeToRepresentation      from 'vtk.js/Sources/Filters/General/MoleculeToRepresentation';
+import vtkSphereMapper                  from 'vtk.js/Sources/Rendering/Core/SphereMapper';
+import vtkStickMapper                   from 'vtk.js/Sources/Rendering/Core/StickMapper';
+import vtkRenderer                      from 'vtk.js/Sources/Rendering/Core/Renderer';
+import vtkRenderWindow                  from 'vtk.js/Sources/Rendering/Core/RenderWindow';
+import vtkOpenGLRenderWindow            from 'vtk.js/Sources/Rendering/OpenGL/RenderWindow';
 
-import baseline from './testMolecule_with_bonds.png';
+import baseline                         from './testMolecule_multiple_bonds.png';
+import testMolecule                     from 'vtk.js/Data/molecule/test-multiple-bonds.cjson';
 
-test.onlyIfWebGL('Test MoleculeMapper', (t) => {
-  t.ok('IO: PDBReader', 'Filter: MoleculeToRepresentation');
+
+test.onlyIfWebGL('Test MultipleBonds', (t) => {
+  t.ok('Filter: MoleculeToRepresentation');
 
   // Create some control UI
   const container = document.querySelector('body');
@@ -30,15 +32,14 @@ test.onlyIfWebGL('Test MoleculeMapper', (t) => {
   // Test code
   // ----------------------------------------------------------------------------
 
-  const reader = vtkPDBReader.newInstance();
+  const molecule = vtkMolecule.newInstance(testMolecule);
   const filter = vtkMoleculeToRepresentation.newInstance();
   const sphereMapper = vtkSphereMapper.newInstance();
   const stickMapper = vtkStickMapper.newInstance();
   const sphereActor = vtkActor.newInstance();
   const stickActor = vtkActor.newInstance();
 
-  filter.setInputConnection(reader.getOutputPort());
-  filter.setRadiusType('radiusCovalent');
+  filter.setInputData(molecule);
 
   // render sphere
   sphereMapper.setInputConnection(filter.getOutputPort(0));
@@ -67,14 +68,7 @@ test.onlyIfWebGL('Test MoleculeMapper', (t) => {
   renderWindow.addView(glwindow);
   glwindow.setSize(400, 400);
 
-  // fetch caffeine.pdb file from Girder
-  reader.setUrl('https://data.kitware.com/api/v1/item/588652298d777f4f3f30849e/download').then(() => {
-    // once data uplaod, render
-    renderer.resetCamera();
-    renderWindow.render();
-
-    // the data have to be uploaded before capturing and comparing the images
-    const image = glwindow.captureImage();
-    testUtils.compareImages(image, [baseline], 'IO/Misc/PDBReader', t);
-  });
+  // capturing and comparing the images
+  const image = glwindow.captureImage();
+  testUtils.compareImages(image, [baseline], 'Filters/General/MoleculeToRepresentation', t);
 });
