@@ -42,9 +42,8 @@ export function vtkOBJRepresentation(publicAPI, model) {
           const material = model.materialsReader.getMaterial(name);
           if (material.image) {
             material.image.onload = () => {
-              const texture = vtkTexture.newInstance();
+              const texture = vtkTexture.newInstance({ interpolate: true, repeat: false, edgeClamp: false });
               textures[name] = texture;
-              texture.setInterpolate(true);
               texture.setImage(material.image);
               texture.modified();
               if (actors[name]) {
