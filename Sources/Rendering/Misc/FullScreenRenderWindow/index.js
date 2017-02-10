@@ -59,6 +59,16 @@ function vtkFullScreenRenderWindow(publicAPI, model) {
   // Update BG color
   publicAPI.setBackground(...model.background);
 
+  // Representation API
+  publicAPI.addRepresentation = (representation) => {
+    representation.getActors().forEach((actor) => {
+      model.renderer.addActor(actor);
+    });
+  };
+  publicAPI.removeRepresentation = (representation) => {
+    representation.getActors().forEach(actor => model.renderer.removeActor(actor));
+  };
+
   // Handle window resize
   function updateRenderWindowSize() {
     const dims = model.container.getBoundingClientRect();
