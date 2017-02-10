@@ -68,7 +68,6 @@ export function vtkOBJRepresentation(publicAPI, model) {
                 actors[name].addTexture(texture);
                 textureCount--;
                 if (textureCount === 0) {
-                  console.log('text2 resolve');
                   resolve();
                 }
               }
@@ -82,10 +81,8 @@ export function vtkOBJRepresentation(publicAPI, model) {
 
           if (actors[name]) {
             actorCount--;
-            console.log('set actor prop (text)', name);
             actors[name].getProperty().set(actorProp);
             if (actorCount === 0 && !hasTextures) {
-              console.log('resolve from texture (actor set)');
               resolve();
             }
           } else {
@@ -109,10 +106,8 @@ export function vtkOBJRepresentation(publicAPI, model) {
 
         if (name && actorProps[name]) {
           actorCount--;
-          console.log('set actor prop (mesh)', name, JSON.stringify(actorProps[name]));
           actor.getProperty().set(actorProps[name]);
           if (actorCount === 0 && !hasTextures) {
-            console.log('set actor prop (mesh)', name);
             resolve();
           }
         }
@@ -121,8 +116,6 @@ export function vtkOBJRepresentation(publicAPI, model) {
           actor.addTexture(textures[name]);
           textureCount--;
           if (textureCount === 0) {
-            console.log('text from mesh resolve');
-
             resolve();
           }
         }

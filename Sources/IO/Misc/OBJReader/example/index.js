@@ -37,9 +37,7 @@ representation.setOBJReader(reader);
 representation.setMaterialsReader(materialsReader);
 
 materialsReader.setUrl(`${__BASE_PATH__}/data/obj/${fileName}.mtl`).then(() => {
-  console.log('got mat');
   reader.setUrl(`${__BASE_PATH__}/data/obj/${fileName}.obj`).then(() => {
-    console.log('got mesh');
     representation.update().then(() => {
       fullScreenRenderer.addRepresentation(representation);
       fullScreenRenderer.getRenderer().resetCamera();

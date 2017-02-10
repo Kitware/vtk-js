@@ -79,7 +79,6 @@ export function vtkMTLReader(publicAPI, model) {
             resolve();
           },
           (err) => {
-            console.log('err', err);
             reject();
           });
     });
