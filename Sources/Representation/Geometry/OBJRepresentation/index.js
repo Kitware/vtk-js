@@ -37,9 +37,24 @@ export function vtkOBJRepresentation(publicAPI, model) {
 
       const actors = {};
       const textures = {};
+      const actorProps = {};
       if (model.materialsReader) {
         model.materialsReader.getMaterialNames().forEach((name) => {
           const material = model.materialsReader.getMaterial(name);
+          const actorProp = {
+            ambientColor: material.Ka.map(i => Number(i)),
+            specularColor: material.Ks.map(i => Number(i)),
+            diffuseColor: material.Kd.map(i => Number(i)),
+            opacity: Number(material.d),
+            specularPower: Number(material.Ns),
+          };
+          const illum = Number(material.illum || 2);
+          ['ambient', 'diffuse', 'specular'].forEach((k, idx) => {
+            actorProp[k] = (idx <= illum) ? 1.0 : 0.0;
+          });
+          actorProps[name] = actorProp;
+
+
           if (material.image) {
             material.image.onload = () => {
               const texture = vtkTexture.newInstance({ interpolate: true, repeat: false, edgeClamp: false });
@@ -62,6 +77,9 @@ export function vtkOBJRepresentation(publicAPI, model) {
         const name = source.get('name').name;
         if (name && textures[name]) {
           actor.addTexture(textures[name]);
+        }
+        if (name && actorProps[name]) {
+          actor.getProperty().set(actorProps[name]);
         }
 
         actors[name] = actor;
