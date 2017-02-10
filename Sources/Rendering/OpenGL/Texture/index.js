@@ -603,16 +603,16 @@ function vtkOpenGLTexture(publicAPI, model) {
     // model.context.pixelStorei(gl.UNPACK_FLIP_Y_WEBGL, true);
     model.context.pixelStorei(model.context.UNPACK_ALIGNMENT, 1);
 
-    let safeImage = image;
-    if (!vtkMath.isPowerOfTwo(image.width) || !vtkMath.isPowerOfTwo(image.height)) {
-      // Scale up the texture to the next highest power of two dimensions.
-      const canvas = document.createElement('canvas');
-      canvas.width = vtkMath.nearestPowerOfTwo(image.width);
-      canvas.height = vtkMath.nearestPowerOfTwo(image.height);
-      const ctx = canvas.getContext('2d');
-      ctx.drawImage(image, 0, 0, image.width, image.height, 0, 0, canvas.width, canvas.height);
-      safeImage = canvas;
-    }
+    // Scale up the texture to the next highest power of two dimensions (if needed) and flip y.
+    const needNearestPowerOfTwo = (!vtkMath.isPowerOfTwo(image.width) || !vtkMath.isPowerOfTwo(image.height));
+    const canvas = document.createElement('canvas');
+    canvas.width = needNearestPowerOfTwo ? vtkMath.nearestPowerOfTwo(image.width) : image.width;
+    canvas.height = needNearestPowerOfTwo ? vtkMath.nearestPowerOfTwo(image.height) : image.height;
+    const ctx = canvas.getContext('2d');
+    ctx.translate(0, canvas.height);
+    ctx.scale(1, -1);
+    ctx.drawImage(image, 0, 0, image.width, image.height, 0, 0, canvas.width, canvas.height);
+    const safeImage = canvas;
 
     model.context.texImage2D(
           model.target,
