@@ -3,6 +3,7 @@ import vtkOBJReader               from 'vtk.js/Sources/IO/Misc/OBJReader';
 import vtkMTLReader               from 'vtk.js/Sources/IO/Misc/MTLReader';
 import vtkOBJRepresentation       from 'vtk.js/Sources/Representation/Geometry/OBJRepresentation';
 
+const fileName = 'space-shuttle-orbiter';
 // ----------------------------------------------------------------------------
 // Standard rendering code setup
 // ----------------------------------------------------------------------------
@@ -35,8 +36,8 @@ function onClick(event) {
 representation.setOBJReader(reader);
 representation.setMaterialsReader(materialsReader);
 
-materialsReader.setUrl(`${__BASE_PATH__}/data/obj/starwars-millennium-falcon.mtl`);
-reader.setUrl(`${__BASE_PATH__}/data/obj/starwars-millennium-falcon.obj`).then(() => {
+materialsReader.setUrl(`${__BASE_PATH__}/data/obj/${fileName}.mtl`);
+reader.setUrl(`${__BASE_PATH__}/data/obj/${fileName}.obj`).then(() => {
   representation.update();
   fullScreenRenderer.addRepresentation(representation);
   fullScreenRenderer.getRenderer().resetCamera();
