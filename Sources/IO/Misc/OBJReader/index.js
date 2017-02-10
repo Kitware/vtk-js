@@ -22,6 +22,7 @@ function begin(splitMode) {
   data.pieces = [];
   data.v = [];
   data.vt = [];
+  data.vn = [];
   data.f = [[]];
   data.size = 0;
 }
@@ -32,7 +33,8 @@ function faceMap(str) {
   const idxs = str.split('/').map(i => Number(i));
   const vertexIdx = idxs[0] - 1;
   const textCoordIdx = idxs[1] ? (idxs[1] - 1) : vertexIdx;
-  return [vertexIdx, textCoordIdx];
+  const vertexNormal = idxs[2] ? (idxs[2] - 1) : vertexIdx;
+  return [vertexIdx, textCoordIdx, vertexNormal];
 }
 
 // ----------------------------------------------------------------------------
@@ -53,6 +55,10 @@ function parseLine(line) {
   } else if (tokens[0] === 'vt') {
     data.vt.push(Number(tokens[1]));
     data.vt.push(Number(tokens[2]));
+  } else if (tokens[0] === 'vn') {
+    data.vn.push(Number(tokens[1]));
+    data.vn.push(Number(tokens[2]));
+    data.vn.push(Number(tokens[3]));
   } else if (tokens[0] === 'f') {
     // Handle triangles for now
     const cells = data.f[data.size - 1];
@@ -68,13 +74,16 @@ function parseLine(line) {
 
 function end(model) {
   const hasTcoords = !!(data.vt.length);
+  const hasNormals = !!(data.vn.length);
   if (model.splitMode) {
     model.numberOfOutputs = data.size;
     for (let idx = 0; idx < data.size; idx++) {
+      const ptIdxMapping = [];
       const ctMapping = {};
       const polydata = vtkPolyData.newInstance({ name: data.pieces[idx] });
       const pts = [];
       const tc = [];
+      const normals = [];
       const polys = [];
 
       const polyIn = data.f[idx];
@@ -84,16 +93,34 @@ function end(model) {
         const cellSize = polyIn[offset];
         polys.push(cellSize);
         for (let pIdx = 0; pIdx < cellSize; pIdx++) {
-          const [vIdx, tcIdx] = polyIn[offset + pIdx + 1];
-          const key = `${vIdx}/${tcIdx}`;
-          if (ctMapping[key] === undefined) {
-            ctMapping[key] = pts.length / 3;
-            pushVector(data.v, vIdx * 3, pts, 3);
-            if (hasTcoords) {
-              pushVector(data.vt, tcIdx * 2, tc, 2);
+          const [vIdx, tcIdx, nIdx] = polyIn[offset + pIdx + 1];
+          if (vIdx !== tcIdx) {
+            // Need to duplicate the point ?
+            const key = `${vIdx}/${tcIdx}`;
+            if (ctMapping[key] === undefined) {
+              ctMapping[key] = pts.length / 3;
+              pushVector(data.v, vIdx * 3, pts, 3);
+              if (hasTcoords) {
+                pushVector(data.vt, tcIdx * 2, tc, 2);
+              }
+              if (hasNormals) {
+                pushVector(data.vn, nIdx * 3, normals, 3);
+              }
             }
+            polys.push(ctMapping[key]);
+          } else {
+            if (ptIdxMapping[vIdx] === undefined) {
+              ptIdxMapping[vIdx] = pts.length / 3;
+              pushVector(data.v, vIdx * 3, pts, 3);
+              if (hasTcoords) {
+                pushVector(data.vt, tcIdx * 2, tc, 2);
+              }
+              if (hasNormals) {
+                pushVector(data.vn, nIdx * 3, normals, 3);
+              }
+            }
+            polys.push(ptIdxMapping[vIdx]);
           }
-          polys.push(ctMapping[key]);
         }
         offset += cellSize + 1;
       }
@@ -106,6 +133,11 @@ function end(model) {
         polydata.getPointData().setTCoords(tcoords);
       }
 
+      if (hasNormals) {
+        const normalsArray = vtkDataArray.newInstance({ numberOfComponents: 3, values: Float32Array.from(normals), name: 'Normals' });
+        polydata.getPointData().setNormals(normalsArray);
+      }
+
       // register in output
       model.output[idx] = polydata;
     }
@@ -116,6 +148,10 @@ function end(model) {
     if (hasTcoords && (data.v.length / 3) === (data.vt.length / 2)) {
       const tcoords = vtkDataArray.newInstance({ numberOfComponents: 2, values: Float32Array.from(data.vt), name: 'TextureCoordinates' });
       polydata.getPointData().setTCoords(tcoords);
+    }
+    if (hasNormals && (data.v.length === data.vn.length)) {
+      const normalsArray = vtkDataArray.newInstance({ numberOfComponents: 3, values: Float32Array.from(data.vn), name: 'Normals' });
+      polydata.getPointData().setNormals(normalsArray);
     }
 
     const polys = [];
