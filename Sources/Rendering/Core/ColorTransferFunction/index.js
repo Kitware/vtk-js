@@ -45,8 +45,7 @@ function vtkColorTransferFunctionAdjustHue(msh, unsatM) {
 
   // This equation is designed to make the perceptual change of the
   // interpolation to be close to constant.
-  const hueSpin = (msh[1] * Math.sqrt((unsatM * unsatM) - (msh[0] * msh[0]))
-                    / (msh[0] * Math.sin(msh[1])));
+  const hueSpin = (msh[1] * Math.sqrt((unsatM * unsatM) - (msh[0] * msh[0])) / (msh[0] * Math.sin(msh[1])));
   // Spin hue away from 0 except in purple hues.
   if (msh[2] > -0.3 * vtkMath.pi()) {
     return msh[2] + hueSpin;
@@ -73,8 +72,8 @@ function vtkColorTransferFunctionAngleDiff(a1, a2) {
 function vtkColorTransferFunctionInterpolateDiverging(s, rgb1, rgb2, result) {
   const lab1 = [];
   const lab2 = [];
-  vtkMath.rGBToLab(rgb1, lab1);
-  vtkMath.rGBToLab(rgb2, lab2);
+  vtkMath.rgb2lab(rgb1, lab1);
+  vtkMath.rgb2lab(rgb2, lab2);
 
   const msh1 = [];
   const msh2 = [];
@@ -120,7 +119,7 @@ function vtkColorTransferFunctionInterpolateDiverging(s, rgb1, rgb2, result) {
   // Now convert back to RGB
   const labTmp = [];
   vtkColorTransferFunctionMshToLab(mshTmp, labTmp);
-  vtkMath.labToRGB(labTmp, result);
+  vtkMath.lab2rgb(labTmp, result);
 }
 
 // Add module-level functions or api that you want to expose statically via
@@ -202,7 +201,7 @@ function vtkColorTransferFunction(publicAPI, model) {
     const rgb = [];
     const hsv = [h, s, v];
 
-    vtkMath.hSVToRGB(hsv, rgb);
+    vtkMath.hsv2rgb(hsv, rgb);
     return publicAPI.addRGBPoint(x, rgb[0], rgb[1], rgb[2], midpoint, sharpness);
   };
 
@@ -326,8 +325,8 @@ function vtkColorTransferFunction(publicAPI, model) {
     const rgb1 = [];
     const rgb2 = [];
 
-    vtkMath.hSVToRGB(hsv1, rgb1);
-    vtkMath.hSVToRGB(hsv2, rgb2);
+    vtkMath.hsv2rgb(hsv1, rgb1);
+    vtkMath.hsv2rgb(hsv2, rgb2);
     publicAPI.addRGBSegment(x1, rgb1[0], rgb1[1], rgb1[2], x2, rgb2[0], rgb2[1], rgb2[2]);
   };
 
@@ -602,8 +601,8 @@ function vtkColorTransferFunction(publicAPI, model) {
           } else if (model.colorSpace === ColorSpace.HSV) {
             const hsv1 = [];
             const hsv2 = [];
-            vtkMath.rGBToHSV(rgb1, hsv1);
-            vtkMath.rGBToHSV(rgb2, hsv2);
+            vtkMath.rgb2hsv(rgb1, hsv1);
+            vtkMath.rgb2hsv(rgb2, hsv2);
 
             if (model.hSVWrap &&
                  (hsv1[0] - hsv2[0] > 0.5 ||
@@ -624,15 +623,15 @@ function vtkColorTransferFunction(publicAPI, model) {
             hsvTmp[2] = ((1.0 - s) * hsv1[2]) + (s * hsv2[2]);
 
             // Now convert this back to RGB
-            vtkMath.hSVToRGB(hsvTmp, tmpVec);
+            vtkMath.hsv2rgb(hsvTmp, tmpVec);
             table[tidx] = tmpVec[0];
             table[tidx + 1] = tmpVec[1];
             table[tidx + 2] = tmpVec[2];
           } else if (model.colorSpace === ColorSpace.LAB) {
             const lab1 = [];
             const lab2 = [];
-            vtkMath.rGBToLab(rgb1, lab1);
-            vtkMath.rGBToLab(rgb2, lab2);
+            vtkMath.rgb2lab(rgb1, lab1);
+            vtkMath.rgb2lab(rgb2, lab2);
 
             const labTmp = [];
             labTmp[0] = ((1 - s) * lab1[0]) + (s * lab2[0]);
@@ -640,7 +639,7 @@ function vtkColorTransferFunction(publicAPI, model) {
             labTmp[2] = ((1 - s) * lab1[2]) + (s * lab2[2]);
 
             // Now convert back to RGB
-            vtkMath.labToRGB(labTmp, tmpVec);
+            vtkMath.lab2rgb(labTmp, tmpVec);
             table[tidx] = tmpVec[0];
             table[tidx + 1] = tmpVec[1];
             table[tidx + 2] = tmpVec[2];
@@ -692,8 +691,8 @@ function vtkColorTransferFunction(publicAPI, model) {
         } else if (model.colorSpace === ColorSpace.HSV) {
           const hsv1 = [];
           const hsv2 = [];
-          vtkMath.rGBToHSV(rgb1, hsv1);
-          vtkMath.rGBToHSV(rgb2, hsv2);
+          vtkMath.rgb2hsv(rgb1, hsv1);
+          vtkMath.rgb2hsv(rgb2, hsv2);
 
           if (model.hSVWrap &&
                (hsv1[0] - hsv2[0] > 0.5 ||
@@ -719,15 +718,15 @@ function vtkColorTransferFunction(publicAPI, model) {
             }
           }
           // Now convert this back to RGB
-          vtkMath.hSVToRGB = (hsvTmp, tmpVec);
+          vtkMath.hsv2rgb = (hsvTmp, tmpVec);
           table[tidx] = tmpVec[0];
           table[tidx + 1] = tmpVec[1];
           table[tidx + 2] = tmpVec[2];
         } else if (model.colorSpace === ColorSpace.LAB) {
           const lab1 = [];
           const lab2 = [];
-          vtkMath.rGBToLab(rgb1, lab1);
-          vtkMath.rGBToLab(rgb2, lab2);
+          vtkMath.rgb2lab(rgb1, lab1);
+          vtkMath.rgb2lab(rgb2, lab2);
 
           const labTmp = [];
           for (let j = 0; j < 3; j++) {
@@ -739,7 +738,7 @@ function vtkColorTransferFunction(publicAPI, model) {
             labTmp[j] = (h1 * lab1[j]) + (h2 * lab2[j]) + (h3 * t) + (h4 * t);
           }
           // Now convert this back to RGB
-          vtkMath.labToRGB(labTmp, tmpVec);
+          vtkMath.lab2rgb(labTmp, tmpVec);
           table[tidx] = tmpVec[0];
           table[tidx + 1] = tmpVec[1];
           table[tidx + 2] = tmpVec[2];
