@@ -97,11 +97,6 @@ export function vtkOpenGLRenderWindow(publicAPI, model) {
     }
   };
 
-  publicAPI.setCanvas = (canvas) => {
-    model.canvas = canvas;
-    publicAPI.modified();
-  };
-
   publicAPI.isInViewport = (x, y, viewport) => {
     const vCoords = viewport.getViewport();
     const size = model.size;
@@ -240,6 +235,7 @@ export function extend(publicAPI, model, initialValues = {}) {
   macro.setGet(publicAPI, model, [
     'initialized',
     'context',
+    'canvas',
   ]);
 
   macro.setGetArray(publicAPI, model, [
