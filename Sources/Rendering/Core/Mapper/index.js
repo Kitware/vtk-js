@@ -344,8 +344,8 @@ function vtkMapper(publicAPI, model) {
       // In the future, we could extend vtkScalarsToColors.
       model.lookupTable.build();
       let numberOfColors = model.lookupTable.getNumberOfAvailableColors();
-      if (numberOfColors > 4096) {
-        numberOfColors = 4096;
+      if (numberOfColors > 4094) {
+        numberOfColors = 4094;
       }
       numberOfColors += 2;
       const k = (range[1] - range[0]) / (numberOfColors - 1 - 2);
@@ -406,7 +406,7 @@ function vtkMapper(publicAPI, model) {
         num, numComps,
         scalarComponent, range,
         model.lookupTable.getRange(),
-        model.lookupTable.getNumberOfAvailableColors(),
+        (model.colorTextureMap.getPointData().getScalars().getNumberOfTuples() / 2) - 2,
         useLogScale);
     }
   };
