@@ -9,6 +9,7 @@ function vtkTexture(publicAPI, model) {
   model.classHierarchy.push('vtkTexture');
 
   publicAPI.imageLoaded = () => {
+    model.image.removeEventListener('load', publicAPI.imageLoaded);
     model.imageLoaded = true;
     publicAPI.modified();
   };
@@ -23,12 +24,15 @@ function vtkTexture(publicAPI, model) {
       publicAPI.setInputConnection(null);
     }
 
-    model.imageLoaded = false;
-    image.addEventListener('load', publicAPI.imageLoaded());
     model.image = image;
+    model.imageLoaded = false;
+
     if (image.complete) {
       publicAPI.imageLoaded();
+    } else {
+      image.addEventListener('load', publicAPI.imageLoaded);
     }
+
     publicAPI.modified();
   };
 }
