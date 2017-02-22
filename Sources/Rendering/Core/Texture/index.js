@@ -7,6 +7,34 @@ import macro from 'vtk.js/Sources/macro';
 function vtkTexture(publicAPI, model) {
   // Set our className
   model.classHierarchy.push('vtkTexture');
+
+  publicAPI.imageLoaded = () => {
+    model.image.removeEventListener('load', publicAPI.imageLoaded);
+    model.imageLoaded = true;
+    publicAPI.modified();
+  };
+
+  publicAPI.setImage = (image) => {
+    if (model.image === image) {
+      return;
+    }
+
+    if (image !== null) {
+      publicAPI.setInputData(null);
+      publicAPI.setInputConnection(null);
+    }
+
+    model.image = image;
+    model.imageLoaded = false;
+
+    if (image.complete) {
+      publicAPI.imageLoaded();
+    } else {
+      image.addEventListener('load', publicAPI.imageLoaded);
+    }
+
+    publicAPI.modified();
+  };
 }
 
 // ----------------------------------------------------------------------------
@@ -18,6 +46,7 @@ const DEFAULT_VALUES = {
   interpolate: false,
   edgeClamp: false,
   image: null,
+  imageLoaded: false,
 };
 
 // ----------------------------------------------------------------------------
