@@ -1,8 +1,8 @@
 import './Common/Core/LookupTable/test/testCategoricalColors';
 import './Common/DataModel/DataSetAttributes/test/testDataSetAttributes';
 import './Filters/General/Calculator/test/testCalculator';
-import './Filters/General/MoleculeToRepresentation/test/testMultipleBonds';
 import './Filters/General/ImageStreamline/test/testStreamline';
+import './Filters/General/MoleculeToRepresentation/test/testMultipleBonds';
 import './Filters/General/WarpScalar/test/testWarp';
 import './Filters/Sources/ConeSource/test/testCone';
 import './Filters/Sources/LineSource/test/testLine';
@@ -10,6 +10,7 @@ import './Filters/Sources/PlaneSource/test/testPlane';
 import './Filters/Sources/PointSource/test/testPointSource';
 import './IO/Misc/PDBReader/test/testMolecule';
 import './Rendering/Core/ColorTransferFunction/test/testColorTransferFunction';
+// import './Rendering/Core/ColorTransferFunction/test/testColorTransferFunctionPresets';
 import './Rendering/Core/Mapper/test/testEdgeVisibility';
 import './Rendering/OpenGL/HardwareSelector/test/testHardwareSelector';
 import './Rendering/OpenGL/PolyDataMapper/test/testInterpolateScalarsBeforeMapping';

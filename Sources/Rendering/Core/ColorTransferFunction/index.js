@@ -1038,6 +1038,29 @@ function vtkColorTransferFunction(publicAPI, model) {
       }
     }
   };
+
+  //----------------------------------------------------------------------------
+  publicAPI.applyColorMap = (colorMap) => {
+    if (colorMap.ColorSpace) {
+      model.colorSpace = ColorSpace[colorMap.ColorSpace.toUpperCase()];
+    }
+    if (colorMap.NanColor) {
+      model.nanColor = [].concat(colorMap.NanColor);
+      while (model.nanColor.length < 4) {
+        model.nanColor.push(1.0);
+      }
+    }
+    if (colorMap.RGBPoints) {
+      model.nodes = [].concat(colorMap.RGBPoints);
+    }
+    // FIXME: not supported ?
+    // if (colorMap.IndexedColors) {
+    // }
+    // if (colorMap.Annotations) {
+    // }
+
+    publicAPI.sortAndUpdateRange();
+  };
 }
 
 // ----------------------------------------------------------------------------
