@@ -60,6 +60,7 @@ export function vtkOBJRepresentation(publicAPI, model) {
             hasTextures = true;
             textureCount++;
             const onLoad = () => {
+              console.log('image ready callback', name);
               const texture = vtkTexture.newInstance({ interpolate: true });
               textures[name] = texture;
               texture.setImage(material.image);
@@ -70,11 +71,15 @@ export function vtkOBJRepresentation(publicAPI, model) {
                 if (textureCount === 0) {
                   resolve();
                 }
+              } else {
+                console.log('got texture but no actor', name);
               }
             };
             if (material.image.complete) {
+              console.log('image is already ready', name);
               onLoad();
             } else {
+              console.log('add listener for image', name);
               material.image.onload = onLoad;
             }
           }
@@ -82,10 +87,14 @@ export function vtkOBJRepresentation(publicAPI, model) {
           if (actors[name]) {
             actorCount--;
             actors[name].getProperty().set(actorProp);
+            console.log('(material) update actor');
             if (actorCount === 0 && !hasTextures) {
               resolve();
+            } else {
+              console.log('(material) no resolve because actorCount:', actorCount, 'hasTextures:', hasTextures, 'name', name);
             }
           } else {
+            console.log('(material) got actor props but no actor', name);
             actorProps[name] = actorProp;
           }
         });
@@ -109,7 +118,11 @@ export function vtkOBJRepresentation(publicAPI, model) {
           actor.getProperty().set(actorProps[name]);
           if (actorCount === 0 && !hasTextures) {
             resolve();
+          } else {
+            console.log('(geo) no resolve because actorCount:', actorCount, 'hasTextures', hasTextures, 'name:', name);
           }
+        } else {
+          console.log('(geo) no actor props for', name);
         }
 
         if (name && textures[name]) {
@@ -117,6 +130,8 @@ export function vtkOBJRepresentation(publicAPI, model) {
           textureCount--;
           if (textureCount === 0) {
             resolve();
+          } else {
+            console.log('(geo) no resolve because texture count', textureCount, 'name:', name);
           }
         }
       }
