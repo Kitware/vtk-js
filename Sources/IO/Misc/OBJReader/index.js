@@ -61,6 +61,9 @@ function parseLine(line) {
     data.vn.push(Number(tokens[3]));
   } else if (tokens[0] === 'f') {
     // Handle triangles for now
+    if (data.size === 0) {
+      data.size++;
+    }
     const cells = data.f[data.size - 1];
     const size = tokens.length - 1;
     cells.push(size);
