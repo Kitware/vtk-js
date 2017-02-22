@@ -9,6 +9,7 @@ const { vtkWarningMacro, vtkErrorMacro } = macro;
 // ----------------------------------------------------------------------------
 
 const eventsWeHandle = [
+  'Animation',
   'Enter',
   'Leave',
   'MouseMove',
@@ -130,7 +131,7 @@ function vtkRenderWindowInteractor(publicAPI, model) {
     canvas.addEventListener('mousedown', publicAPI.handleMouseDown);
     document.querySelector('body').addEventListener('keypress', publicAPI.handleKeyPress);
     canvas.addEventListener('mouseup', publicAPI.handleMouseUp);
-    canvas.addEventListener('mousemove', publicAPI.handleMouseMove);
+    canvas.addEventListener('mousemove', publicAPI.updateMouseCoords);
     canvas.addEventListener('touchstart', publicAPI.handleTouchStart, false);
     canvas.addEventListener('touchend', publicAPI.handleTouchEnd, false);
     canvas.addEventListener('touchcancel', publicAPI.handleTouchEnd, false);
@@ -146,7 +147,7 @@ function vtkRenderWindowInteractor(publicAPI, model) {
     canvas.removeEventListener('mousedown', publicAPI.handleMouseDown);
     document.querySelector('body').removeEventListener('keypress', publicAPI.handleKeyPress);
     canvas.removeEventListener('mouseup', publicAPI.handleMouseUp);
-    canvas.removeEventListener('mousemove', publicAPI.handleMouseMove);
+    canvas.removeEventListener('mousemove', publicAPI.updateMouseCoords);
     canvas.removeEventListener('touchstart', publicAPI.handleTouchStart);
     canvas.removeEventListener('touchend', publicAPI.handleTouchEnd);
     canvas.removeEventListener('touchcancel', publicAPI.handleTouchEnd);
@@ -165,6 +166,8 @@ function vtkRenderWindowInteractor(publicAPI, model) {
     event.stopPropagation();
     event.preventDefault();
 
+    // intentioanlly done twice
+    publicAPI.setEventPosition(event.clientX, model.canvas.clientHeight - event.clientY + 1, 0, 0);
     publicAPI.setEventPosition(event.clientX, model.canvas.clientHeight - event.clientY + 1, 0, 0);
     model.controlKey = event.ctrlKey;
     model.altKey = event.altKey;
@@ -185,12 +188,27 @@ function vtkRenderWindowInteractor(publicAPI, model) {
     }
   };
 
-  publicAPI.handleMouseMove = (event) => {
+  publicAPI.requestAnimation = (requestor) => {
+    model.animationRequest = requestAnimationFrame(publicAPI.handleAnimation);
+  };
+
+  publicAPI.cancelAnimation = (requestor) => {
+    if (model.animationRequest) {
+      cancelAnimationFrame(model.animationRequest);
+      model.animationRequest = null;
+    }
+  };
+
+  publicAPI.updateMouseCoords = (event) => {
+    model.mouseCoords[0] = [event.clientX, model.canvas.clientHeight - event.clientY + 1];
     event.stopPropagation();
     event.preventDefault();
+  };
 
-    publicAPI.setEventPosition(event.clientX, model.canvas.clientHeight - event.clientY + 1, 0, 0);
-    publicAPI.mouseMoveEvent();
+  publicAPI.handleAnimation = () => {
+    publicAPI.setEventPosition(model.mouseCoords[0][0], model.mouseCoords[0][1], 0, 0);
+    publicAPI.animationEvent();
+    model.animationRequest = requestAnimationFrame(publicAPI.handleAnimation);
   };
 
   publicAPI.handleWheel = (event) => {
@@ -607,6 +625,8 @@ const DEFAULT_VALUES = {
   lastTranslation: [],
   rotation: 0.0,
   lastRotation: 0.0,
+  animationRequest: null,
+  mouseCoords: null,
 };
 
 // ----------------------------------------------------------------------------
@@ -619,6 +639,7 @@ export function extend(publicAPI, model, initialValues = {}) {
   model.lastEventPositions = {};
   model.pointersDown = {};
   model.startingEventPositions = {};
+  model.mouseCoords = {};
 
   // Object methods
   macro.obj(publicAPI, model);

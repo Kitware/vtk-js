@@ -73,6 +73,17 @@ function vtkFramebuffer(publicAPI, model) {
     model.context = win.getContext();
   };
 
+  publicAPI.getGLFramebuffer = () => model.glFramebuffer;
+
+  publicAPI.getSize = () => {
+    const size = [0, 0];
+    if (model.glFramebuffer !== null) {
+      size[0] = model.glFramebuffer.width;
+      size[1] = model.glFramebuffer.height;
+    }
+    return size;
+  };
+
   publicAPI.populateFramebuffer = () => {
     publicAPI.bind();
     const gl = model.context;
@@ -119,6 +130,7 @@ export function extend(publicAPI, model, initialValues = {}) {
 
   macro.setGet(publicAPI, model, [
     'context',
+    'colorTexture',
   ]);
 
   // For more macro methods, see "Sources/macro.js"

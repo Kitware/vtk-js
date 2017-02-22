@@ -10,7 +10,7 @@ function vtkTrackballPan(publicAPI, model) {
   // Set our className
   model.classHierarchy.push('vtkTrackballPan');
 
-  publicAPI.onMouseMove = (x, y, ren, rwi) => {
+  publicAPI.onAnimation = (x, y, ren, rwi) => {
     const camera = ren.getActiveCamera();
 
     const lastPos = rwi.getLastEventPosition(rwi.getPointerIndex());

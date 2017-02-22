@@ -394,23 +394,23 @@ function vtkCamera(publicAPI, model) {
 // ----------------------------------------------------------------------------
 
 export const DEFAULT_VALUES = {
-  position: [0, 0, 1],
-  focalPoint: [0, 0, 0],
-  viewUp: [0, 1, 0],
-  directionOfProjection: [0, 0, -1],
+  position: null,
+  focalPoint: null,
+  viewUp: null,
+  directionOfProjection: null,
   parallelProjection: false,
   useHorizontalViewAngle: false,
   viewAngle: 30,
   parallelScale: 1,
-  clippingRange: [0.01, 1000.01],
+  clippingRange: null,
   thickness: 1000,
-  windowCenter: [0, 0],
-  viewPlaneNormal: [0, 0, 1],
+  windowCenter: null,
+  viewPlaneNormal: null,
   focalDisk: 1,
   useOffAxisProjection: false,
-  screenBottomLeft: [-0.5, -0.5, -0.5],
-  screenBottomRight: [0.5, -0.5, -0.5],
-  screenTopRight: [0.5, 0.5, -0.5],
+  screenBottomLeft: null,
+  screenBottomRight: null,
+  screenTopRight: null,
   userViewTransform: null,
   userTransform: null,
   freezeFocalPoint: false,
@@ -426,6 +426,38 @@ export function extend(publicAPI, model, initialValues = {}) {
 
   // Build VTK API
   macro.obj(publicAPI, model);
+
+  if (model.position === null) {
+    model.position = [0, 0, 1];
+  }
+  if (model.focalPoint === null) {
+    model.focalPoint = [0, 0, 0];
+  }
+  if (model.viewUp === null) {
+    model.viewUp = [0, 1, 0];
+  }
+  if (model.directionOfProjection === null) {
+    model.directionOfProjection = [0, 0, -1];
+  }
+  if (model.clippingRange === null) {
+    model.clippingRange = [0.01, 1000.01];
+  }
+  if (model.windowCenter) {
+    model.windowCenter = [0, 0];
+  }
+  if (model.viewPlaneNormal === null) {
+    model.viewPlaneNormal = [0, 0, 1];
+  }
+  if (model.screenBottomLeft === null) {
+    model.screenBottomLeft = [-0.5, -0.5, -0.5];
+  }
+  if (model.screenBottomRight === null) {
+    model.screenBottomRight = [0.5, -0.5, -0.5];
+  }
+  if (model.screenTopRight === null) {
+    model.screenTopRight = [0.5, 0.5, -0.5];
+  }
+
   macro.get(publicAPI, model, [
     'thickness',
     'userViewTransform',

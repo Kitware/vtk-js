@@ -11,6 +11,8 @@ import vtkOpenGLRenderer       from 'vtk.js/Sources/Rendering/OpenGL/Renderer';
 import vtkOpenGLSphereMapper   from 'vtk.js/Sources/Rendering/OpenGL/SphereMapper';
 import vtkOpenGLStickMapper    from 'vtk.js/Sources/Rendering/OpenGL/StickMapper';
 import vtkOpenGLTexture        from 'vtk.js/Sources/Rendering/OpenGL/Texture';
+import vtkOpenGLVolume         from 'vtk.js/Sources/Rendering/OpenGL/Volume';
+import vtkOpenGLVolumeMapper   from 'vtk.js/Sources/Rendering/OpenGL/VolumeMapper';
 
 // ----------------------------------------------------------------------------
 // vtkOpenGLViewNodeFactory methods
@@ -51,6 +53,8 @@ export function extend(publicAPI, model, initialValues = {}) {
   publicAPI.registerOverride('vtkSphereMapper', vtkOpenGLSphereMapper.newInstance);
   publicAPI.registerOverride('vtkStickMapper', vtkOpenGLStickMapper.newInstance);
   publicAPI.registerOverride('vtkTexture', vtkOpenGLTexture.newInstance);
+  publicAPI.registerOverride('vtkVolume', vtkOpenGLVolume.newInstance);
+  publicAPI.registerOverride('vtkVolumeMapper', vtkOpenGLVolumeMapper.newInstance);
 }
 
 // ----------------------------------------------------------------------------

@@ -11,7 +11,7 @@ function vtkTrackballRoll(publicAPI, model) {
   // Set our className
   model.classHierarchy.push('vtkTrackballRoll');
 
-  publicAPI.onMouseMove = (x, y, ren, rwi) => {
+  publicAPI.onAnimation = (x, y, ren, rwi) => {
     const camera = ren.getActiveCamera();
 
     // compute view vector (rotation axis)

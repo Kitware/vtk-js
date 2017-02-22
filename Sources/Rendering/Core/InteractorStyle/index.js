@@ -23,6 +23,7 @@ const stateNames = {
 };
 
 const events = [
+  'Animation',
   'Enter',
   'Leave',
   'MouseMove',
@@ -173,12 +174,28 @@ function vtkInteractorStyle(publicAPI, model) {
     publicAPI.setCurrentRenderer(model.interactor.findPokedRenderer(x, y));
   };
 
+  publicAPI.setAnimationStateOn = () => {
+    if (model.animationState === States.IS_ANIM_ON) {
+      return;
+    }
+    model.animationState = States.IS_ANIM_ON;
+    model.interactor.requestAnimation(publicAPI);
+  };
+
+  publicAPI.setAnimationStateOff = () => {
+    if (model.animationState === States.IS_ANIM_OFF) {
+      return;
+    }
+    model.animationState = States.IS_ANIM_OFF;
+    model.interactor.cancelAnimation(publicAPI);
+  };
+
   publicAPI.startState = (state) => {
     model.state = state;
     if (model.animationState === States.IS_ANIM_OFF) {
-      const rwi = model.interactor;
-      rwi.getRenderWindow().setDesiredUpdateRate(rwi.getDesiredUpdateRate());
-      model.invokeStartInteractionEvent({ type: 'StartInteractionEvent' });
+      // const rwi = model.interactor;
+      // rwi.getRenderWindow().setDesiredUpdateRate(rwi.getDesiredUpdateRate());
+      publicAPI.invokeStartInteractionEvent({ type: 'StartInteractionEvent' });
     }
   };
 
@@ -186,7 +203,7 @@ function vtkInteractorStyle(publicAPI, model) {
     model.state = States.IS_NONE;
     if (model.animationState === States.IS_ANIM_OFF) {
       const rwi = model.interactor;
-      rwi.getRenderWindow().setDesiredUpdateRate(rwi.getStillUpdateRate());
+      // rwi.getRenderWindow().setDesiredUpdateRate(rwi.getStillUpdateRate());
       publicAPI.invokeEndInteractionEvent({ type: 'EndInteractionEvent' });
       rwi.render();
     }
@@ -199,7 +216,7 @@ function vtkInteractorStyle(publicAPI, model) {
 
 const DEFAULT_VALUES = {
   state: States.IS_NONE,
-  animState: States.IS_ANIM_OFF,
+  animationState: States.IS_ANIM_OFF,
   handleObservers: 1,
   autoAdjustCameraClippingRange: 1,
   unsubscribes: null,

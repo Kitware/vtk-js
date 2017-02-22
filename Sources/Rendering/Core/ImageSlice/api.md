@@ -13,7 +13,8 @@ the basis for this and many other image display classes.
 
 ## See Also
 
-vtkImageMapper vtkImageProperty
+[vtkImageMapper](./Rendering_Core_ImageMapper.html) 
+[vtkImageProperty](./Rendering_Core_ImageProperty.html) 
 
 ### mapper
 

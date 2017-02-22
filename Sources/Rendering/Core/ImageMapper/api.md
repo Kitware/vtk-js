@@ -5,7 +5,9 @@ It can be associated with a vtkImageSlice prop and placed within a Renderer.
 
 ## See Also
 
-vtkImageSlice vtkImageProperty vtkInteractorStyleImage
+[vtkImageProperty](./Rendering_Core_ImageProperty.html) 
+[vtkImageSlice](./Rendering_Core_ImageSlice.html) 
+[vtkInteractorStyleImage](./Interactor_Style_InteractorStyleImage.html) 
 
 ### zSlice
 

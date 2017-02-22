@@ -49,9 +49,9 @@ function vtkTrackballMultiRotate(publicAPI, model) {
     }
   };
 
-  publicAPI.onMouseMove = (x, y, ren, rwi) => {
+  publicAPI.onAnimation = (x, y, ren, rwi) => {
     if (currentManipulator) {
-      currentManipulator.onMouseMove(x, y, ren, rwi);
+      currentManipulator.onAnimation(x, y, ren, rwi);
     }
   };
 }

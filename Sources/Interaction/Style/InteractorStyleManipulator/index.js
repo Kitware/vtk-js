@@ -172,6 +172,7 @@ function vtkInteractorStyleManipulator(publicAPI, model) {
       model.currentManipulator.setRotationFactor(model.rotationFactor);
       model.currentManipulator.startInteraction();
       model.currentManipulator.onButtonDown(pos.x, pos.y, model.currentRenderer, model.interactor);
+      publicAPI.setAnimationStateOn();
     } else {
       vtkDebugMacro('No manipulator found');
     }
@@ -213,6 +214,7 @@ function vtkInteractorStyleManipulator(publicAPI, model) {
       return;
     }
     if (model.currentManipulator.getButton() === button) {
+      publicAPI.setAnimationStateOff();
       const pos = model.interactor.getEventPosition(model.interactor.getPointerIndex());
       model.currentManipulator.onButtonUp(pos.x, pos.y, model.currentRenderer, model.interactor);
       model.currentManipulator.endInteraction();
@@ -223,7 +225,7 @@ function vtkInteractorStyleManipulator(publicAPI, model) {
   };
 
   //-------------------------------------------------------------------------
-  publicAPI.handleMouseMove = () => {
+  publicAPI.handleAnimation = () => {
     const pos = model.interactor.getEventPosition(model.interactor.getPointerIndex());
 
     if (model.currentRenderer && model.currentManipulator) {
@@ -234,7 +236,7 @@ function vtkInteractorStyleManipulator(publicAPI, model) {
     }
 
     if (model.currentManipulator) {
-      model.currentManipulator.onMouseMove(pos.x, pos.y, model.currentRenderer, model.interactor);
+      model.currentManipulator.onAnimation(pos.x, pos.y, model.currentRenderer, model.interactor);
       publicAPI.invokeInteractionEvent({ type: 'InteractionEvent' });
     }
   };

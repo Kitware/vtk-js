@@ -284,7 +284,7 @@ function vtkRenderer(publicAPI, model) {
 
     if (nothingVisible) {
       vtkMath.uninitializeBounds(allBounds);
-      vtkDebugMacro('Can\'t compute bounds, no 3D props are visible');
+     // vtkDebugMacro('Can\'t compute bounds, no 3D props are visible');
     }
 
     return allBounds;
@@ -295,7 +295,7 @@ function vtkRenderer(publicAPI, model) {
     const center = [0, 0, 0];
 
     if (!vtkMath.areBoundsInitialized(boundsToUse)) {
-      vtkDebugMacro('Cannot reset camera!');
+//      vtkDebugMacro('Cannot reset camera!');
       return false;
     }
 

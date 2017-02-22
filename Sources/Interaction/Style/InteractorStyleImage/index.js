@@ -61,7 +61,7 @@ function vtkInteractorStyleImage(publicAPI, model) {
 
   // Public API methods
   publicAPI.superHandleMouseMove = publicAPI.handleMouseMove;
-  publicAPI.handleMouseMove = () => {
+  publicAPI.handleAnimation = () => {
     const pos = model.interactor.getEventPosition(model.interactor.getPointerIndex());
 
     switch (model.state) {
@@ -97,14 +97,17 @@ function vtkInteractorStyleImage(publicAPI, model) {
       model.windowLevelStartPosition[0] = pos.x;
       model.windowLevelStartPosition[1] = pos.y;
       publicAPI.startWindowLevel();
+      publicAPI.setAnimationStateOn();
     } else if (model.interactionMode === 'IMAGE3D' &&
              model.interactor.getShiftKey()) {
       // If shift is held down, do a rotation
       publicAPI.startRotate();
+      publicAPI.setAnimationStateOn();
     } else if (model.interactionMode === 'IMAGE_SLICING' &&
              model.interactor.getControlKey()) {
       // If ctrl is held down in slicing mode, slice the image
       publicAPI.startSlice();
+      publicAPI.setAnimationStateOn();
     } else {
       // The rest of the button + key combinations remain the same
       publicAPI.superHandleLeftButtonPress();
@@ -119,14 +122,16 @@ function vtkInteractorStyleImage(publicAPI, model) {
         publicAPI.endWindowLevel();
         if (model.interactor) {
           publicAPI.releaseFocus();
-        }
+          publicAPI.setAnimationStateOff();
+          }
         break;
 
       case States.IS_SLICE:
         publicAPI.endSlice();
         if (model.interactor) {
           publicAPI.releaseFocus();
-        }
+          publicAPI.setAnimationStateOff();
+          }
         break;
 
       default:

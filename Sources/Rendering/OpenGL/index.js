@@ -21,6 +21,8 @@ import vtkTexture                from './Texture';
 import vtkTextureUnitManager     from './TextureUnitManager';
 import vtkVertexArrayObject      from './VertexArrayObject';
 import vtkViewNodeFactory        from './ViewNodeFactory';
+import vtkVolume                 from './Volume';
+import vtkVolumeMapper           from './VolumeMapper';
 
 export default {
   vtkActor,
@@ -46,4 +48,6 @@ export default {
   vtkTextureUnitManager,
   vtkVertexArrayObject,
   vtkViewNodeFactory,
+  vtkVolume,
+  vtVolumeMapper,
 };

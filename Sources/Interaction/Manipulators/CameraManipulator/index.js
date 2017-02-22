@@ -12,7 +12,7 @@ function vtkCameraManipulator(publicAPI, model) {
   publicAPI.endInteraction = () => {};
   publicAPI.onButtonDown = (x, y, ren, rwi) => {};
   publicAPI.onButtonUp = (x, y, ren, rwi) => {};
-  publicAPI.onMouseMove = (x, y, ren, rwi) => {};
+  publicAPI.onAnimation = (x, y, ren, rwi) => {};
   publicAPI.onKeyUp = (rwi) => {};
   publicAPI.onKeyDown = (rwi) => {};
 
