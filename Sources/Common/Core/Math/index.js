@@ -1759,7 +1759,7 @@ function rgb2lab(rgb, lab) {
   xyz2lab(xyz, lab);
 }
 
-function LabToRGB(lab, rgb) {
+function lab2rgb(lab, rgb) {
   const xyz = [0, 0, 0];
   lab2xyz(lab, xyz);
   xyz2rgb(xyz, rgb);
@@ -1983,7 +1983,7 @@ export default {
   xyz2rgb,
   rgb2xyz,
   rgb2lab,
-  LabToRGB,
+  lab2rgb,
   uninitializeBounds,
   areBoundsInitialized,
   clampValue,
