@@ -46,8 +46,13 @@ function vtkOpenGLTexture(publicAPI, model) {
       publicAPI.setMinificationFilter(Filter.NEAREST);
       publicAPI.setMagnificationFilter(Filter.NEAREST);
     }
+    // clear image if input data is set
+    if (model.renderable.getInputData()) {
+      model.renderable.setImage(null);
+    }
     // create the texture if it is not done already
-    if (!model.handle) {
+    if (!model.handle &&
+      (model.renderable.getImage() == null || model.renderable.getImageLoaded())) {
       if (model.renderable.getImage() !== null) {
         if (model.renderable.getInterpolate()) {
           model.generateMipmap = true;
