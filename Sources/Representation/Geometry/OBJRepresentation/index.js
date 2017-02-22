@@ -35,12 +35,10 @@ export function vtkOBJRepresentation(publicAPI, model) {
     return new Promise((resolve, reject) => {
       model.scene = [];
 
-      let hasTextures = false;
-      let textureCount = 0;
-      let actorCount = model.input.getNumberOfOutputPorts();
       const actors = {};
       const textures = {};
       const actorProps = {};
+      const isReady = { material: !model.materialsReader, objReader: false };
       if (model.materialsReader) {
         model.materialsReader.getMaterialNames().forEach((name) => {
           const material = model.materialsReader.getMaterial(name);
@@ -57,47 +55,26 @@ export function vtkOBJRepresentation(publicAPI, model) {
           });
 
           if (material.image) {
-            hasTextures = true;
-            textureCount++;
-            const onLoad = () => {
-              console.log('image ready callback', name);
-              const texture = vtkTexture.newInstance({ interpolate: true });
-              textures[name] = texture;
-              texture.setImage(material.image);
-              texture.modified();
-              if (actors[name]) {
-                actors[name].addTexture(texture);
-                textureCount--;
-                if (textureCount === 0) {
-                  resolve();
-                }
-              } else {
-                console.log('got texture but no actor', name);
-              }
-            };
-            if (material.image.complete) {
-              console.log('image is already ready', name);
-              onLoad();
-            } else {
-              console.log('add listener for image', name);
-              material.image.onload = onLoad;
+            const texture = vtkTexture.newInstance({ interpolate: true });
+            textures[name] = texture;
+            texture.setImage(material.image);
+            if (actors[name]) {
+              console.log('add textute for', name);
+              actors[name].addTexture(texture);
             }
           }
 
           if (actors[name]) {
-            actorCount--;
             actors[name].getProperty().set(actorProp);
-            console.log('(material) update actor');
-            if (actorCount === 0 && !hasTextures) {
-              resolve();
-            } else {
-              console.log('(material) no resolve because actorCount:', actorCount, 'hasTextures:', hasTextures, 'name', name);
-            }
           } else {
-            console.log('(material) got actor props but no actor', name);
             actorProps[name] = actorProp;
           }
         });
+        if (isReady.objReader) {
+          resolve();
+        } else {
+          isReady.material = true;
+        }
       }
 
       const numberOfPieces = model.input.getNumberOfOutputPorts();
@@ -113,27 +90,21 @@ export function vtkOBJRepresentation(publicAPI, model) {
         model.scene.push({ source, mapper, actor, name });
         publicAPI.addActor(actor);
 
+        if (name && textures[name]) {
+          actor.addTexture(textures[name]);
+          console.log('add textute for', name);
+        }
+
         if (name && actorProps[name]) {
-          actorCount--;
           actor.getProperty().set(actorProps[name]);
-          if (actorCount === 0 && !hasTextures) {
-            resolve();
-          } else {
-            console.log('(geo) no resolve because actorCount:', actorCount, 'hasTextures', hasTextures, 'name:', name);
-          }
         } else {
           console.log('(geo) no actor props for', name);
         }
-
-        if (name && textures[name]) {
-          actor.addTexture(textures[name]);
-          textureCount--;
-          if (textureCount === 0) {
-            resolve();
-          } else {
-            console.log('(geo) no resolve because texture count', textureCount, 'name:', name);
-          }
-        }
+      }
+      if (isReady.material) {
+        resolve();
+      } else {
+        isReady.objReader = true;
       }
     });
   };
