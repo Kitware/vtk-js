@@ -235,6 +235,7 @@ export function extend(publicAPI, model, initialValues = {}) {
   macro.setGet(publicAPI, model, [
     'initialized',
     'context',
+    'canvas',
   ]);
 
   macro.setGetArray(publicAPI, model, [
