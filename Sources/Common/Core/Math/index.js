@@ -629,8 +629,8 @@ function jacobiN(a, n, w, v) {
   const vtkROTATE = (aa, ii, jj, kk, ll) => {
     g = aa[ii][jj];
     h = aa[kk][ll];
-    a[ii][jj] = g - (s * (h + (g * tau)));
-    a[kk][ll] = h + (s * (g - (h * tau)));
+    aa[ii][jj] = g - (s * (h + (g * tau)));
+    aa[kk][ll] = h + (s * (g - (h * tau)));
   };
 
   // initialize
