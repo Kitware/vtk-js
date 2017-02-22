@@ -51,7 +51,7 @@ function vtkShaderCache(publicAPI, model) {
     ]).result;
 
     const nVSSource = vtkShaderProgram.substitute(VSSource, '//VTK::System::Dec', [
-      `${version}\n#extension GL_OES_standard_derivatives : enable\n`,
+      `${version}\n`,
       '#ifdef GL_FRAGMENT_PRECISION_HIGH',
       'precision highp float;',
       'precision highp int;',
