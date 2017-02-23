@@ -1,6 +1,6 @@
 import resemble from 'resemblejs';
 
-function compareImages(image, baselines, testName, tapeContext, threshold = 5, nextCallback = null) {
+function compareImages(image, baselines, testName, tapeContext, threshold = 0.5, nextCallback = null) {
   let minDelta = 100;
   let isSameDimensions = false;
   baselines.forEach((baseline) => {

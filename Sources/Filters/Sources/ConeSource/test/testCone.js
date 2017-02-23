@@ -41,5 +41,13 @@ test.onlyIfWebGL('Test vtkConeSource Rendering', (t) => {
 
   const image = glwindow.captureImage();
 
-  testUtils.compareImages(image, [baseline], 'Filters/Sources/ConeSource/', t);
+  // Free memory
+  // glwindow.delete();
+  // renderWindow.delete();
+  // renderer.delete();
+  // mapper.delete();
+  // actor.delete();
+  container.removeChild(renderWindowContainer);
+
+  testUtils.compareImages(image, [baseline], 'Filters/Sources/ConeSource/testCone', t, 2.5);
 });

@@ -68,13 +68,23 @@ test.onlyIfWebGL('Test MoleculeMapper', (t) => {
   glwindow.setSize(400, 400);
 
   // fetch caffeine.pdb file from Girder
-  reader.setUrl('https://data.kitware.com/api/v1/item/588652298d777f4f3f30849e/download').then(() => {
-    // once data uplaod, render
+  t.ok('waiting for download');
+  reader.setUrl(`${__BASE_PATH__}/Data/molecule/pdb/caffeine.pdb`).then(() => {
+    t.ok('download complete');
+
+    // once data upload, render
     renderer.resetCamera();
     renderWindow.render();
 
     // the data have to be uploaded before capturing and comparing the images
     const image = glwindow.captureImage();
+
+    // Free memory
+    // glwindow.delete();
+    // renderWindow.delete();
+    // renderer.delete();
+    container.removeChild(renderWindowContainer);
+
     testUtils.compareImages(image, [baseline], 'IO/Misc/PDBReader', t);
   });
 });

@@ -1,5 +1,5 @@
 import test      from 'tape-catch';
-// import testUtils from 'vtk.js/Sources/Testing/testUtils';
+import testUtils from 'vtk.js/Sources/Testing/testUtils';
 
 import vtkOpenGLRenderWindow    from 'vtk.js/Sources/Rendering/OpenGL/RenderWindow';
 import vtkRenderWindow          from 'vtk.js/Sources/Rendering/Core/RenderWindow';
@@ -16,11 +16,12 @@ import 'vtk.js/Sources/Common/DataModel/DataSetAttributes';
 import 'vtk.js/Sources/Common/DataModel/PolyData';
 
 import colorMaps from '../ColorMaps.json';
-// import baseline from './testColorTransferFunctionPreset.png';
+import baseline from './testColorTransferFunctionPresets.png';
 
-const MAX_NUMBER_OF_PRESETS = 5;
+const MAX_NUMBER_OF_PRESETS = 200;
+const NUMBER_PER_LINE = 20;
 
-function createScalarMap(offset, preset) {
+function createScalarMap(offsetX, offsetY, preset) {
   const polydata = vtk({
     vtkClass: 'vtkPolyData',
     points: {
@@ -28,10 +29,10 @@ function createScalarMap(offset, preset) {
       dataType: 'Float32Array',
       numberOfComponents: 3,
       values: [
-        offset, 0, 0,
-        offset + 0.25, 0, 0,
-        offset + 0.25, 1, 0,
-        offset, 1, 0,
+        offsetX, offsetY, 0,
+        offsetX + 0.25, offsetY, 0,
+        offsetX + 0.25, offsetY + 1, 0,
+        offsetX, offsetY + 1, 0,
       ],
     },
     polys: {
@@ -85,13 +86,15 @@ test.onlyIfWebGL('Test Interpolate Scalars Before Colors', (t) => {
   renderer.setBackground(0.0, 0.0, 0.0);
 
   // Add one with default LUT
-  renderer.addActor(createScalarMap(-0.5));
+  // renderer.addActor(createScalarMap(0, 0));
 
   let count = 0;
   colorMaps.forEach((preset, idx) => {
     if (preset.RGBPoints && count < MAX_NUMBER_OF_PRESETS) {
-      console.log('add bar for', preset.Name);
-      renderer.addActor(createScalarMap(count * 0.5, preset));
+      const i = (count % NUMBER_PER_LINE);
+      const j = Math.floor(count / NUMBER_PER_LINE);
+      console.log(`${count + 1}: [${i}, ${j}] - ${preset.Name} | ${preset.ColorSpace}`);
+      renderer.addActor(createScalarMap(i * 0.5, j * 1.25, preset));
       count += 1;
     }
   });
@@ -100,14 +103,20 @@ test.onlyIfWebGL('Test Interpolate Scalars Before Colors', (t) => {
   const glwindow = vtkOpenGLRenderWindow.newInstance();
   glwindow.setContainer(renderWindowContainer);
   renderWindow.addView(glwindow);
-  glwindow.setSize(200 * count, 400);
+  glwindow.setSize(50 * NUMBER_PER_LINE, 150 * Math.floor(count / NUMBER_PER_LINE));
 
   const camera = renderer.getActiveCamera();
   renderer.resetCamera();
-  camera.zoom(count / 2);
+  camera.zoom(1.45);
   renderWindow.render();
 
-  // const image = glwindow.captureImage();
+  const image = glwindow.captureImage();
 
-  // testUtils.compareImages(image, [baseline], 'Rendering/Core/ColorTransferFunction/', t);
+  // Free memory
+  // glwindow.destroy();
+  // renderWindow.destroy();
+  // renderer.destroy();
+  container.removeChild(renderWindowContainer);
+
+  testUtils.compareImages(image, [baseline], 'Rendering/Core/ColorTransferFunction/testColorTransferFunctionPresets', t);
 });

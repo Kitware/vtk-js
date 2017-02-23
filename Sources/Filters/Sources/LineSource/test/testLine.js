@@ -41,5 +41,13 @@ test.onlyIfWebGL('Test vtkLineSource Rendering', (t) => {
 
   const image = glwindow.captureImage();
 
-  testUtils.compareImages(image, [baseline], 'Filters/Sources/LineSource/', t);
+  // Free memory
+  // glwindow.delete();
+  // renderWindow.delete();
+  // renderer.delete();
+  // mapper.delete();
+  // actor.delete();
+  container.removeChild(renderWindowContainer);
+
+  testUtils.compareImages(image, [baseline], 'Filters/Sources/LineSource/testLine', t);
 });

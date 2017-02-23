@@ -104,5 +104,13 @@ test.onlyIfWebGL('Test Categorical Colors', (t) => {
 
   const image = glwindow.captureImage();
 
-  testUtils.compareImages(image, [baseline], 'Common/Core/LookupTable/', t);
+  // Free memory
+  // glwindow.delete();
+  // renderWindow.delete();
+  // renderer.delete();
+  // mapper.delete();
+  // actor.delete();
+  container.removeChild(renderWindowContainer);
+
+  testUtils.compareImages(image, [baseline], 'Common/Core/LookupTable/testCategoricalColors', t, 2);
 });
