@@ -1,4 +1,6 @@
-var vtkBasePath = require('path').resolve('.');
+var path = require('path');
+var vtkBasePath = path.resolve('.');
+var pathSepa = (path.sep === '\\') ? '\\\\' : '/';
 
 module.exports = function buildConfig(name, relPath, destPath, root) {
   return `
@@ -35,7 +37,7 @@ module.exports = {
     },
   },
   eslint: {
-    configFile: '${root}/.eslintrc.js',
+    configFile: '${root}${pathSepa}.eslintrc.js',
   },
 
   devServer: {
@@ -49,7 +51,7 @@ module.exports = {
       colors: true,
     },
     proxy: {
-      '/data/**': {
+      '${pathSepa}data${pathSepa}**': {
         target: 'http://0.0.0.0:9999/Data',
         pathRewrite: {
           '^/data': ''
