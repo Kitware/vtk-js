@@ -296,7 +296,7 @@ function distance2BetweenPoints(x, y) {
 function angleBetweenVectors(v1, v2) {
   const crossVect = [0, 0, 0];
   cross(v1, v2, crossVect);
-  return Math.atan2(norm(cross), dot(v1, v2));
+  return Math.atan2(norm(crossVect), dot(v1, v2));
 }
 
 function gaussianAmplitude(mean, variance, position) {
