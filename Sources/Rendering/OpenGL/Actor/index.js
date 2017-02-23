@@ -28,16 +28,19 @@ function vtkOpenGLActor(publicAPI, model) {
     }
     publicAPI.apply(operation, true);
 
+    // always traverse textures first, then mapper
     model.activeTextures = [];
     model.children.forEach((child) => {
-      if (child.isA('vtkOpenGLTexture') && operation === 'Render' && child.getHandle()) {
+      if (child.isA('vtkOpenGLTexture')) {
         child.apply(operation, true);
-        model.activeTextures.push(child);
+        if (child.getHandle()) {
+          model.activeTextures.push(child);
+        }
       }
     });
 
     model.children.forEach((child) => {
-      if (!child.isA('vtkOpenGLTexture') || operation !== 'Render') {
+      if (!child.isA('vtkOpenGLTexture')) {
         child.apply(operation, true);
       }
     });

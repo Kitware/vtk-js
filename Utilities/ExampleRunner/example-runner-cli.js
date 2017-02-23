@@ -71,7 +71,7 @@ if (configuration.examples) {
   }
 
   if (buildExample) {
-    let exBasePath = null;
+    var exBasePath = null;
     const exampleName = filterExamples[0];
     Object.keys(examples).forEach((exampleBasePath) => {
       if (examples[exampleBasePath][exampleName]) {

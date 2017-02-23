@@ -45,7 +45,8 @@ function parseLine(line) {
   }
   const tokens = line.split(' ');
   if (tokens[0] === data.splitOn) {
-    data.pieces.push(tokens[1]);
+    tokens.shift();
+    data.pieces.push(tokens.join(' ').trim());
     data.f.push([]);
     data.size++;
   } else if (tokens[0] === 'v') {

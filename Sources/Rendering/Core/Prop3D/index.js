@@ -16,8 +16,11 @@ function vtkProp3D(publicAPI, model) {
   // Set our className
   model.classHierarchy.push('vtkProp3D');
 
+  // Capture 'parentClass' api for internal use
+  const superClass = Object.assign({}, publicAPI);
+
   publicAPI.getMTime = () => Math.max(
-    model.mtime,
+    superClass.getMTime(),
     publicAPI.getUserTransformMatrixMTime());
 
   publicAPI.getUserTransformMatrixMTime = () => Math.max(

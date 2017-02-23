@@ -13,6 +13,9 @@ function vtkActor(publicAPI, model) {
   // Set our className
   model.classHierarchy.push('vtkActor');
 
+  // Capture 'parentClass' api for internal use
+  const superClass = Object.assign({}, publicAPI);
+
   publicAPI.getActors = () => publicAPI;
 
   publicAPI.getIsOpaque = () => {
@@ -119,7 +122,7 @@ function vtkActor(publicAPI, model) {
   };
 
   publicAPI.getMTime = () => {
-    let mt = model.mtime;
+    let mt = superClass.getMTime();
     if (model.property !== null) {
       const time = model.property.getMTime();
       mt = (time > mt ? time : mt);
