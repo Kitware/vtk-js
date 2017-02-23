@@ -25,6 +25,13 @@ function getSplitedPath(filePath) {
   return a.length > b.length ? a : b;
 }
 
+function validPath(str) {
+  if (path.sepa === '\\') {
+      return str.replace(/\//g, '\\\\');
+  }
+  return str;
+}
+
 // ----------------------------------------------------------------------------
 // Find examples
 // ----------------------------------------------------------------------------
@@ -80,7 +87,7 @@ if (configuration.examples) {
     });
 
     // console.log(exampleName, ' => ', exBasePath, examples[exBasePath][exampleName]);
-    const conf = buildConfig(exampleName, examples[exBasePath][exampleName], distDir, rootPath);
+    const conf = buildConfig(exampleName, validPath(examples[exBasePath][exampleName]), distDir, validPath(rootPath));
     shell.ShellString(conf).to(webpackConfigPath);
     shell.cd(exBasePath);
     shell.exec(`webpack-dev-server --progress --open --config ${webpackConfigPath}`)

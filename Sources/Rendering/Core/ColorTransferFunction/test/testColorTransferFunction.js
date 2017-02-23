@@ -103,5 +103,13 @@ test.onlyIfWebGL('Test Interpolate Scalars Before Colors', (t) => {
 
   const image = glwindow.captureImage();
 
-  testUtils.compareImages(image, [baseline], 'Rendering/OpenGL/PolyDataMapper/', t);
+  // Free memory
+  // glwindow.delete();
+  // renderWindow.delete();
+  // renderer.delete();
+  // mapper.delete();
+  // actor.delete();
+  container.removeChild(renderWindowContainer);
+
+  testUtils.compareImages(image, [baseline], 'Rendering/Core/ColorTransferFunction/testColorTransferFunction', t, 1.5);
 });

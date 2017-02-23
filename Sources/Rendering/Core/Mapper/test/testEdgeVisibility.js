@@ -43,5 +43,13 @@ test.onlyIfWebGL('Test Edge Visibility', (t) => {
 
   const image = glwindow.captureImage();
 
-  testUtils.compareImages(image, [baseline], 'Rendering/Core/Mapper/', t);
+  // Free memory
+  // glwindow.delete();
+  // renderWindow.delete();
+  // renderer.delete();
+  // mapper.delete();
+  // actor.delete();
+  container.removeChild(renderWindowContainer);
+
+  testUtils.compareImages(image, [baseline], 'Rendering/Core/Mapper/testEdgeVisibility.js', t, 5);
 });

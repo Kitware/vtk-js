@@ -10,8 +10,8 @@ import vtkRenderer                      from 'vtk.js/Sources/Rendering/Core/Rend
 import vtkRenderWindow                  from 'vtk.js/Sources/Rendering/Core/RenderWindow';
 import vtkOpenGLRenderWindow            from 'vtk.js/Sources/Rendering/OpenGL/RenderWindow';
 
-import baseline                         from './testMolecule_multiple_bonds.png';
 import testMolecule                     from 'vtk.js/Data/molecule/test-multiple-bonds.cjson';
+import baseline                         from './testMolecule_multiple_bonds.png';
 
 
 test.onlyIfWebGL('Test MultipleBonds', (t) => {
@@ -70,5 +70,12 @@ test.onlyIfWebGL('Test MultipleBonds', (t) => {
 
   // capturing and comparing the images
   const image = glwindow.captureImage();
-  testUtils.compareImages(image, [baseline], 'Filters/General/MoleculeToRepresentation', t);
+
+  // Free memory
+  // glwindow.delete();
+  // renderWindow.delete();
+  // renderer.delete();
+  container.removeChild(renderWindowContainer);
+
+  testUtils.compareImages(image, [baseline], 'Filters/General/MoleculeToRepresentation/testMultipleBonds', t);
 });

@@ -113,5 +113,15 @@ test.onlyIfWebGL('Test StickMapper', (t) => {
 
   const image = glwindow.captureImage();
 
-  testUtils.compareImages(image, [baseline], 'Rendering/OpenGL/StickMapper/', t);
+  // Free memory
+  // glwindow.delete();
+  // renderWindow.delete();
+  // renderer.delete();
+  // planeSource.delete();
+  // simpleFilter.delete();
+  // mapper.delete();
+  // actor.delete();
+  container.removeChild(renderWindowContainer);
+
+  testUtils.compareImages(image, [baseline], 'Rendering/OpenGL/StickMapper', t);
 });

@@ -71,5 +71,14 @@ test.onlyIfWebGL('Test HardwareSelector', (tapeContext) => {
 
   tapeContext.ok(res.length === 2, 'Two props selected');
   tapeContext.ok(allGood, 'Correct props were selected');
+
+  // Free memory
+  // glwindow.delete();
+  // renderWindow.delete();
+  // renderer.delete();
+  // mapper.delete();
+  // actor.delete();
+  container.removeChild(renderWindowContainer);
+
   tapeContext.end();
 });

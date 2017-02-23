@@ -45,5 +45,13 @@ test.onlyIfWebGL('Test vtkPointSource Rendering', (t) => {
 
   const image = glwindow.captureImage();
 
-  testUtils.compareImages(image, [basepoint], 'Filters/Sources/PointSource/', t, 0.02);
+  // Free memory
+  // glwindow.delete();
+  // renderWindow.delete();
+  // renderer.delete();
+  // mapper.delete();
+  // actor.delete();
+  container.removeChild(renderWindowContainer);
+
+  testUtils.compareImages(image, [basepoint], 'Filters/Sources/PointSource/testPointSource', t, 0.02);
 });

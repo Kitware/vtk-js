@@ -7,7 +7,6 @@ import atomElem     from 'vtk.js/Utilities/XMLConverter/chemistry/elements.json'
 
 const { vtkErrorMacro } = macro;
 
-
 // ----------------------------------------------------------------------------
 // Globals
 // ----------------------------------------------------------------------------
@@ -15,15 +14,15 @@ const { vtkErrorMacro } = macro;
 const ATOMS = {};
 atomElem.atoms.forEach((a) => { ATOMS[a.atomicNumber] = a; });
 
-const bondPositionData = [];
-const bondScaleData = [];
-const bondOrientationData = [];
-
 // ----------------------------------------------------------------------------
 // vtkMoleculeToRepresentation methods
 // ----------------------------------------------------------------------------
 
 export function vtkMoleculeToRepresentation(publicAPI, model) {
+  const bondPositionData = [];
+  const bondScaleData = [];
+  const bondOrientationData = [];
+
   // Set our className
   model.classHierarchy.push('vtkMoleculeToRepresentation');
 
