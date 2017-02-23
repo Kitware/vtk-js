@@ -47,7 +47,7 @@ function vtkColorTransferFunctionAdjustHue(msh, unsatM) {
   // interpolation to be close to constant.
   const hueSpin = (msh[1] * Math.sqrt((unsatM * unsatM) - (msh[0] * msh[0])) / (msh[0] * Math.sin(msh[1])));
   // Spin hue away from 0 except in purple hues.
-  if (msh[2] > -0.3 * vtkMath.pi()) {
+  if (msh[2] > -0.3 * Math.PI) {
     return msh[2] + hueSpin;
   }
 
@@ -59,11 +59,11 @@ function vtkColorTransferFunctionAngleDiff(a1, a2) {
   if (adiff < 0.0) {
     adiff = -adiff;
   }
-  while (adiff >= 2.0 * vtkMath.pi()) {
-    adiff -= (2.0 * vtkMath.pi());
+  while (adiff >= 2.0 * Math.PI) {
+    adiff -= (2.0 * Math.PI);
   }
-  if (adiff > vtkMath.pi()) {
-    adiff = (2.0 * vtkMath.pi()) - adiff;
+  if (adiff > Math.PI) {
+    adiff = (2.0 * Math.PI) - adiff;
   }
   return adiff;
 }
@@ -84,7 +84,7 @@ function vtkColorTransferFunctionInterpolateDiverging(s, rgb1, rgb2, result) {
   // them.
   let localS = s;
   if ((msh1[1] > 0.05) && (msh2[1] > 0.05)
-      && (vtkColorTransferFunctionAngleDiff(msh1[2], msh2[2]) > 0.33 * vtkMath.pi())) {
+      && (vtkColorTransferFunctionAngleDiff(msh1[2], msh2[2]) > 0.33 * Math.PI)) {
     // Insert the white midpoint by setting one end to white and adjusting the
     // scalar value.
     let Mmid = Math.max(msh1[0], msh2[0]);
@@ -1061,11 +1061,10 @@ function vtkColorTransferFunction(publicAPI, model) {
       }
     }
     if (colorMap.RGBPoints) {
-      const size = colorMap.RGBPoints;
+      const size = colorMap.RGBPoints.length;
       model.nodes = [];
       const midpoint = 0.5;
       const sharpness = 0.0;
-      const color = [0, 0, 0];
       for (let i = 0; i < size; i += 4) {
         // const x = colorMap.RGBPoints[(i * 4) + 0];
         // convert([
@@ -1076,10 +1075,10 @@ function vtkColorTransferFunction(publicAPI, model) {
         // const [r, g, b] = color;
         // model.nodes.push({ x, r, g, b, midpoint, sharpness });
         model.nodes.push({
-          x: colorMap.RGBPoints[(i * 4) + 0],
-          r: colorMap.RGBPoints[(i * 4) + 1],
-          g: colorMap.RGBPoints[(i * 4) + 2],
-          b: colorMap.RGBPoints[(i * 4) + 3],
+          x: colorMap.RGBPoints[i],
+          r: colorMap.RGBPoints[i + 1],
+          g: colorMap.RGBPoints[i + 2],
+          b: colorMap.RGBPoints[i + 3],
           midpoint,
           sharpness,
         });
