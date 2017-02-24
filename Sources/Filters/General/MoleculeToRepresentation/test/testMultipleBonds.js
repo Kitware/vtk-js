@@ -15,16 +15,17 @@ import baseline                         from './testMolecule_multiple_bonds.png'
 
 
 test.onlyIfWebGL('Test MultipleBonds', (t) => {
+  const gc = testUtils.createGarbageCollector(t);
   t.ok('Filter: MoleculeToRepresentation');
 
   // Create some control UI
   const container = document.querySelector('body');
-  const renderWindowContainer = document.createElement('div');
+  const renderWindowContainer = gc.registerDOMElement(document.createElement('div'));
   container.appendChild(renderWindowContainer);
 
   // create what we will view
-  const renderWindow = vtkRenderWindow.newInstance();
-  const renderer = vtkRenderer.newInstance();
+  const renderWindow = gc.registerResource(vtkRenderWindow.newInstance());
+  const renderer = gc.registerResource(vtkRenderer.newInstance());
   renderWindow.addRenderer(renderer);
   renderer.setBackground(0.32, 0.34, 0.43);
 
@@ -32,12 +33,12 @@ test.onlyIfWebGL('Test MultipleBonds', (t) => {
   // Test code
   // ----------------------------------------------------------------------------
 
-  const molecule = vtkMolecule.newInstance(testMolecule);
-  const filter = vtkMoleculeToRepresentation.newInstance();
-  const sphereMapper = vtkSphereMapper.newInstance();
-  const stickMapper = vtkStickMapper.newInstance();
-  const sphereActor = vtkActor.newInstance();
-  const stickActor = vtkActor.newInstance();
+  const molecule = gc.registerResource(vtkMolecule.newInstance(testMolecule));
+  const filter = gc.registerResource(vtkMoleculeToRepresentation.newInstance());
+  const sphereMapper = gc.registerResource(vtkSphereMapper.newInstance());
+  const stickMapper = gc.registerResource(vtkStickMapper.newInstance());
+  const sphereActor = gc.registerResource(vtkActor.newInstance());
+  const stickActor = gc.registerResource(vtkActor.newInstance());
 
   filter.setInputData(molecule);
 
@@ -63,7 +64,7 @@ test.onlyIfWebGL('Test MultipleBonds', (t) => {
   // -----------------------------------------------------------
 
   // create something to view it, in this case webgl
-  const glwindow = vtkOpenGLRenderWindow.newInstance();
+  const glwindow = gc.registerResource(vtkOpenGLRenderWindow.newInstance());
   glwindow.setContainer(renderWindowContainer);
   renderWindow.addView(glwindow);
   glwindow.setSize(400, 400);
@@ -71,11 +72,5 @@ test.onlyIfWebGL('Test MultipleBonds', (t) => {
   // capturing and comparing the images
   const image = glwindow.captureImage();
 
-  // Free memory
-  // glwindow.delete();
-  // renderWindow.delete();
-  // renderer.delete();
-  container.removeChild(renderWindowContainer);
-
-  testUtils.compareImages(image, [baseline], 'Filters/General/MoleculeToRepresentation/testMultipleBonds', t);
+  testUtils.compareImages(image, [baseline], 'Filters/General/MoleculeToRepresentation/testMultipleBonds', t, 1, gc.releaseResources);
 });

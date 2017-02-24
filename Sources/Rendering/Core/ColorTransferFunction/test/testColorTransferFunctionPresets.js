@@ -21,7 +21,7 @@ import baseline from './testColorTransferFunctionPresets.png';
 const MAX_NUMBER_OF_PRESETS = 200;
 const NUMBER_PER_LINE = 20;
 
-function createScalarMap(offsetX, offsetY, preset) {
+function createScalarMap(offsetX, offsetY, preset, gc) {
   const polydata = vtk({
     vtkClass: 'vtkPolyData',
     points: {
@@ -56,14 +56,14 @@ function createScalarMap(offsetX, offsetY, preset) {
     },
   });
 
-  const actor = vtkActor.newInstance();
-  const mapper = vtkMapper.newInstance({ interpolateScalarsBeforeMapping: true });
+  const actor = gc.registerResource(vtkActor.newInstance());
+  const mapper = gc.registerResource(vtkMapper.newInstance({ interpolateScalarsBeforeMapping: true }));
   actor.setMapper(mapper);
   mapper.setInputData(polydata);
   actor.getProperty().set({ edgeVisibility: true, edgeColor: [1, 1, 1] });
 
   if (preset) {
-    const lut = vtkColorTransferFunction.newInstance();
+    const lut = gc.registerResource(vtkColorTransferFunction.newInstance());
     lut.applyColorMap(preset);
     mapper.setLookupTable(lut);
   }
@@ -72,16 +72,17 @@ function createScalarMap(offsetX, offsetY, preset) {
 }
 
 test.onlyIfWebGL('Test Interpolate Scalars Before Colors', (t) => {
+  const gc = testUtils.createGarbageCollector(t);
   t.ok('rendering', 'vtkOpenGLPolyDataMapper ColorTransferFunction Presets');
 
   // Create some control UI
   const container = document.querySelector('body');
-  const renderWindowContainer = document.createElement('div');
+  const renderWindowContainer = gc.registerDOMElement(document.createElement('div'));
   container.appendChild(renderWindowContainer);
 
   // create what we will view
-  const renderWindow = vtkRenderWindow.newInstance();
-  const renderer = vtkRenderer.newInstance();
+  const renderWindow = gc.registerResource(vtkRenderWindow.newInstance());
+  const renderer = gc.registerResource(vtkRenderer.newInstance());
   renderWindow.addRenderer(renderer);
   renderer.setBackground(0.0, 0.0, 0.0);
 
@@ -94,13 +95,13 @@ test.onlyIfWebGL('Test Interpolate Scalars Before Colors', (t) => {
       const i = (count % NUMBER_PER_LINE);
       const j = Math.floor(count / NUMBER_PER_LINE);
       console.log(`${count + 1}: [${i}, ${j}] - ${preset.Name} | ${preset.ColorSpace}`);
-      renderer.addActor(createScalarMap(i * 0.5, j * 1.25, preset));
+      renderer.addActor(createScalarMap(i * 0.5, j * 1.25, preset, gc));
       count += 1;
     }
   });
 
   // now create something to view it, in this case webgl
-  const glwindow = vtkOpenGLRenderWindow.newInstance();
+  const glwindow = gc.registerResource(vtkOpenGLRenderWindow.newInstance());
   glwindow.setContainer(renderWindowContainer);
   renderWindow.addView(glwindow);
   glwindow.setSize(50 * NUMBER_PER_LINE, 150 * Math.floor(count / NUMBER_PER_LINE));
@@ -111,12 +112,5 @@ test.onlyIfWebGL('Test Interpolate Scalars Before Colors', (t) => {
   renderWindow.render();
 
   const image = glwindow.captureImage();
-
-  // Free memory
-  // glwindow.destroy();
-  // renderWindow.destroy();
-  // renderer.destroy();
-  container.removeChild(renderWindowContainer);
-
-  testUtils.compareImages(image, [baseline], 'Rendering/Core/ColorTransferFunction/testColorTransferFunctionPresets', t);
+  testUtils.compareImages(image, [baseline], 'Rendering/Core/ColorTransferFunction/testColorTransferFunctionPresets', t, 1, gc.releaseResources);
 });

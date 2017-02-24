@@ -7,6 +7,10 @@ export const PASS_TYPES = ['Build', 'Render'];
 // ----------------------------------------------------------------------------
 
 function vtkViewNode(publicAPI, model) {
+  // Make sure our list of children is just for our instance not shared with everyone...
+  model.children = [];
+  model.preparedNodes = [];
+
   // Set our className
   model.classHierarchy.push('vtkViewNode');
 
@@ -40,6 +44,10 @@ function vtkViewNode(publicAPI, model) {
   };
 
   publicAPI.traverse = (operation) => {
+    if (model.deleted) {
+      return;
+    }
+
     publicAPI.apply(operation, true);
 
     model.children.forEach((child) => {
@@ -68,7 +76,7 @@ function vtkViewNode(publicAPI, model) {
   };
 
   publicAPI.addMissingNode = (dataObj) => {
-    if (dataObj) {
+    if (dataObj && !dataObj.isDeleted()) {
       publicAPI.addMissingNodes([dataObj]);
     }
   };
@@ -87,7 +95,7 @@ function vtkViewNode(publicAPI, model) {
 
     const newNodes =
       dataObjs
-        .filter(node => (node && childDOs.indexOf(node) === -1))
+        .filter(node => (node && !node.isDeleted() && childDOs.indexOf(node) === -1))
         .map((node) => {
           const newNode = publicAPI.createViewNode(node);
           if (newNode) {
@@ -107,7 +115,7 @@ function vtkViewNode(publicAPI, model) {
 
   publicAPI.removeUnusedNodes = () => {
     model.children = model.children.filter(node =>
-      (model.preparedNodes.indexOf(node.getRenderable()) !== -1)
+      node.isDeleted() || (model.preparedNodes.indexOf(node.getRenderable()) !== -1)
     );
     publicAPI.prepareNodes();
   };
@@ -133,8 +141,8 @@ const DEFAULT_VALUES = {
   parent: null,
   renderable: null,
   myFactory: null,
-  children: [],
-  preparedNodes: [],
+  // children: [],
+  // preparedNodes: [],
 };
 
 // ----------------------------------------------------------------------------

@@ -1,3 +1,4 @@
+import vtkCellArray       from './CellArray';
 import vtkDataArray       from './DataArray';
 import vtkEndian          from './Endian';
 import vtkLookupTable     from './LookupTable';
@@ -9,6 +10,7 @@ import vtkURLExtract      from './URLExtract';
 import vtkVariantArray    from './VariantArray';
 
 export default {
+  vtkCellArray,
   vtkDataArray,
   vtkEndian,
   vtkLookupTable,

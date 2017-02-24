@@ -10,7 +10,7 @@ import './Filters/Sources/PlaneSource/test/testPlane';
 import './Filters/Sources/PointSource/test/testPointSource';
 import './IO/Misc/PDBReader/test/testMolecule';
 import './Rendering/Core/ColorTransferFunction/test/testColorTransferFunction';
-// import './Rendering/Core/ColorTransferFunction/test/testColorTransferFunctionPresets'; // Too much
+import './Rendering/Core/ColorTransferFunction/test/testColorTransferFunctionPresets';
 import './Rendering/Core/Mapper/test/testEdgeVisibility';
 import './Rendering/OpenGL/HardwareSelector/test/testHardwareSelector';
 import './Rendering/OpenGL/PolyDataMapper/test/testInterpolateScalarsBeforeMapping';

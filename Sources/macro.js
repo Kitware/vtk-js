@@ -45,6 +45,8 @@ export function obj(publicAPI = {}, model = {}) {
     return Object.freeze({ unsubscribe });
   }
 
+  publicAPI.isDeleted = () => !!model.deleted;
+
   publicAPI.modified = () => {
     if (model.deleted) {
       console.log('instance deleted - cannot call any method');
