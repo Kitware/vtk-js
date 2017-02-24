@@ -33,12 +33,13 @@ test.onlyIfWebGL('Test Interpolate Scalars Before Colors', (t) => {
   // FIXME ---- end
 
   renderer.addActor(actor);
+  renderer.addActor(createScalarMap(0.5, 0, preset, gc));
 
   // now create something to view it, in this case webgl
   const glwindow = gc.registerResource(vtkOpenGLRenderWindow.newInstance());
   glwindow.setContainer(renderWindowContainer);
   renderWindow.addView(glwindow);
-  glwindow.setSize(125, 500);
+  glwindow.setSize(400, 500);
 
   renderer.resetCamera();
   renderWindow.render();
