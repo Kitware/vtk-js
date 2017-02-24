@@ -202,7 +202,7 @@ function vtkColorTransferFunction(publicAPI, model) {
   // Sort the vector in increasing order, then fill in
   // the Range
   publicAPI.sortAndUpdateRange = () => {
-    model.nodes.sort((a, b) => a.x > b.x);
+    model.nodes.sort((a, b) => a.x - b.x);
 
     const modifiedInvoked = publicAPI.updateRange();
     // If range is updated, Modified() has been called, don't call it again.
