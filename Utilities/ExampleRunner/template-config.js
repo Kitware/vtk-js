@@ -20,7 +20,7 @@ module.exports = {
   ],
   entry: '${relPath.replace(/\\/g, '\\\\')}',
   output: {
-    path: '${destPath}',
+    path: '${destPath.replace(/\\/g, '\\\\')}',
     filename: '${name}.js',
   },
   module: {
@@ -41,9 +41,9 @@ module.exports = {
   },
 
   devServer: {
-    contentBase: '${root}',
+    contentBase: '${root.replace(/\\/g, '\\\\')}',
     port: 9999,
-    host: '0.0.0.0',
+    host: 'localhost',
     hot: true,
     quiet: false,
     noInfo: false,
@@ -51,8 +51,8 @@ module.exports = {
       colors: true,
     },
     proxy: {
-      '${path.sep}data${path.sep}**': {
-        target: 'http://0.0.0.0:9999/Data',
+      '/data/**': {
+        target: 'http://localhost:9999/Data',
         pathRewrite: {
           '^/data': ''
         },
