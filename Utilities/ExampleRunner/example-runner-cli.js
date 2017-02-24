@@ -26,10 +26,7 @@ function getSplitedPath(filePath) {
 }
 
 function validPath(str) {
-  if (path.sepa === '\\') {
-      return str.replace(/\//g, '\\\\');
-  }
-  return str;
+  return str.replace(/\//g, path.sep);
 }
 
 // ----------------------------------------------------------------------------
