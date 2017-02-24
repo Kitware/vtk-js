@@ -13,28 +13,29 @@ import vtkPolyData              from 'vtk.js/Sources/Common/DataModel/PolyData';
 import baseline from './testColorTransferFunction.png';
 
 test.onlyIfWebGL('Test Interpolate Scalars Before Colors', (t) => {
+  const gc = testUtils.createGarbageCollector(t);
   t.ok('rendering', 'vtkOpenGLPolyDataMapper ColorTransferFunction');
 
   // Create some control UI
   const container = document.querySelector('body');
-  const renderWindowContainer = document.createElement('div');
+  const renderWindowContainer = gc.registerDOMElement(document.createElement('div'));
   container.appendChild(renderWindowContainer);
 
   // create what we will view
-  const renderWindow = vtkRenderWindow.newInstance();
-  const renderer = vtkRenderer.newInstance();
+  const renderWindow = gc.registerResource(vtkRenderWindow.newInstance());
+  const renderer = gc.registerResource(vtkRenderer.newInstance());
   renderWindow.addRenderer(renderer);
   renderer.setBackground(0.32, 0.34, 0.43);
 
-  const actor = vtkActor.newInstance();
+  const actor = gc.registerResource(vtkActor.newInstance());
   actor.getProperty().setEdgeVisibility(true);
   actor.getProperty().setEdgeColor(1.0, 0.5, 0.5);
   renderer.addActor(actor);
 
-  const mapper = vtkMapper.newInstance();
+  const mapper = gc.registerResource(vtkMapper.newInstance());
   actor.setMapper(mapper);
 
-  const lut = vtkColorTransferFunction.newInstance();
+  const lut = gc.registerResource(vtkColorTransferFunction.newInstance());
   lut.setUseBelowRangeColor(true);
   lut.setUseAboveRangeColor(true);
   lut.setNanColor(0.8, 0.8, 0.6, 1.0);
@@ -44,7 +45,7 @@ test.onlyIfWebGL('Test Interpolate Scalars Before Colors', (t) => {
   mapper.setLookupTable(lut);
 
   // hand create a plane with special scalars
-  const pd = vtkPolyData.newInstance();
+  const pd = gc.registerResource(vtkPolyData.newInstance());
   const res = 10;
 
   // Points
@@ -89,27 +90,19 @@ test.onlyIfWebGL('Test Interpolate Scalars Before Colors', (t) => {
     }
   }
 
-  const da = vtkDataArray.newInstance({ numberOfComponents: 1, values: scalars });
+  const da = gc.registerResource(vtkDataArray.newInstance({ numberOfComponents: 1, values: scalars }));
   pd.getPointData().setScalars(da);
 
   mapper.setInputData(pd);
   mapper.setInterpolateScalarsBeforeMapping(true);
 
   // now create something to view it, in this case webgl
-  const glwindow = vtkOpenGLRenderWindow.newInstance();
+  const glwindow = gc.registerResource(vtkOpenGLRenderWindow.newInstance());
   glwindow.setContainer(renderWindowContainer);
   renderWindow.addView(glwindow);
   glwindow.setSize(400, 400);
 
   const image = glwindow.captureImage();
 
-  // Free memory
-  // glwindow.delete();
-  // renderWindow.delete();
-  // renderer.delete();
-  // mapper.delete();
-  // actor.delete();
-  container.removeChild(renderWindowContainer);
-
-  testUtils.compareImages(image, [baseline], 'Rendering/Core/ColorTransferFunction/testColorTransferFunction', t, 1.5);
+  testUtils.compareImages(image, [baseline], 'Rendering/Core/ColorTransferFunction/testColorTransferFunction', t, 1.5, gc.releaseResources);
 });

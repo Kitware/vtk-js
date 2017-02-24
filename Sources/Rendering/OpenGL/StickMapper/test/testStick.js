@@ -15,16 +15,17 @@ import { FieldDataTypes }    from 'vtk.js/Sources/Common/DataModel/DataSet/Const
 import baseline from './testStick.png';
 
 test.onlyIfWebGL('Test StickMapper', (t) => {
+  const gc = testUtils.createGarbageCollector(t);
   t.ok('rendering', 'vtkOpenGLStickMapper testStick');
 
   // Create some control UI
   const container = document.querySelector('body');
-  const renderWindowContainer = document.createElement('div');
+  const renderWindowContainer = gc.registerDOMElement(document.createElement('div'));
   container.appendChild(renderWindowContainer);
 
   // create what we will view
-  const renderWindow = vtkRenderWindow.newInstance();
-  const renderer = vtkRenderer.newInstance();
+  const renderWindow = gc.registerResource(vtkRenderWindow.newInstance());
+  const renderer = gc.registerResource(vtkRenderer.newInstance());
   renderWindow.addRenderer(renderer);
   renderer.setBackground(0.32, 0.34, 0.43);
 
@@ -32,10 +33,10 @@ test.onlyIfWebGL('Test StickMapper', (t) => {
   // Test code
   // ----------------------------------------------------------------------------
 
-  const planeSource = vtkPlaneSource.newInstance();
-  const simpleFilter = vtkCalculator.newInstance();
-  const mapper = vtkStickMapper.newInstance();
-  const actor = vtkActor.newInstance();
+  const planeSource = gc.registerResource(vtkPlaneSource.newInstance());
+  const simpleFilter = gc.registerResource(vtkCalculator.newInstance());
+  const mapper = gc.registerResource(vtkStickMapper.newInstance());
+  const actor = gc.registerResource(vtkActor.newInstance());
 
   simpleFilter.setFormula({
     getArrays: inputDataSets => ({
@@ -106,22 +107,11 @@ test.onlyIfWebGL('Test StickMapper', (t) => {
   // -----------------------------------------------------------
 
   // create something to view it, in this case webgl
-  const glwindow = vtkOpenGLRenderWindow.newInstance();
+  const glwindow = gc.registerResource(vtkOpenGLRenderWindow.newInstance());
   glwindow.setContainer(renderWindowContainer);
   renderWindow.addView(glwindow);
   glwindow.setSize(400, 400);
 
   const image = glwindow.captureImage();
-
-  // Free memory
-  // glwindow.delete();
-  // renderWindow.delete();
-  // renderer.delete();
-  // planeSource.delete();
-  // simpleFilter.delete();
-  // mapper.delete();
-  // actor.delete();
-  container.removeChild(renderWindowContainer);
-
-  testUtils.compareImages(image, [baseline], 'Rendering/OpenGL/StickMapper', t);
+  testUtils.compareImages(image, [baseline], 'Rendering/OpenGL/StickMapper', t, 1, gc.releaseResources);
 });
