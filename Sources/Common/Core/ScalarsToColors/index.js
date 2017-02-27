@@ -476,9 +476,9 @@ const DEFAULT_VALUES = {
   vectorComponent: 0,
   vectorSize: -1,
   vectorMode: VectorMode.COMPONENT,
-  mappingRange: [0, 255],
-  annotationArray: [],
-  annotatedValueMap: [],
+  mappingRange: null,
+  annotationArray: null,
+  annotatedValueMap: null,
   indexedLookup: false,
 };
 
@@ -489,6 +489,10 @@ export function extend(publicAPI, model, initialValues = {}) {
 
   // Object methods
   macro.obj(publicAPI, model);
+
+  model.mappingRange = [0, 255];
+  model.annotationArray = [];
+  model.annotatedValueMap = [];
 
   // Create get-set macros
   macro.setGet(publicAPI, model, [

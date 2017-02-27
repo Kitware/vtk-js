@@ -906,6 +906,32 @@ function vtkColorTransferFunction(publicAPI, model) {
   };
 
   //----------------------------------------------------------------------------
+  publicAPI.setMappingRange = (min, max) => {
+    const range = [min, max];
+    const originalRange = publicAPI.getRange();
+    if (originalRange[1] === range[1] &&
+        originalRange[0] === range[0]) {
+      return;
+    }
+
+    if (range[1] === range[0]) {
+      vtkErrorMacro('attempt to set zero width color range');
+      return;
+    }
+
+    const scale = (range[1] - range[0]) / (originalRange[1] - originalRange[0]);
+    const shift = range[0] - (originalRange[0] * scale);
+
+    for (let i = 0; i < model.nodes.length; ++i) {
+      model.nodes[i].x = (model.nodes[i].x * scale) + shift;
+    }
+
+    model.mappingRange[0] = range[0];
+    model.mappingRange[1] = range[1];
+    publicAPI.modified();
+  };
+
+  //----------------------------------------------------------------------------
   publicAPI.adjustRange = (range) => {
     const functionRange = publicAPI.getRange();
 
@@ -1085,16 +1111,14 @@ function vtkColorTransferFunction(publicAPI, model) {
 // ----------------------------------------------------------------------------
 
 const DEFAULT_VALUES = {
-  range: [0, 0],
-
   clamping: true,
   colorSpace: ColorSpace.RGB,
   hSVWrap: true,
   scale: Scale.LINEAR,
 
-  nanColor: [0.5, 0.0, 0.0, 1.0],
-  belowRangeColor: [0.0, 0.0, 0.0, 1.0],
-  aboveRangeColor: [1.0, 1.0, 1.0, 1.0],
+  nanColor: null,
+  belowRangeColor: null,
+  aboveRangeColor: null,
   useAboveRangeColor: false,
   useBelowRangeColor: false,
 
@@ -1119,6 +1143,10 @@ export function extend(publicAPI, model, initialValues = {}) {
   // Internal objects initialization
   model.table = [];
   model.nodes = [];
+
+  model.nanColor = [0.5, 0.0, 0.0, 1.0];
+  model.belowRangeColor = [0.0, 0.0, 0.0, 1.0];
+  model.aboveRangeColor = [1.0, 1.0, 1.0, 1.0];
 
   model.buildTime = {};
   macro.obj(model.buildTime);
