@@ -90,7 +90,9 @@ export function vtkOpenGLRenderWindow(publicAPI, model) {
 
     if (model.el !== el) {
       model.el = el;
-      model.el.appendChild(model.canvas);
+      if (model.el) {
+        model.el.appendChild(model.canvas);
+      }
 
       // Trigger modified()
       publicAPI.modified();
