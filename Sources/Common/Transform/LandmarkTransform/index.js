@@ -123,10 +123,10 @@ function vtkLandmarkTransform(publicAPI, model) {
 
       let N = mat4.fromValues(0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0);
       // on-diagonal elements
-      N[0] = M[0] + M[6] + M[8];
-      N[5] = M[0] - M[6] - M[8];
-      N[10] = - M[0] + M[6] - M[8];
-      N[15] = - M[0] - M[6] + M[8];
+      N[0] = M[0] + M[4] + M[8];
+      N[5] = M[0] - M[4] - M[8];
+      N[10] = - M[0] + M[4] - M[8];
+      N[15] = - M[0] - M[4] + M[8];
       // off-diagonal elements
       N[4] = N[1] = (M[7] - M[5]);
       N[8] = N[2] = (M[2] - M[6]);
