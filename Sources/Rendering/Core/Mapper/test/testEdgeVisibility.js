@@ -11,37 +11,37 @@ import vtkMapper             from 'vtk.js/Sources/Rendering/Core/Mapper';
 import baseline from './testEdgeVisibility.png';
 
 test.onlyIfWebGL('Test Edge Visibility', (t) => {
+  const gc = testUtils.createGarbageCollector(t);
   t.ok('rendering', 'vtkMapper EdgeVisibility');
 
   // Create some control UI
   const container = document.querySelector('body');
-  const renderWindowContainer = document.createElement('div');
+  const renderWindowContainer = gc.registerDOMElement(document.createElement('div'));
   container.appendChild(renderWindowContainer);
 
   // create what we will view
-  const renderWindow = vtkRenderWindow.newInstance();
-  const renderer = vtkRenderer.newInstance();
+  const renderWindow = gc.registerResource(vtkRenderWindow.newInstance());
+  const renderer = gc.registerResource(vtkRenderer.newInstance());
   renderWindow.addRenderer(renderer);
   renderer.setBackground(0.32, 0.34, 0.43);
 
-  const actor = vtkActor.newInstance();
+  const actor = gc.registerResource(vtkActor.newInstance());
   actor.getProperty().setEdgeVisibility(true);
   actor.getProperty().setEdgeColor(1.0, 0.5, 0.5);
   renderer.addActor(actor);
 
-  const mapper = vtkMapper.newInstance();
+  const mapper = gc.registerResource(vtkMapper.newInstance());
   actor.setMapper(mapper);
 
-  const sphereSource = vtkSphereSource.newInstance();
+  const sphereSource = gc.registerResource(vtkSphereSource.newInstance());
   mapper.setInputConnection(sphereSource.getOutputPort());
 
   // now create something to view it, in this case webgl
-  const glwindow = vtkOpenGLRenderWindow.newInstance();
+  const glwindow = gc.registerResource(vtkOpenGLRenderWindow.newInstance());
   glwindow.setContainer(renderWindowContainer);
   renderWindow.addView(glwindow);
   glwindow.setSize(400, 400);
 
   const image = glwindow.captureImage();
-
-  testUtils.compareImages(image, [baseline], 'Rendering/Core/Mapper/', t);
+  testUtils.compareImages(image, [baseline], 'Rendering/Core/Mapper/testEdgeVisibility.js', t, 5, gc.releaseResources);
 });

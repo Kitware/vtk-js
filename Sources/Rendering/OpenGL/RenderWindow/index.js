@@ -189,6 +189,10 @@ export function vtkOpenGLRenderWindow(publicAPI, model) {
   };
 
   publicAPI.captureImage = (format = 'image/png') => {
+    if (model.deleted) {
+      return null;
+    }
+
     publicAPI.traverseAllPasses();
     return model.canvas.toDataURL(format);
   };

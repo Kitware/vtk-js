@@ -51,16 +51,23 @@ function vtkOpenGLTexture(publicAPI, model) {
       model.renderable.setImage(null);
     }
     // create the texture if it is not done already
-    if (!model.handle &&
-      (model.renderable.getImage() == null || model.renderable.getImageLoaded())) {
+    if (!model.handle) {
+      // if we have an Image
       if (model.renderable.getImage() !== null) {
         if (model.renderable.getInterpolate()) {
           model.generateMipmap = true;
           publicAPI.setMinificationFilter(Filter.LINEAR_MIPMAP_LINEAR);
         }
-        publicAPI.create2DFromImage(model.renderable.getImage());
-      } else {
-        const input = model.renderable.getInputData();
+        // Have an Image which may not be complete
+        if (model.renderable.getImage() && model.renderable.getImageLoaded()) {
+          publicAPI.create2DFromImage(model.renderable.getImage());
+          publicAPI.activate();
+          publicAPI.sendParameters();
+        }
+      }
+      // if we have Inputdata
+      const input = model.renderable.getInputData();
+      if (input && input.getPointData().getScalars()) {
         const ext = input.getExtent();
         const inScalars = input.getPointData().getScalars();
         if (model.renderable.getInterpolate()) {
@@ -69,10 +76,11 @@ function vtkOpenGLTexture(publicAPI, model) {
         }
         publicAPI.create2DFromRaw(ext[1] - ext[0] + 1, ext[3] - ext[2] + 1,
           inScalars.getNumberOfComponents(), inScalars.getDataType(), inScalars.getData());
+        publicAPI.activate();
+        publicAPI.sendParameters();
       }
-      publicAPI.activate();
-      publicAPI.sendParameters();
-    } else {
+    }
+    if (model.handle) {
       publicAPI.activate();
     }
   };

@@ -5,13 +5,10 @@ import vtkOpenGLRenderWindow    from 'vtk.js/Sources/Rendering/OpenGL/RenderWind
 import vtkRenderWindow          from 'vtk.js/Sources/Rendering/Core/RenderWindow';
 import vtkRenderer              from 'vtk.js/Sources/Rendering/Core/Renderer';
 
-import colorMaps        from '../ColorMaps.json';
+import colorMaps from '../ColorMaps.json';
 
-import createScalarMap  from './createScalarMap';
-import baseline         from './testColorTransferFunctionPresets.png';
-
-const MAX_NUMBER_OF_PRESETS = 200;
-const NUMBER_PER_LINE = 20;
+import createScalarMap from './createScalarMap';
+import baseline        from './testColorTransferFunctionInterpolation.png';
 
 test.onlyIfWebGL('Test Interpolate Scalars Before Colors', (t) => {
   const gc = testUtils.createGarbageCollector(t);
@@ -28,31 +25,25 @@ test.onlyIfWebGL('Test Interpolate Scalars Before Colors', (t) => {
   renderWindow.addRenderer(renderer);
   renderer.setBackground(0.0, 0.0, 0.0);
 
-  // Add one with default LUT
-  // renderer.addActor(createScalarMap(0, 0));
+  // FIXME ---- magic flag underneath
+  const preset = colorMaps.find(p => p.Name === 'Cool to Warm');
+  const actor = createScalarMap(0, 0, preset, gc, 0, 10000);
+  actor.getMapper().setScalarRange(0, 10000);
+  // console.log('preset', JSON.stringify(preset, null, 2));
+  // FIXME ---- end
 
-  let count = 0;
-  colorMaps.forEach((preset, idx) => {
-    if (preset.RGBPoints && count < MAX_NUMBER_OF_PRESETS) {
-      const i = (count % NUMBER_PER_LINE);
-      const j = Math.floor(count / NUMBER_PER_LINE);
-      console.log(`${count + 1}: [${i}, ${j}] - ${preset.Name} | ${preset.ColorSpace}`);
-      renderer.addActor(createScalarMap(i * 0.5, j * 1.25, preset, gc));
-      count += 1;
-    }
-  });
+  renderer.addActor(actor);
+  renderer.addActor(createScalarMap(0.5, 0, preset, gc));
 
   // now create something to view it, in this case webgl
   const glwindow = gc.registerResource(vtkOpenGLRenderWindow.newInstance());
   glwindow.setContainer(renderWindowContainer);
   renderWindow.addView(glwindow);
-  glwindow.setSize(50 * NUMBER_PER_LINE, 150 * Math.floor(count / NUMBER_PER_LINE));
+  glwindow.setSize(400, 500);
 
-  const camera = renderer.getActiveCamera();
   renderer.resetCamera();
-  camera.zoom(1.45);
   renderWindow.render();
 
   const image = glwindow.captureImage();
-  testUtils.compareImages(image, [baseline], 'Rendering/Core/ColorTransferFunction/testColorTransferFunctionPresets', t, 4, gc.releaseResources);
+  testUtils.compareImages(image, [baseline], 'Rendering/Core/ColorTransferFunction/testColorTransferFunctionInterpolation', t, 5, gc.releaseResources);
 });

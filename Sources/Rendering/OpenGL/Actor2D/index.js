@@ -33,8 +33,16 @@ function vtkOpenGLActor2D(publicAPI, model) {
     model.activeTextures = [];
     model.children.forEach((child) => {
       child.apply(operation, true);
-      if (child.isA('vtkOpenGLTexture') && operation === 'Render') {
-        model.activeTextures.push(child);
+      if (child.isA('vtkOpenGLTexture')) {
+        if (child.getHandle()) {
+          model.activeTextures.push(child);
+        }
+      }
+    });
+
+    model.children.forEach((child) => {
+      if (!child.isA('vtkOpenGLTexture')) {
+        child.apply(operation, true);
       }
     });
 
@@ -52,10 +60,8 @@ function vtkOpenGLActor2D(publicAPI, model) {
       publicAPI.preRender();
     } else {
       // deactivate textures
-      model.children.forEach((child) => {
-        if (child.isA('vtkOpenGLTexture')) {
-          child.deactivate();
-        }
+      model.activeTextures.forEach((child) => {
+        child.deactivate();
       });
       const opaque = (model.renderable.getIsOpaque() !== 0);
       if (!opaque) {

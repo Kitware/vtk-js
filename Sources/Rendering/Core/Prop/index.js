@@ -12,6 +12,11 @@ function vtkProp(publicAPI, model) {
   // Set our className
   model.classHierarchy.push('vtkProp');
 
+  publicAPI.getMTime = () => Math.max(
+    model.mtime, model.textures.reduce((acc, val) =>
+      Math.max(val.getMTime(), acc)
+    , 0));
+
   publicAPI.getActors = () => null;
   publicAPI.getActors2D = () => null;
   publicAPI.getVolumes = () => null;

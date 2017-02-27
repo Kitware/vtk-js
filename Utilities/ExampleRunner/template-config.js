@@ -1,4 +1,6 @@
-var vtkBasePath = require('path').resolve('.');
+var path = require('path');
+var vtkBasePath = path.resolve('.');
+var eslintrc = path.join(vtkBasePath, '.eslintrc.js');
 
 module.exports = function buildConfig(name, relPath, destPath, root) {
   return `
@@ -16,9 +18,9 @@ module.exports = {
       __BASE_PATH__: "''",
     }),
   ],
-  entry: '${relPath}',
+  entry: '${relPath.replace(/\\/g, '\\\\')}',
   output: {
-    path: '${destPath}',
+    path: '${destPath.replace(/\\/g, '\\\\')}',
     filename: '${name}.js',
   },
   module: {
@@ -31,17 +33,17 @@ module.exports = {
   },
   resolve: {
     alias: {
-      'vtk.js': '${vtkBasePath}',
+      'vtk.js': '${vtkBasePath.replace(/\\/g, '\\\\')}',
     },
   },
   eslint: {
-    configFile: '${root}/.eslintrc.js',
+    configFile: '${eslintrc.replace(/\\/g, '\\\\')}',
   },
 
   devServer: {
-    contentBase: '${root}',
+    contentBase: '${root.replace(/\\/g, '\\\\')}',
     port: 9999,
-    host: '0.0.0.0',
+    host: 'localhost',
     hot: true,
     quiet: false,
     noInfo: false,
@@ -50,7 +52,7 @@ module.exports = {
     },
     proxy: {
       '/data/**': {
-        target: 'http://0.0.0.0:9999/Data',
+        target: 'http://localhost:9999/Data',
         pathRewrite: {
           '^/data': ''
         },

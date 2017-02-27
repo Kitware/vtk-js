@@ -2,6 +2,7 @@
 /* eslint-disable react/require-extension */
 var path = require('path');
 var loaders = require('./Utilities/config/webpack.loaders.js');
+var webpack = require('webpack');
 
 if (!process.env.NODE_ENV) process.env.NODE_ENV = 'test';
 
@@ -21,6 +22,7 @@ module.exports = function init(config) {
     files: [
       './node_modules/babel-polyfill/dist/polyfill.min.js',
       'Sources/tests.js',
+      { pattern: 'Data/**', watched: false, served: true, included: false },
     ],
 
     preprocessors: {
@@ -39,6 +41,11 @@ module.exports = function init(config) {
           'vtk.js': path.resolve('.'),
         },
       },
+      plugins: [
+        new webpack.DefinePlugin({
+          __BASE_PATH__: "'/base'",
+        }),
+      ],
     },
 
     webpackMiddleware: {
@@ -64,8 +71,11 @@ module.exports = function init(config) {
     },
 
     client: {
-      useIframe: false,
+      useIframe: true,
     },
+
+    // browserNoActivityTimeout: 600000,
+    // browserDisconnectTimeout: 600000,
 
     port: 9876,
     colors: true,

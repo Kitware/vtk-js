@@ -25,6 +25,10 @@ function getSplitedPath(filePath) {
   return a.length > b.length ? a : b;
 }
 
+function validPath(str) {
+  return str.replace(/\//g, path.sep);
+}
+
 // ----------------------------------------------------------------------------
 // Find examples
 // ----------------------------------------------------------------------------
@@ -71,7 +75,7 @@ if (configuration.examples) {
   }
 
   if (buildExample) {
-    let exBasePath = null;
+    var exBasePath = null;
     const exampleName = filterExamples[0];
     Object.keys(examples).forEach((exampleBasePath) => {
       if (examples[exampleBasePath][exampleName]) {
@@ -80,7 +84,7 @@ if (configuration.examples) {
     });
 
     // console.log(exampleName, ' => ', exBasePath, examples[exBasePath][exampleName]);
-    const conf = buildConfig(exampleName, examples[exBasePath][exampleName], distDir, rootPath);
+    const conf = buildConfig(exampleName, validPath(examples[exBasePath][exampleName]), distDir, validPath(rootPath));
     shell.ShellString(conf).to(webpackConfigPath);
     shell.cd(exBasePath);
     shell.exec(`webpack-dev-server --progress --open --config ${webpackConfigPath}`)

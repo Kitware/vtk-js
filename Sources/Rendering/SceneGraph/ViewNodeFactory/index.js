@@ -5,10 +5,16 @@ import macro from 'vtk.js/Sources/macro';
 // ----------------------------------------------------------------------------
 
 function vtkViewNodeFactory(publicAPI, model) {
+  // Make sure our overrides is just for our instance not shared with everyone...
+  model.overrides = {};
+
   // Set our className
   model.classHierarchy.push('vtkViewNodeFactory');
 
   publicAPI.createNode = (dataObject) => {
+    if (dataObject.isDeleted()) {
+      return null;
+    }
     if (Object.keys(model.overrides).indexOf(dataObject.getClassName()) === -1) {
       return null;
     }
@@ -27,7 +33,7 @@ function vtkViewNodeFactory(publicAPI, model) {
 // ----------------------------------------------------------------------------
 
 const DEFAULT_VALUES = {
-  overrides: {},
+  // overrides: {},
 };
 
 // ----------------------------------------------------------------------------

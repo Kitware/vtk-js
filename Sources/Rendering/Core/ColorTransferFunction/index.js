@@ -47,7 +47,7 @@ function vtkColorTransferFunctionAdjustHue(msh, unsatM) {
   // interpolation to be close to constant.
   const hueSpin = (msh[1] * Math.sqrt((unsatM * unsatM) - (msh[0] * msh[0])) / (msh[0] * Math.sin(msh[1])));
   // Spin hue away from 0 except in purple hues.
-  if (msh[2] > -0.3 * vtkMath.pi()) {
+  if (msh[2] > -0.3 * Math.PI) {
     return msh[2] + hueSpin;
   }
 
@@ -59,11 +59,11 @@ function vtkColorTransferFunctionAngleDiff(a1, a2) {
   if (adiff < 0.0) {
     adiff = -adiff;
   }
-  while (adiff >= 2.0 * vtkMath.pi()) {
-    adiff -= (2.0 * vtkMath.pi());
+  while (adiff >= 2.0 * Math.PI) {
+    adiff -= (2.0 * Math.PI);
   }
-  if (adiff > vtkMath.pi()) {
-    adiff = (2.0 * vtkMath.pi()) - adiff;
+  if (adiff > Math.PI) {
+    adiff = (2.0 * Math.PI) - adiff;
   }
   return adiff;
 }
@@ -84,7 +84,7 @@ function vtkColorTransferFunctionInterpolateDiverging(s, rgb1, rgb2, result) {
   // them.
   let localS = s;
   if ((msh1[1] > 0.05) && (msh2[1] > 0.05)
-      && (vtkColorTransferFunctionAngleDiff(msh1[2], msh2[2]) > 0.33 * vtkMath.pi())) {
+      && (vtkColorTransferFunctionAngleDiff(msh1[2], msh2[2]) > 0.33 * Math.PI)) {
     // Insert the white midpoint by setting one end to white and adjusting the
     // scalar value.
     let Mmid = Math.max(msh1[0], msh2[0]);
@@ -122,15 +122,8 @@ function vtkColorTransferFunctionInterpolateDiverging(s, rgb1, rgb2, result) {
   vtkMath.lab2rgb(labTmp, result);
 }
 
-// Add module-level functions or api that you want to expose statically via
-// the next section...
-
 // ----------------------------------------------------------------------------
-// Static API
-// ----------------------------------------------------------------------------
-
-// ----------------------------------------------------------------------------
-// vtkMyClass methods
+// vtkColorTransferFunction methods
 // ----------------------------------------------------------------------------
 
 function vtkColorTransferFunction(publicAPI, model) {
@@ -209,7 +202,7 @@ function vtkColorTransferFunction(publicAPI, model) {
   // Sort the vector in increasing order, then fill in
   // the Range
   publicAPI.sortAndUpdateRange = () => {
-    model.nodes.sort((a, b) => a.x > b.x);
+    model.nodes.sort((a, b) => a.x - b.x);
 
     const modifiedInvoked = publicAPI.updateRange();
     // If range is updated, Modified() has been called, don't call it again.
@@ -650,7 +643,7 @@ function vtkColorTransferFunction(publicAPI, model) {
             table[tidx + 1] = tmpVec[1];
             table[tidx + 2] = tmpVec[2];
           } else {
-            vtkErrorMacro('ColorSpace set to invalid value.');
+            vtkErrorMacro('ColorSpace set to invalid value.', model.colorSpace);
           }
           continue;
         }
@@ -1043,16 +1036,12 @@ function vtkColorTransferFunction(publicAPI, model) {
 
   //----------------------------------------------------------------------------
   publicAPI.applyColorMap = (colorMap) => {
-    // let convert = (input, output) => {
-    //   output[0] = input[0];
-    //   output[1] = input[1];
-    //   output[2] = input[2];
-    // };
     if (colorMap.ColorSpace) {
       model.colorSpace = ColorSpace[colorMap.ColorSpace.toUpperCase()];
-      console.log('set space to', model.colorSpace);
-      // FIXME are the RGBPoints truly in RGB or could they be in HSV, LAB...
-      // convert = vtkMath[`${colorMap.ColorSpace.toLowerCase()}2rgb`] || convert;
+      if (model.colorSpace === undefined) {
+        vtkErrorMacro(`ColorSpace ${colorMap.ColorSpace} not supported, using RGB instead`);
+        model.colorSpace = ColorSpace.RGB;
+      }
     }
     if (colorMap.NanColor) {
       model.nanColor = [].concat(colorMap.NanColor);
@@ -1061,29 +1050,25 @@ function vtkColorTransferFunction(publicAPI, model) {
       }
     }
     if (colorMap.RGBPoints) {
-      const size = colorMap.RGBPoints;
+      const size = colorMap.RGBPoints.length;
       model.nodes = [];
       const midpoint = 0.5;
       const sharpness = 0.0;
-      const color = [0, 0, 0];
       for (let i = 0; i < size; i += 4) {
-        // const x = colorMap.RGBPoints[(i * 4) + 0];
-        // convert([
-        //   colorMap.RGBPoints[(i * 4) + 1],
-        //   colorMap.RGBPoints[(i * 4) + 2],
-        //   colorMap.RGBPoints[(i * 4) + 3],
-        // ], color);
-        // const [r, g, b] = color;
-        // model.nodes.push({ x, r, g, b, midpoint, sharpness });
         model.nodes.push({
-          x: colorMap.RGBPoints[(i * 4) + 0],
-          r: colorMap.RGBPoints[(i * 4) + 1],
-          g: colorMap.RGBPoints[(i * 4) + 2],
-          b: colorMap.RGBPoints[(i * 4) + 3],
+          x: colorMap.RGBPoints[i],
+          r: colorMap.RGBPoints[i + 1],
+          g: colorMap.RGBPoints[i + 2],
+          b: colorMap.RGBPoints[i + 3],
           midpoint,
           sharpness,
         });
       }
+
+      // FIXME: remove debug output
+      // console.groupCollapsed(colorMap.Name);
+      // console.log(JSON.stringify(model.nodes, null, 2));
+      // console.groupEnd();
     }
     // FIXME: not supported ?
     // if (colorMap.IndexedColors) {

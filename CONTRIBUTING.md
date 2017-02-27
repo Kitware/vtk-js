@@ -39,6 +39,8 @@ This page documents at a very high level how to contribute to vtk.js.
 
     For more information see: [Create a Pull Request]
 
+8. Additional informations on how to create classe/test/example can be found [here](https://kitware.github.io/vtk-js/docs/) in the __Development__ section.
+
 
 vtk.js uses Github for code review and Travis-CI to test proposed
 patches before they are merged.

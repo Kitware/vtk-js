@@ -1,6 +1,8 @@
 import resemble from 'resemblejs';
 
-function compareImages(image, baselines, testName, tapeContext, threshold = 5, nextCallback = null) {
+let REMOVE_DOM_ELEMENTS = true;
+
+function compareImages(image, baselines, testName, tapeContext, threshold = 0.5, nextCallback = null) {
   let minDelta = 100;
   let isSameDimensions = false;
   baselines.forEach((baseline) => {
@@ -25,6 +27,69 @@ function compareImages(image, baselines, testName, tapeContext, threshold = 5, n
   }
 }
 
+function createGarbageCollector(testContext) {
+  const resources = [];
+  const domElements = [];
+
+  function registerResource(vtkObj, priority = 0) {
+    resources.push({ vtkObj, priority });
+    return vtkObj;
+  }
+
+  function registerDOMElement(el) {
+    domElements.push(el);
+    return el;
+  }
+
+  function releaseResources() {
+    // DOM Element handling
+    if (REMOVE_DOM_ELEMENTS) {
+      domElements.forEach((el) => {
+        if (el.parentNode) {
+          el.parentNode.removeChild(el);
+        }
+      });
+    }
+    while (domElements.length) {
+      domElements.pop();
+    }
+
+    // vtkObject handling
+    resources.sort((a, b) => (b.priority - a.priority));
+    resources.forEach(({ vtkObj }) => {
+      if (vtkObj) {
+        vtkObj.delete();
+      }
+    });
+    while (resources.length) {
+      resources.pop();
+    }
+
+    // Test end handling
+    if (testContext) {
+      testContext.end();
+    }
+  }
+
+  return {
+    registerResource,
+    registerDOMElement,
+    releaseResources,
+  };
+}
+
+function keepDOM() {
+  REMOVE_DOM_ELEMENTS = false;
+}
+
+function removeDOM() {
+  REMOVE_DOM_ELEMENTS = true;
+}
+
+
 export default {
   compareImages,
+  createGarbageCollector,
+  keepDOM,
+  removeDOM,
 };

@@ -23,7 +23,8 @@ export function vtkMTLReader(publicAPI, model) {
 
     const tokens = line.split(' ');
     if (tokens[0] === 'newmtl') {
-      model.currentMaterial = tokens[1];
+      tokens.shift();
+      model.currentMaterial = tokens.join(' ').trim();
     } else if (model.currentMaterial) {
       if (!model.materials[model.currentMaterial]) {
         model.materials[model.currentMaterial] = {};
