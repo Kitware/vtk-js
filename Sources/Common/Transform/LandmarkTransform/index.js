@@ -309,6 +309,7 @@ const DEFAULT_VALUES = {
 
 export function extend(publicAPI, model, initialValues = {}) {
   Object.assign(model, DEFAULT_VALUES, initialValues);
+  macro.obj(publicAPI, model);
 
   // Internal objects initialization
   model.matrix = mat4.create(); // identity
