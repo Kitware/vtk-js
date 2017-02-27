@@ -1,7 +1,7 @@
 ## Usage
 
 '''js
-import LandmarkTransform from 'vtk.js/Sources/Common/Transform/LandmarkTransform';
+import vtkLandmarkTransform from 'vtk.js/Sources/Common/Transform/LandmarkTransform';
 
 const transform = LandmarkTransform.New();
 transform.setMode(Mode.RIGID_BODY);
