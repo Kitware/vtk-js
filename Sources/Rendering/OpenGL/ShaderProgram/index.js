@@ -1,6 +1,8 @@
 import macro     from 'vtk.js/Sources/macro';
 import vtkShader from 'vtk.js/Sources/Rendering/OpenGL/Shader';
 
+const { vtkErrorMacro } = macro;
+
 // perform in place string substitutions, indicate if a substitution was done
 // this is useful for building up shader strings which typically involve
 // lots of string substitutions. Return true if a substitution was done.

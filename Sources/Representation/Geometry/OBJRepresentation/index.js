@@ -1,8 +1,10 @@
-import * as macro        from '../../../macro';
+import macro             from '../../../macro';
 import vtkRepresentation from '../../../Rendering/Core/Representation';
 import vtkActor          from '../../../Rendering/Core/Actor';
 import vtkMapper         from '../../../Rendering/Core/Mapper';
 import vtkTexture        from '../../../Rendering/Core/Texture';
+
+const { vtkDebugMacro } = macro;
 
 // ----------------------------------------------------------------------------
 // vtkOBJRepresentation methods

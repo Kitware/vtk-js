@@ -4,7 +4,7 @@ import Constants from 'vtk.js/Sources/Rendering/Core/Property/Constants';
 const { Representation, Interpolation } = Constants;
 
 function notImplemented(method) {
-  return () => vtkErrorMacro(`vtkProperty::${method} - NOT IMPLEMENTED`);
+  return () => macro.vtkErrorMacro(`vtkProperty::${method} - NOT IMPLEMENTED`);
 }
 
 // ----------------------------------------------------------------------------

@@ -1,8 +1,11 @@
 import JSZip  from 'jszip';
 import pako   from 'pako';
 
+import macro                from 'vtk.js/Sources/macro';
 import Endian               from 'vtk.js/Sources/Common/Core/Endian';
 import { DataTypeByteSize } from 'vtk.js/Sources/Common/Core/DataArray/Constants';
+
+const { vtkErrorMacro, vtkDebugMacro } = macro;
 
 function removeLeadingSlash(str) {
   return (str[0] === '/') ? str.substr(1) : str;

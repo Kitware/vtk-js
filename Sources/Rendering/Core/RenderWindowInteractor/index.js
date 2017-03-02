@@ -2,7 +2,7 @@ import macro                             from 'vtk.js/Sources/macro';
 import vtkMath                           from 'vtk.js/Sources/Common/Core/Math';
 import vtkInteractorStyleTrackballCamera from 'vtk.js/Sources/Interaction/Style/InteractorStyleTrackballCamera';
 
-const { vtkErrorMacro } = macro;
+const { vtkWarningMacro, vtkErrorMacro } = macro;
 
 // ----------------------------------------------------------------------------
 // Global methods
@@ -197,15 +197,15 @@ function vtkRenderWindowInteractor(publicAPI, model) {
     event.stopPropagation();
     event.preventDefault();
 
-    let wheelDelta = 0;
-    let mode = '';
-    if (event.wheelDeltaX === undefined) {
-      mode = 'detail';
-      wheelDelta = -event.detail * 2;
-    } else {
-      mode = 'wheelDeltaY';
-      wheelDelta = event.wheelDeltaY;
-    }
+    // let wheelDelta = 0;
+    // let mode = '';
+    // if (event.wheelDeltaX === undefined) {
+    //   mode = 'detail';
+    //   wheelDelta = -event.detail * 2;
+    // } else {
+    //   mode = 'wheelDeltaY';
+    //   wheelDelta = event.wheelDeltaY;
+    // }
 
     // FIXME do something with it...
   };

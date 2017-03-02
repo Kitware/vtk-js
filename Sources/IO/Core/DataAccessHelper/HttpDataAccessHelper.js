@@ -1,7 +1,10 @@
 import pako from 'pako';
 
+import macro                from 'vtk.js/Sources/macro';
 import Endian               from 'vtk.js/Sources/Common/Core/Endian';
 import { DataTypeByteSize } from 'vtk.js/Sources/Common/Core/DataArray/Constants';
+
+const { vtkErrorMacro, vtkDebugMacro } = macro;
 
 let requestCount = 0;
 

@@ -1,6 +1,7 @@
 import macro               from 'vtk.js/Sources/macro';
 import { DefaultDataType } from 'vtk.js/Sources/Common/Core/DataArray/Constants';
 
+const { vtkErrorMacro } = macro;
 const TUPLE_HOLDER = [];
 
 // ----------------------------------------------------------------------------

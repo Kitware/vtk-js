@@ -1,5 +1,7 @@
 import macro from 'vtk.js/Sources/macro';
 
+const { vtkErrorMacro } = macro;
+
 export const PASS_TYPES = ['Build', 'Render'];
 
 // ----------------------------------------------------------------------------

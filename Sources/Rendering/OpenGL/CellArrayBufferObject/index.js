@@ -4,6 +4,8 @@ import vtkBufferObject     from 'vtk.js/Sources/Rendering/OpenGL/BufferObject';
 import { ObjectType }      from 'vtk.js/Sources/Rendering/OpenGL/BufferObject/Constants';
 import { Representation }  from 'vtk.js/Sources/Rendering/Core/Property/Constants';
 
+const { vtkDebugMacro, vtkErrorMacro } = macro;
+
 // ----------------------------------------------------------------------------
 // vtkOpenGLCellArrayBufferObject methods
 // ----------------------------------------------------------------------------

@@ -5,6 +5,8 @@ import vtkHttpDataSetReader from 'vtk.js/Sources/IO/Core/HttpDataSetReader';
 
 import DataAccessHelper     from 'vtk.js/Sources/IO/Core/DataAccessHelper';
 
+const { vtkWarningMacro, vtkErrorMacro } = macro;
+
 let itemCount = 1;
 
 function applySettings(sceneItem, settings) {

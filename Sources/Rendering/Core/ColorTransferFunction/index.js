@@ -1090,7 +1090,6 @@ function vtkColorTransferFunction(publicAPI, model) {
           sharpness,
         });
       }
-
     }
     // FIXME: not supported ?
     // if (colorMap.IndexedColors) {

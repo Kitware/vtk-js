@@ -1,5 +1,7 @@
 import macro from 'vtk.js/Sources/macro';
 
+const { vtkErrorMacro } = macro;
+
 // export const SHADER_TYPES = ['Vertex', 'Fragment', 'Geometry', 'Unknown'];
 
 // ----------------------------------------------------------------------------

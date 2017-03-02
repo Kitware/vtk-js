@@ -44,7 +44,7 @@ function vtkFullScreenRenderWindow(publicAPI, model) {
     if (el) {
       el.parentNode.removeChild(el);
     }
-  }
+  };
 
   publicAPI.addController = (html) => {
     model.controlContainer = document.createElement('div');
