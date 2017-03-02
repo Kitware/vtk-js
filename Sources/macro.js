@@ -9,6 +9,7 @@ export function getCurrentGlobalMTime() {
 // ----------------------------------------------------------------------------
 // Loggins function calls
 // ----------------------------------------------------------------------------
+/* eslint-disable no-prototype-builtins                                      */
 
 const fakeConsole = {};
 function noOp() {}
@@ -16,13 +17,13 @@ function noOp() {}
 const consoleMethods = ['log', 'debug', 'info', 'warn', 'error', 'time', 'timeEnd', 'group', 'groupEnd'];
 consoleMethods.forEach(methodName => (fakeConsole[methodName] = noOp));
 
-global.console = window.console || fakeConsole;
+global.console = (window.console.hasOwnProperty('log') ? window.console : fakeConsole);
 
 const loggerFunctions = {
   debug: global.console.debug || noOp,
   error: global.console.error || noOp,
-  info: global.console.debug || noOp,
-  log: global.console.debug || noOp,
+  info: global.console.info || noOp,
+  log: global.console.log || noOp,
   warn: global.console.warn || noOp,
 };
 
