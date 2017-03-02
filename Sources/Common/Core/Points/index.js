@@ -1,6 +1,9 @@
 import macro            from 'vtk.js/Sources/macro';
 import vtkDataArray     from 'vtk.js/Sources/Common/Core/DataArray';
 import { VtkDataTypes } from 'vtk.js/Sources/Common/Core/DataArray/Constants';
+
+const { vtkErrorMacro } = macro;
+
 // ----------------------------------------------------------------------------
 // vtkPoints methods
 // ----------------------------------------------------------------------------
@@ -39,8 +42,8 @@ function vtkPoints(publicAPI, model) {
     }
 
     if (publicAPI.getNumberOfComponents() !== 2) {
-      console.error('getBounds called on an array with components of ',
-        publicAPI.getNumberOfComponents());
+      vtkErrorMacro(`getBounds called on an array with components of
+        ${publicAPI.getNumberOfComponents()}`);
       return [1, -1, 1, -1, 1, -1];
     }
 

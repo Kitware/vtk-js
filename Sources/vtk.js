@@ -10,12 +10,12 @@ export default function vtk(obj) {
     return obj;
   }
   if (!obj.vtkClass) {
-    console.log('Invalid VTK object');
+    vtkDebugMacro('Invalid VTK object');
     return null;
   }
   const constructor = factoryMapping[obj.vtkClass];
   if (!constructor) {
-    console.log('No vtk class found for Object of type', obj.vtkClass);
+    vtkErrorMacro(`No vtk class found for Object of type ${obj.vtkClass}`);
     return null;
   }
 

@@ -14,7 +14,7 @@ const { ColorMode, ScalarMode, MaterialMode, GetArray } = Constants;
 // ----------------------------------------------------------------------------
 
 function notImplemented(method) {
-  return () => console.log(`vtkMapper::${method} - NOT IMPLEMENTED`);
+  return () => vtkErrorMacro(`vtkMapper::${method} - NOT IMPLEMENTED`);
 }
 
 // CoincidentTopology static methods ------------------------------------------

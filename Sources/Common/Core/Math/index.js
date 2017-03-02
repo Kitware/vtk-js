@@ -13,7 +13,7 @@ const VTK_MAX_ROTATIONS = 20;
 const VTK_SMALL_NUMBER = 1.0e-12;
 
 function notImplemented(method) {
-  return () => console.log(`vtkMath::${method} - NOT IMPLEMENTED`);
+  return () => vtkErrorMacro(`vtkMath::${method} - NOT IMPLEMENTED`);
 }
 
 function vtkSwapVectors3(v1, v2) {

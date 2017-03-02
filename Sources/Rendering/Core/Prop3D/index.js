@@ -5,7 +5,7 @@ import vtkBoundingBox from 'vtk.js/Sources/Common/DataModel/BoundingBox';
 import vtkProp        from 'vtk.js/Sources/Rendering/Core/Prop';
 
 function notImplemented(method) {
-  return () => console.log(`vtkProp3D::${method} - NOT IMPLEMENTED`);
+  return () => vtkErrorMacro(`vtkProp3D::${method} - NOT IMPLEMENTED`);
 }
 
 // ----------------------------------------------------------------------------

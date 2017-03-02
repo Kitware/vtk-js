@@ -59,7 +59,7 @@ export function vtkOBJRepresentation(publicAPI, model) {
             textures[name] = texture;
             texture.setImage(material.image);
             if (actors[name]) {
-              console.log('add textute for', name);
+              vtkDebugMacro(`add textute for ${name}`);
               actors[name].addTexture(texture);
             }
           }
@@ -92,13 +92,13 @@ export function vtkOBJRepresentation(publicAPI, model) {
 
         if (name && textures[name]) {
           actor.addTexture(textures[name]);
-          console.log('add textute for', name);
+          vtkDebugMacro(`add textute for ${name}`);
         }
 
         if (name && actorProps[name]) {
           actor.getProperty().set(actorProps[name]);
         } else {
-          console.log('(geo) no actor props for', name);
+          vtkDebugMacro(`(geo) no actor props for ${name}`);
         }
       }
       if (isReady.material) {

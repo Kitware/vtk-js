@@ -36,7 +36,7 @@ function fetchArray(instance = {}, baseURL, array, fetchGzip = false) {
             } else {
               if (Endian.ENDIANNESS !== array.ref.encode && Endian.ENDIANNESS) {
                 // Need to swap bytes
-                console.log('Swap bytes of', array.name);
+                vtkDebugMacro(`Swap bytes of ${array.name}`);
                 Endian.swapBytes(array.buffer, DataTypeByteSize[array.dataType]);
               }
 
@@ -44,7 +44,7 @@ function fetchArray(instance = {}, baseURL, array, fetchGzip = false) {
             }
 
             if (array.values.length !== array.size) {
-              console.error('Error in FetchArray:', array.name, 'does not have the proper array size. Got', array.values.length, 'instead of', array.size);
+              vtkErrorMacro(`Error in FetchArray: ${array.name}, does not have the proper array size. Got ${array.values.length}, instead of ${array.size}`);
             }
 
             // Done with the ref and work
@@ -113,8 +113,8 @@ function fetchJSON(instance = {}, url, compression) {
 
 function fetchText(instance = {}, url, compression) {
   if (compression && compression !== 'gz') {
-    console.error('Supported algorithms are: [gz]');
-    console.error('Unkown compression algorithm:', compression);
+    vtkErrorMacro('Supported algorithms are: [gz]');
+    vtkErrorMacro(`Unkown compression algorithm: ${compression}`);
   }
 
   return new Promise((resolve, reject) => {

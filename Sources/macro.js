@@ -49,7 +49,7 @@ export function obj(publicAPI = {}, model = {}) {
 
   publicAPI.modified = () => {
     if (model.deleted) {
-      console.log('instance deleted - cannot call any method');
+      vtkErrorMacro('instance deleted - cannot call any method');
       return;
     }
 
@@ -59,7 +59,7 @@ export function obj(publicAPI = {}, model = {}) {
 
   publicAPI.onModified = (callback) => {
     if (model.deleted) {
-      console.log('instance deleted - cannot call any method');
+      vtkErrorMacro('instance deleted - cannot call any method');
       return null;
     }
 
@@ -85,7 +85,7 @@ export function obj(publicAPI = {}, model = {}) {
       } else {
         // Set data on model directly
         if (['mtime'].indexOf(name) === -1 && !noWarning) {
-          console.log('Warning: Set value to model directly', name, map[name]);
+          vtkWarningMacro(`Warning: Set value to model directly ${name}, ${map[name]}`);
         }
         model[name] = map[name];
         ret = true;
@@ -156,7 +156,7 @@ export function obj(publicAPI = {}, model = {}) {
       const keyIdx = keyList.indexOf(key);
       if (keyIdx === -1) {
         if (debug) {
-          console.log(`add ${key} in shallowCopy`);
+          vtkDebugMacro(`add ${key} in shallowCopy`);
         }
       } else {
         keyList.splice(keyIdx, 1);
@@ -164,7 +164,7 @@ export function obj(publicAPI = {}, model = {}) {
       model[key] = otherModel[key];
     });
     if (keyList.length && debug) {
-      console.log(`Untouched keys: ${keyList.join(', ')}`);
+      vtkDebugMacro(`Untouched keys: ${keyList.join(', ')}`);
     }
 
     publicAPI.modified();
@@ -201,7 +201,7 @@ const objectSetterMap = {
           }
           return false;
         }
-        console.error('Set Enum with invalid argument', field, value);
+        vtkErrorMacro(`Set Enum with invalid argument ${field}, ${value}`);
         throw new RangeError('Set Enum with invalid string argument');
       }
       if (typeof value === 'number') {
@@ -211,12 +211,12 @@ const objectSetterMap = {
             publicAPI.modified();
             return true;
           }
-          console.error('Set Enum outside numeric range', field, value);
+          vtkErrorMacro(`Set Enum outside numeric range ${field}, ${value}`);
           throw new RangeError('Set Enum outside numeric range');
         }
         return false;
       }
-      console.error('Set Enum with invalid argument (String/Number)', field, value);
+      vtkErrorMacro(`Set Enum with invalid argument (String/Number) ${field}, ${value}`);
       throw new TypeError('Set Enum with invalid argument (String/Number)');
     };
   },
@@ -229,13 +229,13 @@ function findSetter(field) {
       return (publicAPI, model) => fn(publicAPI, model, field);
     }
 
-    console.error('No setter for field', field);
+    vtkErrorMacro(`No setter for field ${field}`);
     throw new TypeError('No setter for field');
   }
   return function getSetter(publicAPI, model) {
     return function setter(value) {
       if (model.deleted) {
-        console.log('instance deleted - cannot call any method');
+        vtkErrorMacro('instance deleted - cannot call any method');
         return false;
       }
 
@@ -286,7 +286,7 @@ export function setArray(publicAPI, model, fieldNames, size) {
   fieldNames.forEach((field) => {
     publicAPI[`set${capitalize(field)}`] = (...args) => {
       if (model.deleted) {
-        console.log('instance deleted - cannot call any method');
+        vtkErrorMacro('instance deleted - cannot call any method');
         return false;
       }
 
@@ -359,7 +359,7 @@ export function algo(publicAPI, model, numberOfInputs, numberOfOutputs) {
   // Methods
   function setInputData(dataset, port = 0) {
     if (model.deleted) {
-      console.log('instance deleted - cannot call any method');
+      vtkErrorMacro('instance deleted - cannot call any method');
       return;
     }
     model.inputData[port] = dataset;
@@ -375,7 +375,7 @@ export function algo(publicAPI, model, numberOfInputs, numberOfOutputs) {
 
   function setInputConnection(outputPort, port = 0) {
     if (model.deleted) {
-      console.log('instance deleted - cannot call any method');
+      vtkErrorMacro('instance deleted - cannot call any method');
       return;
     }
     model.inputData[port] = null;
@@ -384,7 +384,7 @@ export function algo(publicAPI, model, numberOfInputs, numberOfOutputs) {
 
   function getOutputData(port = 0) {
     if (model.deleted) {
-      console.log('instance deleted - cannot call any method');
+      vtkErrorMacro('instance deleted - cannot call any method');
       return null;
     }
     if (publicAPI.shouldUpdate()) {
@@ -501,7 +501,7 @@ export function event(publicAPI, model, eventName) {
 
   publicAPI[`invoke${capitalize(eventName)}`] = (...args) => {
     if (model.deleted) {
-      console.log('instance deleted - cannot call any method');
+      vtkErrorMacro('instance deleted - cannot call any method');
       return;
     }
 
@@ -510,7 +510,7 @@ export function event(publicAPI, model, eventName) {
 
   publicAPI[`on${capitalize(eventName)}`] = (callback) => {
     if (model.deleted) {
-      console.log('instance deleted - cannot call any method');
+      vtkErrorMacro('instance deleted - cannot call any method');
       return null;
     }
 
@@ -557,13 +557,18 @@ export function chain(...fn) {
 // Loggins function calls
 // ----------------------------------------------------------------------------
 
-const loggerFunctions = {
-  debug: console.debug,
-  error: console.error,
-  warn: console.warn,
-};
-
 function noOp() {}
+
+var console = (window.console = window.console || {});
+
+const loggerFunctions = {
+  // debug: console.debug || noOp,
+  // error: console.error || noOp,
+  // warn: console.warn || noOp,
+  debug: noOp,
+  error: noOp,
+  warn: noOp,
+};
 
 export function setLoggerFunction(name, fn) {
   if (loggerFunctions[name]) {

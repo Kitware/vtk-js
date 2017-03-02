@@ -84,7 +84,7 @@ export function vtkOpenGLRenderWindow(publicAPI, model) {
       if (model.canvas.parentNode === model.el) {
         model.el.removeChild(model.canvas);
       } else {
-        console.log('Error: canvas parent node does not match container');
+        vtkErrorMacro('Error: canvas parent node does not match container');
       }
     }
 

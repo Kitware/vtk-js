@@ -39,7 +39,7 @@ function create(options) {
     fetchArray(instance = {}, baseURL, array, fetchGzip = false) {
       return new Promise((resolve, reject) => {
         if (!ready) {
-          console.log('ERROR!!! zip not ready...');
+          vtkErrorMacro('ERROR!!! zip not ready...');
         }
         const url = removeLeadingSlash([baseURL, array.ref.basepath, fetchGzip ? `${array.ref.id}.gz` : array.ref.id].join('/'));
 
@@ -69,7 +69,7 @@ function create(options) {
             } else {
               if (Endian.ENDIANNESS !== array.ref.encode && Endian.ENDIANNESS) {
                 // Need to swap bytes
-                console.log('Swap bytes of', array.name);
+                vtkDebugMacro(`Swap bytes of ${array.name}`);
                 Endian.swapBytes(array.buffer, DataTypeByteSize[array.dataType]);
               }
 
@@ -77,7 +77,7 @@ function create(options) {
             }
 
             if (array.values.length !== array.size) {
-              console.error('Error in FetchArray:', array.name, 'does not have the proper array size. Got', array.values.length, 'instead of', array.size);
+              vtkErrorMacro(`Error in FetchArray: ${array.name} does not have the proper array size. Got ${array.values.length}, instead of ${array.size}`);
             }
 
             // Done with the ref and work
@@ -96,7 +96,7 @@ function create(options) {
     fetchJSON(instance = {}, url, compression) {
       const path = removeLeadingSlash(url);
       if (!ready) {
-        console.log('ERROR!!! zip not ready...');
+        vtkErrorMacro('ERROR!!! zip not ready...');
       }
 
       if (compression) {
@@ -115,7 +115,7 @@ function create(options) {
     fetchText(instance = {}, url, compression) {
       const path = removeLeadingSlash(url);
       if (!ready) {
-        console.log('ERROR!!! zip not ready...');
+        vtkErrorMacro('ERROR!!! zip not ready...');
       }
 
       if (compression) {

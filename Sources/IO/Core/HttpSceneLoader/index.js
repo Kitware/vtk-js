@@ -9,17 +9,14 @@ let itemCount = 1;
 
 function applySettings(sceneItem, settings) {
   if (settings.actor) {
-    // console.log('actor', settings.actor);
     sceneItem.actor.set(settings.actor);
   }
 
   if (settings.property) {
-    // console.log('property', settings.property);
     sceneItem.actor.getProperty().set(settings.property);
   }
 
   if (settings.mapper) {
-    // console.log('mapper', settings.mapper);
     if (settings.mapper.colorByArrayName) {
       sceneItem.source.enableArray(settings.mapper.colorByArrayName, settings.mapper.colorByArrayName);
       sceneItem.source.loadData();
@@ -92,7 +89,7 @@ export function vtkHttpSceneLoader(publicAPI, model) {
     if (camera) {
       camera.set(params);
     } else {
-      console.log('No active camera to update');
+      vtkErrorMacro('No active camera to update');
     }
   }
 
@@ -103,7 +100,7 @@ export function vtkHttpSceneLoader(publicAPI, model) {
 
   publicAPI.update = () => {
     if (!model.renderer) {
-      console.log('No renderer provided, skip update process');
+      vtkWarningMacro('No renderer provided, skip update process');
       return;
     }
 
@@ -131,7 +128,7 @@ export function vtkHttpSceneLoader(publicAPI, model) {
           }
         },
         (error) => {
-          console.log('Error fetching scene', error);
+          vtkErrorMacro(`Error fetching scene ${error}`);
         });
   };
 

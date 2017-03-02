@@ -71,7 +71,7 @@ function vtkViewNode(publicAPI, model) {
         publicAPI.render(prepass);
         break;
       default:
-        console.log(`UNKNOWN OPERATION  ${operation}`);
+        vtkErrorMacro(`UNKNOWN OPERATION  ${operation}`);
     }
   };
 
@@ -122,7 +122,7 @@ function vtkViewNode(publicAPI, model) {
 
   publicAPI.createViewNode = (dataObj) => {
     if (!model.myFactory) {
-      console.log('Cannot create view nodes without my own factory');
+      vtkErrorMacro('Cannot create view nodes without my own factory');
       return null;
     }
     const ret = model.myFactory.createNode(dataObj);

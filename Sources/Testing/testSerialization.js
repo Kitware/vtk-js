@@ -59,7 +59,7 @@ classToTest.forEach((testName) => {
     const state2 = instance2.getState();
 
     if (debug) {
-      console.log(state);
+      vtkDebugMacro(state);
     }
 
     t.notEqual(instance, instance2, 'We have two different instances');

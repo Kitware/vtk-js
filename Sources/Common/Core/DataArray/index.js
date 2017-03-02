@@ -12,7 +12,7 @@ function computeRange(values, component = 0, tuple = 1) {
 
   if (component < 0) {
     // Compute magnitude
-    console.log('vtkDataArray: Compute magnitude - NOT IMPLEMENTED');
+    vtkErrorMacro('vtkDataArray: Compute magnitude - NOT IMPLEMENTED');
     return range;
   }
 

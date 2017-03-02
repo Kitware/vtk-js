@@ -103,7 +103,7 @@ function applyFormula() {
     /* eslint-enable no-new-func */
   } catch (exc) {
     if (!('name' in exc && exc.name === 'SyntaxError')) {
-      console.log('Unexpected exception ', exc);
+      vtkErrorMacro(`Unexpected exception ${exc}`);
       el.style.background = '#fbb';
       return;
     }
@@ -141,7 +141,7 @@ function applyFormula() {
       renderWindow.render();
       return;
     } catch (exc) {
-      console.log('Unexpected exception ', exc);
+      vtkErrorMacro(`Unexpected exception ${exc}`);
     }
   }
   el.style.background = '#ffb';

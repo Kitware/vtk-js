@@ -108,7 +108,7 @@ function vtkRenderWindowInteractor(publicAPI, model) {
 
   publicAPI.disable = () => publicAPI.setEnabled(false);
 
-  publicAPI.startEventLoop = () => console.log('empty event loop');
+  publicAPI.startEventLoop = () => vtkWarningMacro('empty event loop');
 
   publicAPI.setEventPosition = (xv, yv, zv, pointer) => {
     model.pointerIndex = pointer;
@@ -208,7 +208,6 @@ function vtkRenderWindowInteractor(publicAPI, model) {
     }
 
     // FIXME do something with it...
-    console.log(mode, wheelDelta);
   };
 
   publicAPI.handleMouseUp = (event) => {
@@ -235,7 +234,6 @@ function vtkRenderWindowInteractor(publicAPI, model) {
   publicAPI.handleTouchStart = (event) => {
     event.stopPropagation();
     event.preventDefault();
-    console.log('touch down');
 
     const touches = event.changedTouches;
     for (let i = 0; i < touches.length; i++) {

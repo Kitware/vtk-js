@@ -140,7 +140,7 @@ function vtkOpenGLCellArrayBufferObject(publicAPI, model) {
       polysToSurface(npts, cellPts, offset) {
         if (npts < 3) {
           // ignore degenerate triangles
-          console.log('skipping degenerate triangle');
+          vtkDebugMacro('skipping degenerate triangle');
         } else {
           for (let i = 0; i < npts - 2; i++) {
             addAPoint(cellPts[offset + 0]);
@@ -185,15 +185,15 @@ function vtkOpenGLCellArrayBufferObject(publicAPI, model) {
   };
 
   publicAPI.setCoordShiftAndScaleMethod = (shiftScaleMethod) => {
-    console.log('coordinate shift and scale not yet implemented');
+    vtkErrorMacro('coordinate shift and scale not yet implemented');
   };
 
   publicAPI.setCoordShift = (shiftArray) => {
-    console.log('coordinate shift and scale not yet implemented');
+    vtkErrorMacro('coordinate shift and scale not yet implemented');
   };
 
   publicAPI.setCoordScale = (scaleArray) => {
-    console.log('coordinate shift and scale not yet implemented');
+    vtkErrorMacro('coordinate shift and scale not yet implemented');
   };
 }
 
