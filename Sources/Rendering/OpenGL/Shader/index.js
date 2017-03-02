@@ -1,5 +1,7 @@
 import macro from 'vtk.js/Sources/macro';
 
+const { vtkErrorMacro } = macro;
+
 // export const SHADER_TYPES = ['Vertex', 'Fragment', 'Geometry', 'Unknown'];
 
 // ----------------------------------------------------------------------------
@@ -42,7 +44,7 @@ export function vtkShader(publicAPI, model) {
     const isCompiled = model.context.getShaderParameter(model.handle, model.context.COMPILE_STATUS);
     if (!isCompiled) {
       const lastError = model.context.getShaderInfoLog(model.handle);
-      console.error(`Error compiling shader '${model.source}': ${lastError}`);
+      vtkErrorMacro(`Error compiling shader '${model.source}': ${lastError}`);
       model.context.deleteShader(model.handle);
       model.handle = 0;
       return false;

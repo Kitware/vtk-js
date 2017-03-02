@@ -1,6 +1,8 @@
 import macro     from 'vtk.js/Sources/macro';
 import vtkShader from 'vtk.js/Sources/Rendering/OpenGL/Shader';
 
+const { vtkErrorMacro } = macro;
+
 // perform in place string substitutions, indicate if a substitution was done
 // this is useful for building up shader strings which typically involve
 // lots of string substitutions. Return true if a substitution was done.
@@ -29,33 +31,33 @@ export function vtkShaderProgram(publicAPI, model) {
 
   publicAPI.compileShader = () => {
     if (!model.vertexShader.compile()) {
-      console.log(model.vertexShader.getSource()
+      vtkErrorMacro(model.vertexShader.getSource()
         .split('\n')
         .map((line, index) => `${index}: ${line}`)
         .join('\n'));
-      console.log(model.vertexShader.getError());
+      vtkErrorMacro(model.vertexShader.getError());
       return 0;
     }
     if (!model.fragmentShader.compile()) {
-      console.log(model.fragmentShader.getSource()
+      vtkErrorMacro(model.fragmentShader.getSource()
         .split('\n')
         .map((line, index) => `${index}: ${line}`)
         .join('\n'));
-      console.log(model.fragmentShader.getError());
+      vtkErrorMacro(model.fragmentShader.getError());
       return 0;
     }
     // skip geometry for now
     if (!publicAPI.attachShader(model.vertexShader)) {
-      console.log(model.error);
+      vtkErrorMacro(model.error);
       return 0;
     }
     if (!publicAPI.attachShader(model.fragmentShader)) {
-      console.log(model.error);
+      vtkErrorMacro(model.error);
       return 0;
     }
 
     if (!publicAPI.link()) {
-      console.log(`Links failed: ${model.error}`);
+      vtkErrorMacro(`Links failed: ${model.error}`);
       return 0;
     }
 
@@ -112,7 +114,7 @@ export function vtkShaderProgram(publicAPI, model) {
     const isCompiled = model.context.getProgramParameter(model.handle, model.context.LINK_STATUS);
     if (!isCompiled) {
       const lastError = model.context.getProgramInfoLog(model.handle);
-      console.error(`Error linking shader ${lastError}`);
+      vtkErrorMacro(`Error linking shader ${lastError}`);
       model.handle = 0;
       return false;
     }
@@ -214,7 +216,7 @@ export function vtkShaderProgram(publicAPI, model) {
     }
 
     if (!model.linked) {
-      console.log('attempt to find uniform when the shader program is not linked');
+      vtkErrorMacro('attempt to find uniform when the shader program is not linked');
       return false;
     }
 
@@ -239,7 +241,7 @@ export function vtkShaderProgram(publicAPI, model) {
     }
 
     if (!model.linked) {
-      console.log('attempt to find uniform when the shader program is not linked');
+      vtkErrorMacro('attempt to find uniform when the shader program is not linked');
       return false;
     }
 

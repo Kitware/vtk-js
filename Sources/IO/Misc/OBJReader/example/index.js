@@ -3,12 +3,14 @@ import vtkOBJReader               from 'vtk.js/Sources/IO/Misc/OBJReader';
 import vtkMTLReader               from 'vtk.js/Sources/IO/Misc/MTLReader';
 import vtkOBJRepresentation       from 'vtk.js/Sources/Representation/Geometry/OBJRepresentation';
 
+// const objs = ['ferrari-f1-race-car', 'mini-cooper', 'space-shuttle-orbiter', 'blskes-plane'];
 const fileName = 'space-shuttle-orbiter';
+
 // ----------------------------------------------------------------------------
 // Standard rendering code setup
 // ----------------------------------------------------------------------------
 
-const fullScreenRenderer = vtkFullScreenRenderWindow.newInstance({ background: [0, 0, 0] });
+const fullScreenRenderer = vtkFullScreenRenderWindow.newInstance({ background: [0.5, 0.5, 0.5] });
 
 // ----------------------------------------------------------------------------
 // Example code
@@ -36,8 +38,8 @@ function onClick(event) {
 representation.setOBJReader(reader);
 representation.setMaterialsReader(materialsReader);
 
-materialsReader.setUrl(`${__BASE_PATH__}/data/obj/${fileName}.mtl`).then(() => {
-  reader.setUrl(`${__BASE_PATH__}/data/obj/${fileName}.obj`).then(() => {
+materialsReader.setUrl(`${__BASE_PATH__}/data/obj/${fileName}/${fileName}.mtl`).then(() => {
+  reader.setUrl(`${__BASE_PATH__}/data/obj/${fileName}/${fileName}.obj`).then(() => {
     representation.update().then(() => {
       fullScreenRenderer.addRepresentation(representation);
       fullScreenRenderer.getRenderer().resetCamera();

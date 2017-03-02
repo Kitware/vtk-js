@@ -36,7 +36,6 @@ test.onlyIfWebGL('Test Interpolate Scalars Before Colors', (t) => {
     if (preset.RGBPoints && count < MAX_NUMBER_OF_PRESETS) {
       const i = (count % NUMBER_PER_LINE);
       const j = Math.floor(count / NUMBER_PER_LINE);
-      console.log(`${count + 1}: [${i}, ${j}] - ${preset.Name} | ${preset.ColorSpace}`);
       renderer.addActor(createScalarMap(i * 0.5, j * 1.25, preset, gc));
       count += 1;
     }

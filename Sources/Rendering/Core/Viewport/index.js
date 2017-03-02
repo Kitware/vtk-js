@@ -3,7 +3,7 @@ import macro from 'vtk.js/Sources/macro';
 const { vtkErrorMacro } = macro;
 
 function notImplemented(method) {
-  return () => console.log(`vtkViewport::${method} - NOT IMPLEMENTED`);
+  return () => vtkErrorMacro(`vtkViewport::${method} - NOT IMPLEMENTED`);
 }
 
 // ----------------------------------------------------------------------------

@@ -88,7 +88,7 @@ function reassignManipulators() {
 Object.keys(selectMap).forEach((name) => {
   const elt = document.querySelector(`.${name}`);
   elt.addEventListener('change', (e) => {
-    console.log(`Changing action of ${name} to ${e.target.value}`);
+    vtkDebugMacro(`Changing action of ${name} to ${e.target.value}`);
     uiComponents[name].manipName = e.target.value;
     reassignManipulators();
   });

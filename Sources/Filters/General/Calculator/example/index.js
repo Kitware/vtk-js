@@ -1,3 +1,4 @@
+import macro                      from 'vtk.js/Sources/macro';
 import vtkFullScreenRenderWindow  from 'vtk.js/Sources/Rendering/Misc/FullScreenRenderWindow';
 
 import vtkActor                   from 'vtk.js/Sources/Rendering/Core/Actor';
@@ -12,6 +13,8 @@ import { ColorMode, ScalarMode }  from 'vtk.js/Sources/Rendering/Core/Mapper/Con
 import { FieldDataTypes }         from 'vtk.js/Sources/Common/DataModel/DataSet/Constants';
 
 import controlPanel from './controlPanel.html';
+
+const { vtkErrorMacro } = macro;
 
 let formulaIdx = 0;
 const FORMULA = [
@@ -103,7 +106,7 @@ function applyFormula() {
     /* eslint-enable no-new-func */
   } catch (exc) {
     if (!('name' in exc && exc.name === 'SyntaxError')) {
-      console.log('Unexpected exception ', exc);
+      vtkErrorMacro(`Unexpected exception ${exc}`);
       el.style.background = '#fbb';
       return;
     }
@@ -141,7 +144,7 @@ function applyFormula() {
       renderWindow.render();
       return;
     } catch (exc) {
-      console.log('Unexpected exception ', exc);
+      vtkErrorMacro(`Unexpected exception ${exc}`);
     }
   }
   el.style.background = '#ffb';
@@ -191,6 +194,7 @@ applyFormula();
 // modify objects in your browser's developer console:
 // -----------------------------------------------------------
 
+global.setLoggerFunction = macro.setLoggerFunction;
 global.planeSource = planeSource;
 global.planeMapper = planeMapper;
 global.planeActor = planeActor;

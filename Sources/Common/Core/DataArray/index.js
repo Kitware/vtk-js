@@ -1,6 +1,7 @@
 import macro               from 'vtk.js/Sources/macro';
 import { DefaultDataType } from 'vtk.js/Sources/Common/Core/DataArray/Constants';
 
+const { vtkErrorMacro } = macro;
 const TUPLE_HOLDER = [];
 
 // ----------------------------------------------------------------------------
@@ -12,7 +13,7 @@ function computeRange(values, component = 0, tuple = 1) {
 
   if (component < 0) {
     // Compute magnitude
-    console.log('vtkDataArray: Compute magnitude - NOT IMPLEMENTED');
+    vtkErrorMacro('vtkDataArray: Compute magnitude - NOT IMPLEMENTED');
     return range;
   }
 

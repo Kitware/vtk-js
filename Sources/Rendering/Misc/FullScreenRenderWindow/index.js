@@ -39,6 +39,13 @@ function vtkFullScreenRenderWindow(publicAPI, model) {
   // Expose background
   publicAPI.setBackground = model.renderer.setBackground;
 
+  publicAPI.removeController = () => {
+    const el = document.querySelector(`.${style.controlPanel}`);
+    if (el) {
+      el.parentNode.removeChild(el);
+    }
+  };
+
   publicAPI.addController = (html) => {
     model.controlContainer = document.createElement('div');
     model.controlContainer.className = style.controlPanel;

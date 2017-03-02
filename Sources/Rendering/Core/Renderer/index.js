@@ -10,7 +10,7 @@ import { INIT_BOUNDS }  from 'vtk.js/Sources/Common/DataModel/BoundingBox';
 const { vtkDebugMacro, vtkErrorMacro, vtkWarningMacro } = macro;
 
 function notImplemented(method) {
-  return () => console.log(`vtkRenderer::${method} - NOT IMPLEMENTED`);
+  return () => vtkErrorMacro(`vtkRenderer::${method} - NOT IMPLEMENTED`);
 }
 
 // ----------------------------------------------------------------------------

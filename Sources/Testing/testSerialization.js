@@ -1,5 +1,6 @@
-import test from 'tape-catch';
-import vtk  from 'vtk.js/Sources/vtk';
+import test  from 'tape-catch';
+import vtk   from 'vtk.js/Sources/vtk';
+import macro from 'vtk.js/Sources/macro';
 
 import vtkDataArray       from 'vtk.js/Sources/Common/Core/DataArray';
 import vtkPoints          from 'vtk.js/Sources/Common/Core/Points';
@@ -7,6 +8,8 @@ import vtkLookupTable     from 'vtk.js/Sources/Common/Core/LookupTable';
 import vtkScalarsToColors from 'vtk.js/Sources/Common/Core/ScalarsToColors';
 
 import vtkPolyData        from 'vtk.js/Sources/Common/DataModel/PolyData';
+
+const { vtkDebugMacro } = macro;
 
 const classToTest = [
   'vtkDataArray',
@@ -59,7 +62,7 @@ classToTest.forEach((testName) => {
     const state2 = instance2.getState();
 
     if (debug) {
-      console.log(state);
+      vtkDebugMacro(state);
     }
 
     t.notEqual(instance, instance2, 'We have two different instances');

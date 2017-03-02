@@ -1090,11 +1090,6 @@ function vtkColorTransferFunction(publicAPI, model) {
           sharpness,
         });
       }
-
-      // FIXME: remove debug output
-      // console.groupCollapsed(colorMap.Name);
-      // console.log(JSON.stringify(model.nodes, null, 2));
-      // console.groupEnd();
     }
     // FIXME: not supported ?
     // if (colorMap.IndexedColors) {

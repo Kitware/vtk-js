@@ -2,7 +2,7 @@ import Actor from '..';
 
 const test = (condition, message) => {
   if (!condition) {
-    console.log('ERROR: ', message);
+    vtkErrorMacro(`ERROR: ${message}`);
   }
 };
 const zip = rows => rows[0].map((_, c) => rows.map(row => row[c]));
@@ -13,9 +13,9 @@ const arraysEqual = (aa, bb) =>
 // Create actor instance
 const actor = Actor.newInstance();
 
-console.log('visibility', actor.getVisibility());
-console.log('mapper', actor.getMapper());
-console.log('property', actor.getProperty());
+vtkDebugMacro(`visibility ${actor.getVisibility()}`);
+vtkDebugmacro(`mapper ${actor.getMapper()}`);
+vtkDebugMacro(`property ${actor.getProperty()}`);
 
 test(actor.getProperty() !== null, 'Actor should create a default property.');
 test(actor.getMapper() === null, 'Actor should not have a default mapper.');
@@ -25,7 +25,7 @@ test(
   'Actor bounds should be invalid when there is no mapper.');
 
 actor.setVisibility(!actor.getVisibility());
-console.log('visibility', actor.getVisibility());
+vtkDebugMacro(`visibility ${actor.getVisibility()}`);
 test(!actor.getVisibility(), 'Actor visibility could not be modified.');
 
 // Uncomment to debug in browser:
