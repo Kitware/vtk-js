@@ -7,6 +7,52 @@ export function getCurrentGlobalMTime() {
 }
 
 // ----------------------------------------------------------------------------
+// Loggins function calls
+// ----------------------------------------------------------------------------
+
+const fakeConsole = {};
+function noOp() {}
+
+const consoleMethods = ['log', 'debug', 'info', 'warn', 'error', 'time', 'timeEnd', 'group', 'groupEnd'];
+consoleMethods.forEach(methodName => (fakeConsole[methodName] = noOp));
+
+global.console = window.console || fakeConsole;
+
+const loggerFunctions = {
+  debug: global.console.debug || noOp,
+  error: global.console.error || noOp,
+  info: global.console.debug || noOp,
+  log: global.console.debug || noOp,
+  warn: global.console.warn || noOp,
+};
+
+export function setLoggerFunction(name, fn) {
+  if (loggerFunctions[name]) {
+    loggerFunctions[name] = fn || noOp;
+  }
+}
+
+export function vtkLogMacro(...args) {
+  loggerFunctions.log(...args);
+}
+
+export function vtkInfoMacro(...args) {
+  loggerFunctions.info(...args);
+}
+
+export function vtkDebugMacro(...args) {
+  loggerFunctions.debug(...args);
+}
+
+export function vtkErrorMacro(...args) {
+  loggerFunctions.error(...args);
+}
+
+export function vtkWarningMacro(...args) {
+  loggerFunctions.warn(...args);
+}
+
+// ----------------------------------------------------------------------------
 // capitilze provided string
 // ----------------------------------------------------------------------------
 
@@ -554,41 +600,6 @@ export function chain(...fn) {
 }
 
 // ----------------------------------------------------------------------------
-// Loggins function calls
-// ----------------------------------------------------------------------------
-
-function noOp() {}
-
-var console = (window.console = window.console || {});
-
-const loggerFunctions = {
-  // debug: console.debug || noOp,
-  // error: console.error || noOp,
-  // warn: console.warn || noOp,
-  debug: noOp,
-  error: noOp,
-  warn: noOp,
-};
-
-export function setLoggerFunction(name, fn) {
-  if (loggerFunctions[name]) {
-    loggerFunctions[name] = fn || noOp;
-  }
-}
-
-export function vtkDebugMacro(...args) {
-  loggerFunctions.debug(...args);
-}
-
-export function vtkErrorMacro(...args) {
-  loggerFunctions.error(...args);
-}
-
-export function vtkWarningMacro(...args) {
-  loggerFunctions.warn(...args);
-}
-
-// ----------------------------------------------------------------------------
 // Default export
 // ----------------------------------------------------------------------------
 
@@ -611,5 +622,7 @@ export default {
   setLoggerFunction,
   vtkDebugMacro,
   vtkErrorMacro,
+  vtkInfoMacro,
+  vtkLogMacro,
   vtkWarningMacro,
 };
