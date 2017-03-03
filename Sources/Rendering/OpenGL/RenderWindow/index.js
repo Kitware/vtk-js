@@ -140,8 +140,10 @@ export function vtkOpenGLRenderWindow(publicAPI, model) {
 
   publicAPI.get2DContext = () => model.canvas.getContext('2d');
 
-  publicAPI.get3DContext = (options = { preserveDrawingBuffer: true, premultipliedAlpha: false }) =>
-    model.canvas.getContext('webgl', options) || model.canvas.getContext('experimental-webgl', options);
+  publicAPI.get3DContext = (options = { preserveDrawingBuffer: true, depth: true, alpha: true }) => {
+    let result = model.canvas.getContext('webgl', options) || model.canvas.getContext('experimental-webgl', options);
+    return result;
+  };
 
   publicAPI.activateTexture = (texture) => {
     // Only add if it isn't already there
