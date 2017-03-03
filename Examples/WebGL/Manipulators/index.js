@@ -1,3 +1,4 @@
+import macro                         from 'vtk.js/Sources/macro';
 import vtkFullScreenRenderWindow     from 'vtk.js/Sources/Rendering/Misc/FullScreenRenderWindow';
 
 import vtkActor                      from 'vtk.js/Sources/Rendering/Core/Actor';
@@ -14,6 +15,8 @@ import vtkTrackballZoom              from 'vtk.js/Sources/Interaction/Manipulato
 import vtkTrackballZoomToMouse       from 'vtk.js/Sources/Interaction/Manipulators/TrackballZoomToMouse';
 
 import controlPanel from './controller.html';
+
+const { vtkDebugMacro } = macro;
 
 // ----------------------------------------------------------------------------
 // Standard rendering code setup
