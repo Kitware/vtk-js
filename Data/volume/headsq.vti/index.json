@@ -1,0 +1,58 @@
+{
+  "origin": [
+    0.0, 
+    0.0, 
+    0.0
+  ], 
+  "cellData": {
+    "arrays": [], 
+    "vtkClass": "vtkDataSetAttributes"
+  }, 
+  "FieldData": {
+    "arrays": [], 
+    "vtkClass": "vtkDataSetAttributes"
+  }, 
+  "vtkClass": "vtkImageData", 
+  "pointData": {
+    "arrays": [
+      {
+        "data": {
+          "numberOfComponents": 1, 
+          "name": "ImageFile", 
+          "vtkClass": "vtkDataArray", 
+          "dataType": "Int16Array", 
+          "ranges": [
+            {
+              "max": 3926.0, 
+              "component": null, 
+              "min": 0.0
+            }
+          ], 
+          "ref": {
+            "encode": "LittleEndian", 
+            "basepath": "data", 
+            "id": "1839938295fe4f0839c9df8d9fa67137"
+          }, 
+          "size": 380928
+        }
+      }
+    ], 
+    "vtkClass": "vtkDataSetAttributes"
+  }, 
+  "spacing": [
+    3.2, 
+    3.2, 
+    1.5
+  ], 
+  "extent": [
+    0, 
+    63, 
+    0, 
+    63, 
+    0, 
+    92
+  ], 
+  "metadata": {
+    "name": "headsq.vti"
+  }
+}
