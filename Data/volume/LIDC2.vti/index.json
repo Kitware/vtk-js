@@ -1,0 +1,58 @@
+{
+  "origin": [
+    0.0, 
+    0.0, 
+    0.0
+  ], 
+  "cellData": {
+    "arrays": [], 
+    "vtkClass": "vtkDataSetAttributes"
+  }, 
+  "FieldData": {
+    "arrays": [], 
+    "vtkClass": "vtkDataSetAttributes"
+  }, 
+  "vtkClass": "vtkImageData", 
+  "pointData": {
+    "arrays": [
+      {
+        "data": {
+          "numberOfComponents": 1, 
+          "name": "ImageScalars", 
+          "vtkClass": "vtkDataArray", 
+          "dataType": "Uint8Array", 
+          "ranges": [
+            {
+              "max": 255.0, 
+              "component": null, 
+              "min": 0.0
+            }
+          ], 
+          "ref": {
+            "encode": "LittleEndian", 
+            "basepath": "data", 
+            "id": "b1ad142a1ebc80f957fcdc329e876d51"
+          }, 
+          "size": 8716288
+        }
+      }
+    ], 
+    "vtkClass": "vtkDataSetAttributes"
+  }, 
+  "spacing": [
+    1.40625, 
+    1.40625, 
+    2.5
+  ], 
+  "extent": [
+    0, 
+    255, 
+    0, 
+    255, 
+    0, 
+    132
+  ], 
+  "metadata": {
+    "name": "LIDC2.vti"
+  }
+}
