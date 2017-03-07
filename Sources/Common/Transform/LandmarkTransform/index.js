@@ -253,7 +253,7 @@ function vtkLandmarkTransform(publicAPI, model) {
       model.matrix[10] = ww - xx - yy + zz;
 
       // add in the scale factor (if desired)
-      if (model.mode !== Mode.VTK_LANDMARK_RIGIDBODY) {
+      if (model.mode !== Mode.RIGID_BODY) {
         for (let i = 0; i < 3; i++) {
           model.matrix[(4 * 0) + i] = model.matrix[(4 * 0) + i] * scale;
           model.matrix[(4 * 1) + i] = model.matrix[(4 * 1) + i] * scale;
