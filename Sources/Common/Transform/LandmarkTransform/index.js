@@ -71,8 +71,10 @@ function vtkLandmarkTransform(publicAPI, model) {
 
     // -- build the 3x3 matrix M --
 
-    const M = mat3.fromValues(0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0);
-    const AAT = mat3.fromValues(0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0);
+    const M = mat3.create();
+    M[0] = M[4] = M[8] = 0;
+    const AAT = mat3.create();
+    AAT[0] = AAT[4] = AAT[8] = 0;
 
     const a = [0, 0, 0];
     const b = [0, 0, 0];
@@ -128,7 +130,10 @@ function vtkLandmarkTransform(publicAPI, model) {
 
       // -- build the 4x4 matrix N --
 
-      const N = mat4.fromValues(0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0);
+      const N = mat4.create();
+      N[0] = N[5] = N[10] = N[15] = 0;
+
+
       // on-diagonal elements
       N[0] = M[0] + M[4] + M[8];
       N[5] = M[0] - M[4] - M[8];
@@ -253,7 +258,7 @@ function vtkLandmarkTransform(publicAPI, model) {
       model.matrix[10] = ww - xx - yy + zz;
 
       // add in the scale factor (if desired)
-      if (model.mode !== Mode.VTK_LANDMARK_RIGIDBODY) {
+      if (model.mode !== Mode.RIGID_BODY) {
         for (let i = 0; i < 3; i++) {
           model.matrix[(4 * 0) + i] = model.matrix[(4 * 0) + i] * scale;
           model.matrix[(4 * 1) + i] = model.matrix[(4 * 1) + i] * scale;
@@ -320,4 +325,4 @@ export const newInstance = macro.newInstance(extend, 'vtkLandmarkTransform');
 
 // ----------------------------------------------------------------------------
 
-export default { newInstance, extend };
+export default Object.assign({ newInstance, extend }, { Mode });
