@@ -325,4 +325,4 @@ export const newInstance = macro.newInstance(extend, 'vtkLandmarkTransform');
 
 // ----------------------------------------------------------------------------
 
-export default { newInstance, extend };
+export default Object.assign({ newInstance, extend }, { Mode });
