@@ -1,12 +1,13 @@
-import vtk              from 'vtk.js/Sources/vtk';
-import macro            from 'vtk.js/Sources/macro';
-import vtkPolyData      from 'vtk.js/Sources/Common/DataModel/PolyData';
-import DataAccessHelper from 'vtk.js/Sources/IO/Core/DataAccessHelper';
-
-const fieldDataLocations = ['pointData', 'cellData', 'fieldData'];
-
 // For vtk factory
 import 'vtk.js/Sources/Common/DataModel/ImageData';
+import 'vtk.js/Sources/Common/DataModel/PolyData';
+
+import vtk              from 'vtk.js/Sources/vtk';
+import macro            from 'vtk.js/Sources/macro';
+import DataAccessHelper from 'vtk.js/Sources/IO/Core/DataAccessHelper';
+import vtkDataArray     from 'vtk.js/Sources/Common/Core/DataArray';
+
+const fieldDataLocations = ['pointData', 'cellData', 'fieldData'];
 
 // ----------------------------------------------------------------------------
 // Global methods
@@ -46,18 +47,6 @@ const GEOMETRY_ARRAYS = {
 
     return arrayToDownload;
   },
-
-  vtkMultiBlock(dataset) {
-    let arrayToDownload = [];
-    Object.keys(dataset.vtkMultiBlock.Blocks).forEach((blockName) => {
-      const fn = GEOMETRY_ARRAYS[dataset.vtkMultiBlock.Blocks[blockName].type];
-      if (fn) {
-        arrayToDownload = [].concat(arrayToDownload, fn(dataset.vtkMultiBlock.Blocks[blockName]));
-      }
-    });
-
-    return arrayToDownload;
-  },
 };
 
 
@@ -70,7 +59,7 @@ export function vtkHttpDataSetReader(publicAPI, model) {
   model.classHierarchy.push('vtkHttpDataSetReader');
 
   // Empty output by default
-  model.output[0] = vtkPolyData.newInstance();
+  model.output[0] = vtk({ vtkClass: 'vtkPolyData' });
 
   // Create default dataAccessHelper if not available
   if (!model.dataAccessHelper) {
@@ -82,63 +71,6 @@ export function vtkHttpDataSetReader(publicAPI, model) {
     return model.dataAccessHelper.fetchArray(publicAPI, model.baseURL, array, fetchGzip);
   }
 
-  // Internal method to fill block information and state
-  function fillBlocks(dataset, block, arraysToList, enable) {
-    if (dataset.vtkClass === 'vtkMultiBlock') {
-      Object.keys(dataset.MultiBlock.Blocks).forEach((blockName) => {
-        block[blockName] = fillBlocks(dataset.MultiBlock.Blocks[blockName], {}, arraysToList, enable);
-        block[blockName].enable = enable;
-      });
-    } else {
-      block.type = dataset.vtkClass;
-      block.enable = enable;
-      const container = dataset;
-      fieldDataLocations.forEach((location) => {
-        if (container[location]) {
-          Object.keys(container[location]).forEach((name) => {
-            if (arraysToList[`${location}_:|:_${name}`]) {
-              arraysToList[`${location}_:|:_${name}`].ds.push(container);
-            } else {
-              arraysToList[`${location}_:|:_${name}`] = { name, enable, location, ds: [container] };
-            }
-          });
-        }
-      });
-    }
-
-    return block;
-  }
-
-  // Internal method to test if a dataset should be fetched
-  function isDatasetEnable(root, blockState, dataset) {
-    let enable = false;
-    if (root === dataset) {
-      return blockState ? blockState.enable : true;
-    }
-
-    // Find corresponding datasetBlock
-    if (root && root.Blocks) {
-      Object.keys(root.Blocks).forEach((blockName) => {
-        if (enable) {
-          return;
-        }
-
-        const subRoot = root.Blocks[blockName];
-        const subState = blockState[blockName];
-
-        if (!subState.enable) {
-          return;
-        }
-
-        if (isDatasetEnable(subRoot, subState, dataset)) {
-          enable = true;
-        }
-      });
-    }
-
-    return enable;
-  }
-
   // Fetch dataset (metadata)
   publicAPI.updateMetadata = () =>
     new Promise((resolve, reject) => {
@@ -146,30 +78,21 @@ export function vtkHttpDataSetReader(publicAPI, model) {
         .fetchJSON(publicAPI, model.url)
         .then(
           (dataset) => {
-            model.dataset = dataset;
+            const enable = model.enableArray;
 
             // Generate array list
             model.arrays = [];
 
-            const container = dataset;
-            const enable = model.enableArray;
-            if (container.Blocks) {
-              model.blocks = {};
-              const arraysToList = {};
-              fillBlocks(dataset, model.blocks, arraysToList, enable);
-              Object.keys(arraysToList).forEach((id) => {
-                model.arrays.push(arraysToList[id]);
-              });
-            } else {
-              // Regular dataset
-              fieldDataLocations.forEach((location) => {
-                if (container[location]) {
-                  container[location].arrays.map(i => i.data).forEach((array) => {
-                    model.arrays.push({ name: array.name, enable, location, ds: [container] });
-                  });
-                }
-              });
-            }
+            fieldDataLocations.forEach((location) => {
+              if (dataset[location]) {
+                dataset[location].arrays.map(i => i.data).forEach((array) => {
+                  model.arrays.push({ name: array.name, enable, location, array, registration: array.ref.registration || 'addArray' });
+                });
+
+                // Reset data arrays
+                dataset[location].arrays = [];
+              }
+            });
 
             // Fetch geometry arrays
             const pendingPromises = [];
@@ -190,7 +113,8 @@ export function vtkHttpDataSetReader(publicAPI, model) {
                   }
                 );
             } else {
-              model.output[0] = vtk(dataset);
+              model.dataset = vtk(dataset);
+              model.output[0] = model.dataset;
               resolve(publicAPI, model.output[0]);
             }
           },
@@ -220,25 +144,11 @@ export function vtkHttpDataSetReader(publicAPI, model) {
 
   // Fetch the actual data arrays
   publicAPI.loadData = () => {
-    const datasetStruct = model.dataset;
-    const datasetObj = model.output[0];
-    const arrayToFecth = [];
-    model.arrays
+    const datasetObj = model.dataset;
+    const arrayToFecth = model.arrays
       .filter(array => array.enable)
-      .forEach((array) => {
-        array.ds.forEach((ds) => {
-          if (isDatasetEnable(datasetStruct, model.blocks, ds)) {
-            ds[array.location]
-              .arrays
-              .map(i => i.data)
-              .filter(i => (i.name === array.name))
-              .filter(i => i.ref)
-              .forEach((dataArray) => {
-                arrayToFecth.push(dataArray);
-              });
-          }
-        });
-      });
+      .filter(array => array.array.ref)
+      .map(array => array.array);
 
     return new Promise((resolve, reject) => {
       const error = (xhr, e) => {
@@ -249,6 +159,13 @@ export function vtkHttpDataSetReader(publicAPI, model) {
         if (arrayToFecth.length) {
           fetchArray(arrayToFecth.pop(), model.fetchGzip).then(processNext, error);
         } else {
+          // Perform array registration
+          model.arrays
+            .filter(array => array.registration)
+            .forEach((metaArray) => {
+              datasetObj[`get${macro.capitalize(metaArray.location)}`]()[metaArray.registration](vtkDataArray.newInstance(metaArray.array));
+              delete metaArray.registration;
+            });
           datasetObj.modified();
           resolve(publicAPI, datasetObj);
         }
@@ -272,20 +189,6 @@ export function vtkHttpDataSetReader(publicAPI, model) {
     }
   };
 
-  // Toggle blocks to load
-  publicAPI.enableBlock = (blockPath, enable = true, pathSeparator = '.') => {
-    let container = model.blocks;
-    const path = blockPath.split(pathSeparator);
-
-    while (container && path.length > 1) {
-      container = container[path.shift];
-    }
-
-    if (container && path.length === 1) {
-      container[path[0]].enable = enable;
-    }
-  };
-
   // return Busy state
   publicAPI.isBusy = () => !!model.requestCount;
 }
@@ -298,7 +201,6 @@ const DEFAULT_VALUES = {
   enableArray: true,
   fetchGzip: false,
   arrays: [],
-  blocks: null,
   url: null,
   baseURL: null,
   requestCount: 0,
@@ -316,7 +218,6 @@ export function extend(publicAPI, model, initialValues = {}) {
   macro.get(publicAPI, model, [
     'enableArray',
     'fetchGzip',
-    'blocks',
     'url',
     'baseURL',
     'dataAccessHelper',

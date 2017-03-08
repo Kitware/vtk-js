@@ -14,7 +14,6 @@
   },
   "vtkClass": "vtkImageData",
   "pointData": {
-    "activeScalars": 0,
     "arrays": [
       {
         "data": {
@@ -30,6 +29,7 @@
             }
           ],
           "ref": {
+            "registration": "setScalars",
             "encode": "LittleEndian",
             "basepath": "data",
             "id": "b1ad142a1ebc80f957fcdc329e876d51"
