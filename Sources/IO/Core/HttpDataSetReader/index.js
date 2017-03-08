@@ -5,6 +5,9 @@ import DataAccessHelper from 'vtk.js/Sources/IO/Core/DataAccessHelper';
 
 const fieldDataLocations = ['pointData', 'cellData', 'fieldData'];
 
+// For vtk factory
+import 'vtk.js/Sources/Common/DataModel/ImageData';
+
 // ----------------------------------------------------------------------------
 // Global methods
 // ----------------------------------------------------------------------------
@@ -220,7 +223,6 @@ export function vtkHttpDataSetReader(publicAPI, model) {
     const datasetStruct = model.dataset;
     const datasetObj = model.output[0];
     const arrayToFecth = [];
-    const arrayMappingFunc = [];
     model.arrays
       .filter(array => array.enable)
       .forEach((array) => {
@@ -233,26 +235,19 @@ export function vtkHttpDataSetReader(publicAPI, model) {
               .filter(i => i.ref)
               .forEach((dataArray) => {
                 arrayToFecth.push(dataArray);
-                arrayMappingFunc.push(datasetObj[`get${macro.capitalize(array.location)}`]().addArray);
               });
           }
         });
       });
 
     return new Promise((resolve, reject) => {
-      let lastArray = null;
       const error = (xhr, e) => {
         reject(xhr, e);
       };
 
       const processNext = () => {
-        if (lastArray) {
-          arrayMappingFunc.pop()(vtk(lastArray));
-        }
-
         if (arrayToFecth.length) {
-          lastArray = arrayToFecth.pop();
-          fetchArray(lastArray, model.fetchGzip).then(processNext, error);
+          fetchArray(arrayToFecth.pop(), model.fetchGzip).then(processNext, error);
         } else {
           datasetObj.modified();
           resolve(publicAPI, datasetObj);
