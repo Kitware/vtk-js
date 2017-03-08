@@ -22,7 +22,7 @@
     },
     "devDependencies": {
         "kw-web-suite": "2.2.1",
-        "kw-doc": "1.0.18",
+        "kw-doc": "1.0.19",
         "xml2js": "0.4.17",
 
         "babel-plugin-istanbul": "2.0.0",
