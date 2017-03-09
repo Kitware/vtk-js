@@ -22,7 +22,7 @@ function vtkTrackballZoom(publicAPI, model) {
   };
 
   publicAPI.onAnimation = (x, y, ren, rwi) => {
-    const lastPos = rwi.getLastEventPosition(rwi.getPointerIndex());
+    const lastPos = rwi.getLastAnimationEventPosition(rwi.getPointerIndex());
     const dy = lastPos.y - y;
     const camera = ren.getActiveCamera();
 

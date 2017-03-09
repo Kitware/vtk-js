@@ -18,7 +18,7 @@ function vtkTrackballZoomToMouse(publicAPI, model) {
   };
 
   publicAPI.onAnimation = (x, y, ren, rwi) => {
-    const lastPos = rwi.getLastEventPosition(rwi.getPointerIndex());
+    const lastPos = rwi.getLastAnimationEventPosition(rwi.getPointerIndex());
     const dy = lastPos.y - y;
     const k = dy * model.zoomScale;
     vtkInteractorStyleManipulator.dollyToPosition((1.0 - k), model.zoomPosition, ren, rwi);

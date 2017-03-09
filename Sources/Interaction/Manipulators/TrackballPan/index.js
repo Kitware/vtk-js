@@ -13,7 +13,7 @@ function vtkTrackballPan(publicAPI, model) {
   publicAPI.onAnimation = (x, y, ren, rwi) => {
     const camera = ren.getActiveCamera();
 
-    const lastPos = rwi.getLastEventPosition(rwi.getPointerIndex());
+    const lastPos = rwi.getLastAnimationEventPosition(rwi.getPointerIndex());
 
     const camPos = camera.getPosition();
     const fp = camera.getFocalPoint();
