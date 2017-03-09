@@ -49,5 +49,5 @@ export default {
   vtkVertexArrayObject,
   vtkViewNodeFactory,
   vtkVolume,
-  vtVolumeMapper,
+  vtkVolumeMapper,
 };

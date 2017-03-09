@@ -123,7 +123,7 @@ function vtkInteractorStyleImage(publicAPI, model) {
         if (model.interactor) {
           publicAPI.releaseFocus();
           publicAPI.setAnimationStateOff();
-          }
+        }
         break;
 
       case States.IS_SLICE:
@@ -131,7 +131,7 @@ function vtkInteractorStyleImage(publicAPI, model) {
         if (model.interactor) {
           publicAPI.releaseFocus();
           publicAPI.setAnimationStateOff();
-          }
+        }
         break;
 
       default:
