@@ -43,7 +43,7 @@ actor.getProperty().setInterpolationTypeToLinear();
 
 mapper.setInputConnection(reader.getOutputPort());
 
-reader.setUrl(`${__BASE_PATH__}/Data/volume/LIDC2.vti`).then(() => {
+reader.setUrl(`${__BASE_PATH__}/data/volume/LIDC2.vti`).then(() => {
   reader.loadData().then(() => {
     renderer.addVolume(actor);
     renderer.resetCamera();
