@@ -105,7 +105,8 @@ export function vtkHttpDataSetReader(publicAPI, model) {
               Promise.all(pendingPromises)
                 .then(
                   (ok) => {
-                    model.output[0] = vtk(dataset);
+                    model.dataset = vtk(dataset);
+                    model.output[0] = model.dataset;
                     resolve(publicAPI, model.output[0]);
                   },
                   (err) => {
