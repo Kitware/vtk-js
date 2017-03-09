@@ -38,7 +38,7 @@ test.onlyIfWebGL('Test Composite Volume Rendering', (t) => {
   const reader = vtkHttpDataSetReader.newInstance({ fetchGzip: true });
   // create color and opacity transfer functions
   const ctfun = vtkColorTransferFunction.newInstance();
-  ctfun.addRGBPoint(0, 85/255.0, 0, 0);
+  ctfun.addRGBPoint(0, (85 / 255.0), 0, 0);
   ctfun.addRGBPoint(95, 1.0, 1.0, 1.0);
   ctfun.addRGBPoint(225, 0.66, 0.66, 0.5);
   ctfun.addRGBPoint(255, 0.3, 1.0, 0.5);
