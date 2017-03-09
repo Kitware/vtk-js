@@ -6,7 +6,8 @@ texture map.
 
 ## See Also
 
-Property2D Mapper2D
+[vtkMapper2D](./Rendering_Core_Mapper2D.html) 
+[vtkProperty2D](./Rendering_Core_Property2D.html) 
 
 ## newInstance()
 

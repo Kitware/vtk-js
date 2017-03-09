@@ -17,6 +17,8 @@ import './Rendering/OpenGL/HardwareSelector/test/testHardwareSelector';
 import './Rendering/OpenGL/PolyDataMapper/test/testInterpolateScalarsBeforeMapping';
 import './Rendering/OpenGL/SphereMapper/test/testSphere';
 import './Rendering/OpenGL/StickMapper/test/testStick';
+import './Rendering/OpenGL/VolumeMapper/test/testComposite';
+import './Rendering/OpenGL/VolumeMapper/test/testComposite16Bit';
 import './Testing/testAlgorithm';
 import './Testing/testMacro';
 import './Testing/testSerialization';

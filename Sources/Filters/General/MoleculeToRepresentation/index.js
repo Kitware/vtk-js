@@ -5,7 +5,7 @@ import vtkMath      from 'vtk.js/Sources/Common/Core/Math';
 
 import atomElem     from 'vtk.js/Utilities/XMLConverter/chemistry/elements.json';
 
-const { vtkErrorMacro } = macro;
+const { vtkErrorMacro, vtkDebugMacro } = macro;
 
 // ----------------------------------------------------------------------------
 // Globals
@@ -93,7 +93,7 @@ export function vtkMoleculeToRepresentation(publicAPI, model) {
     const covalentArray = [];
     const colorArray = [];
 
-    // vtkDebugMacro(['Checking for bonds with tolerance ', model.tolerance]);
+    vtkDebugMacro('Checking for bonds with tolerance ', model.tolerance);
 
     // go through each points and fill from elements.json
     /* eslint-disable no-continue */

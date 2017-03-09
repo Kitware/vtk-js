@@ -11,7 +11,7 @@ function vtkTrackballRotate(publicAPI, model) {
   // Set our className
   model.classHierarchy.push('vtkTrackballRotate');
 
-  publicAPI.onMouseMove = (x, y, ren, rwi) => {
+  publicAPI.onAnimation = (x, y, ren, rwi) => {
     if (model.currentRenderer === null) {
       return;
     }

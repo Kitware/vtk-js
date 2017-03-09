@@ -2,10 +2,6 @@
 
 vtkSphereMapper inherits from vtkMapper.
 
-## See Also
-
-vtkOpenGLSphereMapper
-
 ### Settings
 
 * scaleArray

@@ -7,7 +7,8 @@ of an image slice.
 
 ## See Also 
 
-vtkImageMapper vtkImageSlice
+[vtkImageMapper](./Rendering_Core_ImageMapper.html) 
+[vtkImageProperty](./Rendering_Core_ImageProperty.html) 
 
 ### colorWindow
 

@@ -22,6 +22,9 @@ import vtkSphereMapper            from './SphereMapper';
 import vtkStickMapper             from './StickMapper';
 import vtkTexture                 from './Texture';
 import vtkViewport                from './Viewport';
+import vtkVolume                  from './Volume';
+import vtkVolumeMapper            from './VolumeMapper';
+import vtkVolumeProperty          from './VolumeProperty';
 
 export default {
   vtkActor,
@@ -48,4 +51,7 @@ export default {
   vtkStickMapper,
   vtkTexture,
   vtkViewport,
+  vtkVolume,
+  vtkVolumeMapper,
+  vtkVolumeProperty,
 };

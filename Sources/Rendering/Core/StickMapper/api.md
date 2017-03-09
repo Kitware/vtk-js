@@ -2,10 +2,6 @@
 
 vtkStickMapper inherits from vtkMapper.
 
-## See Also
-
-vtkOpenGLStickMapper
-
 ### Settings
 
 * scaleArray

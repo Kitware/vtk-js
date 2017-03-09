@@ -1,6 +1,6 @@
-### vtkTexture - handles properties associated with a texture map
+## vtkTexture - handles properties associated with a texture map
 
-### Description
+## Description
 vtkTexture is an object that handles loading and binding of texture
 maps. It obtains its data from an input image data dataset type.
 Thus you can create visualization pipelines to read, process, and
@@ -19,8 +19,12 @@ supports 1,2, and 3D texture coordinates.
 Some systems require that the texture map dimensions
 are a power of two in each direction.
 
-### See Also
-vtkProp vtkRenderer
+## See Also
+
+[vtkProp](./Rendering_Core_Prop.html) 
+[vtkRenderer](./Rendering_Core_Renderer.html) 
+
+## Methods
 
 ### Repeat
 

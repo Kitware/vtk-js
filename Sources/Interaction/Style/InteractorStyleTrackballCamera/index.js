@@ -14,7 +14,7 @@ function vtkInteractorStyleTrackballCamera(publicAPI, model) {
   model.classHierarchy.push('vtkInteractorStyleTrackballCamera');
 
   // Public API methods
-  publicAPI.handleMouseMove = () => {
+  publicAPI.handleAnimation = () => {
     const pos = model.interactor.getEventPosition(model.interactor.getPointerIndex());
 
     switch (model.state) {
@@ -59,14 +59,18 @@ function vtkInteractorStyleTrackballCamera(publicAPI, model) {
     if (model.interactor.getShiftKey()) {
       if (model.interactor.getControlKey() || model.interactor.getAltKey()) {
         publicAPI.startDolly();
+        publicAPI.setAnimationStateOn();
       } else {
         publicAPI.startPan();
+        publicAPI.setAnimationStateOn();
       }
     } else {
       if (model.interactor.getControlKey() || model.interactor.getAltKey()) {
         publicAPI.startSpin();
+        publicAPI.setAnimationStateOn();
       } else {
         publicAPI.startRotate();
+        publicAPI.setAnimationStateOn();
       }
     }
   };
@@ -76,18 +80,22 @@ function vtkInteractorStyleTrackballCamera(publicAPI, model) {
     switch (model.state) {
       case States.IS_DOLLY:
         publicAPI.endDolly();
+        publicAPI.setAnimationStateOff();
         break;
 
       case States.IS_PAN:
         publicAPI.endPan();
+        publicAPI.setAnimationStateOff();
         break;
 
       case States.IS_SPIN:
         publicAPI.endSpin();
+        publicAPI.setAnimationStateOff();
         break;
 
       case States.IS_ROTATE:
         publicAPI.endRotate();
+        publicAPI.setAnimationStateOff();
         break;
 
       default:

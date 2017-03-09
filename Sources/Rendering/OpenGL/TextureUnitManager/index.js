@@ -15,8 +15,10 @@ function vtkOpenGLTextureUnitManager(publicAPI, model) {
   // Delete the allocation table and check if it is not called before
   // all the texture units have been released.
   publicAPI.deleteTable = () => {
-    if (model.textureUnits.length) {
-      vtkErrorMacro('some texture units  were not properly released');
+    for (let i = 0; i < model.numberOfTextureUnits; ++i) {
+      if (model.textureUnits[i] === true) {
+        vtkErrorMacro('some texture units  were not properly released');
+      }
     }
     model.textureUnits = [];
     model.numberOfTextureUnits = 0;
@@ -31,6 +33,9 @@ function vtkOpenGLTextureUnitManager(publicAPI, model) {
       model.context = ctx;
       if (model.context) {
         model.numberOfTextureUnits = ctx.getParameter(ctx.MAX_TEXTURE_IMAGE_UNITS);
+        for (let i = 0; i < model.numberOfTextureUnits; ++i) {
+          model.textureUnits[i] = false;
+        }
       }
       publicAPI.modified();
     }
@@ -66,7 +71,7 @@ function vtkOpenGLTextureUnitManager(publicAPI, model) {
   // Description:
   // Tell if texture unit `textureUnitId' is already allocated.
   // \pre valid_id_range : textureUnitId>=0 && textureUnitId<this->GetNumberOfTextureUnits()
-  publicAPI.isAllocated = textureUnitId => !!model.textureUnits.filter(item => item === textureUnitId).length;
+  publicAPI.isAllocated = textureUnitId => model.textureUnits[textureUnitId];
 
   // ----------------------------------------------------------------------------
   // Description:
@@ -74,10 +79,7 @@ function vtkOpenGLTextureUnitManager(publicAPI, model) {
   // \pre valid_id: textureUnitId>=0 && textureUnitId<this->GetNumberOfTextureUnits()
   // \pre allocated_id: this->IsAllocated(textureUnitId)
   publicAPI.free = (val) => {
-    const newList = model.textureUnits.filter(item => item === val);
-    if (model.textureUnits.length !== newList.length) {
-      model.textureUnits = newList;
-    }
+    model.textureUnits[val] = false;
   };
 }
 
@@ -98,6 +100,8 @@ export function extend(publicAPI, model, initialValues = {}) {
 
   macro.obj(publicAPI, model);
 
+  model.textureUnits = [];
+
   // Build VTK API
   macro.get(publicAPI, model, [
     'numberOfTextureUnits',
@@ -105,7 +109,6 @@ export function extend(publicAPI, model, initialValues = {}) {
 
   macro.setGet(publicAPI, model, [
     'context',
-    'keyMatrixTime',
   ]);
 
   // Object methods

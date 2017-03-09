@@ -8,7 +8,8 @@ Scale(scale) Rot(y) Rot(x) Rot (z) Trans(origin) Trans(position)
 
 ## See Also
 
-Property Mapper
+[vtkMapper](./Rendering_Core_Mapper.html) 
+[vtkProperty](./Rendering_Core_Property.html) 
 
 ## newInstance()
 

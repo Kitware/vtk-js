@@ -25,9 +25,10 @@ annotated values by taking the modulus of an annotated value's
 index in the list of annotations with the number of colors in the
 table.
 
-## See Also
+## See Also 
 
-vtkLookupTable, vtkColorTransferFunction
+[vtkLookupTable](./Common_Core_LookupTable.html) 
+[vtkColorTransferFunction](./Rendering_Core_ColorTransferFunction.html) 
 
 ## VectorComponent
 

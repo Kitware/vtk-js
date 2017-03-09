@@ -30,7 +30,7 @@ vtkCoordinate object may be specified in different coordinate systems!
 
 ## See Also
 
-vtkActor2D
+[vtkActor2D](./Rendering_Core_Actor2D.html) 
 
 ### referenceCoordinate
 

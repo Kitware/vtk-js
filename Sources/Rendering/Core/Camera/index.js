@@ -426,6 +426,10 @@ export function extend(publicAPI, model, initialValues = {}) {
 
   // Build VTK API
   macro.obj(publicAPI, model);
+
+  // Ensure different references between instances for arrays
+  macro.safeArrays(model);
+
   macro.get(publicAPI, model, [
     'thickness',
     'userViewTransform',

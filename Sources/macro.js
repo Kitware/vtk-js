@@ -20,7 +20,7 @@ consoleMethods.forEach(methodName => (fakeConsole[methodName] = noOp));
 global.console = (window.console.hasOwnProperty('log') ? window.console : fakeConsole);
 
 const loggerFunctions = {
-  debug: global.console.debug || noOp,
+  debug: noOp, // Don't print debug by default
   error: global.console.error || noOp,
   info: global.console.info || noOp,
   log: global.console.log || noOp,
@@ -60,6 +60,20 @@ export function vtkWarningMacro(...args) {
 export function capitalize(str) {
   return str.charAt(0).toUpperCase() + str.slice(1);
 }
+
+// ----------------------------------------------------------------------------
+// Array helper
+// ----------------------------------------------------------------------------
+
+export function safeArrays(model) {
+  Object.keys(model).forEach((key) => {
+    if (Array.isArray(model[key])) {
+      model[key] = [].concat(model[key]);
+    }
+  });
+}
+
+// ----------------------------------------------------------------------------
 
 export function enumToString(e, value) {
   return Object.keys(e).find(key => e[key] === value);
@@ -605,21 +619,22 @@ export function chain(...fn) {
 // ----------------------------------------------------------------------------
 
 export default {
-  getCurrentGlobalMTime,
-  capitalize,
-  enumToString,
-  getStateArrayMapFunc,
-  obj,
-  get,
-  set,
-  setGet,
-  getArray,
-  setArray,
-  setGetArray,
   algo,
-  event,
-  newInstance,
+  capitalize,
   chain,
+  enumToString,
+  event,
+  get,
+  getArray,
+  getCurrentGlobalMTime,
+  getStateArrayMapFunc,
+  newInstance,
+  obj,
+  safeArrays,
+  set,
+  setArray,
+  setGet,
+  setGetArray,
   setLoggerFunction,
   vtkDebugMacro,
   vtkErrorMacro,
