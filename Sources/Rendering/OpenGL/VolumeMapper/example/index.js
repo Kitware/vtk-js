@@ -9,7 +9,7 @@ import vtkVolumeMapper            from 'vtk.js/Sources/Rendering/Core/VolumeMapp
 // Standard rendering code setup
 // ----------------------------------------------------------------------------
 
-const fullScreenRenderer = vtkFullScreenRenderWindow.newInstance();
+const fullScreenRenderer = vtkFullScreenRenderWindow.newInstance({ background: [0, 0, 0] });
 const renderer = fullScreenRenderer.getRenderer();
 const renderWindow = fullScreenRenderer.getRenderWindow();
 
@@ -45,7 +45,6 @@ mapper.setInputConnection(reader.getOutputPort());
 
 reader.setUrl(`${__BASE_PATH__}/Data/volume/LIDC2.vti`).then(() => {
   reader.loadData().then(() => {
-    reader.getOutputData().getPointData().setActiveScalars('ImageScalars');
     renderer.addVolume(actor);
     renderer.resetCamera();
     renderer.getActiveCamera().zoom(1.5);
@@ -62,5 +61,7 @@ reader.setUrl(`${__BASE_PATH__}/Data/volume/LIDC2.vti`).then(() => {
 global.source = reader;
 global.mapper = mapper;
 global.actor = actor;
+global.ctfun = ctfun;
+global.ofun = ofun;
 global.renderer = renderer;
 global.renderWindow = renderWindow;
