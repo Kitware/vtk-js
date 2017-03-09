@@ -173,9 +173,9 @@ function vtkImageData(publicAPI, model) {
 // ----------------------------------------------------------------------------
 
 const DEFAULT_VALUES = {
-  spacing: null,
-  origin: null,
-  extent: null,
+  spacing: [1.0, 1.0, 1.0],
+  origin: [0.0, 0.0, 0.0],
+  extent: [0, -1, 0, -1, 0, -1],
   dataDescription: StructuredType.EMPTY,
 };
 
@@ -187,19 +187,12 @@ export function extend(publicAPI, model, initialValues = {}) {
   // Inheritance
   vtkDataSet.extend(publicAPI, model, initialValues);
 
-  if (model.spacing === null) {
-    model.spacing = [1.0, 1.0, 1.0];
-  }
-  if (model.origin === null) {
-    model.origin = [0.0, 0.0, 0.0];
-  }
-  if (model.extent === null) {
-    model.extent = [0, -1, 0, -1, 0, -1];
-  }
-
   // Set/Get methods
   macro.setGetArray(publicAPI, model, ['origin', 'spacing'], 3);
   macro.getArray(publicAPI, model, ['extent'], 6);
+
+  // Ensure different references between instances for arrays
+  macro.safeArrays(model);
 
   // Object specific methods
   vtkImageData(publicAPI, model);

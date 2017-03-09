@@ -490,7 +490,7 @@ const DEFAULT_VALUES = {
   scalarMaterialMode: 0,
   arrayAccessMode: 1, // By_NAME
 
-  bounds: null,
+  bounds: [1, -1, 1, -1, 1, -1],
   center: [0, 0],
 
   renderTime: 0,
@@ -519,8 +519,7 @@ export function extend(publicAPI, model, initialValues = {}) {
   // Build VTK API
   macro.obj(publicAPI, model); // FIXME parent is not vtkObject
   macro.algo(publicAPI, model, 1, 0);
-
-  model.bounds = [1, -1, 1, -1, 1, -1];
+  macro.safeArrays(model);
 
   macro.get(publicAPI, model, [
     'colorCoordinates',

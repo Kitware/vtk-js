@@ -394,23 +394,23 @@ function vtkCamera(publicAPI, model) {
 // ----------------------------------------------------------------------------
 
 export const DEFAULT_VALUES = {
-  position: null,
-  focalPoint: null,
-  viewUp: null,
-  directionOfProjection: null,
+  position: [0, 0, 1],
+  focalPoint: [0, 0, 0],
+  viewUp: [0, 1, 0],
+  directionOfProjection: [0, 0, -1],
   parallelProjection: false,
   useHorizontalViewAngle: false,
   viewAngle: 30,
   parallelScale: 1,
-  clippingRange: null,
+  clippingRange: [0.01, 1000.01],
   thickness: 1000,
-  windowCenter: null,
-  viewPlaneNormal: null,
+  windowCenter: [0, 0],
+  viewPlaneNormal: [0, 0, 1],
   focalDisk: 1,
   useOffAxisProjection: false,
-  screenBottomLeft: null,
-  screenBottomRight: null,
-  screenTopRight: null,
+  screenBottomLeft: [-0.5, -0.5, -0.5],
+  screenBottomRight: [0.5, -0.5, -0.5],
+  screenTopRight: [0.5, 0.5, -0.5],
   userViewTransform: null,
   userTransform: null,
   freezeFocalPoint: false,
@@ -427,36 +427,8 @@ export function extend(publicAPI, model, initialValues = {}) {
   // Build VTK API
   macro.obj(publicAPI, model);
 
-  if (model.position === null) {
-    model.position = [0, 0, 1];
-  }
-  if (model.focalPoint === null) {
-    model.focalPoint = [0, 0, 0];
-  }
-  if (model.viewUp === null) {
-    model.viewUp = [0, 1, 0];
-  }
-  if (model.directionOfProjection === null) {
-    model.directionOfProjection = [0, 0, -1];
-  }
-  if (model.clippingRange === null) {
-    model.clippingRange = [0.01, 1000.01];
-  }
-  if (model.windowCenter) {
-    model.windowCenter = [0, 0];
-  }
-  if (model.viewPlaneNormal === null) {
-    model.viewPlaneNormal = [0, 0, 1];
-  }
-  if (model.screenBottomLeft === null) {
-    model.screenBottomLeft = [-0.5, -0.5, -0.5];
-  }
-  if (model.screenBottomRight === null) {
-    model.screenBottomRight = [0.5, -0.5, -0.5];
-  }
-  if (model.screenTopRight === null) {
-    model.screenTopRight = [0.5, 0.5, -0.5];
-  }
+  // Ensure different references between instances for arrays
+  macro.safeArrays(model);
 
   macro.get(publicAPI, model, [
     'thickness',

@@ -69,10 +69,10 @@ function vtkOpenGLVolume(publicAPI, model) {
 // ----------------------------------------------------------------------------
 
 const DEFAULT_VALUES = {
-  context: null,
-  keyMatrixTime: null,
-  normalMatrix: null,
-  MCWCMatrix: null,
+  // context: null,
+  // keyMatrixTime: null,
+  // normalMatrix: null,
+  // MCWCMatrix: null,
 };
 
 // ----------------------------------------------------------------------------

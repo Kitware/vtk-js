@@ -280,7 +280,7 @@ function vtkVolumeProperty(publicAPI, model) {
 const DEFAULT_VALUES = {
   independentComponents: 1,
   interpolationType: InterpolationType.FAST_LINEAR,
-  componentData: null,
+  // componentData: null,
 };
 
 // ----------------------------------------------------------------------------
@@ -291,7 +291,7 @@ export function extend(publicAPI, model, initialValues = {}) {
   // Build VTK API
   macro.obj(publicAPI, model);
 
-  if (model.componentData === null) {
+  if (!model.componentData) {
     model.componentData = [];
     for (let i = 0; i < VTK_MAX_VRCOMP; ++i) {
       model.componentData.push({

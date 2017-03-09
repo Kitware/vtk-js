@@ -32,7 +32,7 @@ function vtkVolumeMapper(publicAPI, model) {
 // ----------------------------------------------------------------------------
 
 const DEFAULT_VALUES = {
-  bounds: null,
+  bounds: [1, -1, 1, -1, 1, -1],
   sampleDistance: 1.0,
   imageSampleDistance: 1.0,
   maximumSamplesPerRay: 1000,
@@ -46,15 +46,13 @@ export function extend(publicAPI, model, initialValues = {}) {
   // Build VTK API
   macro.obj(publicAPI, model);
   macro.algo(publicAPI, model, 1, 0);
+  macro.safeArrays(model);
 
   macro.setGet(publicAPI, model, [
     'sampleDistance',
     'imageSampleDistance',
     'maximumSamplesPerRay',
   ]);
-
-
-  model.bounds = [1, -1, 1, -1, 1, -1];
 
   // Object methods
   vtkVolumeMapper(publicAPI, model);
