@@ -36,6 +36,7 @@ const DEFAULT_VALUES = {
   sampleDistance: 1.0,
   imageSampleDistance: 1.0,
   maximumSamplesPerRay: 1000,
+  autoAdjustSampleDistances: true,
 };
 
 // ----------------------------------------------------------------------------
@@ -52,6 +53,7 @@ export function extend(publicAPI, model, initialValues = {}) {
     'sampleDistance',
     'imageSampleDistance',
     'maximumSamplesPerRay',
+    'autoAdjustSampleDistances',
   ]);
 
   // Object methods
