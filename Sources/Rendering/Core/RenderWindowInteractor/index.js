@@ -202,13 +202,18 @@ function vtkRenderWindowInteractor(publicAPI, model) {
       model.lastAnimationEventPositions.set(key, value);
       model.animationEventPositions.set(key, value);
     });
+    model.recentFrameTime = -1.0;
+    model.lastFrameStart = new Date().getTime();
     model.animationRequest = requestAnimationFrame(publicAPI.handleAnimation);
   };
+
+  publicAPI.isAnimating = () => (model.animationRequest !== null);
 
   publicAPI.cancelAnimation = (requestor) => {
     if (model.animationRequest) {
       cancelAnimationFrame(model.animationRequest);
       model.animationRequest = null;
+      model.recentFrameTime = 0.0;
     }
   };
 
@@ -221,6 +226,16 @@ function vtkRenderWindowInteractor(publicAPI, model) {
   };
 
   publicAPI.handleAnimation = () => {
+    const currTime = new Date().getTime();
+    if (model.recentFrameTime === -1.0) {
+      model.recentFrameTime = 1.0 / 30.0;  // initialize to 30 fps
+    } else {
+      // moving average, past 10 frames == 95% of the value
+      model.recentFrameTime =
+        (0.75 * model.recentFrameTime) + (0.25 * (currTime - model.lastFrameStart) / 1000.0);
+    }
+    model.recentFrameTime = Math.max(0.001, model.recentFrameTime);
+    model.lastFrameStart = currTime;
     model.eventPositions.forEach((value, key) => {
       model.lastAnimationEventPositions.set(key, model.animationEventPositions.get(key));
       model.animationEventPositions.set(key, value);
@@ -304,6 +319,15 @@ function vtkRenderWindowInteractor(publicAPI, model) {
       publicAPI.setPointerIndex(touch.identifier);
       publicAPI.endTouchEvent();
     }
+  };
+
+  publicAPI.setView = (val) => {
+    if (model.view === val) {
+      return;
+    }
+    model.view = val;
+    model.view.getRenderable().setInteractor(publicAPI);
+    publicAPI.modified();
   };
 
   publicAPI.findPokedRenderer = (x, y) => {
@@ -627,7 +651,7 @@ const DEFAULT_VALUES = {
   enabled: false,
   enableRender: true,
   lightFollowCamera: true,
-  desiredUpdateRate: 10.0,
+  desiredUpdateRate: 30.0,
   stillUpdateRate: 0.5,
   shiftKey: false,
   altKey: false,
@@ -676,6 +700,8 @@ export function extend(publicAPI, model, initialValues = {}) {
     'rotation',
     'lastRotation',
     'interactorStyle',
+    'recentFrameTime',
+    'view',
   ]);
 
   // Create get-set macros
@@ -687,8 +713,8 @@ export function extend(publicAPI, model, initialValues = {}) {
     'controlKey',
     'altKey',
     'keyCode',
-    'view',
     'recognizeGestures',
+    'desiredUpdateRate',
   ]);
 
   macro.getArray(publicAPI, model, [

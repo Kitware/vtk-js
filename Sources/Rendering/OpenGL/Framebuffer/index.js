@@ -1,6 +1,7 @@
-import * as macro     from '../../../macro';
-import vtkOpenGLTexture from '../Texture';
-import { VtkDataTypes } from '../../../Common/Core/DataArray/Constants';
+import * as macro     from 'vtk.js/Sources/macro';
+import vtkOpenGLTexture from 'vtk.js/Sources/Rendering/OpenGL/Texture';
+import { VtkDataTypes } from 'vtk.js/Sources/Common/Core/DataArray/Constants';
+import { Filter }       from 'vtk.js/Sources/Rendering/OpenGL/Texture/Constants';
 
 // ----------------------------------------------------------------------------
 // vtkFramebuffer methods
@@ -91,6 +92,8 @@ function vtkFramebuffer(publicAPI, model) {
     const texture = vtkOpenGLTexture.newInstance();
     texture.setWindow(model.window);
     texture.setContext(model.context);
+    texture.setMinificationFilter(Filter.LINEAR);
+    texture.setMagnificationFilter(Filter.LINEAR);
     texture.create2DFromRaw(
       model.glFramebuffer.width,
       model.glFramebuffer.height, 4, VtkDataTypes.UNSIGNED_CHAR, null);

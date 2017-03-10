@@ -334,7 +334,36 @@ export function vtkOpenGLVolumeMapper(publicAPI, model) {
   };
 
   publicAPI.renderPieceStart = (ren, actor) => {
-    const xyf = model.renderable.getImageSampleDistance();
+    if (model.renderable.getAutoAdjustSampleDistances() &&
+        ren.getVTKWindow().getInteractor().isAnimating()) {
+      // compute the image sample distance for the desired
+      // frame rate
+      const rwi = ren.getVTKWindow().getInteractor();
+      const rft = rwi.getRecentFrameTime();
+
+      // do a moving average
+      let txyf = model.lastXYF * Math.sqrt(rwi.getDesiredUpdateRate() * rft);
+      // limit subsampling to a factor of 8
+      if (txyf > 8.0) {
+        txyf = 8.0;
+      }
+      // only use FBO for reasonable savings (at least 44% (1.2*1.2 - 1.0))
+      if (txyf < 1.2) {
+        txyf = 1.0;
+      }
+      model.targetXYF = (model.targetXYF * 0.75) + (0.25 * txyf);
+      const factor = model.targetXYF / model.lastXYF;
+      if (factor > 1.3 || factor < 0.8) {
+        model.lastXYF = model.targetXYF;
+      }
+      if (model.targetXYF < 1.1) {
+        model.lastXYF = 1.0;
+      }
+    } else {
+      model.lastXYF = model.renderable.getImageSampleDistance();
+    }
+
+    const xyf = model.lastXYF;
 
     // create/resize framebuffer if needed
     if (xyf !== 1.0) {
@@ -342,15 +371,17 @@ export function vtkOpenGLVolumeMapper(publicAPI, model) {
       const size = model.openGLRenderWindow.getSize();
 
       if (model.framebuffer.getGLFramebuffer() === null) {
-        model.framebuffer.create(size[0] / xyf, size[1] / xyf);
+        model.framebuffer.create(
+          Math.floor((size[0] / xyf) + 0.5),
+          Math.floor((size[1] / xyf) + 0.5));
         model.framebuffer.populateFramebuffer();
       } else {
         const fbSize = model.framebuffer.getSize();
-        if (fbSize[0] !== size[0] / xyf ||
-            fbSize[1] !== size[1] / xyf) {
+        if (fbSize[0] !== Math.floor((size[0] / xyf) + 0.5) ||
+            fbSize[1] !== Math.floor((size[1] / xyf) + 0.5)) {
           model.framebuffer.create(
-            size[0] / model.xyf,
-            size[1] / model.xyf);
+            Math.floor((size[0] / xyf) + 0.5),
+            Math.floor((size[1] / xyf) + 0.5));
           model.framebuffer.populateFramebuffer();
         }
       }
@@ -406,7 +437,8 @@ export function vtkOpenGLVolumeMapper(publicAPI, model) {
       model.LastBoundBO.getVAO().release();
     }
 
-    if (model.renderable.getImageSampleDistance() !== 1.0) {
+    if (model.lastXYF !== 1.0) {
+//    if (model.renderable.getImageSampleDistance() !== 1.0) {
       // now copy the frambuffer with the volume into the
       // regular buffer
       model.framebuffer.restorePreviousBindingsAndBuffers();
@@ -450,10 +482,17 @@ export function vtkOpenGLVolumeMapper(publicAPI, model) {
       model.copyShader.setUniformi('texture',
         tex.getTextureUnit());
 
+      const gl = model.context;
+      gl.blendFuncSeparate(gl.ONE, gl.ONE_MINUS_SRC_ALPHA,
+                       gl.ONE, gl.ONE_MINUS_SRC_ALPHA);
+
       // render quad
       model.context.drawArrays(model.context.TRIANGLES, 0,
         model.tris.getCABO().getElementCount());
       tex.deactivate();
+
+      gl.blendFuncSeparate(gl.SRC_ALPHA, gl.ONE_MINUS_SRC_ALPHA,
+                       gl.ONE, gl.ONE_MINUS_SRC_ALPHA);
     }
   };
 
@@ -523,6 +562,8 @@ export function vtkOpenGLVolumeMapper(publicAPI, model) {
       for (let i = 0; i < oWidth; ++i) {
         oTable[i] = 255.0 * (1.0 - Math.pow(1.0 - ofTable[i], opacityFactor));
       }
+      model.opacityTexture.setMinificationFilter(Filter.LINEAR);
+      model.opacityTexture.setMagnificationFilter(Filter.LINEAR);
       model.opacityTexture.create2DFromRaw(oWidth, 1, 1,
         VtkDataTypes.UNSIGNED_CHAR, oTable);
       model.opacityBuildTime.modified();
@@ -539,6 +580,8 @@ export function vtkOpenGLVolumeMapper(publicAPI, model) {
       for (let i = 0; i < cWidth * 3; ++i) {
         cTable[i] = 255.0 * cfTable[i];
       }
+      model.colorTexture.setMinificationFilter(Filter.LINEAR);
+      model.colorTexture.setMagnificationFilter(Filter.LINEAR);
       model.colorTexture.create2DFromRaw(cWidth, 1, 3,
         VtkDataTypes.UNSIGNED_CHAR, cTable);
       model.colorBuildTime.modified();
@@ -608,6 +651,8 @@ const DEFAULT_VALUES = {
   framebuffer: null,
   copyShader: null,
   copyVAO: null,
+  lastXYF: 1.0,
+  targetXYF: 1.0,
 };
 
 // ----------------------------------------------------------------------------
