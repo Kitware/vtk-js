@@ -248,17 +248,18 @@ function vtkRenderWindowInteractor(publicAPI, model) {
     event.stopPropagation();
     event.preventDefault();
 
-    // let wheelDelta = 0;
+    let wheelDelta = 0;
     // let mode = '';
-    // if (event.wheelDeltaX === undefined) {
-    //   mode = 'detail';
-    //   wheelDelta = -event.detail * 2;
-    // } else {
-    //   mode = 'wheelDeltaY';
-    //   wheelDelta = event.wheelDeltaY;
-    // }
-
-    // FIXME do something with it...
+    if (event.wheelDeltaX === undefined) {
+      // mode = 'detail';
+      wheelDelta = -event.detail * 2;
+    } else {
+      // mode = 'wheelDeltaY';
+      wheelDelta = event.wheelDeltaY;
+    }
+    publicAPI.setScale(publicAPI.getScale() *
+      Math.max(0.01, (wheelDelta + 1000.0) / 1000.0));
+    publicAPI.pinchEvent();
   };
 
   publicAPI.handleMouseUp = (event) => {
@@ -399,6 +400,20 @@ function vtkRenderWindowInteractor(publicAPI, model) {
   });
 
   //------------------------------------------------------------------
+  publicAPI.animationEvent = () => {
+    if (!model.enabled) {
+      return;
+    }
+
+    // are we translating multitouch into gestures?
+    if (model.recognizeGestures && model.pointersDownCount > 1) {
+      publicAPI.recognizeGesture('Animation');
+    } else {
+      publicAPI.invokeAnimation({ type: 'Animation' });
+    }
+  };
+
+  //------------------------------------------------------------------
   publicAPI.mouseMoveEvent = () => {
     if (!model.enabled) {
       return;
@@ -433,12 +448,18 @@ function vtkRenderWindowInteractor(publicAPI, model) {
     // end the gesture if needed
     if (event === 'LeftButtonRelease') {
       if (model.currentGesture === 'Pinch') {
+        model.interactorStyle.setAnimationStateOff();
+        publicAPI.render();
         publicAPI.endPinchEvent();
       }
       if (model.currentGesture === 'Rotate') {
+        model.interactorStyle.setAnimationStateOff();
+        publicAPI.render();
         publicAPI.endRotateEvent();
       }
       if (model.currentGesture === 'Pan') {
+        model.interactorStyle.setAnimationStateOff();
+        publicAPI.render();
         publicAPI.endPanEvent();
       }
       model.currentGesture = 'Start';
@@ -460,36 +481,36 @@ function vtkRenderWindowInteractor(publicAPI, model) {
     // The meat of the algorithm
     // on move events we analyze them to determine what type
     // of movement it is and then deal with it.
+    // calculate the distances
+    const originalDistance = Math.sqrt(
+        ((startVals[0].x - startVals[1].x) * (startVals[0].x - startVals[1].x))
+        + ((startVals[0].y - startVals[1].y) * (startVals[0].y - startVals[1].y)));
+    const newDistance = Math.sqrt(
+        ((posVals[0].x - posVals[1].x) * (posVals[0].x - posVals[1].x))
+        + ((posVals[0].y - posVals[1].y) * (posVals[0].y - posVals[1].y)));
+
+    // calculate rotations
+    let originalAngle =
+      vtkMath.degreesFromRadians(Math.atan2(startVals[1].y - startVals[0].y,
+                                         startVals[1].x - startVals[0].x));
+    let newAngle =
+      vtkMath.degreesFromRadians(Math.atan2(posVals[1].y - posVals[0].y,
+                                          posVals[1].x - posVals[0].x));
+
+    // angles are cyclic so watch for that, 1 and 359 are only 2 apart :)
+    let angleDeviation = newAngle - originalAngle;
+    newAngle = (newAngle + 180.0 >= 360.0 ? newAngle - 180.0 : newAngle + 180.0);
+    originalAngle = (originalAngle + 180.0 >= 360.0 ? originalAngle - 180.0 : originalAngle + 180.0);
+    if (Math.abs(newAngle - originalAngle) < Math.abs(angleDeviation)) {
+      angleDeviation = newAngle - originalAngle;
+    }
+
+    // calculate the translations
+    const trans = [];
+    trans[0] = (posVals[0].x - startVals[0].x + posVals[1].x - startVals[1].x) / 2.0;
+    trans[1] = (posVals[0].y - startVals[0].y + posVals[1].y - startVals[1].y) / 2.0;
+
     if (event === 'MouseMove') {
-      // calculate the distances
-      const originalDistance = Math.sqrt(
-          ((startVals[0].x - startVals[1].x) * (startVals[0].x - startVals[1].x))
-          + ((startVals[0].y - startVals[1].y) * (startVals[0].y - startVals[1].y)));
-      const newDistance = Math.sqrt(
-          ((posVals[0].x - posVals[1].x) * (posVals[0].x - posVals[1].x))
-          + ((posVals[0].y - posVals[1].y) * (posVals[0].y - posVals[1].y)));
-
-      // calculate rotations
-      let originalAngle =
-        vtkMath.degreesFromRadians(Math.atan2(startVals[1].y - startVals[0].y,
-                                           startVals[1].x - startVals[0].x));
-      let newAngle =
-        vtkMath.degreesFromRadians(Math.atan2(posVals[1].y - posVals[0].y,
-                                            posVals[1].x - posVals[0].x));
-
-      // angles are cyclic so watch for that, 1 and 359 are only 2 apart :)
-      let angleDeviation = newAngle - originalAngle;
-      newAngle = (newAngle + 180.0 >= 360.0 ? newAngle - 180.0 : newAngle + 180.0);
-      originalAngle = (originalAngle + 180.0 >= 360.0 ? originalAngle - 180.0 : originalAngle + 180.0);
-      if (Math.abs(newAngle - originalAngle) < Math.abs(angleDeviation)) {
-        angleDeviation = newAngle - originalAngle;
-      }
-
-      // calculate the translations
-      const trans = [];
-      trans[0] = (posVals[0].x - startVals[0].x + posVals[1].x - startVals[1].x) / 2.0;
-      trans[1] = (posVals[0].y - startVals[0].y + posVals[1].y - startVals[1].y) / 2.0;
-
       // OK we want to
       // - immediately respond to the user
       // - allow the user to zoom without panning (saves focal point)
@@ -518,19 +539,24 @@ function vtkRenderWindowInteractor(publicAPI, model) {
           model.currentGesture = 'Pinch';
           model.scale = 1.0;
           publicAPI.startPinchEvent();
+          model.interactorStyle.setAnimationStateOn();
         } else if (rotateDistance > thresh
             && rotateDistance > panDistance) {
           model.currentGesture = 'Rotate';
           model.rotation = 0.0;
           publicAPI.startRotateEvent();
+          model.interactorStyle.setAnimationStateOn();
         } else if (panDistance > thresh) {
           model.currentGesture = 'Pan';
           model.translation[0] = 0.0;
           model.translation[1] = 0.0;
           publicAPI.startPanEvent();
+          model.interactorStyle.setAnimationStateOn();
         }
       }
+    }
 
+    if (event === 'Animation') {
       // if we have found a specific type of movement then
       // handle it
       if (model.currentGesture === 'Rotate') {
