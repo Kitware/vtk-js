@@ -79,23 +79,23 @@ function vtkInteractorStyleTrackballCamera(publicAPI, model) {
   publicAPI.handleLeftButtonRelease = () => {
     switch (model.state) {
       case States.IS_DOLLY:
-        publicAPI.endDolly();
         publicAPI.setAnimationStateOff();
+        publicAPI.endDolly();
         break;
 
       case States.IS_PAN:
-        publicAPI.endPan();
         publicAPI.setAnimationStateOff();
+        publicAPI.endPan();
         break;
 
       case States.IS_SPIN:
-        publicAPI.endSpin();
         publicAPI.setAnimationStateOff();
+        publicAPI.endSpin();
         break;
 
       case States.IS_ROTATE:
-        publicAPI.endRotate();
         publicAPI.setAnimationStateOff();
+        publicAPI.endRotate();
         break;
 
       default:
