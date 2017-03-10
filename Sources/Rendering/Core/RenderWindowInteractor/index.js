@@ -126,7 +126,7 @@ function vtkRenderWindowInteractor(publicAPI, model) {
 
   publicAPI.getLastEventPosition = pointer => model.lastEventPositions.get(pointer);
 
-  publicAPI.getAnimationEventPosition = pointer => model.eventPositions.get(pointer);
+  publicAPI.getAnimationEventPosition = pointer => model.animationEventPositions.get(pointer);
 
   publicAPI.getLastAnimationEventPosition = pointer => model.lastAnimationEventPositions.get(pointer);
 
@@ -397,7 +397,7 @@ function vtkRenderWindowInteractor(publicAPI, model) {
 
     // store the initial positions
     if (event === 'LeftButtonPress') {
-      Object.keys(model.pointersDown).forEach((key) => {
+      model.pointersDown.forEach((value, key) => {
         model.startingEventPositions.set(key,
           model.eventPositions.get(key));
       });
@@ -425,8 +425,10 @@ function vtkRenderWindowInteractor(publicAPI, model) {
     let count = 0;
     const posVals = [];
     const startVals = [];
-    Object.keys(model.pointersDown).forEach((key) => {
-      posVals[count] = model.eventPositions.get(key);
+    model.pointersDown.forEach((value, key) => {
+      posVals[count] = (model.animationRequest === null)
+        ? model.eventPositions.get(key)
+        : model.animationEventPositions.get(key);
       startVals[count] = model.startingEventPositions.get(key);
       count++;
     });
@@ -556,8 +558,8 @@ function vtkRenderWindowInteractor(publicAPI, model) {
 
     // are we translating multitouch into gestures?
     if (model.recognizeGestures) {
-      if (!model.pointersDown[model.pointerIndex]) {
-        model.pointersDown[model.pointerIndex] = 1;
+      if (!model.pointersDown.has(model.pointerIndex)) {
+        model.pointersDown.set(model.pointerIndex, 1);
         model.pointersDownCount++;
       }
       // do we have multitouch
@@ -583,13 +585,13 @@ function vtkRenderWindowInteractor(publicAPI, model) {
 
     // are we translating multitouch into gestures?
     if (model.recognizeGestures) {
-      if (model.pointersDown[model.pointerIndex]) {
+      if (model.pointersDown.has(model.pointerIndex)) {
         // do we have multitouch
         if (model.pointersDownCount > 1) {
           // handle the gesture
           publicAPI.recognizeGesture('LeftButtonRelease');
         }
-        delete model.pointersDown[model.pointerIndex];
+        model.pointersDown.delete(model.pointerIndex);
         if (model.startingEventPositions.get(model.pointerIndex)) {
           model.startingEventPositions.delete(model.pointerIndex);
         }
@@ -652,7 +654,7 @@ export function extend(publicAPI, model, initialValues = {}) {
   // Internal objects initialization
   model.eventPositions = new Map();
   model.lastEventPositions = new Map();
-  model.pointersDown = {};
+  model.pointersDown = new Map();
   model.startingEventPositions = new Map();
   model.animationEventPositions = new Map();
   model.lastAnimationEventPositions = new Map();

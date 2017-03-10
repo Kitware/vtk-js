@@ -191,7 +191,7 @@ function vtkInteractorStyleTrackballCamera(publicAPI, model) {
   };
 
   publicAPI.handleRotate = () => {
-    const pos = model.interactor.getAnimationEventPosition(model.interactor.getPointerIndex());
+    const pos = model.interactor.getEventPosition(model.interactor.getPointerIndex());
     publicAPI.findPokedRenderer(pos.x, pos.y);
     if (model.currentRenderer === null) {
       return;
