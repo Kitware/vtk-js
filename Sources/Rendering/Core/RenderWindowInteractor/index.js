@@ -113,13 +113,22 @@ function vtkRenderWindowInteractor(publicAPI, model) {
 
   publicAPI.setEventPosition = (xv, yv, zv, pointer) => {
     model.pointerIndex = pointer;
-    model.lastEventPositions[pointer] = model.eventPositions[pointer];
-    model.eventPositions[pointer] = { x: xv, y: yv, z: zv };
+    model.lastEventPositions.set(pointer, model.eventPositions.get(pointer));
+    model.eventPositions.set(pointer, { x: xv, y: yv, z: zv });
   };
 
-  publicAPI.getEventPosition = pointer => model.eventPositions[pointer];
+  publicAPI.setAnimationEventPosition = (xv, yv, zv, pointer) => {
+    model.lastAnimationEventPositions.set(pointer, model.animationEventPositions.get(pointer));
+    model.animationEventPositions.set(pointer, { x: xv, y: yv, z: zv });
+  };
 
-  publicAPI.getLastEventPosition = pointer => model.lastEventPositions[pointer];
+  publicAPI.getEventPosition = pointer => model.eventPositions.get(pointer);
+
+  publicAPI.getLastEventPosition = pointer => model.lastEventPositions.get(pointer);
+
+  publicAPI.getAnimationEventPosition = pointer => model.eventPositions.get(pointer);
+
+  publicAPI.getLastAnimationEventPosition = pointer => model.lastAnimationEventPositions.get(pointer);
 
   publicAPI.bindEvents = (canvas) => {
     model.canvas = canvas;
@@ -131,7 +140,7 @@ function vtkRenderWindowInteractor(publicAPI, model) {
     canvas.addEventListener('mousedown', publicAPI.handleMouseDown);
     document.querySelector('body').addEventListener('keypress', publicAPI.handleKeyPress);
     canvas.addEventListener('mouseup', publicAPI.handleMouseUp);
-    canvas.addEventListener('mousemove', publicAPI.updateMouseCoords);
+    canvas.addEventListener('mousemove', publicAPI.handleMouseMove);
     canvas.addEventListener('touchstart', publicAPI.handleTouchStart, false);
     canvas.addEventListener('touchend', publicAPI.handleTouchEnd, false);
     canvas.addEventListener('touchcancel', publicAPI.handleTouchEnd, false);
@@ -147,7 +156,7 @@ function vtkRenderWindowInteractor(publicAPI, model) {
     canvas.removeEventListener('mousedown', publicAPI.handleMouseDown);
     document.querySelector('body').removeEventListener('keypress', publicAPI.handleKeyPress);
     canvas.removeEventListener('mouseup', publicAPI.handleMouseUp);
-    canvas.removeEventListener('mousemove', publicAPI.updateMouseCoords);
+    canvas.removeEventListener('mousemove', publicAPI.handleMouseMove);
     canvas.removeEventListener('touchstart', publicAPI.handleTouchStart);
     canvas.removeEventListener('touchend', publicAPI.handleTouchEnd);
     canvas.removeEventListener('touchcancel', publicAPI.handleTouchEnd);
@@ -189,6 +198,10 @@ function vtkRenderWindowInteractor(publicAPI, model) {
   };
 
   publicAPI.requestAnimation = (requestor) => {
+    model.eventPositions.forEach((value, key) => {
+      model.lastAnimationEventPositions.set(key, value);
+      model.animationEventPositions.set(key, value);
+    });
     model.animationRequest = requestAnimationFrame(publicAPI.handleAnimation);
   };
 
@@ -199,14 +212,19 @@ function vtkRenderWindowInteractor(publicAPI, model) {
     }
   };
 
-  publicAPI.updateMouseCoords = (event) => {
-    model.mouseCoords[0] = [event.clientX, model.canvas.clientHeight - event.clientY + 1];
+  publicAPI.handleMouseMove = (event) => {
+    publicAPI.setEventPosition(event.clientX, model.canvas.clientHeight - event.clientY + 1, 0, 0);
     event.stopPropagation();
     event.preventDefault();
+    publicAPI.setPointerIndex(0);
+    publicAPI.mouseMoveEvent();
   };
 
   publicAPI.handleAnimation = () => {
-    publicAPI.setEventPosition(model.mouseCoords[0][0], model.mouseCoords[0][1], 0, 0);
+    model.eventPositions.forEach((value, key) => {
+      model.lastAnimationEventPositions.set(key, model.animationEventPositions.get(key));
+      model.animationEventPositions.set(key, value);
+    });
     publicAPI.animationEvent();
     model.animationRequest = requestAnimationFrame(publicAPI.handleAnimation);
   };
@@ -380,8 +398,8 @@ function vtkRenderWindowInteractor(publicAPI, model) {
     // store the initial positions
     if (event === 'LeftButtonPress') {
       Object.keys(model.pointersDown).forEach((key) => {
-        model.startingEventPositions[key] =
-          model.eventPositions[key];
+        model.startingEventPositions.set(key,
+          model.eventPositions.get(key));
       });
       // we do not know what the gesture is yet
       model.currentGesture = 'Start';
@@ -408,8 +426,8 @@ function vtkRenderWindowInteractor(publicAPI, model) {
     const posVals = [];
     const startVals = [];
     Object.keys(model.pointersDown).forEach((key) => {
-      posVals[count] = model.eventPositions[key];
-      startVals[count] = model.startingEventPositions[key];
+      posVals[count] = model.eventPositions.get(key);
+      startVals[count] = model.startingEventPositions.get(key);
       count++;
     });
 
@@ -572,14 +590,14 @@ function vtkRenderWindowInteractor(publicAPI, model) {
           publicAPI.recognizeGesture('LeftButtonRelease');
         }
         delete model.pointersDown[model.pointerIndex];
-        if (model.startingEventPositions[model.pointerIndex]) {
-          delete model.startingEventPositions[model.pointerIndex];
+        if (model.startingEventPositions.get(model.pointerIndex)) {
+          model.startingEventPositions.delete(model.pointerIndex);
         }
-        if (model.eventPositions[model.pointerIndex]) {
-          delete model.eventPositions[model.pointerIndex];
+        if (model.eventPositions.get(model.pointerIndex)) {
+          model.eventPositions.delete(model.pointerIndex);
         }
-        if (model.lastEventPositions[model.pointerIndex]) {
-          delete model.lastEventPositions[model.pointerIndex];
+        if (model.lastEventPositions.get(model.pointerIndex)) {
+          model.lastEventPositions.delete(model.pointerIndex);
         }
         model.pointersDownCount--;
         publicAPI.invokeLeftButtonRelease({ type: 'LeftButtonRelease' });
@@ -595,8 +613,6 @@ function vtkRenderWindowInteractor(publicAPI, model) {
 // ----------------------------------------------------------------------------
 
 const DEFAULT_VALUES = {
-  eventPositions: null,
-  lastEventPositions: null,
   startingEventPositions: null,
   pointersDown: null,
   pointersDownCount: 0,
@@ -626,7 +642,6 @@ const DEFAULT_VALUES = {
   rotation: 0.0,
   lastRotation: 0.0,
   animationRequest: null,
-  mouseCoords: null,
 };
 
 // ----------------------------------------------------------------------------
@@ -635,11 +650,12 @@ export function extend(publicAPI, model, initialValues = {}) {
   Object.assign(model, DEFAULT_VALUES, initialValues);
 
   // Internal objects initialization
-  model.eventPositions = {};
-  model.lastEventPositions = {};
+  model.eventPositions = new Map();
+  model.lastEventPositions = new Map();
   model.pointersDown = {};
-  model.startingEventPositions = {};
-  model.mouseCoords = {};
+  model.startingEventPositions = new Map();
+  model.animationEventPositions = new Map();
+  model.lastAnimationEventPositions = new Map();
 
   // Object methods
   macro.obj(publicAPI, model);

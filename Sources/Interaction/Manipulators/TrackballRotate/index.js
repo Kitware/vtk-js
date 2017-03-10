@@ -16,7 +16,7 @@ function vtkTrackballRotate(publicAPI, model) {
       return;
     }
 
-    const lastPos = rwi.getLastEventPosition(rwi.getPointerIndex());
+    const lastPos = rwi.getLastAnimationEventPosition(rwi.getPointerIndex());
 
     const camera = ren.getActiveCamera();
     const cameraPos = camera.getPosition();

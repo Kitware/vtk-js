@@ -216,7 +216,11 @@ function vtkInteractorStyleManipulator(publicAPI, model) {
     if (model.currentManipulator.getButton() === button) {
       publicAPI.setAnimationStateOff();
       const pos = model.interactor.getEventPosition(model.interactor.getPointerIndex());
-      model.currentManipulator.onButtonUp(pos.x, pos.y, model.currentRenderer, model.interactor);
+      if (pos) {
+        model.currentManipulator.onButtonUp(pos.x, pos.y, model.currentRenderer, model.interactor);
+      } else {
+        model.currentManipulator.onButtonUp(0, 0, model.currentRenderer, model.interactor);
+      }
       model.currentManipulator.endInteraction();
       publicAPI.invokeEndInteractionEvent({ type: 'EndInteractionEvent' });
       // this->CurrentManipulator->UnRegister(this);
@@ -226,7 +230,7 @@ function vtkInteractorStyleManipulator(publicAPI, model) {
 
   //-------------------------------------------------------------------------
   publicAPI.handleAnimation = () => {
-    const pos = model.interactor.getEventPosition(model.interactor.getPointerIndex());
+    const pos = model.interactor.getAnimationEventPosition(model.interactor.getPointerIndex());
 
     if (model.currentRenderer && model.currentManipulator) {
       // When an interaction is active, we should not change the renderer being

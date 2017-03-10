@@ -25,7 +25,7 @@ function vtkTrackballRoll(publicAPI, model) {
     // - first compute the two vectors (center to mouse)
     publicAPI.computeDisplayCenter(rwi.getInteractorStyle());
 
-    const lastPos = rwi.getLastEventPosition(rwi.getPointerIndex());
+    const lastPos = rwi.getLastAnimationEventPosition(rwi.getPointerIndex());
     const x1 = lastPos.x - model.displayCenter[0];
     const x2 = x - model.displayCenter[0];
     const y1 = lastPos.y - model.displayCenter[1];

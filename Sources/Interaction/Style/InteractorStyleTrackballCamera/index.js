@@ -15,7 +15,7 @@ function vtkInteractorStyleTrackballCamera(publicAPI, model) {
 
   // Public API methods
   publicAPI.handleAnimation = () => {
-    const pos = model.interactor.getEventPosition(model.interactor.getPointerIndex());
+    const pos = model.interactor.getAnimationEventPosition(model.interactor.getPointerIndex());
 
     switch (model.state) {
       case States.IS_ROTATE:
@@ -191,7 +191,7 @@ function vtkInteractorStyleTrackballCamera(publicAPI, model) {
   };
 
   publicAPI.handleRotate = () => {
-    const pos = model.interactor.getEventPosition(model.interactor.getPointerIndex());
+    const pos = model.interactor.getAnimationEventPosition(model.interactor.getPointerIndex());
     publicAPI.findPokedRenderer(pos.x, pos.y);
     if (model.currentRenderer === null) {
       return;
@@ -216,8 +216,8 @@ function vtkInteractorStyleTrackballCamera(publicAPI, model) {
     const rwi = model.interactor;
 
     const lastPtr = model.interactor.getPointerIndex();
-    const pos = model.interactor.getEventPosition(lastPtr);
-    const lastPos = model.interactor.getLastEventPosition(lastPtr);
+    const pos = model.interactor.getAnimationEventPosition(lastPtr);
+    const lastPos = model.interactor.getLastAnimationEventPosition(lastPtr);
 
     const dx = pos.x - lastPos.x;
     const dy = pos.y - lastPos.y;
@@ -261,8 +261,8 @@ function vtkInteractorStyleTrackballCamera(publicAPI, model) {
     const rwi = model.interactor;
 
     const lastPtr = model.interactor.getPointerIndex();
-    const pos = model.interactor.getEventPosition(lastPtr);
-    const lastPos = model.interactor.getLastEventPosition(lastPtr);
+    const pos = model.interactor.getAnimationEventPosition(lastPtr);
+    const lastPos = model.interactor.getLastAnimationEventPosition(lastPtr);
 
     const camera = model.currentRenderer.getActiveCamera();
     const center = rwi.getView().getViewportCenter(model.currentRenderer);
@@ -290,8 +290,8 @@ function vtkInteractorStyleTrackballCamera(publicAPI, model) {
     const rwi = model.interactor;
 
     const lastPtr = model.interactor.getPointerIndex();
-    const pos = model.interactor.getEventPosition(lastPtr);
-    const lastPos = model.interactor.getLastEventPosition(lastPtr);
+    const pos = model.interactor.getAnimationEventPosition(lastPtr);
+    const lastPos = model.interactor.getLastAnimationEventPosition(lastPtr);
 
     const camera = model.currentRenderer.getActiveCamera();
 
@@ -339,8 +339,8 @@ function vtkInteractorStyleTrackballCamera(publicAPI, model) {
     }
 
     const lastPtr = model.interactor.getPointerIndex();
-    const pos = model.interactor.getEventPosition(lastPtr);
-    const lastPos = model.interactor.getLastEventPosition(lastPtr);
+    const pos = model.interactor.getAnimationEventPosition(lastPtr);
+    const lastPos = model.interactor.getLastAnimationEventPosition(lastPtr);
 
     const dy = pos.y - lastPos.y;
     const rwi = model.interactor;
