@@ -91,6 +91,9 @@ export function getStateArrayMapFunc(item) {
 // ----------------------------------------------------------------------------
 
 export function obj(publicAPI = {}, model = {}) {
+  // Ensure each instance as a unique ref of array
+  safeArrays(model);
+
   const callbacks = [];
   model.mtime = (Number.isInteger(model.mtime) ? model.mtime : ++globalMTime);
   model.classHierarchy = ['vtkObject'];

@@ -519,7 +519,6 @@ export function extend(publicAPI, model, initialValues = {}) {
   // Build VTK API
   macro.obj(publicAPI, model); // FIXME parent is not vtkObject
   macro.algo(publicAPI, model, 1, 0);
-  macro.safeArrays(model);
 
   macro.get(publicAPI, model, [
     'colorCoordinates',

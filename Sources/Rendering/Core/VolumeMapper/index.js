@@ -47,7 +47,6 @@ export function extend(publicAPI, model, initialValues = {}) {
   // Build VTK API
   macro.obj(publicAPI, model);
   macro.algo(publicAPI, model, 1, 0);
-  macro.safeArrays(model);
 
   macro.setGet(publicAPI, model, [
     'sampleDistance',

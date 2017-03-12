@@ -9,10 +9,6 @@ export const PASS_TYPES = ['Build', 'Render'];
 // ----------------------------------------------------------------------------
 
 function vtkViewNode(publicAPI, model) {
-  // Make sure our list of children is just for our instance not shared with everyone...
-  model.children = [];
-  model.preparedNodes = [];
-
   // Set our className
   model.classHierarchy.push('vtkViewNode');
 
@@ -92,7 +88,6 @@ function vtkViewNode(publicAPI, model) {
     // if any dataObj is not a renderable of a child
     // then create child for that dataObj with renderable set to the
     // dataObj
-
     const childDOs = model.children.map(node => node.getRenderable());
 
     const newNodes =
@@ -143,8 +138,8 @@ const DEFAULT_VALUES = {
   parent: null,
   renderable: null,
   myFactory: null,
-  // children: [],
-  // preparedNodes: [],
+  children: [],
+  preparedNodes: [],
 };
 
 // ----------------------------------------------------------------------------
