@@ -126,7 +126,6 @@ export function extend(publicAPI, model, initialValues = {}) {
   // vtkTimeStamp
   model.boundsMTime = {};
   macro.obj(model.boundsMTime);
-  macro.safeArrays(model);
 
   // Build VTK API
   macro.set(publicAPI, model, ['property']);

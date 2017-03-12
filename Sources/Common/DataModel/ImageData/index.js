@@ -191,9 +191,6 @@ export function extend(publicAPI, model, initialValues = {}) {
   macro.setGetArray(publicAPI, model, ['origin', 'spacing'], 3);
   macro.getArray(publicAPI, model, ['extent'], 6);
 
-  // Ensure different references between instances for arrays
-  macro.safeArrays(model);
-
   // Object specific methods
   vtkImageData(publicAPI, model);
 }
