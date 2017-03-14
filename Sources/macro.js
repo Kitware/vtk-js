@@ -426,8 +426,13 @@ export function algo(publicAPI, model, numberOfInputs, numberOfOutputs) {
       vtkErrorMacro('instance deleted - cannot call any method');
       return;
     }
-    model.inputData[port] = dataset;
-    model.inputConnection[port] = null;
+    if (model.inputData[port] !== dataset || model.inputConnection[port]) {
+      model.inputData[port] = dataset;
+      model.inputConnection[port] = null;
+      if (publicAPI.modified) {
+        publicAPI.modified();
+      }
+    }
   }
 
   function getInputData(port = 0) {
