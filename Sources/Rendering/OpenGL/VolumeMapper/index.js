@@ -531,6 +531,7 @@ export function vtkOpenGLVolumeMapper(publicAPI, model) {
     // first do a coarse check
     if (model.VBOBuildTime.getMTime() < publicAPI.getMTime() ||
         model.VBOBuildTime.getMTime() < actor.getMTime() ||
+        model.VBOBuildTime.getMTime() < model.renderable.getMTime() ||
         model.VBOBuildTime.getMTime() < actor.getProperty().getMTime() ||
         model.VBOBuildTime.getMTime() < model.currentInput.getMTime()) {
       return true;
@@ -587,20 +588,18 @@ export function vtkOpenGLVolumeMapper(publicAPI, model) {
       model.colorBuildTime.modified();
     }
 
-    // rebuild scalar texture?
-    if (model.scalarBuildTime.getMTime() < image.getMTime()) {
-      // Build the textures
-      const dims = image.getDimensions();
-      model.openGLTexture.create3DOneComponentFromRaw(dims[0], dims[1], dims[2],
-        image.getPointData().getScalars().getDataType(),
-        image.getPointData().getScalars().getData());
-      model.scalarBuildTime.modified();
-    }
-
     // rebuild the VBO if the data has changed
     const toString = `${image.getMTime()}A${publicAPI.getMTime()}`;
 
     if (model.VBOBuildString !== toString) {
+      // Build the textures
+      const dims = image.getDimensions();
+      model.openGLTexture.resetFormatAndType();
+      model.openGLTexture.create3DOneComponentFromRaw(dims[0], dims[1], dims[2],
+        image.getPointData().getScalars().getDataType(),
+        image.getPointData().getScalars().getData());
+      model.scalarBuildTime.modified();
+
       // build the CABO
       const ptsArray = new Float32Array(12);
       for (let i = 0; i < 4; i++) {
