@@ -13,7 +13,7 @@ export function vtkOpenGLRenderer(publicAPI, model) {
   model.classHierarchy.push('vtkOpenGLRenderer');
 
   // Builds myself.
-  publicAPI.build = (prepass) => {
+  publicAPI.buildPass = (prepass) => {
     if (prepass) {
       if (!model.renderable) {
         return;
@@ -51,12 +51,9 @@ export function vtkOpenGLRenderer(publicAPI, model) {
   };
 
   // Renders myself
-  publicAPI.render = (prepass) => {
+  publicAPI.cameraPass = (prepass) => {
     if (prepass) {
-      model.context = publicAPI.getFirstAncestorOfType('vtkOpenGLRenderWindow').getContext();
       publicAPI.clear();
-    } else {
-      // else
     }
   };
 

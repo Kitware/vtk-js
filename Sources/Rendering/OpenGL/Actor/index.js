@@ -12,7 +12,7 @@ function vtkOpenGLActor(publicAPI, model) {
   model.classHierarchy.push('vtkOpenGLActor');
 
   // Builds myself.
-  publicAPI.build = (prepass) => {
+  publicAPI.buildPass = (prepass) => {
     if (prepass) {
       publicAPI.prepareNodes();
       publicAPI.addMissingNodes(model.renderable.getTextures());
@@ -22,59 +22,78 @@ function vtkOpenGLActor(publicAPI, model) {
   };
 
   // we draw textures, then mapper, then post pass textures
-  publicAPI.traverse = (operation) => {
-    if (!model.renderable || !model.renderable.getVisibility()) {
+  publicAPI.traverseOpaquePass = (renderPass) => {
+    if (!model.renderable ||
+        !model.renderable.getVisibility() ||
+        !model.renderable.getIsOpaque()) {
       return;
     }
-    publicAPI.apply(operation, true);
 
+    publicAPI.apply(renderPass, true);
+    model.children.forEach((child) => {
+      if (!child.isA('vtkOpenGLTexture')) {
+        child.traverse(renderPass);
+      }
+    });
+    publicAPI.apply(renderPass, false);
+  };
+
+  // we draw textures, then mapper, then post pass textures
+  publicAPI.traverseTranslucentPass = (renderPass) => {
+    if (!model.renderable ||
+        !model.renderable.getVisibility() ||
+        model.renderable.getIsOpaque()) {
+      return;
+    }
+
+    publicAPI.apply(renderPass, true);
+    model.children.forEach((child) => {
+      if (!child.isA('vtkOpenGLTexture')) {
+        child.traverse(renderPass);
+      }
+    });
+    publicAPI.apply(renderPass, false);
+  };
+
+  publicAPI.activateTextures = () => {
     // always traverse textures first, then mapper
     model.activeTextures = [];
     model.children.forEach((child) => {
       if (child.isA('vtkOpenGLTexture')) {
-        child.apply(operation, true);
+        child.render();
         if (child.getHandle()) {
           model.activeTextures.push(child);
         }
       }
     });
-
-    model.children.forEach((child) => {
-      if (!child.isA('vtkOpenGLTexture')) {
-        child.apply(operation, true);
-      }
-    });
-    model.children.forEach((child) => {
-      child.apply(operation, false);
-    });
-
-    publicAPI.apply(operation, false);
   };
 
   // Renders myself
-  publicAPI.render = (prepass) => {
+  publicAPI.opaquePass = (prepass, renderPass) => {
     if (prepass) {
       model.context = publicAPI.getFirstAncestorOfType('vtkOpenGLRenderWindow').getContext();
-      publicAPI.preRender();
+      model.context.depthMask(true);
+      publicAPI.activateTextures();
     } else {
       // deactivate textures
       model.activeTextures.forEach((child) => {
         child.deactivate();
       });
-      const opaque = (model.renderable.getIsOpaque() !== 0);
-      if (!opaque) {
-        model.context.depthMask(true);
-      }
     }
   };
 
-  publicAPI.preRender = () => {
-    // get opacity
-    const opaque = (model.renderable.getIsOpaque() !== 0);
-    if (opaque) {
-      model.context.depthMask(true);
-    } else {
+  // Renders myself
+  publicAPI.translucentPass = (prepass, renderPass) => {
+    if (prepass) {
+      model.context = publicAPI.getFirstAncestorOfType('vtkOpenGLRenderWindow').getContext();
       model.context.depthMask(false);
+      publicAPI.activateTextures();
+    } else {
+      // deactivate textures
+      model.activeTextures.forEach((child) => {
+        child.deactivate();
+      });
+      model.context.depthMask(true);
     }
   };
 

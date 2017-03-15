@@ -37,32 +37,31 @@ export function vtkOpenGLPolyDataMapper(publicAPI, model) {
   // Set our className
   model.classHierarchy.push('vtkOpenGLPolyDataMapper');
 
-  // Builds myself.
-  publicAPI.build = (prepass) => {
+  // Renders myself
+  publicAPI.translucentPass = (prepass) => {
     if (prepass) {
-      if (!model.renderable) {
-        return;
-      }
+      publicAPI.render();
     }
   };
 
-  // Renders myself
-  publicAPI.render = (prepass) => {
+  publicAPI.opaquePass = (prepass) => {
     if (prepass) {
-      model.openGLRenderWindow = publicAPI.getFirstAncestorOfType('vtkOpenGLRenderWindow');
-      model.context = model.openGLRenderWindow.getContext();
-      for (let i = primTypes.Start; i < primTypes.End; i++) {
-        model.primitives[i].setContext(model.context);
-      }
-      model.openGLActor = publicAPI.getFirstAncestorOfType('vtkOpenGLActor');
-      const actor = model.openGLActor.getRenderable();
-      model.openGLRenderer = publicAPI.getFirstAncestorOfType('vtkOpenGLRenderer');
-      const ren = model.openGLRenderer.getRenderable();
-      model.openGLCamera = model.openGLRenderer.getViewNodeFor(ren.getActiveCamera());
-      publicAPI.renderPiece(ren, actor);
-    } else {
-      // something
+      publicAPI.render();
     }
+  };
+
+  publicAPI.render = () => {
+    model.openGLRenderWindow = publicAPI.getFirstAncestorOfType('vtkOpenGLRenderWindow');
+    model.context = model.openGLRenderWindow.getContext();
+    for (let i = primTypes.Start; i < primTypes.End; i++) {
+      model.primitives[i].setContext(model.context);
+    }
+    model.openGLActor = publicAPI.getFirstAncestorOfType('vtkOpenGLActor');
+    const actor = model.openGLActor.getRenderable();
+    model.openGLRenderer = publicAPI.getFirstAncestorOfType('vtkOpenGLRenderer');
+    const ren = model.openGLRenderer.getRenderable();
+    model.openGLCamera = model.openGLRenderer.getViewNodeFor(ren.getActiveCamera());
+    publicAPI.renderPiece(ren, actor);
   };
 
   publicAPI.buildShaders = (shaders, ren, actor) => {

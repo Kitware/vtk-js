@@ -11,27 +11,14 @@ function vtkOpenGLCamera(publicAPI, model) {
   // Set our className
   model.classHierarchy.push('vtkOpenGLCamera');
 
-  // Builds myself.
-  publicAPI.build = (prepass) => {
-    if (prepass) {
-      if (!model.renderable) {
-        return;
-      }
-    }
-  };
-
   // Renders myself
-  publicAPI.render = (prepass) => {
+  publicAPI.cameraPass = (prepass) => {
     if (prepass) {
       model.context = publicAPI.getFirstAncestorOfType('vtkOpenGLRenderWindow').getContext();
       const ren = publicAPI.getFirstAncestorOfType('vtkOpenGLRenderer');
-      publicAPI.preRender(ren);
+      const tsize = ren.getTiledSizeAndOrigin();
+      model.context.viewport(tsize.lowerLeftU, tsize.lowerLeftV, tsize.usize, tsize.vsize);
     }
-  };
-
-  publicAPI.preRender = (ren) => {
-    const tsize = ren.getTiledSizeAndOrigin();
-    model.context.viewport(tsize.lowerLeftU, tsize.lowerLeftV, tsize.usize, tsize.vsize);
   };
 
   publicAPI.getKeyMatrices = (ren) => {

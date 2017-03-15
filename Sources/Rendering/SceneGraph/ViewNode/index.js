@@ -20,6 +20,35 @@ function vtkViewNode(publicAPI, model) {
   publicAPI.render = (prepass) => {
   };
 
+  publicAPI.traverse = (renderPass) => {
+    if (model.deleted) {
+      return;
+    }
+
+    // we can choose to do special
+    // traversal here based on pass
+    const passTraversal = `traverse${macro.capitalize(renderPass.getOperation())}`;
+    if (typeof publicAPI[passTraversal] === 'function') {
+      publicAPI[passTraversal](renderPass);
+      return;
+    }
+
+    // default traversal
+    publicAPI.apply(renderPass, true);
+
+    publicAPI.getChildren().forEach((child) => {
+      child.traverse(renderPass);
+    });
+
+    publicAPI.apply(renderPass, false);
+  };
+
+  publicAPI.apply = (renderPass, prepass) => {
+    if (typeof publicAPI[renderPass.getOperation()] === 'function') {
+      publicAPI[renderPass.getOperation()](prepass, publicAPI);
+    }
+  };
+
   publicAPI.getViewNodeFor = (dataObject) => {
     if (model.renderable === dataObject) {
       return publicAPI;
@@ -39,38 +68,6 @@ function vtkViewNode(publicAPI, model) {
       return model.parent;
     }
     return model.parent.getFirstAncestorOfType(type);
-  };
-
-  publicAPI.traverse = (operation) => {
-    if (model.deleted) {
-      return;
-    }
-
-    publicAPI.apply(operation, true);
-
-    model.children.forEach((child) => {
-      child.traverse(operation);
-    });
-
-    publicAPI.apply(operation, false);
-  };
-
-  publicAPI.traverseAllPasses = () => {
-    publicAPI.traverse('Build');
-    publicAPI.traverse('Render');
-  };
-
-  publicAPI.apply = (operation, prepass) => {
-    switch (operation) {
-      case 'Build':
-        publicAPI.build(prepass);
-        break;
-      case 'Render':
-        publicAPI.render(prepass);
-        break;
-      default:
-        vtkErrorMacro(`UNKNOWN OPERATION  ${operation}`);
-    }
   };
 
   publicAPI.addMissingNode = (dataObj) => {

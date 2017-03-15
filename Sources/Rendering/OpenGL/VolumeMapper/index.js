@@ -26,17 +26,8 @@ export function vtkOpenGLVolumeMapper(publicAPI, model) {
   // Set our className
   model.classHierarchy.push('vtkOpenGLVolumeMapper');
 
-  // Builds myself.
-  publicAPI.build = (prepass) => {
-    if (prepass) {
-      if (!model.renderable) {
-        return;
-      }
-    }
-  };
-
   // Renders myself
-  publicAPI.render = (prepass) => {
+  publicAPI.volumePass = (prepass) => {
     if (prepass) {
       model.openGLRenderWindow = publicAPI.getFirstAncestorOfType('vtkOpenGLRenderWindow');
       model.context = model.openGLRenderWindow.getContext();
@@ -55,8 +46,6 @@ export function vtkOpenGLVolumeMapper(publicAPI, model) {
       const ren = model.openGLRenderer.getRenderable();
       model.openGLCamera = model.openGLRenderer.getViewNodeFor(ren.getActiveCamera());
       publicAPI.renderPiece(ren, actor);
-    } else {
-      // something
     }
   };
 
