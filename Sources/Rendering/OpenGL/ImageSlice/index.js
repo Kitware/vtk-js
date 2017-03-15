@@ -12,7 +12,7 @@ function vtkOpenGLImageSlice(publicAPI, model) {
   model.classHierarchy.push('vtkOpenGLImageSlice');
 
   // Builds myself.
-  publicAPI.build = (prepass) => {
+  publicAPI.buildPass = (prepass) => {
     if (!model.renderable || !model.renderable.getVisibility()) {
       return;
     }
@@ -27,29 +27,51 @@ function vtkOpenGLImageSlice(publicAPI, model) {
     }
   };
 
-  // Renders myself
-  publicAPI.render = (prepass) => {
-    if (!model.renderable || !model.renderable.getVisibility()) {
+   // we draw textures, then mapper, then post pass textures
+  publicAPI.traverseOpaquePass = (renderPass) => {
+    if (!model.renderable ||
+        !model.renderable.getVisibility() ||
+        !model.renderable.getIsOpaque()) {
       return;
     }
+
+    publicAPI.apply(renderPass, true);
+    model.children.forEach((child) => {
+      child.traverse(renderPass);
+    });
+    publicAPI.apply(renderPass, false);
+  };
+
+  // we draw textures, then mapper, then post pass textures
+  publicAPI.traverseTranslucentPass = (renderPass) => {
+    if (!model.renderable ||
+        !model.renderable.getVisibility() ||
+        model.renderable.getIsOpaque()) {
+      return;
+    }
+
+    publicAPI.apply(renderPass, true);
+    model.children.forEach((child) => {
+      child.traverse(renderPass);
+    });
+    publicAPI.apply(renderPass, false);
+  };
+
+  // Renders myself
+  publicAPI.opaquePass = (prepass, renderPass) => {
     if (prepass) {
       model.context = publicAPI.getFirstAncestorOfType('vtkOpenGLRenderWindow').getContext();
-      publicAPI.preRender();
-    } else {
-      const opaque = (model.renderable.getIsOpaque() !== 0);
-      if (!opaque) {
-        model.context.depthMask(true);
-      }
+      model.context.depthMask(true);
     }
   };
 
-  publicAPI.preRender = () => {
-    // get opacity
-    const opaque = (model.renderable.getIsOpaque() !== 0);
-    if (opaque) {
-      model.context.depthMask(true);
-    } else {
+  // Renders myself
+  publicAPI.translucentPass = (prepass, renderPass) => {
+    if (prepass) {
+      model.context = publicAPI.getFirstAncestorOfType('vtkOpenGLRenderWindow').getContext();
       model.context.depthMask(false);
+    } else {
+      model.context.depthMask(true);
     }
   };
 

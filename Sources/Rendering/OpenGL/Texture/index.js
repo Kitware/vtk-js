@@ -13,25 +13,9 @@ const { vtkDebugMacro, vtkErrorMacro, vtkWarningMacro } = macro;
 function vtkOpenGLTexture(publicAPI, model) {
   // Set our className
   model.classHierarchy.push('vtkOpenGLTexture');
-
-  // Builds myself.
-  publicAPI.build = (prepass) => {
-    if (prepass) {
-      if (!model.renderable) {
-        return;
-      }
-    }
-  };
-
   // Renders myself
-  publicAPI.render = (prepass) => {
-    if (prepass) {
-      const oglren = publicAPI.getFirstAncestorOfType('vtkOpenGLRenderer');
-      publicAPI.preRender(oglren);
-    }
-  };
-
-  publicAPI.preRender = (oglren) => {
+  publicAPI.render = () => {
+    const oglren = publicAPI.getFirstAncestorOfType('vtkOpenGLRenderer');
     // sync renderable properties
     model.window = oglren.getParent();
     model.context = model.window.getContext();
@@ -847,6 +831,7 @@ export function extend(publicAPI, model, initialValues = {}) {
     'wrapS',
     'wrapT',
     'wrapR',
+    'generateMipmap',
   ]);
 
   macro.get(publicAPI, model, [

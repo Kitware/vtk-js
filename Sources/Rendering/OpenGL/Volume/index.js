@@ -12,15 +12,11 @@ function vtkOpenGLVolume(publicAPI, model) {
   model.classHierarchy.push('vtkOpenGLVolume');
 
   // Builds myself.
-  publicAPI.build = (prepass) => {
+  publicAPI.buildPass = (prepass) => {
     if (!model.renderable || !model.renderable.getVisibility()) {
       return;
     }
     if (prepass) {
-      if (!model.renderable) {
-        return;
-      }
-
       publicAPI.prepareNodes();
       publicAPI.addMissingNode(model.renderable.getMapper());
       publicAPI.removeUnusedNodes();
@@ -28,20 +24,16 @@ function vtkOpenGLVolume(publicAPI, model) {
   };
 
   // Renders myself
-  publicAPI.render = (prepass) => {
+  publicAPI.volumePass = (prepass) => {
     if (!model.renderable || !model.renderable.getVisibility()) {
       return;
     }
     if (prepass) {
       model.context = publicAPI.getFirstAncestorOfType('vtkOpenGLRenderWindow').getContext();
-      publicAPI.preRender();
+      model.context.depthMask(false);
     } else {
       model.context.depthMask(true);
     }
-  };
-
-  publicAPI.preRender = () => {
-    model.context.depthMask(false);
   };
 
   publicAPI.getKeyMatrices = () => {

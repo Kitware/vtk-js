@@ -281,7 +281,7 @@ export function extend(publicAPI, model, initialValues = {}) {
   macro.obj(model.buildTime);
 
   model.opaqueFlagBuildTime = {};
-  macro.obj(model.opaqueFlagBuildTime);
+  macro.obj(model.opaqueFlagBuildTime, { mtime: 0 });
 
   // Create get-only macros
   macro.get(publicAPI, model, [

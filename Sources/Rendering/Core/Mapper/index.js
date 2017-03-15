@@ -190,7 +190,7 @@ function vtkMapper(publicAPI, model) {
     }
 
     if (!model.useLookupTableScalarRange) {
-      model.lookupTable.setRange(
+      publicAPI.getLookupTable().setRange(
         model.scalarRange[0], model.scalarRange[1]);
     }
 

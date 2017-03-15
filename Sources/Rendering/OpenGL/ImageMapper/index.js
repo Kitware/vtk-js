@@ -4,9 +4,9 @@ import vtkHelper          from 'vtk.js/Sources/Rendering/OpenGL/Helper';
 import vtkMath            from 'vtk.js/Sources/Common/Core/Math';
 import vtkOpenGLTexture   from 'vtk.js/Sources/Rendering/OpenGL/Texture';
 import vtkShaderProgram   from 'vtk.js/Sources/Rendering/OpenGL/ShaderProgram';
-import vtkTexture         from 'vtk.js/Sources/Rendering/Core/Texture';
 import vtkViewNode        from 'vtk.js/Sources/Rendering/SceneGraph/ViewNode';
 import { Representation } from 'vtk.js/Sources/Rendering/Core/Property/Constants';
+import { Wrap, Filter }   from 'vtk.js/Sources/Rendering/OpenGL/Texture/Constants';
 
 import vtkPolyDataVS      from 'vtk.js/Sources/Rendering/OpenGL/glsl/vtkPolyDataVS.glsl';
 import vtkPolyDataFS      from 'vtk.js/Sources/Rendering/OpenGL/glsl/vtkPolyDataFS.glsl';
@@ -21,30 +21,31 @@ export function vtkOpenGLImageMapper(publicAPI, model) {
   // Set our className
   model.classHierarchy.push('vtkOpenGLImageMapper');
 
-  // Builds myself.
-  publicAPI.build = (prepass) => {
+  publicAPI.translucentPass = (prepass) => {
     if (prepass) {
-      if (!model.renderable) {
-        return;
-      }
+      publicAPI.render();
+    }
+  };
+
+  publicAPI.opaquePass = (prepass) => {
+    if (prepass) {
+      publicAPI.render();
     }
   };
 
   // Renders myself
-  publicAPI.render = (prepass) => {
-    if (prepass) {
-      model.openGLRenderWindow = publicAPI.getFirstAncestorOfType('vtkOpenGLRenderWindow');
-      model.context = model.openGLRenderWindow.getContext();
-      model.tris.setContext(model.context);
-      model.openGLImageSlice = publicAPI.getFirstAncestorOfType('vtkOpenGLImageSlice');
-      const actor = model.openGLImageSlice.getRenderable();
-      model.openGLRenderer = publicAPI.getFirstAncestorOfType('vtkOpenGLRenderer');
-      const ren = model.openGLRenderer.getRenderable();
-      model.openGLCamera = model.openGLRenderer.getViewNodeFor(ren.getActiveCamera());
-      publicAPI.renderPiece(ren, actor);
-    } else {
-      // something
-    }
+  publicAPI.render = () => {
+    model.openGLRenderWindow = publicAPI.getFirstAncestorOfType('vtkOpenGLRenderWindow');
+    model.context = model.openGLRenderWindow.getContext();
+    model.tris.setContext(model.context);
+    model.openGLTexture.setWindow(model.openGLRenderWindow);
+    model.openGLTexture.setContext(model.context);
+    model.openGLImageSlice = publicAPI.getFirstAncestorOfType('vtkOpenGLImageSlice');
+    const actor = model.openGLImageSlice.getRenderable();
+    model.openGLRenderer = publicAPI.getFirstAncestorOfType('vtkOpenGLRenderer');
+    const ren = model.openGLRenderer.getRenderable();
+    model.openGLCamera = model.openGLRenderer.getViewNodeFor(ren.getActiveCamera());
+    publicAPI.renderPiece(ren, actor);
   };
 
   publicAPI.buildShaders = (shaders, ren, actor) => {
@@ -244,8 +245,8 @@ export function vtkOpenGLImageMapper(publicAPI, model) {
   publicAPI.renderPieceDraw = (ren, actor) => {
     const gl = model.context;
 
-    // render the texture
-    model.openGLTexture.preRender(model.openGLRenderer);
+    // activate the texture
+    model.openGLTexture.activate();
 
     // draw polygons
     if (model.tris.getCABO().getElementCount()) {
@@ -323,7 +324,19 @@ export function vtkOpenGLImageMapper(publicAPI, model) {
 
     if (model.VBOBuildString !== toString) {
       // Build the VBOs
-      model.texture.setInputData(image);
+      const dims = image.getDimensions();
+      model.openGLTexture.setGenerateMipmap(true);
+      model.openGLTexture.setMinificationFilter(Filter.LINEAR_MIPMAP_LINEAR);
+      model.openGLTexture.setMagnificationFilter(Filter.LINEAR);
+      model.openGLTexture.setWrapS(Wrap.CLAMP_TO_EDGE);
+      model.openGLTexture.setWrapT(Wrap.CLAMP_TO_EDGE);
+      model.openGLTexture.create2DFromRaw(dims[0], dims[1],
+        image.getPointData().getScalars().getNumberOfComponents(),
+        image.getPointData().getScalars().getDataType(),
+        image.getPointData().getScalars().getData());
+      model.openGLTexture.activate();
+      model.openGLTexture.sendParameters();
+      model.openGLTexture.deactivate();
 
       const bounds = model.renderable.getBounds();
 
@@ -370,7 +383,6 @@ const DEFAULT_VALUES = {
   context: null,
   VBOBuildTime: 0,
   VBOBuildString: null,
-  texture: null,
   openGLTexture: null,
   tris: null,
 };
@@ -384,9 +396,7 @@ export function extend(publicAPI, model, initialValues = {}) {
   vtkViewNode.extend(publicAPI, model, initialValues);
 
   model.tris = vtkHelper.newInstance();
-  model.texture = vtkTexture.newInstance();
   model.openGLTexture = vtkOpenGLTexture.newInstance();
-  model.openGLTexture.setRenderable(model.texture);
 
   // Build VTK API
   macro.setGet(publicAPI, model, [

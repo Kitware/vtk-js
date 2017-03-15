@@ -1,4 +1,5 @@
 import macro                        from 'vtk.js/Sources/macro';
+import vtkRenderPass                from 'vtk.js/Sources/Rendering/SceneGraph/RenderPass';
 import vtkOpenGLViewNodeFactory     from 'vtk.js/Sources/Rendering/OpenGL/ViewNodeFactory';
 import vtkShaderCache               from 'vtk.js/Sources/Rendering/OpenGL/ShaderCache';
 import vtkViewNode                  from 'vtk.js/Sources/Rendering/SceneGraph/ViewNode';
@@ -32,7 +33,7 @@ export function vtkOpenGLRenderWindow(publicAPI, model) {
   publicAPI.onModified(updateWindow);
 
   // Builds myself.
-  publicAPI.build = (prepass) => {
+  publicAPI.buildPass = (prepass) => {
     if (prepass) {
       if (!model.renderable) {
         return;
@@ -41,6 +42,11 @@ export function vtkOpenGLRenderWindow(publicAPI, model) {
       publicAPI.prepareNodes();
       publicAPI.addMissingNodes(model.renderable.getRenderers());
       publicAPI.removeUnusedNodes();
+
+      publicAPI.initialize();
+      model.children.forEach((child) => {
+        child.setContext(model.context);
+      });
     }
   };
 
@@ -61,21 +67,6 @@ export function vtkOpenGLRenderWindow(publicAPI, model) {
 
   publicAPI.makeCurrent = () => {
     model.context.makeCurrent();
-  };
-
-  publicAPI.frame = () => {
-  };
-
-  // Renders myself
-  publicAPI.render = (prepass) => {
-    if (prepass) {
-      publicAPI.initialize();
-      model.children.forEach((child) => {
-        child.setContext(model.context);
-      });
-    } else {
-      publicAPI.frame();
-    }
   };
 
   publicAPI.setContainer = (el) => {
@@ -200,6 +191,12 @@ export function vtkOpenGLRenderWindow(publicAPI, model) {
     publicAPI.traverseAllPasses();
     return model.canvas.toDataURL(format);
   };
+
+  publicAPI.traverseAllPasses = () => {
+    model.renderPasses.forEach((val) => {
+      val.traverse(publicAPI, null);
+    });
+  };
 }
 
 // ----------------------------------------------------------------------------
@@ -216,6 +213,7 @@ const DEFAULT_VALUES = {
   cursor: 'pointer',
   textureUnitManager: null,
   textureResourceIds: null,
+  renderPasses: [],
 };
 
 // ----------------------------------------------------------------------------
@@ -234,6 +232,17 @@ export function extend(publicAPI, model, initialValues = {}) {
   model.myFactory = vtkOpenGLViewNodeFactory.newInstance();
   model.shaderCache = vtkShaderCache.newInstance();
 
+  // setup default forward pass rendering
+  const rp = vtkRenderPass.newInstance();
+  model.renderPasses[0] = rp;
+  rp.setPreDelegateOperations([
+    'buildPass',
+    'cameraPass',
+    'opaquePass',
+    'translucentPass',
+    'volumePass',
+  ]);
+
   // Build VTK API
   macro.get(publicAPI, model, [
     'shaderCache',
@@ -244,6 +253,7 @@ export function extend(publicAPI, model, initialValues = {}) {
     'initialized',
     'context',
     'canvas',
+    'renderPasses',
   ]);
 
   macro.setGetArray(publicAPI, model, [
