@@ -10,6 +10,7 @@ over time but as of this writing it includes support for
 - opacity transfer functions
 - color transfer functions
 - volume interpolation of nearest, fast linear and linear
+- automatic intermixing of opaque surfaces with volumes
 
 Using volume rendering in vtk-js is very much like using it
 VTK is you are familiar with VTK. The main objects are

@@ -44,6 +44,14 @@ export function vtkOpenGLPolyDataMapper(publicAPI, model) {
     }
   };
 
+  publicAPI.opaqueZBufferPass = (prepass) => {
+    if (prepass) {
+      model.renderDepth = true;
+      publicAPI.render();
+      model.renderDepth = false;
+    }
+  };
+
   publicAPI.opaquePass = (prepass) => {
     if (prepass) {
       publicAPI.render();
@@ -664,6 +672,18 @@ export function vtkOpenGLPolyDataMapper(publicAPI, model) {
     publicAPI.replaceShaderPicking(shaders, ren, actor);
     publicAPI.replaceShaderCoincidentOffset(shaders, ren, actor);
     publicAPI.replaceShaderPositionVC(shaders, ren, actor);
+
+    if (model.renderDepth) {
+      let FSSource = shaders.Fragment;
+      FSSource = vtkShaderProgram.substitute(FSSource,
+            '//VTK::ZBuffer::Impl', [
+              'float iz = floor(gl_FragCoord.z*65535.0 + 0.1);',
+              'float rf = floor(iz/256.0)/255.0;',
+              'float gf = mod(iz,256.0)/255.0;',
+              'gl_FragData[0] = vec4(rf, gf, 0.0, 1.0);',
+            ]).result;
+      shaders.Fragment = FSSource;
+    }
   };
 
   publicAPI.getNeedToRebuildShaders = (cellBO, ren, actor) => {
@@ -733,17 +753,21 @@ export function vtkOpenGLPolyDataMapper(publicAPI, model) {
       needRebuild = true;
     }
 
+    const toString = `${model.renderDepth}`;
+
     // has something changed that would require us to recreate the shader?
     // candidates are
     // property modified (representation interpolation and lighting)
     // input modified
     // light complexity changed
-    if (cellBO.getProgram() === 0 ||
+    if (model.shaderRebuildString !== toString ||
+        cellBO.getProgram() === 0 ||
         cellBO.getShaderSourceTime().getMTime() < publicAPI.getMTime() ||
         cellBO.getShaderSourceTime().getMTime() < actor.getMTime() ||
         cellBO.getShaderSourceTime().getMTime() < model.renderable.getMTime() ||
         cellBO.getShaderSourceTime().getMTime() < model.currentInput.getMTime() ||
         needRebuild) {
+      model.shaderRebuildString = toString;
       return true;
     }
 
@@ -787,7 +811,8 @@ export function vtkOpenGLPolyDataMapper(publicAPI, model) {
     cellBO.getProgram().setUniformi('PrimitiveIDOffset',
       model.primitiveIDOffset);
 
-    if (cellBO.getCABO().getElementCount() && (model.VBOBuildTime > cellBO.getAttributeUpdateTime().getMTime() ||
+    if (cellBO.getCABO().getElementCount() &&
+        (model.VBOBuildTime.getMTime() > cellBO.getAttributeUpdateTime().getMTime() ||
         cellBO.getShaderSourceTime().getMTime() > cellBO.getAttributeUpdateTime().getMTime())) {
       cellBO.getCABO().bind();
       const lastLightComplexity =
@@ -1352,6 +1377,7 @@ const DEFAULT_VALUES = {
   VBOBuildString: null,
   primitives: null,
   primTypes: null,
+  shaderRebuildString: null,
 };
 
 // ----------------------------------------------------------------------------
@@ -1378,7 +1404,7 @@ export function extend(publicAPI, model, initialValues = {}) {
   ]);
 
   model.VBOBuildTime = {};
-  macro.obj(model.VBOBuildTime);
+  macro.obj(model.VBOBuildTime, { mtime: 0 });
 
   // Object methods
   vtkOpenGLPolyDataMapper(publicAPI, model);

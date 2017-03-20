@@ -21,10 +21,14 @@
 
 varying vec3 vertexVCVSOutput;
 
+// camera values
 uniform float camThick;
+uniform float camNear;
+uniform float camFar;
+
+// values describing the volume geometry
 uniform vec3 vOriginVC;
 uniform vec3 vSize;
-
 uniform vec3 vPlaneNormal0;
 uniform float vPlaneDistance0;
 uniform vec3 vPlaneNormal1;
@@ -58,6 +62,9 @@ uniform float ystride;
 uniform int repWidth;
 uniform int repHeight;
 uniform int repDepth;
+
+// declaration for intermixed geometry
+//VTK::ZBuffer::Decl
 
 vec4 getVolumeColor(vec3 vpos)
 {
@@ -156,7 +163,7 @@ void main()
 {
   // camera is at 0,0,0 so rayDir for perspective is just the vc coord
   vec3 rayDir = normalize(vertexVCVSOutput);
-  vec2 tbounds = vec2(100.0*camThick, -100.0);
+  vec2 tbounds = vec2(100.0*camFar, -1.0);
 
   tbounds = getRayPointIntersectionBounds(vertexVCVSOutput, rayDir,
     vPlaneNormal0, vPlaneDistance0, tbounds, vPlaneNormal2, vPlaneNormal4,
@@ -183,6 +190,10 @@ void main()
   // do not go PAST far clipping plane
   float farDist = -camThick/rayDir.z;
   tbounds.y = min(farDist,tbounds.y);
+
+  // Do not go past the zbuffer value if set
+  // This is used for intermixing opaque geometry
+  //VTK::ZBuffer::Impl
 
   // do we need to composite?
   if (tbounds.y >= tbounds.x)

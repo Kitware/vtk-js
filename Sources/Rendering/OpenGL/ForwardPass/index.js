@@ -1,0 +1,114 @@
+import macro                from 'vtk.js/Sources/macro';
+import vtkOpenGLFramebuffer from 'vtk.js/Sources/Rendering/OpenGL/Framebuffer';
+import vtkRenderPass        from 'vtk.js/Sources/Rendering/SceneGraph/RenderPass';
+
+// ----------------------------------------------------------------------------
+
+function vtkForwardPass(publicAPI, model) {
+  // Set our className
+  model.classHierarchy.push('vtkForwardPass');
+
+  publicAPI.getOperation = () => model.currentOperation;
+
+  // this pass implements a forward rendering pipeline
+  // if both volumes and opaque geometry are present
+  // it will mix the two together by capturing a zbuffer
+  // first
+  publicAPI.traverse = (viewNode, parent = null) => {
+    if (model.deleted) {
+      return;
+    }
+
+    // we just render our delegates in order
+    model.currentParent = parent;
+
+    // build
+    model.currentOperation = 'buildPass';
+    viewNode.traverse(publicAPI);
+
+    // check for both opaque and volume actors
+    model.opaqueActorCount = 0;
+    model.translucentActorCount = 0;
+    model.volumeCount = 0;
+    model.currentOperation = 'queryPass';
+    viewNode.traverse(publicAPI);
+
+    // do we need to capture a zbuffer?
+    if (model.opaqueActorCount > 0 && model.volumeCount > 0) {
+      const size = viewNode.getSize();
+      // make sure the framebuffer is setup
+      if (model.framebuffer === null) {
+        model.framebuffer = vtkOpenGLFramebuffer.newInstance();
+      }
+      model.framebuffer.setWindow(viewNode);
+      model.framebuffer.saveCurrentBindingsAndBuffers();
+      const fbSize = model.framebuffer.getSize();
+      if (fbSize === null ||
+          fbSize[0] !== size[0] || fbSize[1] !== size[1]) {
+        model.framebuffer.create(size[0], size[1]);
+        model.framebuffer.populateFramebuffer();
+      }
+      model.framebuffer.bind();
+      model.currentOperation = 'opaqueZBufferPass';
+      viewNode.traverse(publicAPI);
+      model.framebuffer.restorePreviousBindingsAndBuffers();
+    }
+
+    model.currentOperation = 'cameraPass';
+    viewNode.traverse(publicAPI);
+    if (model.opaqueActorCount > 0) {
+      model.currentOperation = 'opaquePass';
+      viewNode.traverse(publicAPI);
+    }
+    if (model.translucentActorCount > 0) {
+      model.currentOperation = 'translucentPass';
+      viewNode.traverse(publicAPI);
+    }
+    if (model.volumeCount > 0) {
+      model.currentOperation = 'volumePass';
+      viewNode.traverse(publicAPI);
+    }
+  };
+
+  publicAPI.getZBufferTexture = () => {
+    if (model.framebuffer) {
+      return model.framebuffer.getColorTexture();
+    }
+    return null;
+  };
+
+  publicAPI.incrementOpaqueActorCount = () => model.opaqueActorCount++;
+  publicAPI.incrementTranslucentActorCount = () => model.translucentActorCount++;
+  publicAPI.incrementVolumeCount = () => model.volumeCount++;
+}
+
+// ----------------------------------------------------------------------------
+// Object factory
+// ----------------------------------------------------------------------------
+
+const DEFAULT_VALUES = {
+  opaqueActorCount: 0,
+  translucentActorCount: 0,
+  volumeCount: 0,
+  framebuffer: null,
+};
+
+// ----------------------------------------------------------------------------
+
+export function extend(publicAPI, model, initialValues = {}) {
+  Object.assign(model, DEFAULT_VALUES, initialValues);
+
+  // Build VTK API
+  vtkRenderPass.extend(publicAPI, model, initialValues);
+
+  // Object methods
+  vtkForwardPass(publicAPI, model);
+}
+
+// ----------------------------------------------------------------------------
+
+export const newInstance = macro.newInstance(extend, 'vtkForwardPass');
+
+// ----------------------------------------------------------------------------
+
+export default { newInstance, extend };

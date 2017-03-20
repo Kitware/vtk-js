@@ -90,4 +90,6 @@ void main()
 
   // handle coincident offsets
   //VTK::Coincident::Impl
+
+  //VTK::ZBuffer::Impl
 }

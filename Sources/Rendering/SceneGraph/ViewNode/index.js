@@ -45,7 +45,7 @@ function vtkViewNode(publicAPI, model) {
 
   publicAPI.apply = (renderPass, prepass) => {
     if (typeof publicAPI[renderPass.getOperation()] === 'function') {
-      publicAPI[renderPass.getOperation()](prepass, publicAPI);
+      publicAPI[renderPass.getOperation()](prepass, renderPass);
     }
   };
 

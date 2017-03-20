@@ -7,6 +7,7 @@ const { vtkDebugMacro } = macro;
 // ----------------------------------------------------------------------------
 // vtkOpenGLRenderer methods
 // ----------------------------------------------------------------------------
+/* eslint-disable no-bitwise */
 
 export function vtkOpenGLRenderer(publicAPI, model) {
   // Set our className
@@ -48,6 +49,28 @@ export function vtkOpenGLRenderer(publicAPI, model) {
     }
 
     return count;
+  };
+
+  publicAPI.opaqueZBufferPass = (prepass) => {
+    if (prepass) {
+      let clearMask = 0;
+      const gl = model.context;
+      if (!model.renderable.getTransparent()) {
+        model.context.clearColor(1.0, 0.0, 0.0, 1.0);
+        clearMask |= gl.COLOR_BUFFER_BIT;
+      }
+
+      if (!model.renderable.getPreserveDepthBuffer()) {
+        gl.clearDepth(1.0);
+        clearMask |= gl.DEPTH_BUFFER_BIT;
+        gl.depthMask(true);
+      }
+
+      gl.colorMask(true, true, true, true);
+      gl.clear(clearMask);
+
+      gl.enable(gl.DEPTH_TEST);
+    }
   };
 
   // Renders myself
@@ -108,7 +131,6 @@ export function vtkOpenGLRenderer(publicAPI, model) {
   };
 
   publicAPI.clear = () => {
-    /* eslint-disable no-bitwise */
     let clearMask = 0;
     const gl = model.context;
 

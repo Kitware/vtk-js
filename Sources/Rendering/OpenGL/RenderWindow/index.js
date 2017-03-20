@@ -1,5 +1,5 @@
 import macro                        from 'vtk.js/Sources/macro';
-import vtkRenderPass                from 'vtk.js/Sources/Rendering/SceneGraph/RenderPass';
+import vtkForwardPass               from 'vtk.js/Sources/Rendering/OpenGL/ForwardPass';
 import vtkOpenGLViewNodeFactory     from 'vtk.js/Sources/Rendering/OpenGL/ViewNodeFactory';
 import vtkShaderCache               from 'vtk.js/Sources/Rendering/OpenGL/ShaderCache';
 import vtkViewNode                  from 'vtk.js/Sources/Rendering/SceneGraph/ViewNode';
@@ -233,15 +233,7 @@ export function extend(publicAPI, model, initialValues = {}) {
   model.shaderCache = vtkShaderCache.newInstance();
 
   // setup default forward pass rendering
-  const rp = vtkRenderPass.newInstance();
-  model.renderPasses[0] = rp;
-  rp.setPreDelegateOperations([
-    'buildPass',
-    'cameraPass',
-    'opaquePass',
-    'translucentPass',
-    'volumePass',
-  ]);
+  model.renderPasses[0] = vtkForwardPass.newInstance();
 
   // Build VTK API
   macro.get(publicAPI, model, [
