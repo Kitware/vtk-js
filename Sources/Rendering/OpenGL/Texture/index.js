@@ -532,6 +532,77 @@ function vtkOpenGLTexture(publicAPI, model) {
   };
 
   //----------------------------------------------------------------------------
+  publicAPI.createCubeFromRaw = (width, height, numComps, dataType, data) => {
+    // Now determine the texture parameters using the arguments.
+    publicAPI.getOpenGLDataType(dataType);
+    publicAPI.getInternalFormat(dataType, numComps);
+    publicAPI.getFormat(dataType, numComps);
+
+    if (!model.internalFormat || !model.format || !model.openGLDataType) {
+      vtkErrorMacro('Failed to determine texture parameters.');
+      return false;
+    }
+
+    model.target = model.context.TEXTURE_CUBE_MAP;
+    model.components = numComps;
+    model.width = width;
+    model.height = height;
+    model.depth = 1;
+    model.numberOfDimensions = 2;
+    model.window.activateTexture(publicAPI);
+    publicAPI.createTexture();
+    publicAPI.bind();
+
+    let pixData = data;
+
+    // if the opengl data type is float
+    // then the data array must be float
+    if (dataType !== VtkDataTypes.FLOAT && model.openGLDataType === model.context.FLOAT) {
+      const pixCount = model.width * model.height * model.components;
+      for (let idx = 0; idx < 6; idx++) {
+        const newArray = new Float32Array(pixCount);
+        for (let i = 0; i < pixCount; i++) {
+          newArray[i] = data[idx][i];
+        }
+        pixData[idx] = newArray;
+      }
+    }
+
+    // if the opengl data type is ubyte
+    // then the data array must be u8, we currently simply truncate the data
+    if (dataType !== VtkDataTypes.UNSIGNED_CHAR && model.openGLDataType === model.context.UNSIGNED_BYTE) {
+      const pixCount = model.width * model.height * model.components;
+      for( let idx = 0; idx < 6; idx++) {
+        const newArray = new Uint8Array(pixCount);
+        for (let i = 0; i < pixCount; i++) {
+          newArray[i] = data[idx][i];
+        }
+        pixData[idx] = newArray;
+      }
+    }
+
+    // Source texture data from the PBO.
+    model.context.pixelStorei(model.context.UNPACK_ALIGNMENT, 1);
+
+    for (let i = 0; i < 6; i++) {
+      if (data[i]) {
+        model.context.texImage2D(
+          model.context.TEXTURE_CUBE_MAP_POSITIVE_X + i,
+          0,
+          model.internalFormat,
+          model.width, model.height,
+          0,
+          model.format,
+          model.openGLDataType,
+          data[i]);
+      }
+    }
+
+    publicAPI.deactivate();
+    return true;
+  };
+
+  //----------------------------------------------------------------------------
   publicAPI.createDepthFromRaw = (width, height, dataType, data) => {
     // Now determine the texture parameters using the arguments.
     publicAPI.getOpenGLDataType(dataType);
