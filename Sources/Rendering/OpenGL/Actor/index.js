@@ -21,6 +21,10 @@ function vtkOpenGLActor(publicAPI, model) {
     }
   };
 
+  publicAPI.traverseOpaqueZBufferPass = (renderPass) => {
+    publicAPI.traverseOpaquePass(renderPass);
+  };
+
   // we draw textures, then mapper, then post pass textures
   publicAPI.traverseOpaquePass = (renderPass) => {
     if (!model.renderable ||
@@ -68,7 +72,22 @@ function vtkOpenGLActor(publicAPI, model) {
     });
   };
 
-  // Renders myself
+  publicAPI.queryPass = (prepass, renderPass) => {
+    if (prepass) {
+      if (!model.renderable ||
+          !model.renderable.getVisibility()) {
+        return;
+      }
+      if (model.renderable.getIsOpaque()) {
+        renderPass.incrementOpaqueActorCount();
+      } else {
+        renderPass.incrementTranslucentActorCount();
+      }
+    }
+  };
+
+  publicAPI.opaqueZBufferPass = (prepass, renderPass) => publicAPI.opaquePass(prepass, renderPass);
+
   publicAPI.opaquePass = (prepass, renderPass) => {
     if (prepass) {
       model.context = publicAPI.getFirstAncestorOfType('vtkOpenGLRenderWindow').getContext();

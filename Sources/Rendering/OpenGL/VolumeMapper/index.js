@@ -26,14 +26,29 @@ export function vtkOpenGLVolumeMapper(publicAPI, model) {
   // Set our className
   model.classHierarchy.push('vtkOpenGLVolumeMapper');
 
+  publicAPI.buildPass = () => {
+    model.zBufferTexture = null;
+  };
+
+  // ohh someone is doing a zbuffer pass, use that for
+  // intermixed volume rendering
+  publicAPI.opaqueZBufferPass = (prepass, renderPass) => {
+    if (prepass) {
+      const zbt = renderPass.getZBufferTexture();
+      if (zbt !== model.zBufferTexture) {
+        model.zBufferTexture = zbt;
+      }
+    }
+  };
+
   // Renders myself
-  publicAPI.volumePass = (prepass) => {
+  publicAPI.volumePass = (prepass, renderPass) => {
     if (prepass) {
       model.openGLRenderWindow = publicAPI.getFirstAncestorOfType('vtkOpenGLRenderWindow');
       model.context = model.openGLRenderWindow.getContext();
       model.tris.setContext(model.context);
-      model.openGLTexture.setWindow(model.openGLRenderWindow);
-      model.openGLTexture.setContext(model.context);
+      model.scalarTexture.setWindow(model.openGLRenderWindow);
+      model.scalarTexture.setContext(model.context);
       model.colorTexture.setWindow(model.openGLRenderWindow);
       model.colorTexture.setContext(model.context);
       model.opacityTexture.setWindow(model.openGLRenderWindow);
@@ -79,7 +94,7 @@ export function vtkOpenGLVolumeMapper(publicAPI, model) {
     // if we had to encode the scalar values into
     // rgb then add the right call to decode them
     // otherwise the generic texture lookup
-    const volInfo = model.openGLTexture.getVolumeInfo();
+    const volInfo = model.scalarTexture.getVolumeInfo();
     if (volInfo.encodedScalars) {
       FSSource = vtkShaderProgram.substitute(FSSource,
         '//VTK::ScalarValueFunction::Impl', [
@@ -102,19 +117,36 @@ export function vtkOpenGLVolumeMapper(publicAPI, model) {
       '//VTK::MaximumSamplesValue',
       `${model.renderable.getMaximumSamplesPerRay()}`).result;
 
+    // if we have a ztexture then declare it and use it
+    if (model.zBufferTexture !== null) {
+      FSSource = vtkShaderProgram.substitute(FSSource,
+        '//VTK::ZBuffer::Decl', [
+          'uniform sampler2D zBufferTexture;',
+          'uniform float vpWidth;',
+          'uniform float vpHeight;',
+        ]).result;
+      FSSource = vtkShaderProgram.substitute(FSSource,
+        '//VTK::ZBuffer::Impl', [
+          'vec4 depthVec = texture2D(zBufferTexture, vec2(gl_FragCoord.x / vpWidth, gl_FragCoord.y/vpHeight));',
+          'float zdepth = (depthVec.r*256.0 + depthVec.g)/257.0;',
+          'zdepth = zdepth * 2.0 - 1.0;',
+          'zdepth = -2.0 * camFar * camNear / (zdepth*(camFar-camNear)-(camFar+camNear)) - camNear;',
+          'zdepth = -zdepth/rayDir.z;',
+          'tbounds.y = min(zdepth,tbounds.y);',
+        ]).result;
+    }
+
     shaders.Fragment = FSSource;
   };
 
   publicAPI.getNeedToRebuildShaders = (cellBO, ren, actor) => {
     // has something changed that would require us to recreate the shader?
-    // candidates are
-    // property modified (representation interpolation and lighting)
-    // input modified
-    // light complexity changed
     if (cellBO.getProgram() === 0 ||
+        model.lastZBufferTexture !== model.zBufferTexture ||
         cellBO.getShaderSourceTime().getMTime() < publicAPI.getMTime() ||
         cellBO.getShaderSourceTime().getMTime() < actor.getMTime() ||
         cellBO.getShaderSourceTime().getMTime() < model.currentInput.getMTime()) {
+      model.lastZBufferTexture = model.zBufferTexture;
       return true;
     }
 
@@ -156,7 +188,8 @@ export function vtkOpenGLVolumeMapper(publicAPI, model) {
     // Now to update the VAO too, if necessary.
     const program = cellBO.getProgram();
 
-    if (cellBO.getCABO().getElementCount() && (model.VBOBuildTime > cellBO.getAttributeUpdateTime().getMTime() ||
+    if (cellBO.getCABO().getElementCount() &&
+        (model.VBOBuildTime.getMTime() > cellBO.getAttributeUpdateTime().getMTime() ||
         cellBO.getShaderSourceTime().getMTime() > cellBO.getAttributeUpdateTime().getMTime())) {
       cellBO.getCABO().bind();
       if (program.isAttributeUsed('vertexDC')) {
@@ -170,9 +203,18 @@ export function vtkOpenGLVolumeMapper(publicAPI, model) {
     }
 
     program.setUniformi('texture1',
-      model.openGLTexture.getTextureUnit());
+      model.scalarTexture.getTextureUnit());
     program.setUniformf('sampleDistance',
       model.renderable.getSampleDistance());
+
+    // if we have a zbuffer texture then set it
+    if (model.zBufferTexture !== null) {
+      program.setUniformi('zBufferTexture',
+        model.zBufferTexture.getTextureUnit());
+      const size = publicAPI.getRenderTargetSize();
+      program.setUniformf('vpWidth', size[0]);
+      program.setUniformf('vpHeight', size[1]);
+    }
   };
 
   publicAPI.setCameraShaderParameters = (cellBO, ren, actor) => {
@@ -185,6 +227,8 @@ export function vtkOpenGLVolumeMapper(publicAPI, model) {
     const cam = model.openGLCamera.getRenderable();
     const crange = cam.getClippingRange();
     program.setUniformf('camThick', crange[1] - crange[0]);
+    program.setUniformf('camNear', crange[0]);
+    program.setUniformf('camFar', crange[1]);
 
     const bounds = model.currentInput.getBounds();
     const dims = model.currentInput.getDimensions();
@@ -248,9 +292,9 @@ export function vtkOpenGLVolumeMapper(publicAPI, model) {
     vec3.divide(vctoijk, vctoijk, vsize);
     program.setUniform3f('vVCToIJK', vctoijk);
 
-    const volInfo = model.openGLTexture.getVolumeInfo();
-    program.setUniformf('texWidth', model.openGLTexture.getWidth());
-    program.setUniformf('texHeight', model.openGLTexture.getHeight());
+    const volInfo = model.scalarTexture.getVolumeInfo();
+    program.setUniformf('texWidth', model.scalarTexture.getWidth());
+    program.setUniformf('texHeight', model.scalarTexture.getHeight());
     program.setUniformi('xreps', volInfo.xreps);
     program.setUniformf('xstride', volInfo.xstride);
     program.setUniformf('ystride', volInfo.ystride);
@@ -307,7 +351,7 @@ export function vtkOpenGLVolumeMapper(publicAPI, model) {
     program.setUniformi('otexture',
       model.opacityTexture.getTextureUnit());
 
-    const volInfo = model.openGLTexture.getVolumeInfo();
+    const volInfo = model.scalarTexture.getVolumeInfo();
     const sscale = volInfo.max - volInfo.min;
 
     const vprop = actor.getProperty();
@@ -320,6 +364,13 @@ export function vtkOpenGLVolumeMapper(publicAPI, model) {
     const cRange = cfun.getRange();
     program.setUniformf('cshift', (volInfo.min - cRange[0]) / (oRange[1] - oRange[0]));
     program.setUniformf('cscale', sscale / (cRange[1] - cRange[0]));
+  };
+
+  publicAPI.getRenderTargetSize = () => {
+    if (model.lastXYF !== 1.0) {
+      return model.framebuffer.getSize();
+    }
+    return model.openGLRenderWindow.getSize();
   };
 
   publicAPI.renderPieceStart = (ren, actor) => {
@@ -389,22 +440,27 @@ export function vtkOpenGLVolumeMapper(publicAPI, model) {
     // set interpolation on the texture based on property setting
     const iType = actor.getProperty().getInterpolationType();
     if (iType === InterpolationType.NEAREST) {
-      model.openGLTexture.setMinificationFilter(Filter.NEAREST);
-      model.openGLTexture.setMagnificationFilter(Filter.NEAREST);
+      model.scalarTexture.setMinificationFilter(Filter.NEAREST);
+      model.scalarTexture.setMagnificationFilter(Filter.NEAREST);
     } else {
-      model.openGLTexture.setMinificationFilter(Filter.LINEAR);
-      model.openGLTexture.setMagnificationFilter(Filter.LINEAR);
+      model.scalarTexture.setMinificationFilter(Filter.LINEAR);
+      model.scalarTexture.setMagnificationFilter(Filter.LINEAR);
     }
 
     // Bind the OpenGL, this is shared between the different primitive/cell types.
     model.lastBoundBO = null;
+
+    // if we have a zbuffer texture then activate it
+    if (model.zBufferTexture !== null) {
+      model.zBufferTexture.activate();
+    }
   };
 
   publicAPI.renderPieceDraw = (ren, actor) => {
     const gl = model.context;
 
     // render the texture
-    model.openGLTexture.activate();
+    model.scalarTexture.activate();
     model.opacityTexture.activate();
     model.colorTexture.activate();
 
@@ -416,7 +472,7 @@ export function vtkOpenGLVolumeMapper(publicAPI, model) {
         model.tris.getCABO().getElementCount());
     }
 
-    model.openGLTexture.deactivate();
+    model.scalarTexture.deactivate();
     model.colorTexture.deactivate();
     model.opacityTexture.deactivate();
   };
@@ -424,6 +480,11 @@ export function vtkOpenGLVolumeMapper(publicAPI, model) {
   publicAPI.renderPieceFinish = (ren, actor) => {
     if (model.LastBoundBO) {
       model.LastBoundBO.getVAO().release();
+    }
+
+    // if we have a zbuffer texture then deactivate it
+    if (model.zBufferTexture !== null) {
+      model.zBufferTexture.deactivate();
     }
 
     if (model.lastXYF !== 1.0) {
@@ -541,14 +602,13 @@ export function vtkOpenGLVolumeMapper(publicAPI, model) {
     const ofun = vprop.getScalarOpacity(0);
     const opacityFactor = model.renderable.getSampleDistance() /
       vprop.getScalarOpacityUnitDistance(0);
-    if (model.lastOpacityFactor !== opacityFactor ||
-        model.opacityBuildTime.getMTime() < ofun.getMTime()) {
+    let toString = `${ofun.getMTime()}A${opacityFactor}`;
+    if (model.opacityTextureString !== toString) {
       const oRange = ofun.getRange();
       const oWidth = 1024;
       const ofTable = new Float32Array(oWidth);
       ofun.getTable(oRange[0], oRange[1], oWidth, ofTable, 1);
       const oTable = new Uint8Array(oWidth);
-      model.lastOpacityFactor = opacityFactor;
       for (let i = 0; i < oWidth; ++i) {
         oTable[i] = 255.0 * (1.0 - Math.pow(1.0 - ofTable[i], opacityFactor));
       }
@@ -556,12 +616,13 @@ export function vtkOpenGLVolumeMapper(publicAPI, model) {
       model.opacityTexture.setMagnificationFilter(Filter.LINEAR);
       model.opacityTexture.create2DFromRaw(oWidth, 1, 1,
         VtkDataTypes.UNSIGNED_CHAR, oTable);
-      model.opacityBuildTime.modified();
+      model.opacityTextureString = toString;
     }
 
     // rebuild color tfun?
     const cfun = vprop.getRGBTransferFunction(0);
-    if (model.colorBuildTime.getMTime() < cfun.getMTime()) {
+    toString = `${cfun.getMTime()}`;
+    if (model.colorTextureString !== toString) {
       const cRange = cfun.getRange();
       const cWidth = 1024;
       const cfTable = new Float32Array(cWidth * 3);
@@ -574,21 +635,22 @@ export function vtkOpenGLVolumeMapper(publicAPI, model) {
       model.colorTexture.setMagnificationFilter(Filter.LINEAR);
       model.colorTexture.create2DFromRaw(cWidth, 1, 3,
         VtkDataTypes.UNSIGNED_CHAR, cTable);
-      model.colorBuildTime.modified();
+      model.colorTextureString = toString;
     }
 
-    // rebuild the VBO if the data has changed
-    const toString = `${image.getMTime()}A${publicAPI.getMTime()}`;
-
-    if (model.VBOBuildString !== toString) {
+    // rebuild the scalarTexture if the data has changed
+    toString = `${image.getMTime()}`;
+    if (model.scalarTextureString !== toString) {
       // Build the textures
       const dims = image.getDimensions();
-      model.openGLTexture.resetFormatAndType();
-      model.openGLTexture.create3DOneComponentFromRaw(dims[0], dims[1], dims[2],
+      model.scalarTexture.resetFormatAndType();
+      model.scalarTexture.create3DOneComponentFromRaw(dims[0], dims[1], dims[2],
         image.getPointData().getScalars().getDataType(),
         image.getPointData().getScalars().getData());
-      model.scalarBuildTime.modified();
+      model.scalarTextureString = toString;
+    }
 
+    if (!model.tris.getCABO().getElementCount()) {
       // build the CABO
       const ptsArray = new Float32Array(12);
       for (let i = 0; i < 4; i++) {
@@ -614,9 +676,9 @@ export function vtkOpenGLVolumeMapper(publicAPI, model) {
       model.tris.getCABO().createVBO(cells,
         'polys', Representation.SURFACE,
         { points, cellOffset: 0 });
-      model.VBOBuildTime.modified();
-      model.VBOBuildString = toString;
     }
+
+    model.VBOBuildTime.modified();
   };
 }
 
@@ -626,21 +688,21 @@ export function vtkOpenGLVolumeMapper(publicAPI, model) {
 
 const DEFAULT_VALUES = {
   context: null,
-  VBOBuildTime: 0,
-  VBOBuildString: null,
-  openGLTexture: null,
+  VBOBuildTime: null,
+  scalarTexture: null,
+  scalarTextureString: null,
   opacityTexture: null,
+  opacityTextureString: null,
   colorTexture: null,
+  colortextureString: null,
   tris: null,
-  opacityBuildTime: null,
-  colorBuildTime: null,
-  scalarBuildTime: null,
-  lastOpacityFactor: 0.0,
   framebuffer: null,
   copyShader: null,
   copyVAO: null,
   lastXYF: 1.0,
   targetXYF: 1.0,
+  zBufferTexture: null,
+  lastZBufferTexture: null,
 };
 
 // ----------------------------------------------------------------------------
@@ -651,8 +713,11 @@ export function extend(publicAPI, model, initialValues = {}) {
   // Inheritance
   vtkViewNode.extend(publicAPI, model, initialValues);
 
+  model.VBOBuildTime = {};
+  macro.obj(model.VBOBuildTime, { mtime: 0 });
+
   model.tris = vtkHelper.newInstance();
-  model.openGLTexture = vtkOpenGLTexture.newInstance();
+  model.scalarTexture = vtkOpenGLTexture.newInstance();
   model.opacityTexture = vtkOpenGLTexture.newInstance();
   model.colorTexture = vtkOpenGLTexture.newInstance();
   model.framebuffer = vtkOpenGLFramebuffer.newInstance();
@@ -661,15 +726,6 @@ export function extend(publicAPI, model, initialValues = {}) {
   macro.setGet(publicAPI, model, [
     'context',
   ]);
-
-  model.VBOBuildTime = {};
-  macro.obj(model.VBOBuildTime, { mtime: 0 });
-  model.opacityBuildTime = {};
-  macro.obj(model.opacityBuildTime, { mtime: 0 });
-  model.colorBuildTime = {};
-  macro.obj(model.colorBuildTime, { mtime: 0 });
-  model.scalarBuildTime = {};
-  macro.obj(model.scalarBuildTime, { mtime: 0 });
 
   // Object methods
   vtkOpenGLVolumeMapper(publicAPI, model);

@@ -23,6 +23,16 @@ function vtkOpenGLVolume(publicAPI, model) {
     }
   };
 
+  publicAPI.queryPass = (prepass, renderPass) => {
+    if (prepass) {
+      if (!model.renderable ||
+          !model.renderable.getVisibility()) {
+        return;
+      }
+      renderPass.incrementVolumeCount();
+    }
+  };
+
   // Renders myself
   publicAPI.volumePass = (prepass) => {
     if (!model.renderable || !model.renderable.getVisibility()) {
