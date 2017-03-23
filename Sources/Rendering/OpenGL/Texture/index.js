@@ -410,6 +410,115 @@ function vtkOpenGLTexture(publicAPI, model) {
   };
 
   //----------------------------------------------------------------------------
+  function updateArrayDataType(dataType, data) {
+    const pixData = [];
+    // if the opengl data type is float
+    // then the data array must be float
+    if (dataType !== VtkDataTypes.FLOAT && model.openGLDataType === model.context.FLOAT) {
+      const pixCount = model.width * model.height * model.components;
+      for (let idx = 0; idx < data.length; idx++) {
+        const newArray = new Float32Array(pixCount);
+        for (let i = 0; i < pixCount; i++) {
+          newArray[i] = data[idx][i];
+        }
+        pixData.push(newArray);
+      }
+    }
+
+    // if the opengl data type is ubyte
+    // then the data array must be u8, we currently simply truncate the data
+    if (dataType !== VtkDataTypes.UNSIGNED_CHAR && model.openGLDataType === model.context.UNSIGNED_BYTE) {
+      const pixCount = model.width * model.height * model.components;
+      for (let idx = 0; idx < data.length; idx++) {
+        const newArray = new Uint8Array(pixCount);
+        for (let i = 0; i < pixCount; i++) {
+          newArray[i] = data[idx][i];
+        }
+        pixData.push(newArray);
+      }
+    }
+
+    // The output has to be filled
+    if (pixData.length === 0) {
+      for (let i = 0; i < data.length; i++) {
+        pixData.push(data[i]);
+      }
+    }
+  }
+
+  //----------------------------------------------------------------------------
+  function scaleTextureToHighestPowerOfTwo(data) {
+    const pixData = [];
+    const width = model.width;
+    const height = model.height;
+    const numComps = model.components;
+    if (data && (!vtkMath.isPowerOfTwo(width) || !vtkMath.isPowerOfTwo(height))) {
+      // Scale up the texture to the next highest power of two dimensions.
+      const newWidth = vtkMath.nearestPowerOfTwo(width);
+      const newHeight = vtkMath.nearestPowerOfTwo(height);
+      const pixCount = newWidth * newHeight * model.components;
+      for (let idx = 0; idx < data.length; idx++) {
+        let newArray = null;
+        switch (model.openGLDataType) {
+          case model.context.FLOAT:
+            newArray = new Float32Array(pixCount);
+            break;
+          default:
+          case model.context.UNSIGNED_BYTE:
+            newArray = new Uint8Array(pixCount);
+            break;
+        }
+        const jFactor = height / newHeight;
+        const iFactor = width / newWidth;
+        for (let j = 0; j < newHeight; j++) {
+          const joff = j * newWidth * numComps;
+          const jidx = j * jFactor;
+          let jlow = Math.floor(jidx);
+          let jhi = Math.ceil(jidx);
+          if (jhi >= height) {
+            jhi = height - 1;
+          }
+          const jmix = jidx - jlow;
+          const jmix1 = 1.0 - jmix;
+          jlow = jlow * width * numComps;
+          jhi = jhi * width * numComps;
+          for (let i = 0; i < newWidth; i++) {
+            const ioff = i * numComps;
+            const iidx = i * iFactor;
+            let ilow = Math.floor(iidx);
+            let ihi = Math.ceil(iidx);
+            if (ihi >= width) {
+              ihi = width - 1;
+            }
+            const imix = iidx - ilow;
+            ilow *= numComps;
+            ihi *= numComps;
+            for (let c = 0; c < numComps; c++) {
+              newArray[joff + ioff + c] =
+                (data[idx][jlow + ilow + c] * jmix1 * (1.0 - imix)) +
+                (data[idx][jlow + ihi + c] * jmix1 * imix) +
+                (data[idx][jhi + ilow + c] * jmix * (1.0 - imix)) +
+                (data[idx][jhi + ihi + c] * jmix * imix);
+            }
+          }
+        }
+        pixData.push(newArray);
+      }
+      model.width = newWidth;
+      model.height = newHeight;
+    }
+
+    // The output has to be filled
+    if (pixData.length === 0) {
+      for (let i = 0; i < data.length; i++) {
+        pixData.push(data[i]);
+      }
+    }
+
+    return pixData;
+  }
+
+  //----------------------------------------------------------------------------
   publicAPI.create2DFromRaw = (width, height, numComps, dataType, data) => {
     // Now determine the texture parameters using the arguments.
     publicAPI.getOpenGLDataType(dataType);
@@ -431,83 +540,10 @@ function vtkOpenGLTexture(publicAPI, model) {
     publicAPI.createTexture();
     publicAPI.bind();
 
-    let pixData = data;
-
-    // if the opengl data type is float
-    // then the data array must be float
-    if (dataType !== VtkDataTypes.FLOAT && model.openGLDataType === model.context.FLOAT) {
-      const pixCount = model.width * model.height * model.components;
-      const newArray = new Float32Array(pixCount);
-      for (let i = 0; i < pixCount; i++) {
-        newArray[i] = data[i];
-      }
-      pixData = newArray;
-    }
-    // if the opengl data type is ubyte
-    // then the data array must be u8, we currently simply truncate the data
-    if (dataType !== VtkDataTypes.UNSIGNED_CHAR && model.openGLDataType === model.context.UNSIGNED_BYTE) {
-      const pixCount = model.width * model.height * model.components;
-      const newArray = new Uint8Array(pixCount);
-      for (let i = 0; i < pixCount; i++) {
-        newArray[i] = data[i];
-      }
-      pixData = newArray;
-    }
-
-    if (pixData && (!vtkMath.isPowerOfTwo(width) || !vtkMath.isPowerOfTwo(height))) {
-      // Scale up the texture to the next highest power of two dimensions.
-      const newWidth = vtkMath.nearestPowerOfTwo(width);
-      const newHeight = vtkMath.nearestPowerOfTwo(height);
-      const pixCount = newWidth * newHeight * model.components;
-      let newArray = null;
-      switch (model.openGLDataType) {
-        case model.context.FLOAT:
-          newArray = new Float32Array(pixCount);
-          break;
-        default:
-        case model.context.UNSIGNED_BYTE:
-          newArray = new Uint8Array(pixCount);
-          break;
-      }
-      const jFactor = height / newHeight;
-      const iFactor = width / newWidth;
-      for (let j = 0; j < newHeight; j++) {
-        const joff = j * newWidth * numComps;
-        const jidx = j * jFactor;
-        let jlow = Math.floor(jidx);
-        let jhi = Math.ceil(jidx);
-        if (jhi >= height) {
-          jhi = height - 1;
-        }
-        const jmix = jidx - jlow;
-        const jmix1 = 1.0 - jmix;
-        jlow = jlow * width * numComps;
-        jhi = jhi * width * numComps;
-        for (let i = 0; i < newWidth; i++) {
-          const ioff = i * numComps;
-          const iidx = i * iFactor;
-          let ilow = Math.floor(iidx);
-          let ihi = Math.ceil(iidx);
-          if (ihi >= width) {
-            ihi = width - 1;
-          }
-          const imix = iidx - ilow;
-          ilow *= numComps;
-          ihi *= numComps;
-          for (let c = 0; c < numComps; c++) {
-            newArray[joff + ioff + c] =
-              (pixData[jlow + ilow + c] * jmix1 * (1.0 - imix)) +
-              (pixData[jlow + ihi + c] * jmix1 * imix) +
-              (pixData[jhi + ilow + c] * jmix * (1.0 - imix)) +
-              (pixData[jhi + ihi + c] * jmix * imix);
-          }
-        }
-      }
-      pixData = newArray;
-      model.width = newWidth;
-      model.height = newHeight;
-    }
-
+    // Create an array of texture with one texture
+    const dataArray = [data];
+    const pixData = updateArrayDataType(dataType, dataArray);
+    const scaledData = scaleTextureToHighestPowerOfTwo(pixData);
 
     // Source texture data from the PBO.
     // model.context.pixelStorei(gl.UNPACK_FLIP_Y_WEBGL, true);
@@ -521,10 +557,56 @@ function vtkOpenGLTexture(publicAPI, model) {
           0,
           model.format,
           model.openGLDataType,
-          pixData);
+          scaledData);
 
     if (model.generateMipmap) {
       model.context.generateMipmap(model.target);
+    }
+
+    publicAPI.deactivate();
+    return true;
+  };
+
+  //----------------------------------------------------------------------------
+  publicAPI.createCubeFromRaw = (width, height, numComps, dataType, data) => {
+    // Now determine the texture parameters using the arguments.
+    publicAPI.getOpenGLDataType(dataType);
+    publicAPI.getInternalFormat(dataType, numComps);
+    publicAPI.getFormat(dataType, numComps);
+
+    if (!model.internalFormat || !model.format || !model.openGLDataType) {
+      vtkErrorMacro('Failed to determine texture parameters.');
+      return false;
+    }
+
+    model.target = model.context.TEXTURE_CUBE_MAP;
+    model.components = numComps;
+    model.width = width;
+    model.height = height;
+    model.depth = 1;
+    model.numberOfDimensions = 2;
+    model.window.activateTexture(publicAPI);
+    publicAPI.createTexture();
+    publicAPI.bind();
+
+    const pixData = updateArrayDataType(dataType, data);
+    const scaledData = scaleTextureToHighestPowerOfTwo(pixData);
+
+    // Source texture data from the PBO.
+    model.context.pixelStorei(model.context.UNPACK_ALIGNMENT, 1);
+
+    for (let i = 0; i < 6; i++) {
+      if (scaledData[i]) {
+        model.context.texImage2D(
+          model.context.TEXTURE_CUBE_MAP_POSITIVE_X + i,
+          0,
+          model.internalFormat,
+          model.width, model.height,
+          0,
+          model.format,
+          model.openGLDataType,
+          scaledData[i]);
+      }
     }
 
     publicAPI.deactivate();
