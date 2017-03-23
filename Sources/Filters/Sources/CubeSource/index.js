@@ -181,21 +181,27 @@ export function vtkCubeSource(publicAPI, model) {
     polys[polyIndex] = 22;
   }
 
-  publicAPI.setBounds = (xMin, xMax, yMin, yMax, zMin, zMax) => {
-    const bounds = [xMin, xMax, yMin, yMax, zMin, zMax];
-    model.setBounds(bounds);
-  };
+  publicAPI.setBounds = (...bounds) => {
+    let boundsArray = [];
 
-  publicAPI.setBounds = (bounds) => {
-    if (bounds.length !== 6) {
+    if (Array.isArray(bounds[0])) {
+      boundsArray = bounds[0];
+    } else {
+      for (let i = 0; i < bounds.length; i++) {
+        boundsArray.push(bounds[i]);
+      }
+    }
+
+    if (boundsArray.length !== 6) {
       return;
     }
-    model.xLength = bounds[1] - bounds[0];
-    model.yLength = bounds[3] - bounds[2];
-    model.zLength = bounds[5] - bounds[4];
-    model.center = [(bounds[0] + bounds[1]) / 2.0,
-                    (bounds[2] + bounds[3]) / 2.0,
-                    (bounds[4] + bounds[5]) / 2.0];
+
+    model.xLength = boundsArray[1] - boundsArray[0];
+    model.yLength = boundsArray[3] - boundsArray[2];
+    model.zLength = boundsArray[5] - boundsArray[4];
+    model.center = [(boundsArray[0] + boundsArray[1]) / 2.0,
+                    (boundsArray[2] + boundsArray[3]) / 2.0,
+                    (boundsArray[4] + boundsArray[5]) / 2.0];
   };
 
   // Expose methods
