@@ -444,6 +444,8 @@ function vtkOpenGLTexture(publicAPI, model) {
         pixData.push(data[i]);
       }
     }
+
+    return pixData;
   }
 
   //----------------------------------------------------------------------------
@@ -458,54 +460,58 @@ function vtkOpenGLTexture(publicAPI, model) {
       const newHeight = vtkMath.nearestPowerOfTwo(height);
       const pixCount = newWidth * newHeight * model.components;
       for (let idx = 0; idx < data.length; idx++) {
-        let newArray = null;
-        switch (model.openGLDataType) {
-          case model.context.FLOAT:
-            newArray = new Float32Array(pixCount);
-            break;
-          default:
-          case model.context.UNSIGNED_BYTE:
-            newArray = new Uint8Array(pixCount);
-            break;
-        }
-        const jFactor = height / newHeight;
-        const iFactor = width / newWidth;
-        for (let j = 0; j < newHeight; j++) {
-          const joff = j * newWidth * numComps;
-          const jidx = j * jFactor;
-          let jlow = Math.floor(jidx);
-          let jhi = Math.ceil(jidx);
-          if (jhi >= height) {
-            jhi = height - 1;
+        if (data[idx] !== null) {
+          let newArray = null;
+          switch (model.openGLDataType) {
+            case model.context.FLOAT:
+              newArray = new Float32Array(pixCount);
+              break;
+            default:
+            case model.context.UNSIGNED_BYTE:
+              newArray = new Uint8Array(pixCount);
+              break;
           }
-          const jmix = jidx - jlow;
-          const jmix1 = 1.0 - jmix;
-          jlow = jlow * width * numComps;
-          jhi = jhi * width * numComps;
-          for (let i = 0; i < newWidth; i++) {
-            const ioff = i * numComps;
-            const iidx = i * iFactor;
-            let ilow = Math.floor(iidx);
-            let ihi = Math.ceil(iidx);
-            if (ihi >= width) {
-              ihi = width - 1;
+          const jFactor = height / newHeight;
+          const iFactor = width / newWidth;
+          for (let j = 0; j < newHeight; j++) {
+            const joff = j * newWidth * numComps;
+            const jidx = j * jFactor;
+            let jlow = Math.floor(jidx);
+            let jhi = Math.ceil(jidx);
+            if (jhi >= height) {
+              jhi = height - 1;
             }
-            const imix = iidx - ilow;
-            ilow *= numComps;
-            ihi *= numComps;
-            for (let c = 0; c < numComps; c++) {
-              newArray[joff + ioff + c] =
-                (data[idx][jlow + ilow + c] * jmix1 * (1.0 - imix)) +
-                (data[idx][jlow + ihi + c] * jmix1 * imix) +
-                (data[idx][jhi + ilow + c] * jmix * (1.0 - imix)) +
-                (data[idx][jhi + ihi + c] * jmix * imix);
+            const jmix = jidx - jlow;
+            const jmix1 = 1.0 - jmix;
+            jlow = jlow * width * numComps;
+            jhi = jhi * width * numComps;
+            for (let i = 0; i < newWidth; i++) {
+              const ioff = i * numComps;
+              const iidx = i * iFactor;
+              let ilow = Math.floor(iidx);
+              let ihi = Math.ceil(iidx);
+              if (ihi >= width) {
+                ihi = width - 1;
+              }
+              const imix = iidx - ilow;
+              ilow *= numComps;
+              ihi *= numComps;
+              for (let c = 0; c < numComps; c++) {
+                newArray[joff + ioff + c] =
+                  (data[idx][jlow + ilow + c] * jmix1 * (1.0 - imix)) +
+                  (data[idx][jlow + ihi + c] * jmix1 * imix) +
+                  (data[idx][jhi + ilow + c] * jmix * (1.0 - imix)) +
+                  (data[idx][jhi + ihi + c] * jmix * imix);
+              }
             }
           }
+          pixData.push(newArray);
+          model.width = newWidth;
+          model.height = newHeight;
+        } else {
+          pixData.push(null);
         }
-        pixData.push(newArray);
       }
-      model.width = newWidth;
-      model.height = newHeight;
     }
 
     // The output has to be filled
@@ -557,7 +563,7 @@ function vtkOpenGLTexture(publicAPI, model) {
           0,
           model.format,
           model.openGLDataType,
-          scaledData);
+          scaledData[0]);
 
     if (model.generateMipmap) {
       model.context.generateMipmap(model.target);
