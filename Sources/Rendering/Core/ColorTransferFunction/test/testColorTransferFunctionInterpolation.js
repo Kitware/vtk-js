@@ -14,7 +14,7 @@ test.onlyIfWebGL('Test Interpolate Scalars Before Colors', (t) => {
   const gc = testUtils.createGarbageCollector(t);
   t.ok('rendering', 'vtkOpenGLPolyDataMapper ColorTransferFunction Presets');
 
-  testUtils.keepDOM();
+  // testUtils.keepDOM();
 
   // Create some control UI
   const container = document.querySelector('body');

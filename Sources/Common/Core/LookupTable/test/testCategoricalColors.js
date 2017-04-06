@@ -15,6 +15,7 @@ import baseline from './testCategoricalColors.png';
 test.onlyIfWebGL('Test Categorical Colors', (t) => {
   const gc = testUtils.createGarbageCollector(t);
   t.ok('rendering', 'vtkLookupTable TestCategoricalColors');
+  // testUtils.keepDOM();
 
   // Create some control UI
   const container = document.querySelector('body');

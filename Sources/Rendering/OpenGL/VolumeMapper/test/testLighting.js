@@ -16,7 +16,7 @@ import baseline from './testLighting.png';
 test.onlyIfWebGL('Test Lighted Volume Rendering', (t) => {
   const gc = testUtils.createGarbageCollector(t);
   t.ok('rendering', 'vtkOpenGLVolumeMapper Lighting');
-  testUtils.keepDOM();
+  // testUtils.keepDOM();
 
   // Create some control UI
   const container = document.querySelector('body');
