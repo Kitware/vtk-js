@@ -64,74 +64,36 @@ uniform int repHeight;
 uniform int repDepth;
 
 // declaration for intermixed geometry
-//VTK::ZBuffer::Decl
+//VTK::ZBuffer::Dec
 
-vec4 getVolumeColor(vec3 vpos)
+// Lighting values
+//VTK::Light::Dec
+
+// normal calc
+//VTK::Normal::Dec
+
+// gradient opacity
+//VTK::GradientOpacity::Dec
+
+vec2 getTextureCoord(vec3 ijk, float offset)
 {
-  // convert from vpos to 3d ijk
-  vec3 ijk = vpos * vVCToIJK;
-  ijk += 0.5;
-
-  int z = int(ijk.z);
+  int z = int(ijk.z + offset);
   int yz = z / xreps;
   int xz = z - yz*xreps;
 
   float ni = (ijk.x + float(xz * repWidth))/xstride;
   float nj = (ijk.y + float(yz * repHeight))/ystride;
 
-  float scalar;
   vec2 tpos = vec2(ni/texWidth, nj/texHeight);
-  //VTK::ScalarValueFunction::Impl
 
-  // now map through opacity and color
-  vec4 color = texture2D(ctexture, vec2(scalar * cscale + cshift, 0.5));
-  color.a = texture2D(otexture, vec2(scalar * oscale + oshift, 0.5)).r;
-
-  return color;
+  return tpos;
 }
 
-vec4 getVolumeColorLinearZ(vec3 vpos)
+// because scalars may be encoded
+// this func will decode them as needed
+float getScalarValue(vec2 tpos)
 {
-  // convert from vpos to 3d ijk
-  vec3 ijk = vpos * vVCToIJK;
-  int z = int(ijk.z);
-
-  float zmix = ijk.z - float(z);
-
-  ijk += 0.5;
-
-  int yz = z / xreps;
-  int xz = z - yz*xreps;
-
-  float ni = (ijk.x + float(xz * repWidth))/xstride;
-  float nj = (ijk.y + float(yz * repHeight))/ystride;
-
-  float scalar;
-  vec2 tpos = vec2(ni/texWidth, nj/texHeight);
   //VTK::ScalarValueFunction::Impl
-  float scalar1 = scalar;
-
-  int z2 = z + 1;
-  if (z2 >= repDepth)
-  {
-    z2 = repDepth -1;
-  }
-  int yz2 = z2 / xreps;
-  int xz2 = z2 - yz2*xreps;
-
-  ni = (ijk.x + float(xz2 * repWidth))/xstride;
-  nj = (ijk.y + float(yz2 * repHeight))/ystride;
-
-  tpos = vec2(ni/texWidth, nj/texHeight);
-  //VTK::ScalarValueFunction::Impl
-
-  scalar = mix(scalar1, scalar, zmix);
-
-  // now map through opacity and color
-  vec4 color = texture2D(ctexture, vec2(scalar * cscale + cshift, 0.5));
-  color.a = texture2D(otexture, vec2(scalar * oscale + oshift, 0.5)).r;
-
-  return color;
 }
 
 vec2 getRayPointIntersectionBounds(
@@ -161,6 +123,9 @@ vec2 getRayPointIntersectionBounds(
 
 void main()
 {
+  float scalar;
+  vec4 scalarComps;
+
   // camera is at 0,0,0 so rayDir for perspective is just the vc coord
   vec3 rayDir = normalize(vertexVCVSOutput);
   vec2 tbounds = vec2(100.0*camFar, -1.0);
@@ -222,7 +187,27 @@ void main()
     int count = int(numSteps - 0.2); // end slightly inside
     for (int i = 0; i < //VTK::MaximumSamplesValue ; ++i)
     {
-      vec4 tcolor = //VTK::VolumeColorFunctionCall
+      // convert from vpos to 3d ijk
+      vec3 ijk = vpos * vVCToIJK;
+
+      // compute the 2d texture coordinate/s
+      //VTK::ComputeTCoords
+
+      // compute the scalar
+      //VTK::ScalarFunction
+
+      // now map through opacity and color
+      vec4 tcolor = texture2D(ctexture, vec2(scalar * cscale + cshift, 0.5));
+      tcolor.a = texture2D(otexture, vec2(scalar * oscale + oshift, 0.5)).r;
+
+      // compute the normal if needed
+      //VTK::Normal::Impl
+
+      // handle gradient opacity
+      //VTK::GradientOpacity::Impl
+
+      // handle lighting
+      //VTK::Light::Impl
 
       float mix = (1.0 - color.a);
       color = color + vec4(tcolor.rgb*tcolor.a, tcolor.a)*mix;

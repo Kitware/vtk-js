@@ -1,4 +1,5 @@
 import macro            from 'vtk.js/Sources/macro';
+import { vec3 }         from 'gl-matrix';
 import { Wrap, Filter } from 'vtk.js/Sources/Rendering/OpenGL/Texture/Constants';
 import { VtkDataTypes } from 'vtk.js/Sources/Common/Core/DataArray/Constants';
 import vtkMath          from 'vtk.js/Sources/Common/Core/Math';
@@ -834,6 +835,130 @@ function vtkOpenGLTexture(publicAPI, model) {
         outIdx += (outXContIncr * numCompsToUse);
       }
     }
+
+    // Source texture data from the PBO.
+    // model.context.pixelStorei(gl.UNPACK_FLIP_Y_WEBGL, true);
+    model.context.pixelStorei(model.context.UNPACK_ALIGNMENT, 1);
+
+    model.context.texImage2D(
+          model.target,
+          0,
+          model.internalFormat,
+          model.width, model.height,
+          0,
+          model.format,
+          model.openGLDataType,
+          newArray);
+
+    publicAPI.deactivate();
+    return true;
+  };
+
+  //----------------------------------------------------------------------------
+  // This method creates a normal/gradient texture for 3D volume
+  // rendering
+  publicAPI.create3DLighting = (scalarTexture, data, spacing) => {
+    // Now determine the texture parameters using the arguments.
+    publicAPI.getOpenGLDataType(VtkDataTypes.UNSIGNED_CHAR);
+    publicAPI.getInternalFormat(VtkDataTypes.UNSIGNED_CHAR, 4);
+    publicAPI.getFormat(VtkDataTypes.UNSIGNED_CHAR, 4);
+
+    if (!model.internalFormat || !model.format || !model.openGLDataType) {
+      vtkErrorMacro('Failed to determine texture parameters.');
+      return false;
+    }
+
+    model.target = model.context.TEXTURE_2D;
+    model.components = 4;
+    model.depth = 1;
+    model.numberOfDimensions = 2;
+
+    const vinfo = scalarTexture.getVolumeInfo();
+
+    const width = vinfo.width;
+    const height = vinfo.height;
+    const depth = vinfo.depth;
+
+    // have to compute the gradient to get the normal
+    // and magnitude
+    const tmpArray = new Float32Array(width * height * depth * 4);
+
+    let inPtr = 0;
+    let outPtr = 0;
+    const sliceSize = width * height;
+    const grad = vec3.create();
+    vec3.set(grad,
+      (data[inPtr + 1] - data[inPtr]) / spacing[0],
+      (data[inPtr + width] - data[inPtr]) / spacing[1],
+      (data[inPtr + sliceSize] - data[inPtr]) / spacing[2]);
+    let minMag = vec3.length(grad);
+    let maxMag = -1.0;
+    for (let z = 0; z < depth; ++z) {
+      let zedge = 0;
+      if (z === depth - 1) {
+        zedge = -sliceSize;
+      }
+      for (let y = 0; y < height; ++y) {
+        let yedge = 0;
+        if (y === height - 1) {
+          yedge = -width;
+        }
+        for (let x = 0; x < width; ++x) {
+          let edge = inPtr + zedge + yedge;
+          if (x === width - 1) {
+            edge--;
+          }
+          vec3.set(grad,
+            (data[edge + 1] - data[edge]) / spacing[0],
+            (data[edge + width] - data[edge]) / spacing[1],
+            (data[edge + sliceSize] - data[edge]) / spacing[2]);
+
+          const mag = vec3.length(grad);
+          minMag = Math.min(mag, minMag);
+          maxMag = Math.max(mag, maxMag);
+
+          vec3.normalize(grad, grad);
+          tmpArray[outPtr++] = grad[0];
+          tmpArray[outPtr++] = grad[1];
+          tmpArray[outPtr++] = grad[2];
+          tmpArray[outPtr++] = mag;
+          inPtr++;
+        }
+      }
+    }
+
+    // now store the computed values into the packed 2D
+    // texture using the same packing as volumeInfo
+    model.width = scalarTexture.getWidth();
+    model.height = scalarTexture.getHeight();
+    const newArray = new Uint8Array(model.width * model.height * 4);
+    let outIdx = 0;
+
+    for (let yRep = 0; yRep < vinfo.yreps; yRep++) {
+      const xrepsThisRow = Math.min(vinfo.xreps, depth - (yRep * vinfo.xreps));
+      const outXContIncr = model.width - (xrepsThisRow * Math.floor(width / vinfo.xstride));
+      for (let inY = 0; inY < height; inY += vinfo.ystride) {
+        for (let xRep = 0; xRep < xrepsThisRow; xRep++) {
+          const inOffset = 4 * ((((yRep * vinfo.xreps) + xRep) * width * height)
+           + (inY * width));
+          for (let inX = 0; inX < width; inX += vinfo.xstride) {
+            // copy value
+            newArray[outIdx++] = 127.5 + (127.5 * tmpArray[inOffset + (inX * 4)]);
+            newArray[outIdx++] = 127.5 + (127.5 * tmpArray[inOffset + (inX * 4) + 1]);
+            newArray[outIdx++] = 127.5 + (127.5 * tmpArray[inOffset + (inX * 4) + 2]);
+            newArray[outIdx++] = 255.0 * (tmpArray[inOffset + (inX * 4) + 3] - minMag) / (maxMag - minMag);
+          }
+        }
+        outIdx += (outXContIncr * 4);
+      }
+    }
+
+    // store the information, we will need it later
+    model.volumeInfo = { min: minMag, max: maxMag };
+
+    model.window.activateTexture(publicAPI);
+    publicAPI.createTexture();
+    publicAPI.bind();
 
     // Source texture data from the PBO.
     // model.context.pixelStorei(gl.UNPACK_FLIP_Y_WEBGL, true);
