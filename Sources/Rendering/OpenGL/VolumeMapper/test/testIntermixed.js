@@ -18,7 +18,7 @@ import baseline from './testIntermixed.png';
 
 test.onlyIfWebGL('Test Composite Volume Rendering', (t) => {
   const gc = testUtils.createGarbageCollector(t);
-  t.ok('rendering', 'vtkOpenGLVolumeMapper Composite');
+  t.ok('rendering', 'vtkOpenGLVolumeMapper Intermixed');
   // testUtils.keepDOM();
 
   // Create some control UI
@@ -73,6 +73,7 @@ test.onlyIfWebGL('Test Composite Volume Rendering', (t) => {
 
   // Interactor
   const interactor = vtkRenderWindowInteractor.newInstance();
+  interactor.setStillUpdateRate(0.01);
   interactor.setView(glwindow);
   interactor.initialize();
   interactor.bindEvents(renderWindowContainer);

@@ -72,6 +72,7 @@ test.onlyIfWebGL('Test Lighted Volume Rendering', (t) => {
 
   // Interactor
   const interactor = vtkRenderWindowInteractor.newInstance();
+  interactor.setStillUpdateRate(0.01);
   interactor.setView(glwindow);
   interactor.initialize();
   interactor.bindEvents(renderWindowContainer);

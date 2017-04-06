@@ -678,7 +678,7 @@ const DEFAULT_VALUES = {
   enableRender: true,
   lightFollowCamera: true,
   desiredUpdateRate: 30.0,
-  stillUpdateRate: 0.5,
+  stillUpdateRate: 2.0,
   shiftKey: false,
   altKey: false,
   controlKey: false,
@@ -741,6 +741,7 @@ export function extend(publicAPI, model, initialValues = {}) {
     'keyCode',
     'recognizeGestures',
     'desiredUpdateRate',
+    'stillUpdateRate',
   ]);
 
   macro.getArray(publicAPI, model, [

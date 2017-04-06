@@ -596,24 +596,31 @@ export function vtkOpenGLVolumeMapper(publicAPI, model) {
   };
 
   publicAPI.renderPieceStart = (ren, actor) => {
-    if (model.renderable.getAutoAdjustSampleDistances() &&
-        ren.getVTKWindow().getInteractor().isAnimating()) {
-      // compute the image sample distance for the desired
-      // frame rate
+    if (model.renderable.getAutoAdjustSampleDistances()) {
       const rwi = ren.getVTKWindow().getInteractor();
       const rft = rwi.getRecentFrameTime();
+      if (ren.getVTKWindow().getInteractor().isAnimating()) {
+        // compute an estimate for the time it would take to
+        // render at full resolution in seconds
+        const fvt = rft * model.lastXYF * model.lastXYF;
+        model.fullViewportTime = (model.fullViewportTime * 0.75) + (0.25 * fvt);
 
-      // do a moving average
-      let txyf = model.lastXYF * Math.sqrt(rwi.getDesiredUpdateRate() * rft);
-      // limit subsampling to a factor of 8
-      if (txyf > 8.0) {
-        txyf = 8.0;
+        // compute target xy factor
+        let txyf = Math.sqrt(model.fullViewportTime * rwi.getDesiredUpdateRate());
+
+        // limit subsampling to a factor of 10
+        if (txyf > 10.0) {
+          txyf = 10.0;
+        }
+        // only use FBO for reasonable savings (at least 44% (1.2*1.2 - 1.0))
+        if (txyf < 1.2) {
+          txyf = 1.0;
+        }
+
+        model.targetXYF = txyf;
+      } else {
+        model.targetXYF = Math.sqrt(model.fullViewportTime * rwi.getStillUpdateRate());
       }
-      // only use FBO for reasonable savings (at least 44% (1.2*1.2 - 1.0))
-      if (txyf < 1.2) {
-        txyf = 1.0;
-      }
-      model.targetXYF = (model.targetXYF * 0.75) + (0.25 * txyf);
       const factor = model.targetXYF / model.lastXYF;
       if (factor > 1.3 || factor < 0.8) {
         model.lastXYF = model.targetXYF;
@@ -624,7 +631,7 @@ export function vtkOpenGLVolumeMapper(publicAPI, model) {
     } else {
       model.lastXYF = model.renderable.getImageSampleDistance();
     }
-
+    // console.log(`XYF factor set to ${model.lastXYF}`);
     const xyf = model.lastXYF;
 
     // create/resize framebuffer if needed
@@ -950,6 +957,7 @@ const DEFAULT_VALUES = {
   zBufferTexture: null,
   lastZBufferTexture: null,
   lastLightComplexity: 0,
+  fullViewportTime: 1.0,
 };
 
 // ----------------------------------------------------------------------------

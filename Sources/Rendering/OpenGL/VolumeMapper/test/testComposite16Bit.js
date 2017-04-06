@@ -62,6 +62,7 @@ test.onlyIfWebGL('Test Composite Volume Rendering', (t) => {
 
   // Interactor
   const interactor = vtkRenderWindowInteractor.newInstance();
+  interactor.setStillUpdateRate(0.01);
   interactor.setView(glwindow);
   interactor.initialize();
   interactor.bindEvents(renderWindowContainer);
@@ -75,6 +76,6 @@ test.onlyIfWebGL('Test Composite Volume Rendering', (t) => {
       testUtils.compareImages(image, [baseline],
         'Rendering/OpenGL/VolumeMapper/testComposite16Bit',
           t, 1.5, gc.releaseResources);
-      });
+    });
   });
 });
