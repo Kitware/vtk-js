@@ -8,6 +8,7 @@ import DataAccessHelper from 'vtk.js/Sources/IO/Core/DataAccessHelper';
 import vtkDataArray     from 'vtk.js/Sources/Common/Core/DataArray';
 
 const fieldDataLocations = ['pointData', 'cellData', 'fieldData'];
+const HTTP_DATA_ACCESS = DataAccessHelper.get('http');
 
 // ----------------------------------------------------------------------------
 // Global methods
@@ -49,6 +50,49 @@ const GEOMETRY_ARRAYS = {
   },
 };
 
+function processDataSet(publicAPI, model, dataset, fetchArray, resolve, reject) {
+  const enable = model.enableArray;
+
+  // Generate array list
+  model.arrays = [];
+
+  fieldDataLocations.forEach((location) => {
+    if (dataset[location]) {
+      dataset[location].arrays.map(i => i.data).forEach((array) => {
+        model.arrays.push({ name: array.name, enable, location, array, registration: array.ref.registration || 'addArray' });
+      });
+
+      // Reset data arrays
+      dataset[location].arrays = [];
+    }
+  });
+
+  // Fetch geometry arrays
+  const pendingPromises = [];
+  GEOMETRY_ARRAYS[dataset.vtkClass](dataset).forEach((array) => {
+    pendingPromises.push(fetchArray(array, model.fetchGzip));
+  });
+
+  // Wait for all geometry array to be fetched
+  if (pendingPromises.length) {
+    Promise.all(pendingPromises)
+      .then(
+        (ok) => {
+          model.dataset = vtk(dataset);
+          model.output[0] = model.dataset;
+          resolve(publicAPI, model.output[0]);
+        },
+        (err) => {
+          reject(err);
+        }
+      );
+  } else {
+    model.dataset = vtk(dataset);
+    model.output[0] = model.dataset;
+    resolve(publicAPI, model.output[0]);
+  }
+}
+
 
 // ----------------------------------------------------------------------------
 // vtkHttpDataSetReader methods
@@ -63,7 +107,7 @@ export function vtkHttpDataSetReader(publicAPI, model) {
 
   // Create default dataAccessHelper if not available
   if (!model.dataAccessHelper) {
-    model.dataAccessHelper = DataAccessHelper.get('http');
+    model.dataAccessHelper = HTTP_DATA_ACCESS;
   }
 
   // Internal method to fetch Array
@@ -72,62 +116,55 @@ export function vtkHttpDataSetReader(publicAPI, model) {
   }
 
   // Fetch dataset (metadata)
-  publicAPI.updateMetadata = () =>
-    new Promise((resolve, reject) => {
+  publicAPI.updateMetadata = () => {
+    if (model.compression === 'zip') {
+      return new Promise((resolve, reject) => {
+        HTTP_DATA_ACCESS.fetchZipFile(model.url).then(
+          (zipContent) => {
+            model.dataAccessHelper = DataAccessHelper.get(
+              'zip',
+              {
+                zipContent,
+                callback: (zip) => {
+                  model.baseURL = '';
+                  model.dataAccessHelper
+                    .fetchJSON(publicAPI, 'index.json')
+                    .then(
+                      (dataset) => {
+                        processDataSet(publicAPI, model, dataset, fetchArray, resolve, reject);
+                      },
+                      (xhr, e) => {
+                        reject(xhr, e);
+                      }
+                    );
+                },
+              }
+            );
+          },
+          (xhr, e) => {
+            reject(xhr, e);
+          }
+        );
+      });
+    }
+
+    return new Promise((resolve, reject) => {
       model.dataAccessHelper
         .fetchJSON(publicAPI, model.url)
         .then(
           (dataset) => {
-            const enable = model.enableArray;
-
-            // Generate array list
-            model.arrays = [];
-
-            fieldDataLocations.forEach((location) => {
-              if (dataset[location]) {
-                dataset[location].arrays.map(i => i.data).forEach((array) => {
-                  model.arrays.push({ name: array.name, enable, location, array, registration: array.ref.registration || 'addArray' });
-                });
-
-                // Reset data arrays
-                dataset[location].arrays = [];
-              }
-            });
-
-            // Fetch geometry arrays
-            const pendingPromises = [];
-            GEOMETRY_ARRAYS[dataset.vtkClass](dataset).forEach((array) => {
-              pendingPromises.push(fetchArray(array, model.fetchGzip));
-            });
-
-            // Wait for all geometry array to be fetched
-            if (pendingPromises.length) {
-              Promise.all(pendingPromises)
-                .then(
-                  (ok) => {
-                    model.dataset = vtk(dataset);
-                    model.output[0] = model.dataset;
-                    resolve(publicAPI, model.output[0]);
-                  },
-                  (err) => {
-                    reject(err);
-                  }
-                );
-            } else {
-              model.dataset = vtk(dataset);
-              model.output[0] = model.dataset;
-              resolve(publicAPI, model.output[0]);
-            }
+            processDataSet(publicAPI, model, dataset, fetchArray, resolve, reject);
           },
           (xhr, e) => {
             reject(xhr, e);
           }
         );
     });
+  };
 
   // Set DataSet url
-  publicAPI.setUrl = (url) => {
-    if (url.indexOf('index.json') === -1) {
+  publicAPI.setUrl = (url, options = {}) => {
+    if (url.indexOf('index.json') === -1 && !options.fullpath) {
       model.baseURL = url;
       model.url = `${url}/index.json`;
     } else {
@@ -138,6 +175,8 @@ export function vtkHttpDataSetReader(publicAPI, model) {
       path.pop();
       model.baseURL = path.join('/');
     }
+
+    model.compression = options.compression;
 
     // Fetch metadata
     return publicAPI.updateMetadata();
