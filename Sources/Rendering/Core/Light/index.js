@@ -27,6 +27,15 @@ export function vtkLight(publicAPI, model) {
     return [].concat(model.focalPoint);
   };
 
+  publicAPI.getDirection = () => {
+    const result = [
+      model.focalPoint[0] - model.position[0],
+      model.focalPoint[1] - model.position[1],
+      model.focalPoint[2] - model.position[2]];
+    vtkMath.normalize(result);
+    return result;
+  };
+
   publicAPI.setDirectionAngle = (elevation, azimuth) => {
     const elevationRadians = vtkMath.radiansFromDegrees(elevation);
     const azimuthRadians = vtkMath.radiansFromDegrees(azimuth);

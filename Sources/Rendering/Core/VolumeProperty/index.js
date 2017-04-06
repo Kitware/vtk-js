@@ -139,64 +139,6 @@ function vtkVolumeProperty(publicAPI, model) {
     return model.componentData[index].scalarOpacity;
   };
 
-  // Set the gradient opacity transfer function
-  publicAPI.setGradientOpacity = (index, func) => {
-    if (model.componentData[index].gradientOpacity !== func) {
-      model.componentData[index].gradientOpacity = func;
-      publicAPI.modified();
-    }
-  };
-
-  publicAPI.createDefaultGradientOpacity = (index) => {
-    if (model.componentData[index].defaultGradientOpacity === null) {
-      model.componentData[index].defaultGradientOpacity = vtkPiecewiseFunction.newInstance();
-    }
-
-    model.componentData[index].defaultGradientOpacity.removeAllPoints();
-    model.componentData[index].defaultGradientOpacity.addPoint(0, 1.0);
-    model.componentData[index].defaultGradientOpacity.addPoint(255, 1.0);
-  };
-
-  publicAPI.getGradientOpacity = (index) => {
-    if (model.componentData[index].disableGradientOpacity) {
-      if (model.componentData[index].defaultGradientOpacity === null) {
-        publicAPI.createDefaultGradientOpacity(index);
-      }
-      return model.componentData[index].defaultGradientOpacity;
-    }
-
-    return publicAPI.getStoredGradientOpacity(index);
-  };
-
-  // Get the gradient opacity transfer function. Create one if none set.
-  publicAPI.getStoredGradientOpacity = (index) => {
-    if (model.componentData[index].gradientOpacity === null) {
-      model.componentData[index].gradientOpacity = vtkPiecewiseFunction.newInstance();
-      model.componentData[index].gradientOpacity.addPoint(0, 1.0);
-      model.componentData[index].gradientOpacity.addPoint(255, 1.0);
-      publicAPI.modified();
-    }
-
-    return model.componentData[index].gradientOpacity;
-  };
-
-  publicAPI.setDisableGradientOpacity = (index, value) => {
-    if (model.componentData[index].disableGradientOpacity === value) {
-      return;
-    }
-
-    model.componentData[index].disableGradientOpacity = value;
-
-    // Make sure the default function is up-to-date (since the user
-    // could have modified the default function)
-
-    if (value) {
-      publicAPI.createDefaultGradientOpacity(index);
-    }
-
-    publicAPI.modified();
-  };
-
   publicAPI.setComponentWeight = (index, value) => {
     if (index < 0 || index >= VTK_MAX_VRCOMP) {
       vtkErrorMacro('Invalid index');
@@ -219,26 +161,6 @@ function vtkVolumeProperty(publicAPI, model) {
     return model.componentData[index].componentWeight;
   };
 
-  publicAPI.setShade = (index, value) => {
-    if (value !== 0 && value !== 1) {
-      vtkErrorMacro('SetShade accepts values 0 or 1');
-      return;
-    }
-
-    if (model.componentData[index].shade !== value) {
-      model.componentData[index].shade = value;
-      publicAPI.modified();
-    }
-  };
-
-  publicAPI.shadeOn = (index) => {
-    publicAPI.setShade(index, 1);
-  };
-
-  publicAPI.shadeOff = (index) => {
-    publicAPI.setShade(index, 0);
-  };
-
   publicAPI.setInterpolationTypeToNearest = () => {
     publicAPI.setInterpolationType(InterpolationType.NEAREST);
   };
@@ -253,8 +175,10 @@ function vtkVolumeProperty(publicAPI, model) {
 
   publicAPI.getInterpolationTypeAsString = () => macro.enumToString(InterpolationType, model.interpolationType);
 
-  const sets = ['specularPower', 'specular', 'diffuse', 'ambient', 'shade',
-    'disableGradientOpacity', 'scalarOpacityUnitDistance'];
+  const sets = [
+    'useGradientOpacity', 'scalarOpacityUnitDistance',
+    'gradientOpacityMinimumValue', 'gradientOpacityMinimumOpacity',
+    'gradientOpacityMaximumValue', 'gradientOpacityMaximumOpacity'];
   sets.forEach((val) => {
     const cap = macro.capitalize(val);
     publicAPI[`set${cap}`] = (index, value) => {
@@ -265,8 +189,10 @@ function vtkVolumeProperty(publicAPI, model) {
     };
   });
 
-  const gets = ['specularPower', 'specular', 'diffuse', 'ambient', 'shade',
-    'disableGradientOpacity', 'scalarOpacityUnitDistance'];
+  const gets = [
+    'useGradientOpacity', 'scalarOpacityUnitDistance',
+    'gradientOpacityMinimumValue', 'gradientOpacityMinimumOpacity',
+    'gradientOpacityMaximumValue', 'gradientOpacityMaximumOpacity'];
   gets.forEach((val) => {
     const cap = macro.capitalize(val);
     publicAPI[`get${cap}`] = index => model.componentData[index][`${val}`];
@@ -280,7 +206,11 @@ function vtkVolumeProperty(publicAPI, model) {
 const DEFAULT_VALUES = {
   independentComponents: 1,
   interpolationType: InterpolationType.FAST_LINEAR,
-  // componentData: null,
+  shade: 0,
+  ambient: 0.1,
+  diffuse: 0.7,
+  specular: 0.2,
+  specularPower: 10.0,
 };
 
 // ----------------------------------------------------------------------------
@@ -300,15 +230,14 @@ export function extend(publicAPI, model, initialValues = {}) {
         rGBTransferFunction: null,
         scalarOpacity: null,
         scalarOpacityUnitDistance: 1.0,
-        gradientOpacity: null,
-        defaultGradientOpacity: null,
-        disableGradientOpacity: 0,
+
+        gradientOpacityMinimumValue: 0,
+        gradientOpacityMinimumOpacity: 0.0,
+        gradientOpacityMaximumValue: 1.0,
+        gradientOpacityMaximumOpacity: 1.0,
+        useGradientOpacity: false,
+
         componentWeight: 1.0,
-        shade: 0,
-        ambient: 0.1,
-        diffuse: 0.7,
-        specular: 0.2,
-        specularPower: 10.0,
       });
     }
   }
@@ -316,6 +245,11 @@ export function extend(publicAPI, model, initialValues = {}) {
   macro.setGet(publicAPI, model, [
     'independentComponents',
     'interpolationType',
+    'shade',
+    'ambient',
+    'diffuse',
+    'specular',
+    'specularPower',
   ]);
 
   // Object methods
