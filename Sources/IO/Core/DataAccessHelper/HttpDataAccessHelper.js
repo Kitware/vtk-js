@@ -8,6 +8,27 @@ const { vtkErrorMacro, vtkDebugMacro } = macro;
 
 let requestCount = 0;
 
+function fetchZipFile(url) {
+  return new Promise((resolve, reject) => {
+    const xhr = new XMLHttpRequest();
+
+    xhr.onreadystatechange = (e) => {
+      if (xhr.readyState === 4) {
+        if (xhr.status === 200 || xhr.status === 0) {
+          resolve(xhr.response);
+        } else {
+          reject(xhr, e);
+        }
+      }
+    };
+
+    // Make request
+    xhr.open('GET', url, true);
+    xhr.responseType = 'arraybuffer';
+    xhr.send();
+  });
+}
+
 function fetchArray(instance = {}, baseURL, array, fetchGzip = false) {
   if (array.ref && !array.ref.pending) {
     return new Promise((resolve, reject) => {
@@ -159,4 +180,5 @@ export default {
   fetchArray,
   fetchJSON,
   fetchText,
+  fetchZipFile, // Only for HTTP
 };
