@@ -3,28 +3,35 @@ import resemble from 'resemblejs';
 let REMOVE_DOM_ELEMENTS = true;
 
 function compareImages(image, baselines, testName, tapeContext, threshold = 0.5, nextCallback = null) {
+  const nbBaselines = baselines.length;
   let minDelta = 100;
   let isSameDimensions = false;
-  baselines.forEach((baseline) => {
+
+  function done() {
+    tapeContext.ok(minDelta < threshold, `Matching image - delta ${minDelta}%`);
+    tapeContext.ok(isSameDimensions, 'Image match resolution');
+
+    if (minDelta >= threshold) {
+      tapeContext.fail(`<img src="${image}" width="100" /> vs <img src="${baselines[0]}" width="100" />`);
+    }
+
+    if (nextCallback) {
+      nextCallback();
+    } else {
+      tapeContext.end();
+    }
+  }
+
+  baselines.forEach((baseline, idx) => {
     resemble(baseline).compareTo(image).onComplete((data) => {
       minDelta = (minDelta < data.misMatchPercentage) ? minDelta : data.misMatchPercentage;
       isSameDimensions = isSameDimensions || data.isSameDimensions;
+
+      if (idx + 1 === nbBaselines) {
+        done();
+      }
     });
   });
-
-  tapeContext.ok(minDelta < threshold, `Matching image - delta ${minDelta}%`);
-  tapeContext.ok(isSameDimensions, 'Image match resolution');
-
-
-  if (minDelta >= threshold) {
-    tapeContext.fail(`<img src="${image}" width="100" /> vs <img src="${baselines[0]}" width="100" />`);
-  }
-
-  if (nextCallback) {
-    nextCallback();
-  } else {
-    tapeContext.end();
-  }
 }
 
 function createGarbageCollector(testContext) {

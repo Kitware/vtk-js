@@ -16,7 +16,7 @@ import baseline from './testComposite16Bit.png';
 test.onlyIfWebGL('Test Composite Volume Rendering', (t) => {
   const gc = testUtils.createGarbageCollector(t);
   t.ok('rendering', 'vtkOpenGLVolumeMapper Composite16Bit');
-  testUtils.keepDOM();
+  // testUtils.keepDOM();
 
   // Create some control UI
   const container = document.querySelector('body');
