@@ -53,23 +53,17 @@ actor.getProperty().setSpecularPower(8.0);
 mapper.setInputConnection(reader.getOutputPort());
 
 // we first load a small dataset 64x64x91
-reader.setUrl('https://data.kitware.com/api/v1/file/58e79a8b8d777f16d095fcd7/download', { fullPath: true, compression: 'zip' }).then(() => {
-  reader.loadData().then(() => {
-    renderer.addVolume(actor);
-    renderer.resetCamera();
-    renderer.getActiveCamera().zoom(1.5);
-    renderer.getActiveCamera().elevation(70);
-    renderer.updateLightsGeometryToFollowCamera();
+reader.setUrl('https://data.kitware.com/api/v1/file/58e79a8b8d777f16d095fcd7/download', { fullPath: true, compression: 'zip', loadData: true }).then(() => {
+  renderer.addVolume(actor);
+  renderer.resetCamera();
+  renderer.getActiveCamera().zoom(1.5);
+  renderer.getActiveCamera().elevation(70);
+  renderer.updateLightsGeometryToFollowCamera();
+  renderWindow.render();
+  // now that the small dataset is loaded we pull down the
+  // full resolution 256x256x91 dataset
+  reader.setUrl('https://data.kitware.com/api/v1/file/58e665158d777f16d095fc2e/download', { fullPath: true, compression: 'zip', loadData: true }).then(() => {
     renderWindow.render();
-    // now that the small dataset is loaded we pull down the
-    // full resolution 256x256x91 dataset
-    const bigreader = vtkHttpDataSetReader.newInstance();
-    bigreader.setUrl('https://data.kitware.com/api/v1/file/58e665158d777f16d095fc2e/download', { fullPath: true, compression: 'zip' }).then(() => {
-      bigreader.loadData().then(() => {
-        mapper.setInputConnection(bigreader.getOutputPort());
-        renderWindow.render();
-      });
-    });
   });
 });
 
