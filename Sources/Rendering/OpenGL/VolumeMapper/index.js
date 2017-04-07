@@ -146,7 +146,7 @@ export function vtkOpenGLVolumeMapper(publicAPI, model) {
         ]).result;
       FSSource = vtkShaderProgram.substitute(FSSource,
         '//VTK::GradientOpacity::Impl', [
-          'tcolor.a = tcolor.a*clamp(normal.a*goscale + goshift, gomin, gomax);',
+          'tcolor.a = tcolor.a*clamp(normal.a*normal.a*goscale + goshift, gomin, gomax);',
         ]).result;
     }
 
@@ -562,7 +562,6 @@ export function vtkOpenGLVolumeMapper(publicAPI, model) {
 
     if (vprop.getUseGradientOpacity(0)) {
       const lightingInfo = model.lightingTexture.getVolumeInfo();
-      const lscale = lightingInfo.max - lightingInfo.min;
       const gomin = vprop.getGradientOpacityMinimumOpacity(0);
       const gomax = vprop.getGradientOpacityMaximumOpacity(0);
       program.setUniformf('gomin', gomin);
@@ -570,9 +569,9 @@ export function vtkOpenGLVolumeMapper(publicAPI, model) {
       const goRange = [
         vprop.getGradientOpacityMinimumValue(0),
         vprop.getGradientOpacityMaximumValue(0)];
-      program.setUniformf('goscale', lscale * (gomax - gomin) / (goRange[1] - goRange[0]));
+      program.setUniformf('goscale', lightingInfo.max * (gomax - gomin) / (goRange[1] - goRange[0]));
       program.setUniformf('goshift',
-        ((lightingInfo.min - goRange[0]) * (gomax - gomin) / (goRange[1] - goRange[0])) + gomin);
+        (-goRange[0] * (gomax - gomin) / (goRange[1] - goRange[0])) + gomin);
     }
 
     if (model.lastLightComplexity > 0 || vprop.getUseGradientOpacity(0)) {

@@ -946,7 +946,10 @@ function vtkOpenGLTexture(publicAPI, model) {
             newArray[outIdx++] = 127.5 + (127.5 * tmpArray[inOffset + (inX * 4)]);
             newArray[outIdx++] = 127.5 + (127.5 * tmpArray[inOffset + (inX * 4) + 1]);
             newArray[outIdx++] = 127.5 + (127.5 * tmpArray[inOffset + (inX * 4) + 2]);
-            newArray[outIdx++] = 255.0 * (tmpArray[inOffset + (inX * 4) + 3] - minMag) / (maxMag - minMag);
+            // we encode gradient magnitude using sqrt so that
+            // we have nonlinear resolution
+            newArray[outIdx++] = 255.0 *
+              (Math.sqrt(tmpArray[inOffset + (inX * 4) + 3] / maxMag));
           }
         }
         outIdx += (outXContIncr * 4);
