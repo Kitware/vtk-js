@@ -50,7 +50,7 @@ const GEOMETRY_ARRAYS = {
   },
 };
 
-function processDataSet(publicAPI, model, dataset, fetchArray, resolve, reject) {
+function processDataSet(publicAPI, model, dataset, fetchArray, resolve, reject, loadData) {
   const enable = model.enableArray;
 
   // Generate array list
@@ -73,23 +73,31 @@ function processDataSet(publicAPI, model, dataset, fetchArray, resolve, reject) 
     pendingPromises.push(fetchArray(array, model.fetchGzip));
   });
 
+  function success() {
+    model.dataset = vtk(dataset);
+    if (!loadData) {
+      model.output[0] = model.dataset;
+      resolve(publicAPI, model.output[0]);
+    } else {
+      publicAPI.loadData().then(
+        () => {
+          model.output[0] = model.dataset;
+          resolve(publicAPI, model.output[0]);
+        });
+    }
+  }
+
   // Wait for all geometry array to be fetched
   if (pendingPromises.length) {
     Promise.all(pendingPromises)
       .then(
-        (ok) => {
-          model.dataset = vtk(dataset);
-          model.output[0] = model.dataset;
-          resolve(publicAPI, model.output[0]);
-        },
+        success,
         (err) => {
           reject(err);
         }
       );
   } else {
-    model.dataset = vtk(dataset);
-    model.output[0] = model.dataset;
-    resolve(publicAPI, model.output[0]);
+    success();
   }
 }
 
@@ -116,7 +124,7 @@ export function vtkHttpDataSetReader(publicAPI, model) {
   }
 
   // Fetch dataset (metadata)
-  publicAPI.updateMetadata = () => {
+  publicAPI.updateMetadata = (loadData = false) => {
     if (model.compression === 'zip') {
       return new Promise((resolve, reject) => {
         HTTP_DATA_ACCESS.fetchZipFile(model.url).then(
@@ -131,7 +139,7 @@ export function vtkHttpDataSetReader(publicAPI, model) {
                     .fetchJSON(publicAPI, 'index.json')
                     .then(
                       (dataset) => {
-                        processDataSet(publicAPI, model, dataset, fetchArray, resolve, reject);
+                        processDataSet(publicAPI, model, dataset, fetchArray, resolve, reject, loadData);
                       },
                       (xhr, e) => {
                         reject(xhr, e);
@@ -153,7 +161,7 @@ export function vtkHttpDataSetReader(publicAPI, model) {
         .fetchJSON(publicAPI, model.url)
         .then(
           (dataset) => {
-            processDataSet(publicAPI, model, dataset, fetchArray, resolve, reject);
+            processDataSet(publicAPI, model, dataset, fetchArray, resolve, reject, loadData);
           },
           (xhr, e) => {
             reject(xhr, e);
@@ -179,7 +187,7 @@ export function vtkHttpDataSetReader(publicAPI, model) {
     model.compression = options.compression;
 
     // Fetch metadata
-    return publicAPI.updateMetadata();
+    return publicAPI.updateMetadata(!!options.loadData);
   };
 
   // Fetch the actual data arrays
