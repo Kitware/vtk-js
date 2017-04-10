@@ -113,12 +113,23 @@ vec2 getRayPointIntersectionBounds(
   vec2 vpos = vec2(
     dot(vxpos, vPlaneX),
     dot(vxpos, vPlaneY));
-  if (vpos.x < 0.0 || vpos.x > vSize1 ||
-      vpos.y < 0.0 || vpos.y > vSize2)
-  {
-    return tbounds;
-  }
-  return vec2(min(tbounds.x, result), max(tbounds.y,result));
+
+  // on some apple nvidia systems this does not work
+  // if (vpos.x < 0.0 || vpos.x > vSize1 ||
+  //     vpos.y < 0.0 || vpos.y > vSize2)
+  // even just
+  // if (vpos.x < 0.0 || vpos.y < 0.0)
+  // fails
+  // so instead we compute a value that represents in and out
+  //and then compute the return using this value
+
+  float xcheck = sign(vpos.x)*sign(vpos.x - vSize1); // <= 0 means in bounds
+  float ycheck = sign(vpos.y)*sign(vpos.y - vSize2); // <= 0 means in bounds
+  float check = sign(max(0.0, max(xcheck, ycheck))); // 0 means in bounds 1 = out
+  return mix(
+   vec2(min(tbounds.x, result), max(tbounds.y, result)), // in value
+   tbounds, // out value
+   check);  // 0 in 1 out
 }
 
 void main()
