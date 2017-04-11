@@ -51,7 +51,7 @@ export function vtkPlaneSource(publicAPI, model) {
     // Texture coords
     const tcData = new Float32Array(numPts * 2);
     const tcoords = vtkDataArray.newInstance({ numberOfComponents: 2, values: tcData, name: 'TextureCoordinates' });
-    pd.getPointData().addArray(tcoords);
+    pd.getPointData().setTCoords(tcoords);
 
 
     const tc = new Float32Array(2);
