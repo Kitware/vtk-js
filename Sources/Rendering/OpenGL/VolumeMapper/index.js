@@ -245,12 +245,12 @@ export function vtkOpenGLVolumeMapper(publicAPI, model) {
 //              `  float df = max(0.0, dot(normal.rgb, -lightDirectionWC${lightNum}));`,
               `  float df = abs(dot(normal.rgb, -lightDirectionWC${lightNum}));`,
               `  diffuse += ((df${shadowFactor}) * lightColor${lightNum});`,
-              '  if (df > 0.0)',
-              '    {',
+              // '  if (df > 0.0)',
+              // '    {',
 //              `    float sf = pow( max(0.0, dot(lightHalfAngleWC${lightNum},normal.rgb)), specularPower);`,
               `    float sf = pow( abs(dot(lightHalfAngleWC${lightNum},normal.rgb)), vSpecularPower);`,
               `    specular += ((sf${shadowFactor}) * lightColor${lightNum});`,
-              '    }',
+//              '    }',
               '  //VTK::Light::Impl'],
               false
               ).result;

@@ -122,10 +122,9 @@ vec2 getRayPointIntersectionBounds(
   // fails
   // so instead we compute a value that represents in and out
   //and then compute the return using this value
+  float xcheck = max(0.0, vpos.x * (vpos.x - vSize1)); //  0 means in bounds
+  float check = sign(max(xcheck, vpos.y * (vpos.y - vSize2))); //  0 means in bounds, 1 = out
 
-  float xcheck = sign(vpos.x)*sign(vpos.x - vSize1); // <= 0 means in bounds
-  float ycheck = sign(vpos.y)*sign(vpos.y - vSize2); // <= 0 means in bounds
-  float check = sign(max(0.0, max(xcheck, ycheck))); // 0 means in bounds 1 = out
   return mix(
    vec2(min(tbounds.x, result), max(tbounds.y, result)), // in value
    tbounds, // out value
@@ -172,7 +171,7 @@ void main()
   //VTK::ZBuffer::Impl
 
   // do we need to composite?
-  if (tbounds.y >= tbounds.x)
+  if (tbounds.y > tbounds.x)
   {
     // compute starting and ending values in volume space
     vec3 startVC = vertexVCVSOutput + tbounds.x*rayDir;
@@ -196,11 +195,11 @@ void main()
     bool done = false;
     vec4 color = vec4(0.0, 0.0, 0.0, 0.0);
     int count = int(numSteps - 0.2); // end slightly inside
+
+    vec3 ijk = vpos * vVCToIJK;
+    vdelta = vdelta * vVCToIJK;
     for (int i = 0; i < //VTK::MaximumSamplesValue ; ++i)
     {
-      // convert from vpos to 3d ijk
-      vec3 ijk = vpos * vVCToIJK;
-
       // compute the 2d texture coordinate/s
       //VTK::ComputeTCoords
 
@@ -224,7 +223,7 @@ void main()
       color = color + vec4(tcolor.rgb*tcolor.a, tcolor.a)*mix;
       if (i > count) { break; }
       if (color.a > 0.99) { color.a = 1.0; break; }
-      vpos += vdelta;
+      ijk += vdelta;
     }
 
     gl_FragData[0] = vec4(color.rgb/color.a, color.a);
