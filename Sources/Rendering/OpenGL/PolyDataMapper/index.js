@@ -74,13 +74,41 @@ export function vtkOpenGLPolyDataMapper(publicAPI, model) {
 
   publicAPI.buildShaders = (shaders, ren, actor) => {
     publicAPI.getShaderTemplate(shaders, ren, actor);
+
+    // user specified pre replacements
+    const shaderReplacements = model.renderable.getViewSpecificProperties().getShaderReplacements();
+    for (let i = 0; i < shaderReplacements.length; i++) {
+      const currReplacement = shaderReplacements[i];
+      if (currReplacement.replaceFirst) {
+        const shaderType = currReplacement.shaderType;
+        const ssrc = shaders[shaderType];
+        const substituteRes = vtkShaderProgram.substitute(ssrc, currReplacement.originalValue, currReplacement.replacementValue, currReplacement.replaceAll);
+        shaders[shaderType] = substituteRes.result;
+      }
+    }
     publicAPI.replaceShaderValues(shaders, ren, actor);
+
+    // user specified post replacements
+    for (let i = 0; i < shaderReplacements.length; i++) {
+      const currReplacement = shaderReplacements[i];
+      if (!currReplacement.replaceFirst) {
+        const shaderType = currReplacement.shaderType;
+        const ssrc = shaders[shaderType];
+        const substituteRes = vtkShaderProgram.substitute(ssrc, currReplacement.originalValue, currReplacement.replacementValue, currReplacement.replaceAll);
+        shaders[shaderType] = substituteRes.result;
+      }
+    }
   };
 
   publicAPI.getShaderTemplate = (shaders, ren, actor) => {
-    shaders.Vertex = vtkPolyDataVS;
-    shaders.Fragment = vtkPolyDataFS;
-    shaders.Geometry = '';
+    const vertexShaderCode = model.renderable.getViewSpecificProperties().getVertexShaderCode();
+    shaders.Vertex = vertexShaderCode === '' ? vtkPolyDataVS : vertexShaderCode;
+
+    const fragmentShaderCode = model.renderable.getViewSpecificProperties().getFragmentShaderCode();
+    shaders.Fragment = fragmentShaderCode === '' ? vtkPolyDataFS : fragmentShaderCode;
+
+    const geometryShaderCode = model.renderable.getViewSpecificProperties().getGeometryShaderCode();
+    shaders.Geometry = geometryShaderCode;
   };
 
   publicAPI.replaceShaderColor = (shaders, ren, actor) => {
@@ -781,7 +809,6 @@ export function vtkOpenGLPolyDataMapper(publicAPI, model) {
     // has something changed that would require us to recreate the shader?
     if (publicAPI.getNeedToRebuildShaders(cellBO, ren, actor)) {
       const shaders = { Vertex: null, Fragment: null, Geometry: null };
-
       publicAPI.buildShaders(shaders, ren, actor);
 
       // compile and bind the program if needed
