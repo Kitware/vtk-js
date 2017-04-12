@@ -36,7 +36,8 @@ function vtkOpenGLTexture(publicAPI, model) {
       model.renderable.setImage(null);
     }
     // create the texture if it is not done already
-    if (!model.handle) {
+    if (!model.handle ||
+        model.renderable.getMTime() > model.textureBuildTime) {
       // if we have an Image
       if (model.renderable.getImage() !== null) {
         if (model.renderable.getInterpolate()) {
@@ -48,6 +49,7 @@ function vtkOpenGLTexture(publicAPI, model) {
           publicAPI.create2DFromImage(model.renderable.getImage());
           publicAPI.activate();
           publicAPI.sendParameters();
+          model.textureBuildTime.modified();
         }
       }
       // if we have Inputdata
@@ -63,6 +65,7 @@ function vtkOpenGLTexture(publicAPI, model) {
           inScalars.getNumberOfComponents(), inScalars.getDataType(), inScalars.getData());
         publicAPI.activate();
         publicAPI.sendParameters();
+        model.textureBuildTime.modified();
       }
     }
     if (model.handle) {
@@ -1000,6 +1003,7 @@ const DEFAULT_VALUES = {
   context: null,
   handle: 0,
   sendParametersTime: null,
+  textureBuildTime: null,
   numberOfDimensions: 0,
   target: 0,
   format: 0,
@@ -1031,6 +1035,9 @@ export function extend(publicAPI, model, initialValues = {}) {
 
   model.sendParametersTime = {};
   macro.obj(model.sendParametersTime);
+
+  model.textureBuildTime = {};
+  macro.obj(model.textureBuildTime);
 
   // Build VTK API
   macro.set(publicAPI, model, [
