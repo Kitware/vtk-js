@@ -37,7 +37,7 @@ function vtkOpenGLTexture(publicAPI, model) {
     }
     // create the texture if it is not done already
     if (!model.handle ||
-        model.renderable.getMTime() > model.textureBuildTime) {
+        model.renderable.getMTime() > model.textureBuildTime.getMTime()) {
       // if we have an Image
       if (model.renderable.getImage() !== null) {
         if (model.renderable.getInterpolate()) {
@@ -1034,10 +1034,10 @@ export function extend(publicAPI, model, initialValues = {}) {
   vtkViewNode.extend(publicAPI, model, initialValues);
 
   model.sendParametersTime = {};
-  macro.obj(model.sendParametersTime);
+  macro.obj(model.sendParametersTime, { mtime: 0 });
 
   model.textureBuildTime = {};
-  macro.obj(model.textureBuildTime);
+  macro.obj(model.textureBuildTime, { mtime: 0 });
 
   // Build VTK API
   macro.set(publicAPI, model, [
