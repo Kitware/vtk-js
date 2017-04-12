@@ -359,3 +359,41 @@ Provide read access to the color texture coordinate array
 
 Provide read access to the color texture array
 
+### viewSpecificProperties
+
+Object that contains specific properties to be able to apply
+your own substitutions to the shader creation process.
+You can apply your own string replacements to add features you desire.
+
+PolyDataMapper is the only object that uses it.
+
+ViewSpecificProperties attributes:
+- OpenGL.ShaderReplacements (Array)
+- OpenGL.VertexShaderCode (String) -> accessible with Set/Get methods
+- OpenGL.FragmentShaderCode (String)-> accessible with Set/Get methods
+- OpenGL.GeometryShaderCode (String) -> accessible with Set/Get methods
+
+To add a property on ShaderReplacements:
+mapper.getViewModelSpecificProperties().addShaderReplacement(
+  shaderType: ...,
+  originalValue: ...,
+  replaceFirst: ...,
+  replacementValue: ...,
+  replaceAll: ...
+);
+
+Expected Values:
+- shaderType: value between: 'Vertex', 'Geometry', 'Fragment'
+- originalValue: string: value to replace
+- replaceFirst: boolean that defines if this replacement will be done before (true)
+                the default or not (false)
+- replacementValue: string: replacement value
+- replaceAll: boolean: defines if need to replace only the first occurrence (false)
+                       or all of them (true)
+
+To remove a property on ShaderReplacements:
+mapper.getViewModelSpecificProperties().clearShaderReplacement(
+  shaderType: ...,
+  originalValue: ...,
+  replaceFirst: ...
+);

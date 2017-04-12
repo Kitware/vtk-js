@@ -83,6 +83,11 @@ function vtkMapper(publicAPI, model) {
   publicAPI.setScalarModeToUseCellFieldData = () => publicAPI.setScalarMode(4);
   publicAPI.setScalarModeToUseFieldData = () => publicAPI.setScalarMode(5);
 
+  // Specific methods to modify shaders
+  publicAPI.getViewSpecificProperties = () => {
+    return model.viewSpecificProperties;
+  };
+
   // Add Static methods to our instance
   Object.keys(otherStaticMethods).forEach((methodName) => {
     publicAPI[methodName] = otherStaticMethods[methodName];
@@ -509,6 +514,8 @@ const DEFAULT_VALUES = {
   useInvertibleColors: false,
   invertibleScalars: null,
   resolveCoincidentTopology: false,
+
+  viewSpecificProperties: null,
 };
 
 // ----------------------------------------------------------------------------
@@ -544,6 +551,70 @@ export function extend(publicAPI, model, initialValues = {}) {
   macro.setGetArray(publicAPI, model, [
     'scalarRange',
   ], 2);
+
+  model.viewSpecificProperties = {
+    OpenGL: {
+      ShaderReplacements: [],
+      VertexShaderCode: '',
+      FragmentShaderCode: '',
+      GeometryShaderCode: '',
+    },
+
+    addShaderReplacement(_shaderType, _originalValue, _replaceFirst, _replacementValue, _replaceAll) {
+      this.OpenGL.ShaderReplacements.push({
+        shaderType: _shaderType,
+        originalValue: _originalValue,
+        replaceFirst: _replaceFirst,
+        replacementValue: _replacementValue,
+        replaceAll: _replaceAll,
+      });
+    },
+
+    clearShaderReplacement(_shaderType, _originalValue, _replaceFirst) {
+      const shaderReplacement = this.OpenGL.ShaderReplacements;
+      let indexToRemove = -1;
+
+      for (let i = 0; i < shaderReplacement.length; i++) {
+        if (shaderReplacement[i].shaderType === _shaderType &&
+          shaderReplacement[i].originalValue === _originalValue &&
+          shaderReplacement[i].replaceFirst === _replaceFirst) {
+          indexToRemove = i;
+          break;
+        }
+      }
+      if (indexToRemove > -1) {
+        shaderReplacement.splice(indexToRemove, 1);
+      }
+    },
+
+    getShaderReplacements() {
+      return this.OpenGL.ShaderReplacements;
+    },
+
+    setVertexShaderCode(vertexShaderCode) {
+      this.OpenGL.VertexShaderCode = vertexShaderCode;
+    },
+
+    getVertexShaderCode() {
+      return this.OpenGL.VertexShaderCode;
+    },
+
+    setGeometryShaderCode(geometryShaderCode) {
+      this.OpenGL.GeometryShaderCode = geometryShaderCode;
+    },
+
+    getGeometryShaderCode() {
+      return this.OpenGL.GeometryShaderCode;
+    },
+
+    setFragmentShaderCode(fragmenShaderCode) {
+      this.OpenGL.FragmentShaderCode = fragmenShaderCode;
+    },
+
+    getFragmentShaderCode() {
+      return this.OpenGL.FragmentShaderCode;
+    },
+  };
 
   // Object methods
   vtkMapper(publicAPI, model);
