@@ -25,7 +25,7 @@ const eventsWeHandle = [
   'Configure',
   'Timer',
   'KeyPress',
-  'KeyRelease',
+  'KeyUp',
   'Char',
   'Delete',
   'StartPinch',
@@ -139,6 +139,7 @@ function vtkRenderWindowInteractor(publicAPI, model) {
 
     canvas.addEventListener('mousedown', publicAPI.handleMouseDown);
     document.querySelector('body').addEventListener('keypress', publicAPI.handleKeyPress);
+    document.querySelector('body').addEventListener('keyup', publicAPI.handleKeyUp);
     canvas.addEventListener('mouseup', publicAPI.handleMouseUp);
     canvas.addEventListener('mousemove', publicAPI.handleMouseMove);
     canvas.addEventListener('touchstart', publicAPI.handleTouchStart, false);
@@ -155,6 +156,7 @@ function vtkRenderWindowInteractor(publicAPI, model) {
 
     canvas.removeEventListener('mousedown', publicAPI.handleMouseDown);
     document.querySelector('body').removeEventListener('keypress', publicAPI.handleKeyPress);
+    document.querySelector('body').removeEventListener('keyup', publicAPI.handleKeyUp);
     canvas.removeEventListener('mouseup', publicAPI.handleMouseUp);
     canvas.removeEventListener('mousemove', publicAPI.handleMouseMove);
     canvas.removeEventListener('touchstart', publicAPI.handleTouchStart);
@@ -167,8 +169,15 @@ function vtkRenderWindowInteractor(publicAPI, model) {
     model.controlKey = event.ctrlKey;
     model.altKey = event.altKey;
     model.shiftKey = event.shiftKey;
+    model.key = event.key;
     model.keyCode = String.fromCharCode(event.charCode);
+    publicAPI.keyPressEvent();
     publicAPI.charEvent();
+  };
+
+  publicAPI.handleKeyUp = (event) => {
+    model.key = event.key;
+    publicAPI.keyUpEvent();
   };
 
   publicAPI.handleMouseDown = (event) => {
@@ -683,6 +692,7 @@ const DEFAULT_VALUES = {
   altKey: false,
   controlKey: false,
   keyCode: 0,
+  key: '',
   canvas: null,
   view: null,
   recognizeGestures: true,
@@ -742,6 +752,7 @@ export function extend(publicAPI, model, initialValues = {}) {
     'recognizeGestures',
     'desiredUpdateRate',
     'stillUpdateRate',
+    'key',
   ]);
 
   macro.getArray(publicAPI, model, [

@@ -39,7 +39,7 @@ const events = [
   'Configure',
   'Timer',
   'KeyPress',
-  'KeyRelease',
+  'KeyUp',
   'Char',
   'Delete',
   'Pinch',
@@ -66,15 +66,16 @@ function vtkInteractorStyle(publicAPI, model) {
 
     // if we already have an Interactor then stop observing it
     if (model.interactor) {
-      model.unsubscribes.forEach(val => val.unsubscribe());
-      model.unsubscribes.clear();
+      while (model.unsubscribes.length) {
+        model.unsubscribes.pop().unsubscribe();
+      }
     }
 
     model.interactor = i;
 
     if (i) {
       events.forEach((eventName) => {
-        model.unsubscribes.set(eventName,
+        model.unsubscribes.push(
         i[`on${eventName}`](() => {
           if (publicAPI[`handle${eventName}`]) {
             publicAPI[`handle${eventName}`]();
@@ -230,7 +231,7 @@ export function extend(publicAPI, model, initialValues = {}) {
   // Inheritance
   vtkInteractorObserver.extend(publicAPI, model, initialValues);
 
-  model.unsubscribes = new Map();
+  model.unsubscribes = [];
 
   // Object specific methods
   vtkInteractorStyle(publicAPI, model);
