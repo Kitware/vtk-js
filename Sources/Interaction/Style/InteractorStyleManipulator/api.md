@@ -58,20 +58,20 @@ Event binding controlling the effects of pressing mouse button.
 
 Event binding controlling the effects of pressing mouse button.
 
-### onKeyDown()
+### handleKeyPress()
 
-Unlike mouse events, this is forwarded to all camera manipulators since we
+Unlike mouse events, this is forwarded to all camera manipulators as `onKeyDown(interactor)` since we
 don't have a mechanism to activate a manipulator by key presses currently.
 
-### onKeyUp()
+### handleKeyUp()
 
-Unlike mouse events, this is forwarded to all camera manipulators since we
+Unlike mouse events, this is forwarded to all camera manipulators as `onKeyUp(interactor)` since we
 don't have a mechanism to activate a manipulator by key presses currently.
 
-### onChar()
+### handleChar()
 
-Overrides superclass behaviors to only support the key codes that make sense
-in a ParaView application.
+Unlike mouse events, this is forwarded to all camera manipulators as `onChar(interactor)` since we
+don't have a mechanism to activate a manipulator by char currently.
   
 ### addManipulator(vtkCameraManipulator)
 

@@ -223,7 +223,6 @@ function vtkInteractorStyleManipulator(publicAPI, model) {
       }
       model.currentManipulator.endInteraction();
       publicAPI.invokeEndInteractionEvent({ type: 'EndInteractionEvent' });
-      // this->CurrentManipulator->UnRegister(this);
       model.currentManipulator = null;
     }
   };
@@ -246,22 +245,11 @@ function vtkInteractorStyleManipulator(publicAPI, model) {
   };
 
   //-------------------------------------------------------------------------
-  publicAPI.onChar = () => {
-    const rwi = model.interactor;
-
-    switch (rwi.getKeyCode()) {
-      case 'Q':
-      case 'q':
-        // It must be noted that this has no effect in QVTKInteractor and hence
-        // we're assured that the Qt application won't exit because the user hit
-        // 'q'.
-        // rwi.exitCallback();
-        vtkDebugMacro('Ignoring "q" or "Q" key, as vtkRenderWindowInteractor has no "exitCallback" method');
-        break;
-      default:
-        // only here to appease linter
-        break;
-    }
+  publicAPI.handleChar = () => {
+    model.cameraManipulators.filter(m => m.onChar).forEach((manipulator) => {
+      manipulator.onChar(model.interactor);
+    });
+    publicAPI.invokeInteractionEvent({ type: 'InteractionEvent' });
   };
 
   //-------------------------------------------------------------------------
@@ -274,17 +262,15 @@ function vtkInteractorStyleManipulator(publicAPI, model) {
   };
 
   //-------------------------------------------------------------------------
-  publicAPI.onKeyDown = () => {
-    // Look for a matching camera interactor.
-    model.cameraManipulators.forEach((manipulator) => {
+  publicAPI.handleKeyPress = () => {
+    model.cameraManipulators.filter(m => m.onKeyDown).forEach((manipulator) => {
       manipulator.onKeyDown(model.interactor);
     });
   };
 
   //-------------------------------------------------------------------------
-  publicAPI.onKeyUp = () => {
-    // Look for a matching camera interactor.
-    model.cameraManipulators.forEach((manipulator) => {
+  publicAPI.handleKeyUp = () => {
+    model.cameraManipulators.filter(m => m.onKeyUp).forEach((manipulator) => {
       manipulator.onKeyUp(model.interactor);
     });
   };
