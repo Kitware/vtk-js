@@ -1,5 +1,5 @@
-import macro                             from 'vtk.js/Sources/macro';
-import vtkInteractorStyleTrackballCamera from 'vtk.js/Sources/Interaction/Style/InteractorStyleTrackballCamera';
+import macro              from 'vtk.js/Sources/macro';
+import vtkInteractorStyle from 'vtk.js/Sources/Rendering/Core/InteractorStyle';
 
 const { vtkDebugMacro } = macro;
 
@@ -100,8 +100,6 @@ function vtkInteractorStyleManipulator(publicAPI, model) {
   model.currentManipulator = null;
   model.centerOfRotation = [0, 0, 0];
   model.rotationFactor = 1;
-
-  const superDolly = publicAPI.dolly;
 
   //-------------------------------------------------------------------------
   publicAPI.removeAllManipulators = () => {
@@ -227,6 +225,13 @@ function vtkInteractorStyleManipulator(publicAPI, model) {
     }
   };
 
+  publicAPI.handlePinch = () => {
+    model.cameraManipulators.filter(m => m.onPinch).forEach((manipulator) => {
+      manipulator.onPinch(model.interactor);
+    });
+    publicAPI.invokeInteractionEvent({ type: 'InteractionEvent' });
+  };
+
   //-------------------------------------------------------------------------
   publicAPI.handleAnimation = () => {
     const pos = model.interactor.getAnimationEventPosition(model.interactor.getPointerIndex());
@@ -274,16 +279,6 @@ function vtkInteractorStyleManipulator(publicAPI, model) {
       manipulator.onKeyUp(model.interactor);
     });
   };
-
-  //-------------------------------------------------------------------------
-  publicAPI.dolly = (fact) => {
-    if (model.interactor.getControlKey()) {
-      const pos = model.interactor.getEventPosition(model.interactor.getPointerIndex());
-      dollyToPosition(fact, pos, model.currentRenderer, model.interactor);
-    } else {
-      superDolly(fact);
-    }
-  };
 }
 
 // ----------------------------------------------------------------------------
@@ -303,7 +298,7 @@ export function extend(publicAPI, model, initialValues = {}) {
   Object.assign(model, DEFAULT_VALUES, initialValues);
 
   // Inheritance
-  vtkInteractorStyleTrackballCamera.extend(publicAPI, model, initialValues);
+  vtkInteractorStyle.extend(publicAPI, model, initialValues);
 
   // Create get-set macros
   macro.setGet(publicAPI, model, ['rotationFactor']);
