@@ -37,6 +37,23 @@ test.onlyIfWebGL('Test Add Shader Replacements', (t) => {
   const mapper = gc.registerResource(vtkMapper.newInstance());
   mapper.setInputConnection(reader.getOutputPort());
 
+  const mapperViewProp = mapper.getViewSpecificProperties();
+
+  mapperViewProp['OpenGL'] = {
+    ShaderReplacements: [],
+  };
+
+  mapperViewProp['addShaderReplacements'] =
+    (_shaderType, _originalValue, _replaceFirst, _replacementValue, _replaceAll) => {
+      mapperViewProp['OpenGL']['ShaderReplacements'].push({
+        shaderType: _shaderType,
+        originalValue: _originalValue,
+        replaceFirst: _replaceFirst,
+        replacementValue: _replacementValue,
+        replaceAll: _replaceAll,
+      });
+    };
+
   const actor = gc.registerResource(vtkActor.newInstance());
   actor.setMapper(mapper);
   actor.getProperty().setAmbientColor(0.2, 0.2, 1.0);
@@ -49,11 +66,8 @@ test.onlyIfWebGL('Test Add Shader Replacements', (t) => {
   actor.getProperty().setOpacity(1.0);
   renderer.addActor(actor);
 
-
-  t.ok('waiting for download');
   reader.setUrl(`${__BASE_PATH__}/Data/obj/space-shuttle-orbiter/space-shuttle-orbiter.obj`).then(() => {
-    t.ok('download complete.');
-    mapper.getViewSpecificProperties().addShaderReplacement(
+    mapperViewProp.addShaderReplacements(
       'Vertex',
       '//VTK::Normal::Dec',
       true,
@@ -61,7 +75,7 @@ test.onlyIfWebGL('Test Add Shader Replacements', (t) => {
       false
     );
 
-    mapper.getViewSpecificProperties().addShaderReplacement(
+    mapperViewProp.addShaderReplacements(
       'Vertex',
       '//VTK::Normal::Impl',
       true,
@@ -69,7 +83,7 @@ test.onlyIfWebGL('Test Add Shader Replacements', (t) => {
       false
     );
 
-    mapper.getViewSpecificProperties().addShaderReplacement(
+    mapperViewProp.addShaderReplacements(
       'Fragment',
       '//VTK::Normal::Dec',
       true,
@@ -77,7 +91,7 @@ test.onlyIfWebGL('Test Add Shader Replacements', (t) => {
       false
     );
 
-    mapper.getViewSpecificProperties().addShaderReplacement(
+    mapperViewProp.addShaderReplacements(
       'Fragment',
       '//VTK::Normal::Impl',
       true,

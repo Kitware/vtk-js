@@ -76,38 +76,68 @@ export function vtkOpenGLPolyDataMapper(publicAPI, model) {
     publicAPI.getShaderTemplate(shaders, ren, actor);
 
     // user specified pre replacements
-    const shaderReplacements = model.renderable.getViewSpecificProperties().getShaderReplacements();
-    for (let i = 0; i < shaderReplacements.length; i++) {
-      const currReplacement = shaderReplacements[i];
-      if (currReplacement.replaceFirst) {
-        const shaderType = currReplacement.shaderType;
-        const ssrc = shaders[shaderType];
-        const substituteRes = vtkShaderProgram.substitute(ssrc, currReplacement.originalValue, currReplacement.replacementValue, currReplacement.replaceAll);
-        shaders[shaderType] = substituteRes.result;
+    const openGLSpec = model.renderable.getViewSpecificProperties().OpenGL;
+    let shaderReplacements = null;
+    if (openGLSpec !== undefined) {
+      shaderReplacements = openGLSpec.ShaderReplacements;
+    }
+
+    if (shaderReplacements !== null) {
+      for (let i = 0; i < shaderReplacements.length; i++) {
+        const currReplacement = shaderReplacements[i];
+        if (currReplacement.replaceFirst) {
+          const shaderType = currReplacement.shaderType;
+          const ssrc = shaders[shaderType];
+          const substituteRes = vtkShaderProgram.substitute(ssrc, currReplacement.originalValue, currReplacement.replacementValue, currReplacement.replaceAll);
+          shaders[shaderType] = substituteRes.result;
+        }
       }
     }
+
     publicAPI.replaceShaderValues(shaders, ren, actor);
 
     // user specified post replacements
-    for (let i = 0; i < shaderReplacements.length; i++) {
-      const currReplacement = shaderReplacements[i];
-      if (!currReplacement.replaceFirst) {
-        const shaderType = currReplacement.shaderType;
-        const ssrc = shaders[shaderType];
-        const substituteRes = vtkShaderProgram.substitute(ssrc, currReplacement.originalValue, currReplacement.replacementValue, currReplacement.replaceAll);
-        shaders[shaderType] = substituteRes.result;
+    if (shaderReplacements !== null) {
+      for (let i = 0; i < shaderReplacements.length; i++) {
+        const currReplacement = shaderReplacements[i];
+        if (!currReplacement.replaceFirst) {
+          const shaderType = currReplacement.shaderType;
+          const ssrc = shaders[shaderType];
+          const substituteRes = vtkShaderProgram.substitute(ssrc, currReplacement.originalValue, currReplacement.replacementValue, currReplacement.replaceAll);
+          shaders[shaderType] = substituteRes.result;
+        }
       }
     }
   };
 
   publicAPI.getShaderTemplate = (shaders, ren, actor) => {
-    const vertexShaderCode = model.renderable.getViewSpecificProperties().getVertexShaderCode();
-    shaders.Vertex = vertexShaderCode === '' ? vtkPolyDataVS : vertexShaderCode;
+    const openGLSpecProp = model.renderable.getViewSpecificProperties().OpenGL;
 
-    const fragmentShaderCode = model.renderable.getViewSpecificProperties().getFragmentShaderCode();
-    shaders.Fragment = fragmentShaderCode === '' ? vtkPolyDataFS : fragmentShaderCode;
+    let vertexShaderCode = vtkPolyDataVS;
+    if (openGLSpecProp !== undefined) {
+      const vertexSpecProp = openGLSpecProp.VertexShaderCode;
+      if (vertexSpecProp !== undefined && vertexSpecProp !== '') {
+        vertexShaderCode = vertexSpecProp;
+      }
+    }
+    shaders.Vertex = vertexShaderCode;
 
-    const geometryShaderCode = model.renderable.getViewSpecificProperties().getGeometryShaderCode();
+    let fragmentShaderCode = vtkPolyDataFS;
+    if (openGLSpecProp !== undefined) {
+      const fragmentSpecProp = openGLSpecProp.FragmentShaderCode;
+      if (fragmentSpecProp !== undefined && fragmentSpecProp !== '') {
+        fragmentShaderCode = fragmentSpecProp;
+      }
+    }
+    shaders.Fragment = fragmentShaderCode;
+
+    let geometryShaderCode = '';
+    if (openGLSpecProp !== undefined) {
+      const geometrySpecProp = openGLSpecProp.GeometryShaderCode;
+      if (geometrySpecProp !== undefined) {
+        geometryShaderCode = geometrySpecProp;
+      }
+    }
     shaders.Geometry = geometryShaderCode;
   };
 
