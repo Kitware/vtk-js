@@ -176,6 +176,9 @@ function vtkRenderWindowInteractor(publicAPI, model) {
   };
 
   publicAPI.handleKeyUp = (event) => {
+    model.controlKey = event.ctrlKey;
+    model.altKey = event.altKey;
+    model.shiftKey = event.shiftKey;
     model.key = event.key;
     publicAPI.keyUpEvent();
   };
