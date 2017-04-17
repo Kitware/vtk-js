@@ -204,7 +204,22 @@ function vtkCamera(publicAPI, model) {
   };
 
   publicAPI.yaw = (angle) => {
+    const newFocalPoint = vec3.create();
+    const position = model.position;
 
+    const trans = mat4.create();
+    mat4.identity(trans);
+
+    // translate the camera to the origin,
+    // rotate about axis,
+    // translate back again
+    mat4.translate(trans, trans, vec3.fromValues(position[0], position[1], position[2]));
+    mat4.rotate(trans, trans, vtkMath.radiansFromDegrees(angle), vec3.fromValues(model.viewUp[0], model.viewUp[1], model.viewUp[2]));
+    mat4.translate(trans, trans, vec3.fromValues(-position[0], -position[1], -position[2]));
+
+    // apply the transform to the position
+    vec3.transformMat4(newFocalPoint, vec3.fromValues(model.focalPoint[0], model.focalPoint[1], model.focalPoint[2]), trans);
+    publicAPI.setFocalPoint(newFocalPoint[0], newFocalPoint[1], newFocalPoint[2]);
   };
 
   publicAPI.elevation = (angle) => {
@@ -230,7 +245,25 @@ function vtkCamera(publicAPI, model) {
   };
 
   publicAPI.pitch = (angle) => {
+    const newFocalPoint = vec3.create();
+    const position = model.position;
 
+    const vt = publicAPI.getViewTransformMatrix();
+    const axis = [vt[0], vt[1], vt[2]];
+
+    const trans = mat4.create();
+    mat4.identity(trans);
+
+    // translate the camera to the origin,
+    // rotate about axis,
+    // translate back again
+    mat4.translate(trans, trans, vec3.fromValues(position[0], position[1], position[2]));
+    mat4.rotate(trans, trans, vtkMath.radiansFromDegrees(angle), vec3.fromValues(axis[0], axis[1], axis[2]));
+    mat4.translate(trans, trans, vec3.fromValues(-position[0], -position[1], -position[2]));
+
+    // apply the transform to the position
+    vec3.transformMat4(newFocalPoint, vec3.fromValues(model.focalPoint[0], model.focalPoint[1], model.focalPoint[2]), trans);
+    publicAPI.setFocalPoint(newFocalPoint[0], newFocalPoint[1], newFocalPoint[2]);
   };
 
   publicAPI.zoom = (factor) => {
