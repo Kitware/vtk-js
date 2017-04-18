@@ -24,7 +24,7 @@ function vtkViewport(publicAPI, model) {
   };
 
   publicAPI.removeViewProp = (prop) => {
-    const newPropList = model.props.filter(item => item === prop);
+    const newPropList = model.props.filter(item => item !== prop);
     if (model.props.length !== newPropList.length) {
       model.props = newPropList;
     }
