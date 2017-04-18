@@ -74,13 +74,71 @@ export function vtkOpenGLPolyDataMapper(publicAPI, model) {
 
   publicAPI.buildShaders = (shaders, ren, actor) => {
     publicAPI.getShaderTemplate(shaders, ren, actor);
+
+    // user specified pre replacements
+    const openGLSpec = model.renderable.getViewSpecificProperties().OpenGL;
+    let shaderReplacements = null;
+    if (openGLSpec !== undefined) {
+      shaderReplacements = openGLSpec.ShaderReplacements;
+    }
+
+    if (shaderReplacements !== null) {
+      for (let i = 0; i < shaderReplacements.length; i++) {
+        const currReplacement = shaderReplacements[i];
+        if (currReplacement.replaceFirst) {
+          const shaderType = currReplacement.shaderType;
+          const ssrc = shaders[shaderType];
+          const substituteRes = vtkShaderProgram.substitute(ssrc, currReplacement.originalValue, currReplacement.replacementValue, currReplacement.replaceAll);
+          shaders[shaderType] = substituteRes.result;
+        }
+      }
+    }
+
     publicAPI.replaceShaderValues(shaders, ren, actor);
+
+    // user specified post replacements
+    if (shaderReplacements !== null) {
+      for (let i = 0; i < shaderReplacements.length; i++) {
+        const currReplacement = shaderReplacements[i];
+        if (!currReplacement.replaceFirst) {
+          const shaderType = currReplacement.shaderType;
+          const ssrc = shaders[shaderType];
+          const substituteRes = vtkShaderProgram.substitute(ssrc, currReplacement.originalValue, currReplacement.replacementValue, currReplacement.replaceAll);
+          shaders[shaderType] = substituteRes.result;
+        }
+      }
+    }
   };
 
   publicAPI.getShaderTemplate = (shaders, ren, actor) => {
-    shaders.Vertex = vtkPolyDataVS;
-    shaders.Fragment = vtkPolyDataFS;
-    shaders.Geometry = '';
+    const openGLSpecProp = model.renderable.getViewSpecificProperties().OpenGL;
+
+    let vertexShaderCode = vtkPolyDataVS;
+    if (openGLSpecProp !== undefined) {
+      const vertexSpecProp = openGLSpecProp.VertexShaderCode;
+      if (vertexSpecProp !== undefined && vertexSpecProp !== '') {
+        vertexShaderCode = vertexSpecProp;
+      }
+    }
+    shaders.Vertex = vertexShaderCode;
+
+    let fragmentShaderCode = vtkPolyDataFS;
+    if (openGLSpecProp !== undefined) {
+      const fragmentSpecProp = openGLSpecProp.FragmentShaderCode;
+      if (fragmentSpecProp !== undefined && fragmentSpecProp !== '') {
+        fragmentShaderCode = fragmentSpecProp;
+      }
+    }
+    shaders.Fragment = fragmentShaderCode;
+
+    let geometryShaderCode = '';
+    if (openGLSpecProp !== undefined) {
+      const geometrySpecProp = openGLSpecProp.GeometryShaderCode;
+      if (geometrySpecProp !== undefined) {
+        geometryShaderCode = geometrySpecProp;
+      }
+    }
+    shaders.Geometry = geometryShaderCode;
   };
 
   publicAPI.replaceShaderColor = (shaders, ren, actor) => {
@@ -781,7 +839,6 @@ export function vtkOpenGLPolyDataMapper(publicAPI, model) {
     // has something changed that would require us to recreate the shader?
     if (publicAPI.getNeedToRebuildShaders(cellBO, ren, actor)) {
       const shaders = { Vertex: null, Fragment: null, Geometry: null };
-
       publicAPI.buildShaders(shaders, ren, actor);
 
       // compile and bind the program if needed

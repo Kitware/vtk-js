@@ -83,6 +83,11 @@ function vtkMapper(publicAPI, model) {
   publicAPI.setScalarModeToUseCellFieldData = () => publicAPI.setScalarMode(4);
   publicAPI.setScalarModeToUseFieldData = () => publicAPI.setScalarMode(5);
 
+  // Specific methods to modify shaders
+  publicAPI.getViewSpecificProperties = () => {
+    return model.viewSpecificProperties;
+  };
+
   // Add Static methods to our instance
   Object.keys(otherStaticMethods).forEach((methodName) => {
     publicAPI[methodName] = otherStaticMethods[methodName];
@@ -411,7 +416,6 @@ function vtkMapper(publicAPI, model) {
     }
   };
 
-
   publicAPI.setScalarMaterialModeToDefault = () => publicAPI.setScalarMaterialMode(MaterialMode.DEFAULT);
   publicAPI.setScalarMaterialModeToAmbient = () => publicAPI.setScalarMaterialMode(MaterialMode.AMBIENT);
   publicAPI.setScalarMaterialModeToDiffuse = () => publicAPI.setScalarMaterialMode(MaterialMode.DIFFUSE);
@@ -509,6 +513,9 @@ const DEFAULT_VALUES = {
   useInvertibleColors: false,
   invertibleScalars: null,
   resolveCoincidentTopology: false,
+
+  viewSpecificProperties: null,
+
 };
 
 // ----------------------------------------------------------------------------
@@ -544,6 +551,8 @@ export function extend(publicAPI, model, initialValues = {}) {
   macro.setGetArray(publicAPI, model, [
     'scalarRange',
   ], 2);
+
+  model.viewSpecificProperties = {};
 
   // Object methods
   vtkMapper(publicAPI, model);

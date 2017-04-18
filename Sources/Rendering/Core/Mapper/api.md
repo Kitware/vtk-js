@@ -359,3 +359,12 @@ Provide read access to the color texture coordinate array
 
 Provide read access to the color texture array
 
+### viewSpecificProperties
+
+If you want to provide specific properties for rendering engines you can use
+viewSpecificProperties.
+
+You can go and have a look in the rendering backend of your choice for details
+on specific properties.
+For example, for OpenGL/WebGL see OpenGL/PolyDataMapper/api.md
+If there is no details, viewSpecificProperties is not supported.
