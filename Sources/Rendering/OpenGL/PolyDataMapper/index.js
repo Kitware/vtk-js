@@ -78,11 +78,11 @@ export function vtkOpenGLPolyDataMapper(publicAPI, model) {
     // user specified pre replacements
     const openGLSpec = model.renderable.getViewSpecificProperties().OpenGL;
     let shaderReplacements = null;
-    if (openGLSpec !== undefined) {
+    if (openGLSpec) {
       shaderReplacements = openGLSpec.ShaderReplacements;
     }
 
-    if (shaderReplacements !== null) {
+    if (shaderReplacements) {
       for (let i = 0; i < shaderReplacements.length; i++) {
         const currReplacement = shaderReplacements[i];
         if (currReplacement.replaceFirst) {
@@ -97,7 +97,7 @@ export function vtkOpenGLPolyDataMapper(publicAPI, model) {
     publicAPI.replaceShaderValues(shaders, ren, actor);
 
     // user specified post replacements
-    if (shaderReplacements !== null) {
+    if (shaderReplacements) {
       for (let i = 0; i < shaderReplacements.length; i++) {
         const currReplacement = shaderReplacements[i];
         if (!currReplacement.replaceFirst) {
@@ -114,7 +114,7 @@ export function vtkOpenGLPolyDataMapper(publicAPI, model) {
     const openGLSpecProp = model.renderable.getViewSpecificProperties().OpenGL;
 
     let vertexShaderCode = vtkPolyDataVS;
-    if (openGLSpecProp !== undefined) {
+    if (openGLSpecProp) {
       const vertexSpecProp = openGLSpecProp.VertexShaderCode;
       if (vertexSpecProp !== undefined && vertexSpecProp !== '') {
         vertexShaderCode = vertexSpecProp;
@@ -123,7 +123,7 @@ export function vtkOpenGLPolyDataMapper(publicAPI, model) {
     shaders.Vertex = vertexShaderCode;
 
     let fragmentShaderCode = vtkPolyDataFS;
-    if (openGLSpecProp !== undefined) {
+    if (openGLSpecProp) {
       const fragmentSpecProp = openGLSpecProp.FragmentShaderCode;
       if (fragmentSpecProp !== undefined && fragmentSpecProp !== '') {
         fragmentShaderCode = fragmentSpecProp;
@@ -132,7 +132,7 @@ export function vtkOpenGLPolyDataMapper(publicAPI, model) {
     shaders.Fragment = fragmentShaderCode;
 
     let geometryShaderCode = '';
-    if (openGLSpecProp !== undefined) {
+    if (openGLSpecProp) {
       const geometrySpecProp = openGLSpecProp.GeometryShaderCode;
       if (geometrySpecProp !== undefined) {
         geometryShaderCode = geometrySpecProp;
