@@ -20,6 +20,7 @@ import './Rendering/OpenGL/PolyDataMapper/test/testAddShaderReplacements';
 import './Rendering/OpenGL/PolyDataMapper/test/testClearShaderReplacements';
 import './Rendering/OpenGL/SphereMapper/test/testSphere';
 import './Rendering/OpenGL/StickMapper/test/testStick';
+import './Rendering/OpenGL/Texture/test/testCreateCubeFromRawTexture';
 import './Rendering/OpenGL/VolumeMapper/test/testComposite';
 import './Rendering/OpenGL/VolumeMapper/test/testComposite16Bit';
 import './Rendering/OpenGL/VolumeMapper/test/testIntermixed';
