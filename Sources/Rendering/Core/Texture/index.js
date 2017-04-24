@@ -35,8 +35,6 @@ function vtkTexture(publicAPI, model) {
 
     publicAPI.modified();
   };
-
-  publicAPI.getViewSpecificProperties = (() => model.viewSpecificProperties);
 }
 
 // ----------------------------------------------------------------------------
@@ -70,9 +68,12 @@ export function extend(publicAPI, model, initialValues = {}) {
     'edgeClamp',
     'interpolate',
     'image',
+    'viewSpecificProperties',
   ]);
 
-  model.viewSpecificProperties = {};
+  if (!model.viewSpecificProperties) {
+    model.viewSpecificProperties = {};
+  }
 
   vtkTexture(publicAPI, model);
 }
