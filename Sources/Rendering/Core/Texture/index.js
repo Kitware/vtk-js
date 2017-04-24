@@ -47,6 +47,7 @@ const DEFAULT_VALUES = {
   edgeClamp: false,
   image: null,
   imageLoaded: false,
+  viewSpecificProperties: null,
 };
 
 // ----------------------------------------------------------------------------
@@ -67,7 +68,12 @@ export function extend(publicAPI, model, initialValues = {}) {
     'edgeClamp',
     'interpolate',
     'image',
+    'viewSpecificProperties',
   ]);
+
+  if (!model.viewSpecificProperties) {
+    model.viewSpecificProperties = {};
+  }
 
   vtkTexture(publicAPI, model);
 }

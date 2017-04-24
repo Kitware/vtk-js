@@ -67,6 +67,22 @@ function vtkOpenGLTexture(publicAPI, model) {
         publicAPI.sendParameters();
         model.textureBuildTime.modified();
       }
+      // If cube properties have been defined
+      const cubeProperties = model.renderable.getViewSpecificProperties().Cube;
+      if (cubeProperties && cubeProperties.data.length === 6) {
+        const data = [];
+        for (let i = 0; i < cubeProperties.data.length; i++) {
+          const scalars = cubeProperties.data[i].getPointData().getScalars().getData();
+          if (scalars) {
+            data.push(cubeProperties.data[i].getPointData().getScalars().getData());
+          }
+        }
+        publicAPI.createCubeFromRaw(cubeProperties.width, cubeProperties.height,
+          cubeProperties.nbComp, cubeProperties.dataType, data);
+        publicAPI.activate();
+        publicAPI.sendParameters();
+        model.textureBuildTime.modified();
+      }
     }
     if (model.handle) {
       publicAPI.activate();
