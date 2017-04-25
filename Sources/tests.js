@@ -15,6 +15,7 @@ import './Rendering/Core/ColorTransferFunction/test/testColorTransferFunctionPre
 import './Rendering/Core/ColorTransferFunction/test/testColorTransferFunctionInterpolation';
 import './Rendering/Core/Mapper/test/testEdgeVisibility';
 import './Rendering/OpenGL/HardwareSelector/test/testHardwareSelector';
+import './Rendering/OpenGL/ImageMapper/test/testImage';
 import './Rendering/OpenGL/PolyDataMapper/test/testInterpolateScalarsBeforeMapping';
 import './Rendering/OpenGL/PolyDataMapper/test/testAddShaderReplacements';
 import './Rendering/OpenGL/PolyDataMapper/test/testClearShaderReplacements';
