@@ -60,7 +60,7 @@ function vtkInteractorStyleImage(publicAPI, model) {
   };
 
   // Public API methods
-  publicAPI.superHandleMouseMove = publicAPI.handleMouseMove;
+  publicAPI.superHandleAnimation = publicAPI.handleAnimation;
   publicAPI.handleAnimation = () => {
     const pos = model.interactor.getEventPosition(model.interactor.getPointerIndex());
 
@@ -80,7 +80,7 @@ function vtkInteractorStyleImage(publicAPI, model) {
       default:
         break;
     }
-    publicAPI.superHandleMouseMove();
+    publicAPI.superHandleAnimation();
   };
 
   //----------------------------------------------------------------------------

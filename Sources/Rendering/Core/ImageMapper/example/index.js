@@ -2,6 +2,7 @@ import vtkFullScreenRenderWindow  from 'vtk.js/Sources/Rendering/Misc/FullScreen
 import vtkImageGridSource         from 'vtk.js/Sources/Filters/Sources/ImageGridSource';
 import vtkImageMapper             from 'vtk.js/Sources/Rendering/Core/ImageMapper';
 import vtkImageSlice              from 'vtk.js/Sources/Rendering/Core/ImageSlice';
+import vtkInteractorStyleImage    from 'vtk.js/Sources/Interaction/Style/InteractorStyleImage';
 
 // ----------------------------------------------------------------------------
 // Standard rendering code setup
@@ -27,6 +28,9 @@ const actor = vtkImageSlice.newInstance();
 actor.getProperty().setColorWindow(255);
 actor.getProperty().setColorLevel(127);
 actor.setMapper(mapper);
+
+const iStyle = vtkInteractorStyleImage.newInstance();
+renderWindow.getInteractor().setInteractorStyle(iStyle);
 
 renderer.addActor(actor);
 renderer.resetCamera();

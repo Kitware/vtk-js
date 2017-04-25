@@ -91,7 +91,7 @@ test.onlyIfWebGL('Test Composite Volume Rendering', (t) => {
       const image = glwindow.captureImage();
       testUtils.compareImages(image, [baseline],
         'Rendering/OpenGL/VolumeMapper/testComposite',
-        t, 1.5, gc.releaseResources);
+        t, 1.8, gc.releaseResources);
     });
   });
 });
