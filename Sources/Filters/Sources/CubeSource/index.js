@@ -29,8 +29,13 @@ export function vtkCubeSource(publicAPI, model) {
     const normalArray = vtkDataArray.newInstance({ name: 'Normals', values: normals, numberOfComponents: 3 });
     polyData.getPointData().setNormals(normalArray);
 
-    const textureCoords = new window[model.pointType](numberOfPoints * 2);
-    const tcoords = vtkDataArray.newInstance({ name: 'TextureCoordinates', values: textureCoords, numberOfComponents: 2 });
+    let tcdim = 2;
+    if (model.generate3DTextureCoordinates === true) {
+      tcdim = 3;
+    }
+
+    const textureCoords = new window[model.pointType](numberOfPoints * tcdim);
+    const tcoords = vtkDataArray.newInstance({ name: 'TextureCoordinates', values: textureCoords, numberOfComponents: tcdim });
     polyData.getPointData().setTCoords(tcoords);
 
     const x = [0.0, 0.0, 0.0];
@@ -59,8 +64,14 @@ export function vtkCubeSource(publicAPI, model) {
           normals[(pointIndex * 3) + 1] = n[1];
           normals[(pointIndex * 3) + 2] = n[2];
 
-          textureCoords[(pointIndex * 2)] = tc[0];
-          textureCoords[(pointIndex * 2) + 1] = tc[1];
+          if (tcdim === 2) {
+            textureCoords[(pointIndex * tcdim)] = tc[0];
+            textureCoords[(pointIndex * tcdim) + 1] = tc[1];
+          } else {
+            textureCoords[(pointIndex * tcdim)] = (2 * i) - 1;
+            textureCoords[(pointIndex * tcdim) + 1] = (2 * j) - 1;
+            textureCoords[(pointIndex * tcdim) + 2] = (2 * k) - 1;
+          }
 
           pointIndex++;
 
@@ -93,8 +104,14 @@ export function vtkCubeSource(publicAPI, model) {
           normals[(pointIndex * 3) + 1] = n[1];
           normals[(pointIndex * 3) + 2] = n[2];
 
-          textureCoords[(pointIndex * 2)] = tc[0];
-          textureCoords[(pointIndex * 2) + 1] = tc[1];
+          if (tcdim === 2) {
+            textureCoords[(pointIndex * tcdim)] = tc[0];
+            textureCoords[(pointIndex * tcdim) + 1] = tc[1];
+          } else {
+            textureCoords[(pointIndex * tcdim)] = (2 * j) - 1;
+            textureCoords[(pointIndex * tcdim) + 1] = (2 * i) - 1;
+            textureCoords[(pointIndex * tcdim) + 2] = (2 * k) - 1;
+          }
 
           pointIndex++;
           x[2] += model.zLength;
@@ -126,8 +143,14 @@ export function vtkCubeSource(publicAPI, model) {
           normals[(pointIndex * 3) + 1] = n[1];
           normals[(pointIndex * 3) + 2] = n[2];
 
-          textureCoords[(pointIndex * 2)] = tc[0];
-          textureCoords[(pointIndex * 2) + 1] = tc[1];
+          if (tcdim === 2) {
+            textureCoords[(pointIndex * tcdim)] = tc[0];
+            textureCoords[(pointIndex * tcdim) + 1] = tc[1];
+          } else {
+            textureCoords[(pointIndex * tcdim)] = (2 * k) - 1;
+            textureCoords[(pointIndex * tcdim) + 1] = (2 * j) - 1;
+            textureCoords[(pointIndex * tcdim) + 2] = (2 * i) - 1;
+          }
 
           pointIndex++;
           x[0] += model.xLength;
@@ -218,6 +241,7 @@ const DEFAULT_VALUES = {
   zLength: 1.0,
   center: [0.0, 0.0, 0.0],
   pointType: 'Float32Array',
+  generate3DTextureCoordinates: false,
 };
 
 // ----------------------------------------------------------------------------
@@ -231,6 +255,7 @@ export function extend(publicAPI, model, initialValues = {}) {
     'xLength',
     'yLength',
     'zLength',
+    'generate3DTextureCoordinates',
   ]);
   macro.setGetArray(publicAPI, model, [
     'center',

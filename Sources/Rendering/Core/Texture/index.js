@@ -47,7 +47,6 @@ const DEFAULT_VALUES = {
   edgeClamp: false,
   image: null,
   imageLoaded: false,
-  viewSpecificProperties: null,
 };
 
 // ----------------------------------------------------------------------------
@@ -57,7 +56,7 @@ export function extend(publicAPI, model, initialValues = {}) {
 
   // Build VTK API
   macro.obj(publicAPI, model);
-  macro.algo(publicAPI, model, 1, 0);
+  macro.algo(publicAPI, model, 6, 0);
 
   macro.get(publicAPI, model, [
     'imageLoaded',
@@ -68,12 +67,7 @@ export function extend(publicAPI, model, initialValues = {}) {
     'edgeClamp',
     'interpolate',
     'image',
-    'viewSpecificProperties',
   ]);
-
-  if (!model.viewSpecificProperties) {
-    model.viewSpecificProperties = {};
-  }
 
   vtkTexture(publicAPI, model);
 }

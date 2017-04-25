@@ -577,48 +577,90 @@ export function vtkOpenGLPolyDataMapper(publicAPI, model) {
       // add in the shader code to do something with them
       const tus = model.openGLActor.getActiveTextures();
       let tNumComp = 2;
+      let tcdim = 2;
       if (tus.length > 0) {
         tNumComp = tus[0].getComponents();
+        if (tus[0].getTarget() === model.context.TEXTURE_CUBE_MAP) {
+          tcdim = 3;
+        }
       }
       if (model.renderable.getColorTextureMap()) {
         tNumComp =
           model.renderable.getColorTextureMap()
           .getPointData().getScalars().getNumberOfComponents();
+        tcdim = 2;
       }
 
-      VSSource = vtkShaderProgram.substitute(VSSource,
-        '//VTK::TCoord::Dec',
-        'attribute vec2 tcoordMC; varying vec2 tcoordVCVSOutput;').result;
-      GSSource = vtkShaderProgram.substitute(GSSource,
-        '//VTK::TCoord::Dec', [
-          'in vec2 tcoordVCVSOutput[];',
-          'out vec2 tcoordVCGSOutput;']).result;
-      GSSource = vtkShaderProgram.substitute(GSSource,
-        '//VTK::TCoord::Impl',
-        'tcoordVCGSOutput = tcoordVCVSOutput[i];').result;
-      FSSource = vtkShaderProgram.substitute(FSSource,
-        '//VTK::TCoord::Dec', [
-          'varying vec2 tcoordVCVSOutput;',
-          'uniform sampler2D texture1;']).result;
-      switch (tNumComp) {
-        case 1:
-          FSSource = vtkShaderProgram.substitute(FSSource,
-            '//VTK::TCoord::Impl', [
-              'vec4 tcolor = texture2D(texture1, tcoordVCVSOutput);',
-              'gl_FragData[0] = clamp(gl_FragData[0],0.0,1.0)*',
-              '  vec4(tcolor.r,tcolor.r,tcolor.r,1.0);']).result;
-          break;
-        case 2:
-          FSSource = vtkShaderProgram.substitute(FSSource,
-            '//VTK::TCoord::Impl', [
-              'vec4 tcolor = texture2D(texture1, tcoordVCVSOutput);',
-              'gl_FragData[0] = clamp(gl_FragData[0],0.0,1.0)*',
-              '  vec4(tcolor.r,tcolor.r,tcolor.r,tcolor.g);']).result;
-          break;
-        default:
-          FSSource = vtkShaderProgram.substitute(FSSource,
-            '//VTK::TCoord::Impl',
-            'gl_FragData[0] = clamp(gl_FragData[0],0.0,1.0)*texture2D(texture1, tcoordVCVSOutput.st);').result;
+      if (tcdim === 2) {
+        VSSource = vtkShaderProgram.substitute(VSSource,
+          '//VTK::TCoord::Dec',
+          'attribute vec2 tcoordMC; varying vec2 tcoordVCVSOutput;').result;
+        GSSource = vtkShaderProgram.substitute(GSSource,
+          '//VTK::TCoord::Dec', [
+            'in vec2 tcoordVCVSOutput[];',
+            'out vec2 tcoordVCGSOutput;']).result;
+        GSSource = vtkShaderProgram.substitute(GSSource,
+          '//VTK::TCoord::Impl',
+          'tcoordVCGSOutput = tcoordVCVSOutput[i];').result;
+        FSSource = vtkShaderProgram.substitute(FSSource,
+          '//VTK::TCoord::Dec', [
+            'varying vec2 tcoordVCVSOutput;',
+            'uniform sampler2D texture1;']).result;
+        switch (tNumComp) {
+          case 1:
+            FSSource = vtkShaderProgram.substitute(FSSource,
+              '//VTK::TCoord::Impl', [
+                'vec4 tcolor = texture2D(texture1, tcoordVCVSOutput);',
+                'gl_FragData[0] = clamp(gl_FragData[0],0.0,1.0)*',
+                '  vec4(tcolor.r,tcolor.r,tcolor.r,1.0);']).result;
+            break;
+          case 2:
+            FSSource = vtkShaderProgram.substitute(FSSource,
+              '//VTK::TCoord::Impl', [
+                'vec4 tcolor = texture2D(texture1, tcoordVCVSOutput);',
+                'gl_FragData[0] = clamp(gl_FragData[0],0.0,1.0)*',
+                '  vec4(tcolor.r,tcolor.r,tcolor.r,tcolor.g);']).result;
+            break;
+          default:
+            FSSource = vtkShaderProgram.substitute(FSSource,
+              '//VTK::TCoord::Impl',
+              'gl_FragData[0] = clamp(gl_FragData[0],0.0,1.0)*texture2D(texture1, tcoordVCVSOutput.st);').result;
+        }
+      } else {
+        VSSource = vtkShaderProgram.substitute(VSSource,
+          '//VTK::TCoord::Dec',
+          'attribute vec3 tcoordMC; varying vec3 tcoordVCVSOutput;').result;
+        GSSource = vtkShaderProgram.substitute(GSSource,
+          '//VTK::TCoord::Dec', [
+            'in vec3 tcoordVCVSOutput[];',
+            'out vec3 tcoordVCGSOutput;']).result;
+        GSSource = vtkShaderProgram.substitute(GSSource,
+          '//VTK::TCoord::Impl',
+          'tcoordVCGSOutput = tcoordVCVSOutput[i];').result;
+        FSSource = vtkShaderProgram.substitute(FSSource,
+          '//VTK::TCoord::Dec', [
+            'varying vec3 tcoordVCVSOutput;',
+            'uniform samplerCube texture1;']).result;
+        switch (tNumComp) {
+          case 1:
+            FSSource = vtkShaderProgram.substitute(FSSource,
+              '//VTK::TCoord::Impl', [
+                'vec4 tcolor = textureCube(texture1, tcoordVCVSOutput);',
+                'gl_FragData[0] = clamp(gl_FragData[0],0.0,1.0)*',
+                '  vec4(tcolor.r,tcolor.r,tcolor.r,1.0);']).result;
+            break;
+          case 2:
+            FSSource = vtkShaderProgram.substitute(FSSource,
+              '//VTK::TCoord::Impl', [
+                'vec4 tcolor = textureCube(texture1, tcoordVCVSOutput);',
+                'gl_FragData[0] = clamp(gl_FragData[0],0.0,1.0)*',
+                '  vec4(tcolor.r,tcolor.r,tcolor.r,tcolor.g);']).result;
+            break;
+          default:
+            FSSource = vtkShaderProgram.substitute(FSSource,
+              '//VTK::TCoord::Impl',
+              'gl_FragData[0] = clamp(gl_FragData[0],0.0,1.0)*textureCube(texture1, tcoordVCVSOutput);').result;
+        }
       }
       shaders.Vertex = VSSource;
       shaders.Geometry = GSSource;

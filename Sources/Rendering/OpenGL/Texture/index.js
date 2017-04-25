@@ -53,32 +53,31 @@ function vtkOpenGLTexture(publicAPI, model) {
         }
       }
       // if we have Inputdata
-      const input = model.renderable.getInputData();
+      const input = model.renderable.getInputData(0);
       if (input && input.getPointData().getScalars()) {
         const ext = input.getExtent();
         const inScalars = input.getPointData().getScalars();
-        if (model.renderable.getInterpolate()) {
-          model.generateMipmap = true;
-          publicAPI.setMinificationFilter(Filter.LINEAR_MIPMAP_LINEAR);
-        }
-        publicAPI.create2DFromRaw(ext[1] - ext[0] + 1, ext[3] - ext[2] + 1,
-          inScalars.getNumberOfComponents(), inScalars.getDataType(), inScalars.getData());
-        publicAPI.activate();
-        publicAPI.sendParameters();
-        model.textureBuildTime.modified();
-      }
-      // If cube properties have been defined
-      const cubeProperties = model.renderable.getViewSpecificProperties().Cube;
-      if (cubeProperties && cubeProperties.data.length === 6) {
+
+        // do we have a cube map? Six inputs
         const data = [];
-        for (let i = 0; i < cubeProperties.data.length; i++) {
-          const scalars = cubeProperties.data[i].getPointData().getScalars().getData();
+        for (let i = 0; i < 6; ++i) {
+          const indata = model.renderable.getInputData(i);
+          const scalars = indata.getPointData().getScalars().getData();
           if (scalars) {
-            data.push(cubeProperties.data[i].getPointData().getScalars().getData());
+            data.push(scalars);
           }
         }
-        publicAPI.createCubeFromRaw(cubeProperties.width, cubeProperties.height,
-          cubeProperties.nbComp, cubeProperties.dataType, data);
+        if (data.length === 6) {
+          publicAPI.createCubeFromRaw(ext[1] - ext[0] + 1, ext[3] - ext[2] + 1,
+            inScalars.getNumberOfComponents(), inScalars.getDataType(), data);
+        } else {
+          if (model.renderable.getInterpolate()) {
+            model.generateMipmap = true;
+            publicAPI.setMinificationFilter(Filter.LINEAR_MIPMAP_LINEAR);
+          }
+          publicAPI.create2DFromRaw(ext[1] - ext[0] + 1, ext[3] - ext[2] + 1,
+            inScalars.getNumberOfComponents(), inScalars.getDataType(), inScalars.getData());
+        }
         publicAPI.activate();
         publicAPI.sendParameters();
         model.textureBuildTime.modified();
@@ -1079,6 +1078,7 @@ export function extend(publicAPI, model, initialValues = {}) {
     'volumeInfo',
     'components',
     'handle',
+    'target',
   ]);
 
   // Object methods
