@@ -17,10 +17,10 @@ test.onlyIfWebGL('Test vtkOpenGLTexture Rendering', (t) => {
   const gc = testUtils.createGarbageCollector(t);
   t.ok('Rendering', 'Filter: OpenGLTexture');
 
-  let callBackfunction = function (loadedTextures){
+  let callBackfunction = function (loadedTextures) {
     // Create come control UI
     const container = document.querySelector('body');
-    const renderWindowContainer = document.createElement('div');
+    const renderWindowContainer = gc.registerDOMElement(document.createElement('div'));
     container.appendChild(renderWindowContainer);
 
     // Create view
@@ -35,25 +35,17 @@ test.onlyIfWebGL('Test vtkOpenGLTexture Rendering', (t) => {
     sphereActor.setMapper(sphereMapper);
     renderer.addActor(sphereActor);
 
-    for(let i = 0; i < 6; i++) {
+    const texture = gc.registerResource(vtkTexture.newInstance());
+    for (let i = 0; i < 6; i++) {
       const scalarName = loadedTextures[i].getPointData().getArrayByIndex(0).getName();
       loadedTextures[i].getPointData().setActiveScalars(scalarName);
+      texture.setInputData(loadedTextures[i], i);
     }
-
-    const texture = gc.registerResource(vtkTexture.newInstance());
-    const viewProperties = texture.getViewSpecificProperties();
-    const firstImage = loadedTextures[0];
-    viewProperties['Cube'] = {
-      width: firstImage.getDimensions()[0],
-      height: firstImage.getDimensions()[1],
-      nbComp: 3,
-      dataType: firstImage.getPointData().getScalars().getDataType(),
-      data: loadedTextures,
-    };
 
     const bounds = renderer.computeVisiblePropBounds();
     const scale = 500;
     const cube = gc.registerResource(vtkCubeSource.newInstance());
+    cube.setGenerate3DTextureCoordinates(true);
     cube.setBounds(bounds[0] * scale, bounds[1] * scale, bounds[2] * scale,
                    bounds[3] * scale, bounds[4] * scale, bounds[5] * scale);
 
@@ -61,54 +53,9 @@ test.onlyIfWebGL('Test vtkOpenGLTexture Rendering', (t) => {
     const mapper = gc.registerResource(vtkMapper.newInstance());
     mapper.setInputConnection(cube.getOutputPort());
 
-    const newFragmentShader = "//VTK::System::Dec\n" +
-      "//VTK::Output::Dec\n" +
-      "// Template for the polydata mappers fragment shader\n" +
-      "uniform int PrimitiveIDOffset;\n" +
-      "// VC position of this fragment\n" +
-      "//VTK::PositionVC::Dec\n" +
-      "uniform samplerCube cubeMap;\n" +
-      "varying vec3 TexCoords;\n" +
-      "void main()\n" +
-      "{\n" +
-      "  gl_FragData[0] = vec4(textureCube(cubeMap, TexCoords).rgb, 1.0);\n" +
-      "}\n";
-
-    const mapperViewProp = mapper.getViewSpecificProperties();
-    mapperViewProp['OpenGL'] = {
-      ShaderReplacements: [],
-      FragmentShaderCode: newFragmentShader,
-    };
-    // Define function addShaderReplacements
-    mapperViewProp['addShaderReplacements'] =
-      (_shaderType, _originalValue, _replaceFirst, _replacementValue, _replaceAll) => {
-      mapperViewProp['OpenGL']['ShaderReplacements'].push({
-        shaderType: _shaderType,
-        originalValue: _originalValue,
-        replaceFirst: _replaceFirst,
-        replacementValue: _replacementValue,
-        replaceAll: _replaceAll,
-      });
-    };
-
-    mapperViewProp.addShaderReplacements(
-      'Vertex',
-      '//VTK::PositionVC::Dec', // replace the normal block
-      true, // before the standard replacements
-      '//VTK::PositionVC::Dec\n' +
-      'varying vec3 TexCoords;\n',
-      false // only do it once
-    );
-    mapperViewProp.addShaderReplacements(
-      'Vertex',
-      '//VTK::PositionVC::Impl', // replace the normal block
-      true, // before the standard replacements
-      '//VTK::PositionVC::Impl\n' +
-      'TexCoords.xyz = vertexMC.xyz;\n',
-      false // only do it once
-    );
-
     const actor = gc.registerResource(vtkActor.newInstance());
+    actor.getProperty().setDiffuse(0.0);
+    actor.getProperty().setAmbient(1.0);
     actor.setMapper(mapper);
     actor.addTexture(texture);
     renderer.addActor(actor);
@@ -116,7 +63,7 @@ test.onlyIfWebGL('Test vtkOpenGLTexture Rendering', (t) => {
     renderer.getActiveCamera().setViewUp(0, -1, 0);
     renderer.getActiveCamera().setFocalPoint(0, 0, 1);
     renderer.getActiveCamera().setPosition(0, 0, -50);
-    renderWindow.render();
+    renderer.resetCameraClippingRange();
 
     const glwindow = gc.registerResource(vtkOpenGLRenderWindow.newInstance());
     glwindow.setContainer(renderWindowContainer);
@@ -128,24 +75,23 @@ test.onlyIfWebGL('Test vtkOpenGLTexture Rendering', (t) => {
   };
 
   // Recursive function to load texture one by one
-  function loadTexture(idTexture, texturePathList, textureImageList, endCallBack){
-    if (idTexture === texturePathList.length)
-    {
+  function loadTexture(idTexture, texturePathList, textureImageList, endCallBack) {
+    if (idTexture === texturePathList.length) {
       if (endCallBack) { // check if endcallback exists
         endCallBack(textureImageList);
       }
       return;
     }
 
-    const reader = gc.registerResource(vtkHttpDataSetReader.newInstance({ fetchGzip : true }));
+    const reader = gc.registerResource(vtkHttpDataSetReader.newInstance({ fetchGzip: true }));
     reader.setUrl(texturePathList[idTexture]).then(() => {
       reader.loadData().then(() => {
-      textureImageList.push(reader.getOutputData());
-      const nextID = idTexture + 1;
-      loadTexture(nextID, texturePathList, textureImageList, endCallBack);
+        textureImageList.push(reader.getOutputData());
+        const nextID = idTexture + 1;
+        loadTexture(nextID, texturePathList, textureImageList, endCallBack);
       });// end loadData
     });// end set url
-  };
+  }
 
   const path = `${__BASE_PATH__}/Data/skybox/mountains/`;
   const texturePathList = [];

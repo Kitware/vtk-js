@@ -13,11 +13,9 @@ SetTexture() method. Actors can share texture maps (this is encouraged
 to save memory resources.)
 
 .SECTION Caveats
-Currently only 2D texture maps are supported, even though the data pipeline
-supports 1,2, and 3D texture coordinates.
 
-Some systems require that the texture map dimensions
-are a power of two in each direction.
+If six inputs are provided this texture will be treated as 
+a cube texture.
 
 ## See Also
 
