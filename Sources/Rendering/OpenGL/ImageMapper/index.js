@@ -325,8 +325,12 @@ export function vtkOpenGLImageMapper(publicAPI, model) {
     if (model.VBOBuildString !== toString) {
       // Build the VBOs
       const dims = image.getDimensions();
-      model.openGLTexture.setGenerateMipmap(true);
-      model.openGLTexture.setMinificationFilter(Filter.LINEAR_MIPMAP_LINEAR);
+      if (image.getPointData().getScalars().getNumberOfComponents() === 4) {
+        model.openGLTexture.setGenerateMipmap(true);
+        model.openGLTexture.setMinificationFilter(Filter.LINEAR_MIPMAP_LINEAR);
+      } else {
+        model.openGLTexture.setMinificationFilter(Filter.LINEAR);
+      }
       model.openGLTexture.setMagnificationFilter(Filter.LINEAR);
       model.openGLTexture.setWrapS(Wrap.CLAMP_TO_EDGE);
       model.openGLTexture.setWrapT(Wrap.CLAMP_TO_EDGE);
