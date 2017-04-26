@@ -71,7 +71,7 @@ function vtkOpenGLTexture(publicAPI, model) {
           publicAPI.createCubeFromRaw(ext[1] - ext[0] + 1, ext[3] - ext[2] + 1,
             inScalars.getNumberOfComponents(), inScalars.getDataType(), data);
         } else {
-          if (model.renderable.getInterpolate()) {
+          if (model.renderable.getInterpolate() && inScalars.getNumberOfComponents() === 4) {
             model.generateMipmap = true;
             publicAPI.setMinificationFilter(Filter.LINEAR_MIPMAP_LINEAR);
           }
