@@ -25,7 +25,7 @@ This page documents at a very high level how to contribute to vtk.js.
     ```sh
     $ edit file1 file2 file3
     $ git add file1 file2 file3
-    $ git cz
+    $ npm run commit
     ```
 
 6. Push commits in your topic branch to your fork in Github:

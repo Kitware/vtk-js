@@ -20,7 +20,6 @@ Please follow the coding style:
     $ git clone https://github.com/<username>/vtk-js.git
     $ cd vtk-js
     $ npm install
-    $ npm install -g commitizen
     ```
 
 3. Create a feature branch.
@@ -33,7 +32,7 @@ Please follow the coding style:
 5. Use Commitizen for commit message
 
     ```
-    $ git cz
+    $ npm run commit
     ```
 
 6. Push the branch:
