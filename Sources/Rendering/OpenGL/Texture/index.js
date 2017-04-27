@@ -62,7 +62,7 @@ function vtkOpenGLTexture(publicAPI, model) {
         const data = [];
         for (let i = 0; i < 6; ++i) {
           const indata = model.renderable.getInputData(i);
-          const scalars = indata.getPointData().getScalars().getData();
+          const scalars = indata ? indata.getPointData().getScalars().getData() : null;
           if (scalars) {
             data.push(scalars);
           }
