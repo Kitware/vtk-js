@@ -83,11 +83,6 @@ function vtkMapper(publicAPI, model) {
   publicAPI.setScalarModeToUseCellFieldData = () => publicAPI.setScalarMode(4);
   publicAPI.setScalarModeToUseFieldData = () => publicAPI.setScalarMode(5);
 
-  // Specific methods to modify shaders
-  publicAPI.getViewSpecificProperties = () => {
-    return model.viewSpecificProperties;
-  };
-
   // Add Static methods to our instance
   Object.keys(otherStaticMethods).forEach((methodName) => {
     publicAPI[methodName] = otherStaticMethods[methodName];
@@ -547,12 +542,15 @@ export function extend(publicAPI, model, initialValues = {}) {
     'scalarVisibility',
     'static',
     'useLookupTableScalarRange',
+    'viewSpecificProperties',
   ]);
   macro.setGetArray(publicAPI, model, [
     'scalarRange',
   ], 2);
 
-  model.viewSpecificProperties = {};
+  if (!model.viewSpecificProperties) {
+    model.viewSpecificProperties = {};
+  }
 
   // Object methods
   vtkMapper(publicAPI, model);
