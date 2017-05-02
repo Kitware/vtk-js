@@ -138,10 +138,10 @@ export function obj(publicAPI = {}, model = {}) {
 
   publicAPI.getClassName = () => model.classHierarchy.slice(-1)[0];
 
-  publicAPI.set = (map = {}, noWarning = false) => {
+  publicAPI.set = (map = {}, noWarning = false, noFunction = false) => {
     let ret = false;
     Object.keys(map).forEach((name) => {
-      const fn = publicAPI[`set${capitalize(name)}`];
+      const fn = noFunction ? null : publicAPI[`set${capitalize(name)}`];
       if (fn && Array.isArray(map[name])) {
         ret = fn(...map[name]) || ret;
       } else if (fn) {
