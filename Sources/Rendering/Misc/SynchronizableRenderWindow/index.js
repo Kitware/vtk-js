@@ -83,6 +83,18 @@ function createInstanceMap() {
     return instances[id];
   }
 
+  function getInstanceId(instance) {
+    let instanceId = null;
+
+    Object.keys(instances).forEach((id) => {
+      if (instance === instances[id]) {
+        instanceId = id;
+      }
+    });
+
+    return instanceId;
+  }
+
   function registerInstance(id, instance) {
     instances[id] = instance;
   }
@@ -99,6 +111,7 @@ function createInstanceMap() {
 
   return {
     getInstance,
+    getInstanceId,
     registerInstance,
     unregisterInstance,
     emptyCachedInstances,
