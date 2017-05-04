@@ -184,7 +184,7 @@ function createSyncFunction(renderWindow, synchronizerContext) {
   let gcThreshold = 100;
 
   function setSynchronizedViewId(synchronizedViewId) {
-    renderWindow.set({ synchronizedViewId }, true);
+    renderWindow.set({ synchronizedViewId }, true, true);
   }
 
   function getSynchronizedViewId() {
