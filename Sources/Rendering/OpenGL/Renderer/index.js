@@ -147,6 +147,11 @@ export function vtkOpenGLRenderer(publicAPI, model) {
     }
 
     gl.colorMask(true, true, true, true);
+
+    const ts = publicAPI.getTiledSizeAndOrigin();
+    gl.enable(gl.SCISSOR_TEST);
+    gl.scissor(ts.lowerLeftU, ts.lowerLeftV, ts.usize, ts.vsize);
+
     gl.clear(clearMask);
 
     gl.enable(gl.DEPTH_TEST);
