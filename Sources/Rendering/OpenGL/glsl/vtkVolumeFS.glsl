@@ -77,6 +77,8 @@ uniform int repDepth;
 
 vec2 getTextureCoord(vec3 ijk, float offset)
 {
+  // uncomment the following line to see  the  packed  texture
+  // return vec2(ijk.x/float(repWidth), ijk.y/float(repHeight));
   int z = int(ijk.z + offset);
   int yz = z / xreps;
   int xz = z - yz*xreps;
@@ -221,7 +223,7 @@ void main()
 
       float mix = (1.0 - color.a);
       color = color + vec4(tcolor.rgb*tcolor.a, tcolor.a)*mix;
-      if (i > count) { break; }
+      if (i >= count) { break; }
       if (color.a > 0.99) { color.a = 1.0; break; }
       ijk += vdelta;
     }
