@@ -191,6 +191,39 @@ function rendererUpdater(instance, state, context) {
 
 // ----------------------------------------------------------------------------
 
+function vtkRenderWindowUpdater(instance, state, context) {
+  // For each renderer we may be removing from this render window, we should first
+  // remove all of the renderer's view props, then have the render window re-render
+  // itself.  This will clear the screen, at which point we can go about the normal
+  // updater process.
+  if (state.calls) {
+    state.calls.filter(call => call[0] === 'removeRenderer').forEach((call) => {
+      extractInstanceIds(call[1]).forEach((renId) => {
+        const renderer = context.getInstance(renId);
+        // Take brief detour through the view props to unregister the dependencies
+        // of each one
+        const viewProps = renderer.getViewProps();
+        viewProps.forEach((viewProp) => {
+          const deps = viewProp.get('flattenedDepIds').flattenedDepIds;
+          if (deps) {
+            deps.forEach(depId => context.unregisterInstance(depId));
+          }
+          context.unregisterInstance(context.getInstanceId(viewProp));
+        });
+        // Now just remove all the view props
+        renderer.removeAllViewProps();
+      });
+    });
+  }
+
+  instance.render();
+
+  // Now just do normal update process
+  genericUpdater(instance, state, context);
+}
+
+// ----------------------------------------------------------------------------
+
 function colorTransferFunctionUpdater(instance, state, context) {
   context.start();
   const nodes = state.properties.nodes.map(([x, r, g, b, midpoint, sharpness]) => ({ x, r, g, b, midpoint, sharpness }));
@@ -296,7 +329,7 @@ const DEFAULT_MAPPING = {
   },
   vtkRenderWindow: {
     build: vtkRenderWindow.newInstance,
-    update: genericUpdater,
+    update: vtkRenderWindowUpdater,
   },
 };
 
