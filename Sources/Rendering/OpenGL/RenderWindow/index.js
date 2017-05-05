@@ -114,10 +114,10 @@ export function vtkOpenGLRenderWindow(publicAPI, model) {
   };
 
   publicAPI.displayToNormalizedDisplay = (x, y, z) =>
-    [x / (model.size[0] - 1), y / (model.size[1] - 1), z];
+    [x / model.size[0], y / model.size[1], z];
 
   publicAPI.normalizedDisplayToDisplay = (x, y, z) =>
-    [x * (model.size[0] - 1), y * (model.size[1] - 1), z];
+    [x * model.size[0], y * model.size[1], z];
 
   publicAPI.getPixelData = (x1, y1, x2, y2) => {
     const pixels = new Uint8Array((x2 - x1 + 1) * (y2 - y1 + 1) * 4);
