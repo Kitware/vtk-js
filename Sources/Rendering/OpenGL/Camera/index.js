@@ -12,14 +12,18 @@ function vtkOpenGLCamera(publicAPI, model) {
   model.classHierarchy.push('vtkOpenGLCamera');
 
   // Renders myself
-  publicAPI.cameraPass = (prepass) => {
+  publicAPI.opaquePass = (prepass) => {
     if (prepass) {
       model.context = publicAPI.getFirstAncestorOfType('vtkOpenGLRenderWindow').getContext();
       const ren = publicAPI.getFirstAncestorOfType('vtkOpenGLRenderer');
       const tsize = ren.getTiledSizeAndOrigin();
       model.context.viewport(tsize.lowerLeftU, tsize.lowerLeftV, tsize.usize, tsize.vsize);
+      model.context.scissor(tsize.lowerLeftU, tsize.lowerLeftV, tsize.usize, tsize.vsize);
     }
   };
+  publicAPI.translucentPass = publicAPI.opaquePass;
+  publicAPI.opaqueZBufferPass = publicAPI.opaquePass;
+  publicAPI.volumePass = publicAPI.opaquePass;
 
   publicAPI.getKeyMatrices = (ren) => {
     // has the camera changed?
