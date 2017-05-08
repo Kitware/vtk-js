@@ -14,6 +14,7 @@ import './Rendering/Core/ColorTransferFunction/test/testColorTransferFunction';
 import './Rendering/Core/ColorTransferFunction/test/testColorTransferFunctionPresets';
 import './Rendering/Core/ColorTransferFunction/test/testColorTransferFunctionInterpolation';
 import './Rendering/Core/Mapper/test/testEdgeVisibility';
+import './Rendering/Core/RenderWindow/test/testMultipleRenderers';
 import './Rendering/OpenGL/Actor/test/testRotate';
 import './Rendering/OpenGL/HardwareSelector/test/testHardwareSelector';
 import './Rendering/OpenGL/ImageMapper/test/testImage';
