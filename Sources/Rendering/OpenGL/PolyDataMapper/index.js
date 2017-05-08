@@ -33,7 +33,7 @@ const { vtkErrorMacro } = macro;
 // vtkOpenGLPolyDataMapper methods
 // ----------------------------------------------------------------------------
 
-export function vtkOpenGLPolyDataMapper(publicAPI, model) {
+function vtkOpenGLPolyDataMapper(publicAPI, model) {
   // Set our className
   model.classHierarchy.push('vtkOpenGLPolyDataMapper');
 

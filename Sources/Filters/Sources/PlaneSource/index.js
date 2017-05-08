@@ -9,7 +9,7 @@ const { vtkWarningMacro } = macro;
 // vtkPlaneSource methods
 // ----------------------------------------------------------------------------
 
-export function vtkPlaneSource(publicAPI, model) {
+function vtkPlaneSource(publicAPI, model) {
   // Set our className
   model.classHierarchy.push('vtkPlaneSource');
 

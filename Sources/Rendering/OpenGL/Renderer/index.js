@@ -9,7 +9,7 @@ const { vtkDebugMacro } = macro;
 // ----------------------------------------------------------------------------
 /* eslint-disable no-bitwise */
 
-export function vtkOpenGLRenderer(publicAPI, model) {
+function vtkOpenGLRenderer(publicAPI, model) {
   // Set our className
   model.classHierarchy.push('vtkOpenGLRenderer');
 

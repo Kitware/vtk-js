@@ -6,7 +6,7 @@ import vtkDataArray from 'vtk.js/Sources/Common/Core/DataArray';
 // vtkImageGridSource methods
 // ----------------------------------------------------------------------------
 
-export function vtkImageGridSource(publicAPI, model) {
+function vtkImageGridSource(publicAPI, model) {
   // Set our className
   model.classHierarchy.push('vtkImageGridSource');
 

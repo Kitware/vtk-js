@@ -6,7 +6,7 @@ import vtkPolyData from 'vtk.js/Sources/Common/DataModel/PolyData';
 // vtkPointSource methods
 // ----------------------------------------------------------------------------
 
-export function vtkPointSource(publicAPI, model) {
+function vtkPointSource(publicAPI, model) {
   // Set our className
   model.classHierarchy.push('vtkPointSource');
 

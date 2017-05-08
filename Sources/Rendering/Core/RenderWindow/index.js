@@ -4,7 +4,7 @@ import macro from 'vtk.js/Sources/macro';
 // vtkRenderWindow methods
 // ----------------------------------------------------------------------------
 
-export function vtkRenderWindow(publicAPI, model) {
+function vtkRenderWindow(publicAPI, model) {
   // Set our className
   model.classHierarchy.push('vtkRenderWindow');
 

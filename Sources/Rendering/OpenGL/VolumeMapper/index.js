@@ -22,7 +22,7 @@ const { vtkWarningMacro, vtkErrorMacro } = macro;
 // vtkOpenGLVolumeMapper methods
 // ----------------------------------------------------------------------------
 
-export function vtkOpenGLVolumeMapper(publicAPI, model) {
+function vtkOpenGLVolumeMapper(publicAPI, model) {
   // Set our className
   model.classHierarchy.push('vtkOpenGLVolumeMapper');
 

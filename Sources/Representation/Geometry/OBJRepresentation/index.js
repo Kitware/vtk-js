@@ -10,7 +10,7 @@ const { vtkDebugMacro } = macro;
 // vtkOBJRepresentation methods
 // ----------------------------------------------------------------------------
 
-export function vtkOBJRepresentation(publicAPI, model) {
+function vtkOBJRepresentation(publicAPI, model) {
   // Set our className
   model.classHierarchy.push('vtkOBJRepresentation');
 

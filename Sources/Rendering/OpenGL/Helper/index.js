@@ -7,7 +7,7 @@ import vtkVertexArrayObject     from 'vtk.js/Sources/Rendering/OpenGL/VertexArra
 // vtkOpenGLHelper methods
 // ----------------------------------------------------------------------------
 
-export function vtkOpenGLHelper(publicAPI, model) {
+function vtkOpenGLHelper(publicAPI, model) {
   // Set our className
   model.classHierarchy.push('vtkOpenGLHelper');
 

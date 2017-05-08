@@ -18,7 +18,7 @@ import vtkOpenGLVolumeMapper   from 'vtk.js/Sources/Rendering/OpenGL/VolumeMappe
 // vtkOpenGLViewNodeFactory methods
 // ----------------------------------------------------------------------------
 
-export function vtkOpenGLViewNodeFactory(publicAPI, model) {
+function vtkOpenGLViewNodeFactory(publicAPI, model) {
   // Set our className
   model.classHierarchy.push('vtkOpenGLViewNodeFactory');
 }

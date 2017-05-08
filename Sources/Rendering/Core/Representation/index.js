@@ -4,7 +4,7 @@ import * as macro from '../../../macro';
 // vtkRepresentation methods
 // ----------------------------------------------------------------------------
 
-export function vtkRepresentation(publicAPI, model) {
+function vtkRepresentation(publicAPI, model) {
   // Set our className
   model.classHierarchy.push('vtkRepresentation');
 

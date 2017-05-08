@@ -25,7 +25,7 @@ export function substitute(source, search, replace, all = true) {
 // vtkShaderProgram methods
 // ----------------------------------------------------------------------------
 
-export function vtkShaderProgram(publicAPI, model) {
+function vtkShaderProgram(publicAPI, model) {
   // Set our className
   model.classHierarchy.push('vtkShaderProgram');
 

@@ -11,7 +11,7 @@ const { vtkErrorMacro } = macro;
 // vtkOpenGLRenderWindow methods
 // ----------------------------------------------------------------------------
 
-export function vtkOpenGLRenderWindow(publicAPI, model) {
+function vtkOpenGLRenderWindow(publicAPI, model) {
   // Set our className
   model.classHierarchy.push('vtkOpenGLRenderWindow');
 

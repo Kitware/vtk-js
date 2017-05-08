@@ -8,7 +8,7 @@ const { vtkWarningMacro } = macro;
 // vtkLineSource methods
 // ----------------------------------------------------------------------------
 
-export function vtkLineSource(publicAPI, model) {
+function vtkLineSource(publicAPI, model) {
   // Set our className
   model.classHierarchy.push('vtkLineSource');
 

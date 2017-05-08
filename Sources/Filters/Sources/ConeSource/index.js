@@ -5,7 +5,7 @@ import vtkPolyData from 'vtk.js/Sources/Common/DataModel/PolyData';
 // vtkConeSource methods
 // ----------------------------------------------------------------------------
 
-export function vtkConeSource(publicAPI, model) {
+function vtkConeSource(publicAPI, model) {
   // Set our className
   model.classHierarchy.push('vtkConeSource');
 

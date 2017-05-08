@@ -106,7 +106,7 @@ function processDataSet(publicAPI, model, dataset, fetchArray, resolve, reject, 
 // vtkHttpDataSetReader methods
 // ----------------------------------------------------------------------------
 
-export function vtkHttpDataSetReader(publicAPI, model) {
+function vtkHttpDataSetReader(publicAPI, model) {
   // Set our className
   model.classHierarchy.push('vtkHttpDataSetReader');
 

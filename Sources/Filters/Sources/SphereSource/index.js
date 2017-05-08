@@ -6,7 +6,7 @@ import vtkDataArray from 'vtk.js/Sources/Common/Core/DataArray';
 // vtkSphereSource methods
 // ----------------------------------------------------------------------------
 
-export function vtkSphereSource(publicAPI, model) {
+function vtkSphereSource(publicAPI, model) {
   // Set our className
   model.classHierarchy.push('vtkSphereSource');
 

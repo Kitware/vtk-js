@@ -8,7 +8,7 @@ import DataAccessHelper from 'vtk.js/Sources/IO/Core/DataAccessHelper';
 // vtkElevationReader methods
 // ----------------------------------------------------------------------------
 
-export function vtkElevationReader(publicAPI, model) {
+function vtkElevationReader(publicAPI, model) {
   // Set our className
   model.classHierarchy.push('vtkElevationReader');
 
