@@ -17,7 +17,7 @@ const { vtkErrorMacro } = macro;
 // vtkOpenGLStickMapper methods
 // ----------------------------------------------------------------------------
 
-export function vtkOpenGLStickMapper(publicAPI, model) {
+function vtkOpenGLStickMapper(publicAPI, model) {
   // Set our className
   model.classHierarchy.push('vtkOpenGLStickMapper');
 

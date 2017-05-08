@@ -9,7 +9,7 @@ export const LIGHT_TYPES = ['HeadLight', 'CameraLight', 'SceneLight'];
 // vtkLight methods
 // ----------------------------------------------------------------------------
 
-export function vtkLight(publicAPI, model) {
+function vtkLight(publicAPI, model) {
   // Set our className
   model.classHierarchy.push('vtkLight');
 

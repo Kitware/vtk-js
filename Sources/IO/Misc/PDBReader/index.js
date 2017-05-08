@@ -8,7 +8,7 @@ import ATOMS            from 'vtk.js/Utilities/XMLConverter/chemistry-mapper/ele
 // vtkPDBReader methods
 // ----------------------------------------------------------------------------
 
-export function vtkPDBReader(publicAPI, model) {
+function vtkPDBReader(publicAPI, model) {
   // Set our className
   model.classHierarchy.push('vtkPDBReader');
 

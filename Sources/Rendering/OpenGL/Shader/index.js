@@ -8,7 +8,7 @@ const { vtkErrorMacro } = macro;
 // vtkShader methods
 // ----------------------------------------------------------------------------
 
-export function vtkShader(publicAPI, model) {
+function vtkShader(publicAPI, model) {
   // Set our className
   model.classHierarchy.push('vtkShader');
 

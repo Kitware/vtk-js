@@ -75,7 +75,7 @@ const TYPE_MAPPING = {
 // vtkHttpSceneLoader methods
 // ----------------------------------------------------------------------------
 
-export function vtkHttpSceneLoader(publicAPI, model) {
+function vtkHttpSceneLoader(publicAPI, model) {
   const originalSceneParameters = {};
 
   // Set our className

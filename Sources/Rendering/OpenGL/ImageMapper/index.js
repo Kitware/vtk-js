@@ -17,7 +17,7 @@ const { vtkErrorMacro } = macro;
 // vtkOpenGLImageMapper methods
 // ----------------------------------------------------------------------------
 
-export function vtkOpenGLImageMapper(publicAPI, model) {
+function vtkOpenGLImageMapper(publicAPI, model) {
   // Set our className
   model.classHierarchy.push('vtkOpenGLImageMapper');
 

@@ -164,7 +164,7 @@ function end(model) {
 // vtkOBJReader methods
 // ----------------------------------------------------------------------------
 
-export function vtkOBJReader(publicAPI, model) {
+function vtkOBJReader(publicAPI, model) {
   // Set our className
   model.classHierarchy.push('vtkOBJReader');
 

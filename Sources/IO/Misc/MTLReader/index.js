@@ -5,7 +5,7 @@ import DataAccessHelper from '../../Core/DataAccessHelper';
 // vtkMTLReader methods
 // ----------------------------------------------------------------------------
 
-export function vtkMTLReader(publicAPI, model) {
+function vtkMTLReader(publicAPI, model) {
   // Set our className
   model.classHierarchy.push('vtkMTLReader');
 

@@ -5,7 +5,7 @@ import vtkMapper from 'vtk.js/Sources/Rendering/Core/Mapper';
 // vtkSphereMapper methods
 // ----------------------------------------------------------------------------
 
-export function vtkSphereMapper(publicAPI, model) {
+function vtkSphereMapper(publicAPI, model) {
   // Set our className
   model.classHierarchy.push('vtkSphereMapper');
 }

@@ -228,7 +228,7 @@ function createSyncFunction(renderWindow, synchronizerContext) {
 // vtkSynchronizableRenderWindow methods
 // ----------------------------------------------------------------------------
 
-export function vtkSynchronizableRenderWindow(publicAPI, model) {
+function vtkSynchronizableRenderWindow(publicAPI, model) {
   // Set our className
   model.classHierarchy.push('vtkSynchronizableRenderWindow');
 

@@ -6,7 +6,7 @@ import vtkPolyData  from 'vtk.js/Sources/Common/DataModel/PolyData';
 // vtkConeSource methods
 // ----------------------------------------------------------------------------
 
-export function vtkCubeSource(publicAPI, model) {
+function vtkCubeSource(publicAPI, model) {
   // Set our className
   model.classHierarchy.push('vtkCubeSource');
 

@@ -13,7 +13,7 @@ const { vtkErrorMacro } = macro;
 // vtkOpenGLHardwareSelector methods
 // ----------------------------------------------------------------------------
 
-export function vtkOpenGLHardwareSelector(publicAPI, model) {
+function vtkOpenGLHardwareSelector(publicAPI, model) {
   // Set our className
   model.classHierarchy.push('vtkOpenGLHardwareSelector');
 

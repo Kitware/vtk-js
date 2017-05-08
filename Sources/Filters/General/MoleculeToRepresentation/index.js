@@ -18,7 +18,7 @@ atomElem.atoms.forEach((a) => { ATOMS[a.atomicNumber] = a; });
 // vtkMoleculeToRepresentation methods
 // ----------------------------------------------------------------------------
 
-export function vtkMoleculeToRepresentation(publicAPI, model) {
+function vtkMoleculeToRepresentation(publicAPI, model) {
   const bondPositionData = [];
   const bondScaleData = [];
   const bondOrientationData = [];
