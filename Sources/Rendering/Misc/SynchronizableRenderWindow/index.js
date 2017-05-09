@@ -159,6 +159,8 @@ function createProgressHandler(callbackWhenReady) {
   };
 }
 
+// ----------------------------------------------------------------------------
+
 function createSceneMtimeHandler() {
   const mtimes = {};
   let activeViewId = 'default';
@@ -196,6 +198,13 @@ function createSyncFunction(renderWindow, synchronizerContext) {
   let lastMtime = -1;
   let gcThreshold = 100;
 
+  const getManagedInstanceId = instance => instance.get('managedInstanceId').managedInstanceId;
+  const getManagedInstanceIds = () => macro.traverseInstanceTree(renderWindow, getManagedInstanceId);
+
+  function clearOneTimeUpdaters() {
+    vtkObjectManager.clearOneTimeUpdaters(getManagedInstanceIds());
+  }
+
   function setSynchronizedViewId(synchronizedViewId) {
     renderWindow.set({ synchronizedViewId }, true, true);
   }
@@ -221,7 +230,7 @@ function createSyncFunction(renderWindow, synchronizerContext) {
     }
   }
 
-  return { synchronize, setSynchronizedViewId, getSynchronizedViewId, updateGarbageCollectorThreshold };
+  return { synchronize, setSynchronizedViewId, getSynchronizedViewId, updateGarbageCollectorThreshold, getManagedInstanceIds, clearOneTimeUpdaters };
 }
 
 // ----------------------------------------------------------------------------

@@ -88,6 +88,28 @@ function updateRenderWindow(instance, props, context) {
   return update('vtkRenderWindow', instance, props, context);
 }
 
+function clearAllOneTimeUpdaters() {
+  Object.keys(ONE_TIME_INSTANCE_TRACKERS).forEach((key) => {
+    delete ONE_TIME_INSTANCE_TRACKERS[key];
+  });
+}
+
+function clearOneTimeUpdaters(...ids) {
+  if (ids.length === 0) {
+    return clearAllOneTimeUpdaters();
+  }
+
+  let array = ids;
+  // allow an array passed as a single arg.
+  if (array.length === 1 && Array.isArray(array[0])) {
+    array = array[0];
+  }
+  array.forEach((instanceId) => {
+    delete ONE_TIME_INSTANCE_TRACKERS[instanceId];
+  });
+  return array;
+}
+
 // ----------------------------------------------------------------------------
 // Updater functions
 // ----------------------------------------------------------------------------
@@ -104,7 +126,7 @@ function genericUpdater(instance, state, context) {
       const { id, type } = childState;
       let childInstance = context.getInstance(id);
       if (!childInstance) {
-        childInstance = build(type);
+        childInstance = build(type, { managedInstanceId: id });
         context.registerInstance(id, childInstance);
       }
       update(type, childInstance, childState, context);
@@ -249,7 +271,6 @@ function polydataUpdater(instance, state, context) {
     if ((arraysToBind.length - 2) === nbArrayToDownload) {
       while (arraysToBind.length) {
         const [fn, args] = arraysToBind.shift();
-        // fn.apply(null, args);
         fn(...args);
       }
       instance.modified();
@@ -280,8 +301,8 @@ function polydataUpdater(instance, state, context) {
       .then(
         (values) => {
           const array = vtkDataArray.newInstance(Object.assign({ values }, arrayMetadata));
-          // console.log('array', array.getName());
-          arraysToBind.push([instance.get(arrayMetadata.location)[arrayMetadata.location].addArray, [array]]);
+          const regMethod = arrayMetadata.registration ? arrayMetadata.registration : 'addArray';
+          arraysToBind.push([instance.get(arrayMetadata.location)[arrayMetadata.location][regMethod], [array]]);
           validateDataset();
         },
         (error) => {
@@ -357,5 +378,6 @@ export default {
   setTypeMapping,
   clearTypeMapping,
   getSupportedTypes,
+  clearOneTimeUpdaters,
   updateRenderWindow,
 };

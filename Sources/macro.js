@@ -623,6 +623,44 @@ export function chain(...fn) {
 }
 
 // ----------------------------------------------------------------------------
+// Some utility methods for vtk objects
+// ----------------------------------------------------------------------------
+
+export function isVtkObject(instance) {
+  return instance && instance.isA && instance.isA('vtkObject');
+}
+
+export function traverseInstanceTree(instance, extractFunction, accumulator = [], visitedInstances = []) {
+  if (isVtkObject(instance)) {
+    if (visitedInstances.indexOf(instance) >= 0) {
+      // avoid cycles
+      return accumulator;
+    }
+
+    visitedInstances.push(instance);
+    const result = extractFunction(instance);
+    if (result !== undefined) {
+      accumulator.push(result);
+    }
+
+    // Now go through this instance's model
+    const model = instance.get();
+    Object.keys(model).forEach((key) => {
+      const modelObj = model[key];
+      if (Array.isArray(modelObj)) {
+        modelObj.forEach((subObj) => {
+          traverseInstanceTree(subObj, extractFunction, accumulator, visitedInstances);
+        });
+      } else {
+        traverseInstanceTree(modelObj, extractFunction, accumulator, visitedInstances);
+      }
+    });
+  }
+
+  return accumulator;
+}
+
+// ----------------------------------------------------------------------------
 // Default export
 // ----------------------------------------------------------------------------
 
@@ -636,6 +674,7 @@ export default {
   getArray,
   getCurrentGlobalMTime,
   getStateArrayMapFunc,
+  isVtkObject,
   newInstance,
   obj,
   safeArrays,
@@ -644,6 +683,7 @@ export default {
   setGet,
   setGetArray,
   setLoggerFunction,
+  traverseInstanceTree,
   vtkDebugMacro,
   vtkErrorMacro,
   vtkInfoMacro,
