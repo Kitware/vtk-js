@@ -1898,7 +1898,7 @@ const isFinite = Number.isFinite;
 
 // JavaScript - add-on ----------------------
 
-function createUninitializedBouds() {
+function createUninitializedBounds() {
   return [].concat([
     Number.MAX_VALUE, Number.MIN_VALUE, // X
     Number.MAX_VALUE, Number.MIN_VALUE, // Y
@@ -2001,5 +2001,5 @@ export default {
   isFinite,
 
   // JS add-on
-  createUninitializedBouds,
+  createUninitializedBounds,
 };

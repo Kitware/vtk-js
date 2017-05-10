@@ -12,7 +12,7 @@ function vtkVolumeMapper(publicAPI, model) {
   publicAPI.getBounds = () => {
     const input = publicAPI.getInputData();
     if (!input) {
-      model.bounds = vtkMath.createUninitializedBouds();
+      model.bounds = vtkMath.createUninitializedBounds();
     } else {
       if (!model.static) {
         publicAPI.update();
