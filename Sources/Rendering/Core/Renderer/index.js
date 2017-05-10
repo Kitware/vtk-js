@@ -528,7 +528,7 @@ const DEFAULT_VALUES = {
   preserveColorBuffer: false,
   preserveDepthBuffer: false,
 
-  computeVisiblePropBounds: vtkMath.createUninitializedBouds(),
+  computeVisiblePropBounds: vtkMath.createUninitializedBounds(),
 
   interactive: true,
 
