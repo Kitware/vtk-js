@@ -75,33 +75,26 @@ function vtkCamera(publicAPI, model) {
   };
 
   publicAPI.setDistance = (d) => {
-    // if (distance === d) {
-    //   return;
-    // }
+    if (model.distance === d) {
+      return;
+    }
 
-    // distance = d;
+    model.distance = d;
 
-    // // Distance should be greater than .0002
-    // if (distance < 0.0002) {
-    //   distance = 0.0002;
-    // }
+    if (model.distance < 1e-20) {
+      model.distance = 1e-20;
+      vtkDebugMacro('Distance is set to minimum.');
+    }
 
-    // // we want to keep the camera pointing in the same direction
-    // const vec = model.directionOfProjection;
+    // we want to keep the camera pointing in the same direction
+    const vec = model.directionOfProjection;
 
-    // // recalculate FocalPoint
-    // model.focalPoint[0] = model.position[0] + vec[0] * distance;
-    // model.focalPoint[1] = model.position[1] + vec[1] * distance;
-    // model.focalPoint[2] = model.position[2] + vec[2] * distance;
+    // recalculate FocalPoint
+    model.focalPoint[0] = model.position[0] + (vec[0] * model.distance);
+    model.focalPoint[1] = model.position[1] + (vec[1] * model.distance);
+    model.focalPoint[2] = model.position[2] + (vec[2] * model.distance);
 
-    // // FIXME
-    // // computeViewTransform();
-    // // computeCameraLightTransform();
-    // publicAPI.modified();
-  };
-
-  publicAPI.getDistance = () => {
-
+    publicAPI.modified();
   };
 
   //----------------------------------------------------------------------------
@@ -459,6 +452,7 @@ export function extend(publicAPI, model, initialValues = {}) {
   macro.obj(publicAPI, model);
 
   macro.get(publicAPI, model, [
+    'distance',
     'thickness',
     'userViewTransform',
     'userTransform',
