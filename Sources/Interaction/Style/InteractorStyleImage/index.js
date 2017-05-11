@@ -106,6 +106,7 @@ function vtkInteractorStyleImage(publicAPI, model) {
     } else if (model.interactionMode === 'IMAGE_SLICING' &&
              model.interactor.getControlKey()) {
       // If ctrl is held down in slicing mode, slice the image
+      model.lastSlicePosition = pos.y;
       publicAPI.startSlice();
       publicAPI.setAnimationStateOn();
     } else {
@@ -208,9 +209,8 @@ function vtkInteractorStyleImage(publicAPI, model) {
 
     const lastPtr = model.interactor.getPointerIndex();
     const pos = model.interactor.getEventPosition(lastPtr);
-    const lastPos = model.interactor.getLastEventPosition(lastPtr);
 
-    const dy = pos.y - lastPos.y;
+    const dy = pos.y - model.lastSlicePosition;
 
     const camera = model.currentRenderer.getActiveCamera();
     const range = camera.getClippingRange();
@@ -239,6 +239,7 @@ function vtkInteractorStyleImage(publicAPI, model) {
     camera.setDistance(distance);
 
     rwi.render();
+    model.lastSlicePosition = pos.y;
   };
 
 
@@ -291,6 +292,7 @@ const DEFAULT_VALUES = {
   motionFactor: 10.0,
   windowLevelStartPosition: [0, 0],
   windowLevelCurrentPosition: [0, 0],
+  lastSlicePosition: 0,
   windowLevelInitial: [1.0, 0.5],
   currentImageProperty: 0,
   currentImageNumber: -1,
@@ -312,7 +314,10 @@ export function extend(publicAPI, model, initialValues = {}) {
   vtkInteractorStyleTrackballCamera.extend(publicAPI, model, initialValues);
 
   // Create get-set macros
-  macro.setGet(publicAPI, model, ['motionFactor']);
+  macro.setGet(publicAPI, model, [
+    'motionFactor',
+    'interactionMode',
+  ]);
 
   // For more macro methods, see "Sources/macro.js"
 

@@ -13,6 +13,34 @@ function vtkImageMapper(publicAPI, model) {
     publicAPI.getInputData();
   };
 
+  publicAPI.setZSliceFromCamera = (cam) => {
+    publicAPI.update();
+    const image = publicAPI.getInputData();
+
+    const fp = cam.getFocalPoint();
+
+    const origin = image.getOrigin();
+    const spacing = image.getSpacing();
+    const ext = image.getExtent();
+
+    // compute the slice number
+    fp[0] -= origin[0];
+    fp[1] -= origin[1];
+    fp[2] -= origin[2];
+
+    fp[0] /= spacing[0];
+    fp[1] /= spacing[1];
+    fp[2] /= spacing[2];
+
+    if (fp[2] < ext[4]) {
+      fp[2] = ext[4];
+    }
+    if (fp[2] > ext[5]) {
+      fp[2] = ext[5];
+    }
+    publicAPI.setZSlice(Math.floor(fp[2] + 0.5));
+  };
+
   publicAPI.getBounds = () => {
     const image = publicAPI.getInputData();
     if (!image) {
@@ -47,6 +75,7 @@ const DEFAULT_VALUES = {
   useCustomExtents: false,
   zSlice: 0,
   renderToRectangle: false,
+  sliceAtFocalPoint: false,
 };
 
 // ----------------------------------------------------------------------------
@@ -62,6 +91,7 @@ export function extend(publicAPI, model, initialValues = {}) {
     'zSlice',
     'useCustomExtents',
     'renderToRectangle',
+    'sliceAtFocalPoint',
   ]);
   macro.setGetArray(publicAPI, model, [
     'customDisplayExtent',

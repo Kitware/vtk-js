@@ -21,6 +21,24 @@ function vtkOpenGLImageMapper(publicAPI, model) {
   // Set our className
   model.classHierarchy.push('vtkOpenGLImageMapper');
 
+  publicAPI.buildPass = (prepass) => {
+    if (prepass) {
+      model.openGLRenderWindow = publicAPI.getFirstAncestorOfType('vtkOpenGLRenderWindow');
+      model.context = model.openGLRenderWindow.getContext();
+      model.tris.setContext(model.context);
+      model.openGLTexture.setWindow(model.openGLRenderWindow);
+      model.openGLTexture.setContext(model.context);
+      model.openGLImageSlice = publicAPI.getFirstAncestorOfType('vtkOpenGLImageSlice');
+      model.openGLRenderer = publicAPI.getFirstAncestorOfType('vtkOpenGLRenderer');
+      const ren = model.openGLRenderer.getRenderable();
+      model.openGLCamera = model.openGLRenderer.getViewNodeFor(ren.getActiveCamera());
+      // is zslice set by the camera
+      if (model.renderable.getSliceAtFocalPoint()) {
+        model.renderable.setZSliceFromCamera(ren.getActiveCamera());
+      }
+    }
+  };
+
   publicAPI.translucentPass = (prepass) => {
     if (prepass) {
       publicAPI.render();
@@ -35,16 +53,8 @@ function vtkOpenGLImageMapper(publicAPI, model) {
 
   // Renders myself
   publicAPI.render = () => {
-    model.openGLRenderWindow = publicAPI.getFirstAncestorOfType('vtkOpenGLRenderWindow');
-    model.context = model.openGLRenderWindow.getContext();
-    model.tris.setContext(model.context);
-    model.openGLTexture.setWindow(model.openGLRenderWindow);
-    model.openGLTexture.setContext(model.context);
-    model.openGLImageSlice = publicAPI.getFirstAncestorOfType('vtkOpenGLImageSlice');
     const actor = model.openGLImageSlice.getRenderable();
-    model.openGLRenderer = publicAPI.getFirstAncestorOfType('vtkOpenGLRenderer');
     const ren = model.openGLRenderer.getRenderable();
-    model.openGLCamera = model.openGLRenderer.getViewNodeFor(ren.getActiveCamera());
     publicAPI.renderPiece(ren, actor);
   };
 
@@ -305,6 +315,7 @@ function vtkOpenGLImageMapper(publicAPI, model) {
     // first do a coarse check
     if (model.VBOBuildTime.getMTime() < publicAPI.getMTime() ||
         model.VBOBuildTime.getMTime() < actor.getMTime() ||
+        model.VBOBuildTime.getMTime() < model.renderable.getMTime() ||
         model.VBOBuildTime.getMTime() < actor.getProperty().getMTime() ||
         model.VBOBuildTime.getMTime() < model.currentInput.getMTime()) {
       return true;
@@ -320,7 +331,8 @@ function vtkOpenGLImageMapper(publicAPI, model) {
     }
 
     // rebuild the VBO if the data has changed
-    const toString = `${image.getMTime()}A${image.getPointData().getScalars().getMTime()}B${publicAPI.getMTime()}`;
+    const z = model.renderable.getZSlice();
+    const toString = `${z}A${image.getMTime()}A${image.getPointData().getScalars().getMTime()}B${publicAPI.getMTime()}`;
 
     if (model.VBOBuildString !== toString) {
       // Build the VBOs
@@ -334,10 +346,13 @@ function vtkOpenGLImageMapper(publicAPI, model) {
       model.openGLTexture.setMagnificationFilter(Filter.LINEAR);
       model.openGLTexture.setWrapS(Wrap.CLAMP_TO_EDGE);
       model.openGLTexture.setWrapT(Wrap.CLAMP_TO_EDGE);
+      const numComp = image.getPointData().getScalars().getNumberOfComponents();
+      const sliceSize = dims[0] * dims[1] * numComp;
+      const scalars = image.getPointData().getScalars().getData().subarray(z * sliceSize, (z + 1) * sliceSize);
       model.openGLTexture.create2DFromRaw(dims[0], dims[1],
-        image.getPointData().getScalars().getNumberOfComponents(),
+        numComp,
         image.getPointData().getScalars().getDataType(),
-        image.getPointData().getScalars().getData());
+        scalars);
       model.openGLTexture.activate();
       model.openGLTexture.sendParameters();
       model.openGLTexture.deactivate();
