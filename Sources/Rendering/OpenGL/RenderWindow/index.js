@@ -183,19 +183,26 @@ function vtkOpenGLRenderWindow(publicAPI, model) {
     }
   };
 
+  function getCanvasDataURL(format = 'image/png') {
+    return model.canvas.toDataURL(format);
+  }
+
   publicAPI.captureImage = (format = 'image/png') => {
     if (model.deleted) {
       return null;
     }
 
     publicAPI.traverseAllPasses();
-    return model.canvas.toDataURL(format);
+    return getCanvasDataURL(format);
   };
 
   publicAPI.traverseAllPasses = () => {
     model.renderPasses.forEach((val) => {
       val.traverse(publicAPI, null);
     });
+    if (model.notifyImageReady) {
+      publicAPI.invokeImageReady(getCanvasDataURL());
+    }
   };
 }
 
@@ -214,6 +221,7 @@ const DEFAULT_VALUES = {
   textureUnitManager: null,
   textureResourceIds: null,
   renderPasses: [],
+  notifyImageReady: false,
 };
 
 // ----------------------------------------------------------------------------
@@ -235,6 +243,8 @@ export function extend(publicAPI, model, initialValues = {}) {
   // setup default forward pass rendering
   model.renderPasses[0] = vtkForwardPass.newInstance();
 
+  macro.event(publicAPI, model, 'imageReady');
+
   // Build VTK API
   macro.get(publicAPI, model, [
     'shaderCache',
@@ -246,6 +256,7 @@ export function extend(publicAPI, model, initialValues = {}) {
     'context',
     'canvas',
     'renderPasses',
+    'notifyImageReady',
   ]);
 
   macro.setGetArray(publicAPI, model, [
