@@ -227,7 +227,9 @@ function createSyncFunction(renderWindow, synchronizerContext) {
       context.incrementMTime();
       vtkObjectManager.updateRenderWindow(renderWindow, state, context);
       context.freeOldArrays(gcThreshold, context);
+      return true;
     }
+    return false;
   }
 
   return { synchronize, setSynchronizedViewId, getSynchronizedViewId, updateGarbageCollectorThreshold, getManagedInstanceIds, clearOneTimeUpdaters };
