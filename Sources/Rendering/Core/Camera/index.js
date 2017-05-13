@@ -275,10 +275,6 @@ function vtkCamera(publicAPI, model) {
 
   };
 
-  publicAPI.setWindowCenter = (x, y) => {
-
-  };
-
   publicAPI.setObliqueAngles = (alpha, beta) => {
 
   };
@@ -471,7 +467,6 @@ export function extend(publicAPI, model, initialValues = {}) {
 
   macro.getArray(publicAPI, model, [
     'directionOfProjection',
-    'windowCenter',
     'viewPlaneNormal',
     'position',
     'focalPoint',
@@ -479,6 +474,7 @@ export function extend(publicAPI, model, initialValues = {}) {
 
   macro.setGetArray(publicAPI, model, [
     'clippingRange',
+    'windowCenter',
   ], 2);
 
   macro.setGetArray(publicAPI, model, [
