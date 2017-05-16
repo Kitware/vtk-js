@@ -1,4 +1,4 @@
-import { vec3, vec4, mat4 } from 'gl-matrix';
+import { quat4, vec3, vec4, mat3, mat4 } from 'gl-matrix';
 
 import macro   from 'vtk.js/Sources/macro';
 import vtkMath from 'vtk.js/Sources/Common/Core/Math';
@@ -279,10 +279,6 @@ function vtkCamera(publicAPI, model) {
 
   };
 
-  publicAPI.applyTransform = (transform) => {
-
-  };
-
   publicAPI.getViewTransformMatrix = () => {
     const eye = model.position;
     const at = model.focalPoint;
@@ -295,10 +291,6 @@ function vtkCamera(publicAPI, model) {
 
     mat4.transpose(result, result);
     return result;
-  };
-
-  publicAPI.getViewTransformObject = () => {
-
   };
 
   publicAPI.getProjectionTransformMatrix = (aspect, nearz, farz) => {
@@ -339,10 +331,6 @@ function vtkCamera(publicAPI, model) {
     return projectionMatrix;
   };
 
-  publicAPI.getProjectionTransformObject = (aspect, nearz, farz) => {
-    // return vtkTransform object
-  };
-
   publicAPI.getCompositeProjectionTransformMatrix = (aspect, nearz, farz) => {
     const vMat = publicAPI.getViewTransformMatrix();
     const pMat = publicAPI.getProjectionTransformMatrix(aspect, nearz, farz);
@@ -353,26 +341,6 @@ function vtkCamera(publicAPI, model) {
   // publicAPI.getProjectionTransformMatrix = renderer => {
   //   // return glmatrix object
   // };
-
-  publicAPI.setUserViewTransform = (transform) => {
-    // transform is a vtkHomogeneousTransform
-  };
-
-  publicAPI.setUserTransform = (transform) => {
-    // transform is a vtkHomogeneousTransform
-  };
-
-  publicAPI.render = (renderer) => {
-
-  };
-
-  publicAPI.getViewingRaysMTime = () => {
-
-  };
-
-  publicAPI.viewingRaysModified = () => {
-
-  };
 
   publicAPI.getFrustumPlanes = (aspect) => {
     // Return array of 24 params (4 params for each of 6 plane equations)
@@ -386,6 +354,91 @@ function vtkCamera(publicAPI, model) {
 
   };
 
+  publicAPI.setDirectionOfProjection = (x, y, z) => {
+    if (model.directionOfProjection[0] === x &&
+        model.directionOfProjection[1] === y &&
+        model.directionOfProjection[2] === z) {
+      return;
+    }
+
+    model.directionOfProjection[0] = x;
+    model.directionOfProjection[1] = y;
+    model.directionOfProjection[2] = z;
+
+    const vec = model.directionOfProjection;
+
+    // recalculate FocalPoint
+    model.focalPoint[0] = model.position[0] + (vec[0] * model.distance);
+    model.focalPoint[1] = model.position[1] + (vec[1] * model.distance);
+    model.focalPoint[2] = model.position[2] + (vec[2] * model.distance);
+    publicAPI.computeViewPlaneNormal();
+  };
+
+  // used to handle convert js device orientation angles
+  // when you use this method the camera will adjust to the
+  // device orientation such that the physicalViewUp you set
+  // in world coordinates looks up, and the physicalViewNorth
+  // you set in world coorindates will (maybe) point north
+  publicAPI.setDeviceAngles = (alpha, beta, gamma, screen) => {
+    const rotmat = mat4.create(); // phone to physical coordinates
+    mat4.rotateZ(rotmat, rotmat, vtkMath.radiansFromDegrees(alpha));
+    mat4.rotateX(rotmat, rotmat, vtkMath.radiansFromDegrees(beta));
+    mat4.rotateY(rotmat, rotmat, vtkMath.radiansFromDegrees(gamma));
+    mat4.rotateZ(rotmat, rotmat, vtkMath.radiansFromDegrees(-screen));
+
+    const dop = vec3.fromValues(0.0, 0.0, -1.0);
+    const vup = vec3.fromValues(0.0, 1.0, 0.0);
+    const newdop = vec3.create();
+    const newvup = vec3.create();
+    vec3.transformMat4(newdop, dop, rotmat);
+    vec3.transformMat4(newvup, vup, rotmat);
+
+    // now the physical to vtk world tform
+    const physVRight = [3];
+    vtkMath.cross(model.physicalViewNorth, model.physicalViewUp, physVRight);
+    const phystoworld = mat3.create();
+    phystoworld[0] = physVRight[0];
+    phystoworld[1] = physVRight[1];
+    phystoworld[2] = physVRight[2];
+    phystoworld[3] = model.physicalViewNorth[0];
+    phystoworld[4] = model.physicalViewNorth[1];
+    phystoworld[5] = model.physicalViewNorth[2];
+    phystoworld[6] = model.physicalViewUp[0];
+    phystoworld[7] = model.physicalViewUp[1];
+    phystoworld[8] = model.physicalViewUp[2];
+    mat3.transpose(phystoworld, phystoworld);
+    vec3.transformMat3(newdop, newdop, phystoworld);
+    vec3.transformMat3(newvup, newvup, phystoworld);
+
+    publicAPI.setDirectionOfProjection(newdop[0], newdop[1], newdop[2]);
+    publicAPI.setViewUp(newvup[0], newvup[1], newvup[2]);
+    publicAPI.modified();
+  };
+
+  publicAPI.setOrientationWXYZ = (degrees, x, y, z) => {
+    const quatMat = mat4.create();
+
+    if (degrees !== 0.0 && (x !== 0.0 || y !== 0.0 || z !== 0.0)) {
+      // convert to radians
+      const angle = vtkMath.radiansFromDegrees(degrees);
+      const q = quat4.create();
+      quat4.setAxisAngle(q, [x, y, z], angle);
+      quat4.toMat4(q, quatMat);
+    }
+
+    const dop = vec3.fromValues(0.0, 0.0, -1.0);
+    const newdop = vec3.create();
+    vec3.transformMat4(newdop, dop, quatMat);
+
+    const vup = vec3.fromValues(0.0, 1.0, 0.0);
+    const newvup = vec3.create();
+    vec3.transformMat4(newvup, vup, quatMat);
+
+    publicAPI.setDirectionOfProjection(newdop[0], newdop[1], newdop[2]);
+    publicAPI.setViewUp(newvup[0], newvup[1], newvup[2]);
+    publicAPI.modified();
+  };
+
   publicAPI.getCameraLightTransformMatrix = () => {
 
   };
@@ -395,10 +448,6 @@ function vtkCamera(publicAPI, model) {
   };
 
   publicAPI.shallowCopy = (sourceCamera) => {
-
-  };
-
-  publicAPI.deepCopy = (sourceCamera) => {
 
   };
 
@@ -437,6 +486,8 @@ export const DEFAULT_VALUES = {
   userTransform: null,
   freezeFocalPoint: false,
   useScissor: false,
+  physicalViewUp: [0.0, 1.0, 0.0],
+  physicalViewNorth: [0.0, 0.0, -1.0],
 };
 
 // ----------------------------------------------------------------------------
@@ -482,6 +533,8 @@ export function extend(publicAPI, model, initialValues = {}) {
     'screenBottomLeft',
     'screenBottomRight',
     'screenTopRight',
+    'physicalViewUp',
+    'physicalViewNorth',
   ], 3);
 
   // Object methods
