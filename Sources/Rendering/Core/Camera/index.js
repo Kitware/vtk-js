@@ -316,18 +316,38 @@ function vtkCamera(publicAPI, model) {
 
       // mat4.ortho(out, left, right, bottom, top, near, far)
       mat4.ortho(projectionMatrix, xmin, xmax, ymin, ymax, nearz, farz);
+      mat4.transpose(projectionMatrix, projectionMatrix);
     } else if (model.useOffAxisProjection) {
       throw new Error('Off-Axis projection is not supported at this time');
     } else {
-      // mat4.perspective(out, fovy, aspect, near, far)
-      let fovy = model.viewAngle;
+      const tmp = Math.tan( vtkMath.radiansFromDegrees( model.viewAngle ) / 2.0 );
+      let width;
+      let height;
       if (model.useHorizontalViewAngle === true) {
-        fovy = model.viewAngle / aspect;
+        width = model.clippingRange[0] * tmp;
+        height = model.clippingRange[0] * tmp / aspect;
+      } else {
+        width = model.clippingRange[0] * tmp * aspect;
+        height = model.clippingRange[0] * tmp;
       }
-      mat4.perspective(projectionMatrix, vtkMath.radiansFromDegrees(fovy), aspect, cRange[0], cRange[1]);
+
+      const xmin = (model.windowCenter[0] - 1.0) * width;
+      const xmax = (model.windowCenter[0] + 1.0) * width;
+      const ymin = (model.windowCenter[1] - 1.0) * height;
+      const ymax = (model.windowCenter[1] + 1.0) * height;
+      const znear = cRange[0];
+      const zfar = cRange[1];
+
+      projectionMatrix[0] =  2.0 * znear / (xmax - xmin);
+      projectionMatrix[5] =  2.0 * znear / (ymax - ymin);
+      projectionMatrix[2] =  (xmin + xmax) / (xmax - xmin);
+      projectionMatrix[6] =  (ymin + ymax) / (ymax - ymin);
+      projectionMatrix[10] = -(znear + zfar) / (zfar - znear);
+      projectionMatrix[14] = -1.0;
+      projectionMatrix[11] = -2.0 * znear * zfar / (zfar - znear);
+      projectionMatrix[15] = 0.0;
     }
 
-    mat4.transpose(projectionMatrix, projectionMatrix);
     return projectionMatrix;
   };
 
