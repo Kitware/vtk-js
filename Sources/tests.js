@@ -1,5 +1,6 @@
 import './Common/Core/LookupTable/test/testCategoricalColors';
 import './Common/DataModel/DataSetAttributes/test/testDataSetAttributes';
+import './Common/DataModel/Plane/test/testPlane';
 import './Filters/General/Calculator/test/testCalculator';
 import './Filters/General/ImageStreamline/test/testStreamline';
 import './Filters/General/MoleculeToRepresentation/test/testMultipleBonds';
