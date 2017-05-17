@@ -451,6 +451,12 @@ export function algo(publicAPI, model, numberOfInputs, numberOfOutputs) {
     model.inputConnection[port] = outputPort;
   }
 
+  function getInputConnection(port = 0) {
+    if (model.inputConnection[port]) {
+      return model.inputConnection[port];
+    }
+  }
+
   function getOutputData(port = 0) {
     if (model.deleted) {
       vtkErrorMacro('instance deleted - cannot call any method');
@@ -509,6 +515,7 @@ export function algo(publicAPI, model, numberOfInputs, numberOfOutputs) {
     publicAPI.setInputData = setInputData;
     publicAPI.setInputConnection = setInputConnection;
     publicAPI.getInputData = getInputData;
+    publicAPI.getInputConnection = getInputConnection;
   }
 
   if (numberOfOutputs) {
