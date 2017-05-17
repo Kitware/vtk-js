@@ -320,7 +320,7 @@ function vtkCamera(publicAPI, model) {
     } else if (model.useOffAxisProjection) {
       throw new Error('Off-Axis projection is not supported at this time');
     } else {
-      const tmp = Math.tan( vtkMath.radiansFromDegrees( model.viewAngle ) / 2.0 );
+      const tmp = Math.tan(vtkMath.radiansFromDegrees(model.viewAngle) / 2.0);
       let width;
       let height;
       if (model.useHorizontalViewAngle === true) {
@@ -338,10 +338,10 @@ function vtkCamera(publicAPI, model) {
       const znear = cRange[0];
       const zfar = cRange[1];
 
-      projectionMatrix[0] =  2.0 * znear / (xmax - xmin);
-      projectionMatrix[5] =  2.0 * znear / (ymax - ymin);
-      projectionMatrix[2] =  (xmin + xmax) / (xmax - xmin);
-      projectionMatrix[6] =  (ymin + ymax) / (ymax - ymin);
+      projectionMatrix[0] = 2.0 * znear / (xmax - xmin);
+      projectionMatrix[5] = 2.0 * znear / (ymax - ymin);
+      projectionMatrix[2] = (xmin + xmax) / (xmax - xmin);
+      projectionMatrix[6] = (ymin + ymax) / (ymax - ymin);
       projectionMatrix[10] = -(znear + zfar) / (zfar - znear);
       projectionMatrix[14] = -1.0;
       projectionMatrix[11] = -2.0 * znear * zfar / (zfar - znear);
