@@ -903,6 +903,13 @@ function vtkOpenGLPolyDataMapper(publicAPI, model) {
     publicAPI.setPropertyShaderParameters(cellBO, ren, actor);
     publicAPI.setCameraShaderParameters(cellBO, ren, actor);
     publicAPI.setLightingShaderParameters(cellBO, ren, actor);
+
+    const listCallbacks = model.renderable.getViewSpecificProperties().ShadersCallbacks;
+    if (listCallbacks) {
+      listCallbacks.forEach((object) => {
+        object.callback(object.userData, cellBO, ren, actor);
+      });
+    }
   };
 
   publicAPI.setMapperShaderParameters = (cellBO, ren, actor) => {
