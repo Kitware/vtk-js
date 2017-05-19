@@ -11,6 +11,7 @@ import './Filters/Sources/LineSource/test/testLine';
 import './Filters/Sources/PlaneSource/test/testPlane';
 import './Filters/Sources/PointSource/test/testPointSource';
 import './IO/Misc/PDBReader/test/testMolecule';
+import './Rendering/Core/AbstractMapper/test/testAbstractMapper';
 import './Rendering/Core/ColorTransferFunction/test/testColorTransferFunction';
 import './Rendering/Core/ColorTransferFunction/test/testColorTransferFunctionPresets';
 import './Rendering/Core/ColorTransferFunction/test/testColorTransferFunctionInterpolation';
