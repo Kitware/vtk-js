@@ -452,9 +452,7 @@ export function algo(publicAPI, model, numberOfInputs, numberOfOutputs) {
   }
 
   function getInputConnection(port = 0) {
-    if (model.inputConnection[port]) {
-      return model.inputConnection[port];
-    }
+    return model.inputConnection[port];
   }
 
   function getOutputData(port = 0) {
