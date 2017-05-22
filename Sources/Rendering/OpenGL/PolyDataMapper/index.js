@@ -668,6 +668,52 @@ function vtkOpenGLPolyDataMapper(publicAPI, model) {
     }
   };
 
+  publicAPI.replaceShaderClip = (shaders, ren, actor) => {
+    let VSSource = shaders.Vertex;
+    let FSSource = shaders.Fragment;
+
+    if (model.renderable.getNumberOfClippingPlanes()) {
+      let numClipPlanes = model.renderable.getNumberOfClippingPlanes();
+      if (numClipPlanes > 6) {
+        macro.vtkErrorMacro('OpenGL has a limit of 6 clipping planes');
+        numClipPlanes = 6;
+      }
+      VSSource = vtkShaderProgram.substitute(VSSource,
+        '//VTK::Clip::Dec', [
+          'uniform int numClipPlanes;',
+          'uniform vec4 clipPlanes[6];',
+          'varying float clipDistancesVSOutput[6];']).result;
+
+      VSSource = vtkShaderProgram.substitute(VSSource,
+        '//VTK::Clip::Impl', [
+          'for (int planeNum = 0; planeNum < 6; planeNum++)',
+          '    {',
+          '    if (planeNum >= numClipPlanes)',
+          '        {',
+          '        break;',
+          '        }',
+          '    clipDistancesVSOutput[planeNum] = dot(clipPlanes[planeNum], vertexMC);',
+          '    }']).result;
+      FSSource = vtkShaderProgram.substitute(FSSource,
+        '//VTK::Clip::Dec', [
+          'uniform int numClipPlanes;',
+          'varying float clipDistancesVSOutput[6];']).result;
+
+      FSSource = vtkShaderProgram.substitute(FSSource,
+        '//VTK::Clip::Impl', [
+          'for (int planeNum = 0; planeNum < 6; planeNum++)',
+          '    {',
+          '    if (planeNum >= numClipPlanes)',
+          '        {',
+          '        break;',
+          '        }',
+          '    if (clipDistancesVSOutput[planeNum] < 0.0) discard;',
+          '    }']).result;
+    }
+    shaders.Vertex = VSSource;
+    shaders.Fragment = FSSource;
+  };
+
   publicAPI.getCoincidentParameters = (ren, actor) => {
     // 1. ResolveCoincidentTopology is On and non zero for this primitive
     // type
@@ -770,6 +816,7 @@ function vtkOpenGLPolyDataMapper(publicAPI, model) {
     publicAPI.replaceShaderLight(shaders, ren, actor);
     publicAPI.replaceShaderTCoord(shaders, ren, actor);
     publicAPI.replaceShaderPicking(shaders, ren, actor);
+    publicAPI.replaceShaderClip(shaders, ren, actor);
     publicAPI.replaceShaderCoincidentOffset(shaders, ren, actor);
     publicAPI.replaceShaderPositionVC(shaders, ren, actor);
 
@@ -955,6 +1002,26 @@ function vtkOpenGLPolyDataMapper(publicAPI, model) {
           vtkErrorMacro('Error setting scalarColor in shader VAO.');
         }
       }
+    }
+
+    if (model.renderable.getNumberOfClippingPlanes()) {
+      // add all the clipping planes
+      let numClipPlanes = model.renderable.getNumberOfClippingPlanes();
+      if (numClipPlanes > 6) {
+        macro.vtkErrorMacro('OpenGL has a limit of 6 clipping planes');
+        numClipPlanes = 6;
+      }
+      const planeEquations = [];
+      for (let i = 0; i < numClipPlanes; i++) {
+        const planeEquation = [];
+        model.renderable.getClippingPlaneInDataCoords(actor.getMatrix(), i, planeEquation);
+
+        for (let j = 0; j < 4; j++) {
+          planeEquations.push(planeEquation[j]);
+        }
+      }
+      cellBO.getProgram().setUniformi('numClipPlanes', numClipPlanes);
+      cellBO.getProgram().setUniform4fv('clipPlanes', 6, planeEquations);
     }
 
     if (model.internalColorTexture

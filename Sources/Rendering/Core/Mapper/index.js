@@ -1,4 +1,5 @@
 import macro                    from 'vtk.js/Sources/macro';
+import vtkAbstractMapper3D      from 'vtk.js/Sources/Rendering/Core/AbstractMapper3D';
 import vtkDataArray             from 'vtk.js/Sources/Common/Core/DataArray';
 import vtkImageData             from 'vtk.js/Sources/Common/DataModel/ImageData';
 import vtkLookupTable           from 'vtk.js/Sources/Common/Core/LookupTable';
@@ -489,9 +490,6 @@ const DEFAULT_VALUES = {
   scalarMaterialMode: 0,
   arrayAccessMode: 1, // By_NAME
 
-  bounds: [1, -1, 1, -1, 1, -1],
-  center: [0, 0],
-
   renderTime: 0,
 
   colorByArrayName: null,
@@ -511,6 +509,7 @@ const DEFAULT_VALUES = {
 
   viewSpecificProperties: null,
 
+
 };
 
 // ----------------------------------------------------------------------------
@@ -518,8 +517,8 @@ const DEFAULT_VALUES = {
 export function extend(publicAPI, model, initialValues = {}) {
   Object.assign(model, DEFAULT_VALUES, initialValues);
 
-  // Build VTK API
-  macro.obj(publicAPI, model); // FIXME parent is not vtkObject
+  // Inheritance
+  vtkAbstractMapper3D.extend(publicAPI, model, initialValues);
   macro.algo(publicAPI, model, 1, 0);
 
   macro.get(publicAPI, model, [

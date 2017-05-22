@@ -1,3 +1,5 @@
+import vtkAbstractMapper          from './AbstractMapper';
+import vtkAbstractMapper3D        from './AbstractMapper3D';
 import vtkActor                   from './Actor';
 import vtkActor2D                 from './Actor2D';
 import vtkCamera                  from './Camera';
@@ -27,6 +29,8 @@ import vtkVolumeMapper            from './VolumeMapper';
 import vtkVolumeProperty          from './VolumeProperty';
 
 export default {
+  vtkAbstractMapper,
+  vtkAbstractMapper3D,
   vtkActor,
   vtkActor2D,
   vtkCamera,

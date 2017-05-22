@@ -184,6 +184,16 @@ function vtkShaderProgram(publicAPI, model) {
     return true;
   };
 
+  publicAPI.setUniform4fv = (name, count, v) => {
+    const location = publicAPI.findUniform(name);
+    if (location === -1) {
+      model.error = `Could not set uniform ${name} . No such uniform.`;
+      return false;
+    }
+    model.context.uniform4fv(location, v);
+    return true;
+  };
+
   publicAPI.findUniform = (name) => {
     if (!name || !model.linked) {
       return -1;
