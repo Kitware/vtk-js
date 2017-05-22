@@ -46,19 +46,19 @@ function extractDependencyIds(state, depList = []) {
 // ----------------------------------------------------------------------------
 
 function update(type, instance, props, context) {
-  const updater = TYPE_HANDLERS[type].update;
-  if (updater) {
-    updater(instance, props, context);
+  const handler = TYPE_HANDLERS[type];
+  if (handler && handler.update) {
+    handler.update(instance, props, context);
   } else {
     console.log('no updater for', type);
   }
 }
 
 function build(type, initialProps = {}) {
-  const builder = TYPE_HANDLERS[type].build;
+  const handler = TYPE_HANDLERS[type];
 
-  if (builder) {
-    return builder(initialProps);
+  if (handler && handler.build) {
+    return handler.build(initialProps);
   }
 
   console.log('No builder for', type);
@@ -175,12 +175,12 @@ function rendererUpdater(instance, state, context) {
   // store them on the instance, in case that view prop is later removed.
   if (state.dependencies) {
     state.dependencies.forEach((childState) => {
-      // We can be sure we have each view prop instance built, cached, and updated
-      // after genericUpdater(...)
       const viewPropInstance = context.getInstance(childState.id);
-      const flattenedDepIds = extractDependencyIds(childState);
-      viewPropInstance.set({ flattenedDepIds }, true);
-      flattenedDepIds.forEach(depId => allActorsDeps.add(depId));
+      if (viewPropInstance) {
+        const flattenedDepIds = extractDependencyIds(childState);
+        viewPropInstance.set({ flattenedDepIds }, true);
+        flattenedDepIds.forEach(depId => allActorsDeps.add(depId));
+      }
     });
   }
 
@@ -345,6 +345,10 @@ const DEFAULT_MAPPING = {
     update: colorTransferFunctionUpdater,
   },
   vtkPVLODActor: {
+    build: vtkActor.newInstance,
+    update: genericUpdater,
+  },
+  vtkOpenGLActor: {
     build: vtkActor.newInstance,
     update: genericUpdater,
   },
