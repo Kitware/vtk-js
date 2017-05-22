@@ -96,6 +96,40 @@ function vtkDataSetAttributes(publicAPI, model) {
     return publicAPI[`get${cleanAttType}`]();
   };
 
+  // Override to allow proper handling of active attributes
+  publicAPI.removeAllArrays = () => {
+    model.arrays = [];
+    attrTypes.forEach((attType) => {
+      model[`active${attType}`] = -1;
+    });
+  };
+
+  // Override to allow proper handling of active attributes
+  publicAPI.removeArray = (arrayName) => {
+    model.arrays = model.arrays.filter((entry, idx) => {
+      if (arrayName === entry.data.getName()) {
+        // Found the array to remove, but is it an active attribute?
+        attrTypes.forEach((attType) => {
+          if (idx === model[`active${attType}`]) {
+            model[`active${attType}`] = -1;
+          }
+        });
+        return false;
+      }
+      return true;
+    });
+  };
+
+  // Override to allow proper handling of active attributes
+  publicAPI.removeArrayByIndex = (arrayIdx) => {
+    model.arrays = model.arrays.filter((entry, idx) => idx !== arrayIdx);
+    attrTypes.forEach((attType) => {
+      if (arrayIdx === model[`active${attType}`]) {
+        model[`active${attType}`] = -1;
+      }
+    });
+  };
+
   attrTypes.forEach((value) => {
     publicAPI[`get${value}`] = () => publicAPI.getArrayByIndex(model[`active${value}`]);
     publicAPI[`set${value}`] = da => publicAPI.setAttribute(da, value);
