@@ -127,5 +127,21 @@ mapperSpecificProp['OpenGL']['FragmentShaderCode'] = 'MyNewFragmentShaderCode';
 mapperSpecificProp['OpenGL']['GeometryShaderCode'] = 'MyNewGeometryShaderCode';
 ```
 
+### CallBack:
+You may want to update some shader code by using callback :
 
+```js
+const mapperSpecificProp = mapper.getViewSpecificProperties();
+mapperSpecificProp.ShaderCallbacks = [];
+mapperSpecificProp.ShaderCallbacks.push({
+	userData: ...,
+	callback: function(userData, cellBO, ren, actor) {
+		const program = cellBO.getProgram();
+		program.setUniformi(...);
+	}
+});
+```
+
+Defined 'userData' will be the first parameters which will be passed to the callback.
+These callbacks will be executed when updateShaders() of OpenGLPolyDataMapper is called.
 
