@@ -174,8 +174,8 @@ function vtkOBJReader(publicAPI, model) {
   }
 
   // Internal method to fetch Array
-  function fetchData(url) {
-    return model.dataAccessHelper.fetchText(publicAPI, url, model.compression);
+  function fetchData(url, option = {}) {
+    return model.dataAccessHelper.fetchText(publicAPI, url, model.compression, option.progressCallback);
   }
 
   // Set DataSet url
@@ -195,12 +195,12 @@ function vtkOBJReader(publicAPI, model) {
     model.compression = option.compression;
 
     // Fetch metadata
-    return publicAPI.loadData();
+    return publicAPI.loadData({progressCallback: option.progressCallback});
   };
 
   // Fetch the actual data arrays
-  publicAPI.loadData = () => {
-    const promise = fetchData(model.url);
+  publicAPI.loadData = (option = {}) => {
+    const promise = fetchData(model.url, option);
     promise.then(publicAPI.parse);
     return promise;
   };

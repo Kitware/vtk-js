@@ -135,7 +135,7 @@ function fetchJSON(instance = {}, url, compression) {
 
 // ----------------------------------------------------------------------------
 
-function fetchText(instance = {}, url, compression) {
+function fetchText(instance = {}, url, compression, progressCallback) {
   if (compression && compression !== 'gz') {
     vtkErrorMacro('Supported algorithms are: [gz]');
     vtkErrorMacro(`Unkown compression algorithm: ${compression}`);
@@ -165,6 +165,10 @@ function fetchText(instance = {}, url, compression) {
         }
       }
     };
+
+    if (progressCallback) {
+      xhr.addEventListener('progress', progressCallback);
+    }
 
     // Make request
     xhr.open('GET', url, true);
