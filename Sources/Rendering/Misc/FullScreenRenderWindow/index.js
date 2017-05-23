@@ -11,14 +11,50 @@ import 'vtk.js/Sources/Common/DataModel/PolyData';
 import 'vtk.js/Sources/Rendering/Core/Actor';
 import 'vtk.js/Sources/Rendering/Core/Mapper';
 
-// Load style
-import style from './FullScreenRenderWindow.mcss';
+const STYLE_CONTAINER = {
+  margin: '0',
+  padding: '0',
+  position: 'absolute',
+  top: '0',
+  left: '0',
+  width: '100vw',
+  height: '100vh',
+  overflow: 'hidden',
+};
+
+const STYLE_CONTROL_PANEL = {
+  position: 'absolute',
+  left: '25px',
+  top: '25px',
+  backgroundColor: 'white',
+  borderRadius: '5px',
+  listStyle: 'none',
+  padding: '5px 10px',
+  margin: '0',
+  display: 'block',
+  border: 'solid 1px black',
+  maxWidth: 'calc(100vw - 70px)',
+  maxHeight: 'calc(100vh - 60px)',
+  overflow: 'auto',
+};
+
+function applyStyle(el, style) {
+  Object.keys(style).forEach((key) => {
+    el.style[key] = style[key];
+  });
+}
 
 function vtkFullScreenRenderWindow(publicAPI, model) {
   // Full screen DOM handler
-  model.container = document.createElement('div');
-  model.container.className = style.container;
-  document.querySelector('body').appendChild(model.container);
+  if (!model.rootContainer) {
+    model.rootContainer = document.querySelector('body');
+  }
+
+  if (!model.container) {
+    model.container = document.createElement('div');
+    applyStyle(model.container, model.containerStyle || STYLE_CONTAINER);
+    model.rootContainer.appendChild(model.container);
+  }
 
   // VTK renderWindow/renderer
   model.renderWindow = vtkRenderWindow.newInstance();
@@ -40,7 +76,7 @@ function vtkFullScreenRenderWindow(publicAPI, model) {
   publicAPI.setBackground = model.renderer.setBackground;
 
   publicAPI.removeController = () => {
-    const el = document.querySelector(`.${style.controlPanel}`);
+    const el = model.controlContainer;
     if (el) {
       el.parentNode.removeChild(el);
     }
@@ -48,11 +84,11 @@ function vtkFullScreenRenderWindow(publicAPI, model) {
 
   publicAPI.addController = (html) => {
     model.controlContainer = document.createElement('div');
-    model.controlContainer.className = style.controlPanel;
-    document.querySelector('body').appendChild(model.controlContainer);
+    applyStyle(model.controlContainer, model.controlPanelStyle || STYLE_CONTROL_PANEL);
+    model.rootContainer.appendChild(model.controlContainer);
     model.controlContainer.innerHTML = html;
 
-    document.querySelector('body').addEventListener('keypress', (e) => {
+    model.rootContainer.addEventListener('keypress', (e) => {
       if (String.fromCharCode(e.charCode) === 'c') {
         if (model.controlContainer.style.display === 'none') {
           model.controlContainer.style.display = 'block';
@@ -77,14 +113,16 @@ function vtkFullScreenRenderWindow(publicAPI, model) {
   };
 
   // Handle window resize
-  function updateRenderWindowSize() {
+  publicAPI.resize = () => {
     const dims = model.container.getBoundingClientRect();
     model.openGlRenderWindow.setSize(dims.width, dims.height);
     model.renderWindow.render();
-  }
+  };
 
-  window.addEventListener('resize', updateRenderWindowSize);
-  updateRenderWindowSize();
+  if (model.listenWindowResize) {
+    window.addEventListener('resize', publicAPI.resize);
+  }
+  publicAPI.resize();
 }
 
 // ----------------------------------------------------------------------------
@@ -93,6 +131,9 @@ function vtkFullScreenRenderWindow(publicAPI, model) {
 
 const DEFAULT_VALUES = {
   background: [0.32, 0.34, 0.43],
+  containerStyle: null,
+  controlPanelStyle: null,
+  listenWindowResize: true,
 };
 
 // ----------------------------------------------------------------------------
