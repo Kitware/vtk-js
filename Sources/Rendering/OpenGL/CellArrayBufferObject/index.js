@@ -1,5 +1,4 @@
 import macro               from 'vtk.js/Sources/macro';
-import DynamicFloat32Array from 'vtk.js/Sources/Rendering/OpenGL/DynamicFloat32Array';
 import vtkBufferObject     from 'vtk.js/Sources/Rendering/OpenGL/BufferObject';
 import { ObjectType }      from 'vtk.js/Sources/Rendering/OpenGL/BufferObject/Constants';
 import { Representation }  from 'vtk.js/Sources/Rendering/Core/Property/Constants';
@@ -13,8 +12,6 @@ const { vtkDebugMacro, vtkErrorMacro } = macro;
 function vtkOpenGLCellArrayBufferObject(publicAPI, model) {
   // Set our className
   model.classHierarchy.push('vtkOpenGLCellArrayBufferObject');
-
-  const packedVBO = new DynamicFloat32Array(); // the data
 
   publicAPI.setType(ObjectType.ARRAY_BUFFER);
 
@@ -58,9 +55,14 @@ function vtkOpenGLCellArrayBufferObject(publicAPI, model) {
 
     if (options.colors) {
       model.colorComponents = options.colors.getNumberOfComponents();
-      model.colorOffset = 4 * model.blockSize;
-      model.blockSize += 1;
+      model.colorOffset = 0;
       colorData = options.colors.getData();
+      if (!model.colorBO) {
+        model.colorBO = vtkBufferObject.newInstance();
+      }
+      model.colorBO.setContext(model.context);
+    } else {
+      model.colorBO = null;
     }
     model.stride = 4 * model.blockSize;
 
@@ -69,43 +71,7 @@ function vtkOpenGLCellArrayBufferObject(publicAPI, model) {
     let tcoordIdx = 0;
     let colorIdx = 0;
     let cellCount = 0;
-
-    const addAPoint = function addAPoint(i) {
-      // Vertices
-      pointIdx = i * 3;
-      tcoordIdx = i * textureComponents;
-
-      packedVBO.push(pointData[pointIdx++]);
-      packedVBO.push(pointData[pointIdx++]);
-      packedVBO.push(pointData[pointIdx++]);
-
-      if (normalData !== null) {
-        if (options.haveCellNormals) {
-          normalIdx = (cellCount + options.cellOffset) * 3;
-        } else {
-          normalIdx = i * 3;
-        }
-        packedVBO.push(normalData[normalIdx++]);
-        packedVBO.push(normalData[normalIdx++]);
-        packedVBO.push(normalData[normalIdx++]);
-      }
-
-      if (tcoordData !== null) {
-        for (let j = 0; j < textureComponents; ++j) {
-          packedVBO.push(tcoordData[tcoordIdx++]);
-        }
-      }
-
-      if (colorData !== null) {
-        if (options.haveCellScalars) {
-          colorIdx = (cellCount + options.cellOffset) * colorComponents;
-        } else {
-          colorIdx = i * colorComponents;
-        }
-        packedVBO.pushBytesFromArray(colorData, colorIdx, colorComponents, 255);
-        colorIdx += colorComponents;
-      }
-    };
+    let addAPoint;
 
     const cellBuilders = {
       // easy, every input point becomes an output point
@@ -160,29 +126,111 @@ function vtkOpenGLCellArrayBufferObject(publicAPI, model) {
       },
     };
 
+    const cellCounters = {
+      // easy, every input point becomes an output point
+      anythingToPoints(numPoints, cellPts) {
+        return numPoints;
+      },
+      linesToWireframe(numPoints, cellPts) {
+        return (numPoints - 1) * 2;
+      },
+      polysToWireframe(numPoints, cellPts) {
+        return numPoints * 2;
+      },
+      stripsToWireframe(numPoints, cellPts) {
+        return (numPoints * 4) - 6;
+      },
+      polysToSurface(npts, cellPts) {
+        if (npts < 3) {
+          return 0;
+        }
+        return (npts - 2) * 3;
+      },
+      stripsToSurface(npts, cellPts, offset) {
+        return (npts - 2) * 3;
+      },
+    };
+
     let func = null;
+    let countFunc = null;
     if (outRep === Representation.POINTS || inRep === 'verts') {
       func = cellBuilders.anythingToPoints;
+      countFunc = cellCounters.anythingToPoints;
     } else if (outRep === Representation.WIREFRAME || inRep === 'lines') {
       func = cellBuilders[`${inRep}ToWireframe`];
+      countFunc = cellCounters[`${inRep}ToWireframe`];
     } else {
       func = cellBuilders[`${inRep}ToSurface`];
+      countFunc = cellCounters[`${inRep}ToSurface`];
     }
 
-    let currentIndex = 0;
     const array = cellArray.getData();
     const size = array.length;
-    for (let index = 0; index < size; index++) {
-      if (index === currentIndex) {
-        func(array[index], array, currentIndex + 1);
-        currentIndex += array[index] + 1;
-        cellCount++;
-      }
+    let caboCount = 0;
+    for (let index = 0; index < size;) {
+      caboCount += countFunc(array[index], array);
+      index += (array[index] + 1);
     }
-    model.elementCount = packedVBO.getNumberOfElements() / model.blockSize;
-    const vboArray = packedVBO.getFrozenArray();
-    publicAPI.upload(vboArray, ObjectType.ARRAY_BUFFER);
-    packedVBO.reset();
+
+    let packedUCVBO = null;
+    const packedVBO = new Float32Array(caboCount * model.blockSize);
+    if (colorData) {
+      packedUCVBO = new Uint8Array(caboCount * 4);
+    }
+    let vboidx = 0;
+    let ucidx = 0;
+
+    addAPoint = function addAPointFunc(i) {
+      // Vertices
+      pointIdx = i * 3;
+
+      packedVBO[vboidx++] = pointData[pointIdx++];
+      packedVBO[vboidx++] = pointData[pointIdx++];
+      packedVBO[vboidx++] = pointData[pointIdx++];
+
+      if (normalData !== null) {
+        if (options.haveCellNormals) {
+          normalIdx = (cellCount + options.cellOffset) * 3;
+        } else {
+          normalIdx = i * 3;
+        }
+        packedVBO[vboidx++] = normalData[normalIdx++];
+        packedVBO[vboidx++] = normalData[normalIdx++];
+        packedVBO[vboidx++] = normalData[normalIdx++];
+      }
+
+      if (tcoordData !== null) {
+        tcoordIdx = i * textureComponents;
+        for (let j = 0; j < textureComponents; ++j) {
+          packedVBO[vboidx++] = tcoordData[tcoordIdx++];
+        }
+      }
+
+      if (colorData !== null) {
+        if (options.haveCellScalars) {
+          colorIdx = (cellCount + options.cellOffset) * colorComponents;
+        } else {
+          colorIdx = i * colorComponents;
+        }
+        packedUCVBO[ucidx++] = colorData[colorIdx++];
+        packedUCVBO[ucidx++] = colorData[colorIdx++];
+        packedUCVBO[ucidx++] = colorData[colorIdx++];
+        packedUCVBO[ucidx++] =
+          (colorComponents === 4 ? colorData[colorIdx++] : 255);
+      }
+    };
+
+    for (let index = 0; index < size;) {
+      func(array[index], array, index + 1);
+      index += (array[index] + 1);
+      cellCount++;
+    }
+    model.elementCount = caboCount;
+    publicAPI.upload(packedVBO, ObjectType.ARRAY_BUFFER);
+    if (model.colorBO) {
+      model.colorBOStride = 4;
+      model.colorBO.upload(packedUCVBO, ObjectType.ARRAY_BUFFER);
+    }
     return cellCount;
   };
 
@@ -206,12 +254,14 @@ function vtkOpenGLCellArrayBufferObject(publicAPI, model) {
 const DEFAULT_VALUES = {
   elementCount: 0,
   stride: 0,
+  colorBOStride: 0,
   vertexOffset: 0,
   normalOffset: 0,
   tCoordOffset: 0,
   tCoordComponents: 0,
   colorOffset: 0,
   colorComponents: 0,
+  tcoordBO: null,
 };
 
 // ----------------------------------------------------------------------------
@@ -223,8 +273,10 @@ export function extend(publicAPI, model, initialValues = {}) {
   vtkBufferObject.extend(publicAPI, model, initialValues);
 
   macro.setGet(publicAPI, model, [
+    'colorBO',
     'elementCount',
     'stride',
+    'colorBOStride',
     'vertexOffset',
     'normalOffset',
     'tCoordOffset',

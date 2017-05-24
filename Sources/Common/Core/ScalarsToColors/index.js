@@ -203,9 +203,6 @@ function vtkScalarsToColors(publicAPI, model) {
       };
 
       const s = new window[newscalars.dataType](4 * scalars.getNumberOfTuples());
-      for (let i = 0; i < s.length; i++) {
-        s[i] = Math.random();
-      }
       newscalars.values = s;
       newscalars.size = s.length;
       newColors = vtkDataArray.newInstance(newscalars);

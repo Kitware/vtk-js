@@ -1001,9 +1001,11 @@ function vtkOpenGLPolyDataMapper(publicAPI, model) {
       }
       if (cellBO.getProgram().isAttributeUsed('scalarColor') &&
           cellBO.getCABO().getColorComponents()) {
-        if (!cellBO.getVAO().addAttributeArray(cellBO.getProgram(), cellBO.getCABO(),
+        cellBO.getCABO().getColorBO().bind();
+        if (!cellBO.getVAO().addAttributeArray(cellBO.getProgram(), cellBO.getCABO().getColorBO(),
                                            'scalarColor', cellBO.getCABO().getColorOffset(),
-                                           cellBO.getCABO().getStride(), model.context.UNSIGNED_BYTE,
+                                           cellBO.getCABO().getColorBOStride(),
+                                           model.context.UNSIGNED_BYTE,
                                            4,
                                            true)) {
           vtkErrorMacro('Error setting scalarColor in shader VAO.');
@@ -1398,7 +1400,7 @@ function vtkOpenGLPolyDataMapper(publicAPI, model) {
         model.VBOBuildTime.getMTime() < model.currentInput.getMTime()) {
       return true;
     }
-    return false;
+    return true;
   };
 
   publicAPI.buildBufferObjects = (ren, actor) => {
@@ -1478,7 +1480,7 @@ function vtkOpenGLPolyDataMapper(publicAPI, model) {
       + `C${(n ? n.getMTime() : 1)}D${(c ? c.getMTime() : 1)}`
       + `E${actor.getProperty().getEdgeVisibility()}`
       + `F${(tcoords ? tcoords.getMTime() : 1)}`;
-    if (model.VBOBuildString !== toString) {
+    if (true || model.VBOBuildString !== toString) {
       // Build the VBOs
       const points = poly.getPoints();
       const options = {

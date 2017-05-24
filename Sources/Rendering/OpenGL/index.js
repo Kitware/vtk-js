@@ -3,7 +3,6 @@ import vtkActor2D                from './Actor2D';
 import vtkBufferObject           from './BufferObject';
 import vtkCamera                 from './Camera';
 import vtkCellArrayBufferObject  from './CellArrayBufferObject';
-import vtkDynamicFloat32Array    from './DynamicFloat32Array';
 import vtkFramebuffer            from './Framebuffer';
 import vtkHardwareSelector       from './HardwareSelector';
 import vtkHelper                 from './Helper';
@@ -30,7 +29,6 @@ export default {
   vtkBufferObject,
   vtkCamera,
   vtkCellArrayBufferObject,
-  vtkDynamicFloat32Array,
   vtkFramebuffer,
   vtkHardwareSelector,
   vtkHelper,
