@@ -222,6 +222,11 @@ void main()
       //VTK::Light::Impl
 
       float mix = (1.0 - color.a);
+
+      // this line should not be needed but nvidia seems to not handle
+      // the break correctly on windows/chrome 58 angle
+      mix = mix * sign(max(float(count - i + 1), 0.0));
+
       color = color + vec4(tcolor.rgb*tcolor.a, tcolor.a)*mix;
       if (i >= count) { break; }
       if (color.a > 0.99) { color.a = 1.0; break; }
@@ -229,6 +234,7 @@ void main()
     }
 
     gl_FragData[0] = vec4(color.rgb/color.a, color.a);
+    // gl_FragData[0] = vec4(tbounds.y/farDist, tbounds.x/farDist, color.b/color.a, 1.0);
   }
   else
   {
