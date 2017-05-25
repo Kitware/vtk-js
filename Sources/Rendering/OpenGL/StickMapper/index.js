@@ -3,8 +3,7 @@ import { ObjectType }           from 'vtk.js/Sources/Rendering/OpenGL/BufferObje
 
 import * as macro               from 'vtk.js/Sources/macro';
 
-import DynamicFloat32Array      from 'vtk.js/Sources/Rendering/OpenGL/DynamicFloat32Array';
-
+import vtkBufferObject          from 'vtk.js/Sources/Rendering/OpenGL/BufferObject';
 import vtkStickMapperVS         from 'vtk.js/Sources/Rendering/OpenGL/glsl/vtkStickMapperVS.glsl';
 import vtkPolyDataFS            from 'vtk.js/Sources/Rendering/OpenGL/glsl/vtkPolyDataFS.glsl';
 
@@ -211,20 +210,23 @@ function vtkOpenGLStickMapper(publicAPI, model) {
         }
       }
       if (cellBO.getProgram().isAttributeUsed('offsetMC')) {
-        if (!cellBO.getVAO().addAttributeArray(cellBO.getProgram(), cellBO.getCABO(),
-                                           'offsetMC',
-                                           24, // after X Y Z OX OY OZ
-                                           cellBO.getCABO().getStride(), model.context.UNSIGNED_BYTE,
-                                           3, true)) {
+        if (!cellBO.getVAO().addAttributeArray(cellBO.getProgram(),
+           cellBO.getCABO().getColorBO(),
+           'offsetMC',
+           0,
+           cellBO.getCABO().getColorBOStride(),
+           model.context.UNSIGNED_BYTE,
+           3, true)) {
           vtkErrorMacro('Error setting \'offsetMC\' in shader VAO.');
         }
       }
       if (cellBO.getProgram().isAttributeUsed('radiusMC')) {
-        if (!cellBO.getVAO().addAttributeArray(cellBO.getProgram(), cellBO.getCABO(),
-                                           'radiusMC',
-                                           28, // X Y Z OX OY OZ OFFSET
-                                           cellBO.getCABO().getStride(), model.context.FLOAT, 1,
-                                           false)) {
+        if (!cellBO.getVAO().addAttributeArray(cellBO.getProgram(),
+            cellBO.getCABO(),
+            'radiusMC',
+            24, // X Y Z OX OY OZ
+            cellBO.getCABO().getStride(), model.context.FLOAT, 1,
+            false)) {
           vtkErrorMacro('Error setting \'radiusMC\' in shader VAO.');
         }
       }
@@ -234,8 +236,9 @@ function vtkOpenGLStickMapper(publicAPI, model) {
           cellBO.getProgram().isAttributeUsed('selectionId')) {
         if (!cellBO.getVAO().addAttributeArray(cellBO.getProgram(), cellBO.getCABO(),
                                            'selectionId',
-                                           32, // this->VBO->ColorOffset+6*sizeof(float),
-                                           cellBO.getCABO().getStride(), model.context.FLOAT,
+                                           cellBO.getCABO().getColorOffset(),
+                                           cellBO.getCABO().getColorBOStride(),
+                                           model.context.UNSIGNED_CHAR,
                                            4, true)) {
           vtkErrorMacro('Error setting \'selectionId\' in shader VAO.');
         }
@@ -304,23 +307,30 @@ function vtkOpenGLStickMapper(publicAPI, model) {
     const pointArray = points.getData();
     let pointSize = 3; // x,y,z
 
-    // three more floats for orientation + 1 for offset + 1 for radius
-    pointSize += 5;
+    // three more floats for orientation + 1 for radius
+    pointSize += 4;
 
     let colorData = null;
     let colorComponents = 0;
+    vbo.setColorBOStride(4);
+
+    if (!vbo.getColorBO()) {
+      vbo.setColorBO(vtkBufferObject.newInstance());
+    }
+    vbo.getColorBO().setContext(model.context);
     if (c) {
       colorComponents = c.getNumberOfComponents();
       vbo.setColorComponents(colorComponents);
-      vbo.setColorOffset(4 * pointSize);
-      pointSize += 1;
+      vbo.setColorOffset(4);
       colorData = c.getData();
+      vbo.setColorBOStride(8);
     }
 
     vbo.setStride(pointSize * 4);
 
     // Create a buffer, and copy the data over.
-    const packedVBO = new DynamicFloat32Array();
+    const packedVBO = new Float32Array(pointSize * numPoints * 12);
+    const packedUCVBO = new Uint8Array(12 * numPoints * (colorData ? 8 : 4));
 
     let scales = null;
     let orientationArray = null;
@@ -370,6 +380,8 @@ function vtkOpenGLStickMapper(publicAPI, model) {
 
     let pointIdx = 0;
     let colorIdx = 0;
+    let vboIdx = 0;
+    let ucIdx = 0;
 
     for (let i = 0; i < numPoints; ++i) {
       let length = model.renderable.getLength();
@@ -381,31 +393,32 @@ function vtkOpenGLStickMapper(publicAPI, model) {
 
       for (let j = 0; j < verticesArray.length; ++j) {
         pointIdx = i * 3;
-        packedVBO.push(pointArray[pointIdx++]);
-        packedVBO.push(pointArray[pointIdx++]);
-        packedVBO.push(pointArray[pointIdx++]);
+        packedVBO[vboIdx++] = pointArray[pointIdx++];
+        packedVBO[vboIdx++] = pointArray[pointIdx++];
+        packedVBO[vboIdx++] = pointArray[pointIdx++];
         pointIdx = i * 3;
-        packedVBO.push(orientationArray[pointIdx++] * length);
-        packedVBO.push(orientationArray[pointIdx++] * length);
-        packedVBO.push(orientationArray[pointIdx++] * length);
+        packedVBO[vboIdx++] = orientationArray[pointIdx++] * length;
+        packedVBO[vboIdx++] = orientationArray[pointIdx++] * length;
+        packedVBO[vboIdx++] = orientationArray[pointIdx++] * length;
+        packedVBO[vboIdx++] = radius;
 
-        packedVBO.pushBytes(
-          255 * (verticesArray[j] % 2),
-          (verticesArray[j] >= 4 ? 255 : 0),
-          (verticesArray[j] >= 2 ? 255 : 0),
-          255);
+        packedUCVBO[ucIdx++] = 255 * (verticesArray[j] % 2);
+        packedUCVBO[ucIdx++] = (verticesArray[j] >= 4 ? 255 : 0);
+        packedUCVBO[ucIdx++] = (verticesArray[j] >= 2 ? 255 : 0);
+        packedUCVBO[ucIdx++] = 255;
 
-        packedVBO.push(radius);
         colorIdx = i * colorComponents;
         if (colorData) {
-          packedVBO.pushBytesFromArray(colorData, colorIdx, 4);
+          packedUCVBO[ucIdx++] = colorData[colorIdx];
+          packedUCVBO[ucIdx++] = colorData[colorIdx + 1];
+          packedUCVBO[ucIdx++] = colorData[colorIdx + 2];
+          packedUCVBO[ucIdx++] = colorData[colorIdx + 3];
         }
       }
     }
-    vbo.setElementCount(packedVBO.getNumberOfElements() / pointSize);
-    const vboArray = packedVBO.getFrozenArray();
-    vbo.upload(vboArray, ObjectType.ARRAY_BUFFER);
-
+    vbo.setElementCount(vboIdx / pointSize);
+    vbo.upload(packedVBO, ObjectType.ARRAY_BUFFER);
+    vbo.getColorBO().upload(packedUCVBO, ObjectType.ARRAY_BUFFER);
     model.VBOBuildTime.modified();
   };
 }

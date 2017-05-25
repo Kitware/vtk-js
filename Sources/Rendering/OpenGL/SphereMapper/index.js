@@ -3,7 +3,7 @@ import { ObjectType }           from 'vtk.js/Sources/Rendering/OpenGL/BufferObje
 
 import macro                    from 'vtk.js/Sources/macro';
 
-import DynamicFloat32Array      from 'vtk.js/Sources/Rendering/OpenGL/DynamicFloat32Array';
+import vtkBufferObject          from 'vtk.js/Sources/Rendering/OpenGL/BufferObject';
 import vtkMath                  from 'vtk.js/Sources/Common/Core/Math';
 
 import vtkShaderProgram         from 'vtk.js/Sources/Rendering/OpenGL/ShaderProgram';
@@ -186,13 +186,12 @@ function vtkOpenGLSphereMapper(publicAPI, model) {
 
     const vbo = model.primitives[model.primTypes.Tris].getCABO();
 
-    const packedVBO = new DynamicFloat32Array();
     const pointData = poly.getPointData();
     const points = poly.getPoints();
     const numPoints = points.getNumberOfPoints();
     const pointArray = points.getData();
 
-    let pointSize = 5; // x,y,z,orientation1,orientation2
+    const pointSize = 5; // x,y,z,orientation1,orientation2
     let scales = null;
 
     if (model.renderable.getScaleArray() != null &&
@@ -202,13 +201,21 @@ function vtkOpenGLSphereMapper(publicAPI, model) {
 
     let colorData = null;
     let colorComponents = 0;
+    let packedUCVBO = null;
     if (c) {
       colorComponents = c.getNumberOfComponents();
       vbo.setColorComponents(colorComponents);
-      vbo.setColorOffset(4 * pointSize);
-      pointSize += 1;
+      vbo.setColorOffset(0);
+      vbo.setColorBOStride(4);
       colorData = c.getData();
+      packedUCVBO = new Uint8Array(3 * numPoints * 4);
+      if (!vbo.getColorBO()) {
+        vbo.setColorBO(vtkBufferObject.newInstance());
+      }
+      vbo.getColorBO().setContext(model.context);
     }
+
+    const packedVBO = new Float32Array(pointSize * numPoints * 3);
 
     vbo.setStride(pointSize * 4);
 
@@ -216,9 +223,11 @@ function vtkOpenGLSphereMapper(publicAPI, model) {
     let pointIdx = 0;
     let colorIdx = 0;
 
-  //
-  // Generate points and point data for sides
-  //
+    //
+    // Generate points and point data for sides
+    //
+    let vboIdx = 0;
+    let ucIdx = 0;
     for (let i = 0; i < numPoints; ++i) {
       let radius = model.renderable.getRadius();
       if (scales) {
@@ -226,40 +235,49 @@ function vtkOpenGLSphereMapper(publicAPI, model) {
       }
 
       pointIdx = i * 3;
-      packedVBO.push(pointArray[pointIdx++]);
-      packedVBO.push(pointArray[pointIdx++]);
-      packedVBO.push(pointArray[pointIdx++]);
-      packedVBO.push(-2.0 * radius * cos30);
-      packedVBO.push(-radius);
+      packedVBO[vboIdx++] = pointArray[pointIdx++];
+      packedVBO[vboIdx++] = pointArray[pointIdx++];
+      packedVBO[vboIdx++] = pointArray[pointIdx++];
+      packedVBO[vboIdx++] = -2.0 * radius * cos30;
+      packedVBO[vboIdx++] = -radius;
       if (colorData) {
         colorIdx = i * colorComponents;
-        packedVBO.pushBytesFromArray(colorData, colorIdx, 4);
+        packedUCVBO[ucIdx++] = colorData[colorIdx];
+        packedUCVBO[ucIdx++] = colorData[colorIdx + 1];
+        packedUCVBO[ucIdx++] = colorData[colorIdx + 2];
+        packedUCVBO[ucIdx++] = colorData[colorIdx + 3];
       }
 
       pointIdx = i * 3;
-      packedVBO.push(pointArray[pointIdx++]);
-      packedVBO.push(pointArray[pointIdx++]);
-      packedVBO.push(pointArray[pointIdx++]);
-      packedVBO.push(2.0 * radius * cos30);
-      packedVBO.push(-radius);
+      packedVBO[vboIdx++] = pointArray[pointIdx++];
+      packedVBO[vboIdx++] = pointArray[pointIdx++];
+      packedVBO[vboIdx++] = pointArray[pointIdx++];
+      packedVBO[vboIdx++] = 2.0 * radius * cos30;
+      packedVBO[vboIdx++] = -radius;
       if (colorData) {
-        packedVBO.pushBytesFromArray(colorData, colorIdx, 4);
+        packedUCVBO[ucIdx++] = colorData[colorIdx];
+        packedUCVBO[ucIdx++] = colorData[colorIdx + 1];
+        packedUCVBO[ucIdx++] = colorData[colorIdx + 2];
+        packedUCVBO[ucIdx++] = colorData[colorIdx + 3];
       }
 
       pointIdx = i * 3;
-      packedVBO.push(pointArray[pointIdx++]);
-      packedVBO.push(pointArray[pointIdx++]);
-      packedVBO.push(pointArray[pointIdx++]);
-      packedVBO.push(0.0);
-      packedVBO.push(2.0 * radius);
+      packedVBO[vboIdx++] = pointArray[pointIdx++];
+      packedVBO[vboIdx++] = pointArray[pointIdx++];
+      packedVBO[vboIdx++] = pointArray[pointIdx++];
+      packedVBO[vboIdx++] = 0.0;
+      packedVBO[vboIdx++] = 2.0 * radius;
       if (colorData) {
-        packedVBO.pushBytesFromArray(colorData, colorIdx, 4);
+        packedUCVBO[ucIdx++] = colorData[colorIdx];
+        packedUCVBO[ucIdx++] = colorData[colorIdx + 1];
+        packedUCVBO[ucIdx++] = colorData[colorIdx + 2];
+        packedUCVBO[ucIdx++] = colorData[colorIdx + 3];
       }
     }
 
-    vbo.setElementCount(packedVBO.getNumberOfElements() / pointSize);
-    const vboArray = packedVBO.getFrozenArray();
-    vbo.upload(vboArray, ObjectType.ARRAY_BUFFER);
+    vbo.setElementCount(vboIdx / pointSize);
+    vbo.upload(packedVBO, ObjectType.ARRAY_BUFFER);
+    if (c) { vbo.getColorBO().upload(packedUCVBO, ObjectType.ARRAY_BUFFER); }
 
     model.VBOBuildTime.modified();
   };
