@@ -26,7 +26,6 @@ function updateListeners() {
   listeners.forEach((listener) => {
     if (listener) {
       const { camera, render } = listener;
-      camera.setViewAngle(80.0);
       camera.setDeviceAngles(alpha, beta, gamma, screen);
       render();
     }
