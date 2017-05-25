@@ -59,6 +59,7 @@ function dataReady() {
   renderer.getActiveCamera().setPhysicalViewNorth(0, 0, 1);
   renderer.getActiveCamera().setFocalPoint(0, 0, 1);
   renderer.getActiveCamera().setPosition(0, 0, -50);
+  renderer.getActiveCamera().setViewAngle(80);
   renderer.resetCameraClippingRange();
   render();
 }
