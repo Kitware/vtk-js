@@ -34,6 +34,7 @@ function vtkImageGridSource(publicAPI, model) {
     id.setOrigin(model.dataOrigin[0], model.dataOrigin[1], model.dataOrigin[2]);
     id.setSpacing(model.dataSpacing[0], model.dataSpacing[1], model.dataSpacing[2]);
     id.setExtent.apply(this, model.dataExtent);
+    id.setDirection(model.dataDirection);
 
     let dims = [0, 0, 0];
     dims = dims.map((_, i) => model.dataExtent[(i * 2) + 1] - model.dataExtent[i * 2] + 1);
@@ -91,6 +92,7 @@ const DEFAULT_VALUES = {
   dataSpacing: [1.0, 1.0, 1.0],
   dataOrigin: [0.0, 0.0, 0.0],
   dataExtent: [0, 255, 0, 255, 0, 0],
+  dataDirection: [1, 0, 0, 0, 1, 0, 0, 0, 1],
 };
 
 // ----------------------------------------------------------------------------
@@ -116,6 +118,10 @@ export function extend(publicAPI, model, initialValues = {}) {
   macro.setGetArray(publicAPI, model, [
     'dataExtent',
   ], 6);
+
+  macro.setGetArray(publicAPI, model, [
+    'dataDirection',
+  ], 9);
 
   macro.algo(publicAPI, model, 0, 1);
   vtkImageGridSource(publicAPI, model);

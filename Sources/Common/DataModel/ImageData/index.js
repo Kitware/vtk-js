@@ -2,6 +2,7 @@ import macro              from 'vtk.js/Sources/macro';
 import vtkDataSet         from 'vtk.js/Sources/Common/DataModel/DataSet';
 import vtkStructuredData  from 'vtk.js/Sources/Common/DataModel/StructuredData';
 import { StructuredType } from 'vtk.js/Sources/Common/DataModel/StructuredData/Constants';
+import { quat, vec3, mat3, mat4 } from 'gl-matrix';
 
 const { vtkErrorMacro } = macro;
 
@@ -71,7 +72,7 @@ function vtkImageData(publicAPI, model) {
 
   publicAPI.getPoint = (index) => {
     const dims = publicAPI.getDimensions();
-    const ijk = [0, 0, 0];
+    const ijk = vec3.fromValues(0, 0, 0);
     const coords = [0, 0, 0];
 
     if (dims[0] === 0 || dims[1] === 0 || dims[2] === 0) {
@@ -124,10 +125,9 @@ function vtkImageData(publicAPI, model) {
         break;
     }
 
-    for (let i = 0; i < 3; i++) {
-      coords[i] = model.origin[i] + ((ijk[i] + model.extent[i * 2]) * model.spacing[i]);
-    }
-
+    const vout = vec3.create();
+    publicAPI.indexToWorldVec3(ijk, vout);
+    vec3.copy(coords, vout);
     return coords;
   };
 
@@ -158,14 +158,116 @@ function vtkImageData(publicAPI, model) {
   // void ComputeBounds() VTK_OVERRIDE;
   // int GetMaxCellSize() VTK_OVERRIDE {return 8;}; //voxel is the largest
 
-  publicAPI.getBounds = () => [
-    model.origin[0] + (model.extent[0] * model.spacing[0]),
-    model.origin[0] + (model.extent[1] * model.spacing[0]),
-    model.origin[1] + (model.extent[2] * model.spacing[1]),
-    model.origin[1] + (model.extent[3] * model.spacing[1]),
-    model.origin[2] + (model.extent[4] * model.spacing[2]),
-    model.origin[2] + (model.extent[5] * model.spacing[2]),
-  ];
+  publicAPI.getBounds = () => publicAPI.extentToBounds(model.extent);
+
+  publicAPI.extentToBounds = (ex) => {
+    const corners = [
+      ex[0], ex[2], ex[4],
+      ex[1], ex[2], ex[4],
+      ex[0], ex[3], ex[4],
+      ex[1], ex[3], ex[4],
+      ex[0], ex[2], ex[5],
+      ex[1], ex[2], ex[5],
+      ex[0], ex[3], ex[5],
+      ex[1], ex[3], ex[5]];
+
+    const idx = vec3.fromValues(corners[0], corners[1], corners[2]);
+    const vout = vec3.create();
+    publicAPI.indexToWorldVec3(idx, vout);
+    const bounds = [vout[0], vout[0], vout[1], vout[1], vout[2], vout[2]];
+    for (let i = 3; i < 24; i += 3) {
+      vec3.set(idx, corners[i], corners[i + 1], corners[i + 2]);
+      publicAPI.indexToWorldVec3(idx, vout);
+      if (vout[0] < bounds[0]) { bounds[0] = vout[0]; }
+      if (vout[1] < bounds[2]) { bounds[2] = vout[1]; }
+      if (vout[2] < bounds[4]) { bounds[4] = vout[2]; }
+      if (vout[0] > bounds[1]) { bounds[1] = vout[0]; }
+      if (vout[1] > bounds[3]) { bounds[3] = vout[1]; }
+      if (vout[2] > bounds[5]) { bounds[5] = vout[2]; }
+    }
+
+    return bounds;
+  };
+
+  publicAPI.computeTransforms = () => {
+    const rotq = quat.create();
+    quat.fromMat3(rotq, model.direction);
+    const trans = vec3.fromValues(
+      model.origin[0], model.origin[1], model.origin[2]);
+    const scale = vec3.fromValues(
+      model.spacing[0], model.spacing[1], model.spacing[2]);
+    mat4.fromRotationTranslationScale(model.indexToWorld, rotq, trans, scale);
+    mat4.invert(model.worldToIndex, model.indexToWorld);
+  };
+
+  //
+  // The direction matrix is a 3x3 basis for the I, J, K axes
+  // of the image. The rows of the matrix correspond to the
+  // axes directions in world coordinates. Direction must
+  // form an orthonormal basis, results are undefined if
+  // it is not.
+  //
+  publicAPI.setDirection = (...args) => {
+    if (model.deleted) {
+      vtkErrorMacro('instance deleted - cannot call any method');
+      return false;
+    }
+
+    let array = args;
+    // allow an array passed as a single arg.
+    if (array.length === 1 && Array.isArray(array[0])) {
+      array = array[0];
+    }
+
+    if (array.length !== 9) {
+      throw new RangeError('Invalid number of values for array setter');
+    }
+    let changeDetected = false;
+    model.direction.forEach((item, index) => {
+      if (item !== array[index]) {
+        if (changeDetected) {
+          return;
+        }
+        changeDetected = true;
+      }
+    });
+
+    if (changeDetected) {
+      for (let i = 0; i < 9; ++i) {
+        model.direction[i] = array[i];
+      }
+      publicAPI.modified();
+    }
+    return true;
+  };
+
+  // this is the fast version, requires vec3 arguments
+  publicAPI.indexToWorldVec3 = (vin, vout) => {
+    vec3.transformMat4(vout, vin, model.indexToWorld);
+  };
+
+  // slow version for generic arrays
+  publicAPI.indexToWorld = (ain, aout) => {
+    const vin = vec3.fromValues(ain[0], ain[1], ain[2]);
+    const vout = vec3.create();
+    vec3.transformMat4(vout, vin, model.indexToWorld);
+    vec3.copy(aout, vout);
+  };
+
+  // this is the fast version, requires vec3 arguments
+  publicAPI.worldToIndexVec3 = (vin, vout) => {
+    vec3.transformMat4(vout, vin, model.worldToIndex);
+  };
+
+  // slow version for generic arrays
+  publicAPI.worldToIndex = (ain, aout) => {
+    const vin = vec3.fromValues(ain[0], ain[1], ain[2]);
+    const vout = vec3.create();
+    vec3.transformMat4(vout, vin, model.worldToIndex);
+    vec3.copy(aout, vout);
+  };
+
+  publicAPI.onModified(publicAPI.computeTransforms);
 }
 
 // ----------------------------------------------------------------------------
@@ -173,6 +275,9 @@ function vtkImageData(publicAPI, model) {
 // ----------------------------------------------------------------------------
 
 const DEFAULT_VALUES = {
+  direction: null,  // a mat3
+  indexToWorld: null, // a mat4
+  worldToIndex: null, // a mat4
   spacing: [1.0, 1.0, 1.0],
   origin: [0.0, 0.0, 0.0],
   extent: [0, -1, 0, -1, 0, -1],
@@ -187,7 +292,25 @@ export function extend(publicAPI, model, initialValues = {}) {
   // Inheritance
   vtkDataSet.extend(publicAPI, model, initialValues);
 
+  if (!model.direction) {
+    model.direction = mat3.create();
+  } else if (Array.isArray(model.direction)) {
+    const dvals = model.direction.slice(0);
+    model.direction = mat3.create();
+    for (let i = 0; i < 9; ++i) {
+      model.direction[i] = dvals[i];
+    }
+  }
+
+  model.indexToWorld = mat4.create();
+  model.worldToIndex = mat4.create();
+
   // Set/Get methods
+  macro.get(publicAPI, model, [
+    'direction',
+    'indexToWorld',
+    'worldToIndex',
+  ]);
   macro.setGetArray(publicAPI, model, ['origin', 'spacing'], 3);
   macro.getArray(publicAPI, model, ['extent'], 6);
 

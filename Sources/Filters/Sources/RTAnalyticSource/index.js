@@ -33,6 +33,7 @@ function vtkRTAnalyticSource(publicAPI, model) {
     id.setSpacing(1.0, 1.0, 1.0);
     id.setExtent.apply(this, model.wholeExtent);
     id.setOrigin(0.0, 0.0, 0.0);
+    id.setDirection(model.dataDirection);
 
     let dims = [0, 0, 0];
     dims = dims.map((_, i) => model.wholeExtent[(i * 2) + 1] - model.wholeExtent[i * 2] + 1);
@@ -92,6 +93,7 @@ const DEFAULT_VALUES = {
   magnitude: [10, 18, 5],
   standardDeviation: 0.5,
   wholeExtent: [-10, 10, -10, 10, -10, 10],
+  dataDirection: [1, 0, 0, 0, 1, 0, 0, 0, 1],
 };
 
 // ----------------------------------------------------------------------------
@@ -117,6 +119,10 @@ export function extend(publicAPI, model, initialValues = {}) {
   macro.setGetArray(publicAPI, model, [
     'wholeExtent',
   ], 6);
+
+  macro.setGetArray(publicAPI, model, [
+    'dataDirection',
+  ], 9);
 
   macro.algo(publicAPI, model, 0, 1);
   vtkRTAnalyticSource(publicAPI, model);

@@ -33,6 +33,10 @@ test.onlyIfWebGL('Test ImageMapper', (t) => {
   gridSource.setDataExtent(0, 200, 0, 200, 0, 0);
   gridSource.setGridSpacing(16, 16, 0);
   gridSource.setGridOrigin(8, 8, 0);
+  gridSource.setDataDirection(
+    0.866, 0.5, 0,
+    -0.5, 0.866, 0,
+    0, 0, 1);
 
   const mapper = gc.registerResource(vtkImageMapper.newInstance());
   mapper.setInputConnection(gridSource.getOutputPort());

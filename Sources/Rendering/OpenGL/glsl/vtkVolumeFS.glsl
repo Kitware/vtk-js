@@ -142,6 +142,7 @@ void main()
   vec3 rayDir = normalize(vertexVCVSOutput);
   vec2 tbounds = vec2(100.0*camFar, -1.0);
 
+  // all this is in View Coordinates
   tbounds = getRayPointIntersectionBounds(vertexVCVSOutput, rayDir,
     vPlaneNormal0, vPlaneDistance0, tbounds, vPlaneNormal2, vPlaneNormal4,
     vSize.y, vSize.z);
@@ -178,6 +179,8 @@ void main()
     // compute starting and ending values in volume space
     vec3 startVC = vertexVCVSOutput + tbounds.x*rayDir;
     startVC = startVC - vOriginVC;
+
+    // vpos and endvpos are in VolumeCoords not Index yet
     vec3 vpos = vec3(
       dot(startVC, vPlaneNormal0),
       dot(startVC, vPlaneNormal2),

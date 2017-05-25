@@ -1,16 +1,16 @@
-import macro              from 'vtk.js/Sources/macro';
-import { vec3, mat4 }     from 'gl-matrix';
-import vtkDataArray       from 'vtk.js/Sources/Common/Core/DataArray';
-import { VtkDataTypes }   from 'vtk.js/Sources/Common/Core/DataArray/Constants';
-import vtkHelper          from 'vtk.js/Sources/Rendering/OpenGL/Helper';
-import vtkMath            from 'vtk.js/Sources/Common/Core/Math';
+import macro                from 'vtk.js/Sources/macro';
+import { vec3, mat3, mat4 } from 'gl-matrix';
+import vtkDataArray         from 'vtk.js/Sources/Common/Core/DataArray';
+import { VtkDataTypes }     from 'vtk.js/Sources/Common/Core/DataArray/Constants';
+import vtkHelper            from 'vtk.js/Sources/Rendering/OpenGL/Helper';
+import vtkMath              from 'vtk.js/Sources/Common/Core/Math';
 import vtkOpenGLFramebuffer from 'vtk.js/Sources/Rendering/OpenGL/Framebuffer';
-import vtkOpenGLTexture   from 'vtk.js/Sources/Rendering/OpenGL/Texture';
-import vtkShaderProgram   from 'vtk.js/Sources/Rendering/OpenGL/ShaderProgram';
+import vtkOpenGLTexture     from 'vtk.js/Sources/Rendering/OpenGL/Texture';
+import vtkShaderProgram     from 'vtk.js/Sources/Rendering/OpenGL/ShaderProgram';
 import vtkVertexArrayObject from 'vtk.js/Sources/Rendering/OpenGL/VertexArrayObject';
-import vtkViewNode        from 'vtk.js/Sources/Rendering/SceneGraph/ViewNode';
-import { Representation } from 'vtk.js/Sources/Rendering/Core/Property/Constants';
-import { Filter }         from 'vtk.js/Sources/Rendering/OpenGL/Texture/Constants';
+import vtkViewNode          from 'vtk.js/Sources/Rendering/SceneGraph/ViewNode';
+import { Representation }   from 'vtk.js/Sources/Rendering/Core/Property/Constants';
+import { Filter }           from 'vtk.js/Sources/Rendering/OpenGL/Texture/Constants';
 import { InterpolationType } from 'vtk.js/Sources/Rendering/Core/VolumeProperty/Constants';
 
 import vtkVolumeVS from 'vtk.js/Sources/Rendering/OpenGL/glsl/vtkVolumeVS.glsl';
@@ -430,14 +430,26 @@ function vtkOpenGLVolumeMapper(publicAPI, model) {
     program.setUniformf('dcymin', dcymin);
     program.setUniformf('dcymax', dcymax);
 
-    vec3.set(pos, bounds[0], bounds[2], bounds[4]);
+    const origin = model.currentInput.getOrigin();
+    vec3.set(pos, origin[0], origin[1], origin[2]);
     vec3.transformMat4(pos, pos, keyMats.wcvc);
     program.setUniform3f('vOriginVC', pos);
+
+    // apply the image directions
+    const i2wmat4 = model.currentInput.getIndexToWorld();
+    mat4.multiply(model.idxToView, keyMats.wcvc, i2wmat4);
+
+    mat3.copy(model.idxNormalMatrix, model.currentInput.getDirection());
+    mat3.multiply(model.idxNormalMatrix, keyMats.normalMatrix,
+      model.idxNormalMatrix);
+
+    const ext = model.currentInput.getExtent();
+    const spc = model.currentInput.getSpacing();
     const vsize = vec3.create();
     vec3.set(vsize,
-      bounds[1] - bounds[0],
-      bounds[3] - bounds[2],
-      bounds[5] - bounds[4]);
+      (ext[1] - ext[0]) * spc[0],
+      (ext[3] - ext[2]) * spc[1],
+      (ext[5] - ext[4]) * spc[2]);
     program.setUniform3f('vSize', vsize);
 
     const maxSamples = vec3.length(vsize) / model.renderable.getSampleDistance();
@@ -465,32 +477,32 @@ function vtkOpenGLVolumeMapper(publicAPI, model) {
 
     // map normals through normal matrix
     // then use a point on the plane to compute the distance
+    const normal = vec3.create();
+    const pos2 = vec3.create();
     for (let i = 0; i < 6; ++i) {
-      const normal = vec3.create();
-      const pos2 = vec3.create();
       switch (i) {
         default:
         case 0: vec3.set(normal, 1.0, 0.0, 0.0);
-          vec3.set(pos2, bounds[1], bounds[3], bounds[5]);
+          vec3.set(pos2, ext[1], ext[3], ext[5]);
           break;
         case 1: vec3.set(normal, -1.0, 0.0, 0.0);
-          vec3.set(pos2, bounds[0], bounds[2], bounds[4]);
+          vec3.set(pos2, ext[0], ext[2], ext[4]);
           break;
         case 2: vec3.set(normal, 0.0, 1.0, 0.0);
-          vec3.set(pos2, bounds[1], bounds[3], bounds[5]);
+          vec3.set(pos2, ext[1], ext[3], ext[5]);
           break;
         case 3: vec3.set(normal, 0.0, -1.0, 0.0);
-          vec3.set(pos2, bounds[0], bounds[2], bounds[4]);
+          vec3.set(pos2, ext[0], ext[2], ext[4]);
           break;
         case 4: vec3.set(normal, 0.0, 0.0, 1.0);
-          vec3.set(pos2, bounds[1], bounds[3], bounds[5]);
+          vec3.set(pos2, ext[1], ext[3], ext[5]);
           break;
         case 5: vec3.set(normal, 0.0, 0.0, -1.0);
-          vec3.set(pos2, bounds[0], bounds[2], bounds[4]);
+          vec3.set(pos2, ext[0], ext[2], ext[4]);
           break;
       }
-      vec3.transformMat3(normal, normal, keyMats.normalMatrix);
-      vec3.transformMat4(pos2, pos2, keyMats.wcvc);
+      vec3.transformMat3(normal, normal, model.idxNormalMatrix);
+      vec3.transformMat4(pos2, pos2, model.idxToView);
       const dist = -1.0 * vec3.dot(pos2, normal);
 
       // we have the plane in view coordinates
@@ -957,6 +969,8 @@ const DEFAULT_VALUES = {
   lastZBufferTexture: null,
   lastLightComplexity: 0,
   fullViewportTime: 1.0,
+  idxToView: null,
+  idxNormalMatrix: null,
 };
 
 // ----------------------------------------------------------------------------
@@ -976,6 +990,9 @@ export function extend(publicAPI, model, initialValues = {}) {
   model.colorTexture = vtkOpenGLTexture.newInstance();
   model.lightingTexture = vtkOpenGLTexture.newInstance();
   model.framebuffer = vtkOpenGLFramebuffer.newInstance();
+
+  model.idxToView = mat4.create();
+  model.idxNormalMatrix = mat3.create();
 
   // Build VTK API
   macro.setGet(publicAPI, model, [

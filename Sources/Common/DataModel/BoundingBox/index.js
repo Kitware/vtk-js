@@ -2,9 +2,9 @@ import macro    from 'vtk.js/Sources/macro';
 import vtkPlane from 'vtk.js/Sources/Common/DataModel/Plane';
 
 export const INIT_BOUNDS = [
-  Number.MAX_VALUE, Number.MIN_VALUE, // X
-  Number.MAX_VALUE, Number.MIN_VALUE, // Y
-  Number.MAX_VALUE, Number.MIN_VALUE, // Z
+  Number.MAX_VALUE, -Number.MAX_VALUE, // X
+  Number.MAX_VALUE, -Number.MAX_VALUE, // Y
+  Number.MAX_VALUE, -Number.MAX_VALUE, // Z
 ];
 
 // ----------------------------------------------------------------------------
