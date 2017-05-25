@@ -1400,7 +1400,7 @@ function vtkOpenGLPolyDataMapper(publicAPI, model) {
         model.VBOBuildTime.getMTime() < model.currentInput.getMTime()) {
       return true;
     }
-    return true;
+    return false;
   };
 
   publicAPI.buildBufferObjects = (ren, actor) => {
@@ -1480,7 +1480,7 @@ function vtkOpenGLPolyDataMapper(publicAPI, model) {
       + `C${(n ? n.getMTime() : 1)}D${(c ? c.getMTime() : 1)}`
       + `E${actor.getProperty().getEdgeVisibility()}`
       + `F${(tcoords ? tcoords.getMTime() : 1)}`;
-    if (true || model.VBOBuildString !== toString) {
+    if (model.VBOBuildString !== toString) {
       // Build the VBOs
       const points = poly.getPoints();
       const options = {
