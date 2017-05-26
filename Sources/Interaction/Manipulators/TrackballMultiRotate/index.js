@@ -23,11 +23,18 @@ function vtkTrackballMultiRotate(publicAPI, model) {
   const rollManipulator = vtkTrackballRoll.newInstance();
   let currentManipulator = null;
 
-  publicAPI.onButtonDown = (x, y, ren, rwi) => {
-    const viewSize = rwi.getView().getSize();
+  publicAPI.onButtonDown = (interactor) => {
+    const lastPtr = interactor.getPointerIndex();
+    const pos = interactor.getAnimationEventPosition(lastPtr);
+
+    if (!pos) {
+      return;
+    }
+
+    const viewSize = interactor.getView().getSize();
     const viewCenter = [0.5 * viewSize[0], 0.5 * viewSize[1]];
     const rotateRadius = 0.9 * max(viewCenter[0], viewCenter[1]);
-    const dist2 = sqr(viewCenter[0] - x) + sqr(viewCenter[1] - y);
+    const dist2 = sqr(viewCenter[0] - pos.x) + sqr(viewCenter[1] - pos.y);
 
     if ((rotateRadius * rotateRadius) > dist2) {
       currentManipulator = rotateManipulator;
@@ -40,18 +47,18 @@ function vtkTrackballMultiRotate(publicAPI, model) {
     currentManipulator.setControl(publicAPI.getControl());
     currentManipulator.setCenter(publicAPI.getCenter());
 
-    currentManipulator.onButtonDown(x, y, ren, rwi);
+    currentManipulator.onButtonDown(interactor);
   };
 
-  publicAPI.onButtonUp = (x, y, ren, rwi) => {
+  publicAPI.onButtonUp = (interactor) => {
     if (currentManipulator) {
-      currentManipulator.onButtonUp(x, y, ren, rwi);
+      currentManipulator.onButtonUp(interactor);
     }
   };
 
-  publicAPI.onAnimation = (x, y, ren, rwi) => {
+  publicAPI.onAnimation = (interactor, renderer) => {
     if (currentManipulator) {
-      currentManipulator.onAnimation(x, y, ren, rwi);
+      currentManipulator.onAnimation(interactor, renderer);
     }
   };
 }

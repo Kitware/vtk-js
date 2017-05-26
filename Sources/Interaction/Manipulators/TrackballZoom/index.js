@@ -9,9 +9,9 @@ function vtkTrackballZoom(publicAPI, model) {
   // Set our className
   model.classHierarchy.push('vtkTrackballZoom');
 
-  publicAPI.onButtonDown = (x, y, ren, rwi) => {
-    const size = rwi.getView().getSize();
-    const camera = ren.getActiveCamera();
+  publicAPI.onButtonDown = (interactor) => {
+    const size = interactor.getView().getSize();
+    const camera = interactor.getActiveCamera();
 
     if (camera.getParallelProjection()) {
       model.zoomScale = 1.5 / size[1];
@@ -21,43 +21,48 @@ function vtkTrackballZoom(publicAPI, model) {
     }
   };
 
-  publicAPI.onAnimation = (x, y, ren, rwi) => {
-    const lastPos = rwi.getLastAnimationEventPosition(rwi.getPointerIndex());
-    const dy = lastPos.y - y;
-    const camera = ren.getActiveCamera();
+  publicAPI.onAnimation = (interactor, renderer) => {
+    const lastPtr = interactor.getPointerIndex();
+    const pos = interactor.getAnimationEventPosition(lastPtr);
+    const lastPos = interactor.getLastAnimationEventPosition(lastPtr);
 
-    // double pos[3], fp[3], *norm, k, tmp;
+    if (!pos || !lastPos || !renderer) {
+      return;
+    }
+
+    const dy = lastPos.y - pos.y;
+    const camera = renderer.getActiveCamera();
 
     if (camera.getParallelProjection()) {
       const k = dy * model.zoomScale;
       camera.setParallelScale((1.0 - k) * camera.getParallelScale());
     } else {
-      const pos = camera.getPosition();
-      const fp = camera.getFocalPoint();
+      const cameraPos = camera.getPosition();
+      const cameraFp = camera.getFocalPoint();
       const norm = camera.getDirectionOfProjection();
       const k = dy * model.zoomScale;
 
       let tmp = k * norm[0];
-      pos[0] += tmp;
-      fp[0] += tmp;
+      cameraPos[0] += tmp;
+      cameraFp[0] += tmp;
 
       tmp = k * norm[1];
-      pos[1] += tmp;
-      fp[1] += tmp;
+      cameraPos[1] += tmp;
+      cameraFp[1] += tmp;
 
       tmp = k * norm[2];
-      pos[2] += tmp;
-      fp[2] += tmp;
+      cameraPos[2] += tmp;
+      cameraFp[2] += tmp;
 
       if (!camera.getFreezeFocalPoint()) {
-        camera.setFocalPoint(fp[0], fp[1], fp[2]);
+        camera.setFocalPoint(cameraFp[0], cameraFp[1], cameraFp[2]);
       }
 
-      camera.setPosition(pos[0], pos[1], pos[2]);
-      ren.resetCameraClippingRange();
+      camera.setPosition(cameraPos[0], cameraPos[1], cameraPos[2]);
+      renderer.resetCameraClippingRange();
     }
 
-    rwi.render();
+    interactor.render();
   };
 }
 
