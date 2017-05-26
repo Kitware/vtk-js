@@ -239,11 +239,11 @@ function vtkInteractorStyleManipulator(publicAPI, model) {
     if (model.currentRenderer && model.currentManipulator) {
       // When an interaction is active, we should not change the renderer being
       // interacted with.
-    } else {
+    } else if (pos) {
       publicAPI.findPokedRenderer(pos.x, pos.y);
     }
 
-    if (model.currentManipulator) {
+    if (model.currentManipulator && model.currentRenderer && pos) {
       model.currentManipulator.onAnimation(pos.x, pos.y, model.currentRenderer, model.interactor);
       publicAPI.invokeInteractionEvent({ type: 'InteractionEvent' });
     }
