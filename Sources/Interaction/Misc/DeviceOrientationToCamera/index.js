@@ -30,14 +30,14 @@ function addWindowListeners() {
   window.addEventListener('orientationchange', onScreenOrientationChangeEvent, false);
   window.addEventListener('deviceorientation', onDeviceOrientationChangeEvent, false);
   orientation.update = true;
-  listeners.filter(i => !!i).map(i => i.renderWindowInteractor.requestAnimation());
+  listeners.filter(i => !!i).forEach(i => i.renderWindowInteractor.requestAnimation());
 }
 
 function removeWindowListeners() {
   window.removeEventListener('orientationchange', onScreenOrientationChangeEvent, false);
   window.removeEventListener('deviceorientation', onDeviceOrientationChangeEvent, false);
   orientation.update = false;
-  listeners.filter(i => !!i).map(i => i.renderWindowInteractor.cancelAnimation());
+  listeners.filter(i => !!i).forEach(i => i.renderWindowInteractor.cancelAnimation());
 }
 
 function addCameraToSynchronize(renderWindowInteractor, camera, render = noOp) {
