@@ -13,6 +13,7 @@ import vtkDeviceOrientationToCamera from 'vtk.js/Sources/Interaction/Misc/Device
 const fullScreenRenderer = vtkFullScreenRenderWindow.newInstance({ background: [0, 0, 0] });
 const renderer = fullScreenRenderer.getRenderer();
 const renderWindow = fullScreenRenderer.getRenderWindow();
+const interactor = fullScreenRenderer.getInteractor();
 
 // ----------------------------------------------------------------------------
 // Example code
@@ -92,7 +93,7 @@ texturePathList.forEach(loadTexture);
 // If device support motion bind it to the camera
 if (vtkDeviceOrientationToCamera.isDeviceOrientationSupported()) {
   vtkDeviceOrientationToCamera.addWindowListeners();
-  cameraListenerId = vtkDeviceOrientationToCamera.addCameraToSynchronize(renderer.getActiveCamera(), render);
+  cameraListenerId = vtkDeviceOrientationToCamera.addCameraToSynchronize(interactor, renderer.getActiveCamera());
 } else {
   alert('Your device does not support motion detection so regular interaction will be available');
 }
