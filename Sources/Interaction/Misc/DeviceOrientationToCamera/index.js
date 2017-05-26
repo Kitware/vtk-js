@@ -15,23 +15,6 @@ const SCREEN_ORIENTATION_MAP = {
 
 function noOp() {}
 
-function updateListeners() {
-  if (orientation.update && orientation.supported) {
-    requestAnimationFrame(updateListeners);
-  }
-
-  const { alpha, beta, gamma } = orientation.device;
-  const screen = orientation.screen;
-
-  listeners.forEach((listener) => {
-    if (listener) {
-      const { camera, render } = listener;
-      camera.setDeviceAngles(alpha, beta, gamma, screen);
-      render();
-    }
-  });
-}
-
 function onDeviceOrientationChangeEvent(evt) {
   orientation.device = evt;
   if (!Number.isFinite(evt.alpha)) {
@@ -47,22 +30,46 @@ function addWindowListeners() {
   window.addEventListener('orientationchange', onScreenOrientationChangeEvent, false);
   window.addEventListener('deviceorientation', onDeviceOrientationChangeEvent, false);
   orientation.update = true;
-  updateListeners();
+  listeners.filter(i => !!i).map(i => i.renderWindowInteractor.requestAnimation());
 }
 
 function removeWindowListeners() {
   window.removeEventListener('orientationchange', onScreenOrientationChangeEvent, false);
   window.removeEventListener('deviceorientation', onDeviceOrientationChangeEvent, false);
   orientation.update = false;
+  listeners.filter(i => !!i).map(i => i.renderWindowInteractor.cancelAnimation());
 }
 
-function addCameraToSynchronize(camera, render = noOp) {
-  const id = listeners.length;
-  listeners.push({ id, camera, render });
-  return id;
+function addCameraToSynchronize(renderWindowInteractor, camera, render = noOp) {
+  function onAnimation() {
+    if (orientation.update) {
+      const { alpha, beta, gamma } = orientation.device;
+      const screen = orientation.screen;
+      camera.setDeviceAngles(alpha, beta, gamma, screen);
+      render();
+    }
+  }
+
+  const subscription = renderWindowInteractor.onAnimation(onAnimation);
+  const listener = { subscription, renderWindowInteractor };
+  const listenerId = listeners.length;
+  listeners.push(listener);
+
+  if (orientation.update) {
+    listener.renderWindowInteractor.requestAnimation();
+  }
+
+  return listenerId;
 }
 
-function removeCameraToSynchronize(id) {
+function removeCameraToSynchronize(id, cancelAnimation = true) {
+  const listener = listeners[id];
+  if (listener) {
+    listener.subscription.unsubscribe();
+    if (cancelAnimation) {
+      listener.renderWindowInteractor.cancelAnimation();
+    }
+  }
   listeners[id] = null;
 }
 
@@ -71,9 +78,9 @@ function isDeviceOrientationSupported() {
 }
 
 export default {
-  addWindowListeners,
-  removeWindowListeners,
   addCameraToSynchronize,
-  removeCameraToSynchronize,
+  addWindowListeners,
   isDeviceOrientationSupported,
+  removeCameraToSynchronize,
+  removeWindowListeners,
 };
