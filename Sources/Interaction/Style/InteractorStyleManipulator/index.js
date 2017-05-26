@@ -3,6 +3,8 @@ import vtkInteractorStyle from 'vtk.js/Sources/Rendering/Core/InteractorStyle';
 
 const { vtkDebugMacro } = macro;
 
+const DEFAULT_EVENT_POSITION = { x: 0, y: 0, z: 0 };
+
 // ----------------------------------------------------------------------------
 // Global methods
 // ----------------------------------------------------------------------------
@@ -101,6 +103,12 @@ function vtkInteractorStyleManipulator(publicAPI, model) {
   model.centerOfRotation = [0, 0, 0];
   model.rotationFactor = 1;
 
+  function updateCurrentRenderer() {
+    const pos = model.interactor.getEventPosition(model.interactor.getPointerIndex()) || DEFAULT_EVENT_POSITION;
+    publicAPI.findPokedRenderer(pos.x, pos.y);
+    return model.currentRenderer;
+  }
+
   //-------------------------------------------------------------------------
   publicAPI.removeAllManipulators = () => {
     model.cameraManipulators = [];
@@ -154,22 +162,14 @@ function vtkInteractorStyleManipulator(publicAPI, model) {
       return;
     }
 
-    // Get the renderer.
-    const pos = model.interactor.getEventPosition(model.interactor.getPointerIndex());
-    publicAPI.findPokedRenderer(pos.x, pos.y);
-    if (model.currentRenderer === null) {
-      return;
-    }
-
     // Look for a matching camera interactor.
     model.currentManipulator = publicAPI.findManipulator(button, shift, control);
     if (model.currentManipulator) {
-      // this->CurrentManipulator->Register(this);
       publicAPI.invokeStartInteractionEvent({ type: 'StartInteractionEvent' });
       model.currentManipulator.setCenter(model.centerOfRotation);
       model.currentManipulator.setRotationFactor(model.rotationFactor);
       model.currentManipulator.startInteraction();
-      model.currentManipulator.onButtonDown(pos.x, pos.y, model.currentRenderer, model.interactor);
+      model.currentManipulator.onButtonDown(model.interactor);
       publicAPI.setAnimationStateOn();
     } else {
       vtkDebugMacro('No manipulator found');
@@ -213,12 +213,7 @@ function vtkInteractorStyleManipulator(publicAPI, model) {
     }
     if (model.currentManipulator.getButton() === button) {
       publicAPI.setAnimationStateOff();
-      const pos = model.interactor.getEventPosition(model.interactor.getPointerIndex());
-      if (pos) {
-        model.currentManipulator.onButtonUp(pos.x, pos.y, model.currentRenderer, model.interactor);
-      } else {
-        model.currentManipulator.onButtonUp(0, 0, model.currentRenderer, model.interactor);
-      }
+      model.currentManipulator.onButtonUp(model.interactor);
       model.currentManipulator.endInteraction();
       publicAPI.invokeEndInteractionEvent({ type: 'EndInteractionEvent' });
       model.currentManipulator = null;
@@ -234,17 +229,8 @@ function vtkInteractorStyleManipulator(publicAPI, model) {
 
   //-------------------------------------------------------------------------
   publicAPI.handleAnimation = () => {
-    const pos = model.interactor.getAnimationEventPosition(model.interactor.getPointerIndex());
-
-    if (model.currentRenderer && model.currentManipulator) {
-      // When an interaction is active, we should not change the renderer being
-      // interacted with.
-    } else if (pos) {
-      publicAPI.findPokedRenderer(pos.x, pos.y);
-    }
-
-    if (model.currentManipulator && model.currentRenderer && pos) {
-      model.currentManipulator.onAnimation(pos.x, pos.y, model.currentRenderer, model.interactor);
+    if (model.currentManipulator && (model.currentRenderer || updateCurrentRenderer())) {
+      model.currentManipulator.onAnimation(model.interactor, model.currentRenderer);
       publicAPI.invokeInteractionEvent({ type: 'InteractionEvent' });
     }
   };
