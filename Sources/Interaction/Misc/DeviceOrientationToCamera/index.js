@@ -13,8 +13,6 @@ const SCREEN_ORIENTATION_MAP = {
   'portrait-primary': 0,
 };
 
-function noOp() {}
-
 function onDeviceOrientationChangeEvent(evt) {
   orientation.device = evt;
   if (!Number.isFinite(evt.alpha)) {
@@ -40,13 +38,12 @@ function removeWindowListeners() {
   listeners.filter(i => !!i).forEach(i => i.renderWindowInteractor.cancelAnimation());
 }
 
-function addCameraToSynchronize(renderWindowInteractor, camera, render = noOp) {
+function addCameraToSynchronize(renderWindowInteractor, camera) {
   function onAnimation() {
     if (orientation.update) {
       const { alpha, beta, gamma } = orientation.device;
       const screen = orientation.screen;
       camera.setDeviceAngles(alpha, beta, gamma, screen);
-      render();
     }
   }
 
