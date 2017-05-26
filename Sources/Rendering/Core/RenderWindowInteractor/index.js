@@ -210,7 +210,8 @@ function vtkRenderWindowInteractor(publicAPI, model) {
   };
 
   publicAPI.requestAnimation = (requestor) => {
-    if (!model.animationRequest) {
+    model.requestAnimationCount += 1;
+    if (model.requestAnimationCount === 1) {
       model.eventPositions.forEach((value, key) => {
         model.lastAnimationEventPositions.set(key, value);
         model.animationEventPositions.set(key, value);
@@ -224,7 +225,9 @@ function vtkRenderWindowInteractor(publicAPI, model) {
   publicAPI.isAnimating = () => (model.animationRequest !== null);
 
   publicAPI.cancelAnimation = (requestor) => {
-    if (model.animationRequest) {
+    model.requestAnimationCount -= 1;
+
+    if (model.animationRequest && model.requestAnimationCount === 0) {
       cancelAnimationFrame(model.animationRequest);
       model.animationRequest = null;
       model.recentFrameTime = 0.0;
@@ -710,6 +713,7 @@ const DEFAULT_VALUES = {
   rotation: 0.0,
   lastRotation: 0.0,
   animationRequest: null,
+  requestAnimationCount: 0,
 };
 
 // ----------------------------------------------------------------------------
