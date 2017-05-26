@@ -11,14 +11,16 @@ function vtkTrackballRotate(publicAPI, model) {
   // Set our className
   model.classHierarchy.push('vtkTrackballRotate');
 
-  publicAPI.onAnimation = (x, y, ren, rwi) => {
-    if (model.currentRenderer === null) {
+  publicAPI.onAnimation = (interactor, renderer) => {
+    const lastPtr = interactor.getPointerIndex();
+    const pos = interactor.getAnimationEventPosition(lastPtr);
+    const lastPos = interactor.getLastAnimationEventPosition(lastPtr);
+
+    if (!pos || !lastPos || !renderer) {
       return;
     }
 
-    const lastPos = rwi.getLastAnimationEventPosition(rwi.getPointerIndex());
-
-    const camera = ren.getActiveCamera();
+    const camera = renderer.getActiveCamera();
     const cameraPos = camera.getPosition();
     const cameraFp = camera.getFocalPoint();
 
@@ -31,10 +33,10 @@ function vtkTrackballRotate(publicAPI, model) {
     // Translate to center
     mat4.translate(trans, trans, vec3.fromValues(center[0], center[1], center[2]));
 
-    const dx = lastPos.x - x;
-    const dy = lastPos.y - y;
+    const dx = lastPos.x - pos.x;
+    const dy = lastPos.y - pos.y;
 
-    const size = rwi.getView().getSize();
+    const size = interactor.getView().getSize();
 
     // Azimuth
     const viewUp = camera.getViewUp();
@@ -62,8 +64,7 @@ function vtkTrackballRotate(publicAPI, model) {
     camera.setViewUp(newViewUp[0] - newCamPos[0], newViewUp[1] - newCamPos[1], newViewUp[2] - newCamPos[2]);
     camera.orthogonalizeViewUp();
 
-    ren.resetCameraClippingRange();
-    rwi.render();
+    renderer.resetCameraClippingRange();
   };
 }
 

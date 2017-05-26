@@ -210,19 +210,24 @@ function vtkRenderWindowInteractor(publicAPI, model) {
   };
 
   publicAPI.requestAnimation = (requestor) => {
-    model.eventPositions.forEach((value, key) => {
-      model.lastAnimationEventPositions.set(key, value);
-      model.animationEventPositions.set(key, value);
-    });
-    model.recentFrameTime = -1.0;
-    model.lastFrameStart = new Date().getTime();
-    model.animationRequest = requestAnimationFrame(publicAPI.handleAnimation);
+    model.requestAnimationCount += 1;
+    if (model.requestAnimationCount === 1) {
+      model.eventPositions.forEach((value, key) => {
+        model.lastAnimationEventPositions.set(key, value);
+        model.animationEventPositions.set(key, value);
+      });
+      model.recentFrameTime = -1.0;
+      model.lastFrameStart = new Date().getTime();
+      model.animationRequest = requestAnimationFrame(publicAPI.handleAnimation);
+    }
   };
 
   publicAPI.isAnimating = () => (model.animationRequest !== null);
 
   publicAPI.cancelAnimation = (requestor) => {
-    if (model.animationRequest) {
+    model.requestAnimationCount -= 1;
+
+    if (model.animationRequest && model.requestAnimationCount === 0) {
       cancelAnimationFrame(model.animationRequest);
       model.animationRequest = null;
       model.recentFrameTime = 0.0;
@@ -253,6 +258,7 @@ function vtkRenderWindowInteractor(publicAPI, model) {
       model.animationEventPositions.set(key, value);
     });
     publicAPI.animationEvent();
+    publicAPI.render();
     model.animationRequest = requestAnimationFrame(publicAPI.handleAnimation);
   };
 
@@ -343,7 +349,7 @@ function vtkRenderWindowInteractor(publicAPI, model) {
     publicAPI.modified();
   };
 
-  publicAPI.findPokedRenderer = (x, y) => {
+  publicAPI.findPokedRenderer = (x = 0, y = 0) => {
     const rc = model.view.getRenderable().getRenderers();
     let interactiveren = null;
     let viewportren = null;
@@ -707,6 +713,7 @@ const DEFAULT_VALUES = {
   rotation: 0.0,
   lastRotation: 0.0,
   animationRequest: null,
+  requestAnimationCount: 0,
 };
 
 // ----------------------------------------------------------------------------

@@ -10,11 +10,16 @@ function vtkTrackballPan(publicAPI, model) {
   // Set our className
   model.classHierarchy.push('vtkTrackballPan');
 
-  publicAPI.onAnimation = (x, y, ren, rwi) => {
-    const camera = ren.getActiveCamera();
+  publicAPI.onAnimation = (interactor, renderer) => {
+    const lastPtr = interactor.getPointerIndex();
+    const pos = interactor.getAnimationEventPosition(lastPtr);
+    const lastPos = interactor.getLastAnimationEventPosition(lastPtr);
 
-    const lastPos = rwi.getLastAnimationEventPosition(rwi.getPointerIndex());
+    if (!pos || !lastPos || !renderer) {
+      return;
+    }
 
+    const camera = renderer.getActiveCamera();
     const camPos = camera.getPosition();
     const fp = camera.getFocalPoint();
 
@@ -29,9 +34,9 @@ function vtkTrackballPan(publicAPI, model) {
       vtkMath.cross(vpn, up, right);
 
       // These are different because y is flipped.
-      const size = rwi.getView().getSize();
-      let dx = (x - lastPos.x) / size[1];
-      let dy = (lastPos.y - y) / size[1];
+      const size = interactor.getView().getSize();
+      let dx = (pos.x - lastPos.x) / size[1];
+      let dy = (lastPos.y - pos.y) / size[1];
 
       const scale = camera.getParallelScale();
       dx *= scale * 2.0;
@@ -50,10 +55,10 @@ function vtkTrackballPan(publicAPI, model) {
       camera.setFocalPoint(fp);
     } else {
       const center = model.center;
-      const focalDepth = rwi.getInteractorStyle().computeWorldToDisplay(center[0], center[1], center[2])[2];
-
-      const worldPoint = rwi.getInteractorStyle().computeDisplayToWorld(x, y, focalDepth);
-      const lastWorldPoint = rwi.getInteractorStyle().computeDisplayToWorld(lastPos.x, lastPos.y, focalDepth);
+      const style = interactor.getInteractorStyle();
+      const focalDepth = style.computeWorldToDisplay(center[0], center[1], center[2])[2];
+      const worldPoint = style.computeDisplayToWorld(pos.x, pos.y, focalDepth);
+      const lastWorldPoint = style.computeDisplayToWorld(lastPos.x, lastPos.y, focalDepth);
 
       const newCamPos = [
         camPos[0] + (lastWorldPoint[0] - worldPoint[0]),
@@ -71,8 +76,7 @@ function vtkTrackballPan(publicAPI, model) {
       camera.setFocalPoint(newFp[0], newFp[1], newFp[2]);
     }
 
-    ren.resetCameraClippingRange();
-    rwi.render();
+    renderer.resetCameraClippingRange();
   };
 }
 

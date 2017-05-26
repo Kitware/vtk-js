@@ -11,25 +11,32 @@ function vtkTrackballRoll(publicAPI, model) {
   // Set our className
   model.classHierarchy.push('vtkTrackballRoll');
 
-  publicAPI.onAnimation = (x, y, ren, rwi) => {
-    const camera = ren.getActiveCamera();
+  publicAPI.onAnimation = (interactor, renderer) => {
+    const lastPtr = interactor.getPointerIndex();
+    const pos = interactor.getAnimationEventPosition(lastPtr);
+    const lastPos = interactor.getLastAnimationEventPosition(lastPtr);
+
+    if (!pos || !lastPos || !renderer) {
+      return;
+    }
+
+    const camera = renderer.getActiveCamera();
 
     // compute view vector (rotation axis)
-    const pos = camera.getPosition();
-    const fp = camera.getFocalPoint();
+    const cameraPos = camera.getPosition();
+    const cameraFp = camera.getFocalPoint();
     const viewUp = camera.getViewUp();
 
-    const axis = [fp[0] - pos[0], fp[1] - pos[1], fp[2] - pos[2]];
+    const axis = [cameraFp[0] - cameraPos[0], cameraFp[1] - cameraPos[1], cameraFp[2] - cameraPos[2]];
 
     // compute the angle of rotation
     // - first compute the two vectors (center to mouse)
-    publicAPI.computeDisplayCenter(rwi.getInteractorStyle());
+    publicAPI.computeDisplayCenter(interactor.getInteractorStyle());
 
-    const lastPos = rwi.getLastAnimationEventPosition(rwi.getPointerIndex());
     const x1 = lastPos.x - model.displayCenter[0];
-    const x2 = x - model.displayCenter[0];
+    const x2 = pos.x - model.displayCenter[0];
     const y1 = lastPos.y - model.displayCenter[1];
-    const y2 = y - model.displayCenter[1];
+    const y2 = pos.y - model.displayCenter[1];
     if ((x2 === 0 && y2 === 0) || (x1 === 0 && y1 === 0)) {
       // don't ever want to divide by zero
       return;
@@ -57,17 +64,16 @@ function vtkTrackballRoll(publicAPI, model) {
     const newViewUp = vec3.create();
 
     // Apply transformation to camera position, focal point, and view up
-    vec3.transformMat4(newCamPos, vec3.fromValues(pos[0], pos[1], pos[2]), transform);
-    vec3.transformMat4(newFp, vec3.fromValues(fp[0], fp[1], fp[2]), transform);
-    vec3.transformMat4(newViewUp, vec3.fromValues(viewUp[0] + pos[0], viewUp[1] + pos[1], viewUp[2] + pos[2]), transform);
+    vec3.transformMat4(newCamPos, vec3.fromValues(cameraPos[0], cameraPos[1], cameraPos[2]), transform);
+    vec3.transformMat4(newFp, vec3.fromValues(cameraFp[0], cameraFp[1], cameraFp[2]), transform);
+    vec3.transformMat4(newViewUp, vec3.fromValues(viewUp[0] + cameraPos[0], viewUp[1] + cameraPos[1], viewUp[2] + cameraPos[2]), transform);
 
     camera.setPosition(newCamPos[0], newCamPos[1], newCamPos[2]);
     camera.setFocalPoint(newFp[0], newFp[1], newFp[2]);
     camera.setViewUp(newViewUp[0] - newCamPos[0], newViewUp[1] - newCamPos[1], newViewUp[2] - newCamPos[2]);
     camera.orthogonalizeViewUp();
 
-    ren.resetCameraClippingRange();
-    rwi.render();
+    renderer.resetCameraClippingRange();
   };
 }
 

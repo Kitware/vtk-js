@@ -10,11 +10,11 @@ function vtkCameraManipulator(publicAPI, model) {
 
   publicAPI.startInteraction = () => {};
   publicAPI.endInteraction = () => {};
-  publicAPI.onButtonDown = (x, y, ren, rwi) => {};
-  publicAPI.onButtonUp = (x, y, ren, rwi) => {};
-  publicAPI.onAnimation = (x, y, ren, rwi) => {};
-  publicAPI.onKeyUp = (rwi) => {};
-  publicAPI.onKeyDown = (rwi) => {};
+  publicAPI.onButtonDown = (interactor) => {};
+  publicAPI.onButtonUp = (interactor) => {};
+  publicAPI.onAnimation = (interactor, renderer) => {};
+  publicAPI.onKeyUp = (interactor) => {};
+  publicAPI.onKeyDown = (interactor) => {};
 
   //-------------------------------------------------------------------------
   publicAPI.computeDisplayCenter = (iObserver) => {
