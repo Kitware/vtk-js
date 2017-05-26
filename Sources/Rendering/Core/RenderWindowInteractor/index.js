@@ -210,13 +210,15 @@ function vtkRenderWindowInteractor(publicAPI, model) {
   };
 
   publicAPI.requestAnimation = (requestor) => {
-    model.eventPositions.forEach((value, key) => {
-      model.lastAnimationEventPositions.set(key, value);
-      model.animationEventPositions.set(key, value);
-    });
-    model.recentFrameTime = -1.0;
-    model.lastFrameStart = new Date().getTime();
-    model.animationRequest = requestAnimationFrame(publicAPI.handleAnimation);
+    if (!model.animationRequest) {
+      model.eventPositions.forEach((value, key) => {
+        model.lastAnimationEventPositions.set(key, value);
+        model.animationEventPositions.set(key, value);
+      });
+      model.recentFrameTime = -1.0;
+      model.lastFrameStart = new Date().getTime();
+      model.animationRequest = requestAnimationFrame(publicAPI.handleAnimation);
+    }
   };
 
   publicAPI.isAnimating = () => (model.animationRequest !== null);
