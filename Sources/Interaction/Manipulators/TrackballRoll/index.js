@@ -74,7 +74,6 @@ function vtkTrackballRoll(publicAPI, model) {
     camera.orthogonalizeViewUp();
 
     renderer.resetCameraClippingRange();
-    interactor.render();
   };
 }
 

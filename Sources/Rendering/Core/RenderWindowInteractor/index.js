@@ -255,6 +255,7 @@ function vtkRenderWindowInteractor(publicAPI, model) {
       model.animationEventPositions.set(key, value);
     });
     publicAPI.animationEvent();
+    publicAPI.render();
     model.animationRequest = requestAnimationFrame(publicAPI.handleAnimation);
   };
 

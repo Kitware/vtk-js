@@ -61,8 +61,6 @@ function vtkTrackballZoom(publicAPI, model) {
       camera.setPosition(cameraPos[0], cameraPos[1], cameraPos[2]);
       renderer.resetCameraClippingRange();
     }
-
-    interactor.render();
   };
 }
 

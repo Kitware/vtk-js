@@ -77,7 +77,6 @@ function vtkTrackballPan(publicAPI, model) {
     }
 
     renderer.resetCameraClippingRange();
-    interactor.render();
   };
 }
 
