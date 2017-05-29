@@ -124,26 +124,6 @@ function vtkShaderProgram(publicAPI, model) {
     return true;
   };
 
-  publicAPI.setUniformf = (name, v) => {
-    const location = publicAPI.findUniform(name);
-    if (location === -1) {
-      model.error = `Could not set uniform ${name} . No such uniform.`;
-      return false;
-    }
-    model.context.uniform1f(location, v);
-    return true;
-  };
-
-  publicAPI.setUniformi = (name, v) => {
-    const location = publicAPI.findUniform(name);
-    if (location === -1) {
-      model.error = `Could not set uniform ${name} . No such uniform.`;
-      return false;
-    }
-    model.context.uniform1i(location, v);
-    return true;
-  };
-
   publicAPI.setUniformMatrix = (name, v) => {
     const location = publicAPI.findUniform(name);
     if (location === -1) {
@@ -164,23 +144,211 @@ function vtkShaderProgram(publicAPI, model) {
     return true;
   };
 
-  publicAPI.setUniform3f = (name, v) => {
+  publicAPI.setUniformf = (name, v) => {
     const location = publicAPI.findUniform(name);
     if (location === -1) {
       model.error = `Could not set uniform ${name} . No such uniform.`;
       return false;
     }
-    model.context.uniform3f(location, v[0], v[1], v[2]);
+    model.context.uniform1f(location, v);
     return true;
   };
 
-  publicAPI.setUniform3fv = (name, count, v) => {
+  publicAPI.setUniformfv = (name, v) => {
     const location = publicAPI.findUniform(name);
     if (location === -1) {
       model.error = `Could not set uniform ${name} . No such uniform.`;
       return false;
     }
-    model.context.uniform3fv(location, count, v);
+    model.context.uniform1fv(location, v);
+    return true;
+  };
+
+  publicAPI.setUniformi = (name, v) => {
+    const location = publicAPI.findUniform(name);
+    if (location === -1) {
+      model.error = `Could not set uniform ${name} . No such uniform.`;
+      return false;
+    }
+    model.context.uniform1i(location, v);
+    return true;
+  };
+
+  publicAPI.setUniformiv = (name, v) => {
+    const location = publicAPI.findUniform(name);
+    if (location === -1) {
+      model.error = `Could not set uniform ${name} . No such uniform.`;
+      return false;
+    }
+    model.context.uniform1iv(location, v);
+    return true;
+  };
+
+  publicAPI.setUniform2f = (name, ...args) => {
+    const location = publicAPI.findUniform(name);
+    if (location === -1) {
+      model.error = `Could not set uniform ${name} . No such uniform.`;
+      return false;
+    }
+    let array = args;
+    // allow an array passed as a single argument
+    if (array.length == 1 && Array.isArray(array[0])){
+      array = array[0];
+    }
+    if (array.length !== 2){
+      throw new RangeError('Invalid number of values for array');
+    }
+    model.context.uniform2f(location, array[0], array[1]);
+    return true;
+  };
+
+  publicAPI.setUniform2fv = (name, v) => {
+    const location = publicAPI.findUniform(name);
+    if (location === -1) {
+      model.error = `Could not set uniform ${name} . No such uniform.`;
+      return false;
+    }
+    model.context.uniform2fv(location, v);
+    return true;
+  };
+
+  publicAPI.setUniform2i = (name, ...args) => {
+    const location = publicAPI.findUniform(name);
+    if (location === -1) {
+      model.error = `Could not set uniform ${name} . No such uniform.`;
+      return false;
+    }
+    let array = args;
+    // allow an array passed as a single argument
+    if (array.length == 1 && Array.isArray(array[0])){
+      array = array[0];
+    }
+    if (array.length !== 2){
+      throw new RangeError('Invalid number of values for array');
+    }
+    model.context.uniform2i(location, array[0], array[1]);
+    return true;
+  };
+
+  publicAPI.setUniform2iv = (name, v) => {
+    const location = publicAPI.findUniform(name);
+    if (location === -1) {
+      model.error = `Could not set uniform ${name} . No such uniform.`;
+      return false;
+    }
+    model.context.uniform2iv(location, v);
+    return true;
+  };
+
+  publicAPI.setUniform3f = (name, ...args) => {
+    const location = publicAPI.findUniform(name);
+    if (location === -1) {
+      model.error = `Could not set uniform ${name} . No such uniform.`;
+      return false;
+    }
+    let array = args;
+    // allow an array passed as a single argument
+    if (array.length == 1 && Array.isArray(array[0])){
+      array = array[0];
+    }
+    if (array.length !== 3){
+      throw new RangeError('Invalid number of values for array');
+    }
+    model.context.uniform3f(location, array[0], array[1], array[2]);
+    return true;
+  };
+
+  publicAPI.setUniform3fv = (name,  v) => {
+    const location = publicAPI.findUniform(name);
+    if (location === -1) {
+      model.error = `Could not set uniform ${name} . No such uniform.`;
+      return false;
+    }
+    model.context.uniform3fv(location, v);
+    return true;
+  };
+
+  publicAPI.setUniform3i = (name, ...args) => {
+    const location = publicAPI.findUniform(name);
+    if (location === -1) {
+      model.error = `Could not set uniform ${name} . No such uniform.`;
+      return false;
+    }
+    let array = args;
+    // allow an array passed as a single argument
+    if (array.length == 1 && Array.isArray(array[0])){
+      array = array[0];
+    }
+    if (array.length !== 3){
+      throw new RangeError('Invalid number of values for array');
+    }
+    model.context.uniform3i(location, array[0], array[1], array[2]);
+    return true;
+  };
+
+  publicAPI.setUniform3iv = (name, v) => {
+    const location = publicAPI.findUniform(name);
+    if (location === -1) {
+      model.error = `Could not set uniform ${name} . No such uniform.`;
+      return false;
+    }
+    model.context.uniform3iv(location, v);
+    return true;
+  };
+
+  publicAPI.setUniform4f = (name, ...args) => {
+    const location = publicAPI.findUniform(name);
+    if (location === -1) {
+      model.error = `Could not set uniform ${name} . No such uniform.`;
+      return false;
+    }
+    let array = args;
+    // allow an array passed as a single argument
+    if (array.length == 1 && Array.isArray(array[0])){
+      array = array[0];
+    }
+    if (array.length !== 4){
+      throw new RangeError('Invalid number of values for array');
+    }
+    model.context.uniform4f(location, array[0], array[1], array[2], array[3]);
+    return true;
+  };
+
+  publicAPI.setUniform4fv = (name, v) => {
+    const location = publicAPI.findUniform(name);
+    if (location === -1) {
+      model.error = `Could not set uniform ${name} . No such uniform.`;
+      return false;
+    }
+    model.context.uniform4fv(location, v);
+    return true;
+  };
+
+  publicAPI.setUniform4i = (name, ...args) => {
+    const location = publicAPI.findUniform(name);
+    if (location === -1) {
+      model.error = `Could not set uniform ${name} . No such uniform.`;
+      return false;
+    }
+    let array = args;
+    // allow an array passed as a single argument
+    if (array.length == 1 && Array.isArray(array[0])){
+      array = array[0];
+    }
+    if (array.length !== 4){
+      throw new RangeError('Invalid number of values for array');
+    }
+    model.context.uniform4i(location, array[0], array[1], array[2], array[3]);
+    return true;
+  };
+
+  publicAPI.setUniform4iv = (name, v) => {
+    const location = publicAPI.findUniform(name);
+    if (location === -1) {
+      model.error = `Could not set uniform ${name} . No such uniform.`;
+      return false;
+    }
+    model.context.uniform4iv(location, v);
     return true;
   };
 
