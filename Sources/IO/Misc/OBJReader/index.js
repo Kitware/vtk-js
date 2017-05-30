@@ -195,7 +195,7 @@ function vtkOBJReader(publicAPI, model) {
     model.compression = option.compression;
 
     // Fetch metadata
-    return publicAPI.loadData({progressCallback: option.progressCallback});
+    return publicAPI.loadData({ progressCallback: option.progressCallback });
   };
 
   // Fetch the actual data arrays
