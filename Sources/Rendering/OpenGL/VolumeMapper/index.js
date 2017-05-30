@@ -433,7 +433,7 @@ function vtkOpenGLVolumeMapper(publicAPI, model) {
     const origin = model.currentInput.getOrigin();
     vec3.set(pos, origin[0], origin[1], origin[2]);
     vec3.transformMat4(pos, pos, keyMats.wcvc);
-    program.setUniform3f('vOriginVC', pos);
+    program.setUniform3f('vOriginVC', pos[0], pos[1], pos[2]);
 
     // apply the image directions
     const i2wmat4 = model.currentInput.getIndexToWorld();
@@ -450,7 +450,7 @@ function vtkOpenGLVolumeMapper(publicAPI, model) {
       (ext[1] - ext[0]) * spc[0],
       (ext[3] - ext[2]) * spc[1],
       (ext[5] - ext[4]) * spc[2]);
-    program.setUniform3f('vSize', vsize);
+    program.setUniform3f('vSize', vsize[0], vsize[1], vsize[2]);
 
     const maxSamples = vec3.length(vsize) / model.renderable.getSampleDistance();
     if (maxSamples > model.renderable.getMaximumSamplesPerRay()) {
@@ -463,7 +463,7 @@ function vtkOpenGLVolumeMapper(publicAPI, model) {
     const vctoijk = vec3.create();
     vec3.set(vctoijk, dims[0] - 1.0, dims[1] - 1.0, dims[2] - 1.0);
     vec3.divide(vctoijk, vctoijk, vsize);
-    program.setUniform3f('vVCToIJK', vctoijk);
+    program.setUniform3f('vVCToIJK', vctoijk[0], vctoijk[1], vctoijk[2]);
 
     const volInfo = model.scalarTexture.getVolumeInfo();
     program.setUniformf('texWidth', model.scalarTexture.getWidth());
@@ -507,7 +507,7 @@ function vtkOpenGLVolumeMapper(publicAPI, model) {
 
       // we have the plane in view coordinates
       // specify the planes in view coordinates
-      program.setUniform3f(`vPlaneNormal${i}`, normal);
+      program.setUniform3f(`vPlaneNormal${i}`, normal[0], normal[1], normal[2]);
       program.setUniformf(`vPlaneDistance${i}`, dist);
     }
 

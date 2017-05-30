@@ -132,7 +132,22 @@ function vtkOpenGLRenderWindow(publicAPI, model) {
   publicAPI.get2DContext = () => model.canvas.getContext('2d');
 
   publicAPI.get3DContext = (options = { preserveDrawingBuffer: false, depth: true, alpha: true }) => {
-    const result = model.canvas.getContext('webgl', options) || model.canvas.getContext('experimental-webgl', options);
+    let result = null;
+
+    const webgl2Supported = (typeof WebGL2RenderingContext !== 'undefined');
+    model.webgl2 = false;
+
+    if (model.defaultToWebgl2 && webgl2Supported) {
+      result = model.canvas.getContext('webgl2', options);
+      if (result) {
+        model.webgl2 = true;
+      }
+    }
+    if (!result) {
+      result = model.canvas.getContext('webgl', options)
+        || model.canvas.getContext('experimental-webgl', options);
+    }
+
     return result;
   };
 
@@ -222,6 +237,8 @@ const DEFAULT_VALUES = {
   textureResourceIds: null,
   renderPasses: [],
   notifyImageReady: false,
+  webgl2: false,
+  defaultToWebgl2: false, // turned off by default
 };
 
 // ----------------------------------------------------------------------------
@@ -249,6 +266,7 @@ export function extend(publicAPI, model, initialValues = {}) {
   macro.get(publicAPI, model, [
     'shaderCache',
     'textureUnitManager',
+    'webgl2',
   ]);
 
   macro.setGet(publicAPI, model, [
@@ -257,6 +275,7 @@ export function extend(publicAPI, model, initialValues = {}) {
     'canvas',
     'renderPasses',
     'notifyImageReady',
+    'defaultToWebgl2',
   ]);
 
   macro.setGetArray(publicAPI, model, [
