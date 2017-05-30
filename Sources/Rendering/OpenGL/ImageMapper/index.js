@@ -1,3 +1,4 @@
+import { mat4 }           from 'gl-matrix';
 import macro              from 'vtk.js/Sources/macro';
 import vtkDataArray       from 'vtk.js/Sources/Common/Core/DataArray';
 import vtkHelper          from 'vtk.js/Sources/Rendering/OpenGL/Helper';
@@ -208,31 +209,12 @@ function vtkOpenGLImageMapper(publicAPI, model) {
   publicAPI.setCameraShaderParameters = (cellBO, ren, actor) => {
     const program = cellBO.getProgram();
 
-    // if (model.renderable.getRenderToRectangle()) {
-    //   let xscale = 1.0;
-    //   let yscale = 1.0;
-    //   const actorPos =
-    //     actor.getActualPositionCoordinate().getComputedViewValue(ren);
-    //   const actorPos2 =
-    //     actor.getActualPosition2Coordinate().getComputedViewValue(ren);
+    const image = model.currentInput;
+    const i2wmat4 = image.getIndexToWorld();
 
-    //   const rectwidth  = (actorPos2[0] - actorPos[0]) + 1;
-    //   const rectheight = (actorPos2[1] - actorPos[1]) + 1;
-    //   const xscale = rectwidth / width;
-    //   const yscale = rectheight / height;
-    // }
-
-    // points->SetPoint(0, 0.0, 0.0, 0);
-    // points->SetPoint(1, width*xscale, 0.0, 0);
-    // points->SetPoint(2, width*xscale, height*yscale, 0);
-    // points->SetPoint(3, 0.0, height*yscale, 0);
-
-    // // [WMVD]C == {world, model, view, display} coordinates
-    // // E.g., WCDC == world to display coordinate transformation
     const keyMats = model.openGLCamera.getKeyMatrices(ren);
-    program.setUniformMatrix('MCDCMatrix', keyMats.wcdc);
-    // program.setUniformf4('p1', );
-    // program.setUniformf4('p2',);
+    mat4.multiply(model.imagemat, keyMats.wcdc, i2wmat4);
+    program.setUniformMatrix('MCDCMatrix', model.imagemat);
   };
 
   publicAPI.setPropertyShaderParameters = (cellBO, ren, actor) => {
@@ -357,14 +339,14 @@ function vtkOpenGLImageMapper(publicAPI, model) {
       model.openGLTexture.sendParameters();
       model.openGLTexture.deactivate();
 
-      const bounds = model.renderable.getBounds();
+      const ext = image.getExtent();
 
       const ptsArray = new Float32Array(12);
       const tcoordArray = new Float32Array(8);
       for (let i = 0; i < 4; i++) {
-        ptsArray[(i * 3)] = bounds[i % 2];
-        ptsArray[(i * 3) + 1] = bounds[((i > 1) ? 1 : 0) + 2];
-        ptsArray[(i * 3) + 2] = bounds[4];
+        ptsArray[(i * 3)] = ((i % 2) ? ext[1] : ext[0]);
+        ptsArray[(i * 3) + 1] = ((i > 1) ? ext[3] : ext[2]);
+        ptsArray[(i * 3) + 2] = z;
         tcoordArray[(i * 2)] = (i % 2) ? 1.0 : 0.0;
         tcoordArray[(i * 2) + 1] = (i > 1) ? 1.0 : 0.0;
       }
@@ -404,6 +386,7 @@ const DEFAULT_VALUES = {
   VBOBuildString: null,
   openGLTexture: null,
   tris: null,
+  imagemat: null,
 };
 
 // ----------------------------------------------------------------------------
@@ -416,6 +399,8 @@ export function extend(publicAPI, model, initialValues = {}) {
 
   model.tris = vtkHelper.newInstance();
   model.openGLTexture = vtkOpenGLTexture.newInstance();
+
+  model.imagemat = mat4.create();
 
   // Build VTK API
   macro.setGet(publicAPI, model, [

@@ -19,26 +19,9 @@ function vtkImageMapper(publicAPI, model) {
 
     const fp = cam.getFocalPoint();
 
-    const origin = image.getOrigin();
-    const spacing = image.getSpacing();
-    const ext = image.getExtent();
-
-    // compute the slice number
-    fp[0] -= origin[0];
-    fp[1] -= origin[1];
-    fp[2] -= origin[2];
-
-    fp[0] /= spacing[0];
-    fp[1] /= spacing[1];
-    fp[2] /= spacing[2];
-
-    if (fp[2] < ext[4]) {
-      fp[2] = ext[4];
-    }
-    if (fp[2] > ext[5]) {
-      fp[2] = ext[5];
-    }
-    publicAPI.setZSlice(Math.floor(fp[2] + 0.5));
+    const idx = [];
+    image.worldToIndex(fp, idx);
+    publicAPI.setZSlice(Math.floor(idx[2] + 0.5));
   };
 
   publicAPI.getBounds = () => {
@@ -50,16 +33,16 @@ function vtkImageMapper(publicAPI, model) {
       return image.getBounds();
     }
 
-    const origin = image.getOrigin();
-    const spacing = image.getSpacing();
-    const res = [];
-    res[0] = origin[0] + (model.customDisplayExtent[0] * spacing[0]);
-    res[1] = origin[0] + (model.customDisplayExtent[1] * spacing[0]);
-    res[2] = origin[1] + (model.customDisplayExtent[2] * spacing[1]);
-    res[3] = origin[1] + (model.customDisplayExtent[3] * spacing[1]);
-    res[4] = origin[2] + (model.zSlice * spacing[2]);
-    res[5] = origin[2] + (model.zSlice * spacing[2]);
-    return res;
+    const ex = [
+      model.customDisplayExtent[0],
+      model.customDisplayExtent[1],
+      model.customDisplayExtent[2],
+      model.customDisplayExtent[3],
+      model.zSlice,
+      model.zSlice,
+    ];
+
+    return image.extentToBounds(ex);
   };
 
   publicAPI.getIsOpaque = () => true;
