@@ -136,6 +136,7 @@ function vtkRenderWindowInteractor(publicAPI, model) {
     canvas.addEventListener('click', preventDefault);
     canvas.addEventListener('mousewheel', publicAPI.handleWheel);
     canvas.addEventListener('DOMMouseScroll', publicAPI.handleWheel);
+    canvas.addEventListener('mouseout', publicAPI.handleMouseOut);
 
     canvas.addEventListener('mousedown', publicAPI.handleMouseDown);
     document.querySelector('body').addEventListener('keypress', publicAPI.handleKeyPress);
@@ -153,6 +154,7 @@ function vtkRenderWindowInteractor(publicAPI, model) {
     canvas.removeEventListener('click', preventDefault);
     canvas.removeEventListener('mousewheel', publicAPI.handleWheel);
     canvas.removeEventListener('DOMMouseScroll', publicAPI.handleWheel);
+    canvas.removeEventListener('mouseout', publicAPI.handleMouseOut);
 
     canvas.removeEventListener('mousedown', publicAPI.handleMouseDown);
     document.querySelector('body').removeEventListener('keypress', publicAPI.handleKeyPress);
@@ -278,6 +280,25 @@ function vtkRenderWindowInteractor(publicAPI, model) {
     publicAPI.setScale(publicAPI.getScale() *
       Math.max(0.01, (wheelDelta + 1000.0) / 1000.0));
     publicAPI.pinchEvent();
+  };
+
+  publicAPI.handleMouseOut = (event) => {
+    event.stopPropagation();
+    event.preventDefault();
+
+    switch (event.which) {
+      case 1:
+        publicAPI.leftButtonReleaseEvent();
+        break;
+      case 2:
+        publicAPI.middleButtonReleaseEvent();
+        break;
+      case 3:
+        publicAPI.rightButtonReleaseEvent();
+        break;
+      default:
+        break;
+    }
   };
 
   publicAPI.handleMouseUp = (event) => {
