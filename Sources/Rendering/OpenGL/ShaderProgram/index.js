@@ -192,10 +192,10 @@ function vtkShaderProgram(publicAPI, model) {
     }
     let array = args;
     // allow an array passed as a single argument
-    if (array.length == 1 && Array.isArray(array[0])){
+    if (array.length === 1 && Array.isArray(array[0])) {
       array = array[0];
     }
-    if (array.length !== 2){
+    if (array.length !== 2) {
       throw new RangeError('Invalid number of values for array');
     }
     model.context.uniform2f(location, array[0], array[1]);
@@ -220,10 +220,10 @@ function vtkShaderProgram(publicAPI, model) {
     }
     let array = args;
     // allow an array passed as a single argument
-    if (array.length == 1 && Array.isArray(array[0])){
+    if (array.length === 1 && Array.isArray(array[0])) {
       array = array[0];
     }
-    if (array.length !== 2){
+    if (array.length !== 2) {
       throw new RangeError('Invalid number of values for array');
     }
     model.context.uniform2i(location, array[0], array[1]);
@@ -248,17 +248,17 @@ function vtkShaderProgram(publicAPI, model) {
     }
     let array = args;
     // allow an array passed as a single argument
-    if (array.length == 1 && Array.isArray(array[0])){
+    if (array.length === 1 && Array.isArray(array[0])) {
       array = array[0];
     }
-    if (array.length !== 3){
+    if (array.length !== 3) {
       throw new RangeError('Invalid number of values for array');
     }
     model.context.uniform3f(location, array[0], array[1], array[2]);
     return true;
   };
 
-  publicAPI.setUniform3fv = (name,  v) => {
+  publicAPI.setUniform3fv = (name, v) => {
     const location = publicAPI.findUniform(name);
     if (location === -1) {
       model.error = `Could not set uniform ${name} . No such uniform.`;
@@ -276,10 +276,10 @@ function vtkShaderProgram(publicAPI, model) {
     }
     let array = args;
     // allow an array passed as a single argument
-    if (array.length == 1 && Array.isArray(array[0])){
+    if (array.length === 1 && Array.isArray(array[0])) {
       array = array[0];
     }
-    if (array.length !== 3){
+    if (array.length !== 3) {
       throw new RangeError('Invalid number of values for array');
     }
     model.context.uniform3i(location, array[0], array[1], array[2]);
@@ -304,10 +304,10 @@ function vtkShaderProgram(publicAPI, model) {
     }
     let array = args;
     // allow an array passed as a single argument
-    if (array.length == 1 && Array.isArray(array[0])){
+    if (array.length === 1 && Array.isArray(array[0])) {
       array = array[0];
     }
-    if (array.length !== 4){
+    if (array.length !== 4) {
       throw new RangeError('Invalid number of values for array');
     }
     model.context.uniform4f(location, array[0], array[1], array[2], array[3]);
@@ -332,10 +332,10 @@ function vtkShaderProgram(publicAPI, model) {
     }
     let array = args;
     // allow an array passed as a single argument
-    if (array.length == 1 && Array.isArray(array[0])){
+    if (array.length === 1 && Array.isArray(array[0])) {
       array = array[0];
     }
-    if (array.length !== 4){
+    if (array.length !== 4) {
       throw new RangeError('Invalid number of values for array');
     }
     model.context.uniform4i(location, array[0], array[1], array[2], array[3]);
