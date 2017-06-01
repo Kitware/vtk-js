@@ -1371,6 +1371,20 @@ function vtkOpenGLPolyDataMapper(publicAPI, model) {
       return;
     }
 
+    // apply faceCulling
+    const gl = model.context;
+    const backfaceCulling = actor.getProperty().getBackfaceCulling();
+    const frontfaceCulling = actor.getProperty().getFrontfaceCulling();
+    if (!backfaceCulling && !frontfaceCulling) {
+      gl.disable(gl.CULL_FACE);
+    } else if (frontfaceCulling) {
+      gl.enable(gl.CULL_FACE);
+      gl.cullFace(gl.FRONT);
+    } else {
+      gl.enable(gl.CULL_FACE);
+      gl.cullFace(gl.BACK);
+    }
+
     publicAPI.renderPieceStart(ren, actor);
     publicAPI.renderPieceDraw(ren, actor);
     publicAPI.renderPieceFinish(ren, actor);
