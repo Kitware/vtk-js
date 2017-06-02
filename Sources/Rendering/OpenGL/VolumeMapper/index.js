@@ -229,7 +229,7 @@ function vtkOpenGLVolumeMapper(publicAPI, model) {
             '  //VTK::Light::Impl',
             '  tcolor.rgb = tcolor.rgb*(diffuse*vDiffuse + vAmbient) + specular*vSpecular;',
           ],
-          false
+          false,
           ).result;
         let lightNum = 0;
         ren.getLights().forEach((light) => {
@@ -252,7 +252,7 @@ function vtkOpenGLVolumeMapper(publicAPI, model) {
               `    specular += ((sf${shadowFactor}) * lightColor${lightNum});`,
 //              '    }',
               '  //VTK::Light::Impl'],
-              false
+              false,
               ).result;
             lightNum++;
           }
@@ -736,14 +736,14 @@ function vtkOpenGLVolumeMapper(publicAPI, model) {
               '//VTK::System::Dec',
               'attribute vec4 vertexDC;',
               'varying vec2 tcoord;',
-              'void main() { tcoord = vec2(vertexDC.x*0.5 + 0.5, vertexDC.y*0.5 + 0.5); gl_Position = vertexDC; }'
+              'void main() { tcoord = vec2(vertexDC.x*0.5 + 0.5, vertexDC.y*0.5 + 0.5); gl_Position = vertexDC; }',
             ].join('\n'),
             [
               '//VTK::System::Dec',
               '//VTK::Output::Dec',
               'uniform sampler2D texture;',
               'varying vec2 tcoord;',
-              'void main() { gl_FragData[0] = texture2D(texture,tcoord); }'
+              'void main() { gl_FragData[0] = texture2D(texture,tcoord); }',
             ].join('\n'),
             '');
         const program = model.copyShader;

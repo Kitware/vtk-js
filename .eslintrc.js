@@ -35,7 +35,6 @@ module.exports = {
 
     // tmp
     "no-restricted-properties": 0,
-    "comma-dangle": 0,
     "no-useless-return": 0,
     "no-multi-assign": 0,
   },

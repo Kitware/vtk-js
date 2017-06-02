@@ -282,7 +282,7 @@ function vtkOpenGLPolyDataMapper(publicAPI, model) {
         FSSource = vtkShaderProgram.substitute(FSSource, '//VTK::Light::Impl', [
           '  gl_FragData[0] = vec4(ambientColor + diffuseColor, opacity);',
           '  //VTK::Light::Impl'],
-        false
+        false,
         ).result;
         break;
 
@@ -322,7 +322,7 @@ function vtkOpenGLPolyDataMapper(publicAPI, model) {
           '  specular = specular * specularColor;',
           '  gl_FragData[0] = vec4(ambientColor + diffuse + specular, opacity);',
           '  //VTK::Light::Impl'],
-          false
+          false,
           ).result;
         break;
 
@@ -338,7 +338,7 @@ function vtkOpenGLPolyDataMapper(publicAPI, model) {
           'uniform vec3 lightAttenuation[6];',
           'uniform float lightConeAngle[6];',
           'uniform float lightExponent[6];',
-          'uniform int lightPositional[6];']
+          'uniform int lightPositional[6];'],
         ).result;
         FSSource = vtkShaderProgram.substitute(FSSource, '//VTK::Light::Impl', [
           '  vec3 diffuse = vec3(0,0,0);',
@@ -387,7 +387,7 @@ function vtkOpenGLPolyDataMapper(publicAPI, model) {
           '  specular = specular * specularColor;',
           '  gl_FragData[0] = vec4(ambientColor + diffuse + specular, opacity);',
           '  //VTK::Light::Impl'],
-          false
+          false,
           ).result;
         break;
       default:
@@ -430,7 +430,7 @@ function vtkOpenGLPolyDataMapper(publicAPI, model) {
             'vec3 normalVCVSOutput = normalize(normalVCVSOutput);',
             //  if (!gl_FrontFacing) does not work in intel hd4000 mac
             //  if (int(gl_FrontFacing) == 0) does not work on mesa
-            '  if (gl_FrontFacing == false) { normalVCVSOutput = -normalVCVSOutput; }']
+            '  if (gl_FrontFacing == false) { normalVCVSOutput = -normalVCVSOutput; }'],
           ).result;
       } else {
         if (model.haveCellNormals) {
@@ -442,7 +442,7 @@ function vtkOpenGLPolyDataMapper(publicAPI, model) {
             '//VTK::Normal::Impl', [
               'vec3 normalVCVSOutput = normalize(normalMatrix *',
               '    texelFetchBuffer(textureN, gl_PrimitiveID + PrimitiveIDOffset).xyz);',
-              '  if (gl_FrontFacing == false) { normalVCVSOutput = -normalVCVSOutput; }']
+              '  if (gl_FrontFacing == false) { normalVCVSOutput = -normalVCVSOutput; }'],
             ).result;
         } else {
           if (publicAPI.getOpenGLMode(
@@ -462,7 +462,7 @@ function vtkOpenGLPolyDataMapper(publicAPI, model) {
             FSSource = vtkShaderProgram.substitute(FSSource, '//VTK::UniformFlow::Impl', [
               '  vec3 fdx = vec3(dFdx(vertexVC.x),dFdx(vertexVC.y),dFdx(vertexVC.z));',
               '  vec3 fdy = vec3(dFdy(vertexVC.x),dFdy(vertexVC.y),dFdy(vertexVC.z));',
-              '  //VTK::UniformFlow::Impl'] // For further replacements
+              '  //VTK::UniformFlow::Impl'], // For further replacements
               ).result;
             FSSource = vtkShaderProgram.substitute(FSSource, '//VTK::Normal::Impl', [
               'vec3 normalVCVSOutput;',
@@ -470,7 +470,7 @@ function vtkOpenGLPolyDataMapper(publicAPI, model) {
               '  fdy = normalize(fdy);',
               '  if (abs(fdx.x) > 0.0)',
               '    { normalVCVSOutput = normalize(cross(vec3(fdx.y, -fdx.x, 0.0), fdx)); }',
-              '  else { normalVCVSOutput = normalize(cross(vec3(fdy.y, -fdy.x, 0.0), fdy));}']
+              '  else { normalVCVSOutput = normalize(cross(vec3(fdy.y, -fdy.x, 0.0), fdy));}'],
               ).result;
           } else {
             FSSource = vtkShaderProgram.substitute(FSSource,
@@ -482,7 +482,7 @@ function vtkOpenGLPolyDataMapper(publicAPI, model) {
               // '  vec3 fdy = vec3(dFdy(vertexVC.x),dFdy(vertexVC.y),dFdy(vertexVC.z));',
               '  vec3 fdx = dFdx(vertexVC.xyz);',
               '  vec3 fdy = dFdy(vertexVC.xyz);',
-              '  //VTK::UniformFlow::Impl'] // For further replacements
+              '  //VTK::UniformFlow::Impl'], // For further replacements
               ).result;
             FSSource = vtkShaderProgram.substitute(FSSource, '//VTK::Normal::Impl', [
               '  fdx = normalize(fdx);',
