@@ -52,7 +52,7 @@ simpleFilter.setFormulaSimple(
   FieldDataTypes.POINT, // Generate an output array defined over points.
   [],  // We don't request any point-data arrays because point coordinates are made available by default.
   'z', // Name the output array "z"
-  x => ((x[0] - 0.5) * (x[0] - 0.5)) + ((x[1] - 0.5) * (x[1] - 0.5)) + 0.125
+  x => ((x[0] - 0.5) * (x[0] - 0.5)) + ((x[1] - 0.5) * (x[1] - 0.5)) + 0.125,
 ); // Our formula for z
 
 const warpScalar = vtkWarpScalar.newInstance();
