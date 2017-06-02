@@ -1,4 +1,4 @@
-const vtkLoaders = require('../Utilities/config/webpack.loaders.js');
+const vtkRules = require('../Utilities/config/rules.js');
 const path = require('path');
 
 module.exports = {
@@ -19,7 +19,7 @@ module.exports = {
   },
   webpack: {
     module: {
-      loaders: vtkLoaders,
+      rules: vtkRules,
     },
     resolve: {
       alias: {
