@@ -1,7 +1,10 @@
 /* eslint-disable global-require */
 /* eslint-disable react/require-extension */
 var path = require('path');
-var vtkRules = require('./Utilities/config/rules.js');
+
+const testsRules = require('./Utilities/config/rules-tests.js');
+const linterRules = require('./Utilities/config/rules-linter.js');
+
 var webpack = require('webpack');
 
 var sourcePath = path.join(__dirname, './Sources');
@@ -36,7 +39,7 @@ module.exports = function init(config) {
         fs: 'empty',
       },
       module: {
-        rules: [].concat(vtkRules),
+        rules: [].concat(testsRules, linterRules),
       },
       resolve: {
         modules: [
