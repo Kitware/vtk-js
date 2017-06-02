@@ -42,22 +42,23 @@ test.onlyIfWebGL('Test Clipping planes', (t) => {
 
 
   const planeX = gc.registerResource(vtkPlane.newInstance({
-    origin: [2.0,0.0,0.0],
-    normal: [1.0, 0.0, 0.0]
+    origin: [2.0, 0.0, 0.0],
+    normal: [1.0, 0.0, 0.0],
   }));
 
   const planeY = gc.registerResource(vtkPlane.newInstance({
-    origin: [2.0,0.0,0.0],
-    normal: [0.0, 1.0, 0.0]
+    origin: [2.0, 0.0, 0.0],
+    normal: [0.0, 1.0, 0.0],
   }));
 
   const planeZ = gc.registerResource(vtkPlane.newInstance({
-    origin: [2.0,0.0,0.0],
-    normal: [0.0, 0.0, 1.0]
+    origin: [2.0, 0.0, 0.0],
+    normal: [0.0, 0.0, 1.0],
   }));
 
   const cube1 = gc.registerResource(vtkCubeSource.newInstance({
-    center: [2.0, 0.0, 0.0]}));
+    center: [2.0, 0.0, 0.0],
+  }));
   const mapperCube1 = gc.registerResource(vtkMapper.newInstance());
   mapperCube1.setInputConnection(cube1.getOutputPort());
   mapperCube1.addClippingPlane(planeX);

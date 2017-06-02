@@ -97,8 +97,7 @@ function vtkViewNode(publicAPI, model) {
             newNode.setRenderable(node);
           }
           return newNode;
-        }
-      );
+        });
 
     model.children = model.children.concat(newNodes);
   };
@@ -109,8 +108,7 @@ function vtkViewNode(publicAPI, model) {
 
   publicAPI.removeUnusedNodes = () => {
     model.children = model.children.filter(node =>
-      node.isDeleted() || (model.preparedNodes.indexOf(node.getRenderable()) !== -1)
-    );
+      node.isDeleted() || (model.preparedNodes.indexOf(node.getRenderable()) !== -1));
     publicAPI.prepareNodes();
   };
 

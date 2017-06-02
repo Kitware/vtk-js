@@ -14,6 +14,15 @@ module.exports = {
     },
     v2: {
       rules: [
+        {
+          test: /\.glsl$/i,
+          include: /node_modules(\/|\\)vtk\.js(\/|\\)/,
+          loader: 'shader-loader',
+        }, {
+          test: /\.js$/,
+          include: /node_modules(\/|\\)vtk\.js(\/|\\)/,
+          loader: 'babel-loader?presets[]=es2015',
+        },
       ],
     },
   },

@@ -229,7 +229,7 @@ function vtkOpenGLVolumeMapper(publicAPI, model) {
             '  //VTK::Light::Impl',
             '  tcolor.rgb = tcolor.rgb*(diffuse*vDiffuse + vAmbient) + specular*vSpecular;',
           ],
-          false
+          false,
           ).result;
         let lightNum = 0;
         ren.getLights().forEach((light) => {
@@ -252,7 +252,7 @@ function vtkOpenGLVolumeMapper(publicAPI, model) {
               `    specular += ((sf${shadowFactor}) * lightColor${lightNum});`,
 //              '    }',
               '  //VTK::Light::Impl'],
-              false
+              false,
               ).result;
             lightNum++;
           }
@@ -454,11 +454,10 @@ function vtkOpenGLVolumeMapper(publicAPI, model) {
 
     const maxSamples = vec3.length(vsize) / model.renderable.getSampleDistance();
     if (maxSamples > model.renderable.getMaximumSamplesPerRay()) {
-      vtkWarningMacro(
-        [`The number of steps required ${Math.ceil(maxSamples)} is larger than the `,
-        `specified maximum number of steps ${model.renderable.getMaximumSamplesPerRay()}.`,
-        'Please either change the ',
-        'volumeMapper sampleDistance or its maximum number of samples.'].join(''));
+      vtkWarningMacro(`The number of steps required ${Math.ceil(maxSamples)} is larger than the
+        specified maximum number of steps ${model.renderable.getMaximumSamplesPerRay()}.
+        Please either change the
+        volumeMapper sampleDistance or its maximum number of samples.`);
     }
     const vctoijk = vec3.create();
     vec3.set(vctoijk, dims[0] - 1.0, dims[1] - 1.0, dims[2] - 1.0);
@@ -745,16 +744,20 @@ function vtkOpenGLVolumeMapper(publicAPI, model) {
       if (model.copyShader === null) {
         model.copyShader =
           model.openGLRenderWindow.getShaderCache().readyShaderProgramArray(
-            ['//VTK::System::Dec',
-            'attribute vec4 vertexDC;',
-            'varying vec2 tcoord;',
-            'void main() { tcoord = vec2(vertexDC.x*0.5 + 0.5, vertexDC.y*0.5 + 0.5); gl_Position = vertexDC; }'].join('\n'),
-            ['//VTK::System::Dec',
-             '//VTK::Output::Dec',
-             'uniform sampler2D texture;',
-             'varying vec2 tcoord;',
-             'void main() { gl_FragData[0] = texture2D(texture,tcoord); }'].join('\n'),
-             '');
+            [
+              '//VTK::System::Dec',
+              'attribute vec4 vertexDC;',
+              'varying vec2 tcoord;',
+              'void main() { tcoord = vec2(vertexDC.x*0.5 + 0.5, vertexDC.y*0.5 + 0.5); gl_Position = vertexDC; }',
+            ].join('\n'),
+            [
+              '//VTK::System::Dec',
+              '//VTK::Output::Dec',
+              'uniform sampler2D texture;',
+              'varying vec2 tcoord;',
+              'void main() { gl_FragData[0] = texture2D(texture,tcoord); }',
+            ].join('\n'),
+            '');
         const program = model.copyShader;
 
         model.copyVAO = vtkVertexArrayObject.newInstance();

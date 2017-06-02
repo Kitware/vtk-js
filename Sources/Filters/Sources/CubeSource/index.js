@@ -222,9 +222,11 @@ function vtkCubeSource(publicAPI, model) {
     model.xLength = boundsArray[1] - boundsArray[0];
     model.yLength = boundsArray[3] - boundsArray[2];
     model.zLength = boundsArray[5] - boundsArray[4];
-    model.center = [(boundsArray[0] + boundsArray[1]) / 2.0,
-                    (boundsArray[2] + boundsArray[3]) / 2.0,
-                    (boundsArray[4] + boundsArray[5]) / 2.0];
+    model.center = [
+      (boundsArray[0] + boundsArray[1]) / 2.0,
+      (boundsArray[2] + boundsArray[3]) / 2.0,
+      (boundsArray[4] + boundsArray[5]) / 2.0,
+    ];
   };
 
   // Expose methods

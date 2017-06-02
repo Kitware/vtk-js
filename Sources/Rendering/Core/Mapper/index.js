@@ -32,7 +32,7 @@ CoincidentTopologyHelper.addCoincidentTopologyMethods(
   staticOffsetAPI,
   staticOffsetModel,
   CoincidentTopologyHelper.CATEGORIES
-    .map(key => ({ key, method: `ResolveCoincidentTopology${key}OffsetParameters` }))
+    .map(key => ({ key, method: `ResolveCoincidentTopology${key}OffsetParameters` })),
 );
 
 // ----------------------------------------------------------------------------
@@ -103,7 +103,7 @@ function vtkMapper(publicAPI, model) {
     publicAPI,
     model.topologyOffset,
     CoincidentTopologyHelper.CATEGORIES
-      .map(key => ({ key, method: `RelativeCoincidentTopology${key}OffsetParameters` }))
+      .map(key => ({ key, method: `RelativeCoincidentTopology${key}OffsetParameters` })),
   );
   /* eslint-enable arrow-body-style */
 

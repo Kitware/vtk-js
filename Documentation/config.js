@@ -1,4 +1,7 @@
-const vtkLoaders = require('../Utilities/config/webpack.loaders.js');
+const vtkRules = require('../Utilities/config/rules-vtk.js');
+const linterRules = require('../Utilities/config/rules-linter.js');
+const examplesRules = require('../Utilities/config/rules-examples.js');
+
 const path = require('path');
 
 module.exports = {
@@ -19,7 +22,7 @@ module.exports = {
   },
   webpack: {
     module: {
-      loaders: vtkLoaders,
+      rules: [].concat(linterRules, vtkRules, examplesRules),
     },
     resolve: {
       alias: {

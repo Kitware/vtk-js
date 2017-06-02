@@ -1,8 +1,7 @@
 import test      from 'tape-catch';
-import testUtils from 'vtk.js/Sources/Testing/testUtils';
 
-import vtkMapper              from 'vtk.js/Sources/Rendering/Core/Mapper';
-import vtkPlane               from 'vtk.js/Sources/Common/DataModel/Plane';
+import vtkMapper from 'vtk.js/Sources/Rendering/Core/Mapper';
+import vtkPlane  from 'vtk.js/Sources/Common/DataModel/Plane';
 
 test('Test vtkAbstractMapper publicAPI', (t) => {
   const mapper = vtkMapper.newInstance();
@@ -10,7 +9,7 @@ test('Test vtkAbstractMapper publicAPI', (t) => {
 
   const normals = [[1.0, 0.0, 0.0], [0.0, 1.0, 0.0], [0.0, 0.0, 1.0]];
 
-  const plane = vtkPlane.newInstance({normal: normals[0]});
+  const plane = vtkPlane.newInstance({ normal: normals[0] });
   mapper.addClippingPlane(plane);
   t.equal(mapper.getClippingPlanes().length, 1);
   mapper.removeClippingPlane(0);
@@ -21,8 +20,8 @@ test('Test vtkAbstractMapper publicAPI', (t) => {
   t.equal(mapper.getClippingPlanes().length, 0);
   mapper.removeClippingPlane(0);
 
-  const plane2 = vtkPlane.newInstance({normal: normals[1]});
-  const plane3 = vtkPlane.newInstance({normal: normals[2]});
+  const plane2 = vtkPlane.newInstance({ normal: normals[1] });
+  const plane3 = vtkPlane.newInstance({ normal: normals[2] });
 
   mapper.setClippingPlanes([plane, plane2, plane3]);
   t.equal(mapper.getClippingPlanes().length, 3);

@@ -4,11 +4,8 @@ import testUtils from 'vtk.js/Sources/Testing/testUtils';
 import vtkOpenGLRenderWindow from 'vtk.js/Sources/Rendering/OpenGL/RenderWindow';
 import vtkRenderWindow       from 'vtk.js/Sources/Rendering/Core/RenderWindow';
 import vtkRenderer           from 'vtk.js/Sources/Rendering/Core/Renderer';
-import vtkLookupTable        from 'vtk.js/Sources/Common/Core/LookupTable';
 import vtkActor              from 'vtk.js/Sources/Rendering/Core/Actor';
 import vtkMapper             from 'vtk.js/Sources/Rendering/Core/Mapper';
-import vtkDataArray          from 'vtk.js/Sources/Common/Core/DataArray';
-import vtkPolyData           from 'vtk.js/Sources/Common/DataModel/PolyData';
 import vtkOBJReader          from 'vtk.js/Sources/IO/Misc/OBJReader';
 
 import baseline from './testClearShaderReplacement.png';
@@ -31,19 +28,19 @@ test.onlyIfWebGL('Test Clear Shader Replacements', (t) => {
   // ----------------------------------------------------------------------------
   // Test code
   // ----------------------------------------------------------------------------
-  const reader = gc.registerResource(vtkOBJReader.newInstance({splitMode : 'usemtl'}));
+  const reader = gc.registerResource(vtkOBJReader.newInstance({ splitMode: 'usemtl' }));
 
   const mapper = gc.registerResource(vtkMapper.newInstance());
   mapper.setInputConnection(reader.getOutputPort());
 
   const mapperViewProp = mapper.getViewSpecificProperties();
-  mapperViewProp['OpenGL'] = {
+  mapperViewProp.OpenGL = {
     ShaderReplacements: [],
   };
 
-  mapperViewProp['clearShaderReplacement'] =
+  mapperViewProp.clearShaderReplacement =
     (_shaderType, _originalValue, _replaceFirst) => {
-      const shaderReplacement = mapperViewProp['OpenGL']['ShaderReplacements'];
+      const shaderReplacement = mapperViewProp.OpenGL.ShaderReplacements;
       let indexToRemove = -1;
 
       for (let i = 0; i < shaderReplacement.length; i++) {
@@ -72,18 +69,18 @@ test.onlyIfWebGL('Test Clear Shader Replacements', (t) => {
   renderer.addActor(actor);
 
   reader.setUrl(`${__BASE_PATH__}/Data/obj/space-shuttle-orbiter/space-shuttle-orbiter.obj`).then(() => {
-    mapperViewProp['OpenGL']['ShaderReplacements'].push({
+    mapperViewProp.OpenGL.ShaderReplacements.push({
       shaderType: 'Vertex',
       originalValue: '//VTK::Normal::Dec',
       replaceFirst: true,
       replacementValue: '//VTK::Normal::Dec\n  varying vec3 myNormalMCVSOutput;\n',
-      replaceAll: false
+      replaceAll: false,
     });
 
     mapperViewProp.clearShaderReplacement(
       'Vertex',
       '//VTK::Normal::Dec',
-      true
+      true,
     );
 
     renderWindow.render();
@@ -102,7 +99,6 @@ test.onlyIfWebGL('Test Clear Shader Replacements', (t) => {
 
     const image = glwindow.captureImage();
     testUtils.compareImages(image, [baseline], 'Rendering/OpenGL/PolyDataMapper/testShaderReplacementsClear', t, 1.5, gc.releaseResources);
-
   });
 });
 

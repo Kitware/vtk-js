@@ -1,45 +1,32 @@
-var entry = require.resolve('./Sources/index.js');
+const webpack = require('webpack');
+const path = require('path');
 
-var path = require('path');
-var webpack = require('webpack');
-var loaders = require('./Utilities/config/webpack.loaders.js');
-var pluginList = [];
+const entry = path.join(__dirname, './Sources/index.js');
+const sourcePath = path.join(__dirname, './Sources');
+const outputPath = path.join(__dirname, './dist');
 
-if (process.env.NODE_ENV === 'production') {
-  console.log('==> Production build');
-  pluginList.push(new webpack.DefinePlugin({
-    'process.env': {
-      NODE_ENV: JSON.stringify('production'),
-    },
-  }));
-}
+const vtkRules = require('./Utilities/config/rules-vtk.js');
+const linterRules = require('./Utilities/config/rules-linter.js');
 
 module.exports = {
-  plugins: pluginList,
-  entry: entry,
+  entry,
   output: {
-    path: './dist',
+    path: outputPath,
     filename: 'vtk.js',
   },
   module: {
-    preLoaders: [{
-      test: /\.js$/,
-      loader: 'eslint-loader',
-      exclude: /node_modules/,
-    }],
-    loaders: [
-      { test: entry, loader: 'expose?vtk' },
-    ].concat(loaders),
-  },
-  postcss: [
-    require('autoprefixer')({ browsers: ['last 2 versions'] }),
-  ],
-  eslint: {
-    configFile: '.eslintrc.js',
+    rules: [
+      { test: entry, loader: 'expose-loader?vtk' },
+    ].concat(linterRules, vtkRules),
   },
   resolve: {
+    extensions: ['.webpack-loader.js', '.web-loader.js', '.loader.js', '.js', '.jsx'],
+    modules: [
+      path.resolve(__dirname, 'node_modules'),
+      sourcePath,
+    ],
     alias: {
-      'vtk.js': path.resolve('.'),
+      'vtk.js': __dirname,
     },
   },
 };

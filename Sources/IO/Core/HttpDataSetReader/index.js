@@ -94,7 +94,7 @@ function processDataSet(publicAPI, model, dataset, fetchArray, resolve, reject, 
         success,
         (err) => {
           reject(err);
-        }
+        },
       );
   } else {
     success();
@@ -143,15 +143,15 @@ function vtkHttpDataSetReader(publicAPI, model) {
                       },
                       (xhr, e) => {
                         reject(xhr, e);
-                      }
+                      },
                     );
                 },
-              }
+              },
             );
           },
           (xhr, e) => {
             reject(xhr, e);
-          }
+          },
         );
       });
     }
@@ -165,7 +165,7 @@ function vtkHttpDataSetReader(publicAPI, model) {
           },
           (xhr, e) => {
             reject(xhr, e);
-          }
+          },
         );
     });
   };
