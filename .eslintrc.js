@@ -32,6 +32,14 @@ module.exports = {
     // eslint-3.3.0
     "no-global-assign": 0,
     "no-unsafe-negation": 0,
+
+    // tmp
+    "no-restricted-properties": 0,
+    "comma-dangle": 0,
+    "indent": 0,
+    "no-useless-return": 0,
+    "no-multi-assign": 0,
+    "object-curly-spacing": 0,
   },
   globals: {
     __BASE_PATH__: false,
