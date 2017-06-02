@@ -39,7 +39,6 @@ module.exports = {
     "indent": 0,
     "no-useless-return": 0,
     "no-multi-assign": 0,
-    "object-curly-spacing": 0,
   },
   globals: {
     __BASE_PATH__: false,
