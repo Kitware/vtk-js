@@ -53,5 +53,5 @@ test.onlyIfWebGL('Test Interpolate Scalars Before Colors', (t) => {
   renderWindow.render();
 
   const image = glwindow.captureImage();
-  testUtils.compareImages(image, [baseline], 'Rendering/Core/ColorTransferFunction/testColorTransferFunctionPresets', t, 4, gc.releaseResources);
+  testUtils.compareImages(image, [baseline], 'Rendering/Core/ColorTransferFunction/testColorTransferFunctionPresets', t, 4.8, gc.releaseResources);
 });
