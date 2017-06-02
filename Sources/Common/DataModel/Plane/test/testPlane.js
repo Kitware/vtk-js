@@ -15,7 +15,7 @@ test('Test vtkPlane projectVector', (t) => {
 
   // test where vector is out of plane
   const v = [1.0, 2.0, 3.0];
-  let vProj = [];
+  const vProj = [];
   plane.projectVector(v, vProj);
 
   const correct = [1.0, 2.0, 0.0];
@@ -48,7 +48,7 @@ test('Test vtkPlane projectPoint', (t) => {
   plane.setNormal(0.0, 0.0, 1.0);
 
   const x = [1.0, 2.0, 3.0];
-  let xProj = [];
+  const xProj = [];
   plane.projectVector(x, xProj);
 
   const correct = [1.0, 2.0, 0.0];
@@ -118,7 +118,7 @@ test('Test vtkPlane intersectWithLine', (t) => {
   t.equal(res.t, 0.5);
   t.equal(res.x.length, 3);
   let correct = [-1.0, 0.0, 0.0];
-  for (let i =0; i < 3; i++) {
+  for (let i = 0; i < 3; i++) {
     t.equal(res.x[i], correct[i]);
   }
 
@@ -130,7 +130,7 @@ test('Test vtkPlane intersectWithLine', (t) => {
   t.equal(res.t, 2);
   t.equal(res.x.length, 3);
   correct = [6.0, 0.0, 0.0];
-  for (let i =0; i < 3; i++) {
+  for (let i = 0; i < 3; i++) {
     t.equal(res.x[i], correct[i]);
   }
 

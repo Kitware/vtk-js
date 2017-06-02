@@ -1,8 +1,10 @@
 /* eslint-disable global-require */
 /* eslint-disable react/require-extension */
 var path = require('path');
-var loaders = require('./Utilities/config/webpack.loaders.js');
+var vtkRules = require('./Utilities/config/rules.js');
 var webpack = require('webpack');
+
+var sourcePath = path.join(__dirname, './Sources');
 
 if (!process.env.NODE_ENV) process.env.NODE_ENV = 'test';
 
@@ -34,11 +36,15 @@ module.exports = function init(config) {
         fs: 'empty',
       },
       module: {
-        loaders: [].concat(loaders),
+        rules: [].concat(vtkRules),
       },
       resolve: {
+        modules: [
+          path.resolve(__dirname, 'node_modules'),
+          sourcePath,
+        ],
         alias: {
-          'vtk.js': path.resolve('.'),
+          'vtk.js': __dirname,
         },
       },
       plugins: [

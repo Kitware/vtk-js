@@ -17,7 +17,7 @@ test.onlyIfWebGL('Test vtkOpenGLTexture Rendering', (t) => {
   const gc = testUtils.createGarbageCollector(t);
   t.ok('Rendering', 'Filter: OpenGLTexture');
 
-  let callBackfunction = function (loadedTextures) {
+  function callBackfunction(loadedTextures) {
     // Create come control UI
     const container = document.querySelector('body');
     const renderWindowContainer = gc.registerDOMElement(document.createElement('div'));
@@ -72,7 +72,7 @@ test.onlyIfWebGL('Test vtkOpenGLTexture Rendering', (t) => {
 
     const image = glwindow.captureImage();
     testUtils.compareImages(image, [baseline], 'Rendering/OpenGL/Texture/', t, 0.5, gc.releaseResources);
-  };
+  }
 
   // Recursive function to load texture one by one
   function loadTexture(idTexture, texturePathList, textureImageList, endCallBack) {
@@ -95,12 +95,12 @@ test.onlyIfWebGL('Test vtkOpenGLTexture Rendering', (t) => {
 
   const path = `${__BASE_PATH__}/Data/skybox/mountains/`;
   const texturePathList = [];
-  texturePathList.push(path + 'px.vti');
-  texturePathList.push(path + 'nx.vti');
-  texturePathList.push(path + 'py.vti');
-  texturePathList.push(path + 'ny.vti');
-  texturePathList.push(path + 'pz.vti');
-  texturePathList.push(path + 'nz.vti');
+  texturePathList.push(`${path}px.vti`);
+  texturePathList.push(`${path}nx.vti`);
+  texturePathList.push(`${path}py.vti`);
+  texturePathList.push(`${path}ny.vti`);
+  texturePathList.push(`${path}pz.vti`);
+  texturePathList.push(`${path}nz.vti`);
 
   // It will contains all vtkImageData which will textured the cube
   const textures = [];

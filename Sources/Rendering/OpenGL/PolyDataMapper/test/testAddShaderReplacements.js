@@ -4,13 +4,9 @@ import testUtils from 'vtk.js/Sources/Testing/testUtils';
 import vtkOpenGLRenderWindow from 'vtk.js/Sources/Rendering/OpenGL/RenderWindow';
 import vtkRenderWindow       from 'vtk.js/Sources/Rendering/Core/RenderWindow';
 import vtkRenderer           from 'vtk.js/Sources/Rendering/Core/Renderer';
-import vtkLookupTable        from 'vtk.js/Sources/Common/Core/LookupTable';
 import vtkActor              from 'vtk.js/Sources/Rendering/Core/Actor';
 import vtkMapper             from 'vtk.js/Sources/Rendering/Core/Mapper';
-import vtkDataArray          from 'vtk.js/Sources/Common/Core/DataArray';
-import vtkPolyData           from 'vtk.js/Sources/Common/DataModel/PolyData';
 import vtkOBJReader          from 'vtk.js/Sources/IO/Misc/OBJReader';
-
 
 import baseline from './testAddShaderReplacement.png';
 
@@ -32,20 +28,20 @@ test.onlyIfWebGL('Test Add Shader Replacements', (t) => {
   // ----------------------------------------------------------------------------
   // Test code
   // ----------------------------------------------------------------------------
-  const reader = gc.registerResource(vtkOBJReader.newInstance({splitMode : 'usemtl'}));
+  const reader = gc.registerResource(vtkOBJReader.newInstance({ splitMode: 'usemtl' }));
 
   const mapper = gc.registerResource(vtkMapper.newInstance());
   mapper.setInputConnection(reader.getOutputPort());
 
   const mapperViewProp = mapper.getViewSpecificProperties();
 
-  mapperViewProp['OpenGL'] = {
+  mapperViewProp.OpenGL = {
     ShaderReplacements: [],
   };
 
-  mapperViewProp['addShaderReplacements'] =
+  mapperViewProp.addShaderReplacements =
     (_shaderType, _originalValue, _replaceFirst, _replacementValue, _replaceAll) => {
-      mapperViewProp['OpenGL']['ShaderReplacements'].push({
+      mapperViewProp.OpenGL.ShaderReplacements.push({
         shaderType: _shaderType,
         originalValue: _originalValue,
         replaceFirst: _replaceFirst,
@@ -72,7 +68,7 @@ test.onlyIfWebGL('Test Add Shader Replacements', (t) => {
       '//VTK::Normal::Dec',
       true,
       '//VTK::Normal::Dec\n  varying vec3 myNormalMCVSOutput;\n',
-      false
+      false,
     );
 
     mapperViewProp.addShaderReplacements(
@@ -80,7 +76,7 @@ test.onlyIfWebGL('Test Add Shader Replacements', (t) => {
       '//VTK::Normal::Impl',
       true,
       '//VTK::Normal::Impl\n  myNormalMCVSOutput = normalMC;\n',
-      false
+      false,
     );
 
     mapperViewProp.addShaderReplacements(
@@ -88,7 +84,7 @@ test.onlyIfWebGL('Test Add Shader Replacements', (t) => {
       '//VTK::Normal::Dec',
       true,
       '//VTK::Normal::Dec\n  varying vec3 myNormalMCVSOutput;\n',
-      false
+      false,
     );
 
     mapperViewProp.addShaderReplacements(
@@ -96,7 +92,7 @@ test.onlyIfWebGL('Test Add Shader Replacements', (t) => {
       '//VTK::Normal::Impl',
       true,
       '//VTK::Normal::Impl\n  diffuseColor = abs(myNormalMCVSOutput);\n',
-      false
+      false,
     );
 
     renderWindow.render();
