@@ -63,39 +63,29 @@ $ npm install kw-web-suite --save-dev
 ## Webpack config
 
 ``` js webpack.config.js
-var path = require('path'),
-    webpack = require('webpack'),
-    loaders = require('./node_modules/vtk.js/Utilities/config/webpack.loaders.js'),
-    plugins = [];
+var path = require('path');
+var webpack = require('webpack');
+var vtkRules = require('./node_modules/vtk.js/Utilities/config/dependency.js').webpack.v2.rules;
 
-if(process.env.NODE_ENV === 'production') {
-    console.log('==> Production build');
-    plugins.push(new webpack.DefinePlugin({
-        "process.env": {
-            NODE_ENV: JSON.stringify("production"),
-        },
-    }));
-}
+var entry = path.join(__dirname, './src/index.js');
 
 module.exports = {
-  plugins: plugins,
-  entry: './src/index.js',
+  entry,
   output: {
     path: './dist',
     filename: 'MyWebApp.js',
   },
   module: {
-    loaders: [
-        { test: require.resolve("./src/index.js"), loader: "expose?MyWebApp" },
-    ].concat(loaders),
+    rules: [
+        { test: entry, loader: "expose-loader?MyWebApp" },
+    ].concat(vtkRules),
   },
-  postcss: [
-    require('autoprefixer')({ browsers: ['last 2 versions'] }),
-  ],
   resolve: {
-    alias: {
-      'vtk.js': path.resolve('./node_modules/vtk.js'),
-    },
+    extensions: ['.webpack-loader.js', '.web-loader.js', '.loader.js', '.js', '.jsx'],
+    modules: [
+      path.resolve(__dirname, 'node_modules'),
+      sourcePath,
+    ],
   },
 };
 ```
@@ -109,7 +99,7 @@ You should extend the generated **package.json** file with the following set of 
   [...],
   "scripts": {
     "build": "webpack",
-    "build:release": "export NODE_ENV=production && webpack -p",
+    "build:release": "webpack -p",
     "start": "webpack-dev-server --content-base ./dist",
 
     "commit": "git cz",
