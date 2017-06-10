@@ -84,7 +84,7 @@ if (configuration.examples) {
     });
 
     // console.log(exampleName, ' => ', exBasePath, examples[exBasePath][exampleName]);
-    const conf = buildConfig(exampleName, validPath(examples[exBasePath][exampleName]), distDir, validPath(rootPath));
+    const conf = buildConfig(exampleName, validPath(examples[exBasePath][exampleName]), distDir, validPath(rootPath), validPath(exBasePath));
     shell.ShellString(conf).to(webpackConfigPath);
     shell.cd(exBasePath);
     shell.exec(`webpack-dev-server --progress --open --config ${webpackConfigPath}`)
