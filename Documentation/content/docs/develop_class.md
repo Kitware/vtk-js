@@ -42,6 +42,7 @@ For instance, vtk.js currently have the following set of **kits** in bold and *m
 
 Here is an example of how to get started writing a new class for vtk.js.
 The design inspiration originated from Douglas Crockford with functional inheritance but we went further in some way too and the [blog](https://medium.com/javascript-scene/functional-mixins-composing-software-ffb66d5e731c) provides a very good background on the technics we use and leverage inside vtk.js.
+That other [blog](https://medium.com/@kentcdodds/classes-complexity-and-functional-programming-a8dd86903747) also explain why classes in JavaScript are not always the best choice.
 
 
 ```js MyClass/index.js
