@@ -40,7 +40,9 @@ For instance, vtk.js currently have the following set of **kits** in bold and *m
 
 ## Class definition
 
-Here is an example of how to get started writing a new class for vtk.js
+Here is an example of how to get started writing a new class for vtk.js.
+The design inspiration originated from Douglas Crockford with functional inheritance but we went further in some way too and the [blog](https://medium.com/javascript-scene/functional-mixins-composing-software-ffb66d5e731c) provides a very good background on the technics we use and leverage inside vtk.js.
+
 
 ```js MyClass/index.js
 import macro          from 'vtk.js/macro';
