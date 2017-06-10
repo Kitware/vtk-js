@@ -1,10 +1,9 @@
 var path = require('path');
 var vtkBasePath = path.resolve('.');
-var eslintrc = path.join(vtkBasePath, '.eslintrc.js');
 
-module.exports = function buildConfig(name, relPath, destPath, root) {
+module.exports = function buildConfig(name, relPath, destPath, root, exampleBasePath) {
   return `
-var loaders = require('../config/webpack.loaders.js');
+var rules = [].concat(require('../config/rules-vtk.js'), require('../config/rules-examples.js'), require('../config/rules-linter.js'));
 var HtmlWebpackPlugin = require('html-webpack-plugin');
 var webpack = require('webpack');
 var path = require('path');
@@ -18,33 +17,25 @@ module.exports = {
       __BASE_PATH__: "''",
     }),
   ],
-  entry: '${relPath.replace(/\\/g, '\\\\')}',
+  entry: path.join('${exampleBasePath.replace(/\\/g, '\\\\')}', '${relPath.replace(/\\/g, '\\\\')}'),
   output: {
     path: '${destPath.replace(/\\/g, '\\\\')}',
     filename: '${name}.js',
   },
   module: {
-    preLoaders: [{
-      test: /\.js$/,
-      loader: 'eslint-loader',
-      exclude: /node_modules/,
-    }],
-    loaders: loaders,
+    rules: rules,
   },
   resolve: {
     alias: {
       'vtk.js': '${vtkBasePath.replace(/\\/g, '\\\\')}',
     },
   },
-  eslint: {
-    configFile: '${eslintrc.replace(/\\/g, '\\\\')}',
-  },
 
   devServer: {
     contentBase: '${root.replace(/\\/g, '\\\\')}',
     port: 9999,
     host: 'localhost',
-    hot: true,
+    hot: false,
     quiet: false,
     noInfo: false,
     stats: {
