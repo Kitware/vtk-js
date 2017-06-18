@@ -46,7 +46,8 @@ function vtkCubeSource(publicAPI, model) {
 
     x[0] = model.center[0] - (model.xLength / 2.0);
     n[0] = (-1.0);
-    n[1] = n[2] = 0.0;
+    n[1] = 0.0;
+    n[2] = 0.0;
     for (let i = 0; i < 2; i++) {
       x[1] = model.center[1] - (model.yLength / 2.0);
 
@@ -85,7 +86,8 @@ function vtkCubeSource(publicAPI, model) {
 
     x[1] = model.center[1] - (model.yLength / 2.0);
     n[1] = (-1.0);
-    n[0] = n[2] = 0.0;
+    n[0] = 0.0;
+    n[2] = 0.0;
     for (let i = 0; i < 2; i++) {
       x[0] = model.center[0] - (model.xLength / 2.0);
 
@@ -124,7 +126,8 @@ function vtkCubeSource(publicAPI, model) {
 
     x[2] = model.center[2] - (model.zLength / 2.0);
     n[2] = (-1.0);
-    n[0] = n[1] = 0.0;
+    n[0] = 0.0;
+    n[1] = 0.0;
     for (let i = 0; i < 2; i++) {
       x[1] = model.center[1] - (model.yLength / 2.0);
 

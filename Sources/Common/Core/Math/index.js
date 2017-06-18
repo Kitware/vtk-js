@@ -7,6 +7,7 @@ const { vtkErrorMacro, vtkWarningMacro } = macro;
 /* eslint-disable camelcase                                                  */
 /* eslint-disable no-cond-assign                                             */
 /* eslint-disable no-bitwise                                                 */
+/* eslint-disable no-multi-assign                                            */
 // ----------------------------------------------------------------------------
 let randomSeedValue = 0;
 const VTK_MAX_ROTATIONS = 20;
