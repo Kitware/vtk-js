@@ -1,5 +1,5 @@
 module.exports = {
-  extends: ['airbnb', 'prettier'],
+  extends: ['airbnb'], // , 'prettier'
   rules: {
     'max-len': ["warn", 160, 4, {"ignoreUrls": true}],
     'no-multi-spaces': ["error", { exceptions: { "ImportDeclaration": true } }],
@@ -32,9 +32,9 @@ module.exports = {
     // May want to remove at some point
     'no-restricted-properties': 0,
   },
-  plugins: [
-    'prettier'
-  ],
+  // plugins: [
+  //   'prettier'
+  // ],
   globals: {
     __BASE_PATH__: false,
   },
@@ -44,13 +44,13 @@ module.exports = {
   env: {
     browser: true,
   },
-  rules: {
-    'prettier/prettier': [
-      'error', {
-        printWidth: 100,
-        singleQuote: true,
-        trailingComma: "es5"
-      }
-    ],
-  }
+  // rules: {
+  //   'prettier/prettier': [
+  //     'error', {
+  //       printWidth: 100,
+  //       singleQuote: true,
+  //       trailingComma: "es5"
+  //     }
+  //   ],
+  // }
 };
