@@ -1,5 +1,5 @@
 module.exports = {
-  extends: 'airbnb',
+  extends: ['airbnb', 'prettier'],
   rules: {
     'max-len': ["warn", 160, 4, {"ignoreUrls": true}],
     'no-multi-spaces': ["error", { exceptions: { "ImportDeclaration": true } }],
@@ -29,15 +29,12 @@ module.exports = {
     'import/no-named-as-default': 0,
     'import/no-named-as-default-member': 0,
 
-    // eslint-3.3.0
-    "no-global-assign": 0,
-    "no-unsafe-negation": 0,
-
-    // tmp
-    "no-restricted-properties": 0,
-    "no-useless-return": 0,
-    "no-multi-assign": 0,
+    // May want to remove at some point
+    'no-restricted-properties': 0,
   },
+  plugins: [
+    'prettier'
+  ],
   globals: {
     __BASE_PATH__: false,
   },
@@ -47,4 +44,13 @@ module.exports = {
   env: {
     browser: true,
   },
+  rules: {
+    'prettier/prettier': [
+      'error', {
+        printWidth: 100,
+        singleQuote: true,
+        trailingComma: "es5"
+      }
+    ],
+  }
 };

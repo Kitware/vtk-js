@@ -15,10 +15,12 @@ function vtkLandmarkTransform(publicAPI, model) {
 
   // Convert a mat4 matrix to a Matrix 2 dimensions
   function mat4To2DArray(mat) {
-    const output = [[0.0, 0.0, 0.0, 0.0],
+    const output = [
       [0.0, 0.0, 0.0, 0.0],
       [0.0, 0.0, 0.0, 0.0],
-      [0.0, 0.0, 0.0, 0.0]];
+      [0.0, 0.0, 0.0, 0.0],
+      [0.0, 0.0, 0.0, 0.0],
+    ];
     let cpt = 0;
     for (let c = 0; c < 4; c++) {
       for (let r = 0; r < 4; r++) {
@@ -72,9 +74,13 @@ function vtkLandmarkTransform(publicAPI, model) {
     // -- build the 3x3 matrix M --
 
     const M = mat3.create();
-    M[0] = M[4] = M[8] = 0;
+    M[0] = 0;
+    M[4] = 0;
+    M[8] = 0;
     const AAT = mat3.create();
-    AAT[0] = AAT[4] = AAT[8] = 0;
+    AAT[0] = 0;
+    AAT[4] = 0;
+    AAT[8] = 0;
 
     const a = [0, 0, 0];
     const b = [0, 0, 0];
@@ -131,8 +137,10 @@ function vtkLandmarkTransform(publicAPI, model) {
       // -- build the 4x4 matrix N --
 
       const N = mat4.create();
-      N[0] = N[5] = N[10] = N[15] = 0;
-
+      N[0] = 0;
+      N[5] = 0;
+      N[10] = 0;
+      N[15] = 0;
 
       // on-diagonal elements
       N[0] = M[0] + M[4] + M[8];
@@ -140,6 +148,7 @@ function vtkLandmarkTransform(publicAPI, model) {
       N[10] = -M[0] + M[4] - M[8];
       N[15] = -M[0] - M[4] + M[8];
       // off-diagonal elements
+      /* eslint-disable no-multi-assign */
       N[4] = N[1] = (M[7] - M[5]);
       N[8] = N[2] = (M[2] - M[6]);
       N[12] = N[3] = (M[3] - M[1]);
@@ -147,6 +156,7 @@ function vtkLandmarkTransform(publicAPI, model) {
       N[9] = N[6] = (M[3] + M[1]);
       N[13] = N[7] = (M[2] + M[6]);
       N[14] = N[11] = (M[7] + M[5]);
+      /* eslint-enable no-multi-assign */
 
       // -- eigen-decompose N (is symmetric) --
 

@@ -124,21 +124,21 @@ function vtkProp3D(publicAPI, model) {
   publicAPI.getUserMatrix = notImplemented('GetUserMatrix');
 
   function updateIdentityFlag() {
+    let noChange = true;
     [model.origin, model.position].forEach((array) => {
-      if (array.filter(v => v !== 0).length) {
+      if (noChange && array.filter(v => v !== 0).length) {
         model.isIdentity = false;
-        return;
+        noChange = false;
       }
     });
 
     // if (model.userMatrix || model.userTransform) {
     //   model.isIdentity = false;
-    //   return;
+    //   noChange = false;
     // }
 
-    if (model.scale.filter(v => v !== 1).length) {
+    if (noChange && model.scale.filter(v => v !== 1).length) {
       model.isIdentity = false;
-      return;
     }
   }
 

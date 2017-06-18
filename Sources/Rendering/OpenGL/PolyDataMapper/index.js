@@ -1121,9 +1121,10 @@ function vtkOpenGLPolyDataMapper(publicAPI, model) {
     program.setUniformi('numberOfLights', numberOfLights);
 
     // // we are done unless we have positional lights
-    if (lastLightComplexity < 3) {
-      return;
-    }
+    // ===> FIXME should be uncommented if we do something below otherwise it is useless
+    // if (lastLightComplexity < 3) {
+    //   return;
+    // }
 
     // // if positional lights pass down more parameters
     // let lightAttenuation[6][3];

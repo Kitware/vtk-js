@@ -153,7 +153,6 @@ function vtkOpenGLHardwareSelector(publicAPI, model) {
   publicAPI.renderCompositeIndex = (index) => {
     if (index > 0xffffff) {
       vtkErrorMacro('Indices > 0xffffff are not supported.');
-      return;
     }
   };
 
@@ -169,9 +168,9 @@ function vtkOpenGLHardwareSelector(publicAPI, model) {
     model.maxAttributeId = (attribid > model.maxAttributeId)
       ? attribid : model.maxAttributeId;
 
-    if (model.currentPass < PassTypes.ID_LOW24) {
-      return;
-    }
+    // if (model.currentPass < PassTypes.ID_LOW24) {
+    //   return; // useless...
+    // }
   };
 
   //----------------------------------------------------------------------------
