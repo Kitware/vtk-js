@@ -15,6 +15,58 @@ function vtkOpenGLCellArrayBufferObject(publicAPI, model) {
 
   publicAPI.setType(ObjectType.ARRAY_BUFFER);
 
+  publicAPI.updatePointsDataVBO = (poly, updateOptions) => {
+    if (!model.packedVBO) {
+      return;
+    }
+
+    const pointsData = poly.getPoints().getData();
+    const countPointsComp = updateOptions.points ? 0 : 3;
+
+    const normalsData = poly.getPointData().getNormals().getData();
+    const countNormalsComp = updateOptions.normals ? 0 : 3;
+
+    const tCoordsData = poly.getPointData().getTCoords().getData();
+    const countTCoordsComp = updateOptions.tCoords ? 0 : 2;
+
+    let pointIdx = 0;
+    let normalIdx = 0;
+    let tCoordsIdx = 0;
+    let vboidx = 0;
+
+    const cellData = poly.getPolys().getData();
+    const size = cellData.length;
+
+    for (let index = 0; index < size;) {
+      const npts = cellData[index];
+      const offset = index + 1;
+      for (let i = 0; i < npts; i++) {
+        if (updateOptions.points) {
+          pointIdx = cellData[offset + i] * 3;
+          model.packedVBO[vboidx++] = pointsData[pointIdx++];
+          model.packedVBO[vboidx++] = pointsData[pointIdx++];
+          model.packedVBO[vboidx++] = pointsData[pointIdx++];
+        }
+
+        if (updateOptions.normals) {
+          normalIdx = cellData[offset + i] * 3;
+          model.packedVBO[vboidx++] = normalsData[normalIdx++];
+          model.packedVBO[vboidx++] = normalsData[normalIdx++];
+          model.packedVBO[vboidx++] = normalsData[normalIdx++];
+        }
+
+        if (updateOptions.tCoords) {
+          tCoordsIdx = cellData[offset + i] * 2;
+          model.packedVBO[vboidx++] = tCoordsData[tCoordsIdx++];
+          model.packedVBO[vboidx++] = tCoordsData[tCoordsIdx++];
+        }
+        vboidx += countPointsComp + countNormalsComp + countTCoordsComp;
+      }
+      index += npts + 1;
+    }
+    publicAPI.upload(model.packedVBO, ObjectType.ARRAY_BUFFER);
+  };
+
   publicAPI.createVBO = (cellArray, inRep, outRep, options) => {
     if (!cellArray.getData() || !cellArray.getData().length) {
       model.elementCount = 0;
@@ -173,7 +225,11 @@ function vtkOpenGLCellArrayBufferObject(publicAPI, model) {
     }
 
     let packedUCVBO = null;
-    const packedVBO = new Float32Array(caboCount * model.blockSize);
+
+    if (!model.packedVBO || (model.packedVBO && (model.packedVBO.length !== caboCount * model.blockSize))) {
+      model.packedVBO = new Float32Array(caboCount * model.blockSize);
+    }
+
     if (colorData) {
       packedUCVBO = new Uint8Array(caboCount * 4);
     }
@@ -184,9 +240,9 @@ function vtkOpenGLCellArrayBufferObject(publicAPI, model) {
       // Vertices
       pointIdx = i * 3;
 
-      packedVBO[vboidx++] = pointData[pointIdx++];
-      packedVBO[vboidx++] = pointData[pointIdx++];
-      packedVBO[vboidx++] = pointData[pointIdx++];
+      model.packedVBO[vboidx++] = pointData[pointIdx++];
+      model.packedVBO[vboidx++] = pointData[pointIdx++];
+      model.packedVBO[vboidx++] = pointData[pointIdx++];
 
       if (normalData !== null) {
         if (options.haveCellNormals) {
@@ -194,15 +250,15 @@ function vtkOpenGLCellArrayBufferObject(publicAPI, model) {
         } else {
           normalIdx = i * 3;
         }
-        packedVBO[vboidx++] = normalData[normalIdx++];
-        packedVBO[vboidx++] = normalData[normalIdx++];
-        packedVBO[vboidx++] = normalData[normalIdx++];
+        model.packedVBO[vboidx++] = normalData[normalIdx++];
+        model.packedVBO[vboidx++] = normalData[normalIdx++];
+        model.packedVBO[vboidx++] = normalData[normalIdx++];
       }
 
       if (tcoordData !== null) {
         tcoordIdx = i * textureComponents;
         for (let j = 0; j < textureComponents; ++j) {
-          packedVBO[vboidx++] = tcoordData[tcoordIdx++];
+          model.packedVBO[vboidx++] = tcoordData[tcoordIdx++];
         }
       }
 
@@ -226,7 +282,7 @@ function vtkOpenGLCellArrayBufferObject(publicAPI, model) {
       cellCount++;
     }
     model.elementCount = caboCount;
-    publicAPI.upload(packedVBO, ObjectType.ARRAY_BUFFER);
+    publicAPI.upload(model.packedVBO, ObjectType.ARRAY_BUFFER);
     if (model.colorBO) {
       model.colorBOStride = 4;
       model.colorBO.upload(packedUCVBO, ObjectType.ARRAY_BUFFER);
@@ -262,6 +318,8 @@ const DEFAULT_VALUES = {
   colorOffset: 0,
   colorComponents: 0,
   tcoordBO: null,
+
+  packedVBO: null,
 };
 
 // ----------------------------------------------------------------------------
@@ -283,6 +341,7 @@ export function extend(publicAPI, model, initialValues = {}) {
     'tCoordComponents',
     'colorOffset',
     'colorComponents',
+    'packedVBO',
   ]);
 
   // Object specific methods
