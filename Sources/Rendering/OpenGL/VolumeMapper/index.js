@@ -172,9 +172,19 @@ function vtkOpenGLVolumeMapper(publicAPI, model) {
     // We do a break so most systems will gracefully
     // early terminate, but it is always possible
     // a system will execute every step regardless
+
+    const ext = model.currentInput.getExtent();
+    const spc = model.currentInput.getSpacing();
+    const vsize = vec3.create();
+    vec3.set(vsize,
+      (ext[1] - ext[0]) * spc[0],
+      (ext[3] - ext[2]) * spc[1],
+      (ext[5] - ext[4]) * spc[2]);
+    const maxSamples = vec3.length(vsize) / model.renderable.getSampleDistance();
+
     FSSource = vtkShaderProgram.substitute(FSSource,
       '//VTK::MaximumSamplesValue',
-      `${model.renderable.getMaximumSamplesPerRay()}`).result;
+      `${Math.ceil(maxSamples)}`).result;
 
     // if we have a ztexture then declare it and use it
     if (model.zBufferTexture !== null) {
