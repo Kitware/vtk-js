@@ -197,7 +197,6 @@ void main()
 
     // start slightly inside
     vpos = vpos + vdelta*0.1;
-    bool done = false;
     vec4 color = vec4(0.0, 0.0, 0.0, 0.0);
     int count = int(numSteps - 0.2); // end slightly inside
 
