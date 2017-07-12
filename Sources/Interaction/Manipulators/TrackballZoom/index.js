@@ -1,6 +1,8 @@
 import macro                from 'vtk.js/Sources/macro';
 import vtkCameraManipulator from 'vtk.js/Sources/Interaction/Manipulators/CameraManipulator';
 
+const { vtkWarningMacro } = macro;
+
 // ----------------------------------------------------------------------------
 // vtkTrackballZoom methods
 // ----------------------------------------------------------------------------
@@ -11,13 +13,17 @@ function vtkTrackballZoom(publicAPI, model) {
 
   publicAPI.onButtonDown = (interactor) => {
     const size = interactor.getView().getSize();
-    const camera = interactor.getActiveCamera();
 
-    if (camera.getParallelProjection()) {
-      model.zoomScale = 1.5 / size[1];
-    } else {
-      const range = camera.getClippingRange();
-      model.zoomScale = 1.5 * (range[1] / size[1]);
+    try {
+      const camera = interactor.getInteractorStyle().getCurrentRenderer().getActiveCamera();
+      if (camera.getParallelProjection()) {
+        model.zoomScale = 1.5 / size[1];
+      } else {
+        const range = camera.getClippingRange();
+        model.zoomScale = 1.5 * (range[1] / size[1]);
+      }
+    } catch (e) {
+      vtkWarningMacro('Unable to set model.zoomScale');
     }
   };
 
