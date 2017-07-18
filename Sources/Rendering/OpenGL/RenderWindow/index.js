@@ -136,18 +136,17 @@ function vtkOpenGLRenderWindow(publicAPI, model) {
 
     const webgl2Supported = (typeof WebGL2RenderingContext !== 'undefined');
     model.webgl2 = false;
-
     if (model.defaultToWebgl2 && webgl2Supported) {
-      result = model.canvas.getContext('webgl2', options);
+      result = model.canvas.getContext('webgl2'); // , options);
       if (result) {
         model.webgl2 = true;
+        console.log('using webgl2');
       }
     }
     if (!result) {
       result = model.canvas.getContext('webgl', options)
         || model.canvas.getContext('experimental-webgl', options);
     }
-
     return result;
   };
 

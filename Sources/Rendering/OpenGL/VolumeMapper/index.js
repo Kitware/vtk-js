@@ -15,6 +15,7 @@ import { InterpolationType } from 'vtk.js/Sources/Rendering/Core/VolumeProperty/
 
 import vtkVolumeVS from 'vtk.js/Sources/Rendering/OpenGL/glsl/vtkVolumeVS.glsl';
 import vtkVolumeFS from 'vtk.js/Sources/Rendering/OpenGL/glsl/vtkVolumeFS.glsl';
+import vtkVolumeFS2 from 'vtk.js/Sources/Rendering/OpenGL/glsl/vtkVolumeFS2.glsl';
 
 const { vtkWarningMacro, vtkErrorMacro } = macro;
 
@@ -73,7 +74,11 @@ function vtkOpenGLVolumeMapper(publicAPI, model) {
 
   publicAPI.getShaderTemplate = (shaders, ren, actor) => {
     shaders.Vertex = vtkVolumeVS;
-    shaders.Fragment = vtkVolumeFS;
+    if (model.openGLRenderWindow.getWebgl2()) {
+      shaders.Fragment = vtkVolumeFS2;
+    } else {
+      shaders.Fragment = vtkVolumeFS;
+    }
     shaders.Geometry = '';
   };
 
@@ -81,58 +86,110 @@ function vtkOpenGLVolumeMapper(publicAPI, model) {
     let FSSource = shaders.Fragment;
 
     const iType = actor.getProperty().getInterpolationType();
-
-    // compute the tcoords
-    if (iType === InterpolationType.LINEAR) {
-      FSSource = vtkShaderProgram.substitute(FSSource,
-        '//VTK::ComputeTCoords', [
-          'vec2 tpos = getTextureCoord(ijk, 0.0);',
-          'vec2 tpos2 = getTextureCoord(ijk, 1.0);',
-          'float zmix = ijk.z - floor(ijk.z);',
-        ]).result;
-    } else {
-      FSSource = vtkShaderProgram.substitute(FSSource,
-        '//VTK::ComputeTCoords', [
-          'vec2 tpos = getTextureCoord(ijk, 0.5);',
-        ]).result;
-    }
-
-    // compute the scalar value
-    if (iType === InterpolationType.LINEAR) {
-      FSSource = vtkShaderProgram.substitute(FSSource,
-        '//VTK::ScalarFunction', [
-          'scalar = getScalarValue(tpos);',
-          'float scalar2 = getScalarValue(tpos2);',
-          'scalar = mix(scalar, scalar2, zmix);',
-        ]).result;
-    } else {
-      FSSource = vtkShaderProgram.substitute(FSSource,
-        '//VTK::ScalarFunction', [
-          'scalar = getScalarValue(tpos);',
-        ]).result;
-    }
-
-    // for lighting and gradient opacity we need the
-    // normal texture
     const gopacity = actor.getProperty().getUseGradientOpacity(0);
-    if (gopacity || model.lastLightComplexity > 0) {
-      FSSource = vtkShaderProgram.substitute(FSSource,
-        '//VTK::Normal::Dec', [
-          'uniform sampler2D normalTexture;',
-        ]).result;
-      if (iType === InterpolationType.LINEAR) {
+    const volInfo = model.scalarTexture.getVolumeInfo();
+
+    // WebGL2
+    if (model.openGLRenderWindow.getWebgl2()) {
+      // for lighting and gradient opacity we need the
+      // normal texture
+      if (gopacity || model.lastLightComplexity > 0) {
+        FSSource = vtkShaderProgram.substitute(FSSource,
+          '//VTK::Normal::Dec', [
+            'uniform highp sampler3D normalTexture;',
+          ]).result;
         FSSource = vtkShaderProgram.substitute(FSSource,
           '//VTK::Normal::Impl', [
-            'vec4 normal = texture2D(normalTexture, tpos);',
-            'vec4 normal2 = texture2D(normalTexture, tpos2);',
-            'normal = mix(normal, normal2, zmix);',
+            'vec4 normal = texture(normalTexture, ijk);',
+          ]).result;
+      }
+    } else { // WebGL1
+      // compute the tcoords
+      if (iType === InterpolationType.LINEAR) {
+        FSSource = vtkShaderProgram.substitute(FSSource,
+          '//VTK::ComputeTCoords', [
+            'vec2 tpos = getTextureCoord(ijk, 0.0);',
+            'vec2 tpos2 = getTextureCoord(ijk, 1.0);',
+            'float zmix = ijk.z - floor(ijk.z);',
           ]).result;
       } else {
         FSSource = vtkShaderProgram.substitute(FSSource,
-          '//VTK::Normal::Impl', [
-            'vec4 normal = texture2D(normalTexture,tpos);',
+          '//VTK::ComputeTCoords', [
+            'vec2 tpos = getTextureCoord(ijk, 0.5);',
           ]).result;
       }
+
+      // compute the scalar value
+      if (iType === InterpolationType.LINEAR) {
+        FSSource = vtkShaderProgram.substitute(FSSource,
+          '//VTK::ScalarFunction', [
+            'scalar = getScalarValue(tpos);',
+            'float scalar2 = getScalarValue(tpos2);',
+            'scalar = mix(scalar, scalar2, zmix);',
+          ]).result;
+      } else {
+        FSSource = vtkShaderProgram.substitute(FSSource,
+          '//VTK::ScalarFunction', [
+            'scalar = getScalarValue(tpos);',
+          ]).result;
+      }
+
+      // for lighting and gradient opacity we need the
+      // normal texture
+      if (gopacity || model.lastLightComplexity > 0) {
+        FSSource = vtkShaderProgram.substitute(FSSource,
+          '//VTK::Normal::Dec', [
+            'uniform sampler2D normalTexture;',
+          ]).result;
+        if (iType === InterpolationType.LINEAR) {
+          FSSource = vtkShaderProgram.substitute(FSSource,
+            '//VTK::Normal::Impl', [
+              'vec4 normal = texture2D(normalTexture, tpos);',
+              'vec4 normal2 = texture2D(normalTexture, tpos2);',
+              'normal = mix(normal, normal2, zmix);',
+            ]).result;
+        } else {
+          FSSource = vtkShaderProgram.substitute(FSSource,
+            '//VTK::Normal::Impl', [
+              'vec4 normal = texture2D(normalTexture,tpos);',
+            ]).result;
+        }
+      }
+
+      // if we had to encode the scalar values into
+      // rgb then add the right call to decode them
+      // otherwise the generic texture lookup
+      if (volInfo.encodedScalars) {
+        FSSource = vtkShaderProgram.substitute(FSSource,
+          '//VTK::ScalarValueFunction::Impl', [
+            'vec4 scalarComps = texture2D(texture1, tpos);',
+            'return scalarComps.r + scalarComps.g/255.0 + scalarComps.b/65025.0;',
+          ]).result;
+      } else {
+        FSSource = vtkShaderProgram.substitute(FSSource,
+          '//VTK::ScalarValueFunction::Impl',
+          'return texture2D(texture1, tpos).r;').result;
+      }
+
+      // WebGL only supports loops over constants
+      // and does not support while loops so we
+      // have to hard code how many steps/samples to take
+      // We do a break so most systems will gracefully
+      // early terminate, but it is always possible
+      // a system will execute every step regardless
+
+      const ext = model.currentInput.getExtent();
+      const spc = model.currentInput.getSpacing();
+      const vsize = vec3.create();
+      vec3.set(vsize,
+        (ext[1] - ext[0]) * spc[0],
+        (ext[3] - ext[2]) * spc[1],
+        (ext[5] - ext[4]) * spc[2]);
+      const maxSamples = vec3.length(vsize) / model.renderable.getSampleDistance();
+
+      FSSource = vtkShaderProgram.substitute(FSSource,
+        '//VTK::MaximumSamplesValue',
+        `${Math.ceil(maxSamples)}`).result;
     }
 
     // if using gradient opacity apply that
@@ -149,42 +206,6 @@ function vtkOpenGLVolumeMapper(publicAPI, model) {
           'tcolor.a = tcolor.a*clamp(normal.a*normal.a*goscale + goshift, gomin, gomax);',
         ]).result;
     }
-
-    // if we had to encode the scalar values into
-    // rgb then add the right call to decode them
-    // otherwise the generic texture lookup
-    const volInfo = model.scalarTexture.getVolumeInfo();
-    if (volInfo.encodedScalars) {
-      FSSource = vtkShaderProgram.substitute(FSSource,
-        '//VTK::ScalarValueFunction::Impl', [
-          'vec4 scalarComps = texture2D(texture1, tpos);',
-          'return scalarComps.r + scalarComps.g/255.0 + scalarComps.b/65025.0;',
-        ]).result;
-    } else {
-      FSSource = vtkShaderProgram.substitute(FSSource,
-        '//VTK::ScalarValueFunction::Impl',
-        'return texture2D(texture1, tpos).r;').result;
-    }
-
-    // WebGL only supports loops over constants
-    // and does not support while loops so we
-    // have to hard code how many steps/samples to take
-    // We do a break so most systems will gracefully
-    // early terminate, but it is always possible
-    // a system will execute every step regardless
-
-    const ext = model.currentInput.getExtent();
-    const spc = model.currentInput.getSpacing();
-    const vsize = vec3.create();
-    vec3.set(vsize,
-      (ext[1] - ext[0]) * spc[0],
-      (ext[3] - ext[2]) * spc[1],
-      (ext[5] - ext[4]) * spc[2]);
-    const maxSamples = vec3.length(vsize) / model.renderable.getSampleDistance();
-
-    FSSource = vtkShaderProgram.substitute(FSSource,
-      '//VTK::MaximumSamplesValue',
-      `${Math.ceil(maxSamples)}`).result;
 
     // if we have a ztexture then declare it and use it
     if (model.zBufferTexture !== null) {
@@ -470,19 +491,25 @@ function vtkOpenGLVolumeMapper(publicAPI, model) {
         volumeMapper sampleDistance or its maximum number of samples.`);
     }
     const vctoijk = vec3.create();
-    vec3.set(vctoijk, dims[0] - 1.0, dims[1] - 1.0, dims[2] - 1.0);
+    if (model.openGLRenderWindow.getWebgl2()) {
+      vec3.set(vctoijk, 1.0, 1.0, 1.0);
+    } else {
+      vec3.set(vctoijk, dims[0] - 1.0, dims[1] - 1.0, dims[2] - 1.0);
+    }
     vec3.divide(vctoijk, vctoijk, vsize);
     program.setUniform3f('vVCToIJK', vctoijk[0], vctoijk[1], vctoijk[2]);
 
-    const volInfo = model.scalarTexture.getVolumeInfo();
-    program.setUniformf('texWidth', model.scalarTexture.getWidth());
-    program.setUniformf('texHeight', model.scalarTexture.getHeight());
-    program.setUniformi('xreps', volInfo.xreps);
-    program.setUniformf('xstride', volInfo.xstride);
-    program.setUniformf('ystride', volInfo.ystride);
-    program.setUniformi('repWidth', volInfo.width);
-    program.setUniformi('repHeight', volInfo.height);
-    program.setUniformi('repDepth', dims[2]);
+    if (!model.openGLRenderWindow.getWebgl2()) {
+      const volInfo = model.scalarTexture.getVolumeInfo();
+      program.setUniformf('texWidth', model.scalarTexture.getWidth());
+      program.setUniformf('texHeight', model.scalarTexture.getHeight());
+      program.setUniformi('xreps', volInfo.xreps);
+      program.setUniformf('xstride', volInfo.xstride);
+      program.setUniformf('ystride', volInfo.ystride);
+      program.setUniformi('repWidth', volInfo.width);
+      program.setUniformi('repHeight', volInfo.height);
+      program.setUniformi('repDepth', dims[2]);
+    }
 
     // map normals through normal matrix
     // then use a point on the plane to compute the distance
@@ -763,9 +790,9 @@ function vtkOpenGLVolumeMapper(publicAPI, model) {
             [
               '//VTK::System::Dec',
               '//VTK::Output::Dec',
-              'uniform sampler2D texture;',
+              'uniform sampler2D texture1;',
               'varying vec2 tcoord;',
-              'void main() { gl_FragData[0] = texture2D(texture,tcoord); }',
+              'void main() { gl_FragData[0] = texture2D(texture1,tcoord); }',
             ].join('\n'),
             '');
         const program = model.copyShader;
