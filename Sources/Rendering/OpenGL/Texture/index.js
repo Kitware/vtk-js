@@ -736,10 +736,74 @@ function vtkOpenGLTexture(publicAPI, model) {
   };
 
   //----------------------------------------------------------------------------
+  publicAPI.create3DFromRaw = (width, height, depth, numComps, dataType, data) => {
+    // Now determine the texture parameters using the arguments.
+    publicAPI.getOpenGLDataType(dataType);
+    publicAPI.getInternalFormat(dataType, numComps);
+    publicAPI.getFormat(dataType, numComps);
+
+    if (!model.internalFormat || !model.format || !model.openGLDataType) {
+      vtkErrorMacro('Failed to determine texture parameters.');
+      return false;
+    }
+
+    model.target = model.context.TEXTURE_3D;
+    model.components = numComps;
+    model.width = width;
+    model.height = height;
+    model.depth = depth;
+    model.numberOfDimensions = 3;
+    model.window.activateTexture(publicAPI);
+    publicAPI.createTexture();
+    publicAPI.bind();
+
+    // Source texture data from the PBO.
+    // model.context.pixelStorei(gl.UNPACK_FLIP_Y_WEBGL, true);
+    // model.context.pixelStorei(model.context.UNPACK_ALIGNMENT, 1);
+
+    model.context.texImage3D(
+          model.target,
+          0,
+          model.internalFormat,
+          model.width, model.height, model.depth,
+          0,
+          model.format,
+          model.openGLDataType,
+          data);
+
+    if (model.generateMipmap) {
+      model.context.generateMipmap(model.target);
+    }
+
+    publicAPI.deactivate();
+    return true;
+  };
+
+  //----------------------------------------------------------------------------
   // This method simulates a 3D texture using 2D
   publicAPI.create3DOneComponentFromRaw = (width, height, depth, dataType, data) => {
-    let volCopyData = (outArray, outIdx, inValue, min, max) => {
-      outArray[outIdx] = 255.0 * (inValue - min) / (max - min);
+    const numPixelsIn = width * height * depth;
+
+    // compute min and max values
+    let min = data[0];
+    let max = data[0];
+    for (let i = 0; i < numPixelsIn; ++i) {
+      min = Math.min(min, data[i]);
+      max = Math.max(max, data[i]);
+    }
+    if (min === max) {
+      max = min + 1.0;
+    }
+
+    // store the information, we will need it later
+    model.volumeInfo = { min, max, width, height, depth };
+
+    if (model.window.getWebgl2()) {
+      return publicAPI.create3DFromRaw(width, height, depth, 1, dataType, data);
+    }
+
+    let volCopyData = (outArray, outIdx, inValue, smin, smax) => {
+      outArray[outIdx] = 255.0 * (inValue - smin) / (smax - smin);
     };
     let dataTypeToUse = VtkDataTypes.UNSIGNED_CHAR;
     let numCompsToUse = 1;
@@ -748,15 +812,15 @@ function vtkOpenGLTexture(publicAPI, model) {
       if (model.context.getExtension('OES_texture_float') &&
           model.context.getExtension('OES_texture_float_linear')) {
         dataTypeToUse = VtkDataTypes.FLOAT;
-        volCopyData = (outArray, outIdx, inValue, min, max) => {
-          outArray[outIdx] = (inValue - min) / (max - min);
+        volCopyData = (outArray, outIdx, inValue, smin, smax) => {
+          outArray[outIdx] = (inValue - smin) / (smax - smin);
         };
       } else {
         encodedScalars = true;
         dataTypeToUse = VtkDataTypes.UNSIGNED_CHAR;
         numCompsToUse = 4;
-        volCopyData = (outArray, outIdx, inValue, min, max) => {
-          let fval = (inValue - min) / (max - min);
+        volCopyData = (outArray, outIdx, inValue, smin, smax) => {
+          let fval = (inValue - smin) / (smax - smin);
           const r = Math.floor(fval * 255.0);
           fval = (fval * 255.0) - r;
           outArray[outIdx] = r;
@@ -786,18 +850,6 @@ function vtkOpenGLTexture(publicAPI, model) {
 
     // have to pack this 3D texture into pot 2D texture
     const maxTexDim = model.context.getParameter(model.context.MAX_TEXTURE_SIZE);
-    const numPixelsIn = width * height * depth;
-
-    // compute min and max values
-    let min = data[0];
-    let max = data[0];
-    for (let i = 0; i < numPixelsIn; ++i) {
-      min = Math.min(min, data[i]);
-      max = Math.max(max, data[i]);
-    }
-    if (min === max) {
-      max = min + 1.0;
-    }
 
     // compute estimate for XY subsample
     let xstride = 1;
@@ -876,21 +928,6 @@ function vtkOpenGLTexture(publicAPI, model) {
   // This method creates a normal/gradient texture for 3D volume
   // rendering
   publicAPI.create3DLighting = (scalarTexture, data, spacing) => {
-    // Now determine the texture parameters using the arguments.
-    publicAPI.getOpenGLDataType(VtkDataTypes.UNSIGNED_CHAR);
-    publicAPI.getInternalFormat(VtkDataTypes.UNSIGNED_CHAR, 4);
-    publicAPI.getFormat(VtkDataTypes.UNSIGNED_CHAR, 4);
-
-    if (!model.internalFormat || !model.format || !model.openGLDataType) {
-      vtkErrorMacro('Failed to determine texture parameters.');
-      return false;
-    }
-
-    model.target = model.context.TEXTURE_2D;
-    model.components = 4;
-    model.depth = 1;
-    model.numberOfDimensions = 2;
-
     const vinfo = scalarTexture.getVolumeInfo();
 
     const width = vinfo.width;
@@ -945,12 +982,48 @@ function vtkOpenGLTexture(publicAPI, model) {
       }
     }
 
+    // store the information, we will need it later
+    model.volumeInfo = { min: minMag, max: maxMag };
+    let outIdx = 0;
+
+    if (model.window.getWebgl2()) {
+      const numPixelsIn = width * height * depth;
+      const newArray = new Uint8Array(numPixelsIn * 4);
+      for (let p = 0; p < numPixelsIn; ++p) {
+        const pp = p * 4;
+        newArray[outIdx++] = 127.5 + (127.5 * tmpArray[pp]);
+        newArray[outIdx++] = 127.5 + (127.5 * tmpArray[pp + 1]);
+        newArray[outIdx++] = 127.5 + (127.5 * tmpArray[pp + 2]);
+        // we encode gradient magnitude using sqrt so that
+        // we have nonlinear resolution
+        newArray[outIdx++] = 255.0 *
+          (Math.sqrt(tmpArray[pp + 3] / maxMag));
+      }
+      return publicAPI.create3DFromRaw(width, height, depth, 4,
+        VtkDataTypes.UNSIGNED_CHAR, newArray);
+    }
+
+    // Now determine the texture parameters using the arguments.
+    publicAPI.getOpenGLDataType(VtkDataTypes.UNSIGNED_CHAR);
+    publicAPI.getInternalFormat(VtkDataTypes.UNSIGNED_CHAR, 4);
+    publicAPI.getFormat(VtkDataTypes.UNSIGNED_CHAR, 4);
+
+    if (!model.internalFormat || !model.format || !model.openGLDataType) {
+      vtkErrorMacro('Failed to determine texture parameters.');
+      return false;
+    }
+
+    model.target = model.context.TEXTURE_2D;
+    model.components = 4;
+    model.depth = 1;
+    model.numberOfDimensions = 2;
+
+
     // now store the computed values into the packed 2D
     // texture using the same packing as volumeInfo
     model.width = scalarTexture.getWidth();
     model.height = scalarTexture.getHeight();
     const newArray = new Uint8Array(model.width * model.height * 4);
-    let outIdx = 0;
 
     for (let yRep = 0; yRep < vinfo.yreps; yRep++) {
       const xrepsThisRow = Math.min(vinfo.xreps, depth - (yRep * vinfo.xreps));
@@ -973,9 +1046,6 @@ function vtkOpenGLTexture(publicAPI, model) {
         outIdx += (outXContIncr * 4);
       }
     }
-
-    // store the information, we will need it later
-    model.volumeInfo = { min: minMag, max: maxMag };
 
     model.window.activateTexture(publicAPI);
     publicAPI.createTexture();

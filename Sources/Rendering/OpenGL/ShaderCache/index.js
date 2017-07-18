@@ -36,10 +36,18 @@ function vtkShaderCache(publicAPI, model) {
       fragDepthString = '#extension GL_EXT_frag_depth : enable\n';
     }
 
-    const version = '#version 100\n';
+    const gl2 = (model.context.getParameter(model.context.VERSION).indexOf('WebGL 2.0') !== -1);
+
+    let version = '#version 100\n';
+    if (gl2) {
+      version = '#version 300 es\n'
+      + '#define attribute in\n'
+      + '#define texture2D texture\n';
+    }
 
     nFSSource = vtkShaderProgram.substitute(nFSSource, '//VTK::System::Dec', [
-      `${version}\n#extension GL_OES_standard_derivatives : enable\n`,
+      `${version}\n`,
+      (gl2 ? '' : '#extension GL_OES_standard_derivatives : enable\n'),
       fragDepthString,
       '#ifdef GL_FRAGMENT_PRECISION_HIGH',
       'precision highp float;',
@@ -50,7 +58,7 @@ function vtkShaderCache(publicAPI, model) {
       '#endif',
     ]).result;
 
-    const nVSSource = vtkShaderProgram.substitute(VSSource, '//VTK::System::Dec', [
+    let nVSSource = vtkShaderProgram.substitute(VSSource, '//VTK::System::Dec', [
       `${version}\n`,
       '#ifdef GL_FRAGMENT_PRECISION_HIGH',
       'precision highp float;',
@@ -60,6 +68,17 @@ function vtkShaderCache(publicAPI, model) {
       'precision mediump int;',
       '#endif',
     ]).result;
+
+    if (gl2) {
+      nVSSource =
+        vtkShaderProgram.substitute(nVSSource, 'varying', 'out').result;
+      nFSSource =
+        vtkShaderProgram.substitute(nFSSource, 'varying', 'in').result;
+      nFSSource =
+        vtkShaderProgram.substitute(nFSSource, 'gl_FragData\\[0\\]', 'fragOutput0').result;
+      nFSSource =
+        vtkShaderProgram.substitute(nFSSource, '//VTK::Output::Dec', 'layout(location = 0) out vec4 fragOutput0;').result;
+    }
 
     // nFSSource = ShaderProgram.substitute(nFSSource, 'gl_FragData\\[0\\]',
     //   'gl_FragColor').result;
