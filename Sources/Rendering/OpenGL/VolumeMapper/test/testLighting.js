@@ -11,7 +11,8 @@ import vtkRenderer           from 'vtk.js/Sources/Rendering/Core/Renderer';
 import vtkVolume             from 'vtk.js/Sources/Rendering/Core/Volume';
 import vtkVolumeMapper       from 'vtk.js/Sources/Rendering/Core/VolumeMapper';
 
-import baseline from './testLighting.png';
+import baseline1 from './testLighting.png';
+import baseline2 from './testLighting_2.png';
 
 test.onlyIfWebGL('Test Lighted Volume Rendering', (t) => {
   const gc = testUtils.createGarbageCollector(t);
@@ -89,7 +90,7 @@ test.onlyIfWebGL('Test Lighted Volume Rendering', (t) => {
       renderer.updateLightsGeometryToFollowCamera();
       renderWindow.render();
       const image = glwindow.captureImage();
-      testUtils.compareImages(image, [baseline],
+      testUtils.compareImages(image, [baseline1, baseline2],
         'Rendering/OpenGL/VolumeMapper/testLighting',
           t, 1.5, gc.releaseResources);
     });

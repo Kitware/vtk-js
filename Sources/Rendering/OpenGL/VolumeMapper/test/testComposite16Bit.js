@@ -11,7 +11,8 @@ import vtkRenderer           from 'vtk.js/Sources/Rendering/Core/Renderer';
 import vtkVolume             from 'vtk.js/Sources/Rendering/Core/Volume';
 import vtkVolumeMapper       from 'vtk.js/Sources/Rendering/Core/VolumeMapper';
 
-import baseline from './testComposite16Bit.png';
+import baseline1 from './testComposite16Bit.png';
+import baseline2 from './testComposite16Bit_2.png';
 
 test.onlyIfWebGL('Test Composite Volume Rendering', (t) => {
   const gc = testUtils.createGarbageCollector(t);
@@ -73,7 +74,7 @@ test.onlyIfWebGL('Test Composite Volume Rendering', (t) => {
       renderer.resetCamera();
       renderWindow.render();
       const image = glwindow.captureImage();
-      testUtils.compareImages(image, [baseline],
+      testUtils.compareImages(image, [baseline1, baseline2],
         'Rendering/OpenGL/VolumeMapper/testComposite16Bit',
           t, 1.5, gc.releaseResources);
     });
