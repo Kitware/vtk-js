@@ -12,7 +12,7 @@ function compareImages(image, baselines, testName, tapeContext, threshold = 0.5,
     tapeContext.ok(isSameDimensions, 'Image match resolution');
 
     if (minDelta >= threshold) {
-      tapeContext.fail(`<img src="${image}" width="100" /> vs <img src="${baselines[0]}" width="100" />`);
+      tapeContext.fail(`<img src="${image}" /> vs <img src="${baselines[0]}" />`);
     }
 
     if (nextCallback) {

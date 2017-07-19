@@ -4,8 +4,9 @@ import vtkOpenGLViewNodeFactory     from 'vtk.js/Sources/Rendering/OpenGL/ViewNo
 import vtkShaderCache               from 'vtk.js/Sources/Rendering/OpenGL/ShaderCache';
 import vtkViewNode                  from 'vtk.js/Sources/Rendering/SceneGraph/ViewNode';
 import vtkOpenGLTextureUnitManager  from 'vtk.js/Sources/Rendering/OpenGL/TextureUnitManager';
+import { VtkDataTypes }             from 'vtk.js/Sources/Common/Core/DataArray/Constants';
 
-const { vtkErrorMacro } = macro;
+const { vtkDebugMacro, vtkErrorMacro } = macro;
 
 // ----------------------------------------------------------------------------
 // vtkOpenGLRenderWindow methods
@@ -140,7 +141,7 @@ function vtkOpenGLRenderWindow(publicAPI, model) {
       result = model.canvas.getContext('webgl2'); // , options);
       if (result) {
         model.webgl2 = true;
-        console.log('using webgl2');
+        vtkDebugMacro('using webgl2');
       }
     }
     if (!result) {
@@ -186,7 +187,31 @@ function vtkOpenGLRenderWindow(publicAPI, model) {
   };
 
   publicAPI.getDefaultTextureInternalFormat = (vtktype, numComps, useFloat) => {
-    // currently only supports four types
+    if (model.webgl2) {
+      switch (vtktype) {
+        default:
+        case VtkDataTypes.UNSIGNED_CHAR:
+          switch (numComps) {
+            case 1: return model.context.R8;
+            case 2: return model.context.RG8;
+            case 3: return model.context.RGB8;
+            case 4:
+            default:
+              return model.context.RGBA8;
+          }
+        case VtkDataTypes.FLOAT:
+          switch (numComps) {
+            case 1: return model.context.R16F;
+            case 2: return model.context.RG16F;
+            case 3: return model.context.RGB16F;
+            case 4:
+            default:
+              return model.context.RGBA16F;
+          }
+      }
+    }
+
+    // webgl1 only supports four types
     switch (numComps) {
       case 1: return model.context.LUMINANCE;
       case 2: return model.context.LUMINANCE_ALPHA;
@@ -260,6 +285,11 @@ export function extend(publicAPI, model, initialValues = {}) {
   model.renderPasses[0] = vtkForwardPass.newInstance();
 
   macro.event(publicAPI, model, 'imageReady');
+
+  // on mac default to webgl2
+  if (navigator.appVersion.indexOf('Mac') !== -1) {
+    model.defaultToWebgl2 = true;
+  }
 
   // Build VTK API
   macro.get(publicAPI, model, [

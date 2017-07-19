@@ -223,6 +223,10 @@ function vtkOpenGLTexture(publicAPI, model) {
       publicAPI.getOpenGLWrapMode(model.wrapS));
     model.context.texParameteri(model.target, model.context.TEXTURE_WRAP_T,
       publicAPI.getOpenGLWrapMode(model.wrapT));
+    if (model.window.getWebgl2()) {
+      model.context.texParameteri(model.target, model.context.TEXTURE_WRAP_R,
+        publicAPI.getOpenGLWrapMode(model.wrapR));
+    }
 
     model.context.texParameteri(
       model.target,
@@ -300,17 +304,32 @@ function vtkOpenGLTexture(publicAPI, model) {
 
   //----------------------------------------------------------------------------
   publicAPI.getDefaultFormat = (vtktype, numComps) => {
-    switch (numComps) {
-      case 1:
-        return model.context.LUMINANCE;
-      case 2:
-        return model.context.LUMINANCE_ALPHA;
-      case 3:
-        return model.context.RGB;
-      case 4:
-        return model.context.RGBA;
-      default:
-        return model.context.RGB;
+    if (model.window.getWebgl2()) {
+      switch (numComps) {
+        case 1:
+          return model.context.RED;
+        case 2:
+          return model.context.RG;
+        case 3:
+          return model.context.RGB;
+        case 4:
+          return model.context.RGBA;
+        default:
+          return model.context.RGB;
+      }
+    } else {
+      switch (numComps) {
+        case 1:
+          return model.context.LUMINANCE;
+        case 2:
+          return model.context.LUMINANCE_ALPHA;
+        case 3:
+          return model.context.RGB;
+        case 4:
+          return model.context.RGBA;
+        default:
+          return model.context.RGB;
+      }
     }
   };
 
@@ -324,6 +343,27 @@ function vtkOpenGLTexture(publicAPI, model) {
   //----------------------------------------------------------------------------
   publicAPI.getDefaultDataType = (vtkScalarType) => {
     // DON'T DEAL with VTK_CHAR as this is platform dependent.
+    if (model.window.getWebgl2()) {
+      switch (vtkScalarType) {
+        // case VtkDataTypes.SIGNED_CHAR:
+        //   return model.context.BYTE;
+        case VtkDataTypes.UNSIGNED_CHAR:
+          return model.context.UNSIGNED_BYTE;
+        // case VtkDataTypes.SHORT:
+        //   return model.context.SHORT;
+        // case VtkDataTypes.UNSIGNED_SHORT:
+        //   return model.context.UNSIGNED_SHORT;
+        // case VtkDataTypes.INT:
+        //   return model.context.INT;
+        // case VtkDataTypes.UNSIGNED_INT:
+        //   return model.context.UNSIGNED_INT;
+        case VtkDataTypes.FLOAT:
+        case VtkDataTypes.VOID: // used for depth component textures.
+        default:
+          return model.context.FLOAT;
+      }
+    }
+
     switch (vtkScalarType) {
       // case VtkDataTypes.SIGNED_CHAR:
       //   return model.context.BYTE;
@@ -341,7 +381,7 @@ function vtkOpenGLTexture(publicAPI, model) {
       case VtkDataTypes.VOID: // used for depth component textures.
       default:
         if (model.context.getExtension('OES_texture_float') &&
-            model.context.getExtension('OES_texture_float_linear')) {
+          model.context.getExtension('OES_texture_float_linear')) {
           return model.context.FLOAT;
         }
         return model.context.UNSIGNED_BYTE;
@@ -798,39 +838,48 @@ function vtkOpenGLTexture(publicAPI, model) {
     // store the information, we will need it later
     model.volumeInfo = { min, max, width, height, depth };
 
-    if (model.window.getWebgl2()) {
-      return publicAPI.create3DFromRaw(width, height, depth, 1, dataType, data);
-    }
-
     let volCopyData = (outArray, outIdx, inValue, smin, smax) => {
-      outArray[outIdx] = 255.0 * (inValue - smin) / (smax - smin);
+      outArray[outIdx] = inValue;
     };
     let dataTypeToUse = VtkDataTypes.UNSIGNED_CHAR;
     let numCompsToUse = 1;
     let encodedScalars = false;
-    if (dataType !== VtkDataTypes.UNSIGNED_CHAR) {
-      if (model.context.getExtension('OES_texture_float') &&
-          model.context.getExtension('OES_texture_float_linear')) {
-        dataTypeToUse = VtkDataTypes.FLOAT;
-        volCopyData = (outArray, outIdx, inValue, smin, smax) => {
-          outArray[outIdx] = (inValue - smin) / (smax - smin);
-        };
-      } else {
-        encodedScalars = true;
-        dataTypeToUse = VtkDataTypes.UNSIGNED_CHAR;
-        numCompsToUse = 4;
-        volCopyData = (outArray, outIdx, inValue, smin, smax) => {
-          let fval = (inValue - smin) / (smax - smin);
-          const r = Math.floor(fval * 255.0);
-          fval = (fval * 255.0) - r;
-          outArray[outIdx] = r;
-          const g = Math.floor(fval * 255.0);
-          fval = (fval * 255.0) - g;
-          outArray[outIdx + 1] = g;
-          const b = Math.floor(fval * 255.0);
-          outArray[outIdx + 2] = b;
-        };
+    if (dataType === VtkDataTypes.UNSIGNED_CHAR) {
+      model.volumeInfo.min = 0.0;
+      model.volumeInfo.max = 255.0;
+    } else if (model.window.getWebgl2() ||
+        (model.context.getExtension('OES_texture_float') &&
+         model.context.getExtension('OES_texture_float_linear'))) {
+      dataTypeToUse = VtkDataTypes.FLOAT;
+      volCopyData = (outArray, outIdx, inValue, smin, smax) => {
+        outArray[outIdx] = (inValue - smin) / (smax - smin);
+      };
+    } else {
+      encodedScalars = true;
+      dataTypeToUse = VtkDataTypes.UNSIGNED_CHAR;
+      numCompsToUse = 4;
+      volCopyData = (outArray, outIdx, inValue, smin, smax) => {
+        let fval = (inValue - smin) / (smax - smin);
+        const r = Math.floor(fval * 255.0);
+        fval = (fval * 255.0) - r;
+        outArray[outIdx] = r;
+        const g = Math.floor(fval * 255.0);
+        fval = (fval * 255.0) - g;
+        outArray[outIdx + 1] = g;
+        const b = Math.floor(fval * 255.0);
+        outArray[outIdx + 2] = b;
+      };
+    }
+
+    if (model.window.getWebgl2()) {
+      if (dataType !== VtkDataTypes.UNSIGNED_CHAR) {
+        const newArray = new Float32Array(numPixelsIn);
+        for (let i = 0; i < numPixelsIn; ++i) {
+          newArray[i] = (data[i] - min) / (max - min);
+        }
+        return publicAPI.create3DFromRaw(width, height, depth, 1, VtkDataTypes.FLOAT, newArray);
       }
+      return publicAPI.create3DFromRaw(width, height, depth, 1, dataType, data);
     }
 
     // Now determine the texture parameters using the arguments.

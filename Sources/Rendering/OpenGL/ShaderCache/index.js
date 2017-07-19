@@ -42,6 +42,7 @@ function vtkShaderCache(publicAPI, model) {
     if (gl2) {
       version = '#version 300 es\n'
       + '#define attribute in\n'
+      + '#define textureCube texture\n'
       + '#define texture2D texture\n';
     }
 
