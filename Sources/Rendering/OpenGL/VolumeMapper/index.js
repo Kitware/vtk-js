@@ -1,5 +1,6 @@
 import macro                from 'vtk.js/Sources/macro';
 import { vec3, mat3, mat4 } from 'gl-matrix';
+// import vtkBoundingBox       from 'vtk.js/Sources/Common/DataModel/BoundingBox';
 import vtkDataArray         from 'vtk.js/Sources/Common/Core/DataArray';
 import { VtkDataTypes }     from 'vtk.js/Sources/Common/Core/DataArray/Constants';
 import vtkHelper            from 'vtk.js/Sources/Rendering/OpenGL/Helper';
@@ -636,8 +637,9 @@ function vtkOpenGLVolumeMapper(publicAPI, model) {
   };
 
   publicAPI.getRenderTargetSize = () => {
-    if (model.lastXYF !== 1.0) {
-      return model.framebuffer.getSize();
+    if (model.lastXYF > 1.43) {
+      const sz = model.framebuffer.getSize();
+      return [model.fvp[0] * sz[0], model.fvp[1] * sz[1]];
     }
     return model.openGLRenderWindow.getSize();
   };
@@ -645,59 +647,89 @@ function vtkOpenGLVolumeMapper(publicAPI, model) {
   publicAPI.renderPieceStart = (ren, actor) => {
     if (model.renderable.getAutoAdjustSampleDistances()) {
       const rwi = ren.getVTKWindow().getInteractor();
-      const rft = rwi.getRecentFrameTime();
-      if (ren.getVTKWindow().getInteractor().isAnimating()) {
-        // compute an estimate for the time it would take to
-        // render at full resolution in seconds
-        const fvt = rft * model.lastXYF * model.lastXYF;
-        model.fullViewportTime = (model.fullViewportTime * 0.75) + (0.25 * fvt);
+      const rft = rwi.getLastFrameTime();
+      // console.log(`last frame time ${Math.floor(1.0 / rft)}`);
 
+      // frame time is typically for a couple frames prior
+      // which makes it messy, so keep long running averages
+      // of frame times and pixels rendered
+      model.avgFrameTime =
+        (0.97 * model.avgFrameTime) + (0.03 * rft);
+      model.avgWindowArea =
+        (0.97 * model.avgWindowArea) + (0.03 / (model.lastXYF * model.lastXYF));
+
+      if (ren.getVTKWindow().getInteractor().isAnimating()) {
         // compute target xy factor
-        let txyf = Math.sqrt(model.fullViewportTime * rwi.getDesiredUpdateRate());
+        let txyf = Math.sqrt((model.avgFrameTime * rwi.getDesiredUpdateRate()) / model.avgWindowArea);
 
         // limit subsampling to a factor of 10
         if (txyf > 10.0) {
           txyf = 10.0;
         }
-        // only use FBO for reasonable savings (at least 44% (1.2*1.2 - 1.0))
-        if (txyf < 1.2) {
-          txyf = 1.0;
-        }
 
         model.targetXYF = txyf;
       } else {
-        model.targetXYF = Math.sqrt(model.fullViewportTime * rwi.getStillUpdateRate());
+        model.targetXYF = Math.sqrt((model.avgFrameTime * rwi.getStillUpdateRate()) / model.avgWindowArea);
       }
-      const factor = model.targetXYF / model.lastXYF;
-      if (factor > 1.3 || factor < 0.8) {
-        model.lastXYF = model.targetXYF;
+
+      // have some inertia to change states around 1.43
+      if (model.targetXYF < 1.53 && model.targetXYF > 1.33) {
+        model.targetXYF = model.lastXYF;
       }
-      if (model.targetXYF < 1.1) {
-        model.lastXYF = 1.0;
+
+      // and add some inertia to change at all
+      if (Math.abs(1.0 - (model.targetXYF / model.lastXYF)) < 0.1) {
+        model.targetXYF = model.lastXYF;
       }
+      model.lastXYF = model.targetXYF;
     } else {
       model.lastXYF = model.renderable.getImageSampleDistance();
     }
-    // console.log(`XYF factor set to ${model.lastXYF}`);
+
+    // only use FBO beyond this value
+    if (model.lastXYF <= 1.43) {
+      model.lastXYF = 1.0;
+    }
+
+    // console.log(`last target  ${model.lastXYF} ${model.targetXYF}`);
+    // console.log(`awin aft  ${model.avgWindowArea} ${model.avgFrameTime}`);
     const xyf = model.lastXYF;
 
+    const size = model.openGLRenderWindow.getSize();
+    // const newSize = [
+    //   Math.floor((size[0] / xyf) + 0.5),
+    //   Math.floor((size[1] / xyf) + 0.5)];
+
+    // const diag = vtkBoundingBox.getDiagonalLength(model.currentInput.getBounds());
+
+    // // so what is the resulting sample size roughly
+    // console.log(`sam size ${diag / newSize[0]} ${diag / newSize[1]} ${model.renderable.getImageSampleDistance()}`);
+
+    // // if the sample distance is getting far from the image sample dist
+    // if (2.0 * diag / (newSize[0] + newSize[1]) > 4 * model.renderable.getSampleDistance()) {
+    //   model.renderable.setSampleDistance(4.0 * model.renderable.getSampleDistance());
+    // }
+    // if (2.0 * diag / (newSize[0] + newSize[1]) < 0.25 * model.renderable.getSampleDistance()) {
+    //   model.renderable.setSampleDistance(0.25 * model.renderable.getSampleDistance());
+    // }
+
     // create/resize framebuffer if needed
-    if (xyf !== 1.0) {
+    if (xyf > 1.43) {
       model.framebuffer.saveCurrentBindingsAndBuffers();
-      const size = model.openGLRenderWindow.getSize();
 
       if (model.framebuffer.getGLFramebuffer() === null) {
         model.framebuffer.create(
-          Math.floor((size[0] / xyf) + 0.5),
-          Math.floor((size[1] / xyf) + 0.5));
+          Math.floor(size[0] * 0.7),
+          Math.floor(size[1] * 0.7));
         model.framebuffer.populateFramebuffer();
       } else {
         const fbSize = model.framebuffer.getSize();
-        if (fbSize[0] !== Math.floor((size[0] / xyf) + 0.5) ||
-            fbSize[1] !== Math.floor((size[1] / xyf) + 0.5)) {
+        if (fbSize[0] !== Math.floor(size[0] * 0.7) ||
+            fbSize[1] !== Math.floor(size[1] * 0.7)) {
+          console.log('resizing');
           model.framebuffer.create(
-            Math.floor((size[0] / xyf) + 0.5),
-            Math.floor((size[1] / xyf) + 0.5));
+            Math.floor(size[0] * 0.7),
+            Math.floor(size[1] * 0.7));
           model.framebuffer.populateFramebuffer();
         }
       }
@@ -706,7 +738,10 @@ function vtkOpenGLVolumeMapper(publicAPI, model) {
       gl.clearColor(0.0, 0.0, 0.0, 0.0);
       gl.colorMask(true, true, true, true);
       gl.clear(gl.COLOR_BUFFER_BIT);
-      gl.viewport(0, 0, size[0] / xyf, size[1] / xyf);
+      gl.viewport(0, 0,
+        size[0] / xyf, size[1] / xyf);
+      model.fvp = [Math.floor(size[0] / xyf) / Math.floor(size[0] * 0.7),
+        Math.floor(size[1] / xyf) / Math.floor(size[1] * 0.7)];
     }
     model.context.disable(model.context.DEPTH_TEST);
 
@@ -773,7 +808,7 @@ function vtkOpenGLVolumeMapper(publicAPI, model) {
       model.zBufferTexture.deactivate();
     }
 
-    if (model.lastXYF !== 1.0) {
+    if (model.lastXYF > 1.43) {
       // now copy the frambuffer with the volume into the
       // regular buffer
       model.framebuffer.restorePreviousBindingsAndBuffers();
@@ -784,8 +819,9 @@ function vtkOpenGLVolumeMapper(publicAPI, model) {
             [
               '//VTK::System::Dec',
               'attribute vec4 vertexDC;',
+              'uniform vec2 tfactor;',
               'varying vec2 tcoord;',
-              'void main() { tcoord = vec2(vertexDC.x*0.5 + 0.5, vertexDC.y*0.5 + 0.5); gl_Position = vertexDC; }',
+              'void main() { tcoord = vec2(vertexDC.x*0.5 + 0.5, vertexDC.y*0.5 + 0.5) * tfactor; gl_Position = vertexDC; }',
             ].join('\n'),
             [
               '//VTK::System::Dec',
@@ -820,6 +856,8 @@ function vtkOpenGLVolumeMapper(publicAPI, model) {
       tex.activate();
       model.copyShader.setUniformi('texture',
         tex.getTextureUnit());
+
+      model.copyShader.setUniform2f('tfactor', model.fvp[0], model.fvp[1]);
 
       const gl = model.context;
       gl.blendFuncSeparate(gl.ONE, gl.ONE_MINUS_SRC_ALPHA,
@@ -1011,6 +1049,8 @@ const DEFAULT_VALUES = {
   fullViewportTime: 1.0,
   idxToView: null,
   idxNormalMatrix: null,
+  avgWindowArea: 0.0,
+  avgFrameTime: 0.0,
 };
 
 // ----------------------------------------------------------------------------
