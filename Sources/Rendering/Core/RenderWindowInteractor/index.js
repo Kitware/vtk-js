@@ -216,7 +216,7 @@ function vtkRenderWindowInteractor(publicAPI, model) {
         model.lastAnimationEventPositions.set(key, value);
         model.animationEventPositions.set(key, value);
       });
-      model.recentFrameTime = -1.0;
+      model.lastFrameTime = 0.1;
       model.lastFrameStart = new Date().getTime();
       model.animationRequest = requestAnimationFrame(publicAPI.handleAnimation);
     }
@@ -230,7 +230,6 @@ function vtkRenderWindowInteractor(publicAPI, model) {
     if (model.animationRequest && model.requestAnimationCount === 0) {
       cancelAnimationFrame(model.animationRequest);
       model.animationRequest = null;
-      model.recentFrameTime = 0.0;
     }
   };
 
@@ -244,14 +243,12 @@ function vtkRenderWindowInteractor(publicAPI, model) {
 
   publicAPI.handleAnimation = () => {
     const currTime = new Date().getTime();
-    if (model.recentFrameTime === -1.0) {
-      model.recentFrameTime = 1.0 / 30.0;  // initialize to 30 fps
+    if (model.FrameTime === -1.0) {
+      model.lastFrameTime = 0.1;
     } else {
-      // moving average, past 10 frames == 95% of the value
-      model.recentFrameTime =
-        (0.75 * model.recentFrameTime) + (0.25 * (currTime - model.lastFrameStart) / 1000.0);
+      model.lastFrameTime = (currTime - model.lastFrameStart) / 1000.0;
     }
-    model.recentFrameTime = Math.max(0.001, model.recentFrameTime);
+    model.lastFrameTime = Math.max(0.01, model.lastFrameTime);
     model.lastFrameStart = currTime;
     model.eventPositions.forEach((value, key) => {
       model.lastAnimationEventPositions.set(key, model.animationEventPositions.get(key));
@@ -714,6 +711,7 @@ const DEFAULT_VALUES = {
   lastRotation: 0.0,
   animationRequest: null,
   requestAnimationCount: 0,
+  lastFrameTime: 0.1,
 };
 
 // ----------------------------------------------------------------------------
@@ -746,7 +744,7 @@ export function extend(publicAPI, model, initialValues = {}) {
     'rotation',
     'lastRotation',
     'interactorStyle',
-    'recentFrameTime',
+    'lastFrameTime',
     'view',
   ]);
 
