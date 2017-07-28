@@ -38,12 +38,15 @@ function removeWindowListeners() {
   listeners.filter(i => !!i).forEach(i => i.renderWindowInteractor.cancelAnimation());
 }
 
-function addCameraToSynchronize(renderWindowInteractor, camera) {
+function addCameraToSynchronize(renderWindowInteractor, camera, onCameraUpdate) {
   function onAnimation() {
     if (orientation.update) {
       const { alpha, beta, gamma } = orientation.device;
       const screen = orientation.screen;
       camera.setDeviceAngles(alpha, beta, gamma, screen);
+      if (onCameraUpdate) {
+        onCameraUpdate();
+      }
     }
   }
 
