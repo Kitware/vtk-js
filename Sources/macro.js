@@ -360,7 +360,11 @@ export function setArray(publicAPI, model, fieldNames, size) {
         array = array[0];
       }
 
-      if (array.length !== size) {
+      if (Array.isArray(size)) {
+        if (!size.includes(array.length)) {
+          throw new RangeError('Invalid number of values for array setter');
+        }
+      } else if (array.length !== size) {
         throw new RangeError('Invalid number of values for array setter');
       }
       let changeDetected = false;

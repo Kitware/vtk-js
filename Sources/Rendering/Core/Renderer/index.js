@@ -597,7 +597,7 @@ export function extend(publicAPI, model, initialValues = {}) {
     'pass',
   ]);
   macro.getArray(publicAPI, model, ['actors', 'volumes', 'lights']);
-  macro.setGetArray(publicAPI, model, ['background'], 3);
+  macro.setGetArray(publicAPI, model, ['background'], [3, 4]);
 
   // Object methods
   vtkRenderer(publicAPI, model);

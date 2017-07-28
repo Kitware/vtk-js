@@ -224,7 +224,7 @@ def writeDataSet(filePath, dataset, outputDir, colorArrayInfo, newDSName = None,
   if writer:
     writer(datasetDir, dataDir, dataset, colorArrayInfo, root, compress)
   else:
-    print dataObject.GetClassName(), 'is not supported'
+    print (dataObject.GetClassName(), 'is not supported')
 
   with open(os.path.join(datasetDir, "index.json"), 'w') as f:
     f.write(json.dumps(root, indent=2))
@@ -280,10 +280,10 @@ scDirs = []
 sceneComponents = []
 componentIndex = 0
 
-for rIdx in xrange(renderers.GetNumberOfItems()):
+for rIdx in range(renderers.GetNumberOfItems()):
   renderer = renderers.GetItemAsObject(rIdx)
   renProps = renderer.GetViewProps()
-  for rpIdx in xrange(renProps.GetNumberOfItems()):
+  for rpIdx in range(renProps.GetNumberOfItems()):
     renProp = renProps.GetItemAsObject(rpIdx)
     if not renProp.GetVisibility():
       continue
@@ -421,4 +421,4 @@ finally:
 
 shutil.rmtree(outputDir)
 
-print 'Finished exporting dataset to: ',sceneFileName
+print ('Finished exporting dataset to: ',sceneFileName)
