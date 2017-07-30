@@ -344,9 +344,10 @@ export function getArray(publicAPI, model, fieldNames) {
 
 // ----------------------------------------------------------------------------
 // setXXX: add setter for object of type array
+// if 'defaultVal' is supplied, shorter arrays will be padded to 'size' with 'defaultVal'
 // ----------------------------------------------------------------------------
 
-export function setArray(publicAPI, model, fieldNames, size) {
+export function setArray(publicAPI, model, fieldNames, size, defaultVal = undefined) {
   fieldNames.forEach((field) => {
     publicAPI[`set${capitalize(field)}`] = (...args) => {
       if (model.deleted) {
@@ -360,12 +361,13 @@ export function setArray(publicAPI, model, fieldNames, size) {
         array = array[0];
       }
 
-      if (Array.isArray(size)) {
-        if (!size.includes(array.length)) {
+      if (array.length !== size) {
+        if (array.length < size && defaultVal !== undefined) {
+          array = [].concat(array);
+          while (array.length < size) array.push(defaultVal);
+        } else {
           throw new RangeError('Invalid number of values for array setter');
         }
-      } else if (array.length !== size) {
-        throw new RangeError('Invalid number of values for array setter');
       }
       let changeDetected = false;
       model[field].forEach((item, index) => {
@@ -377,7 +379,7 @@ export function setArray(publicAPI, model, fieldNames, size) {
         }
       });
 
-      if (changeDetected) {
+      if (changeDetected || model[field].length !== array.length) {
         model[field] = [].concat(array);
         publicAPI.modified();
       }
@@ -390,9 +392,9 @@ export function setArray(publicAPI, model, fieldNames, size) {
 // set/get XXX: add setter and getter for object of type array
 // ----------------------------------------------------------------------------
 
-export function setGetArray(publicAPI, model, fieldNames, size) {
+export function setGetArray(publicAPI, model, fieldNames, size, defaultVal = undefined) {
   getArray(publicAPI, model, fieldNames);
-  setArray(publicAPI, model, fieldNames, size);
+  setArray(publicAPI, model, fieldNames, size, defaultVal);
 }
 
 // ----------------------------------------------------------------------------

@@ -20,6 +20,10 @@ function notImplemented(method) {
 function vtkRenderer(publicAPI, model) {
   // Set our className
   model.classHierarchy.push('vtkRenderer');
+  // make sure background has 4 entries. Default to opaque black
+  if (!model.background) model.background = [0, 0, 0, 1];
+  while (model.background.length < 3) model.background.push(0);
+  if (model.background.length === 3) model.background.push(1);
 
   publicAPI.updateCamera = () => {
     if (!model.activeCamera) {
@@ -597,7 +601,7 @@ export function extend(publicAPI, model, initialValues = {}) {
     'pass',
   ]);
   macro.getArray(publicAPI, model, ['actors', 'volumes', 'lights']);
-  macro.setGetArray(publicAPI, model, ['background'], [3, 4]);
+  macro.setGetArray(publicAPI, model, ['background'], 4, 1.0);
 
   // Object methods
   vtkRenderer(publicAPI, model);
