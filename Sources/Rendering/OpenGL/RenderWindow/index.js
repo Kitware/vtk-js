@@ -189,7 +189,6 @@ function vtkOpenGLRenderWindow(publicAPI, model) {
   publicAPI.getDefaultTextureInternalFormat = (vtktype, numComps, useFloat) => {
     if (model.webgl2) {
       switch (vtktype) {
-        default:
         case VtkDataTypes.UNSIGNED_CHAR:
           switch (numComps) {
             case 1: return model.context.R8;
@@ -199,6 +198,7 @@ function vtkOpenGLRenderWindow(publicAPI, model) {
             default:
               return model.context.RGBA8;
           }
+        default:
         case VtkDataTypes.FLOAT:
           switch (numComps) {
             case 1: return model.context.R16F;
