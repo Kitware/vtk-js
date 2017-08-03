@@ -93,7 +93,7 @@ texturePathList.forEach(loadTexture);
 // If device support motion bind it to the camera
 if (vtkDeviceOrientationToCamera.isDeviceOrientationSupported()) {
   vtkDeviceOrientationToCamera.addWindowListeners();
-  cameraListenerId = vtkDeviceOrientationToCamera.addCameraToSynchronize(interactor, renderer.getActiveCamera());
+  cameraListenerId = vtkDeviceOrientationToCamera.addCameraToSynchronize(interactor, renderer.getActiveCamera(), renderer.resetCameraClippingRange);
 } else {
   alert('Your device does not support motion detection so regular interaction will be available');
 }
