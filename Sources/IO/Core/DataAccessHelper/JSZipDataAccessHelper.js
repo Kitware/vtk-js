@@ -7,6 +7,54 @@ import { DataTypeByteSize } from 'vtk.js/Sources/Common/Core/DataArray/Constants
 
 const { vtkErrorMacro, vtkDebugMacro } = macro;
 
+function handleUint8Array(array, fetchGzip, done) {
+  return (uint8array) => {
+    array.buffer = new ArrayBuffer(uint8array.length);
+
+    // copy uint8array to buffer
+    const view = new Uint8Array(array.buffer);
+    view.set(uint8array);
+
+    if (fetchGzip) {
+      if (array.dataType === 'string' || array.dataType === 'JSON') {
+        array.buffer = pako.inflate(new Uint8Array(array.buffer), { to: 'string' });
+      } else {
+        array.buffer = pako.inflate(new Uint8Array(array.buffer)).buffer;
+      }
+    }
+
+    if (array.ref.encode === 'JSON') {
+      array.values = JSON.parse(array.buffer);
+    } else {
+      if (Endian.ENDIANNESS !== array.ref.encode && Endian.ENDIANNESS) {
+        // Need to swap bytes
+        vtkDebugMacro(`Swap bytes of ${array.name}`);
+        Endian.swapBytes(array.buffer, DataTypeByteSize[array.dataType]);
+      }
+
+      array.values = new window[array.dataType](array.buffer);
+    }
+
+    if (array.values.length !== array.size) {
+      vtkErrorMacro(`Error in FetchArray: ${array.name} does not have the proper array size. Got ${array.values.length}, instead of ${array.size}`);
+    }
+
+    done();
+  };
+}
+
+function handleString(array, fetchGzip, done) {
+  return (string) => {
+    array.values = JSON.parse(string);
+    done();
+  };
+}
+
+const handlers = {
+  uint8array: handleUint8Array,
+  string: handleString,
+};
+
 function removeLeadingSlash(str) {
   return (str[0] === '/') ? str.substr(1) : str;
 }
@@ -50,49 +98,24 @@ function create(options) {
           instance.invokeBusy(true);
         }
 
+        function doneCleanUp() {
+          // Done with the ref and work
+          delete array.ref;
+          if (--requestCount === 0 && instance.invokeBusy) {
+            instance.invokeBusy(false);
+          }
+          if (instance.modified) {
+            instance.modified();
+          }
+          resolve(array);
+        }
+
+        const asyncType = array.dataType === 'string' ? 'string' : 'uint8array';
+        const asyncCallback = handlers[asyncType](array, fetchGzip, doneCleanUp);
+
         zipRoot.file(url)
-          .async('uint8array')
-          .then((uint8array) => {
-            array.buffer = new ArrayBuffer(uint8array.length);
-
-            // copy uint8array to buffer
-            const view = new Uint8Array(array.buffer);
-            view.set(uint8array);
-
-            if (fetchGzip) {
-              if (array.dataType === 'string' || array.dataType === 'JSON') {
-                array.buffer = pako.inflate(new Uint8Array(array.buffer), { to: 'string' });
-              } else {
-                array.buffer = pako.inflate(new Uint8Array(array.buffer)).buffer;
-              }
-            }
-
-            if (array.ref.encode === 'JSON') {
-              array.values = JSON.parse(array.buffer);
-            } else {
-              if (Endian.ENDIANNESS !== array.ref.encode && Endian.ENDIANNESS) {
-                // Need to swap bytes
-                vtkDebugMacro(`Swap bytes of ${array.name}`);
-                Endian.swapBytes(array.buffer, DataTypeByteSize[array.dataType]);
-              }
-
-              array.values = new window[array.dataType](array.buffer);
-            }
-
-            if (array.values.length !== array.size) {
-              vtkErrorMacro(`Error in FetchArray: ${array.name} does not have the proper array size. Got ${array.values.length}, instead of ${array.size}`);
-            }
-
-            // Done with the ref and work
-            delete array.ref;
-            if (--requestCount === 0 && instance.invokeBusy) {
-              instance.invokeBusy(false);
-            }
-            if (instance.modified) {
-              instance.modified();
-            }
-            resolve(array);
-          });
+          .async(asyncType)
+          .then(asyncCallback);
       });
     },
 
