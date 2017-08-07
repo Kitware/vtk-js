@@ -116,7 +116,15 @@ function vtkFullScreenRenderWindow(publicAPI, model) {
   publicAPI.resize = () => {
     const dims = model.container.getBoundingClientRect();
     model.openGlRenderWindow.setSize(dims.width, dims.height);
+    if (model.resizeCallback) {
+      model.resizeCallback(dims);
+    }
     model.renderWindow.render();
+  };
+
+  publicAPI.setResizeCallback = (cb) => {
+    model.resizeCallback = cb;
+    publicAPI.resize();
   };
 
   if (model.listenWindowResize) {
@@ -134,6 +142,7 @@ const DEFAULT_VALUES = {
   containerStyle: null,
   controlPanelStyle: null,
   listenWindowResize: true,
+  resizeCallback: null,
 };
 
 // ----------------------------------------------------------------------------
