@@ -36,7 +36,7 @@ function vtkFieldData(publicAPI, model) {
   publicAPI.getNumberOfArrays = () => model.arrays.length;
   publicAPI.getNumberOfActiveArrays = () => model.arrays.length;
   publicAPI.addArray = (arr) => { model.arrays = [].concat(model.arrays, { data: arr }); return model.arrays.length - 1; };
-  publicAPI.removeAllArrays = () => (model.arrays = []);
+  publicAPI.removeAllArrays = () => { (model.arrays = []); };
   publicAPI.removeArray = (arrayName) => {
     model.arrays = model.arrays.filter(entry => arrayName !== entry.data.getName());
   };
