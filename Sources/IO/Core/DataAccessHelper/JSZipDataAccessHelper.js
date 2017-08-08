@@ -27,7 +27,7 @@ function create(options) {
           metaFiles.push(relativePath);
         }
       });
-      metaFiles.sort((a, b) => a.length > b.length);
+      metaFiles.sort((a, b) => a.length - b.length);
       const fullRootPath = metaFiles[0].split('/');
       while (fullRootPath.length > 1) {
         const dirName = fullRootPath.shift();
