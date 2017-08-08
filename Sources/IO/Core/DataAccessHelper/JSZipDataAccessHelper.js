@@ -45,7 +45,11 @@ function handleUint8Array(array, fetchGzip, done) {
 
 function handleString(array, fetchGzip, done) {
   return (string) => {
-    array.values = JSON.parse(string);
+    if (fetchGzip) {
+      array.values = JSON.parse(pako.inflate(string, { to: 'string' }));
+    } else {
+      array.values = JSON.parse(string);
+    }
     done();
   };
 }
@@ -110,7 +114,7 @@ function create(options) {
           resolve(array);
         }
 
-        const asyncType = array.dataType === 'string' ? 'string' : 'uint8array';
+        const asyncType = array.dataType === 'string' && !fetchGzip ? 'string' : 'uint8array';
         const asyncCallback = handlers[asyncType](array, fetchGzip, doneCleanUp);
 
         zipRoot.file(url)
