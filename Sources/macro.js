@@ -15,7 +15,7 @@ const fakeConsole = {};
 function noOp() {}
 
 const consoleMethods = ['log', 'debug', 'info', 'warn', 'error', 'time', 'timeEnd', 'group', 'groupEnd'];
-consoleMethods.forEach(methodName => (fakeConsole[methodName] = noOp));
+consoleMethods.forEach((methodName) => { (fakeConsole[methodName] = noOp); });
 
 global.console = (window.console.hasOwnProperty('log') ? window.console : fakeConsole);
 
