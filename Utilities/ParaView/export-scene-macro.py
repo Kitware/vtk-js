@@ -253,6 +253,19 @@ def generateSceneName():
 
   return sceneName
 
+# -----------------------------------------------------------------------------
+
+componentIndex = 0
+
+def getComponentName(actor):
+  srcs = simple.GetSources()
+  for key, val in srcs.items():
+    actorRep = simple.GetRepresentation(val).GetClientSideObject().GetActiveRepresentation().GetActor()
+    if actor == actorRep:
+      return key[0]
+  return '%d' % componentIndex
+
+
 ### ----------------------------------------------------------------------- ###
 ###                          Main script contents                           ###
 ### ----------------------------------------------------------------------- ###
@@ -280,7 +293,6 @@ renderers = renderWindow.GetRenderers()
 
 scDirs = []
 sceneComponents = []
-componentIndex = 0
 
 for rIdx in range(renderers.GetNumberOfItems()):
   renderer = renderers.GetItemAsObject(rIdx)
@@ -305,7 +317,7 @@ for rIdx in range(renderers.GetNumberOfItems()):
         dataset = mapper.GetInput()
 
       if dataset and dataset.GetPoints():
-        componentName = '%d' % componentIndex
+        componentName = getComponentName(renProp)
         scalarVisibility = mapper.GetScalarVisibility()
         arrayAccessMode = mapper.GetArrayAccessMode()
         colorArrayName = mapper.GetArrayName() if arrayAccessMode == 1 else mapper.GetArrayId()
@@ -361,6 +373,7 @@ for rIdx in range(renderers.GetNumberOfItems()):
         p3dRotateWXYZ = renProp.GetOrientationWXYZ()  if renProp.IsA('vtkProp3D') else [0, 0, 0, 0]
 
         sceneComponents.append({
+          "name": componentName,
           "type": "httpDataSetReader",
           "httpDataSetReader": {
             "url": componentName
