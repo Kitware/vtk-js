@@ -14,6 +14,14 @@ function applySettings(sceneItem, settings) {
     sceneItem.actor.set(settings.actor);
   }
 
+  if (settings.actorRotation) {
+    sceneItem.actor.rotateWXYZ(
+      settings.actorRotation[0],
+      settings.actorRotation[1],
+      settings.actorRotation[2],
+      settings.actorRotation[3]);
+  }
+
   if (settings.property) {
     sceneItem.actor.getProperty().set(settings.property);
   }

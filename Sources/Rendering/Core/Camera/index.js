@@ -1,4 +1,4 @@
-import { quat4, vec3, vec4, mat3, mat4 } from 'gl-matrix';
+import { quat, vec3, vec4, mat3, mat4 } from 'gl-matrix';
 
 import macro   from 'vtk.js/Sources/macro';
 import vtkMath from 'vtk.js/Sources/Common/Core/Math';
@@ -441,9 +441,9 @@ function vtkCamera(publicAPI, model) {
     if (degrees !== 0.0 && (x !== 0.0 || y !== 0.0 || z !== 0.0)) {
       // convert to radians
       const angle = vtkMath.radiansFromDegrees(degrees);
-      const q = quat4.create();
-      quat4.setAxisAngle(q, [x, y, z], angle);
-      quat4.toMat4(q, quatMat);
+      const q = quat.create();
+      quat.setAxisAngle(q, [x, y, z], angle);
+      quat.toMat4(q, quatMat);
     }
 
     const dop = vec3.fromValues(0.0, 0.0, -1.0);

@@ -243,6 +243,8 @@ def generateSceneName():
       nameParts.append(key[0])
   fileName = '-'.join(nameParts)
 
+  # limit to a reasonable length characters
+  fileName = fileName[:12] if len(fileName) > 15 else fileName
   sceneName = '%s' % fileName
   counter = 0
   while os.path.isfile(os.path.join(ROOT_OUTPUT_DIRECTORY, '%s%s' % (sceneName, FILENAME_EXTENSION))):
@@ -353,11 +355,22 @@ for rIdx in range(renderers.GetNumberOfItems()):
         opacity = renProp.GetProperty().GetOpacity() if hasattr(renProp, 'GetProperty') else 1.0
         edgeVisibility = renProp.GetProperty().GetEdgeVisibility() if hasattr(renProp, 'GetProperty') else false
 
+        p3dPosition = renProp.GetPosition() if renProp.IsA('vtkProp3D') else [0, 0, 0]
+        p3dScale = renProp.GetScale() if renProp.IsA('vtkProp3D') else [1, 1, 1]
+        p3dOrigin = renProp.GetOrigin() if renProp.IsA('vtkProp3D') else [0, 0, 0]
+        p3dRotateWXYZ = renProp.GetOrientationWXYZ()  if renProp.IsA('vtkProp3D') else [0, 0, 0, 0]
+
         sceneComponents.append({
           "type": "httpDataSetReader",
           "httpDataSetReader": {
             "url": componentName
           },
+          "actor": {
+            "origin": p3dOrigin,
+            "scale": p3dScale,
+            "position": p3dPosition,
+          },
+          "actorRotation": p3dRotateWXYZ,
           "mapper": {
             "colorByArrayName": colorArrayName,
             "colorMode": colorMode,

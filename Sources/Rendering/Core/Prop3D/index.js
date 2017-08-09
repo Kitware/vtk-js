@@ -1,4 +1,4 @@
-import { vec3, quat4, mat4 } from 'gl-matrix';
+import { vec3, quat, mat4 } from 'gl-matrix';
 
 import macro          from 'vtk.js/Sources/macro';
 import vtkBoundingBox from 'vtk.js/Sources/Common/DataModel/BoundingBox';
@@ -34,10 +34,10 @@ function vtkProp3D(publicAPI, model) {
   };
 
   publicAPI.getOrientationWXYZ = () => {
-    const q = quat4.create();
+    const q = quat.create();
     mat4.getRotation(q, model.rotation);
     const oaxis = vec3.create();
-    const w = quat4.getAxisAngle(oaxis, q);
+    const w = quat.getAxisAngle(oaxis, q);
     return [vtkMath.degreesFromRadians(w), oaxis[0], oaxis[1], oaxis[2]];
   };
 
@@ -79,12 +79,12 @@ function vtkProp3D(publicAPI, model) {
     // convert to radians
     const angle = vtkMath.radiansFromDegrees(degrees);
 
-    const q = quat4.create();
-    quat4.setAxisAngle(q, [x, y, z], angle);
+    const q = quat.create();
+    quat.setAxisAngle(q, [x, y, z], angle);
 
     const quatMat = mat4.create();
-    quat4.toMat4(q, quatMat);
-    mat4.multiply(model.rotation, quatMat);
+    mat4.fromQuat(quatMat, q);
+    mat4.multiply(model.rotation, model.rotation, quatMat);
   };
 
   publicAPI.SetUserTransform = notImplemented('SetUserTransform');
@@ -103,11 +103,11 @@ function vtkProp3D(publicAPI, model) {
     // check whether or not need to rebuild the matrix
     if (publicAPI.getMTime() > model.matrixMTime.getMTime()) {
       mat4.identity(model.matrix);
-      mat4.translate(model.matrix, model.matrix, [-model.origin[0], -model.origin[1], -model.origin[2]]);
-      mat4.scale(model.matrix, model.matrix, model.scale);
-      mat4.multiply(model.matrix, model.matrix, model.rotation);
-      mat4.translate(model.matrix, model.matrix, model.position);
       mat4.translate(model.matrix, model.matrix, model.origin);
+      mat4.translate(model.matrix, model.matrix, model.position);
+      mat4.multiply(model.matrix, model.matrix, model.rotation);
+      mat4.scale(model.matrix, model.matrix, model.scale);
+      mat4.translate(model.matrix, model.matrix, [-model.origin[0], -model.origin[1], -model.origin[2]]);
       mat4.transpose(model.matrix, model.matrix);
 
       model.matrixMTime.modified();
