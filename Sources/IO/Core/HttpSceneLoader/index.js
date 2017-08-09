@@ -1,7 +1,8 @@
 import macro                from 'vtk.js/Sources/macro';
 import vtkActor             from 'vtk.js/Sources/Rendering/Core/Actor';
-import vtkMapper            from 'vtk.js/Sources/Rendering/Core/Mapper';
 import vtkHttpDataSetReader from 'vtk.js/Sources/IO/Core/HttpDataSetReader';
+import vtkMapper            from 'vtk.js/Sources/Rendering/Core/Mapper';
+import vtkTexture           from 'vtk.js/Sources/Rendering/Core/Texture';
 
 import DataAccessHelper     from 'vtk.js/Sources/IO/Core/DataAccessHelper';
 
@@ -56,6 +57,21 @@ function loadHttpDataSetReader(item, model, publicAPI) {
     actor,
     defaultSettings: item,
   };
+  if (item.texture) {
+    console.log('find texture', item.texture);
+    const textureSource = vtkHttpDataSetReader.newInstance({ fetchGzip: model.fetchGzip, dataAccessHelper: model.dataAccessHelper });
+    textureSource
+      .setUrl([model.baseURL, item.texture].join('/'), { loadData: true })
+      .then(() => {
+        const texture = vtkTexture.newInstance();
+        texture.setInterpolate(true);
+        texture.setInputData(textureSource.getOutputData());
+        console.log('texture loaded', item.texture);
+        console.log('texture data', textureSource.getOutputData());
+        actor.addTexture(texture);
+        sceneItem.texture = texture;
+      });
+  }
 
   model.renderer.addActor(actor);
   actor.setMapper(mapper);
