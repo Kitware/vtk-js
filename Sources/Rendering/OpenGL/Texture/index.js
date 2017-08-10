@@ -31,6 +31,11 @@ function vtkOpenGLTexture(publicAPI, model) {
       publicAPI.setMinificationFilter(Filter.NEAREST);
       publicAPI.setMagnificationFilter(Filter.NEAREST);
     }
+    if (model.renderable.getRepeat()) {
+      publicAPI.setWrapR(Wrap.REPEAT);
+      publicAPI.setWrapS(Wrap.REPEAT);
+      publicAPI.setWrapT(Wrap.REPEAT);
+    }
     // clear image if input data is set
     if (model.renderable.getInputData()) {
       model.renderable.setImage(null);
