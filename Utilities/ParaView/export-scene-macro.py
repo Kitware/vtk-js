@@ -294,9 +294,9 @@ def dumpImageData(datasetDir, dataDir, dataset, colorArrayInfo, root = {}, compr
   root['vtkClass'] = 'vtkImageData'
   container = root
 
-  container['spacing'] = dataset.GetSpacing(),
-  container['origin'] = dataset.GetOrigin(),
-  container['extent'] = dataset.GetExtent(),
+  container['spacing'] = dataset.GetSpacing()
+  container['origin'] = dataset.GetOrigin()
+  container['extent'] = dataset.GetExtent()
 
   dumpAllArrays(datasetDir, dataDir, dataset, container, compress)
 

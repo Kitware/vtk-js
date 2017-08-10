@@ -58,7 +58,6 @@ function loadHttpDataSetReader(item, model, publicAPI) {
     defaultSettings: item,
   };
   if (item.texture) {
-    console.log('find texture', item.texture);
     const textureSource = vtkHttpDataSetReader.newInstance({ fetchGzip: model.fetchGzip, dataAccessHelper: model.dataAccessHelper });
     textureSource
       .setUrl([model.baseURL, item.texture].join('/'), { loadData: true })
@@ -66,8 +65,6 @@ function loadHttpDataSetReader(item, model, publicAPI) {
         const texture = vtkTexture.newInstance();
         texture.setInterpolate(true);
         texture.setInputData(textureSource.getOutputData());
-        console.log('texture loaded', item.texture);
-        console.log('texture data', textureSource.getOutputData());
         actor.addTexture(texture);
         sceneItem.texture = texture;
       });
