@@ -64,6 +64,7 @@ function loadHttpDataSetReader(item, model, publicAPI) {
       .then(() => {
         const texture = vtkTexture.newInstance();
         texture.setInterpolate(true);
+        texture.setRepeat(true);
         texture.setInputData(textureSource.getOutputData());
         actor.addTexture(texture);
         sceneItem.texture = texture;
