@@ -73,6 +73,18 @@ def getRef(destDirectory, md5):
 
 # -----------------------------------------------------------------------------
 
+objIds = []
+def getObjectId(obj):
+  try:
+    idx = objIds.index(obj)
+    return idx + 1
+  except ValueError:
+    objIds.append(obj)
+    return len(objIds)
+
+
+# -----------------------------------------------------------------------------
+
 def dumpDataArray(datasetDir, dataDir, array, root = {}, compress = True):
   if not array:
     return None
@@ -161,6 +173,73 @@ def dumpColorArray(datasetDir, dataDir, colorArrayInfo, root = {}, compress = Tr
     root[location]['arrays'].append({ 'data': dumpedArray })
 
   return root
+# -----------------------------------------------------------------------------
+
+def dumpTCoords(datasetDir, dataDir, dataset, root = {}, compress = True):
+  tcoords = dataset.GetPointData().GetTCoords()
+  if tcoords:
+    dumpedArray = dumpDataArray(datasetDir, dataDir, tcoords, {}, compress)
+    root['pointData']['activeTCoords'] = len(root['pointData']['arrays'])
+    root['pointData']['arrays'].append({ 'data': dumpedArray })
+
+# -----------------------------------------------------------------------------
+
+def dumpAllArrays(datasetDir, dataDir, dataset, root = {}, compress = True):
+  root['pointData'] = {
+    'vtkClass': 'vtkDataSetAttributes',
+    "activeGlobalIds": -1,
+    "activeNormals": -1,
+    "activePedigreeIds": -1,
+    "activeScalars": -1,
+    "activeTCoords": -1,
+    "activeTensors": -1,
+    "activeVectors": -1,
+    "arrays": []
+  }
+  root['cellData'] = {
+    'vtkClass': 'vtkDataSetAttributes',
+    "activeGlobalIds": -1,
+    "activeNormals": -1,
+    "activePedigreeIds": -1,
+    "activeScalars": -1,
+    "activeTCoords": -1,
+    "activeTensors": -1,
+    "activeVectors": -1,
+    "arrays": []
+  }
+  root['fieldData'] = {
+    'vtkClass': 'vtkDataSetAttributes',
+    "activeGlobalIds": -1,
+    "activeNormals": -1,
+    "activePedigreeIds": -1,
+    "activeScalars": -1,
+    "activeTCoords": -1,
+    "activeTensors": -1,
+    "activeVectors": -1,
+    "arrays": []
+  }
+
+  # Point data
+  pd = dataset.GetPointData()
+  pd_size = pd.GetNumberOfArrays()
+  for i in range(pd_size):
+    array = pd.GetArray(i)
+    if array:
+      dumpedArray = dumpDataArray(datasetDir, dataDir, array, {}, compress)
+      root['pointData']['activeScalars'] = 0
+      root['pointData']['arrays'].append({ 'data': dumpedArray })
+
+  # Cell data
+  cd = dataset.GetCellData()
+  cd_size = pd.GetNumberOfArrays()
+  for i in range(cd_size):
+    array = cd.GetArray(i)
+    if array:
+      dumpedArray = dumpDataArray(datasetDir, dataDir, array, {}, compress)
+      root['cellData']['activeScalars'] = 0
+      root['cellData']['arrays'].append({ 'data': dumpedArray })
+
+  return root
 
 # -----------------------------------------------------------------------------
 
@@ -202,10 +281,29 @@ def dumpPolyData(datasetDir, dataDir, dataset, colorArrayInfo, root = {}, compre
 
   dumpColorArray(datasetDir, dataDir, colorArrayInfo, container, compress)
 
+  ## PointData TCoords
+  dumpTCoords(datasetDir, dataDir, dataset, container, compress)
+
   return root
 
 # -----------------------------------------------------------------------------
 writerMapping['vtkPolyData'] = dumpPolyData
+# -----------------------------------------------------------------------------
+
+def dumpImageData(datasetDir, dataDir, dataset, colorArrayInfo, root = {}, compress = True):
+  root['vtkClass'] = 'vtkImageData'
+  container = root
+
+  container['spacing'] = dataset.GetSpacing()
+  container['origin'] = dataset.GetOrigin()
+  container['extent'] = dataset.GetExtent()
+
+  dumpAllArrays(datasetDir, dataDir, dataset, container, compress)
+
+  return root
+
+# -----------------------------------------------------------------------------
+writerMapping['vtkImageData'] = dumpImageData
 # -----------------------------------------------------------------------------
 
 def writeDataSet(filePath, dataset, outputDir, colorArrayInfo, newDSName = None, compress = True):
@@ -259,11 +357,27 @@ componentIndex = 0
 
 def getComponentName(actor):
   srcs = simple.GetSources()
+  duplicates = {}
   for key, val in srcs.items():
+    # Prevent name duplication
+    nameToUse = key[0]
+    if nameToUse in duplicates:
+      count = 1
+      newName = '%s (%d)' % (nameToUse, count)
+      while newName in duplicates:
+        count += 1
+        newName = '%s (%d)' % (nameToUse, count)
+
+      nameToUse = newName
+    duplicates[nameToUse] = True
+
     actorRep = simple.GetRepresentation(val).GetClientSideObject().GetActiveRepresentation().GetActor()
     if actor == actorRep:
-      return key[0]
-  return '%d' % componentIndex
+      return nameToUse
+
+  nameToUse = '%d' % componentIndex
+  componentIndex += 1
+  return nameToUse
 
 
 ### ----------------------------------------------------------------------- ###
@@ -293,6 +407,7 @@ renderers = renderWindow.GetRenderers()
 
 scDirs = []
 sceneComponents = []
+textureToSave = {}
 
 for rIdx in range(renderers.GetNumberOfItems()):
   renderer = renderers.GetItemAsObject(rIdx)
@@ -357,7 +472,13 @@ for rIdx in range(renderers.GetNumberOfItems()):
         }
 
         scDirs.append(writeDataSet('', dataset, outputDir, colorArrayInfo, newDSName=componentName, compress=doCompressArrays))
-        componentIndex += 1
+
+        # Handle texture if any
+        textureName = None
+        if renProp.GetTexture() and renProp.GetTexture().GetInput():
+          textureData = renProp.GetTexture().GetInput()
+          textureName = 'texture_%d' % getObjectId(textureData);
+          textureToSave[textureName] = textureData
 
         representation = renProp.GetProperty().GetRepresentation() if hasattr(renProp, 'GetProperty') else 2
         colorToUse = renProp.GetProperty().GetDiffuseColor() if hasattr(renProp, 'GetProperty') else [1, 1, 1]
@@ -401,6 +522,13 @@ for rIdx in range(renderers.GetNumberOfItems()):
             "hueRange": lookupTable.GetHueRange() if hasattr(lookupTable, 'GetHueRange') else [0.5, 0]
           }
         })
+
+        if textureName:
+          sceneComponents[-1]['texture'] = textureName
+
+# Save texture data if any
+for key, val in textureToSave.items():
+  writeDataSet('', val, outputDir, None, newDSName=key, compress=doCompressArrays)
 
 cameraClippingRange = activeView.GetActiveCamera().GetClippingRange()
 
