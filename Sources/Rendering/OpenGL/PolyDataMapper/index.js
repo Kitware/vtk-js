@@ -1393,10 +1393,10 @@ function vtkOpenGLPolyDataMapper(publicAPI, model) {
 
   publicAPI.computeBounds = (ren, actor) => {
     if (!publicAPI.getInput()) {
-      vtkMath.uninitializeBounds(model.Bounds);
+      vtkMath.uninitializeBounds(model.bounds);
       return;
     }
-    model.bounnds = publicAPI.getInput().getBounds();
+    model.bounds = publicAPI.getInput().getBounds();
   };
 
   publicAPI.updateBufferObjects = (ren, actor) => {
