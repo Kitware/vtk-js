@@ -1,5 +1,9 @@
+// import { mat4, vec3 }     from 'gl-matrix';
+
 import macro              from 'vtk.js/Sources/macro';
 import vtkViewNode        from 'vtk.js/Sources/Rendering/SceneGraph/ViewNode';
+
+const { vtkDebugMacro } = macro;
 
 // ----------------------------------------------------------------------------
 // vtkOpenGLPixelSpaceCallbackMapper methods
@@ -8,14 +12,61 @@ import vtkViewNode        from 'vtk.js/Sources/Rendering/SceneGraph/ViewNode';
 function vtkOpenGLPixelSpaceCallbackMapper(publicAPI, model) {
   model.classHierarchy.push('vtkOpenGLPixelSpaceCallbackMapper');
 
-  publicAPI.opaquePass = () => {
+  publicAPI.opaquePass = (prepass, renderPass) => {
     const oglren = publicAPI.getFirstAncestorOfType('vtkOpenGLRenderer');
     const aspectRatio = oglren.getAspectRatio();
     const ren = publicAPI.getFirstAncestorOfType('vtkOpenGLRenderer');
     const camera = ren ? ren.getRenderable().getActiveCamera() : null;
     const tsize = ren.getTiledSizeAndOrigin();
+    let texels = null;
 
-    model.renderable.invokeCallback(model.renderable.getInputData(), camera, aspectRatio, tsize);
+    if (model.renderable.getUseZValues()) {
+      const zbt = renderPass.getZBufferTexture();
+      const width = Math.floor(zbt.getWidth());
+      const height = Math.floor(zbt.getHeight());
+
+      const gl = zbt.getContext();
+      zbt.bind();
+
+      // Here we need to use vtkFramebuffer to save current settings (bindings/buffers)
+      const fb = renderPass.getFramebuffer();
+      if (!fb) {
+        vtkDebugMacro('No framebuffer to save/restore');
+      } else {
+        // save framebuffer settings
+        fb.saveCurrentBindingsAndBuffers();
+      }
+
+      const framebuffer = gl.createFramebuffer();
+      gl.bindFramebuffer(gl.FRAMEBUFFER, framebuffer);
+      gl.framebufferTexture2D(gl.FRAMEBUFFER, gl.COLOR_ATTACHMENT0, gl.TEXTURE_2D, zbt.getHandle(), 0);
+
+      if (gl.checkFramebufferStatus(gl.FRAMEBUFFER) === gl.FRAMEBUFFER_COMPLETE) {
+        texels = new Uint8Array(width * height * 4);
+        gl.viewport(0, 0, width, height);
+        gl.readPixels(0, 0, width, height, gl.RGBA, gl.UNSIGNED_BYTE, texels);
+      }
+
+      // Now we need to restore framebuffer bindings/buffers
+      if (fb) {
+        fb.restorePreviousBindingsAndBuffers();
+      }
+
+      zbt.unBind();
+      gl.deleteFramebuffer(framebuffer);
+    }
+
+    model.renderable.invokeCallback(model.renderable.getInputData(), camera, aspectRatio, tsize, texels);
+  };
+
+  publicAPI.queryPass = (prepass, renderPass) => {
+    if (prepass) {
+      if (model.renderable.getUseZValues()) {
+        renderPass.setDepthRequested(true);
+      } else {
+        renderPass.setDepthRequested(true);
+      }
+    }
   };
 }
 
