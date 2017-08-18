@@ -354,6 +354,8 @@ def generateSceneName():
 
   # limit to a reasonable length characters
   fileName = fileName[:12] if len(fileName) > 15 else fileName
+  if len(fileName) == 0:
+    fileName = 'SceneExport'
   sceneName = '%s' % fileName
   counter = 0
   while os.path.isfile(os.path.join(ROOT_OUTPUT_DIRECTORY, '%s%s' % (sceneName, FILENAME_EXTENSION))):
@@ -367,6 +369,7 @@ def generateSceneName():
 componentIndex = 0
 
 def getComponentName(actor):
+  global componentIndex
   srcs = simple.GetSources()
   duplicates = {}
   for key, val in srcs.items():
