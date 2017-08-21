@@ -1,4 +1,5 @@
 import { mat4 }           from 'gl-matrix';
+import Constants          from 'vtk.js/Sources/Rendering/Core/ImageMapper/Constants';
 import macro              from 'vtk.js/Sources/macro';
 import vtkDataArray       from 'vtk.js/Sources/Common/Core/DataArray';
 import vtkHelper          from 'vtk.js/Sources/Rendering/OpenGL/Helper';
@@ -13,6 +14,8 @@ import vtkPolyDataVS      from 'vtk.js/Sources/Rendering/OpenGL/glsl/vtkPolyData
 import vtkPolyDataFS      from 'vtk.js/Sources/Rendering/OpenGL/glsl/vtkPolyDataFS.glsl';
 
 const { vtkErrorMacro } = macro;
+
+const { SlicingMode } = Constants;
 
 // ----------------------------------------------------------------------------
 // vtkOpenGLImageMapper methods
@@ -313,9 +316,14 @@ function vtkOpenGLImageMapper(publicAPI, model) {
     }
 
     // rebuild the VBO if the data has changed
-    const z = model.renderable.getZSlice();
-    const toString = `${z}A${image.getMTime()}A${image.getPointData().getScalars().getMTime()}B${publicAPI.getMTime()}`;
-
+    let nSlice = model.renderable.getZSlice();
+    if (model.renderable.getCurrentSlicingMode() === SlicingMode.X) {
+      nSlice = model.renderable.getXSlice();
+    }
+    if (model.renderable.getCurrentSlicingMode() === SlicingMode.Y) {
+      nSlice = model.renderable.getYSlice();
+    }
+    const toString = `${nSlice}A${image.getMTime()}A${image.getPointData().getScalars().getMTime()}B${publicAPI.getMTime()}`;
     if (model.VBOBuildString !== toString) {
       // Build the VBOs
       const dims = image.getDimensions();
@@ -330,7 +338,80 @@ function vtkOpenGLImageMapper(publicAPI, model) {
       model.openGLTexture.setWrapT(Wrap.CLAMP_TO_EDGE);
       const numComp = image.getPointData().getScalars().getNumberOfComponents();
       const sliceSize = dims[0] * dims[1] * numComp;
-      const scalars = image.getPointData().getScalars().getData().subarray(z * sliceSize, (z + 1) * sliceSize);
+
+      const ext = image.getExtent();
+      const ptsArray = new Float32Array(12);
+      const tcoordArray = new Float32Array(8);
+      for (let i = 0; i < 4; i++) {
+        ptsArray[(i * 3)] = ((i % 2) ? ext[1] : ext[0]);
+        ptsArray[(i * 3) + 1] = ((i > 1) ? ext[3] : ext[2]);
+        ptsArray[(i * 3) + 2] = nSlice;
+        tcoordArray[(i * 2)] = (i % 2) ? 1.0 : 0.0;
+        tcoordArray[(i * 2) + 1] = (i > 1) ? 1.0 : 0.0;
+      }
+
+      const basicScalars = image.getPointData().getScalars().getData();
+      let scalars = basicScalars.subarray(nSlice * sliceSize, (nSlice + 1) * sliceSize);
+      // Get right scalars according to slicing mode
+      if (model.renderable.getCurrentSlicingMode() === SlicingMode.X) {
+        scalars = [];
+        for (let k = 0; k < dims[2]; k++) {
+          for (let j = 0; j < dims[1]; j++) {
+            scalars.push(basicScalars[nSlice + (j * dims[0]) + (k * dims[0] * dims[1])]);
+          }
+        }
+        dims[0] = dims[1];
+        dims[1] = dims[2];
+        ptsArray[0] = nSlice;
+        ptsArray[1] = ext[2];
+        ptsArray[2] = ext[4];
+        ptsArray[3] = nSlice;
+        ptsArray[4] = ext[3];
+        ptsArray[5] = ext[4];
+        ptsArray[6] = nSlice;
+        ptsArray[7] = ext[2];
+        ptsArray[8] = ext[5];
+        ptsArray[9] = nSlice;
+        ptsArray[10] = ext[3];
+        ptsArray[11] = ext[5];
+      }
+      if (model.renderable.getCurrentSlicingMode() === SlicingMode.Y) {
+        scalars = [];
+        for (let k = 0; k < dims[2]; k++) {
+          for (let i = 0; i < dims[0]; i++) {
+            scalars.push(basicScalars[i + (nSlice * dims[0]) + (k * dims[0] * dims[1])]);
+          }
+        }
+        dims[1] = dims[2];
+        ptsArray[0] = ext[0];
+        ptsArray[1] = nSlice;
+        ptsArray[2] = ext[4];
+        ptsArray[3] = ext[1];
+        ptsArray[4] = nSlice;
+        ptsArray[5] = ext[4];
+        ptsArray[6] = ext[0];
+        ptsArray[7] = nSlice;
+        ptsArray[8] = ext[5];
+        ptsArray[9] = ext[1];
+        ptsArray[10] = nSlice;
+        ptsArray[11] = ext[5];
+      }
+
+      if (model.renderable.getCurrentSlicingMode() === SlicingMode.Z) {
+        ptsArray[0] = ext[0];
+        ptsArray[1] = ext[2];
+        ptsArray[2] = nSlice;
+        ptsArray[3] = ext[1];
+        ptsArray[4] = ext[2];
+        ptsArray[5] = nSlice;
+        ptsArray[6] = ext[0];
+        ptsArray[7] = ext[3];
+        ptsArray[8] = nSlice;
+        ptsArray[9] = ext[1];
+        ptsArray[10] = ext[3];
+        ptsArray[11] = nSlice;
+      }
+
       model.openGLTexture.create2DFromRaw(dims[0], dims[1],
         numComp,
         image.getPointData().getScalars().getDataType(),
@@ -338,18 +419,6 @@ function vtkOpenGLImageMapper(publicAPI, model) {
       model.openGLTexture.activate();
       model.openGLTexture.sendParameters();
       model.openGLTexture.deactivate();
-
-      const ext = image.getExtent();
-
-      const ptsArray = new Float32Array(12);
-      const tcoordArray = new Float32Array(8);
-      for (let i = 0; i < 4; i++) {
-        ptsArray[(i * 3)] = ((i % 2) ? ext[1] : ext[0]);
-        ptsArray[(i * 3) + 1] = ((i > 1) ? ext[3] : ext[2]);
-        ptsArray[(i * 3) + 2] = z;
-        tcoordArray[(i * 2)] = (i % 2) ? 1.0 : 0.0;
-        tcoordArray[(i * 2) + 1] = (i > 1) ? 1.0 : 0.0;
-      }
 
       const points = vtkDataArray.newInstance({ numberOfComponents: 3, values: ptsArray });
       points.setName('points');
