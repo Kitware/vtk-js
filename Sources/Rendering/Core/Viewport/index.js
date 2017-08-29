@@ -80,7 +80,7 @@ function vtkViewport(publicAPI, model) {
   publicAPI.normalizedViewportToNormalizedDisplay = (x, y, z) => {
     const scale = [model.viewport[2] - model.viewport[0],
       model.viewport[3] - model.viewport[1]];
-    return [(x - model.viewport[0]) / scale[0], (y - model.viewport[1]) / scale[1], z];
+    return [(x * scale[0]) + model.viewport[0], (y * scale[1]) + model.viewport[1], z];
   };
 
   publicAPI.viewToNormalizedViewport = (x, y, z) =>
