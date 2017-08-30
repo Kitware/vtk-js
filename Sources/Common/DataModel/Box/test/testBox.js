@@ -13,7 +13,7 @@ test('Test vtkBox intersectBox', (t) => {
   const orig = [100, 0, 0];
   const dir = [-100, 0, 0];
   let coord = [];
-  let tol = [];
+  const tol = [];
 
   // Orig outside and intersect with dir
   const hit = vtkBox.intersectBox(bounds, orig, dir, coord, tol);
