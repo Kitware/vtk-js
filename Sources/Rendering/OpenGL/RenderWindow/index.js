@@ -120,6 +120,28 @@ function vtkOpenGLRenderWindow(publicAPI, model) {
   publicAPI.normalizedDisplayToDisplay = (x, y, z) =>
     [x * model.size[0], y * model.size[1], z];
 
+  publicAPI.worldToView = (x, y, z, renderer) => {
+    const dims = publicAPI.getViewportSize(renderer);
+    return renderer.worldToView(y, y, z, dims[0] / dims[1]);
+  };
+
+  publicAPI.viewToWorld = (x, y, z, renderer) => {
+    const dims = publicAPI.getViewportSize(renderer);
+    return renderer.viewToWorld(y, y, z, dims[0] / dims[1]);
+  };
+
+  publicAPI.worldToDisplay = (x, y, z, renderer) => {
+    const val = publicAPI.worldToView(x, y, z, renderer);
+    const val2 = renderer.viewToNormalizedDisplay(val[0], val[1], val[2]);
+    return publicAPI.normalizedDisplayToDisplay(val2[0], val2[1], val2[2]);
+  };
+
+  publicAPI.displayToWorld = (x, y, z, renderer) => {
+    const val = publicAPI.displayToNormalized(x, y, z);
+    const val2 = renderer.normalizedDisplayToView(val[0], val[1], val[2]);
+    return publicAPI.viewToWorld(val2[0], val2[1], val2[2], renderer);
+  };
+
   publicAPI.getPixelData = (x1, y1, x2, y2) => {
     const pixels = new Uint8Array((x2 - x1 + 1) * (y2 - y1 + 1) * 4);
     model.context.readPixels(

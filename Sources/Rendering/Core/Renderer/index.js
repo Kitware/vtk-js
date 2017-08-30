@@ -200,20 +200,23 @@ function vtkRenderer(publicAPI, model) {
     model.createdLight.setFocalPoint(publicAPI.getActiveCamera().getFocalPoint());
   };
 
-  publicAPI.normalizedDisplayToWorld = (x, y, z) => {
+  // requires the aspect ratio of the viewport as X/Y
+  publicAPI.normalizedDisplayToWorld = (x, y, z, aspect) => {
     const vpd = publicAPI.normalizedDisplayToView(x, y, z);
 
-    return publicAPI.viewToWorld(vpd[0], vpd[1], vpd[2]);
+    return publicAPI.viewToWorld(vpd[0], vpd[1], vpd[2], aspect);
   };
 
-  publicAPI.worldToNormalizedDisplay = (x, y, z) => {
+  // requires the aspect ratio of the viewport as X/Y
+  publicAPI.worldToNormalizedDisplay = (x, y, z, aspect) => {
     const vpd = publicAPI.worldToView(x, y, z);
 
-    return publicAPI.viewToNormalizedDisplay(vpd[0], vpd[1], vpd[2]);
+    return publicAPI.viewToNormalizedDisplay(vpd[0], vpd[1], vpd[2], aspect);
   };
 
 
-  publicAPI.viewToWorld = (x, y, z) => {
+  // requires the aspect ratio of the viewport as X/Y
+  publicAPI.viewToWorld = (x, y, z, aspect) => {
     if (model.activeCamera === null) {
       vtkErrorMacro('ViewToWorld: no active camera, cannot compute view to world, returning 0,0,0');
       return [0, 0, 0];
@@ -221,8 +224,7 @@ function vtkRenderer(publicAPI, model) {
 
     // get the perspective transformation from the active camera
     const matrix = model.activeCamera
-      .getCompositeProjectionTransformMatrix(1.0, 0, 1);
-//                    publicAPI.getTiledAspectRatio(), 0, 1);
+      .getCompositeProjectionTransformMatrix(aspect, -1.0, 1.0);
 
     mat4.invert(matrix, matrix);
     mat4.transpose(matrix, matrix);
@@ -234,7 +236,8 @@ function vtkRenderer(publicAPI, model) {
   };
 
   // Convert world point coordinates to view coordinates.
-  publicAPI.worldToView = (x, y, z) => {
+  // requires the aspect ratio of the viewport as X/Y
+  publicAPI.worldToView = (x, y, z, aspect) => {
     if (model.activeCamera === null) {
       vtkErrorMacro('ViewToWorld: no active camera, cannot compute view to world, returning 0,0,0');
       return [0, 0, 0];
@@ -242,8 +245,7 @@ function vtkRenderer(publicAPI, model) {
 
     // get the perspective transformation from the active camera
     const matrix = model.activeCamera
-      .getCompositeProjectionTransformMatrix(1.0, 0, 1);
-//                    publicAPI.getTiledAspectRatio(), 0, 1);
+      .getCompositeProjectionTransformMatrix(aspect, -1.0, 1.0);
     mat4.transpose(matrix, matrix);
 
     const result = vec3.fromValues(x, y, z);

@@ -58,10 +58,8 @@ function vtkInteractorObserver(publicAPI, model) {
       return null;
     }
 
-    const ndp =
-      model.interactor.getView().displayToNormalizedDisplay(x, y, z);
-
-    return model.currentRenderer.normalizedDisplayToWorld(ndp[0], ndp[1], ndp[2]);
+    return model.interactor.getView().displayToWorld(
+      x, y, z, model.currentRenderer);
   };
 
   //----------------------------------------------------------------------------
@@ -72,9 +70,8 @@ function vtkInteractorObserver(publicAPI, model) {
       return null;
     }
 
-    const ndp = model.currentRenderer.worldToNormalizedDisplay(x, y, z);
-
-    return model.interactor.getView().normalizedDisplayToDisplay(ndp[0], ndp[1], ndp[2]);
+    return model.interactor.getView().worldToDisplay(
+      x, y, z, model.currentRenderer);
   };
 
   //----------------------------------------------------------------------------
