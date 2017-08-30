@@ -761,6 +761,7 @@ export function extend(publicAPI, model, initialValues = {}) {
     'desiredUpdateRate',
     'stillUpdateRate',
     'key',
+    'picker',
   ]);
 
   macro.getArray(publicAPI, model, [
