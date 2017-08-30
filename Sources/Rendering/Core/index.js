@@ -1,5 +1,6 @@
 import vtkAbstractMapper          from './AbstractMapper';
 import vtkAbstractMapper3D        from './AbstractMapper3D';
+import vtkAbstractPicker          from './AbstractPicker';
 import vtkActor                   from './Actor';
 import vtkActor2D                 from './Actor2D';
 import vtkCamera                  from './Camera';
@@ -12,6 +13,8 @@ import vtkInteractorObserver      from './InteractorObserver';
 import vtkInteractorStyle         from './InteractorStyle';
 import vtkLight                   from './Light';
 import vtkMapper                  from './Mapper';
+import vtkPicker                  from './Picker';
+import vtkPointPicker             from './PointPicker';
 import vtkProp                    from './Prop';
 import vtkProp3D                  from './Prop3D';
 import vtkProperty                from './Property';
@@ -31,6 +34,7 @@ import vtkVolumeProperty          from './VolumeProperty';
 export default {
   vtkAbstractMapper,
   vtkAbstractMapper3D,
+  vtkAbstractPicker,
   vtkActor,
   vtkActor2D,
   vtkCamera,
@@ -43,6 +47,8 @@ export default {
   vtkInteractorStyle,
   vtkLight,
   vtkMapper,
+  vtkPicker,
+  vtkPointPicker,
   vtkProp,
   vtkProp3D,
   vtkProperty,
