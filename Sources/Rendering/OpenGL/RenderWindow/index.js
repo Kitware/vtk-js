@@ -137,7 +137,7 @@ function vtkOpenGLRenderWindow(publicAPI, model) {
   };
 
   publicAPI.displayToWorld = (x, y, z, renderer) => {
-    const val = publicAPI.displayToNormalized(x, y, z);
+    const val = publicAPI.displayToNormalizedDisplay(x, y, z);
     const val2 = renderer.normalizedDisplayToView(val[0], val[1], val[2]);
     return publicAPI.viewToWorld(val2[0], val2[1], val2[2], renderer);
   };
