@@ -10,6 +10,7 @@ import vtkPlane             from './Plane';
 import vtkPointSet          from './PointSet';
 import vtkPolyData          from './PolyData';
 import vtkStructuredData    from './StructuredData';
+import vtkTriangle          from './Triangle';
 
 export default {
   vtkBoundingBox,
@@ -24,4 +25,5 @@ export default {
   vtkPointSet,
   vtkPolyData,
   vtkStructuredData,
+  vtkTriangle,
 };
