@@ -1,5 +1,6 @@
 import vtkBoundingBox       from './BoundingBox';
 import vtkBox               from './Box';
+import vtkCell              from './Cell';
 import vtkDataSet           from './DataSet';
 import vtkDataSetAttributes from './DataSetAttributes';
 import vtkImageData         from './ImageData';
@@ -13,6 +14,7 @@ import vtkStructuredData    from './StructuredData';
 export default {
   vtkBoundingBox,
   vtkBox,
+  vtkCell,
   vtkDataSet,
   vtkDataSetAttributes,
   vtkImageData,
