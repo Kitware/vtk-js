@@ -300,6 +300,29 @@ function vtkTriangle(publicAPI, model) {
 
     return outObj;
   };
+
+  publicAPI.getParametricDistance = (pcoords) => {
+    let pDist;
+    let pDistMax = 0.0;
+    const pc = [];
+    pc[0] = pcoords[0];
+    pc[1] = pcoords[1];
+    pc[2] = 1.0 - pcoords[0] - pcoords[1];
+
+    for (let i = 0; i < 3; i++) {
+      if (pc[i] < 0.0) {
+        pDist = -pc[i];
+      } else if (pc[i] > 1.0) {
+        pDist = pc[i] - 1.0;
+      } else { // inside the cell in the parametric direction
+        pDist = 0.0;
+      }
+      if (pDist > pDistMax) {
+        pDistMax = pDist;
+      }
+    }
+    return pDistMax;
+  };
 }
 
 // ----------------------------------------------------------------------------
