@@ -60,6 +60,25 @@ function vtkCell(publicAPI, model) {
     return length;
   };
 
+  publicAPI.getParametricDistance = (pcoords) => {
+    let pDist;
+    let pDistMax = 0.0;
+
+    for (let i = 0; i < 3; i++) {
+      if (pcoords[i] < 0.0) {
+        pDist = -pcoords[i];
+      } else if (pcoords[i] > 1.0) {
+        pDist = pcoords[i] - 1.0;
+      } else { // inside the cell in the parametric direction
+        pDist = 0.0;
+      }
+      if (pDist > pDistMax) {
+        pDistMax = pDist;
+      }
+    }
+    return pDistMax;
+  };
+
   publicAPI.getNumberOfPoints = () => model.points.getNumberOfPoints();
 
   publicAPI.getCellDimension = () => {}; // virtual
