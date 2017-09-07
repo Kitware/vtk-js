@@ -331,8 +331,14 @@ function normalize2D(x) {
   return den;
 }
 
-function determinant2x2(c1, c2) {
-  return ((c1[0] * c2[1]) - (c2[0] * c1[1]));
+function determinant2x2(a, b, c, d) {
+  if (arguments.length === 2) {
+    return ((a[0] * b[1]) - (b[0] * a[1]));
+  }
+  if (arguments.length === 4) {
+    return (a * d) - (b * c);
+  }
+  return Number.NaN;
 }
 
 function LUFactor3x3(mat_3x3, index_3) {
