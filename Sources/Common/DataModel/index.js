@@ -4,6 +4,7 @@ import vtkCell              from './Cell';
 import vtkDataSet           from './DataSet';
 import vtkDataSetAttributes from './DataSetAttributes';
 import vtkImageData         from './ImageData';
+import vtkLine              from './Line';
 import vtkMolecule          from './Molecule';
 import vtkPiecewiseFunction from './PiecewiseFunction';
 import vtkPlane             from './Plane';
@@ -19,6 +20,7 @@ export default {
   vtkDataSet,
   vtkDataSetAttributes,
   vtkImageData,
+  vtkLine,
   vtkMolecule,
   vtkPiecewiseFunction,
   vtkPlane,
