@@ -331,12 +331,12 @@ function normalize2D(x) {
   return den;
 }
 
-function determinant2x2(a, b, c, d) {
-  if (arguments.length === 2) {
-    return ((a[0] * b[1]) - (b[0] * a[1]));
+function determinant2x2(...args) {
+  if (args.length === 2) {
+    return ((args[0][0] * args[1][1]) - (args[1][0] * args[0][1]));
   }
-  if (arguments.length === 4) {
-    return (a * d) - (b * c);
+  if (args.length === 4) {
+    return (args[0] * args[3]) - (args[1] * args[2]);
   }
   return Number.NaN;
 }
