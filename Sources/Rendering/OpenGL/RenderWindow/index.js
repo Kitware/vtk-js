@@ -122,12 +122,12 @@ function vtkOpenGLRenderWindow(publicAPI, model) {
 
   publicAPI.worldToView = (x, y, z, renderer) => {
     const dims = publicAPI.getViewportSize(renderer);
-    return renderer.worldToView(y, y, z, dims[0] / dims[1]);
+    return renderer.worldToView(x, y, z, dims[0] / dims[1]);
   };
 
   publicAPI.viewToWorld = (x, y, z, renderer) => {
     const dims = publicAPI.getViewportSize(renderer);
-    return renderer.viewToWorld(y, y, z, dims[0] / dims[1]);
+    return renderer.viewToWorld(x, y, z, dims[0] / dims[1]);
   };
 
   publicAPI.worldToDisplay = (x, y, z, renderer) => {
