@@ -4,6 +4,7 @@ import vtkAbstractPicker          from './AbstractPicker';
 import vtkActor                   from './Actor';
 import vtkActor2D                 from './Actor2D';
 import vtkCamera                  from './Camera';
+import vtkCellPicker              from './CellPicker';
 import vtkColorTransferFunction   from './ColorTransferFunction';
 import vtkCoordinate              from './Coordinate';
 import vtkImageMapper             from './ImageMapper';
@@ -38,6 +39,7 @@ export default {
   vtkActor,
   vtkActor2D,
   vtkCamera,
+  vtkCellPicker,
   vtkColorTransferFunction,
   vtkCoordinate,
   vtkImageMapper,
