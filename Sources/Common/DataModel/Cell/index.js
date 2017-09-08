@@ -104,7 +104,7 @@ export function extend(publicAPI, model, initialValues = {}) {
 
   model.points = vtkPoints.newInstance();
 
-  macro.get(publicAPI, macro, ['points', 'pointsIds']);
+  macro.get(publicAPI, model, ['points', 'pointsIds']);
 
   vtkCell(publicAPI, model);
 }
