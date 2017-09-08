@@ -29,6 +29,8 @@ function vtkPicker(publicAPI, model) {
 
     model.mapper = null;
     model.dataSet = null;
+
+    model.globalTMin = Number.MAX_VALUE;
   }
 
   // Intersect data with specified ray.
@@ -195,18 +197,18 @@ function vtkPicker(publicAPI, model) {
       }
 
       if (pickable) {
-        const matrix = prop.getMatrix();
-        mat4.invert(matrix, matrix);
+        model.transformMatrix = prop.getMatrix();
+        mat4.invert(model.transformMatrix, model.transformMatrix);
         // Extract scale
-        const col1 = [matrix[0], matrix[1], matrix[2]];
-        const col2 = [matrix[4], matrix[5], matrix[6]];
-        const col3 = [matrix[8], matrix[9], matrix[10]];
+        const col1 = [model.transformMatrix[0], model.transformMatrix[1], model.transformMatrix[2]];
+        const col2 = [model.transformMatrix[4], model.transformMatrix[5], model.transformMatrix[6]];
+        const col3 = [model.transformMatrix[8], model.transformMatrix[9], model.transformMatrix[10]];
         scale[0] = vtkMath.norm(col1);
         scale[1] = vtkMath.norm(col2);
         scale[2] = vtkMath.norm(col3);
 
-        vec3.transformMat4(p1Mapper, p1World, matrix);
-        vec3.transformMat4(p2Mapper, p2World, matrix);
+        vec3.transformMat4(p1Mapper, p1World, model.transformMatrix);
+        vec3.transformMat4(p2Mapper, p2World, model.transformMatrix);
 
         for (let i = 0; i < 3; i++) {
           ray[i] = p2Mapper[i] - p1Mapper[i];
@@ -269,6 +271,8 @@ const DEFAULT_VALUES = {
   dataSet: null,
   actors: [],
   pickedPositions: [],
+  transformMatrix: null,
+  globalTMin: Number.MAX_VALUE,
 };
 
 // ----------------------------------------------------------------------------
