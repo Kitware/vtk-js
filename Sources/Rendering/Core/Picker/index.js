@@ -36,7 +36,6 @@ function vtkPicker(publicAPI, model) {
   // Intersect data with specified ray.
   // Project the center point of the mapper onto the ray and determine its parametric value
   publicAPI.intersectWithLine = (p1, p2, tol, mapper) => {
-    console.log('vtkPicker : intersectWithLine');
     if (!mapper) {
       return Number.MAX_VALUE;
     }
@@ -186,8 +185,11 @@ function vtkPicker(publicAPI, model) {
     }
 
     tol = Math.sqrt(tol) * model.tolerance;
-
-    props = renderer.getActors();
+    if (model.pickFromList) {
+      props = model.pickList;
+    } else {
+      props = renderer.getActors();
+    }
     const scale = [];
     props.forEach((prop) => {
       const mapper = prop.getMapper();
@@ -251,13 +253,6 @@ function vtkPicker(publicAPI, model) {
       return 1;
     });
   };
-
-  // publicAPI.pick = (selectionPt, renderer) => {
-  //   if (selectionPt.length !== 3) {
-  //     vtkWarningMacro('vtkPicker::pick: selectionPt needs three components');
-  //   }
-  //   model.pick(selectionPt[0], selectionPt[1], selectionPt[2], renderer);
-  // };
 }
 
 // ----------------------------------------------------------------------------

@@ -56,9 +56,9 @@ export function extend(publicAPI, model, initialValues = {}) {
   // Build VTK API
   macro.obj(publicAPI, model);
 
-  macro.get(publicAPI, model, ['renderer', 'pickList']);
+  macro.get(publicAPI, model, ['renderer']);
   macro.getArray(publicAPI, model, ['selectionPoint', 'pickPosition']);
-  macro.setGet(publicAPI, model, ['pickFromList']);
+  macro.setGet(publicAPI, model, ['pickFromList', 'pickList']);
 
   vtkAbstractPicker(publicAPI, model);
 }
