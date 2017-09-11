@@ -35,11 +35,18 @@ function vtkSLICSource(publicAPI, model) {
   publicAPI.addCluster = (centerX, centerY, centerZ, fnConst, fnDfDx, fnDfDy, fnDfDz) => {
     const id = model.clusters.length;
     model.clusters.push(new Float32Array([centerX, centerY, centerZ, fnConst, fnDfDx, fnDfDy, fnDfDz]));
+    publicAPI.modified();
     return id;
   };
 
   publicAPI.removeCluster = (id) => {
     model.clusters.splice(id, 1);
+    publicAPI.modified();
+  };
+
+  publicAPI.removeAllClusters = () => {
+    model.clusters = [];
+    publicAPI.modified();
   };
 
   publicAPI.updateCluster = (id, centerX, centerY, centerZ, fnConst, fnDfDx, fnDfDy, fnDfDz) => {
@@ -53,6 +60,7 @@ function vtkSLICSource(publicAPI, model) {
     model.clusters[id][4] = fnDfDx;
     model.clusters[id][5] = fnDfDy;
     model.clusters[id][6] = fnDfDz;
+    publicAPI.modified();
   };
 
   publicAPI.getNumberOfClusters = () => model.clusters.length;
