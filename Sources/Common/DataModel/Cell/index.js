@@ -81,6 +81,10 @@ function vtkCell(publicAPI, model) {
 
   publicAPI.getNumberOfPoints = () => model.points.getNumberOfPoints();
 
+  publicAPI.deepCopy = (cell) => {
+    cell.initialize(model.points.getNumberOfPoints(), model.pointsIds, model.points);
+  };
+
   publicAPI.getCellDimension = () => {}; // virtual
   publicAPI.intersectWithLine = (p1, p2, tol, t, x, pcoords, subId) => {}; // virtual
   publicAPI.evaluatePosition = (x, closestPoint, subId, pcoords, dist2, weights) => {}; // virtual
