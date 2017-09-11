@@ -142,6 +142,35 @@ function vtkOpenGLRenderWindow(publicAPI, model) {
     return publicAPI.viewToWorld(val2[0], val2[1], val2[2], renderer);
   };
 
+  publicAPI.normalizedDisplayToViewport = (x, y, z, renderer) => {
+    let vCoords = renderer.getViewport();
+    vCoords = publicAPI.normalizedDisplayToDisplay(vCoords[0], vCoords[1], 0.0);
+    const coords = publicAPI.normalizedDisplayToDisplay(x, y, z);
+    return [coords[0] - vCoords[0] - 0.5, coords[1] - vCoords[1] - 0.5, z];
+  };
+
+  publicAPI.viewportToNormalizedViewport = (x, y, z, renderer) => {
+    const size = publicAPI.getViewportSize(renderer);
+    if (size && size[0] !== 0 && size[1] !== 0) {
+      return [x / (size[0] - 1.0), y / (size[1] - 1.0), z];
+    }
+    return [x, y, z];
+  };
+
+  publicAPI.normalizedViewportToViewport = (x, y, z) =>
+    [x * (model.size[0] - 1.0), y * (model.size[1] - 1.0), z];
+
+  publicAPI.displayToLocalDisplay = (x, y, z) =>
+    [x, model.size[1] - y - 1, z];
+
+  publicAPI.viewportToNormalizedDisplay = (x, y, z, renderer) => {
+    let vCoords = renderer.getViewport();
+    vCoords = publicAPI.normalizedDisplayToDisplay(vCoords[0], vCoords[1], 0.0);
+    const x2 = x + vCoords[0] + 0.5;
+    const y2 = y + vCoords[1] + 0.5;
+    return publicAPI.displayToNormalizedDisplay(x2, y2, z);
+  };
+
   publicAPI.getPixelData = (x1, y1, x2, y2) => {
     const pixels = new Uint8Array((x2 - x1 + 1) * (y2 - y1 + 1) * 4);
     model.context.readPixels(
