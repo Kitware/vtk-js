@@ -13,6 +13,7 @@ const fullScreenRenderer = vtkFullScreenRenderWindow.newInstance();
 const renderer = fullScreenRenderer.getRenderer();
 const renderWindow = fullScreenRenderer.getRenderWindow();
 
+// Press shift+click to pick
 const picker = vtkCellPicker.newInstance();
 picker.setPickFromList(1);
 picker.initializePickList();
