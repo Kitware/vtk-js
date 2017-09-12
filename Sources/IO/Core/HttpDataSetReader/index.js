@@ -211,7 +211,7 @@ function vtkHttpDataSetReader(publicAPI, model) {
       const processNext = () => {
         if (arrayToFecth.length) {
           fetchArray(arrayToFecth.pop(), model.fetchGzip).then(processNext, error);
-        } else {
+        } else if (datasetObj) {
           // Perform array registration
           model.arrays
             .filter(array => array.registration)
