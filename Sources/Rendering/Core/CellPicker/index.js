@@ -159,7 +159,7 @@ function vtkCellPicker(publicAPI, model) {
   publicAPI.intersectWithLine = (p1, p2, tol, mapper) => {
     const t1 = 0.0;
     const t2 = 1.0;
-    let tMin;
+
     const vtkCellPickerPlaneTol = 1e-14;
 
     const clipLine = clipLineWithPlane(mapper, model.transformMatrix, p1, p2, t1, t2);
@@ -167,14 +167,14 @@ function vtkCellPicker(publicAPI, model) {
       return Number.MAX_VALUE;
     }
 
-    const vtkMapperString = 'vtkMapper';
-    if (vtkMapperString.localCompare(mapper.getClassName()) === 0) {
-      tMin = publicAPI.intersectActorWithLine(p1, p2, t1, t2, tol, mapper);
-    }
+    // const vtkMapperString = 'vtkMapper';
+    // if (vtkMapperString.localCompare(mapper.getClassName()) === 0) {
+    const tMin = publicAPI.intersectActorWithLine(p1, p2, t1, t2, tol, mapper);
+    // }
 
     if (tMin < model.globalTMin) {
       model.globalTMin = tMin;
-      if (Math.fabs(tMin - t1) < vtkCellPickerPlaneTol && clipLine.clippingPlaneId >= 0) {
+      if (Math.abs(tMin - t1) < vtkCellPickerPlaneTol && clipLine.clippingPlaneId >= 0) {
         model.mapperPosition[0] = (p1[0] * (1 - t1)) + (p2[0] * t1);
         model.mapperPosition[1] = (p1[1] * (1 - t1)) + (p2[1] * t1);
         model.mapperPosition[2] = (p1[2] * (1 - t1)) + (p2[2] * t1);
@@ -203,11 +203,10 @@ function vtkCellPicker(publicAPI, model) {
     let pDistMin = Number.MAX_VALUE;
     const minPCoords = [0, 0, 0];
     let minCellId = -1;
-    let minCell;
+    const minCell = vtkTriangle.newInstance();
     const x = [];
     const data = mapper.getInputData();
-    const vtkPolyDataString = 'vtkPolyData';
-    const isPolyData = vtkPolyDataString.localCompare(data.getClassName()) === 0 ? 1 : 0;
+    const isPolyData = 1;
 
     // Make a new p1 and p2 using the clipped t1 and t2
     const q1 = [0, 0, 0];
@@ -230,30 +229,32 @@ function vtkCellPicker(publicAPI, model) {
       // TODO when cell locator will be implemented
     } else {
       const cellObject = data.getPolys();
-      const dataPoints = data.getPoints();
+      const points = data.getPoints();
+      const pointsData = points.getData();
       const cellData = cellObject.getData();
       let cellId = 0;
       const pointsIdList = [-1, -1, -1];
+      const cell = vtkTriangle.newInstance();
+      const cellPoints = vtkPoints.newInstance();
       // cross all cells
-      for (let i = 0; i < cellData.length; i++) {
+      for (let i = 0; i < cellData.length; cellId++) {
         const pCoords = [0, 0, 0];
         const nbPointsInCell = cellData[i++];
-        const p = [];
-        ++cellId;
 
-        const cellPoints = vtkPoints.newInstance();
-        cellPoints.setNumberOfPoints(cellData[0]);
+        cellPoints.setNumberOfPoints(nbPointsInCell);
         cellPoints.setNumberOfComponents(3);
-
+        const cellPointsData = new Array(nbPointsInCell * 3);
         // Extract cell points
+        let cpt = 0;
         for (let j = 0; j < nbPointsInCell; j++) {
-          pointsIdList[j] = data[i];
-          dataPoints.getPoints(data[i++], p);
-          cellPoints.setPoint(j, p[0], p[1], p[2]);
+          pointsIdList[j] = cellData[i++];
+          cellPointsData[cpt++] = pointsData[pointsIdList[j] * 3];
+          cellPointsData[cpt++] = pointsData[(pointsIdList[j] * 3) + 1];
+          cellPointsData[cpt++] = pointsData[(pointsIdList[j] * 3) + 2];
         }
+        cellPoints.setData(cellPointsData);
 
         // Create cell from points
-        const cell = vtkTriangle.newInstance();
         cell.initialize(cellPoints.getNumberOfPoints(), pointsIdList, cellPoints);
 
         let cellPicked;
@@ -273,7 +274,7 @@ function vtkCellPicker(publicAPI, model) {
             tMin = cellPicked.t;
             pDistMin = pDist;
             minCellId = cellId;
-            minCell = cell;
+            cell.deepCopy(minCell);
             for (let k = 0; k < 3; k++) {
               minXYZ[k] = x[k];
               minPCoords[k] = pCoords[k];
@@ -284,7 +285,7 @@ function vtkCellPicker(publicAPI, model) {
     }
 
     if (minCellId >= 0 && tMin < model.globalTMin) {
-      model.resetPickInfo();
+      resetPickInfo();
       const nbPointsInCell = minCell.getNumberOfPoints();
       const weights = new Array(nbPointsInCell);
       for (let i = 0; i < nbPointsInCell; i++) {
@@ -292,8 +293,6 @@ function vtkCellPicker(publicAPI, model) {
       }
       const point = [];
       minCell.evaluateLocation(minPCoords, point, weights);
-
-      // TODO add pickTextureData + Texture
 
       // Return the polydata to the user
       model.dataSet = data;
@@ -345,8 +344,8 @@ const DEFAULT_VALUES = {
   cellId: -1,
   subId: -1,
   pCoords: [],
-  pointIJK: -1,
-  cellIJK: -1,
+  pointIJK: [],
+  cellIJK: [],
   pickNormal: [],
   mapperNormal: [],
   pointIds: [],
