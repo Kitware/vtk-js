@@ -567,7 +567,7 @@ function vtkOpenGLVolumeMapper(publicAPI, model) {
         ren.getLights().forEach((light) => {
           const status = light.getSwitch();
           if (status > 0) {
-            const dColor = light.getDiffuseColor();
+            const dColor = light.getColor();
             const intensity = light.getIntensity();
             lightColor[0] = dColor[0] * intensity;
             lightColor[1] = dColor[1] * intensity;

@@ -76,9 +76,7 @@ function vtkLight(publicAPI, model) {
 const DEFAULT_VALUES = {
   switch: true,
   intensity: 1,
-  ambientColor: [0, 0, 0],
-  diffuseColor: [1, 1, 1],
-  specularColor: [1, 1, 1],
+  color: [1, 1, 1],
   position: [0, 0, 1],
   focalPoint: [0, 0, 0],
   positional: false,
@@ -108,9 +106,7 @@ export function extend(publicAPI, model, initialValues = {}) {
     'shadowAttenuation',
   ]);
   macro.setGetArray(publicAPI, model, [
-    'ambientColor',
-    'diffuseColor',
-    'specularColor',
+    'color',
     'position',
     'focalPoint',
     'attenuationValues',
