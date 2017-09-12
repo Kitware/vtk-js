@@ -1,12 +1,14 @@
-import vtkActor                  from 'vtk.js/Sources/Rendering/Core/Actor';
-import vtkSphereMapper           from 'vtk.js/Sources/Rendering/Core/SphereMapper';
-import vtkMapper                 from 'vtk.js/Sources/Rendering/Core/Mapper';
-import vtkOpenGLRenderWindow     from 'vtk.js/Sources/Rendering/OpenGL/RenderWindow';
+import { mat4, vec3 }              from 'gl-matrix';
+
+import vtkActor                    from 'vtk.js/Sources/Rendering/Core/Actor';
+import vtkSphereMapper             from 'vtk.js/Sources/Rendering/Core/SphereMapper';
+import vtkMapper                   from 'vtk.js/Sources/Rendering/Core/Mapper';
+import vtkOpenGLRenderWindow       from 'vtk.js/Sources/Rendering/OpenGL/RenderWindow';
 import vtkPixelSpaceCallbackMapper from 'vtk.js/Sources/Rendering/Core/PixelSpaceCallbackMapper';
-import vtkRenderWindow           from 'vtk.js/Sources/Rendering/Core/RenderWindow';
-import vtkRenderWindowInteractor from 'vtk.js/Sources/Rendering/Core/RenderWindowInteractor';
-import vtkRenderer               from 'vtk.js/Sources/Rendering/Core/Renderer';
-import vtk                       from 'vtk.js/Sources/vtk';
+import vtkRenderWindow             from 'vtk.js/Sources/Rendering/Core/RenderWindow';
+import vtkRenderWindowInteractor   from 'vtk.js/Sources/Rendering/Core/RenderWindowInteractor';
+import vtkRenderer                 from 'vtk.js/Sources/Rendering/Core/Renderer';
+import vtk                         from 'vtk.js/Sources/vtk';
 
 // Need polydata registered in the vtk factory
 import 'vtk.js/Sources/Common/Core/Points';
@@ -226,12 +228,25 @@ planeActor.setMapper(planeMapper);
 const psMapper = vtkPixelSpaceCallbackMapper.newInstance();
 psMapper.setInputData(pointPoly);
 psMapper.setUseZValues(true);
-psMapper.setCallback((coordsList, depthBuffer) => {
+psMapper.setCallback((coordsList, camera, aspect, depthBuffer) => {
   if (textCtx && windowWidth > 0 && windowHeight > 0) {
+    const dataPoints = psMapper.getInputData().getPoints();
+
+    const viewMatrix = camera.getViewTransformMatrix();
+    mat4.transpose(viewMatrix, viewMatrix);
+    const projMatrix = camera.getProjectionTransformMatrix(aspect, -1, 1);
+    mat4.transpose(projMatrix, projMatrix);
+
     textCtx.clearRect(0, 0, windowWidth, windowHeight);
     coordsList.forEach((xy, idx) => {
+      const pdPoint = dataPoints.getPoint(idx);
+      const vc = vec3.fromValues(pdPoint[0], pdPoint[1], pdPoint[2]);
+      vec3.transformMat4(vc, vc, viewMatrix);
+      vc[2] += 0.5; // sphere mapper's radius
+      vec3.transformMat4(vc, vc, projMatrix);
+
       console.log(`Distance to camera: point = ${xy[2]}, depth buffer = ${xy[3]}`);
-      if ((xy[2] - 0.001) < xy[3]) {
+      if ((vc[2] - 0.001) < xy[3]) {
         textCtx.font = '12px serif';
         textCtx.textAlign = 'center';
         textCtx.textBaseline = 'middle';
