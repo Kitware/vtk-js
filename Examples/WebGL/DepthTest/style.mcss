@@ -1,0 +1,14 @@
+.container {
+    position: absolute;
+    top: 0;
+    right: 0;
+    bottom: 0;
+    left: 0;
+}
+
+.debugCanvas {
+    position: absolute;
+    bottom: 25px;
+    right: 25px;
+    z-index: 1;
+}

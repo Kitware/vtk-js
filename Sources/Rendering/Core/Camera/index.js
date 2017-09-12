@@ -284,12 +284,14 @@ function vtkCamera(publicAPI, model) {
     const at = model.focalPoint;
     const up = model.viewUp;
 
-    const result = mat4.lookAt(viewMatrix,
+    const result = mat4.create();
+    mat4.lookAt(viewMatrix,
       vec3.fromValues(eye[0], eye[1], eye[2]),  // eye
       vec3.fromValues(at[0], at[1], at[2]),     // at
       vec3.fromValues(up[0], up[1], up[2]));    // up
 
-    mat4.transpose(result, result);
+    mat4.transpose(viewMatrix, viewMatrix);
+    mat4.copy(result, viewMatrix);
     return result;
   };
 
@@ -348,14 +350,18 @@ function vtkCamera(publicAPI, model) {
       projectionMatrix[15] = 0.0;
     }
 
-    return projectionMatrix;
+    const result = mat4.create();
+    mat4.copy(result, projectionMatrix);
+
+    return result;
   };
 
   publicAPI.getCompositeProjectionTransformMatrix = (aspect, nearz, farz) => {
     const vMat = publicAPI.getViewTransformMatrix();
     const pMat = publicAPI.getProjectionTransformMatrix(aspect, nearz, farz);
-    mat4.multiply(pMat, vMat, pMat);
-    return pMat;
+    const result = mat4.create();
+    mat4.multiply(result, vMat, pMat);
+    return result;
   };
 
   // publicAPI.getProjectionTransformMatrix = renderer => {

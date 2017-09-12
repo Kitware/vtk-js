@@ -34,7 +34,7 @@ function vtkForwardPass(publicAPI, model) {
     viewNode.traverse(publicAPI);
 
     // do we need to capture a zbuffer?
-    if (model.opaqueActorCount > 0 && model.volumeCount > 0) {
+    if ((model.opaqueActorCount > 0 && model.volumeCount > 0) || model.depthRequested) {
       const size = viewNode.getSize();
       // make sure the framebuffer is setup
       if (model.framebuffer === null) {
@@ -91,6 +91,7 @@ const DEFAULT_VALUES = {
   translucentActorCount: 0,
   volumeCount: 0,
   framebuffer: null,
+  depthRequested: false,
 };
 
 // ----------------------------------------------------------------------------
@@ -100,6 +101,11 @@ export function extend(publicAPI, model, initialValues = {}) {
 
   // Build VTK API
   vtkRenderPass.extend(publicAPI, model, initialValues);
+
+  macro.get(publicAPI, model, ['framebuffer']);
+  macro.setGet(publicAPI, model, [
+    'depthRequested',
+  ]);
 
   // Object methods
   vtkForwardPass(publicAPI, model);

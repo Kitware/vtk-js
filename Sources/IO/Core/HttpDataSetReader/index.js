@@ -6,9 +6,14 @@ import vtk              from 'vtk.js/Sources/vtk';
 import macro            from 'vtk.js/Sources/macro';
 import DataAccessHelper from 'vtk.js/Sources/IO/Core/DataAccessHelper';
 import vtkDataArray     from 'vtk.js/Sources/Common/Core/DataArray';
+import vtkStringArray   from 'vtk.js/Sources/Common/Core/StringArray';
 
 const fieldDataLocations = ['pointData', 'cellData', 'fieldData'];
 const HTTP_DATA_ACCESS = DataAccessHelper.get('http');
+const ARRAY_BUILDERS = {
+  vtkDataArray,
+  vtkStringArray,
+};
 
 // ----------------------------------------------------------------------------
 // Global methods
@@ -206,12 +211,13 @@ function vtkHttpDataSetReader(publicAPI, model) {
       const processNext = () => {
         if (arrayToFecth.length) {
           fetchArray(arrayToFecth.pop(), model.fetchGzip).then(processNext, error);
-        } else {
+        } else if (datasetObj) {
           // Perform array registration
           model.arrays
             .filter(array => array.registration)
             .forEach((metaArray) => {
-              datasetObj[`get${macro.capitalize(metaArray.location)}`]()[metaArray.registration](vtkDataArray.newInstance(metaArray.array));
+              const newArray = ARRAY_BUILDERS[metaArray.array.vtkClass].newInstance(metaArray.array);
+              datasetObj[`get${macro.capitalize(metaArray.location)}`]()[metaArray.registration](newArray);
               delete metaArray.registration;
             });
           datasetObj.modified();
