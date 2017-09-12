@@ -1,6 +1,34 @@
 import macro from 'vtk.js/Sources/macro';
 
 // ----------------------------------------------------------------------------
+// Global methods
+// ----------------------------------------------------------------------------
+
+//----------------------------------------------------------------------------
+// Description:
+// Transform from world to display coordinates.
+function computeWorldToDisplay(renderer, x, y, z) {
+  const view = renderer.getRenderWindow().getView()[0];
+  return view.worldToDisplay(x, y, z, renderer);
+}
+
+//----------------------------------------------------------------------------
+// Description:
+// Transform from display to world coordinates.
+function computeDisplayToWorld(renderer, x, y, z) {
+  const view = renderer.getRenderWindow().getView()[0];
+  return view.displayToWorld(x, y, z, renderer);
+}
+
+// ----------------------------------------------------------------------------
+// Static API
+// ----------------------------------------------------------------------------
+export const STATIC = {
+  computeWorldToDisplay,
+  computeDisplayToWorld,
+};
+
+// ----------------------------------------------------------------------------
 // vtkInteractorObserver methods
 // ----------------------------------------------------------------------------
 
@@ -159,4 +187,4 @@ export const newInstance = macro.newInstance(extend, 'vtkInteractorObserver');
 
 // ----------------------------------------------------------------------------
 
-export default Object.assign({ newInstance, extend });
+export default Object.assign({ newInstance, extend }, STATIC);
