@@ -6,6 +6,7 @@ import vtkRenderWindow        from 'vtk.js/Sources/Rendering/Core/RenderWindow';
 import vtkRenderer            from 'vtk.js/Sources/Rendering/Core/Renderer';
 import vtkConeSource          from 'vtk.js/Sources/Filters/Sources/ConeSource';
 import vtkActor               from 'vtk.js/Sources/Rendering/Core/Actor';
+import vtkLight               from 'vtk.js/Sources/Rendering/Core/Light';
 import vtkMapper              from 'vtk.js/Sources/Rendering/Core/Mapper';
 
 import baseline from './testCone.png';
@@ -25,6 +26,15 @@ test.onlyIfWebGL('Test vtkConeSource Rendering', (t) => {
   renderWindow.addRenderer(renderer);
   renderer.setBackground(0.32, 0.34, 0.43);
 
+  const light1 = gc.registerResource(vtkLight.newInstance());
+  light1.setColor(1, 0, 1);
+  light1.setPosition(1, 0, 0);
+  const light2 = gc.registerResource(vtkLight.newInstance());
+  light2.setColor(1, 1, 0);
+  light2.setPosition(0, 1, 0);
+  renderer.addLight(light1);
+  renderer.addLight(light2);
+
   const actor = gc.registerResource(vtkActor.newInstance());
   renderer.addActor(actor);
 
@@ -32,6 +42,7 @@ test.onlyIfWebGL('Test vtkConeSource Rendering', (t) => {
   actor.setMapper(mapper);
 
   const coneSource = gc.registerResource(vtkConeSource.newInstance({ height: 1.0 }));
+  coneSource.setResolution(40);
   mapper.setInputConnection(coneSource.getOutputPort());
 
   // now create something to view it, in this case webgl

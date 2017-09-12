@@ -277,6 +277,11 @@ function vtkOpenGLPolyDataMapper(publicAPI, model) {
     const lastLightComplexity =
       model.lastBoundBO.get('lastLightComplexity').lastLightComplexity;
 
+    const lastLightCount =
+      model.lastBoundBO.get('lastLightCount').lastLightCount;
+
+    let sstring = [];
+
     switch (lastLightComplexity) {
       case 0: // no lighting or RENDER_VALUES
         FSSource = vtkShaderProgram.substitute(FSSource, '//VTK::Light::Impl', [
@@ -298,32 +303,35 @@ function vtkOpenGLPolyDataMapper(publicAPI, model) {
         break;
 
       case 2: // light kit
-        FSSource = vtkShaderProgram.substitute(FSSource, '//VTK::Light::Dec', [
-          // only allow for up to 6 active lights
-          'uniform int numberOfLights;',
-          // intensity weighted color
-          'uniform vec3 lightColor[6];',
-          'uniform vec3 lightDirectionVC[6]; // normalized',
-          'uniform vec3 lightHalfAngleVC[6]; // normalized']).result;
-        FSSource = vtkShaderProgram.substitute(FSSource, '//VTK::Light::Impl', [
+        for (let lc = 0; lc < lastLightCount; ++lc) {
+          sstring = sstring.concat([`uniform vec3 lightColor${lc};`,
+            `uniform vec3 lightDirectionVC${lc}; // normalized`,
+            `uniform vec3 lightHalfAngleVC${lc}; // normalized`]);
+        }
+        FSSource = vtkShaderProgram.substitute(FSSource,
+          '//VTK::Light::Dec', sstring).result;
+
+        sstring = [
           'vec3 diffuse = vec3(0,0,0);',
           '  vec3 specular = vec3(0,0,0);',
-          '  for (int lightNum = 0; lightNum < numberOfLights; lightNum++)',
-          '    {',
-          '    float df = max(0.0, dot(normalVCVSOutput, -lightDirectionVC[lightNum]));',
-          `    diffuse += ((df${shadowFactor}) * lightColor[lightNum]);`,
-          '    if (dot(normalVCVSOutput, lightDirectionVC[lightNum]) < 0.0)',
-          '      {',
-          '      float sf = pow( max(0.0, dot(lightHalfAngleVC[lightNum],normalVCVSOutput)), specularPower);',
-          `      specular += ((sf${shadowFactor}) * lightColor[lightNum]);`,
-          '      }',
-          '    }',
+          '  float df;'];
+        for (let lc = 0; lc < lastLightCount; ++lc) {
+          sstring = sstring.concat([
+            `  df = max(0.0, dot(normalVCVSOutput, -lightDirectionVC${lc}));`,
+            `  diffuse += ((df${shadowFactor}) * lightColor${lc});`,
+            `  if (dot(normalVCVSOutput, lightDirectionVC${lc}) < 0.0)`,
+            '    {',
+            `    float sf = pow( max(0.0, dot(lightHalfAngleVC${lc},normalVCVSOutput)), specularPower);`,
+            `    specular += ((sf${shadowFactor}) * lightColor${lc});`,
+            '    }']);
+        }
+        sstring = sstring.concat([
           '  diffuse = diffuse * diffuseColor;',
           '  specular = specular * specularColor;',
           '  gl_FragData[0] = vec4(ambientColor + diffuse + specular, opacity);',
-          '  //VTK::Light::Impl'],
-          false,
-          ).result;
+          '  //VTK::Light::Impl']);
+        FSSource = vtkShaderProgram.substitute(FSSource,
+          '//VTK::Light::Impl', sstring, false).result;
         break;
 
       case 3: // positional
@@ -835,6 +843,7 @@ function vtkOpenGLPolyDataMapper(publicAPI, model) {
 
   publicAPI.getNeedToRebuildShaders = (cellBO, ren, actor) => {
     let lightComplexity = 0;
+    let numberOfLights = 0;
 
     const primType = cellBO.getPrimitiveType();
 
@@ -860,7 +869,6 @@ function vtkOpenGLPolyDataMapper(publicAPI, model) {
       // consider the lighting complexity to determine which case applies
       // simple headlight, Light Kit, the whole feature set of VTK
       lightComplexity = 0;
-      let numberOfLights = 0;
 
       ren.getLights().forEach((light) => {
         const status = light.getSwitch();
@@ -887,8 +895,12 @@ function vtkOpenGLPolyDataMapper(publicAPI, model) {
     let needRebuild = false;
     const lastLightComplexity =
       model.lastBoundBO.get('lastLightComplexity').lastLightComplexity;
-    if (lastLightComplexity !== lightComplexity) {
+    const lastLightCount =
+      model.lastBoundBO.get('lastLightCount').lastLightCount;
+    if (lastLightComplexity !== lightComplexity ||
+        lastLightCount !== numberOfLights) {
       model.lastBoundBO.set({ lastLightComplexity: lightComplexity }, true);
+      model.lastBoundBO.set({ lastLightCount: numberOfLights }, true);
       needRebuild = true;
     }
 
@@ -1082,43 +1094,30 @@ function vtkOpenGLPolyDataMapper(publicAPI, model) {
     // bind some light settings
     let numberOfLights = 0;
 
-    const lightColor = [];
-    // const lightDirection = [];
-    // const lightHalfAngle = [];
     const lights = ren.getLights();
     Object.keys(lights).map(key => lights[key]).forEach((light) => {
       const status = light.getSwitch();
       if (status > 0.0) {
-        const dColor = light.getDiffuseColor();
+        const dColor = light.getColor();
         const intensity = light.getIntensity();
-        lightColor[numberOfLights][0] = dColor[0] * intensity;
-        lightColor[numberOfLights][1] = dColor[1] * intensity;
-        lightColor[numberOfLights][2] = dColor[2] * intensity;
+        const lightColor = [
+          dColor[0] * intensity,
+          dColor[1] * intensity,
+          dColor[2] * intensity];
         // get required info from light
-        // double *lfp = light.getTransformedFocalPoint();
-        // double *lp = light.getTransformedPosition();
-        // double lightDir[3];
-        // vtkMath::Subtract(lfp,lp,lightDir);
-        // vtkMath::Normalize(lightDir);
-        // double *tDir = viewTF.TransformNormal(lightDir);
-        // lightDirection[numberOfLights][0] = tDir[0];
-        // lightDirection[numberOfLights][1] = tDir[1];
-        // lightDirection[numberOfLights][2] = tDir[2];
-        // lightDir[0] = -tDir[0];
-        // lightDir[1] = -tDir[1];
-        // lightDir[2] = -tDir[2]+1.0;
-        // vtkMath::Normalize(lightDir);
-        // lightHalfAngle[numberOfLights][0] = lightDir[0];
-        // lightHalfAngle[numberOfLights][1] = lightDir[1];
-        // lightHalfAngle[numberOfLights][2] = lightDir[2];
+        const lightDirection = light.getDirection();
+        const lightHalfAngle = [
+          -lightDirection[0],
+          -lightDirection[1],
+          -lightDirection[2] + 1.0];
+        vtkMath.normalize(lightDirection);
+        program.setUniform3f(`lightColor${numberOfLights}`, lightColor);
+        program.setUniform3f(`lightDirectionVC${numberOfLights}`, lightDirection);
+        program.setUniform3f(`lightHalfAngleVC${numberOfLights}`, lightHalfAngle);
         numberOfLights++;
       }
     });
 
-    program.setUniform3fv('lightColor', numberOfLights, lightColor);
-    // program.setUniform3fv('lightDirectionVC', numberOfLights, lightDirection);
-    // program.setUniform3fv('lightHalfAngleVC', numberOfLights, lightHalfAngle);
-    program.setUniformi('numberOfLights', numberOfLights);
 
     // // we are done unless we have positional lights
     // ===> FIXME should be uncommented if we do something below otherwise it is useless
@@ -1585,7 +1584,7 @@ export function extend(publicAPI, model, initialValues = {}) {
     model.primitives[i] = vtkHelper.newInstance();
     model.primitives[i].setPrimitiveType(i);
     model.primitives[i].set(
-      { lastLightComplexity: 0, lastSelectionPass: -1 }, true);
+      { lastLightComplexity: 0, lastLightCount: 0, lastSelectionPass: -1 }, true);
   }
 
   // Build VTK API
