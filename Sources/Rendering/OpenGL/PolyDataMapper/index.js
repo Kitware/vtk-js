@@ -1,4 +1,4 @@
-import { mat3, mat4 } from 'gl-matrix';
+import { mat3, mat4, vec3 } from 'gl-matrix';
 
 import macro                        from 'vtk.js/Sources/macro';
 import vtkHelper                    from 'vtk.js/Sources/Rendering/OpenGL/Helper';
@@ -335,68 +335,71 @@ function vtkOpenGLPolyDataMapper(publicAPI, model) {
         break;
 
       case 3: // positional
-        FSSource = vtkShaderProgram.substitute(FSSource, '//VTK::Light::Dec', [
-          // only allow for up to 6 active lights
-          'uniform int numberOfLights;',
-          // intensity weighted color
-          'uniform vec3 lightColor[6];',
-          'uniform vec3 lightDirectionVC[6]; // normalized',
-          'uniform vec3 lightHalfAngleVC[6]; // normalized',
-          'uniform vec3 lightPositionVC[6];',
-          'uniform vec3 lightAttenuation[6];',
-          'uniform float lightConeAngle[6];',
-          'uniform float lightExponent[6];',
-          'uniform int lightPositional[6];'],
-        ).result;
-        FSSource = vtkShaderProgram.substitute(FSSource, '//VTK::Light::Impl', [
-          '  vec3 diffuse = vec3(0,0,0);',
+        for (let lc = 0; lc < lastLightCount; ++lc) {
+          sstring = sstring.concat([`uniform vec3 lightColor${lc};`,
+            `uniform vec3 lightDirectionVC${lc}; // normalized`,
+            `uniform vec3 lightHalfAngleVC${lc}; // normalized`,
+            `uniform vec3 lightPositionVC${lc};`,
+            `uniform vec3 lightAttenuation${lc};`,
+            `uniform float lightConeAngle${lc};`,
+            `uniform float lightExponent${lc};`,
+            `uniform int lightPositional${lc};`]);
+        }
+        FSSource = vtkShaderProgram.substitute(FSSource,
+          '//VTK::Light::Dec', sstring).result;
+
+        sstring = [
+          'vec3 diffuse = vec3(0,0,0);',
           '  vec3 specular = vec3(0,0,0);',
           '  vec3 vertLightDirectionVC;',
-          '  for (int lightNum = 0; lightNum < numberOfLights; lightNum++)',
-          '    {',
-          '    float attenuation = 1.0;',
-          '    if (lightPositional[lightNum] == 0)',
-          '      {',
-          '      vertLightDirectionVC = lightDirectionVC[lightNum];',
-          '      }',
-          '    else',
-          '      {',
-          '      vertLightDirectionVC = vertexVC.xyz - lightPositionVC[lightNum];',
-          '      float distanceVC = length(vertLightDirectionVC);',
-          '      vertLightDirectionVC = normalize(vertLightDirectionVC);',
-          '      attenuation = 1.0 /',
-          '        (lightAttenuation[lightNum].x',
-          '         + lightAttenuation[lightNum].y * distanceVC',
-          '         + lightAttenuation[lightNum].z * distanceVC * distanceVC);',
-          '      // per OpenGL standard cone angle is 90 or less for a spot light',
-          '      if (lightConeAngle[lightNum] <= 90.0)',
-          '        {',
-          '        float coneDot = dot(vertLightDirectionVC, lightDirectionVC[lightNum]);',
-          '        // if inside the cone',
-          '        if (coneDot >= cos(radians(lightConeAngle[lightNum])))',
-          '          {',
-          '          attenuation = attenuation * pow(coneDot, lightExponent[lightNum]);',
-          '          }',
-          '        else',
-          '          {',
-          '          attenuation = 0.0;',
-          '          }',
-          '        }',
-          '      }',
-          '    float df = max(0.0, attenuation*dot(normalVCVSOutput, -vertLightDirectionVC));',
-          `    diffuse += ((df${shadowFactor}) * lightColor[lightNum]);`,
-          '    if (dot(normalVCVSOutput, vertLightDirectionVC) < 0.0)',
-          '      {',
-          '      float sf = attenuation*pow( max(0.0, dot(lightHalfAngleVC[lightNum],normalVCVSOutput)), specularPower);',
-          `      specular += ((sf${shadowFactor}) * lightColor[lightNum]);`,
-          '      }',
-          '    }',
+          '  float attenuation;',
+          '  float df;'];
+        for (let lc = 0; lc < lastLightCount; ++lc) {
+          sstring = sstring.concat([
+            '  attenuation = 1.0;',
+            `  if (lightPositional${lc} == 0)`,
+            '    {',
+            `      vertLightDirectionVC = lightDirectionVC${lc};`,
+            '    }',
+            '  else',
+            '    {',
+            `    vertLightDirectionVC = vertexVC.xyz - lightPositionVC${lc};`,
+            '    float distanceVC = length(vertLightDirectionVC);',
+            '    vertLightDirectionVC = normalize(vertLightDirectionVC);',
+            '    attenuation = 1.0 /',
+            `      (lightAttenuation${lc}.x`,
+            `       + lightAttenuation${lc}.y * distanceVC`,
+            `       + lightAttenuation${lc}.z * distanceVC * distanceVC);`,
+            '    // per OpenGL standard cone angle is 90 or less for a spot light',
+            `    if (lightConeAngle${lc} <= 90.0)`,
+            '      {',
+            `      float coneDot = dot(vertLightDirectionVC, lightDirectionVC${lc});`,
+            '      // if inside the cone',
+            `      if (coneDot >= cos(radians(lightConeAngle${lc})))`,
+            '        {',
+            `        attenuation = attenuation * pow(coneDot, lightExponent${lc});`,
+            '        }',
+            '      else',
+            '        {',
+            '        attenuation = 0.0;',
+            '        }',
+            '      }',
+            '    }',
+            '    df = max(0.0, attenuation*dot(normalVCVSOutput, -vertLightDirectionVC));',
+            `    diffuse += ((df${shadowFactor}) * lightColor${lc});`,
+            '    if (dot(normalVCVSOutput, vertLightDirectionVC) < 0.0)',
+            '      {',
+            `      float sf = attenuation*pow( max(0.0, dot(lightHalfAngleVC${lc},normalVCVSOutput)), specularPower);`,
+            `    specular += ((sf${shadowFactor}) * lightColor${lc});`,
+            '    }']);
+        }
+        sstring = sstring.concat([
           '  diffuse = diffuse * diffuseColor;',
           '  specular = specular * specularColor;',
           '  gl_FragData[0] = vec4(ambientColor + diffuse + specular, opacity);',
-          '  //VTK::Light::Impl'],
-          false,
-          ).result;
+          '  //VTK::Light::Impl']);
+        FSSource = vtkShaderProgram.substitute(FSSource,
+          '//VTK::Light::Impl', sstring, false).result;
         break;
       default:
         vtkErrorMacro('bad light complexity');
@@ -1087,10 +1090,6 @@ function vtkOpenGLPolyDataMapper(publicAPI, model) {
 
     const program = cellBO.getProgram();
 
-    // for lightkit case there are some parameters to set
-    // const cam = ren.getActiveCamera();
-    // const viewTF = cam.getModelViewTransformObject();
-
     // bind some light settings
     let numberOfLights = 0;
 
@@ -1119,45 +1118,33 @@ function vtkOpenGLPolyDataMapper(publicAPI, model) {
     });
 
 
-    // // we are done unless we have positional lights
-    // ===> FIXME should be uncommented if we do something below otherwise it is useless
-    // if (lastLightComplexity < 3) {
-    //   return;
-    // }
+    // we are done unless we have positional lights
+    if (lastLightComplexity < 3) {
+      return;
+    }
 
-    // // if positional lights pass down more parameters
-    // let lightAttenuation[6][3];
-    // let lightPosition[6][3];
-    // let lightConeAngle[6];
-    // let lightExponent[6];
-    // int lightPositional[6];
-    // numberOfLights = 0;
-    // for(lc.InitTraversal(sit);
-    //     (light = lc.getNextLight(sit)); )
-    //   {
-    //   let status = light.getSwitch();
-    //   if (status > 0.0)
-    //     {
-    //     double *attn = light.getAttenuationValues();
-    //     lightAttenuation[numberOfLights][0] = attn[0];
-    //     lightAttenuation[numberOfLights][1] = attn[1];
-    //     lightAttenuation[numberOfLights][2] = attn[2];
-    //     lightExponent[numberOfLights] = light.getExponent();
-    //     lightConeAngle[numberOfLights] = light.getConeAngle();
-    //     double *lp = light.getTransformedPosition();
-    //     double *tlp = viewTF.TransformPoint(lp);
-    //     lightPosition[numberOfLights][0] = tlp[0];
-    //     lightPosition[numberOfLights][1] = tlp[1];
-    //     lightPosition[numberOfLights][2] = tlp[2];
-    //     lightPositional[numberOfLights] = light.getPositional();
-    //     numberOfLights++;
-    //     }
-    //   }
-    // program.SetUniform3fv('lightAttenuation', numberOfLights, lightAttenuation);
-    // program.SetUniform1iv('lightPositional', numberOfLights, lightPositional);
-    // program.SetUniform3fv('lightPositionVC', numberOfLights, lightPosition);
-    // program.SetUniform1fv('lightExponent', numberOfLights, lightExponent);
-    // program.SetUniform1fv('lightConeAngle', numberOfLights, lightConeAngle);
+    // for lightkit case there are some parameters to set
+    const cam = ren.getActiveCamera();
+    const viewTF = cam.getViewTransformMatrix();
+    mat4.transpose(viewTF, viewTF);
+
+    numberOfLights = 0;
+
+    Object.keys(lights).map(key => lights[key]).forEach((light) => {
+      const status = light.getSwitch();
+      if (status > 0.0) {
+        const lp = light.getTransformedPosition();
+        const np = vec3.fromValues(lp[0], lp[1], lp[2]);
+        vec3.transformMat4(np, np, viewTF);
+        program.setUniform3f(`lightAttenuation${numberOfLights}`, light.getAttenuationValues());
+        program.setUniformi(`lightPositional${numberOfLights}`, light.getPositional());
+        program.setUniformf(`lightExponent${numberOfLights}`, light.getExponent());
+        program.setUniformf(`lightConeAngle${numberOfLights}`, light.getConeAngle());
+        program.setUniform3f(`lightPositionVC${numberOfLights}`,
+          [np[0], np[1], np[2]]);
+        numberOfLights++;
+      }
+    });
   };
 
   publicAPI.setCameraShaderParameters = (cellBO, ren, actor) => {
