@@ -301,6 +301,24 @@ function vtkTriangle(publicAPI, model) {
     return outObj;
   };
 
+  publicAPI.evaluateLocation = (pcoords, x, weights) => {
+    const p0 = [];
+    const p1 = [];
+    const p2 = [];
+    model.points.getPoint(0, p0);
+    model.points.getPoint(1, p1);
+    model.points.getPoint(2, p2);
+    const u3 = 1.0 - pcoords[0] - pcoords[1];
+
+    for (let i = 0; i < 3; i++) {
+      x[i] = (p0[i] * u3) + (p1[i] * pcoords[0]) + (p2[i] * pcoords[1]);
+    }
+
+    weights[0] = u3;
+    weights[1] = pcoords[0];
+    weights[2] = pcoords[1];
+  };
+
   publicAPI.getParametricDistance = (pcoords) => {
     let pDist;
     let pDistMax = 0.0;
