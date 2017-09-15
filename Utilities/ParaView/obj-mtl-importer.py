@@ -231,7 +231,8 @@ class MTLParser(object):
         if self.currentMaterial not in self.materials:
           self.materials[self.currentMaterial] = {}
 
-        self.materials[self.currentMaterial][tokens[0]] = tokens[1:]
+        if len(tokens) > 1:
+            self.materials[self.currentMaterial][tokens[0]] = tokens[1:]
 
   def applyMaterialToRepresentation(self, name, representation):
     material = self.materials[name] if name in self.materials else {}
