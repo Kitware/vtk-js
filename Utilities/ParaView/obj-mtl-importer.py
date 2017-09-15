@@ -18,7 +18,7 @@
 
 # -----------------------------------------------------------------------------
 
-from paraview.vtk import *
+from vtk import *
 from paraview import simple
 import os
 import sys
