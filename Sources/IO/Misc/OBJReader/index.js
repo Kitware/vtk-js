@@ -66,10 +66,12 @@ function parseLine(line) {
       data.size++;
     }
     const cells = data.f[data.size - 1];
-    const size = tokens.length - 1;
+    tokens.shift();
+    const faces = tokens.filter(s => s.length);
+    const size = faces.length;
     cells.push(size);
     for (let i = 0; i < size; i++) {
-      cells.push(faceMap(tokens[i + 1]));
+      cells.push(faceMap(faces[i]));
     }
   }
 }

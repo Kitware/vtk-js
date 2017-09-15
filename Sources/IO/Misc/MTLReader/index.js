@@ -26,6 +26,9 @@ function vtkMTLReader(publicAPI, model) {
       tokens.shift();
       model.currentMaterial = tokens.join(' ').trim();
     } else if (model.currentMaterial) {
+      if (tokens.length === 1) {
+        return;
+      }
       if (!model.materials[model.currentMaterial]) {
         model.materials[model.currentMaterial] = {};
       }
