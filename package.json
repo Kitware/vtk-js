@@ -39,6 +39,7 @@
         "kw-web-suite": "3.1.1",
         "prettier": "1.4.4",
         "resemblejs": "2.2.4",
+        "size-limit": "^0.11.3",
         "tap-markdown": "1.2.1",
         "tap-spec": "4.1.1",
         "tape": "4.6.3",
@@ -46,6 +47,7 @@
         "xml2js": "0.4.17"
     },
     "scripts": {
+        "size": "size-limit --why --config ./webpack.config.js",
         "validate": "prettier --single-quote --trailing-comma es5 --print-width 100 --list-different \"Sources/**/*.js\"",
         "reformat": "prettier --single-quote --trailing-comma es5 --print-width 100 --write \"Sources/**/*.js\"",
         "reformat-only": "prettier --single-quote --trailing-comma es5 --print-width 100 --write",
@@ -68,6 +70,12 @@
             "path": "node_modules/cz-conventional-changelog"
         }
     },
+    "size-limit": [
+      {
+        "path": "./Sources/index.js",
+        "limit": "200 KB"
+      }
+    ],
     "bin": {
         "vtkDataConverter": "./Utilities/DataGenerator/convert-cli.js",
         "xml2json": "./Utilities/XMLConverter/xml2json-cli.js"
