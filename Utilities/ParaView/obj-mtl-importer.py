@@ -121,10 +121,13 @@ class OBJParser(object):
           self.size += 1
 
         cells = self.f[self.size - 1];
-        size = len(tokens) - 1
+        tokens.pop(0)
+        while len(tokens[0]) == 0:
+            tokens.pop(0)
+        size = len(tokens)
         cells.append(size)
         for i in range(size):
-          cells.append(OBJParser.faceMap(tokens[i + 1]))
+          cells.append(OBJParser.faceMap(tokens[i]))
 
 
   def end(self):
