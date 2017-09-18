@@ -95,10 +95,10 @@ class OBJParser(object):
 
 
   def parseLine(self, line):
-      if len(line) == 0 or line[0] == '#':
+      if len(line.strip()) == 0 or line[0] == '#':
         return
 
-      tokens = line.strip().split(' ')
+      tokens = line.strip().split()
       if tokens[0] == self.splitOn:
         tokens.pop(0)
         self.pieces.append(' '.join(tokens).strip())
@@ -122,8 +122,6 @@ class OBJParser(object):
 
         cells = self.f[self.size - 1];
         tokens.pop(0)
-        while len(tokens[0]) == 0:
-            tokens.pop(0)
         size = len(tokens)
         cells.append(size)
         for i in range(size):
@@ -269,10 +267,10 @@ class MTLParser(object):
         representation.Ambient = 1.0 if 0 <= float(material['illum'][0]) else 0.0
         representation.Diffuse = 1.0 if 1 <= float(material['illum'][0]) else 0.0
         representation.Specular = 1.0 if 2 <= float(material['illum'][0]) else 0.0
-    else:
-        representation.Ambient = 1.0
-        representation.Diffuse = 1.0
-        representation.Specular = 1.0
+    # else:
+    #     representation.Ambient = 1.0
+    #     representation.Diffuse = 1.0
+    #     representation.Specular = 1.0
 
 
 

@@ -43,7 +43,7 @@ function parseLine(line) {
   if (line[0] === '#') {
     return;
   }
-  const tokens = line.split(' ');
+  const tokens = line.split(/[ \t]+/);
   if (tokens[0] === data.splitOn) {
     tokens.shift();
     data.pieces.push(tokens.join(' ').trim());
