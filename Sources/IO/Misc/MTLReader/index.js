@@ -21,7 +21,7 @@ function vtkMTLReader(publicAPI, model) {
       return;
     }
 
-    const tokens = line.split(' ');
+    const tokens = line.split(/[ \t]+/);
     if (tokens[0] === 'newmtl') {
       tokens.shift();
       model.currentMaterial = tokens.join(' ').trim();
