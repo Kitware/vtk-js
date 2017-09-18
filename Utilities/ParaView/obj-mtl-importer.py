@@ -221,10 +221,10 @@ class MTLParser(object):
               self.parseLine(line.rstrip('\n'))
 
   def parseLine(self, line):
-      if len(line) == 0 or line[0] == '#':
+      if len(line.strip()) == 0 or line[0] == '#':
         return
 
-      tokens = line.strip().split(' ')
+      tokens = line.strip().split()
       if tokens[0] == 'newmtl':
         tokens.pop(0);
         self.currentMaterial = ' '.join(tokens).strip()
