@@ -233,6 +233,8 @@ export function obj(publicAPI = {}, model = {}) {
 
     publicAPI.modified();
   };
+
+  publicAPI.getHierarchy = () => model.classHierarchy;
 }
 
 // ----------------------------------------------------------------------------

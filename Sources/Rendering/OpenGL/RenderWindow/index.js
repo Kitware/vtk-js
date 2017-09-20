@@ -356,6 +356,7 @@ export function extend(publicAPI, model, initialValues = {}) {
     'renderPasses',
     'notifyImageReady',
     'defaultToWebgl2',
+    'cursor',
   ]);
 
   macro.setGetArray(publicAPI, model, [

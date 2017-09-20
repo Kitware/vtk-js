@@ -737,6 +737,7 @@ export function extend(publicAPI, model, initialValues = {}) {
   // Create get-only macros
   macro.get(publicAPI, model, [
     'initialized',
+    'canvas',
     'enabled',
     'enableRender',
     'scale',

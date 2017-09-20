@@ -1,4 +1,5 @@
 import macro                   from 'vtk.js/Sources/macro';
+import vtkGenericWidgetRepresentation from 'vtk.js/Sources/Rendering/SceneGraph/GenericWidgetRepresentation';
 import vtkViewNodeFactory      from 'vtk.js/Sources/Rendering/SceneGraph/ViewNodeFactory';
 import vtkOpenGLActor          from 'vtk.js/Sources/Rendering/OpenGL/Actor';
 import vtkOpenGLActor2D        from 'vtk.js/Sources/Rendering/OpenGL/Actor2D';
@@ -57,6 +58,7 @@ export function extend(publicAPI, model, initialValues = {}) {
   publicAPI.registerOverride('vtkTexture', vtkOpenGLTexture.newInstance);
   publicAPI.registerOverride('vtkVolume', vtkOpenGLVolume.newInstance);
   publicAPI.registerOverride('vtkVolumeMapper', vtkOpenGLVolumeMapper.newInstance);
+  publicAPI.registerOverride('vtkWidgetRepresentation', vtkGenericWidgetRepresentation.newInstance);
 }
 
 // ----------------------------------------------------------------------------
