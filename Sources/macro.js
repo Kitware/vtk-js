@@ -136,7 +136,7 @@ export function obj(publicAPI = {}, model = {}) {
 
   publicAPI.isA = className => (model.classHierarchy.indexOf(className) !== -1);
 
-  publicAPI.getClassName = () => model.classHierarchy.slice(-1)[0];
+  publicAPI.getClassName = (depth = 0) => model.classHierarchy[model.classHierarchy.length - 1 - depth];
 
   publicAPI.set = (map = {}, noWarning = false, noFunction = false) => {
     let ret = false;
@@ -233,8 +233,6 @@ export function obj(publicAPI = {}, model = {}) {
 
     publicAPI.modified();
   };
-
-  publicAPI.getHierarchy = () => model.classHierarchy;
 }
 
 // ----------------------------------------------------------------------------

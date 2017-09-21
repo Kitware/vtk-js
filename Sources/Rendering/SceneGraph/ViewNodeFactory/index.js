@@ -15,20 +15,19 @@ function vtkViewNodeFactory(publicAPI, model) {
     if (dataObject.isDeleted()) {
       return null;
     }
-    // if (Object.keys(model.overrides).indexOf(dataObject.getClassName()) === -1) {
-    //   return null;
-    // }
 
-    const hierarchy = dataObject.getHierarchy();
+    let cpt = 0;
+    let className = dataObject.getClassName(cpt++);
     let isObject = false;
-    let className = '';
-    for (let i = hierarchy.length - 1; i > 0; i--) {
-      if (Object.keys(model.overrides).indexOf(hierarchy[i]) !== -1) {
+    const keys = Object.keys(model.overrides);
+    while (className && !isObject) {
+      if (keys.indexOf(className) !== -1) {
         isObject = true;
-        className = hierarchy[i];
-        break;
+      } else {
+        className = dataObject.getClassName(cpt++);
       }
     }
+
     if (!isObject) {
       return null;
     }
