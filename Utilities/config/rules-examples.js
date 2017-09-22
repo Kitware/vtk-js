@@ -1,7 +1,7 @@
 const autoprefixer = require('autoprefixer');
 
 module.exports = [
-  { test: /\.(png|jpg)$/, use: 'url-loader?limit=8192', exclude: /test[^\.]*\.(png|jpg)$/ },
+  { test: /\.(png|jpg)$/, use: 'url-loader?limit=81920', exclude: /test[^\.]*\.(png|jpg)$/ },
   { test: /\.html$/, loader: 'html-loader' },
   { test: /\.css$/, use: ['style-loader', 'css-loader', 'postcss-loader'] },
   { test: /\.mcss$/,
