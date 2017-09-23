@@ -1,5 +1,6 @@
 import * as macro from '../../../macro';
 import DataAccessHelper from '../../Core/DataAccessHelper';
+import vtkTexture        from '../../../Rendering/Core/Texture';
 
 // ----------------------------------------------------------------------------
 // vtkMTLReader methods
@@ -21,12 +22,12 @@ function vtkMTLReader(publicAPI, model) {
       return;
     }
 
-    const tokens = line.split(/[ \t]+/);
+    const tokens = line.split(/[ \t]+/).map(s => s.trim()).filter(s => s.length);
     if (tokens[0] === 'newmtl') {
       tokens.shift();
       model.currentMaterial = tokens.join(' ').trim();
     } else if (model.currentMaterial) {
-      if (tokens.length === 1) {
+      if (tokens.length < 2) {
         return;
       }
       if (!model.materials[model.currentMaterial]) {
@@ -98,6 +99,47 @@ function vtkMTLReader(publicAPI, model) {
 
   publicAPI.getMaterialNames = () => Object.keys(model.materials);
   publicAPI.getMaterial = name => model.materials[name];
+
+  publicAPI.listImages = () =>
+    Object.keys(model.materials)
+      .map(name => model.materials[name].map_Kd)
+      .filter(fileName => !!fileName)
+      .map(s => s[0].trim());
+
+  publicAPI.setImageSrc = (imagePath, src) => {
+    const selectedName = Object.keys(model.materials)
+      .find(name =>
+        (model.materials[name].map_Kd
+          && model.materials[name].map_Kd[0].trim() === imagePath.trim()));
+    const material = model.materials[selectedName];
+    if (material && material.image) {
+      material.image.src = src;
+    }
+  };
+
+  publicAPI.applyMaterialToActor = (name, actor) => {
+    const material = model.materials[name];
+    if (material && actor) {
+      const white = [1, 1, 1];
+      const actorProp = {
+        ambientColor: material.Ka ? material.Ka.map(i => Number(i)) : white,
+        specularColor: material.Ks ? material.Ks.map(i => Number(i)) : white,
+        diffuseColor: material.Kd ? material.Kd.map(i => Number(i)) : white,
+        opacity: material.d ? Number(material.d) : 1,
+        specularPower: material.Ns ? Number(material.Ns) : 1,
+      };
+      const illum = Number(material.illum || 2);
+      ['ambient', 'diffuse', 'specular'].forEach((k, idx) => {
+        actorProp[k] = (idx <= illum) ? 1.0 : 0.0;
+      });
+      if (material.image) {
+        const texture = vtkTexture.newInstance({ interpolate: true });
+        texture.setImage(material.image);
+        actor.addTexture(texture);
+      }
+      actor.getProperty().set(actorProp);
+    }
+  };
 }
 
 // ----------------------------------------------------------------------------
