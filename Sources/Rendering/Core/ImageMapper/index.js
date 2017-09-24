@@ -1,5 +1,8 @@
-import macro   from 'vtk.js/Sources/macro';
-import vtkMath from 'vtk.js/Sources/Common/Core/Math';
+import macro     from 'vtk.js/Sources/macro';
+import Constants from 'vtk.js/Sources/Rendering/Core/ImageMapper/Constants';
+import vtkMath   from 'vtk.js/Sources/Common/Core/Math';
+
+const { SlicingMode } = Constants;
 
 // ----------------------------------------------------------------------------
 // vtkImageMapper methods
@@ -22,6 +25,24 @@ function vtkImageMapper(publicAPI, model) {
     const idx = [];
     image.worldToIndex(fp, idx);
     publicAPI.setZSlice(Math.floor(idx[2] + 0.5));
+  };
+
+  publicAPI.setZSliceIndex = (id) => {
+    model.currentSlicingMode = SlicingMode.Z;
+    publicAPI.update();
+    publicAPI.setZSlice(id);
+  };
+
+  publicAPI.setYSliceIndex = (id) => {
+    model.currentSlicingMode = SlicingMode.Y;
+    publicAPI.update();
+    publicAPI.setYSlice(id);
+  };
+
+  publicAPI.setXSliceIndex = (id) => {
+    model.currentSlicingMode = SlicingMode.X;
+    publicAPI.update();
+    publicAPI.setXSlice(id);
   };
 
   publicAPI.getBounds = () => {
@@ -56,7 +77,10 @@ const DEFAULT_VALUES = {
   displayExtent: [0, 0, 0, 0, 0, 0],
   customDisplayExtent: [0, 0, 0, 0],
   useCustomExtents: false,
+  xSlice: 0,
+  ySlice: 0,
   zSlice: 0,
+  currentSlicingMode: SlicingMode.NONE,
   renderToRectangle: false,
   sliceAtFocalPoint: false,
 };
@@ -71,6 +95,9 @@ export function extend(publicAPI, model, initialValues = {}) {
   macro.algo(publicAPI, model, 1, 0);
 
   macro.setGet(publicAPI, model, [
+    'currentSlicingMode',
+    'xSlice',
+    'ySlice',
     'zSlice',
     'useCustomExtents',
     'renderToRectangle',
