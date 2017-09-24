@@ -1,7 +1,8 @@
+import vtkActor                   from 'vtk.js/Sources/Rendering/Core/Actor';
 import vtkFullScreenRenderWindow  from 'vtk.js/Sources/Rendering/Misc/FullScreenRenderWindow';
-import vtkOBJReader               from 'vtk.js/Sources/IO/Misc/OBJReader';
+import vtkMapper                  from 'vtk.js/Sources/Rendering/Core/Mapper';
 import vtkMTLReader               from 'vtk.js/Sources/IO/Misc/MTLReader';
-import vtkOBJRepresentation       from 'vtk.js/Sources/Representation/Geometry/OBJRepresentation';
+import vtkOBJReader               from 'vtk.js/Sources/IO/Misc/OBJReader';
 
 // const objs = ['ferrari-f1-race-car', 'mini-cooper', 'space-shuttle-orbiter', 'blskes-plane'];
 const fileName = 'space-shuttle-orbiter';
@@ -11,6 +12,11 @@ const fileName = 'space-shuttle-orbiter';
 // ----------------------------------------------------------------------------
 
 const fullScreenRenderer = vtkFullScreenRenderWindow.newInstance({ background: [0.5, 0.5, 0.5] });
+const renderer = fullScreenRenderer.getRenderer();
+const renderWindow = fullScreenRenderer.getRenderWindow();
+
+const resetCamera = renderer.resetCamera;
+const render = renderWindow.render;
 
 // ----------------------------------------------------------------------------
 // Example code
@@ -18,12 +24,12 @@ const fullScreenRenderer = vtkFullScreenRenderWindow.newInstance({ background: [
 
 const reader = vtkOBJReader.newInstance({ splitMode: 'usemtl' });
 const materialsReader = vtkMTLReader.newInstance();
-const representation = vtkOBJRepresentation.newInstance();
+const scene = [];
 
 function onClick(event) {
   const el = event.target;
   const index = Number(el.dataset.index);
-  const actor = representation.getActors()[index];
+  const actor = scene[index].actor;
   const visibility = actor.getVisibility();
 
   actor.setVisibility(!visibility);
@@ -32,27 +38,35 @@ function onClick(event) {
   } else {
     el.classList.add('visible');
   }
-  fullScreenRenderer.getRenderWindow().render();
+  render();
 }
-
-representation.setOBJReader(reader);
-representation.setMaterialsReader(materialsReader);
 
 materialsReader.setUrl(`${__BASE_PATH__}/data/obj/${fileName}/${fileName}.mtl`).then(() => {
   reader.setUrl(`${__BASE_PATH__}/data/obj/${fileName}/${fileName}.obj`).then(() => {
-    representation.update().then(() => {
-      fullScreenRenderer.addRepresentation(representation);
-      fullScreenRenderer.getRenderer().resetCamera();
-      fullScreenRenderer.getRenderWindow().render();
-    });
+    const size = reader.getNumberOfOutputPorts();
+    for (let i = 0; i < size; i++) {
+      const polydata = reader.getOutputData(i);
+      const name = polydata.get('name').name;
+      const mapper = vtkMapper.newInstance();
+      const actor = vtkActor.newInstance();
+
+      actor.setMapper(mapper);
+      mapper.setInputData(polydata);
+
+      materialsReader.applyMaterialToActor(name, actor);
+      renderer.addActor(actor);
+
+      scene.push({ name, polydata, mapper, actor });
+    }
+    resetCamera();
+    render();
 
     // Build control ui
-    const size = reader.getNumberOfOutputPorts();
     const htmlBuffer = ['<style>.visible { font-weight: bold; } .click { cursor: pointer; min-width: 150px;}</style>'];
-    for (let i = 0; i < size; i++) {
-      const name = reader.getOutputData(i).get('name').name;
-      htmlBuffer.push(`<div class="click visible" data-index="${i}">${name}</div>`);
-    }
+    scene.forEach((item, idx) => {
+      htmlBuffer.push(`<div class="click visible" data-index="${idx}">${item.name}</div>`);
+    });
+
     fullScreenRenderer.addController(htmlBuffer.join('\n'));
     const nodes = document.querySelectorAll('.click');
     for (let i = 0; i < nodes.length; i++) {
@@ -69,5 +83,5 @@ materialsReader.setUrl(`${__BASE_PATH__}/data/obj/${fileName}/${fileName}.mtl`).
 
 global.reader = reader;
 global.materialsReader = materialsReader;
-global.representation = representation;
+global.scene = scene;
 global.fullScreenRenderer = fullScreenRenderer;
