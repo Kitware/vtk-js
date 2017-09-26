@@ -22,7 +22,7 @@ renderer.addActor(imageActorX);
 const reader = vtkHttpDataSetReader.newInstance({
   fetchGzip: true,
 });
-reader.setUrl(`${__BASE_PATH__}/Data/volume/headsq.vti`).then(() => {
+reader.setUrl(`${__BASE_PATH__}/data/volume/headsq.vti`).then(() => {
   reader.loadData().then(() => {
     const data = reader.getOutputData();
     const imageMapperZ = vtkImageMapper.newInstance();
