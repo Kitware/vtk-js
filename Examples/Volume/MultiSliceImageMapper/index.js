@@ -50,6 +50,8 @@ reader.setUrl(`${__BASE_PATH__}/data/volume/headsq.vti`).then(() => {
     document.querySelector('.sliceY').setAttribute('value', 30);
     document.querySelector('.sliceZ').setAttribute('max', imageActorZ.getMapper().getInputData().getExtent()[5]);
     document.querySelector('.sliceZ').setAttribute('value', 30);
+    document.querySelector('.colorLevel').setAttribute('value', imageActorX.getProperty().getColorLevel());
+    document.querySelector('.colorWindow').setAttribute('value', imageActorX.getProperty().getColorWindow());
   });
 });
 
@@ -65,6 +67,22 @@ document.querySelector('.sliceY').addEventListener('input', (e) => {
 
 document.querySelector('.sliceZ').addEventListener('input', (e) => {
   imageActorZ.getMapper().setZSliceIndex(Number(e.target.value));
+  renderWindow.render();
+});
+
+document.querySelector('.colorLevel').addEventListener('input', (e) => {
+  const colorLevel = Number(e.target.value);
+  imageActorX.getProperty().setColorLevel(colorLevel);
+  imageActorY.getProperty().setColorLevel(colorLevel);
+  imageActorZ.getProperty().setColorLevel(colorLevel);
+  renderWindow.render();
+});
+
+document.querySelector('.colorWindow').addEventListener('input', (e) => {
+  const colorLevel = Number(e.target.value);
+  imageActorX.getProperty().setColorWindow(colorLevel);
+  imageActorY.getProperty().setColorWindow(colorLevel);
+  imageActorZ.getProperty().setColorWindow(colorLevel);
   renderWindow.render();
 });
 
