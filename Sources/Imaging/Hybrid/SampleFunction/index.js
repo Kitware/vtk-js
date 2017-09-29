@@ -39,10 +39,11 @@ function vtkSampleFunction(publicAPI, model) {
     }
     const volume = vtkImageData.newInstance();
     const origin = [model.modelBounds[0], model.modelBounds[2], model.modelBounds[4]];
-    const spacing = [(model.modelBounds[1] - model.modelBounds[0]) / (dims[0] - 1),
-                     (model.modelBounds[3] - model.modelBounds[2]) / (dims[1] - 1),
-                     (model.modelBounds[5] - model.modelBounds[4]) / (dims[2] - 1),
-                    ];
+    const spacing = [
+      (model.modelBounds[1] - model.modelBounds[0]) / (dims[0] - 1),
+      (model.modelBounds[3] - model.modelBounds[2]) / (dims[1] - 1),
+      (model.modelBounds[5] - model.modelBounds[4]) / (dims[2] - 1),
+    ];
     const sliceSize = dims[0] * dims[1];
     volume.setDimensions(dims);
     volume.setOrigin(origin);
@@ -70,8 +71,6 @@ function vtkSampleFunction(publicAPI, model) {
 
     // Update output
     outData[0] = volume;
-
-    return;
   };
 }
 
