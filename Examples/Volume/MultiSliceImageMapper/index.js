@@ -19,40 +19,63 @@ renderer.addActor(imageActorZ);
 renderer.addActor(imageActorY);
 renderer.addActor(imageActorX);
 
+function updateColorLevel(e) {
+  const colorLevel = Number((e ? e.target : document.querySelector('.colorLevel')).value);
+  imageActorX.getProperty().setColorLevel(colorLevel);
+  imageActorY.getProperty().setColorLevel(colorLevel);
+  imageActorZ.getProperty().setColorLevel(colorLevel);
+  renderWindow.render();
+}
+
+function updateColorWindow(e) {
+  const colorLevel = Number((e ? e.target : document.querySelector('.colorWindow')).value);
+  imageActorX.getProperty().setColorWindow(colorLevel);
+  imageActorY.getProperty().setColorWindow(colorLevel);
+  imageActorZ.getProperty().setColorWindow(colorLevel);
+  renderWindow.render();
+}
+
 const reader = vtkHttpDataSetReader.newInstance({
   fetchGzip: true,
 });
-reader.setUrl(`${__BASE_PATH__}/data/volume/headsq.vti`).then(() => {
-  reader.loadData().then(() => {
-    const data = reader.getOutputData();
-    const imageMapperZ = vtkImageMapper.newInstance();
-    imageMapperZ.setInputData(data);
-    imageMapperZ.setZSliceIndex(30);
-    imageActorZ.setMapper(imageMapperZ);
+reader.setUrl(`${__BASE_PATH__}/data/volume/headsq.vti`, { loadData: true }).then(() => {
+  const data = reader.getOutputData();
+  const dataRange = data.getPointData().getScalars().getRange();
+  const extent = data.getExtent();
 
-    const imageMapperY = vtkImageMapper.newInstance();
-    imageMapperY.setInputData(data);
-    imageMapperY.setYSliceIndex(30);
-    imageActorY.setMapper(imageMapperY);
+  const imageMapperZ = vtkImageMapper.newInstance();
+  imageMapperZ.setInputData(data);
+  imageMapperZ.setZSliceIndex(30);
+  imageActorZ.setMapper(imageMapperZ);
 
-    const imageMapperX = vtkImageMapper.newInstance();
-    imageMapperX.setInputData(data);
-    imageMapperX.setXSliceIndex(30);
-    imageActorX.setMapper(imageMapperX);
+  const imageMapperY = vtkImageMapper.newInstance();
+  imageMapperY.setInputData(data);
+  imageMapperY.setYSliceIndex(30);
+  imageActorY.setMapper(imageMapperY);
 
-    renderer.resetCamera();
-    renderer.resetCameraClippingRange();
-    renderWindow.render();
+  const imageMapperX = vtkImageMapper.newInstance();
+  imageMapperX.setInputData(data);
+  imageMapperX.setXSliceIndex(30);
+  imageActorX.setMapper(imageMapperX);
 
-    document.querySelector('.sliceX').setAttribute('max', imageActorX.getMapper().getInputData().getExtent()[1]);
-    document.querySelector('.sliceX').setAttribute('value', 30);
-    document.querySelector('.sliceY').setAttribute('max', imageActorY.getMapper().getInputData().getExtent()[3]);
-    document.querySelector('.sliceY').setAttribute('value', 30);
-    document.querySelector('.sliceZ').setAttribute('max', imageActorZ.getMapper().getInputData().getExtent()[5]);
-    document.querySelector('.sliceZ').setAttribute('value', 30);
-    document.querySelector('.colorLevel').setAttribute('value', imageActorX.getProperty().getColorLevel());
-    document.querySelector('.colorWindow').setAttribute('value', imageActorX.getProperty().getColorWindow());
+  renderer.resetCamera();
+  renderer.resetCameraClippingRange();
+  renderWindow.render();
+
+  ['.sliceX', '.sliceY', '.sliceZ'].forEach((selector, idx) => {
+    const el = document.querySelector(selector);
+    el.setAttribute('min', extent[(idx * 2) + 0]);
+    el.setAttribute('max', extent[(idx * 2) + 1]);
+    el.setAttribute('value', 30);
   });
+
+  ['.colorLevel', '.colorWindow'].forEach((selector) => {
+    document.querySelector(selector).setAttribute('max', dataRange[1]);
+    document.querySelector(selector).setAttribute('value', dataRange[1]);
+  });
+  document.querySelector('.colorLevel').setAttribute('value', (dataRange[0] + dataRange[1]) / 2);
+  updateColorLevel();
+  updateColorWindow();
 });
 
 document.querySelector('.sliceX').addEventListener('input', (e) => {
@@ -70,21 +93,8 @@ document.querySelector('.sliceZ').addEventListener('input', (e) => {
   renderWindow.render();
 });
 
-document.querySelector('.colorLevel').addEventListener('input', (e) => {
-  const colorLevel = Number(e.target.value);
-  imageActorX.getProperty().setColorLevel(colorLevel);
-  imageActorY.getProperty().setColorLevel(colorLevel);
-  imageActorZ.getProperty().setColorLevel(colorLevel);
-  renderWindow.render();
-});
-
-document.querySelector('.colorWindow').addEventListener('input', (e) => {
-  const colorLevel = Number(e.target.value);
-  imageActorX.getProperty().setColorWindow(colorLevel);
-  imageActorY.getProperty().setColorWindow(colorLevel);
-  imageActorZ.getProperty().setColorWindow(colorLevel);
-  renderWindow.render();
-});
+document.querySelector('.colorLevel').addEventListener('input', updateColorLevel);
+document.querySelector('.colorWindow').addEventListener('input', updateColorWindow);
 
 global.fullScreen = fullScreenRenderWindow;
 global.imageActorX = imageActorX;
