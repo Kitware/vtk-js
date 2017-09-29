@@ -87,5 +87,6 @@
         "exclude": [
             "Sources/**/test/*.js"
         ]
+
     }
 }

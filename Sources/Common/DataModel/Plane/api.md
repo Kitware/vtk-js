@@ -5,11 +5,12 @@ projecting points onto a plane, evaluating the plane equation, and
 returning plane normal.
 
 ### normal (set/get)
-Plane normal. Plane is defined by point and normal. Default is [0.0, 0.0, 0.0].
+Plane normal. Plane is defined by point and normal. Default is [0.0, 0.0, 1.0].
 
 ### origin (set/get)
 Point through which plane passes. Plane is defined by point and normal.
 Default is [0.0, 0.0, 0.0].
+
 ## Methods
 
 evaluateFunction(x)
@@ -18,6 +19,13 @@ evaluateFunction(x)
 plane.evaluateFunction([0.0, 0.0, 0.0]);
 plane.evaluateFunction(0.0, 0.0, 0.0);
 ```
+
+
+evaluateGradient(xyz)
+: Given the point xyz (three floating values) evaluate the equation for the 
+plane gradient. Note that the normal and origin must have already been 
+specified. The method returns an array of three floats.
+
 
 push(distance)
 : Translate the plane in the direction of the normal by the distance
