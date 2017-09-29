@@ -19,7 +19,7 @@ Floating value representing cube length along y axis.
 
 Floating value representing cube length along z axis.
 
-### Center (set/get)
+### center (set/get)
 
 Float array of size 3 representing the center of the cube.
 

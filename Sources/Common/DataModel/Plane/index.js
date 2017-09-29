@@ -123,7 +123,7 @@ export const STATIC = {
 // vtkPlane methods
 // ----------------------------------------------------------------------------
 
-function vtkPlane(publicAPI, model) {
+export function vtkPlane(publicAPI, model) {
   // Set our className
   model.classHierarchy.push('vtkPlane');
 
@@ -167,6 +167,15 @@ function vtkPlane(publicAPI, model) {
     );
   };
 
+  publicAPI.evaluateGradient = (xyz) => {
+    const retVal = [
+      model.normal[0],
+      model.normal[1],
+      model.normal[2],
+    ];
+    return retVal;
+  };
+
   publicAPI.intersectWithLine = (p1, p2) => intersectWithLine(p1, p2, model.origin, model.normal);
 }
 
@@ -175,7 +184,7 @@ function vtkPlane(publicAPI, model) {
 // ----------------------------------------------------------------------------
 
 const DEFAULT_VALUES = {
-  normal: [0.0, 0.0, 0.0],
+  normal: [0.0, 0.0, 1.0],
   origin: [0.0, 0.0, 0.0],
 };
 
@@ -186,6 +195,7 @@ export function extend(publicAPI, model, initialValues = {}) {
 
   // Object methods
   macro.obj(publicAPI, model);
+
   macro.setGet(publicAPI, model, ['bounds']);
 
   macro.setGetArray(publicAPI, model, [
