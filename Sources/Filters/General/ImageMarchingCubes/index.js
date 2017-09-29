@@ -1,7 +1,7 @@
 import macro       from 'vtk.js/Sources/macro';
 import vtkPolyData from 'vtk.js/Sources/Common/DataModel/PolyData';
 
-var vtkCaseTable = require('vtk.js/Sources/Filters/General/ImageMarchingCubes/caseTable');
+const vtkCaseTable = require('vtk.js/Sources/Filters/General/ImageMarchingCubes/caseTable');
 
 const { vtkErrorMacro, vtkDebugMacro } = macro;
 
