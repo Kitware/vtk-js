@@ -41,7 +41,32 @@ function vtkImageData(publicAPI, model) {
     }
   };
 
-  publicAPI.setDimensions = (i, j, k) => publicAPI.setExtent(0, i - 1, 0, j - 1, 0, k - 1);
+  publicAPI.setDimensions = (...dims) => {
+    var i;
+    var j;
+    var k;
+
+    if (model.deleted) {
+      vtkErrorMacro('instance deleted - cannot call any method');
+      return;
+    }
+
+    if (dims.length === 1) {
+      const array = dims[0];
+      i = array[0];
+      j = array[1];
+      k = array[2];
+    } else if (dims.length === 3) {
+      i = dims[0];
+      j = dims[1];
+      k = dims[2];
+    } else {
+      vtkErrorMacro('Bad dimension specification');
+      return;
+    }
+
+    publicAPI.setExtent(0, i - 1, 0, j - 1, 0, k - 1);
+  };
 
   publicAPI.getDimensions = () => [
     (model.extent[1] - model.extent[0]) + 1,
