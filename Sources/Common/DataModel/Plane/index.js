@@ -196,8 +196,6 @@ export function extend(publicAPI, model, initialValues = {}) {
   // Object methods
   macro.obj(publicAPI, model);
 
-  macro.setGet(publicAPI, model, ['bounds']);
-
   macro.setGetArray(publicAPI, model, [
     'normal',
     'origin',
