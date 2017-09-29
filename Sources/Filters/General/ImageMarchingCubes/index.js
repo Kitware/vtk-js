@@ -1,11 +1,9 @@
 import macro       from 'vtk.js/Sources/macro';
 import vtkPolyData from 'vtk.js/Sources/Common/DataModel/PolyData';
 
-const vtkCaseTable = require('vtk.js/Sources/Filters/General/ImageMarchingCubes/caseTable');
+import vtkCaseTable from './caseTable';
 
 const { vtkErrorMacro, vtkDebugMacro } = macro;
-
-// import mappingFunctions from './mappingFunctions';
 
 // ----------------------------------------------------------------------------
 // vtkImageMarchingCubes methods
@@ -118,10 +116,6 @@ function vtkImageMarchingCubes(publicAPI, model) {
     const dims = input.getDimensions();
     const s = input.getPointData().getScalars();
 
-    // Prepare the output
-    const pd = vtkPolyData.newInstance();
-    outData[0] = pd;
-
     // Points - dynamic array
     const pBuffer = [];
 
@@ -138,10 +132,10 @@ function vtkImageMarchingCubes(publicAPI, model) {
     }
 
     // Update output
-    const points = new window.Float32Array(pBuffer);
-    pd.getPoints().setData(points, 3);
-    const tris = new Uint32Array(tBuffer);
-    pd.getPolys().setData(tris, 1);
+    const polydata = vtkPolyData.newInstance();
+    polydata.getPoints().setData(new Float32Array(pBuffer), 3);
+    polydata.getPolys().setData(new Uint32Array(tBuffer));
+    outData[0] = polydata;
 
     vtkDebugMacro('Produced output');
   };
