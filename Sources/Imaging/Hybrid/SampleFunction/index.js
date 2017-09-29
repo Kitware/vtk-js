@@ -17,7 +17,7 @@ function vtkSampleFunction(publicAPI, model) {
   const superClass = Object.assign({}, publicAPI);
 
   publicAPI.getMTime = () => {
-    if (model.implicitFunction === undefined) {
+    if (!(model.implicitFunction && model.implicitFunction.getMTime)) {
       return superClass.getMTime();
     }
     return Math.max(superClass.getMTime(), model.implicitFunction.getMTime());
