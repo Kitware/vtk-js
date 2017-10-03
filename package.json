@@ -25,13 +25,11 @@
     },
     "devDependencies": {
         "babel-plugin-istanbul": "4.1.4",
-        "electron": "1.6.11",
         "eslint-config-prettier": "2.2.0",
         "eslint-plugin-prettier": "2.1.2",
         "karma": "1.7.0",
         "karma-chrome-launcher": "2.1.1",
         "karma-coverage": "1.1.1",
-        "karma-electron": "5.2.1",
         "karma-tap": "3.1.1",
         "karma-tap-pretty-reporter": "3.0.5",
         "karma-webpack": "2.0.3",
@@ -59,8 +57,7 @@
         "build:debug": "webpack --progress --colors --display-modules",
         "build:release": "npm run build -- -p",
         "test": "karma start ./karma.conf.js",
-        "test:travis2": "karma start ./karma.conf.js --browsers ChromeHeadless --single-run",
-        "test:travis": "karma start ./karma.conf.js --browsers Electron --single-run",
+        "test:travis": "karma start ./karma.conf.js --browsers ChromeHeadless --single-run",
         "test:debug": "karma start ./karma.conf.js --no-single-run",
         "commit": "git cz",
         "semantic-release": "semantic-release pre && npm publish && semantic-release post"
