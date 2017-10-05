@@ -758,9 +758,9 @@ function vtkColorTransferFunction(publicAPI, model) {
   };
 
   //----------------------------------------------------------------------------
-  publicAPI.getUint8Table = (xStart, xEnd, size) => {
+  publicAPI.getUint8Table = (xStart, xEnd, size, withAlpha = false) => {
     if (publicAPI.getMTime() <= model.buildTime &&
-        model.tableSize === size) {
+        model.tableSize === size && model.tableWithAlpha !== withAlpha) {
       return model.table;
     }
 
@@ -770,16 +770,23 @@ function vtkColorTransferFunction(publicAPI, model) {
       return model.table;
     }
 
-    if (model.tableSize !== size) {
-      model.table = new Uint8Array(size * 3);
+    const nbChannels = (withAlpha ? 4 : 3);
+    if (model.tableSize !== size || model.tableWithAlpha !== withAlpha) {
+      model.table = new Uint8Array(size * nbChannels);
       model.tableSize = size;
+      model.tableWithAlpha = withAlpha;
     }
 
     const tmpTable = [];
     publicAPI.getTable(xStart, xEnd, size, tmpTable);
 
-    for (let i = 0; i < size * 3; i++) {
-      model.table[i] = Math.floor((tmpTable[i] * 255.0) + 0.5);
+    for (let i = 0; i < size; i++) {
+      model.table[(i * nbChannels) + 0] = Math.floor((tmpTable[(i * 3) + 0] * 255.0) + 0.5);
+      model.table[(i * nbChannels) + 1] = Math.floor((tmpTable[(i * 3) + 1] * 255.0) + 0.5);
+      model.table[(i * nbChannels) + 2] = Math.floor((tmpTable[(i * 3) + 2] * 255.0) + 0.5);
+      if (withAlpha) {
+        model.table[(i * nbChannels) + 3] = 255;
+      }
     }
 
     model.buildTime.modified();
@@ -1149,6 +1156,7 @@ export function extend(publicAPI, model, initialValues = {}) {
   // Create get-only macros
   macro.get(publicAPI, model, [
     'buildTime',
+    'mappingRange',
   ]);
 
   // Create get-set macros
