@@ -124,10 +124,39 @@ function drawChart(ctx, area, values, style = { lineWidth: 1, strokeStyle: '#000
   if (fill) {
     ctx.fillStyle = style.fillStyle;
     ctx.lineTo(area[0] + area[2], area[1] + area[3]);
+
+    if (style.clip) {
+      ctx.clip();
+      return;
+    }
+
     ctx.fill();
   }
-
   ctx.stroke();
+}
+
+// ----------------------------------------------------------------------------
+
+function updateColorCanvas(colorTransferFunction, width, rangeToUse, canvas) {
+  const workCanvas = canvas || document.createElement('canvas');
+  workCanvas.setAttribute('width', width);
+  workCanvas.setAttribute('height', 256);
+  const ctx = workCanvas.getContext('2d');
+
+  const rgba = colorTransferFunction.getUint8Table(rangeToUse[0], rangeToUse[1], width, 4);
+  const pixelsArea = ctx.getImageData(0, 0, width, 256);
+  for (let lineIdx = 0; lineIdx < 256; lineIdx++) {
+    pixelsArea.data.set(rgba, lineIdx * 4 * width);
+  }
+
+  const nbValues = 256 * width * 4;
+  const lineSize = width * 4;
+  for (let i = 3; i < nbValues; i += 4) {
+    pixelsArea.data[i] = 255 - Math.floor(i / lineSize);
+  }
+
+  ctx.putImageData(pixelsArea, 0, 0);
+  return workCanvas;
 }
 
 // ----------------------------------------------------------------------------
@@ -228,7 +257,7 @@ function vtkPiecewiseFunctionWidget(publicAPI, model) {
     publicAPI.modified();
   };
 
-  publicAPI.setDataArray = (array) => {
+  publicAPI.setDataArray = (array, scaleRatio = 4) => {
     model.histogramArray = array;
     const size = array.length;
     let max = array[0];
@@ -250,7 +279,7 @@ function vtkPiecewiseFunctionWidget(publicAPI, model) {
     });
 
     // Smart Rescale Histogram
-    const sampleSize = Math.ceil(model.histogram.length / 4);
+    const sampleSize = Math.ceil(model.histogram.length / scaleRatio);
     const sortedArray = [].concat(model.histogram);
     sortedArray.sort((a, b) => (Number(a) - Number(b)));
     const topQuarterMean = sortedArray.slice(-sampleSize).reduce((a, b) => a + b, 0) / sampleSize;
@@ -294,6 +323,7 @@ function vtkPiecewiseFunctionWidget(publicAPI, model) {
         }
         default: {
           model.selectedGaussian = -1;
+          model.dragAction = null;
         }
       }
     } else {
@@ -318,7 +348,11 @@ function vtkPiecewiseFunctionWidget(publicAPI, model) {
       if (invY > gaussian.height + tolerance) {
         actionName = 'adjustPosition';
       } else if (invY > gaussian.height - tolerance) {
-        actionName = 'adjustHeight';
+        if (Math.abs(xNormalized - gaussian.position) < tolerance) {
+          actionName = 'adjustHeight';
+        } else {
+          actionName = 'adjustPosition';
+        }
       } else if (invY > (gaussian.height * 0.5) + tolerance) {
         actionName = 'adjustPosition';
       } else if (invY > (gaussian.height * 0.5) - tolerance) {
@@ -373,6 +407,15 @@ function vtkPiecewiseFunctionWidget(publicAPI, model) {
     return true;
   };
 
+  publicAPI.onLeave = (x, y) => {
+    publicAPI.onUp(x, y);
+    model.canvas.style.cursor = 'default';
+    model.activeGaussian = -1;
+    publicAPI.modified();
+    return true;
+  };
+
+
   publicAPI.bindMouseListeners = () => {
     if (!model.listeners) {
       const isDown = () => !!model.mouseIsDown;
@@ -381,6 +424,7 @@ function vtkPiecewiseFunctionWidget(publicAPI, model) {
         click: createListener(publicAPI.onClick),
         mouseup: createListener(publicAPI.onUp),
         mousedown: createListener(publicAPI.onDown),
+        mouseout: createListener(publicAPI.onLeave),
       };
       Object.keys(model.listeners).forEach((eventType) => {
         model.canvas.addEventListener(eventType, model.listeners[eventType]);
@@ -404,9 +448,9 @@ function vtkPiecewiseFunctionWidget(publicAPI, model) {
     const [width, height] = model.size;
     const offset = model.style.padding;
     const graphArea = [
-      model.style.iconSize + (2 * offset),
+      model.style.iconSize + offset,
       offset,
-      width - (3 * offset) - model.style.iconSize,
+      width - (2 * offset) - model.style.iconSize,
       height - (2 * offset),
     ];
     model.graphArea = graphArea;
@@ -422,29 +466,35 @@ function vtkPiecewiseFunctionWidget(publicAPI, model) {
     const halfSize = Math.round((model.style.iconSize / 2) - model.style.strokeWidth);
     const center = Math.round(halfSize + offset + model.style.strokeWidth);
     ctx.beginPath();
-    ctx.lineWidth = model.style.strokeWidth;
-    ctx.strokeStyle = model.style.strokeColor;
-    ctx.arc(center, center, halfSize, 0, 2 * Math.PI, false);
-    ctx.fillStyle = model.style.backgroundColor;
+    ctx.lineWidth = model.style.buttonStrokeWidth;
+    ctx.strokeStyle = model.style.buttonStrokeColor;
+    ctx.arc(center - (offset / 2), center, halfSize, 0, 2 * Math.PI, false);
+    ctx.fillStyle = model.style.buttonFillColor;
     ctx.fill();
     ctx.stroke();
-    ctx.moveTo(center - halfSize + model.style.strokeWidth + 2, center);
-    ctx.lineTo(center + halfSize - model.style.strokeWidth - 2, center);
+    ctx.moveTo(center - halfSize + model.style.strokeWidth + 2 - (offset / 2), center);
+    ctx.lineTo(center + halfSize - model.style.strokeWidth - 2 - (offset / 2), center);
     ctx.stroke();
-    ctx.moveTo(center, center - halfSize + model.style.strokeWidth + 2);
-    ctx.lineTo(center, center + halfSize - model.style.strokeWidth - 2);
+    ctx.moveTo(center - (offset / 2), center - halfSize + model.style.strokeWidth + 2);
+    ctx.lineTo(center - (offset / 2), center + halfSize - model.style.strokeWidth - 2);
     ctx.stroke();
 
     // -
+    if (model.selectedGaussian === -1) {
+      ctx.fillStyle = model.style.buttonDisableFillColor;
+      ctx.lineWidth = model.style.buttonDisableStrokeWidth;
+      ctx.strokeStyle = model.style.buttonDisableStrokeColor;
+    } else {
+      ctx.fillStyle = model.style.buttonFillColor;
+      ctx.lineWidth = model.style.buttonStrokeWidth;
+      ctx.strokeStyle = model.style.buttonStrokeColor;
+    }
     ctx.beginPath();
-    ctx.arc(center, center + offset + model.style.iconSize, halfSize, 0, 2 * Math.PI, false);
-    ctx.fillStyle = (model.selectedGaussian === -1) ? model.style.disableColor : model.style.backgroundColor;
+    ctx.arc(center - (offset / 2), center + (offset / 2) + model.style.iconSize, halfSize, 0, 2 * Math.PI, false);
     ctx.fill();
-    ctx.lineWidth = model.style.strokeWidth;
-    ctx.strokeStyle = model.style.strokeColor;
     ctx.stroke();
-    ctx.moveTo(center - halfSize + model.style.strokeWidth + 2, center + offset + model.style.iconSize);
-    ctx.lineTo(center + halfSize - model.style.strokeWidth - 2, center + offset + model.style.iconSize);
+    ctx.moveTo(center - halfSize + model.style.strokeWidth + 2 - (offset / 2), center + (offset / 2) + model.style.iconSize);
+    ctx.lineTo(center + halfSize - model.style.strokeWidth - 2 - (offset / 2), center + (offset / 2) + model.style.iconSize);
     ctx.stroke();
 
     // Draw histogram
@@ -453,11 +503,24 @@ function vtkPiecewiseFunctionWidget(publicAPI, model) {
     // Draw gaussians
     drawChart(ctx, graphArea, model.opacities, { lineWidth: model.style.strokeWidth, strokeStyle: model.style.strokeColor });
 
+    // Draw color function if any
+    if (model.colorTransferFunction) {
+      const rangeToUse = model.dataRange || model.colorTransferFunction.getMappingRange();
+      if (!model.colorCanvas || model.colorCanvasMTime < model.colorTransferFunction.getMTime()) {
+        model.colorCanvasMTime = model.colorTransferFunction.getMTime();
+        model.colorCanvas = updateColorCanvas(model.colorTransferFunction, graphArea[2], rangeToUse, model.colorCanvas);
+      }
+      ctx.save();
+      drawChart(ctx, graphArea, model.opacities, { lineWidth: 1, strokeStyle: 'rgba(0,0,0,0)', fillStyle: 'rgba(0,0,0,1)', clip: true });
+      ctx.drawImage(model.colorCanvas, graphArea[0], graphArea[1]);
+      ctx.restore();
+    }
+
     // Draw active guassian
     const activeGaussian = model.gaussians[model.activeGaussian] || model.gaussians[model.selectedGaussian];
     if (activeGaussian) {
       const activeOpacities = computeOpacities([activeGaussian], graphArea[2]);
-      drawChart(ctx, graphArea, activeOpacities, { lineWidth: model.style.strokeWidth, strokeStyle: model.style.activeColor });
+      drawChart(ctx, graphArea, activeOpacities, { lineWidth: model.style.activeStrokeWidth, strokeStyle: model.style.activeColor });
       // Draw controls
       const xCenter = graphArea[0] + (activeGaussian.position * graphArea[2]);
       const yTop = graphArea[1] + ((1 - activeGaussian.height) * graphArea[3]);
@@ -527,14 +590,20 @@ const DEFAULT_VALUES = {
   opacities: [],
   size: [600, 300],
   piecewiseSize: 256,
+  colorCanvasMTime: 0,
   style: {
     backgroundColor: 'rgba(255, 255, 255, 1)',
     histogramColor: 'rgba(200, 200, 200, 0.5)',
     strokeColor: 'rgb(0, 0, 0)',
     activeColor: 'rgb(0, 0, 150)',
-    disableColor: 'rgba(200, 200, 200, 0.5)',
+    buttonDisableFillColor: 'rgba(255, 255, 255, 0.5)',
+    buttonDisableStrokeColor: 'rgba(0, 0, 0, 0.5)',
+    buttonStrokeColor: 'rgba(0, 0, 0, 1)',
+    buttonFillColor: 'rgba(255, 255, 255, 1)',
     handleColor: 'rgb(0, 150, 0)',
     strokeWidth: 2,
+    activeStrokeWidth: 3,
+    buttonStrokeWidth: 1,
     handleWidth: 3,
     iconSize: 32,
     padding: 10,
@@ -550,7 +619,7 @@ export function extend(publicAPI, model, initialValues = {}) {
 
   // Object methods
   macro.obj(publicAPI, model);
-  macro.setGet(publicAPI, model, ['piecewiseSize', 'numberOfBins']);
+  macro.setGet(publicAPI, model, ['piecewiseSize', 'numberOfBins', 'colorTransferFunction']);
   macro.get(publicAPI, model, ['size', 'canvas']);
   macro.event(publicAPI, model, 'opacityChange');
 
