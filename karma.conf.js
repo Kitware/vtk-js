@@ -17,7 +17,6 @@ module.exports = function init(config) {
       require('karma-webpack'),
       require('karma-tap'),
       require('karma-chrome-launcher'),
-      require('karma-electron'),
       require('karma-coverage'),
       require('karma-tap-pretty-reporter'),
     ],
