@@ -8,7 +8,7 @@ const { vtkErrorMacro, vtkDebugMacro } = macro;
 
 let requestCount = 0;
 
-function fetchZipFile(url) {
+function fetchBinary(url, options = {}) {
   return new Promise((resolve, reject) => {
     const xhr = new XMLHttpRequest();
 
@@ -22,6 +22,10 @@ function fetchZipFile(url) {
       }
     };
 
+    if (options && options.progressCallback) {
+      xhr.addEventListener('progress', options.progressCallback);
+    }
+
     // Make request
     xhr.open('GET', url, true);
     xhr.responseType = 'arraybuffer';
@@ -29,11 +33,11 @@ function fetchZipFile(url) {
   });
 }
 
-function fetchArray(instance = {}, baseURL, array, fetchGzip = false) {
+function fetchArray(instance = {}, baseURL, array, options = {}) {
   if (array.ref && !array.ref.pending) {
     return new Promise((resolve, reject) => {
       const xhr = new XMLHttpRequest();
-      const url = [baseURL, array.ref.basepath, fetchGzip ? `${array.ref.id}.gz` : array.ref.id].join('/');
+      const url = [baseURL, array.ref.basepath, options.compression ? `${array.ref.id}.gz` : array.ref.id].join('/');
 
       xhr.onreadystatechange = (e) => {
         if (xhr.readyState === 1) {
@@ -47,7 +51,7 @@ function fetchArray(instance = {}, baseURL, array, fetchGzip = false) {
           if (xhr.status === 200 || xhr.status === 0) {
             array.buffer = xhr.response;
 
-            if (fetchGzip) {
+            if (options.compression) {
               if (array.dataType === 'string' || array.dataType === 'JSON') {
                 array.buffer = pako.inflate(new Uint8Array(array.buffer), { to: 'string' });
               } else {
@@ -86,9 +90,13 @@ function fetchArray(instance = {}, baseURL, array, fetchGzip = false) {
         }
       };
 
+      if (options && options.progressCallback) {
+        xhr.addEventListener('progress', options.progressCallback);
+      }
+
       // Make request
       xhr.open('GET', url, true);
-      xhr.responseType = (fetchGzip || array.dataType !== 'string') ? 'arraybuffer' : 'text';
+      xhr.responseType = (options.compression || array.dataType !== 'string') ? 'arraybuffer' : 'text';
       xhr.send();
     });
   }
@@ -100,7 +108,7 @@ function fetchArray(instance = {}, baseURL, array, fetchGzip = false) {
 
 // ----------------------------------------------------------------------------
 
-function fetchJSON(instance = {}, url, compression) {
+function fetchJSON(instance = {}, url, options = {}) {
   return new Promise((resolve, reject) => {
     const xhr = new XMLHttpRequest();
 
@@ -115,7 +123,7 @@ function fetchJSON(instance = {}, url, compression) {
           instance.invokeBusy(false);
         }
         if (xhr.status === 200 || xhr.status === 0) {
-          if (compression) {
+          if (options.compression) {
             resolve(JSON.parse(pako.inflate(new Uint8Array(xhr.response), { to: 'string' })));
           } else {
             resolve(JSON.parse(xhr.responseText));
@@ -126,19 +134,23 @@ function fetchJSON(instance = {}, url, compression) {
       }
     };
 
+    if (options && options.progressCallback) {
+      xhr.addEventListener('progress', options.progressCallback);
+    }
+
     // Make request
     xhr.open('GET', url, true);
-    xhr.responseType = compression ? 'arraybuffer' : 'text';
+    xhr.responseType = options.compression ? 'arraybuffer' : 'text';
     xhr.send();
   });
 }
 
 // ----------------------------------------------------------------------------
 
-function fetchText(instance = {}, url, compression, progressCallback) {
-  if (compression && compression !== 'gz') {
+function fetchText(instance = {}, url, options = {}) {
+  if (options && options.compression && options.compression !== 'gz') {
     vtkErrorMacro('Supported algorithms are: [gz]');
-    vtkErrorMacro(`Unkown compression algorithm: ${compression}`);
+    vtkErrorMacro(`Unkown compression algorithm: ${options.compression}`);
   }
 
   return new Promise((resolve, reject) => {
@@ -155,7 +167,7 @@ function fetchText(instance = {}, url, compression, progressCallback) {
           instance.invokeBusy(false);
         }
         if (xhr.status === 200 || xhr.status === 0) {
-          if (compression) {
+          if (options.compression) {
             resolve(pako.inflate(new Uint8Array(xhr.response), { to: 'string' }));
           } else {
             resolve(xhr.responseText);
@@ -166,13 +178,13 @@ function fetchText(instance = {}, url, compression, progressCallback) {
       }
     };
 
-    if (progressCallback) {
-      xhr.addEventListener('progress', progressCallback);
+    if (options.progressCallback) {
+      xhr.addEventListener('progress', options.progressCallback);
     }
 
     // Make request
     xhr.open('GET', url, true);
-    xhr.responseType = compression ? 'arraybuffer' : 'text';
+    xhr.responseType = options.compression ? 'arraybuffer' : 'text';
     xhr.send();
   });
 }
@@ -184,5 +196,5 @@ export default {
   fetchArray,
   fetchJSON,
   fetchText,
-  fetchZipFile, // Only for HTTP
+  fetchBinary, // Only for HTTP
 };

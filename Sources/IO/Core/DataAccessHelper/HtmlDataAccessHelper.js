@@ -20,7 +20,7 @@ function removeLeadingSlash(str) {
 }
 
 
-function fetchText(instance = {}, url, compression, progressCallback) {
+function fetchText(instance = {}, url, options = {}) {
   return new Promise((resolve, reject) => {
     const txt = getContent(url);
     if (txt === null) {
@@ -32,7 +32,7 @@ function fetchText(instance = {}, url, compression, progressCallback) {
 }
 
 
-function fetchJSON(instance = {}, url, compression) {
+function fetchJSON(instance = {}, url, options = {}) {
   return new Promise((resolve, reject) => {
     const txt = getContent(removeLeadingSlash(url));
     if (txt === null) {
@@ -44,9 +44,9 @@ function fetchJSON(instance = {}, url, compression) {
 }
 
 
-function fetchArray(instance = {}, baseURL, array, fetchGzip = false) {
+function fetchArray(instance = {}, baseURL, array, options = {}) {
   return new Promise((resolve, reject) => {
-    const url = removeLeadingSlash([baseURL, array.ref.basepath, fetchGzip ? `${array.ref.id}.gz` : array.ref.id].join('/'));
+    const url = removeLeadingSlash([baseURL, array.ref.basepath, options.compression ? `${array.ref.id}.gz` : array.ref.id].join('/'));
 
     const txt = getContent(url);
     if (txt === null) {
@@ -54,7 +54,7 @@ function fetchArray(instance = {}, baseURL, array, fetchGzip = false) {
     } else {
       if (array.dataType === 'string') {
         let bText = atob(txt);
-        if (fetchGzip) {
+        if (options.compression) {
           bText = pako.inflate(bText, { to: 'string' });
         }
         array.values = JSON.parse(bText);
@@ -67,7 +67,7 @@ function fetchArray(instance = {}, baseURL, array, fetchGzip = false) {
         const view = new Uint8Array(array.buffer);
         view.set(uint8array);
 
-        if (fetchGzip) {
+        if (options.compression) {
           if (array.dataType === 'string' || array.dataType === 'JSON') {
             array.buffer = pako.inflate(new Uint8Array(array.buffer), { to: 'string' });
           } else {

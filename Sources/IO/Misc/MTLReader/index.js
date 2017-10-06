@@ -51,7 +51,9 @@ function vtkMTLReader(publicAPI, model) {
 
   // Internal method to fetch Array
   function fetchData(url) {
-    return model.dataAccessHelper.fetchText(publicAPI, url, model.compression);
+    const compression = model.compression;
+    const progressCallback = model.progressCallback;
+    return model.dataAccessHelper.fetchText(publicAPI, url, { compression, progressCallback });
   }
 
   // Set DataSet url

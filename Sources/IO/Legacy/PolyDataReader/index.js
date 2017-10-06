@@ -17,7 +17,9 @@ function vtkPolyDataReader(publicAPI, model) {
 
   // Internal method to fetch Array
   function fetchData(url, option = {}) {
-    return model.dataAccessHelper.fetchText(publicAPI, url, model.compression, option.progressCallback);
+    const compression = model.compression;
+    const progressCallback = model.progressCallback;
+    return model.dataAccessHelper.fetchText(publicAPI, url, { compression, progressCallback });
   }
 
   // Set DataSet url
