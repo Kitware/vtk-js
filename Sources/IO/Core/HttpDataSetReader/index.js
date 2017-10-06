@@ -74,8 +74,10 @@ function processDataSet(publicAPI, model, dataset, fetchArray, resolve, reject, 
 
   // Fetch geometry arrays
   const pendingPromises = [];
+  const progressCallback = model.progressCallback;
+  const compression = model.fetchGzip ? 'gz' : null;
   GEOMETRY_ARRAYS[dataset.vtkClass](dataset).forEach((array) => {
-    pendingPromises.push(fetchArray(array, model.fetchGzip));
+    pendingPromises.push(fetchArray(array, { compression, progressCallback }));
   });
 
   function success() {
@@ -124,8 +126,8 @@ function vtkHttpDataSetReader(publicAPI, model) {
   }
 
   // Internal method to fetch Array
-  function fetchArray(array, fetchGzip = false) {
-    return model.dataAccessHelper.fetchArray(publicAPI, model.baseURL, array, fetchGzip);
+  function fetchArray(array, options = {}) {
+    return model.dataAccessHelper.fetchArray(publicAPI, model.baseURL, array, options);
   }
 
   // Fetch dataset (metadata)
@@ -210,7 +212,9 @@ function vtkHttpDataSetReader(publicAPI, model) {
 
       const processNext = () => {
         if (arrayToFecth.length) {
-          fetchArray(arrayToFecth.pop(), model.fetchGzip).then(processNext, error);
+          const progressCallback = model.progressCallback;
+          const compression = model.fetchGzip ? 'gz' : null;
+          fetchArray(arrayToFecth.pop(), { compression, progressCallback }).then(processNext, error);
         } else if (datasetObj) {
           // Perform array registration
           model.arrays

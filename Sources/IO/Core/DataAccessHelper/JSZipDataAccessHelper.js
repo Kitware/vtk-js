@@ -7,7 +7,7 @@ import { DataTypeByteSize } from 'vtk.js/Sources/Common/Core/DataArray/Constants
 
 const { vtkErrorMacro, vtkDebugMacro } = macro;
 
-function handleUint8Array(array, fetchGzip, done) {
+function handleUint8Array(array, compression, done) {
   return (uint8array) => {
     array.buffer = new ArrayBuffer(uint8array.length);
 
@@ -15,7 +15,7 @@ function handleUint8Array(array, fetchGzip, done) {
     const view = new Uint8Array(array.buffer);
     view.set(uint8array);
 
-    if (fetchGzip) {
+    if (compression) {
       if (array.dataType === 'string' || array.dataType === 'JSON') {
         array.buffer = pako.inflate(new Uint8Array(array.buffer), { to: 'string' });
       } else {
@@ -43,9 +43,9 @@ function handleUint8Array(array, fetchGzip, done) {
   };
 }
 
-function handleString(array, fetchGzip, done) {
+function handleString(array, compression, done) {
   return (string) => {
-    if (fetchGzip) {
+    if (compression) {
       array.values = JSON.parse(pako.inflate(string, { to: 'string' }));
     } else {
       array.values = JSON.parse(string);
@@ -63,12 +63,12 @@ function removeLeadingSlash(str) {
   return (str[0] === '/') ? str.substr(1) : str;
 }
 
-function create(options) {
+function create(createOptions) {
   let ready = false;
   let requestCount = 0;
   const zip = new JSZip();
   let zipRoot = zip;
-  zip.loadAsync(options.zipContent)
+  zip.loadAsync(createOptions.zipContent)
     .then(() => {
       ready = true;
 
@@ -86,17 +86,17 @@ function create(options) {
         zipRoot = zipRoot.folder(dirName);
       }
 
-      if (options.callback) {
-        options.callback(zip);
+      if (createOptions.callback) {
+        createOptions.callback(zip);
       }
     });
   return {
-    fetchArray(instance = {}, baseURL, array, fetchGzip = false) {
+    fetchArray(instance = {}, baseURL, array, options = {}) {
       return new Promise((resolve, reject) => {
         if (!ready) {
           vtkErrorMacro('ERROR!!! zip not ready...');
         }
-        const url = removeLeadingSlash([baseURL, array.ref.basepath, fetchGzip ? `${array.ref.id}.gz` : array.ref.id].join('/'));
+        const url = removeLeadingSlash([baseURL, array.ref.basepath, options.compression ? `${array.ref.id}.gz` : array.ref.id].join('/'));
 
         if (++requestCount === 1 && instance.invokeBusy) {
           instance.invokeBusy(true);
@@ -114,8 +114,8 @@ function create(options) {
           resolve(array);
         }
 
-        const asyncType = array.dataType === 'string' && !fetchGzip ? 'string' : 'uint8array';
-        const asyncCallback = handlers[asyncType](array, fetchGzip, doneCleanUp);
+        const asyncType = array.dataType === 'string' && !options.compression ? 'string' : 'uint8array';
+        const asyncCallback = handlers[asyncType](array, options.compression, doneCleanUp);
 
         zipRoot.file(url)
           .async(asyncType)

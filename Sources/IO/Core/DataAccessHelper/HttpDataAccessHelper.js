@@ -33,11 +33,11 @@ function fetchBinary(url, options = {}) {
   });
 }
 
-function fetchArray(instance = {}, baseURL, array, fetchGzip = false) {
+function fetchArray(instance = {}, baseURL, array, options = {}) {
   if (array.ref && !array.ref.pending) {
     return new Promise((resolve, reject) => {
       const xhr = new XMLHttpRequest();
-      const url = [baseURL, array.ref.basepath, fetchGzip ? `${array.ref.id}.gz` : array.ref.id].join('/');
+      const url = [baseURL, array.ref.basepath, options.compression ? `${array.ref.id}.gz` : array.ref.id].join('/');
 
       xhr.onreadystatechange = (e) => {
         if (xhr.readyState === 1) {
@@ -51,7 +51,7 @@ function fetchArray(instance = {}, baseURL, array, fetchGzip = false) {
           if (xhr.status === 200 || xhr.status === 0) {
             array.buffer = xhr.response;
 
-            if (fetchGzip) {
+            if (options.compression) {
               if (array.dataType === 'string' || array.dataType === 'JSON') {
                 array.buffer = pako.inflate(new Uint8Array(array.buffer), { to: 'string' });
               } else {
@@ -90,9 +90,13 @@ function fetchArray(instance = {}, baseURL, array, fetchGzip = false) {
         }
       };
 
+      if (options && options.progressCallback) {
+        xhr.addEventListener('progress', options.progressCallback);
+      }
+
       // Make request
       xhr.open('GET', url, true);
-      xhr.responseType = (fetchGzip || array.dataType !== 'string') ? 'arraybuffer' : 'text';
+      xhr.responseType = (options.compression || array.dataType !== 'string') ? 'arraybuffer' : 'text';
       xhr.send();
     });
   }
