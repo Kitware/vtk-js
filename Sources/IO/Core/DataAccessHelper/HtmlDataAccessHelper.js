@@ -20,7 +20,7 @@ function removeLeadingSlash(str) {
 }
 
 
-function fetchText(instance = {}, url, compression, progressCallback) {
+function fetchText(instance = {}, url, options = {}) {
   return new Promise((resolve, reject) => {
     const txt = getContent(url);
     if (txt === null) {

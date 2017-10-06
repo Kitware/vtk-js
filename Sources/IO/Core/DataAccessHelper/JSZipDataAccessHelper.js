@@ -142,14 +142,14 @@ function create(createOptions) {
       return zipRoot.file(path).async('string').then(str => new Promise(ok => ok(JSON.parse(str))));
     },
 
-    fetchText(instance = {}, url, compression) {
+    fetchText(instance = {}, url, options = {}) {
       const path = removeLeadingSlash(url);
       if (!ready) {
         vtkErrorMacro('ERROR!!! zip not ready...');
       }
 
-      if (compression) {
-        if (compression === 'gz') {
+      if (options.compression) {
+        if (options.compression === 'gz') {
           return zipRoot.file(path).async('uint8array').then((uint8array) => {
             const str = pako.inflate(uint8array, { to: 'string' });
             return new Promise(ok => ok(str));

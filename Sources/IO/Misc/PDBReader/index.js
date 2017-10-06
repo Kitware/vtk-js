@@ -19,7 +19,9 @@ function vtkPDBReader(publicAPI, model) {
 
   // Internal method to fetch Array
   function fetchPDB(url) {
-    return model.dataAccessHelper.fetchText(publicAPI, url);
+    const compression = model.compression;
+    const progressCallback = model.progressCallback;
+    return model.dataAccessHelper.fetchText(publicAPI, url, { compression, progressCallback });
   }
 
   // Set DataSet url

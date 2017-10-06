@@ -147,10 +147,10 @@ function fetchJSON(instance = {}, url, options = {}) {
 
 // ----------------------------------------------------------------------------
 
-function fetchText(instance = {}, url, compression, progressCallback) {
-  if (compression && compression !== 'gz') {
+function fetchText(instance = {}, url, options = {}) {
+  if (options && options.compression && options.compression !== 'gz') {
     vtkErrorMacro('Supported algorithms are: [gz]');
-    vtkErrorMacro(`Unkown compression algorithm: ${compression}`);
+    vtkErrorMacro(`Unkown compression algorithm: ${options.compression}`);
   }
 
   return new Promise((resolve, reject) => {
@@ -167,7 +167,7 @@ function fetchText(instance = {}, url, compression, progressCallback) {
           instance.invokeBusy(false);
         }
         if (xhr.status === 200 || xhr.status === 0) {
-          if (compression) {
+          if (options.compression) {
             resolve(pako.inflate(new Uint8Array(xhr.response), { to: 'string' }));
           } else {
             resolve(xhr.responseText);
@@ -178,13 +178,13 @@ function fetchText(instance = {}, url, compression, progressCallback) {
       }
     };
 
-    if (progressCallback) {
-      xhr.addEventListener('progress', progressCallback);
+    if (options.progressCallback) {
+      xhr.addEventListener('progress', options.progressCallback);
     }
 
     // Make request
     xhr.open('GET', url, true);
-    xhr.responseType = compression ? 'arraybuffer' : 'text';
+    xhr.responseType = options.compression ? 'arraybuffer' : 'text';
     xhr.send();
   });
 }
