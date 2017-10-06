@@ -280,7 +280,7 @@ export function extend(publicAPI, model, initialValues = {}) {
     'baseURL',
     'dataAccessHelper',
   ]);
-  macro.set(publicAPI, model, ['dataAccessHelper']);
+  macro.set(publicAPI, model, ['dataAccessHelper', 'progressCallback']);
   macro.getArray(publicAPI, model, ['arrays']);
   macro.algo(publicAPI, model, 0, 1);
   macro.event(publicAPI, model, 'busy');
