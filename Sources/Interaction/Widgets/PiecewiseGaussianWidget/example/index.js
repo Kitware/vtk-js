@@ -2,7 +2,7 @@ import vtkColorTransferFunction   from 'vtk.js/Sources/Rendering/Core/ColorTrans
 import vtkFullScreenRenderWindow  from 'vtk.js/Sources/Rendering/Misc/FullScreenRenderWindow';
 import vtkHttpDataSetReader       from 'vtk.js/Sources/IO/Core/HttpDataSetReader';
 import vtkPiecewiseFunction       from 'vtk.js/Sources/Common/DataModel/PiecewiseFunction';
-import vtkPiecewiseFunctionWidget from 'vtk.js/Sources/Interaction/Widgets/PiecewiseFunctionWidget';
+import vtkPiecewiseGaussianWidget from 'vtk.js/Sources/Interaction/Widgets/PiecewiseGaussianWidget';
 import vtkVolume                  from 'vtk.js/Sources/Rendering/Core/Volume';
 import vtkVolumeMapper            from 'vtk.js/Sources/Rendering/Core/VolumeMapper';
 
@@ -81,7 +81,7 @@ labelContainer.addEventListener('click', (event) => {
 // ----------------------------------------------------------------------------
 
 
-const widget = vtkPiecewiseFunctionWidget.newInstance({ numberOfBins: 256, size: [400, 150] });
+const widget = vtkPiecewiseGaussianWidget.newInstance({ numberOfBins: 256, size: [400, 150] });
 widget.updateStyle({
   backgroundColor: 'rgba(255, 255, 255, 0.6)',
   histogramColor: 'rgba(100, 100, 100, 0.5)',

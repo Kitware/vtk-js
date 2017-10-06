@@ -1,5 +1,5 @@
-import vtkPiecewiseFunctionWidget from './PiecewiseFunctionWidget';
+import vtkPiecewiseGaussianWidget from './PiecewiseGaussianWidget';
 
 export default {
-  vtkPiecewiseFunctionWidget,
+  vtkPiecewiseGaussianWidget,
 };

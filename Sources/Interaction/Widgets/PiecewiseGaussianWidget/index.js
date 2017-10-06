@@ -275,12 +275,12 @@ export const STATIC = {
 };
 
 // ----------------------------------------------------------------------------
-// vtkPiecewiseFunctionWidget methods
+// vtkPiecewiseGaussianWidget methods
 // ----------------------------------------------------------------------------
 
-function vtkPiecewiseFunctionWidget(publicAPI, model) {
+function vtkPiecewiseGaussianWidget(publicAPI, model) {
   // Set our className
-  model.classHierarchy.push('vtkPiecewiseFunctionWidget');
+  model.classHierarchy.push('vtkPiecewiseGaussianWidget');
 
   if (!model.canvas) {
     model.canvas = document.createElement('canvas');
@@ -744,12 +744,12 @@ export function extend(publicAPI, model, initialValues = {}) {
   macro.event(publicAPI, model, 'opacityChange');
 
   // Object specific methods
-  vtkPiecewiseFunctionWidget(publicAPI, model);
+  vtkPiecewiseGaussianWidget(publicAPI, model);
 }
 
 // ----------------------------------------------------------------------------
 
-export const newInstance = macro.newInstance(extend, 'vtkPiecewiseFunctionWidget');
+export const newInstance = macro.newInstance(extend, 'vtkPiecewiseGaussianWidget');
 
 // ----------------------------------------------------------------------------
 
