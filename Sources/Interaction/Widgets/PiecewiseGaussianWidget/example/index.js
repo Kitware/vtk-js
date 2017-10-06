@@ -2,9 +2,11 @@ import vtkColorTransferFunction   from 'vtk.js/Sources/Rendering/Core/ColorTrans
 import vtkFullScreenRenderWindow  from 'vtk.js/Sources/Rendering/Misc/FullScreenRenderWindow';
 import vtkHttpDataSetReader       from 'vtk.js/Sources/IO/Core/HttpDataSetReader';
 import vtkPiecewiseFunction       from 'vtk.js/Sources/Common/DataModel/PiecewiseFunction';
-import vtkPiecewiseFunctionWidget from 'vtk.js/Sources/Interaction/Widgets/PiecewiseFunctionWidget';
+import vtkPiecewiseGaussianWidget from 'vtk.js/Sources/Interaction/Widgets/PiecewiseGaussianWidget';
 import vtkVolume                  from 'vtk.js/Sources/Rendering/Core/Volume';
 import vtkVolumeMapper            from 'vtk.js/Sources/Rendering/Core/VolumeMapper';
+
+import macro            from 'vtk.js/Sources/macro';
 
 import presets from 'vtk.js/Sources/Rendering/Core/ColorTransferFunction/ColorMaps.json';
 
@@ -79,7 +81,7 @@ labelContainer.addEventListener('click', (event) => {
 // ----------------------------------------------------------------------------
 
 
-const widget = vtkPiecewiseFunctionWidget.newInstance({ numberOfBins: 256, size: [400, 150] });
+const widget = vtkPiecewiseGaussianWidget.newInstance({ numberOfBins: 256, size: [400, 150] });
 widget.updateStyle({
   backgroundColor: 'rgba(255, 255, 255, 0.6)',
   histogramColor: 'rgba(100, 100, 100, 0.5)',
@@ -94,7 +96,7 @@ widget.updateStyle({
   activeStrokeWidth: 3,
   buttonStrokeWidth: 1.5,
   handleWidth: 3,
-  iconSize: 20,
+  iconSize: 20, // Can be 0 if you want to remove buttons (dblClick for (+) / rightClick for (-))
   padding: 10,
 });
 
@@ -153,10 +155,10 @@ widget.addGaussian(0.75, 1, 0.3, 0, 0);
 widget.setContainer(container);
 widget.bindMouseListeners();
 
-widget.onOpacityChange(() => {
+widget.onOpacityChange(macro.debounce(() => {
   widget.applyOpacity(piecewiseFunction);
   render();
-});
+}), 1000);
 
 // ----------------------------------------------------------------------------
 // Expose variable to global namespace

@@ -3,7 +3,7 @@ import macro from 'vtk.js/Sources/macro';
 /* eslint-disable no-continue */
 
 // ----------------------------------------------------------------------------
-// Global methods
+// Global structures
 // ----------------------------------------------------------------------------
 
 const MIN_GAUSSIAN_WIDTH = 0.001;
@@ -14,6 +14,12 @@ const ACTION_TO_CURSOR = {
   adjustBias: 'crosshair',
   adjustWidth: 'col-resize',
 };
+
+const TOUCH_CLICK = [];
+
+// ----------------------------------------------------------------------------
+// Global methods
+// ----------------------------------------------------------------------------
 
 const ACTIONS = {
   adjustPosition(x, y, originalXY, gaussian, originalGaussian) {
@@ -178,8 +184,75 @@ function findGaussian(x, gaussians) {
 
 // ----------------------------------------------------------------------------
 
-function createListener(callback) {
-  return ({ offsetX, offsetY }) => callback(offsetX, offsetY);
+function createListener(callback, preventDefault = true) {
+  return (e) => {
+    const { offsetX, offsetY } = e;
+    if (preventDefault) {
+      e.preventDefault();
+    }
+    callback(offsetX, offsetY);
+  };
+}
+
+function createTouchClickListener(...callbacks) {
+  const id = TOUCH_CLICK.length;
+  TOUCH_CLICK.push({ callbacks, timeout: 0, deltaT: 200, count: 0, ready: false });
+  return id;
+}
+
+function processTouchClicks() {
+  console.log('processTouchClicks');
+  TOUCH_CLICK.filter(t => t.ready).forEach((touchHandle) => {
+    console.log(touchHandle);
+    touchHandle.callbacks.forEach((callback) => {
+      if (callback.touches === touchHandle.touches && callback.clicks === touchHandle.count) {
+        callback.action(...touchHandle.singleTouche);
+      }
+    });
+
+    // Clear state
+    touchHandle.ts = 0;
+    touchHandle.count = 0;
+    touchHandle.touches = 0;
+    touchHandle.ready = false;
+  });
+}
+
+function createTouchListener(id, callback, nbTouches = 1, preventDefault = true) {
+  return (e) => {
+    if (preventDefault) {
+      e.preventDefault();
+    }
+
+    const targetBounds = e.target.getBoundingClientRect();
+    const relativeTouches = Array.prototype.map.call(e.touches, t => [t.pageX - targetBounds.left, t.pageY - targetBounds.top]);
+    const singleTouche = relativeTouches.reduce((a, b) => [a[0] + b[0], a[1] + b[1]], [0, 0]).map(v => v / e.touches.length);
+
+    if (e.type === 'touchstart') {
+      clearTimeout(TOUCH_CLICK[id].timeout);
+      TOUCH_CLICK[id].ts = e.timeStamp;
+      TOUCH_CLICK[id].singleTouche = singleTouche;
+      TOUCH_CLICK[id].touches = e.touches.length;
+    } else if (e.type === 'touchmove') {
+      console.log('touchmove');
+      TOUCH_CLICK[id].ts = 0;
+      TOUCH_CLICK[id].count = 0;
+      TOUCH_CLICK[id].ready = false;
+    } else if (e.type === 'touchend') {
+      if (e.timeStamp - TOUCH_CLICK[id].ts < TOUCH_CLICK[id].deltaT) {
+        TOUCH_CLICK[id].count += 1;
+        TOUCH_CLICK[id].ready = true;
+        TOUCH_CLICK[id].timeout = setTimeout(processTouchClicks, TOUCH_CLICK[id].deltaT);
+      } else {
+        console.log('no click');
+        TOUCH_CLICK[id].ready = false;
+      }
+    }
+
+    if (e.touches.length === nbTouches) {
+      callback(...singleTouche);
+    }
+  };
 }
 
 // ----------------------------------------------------------------------------
@@ -202,12 +275,12 @@ export const STATIC = {
 };
 
 // ----------------------------------------------------------------------------
-// vtkPiecewiseFunctionWidget methods
+// vtkPiecewiseGaussianWidget methods
 // ----------------------------------------------------------------------------
 
-function vtkPiecewiseFunctionWidget(publicAPI, model) {
+function vtkPiecewiseGaussianWidget(publicAPI, model) {
   // Set our className
-  model.classHierarchy.push('vtkPiecewiseFunctionWidget');
+  model.classHierarchy.push('vtkPiecewiseGaussianWidget');
 
   if (!model.canvas) {
     model.canvas = document.createElement('canvas');
@@ -289,8 +362,9 @@ function vtkPiecewiseFunctionWidget(publicAPI, model) {
   };
 
   publicAPI.onClick = (x, y) => {
-    const xNormalized = normalizeCoordinates(x, y, model.graphArea)[0];
-    if (xNormalized < 0) {
+    console.log('click');
+    const [xNormalized, yNormalized] = normalizeCoordinates(x, y, model.graphArea);
+    if (xNormalized < 0 && model.style.iconSize > 1) {
       // Control buttons
       const delta = model.style.iconSize + model.style.padding;
       let offset = delta;
@@ -326,6 +400,9 @@ function vtkPiecewiseFunctionWidget(publicAPI, model) {
           model.dragAction = null;
         }
       }
+    } else if (xNormalized < 0 || xNormalized > 1 || yNormalized < 0 || yNormalized > 1) {
+      model.selectedGaussian = -1;
+      model.dragAction = null;
     } else {
       const newSelected = findGaussian(xNormalized, model.gaussians);
       if (newSelected !== model.selectedGaussian) {
@@ -337,6 +414,7 @@ function vtkPiecewiseFunctionWidget(publicAPI, model) {
   };
 
   publicAPI.onHover = (x, y) => {
+    console.log('hover');
     const [xNormalized, yNormalized] = normalizeCoordinates(x, y, model.graphArea);
     const newActive = (xNormalized < 0) ? model.selectedGaussian : findGaussian(xNormalized, model.gaussians);
     model.canvas.style.cursor = 'default';
@@ -380,6 +458,7 @@ function vtkPiecewiseFunctionWidget(publicAPI, model) {
   };
 
   publicAPI.onDown = (x, y) => {
+    console.log('down');
     model.mouseIsDown = true;
     const xNormalized = normalizeCoordinates(x, y, model.graphArea)[0];
     const newSelected = findGaussian(xNormalized, model.gaussians);
@@ -391,6 +470,7 @@ function vtkPiecewiseFunctionWidget(publicAPI, model) {
   };
 
   publicAPI.onDrag = (x, y) => {
+    console.log('drag');
     if (model.dragAction) {
       const [xNormalized, yNormalized] = normalizeCoordinates(x, y, model.graphArea);
       const { position, gaussian, originalGaussian, action } = model.dragAction;
@@ -403,6 +483,7 @@ function vtkPiecewiseFunctionWidget(publicAPI, model) {
   };
 
   publicAPI.onUp = (x, y) => {
+    console.log('up');
     model.mouseIsDown = false;
     return true;
   };
@@ -415,19 +496,56 @@ function vtkPiecewiseFunctionWidget(publicAPI, model) {
     return true;
   };
 
+  publicAPI.onAddGaussian = (x, y) => {
+    const [xNormalized, yNormalized] = normalizeCoordinates(x, y, model.graphArea);
+    if (xNormalized >= 0) {
+      publicAPI.addGaussian(xNormalized, 1 - yNormalized, 0.1, 0, 0);
+    }
+    return true;
+  };
+
+  publicAPI.onRemoveGaussian = (x, y) => {
+    const xNormalized = normalizeCoordinates(x, y, model.graphArea)[0];
+    const newSelected = findGaussian(xNormalized, model.gaussians);
+    if (xNormalized >= 0 && newSelected !== -1) {
+      publicAPI.removeGaussian(newSelected);
+    }
+    return true;
+  };
 
   publicAPI.bindMouseListeners = () => {
     if (!model.listeners) {
       const isDown = () => !!model.mouseIsDown;
+      const touchId = createTouchClickListener(
+        {
+          clicks: 1,
+          touches: 1,
+          action: publicAPI.onClick,
+        }, {
+          clicks: 2,
+          touches: 1,
+          action: publicAPI.onAddGaussian,
+        }, {
+          clicks: 2,
+          touches: 2,
+          action: publicAPI.onRemoveGaussian,
+        });
+
       model.listeners = {
         mousemove: listenerSelector(isDown, createListener(publicAPI.onDrag), createListener(publicAPI.onHover)),
+        dblclick: createListener(publicAPI.onAddGaussian),
+        contextmenu: createListener(publicAPI.onRemoveGaussian),
         click: createListener(publicAPI.onClick),
         mouseup: createListener(publicAPI.onUp),
         mousedown: createListener(publicAPI.onDown),
         mouseout: createListener(publicAPI.onLeave),
+
+        touchstart: createTouchListener(touchId, macro.chain(publicAPI.onHover, publicAPI.onDown)),
+        touchmove: listenerSelector(isDown, createTouchListener(touchId, publicAPI.onDrag), createTouchListener(touchId, publicAPI.onHover)),
+        touchend: createTouchListener(touchId, publicAPI.onUp),
       };
       Object.keys(model.listeners).forEach((eventType) => {
-        model.canvas.addEventListener(eventType, model.listeners[eventType]);
+        model.canvas.addEventListener(eventType, model.listeners[eventType], false);
       });
     }
   };
@@ -461,41 +579,43 @@ function vtkPiecewiseFunctionWidget(publicAPI, model) {
     ctx.fillStyle = model.style.backgroundColor;
     ctx.fillRect(...graphArea);
 
-    // Draw icons
-    // +
-    const halfSize = Math.round((model.style.iconSize / 2) - model.style.strokeWidth);
-    const center = Math.round(halfSize + offset + model.style.strokeWidth);
-    ctx.beginPath();
-    ctx.lineWidth = model.style.buttonStrokeWidth;
-    ctx.strokeStyle = model.style.buttonStrokeColor;
-    ctx.arc(center - (offset / 2), center, halfSize, 0, 2 * Math.PI, false);
-    ctx.fillStyle = model.style.buttonFillColor;
-    ctx.fill();
-    ctx.stroke();
-    ctx.moveTo(center - halfSize + model.style.strokeWidth + 2 - (offset / 2), center);
-    ctx.lineTo(center + halfSize - model.style.strokeWidth - 2 - (offset / 2), center);
-    ctx.stroke();
-    ctx.moveTo(center - (offset / 2), center - halfSize + model.style.strokeWidth + 2);
-    ctx.lineTo(center - (offset / 2), center + halfSize - model.style.strokeWidth - 2);
-    ctx.stroke();
-
-    // -
-    if (model.selectedGaussian === -1) {
-      ctx.fillStyle = model.style.buttonDisableFillColor;
-      ctx.lineWidth = model.style.buttonDisableStrokeWidth;
-      ctx.strokeStyle = model.style.buttonDisableStrokeColor;
-    } else {
-      ctx.fillStyle = model.style.buttonFillColor;
+    if (model.style.iconSize > 1) {
+      // Draw icons
+      // +
+      const halfSize = Math.round((model.style.iconSize / 2) - model.style.strokeWidth);
+      const center = Math.round(halfSize + offset + model.style.strokeWidth);
+      ctx.beginPath();
       ctx.lineWidth = model.style.buttonStrokeWidth;
       ctx.strokeStyle = model.style.buttonStrokeColor;
+      ctx.arc(center - (offset / 2), center, halfSize, 0, 2 * Math.PI, false);
+      ctx.fillStyle = model.style.buttonFillColor;
+      ctx.fill();
+      ctx.stroke();
+      ctx.moveTo(center - halfSize + model.style.strokeWidth + 2 - (offset / 2), center);
+      ctx.lineTo(center + halfSize - model.style.strokeWidth - 2 - (offset / 2), center);
+      ctx.stroke();
+      ctx.moveTo(center - (offset / 2), center - halfSize + model.style.strokeWidth + 2);
+      ctx.lineTo(center - (offset / 2), center + halfSize - model.style.strokeWidth - 2);
+      ctx.stroke();
+
+      // -
+      if (model.selectedGaussian === -1) {
+        ctx.fillStyle = model.style.buttonDisableFillColor;
+        ctx.lineWidth = model.style.buttonDisableStrokeWidth;
+        ctx.strokeStyle = model.style.buttonDisableStrokeColor;
+      } else {
+        ctx.fillStyle = model.style.buttonFillColor;
+        ctx.lineWidth = model.style.buttonStrokeWidth;
+        ctx.strokeStyle = model.style.buttonStrokeColor;
+      }
+      ctx.beginPath();
+      ctx.arc(center - (offset / 2), center + (offset / 2) + model.style.iconSize, halfSize, 0, 2 * Math.PI, false);
+      ctx.fill();
+      ctx.stroke();
+      ctx.moveTo(center - halfSize + model.style.strokeWidth + 2 - (offset / 2), center + (offset / 2) + model.style.iconSize);
+      ctx.lineTo(center + halfSize - model.style.strokeWidth - 2 - (offset / 2), center + (offset / 2) + model.style.iconSize);
+      ctx.stroke();
     }
-    ctx.beginPath();
-    ctx.arc(center - (offset / 2), center + (offset / 2) + model.style.iconSize, halfSize, 0, 2 * Math.PI, false);
-    ctx.fill();
-    ctx.stroke();
-    ctx.moveTo(center - halfSize + model.style.strokeWidth + 2 - (offset / 2), center + (offset / 2) + model.style.iconSize);
-    ctx.lineTo(center + halfSize - model.style.strokeWidth - 2 - (offset / 2), center + (offset / 2) + model.style.iconSize);
-    ctx.stroke();
 
     // Draw histogram
     drawChart(ctx, graphArea, model.histogram, { lineWidth: 1, strokeStyle: model.style.histogramColor, fillStyle: model.style.histogramColor });
@@ -603,9 +723,9 @@ const DEFAULT_VALUES = {
     handleColor: 'rgb(0, 150, 0)',
     strokeWidth: 2,
     activeStrokeWidth: 3,
-    buttonStrokeWidth: 1,
+    buttonStrokeWidth: 1.5,
     handleWidth: 3,
-    iconSize: 32,
+    iconSize: 20,
     padding: 10,
   },
   activeGaussian: -1,
@@ -624,12 +744,12 @@ export function extend(publicAPI, model, initialValues = {}) {
   macro.event(publicAPI, model, 'opacityChange');
 
   // Object specific methods
-  vtkPiecewiseFunctionWidget(publicAPI, model);
+  vtkPiecewiseGaussianWidget(publicAPI, model);
 }
 
 // ----------------------------------------------------------------------------
 
-export const newInstance = macro.newInstance(extend, 'vtkPiecewiseFunctionWidget');
+export const newInstance = macro.newInstance(extend, 'vtkPiecewiseGaussianWidget');
 
 // ----------------------------------------------------------------------------
 
