@@ -108,7 +108,7 @@ function fetchArray(instance = {}, baseURL, array, options = {}) {
 
 // ----------------------------------------------------------------------------
 
-function fetchJSON(instance = {}, url, compression) {
+function fetchJSON(instance = {}, url, options = {}) {
   return new Promise((resolve, reject) => {
     const xhr = new XMLHttpRequest();
 
@@ -123,7 +123,7 @@ function fetchJSON(instance = {}, url, compression) {
           instance.invokeBusy(false);
         }
         if (xhr.status === 200 || xhr.status === 0) {
-          if (compression) {
+          if (options.compression) {
             resolve(JSON.parse(pako.inflate(new Uint8Array(xhr.response), { to: 'string' })));
           } else {
             resolve(JSON.parse(xhr.responseText));
@@ -134,9 +134,13 @@ function fetchJSON(instance = {}, url, compression) {
       }
     };
 
+    if (options && options.progressCallback) {
+      xhr.addEventListener('progress', options.progressCallback);
+    }
+
     // Make request
     xhr.open('GET', url, true);
-    xhr.responseType = compression ? 'arraybuffer' : 'text';
+    xhr.responseType = options.compression ? 'arraybuffer' : 'text';
     xhr.send();
   });
 }

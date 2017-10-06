@@ -123,14 +123,14 @@ function create(createOptions) {
       });
     },
 
-    fetchJSON(instance = {}, url, compression) {
+    fetchJSON(instance = {}, url, options = {}) {
       const path = removeLeadingSlash(url);
       if (!ready) {
         vtkErrorMacro('ERROR!!! zip not ready...');
       }
 
-      if (compression) {
-        if (compression === 'gz') {
+      if (options.compression) {
+        if (options.compression === 'gz') {
           return zipRoot.file(path).async('uint8array').then((uint8array) => {
             const str = pako.inflate(uint8array, { to: 'string' });
             return new Promise(ok => ok(JSON.parse(str)));

@@ -32,7 +32,7 @@ function fetchText(instance = {}, url, compression, progressCallback) {
 }
 
 
-function fetchJSON(instance = {}, url, compression) {
+function fetchJSON(instance = {}, url, options = {}) {
   return new Promise((resolve, reject) => {
     const txt = getContent(removeLeadingSlash(url));
     if (txt === null) {
