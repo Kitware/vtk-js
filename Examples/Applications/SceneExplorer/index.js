@@ -3,10 +3,10 @@
 
 import 'babel-polyfill';
 
-import vtkFullScreenRenderWindow  from 'vtk.js/Sources/Rendering/Misc/FullScreenRenderWindow';
-
-import vtkHttpSceneLoader         from 'vtk.js/Sources/IO/Core/HttpSceneLoader';
 import DataAccessHelper           from 'vtk.js/Sources/IO/Core/DataAccessHelper';
+import HttpDataAccessHelper       from 'vtk.js/Sources/IO/Core/DataAccessHelper/HttpDataAccessHelper';
+import vtkFullScreenRenderWindow  from 'vtk.js/Sources/Rendering/Misc/FullScreenRenderWindow';
+import vtkHttpSceneLoader         from 'vtk.js/Sources/IO/Core/HttpSceneLoader';
 import vtkURLExtract              from 'vtk.js/Sources/Common/Core/URLExtract';
 
 import controlWidget from './SceneExplorerWidget';
@@ -26,27 +26,6 @@ function emptyContainer(container) {
   while (container.firstChild) {
     container.removeChild(container.firstChild);
   }
-}
-
-function downloadZipFile(url) {
-  return new Promise((resolve, reject) => {
-    const xhr = new XMLHttpRequest();
-
-    xhr.onreadystatechange = (e) => {
-      if (xhr.readyState === 4) {
-        if (xhr.status === 200 || xhr.status === 0) {
-          resolve(xhr.response);
-        } else {
-          reject(xhr, e);
-        }
-      }
-    };
-
-    // Make request
-    xhr.open('GET', url, true);
-    xhr.responseType = 'arraybuffer';
-    xhr.send();
-  });
 }
 
 export function load(container, options) {
@@ -79,7 +58,7 @@ export function load(container, options) {
     sceneImporter.setUrl(options.url);
     onReady(sceneImporter);
   } else if (options.fileURL) {
-    downloadZipFile(options.fileURL)
+    HttpDataAccessHelper.fetchBinary(options.fileURL)
       .then((zipContent) => {
         const dataAccessHelper = DataAccessHelper.get(
           'zip',

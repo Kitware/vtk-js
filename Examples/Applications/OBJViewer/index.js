@@ -149,7 +149,7 @@ export function load(container, options) {
       loadZipContent(options.file, renderWindow, renderer);
     }
   } else if (options.fileURL) {
-    HttpDataAccessHelper.fetchZipFile(options.fileURL)
+    HttpDataAccessHelper.fetchBinary(options.fileURL)
       .then((content) => {
         loadZipContent(content, renderWindow, renderer);
       });

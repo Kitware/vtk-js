@@ -8,7 +8,7 @@ const { vtkErrorMacro, vtkDebugMacro } = macro;
 
 let requestCount = 0;
 
-function fetchZipFile(url) {
+function fetchBinary(url, options = {}) {
   return new Promise((resolve, reject) => {
     const xhr = new XMLHttpRequest();
 
@@ -21,6 +21,10 @@ function fetchZipFile(url) {
         }
       }
     };
+
+    if (options && options.progressCallback) {
+      xhr.addEventListener('progress', options.progressCallback);
+    }
 
     // Make request
     xhr.open('GET', url, true);
@@ -184,5 +188,5 @@ export default {
   fetchArray,
   fetchJSON,
   fetchText,
-  fetchZipFile, // Only for HTTP
+  fetchBinary, // Only for HTTP
 };

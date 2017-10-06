@@ -132,7 +132,7 @@ function vtkHttpDataSetReader(publicAPI, model) {
   publicAPI.updateMetadata = (loadData = false) => {
     if (model.compression === 'zip') {
       return new Promise((resolve, reject) => {
-        HTTP_DATA_ACCESS.fetchZipFile(model.url).then(
+        HTTP_DATA_ACCESS.fetchBinary(model.url).then(
           (zipContent) => {
             model.dataAccessHelper = DataAccessHelper.get(
               'zip',
