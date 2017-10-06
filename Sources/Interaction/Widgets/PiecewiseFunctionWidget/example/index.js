@@ -6,6 +6,8 @@ import vtkPiecewiseFunctionWidget from 'vtk.js/Sources/Interaction/Widgets/Piece
 import vtkVolume                  from 'vtk.js/Sources/Rendering/Core/Volume';
 import vtkVolumeMapper            from 'vtk.js/Sources/Rendering/Core/VolumeMapper';
 
+import macro            from 'vtk.js/Sources/macro';
+
 import presets from 'vtk.js/Sources/Rendering/Core/ColorTransferFunction/ColorMaps.json';
 
 // ----------------------------------------------------------------------------
@@ -94,7 +96,7 @@ widget.updateStyle({
   activeStrokeWidth: 3,
   buttonStrokeWidth: 1.5,
   handleWidth: 3,
-  iconSize: 20,
+  iconSize: 20, // Can be 0 if you want to remove buttons (dblClick for (+) / rightClick for (-))
   padding: 10,
 });
 
@@ -153,10 +155,10 @@ widget.addGaussian(0.75, 1, 0.3, 0, 0);
 widget.setContainer(container);
 widget.bindMouseListeners();
 
-widget.onOpacityChange(() => {
+widget.onOpacityChange(macro.debounce(() => {
   widget.applyOpacity(piecewiseFunction);
   render();
-});
+}), 1000);
 
 // ----------------------------------------------------------------------------
 // Expose variable to global namespace
