@@ -34,7 +34,8 @@ module.exports = {
   devServer: {
     contentBase: '${root.replace(/\\/g, '\\\\')}',
     port: 9999,
-    host: 'localhost',
+    host: '0.0.0.0',
+    disableHostCheck: true,
     hot: false,
     quiet: false,
     noInfo: false,
