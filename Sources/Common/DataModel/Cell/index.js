@@ -11,15 +11,9 @@ function vtkCell(publicAPI, model) {
   model.classHierarchy.push('vtkCell');
 
   publicAPI.initialize = (npts, pointIdsList, pointList) => {
-    model.pointsIds = [];
-    model.points = vtkPoints.newInstance();
+    model.pointsIds = pointIdsList;
     model.points.setNumberOfPoints(npts);
-    const p = [];
-    for (let i = 0; i < npts; i++) {
-      pointList.getPoint(i, p);
-      model.pointsIds.push(pointIdsList[i]);
-      model.points.setPoint(i, p[0], p[1], p[2]);
-    }
+    model.points.setData(pointList.getData());
   };
 
   publicAPI.getBounds = () => {
