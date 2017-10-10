@@ -267,7 +267,7 @@ function vtkCellPicker(publicAPI, model) {
           }
         }
 
-        if (cellPicked.intersect && cellPicked.t <= (tMin + model.tolerance) &&
+        if (cellPicked.intersect === 1 && cellPicked.t <= (tMin + model.tolerance) &&
           cellPicked.t >= t1 && cellPicked.t <= t2) {
           const pDist = cell.getParametricDistance(pCoords);
           if (pDist < pDistMin || (pDist === pDistMin && cellPicked.t < tMin)) {
