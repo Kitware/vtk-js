@@ -201,9 +201,7 @@ function createTouchClickListener(...callbacks) {
 }
 
 function processTouchClicks() {
-  console.log('processTouchClicks');
   TOUCH_CLICK.filter(t => t.ready).forEach((touchHandle) => {
-    console.log(touchHandle);
     touchHandle.callbacks.forEach((callback) => {
       if (callback.touches === touchHandle.touches && callback.clicks === touchHandle.count) {
         callback.action(...touchHandle.singleTouche);
@@ -234,7 +232,6 @@ function createTouchListener(id, callback, nbTouches = 1, preventDefault = true)
       TOUCH_CLICK[id].singleTouche = singleTouche;
       TOUCH_CLICK[id].touches = e.touches.length;
     } else if (e.type === 'touchmove') {
-      console.log('touchmove');
       TOUCH_CLICK[id].ts = 0;
       TOUCH_CLICK[id].count = 0;
       TOUCH_CLICK[id].ready = false;
@@ -244,7 +241,6 @@ function createTouchListener(id, callback, nbTouches = 1, preventDefault = true)
         TOUCH_CLICK[id].ready = true;
         TOUCH_CLICK[id].timeout = setTimeout(processTouchClicks, TOUCH_CLICK[id].deltaT);
       } else {
-        console.log('no click');
         TOUCH_CLICK[id].ready = false;
       }
     }
@@ -362,7 +358,6 @@ function vtkPiecewiseGaussianWidget(publicAPI, model) {
   };
 
   publicAPI.onClick = (x, y) => {
-    console.log('click');
     const [xNormalized, yNormalized] = normalizeCoordinates(x, y, model.graphArea);
     if (xNormalized < 0 && model.style.iconSize > 1) {
       // Control buttons
@@ -414,7 +409,6 @@ function vtkPiecewiseGaussianWidget(publicAPI, model) {
   };
 
   publicAPI.onHover = (x, y) => {
-    console.log('hover');
     const [xNormalized, yNormalized] = normalizeCoordinates(x, y, model.graphArea);
     const newActive = (xNormalized < 0) ? model.selectedGaussian : findGaussian(xNormalized, model.gaussians);
     model.canvas.style.cursor = 'default';
@@ -458,7 +452,6 @@ function vtkPiecewiseGaussianWidget(publicAPI, model) {
   };
 
   publicAPI.onDown = (x, y) => {
-    console.log('down');
     model.mouseIsDown = true;
     const xNormalized = normalizeCoordinates(x, y, model.graphArea)[0];
     const newSelected = findGaussian(xNormalized, model.gaussians);
@@ -470,7 +463,6 @@ function vtkPiecewiseGaussianWidget(publicAPI, model) {
   };
 
   publicAPI.onDrag = (x, y) => {
-    console.log('drag');
     if (model.dragAction) {
       const [xNormalized, yNormalized] = normalizeCoordinates(x, y, model.graphArea);
       const { position, gaussian, originalGaussian, action } = model.dragAction;
@@ -483,7 +475,6 @@ function vtkPiecewiseGaussianWidget(publicAPI, model) {
   };
 
   publicAPI.onUp = (x, y) => {
-    console.log('up');
     model.mouseIsDown = false;
     return true;
   };
