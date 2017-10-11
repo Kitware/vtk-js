@@ -3,15 +3,14 @@
 
 import 'babel-polyfill';
 
-import vtkFullScreenRenderWindow  from 'vtk.js/Sources/Rendering/Misc/FullScreenRenderWindow';
-import vtkURLExtract              from 'vtk.js/Sources/Common/Core/URLExtract';
-
+import HttpDataAccessHelper       from 'vtk.js/Sources/IO/Core/DataAccessHelper/HttpDataAccessHelper';
+import vtkActor                   from 'vtk.js/Sources/Rendering/Core/Actor';
 import vtkColorMaps               from 'vtk.js/Sources/Rendering/Core/ColorTransferFunction/ColorMaps.json';
 import vtkColorTransferFunction   from 'vtk.js/Sources/Rendering/Core/ColorTransferFunction';
-import vtkActor                   from 'vtk.js/Sources/Rendering/Core/Actor';
+import vtkFullScreenRenderWindow  from 'vtk.js/Sources/Rendering/Misc/FullScreenRenderWindow';
 import vtkMapper                  from 'vtk.js/Sources/Rendering/Core/Mapper';
+import vtkURLExtract              from 'vtk.js/Sources/Common/Core/URLExtract';
 import vtkXMLPolyDataReader       from 'vtk.js/Sources/IO/XML/XMLPolyDataReader';
-
 import { ColorMode, ScalarMode }  from 'vtk.js/Sources/Rendering/Core/Mapper/Constants';
 
 
@@ -77,137 +76,156 @@ function emptyContainer(container) {
 
 // ----------------------------------------------------------------------------
 
-export function load(container, options) {
-  autoInit = false;
-  emptyContainer(container);
-
+function createViewer(container, fileContentAsText) {
   const fullScreenRenderer = vtkFullScreenRenderWindow.newInstance({ background: [0, 0, 0] });
   const renderer = fullScreenRenderer.getRenderer();
   const renderWindow = fullScreenRenderer.getRenderWindow();
-
   renderWindow.getInteractor().setDesiredUpdateRate(25);
+
+  const vtpReader = vtkXMLPolyDataReader.newInstance();
+  vtpReader.parse(fileContentAsText);
+
+  const lookupTable = vtkColorTransferFunction.newInstance();
+  const source = vtpReader.getOutputData(0);
+  const mapper = vtkMapper.newInstance({
+    interpolateScalarsBeforeMapping: false,
+    useLookupTableScalarRange: true,
+    lookupTable,
+    scalarVisibility: false,
+  });
+  const actor = vtkActor.newInstance();
+  const scalars = source.getPointData().getScalars();
+  const dataRange = [].concat(scalars ? scalars.getRange() : [0, 1]);
+
+  // --------------------------------------------------------------------
+  // Color handling
+  // --------------------------------------------------------------------
+
+  function applyPreset() {
+    const preset = getPreset(presetSelector.value);
+    lookupTable.applyColorMap(preset);
+    lookupTable.setMappingRange(dataRange[0], dataRange[1]);
+    lookupTable.updateRange();
+  }
+  applyPreset();
+  presetSelector.addEventListener('change', applyPreset);
+
+  // --------------------------------------------------------------------
+  // Representation handling
+  // --------------------------------------------------------------------
+
+  function updateRepresentation(event) {
+    const [representation, edgeVisibility] = event.target.value.split(':').map(Number);
+    actor.getProperty().set({ representation, edgeVisibility });
+    renderWindow.render();
+  }
+  representationSelector.addEventListener('change', updateRepresentation);
+
+  // --------------------------------------------------------------------
+  // ColorBy handling
+  // --------------------------------------------------------------------
+
+  const colorByOptions = [{ value: ':', label: 'Solid color' }].concat(
+    source.getPointData().getArrays().map(a => ({ label: `(p) ${a.getName()}`, value: `PointData:${a.getName()}` })),
+    source.getCellData().getArrays().map(a => ({ label: `(c) ${a.getName()}`, value: `CellData:${a.getName()}` })));
+  colorBySelector.innerHTML = colorByOptions.map(({ label, value }) => `<option value="${value}">${label}</option>`).join('');
+
+  function updateColorBy(event) {
+    const [location, colorByArrayName] = event.target.value.split(':');
+    const interpolateScalarsBeforeMapping = (location === 'PointData');
+    let colorMode = ColorMode.DEFAULT;
+    let scalarMode = ScalarMode.DEFAULT;
+    const colorByArrayComponent = -1;
+    const scalarVisibility = (location.length > 0);
+    if (scalarVisibility) {
+      const activeArray = source[`get${location}`]().getArrayByName(colorByArrayName);
+      const newDataRange = activeArray.getRange();
+      dataRange[0] = newDataRange[0];
+      dataRange[1] = newDataRange[1];
+      colorMode = ColorMode.MAP_SCALARS;
+      scalarMode = interpolateScalarsBeforeMapping ? ScalarMode.USE_POINT_FIELD_DATA : ScalarMode.USE_CELL_FIELD_DATA;
+
+      const numberOfComponents = activeArray.getNumberOfComponents();
+      if (numberOfComponents > 1) {
+        // componentSelector.style.display = 'block'; // FIXME the 'colorByArrayComponent' is not yet processed in mapper
+        const compOpts = ['Magnitude'];
+        while (compOpts.length <= numberOfComponents) {
+          compOpts.push(`Component ${compOpts.length}`);
+        }
+        componentSelector.innerHTML = compOpts.map((t, index) => `<option value="${index - 1}">${t}</option>`).join('');
+      } else {
+        componentSelector.style.display = 'none';
+      }
+    }
+    mapper.set({
+      colorByArrayComponent,
+      colorByArrayName,
+      colorMode,
+      interpolateScalarsBeforeMapping,
+      scalarMode,
+      scalarVisibility,
+    });
+    applyPreset();
+  }
+  colorBySelector.addEventListener('change', updateColorBy);
+
+  function updateColorByComponent(event) {
+    mapper.setColorByArrayComponent(Number(event.target.value));
+    renderWindow.render();
+  }
+  componentSelector.addEventListener('change', updateColorByComponent);
+
+  // --------------------------------------------------------------------
+  // Pipeline handling
+  // --------------------------------------------------------------------
+
+  actor.setMapper(mapper);
+  mapper.setInputData(source);
+  renderer.addActor(actor);
+
+  // Manage update when lookupTable change
+  lookupTable.onModified(() => {
+    renderWindow.render();
+  });
+
+  // Add UI to web page
+  container.appendChild(controlContainer);
+
+  // First render
+  renderer.resetCamera();
+  renderWindow.render();
+}
+
+// ----------------------------------------------------------------------------
+
+export function load(container, options) {
+  autoInit = false;
+  emptyContainer(container);
 
   if (options.file) {
     if (options.ext === 'vtp') {
       const reader = new FileReader();
       reader.onload = function onLoad(e) {
-        const vtpReader = vtkXMLPolyDataReader.newInstance();
-        vtpReader.parse(reader.result);
-
-        const lookupTable = vtkColorTransferFunction.newInstance();
-        const source = vtpReader.getOutputData(0);
-        const mapper = vtkMapper.newInstance({
-          interpolateScalarsBeforeMapping: false,
-          useLookupTableScalarRange: true,
-          lookupTable,
-          scalarVisibility: false,
-        });
-        const actor = vtkActor.newInstance();
-        const scalars = source.getPointData().getScalars();
-        const dataRange = [].concat(scalars ? scalars.getRange() : [0, 1]);
-
-        // --------------------------------------------------------------------
-        // Color handling
-        // --------------------------------------------------------------------
-
-        function applyPreset() {
-          const preset = getPreset(presetSelector.value);
-          lookupTable.applyColorMap(preset);
-          lookupTable.setMappingRange(dataRange[0], dataRange[1]);
-          lookupTable.updateRange();
-        }
-        applyPreset();
-        presetSelector.addEventListener('change', applyPreset);
-
-        // --------------------------------------------------------------------
-        // Representation handling
-        // --------------------------------------------------------------------
-
-        function updateRepresentation(event) {
-          const [representation, edgeVisibility] = event.target.value.split(':').map(Number);
-          actor.getProperty().set({ representation, edgeVisibility });
-          renderWindow.render();
-        }
-        representationSelector.addEventListener('change', updateRepresentation);
-
-        // --------------------------------------------------------------------
-        // ColorBy handling
-        // --------------------------------------------------------------------
-
-        const colorByOptions = [{ value: ':', label: 'Solid color' }].concat(
-          source.getPointData().getArrays().map(a => ({ label: `(p) ${a.getName()}`, value: `PointData:${a.getName()}` })),
-          source.getCellData().getArrays().map(a => ({ label: `(c) ${a.getName()}`, value: `CellData:${a.getName()}` })));
-        colorBySelector.innerHTML = colorByOptions.map(({ label, value }) => `<option value="${value}">${label}</option>`).join('');
-
-        function updateColorBy(event) {
-          const [location, colorByArrayName] = event.target.value.split(':');
-          const interpolateScalarsBeforeMapping = (location === 'PointData');
-          let colorMode = ColorMode.DEFAULT;
-          let scalarMode = ScalarMode.DEFAULT;
-          const colorByArrayComponent = -1;
-          const scalarVisibility = (location.length > 0);
-          if (scalarVisibility) {
-            const activeArray = source[`get${location}`]().getArrayByName(colorByArrayName);
-            const newDataRange = activeArray.getRange();
-            dataRange[0] = newDataRange[0];
-            dataRange[1] = newDataRange[1];
-            colorMode = ColorMode.MAP_SCALARS;
-            scalarMode = interpolateScalarsBeforeMapping ? ScalarMode.USE_POINT_FIELD_DATA : ScalarMode.USE_CELL_FIELD_DATA;
-
-            const numberOfComponents = activeArray.getNumberOfComponents();
-            if (numberOfComponents > 1) {
-              // componentSelector.style.display = 'block'; // FIXME the 'colorByArrayComponent' is not yet processed in mapper
-              const compOpts = ['Magnitude'];
-              while (compOpts.length <= numberOfComponents) {
-                compOpts.push(`Component ${compOpts.length}`);
-              }
-              componentSelector.innerHTML = compOpts.map((t, index) => `<option value="${index - 1}">${t}</option>`).join('');
-            } else {
-              componentSelector.style.display = 'none';
-            }
-          }
-          mapper.set({
-            colorByArrayComponent,
-            colorByArrayName,
-            colorMode,
-            interpolateScalarsBeforeMapping,
-            scalarMode,
-            scalarVisibility,
-          });
-          applyPreset();
-        }
-        colorBySelector.addEventListener('change', updateColorBy);
-
-        function updateColorByComponent(event) {
-          mapper.setColorByArrayComponent(Number(event.target.value));
-          renderWindow.render();
-        }
-        componentSelector.addEventListener('change', updateColorByComponent);
-
-        // --------------------------------------------------------------------
-        // Pipeline handling
-        // --------------------------------------------------------------------
-
-        actor.setMapper(mapper);
-        mapper.setInputData(source);
-        renderer.addActor(actor);
-
-        // Manage update when lookupTable change
-        lookupTable.onModified(() => {
-          renderWindow.render();
-        });
-
-        // Add UI to web page
-        container.appendChild(controlContainer);
-
-        // First render
-        renderer.resetCamera();
-        renderWindow.render();
+        createViewer(container, reader.result);
       };
       reader.readAsText(options.file);
     } else {
       console.error('Unkown file...');
     }
+  } else if (options.fileURL) {
+    const progressContainer = document.createElement('div');
+    progressContainer.setAttribute('class', style.progress);
+    container.appendChild(progressContainer);
+
+    const progressCallback = (progressEvent) => {
+      const percent = Math.floor(100 * progressEvent.loaded / progressEvent.total);
+      progressContainer.innerHTML = `Loading ${percent}%`;
+    };
+
+    HttpDataAccessHelper.fetchText({}, options.fileURL, { progressCallback }).then((txt) => {
+      container.removeChild(progressContainer);
+      createViewer(container, txt);
+    });
   }
 }
 

@@ -1,3 +1,9 @@
+body {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
+
 .fullScreen {
   position: absolute;
   width: 100vw;
@@ -54,4 +60,9 @@ select:focus {
   left: 5px;
   width: 100%;
   z-index: 1;
+}
+
+.progress {
+  flex: none;
+  font-size: 50px;
 }

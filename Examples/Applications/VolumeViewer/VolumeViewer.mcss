@@ -1,3 +1,9 @@
+body {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
+
 .fullScreen {
   position: absolute;
   width: 100vw;
@@ -70,4 +76,9 @@ select:focus {
 
 .shadow input {
   margin-right: 10px;
+}
+
+.progress {
+  flex: none;
+  font-size: 50px;
 }
