@@ -45,6 +45,8 @@ const ACTIONS = {
   },
 };
 
+// ----------------------------------------------------------------------------
+
 function computeOpacities(gaussians, sampling = 256) {
   const opacities = [];
   while (opacities.length < sampling) {
@@ -194,11 +196,15 @@ function createListener(callback, preventDefault = true) {
   };
 }
 
+// ----------------------------------------------------------------------------
+
 function createTouchClickListener(...callbacks) {
   const id = TOUCH_CLICK.length;
   TOUCH_CLICK.push({ callbacks, timeout: 0, deltaT: 200, count: 0, ready: false });
   return id;
 }
+
+// ----------------------------------------------------------------------------
 
 function processTouchClicks() {
   TOUCH_CLICK.filter(t => t.ready).forEach((touchHandle) => {
@@ -215,6 +221,8 @@ function processTouchClicks() {
     touchHandle.ready = false;
   });
 }
+
+// ----------------------------------------------------------------------------
 
 function createTouchListener(id, callback, nbTouches = 1, preventDefault = true) {
   return (e) => {
@@ -379,7 +387,7 @@ function vtkPiecewiseGaussianWidget(publicAPI, model) {
 
           // Fake active action
           setImmediate(() => {
-            model.mouseIsDown = true;
+            publicAPI.onDown(x, y);
             model.dragAction = { position: [0, 0], action, gaussian, originalGaussian };
           });
           break;
@@ -452,6 +460,9 @@ function vtkPiecewiseGaussianWidget(publicAPI, model) {
   };
 
   publicAPI.onDown = (x, y) => {
+    if (!model.mouseIsDown) {
+      publicAPI.invokeAnimation(true);
+    }
     model.mouseIsDown = true;
     const xNormalized = normalizeCoordinates(x, y, model.graphArea)[0];
     const newSelected = findGaussian(xNormalized, model.gaussians);
@@ -475,6 +486,9 @@ function vtkPiecewiseGaussianWidget(publicAPI, model) {
   };
 
   publicAPI.onUp = (x, y) => {
+    if (model.mouseIsDown) {
+      publicAPI.invokeAnimation(false);
+    }
     model.mouseIsDown = false;
     return true;
   };
@@ -733,6 +747,7 @@ export function extend(publicAPI, model, initialValues = {}) {
   macro.setGet(publicAPI, model, ['piecewiseSize', 'numberOfBins', 'colorTransferFunction']);
   macro.get(publicAPI, model, ['size', 'canvas']);
   macro.event(publicAPI, model, 'opacityChange');
+  macro.event(publicAPI, model, 'animation');
 
   // Object specific methods
   vtkPiecewiseGaussianWidget(publicAPI, model);
