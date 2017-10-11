@@ -37,15 +37,15 @@
 .selector {
   position: absolute;
   top: 5px;
-  left: 5px;
-  width: 400px;
+  left: 400px;
+  transform: translate(-100%, 0px);
   border: none;
   background: transparent;
   color: white;
   border: none;
 }
 
-.selector:focus {
+select:focus {
   outline: none;
   border: none;
 }
@@ -56,4 +56,18 @@
   left: 5px;
   background: rgba(255, 255, 255, 0.3);
   border-radius: 5px;
+}
+
+.shadow {
+  position: absolute;
+  top: 5px;
+  left: 5px;
+  border: none;
+  background: transparent;
+  color: white;
+  border: none;
+}
+
+.shadow input {
+  margin-right: 10px;
 }

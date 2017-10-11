@@ -6,6 +6,7 @@ import 'babel-polyfill';
 import vtkFullScreenRenderWindow  from 'vtk.js/Sources/Rendering/Misc/FullScreenRenderWindow';
 import vtkURLExtract              from 'vtk.js/Sources/Common/Core/URLExtract';
 
+import vtkBoundingBox             from 'vtk.js/Sources/Common/DataModel/BoundingBox';
 import vtkColorMaps               from 'vtk.js/Sources/Rendering/Core/ColorTransferFunction/ColorMaps.json';
 import vtkColorTransferFunction   from 'vtk.js/Sources/Rendering/Core/ColorTransferFunction';
 import vtkPiecewiseFunction       from 'vtk.js/Sources/Common/DataModel/PiecewiseFunction';
@@ -38,6 +39,10 @@ presetSelector.innerHTML = presetNames.map(name => `<option value="${name}">${na
 
 const widgetContainer = document.createElement('div');
 widgetContainer.setAttribute('class', style.piecewiseWidget);
+
+const shadowContainer = document.createElement('select');
+shadowContainer.setAttribute('class', style.shadow);
+shadowContainer.innerHTML = '<option value="1">Use shadow</option><option value="0">No shadow</option>';
 
 // ----------------------------------------------------------------------------
 // Add class to body if iOS device
@@ -81,17 +86,27 @@ export function load(container, options) {
         const actor = vtkVolume.newInstance();
 
         const dataArray = source.getPointData().getScalars();
+        const dataRange = dataArray.getRange();
 
         // Color handling
         const lookupTable = vtkColorTransferFunction.newInstance();
         function applyPreset() {
           const preset = getPreset(presetSelector.value);
           lookupTable.applyColorMap(preset);
-          lookupTable.setMappingRange(...dataArray.getRange());
+          lookupTable.setMappingRange(...dataRange);
           lookupTable.updateRange();
         }
         applyPreset();
         presetSelector.addEventListener('change', applyPreset);
+
+        // Shadow management
+        shadowContainer.addEventListener('change', (event) => {
+          const useShadow = !!Number(event.target.value);
+          console.log('useShadow', useShadow, event.target.value);
+          actor.getProperty().setShade(useShadow);
+          actor.getProperty().setUseGradientOpacity(0, useShadow);
+          renderWindow.render();
+        });
 
         // Opacity handling
         const piecewiseFunction = vtkPiecewiseFunction.newInstance();
@@ -109,13 +124,22 @@ export function load(container, options) {
         actor.getProperty().setInterpolationTypeToFastLinear();
 
         // For better looking volume rendering
-        actor.getProperty().setScalarOpacityUnitDistance(0, 4.5);
-        actor.getProperty().setUseGradientOpacity(0, true);
-        actor.getProperty().setGradientOpacityMinimumValue(0, 15);
-        actor.getProperty().setGradientOpacityMinimumOpacity(0, 0.0);
-        actor.getProperty().setGradientOpacityMaximumValue(0, 100);
-        actor.getProperty().setGradientOpacityMaximumOpacity(0, 1.0);
+        // - distance in world coordinates a scalar opacity of 1.0
+        actor.getProperty().setScalarOpacityUnitDistance(0, vtkBoundingBox.getDiagonalLength(source.getBounds()) / Math.max(...source.getDimensions()));
+        // - control how we emphasize surface boundaries
+        //  => max should be around the average gradient magnitude for the
+        //     volume or maybe average plus one std dev of the gradient magnitude
+        //     (adjusted for spacing, this is a world coordinate gradient, not a
+        //     pixel gradient)
+        //  => max hack: (dataRange[1] - dataRange[0]) * 0.05
+        actor.getProperty().setGradientOpacityMinimumValue(0, 0);
+        actor.getProperty().setGradientOpacityMaximumValue(0, (dataRange[1] - dataRange[0]) * 0.05);
+        // - Use shading based on gradient
         actor.getProperty().setShade(true);
+        actor.getProperty().setUseGradientOpacity(0, true);
+        // - generic good default
+        actor.getProperty().setGradientOpacityMinimumOpacity(0, 0.0);
+        actor.getProperty().setGradientOpacityMaximumOpacity(0, 1.0);
         actor.getProperty().setAmbient(0.2);
         actor.getProperty().setDiffuse(0.7);
         actor.getProperty().setSpecular(0.3);
@@ -137,10 +161,10 @@ export function load(container, options) {
           activeStrokeWidth: 3,
           buttonStrokeWidth: 1.5,
           handleWidth: 3,
-          iconSize: 20,
+          iconSize: 0,
           padding: 10,
         });
-        transferFunctionWidget.addGaussian(0.5, 0.30, 0.5, 0.5, 0.4);
+        transferFunctionWidget.addGaussian(0.5, 1.0, 0.5, 0.5, 0.4);
         transferFunctionWidget.setDataArray(dataArray.getData());
         transferFunctionWidget.setColorTransferFunction(lookupTable);
         transferFunctionWidget.applyOpacity(piecewiseFunction);
@@ -173,6 +197,7 @@ export function load(container, options) {
         // Add UI to web page
         container.appendChild(widgetContainer);
         container.appendChild(presetSelector);
+        container.appendChild(shadowContainer);
 
         // First render
         renderer.resetCamera();
@@ -180,7 +205,7 @@ export function load(container, options) {
       };
       reader.readAsText(options.file);
     } else {
-      alert('Unkown file...');
+      console.error('Unkown file...');
     }
   }
 }
