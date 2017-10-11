@@ -70,6 +70,40 @@ function vtkViewNode(publicAPI, model) {
     return model.parent.getFirstAncestorOfType(type);
   };
 
+  publicAPI.addMissingPropNodes = (actorsList) => {
+    if (!actorsList || !actorsList.length) {
+      return;
+    }
+    publicAPI.addMissingPropNode(actorsList, publicAPI);
+  };
+
+  publicAPI.addMissingPropNode = (dataObjs, parent) => {
+    model.preparedNodes = model.preparedNodes.concat(dataObjs);
+
+    // if any dataObj is not a renderable of a child
+    // then create child for that dataObj with renderable set to the
+    // dataObj
+    const childDOs = model.children.map(node => node.getRenderable());
+
+    const newNodes =
+      dataObjs
+        .filter(node => (node && !node.isDeleted() && childDOs.indexOf(node) === -1))
+        .map((node) => {
+          const newNode = parent.createViewNode(node);
+          if (newNode) {
+            newNode.setParent(parent);
+            newNode.setRenderable(node);
+          }
+          const actors = [].concat(node.getActors());
+          const childs = actors.filter(actor => actor !== node);
+          if (childs.length > 0) {
+            newNode.addMissingPropNode(childs, newNode);
+          }
+          return newNode;
+        });
+    model.children = model.children.concat(newNodes);
+  };
+
   publicAPI.addMissingNode = (dataObj) => {
     if (dataObj && !dataObj.isDeleted()) {
       publicAPI.addMissingNodes([dataObj]);

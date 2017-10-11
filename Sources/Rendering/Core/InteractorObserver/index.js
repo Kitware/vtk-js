@@ -8,7 +8,7 @@ import macro from 'vtk.js/Sources/macro';
 // Description:
 // Transform from world to display coordinates.
 function computeWorldToDisplay(renderer, x, y, z) {
-  const view = renderer.getRenderWindow().getView()[0];
+  const view = renderer.getRenderWindow().getViews()[0];
   return view.worldToDisplay(x, y, z, renderer);
 }
 
@@ -16,7 +16,7 @@ function computeWorldToDisplay(renderer, x, y, z) {
 // Description:
 // Transform from display to world coordinates.
 function computeDisplayToWorld(renderer, x, y, z) {
-  const view = renderer.getRenderWindow().getView()[0];
+  const view = renderer.getRenderWindow().getViews()[0];
   return view.displayToWorld(x, y, z, renderer);
 }
 

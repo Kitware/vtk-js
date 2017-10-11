@@ -411,6 +411,7 @@ export function extend(publicAPI, model, initialValues = {}) {
 
   // Build VTK API
   macro.set(publicAPI, model, ['property']);
+  macro.get(publicAPI, model, ['value']);
   macro.setGet(publicAPI, model, [
     'coordinateSystem',
     'referenceCoordinate',

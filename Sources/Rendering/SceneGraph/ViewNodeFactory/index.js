@@ -15,10 +15,23 @@ function vtkViewNodeFactory(publicAPI, model) {
     if (dataObject.isDeleted()) {
       return null;
     }
-    if (Object.keys(model.overrides).indexOf(dataObject.getClassName()) === -1) {
+
+    let cpt = 0;
+    let className = dataObject.getClassName(cpt++);
+    let isObject = false;
+    const keys = Object.keys(model.overrides);
+    while (className && !isObject) {
+      if (keys.indexOf(className) !== -1) {
+        isObject = true;
+      } else {
+        className = dataObject.getClassName(cpt++);
+      }
+    }
+
+    if (!isObject) {
       return null;
     }
-    const vn = model.overrides[dataObject.getClassName()]();
+    const vn = model.overrides[className]();
     vn.setMyFactory(publicAPI);
     return vn;
   };
