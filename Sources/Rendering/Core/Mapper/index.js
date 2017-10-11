@@ -508,8 +508,6 @@ const DEFAULT_VALUES = {
   resolveCoincidentTopology: false,
 
   viewSpecificProperties: null,
-
-
 };
 
 // ----------------------------------------------------------------------------
