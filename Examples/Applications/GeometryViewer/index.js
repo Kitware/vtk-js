@@ -4,18 +4,17 @@
 import 'babel-polyfill';
 
 import HttpDataAccessHelper       from 'vtk.js/Sources/IO/Core/DataAccessHelper/HttpDataAccessHelper';
-import vtkBoundingBox             from 'vtk.js/Sources/Common/DataModel/BoundingBox';
+import vtkActor                   from 'vtk.js/Sources/Rendering/Core/Actor';
 import vtkColorMaps               from 'vtk.js/Sources/Rendering/Core/ColorTransferFunction/ColorMaps.json';
 import vtkColorTransferFunction   from 'vtk.js/Sources/Rendering/Core/ColorTransferFunction';
 import vtkFullScreenRenderWindow  from 'vtk.js/Sources/Rendering/Misc/FullScreenRenderWindow';
-import vtkPiecewiseFunction       from 'vtk.js/Sources/Common/DataModel/PiecewiseFunction';
-import vtkPiecewiseGaussianWidget from 'vtk.js/Sources/Interaction/Widgets/PiecewiseGaussianWidget';
+import vtkMapper                  from 'vtk.js/Sources/Rendering/Core/Mapper';
 import vtkURLExtract              from 'vtk.js/Sources/Common/Core/URLExtract';
-import vtkVolume                  from 'vtk.js/Sources/Rendering/Core/Volume';
-import vtkVolumeMapper            from 'vtk.js/Sources/Rendering/Core/VolumeMapper';
-import vtkXMLImageDataReader      from 'vtk.js/Sources/IO/XML/XMLImageDataReader';
+import vtkXMLPolyDataReader       from 'vtk.js/Sources/IO/XML/XMLPolyDataReader';
+import { ColorMode, ScalarMode }  from 'vtk.js/Sources/Rendering/Core/Mapper/Constants';
 
-import style from './VolumeViewer.mcss';
+
+import style from './GeometryViewer.mcss';
 
 let autoInit = true;
 
@@ -37,12 +36,25 @@ const presetSelector = document.createElement('select');
 presetSelector.setAttribute('class', style.selector);
 presetSelector.innerHTML = presetNames.map(name => `<option value="${name}">${name}</option>`).join('');
 
-const widgetContainer = document.createElement('div');
-widgetContainer.setAttribute('class', style.piecewiseWidget);
+const representationSelector = document.createElement('select');
+representationSelector.setAttribute('class', style.selector);
+representationSelector.innerHTML = ['Points', 'Wireframe', 'Surface', 'Surface with Edge']
+  .map((name, idx) => `<option value="${idx < 3 ? idx : 2}:${idx === 3 ? 1 : 0}">${name}</option>`).join('');
+representationSelector.value = '2:0';
 
-const shadowContainer = document.createElement('select');
-shadowContainer.setAttribute('class', style.shadow);
-shadowContainer.innerHTML = '<option value="1">Use shadow</option><option value="0">No shadow</option>';
+const colorBySelector = document.createElement('select');
+colorBySelector.setAttribute('class', style.selector);
+
+const componentSelector = document.createElement('select');
+componentSelector.setAttribute('class', style.selector);
+componentSelector.style.display = 'none';
+
+const controlContainer = document.createElement('div');
+controlContainer.setAttribute('class', style.control);
+controlContainer.appendChild(representationSelector);
+controlContainer.appendChild(presetSelector);
+controlContainer.appendChild(colorBySelector);
+controlContainer.appendChild(componentSelector);
 
 // ----------------------------------------------------------------------------
 // Add class to body if iOS device
@@ -70,126 +82,114 @@ function createViewer(container, fileContentAsText) {
   const renderWindow = fullScreenRenderer.getRenderWindow();
   renderWindow.getInteractor().setDesiredUpdateRate(25);
 
-  const vtiReader = vtkXMLImageDataReader.newInstance();
-  vtiReader.parse(fileContentAsText);
+  const vtpReader = vtkXMLPolyDataReader.newInstance();
+  vtpReader.parse(fileContentAsText);
 
-  const source = vtiReader.getOutputData(0);
-  const mapper = vtkVolumeMapper.newInstance();
-  const actor = vtkVolume.newInstance();
-
-  const dataArray = source.getPointData().getScalars();
-  const dataRange = dataArray.getRange();
-
-  // Color handling
   const lookupTable = vtkColorTransferFunction.newInstance();
+  const source = vtpReader.getOutputData(0);
+  const mapper = vtkMapper.newInstance({
+    interpolateScalarsBeforeMapping: false,
+    useLookupTableScalarRange: true,
+    lookupTable,
+    scalarVisibility: false,
+  });
+  const actor = vtkActor.newInstance();
+  const scalars = source.getPointData().getScalars();
+  const dataRange = [].concat(scalars ? scalars.getRange() : [0, 1]);
+
+  // --------------------------------------------------------------------
+  // Color handling
+  // --------------------------------------------------------------------
+
   function applyPreset() {
     const preset = getPreset(presetSelector.value);
     lookupTable.applyColorMap(preset);
-    lookupTable.setMappingRange(...dataRange);
+    lookupTable.setMappingRange(dataRange[0], dataRange[1]);
     lookupTable.updateRange();
   }
   applyPreset();
   presetSelector.addEventListener('change', applyPreset);
 
-  // Shadow management
-  shadowContainer.addEventListener('change', (event) => {
-    const useShadow = !!Number(event.target.value);
-    console.log('useShadow', useShadow, event.target.value);
-    actor.getProperty().setShade(useShadow);
-    actor.getProperty().setUseGradientOpacity(0, useShadow);
+  // --------------------------------------------------------------------
+  // Representation handling
+  // --------------------------------------------------------------------
+
+  function updateRepresentation(event) {
+    const [representation, edgeVisibility] = event.target.value.split(':').map(Number);
+    actor.getProperty().set({ representation, edgeVisibility });
     renderWindow.render();
-  });
+  }
+  representationSelector.addEventListener('change', updateRepresentation);
 
-  // Opacity handling
-  const piecewiseFunction = vtkPiecewiseFunction.newInstance();
+  // --------------------------------------------------------------------
+  // ColorBy handling
+  // --------------------------------------------------------------------
 
+  const colorByOptions = [{ value: ':', label: 'Solid color' }].concat(
+    source.getPointData().getArrays().map(a => ({ label: `(p) ${a.getName()}`, value: `PointData:${a.getName()}` })),
+    source.getCellData().getArrays().map(a => ({ label: `(c) ${a.getName()}`, value: `CellData:${a.getName()}` })));
+  colorBySelector.innerHTML = colorByOptions.map(({ label, value }) => `<option value="${value}">${label}</option>`).join('');
+
+  function updateColorBy(event) {
+    const [location, colorByArrayName] = event.target.value.split(':');
+    const interpolateScalarsBeforeMapping = (location === 'PointData');
+    let colorMode = ColorMode.DEFAULT;
+    let scalarMode = ScalarMode.DEFAULT;
+    const colorByArrayComponent = -1;
+    const scalarVisibility = (location.length > 0);
+    if (scalarVisibility) {
+      const activeArray = source[`get${location}`]().getArrayByName(colorByArrayName);
+      const newDataRange = activeArray.getRange();
+      dataRange[0] = newDataRange[0];
+      dataRange[1] = newDataRange[1];
+      colorMode = ColorMode.MAP_SCALARS;
+      scalarMode = interpolateScalarsBeforeMapping ? ScalarMode.USE_POINT_FIELD_DATA : ScalarMode.USE_CELL_FIELD_DATA;
+
+      const numberOfComponents = activeArray.getNumberOfComponents();
+      if (numberOfComponents > 1) {
+        // componentSelector.style.display = 'block'; // FIXME the 'colorByArrayComponent' is not yet processed in mapper
+        const compOpts = ['Magnitude'];
+        while (compOpts.length <= numberOfComponents) {
+          compOpts.push(`Component ${compOpts.length}`);
+        }
+        componentSelector.innerHTML = compOpts.map((t, index) => `<option value="${index - 1}">${t}</option>`).join('');
+      } else {
+        componentSelector.style.display = 'none';
+      }
+    }
+    mapper.set({
+      colorByArrayComponent,
+      colorByArrayName,
+      colorMode,
+      interpolateScalarsBeforeMapping,
+      scalarMode,
+      scalarVisibility,
+    });
+    applyPreset();
+  }
+  colorBySelector.addEventListener('change', updateColorBy);
+
+  function updateColorByComponent(event) {
+    mapper.setColorByArrayComponent(Number(event.target.value));
+    renderWindow.render();
+  }
+  componentSelector.addEventListener('change', updateColorByComponent);
+
+  // --------------------------------------------------------------------
   // Pipeline handling
+  // --------------------------------------------------------------------
+
   actor.setMapper(mapper);
   mapper.setInputData(source);
   renderer.addActor(actor);
 
-  // Configuration
-  const sampleDistance = Math.min(...source.getSpacing());
-  mapper.setSampleDistance(sampleDistance);
-  actor.getProperty().setRGBTransferFunction(0, lookupTable);
-  actor.getProperty().setScalarOpacity(0, piecewiseFunction);
-  actor.getProperty().setInterpolationTypeToFastLinear();
-
-  // For better looking volume rendering
-  // - distance in world coordinates a scalar opacity of 1.0
-  actor.getProperty().setScalarOpacityUnitDistance(0, vtkBoundingBox.getDiagonalLength(source.getBounds()) / Math.max(...source.getDimensions()));
-  // - control how we emphasize surface boundaries
-  //  => max should be around the average gradient magnitude for the
-  //     volume or maybe average plus one std dev of the gradient magnitude
-  //     (adjusted for spacing, this is a world coordinate gradient, not a
-  //     pixel gradient)
-  //  => max hack: (dataRange[1] - dataRange[0]) * 0.05
-  actor.getProperty().setGradientOpacityMinimumValue(0, 0);
-  actor.getProperty().setGradientOpacityMaximumValue(0, (dataRange[1] - dataRange[0]) * 0.05);
-  // - Use shading based on gradient
-  actor.getProperty().setShade(true);
-  actor.getProperty().setUseGradientOpacity(0, true);
-  // - generic good default
-  actor.getProperty().setGradientOpacityMinimumOpacity(0, 0.0);
-  actor.getProperty().setGradientOpacityMaximumOpacity(0, 1.0);
-  actor.getProperty().setAmbient(0.2);
-  actor.getProperty().setDiffuse(0.7);
-  actor.getProperty().setSpecular(0.3);
-  actor.getProperty().setSpecularPower(8.0);
-
-  // Control UI
-  const transferFunctionWidget = vtkPiecewiseGaussianWidget.newInstance({ numberOfBins: 256, size: [400, 150] });
-  transferFunctionWidget.updateStyle({
-    backgroundColor: 'rgba(255, 255, 255, 0.6)',
-    histogramColor: 'rgba(100, 100, 100, 0.5)',
-    strokeColor: 'rgb(0, 0, 0)',
-    activeColor: 'rgb(255, 255, 255)',
-    handleColor: 'rgb(50, 150, 50)',
-    buttonDisableFillColor: 'rgba(255, 255, 255, 0.5)',
-    buttonDisableStrokeColor: 'rgba(0, 0, 0, 0.5)',
-    buttonStrokeColor: 'rgba(0, 0, 0, 1)',
-    buttonFillColor: 'rgba(255, 255, 255, 1)',
-    strokeWidth: 2,
-    activeStrokeWidth: 3,
-    buttonStrokeWidth: 1.5,
-    handleWidth: 3,
-    iconSize: 0,
-    padding: 10,
-  });
-  transferFunctionWidget.addGaussian(0.5, 1.0, 0.5, 0.5, 0.4);
-  transferFunctionWidget.setDataArray(dataArray.getData());
-  transferFunctionWidget.setColorTransferFunction(lookupTable);
-  transferFunctionWidget.applyOpacity(piecewiseFunction);
-  transferFunctionWidget.setContainer(widgetContainer);
-  transferFunctionWidget.bindMouseListeners();
-
-  // Manage update when opacity change
-  transferFunctionWidget.onAnimation((start) => {
-    if (start) {
-      renderWindow.getInteractor().requestAnimation(transferFunctionWidget);
-    } else {
-      renderWindow.getInteractor().cancelAnimation(transferFunctionWidget);
-    }
-  });
-  transferFunctionWidget.onOpacityChange(() => {
-    transferFunctionWidget.applyOpacity(piecewiseFunction);
-    if (!renderWindow.getInteractor().isAnimating()) {
-      renderWindow.render();
-    }
-  });
-
   // Manage update when lookupTable change
   lookupTable.onModified(() => {
-    transferFunctionWidget.render();
-    if (!renderWindow.getInteractor().isAnimating()) {
-      renderWindow.render();
-    }
+    renderWindow.render();
   });
 
   // Add UI to web page
-  container.appendChild(widgetContainer);
-  container.appendChild(presetSelector);
-  container.appendChild(shadowContainer);
+  container.appendChild(controlContainer);
 
   // First render
   renderer.resetCamera();
@@ -203,7 +203,7 @@ export function load(container, options) {
   emptyContainer(container);
 
   if (options.file) {
-    if (options.ext === 'vti') {
+    if (options.ext === 'vtp') {
       const reader = new FileReader();
       reader.onload = function onLoad(e) {
         createViewer(container, reader.result);
@@ -256,7 +256,7 @@ export function initLocalFileLoader(container) {
 // ?fileURL=https://data.kitware.com/api/v1/item/59cdbb588d777f31ac63de08/download
 const userParams = vtkURLExtract.extractURLParameters();
 
-if (userParams.fileURL) {
+if (userParams.url || userParams.fileURL) {
   const exampleContainer = document.querySelector('.content');
   const rootBody = document.querySelector('body');
   const myContainer = exampleContainer || rootBody;

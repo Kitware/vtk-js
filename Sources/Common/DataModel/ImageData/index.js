@@ -292,7 +292,9 @@ function vtkImageData(publicAPI, model) {
     vec3.copy(aout, vout);
   };
 
+  // Make sure the transform is correct
   publicAPI.onModified(publicAPI.computeTransforms);
+  publicAPI.computeTransforms();
 }
 
 // ----------------------------------------------------------------------------

@@ -6,9 +6,9 @@ import vtkPiecewiseGaussianWidget from 'vtk.js/Sources/Interaction/Widgets/Piece
 import vtkVolume                  from 'vtk.js/Sources/Rendering/Core/Volume';
 import vtkVolumeMapper            from 'vtk.js/Sources/Rendering/Core/VolumeMapper';
 
-import macro            from 'vtk.js/Sources/macro';
+import ColorMaps from 'vtk.js/Sources/Rendering/Core/ColorTransferFunction/ColorMaps.json';
 
-import presets from 'vtk.js/Sources/Rendering/Core/ColorTransferFunction/ColorMaps.json';
+const presets = ColorMaps.filter(p => p.RGBPoints).filter(p => p.ColorSpace !== 'CIELAB');
 
 // ----------------------------------------------------------------------------
 // Standard rendering code setup
@@ -17,8 +17,8 @@ import presets from 'vtk.js/Sources/Rendering/Core/ColorTransferFunction/ColorMa
 const fullScreenRenderer = vtkFullScreenRenderWindow.newInstance({ background: [0, 0, 0] });
 const renderer = fullScreenRenderer.getRenderer();
 const renderWindow = fullScreenRenderer.getRenderWindow();
-const render = renderWindow.render;
-const resetCamera = renderer.resetCamera;
+
+renderWindow.getInteractor().setDesiredUpdateRate(15.0);
 
 // ----------------------------------------------------------------------------
 // Example code
@@ -127,14 +127,13 @@ reader.setUrl(`${__BASE_PATH__}/data/volume/LIDC2.vti`).then(() => {
     widget.setColorTransferFunction(lookupTable);
     lookupTable.onModified(() => {
       widget.render();
-      render();
+      renderWindow.render();
     });
 
     renderer.addVolume(actor);
-    renderWindow.getInteractor().setDesiredUpdateRate(15.0);
-    resetCamera();
+    renderer.resetCamera();
     renderer.getActiveCamera().elevation(70);
-    render();
+    renderWindow.render();
   });
 });
 
@@ -155,10 +154,20 @@ widget.addGaussian(0.75, 1, 0.3, 0, 0);
 widget.setContainer(container);
 widget.bindMouseListeners();
 
-widget.onOpacityChange(macro.debounce(() => {
+widget.onAnimation((start) => {
+  if (start) {
+    renderWindow.getInteractor().requestAnimation(widget);
+  } else {
+    renderWindow.getInteractor().cancelAnimation(widget);
+  }
+});
+
+widget.onOpacityChange(() => {
   widget.applyOpacity(piecewiseFunction);
-  render();
-}), 1000);
+  if (!renderWindow.getInteractor().isAnimating()) {
+    renderWindow.render();
+  }
+});
 
 // ----------------------------------------------------------------------------
 // Expose variable to global namespace
