@@ -22,7 +22,7 @@ let autoInit = true;
 // Handle color presets
 // ----------------------------------------------------------------------------
 
-const presetNames = vtkColorMaps.filter(p => p.RGBPoints).map(p => p.Name);
+const presetNames = vtkColorMaps.filter(p => p.RGBPoints).filter(p => p.ColorSpace !== 'CIELAB').map(p => p.Name);
 
 function getPreset(name) {
   return vtkColorMaps.find(p => p.Name === name);
@@ -108,6 +108,7 @@ export function load(container, options) {
         actor.getProperty().setScalarOpacity(0, piecewiseFunction);
         actor.getProperty().setInterpolationTypeToFastLinear();
 
+        // For better looking volume rendering
         actor.getProperty().setScalarOpacityUnitDistance(0, 4.5);
         actor.getProperty().setUseGradientOpacity(0, true);
         actor.getProperty().setGradientOpacityMinimumValue(0, 15);
