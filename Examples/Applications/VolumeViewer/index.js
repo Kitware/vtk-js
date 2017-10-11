@@ -3,7 +3,6 @@
 
 import 'babel-polyfill';
 
-import macro                      from 'vtk.js/Sources/macro';
 import vtkFullScreenRenderWindow  from 'vtk.js/Sources/Rendering/Misc/FullScreenRenderWindow';
 import vtkURLExtract              from 'vtk.js/Sources/Common/Core/URLExtract';
 
@@ -24,13 +23,21 @@ let autoInit = true;
 // ----------------------------------------------------------------------------
 
 const presetNames = vtkColorMaps.filter(p => p.RGBPoints).map(p => p.Name);
-const presetSelector = document.createElement('select');
-presetSelector.setAttribute('class', style.selector);
-presetSelector.innerHTML = presetNames.map(name => `<option value="${name}">${name}</option>`).join('');
 
 function getPreset(name) {
   return vtkColorMaps.find(p => p.Name === name);
 }
+
+// ----------------------------------------------------------------------------
+// DOM containers for UI control
+// ----------------------------------------------------------------------------
+
+const presetSelector = document.createElement('select');
+presetSelector.setAttribute('class', style.selector);
+presetSelector.innerHTML = presetNames.map(name => `<option value="${name}">${name}</option>`).join('');
+
+const widgetContainer = document.createElement('div');
+widgetContainer.setAttribute('class', style.piecewiseWidget);
 
 // ----------------------------------------------------------------------------
 // Add class to body if iOS device
@@ -43,11 +50,14 @@ if (iOS) {
 }
 
 // ----------------------------------------------------------------------------
+
 function emptyContainer(container) {
   while (container.firstChild) {
     container.removeChild(container.firstChild);
   }
 }
+
+// ----------------------------------------------------------------------------
 
 export function load(container, options) {
   autoInit = false;
@@ -56,6 +66,8 @@ export function load(container, options) {
   const fullScreenRenderer = vtkFullScreenRenderWindow.newInstance({ background: [0, 0, 0] });
   const renderer = fullScreenRenderer.getRenderer();
   const renderWindow = fullScreenRenderer.getRenderWindow();
+
+  renderWindow.getInteractor().setDesiredUpdateRate(25);
 
   if (options.file) {
     if (options.ext === 'vti') {
@@ -81,10 +93,32 @@ export function load(container, options) {
         applyPreset();
         presetSelector.addEventListener('change', applyPreset);
 
+        // Opacity handling
+        const piecewiseFunction = vtkPiecewiseFunction.newInstance();
+
         // Pipeline handling
         actor.setMapper(mapper);
         mapper.setInputData(source);
         renderer.addActor(actor);
+
+        // Configuration
+        const sampleDistance = Math.min(...source.getSpacing());
+        mapper.setSampleDistance(sampleDistance);
+        actor.getProperty().setRGBTransferFunction(0, lookupTable);
+        actor.getProperty().setScalarOpacity(0, piecewiseFunction);
+        actor.getProperty().setInterpolationTypeToFastLinear();
+
+        actor.getProperty().setScalarOpacityUnitDistance(0, 4.5);
+        actor.getProperty().setUseGradientOpacity(0, true);
+        actor.getProperty().setGradientOpacityMinimumValue(0, 15);
+        actor.getProperty().setGradientOpacityMinimumOpacity(0, 0.0);
+        actor.getProperty().setGradientOpacityMaximumValue(0, 100);
+        actor.getProperty().setGradientOpacityMaximumOpacity(0, 1.0);
+        actor.getProperty().setShade(true);
+        actor.getProperty().setAmbient(0.2);
+        actor.getProperty().setDiffuse(0.7);
+        actor.getProperty().setSpecular(0.3);
+        actor.getProperty().setSpecularPower(8.0);
 
         // Control UI
         const transferFunctionWidget = vtkPiecewiseGaussianWidget.newInstance({ numberOfBins: 256, size: [400, 150] });
@@ -102,37 +136,50 @@ export function load(container, options) {
           activeStrokeWidth: 3,
           buttonStrokeWidth: 1.5,
           handleWidth: 3,
-          iconSize: 0,
+          iconSize: 20,
           padding: 10,
         });
-        transferFunctionWidget.setDataArray(dataArray.getData());
-
-        const piecewiseFunction = vtkPiecewiseFunction.newInstance();
-        transferFunctionWidget.setColorTransferFunction(lookupTable);
         transferFunctionWidget.addGaussian(0.5, 0.30, 0.5, 0.5, 0.4);
+        transferFunctionWidget.setDataArray(dataArray.getData());
+        transferFunctionWidget.setColorTransferFunction(lookupTable);
         transferFunctionWidget.applyOpacity(piecewiseFunction);
-
-        const widgetContainer = document.createElement('div');
-        widgetContainer.setAttribute('class', style.piecewiseWidget);
-
         transferFunctionWidget.setContainer(widgetContainer);
         transferFunctionWidget.bindMouseListeners();
-        transferFunctionWidget.onOpacityChange(macro.debounce(() => {
+
+        // Manage update when opacity change
+        transferFunctionWidget.onAnimation((start) => {
+          if (start) {
+            renderWindow.getInteractor().requestAnimation(transferFunctionWidget);
+          } else {
+            renderWindow.getInteractor().cancelAnimation(transferFunctionWidget);
+          }
+        });
+        transferFunctionWidget.onOpacityChange(() => {
           transferFunctionWidget.applyOpacity(piecewiseFunction);
-          renderWindow.render();
-        }), 1000);
-        lookupTable.onModified(() => {
-          transferFunctionWidget.render();
-          renderWindow.render();
+          if (!renderWindow.getInteractor().isAnimating()) {
+            renderWindow.render();
+          }
         });
 
+        // Manage update when lookupTable change
+        lookupTable.onModified(() => {
+          transferFunctionWidget.render();
+          if (!renderWindow.getInteractor().isAnimating()) {
+            renderWindow.render();
+          }
+        });
+
+        // Add UI to web page
         container.appendChild(widgetContainer);
         container.appendChild(presetSelector);
 
+        // First render
         renderer.resetCamera();
         renderWindow.render();
       };
       reader.readAsText(options.file);
+    } else {
+      alert('Unkown file...');
     }
   }
 }
