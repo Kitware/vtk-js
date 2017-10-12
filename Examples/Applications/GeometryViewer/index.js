@@ -18,6 +18,11 @@ import style from './GeometryViewer.mcss';
 
 let autoInit = true;
 
+function preventDefaults(e) {
+  e.preventDefault();
+  e.stopPropagation();
+}
+
 // ----------------------------------------------------------------------------
 // Handle color presets
 // ----------------------------------------------------------------------------
@@ -234,21 +239,27 @@ export function initLocalFileLoader(container) {
   const rootBody = document.querySelector('body');
   const myContainer = container || exampleContainer || rootBody;
 
-  const fileSelector = document.createElement('input');
-  fileSelector.setAttribute('type', 'file');
-  fileSelector.setAttribute('class', style.bigFileDrop);
-  myContainer.appendChild(fileSelector);
-  myContainer.setAttribute('class', style.fullScreen);
+  const fileContainer = document.createElement('div');
+  fileContainer.innerHTML = `<div class="${style.bigFileDrop}"/><input type="file" class="file" style="display: none;"/>`;
+  myContainer.appendChild(fileContainer);
+
+  const fileInput = fileContainer.querySelector('input');
 
   function handleFile(e) {
-    var files = this.files;
+    preventDefaults(e);
+    const dataTransfer = e.dataTransfer;
+    const files = e.target.files || dataTransfer.files;
     if (files.length === 1) {
-      myContainer.removeChild(fileSelector);
+      myContainer.removeChild(fileContainer);
       const ext = files[0].name.split('.').slice(-1)[0];
       load(myContainer, { file: files[0], ext });
     }
   }
-  fileSelector.onchange = handleFile;
+
+  fileInput.addEventListener('change', handleFile);
+  fileContainer.addEventListener('drop', handleFile);
+  fileContainer.addEventListener('click', e => fileInput.click());
+  fileContainer.addEventListener('dragover', preventDefaults);
 }
 
 

@@ -51,6 +51,14 @@ body {
   border: none;
 }
 
+select {
+  -moz-appearance: none;
+}
+
+select option {
+  color: black;
+}
+
 select:focus {
   outline: none;
   border: none;
