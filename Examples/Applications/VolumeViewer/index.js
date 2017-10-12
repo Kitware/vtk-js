@@ -65,7 +65,7 @@ function emptyContainer(container) {
 // ----------------------------------------------------------------------------
 
 function createViewer(container, fileContentAsText) {
-  const fullScreenRenderer = vtkFullScreenRenderWindow.newInstance({ background: [0, 0, 0] });
+  const fullScreenRenderer = vtkFullScreenRenderWindow.newInstance({ background: [0, 0, 0], rootContainer: container });
   const renderer = fullScreenRenderer.getRenderer();
   const renderWindow = fullScreenRenderer.getRenderWindow();
   renderWindow.getInteractor().setDesiredUpdateRate(25);
@@ -94,7 +94,6 @@ function createViewer(container, fileContentAsText) {
   // Shadow management
   shadowContainer.addEventListener('change', (event) => {
     const useShadow = !!Number(event.target.value);
-    console.log('useShadow', useShadow, event.target.value);
     actor.getProperty().setShade(useShadow);
     actor.getProperty().setUseGradientOpacity(0, useShadow);
     renderWindow.render();
