@@ -54,6 +54,10 @@ select:focus {
   border: none;
 }
 
+select option {
+  color: black;
+}
+
 .control {
   position: absolute;
   top: 5px;
