@@ -6,11 +6,11 @@ import vtkPolyData  from 'vtk.js/Sources/Common/DataModel/PolyData';
 // Global method
 // ----------------------------------------------------------------------------
 
-function handleArray(polydata, cellType, piece, compressor, byteOrder) {
+function handleArray(polydata, cellType, piece, compressor, byteOrder, headerType) {
   const size = Number(piece.getAttribute(`NumberOf${cellType}`));
   if (size > 0) {
     const dataArrayElem = piece.getElementsByTagName(cellType)[0].getElementsByTagName('DataArray')[0];
-    const { values, numberOfComponents } = vtkXMLReader.processDataArray(size, dataArrayElem, compressor, byteOrder);
+    const { values, numberOfComponents } = vtkXMLReader.processDataArray(size, dataArrayElem, compressor, byteOrder, headerType);
     polydata[`get${cellType}`]().setData(values, numberOfComponents);
   }
   return size;
@@ -18,10 +18,10 @@ function handleArray(polydata, cellType, piece, compressor, byteOrder) {
 
 // ----------------------------------------------------------------------------
 
-function handleCells(polydata, cellType, piece, compressor, byteOrder) {
+function handleCells(polydata, cellType, piece, compressor, byteOrder, headerType) {
   const size = Number(piece.getAttribute(`NumberOf${cellType}`));
   if (size > 0) {
-    const values = vtkXMLReader.processCells(size, piece.getElementsByTagName(cellType)[0], compressor, byteOrder);
+    const values = vtkXMLReader.processCells(size, piece.getElementsByTagName(cellType)[0], compressor, byteOrder, headerType);
     polydata[`get${cellType}`]().setData(values);
   }
   return size;
@@ -35,7 +35,7 @@ function vtkXMLPolyDataReader(publicAPI, model) {
   // Set our className
   model.classHierarchy.push('vtkXMLPolyDataReader');
 
-  publicAPI.parseXML = (rootElem, type, compressor, byteOrder) => {
+  publicAPI.parseXML = (rootElem, type, compressor, byteOrder, headerType) => {
     const datasetElem = rootElem.getElementsByTagName(model.dataType)[0];
     const pieces = datasetElem.getElementsByTagName('Piece');
     const nbPieces = pieces.length;
@@ -46,17 +46,17 @@ function vtkXMLPolyDataReader(publicAPI, model) {
       const piece = pieces[outputIndex];
 
       // Points
-      const nbPoints = handleArray(polydata, 'Points', piece, compressor, byteOrder);
+      const nbPoints = handleArray(polydata, 'Points', piece, compressor, byteOrder, headerType);
 
       // Cells
       let nbCells = 0;
       ['Verts', 'Lines', 'Strips', 'Polys'].forEach((cellType) => {
-        nbCells += handleCells(polydata, cellType, piece, compressor, byteOrder);
+        nbCells += handleCells(polydata, cellType, piece, compressor, byteOrder, headerType);
       });
 
       // Fill data
-      vtkXMLReader.processFieldData(nbPoints, piece.getElementsByTagName('PointData')[0], polydata.getPointData(), compressor, byteOrder);
-      vtkXMLReader.processFieldData(nbCells, piece.getElementsByTagName('CellData')[0], polydata.getCellData(), compressor, byteOrder);
+      vtkXMLReader.processFieldData(nbPoints, piece.getElementsByTagName('PointData')[0], polydata.getPointData(), compressor, byteOrder, headerType);
+      vtkXMLReader.processFieldData(nbCells, piece.getElementsByTagName('CellData')[0], polydata.getCellData(), compressor, byteOrder, headerType);
 
       // Add new output
       model.output[outputIndex++] = polydata;

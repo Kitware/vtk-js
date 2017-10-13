@@ -10,7 +10,7 @@ function vtkXMLImageDataReader(publicAPI, model) {
   // Set our className
   model.classHierarchy.push('vtkXMLImageDataReader');
 
-  publicAPI.parseXML = (rootElem, type, compressor, byteOrder) => {
+  publicAPI.parseXML = (rootElem, type, compressor, byteOrder, headerType) => {
     const imageDataElem = rootElem.getElementsByTagName(model.dataType)[0];
     const origin = imageDataElem.getAttribute('Origin').split(' ').map(t => Number(t));
     const spacing = imageDataElem.getAttribute('Spacing').split(' ').map(t => Number(t));
@@ -24,8 +24,17 @@ function vtkXMLImageDataReader(publicAPI, model) {
       const imageData = vtkImageData.newInstance({ origin, spacing, extent });
 
       // Fill data
-      vtkXMLReader.processFieldData(imageData.getNumberOfPoints(), piece.getElementsByTagName('PointData')[0], imageData.getPointData(), compressor, byteOrder);
-      vtkXMLReader.processFieldData(imageData.getNumberOfCells(), piece.getElementsByTagName('CellData')[0], imageData.getCellData(), compressor, byteOrder);
+      vtkXMLReader.processFieldData(
+        imageData.getNumberOfPoints(),
+        piece.getElementsByTagName('PointData')[0],
+        imageData.getPointData(),
+        compressor, byteOrder, headerType);
+
+      vtkXMLReader.processFieldData(
+        imageData.getNumberOfCells(),
+        piece.getElementsByTagName('CellData')[0],
+        imageData.getCellData(),
+        compressor, byteOrder, headerType);
 
       // Add new output
       model.output[outputIndex++] = imageData;
