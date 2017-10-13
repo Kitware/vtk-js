@@ -462,8 +462,18 @@ function vtkOpenGLVolumeMapper(publicAPI, model) {
     program.setUniformf('dcymin', dcymin);
     program.setUniformf('dcymax', dcymax);
 
-    const origin = model.currentInput.getOrigin();
-    vec3.set(pos, origin[0], origin[1], origin[2]);
+    const ext = model.currentInput.getExtent();
+    const spc = model.currentInput.getSpacing();
+    const vsize = vec3.create();
+    vec3.set(vsize,
+      (ext[1] - ext[0]) * spc[0],
+      (ext[3] - ext[2]) * spc[1],
+      (ext[5] - ext[4]) * spc[2]);
+    program.setUniform3f('vSize', vsize[0], vsize[1], vsize[2]);
+
+    vec3.set(pos, ext[0], ext[2], ext[4]);
+    model.currentInput.indexToWorldVec3(pos, pos);
+
     vec3.transformMat4(pos, pos, keyMats.wcvc);
     program.setUniform3f('vOriginVC', pos[0], pos[1], pos[2]);
 
@@ -474,15 +484,6 @@ function vtkOpenGLVolumeMapper(publicAPI, model) {
     mat3.copy(model.idxNormalMatrix, model.currentInput.getDirection());
     mat3.multiply(model.idxNormalMatrix, keyMats.normalMatrix,
       model.idxNormalMatrix);
-
-    const ext = model.currentInput.getExtent();
-    const spc = model.currentInput.getSpacing();
-    const vsize = vec3.create();
-    vec3.set(vsize,
-      (ext[1] - ext[0]) * spc[0],
-      (ext[3] - ext[2]) * spc[1],
-      (ext[5] - ext[4]) * spc[2]);
-    program.setUniform3f('vSize', vsize[0], vsize[1], vsize[2]);
 
     const maxSamples = vec3.length(vsize) / model.renderable.getSampleDistance();
     if (maxSamples > model.renderable.getMaximumSamplesPerRay()) {
