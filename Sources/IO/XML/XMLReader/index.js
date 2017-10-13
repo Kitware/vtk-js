@@ -35,7 +35,68 @@ const TYPED_ARRAY = {
 
 // ----------------------------------------------------------------------------
 
-function processDataArray(size, dataArrayElem, compressor, byteOrder) {
+const TYPED_ARRAY_BYTES = {
+  Int8: 1,
+  UInt8: 1,
+  Int16: 2,
+  UInt16: 2,
+  Int32: 4,
+  UInt32: 4,
+  Int64: 8, // Not supported with JavaScript will cause error in binary
+  UInt64: 8, // Not supported with JavaScript will cause error in binary
+  Float32: 4,
+  Float64: 8,
+};
+
+// ----------------------------------------------------------------------------
+
+function integer64to32(array) {
+  const maxIdx = array.length - 1; // Skip last
+  return array.filter((v, i) => (i < maxIdx) && (i % 2) === 0);
+}
+
+// ----------------------------------------------------------------------------
+
+function readerHeader(uint8, headerType) {
+  // We do not handle endianess or if more than 32 bits are needed to encode the data
+  if (headerType === 'UInt64') {
+    const offset = 8;
+    let uint32 = new Uint32Array(uint8.buffer, 0, 3 * 8);
+    const nbBlocks = uint32[0];
+    const s1 = uint32[2];
+    const s2 = uint32[4];
+    const resultArray = [offset, nbBlocks, s1, s2];
+    uint32 = new Uint32Array(uint8.buffer, 3 * 8, nbBlocks * 8);
+    for (let i = 0; i < nbBlocks; i++) {
+      resultArray.push(uint32[i * 2]);
+    }
+    return resultArray;
+  }
+  // UInt32
+  let uint32 = new Uint32Array(uint8.buffer, 0, 3 * 4);
+  const offset = 4;
+  const nbBlocks = uint32[0];
+  const s1 = uint32[1];
+  const s2 = uint32[2];
+  const resultArray = [offset, nbBlocks, s1, s2];
+  uint32 = new Uint32Array(uint8.buffer, 3 * 4, nbBlocks * 4);
+  for (let i = 0; i < nbBlocks; i++) {
+    resultArray.push(uint32[i]);
+  }
+  return resultArray;
+}
+
+// ----------------------------------------------------------------------------
+
+function uncompressBlock(compressedUint8, output) {
+  const uncompressedBlock = pako.inflate(compressedUint8);
+  output.uint8.set(uncompressedBlock, output.offset);
+  output.offset += uncompressedBlock.length;
+}
+
+// ----------------------------------------------------------------------------
+
+function processDataArray(size, dataArrayElem, compressor, byteOrder, headerType) {
   const dataType = dataArrayElem.getAttribute('type');
   const name = dataArrayElem.getAttribute('Name');
   const format = dataArrayElem.getAttribute('format'); // binary, ascii, [appended: not supported]
@@ -53,9 +114,42 @@ function processDataArray(size, dataArrayElem, compressor, byteOrder) {
   } else if (format === 'binary') {
     const uint8 = toByteArray(dataArrayElem.firstChild.nodeValue.trim());
     if (compressor === 'vtkZLibDataCompressor') {
-      values = new TYPED_ARRAY[dataType](pako.inflate(uint8).buffer); // Not working but not sure to know why yet...
+      const buffer = new ArrayBuffer(TYPED_ARRAY_BYTES[dataType] * size * numberOfComponents);
+      values = new TYPED_ARRAY[dataType](buffer);
+      const output = {
+        offset: 0,
+        uint8: new Uint8Array(buffer),
+      };
+      // ----------------------------------------------------------------------
+      // Layout of the data
+      // header[N, s1, s1, blockSize1, ..., blockSizeN], [padding???], block[compressedData], ..., block[compressedData]
+      // [header] N, s1 and s2 are uint 32 or 64 (defined by header_type="UInt64" attribute on the root node)
+      // [header] s1: uncompress size of each block except the last one
+      // [header] s2: uncompress size of the last blocks
+      // [header] blockSize: size of the block in compressed space that represent to bloc to inflate in zlib. (This also give the offset to the next block)
+      // ----------------------------------------------------------------------
+      // Header reading
+      const header = readerHeader(uint8, headerType);
+      const nbBlocks = header[1];
+      let offset = uint8.length - (header.reduce((a, b) => a + b, 0) - (header[0] + header[1] + header[2] + header[3]));
+      for (let i = 0; i < nbBlocks; i++) {
+        const blockSize = header[4 + i];
+        const compressedBlock = new Uint8Array(uint8.buffer, offset, blockSize);
+        uncompressBlock(compressedBlock, output);
+        offset += blockSize;
+      }
+
+      // Handle (u)int64 hoping for no overflow...
+      if (dataType.indexOf('Int64') !== -1) {
+        values = integer64to32(values);
+      }
     } else {
-      values = new TYPED_ARRAY[dataType](uint8.buffer);
+      values = new TYPED_ARRAY[dataType](uint8.buffer, TYPED_ARRAY_BYTES[headerType]); // Skip the count
+
+      // Handle (u)int64 hoping no overflow...
+      if (dataType.indexOf('Int64') !== -1) {
+        values = integer64to32(values);
+      }
     }
   } else {
     console.error('Format not supported', format);
@@ -66,7 +160,7 @@ function processDataArray(size, dataArrayElem, compressor, byteOrder) {
 
 // ----------------------------------------------------------------------------
 
-function processCells(size, containerElem, compressor, byteOrder) {
+function processCells(size, containerElem, compressor, byteOrder, headerType) {
   const arrayElems = {};
   const dataArrayElems = containerElem.getElementsByTagName('DataArray');
   for (let elIdx = 0; elIdx < dataArrayElems.length; elIdx++) {
@@ -74,9 +168,9 @@ function processCells(size, containerElem, compressor, byteOrder) {
     arrayElems[el.getAttribute('Name')] = el;
   }
 
-  const offsets = processDataArray(size, arrayElems.offsets, compressor, byteOrder).values;
+  const offsets = processDataArray(size, arrayElems.offsets, compressor, byteOrder, headerType).values;
   const connectivitySize = offsets[offsets.length - 1];
-  const connectivity = processDataArray(connectivitySize, arrayElems.connectivity, compressor, byteOrder).values;
+  const connectivity = processDataArray(connectivitySize, arrayElems.connectivity, compressor, byteOrder, headerType).values;
   const values = new Uint32Array(size + connectivitySize);
   let writeOffset = 0;
   let previousOffset = 0;
@@ -97,7 +191,7 @@ function processCells(size, containerElem, compressor, byteOrder) {
 
 // ----------------------------------------------------------------------------
 
-function processFieldData(size, fieldElem, fieldContainer, compressor, byteOrder) {
+function processFieldData(size, fieldElem, fieldContainer, compressor, byteOrder, headerType) {
   if (fieldElem) {
     const attributes = ['Scalars', 'Vectors', 'Normals', 'Tensors', 'TCoords'];
     const nameBinding = {};
@@ -112,7 +206,7 @@ function processFieldData(size, fieldElem, fieldContainer, compressor, byteOrder
     const nbArrays = arrays.length;
     for (let idx = 0; idx < nbArrays; idx++) {
       const array = arrays[idx];
-      const dataArray = vtkDataArray.newInstance(processDataArray(size, array, compressor, byteOrder));
+      const dataArray = vtkDataArray.newInstance(processDataArray(size, array, compressor, byteOrder, headerType));
       const name = dataArray.getName();
       (nameBinding[name] || fieldContainer.addArray)(dataArray);
     }
@@ -179,9 +273,15 @@ function vtkXMLReader(publicAPI, model) {
     const type = rootElem.getAttribute('type');
     const compressor = rootElem.getAttribute('compressor');
     const byteOrder = rootElem.getAttribute('byte_order');
+    const headerType = rootElem.getAttribute('header_type');
 
     if (compressor && compressor !== 'vtkZLibDataCompressor') {
       console.error('Invalid compressor', compressor);
+      return;
+    }
+
+    if (byteOrder && byteOrder !== 'LittleEndian') {
+      console.error('Only LittleEndian encoding is supported');
       return;
     }
 
@@ -190,7 +290,7 @@ function vtkXMLReader(publicAPI, model) {
       return;
     }
 
-    publicAPI.parseXML(rootElem, type, compressor, byteOrder);
+    publicAPI.parseXML(rootElem, type, compressor, byteOrder, headerType);
   };
 
   publicAPI.requestData = (inData, outData) => {
