@@ -38,6 +38,7 @@ body {
   border-radius: 10px;
   width: 50px;
   padding: calc(50vh - 2em) calc(50vw - 25px - 2em);
+  cursor: pointer;
 }
 
 .selector {
