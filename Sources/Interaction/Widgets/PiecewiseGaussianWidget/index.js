@@ -226,10 +226,6 @@ function processTouchClicks() {
 
 function createTouchListener(id, callback, nbTouches = 1, preventDefault = true) {
   return (e) => {
-    if (preventDefault) {
-      e.preventDefault();
-    }
-
     const targetBounds = e.target.getBoundingClientRect();
     const relativeTouches = Array.prototype.map.call(e.touches, t => [t.pageX - targetBounds.left, t.pageY - targetBounds.top]);
     const singleTouche = relativeTouches.reduce((a, b) => [a[0] + b[0], a[1] + b[1]], [0, 0]).map(v => v / e.touches.length);
@@ -247,6 +243,9 @@ function createTouchListener(id, callback, nbTouches = 1, preventDefault = true)
       if (e.timeStamp - TOUCH_CLICK[id].ts < TOUCH_CLICK[id].deltaT) {
         TOUCH_CLICK[id].count += 1;
         TOUCH_CLICK[id].ready = true;
+        if (preventDefault) {
+          e.preventDefault();
+        }
         TOUCH_CLICK[id].timeout = setTimeout(processTouchClicks, TOUCH_CLICK[id].deltaT);
       } else {
         TOUCH_CLICK[id].ready = false;
@@ -255,6 +254,9 @@ function createTouchListener(id, callback, nbTouches = 1, preventDefault = true)
 
     if (e.touches.length === nbTouches) {
       callback(...singleTouche);
+      if (preventDefault) {
+        e.preventDefault();
+      }
     }
   };
 }
@@ -547,7 +549,7 @@ function vtkPiecewiseGaussianWidget(publicAPI, model) {
 
         touchstart: createTouchListener(touchId, macro.chain(publicAPI.onHover, publicAPI.onDown)),
         touchmove: listenerSelector(isDown, createTouchListener(touchId, publicAPI.onDrag), createTouchListener(touchId, publicAPI.onHover)),
-        touchend: createTouchListener(touchId, publicAPI.onUp),
+        touchend: createTouchListener(touchId, publicAPI.onUp, 0), // touchend have 0 touch event...
       };
       Object.keys(model.listeners).forEach((eventType) => {
         model.canvas.addEventListener(eventType, model.listeners[eventType], false);
