@@ -320,11 +320,11 @@ function vtkOpenGLStickMapper(publicAPI, model) {
     vbo.getColorBO().setContext(model.context);
     if (c) {
       colorComponents = c.getNumberOfComponents();
-      vbo.setColorComponents(colorComponents);
       vbo.setColorOffset(4);
       colorData = c.getData();
       vbo.setColorBOStride(8);
     }
+    vbo.setColorComponents(colorComponents);
 
     vbo.setStride(pointSize * 4);
 

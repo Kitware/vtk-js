@@ -204,7 +204,6 @@ function vtkOpenGLSphereMapper(publicAPI, model) {
     let packedUCVBO = null;
     if (c) {
       colorComponents = c.getNumberOfComponents();
-      vbo.setColorComponents(colorComponents);
       vbo.setColorOffset(0);
       vbo.setColorBOStride(4);
       colorData = c.getData();
@@ -213,7 +212,10 @@ function vtkOpenGLSphereMapper(publicAPI, model) {
         vbo.setColorBO(vtkBufferObject.newInstance());
       }
       vbo.getColorBO().setContext(model.context);
+    } else if (vbo.getColorBO()) {
+      vbo.setColorBO(null);
     }
+    vbo.setColorComponents(colorComponents);
 
     const packedVBO = new Float32Array(pointSize * numPoints * 3);
 
