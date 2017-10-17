@@ -316,8 +316,7 @@ function vtkCamera(publicAPI, model) {
       const ymin = (model.windowCenter[1] - 1.0) * height;
       const ymax = (model.windowCenter[1] + 1.0) * height;
 
-      // mat4.ortho(out, left, right, bottom, top, near, far)
-      mat4.ortho(projectionMatrix, xmin, xmax, ymin, ymax, nearz, farz);
+      mat4.ortho(projectionMatrix, xmin, xmax, ymin, ymax, cRange[0], cRange[1]);
       mat4.transpose(projectionMatrix, projectionMatrix);
     } else if (model.useOffAxisProjection) {
       throw new Error('Off-Axis projection is not supported at this time');
