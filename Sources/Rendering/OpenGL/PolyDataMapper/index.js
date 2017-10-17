@@ -857,7 +857,7 @@ function vtkOpenGLPolyDataMapper(publicAPI, model) {
     let n = (actor.getProperty().getInterpolation() !== Shading.FLAT)
       ? poly.getPointData().getNormals() : null;
     if (n === null && poly.getCellData().getNormals()) {
-      n = poly.getCelData().getNormals();
+      n = poly.getCellData().getNormals();
     }
 
     const haveNormals = (n !== null);
@@ -1433,7 +1433,7 @@ function vtkOpenGLPolyDataMapper(publicAPI, model) {
       ? poly.getPointData().getNormals() : null;
     if (n === null && poly.getCellData().getNormals()) {
       model.haveCellNormals = true;
-      n = poly.getCelData().getNormals();
+      n = poly.getCellData().getNormals();
     }
 
 
