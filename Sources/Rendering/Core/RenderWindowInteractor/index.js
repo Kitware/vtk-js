@@ -235,8 +235,9 @@ function vtkRenderWindowInteractor(publicAPI, model) {
 
   publicAPI.handleMouseMove = (event) => {
     publicAPI.setEventPosition(event.clientX, model.canvas.clientHeight - event.clientY + 1, 0, 0);
-    event.stopPropagation();
-    event.preventDefault();
+    // Do not consume event for move
+    // event.stopPropagation();
+    // event.preventDefault();
     publicAPI.setPointerIndex(0);
     publicAPI.mouseMoveEvent();
   };
