@@ -145,7 +145,7 @@ function vtkProp3D(publicAPI, model) {
   publicAPI.getZRange = () => vtkBoundingBox.getZRange(model.bounds);
 
   publicAPI.pokeMatrix = notImplemented('pokeMatrix');
-  publicAPI.getUserMatrix = notImplemented('GetUserMatrix');
+  publicAPI.getUserMatrix = () => model.userMatrix;
 
   function updateIdentityFlag() {
     let noChange = true;
@@ -218,6 +218,7 @@ export function extend(publicAPI, model, initialValues = {}) {
   // Object internal instance
   model.matrix = mat4.create();
   model.rotation = mat4.create();
+  model.userMatrix = mat4.create();
   model.transform = null; // FIXME
 
   // Object methods
