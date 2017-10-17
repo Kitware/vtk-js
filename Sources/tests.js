@@ -19,6 +19,7 @@ import './Rendering/Core/ColorTransferFunction/test/testColorTransferFunction';
 import './Rendering/Core/ColorTransferFunction/test/testColorTransferFunctionPresets';
 import './Rendering/Core/ColorTransferFunction/test/testColorTransferFunctionInterpolation';
 import './Rendering/Core/Coordinate/test/testCoordinate';
+import './Rendering/Core/SphereMapper/test/testDisableScalarColoring';
 import './Rendering/OpenGL/Actor/test/testRotate';
 import './Rendering/Core/RenderWindow/test/testMultipleRenderers';
 import './Rendering/OpenGL/HardwareSelector/test/testHardwareSelector';
