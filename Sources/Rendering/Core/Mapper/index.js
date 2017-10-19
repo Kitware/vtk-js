@@ -464,6 +464,17 @@ function vtkMapper(publicAPI, model) {
     return mt;
   };
 
+  publicAPI.getPrimativeCount = () => {
+    const input = publicAPI.getInputData();
+    const pcount = {
+      points: input.getPoints().getNumberOfValues(),
+      verts: input.getVerts().getNumberOfValues() - input.getVerts().getNumberOfCells(),
+      lines: input.getLines().getNumberOfValues() - (2 * input.getLines().getNumberOfCells()),
+      triangles: input.getPolys().getNumberOfValues() - (3 * input.getLines().getNumberOfCells()),
+    };
+    return pcount;
+  };
+
   publicAPI.acquireInvertibleLookupTable = notImplemented('AcquireInvertibleLookupTable');
   publicAPI.valueToColor = notImplemented('ValueToColor');
   publicAPI.colorToValue = notImplemented('ColorToValue');

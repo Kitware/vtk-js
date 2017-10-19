@@ -28,8 +28,9 @@ function vtkViewNode(publicAPI, model) {
     // we can choose to do special
     // traversal here based on pass
     const passTraversal = `traverse${macro.capitalize(renderPass.getOperation())}`;
-    if (typeof publicAPI[passTraversal] === 'function') {
-      publicAPI[passTraversal](renderPass);
+    const fn = publicAPI[passTraversal];
+    if (fn) {
+      fn(renderPass);
       return;
     }
 
@@ -44,8 +45,9 @@ function vtkViewNode(publicAPI, model) {
   };
 
   publicAPI.apply = (renderPass, prepass) => {
-    if (typeof publicAPI[renderPass.getOperation()] === 'function') {
-      publicAPI[renderPass.getOperation()](prepass, renderPass);
+    const customRenderPass = publicAPI[renderPass.getOperation()];
+    if (customRenderPass) {
+      customRenderPass(prepass, renderPass);
     }
   };
 

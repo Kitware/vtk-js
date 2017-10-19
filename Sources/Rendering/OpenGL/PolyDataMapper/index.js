@@ -60,9 +60,12 @@ function vtkOpenGLPolyDataMapper(publicAPI, model) {
 
   publicAPI.render = () => {
     model.openGLRenderWindow = publicAPI.getFirstAncestorOfType('vtkOpenGLRenderWindow');
-    model.context = model.openGLRenderWindow.getContext();
-    for (let i = primTypes.Start; i < primTypes.End; i++) {
-      model.primitives[i].setContext(model.context);
+    const ctx = model.openGLRenderWindow.getContext();
+    if (model.context !== ctx) {
+      model.context = ctx;
+      for (let i = primTypes.Start; i < primTypes.End; i++) {
+        model.primitives[i].setContext(ctx);
+      }
     }
     model.openGLActor = publicAPI.getFirstAncestorOfType('vtkOpenGLActor');
     const actor = model.openGLActor.getRenderable();

@@ -56,6 +56,28 @@ function vtkRenderWindow(publicAPI, model) {
     model.views.forEach(view => view.traverseAllPasses());
   };
 
+  publicAPI.getStatistics = () => {
+    const results = { propCount: 0 };
+    model.renderers.forEach((ren) => {
+      const props = ren.getViewProps();
+      props.forEach((prop) => {
+        results.propCount += 1;
+        const mpr = prop.getMapper();
+        if (mpr && mpr.getPrimativeCount) {
+          const pcount = mpr.getPrimativeCount();
+          Object.keys(pcount).forEach((keyName) => {
+            if (!results[keyName]) {
+              results[keyName] = 0;
+            }
+            results[keyName] += pcount[keyName];
+          });
+        }
+      });
+    });
+    results.str = Object.keys(results).map(keyName => `${keyName}: ${results[keyName]}`).join('\n');
+    return results;
+  };
+
   publicAPI.captureImages = (format = 'image/png') => {
     publicAPI.render();
     return model.views
