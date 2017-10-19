@@ -194,8 +194,6 @@ function vtkInteractorStyleImage(publicAPI, model) {
 
       model.currentImageProperty.setColorWindow(newWindow);
       model.currentImageProperty.setColorLevel(newLevel);
-
-      rwi.render();
     }
   };
 
@@ -238,7 +236,6 @@ function vtkInteractorStyleImage(publicAPI, model) {
     }
     camera.setDistance(distance);
 
-    rwi.render();
     model.lastSlicePosition = pos.y;
   };
 

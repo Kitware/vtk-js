@@ -130,7 +130,6 @@ function vtkInteractorStyleTrackballCamera(publicAPI, model) {
     if (model.interactor.getLightFollowCamera()) {
       model.currentRenderer.updateLightsGeometryToFollowCamera();
     }
-    model.interactor.render();
   };
 
   //----------------------------------------------------------------------------
@@ -187,7 +186,6 @@ function vtkInteractorStyleTrackballCamera(publicAPI, model) {
     }
 
     camera.orthogonalizeViewUp();
-    model.interactor.render();
   };
 
   publicAPI.handleRotate = () => {
@@ -203,7 +201,6 @@ function vtkInteractorStyleTrackballCamera(publicAPI, model) {
     camera.roll(model.interactor.getRotation() - model.interactor.getLastRotation());
 
     camera.orthogonalizeViewUp();
-    model.interactor.render();
   };
 
 
@@ -248,8 +245,6 @@ function vtkInteractorStyleTrackballCamera(publicAPI, model) {
     if (rwi.getLightFollowCamera()) {
       model.currentRenderer.updateLightsGeometryToFollowCamera();
     }
-
-    rwi.render();
   };
 
   //--------------------------------------------------------------------------
@@ -278,8 +273,6 @@ function vtkInteractorStyleTrackballCamera(publicAPI, model) {
       camera.roll(newAngle);
       camera.orthogonalizeViewUp();
     }
-
-    rwi.render();
   };
 
   publicAPI.pan = () => {
@@ -328,8 +321,6 @@ function vtkInteractorStyleTrackballCamera(publicAPI, model) {
     if (rwi.getLightFollowCamera()) {
       model.currentRenderer.updateLightsGeometryToFollowCamera();
     }
-
-    rwi.render();
   };
 
   //----------------------------------------------------------------------------
@@ -371,8 +362,6 @@ function vtkInteractorStyleTrackballCamera(publicAPI, model) {
     if (rwi.getLightFollowCamera()) {
       model.currentRenderer.updateLightsGeometryToFollowCamera();
     }
-
-    rwi.render();
   };
 }
 

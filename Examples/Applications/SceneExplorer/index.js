@@ -40,6 +40,7 @@ export function load(container, options) {
   const fullScreenRenderer = vtkFullScreenRenderWindow.newInstance();
   const renderer = fullScreenRenderer.getRenderer();
   const renderWindow = fullScreenRenderer.getRenderWindow();
+  global.renderWindow = renderWindow;
 
   function onReady(sceneImporter) {
     sceneImporter.onReady(() => {

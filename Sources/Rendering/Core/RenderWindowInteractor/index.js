@@ -230,6 +230,7 @@ function vtkRenderWindowInteractor(publicAPI, model) {
     if (model.animationRequest && model.requestAnimationCount === 0) {
       cancelAnimationFrame(model.animationRequest);
       model.animationRequest = null;
+      publicAPI.render();
     }
   };
 
@@ -276,6 +277,7 @@ function vtkRenderWindowInteractor(publicAPI, model) {
     publicAPI.setScale(publicAPI.getScale() *
       Math.max(0.01, (wheelDelta + 1000.0) / 1000.0));
     publicAPI.pinchEvent();
+    publicAPI.render();
   };
 
   publicAPI.handleMouseUp = (event) => {
