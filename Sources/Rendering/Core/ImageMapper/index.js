@@ -2,6 +2,9 @@ import Constants          from 'vtk.js/Sources/Rendering/Core/ImageMapper/Consta
 import macro              from 'vtk.js/Sources/macro';
 import vtkAbstractMapper  from 'vtk.js/Sources/Rendering/Core/AbstractMapper';
 import vtkMath            from 'vtk.js/Sources/Common/Core/Math';
+import vtkPlane           from 'vtk.js/Sources/Common/DataModel/Plane';
+
+import { vec3 } from 'gl-matrix';
 
 const { SlicingMode } = Constants;
 
@@ -58,6 +61,97 @@ function vtkImageMapper(publicAPI, model) {
   };
 
   publicAPI.getIsOpaque = () => true;
+
+  publicAPI.intersectWithLineForPointPicking = (p1, p2) => {
+    const imageData = publicAPI.getInputData();
+    const extent = imageData.getExtent();
+
+    // Slice origin
+    const ijk = [model.xSlice, model.ySlice, model.zSlice];
+    const worldOrigin = [0, 0, 0];
+    imageData.indexToWorld(ijk, worldOrigin);
+
+    // Normal computation
+    ijk[model.currentSlicingMode] += 1;
+    const worldNormal = [0, 0, 0];
+    imageData.indexToWorld(ijk, worldNormal);
+    worldNormal[0] -= worldOrigin[0];
+    worldNormal[1] -= worldOrigin[1];
+    worldNormal[2] -= worldOrigin[2];
+    vec3.normalize(worldNormal);
+
+    const intersect = vtkPlane.intersectWithLine(p1, p2, worldOrigin, worldNormal);
+    if (intersect.intersection) {
+      const point = intersect.x;
+      const absoluteIJK = [0, 0, 0];
+      imageData.worldToIndex(point, absoluteIJK);
+
+      // Are we outside our actual extent/bounds
+      if (absoluteIJK[0] < extent[0] || absoluteIJK[0] > extent[1]
+        || absoluteIJK[1] < extent[2] || absoluteIJK[1] > extent[3]
+        || absoluteIJK[2] < extent[4] || absoluteIJK[2] > extent[5]) {
+        return null;
+      }
+
+      // Get closer integer ijk
+      ijk[0] = Math.round(absoluteIJK[0]);
+      ijk[1] = Math.round(absoluteIJK[1]);
+      ijk[2] = Math.round(absoluteIJK[2]);
+
+      return {
+        ijk,
+        absoluteIJK,
+        point,
+      };
+    }
+    return null;
+  };
+
+  publicAPI.intersectWithLineForCellPicking = (p1, p2) => {
+    const imageData = publicAPI.getInputData();
+    const extent = imageData.getExtent();
+
+    // Slice origin
+    const ijk = [model.xSlice, model.ySlice, model.zSlice];
+    const worldOrigin = [0, 0, 0];
+    imageData.indexToWorld(ijk, worldOrigin);
+
+    // Normal computation
+    ijk[model.currentSlicingMode] += 1;
+    const worldNormal = [0, 0, 0];
+    imageData.indexToWorld(ijk, worldNormal);
+    worldNormal[0] -= worldOrigin[0];
+    worldNormal[1] -= worldOrigin[1];
+    worldNormal[2] -= worldOrigin[2];
+    vec3.normalize(worldNormal);
+
+    const intersect = vtkPlane.intersectWithLine(p1, p2, worldOrigin, worldNormal);
+    if (intersect.intersection) {
+      const point = intersect.x;
+      const absoluteIJK = [0, 0, 0];
+      imageData.worldToIndex(point, absoluteIJK);
+
+
+      // Are we outside our actual extent/bounds
+      if (absoluteIJK[0] < extent[0] || absoluteIJK[0] > extent[1]
+        || absoluteIJK[1] < extent[2] || absoluteIJK[1] > extent[3]
+        || absoluteIJK[2] < extent[4] || absoluteIJK[2] > extent[5]) {
+        return null;
+      }
+
+      // Get closer integer ijk
+      ijk[0] = Math.floor(absoluteIJK[0]);
+      ijk[1] = Math.floor(absoluteIJK[1]);
+      ijk[2] = Math.floor(absoluteIJK[2]);
+
+      return {
+        ijk,
+        absoluteIJK,
+        point,
+      };
+    }
+    return null;
+  };
 }
 
 // ----------------------------------------------------------------------------
