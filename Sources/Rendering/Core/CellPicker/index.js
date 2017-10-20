@@ -227,7 +227,7 @@ function vtkCellPicker(publicAPI, model) {
     const locator = null;
     if (locator) {
       // TODO when cell locator will be implemented
-    } else {
+    } else if (data.getPolys) {
       const cellObject = data.getPolys();
       const points = data.getPoints();
       const pointsData = points.getData();

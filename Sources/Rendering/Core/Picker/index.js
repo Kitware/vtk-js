@@ -250,6 +250,7 @@ function vtkPicker(publicAPI, model) {
           }
         }
       }
+      publicAPI.invokePickChange(model.pickedPositions);
       return 1;
     });
   };
@@ -287,6 +288,7 @@ export function extend(publicAPI, model, initialValues = {}) {
     'actors',
     'pickedPositions',
   ]);
+  macro.event(publicAPI, model, 'pickChange');
 
   vtkPicker(publicAPI, model);
 }
