@@ -573,10 +573,10 @@ function vtkPiecewiseGaussianWidget(publicAPI, model) {
     const [width, height] = model.size;
     const offset = model.style.padding;
     const graphArea = [
-      model.style.iconSize + offset,
-      offset,
-      width - (2 * offset) - model.style.iconSize,
-      height - (2 * offset),
+      Math.floor(model.style.iconSize + offset),
+      Math.floor(offset),
+      Math.ceil(width - (2 * offset) - model.style.iconSize),
+      Math.ceil(height - (2 * offset)),
     ];
     model.graphArea = graphArea;
 
