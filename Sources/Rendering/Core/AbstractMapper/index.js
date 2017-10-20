@@ -5,6 +5,10 @@ import macro        from 'vtk.js/Sources/macro';
 // ----------------------------------------------------------------------------
 
 function vtkAbstractMapper(publicAPI, model) {
+  publicAPI.update = () => {
+    publicAPI.getInputData();
+  };
+
   publicAPI.addClippingPlane = (plane) => {
     if (plane.getClassName() !== 'vtkPlane') {
       return;
@@ -57,6 +61,7 @@ export function extend(publicAPI, model, initialValues = {}) {
 
   // Object methods
   macro.obj(publicAPI, model);
+  macro.algo(publicAPI, model, 1, 0);
 
   if (!model.clippingPlanes) {
     model.clippingPlanes = [];

@@ -1,6 +1,7 @@
-import macro     from 'vtk.js/Sources/macro';
-import Constants from 'vtk.js/Sources/Rendering/Core/ImageMapper/Constants';
-import vtkMath   from 'vtk.js/Sources/Common/Core/Math';
+import Constants          from 'vtk.js/Sources/Rendering/Core/ImageMapper/Constants';
+import macro              from 'vtk.js/Sources/macro';
+import vtkAbstractMapper  from 'vtk.js/Sources/Rendering/Core/AbstractMapper';
+import vtkMath            from 'vtk.js/Sources/Common/Core/Math';
 
 const { SlicingMode } = Constants;
 
@@ -12,16 +13,9 @@ function vtkImageMapper(publicAPI, model) {
   // Set our className
   model.classHierarchy.push('vtkImageMapper');
 
-  publicAPI.update = () => {
-    publicAPI.getInputData();
-  };
-
   publicAPI.setZSliceFromCamera = (cam) => {
-    publicAPI.update();
     const image = publicAPI.getInputData();
-
     const fp = cam.getFocalPoint();
-
     const idx = [];
     image.worldToIndex(fp, idx);
     publicAPI.setZSlice(Math.floor(idx[2] + 0.5));
@@ -29,19 +23,16 @@ function vtkImageMapper(publicAPI, model) {
 
   publicAPI.setZSliceIndex = (id) => {
     model.currentSlicingMode = SlicingMode.Z;
-    publicAPI.update();
     publicAPI.setZSlice(id);
   };
 
   publicAPI.setYSliceIndex = (id) => {
     model.currentSlicingMode = SlicingMode.Y;
-    publicAPI.update();
     publicAPI.setYSlice(id);
   };
 
   publicAPI.setXSliceIndex = (id) => {
     model.currentSlicingMode = SlicingMode.X;
-    publicAPI.update();
     publicAPI.setXSlice(id);
   };
 
@@ -91,8 +82,7 @@ export function extend(publicAPI, model, initialValues = {}) {
   Object.assign(model, DEFAULT_VALUES, initialValues);
 
   // Build VTK API
-  macro.obj(publicAPI, model);
-  macro.algo(publicAPI, model, 1, 0);
+  vtkAbstractMapper.extend(publicAPI, model, initialValues);
 
   macro.setGet(publicAPI, model, [
     'currentSlicingMode',

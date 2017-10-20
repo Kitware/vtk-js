@@ -56,10 +56,6 @@ function vtkMapper(publicAPI, model) {
     return model.bounds;
   };
 
-  publicAPI.update = () => {
-    publicAPI.getInputData();
-  };
-
   publicAPI.setForceCompileOnly = (v) => {
     model.forceCompileOnly = v;
     // make sure we do NOT call modified()
@@ -528,7 +524,6 @@ export function extend(publicAPI, model, initialValues = {}) {
 
   // Inheritance
   vtkAbstractMapper3D.extend(publicAPI, model, initialValues);
-  macro.algo(publicAPI, model, 1, 0);
 
   macro.get(publicAPI, model, [
     'colorCoordinates',
