@@ -202,6 +202,9 @@ function vtkPicker(publicAPI, model) {
 
       if (pickable) {
         model.transformMatrix = prop.getMatrix();
+        // Webgl need a transpose matrix but we need the untransposed one to project world points
+        // into the right referential
+        mat4.transpose(model.transformMatrix, model.transformMatrix);
         mat4.invert(model.transformMatrix, model.transformMatrix);
         // Extract scale
         const col1 = [model.transformMatrix[0], model.transformMatrix[1], model.transformMatrix[2]];
@@ -213,6 +216,14 @@ function vtkPicker(publicAPI, model) {
 
         vec4.transformMat4(p1Mapper, p1World, model.transformMatrix);
         vec4.transformMat4(p2Mapper, p2World, model.transformMatrix);
+
+        p1Mapper[0] /= p1Mapper[3];
+        p1Mapper[1] /= p1Mapper[3];
+        p1Mapper[2] /= p1Mapper[3];
+
+        p2Mapper[0] /= p2Mapper[3];
+        p2Mapper[1] /= p2Mapper[3];
+        p2Mapper[2] /= p2Mapper[3];
 
         for (let i = 0; i < 3; i++) {
           ray[i] = p2Mapper[i] - p1Mapper[i];
