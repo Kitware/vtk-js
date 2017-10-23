@@ -20,13 +20,18 @@ function vtkProp3D(publicAPI, model) {
   // Capture 'parentClass' api for internal use
   const superClass = Object.assign({}, publicAPI);
 
-  publicAPI.getMTime = () => Math.max(
-    superClass.getMTime(),
-    publicAPI.getUserTransformMatrixMTime());
+  publicAPI.getMTime = () => {
+    const m1 = superClass.getMTime();
+    const m2 =
+      publicAPI.getUserMatrixMTime();
+    if (m1 > m2) {
+      return m1;
+    }
+    return m2;
+  };
 
-  publicAPI.getUserTransformMatrixMTime = () => Math.max(
-    model.userMatrix ? model.userMatrix.getMTime() : 0,
-    model.userTransform ? model.userTransform.getMTime() : 0);
+  publicAPI.getUserMatrixMTime = () =>
+    (model.userMatrix ? model.userMatrix.getMTime() : 0);
 
   publicAPI.addPosition = (deltaXYZ) => {
     model.position = model.position.map((value, index) => value + deltaXYZ[index]);

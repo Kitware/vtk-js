@@ -99,13 +99,17 @@ function vtkDataArray(publicAPI, model) {
     range = model.ranges[rangeIdx];
 
     if (range) {
-      return [range.min, range.max];
+      model.rangeTuple[0] = range.min;
+      model.rangeTuple[1] = range.max;
+      return model.rangeTuple;
     }
 
     // Need to compute ranges...
     range = computeRange(model.values, componentIndex, model.numberOfComponents);
     model.ranges[rangeIdx] = range;
-    return [range.min, range.max];
+    model.rangeTuple[0] = range.min;
+    model.rangeTuple[1] = range.max;
+    return model.rangeTuple;
   };
 
   publicAPI.setTuple = (idx, tuple) => {
@@ -205,6 +209,7 @@ const DEFAULT_VALUES = {
   numberOfComponents: 1,
   size: 0,
   dataType: DefaultDataType,
+  rangeTuple: [0, 0],
   // values: null,
   // ranges: null,
 };

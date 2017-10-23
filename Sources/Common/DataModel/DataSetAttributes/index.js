@@ -131,7 +131,8 @@ function vtkDataSetAttributes(publicAPI, model) {
   };
 
   attrTypes.forEach((value) => {
-    publicAPI[`get${value}`] = () => publicAPI.getArrayByIndex(model[`active${value}`]);
+    const activeVal = `active${value}`;
+    publicAPI[`get${value}`] = () => publicAPI.getArrayByIndex(model[activeVal]);
     publicAPI[`set${value}`] = da => publicAPI.setAttribute(da, value);
     publicAPI[`setActive${value}`] =
       arrayName => publicAPI.setActiveAttributeByIndex(

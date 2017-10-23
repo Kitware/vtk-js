@@ -23,7 +23,7 @@ function vtkViewNode(publicAPI, model) {
   publicAPI.traverse = (renderPass) => {
     // we can choose to do special
     // traversal here based on pass
-    const passTraversal = `traverse${macro.capitalize(renderPass.getOperation())}`;
+    const passTraversal = renderPass.getTraverseOperation();
     const fn = publicAPI[passTraversal];
     if (fn) {
       fn(renderPass);
@@ -33,9 +33,9 @@ function vtkViewNode(publicAPI, model) {
     // default traversal
     publicAPI.apply(renderPass, true);
 
-    publicAPI.getChildren().forEach((child) => {
-      child.traverse(renderPass);
-    });
+    for (let index = 0; index < model.children.length; index++) {
+      model.children[index].traverse(renderPass);
+    }
 
     publicAPI.apply(renderPass, false);
   };
@@ -68,9 +68,22 @@ function vtkViewNode(publicAPI, model) {
     return model.parent.getFirstAncestorOfType(type);
   };
 
-  publicAPI.addMissingNode = (dataObj) => {
-    if (dataObj) {
-      publicAPI.addMissingNodes([dataObj]);
+  publicAPI.addMissingNode = (dobj) => {
+    if (!dobj) {
+      return;
+    }
+    const result = model.renderableChildMap.get(dobj);
+    // if found just mark as visited
+    if (result !== undefined) {
+      result.setVisited(true);
+    } else { // otherwise create a node
+      const newNode = publicAPI.createViewNode(dobj);
+      if (newNode) {
+        newNode.setParent(publicAPI);
+        newNode.setVisited(true);
+        model.renderableChildMap.set(dobj, newNode);
+        model.children.push(newNode);
+      }
     }
   };
 
@@ -79,7 +92,8 @@ function vtkViewNode(publicAPI, model) {
       return;
     }
 
-    dataObjs.forEach((dobj) => {
+    for (let index = 0; index < dataObjs.length; ++index) {
+      const dobj = dataObjs[index];
       const result = model.renderableChildMap.get(dobj);
       // if found just mark as visited
       if (result !== undefined) {
@@ -88,17 +102,18 @@ function vtkViewNode(publicAPI, model) {
         const newNode = publicAPI.createViewNode(dobj);
         if (newNode) {
           newNode.setParent(publicAPI);
-          // newNode.setRenderable(dobj);
           newNode.setVisited(true);
           model.renderableChildMap.set(dobj, newNode);
           model.children.push(newNode);
         }
       }
-    });
+    }
   };
 
   publicAPI.prepareNodes = () => {
-    model.children.forEach(child => (child.setVisited(false)));
+    for (let index = 0; index < model.children.length; ++index) {
+      model.children[index].setVisited(false);
+    }
   };
 
   publicAPI.setVisited = (val) => {
@@ -106,19 +121,28 @@ function vtkViewNode(publicAPI, model) {
   };
 
   publicAPI.removeUnusedNodes = () => {
-    if (!model.children.every(node => node.getVisited())) {
-      model.children = model.children.filter((node) => {
-        const visited = node.getVisited();
-        if (!visited) {
-          const renderable = node.getRenderable();
-          if (renderable) {
-            model.renderableChildMap.delete(renderable);
-          }
+    let deleted = null;
+    for (let index = 0; index < model.children.length; ++index) {
+      const child = model.children[index];
+      const visited = child.getVisited();
+      if (!visited) {
+        const renderable = child.getRenderable();
+        if (renderable) {
+          model.renderableChildMap.delete(renderable);
         }
-        return visited;
-      });
+        if (!deleted) {
+          deleted = [];
+        }
+        deleted.push(child);
+      } else {
+        child.setVisited(false);
+      }
     }
-    publicAPI.prepareNodes();
+
+    if (deleted) {
+      // slow does alloc but not as common
+      model.children = model.children.filter(el => !deleted.includes(el));
+    }
   };
 
   publicAPI.createViewNode = (dataObj) => {

@@ -36,11 +36,12 @@ function vtkOpenGLRenderer(publicAPI, model) {
   publicAPI.updateLights = () => {
     let count = 0;
 
-    model.renderable.getLights().forEach((light) => {
-      if (light.getSwitch() > 0.0) {
+    const lights = model.renderable.getLights(true);
+    for (let index = 0; index < lights.length; ++index) {
+      if (lights[index].getSwitch() > 0.0) {
         count++;
       }
-    });
+    }
 
     if (!count) {
       vtkDebugMacro('No lights are on, creating one.');
@@ -80,13 +81,13 @@ function vtkOpenGLRenderer(publicAPI, model) {
   };
 
   publicAPI.getAspectRatio = () => {
-    const size = model.parent.getSize();
-    const viewport = model.renderable.getViewport();
+    const size = model.parent.getSize(true);
+    const viewport = model.renderable.getViewport(true);
     return size[0] * (viewport[2] - viewport[0]) / ((viewport[3] - viewport[1]) * size[1]);
   };
 
   publicAPI.getTiledSizeAndOrigin = () => {
-    const vport = model.renderable.getViewport();
+    const vport = model.renderable.getViewport(true);
 
     // if there is no window assume 0 1
     const tileViewPort = [0.0, 0.0, 1.0, 1.0];
@@ -134,7 +135,7 @@ function vtkOpenGLRenderer(publicAPI, model) {
     const gl = model.context;
 
     if (!model.renderable.getTransparent()) {
-      const background = model.renderable.getBackground();
+      const background = model.renderable.getBackground(true);
       // renderable ensures that background has 4 entries.
       model.context.clearColor(...background);
       clearMask |= gl.COLOR_BUFFER_BIT;

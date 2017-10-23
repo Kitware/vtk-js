@@ -347,7 +347,6 @@ function vtkOpenGLVolumeMapper(publicAPI, model) {
   };
 
   publicAPI.updateShaders = (cellBO, ren, actor) => {
-    cellBO.getVAO().bind();
     model.lastBoundBO = cellBO;
 
     // has something changed that would require us to recreate the shader?
@@ -372,6 +371,7 @@ function vtkOpenGLVolumeMapper(publicAPI, model) {
       model.openGLRenderWindow.getShaderCache().readyShaderProgram(cellBO.getProgram());
     }
 
+    cellBO.getVAO().bind();
     publicAPI.setMapperShaderParameters(cellBO, ren, actor);
     publicAPI.setCameraShaderParameters(cellBO, ren, actor);
     publicAPI.setPropertyShaderParameters(cellBO, ren, actor);
@@ -384,7 +384,6 @@ function vtkOpenGLVolumeMapper(publicAPI, model) {
     if (cellBO.getCABO().getElementCount() &&
         (model.VBOBuildTime.getMTime() > cellBO.getAttributeUpdateTime().getMTime() ||
         cellBO.getShaderSourceTime().getMTime() > cellBO.getAttributeUpdateTime().getMTime())) {
-      cellBO.getCABO().bind();
       if (program.isAttributeUsed('vertexDC')) {
         if (!cellBO.getVAO().addAttributeArray(program, cellBO.getCABO(),
                                            'vertexDC', cellBO.getCABO().getVertexOffset(),
@@ -393,6 +392,7 @@ function vtkOpenGLVolumeMapper(publicAPI, model) {
           vtkErrorMacro('Error setting vertexDC in shader VAO.');
         }
       }
+      cellBO.getAttributeUpdateTime().modified();
     }
 
     program.setUniformi('texture1',
@@ -573,14 +573,14 @@ function vtkOpenGLVolumeMapper(publicAPI, model) {
             lightColor[0] = dColor[0] * intensity;
             lightColor[1] = dColor[1] * intensity;
             lightColor[2] = dColor[2] * intensity;
-            program.setUniform3f(`lightColor${lightNum}`, lightColor);
+            program.setUniform3fArray(`lightColor${lightNum}`, lightColor);
             const lightDir = light.getDirection();
-            program.setUniform3f(`lightDirectionWC${lightNum}`, lightDir);
+            program.setUniform3fArray(`lightDirectionWC${lightNum}`, lightDir);
             const halfAngle = [
               -0.5 * (lightDir[0] + camDOP[0]),
               -0.5 * (lightDir[1] + camDOP[1]),
               -0.5 * (lightDir[2] + camDOP[2])];
-            program.setUniform3f(`lightHalfAngleWC${lightNum}`, halfAngle);
+            program.setUniform3fArray(`lightHalfAngleWC${lightNum}`, halfAngle);
             lightNum++;
           }
         });

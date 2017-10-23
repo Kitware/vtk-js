@@ -199,7 +199,6 @@ function vtkOpenGLStickMapper(publicAPI, model) {
       const selector = ren.getSelector();
       const picking = false; // (ren.getRenderWindow().getIsPicking() || selector !== null);
 
-      cellBO.getCABO().bind();
       if (cellBO.getProgram().isAttributeUsed('orientMC')) {
         if (!cellBO.getVAO().addAttributeArray(cellBO.getProgram(), cellBO.getCABO(),
                                            'orientMC',

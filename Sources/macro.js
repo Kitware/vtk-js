@@ -169,6 +169,8 @@ export function obj(publicAPI = {}, model = {}) {
     return subset;
   };
 
+  publicAPI.getOneProperty = val => model[val];
+
   publicAPI.delete = () => {
     Object.keys(model).forEach(field => delete model[field]);
     callbacks.forEach((el, index) => off(index));
@@ -338,7 +340,13 @@ export function setGet(publicAPI, model, fieldNames) {
 
 export function getArray(publicAPI, model, fieldNames) {
   fieldNames.forEach((field) => {
-    publicAPI[`get${capitalize(field)}`] = () => [].concat(model[field]);
+    // by default return a copy to be safe unless noModify is true
+    publicAPI[`get${capitalize(field)}`] = (noModify = false) => {
+      if (noModify) {
+        return model[field];
+      }
+      return [].concat(model[field]);
+    };
   });
 }
 
@@ -474,11 +482,19 @@ export function algo(publicAPI, model, numberOfInputs, numberOfOutputs) {
   }
 
   publicAPI.shouldUpdate = () => {
-    const localMTime = publicAPI.getMTime();
+    const localMTime = model.mtime;
     let count = numberOfOutputs;
+    let minOutputMTime = Infinity;
     while (count--) {
-      if (!model.output[count] || model.output[count].getMTime() < localMTime) {
+      if (!model.output[count]) {
         return true;
+      }
+      const mt = model.output[count].getMTime();
+      if (mt < localMTime) {
+        return true;
+      }
+      if (mt < minOutputMTime) {
+        minOutputMTime = mt;
       }
     }
 
@@ -489,7 +505,6 @@ export function algo(publicAPI, model, numberOfInputs, numberOfOutputs) {
       }
     }
 
-    const minOutputMTime = Math.min(...model.output.filter(i => !!i).map(i => i.getMTime()));
     count = numberOfInputs;
     while (count--) {
       if (publicAPI.getInputData(count) && publicAPI.getInputData(count).getMTime() > minOutputMTime) {
@@ -579,13 +594,14 @@ export function event(publicAPI, model, eventName) {
     return Object.freeze({ unsubscribe });
   }
 
-  publicAPI[`invoke${capitalize(eventName)}`] = (...args) => {
+  publicAPI[`invoke${capitalize(eventName)}`] = () => {
     if (model.deleted) {
       vtkErrorMacro('instance deleted - cannot call any method');
       return;
     }
-
-    callbacks.forEach(callback => callback && callback.apply(publicAPI, args));
+    /* eslint-disable prefer-rest-params */
+    callbacks.forEach(callback => callback && callback.apply(publicAPI, arguments));
+    /* eslint-enable prefer-rest-params */
   };
 
   publicAPI[`on${capitalize(eventName)}`] = (callback) => {

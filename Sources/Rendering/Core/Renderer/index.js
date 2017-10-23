@@ -57,8 +57,8 @@ function vtkRenderer(publicAPI, model) {
         // vtkLight::SetLightTypeToSceneLight()
       } else if (light.lightTypeIsHeadLight()) {
         // update position and orientation of light to match camera.
-        light.setPosition(camera.getPosition());
-        light.setFocalPoint(camera.getFocalPoint());
+        light.setPosition(camera.getPosition(true));
+        light.setFocalPoint(camera.getFocalPoint(true));
       } else if (light.lightTypeIsCameraLight()) {
         light.setTransformMatrix(lightMatrix);
       } else {
@@ -257,12 +257,12 @@ function vtkRenderer(publicAPI, model) {
     const allBounds = [].concat(INIT_BOUNDS);
     let nothingVisible = true;
 
-    publicAPI.invokeEvent({ type: 'ComputeVisiblePropBoundsEvent', renderer: publicAPI });
+    publicAPI.invokeEvent(model.computeVisiblePropBoundsEventData);
 
     // loop through all props
-    model.props
-      .filter(prop => prop.getVisibility() && prop.getUseBounds())
-      .forEach((prop) => {
+    for (let index = 0; index < model.props.length; ++index) {
+      const prop = model.props[index];
+      if (prop.getVisibility() && prop.getUseBounds()) {
         const bounds = prop.getBounds();
         if (bounds && vtkMath.areBoundsInitialized(bounds)) {
           nothingVisible = false;
@@ -286,7 +286,8 @@ function vtkRenderer(publicAPI, model) {
             allBounds[5] = bounds[5];
           }
         }
-      });
+      }
+    }
 
     if (nothingVisible) {
       vtkMath.uninitializeBounds(allBounds);
@@ -395,8 +396,8 @@ function vtkRenderer(publicAPI, model) {
     }
 
     let vn = null; let position = null;
-    vn = model.activeCamera.getViewPlaneNormal();
-    position = model.activeCamera.getPosition();
+    vn = model.activeCamera.getViewPlaneNormal(true);
+    position = model.activeCamera.getPosition(true);
 
     const a = -vn[0];
     const b = -vn[1];
@@ -476,12 +477,18 @@ function vtkRenderer(publicAPI, model) {
   publicAPI.visibleActorCount = () => model.props.filter(prop => prop.getVisibility()).length;
   publicAPI.visibleVolumeCount = publicAPI.visibleActorCount;
 
-  publicAPI.getMTime = () =>
-    Math.max(
-      model.mtime,
-      model.activeCamera ? model.activeCamera.getMTime() : 0,
-      model.createdLight ? model.createdLight.getMTime() : 0);
-
+  publicAPI.getMTime = () => {
+    let m1 = model.mtime;
+    const m2 = model.activeCamera ? model.activeCamera.getMTime() : 0;
+    if (m2 > m1) {
+      m1 = m2;
+    }
+    const m3 = model.createdLight ? model.createdLight.getMTime() : 0;
+    if (m3 > m1) {
+      m1 = m3;
+    }
+    return m1;
+  };
 
   // FIXME
   publicAPI.pickProp = notImplemented('pickProp');
@@ -604,6 +611,11 @@ export function extend(publicAPI, model, initialValues = {}) {
   ]);
   macro.getArray(publicAPI, model, ['actors', 'volumes', 'lights']);
   macro.setGetArray(publicAPI, model, ['background'], 4, 1.0);
+
+  model.computeVisiblePropBoundsEventData = {
+    type: 'ComputeVisiblePropBoundsEvent',
+    renderer: publicAPI,
+  };
 
   // Object methods
   vtkRenderer(publicAPI, model);

@@ -36,9 +36,11 @@ function vtkViewport(publicAPI, model) {
 
   // this method get all the props including any nested props
   publicAPI.getViewPropsWithNestedProps = () => {
-    model.allprops = [];
+    model.allprops = model.props;
     model.props.forEach((prop) => {
-      model.allprops = model.allprops.concat(prop.getProps());
+      if (prop.getNestedProps()) {
+        model.allprops = model.allprops.concat(prop.getProps());
+      }
     });
     return model.allprops;
   };

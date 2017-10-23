@@ -184,21 +184,16 @@ function vtkShaderProgram(publicAPI, model) {
     return true;
   };
 
-  publicAPI.setUniform2f = (name, ...args) => {
+  publicAPI.setUniform2f = (name, v1, v2) => {
     const location = publicAPI.findUniform(name);
     if (location === -1) {
       model.error = `Could not set uniform ${name} . No such uniform.`;
       return false;
     }
-    let array = args;
-    // allow an array passed as a single argument
-    if (array.length === 1 && Array.isArray(array[0])) {
-      array = array[0];
-    }
-    if (array.length !== 2) {
+    if (v2 === undefined) {
       throw new RangeError('Invalid number of values for array');
     }
-    model.context.uniform2f(location, array[0], array[1]);
+    model.context.uniform2f(location, v1, v2);
     return true;
   };
 
@@ -212,21 +207,16 @@ function vtkShaderProgram(publicAPI, model) {
     return true;
   };
 
-  publicAPI.setUniform2i = (name, ...args) => {
+  publicAPI.setUniform2i = (name, v1, v2) => {
     const location = publicAPI.findUniform(name);
     if (location === -1) {
       model.error = `Could not set uniform ${name} . No such uniform.`;
       return false;
     }
-    let array = args;
-    // allow an array passed as a single argument
-    if (array.length === 1 && Array.isArray(array[0])) {
-      array = array[0];
-    }
-    if (array.length !== 2) {
+    if (v2 === undefined) {
       throw new RangeError('Invalid number of values for array');
     }
-    model.context.uniform2i(location, array[0], array[1]);
+    model.context.uniform2i(location, v1, v2);
     return true;
   };
 
@@ -240,21 +230,29 @@ function vtkShaderProgram(publicAPI, model) {
     return true;
   };
 
-  publicAPI.setUniform3f = (name, ...args) => {
+  publicAPI.setUniform3f = (name, a1, a2, a3) => {
     const location = publicAPI.findUniform(name);
     if (location === -1) {
       model.error = `Could not set uniform ${name} . No such uniform.`;
       return false;
     }
-    let array = args;
-    // allow an array passed as a single argument
-    if (array.length === 1 && Array.isArray(array[0])) {
-      array = array[0];
-    }
-    if (array.length !== 3) {
+    if (a3 === undefined) {
       throw new RangeError('Invalid number of values for array');
     }
-    model.context.uniform3f(location, array[0], array[1], array[2]);
+    model.context.uniform3f(location, a1, a2, a3);
+    return true;
+  };
+
+  publicAPI.setUniform3fArray = (name, a) => {
+    const location = publicAPI.findUniform(name);
+    if (location === -1) {
+      model.error = `Could not set uniform ${name} . No such uniform.`;
+      return false;
+    }
+    if (!Array.isArray(a) || a.length !== 3) {
+      throw new RangeError('Invalid number of values for array');
+    }
+    model.context.uniform3f(location, a[0], a[1], a[2]);
     return true;
   };
 
@@ -367,18 +365,20 @@ function vtkShaderProgram(publicAPI, model) {
       return -1;
     }
 
-    let loc = Object.keys(model.uniformLocs).indexOf(name);
-
-    if (loc !== -1) {
-      return model.uniformLocs[name];
+    // see if we have cached the result
+    let loc = model.uniformLocs[name];
+    if (loc !== undefined) {
+      return loc;
     }
 
     loc = model.context.getUniformLocation(model.handle, name);
     if (loc === null) {
       model.error = `Uniform ${name} not found in current shader program.`;
+      model.uniformLocs[name] = -1;
+      return -1;
     }
-    model.uniformLocs[name] = loc;
 
+    model.uniformLocs[name] = loc;
     return loc;
   };
 
@@ -388,9 +388,9 @@ function vtkShaderProgram(publicAPI, model) {
     }
 
     // see if we have cached the result
-    let loc = Object.keys(model.uniformLocs).indexOf(name);
-    if (loc !== -1) {
-      return true;
+    let loc = model.uniformLocs[name];
+    if (loc !== undefined) {
+      return (loc !== null);
     }
 
     if (!model.linked) {
@@ -399,10 +399,11 @@ function vtkShaderProgram(publicAPI, model) {
     }
 
     loc = model.context.getUniformLocation(model.handle, name);
+    model.uniformLocs[name] = loc;
+
     if (loc === null) {
       return false;
     }
-    model.uniformLocs[name] = loc;
 
     return true;
   };

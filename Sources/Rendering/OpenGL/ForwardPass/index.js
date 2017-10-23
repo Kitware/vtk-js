@@ -8,8 +8,6 @@ function vtkForwardPass(publicAPI, model) {
   // Set our className
   model.classHierarchy.push('vtkForwardPass');
 
-  publicAPI.getOperation = () => model.currentOperation;
-
   // this pass implements a forward rendering pipeline
   // if both volumes and opaque geometry are present
   // it will mix the two together by capturing a zbuffer
@@ -23,14 +21,15 @@ function vtkForwardPass(publicAPI, model) {
     model.currentParent = parent;
 
     // build
-    model.currentOperation = 'buildPass';
+    publicAPI.setCurrentOperation('buildPass');
     viewNode.traverse(publicAPI);
 
     // check for both opaque and volume actors
     model.opaqueActorCount = 0;
     model.translucentActorCount = 0;
     model.volumeCount = 0;
-    model.currentOperation = 'queryPass';
+    publicAPI.setCurrentOperation('queryPass');
+
     viewNode.traverse(publicAPI);
 
     // do we need to capture a zbuffer?
@@ -49,23 +48,23 @@ function vtkForwardPass(publicAPI, model) {
         model.framebuffer.populateFramebuffer();
       }
       model.framebuffer.bind();
-      model.currentOperation = 'opaqueZBufferPass';
+      publicAPI.setCurrentOperation('opaqueZBufferPass');
       viewNode.traverse(publicAPI);
       model.framebuffer.restorePreviousBindingsAndBuffers();
     }
 
-    model.currentOperation = 'cameraPass';
+    publicAPI.setCurrentOperation('cameraPass');
     viewNode.traverse(publicAPI);
     if (model.opaqueActorCount > 0) {
-      model.currentOperation = 'opaquePass';
+      publicAPI.setCurrentOperation('opaquePass');
       viewNode.traverse(publicAPI);
     }
     if (model.translucentActorCount > 0) {
-      model.currentOperation = 'translucentPass';
+      publicAPI.setCurrentOperation('translucentPass');
       viewNode.traverse(publicAPI);
     }
     if (model.volumeCount > 0) {
-      model.currentOperation = 'volumePass';
+      publicAPI.setCurrentOperation('volumePass');
       viewNode.traverse(publicAPI);
     }
   };
