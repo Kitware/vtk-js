@@ -1,5 +1,6 @@
 import macro       from 'vtk.js/Sources/macro';
 import vtkPolyData from 'vtk.js/Sources/Common/DataModel/PolyData';
+import vtkMatrixBuilder from 'vtk.js/Sources/Common/Core/MatrixBuilder';
 
 // ----------------------------------------------------------------------------
 // vtkConeSource methods
@@ -60,7 +61,13 @@ function vtkConeSource(publicAPI, model) {
       polys[cellLocation++] = i + 2 > model.resolution ? 1 : i + 2;
     }
 
-    // FIXME apply tranform
+    // Apply tranformation to the points coordinates
+    vtkMatrixBuilder
+      .buildFromRadian()
+      .translate(...model.center)
+      .rotateFromDirections([1, 0, 0], model.direction)
+      .apply(points);
+
     dataset = vtkPolyData.newInstance();
     dataset.getPoints().setData(points, 3);
     dataset.getPolys().setData(polys, 1);

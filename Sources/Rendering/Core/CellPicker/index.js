@@ -169,7 +169,12 @@ function vtkCellPicker(publicAPI, model) {
     }
 
     if (mapper.isA('vtkImageMapper')) {
-      tMin = publicAPI.intersectVolumeSliceWithLine(p1, p2, t1, t2, tol, mapper);
+      const pickData = mapper.intersectWithLineForCellPicking(p1, p2);
+      if (pickData) {
+        tMin = 0;
+        model.cellIJK = pickData.ijk;
+        model.pCoords = pickData.x;
+      }
     } else if (mapper.isA('vtkMapper')) {
       tMin = publicAPI.intersectActorWithLine(p1, p2, t1, t2, tol, mapper);
     }
@@ -197,26 +202,6 @@ function vtkCellPicker(publicAPI, model) {
     }
 
     return tMin;
-  };
-
-  publicAPI.intersectVolumeSliceWithLine = (p1, p2, t1, t2, tol, mapper) => {
-    // Total Hack - SHOULD BE CLEANED UP !!!!!
-    // - assume no transform
-    // - assume parallel projection
-    // - assume bad things !!!!!!
-    const imageData = mapper.getInputData();
-    const sliceAxis = mapper.getCurrentSlicingMode();
-
-    const bounds = imageData.getBounds();
-    const normalizeInterset = [
-      (p1[0] - bounds[0]) / (bounds[1] - bounds[0]),
-      (p1[1] - bounds[2]) / (bounds[3] - bounds[2]),
-      (p1[2] - bounds[4]) / (bounds[5] - bounds[4]),
-    ];
-    model.cellIJK = imageData.getDimensions().map((d, i) => Math.floor(((d - 1) * normalizeInterset[i]) + 0.5));
-    model.cellIJK[sliceAxis] = mapper[`get${'XYZ'[sliceAxis]}Slice`]();
-
-    return 0;
   };
 
   publicAPI.intersectActorWithLine = (p1, p2, t1, t2, tol, mapper) => {
