@@ -194,8 +194,6 @@ function vtkInteractorStyle(publicAPI, model) {
   publicAPI.startState = (state) => {
     model.state = state;
     if (model.animationState === States.IS_ANIM_OFF) {
-      // const rwi = model.interactor;
-      // rwi.getRenderWindow().setDesiredUpdateRate(rwi.getDesiredUpdateRate());
       publicAPI.invokeStartInteractionEvent({ type: 'StartInteractionEvent' });
     }
   };
@@ -204,7 +202,6 @@ function vtkInteractorStyle(publicAPI, model) {
     model.state = States.IS_NONE;
     if (model.animationState === States.IS_ANIM_OFF) {
       const rwi = model.interactor;
-      // rwi.getRenderWindow().setDesiredUpdateRate(rwi.getStillUpdateRate());
       publicAPI.invokeEndInteractionEvent({ type: 'EndInteractionEvent' });
       rwi.render();
     }

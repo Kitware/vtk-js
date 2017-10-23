@@ -17,6 +17,7 @@ function vtkProp(publicAPI, model) {
       Math.max(val.getMTime(), acc)
     , 0));
 
+  publicAPI.getProps = () => publicAPI;
   publicAPI.getActors = () => null;
   publicAPI.getActors2D = () => null;
   publicAPI.getVolumes = () => null;

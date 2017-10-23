@@ -4,6 +4,8 @@ import { VtkDataTypes } from 'vtk.js/Sources/Common/Core/DataArray/Constants';
 
 const { vtkErrorMacro } = macro;
 
+const INVALID_BOUNDS = [1, -1, 1, -1, 1, -1];
+
 // ----------------------------------------------------------------------------
 // vtkPoints methods
 // ----------------------------------------------------------------------------
@@ -35,21 +37,34 @@ function vtkPoints(publicAPI, model) {
 
   publicAPI.getBounds = () => {
     if (publicAPI.getNumberOfComponents() === 3) {
-      return [].concat(
-        publicAPI.getRange(0),
-        publicAPI.getRange(1),
-        publicAPI.getRange(2));
+      const xRange = publicAPI.getRange(0);
+      model.bounds[0] = xRange[0];
+      model.bounds[1] = xRange[1];
+      const yRange = publicAPI.getRange(1);
+      model.bounds[2] = yRange[0];
+      model.bounds[3] = yRange[1];
+      const zRange = publicAPI.getRange(2);
+      model.bounds[4] = zRange[0];
+      model.bounds[5] = zRange[1];
+      return model.bounds;
     }
 
     if (publicAPI.getNumberOfComponents() !== 2) {
       vtkErrorMacro(`getBounds called on an array with components of
         ${publicAPI.getNumberOfComponents()}`);
-      return [1, -1, 1, -1, 1, -1];
+      return INVALID_BOUNDS;
     }
 
-    return [].concat(
-      publicAPI.getRange(0),
-      publicAPI.getRange(1));
+    const xRange = publicAPI.getRange(0);
+    model.bounds[0] = xRange[0];
+    model.bounds[1] = xRange[1];
+    const yRange = publicAPI.getRange(1);
+    model.bounds[2] = yRange[0];
+    model.bounds[3] = yRange[1];
+    model.bounds[4] = 0;
+    model.bounds[5] = 0;
+
+    return model.bounds;
   };
 
   // Trigger the computation of bounds
@@ -64,6 +79,7 @@ const DEFAULT_VALUES = {
   empty: true,
   numberOfComponents: 3,
   dataType: VtkDataTypes.FLOAT,
+  bounds: [1, -1, 1, -1, 1, -1],
 };
 
 // ----------------------------------------------------------------------------

@@ -37,6 +37,16 @@ function vtkOpenGLPolyDataMapper(publicAPI, model) {
   // Set our className
   model.classHierarchy.push('vtkOpenGLPolyDataMapper');
 
+  publicAPI.buildPass = (prepass) => {
+    if (prepass) {
+      model.openGLActor = publicAPI.getFirstAncestorOfType('vtkOpenGLActor');
+      model.openGLRenderer = model.openGLActor.getFirstAncestorOfType('vtkOpenGLRenderer');
+      model.openGLRenderWindow = model.openGLRenderer.getParent();
+      model.openGLCamera = model.openGLRenderer.getViewNodeFor(
+        model.openGLRenderer.getRenderable().getActiveCamera());
+    }
+  };
+
   // Renders myself
   publicAPI.translucentPass = (prepass) => {
     if (prepass) {
@@ -59,7 +69,6 @@ function vtkOpenGLPolyDataMapper(publicAPI, model) {
   };
 
   publicAPI.render = () => {
-    model.openGLRenderWindow = publicAPI.getFirstAncestorOfType('vtkOpenGLRenderWindow');
     const ctx = model.openGLRenderWindow.getContext();
     if (model.context !== ctx) {
       model.context = ctx;
@@ -67,11 +76,8 @@ function vtkOpenGLPolyDataMapper(publicAPI, model) {
         model.primitives[i].setContext(ctx);
       }
     }
-    model.openGLActor = publicAPI.getFirstAncestorOfType('vtkOpenGLActor');
     const actor = model.openGLActor.getRenderable();
-    model.openGLRenderer = publicAPI.getFirstAncestorOfType('vtkOpenGLRenderer');
     const ren = model.openGLRenderer.getRenderable();
-    model.openGLCamera = model.openGLRenderer.getViewNodeFor(ren.getActiveCamera());
     publicAPI.renderPiece(ren, actor);
   };
 
@@ -1344,11 +1350,10 @@ function vtkOpenGLPolyDataMapper(publicAPI, model) {
 
 
     publicAPI.invokeEvent({ type: 'StartEvent' });
-    model.currentInput = model.renderable.getInputData();
     if (!model.renderable.getStatic()) {
       model.renderable.update();
-      model.currentInput = model.renderable.getInputData();
     }
+    model.currentInput = model.renderable.getInputData();
     publicAPI.invokeEvent({ type: 'EndEvent' });
 
     if (model.currentInput === null) {
@@ -1397,11 +1402,12 @@ function vtkOpenGLPolyDataMapper(publicAPI, model) {
 
   publicAPI.getNeedToRebuildBufferObjects = (ren, actor) => {
     // first do a coarse check
-    if (model.VBOBuildTime.getMTime() < publicAPI.getMTime() ||
-        model.VBOBuildTime.getMTime() < model.renderable.getMTime() ||
-        model.VBOBuildTime.getMTime() < actor.getMTime() ||
-        model.VBOBuildTime.getMTime() < actor.getProperty().getMTime() ||
-        model.VBOBuildTime.getMTime() < model.currentInput.getMTime()) {
+    // Note that the actor's mtime includes it's properties mtime
+    const vmtime = model.VBOBuildTime.getMTime();
+    if (vmtime < publicAPI.getMTime() ||
+        vmtime < model.renderable.getMTime() ||
+        vmtime < actor.getMTime() ||
+        vmtime < model.currentInput.getMTime()) {
       return true;
     }
     return false;

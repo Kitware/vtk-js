@@ -20,6 +20,7 @@ function vtkSphereHandleRepresentation(publicAPI, model) {
   const superClass = Object.assign({}, publicAPI);
 
   publicAPI.getActors = () => model.actor;
+  publicAPI.getProps = () => model.actor;
 
   publicAPI.placeWidget = (...bounds) => {
     let boundsArray = [];

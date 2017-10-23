@@ -21,10 +21,6 @@ function vtkViewNode(publicAPI, model) {
   };
 
   publicAPI.traverse = (renderPass) => {
-    if (model.deleted) {
-      return;
-    }
-
     // we can choose to do special
     // traversal here based on pass
     const passTraversal = `traverse${macro.capitalize(renderPass.getOperation())}`;
@@ -72,42 +68,8 @@ function vtkViewNode(publicAPI, model) {
     return model.parent.getFirstAncestorOfType(type);
   };
 
-  publicAPI.addMissingPropNodes = (actorsList) => {
-    if (!actorsList || !actorsList.length) {
-      return;
-    }
-    publicAPI.addMissingPropNode(actorsList, publicAPI);
-  };
-
-  publicAPI.addMissingPropNode = (dataObjs, parent) => {
-    model.preparedNodes = model.preparedNodes.concat(dataObjs);
-
-    // if any dataObj is not a renderable of a child
-    // then create child for that dataObj with renderable set to the
-    // dataObj
-    const childDOs = model.children.map(node => node.getRenderable());
-
-    const newNodes =
-      dataObjs
-        .filter(node => (node && !node.isDeleted() && childDOs.indexOf(node) === -1))
-        .map((node) => {
-          const newNode = parent.createViewNode(node);
-          if (newNode) {
-            newNode.setParent(parent);
-            newNode.setRenderable(node);
-          }
-          const actors = [].concat(node.getActors());
-          const childs = actors.filter(actor => actor !== node);
-          if (childs.length > 0) {
-            newNode.addMissingPropNode(childs, newNode);
-          }
-          return newNode;
-        });
-    model.children = model.children.concat(newNodes);
-  };
-
   publicAPI.addMissingNode = (dataObj) => {
-    if (dataObj && !dataObj.isDeleted()) {
+    if (dataObj) {
       publicAPI.addMissingNodes([dataObj]);
     }
   };
@@ -116,35 +78,46 @@ function vtkViewNode(publicAPI, model) {
     if (!dataObjs || !dataObjs.length) {
       return;
     }
-    model.preparedNodes = model.preparedNodes.concat(dataObjs);
 
-    // if any dataObj is not a renderable of a child
-    // then create child for that dataObj with renderable set to the
-    // dataObj
-    const childDOs = model.children.map(node => node.getRenderable());
-
-    const newNodes =
-      dataObjs
-        .filter(node => (node && !node.isDeleted() && childDOs.indexOf(node) === -1))
-        .map((node) => {
-          const newNode = publicAPI.createViewNode(node);
-          if (newNode) {
-            newNode.setParent(publicAPI);
-            newNode.setRenderable(node);
-          }
-          return newNode;
-        });
-
-    model.children = model.children.concat(newNodes);
+    dataObjs.forEach((dobj) => {
+      const result = model.renderableChildMap.get(dobj);
+      // if found just mark as visited
+      if (result !== undefined) {
+        result.setVisited(true);
+      } else { // otherwise create a node
+        const newNode = publicAPI.createViewNode(dobj);
+        if (newNode) {
+          newNode.setParent(publicAPI);
+          // newNode.setRenderable(dobj);
+          newNode.setVisited(true);
+          model.renderableChildMap.set(dobj, newNode);
+          model.children.push(newNode);
+        }
+      }
+    });
   };
 
   publicAPI.prepareNodes = () => {
-    model.preparedNodes = [];
+    model.children.forEach(child => (child.setVisited(false)));
+  };
+
+  publicAPI.setVisited = (val) => {
+    model.visited = val;
   };
 
   publicAPI.removeUnusedNodes = () => {
-    model.children = model.children.filter(node =>
-      node.isDeleted() || (model.preparedNodes.indexOf(node.getRenderable()) !== -1));
+    if (!model.children.every(node => node.getVisited())) {
+      model.children = model.children.filter((node) => {
+        const visited = node.getVisited();
+        if (!visited) {
+          const renderable = node.getRenderable();
+          if (renderable) {
+            model.renderableChildMap.delete(renderable);
+          }
+        }
+        return visited;
+      });
+    }
     publicAPI.prepareNodes();
   };
 
@@ -170,7 +143,7 @@ const DEFAULT_VALUES = {
   renderable: null,
   myFactory: null,
   children: [],
-  preparedNodes: [],
+  visited: false,
 };
 
 // ----------------------------------------------------------------------------
@@ -181,6 +154,12 @@ export function extend(publicAPI, model, initialValues = {}) {
   // Build VTK API
   macro.obj(publicAPI, model);
   macro.event(publicAPI, model, 'event');
+
+  model.renderableChildMap = new Map();
+
+  macro.get(publicAPI, model, [
+    'visited',
+  ]);
   macro.setGet(publicAPI, model, [
     'parent',
     'renderable',
