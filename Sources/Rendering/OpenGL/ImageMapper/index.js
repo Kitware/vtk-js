@@ -27,13 +27,13 @@ function vtkOpenGLImageMapper(publicAPI, model) {
 
   publicAPI.buildPass = (prepass) => {
     if (prepass) {
-      model.openGLRenderWindow = publicAPI.getFirstAncestorOfType('vtkOpenGLRenderWindow');
+      model.openGLImageSlice = publicAPI.getFirstAncestorOfType('vtkOpenGLImageSlice');
+      model.openGLRenderer = publicAPI.getFirstAncestorOfType('vtkOpenGLRenderer');
+      model.openGLRenderWindow = model.openGLRenderer.getParent();
       model.context = model.openGLRenderWindow.getContext();
       model.tris.setContext(model.context);
       model.openGLTexture.setWindow(model.openGLRenderWindow);
       model.openGLTexture.setContext(model.context);
-      model.openGLImageSlice = publicAPI.getFirstAncestorOfType('vtkOpenGLImageSlice');
-      model.openGLRenderer = publicAPI.getFirstAncestorOfType('vtkOpenGLRenderer');
       const ren = model.openGLRenderer.getRenderable();
       model.openGLCamera = model.openGLRenderer.getViewNodeFor(ren.getActiveCamera());
       // is zslice set by the camera

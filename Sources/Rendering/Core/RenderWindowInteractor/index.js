@@ -230,7 +230,7 @@ function vtkRenderWindowInteractor(publicAPI, model) {
     if (model.animationRequest && model.requestAnimationCount === 0) {
       cancelAnimationFrame(model.animationRequest);
       model.animationRequest = null;
-      publicAPI.render();
+      publicAPI.forceRender();
     }
   };
 
@@ -257,7 +257,7 @@ function vtkRenderWindowInteractor(publicAPI, model) {
       model.animationEventPositions.set(key, value);
     });
     publicAPI.animationEvent();
-    publicAPI.render();
+    publicAPI.forceRender();
     model.animationRequest = requestAnimationFrame(publicAPI.handleAnimation);
   };
 
@@ -276,8 +276,23 @@ function vtkRenderWindowInteractor(publicAPI, model) {
     }
     publicAPI.setScale(publicAPI.getScale() *
       Math.max(0.01, (wheelDelta + 1000.0) / 1000.0));
+
     publicAPI.pinchEvent();
-    publicAPI.render();
+
+    // start a timer to keep us animating while we get wheel events
+    if (model.wheelTimeoutID === 0) {
+      publicAPI.requestAnimation(publicAPI);
+      model.wheelTimeoutID = setTimeout(() => {
+        publicAPI.cancelAnimation(publicAPI);
+        model.wheelTimeoutID = 0;
+      }, 200);
+    } else {
+      clearTimeout(model.wheelTimeoutID);
+      model.wheelTimeoutID = setTimeout(() => {
+        publicAPI.cancelAnimation(publicAPI);
+        model.wheelTimeoutID = 0;
+      }, 200);
+    }
   };
 
   publicAPI.handleMouseUp = (event) => {
@@ -394,7 +409,7 @@ function vtkRenderWindowInteractor(publicAPI, model) {
   };
 
   //----------------------------------------------------------------------
-  publicAPI.render = () => {
+  publicAPI.forceRender = () => {
     // if (model.renderWindow && model.enabled && model.enableRender) {
     //   model.renderWindow.render();
     // }
@@ -404,6 +419,16 @@ function vtkRenderWindowInteractor(publicAPI, model) {
     // outside the above test so that third-party code can redirect
     // the render to the appropriate class
     publicAPI.invokeRenderEvent();
+  };
+
+  // only render if we are not animating. If we are animating
+  // then renders will happen naturally anyhow and we definitely
+  // do not want extra renders as the make the apparent interaction
+  // rate slower.
+  publicAPI.render = () => {
+    if (model.requestAnimationCount === 0) {
+      publicAPI.forceRender();
+    }
   };
 
   // create the generic Event methods
@@ -715,6 +740,7 @@ const DEFAULT_VALUES = {
   animationRequest: null,
   requestAnimationCount: 0,
   lastFrameTime: 0.1,
+  wheelTimeoutID: 0,
 };
 
 // ----------------------------------------------------------------------------

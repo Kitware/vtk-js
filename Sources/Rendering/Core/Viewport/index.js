@@ -34,6 +34,15 @@ function vtkViewport(publicAPI, model) {
     model.props = [];
   };
 
+  // this method get all the props including any nested props
+  publicAPI.getViewPropsWithNestedProps = () => {
+    model.allprops = [];
+    model.props.forEach((prop) => {
+      model.allprops = model.allprops.concat(prop.getProps());
+    });
+    return model.allprops;
+  };
+
   publicAPI.addActor2D = publicAPI.addViewProp;
   publicAPI.removeActor2D = (prop) => {
     // VTK way: model.actors2D.RemoveItem(prop);

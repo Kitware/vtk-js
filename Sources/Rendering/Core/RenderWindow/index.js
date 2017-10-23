@@ -53,7 +53,11 @@ function vtkRenderWindow(publicAPI, model) {
   publicAPI.hasView = view => model.views.indexOf(view) !== -1;
 
   publicAPI.render = () => {
-    model.views.forEach(view => view.traverseAllPasses());
+    if (model.interactor) {
+      model.interactor.render();
+    } else {
+      model.views.forEach(view => view.traverseAllPasses());
+    }
   };
 
   publicAPI.getStatistics = () => {
