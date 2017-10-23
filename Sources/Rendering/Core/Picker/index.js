@@ -2,7 +2,7 @@ import macro        from 'vtk.js/Sources/macro';
 import vtkAbstractPicker from 'vtk.js/Sources/Rendering/Core/AbstractPicker';
 import vtkBox from 'vtk.js/Sources/Common/DataModel/Box';
 import vtkMath from 'vtk.js/Sources/Common/Core/Math';
-import { mat4, vec3 } from 'gl-matrix';
+import { mat4, vec4 } from 'gl-matrix';
 
 const { vtkErrorMacro } = macro;
 const { vtkWarningMacro } = macro;
@@ -86,8 +86,8 @@ function vtkPicker(publicAPI, model) {
     let tol = 0.0;
     let props = [];
     let pickable = false;
-    const p1Mapper = vec3.create();
-    const p2Mapper = vec3.create();
+    const p1Mapper = vec4.create();
+    const p2Mapper = vec4.create();
     let bounds = [0.0, 0.0, 0.0, 0.0, 0.0, 0.0];
     const t = [];
     const hitPosition = [];
@@ -160,6 +160,8 @@ function vtkPicker(publicAPI, model) {
         p2World[i] = cameraPos[i] + (tB * ray[i]);
       }
     }
+    p1World[3] = 1.0;
+    p2World[3] = 1.0;
 
 
     // Compute the tolerance in world coordinates.  Do this by
@@ -200,6 +202,9 @@ function vtkPicker(publicAPI, model) {
 
       if (pickable) {
         model.transformMatrix = prop.getMatrix();
+        // Webgl need a transpose matrix but we need the untransposed one to project world points
+        // into the right referential
+        mat4.transpose(model.transformMatrix, model.transformMatrix);
         mat4.invert(model.transformMatrix, model.transformMatrix);
         // Extract scale
         const col1 = [model.transformMatrix[0], model.transformMatrix[1], model.transformMatrix[2]];
@@ -209,8 +214,16 @@ function vtkPicker(publicAPI, model) {
         scale[1] = vtkMath.norm(col2);
         scale[2] = vtkMath.norm(col3);
 
-        vec3.transformMat4(p1Mapper, p1World, model.transformMatrix);
-        vec3.transformMat4(p2Mapper, p2World, model.transformMatrix);
+        vec4.transformMat4(p1Mapper, p1World, model.transformMatrix);
+        vec4.transformMat4(p2Mapper, p2World, model.transformMatrix);
+
+        p1Mapper[0] /= p1Mapper[3];
+        p1Mapper[1] /= p1Mapper[3];
+        p1Mapper[2] /= p1Mapper[3];
+
+        p2Mapper[0] /= p2Mapper[3];
+        p2Mapper[1] /= p2Mapper[3];
+        p2Mapper[2] /= p2Mapper[3];
 
         for (let i = 0; i < 3; i++) {
           ray[i] = p2Mapper[i] - p1Mapper[i];
