@@ -67,7 +67,7 @@ function vtkImageMapper(publicAPI, model) {
     const extent = imageData.getExtent();
 
     // Slice origin
-    const ijk = [model.xSlice, model.ySlice, model.zSlice];
+    const ijk = [model.xSlice + extent[0], model.ySlice + extent[2], model.zSlice + extent[4]];
     const worldOrigin = [0, 0, 0];
     imageData.indexToWorld(ijk, worldOrigin);
 
@@ -112,7 +112,7 @@ function vtkImageMapper(publicAPI, model) {
     const extent = imageData.getExtent();
 
     // Slice origin
-    const ijk = [model.xSlice, model.ySlice, model.zSlice];
+    const ijk = [model.xSlice + extent[0], model.ySlice + extent[2], model.zSlice + extent[4]];
     const worldOrigin = [0, 0, 0];
     imageData.indexToWorld(ijk, worldOrigin);
 
@@ -201,4 +201,4 @@ export const newInstance = macro.newInstance(extend, 'vtkImageMapper');
 
 // ----------------------------------------------------------------------------
 
-export default { newInstance, extend };
+export default Object.assign({ newInstance, extend }, Constants);
