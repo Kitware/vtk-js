@@ -95,4 +95,4 @@ export const newInstance = macro.newInstance(extend, 'vtkHandleRepresentation');
 
 // ----------------------------------------------------------------------------
 
-export default { newInstance, extend };
+export default Object.assign({ newInstance, extend }, Constants);
