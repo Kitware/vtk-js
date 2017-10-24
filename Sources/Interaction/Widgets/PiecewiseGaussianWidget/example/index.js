@@ -121,7 +121,7 @@ reader.setUrl(`${__BASE_PATH__}/data/volume/LIDC2.vti`).then(() => {
     // Automatic switch to next preset every 5s
     intervalID = setInterval(changePreset, 5000);
 
-    widget.setDataArray(dataArray.getData(), 1.5);
+    widget.setDataArray(dataArray.getData());
     widget.applyOpacity(piecewiseFunction);
 
     widget.setColorTransferFunction(lookupTable);
