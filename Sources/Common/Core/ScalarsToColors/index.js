@@ -1,9 +1,11 @@
-import macro                                from 'vtk.js/Sources/macro';
-import vtkDataArray                         from 'vtk.js/Sources/Common/Core/DataArray';
-import { VtkDataTypes }                     from 'vtk.js/Sources/Common/Core/DataArray/Constants';
-import { ScalarMappingTarget, VectorMode }  from 'vtk.js/Sources/Common/Core/ScalarsToColors/Constants';
-import { ColorMode }                        from 'vtk.js/Sources/Rendering/Core/Mapper/Constants';
+import macro        from 'vtk.js/Sources/macro';
+import vtkDataArray from 'vtk.js/Sources/Common/Core/DataArray';
+import Constants    from 'vtk.js/Sources/Common/Core/ScalarsToColors/Constants';
+import vtkMapper    from 'vtk.js/Sources/Rendering/Core/Mapper/Constants'; // Need to go inside Constants otherwise dependency loop
 
+const { ScalarMappingTarget, VectorMode } = Constants;
+const { VtkDataTypes } = vtkDataArray;
+const { ColorMode } = vtkMapper;
 const { vtkErrorMacro } = macro;
 
 // ----------------------------------------------------------------------------
@@ -21,7 +23,7 @@ function intColorToUChar(c) { return c; }
 function floatColorToUChar(c) { return Math.floor((c * 255.0) + 0.5); }
 
 // ----------------------------------------------------------------------------
-// vtkMyClass methods
+// vtkScalarsToColors methods
 // ----------------------------------------------------------------------------
 
 function vtkScalarsToColors(publicAPI, model) {
@@ -525,4 +527,4 @@ export const newInstance = macro.newInstance(extend, 'vtkScalarsToColors');
 
 // ----------------------------------------------------------------------------
 
-export default Object.assign({ newInstance, extend });
+export default Object.assign({ newInstance, extend }, Constants);
