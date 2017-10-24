@@ -157,7 +157,7 @@ export const newInstance = macro.newInstance(extend, 'vtkMyClass');
 
 // ----------------------------------------------------------------------------
 
-export default Object.assign({ newInstance, extend }, STATIC);
+export default Object.assign({ newInstance, extend }, STATIC, Constants);
 ```
 
 ## Constants definition
