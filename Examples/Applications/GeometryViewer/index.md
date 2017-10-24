@@ -10,5 +10,6 @@ Also using extra argument to the URL allow to view remote VTP like the links bel
 - [diskout-stream-ascii.vtp](https://kitware.github.io/vtk-js/examples/GeometryViewer/GeometryViewer.html?fileURL=https://data.kitware.com/api/v1/item/59e12daa8d777f31ac645568/download) 1.13 MB
 - [diskout-stream-binary.vtp](https://kitware.github.io/vtk-js/examples/GeometryViewer/GeometryViewer.html?fileURL=https://data.kitware.com/api/v1/item/59e12d848d777f31ac645553/download) 844.4 kB
 - [diskout-stream-binary-zlib.vtp](https://kitware.github.io/vtk-js/examples/GeometryViewer/GeometryViewer.html?fileURL=https://data.kitware.com/api/v1/item/59e12d948d777f31ac64555c/download) 501.3 kB
+- [Earth.vtp](https://kitware.github.io/vtk-js/examples/GeometryViewer/GeometryViewer.html?fileURL=https://data.kitware.com/api/v1/item/59ee68d98d777f31ac64784b/download) 1.17 MB
 
 [HTML]: https://kitware.github.io/vtk-js/examples/GeometryViewer/GeometryViewer.html

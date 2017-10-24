@@ -18,6 +18,10 @@ Other CAD models
 - [MoyeuExpensible](https://kitware.github.io/vtk-js/examples/SceneExplorer/index.html?fileURL=https://data.kitware.com/api/v1/file/5878eb978d777f05f44b1427/download) 35.29 kB
 - [TBarAssembly](https://kitware.github.io/vtk-js/examples/SceneExplorer/index.html?fileURL=https://data.kitware.com/api/v1/file/5878eb978d777f05f44b142a/download) 71.70 kB
 
+Other ParaView exports:
+- [Vessel](https://kitware.github.io/vtk-js/examples/SceneExplorer/index.html?fileURL=https://data.kitware.com/api/v1/file/59ee64308d777f31ac647846/download) 8.59 MB
+- [Vessel+Stream line](https://kitware.github.io/vtk-js/examples/SceneExplorer/index.html?fileURL=https://data.kitware.com/api/v1/file/59ee68208d777f31ac647849/download) 18.07 MB
+
 [HTML]: https://kitware.github.io/vtk-js/examples/SceneExplorer/SceneExplorer.html
 [macro]: https://raw.githubusercontent.com/Kitware/vtk-js/master/Utilities/ParaView/export-scene-macro.py
 [Dragon]: https://raw.githubusercontent.com/Kitware/vtk-js/master/Data/StanfordDragon.vtkjs
