@@ -18,13 +18,13 @@ function vtkImageMarchingCubes(publicAPI, model) {
   const voxelPts = new Float32Array(24);
 
   // Retrieve scalars and voxel coordinates
-  publicAPI.getVoxelScalars = (i, j, k, dims, origin, spacing, s) => {
+  publicAPI.getVoxelScalars = (i, j, k, slice, dims, origin, spacing, s) => {
     // First get the indices for the voxel
-    ids[0] = (k * dims[0] * dims[1]) + (j * dims[0]) + i; // i, j, k
+    ids[0] = (k * slice) + (j * dims[0]) + i; // i, j, k
     ids[1] = ids[0] + 1; // i+1, j, k
     ids[2] = ids[0] + dims[0]; // i, j+1, k
     ids[3] = ids[2] + 1; // i+1, j+1, k
-    ids[4] = ids[0] + (dims[0] * dims[1]); // i, j, k+1
+    ids[4] = ids[0] + slice; // i, j, k+1
     ids[5] = ids[4] + 1; // i+1, j, k+1
     ids[6] = ids[4] + dims[0]; // i, j+1, k+1
     ids[7] = ids[6] + 1; // i+1, j+1, k+1
@@ -41,35 +41,36 @@ function vtkImageMarchingCubes(publicAPI, model) {
     voxelPts[0] = origin[0] + (i * spacing[0]); // 0
     voxelPts[1] = origin[1] + (j * spacing[1]);
     voxelPts[2] = origin[2] + (k * spacing[2]);
-    voxelPts[3] = origin[0] + ((i + 1) * spacing[0]);// 1
-    voxelPts[4] = origin[1] + (j * spacing[1]);
-    voxelPts[5] = origin[2] + (k * spacing[2]);
-    voxelPts[6] = origin[0] + (i * spacing[0]); // 2
-    voxelPts[7] = origin[1] + ((j + 1) * spacing[1]);
-    voxelPts[8] = origin[2] + (k * spacing[2]);
-    voxelPts[9] = origin[0] + ((i + 1) * spacing[0]); // 3
-    voxelPts[10] = origin[1] + ((j + 1) * spacing[1]);
-    voxelPts[11] = origin[2] + (k * spacing[2]);
-    voxelPts[12] = origin[0] + (i * spacing[0]); // 4
-    voxelPts[13] = origin[1] + (j * spacing[1]);
-    voxelPts[14] = origin[2] + ((k + 1) * spacing[2]);
-    voxelPts[15] = origin[0] + ((i + 1) * spacing[0]); // 5
-    voxelPts[16] = origin[1] + (j * spacing[1]);
-    voxelPts[17] = origin[2] + ((k + 1) * spacing[2]);
-    voxelPts[18] = origin[0] + (i * spacing[0]); // 6
-    voxelPts[19] = origin[1] + ((j + 1) * spacing[1]);
-    voxelPts[20] = origin[2] + ((k + 1) * spacing[2]);
-    voxelPts[21] = origin[0] + ((i + 1) * spacing[0]); // 7
-    voxelPts[22] = origin[1] + ((j + 1) * spacing[1]);
-    voxelPts[23] = origin[2] + ((k + 1) * spacing[2]);
+    voxelPts[3] = voxelPts[0] + spacing[0];// 1
+    voxelPts[4] = voxelPts[1];
+    voxelPts[5] = voxelPts[2];
+    voxelPts[6] = voxelPts[0]; // 2
+    voxelPts[7] = voxelPts[1] + spacing[1];
+    voxelPts[8] = voxelPts[2];
+    voxelPts[9] = voxelPts[3]; // 3
+    voxelPts[10] = voxelPts[7];
+    voxelPts[11] = voxelPts[2];
+    voxelPts[12] = voxelPts[0]; // 4
+    voxelPts[13] = voxelPts[1];
+    voxelPts[14] = voxelPts[2] + spacing[2];
+    voxelPts[15] = voxelPts[3]; // 5
+    voxelPts[16] = voxelPts[1];
+    voxelPts[17] = voxelPts[14];
+    voxelPts[18] = voxelPts[0]; // 6
+    voxelPts[19] = voxelPts[7];
+    voxelPts[20] = voxelPts[14];
+    voxelPts[21] = voxelPts[3]; // 7
+    voxelPts[22] = voxelPts[7];
+    voxelPts[23] = voxelPts[14];
   };
 
-  publicAPI.produceTriangles = (cVal, i, j, k, dims, origin, spacing, scalars, points, tris) => {
+  publicAPI.produceTriangles = (cVal, i, j, k, slice, dims, origin, spacing, scalars, points, tris) => {
     const CASE_MASK = [1, 2, 4, 8, 16, 32, 64, 128];
     const VERT_MAP = [0, 1, 3, 2, 4, 5, 7, 6];
-    const xyz = new Float32Array(3);
+    const xyz = [];
     let pId;
-    publicAPI.getVoxelScalars(i, j, k, dims, origin, spacing, scalars);
+
+    publicAPI.getVoxelScalars(i, j, k, slice, dims, origin, spacing, scalars);
 
     let index = 0;
     for (let idx = 0; idx < 8; idx++) {
@@ -110,6 +111,8 @@ function vtkImageMarchingCubes(publicAPI, model) {
       return;
     }
 
+    console.time('mcubes');
+
     // Retrieve output and volume data
     const origin = input.getOrigin();
     const spacing = input.getSpacing();
@@ -123,10 +126,11 @@ function vtkImageMarchingCubes(publicAPI, model) {
     const tBuffer = [];
 
     // Loop over all voxels, determine case and process
+    const slice = dims[0] * dims[1];
     for (let k = 0; k < (dims[2] - 1); ++k) {
       for (let j = 0; j < (dims[1] - 1); ++j) {
-        for (let i = 0; i < (dims[0] - 2); ++i) {
-          publicAPI.produceTriangles(model.contourValue, i, j, k, dims, origin, spacing, s, pBuffer, tBuffer);
+        for (let i = 0; i < (dims[0] - 1); ++i) {
+          publicAPI.produceTriangles(model.contourValue, i, j, k, slice, dims, origin, spacing, s, pBuffer, tBuffer);
         }
       }
     }
@@ -138,6 +142,7 @@ function vtkImageMarchingCubes(publicAPI, model) {
     outData[0] = polydata;
 
     vtkDebugMacro('Produced output');
+    console.timeEnd('mcubes');
   };
 }
 
