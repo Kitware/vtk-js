@@ -4,13 +4,14 @@ import vtkDataArray             from 'vtk.js/Sources/Common/Core/DataArray';
 import vtkImageData             from 'vtk.js/Sources/Common/DataModel/ImageData';
 import vtkLookupTable           from 'vtk.js/Sources/Common/Core/LookupTable';
 import vtkMath                  from 'vtk.js/Sources/Common/Core/Math';
-import { VectorMode }           from 'vtk.js/Sources/Common/Core/ScalarsToColors/Constants';
+import vtkScalarsToColors       from 'vtk.js/Sources/Common/Core/ScalarsToColors/Constants'; // Need to go inside Constants otherwise dependency loop
 
 import CoincidentTopologyHelper from 'vtk.js/Sources/Rendering/Core/Mapper/CoincidentTopologyHelper';
 import otherStaticMethods       from 'vtk.js/Sources/Rendering/Core/Mapper/Static';
 import Constants                from 'vtk.js/Sources/Rendering/Core/Mapper/Constants';
 
 const { ColorMode, ScalarMode, MaterialMode, GetArray } = Constants;
+const { VectorMode } = vtkScalarsToColors;
 
 // ----------------------------------------------------------------------------
 
@@ -565,4 +566,4 @@ export const newInstance = macro.newInstance(extend, 'vtkMapper');
 
 // ----------------------------------------------------------------------------
 
-export default Object.assign({ newInstance, extend }, staticOffsetAPI, otherStaticMethods);
+export default Object.assign({ newInstance, extend }, staticOffsetAPI, otherStaticMethods, Constants);
