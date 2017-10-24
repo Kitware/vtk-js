@@ -1400,7 +1400,28 @@ function vtkOpenGLPolyDataMapper(publicAPI, model) {
     // Rebuild buffers if needed
     if (publicAPI.getNeedToRebuildBufferObjects(ren, actor)) {
       publicAPI.buildBufferObjects(ren, actor);
+    } else {
+      const updateOptions = publicAPI.getNeedToUpdatePointsDataVBO();
+      if (updateOptions.points || updateOptions.normals || updateOptions.tCoords) {
+        model.primitives[primTypes.Tris].getCABO().updatePointsDataVBO(model.currentInput, updateOptions);
+        model.VBOUpdatePointsTime.modified();
+      }
     }
+  };
+
+  publicAPI.getNeedToUpdatePointsDataVBO = () => {
+    const refTime = model.VBOUpdatePointsTime.getMTime();
+
+    const normals = model.currentInput.getPointData().getNormals();
+    const tCoords = model.currentInput.getPointData().getTCoords();
+
+    const updateOptions = {
+      points: refTime < model.currentInput.getPoints().getMTime(),
+      normals: normals && refTime < normals.getMTime(),
+      tCoords: tCoords && refTime < tCoords.getMTime(),
+    };
+
+    return updateOptions;
   };
 
   publicAPI.getNeedToRebuildBufferObjects = (ren, actor) => {
@@ -1550,6 +1571,7 @@ function vtkOpenGLPolyDataMapper(publicAPI, model) {
       }
 
       model.VBOBuildTime.modified();
+      model.VBOUpdatePointsTime.modified();
       model.VBOBuildString = toString;
     }
   };
@@ -1566,6 +1588,8 @@ const DEFAULT_VALUES = {
   primitives: null,
   primTypes: null,
   shaderRebuildString: null,
+
+  VBOUpdatePointsTime: 0,
 };
 
 // ----------------------------------------------------------------------------
@@ -1593,6 +1617,9 @@ export function extend(publicAPI, model, initialValues = {}) {
 
   model.VBOBuildTime = {};
   macro.obj(model.VBOBuildTime, { mtime: 0 });
+
+  model.VBOUpdatePointsTime = {};
+  macro.obj(model.VBOUpdatePointsTime, { mtime: 0 });
 
   // Object methods
   vtkOpenGLPolyDataMapper(publicAPI, model);
