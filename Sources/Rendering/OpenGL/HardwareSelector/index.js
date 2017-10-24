@@ -1,12 +1,12 @@
-import macro                  from 'vtk.js/Sources/macro';
-import { PassTypes }          from 'vtk.js/Sources/Rendering/OpenGL/HardwareSelector/Constants';
-import vtkOpenGLFramebuffer   from 'vtk.js/Sources/Rendering/OpenGL/Framebuffer';
-import vtkSelectionNode       from 'vtk.js/Sources/Common/DataModel/SelectionNode';
-import SelectionNodeConstants from 'vtk.js/Sources/Common/DataModel/SelectionNode/Constants';
-import DataSetConstants       from 'vtk.js/Sources/Common/DataModel/DataSet/Constants';
+import macro                from 'vtk.js/Sources/macro';
+import Constants            from 'vtk.js/Sources/Rendering/OpenGL/HardwareSelector/Constants';
+import vtkOpenGLFramebuffer from 'vtk.js/Sources/Rendering/OpenGL/Framebuffer';
+import vtkSelectionNode     from 'vtk.js/Sources/Common/DataModel/SelectionNode';
+import vtkDataSet           from 'vtk.js/Sources/Common/DataModel/DataSet';
 
-const { SelectionContent, SelectionField } = SelectionNodeConstants;
-const { FieldAssociations } = DataSetConstants;
+const { PassTypes } = Constants;
+const { SelectionContent, SelectionField } = vtkSelectionNode;
+const { FieldAssociations } = vtkDataSet;
 const { vtkErrorMacro } = macro;
 
 // ----------------------------------------------------------------------------
@@ -439,4 +439,4 @@ export const newInstance = macro.newInstance(extend, 'vtkOpenGLHardwareSelector'
 
 // ----------------------------------------------------------------------------
 
-export default { newInstance, extend };
+export default Object.assign({ newInstance, extend }, Constants);
