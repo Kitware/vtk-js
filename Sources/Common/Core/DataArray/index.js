@@ -1,6 +1,7 @@
 import macro               from 'vtk.js/Sources/macro';
-import { DefaultDataType } from 'vtk.js/Sources/Common/Core/DataArray/Constants';
+import Constants from 'vtk.js/Sources/Common/Core/DataArray/Constants';
 
+const { DefaultDataType } = Constants;
 const { vtkErrorMacro } = macro;
 const TUPLE_HOLDER = [];
 
@@ -243,4 +244,4 @@ export const newInstance = macro.newInstance(extend, 'vtkDataArray');
 
 // ----------------------------------------------------------------------------
 
-export default Object.assign({ newInstance, extend }, STATIC);
+export default Object.assign({ newInstance, extend }, STATIC, Constants);

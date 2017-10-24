@@ -1,18 +1,17 @@
 import { mat3, mat4, vec3 } from 'gl-matrix';
 
-import macro                        from 'vtk.js/Sources/macro';
-import vtkHelper                    from 'vtk.js/Sources/Rendering/OpenGL/Helper';
-import vtkMath                      from 'vtk.js/Sources/Common/Core/Math';
-import vtkShaderProgram             from 'vtk.js/Sources/Rendering/OpenGL/ShaderProgram';
-import vtkOpenGLTexture             from 'vtk.js/Sources/Rendering/OpenGL/Texture';
-import vtkViewNode                  from 'vtk.js/Sources/Rendering/SceneGraph/ViewNode';
-import { Representation, Shading }  from 'vtk.js/Sources/Rendering/Core/Property/Constants';
-import { MaterialMode, ScalarMode } from 'vtk.js/Sources/Rendering/Core/Mapper/Constants';
-import { Filter, Wrap }             from 'vtk.js/Sources/Rendering/OpenGL/Texture/Constants';
-import { PassTypes }                from 'vtk.js/Sources/Rendering/OpenGL/HardwareSelector/Constants';
+import macro               from 'vtk.js/Sources/macro';
+import vtkHardwareSelector from 'vtk.js/Sources/Rendering/OpenGL/HardwareSelector';
+import vtkHelper           from 'vtk.js/Sources/Rendering/OpenGL/Helper';
+import vtkMapper           from 'vtk.js/Sources/Rendering/Core/Mapper';
+import vtkMath             from 'vtk.js/Sources/Common/Core/Math';
+import vtkOpenGLTexture    from 'vtk.js/Sources/Rendering/OpenGL/Texture';
+import vtkProperty         from 'vtk.js/Sources/Rendering/Core/Property';
+import vtkShaderProgram    from 'vtk.js/Sources/Rendering/OpenGL/ShaderProgram';
+import vtkViewNode         from 'vtk.js/Sources/Rendering/SceneGraph/ViewNode';
 
-import vtkPolyDataVS                from 'vtk.js/Sources/Rendering/OpenGL/glsl/vtkPolyDataVS.glsl';
-import vtkPolyDataFS                from 'vtk.js/Sources/Rendering/OpenGL/glsl/vtkPolyDataFS.glsl';
+import vtkPolyDataVS from 'vtk.js/Sources/Rendering/OpenGL/glsl/vtkPolyDataVS.glsl';
+import vtkPolyDataFS from 'vtk.js/Sources/Rendering/OpenGL/glsl/vtkPolyDataFS.glsl';
 
 /* eslint-disable no-lonely-if */
 
@@ -27,6 +26,10 @@ const primTypes = {
   End: 6,
 };
 
+const { Representation, Shading } = vtkProperty;
+const { MaterialMode, ScalarMode } = vtkMapper;
+const { Filter, Wrap } = vtkOpenGLTexture;
+const { PassTypes } = vtkHardwareSelector;
 const { vtkErrorMacro } = macro;
 
 // ----------------------------------------------------------------------------

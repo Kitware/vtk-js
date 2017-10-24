@@ -1,4 +1,5 @@
 import macro from 'vtk.js/Sources/macro';
+import Constants from 'vtk.js/Sources/Common/DataModel/SelectionNode/Constants.js';
 
 // ----------------------------------------------------------------------------
 // vtkSelectionNode methods
@@ -47,4 +48,4 @@ export const newInstance = macro.newInstance(extend, 'vtkSelectionNode');
 
 // ----------------------------------------------------------------------------
 
-export default { newInstance, extend };
+export default Object.assign({ newInstance, extend }, Constants);

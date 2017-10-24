@@ -1,4 +1,6 @@
-import { StructuredType } from 'vtk.js/Sources/Common/DataModel/StructuredData/Constants';
+import Constants from 'vtk.js/Sources/Common/DataModel/StructuredData/Constants';
+
+const { StructuredType } = Constants;
 
 export function getDataDescriptionFromExtent(inExt) {
   let dataDim = 0;
@@ -33,6 +35,4 @@ export function getDataDescriptionFromExtent(inExt) {
   return StructuredType.SINGLE_POINT;
 }
 
-export default {
-  getDataDescriptionFromExtent,
-};
+export default Object.assign({ getDataDescriptionFromExtent }, Constants);

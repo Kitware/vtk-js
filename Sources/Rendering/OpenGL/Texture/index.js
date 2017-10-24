@@ -1,10 +1,12 @@
-import macro            from 'vtk.js/Sources/macro';
-import { vec3 }         from 'gl-matrix';
-import { Wrap, Filter } from 'vtk.js/Sources/Rendering/OpenGL/Texture/Constants';
-import { VtkDataTypes } from 'vtk.js/Sources/Common/Core/DataArray/Constants';
-import vtkMath          from 'vtk.js/Sources/Common/Core/Math';
-import vtkViewNode      from 'vtk.js/Sources/Rendering/SceneGraph/ViewNode';
+import Constants    from 'vtk.js/Sources/Rendering/OpenGL/Texture/Constants';
+import macro        from 'vtk.js/Sources/macro';
+import vtkDataArray from 'vtk.js/Sources/Common/Core/DataArray';
+import vtkMath      from 'vtk.js/Sources/Common/Core/Math';
+import vtkViewNode  from 'vtk.js/Sources/Rendering/SceneGraph/ViewNode';
+import { vec3 }     from 'gl-matrix';
 
+const { Wrap, Filter } = Constants;
+const { VtkDataTypes } = vtkDataArray;
 const { vtkDebugMacro, vtkErrorMacro, vtkWarningMacro } = macro;
 
 // ----------------------------------------------------------------------------
@@ -1215,4 +1217,4 @@ export const newInstance = macro.newInstance(extend, 'vtkOpenGLTexture');
 
 // ----------------------------------------------------------------------------
 
-export default { newInstance, extend };
+export default Object.assign({ newInstance, extend }, Constants);

@@ -1,7 +1,8 @@
 import macro                 from 'vtk.js/Sources/macro';
 import vtkInteractorObserver from 'vtk.js/Sources/Rendering/Core/InteractorObserver';
-import { States }            from 'vtk.js/Sources/Rendering/Core/InteractorStyle/Constants';  // { ENUM_1: 0, ENUM_2: 1, ... }
+import Constants             from 'vtk.js/Sources/Rendering/Core/InteractorStyle/Constants';
 
+const { States } = Constants;
 const { vtkWarningMacro } = macro;
 
 // ----------------------------------------------------------------------------
@@ -240,4 +241,4 @@ export const newInstance = macro.newInstance(extend, 'vtkInteractorStyle');
 
 // ----------------------------------------------------------------------------
 
-export default Object.assign({ newInstance, extend });
+export default Object.assign({ newInstance, extend }, Constants);

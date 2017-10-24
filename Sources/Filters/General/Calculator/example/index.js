@@ -1,19 +1,20 @@
 import macro                      from 'vtk.js/Sources/macro';
 import vtkFullScreenRenderWindow  from 'vtk.js/Sources/Rendering/Misc/FullScreenRenderWindow';
 
-import vtkActor                   from 'vtk.js/Sources/Rendering/Core/Actor';
-import vtkCalculator              from 'vtk.js/Sources/Filters/General/Calculator';
-import vtkLookupTable             from 'vtk.js/Sources/Common/Core/LookupTable';
-import vtkMapper                  from 'vtk.js/Sources/Rendering/Core/Mapper';
-import vtkPlaneSource             from 'vtk.js/Sources/Filters/Sources/PlaneSource';
-import vtkPoints                  from 'vtk.js/Sources/Common/Core/Points';
-import vtkPolyData                from 'vtk.js/Sources/Common/DataModel/PolyData';
-import vtkWarpScalar              from 'vtk.js/Sources/Filters/General/WarpScalar';
-import { ColorMode, ScalarMode }  from 'vtk.js/Sources/Rendering/Core/Mapper/Constants';
-import { FieldDataTypes }         from 'vtk.js/Sources/Common/DataModel/DataSet/Constants';
+import vtkActor       from 'vtk.js/Sources/Rendering/Core/Actor';
+import vtkCalculator  from 'vtk.js/Sources/Filters/General/Calculator';
+import vtkDataSet     from 'vtk.js/Sources/Common/DataModel/DataSet';
+import vtkLookupTable from 'vtk.js/Sources/Common/Core/LookupTable';
+import vtkMapper      from 'vtk.js/Sources/Rendering/Core/Mapper';
+import vtkPlaneSource from 'vtk.js/Sources/Filters/Sources/PlaneSource';
+import vtkPoints      from 'vtk.js/Sources/Common/Core/Points';
+import vtkPolyData    from 'vtk.js/Sources/Common/DataModel/PolyData';
+import vtkWarpScalar  from 'vtk.js/Sources/Filters/General/WarpScalar';
 
 import controlPanel from './controlPanel.html';
 
+const { ColorMode, ScalarMode } = vtkMapper;
+const { FieldDataTypes } = vtkDataSet;
 const { vtkErrorMacro } = macro;
 
 let formulaIdx = 0;

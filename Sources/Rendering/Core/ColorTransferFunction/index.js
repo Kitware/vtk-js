@@ -1,9 +1,10 @@
-import macro                    from 'vtk.js/Sources/macro';
-import vtkMath                  from 'vtk.js/Sources/Common/Core/Math';
-import vtkScalarsToColors       from 'vtk.js/Sources/Common/Core/ScalarsToColors';
-import { ColorSpace, Scale }    from 'vtk.js/Sources/Rendering/Core/ColorTransferFunction/Constants';
-import { ScalarMappingTarget }  from 'vtk.js/Sources/Common/Core/ScalarsToColors/Constants';
+import macro               from 'vtk.js/Sources/macro';
+import vtkMath             from 'vtk.js/Sources/Common/Core/Math';
+import vtkScalarsToColors  from 'vtk.js/Sources/Common/Core/ScalarsToColors';
+import Constants           from 'vtk.js/Sources/Rendering/Core/ColorTransferFunction/Constants';
 
+const { ColorSpace, Scale } = Constants;
+const { ScalarMappingTarget } = vtkScalarsToColors;
 const { vtkDebugMacro, vtkErrorMacro, vtkWarningMacro } = macro;
 
 // ----------------------------------------------------------------------------
@@ -1190,4 +1191,4 @@ export const newInstance = macro.newInstance(extend, 'vtkColorTransferFunction')
 
 // ----------------------------------------------------------------------------
 
-export default Object.assign({ newInstance, extend });
+export default Object.assign({ newInstance, extend }, Constants);

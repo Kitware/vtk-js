@@ -1,5 +1,7 @@
-import * as macro from '../../../macro';
-import { ObjectType } from './Constants';
+import macro     from 'vtk.js/Sources/macro';
+import Constants from 'vtk.js/Sources/Rendering/OpenGL/BufferObject/Constants';
+
+const { ObjectType } = Constants;
 
 // ----------------------------------------------------------------------------
 // Global methods
@@ -131,4 +133,4 @@ export const newInstance = macro.newInstance(extend);
 
 // ----------------------------------------------------------------------------
 
-export default Object.assign({ newInstance, extend }, STATIC);
+export default Object.assign({ newInstance, extend }, STATIC, Constants);

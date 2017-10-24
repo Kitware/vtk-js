@@ -1,8 +1,9 @@
 import macro     from 'vtk.js/Sources/macro';
 import vtkColorTransferFunction from 'vtk.js/Sources/Rendering/Core/ColorTransferFunction';
 import vtkPiecewiseFunction from 'vtk.js/Sources/Common/DataModel/PiecewiseFunction';
-import { InterpolationType } from 'vtk.js/Sources/Rendering/Core/VolumeProperty/Constants';
+import Constants from 'vtk.js/Sources/Rendering/Core/VolumeProperty/Constants';
 
+const { InterpolationType } = Constants;
 const { vtkErrorMacro } = macro;
 
 const VTK_MAX_VRCOMP = 4;
@@ -262,4 +263,4 @@ export const newInstance = macro.newInstance(extend, 'vtkVolumeProperty');
 
 // ----------------------------------------------------------------------------
 
-export default { newInstance, extend };
+export default Object.assign({ newInstance, extend }, Constants);

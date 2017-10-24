@@ -1,7 +1,8 @@
-import macro          from 'vtk.js/Sources/macro';
-import { Coordinate } from 'vtk.js/Sources/Rendering/Core/Coordinate/Constants';
-import vtkMath        from 'vtk.js/Sources/Common/Core/Math';
+import macro     from 'vtk.js/Sources/macro';
+import Constants from 'vtk.js/Sources/Rendering/Core/Coordinate/Constants';
+import vtkMath   from 'vtk.js/Sources/Common/Core/Math';
 
+const { Coordinate } = Constants;
 const { vtkErrorMacro } = macro;
 
 // ----------------------------------------------------------------------------
@@ -432,4 +433,4 @@ export const newInstance = macro.newInstance(extend, 'vtkCoordinate');
 
 // ----------------------------------------------------------------------------
 
-export default { newInstance, extend };
+export default Object.assign({ newInstance, extend }, Constants);

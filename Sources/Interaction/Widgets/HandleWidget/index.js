@@ -1,10 +1,11 @@
 import macro                         from 'vtk.js/Sources/macro';
 import vtkAbstractWidget             from 'vtk.js/Sources/Interaction/Widgets/AbstractWidget';
 import vtkSphereHandleRepresentation from 'vtk.js/Sources/Interaction/Widgets/SphereHandleRepresentation';
+import vtkHandleRepresentation       from 'vtk.js/Sources/Interaction/Widgets/HandleRepresentation';
+import Constants                     from 'vtk.js/Sources/Interaction/Widgets/HandleWidget/Constants';
 
-import { InteractionState }          from '../HandleRepresentation/Constants';
-import { WidgetState }               from './Constants';
-
+const { InteractionState } = vtkHandleRepresentation;
+const { WidgetState } = Constants;
 const { vtkErrorMacro } = macro;
 
 // ----------------------------------------------------------------------------
@@ -217,4 +218,4 @@ export const newInstance = macro.newInstance(extend, 'vtkHandleWidget');
 
 // ----------------------------------------------------------------------------
 
-export default { newInstance, extend };
+export default Object.assign({ newInstance, extend }, Constants);

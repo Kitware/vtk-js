@@ -12,7 +12,7 @@ import vtkPolyData           from 'vtk.js/Sources/Common/DataModel/PolyData';
 
 import baseline from './testInterpolateScalarsBeforeMapping.png';
 
-test.onlyIfWebGL('Test Interpolate Scalars Before Colors', (t) => {
+test.onlyIfWebGL('Test Interpolate Scalars Before Mapping', (t) => {
   const gc = testUtils.createGarbageCollector(t);
   t.ok('rendering', 'vtkOpenGLPolyDataMapper InterpolateScalarsBeforeColors');
 

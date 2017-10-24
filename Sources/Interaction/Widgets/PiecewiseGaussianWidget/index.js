@@ -336,7 +336,7 @@ function vtkPiecewiseGaussianWidget(publicAPI, model) {
     publicAPI.modified();
   };
 
-  publicAPI.setDataArray = (array, scaleRatio = 4) => {
+  publicAPI.setDataArray = (array, numberOfBinToConsider = 1, numberOfBinsToSkip = 1) => {
     model.histogramArray = array;
     const size = array.length;
     let max = array[0];
@@ -358,12 +358,18 @@ function vtkPiecewiseGaussianWidget(publicAPI, model) {
     });
 
     // Smart Rescale Histogram
-    const sampleSize = Math.ceil(model.histogram.length / scaleRatio);
+    const sampleSize = Math.min(numberOfBinToConsider, model.histogram.length - numberOfBinsToSkip);
     const sortedArray = [].concat(model.histogram);
     sortedArray.sort((a, b) => (Number(a) - Number(b)));
-    const topQuarterMean = sortedArray.slice(-sampleSize).reduce((a, b) => a + b, 0) / sampleSize;
+    for (let i = 0; i < numberOfBinsToSkip; i++) {
+      sortedArray.pop();
+    }
+    while (sortedArray.length > sampleSize) {
+      sortedArray.shift();
+    }
+    const mean = sortedArray.reduce((a, b) => a + b, 0) / sampleSize;
 
-    model.histogram = model.histogram.map(v => v / topQuarterMean);
+    model.histogram = model.histogram.map(v => v / mean);
     publicAPI.modified();
   };
 
