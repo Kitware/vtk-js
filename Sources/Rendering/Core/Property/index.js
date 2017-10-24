@@ -128,4 +128,4 @@ export const newInstance = macro.newInstance(extend, 'vtkProperty');
 
 // ----------------------------------------------------------------------------
 
-export default { newInstance, extend };
+export default Object.assign({ newInstance, extend }, Constants);
