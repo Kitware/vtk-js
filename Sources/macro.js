@@ -406,6 +406,31 @@ export function setGetArray(publicAPI, model, fieldNames, size, defaultVal = und
 }
 
 // ----------------------------------------------------------------------------
+// get{xxx}ByReference: add a fast getter with no check
+// ----------------------------------------------------------------------------
+
+export function getReference(publicAPI, model, fieldNames) {
+  fieldNames.forEach((field) => {
+    publicAPI[`get${capitalize(field)}ByReference`] = () => model.field;
+  });
+}
+
+// ----------------------------------------------------------------------------
+// set{xxx}From: add setter for arrays with no object creation or mark modified
+// ----------------------------------------------------------------------------
+
+export function setFrom(publicAPI, model, fieldNames) {
+  fieldNames.forEach((field) => {
+    publicAPI[`set${capitalize(field)}From`] = (otherArray) => {
+      const target = model[field];
+      otherArray.forEach((v, i) => {
+        target[i] = v;
+      });
+    };
+  });
+}
+
+// ----------------------------------------------------------------------------
 // vtkAlgorithm: setInputData(), setInputConnection(), getOutput(), getOutputPort()
 // ----------------------------------------------------------------------------
 
