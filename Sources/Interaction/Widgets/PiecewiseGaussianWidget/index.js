@@ -690,17 +690,22 @@ function vtkPiecewiseGaussianWidget(publicAPI, model) {
     }
   };
 
-  publicAPI.applyOpacity = (piecewiseFunction, dataRange) => {
+  publicAPI.getOpacityNodes = (dataRange) => {
     const rangeToUse = dataRange || model.dataRange;
     const delta = (rangeToUse[1] - rangeToUse[0]) / (model.opacities.length - 1);
     const nodes = [];
     const midpoint = 0.5;
     const sharpness = 0;
-    piecewiseFunction.removeAllPoints();
     model.opacities.forEach((y, index) => {
       const x = rangeToUse[0] + (delta * index);
       nodes.push({ x, y, midpoint, sharpness });
     });
+    return nodes;
+  };
+
+  publicAPI.applyOpacity = (piecewiseFunction, dataRange) => {
+    const nodes = publicAPI.getOpacityNodes(dataRange);
+    piecewiseFunction.removeAllPoints();
     piecewiseFunction.set({ nodes }, true);
     piecewiseFunction.sortAndUpdateRange();
   };
