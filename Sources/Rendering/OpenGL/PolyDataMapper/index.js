@@ -1323,6 +1323,7 @@ function vtkOpenGLPolyDataMapper(publicAPI, model) {
         publicAPI.updateShaders(model.primitives[i], ren, actor);
         const mode = publicAPI.getOpenGLMode(representation, i);
         gl.drawArrays(mode, 0, cabo.getElementCount());
+        model.primitives[i].getVAO().release();
 
         const stride = (mode === gl.POINTS ? 1 : (mode === gl.LINES ? 2 : 3));
         model.primitiveIDOffset += cabo.getElementCount() / stride;
@@ -1345,9 +1346,6 @@ function vtkOpenGLPolyDataMapper(publicAPI, model) {
   };
 
   publicAPI.renderPieceFinish = (ren, actor) => {
-    if (model.LastBoundBO) {
-      model.LastBoundBO.getVAO().release();
-    }
     if (model.renderable.getColorTextureMap()) {
       model.internalColorTexture.deactivate();
     }

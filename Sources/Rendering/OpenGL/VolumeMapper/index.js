@@ -789,6 +789,7 @@ function vtkOpenGLVolumeMapper(publicAPI, model) {
     // First we do the triangles, update the shader, set uniforms, etc.
     gl.drawArrays(gl.TRIANGLES, 0,
       model.tris.getCABO().getElementCount());
+    model.tris.getVAO().release();
 
     model.scalarTexture.deactivate();
     model.colorTexture.deactivate();
@@ -800,10 +801,6 @@ function vtkOpenGLVolumeMapper(publicAPI, model) {
   };
 
   publicAPI.renderPieceFinish = (ren, actor) => {
-    if (model.LastBoundBO) {
-      model.LastBoundBO.getVAO().release();
-    }
-
     // if we have a zbuffer texture then deactivate it
     if (model.zBufferTexture !== null) {
       model.zBufferTexture.deactivate();

@@ -249,15 +249,13 @@ function vtkOpenGLImageMapper(publicAPI, model) {
       publicAPI.updateShaders(model.tris, ren, actor);
       gl.drawArrays(gl.TRIANGLES, 0,
         model.tris.getCABO().getElementCount());
+      model.tris.getVAO().release();
     }
 
     model.openGLTexture.deactivate();
   };
 
   publicAPI.renderPieceFinish = (ren, actor) => {
-    if (model.LastBoundBO) {
-      model.LastBoundBO.getVAO().release();
-    }
   };
 
   publicAPI.renderPiece = (ren, actor) => {
