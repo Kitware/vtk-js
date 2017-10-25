@@ -95,19 +95,23 @@ function vtkProp3D(publicAPI, model) {
   publicAPI.SetUserTransform = notImplemented('SetUserTransform');
 
   publicAPI.setUserMatrix = (matrix) => {
-    model.isIdentity = false;
-    model.userMatrix = null;
+    const identityMatrix = mat4.create();
+
     if (!matrix) {
+      if (model.matrix) {
+        model.isIdentity = vtkMath.areMatricesEqual(identityMatrix, model.matrix);
+      } else {
+        model.isIdentity = false;
+      }
+      model.userMatrix = null;
       return;
     }
+
+    model.isIdentity = vtkMath.areMatricesEqual(identityMatrix, matrix);
 
     model.userMatrix = mat4.clone(matrix);
     model.userMatrixMTime.modified();
 
-    if (model.userTransform) {
-      // TODO
-      // Should create a vtkMatrixToLinearTransform using model.userMatrix as input
-    }
     publicAPI.modified();
   };
 
@@ -156,7 +160,7 @@ function vtkProp3D(publicAPI, model) {
       }
     });
 
-    if (model.userMatrix || model.userTransform) {
+    if (model.userMatrix) {
       model.isIdentity = false;
       noChange = false;
     }
@@ -182,7 +186,6 @@ const DEFAULT_VALUES = {
 
   userMatrix: null,
   userMatrixMTime: null,
-  userTransform: null,
 
   cachedProp3D: null,
   isIdentity: true,
