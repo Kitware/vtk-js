@@ -89,12 +89,16 @@ function vtkActor(publicAPI, model) {
     // of caching. If the values returned this time are different, or
     // the modified time of this class is newer than the cached time,
     // then we need to rebuild.
-    const zip = rows => rows[0].map((_, c) => rows.map(row => row[c]));
-    if (!model.mapperBounds ||
-      !zip([bds, model.mapperBounds]).reduce((a, b) => (a && b[0] === b[1]), true) ||
-      publicAPI.getMTime() > model.boundsMTime.getMTime()) {
+    if (!model.mapperBounds
+     || bds[0] !== model.mapperBounds[0]
+     || bds[1] !== model.mapperBounds[1]
+     || bds[2] !== model.mapperBounds[2]
+     || bds[3] !== model.mapperBounds[3]
+     || bds[4] !== model.mapperBounds[4]
+     || bds[5] !== model.mapperBounds[5]
+     || publicAPI.getMTime() > model.boundsMTime.getMTime()) {
       vtkDebugMacro('Recomputing bounds...');
-      model.mapperBounds = bds.map(x => x);
+      model.mapperBounds = bds.concat(); // copy the mapper's bounds
       const bbox = [
         vec3.fromValues(bds[1], bds[3], bds[5]),
         vec3.fromValues(bds[1], bds[2], bds[5]),
@@ -115,9 +119,11 @@ function vtkActor(publicAPI, model) {
       model.bounds[0] = model.bounds[2] = model.bounds[4] = Number.MAX_VALUE;
       model.bounds[1] = model.bounds[3] = model.bounds[5] = -Number.MAX_VALUE;
       /* eslint-enable no-multi-assign */
+
       model.bounds = model.bounds.map((d, i) => ((i % 2 === 0) ?
         bbox.reduce((a, b) => (a > b[i / 2] ? b[i / 2] : a), d) :
         bbox.reduce((a, b) => (a < b[(i - 1) / 2] ? b[(i - 1) / 2] : a), d)));
+
       model.boundsMTime.modified();
     }
     return model.bounds;
@@ -191,7 +197,6 @@ export function extend(publicAPI, model, initialValues = {}) {
     'forceTranslucent',
     'mapper',
   ]);
-  macro.getArray(publicAPI, model, ['bounds'], 6);
 
   // Object methods
   vtkActor(publicAPI, model);

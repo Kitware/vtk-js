@@ -8,6 +8,13 @@ function vtkRenderPass(publicAPI, model) {
 
   publicAPI.getOperation = () => model.currentOperation;
 
+  publicAPI.setCurrentOperation = (val) => {
+    model.currentOperation = val;
+    model.currentTraverseOperation = `traverse${macro.capitalize(model.currentOperation)}`;
+  };
+
+  publicAPI.getTraverseOperation = () => model.currentTraverseOperation;
+
   // by default this class will traverse all of its
   // preDelegateOperations, then call its delegate render passes
   // the traverse all of its postDelegateOperations
@@ -21,14 +28,14 @@ function vtkRenderPass(publicAPI, model) {
     model.currentParent = parent;
 
     model.preDelegateOperations.forEach((val) => {
-      model.currentOperation = val;
+      publicAPI.setCurrentOperation(val);
       viewNode.traverse(publicAPI);
     });
     model.delegates.forEach((val) => {
       val.traverse(viewNode, publicAPI);
     });
     model.postDelegateOperations.forEach((val) => {
-      model.currentOperation = val;
+      publicAPI.setCurrentOperation(val);
       viewNode.traverse(publicAPI);
     });
   };
@@ -53,10 +60,12 @@ export function extend(publicAPI, model, initialValues = {}) {
 
   // Build VTK API
   macro.obj(publicAPI, model);
+  macro.get(publicAPI, model, [
+    'currentOperation',
+  ]);
   macro.setGet(publicAPI, model, [
     'delegates',
     'currentParent',
-    'currentOperation',
     'preDelegateOperations',
     'postDelegateOperations',
   ]);

@@ -131,7 +131,6 @@ function vtkOpenGLSphereMapper(publicAPI, model) {
     if (cellBO.getCABO().getElementCount() && (model.VBOBuildTime > cellBO.getAttributeUpdateTime().getMTime() ||
         cellBO.getShaderSourceTime().getMTime() > cellBO.getAttributeUpdateTime().getMTime()) &&
         cellBO.getProgram().isAttributeUsed('offsetMC')) {
-      cellBO.getCABO().bind();
       if (!cellBO.getVAO().addAttributeArray(cellBO.getProgram(), cellBO.getCABO(),
           'offsetMC', 12, // 12:this->VBO->ColorOffset+sizeof(float)
           cellBO.getCABO().getStride(), model.context.FLOAT, 2, false)) {

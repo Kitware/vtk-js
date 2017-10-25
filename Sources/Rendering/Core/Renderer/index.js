@@ -20,10 +20,25 @@ function notImplemented(method) {
 function vtkRenderer(publicAPI, model) {
   // Set our className
   model.classHierarchy.push('vtkRenderer');
+
   // make sure background has 4 entries. Default to opaque black
   if (!model.background) model.background = [0, 0, 0, 1];
   while (model.background.length < 3) model.background.push(0);
   if (model.background.length === 3) model.background.push(1);
+
+  // Events
+  const COMPUTE_VISIBLE_PROP_BOUNDS_EVENT = {
+    type: 'ComputeVisiblePropBoundsEvent',
+    renderer: publicAPI,
+  };
+  const RESET_CAMERA_CLIPPING_RANGE_EVENT = {
+    type: 'ResetCameraClippingRangeEvent',
+    renderer: publicAPI,
+  };
+  const RESET_CAMERA_EVENT = {
+    type: 'ResetCameraEvent',
+    renderer: publicAPI,
+  };
 
   publicAPI.updateCamera = () => {
     if (!model.activeCamera) {
@@ -57,8 +72,8 @@ function vtkRenderer(publicAPI, model) {
         // vtkLight::SetLightTypeToSceneLight()
       } else if (light.lightTypeIsHeadLight()) {
         // update position and orientation of light to match camera.
-        light.setPosition(camera.getPosition());
-        light.setFocalPoint(camera.getFocalPoint());
+        light.setPosition(camera.getPosition(true));
+        light.setFocalPoint(camera.getFocalPoint(true));
       } else if (light.lightTypeIsCameraLight()) {
         light.setTransformMatrix(lightMatrix);
       } else {
@@ -257,12 +272,11 @@ function vtkRenderer(publicAPI, model) {
     const allBounds = [].concat(INIT_BOUNDS);
     let nothingVisible = true;
 
-    publicAPI.invokeEvent({ type: 'ComputeVisiblePropBoundsEvent', renderer: publicAPI });
+    publicAPI.invokeEvent(COMPUTE_VISIBLE_PROP_BOUNDS_EVENT);
 
     // loop through all props
-    model.props
-      .filter(prop => prop.getVisibility() && prop.getUseBounds())
-      .forEach((prop) => {
+    model.props.forEach((prop) => {
+      if (prop.getVisibility() && prop.getUseBounds()) {
         const bounds = prop.getBounds();
         if (bounds && vtkMath.areBoundsInitialized(bounds)) {
           nothingVisible = false;
@@ -286,7 +300,8 @@ function vtkRenderer(publicAPI, model) {
             allBounds[5] = bounds[5];
           }
         }
-      });
+      }
+    });
 
     if (nothingVisible) {
       vtkMath.uninitializeBounds(allBounds);
@@ -374,7 +389,7 @@ function vtkRenderer(publicAPI, model) {
 
     // Here to let parallel/distributed compositing intercept
     // and do the right thing.
-    publicAPI.invokeEvent({ type: 'ResetCameraEvent', renderer: publicAPI });
+    publicAPI.invokeEvent(RESET_CAMERA_EVENT);
 
     return true;
   };
@@ -395,8 +410,8 @@ function vtkRenderer(publicAPI, model) {
     }
 
     let vn = null; let position = null;
-    vn = model.activeCamera.getViewPlaneNormal();
-    position = model.activeCamera.getPosition();
+    vn = model.activeCamera.getViewPlaneNormal(true);
+    position = model.activeCamera.getPosition(true);
 
     const a = -vn[0];
     const b = -vn[1];
@@ -462,7 +477,7 @@ function vtkRenderer(publicAPI, model) {
 
     // Here to let parallel/distributed compositing intercept
     // and do the right thing.
-    publicAPI.invokeEvent({ type: 'ResetCameraClippingRangeEvent', renderer: publicAPI });
+    publicAPI.invokeEvent(RESET_CAMERA_CLIPPING_RANGE_EVENT);
     return false;
   };
 
@@ -476,12 +491,18 @@ function vtkRenderer(publicAPI, model) {
   publicAPI.visibleActorCount = () => model.props.filter(prop => prop.getVisibility()).length;
   publicAPI.visibleVolumeCount = publicAPI.visibleActorCount;
 
-  publicAPI.getMTime = () =>
-    Math.max(
-      model.mtime,
-      model.activeCamera ? model.activeCamera.getMTime() : 0,
-      model.createdLight ? model.createdLight.getMTime() : 0);
-
+  publicAPI.getMTime = () => {
+    let m1 = model.mtime;
+    const m2 = model.activeCamera ? model.activeCamera.getMTime() : 0;
+    if (m2 > m1) {
+      m1 = m2;
+    }
+    const m3 = model.createdLight ? model.createdLight.getMTime() : 0;
+    if (m3 > m1) {
+      m1 = m3;
+    }
+    return m1;
+  };
 
   // FIXME
   publicAPI.pickProp = notImplemented('pickProp');

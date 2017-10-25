@@ -17,7 +17,7 @@ function vtkOpenGLVertexArrayObject(publicAPI, model) {
   publicAPI.initialize = () => {
     model.extension = model.context.getExtension('OES_vertex_array_object');
 
-  // Start setting up VAO
+    // Start setting up VAO
     if (!model.forceEmulation && model.extension) {
       model.supported = true;
       model.handleVAO = model.extension.createVertexArrayOES();
@@ -41,9 +41,11 @@ function vtkOpenGLVertexArrayObject(publicAPI, model) {
       model.extension.bindVertexArrayOES(model.handleVAO);
     } else if (publicAPI.isReady()) {
       const gl = model.context;
-      Object.keys(model.buffers).map(key => model.buffers[key]).forEach((buff) => {
+      for (let ibuff = 0; ibuff < model.buffers.length; ++ibuff) {
+        const buff = model.buffers[ibuff];
         model.context.bindBuffer(gl.ARRAY_BUFFER, buff.buffer);
-        Object.keys(buff.attributes).map(key => buff.attributes[key]).forEach((attrIt) => {
+        for (let iatt = 0; iatt < buff.attributes.length; ++iatt) {
+          const attrIt = buff.attributes[iatt];
           const matrixCount = attrIt.isMatrix ? attrIt.size : 1;
           for (let i = 0; i < matrixCount; ++i) {
             gl.enableVertexAttribArray(attrIt.index + i);
@@ -54,9 +56,8 @@ function vtkOpenGLVertexArrayObject(publicAPI, model) {
               gl.vertexAttribDivisor(attrIt.index + i, 1);
             }
           }
-        });
-        // gl.bindBuffer(gl.ARRAY_BUFFER, 0);
-      });
+        }
+      }
     }
   };
 
@@ -66,8 +67,11 @@ function vtkOpenGLVertexArrayObject(publicAPI, model) {
       model.extension.bindVertexArrayOES(null);
     } else if (publicAPI.isReady()) {
       const gl = model.context;
-      Object.keys(model.buffers).map(key => model.buffers[key]).forEach((buff) => {
-        Object.keys(buff.attributes).map(key => buff.attributes[key]).forEach((attrIt) => {
+      for (let ibuff = 0; ibuff < model.buffers.length; ++ibuff) {
+        const buff = model.buffers[ibuff];
+        model.context.bindBuffer(gl.ARRAY_BUFFER, buff.buffer);
+        for (let iatt = 0; iatt < buff.attributes.length; ++iatt) {
+          const attrIt = buff.attributes[iatt];
           const matrixCount = attrIt.isMatrix ? attrIt.size : 1;
           for (let i = 0; i < matrixCount; ++i) {
             gl.enableVertexAttribArray(attrIt.index + i);
@@ -79,8 +83,8 @@ function vtkOpenGLVertexArrayObject(publicAPI, model) {
             }
             gl.disableVertexAttribArray(attrIt.index + i);
           }
-        });
-      });
+        }
+      }
     }
   };
 
@@ -131,6 +135,7 @@ function vtkOpenGLVertexArrayObject(publicAPI, model) {
     const gl = model.context;
 
     const attribs = {};
+    attribs.name = name;
     attribs.index = gl.getAttribLocation(model.handleProgram, name);
     attribs.offset = offset;
     attribs.stride = stride;
@@ -158,16 +163,31 @@ function vtkOpenGLVertexArrayObject(publicAPI, model) {
       gl.vertexAttribDivisor(attribs.index, 1);
     }
 
+    attribs.buffer = buffer.getHandle();
+
     // If vertex array objects are not supported then build up our list.
     if (!model.supported) {
-      const handleBuffer = buffer.getHandle();
       // find the buffer
-      if (Object.keys(model.buffers).indexOf(handleBuffer) !== -1) {
-        model.buffers[handleBuffer].attributes[attribs.index] = attribs;
-        model.buffers[handleBuffer].buffer = handleBuffer;
-      } else {
-        // a single handle can have multiple attribs
-        model.buffers[handleBuffer] = { buffer: handleBuffer, attributes: { [attribs.index]: attribs } };
+      let buffFound = false;
+      for (let ibuff = 0; ibuff < model.buffers.length; ++ibuff) {
+        const buff = model.buffers[ibuff];
+        if (buff.buffer === attribs.buffer) {
+          buffFound = true;
+          let found = false;
+          for (let iatt = 0; iatt < buff.attributes.length; ++iatt) {
+            const attrIt = buff.attributes[iatt];
+            if (attrIt.name === name) {
+              found = true;
+              buff.attributes[iatt] = attribs;
+            }
+          }
+          if (!found) {
+            buff.attributes.push(attribs);
+          }
+        }
+      }
+      if (!buffFound) {
+        model.buffers.push({ buffer: attribs.buffer, attributes: [attribs] });
       }
     }
     return true;
@@ -206,19 +226,21 @@ function vtkOpenGLVertexArrayObject(publicAPI, model) {
       return false;
     }
 
-    const gl = model.context;
-    const location = gl.getAttribLocation(model.handleProgram, name);
-
-    if (location === -1) {
-      return false;
-    }
-
-    gl.disableVertexAttribArray(location);
     // If we don't have real VAOs find the entry and remove it too.
     if (!model.supported) {
-      Object.keys(model.buffers).map(key => model.buffers[key]).forEach((buff) => {
-        delete buff.attributes[location];
-      });
+      for (let ibuff = 0; ibuff < model.buffers.length; ++ibuff) {
+        const buff = model.buffers[ibuff];
+        for (let iatt = 0; iatt < buff.attributes.length; ++iatt) {
+          const attrIt = buff.attributes[iatt];
+          if (attrIt.name === name) {
+            buff.attributes.splice(iatt, 1);
+            if (!buff.attributes.length) {
+              model.buffers.splice(ibuff, 1);
+            }
+            return true;
+          }
+        }
+      }
     }
 
     return true;
@@ -244,7 +266,7 @@ export function extend(publicAPI, model, initialValues = {}) {
   Object.assign(model, DEFAULT_VALUES, initialValues);
 
   // Internal objects initialization
-  model.buffers = {};
+  model.buffers = [];
 
   // Object methods
   macro.obj(publicAPI, model);

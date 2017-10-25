@@ -139,7 +139,6 @@ function vtkOpenGLImageMapper(publicAPI, model) {
   };
 
   publicAPI.updateShaders = (cellBO, ren, actor) => {
-    cellBO.getVAO().bind();
     model.lastBoundBO = cellBO;
 
     // has something changed that would require us to recreate the shader?
@@ -164,6 +163,7 @@ function vtkOpenGLImageMapper(publicAPI, model) {
       model.openGLRenderWindow.getShaderCache().readyShaderProgram(cellBO.getProgram());
     }
 
+    cellBO.getVAO().bind();
     publicAPI.setMapperShaderParameters(cellBO, ren, actor);
     publicAPI.setCameraShaderParameters(cellBO, ren, actor);
     publicAPI.setPropertyShaderParameters(cellBO, ren, actor);
@@ -174,7 +174,6 @@ function vtkOpenGLImageMapper(publicAPI, model) {
 
     if (cellBO.getCABO().getElementCount() && (model.VBOBuildTime > cellBO.getAttributeUpdateTime().getMTime() ||
         cellBO.getShaderSourceTime().getMTime() > cellBO.getAttributeUpdateTime().getMTime())) {
-      cellBO.getCABO().bind();
       if (cellBO.getProgram().isAttributeUsed('vertexMC')) {
         if (!cellBO.getVAO().addAttributeArray(cellBO.getProgram(), cellBO.getCABO(),
                                            'vertexMC', cellBO.getCABO().getVertexOffset(),
@@ -193,6 +192,7 @@ function vtkOpenGLImageMapper(publicAPI, model) {
           vtkErrorMacro('Error setting tcoordMC in shader VAO.');
         }
       }
+      cellBO.getAttributeUpdateTime().modified();
     }
 
     const texUnit = model.openGLTexture.getTextureUnit();
@@ -249,15 +249,13 @@ function vtkOpenGLImageMapper(publicAPI, model) {
       publicAPI.updateShaders(model.tris, ren, actor);
       gl.drawArrays(gl.TRIANGLES, 0,
         model.tris.getCABO().getElementCount());
+      model.tris.getVAO().release();
     }
 
     model.openGLTexture.deactivate();
   };
 
   publicAPI.renderPieceFinish = (ren, actor) => {
-    if (model.LastBoundBO) {
-      model.LastBoundBO.getVAO().release();
-    }
   };
 
   publicAPI.renderPiece = (ren, actor) => {

@@ -16,9 +16,24 @@ function vtkOpenGLActor(publicAPI, model) {
     if (prepass) {
       model.context = publicAPI.getFirstAncestorOfType('vtkOpenGLRenderWindow').getContext();
       publicAPI.prepareNodes();
-      publicAPI.addMissingNodes(model.renderable.getTextures());
+      publicAPI.addMissingNodes(model.renderable.getTextures(true));
       publicAPI.addMissingNode(model.renderable.getMapper());
       publicAPI.removeUnusedNodes();
+
+      // we store textures and mapper
+      model.ogltextures = null;
+      model.activeTextures = null;
+      for (let index = 0; index < model.children.length; index++) {
+        const child = model.children[index];
+        if (child.isA('vtkOpenGLTexture')) {
+          if (!model.ogltextures) {
+            model.ogltextures = [];
+          }
+          model.ogltextures.push(child);
+        } else {
+          model.oglmapper = child;
+        }
+      }
     }
   };
 
@@ -35,11 +50,9 @@ function vtkOpenGLActor(publicAPI, model) {
     }
 
     publicAPI.apply(renderPass, true);
-    model.children.forEach((child) => {
-      if (!child.isA('vtkOpenGLTexture')) {
-        child.traverse(renderPass);
-      }
-    });
+
+    model.oglmapper.traverse(renderPass);
+
     publicAPI.apply(renderPass, false);
   };
 
@@ -52,25 +65,26 @@ function vtkOpenGLActor(publicAPI, model) {
     }
 
     publicAPI.apply(renderPass, true);
-    model.children.forEach((child) => {
-      if (!child.isA('vtkOpenGLTexture')) {
-        child.traverse(renderPass);
-      }
-    });
+
+    model.oglmapper.traverse(renderPass);
+
     publicAPI.apply(renderPass, false);
   };
 
   publicAPI.activateTextures = () => {
     // always traverse textures first, then mapper
+    if (!model.ogltextures) {
+      return;
+    }
+
     model.activeTextures = [];
-    model.children.forEach((child) => {
-      if (child.isA('vtkOpenGLTexture')) {
-        child.render();
-        if (child.getHandle()) {
-          model.activeTextures.push(child);
-        }
+    for (let index = 0; index < model.ogltextures.length; index++) {
+      const child = model.ogltextures[index];
+      child.render();
+      if (child.getHandle()) {
+        model.activeTextures.push(child);
       }
-    });
+    }
   };
 
   publicAPI.queryPass = (prepass, renderPass) => {
@@ -93,11 +107,10 @@ function vtkOpenGLActor(publicAPI, model) {
     if (prepass) {
       model.context.depthMask(true);
       publicAPI.activateTextures();
-    } else {
-      // deactivate textures
-      model.activeTextures.forEach((child) => {
-        child.deactivate();
-      });
+    } else if (model.activeTextures) {
+      for (let index = 0; index < model.activeTextures.length; index++) {
+        model.activeTextures[index].deactivate();
+      }
     }
   };
 
@@ -106,11 +119,12 @@ function vtkOpenGLActor(publicAPI, model) {
     if (prepass) {
       model.context.depthMask(false);
       publicAPI.activateTextures();
+    } else if (model.activeTextures) {
+      for (let index = 0; index < model.activeTextures.length; index++) {
+        model.activeTextures[index].deactivate();
+      }
+      model.context.depthMask(true);
     } else {
-      // deactivate textures
-      model.activeTextures.forEach((child) => {
-        child.deactivate();
-      });
       model.context.depthMask(true);
     }
   };
@@ -144,7 +158,7 @@ const DEFAULT_VALUES = {
   keyMatrixTime: null,
   normalMatrix: null,
   MCWCMatrix: null,
-  activeTextures: [],
+  activeTextures: null,
 };
 
 // ----------------------------------------------------------------------------

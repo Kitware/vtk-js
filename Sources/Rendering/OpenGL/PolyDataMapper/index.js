@@ -32,6 +32,9 @@ const { Filter, Wrap } = vtkOpenGLTexture;
 const { PassTypes } = vtkHardwareSelector;
 const { vtkErrorMacro } = macro;
 
+const StartEvent = { type: 'StartEvent' };
+const EndEvent = { type: 'EndEvent' };
+
 // ----------------------------------------------------------------------------
 // vtkOpenGLPolyDataMapper methods
 // ----------------------------------------------------------------------------
@@ -159,7 +162,7 @@ function vtkOpenGLPolyDataMapper(publicAPI, model) {
     let FSSource = shaders.Fragment;
 
     const lastLightComplexity =
-      model.lastBoundBO.get('lastLightComplexity').lastLightComplexity;
+      model.lastBoundBO.getOneProperty('lastLightComplexity');
 
     // create the material/color property declarations, and VS implementation
     // these are always defined
@@ -287,10 +290,10 @@ function vtkOpenGLPolyDataMapper(publicAPI, model) {
     const shadowFactor = '';
 
     const lastLightComplexity =
-      model.lastBoundBO.get('lastLightComplexity').lastLightComplexity;
+      model.lastBoundBO.getOneProperty('lastLightComplexity');
 
     const lastLightCount =
-      model.lastBoundBO.get('lastLightCount').lastLightCount;
+      model.lastBoundBO.getOneProperty('lastLightCount');
 
     let sstring = [];
 
@@ -422,7 +425,7 @@ function vtkOpenGLPolyDataMapper(publicAPI, model) {
 
   publicAPI.replaceShaderNormal = (shaders, ren, actor) => {
     const lastLightComplexity =
-      model.lastBoundBO.get('lastLightComplexity').lastLightComplexity;
+      model.lastBoundBO.getOneProperty('lastLightComplexity');
 
     if (lastLightComplexity > 0) {
       let VSSource = shaders.Vertex;
@@ -541,7 +544,7 @@ function vtkOpenGLPolyDataMapper(publicAPI, model) {
 
     // do we need the vertex in the shader in View Coordinates
     const lastLightComplexity =
-      model.lastBoundBO.get('lastLightComplexity').lastLightComplexity;
+      model.lastBoundBO.getOneProperty('lastLightComplexity');
     if (lastLightComplexity > 0) {
       VSSource = vtkShaderProgram.substitute(VSSource,
         '//VTK::PositionVC::Dec', [
@@ -601,7 +604,7 @@ function vtkOpenGLPolyDataMapper(publicAPI, model) {
       const tus = model.openGLActor.getActiveTextures();
       let tNumComp = 2;
       let tcdim = 2;
-      if (tus.length > 0) {
+      if (tus && tus.length > 0) {
         tNumComp = tus[0].getComponents();
         if (tus[0].getTarget() === model.context.TEXTURE_CUBE_MAP) {
           tcdim = 3;
@@ -884,8 +887,9 @@ function vtkOpenGLPolyDataMapper(publicAPI, model) {
       // consider the lighting complexity to determine which case applies
       // simple headlight, Light Kit, the whole feature set of VTK
       lightComplexity = 0;
-
-      ren.getLights().forEach((light) => {
+      const lights = ren.getLights(true);
+      for (let index = 0; index < lights.length; ++index) {
+        const light = lights[index];
         const status = light.getSwitch();
         if (status > 0) {
           numberOfLights++;
@@ -904,14 +908,14 @@ function vtkOpenGLPolyDataMapper(publicAPI, model) {
             && (light.getPositional())) {
           lightComplexity = 3;
         }
-      });
+      }
     }
 
     let needRebuild = false;
     const lastLightComplexity =
-      model.lastBoundBO.get('lastLightComplexity').lastLightComplexity;
+      model.lastBoundBO.getOneProperty('lastLightComplexity');
     const lastLightCount =
-      model.lastBoundBO.get('lastLightCount').lastLightCount;
+      model.lastBoundBO.getOneProperty('lastLightCount');
     if (lastLightComplexity !== lightComplexity ||
         lastLightCount !== numberOfLights) {
       model.lastBoundBO.set({ lastLightComplexity: lightComplexity }, true);
@@ -921,7 +925,7 @@ function vtkOpenGLPolyDataMapper(publicAPI, model) {
 
     const selector = model.openGLRenderer.getSelector();
     const selectionPass = (selector === null ? -1 : selector.getCurrentPass());
-    if (model.lastBoundBO.get('lastSelectionPass').lastSelectionPass !==
+    if (model.lastBoundBO.getOneProperty('lastSelectionPass') !==
         selectionPass) {
       model.lastBoundBO.set({ lastSelectionPass: selectionPass }, true);
       needRebuild = true;
@@ -949,7 +953,6 @@ function vtkOpenGLPolyDataMapper(publicAPI, model) {
   };
 
   publicAPI.updateShaders = (cellBO, ren, actor) => {
-    cellBO.getVAO().bind();
     model.lastBoundBO = cellBO;
 
     // has something changed that would require us to recreate the shader?
@@ -973,6 +976,8 @@ function vtkOpenGLPolyDataMapper(publicAPI, model) {
       model.openGLRenderWindow.getShaderCache().readyShaderProgram(cellBO.getProgram());
     }
 
+    cellBO.getVAO().bind();
+
     publicAPI.setMapperShaderParameters(cellBO, ren, actor);
     publicAPI.setPropertyShaderParameters(cellBO, ren, actor);
     publicAPI.setCameraShaderParameters(cellBO, ren, actor);
@@ -988,15 +993,16 @@ function vtkOpenGLPolyDataMapper(publicAPI, model) {
 
   publicAPI.setMapperShaderParameters = (cellBO, ren, actor) => {
     // Now to update the VAO too, if necessary.
-    cellBO.getProgram().setUniformi('PrimitiveIDOffset',
-      model.primitiveIDOffset);
+    if (cellBO.getProgram().isUniformUsed('PrimitiveIDOffset')) {
+      cellBO.getProgram().setUniformi('PrimitiveIDOffset',
+        model.primitiveIDOffset);
+    }
 
     if (cellBO.getCABO().getElementCount() &&
         (model.VBOBuildTime.getMTime() > cellBO.getAttributeUpdateTime().getMTime() ||
         cellBO.getShaderSourceTime().getMTime() > cellBO.getAttributeUpdateTime().getMTime())) {
-      cellBO.getCABO().bind();
       const lastLightComplexity =
-        model.lastBoundBO.get('lastLightComplexity').lastLightComplexity;
+        model.lastBoundBO.getOneProperty('lastLightComplexity');
 
       if (cellBO.getProgram().isAttributeUsed('vertexMC')) {
         if (!cellBO.getVAO().addAttributeArray(cellBO.getProgram(), cellBO.getCABO(),
@@ -1015,6 +1021,8 @@ function vtkOpenGLPolyDataMapper(publicAPI, model) {
                                            false)) {
           vtkErrorMacro('Error setting normalMC in shader VAO.');
         }
+      } else {
+        cellBO.getVAO().removeAttributeArray('normalMC');
       }
       if (cellBO.getProgram().isAttributeUsed('tcoordMC') &&
           cellBO.getCABO().getTCoordOffset()) {
@@ -1025,10 +1033,11 @@ function vtkOpenGLPolyDataMapper(publicAPI, model) {
                                            false)) {
           vtkErrorMacro('Error setting tcoordMC in shader VAO.');
         }
+      } else {
+        cellBO.getVAO().removeAttributeArray('tcoordMC');
       }
       if (cellBO.getProgram().isAttributeUsed('scalarColor') &&
           cellBO.getCABO().getColorComponents()) {
-        cellBO.getCABO().getColorBO().bind();
         if (!cellBO.getVAO().addAttributeArray(cellBO.getProgram(), cellBO.getCABO().getColorBO(),
                                            'scalarColor', cellBO.getCABO().getColorOffset(),
                                            cellBO.getCABO().getColorBOStride(),
@@ -1037,7 +1046,11 @@ function vtkOpenGLPolyDataMapper(publicAPI, model) {
                                            true)) {
           vtkErrorMacro('Error setting scalarColor in shader VAO.');
         }
+      } else {
+        cellBO.getVAO().removeAttributeArray('scalarColor');
       }
+
+      cellBO.getAttributeUpdateTime().modified();
     }
 
     if (model.renderable.getNumberOfClippingPlanes()) {
@@ -1066,13 +1079,16 @@ function vtkOpenGLPolyDataMapper(publicAPI, model) {
         model.internalColorTexture.getTextureUnit());
     }
     const tus = model.openGLActor.getActiveTextures();
-    tus.forEach((tex) => {
-      const texUnit = tex.getTextureUnit();
-      const tname = `texture${texUnit + 1}`;
-      if (cellBO.getProgram().isUniformUsed(tname)) {
-        cellBO.getProgram().setUniformi(tname, texUnit);
+    if (tus) {
+      for (let index = 0; index < tus.length; ++index) {
+        const tex = tus[index];
+        const texUnit = tex.getTextureUnit();
+        const tname = `texture${texUnit + 1}`;
+        if (cellBO.getProgram().isUniformUsed(tname)) {
+          cellBO.getProgram().setUniformi(tname, texUnit);
+        }
       }
-    });
+    }
 
     // handle coincident
     if (cellBO.getProgram().isUniformUsed('coffset')) {
@@ -1087,7 +1103,7 @@ function vtkOpenGLPolyDataMapper(publicAPI, model) {
     const selector = model.openGLRenderer.getSelector();
     if (selector && cellBO.getProgram().isUniformUsed('mapperIndex')) {
       if (selector.getCurrentPass() < PassTypes.ID_LOW24) {
-        cellBO.getProgram().setUniform3f('mapperIndex', selector.getPropColorValue());
+        cellBO.getProgram().setUniform3fArray('mapperIndex', selector.getPropColorValue());
       }
     }
   };
@@ -1095,7 +1111,7 @@ function vtkOpenGLPolyDataMapper(publicAPI, model) {
   publicAPI.setLightingShaderParameters = (cellBO, ren, actor) => {
     // for unlit and headlight there are no lighting parameters
     const lastLightComplexity =
-      model.lastBoundBO.get('lastLightComplexity').lastLightComplexity;
+      model.lastBoundBO.getOneProperty('lastLightComplexity');
     if (lastLightComplexity < 2) {
       return;
     }
@@ -1105,30 +1121,31 @@ function vtkOpenGLPolyDataMapper(publicAPI, model) {
     // bind some light settings
     let numberOfLights = 0;
 
-    const lights = ren.getLights();
-    Object.keys(lights).map(key => lights[key]).forEach((light) => {
+    const lights = ren.getLights(true);
+    for (let index = 0; index < lights.length; ++index) {
+      const light = lights[index];
       const status = light.getSwitch();
       if (status > 0.0) {
-        const dColor = light.getColor();
+        const dColor = light.getColor(true);
         const intensity = light.getIntensity();
-        const lightColor = [
-          dColor[0] * intensity,
-          dColor[1] * intensity,
-          dColor[2] * intensity];
+        model.lightColor[0] = dColor[0] * intensity;
+        model.lightColor[1] = dColor[1] * intensity;
+        model.lightColor[2] = dColor[2] * intensity;
         // get required info from light
-        const lightDirection = light.getDirection();
-        const lightHalfAngle = [
-          -lightDirection[0],
-          -lightDirection[1],
-          -lightDirection[2] + 1.0];
-        vtkMath.normalize(lightDirection);
-        program.setUniform3f(`lightColor${numberOfLights}`, lightColor);
-        program.setUniform3f(`lightDirectionVC${numberOfLights}`, lightDirection);
-        program.setUniform3f(`lightHalfAngleVC${numberOfLights}`, lightHalfAngle);
+        const ld = light.getDirection(true);
+        model.lightDirection[0] = ld[0];
+        model.lightDirection[1] = ld[1];
+        model.lightDirection[2] = ld[2];
+        model.lightHalfAngle[0] = -model.lightDirection[0];
+        model.lightHalfAngle[1] = -model.lightDirection[1];
+        model.lightHalfAngle[2] = -model.lightDirection[2] + 1.0;
+        vtkMath.normalize(model.lightDirection);
+        program.setUniform3fArray(`lightColor${numberOfLights}`, model.lightColor);
+        program.setUniform3fArray(`lightDirectionVC${numberOfLights}`, model.lightDirection);
+        program.setUniform3fArray(`lightHalfAngleVC${numberOfLights}`, model.lightHalfAngle);
         numberOfLights++;
       }
-    });
-
+    }
 
     // we are done unless we have positional lights
     if (lastLightComplexity < 3) {
@@ -1142,21 +1159,22 @@ function vtkOpenGLPolyDataMapper(publicAPI, model) {
 
     numberOfLights = 0;
 
-    Object.keys(lights).map(key => lights[key]).forEach((light) => {
+    for (let index = 0; index < lights.length; ++index) {
+      const light = lights[index];
       const status = light.getSwitch();
       if (status > 0.0) {
         const lp = light.getTransformedPosition();
         const np = vec3.fromValues(lp[0], lp[1], lp[2]);
         vec3.transformMat4(np, np, viewTF);
-        program.setUniform3f(`lightAttenuation${numberOfLights}`, light.getAttenuationValues());
+        program.setUniform3fArray(`lightAttenuation${numberOfLights}`, light.getAttenuationValues(true));
         program.setUniformi(`lightPositional${numberOfLights}`, light.getPositional());
         program.setUniformf(`lightExponent${numberOfLights}`, light.getExponent());
         program.setUniformf(`lightConeAngle${numberOfLights}`, light.getConeAngle());
-        program.setUniform3f(`lightPositionVC${numberOfLights}`,
+        program.setUniform3fArray(`lightPositionVC${numberOfLights}`,
           [np[0], np[1], np[2]]);
         numberOfLights++;
       }
-    });
+    }
   };
 
   publicAPI.setCameraShaderParameters = (cellBO, ren, actor) => {
@@ -1202,34 +1220,34 @@ function vtkOpenGLPolyDataMapper(publicAPI, model) {
     const ppty = actor.getProperty();
 
     const opacity = ppty.getOpacity();
-    const aColor = model.drawingEdges ? ppty.getEdgeColor()
-      : ppty.getAmbientColor();
+    const aColor = model.drawingEdges ? ppty.getEdgeColor(true)
+      : ppty.getAmbientColor(true);
     const aIntensity = ppty.getAmbient();
-    const ambientColor = [aColor[0] * aIntensity,
-      aColor[1] * aIntensity,
-      aColor[2] * aIntensity];
-    const dColor = model.drawingEdges ? ppty.getEdgeColor()
-      : ppty.getDiffuseColor();
+    model.ambientColor[0] = aColor[0] * aIntensity;
+    model.ambientColor[1] = aColor[1] * aIntensity;
+    model.ambientColor[2] = aColor[2] * aIntensity;
+    const dColor = model.drawingEdges ? ppty.getEdgeColor(true)
+      : ppty.getDiffuseColor(true);
     const dIntensity = ppty.getDiffuse();
-    const diffuseColor = [dColor[0] * dIntensity,
-      dColor[1] * dIntensity,
-      dColor[2] * dIntensity];
+    model.diffuseColor[0] = dColor[0] * dIntensity;
+    model.diffuseColor[1] = dColor[1] * dIntensity;
+    model.diffuseColor[2] = dColor[2] * dIntensity;
 
     program.setUniformf('opacityUniform', opacity);
-    program.setUniform3f('ambientColorUniform', ambientColor);
-    program.setUniform3f('diffuseColorUniform', diffuseColor);
+    program.setUniform3fArray('ambientColorUniform', model.ambientColor);
+    program.setUniform3fArray('diffuseColorUniform', model.diffuseColor);
     // we are done unless we have lighting
     const lastLightComplexity =
-      model.lastBoundBO.get('lastLightComplexity').lastLightComplexity;
+      model.lastBoundBO.getOneProperty('lastLightComplexity');
     if (lastLightComplexity < 1) {
       return;
     }
-    const sColor = ppty.getSpecularColor();
+    const sColor = ppty.getSpecularColor(true);
     const sIntensity = ppty.getSpecular();
-    const specularColor = [sColor[0] * sIntensity,
-      sColor[1] * sIntensity,
-      sColor[2] * sIntensity];
-    program.setUniform3f('specularColorUniform', specularColor);
+    model.specularColor[0] = sColor[0] * sIntensity;
+    model.specularColor[1] = sColor[1] * sIntensity;
+    model.specularColor[2] = sColor[2] * sIntensity;
+    program.setUniform3fArray('specularColorUniform', model.specularColor);
     const specularPower = ppty.getSpecularPower();
     program.setUniformf('specularPowerUniform', specularPower);
 
@@ -1352,12 +1370,12 @@ function vtkOpenGLPolyDataMapper(publicAPI, model) {
     // }
 
 
-    publicAPI.invokeEvent({ type: 'StartEvent' });
+    publicAPI.invokeEvent(StartEvent);
     if (!model.renderable.getStatic()) {
       model.renderable.update();
     }
     model.currentInput = model.renderable.getInputData();
-    publicAPI.invokeEvent({ type: 'EndEvent' });
+    publicAPI.invokeEvent(EndEvent);
 
     if (model.currentInput === null) {
       vtkErrorMacro('No input!');
@@ -1458,7 +1476,7 @@ function vtkOpenGLPolyDataMapper(publicAPI, model) {
     const representation = actor.getProperty().getRepresentation();
 
     let tcoords = poly.getPointData().getTCoords();
-    if (!model.openGLActor.getActiveTextures().length) {
+    if (!model.openGLActor.getActiveTextures()) {
       tcoords = null;
     }
 
@@ -1566,6 +1584,12 @@ const DEFAULT_VALUES = {
   primitives: null,
   primTypes: null,
   shaderRebuildString: null,
+  ambientColor: [], // used internally
+  diffuseColor: [], // used internally
+  specularColor: [], // used internally
+  lightColor: [], // used internally
+  lightHalfAngle: [], // used internally
+  lightDirection: [], // used internally
 };
 
 // ----------------------------------------------------------------------------

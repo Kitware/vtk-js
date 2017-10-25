@@ -12,12 +12,18 @@ function vtkProp(publicAPI, model) {
   // Set our className
   model.classHierarchy.push('vtkProp');
 
-  publicAPI.getMTime = () => Math.max(
-    model.mtime, model.textures.reduce((acc, val) =>
-      Math.max(val.getMTime(), acc)
-    , 0));
+  publicAPI.getMTime = () => {
+    let m1 = model.mtime;
+    for (let index = 0; index < model.textures.length; ++index) {
+      const m2 = model.textures[index].getMTime();
+      if (m2 > m1) {
+        m1 = m2;
+      }
+    }
+    return m1;
+  };
 
-  publicAPI.getProps = () => publicAPI;
+  publicAPI.getNestedProps = () => null;
   publicAPI.getActors = () => null;
   publicAPI.getActors2D = () => null;
   publicAPI.getVolumes = () => null;

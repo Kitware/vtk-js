@@ -88,7 +88,7 @@ function vtkOpenGLHardwareSelector(publicAPI, model) {
 
     // Initialize renderer for selection.
     // change the renderer's background to black, which will indicate a miss
-    model.originalBackground = model.renderer.getBackground();
+    model.originalBackground = model.renderer.getBackground(true);
     model.renderer.setBackground(0.0, 0.0, 0.0);
 
     publicAPI.beginSelection();
