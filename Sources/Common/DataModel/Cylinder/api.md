@@ -1,8 +1,7 @@
 ## Introduction
 
 vtkCylinder computes the implicit function and/or gradient for a cylinder.
-vtkCylinder is a concrete implementation of vtkImplicitFunction. vtkCylinder is a 
-of the abstract class vtkImplicitFunction.
+vtkCylinder is a concrete implementation of vtkImplicitFunction.
 
 ### radius (set/get)
 

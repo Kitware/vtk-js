@@ -1,5 +1,6 @@
 import './Common/Core/LookupTable/test/testCategoricalColors';
 import './Common/DataModel/Box/test/testBox';
+import './Common/DataModel/Cone/test/testConeImplicitFunction';
 import './Common/DataModel/DataSetAttributes/test/testDataSetAttributes';
 import './Common/DataModel/Line/test/testLine';
 import './Common/DataModel/Plane/test/testPlane';
