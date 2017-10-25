@@ -20,10 +20,25 @@ function notImplemented(method) {
 function vtkRenderer(publicAPI, model) {
   // Set our className
   model.classHierarchy.push('vtkRenderer');
+
   // make sure background has 4 entries. Default to opaque black
   if (!model.background) model.background = [0, 0, 0, 1];
   while (model.background.length < 3) model.background.push(0);
   if (model.background.length === 3) model.background.push(1);
+
+  // Events
+  const COMPUTE_VISIBLE_PROP_BOUNDS_EVENT = {
+    type: 'ComputeVisiblePropBoundsEvent',
+    renderer: publicAPI,
+  };
+  const RESET_CAMERA_CLIPPING_RANGE_EVENT = {
+    type: 'ResetCameraClippingRangeEvent',
+    renderer: publicAPI,
+  };
+  const RESET_CAMERA_EVENT = {
+    type: 'ResetCameraEvent',
+    renderer: publicAPI,
+  };
 
   publicAPI.updateCamera = () => {
     if (!model.activeCamera) {
@@ -257,11 +272,10 @@ function vtkRenderer(publicAPI, model) {
     const allBounds = [].concat(INIT_BOUNDS);
     let nothingVisible = true;
 
-    publicAPI.invokeEvent(model.computeVisiblePropBoundsEventData);
+    publicAPI.invokeEvent(COMPUTE_VISIBLE_PROP_BOUNDS_EVENT);
 
     // loop through all props
-    for (let index = 0; index < model.props.length; ++index) {
-      const prop = model.props[index];
+    model.props.forEach((prop) => {
       if (prop.getVisibility() && prop.getUseBounds()) {
         const bounds = prop.getBounds();
         if (bounds && vtkMath.areBoundsInitialized(bounds)) {
@@ -287,7 +301,7 @@ function vtkRenderer(publicAPI, model) {
           }
         }
       }
-    }
+    });
 
     if (nothingVisible) {
       vtkMath.uninitializeBounds(allBounds);
@@ -375,7 +389,7 @@ function vtkRenderer(publicAPI, model) {
 
     // Here to let parallel/distributed compositing intercept
     // and do the right thing.
-    publicAPI.invokeEvent({ type: 'ResetCameraEvent', renderer: publicAPI });
+    publicAPI.invokeEvent(RESET_CAMERA_EVENT);
 
     return true;
   };
@@ -463,7 +477,7 @@ function vtkRenderer(publicAPI, model) {
 
     // Here to let parallel/distributed compositing intercept
     // and do the right thing.
-    publicAPI.invokeEvent({ type: 'ResetCameraClippingRangeEvent', renderer: publicAPI });
+    publicAPI.invokeEvent(RESET_CAMERA_CLIPPING_RANGE_EVENT);
     return false;
   };
 
@@ -611,11 +625,6 @@ export function extend(publicAPI, model, initialValues = {}) {
   ]);
   macro.getArray(publicAPI, model, ['actors', 'volumes', 'lights']);
   macro.setGetArray(publicAPI, model, ['background'], 4, 1.0);
-
-  model.computeVisiblePropBoundsEventData = {
-    type: 'ComputeVisiblePropBoundsEvent',
-    renderer: publicAPI,
-  };
 
   // Object methods
   vtkRenderer(publicAPI, model);
