@@ -1018,6 +1018,8 @@ function vtkOpenGLPolyDataMapper(publicAPI, model) {
                                            false)) {
           vtkErrorMacro('Error setting normalMC in shader VAO.');
         }
+      } else {
+        cellBO.getVAO().removeAttributeArray('normalMC');
       }
       if (cellBO.getProgram().isAttributeUsed('tcoordMC') &&
           cellBO.getCABO().getTCoordOffset()) {
@@ -1028,6 +1030,8 @@ function vtkOpenGLPolyDataMapper(publicAPI, model) {
                                            false)) {
           vtkErrorMacro('Error setting tcoordMC in shader VAO.');
         }
+      } else {
+        cellBO.getVAO().removeAttributeArray('tcoordMC');
       }
       if (cellBO.getProgram().isAttributeUsed('scalarColor') &&
           cellBO.getCABO().getColorComponents()) {
@@ -1039,7 +1043,10 @@ function vtkOpenGLPolyDataMapper(publicAPI, model) {
                                            true)) {
           vtkErrorMacro('Error setting scalarColor in shader VAO.');
         }
+      } else {
+        cellBO.getVAO().removeAttributeArray('scalarColor');
       }
+
       cellBO.getAttributeUpdateTime().modified();
     }
 
@@ -1323,7 +1330,6 @@ function vtkOpenGLPolyDataMapper(publicAPI, model) {
         publicAPI.updateShaders(model.primitives[i], ren, actor);
         const mode = publicAPI.getOpenGLMode(representation, i);
         gl.drawArrays(mode, 0, cabo.getElementCount());
-        model.primitives[i].getVAO().release();
 
         const stride = (mode === gl.POINTS ? 1 : (mode === gl.LINES ? 2 : 3));
         model.primitiveIDOffset += cabo.getElementCount() / stride;
@@ -1346,6 +1352,9 @@ function vtkOpenGLPolyDataMapper(publicAPI, model) {
   };
 
   publicAPI.renderPieceFinish = (ren, actor) => {
+    if (model.LastBoundBO) {
+      model.LastBoundBO.getVAO().release();
+    }
     if (model.renderable.getColorTextureMap()) {
       model.internalColorTexture.deactivate();
     }
