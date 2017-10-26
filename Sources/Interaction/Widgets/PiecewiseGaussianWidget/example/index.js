@@ -8,9 +8,7 @@ import vtkPiecewiseGaussianWidget from 'vtk.js/Sources/Interaction/Widgets/Piece
 import vtkVolume                  from 'vtk.js/Sources/Rendering/Core/Volume';
 import vtkVolumeMapper            from 'vtk.js/Sources/Rendering/Core/VolumeMapper';
 
-import ColorMaps from 'vtk.js/Sources/Rendering/Core/ColorTransferFunction/ColorMaps.json';
-
-const presets = ColorMaps.filter(p => p.RGBPoints).filter(p => p.ColorSpace !== 'CIELAB');
+import vtkColorMaps from 'vtk.js/Sources/Rendering/Core/ColorTransferFunction/ColorMaps';
 
 // ----------------------------------------------------------------------------
 // Standard rendering code setup
@@ -53,11 +51,11 @@ const globalDataRange = [0, 255];
 const lookupTable = vtkColorTransferFunction.newInstance();
 
 function changePreset(delta = 1) {
-  presetIndex = (presetIndex + delta + presets.length) % presets.length;
-  lookupTable.applyColorMap(presets[presetIndex]);
+  presetIndex = (presetIndex + delta + vtkColorMaps.rgbPresetNames.length) % vtkColorMaps.rgbPresetNames.length;
+  lookupTable.applyColorMap(vtkColorMaps.getPresetByName(vtkColorMaps.rgbPresetNames[presetIndex]));
   lookupTable.setMappingRange(...globalDataRange);
   lookupTable.updateRange();
-  labelContainer.innerHTML = presets[presetIndex].Name;
+  labelContainer.innerHTML = vtkColorMaps.rgbPresetNames[presetIndex];
 }
 
 let intervalID = null;
