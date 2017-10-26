@@ -11,10 +11,10 @@ function vtkOpenGLHelper(publicAPI, model) {
   // Set our className
   model.classHierarchy.push('vtkOpenGLHelper');
 
-  publicAPI.setContext = (ctx) => {
-    model.program.setContext(ctx);
-    model.VAO.setContext(ctx);
-    model.CABO.setContext(ctx);
+  publicAPI.setWindow = (win) => {
+    model.program.setContext(win.getContext());
+    model.VAO.setWindow(win);
+    model.CABO.setContext(win.getContext());
   };
 
   publicAPI.releaseGraphicsResources = (oglwin) => {

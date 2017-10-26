@@ -15,14 +15,19 @@ function vtkOpenGLVertexArrayObject(publicAPI, model) {
   };
 
   publicAPI.initialize = () => {
-    model.extension = model.context.getExtension('OES_vertex_array_object');
-
-    // Start setting up VAO
-    if (!model.forceEmulation && model.extension) {
+    if (!model.forceEmulation && model.openGLWindow && model.openGLWindow.getWebgl2()) {
+      model.extension = null;
       model.supported = true;
-      model.handleVAO = model.extension.createVertexArrayOES();
+      model.handleVAO = model.context.createVertexArray();
     } else {
-      model.supported = false;
+      model.extension = model.context.getExtension('OES_vertex_array_object');
+      // Start setting up VAO
+      if (!model.forceEmulation && model.extension) {
+        model.supported = true;
+        model.handleVAO = model.extension.createVertexArrayOES();
+      } else {
+        model.supported = false;
+      }
     }
   };
 
@@ -38,7 +43,11 @@ function vtkOpenGLVertexArrayObject(publicAPI, model) {
       publicAPI.initialize();
     }
     if (publicAPI.isReady() && model.supported) {
-      model.extension.bindVertexArrayOES(model.handleVAO);
+      if (model.extension) {
+        model.extension.bindVertexArrayOES(model.handleVAO);
+      } else {
+        model.context.bindVertexArray(model.handleVAO);
+      }
     } else if (publicAPI.isReady()) {
       const gl = model.context;
       for (let ibuff = 0; ibuff < model.buffers.length; ++ibuff) {
@@ -64,7 +73,11 @@ function vtkOpenGLVertexArrayObject(publicAPI, model) {
   publicAPI.release = () => {
     // Either simply release the VAO, or emulate behavior by releasing all attributes.
     if (publicAPI.isReady() && model.supported) {
-      model.extension.bindVertexArrayOES(null);
+      if (model.extension) {
+        model.extension.bindVertexArrayOES(null);
+      } else {
+        model.context.bindVertexArray(null);
+      }
     } else if (publicAPI.isReady()) {
       const gl = model.context;
       for (let ibuff = 0; ibuff < model.buffers.length; ++ibuff) {
@@ -91,7 +104,11 @@ function vtkOpenGLVertexArrayObject(publicAPI, model) {
   publicAPI.shaderProgramChanged = () => {
     publicAPI.release();
     if (model.handleVAO) {
-      model.extension.deleteVertexArrayOES(model.handleVAO);
+      if (model.extension) {
+        model.extension.deleteVertexArrayOES(model.handleVAO);
+      } else {
+        model.context.deleteVertexArray(model.handleVAO);
+      }
     }
     model.handleVAO = 0;
     model.handleProgram = 0;
@@ -100,7 +117,11 @@ function vtkOpenGLVertexArrayObject(publicAPI, model) {
   publicAPI.releaseGraphicsResources = () => {
     publicAPI.shaderProgramChanged();
     if (model.handleVAO) {
-      model.extension.deleteVertexArrayOES(model.handleVAO);
+      if (model.extension) {
+        model.extension.deleteVertexArrayOES(model.handleVAO);
+      } else {
+        model.context.deleteVertexArray(model.handleVAO);
+      }
     }
     model.handleVAO = 0;
     model.supported = true;
@@ -245,6 +266,11 @@ function vtkOpenGLVertexArrayObject(publicAPI, model) {
 
     return true;
   };
+
+  publicAPI.setWindow = (win) => {
+    model.openGLWindow = win;
+    model.context = win.getContext();
+  };
 }
 
 // ----------------------------------------------------------------------------
@@ -258,6 +284,7 @@ const DEFAULT_VALUES = {
   supported: true,
   buffers: null,
   context: null,
+  openGLWindow: null,
 };
 
 // ----------------------------------------------------------------------------
@@ -275,7 +302,7 @@ export function extend(publicAPI, model, initialValues = {}) {
   macro.get(publicAPI, model, ['supported']);
 
   // Create get-set macros
-  macro.setGet(publicAPI, model, ['context', 'forceEmulation']);
+  macro.setGet(publicAPI, model, ['forceEmulation']);
 
   // For more macro methods, see "Sources/macro.js"
 

@@ -48,7 +48,7 @@ function vtkOpenGLVolumeMapper(publicAPI, model) {
     if (prepass) {
       model.openGLRenderWindow = publicAPI.getFirstAncestorOfType('vtkOpenGLRenderWindow');
       model.context = model.openGLRenderWindow.getContext();
-      model.tris.setContext(model.context);
+      model.tris.setWindow(model.openGLRenderWindow);
       model.scalarTexture.setWindow(model.openGLRenderWindow);
       model.scalarTexture.setContext(model.context);
       model.colorTexture.setWindow(model.openGLRenderWindow);
@@ -832,7 +832,7 @@ function vtkOpenGLVolumeMapper(publicAPI, model) {
         const program = model.copyShader;
 
         model.copyVAO = vtkVertexArrayObject.newInstance();
-        model.copyVAO.setContext(model.context);
+        model.copyVAO.setWindow(model.openGLRenderWindow);
 
         model.tris.getCABO().bind();
         if (!model.copyVAO.addAttributeArray(
