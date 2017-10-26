@@ -1,3 +1,5 @@
+import 'vtk.js/Sources/favicon';
+
 import { mat4, vec3 }              from 'gl-matrix';
 
 import vtkActor                    from 'vtk.js/Sources/Rendering/Core/Actor';

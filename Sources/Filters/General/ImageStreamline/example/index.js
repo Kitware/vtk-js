@@ -1,3 +1,5 @@
+import 'vtk.js/Sources/favicon';
+
 import vtkFullScreenRenderWindow  from 'vtk.js/Sources/Rendering/Misc/FullScreenRenderWindow';
 import vtkOutlineFilter           from 'vtk.js/Sources/Filters/General/OutlineFilter';
 import vtkPlaneSource             from 'vtk.js/Sources/Filters/Sources/PlaneSource';

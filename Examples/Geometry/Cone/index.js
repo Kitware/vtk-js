@@ -1,3 +1,5 @@
+import 'vtk.js/Sources/favicon';
+
 import vtkActor                  from 'vtk.js/Sources/Rendering/Core/Actor';
 import vtkCalculator             from 'vtk.js/Sources/Filters/General/Calculator';
 import vtkConeSource             from 'vtk.js/Sources/Filters/Sources/ConeSource';

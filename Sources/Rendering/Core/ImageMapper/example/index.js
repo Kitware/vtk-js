@@ -1,3 +1,5 @@
+import 'vtk.js/Sources/favicon';
+
 import vtkFullScreenRenderWindow  from 'vtk.js/Sources/Rendering/Misc/FullScreenRenderWindow';
 import vtkRTAnalyticSource        from 'vtk.js/Sources/Filters/Sources/RTAnalyticSource';
 import vtkImageMapper             from 'vtk.js/Sources/Rendering/Core/ImageMapper';

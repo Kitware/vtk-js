@@ -1,3 +1,5 @@
+import 'vtk.js/Sources/favicon';
+
 import vtkFullScreenRenderWindow from 'vtk.js/Sources/Rendering/Misc/FullScreenRenderWindow';
 import vtkHandleWidget           from 'vtk.js/Sources/Interaction/Widgets/HandleWidget';
 

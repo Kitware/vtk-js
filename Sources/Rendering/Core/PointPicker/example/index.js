@@ -1,3 +1,5 @@
+import 'vtk.js/Sources/favicon';
+
 import vtkActor                          from 'vtk.js/Sources/Rendering/Core/Actor';
 import vtkCubeSource                     from 'vtk.js/Sources/Filters/Sources/CubeSource';
 import vtkFullScreenRenderWindow         from 'vtk.js/Sources/Rendering/Misc/FullScreenRenderWindow';
