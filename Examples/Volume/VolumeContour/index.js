@@ -16,7 +16,7 @@ fullScreenRenderWindow.addController(controlPanel);
 
 const actor = vtkActor.newInstance();
 const mapper = vtkMapper.newInstance();
-const marchingCube = vtkImageMarchingCubes.newInstance({ contourValue: 0.0 });
+const marchingCube = vtkImageMarchingCubes.newInstance({ contourValue: 0.0, computeNormals: true, mergePoints: true });
 
 actor.setMapper(mapper);
 mapper.setInputConnection(marchingCube.getOutputPort());
@@ -39,7 +39,7 @@ reader.setUrl(`${__BASE_PATH__}/data/volume/headsq.vti`, { loadData: true }).the
   el.setAttribute('min', dataRange[0]);
   el.setAttribute('max', dataRange[1]);
   el.setAttribute('value', firstIsoValue);
-  el.addEventListener('change', updateIsoValue);
+  el.addEventListener('input', updateIsoValue);
 
   marchingCube.setContourValue(firstIsoValue);
   renderer.addActor(actor);
