@@ -1,6 +1,7 @@
 import vtkBoundingBox       from './BoundingBox';
 import vtkBox               from './Box';
 import vtkCell              from './Cell';
+import vtkCone              from './Cone';
 import vtkCylinder          from './Cylinder';
 import vtkDataSet           from './DataSet';
 import vtkDataSetAttributes from './DataSetAttributes';
@@ -20,6 +21,7 @@ export default {
   vtkBoundingBox,
   vtkBox,
   vtkCell,
+  vtkCone,
   vtkCylinder,
   vtkDataSet,
   vtkDataSetAttributes,

@@ -31,7 +31,7 @@ function vtkImageMarchingCubes(publicAPI, model) {
 
     // Now retrieve the scalars
     for (let ii = 0; ii < 8; ++ii) {
-      voxelScalars[ii] = s.getTuple(ids[ii]);
+      voxelScalars[ii] = s[ids[ii]];
     }
   };
 
@@ -97,7 +97,7 @@ function vtkImageMarchingCubes(publicAPI, model) {
         xyz[1] = x0[1] + (t * (x1[1] - x0[1]));
         xyz[2] = x0[2] + (t * (x1[2] - x0[2]));
         pId = points.length / 3;
-        points.push(...xyz);
+        points.push(xyz[0], xyz[1], xyz[2]);
         tris.push(pId);
       }
     }
@@ -117,7 +117,7 @@ function vtkImageMarchingCubes(publicAPI, model) {
     const origin = input.getOrigin();
     const spacing = input.getSpacing();
     const dims = input.getDimensions();
-    const s = input.getPointData().getScalars();
+    const s = input.getPointData().getScalars().getData();
 
     // Points - dynamic array
     const pBuffer = [];
