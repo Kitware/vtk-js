@@ -31,7 +31,7 @@ function vtkProp3D(publicAPI, model) {
   };
 
   publicAPI.getUserMatrixMTime = () =>
-    (model.userMatrix ? model.userMatrix.getMTime() : 0);
+    (model.userMatrix ? model.userMatrixMTime.getMTime() : 0);
 
   publicAPI.addPosition = (deltaXYZ) => {
     model.position = model.position.map((value, index) => value + deltaXYZ[index]);
@@ -93,7 +93,27 @@ function vtkProp3D(publicAPI, model) {
   };
 
   publicAPI.SetUserTransform = notImplemented('SetUserTransform');
-  publicAPI.SetUserMatrix = notImplemented('SetUserMatrix');
+
+  publicAPI.setUserMatrix = (matrix) => {
+    const identityMatrix = mat4.create();
+
+    if (!matrix) {
+      if (model.matrix) {
+        model.isIdentity = vtkMath.areMatricesEqual(identityMatrix, model.matrix);
+      } else {
+        model.isIdentity = false;
+      }
+      model.userMatrix = null;
+      return;
+    }
+
+    model.isIdentity = vtkMath.areMatricesEqual(identityMatrix, matrix);
+
+    model.userMatrix = mat4.clone(matrix);
+    model.userMatrixMTime.modified();
+
+    publicAPI.modified();
+  };
 
   publicAPI.getMatrix = () => {
     publicAPI.computeMatrix();
@@ -108,6 +128,9 @@ function vtkProp3D(publicAPI, model) {
     // check whether or not need to rebuild the matrix
     if (publicAPI.getMTime() > model.matrixMTime.getMTime()) {
       mat4.identity(model.matrix);
+      if (model.userMatrix) {
+        mat4.multiply(model.matrix, model.matrix, model.userMatrix);
+      }
       mat4.translate(model.matrix, model.matrix, model.origin);
       mat4.translate(model.matrix, model.matrix, model.position);
       mat4.multiply(model.matrix, model.matrix, model.rotation);
@@ -126,7 +149,7 @@ function vtkProp3D(publicAPI, model) {
   publicAPI.getZRange = () => vtkBoundingBox.getZRange(model.bounds);
 
   publicAPI.pokeMatrix = notImplemented('pokeMatrix');
-  publicAPI.getUserMatrix = notImplemented('GetUserMatrix');
+  publicAPI.getUserMatrix = () => model.userMatrix;
 
   function updateIdentityFlag() {
     let noChange = true;
@@ -137,10 +160,10 @@ function vtkProp3D(publicAPI, model) {
       }
     });
 
-    // if (model.userMatrix || model.userTransform) {
-    //   model.isIdentity = false;
-    //   noChange = false;
-    // }
+    if (model.userMatrix) {
+      model.isIdentity = false;
+      noChange = false;
+    }
 
     if (noChange && model.scale.filter(v => v !== 1).length) {
       model.isIdentity = false;
@@ -162,7 +185,7 @@ const DEFAULT_VALUES = {
   bounds: [1, -1, 1, -1, 1, -1],
 
   userMatrix: null,
-  userTransform: null,
+  userMatrixMTime: null,
 
   cachedProp3D: null,
   isIdentity: true,
@@ -180,6 +203,9 @@ export function extend(publicAPI, model, initialValues = {}) {
   model.matrixMTime = {};
   macro.obj(model.matrixMTime);
 
+  model.userMatrixMTime = {};
+  macro.obj(model.userMatrixMTime);
+
   // Build VTK API
   macro.get(publicAPI, model, [
     'bounds',
@@ -195,6 +221,7 @@ export function extend(publicAPI, model, initialValues = {}) {
   // Object internal instance
   model.matrix = mat4.create();
   model.rotation = mat4.create();
+  model.userMatrix = mat4.create();
   model.transform = null; // FIXME
 
   // Object methods

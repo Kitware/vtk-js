@@ -111,6 +111,14 @@ setOrientation.
 
 Get the modified time of the user matrix or user transform.
 
+### setUserMatrix()
+
+In addition to the instance variables such as position and orientation,
+you can add an additional transformation matrix for your own use.  This
+matrix is concatenated with the actor's internal matrix,
+which you implicitly create through the use of setPosition(),
+setOrigin() and setOrientation().
+
 ### computeMatrix()
 
 Generate the matrix based on internal model.

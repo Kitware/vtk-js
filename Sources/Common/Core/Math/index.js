@@ -613,6 +613,17 @@ function quaternionToMatrix3x3(quat_4, mat_3x3) {
   mat_3x3[2][2] = (zz * f) + s;
 }
 
+function areMatricesEqual(matA, matB) {
+  if (!matA.length === matB.length) {
+    return false;
+  }
+
+  function isEqual(element, index) {
+    return element === matB[index];
+  }
+  return matA.every(isEqual);
+}
+
 function jacobiN(a, n, w, v) {
   let i;
   let j;
@@ -1969,6 +1980,7 @@ export default {
   identity3x3,
   determinant3x3,
   quaternionToMatrix3x3,
+  areMatricesEqual,
   matrix3x3ToQuaternion,
   multiplyQuaternion,
   orthogonalize3x3,
