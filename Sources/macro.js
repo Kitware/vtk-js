@@ -169,7 +169,7 @@ export function obj(publicAPI = {}, model = {}) {
     return subset;
   };
 
-  publicAPI.getOneProperty = val => model[val];
+  publicAPI.getReferenceByName = val => model[val];
 
   publicAPI.delete = () => {
     Object.keys(model).forEach(field => delete model[field]);

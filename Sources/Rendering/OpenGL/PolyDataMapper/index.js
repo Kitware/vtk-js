@@ -162,7 +162,7 @@ function vtkOpenGLPolyDataMapper(publicAPI, model) {
     let FSSource = shaders.Fragment;
 
     const lastLightComplexity =
-      model.lastBoundBO.getOneProperty('lastLightComplexity');
+      model.lastBoundBO.getReferenceByName('lastLightComplexity');
 
     // create the material/color property declarations, and VS implementation
     // these are always defined
@@ -290,10 +290,10 @@ function vtkOpenGLPolyDataMapper(publicAPI, model) {
     const shadowFactor = '';
 
     const lastLightComplexity =
-      model.lastBoundBO.getOneProperty('lastLightComplexity');
+      model.lastBoundBO.getReferenceByName('lastLightComplexity');
 
     const lastLightCount =
-      model.lastBoundBO.getOneProperty('lastLightCount');
+      model.lastBoundBO.getReferenceByName('lastLightCount');
 
     let sstring = [];
 
@@ -425,7 +425,7 @@ function vtkOpenGLPolyDataMapper(publicAPI, model) {
 
   publicAPI.replaceShaderNormal = (shaders, ren, actor) => {
     const lastLightComplexity =
-      model.lastBoundBO.getOneProperty('lastLightComplexity');
+      model.lastBoundBO.getReferenceByName('lastLightComplexity');
 
     if (lastLightComplexity > 0) {
       let VSSource = shaders.Vertex;
@@ -544,7 +544,7 @@ function vtkOpenGLPolyDataMapper(publicAPI, model) {
 
     // do we need the vertex in the shader in View Coordinates
     const lastLightComplexity =
-      model.lastBoundBO.getOneProperty('lastLightComplexity');
+      model.lastBoundBO.getReferenceByName('lastLightComplexity');
     if (lastLightComplexity > 0) {
       VSSource = vtkShaderProgram.substitute(VSSource,
         '//VTK::PositionVC::Dec', [
@@ -913,9 +913,9 @@ function vtkOpenGLPolyDataMapper(publicAPI, model) {
 
     let needRebuild = false;
     const lastLightComplexity =
-      model.lastBoundBO.getOneProperty('lastLightComplexity');
+      model.lastBoundBO.getReferenceByName('lastLightComplexity');
     const lastLightCount =
-      model.lastBoundBO.getOneProperty('lastLightCount');
+      model.lastBoundBO.getReferenceByName('lastLightCount');
     if (lastLightComplexity !== lightComplexity ||
         lastLightCount !== numberOfLights) {
       model.lastBoundBO.set({ lastLightComplexity: lightComplexity }, true);
@@ -925,7 +925,7 @@ function vtkOpenGLPolyDataMapper(publicAPI, model) {
 
     const selector = model.openGLRenderer.getSelector();
     const selectionPass = (selector === null ? -1 : selector.getCurrentPass());
-    if (model.lastBoundBO.getOneProperty('lastSelectionPass') !==
+    if (model.lastBoundBO.getReferenceByName('lastSelectionPass') !==
         selectionPass) {
       model.lastBoundBO.set({ lastSelectionPass: selectionPass }, true);
       needRebuild = true;
@@ -1002,7 +1002,7 @@ function vtkOpenGLPolyDataMapper(publicAPI, model) {
         (model.VBOBuildTime.getMTime() > cellBO.getAttributeUpdateTime().getMTime() ||
         cellBO.getShaderSourceTime().getMTime() > cellBO.getAttributeUpdateTime().getMTime())) {
       const lastLightComplexity =
-        model.lastBoundBO.getOneProperty('lastLightComplexity');
+        model.lastBoundBO.getReferenceByName('lastLightComplexity');
 
       if (cellBO.getProgram().isAttributeUsed('vertexMC')) {
         if (!cellBO.getVAO().addAttributeArray(cellBO.getProgram(), cellBO.getCABO(),
@@ -1111,7 +1111,7 @@ function vtkOpenGLPolyDataMapper(publicAPI, model) {
   publicAPI.setLightingShaderParameters = (cellBO, ren, actor) => {
     // for unlit and headlight there are no lighting parameters
     const lastLightComplexity =
-      model.lastBoundBO.getOneProperty('lastLightComplexity');
+      model.lastBoundBO.getReferenceByName('lastLightComplexity');
     if (lastLightComplexity < 2) {
       return;
     }
@@ -1238,7 +1238,7 @@ function vtkOpenGLPolyDataMapper(publicAPI, model) {
     program.setUniform3fArray('diffuseColorUniform', model.diffuseColor);
     // we are done unless we have lighting
     const lastLightComplexity =
-      model.lastBoundBO.getOneProperty('lastLightComplexity');
+      model.lastBoundBO.getReferenceByName('lastLightComplexity');
     if (lastLightComplexity < 1) {
       return;
     }
