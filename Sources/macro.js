@@ -619,7 +619,7 @@ export function event(publicAPI, model, eventName) {
     return Object.freeze({ unsubscribe });
   }
 
-  publicAPI[`invoke${capitalize(eventName)}`] = () => {
+  function invoke() {
     if (model.deleted) {
       vtkErrorMacro('instance deleted - cannot call any method');
       return;
@@ -627,7 +627,9 @@ export function event(publicAPI, model, eventName) {
     /* eslint-disable prefer-rest-params */
     callbacks.forEach(callback => callback && callback.apply(publicAPI, arguments));
     /* eslint-enable prefer-rest-params */
-  };
+  }
+
+  publicAPI[`invoke${capitalize(eventName)}`] = invoke;
 
   publicAPI[`on${capitalize(eventName)}`] = (callback) => {
     if (model.deleted) {
