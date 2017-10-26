@@ -6,7 +6,7 @@ import 'vtk.js/Sources/favicon';
 
 import HttpDataAccessHelper       from 'vtk.js/Sources/IO/Core/DataAccessHelper/HttpDataAccessHelper';
 import vtkBoundingBox             from 'vtk.js/Sources/Common/DataModel/BoundingBox';
-import vtkColorMaps               from 'vtk.js/Sources/Rendering/Core/ColorTransferFunction/ColorMaps.json';
+import vtkColorMaps               from 'vtk.js/Sources/Rendering/Core/ColorTransferFunction/ColorMaps';
 import vtkColorTransferFunction   from 'vtk.js/Sources/Rendering/Core/ColorTransferFunction';
 import vtkFullScreenRenderWindow  from 'vtk.js/Sources/Rendering/Misc/FullScreenRenderWindow';
 import vtkPiecewiseFunction       from 'vtk.js/Sources/Common/DataModel/PiecewiseFunction';
@@ -21,22 +21,12 @@ import style from './VolumeViewer.mcss';
 let autoInit = true;
 
 // ----------------------------------------------------------------------------
-// Handle color presets
-// ----------------------------------------------------------------------------
-
-const presetNames = vtkColorMaps.filter(p => p.RGBPoints).filter(p => p.ColorSpace !== 'CIELAB').map(p => p.Name);
-
-function getPreset(name) {
-  return vtkColorMaps.find(p => p.Name === name);
-}
-
-// ----------------------------------------------------------------------------
 // DOM containers for UI control
 // ----------------------------------------------------------------------------
 
 const presetSelector = document.createElement('select');
 presetSelector.setAttribute('class', style.selector);
-presetSelector.innerHTML = presetNames.map(name => `<option value="${name}">${name}</option>`).join('');
+presetSelector.innerHTML = vtkColorMaps.rgbPresetNames.map(name => `<option value="${name}">${name}</option>`).join('');
 
 const widgetContainer = document.createElement('div');
 widgetContainer.setAttribute('class', style.piecewiseWidget);
@@ -91,7 +81,7 @@ function createViewer(container, fileContentAsText) {
   // Color handling
   const lookupTable = vtkColorTransferFunction.newInstance();
   function applyPreset() {
-    const preset = getPreset(presetSelector.value);
+    const preset = vtkColorMaps.getPresetByName(presetSelector.value);
     lookupTable.applyColorMap(preset);
     lookupTable.setMappingRange(...dataRange);
     lookupTable.updateRange();
