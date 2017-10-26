@@ -38,7 +38,7 @@ const ACTIONS = {
     gaussian.yBias = Math.max(0, Math.min(2, gaussian.yBias));
   },
   adjustWidth(x, y, originalXY, gaussian, originalGaussian) {
-    gaussian.width = originalGaussian.width - (originalXY[0] - x);
+    gaussian.width = (originalGaussian.position < x) ? originalGaussian.width - (originalXY[0] - x) : originalGaussian.width + (originalXY[0] - x);
     if (gaussian.width < MIN_GAUSSIAN_WIDTH) {
       gaussian.width = MIN_GAUSSIAN_WIDTH;
     }
@@ -164,6 +164,17 @@ function updateColorCanvas(colorTransferFunction, width, rangeToUse, canvas) {
   }
 
   ctx.putImageData(pixelsArea, 0, 0);
+  return workCanvas;
+}
+
+// ----------------------------------------------------------------------------
+
+function updateColorCanvasFromImage(img, width, canvas) {
+  const workCanvas = canvas || document.createElement('canvas');
+  workCanvas.setAttribute('width', width);
+  workCanvas.setAttribute('height', 256);
+  const ctx = workCanvas.getContext('2d');
+  ctx.drawImage(img, 0, 0, img.width, img.height, 0, 0, width, 256);
   return workCanvas;
 }
 
@@ -303,6 +314,16 @@ function vtkPiecewiseGaussianWidget(publicAPI, model) {
       }
       publicAPI.modified();
     }
+  };
+
+  publicAPI.setGaussians = (gaussians) => {
+    if (model.gaussians === gaussians) {
+      return;
+    }
+    model.gaussians = gaussians;
+    model.opacities = computeOpacities(model.gaussians, model.piecewiseSize);
+    publicAPI.invokeOpacityChange(publicAPI);
+    publicAPI.modified();
   };
 
   publicAPI.addGaussian = (position, height, width, xBias, yBias) => {
@@ -647,6 +668,12 @@ function vtkPiecewiseGaussianWidget(publicAPI, model) {
       drawChart(ctx, graphArea, model.opacities, { lineWidth: 1, strokeStyle: 'rgba(0,0,0,0)', fillStyle: 'rgba(0,0,0,1)', clip: true });
       ctx.drawImage(model.colorCanvas, graphArea[0], graphArea[1]);
       ctx.restore();
+    } else if (model.backgroundImage) {
+      model.colorCanvas = updateColorCanvasFromImage(model.backgroundImage, graphArea[2], model.colorCanvas);
+      ctx.save();
+      drawChart(ctx, graphArea, model.opacities, { lineWidth: 1, strokeStyle: 'rgba(0,0,0,0)', fillStyle: 'rgba(0,0,0,1)', clip: true });
+      ctx.drawImage(model.colorCanvas, graphArea[0], graphArea[1]);
+      ctx.restore();
     }
 
     // Draw active guassian
@@ -757,7 +784,7 @@ export function extend(publicAPI, model, initialValues = {}) {
 
   // Object methods
   macro.obj(publicAPI, model);
-  macro.setGet(publicAPI, model, ['piecewiseSize', 'numberOfBins', 'colorTransferFunction']);
+  macro.setGet(publicAPI, model, ['piecewiseSize', 'numberOfBins', 'colorTransferFunction', 'backgroundImage']);
   macro.get(publicAPI, model, ['size', 'canvas']);
   macro.event(publicAPI, model, 'opacityChange');
   macro.event(publicAPI, model, 'animation');
