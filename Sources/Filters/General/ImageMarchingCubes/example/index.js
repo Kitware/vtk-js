@@ -27,11 +27,11 @@ actor.setMapper(mapper);
 // Build pipeline
 const sphere = vtkSphere.newInstance({ center: [0.0, 0.0, 0.0], radius: 0.5 });
 const sample = vtkSampleFunction.newInstance({ implicitFunction: sphere, sampleDimensions: [50, 50, 50], modelBounds: [-0.5, 0.5, -0.5, 0.5, -0.5, 0.5] });
-const marchingCube = vtkImageMarchingCubes.newInstance({ contourValue: 0.0 });
+const mCubes = vtkImageMarchingCubes.newInstance({ contourValue: 0.0 });
 
 // Connect the pipeline proper
-marchingCube.setInputConnection(sample.getOutputPort());
-mapper.setInputConnection(marchingCube.getOutputPort());
+mCubes.setInputConnection(sample.getOutputPort());
+mapper.setInputConnection(mCubes.getOutputPort());
 
 // ----------------------------------------------------------------------------
 // UI control handling
@@ -41,7 +41,7 @@ fullScreenRenderer.addController(controlPanel);
 // Define the isosurface value
 document.querySelector('.isoValue').addEventListener('input', (e) => {
   const value = Number(e.target.value);
-  marchingCube.setContourValue(value);
+  mCubes.setContourValue(value);
   renderWindow.render();
 });
 
@@ -59,6 +59,19 @@ document.querySelector('.sphereRadius').addEventListener('input', (e) => {
   renderWindow.render();
 });
 
+// Indicate whether to compute normals or not
+document.querySelector('.computeNormals').addEventListener('change', (e) => {
+  mCubes.setComputeNormals(!!e.target.checked);
+  renderWindow.render();
+});
+
+// Indicate whether to merge conincident points or not
+document.querySelector('.mergePoints').addEventListener('change', (e) => {
+  mCubes.setMergePoints(!!e.target.checked);
+  renderWindow.render();
+});
+
+
 // -----------------------------------------------------------
 
 renderer.resetCamera();
@@ -70,6 +83,6 @@ renderWindow.render();
 // -----------------------------------------------------------
 
 global.source = sample;
-global.filter = marchingCube;
+global.filter = mCubes;
 global.mapper = mapper;
 global.actor = actor;
