@@ -31,7 +31,7 @@ function vtkOpenGLImageMapper(publicAPI, model) {
       model.openGLRenderer = publicAPI.getFirstAncestorOfType('vtkOpenGLRenderer');
       model.openGLRenderWindow = model.openGLRenderer.getParent();
       model.context = model.openGLRenderWindow.getContext();
-      model.tris.setContext(model.context);
+      model.tris.setWindow(model.openGLRenderWindow);
       model.openGLTexture.setWindow(model.openGLRenderWindow);
       model.openGLTexture.setContext(model.context);
       const ren = model.openGLRenderer.getRenderable();

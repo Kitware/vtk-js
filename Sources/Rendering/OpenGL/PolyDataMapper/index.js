@@ -79,7 +79,7 @@ function vtkOpenGLPolyDataMapper(publicAPI, model) {
     if (model.context !== ctx) {
       model.context = ctx;
       for (let i = primTypes.Start; i < primTypes.End; i++) {
-        model.primitives[i].setContext(ctx);
+        model.primitives[i].setWindow(model.openGLRenderWindow);
       }
     }
     const actor = model.openGLActor.getRenderable();
