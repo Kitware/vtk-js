@@ -2,6 +2,7 @@
 /* eslint-disable import/no-extraneous-dependencies */
 
 import 'babel-polyfill';
+import 'vtk.js/Sources/favicon';
 
 import HttpDataAccessHelper       from 'vtk.js/Sources/IO/Core/DataAccessHelper/HttpDataAccessHelper';
 import vtkActor                   from 'vtk.js/Sources/Rendering/Core/Actor';
@@ -13,10 +14,16 @@ import vtkURLExtract              from 'vtk.js/Sources/Common/Core/URLExtract';
 import vtkXMLPolyDataReader       from 'vtk.js/Sources/IO/XML/XMLPolyDataReader';
 import { ColorMode, ScalarMode }  from 'vtk.js/Sources/Rendering/Core/Mapper/Constants';
 
-
 import style from './GeometryViewer.mcss';
 
 let autoInit = true;
+let background = [0, 0, 0];
+
+const userParams = vtkURLExtract.extractURLParameters();
+if (userParams.background) {
+  background = userParams.background.split(',').map(s => Number(s));
+}
+const selectorClass = (background.reduce((a, b) => a + b, 0) < 1.5) ? style.dark : style.light;
 
 function preventDefaults(e) {
   e.preventDefault();
@@ -38,20 +45,20 @@ function getPreset(name) {
 // ----------------------------------------------------------------------------
 
 const presetSelector = document.createElement('select');
-presetSelector.setAttribute('class', style.selector);
+presetSelector.setAttribute('class', selectorClass);
 presetSelector.innerHTML = presetNames.map(name => `<option value="${name}">${name}</option>`).join('');
 
 const representationSelector = document.createElement('select');
-representationSelector.setAttribute('class', style.selector);
+representationSelector.setAttribute('class', selectorClass);
 representationSelector.innerHTML = ['Points', 'Wireframe', 'Surface', 'Surface with Edge']
   .map((name, idx) => `<option value="${idx < 3 ? idx : 2}:${idx === 3 ? 1 : 0}">${name}</option>`).join('');
 representationSelector.value = '2:0';
 
 const colorBySelector = document.createElement('select');
-colorBySelector.setAttribute('class', style.selector);
+colorBySelector.setAttribute('class', selectorClass);
 
 const componentSelector = document.createElement('select');
-componentSelector.setAttribute('class', style.selector);
+componentSelector.setAttribute('class', selectorClass);
 componentSelector.style.display = 'none';
 
 const controlContainer = document.createElement('div');
@@ -82,7 +89,7 @@ function emptyContainer(container) {
 // ----------------------------------------------------------------------------
 
 function createViewer(container, fileContentAsText) {
-  const fullScreenRenderer = vtkFullScreenRenderWindow.newInstance({ background: [0, 0, 0] });
+  const fullScreenRenderer = vtkFullScreenRenderWindow.newInstance({ background });
   const renderer = fullScreenRenderer.getRenderer();
   const renderWindow = fullScreenRenderer.getRenderWindow();
   renderWindow.getInteractor().setDesiredUpdateRate(25);
@@ -265,8 +272,6 @@ export function initLocalFileLoader(container) {
 
 // Look at URL an see if we should load a file
 // ?fileURL=https://data.kitware.com/api/v1/item/59cdbb588d777f31ac63de08/download
-const userParams = vtkURLExtract.extractURLParameters();
-
 if (userParams.url || userParams.fileURL) {
   const exampleContainer = document.querySelector('.content');
   const rootBody = document.querySelector('body');

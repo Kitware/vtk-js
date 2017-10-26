@@ -2,6 +2,7 @@
 /* eslint-disable import/no-extraneous-dependencies */
 
 import 'babel-polyfill';
+import 'vtk.js/Sources/favicon';
 
 import HttpDataAccessHelper       from 'vtk.js/Sources/IO/Core/DataAccessHelper/HttpDataAccessHelper';
 import vtkBoundingBox             from 'vtk.js/Sources/Common/DataModel/BoundingBox';

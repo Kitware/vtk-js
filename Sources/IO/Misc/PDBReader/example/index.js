@@ -1,3 +1,5 @@
+import 'vtk.js/Sources/favicon';
+
 import vtkFullScreenRenderWindow    from 'vtk.js/Sources/Rendering/Misc/FullScreenRenderWindow';
 import vtkActor                     from 'vtk.js/Sources/Rendering/Core/Actor';
 import vtkPDBReader                 from 'vtk.js/Sources/IO/Misc/PDBReader';

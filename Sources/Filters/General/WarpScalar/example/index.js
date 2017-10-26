@@ -1,3 +1,5 @@
+import 'vtk.js/Sources/favicon';
+
 import vtkFullScreenRenderWindow  from 'vtk.js/Sources/Rendering/Misc/FullScreenRenderWindow';
 import macro                      from 'vtk.js/Sources/macro';
 import vtk                        from 'vtk.js/Sources/vtk';

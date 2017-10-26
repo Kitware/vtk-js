@@ -1,3 +1,5 @@
+import 'vtk.js/Sources/favicon';
+
 import Actor from '..';
 
 const test = (condition, message) => {

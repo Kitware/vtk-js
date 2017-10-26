@@ -1,3 +1,5 @@
+import 'vtk.js/Sources/favicon';
+
 import vtkColorTransferFunction   from 'vtk.js/Sources/Rendering/Core/ColorTransferFunction';
 import vtkFullScreenRenderWindow  from 'vtk.js/Sources/Rendering/Misc/FullScreenRenderWindow';
 import vtkHttpDataSetReader       from 'vtk.js/Sources/IO/Core/HttpDataSetReader';

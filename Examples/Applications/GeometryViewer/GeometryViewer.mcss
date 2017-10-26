@@ -44,7 +44,6 @@ body {
 .selector {
   float: left;
   background: transparent;
-  color: white;
   border: none;
   margin: 5px;
   z-index: 1;
@@ -53,10 +52,6 @@ body {
 select:focus {
   outline: none;
   border: none;
-}
-
-select option {
-  color: black;
 }
 
 .control {
@@ -70,4 +65,22 @@ select option {
 .progress {
   flex: none;
   font-size: 50px;
+}
+
+.dark {
+  composes: selector;
+  color: white;
+}
+
+.dark option {
+  color: black;
+}
+
+.light {
+  composes: selector;
+  color: black;
+}
+
+.light option {
+  color: white;
 }
