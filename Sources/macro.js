@@ -111,9 +111,13 @@ export function obj(publicAPI = {}, model = {}) {
 
   publicAPI.isDeleted = () => !!model.deleted;
 
-  publicAPI.modified = () => {
+  publicAPI.modified = (otherMTime) => {
     if (model.deleted) {
       vtkErrorMacro('instance deleted - cannot call any method');
+      return;
+    }
+
+    if (otherMTime && otherMTime < model.mtime) {
       return;
     }
 
@@ -169,7 +173,7 @@ export function obj(publicAPI = {}, model = {}) {
     return subset;
   };
 
-  publicAPI.getOneProperty = val => model[val];
+  publicAPI.getReferenceByName = val => model[val];
 
   publicAPI.delete = () => {
     Object.keys(model).forEach(field => delete model[field]);
@@ -335,24 +339,21 @@ export function setGet(publicAPI, model, fieldNames) {
 }
 
 // ----------------------------------------------------------------------------
-// getXXX: add getters for object of type array
+// getXXX: add getters for object of type array with copy to be safe
+// getXXXByReference: add getters for object of type array without copy
 // ----------------------------------------------------------------------------
 
 export function getArray(publicAPI, model, fieldNames) {
   fieldNames.forEach((field) => {
-    // by default return a copy to be safe unless noModify is true
-    publicAPI[`get${capitalize(field)}`] = (noModify = false) => {
-      if (noModify) {
-        return model[field];
-      }
-      return [].concat(model[field]);
-    };
+    publicAPI[`get${capitalize(field)}`] = () => [].concat(model[field]);
+    publicAPI[`get${capitalize(field)}ByReference`] = () => model[field];
   });
 }
 
 // ----------------------------------------------------------------------------
 // setXXX: add setter for object of type array
 // if 'defaultVal' is supplied, shorter arrays will be padded to 'size' with 'defaultVal'
+// set...From: fast path to copy the content of an array to the current one without call to modified.
 // ----------------------------------------------------------------------------
 
 export function setArray(publicAPI, model, fieldNames, size, defaultVal = undefined) {
@@ -393,6 +394,13 @@ export function setArray(publicAPI, model, fieldNames, size, defaultVal = undefi
       }
       return true;
     };
+
+    publicAPI[`set${capitalize(field)}From`] = (otherArray) => {
+      const target = model[field];
+      otherArray.forEach((v, i) => {
+        target[i] = v;
+      });
+    };
   });
 }
 
@@ -403,31 +411,6 @@ export function setArray(publicAPI, model, fieldNames, size, defaultVal = undefi
 export function setGetArray(publicAPI, model, fieldNames, size, defaultVal = undefined) {
   getArray(publicAPI, model, fieldNames);
   setArray(publicAPI, model, fieldNames, size, defaultVal);
-}
-
-// ----------------------------------------------------------------------------
-// get{xxx}ByReference: add a fast getter with no check
-// ----------------------------------------------------------------------------
-
-export function getReference(publicAPI, model, fieldNames) {
-  fieldNames.forEach((field) => {
-    publicAPI[`get${capitalize(field)}ByReference`] = () => model.field;
-  });
-}
-
-// ----------------------------------------------------------------------------
-// set{xxx}From: add setter for arrays with no object creation or mark modified
-// ----------------------------------------------------------------------------
-
-export function setFrom(publicAPI, model, fieldNames) {
-  fieldNames.forEach((field) => {
-    publicAPI[`set${capitalize(field)}From`] = (otherArray) => {
-      const target = model[field];
-      otherArray.forEach((v, i) => {
-        target[i] = v;
-      });
-    };
-  });
 }
 
 // ----------------------------------------------------------------------------
@@ -619,7 +602,7 @@ export function event(publicAPI, model, eventName) {
     return Object.freeze({ unsubscribe });
   }
 
-  publicAPI[`invoke${capitalize(eventName)}`] = () => {
+  function invoke() {
     if (model.deleted) {
       vtkErrorMacro('instance deleted - cannot call any method');
       return;
@@ -627,7 +610,9 @@ export function event(publicAPI, model, eventName) {
     /* eslint-disable prefer-rest-params */
     callbacks.forEach(callback => callback && callback.apply(publicAPI, arguments));
     /* eslint-enable prefer-rest-params */
-  };
+  }
+
+  publicAPI[`invoke${capitalize(eventName)}`] = invoke;
 
   publicAPI[`on${capitalize(eventName)}`] = (callback) => {
     if (model.deleted) {

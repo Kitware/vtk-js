@@ -28,12 +28,14 @@ function vtkLight(publicAPI, model) {
   };
 
   publicAPI.getDirection = () => {
-    const result = [
-      model.focalPoint[0] - model.position[0],
-      model.focalPoint[1] - model.position[1],
-      model.focalPoint[2] - model.position[2]];
-    vtkMath.normalize(result);
-    return result;
+    if (model.directionMTime < model.mtime) {
+      model.direction[0] = model.focalPoint[0] - model.position[0];
+      model.direction[1] = model.focalPoint[1] - model.position[1];
+      model.direction[2] = model.focalPoint[2] - model.position[2];
+      vtkMath.normalize(model.direction);
+      model.directionMTime = model.mtime;
+    }
+    return model.direction;
   };
 
   publicAPI.setDirectionAngle = (elevation, azimuth) => {
@@ -86,6 +88,8 @@ const DEFAULT_VALUES = {
   transformMatrix: null,
   lightType: 'SceneLight',
   shadowAttenuation: 1,
+  direction: [0, 0, 0],
+  directionMTime: 0,
 };
 
 // ----------------------------------------------------------------------------
