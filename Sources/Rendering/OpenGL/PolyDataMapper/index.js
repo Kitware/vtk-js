@@ -887,7 +887,7 @@ function vtkOpenGLPolyDataMapper(publicAPI, model) {
       // consider the lighting complexity to determine which case applies
       // simple headlight, Light Kit, the whole feature set of VTK
       lightComplexity = 0;
-      const lights = ren.getLights(true);
+      const lights = ren.getLightsByReference();
       for (let index = 0; index < lights.length; ++index) {
         const light = lights[index];
         const status = light.getSwitch();
@@ -1121,18 +1121,18 @@ function vtkOpenGLPolyDataMapper(publicAPI, model) {
     // bind some light settings
     let numberOfLights = 0;
 
-    const lights = ren.getLights(true);
+    const lights = ren.getLightsByReference();
     for (let index = 0; index < lights.length; ++index) {
       const light = lights[index];
       const status = light.getSwitch();
       if (status > 0.0) {
-        const dColor = light.getColor(true);
+        const dColor = light.getColorByReference();
         const intensity = light.getIntensity();
         model.lightColor[0] = dColor[0] * intensity;
         model.lightColor[1] = dColor[1] * intensity;
         model.lightColor[2] = dColor[2] * intensity;
         // get required info from light
-        const ld = light.getDirection(true);
+        const ld = light.getDirection();
         model.lightDirection[0] = ld[0];
         model.lightDirection[1] = ld[1];
         model.lightDirection[2] = ld[2];
@@ -1166,7 +1166,7 @@ function vtkOpenGLPolyDataMapper(publicAPI, model) {
         const lp = light.getTransformedPosition();
         const np = vec3.fromValues(lp[0], lp[1], lp[2]);
         vec3.transformMat4(np, np, viewTF);
-        program.setUniform3fArray(`lightAttenuation${numberOfLights}`, light.getAttenuationValues(true));
+        program.setUniform3fArray(`lightAttenuation${numberOfLights}`, light.getAttenuationValuesByReference());
         program.setUniformi(`lightPositional${numberOfLights}`, light.getPositional());
         program.setUniformf(`lightExponent${numberOfLights}`, light.getExponent());
         program.setUniformf(`lightConeAngle${numberOfLights}`, light.getConeAngle());
@@ -1220,14 +1220,14 @@ function vtkOpenGLPolyDataMapper(publicAPI, model) {
     const ppty = actor.getProperty();
 
     const opacity = ppty.getOpacity();
-    const aColor = model.drawingEdges ? ppty.getEdgeColor(true)
-      : ppty.getAmbientColor(true);
+    const aColor = model.drawingEdges ? ppty.getEdgeColorByReference()
+      : ppty.getAmbientColorByReference();
     const aIntensity = ppty.getAmbient();
     model.ambientColor[0] = aColor[0] * aIntensity;
     model.ambientColor[1] = aColor[1] * aIntensity;
     model.ambientColor[2] = aColor[2] * aIntensity;
-    const dColor = model.drawingEdges ? ppty.getEdgeColor(true)
-      : ppty.getDiffuseColor(true);
+    const dColor = model.drawingEdges ? ppty.getEdgeColorByReference()
+      : ppty.getDiffuseColorByReference();
     const dIntensity = ppty.getDiffuse();
     model.diffuseColor[0] = dColor[0] * dIntensity;
     model.diffuseColor[1] = dColor[1] * dIntensity;
@@ -1242,7 +1242,7 @@ function vtkOpenGLPolyDataMapper(publicAPI, model) {
     if (lastLightComplexity < 1) {
       return;
     }
-    const sColor = ppty.getSpecularColor(true);
+    const sColor = ppty.getSpecularColorByReference();
     const sIntensity = ppty.getSpecular();
     model.specularColor[0] = sColor[0] * sIntensity;
     model.specularColor[1] = sColor[1] * sIntensity;

@@ -41,7 +41,7 @@ function vtkOpenGLRenderWindow(publicAPI, model) {
       }
 
       publicAPI.prepareNodes();
-      publicAPI.addMissingNodes(model.renderable.getRenderers(true));
+      publicAPI.addMissingNodes(model.renderable.getRenderersByReference());
       publicAPI.removeUnusedNodes();
 
       publicAPI.initialize();
@@ -92,7 +92,7 @@ function vtkOpenGLRenderWindow(publicAPI, model) {
   };
 
   publicAPI.isInViewport = (x, y, viewport) => {
-    const vCoords = viewport.getViewport(true);
+    const vCoords = viewport.getViewportByReference();
     const size = model.size;
     if ((vCoords[0] * size[0] <= x) &&
         (vCoords[2] * size[0] >= x) &&
@@ -104,7 +104,7 @@ function vtkOpenGLRenderWindow(publicAPI, model) {
   };
 
   publicAPI.getViewportSize = (viewport) => {
-    const vCoords = viewport.getViewport(true);
+    const vCoords = viewport.getViewportByReference();
     const size = model.size;
     return [(vCoords[2] - vCoords[0]) * size[0], (vCoords[3] - vCoords[1]) * size[1]];
   };
@@ -143,7 +143,7 @@ function vtkOpenGLRenderWindow(publicAPI, model) {
   };
 
   publicAPI.normalizedDisplayToViewport = (x, y, z, renderer) => {
-    let vCoords = renderer.getViewport(true);
+    let vCoords = renderer.getViewportByReference();
     vCoords = publicAPI.normalizedDisplayToDisplay(vCoords[0], vCoords[1], 0.0);
     const coords = publicAPI.normalizedDisplayToDisplay(x, y, z);
     return [coords[0] - vCoords[0] - 0.5, coords[1] - vCoords[1] - 0.5, z];
@@ -164,7 +164,7 @@ function vtkOpenGLRenderWindow(publicAPI, model) {
     [x, model.size[1] - y - 1, z];
 
   publicAPI.viewportToNormalizedDisplay = (x, y, z, renderer) => {
-    let vCoords = renderer.getViewport(true);
+    let vCoords = renderer.getViewportByReference();
     vCoords = publicAPI.normalizedDisplayToDisplay(vCoords[0], vCoords[1], 0.0);
     const x2 = x + vCoords[0] + 0.5;
     const y2 = y + vCoords[1] + 0.5;

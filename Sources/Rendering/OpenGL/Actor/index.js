@@ -16,7 +16,7 @@ function vtkOpenGLActor(publicAPI, model) {
     if (prepass) {
       model.context = publicAPI.getFirstAncestorOfType('vtkOpenGLRenderWindow').getContext();
       publicAPI.prepareNodes();
-      publicAPI.addMissingNodes(model.renderable.getTextures(true));
+      publicAPI.addMissingNodes(model.renderable.getTextures());
       publicAPI.addMissingNode(model.renderable.getMapper());
       publicAPI.removeUnusedNodes();
 

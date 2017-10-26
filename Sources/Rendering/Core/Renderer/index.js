@@ -72,8 +72,9 @@ function vtkRenderer(publicAPI, model) {
         // vtkLight::SetLightTypeToSceneLight()
       } else if (light.lightTypeIsHeadLight()) {
         // update position and orientation of light to match camera.
-        light.setPosition(camera.getPosition(true));
-        light.setFocalPoint(camera.getFocalPoint(true));
+        light.setPositionFrom(camera.getPositionByReference());
+        light.setFocalPointFrom(camera.getFocalPointByReference());
+        light.modified(camera.getMTime());
       } else if (light.lightTypeIsCameraLight()) {
         light.setTransformMatrix(lightMatrix);
       } else {
@@ -410,8 +411,8 @@ function vtkRenderer(publicAPI, model) {
     }
 
     let vn = null; let position = null;
-    vn = model.activeCamera.getViewPlaneNormal(true);
-    position = model.activeCamera.getPosition(true);
+    vn = model.activeCamera.getViewPlaneNormalByReference();
+    position = model.activeCamera.getPositionByReference();
 
     const a = -vn[0];
     const b = -vn[1];
