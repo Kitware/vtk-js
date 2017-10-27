@@ -61,25 +61,25 @@ function readerHeader(uint8, headerType) {
   // We do not handle endianess or if more than 32 bits are needed to encode the data
   if (headerType === 'UInt64') {
     const offset = 8;
-    let uint32 = new Uint32Array(uint8.buffer, 0, 3 * 8);
+    let uint32 = new Uint32Array(uint8.buffer, 0, 6);
     const nbBlocks = uint32[0];
     const s1 = uint32[2];
     const s2 = uint32[4];
     const resultArray = [offset, nbBlocks, s1, s2];
-    uint32 = new Uint32Array(uint8.buffer, 3 * 8, nbBlocks * 8);
+    uint32 = new Uint32Array(uint8.buffer, 3 * 8, nbBlocks * 2);
     for (let i = 0; i < nbBlocks; i++) {
       resultArray.push(uint32[i * 2]);
     }
     return resultArray;
   }
   // UInt32
-  let uint32 = new Uint32Array(uint8.buffer, 0, 3 * 4);
+  let uint32 = new Uint32Array(uint8.buffer, 0, 3);
   const offset = 4;
   const nbBlocks = uint32[0];
   const s1 = uint32[1];
   const s2 = uint32[2];
   const resultArray = [offset, nbBlocks, s1, s2];
-  uint32 = new Uint32Array(uint8.buffer, 3 * 4, nbBlocks * 4);
+  uint32 = new Uint32Array(uint8.buffer, 3 * 4, nbBlocks);
   for (let i = 0; i < nbBlocks; i++) {
     resultArray.push(uint32[i]);
   }
