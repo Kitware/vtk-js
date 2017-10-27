@@ -15,15 +15,21 @@ import vtkXMLPolyDataReader       from 'vtk.js/Sources/IO/XML/XMLPolyDataReader'
 import { ColorMode, ScalarMode }  from 'vtk.js/Sources/Rendering/Core/Mapper/Constants';
 
 import style from './GeometryViewer.mcss';
+import icon from '../../../Documentation/content/icon/favicon-96x96.png';
 
 let autoInit = true;
 let background = [0, 0, 0];
+let renderWindow;
+let renderer;
 
 const userParams = vtkURLExtract.extractURLParameters();
 if (userParams.background) {
   background = userParams.background.split(',').map(s => Number(s));
 }
-const selectorClass = (background.reduce((a, b) => a + b, 0) < 1.5) ? style.dark : style.light;
+const selectorClass =
+  (background.length === 3 && background.reduce((a, b) => a + b, 0) < 1.5)
+  ? style.dark
+  : style.light;
 
 function preventDefaults(e) {
   e.preventDefault();
@@ -34,29 +40,16 @@ function preventDefaults(e) {
 // DOM containers for UI control
 // ----------------------------------------------------------------------------
 
-const presetSelector = document.createElement('select');
-presetSelector.setAttribute('class', selectorClass);
-presetSelector.innerHTML = vtkColorMaps.rgbPresetNames.map(name => `<option value="${name}">${name}</option>`).join('');
+const rootControllerContainer = document.createElement('div');
+rootControllerContainer.setAttribute('class', style.rootController);
 
-const representationSelector = document.createElement('select');
-representationSelector.setAttribute('class', selectorClass);
-representationSelector.innerHTML = ['Points', 'Wireframe', 'Surface', 'Surface with Edge']
-  .map((name, idx) => `<option value="${idx < 3 ? idx : 2}:${idx === 3 ? 1 : 0}">${name}</option>`).join('');
-representationSelector.value = '2:0';
-
-const colorBySelector = document.createElement('select');
-colorBySelector.setAttribute('class', selectorClass);
-
-const componentSelector = document.createElement('select');
-componentSelector.setAttribute('class', selectorClass);
-componentSelector.style.display = 'none';
-
-const controlContainer = document.createElement('div');
-controlContainer.setAttribute('class', style.control);
-controlContainer.appendChild(representationSelector);
-controlContainer.appendChild(presetSelector);
-controlContainer.appendChild(colorBySelector);
-controlContainer.appendChild(componentSelector);
+const addDataSetButton = document.createElement('img');
+addDataSetButton.setAttribute('class', style.button);
+addDataSetButton.setAttribute('src', icon);
+addDataSetButton.addEventListener('click', () => {
+  const isVisible = rootControllerContainer.style.display !== 'none';
+  rootControllerContainer.style.display = isVisible ? 'none' : 'flex';
+});
 
 // ----------------------------------------------------------------------------
 // Add class to body if iOS device
@@ -78,12 +71,46 @@ function emptyContainer(container) {
 
 // ----------------------------------------------------------------------------
 
-function createViewer(container, fileContentAsText) {
+function createViewer(container) {
   const fullScreenRenderer = vtkFullScreenRenderWindow.newInstance({ background });
-  const renderer = fullScreenRenderer.getRenderer();
-  const renderWindow = fullScreenRenderer.getRenderWindow();
+  renderer = fullScreenRenderer.getRenderer();
+  renderWindow = fullScreenRenderer.getRenderWindow();
   renderWindow.getInteractor().setDesiredUpdateRate(25);
 
+  container.appendChild(rootControllerContainer);
+  container.appendChild(addDataSetButton);
+}
+
+// ----------------------------------------------------------------------------
+
+function createPipeline(fileName, fileContentAsText) {
+  // Create UI
+  const presetSelector = document.createElement('select');
+  presetSelector.setAttribute('class', selectorClass);
+  presetSelector.innerHTML = vtkColorMaps.rgbPresetNames.map(name => `<option value="${name}">${name}</option>`).join('');
+
+  const representationSelector = document.createElement('select');
+  representationSelector.setAttribute('class', selectorClass);
+  representationSelector.innerHTML = ['Hidden', 'Points', 'Wireframe', 'Surface', 'Surface with Edge']
+    .map((name, idx) => `<option value="${idx === 0 ? 0 : 1}:${idx < 4 ? idx - 1 : 2}:${idx === 4 ? 1 : 0}">${name}</option>`).join('');
+  representationSelector.value = '1:2:0';
+
+  const colorBySelector = document.createElement('select');
+  colorBySelector.setAttribute('class', selectorClass);
+
+  const componentSelector = document.createElement('select');
+  componentSelector.setAttribute('class', selectorClass);
+  componentSelector.style.display = 'none';
+
+  const controlContainer = document.createElement('div');
+  controlContainer.setAttribute('class', style.control);
+  controlContainer.appendChild(representationSelector);
+  controlContainer.appendChild(presetSelector);
+  controlContainer.appendChild(colorBySelector);
+  controlContainer.appendChild(componentSelector);
+  rootControllerContainer.appendChild(controlContainer);
+
+  // VTK pipeline
   const vtpReader = vtkXMLPolyDataReader.newInstance();
   vtpReader.parse(fileContentAsText);
 
@@ -117,8 +144,9 @@ function createViewer(container, fileContentAsText) {
   // --------------------------------------------------------------------
 
   function updateRepresentation(event) {
-    const [representation, edgeVisibility] = event.target.value.split(':').map(Number);
+    const [visibility, representation, edgeVisibility] = event.target.value.split(':').map(Number);
     actor.getProperty().set({ representation, edgeVisibility });
+    actor.setVisibility(!!visibility);
     renderWindow.render();
   }
   representationSelector.addEventListener('change', updateRepresentation);
@@ -190,12 +218,19 @@ function createViewer(container, fileContentAsText) {
     renderWindow.render();
   });
 
-  // Add UI to web page
-  container.appendChild(controlContainer);
-
   // First render
   renderer.resetCamera();
   renderWindow.render();
+}
+
+// ----------------------------------------------------------------------------
+
+function loadFile(file) {
+  const reader = new FileReader();
+  reader.onload = function onLoad(e) {
+    createPipeline(file.name, reader.result);
+  };
+  reader.readAsText(file);
 }
 
 // ----------------------------------------------------------------------------
@@ -204,15 +239,11 @@ export function load(container, options) {
   autoInit = false;
   emptyContainer(container);
 
-  if (options.file) {
-    if (options.ext === 'vtp') {
-      const reader = new FileReader();
-      reader.onload = function onLoad(e) {
-        createViewer(container, reader.result);
-      };
-      reader.readAsText(options.file);
-    } else {
-      console.error('Unkown file...');
+  if (options.files) {
+    createViewer(container);
+    let count = options.files.length;
+    while (count--) {
+      loadFile(options.files[count]);
     }
   } else if (options.fileURL) {
     const progressContainer = document.createElement('div');
@@ -226,7 +257,8 @@ export function load(container, options) {
 
     HttpDataAccessHelper.fetchText({}, options.fileURL, { progressCallback }).then((txt) => {
       container.removeChild(progressContainer);
-      createViewer(container, txt);
+      createViewer(container);
+      createPipeline('', txt);
     });
   }
 }
@@ -237,7 +269,7 @@ export function initLocalFileLoader(container) {
   const myContainer = container || exampleContainer || rootBody;
 
   const fileContainer = document.createElement('div');
-  fileContainer.innerHTML = `<div class="${style.bigFileDrop}"/><input type="file" class="file" style="display: none;"/>`;
+  fileContainer.innerHTML = `<div class="${style.bigFileDrop}"/><input type="file" multiple accept=".vtp" style="display: none;"/>`;
   myContainer.appendChild(fileContainer);
 
   const fileInput = fileContainer.querySelector('input');
@@ -246,10 +278,9 @@ export function initLocalFileLoader(container) {
     preventDefaults(e);
     const dataTransfer = e.dataTransfer;
     const files = e.target.files || dataTransfer.files;
-    if (files.length === 1) {
+    if (files.length > 0) {
       myContainer.removeChild(fileContainer);
-      const ext = files[0].name.split('.').slice(-1)[0];
-      load(myContainer, { file: files[0], ext });
+      load(myContainer, { files });
     }
   }
 

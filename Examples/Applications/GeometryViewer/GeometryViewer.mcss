@@ -4,6 +4,32 @@ body {
   justify-content: center;
 }
 
+.button {
+  position: absolute;
+  right: 5px;
+  top: 5px;
+  width: 1em;
+  z-index: 2;
+  cursor: pointer;
+}
+
+.rootController {
+  display: flex;
+  flex-direction: column;
+  position: absolute;
+  top: 5px;
+  left: 5px;
+  width: 100%;
+  z-index: 1;
+}
+
+.control {
+  display: flex;
+  flex-direction: row;
+  flex: 1;
+  align-items: center;
+}
+
 .fullScreen {
   position: absolute;
   width: 100vw;
@@ -42,7 +68,6 @@ body {
 }
 
 .selector {
-  float: left;
   background: transparent;
   border: none;
   margin: 5px;
@@ -52,14 +77,6 @@ body {
 select:focus {
   outline: none;
   border: none;
-}
-
-.control {
-  position: absolute;
-  top: 5px;
-  left: 5px;
-  width: 100%;
-  z-index: 1;
 }
 
 .progress {

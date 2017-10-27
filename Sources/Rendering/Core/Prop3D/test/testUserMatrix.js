@@ -40,13 +40,12 @@ test.onlyIfWebGL('Test Set Actor User Matrix', (t) => {
   renderer.addActor(actor);
 
   const userMatrix = mat4.create();
-  mat4.rotateZ(userMatrix, userMatrix, Math.PI/4);
+  mat4.rotateZ(userMatrix, userMatrix, Math.PI / 4);
   actor.setUserMatrix(userMatrix);
 
   actor.rotateZ(45);
 
   reader.setUrl(`${__BASE_PATH__}/Data/obj/space-shuttle-orbiter/space-shuttle-orbiter.obj`).then(() => {
-    
     renderer.resetCamera();
     renderWindow.render();
 
