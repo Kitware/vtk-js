@@ -138,7 +138,17 @@ export function obj(publicAPI = {}, model = {}) {
 
   publicAPI.getMTime = () => model.mtime;
 
-  publicAPI.isA = className => (model.classHierarchy.indexOf(className) !== -1);
+  publicAPI.isA = (className) => {
+    let count = model.classHierarchy.length;
+    // we go backwards as that is more likely for
+    // early termination
+    while (count--) {
+      if (model.classHierarchy[count] === className) {
+        return true;
+      }
+    }
+    return false;
+  };
 
   publicAPI.getClassName = (depth = 0) => model.classHierarchy[model.classHierarchy.length - 1 - depth];
 
@@ -608,7 +618,12 @@ export function event(publicAPI, model, eventName) {
       return;
     }
     /* eslint-disable prefer-rest-params */
-    callbacks.forEach(callback => callback && callback.apply(publicAPI, arguments));
+    for (let index = 0; index < callbacks.length; ++index) {
+      const cb = callbacks[index];
+      if (cb) {
+        cb.apply(publicAPI, arguments);
+      }
+    }
     /* eslint-enable prefer-rest-params */
   }
 

@@ -515,6 +515,10 @@ function vtkShaderProgram(publicAPI, model) {
     model.geometryShader.setContext(ctx);
   };
 
+  publicAPI.setLastCameraMTime = (mtime) => {
+    model.lastCameraMTime = mtime;
+  };
+
   // publicAPI.enableAttributeArray = (name) => {
   //   const location = publicAPI.findAttributeArray(name);
   //   if (location === -1) {
@@ -558,6 +562,7 @@ const DEFAULT_VALUES = {
   uniformLocs: null,
   md5Hash: 0,
   context: null,
+  lastCameraMTime: null,
 };
 
 // ----------------------------------------------------------------------------
@@ -577,6 +582,9 @@ export function extend(publicAPI, model, initialValues = {}) {
 
   // Build VTK API
   macro.obj(publicAPI, model);
+  macro.get(publicAPI, model, [
+    'lastCameraMTime',
+  ]);
   macro.setGet(publicAPI, model, [
     'error',
     'handle',

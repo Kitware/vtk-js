@@ -52,10 +52,14 @@ function vtkViewNode(publicAPI, model) {
       return publicAPI;
     }
 
-    return model.children.find((child) => {
+    for (let index = 0; index < model.children.length; ++index) {
+      const child = model.children[index];
       const vn = child.getViewNodeFor(dataObject);
-      return !!vn;
-    });
+      if (vn) {
+        return vn;
+      }
+    }
+    return undefined;
   };
 
   publicAPI.getFirstAncestorOfType = (type) => {

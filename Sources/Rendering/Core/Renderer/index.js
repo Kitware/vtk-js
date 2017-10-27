@@ -270,46 +270,52 @@ function vtkRenderer(publicAPI, model) {
   };
 
   publicAPI.computeVisiblePropBounds = () => {
-    const allBounds = [].concat(INIT_BOUNDS);
+    model.allBounds[0] = INIT_BOUNDS[0];
+    model.allBounds[1] = INIT_BOUNDS[1];
+    model.allBounds[2] = INIT_BOUNDS[2];
+    model.allBounds[3] = INIT_BOUNDS[3];
+    model.allBounds[4] = INIT_BOUNDS[4];
+    model.allBounds[5] = INIT_BOUNDS[5];
     let nothingVisible = true;
 
     publicAPI.invokeEvent(COMPUTE_VISIBLE_PROP_BOUNDS_EVENT);
 
     // loop through all props
-    model.props.forEach((prop) => {
+    for (let index = 0; index < model.props.length; ++index) {
+      const prop = model.props[index];
       if (prop.getVisibility() && prop.getUseBounds()) {
         const bounds = prop.getBounds();
         if (bounds && vtkMath.areBoundsInitialized(bounds)) {
           nothingVisible = false;
 
-          if (bounds[0] < allBounds[0]) {
-            allBounds[0] = bounds[0];
+          if (bounds[0] < model.allBounds[0]) {
+            model.allBounds[0] = bounds[0];
           }
-          if (bounds[1] > allBounds[1]) {
-            allBounds[1] = bounds[1];
+          if (bounds[1] > model.allBounds[1]) {
+            model.allBounds[1] = bounds[1];
           }
-          if (bounds[2] < allBounds[2]) {
-            allBounds[2] = bounds[2];
+          if (bounds[2] < model.allBounds[2]) {
+            model.allBounds[2] = bounds[2];
           }
-          if (bounds[3] > allBounds[3]) {
-            allBounds[3] = bounds[3];
+          if (bounds[3] > model.allBounds[3]) {
+            model.allBounds[3] = bounds[3];
           }
-          if (bounds[4] < allBounds[4]) {
-            allBounds[4] = bounds[4];
+          if (bounds[4] < model.allBounds[4]) {
+            model.allBounds[4] = bounds[4];
           }
-          if (bounds[5] > allBounds[5]) {
-            allBounds[5] = bounds[5];
+          if (bounds[5] > model.allBounds[5]) {
+            model.allBounds[5] = bounds[5];
           }
         }
       }
-    });
+    }
 
     if (nothingVisible) {
-      vtkMath.uninitializeBounds(allBounds);
+      vtkMath.uninitializeBounds(model.allBounds);
       vtkDebugMacro('Can\'t compute bounds, no 3D props are visible');
     }
 
-    return allBounds;
+    return model.allBounds;
   };
 
   publicAPI.resetCamera = (bounds = null) => {
@@ -528,6 +534,7 @@ const DEFAULT_VALUES = {
   pickedProp: null,
   activeCamera: null,
 
+  allBounds: [],
   ambient: [1, 1, 1],
 
   allocatedRenderTime: 100,

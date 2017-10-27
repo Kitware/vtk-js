@@ -17,22 +17,6 @@ function vtkProp3D(publicAPI, model) {
   // Set our className
   model.classHierarchy.push('vtkProp3D');
 
-  // Capture 'parentClass' api for internal use
-  const superClass = Object.assign({}, publicAPI);
-
-  publicAPI.getMTime = () => {
-    const m1 = superClass.getMTime();
-    const m2 =
-      publicAPI.getUserMatrixMTime();
-    if (m1 > m2) {
-      return m1;
-    }
-    return m2;
-  };
-
-  publicAPI.getUserMatrixMTime = () =>
-    (model.userMatrix ? model.userMatrixMTime.getMTime() : 0);
-
   publicAPI.addPosition = (deltaXYZ) => {
     model.position = model.position.map((value, index) => value + deltaXYZ[index]);
     publicAPI.modified();
@@ -53,27 +37,30 @@ function vtkProp3D(publicAPI, model) {
 
 
   publicAPI.rotateX = (val) => {
-    if (val !== 0.0) {
-      model.isIdentity = false;
+    if (val === 0.0) {
+      return;
     }
     mat4.rotateX(model.rotation, model.rotation,
       vtkMath.radiansFromDegrees(val));
+    publicAPI.modified();
   };
 
   publicAPI.rotateY = (val) => {
-    if (val !== 0.0) {
-      model.isIdentity = false;
+    if (val === 0.0) {
+      return;
     }
     mat4.rotateY(model.rotation, model.rotation,
       vtkMath.radiansFromDegrees(val));
+    publicAPI.modified();
   };
 
   publicAPI.rotateZ = (val) => {
-    if (val !== 0.0) {
-      model.isIdentity = false;
+    if (val === 0.0) {
+      return;
     }
     mat4.rotateZ(model.rotation, model.rotation,
       vtkMath.radiansFromDegrees(val));
+    publicAPI.modified();
   };
 
   publicAPI.rotateWXYZ = (degrees, x, y, z) => {
@@ -90,28 +77,11 @@ function vtkProp3D(publicAPI, model) {
     const quatMat = mat4.create();
     mat4.fromQuat(quatMat, q);
     mat4.multiply(model.rotation, model.rotation, quatMat);
+    publicAPI.modified();
   };
 
-  publicAPI.SetUserTransform = notImplemented('SetUserTransform');
-
   publicAPI.setUserMatrix = (matrix) => {
-    const identityMatrix = mat4.create();
-
-    if (!matrix) {
-      if (model.matrix) {
-        model.isIdentity = vtkMath.areMatricesEqual(identityMatrix, model.matrix);
-      } else {
-        model.isIdentity = false;
-      }
-      model.userMatrix = null;
-      return;
-    }
-
-    model.isIdentity = vtkMath.areMatricesEqual(identityMatrix, matrix);
-
-    model.userMatrix = mat4.clone(matrix);
-    model.userMatrixMTime.modified();
-
+    mat4.copy(model.userMatrix, matrix);
     publicAPI.modified();
   };
 
@@ -121,10 +91,6 @@ function vtkProp3D(publicAPI, model) {
   };
 
   publicAPI.computeMatrix = () => {
-    if (model.isIdentity) {
-      return;
-    }
-
     // check whether or not need to rebuild the matrix
     if (publicAPI.getMTime() > model.matrixMTime.getMTime()) {
       mat4.identity(model.matrix);
@@ -138,6 +104,15 @@ function vtkProp3D(publicAPI, model) {
       mat4.translate(model.matrix, model.matrix, [-model.origin[0], -model.origin[1], -model.origin[2]]);
       mat4.transpose(model.matrix, model.matrix);
 
+      // check for identity
+      model.isIdentity = true;
+      for (let i = 0; i < 4; ++i) {
+        for (let j = 0; j < 4; ++j) {
+          if ((i === j ? 1.0 : 0.0) !== model.matrix[i + (j * 4)]) {
+            model.isIdentity = false;
+          }
+        }
+      }
       model.matrixMTime.modified();
     }
   };
@@ -148,26 +123,10 @@ function vtkProp3D(publicAPI, model) {
   publicAPI.getYRange = () => vtkBoundingBox.getYRange(model.bounds);
   publicAPI.getZRange = () => vtkBoundingBox.getZRange(model.bounds);
 
-  publicAPI.pokeMatrix = notImplemented('pokeMatrix');
   publicAPI.getUserMatrix = () => model.userMatrix;
 
   function updateIdentityFlag() {
-    let noChange = true;
-    [model.origin, model.position].forEach((array) => {
-      if (noChange && array.filter(v => v !== 0).length) {
-        model.isIdentity = false;
-        noChange = false;
-      }
-    });
-
-    if (model.userMatrix) {
-      model.isIdentity = false;
-      noChange = false;
-    }
-
-    if (noChange && model.scale.filter(v => v !== 1).length) {
-      model.isIdentity = false;
-    }
+    publicAPI.computeMatrix();
   }
 
   publicAPI.onModified(updateIdentityFlag);
@@ -202,9 +161,6 @@ export function extend(publicAPI, model, initialValues = {}) {
 
   model.matrixMTime = {};
   macro.obj(model.matrixMTime);
-
-  model.userMatrixMTime = {};
-  macro.obj(model.userMatrixMTime);
 
   // Build VTK API
   macro.get(publicAPI, model, [

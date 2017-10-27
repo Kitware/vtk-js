@@ -137,7 +137,7 @@ function vtkOpenGLRenderer(publicAPI, model) {
     if (!model.renderable.getTransparent()) {
       const background = model.renderable.getBackgroundByReference();
       // renderable ensures that background has 4 entries.
-      model.context.clearColor(...background);
+      model.context.clearColor(background[0], background[1], background[2], background[3]);
       clearMask |= gl.COLOR_BUFFER_BIT;
     }
 
