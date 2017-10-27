@@ -1185,32 +1185,41 @@ function vtkOpenGLPolyDataMapper(publicAPI, model) {
     const keyMats = model.openGLCamera.getKeyMatrices(ren);
     const cam = ren.getActiveCamera();
 
-    if (actor.getIsIdentity()) {
-      program.setUniformMatrix('MCDCMatrix', keyMats.wcdc);
-      if (program.isUniformUsed('MCVCMatrix')) {
-        program.setUniformMatrix('MCVCMatrix', keyMats.wcvc);
+    const camm = cam.getMTime();
+    const progm = program.getLastCameraMTime();
+
+    if (progm !== camm) {
+      if (actor.getIsIdentity()) {
+        program.setUniformMatrix('MCDCMatrix', keyMats.wcdc);
+        if (program.isUniformUsed('MCVCMatrix')) {
+          program.setUniformMatrix('MCVCMatrix', keyMats.wcvc);
+        }
+        if (program.isUniformUsed('normalMatrix')) {
+          program.setUniformMatrix3x3('normalMatrix', keyMats.normalMatrix);
+        }
       }
-      if (program.isUniformUsed('normalMatrix')) {
-        program.setUniformMatrix3x3('normalMatrix', keyMats.normalMatrix);
+      if (program.isUniformUsed('cameraParallel')) {
+        program.setUniformi('cameraParallel', cam.getParallelProjection());
       }
-    } else {
+      program.setLastCameraMTime(camm);
+    }
+
+    if (!actor.getIsIdentity()) {
       const actMats = model.openGLActor.getKeyMatrices();
       if (program.isUniformUsed('normalMatrix')) {
         const anorms = mat3.create();
         mat3.multiply(anorms, keyMats.normalMatrix, actMats.normalMatrix);
         program.setUniformMatrix3x3('normalMatrix', anorms);
       }
-      const tmp4 = mat4.create();
-      mat4.multiply(tmp4, keyMats.wcdc, actMats.mcwc);
-      program.setUniformMatrix('MCDCMatrix', tmp4);
+      mat4.identity(model.tmpMat4);
+      mat4.multiply(model.tmpMat4, keyMats.wcdc, actMats.mcwc);
+      program.setUniformMatrix('MCDCMatrix', model.tmpMat4);
       if (program.isUniformUsed('MCVCMatrix')) {
-        mat4.multiply(tmp4, keyMats.wcvc, actMats.mcwc);
-        program.setUniformMatrix('MCVCMatrix', tmp4);
+        mat4.multiply(model.tmpMat4, keyMats.wcvc, actMats.mcwc);
+        program.setUniformMatrix('MCVCMatrix', model.tmpMat4);
       }
-    }
-
-    if (program.isUniformUsed('cameraParallel')) {
-      program.setUniformi('cameraParallel', cam.getParallelProjection());
+      // reset the cam mtime as actor modified the shader values
+      program.setLastCameraMTime(0);
     }
   };
 
@@ -1296,8 +1305,6 @@ function vtkOpenGLPolyDataMapper(publicAPI, model) {
           model.openGLRenderer.getSelector().renderProp(actor);
       }
     }
-    // Line Width setting (FIXME Ken)
-    model.context.lineWidth(actor.getProperty().getLineWidth());
 
     // make sure the BOs are up to date
     publicAPI.updateBufferObjects(ren, actor);
@@ -1392,12 +1399,12 @@ function vtkOpenGLPolyDataMapper(publicAPI, model) {
     const backfaceCulling = actor.getProperty().getBackfaceCulling();
     const frontfaceCulling = actor.getProperty().getFrontfaceCulling();
     if (!backfaceCulling && !frontfaceCulling) {
-      gl.disable(gl.CULL_FACE);
+      model.openGLRenderWindow.disableCullFace();
     } else if (frontfaceCulling) {
-      gl.enable(gl.CULL_FACE);
+      model.openGLRenderWindow.enableCullFace();
       gl.cullFace(gl.FRONT);
     } else {
-      gl.enable(gl.CULL_FACE);
+      model.openGLRenderWindow.enableCullFace();
       gl.cullFace(gl.BACK);
     }
 
@@ -1584,6 +1591,7 @@ const DEFAULT_VALUES = {
   primitives: null,
   primTypes: null,
   shaderRebuildString: null,
+  tmpMat4: null,
   ambientColor: [], // used internally
   diffuseColor: [], // used internally
   specularColor: [], // used internally
@@ -1602,6 +1610,8 @@ export function extend(publicAPI, model, initialValues = {}) {
 
   model.primitives = [];
   model.primTypes = primTypes;
+
+  model.tmpMat4 = mat4.create();
 
   for (let i = primTypes.Start; i < primTypes.End; i++) {
     model.primitives[i] = vtkHelper.newInstance();

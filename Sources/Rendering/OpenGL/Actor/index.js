@@ -14,7 +14,8 @@ function vtkOpenGLActor(publicAPI, model) {
   // Builds myself.
   publicAPI.buildPass = (prepass) => {
     if (prepass) {
-      model.context = publicAPI.getFirstAncestorOfType('vtkOpenGLRenderWindow').getContext();
+      model.openGLRenderWindow = publicAPI.getFirstAncestorOfType('vtkOpenGLRenderWindow');
+      model.context = model.openGLRenderWindow.getContext();
       publicAPI.prepareNodes();
       publicAPI.addMissingNodes(model.renderable.getTextures());
       publicAPI.addMissingNode(model.renderable.getMapper());
@@ -105,7 +106,7 @@ function vtkOpenGLActor(publicAPI, model) {
 
   publicAPI.opaquePass = (prepass, renderPass) => {
     if (prepass) {
-      model.context.depthMask(true);
+      model.openGLRenderWindow.enableDepthMask();
       publicAPI.activateTextures();
     } else if (model.activeTextures) {
       for (let index = 0; index < model.activeTextures.length; index++) {
@@ -117,15 +118,12 @@ function vtkOpenGLActor(publicAPI, model) {
   // Renders myself
   publicAPI.translucentPass = (prepass, renderPass) => {
     if (prepass) {
-      model.context.depthMask(false);
+      model.openGLRenderWindow.disableDepthMask();
       publicAPI.activateTextures();
     } else if (model.activeTextures) {
       for (let index = 0; index < model.activeTextures.length; index++) {
         model.activeTextures[index].deactivate();
       }
-      model.context.depthMask(true);
-    } else {
-      model.context.depthMask(true);
     }
   };
 
@@ -133,19 +131,19 @@ function vtkOpenGLActor(publicAPI, model) {
     // has the actor changed?
     if (model.renderable.getMTime() > model.keyMatrixTime.getMTime()) {
       model.renderable.computeMatrix();
-      mat4.copy(model.MCWCMatrix, model.renderable.getMatrix());
-      mat4.transpose(model.MCWCMatrix, model.MCWCMatrix);
+      mat4.copy(model.keyMatrices.mcwc, model.renderable.getMatrix());
+      mat4.transpose(model.keyMatrices.mcwc, model.keyMatrices.mcwc);
 
       if (model.renderable.getIsIdentity()) {
-        mat3.identity(model.normalMatrix);
+        mat3.identity(model.keyMatrices.normalMatrix);
       } else {
-        mat3.fromMat4(model.normalMatrix, model.MCWCMatrix);
-        mat3.invert(model.normalMatrix, model.normalMatrix);
+        mat3.fromMat4(model.keyMatrices.normalMatrix, model.keyMatrices.mcwc);
+        mat3.invert(model.keyMatrices.normalMatrix, model.keyMatrices.normalMatrix);
       }
       model.keyMatrixTime.modified();
     }
 
-    return { mcwc: model.MCWCMatrix, normalMatrix: model.normalMatrix };
+    return model.keyMatrices;
   };
 }
 
@@ -156,8 +154,7 @@ function vtkOpenGLActor(publicAPI, model) {
 const DEFAULT_VALUES = {
   context: null,
   keyMatrixTime: null,
-  normalMatrix: null,
-  MCWCMatrix: null,
+  keyMatrices: null,
   activeTextures: null,
 };
 
@@ -171,8 +168,10 @@ export function extend(publicAPI, model, initialValues = {}) {
 
   model.keyMatrixTime = {};
   macro.obj(model.keyMatrixTime, { mtime: 0 });
-  model.normalMatrix = mat3.create();
-  model.MCWCMatrix = mat4.create();
+  model.keyMatrices = {
+    normalMatrix: mat3.create(),
+    mcwc: mat4.create(),
+  };
 
   // Build VTK API
   macro.setGet(publicAPI, model, [

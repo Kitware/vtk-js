@@ -294,6 +294,34 @@ function vtkOpenGLRenderWindow(publicAPI, model) {
       publicAPI.invokeImageReady(getCanvasDataURL());
     }
   };
+
+  publicAPI.disableDepthMask = () => {
+    if (model.depthMaskEnabled) {
+      model.context.depthMask(false);
+      model.depthMaskEnabled = false;
+    }
+  };
+
+  publicAPI.enableDepthMask = () => {
+    if (!model.depthMaskEnabled) {
+      model.context.depthMask(true);
+      model.depthMaskEnabled = true;
+    }
+  };
+
+  publicAPI.disableCullFace = () => {
+    if (model.cullFaceEnabled) {
+      model.context.disable(model.context.CULL_FACE);
+      model.cullFaceEnabled = false;
+    }
+  };
+
+  publicAPI.enableCullFace = () => {
+    if (!model.cullFaceEnabled) {
+      model.context.enable(model.context.CULL_FACE);
+      model.cullFaceEnabled = true;
+    }
+  };
 }
 
 // ----------------------------------------------------------------------------
@@ -301,6 +329,8 @@ function vtkOpenGLRenderWindow(publicAPI, model) {
 // ----------------------------------------------------------------------------
 
 const DEFAULT_VALUES = {
+  cullFaceEnabled: false,
+  depthMaskEnabled: true,
   shaderCache: null,
   initialized: false,
   context: null,
