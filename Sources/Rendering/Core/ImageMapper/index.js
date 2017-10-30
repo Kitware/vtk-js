@@ -78,7 +78,7 @@ function vtkImageMapper(publicAPI, model) {
     worldNormal[0] -= worldOrigin[0];
     worldNormal[1] -= worldOrigin[1];
     worldNormal[2] -= worldOrigin[2];
-    vec3.normalize(worldNormal);
+    vec3.normalize(worldNormal, worldNormal);
 
     const intersect = vtkPlane.intersectWithLine(p1, p2, worldOrigin, worldNormal);
     if (intersect.intersection) {
@@ -123,7 +123,7 @@ function vtkImageMapper(publicAPI, model) {
     worldNormal[0] -= worldOrigin[0];
     worldNormal[1] -= worldOrigin[1];
     worldNormal[2] -= worldOrigin[2];
-    vec3.normalize(worldNormal);
+    vec3.normalize(worldNormal, worldNormal);
 
     const intersect = vtkPlane.intersectWithLine(p1, p2, worldOrigin, worldNormal);
     if (intersect.intersection) {
