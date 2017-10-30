@@ -75,7 +75,7 @@ function createViewer(container, fileContentAsText) {
   const mapper = vtkVolumeMapper.newInstance();
   const actor = vtkVolume.newInstance();
 
-  const dataArray = source.getPointData().getScalars();
+  const dataArray = source.getPointData().getScalars() || source.getPointData().getArrays()[0];
   const dataRange = dataArray.getRange();
 
   // Color handling
