@@ -115,7 +115,7 @@ function vtkFullScreenRenderWindow(publicAPI, model) {
   // Handle window resize
   publicAPI.resize = () => {
     const dims = model.container.getBoundingClientRect();
-    model.openGlRenderWindow.setSize(dims.width, dims.height);
+    model.openGlRenderWindow.setSize(Math.floor(dims.width), Math.floor(dims.height));
     if (model.resizeCallback) {
       model.resizeCallback(dims);
     }
