@@ -40,7 +40,7 @@ function vtkViewport(publicAPI, model) {
     for (let index = 0; index < model.props.length; ++index) {
       const prop = model.props[index];
       if (prop.getNestedProps()) {
-        model.allprops = model.allprops.concat(prop.getProps());
+        model.allprops = model.allprops.concat(prop.getNestedProps());
       }
     }
     return model.allprops;
