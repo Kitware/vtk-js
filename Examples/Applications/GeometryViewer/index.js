@@ -22,6 +22,8 @@ let background = [0, 0, 0];
 let renderWindow;
 let renderer;
 
+global.pipeline = {};
+
 const userParams = vtkURLExtract.extractURLParameters();
 if (userParams.background) {
   background = userParams.background.split(',').map(s => Number(s));
@@ -102,12 +104,25 @@ function createPipeline(fileName, fileContentAsText) {
   componentSelector.setAttribute('class', selectorClass);
   componentSelector.style.display = 'none';
 
+  const opacitySelector = document.createElement('input');
+  opacitySelector.setAttribute('class', selectorClass);
+  opacitySelector.setAttribute('type', 'range');
+  opacitySelector.setAttribute('value', '100');
+  opacitySelector.setAttribute('max', '100');
+  opacitySelector.setAttribute('min', '1');
+
+  const labelSelector = document.createElement('label');
+  labelSelector.setAttribute('class', selectorClass);
+  labelSelector.innerHTML = fileName;
+
   const controlContainer = document.createElement('div');
   controlContainer.setAttribute('class', style.control);
+  controlContainer.appendChild(labelSelector);
   controlContainer.appendChild(representationSelector);
   controlContainer.appendChild(presetSelector);
   controlContainer.appendChild(colorBySelector);
   controlContainer.appendChild(componentSelector);
+  controlContainer.appendChild(opacitySelector);
   rootControllerContainer.appendChild(controlContainer);
 
   // VTK pipeline
@@ -150,6 +165,18 @@ function createPipeline(fileName, fileContentAsText) {
     renderWindow.render();
   }
   representationSelector.addEventListener('change', updateRepresentation);
+
+  // --------------------------------------------------------------------
+  // Opacity handling
+  // --------------------------------------------------------------------
+
+  function updateOpacity(event) {
+    const opacity = Number(event.target.value) / 100;
+    actor.getProperty().setOpacity(opacity);
+    renderWindow.render();
+  }
+
+  opacitySelector.addEventListener('input', updateOpacity);
 
   // --------------------------------------------------------------------
   // ColorBy handling
@@ -221,6 +248,8 @@ function createPipeline(fileName, fileContentAsText) {
   // First render
   renderer.resetCamera();
   renderWindow.render();
+
+  global.pipeline[fileName] = { actor, mapper, source, lookupTable, renderer, renderWindow };
 }
 
 // ----------------------------------------------------------------------------
