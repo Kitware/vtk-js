@@ -72,6 +72,14 @@ body {
   border: none;
   margin: 5px;
   z-index: 1;
+  max-width: 100px;
+  min-width: 100px;
+}
+
+label.selector {
+  font-size: 12px;
+  text-overflow: ellipsis;
+  overflow: hidden;
 }
 
 select:focus {
