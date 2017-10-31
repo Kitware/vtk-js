@@ -192,6 +192,17 @@ function createViewer(container, fileContentAsText) {
   // First render
   renderer.resetCamera();
   renderWindow.render();
+
+  global.pipeline = {
+    actor,
+    renderer,
+    renderWindow,
+    lookupTable,
+    mapper,
+    source,
+    piecewiseFunction,
+    fullScreenRenderer,
+  };
 }
 
 // ----------------------------------------------------------------------------
