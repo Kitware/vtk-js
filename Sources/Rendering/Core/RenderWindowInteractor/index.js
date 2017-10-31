@@ -209,13 +209,20 @@ function vtkRenderWindowInteractor(publicAPI, model) {
     }
   };
 
+  function updateAnimationEventPositionsAtRequest(value, key) {
+    model.lastAnimationEventPositions.set(key, value);
+    model.animationEventPositions.set(key, value);
+  }
+
+  function updateAnimationEventPositionsAtHandle(value, key) {
+    model.lastAnimationEventPositions.set(key, model.animationEventPositions.get(key));
+    model.animationEventPositions.set(key, value);
+  }
+
   publicAPI.requestAnimation = (requestor) => {
     model.requestAnimationCount += 1;
     if (model.requestAnimationCount === 1) {
-      model.eventPositions.forEach((value, key) => {
-        model.lastAnimationEventPositions.set(key, value);
-        model.animationEventPositions.set(key, value);
-      });
+      model.eventPositions.forEach(updateAnimationEventPositionsAtRequest);
       model.lastFrameTime = 0.1;
       model.lastFrameStart = new Date().getTime();
       model.animationRequest = requestAnimationFrame(publicAPI.handleAnimation);
@@ -252,10 +259,7 @@ function vtkRenderWindowInteractor(publicAPI, model) {
     }
     model.lastFrameTime = Math.max(0.01, model.lastFrameTime);
     model.lastFrameStart = currTime;
-    model.eventPositions.forEach((value, key) => {
-      model.lastAnimationEventPositions.set(key, model.animationEventPositions.get(key));
-      model.animationEventPositions.set(key, value);
-    });
+    model.eventPositions.forEach(updateAnimationEventPositionsAtHandle);
     publicAPI.animationEvent();
     publicAPI.forceRender();
     model.animationRequest = requestAnimationFrame(publicAPI.handleAnimation);
@@ -370,7 +374,9 @@ function vtkRenderWindowInteractor(publicAPI, model) {
     let viewportren = null;
     let currentRenderer = null;
 
-    rc.forEach((aren) => {
+    let count = rc.length;
+    while (count--) {
+      const aren = rc[count];
       if (model.view.isInViewport(x, y, aren) && aren.getInteractive()) {
         currentRenderer = aren;
       }
@@ -385,7 +391,7 @@ function vtkRenderWindowInteractor(publicAPI, model) {
         // is interactive.
         viewportren = aren;
       }
-    }); // for all renderers
+    }
 
     // We must have a value.  If we found an interactive renderer before, that's
     // better than a non-interactive renderer.

@@ -53,7 +53,9 @@ function computeOpacities(gaussians, sampling = 256) {
     opacities.push(0);
   }
 
-  gaussians.forEach(({ position, height, width, xBias, yBias }) => {
+  let count = gaussians.length;
+  while (count--) {
+    const { position, height, width, xBias, yBias } = gaussians[count];
     for (let i = 0; i < sampling; i++) {
       const x = i / (sampling - 1);
 
@@ -106,7 +108,7 @@ function computeOpacities(gaussians, sampling = 256) {
         opacities[i] = h2;
       }
     }
-  });
+  }
 
   return opacities;
 }
@@ -125,9 +127,9 @@ function drawChart(ctx, area, values, style = { lineWidth: 1, strokeStyle: '#000
   ctx.beginPath();
   ctx.moveTo(area[0], height - area[1]);
 
-  values.forEach((value, index) => {
-    ctx.lineTo(area[0] + (index * horizontalScale), Math.max(area[1], height - (area[1] + (value * verticalScale))));
-  });
+  for (let index = 0; index < values.length; index++) {
+    ctx.lineTo(area[0] + (index * horizontalScale), Math.max(area[1], height - (area[1] + (values[index] * verticalScale))));
+  }
 
   if (fill) {
     ctx.fillStyle = style.fillStyle;
@@ -723,10 +725,11 @@ function vtkPiecewiseGaussianWidget(publicAPI, model) {
     const nodes = [];
     const midpoint = 0.5;
     const sharpness = 0;
-    model.opacities.forEach((y, index) => {
+    for (let index = 0; index < model.opacities.length; index++) {
       const x = rangeToUse[0] + (delta * index);
+      const y = model.opacities[index];
       nodes.push({ x, y, midpoint, sharpness });
-    });
+    }
     return nodes;
   };
 
