@@ -14,7 +14,8 @@ import vtkColorMaps from 'vtk.js/Sources/Rendering/Core/ColorTransferFunction/Co
 // Standard rendering code setup
 // ----------------------------------------------------------------------------
 
-const fullScreenRenderer = vtkFullScreenRenderWindow.newInstance({ background: [0, 0, 0] });
+const rootContainer = document.querySelector('.vtk-js-example-piecewise-gaussian-widget');
+const fullScreenRenderer = vtkFullScreenRenderWindow.newInstance({ background: [0, 0, 0], rootContainer });
 const renderer = fullScreenRenderer.getRenderer();
 const renderWindow = fullScreenRenderer.getRenderWindow();
 
