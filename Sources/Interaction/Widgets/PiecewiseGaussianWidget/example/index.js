@@ -17,7 +17,7 @@ import vtkColorMaps from 'vtk.js/Sources/Rendering/Core/ColorTransferFunction/Co
 const rootContainer = document.querySelector('.vtk-js-example-piecewise-gaussian-widget');
 const urlToLoad = rootContainer ? rootContainer.dataset.url || 'https://kitware.github.io/vtk-js/data/volume/LIDC2.vti' : `${__BASE_PATH__}/data/volume/LIDC2.vti`;
 
-const fullScreenRenderer = vtkFullScreenRenderWindow.newInstance({ background: [0, 0, 0], rootContainer });
+const fullScreenRenderer = vtkFullScreenRenderWindow.newInstance({ background: [0, 0, 0], rootContainer, containerStyle: {} });
 const renderer = fullScreenRenderer.getRenderer();
 const renderWindow = fullScreenRenderer.getRenderWindow();
 
@@ -27,15 +27,15 @@ renderWindow.getInteractor().setDesiredUpdateRate(15.0);
 // Example code
 // ----------------------------------------------------------------------------
 
-const body = document.querySelector('body');
+const body = rootContainer || document.querySelector('body');
 
 // Create Widget container
-const container = document.createElement('div');
-container.style.position = 'absolute';
-container.style.top = 'calc(10px + 1em)';
-container.style.left = '5px';
-container.style.background = 'rgba(255, 255, 255, 0.3)';
-body.appendChild(container);
+const widgetContainer = document.createElement('div');
+widgetContainer.style.position = 'absolute';
+widgetContainer.style.top = 'calc(10px + 1em)';
+widgetContainer.style.left = '5px';
+widgetContainer.style.background = 'rgba(255, 255, 255, 0.3)';
+body.appendChild(widgetContainer);
 
 // Create Label for preset
 const labelContainer = document.createElement('div');
@@ -154,7 +154,7 @@ actor.getProperty().setInterpolationTypeToFastLinear();
 widget.addGaussian(0.425, 0.5, 0.2, 0.3, 0.2);
 widget.addGaussian(0.75, 1, 0.3, 0, 0);
 
-widget.setContainer(container);
+widget.setContainer(widgetContainer);
 widget.bindMouseListeners();
 
 widget.onAnimation((start) => {
