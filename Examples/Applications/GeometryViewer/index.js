@@ -24,7 +24,10 @@ let renderer;
 
 global.pipeline = {};
 
+// Process arguments from URL
 const userParams = vtkURLExtract.extractURLParameters();
+
+// Background handling
 if (userParams.background) {
   background = userParams.background.split(',').map(s => Number(s));
 }
@@ -32,6 +35,15 @@ const selectorClass =
   (background.length === 3 && background.reduce((a, b) => a + b, 0) < 1.5)
   ? style.dark
   : style.light;
+
+// name
+const defaultName = userParams.name || '';
+
+// lut
+const lutName = userParams.lut || 'erdc_rainbow_bright';
+
+// field
+const field = userParams.field || '';
 
 function preventDefaults(e) {
   e.preventDefault();
@@ -89,7 +101,10 @@ function createPipeline(fileName, fileContentAsText) {
   // Create UI
   const presetSelector = document.createElement('select');
   presetSelector.setAttribute('class', selectorClass);
-  presetSelector.innerHTML = vtkColorMaps.rgbPresetNames.map(name => `<option value="${name}">${name}</option>`).join('');
+  presetSelector.innerHTML = vtkColorMaps
+    .rgbPresetNames
+    .map(name => `<option value="${name}" ${lutName === name ? 'selected="selected"' : ''}>${name}</option>`)
+    .join('');
 
   const representationSelector = document.createElement('select');
   representationSelector.setAttribute('class', selectorClass);
@@ -185,7 +200,9 @@ function createPipeline(fileName, fileContentAsText) {
   const colorByOptions = [{ value: ':', label: 'Solid color' }].concat(
     source.getPointData().getArrays().map(a => ({ label: `(p) ${a.getName()}`, value: `PointData:${a.getName()}` })),
     source.getCellData().getArrays().map(a => ({ label: `(c) ${a.getName()}`, value: `CellData:${a.getName()}` })));
-  colorBySelector.innerHTML = colorByOptions.map(({ label, value }) => `<option value="${value}">${label}</option>`).join('');
+  colorBySelector.innerHTML = colorByOptions
+    .map(({ label, value }) => `<option value="${value}" ${field === value ? 'selected="selected"' : ''}>${label}</option>`)
+    .join('');
 
   function updateColorBy(event) {
     const [location, colorByArrayName] = event.target.value.split(':');
@@ -225,6 +242,7 @@ function createPipeline(fileName, fileContentAsText) {
     applyPreset();
   }
   colorBySelector.addEventListener('change', updateColorBy);
+  updateColorBy({ target: colorBySelector });
 
   function updateColorByComponent(event) {
     mapper.setColorByArrayComponent(Number(event.target.value));
@@ -287,7 +305,7 @@ export function load(container, options) {
     HttpDataAccessHelper.fetchText({}, options.fileURL, { progressCallback }).then((txt) => {
       container.removeChild(progressContainer);
       createViewer(container);
-      createPipeline('', txt);
+      createPipeline(defaultName, txt);
     });
   }
 }
