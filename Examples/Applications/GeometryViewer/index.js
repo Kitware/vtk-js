@@ -45,6 +45,16 @@ const lutName = userParams.lut || 'erdc_rainbow_bright';
 // field
 const field = userParams.field || '';
 
+// camera
+function updateCamera(camera) {
+  ['zoom', 'pitch', 'elevation', 'yaw', 'azimuth', 'roll', 'dolly'].forEach((key) => {
+    if (userParams[key]) {
+      camera[key](userParams[key]);
+    }
+    renderWindow.render();
+  });
+}
+
 function preventDefaults(e) {
   e.preventDefault();
   e.stopPropagation();
@@ -89,7 +99,7 @@ function createViewer(container) {
   const fullScreenRenderer = vtkFullScreenRenderWindow.newInstance({ background });
   renderer = fullScreenRenderer.getRenderer();
   renderWindow = fullScreenRenderer.getRenderWindow();
-  renderWindow.getInteractor().setDesiredUpdateRate(25);
+  renderWindow.getInteractor().setDesiredUpdateRate(15);
 
   container.appendChild(rootControllerContainer);
   container.appendChild(addDataSetButton);
@@ -292,6 +302,7 @@ export function load(container, options) {
     while (count--) {
       loadFile(options.files[count]);
     }
+    updateCamera(renderer.getActiveCamera());
   } else if (options.fileURL) {
     const progressContainer = document.createElement('div');
     progressContainer.setAttribute('class', style.progress);
@@ -306,6 +317,7 @@ export function load(container, options) {
       container.removeChild(progressContainer);
       createViewer(container);
       createPipeline(defaultName, txt);
+      updateCamera(renderer.getActiveCamera());
     });
   }
 }
