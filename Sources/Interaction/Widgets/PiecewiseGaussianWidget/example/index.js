@@ -15,6 +15,8 @@ import vtkColorMaps from 'vtk.js/Sources/Rendering/Core/ColorTransferFunction/Co
 // ----------------------------------------------------------------------------
 
 const rootContainer = document.querySelector('.vtk-js-example-piecewise-gaussian-widget');
+const urlToLoad = rootContainer ? rootContainer.dataset.url || 'https://kitware.github.io/vtk-js/data/volume/LIDC2.vti' : `${__BASE_PATH__}/data/volume/LIDC2.vti`;
+
 const fullScreenRenderer = vtkFullScreenRenderWindow.newInstance({ background: [0, 0, 0], rootContainer });
 const renderer = fullScreenRenderer.getRenderer();
 const renderWindow = fullScreenRenderer.getRenderWindow();
@@ -108,7 +110,7 @@ const mapper = vtkVolumeMapper.newInstance({ sampleDistance: 1.1 });
 const reader = vtkHttpDataSetReader.newInstance({ fetchGzip: true });
 
 
-reader.setUrl(`${__BASE_PATH__}/data/volume/LIDC2.vti`).then(() => {
+reader.setUrl(urlToLoad).then(() => {
   reader.loadData().then(() => {
     const imageData = reader.getOutputData();
     const dataArray = imageData.getPointData().getScalars();
