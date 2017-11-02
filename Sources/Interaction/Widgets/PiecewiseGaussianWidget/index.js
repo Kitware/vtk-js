@@ -37,8 +37,8 @@ const ACTIONS = {
     gaussian.xBias = Math.max(-1, Math.min(1, gaussian.xBias));
     gaussian.yBias = Math.max(0, Math.min(2, gaussian.yBias));
   },
-  adjustWidth(x, y, originalXY, gaussian, originalGaussian) {
-    gaussian.width = (originalGaussian.position < x) ? originalGaussian.width - (originalXY[0] - x) : originalGaussian.width + (originalXY[0] - x);
+  adjustWidth(x, y, originalXY, gaussian, originalGaussian, side) {
+    gaussian.width = (side.position < 0) ? originalGaussian.width - (originalXY[0] - x) : originalGaussian.width + (originalXY[0] - x);
     if (gaussian.width < MIN_GAUSSIAN_WIDTH) {
       gaussian.width = MIN_GAUSSIAN_WIDTH;
     }
@@ -499,6 +499,11 @@ function vtkPiecewiseGaussianWidget(publicAPI, model) {
     const newSelected = findGaussian(xNormalized, model.gaussians);
     if (newSelected !== model.selectedGaussian && xNormalized > 0) {
       model.selectedGaussian = newSelected;
+      model.gaussianSide = 0;
+      if (model.selectedGaussian) {
+        model.gaussianSide = model.selectedGaussian.position - x;
+      }
+
       publicAPI.modified();
     }
     return true;
@@ -508,7 +513,7 @@ function vtkPiecewiseGaussianWidget(publicAPI, model) {
     if (model.dragAction) {
       const [xNormalized, yNormalized] = normalizeCoordinates(x, y, model.graphArea);
       const { position, gaussian, originalGaussian, action } = model.dragAction;
-      action(xNormalized, yNormalized, position, gaussian, originalGaussian);
+      action(xNormalized, yNormalized, position, gaussian, originalGaussian, model.gaussianSide);
       model.opacities = computeOpacities(model.gaussians, model.piecewiseSize);
       publicAPI.invokeOpacityChange(publicAPI, true);
       publicAPI.modified();
