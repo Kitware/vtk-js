@@ -43,7 +43,7 @@ const labelContainer = document.createElement('div');
 labelContainer.style.position = 'absolute';
 labelContainer.style.top = '5px';
 labelContainer.style.left = '5px';
-labelContainer.style.width = '400px';
+labelContainer.style.width = '100%';
 labelContainer.style.color = 'white';
 labelContainer.style.textAlign = 'center';
 labelContainer.style.userSelect = 'none';
@@ -104,12 +104,15 @@ widget.updateStyle({
   padding: 10,
 });
 
+fullScreenRenderer.setResizeCallback(({ width, height }) => {
+  widget.setSize(width - 10, 150);
+});
+
 const piecewiseFunction = vtkPiecewiseFunction.newInstance();
 
 const actor = vtkVolume.newInstance();
 const mapper = vtkVolumeMapper.newInstance({ sampleDistance: 1.1 });
 const reader = vtkHttpDataSetReader.newInstance({ fetchGzip: true });
-
 
 reader.setUrl(urlToLoad).then(() => {
   reader.loadData().then(() => {
@@ -123,7 +126,9 @@ reader.setUrl(urlToLoad).then(() => {
     changePreset();
 
     // Automatic switch to next preset every 5s
-    intervalID = setInterval(changePreset, 5000);
+    if (!rootContainer) {
+      intervalID = setInterval(changePreset, 5000);
+    }
 
     widget.setDataArray(dataArray.getData());
     widget.applyOpacity(piecewiseFunction);
