@@ -350,6 +350,7 @@ function vtkPiecewiseGaussianWidget(publicAPI, model) {
 
     if (model.size[0] !== width || model.size[1] !== height) {
       model.size = [width, height];
+      model.colorCanvasMTime = 0;
       publicAPI.modified();
     }
   };
