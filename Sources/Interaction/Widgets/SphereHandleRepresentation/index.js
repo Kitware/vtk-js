@@ -20,7 +20,7 @@ function vtkSphereHandleRepresentation(publicAPI, model) {
   const superClass = Object.assign({}, publicAPI);
 
   publicAPI.getActors = () => model.actor;
-  publicAPI.getNestedProps = () => model.actor;
+  publicAPI.getNestedProps = () => publicAPI.getActors();
 
   publicAPI.placeWidget = (...bounds) => {
     let boundsArray = [];
@@ -52,7 +52,7 @@ function vtkSphereHandleRepresentation(publicAPI, model) {
 
   publicAPI.setSphereRadius = (radius) => {
     model.sphere.setRadius(radius);
-    model.modified();
+    publicAPI.modified();
   };
 
   publicAPI.getSphereRadius = () => model.sphere.getRadius();
@@ -281,6 +281,10 @@ function vtkSphereHandleRepresentation(publicAPI, model) {
       model.sphere.update();
       publicAPI.modified();
     }
+  };
+
+  publicAPI.setProperty = (property) => {
+    model.actor.setProperty(property);
   };
 }
 

@@ -56,6 +56,7 @@ function vtkAbstractWidget(publicAPI, model) {
       // Enable listening events
       publicAPI.listenEvents();
 
+      model.widgetRep.getBounds();
       model.widgetRep.buildRepresentation();
       model.currentRenderer.addViewProp(model.widgetRep);
     } else {
