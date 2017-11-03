@@ -105,7 +105,7 @@ widget.updateStyle({
 });
 
 fullScreenRenderer.setResizeCallback(({ width, height }) => {
-  widget.setSize(width - 10, 150);
+  widget.setSize(Math.min(450, width - 10), 150);
 });
 
 const piecewiseFunction = vtkPiecewiseFunction.newInstance();
