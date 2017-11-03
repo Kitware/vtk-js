@@ -38,7 +38,7 @@ const ACTIONS = {
     gaussian.yBias = Math.max(0, Math.min(2, gaussian.yBias));
   },
   adjustWidth(x, y, originalXY, gaussian, originalGaussian, side) {
-    gaussian.width = (side.position < 0) ? originalGaussian.width - (originalXY[0] - x) : originalGaussian.width + (originalXY[0] - x);
+    gaussian.width = (side < 0) ? originalGaussian.width - (originalXY[0] - x) : originalGaussian.width + (originalXY[0] - x);
     if (gaussian.width < MIN_GAUSSIAN_WIDTH) {
       gaussian.width = MIN_GAUSSIAN_WIDTH;
     }
@@ -498,13 +498,14 @@ function vtkPiecewiseGaussianWidget(publicAPI, model) {
     model.mouseIsDown = true;
     const xNormalized = normalizeCoordinates(x, y, model.graphArea)[0];
     const newSelected = findGaussian(xNormalized, model.gaussians);
+    model.gaussianSide = 0;
+    const gaussian = model.gaussians[newSelected];
+    if (gaussian) {
+      model.gaussianSide = gaussian.position - xNormalized;
+    }
+
     if (newSelected !== model.selectedGaussian && xNormalized > 0) {
       model.selectedGaussian = newSelected;
-      model.gaussianSide = 0;
-      if (model.selectedGaussian) {
-        model.gaussianSide = model.selectedGaussian.position - x;
-      }
-
       publicAPI.modified();
     }
     return true;
