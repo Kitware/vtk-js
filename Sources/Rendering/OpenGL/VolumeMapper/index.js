@@ -11,7 +11,7 @@ import vtkShaderProgram     from 'vtk.js/Sources/Rendering/OpenGL/ShaderProgram'
 import vtkVertexArrayObject from 'vtk.js/Sources/Rendering/OpenGL/VertexArrayObject';
 import vtkViewNode          from 'vtk.js/Sources/Rendering/SceneGraph/ViewNode';
 import { Representation }   from 'vtk.js/Sources/Rendering/Core/Property/Constants';
-import { Filter }           from 'vtk.js/Sources/Rendering/OpenGL/Texture/Constants';
+import { Wrap, Filter }     from 'vtk.js/Sources/Rendering/OpenGL/Texture/Constants';
 import { InterpolationType } from 'vtk.js/Sources/Rendering/Core/VolumeProperty/Constants';
 
 import vtkVolumeVS from 'vtk.js/Sources/Rendering/OpenGL/glsl/vtkVolumeVS.glsl';
@@ -57,6 +57,8 @@ function vtkOpenGLVolumeMapper(publicAPI, model) {
       model.opacityTexture.setContext(model.context);
       model.lightingTexture.setWindow(model.openGLRenderWindow);
       model.lightingTexture.setContext(model.context);
+      model.jitterTexture.setWindow(model.openGLRenderWindow);
+      model.jitterTexture.setContext(model.context);
       model.framebuffer.setWindow(model.openGLRenderWindow);
 
       model.openGLVolume = publicAPI.getFirstAncestorOfType('vtkOpenGLVolume');
@@ -595,6 +597,8 @@ function vtkOpenGLVolumeMapper(publicAPI, model) {
       model.colorTexture.getTextureUnit());
     program.setUniformi('otexture',
       model.opacityTexture.getTextureUnit());
+    program.setUniformi('jtexture',
+      model.jitterTexture.getTextureUnit());
 
     const volInfo = model.scalarTexture.getVolumeInfo();
     const sscale = volInfo.max - volInfo.min;
@@ -779,6 +783,7 @@ function vtkOpenGLVolumeMapper(publicAPI, model) {
     model.scalarTexture.activate();
     model.opacityTexture.activate();
     model.colorTexture.activate();
+    model.jitterTexture.activate();
     if (actor.getProperty().getShade() ||
         actor.getProperty().getUseGradientOpacity(0)) {
       model.lightingTexture.activate();
@@ -794,6 +799,7 @@ function vtkOpenGLVolumeMapper(publicAPI, model) {
     model.scalarTexture.deactivate();
     model.colorTexture.deactivate();
     model.opacityTexture.deactivate();
+    model.jitterTexture.deactivate();
     if (actor.getProperty().getShade() ||
         actor.getProperty().getUseGradientOpacity(0)) {
       model.lightingTexture.deactivate();
@@ -923,6 +929,17 @@ function vtkOpenGLVolumeMapper(publicAPI, model) {
 
     const vprop = actor.getProperty();
 
+    if (!model.jitterTexture.getHandle()) {
+      const oTable = new Uint8Array(32 * 32);
+      for (let i = 0; i < 32 * 32; ++i) {
+        oTable[i] = 255.0 * Math.random();
+      }
+      model.jitterTexture.setMinificationFilter(Filter.LINEAR);
+      model.jitterTexture.setMagnificationFilter(Filter.LINEAR);
+      model.jitterTexture.create2DFromRaw(32, 32, 1,
+        VtkDataTypes.UNSIGNED_CHAR, oTable);
+    }
+
     // rebuild opacity tfun?
     const ofun = vprop.getScalarOpacity(0);
     const opacityFactor = model.renderable.getSampleDistance() /
@@ -1035,6 +1052,7 @@ const DEFAULT_VALUES = {
   colortextureString: null,
   lightingTexture: null,
   lightingTextureString: null,
+  jitterTexture: null,
   tris: null,
   framebuffer: null,
   copyShader: null,
@@ -1067,6 +1085,9 @@ export function extend(publicAPI, model, initialValues = {}) {
   model.opacityTexture = vtkOpenGLTexture.newInstance();
   model.colorTexture = vtkOpenGLTexture.newInstance();
   model.lightingTexture = vtkOpenGLTexture.newInstance();
+  model.jitterTexture = vtkOpenGLTexture.newInstance();
+  model.jitterTexture.setWrapS(Wrap.REPEAT);
+  model.jitterTexture.setWrapT(Wrap.REPEAT);
   model.framebuffer = vtkOpenGLFramebuffer.newInstance();
 
   model.idxToView = mat4.create();

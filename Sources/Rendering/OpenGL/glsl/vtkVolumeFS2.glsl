@@ -50,6 +50,9 @@ uniform sampler2D ctexture;
 uniform float cshift;
 uniform float cscale;
 
+// jitter texture
+uniform sampler2D jtexture;
+
 // some 3D texture values
 uniform highp sampler3D texture1;
 uniform float sampleDistance;
@@ -164,8 +167,9 @@ void main()
     float numSteps = length(vdelta) / sampleDistance;
     vdelta = vdelta / numSteps;
 
-    // start slightly inside
-    vpos = vpos + vdelta*0.1;
+    // start slightly inside and apply some jitter
+    float jitter = texture2D(jtexture, gl_FragCoord.xy/32.0).r;
+    vpos = vpos + vdelta*(0.01 + 0.98*jitter);
     vec4 color = vec4(0.0, 0.0, 0.0, 0.0);
 
     vec3 ijk = vpos * vVCToIJK;

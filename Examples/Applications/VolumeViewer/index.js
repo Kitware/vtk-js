@@ -110,7 +110,8 @@ function createViewer(container, fileContentAsText) {
   mapper.setSampleDistance(sampleDistance);
   actor.getProperty().setRGBTransferFunction(0, lookupTable);
   actor.getProperty().setScalarOpacity(0, piecewiseFunction);
-  actor.getProperty().setInterpolationTypeToFastLinear();
+  // actor.getProperty().setInterpolationTypeToFastLinear();
+  actor.getProperty().setInterpolationTypeToLinear();
 
   // For better looking volume rendering
   // - distance in world coordinates a scalar opacity of 1.0
