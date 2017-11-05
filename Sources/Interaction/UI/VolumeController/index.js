@@ -64,7 +64,7 @@ function vtkVolumeController(publicAPI, model) {
     const value = Number(model.el.querySelector('.js-spacing').value);
     const sourceDS = model.actor.getMapper().getInputData();
     const sampleDistance = 0.7 * Math.sqrt(sourceDS.getSpacing().map(v => v * v).reduce((a, b) => a + b, 0));
-    model.actor.getMapper().setSampleDistance(sampleDistance * Math.pow(2, (value * 2.0) - 1.0));
+    model.actor.getMapper().setSampleDistance(sampleDistance * Math.pow(2, (value * 3.0) - 1.5));
     model.renderWindow.render();
   }
 
@@ -77,7 +77,11 @@ function vtkVolumeController(publicAPI, model) {
       const dataArray = sourceDS.getPointData().getScalars() || sourceDS.getPointData().getArrays()[0];
       const dataRange = dataArray.getRange();
       model.actor.getProperty().setUseGradientOpacity(0, true);
-      model.actor.getProperty().setGradientOpacityMaximumValue(0, (dataRange[1] - dataRange[0]) * 0.05 * value);
+      const minV = Math.max(0.0, value - 0.3) / 0.7;
+      model.actor.getProperty().setGradientOpacityMinimumValue(0,
+        (dataRange[1] - dataRange[0]) * 0.2 * minV * minV);
+      model.actor.getProperty().setGradientOpacityMaximumValue(0,
+        (dataRange[1] - dataRange[0]) * 1.0 * value * value);
     }
     model.renderWindow.render();
   }
@@ -110,11 +114,11 @@ function vtkVolumeController(publicAPI, model) {
       <div class="${style.line} js-toggle">
         <div class="${style.sliderEntry}">
           <div class="${style.sliderIcon}">${svgSpacing}</div>
-          <input type="range" min="0" max="1" value="0.25" step="0.01" class="${style.slider} js-spacing" />
+          <input type="range" min="0" max="1" value="0.4" step="0.01" class="${style.slider} js-spacing" />
         </div>
         <div class="${style.sliderEntry}">
           <div class="${style.sliderIcon}">${svgEdge}</div>
-          <input type="range" min="0" max="1" value="0.5" step="0.01" class="${style.slider} js-edge" />
+          <input type="range" min="0" max="1" value="0.2" step="0.01" class="${style.slider} js-edge" />
         </div>
       </div>
       <div class="${style.piecewiseEditor} js-pwf js-toggle"></div>
