@@ -1,0 +1,123 @@
+.container {
+  display: flex;
+  align-items: stretch;
+  flex-direction: column;
+  justify-content: space-between;
+  position: absolute;
+  top: 5px;
+  left: 5px;
+  background: rgba(128, 128, 128, 0.5);
+  border-radius: 5px;
+  padding: 2px;
+  border: 0.5px solid black;
+  box-sizing: border-box;
+}
+
+.line {
+  display: flex;
+  flex-direction: row;
+  flex: 1;
+  align-items: center;
+  justify-content: space-between;
+}
+
+.button {
+  cursor: pointer;
+  width: 1rem;
+  margin-left: 5px;
+  margin-right: 5px;
+}
+
+.button svg {
+  width: 1rem;
+  height: 1rem;
+}
+
+.sliderEntry {
+  flex: 1;
+  display: flex;
+  flex-direction: row;
+  align-items: center;
+}
+
+.sliderIcon {
+  composes: button;
+  height: 1rem;
+}
+
+.slider {
+  flex: 1;
+  min-height: 1rem;
+  width: 5px;
+}
+
+.piecewiseEditor {
+  flex: 1;
+}
+
+.select {
+  flex: 1;
+  border: none;
+  background: transparent;
+  color: white;
+  border: none;
+  -moz-appearance: none;
+  width: 5px;
+}
+
+.select select:focus {
+  outline: none;
+  border: none;
+}
+
+.presets {
+  composes: select;
+}
+
+.shadow {
+  composes: select;
+}
+
+.buttonDarkBG {
+  composes: button;
+}
+
+.presetsDarkBG {
+  composes: presets;
+  color: white;
+}
+
+.presetsDarkBG option {
+  color: black;
+}
+
+.shadowDarkBG {
+  composes: shadow;
+  color: white;
+}
+
+.shadowDarkBG option {
+  color: black;
+}
+
+.buttonBrightBG {
+  composes: button;
+}
+
+.presetsBrightBG {
+  composes: presets;
+  color: black;
+}
+
+.presetsBrightBG option {
+  color: white;
+}
+
+.shadowBrightBG {
+  composes: shadow;
+  color: black;
+}
+
+.shadowBrightBG option {
+  color: white;
+}

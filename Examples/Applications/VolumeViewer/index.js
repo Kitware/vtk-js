@@ -6,11 +6,10 @@ import 'vtk.js/Sources/favicon';
 
 import HttpDataAccessHelper       from 'vtk.js/Sources/IO/Core/DataAccessHelper/HttpDataAccessHelper';
 import vtkBoundingBox             from 'vtk.js/Sources/Common/DataModel/BoundingBox';
-import vtkColorMaps               from 'vtk.js/Sources/Rendering/Core/ColorTransferFunction/ColorMaps';
 import vtkColorTransferFunction   from 'vtk.js/Sources/Rendering/Core/ColorTransferFunction';
 import vtkFullScreenRenderWindow  from 'vtk.js/Sources/Rendering/Misc/FullScreenRenderWindow';
 import vtkPiecewiseFunction       from 'vtk.js/Sources/Common/DataModel/PiecewiseFunction';
-import vtkPiecewiseGaussianWidget from 'vtk.js/Sources/Interaction/Widgets/PiecewiseGaussianWidget';
+import vtkVolumeController        from 'vtk.js/Sources/Interaction/UI/VolumeController';
 import vtkURLExtract              from 'vtk.js/Sources/Common/Core/URLExtract';
 import vtkVolume                  from 'vtk.js/Sources/Rendering/Core/Volume';
 import vtkVolumeMapper            from 'vtk.js/Sources/Rendering/Core/VolumeMapper';
@@ -19,21 +18,7 @@ import vtkXMLImageDataReader      from 'vtk.js/Sources/IO/XML/XMLImageDataReader
 import style from './VolumeViewer.mcss';
 
 let autoInit = true;
-
-// ----------------------------------------------------------------------------
-// DOM containers for UI control
-// ----------------------------------------------------------------------------
-
-const presetSelector = document.createElement('select');
-presetSelector.setAttribute('class', style.selector);
-presetSelector.innerHTML = vtkColorMaps.rgbPresetNames.map(name => `<option value="${name}">${name}</option>`).join('');
-
-const widgetContainer = document.createElement('div');
-widgetContainer.setAttribute('class', style.piecewiseWidget);
-
-const shadowContainer = document.createElement('select');
-shadowContainer.setAttribute('class', style.shadow);
-shadowContainer.innerHTML = '<option value="1">Use shadow</option><option value="0">No shadow</option>';
+const userParams = vtkURLExtract.extractURLParameters();
 
 // ----------------------------------------------------------------------------
 // Add class to body if iOS device
@@ -62,11 +47,13 @@ function preventDefaults(e) {
 
 // ----------------------------------------------------------------------------
 
-function createViewer(container, fileContentAsText) {
-  const fullScreenRenderer = vtkFullScreenRenderWindow.newInstance({ background: [0, 0, 0], rootContainer: container });
+function createViewer(rootContainer, fileContentAsText, options) {
+  const background = options.background ? options.background.split(',').map(s => Number(s)) : [0, 0, 0];
+  const containerStyle = options.containerStyle;
+  const fullScreenRenderer = vtkFullScreenRenderWindow.newInstance({ background, rootContainer, containerStyle });
   const renderer = fullScreenRenderer.getRenderer();
   const renderWindow = fullScreenRenderer.getRenderWindow();
-  renderWindow.getInteractor().setDesiredUpdateRate(25);
+  renderWindow.getInteractor().setDesiredUpdateRate(15);
 
   const vtiReader = vtkXMLImageDataReader.newInstance();
   vtiReader.parse(fileContentAsText);
@@ -78,26 +65,7 @@ function createViewer(container, fileContentAsText) {
   const dataArray = source.getPointData().getScalars() || source.getPointData().getArrays()[0];
   const dataRange = dataArray.getRange();
 
-  // Color handling
   const lookupTable = vtkColorTransferFunction.newInstance();
-  function applyPreset() {
-    const preset = vtkColorMaps.getPresetByName(presetSelector.value);
-    lookupTable.applyColorMap(preset);
-    lookupTable.setMappingRange(...dataRange);
-    lookupTable.updateRange();
-  }
-  applyPreset();
-  presetSelector.addEventListener('change', applyPreset);
-
-  // Shadow management
-  shadowContainer.addEventListener('change', (event) => {
-    const useShadow = !!Number(event.target.value);
-    actor.getProperty().setShade(useShadow);
-    actor.getProperty().setUseGradientOpacity(0, useShadow);
-    renderWindow.render();
-  });
-
-  // Opacity handling
   const piecewiseFunction = vtkPiecewiseFunction.newInstance();
 
   // Pipeline handling
@@ -136,59 +104,19 @@ function createViewer(container, fileContentAsText) {
   actor.getProperty().setSpecularPower(8.0);
 
   // Control UI
-  const transferFunctionWidget = vtkPiecewiseGaussianWidget.newInstance({ numberOfBins: 256, size: [400, 150] });
-  transferFunctionWidget.updateStyle({
-    backgroundColor: 'rgba(255, 255, 255, 0.6)',
-    histogramColor: 'rgba(100, 100, 100, 0.5)',
-    strokeColor: 'rgb(0, 0, 0)',
-    activeColor: 'rgb(255, 255, 255)',
-    handleColor: 'rgb(50, 150, 50)',
-    buttonDisableFillColor: 'rgba(255, 255, 255, 0.5)',
-    buttonDisableStrokeColor: 'rgba(0, 0, 0, 0.5)',
-    buttonStrokeColor: 'rgba(0, 0, 0, 1)',
-    buttonFillColor: 'rgba(255, 255, 255, 1)',
-    strokeWidth: 2,
-    activeStrokeWidth: 3,
-    buttonStrokeWidth: 1.5,
-    handleWidth: 3,
-    iconSize: 0,
-    padding: 10,
-  });
-  transferFunctionWidget.addGaussian(0.5, 1.0, 0.5, 0.5, 0.4);
-  transferFunctionWidget.setDataArray(dataArray.getData());
-  transferFunctionWidget.setColorTransferFunction(lookupTable);
-  transferFunctionWidget.applyOpacity(piecewiseFunction);
-  transferFunctionWidget.setContainer(widgetContainer);
-  transferFunctionWidget.bindMouseListeners();
-
-  // Manage update when opacity change
-  transferFunctionWidget.onAnimation((start) => {
-    if (start) {
-      renderWindow.getInteractor().requestAnimation(transferFunctionWidget);
+  const controllerWidget = vtkVolumeController.newInstance({ size: [400, 150] });
+  const isBackgroundDark = (background[0] + background[1] + background[2]) < 1.5;
+  controllerWidget.setContainer(rootContainer);
+  controllerWidget.setupContent(renderWindow, actor, isBackgroundDark);
+  fullScreenRenderer.setResizeCallback(({ width, height }) => {
+    // 2px padding + 2x1px boder + 5px edge = 14
+    if (width > 414) {
+      controllerWidget.setSize(400, 150);
     } else {
-      renderWindow.getInteractor().cancelAnimation(transferFunctionWidget);
-      renderWindow.render();
+      controllerWidget.setSize(width - 14, 150);
     }
+    controllerWidget.render();
   });
-  transferFunctionWidget.onOpacityChange(() => {
-    transferFunctionWidget.applyOpacity(piecewiseFunction);
-    if (!renderWindow.getInteractor().isAnimating()) {
-      renderWindow.render();
-    }
-  });
-
-  // Manage update when lookupTable change
-  lookupTable.onModified(() => {
-    transferFunctionWidget.render();
-    if (!renderWindow.getInteractor().isAnimating()) {
-      renderWindow.render();
-    }
-  });
-
-  // Add UI to web page
-  container.appendChild(widgetContainer);
-  container.appendChild(presetSelector);
-  container.appendChild(shadowContainer);
 
   // First render
   renderer.resetCamera();
@@ -216,7 +144,7 @@ export function load(container, options) {
     if (options.ext === 'vti') {
       const reader = new FileReader();
       reader.onload = function onLoad(e) {
-        createViewer(container, reader.result);
+        createViewer(container, reader.result, options);
       };
       reader.readAsText(options.file);
     } else {
@@ -234,7 +162,7 @@ export function load(container, options) {
 
     HttpDataAccessHelper.fetchText({}, options.fileURL, { progressCallback }).then((txt) => {
       container.removeChild(progressContainer);
-      createViewer(container, txt);
+      createViewer(container, txt, options);
     });
   }
 }
@@ -257,7 +185,8 @@ export function initLocalFileLoader(container) {
     if (files.length === 1) {
       myContainer.removeChild(fileContainer);
       const ext = files[0].name.split('.').slice(-1)[0];
-      load(myContainer, { file: files[0], ext });
+      const options = Object.assign({ file: files[0], ext }, userParams);
+      load(myContainer, options);
     }
   }
 
@@ -270,13 +199,20 @@ export function initLocalFileLoader(container) {
 
 // Look at URL an see if we should load a file
 // ?fileURL=https://data.kitware.com/api/v1/item/59cdbb588d777f31ac63de08/download
-const userParams = vtkURLExtract.extractURLParameters();
-
 if (userParams.fileURL) {
   const exampleContainer = document.querySelector('.content');
   const rootBody = document.querySelector('body');
   const myContainer = exampleContainer || rootBody;
   load(myContainer, userParams);
+}
+
+const viewerContainers = document.querySelectorAll('.vtkjs-volume-viewer');
+let nbViewers = viewerContainers.length;
+while (nbViewers--) {
+  const viewerContainer = viewerContainers[nbViewers];
+  const fileURL = viewerContainer.dataset.url;
+  const options = Object.assign({ containerStyle: { height: '100%' } }, userParams, { fileURL });
+  load(viewerContainer, options);
 }
 
 // Auto setup if no method get called within 100ms
