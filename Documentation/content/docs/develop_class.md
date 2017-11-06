@@ -4,9 +4,9 @@ title: Creating a new class in vtk.js
 This guide illustrates how to add new classes to the vtk.js repository and the concepts behind the infrastructure we use.
 
 First of all, vtk.js does not rely on the class definition that was brought in with the ES6 specification. Instead, vtk.js provides a closure based infrastructure which lets us compose methods into specific instances without any hierarchical constraint.
-Due to our closure paradigm methods can be used outside of their instance context and can be directly be passed as callbacks. Therefore their usage does not require `this` to be referenced each time. 
+Due to our closure paradigm methods can be used outside of their instance context and can be directly be passed as callbacks. Therefore their usage does not require `this` to be referenced each time.
 
-By convention, we create a directory for each of our class. The name of the directory must be the name of the class capitalized without its "vtk" prefix (although when importing a class, we will readd the "vtk" prefix). The definition of that class should be held in an "index.js" file within that directory.
+By convention, we create a directory for each of our class. The name of the directory must be the name of the class capitalized without its "vtk" prefix (although when importing a class, we will add the "vtk" prefix). The definition of that class should be held in an "index.js" file within that directory.
 
 ```js
 import vtkDataSet from 'vtk.js/Sources/Common/DataModel/DataSet';
@@ -41,8 +41,8 @@ For instance, vtk.js currently have the following set of **kits** in bold and *m
 ## Class definition
 
 Here is an example of how to get started writing a new class for vtk.js.
-The design inspiration originated from Douglas Crockford with functional inheritance but we went further in some way too and the [blog](https://medium.com/javascript-scene/functional-mixins-composing-software-ffb66d5e731c) provides a very good background on the technics we use and leverage inside vtk.js.
-That other [blog](https://medium.com/@kentcdodds/classes-complexity-and-functional-programming-a8dd86903747) also explain why classes in JavaScript are not always the best choice.
+The design inspiration originated from Douglas Crockford with functional inheritance, but we went further in some ways, too. This [blog](https://medium.com/javascript-scene/functional-mixins-composing-software-ffb66d5e731c) provides a very good background on the techniques we use and leverage inside vtk.js.
+This [blog](https://medium.com/@kentcdodds/classes-complexity-and-functional-programming-a8dd86903747) also explains why classes in JavaScript are not always the best choice.
 
 
 ```js MyClass/index.js
