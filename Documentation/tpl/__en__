@@ -2,6 +2,7 @@ menu:
   docs: Docs
   api: API
   examples: Examples
+  datasets: Sample data
   news: News
   search: Search
 
