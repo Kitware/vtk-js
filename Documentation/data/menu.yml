@@ -1,3 +1,4 @@
 docs: /docs/
 api: /api/
 examples: /examples/
+datasets: https://kitware.github.io/vtk-js-datasets/
