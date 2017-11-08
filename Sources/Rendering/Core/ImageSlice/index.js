@@ -151,6 +151,14 @@ function vtkImageSlice(publicAPI, model) {
         mt = (time > mt ? time : mt);
       }
     }
+    if (model.property !== null) {
+      let time = model.property.getMTime();
+      mt = (time > mt ? time : mt);
+      if (model.property.getRGBTransferFunction() !== null) {
+        time = model.property.getRGBTransferFunction().getMTime();
+        mt = (time > mt ? time : mt);
+      }
+    }
     return mt;
   };
 

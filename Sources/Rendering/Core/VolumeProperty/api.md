@@ -31,7 +31,7 @@ between nodes.
 See the description of class vtkPiecewiseFunction for an explanation of
 midpoint and sharpness.
 
-## Useage
+## Usage
 
 ```js
 
@@ -54,9 +54,9 @@ midpoint and sharpness.
 
 ## See Also
 
-[vtkColorTransferFunction](./Rendering_Core_ColorTransferFunction.html) 
-[vtkPiecewiseFunction](./Common_DataModel_PiecewiseFunction.html) 
-[vtkVolume](./Rendering_Core_Volume.html) 
+[vtkColorTransferFunction](./Rendering_Core_ColorTransferFunction.html)
+[vtkPiecewiseFunction](./Common_DataModel_PiecewiseFunction.html)
+[vtkVolume](./Rendering_Core_Volume.html)
 
 ## Methods
 
@@ -70,7 +70,7 @@ Set/Get the interpolation type for sampling a volume. The initial
 value is FAST_LINEAR. NEAREST interpolation will snap to the closest
 voxel, LINEAR will perform trilinear interpolation to compute a
 scalar value from surrounding voxels. FAST_LINEAR under WebGL 1
-will perform bilinear interpolation on X and Y but use nearest 
+will perform bilinear interpolation on X and Y but use nearest
 for Z. This is slightly faster than full linear at the cost of
 no Z axis linear interpolation.
 

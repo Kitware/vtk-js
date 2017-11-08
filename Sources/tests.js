@@ -26,6 +26,7 @@ import './Rendering/Core/SphereMapper/test/testDisableScalarColoring';
 import './Rendering/OpenGL/Actor/test/testRotate';
 import './Rendering/OpenGL/HardwareSelector/test/testHardwareSelector';
 import './Rendering/OpenGL/ImageMapper/test/testImage';
+import './Rendering/OpenGL/ImageMapper/test/testImageColorTransferFunction';
 import './Rendering/OpenGL/PolyDataMapper/test/testAddShaderReplacements';
 import './Rendering/OpenGL/PolyDataMapper/test/testClearShaderReplacements';
 import './Rendering/OpenGL/PolyDataMapper/test/testClippingPlanes';

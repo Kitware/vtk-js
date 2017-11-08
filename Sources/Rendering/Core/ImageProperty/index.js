@@ -18,6 +18,7 @@ const DEFAULT_VALUES = {
   ambient: 1.0,
   diffuse: 0.0,
   opacity: 1.0,
+  rGBTransferFunction: null,
 };
 
 // ----------------------------------------------------------------------------
@@ -34,7 +35,18 @@ export function extend(publicAPI, model, initialValues = {}) {
     'ambient',
     'diffuse',
     'opacity',
+    'rGBTransferFunction',
   ]);
+
+  publicAPI.getMTime = () => {
+    let mTime = model.mtime;
+    if (model.rGBTransferFunction !== null) {
+      const time = model.rGBTransferFunction.getMTime();
+      mTime = (time > mTime ? time : mTime);
+    }
+
+    return mTime;
+  };
 
   // Object methods
   vtkImageProperty(publicAPI, model);
