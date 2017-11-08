@@ -792,6 +792,9 @@ function vtkOpenGLVolumeMapper(publicAPI, model) {
     publicAPI.updateShaders(model.tris, ren, actor);
 
     // First we do the triangles, update the shader, set uniforms, etc.
+    // for (let i = 0; i < 11; ++i) {
+    //   gl.drawArrays(gl.TRIANGLES, 66 * i, 66);
+    // }
     gl.drawArrays(gl.TRIANGLES, 0,
       model.tris.getCABO().getElementCount());
     model.tris.getVAO().release();
@@ -1014,9 +1017,6 @@ function vtkOpenGLVolumeMapper(publicAPI, model) {
         ptsArray[(i * 3) + 2] = -1.0;
       }
 
-      const points = vtkDataArray.newInstance({ numberOfComponents: 3, values: ptsArray });
-      points.setName('points');
-
       const cellArray = new Uint16Array(8);
       cellArray[0] = 3;
       cellArray[1] = 0;
@@ -1026,8 +1026,36 @@ function vtkOpenGLVolumeMapper(publicAPI, model) {
       cellArray[5] = 0;
       cellArray[6] = 3;
       cellArray[7] = 2;
-      const cells = vtkDataArray.newInstance({ numberOfComponents: 1, values: cellArray });
 
+      // const dim = 12.0;
+      // const ptsArray = new Float32Array(3 * dim * dim);
+      // for (let i = 0; i < dim; i++) {
+      //   for (let j = 0; j < dim; j++) {
+      //     const offset = ((i * dim) + j) * 3;
+      //     ptsArray[offset] = (2.0 * (i / (dim - 1.0))) - 1.0;
+      //     ptsArray[offset + 1] = (2.0 * (j / (dim - 1.0))) - 1.0;
+      //     ptsArray[offset + 2] = -1.0;
+      //   }
+      // }
+
+      // const cellArray = new Uint16Array(8 * (dim - 1) * (dim - 1));
+      // for (let i = 0; i < dim - 1; i++) {
+      //   for (let j = 0; j < dim - 1; j++) {
+      //     const offset = 8 * ((i * (dim - 1)) + j);
+      //     cellArray[offset] = 3;
+      //     cellArray[offset + 1] = (i * dim) + j;
+      //     cellArray[offset + 2] = (i * dim) + 1 + j;
+      //     cellArray[offset + 3] = ((i + 1) * dim) + 1 + j;
+      //     cellArray[offset + 4] = 3;
+      //     cellArray[offset + 5] = (i * dim) + j;
+      //     cellArray[offset + 6] = ((i + 1) * dim) + 1 + j;
+      //     cellArray[offset + 7] = ((i + 1) * dim) + j;
+      //   }
+      // }
+
+      const points = vtkDataArray.newInstance({ numberOfComponents: 3, values: ptsArray });
+      points.setName('points');
+      const cells = vtkDataArray.newInstance({ numberOfComponents: 1, values: cellArray });
       model.tris.getCABO().createVBO(cells,
         'polys', Representation.SURFACE,
         { points, cellOffset: 0 });
