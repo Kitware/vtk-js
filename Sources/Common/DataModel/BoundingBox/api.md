@@ -4,7 +4,7 @@ very fast. It is not derived from vtkObject so it can be allocated on the stack
 
 ## newInstance({ bounds: [xMin, xMax, yMin, yMax, zMin, zMax]})
 
-Construct a bounding box with the min point set to Number.MAX_VALUE and the max point set to Number.MIN_VALUE unless { bounds } are provided.
+Construct a bounding box with the min point set to Number.MAX_VALUE and the max point set to -Number.MAX_VALUE unless { bounds } are provided.
 
 ### clone() : newInstance
 

@@ -10,7 +10,7 @@ const TUPLE_HOLDER = [];
 // ----------------------------------------------------------------------------
 
 function computeRange(values, component = 0, tuple = 1) {
-  const range = { min: Number.MAX_VALUE, max: Number.MIN_VALUE };
+  const range = { min: Number.MAX_VALUE, max: -Number.MAX_VALUE };
 
   if (component < 0) {
     // Compute magnitude
