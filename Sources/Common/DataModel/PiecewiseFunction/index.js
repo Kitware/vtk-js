@@ -140,7 +140,7 @@ function vtkPiecewiseFunction(publicAPI, model) {
       // If this is the first point in the function, return its
       // value is clamping is off, otherwise VTK_DOUBLE_MIN if
       // clamping is on.
-      x = Number.MIN_VALUE;
+      x = -Number.MAX_VALUE;
     } else {
       x = model.nodes[0].x;
     }
