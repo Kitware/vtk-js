@@ -128,7 +128,11 @@ export function load(container, options) {
   autoInit = false;
   emptyContainer(container);
 
-  const fullScreenRenderer = vtkFullScreenRenderWindow.newInstance({ background: [0, 0, 0] });
+  const fullScreenRenderer = vtkFullScreenRenderWindow.newInstance({
+    background: [0, 0, 0],
+    rootContainer: container,
+    containerStyle: { height: '100%', width: '100%', position: 'absolute' },
+  });
   const renderer = fullScreenRenderer.getRenderer();
   const renderWindow = fullScreenRenderer.getRenderWindow();
 
@@ -155,7 +159,19 @@ export function load(container, options) {
       loadZipContent(options.file, renderWindow, renderer);
     }
   } else if (options.fileURL) {
-    HttpDataAccessHelper.fetchBinary(options.fileURL)
+    const progressContainer = document.createElement('div');
+    progressContainer.setAttribute('class', style.progress);
+    container.appendChild(progressContainer);
+
+    const progressCallback = (progressEvent) => {
+      const percent = Math.floor(100 * progressEvent.loaded / progressEvent.total);
+      progressContainer.innerHTML = `Loading ${percent}%`;
+      if (percent === 100) {
+        progressContainer.parentNode.removeChild(progressContainer);
+      }
+    };
+
+    HttpDataAccessHelper.fetchBinary(options.fileURL, { progressCallback })
       .then((content) => {
         loadZipContent(content, renderWindow, renderer);
       });
@@ -199,6 +215,9 @@ if (userParams.url || userParams.fileURL) {
   const exampleContainer = document.querySelector('.content');
   const rootBody = document.querySelector('body');
   const myContainer = exampleContainer || rootBody;
+  if (myContainer === rootBody) {
+    myContainer.classList.add(style.fullScreen);
+  }
   load(myContainer, userParams);
 }
 
