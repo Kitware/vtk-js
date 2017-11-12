@@ -166,13 +166,11 @@ export function load(container, options) {
     const progressCallback = (progressEvent) => {
       const percent = Math.floor(100 * progressEvent.loaded / progressEvent.total);
       progressContainer.innerHTML = `Loading ${percent}%`;
-      if (percent === 100) {
-        progressContainer.parentNode.removeChild(progressContainer);
-      }
     };
 
     HttpDataAccessHelper.fetchBinary(options.fileURL, { progressCallback })
       .then((content) => {
+        container.removeChild(progressContainer);
         loadZipContent(content, renderWindow, renderer);
       });
   }
