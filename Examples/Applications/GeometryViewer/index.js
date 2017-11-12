@@ -96,7 +96,11 @@ function emptyContainer(container) {
 // ----------------------------------------------------------------------------
 
 function createViewer(container) {
-  const fullScreenRenderer = vtkFullScreenRenderWindow.newInstance({ background });
+  const fullScreenRenderer = vtkFullScreenRenderWindow.newInstance({
+    background,
+    rootContainer: container,
+    containerStyle: { height: '100%', width: '100%', position: 'absolute' },
+  });
   renderer = fullScreenRenderer.getRenderer();
   renderWindow = fullScreenRenderer.getRenderWindow();
   renderWindow.getInteractor().setDesiredUpdateRate(15);
@@ -327,6 +331,15 @@ export function initLocalFileLoader(container) {
   const rootBody = document.querySelector('body');
   const myContainer = container || exampleContainer || rootBody;
 
+  if (myContainer !== container) {
+    myContainer.classList.add(style.fullScreen);
+    rootBody.style.margin = '0';
+    rootBody.style.padding = '0';
+  } else {
+    rootBody.style.margin = '0';
+    rootBody.style.padding = '0';
+  }
+
   const fileContainer = document.createElement('div');
   fileContainer.innerHTML = `<div class="${style.bigFileDrop}"/><input type="file" multiple accept=".vtp" style="display: none;"/>`;
   myContainer.appendChild(fileContainer);
@@ -356,6 +369,13 @@ if (userParams.url || userParams.fileURL) {
   const exampleContainer = document.querySelector('.content');
   const rootBody = document.querySelector('body');
   const myContainer = exampleContainer || rootBody;
+
+  if (myContainer) {
+    myContainer.classList.add(style.fullScreen);
+    rootBody.style.margin = '0';
+    rootBody.style.padding = '0';
+  }
+
   load(myContainer, userParams);
 }
 

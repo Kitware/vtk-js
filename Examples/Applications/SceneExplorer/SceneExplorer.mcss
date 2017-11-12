@@ -1,9 +1,3 @@
-body {
-  display: flex;
-  align-items: center;
-  justify-content: center;
-}
-
 .fullScreen {
   position: absolute;
   width: 100vw;
@@ -15,6 +9,9 @@ body {
   margin: 0;
   padding: 0;
   z-index: -1;
+  display: flex;
+  align-items: center;
+  justify-content: center;
 }
 
 .fullParentSize {
