@@ -86,4 +86,10 @@ select:focus {
 .progress {
   flex: none;
   font-size: 50px;
+  color: black;
+  z-index: 1;
+  background: rgba(128,128,128,.5);
+  padding: 20px;
+  border-radius: 10px;
+  user-select: none;
 }
