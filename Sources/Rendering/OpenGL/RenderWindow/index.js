@@ -1,6 +1,7 @@
 import macro                        from 'vtk.js/Sources/macro';
 import vtkForwardPass               from 'vtk.js/Sources/Rendering/OpenGL/ForwardPass';
 import vtkOpenGLViewNodeFactory     from 'vtk.js/Sources/Rendering/OpenGL/ViewNodeFactory';
+import vtkRenderPass                from 'vtk.js/Sources/Rendering/SceneGraph/RenderPass';
 import vtkShaderCache               from 'vtk.js/Sources/Rendering/OpenGL/ShaderCache';
 import vtkViewNode                  from 'vtk.js/Sources/Rendering/SceneGraph/ViewNode';
 import vtkOpenGLTextureUnitManager  from 'vtk.js/Sources/Rendering/OpenGL/TextureUnitManager';
@@ -199,7 +200,22 @@ function vtkOpenGLRenderWindow(publicAPI, model) {
       result = model.canvas.getContext('webgl', options)
         || model.canvas.getContext('experimental-webgl', options);
     }
+
+    // prevent default context lost handler
+    model.canvas.addEventListener('webglcontextlost', (event) => {
+      event.preventDefault();
+    }, false);
+
+    model.canvas.addEventListener(
+      'webglcontextrestored', publicAPI.restoreContext, false);
+
     return result;
+  };
+
+  publicAPI.restoreContext = () => {
+    const rp = vtkRenderPass.newInstance();
+    rp.setCurrentOperation('Release');
+    rp.traverse(publicAPI, null);
   };
 
   publicAPI.activateTexture = (texture) => {
@@ -369,6 +385,16 @@ export function extend(publicAPI, model, initialValues = {}) {
 
   // on mac default to webgl2
   if (navigator.appVersion.indexOf('Mac') !== -1) {
+    model.defaultToWebgl2 = true;
+  }
+
+  // on linux default to webgl2
+  if (navigator.platform.indexOf('Linux') !== -1) {
+    model.defaultToWebgl2 = true;
+  }
+
+  // on firefox default to webgl2
+  if (typeof InstallTrigger !== 'undefined') {
     model.defaultToWebgl2 = true;
   }
 
