@@ -35,7 +35,7 @@ Construct a new vtkColorTransferFunction with some initial content.
 ### addRGBPoint( x, r, g, b)
 ### addRGBPointLong( x, r, g, b, midpoint, sharpness)
 ### removePoint( x );
-### removeAllPoins();
+### removeAllPoints();
 
 Add/Remove a point to/from the function defined in RGB or HSV
 Return the index of the point (0 based), or -1 on error.

@@ -2,6 +2,7 @@ import { mat4 }           from 'gl-matrix';
 import Constants          from 'vtk.js/Sources/Rendering/Core/ImageMapper/Constants';
 import macro              from 'vtk.js/Sources/macro';
 import vtkDataArray       from 'vtk.js/Sources/Common/Core/DataArray';
+import { VtkDataTypes }   from 'vtk.js/Sources/Common/Core/DataArray/Constants';
 import vtkHelper          from 'vtk.js/Sources/Rendering/OpenGL/Helper';
 import vtkMath            from 'vtk.js/Sources/Common/Core/Math';
 import vtkOpenGLTexture   from 'vtk.js/Sources/Rendering/OpenGL/Texture';
@@ -34,6 +35,8 @@ function vtkOpenGLImageMapper(publicAPI, model) {
       model.tris.setWindow(model.openGLRenderWindow);
       model.openGLTexture.setWindow(model.openGLRenderWindow);
       model.openGLTexture.setContext(model.context);
+      model.colorTexture.setWindow(model.openGLRenderWindow);
+      model.colorTexture.setContext(model.context);
       const ren = model.openGLRenderer.getRenderable();
       model.openGLCamera = model.openGLRenderer.getViewNodeFor(ren.getActiveCamera());
       // is zslice set by the camera
@@ -98,25 +101,29 @@ function vtkOpenGLImageMapper(publicAPI, model) {
         'varying vec2 tcoordVCVSOutput;',
         'uniform float shift;',
         'uniform float scale;',
-        'uniform sampler2D texture1;']).result;
+        'uniform sampler2D texture1;',
+        'uniform sampler2D colorTexture1;']).result;
     switch (tNumComp) {
       case 1:
         FSSource = vtkShaderProgram.substitute(FSSource,
           '//VTK::TCoord::Impl', [
             'float intensity = texture2D(texture1, tcoordVCVSOutput).r*scale + shift;',
-            'gl_FragData[0] = vec4(intensity,intensity,intensity,1.0);']).result;
+            'gl_FragData[0] = texture2D(colorTexture1, vec2(intensity, 0.5));']).result;
         break;
       case 2:
         FSSource = vtkShaderProgram.substitute(FSSource,
           '//VTK::TCoord::Impl', [
             'vec4 tcolor = texture2D(texture1, tcoordVCVSOutput);',
             'float intensity = tcolor.r*scale + shift;',
-            'gl_FragData[0] = vec4(intensity, intensity, intensity, scale*tcolor.g + shift);']).result;
+            'gl_FragData[0] = vec4(texture2D(colorTexture1, vec2(intensity, 0.5)), scale*tcolor.g + shift);']).result;
         break;
       default:
         FSSource = vtkShaderProgram.substitute(FSSource,
-          '//VTK::TCoord::Impl',
-          'gl_FragData[0] = scale*texture2D(texture1, tcoordVCVSOutput.st) + shift;').result;
+          '//VTK::TCoord::Impl', [
+            'vec4 tcolor = scale*texture2D(texture1, tcoordVCVSOutput.st) + shift;',
+            'gl_FragData[0] = vec4(texture2D(colorTexture1, vec2(tcolor.r,0.5)),',
+            '  texture2D(colorTexture1, vec2(tcolor.g,0.5)),',
+            '  texture2D(colorTexture1, vec2(tcolor.b,0.5)), tcolor.a);']).result;
     }
     shaders.Vertex = VSSource;
     shaders.Fragment = FSSource;
@@ -198,8 +205,14 @@ function vtkOpenGLImageMapper(publicAPI, model) {
     const texUnit = model.openGLTexture.getTextureUnit();
     cellBO.getProgram().setUniformi('texture1', texUnit);
 
-    const cw = actor.getProperty().getColorWindow();
-    const cl = actor.getProperty().getColorLevel();
+    let cw = actor.getProperty().getColorWindow();
+    let cl = actor.getProperty().getColorLevel();
+    const cfun = actor.getProperty().getRGBTransferFunction();
+    if (cfun) {
+      const cRange = cfun.getRange();
+      cw = cRange[1] - cRange[0];
+      cl = 0.5 * (cRange[1] + cRange[0]);
+    }
     const oglShiftScale = model.openGLTexture.getShiftAndScale();
 
     const scale = oglShiftScale.scale / cw;
@@ -207,6 +220,9 @@ function vtkOpenGLImageMapper(publicAPI, model) {
 
     cellBO.getProgram().setUniformf('shift', shift);
     cellBO.getProgram().setUniformf('scale', scale);
+
+    const texColorUnit = model.colorTexture.getTextureUnit();
+    cellBO.getProgram().setUniformi('colorTexture1', texColorUnit);
   };
 
   publicAPI.setCameraShaderParameters = (cellBO, ren, actor) => {
@@ -242,6 +258,7 @@ function vtkOpenGLImageMapper(publicAPI, model) {
 
     // activate the texture
     model.openGLTexture.activate();
+    model.colorTexture.activate();
 
     // draw polygons
     if (model.tris.getCABO().getElementCount()) {
@@ -253,6 +270,7 @@ function vtkOpenGLImageMapper(publicAPI, model) {
     }
 
     model.openGLTexture.deactivate();
+    model.colorTexture.deactivate();
   };
 
   publicAPI.renderPieceFinish = (ren, actor) => {
@@ -312,6 +330,36 @@ function vtkOpenGLImageMapper(publicAPI, model) {
     if (image === null) {
       return;
     }
+
+    const cWidth = 1024;
+    const cTable = new Uint8Array(cWidth * 3);
+    const cfun = actor.getProperty().getRGBTransferFunction();
+    if (cfun) {
+      const cfunToString = `${cfun.getMTime()}`;
+      if (model.colorTextureString !== cfunToString) {
+        const cRange = cfun.getRange();
+        const cfTable = new Float32Array(cWidth * 3);
+        cfun.getTable(cRange[0], cRange[1], cWidth, cfTable, 1);
+        for (let i = 0; i < cWidth * 3; ++i) {
+          cTable[i] = 255.0 * cfTable[i];
+        }
+        model.colorTextureString = cfunToString;
+      }
+    } else {
+      const cfunToString = '0';
+      if (model.colorTextureString !== cfunToString) {
+        for (let i = 0; i < cWidth * 3; ++i) {
+          cTable[i] = 255.0 * i / ((cWidth - 1) * 3);
+          cTable[i + 1] = 255.0 * i / ((cWidth - 1) * 3);
+          cTable[i + 2] = 255.0 * i / ((cWidth - 1) * 3);
+        }
+        model.colorTextureString = cfunToString;
+      }
+    }
+    model.colorTexture.setMinificationFilter(Filter.LINEAR);
+    model.colorTexture.setMagnificationFilter(Filter.LINEAR);
+    model.colorTexture.create2DFromRaw(cWidth, 1, 3,
+      VtkDataTypes.UNSIGNED_CHAR, cTable);
 
     // rebuild the VBO if the data has changed
     let nSlice = model.renderable.getZSlice();
@@ -454,6 +502,7 @@ const DEFAULT_VALUES = {
   openGLTexture: null,
   tris: null,
   imagemat: null,
+  colorTexture: null,
 };
 
 // ----------------------------------------------------------------------------
@@ -466,6 +515,7 @@ export function extend(publicAPI, model, initialValues = {}) {
 
   model.tris = vtkHelper.newInstance();
   model.openGLTexture = vtkOpenGLTexture.newInstance();
+  model.colorTexture = vtkOpenGLTexture.newInstance();
 
   model.imagemat = mat4.create();
 
