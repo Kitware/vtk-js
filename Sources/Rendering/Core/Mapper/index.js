@@ -10,7 +10,7 @@ import CoincidentTopologyHelper from 'vtk.js/Sources/Rendering/Core/Mapper/Coinc
 import otherStaticMethods       from 'vtk.js/Sources/Rendering/Core/Mapper/Static';
 import Constants                from 'vtk.js/Sources/Rendering/Core/Mapper/Constants';
 
-const { ColorMode, ScalarMode, MaterialMode, GetArray } = Constants;
+const { ColorMode, ScalarMode, GetArray } = Constants;
 const { VectorMode } = vtkScalarsToColors;
 
 // ----------------------------------------------------------------------------
@@ -409,12 +409,6 @@ function vtkMapper(publicAPI, model) {
     }
   };
 
-  publicAPI.setScalarMaterialModeToDefault = () => publicAPI.setScalarMaterialMode(MaterialMode.DEFAULT);
-  publicAPI.setScalarMaterialModeToAmbient = () => publicAPI.setScalarMaterialMode(MaterialMode.AMBIENT);
-  publicAPI.setScalarMaterialModeToDiffuse = () => publicAPI.setScalarMaterialMode(MaterialMode.DIFFUSE);
-  publicAPI.setScalarMaterialModeToAmbientAndDiffuse = () => publicAPI.setScalarMaterialMode(MaterialMode.AMBIENT_AND_DIFFUSE);
-  publicAPI.getScalarMaterialModeAsString = () => macro.enumToString(MaterialMode, model.scalarMaterialMode);
-
   publicAPI.getIsOpaque = () => {
     const lut = publicAPI.getLookupTable();
     if (lut) {
@@ -495,7 +489,6 @@ const DEFAULT_VALUES = {
 
   colorMode: 0,
   scalarMode: 0,
-  scalarMaterialMode: 0,
   arrayAccessMode: 1, // By_NAME
 
   renderTime: 0,
@@ -541,7 +534,6 @@ export function extend(publicAPI, model, initialValues = {}) {
     'lookupTable',
     'renderTime',
     'resolveCoincidentTopology',
-    'scalarMaterialMode',
     'scalarMode',
     'scalarVisibility',
     'static',

@@ -4,6 +4,7 @@ import vtkViewNodeFactory      from 'vtk.js/Sources/Rendering/SceneGraph/ViewNod
 import vtkOpenGLActor          from 'vtk.js/Sources/Rendering/OpenGL/Actor';
 import vtkOpenGLActor2D        from 'vtk.js/Sources/Rendering/OpenGL/Actor2D';
 import vtkOpenGLCamera         from 'vtk.js/Sources/Rendering/OpenGL/Camera';
+import vtkOpenGLGlyph3DMapper  from 'vtk.js/Sources/Rendering/OpenGL/Glyph3DMapper';
 import vtkOpenGLImageMapper    from 'vtk.js/Sources/Rendering/OpenGL/ImageMapper';
 import vtkOpenGLImageSlice     from 'vtk.js/Sources/Rendering/OpenGL/ImageSlice';
 import vtkOpenGLPixelSpaceCallbackMapper from 'vtk.js/Sources/Rendering/OpenGL/PixelSpaceCallbackMapper';
@@ -47,6 +48,7 @@ export function extend(publicAPI, model, initialValues = {}) {
   publicAPI.registerOverride('vtkActor', vtkOpenGLActor.newInstance);
   publicAPI.registerOverride('vtkActor2D', vtkOpenGLActor2D.newInstance);
   publicAPI.registerOverride('vtkCamera', vtkOpenGLCamera.newInstance);
+  publicAPI.registerOverride('vtkGlyph3DMapper', vtkOpenGLGlyph3DMapper.newInstance);
   publicAPI.registerOverride('vtkImageMapper', vtkOpenGLImageMapper.newInstance);
   publicAPI.registerOverride('vtkImageSlice', vtkOpenGLImageSlice.newInstance);
   publicAPI.registerOverride('vtkMapper', vtkOpenGLPolyDataMapper.newInstance);

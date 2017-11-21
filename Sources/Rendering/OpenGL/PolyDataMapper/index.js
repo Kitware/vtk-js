@@ -27,7 +27,7 @@ const primTypes = {
 };
 
 const { Representation, Shading } = vtkProperty;
-const { MaterialMode, ScalarMode } = vtkMapper;
+const { ScalarMode } = vtkMapper;
 const { Filter, Wrap } = vtkOpenGLTexture;
 const { PassTypes } = vtkHardwareSelector;
 const { vtkErrorMacro } = macro;
@@ -167,6 +167,9 @@ function vtkOpenGLPolyDataMapper(publicAPI, model) {
     // create the material/color property declarations, and VS implementation
     // these are always defined
     let colorDec = [
+      'uniform float ambient;',
+      'uniform float diffuse;',
+      'uniform float specular;',
       'uniform float opacityUniform; // the fragment opacity',
       'uniform vec3 ambientColorUniform; // intensity weighted color',
       'uniform vec3 diffuseColorUniform; // intensity weighted color'];
@@ -217,59 +220,23 @@ function vtkOpenGLPolyDataMapper(publicAPI, model) {
           'vertexColorGSOutput = vertexColorVSOutput[i];']).result;
     }
 
-    const scalarMatMode = model.renderable.getScalarMaterialMode();
-
     if (model.lastBoundBO.getCABO().getColorComponents() !== 0 &&
         !model.drawingEdges) {
-      if (scalarMatMode === MaterialMode.AMBIENT ||
-          (scalarMatMode === MaterialMode.DEFAULT &&
-            actor.getProperty().getAmbient() > actor.getProperty().getDiffuse())) {
-        FSSource = vtkShaderProgram.substitute(FSSource, '//VTK::Color::Impl',
-          colorImpl.concat([
-            '  ambientColor = vertexColorVSOutput.rgb;',
-            '  opacity = opacity*vertexColorVSOutput.a;'])).result;
-      } else if (scalarMatMode === MaterialMode.DIFFUSE ||
-          (scalarMatMode === MaterialMode.DEFAULT &&
-            actor.getProperty().getAmbient() <= actor.getProperty().getDiffuse())) {
-        FSSource = vtkShaderProgram.substitute(FSSource, '//VTK::Color::Impl',
-          colorImpl.concat([
-            '  diffuseColor = vertexColorVSOutput.rgb;',
-            '  opacity = opacity*vertexColorVSOutput.a;'])).result;
-      } else {
-        FSSource = vtkShaderProgram.substitute(FSSource, '//VTK::Color::Impl',
-          colorImpl.concat([
-            '  diffuseColor = vertexColorVSOutput.rgb;',
-            '  ambientColor = vertexColorVSOutput.rgb;',
-            '  opacity = opacity*vertexColorVSOutput.a;'])).result;
-      }
+      FSSource = vtkShaderProgram.substitute(FSSource, '//VTK::Color::Impl',
+        colorImpl.concat([
+          '  diffuseColor = vertexColorVSOutput.rgb;',
+          '  ambientColor = vertexColorVSOutput.rgb;',
+          '  opacity = opacity*vertexColorVSOutput.a;'])).result;
     } else {
       if (model.renderable.getInterpolateScalarsBeforeMapping()
          && model.renderable.getColorCoordinates()
          && !model.drawingEdges) {
-        if (scalarMatMode === MaterialMode.AMBIENT ||
-          (scalarMatMode === MaterialMode.DEFAULT &&
-            actor.getProperty().getAmbient() > actor.getProperty().getDiffuse())) {
-          FSSource = vtkShaderProgram.substitute(FSSource, '//VTK::Color::Impl',
-            colorImpl.concat([
-              '  vec4 texColor = texture2D(texture1, tcoordVCVSOutput.st);',
-              '  ambientColor = texColor.rgb;',
-              '  opacity = opacity*texColor.a;'])).result;
-        } else if (scalarMatMode === MaterialMode.DIFFUSE ||
-            (scalarMatMode === MaterialMode.DEFAULT &&
-              actor.getProperty().getAmbient() <= actor.getProperty().getDiffuse())) {
-          FSSource = vtkShaderProgram.substitute(FSSource, '//VTK::Color::Impl',
-            colorImpl.concat([
-              '  vec4 texColor = texture2D(texture1, tcoordVCVSOutput.st);',
-              '  diffuseColor = texColor.rgb;',
-              '  opacity = opacity*texColor.a;'])).result;
-        } else {
-          FSSource = vtkShaderProgram.substitute(FSSource, '//VTK::Color::Impl',
-            colorImpl.concat([
-              '  vec4 texColor = texture2D(texture1, tcoordVCVSOutput.st);',
-              '  diffuseColor = texColor.rgb;',
-              '  ambientColor = texColor.rgb;',
-              '  opacity = opacity*texColor.a;'])).result;
-        }
+        FSSource = vtkShaderProgram.substitute(FSSource, '//VTK::Color::Impl',
+          colorImpl.concat([
+            '  vec4 texColor = texture2D(texture1, tcoordVCVSOutput.st);',
+            '  diffuseColor = texColor.rgb;',
+            '  ambientColor = texColor.rgb;',
+            '  opacity = opacity*texColor.a;'])).result;
       } else {
         FSSource = vtkShaderProgram.substitute(FSSource, '//VTK::Color::Impl', colorImpl).result;
       }
@@ -300,7 +267,7 @@ function vtkOpenGLPolyDataMapper(publicAPI, model) {
     switch (lastLightComplexity) {
       case 0: // no lighting or RENDER_VALUES
         FSSource = vtkShaderProgram.substitute(FSSource, '//VTK::Light::Impl', [
-          '  gl_FragData[0] = vec4(ambientColor + diffuseColor, opacity);',
+          '  gl_FragData[0] = vec4(ambientColor * ambient + diffuseColor * diffuse, opacity);',
           '  //VTK::Light::Impl'],
         false,
         ).result;
@@ -310,9 +277,9 @@ function vtkOpenGLPolyDataMapper(publicAPI, model) {
         FSSource = vtkShaderProgram.substitute(FSSource, '//VTK::Light::Impl', [
           '  float df = max(0.0, normalVCVSOutput.z);',
           '  float sf = pow(df, specularPower);',
-          '  vec3 diffuse = df * diffuseColor;',
-          '  vec3 specular = sf * specularColor;',
-          '  gl_FragData[0] = vec4(ambientColor + diffuse + specular, opacity);',
+          '  vec3 diffuseL = df * diffuseColor;',
+          '  vec3 specularL = sf * specularColor;',
+          '  gl_FragData[0] = vec4(ambientColor * ambient + diffuseL * diffuse + specularL * specular, opacity);',
           '  //VTK::Light::Impl'],
           false).result;
         break;
@@ -327,23 +294,23 @@ function vtkOpenGLPolyDataMapper(publicAPI, model) {
           '//VTK::Light::Dec', sstring).result;
 
         sstring = [
-          'vec3 diffuse = vec3(0,0,0);',
-          '  vec3 specular = vec3(0,0,0);',
+          'vec3 diffuseL = vec3(0,0,0);',
+          '  vec3 specularL = vec3(0,0,0);',
           '  float df;'];
         for (let lc = 0; lc < lastLightCount; ++lc) {
           sstring = sstring.concat([
             `  df = max(0.0, dot(normalVCVSOutput, -lightDirectionVC${lc}));`,
-            `  diffuse += ((df${shadowFactor}) * lightColor${lc});`,
+            `  diffuseL += ((df${shadowFactor}) * lightColor${lc});`,
             `  if (dot(normalVCVSOutput, lightDirectionVC${lc}) < 0.0)`,
             '    {',
             `    float sf = pow( max(0.0, dot(lightHalfAngleVC${lc},normalVCVSOutput)), specularPower);`,
-            `    specular += ((sf${shadowFactor}) * lightColor${lc});`,
+            `    specularL += ((sf${shadowFactor}) * lightColor${lc});`,
             '    }']);
         }
         sstring = sstring.concat([
-          '  diffuse = diffuse * diffuseColor;',
-          '  specular = specular * specularColor;',
-          '  gl_FragData[0] = vec4(ambientColor + diffuse + specular, opacity);',
+          '  diffuseL = diffuseL * diffuseColor;',
+          '  specularL = specularL * specularColor;',
+          '  gl_FragData[0] = vec4(ambientColor * ambient + diffuseL * diffuse + specularL * specular, opacity);',
           '  //VTK::Light::Impl']);
         FSSource = vtkShaderProgram.substitute(FSSource,
           '//VTK::Light::Impl', sstring, false).result;
@@ -364,8 +331,8 @@ function vtkOpenGLPolyDataMapper(publicAPI, model) {
           '//VTK::Light::Dec', sstring).result;
 
         sstring = [
-          'vec3 diffuse = vec3(0,0,0);',
-          '  vec3 specular = vec3(0,0,0);',
+          'vec3 diffuseL = vec3(0,0,0);',
+          '  vec3 specularL = vec3(0,0,0);',
           '  vec3 vertLightDirectionVC;',
           '  float attenuation;',
           '  float df;'];
@@ -401,17 +368,17 @@ function vtkOpenGLPolyDataMapper(publicAPI, model) {
             '      }',
             '    }',
             '    df = max(0.0, attenuation*dot(normalVCVSOutput, -vertLightDirectionVC));',
-            `    diffuse += ((df${shadowFactor}) * lightColor${lc});`,
+            `    diffuseL += ((df${shadowFactor}) * lightColor${lc});`,
             '    if (dot(normalVCVSOutput, vertLightDirectionVC) < 0.0)',
             '      {',
             `      float sf = attenuation*pow( max(0.0, dot(lightHalfAngleVC${lc},normalVCVSOutput)), specularPower);`,
-            `    specular += ((sf${shadowFactor}) * lightColor${lc});`,
+            `    specularL += ((sf${shadowFactor}) * lightColor${lc});`,
             '    }']);
         }
         sstring = sstring.concat([
-          '  diffuse = diffuse * diffuseColor;',
-          '  specular = specular * specularColor;',
-          '  gl_FragData[0] = vec4(ambientColor + diffuse + specular, opacity);',
+          '  diffuseL = diffuseL * diffuseColor;',
+          '  specularL = specularL * specularColor;',
+          '  gl_FragData[0] = vec4(ambientColor * ambient + diffuseL * diffuse + specularL * specular, opacity);',
           '  //VTK::Light::Impl']);
         FSSource = vtkShaderProgram.substitute(FSSource,
           '//VTK::Light::Impl', sstring, false).result;
@@ -1229,22 +1196,18 @@ function vtkOpenGLPolyDataMapper(publicAPI, model) {
     const ppty = actor.getProperty();
 
     const opacity = ppty.getOpacity();
+    program.setUniformf('opacityUniform', opacity);
+
     const aColor = model.drawingEdges ? ppty.getEdgeColorByReference()
       : ppty.getAmbientColorByReference();
-    const aIntensity = ppty.getAmbient();
-    model.ambientColor[0] = aColor[0] * aIntensity;
-    model.ambientColor[1] = aColor[1] * aIntensity;
-    model.ambientColor[2] = aColor[2] * aIntensity;
+    program.setUniform3fArray('ambientColorUniform', aColor);
+    program.setUniformf('ambient', ppty.getAmbient());
+
     const dColor = model.drawingEdges ? ppty.getEdgeColorByReference()
       : ppty.getDiffuseColorByReference();
-    const dIntensity = ppty.getDiffuse();
-    model.diffuseColor[0] = dColor[0] * dIntensity;
-    model.diffuseColor[1] = dColor[1] * dIntensity;
-    model.diffuseColor[2] = dColor[2] * dIntensity;
+    program.setUniform3fArray('diffuseColorUniform', dColor);
+    program.setUniformf('diffuse', ppty.getDiffuse());
 
-    program.setUniformf('opacityUniform', opacity);
-    program.setUniform3fArray('ambientColorUniform', model.ambientColor);
-    program.setUniform3fArray('diffuseColorUniform', model.diffuseColor);
     // we are done unless we have lighting
     const lastLightComplexity =
       model.lastBoundBO.getReferenceByName('lastLightComplexity');
@@ -1252,13 +1215,9 @@ function vtkOpenGLPolyDataMapper(publicAPI, model) {
       return;
     }
     const sColor = ppty.getSpecularColorByReference();
-    const sIntensity = ppty.getSpecular();
-    model.specularColor[0] = sColor[0] * sIntensity;
-    model.specularColor[1] = sColor[1] * sIntensity;
-    model.specularColor[2] = sColor[2] * sIntensity;
-    program.setUniform3fArray('specularColorUniform', model.specularColor);
-    const specularPower = ppty.getSpecularPower();
-    program.setUniformf('specularPowerUniform', specularPower);
+    program.setUniform3fArray('specularColorUniform', sColor);
+    program.setUniformf('specular', ppty.getSpecular());
+    program.setUniformf('specularPowerUniform', ppty.getSpecularPower());
 
     // // now set the backface properties if we have them
     // if (actor.getBackfaceProperty() && !model.DrawingEdges)

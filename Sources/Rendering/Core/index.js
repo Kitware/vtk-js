@@ -7,6 +7,7 @@ import vtkCamera                  from './Camera';
 import vtkCellPicker              from './CellPicker';
 import vtkColorTransferFunction   from './ColorTransferFunction';
 import vtkCoordinate              from './Coordinate';
+import vtkGlyph3DMapper           from './Glyph3DMapper';
 import vtkImageMapper             from './ImageMapper';
 import vtkImageProperty           from './ImageProperty';
 import vtkImageSlice              from './ImageSlice';
@@ -42,6 +43,7 @@ export default {
   vtkCellPicker,
   vtkColorTransferFunction,
   vtkCoordinate,
+  vtkGlyph3DMapper,
   vtkImageMapper,
   vtkImageProperty,
   vtkImageSlice,

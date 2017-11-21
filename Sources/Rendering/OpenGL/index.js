@@ -4,6 +4,7 @@ import vtkBufferObject           from './BufferObject';
 import vtkCamera                 from './Camera';
 import vtkCellArrayBufferObject  from './CellArrayBufferObject';
 import vtkFramebuffer            from './Framebuffer';
+import vtkGlyph3DMapper          from './Glyph3DMapper';
 import vtkHardwareSelector       from './HardwareSelector';
 import vtkHelper                 from './Helper';
 import vtkImageMapper            from './ImageMapper';
@@ -30,6 +31,7 @@ export default {
   vtkCamera,
   vtkCellArrayBufferObject,
   vtkFramebuffer,
+  vtkGlyph3DMapper,
   vtkHardwareSelector,
   vtkHelper,
   vtkImageMapper,
