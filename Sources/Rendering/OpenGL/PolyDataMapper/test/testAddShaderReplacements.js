@@ -91,7 +91,7 @@ test.onlyIfWebGL('Test Add Shader Replacements', (t) => {
       'Fragment',
       '//VTK::Normal::Impl',
       true,
-      '//VTK::Normal::Impl\n  diffuseColor = abs(myNormalMCVSOutput);\n',
+      '//VTK::Normal::Impl\n  diffuseColor = abs(myNormalMCVSOutput) / diffuse;\n',
       false,
     );
 

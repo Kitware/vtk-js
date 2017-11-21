@@ -13,13 +13,6 @@ export const ScalarMode = {
   USE_FIELD_DATA: 5,
 };
 
-export const MaterialMode = {
-  DEFAULT: 0,
-  AMBIENT: 1,
-  DIFFUSE: 2,
-  AMBIENT_AND_DIFFUSE: 3,
-};
-
 export const GetArray = {
   BY_ID: 0,
   BY_NAME: 1,
@@ -28,6 +21,5 @@ export const GetArray = {
 export default {
   ColorMode,
   GetArray,
-  MaterialMode,
   ScalarMode,
 };

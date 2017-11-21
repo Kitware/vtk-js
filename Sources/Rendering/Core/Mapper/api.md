@@ -297,33 +297,6 @@ which comes from a vtkActor, etc.)
 }
 ```
 
-### scalarMaterialMode
-
-Set/Get the light-model color mode.
-
-```js
-// Other helper methods
-setScalarMaterialModeToDefault();
-setScalarMaterialModeToAmbient();
-setScalarMaterialModeToDiffuse();
-setScalarMaterialModeToAmbientAndDiffuse();
-```
-
-### getScalarMaterialModeAsString() : String
-
-Return the light-model color mode.
-
-```js
-const MaterialMode = {
-  DEFAULT: 0,
-  AMBIENT: 1,
-  DIFFUSE: 2,
-  AMBIENT_AND_DIFFUSE: 3,
-};
-
-console.log(getScalarMaterialModeAsString(3));
-```
-
 ### getIsOpaque() : Boolean
 
 Returns if the mapper does not expect to have translucent geometry. This

@@ -177,7 +177,6 @@
     "output": [],
     "renderTime": 0,
     "resolveCoincidentTopology": false,
-    "scalarMaterialMode": 0,
     "scalarMode": 0,
     "scalarRange": [0, 1],
     "scalarVisibility": true,
