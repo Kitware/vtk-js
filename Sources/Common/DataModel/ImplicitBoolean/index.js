@@ -19,6 +19,18 @@ function vtkImplicitBoolean(publicAPI, model) {
   // Set our className
   model.classHierarchy.push('vtkImplicitBoolean');
 
+  publicAPI.getMTime = () => {
+    let mTime = model.superClass.getMTime();
+    if (!model.functions || model.functions.length <= 0) {
+      return mTime;
+    }
+
+    for (let i = 0; i < model.functions.length; ++i) {
+      mTime = Math.max(mTime, model.functions[i].getMTime());
+    }
+    return mTime;
+  };
+
   publicAPI.getOperationAsString = () => macro.enumToString(Operation, model.operation);
 
   publicAPI.setOperationToUnion = () => publicAPI.setOperation(0);
