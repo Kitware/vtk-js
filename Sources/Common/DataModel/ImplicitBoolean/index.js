@@ -19,8 +19,11 @@ function vtkImplicitBoolean(publicAPI, model) {
   // Set our className
   model.classHierarchy.push('vtkImplicitBoolean');
 
+  // Capture "parentClass" api for internal use
+  const superClass = Object.assign({}, publicAPI);
+
   publicAPI.getMTime = () => {
-    let mTime = model.superClass.getMTime();
+    let mTime = superClass.getMTime();
     if (!model.functions || model.functions.length <= 0) {
       return mTime;
     }
