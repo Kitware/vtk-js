@@ -154,14 +154,16 @@ function vtkSphereHandleRepresentation(publicAPI, model) {
     }
   };
 
+  publicAPI.displayToWorld = (eventPos, z) => vtkInteractorObserver.computeDisplayToWorld(model.renderer,
+      eventPos[0], eventPos[1], z);
+
   publicAPI.complexWidgetInteraction = (eventPos) => {
     const focalPoint = vtkInteractorObserver.computeDisplayToWorld(model.renderer,
         model.lastPickPosition[0], model.lastPickPosition[1], model.lastPickPosition[2]);
     const z = focalPoint[2];
     const prevPickPoint = vtkInteractorObserver.computeDisplayToWorld(model.renderer,
         model.lastEventPosition[0], model.lastEventPosition[1], z);
-    const pickPoint = vtkInteractorObserver.computeDisplayToWorld(model.renderer,
-        eventPos[0], eventPos[1], z);
+    const pickPoint = publicAPI.displayToWorld(eventPos, z);
 
     if (model.interactionState === InteractionState.SELECTING ||
       model.interactionState === InteractionState.TRANSLATING) {
