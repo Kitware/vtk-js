@@ -316,7 +316,7 @@ function vtkOpenGLStickMapper(publicAPI, model) {
     if (!vbo.getColorBO()) {
       vbo.setColorBO(vtkBufferObject.newInstance());
     }
-    vbo.getColorBO().setContext(model.context);
+    vbo.getColorBO().setOpenGLRenderWindow(model.openGLRenderWindow);
     if (c) {
       colorComponents = c.getNumberOfComponents();
       vbo.setColorOffset(4);

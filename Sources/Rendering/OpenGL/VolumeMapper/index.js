@@ -48,18 +48,13 @@ function vtkOpenGLVolumeMapper(publicAPI, model) {
     if (prepass) {
       model.openGLRenderWindow = publicAPI.getFirstAncestorOfType('vtkOpenGLRenderWindow');
       model.context = model.openGLRenderWindow.getContext();
-      model.tris.setWindow(model.openGLRenderWindow);
-      model.scalarTexture.setWindow(model.openGLRenderWindow);
-      model.scalarTexture.setContext(model.context);
-      model.colorTexture.setWindow(model.openGLRenderWindow);
-      model.colorTexture.setContext(model.context);
-      model.opacityTexture.setWindow(model.openGLRenderWindow);
-      model.opacityTexture.setContext(model.context);
-      model.lightingTexture.setWindow(model.openGLRenderWindow);
-      model.lightingTexture.setContext(model.context);
-      model.jitterTexture.setWindow(model.openGLRenderWindow);
-      model.jitterTexture.setContext(model.context);
-      model.framebuffer.setWindow(model.openGLRenderWindow);
+      model.tris.setOpenGLRenderWindow(model.openGLRenderWindow);
+      model.scalarTexture.setOpenGLRenderWindow(model.openGLRenderWindow);
+      model.colorTexture.setOpenGLRenderWindow(model.openGLRenderWindow);
+      model.opacityTexture.setOpenGLRenderWindow(model.openGLRenderWindow);
+      model.lightingTexture.setOpenGLRenderWindow(model.openGLRenderWindow);
+      model.jitterTexture.setOpenGLRenderWindow(model.openGLRenderWindow);
+      model.framebuffer.setOpenGLRenderWindow(model.openGLRenderWindow);
 
       model.openGLVolume = publicAPI.getFirstAncestorOfType('vtkOpenGLVolume');
       const actor = model.openGLVolume.getRenderable();

@@ -79,7 +79,7 @@ function vtkOpenGLPolyDataMapper(publicAPI, model) {
     if (model.context !== ctx) {
       model.context = ctx;
       for (let i = primTypes.Start; i < primTypes.End; i++) {
-        model.primitives[i].setWindow(model.openGLRenderWindow);
+        model.primitives[i].setOpenGLRenderWindow(model.openGLRenderWindow);
       }
     }
     const actor = model.openGLActor.getRenderable();
@@ -171,12 +171,12 @@ function vtkOpenGLPolyDataMapper(publicAPI, model) {
       'uniform float diffuse;',
       'uniform float specular;',
       'uniform float opacityUniform; // the fragment opacity',
-      'uniform vec3 ambientColorUniform; // intensity weighted color',
-      'uniform vec3 diffuseColorUniform; // intensity weighted color'];
+      'uniform vec3 ambientColorUniform;',
+      'uniform vec3 diffuseColorUniform;'];
     // add more for specular
     if (lastLightComplexity) {
       colorDec = colorDec.concat([
-        'uniform vec3 specularColorUniform; // intensity weighted color',
+        'uniform vec3 specularColorUniform;',
         'uniform float specularPowerUniform;']);
     }
 
@@ -1458,8 +1458,7 @@ function vtkOpenGLPolyDataMapper(publicAPI, model) {
       tex.setMagnificationFilter(Filter.NEAREST);
       tex.setWrapS(Wrap.CLAMP_TO_EDGE);
       tex.setWrapT(Wrap.CLAMP_TO_EDGE);
-      tex.setWindow(model.openGLRenderWindow);
-      tex.setContext(model.openGLRenderWindow.getContext());
+      tex.setOpenGLRenderWindow(model.openGLRenderWindow);
 
       const input = model.renderable.getColorTextureMap();
       const ext = input.getExtent();

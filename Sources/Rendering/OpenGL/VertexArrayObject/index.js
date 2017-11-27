@@ -15,7 +15,9 @@ function vtkOpenGLVertexArrayObject(publicAPI, model) {
   };
 
   publicAPI.initialize = () => {
-    if (!model.forceEmulation && model.openGLWindow && model.openGLWindow.getWebgl2()) {
+    if (!model.forceEmulation &&
+         model.openGLRenderWindow &&
+         model.openGLRenderWindow.getWebgl2()) {
       model.extension = null;
       model.supported = true;
       model.handleVAO = model.context.createVertexArray();
@@ -160,7 +162,6 @@ function vtkOpenGLVertexArrayObject(publicAPI, model) {
     attribs.index = gl.getAttribLocation(model.handleProgram, name);
     attribs.offset = offset;
     attribs.stride = stride;
-  //    attribs.type = convertTypeToGL(elementType);
     attribs.type = elementType;
     attribs.size = elementTupleSize;
     attribs.normalize = normalize;
@@ -230,7 +231,6 @@ function vtkOpenGLVertexArrayObject(publicAPI, model) {
 
     for (let i = 1; i < elementTupleSize; i++) {
       gl.enableVertexAttribArray(index + i);
-//      gl.vertexAttribPointer(index + i, elementTupleSize, convertTypeToGL(elementType),
       gl.vertexAttribPointer(index + i, elementTupleSize, elementType,
                             normalize, stride,
                             offset + ((stride * i) / elementTupleSize));
@@ -267,9 +267,16 @@ function vtkOpenGLVertexArrayObject(publicAPI, model) {
     return true;
   };
 
-  publicAPI.setWindow = (win) => {
-    model.openGLWindow = win;
-    model.context = win.getContext();
+  publicAPI.setOpenGLRenderWindow = (rw) => {
+    if (model.openGLRenderWindow === rw) {
+      return;
+    }
+    publicAPI.releaseGraphicsResources();
+    model.openGLRenderWindow = rw;
+    model.context = null;
+    if (rw) {
+      model.context = model.openGLRenderWindow.getContext();
+    }
   };
 }
 
@@ -284,7 +291,7 @@ const DEFAULT_VALUES = {
   supported: true,
   buffers: null,
   context: null,
-  openGLWindow: null,
+  openGLRenderWindow: null,
 };
 
 // ----------------------------------------------------------------------------

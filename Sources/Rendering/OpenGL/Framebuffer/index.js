@@ -69,12 +69,31 @@ function vtkFramebuffer(publicAPI, model) {
   //   gl.framebufferTexture2D(gl.FRAMEBUFFER, gl.DEPTH_ATTACHMENT, gl.TEXTURE_2D, texture.getHandle(), 0);
   // };
 
-  publicAPI.setWindow = (win) => {
-    model.window = win;
-    model.context = win.getContext();
+  publicAPI.getGLFramebuffer = () => model.glFramebuffer;
+
+  publicAPI.setOpenGLRenderWindow = (rw) => {
+    if (model.openGLRenderWindow === rw) {
+      return;
+    }
+    publicAPI.releaseGraphicsResources();
+    model.openGLRenderWindow = rw;
+    model.context = null;
+    if (rw) {
+      model.context = model.openGLRenderWindow.getContext();
+    }
   };
 
-  publicAPI.getGLFramebuffer = () => model.glFramebuffer;
+  publicAPI.releaseGraphicsResources = () => {
+    if (model.glFramebuffer) {
+      model.context.deleteFramebuffer(model.glFramebuffer);
+    }
+    if (model.depthTexture) {
+      model.depthTexture.releaseGraphicsResources();
+    }
+    if (model.colorTexture) {
+      model.colorTexture.releaseGraphicsResources();
+    }
+  };
 
   publicAPI.getSize = () => {
     const size = [0, 0];
@@ -90,8 +109,7 @@ function vtkFramebuffer(publicAPI, model) {
     const gl = model.context;
 
     const texture = vtkOpenGLTexture.newInstance();
-    texture.setWindow(model.window);
-    texture.setContext(model.context);
+    texture.setOpenGLRenderWindow(model.openGLRenderWindow);
     texture.setMinificationFilter(Filter.LINEAR);
     texture.setMagnificationFilter(Filter.LINEAR);
     texture.create2DFromRaw(
@@ -113,8 +131,7 @@ function vtkFramebuffer(publicAPI, model) {
 // Object factory
 // ----------------------------------------------------------------------------
 const DEFAULT_VALUES = {
-  window: null,
-  context: null,
+  openGLRenderWindow: null,
   glFramebuffer: null,
   colorTexture: null,
   depthTexture: null,
@@ -132,7 +149,6 @@ export function extend(publicAPI, model, initialValues = {}) {
   macro.obj(publicAPI, model);
 
   macro.setGet(publicAPI, model, [
-    'context',
     'colorTexture',
   ]);
 
