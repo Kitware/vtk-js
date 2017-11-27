@@ -210,7 +210,7 @@ function vtkOpenGLSphereMapper(publicAPI, model) {
       if (!vbo.getColorBO()) {
         vbo.setColorBO(vtkBufferObject.newInstance());
       }
-      vbo.getColorBO().setContext(model.context);
+      vbo.getColorBO().setOpenGLRenderWindow(model.openGLRenderWindow);
     } else if (vbo.getColorBO()) {
       vbo.setColorBO(null);
     }

@@ -32,11 +32,9 @@ function vtkOpenGLImageMapper(publicAPI, model) {
       model.openGLRenderer = publicAPI.getFirstAncestorOfType('vtkOpenGLRenderer');
       model.openGLRenderWindow = model.openGLRenderer.getParent();
       model.context = model.openGLRenderWindow.getContext();
-      model.tris.setWindow(model.openGLRenderWindow);
-      model.openGLTexture.setWindow(model.openGLRenderWindow);
-      model.openGLTexture.setContext(model.context);
-      model.colorTexture.setWindow(model.openGLRenderWindow);
-      model.colorTexture.setContext(model.context);
+      model.tris.setOpenGLRenderWindow(model.openGLRenderWindow);
+      model.openGLTexture.setOpenGLRenderWindow(model.openGLRenderWindow);
+      model.colorTexture.setOpenGLRenderWindow(model.openGLRenderWindow);
       const ren = model.openGLRenderer.getRenderable();
       model.openGLCamera = model.openGLRenderer.getViewNodeFor(ren.getActiveCamera());
       // is zslice set by the camera
@@ -344,6 +342,10 @@ function vtkOpenGLImageMapper(publicAPI, model) {
           cTable[i] = 255.0 * cfTable[i];
         }
         model.colorTextureString = cfunToString;
+        model.colorTexture.setMinificationFilter(Filter.LINEAR);
+        model.colorTexture.setMagnificationFilter(Filter.LINEAR);
+        model.colorTexture.create2DFromRaw(cWidth, 1, 3,
+          VtkDataTypes.UNSIGNED_CHAR, cTable);
       }
     } else {
       const cfunToString = '0';
@@ -354,12 +356,12 @@ function vtkOpenGLImageMapper(publicAPI, model) {
           cTable[i + 2] = 255.0 * i / ((cWidth - 1) * 3);
         }
         model.colorTextureString = cfunToString;
+        model.colorTexture.setMinificationFilter(Filter.LINEAR);
+        model.colorTexture.setMagnificationFilter(Filter.LINEAR);
+        model.colorTexture.create2DFromRaw(cWidth, 1, 3,
+          VtkDataTypes.UNSIGNED_CHAR, cTable);
       }
     }
-    model.colorTexture.setMinificationFilter(Filter.LINEAR);
-    model.colorTexture.setMagnificationFilter(Filter.LINEAR);
-    model.colorTexture.create2DFromRaw(cWidth, 1, 3,
-      VtkDataTypes.UNSIGNED_CHAR, cTable);
 
     // rebuild the VBO if the data has changed
     let nSlice = model.renderable.getZSlice();
@@ -496,7 +498,6 @@ function vtkOpenGLImageMapper(publicAPI, model) {
 // ----------------------------------------------------------------------------
 
 const DEFAULT_VALUES = {
-  context: null,
   VBOBuildTime: 0,
   VBOBuildString: null,
   openGLTexture: null,
@@ -521,7 +522,6 @@ export function extend(publicAPI, model, initialValues = {}) {
 
   // Build VTK API
   macro.setGet(publicAPI, model, [
-    'context',
   ]);
 
   model.VBOBuildTime = {};

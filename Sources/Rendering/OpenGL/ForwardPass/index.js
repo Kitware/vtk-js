@@ -39,7 +39,7 @@ function vtkForwardPass(publicAPI, model) {
       if (model.framebuffer === null) {
         model.framebuffer = vtkOpenGLFramebuffer.newInstance();
       }
-      model.framebuffer.setWindow(viewNode);
+      model.framebuffer.setOpenGLRenderWindow(viewNode);
       model.framebuffer.saveCurrentBindingsAndBuffers();
       const fbSize = model.framebuffer.getSize();
       if (fbSize === null ||

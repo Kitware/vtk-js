@@ -158,6 +158,24 @@ function vtkOpenGLRenderer(publicAPI, model) {
     gl.enable(gl.DEPTH_TEST);
     /* eslint-enable no-bitwise */
   };
+
+  publicAPI.releaseGraphicsResources = () => {
+    if (model.selector !== null) {
+      model.selector.releaseGraphicsResources();
+    }
+  };
+
+  publicAPI.setOpenGLRenderWindow = (rw) => {
+    if (model.openGLRenderWindow === rw) {
+      return;
+    }
+    publicAPI.releaseGraphicsResources();
+    model.openGLRenderWindow = rw;
+    model.context = null;
+    if (rw) {
+      model.context = model.openGLRenderWindow.getContext();
+    }
+  };
 }
 
 // ----------------------------------------------------------------------------
@@ -166,6 +184,7 @@ function vtkOpenGLRenderer(publicAPI, model) {
 
 const DEFAULT_VALUES = {
   context: null,
+  openGLRenderWindow: null,
   selector: null,
 };
 
@@ -181,7 +200,6 @@ export function extend(publicAPI, model, initialValues = {}) {
   macro.get(publicAPI, model, ['shaderCache']);
 
   macro.setGet(publicAPI, model, [
-    'context',
     'selector',
   ]);
 

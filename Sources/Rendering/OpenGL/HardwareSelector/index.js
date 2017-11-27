@@ -24,18 +24,18 @@ function vtkOpenGLHardwareSelector(publicAPI, model) {
 
   //----------------------------------------------------------------------------
   publicAPI.beginSelection = () => {
-    model.oglrenderer = model.oglwindow.getViewNodeFor(model.renderer);
+    model.openGLRenderer = model.openGLRenderWindow.getViewNodeFor(model.renderer);
     model.maxAttributeId = 0;
 
     model.framebuffer = vtkOpenGLFramebuffer.newInstance();
-    model.framebuffer.setWindow(model.oglwindow);
+    model.framebuffer.setOpenGLRenderWindow(model.openGLRenderWindow);
     model.framebuffer.saveCurrentBindingsAndBuffers();
-    const size = model.oglwindow.getSize();
+    const size = model.openGLRenderWindow.getSize();
     model.framebuffer.create(size[0], size[1]);
     model.framebuffer.populateFramebuffer();
 
-    model.oglrenderer.clear();
-    model.oglrenderer.setSelector(publicAPI);
+    model.openGLRenderer.clear();
+    model.openGLRenderer.setSelector(publicAPI);
     model.renderer.setPreserveDepthBuffer(1);
     model.hitProps = [];
     model.props = [];
@@ -45,7 +45,7 @@ function vtkOpenGLHardwareSelector(publicAPI, model) {
   //----------------------------------------------------------------------------
   publicAPI.endSelection = () => {
     model.hitProps = [];
-    model.oglrenderer.setSelector(null);
+    model.openGLRenderer.setSelector(null);
     model.renderer.setPreserveDepthBuffer(0);
     model.framebuffer.restorePreviousBindingsAndBuffers();
   };
@@ -70,12 +70,12 @@ function vtkOpenGLHardwareSelector(publicAPI, model) {
 
   //----------------------------------------------------------------------------
   publicAPI.captureBuffers = () => {
-    if (!model.renderer || !model.oglwindow) {
+    if (!model.renderer || !model.openGLRenderWindow) {
       vtkErrorMacro('Renderer and view must be set before calling Select.');
       return false;
     }
 
-    model.oglrenderer = model.oglwindow.getViewNodeFor(model.renderer);
+    model.openGLRenderer = model.openGLRenderWindow.getViewNodeFor(model.renderer);
 
     // int rgba[4];
     // rwin.getColorBufferSizes(rgba);
@@ -96,7 +96,7 @@ function vtkOpenGLHardwareSelector(publicAPI, model) {
       model.currentPass <= PassTypes.MAX_KNOWN_PASS; model.currentPass++) {
       if (publicAPI.passRequired(model.currentPass)) {
         publicAPI.preCapturePass(model.currentPass);
-        model.oglwindow.traverseAllPasses();
+        model.openGLRenderWindow.traverseAllPasses();
         publicAPI.postCapturePass(model.currentPass);
 
         publicAPI.savePixelBuffer(model.currentPass);
@@ -109,7 +109,7 @@ function vtkOpenGLHardwareSelector(publicAPI, model) {
     publicAPI.invokeEvent({ type: 'EndEvent' });
 
     // restore image
-    model.oglwindow.traverseAllPasses();
+    model.openGLRenderWindow.traverseAllPasses();
     return true;
   };
 
@@ -118,7 +118,7 @@ function vtkOpenGLHardwareSelector(publicAPI, model) {
 
   //----------------------------------------------------------------------------
   publicAPI.savePixelBuffer = (passNo) => {
-    model.pixBuffer[passNo] = model.oglwindow.getPixelData(
+    model.pixBuffer[passNo] = model.openGLRenderWindow.getPixelData(
       model.area[0], model.area[1], model.area[2], model.area[3]);
     if (passNo === PassTypes.ACTOR_PASS) {
       publicAPI.buildPropHitList(model.pixBuffer[passNo]);
@@ -382,7 +382,7 @@ function vtkOpenGLHardwareSelector(publicAPI, model) {
   };
 
   publicAPI.attach = (w, r) => {
-    model.oglwindow = w;
+    model.openGLRenderWindow = w;
     model.renderer = r;
   };
 }
@@ -395,8 +395,8 @@ const DEFAULT_VALUES = {
   fieldAssociation: FieldAssociations.FIELD_ASSOCIATION_CELLS,
   renderer: null,
   area: null,
-  oglwindow: null,
-  oglrenderer: null,
+  openGLRenderWindow: null,
+  openGLRenderer: null,
   currentPass: -1,
   propColorValue: null,
   props: null,

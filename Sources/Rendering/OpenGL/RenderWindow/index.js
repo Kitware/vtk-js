@@ -47,7 +47,7 @@ function vtkOpenGLRenderWindow(publicAPI, model) {
 
       publicAPI.initialize();
       model.children.forEach((child) => {
-        child.setContext(model.context);
+        child.setOpenGLRenderWindow(publicAPI);
       });
     }
   };

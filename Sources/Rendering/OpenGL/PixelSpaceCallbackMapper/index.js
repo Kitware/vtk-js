@@ -13,11 +13,10 @@ function vtkOpenGLPixelSpaceCallbackMapper(publicAPI, model) {
   model.classHierarchy.push('vtkOpenGLPixelSpaceCallbackMapper');
 
   publicAPI.opaquePass = (prepass, renderPass) => {
-    const oglren = publicAPI.getFirstAncestorOfType('vtkOpenGLRenderer');
-    const aspectRatio = oglren.getAspectRatio();
-    const ren = publicAPI.getFirstAncestorOfType('vtkOpenGLRenderer');
-    const camera = ren ? ren.getRenderable().getActiveCamera() : null;
-    const tsize = ren.getTiledSizeAndOrigin();
+    model.openGLRenderer = publicAPI.getFirstAncestorOfType('vtkOpenGLRenderer');
+    const aspectRatio = model.openGLRenderer.getAspectRatio();
+    const camera = model.openGLRenderer ? model.openGLRenderer.getRenderable().getActiveCamera() : null;
+    const tsize = model.openGLRenderer.getTiledSizeAndOrigin();
     let texels = null;
 
     if (model.renderable.getUseZValues()) {

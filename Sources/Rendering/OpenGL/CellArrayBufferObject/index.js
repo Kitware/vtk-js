@@ -60,7 +60,7 @@ function vtkOpenGLCellArrayBufferObject(publicAPI, model) {
       if (!model.colorBO) {
         model.colorBO = vtkBufferObject.newInstance();
       }
-      model.colorBO.setContext(model.context);
+      model.colorBO.setOpenGLRenderWindow(model.openGLRenderWindow);
     } else {
       model.colorBO = null;
     }

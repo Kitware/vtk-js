@@ -1,14 +1,15 @@
 import { mat3, mat4 }           from 'gl-matrix';
-// import { ObjectType }           from 'vtk.js/Sources/Rendering/OpenGL/BufferObject/Constants';
 
 import macro                    from 'vtk.js/Sources/macro';
 
-// import vtkBufferObject          from 'vtk.js/Sources/Rendering/OpenGL/BufferObject';
+import vtkBufferObject          from 'vtk.js/Sources/Rendering/OpenGL/BufferObject';
 import vtkProperty              from 'vtk.js/Sources/Rendering/Core/Property';
 import vtkOpenGLPolyDataMapper  from 'vtk.js/Sources/Rendering/OpenGL/PolyDataMapper';
+import vtkShaderProgram         from 'vtk.js/Sources/Rendering/OpenGL/ShaderProgram';
 
 const { vtkErrorMacro } = macro;
 const { Representation } = vtkProperty;
+const { ObjectType } = vtkBufferObject;
 
 const StartEvent = { type: 'StartEvent' };
 const EndEvent = { type: 'EndEvent' };
@@ -106,6 +107,138 @@ function vtkOpenGLGlyph3DMapper(publicAPI, model) {
     out[13] = (b0 * a01) + (b1 * a11) + (b2 * a21) + (b3 * a31);
     out[14] = (b0 * a02) + (b1 * a12) + (b2 * a22) + (b3 * a32);
     out[15] = (b0 * a03) + (b1 * a13) + (b2 * a23) + (b3 * a33);
+  };
+
+  publicAPI.replaceShaderNormal = (shaders, ren, actor) => {
+    const lastLightComplexity =
+      model.lastBoundBO.getReferenceByName('lastLightComplexity');
+
+    if (lastLightComplexity > 0) {
+      let VSSource = shaders.Vertex;
+
+      if (model.lastBoundBO.getCABO().getNormalOffset()) {
+        VSSource = vtkShaderProgram.substitute(VSSource,
+          '//VTK::Normal::Dec', [
+            'attribute vec3 normalMC;',
+            'attribute mat3 gNormal;',
+            'uniform mat3 normalMatrix;',
+            'varying vec3 normalVCVSOutput;']).result;
+        VSSource = vtkShaderProgram.substitute(VSSource,
+          '//VTK::Normal::Impl', [
+            'normalVCVSOutput = normalMatrix * gNormal * normalMC;']).result;
+      }
+      shaders.Vertex = VSSource;
+    }
+    superClass.replaceShaderNormal(shaders, ren, actor);
+  };
+
+
+  publicAPI.replaceShaderColor = (shaders, ren, actor) => {
+    if (model.openGLRenderWindow.getWebgl2() && model.renderable.getColorArray()) {
+      let VSSource = shaders.Vertex;
+      let GSSource = shaders.Geometry;
+      let FSSource = shaders.Fragment;
+
+      const lastLightComplexity =
+        model.lastBoundBO.getReferenceByName('lastLightComplexity');
+
+      // create the material/color property declarations, and VS implementation
+      // these are always defined
+      let colorDec = [
+        'uniform float ambient;',
+        'uniform float diffuse;',
+        'uniform float specular;',
+        'uniform float opacityUniform; // the fragment opacity'];
+      // add more for specular
+      if (lastLightComplexity) {
+        colorDec = colorDec.concat([
+          'uniform vec3 specularColorUniform;',
+          'uniform float specularPowerUniform;']);
+      }
+
+      // now handle the more complex fragment shader implementation
+      // the following are always defined variables.  We start
+      // by assiging a default value from the uniform
+      let colorImpl = [
+        'vec3 ambientColor;',
+        '  vec3 diffuseColor;',
+        '  float opacity;'];
+      if (lastLightComplexity) {
+        colorImpl = colorImpl.concat([
+          '  vec3 specularColor;',
+          '  float specularPower;']);
+      }
+      colorImpl = colorImpl.concat([
+        '  opacity = opacityUniform;']);
+      if (lastLightComplexity) {
+        colorImpl = colorImpl.concat([
+          '  specularColor = specularColorUniform;',
+          '  specularPower = specularPowerUniform;']);
+      }
+
+      if (!model.drawingEdges) {
+        colorDec = colorDec.concat(['varying vec4 vertexColorVSOutput;']);
+        VSSource = vtkShaderProgram.substitute(VSSource, '//VTK::Color::Dec', [
+          'attribute vec4 gColor;',
+          'varying vec4 vertexColorVSOutput;']).result;
+        VSSource = vtkShaderProgram.substitute(VSSource, '//VTK::Color::Impl', [
+          'vertexColorVSOutput = gColor;']).result;
+        GSSource = vtkShaderProgram.substitute(GSSource,
+          '//VTK::Color::Dec', [
+            'in vec4 vertexColorVSOutput[];',
+            'out vec4 vertexColorGSOutput;']).result;
+        GSSource = vtkShaderProgram.substitute(GSSource,
+          '//VTK::Color::Impl', [
+            'vertexColorGSOutput = vertexColorVSOutput[i];']).result;
+      }
+
+      FSSource = vtkShaderProgram.substitute(FSSource, '//VTK::Color::Impl',
+        colorImpl.concat([
+          '  diffuseColor = vertexColorVSOutput.rgb;',
+          '  ambientColor = vertexColorVSOutput.rgb;',
+          '  opacity = opacity*vertexColorVSOutput.a;'])).result;
+
+      FSSource = vtkShaderProgram.substitute(FSSource, '//VTK::Color::Dec',
+        colorDec).result;
+
+      shaders.Vertex = VSSource;
+      shaders.Geometry = GSSource;
+      shaders.Fragment = FSSource;
+    }
+    superClass.replaceShaderColor(shaders, ren, actor);
+  };
+
+  publicAPI.replaceShaderPositionVC = (shaders, ren, actor) => {
+    if (model.openGLRenderWindow.getWebgl2()) {
+      let VSSource = shaders.Vertex;
+
+      // do we need the vertex in the shader in View Coordinates
+      const lastLightComplexity =
+        model.lastBoundBO.getReferenceByName('lastLightComplexity');
+      if (lastLightComplexity > 0) {
+        VSSource = vtkShaderProgram.substitute(VSSource,
+          '//VTK::PositionVC::Impl', [
+            'vec4 gVertexMC = gMatrix * vertexMC;',
+            'vertexVCVSOutput = MCVCMatrix * gVertexMC;',
+            '  gl_Position = MCDCMatrix * gVertexMC;']).result;
+        VSSource = vtkShaderProgram.substitute(VSSource,
+          '//VTK::Camera::Dec', [
+            'attribute mat4 gMatrix;',
+            'uniform mat4 MCDCMatrix;',
+            'uniform mat4 MCVCMatrix;']).result;
+      } else {
+        VSSource = vtkShaderProgram.substitute(VSSource,
+          '//VTK::Camera::Dec', [
+            'attribute mat4 gMatrix;',
+            'uniform mat4 MCDCMatrix;']).result;
+        VSSource = vtkShaderProgram.substitute(VSSource,
+          '//VTK::PositionVC::Impl', [
+            'vec4 gVertexMC = gMatrix * vertexMC;',
+            '  gl_Position = MCDCMatrix * gVertexMC;']).result;
+      }
+      shaders.Vertex = VSSource;
+    }
+    superClass.replaceShaderPositionVC(shaders, ren, actor);
   };
 
   publicAPI.updateGlyphShaderParameters = (
@@ -213,19 +346,64 @@ function vtkOpenGLGlyph3DMapper(publicAPI, model) {
         const normalMatrixUsed = program.isUniformUsed('normalMatrix');
         const mcvcMatrixUsed = program.isUniformUsed('MCVCMatrix');
 
-        // draw the array multiple times with different cam matrix
-        for (let p = 0; p < numPts; ++p) {
-          publicAPI.updateGlyphShaderParameters(
-            normalMatrixUsed,
-            mcvcMatrixUsed,
-            model.primitives[i], carray, garray, narray, p);
-          gl.drawArrays(mode, 0, cabo.getElementCount());
+        if (model.openGLRenderWindow.getWebgl2()) {
+          gl.drawArraysInstanced(mode, 0, cabo.getElementCount(), numPts);
+        } else {
+          // draw the array multiple times with different cam matrix
+          for (let p = 0; p < numPts; ++p) {
+            publicAPI.updateGlyphShaderParameters(
+              normalMatrixUsed,
+              mcvcMatrixUsed,
+              model.primitives[i], carray, garray, narray, p);
+            gl.drawArrays(mode, 0, cabo.getElementCount());
+          }
         }
-
-        const stride = (mode === gl.POINTS ? 1 : (mode === gl.LINES ? 2 : 3));
-        model.primitiveIDOffset += cabo.getElementCount() / stride;
       }
     }
+  };
+
+  publicAPI.setMapperShaderParameters = (cellBO, ren, actor) => {
+    if (cellBO.getCABO().getElementCount() &&
+        (model.glyphBOBuildTime.getMTime() > cellBO.getAttributeUpdateTime().getMTime() ||
+        cellBO.getShaderSourceTime().getMTime() > cellBO.getAttributeUpdateTime().getMTime())) {
+      if (cellBO.getProgram().isAttributeUsed('gMatrix')) {
+        if (!cellBO.getVAO().addAttributeMatrixWithDivisor(
+          cellBO.getProgram(), model.matrixBuffer,
+             'gMatrix', 0, 64, model.context.FLOAT, 4,
+             false, 1)) {
+          vtkErrorMacro('Error setting gMatrix in shader VAO.');
+        }
+      } else {
+        cellBO.getVAO().removeAttributeArray('gMatrix');
+      }
+      if (cellBO.getProgram().isAttributeUsed('gNormal')) {
+        if (!cellBO.getVAO().addAttributeMatrixWithDivisor(
+          cellBO.getProgram(), model.normalBuffer,
+             'gNormal', 0, 36, model.context.FLOAT, 3,
+             false, 1)) {
+          vtkErrorMacro('Error setting gNormal in shader VAO.');
+        }
+      } else {
+        cellBO.getVAO().removeAttributeArray('gNormal');
+      }
+      if (cellBO.getProgram().isAttributeUsed('gColor')) {
+        if (!cellBO.getVAO().addAttributeArrayWithDivisor(
+            cellBO.getProgram(), model.colorBuffer,
+           'gColor', 0, 4,
+           model.context.UNSIGNED_BYTE,
+           4,
+           true, 1, false)) {
+          vtkErrorMacro('Error setting gColor in shader VAO.');
+        }
+      } else {
+        cellBO.getVAO().removeAttributeArray('gColor');
+      }
+      superClass.setMapperShaderParameters(cellBO, ren, actor);
+      cellBO.getAttributeUpdateTime().modified();
+      return;
+    }
+
+    superClass.setMapperShaderParameters(cellBO, ren, actor);
   };
 
   publicAPI.getNeedToRebuildBufferObjects = (ren, actor) => {
@@ -240,115 +418,30 @@ function vtkOpenGLGlyph3DMapper(publicAPI, model) {
     return superClass.getNeedToRebuildBufferObjects(ren, actor);
   };
 
-  // publicAPI.buildBufferObjects = (ren, actor) => {
-  //   const poly = model.currentInput;
 
-  //   if (poly === null) {
-  //     return;
-  //   }
-
-  //   model.renderable.mapScalars(poly, 1.0);
-  //   const c = model.renderable.getColorMapColors();
-
-  //   const vbo = model.primitives[model.primTypes.Tris].getCABO();
-
-  //   const pointData = poly.getPointData();
-  //   const points = poly.getPoints();
-  //   const numPoints = points.getNumberOfPoints();
-  //   const pointArray = points.getData();
-
-  //   const pointSize = 5; // x,y,z,orientation1,orientation2
-  //   let scales = null;
-
-  //   if (model.renderable.getScaleArray() != null &&
-  //       pointData.hasArray(model.renderable.getScaleArray())) {
-  //     scales = pointData.getArray(model.renderable.getScaleArray()).getData();
-  //   }
-
-  //   let colorData = null;
-  //   let colorComponents = 0);
-  //   let packedUCVBO = null;
-  //   if (c) {
-  //     colorComponents = c.getNumberOfComponents();
-  //     vbo.setColorOffset(0);
-  //     vbo.setColorBOStride(4);
-  //     colorData = c.getData();
-  //     packedUCVBO = new Uint8Array(3 * numPoints * 4);
-  //     if (!vbo.getColorBO()) {
-  //       vbo.setColorBO(vtkBufferObject.newInstance());
-  //     }
-  //     vbo.getColorBO().setContext(model.context);
-  //   } else if (vbo.getColorBO()) {
-  //     vbo.setColorBO(null);
-  //   }
-  //   vbo.setColorComponents(colorComponents);
-
-  //   const packedVBO = new Float32Array(pointSize * numPoints * 3);
-
-  //   vbo.setStride(pointSize * 4);
-
-  //   const cos30 = Math.cos(vtkMath.radiansFromDegrees(30.0));
-  //   let pointIdx = 0);
-  //   let colorIdx = 0);
-
-  //   //
-  //   // Generate points and point data for sides
-  //   //
-  //   let vboIdx = 0);
-  //   let ucIdx = 0);
-  //   for (let i = 0); i < numPoints; ++i) {
-  //     let radius = model.renderable.getRadius();
-  //     if (scales) {
-  //       radius = scales[i];
-  //     }
-
-  //     pointIdx = i * 3;
-  //     packedVBO[vboIdx++] = pointArray[pointIdx++];
-  //     packedVBO[vboIdx++] = pointArray[pointIdx++];
-  //     packedVBO[vboIdx++] = pointArray[pointIdx++];
-  //     packedVBO[vboIdx++] = -2.0 * radius * cos30);
-  //     packedVBO[vboIdx++] = -radius;
-  //     if (colorData) {
-  //       colorIdx = i * colorComponents;
-  //       packedUCVBO[ucIdx++] = colorData[colorIdx];
-  //       packedUCVBO[ucIdx++] = colorData[colorIdx + 1];
-  //       packedUCVBO[ucIdx++] = colorData[colorIdx + 2];
-  //       packedUCVBO[ucIdx++] = colorData[colorIdx + 3];
-  //     }
-
-  //     pointIdx = i * 3;
-  //     packedVBO[vboIdx++] = pointArray[pointIdx++];
-  //     packedVBO[vboIdx++] = pointArray[pointIdx++];
-  //     packedVBO[vboIdx++] = pointArray[pointIdx++];
-  //     packedVBO[vboIdx++] = 2.0 * radius * cos30);
-  //     packedVBO[vboIdx++] = -radius;
-  //     if (colorData) {
-  //       packedUCVBO[ucIdx++] = colorData[colorIdx];
-  //       packedUCVBO[ucIdx++] = colorData[colorIdx + 1];
-  //       packedUCVBO[ucIdx++] = colorData[colorIdx + 2];
-  //       packedUCVBO[ucIdx++] = colorData[colorIdx + 3];
-  //     }
-
-  //     pointIdx = i * 3;
-  //     packedVBO[vboIdx++] = pointArray[pointIdx++];
-  //     packedVBO[vboIdx++] = pointArray[pointIdx++];
-  //     packedVBO[vboIdx++] = pointArray[pointIdx++];
-  //     packedVBO[vboIdx++] = 0.0);
-  //     packedVBO[vboIdx++] = 2.0 * radius;
-  //     if (colorData) {
-  //       packedUCVBO[ucIdx++] = colorData[colorIdx];
-  //       packedUCVBO[ucIdx++] = colorData[colorIdx + 1];
-  //       packedUCVBO[ucIdx++] = colorData[colorIdx + 2];
-  //       packedUCVBO[ucIdx++] = colorData[colorIdx + 3];
-  //     }
-  //   }
-
-  //   vbo.setElementCount(vboIdx / pointSize);
-  //   vbo.upload(packedVBO, ObjectType.ARRAY_BUFFER);
-  //   if (c) { vbo.getColorBO().upload(packedUCVBO, ObjectType.ARRAY_BUFFER); }
-
-  //   model.VBOBuildTime.modified();
-  // };
+  publicAPI.buildBufferObjects = (ren, actor) => {
+    if (model.openGLRenderWindow.getWebgl2()) {
+      // update the buffer objects if needed
+      const garray = model.renderable.getMatrixArray();
+      const narray = model.renderable.getNormalArray();
+      const carray = model.renderable.getColorArray();
+      if (!model.matrixBuffer) {
+        model.matrixBuffer = vtkBufferObject.newInstance();
+        model.matrixBuffer.setOpenGLRenderWindow(model.openGLRenderWindow);
+        model.normalBuffer = vtkBufferObject.newInstance();
+        model.normalBuffer.setOpenGLRenderWindow(model.openGLRenderWindow);
+        model.colorBuffer = vtkBufferObject.newInstance();
+        model.colorBuffer.setOpenGLRenderWindow(model.openGLRenderWindow);
+      }
+      if (model.renderable.getBuildTime().getMTime() > model.glyphBOBuildTime.getMTime()) {
+        model.matrixBuffer.upload(garray, ObjectType.ARRAY_BUFFER);
+        model.normalBuffer.upload(narray, ObjectType.ARRAY_BUFFER);
+        model.colorBuffer.upload(carray.getData(), ObjectType.ARRAY_BUFFER);
+        model.glyphBOBuildTime.modified();
+      }
+    }
+    return superClass.buildBufferObjects(ren, actor);
+  };
 }
 
 // ----------------------------------------------------------------------------
@@ -374,6 +467,9 @@ export function extend(publicAPI, model, initialValues = {}) {
   model.mcdcMatrix = mat4.create();
   model.mcvcMatrix = mat4.create();
   model.tmpColor = [];
+
+  model.glyphBOBuildTime = {};
+  macro.obj(model.glyphBOBuildTime, { mtime: 0 });
 
   // Object methods
   vtkOpenGLGlyph3DMapper(publicAPI, model);

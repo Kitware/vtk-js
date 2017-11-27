@@ -18,10 +18,10 @@ function vtkOpenGLTexture(publicAPI, model) {
   model.classHierarchy.push('vtkOpenGLTexture');
   // Renders myself
   publicAPI.render = () => {
-    const oglren = publicAPI.getFirstAncestorOfType('vtkOpenGLRenderer');
+    model.openGLRenderer = publicAPI.getFirstAncestorOfType('vtkOpenGLRenderer');
     // sync renderable properties
-    model.window = oglren.getParent();
-    model.context = model.window.getContext();
+    model.openGLRenderWindow = model.openGLRenderer.getParent();
+    model.context = model.openGLRenderWindow.getContext();
     if (model.renderable.getInterpolate()) {
       if (model.generateMipmap) {
         publicAPI.setMinificationFilter(Filter.LINEAR_MIPMAP_LINEAR);
@@ -142,8 +142,8 @@ function vtkOpenGLTexture(publicAPI, model) {
 
   //---------------------------------------------------------------------------
   publicAPI.getTextureUnit = () => {
-    if (model.window) {
-      return model.window.getTextureUnitForTexture(publicAPI);
+    if (model.openGLRenderWindow) {
+      return model.openGLRenderWindow.getTextureUnitForTexture(publicAPI);
     }
     return -1;
   };
@@ -151,16 +151,14 @@ function vtkOpenGLTexture(publicAPI, model) {
   //---------------------------------------------------------------------------
   publicAPI.activate = () => {
     // activate a free texture unit for this texture
-    model.window.activateTexture(publicAPI);
+    model.openGLRenderWindow.activateTexture(publicAPI);
     publicAPI.bind();
   };
 
   //---------------------------------------------------------------------------
   publicAPI.deactivate = () => {
-    if (model.window) {
-      model.window.activateTexture(publicAPI);
-      publicAPI.unBind();
-      model.window.deactivateTexture(publicAPI);
+    if (model.openGLRenderWindow) {
+      model.openGLRenderWindow.deactivateTexture(publicAPI);
     }
   };
 
@@ -170,7 +168,6 @@ function vtkOpenGLTexture(publicAPI, model) {
       rwin.makeCurrent();
 
       rwin.activateTexture(publicAPI);
-      publicAPI.unBind();
       rwin.deactivateTexture(publicAPI);
       model.context.deleteTexture(model.handle);
       model.handle = 0;
@@ -199,13 +196,6 @@ function vtkOpenGLTexture(publicAPI, model) {
   };
 
   //----------------------------------------------------------------------------
-  publicAPI.unBind = () => {
-    if (model.target) {
-      model.context.bindTexture(model.target, null);
-    }
-  };
-
-  //----------------------------------------------------------------------------
   publicAPI.isBound = () => {
     let result = false;
     if (model.context && model.handle) {
@@ -230,7 +220,7 @@ function vtkOpenGLTexture(publicAPI, model) {
       publicAPI.getOpenGLWrapMode(model.wrapS));
     model.context.texParameteri(model.target, model.context.TEXTURE_WRAP_T,
       publicAPI.getOpenGLWrapMode(model.wrapT));
-    if (model.window.getWebgl2()) {
+    if (model.openGLRenderWindow.getWebgl2()) {
       model.context.texParameteri(model.target, model.context.TEXTURE_WRAP_R,
         publicAPI.getOpenGLWrapMode(model.wrapR));
     }
@@ -274,14 +264,14 @@ function vtkOpenGLTexture(publicAPI, model) {
     let result = 0;
 
     // try default next
-    result = model.window.getDefaultTextureInternalFormat(
+    result = model.openGLRenderWindow.getDefaultTextureInternalFormat(
       vtktype, numComps, false);
     if (result) {
       return result;
     }
 
     // try floating point
-    result = this.window.getDefaultTextureInternalFormat(
+    result = this.openGLRenderWindow.getDefaultTextureInternalFormat(
       vtktype, numComps, true);
 
     if (!result) {
@@ -311,7 +301,7 @@ function vtkOpenGLTexture(publicAPI, model) {
 
   //----------------------------------------------------------------------------
   publicAPI.getDefaultFormat = (vtktype, numComps) => {
-    if (model.window.getWebgl2()) {
+    if (model.openGLRenderWindow.getWebgl2()) {
       switch (numComps) {
         case 1:
           return model.context.RED;
@@ -350,7 +340,7 @@ function vtkOpenGLTexture(publicAPI, model) {
   //----------------------------------------------------------------------------
   publicAPI.getDefaultDataType = (vtkScalarType) => {
     // DON'T DEAL with VTK_CHAR as this is platform dependent.
-    if (model.window.getWebgl2()) {
+    if (model.openGLRenderWindow.getWebgl2()) {
       switch (vtkScalarType) {
         // case VtkDataTypes.SIGNED_CHAR:
         //   return model.context.BYTE;
@@ -608,7 +598,7 @@ function vtkOpenGLTexture(publicAPI, model) {
     model.height = height;
     model.depth = 1;
     model.numberOfDimensions = 2;
-    model.window.activateTexture(publicAPI);
+    model.openGLRenderWindow.activateTexture(publicAPI);
     publicAPI.createTexture();
     publicAPI.bind();
 
@@ -657,7 +647,7 @@ function vtkOpenGLTexture(publicAPI, model) {
     model.height = height;
     model.depth = 1;
     model.numberOfDimensions = 2;
-    model.window.activateTexture(publicAPI);
+    model.openGLRenderWindow.activateTexture(publicAPI);
     publicAPI.createTexture();
     publicAPI.bind();
 
@@ -703,7 +693,7 @@ function vtkOpenGLTexture(publicAPI, model) {
     model.height = height;
     model.depth = 1;
     model.numberOfDimensions = 2;
-    model.window.activateTexture(publicAPI);
+    model.openGLRenderWindow.activateTexture(publicAPI);
     publicAPI.createTexture();
     publicAPI.bind();
 
@@ -747,7 +737,7 @@ function vtkOpenGLTexture(publicAPI, model) {
     model.height = image.height;
     model.depth = 1;
     model.numberOfDimensions = 2;
-    model.window.activateTexture(publicAPI);
+    model.openGLRenderWindow.activateTexture(publicAPI);
     publicAPI.createTexture();
     publicAPI.bind();
 
@@ -800,7 +790,7 @@ function vtkOpenGLTexture(publicAPI, model) {
     model.height = height;
     model.depth = depth;
     model.numberOfDimensions = 3;
-    model.window.activateTexture(publicAPI);
+    model.openGLRenderWindow.activateTexture(publicAPI);
     publicAPI.createTexture();
     publicAPI.bind();
 
@@ -854,7 +844,7 @@ function vtkOpenGLTexture(publicAPI, model) {
     if (dataType === VtkDataTypes.UNSIGNED_CHAR) {
       model.volumeInfo.min = 0.0;
       model.volumeInfo.max = 255.0;
-    } else if (model.window.getWebgl2() ||
+    } else if (model.openGLRenderWindow.getWebgl2() ||
         (model.context.getExtension('OES_texture_float') &&
          model.context.getExtension('OES_texture_float_linear'))) {
       dataTypeToUse = VtkDataTypes.FLOAT;
@@ -878,7 +868,7 @@ function vtkOpenGLTexture(publicAPI, model) {
       };
     }
 
-    if (model.window.getWebgl2()) {
+    if (model.openGLRenderWindow.getWebgl2()) {
       if (dataType !== VtkDataTypes.UNSIGNED_CHAR) {
         const newArray = new Float32Array(numPixelsIn);
         for (let i = 0; i < numPixelsIn; ++i) {
@@ -923,7 +913,7 @@ function vtkOpenGLTexture(publicAPI, model) {
 
     model.width = targetWidth;
     model.height = targetHeight;
-    model.window.activateTexture(publicAPI);
+    model.openGLRenderWindow.activateTexture(publicAPI);
     publicAPI.createTexture();
     publicAPI.bind();
 
@@ -1042,7 +1032,7 @@ function vtkOpenGLTexture(publicAPI, model) {
     model.volumeInfo = { min: minMag, max: maxMag };
     let outIdx = 0;
 
-    if (model.window.getWebgl2()) {
+    if (model.openGLRenderWindow.getWebgl2()) {
       const numPixelsIn = width * height * depth;
       const newArray = new Uint8Array(numPixelsIn * 4);
       for (let p = 0; p < numPixelsIn; ++p) {
@@ -1103,7 +1093,7 @@ function vtkOpenGLTexture(publicAPI, model) {
       }
     }
 
-    model.window.activateTexture(publicAPI);
+    model.openGLRenderWindow.activateTexture(publicAPI);
     publicAPI.createTexture();
     publicAPI.bind();
 
@@ -1125,6 +1115,18 @@ function vtkOpenGLTexture(publicAPI, model) {
     return true;
   };
 
+  publicAPI.setOpenGLRenderWindow = (rw) => {
+    if (model.openGLRenderWindow === rw) {
+      return;
+    }
+    publicAPI.releaseGraphicsResources();
+    model.openGLRenderWindow = rw;
+    model.context = null;
+    if (rw) {
+      model.context = model.openGLRenderWindow.getContext();
+    }
+  };
+
   //----------------------------------------------------------------------------
   publicAPI.getMaximumTextureSize = (ctx) => {
     if (ctx && ctx.isCurrent()) {
@@ -1140,7 +1142,7 @@ function vtkOpenGLTexture(publicAPI, model) {
 // ----------------------------------------------------------------------------
 
 const DEFAULT_VALUES = {
-  window: null,
+  openGLRenderWindow: null,
   context: null,
   handle: 0,
   sendParametersTime: null,
@@ -1187,8 +1189,6 @@ export function extend(publicAPI, model, initialValues = {}) {
   ]);
 
   macro.setGet(publicAPI, model, [
-    'window',
-    'context',
     'keyMatrixTime',
     'minificationFilter',
     'magnificationFilter',
