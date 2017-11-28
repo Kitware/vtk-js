@@ -21,6 +21,8 @@ import './Rendering/Core/ColorTransferFunction/test/testColorTransferFunctionPre
 import './Rendering/Core/ColorTransferFunction/test/testColorTransferFunctionInterpolation';
 import './Rendering/Core/Coordinate/test/testCoordinate';
 import './Rendering/Core/Glyph3DMapper/test/testGlyph3DMapper';
+import './Rendering/Core/Mapper/test/testEdgeVisibility';
+import './Rendering/Core/Mapper/test/testVectorComponent';
 import './Rendering/Core/Prop3D/test/testUserMatrix';
 import './Rendering/Core/RenderWindow/test/testMultipleRenderers';
 import './Rendering/Core/SphereMapper/test/testDisableScalarColoring';
@@ -37,7 +39,6 @@ import './Rendering/OpenGL/StickMapper/test/testStick';
 import './Rendering/OpenGL/Texture/test/testCreateCubeFromRawTexture';
 import './Rendering/OpenGL/VolumeMapper/test/testComposite';
 import './Rendering/OpenGL/VolumeMapper/test/testComposite16Bit';
-import './Rendering/Core/Mapper/test/testEdgeVisibility';
 import './Rendering/OpenGL/VolumeMapper/test/testIntermixed';
 import './Rendering/OpenGL/VolumeMapper/test/testLighting';
 import './Testing/testAlgorithm';

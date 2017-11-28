@@ -16,7 +16,6 @@
     "bounds": [-0.5, 0.5, -0.5, 0.5, -0.5, 0.5],
     "center": [0, 0],
     "classHierarchy": ["vtkObject", "vtkMapper"],
-    "colorByArrayComponent": -1,
     "colorMapColors": {
       "classHierarchy": ["vtkObject", "vtkDataArray"],
       "dataType": "Uint8Array",

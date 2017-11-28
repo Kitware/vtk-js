@@ -494,7 +494,6 @@ const DEFAULT_VALUES = {
   renderTime: 0,
 
   colorByArrayName: null,
-  colorByArrayComponent: -1,
 
   fieldDataTupleId: -1,
 
@@ -525,7 +524,6 @@ export function extend(publicAPI, model, initialValues = {}) {
     'colorTextureMap',
   ]);
   macro.setGet(publicAPI, model, [
-    'colorByArrayComponent',
     'colorByArrayName',
     'arrayAccessMode',
     'colorMode',
