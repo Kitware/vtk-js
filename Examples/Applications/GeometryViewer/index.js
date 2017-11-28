@@ -223,7 +223,6 @@ function createPipeline(fileName, fileContentAsText) {
     const interpolateScalarsBeforeMapping = (location === 'PointData');
     let colorMode = ColorMode.DEFAULT;
     let scalarMode = ScalarMode.DEFAULT;
-    const colorByArrayComponent = -1;
     const scalarVisibility = (location.length > 0);
     if (scalarVisibility) {
       const activeArray = source[`get${location}`]().getArrayByName(colorByArrayName);
@@ -231,11 +230,16 @@ function createPipeline(fileName, fileContentAsText) {
       dataRange[0] = newDataRange[0];
       dataRange[1] = newDataRange[1];
       colorMode = ColorMode.MAP_SCALARS;
-      scalarMode = interpolateScalarsBeforeMapping ? ScalarMode.USE_POINT_FIELD_DATA : ScalarMode.USE_CELL_FIELD_DATA;
+      scalarMode = (location === 'PointData') ? ScalarMode.USE_POINT_FIELD_DATA : ScalarMode.USE_CELL_FIELD_DATA;
 
       const numberOfComponents = activeArray.getNumberOfComponents();
       if (numberOfComponents > 1) {
-        // componentSelector.style.display = 'block'; // FIXME the 'colorByArrayComponent' is not yet processed in mapper
+        // always start on magnitude setting
+        if (mapper.getLookupTable()) {
+          const lut = mapper.getLookupTable();
+          lut.setVectorModeToMagnitude();
+        }
+        componentSelector.style.display = 'block';
         const compOpts = ['Magnitude'];
         while (compOpts.length <= numberOfComponents) {
           compOpts.push(`Component ${compOpts.length}`);
@@ -244,9 +248,10 @@ function createPipeline(fileName, fileContentAsText) {
       } else {
         componentSelector.style.display = 'none';
       }
+    } else {
+      componentSelector.style.display = 'none';
     }
     mapper.set({
-      colorByArrayComponent,
       colorByArrayName,
       colorMode,
       interpolateScalarsBeforeMapping,
@@ -259,8 +264,16 @@ function createPipeline(fileName, fileContentAsText) {
   updateColorBy({ target: colorBySelector });
 
   function updateColorByComponent(event) {
-    mapper.setColorByArrayComponent(Number(event.target.value));
-    renderWindow.render();
+    if (mapper.getLookupTable()) {
+      const lut = mapper.getLookupTable();
+      if (event.target.value === -1) {
+        lut.setVectorModeToMagnitude();
+      } else {
+        lut.setVectorModeToComponent();
+        lut.setVectorComponent(Number(event.target.value));
+      }
+      renderWindow.render();
+    }
   }
   componentSelector.addEventListener('change', updateColorByComponent);
 

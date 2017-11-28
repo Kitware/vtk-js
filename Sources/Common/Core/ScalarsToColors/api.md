@@ -32,8 +32,7 @@ table.
 
 ## VectorComponent
 
-If the mapper does not select which component of a vector
-to map to colors, you can specify it here.
+Select which component of a vector to map to colors.
 
 ## VectorSize
 

@@ -157,10 +157,6 @@ for coloring the entire data set.
 
 Set/Get the array name to color by.
 
-### colorByArrayComponent
-
-Set/Get the array component to color by.
-
 ### resolveCoincidentTopology (STATIC)
 
 Set/Get a global flag that controls whether coincident topology (e.g., a
