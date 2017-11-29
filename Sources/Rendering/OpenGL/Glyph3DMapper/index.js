@@ -439,7 +439,7 @@ function vtkOpenGLGlyph3DMapper(publicAPI, model) {
         if (carray) {
           model.colorBuffer.upload(carray.getData(), ObjectType.ARRAY_BUFFER);
         } else {
-          model.colorBuffer.releaseGraphicResources();
+          model.colorBuffer.releaseGraphicsResources();
         }
         model.glyphBOBuildTime.modified();
       }
