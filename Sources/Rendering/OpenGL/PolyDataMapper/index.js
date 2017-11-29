@@ -1152,7 +1152,7 @@ function vtkOpenGLPolyDataMapper(publicAPI, model) {
     const keyMats = model.openGLCamera.getKeyMatrices(ren);
     const cam = ren.getActiveCamera();
 
-    const camm = cam.getMTime();
+    const camm = model.openGLCamera.getKeyMatrixTime().getMTime();
     const progm = program.getLastCameraMTime();
 
     if (progm !== camm) {
