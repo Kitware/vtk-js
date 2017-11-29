@@ -215,6 +215,9 @@ function vtkGlyph3DMapper(publicAPI, model) {
                 scale[2] = scale[0];
                 break;
               case ScaleModes.SCALE_BY_COMPONENTS:
+                for (let t = 0; t < numSComp; ++t) {
+                  tuple[t] = sData[(i * numSComp) + t];
+                }
                 scale[0] = tuple[0];
                 scale[1] = tuple[1];
                 scale[2] = tuple[2];
