@@ -105,7 +105,6 @@ function vtkLineWidget(publicAPI, model) {
         model.widgetRep.setPoint1Visibility(1);
         model.widgetRep.setPoint2Visibility(1);
 
-
         // // Widgets can't be enabled together because of interaction event which doesn't
         // // manage priority
         // model.point1Widget.setEnable(1);
@@ -170,9 +169,7 @@ function vtkLineWidget(publicAPI, model) {
     if (model.widgetRep.getInteractionState === InteractionState.OUTSIDE) {
       return;
     }
-    const pos = model.interactor.getEventPosition(model.interactor.getPointerIndex());
-    const boundingContainer = model.interactor.getCanvas().getBoundingClientRect();
-    const position = [pos.x - boundingContainer.left, pos.y + boundingContainer.top];
+    const position = publicAPI.get2DPointerPosition();
 
     if (model.widgetState === WidgetState.START) {
       const pos3D = model.point1Widget.getWidgetRep().displayToWorld(position, 0);
@@ -224,10 +221,7 @@ function vtkLineWidget(publicAPI, model) {
       model.widgetRep.setInteractionState(State.ONLINE);
     }
 
-    const pos = model.interactor.getEventPosition(model.interactor.getPointerIndex());
-    const boundingContainer = model.interactor.getCanvas().getBoundingClientRect();
-    const position = [pos.x - boundingContainer.left, pos.y + boundingContainer.top];
-
+    const position = publicAPI.get2DPointerPosition();
     model.widgetState = WidgetState.ACTIVE;
     model.widgetRep.startComplexWidgetInteraction(position);
     publicAPI.invokeStartInteractionEvent();
@@ -238,19 +232,14 @@ function vtkLineWidget(publicAPI, model) {
       return;
     }
     model.widgetRep.setInteractionState(State.SCALING);
-    const pos = model.interactor.getEventPosition(model.interactor.getPointerIndex());
-    const boundingContainer = model.interactor.getCanvas().getBoundingClientRect();
-    const position = [pos.x - boundingContainer.left, pos.y + boundingContainer.top];
-
+    const position = publicAPI.get2DPointerPosition();
     model.widgetState = WidgetState.ACTIVE;
     model.widgetRep.startComplexWidgetInteraction(position);
     publicAPI.invokeStartInteractionEvent();
   };
 
   publicAPI.moveAction = () => {
-    const pos = model.interactor.getEventPosition(model.interactor.getPointerIndex());
-    const boundingContainer = model.interactor.getCanvas().getBoundingClientRect();
-    const position = [pos.x - boundingContainer.left, pos.y + boundingContainer.top];
+    const position = publicAPI.get2DPointerPosition();
 
     // Need to check where the mouse is
     if (model.widgetState === WidgetState.MANIPULATE) {
@@ -258,6 +247,7 @@ function vtkLineWidget(publicAPI, model) {
 
       model.point1Widget.setEnable(0);
       model.point2Widget.setEnable(0);
+
       if (model.currentHandle === 1) {
         model.point1Widget.setEnable(1);
       }
@@ -296,9 +286,7 @@ function vtkLineWidget(publicAPI, model) {
     if (model.widgetState === WidgetState.START) {
       return;
     }
-    const pos = model.interactor.getEventPosition(model.interactor.getPointerIndex());
-    const boundingContainer = model.interactor.getCanvas().getBoundingClientRect();
-    const position = [pos.x - boundingContainer.left, pos.y + boundingContainer.top];
+    const position = publicAPI.get2DPointerPosition();
     model.widgetRep.complexWidgetInteraction(position);
     model.widgetRep.setPoint1WorldPosition(model.point1Widget.getWidgetRep().getWorldPosition());
     model.widgetRep.setPoint2WorldPosition(model.point2Widget.getWidgetRep().getWorldPosition());

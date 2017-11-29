@@ -76,6 +76,13 @@ function vtkAbstractWidget(publicAPI, model) {
       model.currentRenderer = null;
     }
   };
+
+  publicAPI.get2DPointerPosition = () => {
+    const pos = model.interactor.getEventPosition(model.interactor.getPointerIndex());
+    const boundingContainer = model.interactor.getCanvas().getBoundingClientRect();
+    const position = [pos.x - boundingContainer.left, pos.y + boundingContainer.top];
+    return position;
+  };
 }
 
 // ----------------------------------------------------------------------------
