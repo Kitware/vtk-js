@@ -20,7 +20,7 @@ function vtkSphereHandleRepresentation(publicAPI, model) {
   const superClass = Object.assign({}, publicAPI);
 
   publicAPI.getActors = () => model.actor;
-  publicAPI.getNestedProps = () => model.actor;
+  publicAPI.getNestedProps = () => publicAPI.getActors();
 
   publicAPI.placeWidget = (...bounds) => {
     let boundsArray = [];
@@ -52,7 +52,7 @@ function vtkSphereHandleRepresentation(publicAPI, model) {
 
   publicAPI.setSphereRadius = (radius) => {
     model.sphere.setRadius(radius);
-    model.modified();
+    publicAPI.modified();
   };
 
   publicAPI.getSphereRadius = () => model.sphere.getRadius();
@@ -154,14 +154,16 @@ function vtkSphereHandleRepresentation(publicAPI, model) {
     }
   };
 
+  publicAPI.displayToWorld = (eventPos, z) => vtkInteractorObserver.computeDisplayToWorld(model.renderer,
+      eventPos[0], eventPos[1], z);
+
   publicAPI.complexWidgetInteraction = (eventPos) => {
     const focalPoint = vtkInteractorObserver.computeDisplayToWorld(model.renderer,
         model.lastPickPosition[0], model.lastPickPosition[1], model.lastPickPosition[2]);
     const z = focalPoint[2];
     const prevPickPoint = vtkInteractorObserver.computeDisplayToWorld(model.renderer,
         model.lastEventPosition[0], model.lastEventPosition[1], z);
-    const pickPoint = vtkInteractorObserver.computeDisplayToWorld(model.renderer,
-        eventPos[0], eventPos[1], z);
+    const pickPoint = publicAPI.displayToWorld(eventPos, z);
 
     if (model.interactionState === InteractionState.SELECTING ||
       model.interactionState === InteractionState.TRANSLATING) {
@@ -281,6 +283,10 @@ function vtkSphereHandleRepresentation(publicAPI, model) {
       model.sphere.update();
       publicAPI.modified();
     }
+  };
+
+  publicAPI.setProperty = (property) => {
+    model.actor.setProperty(property);
   };
 }
 

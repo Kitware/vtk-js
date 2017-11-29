@@ -56,6 +56,7 @@ function vtkAbstractWidget(publicAPI, model) {
       // Enable listening events
       publicAPI.listenEvents();
 
+      model.widgetRep.getBounds();
       model.widgetRep.buildRepresentation();
       model.currentRenderer.addViewProp(model.widgetRep);
     } else {
@@ -74,6 +75,13 @@ function vtkAbstractWidget(publicAPI, model) {
       }
       model.currentRenderer = null;
     }
+  };
+
+  publicAPI.get2DPointerPosition = () => {
+    const pos = model.interactor.getEventPosition(model.interactor.getPointerIndex());
+    const boundingContainer = model.interactor.getCanvas().getBoundingClientRect();
+    const position = [pos.x - boundingContainer.left, pos.y + boundingContainer.top];
+    return position;
   };
 }
 

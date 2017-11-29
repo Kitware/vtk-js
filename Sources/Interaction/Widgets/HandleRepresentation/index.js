@@ -83,7 +83,7 @@ export function extend(publicAPI, model, initialValues = {}) {
   model.pointPlacer = vtkPointPlacer.newInstance();
   model.interactionState = InteractionState.OUTSIDE;
 
-  macro.setGet(publicAPI, model, ['activeRepresentation']);
+  macro.setGet(publicAPI, model, ['activeRepresentation', 'tolerance']);
 
   // Object methods
   vtkHandleRepresentation(publicAPI, model);

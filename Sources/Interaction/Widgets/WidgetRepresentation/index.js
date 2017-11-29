@@ -96,6 +96,7 @@ const DEFAULT_VALUES = {
   renderer: null,
   interactionState: 0,
   startEventPosition: [0.0, 0.0, 0.0],
+  lastEventPosition: [0.0, 0.0, 0.0],
   placeFactor: 0.5,
   placed: 0,
   handleSize: 0.05,

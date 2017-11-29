@@ -172,6 +172,25 @@ function vtkBox(publicAPI, model) {
     }
     return distance;
   };
+
+  publicAPI.addBounds = (...bounds) => {
+    let boundsArray = [];
+
+    if (Array.isArray(bounds[0])) {
+      boundsArray = bounds[0];
+    } else {
+      for (let i = 0; i < bounds.length; i++) {
+        boundsArray.push(bounds[i]);
+      }
+    }
+
+    if (boundsArray.length !== 6) {
+      return;
+    }
+
+    model.bbox.addBounds(...boundsArray);
+    model.bbox.modified();
+  };
 }
 
 // ----------------------------------------------------------------------------
