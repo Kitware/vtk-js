@@ -3,7 +3,7 @@ title: Overview
 
 The Visualization Toolkit (VTK) is an open-source, freely available software system for 3D computer graphics, image processing, and visualization. Its implementation consists of an ES6 JavaScript class library which can be integrated into any web application. The toolkit leverages WebGL and supports a wide variety of visualization algorithms including scalar, vector, tensor, texture, and volumetric methods. VTK is part of Kitware’s collection of commercially supported open-source platforms for software development.
 
-Welcome to the vtk.js documentation. If you encounter any problems when using vtk.js, have a look at the  [troubleshooting guide](troubleshooting.html), raise an issue on [GitHub](https://github.com/kitware/vtk-js/issues) or start a topic on the [Mailing list](http://www.vtk.org/mailman/listinfo/vtk).
+Welcome to the vtk.js documentation. If you encounter any problems when using vtk.js, have a look at the  [troubleshooting guide](misc_troubleshooting.html), raise an issue on [GitHub](https://github.com/kitware/vtk-js/issues) or start a topic on the [Mailing list](http://www.vtk.org/mailman/listinfo/vtk).
 
 ## What is vtk.js?
 
