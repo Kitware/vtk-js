@@ -62,6 +62,7 @@ simpleFilter.setFormula({
       press[(i * 3) + 2] = (((coords[3 * i] - 0.5) * (coords[3 * i] - 0.5)) + ((coords[(3 * i) + 1] - 0.5) * (coords[(3 * i) + 1] - 0.5)) + 0.125) * 0.1;
       temp[i] = coords[(3 * i) + 1] * 0.1;
     }
+
     // Mark the output vtkDataArray as modified
     arraysOut.forEach(x => x.modified());
   },

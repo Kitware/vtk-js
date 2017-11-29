@@ -256,7 +256,7 @@ function vtkGlyph3DMapper(publicAPI, model) {
 
       model.colorArray = null;
       const lut = publicAPI.getLookupTable();
-      if (lut) {
+      if (lut && scalars) {
         // Ensure that the lookup table is built
         lut.build();
         model.colorArray = lut.mapScalars(scalars, model.colorMode, 0);
