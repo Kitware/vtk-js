@@ -436,7 +436,11 @@ function vtkOpenGLGlyph3DMapper(publicAPI, model) {
       if (model.renderable.getBuildTime().getMTime() > model.glyphBOBuildTime.getMTime()) {
         model.matrixBuffer.upload(garray, ObjectType.ARRAY_BUFFER);
         model.normalBuffer.upload(narray, ObjectType.ARRAY_BUFFER);
-        model.colorBuffer.upload(carray.getData(), ObjectType.ARRAY_BUFFER);
+        if (carray) {
+          model.colorBuffer.upload(carray.getData(), ObjectType.ARRAY_BUFFER);
+        } else {
+          model.colorBuffer.releaseGraphicResources();
+        }
         model.glyphBOBuildTime.modified();
       }
     }
