@@ -97,17 +97,29 @@ function vtkGlyph3DMapper(publicAPI, model) {
     }
     if (sArray && model.scaleMode !== ScaleModes.SCALE_BY_CONSTANT) {
       const numC = sArray.getNumberOfComponents();
-      let maxScale = 0.0;
-      for (let i = 0; i < numC; ++i) {
-        const srange = sArray.getRange(i);
-        if (-srange[0] > maxScale) {
-          maxScale = -srange[0];
+      if (model.scaleMode === ScaleModes.SCALE_BY_COMPONENTS) {
+        let maxScale = 0.0;
+        for (let i = 0; i < numC; ++i) {
+          const srange = sArray.getRange(i);
+          if (-srange[0] > maxScale) {
+            maxScale = -srange[0];
+          }
+          if (srange[1] > maxScale) {
+            maxScale = srange[1];
+          }
         }
-        if (srange[1] > maxScale) {
-          maxScale = srange[1];
+        scale *= maxScale;
+      } else {
+        const maxScale = [];
+        for (let i = 0; i < numC; ++i) {
+          const srange = sArray.getRange(i);
+          maxScale[i] = -srange[0];
+          if (srange[1] > maxScale[i]) {
+            maxScale[i] = srange[1];
+          }
         }
+        scale *= vtkMath.norm(maxScale, numC);
       }
-      scale *= maxScale;
     }
 
     // if orienting then use the radius
@@ -200,9 +212,9 @@ function vtkGlyph3DMapper(publicAPI, model) {
 
         // scale data if appropriate
         if (model.scaling) {
-          scale[0] = 1.0;
-          scale[1] = 1.0;
-          scale[2] = 1.0;
+          scale[0] = model.scaleFactor;
+          scale[1] = model.scaleFactor;
+          scale[2] = model.scaleFactor;
           // Get the scalar and vector data
           if (sArray) {
             switch (model.scaleMode) {
@@ -210,7 +222,7 @@ function vtkGlyph3DMapper(publicAPI, model) {
                 for (let t = 0; t < numSComp; ++t) {
                   tuple[t] = sData[(i * numSComp) + t];
                 }
-                scale[0] = vtkMath.norm(tuple, numSComp);
+                scale[0] *= vtkMath.norm(tuple, numSComp);
                 scale[1] = scale[0];
                 scale[2] = scale[0];
                 break;
@@ -218,9 +230,9 @@ function vtkGlyph3DMapper(publicAPI, model) {
                 for (let t = 0; t < numSComp; ++t) {
                   tuple[t] = sData[(i * numSComp) + t];
                 }
-                scale[0] = tuple[0];
-                scale[1] = tuple[1];
-                scale[2] = tuple[2];
+                scale[0] *= tuple[0];
+                scale[1] *= tuple[1];
+                scale[2] *= tuple[2];
                 break;
               case ScaleModes.SCALE_BY_CONSTANT:
               default:

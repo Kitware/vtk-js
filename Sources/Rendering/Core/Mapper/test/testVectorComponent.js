@@ -9,9 +9,9 @@ import vtkSphereSource       from 'vtk.js/Sources/Filters/Sources/SphereSource';
 import vtkActor              from 'vtk.js/Sources/Rendering/Core/Actor';
 import vtkMapper             from 'vtk.js/Sources/Rendering/Core/Mapper';
 
-const { GetArray } = vtkMapper;
-
 import baseline from './testVectorComponent.png';
+
+const { GetArray } = vtkMapper;
 
 test.onlyIfWebGL('Test VectorComponent', (t) => {
   const gc = testUtils.createGarbageCollector(t);
