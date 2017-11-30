@@ -57,7 +57,7 @@
         "build:debug": "webpack --progress --colors --display-modules",
         "build:release": "npm run build -- -p",
         "test": "karma start ./karma.conf.js",
-        "test:travis": "karma start ./karma.conf.js --browsers ChromeHeadless --single-run",
+        "test:travis": "karma start ./karma.conf.js --browsers ChromeHeadlessNoSandbox --single-run",
         "test:debug": "karma start ./karma.conf.js --no-single-run",
         "commit": "git cz",
         "semantic-release": "semantic-release pre && npm publish && semantic-release post"
