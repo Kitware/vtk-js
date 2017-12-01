@@ -320,6 +320,7 @@ export function extend(publicAPI, model, initialValues = {}) {
     'center',
     'direction',
   ], 3);
+  macro.getArray(publicAPI, model, ['cellFields']);
   macro.algo(publicAPI, model, 0, 1);
   vtkConcentricCylinderSource(publicAPI, model);
 }
