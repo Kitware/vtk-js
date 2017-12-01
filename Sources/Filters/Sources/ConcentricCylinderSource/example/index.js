@@ -7,11 +7,13 @@ import vtkMapper                    from 'vtk.js/Sources/Rendering/Core/Mapper';
 
 // import { ColorMode, ScalarMode }    from 'vtk.js/Sources/Rendering/Core/Mapper/Constants';
 
+import controlPanel from './controlPanel.html';
+
 // ----------------------------------------------------------------------------
 // Standard rendering code setup
 // ----------------------------------------------------------------------------
 
-const fullScreenRenderer = vtkFullScreenRenderWindow.newInstance({ background: [0, 0, 0] });
+const fullScreenRenderer = vtkFullScreenRenderWindow.newInstance({ background: [0.5, 0.5, 0.5] });
 const renderer = fullScreenRenderer.getRenderer();
 const renderWindow = fullScreenRenderer.getRenderWindow();
 
@@ -24,6 +26,7 @@ const cylinder = vtkConcentricCylinderSource.newInstance({
   radius: [0.2, 0.3, 0.4, 0.6, 0.7, 0.8, 0.9, 1],
   cellFields: [0, 0.2, 0.4, 0.6, 0.7, 0.8, 0.9, 1],
   resolution: 120,
+  skipInnerFaces: true,
 });
 const actor = vtkActor.newInstance();
 const mapper = vtkMapper.newInstance();
@@ -38,6 +41,29 @@ lut.setHueRange(0.666, 0);
 renderer.addActor(actor);
 renderer.resetCamera();
 renderWindow.render();
+
+// -----------------------------------------------------------
+// UI control handling
+// -----------------------------------------------------------
+
+fullScreenRenderer.addController(controlPanel);
+
+document.querySelector('.skipInnerFaces').addEventListener('change', (e) => {
+  const skipInnerFaces = !!(e.target.checked);
+  cylinder.setSkipInnerFaces(skipInnerFaces);
+  renderWindow.render();
+});
+
+const masksButtons = document.querySelectorAll('.mask');
+let count = masksButtons.length;
+while (count--) {
+  masksButtons[count].addEventListener('change', (e) => {
+    const mask = !!(e.target.checked);
+    const index = Number(e.target.dataset.layer);
+    cylinder.setMaskLayer(index, mask);
+    renderWindow.render();
+  });
+}
 
 // -----------------------------------------------------------
 // Make some variables global so that you can inspect and
