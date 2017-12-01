@@ -142,28 +142,28 @@ function vtkInteractorStyleManipulator(publicAPI, model) {
 
   //-------------------------------------------------------------------------
   publicAPI.handleLeftButtonPress = () => {
-    publicAPI.onButtonDown(1, model.interactor.getShiftKey(), model.interactor.getControlKey());
+    publicAPI.onButtonDown(1, model.interactor.getShiftKey(), model.interactor.getControlKey(), model.interactor.getAltKey());
   };
 
   //-------------------------------------------------------------------------
   publicAPI.handleMiddleButtonPress = () => {
-    publicAPI.onButtonDown(2, model.interactor.getShiftKey(), model.interactor.getControlKey());
+    publicAPI.onButtonDown(2, model.interactor.getShiftKey(), model.interactor.getControlKey(), model.interactor.getAltKey());
   };
 
   //-------------------------------------------------------------------------
   publicAPI.handleRightButtonPress = () => {
-    publicAPI.onButtonDown(3, model.interactor.getShiftKey(), model.interactor.getControlKey());
+    publicAPI.onButtonDown(3, model.interactor.getShiftKey(), model.interactor.getControlKey(), model.interactor.getAltKey());
   };
 
   //-------------------------------------------------------------------------
-  publicAPI.onButtonDown = (button, shift, control) => {
+  publicAPI.onButtonDown = (button, shift, control, alt) => {
     // Must not be processing an interaction to start another.
     if (model.currentManipulator) {
       return;
     }
 
     // Look for a matching camera interactor.
-    model.currentManipulator = publicAPI.findManipulator(button, shift, control);
+    model.currentManipulator = publicAPI.findManipulator(button, shift, control, alt);
     if (model.currentManipulator) {
       publicAPI.invokeStartInteractionEvent({ type: 'StartInteractionEvent' });
       model.currentManipulator.setCenter(model.centerOfRotation);
@@ -177,14 +177,15 @@ function vtkInteractorStyleManipulator(publicAPI, model) {
   };
 
   //-------------------------------------------------------------------------
-  publicAPI.findManipulator = (button, shift, control) => {
+  publicAPI.findManipulator = (button, shift, control, alt) => {
     // Look for a matching camera manipulator
     let manipulator = null;
     model.cameraManipulators.forEach((manip) => {
       if (manip
           && manip.getButton() === button
           && manip.getShift() === shift
-          && manip.getControl() === control) {
+          && manip.getControl() === control
+          && manip.getAlt() === alt) {
         manipulator = manip;
       }
     });
