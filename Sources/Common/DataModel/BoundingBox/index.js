@@ -1,7 +1,7 @@
 import macro    from 'vtk.js/Sources/macro';
 import vtkPlane from 'vtk.js/Sources/Common/DataModel/Plane';
 
-export const INIT_BOUNDS = [
+const INIT_BOUNDS = [
   Number.MAX_VALUE, -Number.MAX_VALUE, // X
   Number.MAX_VALUE, -Number.MAX_VALUE, // Y
   Number.MAX_VALUE, -Number.MAX_VALUE, // Z
@@ -74,6 +74,18 @@ function oppositeSign(a, b) {
   return (a <= 0 && b >= 0) || (a >= 0 && b <= 0);
 }
 
+function getCorners(bounds, corners) {
+  let count = 0;
+  for (let ix = 0; ix < 2; ix++) {
+    for (let iy = 2; iy < 4; iy++) {
+      for (let iz = 4; iz < 6; iz++) {
+        corners[count] = [bounds[ix], bounds[iy], bounds[iz]];
+        count++;
+      }
+    }
+  }
+}
+
 // ----------------------------------------------------------------------------
 // Static API
 // ----------------------------------------------------------------------------
@@ -88,6 +100,8 @@ export const STATIC = {
   getXRange,
   getYRange,
   getZRange,
+  getCorners,
+  INIT_BOUNDS,
 };
 
 // ----------------------------------------------------------------------------
@@ -360,6 +374,11 @@ function vtkBoundingBox(publicAPI, model) {
     });
   };
 
+  publicAPI.getCorners = () => {
+    getCorners(model.bounds, model.corners);
+    return model.corners;
+  };
+
   publicAPI.scale = (sx, sy, sz) => {
     if (publicAPI.isValid()) {
       const newBounds = [].concat(model.bounds);
@@ -401,6 +420,7 @@ function vtkBoundingBox(publicAPI, model) {
 const DEFAULT_VALUES = {
   type: 'vtkBoundingBox',
   bounds: [].concat(INIT_BOUNDS),
+  corners: [],
 };
 
 // ----------------------------------------------------------------------------

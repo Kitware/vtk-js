@@ -1,9 +1,10 @@
-import { mat3, mat4 } from 'gl-matrix';
+import { mat3, mat4, vec3 } from 'gl-matrix';
 
 import Constants from 'vtk.js/Sources/Rendering/Core/Glyph3DMapper/Constants';
 import macro     from 'vtk.js/Sources/macro';
 import vtkMapper from 'vtk.js/Sources/Rendering/Core/Mapper';
 import vtkMath   from 'vtk.js/Sources/Common/Core/Math';
+import vtkBoundingBox from 'vtk.js/Sources/Common/DataModel/BoundingBox';
 
 const { OrientationModes, ScaleModes } = Constants;
 const { vtkErrorMacro } = macro;
@@ -69,83 +70,18 @@ function vtkGlyph3DMapper(publicAPI, model) {
     if (!idata || !gdata) {
       return vtkMath.createUninitializedBounds();
     }
-    const ibounds = idata.getBounds();
-    const gbounds = gdata.getBounds();
 
-    const sArray = publicAPI.getScaleArrayData();
-
-    // either have to compute the full dataset result
-    // or use a heuristic. The basic gist is for the
-    // idata points, place a scaled and oriented glyph
-    // at that location and then compute the bounds.
-    // we instead take the input bounds, and add to them
-    // the maximum scaled glyph bounds for any orientation
-    // To get any orientation we treat the glyph as a
-    // sphere about the origin making it rotationally
-    // invarient
-    let radius = Math.abs(gbounds[0]);
-    for (let i = 1; i < 6; ++i) {
-      if (Math.abs(gbounds[i]) > radius) {
-        radius = gbounds[i];
-      }
-    }
-
-    // compute the max absolute scale
-    let scale = 1.0;
-    if (model.scaling) {
-      scale = model.scaleFactor;
-    }
-    if (sArray && model.scaleMode !== ScaleModes.SCALE_BY_CONSTANT) {
-      const numC = sArray.getNumberOfComponents();
-      if (model.scaleMode === ScaleModes.SCALE_BY_COMPONENTS) {
-        let maxScale = 0.0;
-        for (let i = 0; i < numC; ++i) {
-          const srange = sArray.getRange(i);
-          if (-srange[0] > maxScale) {
-            maxScale = -srange[0];
-          }
-          if (srange[1] > maxScale) {
-            maxScale = srange[1];
-          }
-        }
-        scale *= maxScale;
-      } else {
-        const maxScale = [];
-        for (let i = 0; i < numC; ++i) {
-          const srange = sArray.getRange(i);
-          maxScale[i] = -srange[0];
-          if (srange[1] > maxScale[i]) {
-            maxScale[i] = srange[1];
-          }
-        }
-        scale *= vtkMath.norm(maxScale, numC);
-      }
-    }
-
-    // if orienting then use the radius
-    if (model.orienting) {
-      model.bounds[0] = ibounds[0] - (radius * scale);
-      model.bounds[1] = ibounds[1] + (radius * scale);
-      model.bounds[2] = ibounds[2] - (radius * scale);
-      model.bounds[3] = ibounds[3] + (radius * scale);
-      model.bounds[4] = ibounds[4] - (radius * scale);
-      model.bounds[5] = ibounds[5] + (radius * scale);
-    } else { // other wise use the actual glyph
-      model.bounds[0] = ibounds[0] + (gbounds[0] * scale);
-      model.bounds[1] = ibounds[1] + (gbounds[1] * scale);
-      model.bounds[2] = ibounds[2] + (gbounds[2] * scale);
-      model.bounds[3] = ibounds[3] + (gbounds[3] * scale);
-      model.bounds[4] = ibounds[4] + (gbounds[4] * scale);
-      model.bounds[5] = ibounds[5] + (gbounds[5] * scale);
-    }
-
+    // first we build the arrays used for the glyphing
+    publicAPI.buildArrays();
     return model.bounds;
   };
 
   publicAPI.buildArrays = () => {
     // if the mtgime requires it, rebuild
     const idata = publicAPI.getInputData(0);
-    if (model.buildTime.getMTime() < idata.getMTime() ||
+    const gdata = publicAPI.getInputData(1);
+    if (model.buildTime.getMTime() < gdata.getMTime() ||
+        model.buildTime.getMTime() < idata.getMTime() ||
         model.buildTime.getMTime() < publicAPI.getMTime()) {
       const pts = idata.getPoints().getData();
       let sArray = publicAPI.getScaleArrayData();
@@ -162,6 +98,21 @@ function vtkGlyph3DMapper(publicAPI, model) {
         vtkErrorMacro('Cannot scale by components since scale array does not have 3 components.');
         sArray = null;
       }
+
+      // get the glyph bounds
+      const gbounds = gdata.getBounds();
+      // convert them to 8 points so we can compute the
+      // overall bounds while building the arrays
+      const corners = [];
+      vtkBoundingBox.getCorners(gbounds, corners);
+      model.bounds[0] = vtkBoundingBox.INIT_BOUNDS[0];
+      model.bounds[1] = vtkBoundingBox.INIT_BOUNDS[1];
+      model.bounds[2] = vtkBoundingBox.INIT_BOUNDS[2];
+      model.bounds[3] = vtkBoundingBox.INIT_BOUNDS[3];
+      model.bounds[4] = vtkBoundingBox.INIT_BOUNDS[4];
+      model.bounds[5] = vtkBoundingBox.INIT_BOUNDS[5];
+
+      const tcorner = vec3.create();
 
       const oArray = publicAPI.getOrientationArrayData();
 
@@ -251,6 +202,29 @@ function vtkGlyph3DMapper(publicAPI, model) {
           mat4.scale(z, z, scale);
         }
 
+        // update bounds
+        for (let p = 0; p < 8; ++p) {
+          vec3.transformMat4(tcorner, corners[p], z);
+          if (tcorner[0] < model.bounds[0]) {
+            model.bounds[0] = tcorner[0];
+          }
+          if (tcorner[1] < model.bounds[2]) {
+            model.bounds[2] = tcorner[1];
+          }
+          if (tcorner[2] < model.bounds[4]) {
+            model.bounds[4] = tcorner[2];
+          }
+          if (tcorner[0] > model.bounds[1]) {
+            model.bounds[1] = tcorner[0];
+          }
+          if (tcorner[1] > model.bounds[3]) {
+            model.bounds[3] = tcorner[1];
+          }
+          if (tcorner[2] > model.bounds[5]) {
+            model.bounds[5] = tcorner[2];
+          }
+        }
+
         const n = new Float32Array(nbuff, i * 36, 9);
         mat3.fromMat4(n, z);
         mat3.invert(n, n);
@@ -310,6 +284,9 @@ export function extend(publicAPI, model, initialValues = {}) {
 
   model.buildTime = {};
   macro.obj(model.buildTime, { mtime: 0 });
+
+  model.boundsTime = {};
+  macro.obj(model.boundsTime, { mtime: 0 });
 
   macro.setGet(publicAPI, model, [
     'orient',

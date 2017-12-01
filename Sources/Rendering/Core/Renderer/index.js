@@ -5,7 +5,7 @@ import vtkCamera        from 'vtk.js/Sources/Rendering/Core/Camera';
 import vtkLight         from 'vtk.js/Sources/Rendering/Core/Light';
 import vtkMath          from 'vtk.js/Sources/Common/Core/Math';
 import vtkViewport      from 'vtk.js/Sources/Rendering/Core/Viewport';
-import { INIT_BOUNDS }  from 'vtk.js/Sources/Common/DataModel/BoundingBox';
+import vtkBoundingBox from 'vtk.js/Sources/Common/DataModel/BoundingBox';
 
 const { vtkDebugMacro, vtkErrorMacro, vtkWarningMacro } = macro;
 
@@ -270,12 +270,12 @@ function vtkRenderer(publicAPI, model) {
   };
 
   publicAPI.computeVisiblePropBounds = () => {
-    model.allBounds[0] = INIT_BOUNDS[0];
-    model.allBounds[1] = INIT_BOUNDS[1];
-    model.allBounds[2] = INIT_BOUNDS[2];
-    model.allBounds[3] = INIT_BOUNDS[3];
-    model.allBounds[4] = INIT_BOUNDS[4];
-    model.allBounds[5] = INIT_BOUNDS[5];
+    model.allBounds[0] = vtkBoundingBox.INIT_BOUNDS[0];
+    model.allBounds[1] = vtkBoundingBox.INIT_BOUNDS[1];
+    model.allBounds[2] = vtkBoundingBox.INIT_BOUNDS[2];
+    model.allBounds[3] = vtkBoundingBox.INIT_BOUNDS[3];
+    model.allBounds[4] = vtkBoundingBox.INIT_BOUNDS[4];
+    model.allBounds[5] = vtkBoundingBox.INIT_BOUNDS[5];
     let nothingVisible = true;
 
     publicAPI.invokeEvent(COMPUTE_VISIBLE_PROP_BOUNDS_EVENT);
