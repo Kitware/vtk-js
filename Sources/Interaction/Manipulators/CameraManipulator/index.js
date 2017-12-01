@@ -34,6 +34,7 @@ const DEFAULT_VALUES = {
   button: 1,
   shift: false,
   control: false,
+  alt: false,
 
   center: [0, 0, 0],
   rotationFactor: 1,
@@ -54,6 +55,7 @@ export function extend(publicAPI, model, initialValues = {}) {
     'button',
     'shift',
     'control',
+    'alt',
     'rotationFactor',
   ]);
 
