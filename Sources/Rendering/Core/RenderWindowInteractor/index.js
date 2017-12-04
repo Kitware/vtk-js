@@ -1,12 +1,23 @@
 import macro                             from 'vtk.js/Sources/macro';
 import vtkMath                           from 'vtk.js/Sources/Common/Core/Math';
 import vtkInteractorStyleTrackballCamera from 'vtk.js/Sources/Interaction/Style/InteractorStyleTrackballCamera';
+import Constants                         from 'vtk.js/Sources/Rendering/Core/RenderWindowInteractor/Constants';
 
+const { Device, Input } = Constants;
 const { vtkWarningMacro, vtkErrorMacro } = macro;
 
 // ----------------------------------------------------------------------------
 // Global methods
 // ----------------------------------------------------------------------------
+
+const deviceInputMap = {
+  'OpenVR Gamepad': [
+    Input.TrackPad,
+    Input.Trigger,
+    Input.Grip,
+    Input.ApplicationMenu,
+  ],
+};
 
 const eventsWeHandle = [
   'Animation',
@@ -40,6 +51,8 @@ const eventsWeHandle = [
   'Tap',
   'LongTap',
   'Swipe',
+  'Button3D',
+  'Move3D',
 ];
 
 function preventDefault(event) {
@@ -229,7 +242,7 @@ function vtkRenderWindowInteractor(publicAPI, model) {
     }
   };
 
-  publicAPI.isAnimating = () => (model.animationRequest !== null);
+  publicAPI.isAnimating = () => (model.vrAnimation || model.animationRequest !== null);
 
   publicAPI.cancelAnimation = (requestor) => {
     model.requestAnimationCount -= 1;
@@ -238,6 +251,57 @@ function vtkRenderWindowInteractor(publicAPI, model) {
       cancelAnimationFrame(model.animationRequest);
       model.animationRequest = null;
       publicAPI.forceRender();
+    }
+  };
+
+  publicAPI.switchToVRAnimation = () => {
+    // cancel existing animation if any
+    if (model.animationRequest) {
+      cancelAnimationFrame(model.animationRequest);
+      model.animationRequest = null;
+    }
+    model.vrAnimation = true;
+  };
+
+  publicAPI.returnFromVRAnimation = () => {
+    model.vrAnimation = false;
+  };
+
+  publicAPI.updateGamepads = (displayId) => {
+    const gamepads = navigator.getGamepads();
+
+    // watch for when buttons change state and fire events
+    for (let i = 0; i < gamepads.length; ++i) {
+      const gp = gamepads[i];
+      if (gp && gp.displayId === displayId) {
+        if (!(gp.index in model.lastGamepadValues)) {
+          model.lastGamepadValues[gp.index] = { buttons: {} };
+        }
+        for (let b = 0; b < gp.buttons.length; ++b) {
+          if (!(b in model.lastGamepadValues[gp.index].buttons)) {
+            model.lastGamepadValues[gp.index].buttons[b] = false;
+          }
+          if (model.lastGamepadValues[gp.index].buttons[b] !== gp.buttons[b].pressed) {
+            publicAPI.button3DEvent({
+              gamepad: gp,
+              position: gp.pose.position,
+              orientation: gp.pose.orientation,
+              pressed: gp.buttons[b].pressed,
+              device: (gp.hand === 'left' ? Device.LeftController : Device.RightController),
+              input: (deviceInputMap[gp.id] && deviceInputMap[gp.id][b] ? deviceInputMap[gp.id][b] : Input.Trigger),
+            });
+            model.lastGamepadValues[gp.index].buttons[b] = gp.buttons[b].pressed;
+          }
+          if (model.lastGamepadValues[gp.index].buttons[b]) {
+            publicAPI.move3DEvent({
+              gamepad: gp,
+              position: gp.pose.position,
+              orientation: gp.pose.orientation,
+              device: (gp.hand === 'left' ? Device.LeftController : Device.RightController),
+            });
+          }
+        }
+      }
     }
   };
 
@@ -416,9 +480,6 @@ function vtkRenderWindowInteractor(publicAPI, model) {
 
   //----------------------------------------------------------------------
   publicAPI.forceRender = () => {
-    // if (model.renderWindow && model.enabled && model.enableRender) {
-    //   model.renderWindow.render();
-    // }
     if (model.view && model.enabled && model.enableRender) {
       model.view.traverseAllPasses();
     }
@@ -440,11 +501,11 @@ function vtkRenderWindowInteractor(publicAPI, model) {
   // create the generic Event methods
   eventsWeHandle.forEach((eventName) => {
     const lowerFirst = eventName.charAt(0).toLowerCase() + eventName.slice(1);
-    publicAPI[`${lowerFirst}Event`] = () => {
+    publicAPI[`${lowerFirst}Event`] = (arg) => {
       if (!model.enabled) {
         return;
       }
-      publicAPI[`invoke${eventName}`]({ type: eventName });
+      publicAPI[`invoke${eventName}`]({ type: eventName, calldata: arg });
     };
   });
 
@@ -747,6 +808,7 @@ const DEFAULT_VALUES = {
   requestAnimationCount: 0,
   lastFrameTime: 0.1,
   wheelTimeoutID: 0,
+  lastGamepadValues: {},
 };
 
 // ----------------------------------------------------------------------------
@@ -819,4 +881,4 @@ export const newInstance = macro.newInstance(extend, 'vtkRenderWindowInteractor'
 
 // ----------------------------------------------------------------------------
 
-export default Object.assign({ newInstance, extend });
+export default Object.assign({ newInstance, extend }, Constants);

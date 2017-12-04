@@ -1,7 +1,9 @@
 import macro              from 'vtk.js/Sources/macro';
 import vtkInteractorStyle from 'vtk.js/Sources/Rendering/Core/InteractorStyle';
 import vtkMath            from 'vtk.js/Sources/Common/Core/Math';
-import { States }         from 'vtk.js/Sources/Rendering/Core/InteractorStyle/Constants';
+import { Device, Input }  from 'vtk.js/Sources/Rendering/Core/RenderWindowInteractor/Constants';
+
+const { States } = vtkInteractorStyle;
 
 /* eslint-disable no-lonely-if */
 
@@ -45,6 +47,61 @@ function vtkInteractorStyleTrackballCamera(publicAPI, model) {
       default:
         break;
     }
+  };
+
+  publicAPI.handleButton3D = (arg) => {
+    const ed = arg.calldata;
+    publicAPI.findPokedRenderer(0, 0);
+    if (model.currentRenderer === null) {
+      return;
+    }
+
+    if (ed && ed.pressed &&
+        ed.device === Device.RightController &&
+        ed.input === Input.TrackPad) {
+      publicAPI.startCameraPose();
+      publicAPI.setAnimationStateOn();
+      return;
+    }
+    if (ed && !ed.pressed &&
+        ed.device === Device.RightController &&
+        ed.input === Input.TrackPad &&
+        model.state === States.IS_CAMERA_POSE) {
+      publicAPI.endCameraPose();
+      publicAPI.setAnimationStateOff();
+      // return;
+    }
+  };
+
+  publicAPI.handleMove3D = (arg) => {
+    const ed = arg.calldata;
+    switch (model.state) {
+      case States.IS_CAMERA_POSE:
+        publicAPI.updateCameraPose(ed);
+        break;
+      default:
+    }
+  };
+
+  publicAPI.updateCameraPose = (ed) => {
+    // move the world in the direction of the
+    // controller
+    const camera = model.currentRenderer.getActiveCamera();
+    const oldTrans = camera.getPhysicalTranslation();
+
+    // look at the y axis to determine how fast / what direction to move
+    const speed = ed.gamepad.axes[1];
+
+    // 0.05 meters / frame movement
+    const pscale = speed * 0.05 / camera.getPhysicalScale();
+
+    // convert orientation to world coordinate direction
+    const dir = camera.physicalOrientationToWorldDirection(ed.orientation);
+
+    camera.setPhysicalTranslation(
+      oldTrans[0] + (dir[0] * pscale),
+      oldTrans[1] + (dir[1] * pscale),
+      oldTrans[2] + (dir[2] * pscale));
   };
 
   //----------------------------------------------------------------------------

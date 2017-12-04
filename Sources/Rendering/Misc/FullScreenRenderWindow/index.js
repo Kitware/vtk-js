@@ -62,13 +62,13 @@ function vtkFullScreenRenderWindow(publicAPI, model) {
   model.renderWindow.addRenderer(model.renderer);
 
   // OpenGlRenderWindow
-  model.openGlRenderWindow = vtkOpenGLRenderWindow.newInstance();
-  model.openGlRenderWindow.setContainer(model.container);
-  model.renderWindow.addView(model.openGlRenderWindow);
+  model.openGLRenderWindow = vtkOpenGLRenderWindow.newInstance();
+  model.openGLRenderWindow.setContainer(model.container);
+  model.renderWindow.addView(model.openGLRenderWindow);
 
   // Interactor
   model.interactor = vtkRenderWindowInteractor.newInstance();
-  model.interactor.setView(model.openGlRenderWindow);
+  model.interactor.setView(model.openGLRenderWindow);
   model.interactor.initialize();
   model.interactor.bindEvents(model.container);
 
@@ -115,7 +115,7 @@ function vtkFullScreenRenderWindow(publicAPI, model) {
   // Handle window resize
   publicAPI.resize = () => {
     const dims = model.container.getBoundingClientRect();
-    model.openGlRenderWindow.setSize(Math.floor(dims.width), Math.floor(dims.height));
+    model.openGLRenderWindow.setSize(Math.floor(dims.width), Math.floor(dims.height));
     if (model.resizeCallback) {
       model.resizeCallback(dims);
     }
@@ -155,7 +155,7 @@ export function extend(publicAPI, model, initialValues = {}) {
   macro.get(publicAPI, model, [
     'renderWindow',
     'renderer',
-    'openGlRenderWindow',
+    'openGLRenderWindow',
     'interactor',
     'container',
     'controlContainer',

@@ -21,6 +21,7 @@ const stateNames = {
   Timer: States.IS_TIMER,
   TwoPointer: States.IS_TWO_POINTER,
   UniformScale: States.IS_USCALE,
+  CameraPose: States.IS_CAMERA_POSE,
 };
 
 const events = [
@@ -49,6 +50,8 @@ const events = [
   'Tap',
   'LongTap',
   'Swipe',
+  'Button3D',
+  'Move3D',
 ];
 
 // ----------------------------------------------------------------------------
@@ -77,9 +80,9 @@ function vtkInteractorStyle(publicAPI, model) {
     if (i) {
       events.forEach((eventName) => {
         model.unsubscribes.push(
-        i[`on${eventName}`](() => {
+        i[`on${eventName}`]((data) => {
           if (publicAPI[`handle${eventName}`]) {
-            publicAPI[`handle${eventName}`]();
+            publicAPI[`handle${eventName}`](data);
           }
         }));
       });

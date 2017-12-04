@@ -45,10 +45,6 @@ function vtkRenderer(publicAPI, model) {
       vtkDebugMacro('No cameras are on, creating one.');
       // the get method will automagically create a camera
       // and reset it since one hasn't been specified yet.
-      // If is very unlikely that this can occur - if this
-      // renderer is part of a vtkRenderWindow, the camera
-      // will already have been created as part of the
-      // DoStereoRender() method.
       publicAPI.getActiveCameraAndResetIfCreated();
     }
 
@@ -393,6 +389,10 @@ function vtkRenderer(publicAPI, model) {
 
     // setup default parallel scale
     model.activeCamera.setParallelScale(parallelScale);
+
+    // update reasonable world to physical values
+    model.activeCamera.setPhysicalScale(1.0 / radius);
+    model.activeCamera.setPhysicalTranslation(-center[0], -center[1], -center[2]);
 
     // Here to let parallel/distributed compositing intercept
     // and do the right thing.
