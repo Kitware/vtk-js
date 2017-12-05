@@ -1,0 +1,77 @@
+.container {
+  display: flex;
+  align-items: stretch;
+  justify-content: space-between;
+  flex-direction: column;
+  user-select: none;
+  z-index: 100;
+  position: absolute;
+  top: 0;
+  left: 0;
+  width: 100%;
+  height: 100%;
+}
+
+.row {
+  flex: 1;
+  display: flex;
+  justify-content: space-between;
+  flex-direction: row;
+}
+
+.topRow {
+  composes: row;
+  align-items: flex-start;
+}
+
+.middleRow {
+  composes: row;
+  align-items: center;
+}
+
+.bottomRow {
+  composes: row;
+  align-items: flex-end;
+}
+
+.item {
+  flex: 1;
+  padding: 5px;
+}
+
+.east {
+  composes: item;
+  text-align: right;
+}
+
+.west {
+  composes: item;
+  text-align: left;
+}
+
+.north {
+  composes: item;
+  text-align: center;
+}
+
+.south {
+  composes: item;
+  text-align: center;
+}
+
+.northEast {
+  composes: east;
+}
+
+.northWest {
+  composes: west;
+}
+
+.southEast {
+  composes: east;
+}
+
+.southWest {
+  composes: west;
+}
+
