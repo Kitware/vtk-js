@@ -1,5 +1,6 @@
 import vtkRenderWindowWithControlBar from 'vtk.js/Sources/Rendering/Misc/RenderWindowWithControlBar';
 import vtkSlider                     from 'vtk.js/Sources/Interaction/UI/Slider';
+import vtkCornerAnnotation           from 'vtk.js/Sources/Interaction/UI/CornerAnnotation';
 
 import vtkActor      from 'vtk.js/Sources/Rendering/Core/Actor';
 import vtkConeSource from 'vtk.js/Sources/Filters/Sources/ConeSource';
@@ -42,6 +43,20 @@ renderWindow.getControlContainer().innerHTML = `
   <div class="js-slider"></div>
 `;
 
+// Add corner annotation
+const cornerAnnotation = vtkCornerAnnotation.newInstance();
+cornerAnnotation.setContainer(renderWindow.getRenderWindowContainer());
+cornerAnnotation.getAnnotationContainer().style.color = 'white';
+cornerAnnotation.updateMetadata(coneSource.get('resolution', 'mtime'));
+cornerAnnotation.updateTemplates({
+  nw(meta) {
+    return `<b>Resolution: </b> ${meta.resolution}`;
+  },
+  se(meta) {
+    return `<span style="font-size: 50%"><i style="color: red;">mtime:</i>${meta.mtime}</span><br/>Annotation Corner`;
+  },
+});
+
 // Add slider to the control bar
 const sliderContainer = renderWindow.getControlContainer().querySelector('.js-slider');
 sliderContainer.style.flex = '1';
@@ -56,6 +71,7 @@ slider.setContainer(sliderContainer);
 slider.onValueChange((resolution) => {
   coneSource.set({ resolution });
   renderWindow.getRenderWindow().render();
+  cornerAnnotation.updateMetadata(coneSource.get('resolution', 'mtime'));
 });
 
 function updateSizeAndOrientation() {
