@@ -18,6 +18,48 @@ function stringToXML(xmlStr) {
   return (new DOMParser()).parseFromString(xmlStr, 'application/xml');
 }
 
+/**
+ * Extracts binary data out of a file bytearray given a prefix/suffix.
+ */
+function extractBinary(arrayBuffer, prefixRegex, suffixRegex = null) {
+  // convert array buffer to string via fromCharCode so length is preserved
+  const byteArray = new Uint8Array(arrayBuffer);
+  const strArr = [];
+  for (let i = 0; i < byteArray.length; ++i) {
+    strArr[i] = String.fromCharCode(byteArray[i]);
+  }
+  const str = strArr.join('');
+
+  const prefixMatch = prefixRegex.exec(str);
+  if (!prefixMatch) {
+    return { text: str };
+  }
+
+  const dataStartIndex = prefixMatch.index + prefixMatch[0].length;
+  const strFirstHalf = str.substring(0, dataStartIndex);
+  let retVal = null;
+
+  const suffixMatch = suffixRegex ? suffixRegex.exec(str) : null;
+  if (suffixMatch) {
+    const strSecondHalf = str.substr(suffixMatch.index);
+    retVal = {
+      text: strFirstHalf + strSecondHalf,
+      binaryBuffer: arrayBuffer.slice(dataStartIndex, suffixMatch.index),
+    };
+  } else {
+    // no suffix, so just take all the data starting from dataStartIndex
+    retVal = {
+      text: strFirstHalf,
+      binaryBuffer: arrayBuffer.slice(dataStartIndex),
+    };
+  }
+
+  // TODO Maybe delete the internal ref to strArr from the match objs?
+  retVal.prefixMatch = prefixMatch;
+  retVal.suffixMatch = suffixMatch;
+  return retVal;
+}
+
 // ----------------------------------------------------------------------------
 
 const TYPED_ARRAY = {
@@ -96,10 +138,10 @@ function uncompressBlock(compressedUint8, output) {
 
 // ----------------------------------------------------------------------------
 
-function processDataArray(size, dataArrayElem, compressor, byteOrder, headerType) {
+function processDataArray(size, dataArrayElem, compressor, byteOrder, headerType, binaryBuffer) {
   const dataType = dataArrayElem.getAttribute('type');
   const name = dataArrayElem.getAttribute('Name');
-  const format = dataArrayElem.getAttribute('format'); // binary, ascii, [appended: not supported]
+  const format = dataArrayElem.getAttribute('format'); // binary, ascii, appended
   const numberOfComponents = Number(dataArrayElem.getAttribute('NumberOfComponents') || '1');
   let values = null;
 
@@ -151,6 +193,13 @@ function processDataArray(size, dataArrayElem, compressor, byteOrder, headerType
         values = integer64to32(values);
       }
     }
+  } else if (format === 'appended') {
+    const offset = dataArrayElem.getAttribute('offset');
+    // read header
+    const header = binaryBuffer.slice(offset, offset + TYPED_ARRAY_BYTES[headerType]);
+    const arraySize = (new TYPED_ARRAY[headerType](header))[0] / TYPED_ARRAY_BYTES[dataType];
+    // read values
+    values = new TYPED_ARRAY[dataType](binaryBuffer, offset + header.byteLength, arraySize);
   } else {
     console.error('Format not supported', format);
   }
@@ -191,7 +240,7 @@ function processCells(size, containerElem, compressor, byteOrder, headerType) {
 
 // ----------------------------------------------------------------------------
 
-function processFieldData(size, fieldElem, fieldContainer, compressor, byteOrder, headerType) {
+function processFieldData(size, fieldElem, fieldContainer, compressor, byteOrder, headerType, binaryBuffer) {
   if (fieldElem) {
     const attributes = ['Scalars', 'Vectors', 'Normals', 'Tensors', 'TCoords'];
     const nameBinding = {};
@@ -206,7 +255,7 @@ function processFieldData(size, fieldElem, fieldContainer, compressor, byteOrder
     const nbArrays = arrays.length;
     for (let idx = 0; idx < nbArrays; idx++) {
       const array = arrays[idx];
-      const dataArray = vtkDataArray.newInstance(processDataArray(size, array, compressor, byteOrder, headerType));
+      const dataArray = vtkDataArray.newInstance(processDataArray(size, array, compressor, byteOrder, headerType, binaryBuffer));
       const name = dataArray.getName();
       (nameBinding[name] || fieldContainer.addArray)(dataArray);
     }
@@ -255,7 +304,7 @@ function vtkXMLReader(publicAPI, model) {
     return promise;
   };
 
-  publicAPI.parse = (content) => {
+  publicAPI.parse = (content, binaryBuffer) => {
     if (!content) {
       return;
     }
@@ -266,6 +315,8 @@ function vtkXMLReader(publicAPI, model) {
     }
 
     model.parseData = content;
+    // TODO maybe name as "appendDataBuffer"
+    model.binaryBuffer = binaryBuffer;
 
     // Parse data here...
     const doc = stringToXML(content);
@@ -290,11 +341,27 @@ function vtkXMLReader(publicAPI, model) {
       return;
     }
 
+    // appended format
+    if (rootElem.querySelector('AppendedData')) {
+      const appendedDataElem = rootElem.querySelector('AppendedData');
+      const encoding = appendedDataElem.getAttribute('encoding');
+
+      if (encoding === 'base64') {
+        // substr(1) is to remove the '_' prefix
+        model.binaryBuffer = toByteArray(appendedDataElem.textContent.trim().substr(1)).buffer;
+      }
+
+      if (!model.binaryBuffer) {
+        console.error('Processing appended data format: requires binaryBuffer to parse');
+        return;
+      }
+    }
+
     publicAPI.parseXML(rootElem, type, compressor, byteOrder, headerType);
   };
 
   publicAPI.requestData = (inData, outData) => {
-    publicAPI.parse(model.parseData);
+    publicAPI.parse(model.parseData, model.binaryBuffer);
   };
 }
 
