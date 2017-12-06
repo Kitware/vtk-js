@@ -12,7 +12,9 @@ const rootContainer = document.createElement('div');
 rootContainer.style.position = 'relative';
 rootContainer.style.width = '500px';
 rootContainer.style.height = '500px';
+
 body.appendChild(rootContainer);
+body.style.margin = '0';
 
 // Create render window inside container
 const renderWindow = vtkRenderWindowWithControlBar.newInstance({ controlSize: 25 });
