@@ -154,11 +154,17 @@ function processDataArray(size, dataArrayElem, compressor, byteOrder, headerType
   } else if (format === 'appended') {
     const offset = dataArrayElem.getAttribute('offset');
     // read header
+    // NOTE: this will incorrectly read the size if headerType is (U)Int64 and
+    // the value requires (U)Int64.
     const header = new TYPED_ARRAY[headerType](binaryBuffer, offset, 1);
     const arraySize = header[0] / TYPED_ARRAY_BYTES[dataType];
 
     // read values
     values = new TYPED_ARRAY[dataType](binaryBuffer, offset + TYPED_ARRAY_BYTES[headerType], arraySize);
+    // remove higher order 32 bits assuming they're not used.
+    if (dataType.indexOf('Int64') !== -1) {
+      values = integer64to32(values);
+    }
   } else {
     console.error('Format not supported', format);
   }
