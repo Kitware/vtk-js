@@ -15,6 +15,8 @@ import vtkVolume                  from 'vtk.js/Sources/Rendering/Core/Volume';
 import vtkVolumeMapper            from 'vtk.js/Sources/Rendering/Core/VolumeMapper';
 import vtkXMLImageDataReader      from 'vtk.js/Sources/IO/XML/XMLImageDataReader';
 
+import BinaryHelper               from 'vtk.js/Sources/IO/Core/BinaryHelper';
+
 import style from './VolumeViewer.mcss';
 
 let autoInit = true;
@@ -146,7 +148,7 @@ export function load(container, options) {
       reader.onload = function onLoad(e) {
         const prefixRegex = /^\s*<AppendedData\s+encoding="raw">\s*_/m;
         const suffixRegex = /\n\s*<\/AppendedData>/m;
-        const result = extractBinary(reader.result, prefixRegex, suffixRegex);
+        const result = BinaryHelper.extractBinary(reader.result, prefixRegex, suffixRegex);
         createViewer(container, result, options);
       };
       reader.readAsArrayBuffer(options.file);
