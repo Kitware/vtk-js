@@ -154,10 +154,11 @@ function processDataArray(size, dataArrayElem, compressor, byteOrder, headerType
   } else if (format === 'appended') {
     const offset = dataArrayElem.getAttribute('offset');
     // read header
-    const header = binaryBuffer.slice(offset, offset + TYPED_ARRAY_BYTES[headerType]);
-    const arraySize = (new TYPED_ARRAY[headerType](header))[0] / TYPED_ARRAY_BYTES[dataType];
+    const header = new TYPED_ARRAY[headerType](binaryBuffer, offset, 1);
+    const arraySize = header[0] / TYPED_ARRAY_BYTES[dataType];
+
     // read values
-    values = new TYPED_ARRAY[dataType](binaryBuffer, offset + header.byteLength, arraySize);
+    values = new TYPED_ARRAY[dataType](binaryBuffer, offset + TYPED_ARRAY_BYTES[headerType], arraySize);
   } else {
     console.error('Format not supported', format);
   }
