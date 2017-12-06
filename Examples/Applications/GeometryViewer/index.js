@@ -14,6 +14,8 @@ import vtkURLExtract              from 'vtk.js/Sources/Common/Core/URLExtract';
 import vtkXMLPolyDataReader       from 'vtk.js/Sources/IO/XML/XMLPolyDataReader';
 import { ColorMode, ScalarMode }  from 'vtk.js/Sources/Rendering/Core/Mapper/Constants';
 
+import BinaryHelper               from 'vtk.js/Sources/IO/Core/BinaryHelper';
+
 import style from './GeometryViewer.mcss';
 import icon from '../../../Documentation/content/icon/favicon-96x96.png';
 
@@ -111,7 +113,7 @@ function createViewer(container) {
 
 // ----------------------------------------------------------------------------
 
-function createPipeline(fileName, fileContentAsText) {
+function createPipeline(fileName, parsedFileContents) {
   // Create UI
   const presetSelector = document.createElement('select');
   presetSelector.setAttribute('class', selectorClass);
@@ -156,7 +158,7 @@ function createPipeline(fileName, fileContentAsText) {
 
   // VTK pipeline
   const vtpReader = vtkXMLPolyDataReader.newInstance();
-  vtpReader.parse(fileContentAsText);
+  vtpReader.parse(parsedFileContents.text, parsedFileContents.binaryBuffer);
 
   const lookupTable = vtkColorTransferFunction.newInstance();
   const source = vtpReader.getOutputData(0);
@@ -302,9 +304,12 @@ function createPipeline(fileName, fileContentAsText) {
 function loadFile(file) {
   const reader = new FileReader();
   reader.onload = function onLoad(e) {
-    createPipeline(file.name, reader.result);
+    const prefixRegex = /^\s*<AppendedData\s+encoding="raw">\s*_/m;
+    const suffixRegex = /\n\s*<\/AppendedData>/m;
+    const result = BinaryHelper.extractBinary(reader.result, prefixRegex, suffixRegex);
+    createPipeline(file.name, result);
   };
-  reader.readAsText(file);
+  reader.readAsArrayBuffer(file);
 }
 
 // ----------------------------------------------------------------------------
@@ -333,7 +338,7 @@ export function load(container, options) {
     HttpDataAccessHelper.fetchText({}, options.fileURL, { progressCallback }).then((txt) => {
       container.removeChild(progressContainer);
       createViewer(container);
-      createPipeline(defaultName, txt);
+      createPipeline(defaultName, { text: txt });
       updateCamera(renderer.getActiveCamera());
     });
   }

@@ -167,7 +167,7 @@ export function load(container, options) {
 
     HttpDataAccessHelper.fetchText({}, options.fileURL, { progressCallback }).then((txt) => {
       container.removeChild(progressContainer);
-      createViewer(container, txt, options);
+      createViewer(container, { text: txt }, options);
     });
   }
 }

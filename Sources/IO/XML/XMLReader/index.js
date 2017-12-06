@@ -152,12 +152,18 @@ function processDataArray(size, dataArrayElem, compressor, byteOrder, headerType
       }
     }
   } else if (format === 'appended') {
-    const offset = dataArrayElem.getAttribute('offset');
+    const offset = Number(dataArrayElem.getAttribute('offset'));
     // read header
     // NOTE: this will incorrectly read the size if headerType is (U)Int64 and
     // the value requires (U)Int64.
     const header = new TYPED_ARRAY[headerType](binaryBuffer, offset, 1);
-    const arraySize = header[0] / TYPED_ARRAY_BYTES[dataType];
+    let arraySize = header[0] / TYPED_ARRAY_BYTES[dataType];
+
+    // if we are dealing with Uint64, we need to get double the values since
+    // TYPED_ARRAY[Uint64] is Uint32.
+    if (dataType.indexOf('Int64') !== -1) {
+      arraySize *= 2;
+    }
 
     // read values
     values = new TYPED_ARRAY[dataType](binaryBuffer, offset + TYPED_ARRAY_BYTES[headerType], arraySize);
@@ -174,7 +180,7 @@ function processDataArray(size, dataArrayElem, compressor, byteOrder, headerType
 
 // ----------------------------------------------------------------------------
 
-function processCells(size, containerElem, compressor, byteOrder, headerType) {
+function processCells(size, containerElem, compressor, byteOrder, headerType, binaryBuffer) {
   const arrayElems = {};
   const dataArrayElems = containerElem.getElementsByTagName('DataArray');
   for (let elIdx = 0; elIdx < dataArrayElems.length; elIdx++) {
@@ -182,9 +188,9 @@ function processCells(size, containerElem, compressor, byteOrder, headerType) {
     arrayElems[el.getAttribute('Name')] = el;
   }
 
-  const offsets = processDataArray(size, arrayElems.offsets, compressor, byteOrder, headerType).values;
+  const offsets = processDataArray(size, arrayElems.offsets, compressor, byteOrder, headerType, binaryBuffer).values;
   const connectivitySize = offsets[offsets.length - 1];
-  const connectivity = processDataArray(connectivitySize, arrayElems.connectivity, compressor, byteOrder, headerType).values;
+  const connectivity = processDataArray(connectivitySize, arrayElems.connectivity, compressor, byteOrder, headerType, binaryBuffer).values;
   const values = new Uint32Array(size + connectivitySize);
   let writeOffset = 0;
   let previousOffset = 0;
@@ -313,7 +319,41 @@ function vtkXMLReader(publicAPI, model) {
 
       if (encoding === 'base64') {
         // substr(1) is to remove the '_' prefix
-        model.binaryBuffer = toByteArray(appendedDataElem.textContent.trim().substr(1)).buffer;
+        const appendedData = appendedDataElem.textContent.trim().substr(1);
+        const arrays = rootElem.querySelectorAll('DataArray');
+
+        // read binary chunks
+        const binChunks = [];
+        let bufferLength = 0;
+        for (let i = 0; i < arrays.length; ++i) {
+          const offset = arrays[i].getAttribute('offset');
+          let nextOffset = 0;
+          if (i === arrays.length - 1) {
+            nextOffset = appendedData.length;
+          } else {
+            nextOffset = arrays[i + 1].getAttribute('offset');
+          }
+
+          const base64 = appendedData.substring(offset, nextOffset);
+          const data = toByteArray(base64);
+          binChunks.push(data);
+
+          // Modify the DataArray offset to point to the offset in the binary array
+          // rather than the offset in the original AppendedData buffer.
+          arrays[i].setAttribute('offset', bufferLength);
+
+          bufferLength += data.length;
+        }
+
+        const buffer = new ArrayBuffer(bufferLength);
+        const view = new Uint8Array(buffer);
+
+        for (let i = 0, offset = 0; i < binChunks.length; ++i) {
+          view.set(binChunks[i], offset);
+          offset += binChunks[i].length;
+        }
+
+        model.binaryBuffer = buffer;
       }
 
       if (!model.binaryBuffer) {
