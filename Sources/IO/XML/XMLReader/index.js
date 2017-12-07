@@ -152,7 +152,7 @@ function processDataArray(size, dataArrayElem, compressor, byteOrder, headerType
       }
     }
   } else if (format === 'appended') {
-    const offset = Number(dataArrayElem.getAttribute('offset'));
+    let offset = Number(dataArrayElem.getAttribute('offset'));
     // read header
     // NOTE: this will incorrectly read the size if headerType is (U)Int64 and
     // the value requires (U)Int64.
@@ -165,8 +165,15 @@ function processDataArray(size, dataArrayElem, compressor, byteOrder, headerType
       arraySize *= 2;
     }
 
+    offset += TYPED_ARRAY_BYTES[headerType];
+
     // read values
-    values = new TYPED_ARRAY[dataType](binaryBuffer, offset + TYPED_ARRAY_BYTES[headerType], arraySize);
+    // if offset is aligned to dataType, use view. Otherwise, slice due to misalignment.
+    if (offset % TYPED_ARRAY_BYTES[dataType] === 0) {
+      values = new TYPED_ARRAY[dataType](binaryBuffer, offset, arraySize);
+    } else {
+      values = new TYPED_ARRAY[dataType](binaryBuffer.slice(offset, offset + header[0]));
+    }
     // remove higher order 32 bits assuming they're not used.
     if (dataType.indexOf('Int64') !== -1) {
       values = integer64to32(values);
@@ -295,7 +302,8 @@ function vtkXMLReader(publicAPI, model) {
     const type = rootElem.getAttribute('type');
     const compressor = rootElem.getAttribute('compressor');
     const byteOrder = rootElem.getAttribute('byte_order');
-    const headerType = rootElem.getAttribute('header_type');
+    // default to UInt32. I think version 0.1 vtp/vti files default to UInt32.
+    const headerType = rootElem.getAttribute('header_type') || 'UInt32';
 
     if (compressor && compressor !== 'vtkZLibDataCompressor') {
       console.error('Invalid compressor', compressor);
@@ -316,78 +324,54 @@ function vtkXMLReader(publicAPI, model) {
     if (rootElem.querySelector('AppendedData')) {
       const appendedDataElem = rootElem.querySelector('AppendedData');
       const encoding = appendedDataElem.getAttribute('encoding');
+      // Only get data arrays that are descendants of <Piece />
+      // We don't parse DataArrays from FieldData right now.
+      const arrayElems = rootElem.querySelectorAll('Piece DataArray');
+
+      let appendedBuffer = model.binaryBuffer;
 
       if (encoding === 'base64') {
         // substr(1) is to remove the '_' prefix
-        const appendedData = appendedDataElem.textContent.trim().substr(1);
-        const arrays = rootElem.querySelectorAll('DataArray');
+        appendedBuffer = appendedDataElem.textContent.trim().substr(1);
+      }
 
-        // read binary chunks
-        const binChunks = [];
-        let bufferLength = 0;
-        for (let i = 0; i < arrays.length; ++i) {
-          const offset = Number(arrays[i].getAttribute('offset'));
-          let nextOffset = 0;
-          if (i === arrays.length - 1) {
-            nextOffset = appendedData.length;
-          } else {
-            nextOffset = Number(arrays[i + 1].getAttribute('offset'));
-          }
-
-          const base64 = appendedData.substring(offset, nextOffset);
-          const data = toByteArray(base64);
-          binChunks.push(data);
-
-          // Modify the DataArray offset to point to the offset in the binary array
-          // rather than the offset in the original AppendedData buffer.
-          arrays[i].setAttribute('offset', bufferLength);
-
-          bufferLength += data.length;
+      // get data array chunks
+      const dataArrays = [];
+      for (let i = 0; i < arrayElems.length; ++i) {
+        const offset = Number(arrayElems[i].getAttribute('offset'));
+        let nextOffset = 0;
+        if (i === arrayElems.length - 1) {
+          nextOffset = appendedBuffer.length;
+        } else {
+          nextOffset = Number(arrayElems[i + 1].getAttribute('offset'));
         }
 
-        const buffer = new ArrayBuffer(bufferLength);
-        const view = new Uint8Array(buffer);
-
-        for (let i = 0, offset = 0; i < binChunks.length; ++i) {
-          view.set(binChunks[i], offset);
-          offset += binChunks[i].length;
+        if (encoding === 'base64') {
+          dataArrays.push(toByteArray(appendedBuffer.substring(offset, nextOffset)));
+        } else { // encoding === 'raw'
+          // Need to slice the ArrayBuffer so readerHeader() works properly
+          dataArrays.push(new Uint8Array(appendedBuffer.slice(offset, nextOffset)));
         }
-
-        model.binaryBuffer = buffer;
       }
 
       if (compressor === 'vtkZLibDataCompressor') {
-        const arrays = rootElem.querySelectorAll('DataArray');
-
-        // read binary chunks
-        const binChunks = [];
-        let bufferLength = 0;
-        for (let i = 0; i < arrays.length; ++i) {
-          const offset = Number(arrays[i].getAttribute('offset'));
-          let nextOffset = 0;
-          if (i === arrays.length - 1) {
-            nextOffset = model.binaryBuffer.byteLength;
-          } else {
-            nextOffset = Number(arrays[i + 1].getAttribute('offset'));
-          }
-
-          // need to slice here otherwise readerHeader breaks
-          const uint8 = new Uint8Array(model.binaryBuffer.slice(offset, nextOffset));
+        for (let arrayidx = 0; arrayidx < dataArrays.length; ++arrayidx) {
+          const dataArray = dataArrays[arrayidx];
 
           // Header reading
           // Refer to processDataArray() above for info on header fields
-          const header = readerHeader(uint8, headerType);
+          const header = readerHeader(dataArray, headerType);
           const nbBlocks = header[1];
           let compressedOffset =
-            uint8.length -
-            (header.reduce((a, b) => a + b, 0) - (header[0] + header[1] + header[2] + header[3])) +
-            uint8.byteOffset;
+            dataArray.length -
+            (header.reduce((a, b) => a + b, 0) - (header[0] + header[1] + header[2] + header[3]));
 
           let buffer = null;
           if (nbBlocks > 0) {
             buffer = new ArrayBuffer((header[2] * (nbBlocks - 1)) + header[3]);
           } else {
-            buffer = new ArrayBuffer(16);
+            // if there is no blocks, then default to a zero array of size 0.
+            buffer = new ArrayBuffer(0);
           }
 
           // uncompressed buffer
@@ -397,40 +381,37 @@ function vtkXMLReader(publicAPI, model) {
             uint8: uncompressed,
           };
 
-          // console.log('header', header, compressedOffset, buffer.byteLength);
 
-          for (let j = 0; j < nbBlocks; j++) {
-            const blockSize = header[4 + j];
-            const compressedBlock = new Uint8Array(uint8.buffer, compressedOffset, blockSize);
+          for (let i = 0; i < nbBlocks; i++) {
+            const blockSize = header[4 + i];
+            const compressedBlock = new Uint8Array(dataArray.buffer, compressedOffset, blockSize);
             uncompressBlock(compressedBlock, output);
             compressedOffset += blockSize;
           }
 
-          const data = new Uint8Array(uncompressed.length + 8);
+          const data = new Uint8Array(uncompressed.length + TYPED_ARRAY_BYTES[headerType]);
           // set length header
-          // NOTE: This does not work for lengths that are greater than the max Uint32 value.
+          // TODO this does not work for lengths that are greater than the max Uint32 value.
           (new TYPED_ARRAY[headerType](data.buffer))[0] = uncompressed.length;
-          data.set(uncompressed, 8);
+          data.set(uncompressed, TYPED_ARRAY_BYTES[headerType]);
 
-          binChunks.push(data);
-
-          // Modify the DataArray offset to point to the offset in the binary array
-          // rather than the offset in the original AppendedData buffer.
-          arrays[i].setAttribute('offset', bufferLength);
-
-          bufferLength += data.length;
+          dataArrays[arrayidx] = data;
         }
-
-        const buffer = new ArrayBuffer(bufferLength);
-        const view = new Uint8Array(buffer);
-
-        for (let i = 0, offset = 0; i < binChunks.length; ++i) {
-          view.set(binChunks[i], offset);
-          offset += binChunks[i].length;
-        }
-
-        model.binaryBuffer = buffer;
       }
+
+      const bufferLength = dataArrays.reduce((acc, arr) => acc + arr.length, 0);
+      const buffer = new ArrayBuffer(bufferLength);
+      const view = new Uint8Array(buffer);
+
+      for (let i = 0, offset = 0; i < dataArrays.length; ++i) {
+        // set correct offsets
+        arrayElems[i].setAttribute('offset', offset);
+        // set final buffer data
+        view.set(dataArrays[i], offset);
+        offset += dataArrays[i].length;
+      }
+
+      model.binaryBuffer = buffer;
 
       if (!model.binaryBuffer) {
         console.error('Processing appended data format: requires binaryBuffer to parse');
