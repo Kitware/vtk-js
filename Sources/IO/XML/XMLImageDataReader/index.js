@@ -28,13 +28,15 @@ function vtkXMLImageDataReader(publicAPI, model) {
         imageData.getNumberOfPoints(),
         piece.getElementsByTagName('PointData')[0],
         imageData.getPointData(),
-        compressor, byteOrder, headerType);
+        compressor, byteOrder, headerType,
+        model.binaryBuffer);
 
       vtkXMLReader.processFieldData(
         imageData.getNumberOfCells(),
         piece.getElementsByTagName('CellData')[0],
         imageData.getCellData(),
-        compressor, byteOrder, headerType);
+        compressor, byteOrder, headerType,
+        model.binaryBuffer);
 
       // Add new output
       model.output[outputIndex++] = imageData;

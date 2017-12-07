@@ -15,6 +15,8 @@ import vtkVolume                  from 'vtk.js/Sources/Rendering/Core/Volume';
 import vtkVolumeMapper            from 'vtk.js/Sources/Rendering/Core/VolumeMapper';
 import vtkXMLImageDataReader      from 'vtk.js/Sources/IO/XML/XMLImageDataReader';
 
+import BinaryHelper               from 'vtk.js/Sources/IO/Core/BinaryHelper';
+
 import style from './VolumeViewer.mcss';
 
 let autoInit = true;
@@ -47,7 +49,7 @@ function preventDefaults(e) {
 
 // ----------------------------------------------------------------------------
 
-function createViewer(rootContainer, fileContentAsText, options) {
+function createViewer(rootContainer, parsedFileContents, options) {
   const background = options.background ? options.background.split(',').map(s => Number(s)) : [0, 0, 0];
   const containerStyle = options.containerStyle;
   const fullScreenRenderer = vtkFullScreenRenderWindow.newInstance({ background, rootContainer, containerStyle });
@@ -56,7 +58,7 @@ function createViewer(rootContainer, fileContentAsText, options) {
   renderWindow.getInteractor().setDesiredUpdateRate(15);
 
   const vtiReader = vtkXMLImageDataReader.newInstance();
-  vtiReader.parse(fileContentAsText);
+  vtiReader.parse(parsedFileContents.text, parsedFileContents.binaryBuffer);
 
   const source = vtiReader.getOutputData(0);
   const mapper = vtkVolumeMapper.newInstance();
@@ -144,9 +146,12 @@ export function load(container, options) {
     if (options.ext === 'vti') {
       const reader = new FileReader();
       reader.onload = function onLoad(e) {
-        createViewer(container, reader.result, options);
+        const prefixRegex = /^\s*<AppendedData\s+encoding="raw">\s*_/m;
+        const suffixRegex = /\n\s*<\/AppendedData>/m;
+        const result = BinaryHelper.extractBinary(reader.result, prefixRegex, suffixRegex);
+        createViewer(container, result, options);
       };
-      reader.readAsText(options.file);
+      reader.readAsArrayBuffer(options.file);
     } else {
       console.error('Unkown file...');
     }
@@ -162,7 +167,7 @@ export function load(container, options) {
 
     HttpDataAccessHelper.fetchText({}, options.fileURL, { progressCallback }).then((txt) => {
       container.removeChild(progressContainer);
-      createViewer(container, txt, options);
+      createViewer(container, { text: txt }, options);
     });
   }
 }

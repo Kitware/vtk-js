@@ -96,10 +96,10 @@ function uncompressBlock(compressedUint8, output) {
 
 // ----------------------------------------------------------------------------
 
-function processDataArray(size, dataArrayElem, compressor, byteOrder, headerType) {
+function processDataArray(size, dataArrayElem, compressor, byteOrder, headerType, binaryBuffer) {
   const dataType = dataArrayElem.getAttribute('type');
   const name = dataArrayElem.getAttribute('Name');
-  const format = dataArrayElem.getAttribute('format'); // binary, ascii, [appended: not supported]
+  const format = dataArrayElem.getAttribute('format'); // binary, ascii, appended
   const numberOfComponents = Number(dataArrayElem.getAttribute('NumberOfComponents') || '1');
   let values = null;
 
@@ -151,6 +151,33 @@ function processDataArray(size, dataArrayElem, compressor, byteOrder, headerType
         values = integer64to32(values);
       }
     }
+  } else if (format === 'appended') {
+    let offset = Number(dataArrayElem.getAttribute('offset'));
+    // read header
+    // NOTE: this will incorrectly read the size if headerType is (U)Int64 and
+    // the value requires (U)Int64.
+    const header = new TYPED_ARRAY[headerType](binaryBuffer, offset, 1);
+    let arraySize = header[0] / TYPED_ARRAY_BYTES[dataType];
+
+    // if we are dealing with Uint64, we need to get double the values since
+    // TYPED_ARRAY[Uint64] is Uint32.
+    if (dataType.indexOf('Int64') !== -1) {
+      arraySize *= 2;
+    }
+
+    offset += TYPED_ARRAY_BYTES[headerType];
+
+    // read values
+    // if offset is aligned to dataType, use view. Otherwise, slice due to misalignment.
+    if (offset % TYPED_ARRAY_BYTES[dataType] === 0) {
+      values = new TYPED_ARRAY[dataType](binaryBuffer, offset, arraySize);
+    } else {
+      values = new TYPED_ARRAY[dataType](binaryBuffer.slice(offset, offset + header[0]));
+    }
+    // remove higher order 32 bits assuming they're not used.
+    if (dataType.indexOf('Int64') !== -1) {
+      values = integer64to32(values);
+    }
   } else {
     console.error('Format not supported', format);
   }
@@ -160,7 +187,7 @@ function processDataArray(size, dataArrayElem, compressor, byteOrder, headerType
 
 // ----------------------------------------------------------------------------
 
-function processCells(size, containerElem, compressor, byteOrder, headerType) {
+function processCells(size, containerElem, compressor, byteOrder, headerType, binaryBuffer) {
   const arrayElems = {};
   const dataArrayElems = containerElem.getElementsByTagName('DataArray');
   for (let elIdx = 0; elIdx < dataArrayElems.length; elIdx++) {
@@ -168,9 +195,9 @@ function processCells(size, containerElem, compressor, byteOrder, headerType) {
     arrayElems[el.getAttribute('Name')] = el;
   }
 
-  const offsets = processDataArray(size, arrayElems.offsets, compressor, byteOrder, headerType).values;
+  const offsets = processDataArray(size, arrayElems.offsets, compressor, byteOrder, headerType, binaryBuffer).values;
   const connectivitySize = offsets[offsets.length - 1];
-  const connectivity = processDataArray(connectivitySize, arrayElems.connectivity, compressor, byteOrder, headerType).values;
+  const connectivity = processDataArray(connectivitySize, arrayElems.connectivity, compressor, byteOrder, headerType, binaryBuffer).values;
   const values = new Uint32Array(size + connectivitySize);
   let writeOffset = 0;
   let previousOffset = 0;
@@ -191,7 +218,7 @@ function processCells(size, containerElem, compressor, byteOrder, headerType) {
 
 // ----------------------------------------------------------------------------
 
-function processFieldData(size, fieldElem, fieldContainer, compressor, byteOrder, headerType) {
+function processFieldData(size, fieldElem, fieldContainer, compressor, byteOrder, headerType, binaryBuffer) {
   if (fieldElem) {
     const attributes = ['Scalars', 'Vectors', 'Normals', 'Tensors', 'TCoords'];
     const nameBinding = {};
@@ -206,7 +233,7 @@ function processFieldData(size, fieldElem, fieldContainer, compressor, byteOrder
     const nbArrays = arrays.length;
     for (let idx = 0; idx < nbArrays; idx++) {
       const array = arrays[idx];
-      const dataArray = vtkDataArray.newInstance(processDataArray(size, array, compressor, byteOrder, headerType));
+      const dataArray = vtkDataArray.newInstance(processDataArray(size, array, compressor, byteOrder, headerType, binaryBuffer));
       const name = dataArray.getName();
       (nameBinding[name] || fieldContainer.addArray)(dataArray);
     }
@@ -255,7 +282,7 @@ function vtkXMLReader(publicAPI, model) {
     return promise;
   };
 
-  publicAPI.parse = (content) => {
+  publicAPI.parse = (content, binaryBuffer) => {
     if (!content) {
       return;
     }
@@ -266,6 +293,8 @@ function vtkXMLReader(publicAPI, model) {
     }
 
     model.parseData = content;
+    // TODO maybe name as "appendDataBuffer"
+    model.binaryBuffer = binaryBuffer;
 
     // Parse data here...
     const doc = stringToXML(content);
@@ -273,7 +302,8 @@ function vtkXMLReader(publicAPI, model) {
     const type = rootElem.getAttribute('type');
     const compressor = rootElem.getAttribute('compressor');
     const byteOrder = rootElem.getAttribute('byte_order');
-    const headerType = rootElem.getAttribute('header_type');
+    // default to UInt32. I think version 0.1 vtp/vti files default to UInt32.
+    const headerType = rootElem.getAttribute('header_type') || 'UInt32';
 
     if (compressor && compressor !== 'vtkZLibDataCompressor') {
       console.error('Invalid compressor', compressor);
@@ -290,11 +320,110 @@ function vtkXMLReader(publicAPI, model) {
       return;
     }
 
+    // appended format
+    if (rootElem.querySelector('AppendedData')) {
+      const appendedDataElem = rootElem.querySelector('AppendedData');
+      const encoding = appendedDataElem.getAttribute('encoding');
+      // Only get data arrays that are descendants of <Piece />
+      // We don't parse DataArrays from FieldData right now.
+      const arrayElems = rootElem.querySelectorAll('Piece DataArray');
+
+      let appendedBuffer = model.binaryBuffer;
+
+      if (encoding === 'base64') {
+        // substr(1) is to remove the '_' prefix
+        appendedBuffer = appendedDataElem.textContent.trim().substr(1);
+      }
+
+      // get data array chunks
+      const dataArrays = [];
+      for (let i = 0; i < arrayElems.length; ++i) {
+        const offset = Number(arrayElems[i].getAttribute('offset'));
+        let nextOffset = 0;
+        if (i === arrayElems.length - 1) {
+          nextOffset = appendedBuffer.length;
+        } else {
+          nextOffset = Number(arrayElems[i + 1].getAttribute('offset'));
+        }
+
+        if (encoding === 'base64') {
+          dataArrays.push(toByteArray(appendedBuffer.substring(offset, nextOffset)));
+        } else { // encoding === 'raw'
+          // Need to slice the ArrayBuffer so readerHeader() works properly
+          dataArrays.push(new Uint8Array(appendedBuffer.slice(offset, nextOffset)));
+        }
+      }
+
+      if (compressor === 'vtkZLibDataCompressor') {
+        for (let arrayidx = 0; arrayidx < dataArrays.length; ++arrayidx) {
+          const dataArray = dataArrays[arrayidx];
+
+          // Header reading
+          // Refer to processDataArray() above for info on header fields
+          const header = readerHeader(dataArray, headerType);
+          const nbBlocks = header[1];
+          let compressedOffset =
+            dataArray.length -
+            (header.reduce((a, b) => a + b, 0) - (header[0] + header[1] + header[2] + header[3]));
+
+          let buffer = null;
+          if (nbBlocks > 0) {
+            buffer = new ArrayBuffer((header[2] * (nbBlocks - 1)) + header[3]);
+          } else {
+            // if there is no blocks, then default to a zero array of size 0.
+            buffer = new ArrayBuffer(0);
+          }
+
+          // uncompressed buffer
+          const uncompressed = new Uint8Array(buffer);
+          const output = {
+            offset: 0,
+            uint8: uncompressed,
+          };
+
+
+          for (let i = 0; i < nbBlocks; i++) {
+            const blockSize = header[4 + i];
+            const compressedBlock = new Uint8Array(dataArray.buffer, compressedOffset, blockSize);
+            uncompressBlock(compressedBlock, output);
+            compressedOffset += blockSize;
+          }
+
+          const data = new Uint8Array(uncompressed.length + TYPED_ARRAY_BYTES[headerType]);
+          // set length header
+          // TODO this does not work for lengths that are greater than the max Uint32 value.
+          (new TYPED_ARRAY[headerType](data.buffer))[0] = uncompressed.length;
+          data.set(uncompressed, TYPED_ARRAY_BYTES[headerType]);
+
+          dataArrays[arrayidx] = data;
+        }
+      }
+
+      const bufferLength = dataArrays.reduce((acc, arr) => acc + arr.length, 0);
+      const buffer = new ArrayBuffer(bufferLength);
+      const view = new Uint8Array(buffer);
+
+      for (let i = 0, offset = 0; i < dataArrays.length; ++i) {
+        // set correct offsets
+        arrayElems[i].setAttribute('offset', offset);
+        // set final buffer data
+        view.set(dataArrays[i], offset);
+        offset += dataArrays[i].length;
+      }
+
+      model.binaryBuffer = buffer;
+
+      if (!model.binaryBuffer) {
+        console.error('Processing appended data format: requires binaryBuffer to parse');
+        return;
+      }
+    }
+
     publicAPI.parseXML(rootElem, type, compressor, byteOrder, headerType);
   };
 
   publicAPI.requestData = (inData, outData) => {
-    publicAPI.parse(model.parseData);
+    publicAPI.parse(model.parseData, model.binaryBuffer);
   };
 }
 
