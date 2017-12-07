@@ -14,6 +14,7 @@ import './Filters/Sources/CubeSource/test/testCube';
 import './Filters/Sources/LineSource/test/testLine';
 import './Filters/Sources/PlaneSource/test/testPlane';
 import './Filters/Sources/PointSource/test/testPointSource';
+import './Filters/Texture/TextureMapToSphere/test/testTextureMapToSphere';
 import './IO/Misc/PDBReader/test/testMolecule';
 import './Rendering/Core/AbstractMapper/test/testAbstractMapper';
 import './Rendering/Core/ColorTransferFunction/test/testColorTransferFunction';
