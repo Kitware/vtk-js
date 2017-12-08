@@ -201,6 +201,19 @@ function vtkOpenGLRenderWindow(publicAPI, model) {
         || model.canvas.getContext('experimental-webgl', options);
     }
 
+    // Do we have webvr support
+    if (navigator.getVRDisplays) {
+      navigator.getVRDisplays().then((displays) => {
+        if (displays.length > 0) {
+          // take the first display for now
+          model.vrDisplay = displays[0];
+          // set the clipping ranges
+          model.vrDisplay.depthNear = 0.01; // meters
+          model.vrDisplay.depthFar = 100.0; // meters
+        }
+      });
+    }
+
     // prevent default context lost handler
     model.canvas.addEventListener('webglcontextlost', (event) => {
       event.preventDefault();
@@ -210,6 +223,69 @@ function vtkOpenGLRenderWindow(publicAPI, model) {
       'webglcontextrestored', publicAPI.restoreContext, false);
 
     return result;
+  };
+
+  publicAPI.startVR = () => {
+    if (model.vrDisplay.isConnected) {
+      model.vrDisplay.requestPresent([{ source: model.canvas }]).then(() => {
+        model.oldCanvasSize = [model.canvas.width, model.canvas.height];
+
+        // const leftEye = model.vrDisplay.getEyeParameters('left');
+        // const rightEye = model.vrDisplay.getEyeParameters('right');
+        // model.canvas.width = Math.max(leftEye.renderWidth, rightEye.renderWidth) * 2;
+        // model.canvas.height = Math.max(leftEye.renderHeight, rightEye.renderHeight);
+        const ren = model.renderable.getRenderers()[0];
+        ren.resetCamera();
+        model.vrFrameData = new VRFrameData();
+        model.renderable.getInteractor().switchToVRAnimation();
+
+        publicAPI.vrRender();
+      });
+    } else {
+      vtkErrorMacro('vrDisplay is not connected');
+    }
+  };
+
+  publicAPI.stopVR = () => {
+    model.renderable.getInteractor().returnFromVRAnimation();
+    model.vrDisplay.exitPresent();
+    model.vrDisplay.cancelAnimationFrame(model.vrSceneFrame);
+
+    model.canvas.width = model.oldCanvasSize[0];
+    model.canvas.height = model.oldCanvasSize[1];
+
+
+    const ren = model.renderable.getRenderers()[0];
+    ren.getActiveCamera().setProjectionMatrix(null);
+
+    ren.setViewport(0.0, 0, 1.0, 1.0);
+    publicAPI.traverseAllPasses();
+  };
+
+  publicAPI.vrRender = () => {
+    model.renderable.getInteractor().updateGamepads(model.vrDisplay.displayId);
+    model.vrSceneFrame = model.vrDisplay.requestAnimationFrame(publicAPI.vrRender);
+    model.vrDisplay.getFrameData(model.vrFrameData);
+
+    // get the first renderer
+    const ren = model.renderable.getRenderers()[0];
+
+    // do the left eye
+    ren.setViewport(0, 0, 0.5, 1.0);
+    ren.getActiveCamera().computeViewParametersFromPhysicalMatrix(
+      model.vrFrameData.leftViewMatrix);
+    ren.getActiveCamera().setProjectionMatrix(
+      model.vrFrameData.leftProjectionMatrix);
+    publicAPI.traverseAllPasses();
+
+    ren.setViewport(0.5, 0, 1.0, 1.0);
+    ren.getActiveCamera().computeViewParametersFromPhysicalMatrix(
+      model.vrFrameData.rightViewMatrix);
+    ren.getActiveCamera().setProjectionMatrix(
+      model.vrFrameData.rightProjectionMatrix);
+    publicAPI.traverseAllPasses();
+
+    model.vrDisplay.submitFrame();
   };
 
   publicAPI.restoreContext = () => {

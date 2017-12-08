@@ -37,6 +37,7 @@ module.exports = {
   // ],
   globals: {
     __BASE_PATH__: false,
+    VRFrameData: true,
   },
   'settings': {
     'import/resolver': 'webpack'

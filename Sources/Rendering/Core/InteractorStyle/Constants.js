@@ -12,6 +12,7 @@ export const States = {
   IS_FORWARDFLY: 8,
   IS_REVERSEFLY: 9,
   IS_TWO_POINTER: 10,
+  IS_CAMERA_POSE: 11,
 
   IS_ANIM_OFF: 0,
   IS_ANIM_ON: 1,
