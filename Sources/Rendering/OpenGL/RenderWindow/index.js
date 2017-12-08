@@ -19,6 +19,10 @@ function vtkOpenGLRenderWindow(publicAPI, model) {
 
   // Auto update style
   function updateWindow() {
+    // Prevent invalid window size
+    model.size[0] = model.size[0] < 1 ? 1 : model.size[0];
+    model.size[1] = model.size[1] < 1 ? 1 : model.size[1];
+
     // Canvas size
     if (model.renderable) {
       model.canvas.setAttribute('width', model.size[0]);
