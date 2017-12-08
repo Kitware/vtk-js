@@ -234,9 +234,9 @@ psMapper.setCallback((coordsList, camera, aspect, depthBuffer) => {
   if (textCtx && windowWidth > 0 && windowHeight > 0) {
     const dataPoints = psMapper.getInputData().getPoints();
 
-    const viewMatrix = camera.getViewTransformMatrix();
+    const viewMatrix = camera.getViewMatrix();
     mat4.transpose(viewMatrix, viewMatrix);
-    const projMatrix = camera.getProjectionTransformMatrix(aspect, -1, 1);
+    const projMatrix = camera.getProjectionMatrix(aspect, -1, 1);
     mat4.transpose(projMatrix, projMatrix);
 
     textCtx.clearRect(0, 0, windowWidth, windowHeight);
