@@ -19,7 +19,7 @@ function vtkPixelSpaceCallbackMapper(publicAPI, model) {
       return;
     }
 
-    const matrix = camera.getCompositeProjectionTransformMatrix(aspect, -1, 1);
+    const matrix = camera.getCompositeProjectionMatrix(aspect, -1, 1);
     mat4.transpose(matrix, matrix);
 
     const dataPoints = dataset.getPoints();

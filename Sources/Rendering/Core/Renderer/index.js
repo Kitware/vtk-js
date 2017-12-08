@@ -59,7 +59,6 @@ function vtkRenderer(publicAPI, model) {
     // this lights.  That allows one renderer to view the lights that
     // another renderer is setting up.
     const camera = publicAPI.getActiveCameraAndResetIfCreated();
-    const lightMatrix = camera.getCameraLightTransformMatrix();
 
     model.lights.forEach((light) => {
       if (light.lightTypeIsSceneLight()) {
@@ -72,7 +71,7 @@ function vtkRenderer(publicAPI, model) {
         light.setFocalPointFrom(camera.getFocalPointByReference());
         light.modified(camera.getMTime());
       } else if (light.lightTypeIsCameraLight()) {
-        light.setTransformMatrix(lightMatrix);
+        vtkErrorMacro('camera lights not supported yet', light);
       } else {
         vtkErrorMacro('light has unknown light type', light);
       }
@@ -236,7 +235,7 @@ function vtkRenderer(publicAPI, model) {
 
     // get the perspective transformation from the active camera
     const matrix = model.activeCamera
-      .getCompositeProjectionTransformMatrix(aspect, -1.0, 1.0);
+      .getCompositeProjectionMatrix(aspect, -1.0, 1.0);
 
     mat4.invert(matrix, matrix);
     mat4.transpose(matrix, matrix);
@@ -257,7 +256,7 @@ function vtkRenderer(publicAPI, model) {
 
     // get the perspective transformation from the active camera
     const matrix = model.activeCamera
-      .getCompositeProjectionTransformMatrix(aspect, -1.0, 1.0);
+      .getCompositeProjectionMatrix(aspect, -1.0, 1.0);
     mat4.transpose(matrix, matrix);
 
     const result = vec3.fromValues(x, y, z);

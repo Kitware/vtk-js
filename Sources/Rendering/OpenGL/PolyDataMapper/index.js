@@ -1121,7 +1121,7 @@ function vtkOpenGLPolyDataMapper(publicAPI, model) {
 
     // for lightkit case there are some parameters to set
     const cam = ren.getActiveCamera();
-    const viewTF = cam.getViewTransformMatrix();
+    const viewTF = cam.getViewMatrix();
     mat4.transpose(viewTF, viewTF);
 
     numberOfLights = 0;

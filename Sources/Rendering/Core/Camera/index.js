@@ -37,7 +37,7 @@ function vtkCamera(publicAPI, model) {
   const tmpvec3 = vec3.create();
 
   publicAPI.orthogonalizeViewUp = () => {
-    const vt = publicAPI.getViewTransformMatrix();
+    const vt = publicAPI.getViewMatrix();
     model.viewUp[0] = vt[4];
     model.viewUp[1] = vt[5];
     model.viewUp[2] = vt[6];
@@ -58,7 +58,6 @@ function vtkCamera(publicAPI, model) {
 
     // recompute the focal distance
     publicAPI.computeDistance();
-    // publicAPI.computeCameraLightTransform();
 
     publicAPI.modified();
   };
@@ -76,7 +75,6 @@ function vtkCamera(publicAPI, model) {
 
     // recompute the focal distance
     publicAPI.computeDistance();
-    // publicAPI.computeCameraLightTransform();
 
     publicAPI.modified();
   };
@@ -226,7 +224,7 @@ function vtkCamera(publicAPI, model) {
     const newPosition = vec3.create();
     const fp = model.focalPoint;
 
-    const vt = publicAPI.getViewTransformMatrix();
+    const vt = publicAPI.getViewMatrix();
     const axis = [-vt[0], -vt[1], -vt[2]];
 
     const trans = mat4.create();
@@ -248,7 +246,7 @@ function vtkCamera(publicAPI, model) {
     const newFocalPoint = vec3.create();
     const position = model.position;
 
-    const vt = publicAPI.getViewTransformMatrix();
+    const vt = publicAPI.getViewMatrix();
     const axis = [vt[0], vt[1], vt[2]];
 
     const trans = mat4.create();
@@ -363,7 +361,7 @@ function vtkCamera(publicAPI, model) {
     publicAPI.setDistance(oldDist);
   };
 
-  publicAPI.getViewTransformMatrix = () => {
+  publicAPI.getViewMatrix = () => {
     const eye = model.position;
     const at = model.focalPoint;
     const up = model.viewUp;
@@ -384,7 +382,7 @@ function vtkCamera(publicAPI, model) {
     model.projectionMatrix = mat;
   };
 
-  publicAPI.getProjectionTransformMatrix = (aspect, nearz, farz) => {
+  publicAPI.getProjectionMatrix = (aspect, nearz, farz) => {
     const result = mat4.create();
 
     if (model.projectionMatrix) {
@@ -456,17 +454,13 @@ function vtkCamera(publicAPI, model) {
     return result;
   };
 
-  publicAPI.getCompositeProjectionTransformMatrix = (aspect, nearz, farz) => {
-    const vMat = publicAPI.getViewTransformMatrix();
-    const pMat = publicAPI.getProjectionTransformMatrix(aspect, nearz, farz);
+  publicAPI.getCompositeProjectionMatrix = (aspect, nearz, farz) => {
+    const vMat = publicAPI.getViewMatrix();
+    const pMat = publicAPI.getProjectionMatrix(aspect, nearz, farz);
     const result = mat4.create();
     mat4.multiply(result, vMat, pMat);
     return result;
   };
-
-  // publicAPI.getProjectionTransformMatrix = renderer => {
-  //   // return glmatrix object
-  // };
 
   publicAPI.getFrustumPlanes = (aspect) => {
     // Return array of 24 params (4 params for each of 6 plane equations)
@@ -563,26 +557,6 @@ function vtkCamera(publicAPI, model) {
     publicAPI.setDirectionOfProjection(newdop[0], newdop[1], newdop[2]);
     publicAPI.setViewUp(newvup[0], newvup[1], newvup[2]);
     publicAPI.modified();
-  };
-
-  publicAPI.getCameraLightTransformMatrix = () => {
-
-  };
-
-  publicAPI.updateViewport = () => {
-
-  };
-
-  publicAPI.shallowCopy = (sourceCamera) => {
-
-  };
-
-  publicAPI.setScissorRect = (rect) => {
-    // rect is a vtkRect
-  };
-
-  publicAPI.getScissorRect = () => {
-
   };
 }
 

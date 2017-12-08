@@ -37,7 +37,7 @@ function vtkOpenGLCamera(publicAPI, model) {
       model.openGLRenderWindow.getMTime() > model.keyMatrixTime.getMTime() ||
       publicAPI.getMTime() > model.keyMatrixTime.getMTime() ||
       ren.getMTime() > model.keyMatrixTime.getMTime()) {
-      mat4.copy(model.keyMatrices.wcvc, model.renderable.getViewTransformMatrix());
+      mat4.copy(model.keyMatrices.wcvc, model.renderable.getViewMatrix());
 
       mat3.fromMat4(model.keyMatrices.normalMatrix, model.keyMatrices.wcvc);
       mat3.invert(model.keyMatrices.normalMatrix, model.keyMatrices.normalMatrix);
@@ -45,12 +45,11 @@ function vtkOpenGLCamera(publicAPI, model) {
 
       const aspectRatio = model.openGLRenderer.getAspectRatio();
 
-      mat4.copy(model.keyMatrices.vcdc, model.renderable.getProjectionTransformMatrix(
+      mat4.copy(model.keyMatrices.vcdc, model.renderable.getProjectionMatrix(
                            aspectRatio, -1, 1));
       mat4.transpose(model.keyMatrices.vcdc, model.keyMatrices.vcdc);
 
       mat4.multiply(model.keyMatrices.wcdc, model.keyMatrices.vcdc, model.keyMatrices.wcvc);
-//      mat4.multiply(model.WCDCMatrix, model.WCVCMatrix, model.VCDCMatrix);
 
       model.keyMatrixTime.modified();
       model.lastRenderer = ren;
