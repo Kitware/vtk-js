@@ -11,6 +11,7 @@ import './Filters/General/MoleculeToRepresentation/test/testMultipleBonds';
 import './Filters/General/WarpScalar/test/testWarp';
 import './Filters/Sources/ConeSource/test/testCone';
 import './Filters/Sources/CubeSource/test/testCube';
+import './Filters/Sources/CylinderSource/test/testCylinder';
 import './Filters/Sources/LineSource/test/testLine';
 import './Filters/Sources/PlaneSource/test/testPlane';
 import './Filters/Sources/PointSource/test/testPointSource';
