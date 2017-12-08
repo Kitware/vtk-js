@@ -180,33 +180,20 @@ calculation. Default is (0.5, -0.5, -0.5).
 Set/Get top right corner point of the screen. This will be used only for offaxis frustum
 calculation. Default is (0.5, 0.5, -0.5).
 
-### getViewTransformMatrix()
+### getViewMatrix()
 
 Return the matrix of the view transform. The ViewTransform depends on only three ivars:  the
 Position, the FocalPoint, and the ViewUp vector. All the other methods are there simply for
 the sake of the users' convenience.
 
-### getViewTransformObject()
-
-Return the view transform. The ViewTransform depends on only three ivars: the Position, the
-FocalPoint, and the ViewUp vector. All the other methods are there simply for the sake of the
-users' convenience.
-
-### getProjectionTransformMatrix(aspect, nearz, farz)
+### getProjectionMatrix(aspect, nearz, farz)
 
 Return the projection transform matrix, which converts from camera coordinates to viewport
 coordinates. The 'aspect' is the width/height for the viewport, and the nearz and farz are
 the Z-buffer values that map to the near and far clipping planes. The viewport coordinates of
 a point located inside the frustum are in the range ([-1,+1],[-1,+1],[nearz,farz]).
 
-### getProjectionTransformObject(aspect, nearz, farz)
-
-Return the projection transform matrix, which converts from camera coordinates to viewport
-coordinates. The 'aspect' is the width/height for the viewport, and the nearz and farz are
-the Z-buffer values that map to the near and far clipping planes. The viewport coordinates
-of a point located inside the frustum are in the range ([-1,+1],[-1,+1],[nearz,farz]).
-
-### getCompositeProjectionTransformMatrix(aspect, nearz, farz)
+### getCompositeProjectionMatrix(aspect, nearz, farz)
 
 Return the concatenation of the ViewTransform and the ProjectionTransform. This transform
 will convert world coordinates to viewport coordinates. The 'aspect' is the width/height
@@ -214,23 +201,11 @@ for the viewport, and the nearz and farz are the Z-buffer values that map to the
 far clipping planes. The viewport coordinates of a point located inside the frustum are
 in the range ([-1,+1],[-1,+1],[nearz,farz]).
 
-### getProjectionTransformMatrix(renderer)
+### getProjectionMatrix(renderer)
 
 Given a vtkRenderer, return the projection transform matrix, which converts from camera
 coordinates to viewport coordinates. This method computes the aspect, nearz and farz,
 then calls the more specific signature of GetCompositeProjectionTransformMatrix.
-
-### userViewTransform
-
-In addition to the instance variables such as position and orientation, you can add an
-additional transformation for your own use. This transformation is concatenated to the
-camera's ViewTransform.
-
-### userTransform
-
-In addition to the instance variables such as position and orientation, you can add an
-additional transformation for your own use. This transformation is concatenated to the
-camera's ProjectionTransform.
 
 ### render(renderer)
 
