@@ -34,9 +34,9 @@ function vtkTrackballPan(publicAPI, model) {
       vtkMath.cross(vpn, up, right);
 
       // These are different because y is flipped.
-      const size = interactor.getView().getSize();
-      let dx = (pos.x - lastPos.x) / size[1];
-      let dy = (lastPos.y - pos.y) / size[1];
+      const height = interactor.getView().getSize()[1];
+      let dx = (pos.x - lastPos.x) / height;
+      let dy = (lastPos.y - pos.y) / height;
 
       const scale = camera.getParallelScale();
       dx *= scale * 2.0;
@@ -51,8 +51,8 @@ function vtkTrackballPan(publicAPI, model) {
       tmp = (right[2] * dx) + (up[2] * dy);
       camPos[2] += tmp;
       fp[2] += tmp;
-      camera.setPosition(camPos);
-      camera.setFocalPoint(fp);
+      camera.setPosition(camPos[0], camPos[1], camPos[2]);
+      camera.setFocalPoint(fp[0], fp[1], fp[2]);
     } else {
       const center = model.center;
       const style = interactor.getInteractorStyle();
