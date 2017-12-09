@@ -2,6 +2,7 @@ import macro                from 'vtk.js/Sources/macro';
 import vtkCameraManipulator from 'vtk.js/Sources/Interaction/Manipulators/CameraManipulator';
 
 const { vtkWarningMacro } = macro;
+const DEFAULT_POSITION = { x: 0, y: 0 };
 
 // ----------------------------------------------------------------------------
 // vtkTrackballZoom methods
@@ -15,7 +16,10 @@ function vtkTrackballZoom(publicAPI, model) {
     const size = interactor.getView().getSize();
 
     try {
-      const camera = interactor.getInteractorStyle().getCurrentRenderer().getActiveCamera();
+      const { x, y } = interactor.getAnimationEventPosition(interactor.getPointerIndex()) || DEFAULT_POSITION;
+      const interactorStyle = interactor.getInteractorStyle();
+      const renderer = interactorStyle.getCurrentRenderer() || interactor.findPokedRenderer(x, y);
+      const camera = renderer.getActiveCamera();
       if (camera.getParallelProjection()) {
         model.zoomScale = 1.5 / size[1];
       } else {
