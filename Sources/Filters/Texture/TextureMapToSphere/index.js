@@ -116,9 +116,39 @@ function vtkTextureMapToSphere(publicAPI, model) {
     });
 
     const output = vtkPolyData.newInstance();
-    output.getPoints().setData(new Float32Array(input.getPoints().getData()));
+    output.getPoints().setData(new Float32Array(input.getPoints().getData()), 3);
     output.getPolys().setData(new Uint32Array(input.getPolys().getData()));
     output.getPointData().setTCoords(tCoords);
+
+    // Copy all data arrays
+
+    for (let i = 0; i < input.getPointData().getNumberOfArrays(); i++) {
+      const inputData = input.getPointData().getArrayByIndex(i);
+      const data = vtkDataArray.newInstance({
+        name: inputData.getName(),
+        numberOfComponents: inputData.getNumberOfComponents(),
+        values: inputData.getData().slice(0),
+      });
+      output.getPointData().addArray(data);
+    }
+
+    for (let i = 0; i < input.getCellData().getNumberOfArrays(); i++) {
+      const inputData = input.getCellData().getArrayByIndex(i);
+      const data = vtkDataArray.newInstance({
+        name: inputData.getName(),
+        numberOfComponents: inputData.getNumberOfComponents(),
+        values: inputData.getData().slice(0),
+      });
+      output.getCellData().addArray(data);
+    }
+
+    if (input.getPointData().getNormals()) {
+      output.getPointData().setActiveNormals(input.getPointData().getNormals().getName());
+    }
+
+    if (input.getCellData().getNormals()) {
+      output.getCellData().setActiveNormals(input.getCellData().getNormals().getName());
+    }
 
     // Update output
     outData[0] = output;
