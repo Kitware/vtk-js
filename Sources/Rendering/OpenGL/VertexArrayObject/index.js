@@ -15,6 +15,10 @@ function vtkOpenGLVertexArrayObject(publicAPI, model) {
   };
 
   publicAPI.initialize = () => {
+    model.instancingExtension = null;
+    if (!model.openGLRenderWindow.getWebgl2()) {
+      model.instancingExtension = model.context.getExtension('ANGLE_instanced_arrays');
+    }
     if (!model.forceEmulation &&
          model.openGLRenderWindow &&
          model.openGLRenderWindow.getWebgl2()) {
@@ -64,7 +68,11 @@ function vtkOpenGLVertexArrayObject(publicAPI, model) {
                                   attrIt.normalize, attrIt.stride,
                                   attrIt.offset + ((attrIt.stride * i) / attrIt.size));
             if (attrIt.divisor > 0) {
-              gl.vertexAttribDivisor(attrIt.index + i, 1);
+              if (model.instancingExtension) {
+                model.instancingExtension.vertexAttribDivisorANGLE(attrIt.index + i, 1);
+              } else {
+                gl.vertexAttribDivisor(attrIt.index + i, 1);
+              }
             }
           }
         }
@@ -94,7 +102,11 @@ function vtkOpenGLVertexArrayObject(publicAPI, model) {
                                   attrIt.normalize, attrIt.stride,
                                   attrIt.offset + ((attrIt.stride * i) / attrIt.size));
             if (attrIt.divisor > 0) {
-              gl.vertexAttribDivisor(attrIt.index + i, 0);
+              if (model.instancingExtension) {
+                model.instancingExtension.vertexAttribDivisorANGLE(attrIt.index + i, 0);
+              } else {
+                gl.vertexAttribDivisor(attrIt.index + i, 0);
+              }
             }
             gl.disableVertexAttribArray(attrIt.index + i);
           }
@@ -182,7 +194,11 @@ function vtkOpenGLVertexArrayObject(publicAPI, model) {
 
 
     if (divisor > 0) {
-      gl.vertexAttribDivisor(attribs.index, 1);
+      if (model.instancingExtension) {
+        model.instancingExtension.vertexAttribDivisorANGLE(attribs.index, 1);
+      } else {
+        gl.vertexAttribDivisor(attribs.index, 1);
+      }
     }
 
     attribs.buffer = buffer.getHandle();
@@ -235,7 +251,11 @@ function vtkOpenGLVertexArrayObject(publicAPI, model) {
                             normalize, stride,
                             offset + ((stride * i) / elementTupleSize));
       if (divisor > 0) {
-        gl.vertexAttribDivisor(index + i, 1);
+        if (model.instancingExtension) {
+          model.instancingExtension.vertexAttribDivisorANGLE(index + i, 1);
+        } else {
+          gl.vertexAttribDivisor(index + i, 1);
+        }
       }
     }
 

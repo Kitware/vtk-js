@@ -45,6 +45,14 @@ function vtkOpenGLGlyph3DMapper(publicAPI, model) {
 
     // apply faceCulling
     const gl = model.context;
+    if (model.openGLRenderWindow.getWebgl2()) {
+      model.hardwareSupport = true;
+      model.extension = null;
+    } else if (!model.extension) {
+      model.extension = model.context.getExtension('ANGLE_instanced_arrays');
+      model.hardwareSupport = !(!(model.extension));
+    }
+
     const backfaceCulling = actor.getProperty().getBackfaceCulling();
     const frontfaceCulling = actor.getProperty().getFrontfaceCulling();
     if (!backfaceCulling && !frontfaceCulling) {
@@ -136,7 +144,7 @@ function vtkOpenGLGlyph3DMapper(publicAPI, model) {
 
 
   publicAPI.replaceShaderColor = (shaders, ren, actor) => {
-    if (model.openGLRenderWindow.getWebgl2() && model.renderable.getColorArray()) {
+    if (model.hardwareSupport && model.renderable.getColorArray()) {
       let VSSource = shaders.Vertex;
       let GSSource = shaders.Geometry;
       let FSSource = shaders.Fragment;
@@ -211,7 +219,7 @@ function vtkOpenGLGlyph3DMapper(publicAPI, model) {
   };
 
   publicAPI.replaceShaderPositionVC = (shaders, ren, actor) => {
-    if (model.openGLRenderWindow.getWebgl2()) {
+    if (model.hardwareSupport) {
       let VSSource = shaders.Vertex;
 
       // do we need the vertex in the shader in View Coordinates
@@ -348,8 +356,12 @@ function vtkOpenGLGlyph3DMapper(publicAPI, model) {
         const normalMatrixUsed = program.isUniformUsed('normalMatrix');
         const mcvcMatrixUsed = program.isUniformUsed('MCVCMatrix');
 
-        if (model.openGLRenderWindow.getWebgl2()) {
-          gl.drawArraysInstanced(mode, 0, cabo.getElementCount(), numPts);
+        if (model.hardwareSupport) {
+          if (model.extension) {
+            model.extension.drawArraysInstancedANGLE(mode, 0, cabo.getElementCount(), numPts);
+          } else {
+            gl.drawArraysInstanced(mode, 0, cabo.getElementCount(), numPts);
+          }
         } else {
           // draw the array multiple times with different cam matrix
           for (let p = 0; p < numPts; ++p) {
@@ -422,7 +434,7 @@ function vtkOpenGLGlyph3DMapper(publicAPI, model) {
 
 
   publicAPI.buildBufferObjects = (ren, actor) => {
-    if (model.openGLRenderWindow.getWebgl2()) {
+    if (model.hardwareSupport) {
       // update the buffer objects if needed
       const garray = model.renderable.getMatrixArray();
       const narray = model.renderable.getNormalArray();
