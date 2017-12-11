@@ -110,24 +110,26 @@ function vtkOpenGLGlyph3DMapper(publicAPI, model) {
   };
 
   publicAPI.replaceShaderNormal = (shaders, ren, actor) => {
-    const lastLightComplexity =
-      model.lastBoundBO.getReferenceByName('lastLightComplexity');
+    if (model.openGLRenderWindow.getWebgl2()) {
+      const lastLightComplexity =
+        model.lastBoundBO.getReferenceByName('lastLightComplexity');
 
-    if (lastLightComplexity > 0) {
-      let VSSource = shaders.Vertex;
+      if (lastLightComplexity > 0) {
+        let VSSource = shaders.Vertex;
 
-      if (model.lastBoundBO.getCABO().getNormalOffset()) {
-        VSSource = vtkShaderProgram.substitute(VSSource,
-          '//VTK::Normal::Dec', [
-            'attribute vec3 normalMC;',
-            'attribute mat3 gNormal;',
-            'uniform mat3 normalMatrix;',
-            'varying vec3 normalVCVSOutput;']).result;
-        VSSource = vtkShaderProgram.substitute(VSSource,
-          '//VTK::Normal::Impl', [
-            'normalVCVSOutput = normalMatrix * gNormal * normalMC;']).result;
+        if (model.lastBoundBO.getCABO().getNormalOffset()) {
+          VSSource = vtkShaderProgram.substitute(VSSource,
+            '//VTK::Normal::Dec', [
+              'attribute vec3 normalMC;',
+              'attribute mat3 gNormal;',
+              'uniform mat3 normalMatrix;',
+              'varying vec3 normalVCVSOutput;']).result;
+          VSSource = vtkShaderProgram.substitute(VSSource,
+            '//VTK::Normal::Impl', [
+              'normalVCVSOutput = normalMatrix * gNormal * normalMC;']).result;
+        }
+        shaders.Vertex = VSSource;
       }
-      shaders.Vertex = VSSource;
     }
     superClass.replaceShaderNormal(shaders, ren, actor);
   };
