@@ -118,7 +118,7 @@ function vtkOpenGLGlyph3DMapper(publicAPI, model) {
   };
 
   publicAPI.replaceShaderNormal = (shaders, ren, actor) => {
-    if (model.openGLRenderWindow.getWebgl2()) {
+    if (model.hardwareSupport) {
       const lastLightComplexity =
         model.lastBoundBO.getReferenceByName('lastLightComplexity');
 
