@@ -19,7 +19,7 @@ function stringToXML(xmlStr) {
   return (new DOMParser()).parseFromString(xmlStr, 'application/xml');
 }
 
-function parseArrayBuffer(buffer) {
+function extractAppendedData(buffer) {
   // search for appended data tag
   const prefixRegex = /^\s*<AppendedData\s+encoding="raw">\s*_/m;
   const suffixRegex = /\n\s*<\/AppendedData>/m;
@@ -300,7 +300,7 @@ function vtkXMLReader(publicAPI, model) {
       return;
     }
 
-    const { text: content, binaryBuffer } = parseArrayBuffer(arrayBuffer);
+    const { text: content, binaryBuffer } = extractAppendedData(arrayBuffer);
     model.rawDataBuffer = arrayBuffer;
     model.binaryBuffer = binaryBuffer;
 
