@@ -4,6 +4,7 @@ import { toByteArray } from 'base64-js';
 import DataAccessHelper from 'vtk.js/Sources/IO/Core/DataAccessHelper';
 import macro            from 'vtk.js/Sources/macro';
 import vtkDataArray     from 'vtk.js/Sources/Common/Core/DataArray';
+import BinaryHelper     from 'vtk.js/Sources/IO/Core/BinaryHelper';
 
 // ----------------------------------------------------------------------------
 // Global methods
@@ -16,6 +17,13 @@ function stringToXML(xmlStr) {
     return oXML;
   }
   return (new DOMParser()).parseFromString(xmlStr, 'application/xml');
+}
+
+function extractAppendedData(buffer) {
+  // search for appended data tag
+  const prefixRegex = /^\s*<AppendedData\s+encoding="raw">\s*_/m;
+  const suffixRegex = /\n\s*<\/AppendedData>/m;
+  return BinaryHelper.extractBinary(buffer, prefixRegex, suffixRegex);
 }
 
 // ----------------------------------------------------------------------------
@@ -282,18 +290,18 @@ function vtkXMLReader(publicAPI, model) {
     return promise;
   };
 
-  publicAPI.parse = (content, binaryBuffer) => {
-    if (!content) {
+  publicAPI.parseArrayBuffer = (arrayBuffer) => {
+    if (!arrayBuffer) {
       return;
     }
-    if (content !== model.parseData) {
+    if (arrayBuffer !== model.rawDataBuffer) {
       publicAPI.modified();
     } else {
       return;
     }
 
-    model.parseData = content;
-    // TODO maybe name as "appendDataBuffer"
+    const { text: content, binaryBuffer } = extractAppendedData(arrayBuffer);
+    model.rawDataBuffer = arrayBuffer;
     model.binaryBuffer = binaryBuffer;
 
     // Parse data here...
@@ -423,7 +431,7 @@ function vtkXMLReader(publicAPI, model) {
   };
 
   publicAPI.requestData = (inData, outData) => {
-    publicAPI.parse(model.parseData, model.binaryBuffer);
+    publicAPI.parseArrayBuffer(model.rawDataBuffer);
   };
 }
 
