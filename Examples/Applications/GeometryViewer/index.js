@@ -14,8 +14,6 @@ import vtkURLExtract              from 'vtk.js/Sources/Common/Core/URLExtract';
 import vtkXMLPolyDataReader       from 'vtk.js/Sources/IO/XML/XMLPolyDataReader';
 import { ColorMode, ScalarMode }  from 'vtk.js/Sources/Rendering/Core/Mapper/Constants';
 
-import BinaryHelper               from 'vtk.js/Sources/IO/Core/BinaryHelper';
-
 import style from './GeometryViewer.mcss';
 import icon from '../../../Documentation/content/icon/favicon-96x96.png';
 
@@ -113,7 +111,7 @@ function createViewer(container) {
 
 // ----------------------------------------------------------------------------
 
-function createPipeline(fileName, parsedFileContents) {
+function createPipeline(fileName, fileContents) {
   // Create UI
   const presetSelector = document.createElement('select');
   presetSelector.setAttribute('class', selectorClass);
@@ -158,7 +156,7 @@ function createPipeline(fileName, parsedFileContents) {
 
   // VTK pipeline
   const vtpReader = vtkXMLPolyDataReader.newInstance();
-  vtpReader.parse(parsedFileContents.text, parsedFileContents.binaryBuffer);
+  vtpReader.parseArrayBuffer(fileContents);
 
   const lookupTable = vtkColorTransferFunction.newInstance();
   const source = vtpReader.getOutputData(0);
@@ -304,10 +302,7 @@ function createPipeline(fileName, parsedFileContents) {
 function loadFile(file) {
   const reader = new FileReader();
   reader.onload = function onLoad(e) {
-    const prefixRegex = /^\s*<AppendedData\s+encoding="raw">\s*_/m;
-    const suffixRegex = /\n\s*<\/AppendedData>/m;
-    const result = BinaryHelper.extractBinary(reader.result, prefixRegex, suffixRegex);
-    createPipeline(file.name, result);
+    createPipeline(file.name, reader.result);
   };
   reader.readAsArrayBuffer(file);
 }
@@ -335,10 +330,10 @@ export function load(container, options) {
       progressContainer.innerHTML = `Loading ${percent}%`;
     };
 
-    HttpDataAccessHelper.fetchText({}, options.fileURL, { progressCallback }).then((txt) => {
+    HttpDataAccessHelper.fetchBinary(options.fileURL, { progressCallback }).then((binary) => {
       container.removeChild(progressContainer);
       createViewer(container);
-      createPipeline(defaultName, { text: txt });
+      createPipeline(defaultName, binary);
       updateCamera(renderer.getActiveCamera());
     });
   }

@@ -66,7 +66,7 @@ function vtkXMLPolyDataReader(publicAPI, model) {
   };
 
   publicAPI.requestData = (inData, outData) => {
-    publicAPI.parse(model.parseData);
+    publicAPI.parseArrayBuffer(model.rawDataBuffer);
   };
 }
 
