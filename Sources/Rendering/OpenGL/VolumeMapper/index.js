@@ -836,7 +836,7 @@ function vtkOpenGLVolumeMapper(publicAPI, model) {
         const program = model.copyShader;
 
         model.copyVAO = vtkVertexArrayObject.newInstance();
-        model.copyVAO.setWindow(model.openGLRenderWindow);
+        model.copyVAO.setOpenGLRenderWindow(model.openGLRenderWindow);
 
         model.tris.getCABO().bind();
         if (!model.copyVAO.addAttributeArray(
