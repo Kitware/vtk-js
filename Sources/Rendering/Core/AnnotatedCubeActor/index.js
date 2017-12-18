@@ -22,6 +22,14 @@ function vtkAnnotatedCubeActor(publicAPI, model) {
   // Set our className
   model.classHierarchy.push('vtkAnnotatedCubeActor');
 
+  // Make sure face properties are not references to the default value.
+  model.xPlusFaceProperty = Object.assign({}, model.xPlusFaceProperty);
+  model.xMinusFaceProperty = Object.assign({}, model.xMinusFaceProperty);
+  model.yPlusFaceProperty = Object.assign({}, model.yPlusFaceProperty);
+  model.yMinusFaceProperty = Object.assign({}, model.yMinusFaceProperty);
+  model.zPlusFaceProperty = Object.assign({}, model.zPlusFaceProperty);
+  model.zMinusFaceProperty = Object.assign({}, model.zMinusFaceProperty);
+
   // private variables
 
   let cubeSource = null;
@@ -191,13 +199,12 @@ function vtkAnnotatedCubeActor(publicAPI, model) {
 // ----------------------------------------------------------------------------
 
 export const DEFAULT_VALUES = {
-  // prevent modification of default object values
-  xPlusFaceProperty: Object.assign({}, { text: '', faceColor: '#fff' }),
-  xMinusFaceProperty: Object.assign({}, { text: '', faceColor: '#fff' }),
-  yPlusFaceProperty: Object.assign({}, { text: '', faceColor: '#fff' }),
-  yMinusFaceProperty: Object.assign({}, { text: '', faceColor: '#fff' }),
-  zPlusFaceProperty: Object.assign({}, { text: '', faceColor: '#fff' }),
-  zMinusFaceProperty: Object.assign({}, { text: '', faceColor: '#fff' }),
+  xPlusFaceProperty: { text: '+X', faceColor: '#fff' },
+  xMinusFaceProperty: { text: '-X', faceColor: '#fff' },
+  yPlusFaceProperty: { text: '+Y', faceColor: '#fff' },
+  yMinusFaceProperty: { text: '-Y', faceColor: '#fff' },
+  zPlusFaceProperty: { text: '+Z', faceColor: '#fff' },
+  zMinusFaceProperty: { text: '-Z', faceColor: '#fff' },
   fontStyle: 'normal',
   fontFamily: 'Arial',
   fontColor: 'black',
