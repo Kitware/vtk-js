@@ -21,6 +21,7 @@ function vtkOrientationMarkerWidget(publicAPI, model) {
   // Private variables
 
   const selfRenderer = vtkRenderer.newInstance();
+  let interactorUnsubscribe = null;
 
   // private methods
 
@@ -75,13 +76,18 @@ function vtkOrientationMarkerWidget(publicAPI, model) {
 
       selfRenderer.setViewport(...getViewport());
 
-      model.interactor.onAnimation(updateMarkerOrientation);
+      const { unsubscribe } = model.interactor.onAnimation(updateMarkerOrientation);
+      interactorUnsubscribe = unsubscribe;
 
       model.enabled = true;
     } else {
+      if (!model.enabled) {
+        return;
+      }
       model.enabled = false;
 
-      // TODO interactor.offAnimation() or something similar
+      interactorUnsubscribe();
+      interactorUnsubscribe = null;
 
       model.actor.setVisibility(false);
       selfRenderer.removeViewProp(model.actor);
