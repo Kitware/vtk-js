@@ -47,8 +47,8 @@ function vtkArrowSource(publicAPI, model) {
       .apply(conePts);
 
     const append = vtkAppendPolyData.newInstance();
-    append.setInputData(cylinderPD, 0);
-    append.setInputData(conePD, 1);
+    append.setInputData(cylinderPD);
+    append.addInputData(conePD);
 
     if (model.invert) {
       const appendPD = append.getOutputData();

@@ -148,7 +148,7 @@ export function extend(publicAPI, model, initialValues = {}) {
   macro.obj(publicAPI, model);
 
   // Also make it an algorithm with one input and one output
-  macro.algo(publicAPI, model, 2, 1);
+  macro.algo(publicAPI, model, 1, 1);
 
   // Object specific methods
   vtkAppendPolyData(publicAPI, model);
