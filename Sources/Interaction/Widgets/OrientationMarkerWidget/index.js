@@ -68,6 +68,7 @@ function vtkOrientationMarkerWidget(publicAPI, model) {
       if (renderWindow.getNumberOfLayers() < 2) {
         renderWindow.setNumberOfLayers(2);
       }
+      // Highest number is foreground
       selfRenderer.setLayer(renderWindow.getNumberOfLayers() - 1);
       selfRenderer.setInteractive(false);
 

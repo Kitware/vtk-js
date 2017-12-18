@@ -31,16 +31,23 @@ renderer.addActor(actor);
 
 // create axes
 const axes = vtkAnnotatedCubeActor.newInstance();
-axes.setResolution(400);
-axes.setFontStyle('bold');
-axes.setFontColor('black');
-axes.setEdgeThickness(0.1);
-axes.setXPlusFaceProperty({ text: '+X', faceColor: '#ff0000' });
-axes.setXMinusFaceProperty({ text: '-X', faceColor: '#ffff00' });
-axes.setYPlusFaceProperty({ text: '+Y', faceColor: '#00ff00' });
-axes.setYMinusFaceProperty({ text: '-Y', faceColor: '#00ffff' });
-axes.setZPlusFaceProperty({ text: '+Z', faceColor: '#ff00ff' });
-axes.setZMinusFaceProperty({ text: '-Z', faceColor: '#0000ff' });
+axes.setDefaultStyle({
+  text: '+X',
+  fontStyle: 'bold',
+  fontFamily: 'Arial',
+  fontColor: 'black',
+  fontSizeScale: res => res / 2,
+  faceColor: '#0000ff',
+  edgeThickness: 0.1,
+  edgeColor: 'black',
+  resolution: 400,
+});
+// axes.setXPlusFaceProperty({ text: '+X' });
+axes.setXMinusFaceProperty({ text: '-X', faceColor: '#ffff00', fontStyle: 'italic' });
+axes.setYPlusFaceProperty({ text: '+Y', faceColor: '#00ff00', fontSizeScale: res => res / 4 });
+axes.setYMinusFaceProperty({ text: '-Y', faceColor: '#00ffff', fontColor: 'white' });
+axes.setZPlusFaceProperty({ text: '+Z', edgeColor: 'yellow' });
+axes.setZMinusFaceProperty({ text: '-Z', edgeThickness: 0 });
 
 // create orientation widget
 const orientationWidget = vtkOrientationMarkerWidget.newInstance({

@@ -22,7 +22,7 @@ function vtkAnnotatedCubeActor(publicAPI, model) {
   // Set our className
   model.classHierarchy.push('vtkAnnotatedCubeActor');
 
-  // Make sure face properties are not references to the default value.
+  // Make sure face properties are not references to the default value
   model.xPlusFaceProperty = Object.assign({}, model.xPlusFaceProperty);
   model.xMinusFaceProperty = Object.assign({}, model.xMinusFaceProperty);
   model.yPlusFaceProperty = Object.assign({}, model.yPlusFaceProperty);
@@ -46,7 +46,12 @@ function vtkAnnotatedCubeActor(publicAPI, model) {
       Object.assign(model[`${faceName}FaceProperty`], newProp);
     }
 
-    const prop = model[`${faceName}FaceProperty`];
+    const prop = Object.assign({}, model.defaultStyle, model[`${faceName}FaceProperty`]);
+
+    // set canvas resolution
+    canvas.width = prop.resolution;
+    canvas.height = prop.resolution;
+
     const ctxt = canvas.getContext('2d');
 
     // set background color
@@ -54,18 +59,18 @@ function vtkAnnotatedCubeActor(publicAPI, model) {
     ctxt.fillRect(0, 0, canvas.width, canvas.height);
 
     // draw edge
-    if (model.edgeThickness > 0) {
-      ctxt.strokeStyle = model.edgeColor;
-      ctxt.lineWidth = model.edgeThickness * canvas.width;
+    if (prop.edgeThickness > 0) {
+      ctxt.strokeStyle = prop.edgeColor;
+      ctxt.lineWidth = prop.edgeThickness * canvas.width;
       ctxt.strokeRect(0, 0, canvas.width, canvas.height);
     }
 
     // set foreground text
-    const textSize = canvas.width / 1.8;
-    ctxt.fillStyle = model.fontColor;
+    const textSize = prop.fontSizeScale(prop.resolution);
+    ctxt.fillStyle = prop.fontColor;
     ctxt.textAlign = 'center';
     ctxt.textBaseline = 'middle';
-    ctxt.font = `${model.fontStyle} ${textSize}px "${model.fontFamily}"`;
+    ctxt.font = `${prop.fontStyle} ${textSize}px "${prop.fontFamily}"`;
     ctxt.fillText(prop.text, canvas.width / 2, canvas.height / 2);
 
     const vtkImage = ImageHelper.canvasToImageData(canvas);
@@ -73,6 +78,12 @@ function vtkAnnotatedCubeActor(publicAPI, model) {
   }
 
   function updateAllFaceTextures() {
+    cubeSource = vtkCubeSource.newInstance({
+      generate3DTextureCoordinates: true,
+    });
+
+    mapper.setInputConnection(cubeSource.getOutputPort());
+
     updateFaceTexture('xPlus');
     updateFaceTexture('xMinus');
     updateFaceTexture('yPlus');
@@ -83,51 +94,8 @@ function vtkAnnotatedCubeActor(publicAPI, model) {
 
   // public methods
 
-  /**
-   * Sets the cube face resolution.
-   */
-  publicAPI.setResolution = (resolution) => {
-    model.resolution = resolution;
-
-    cubeSource = vtkCubeSource.newInstance({
-      xLength: resolution,
-      yLength: resolution,
-      zLength: resolution,
-      generate3DTextureCoordinates: true,
-    });
-
-    mapper.setInputConnection(cubeSource.getOutputPort());
-
-    // set canvas dimensions
-    canvas.height = resolution;
-    canvas.width = resolution;
-
-    // redraw all faces
-    updateAllFaceTextures();
-  };
-
-  publicAPI.setFontStyle = (style) => {
-    model.fontStyle = style;
-    updateAllFaceTextures();
-  };
-
-  publicAPI.setFontFamily = (family) => {
-    model.fontStyle = family;
-    updateAllFaceTextures();
-  };
-
-  publicAPI.setFontColor = (color) => {
-    model.fontColor = color;
-    updateAllFaceTextures();
-  };
-
-  publicAPI.setEdgeThickness = (thickness) => {
-    model.edgeThickness = Math.min(1, Math.max(0, thickness));
-    updateAllFaceTextures();
-  };
-
-  publicAPI.setEdgeColor = (color) => {
-    model.edgeColor = color;
+  publicAPI.setDefaultStyle = (style) => {
+    model.defaultStyle = Object.assign({}, model.defaultStyle, style);
     updateAllFaceTextures();
   };
 
@@ -140,8 +108,7 @@ function vtkAnnotatedCubeActor(publicAPI, model) {
 
   // constructor
 
-  // create cube
-  publicAPI.setResolution(model.resolution);
+  updateAllFaceTextures();
 
   // set mapper
   mapper.setInputConnection(cubeSource.getOutputPort());
@@ -156,18 +123,23 @@ function vtkAnnotatedCubeActor(publicAPI, model) {
 // ----------------------------------------------------------------------------
 
 export const DEFAULT_VALUES = {
-  xPlusFaceProperty: { text: '+X', faceColor: '#fff' },
-  xMinusFaceProperty: { text: '-X', faceColor: '#fff' },
-  yPlusFaceProperty: { text: '+Y', faceColor: '#fff' },
-  yMinusFaceProperty: { text: '-Y', faceColor: '#fff' },
-  zPlusFaceProperty: { text: '+Z', faceColor: '#fff' },
-  zMinusFaceProperty: { text: '-Z', faceColor: '#fff' },
-  fontStyle: 'normal',
-  fontFamily: 'Arial',
-  fontColor: 'black',
-  resolution: 200,
-  edgeThickness: 0.1,
-  edgeColor: 'black',
+  defaultStyle: {
+    text: '',
+    faceColor: 'white',
+    fontFamily: 'Arial',
+    fontColor: 'black',
+    fontStyle: 'normal',
+    fontSizeScale: resolution => resolution / 1.8,
+    edgeThickness: 0.1,
+    edgeColor: 'black',
+    resolution: 200,
+  },
+  // xPlusFaceProperty: null,
+  // xMinusFaceProperty: null,
+  // yPlusFaceProperty: null,
+  // yMinusFaceProperty: null,
+  // zPlusFaceProperty: null,
+  // zMinusFaceProperty: null,
 };
 
 // ----------------------------------------------------------------------------
@@ -179,18 +151,14 @@ export function extend(publicAPI, model, initialValues = {}) {
   vtkActor.extend(publicAPI, model, initialValues);
 
   macro.get(publicAPI, model, [
+    'defaultFontStyle',
     'xPlusFaceProperty',
     'xMinusFaceProperty',
     'yPlusFaceProperty',
     'yMinusFaceProperty',
     'zPlusFaceProperty',
     'zMinusFaceProperty',
-    'fontStyle',
-    'fontFamily',
-    'fontColor',
     'resolution',
-    'edgeThickness',
-    'edgeColor',
   ]);
 
   // Object methods
