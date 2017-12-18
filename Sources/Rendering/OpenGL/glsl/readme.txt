@@ -20,7 +20,7 @@ For example
 //VTK::Normal::Dec  - declaration any uniforms/varying needed for normals
 //VTK::Normal::Impl - Implementation of shader code for handling normals
 
-All shaders should start with the folowing line
+All shaders should start with the following line
 
 //VTK::System::Dec
 
@@ -32,18 +32,18 @@ your fragment shader) is
 
 which VTK uses to map shader outputs to the framebufer.
 
-All vertex shaders should name their outputs with a postfix of VSOutput All
-geometry shaders should name their outputs with a postfix of GSOutput All
-fragment shaders shoudl name their inputs with a postfix of VSOutput.  Put
+All vertex shaders should name their outputs with a postfix of VSOutput.
+All geometry shaders should name their outputs with a postfix of GSOutput.
+All fragment shaders should name their inputs with a postfix of VSOutput. Put
 another way fragment shaders should assuming their input is coming from the
-vertex shader.  If a geometry shader is present VTK will rename the fragment
+vertex shader. If a geometry shader is present VTK will rename the fragment
 shader inputs from VSOutput to GSOuput automatically.
 
 All variables that represent positions or directions usually have a suffix
 indicating the coordinate system they are in. The possible values are
 
 MC  - Model Coordinates
-WC  - WC world coordinates
+WC  - WC World Coordinates
 VC  - View Coordinates
 DC  - Display Coordinates
-NVC - NormalizeViewCoordinates
+NVC - NormalizedViewCoordinates
