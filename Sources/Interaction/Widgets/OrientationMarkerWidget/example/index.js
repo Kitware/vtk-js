@@ -48,6 +48,7 @@ const orientationWidget = vtkOrientationMarkerWidget.newInstance({
   interactor: renderWindow.getInteractor(),
 });
 orientationWidget.setEnabled(true);
+orientationWidget.setViewportCorner(vtkOrientationMarkerWidget.Corners.BOTTOM_RIGHT);
 orientationWidget.setViewportSize(0.15);
 
 renderer.resetCamera();

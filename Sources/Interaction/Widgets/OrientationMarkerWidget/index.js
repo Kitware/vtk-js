@@ -1,17 +1,12 @@
 import macro       from 'vtk.js/Sources/macro';
 import vtkRenderer from 'vtk.js/Sources/Rendering/Core/Renderer';
+import Constants   from 'vtk.js/Sources/Interaction/Widgets/OrientationMarkerWidget/Constants';
 
 // ----------------------------------------------------------------------------
 // vtkOrientationMarkerWidget
 // ----------------------------------------------------------------------------
 
-const CORNERS = {
-  TOP_LEFT: 'TOP_LEFT',
-  TOP_RIGHT: 'TOP_RIGHT',
-  BOTTOM_LEFT: 'BOTTOM_LEFT',
-  BOTTOM_RIGHT: 'BOTTOM_RIGHT',
-};
-
+// depends on Constants.Corners
 const VIEWPORTS = {
   TOP_LEFT: size => [0, (1 - size), size, 1],
   TOP_RIGHT: size => [(1 - size), (1 - size), 1, 1],
@@ -126,7 +121,7 @@ function vtkOrientationMarkerWidget(publicAPI, model) {
 export const DEFAULT_VALUES = {
   actor: null,
   interactor: null,
-  viewportCorner: CORNERS.BOTTOM_LEFT,
+  viewportCorner: Constants.Corners.BOTTOM_LEFT,
   viewportSize: 0.2,
 };
 
@@ -161,4 +156,4 @@ export const newInstance = macro.newInstance(extend, 'vtkOrientationMarkerWidget
 
 // ----------------------------------------------------------------------------
 
-export default Object.assign({ newInstance, extend }, CORNERS);
+export default Object.assign({ newInstance, extend }, Constants);
