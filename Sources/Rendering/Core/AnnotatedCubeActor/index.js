@@ -121,64 +121,21 @@ function vtkAnnotatedCubeActor(publicAPI, model) {
     updateAllFaceTextures();
   };
 
-  /**
-   * Sets edge thickness.
-   *
-   * Edge thickness is a value between 0.0 and 1.0, and represents
-   * the fraction of the face resolution to cover (for one edge).
-   */
   publicAPI.setEdgeThickness = (thickness) => {
     model.edgeThickness = Math.min(1, Math.max(0, thickness));
     updateAllFaceTextures();
   };
 
-  /**
-   * Sets the +X face property.
-   *
-   * This takes an object, where you can optionally set the face text
-   * or the face color, e.g. { text: 'Text', faceColor: '#0000ff' }.
-   */
+  publicAPI.setEdgeColor = (color) => {
+    model.edgeColor = color;
+    updateAllFaceTextures();
+  };
+
   publicAPI.setXPlusFaceProperty = prop => updateFaceTexture('xPlus', prop);
-
-  /**
-   * Sets the -X face property.
-   *
-   * This takes an object, where you can optionally set the face text
-   * or the face color, e.g. { text: 'Text', faceColor: '#0000ff' }.
-   */
   publicAPI.setXMinusFaceProperty = prop => updateFaceTexture('xMinus', prop);
-
-  /**
-   * Sets the +Y face property.
-   *
-   * This takes an object, where you can optionally set the face text
-   * or the face color, e.g. { text: 'Text', faceColor: '#0000ff' }.
-   */
-
   publicAPI.setYPlusFaceProperty = prop => updateFaceTexture('yPlus', prop);
-
-  /**
-   * Sets the -Y face property.
-   *
-   * This takes an object, where you can optionally set the face text
-   * or the face color, e.g. { text: 'Text', faceColor: '#0000ff' }.
-   */
   publicAPI.setYMinusFaceProperty = prop => updateFaceTexture('yMinus', prop);
-
-  /**
-   * Sets the +Z face property.
-   *
-   * This takes an object, where you can optionally set the face text
-   * or the face color, e.g. { text: 'Text', faceColor: '#0000ff' }.
-   */
   publicAPI.setZPlusFaceProperty = prop => updateFaceTexture('zPlus', prop);
-
-  /**
-   * Sets the -Z face property.
-   *
-   * This takes an object, where you can optionally set the face text
-   * or the face color, e.g. { text: 'Text', faceColor: '#0000ff' }.
-   */
   publicAPI.setZMinusFaceProperty = prop => updateFaceTexture('zMinus', prop);
 
   // constructor
