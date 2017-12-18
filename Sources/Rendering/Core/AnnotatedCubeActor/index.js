@@ -10,8 +10,8 @@ const FACE_TO_INDEX = {
   xMinus: 1,
   yPlus: 2,
   yMinus: 3,
-  zPlus: 5,
-  zMinus: 4,
+  zPlus: 4,
+  zMinus: 5,
 };
 
 // ----------------------------------------------------------------------------
