@@ -452,6 +452,9 @@ export function algo(publicAPI, model, numberOfInputs, numberOfOutputs) {
     model.inputArrayToProcess = [];
   }
 
+  // Cache the argument for later manipulation
+  model.numberOfInputs = numberOfInputs;
+
   // Methods
   function setInputData(dataset, port = 0) {
     if (model.deleted) {
@@ -501,6 +504,24 @@ export function algo(publicAPI, model, numberOfInputs, numberOfOutputs) {
     return model.inputConnection[port];
   }
 
+  function addInputConnection(outputPort) {
+    if (model.deleted) {
+      vtkErrorMacro('instance deleted - cannot call any method');
+      return;
+    }
+    model.numberOfInputs++;
+    setInputConnection(outputPort, model.numberOfInputs - 1);
+  }
+
+  function addInputData(dataset) {
+    if (model.deleted) {
+      vtkErrorMacro('instance deleted - cannot call any method');
+      return;
+    }
+    model.numberOfInputs++;
+    setInputData(dataset, model.numberOfInputs - 1);
+  }
+
   function getOutputData(port = 0) {
     if (model.deleted) {
       vtkErrorMacro('instance deleted - cannot call any method');
@@ -530,14 +551,14 @@ export function algo(publicAPI, model, numberOfInputs, numberOfOutputs) {
       }
     }
 
-    count = numberOfInputs;
+    count = model.numberOfInputs;
     while (count--) {
       if (model.inputConnection[count] && model.inputConnection[count].filter.shouldUpdate()) {
         return true;
       }
     }
 
-    count = numberOfInputs;
+    count = model.numberOfInputs;
     while (count--) {
       if (publicAPI.getInputData(count) && publicAPI.getInputData(count).getMTime() > minOutputMTime) {
         return true;
@@ -554,9 +575,9 @@ export function algo(publicAPI, model, numberOfInputs, numberOfOutputs) {
   }
 
   // Handle input if needed
-  if (numberOfInputs) {
+  if (model.numberOfInputs) {
     // Reserve inputs
-    let count = numberOfInputs;
+    let count = model.numberOfInputs;
     while (count--) {
       model.inputData.push(null);
       model.inputConnection.push(null);
@@ -565,6 +586,8 @@ export function algo(publicAPI, model, numberOfInputs, numberOfOutputs) {
     // Expose public methods
     publicAPI.setInputData = setInputData;
     publicAPI.setInputConnection = setInputConnection;
+    publicAPI.addInputData = addInputData;
+    publicAPI.addInputConnection = addInputConnection;
     publicAPI.getInputData = getInputData;
     publicAPI.getInputConnection = getInputConnection;
   }
@@ -576,9 +599,9 @@ export function algo(publicAPI, model, numberOfInputs, numberOfOutputs) {
 
   publicAPI.update = () => {
     const ins = [];
-    if (numberOfInputs) {
+    if (model.numberOfInputs) {
       let count = 0;
-      while (count < numberOfInputs) {
+      while (count < model.numberOfInputs) {
         ins[count] = publicAPI.getInputData(count);
         count++;
       }
@@ -588,7 +611,7 @@ export function algo(publicAPI, model, numberOfInputs, numberOfOutputs) {
     }
   };
 
-  publicAPI.getNumberOfInputPorts = () => numberOfInputs;
+  publicAPI.getNumberOfInputPorts = () => model.numberOfInputs;
   publicAPI.getNumberOfOutputPorts = () => numberOfOutputs;
 
   publicAPI.getInputArrayToProcess = (inputPort) => {
