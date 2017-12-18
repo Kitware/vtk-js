@@ -125,8 +125,8 @@ function vtkOrientationMarkerWidget(publicAPI, model) {
 // ----------------------------------------------------------------------------
 
 export const DEFAULT_VALUES = {
-  actor: null,
-  interactor: null,
+  // actor: null,
+  // interactor: null,
   viewportCorner: Constants.Corners.BOTTOM_LEFT,
   viewportSize: 0.2,
 };
