@@ -65,7 +65,7 @@ function vtkAnnotatedCubeActor(publicAPI, model) {
     ctxt.fillStyle = model.fontColor;
     ctxt.textAlign = 'center';
     ctxt.textBaseline = 'middle';
-    ctxt.font = `${model.fontStyle} ${textSize}px ${model.fontFamily}`;
+    ctxt.font = `${model.fontStyle} ${textSize}px "${model.fontFamily}"`;
     ctxt.fillText(prop.text, canvas.width / 2, canvas.height / 2);
 
     const vtkImage = ImageHelper.canvasToImageData(canvas);
