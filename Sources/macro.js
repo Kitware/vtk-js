@@ -704,13 +704,19 @@ export function event(publicAPI, model, eventName) {
   const callbacks = [];
   const previousDelete = publicAPI.delete;
 
-  function off(index) {
-    callbacks[index] = null;
+  function off(callback) {
+    for (let i = 0; i < callbacks.length; ++i) {
+      const [cb] = callbacks[i];
+      if (cb === callback) {
+        callbacks.splice(i, 1);
+        return;
+      }
+    }
   }
 
-  function on(index) {
+  function on(callback) {
     function unsubscribe() {
-      off(index);
+      off(callback);
     }
     return Object.freeze({ unsubscribe });
   }
@@ -722,9 +728,13 @@ export function event(publicAPI, model, eventName) {
     }
     /* eslint-disable prefer-rest-params */
     for (let index = 0; index < callbacks.length; ++index) {
-      const cb = callbacks[index];
+      const [cb] = callbacks[index];
       if (cb) {
-        cb.apply(publicAPI, arguments);
+        // Abort only if the callback explicitly returns false
+        const continueNext = cb.apply(publicAPI, arguments);
+        if (continueNext === false) {
+          break;
+        }
       }
     }
     /* eslint-enable prefer-rest-params */
@@ -732,15 +742,15 @@ export function event(publicAPI, model, eventName) {
 
   publicAPI[`invoke${capitalize(eventName)}`] = invoke;
 
-  publicAPI[`on${capitalize(eventName)}`] = (callback) => {
+  publicAPI[`on${capitalize(eventName)}`] = (callback, priority = 0.0) => {
     if (model.deleted) {
       vtkErrorMacro('instance deleted - cannot call any method');
       return null;
     }
 
-    const index = callbacks.length;
-    callbacks.push(callback);
-    return on(index);
+    callbacks.push([callback, priority]);
+    callbacks.sort(([cb1, pri1], [cb2, pri2]) => pri2 - pri1);
+    return on(callback);
   };
 
   publicAPI.delete = () => {
