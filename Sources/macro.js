@@ -738,6 +738,140 @@ export function debounce(func, wait, immediate) {
 }
 
 // ----------------------------------------------------------------------------
+// proxy(publicAPI, model, sectionName, propertyUI)
+//
+//    - sectionName: Name of the section for UI
+//    - propertyUI: List of props with their UI description
+//
+// Generated API
+//  getProxyId() : String
+//  listProxyProperties() : [string]
+//  updateProxyProperty(name, prop)
+//  getProxySection() => List of properties for UI generation
+// ----------------------------------------------------------------------------
+let nextProxyId = 1;
+
+function proxy(publicAPI, model, sectionName, uiDescription = []) {
+  // getProxyId
+  model.proxyId = `${nextProxyId++}`;
+  publicAPI.getProxyId = () => model.proxyId;
+
+  // list
+  const propertyNames = uiDescription.map(p => p.name);
+  publicAPI.listProxyProperties = () => propertyNames;
+
+  // ui handling
+  const ui = uiDescription.map(i => Object.assign({}, i));
+  publicAPI.updateProxyProperty = (propertyName, propUI) => {
+    const prop = ui.find(p => p.name === propertyName);
+    if (prop) {
+      Object.assign(prop, propUI);
+    }
+  };
+
+  // extract values
+  function getProperties() {
+    const values = [];
+    const id = model.proxyId;
+    for (let i = 0; i < propertyNames.length; i++) {
+      const name = propertyNames[i];
+      const value = publicAPI[`get${capitalize(name)}`]();
+      values.push({ id, name, value });
+    }
+    return values;
+  }
+
+  // ui section
+  publicAPI.getProxySection = () => ({
+    id: model.proxyId,
+    name: sectionName,
+    ui,
+    properties: getProperties(),
+  });
+}
+
+// ----------------------------------------------------------------------------
+// proxyPropertyMapping(publicAPI, model, map)
+//
+//   map = {
+//      opacity: { modelKey: 'property', property: 'opacity' },
+//   }
+//
+// Generated API:
+//  Elevate set/get methods from internal object stored in the model to current one
+// ----------------------------------------------------------------------------
+
+function proxyPropertyMapping(publicAPI, model, map) {
+  const propertyNames = Object.keys(map);
+  let count = propertyNames.length;
+  while (count--) {
+    const propertyName = propertyNames[count];
+    const { modelKey, property } = map[propertyName];
+    const methodSrc = capitalize(property);
+    const methodDst = capitalize(propertyName);
+    publicAPI[`get${methodDst}`] = model[modelKey][`get${methodSrc}`];
+    publicAPI[`set${methodDst}`] = model[modelKey][`set${methodSrc}`];
+  }
+}
+
+// ----------------------------------------------------------------------------
+// proxyPropertyState(publicAPI, model, state, defaults)
+//
+//   state = {
+//     representation: {
+//       'Surface with edges': { property: { edgeVisibility: true, representation: 2 } },
+//       Surface: { property: { edgeVisibility: false, representation: 2 } },
+//       Wireframe: { property: { edgeVisibility: false, representation: 1 } },
+//       Points: { property: { edgeVisibility: false, representation: 0 } },
+//     },
+//   }
+//
+//   defaults = {
+//      representation: 'Surface',
+//   }
+//
+// Generated API
+//   get / set Representation ( string ) => push state to various internal objects
+// ----------------------------------------------------------------------------
+
+function proxyPropertyState(publicAPI, model, state = {}, defaults = {}) {
+  model.this = publicAPI;
+
+  function applyState(map) {
+    const modelKeys = Object.keys(map);
+    let count = modelKeys.length;
+    while (count--) {
+      const modelKey = modelKeys[count];
+      model[modelKey].set(map[modelKey]);
+    }
+  }
+
+  const modelKeys = Object.keys(defaults);
+  let count = modelKeys.length;
+  while (count--) {
+    // Add default
+    const key = modelKeys[count];
+    model[key] = defaults[key];
+
+    // Add set method
+    const mapping = state[key];
+    publicAPI[`set${capitalize(key)}`] = (value) => {
+      if (value !== model[key]) {
+        model[key] = value;
+        const propValues = mapping[value];
+        applyState(propValues);
+        publicAPI.modified();
+      }
+    };
+  }
+
+  // Add getter
+  if (modelKeys.length) {
+    get(publicAPI, model, modelKeys);
+  }
+}
+
+// ----------------------------------------------------------------------------
 // Default export
 // ----------------------------------------------------------------------------
 
@@ -767,4 +901,7 @@ export default {
   vtkLogMacro,
   vtkWarningMacro,
   debounce,
+  proxy,
+  proxyPropertyMapping,
+  proxyPropertyState,
 };
