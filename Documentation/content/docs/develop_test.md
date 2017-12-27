@@ -117,3 +117,17 @@ $ npm run test:debug
 This will automatically open a browser and run the test. But you can manually open `http://localhost:9876/debug.html` with any browser and start debugging.
 
 Moreover, when doing some rendering that's a great way for building your baseline image.
+
+## Creating a new baseline image
+
+Follow the following procedure to create a new baseline or change an existing baseline for a test.
+
+- Add an invalid baseline (any PNG file) and rename it as the required baseline.
+  For example, to create a baseline for `testCylinder.js` copy *testCone.png* to *Sources/Filters/Sources/CylinderSource/test/testCylinder.png*.
+- Run the test as per [Running a single test for debugging](#Running-a-single-test-for-debugging). The test should fail because of the invalid baseline. 
+- The test execution creates a file **Documentation/content/coverage/tests.md**.
+  Rename this file as **tests.html** and open it in the browser.
+- The file should show the test output versus the invalid baseline image.
+  Right-click on the test output image and save it as the valid baseline.
+- Re-run the test to ensure that it passes with the valid baseline.
+- Commit the baseline image to the git source tree. 
