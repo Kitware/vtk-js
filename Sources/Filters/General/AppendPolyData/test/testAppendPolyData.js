@@ -1,10 +1,24 @@
 import test               from 'tape-catch';
+import testUtils from 'vtk.js/Sources/Testing/testUtils';
 
 import vtkAppendPolyData  from 'vtk.js/Sources/Filters/General/AppendPolyData';
 import vtkConeSource      from 'vtk.js/Sources/Filters/Sources/ConeSource';
 import vtkCylinderSource  from 'vtk.js/Sources/Filters/Sources/CylinderSource';
+import vtkPlaneSource     from 'vtk.js/Sources/Filters/Sources/PlaneSource';
+import vtkCalculator      from 'vtk.js/Sources/Filters/General/Calculator';
 
-import { VtkDataTypes } from 'vtk.js/Sources/Common/Core/DataArray/Constants';
+import vtkActor               from 'vtk.js/Sources/Rendering/Core/Actor';
+import vtkDataArray           from 'vtk.js/Sources/Common/Core/DataArray';
+import vtkMapper              from 'vtk.js/Sources/Rendering/Core/Mapper';
+import vtkOpenGLRenderWindow  from 'vtk.js/Sources/Rendering/OpenGL/RenderWindow';
+import vtkRenderWindow        from 'vtk.js/Sources/Rendering/Core/RenderWindow';
+import vtkRenderer            from 'vtk.js/Sources/Rendering/Core/Renderer';
+
+import { VtkDataTypes }       from 'vtk.js/Sources/Common/Core/DataArray/Constants';
+import { AttributeTypes }     from 'vtk.js/Sources/Common/DataModel/DataSetAttributes/Constants';
+import { FieldDataTypes }     from 'vtk.js/Sources/Common/DataModel/DataSet/Constants';
+
+import baseline from './testAppendPolyData.png';
 
 const PointPrecision = vtkAppendPolyData;
 
@@ -61,15 +75,37 @@ test.onlyIfWebGL('Test vtkAppendPolyData rendering', (t) => {
   const mapper = gc.registerResource(vtkMapper.newInstance());
   actor.setMapper(mapper);
 
+  const calc = vtkCalculator.newInstance();
+  calc.setFormula({
+    getArrays: inputDataSets => ({
+      input: [],
+      output: [
+        { location: FieldDataTypes.POINT,
+          name: 'Scalars',
+          dataType: 'Float32Array',
+          attribute: AttributeTypes.SCALARS },
+      ],
+    }),
+    evaluate: (arraysIn, arraysOut) => {
+      const [scalars] = arraysOut.map(d => d.getData());
+      for (let i = 0; i < scalars.length; i++) {
+        scalars[i] = i * 0.01;
+      }
+    },
+  });
+
   const plane = vtkPlaneSource.newInstance({ xResolution: 5, yResolution: 10 });
+  calc.setInputConnection(plane.getOutputPort());
+  const planeData = calc.getOutputData();
   const plane2 = vtkPlaneSource.newInstance({ xResolution: 10, yResolution: 5 });
   plane2.setOrigin(0.5, 0, -0.5);
   plane2.setPoint1(0.5, 0, 0.5);
   plane2.setPoint2(0.5, 1, -0.5);
+  calc.setInputConnection(plane2.getOutputPort());
 
   const filter = vtkAppendPolyData.newInstance();
-  filter.setInputConnection(plane.getOutputPort());
-  filter.addInputConnection(plane2.getOutputPort());
+  filter.setInputConnection(calc.getOutputPort());
+  filter.addInputData(planeData);
   mapper.setInputConnection(filter.getOutputPort());
 
   // now create something to view it, in this case webgl

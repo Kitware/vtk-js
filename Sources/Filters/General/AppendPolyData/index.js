@@ -141,8 +141,8 @@ function vtkAppendPolyData(publicAPI, model) {
       const dsScalars = lds.getPointData().getScalars();
       newPtScalars = vtkDataArray.newInstance({
         numberOfComponents: dsScalars.getNumberOfComponents(),
-        numberOfTuples: dsScalars.getNumberOfTuples(),
-        size: dsScalars.getNumberOfValues(),
+        numberOfTuples: numPts,
+        size: numPts * dsScalars.getNumberOfComponents(),
         dataType: dsScalars.getDataType(),
         name: dsScalars.getName() });
     }
