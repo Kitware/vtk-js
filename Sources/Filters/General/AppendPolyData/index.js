@@ -1,4 +1,5 @@
 import macro            from 'vtk.js/Sources/macro';
+import vtkDataArray     from 'vtk.js/Sources/Common/Core/DataArray';
 import vtkPoints        from 'vtk.js/Sources/Common/Core/Points';
 import vtkPolyData      from 'vtk.js/Sources/Common/DataModel/PolyData';
 import { VtkDataTypes } from 'vtk.js/Sources/Common/Core/DataArray/Constants';
@@ -59,6 +60,11 @@ function vtkAppendPolyData(publicAPI, model) {
     let numStrips = 0;
     let numPolys = 0;
 
+    // Field data is propogated to output only if present in all inputs
+    let hasPtNormals = true; // assume present by default
+    let hasPtTCoords = true;
+    let hasPtScalars = true;
+
     for (let i = 0; i < numberOfInputs; i++) {
       const ds = inData[i];
       if (!ds) {
@@ -80,6 +86,17 @@ function vtkAppendPolyData(publicAPI, model) {
         ttype = ds.getPoints().getDataType();
         pointType = pointType > ttype ? pointType : ttype;
       }
+
+      const ptD = ds.getPointData();
+      if (ptD) {
+        hasPtNormals = hasPtNormals && (ptD.getNormals() !== null);
+        hasPtTCoords = hasPtTCoords && (ptD.getTCoords() !== null);
+        hasPtScalars = hasPtScalars && (ptD.getScalars() !== null);
+      } else {
+        hasPtNormals = false;
+        hasPtTCoords = false;
+        hasPtScalars = false;
+      }
     }
 
     if (model.outputPointsPrecision === PointPrecision.SINGLE) {
@@ -97,6 +114,39 @@ function vtkAppendPolyData(publicAPI, model) {
     const stripData = new Uint32Array(numStrips);
     const polyData = new Uint32Array(numPolys);
 
+    let newPtNormals = null;
+    let newPtTCoords = null;
+    let newPtScalars = null;
+
+    const lds = inData[numberOfInputs - 1];
+    if (hasPtNormals) {
+      const dsNormals = lds.getPointData().getNormals();
+      newPtNormals = vtkDataArray.newInstance({
+        numberOfComponents: 3,
+        numberOfTuples: numPts,
+        size: 3 * numPts,
+        dataType: dsNormals.getDataType(),
+        name: dsNormals.getName() });
+    }
+    if (hasPtTCoords) {
+      const dsTCoords = lds.getPointData().getTCoords();
+      newPtTCoords = vtkDataArray.newInstance({
+        numberOfComponents: 2,
+        numberOfTuples: numPts,
+        size: 2 * numPts,
+        dataType: dsTCoords.getDataType(),
+        name: dsTCoords.getName() });
+    }
+    if (hasPtScalars) {
+      const dsScalars = lds.getPointData().getScalars();
+      newPtScalars = vtkDataArray.newInstance({
+        numberOfComponents: dsScalars.getNumberOfComponents(),
+        numberOfTuples: dsScalars.getNumberOfTuples(),
+        size: dsScalars.getNumberOfValues(),
+        dataType: dsScalars.getDataType(),
+        name: dsScalars.getName() });
+    }
+
     numPts = 0;
     numVerts = 0;
     numLines = 0;
@@ -113,6 +163,22 @@ function vtkAppendPolyData(publicAPI, model) {
       numStrips += ds.getStrips().getNumberOfValues();
       appendCellData(polyData, ds.getPolys().getData(), numPts, numPolys);
       numPolys += ds.getPolys().getNumberOfValues();
+
+      const dsPD = ds.getPointData();
+      if (hasPtNormals) {
+        const ptNorms = dsPD.getNormals();
+        newPtNormals.getData().set(ptNorms.getData(), numPts * 3);
+      }
+      if (hasPtTCoords) {
+        const ptTCoords = dsPD.getTCoords();
+        newPtTCoords.getData().set(ptTCoords.getData(), numPts * 2);
+      }
+      if (hasPtScalars) {
+        const ptScalars = dsPD.getScalars();
+        newPtScalars.getData().set(ptScalars.getData(),
+                                   numPts * newPtScalars.getNumberOfComponents());
+      }
+
       numPts += ds.getPoints().getNumberOfPoints();
     }
 
@@ -121,6 +187,15 @@ function vtkAppendPolyData(publicAPI, model) {
     output.getLines().setData(lineData);
     output.getStrips().setData(stripData);
     output.getPolys().setData(polyData);
+    if (newPtNormals) {
+      output.getPointData().setNormals(newPtNormals);
+    }
+    if (newPtTCoords) {
+      output.getPointData().setTCoords(newPtTCoords);
+    }
+    if (newPtScalars) {
+      output.getPointData().setScalars(newPtScalars);
+    }
     outData[0] = output;
   };
 }
