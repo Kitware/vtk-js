@@ -25,12 +25,17 @@ function vtkArrowSource(publicAPI, model) {
 
     const cylinderPD = cylinder.getOutputData();
     const cylinderPts = cylinderPD.getPoints().getData();
+    const cylinderNormals = cylinderPD.getPointData().getNormals().getData();
 
     // Apply transformation to the cylinder
     vtkMatrixBuilder
       .buildFromDegree()
       .rotateZ(-90)
       .apply(cylinderPts);
+    vtkMatrixBuilder
+      .buildFromDegree()
+      .rotateZ(-90)
+      .apply(cylinderNormals);
 
     const cone = vtkConeSource.newInstance();
     cone.setResolution(model.tipResolution);
