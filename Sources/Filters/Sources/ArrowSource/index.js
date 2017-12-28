@@ -31,10 +31,7 @@ function vtkArrowSource(publicAPI, model) {
     vtkMatrixBuilder
       .buildFromDegree()
       .rotateZ(-90)
-      .apply(cylinderPts);
-    vtkMatrixBuilder
-      .buildFromDegree()
-      .rotateZ(-90)
+      .apply(cylinderPts)
       .apply(cylinderNormals);
 
     const cone = vtkConeSource.newInstance();
