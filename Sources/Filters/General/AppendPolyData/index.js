@@ -4,13 +4,10 @@ import vtkPoints        from 'vtk.js/Sources/Common/Core/Points';
 import vtkPolyData      from 'vtk.js/Sources/Common/DataModel/PolyData';
 import { VtkDataTypes } from 'vtk.js/Sources/Common/Core/DataArray/Constants';
 
-const { vtkErrorMacro } = macro;
+import Constants        from 'vtk.js/Sources/Filters/General/AppendPolyData/Constants';
 
-export const PointPrecision = {
-  DEFAULT: 0, // use the point type that does not truncate any data
-  SINGLE: 1,  // use Float32Array
-  DOUBLE: 2,  // use Float64Array
-};
+const { PointPrecision } = Constants;
+const { vtkErrorMacro } = macro;
 
 function offsetCellArray(typedArray, offset) {
   let currentIdx = 0;
@@ -157,7 +154,7 @@ function vtkAppendPolyData(publicAPI, model) {
       pointData.set(ds.getPoints().getData(), numPts * 3);
       appendCellData(vertData, ds.getVerts().getData(), numPts, numVerts);
       numVerts += ds.getVerts().getNumberOfValues();
-      appendCellData(vertData, ds.getLines().getData(), numPts, numLines);
+      appendCellData(lineData, ds.getLines().getData(), numPts, numLines);
       numLines += ds.getLines().getNumberOfValues();
       appendCellData(stripData, ds.getStrips().getData(), numPts, numStrips);
       numStrips += ds.getStrips().getNumberOfValues();
@@ -235,4 +232,4 @@ export const newInstance = macro.newInstance(extend, 'vtkAppendPolyData');
 
 // ----------------------------------------------------------------------------
 
-export default { newInstance, extend };
+export default Object.assign({ newInstance, extend }, Constants);
