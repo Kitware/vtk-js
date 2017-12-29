@@ -83,7 +83,8 @@ class Transform {
       && IDENTITY[13] === this.matrix[13]
       && IDENTITY[14] === this.matrix[14]
       && IDENTITY[15] === this.matrix[15]) {
-      return;
+      // Make sure we can chain apply...
+      return this;
     }
 
     const size = (nbIterations === -1) ? typedArray.length : offset + (nbIterations * 3);
@@ -94,6 +95,9 @@ class Transform {
       typedArray[i + 1] = this.tmp[1];
       typedArray[i + 2] = this.tmp[2];
     }
+
+    // Make sure we can chain apply...
+    return this;
   }
 
   getMatrix() {
