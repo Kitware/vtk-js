@@ -942,7 +942,7 @@ function proxyPropertyMapping(publicAPI, model, map) {
       subscriptions.pop().unsubscribe();
     }
     parentDelete();
-  }
+  };
 }
 
 // ----------------------------------------------------------------------------
