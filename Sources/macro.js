@@ -789,6 +789,8 @@ export function debounce(func, wait, immediate) {
 let nextProxyId = 1;
 
 function proxy(publicAPI, model, sectionName, uiDescription = []) {
+  const parentDelete = publicAPI.delete;
+
   // getProxyId
   model.proxyId = `${nextProxyId++}`;
   publicAPI.getProxyId = () => model.proxyId;
@@ -804,6 +806,77 @@ function proxy(publicAPI, model, sectionName, uiDescription = []) {
     if (prop) {
       Object.assign(prop, propUI);
     }
+  };
+
+  // property link
+  model.propertyLinkMap = {};
+  publicAPI.getPropertyLink = (id) => {
+    if (model.propertyLinkMap[id]) {
+      return model.propertyLinkMap[id];
+    }
+    let value = null;
+    const links = [];
+    let count = 0;
+    let updateInProgress = false;
+
+    function update(source) {
+      if (updateInProgress) {
+        return;
+      }
+
+      const needUpdate = [];
+      let sourceLink = null;
+      count = links.length;
+      while (count--) {
+        const link = links[count];
+        if (link.instance === source) {
+          sourceLink = link;
+        } else {
+          needUpdate.push(link);
+        }
+      }
+
+      const newValue = sourceLink.instance[`get${capitalize(sourceLink.propertyName)}`]();
+      if (newValue !== value) {
+        value = newValue;
+        updateInProgress = true;
+        while (needUpdate.length) {
+          const linkToUpdate = needUpdate.pop();
+          linkToUpdate.instance.set({ [linkToUpdate.propertyName]: value });
+        }
+        updateInProgress = false;
+      }
+    }
+
+    function bind(instance, propertyName) {
+      const subscription = instance.onModified(update);
+      links.push({ instance, propertyName, subscription });
+    }
+
+    function unbind(instance, propertyName) {
+      const indexToDelete = [];
+      count = links.length;
+      while (count--) {
+        const link = links[count];
+        if (link.instance === instance && link.propertyName === propertyName) {
+          link.subscription.unsubscribe();
+          indexToDelete.push(count);
+        }
+      }
+      while (indexToDelete.length) {
+        links.splice(indexToDelete.pop(), 1);
+      }
+    }
+
+    function unsubscribe() {
+      while (links.length) {
+        links.pop().subscription.unsubscribe();
+      }
+    }
+
+    const linkHandler = { bind, unbind, unsubscribe };
+    model.propertyLinkMap[id] = linkHandler;
+    return linkHandler;
   };
 
   // extract values
@@ -825,6 +898,16 @@ function proxy(publicAPI, model, sectionName, uiDescription = []) {
     ui,
     properties: getProperties(),
   });
+
+  // free resources
+  publicAPI.delete = () => {
+    const list = Object.keys(model.propertyLinkMap);
+    let count = list.length;
+    while (count--) {
+      model.propertyLinkMap[list[count]].unsubscribe();
+    }
+    parentDelete();
+  };
 }
 
 // ----------------------------------------------------------------------------
@@ -839,6 +922,9 @@ function proxy(publicAPI, model, sectionName, uiDescription = []) {
 // ----------------------------------------------------------------------------
 
 function proxyPropertyMapping(publicAPI, model, map) {
+  const parentDelete = publicAPI.delete;
+  const subscriptions = [];
+
   const propertyNames = Object.keys(map);
   let count = propertyNames.length;
   while (count--) {
@@ -848,6 +934,14 @@ function proxyPropertyMapping(publicAPI, model, map) {
     const methodDst = capitalize(propertyName);
     publicAPI[`get${methodDst}`] = model[modelKey][`get${methodSrc}`];
     publicAPI[`set${methodDst}`] = model[modelKey][`set${methodSrc}`];
+    subscriptions.push(model[modelKey].onModified(publicAPI.modified));
+  }
+
+  publicAPI.delete = () => {
+    while (subscriptions.length) {
+      subscriptions.pop().unsubscribe();
+    }
+    parentDelete();
   }
 }
 
