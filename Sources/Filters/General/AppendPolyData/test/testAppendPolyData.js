@@ -16,10 +16,9 @@ import vtkRenderer from 'vtk.js/Sources/Rendering/Core/Renderer';
 import { VtkDataTypes } from 'vtk.js/Sources/Common/Core/DataArray/Constants';
 import { AttributeTypes } from 'vtk.js/Sources/Common/DataModel/DataSetAttributes/Constants';
 import { FieldDataTypes } from 'vtk.js/Sources/Common/DataModel/DataSet/Constants';
+import { PointPrecision } from 'vtk.js/Sources/Filters/General/Constants';
 
 import baseline from './testAppendPolyData.png';
-
-const PointPrecision = vtkAppendPolyData;
 
 test('Test vtkAppendPolyData instance', (t) => {
   t.ok(vtkAppendPolyData, 'Make sure the class definition exists.');

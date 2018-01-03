@@ -1,10 +1,9 @@
+import Constants from 'vtk.js/Sources/Filters/General/Constants';
 import macro from 'vtk.js/Sources/macro';
 import vtkDataArray from 'vtk.js/Sources/Common/Core/DataArray';
 import vtkPoints from 'vtk.js/Sources/Common/Core/Points';
 import vtkPolyData from 'vtk.js/Sources/Common/DataModel/PolyData';
 import { VtkDataTypes } from 'vtk.js/Sources/Common/Core/DataArray/Constants';
-
-import Constants from 'vtk.js/Sources/Filters/General/AppendPolyData/Constants';
 
 const { PointPrecision } = Constants;
 const { vtkErrorMacro } = macro;
@@ -237,4 +236,4 @@ export const newInstance = macro.newInstance(extend, 'vtkAppendPolyData');
 
 // ----------------------------------------------------------------------------
 
-export default Object.assign({ newInstance, extend }, Constants);
+export default Object.assign({ newInstance, extend });
