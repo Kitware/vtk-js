@@ -8,7 +8,6 @@ import vtkPlaneSource     from 'vtk.js/Sources/Filters/Sources/PlaneSource';
 import vtkCalculator      from 'vtk.js/Sources/Filters/General/Calculator';
 
 import vtkActor               from 'vtk.js/Sources/Rendering/Core/Actor';
-import vtkDataArray           from 'vtk.js/Sources/Common/Core/DataArray';
 import vtkMapper              from 'vtk.js/Sources/Rendering/Core/Mapper';
 import vtkOpenGLRenderWindow  from 'vtk.js/Sources/Rendering/OpenGL/RenderWindow';
 import vtkRenderWindow        from 'vtk.js/Sources/Rendering/Core/RenderWindow';
