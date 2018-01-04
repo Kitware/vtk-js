@@ -589,13 +589,11 @@ function vtkOpenGLImageMapper(publicAPI, model) {
         values: cellArray,
       });
 
-      model.tris
-        .getCABO()
-        .createVBO(cells, 'polys', Representation.SURFACE, {
-          points,
-          tcoords,
-          cellOffset: 0,
-        });
+      model.tris.getCABO().createVBO(cells, 'polys', Representation.SURFACE, {
+        points,
+        tcoords,
+        cellOffset: 0,
+      });
       model.VBOBuildTime.modified();
       model.VBOBuildString = toString;
     }
