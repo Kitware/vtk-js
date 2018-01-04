@@ -40,12 +40,8 @@ function createArray(size = 3) {
 const Pi = () => Math.PI;
 const radiansFromDegrees = (deg) => deg / 180 * Math.PI;
 const degreesFromRadians = (rad) => rad * 180 / Math.PI;
-const round = Math.round;
-const floor = Math.floor;
-const ceil = Math.ceil;
+const { round, floor, ceil, min, max } = Math;
 const ceilLog2 = notImplemented('ceilLog2');
-const min = Math.min;
-const max = Math.max;
 const factorial = notImplemented('factorial');
 
 function nearestPowerOfTwo(xi) {
@@ -304,13 +300,13 @@ function gaussianAmplitude(mean, variance, position) {
   return (
     1 /
     Math.sqrt(2 * Math.PI * variance) *
-    Math.exp(-Math.pow(distanceFromMean, 2) / (2 * variance))
+    Math.exp(-(distanceFromMean ** 2) / (2 * variance))
   );
 }
 
 function gaussianWeight(mean, variance, position) {
   const distanceFromMean = Math.abs(mean - position);
-  return Math.exp(-Math.pow(distanceFromMean, 2) / (2 * variance));
+  return Math.exp(-(distanceFromMean ** 2) / (2 * variance));
 }
 
 function outer2D(x, y, out_2x2) {
@@ -1675,20 +1671,20 @@ function lab2xyz(lab, xyz) {
   let var_X = a / 500 + var_Y;
   let var_Z = var_Y - b / 200;
 
-  if (Math.pow(var_Y, 3) > 0.008856) {
-    var_Y = Math.pow(var_Y, 3);
+  if (var_Y ** 3 > 0.008856) {
+    var_Y **= 3;
   } else {
     var_Y = (var_Y - 16.0 / 116.0) / 7.787;
   }
 
-  if (Math.pow(var_X, 3) > 0.008856) {
-    var_X = Math.pow(var_X, 3);
+  if (var_X ** 3 > 0.008856) {
+    var_X **= 3;
   } else {
     var_X = (var_X - 16.0 / 116.0) / 7.787;
   }
 
-  if (Math.pow(var_Z, 3) > 0.008856) {
-    var_Z = Math.pow(var_Z, 3);
+  if (var_Z ** 3 > 0.008856) {
+    var_Z **= 3;
   } else {
     var_Z = (var_Z - 16.0 / 116.0) / 7.787;
   }
@@ -1709,11 +1705,11 @@ function xyz2lab(xyz, lab) {
   let var_Y = y / ref_Y; // ref_Y = 1.000
   let var_Z = z / ref_Z; // ref_Z = 1.089
 
-  if (var_X > 0.008856) var_X = Math.pow(var_X, 1.0 / 3.0);
+  if (var_X > 0.008856) var_X **= 1.0 / 3.0;
   else var_X = 7.787 * var_X + 16.0 / 116.0;
-  if (var_Y > 0.008856) var_Y = Math.pow(var_Y, 1.0 / 3.0);
+  if (var_Y > 0.008856) var_Y **= 1.0 / 3.0;
   else var_Y = 7.787 * var_Y + 16.0 / 116.0;
-  if (var_Z > 0.008856) var_Z = Math.pow(var_Z, 1.0 / 3.0);
+  if (var_Z > 0.008856) var_Z **= 1.0 / 3.0;
   else var_Z = 7.787 * var_Z + 16.0 / 116.0;
 
   lab[0] = 116 * var_Y - 16;
@@ -1735,11 +1731,11 @@ function xyz2rgb(xyz, rgb) {
   // several applications including Adobe Photoshop and Microsoft Windows color
   // management.  OpenGL is agnostic on its RGB color space, but it is reasonable
   // to assume it is close to this one.
-  if (r > 0.0031308) r = 1.055 * Math.pow(r, 1 / 2.4) - 0.055;
+  if (r > 0.0031308) r = 1.055 * r ** (1 / 2.4) - 0.055;
   else r *= 12.92;
-  if (g > 0.0031308) g = 1.055 * Math.pow(g, 1 / 2.4) - 0.055;
+  if (g > 0.0031308) g = 1.055 * g ** (1 / 2.4) - 0.055;
   else g *= 12.92;
-  if (b > 0.0031308) b = 1.055 * Math.pow(b, 1 / 2.4) - 0.055;
+  if (b > 0.0031308) b = 1.055 * b ** (1 / 2.4) - 0.055;
   else b *= 12.92;
 
   // Clip colors. ideally we would do something that is perceptually closest
@@ -1773,11 +1769,11 @@ function rgb2xyz(rgb, xyz) {
   // several applications including Adobe Photoshop and Microsoft Windows color
   // management.  OpenGL is agnostic on its RGB color space, but it is reasonable
   // to assume it is close to this one.
-  if (r > 0.04045) r = Math.pow((r + 0.055) / 1.055, 2.4);
+  if (r > 0.04045) r = ((r + 0.055) / 1.055) ** 2.4;
   else r /= 12.92;
-  if (g > 0.04045) g = Math.pow((g + 0.055) / 1.055, 2.4);
+  if (g > 0.04045) g = ((g + 0.055) / 1.055) ** 2.4;
   else g /= 12.92;
-  if (b > 0.04045) b = Math.pow((b + 0.055) / 1.055, 2.4);
+  if (b > 0.04045) b = ((b + 0.055) / 1.055) ** 2.4;
   else b /= 12.92;
 
   // Observer. = 2 deg, Illuminant = D65
@@ -1935,8 +1931,7 @@ const inf = Infinity;
 const negInf = -Infinity;
 
 const isInf = (value) => !Number.isFinite(value);
-const isNan = Number.isNaN;
-const isFinite = Number.isFinite;
+const { isFinite, isNaN } = Number.isFinite;
 
 // JavaScript - add-on ----------------------
 
@@ -2043,7 +2038,8 @@ export default {
   inf,
   negInf,
   isInf,
-  isNan,
+  isNan: isNaN,
+  isNaN,
   isFinite,
 
   // JS add-on
