@@ -3,19 +3,7 @@ import macro from 'vtk.js/Sources/macro';
 const { vtkErrorMacro } = macro;
 
 // ----------------------------------------------------------------------------
-// Global methods
-// ----------------------------------------------------------------------------
-/* eslint-disable no-continue                                                */
-
-// Add module-level functions or api that you want to expose statically via
-// the next section...
-
-// ----------------------------------------------------------------------------
-// Static API
-// ----------------------------------------------------------------------------
-
-// ----------------------------------------------------------------------------
-// vtkMyClass methods
+// vtkPiecewiseFunction methods
 // ----------------------------------------------------------------------------
 
 function vtkPiecewiseFunction(publicAPI, model) {
@@ -401,6 +389,8 @@ function vtkPiecewiseFunction(publicAPI, model) {
   };
 
   // Returns a table of function values evaluated at regular intervals
+  /* eslint-disable prefer-destructuring */
+  /* eslint-disable no-continue */
   publicAPI.getTable = (xStart, xEnd, size, table, stride) => {
     let i;
     let idx = 0;
@@ -518,9 +508,9 @@ function vtkPiecewiseFunction(publicAPI, model) {
         // First, we will adjust our position based on sharpness in
         // order to make the curve sharper (closer to piecewise constant)
         if (s < 0.5) {
-          s = 0.5 * Math.pow(s * 2, 1.0 + 10 * sharpness);
+          s = 0.5 * (s * 2) ** (1.0 + 10 * sharpness);
         } else if (s > 0.5) {
-          s = 1.0 - 0.5 * Math.pow((1.0 - s) * 2, 1 + 10 * sharpness);
+          s = 1.0 - 0.5 * ((1.0 - s) * 2) ** (1 + 10 * sharpness);
         }
 
         // Compute some coefficients we will need for the hermite curve
@@ -550,6 +540,8 @@ function vtkPiecewiseFunction(publicAPI, model) {
     }
   };
 }
+/* eslint-enable prefer-destructuring */
+/* eslint-enable no-continue */
 
 // ----------------------------------------------------------------------------
 // Object factory
