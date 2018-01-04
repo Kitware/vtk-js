@@ -6,6 +6,7 @@ module.exports = {
     'no-multi-spaces': ["error", { exceptions: { "ImportDeclaration": true } }],
     'no-param-reassign': ["error", { props: false }],
     'no-unused-vars': ["error", { args: 'none' }],
+    'import/no-extraneous-dependencies': 0, // Needed for tests
     // 'no-mixed-operators': 'error',
 
     // Should fix that at some point

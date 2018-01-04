@@ -41,29 +41,29 @@ const loggerFunctions = {
   warn: global.console.warn || noOp,
 };
 
-function setLoggerFunction(name, fn) {
+export function setLoggerFunction(name, fn) {
   if (loggerFunctions[name]) {
     loggerFunctions[name] = fn || noOp;
   }
 }
 
-function vtkLogMacro(...args) {
+export function vtkLogMacro(...args) {
   loggerFunctions.log(...args);
 }
 
-function vtkInfoMacro(...args) {
+export function vtkInfoMacro(...args) {
   loggerFunctions.info(...args);
 }
 
-function vtkDebugMacro(...args) {
+export function vtkDebugMacro(...args) {
   loggerFunctions.debug(...args);
 }
 
-function vtkErrorMacro(...args) {
+export function vtkErrorMacro(...args) {
   loggerFunctions.error(...args);
 }
 
-function vtkWarningMacro(...args) {
+export function vtkWarningMacro(...args) {
   loggerFunctions.warn(...args);
 }
 
@@ -71,7 +71,7 @@ function vtkWarningMacro(...args) {
 // capitilze provided string
 // ----------------------------------------------------------------------------
 
-function capitalize(str) {
+export function capitalize(str) {
   return str.charAt(0).toUpperCase() + str.slice(1);
 }
 
@@ -104,7 +104,7 @@ function getStateArrayMapFunc(item) {
 // vtkObject: modified(), onModified(callback), delete()
 // ----------------------------------------------------------------------------
 
-function obj(publicAPI = {}, model = {}) {
+export function obj(publicAPI = {}, model = {}) {
   // Ensure each instance as a unique ref of array
   safeArrays(model);
 
@@ -278,7 +278,7 @@ function obj(publicAPI = {}, model = {}) {
 // getXXX: add getters
 // ----------------------------------------------------------------------------
 
-function get(publicAPI, model, fieldNames) {
+export function get(publicAPI, model, fieldNames) {
   fieldNames.forEach((field) => {
     if (typeof field === 'object') {
       publicAPI[`get${capitalize(field.name)}`] = () => model[field.name];
@@ -358,7 +358,7 @@ function findSetter(field) {
   };
 }
 
-function set(publicAPI, model, fields) {
+export function set(publicAPI, model, fields) {
   fields.forEach((field) => {
     if (typeof field === 'object') {
       publicAPI[`set${capitalize(field.name)}`] = findSetter(field)(
@@ -378,7 +378,7 @@ function set(publicAPI, model, fields) {
 // set/get XXX: add both setters and getters
 // ----------------------------------------------------------------------------
 
-function setGet(publicAPI, model, fieldNames) {
+export function setGet(publicAPI, model, fieldNames) {
   get(publicAPI, model, fieldNames);
   set(publicAPI, model, fieldNames);
 }
@@ -388,7 +388,7 @@ function setGet(publicAPI, model, fieldNames) {
 // getXXXByReference: add getters for object of type array without copy
 // ----------------------------------------------------------------------------
 
-function getArray(publicAPI, model, fieldNames) {
+export function getArray(publicAPI, model, fieldNames) {
   fieldNames.forEach((field) => {
     publicAPI[`get${capitalize(field)}`] = () => [].concat(model[field]);
     publicAPI[`get${capitalize(field)}ByReference`] = () => model[field];
@@ -401,7 +401,13 @@ function getArray(publicAPI, model, fieldNames) {
 // set...From: fast path to copy the content of an array to the current one without call to modified.
 // ----------------------------------------------------------------------------
 
-function setArray(publicAPI, model, fieldNames, size, defaultVal = undefined) {
+export function setArray(
+  publicAPI,
+  model,
+  fieldNames,
+  size,
+  defaultVal = undefined
+) {
   fieldNames.forEach((field) => {
     publicAPI[`set${capitalize(field)}`] = (...args) => {
       if (model.deleted) {
@@ -455,7 +461,7 @@ function setArray(publicAPI, model, fieldNames, size, defaultVal = undefined) {
 // set/get XXX: add setter and getter for object of type array
 // ----------------------------------------------------------------------------
 
-function setGetArray(
+export function setGetArray(
   publicAPI,
   model,
   fieldNames,
@@ -470,7 +476,7 @@ function setGetArray(
 // vtkAlgorithm: setInputData(), setInputConnection(), getOutput(), getOutputPort()
 // ----------------------------------------------------------------------------
 
-function algo(publicAPI, model, numberOfInputs, numberOfOutputs) {
+export function algo(publicAPI, model, numberOfInputs, numberOfOutputs) {
   if (model.inputData) {
     model.inputData = model.inputData.map(vtk);
   } else {
@@ -694,7 +700,7 @@ function algo(publicAPI, model, numberOfInputs, numberOfOutputs) {
 // Event handling: onXXX(callback), invokeXXX(args...)
 // ----------------------------------------------------------------------------
 
-function event(publicAPI, model, eventName) {
+export function event(publicAPI, model, eventName) {
   const callbacks = [];
   const previousDelete = publicAPI.delete;
 
@@ -747,7 +753,7 @@ function event(publicAPI, model, eventName) {
 // newInstance
 // ----------------------------------------------------------------------------
 
-function newInstance(extend, className) {
+export function newInstance(extend, className) {
   const constructor = (initialValues = {}) => {
     const model = {};
     const publicAPI = {};
@@ -767,7 +773,7 @@ function newInstance(extend, className) {
 // Chain function calls
 // ----------------------------------------------------------------------------
 
-function chain(...fn) {
+export function chain(...fn) {
   return (...args) => fn.filter((i) => !!i).forEach((i) => i(...args));
 }
 
@@ -775,11 +781,11 @@ function chain(...fn) {
 // Some utility methods for vtk objects
 // ----------------------------------------------------------------------------
 
-function isVtkObject(instance) {
+export function isVtkObject(instance) {
   return instance && instance.isA && instance.isA('vtkObject');
 }
 
-function traverseInstanceTree(
+export function traverseInstanceTree(
   instance,
   extractFunction,
   accumulator = [],
@@ -830,7 +836,7 @@ function traverseInstanceTree(
 // N milliseconds. If `immediate` is passed, trigger the function on the
 // leading edge, instead of the trailing.
 
-function debounce(func, wait, immediate) {
+export function debounce(func, wait, immediate) {
   let timeout;
   return (...args) => {
     const context = this;
@@ -863,7 +869,7 @@ function debounce(func, wait, immediate) {
 // ----------------------------------------------------------------------------
 let nextProxyId = 1;
 
-function proxy(publicAPI, model, sectionName, uiDescription = []) {
+export function proxy(publicAPI, model, sectionName, uiDescription = []) {
   const parentDelete = publicAPI.delete;
 
   // getProxyId
@@ -998,7 +1004,7 @@ function proxy(publicAPI, model, sectionName, uiDescription = []) {
 //  Elevate set/get methods from internal object stored in the model to current one
 // ----------------------------------------------------------------------------
 
-function proxyPropertyMapping(publicAPI, model, map) {
+export function proxyPropertyMapping(publicAPI, model, map) {
   const parentDelete = publicAPI.delete;
   const subscriptions = [];
 
@@ -1042,7 +1048,12 @@ function proxyPropertyMapping(publicAPI, model, map) {
 //   get / set Representation ( string ) => push state to various internal objects
 // ----------------------------------------------------------------------------
 
-function proxyPropertyState(publicAPI, model, state = {}, defaults = {}) {
+export function proxyPropertyState(
+  publicAPI,
+  model,
+  state = {},
+  defaults = {}
+) {
   model.this = publicAPI;
 
   function applyState(map) {
