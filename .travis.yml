@@ -1,6 +1,9 @@
 language: node_js
 os: linux
 dist: trusty
+before_install:
+  - sudo apt-get -qq update
+  - sudo apt-get install -y libgif-dev
 before_script:
   - "export DISPLAY=:99.0"
   - "sh -e /etc/init.d/xvfb start"
