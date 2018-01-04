@@ -1,4 +1,4 @@
-export const DataTypeByteSize = {
+const DataTypeByteSize = {
   Int8Array: 1,
   Uint8Array: 1,
   Uint8ClampedArray: 1,
@@ -10,7 +10,7 @@ export const DataTypeByteSize = {
   Float64Array: 8,
 };
 
-export const VtkDataTypes = {
+const VtkDataTypes = {
   VOID: '', // FIXME not sure to know what that shoud be
   CHAR: 'Int8Array',
   SIGNED_CHAR: 'Int8Array',
@@ -23,7 +23,7 @@ export const VtkDataTypes = {
   DOUBLE: 'Float64Array',
 };
 
-export const DefaultDataType = VtkDataTypes.FLOAT;
+const DefaultDataType = VtkDataTypes.FLOAT;
 
 export default {
   DefaultDataType,

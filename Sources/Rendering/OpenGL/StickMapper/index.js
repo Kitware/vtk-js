@@ -1,14 +1,14 @@
-import { mat3, mat4 }           from 'gl-matrix';
-import { ObjectType }           from 'vtk.js/Sources/Rendering/OpenGL/BufferObject/Constants';
+import { mat3, mat4 } from 'gl-matrix';
+import { ObjectType } from 'vtk.js/Sources/Rendering/OpenGL/BufferObject/Constants';
 
-import * as macro               from 'vtk.js/Sources/macro';
+import * as macro from 'vtk.js/Sources/macro';
 
-import vtkBufferObject          from 'vtk.js/Sources/Rendering/OpenGL/BufferObject';
-import vtkStickMapperVS         from 'vtk.js/Sources/Rendering/OpenGL/glsl/vtkStickMapperVS.glsl';
-import vtkPolyDataFS            from 'vtk.js/Sources/Rendering/OpenGL/glsl/vtkPolyDataFS.glsl';
+import vtkBufferObject from 'vtk.js/Sources/Rendering/OpenGL/BufferObject';
+import vtkStickMapperVS from 'vtk.js/Sources/Rendering/OpenGL/glsl/vtkStickMapperVS.glsl';
+import vtkPolyDataFS from 'vtk.js/Sources/Rendering/OpenGL/glsl/vtkPolyDataFS.glsl';
 
-import vtkShaderProgram         from 'vtk.js/Sources/Rendering/OpenGL/ShaderProgram';
-import vtkOpenGLPolyDataMapper  from 'vtk.js/Sources/Rendering/OpenGL/PolyDataMapper';
+import vtkShaderProgram from 'vtk.js/Sources/Rendering/OpenGL/ShaderProgram';
+import vtkOpenGLPolyDataMapper from 'vtk.js/Sources/Rendering/OpenGL/PolyDataMapper';
 
 const { vtkErrorMacro } = macro;
 
@@ -33,20 +33,24 @@ function vtkOpenGLStickMapper(publicAPI, model) {
     let VSSource = shaders.Vertex;
     let FSSource = shaders.Fragment;
 
-    VSSource = vtkShaderProgram.substitute(VSSource,
-      '//VTK::Camera::Dec', [
-        'uniform mat4 VCDCMatrix;\n',
-        'uniform mat4 MCVCMatrix;']).result;
+    VSSource = vtkShaderProgram.substitute(VSSource, '//VTK::Camera::Dec', [
+      'uniform mat4 VCDCMatrix;\n',
+      'uniform mat4 MCVCMatrix;',
+    ]).result;
 
-    FSSource = vtkShaderProgram.substitute(FSSource,
+    FSSource = vtkShaderProgram.substitute(
+      FSSource,
       '//VTK::PositionVC::Dec',
-      'varying vec4 vertexVCVSOutput;').result;
+      'varying vec4 vertexVCVSOutput;'
+    ).result;
 
     // we create vertexVC below, so turn off the default
     // implementation
-    FSSource = vtkShaderProgram.substitute(FSSource,
+    FSSource = vtkShaderProgram.substitute(
+      FSSource,
       '//VTK::PositionVC::Impl',
-      '  vec4 vertexVC = vertexVCVSOutput;\n').result;
+      '  vec4 vertexVC = vertexVCVSOutput;\n'
+    ).result;
 
     // for lights kit and positional the VCDC matrix is already defined
     // so don't redefine it
@@ -56,8 +60,13 @@ function vtkOpenGLStickMapper(publicAPI, model) {
       'varying vec3 orientVCVSOutput;\n',
       'varying float lengthVCVSOutput;\n',
       'varying vec3 centerVCVSOutput;\n',
-      'uniform mat4 VCDCMatrix;\n'];
-    FSSource = vtkShaderProgram.substitute(FSSource, '//VTK::Normal::Dec', replacement).result;
+      'uniform mat4 VCDCMatrix;\n',
+    ];
+    FSSource = vtkShaderProgram.substitute(
+      FSSource,
+      '//VTK::Normal::Dec',
+      replacement
+    ).result;
 
     let fragString = '';
     if (model.context.getExtension('EXT_frag_depth')) {
@@ -130,60 +139,75 @@ function vtkOpenGLStickMapper(publicAPI, model) {
       '      }\n',
       '    }\n',
 
-  //    '  vec3 normalVC = vec3(0.0,0.0,1.0);\n'
+      //    '  vec3 normalVC = vec3(0.0,0.0,1.0);\n'
       // compute the pixel's depth
       '  vec4 pos = VCDCMatrix * vertexVC;\n',
-      fragString]).result;
+      fragString,
+    ]).result;
 
     // Strip out the normal line -- the normal is computed as part of the depth
-    FSSource = vtkShaderProgram.substitute(FSSource, '//VTK::Normal::Impl', '').result;
+    FSSource = vtkShaderProgram.substitute(FSSource, '//VTK::Normal::Impl', '')
+      .result;
 
     const selector = ren.getSelector();
     const picking = false; // (ren.getRenderWindow().getIsPicking() || selector != null);
     fragString = '';
     if (picking) {
-      if (!selector /* ||
-          (this->LastSelectionState >= vtkHardwareSelector::ID_LOW24) */) {
-        VSSource = vtkShaderProgram.substitute(VSSource,
-          '//VTK::Picking::Dec', [
-            'attribute vec4 selectionId;\n',
-            'varying vec4 selectionIdVSOutput;']).result;
-        VSSource = vtkShaderProgram.substitute(VSSource,
-          '//VTK::Picking::Impl',
-          'selectionIdVSOutput = selectionId;').result;
-        FSSource = vtkShaderProgram.substitute(FSSource,
+      if (
+        !selector /* ||
+          (this->LastSelectionState >= vtkHardwareSelector::ID_LOW24) */
+      ) {
+        VSSource = vtkShaderProgram.substitute(
+          VSSource,
           '//VTK::Picking::Dec',
-          'varying vec4 selectionIdVSOutput;').result;
+          ['attribute vec4 selectionId;\n', 'varying vec4 selectionIdVSOutput;']
+        ).result;
+        VSSource = vtkShaderProgram.substitute(
+          VSSource,
+          '//VTK::Picking::Impl',
+          'selectionIdVSOutput = selectionId;'
+        ).result;
+        FSSource = vtkShaderProgram.substitute(
+          FSSource,
+          '//VTK::Picking::Dec',
+          'varying vec4 selectionIdVSOutput;'
+        ).result;
 
         if (model.context.getExtension('EXT_frag_depth')) {
-          fragString = '    gl_FragData[0] = vec4(selectionIdVSOutput.rgb, 1.0);\n';
+          fragString =
+            '    gl_FragData[0] = vec4(selectionIdVSOutput.rgb, 1.0);\n';
         }
-        FSSource = vtkShaderProgram.substitute(FSSource,
+        FSSource = vtkShaderProgram.substitute(
+          FSSource,
           '//VTK::Picking::Impl',
-          fragString).result;
+          fragString
+        ).result;
       } else {
-        FSSource = vtkShaderProgram.substitute(FSSource,
+        FSSource = vtkShaderProgram.substitute(
+          FSSource,
           '//VTK::Picking::Dec',
-          'uniform vec3 mapperIndex;').result;
+          'uniform vec3 mapperIndex;'
+        ).result;
 
         if (model.context.getExtension('EXT_frag_depth')) {
           fragString = '  gl_FragData[0] = vec4(mapperIndex,1.0);\n';
         }
-        FSSource = vtkShaderProgram.substitute(FSSource,
+        FSSource = vtkShaderProgram.substitute(
+          FSSource,
           '//VTK::Picking::Impl',
-          fragString).result;
+          fragString
+        ).result;
       }
     }
 
     if (model.renderDepth) {
-      FSSource = vtkShaderProgram.substitute(FSSource,
-            '//VTK::ZBuffer::Impl', [
-              'float computedZ = (pos.z / pos.w + 1.0) / 2.0;',
-              'float iz = floor(computedZ * 65535.0 + 0.1);',
-              'float rf = floor(iz/256.0)/255.0;',
-              'float gf = mod(iz,256.0)/255.0;',
-              'gl_FragData[0] = vec4(rf, gf, 0.0, 1.0);',
-            ]).result;
+      FSSource = vtkShaderProgram.substitute(FSSource, '//VTK::ZBuffer::Impl', [
+        'float computedZ = (pos.z / pos.w + 1.0) / 2.0;',
+        'float iz = floor(computedZ * 65535.0 + 0.1);',
+        'float rf = floor(iz/256.0)/255.0;',
+        'float gf = mod(iz,256.0)/255.0;',
+        'gl_FragData[0] = vec4(rf, gf, 0.0, 1.0);',
+      ]).result;
       shaders.Fragment = FSSource;
     }
 
@@ -194,52 +218,86 @@ function vtkOpenGLStickMapper(publicAPI, model) {
   };
 
   publicAPI.setMapperShaderParameters = (cellBO, ren, actor) => {
-    if (cellBO.getCABO().getElementCount() && (model.VBOBuildTime > cellBO.getAttributeUpdateTime().getMTime() ||
-        cellBO.getShaderSourceTime().getMTime() > cellBO.getAttributeUpdateTime().getMTime())) {
+    if (
+      cellBO.getCABO().getElementCount() &&
+      (model.VBOBuildTime > cellBO.getAttributeUpdateTime().getMTime() ||
+        cellBO.getShaderSourceTime().getMTime() >
+          cellBO.getAttributeUpdateTime().getMTime())
+    ) {
       const selector = ren.getSelector();
       const picking = false; // (ren.getRenderWindow().getIsPicking() || selector !== null);
 
       if (cellBO.getProgram().isAttributeUsed('orientMC')) {
-        if (!cellBO.getVAO().addAttributeArray(cellBO.getProgram(), cellBO.getCABO(),
-                                           'orientMC',
-                                           12, // after X Y Z
-                                           cellBO.getCABO().getStride(), model.context.FLOAT, 3,
-                                           false)) {
-          vtkErrorMacro('Error setting \'orientMC\' in shader VAO.');
+        if (
+          !cellBO.getVAO().addAttributeArray(
+            cellBO.getProgram(),
+            cellBO.getCABO(),
+            'orientMC',
+            12, // after X Y Z
+            cellBO.getCABO().getStride(),
+            model.context.FLOAT,
+            3,
+            false
+          )
+        ) {
+          vtkErrorMacro("Error setting 'orientMC' in shader VAO.");
         }
       }
       if (cellBO.getProgram().isAttributeUsed('offsetMC')) {
-        if (!cellBO.getVAO().addAttributeArray(cellBO.getProgram(),
-           cellBO.getCABO().getColorBO(),
-           'offsetMC',
-           0,
-           cellBO.getCABO().getColorBOStride(),
-           model.context.UNSIGNED_BYTE,
-           3, true)) {
-          vtkErrorMacro('Error setting \'offsetMC\' in shader VAO.');
+        if (
+          !cellBO
+            .getVAO()
+            .addAttributeArray(
+              cellBO.getProgram(),
+              cellBO.getCABO().getColorBO(),
+              'offsetMC',
+              0,
+              cellBO.getCABO().getColorBOStride(),
+              model.context.UNSIGNED_BYTE,
+              3,
+              true
+            )
+        ) {
+          vtkErrorMacro("Error setting 'offsetMC' in shader VAO.");
         }
       }
       if (cellBO.getProgram().isAttributeUsed('radiusMC')) {
-        if (!cellBO.getVAO().addAttributeArray(cellBO.getProgram(),
+        if (
+          !cellBO.getVAO().addAttributeArray(
+            cellBO.getProgram(),
             cellBO.getCABO(),
             'radiusMC',
             24, // X Y Z OX OY OZ
-            cellBO.getCABO().getStride(), model.context.FLOAT, 1,
-            false)) {
-          vtkErrorMacro('Error setting \'radiusMC\' in shader VAO.');
+            cellBO.getCABO().getStride(),
+            model.context.FLOAT,
+            1,
+            false
+          )
+        ) {
+          vtkErrorMacro("Error setting 'radiusMC' in shader VAO.");
         }
       }
-      if (picking &&
-          (!selector /* ||
-           (model.LastSelectionState >= vtkHardwareSelector::ID_LOW24) */) &&
-          cellBO.getProgram().isAttributeUsed('selectionId')) {
-        if (!cellBO.getVAO().addAttributeArray(cellBO.getProgram(), cellBO.getCABO(),
-                                           'selectionId',
-                                           cellBO.getCABO().getColorOffset(),
-                                           cellBO.getCABO().getColorBOStride(),
-                                           model.context.UNSIGNED_CHAR,
-                                           4, true)) {
-          vtkErrorMacro('Error setting \'selectionId\' in shader VAO.');
+      if (
+        picking &&
+        !selector /* ||
+           (model.LastSelectionState >= vtkHardwareSelector::ID_LOW24) */ &&
+        cellBO.getProgram().isAttributeUsed('selectionId')
+      ) {
+        if (
+          !cellBO
+            .getVAO()
+            .addAttributeArray(
+              cellBO.getProgram(),
+              cellBO.getCABO(),
+              'selectionId',
+              cellBO.getCABO().getColorOffset(),
+              cellBO.getCABO().getColorBOStride(),
+              model.context.UNSIGNED_CHAR,
+              4,
+              true
+            )
+        ) {
+          vtkErrorMacro("Error setting 'selectionId' in shader VAO.");
         }
       } else {
         cellBO.getVAO().removeAttributeArray('selectionId');
@@ -282,7 +340,9 @@ function vtkOpenGLStickMapper(publicAPI, model) {
     }
 
     if (program.isUniformUsed('cameraParallel')) {
-      cellBO.getProgram().setUniformi('cameraParallel', cam.getParallelProjection());
+      cellBO
+        .getProgram()
+        .setUniformi('cameraParallel', cam.getParallelProjection());
     }
   };
 
@@ -333,22 +393,29 @@ function vtkOpenGLStickMapper(publicAPI, model) {
 
     let scales = null;
     let orientationArray = null;
-  //
-  // Generate points and point data for sides
-  //
-    if (model.renderable.getScaleArray() != null &&
-        pointData.hasArray(model.renderable.getScaleArray())) {
+    //
+    // Generate points and point data for sides
+    //
+    if (
+      model.renderable.getScaleArray() != null &&
+      pointData.hasArray(model.renderable.getScaleArray())
+    ) {
       scales = pointData.getArray(model.renderable.getScaleArray()).getData();
     }
 
-    if (model.renderable.getOrientationArray() != null &&
-        pointData.hasArray(model.renderable.getOrientationArray())) {
-      orientationArray = pointData.getArray(model.renderable.getOrientationArray()).getData();
+    if (
+      model.renderable.getOrientationArray() != null &&
+      pointData.hasArray(model.renderable.getOrientationArray())
+    ) {
+      orientationArray = pointData
+        .getArray(model.renderable.getOrientationArray())
+        .getData();
     } else {
-      vtkErrorMacro(['Error setting orientationArray.\n',
-        'You have to specify the stick orientation']);
+      vtkErrorMacro([
+        'Error setting orientationArray.\n',
+        'You have to specify the stick orientation',
+      ]);
     }
-
 
     // Vertices
     // 013 - 032 - 324 - 453
@@ -371,11 +438,13 @@ function vtkOpenGLStickMapper(publicAPI, model) {
     // 4: 011
     // 5: 111
 
+    // prettier-ignore
     const verticesArray = [
       0, 1, 3,
       0, 3, 2,
       2, 3, 5,
-      2, 5, 4];
+      2, 5, 4,
+    ];
 
     let pointIdx = 0;
     let colorIdx = 0;
@@ -387,7 +456,7 @@ function vtkOpenGLStickMapper(publicAPI, model) {
       let radius = model.renderable.getRadius();
       if (scales) {
         length = scales[i * 2];
-        radius = scales[(i * 2) + 1];
+        radius = scales[i * 2 + 1];
       }
 
       for (let j = 0; j < verticesArray.length; ++j) {
@@ -402,8 +471,8 @@ function vtkOpenGLStickMapper(publicAPI, model) {
         packedVBO[vboIdx++] = radius;
 
         packedUCVBO[ucIdx++] = 255 * (verticesArray[j] % 2);
-        packedUCVBO[ucIdx++] = (verticesArray[j] >= 4 ? 255 : 0);
-        packedUCVBO[ucIdx++] = (verticesArray[j] >= 2 ? 255 : 0);
+        packedUCVBO[ucIdx++] = verticesArray[j] >= 4 ? 255 : 0;
+        packedUCVBO[ucIdx++] = verticesArray[j] >= 2 ? 255 : 0;
         packedUCVBO[ucIdx++] = 255;
 
         colorIdx = i * colorComponents;
@@ -426,8 +495,7 @@ function vtkOpenGLStickMapper(publicAPI, model) {
 // Object factory
 // ----------------------------------------------------------------------------
 
-const DEFAULT_VALUES = {
-};
+const DEFAULT_VALUES = {};
 
 // ----------------------------------------------------------------------------
 

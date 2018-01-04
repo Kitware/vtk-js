@@ -1,7 +1,7 @@
 import { vec3, mat4 } from 'gl-matrix';
-import macro          from 'vtk.js/Sources/macro';
-import vtkProp3D      from 'vtk.js/Sources/Rendering/Core/Prop3D';
-import vtkProperty    from 'vtk.js/Sources/Rendering/Core/Property';
+import macro from 'vtk.js/Sources/macro';
+import vtkProp3D from 'vtk.js/Sources/Rendering/Core/Prop3D';
+import vtkProperty from 'vtk.js/Sources/Rendering/Core/Property';
 
 const { vtkDebugMacro } = macro;
 
@@ -31,7 +31,7 @@ function vtkActor(publicAPI, model) {
       publicAPI.getProperty();
     }
 
-    let isOpaque = (model.property.getOpacity() >= 1.0);
+    let isOpaque = model.property.getOpacity() >= 1.0;
 
     // are we using an opaque texture, if any?
     isOpaque = isOpaque && (!model.texture || !model.texture.isTranslucent());
@@ -89,14 +89,16 @@ function vtkActor(publicAPI, model) {
     // of caching. If the values returned this time are different, or
     // the modified time of this class is newer than the cached time,
     // then we need to rebuild.
-    if (!model.mapperBounds
-     || bds[0] !== model.mapperBounds[0]
-     || bds[1] !== model.mapperBounds[1]
-     || bds[2] !== model.mapperBounds[2]
-     || bds[3] !== model.mapperBounds[3]
-     || bds[4] !== model.mapperBounds[4]
-     || bds[5] !== model.mapperBounds[5]
-     || publicAPI.getMTime() > model.boundsMTime.getMTime()) {
+    if (
+      !model.mapperBounds ||
+      bds[0] !== model.mapperBounds[0] ||
+      bds[1] !== model.mapperBounds[1] ||
+      bds[2] !== model.mapperBounds[2] ||
+      bds[3] !== model.mapperBounds[3] ||
+      bds[4] !== model.mapperBounds[4] ||
+      bds[5] !== model.mapperBounds[5] ||
+      publicAPI.getMTime() > model.boundsMTime.getMTime()
+    ) {
       vtkDebugMacro('Recomputing bounds...');
       model.mapperBounds = bds.concat(); // copy the mapper's bounds
       const bbox = [
@@ -113,16 +115,22 @@ function vtkActor(publicAPI, model) {
       publicAPI.computeMatrix();
       const tmp4 = mat4.create();
       mat4.transpose(tmp4, model.matrix);
-      bbox.forEach(pt => vec3.transformMat4(pt, pt, tmp4));
+      bbox.forEach((pt) => vec3.transformMat4(pt, pt, tmp4));
 
       /* eslint-disable no-multi-assign */
       model.bounds[0] = model.bounds[2] = model.bounds[4] = Number.MAX_VALUE;
       model.bounds[1] = model.bounds[3] = model.bounds[5] = -Number.MAX_VALUE;
       /* eslint-enable no-multi-assign */
 
-      model.bounds = model.bounds.map((d, i) => ((i % 2 === 0) ?
-        bbox.reduce((a, b) => (a > b[i / 2] ? b[i / 2] : a), d) :
-        bbox.reduce((a, b) => (a < b[(i - 1) / 2] ? b[(i - 1) / 2] : a), d)));
+      model.bounds = model.bounds.map(
+        (d, i) =>
+          i % 2 === 0
+            ? bbox.reduce((a, b) => (a > b[i / 2] ? b[i / 2] : a), d)
+            : bbox.reduce(
+                (a, b) => (a < b[(i - 1) / 2] ? b[(i - 1) / 2] : a),
+                d
+              )
+      );
 
       model.boundsMTime.modified();
     }
@@ -133,12 +141,12 @@ function vtkActor(publicAPI, model) {
     let mt = superClass.getMTime();
     if (model.property !== null) {
       const time = model.property.getMTime();
-      mt = (time > mt ? time : mt);
+      mt = time > mt ? time : mt;
     }
 
     if (model.backfaceProperty !== null) {
       const time = model.backfaceProperty.getMTime();
-      mt = (time > mt ? time : mt);
+      mt = time > mt ? time : mt;
     }
 
     return mt;
@@ -148,18 +156,19 @@ function vtkActor(publicAPI, model) {
     let mt = model.mtime;
     if (model.mapper !== null) {
       let time = model.mapper.getMTime();
-      mt = (time > mt ? time : mt);
+      mt = time > mt ? time : mt;
       if (model.mapper.getInput() !== null) {
         // FIXME !!! getInputAlgorithm / getInput
         model.mapper.getInputAlgorithm().update();
         time = model.mapper.getInput().getMTime();
-        mt = (time > mt ? time : mt);
+        mt = time > mt ? time : mt;
       }
     }
     return mt;
   };
 
-  publicAPI.getSupportsSelection = () => (model.mapper ? model.mapper.getSupportsSelection() : false);
+  publicAPI.getSupportsSelection = () =>
+    model.mapper ? model.mapper.getSupportsSelection() : false;
 }
 
 // ----------------------------------------------------------------------------

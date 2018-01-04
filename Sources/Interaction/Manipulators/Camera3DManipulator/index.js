@@ -1,5 +1,8 @@
 import macro from 'vtk.js/Sources/macro';
-import { Device, Input }  from 'vtk.js/Sources/Rendering/Core/RenderWindowInteractor/Constants';
+import {
+  Device,
+  Input,
+} from 'vtk.js/Sources/Rendering/Core/RenderWindowInteractor/Constants';
 
 // ----------------------------------------------------------------------------
 // vtkCameraManipulator methods
@@ -9,8 +12,22 @@ function vtkCamera3DManipulator(publicAPI, model) {
   // Set our className
   model.classHierarchy.push('vtkCamera3DManipulator');
 
-  publicAPI.onButton3D = (interactor, renderer, state, device, input, pressed) => {};
-  publicAPI.onMove3D = (interactor, renderer, state, device, input, pressed) => {};
+  publicAPI.onButton3D = (
+    interactor,
+    renderer,
+    state,
+    device,
+    input,
+    pressed
+  ) => {};
+  publicAPI.onMove3D = (
+    interactor,
+    renderer,
+    state,
+    device,
+    input,
+    pressed
+  ) => {};
 }
 
 // ----------------------------------------------------------------------------
@@ -32,10 +49,7 @@ export function extend(publicAPI, model, initialValues = {}) {
   macro.obj(publicAPI, model);
 
   // Create get-set macros
-  macro.setGet(publicAPI, model, [
-    'device',
-    'input',
-  ]);
+  macro.setGet(publicAPI, model, ['device', 'input']);
 
   // Object specific methods
   vtkCamera3DManipulator(publicAPI, model);

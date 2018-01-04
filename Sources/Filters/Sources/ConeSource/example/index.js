@@ -1,9 +1,9 @@
 import 'vtk.js/Sources/favicon';
 
-import vtkFullScreenRenderWindow  from 'vtk.js/Sources/Rendering/Misc/FullScreenRenderWindow';
-import vtkActor                   from 'vtk.js/Sources/Rendering/Core/Actor';
-import vtkConeSource              from 'vtk.js/Sources/Filters/Sources/ConeSource';
-import vtkMapper                  from 'vtk.js/Sources/Rendering/Core/Mapper';
+import vtkFullScreenRenderWindow from 'vtk.js/Sources/Rendering/Misc/FullScreenRenderWindow';
+import vtkActor from 'vtk.js/Sources/Rendering/Core/Actor';
+import vtkConeSource from 'vtk.js/Sources/Filters/Sources/ConeSource';
+import vtkMapper from 'vtk.js/Sources/Rendering/Core/Mapper';
 
 import controlPanel from './controlPanel.html';
 
@@ -11,7 +11,9 @@ import controlPanel from './controlPanel.html';
 // Standard rendering code setup
 // ----------------------------------------------------------------------------
 
-const fullScreenRenderer = vtkFullScreenRenderWindow.newInstance({ background: [0, 0, 0] });
+const fullScreenRenderer = vtkFullScreenRenderWindow.newInstance({
+  background: [0, 0, 0],
+});
 const renderer = fullScreenRenderer.getRenderer();
 const renderWindow = fullScreenRenderer.getRenderWindow();
 
@@ -56,7 +58,7 @@ fullScreenRenderer.addController(controlPanel);
 });
 
 document.querySelector('.capping').addEventListener('change', (e) => {
-  const capping = !!(e.target.checked);
+  const capping = !!e.target.checked;
   pipelines[0].coneSource.set({ capping });
   pipelines[1].coneSource.set({ capping });
   renderWindow.render();
@@ -70,7 +72,9 @@ function updateTransformedCone() {
   const direction = [1, 0, 0];
   for (let i = 0; i < 3; i++) {
     center[Number(centerElems[i].dataset.index)] = Number(centerElems[i].value);
-    direction[Number(directionElems[i].dataset.index)] = Number(directionElems[i].value);
+    direction[Number(directionElems[i].dataset.index)] = Number(
+      directionElems[i].value
+    );
   }
   console.log('updateTransformedCone', center, direction);
   pipelines[1].coneSource.set({ center, direction });

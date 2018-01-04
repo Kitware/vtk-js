@@ -1,4 +1,4 @@
-import test      from 'tape-catch';
+import test from 'tape-catch';
 import vtkPlane from 'vtk.js/Sources/Common/DataModel/Plane';
 
 test('Test vtkPlane instance', (t) => {
@@ -95,7 +95,6 @@ test('Test vtkPlane Push', (t) => {
 
   t.end();
 });
-
 
 test('Test vtkPlane intersectWithLine', (t) => {
   const plane = vtkPlane.newInstance();

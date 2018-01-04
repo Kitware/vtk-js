@@ -1,6 +1,6 @@
 import { mat4, vec3 } from 'gl-matrix';
 
-import macro     from 'vtk.js/Sources/macro';
+import macro from 'vtk.js/Sources/macro';
 import vtkMapper from 'vtk.js/Sources/Rendering/Core/Mapper';
 
 // ----------------------------------------------------------------------------
@@ -14,7 +14,13 @@ function vtkPixelSpaceCallbackMapper(publicAPI, model) {
     model.callback = () => {};
   }
 
-  publicAPI.invokeCallback = (dataset, camera, aspect, windowSize, depthValues) => {
+  publicAPI.invokeCallback = (
+    dataset,
+    camera,
+    aspect,
+    windowSize,
+    depthValues
+  ) => {
     if (!model.callback) {
       return;
     }
@@ -32,17 +38,19 @@ function vtkPixelSpaceCallbackMapper(publicAPI, model) {
 
     for (let pidx = 0; pidx < dataPoints.getNumberOfPoints(); pidx += 1) {
       const point = dataPoints.getPoint(pidx);
-      result[0] = point[0]; result[1] = point[1]; result[2] = point[2];
+      result[0] = point[0];
+      result[1] = point[1];
+      result[2] = point[2];
       vec3.transformMat4(result, result, matrix);
-      const coord = [(result[0] * hw) + hw, (result[1] * hh) + hh, result[2], 0];
+      const coord = [result[0] * hw + hw, result[1] * hh + hh, result[2], 0];
 
       if (depthValues) {
-        const linIdx = (Math.floor(coord[1]) * width) + Math.floor(coord[0]);
+        const linIdx = Math.floor(coord[1]) * width + Math.floor(coord[0]);
         const idx = linIdx * 4;
         const r = depthValues[idx] / 255;
         const g = depthValues[idx + 1] / 255;
-        const z = ((r * 256) + g) / 257;
-        coord[3] = (z * 2) - 1;
+        const z = (r * 256 + g) / 257;
+        coord[3] = z * 2 - 1;
       }
 
       coords.push(coord);
@@ -69,10 +77,7 @@ export function extend(publicAPI, model, initialValues = {}) {
   // Inheritance
   vtkMapper.extend(publicAPI, model, initialValues);
 
-  macro.setGet(publicAPI, model, [
-    'callback',
-    'useZValues',
-  ]);
+  macro.setGet(publicAPI, model, ['callback', 'useZValues']);
 
   // Object methods
   vtkPixelSpaceCallbackMapper(publicAPI, model);
@@ -80,9 +85,11 @@ export function extend(publicAPI, model, initialValues = {}) {
 
 // ----------------------------------------------------------------------------
 
-export const newInstance = macro.newInstance(extend, 'vtkPixelSpaceCallbackMapper');
+export const newInstance = macro.newInstance(
+  extend,
+  'vtkPixelSpaceCallbackMapper'
+);
 
 // ----------------------------------------------------------------------------
 
 export default { newInstance, extend };
-

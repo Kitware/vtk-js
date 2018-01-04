@@ -21,24 +21,53 @@ function onDeviceOrientationChangeEvent(evt) {
 }
 
 function onScreenOrientationChangeEvent() {
-  orientation.screen = SCREEN_ORIENTATION_MAP[window.screen.orientation || window.screen.mozOrientation] || window.orientation || 0;
+  orientation.screen =
+    SCREEN_ORIENTATION_MAP[
+      window.screen.orientation || window.screen.mozOrientation
+    ] ||
+    window.orientation ||
+    0;
 }
 
 function addWindowListeners() {
-  window.addEventListener('orientationchange', onScreenOrientationChangeEvent, false);
-  window.addEventListener('deviceorientation', onDeviceOrientationChangeEvent, false);
+  window.addEventListener(
+    'orientationchange',
+    onScreenOrientationChangeEvent,
+    false
+  );
+  window.addEventListener(
+    'deviceorientation',
+    onDeviceOrientationChangeEvent,
+    false
+  );
   orientation.update = true;
-  listeners.filter(i => !!i).forEach(i => i.renderWindowInteractor.requestAnimation());
+  listeners
+    .filter((i) => !!i)
+    .forEach((i) => i.renderWindowInteractor.requestAnimation());
 }
 
 function removeWindowListeners() {
-  window.removeEventListener('orientationchange', onScreenOrientationChangeEvent, false);
-  window.removeEventListener('deviceorientation', onDeviceOrientationChangeEvent, false);
+  window.removeEventListener(
+    'orientationchange',
+    onScreenOrientationChangeEvent,
+    false
+  );
+  window.removeEventListener(
+    'deviceorientation',
+    onDeviceOrientationChangeEvent,
+    false
+  );
   orientation.update = false;
-  listeners.filter(i => !!i).forEach(i => i.renderWindowInteractor.cancelAnimation());
+  listeners
+    .filter((i) => !!i)
+    .forEach((i) => i.renderWindowInteractor.cancelAnimation());
 }
 
-function addCameraToSynchronize(renderWindowInteractor, camera, onCameraUpdate) {
+function addCameraToSynchronize(
+  renderWindowInteractor,
+  camera,
+  onCameraUpdate
+) {
   function onAnimation() {
     if (orientation.update) {
       const { alpha, beta, gamma } = orientation.device;

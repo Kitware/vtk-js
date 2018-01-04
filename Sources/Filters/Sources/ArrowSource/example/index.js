@@ -1,9 +1,9 @@
 import 'vtk.js/Sources/favicon';
 
-import vtkActor                   from 'vtk.js/Sources/Rendering/Core/Actor';
-import vtkArrowSource             from 'vtk.js/Sources/Filters/Sources/ArrowSource';
-import vtkFullScreenRenderWindow  from 'vtk.js/Sources/Rendering/Misc/FullScreenRenderWindow';
-import vtkMapper                  from 'vtk.js/Sources/Rendering/Core/Mapper';
+import vtkActor from 'vtk.js/Sources/Rendering/Core/Actor';
+import vtkArrowSource from 'vtk.js/Sources/Filters/Sources/ArrowSource';
+import vtkFullScreenRenderWindow from 'vtk.js/Sources/Rendering/Misc/FullScreenRenderWindow';
+import vtkMapper from 'vtk.js/Sources/Rendering/Core/Mapper';
 
 import controlPanel from './controlPanel.html';
 
@@ -11,7 +11,9 @@ import controlPanel from './controlPanel.html';
 // Standard rendering code setup
 // ----------------------------------------------------------------------------
 
-const fullScreenRenderer = vtkFullScreenRenderWindow.newInstance({ background: [0, 0, 0] });
+const fullScreenRenderer = vtkFullScreenRenderWindow.newInstance({
+  background: [0, 0, 0],
+});
 const renderer = fullScreenRenderer.getRenderer();
 const renderWindow = fullScreenRenderer.getRenderWindow();
 
@@ -45,7 +47,13 @@ renderWindow.render();
 
 fullScreenRenderer.addController(controlPanel);
 
-['tipResolution', 'tipRadius', 'tipLength', 'shaftResolution', 'shaftRadius'].forEach((propertyName) => {
+[
+  'tipResolution',
+  'tipRadius',
+  'tipLength',
+  'shaftResolution',
+  'shaftRadius',
+].forEach((propertyName) => {
   document.querySelector(`.${propertyName}`).addEventListener('input', (e) => {
     const value = Number(e.target.value);
     pipelines[0].arrowSource.set({ [propertyName]: value });
@@ -54,7 +62,7 @@ fullScreenRenderer.addController(controlPanel);
 });
 
 document.querySelector('.invert').addEventListener('change', (e) => {
-  const invert = !!(e.target.checked);
+  const invert = !!e.target.checked;
   pipelines[0].arrowSource.set({ invert });
   renderWindow.render();
 });

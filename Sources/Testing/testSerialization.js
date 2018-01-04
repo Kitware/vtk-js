@@ -1,13 +1,13 @@
-import test  from 'tape-catch';
-import vtk   from 'vtk.js/Sources/vtk';
+import test from 'tape-catch';
+import vtk from 'vtk.js/Sources/vtk';
 import macro from 'vtk.js/Sources/macro';
 
-import vtkDataArray       from 'vtk.js/Sources/Common/Core/DataArray';
-import vtkPoints          from 'vtk.js/Sources/Common/Core/Points';
-import vtkLookupTable     from 'vtk.js/Sources/Common/Core/LookupTable';
+import vtkDataArray from 'vtk.js/Sources/Common/Core/DataArray';
+import vtkPoints from 'vtk.js/Sources/Common/Core/Points';
+import vtkLookupTable from 'vtk.js/Sources/Common/Core/LookupTable';
 import vtkScalarsToColors from 'vtk.js/Sources/Common/Core/ScalarsToColors';
 
-import vtkPolyData        from 'vtk.js/Sources/Common/DataModel/PolyData';
+import vtkPolyData from 'vtk.js/Sources/Common/DataModel/PolyData';
 
 const { vtkDebugMacro } = macro;
 
@@ -35,8 +35,16 @@ const SERIALIZABLE_CLASSES = {
   vtkPolyData: {
     class: vtkPolyData,
     data: {
-      points: { vtkClass: 'vtkPoints', values: [0, 0, 0, 1, 1, 1, 2, 2, 2], numberOfComponents: 3 },
-      polys: { vtkClass: 'vtkDataArray', values: [1, 0, 1, 2], dataType: 'Uint32Array' },
+      points: {
+        vtkClass: 'vtkPoints',
+        values: [0, 0, 0, 1, 1, 1, 2, 2, 2],
+        numberOfComponents: 3,
+      },
+      polys: {
+        vtkClass: 'vtkDataArray',
+        values: [1, 0, 1, 2],
+        dataType: 'Uint32Array',
+      },
     },
   },
 };
@@ -46,7 +54,8 @@ function ignoreMTime(json) {
 }
 
 classToTest.forEach((testName) => {
-  const klass = SERIALIZABLE_CLASSES[testName].class || SERIALIZABLE_CLASSES[testName];
+  const klass =
+    SERIALIZABLE_CLASSES[testName].class || SERIALIZABLE_CLASSES[testName];
   const initData = SERIALIZABLE_CLASSES[testName].data;
   const debug = SERIALIZABLE_CLASSES[testName].debug;
 
@@ -66,9 +75,12 @@ classToTest.forEach((testName) => {
     }
 
     t.notEqual(instance, instance2, 'We have two different instances');
-    t.deepEqual(ignoreMTime(state), ignoreMTime(state2), 'But same serialized content');
+    t.deepEqual(
+      ignoreMTime(state),
+      ignoreMTime(state2),
+      'But same serialized content'
+    );
 
     t.end();
   });
 });
-

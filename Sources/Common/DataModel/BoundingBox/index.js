@@ -1,10 +1,13 @@
-import macro    from 'vtk.js/Sources/macro';
+import macro from 'vtk.js/Sources/macro';
 import vtkPlane from 'vtk.js/Sources/Common/DataModel/Plane';
 
 const INIT_BOUNDS = [
-  Number.MAX_VALUE, -Number.MAX_VALUE, // X
-  Number.MAX_VALUE, -Number.MAX_VALUE, // Y
-  Number.MAX_VALUE, -Number.MAX_VALUE, // Z
+  Number.MAX_VALUE,
+  -Number.MAX_VALUE, // X
+  Number.MAX_VALUE,
+  -Number.MAX_VALUE, // Y
+  Number.MAX_VALUE,
+  -Number.MAX_VALUE, // Z
 ];
 
 // ----------------------------------------------------------------------------
@@ -12,9 +15,9 @@ const INIT_BOUNDS = [
 // ----------------------------------------------------------------------------
 
 function isValid(bounds) {
-  return bounds[0] <= bounds[1]
-    && bounds[2] <= bounds[3]
-    && bounds[4] <= bounds[5];
+  return (
+    bounds[0] <= bounds[1] && bounds[2] <= bounds[3] && bounds[4] <= bounds[5]
+  );
 }
 
 function getCenter(bounds) {
@@ -26,15 +29,11 @@ function getCenter(bounds) {
 }
 
 function getLength(bounds, index) {
-  return bounds[(index * 2) + 1] - bounds[index * 2];
+  return bounds[index * 2 + 1] - bounds[index * 2];
 }
 
 function getLengths(bounds) {
-  return [
-    getLength(bounds, 0),
-    getLength(bounds, 1),
-    getLength(bounds, 2),
-  ];
+  return [getLength(bounds, 0), getLength(bounds, 1), getLength(bounds, 2)];
 }
 
 function getXRange(bounds) {
@@ -65,7 +64,7 @@ function getMaxLength(bounds) {
 function getDiagonalLength(bounds) {
   if (isValid(bounds)) {
     const l = getLengths(bounds);
-    return Math.sqrt((l[0] * l[0]) + (l[1] * l[1]) + (l[2] * l[2]));
+    return Math.sqrt(l[0] * l[0] + l[1] * l[1] + l[2] * l[2]);
   }
   return null;
 }
@@ -122,12 +121,14 @@ function vtkBoundingBox(publicAPI, model) {
   publicAPI.equals = (other) => {
     const a = model.bounds;
     const b = other.getBounds();
-    return a[0] === b[0]
-      && a[1] === b[1]
-      && a[2] === b[2]
-      && a[3] === b[3]
-      && a[4] === b[4]
-      && a[5] === b[5];
+    return (
+      a[0] === b[0] &&
+      a[1] === b[1] &&
+      a[2] === b[2] &&
+      a[3] === b[3] &&
+      a[4] === b[4] &&
+      a[5] === b[5]
+    );
   };
 
   publicAPI.setMinPoint = (x, y, z) => {
@@ -172,9 +173,12 @@ function vtkBoundingBox(publicAPI, model) {
   publicAPI.addBounds = (xMin, xMax, yMin, yMax, zMin, zMax) => {
     const [_xMin, _xMax, _yMin, _yMax, _zMin, _zMax] = model.bounds;
     model.bounds = [
-      Math.min(xMin, _xMin), Math.max(xMax, _xMax),
-      Math.min(yMin, _yMin), Math.max(yMax, _yMax),
-      Math.min(zMin, _zMin), Math.max(zMax, _zMax),
+      Math.min(xMin, _xMin),
+      Math.max(xMax, _xMax),
+      Math.min(yMin, _yMin),
+      Math.max(yMax, _yMax),
+      Math.min(zMin, _zMin),
+      Math.max(zMax, _zMax),
     ];
   };
 
@@ -194,24 +198,32 @@ function vtkBoundingBox(publicAPI, model) {
     let intersects;
     for (let i = 0; i < 3; i++) {
       intersects = false;
-      if ((bBounds[i * 2] >= model.bounds[i * 2]) &&
-          (bBounds[i * 2] <= model.bounds[(i * 2) + 1])) {
+      if (
+        bBounds[i * 2] >= model.bounds[i * 2] &&
+        bBounds[i * 2] <= model.bounds[i * 2 + 1]
+      ) {
         intersects = true;
         newBounds[i * 2] = bBounds[i * 2];
-      } else if ((model.bounds[i * 2] >= bBounds[i * 2]) &&
-             (model.bounds[i * 2] <= bBounds[(i * 2) + 1])) {
+      } else if (
+        model.bounds[i * 2] >= bBounds[i * 2] &&
+        model.bounds[i * 2] <= bBounds[i * 2 + 1]
+      ) {
         intersects = true;
         newBounds[i * 2] = model.bounds[i * 2];
       }
 
-      if ((bBounds[(i * 2) + 1] >= model.bounds[i * 2]) &&
-          (bBounds[(i * 2) + 1] <= model.bounds[(i * 2) + 1])) {
+      if (
+        bBounds[i * 2 + 1] >= model.bounds[i * 2] &&
+        bBounds[i * 2 + 1] <= model.bounds[i * 2 + 1]
+      ) {
         intersects = true;
-        newBounds[(i * 2) + 1] = bbox.MaxPnt[i];
-      } else if ((model.bounds[(i * 2) + 1] >= bbox.MinPnt[i * 2]) &&
-               (model.bounds[(i * 2) + 1] <= bbox.MaxPnt[(i * 2) + 1])) {
+        newBounds[i * 2 + 1] = bbox.MaxPnt[i];
+      } else if (
+        model.bounds[i * 2 + 1] >= bbox.MinPnt[i * 2] &&
+        model.bounds[i * 2 + 1] <= bbox.MaxPnt[i * 2 + 1]
+      ) {
         intersects = true;
-        newBounds[(i * 2) + 1] = model.bounds[(i * 2) + 1];
+        newBounds[i * 2 + 1] = model.bounds[i * 2 + 1];
       }
 
       if (!intersects) {
@@ -231,19 +243,27 @@ function vtkBoundingBox(publicAPI, model) {
     const bBounds = bbox.getBounds();
     /* eslint-disable no-continue */
     for (let i = 0; i < 3; i++) {
-      if ((bBounds[i * 2] >= model.bounds[i * 2]) &&
-          (bBounds[i * 2] <= model.bounds[(i * 2) + 1])) {
+      if (
+        bBounds[i * 2] >= model.bounds[i * 2] &&
+        bBounds[i * 2] <= model.bounds[i * 2 + 1]
+      ) {
         continue;
-      } else if ((model.bounds[i * 2] >= bBounds[i * 2]) &&
-             (model.bounds[i * 2] <= bBounds[(i * 2) + 1])) {
+      } else if (
+        model.bounds[i * 2] >= bBounds[i * 2] &&
+        model.bounds[i * 2] <= bBounds[i * 2 + 1]
+      ) {
         continue;
       }
 
-      if ((bBounds[(i * 2) + 1] >= model.bounds[i * 2]) &&
-          (bBounds[(i * 2) + 1] <= model.bounds[(i * 2) + 1])) {
+      if (
+        bBounds[i * 2 + 1] >= model.bounds[i * 2] &&
+        bBounds[i * 2 + 1] <= model.bounds[i * 2 + 1]
+      ) {
         continue;
-      } else if ((model.bounds[(i * 2) + 1] >= bbox.MinPnt[i * 2]) &&
-               (model.bounds[(i * 2) + 1] <= bbox.MaxPnt[(i * 2) + 1])) {
+      } else if (
+        model.bounds[i * 2 + 1] >= bbox.MinPnt[i * 2] &&
+        model.bounds[i * 2 + 1] <= bbox.MaxPnt[i * 2 + 1]
+      ) {
         continue;
       }
       return false;
@@ -274,15 +294,16 @@ function vtkBoundingBox(publicAPI, model) {
       }
     }
 
-
     let dir = 2;
     while (dir--) {
       // in each direction, we test if the vertices of two orthogonal faces
       // are on either side of the plane
-      if (oppositeSign(d[index[dir][0]], d[index[dir][4]]) &&
-          oppositeSign(d[index[dir][1]], d[index[dir][5]]) &&
-          oppositeSign(d[index[dir][2]], d[index[dir][6]]) &&
-          oppositeSign(d[index[dir][3]], d[index[dir][7]])) {
+      if (
+        oppositeSign(d[index[dir][0]], d[index[dir][4]]) &&
+        oppositeSign(d[index[dir][1]], d[index[dir][5]]) &&
+        oppositeSign(d[index[dir][2]], d[index[dir][6]]) &&
+        oppositeSign(d[index[dir][3]], d[index[dir][7]])
+      ) {
         break;
       }
     }
@@ -292,7 +313,9 @@ function vtkBoundingBox(publicAPI, model) {
     }
 
     const sign = Math.sign(normal[dir]);
-    const size = Math.abs((model.bounds[(dir * 2) + 1] - model.bounds[dir * 2]) * normal[dir]);
+    const size = Math.abs(
+      (model.bounds[dir * 2 + 1] - model.bounds[dir * 2]) * normal[dir]
+    );
     let t = sign > 0 ? 1 : 0;
     /* eslint-disable no-continue */
     for (let i = 0; i < 4; i++) {
@@ -309,36 +332,45 @@ function vtkBoundingBox(publicAPI, model) {
       }
     }
     /* eslint-enable no-continue */
-    const bound = ((1.0 - t) * model.bounds[dir * 2]) + (t * model.bounds[(dir * 2) + 1]);
+    const bound =
+      (1.0 - t) * model.bounds[dir * 2] + t * model.bounds[dir * 2 + 1];
 
     if (sign > 0) {
       model.bounds[dir * 2] = bound;
     } else {
-      model.bounds[(dir * 2) + 1] = bound;
+      model.bounds[dir * 2 + 1] = bound;
     }
 
     return true;
   };
 
   publicAPI.containsPoint = (x, y, z) => {
-    if ((x < model.bounds[0]) || (x > model.bounds[1])) {
+    if (x < model.bounds[0] || x > model.bounds[1]) {
       return false;
     }
 
-    if ((y < model.bounds[2]) || (y > model.bounds[3])) {
+    if (y < model.bounds[2] || y > model.bounds[3]) {
       return false;
     }
 
-    if ((z < model.bounds[4]) || (z > model.bounds[5])) {
+    if (z < model.bounds[4] || z > model.bounds[5]) {
       return false;
     }
 
     return true;
   };
 
-  publicAPI.getMinPoint = () => [model.bounds[0], model.bounds[2], model.bounds[4]];
-  publicAPI.getMaxPoint = () => [model.bounds[1], model.bounds[3], model.bounds[5]];
-  publicAPI.getBound = index => model.bound[index];
+  publicAPI.getMinPoint = () => [
+    model.bounds[0],
+    model.bounds[2],
+    model.bounds[4],
+  ];
+  publicAPI.getMaxPoint = () => [
+    model.bounds[1],
+    model.bounds[3],
+    model.bounds[5],
+  ];
+  publicAPI.getBound = (index) => model.bound[index];
 
   publicAPI.contains = (bbox) => {
     // if either box is not valid or they don't intersect
@@ -358,7 +390,7 @@ function vtkBoundingBox(publicAPI, model) {
   };
 
   publicAPI.getCenter = () => getCenter(model.bounds);
-  publicAPI.getLength = index => getLength(model.bounds, index);
+  publicAPI.getLength = (index) => getLength(model.bounds, index);
   publicAPI.getLengths = () => getLengths(model.bounds);
   publicAPI.getMaxLength = () => getMaxLength(model.bounds);
   publicAPI.getDiagonalLength = () => getDiagonalLength(model.bounds);

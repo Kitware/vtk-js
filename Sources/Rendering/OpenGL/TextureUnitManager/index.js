@@ -32,7 +32,9 @@ function vtkOpenGLTextureUnitManager(publicAPI, model) {
       }
       model.context = ctx;
       if (model.context) {
-        model.numberOfTextureUnits = ctx.getParameter(ctx.MAX_TEXTURE_IMAGE_UNITS);
+        model.numberOfTextureUnits = ctx.getParameter(
+          ctx.MAX_TEXTURE_IMAGE_UNITS
+        );
         for (let i = 0; i < model.numberOfTextureUnits; ++i) {
           model.textureUnits[i] = false;
         }
@@ -71,7 +73,7 @@ function vtkOpenGLTextureUnitManager(publicAPI, model) {
   // Description:
   // Tell if texture unit `textureUnitId' is already allocated.
   // \pre valid_id_range : textureUnitId>=0 && textureUnitId<this->GetNumberOfTextureUnits()
-  publicAPI.isAllocated = textureUnitId => model.textureUnits[textureUnitId];
+  publicAPI.isAllocated = (textureUnitId) => model.textureUnits[textureUnitId];
 
   // ----------------------------------------------------------------------------
   // Description:
@@ -103,13 +105,9 @@ export function extend(publicAPI, model, initialValues = {}) {
   model.textureUnits = [];
 
   // Build VTK API
-  macro.get(publicAPI, model, [
-    'numberOfTextureUnits',
-  ]);
+  macro.get(publicAPI, model, ['numberOfTextureUnits']);
 
-  macro.setGet(publicAPI, model, [
-    'context',
-  ]);
+  macro.setGet(publicAPI, model, ['context']);
 
   // Object methods
   vtkOpenGLTextureUnitManager(publicAPI, model);
@@ -117,7 +115,10 @@ export function extend(publicAPI, model, initialValues = {}) {
 
 // ----------------------------------------------------------------------------
 
-export const newInstance = macro.newInstance(extend, 'vtkOpenGLTextureUnitManager');
+export const newInstance = macro.newInstance(
+  extend,
+  'vtkOpenGLTextureUnitManager'
+);
 
 // ----------------------------------------------------------------------------
 

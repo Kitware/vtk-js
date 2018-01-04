@@ -1,15 +1,15 @@
 import 'vtk.js/Sources/favicon';
 
-import macro                      from 'vtk.js/Sources/macro';
-import vtk                        from 'vtk.js/Sources/vtk';
-import vtkActor                   from 'vtk.js/Sources/Rendering/Core/Actor';
-import vtkCalculator              from 'vtk.js/Sources/Filters/General/Calculator';
-import vtkConeSource              from 'vtk.js/Sources/Filters/Sources/ConeSource';
-import vtkDataArray               from 'vtk.js/Sources/Common/Core/DataArray';
-import vtkFullScreenRenderWindow  from 'vtk.js/Sources/Rendering/Misc/FullScreenRenderWindow';
-import vtkMapper                  from 'vtk.js/Sources/Rendering/Core/Mapper';
-import { AttributeTypes }         from 'vtk.js/Sources/Common/DataModel/DataSetAttributes/Constants';
-import { FieldDataTypes }         from 'vtk.js/Sources/Common/DataModel/DataSet/Constants';
+import macro from 'vtk.js/Sources/macro';
+import vtk from 'vtk.js/Sources/vtk';
+import vtkActor from 'vtk.js/Sources/Rendering/Core/Actor';
+import vtkCalculator from 'vtk.js/Sources/Filters/General/Calculator';
+import vtkConeSource from 'vtk.js/Sources/Filters/Sources/ConeSource';
+import vtkDataArray from 'vtk.js/Sources/Common/Core/DataArray';
+import vtkFullScreenRenderWindow from 'vtk.js/Sources/Rendering/Misc/FullScreenRenderWindow';
+import vtkMapper from 'vtk.js/Sources/Rendering/Core/Mapper';
+import { AttributeTypes } from 'vtk.js/Sources/Common/DataModel/DataSetAttributes/Constants';
+import { FieldDataTypes } from 'vtk.js/Sources/Common/DataModel/DataSet/Constants';
 
 import controlPanel from './controller.html';
 
@@ -17,7 +17,9 @@ import controlPanel from './controller.html';
 // Standard rendering code setup
 // ----------------------------------------------------------------------------
 
-const fullScreenRenderer = vtkFullScreenRenderWindow.newInstance({ background: [0, 0, 0] });
+const fullScreenRenderer = vtkFullScreenRenderWindow.newInstance({
+  background: [0, 0, 0],
+});
 const renderer = fullScreenRenderer.getRenderer();
 const renderWindow = fullScreenRenderer.getRenderWindow();
 
@@ -44,15 +46,20 @@ const filterB = vtkCalculator.newInstance();
 const filterC = vtkCalculator.newInstance();
 
 filterA.setFormula({
-  getArrays: inputDataSets => ({
+  getArrays: (inputDataSets) => ({
     input: [],
     output: [
-      { location: FieldDataTypes.CELL, name: 'a', dataType: 'Float32Array', attribute: AttributeTypes.SCALARS },
+      {
+        location: FieldDataTypes.CELL,
+        name: 'a',
+        dataType: 'Float32Array',
+        attribute: AttributeTypes.SCALARS,
+      },
     ],
   }),
   evaluate: (arraysIn, arraysOut) => {
     updateExecution(0);
-    const [scalars] = arraysOut.map(d => d.getData());
+    const [scalars] = arraysOut.map((d) => d.getData());
     for (let i = 0; i < scalars.length; i++) {
       scalars[i] = Math.random();
     }
@@ -60,15 +67,20 @@ filterA.setFormula({
 });
 
 filterB.setFormula({
-  getArrays: inputDataSets => ({
+  getArrays: (inputDataSets) => ({
     input: [],
     output: [
-      { location: FieldDataTypes.CELL, name: 'b', dataType: 'Float32Array', attribute: AttributeTypes.SCALARS },
+      {
+        location: FieldDataTypes.CELL,
+        name: 'b',
+        dataType: 'Float32Array',
+        attribute: AttributeTypes.SCALARS,
+      },
     ],
   }),
   evaluate: (arraysIn, arraysOut) => {
     updateExecution(1);
-    const [scalars] = arraysOut.map(d => d.getData());
+    const [scalars] = arraysOut.map((d) => d.getData());
     for (let i = 0; i < scalars.length; i++) {
       scalars[i] = Math.random();
     }
@@ -78,9 +90,12 @@ filterB.setFormula({
 const randFilter = macro.newInstance((publicAPI, model) => {
   macro.obj(publicAPI, model); // make it an object
   macro.algo(publicAPI, model, 1, 1); // mixin algorithm code 1 in, 1 out
-  publicAPI.requestData = (inData, outData) => { // implement requestData
+  publicAPI.requestData = (inData, outData) => {
+    // implement requestData
     updateExecution(2);
-    const newArray = new Float32Array(inData[0].getPoints().getNumberOfPoints());
+    const newArray = new Float32Array(
+      inData[0].getPoints().getNumberOfPoints()
+    );
     for (let i = 0; i < newArray.length; i++) {
       newArray[i] = i % 2 ? 1 : 0;
     }
@@ -94,15 +109,20 @@ const randFilter = macro.newInstance((publicAPI, model) => {
 })();
 
 filterC.setFormula({
-  getArrays: inputDataSets => ({
+  getArrays: (inputDataSets) => ({
     input: [],
     output: [
-      { location: FieldDataTypes.CELL, name: 'c', dataType: 'Float32Array', attribute: AttributeTypes.SCALARS },
+      {
+        location: FieldDataTypes.CELL,
+        name: 'c',
+        dataType: 'Float32Array',
+        attribute: AttributeTypes.SCALARS,
+      },
     ],
   }),
   evaluate: (arraysIn, arraysOut) => {
     updateExecution(3);
-    const [scalars] = arraysOut.map(d => d.getData());
+    const [scalars] = arraysOut.map((d) => d.getData());
     for (let i = 0; i < scalars.length; i++) {
       scalars[i] = Math.random();
     }

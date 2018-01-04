@@ -28,25 +28,30 @@ function createArrayHandler() {
 
     if (!arrayFetcher) {
       return new Promise((resolve, reject) => {
-        reject('No array fetcher found, please use "setArrayFetcher" to provide one');
+        reject(
+          'No array fetcher found, please use "setArrayFetcher" to provide one'
+        );
       });
     }
 
     return new Promise((resolve, reject) => {
-      arrayFetcher(sha).then((data) => {
-        let buffer = data;
-        if (typeof data === 'string') {
-          buffer = toByteArray(data).buffer;
+      arrayFetcher(sha).then(
+        (data) => {
+          let buffer = data;
+          if (typeof data === 'string') {
+            buffer = toByteArray(data).buffer;
+          }
+          const array = new window[dataType](buffer);
+          const mtimes = { [context.getActiveViewId()]: context.getMTime() };
+          dataArrayCache[sha] = { mtimes, array };
+          resolve(array);
+        },
+        (error) => {
+          console.log('Error getting data array:');
+          console.log(error);
+          reject(error);
         }
-        const array = new window[dataType](buffer);
-        const mtimes = { [context.getActiveViewId()]: context.getMTime() };
-        dataArrayCache[sha] = { mtimes, array };
-        resolve(array);
-      }, (error) => {
-        console.log('Error getting data array:');
-        console.log(error);
-        reject(error);
-      });
+      );
     });
   }
 
@@ -59,8 +64,11 @@ function createArrayHandler() {
   function freeOldArrays(threshold, context) {
     const mtimeThreshold = context.getMTime() - threshold;
     Object.keys(dataArrayCache)
-      .filter(key => dataArrayCache[key].mtimes[context.getActiveViewId()])
-      .filter(key => dataArrayCache[key].mtimes[context.getActiveViewId()] < mtimeThreshold)
+      .filter((key) => dataArrayCache[key].mtimes[context.getActiveViewId()])
+      .filter(
+        (key) =>
+          dataArrayCache[key].mtimes[context.getActiveViewId()] < mtimeThreshold
+      )
       .forEach((key) => {
         delete dataArrayCache[key];
       });
@@ -194,12 +202,19 @@ function createSceneMtimeHandler() {
 function createSyncFunction(renderWindow, synchronizerContext) {
   const progressHandler = createProgressHandler(renderWindow.render);
   const mtimeHandler = createSceneMtimeHandler();
-  const context = Object.assign({}, synchronizerContext, progressHandler, mtimeHandler);
+  const context = Object.assign(
+    {},
+    synchronizerContext,
+    progressHandler,
+    mtimeHandler
+  );
   let lastMtime = -1;
   let gcThreshold = 100;
 
-  const getManagedInstanceId = instance => instance.get('managedInstanceId').managedInstanceId;
-  const getManagedInstanceIds = () => macro.traverseInstanceTree(renderWindow, getManagedInstanceId);
+  const getManagedInstanceId = (instance) =>
+    instance.get('managedInstanceId').managedInstanceId;
+  const getManagedInstanceIds = () =>
+    macro.traverseInstanceTree(renderWindow, getManagedInstanceId);
 
   function clearOneTimeUpdaters() {
     vtkObjectManager.clearOneTimeUpdaters(getManagedInstanceIds());
@@ -232,7 +247,14 @@ function createSyncFunction(renderWindow, synchronizerContext) {
     return false;
   }
 
-  return { synchronize, setSynchronizedViewId, getSynchronizedViewId, updateGarbageCollectorThreshold, getManagedInstanceIds, clearOneTimeUpdaters };
+  return {
+    synchronize,
+    setSynchronizedViewId,
+    getSynchronizedViewId,
+    updateGarbageCollectorThreshold,
+    getManagedInstanceIds,
+    clearOneTimeUpdaters,
+  };
 }
 
 // ----------------------------------------------------------------------------
@@ -244,7 +266,9 @@ function vtkSynchronizableRenderWindow(publicAPI, model) {
   model.classHierarchy.push('vtkSynchronizableRenderWindow');
 
   if (!model.synchronizerContext) {
-    model.synchronizerContext = getSynchronizerContext(model.synchronizerContextName);
+    model.synchronizerContext = getSynchronizerContext(
+      model.synchronizerContextName
+    );
   }
 
   const addOn = createSyncFunction(publicAPI, model.synchronizerContext);
@@ -278,7 +302,10 @@ export function extend(publicAPI, model, initialValues = {}) {
 
 // ----------------------------------------------------------------------------
 
-export const newInstance = macro.newInstance(extend, 'vtkSynchronizableRenderWindow');
+export const newInstance = macro.newInstance(
+  extend,
+  'vtkSynchronizableRenderWindow'
+);
 
 // ----------------------------------------------------------------------------
 // More Static methods

@@ -1,8 +1,8 @@
-import macro              from 'vtk.js/Sources/macro';
-import vtkAppendPolyData  from 'vtk.js/Sources/Filters/General/AppendPolyData';
-import vtkConeSource      from 'vtk.js/Sources/Filters/Sources/ConeSource';
-import vtkCylinderSource  from 'vtk.js/Sources/Filters/Sources/CylinderSource';
-import vtkMatrixBuilder   from 'vtk.js/Sources/Common/Core/MatrixBuilder';
+import macro from 'vtk.js/Sources/macro';
+import vtkAppendPolyData from 'vtk.js/Sources/Filters/General/AppendPolyData';
+import vtkConeSource from 'vtk.js/Sources/Filters/Sources/ConeSource';
+import vtkCylinderSource from 'vtk.js/Sources/Filters/Sources/CylinderSource';
+import vtkMatrixBuilder from 'vtk.js/Sources/Common/Core/MatrixBuilder';
 
 // ----------------------------------------------------------------------------
 // vtkArrowSource methods
@@ -25,7 +25,10 @@ function vtkArrowSource(publicAPI, model) {
 
     const cylinderPD = cylinder.getOutputData();
     const cylinderPts = cylinderPD.getPoints().getData();
-    const cylinderNormals = cylinderPD.getPointData().getNormals().getData();
+    const cylinderNormals = cylinderPD
+      .getPointData()
+      .getNormals()
+      .getData();
 
     // Apply transformation to the cylinder
     vtkMatrixBuilder
@@ -45,7 +48,7 @@ function vtkArrowSource(publicAPI, model) {
     // Apply transformation to the cone
     vtkMatrixBuilder
       .buildFromRadian()
-      .translate(1.0 - (model.tipLength * 0.5), 0.0, 0.0)
+      .translate(1.0 - model.tipLength * 0.5, 0.0, 0.0)
       .apply(conePts);
 
     const append = vtkAppendPolyData.newInstance();

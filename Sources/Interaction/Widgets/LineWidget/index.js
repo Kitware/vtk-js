@@ -10,7 +10,6 @@ const { vtkErrorMacro } = macro;
 const { WidgetState } = Constants;
 const { InteractionState } = HandleRepConstants;
 
-
 // ----------------------------------------------------------------------------
 // vtkHandleWidget methods
 // ----------------------------------------------------------------------------
@@ -55,7 +54,8 @@ function vtkLineWidget(publicAPI, model) {
           if (publicAPI[`handle${eventName}`]) {
             publicAPI[`handle${eventName}`]();
           }
-        }));
+        })
+      );
     });
   };
 
@@ -113,8 +113,12 @@ function vtkLineWidget(publicAPI, model) {
     }
 
     if (enabling && !enable) {
-      model.point1Widget.setWidgetRep(model.widgetRep.getPoint1Representation());
-      model.point2Widget.setWidgetRep(model.widgetRep.getPoint2Representation());
+      model.point1Widget.setWidgetRep(
+        model.widgetRep.getPoint1Representation()
+      );
+      model.point2Widget.setWidgetRep(
+        model.widgetRep.getPoint2Representation()
+      );
       model.point1Widget.getWidgetRep().setRenderer(model.currentRenderer);
       model.point2Widget.getWidgetRep().setRenderer(model.currentRenderer);
     } else if (!enabling && enable) {
@@ -172,7 +176,9 @@ function vtkLineWidget(publicAPI, model) {
     const position = publicAPI.get2DPointerPosition();
 
     if (model.widgetState === WidgetState.START) {
-      const pos3D = model.point1Widget.getWidgetRep().displayToWorld(position, 0);
+      const pos3D = model.point1Widget
+        .getWidgetRep()
+        .displayToWorld(position, 0);
       // The first time we click, the method is called twice
       if (model.currentHandle <= 1) {
         model.point1Widget.setEnable(0);
@@ -268,14 +274,20 @@ function vtkLineWidget(publicAPI, model) {
     } else if (model.widgetState === WidgetState.START) {
       model.widgetRep.setPoint1Visibility(1);
       model.widgetRep.complexWidgetInteraction(position);
-      const pos3D = model.point1Widget.getWidgetRep().displayToWorld(position, 0);
+      const pos3D = model.point1Widget
+        .getWidgetRep()
+        .displayToWorld(position, 0);
       if (model.currentHandle === 0) {
         model.widgetRep.setPoint1WorldPosition(pos3D);
       }
       model.widgetRep.setPoint2WorldPosition(pos3D);
     } else if (model.widgetState === WidgetState.ACTIVE) {
-      model.widgetRep.setPoint1WorldPosition(model.point1Widget.getWidgetRep().getWorldPosition());
-      model.widgetRep.setPoint2WorldPosition(model.point2Widget.getWidgetRep().getWorldPosition());
+      model.widgetRep.setPoint1WorldPosition(
+        model.point1Widget.getWidgetRep().getWorldPosition()
+      );
+      model.widgetRep.setPoint2WorldPosition(
+        model.point2Widget.getWidgetRep().getWorldPosition()
+      );
     }
 
     publicAPI.invokeInteractionEvent();
@@ -288,8 +300,12 @@ function vtkLineWidget(publicAPI, model) {
     }
     const position = publicAPI.get2DPointerPosition();
     model.widgetRep.complexWidgetInteraction(position);
-    model.widgetRep.setPoint1WorldPosition(model.point1Widget.getWidgetRep().getWorldPosition());
-    model.widgetRep.setPoint2WorldPosition(model.point2Widget.getWidgetRep().getWorldPosition());
+    model.widgetRep.setPoint1WorldPosition(
+      model.point1Widget.getWidgetRep().getWorldPosition()
+    );
+    model.widgetRep.setPoint2WorldPosition(
+      model.point2Widget.getWidgetRep().getWorldPosition()
+    );
 
     model.widgetState = WidgetState.MANIPULATE;
     publicAPI.invokeEndInteractionEvent();

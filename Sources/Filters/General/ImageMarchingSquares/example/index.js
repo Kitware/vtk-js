@@ -1,14 +1,14 @@
 import 'vtk.js/Sources/favicon';
 
-import vtkActor                   from 'vtk.js/Sources/Rendering/Core/Actor';
-import vtkFullScreenRenderWindow  from 'vtk.js/Sources/Rendering/Misc/FullScreenRenderWindow';
-import vtkImageMarchingSquares    from 'vtk.js/Sources/Filters/General/ImageMarchingSquares';
-import vtkOutlineFilter           from 'vtk.js/Sources/Filters/General/OutlineFilter';
-import vtkMapper                  from 'vtk.js/Sources/Rendering/Core/Mapper';
-import vtkSampleFunction          from 'vtk.js/Sources/Imaging/Hybrid/SampleFunction';
-import vtkSphere                  from 'vtk.js/Sources/Common/DataModel/Sphere';
+import vtkActor from 'vtk.js/Sources/Rendering/Core/Actor';
+import vtkFullScreenRenderWindow from 'vtk.js/Sources/Rendering/Misc/FullScreenRenderWindow';
+import vtkImageMarchingSquares from 'vtk.js/Sources/Filters/General/ImageMarchingSquares';
+import vtkOutlineFilter from 'vtk.js/Sources/Filters/General/OutlineFilter';
+import vtkMapper from 'vtk.js/Sources/Rendering/Core/Mapper';
+import vtkSampleFunction from 'vtk.js/Sources/Imaging/Hybrid/SampleFunction';
+import vtkSphere from 'vtk.js/Sources/Common/DataModel/Sphere';
 // import vtkPlane                   from 'vtk.js/Sources/Common/DataModel/Plane';
-import vtkImplicitBoolean         from 'vtk.js/Sources/Common/DataModel/ImplicitBoolean';
+import vtkImplicitBoolean from 'vtk.js/Sources/Common/DataModel/ImplicitBoolean';
 
 import controlPanel from './controller.html';
 
@@ -35,8 +35,15 @@ actor.setMapper(mapper);
 const sphere = vtkSphere.newInstance({ center: [-2.5, 0.0, 0.0], radius: 0.5 });
 const sphere2 = vtkSphere.newInstance({ center: [2.5, 0.0, 0.0], radius: 0.5 });
 // const plane = vtkPlane.newInstance({ origin: [0, 0, 0], normal: [0, 1, 0] });
-const impBool = vtkImplicitBoolean.newInstance({ operation: Operation.UNION, functions: [sphere, sphere2] });
-const sample = vtkSampleFunction.newInstance({ implicitFunction: impBool, sampleDimensions: [5, 3, 3], modelBounds: [-5.0, 5.0, -1.0, 1.0, -1.0, 1.0] });
+const impBool = vtkImplicitBoolean.newInstance({
+  operation: Operation.UNION,
+  functions: [sphere, sphere2],
+});
+const sample = vtkSampleFunction.newInstance({
+  implicitFunction: impBool,
+  sampleDimensions: [5, 3, 3],
+  modelBounds: [-5.0, 5.0, -1.0, 1.0, -1.0, 1.0],
+});
 
 // Isocontour
 const mSquares = vtkImageMarchingSquares.newInstance({ slice: 1 });
@@ -48,9 +55,13 @@ mapper.setInputConnection(mSquares.getOutputPort());
 // Update the pipeline to obtain metadata (range) about scalars
 sample.update();
 const cValues = [];
-const [min, max] = sample.getOutputData().getPointData().getScalars().getRange();
+const [min, max] = sample
+  .getOutputData()
+  .getPointData()
+  .getScalars()
+  .getRange();
 for (let i = 0; i < 20; ++i) {
-  cValues[i] = min + ((i / 19) * (max - min));
+  cValues[i] = min + i / 19 * (max - min);
 }
 mSquares.setContourValues(cValues);
 
@@ -72,7 +83,7 @@ fullScreenRenderer.addController(controlPanel);
 document.querySelector('.volumeResolution').addEventListener('input', (e) => {
   const value = Number(e.target.value);
   sample.setSampleDimensions(value, value, value);
-  mSquares.setSlice((value / 2.0));
+  mSquares.setSlice(value / 2.0);
   renderWindow.render();
 });
 
@@ -90,7 +101,6 @@ document.querySelector('.mergePoints').addEventListener('change', (e) => {
   mSquares.setMergePoints(!!e.target.checked);
   renderWindow.render();
 });
-
 
 // -----------------------------------------------------------
 const cam = renderer.getActiveCamera();

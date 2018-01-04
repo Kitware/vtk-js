@@ -1,5 +1,5 @@
-import vtk       from 'vtk.js/Sources/vtk';
-import macro     from 'vtk.js/Sources/macro';
+import vtk from 'vtk.js/Sources/vtk';
+import macro from 'vtk.js/Sources/macro';
 import vtkPoints from 'vtk.js/Sources/Common/Core/Points';
 
 const { vtkDebugMacro, vtkErrorMacro } = macro;
@@ -12,7 +12,8 @@ function vtkWarpScalar(publicAPI, model) {
   // Set our className
   model.classHierarchy.push('vtkWarpScalar');
 
-  publicAPI.requestData = (inData, outData) => { // implement requestData
+  publicAPI.requestData = (inData, outData) => {
+    // implement requestData
     const input = inData[0];
 
     if (!input) {
@@ -41,9 +42,9 @@ function vtkWarpScalar(publicAPI, model) {
     const normal = [0, 0, 1];
     if (inNormals && !model.useNormal) {
       pointNormal = (id, array) => [
-        array.getData()[(id * 3)],
-        array.getData()[(id * 3) + 1],
-        array.getData()[(id * 3) + 2],
+        array.getData()[id * 3],
+        array.getData()[id * 3 + 1],
+        array.getData()[id * 3 + 2],
       ];
       vtkDebugMacro('Using data normals');
     } else if (publicAPI.getXyPlane()) {
@@ -74,9 +75,11 @@ function vtkWarpScalar(publicAPI, model) {
         s = scalarDataArray[ptId * nc];
       }
 
-      newPtsData[ptOffset] = inPoints[ptOffset] + (model.scaleFactor * s * n[0]);
-      newPtsData[ptOffset + 1] = inPoints[ptOffset + 1] + (model.scaleFactor * s * n[1]);
-      newPtsData[ptOffset + 2] = inPoints[ptOffset + 2] + (model.scaleFactor * s * n[2]);
+      newPtsData[ptOffset] = inPoints[ptOffset] + model.scaleFactor * s * n[0];
+      newPtsData[ptOffset + 1] =
+        inPoints[ptOffset + 1] + model.scaleFactor * s * n[1];
+      newPtsData[ptOffset + 2] =
+        inPoints[ptOffset + 2] + model.scaleFactor * s * n[2];
     }
 
     const newDataSet = vtk({ vtkClass: input.getClassName() });
@@ -113,15 +116,9 @@ export function extend(publicAPI, model, initialValues = {}) {
   macro.algo(publicAPI, model, 1, 1);
 
   // Generate macros for properties
-  macro.setGet(publicAPI, model, [
-    'scaleFactor',
-    'useNormal',
-    'xyPlane',
-  ]);
+  macro.setGet(publicAPI, model, ['scaleFactor', 'useNormal', 'xyPlane']);
 
-  macro.setGetArray(publicAPI, model, [
-    'normal',
-  ], 3);
+  macro.setGetArray(publicAPI, model, ['normal'], 3);
 
   // Object specific methods
   vtkWarpScalar(publicAPI, model);

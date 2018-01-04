@@ -1,17 +1,17 @@
 import 'vtk.js/Sources/favicon';
 
-import macro                      from 'vtk.js/Sources/macro';
-import vtkFullScreenRenderWindow  from 'vtk.js/Sources/Rendering/Misc/FullScreenRenderWindow';
+import macro from 'vtk.js/Sources/macro';
+import vtkFullScreenRenderWindow from 'vtk.js/Sources/Rendering/Misc/FullScreenRenderWindow';
 
-import vtkActor       from 'vtk.js/Sources/Rendering/Core/Actor';
-import vtkCalculator  from 'vtk.js/Sources/Filters/General/Calculator';
-import vtkDataSet     from 'vtk.js/Sources/Common/DataModel/DataSet';
+import vtkActor from 'vtk.js/Sources/Rendering/Core/Actor';
+import vtkCalculator from 'vtk.js/Sources/Filters/General/Calculator';
+import vtkDataSet from 'vtk.js/Sources/Common/DataModel/DataSet';
 import vtkLookupTable from 'vtk.js/Sources/Common/Core/LookupTable';
-import vtkMapper      from 'vtk.js/Sources/Rendering/Core/Mapper';
+import vtkMapper from 'vtk.js/Sources/Rendering/Core/Mapper';
 import vtkPlaneSource from 'vtk.js/Sources/Filters/Sources/PlaneSource';
-import vtkPoints      from 'vtk.js/Sources/Common/Core/Points';
-import vtkPolyData    from 'vtk.js/Sources/Common/DataModel/PolyData';
-import vtkWarpScalar  from 'vtk.js/Sources/Filters/General/WarpScalar';
+import vtkPoints from 'vtk.js/Sources/Common/Core/Points';
+import vtkPolyData from 'vtk.js/Sources/Common/DataModel/PolyData';
+import vtkWarpScalar from 'vtk.js/Sources/Filters/General/WarpScalar';
 
 import controlPanel from './controlPanel.html';
 
@@ -29,7 +29,9 @@ const FORMULA = [
 // Standard rendering code setup
 // ----------------------------------------------------------------------------
 
-const fullScreenRenderer = vtkFullScreenRenderWindow.newInstance({ background: [0.9, 0.9, 0.9] });
+const fullScreenRenderer = vtkFullScreenRenderWindow.newInstance({
+  background: [0.9, 0.9, 0.9],
+});
 const renderer = fullScreenRenderer.getRenderer();
 const renderWindow = fullScreenRenderer.getRenderWindow();
 
@@ -39,7 +41,10 @@ const renderWindow = fullScreenRenderer.getRenderWindow();
 
 const lookupTable = vtkLookupTable.newInstance({ hueRange: [0.666, 0] });
 
-const planeSource = vtkPlaneSource.newInstance({ xResolution: 25, yResolution: 25 });
+const planeSource = vtkPlaneSource.newInstance({
+  xResolution: 25,
+  yResolution: 25,
+});
 const planeMapper = vtkMapper.newInstance({
   interpolateScalarsBeforeMapping: true,
   colorMode: ColorMode.DEFAULT,
@@ -53,9 +58,9 @@ planeActor.getProperty().setEdgeVisibility(true);
 const simpleFilter = vtkCalculator.newInstance();
 simpleFilter.setFormulaSimple(
   FieldDataTypes.POINT, // Generate an output array defined over points.
-  [],  // We don't request any point-data arrays because point coordinates are made available by default.
+  [], // We don't request any point-data arrays because point coordinates are made available by default.
   'z', // Name the output array "z"
-  x => ((x[0] - 0.5) * (x[0] - 0.5)) + ((x[1] - 0.5) * (x[1] - 0.5)) + 0.125,
+  (x) => (x[0] - 0.5) * (x[0] - 0.5) + (x[1] - 0.5) * (x[1] - 0.5) + 0.125
 ); // Our formula for z
 
 const warpScalar = vtkWarpScalar.newInstance();
@@ -117,14 +122,23 @@ function applyFormula() {
   if (fn) {
     el.style.background = '#fff';
     const formulaObj = simpleFilter.createSimpleFormulaObject(
-      FieldDataTypes.POINT, [], 'z', fn);
+      FieldDataTypes.POINT,
+      [],
+      'z',
+      fn
+    );
 
     // See if the formula is actually valid by invoking "formulaObj" on
     // a dataset containing a single point.
     planeSource.update();
     const arraySpec = formulaObj.getArrays(planeSource.getOutputData());
     const testData = vtkPolyData.newInstance();
-    const testPts = vtkPoints.newInstance({ name: 'coords', numberOfComponents: 3, size: 3, values: [0, 0, 0] });
+    const testPts = vtkPoints.newInstance({
+      name: 'coords',
+      numberOfComponents: 3,
+      size: 3,
+      values: [0, 0, 0],
+    });
     testData.setPoints(testPts);
     const testOut = vtkPolyData.newInstance();
     testOut.shallowCopy(testData);
@@ -139,7 +153,11 @@ function applyFormula() {
       simpleFilter.update();
 
       // Update UI with new range
-      const [min, max] = simpleFilter.getOutputData().getPointData().getScalars().getRange();
+      const [min, max] = simpleFilter
+        .getOutputData()
+        .getPointData()
+        .getScalars()
+        .getRange();
       document.querySelector('.min').value = min;
       document.querySelector('.max').value = max;
       lookupTable.setMappingRange(min, max);
@@ -178,7 +196,9 @@ document.querySelector('.visibility').addEventListener('change', (e) => {
 document.querySelector('.formula').addEventListener('input', applyFormula);
 
 ['min', 'max'].forEach((selector) => {
-  document.querySelector(`.${selector}`).addEventListener('input', updateScalarRange);
+  document
+    .querySelector(`.${selector}`)
+    .addEventListener('input', updateScalarRange);
 });
 
 document.querySelector('.next').addEventListener('click', (e) => {
@@ -187,7 +207,6 @@ document.querySelector('.next').addEventListener('click', (e) => {
   applyFormula();
   renderWindow.render();
 });
-
 
 // Eecompute scalar range
 applyFormula();

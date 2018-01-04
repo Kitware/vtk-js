@@ -1,15 +1,13 @@
-import macro    from   'vtk.js/Sources/macro';
-import vtkMath  from   'vtk.js/Sources/Common/Core/Math';
+import macro from 'vtk.js/Sources/macro';
+import vtkMath from 'vtk.js/Sources/Common/Core/Math';
 
 // ----------------------------------------------------------------------------
 // Global methods
 // ----------------------------------------------------------------------------
 
-
 // ----------------------------------------------------------------------------
 // Static API
 // ----------------------------------------------------------------------------
-
 
 // ----------------------------------------------------------------------------
 // vtkCone methods
@@ -21,18 +19,15 @@ function vtkCone(publicAPI, model) {
 
   publicAPI.evaluateFunction = (x) => {
     const tanTheta = Math.tan(vtkMath.radiansFromDegrees(model.angle));
-    const retVal = (x[1] * x[1]) + (x[2] * x[2]) - (x[0] * x[0] * tanTheta * tanTheta);
+    const retVal =
+      x[1] * x[1] + x[2] * x[2] - x[0] * x[0] * tanTheta * tanTheta;
 
     return retVal;
   };
 
   publicAPI.evaluateGradient = (x) => {
     const tanTheta = Math.tan(vtkMath.radiansFromDegrees(model.angle));
-    const retVal = [
-      -2.0 * x[0] * tanTheta * tanTheta,
-      2.0 * x[1],
-      2.0 * x[2],
-    ];
+    const retVal = [-2.0 * x[0] * tanTheta * tanTheta, 2.0 * x[1], 2.0 * x[2]];
     return retVal;
   };
 }
@@ -51,9 +46,7 @@ export function extend(publicAPI, model, initialValues = {}) {
 
   // Object methods
   macro.obj(publicAPI, model);
-  macro.setGet(publicAPI, model, [
-    'angle',
-  ]);
+  macro.setGet(publicAPI, model, ['angle']);
 
   vtkCone(publicAPI, model);
 }

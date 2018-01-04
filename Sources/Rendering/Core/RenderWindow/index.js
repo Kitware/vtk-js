@@ -28,11 +28,11 @@ function vtkRenderWindow(publicAPI, model) {
 
   // Remove renderer
   publicAPI.removeRenderer = (renderer) => {
-    model.renderers = model.renderers.filter(r => r !== renderer);
+    model.renderers = model.renderers.filter((r) => r !== renderer);
     publicAPI.modified();
   };
 
-  publicAPI.hasRenderer = ren => model.renderers.indexOf(ren) !== -1;
+  publicAPI.hasRenderer = (ren) => model.renderers.indexOf(ren) !== -1;
 
   // Add renderer
   publicAPI.addView = (view) => {
@@ -46,17 +46,17 @@ function vtkRenderWindow(publicAPI, model) {
 
   // Remove renderer
   publicAPI.removeView = (view) => {
-    model.views = model.views.filter(r => r !== view);
+    model.views = model.views.filter((r) => r !== view);
     publicAPI.modified();
   };
 
-  publicAPI.hasView = view => model.views.indexOf(view) !== -1;
+  publicAPI.hasView = (view) => model.views.indexOf(view) !== -1;
 
   publicAPI.render = () => {
     if (model.interactor) {
       model.interactor.render();
     } else {
-      model.views.forEach(view => view.traverseAllPasses());
+      model.views.forEach((view) => view.traverseAllPasses());
     }
   };
 
@@ -78,15 +78,19 @@ function vtkRenderWindow(publicAPI, model) {
         }
       });
     });
-    results.str = Object.keys(results).map(keyName => `${keyName}: ${results[keyName]}`).join('\n');
+    results.str = Object.keys(results)
+      .map((keyName) => `${keyName}: ${results[keyName]}`)
+      .join('\n');
     return results;
   };
 
   publicAPI.captureImages = (format = 'image/png') => {
     publicAPI.render();
     return model.views
-      .map(view => (view.captureImage ? view.captureImage(format) : undefined))
-      .filter(i => !!i);
+      .map(
+        (view) => (view.captureImage ? view.captureImage(format) : undefined)
+      )
+      .filter((i) => !!i);
   };
 }
 
@@ -109,11 +113,7 @@ export function extend(publicAPI, model, initialValues = {}) {
 
   // Build VTK API
   macro.obj(publicAPI, model);
-  macro.setGet(publicAPI, model, [
-    'interactor',
-    'numberOfLayers',
-    'views',
-  ]);
+  macro.setGet(publicAPI, model, ['interactor', 'numberOfLayers', 'views']);
   macro.get(publicAPI, model, ['neverRendered']);
   macro.getArray(publicAPI, model, ['renderers']);
   macro.event(publicAPI, model, 'completion');

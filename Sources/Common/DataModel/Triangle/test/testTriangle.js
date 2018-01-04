@@ -1,4 +1,4 @@
-import test   from 'tape-catch';
+import test from 'tape-catch';
 import vtkPoints from 'vtk.js/Sources/Common/Core/Points';
 import vtkTriangle from 'vtk.js/Sources/Common/DataModel/Triangle';
 
@@ -144,7 +144,11 @@ test('Test vtkTriangle evaluatePosition', (t) => {
   // subId does not matter
   t.equal(result.dist2, 0.0);
   t.deepEqual(pcoords, [Math.sqrt(2) - 1, (2 - Math.sqrt(2)) / 2, 0]);
-  t.deepEqual(weights, [(2 - Math.sqrt(2)) / 2, Math.sqrt(2) - 1, (2 - Math.sqrt(2)) / 2]);
+  t.deepEqual(weights, [
+    (2 - Math.sqrt(2)) / 2,
+    Math.sqrt(2) - 1,
+    (2 - Math.sqrt(2)) / 2,
+  ]);
 
   // Outside
   x = [0, 2, 0];

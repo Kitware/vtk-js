@@ -1,6 +1,6 @@
-import macro                from 'vtk.js/Sources/macro';
+import macro from 'vtk.js/Sources/macro';
 import vtkCameraManipulator from 'vtk.js/Sources/Interaction/Manipulators/CameraManipulator';
-import vtkMath              from 'vtk.js/Sources/Common/Core/Math';
+import vtkMath from 'vtk.js/Sources/Common/Core/Math';
 
 // ----------------------------------------------------------------------------
 // vtkTrackballPan methods
@@ -42,13 +42,13 @@ function vtkTrackballPan(publicAPI, model) {
       dx *= scale * 2.0;
       dy *= scale * 2.0;
 
-      let tmp = (right[0] * dx) + (up[0] * dy);
+      let tmp = right[0] * dx + up[0] * dy;
       camPos[0] += tmp;
       fp[0] += tmp;
-      tmp = (right[1] * dx) + (up[1] * dy);
+      tmp = right[1] * dx + up[1] * dy;
       camPos[1] += tmp;
       fp[1] += tmp;
-      tmp = (right[2] * dx) + (up[2] * dy);
+      tmp = right[2] * dx + up[2] * dy;
       camPos[2] += tmp;
       fp[2] += tmp;
       camera.setPosition(camPos[0], camPos[1], camPos[2]);
@@ -56,9 +56,17 @@ function vtkTrackballPan(publicAPI, model) {
     } else {
       const center = model.center;
       const style = interactor.getInteractorStyle();
-      const focalDepth = style.computeWorldToDisplay(center[0], center[1], center[2])[2];
+      const focalDepth = style.computeWorldToDisplay(
+        center[0],
+        center[1],
+        center[2]
+      )[2];
       const worldPoint = style.computeDisplayToWorld(pos.x, pos.y, focalDepth);
-      const lastWorldPoint = style.computeDisplayToWorld(lastPos.x, lastPos.y, focalDepth);
+      const lastWorldPoint = style.computeDisplayToWorld(
+        lastPos.x,
+        lastPos.y,
+        focalDepth
+      );
 
       const newCamPos = [
         camPos[0] + (lastWorldPoint[0] - worldPoint[0]),

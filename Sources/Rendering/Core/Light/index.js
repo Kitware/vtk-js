@@ -1,4 +1,4 @@
-import macro   from 'vtk.js/Sources/macro';
+import macro from 'vtk.js/Sources/macro';
 import vtkMath from 'vtk.js/Sources/Common/Core/Math';
 
 // ----------------------------------------------------------------------------
@@ -45,7 +45,8 @@ function vtkLight(publicAPI, model) {
     publicAPI.setPosition(
       Math.cos(elevationRadians) * Math.sin(azimuthRadians),
       Math.sin(elevationRadians),
-      Math.cos(elevationRadians) * Math.cos(azimuthRadians));
+      Math.cos(elevationRadians) * Math.cos(azimuthRadians)
+    );
 
     publicAPI.setFocalPoint(0, 0, 0);
     publicAPI.setPositional(0);
@@ -109,12 +110,12 @@ export function extend(publicAPI, model, initialValues = {}) {
     'lightType',
     'shadowAttenuation',
   ]);
-  macro.setGetArray(publicAPI, model, [
-    'color',
-    'position',
-    'focalPoint',
-    'attenuationValues',
-  ], 3);
+  macro.setGetArray(
+    publicAPI,
+    model,
+    ['color', 'position', 'focalPoint', 'attenuationValues'],
+    3
+  );
 
   // Object methods
   vtkLight(publicAPI, model);

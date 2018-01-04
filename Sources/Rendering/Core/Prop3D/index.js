@@ -1,9 +1,9 @@
 import { vec3, quat, mat4 } from 'gl-matrix';
 
-import macro          from 'vtk.js/Sources/macro';
+import macro from 'vtk.js/Sources/macro';
 import vtkBoundingBox from 'vtk.js/Sources/Common/DataModel/BoundingBox';
-import vtkMath        from 'vtk.js/Sources/Common/Core/Math';
-import vtkProp        from 'vtk.js/Sources/Rendering/Core/Prop';
+import vtkMath from 'vtk.js/Sources/Common/Core/Math';
+import vtkProp from 'vtk.js/Sources/Rendering/Core/Prop';
 
 function notImplemented(method) {
   return () => macro.vtkErrorMacro(`vtkProp3D::${method} - NOT IMPLEMENTED`);
@@ -18,7 +18,9 @@ function vtkProp3D(publicAPI, model) {
   model.classHierarchy.push('vtkProp3D');
 
   publicAPI.addPosition = (deltaXYZ) => {
-    model.position = model.position.map((value, index) => value + deltaXYZ[index]);
+    model.position = model.position.map(
+      (value, index) => value + deltaXYZ[index]
+    );
     publicAPI.modified();
   };
 
@@ -35,13 +37,15 @@ function vtkProp3D(publicAPI, model) {
   publicAPI.getOrientation = notImplemented('getOrientation');
   publicAPI.setOrientation = notImplemented('setOrientation');
 
-
   publicAPI.rotateX = (val) => {
     if (val === 0.0) {
       return;
     }
-    mat4.rotateX(model.rotation, model.rotation,
-      vtkMath.radiansFromDegrees(val));
+    mat4.rotateX(
+      model.rotation,
+      model.rotation,
+      vtkMath.radiansFromDegrees(val)
+    );
     publicAPI.modified();
   };
 
@@ -49,8 +53,11 @@ function vtkProp3D(publicAPI, model) {
     if (val === 0.0) {
       return;
     }
-    mat4.rotateY(model.rotation, model.rotation,
-      vtkMath.radiansFromDegrees(val));
+    mat4.rotateY(
+      model.rotation,
+      model.rotation,
+      vtkMath.radiansFromDegrees(val)
+    );
     publicAPI.modified();
   };
 
@@ -58,8 +65,11 @@ function vtkProp3D(publicAPI, model) {
     if (val === 0.0) {
       return;
     }
-    mat4.rotateZ(model.rotation, model.rotation,
-      vtkMath.radiansFromDegrees(val));
+    mat4.rotateZ(
+      model.rotation,
+      model.rotation,
+      vtkMath.radiansFromDegrees(val)
+    );
     publicAPI.modified();
   };
 
@@ -101,14 +111,18 @@ function vtkProp3D(publicAPI, model) {
       mat4.translate(model.matrix, model.matrix, model.position);
       mat4.multiply(model.matrix, model.matrix, model.rotation);
       mat4.scale(model.matrix, model.matrix, model.scale);
-      mat4.translate(model.matrix, model.matrix, [-model.origin[0], -model.origin[1], -model.origin[2]]);
+      mat4.translate(model.matrix, model.matrix, [
+        -model.origin[0],
+        -model.origin[1],
+        -model.origin[2],
+      ]);
       mat4.transpose(model.matrix, model.matrix);
 
       // check for identity
       model.isIdentity = true;
       for (let i = 0; i < 4; ++i) {
         for (let j = 0; j < 4; ++j) {
-          if ((i === j ? 1.0 : 0.0) !== model.matrix[i + (j * 4)]) {
+          if ((i === j ? 1.0 : 0.0) !== model.matrix[i + j * 4]) {
             model.isIdentity = false;
           }
         }
@@ -163,16 +177,13 @@ export function extend(publicAPI, model, initialValues = {}) {
   macro.obj(model.matrixMTime);
 
   // Build VTK API
-  macro.get(publicAPI, model, [
-    'bounds',
-    'isIdentity',
-  ]);
-  macro.setGetArray(publicAPI, model, [
-    'origin',
-    'position',
-    'orientation',
-    'scale',
-  ], 3);
+  macro.get(publicAPI, model, ['bounds', 'isIdentity']);
+  macro.setGetArray(
+    publicAPI,
+    model,
+    ['origin', 'position', 'orientation', 'scale'],
+    3
+  );
 
   // Object internal instance
   model.matrix = mat4.create();

@@ -1,6 +1,6 @@
 import { quat, vec3, vec4, mat3, mat4 } from 'gl-matrix';
 
-import macro   from 'vtk.js/Sources/macro';
+import macro from 'vtk.js/Sources/macro';
 import vtkMath from 'vtk.js/Sources/Common/Core/Math';
 
 const { vtkDebugMacro } = macro;
@@ -46,9 +46,11 @@ function vtkCamera(publicAPI, model) {
   };
 
   publicAPI.setPosition = (x, y, z) => {
-    if (x === model.position[0] &&
-        y === model.position[1] &&
-        z === model.position[2]) {
+    if (
+      x === model.position[0] &&
+      y === model.position[1] &&
+      z === model.position[2]
+    ) {
       return;
     }
 
@@ -63,9 +65,11 @@ function vtkCamera(publicAPI, model) {
   };
 
   publicAPI.setFocalPoint = (x, y, z) => {
-    if (x === model.focalPoint[0] &&
-        y === model.focalPoint[1] &&
-        z === model.focalPoint[2]) {
+    if (
+      x === model.focalPoint[0] &&
+      y === model.focalPoint[1] &&
+      z === model.focalPoint[2]
+    ) {
       return;
     }
 
@@ -95,9 +99,9 @@ function vtkCamera(publicAPI, model) {
     const vec = model.directionOfProjection;
 
     // recalculate FocalPoint
-    model.focalPoint[0] = model.position[0] + (vec[0] * model.distance);
-    model.focalPoint[1] = model.position[1] + (vec[1] * model.distance);
-    model.focalPoint[2] = model.position[2] + (vec[2] * model.distance);
+    model.focalPoint[0] = model.position[0] + vec[0] * model.distance;
+    model.focalPoint[1] = model.position[1] + vec[1] * model.distance;
+    model.focalPoint[2] = model.position[2] + vec[2] * model.distance;
 
     publicAPI.modified();
   };
@@ -109,7 +113,7 @@ function vtkCamera(publicAPI, model) {
     const dy = model.focalPoint[1] - model.position[1];
     const dz = model.focalPoint[2] - model.position[2];
 
-    model.distance = Math.sqrt((dx * dx) + (dy * dy) + (dz * dz));
+    model.distance = Math.sqrt(dx * dx + dy * dy + dz * dz);
 
     if (model.distance < 1e-20) {
       model.distance = 1e-20;
@@ -118,9 +122,9 @@ function vtkCamera(publicAPI, model) {
       const vec = model.directionOfProjection;
 
       // recalculate FocalPoint
-      model.focalPoint[0] = model.position[0] + (vec[0] * model.distance);
-      model.focalPoint[1] = model.position[1] + (vec[1] * model.distance);
-      model.focalPoint[2] = model.position[2] + (vec[2] * model.distance);
+      model.focalPoint[0] = model.position[0] + vec[0] * model.distance;
+      model.focalPoint[1] = model.position[1] + vec[1] * model.distance;
+      model.focalPoint[2] = model.position[2] + vec[2] * model.distance;
     }
 
     model.directionOfProjection[0] = dx / model.distance;
@@ -151,18 +155,15 @@ function vtkCamera(publicAPI, model) {
     const d = model.distance / amount;
 
     publicAPI.setPosition(
-      model.focalPoint[0] - (d * model.directionOfProjection[0]),
-      model.focalPoint[1] - (d * model.directionOfProjection[1]),
-      model.focalPoint[2] - (d * model.directionOfProjection[2]));
+      model.focalPoint[0] - d * model.directionOfProjection[0],
+      model.focalPoint[1] - d * model.directionOfProjection[1],
+      model.focalPoint[2] - d * model.directionOfProjection[2]
+    );
   };
 
-  publicAPI.setRoll = (roll) => {
+  publicAPI.setRoll = (roll) => {};
 
-  };
-
-  publicAPI.getRoll = () => {
-
-  };
+  publicAPI.getRoll = () => {};
 
   publicAPI.roll = (angle) => {
     const eye = model.position;
@@ -170,9 +171,18 @@ function vtkCamera(publicAPI, model) {
     const up = model.viewUp;
     const viewUpVec4 = vec4.fromValues(up[0], up[1], up[2], 0.0);
 
-    const rotateMatrix = mat4.create();   // FIXME: don't create a new one each time?
-    const viewDir = vec3.fromValues((at[0] - eye[0]), (at[1] - eye[1]), (at[2] - eye[2]));
-    mat4.rotate(rotateMatrix, rotateMatrix, vtkMath.radiansFromDegrees(angle), viewDir);
+    const rotateMatrix = mat4.create(); // FIXME: don't create a new one each time?
+    const viewDir = vec3.fromValues(
+      at[0] - eye[0],
+      at[1] - eye[1],
+      at[2] - eye[2]
+    );
+    mat4.rotate(
+      rotateMatrix,
+      rotateMatrix,
+      vtkMath.radiansFromDegrees(angle),
+      viewDir
+    );
     vec4.transformMat4(viewUpVec4, viewUpVec4, rotateMatrix);
 
     model.viewUp[0] = viewUpVec4[0];
@@ -193,11 +203,20 @@ function vtkCamera(publicAPI, model) {
     // rotate about view up,
     // translate back again
     mat4.translate(trans, trans, vec3.fromValues(fp[0], fp[1], fp[2]));
-    mat4.rotate(trans, trans, vtkMath.radiansFromDegrees(angle), vec3.fromValues(model.viewUp[0], model.viewUp[1], model.viewUp[2]));
+    mat4.rotate(
+      trans,
+      trans,
+      vtkMath.radiansFromDegrees(angle),
+      vec3.fromValues(model.viewUp[0], model.viewUp[1], model.viewUp[2])
+    );
     mat4.translate(trans, trans, vec3.fromValues(-fp[0], -fp[1], -fp[2]));
 
     // apply the transform to the position
-    vec3.transformMat4(newPosition, vec3.fromValues(model.position[0], model.position[1], model.position[2]), trans);
+    vec3.transformMat4(
+      newPosition,
+      vec3.fromValues(model.position[0], model.position[1], model.position[2]),
+      trans
+    );
     publicAPI.setPosition(newPosition[0], newPosition[1], newPosition[2]);
   };
 
@@ -211,13 +230,38 @@ function vtkCamera(publicAPI, model) {
     // translate the camera to the origin,
     // rotate about axis,
     // translate back again
-    mat4.translate(trans, trans, vec3.fromValues(position[0], position[1], position[2]));
-    mat4.rotate(trans, trans, vtkMath.radiansFromDegrees(angle), vec3.fromValues(model.viewUp[0], model.viewUp[1], model.viewUp[2]));
-    mat4.translate(trans, trans, vec3.fromValues(-position[0], -position[1], -position[2]));
+    mat4.translate(
+      trans,
+      trans,
+      vec3.fromValues(position[0], position[1], position[2])
+    );
+    mat4.rotate(
+      trans,
+      trans,
+      vtkMath.radiansFromDegrees(angle),
+      vec3.fromValues(model.viewUp[0], model.viewUp[1], model.viewUp[2])
+    );
+    mat4.translate(
+      trans,
+      trans,
+      vec3.fromValues(-position[0], -position[1], -position[2])
+    );
 
     // apply the transform to the position
-    vec3.transformMat4(newFocalPoint, vec3.fromValues(model.focalPoint[0], model.focalPoint[1], model.focalPoint[2]), trans);
-    publicAPI.setFocalPoint(newFocalPoint[0], newFocalPoint[1], newFocalPoint[2]);
+    vec3.transformMat4(
+      newFocalPoint,
+      vec3.fromValues(
+        model.focalPoint[0],
+        model.focalPoint[1],
+        model.focalPoint[2]
+      ),
+      trans
+    );
+    publicAPI.setFocalPoint(
+      newFocalPoint[0],
+      newFocalPoint[1],
+      newFocalPoint[2]
+    );
   };
 
   publicAPI.elevation = (angle) => {
@@ -234,11 +278,20 @@ function vtkCamera(publicAPI, model) {
     // rotate about view up,
     // translate back again
     mat4.translate(trans, trans, vec3.fromValues(fp[0], fp[1], fp[2]));
-    mat4.rotate(trans, trans, vtkMath.radiansFromDegrees(angle), vec3.fromValues(axis[0], axis[1], axis[2]));
+    mat4.rotate(
+      trans,
+      trans,
+      vtkMath.radiansFromDegrees(angle),
+      vec3.fromValues(axis[0], axis[1], axis[2])
+    );
     mat4.translate(trans, trans, vec3.fromValues(-fp[0], -fp[1], -fp[2]));
 
     // apply the transform to the position
-    vec3.transformMat4(newPosition, vec3.fromValues(model.position[0], model.position[1], model.position[2]), trans);
+    vec3.transformMat4(
+      newPosition,
+      vec3.fromValues(model.position[0], model.position[1], model.position[2]),
+      trans
+    );
     publicAPI.setPosition(newPosition[0], newPosition[1], newPosition[2]);
   };
 
@@ -255,13 +308,38 @@ function vtkCamera(publicAPI, model) {
     // translate the camera to the origin,
     // rotate about axis,
     // translate back again
-    mat4.translate(trans, trans, vec3.fromValues(position[0], position[1], position[2]));
-    mat4.rotate(trans, trans, vtkMath.radiansFromDegrees(angle), vec3.fromValues(axis[0], axis[1], axis[2]));
-    mat4.translate(trans, trans, vec3.fromValues(-position[0], -position[1], -position[2]));
+    mat4.translate(
+      trans,
+      trans,
+      vec3.fromValues(position[0], position[1], position[2])
+    );
+    mat4.rotate(
+      trans,
+      trans,
+      vtkMath.radiansFromDegrees(angle),
+      vec3.fromValues(axis[0], axis[1], axis[2])
+    );
+    mat4.translate(
+      trans,
+      trans,
+      vec3.fromValues(-position[0], -position[1], -position[2])
+    );
 
     // apply the transform to the position
-    vec3.transformMat4(newFocalPoint, vec3.fromValues(model.focalPoint[0], model.focalPoint[1], model.focalPoint[2]), trans);
-    publicAPI.setFocalPoint(newFocalPoint[0], newFocalPoint[1], newFocalPoint[2]);
+    vec3.transformMat4(
+      newFocalPoint,
+      vec3.fromValues(
+        model.focalPoint[0],
+        model.focalPoint[1],
+        model.focalPoint[2]
+      ),
+      trans
+    );
+    publicAPI.setFocalPoint(
+      newFocalPoint[0],
+      newFocalPoint[1],
+      newFocalPoint[2]
+    );
   };
 
   publicAPI.zoom = (factor) => {
@@ -276,13 +354,9 @@ function vtkCamera(publicAPI, model) {
     publicAPI.modified();
   };
 
-  publicAPI.setThickness = (thickness) => {
+  publicAPI.setThickness = (thickness) => {};
 
-  };
-
-  publicAPI.setObliqueAngles = (alpha, beta) => {
-
-  };
+  publicAPI.setObliqueAngles = (alpha, beta) => {};
 
   publicAPI.physicalOrientationToWorldDirection = (ori) => {
     // get the PhysicalToWorldMatrix
@@ -309,8 +383,12 @@ function vtkCamera(publicAPI, model) {
 
   publicAPI.getWorldToPhysicalMatrix = (result) => {
     mat4.identity(w2pMatrix);
-    vec3.set(tmpvec1,
-      model.physicalScale, model.physicalScale, model.physicalScale);
+    vec3.set(
+      tmpvec1,
+      model.physicalScale,
+      model.physicalScale,
+      model.physicalScale
+    );
     mat4.scale(w2pMatrix, w2pMatrix, tmpvec1);
     mat4.translate(w2pMatrix, w2pMatrix, model.physicalTranslation);
 
@@ -367,10 +445,12 @@ function vtkCamera(publicAPI, model) {
     const up = model.viewUp;
 
     const result = mat4.create();
-    mat4.lookAt(viewMatrix,
-      vec3.fromValues(eye[0], eye[1], eye[2]),  // eye
-      vec3.fromValues(at[0], at[1], at[2]),     // at
-      vec3.fromValues(up[0], up[1], up[2]));    // up
+    mat4.lookAt(
+      viewMatrix,
+      vec3.fromValues(eye[0], eye[1], eye[2]), // eye
+      vec3.fromValues(at[0], at[1], at[2]), // at
+      vec3.fromValues(up[0], up[1], up[2])
+    ); // up
 
     mat4.transpose(viewMatrix, viewMatrix);
 
@@ -386,9 +466,12 @@ function vtkCamera(publicAPI, model) {
     const result = mat4.create();
 
     if (model.projectionMatrix) {
-      vec3.set(tmpvec1,
-        model.physicalScale, model.physicalScale, model.physicalScale);
-
+      vec3.set(
+        tmpvec1,
+        model.physicalScale,
+        model.physicalScale,
+        model.physicalScale
+      );
 
       mat4.copy(result, model.projectionMatrix);
       mat4.scale(result, result, tmpvec1);
@@ -403,8 +486,9 @@ function vtkCamera(publicAPI, model) {
     // this->ProjectionTransform->AdjustZBuffer( -1, +1, nearz, farz );
     const cWidth = model.clippingRange[1] - model.clippingRange[0];
     const cRange = [
-      model.clippingRange[0] + (((nearz + 1) * cWidth) / 2.0),
-      model.clippingRange[0] + (((farz + 1) * cWidth) / 2.0)];
+      model.clippingRange[0] + (nearz + 1) * cWidth / 2.0,
+      model.clippingRange[0] + (farz + 1) * cWidth / 2.0,
+    ];
 
     if (model.parallelProjection) {
       // set up a rectangular parallelipiped
@@ -416,7 +500,15 @@ function vtkCamera(publicAPI, model) {
       const ymin = (model.windowCenter[1] - 1.0) * height;
       const ymax = (model.windowCenter[1] + 1.0) * height;
 
-      mat4.ortho(projectionMatrix, xmin, xmax, ymin, ymax, cRange[0], cRange[1]);
+      mat4.ortho(
+        projectionMatrix,
+        xmin,
+        xmax,
+        ymin,
+        ymax,
+        cRange[0],
+        cRange[1]
+      );
       mat4.transpose(projectionMatrix, projectionMatrix);
     } else if (model.useOffAxisProjection) {
       throw new Error('Off-Axis projection is not supported at this time');
@@ -466,18 +558,16 @@ function vtkCamera(publicAPI, model) {
     // Return array of 24 params (4 params for each of 6 plane equations)
   };
 
-  publicAPI.getOrientation = () => {
+  publicAPI.getOrientation = () => {};
 
-  };
-
-  publicAPI.getOrientationWXYZ = () => {
-
-  };
+  publicAPI.getOrientationWXYZ = () => {};
 
   publicAPI.setDirectionOfProjection = (x, y, z) => {
-    if (model.directionOfProjection[0] === x &&
-        model.directionOfProjection[1] === y &&
-        model.directionOfProjection[2] === z) {
+    if (
+      model.directionOfProjection[0] === x &&
+      model.directionOfProjection[1] === y &&
+      model.directionOfProjection[2] === z
+    ) {
       return;
     }
 
@@ -488,9 +578,9 @@ function vtkCamera(publicAPI, model) {
     const vec = model.directionOfProjection;
 
     // recalculate FocalPoint
-    model.focalPoint[0] = model.position[0] + (vec[0] * model.distance);
-    model.focalPoint[1] = model.position[1] + (vec[1] * model.distance);
-    model.focalPoint[2] = model.position[2] + (vec[2] * model.distance);
+    model.focalPoint[0] = model.position[0] + vec[0] * model.distance;
+    model.focalPoint[1] = model.position[1] + vec[1] * model.distance;
+    model.focalPoint[2] = model.position[2] + vec[2] * model.distance;
     publicAPI.computeViewPlaneNormal();
   };
 
@@ -600,11 +690,7 @@ export function extend(publicAPI, model, initialValues = {}) {
   // Build VTK API
   macro.obj(publicAPI, model);
 
-  model.viewMatrix =
-  macro.get(publicAPI, model, [
-    'distance',
-    'thickness',
-  ]);
+  model.viewMatrix = macro.get(publicAPI, model, ['distance', 'thickness']);
 
   macro.setGet(publicAPI, model, [
     'parallelProjection',
@@ -624,20 +710,22 @@ export function extend(publicAPI, model, initialValues = {}) {
     'focalPoint',
   ]);
 
-  macro.setGetArray(publicAPI, model, [
-    'clippingRange',
-    'windowCenter',
-  ], 2);
+  macro.setGetArray(publicAPI, model, ['clippingRange', 'windowCenter'], 2);
 
-  macro.setGetArray(publicAPI, model, [
-    'viewUp',
-    'screenBottomLeft',
-    'screenBottomRight',
-    'screenTopRight',
-    'physicalTranslation',
-    'physicalViewUp',
-    'physicalViewNorth',
-  ], 3);
+  macro.setGetArray(
+    publicAPI,
+    model,
+    [
+      'viewUp',
+      'screenBottomLeft',
+      'screenBottomRight',
+      'screenTopRight',
+      'physicalTranslation',
+      'physicalViewUp',
+      'physicalViewNorth',
+    ],
+    3
+  );
 
   // Object methods
   vtkCamera(publicAPI, model);

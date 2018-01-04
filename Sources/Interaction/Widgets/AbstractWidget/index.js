@@ -1,4 +1,4 @@
-import macro                 from 'vtk.js/Sources/macro';
+import macro from 'vtk.js/Sources/macro';
 import vtkInteractorObserver from 'vtk.js/Sources/Rendering/Core/InteractorObserver';
 
 const { vtkErrorMacro } = macro;
@@ -12,12 +12,10 @@ function vtkAbstractWidget(publicAPI, model) {
   model.classHierarchy.push('vtkAbstractWidget');
 
   // Virtual method
-  publicAPI.createDefaultRepresentation = () => {
-  };
+  publicAPI.createDefaultRepresentation = () => {};
 
   // Virtual method
-  publicAPI.listenEvents = () => {
-  };
+  publicAPI.listenEvents = () => {};
 
   publicAPI.render = () => {
     if (!model.parent && model.interactor) {
@@ -27,11 +25,14 @@ function vtkAbstractWidget(publicAPI, model) {
 
   publicAPI.setEnable = (enable) => {
     if (enable) {
-      if (model.enabled) { // widget already enabled
+      if (model.enabled) {
+        // widget already enabled
         return;
       }
       if (!model.interactor) {
-        vtkErrorMacro('The interactor must be set prior to enabling the widget');
+        vtkErrorMacro(
+          'The interactor must be set prior to enabling the widget'
+        );
         return;
       }
 
@@ -60,7 +61,8 @@ function vtkAbstractWidget(publicAPI, model) {
       model.widgetRep.buildRepresentation();
       model.currentRenderer.addViewProp(model.widgetRep);
     } else {
-      if (!model.enabled) { // already
+      if (!model.enabled) {
+        // already
         return;
       }
       model.enabled = 0;
@@ -78,9 +80,16 @@ function vtkAbstractWidget(publicAPI, model) {
   };
 
   publicAPI.get2DPointerPosition = () => {
-    const pos = model.interactor.getEventPosition(model.interactor.getPointerIndex());
-    const boundingContainer = model.interactor.getCanvas().getBoundingClientRect();
-    const position = [pos.x - boundingContainer.left, pos.y + boundingContainer.top];
+    const pos = model.interactor.getEventPosition(
+      model.interactor.getPointerIndex()
+    );
+    const boundingContainer = model.interactor
+      .getCanvas()
+      .getBoundingClientRect();
+    const position = [
+      pos.x - boundingContainer.left,
+      pos.y + boundingContainer.top,
+    ];
     return position;
   };
 }
@@ -103,10 +112,7 @@ export function extend(publicAPI, model, initialValues = {}) {
   // Inheritance
   vtkInteractorObserver.extend(publicAPI, model, initialValues);
 
-  macro.setGet(publicAPI, model, [
-    'widgetRep',
-    'parent',
-  ]);
+  macro.setGet(publicAPI, model, ['widgetRep', 'parent']);
 
   model.unsubscribes = [];
 

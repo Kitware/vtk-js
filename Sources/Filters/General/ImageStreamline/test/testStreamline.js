@@ -1,15 +1,16 @@
 import test from 'tape-catch';
 
-import macro              from 'vtk.js/Sources/macro';
-import vtkDataArray       from 'vtk.js/Sources/Common/Core/DataArray';
-import vtkImageData       from 'vtk.js/Sources/Common/DataModel/ImageData';
+import macro from 'vtk.js/Sources/macro';
+import vtkDataArray from 'vtk.js/Sources/Common/Core/DataArray';
+import vtkImageData from 'vtk.js/Sources/Common/DataModel/ImageData';
 import vtkImageStreamline from 'vtk.js/Sources/Filters/General/ImageStreamline';
-import vtkPlaneSource     from 'vtk.js/Sources/Filters/Sources/PlaneSource';
+import vtkPlaneSource from 'vtk.js/Sources/Filters/Sources/PlaneSource';
 
 const vecSource = macro.newInstance((publicAPI, model) => {
   macro.obj(publicAPI, model); // make it an object
   macro.algo(publicAPI, model, 0, 1); // mixin algorithm code 1 in, 1 out
-  publicAPI.requestData = (inData, outData) => { // implement requestData
+  publicAPI.requestData = (inData, outData) => {
+    // implement requestData
     if (!outData[0]) {
       const id = vtkImageData.newInstance();
       id.setSpacing(0.1, 0.1, 0.1);
@@ -24,13 +25,16 @@ const vecSource = macro.newInstance((publicAPI, model) => {
           for (let x = 0; x <= 9; x++) {
             newArray[i++] = 0.1 * x;
             const v = 0.1 * y;
-            newArray[i++] = (v * v);
+            newArray[i++] = v * v;
             newArray[i++] = 0;
           }
         }
       }
 
-      const da = vtkDataArray.newInstance({ numberOfComponents: 3, values: newArray });
+      const da = vtkDataArray.newInstance({
+        numberOfComponents: 3,
+        values: newArray,
+      });
       da.setName('vectors');
 
       const cpd = id.getPointData();
@@ -47,15 +51,26 @@ test('Test vtkImageStreamline instance', (t) => {
   const instance = vtkImageStreamline.newInstance();
   t.ok(instance, 'Make sure the instance exist');
 
-  t.equal(instance.getIntegrationStep(), 1, 'Default integrationStep should be 1');
-  t.equal(instance.getMaximumNumberOfSteps(), 1000, 'Default MaximumNumberOfSteps should be 1000');
+  t.equal(
+    instance.getIntegrationStep(),
+    1,
+    'Default integrationStep should be 1'
+  );
+  t.equal(
+    instance.getMaximumNumberOfSteps(),
+    1000,
+    'Default MaximumNumberOfSteps should be 1000'
+  );
 
   instance.setIntegrationStep(0.1);
-  t.equal(instance.getIntegrationStep(), 0.1, 'Updated value of integrationStep should be 0.1');
+  t.equal(
+    instance.getIntegrationStep(),
+    0.1,
+    'Updated value of integrationStep should be 0.1'
+  );
 
   t.end();
 });
-
 
 test('Test vtkImageStreamline execution', (t) => {
   const planeSource = vtkPlaneSource.newInstance();
@@ -75,11 +90,16 @@ test('Test vtkImageStreamline execution', (t) => {
   const output = filter.getOutputData();
 
   t.ok(output, 'Output dataset exist');
-  t.equal(output.isA('vtkPolyData'), true, 'The output dataset should be a vtkPolydata');
+  t.equal(
+    output.isA('vtkPolyData'),
+    true,
+    'The output dataset should be a vtkPolydata'
+  );
   t.equal(
     output.getPoints().getNumberOfPoints(),
     2228,
-    'The number of points should be 2228');
+    'The number of points should be 2228'
+  );
 
   t.end();
 });

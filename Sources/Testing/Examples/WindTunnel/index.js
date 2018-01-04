@@ -1,20 +1,22 @@
 import 'vtk.js/Sources/favicon';
 
-import vtkActor                  from 'vtk.js/Sources/Rendering/Core/Actor';
+import vtkActor from 'vtk.js/Sources/Rendering/Core/Actor';
 import vtkFullScreenRenderWindow from 'vtk.js/Sources/Rendering/Misc/FullScreenRenderWindow';
-import vtkMapper                 from 'vtk.js/Sources/Rendering/Core/Mapper';
-import vtkOBJReader              from 'vtk.js/Sources/IO/Misc/OBJReader';
-import vtkOutlineFilter          from 'vtk.js/Sources/Filters/General/OutlineFilter';
-import vtkPolyData               from 'vtk.js/Sources/Common/DataModel/PolyData';
+import vtkMapper from 'vtk.js/Sources/Rendering/Core/Mapper';
+import vtkOBJReader from 'vtk.js/Sources/IO/Misc/OBJReader';
+import vtkOutlineFilter from 'vtk.js/Sources/Filters/General/OutlineFilter';
+import vtkPolyData from 'vtk.js/Sources/Common/DataModel/PolyData';
 
 import controlPanel from './controller.html';
-import style        from './windtunnel.mcss';
+import style from './windtunnel.mcss';
 
 // ----------------------------------------------------------------------------
 // Standard rendering code setup
 // ----------------------------------------------------------------------------
 
-const fullScreenRenderer = vtkFullScreenRenderWindow.newInstance({ background: [0, 0, 0] });
+const fullScreenRenderer = vtkFullScreenRenderWindow.newInstance({
+  background: [0, 0, 0],
+});
 const renderer = fullScreenRenderer.getRenderer();
 const renderWindow = fullScreenRenderer.getRenderWindow();
 
@@ -55,8 +57,8 @@ function updateUI() {
     if (tunnelBounds[i * 2] > objBounds[i * 2]) {
       tunnelBounds[i * 2] = objBounds[i * 2];
     }
-    if (tunnelBounds[(i * 2) + 1] < objBounds[(i * 2) + 1]) {
-      tunnelBounds[(i * 2) + 1] = objBounds[(i * 2) + 1];
+    if (tunnelBounds[i * 2 + 1] < objBounds[i * 2 + 1]) {
+      tunnelBounds[i * 2 + 1] = objBounds[i * 2 + 1];
     }
   }
   document.querySelector('.tx0').value = tunnelBounds[0].toFixed(3);
@@ -120,11 +122,14 @@ function onClick(event) {
 
   const camera = renderer.getActiveCamera();
   const mappingIndex = 'xyz'.indexOf(dataModel.wind.direction[0]);
-  const delta = (dataModel.wind.direction[1] === '+') ? 1 : -1;
+  const delta = dataModel.wind.direction[1] === '+' ? 1 : -1;
   const focalPoint = camera.getFocalPoint();
-  const position = focalPoint.map((v, i) => ((i === mappingIndex) ? (v + delta) : v));
+  const position = focalPoint.map(
+    (v, i) => (i === mappingIndex ? v + delta : v)
+  );
   const viewUp = [0, 0, 0];
-  viewUp['xyz'.indexOf(dataModel.wind.orientation[0])] = ((dataModel.wind.orientation[1] === '+') ? 1 : -1);
+  viewUp['xyz'.indexOf(dataModel.wind.orientation[0])] =
+    dataModel.wind.orientation[1] === '+' ? 1 : -1;
   camera.set({ focalPoint, position, viewUp });
   renderer.resetCamera();
   updateUI();
@@ -181,7 +186,10 @@ mapper.setInputConnection(reader.getOutputPort());
 actor.setMapper(mapper);
 
 reader
-  .setUrl('https://data.kitware.com/api/v1/file/589b535f8d777f07219fcc58/download', { fullpath: true, compression: 'gz' })
+  .setUrl(
+    'https://data.kitware.com/api/v1/file/589b535f8d777f07219fcc58/download',
+    { fullpath: true, compression: 'gz' }
+  )
   .then(() => {
     dataModel.size.object = reader.getOutputData().getBounds();
     updateUI();

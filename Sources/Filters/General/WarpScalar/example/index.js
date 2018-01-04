@@ -1,14 +1,14 @@
 import 'vtk.js/Sources/favicon';
 
-import vtkFullScreenRenderWindow  from 'vtk.js/Sources/Rendering/Misc/FullScreenRenderWindow';
-import macro                      from 'vtk.js/Sources/macro';
-import vtk                        from 'vtk.js/Sources/vtk';
-import vtkActor                   from 'vtk.js/Sources/Rendering/Core/Actor';
-import vtkCamera                  from 'vtk.js/Sources/Rendering/Core/Camera';
-import vtkDataArray               from 'vtk.js/Sources/Common/Core/DataArray';
-import vtkMapper                  from 'vtk.js/Sources/Rendering/Core/Mapper';
-import vtkSphereSource            from 'vtk.js/Sources/Filters/Sources/SphereSource';
-import vtkWarpScalar              from 'vtk.js/Sources/Filters/General/WarpScalar';
+import vtkFullScreenRenderWindow from 'vtk.js/Sources/Rendering/Misc/FullScreenRenderWindow';
+import macro from 'vtk.js/Sources/macro';
+import vtk from 'vtk.js/Sources/vtk';
+import vtkActor from 'vtk.js/Sources/Rendering/Core/Actor';
+import vtkCamera from 'vtk.js/Sources/Rendering/Core/Camera';
+import vtkDataArray from 'vtk.js/Sources/Common/Core/DataArray';
+import vtkMapper from 'vtk.js/Sources/Rendering/Core/Mapper';
+import vtkSphereSource from 'vtk.js/Sources/Filters/Sources/SphereSource';
+import vtkWarpScalar from 'vtk.js/Sources/Filters/General/WarpScalar';
 
 import controlPanel from './controller.html';
 
@@ -16,7 +16,9 @@ import controlPanel from './controller.html';
 // Standard rendering code setup
 // ----------------------------------------------------------------------------
 
-const fullScreenRenderer = vtkFullScreenRenderWindow.newInstance({ background: [0, 0, 0] });
+const fullScreenRenderer = vtkFullScreenRenderWindow.newInstance({
+  background: [0, 0, 0],
+});
 const renderer = fullScreenRenderer.getRenderer();
 const renderWindow = fullScreenRenderer.getRenderWindow();
 
@@ -37,7 +39,10 @@ cam.setPosition(0, 0, 10);
 cam.setClippingRange(0.1, 50.0);
 
 // Build pipeline
-const sphereSource = vtkSphereSource.newInstance({ thetaResolution: 40, phiResolution: 41 });
+const sphereSource = vtkSphereSource.newInstance({
+  thetaResolution: 40,
+  phiResolution: 41,
+});
 const filter = vtkWarpScalar.newInstance({ scaleFactor: 0, useNormal: false });
 
 // create a filter on the fly, sort of cool, this is a random scalars
@@ -46,9 +51,12 @@ const filter = vtkWarpScalar.newInstance({ scaleFactor: 0, useNormal: false });
 const randFilter = macro.newInstance((publicAPI, model) => {
   macro.obj(publicAPI, model); // make it an object
   macro.algo(publicAPI, model, 1, 1); // mixin algorithm code 1 in, 1 out
-  publicAPI.requestData = (inData, outData) => { // implement requestData
+  publicAPI.requestData = (inData, outData) => {
+    // implement requestData
     if (!outData[0] || inData[0].getMTime() > outData[0].getMTime()) {
-      const newArray = new Float32Array(inData[0].getPoints().getNumberOfPoints());
+      const newArray = new Float32Array(
+        inData[0].getPoints().getNumberOfPoints()
+      );
       for (let i = 0; i < newArray.length; i++) {
         newArray[i] = i % 2 ? 1 : 0;
       }
@@ -86,7 +94,7 @@ fullScreenRenderer.addController(controlPanel);
 
 // Checkbox
 document.querySelector('.useNormal').addEventListener('change', (e) => {
-  const useNormal = !!(e.target.checked);
+  const useNormal = !!e.target.checked;
   filter.set({ useNormal });
   renderWindow.render();
 });

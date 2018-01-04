@@ -42,9 +42,9 @@
     },
     "scripts": {
         "size": "size-limit --why --config ./webpack.config.js",
-        "validate": "prettier --single-quote --trailing-comma es5 --print-width 100 --list-different \"Sources/**/*.js\"",
-        "reformat": "prettier --single-quote --trailing-comma es5 --print-width 100 --write \"Sources/**/*.js\"",
-        "reformat-only": "prettier --single-quote --trailing-comma es5 --print-width 100 --write",
+        "validate": "prettier --config ./prettier.config.js --list-different \"Sources/**/*.js\"",
+        "reformat": "prettier --config ./prettier.config.js --write \"Sources/**/*.js\"",
+        "reformat-only": "prettier --single-quote --trailing-comma es5 --print-width 80 --arrow-parens always --write",
         "doc": "kw-doc -c ./Documentation/config.js",
         "doc:www": "npm t -- --single-run && kw-doc -c ./Documentation/config.js -s",
         "doc:publish": "kw-doc -c ./Documentation/config.js -mp",

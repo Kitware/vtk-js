@@ -1,6 +1,6 @@
-import macro                from 'vtk.js/Sources/macro';
+import macro from 'vtk.js/Sources/macro';
 import vtkOpenGLFramebuffer from 'vtk.js/Sources/Rendering/OpenGL/Framebuffer';
-import vtkRenderPass        from 'vtk.js/Sources/Rendering/SceneGraph/RenderPass';
+import vtkRenderPass from 'vtk.js/Sources/Rendering/SceneGraph/RenderPass';
 
 // ----------------------------------------------------------------------------
 
@@ -38,7 +38,10 @@ function vtkForwardPass(publicAPI, model) {
       renNode.traverse(publicAPI);
 
       // do we need to capture a zbuffer?
-      if ((model.opaqueActorCount > 0 && model.volumeCount > 0) || model.depthRequested) {
+      if (
+        (model.opaqueActorCount > 0 && model.volumeCount > 0) ||
+        model.depthRequested
+      ) {
         const size = viewNode.getSize();
         // make sure the framebuffer is setup
         if (model.framebuffer === null) {
@@ -47,8 +50,7 @@ function vtkForwardPass(publicAPI, model) {
         model.framebuffer.setOpenGLRenderWindow(viewNode);
         model.framebuffer.saveCurrentBindingsAndBuffers();
         const fbSize = model.framebuffer.getSize();
-        if (fbSize === null ||
-            fbSize[0] !== size[0] || fbSize[1] !== size[1]) {
+        if (fbSize === null || fbSize[0] !== size[0] || fbSize[1] !== size[1]) {
           model.framebuffer.create(size[0], size[1]);
           model.framebuffer.populateFramebuffer();
         }
@@ -83,7 +85,8 @@ function vtkForwardPass(publicAPI, model) {
   };
 
   publicAPI.incrementOpaqueActorCount = () => model.opaqueActorCount++;
-  publicAPI.incrementTranslucentActorCount = () => model.translucentActorCount++;
+  publicAPI.incrementTranslucentActorCount = () =>
+    model.translucentActorCount++;
   publicAPI.incrementVolumeCount = () => model.volumeCount++;
 }
 
@@ -108,9 +111,7 @@ export function extend(publicAPI, model, initialValues = {}) {
   vtkRenderPass.extend(publicAPI, model, initialValues);
 
   macro.get(publicAPI, model, ['framebuffer']);
-  macro.setGet(publicAPI, model, [
-    'depthRequested',
-  ]);
+  macro.setGet(publicAPI, model, ['depthRequested']);
 
   // Object methods
   vtkForwardPass(publicAPI, model);

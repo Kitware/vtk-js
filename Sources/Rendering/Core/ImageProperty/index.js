@@ -42,7 +42,7 @@ export function extend(publicAPI, model, initialValues = {}) {
     let mTime = model.mtime;
     if (model.rGBTransferFunction !== null) {
       const time = model.rGBTransferFunction.getMTime();
-      mTime = (time > mTime ? time : mTime);
+      mTime = time > mTime ? time : mTime;
     }
 
     return mTime;

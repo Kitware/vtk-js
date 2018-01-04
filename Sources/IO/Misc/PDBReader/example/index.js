@@ -1,17 +1,19 @@
 import 'vtk.js/Sources/favicon';
 
-import vtkFullScreenRenderWindow    from 'vtk.js/Sources/Rendering/Misc/FullScreenRenderWindow';
-import vtkActor                     from 'vtk.js/Sources/Rendering/Core/Actor';
-import vtkPDBReader                 from 'vtk.js/Sources/IO/Misc/PDBReader';
-import vtkSphereMapper              from 'vtk.js/Sources/Rendering/Core/SphereMapper';
-import vtkStickMapper               from 'vtk.js/Sources/Rendering/Core/StickMapper';
-import vtkMoleculeToRepresentation  from 'vtk.js/Sources/Filters/General/MoleculeToRepresentation';
+import vtkFullScreenRenderWindow from 'vtk.js/Sources/Rendering/Misc/FullScreenRenderWindow';
+import vtkActor from 'vtk.js/Sources/Rendering/Core/Actor';
+import vtkPDBReader from 'vtk.js/Sources/IO/Misc/PDBReader';
+import vtkSphereMapper from 'vtk.js/Sources/Rendering/Core/SphereMapper';
+import vtkStickMapper from 'vtk.js/Sources/Rendering/Core/StickMapper';
+import vtkMoleculeToRepresentation from 'vtk.js/Sources/Filters/General/MoleculeToRepresentation';
 
 // ----------------------------------------------------------------------------
 // Standard rendering code setup
 // ----------------------------------------------------------------------------
 
-const fullScreenRenderer = vtkFullScreenRenderWindow.newInstance({ background: [0, 0, 0] });
+const fullScreenRenderer = vtkFullScreenRenderWindow.newInstance({
+  background: [0, 0, 0],
+});
 const renderer = fullScreenRenderer.getRenderer();
 const renderWindow = fullScreenRenderer.getRenderWindow();
 
@@ -50,7 +52,6 @@ renderer.addActor(sphereActor);
 renderer.addActor(stickActor);
 renderer.resetCamera();
 renderWindow.render();
-
 
 // -----------------------------------------------------------
 // Make some variables global so that you can inspect and

@@ -1,16 +1,16 @@
-import { mat4 }                 from 'gl-matrix';
-import { ObjectType }           from 'vtk.js/Sources/Rendering/OpenGL/BufferObject/Constants';
+import { mat4 } from 'gl-matrix';
+import { ObjectType } from 'vtk.js/Sources/Rendering/OpenGL/BufferObject/Constants';
 
-import macro                    from 'vtk.js/Sources/macro';
+import macro from 'vtk.js/Sources/macro';
 
-import vtkBufferObject          from 'vtk.js/Sources/Rendering/OpenGL/BufferObject';
-import vtkMath                  from 'vtk.js/Sources/Common/Core/Math';
+import vtkBufferObject from 'vtk.js/Sources/Rendering/OpenGL/BufferObject';
+import vtkMath from 'vtk.js/Sources/Common/Core/Math';
 
-import vtkShaderProgram         from 'vtk.js/Sources/Rendering/OpenGL/ShaderProgram';
-import vtkOpenGLPolyDataMapper  from 'vtk.js/Sources/Rendering/OpenGL/PolyDataMapper';
+import vtkShaderProgram from 'vtk.js/Sources/Rendering/OpenGL/ShaderProgram';
+import vtkOpenGLPolyDataMapper from 'vtk.js/Sources/Rendering/OpenGL/PolyDataMapper';
 
-import vtkSphereMapperVS        from 'vtk.js/Sources/Rendering/OpenGL/glsl/vtkSphereMapperVS.glsl';
-import vtkPolyDataFS            from 'vtk.js/Sources/Rendering/OpenGL/glsl/vtkPolyDataFS.glsl';
+import vtkSphereMapperVS from 'vtk.js/Sources/Rendering/OpenGL/glsl/vtkSphereMapperVS.glsl';
+import vtkPolyDataFS from 'vtk.js/Sources/Rendering/OpenGL/glsl/vtkPolyDataFS.glsl';
 
 const { vtkErrorMacro } = macro;
 
@@ -35,20 +35,22 @@ function vtkOpenGLSphereMapper(publicAPI, model) {
     let VSSource = shaders.Vertex;
     let FSSource = shaders.Fragment;
 
-    VSSource = vtkShaderProgram.substitute(VSSource,
-      '//VTK::Camera::Dec', [
-        'uniform mat4 VCDCMatrix;\n',
-        'uniform mat4 MCVCMatrix;']).result;
+    VSSource = vtkShaderProgram.substitute(VSSource, '//VTK::Camera::Dec', [
+      'uniform mat4 VCDCMatrix;\n',
+      'uniform mat4 MCVCMatrix;',
+    ]).result;
 
-    FSSource = vtkShaderProgram.substitute(FSSource,
-      '//VTK::PositionVC::Dec', [
-        'varying vec4 vertexVCVSOutput;']).result;
+    FSSource = vtkShaderProgram.substitute(FSSource, '//VTK::PositionVC::Dec', [
+      'varying vec4 vertexVCVSOutput;',
+    ]).result;
 
     // we create vertexVC below, so turn off the default
     // implementation
-    FSSource = vtkShaderProgram.substitute(FSSource,
-      '//VTK::PositionVC::Impl', [
-        'vec4 vertexVC = vertexVCVSOutput;\n']).result;
+    FSSource = vtkShaderProgram.substitute(
+      FSSource,
+      '//VTK::PositionVC::Impl',
+      ['vec4 vertexVC = vertexVCVSOutput;\n']
+    ).result;
 
     // for lights kit and positional the VCDC matrix is already defined
     // so don't redefine it
@@ -57,8 +59,13 @@ function vtkOpenGLSphereMapper(publicAPI, model) {
       'uniform int cameraParallel;\n',
       'varying float radiusVCVSOutput;\n',
       'varying vec3 centerVCVSOutput;\n',
-      'uniform mat4 VCDCMatrix;\n'];
-    FSSource = vtkShaderProgram.substitute(FSSource, '//VTK::Normal::Dec', replacement).result;
+      'uniform mat4 VCDCMatrix;\n',
+    ];
+    FSSource = vtkShaderProgram.substitute(
+      FSSource,
+      '//VTK::Normal::Dec',
+      replacement
+    ).result;
 
     let fragString = '';
     if (model.context.getExtension('EXT_frag_depth')) {
@@ -102,22 +109,23 @@ function vtkOpenGLSphereMapper(publicAPI, model) {
       '    vertexVC.xyz = normalVCVSOutput*radiusVCVSOutput + centerVCVSOutput;\n',
       '    }\n',
       // compute the pixel's depth
-     // ' normalVCVSOutput = vec3(0,0,1);\n'
+      // ' normalVCVSOutput = vec3(0,0,1);\n'
       '  vec4 pos = VCDCMatrix * vertexVC;\n',
-      fragString]).result;
+      fragString,
+    ]).result;
 
     // Strip out the normal line -- the normal is computed as part of the depth
-    FSSource = vtkShaderProgram.substitute(FSSource, '//VTK::Normal::Impl', '').result;
+    FSSource = vtkShaderProgram.substitute(FSSource, '//VTK::Normal::Impl', '')
+      .result;
 
     if (model.renderDepth) {
-      FSSource = vtkShaderProgram.substitute(FSSource,
-            '//VTK::ZBuffer::Impl', [
-              'float computedZ = (pos.z / pos.w + 1.0) / 2.0;',
-              'float iz = floor(computedZ * 65535.0 + 0.1);',
-              'float rf = floor(iz/256.0)/255.0;',
-              'float gf = mod(iz,256.0)/255.0;',
-              'gl_FragData[0] = vec4(rf, gf, 0.0, 1.0);',
-            ]).result;
+      FSSource = vtkShaderProgram.substitute(FSSource, '//VTK::ZBuffer::Impl', [
+        'float computedZ = (pos.z / pos.w + 1.0) / 2.0;',
+        'float iz = floor(computedZ * 65535.0 + 0.1);',
+        'float rf = floor(iz/256.0)/255.0;',
+        'float gf = mod(iz,256.0)/255.0;',
+        'gl_FragData[0] = vec4(rf, gf, 0.0, 1.0);',
+      ]).result;
       shaders.Fragment = FSSource;
     }
 
@@ -128,18 +136,33 @@ function vtkOpenGLSphereMapper(publicAPI, model) {
   };
 
   publicAPI.setMapperShaderParameters = (cellBO, ren, actor) => {
-    if (cellBO.getCABO().getElementCount() && (model.VBOBuildTime > cellBO.getAttributeUpdateTime().getMTime() ||
-        cellBO.getShaderSourceTime().getMTime() > cellBO.getAttributeUpdateTime().getMTime()) &&
-        cellBO.getProgram().isAttributeUsed('offsetMC')) {
-      if (!cellBO.getVAO().addAttributeArray(cellBO.getProgram(), cellBO.getCABO(),
-          'offsetMC', 12, // 12:this->VBO->ColorOffset+sizeof(float)
-          cellBO.getCABO().getStride(), model.context.FLOAT, 2, false)) {
-        vtkErrorMacro('Error setting \'offsetMC\' in shader VAO.');
+    if (
+      cellBO.getCABO().getElementCount() &&
+      (model.VBOBuildTime > cellBO.getAttributeUpdateTime().getMTime() ||
+        cellBO.getShaderSourceTime().getMTime() >
+          cellBO.getAttributeUpdateTime().getMTime()) &&
+      cellBO.getProgram().isAttributeUsed('offsetMC')
+    ) {
+      if (
+        !cellBO.getVAO().addAttributeArray(
+          cellBO.getProgram(),
+          cellBO.getCABO(),
+          'offsetMC',
+          12, // 12:this->VBO->ColorOffset+sizeof(float)
+          cellBO.getCABO().getStride(),
+          model.context.FLOAT,
+          2,
+          false
+        )
+      ) {
+        vtkErrorMacro("Error setting 'offsetMC' in shader VAO.");
       }
     }
 
     if (cellBO.getProgram().isUniformUsed('invertedDepth')) {
-      cellBO.getProgram().setUniformf('invertedDepth', model.invert ? -1.0 : 1.0);
+      cellBO
+        .getProgram()
+        .setUniformf('invertedDepth', model.invert ? -1.0 : 1.0);
     }
 
     superClass.setMapperShaderParameters(cellBO, ren, actor);
@@ -167,7 +190,9 @@ function vtkOpenGLSphereMapper(publicAPI, model) {
     }
 
     if (program.isUniformUsed('cameraParallel')) {
-      cellBO.getProgram().setUniformi('cameraParallel', cam.getParallelProjection());
+      cellBO
+        .getProgram()
+        .setUniformi('cameraParallel', cam.getParallelProjection());
     }
   };
 
@@ -193,8 +218,10 @@ function vtkOpenGLSphereMapper(publicAPI, model) {
     const pointSize = 5; // x,y,z,orientation1,orientation2
     let scales = null;
 
-    if (model.renderable.getScaleArray() != null &&
-        pointData.hasArray(model.renderable.getScaleArray())) {
+    if (
+      model.renderable.getScaleArray() != null &&
+      pointData.hasArray(model.renderable.getScaleArray())
+    ) {
       scales = pointData.getArray(model.renderable.getScaleArray()).getData();
     }
 
@@ -278,7 +305,9 @@ function vtkOpenGLSphereMapper(publicAPI, model) {
 
     vbo.setElementCount(vboIdx / pointSize);
     vbo.upload(packedVBO, ObjectType.ARRAY_BUFFER);
-    if (c) { vbo.getColorBO().upload(packedUCVBO, ObjectType.ARRAY_BUFFER); }
+    if (c) {
+      vbo.getColorBO().upload(packedUCVBO, ObjectType.ARRAY_BUFFER);
+    }
 
     model.VBOBuildTime.modified();
   };
@@ -288,8 +317,7 @@ function vtkOpenGLSphereMapper(publicAPI, model) {
 // Object factory
 // ----------------------------------------------------------------------------
 
-const DEFAULT_VALUES = {
-};
+const DEFAULT_VALUES = {};
 
 // ----------------------------------------------------------------------------
 

@@ -1,9 +1,9 @@
-import macro                             from 'vtk.js/Sources/macro';
+import macro from 'vtk.js/Sources/macro';
 import vtkInteractorStyleTrackballCamera from 'vtk.js/Sources/Interaction/Style/InteractorStyleTrackballCamera';
-import vtkSphereSource                   from 'vtk.js/Sources/Filters/Sources/SphereSource';
-import vtkActor                          from 'vtk.js/Sources/Rendering/Core/Actor';
-import vtkMapper                         from 'vtk.js/Sources/Rendering/Core/Mapper';
-import vtkMath                           from 'vtk.js/Sources/Common/Core/Math';
+import vtkSphereSource from 'vtk.js/Sources/Filters/Sources/SphereSource';
+import vtkActor from 'vtk.js/Sources/Rendering/Core/Actor';
+import vtkMapper from 'vtk.js/Sources/Rendering/Core/Mapper';
+import vtkMath from 'vtk.js/Sources/Common/Core/Math';
 
 // ----------------------------------------------------------------------------
 // vtkInteractorStyleTrackballCamera2 methods
@@ -16,7 +16,9 @@ function vtkPickerInteractorStyle(publicAPI, model) {
   const superClass = Object.assign({}, publicAPI);
 
   publicAPI.handleLeftButtonPress = () => {
-    const pos = model.interactor.getEventPosition(model.interactor.getPointerIndex());
+    const pos = model.interactor.getEventPosition(
+      model.interactor.getPointerIndex()
+    );
     publicAPI.findPokedRenderer(pos.x, pos.y);
     if (model.currentRenderer === null) {
       return;
@@ -26,17 +28,25 @@ function vtkPickerInteractorStyle(publicAPI, model) {
       const renderer = model.currentRenderer;
       const interactor = model.interactor;
       const boundingContainer = model.container.getBoundingClientRect();
-      const point = [pos.x - boundingContainer.left, pos.y + boundingContainer.top, 0.0];
+      const point = [
+        pos.x - boundingContainer.left,
+        pos.y + boundingContainer.top,
+        0.0,
+      ];
       interactor.getPicker().pick(point, renderer);
 
       const pickedPoints = interactor.getPicker().getPickedPositions();
       const pickedCellId = interactor.getPicker().getCellId();
       console.log('cell id : ', pickedCellId);
 
-      const cameraCenter = model.currentRenderer.getActiveCamera().getPosition();
+      const cameraCenter = model.currentRenderer
+        .getActiveCamera()
+        .getPosition();
       let minDistance = Number.MAX_VALUE;
       for (let i = 0; i < pickedPoints.length; i++) {
-        const dist = Math.sqrt(vtkMath.distance2BetweenPoints(cameraCenter, pickedPoints[i]));
+        const dist = Math.sqrt(
+          vtkMath.distance2BetweenPoints(cameraCenter, pickedPoints[i])
+        );
         if (dist < minDistance) {
           minDistance = dist;
         }
@@ -77,7 +87,10 @@ export function extend(publicAPI, model, initialValues = {}) {
 
 // ----------------------------------------------------------------------------
 
-export const newInstance = macro.newInstance(extend, 'vtkPickerInteractorStyle');
+export const newInstance = macro.newInstance(
+  extend,
+  'vtkPickerInteractorStyle'
+);
 
 // ----------------------------------------------------------------------------
 

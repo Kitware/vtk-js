@@ -35,11 +35,13 @@ function vtkProgressHandler(publicAPI, model) {
         (...rejectArgs) => {
           publicAPI.stopWork();
           reject(...rejectArgs);
-        });
+        }
+      );
     });
   };
 
-  publicAPI.wrapPromiseFunction = fn => ((...args) => publicAPI.wrapPromise(fn(...args)));
+  publicAPI.wrapPromiseFunction = (fn) => (...args) =>
+    publicAPI.wrapPromise(fn(...args));
 }
 
 // ----------------------------------------------------------------------------

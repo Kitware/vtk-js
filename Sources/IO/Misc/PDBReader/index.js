@@ -1,8 +1,8 @@
-import macro            from 'vtk.js/Sources/macro';
-import vtkMolecule      from 'vtk.js/Sources/Common/DataModel/Molecule';
+import macro from 'vtk.js/Sources/macro';
+import vtkMolecule from 'vtk.js/Sources/Common/DataModel/Molecule';
 import DataAccessHelper from 'vtk.js/Sources/IO/Core/DataAccessHelper';
 
-import ATOMS            from 'vtk.js/Utilities/XMLConverter/chemistry-mapper/elements.json';
+import ATOMS from 'vtk.js/Utilities/XMLConverter/chemistry-mapper/elements.json';
 
 // ----------------------------------------------------------------------------
 // vtkPDBReader methods
@@ -21,7 +21,10 @@ function vtkPDBReader(publicAPI, model) {
   function fetchPDB(url) {
     const compression = model.compression;
     const progressCallback = model.progressCallback;
-    return model.dataAccessHelper.fetchText(publicAPI, url, { compression, progressCallback });
+    return model.dataAccessHelper.fetchText(publicAPI, url, {
+      compression,
+      progressCallback,
+    });
   }
 
   // Set DataSet url
@@ -46,16 +49,15 @@ function vtkPDBReader(publicAPI, model) {
   publicAPI.loadData = () => {
     const promise = fetchPDB(model.url);
 
-    promise.then(
-      (pdb) => {
-        model.pdb = pdb;
-        model.molecule = [];
+    promise.then((pdb) => {
+      model.pdb = pdb;
+      model.molecule = [];
 
-        // Parse data
-        model.molecule = model.pdb.split('\n');
+      // Parse data
+      model.molecule = model.pdb.split('\n');
 
-        publicAPI.modified();
-      });
+      publicAPI.modified();
+    });
 
     return promise;
   };
@@ -79,26 +81,26 @@ function vtkPDBReader(publicAPI, model) {
         const iSize = model.molecule[j].length;
         const linebuf = model.molecule[j];
 
-        const command = (linebuf.substr(0, 6)).replace(/\s+/g, '');
+        const command = linebuf.substr(0, 6).replace(/\s+/g, '');
         command.toUpperCase();
 
         // Parse lines
         if (command === 'ATOM' || command === 'HETATM') {
-          const dum1 = (linebuf.substr(12, 4)).replace(/\s+/g, '');
+          const dum1 = linebuf.substr(12, 4).replace(/\s+/g, '');
           // const dum2 = (linebuf.substr(17, 3)).replace(/\s+/g, '');
           // const chain = (linebuf.substr(21, 1)).replace(/\s+/g, '');
           // const resi = ((linebuf.substr(22, 8)).replace(/\s+/g, '')).replace(/\D/g, '');
-          const x = (linebuf.substr(30, 8)).replace(/\s+/g, '');
-          const y = (linebuf.substr(38, 8)).replace(/\s+/g, '');
-          const z = (linebuf.substr(46, 8)).replace(/\s+/g, '');
+          const x = linebuf.substr(30, 8).replace(/\s+/g, '');
+          const y = linebuf.substr(38, 8).replace(/\s+/g, '');
+          const z = linebuf.substr(46, 8).replace(/\s+/g, '');
 
           let elem = '';
           if (iSize >= 78) {
-            elem = (linebuf.substr(76, 2)).replace(/\s+/g, '');
+            elem = linebuf.substr(76, 2).replace(/\s+/g, '');
           }
           if (elem === '') {
             // if element symbol was not specified, just use the "Atom name".
-            elem = (dum1.substr(0, 2)).replace(/\d/g, '');
+            elem = dum1.substr(0, 2).replace(/\d/g, '');
           }
 
           // fill polydata
@@ -182,9 +184,7 @@ export function extend(publicAPI, model, initialValues = {}) {
     'numberOfAtoms',
     'requestCount',
   ]);
-  macro.setGet(publicAPI, model, [
-    'dataAccessHelper',
-  ]);
+  macro.setGet(publicAPI, model, ['dataAccessHelper']);
   macro.algo(publicAPI, model, 0, 1);
   macro.event(publicAPI, model, 'busy');
 

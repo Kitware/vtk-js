@@ -1,4 +1,4 @@
-import test      from 'tape-catch';
+import test from 'tape-catch';
 import vtkCubeSource from 'vtk.js/Sources/Filters/Sources/CubeSource';
 import vtkTextureMapToSphere from 'vtk.js/Sources/Filters/Texture/TextureMapToSphere';
 
@@ -17,7 +17,13 @@ test('Test vtkTextureMapToSphere TCoords generation', (t) => {
   sphereTextureFilter.setInputData(cube);
   sphereTextureFilter.update();
 
-  const generatedTCoords = sphereTextureFilter.getOutputData().getPointData().getTCoords().getData();
+  const generatedTCoords = sphereTextureFilter
+    .getOutputData()
+    .getPointData()
+    .getTCoords()
+    .getData();
+
+  // prettier-ignore
   const expectedData = [
     0.75, 0.695913,
     0.75, 0.304087,

@@ -1,6 +1,6 @@
-import macro                 from 'vtk.js/Sources/macro';
+import macro from 'vtk.js/Sources/macro';
 import vtkInteractorObserver from 'vtk.js/Sources/Rendering/Core/InteractorObserver';
-import Constants             from 'vtk.js/Sources/Rendering/Core/InteractorStyle/Constants';
+import Constants from 'vtk.js/Sources/Rendering/Core/InteractorStyle/Constants';
 
 const { States } = Constants;
 const { vtkWarningMacro } = macro;
@@ -80,11 +80,12 @@ function vtkInteractorStyle(publicAPI, model) {
     if (i) {
       events.forEach((eventName) => {
         model.unsubscribes.push(
-        i[`on${eventName}`]((data) => {
-          if (publicAPI[`handle${eventName}`]) {
-            publicAPI[`handle${eventName}`](data);
-          }
-        }));
+          i[`on${eventName}`]((data) => {
+            if (publicAPI[`handle${eventName}`]) {
+              publicAPI[`handle${eventName}`](data);
+            }
+          })
+        );
       });
     }
   };
@@ -112,8 +113,8 @@ function vtkInteractorStyle(publicAPI, model) {
     let pos = null;
 
     switch (rwi.getKeyCode()) {
-      case 'r' :
-      case 'R' :
+      case 'r':
+      case 'R':
         pos = model.interactor.getEventPosition(rwi.getPointerIndex());
         publicAPI.findPokedRenderer(pos.x, pos.y);
         if (model.currentRenderer !== 0) {
@@ -124,8 +125,8 @@ function vtkInteractorStyle(publicAPI, model) {
         rwi.render();
         break;
 
-      case 'w' :
-      case 'W' :
+      case 'w':
+      case 'W':
         pos = model.interactor.getEventPosition(rwi.getPointerIndex());
         publicAPI.findPokedRenderer(pos.x, pos.y);
         if (model.currentRenderer !== 0) {
@@ -139,8 +140,8 @@ function vtkInteractorStyle(publicAPI, model) {
         rwi.render();
         break;
 
-      case 's' :
-      case 'S' :
+      case 's':
+      case 'S':
         pos = model.interactor.getEventPosition(rwi.getPointerIndex());
         publicAPI.findPokedRenderer(pos.x, pos.y);
         if (model.currentRenderer !== 0) {
@@ -154,8 +155,8 @@ function vtkInteractorStyle(publicAPI, model) {
         rwi.render();
         break;
 
-      case 'v' :
-      case 'V' :
+      case 'v':
+      case 'V':
         pos = model.interactor.getEventPosition(rwi.getPointerIndex());
         publicAPI.findPokedRenderer(pos.x, pos.y);
         if (model.currentRenderer !== 0) {

@@ -1,13 +1,13 @@
-import test      from 'tape-catch';
+import test from 'tape-catch';
 import testUtils from 'vtk.js/Sources/Testing/testUtils';
 
-import vtkLookupTable        from 'vtk.js/Sources/Common/Core/LookupTable';
+import vtkLookupTable from 'vtk.js/Sources/Common/Core/LookupTable';
 import vtkOpenGLRenderWindow from 'vtk.js/Sources/Rendering/OpenGL/RenderWindow';
-import vtkRenderWindow       from 'vtk.js/Sources/Rendering/Core/RenderWindow';
-import vtkRenderer           from 'vtk.js/Sources/Rendering/Core/Renderer';
-import vtkSphereSource       from 'vtk.js/Sources/Filters/Sources/SphereSource';
-import vtkActor              from 'vtk.js/Sources/Rendering/Core/Actor';
-import vtkMapper             from 'vtk.js/Sources/Rendering/Core/Mapper';
+import vtkRenderWindow from 'vtk.js/Sources/Rendering/Core/RenderWindow';
+import vtkRenderer from 'vtk.js/Sources/Rendering/Core/Renderer';
+import vtkSphereSource from 'vtk.js/Sources/Filters/Sources/SphereSource';
+import vtkActor from 'vtk.js/Sources/Rendering/Core/Actor';
+import vtkMapper from 'vtk.js/Sources/Rendering/Core/Mapper';
 
 import baseline from './testVectorComponent.png';
 
@@ -19,7 +19,9 @@ test.onlyIfWebGL('Test VectorComponent', (t) => {
 
   // Create some control UI
   const container = document.querySelector('body');
-  const renderWindowContainer = gc.registerDOMElement(document.createElement('div'));
+  const renderWindowContainer = gc.registerDOMElement(
+    document.createElement('div')
+  );
   container.appendChild(renderWindowContainer);
 
   // create what we will view
@@ -58,5 +60,12 @@ test.onlyIfWebGL('Test VectorComponent', (t) => {
   renderWindow.render();
 
   const image = glwindow.captureImage();
-  testUtils.compareImages(image, [baseline], 'Rendering/Core/Mapper/testVectorComponent.js', t, 5, gc.releaseResources);
+  testUtils.compareImages(
+    image,
+    [baseline],
+    'Rendering/Core/Mapper/testVectorComponent.js',
+    t,
+    5,
+    gc.releaseResources
+  );
 });

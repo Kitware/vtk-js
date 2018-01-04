@@ -1,11 +1,11 @@
-import HtmlDataAccessHelper   from './HtmlDataAccessHelper';
-import HttpDataAccessHelper   from './HttpDataAccessHelper';
-import JSZipDataAccessHelper  from './JSZipDataAccessHelper';
+import HtmlDataAccessHelper from './HtmlDataAccessHelper';
+import HttpDataAccessHelper from './HttpDataAccessHelper';
+import JSZipDataAccessHelper from './JSZipDataAccessHelper';
 
 const TYPE_MAPPING = {
-  http: options => HttpDataAccessHelper,
-  zip: options => JSZipDataAccessHelper.create(options),
-  html: options => HtmlDataAccessHelper,
+  http: (options) => HttpDataAccessHelper,
+  zip: (options) => JSZipDataAccessHelper.create(options),
+  html: (options) => HtmlDataAccessHelper,
 };
 
 function get(type = 'http', options = {}) {

@@ -1,7 +1,7 @@
-import macro                    from 'vtk.js/Sources/macro';
+import macro from 'vtk.js/Sources/macro';
 import vtkCellArrayBufferObject from 'vtk.js/Sources/Rendering/OpenGL/CellArrayBufferObject';
-import vtkShaderProgram         from 'vtk.js/Sources/Rendering/OpenGL/ShaderProgram';
-import vtkVertexArrayObject     from 'vtk.js/Sources/Rendering/OpenGL/VertexArrayObject';
+import vtkShaderProgram from 'vtk.js/Sources/Rendering/OpenGL/ShaderProgram';
+import vtkVertexArrayObject from 'vtk.js/Sources/Rendering/OpenGL/VertexArrayObject';
 
 // ----------------------------------------------------------------------------
 // vtkOpenGLHelper methods

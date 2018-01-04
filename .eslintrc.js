@@ -1,48 +1,35 @@
+var prettierConf = require('./prettier.config.js');
+
 module.exports = {
-  extends: ['airbnb'], // , 'prettier'
+  extends: ['airbnb', 'prettier'],
   rules: {
-    'max-len': ["warn", 160, 4, {"ignoreUrls": true}],
     'no-multi-spaces': ["error", { exceptions: { "ImportDeclaration": true } }],
     'no-param-reassign': ["error", { props: false }],
     'no-unused-vars': ["error", { args: 'none' }],
-    'react/jsx-filename-extension': ["error", { "extensions": [".js"] }],
-    'no-mixed-operators': ["error", {"allowSamePrecedence": true}],
+    // 'no-mixed-operators': 'error',
 
-    // Should fix that at some point but too much work...
-    'react/no-is-mounted': "warn",
-    'no-var': 0,
-    'one-var': 0,
-    'react/prefer-es6-class': 0,
+    // Should fix that at some point
     'no-nested-ternary': 0,
+    'prefer-destructuring': 0,
+    'import/no-named-as-default': 0,
+    'import/no-named-as-default-member': 0,
+    'no-restricted-properties': 0,
+    'no-multi-spaces': 0,
+    'prefer-promise-reject-errors': 0,
+    'spaced-comment': 0,
+    'no-var': 0,
+    'import/extensions': 0,
 
     // Not for us ;-)
     'jsx-a11y/label-has-for': 0,
     'no-console': 0,
     'no-plusplus': 0,
-    'linebreak-style': 0,
 
-    // Not for vtk.js
-    // 'import/no-extraneous-dependencies': ["error", { "devDependencies": true }],
-    'import/no-extraneous-dependencies': 0,
-    'import/no-unresolved': 0,
-    'import/extensions': 0,
-    'import/no-named-as-default': 0,
-    'import/no-named-as-default-member': 0,
-
-    // May want to remove at some point
-    'no-restricted-properties': 0,
-    'function-paren-newline': 0,
-    'indent': 0,
-    'no-multi-spaces': 0,
-    'object-curly-newline': 0,
-    'prefer-destructuring': 0,
-    'prefer-promise-reject-errors': 0,
-    'switch-colon-spacing': 0,
-    'spaced-comment': 0,
+    'prettier/prettier': ['error', prettierConf],
   },
-  // plugins: [
-  //   'prettier'
-  // ],
+  plugins: [
+    'prettier'
+  ],
   globals: {
     __BASE_PATH__: false,
     VRFrameData: true,
@@ -51,15 +38,7 @@ module.exports = {
     'import/resolver': 'webpack'
   },
   env: {
+    es6: true,
     browser: true,
   },
-  // rules: {
-  //   'prettier/prettier': [
-  //     'error', {
-  //       printWidth: 100,
-  //       singleQuote: true,
-  //       trailingComma: "es5"
-  //     }
-  //   ],
-  // }
 };

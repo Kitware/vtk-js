@@ -1,7 +1,10 @@
-import macro              from 'vtk.js/Sources/macro';
+import macro from 'vtk.js/Sources/macro';
 import vtkInteractorStyle from 'vtk.js/Sources/Rendering/Core/InteractorStyle';
-import vtkMath            from 'vtk.js/Sources/Common/Core/Math';
-import { Device, Input }  from 'vtk.js/Sources/Rendering/Core/RenderWindowInteractor/Constants';
+import vtkMath from 'vtk.js/Sources/Common/Core/Math';
+import {
+  Device,
+  Input,
+} from 'vtk.js/Sources/Rendering/Core/RenderWindowInteractor/Constants';
 
 const { States } = vtkInteractorStyle;
 
@@ -17,7 +20,9 @@ function vtkInteractorStyleTrackballCamera(publicAPI, model) {
 
   // Public API methods
   publicAPI.handleAnimation = () => {
-    const pos = model.interactor.getAnimationEventPosition(model.interactor.getPointerIndex());
+    const pos = model.interactor.getAnimationEventPosition(
+      model.interactor.getPointerIndex()
+    );
 
     switch (model.state) {
       case States.IS_ROTATE:
@@ -56,17 +61,23 @@ function vtkInteractorStyleTrackballCamera(publicAPI, model) {
       return;
     }
 
-    if (ed && ed.pressed &&
-        ed.device === Device.RightController &&
-        ed.input === Input.TrackPad) {
+    if (
+      ed &&
+      ed.pressed &&
+      ed.device === Device.RightController &&
+      ed.input === Input.TrackPad
+    ) {
       publicAPI.startCameraPose();
       publicAPI.setAnimationStateOn();
       return;
     }
-    if (ed && !ed.pressed &&
-        ed.device === Device.RightController &&
-        ed.input === Input.TrackPad &&
-        model.state === States.IS_CAMERA_POSE) {
+    if (
+      ed &&
+      !ed.pressed &&
+      ed.device === Device.RightController &&
+      ed.input === Input.TrackPad &&
+      model.state === States.IS_CAMERA_POSE
+    ) {
       publicAPI.endCameraPose();
       publicAPI.setAnimationStateOff();
       // return;
@@ -99,14 +110,17 @@ function vtkInteractorStyleTrackballCamera(publicAPI, model) {
     const dir = camera.physicalOrientationToWorldDirection(ed.orientation);
 
     camera.setPhysicalTranslation(
-      oldTrans[0] + (dir[0] * pscale),
-      oldTrans[1] + (dir[1] * pscale),
-      oldTrans[2] + (dir[2] * pscale));
+      oldTrans[0] + dir[0] * pscale,
+      oldTrans[1] + dir[1] * pscale,
+      oldTrans[2] + dir[2] * pscale
+    );
   };
 
   //----------------------------------------------------------------------------
   publicAPI.handleLeftButtonPress = () => {
-    const pos = model.interactor.getEventPosition(model.interactor.getPointerIndex());
+    const pos = model.interactor.getEventPosition(
+      model.interactor.getPointerIndex()
+    );
     publicAPI.findPokedRenderer(pos.x, pos.y);
     if (model.currentRenderer === null) {
       return;
@@ -166,7 +180,9 @@ function vtkInteractorStyleTrackballCamera(publicAPI, model) {
 
   //----------------------------------------------------------------------------
   publicAPI.handlePinch = () => {
-    const pos = model.interactor.getEventPosition(model.interactor.getPointerIndex());
+    const pos = model.interactor.getEventPosition(
+      model.interactor.getPointerIndex()
+    );
     publicAPI.findPokedRenderer(pos.x, pos.y);
     if (model.currentRenderer === null) {
       return;
@@ -191,7 +207,9 @@ function vtkInteractorStyleTrackballCamera(publicAPI, model) {
 
   //----------------------------------------------------------------------------
   publicAPI.handlePan = () => {
-    const pos = model.interactor.getEventPosition(model.interactor.getPointerIndex());
+    const pos = model.interactor.getEventPosition(
+      model.interactor.getPointerIndex()
+    );
     publicAPI.findPokedRenderer(pos.x, pos.y);
     if (model.currentRenderer === null) {
       return;
@@ -204,23 +222,34 @@ function vtkInteractorStyleTrackballCamera(publicAPI, model) {
     // Calculate the focal depth since we'll be using it a lot
     let viewFocus = camera.getFocalPoint();
 
-    viewFocus = publicAPI.computeWorldToDisplay(viewFocus[0], viewFocus[1], viewFocus[2]);
+    viewFocus = publicAPI.computeWorldToDisplay(
+      viewFocus[0],
+      viewFocus[1],
+      viewFocus[2]
+    );
     const focalDepth = viewFocus[2];
 
-    let newPickPoint = publicAPI.computeDisplayToWorld(pos.x, pos.y,
-                                focalDepth);
+    let newPickPoint = publicAPI.computeDisplayToWorld(
+      pos.x,
+      pos.y,
+      focalDepth
+    );
 
     const trans = rwi.getTranslation();
     const lastTrans = rwi.getLastTranslation();
-    newPickPoint = publicAPI.computeDisplayToWorld(viewFocus[0] + trans[0] - lastTrans[0],
-                                viewFocus[1] + trans[1] - lastTrans[1],
-                                focalDepth);
+    newPickPoint = publicAPI.computeDisplayToWorld(
+      viewFocus[0] + trans[0] - lastTrans[0],
+      viewFocus[1] + trans[1] - lastTrans[1],
+      focalDepth
+    );
 
     // Has to recalc old mouse point since the viewport has moved,
     // so can't move it outside the loop
-    const oldPickPoint = publicAPI.computeDisplayToWorld(viewFocus[0],
-                                viewFocus[1],
-                                focalDepth);
+    const oldPickPoint = publicAPI.computeDisplayToWorld(
+      viewFocus[0],
+      viewFocus[1],
+      focalDepth
+    );
 
     // Camera motion is reversed
     const motionVector = [];
@@ -230,13 +259,17 @@ function vtkInteractorStyleTrackballCamera(publicAPI, model) {
 
     viewFocus = camera.getFocalPoint();
     const viewPoint = camera.getPosition();
-    camera.setFocalPoint(motionVector[0] + viewFocus[0],
-                          motionVector[1] + viewFocus[1],
-                          motionVector[2] + viewFocus[2]);
+    camera.setFocalPoint(
+      motionVector[0] + viewFocus[0],
+      motionVector[1] + viewFocus[1],
+      motionVector[2] + viewFocus[2]
+    );
 
-    camera.setPosition(motionVector[0] + viewPoint[0],
-                        motionVector[1] + viewPoint[1],
-                        motionVector[2] + viewPoint[2]);
+    camera.setPosition(
+      motionVector[0] + viewPoint[0],
+      motionVector[1] + viewPoint[1],
+      motionVector[2] + viewPoint[2]
+    );
 
     if (model.interactor.getLightFollowCamera()) {
       model.currentRenderer.updateLightsGeometryToFollowCamera();
@@ -246,7 +279,9 @@ function vtkInteractorStyleTrackballCamera(publicAPI, model) {
   };
 
   publicAPI.handleRotate = () => {
-    const pos = model.interactor.getEventPosition(model.interactor.getPointerIndex());
+    const pos = model.interactor.getEventPosition(
+      model.interactor.getPointerIndex()
+    );
     publicAPI.findPokedRenderer(pos.x, pos.y);
     if (model.currentRenderer === null) {
       return;
@@ -254,12 +289,12 @@ function vtkInteractorStyleTrackballCamera(publicAPI, model) {
 
     const camera = model.currentRenderer.getActiveCamera();
 
-
-    camera.roll(model.interactor.getRotation() - model.interactor.getLastRotation());
+    camera.roll(
+      model.interactor.getRotation() - model.interactor.getLastRotation()
+    );
 
     camera.orthogonalizeViewUp();
   };
-
 
   //--------------------------------------------------------------------------
   publicAPI.rotate = () => {
@@ -319,12 +354,13 @@ function vtkInteractorStyleTrackballCamera(publicAPI, model) {
     const camera = model.currentRenderer.getActiveCamera();
     const center = rwi.getView().getViewportCenter(model.currentRenderer);
 
-    const oldAngle =
-      vtkMath.degreesFromRadians(Math.atan2(lastPos.y - center[1],
-                                          lastPos.x - center[0]));
+    const oldAngle = vtkMath.degreesFromRadians(
+      Math.atan2(lastPos.y - center[1], lastPos.x - center[0])
+    );
     const newAngle =
-      vtkMath.degreesFromRadians(Math.atan2(pos.y - center[1],
-                                          pos.x - center[0])) - oldAngle;
+      vtkMath.degreesFromRadians(
+        Math.atan2(pos.y - center[1], pos.x - center[0])
+      ) - oldAngle;
 
     if (!Number.isNaN(newAngle)) {
       camera.roll(newAngle);
@@ -347,17 +383,26 @@ function vtkInteractorStyleTrackballCamera(publicAPI, model) {
 
     // Calculate the focal depth since we'll be using it a lot
     let viewFocus = camera.getFocalPoint();
-    viewFocus = publicAPI.computeWorldToDisplay(viewFocus[0], viewFocus[1], viewFocus[2]);
+    viewFocus = publicAPI.computeWorldToDisplay(
+      viewFocus[0],
+      viewFocus[1],
+      viewFocus[2]
+    );
     const focalDepth = viewFocus[2];
 
-    const newPickPoint = publicAPI.computeDisplayToWorld(pos.x, pos.y,
-                                focalDepth);
+    const newPickPoint = publicAPI.computeDisplayToWorld(
+      pos.x,
+      pos.y,
+      focalDepth
+    );
 
     // Has to recalc old mouse point since the viewport has moved,
     // so can't move it outside the loop
-    const oldPickPoint = publicAPI.computeDisplayToWorld(lastPos.x,
-                                lastPos.y,
-                                focalDepth);
+    const oldPickPoint = publicAPI.computeDisplayToWorld(
+      lastPos.x,
+      lastPos.y,
+      focalDepth
+    );
 
     // Camera motion is reversed
     const motionVector = [];
@@ -367,13 +412,17 @@ function vtkInteractorStyleTrackballCamera(publicAPI, model) {
 
     viewFocus = camera.getFocalPoint();
     const viewPoint = camera.getPosition();
-    camera.setFocalPoint(motionVector[0] + viewFocus[0],
-                          motionVector[1] + viewFocus[1],
-                          motionVector[2] + viewFocus[2]);
+    camera.setFocalPoint(
+      motionVector[0] + viewFocus[0],
+      motionVector[1] + viewFocus[1],
+      motionVector[2] + viewFocus[2]
+    );
 
-    camera.setPosition(motionVector[0] + viewPoint[0],
-                        motionVector[1] + viewPoint[1],
-                        motionVector[2] + viewPoint[2]);
+    camera.setPosition(
+      motionVector[0] + viewPoint[0],
+      motionVector[1] + viewPoint[1],
+      motionVector[2] + viewPoint[2]
+    );
 
     if (rwi.getLightFollowCamera()) {
       model.currentRenderer.updateLightsGeometryToFollowCamera();
@@ -449,7 +498,10 @@ export function extend(publicAPI, model, initialValues = {}) {
 
 // ----------------------------------------------------------------------------
 
-export const newInstance = macro.newInstance(extend, 'vtkInteractorStyleTrackballCamera');
+export const newInstance = macro.newInstance(
+  extend,
+  'vtkInteractorStyleTrackballCamera'
+);
 
 // ----------------------------------------------------------------------------
 

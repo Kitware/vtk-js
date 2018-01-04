@@ -18,7 +18,9 @@ export default function vtk(obj) {
   const constructor = factoryMapping[obj.vtkClass];
   if (!constructor) {
     if (global.console && global.console.error) {
-      global.console.error(`No vtk class found for Object of type ${obj.vtkClass}`);
+      global.console.error(
+        `No vtk class found for Object of type ${obj.vtkClass}`
+      );
     }
     return null;
   }
@@ -28,7 +30,11 @@ export default function vtk(obj) {
 
   // Convert into vtkObject any nested key
   Object.keys(model).forEach((keyName) => {
-    if (model[keyName] && typeof model[keyName] === 'object' && model[keyName].vtkClass) {
+    if (
+      model[keyName] &&
+      typeof model[keyName] === 'object' &&
+      model[keyName].vtkClass
+    ) {
       model[keyName] = vtk(model[keyName]);
     }
   });
@@ -41,7 +47,7 @@ export default function vtk(obj) {
   return newInst;
 }
 
-export function register(vtkClassName, constructor) {
+function register(vtkClassName, constructor) {
   factoryMapping[vtkClassName] = constructor;
 }
 

@@ -143,13 +143,8 @@ export function extend(publicAPI, model, initialValues = {}) {
   // Build VTK API
   macro.obj(publicAPI, model);
 
-  macro.setGetArray(publicAPI, model, [
-    'center',
-  ]);
-  macro.setGet(publicAPI, model, [
-    'automaticSphereGeneration',
-    'preventSeam',
-  ]);
+  macro.setGetArray(publicAPI, model, ['center']);
+  macro.setGet(publicAPI, model, ['automaticSphereGeneration', 'preventSeam']);
 
   macro.algo(publicAPI, model, 1, 1);
   vtkTextureMapToSphere(publicAPI, model);

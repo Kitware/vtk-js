@@ -1,7 +1,7 @@
-import macro                   from 'vtk.js/Sources/macro';
-import Constants               from 'vtk.js/Sources/Interaction/Widgets/HandleRepresentation/Constants';
-import vtkCoordinate           from 'vtk.js/Sources/Rendering/Core/Coordinate';
-import vtkPointPlacer          from 'vtk.js/Sources/Interaction/Widgets/PointPlacer';
+import macro from 'vtk.js/Sources/macro';
+import Constants from 'vtk.js/Sources/Interaction/Widgets/HandleRepresentation/Constants';
+import vtkCoordinate from 'vtk.js/Sources/Rendering/Core/Coordinate';
+import vtkPointPlacer from 'vtk.js/Sources/Interaction/Widgets/PointPlacer';
 import vtkWidgetRepresentation from 'vtk.js/Sources/Interaction/Widgets/WidgetRepresentation';
 
 const { InteractionState } = Constants;
@@ -17,7 +17,13 @@ function vtkHandleRepresentation(publicAPI, model) {
   publicAPI.setDisplayPosition = (displayPos) => {
     if (model.renderer && model.pointPlacer) {
       const worldPos = [];
-      if (model.pointPlacer.computeWorldPosition(model.renderer, displayPos, worldPos)) {
+      if (
+        model.pointPlacer.computeWorldPosition(
+          model.renderer,
+          displayPos,
+          worldPos
+        )
+      ) {
         model.displayPosition.setValue(displayPos);
         model.worldPosition.setValue(worldPos);
       }

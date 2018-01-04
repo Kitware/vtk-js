@@ -1,7 +1,7 @@
-import macro               from 'vtk.js/Sources/macro';
-import vtkMath             from 'vtk.js/Sources/Common/Core/Math';
-import vtkScalarsToColors  from 'vtk.js/Sources/Common/Core/ScalarsToColors';
-import Constants           from 'vtk.js/Sources/Rendering/Core/ColorTransferFunction/Constants';
+import macro from 'vtk.js/Sources/macro';
+import vtkMath from 'vtk.js/Sources/Common/Core/Math';
+import vtkScalarsToColors from 'vtk.js/Sources/Common/Core/ScalarsToColors';
+import Constants from 'vtk.js/Sources/Rendering/Core/ColorTransferFunction/Constants';
 
 const { ColorSpace, Scale } = Constants;
 const { ScalarMappingTarget } = vtkScalarsToColors;
@@ -18,9 +18,9 @@ function vtkColorTransferFunctionLabToMsh(lab, msh) {
   const L = lab[0];
   const a = lab[1];
   const b = lab[2];
-  const M = Math.sqrt((L * L) + (a * a) + (b * b));
-  const s = (M > 0.001) ? Math.acos(L / M) : 0.0;
-  const h = (s > 0.001) ? Math.atan2(b, a) : 0.0;
+  const M = Math.sqrt(L * L + a * a + b * b);
+  const s = M > 0.001 ? Math.acos(L / M) : 0.0;
+  const h = s > 0.001 ? Math.atan2(b, a) : 0.0;
   msh[0] = M;
   msh[1] = s;
   msh[2] = h;
@@ -46,7 +46,10 @@ function vtkColorTransferFunctionAdjustHue(msh, unsatM) {
 
   // This equation is designed to make the perceptual change of the
   // interpolation to be close to constant.
-  const hueSpin = (msh[1] * Math.sqrt((unsatM * unsatM) - (msh[0] * msh[0])) / (msh[0] * Math.sin(msh[1])));
+  const hueSpin =
+    msh[1] *
+    Math.sqrt(unsatM * unsatM - msh[0] * msh[0]) /
+    (msh[0] * Math.sin(msh[1]));
   // Spin hue away from 0 except in purple hues.
   if (msh[2] > -0.3 * Math.PI) {
     return msh[2] + hueSpin;
@@ -61,10 +64,10 @@ function vtkColorTransferFunctionAngleDiff(a1, a2) {
     adiff = -adiff;
   }
   while (adiff >= 2.0 * Math.PI) {
-    adiff -= (2.0 * Math.PI);
+    adiff -= 2.0 * Math.PI;
   }
   if (adiff > Math.PI) {
-    adiff = (2.0 * Math.PI) - adiff;
+    adiff = 2.0 * Math.PI - adiff;
   }
   return adiff;
 }
@@ -84,8 +87,11 @@ function vtkColorTransferFunctionInterpolateDiverging(s, rgb1, rgb2, result) {
   // If the endpoints are distinct saturated colors, then place white in between
   // them.
   let localS = s;
-  if ((msh1[1] > 0.05) && (msh2[1] > 0.05)
-      && (vtkColorTransferFunctionAngleDiff(msh1[2], msh2[2]) > 0.33 * Math.PI)) {
+  if (
+    msh1[1] > 0.05 &&
+    msh2[1] > 0.05 &&
+    vtkColorTransferFunctionAngleDiff(msh1[2], msh2[2]) > 0.33 * Math.PI
+  ) {
     // Insert the white midpoint by setting one end to white and adjusting the
     // scalar value.
     let Mmid = Math.max(msh1[0], msh2[0]);
@@ -99,23 +105,23 @@ function vtkColorTransferFunctionInterpolateDiverging(s, rgb1, rgb2, result) {
       msh1[0] = Mmid;
       msh1[1] = 0.0;
       msh1[2] = 0.0;
-      localS = (2.0 * localS) - 1.0;
+      localS = 2.0 * localS - 1.0;
     }
   }
 
   // If one color has no saturation, then its hue value is invalid.  In this
   // case, we want to set it to something logical so that the interpolation of
   // hue makes sense.
-  if ((msh1[1] < 0.05) && (msh2[1] > 0.05)) {
+  if (msh1[1] < 0.05 && msh2[1] > 0.05) {
     msh1[2] = vtkColorTransferFunctionAdjustHue(msh2, msh1[0]);
-  } else if ((msh2[1] < 0.05) && (msh1[1] > 0.05)) {
+  } else if (msh2[1] < 0.05 && msh1[1] > 0.05) {
     msh2[2] = vtkColorTransferFunctionAdjustHue(msh1, msh2[0]);
   }
 
   const mshTmp = [];
-  mshTmp[0] = ((1 - localS) * msh1[0]) + (localS * msh2[0]);
-  mshTmp[1] = ((1 - localS) * msh1[1]) + (localS * msh2[1]);
-  mshTmp[2] = ((1 - localS) * msh1[2]) + (localS * msh2[2]);
+  mshTmp[0] = (1 - localS) * msh1[0] + localS * msh2[0];
+  mshTmp[1] = (1 - localS) * msh1[1] + localS * msh2[1];
+  mshTmp[2] = (1 - localS) * msh1[2] + localS * msh2[2];
 
   // Now convert back to RGB
   const labTmp = [];
@@ -130,7 +136,6 @@ function vtkColorTransferFunctionInterpolateDiverging(s, rgb1, rgb2, result) {
 function vtkColorTransferFunction(publicAPI, model) {
   // Set our className
   model.classHierarchy.push('vtkColorTransferFunction');
-
 
   // Return the number of points which specify this function
   publicAPI.getSize = () => model.nodes.length;
@@ -196,7 +201,14 @@ function vtkColorTransferFunction(publicAPI, model) {
     const hsv = [h, s, v];
 
     vtkMath.hsv2rgb(hsv, rgb);
-    return publicAPI.addRGBPoint(x, rgb[0], rgb[1], rgb[2], midpoint, sharpness);
+    return publicAPI.addRGBPoint(
+      x,
+      rgb[0],
+      rgb[1],
+      rgb[2],
+      midpoint,
+      sharpness
+    );
   };
 
   //----------------------------------------------------------------------------
@@ -228,7 +240,10 @@ function vtkColorTransferFunction(publicAPI, model) {
     }
 
     // If the range is the same, then no need to call Modified()
-    if (oldRange[0] === model.mappingRange[0] && oldRange[1] === model.mappingRange[1]) {
+    if (
+      oldRange[0] === model.mappingRange[0] &&
+      oldRange[1] === model.mappingRange[1]
+    ) {
       return false;
     }
 
@@ -298,7 +313,7 @@ function vtkColorTransferFunction(publicAPI, model) {
   publicAPI.addRGBSegment = (x1, r1, g1, b1, x2, r2, g2, b2) => {
     // First, find all points in this range and remove them
     publicAPI.sortAndUpdateRange();
-    for (let i = 0; i < model.nodes.length;) {
+    for (let i = 0; i < model.nodes.length; ) {
       if (model.nodes[i].x >= x1 && model.nodes[i].x <= x2) {
         model.nodes.splice(i, 1);
       } else {
@@ -322,7 +337,16 @@ function vtkColorTransferFunction(publicAPI, model) {
 
     vtkMath.hsv2rgb(hsv1, rgb1);
     vtkMath.hsv2rgb(hsv2, rgb2);
-    publicAPI.addRGBSegment(x1, rgb1[0], rgb1[1], rgb1[2], x2, rgb2[0], rgb2[1], rgb2[2]);
+    publicAPI.addRGBSegment(
+      x1,
+      rgb1[0],
+      rgb1[1],
+      rgb1[2],
+      x2,
+      rgb2[0],
+      rgb2[1],
+      rgb2[2]
+    );
   };
 
   //----------------------------------------------------------------------------
@@ -332,10 +356,11 @@ function vtkColorTransferFunction(publicAPI, model) {
     publicAPI.getColor(x, rgb);
 
     return [
-      Math.floor((255.0 * rgb[0]) + 0.5),
-      Math.floor((255.0 * rgb[1]) + 0.5),
-      Math.floor((255.0 * rgb[2]) + 0.5),
-      255];
+      Math.floor(255.0 * rgb[0] + 0.5),
+      Math.floor(255.0 * rgb[1] + 0.5),
+      Math.floor(255.0 * rgb[2] + 0.5),
+      255,
+    ];
   };
 
   //----------------------------------------------------------------------------
@@ -391,9 +416,9 @@ function vtkColorTransferFunction(publicAPI, model) {
     // the NaN color.
     if (vtkMath.isNan(xStart) || vtkMath.isNan(xEnd)) {
       for (let i = 0; i < size; i++) {
-        table[(i * 3) + 0] = model.nanColor[0];
-        table[(i * 3) + 1] = model.nanColor[1];
-        table[(i * 3) + 2] = model.nanColor[2];
+        table[i * 3 + 0] = model.nanColor[0];
+        table[i * 3 + 1] = model.nanColor[1];
+        table[i * 3 + 2] = model.nanColor[2];
       }
       return;
     }
@@ -424,10 +449,10 @@ function vtkColorTransferFunction(publicAPI, model) {
     const tmpVec = [];
 
     // If the scale is logarithmic, make sure the range is valid.
-    let usingLogScale = (model.scale === Scale.LOG10);
+    let usingLogScale = model.scale === Scale.LOG10;
     if (usingLogScale) {
       // Note: This requires range[0] <= range[1].
-      usingLogScale = (model.mappingRange[0] > 0.0);
+      usingLogScale = model.mappingRange[0] > 0.0;
     }
 
     let logStart = 0.0;
@@ -448,12 +473,10 @@ function vtkColorTransferFunction(publicAPI, model) {
       // be the same in this case)
       if (size > 1) {
         if (usingLogScale) {
-          logX = logStart +
-            ((i / (size - 1.0))
-            * (logEnd - logStart));
+          logX = logStart + i / (size - 1.0) * (logEnd - logStart);
           x = Math.pow(10.0, logX);
         } else {
-          x = xStart + ((i / (size - 1.0)) * (xEnd - xStart));
+          x = xStart + i / (size - 1.0) * (xEnd - xStart);
         }
       } else if (usingLogScale) {
         logX = 0.5 * (logStart + logEnd);
@@ -463,8 +486,7 @@ function vtkColorTransferFunction(publicAPI, model) {
       }
 
       // Do we need to move to the next node?
-      while (idx < numNodes &&
-              x > model.nodes[idx].x) {
+      while (idx < numNodes && x > model.nodes[idx].x) {
         idx++;
         // If we are at a valid point index, fill in
         // the value at this node, and the one before (the
@@ -564,7 +586,7 @@ function vtkColorTransferFunction(publicAPI, model) {
         if (s < midpoint) {
           s = 0.5 * s / midpoint;
         } else {
-          s = 0.5 + (0.5 * (s - midpoint) / (1.0 - midpoint));
+          s = 0.5 + 0.5 * (s - midpoint) / (1.0 - midpoint);
         }
 
         // override for sharpness > 0.99
@@ -590,18 +612,19 @@ function vtkColorTransferFunction(publicAPI, model) {
         if (sharpness < 0.01) {
           // Simple linear interpolation
           if (model.colorSpace === ColorSpace.RGB) {
-            table[tidx] = ((1 - s) * rgb1[0]) + (s * rgb2[0]);
-            table[tidx + 1] = ((1 - s) * rgb1[1]) + (s * rgb2[1]);
-            table[tidx + 2] = ((1 - s) * rgb1[2]) + (s * rgb2[2]);
+            table[tidx] = (1 - s) * rgb1[0] + s * rgb2[0];
+            table[tidx + 1] = (1 - s) * rgb1[1] + s * rgb2[1];
+            table[tidx + 2] = (1 - s) * rgb1[2] + s * rgb2[2];
           } else if (model.colorSpace === ColorSpace.HSV) {
             const hsv1 = [];
             const hsv2 = [];
             vtkMath.rgb2hsv(rgb1, hsv1);
             vtkMath.rgb2hsv(rgb2, hsv2);
 
-            if (model.hSVWrap &&
-                 (hsv1[0] - hsv2[0] > 0.5 ||
-                  hsv2[0] - hsv1[0] > 0.5)) {
+            if (
+              model.hSVWrap &&
+              (hsv1[0] - hsv2[0] > 0.5 || hsv2[0] - hsv1[0] > 0.5)
+            ) {
               if (hsv1[0] > hsv2[0]) {
                 hsv1[0] -= 1.0;
               } else {
@@ -610,12 +633,12 @@ function vtkColorTransferFunction(publicAPI, model) {
             }
 
             const hsvTmp = [];
-            hsvTmp[0] = ((1.0 - s) * hsv1[0]) + (s * hsv2[0]);
+            hsvTmp[0] = (1.0 - s) * hsv1[0] + s * hsv2[0];
             if (hsvTmp[0] < 0.0) {
               hsvTmp[0] += 1.0;
             }
-            hsvTmp[1] = ((1.0 - s) * hsv1[1]) + (s * hsv2[1]);
-            hsvTmp[2] = ((1.0 - s) * hsv1[2]) + (s * hsv2[2]);
+            hsvTmp[1] = (1.0 - s) * hsv1[1] + s * hsv2[1];
+            hsvTmp[2] = (1.0 - s) * hsv1[2] + s * hsv2[2];
 
             // Now convert this back to RGB
             vtkMath.hsv2rgb(hsvTmp, tmpVec);
@@ -629,9 +652,9 @@ function vtkColorTransferFunction(publicAPI, model) {
             vtkMath.rgb2lab(rgb2, lab2);
 
             const labTmp = [];
-            labTmp[0] = ((1 - s) * lab1[0]) + (s * lab2[0]);
-            labTmp[1] = ((1 - s) * lab1[1]) + (s * lab2[1]);
-            labTmp[2] = ((1 - s) * lab1[2]) + (s * lab2[2]);
+            labTmp[0] = (1 - s) * lab1[0] + s * lab2[0];
+            labTmp[1] = (1 - s) * lab1[1] + s * lab2[1];
+            labTmp[2] = (1 - s) * lab1[2] + s * lab2[2];
 
             // Now convert back to RGB
             vtkMath.lab2rgb(labTmp, tmpVec);
@@ -657,18 +680,18 @@ function vtkColorTransferFunction(publicAPI, model) {
         // First, we will adjust our position based on sharpness in
         // order to make the curve sharper (closer to piecewise constant)
         if (s < 0.5) {
-          s = 0.5 * Math.pow(s * 2.0, 1.0 + (10.0 * sharpness));
+          s = 0.5 * Math.pow(s * 2.0, 1.0 + 10.0 * sharpness);
         } else if (s > 0.5) {
-          s = 1.0 - (0.5 * Math.pow((1.0 - s) * 2, 1 + (10.0 * sharpness)));
+          s = 1.0 - 0.5 * Math.pow((1.0 - s) * 2, 1 + 10.0 * sharpness);
         }
 
         // Compute some coefficients we will need for the hermite curve
         const ss = s * s;
         const sss = ss * s;
 
-        const h1 = (2.0 * sss) - (3 * ss) + 1;
-        const h2 = (-2 * sss) + (3 * ss);
-        const h3 = sss - (2 * ss) + s;
+        const h1 = 2.0 * sss - 3 * ss + 1;
+        const h2 = -2 * sss + 3 * ss;
+        const h3 = sss - 2 * ss + s;
         const h4 = sss - ss;
 
         let slope;
@@ -681,7 +704,7 @@ function vtkColorTransferFunction(publicAPI, model) {
             t = (1.0 - sharpness) * slope;
 
             // Compute the value
-            table[tidx + j] = (h1 * rgb1[j]) + (h2 * rgb2[j]) + (h3 * t) + (h4 * t);
+            table[tidx + j] = h1 * rgb1[j] + h2 * rgb2[j] + h3 * t + h4 * t;
           }
         } else if (model.colorSpace === ColorSpace.HSV) {
           const hsv1 = [];
@@ -689,9 +712,10 @@ function vtkColorTransferFunction(publicAPI, model) {
           vtkMath.rgb2hsv(rgb1, hsv1);
           vtkMath.rgb2hsv(rgb2, hsv2);
 
-          if (model.hSVWrap &&
-               (hsv1[0] - hsv2[0] > 0.5 ||
-                hsv2[0] - hsv1[0] > 0.5)) {
+          if (
+            model.hSVWrap &&
+            (hsv1[0] - hsv2[0] > 0.5 || hsv2[0] - hsv1[0] > 0.5)
+          ) {
             if (hsv1[0] > hsv2[0]) {
               hsv1[0] -= 1.0;
             } else {
@@ -707,7 +731,7 @@ function vtkColorTransferFunction(publicAPI, model) {
             t = (1.0 - sharpness) * slope;
 
             // Compute the value
-            hsvTmp[j] = (h1 * hsv1[j]) + (h2 * hsv2[j]) + (h3 * t) + (h4 * t);
+            hsvTmp[j] = h1 * hsv1[j] + h2 * hsv2[j] + h3 * t + h4 * t;
             if (j === 0 && hsvTmp[j] < 0.0) {
               hsvTmp[j] += 1.0;
             }
@@ -730,7 +754,7 @@ function vtkColorTransferFunction(publicAPI, model) {
             t = (1.0 - sharpness) * slope;
 
             // Compute the value
-            labTmp[j] = (h1 * lab1[j]) + (h2 * lab2[j]) + (h3 * t) + (h4 * t);
+            labTmp[j] = h1 * lab1[j] + h2 * lab2[j] + h3 * t + h4 * t;
           }
           // Now convert this back to RGB
           vtkMath.lab2rgb(labTmp, tmpVec);
@@ -751,8 +775,8 @@ function vtkColorTransferFunction(publicAPI, model) {
 
         // Final error check to make sure we don't go outside [0,1]
         for (let j = 0; j < 3; j++) {
-          table[tidx + j] = (table[tidx + j] < 0.0) ? (0.0) : (table[tidx + j]);
-          table[tidx + j] = (table[tidx + j] > 1.0) ? (1.0) : (table[tidx + j]);
+          table[tidx + j] = table[tidx + j] < 0.0 ? 0.0 : table[tidx + j];
+          table[tidx + j] = table[tidx + j] > 1.0 ? 1.0 : table[tidx + j];
         }
       }
     }
@@ -760,18 +784,22 @@ function vtkColorTransferFunction(publicAPI, model) {
 
   //----------------------------------------------------------------------------
   publicAPI.getUint8Table = (xStart, xEnd, size, withAlpha = false) => {
-    if (publicAPI.getMTime() <= model.buildTime &&
-        model.tableSize === size && model.tableWithAlpha !== withAlpha) {
+    if (
+      publicAPI.getMTime() <= model.buildTime &&
+      model.tableSize === size &&
+      model.tableWithAlpha !== withAlpha
+    ) {
       return model.table;
     }
 
     if (model.nodes.length === 0) {
       vtkErrorMacro(
-        'Attempting to lookup a value with no points in the function');
+        'Attempting to lookup a value with no points in the function'
+      );
       return model.table;
     }
 
-    const nbChannels = (withAlpha ? 4 : 3);
+    const nbChannels = withAlpha ? 4 : 3;
     if (model.tableSize !== size || model.tableWithAlpha !== withAlpha) {
       model.table = new Uint8Array(size * nbChannels);
       model.tableSize = size;
@@ -782,11 +810,17 @@ function vtkColorTransferFunction(publicAPI, model) {
     publicAPI.getTable(xStart, xEnd, size, tmpTable);
 
     for (let i = 0; i < size; i++) {
-      model.table[(i * nbChannels) + 0] = Math.floor((tmpTable[(i * 3) + 0] * 255.0) + 0.5);
-      model.table[(i * nbChannels) + 1] = Math.floor((tmpTable[(i * 3) + 1] * 255.0) + 0.5);
-      model.table[(i * nbChannels) + 2] = Math.floor((tmpTable[(i * 3) + 2] * 255.0) + 0.5);
+      model.table[i * nbChannels + 0] = Math.floor(
+        tmpTable[i * 3 + 0] * 255.0 + 0.5
+      );
+      model.table[i * nbChannels + 1] = Math.floor(
+        tmpTable[i * 3 + 1] * 255.0 + 0.5
+      );
+      model.table[i * nbChannels + 2] = Math.floor(
+        tmpTable[i * 3 + 2] * 255.0 + 0.5
+      );
       if (withAlpha) {
-        model.table[(i * nbChannels) + 3] = 255;
+        model.table[i * nbChannels + 3] = 255;
       }
     }
 
@@ -806,10 +840,10 @@ function vtkColorTransferFunction(publicAPI, model) {
 
     for (let i = 0; i < size; i++) {
       const node = {
-        x: xStart + (inc * i),
+        x: xStart + inc * i,
         r: table[i * 3],
-        g: table[(i * 3) + 1],
-        b: table[(i * 3) + 2],
+        g: table[i * 3 + 1],
+        b: table[i * 3 + 2],
         sharpness: 0.0,
         midpoint: 0.5,
       };
@@ -877,7 +911,7 @@ function vtkColorTransferFunction(publicAPI, model) {
       // has been called.
       return model.tableSize;
     }
-    return 16777216;  // 2^24
+    return 16777216; // 2^24
   };
 
   //----------------------------------------------------------------------------
@@ -906,10 +940,11 @@ function vtkColorTransferFunction(publicAPI, model) {
 
     for (let i = 0; i < nb; i++) {
       publicAPI.addRGBPoint(
-      ptr[i * 4],
-      ptr[(i * 4) + 1],
-      ptr[(i * 4) + 2],
-      ptr[(i * 4) + 3]);
+        ptr[i * 4],
+        ptr[i * 4 + 1],
+        ptr[i * 4 + 2],
+        ptr[i * 4 + 3]
+      );
     }
   };
 
@@ -917,8 +952,7 @@ function vtkColorTransferFunction(publicAPI, model) {
   publicAPI.setMappingRange = (min, max) => {
     const range = [min, max];
     const originalRange = publicAPI.getRange();
-    if (originalRange[1] === range[1] &&
-        originalRange[0] === range[0]) {
+    if (originalRange[1] === range[1] && originalRange[0] === range[0]) {
       return;
     }
 
@@ -928,10 +962,10 @@ function vtkColorTransferFunction(publicAPI, model) {
     }
 
     const scale = (range[1] - range[0]) / (originalRange[1] - originalRange[0]);
-    const shift = range[0] - (originalRange[0] * scale);
+    const shift = range[0] - originalRange[0] * scale;
 
     for (let i = 0; i < model.nodes.length; ++i) {
-      model.nodes[i].x = (model.nodes[i].x * scale) + shift;
+      model.nodes[i].x = model.nodes[i].x * scale + shift;
     }
 
     model.mappingRange[0] = range[0];
@@ -963,7 +997,7 @@ function vtkColorTransferFunction(publicAPI, model) {
 
     // Remove all points out-of-range
     publicAPI.sortAndUpdateRange();
-    for (let i = 0; i < model.nodes.length;) {
+    for (let i = 0; i < model.nodes.length; ) {
       if (model.nodes[i].x >= range[0] && model.nodes[i].x <= range[1]) {
         model.nodes.splice(i, 1);
       } else {
@@ -997,7 +1031,12 @@ function vtkColorTransferFunction(publicAPI, model) {
     return distance;
   };
 
-  publicAPI.mapScalarsThroughTable = (input, output, outFormat, inputOffset) => {
+  publicAPI.mapScalarsThroughTable = (
+    input,
+    output,
+    outFormat,
+    inputOffset
+  ) => {
     if (publicAPI.getSize() === 0) {
       vtkDebugMacro('Transfer Function Has No Points!');
       return;
@@ -1017,7 +1056,7 @@ function vtkColorTransferFunction(publicAPI, model) {
       return;
     }
 
-    const alpha = Math.floor((publicAPI.getAlpha() * 255.0) + 0.5);
+    const alpha = Math.floor(publicAPI.getAlpha() * 255.0 + 0.5);
     const length = input.getNumberOfTuples();
     const inIncr = input.getNumberOfComponents();
 
@@ -1027,43 +1066,43 @@ function vtkColorTransferFunction(publicAPI, model) {
 
     if (outFormat === ScalarMappingTarget.RGBA) {
       for (let i = 0; i < length; i++) {
-        const x = inputV[(i * inIncr) + inputOffset];
+        const x = inputV[i * inIncr + inputOffset];
         publicAPI.getColor(x, rgb);
-        outputV[i * 4] = Math.floor((rgb[0] * 255.0) + 0.5);
-        outputV[(i * 4) + 1] = Math.floor((rgb[1] * 255.0) + 0.5);
-        outputV[(i * 4) + 2] = Math.floor((rgb[2] * 255.0) + 0.5);
-        outputV[(i * 4) + 3] = alpha;
+        outputV[i * 4] = Math.floor(rgb[0] * 255.0 + 0.5);
+        outputV[i * 4 + 1] = Math.floor(rgb[1] * 255.0 + 0.5);
+        outputV[i * 4 + 2] = Math.floor(rgb[2] * 255.0 + 0.5);
+        outputV[i * 4 + 3] = alpha;
       }
     }
 
     if (outFormat === ScalarMappingTarget.RGB) {
       for (let i = 0; i < length; i++) {
-        const x = inputV[(i * inIncr) + inputOffset];
+        const x = inputV[i * inIncr + inputOffset];
         publicAPI.getColor(x, rgb);
-        outputV[i * 3] = Math.floor((rgb[0] * 255.0) + 0.5);
-        outputV[(i * 3) + 1] = Math.floor((rgb[1] * 255.0) + 0.5);
-        outputV[(i * 3) + 2] = Math.floor((rgb[2] * 255.0) + 0.5);
+        outputV[i * 3] = Math.floor(rgb[0] * 255.0 + 0.5);
+        outputV[i * 3 + 1] = Math.floor(rgb[1] * 255.0 + 0.5);
+        outputV[i * 3 + 2] = Math.floor(rgb[2] * 255.0 + 0.5);
       }
     }
 
     if (outFormat === ScalarMappingTarget.LUMINANCE) {
       for (let i = 0; i < length; i++) {
-        const x = inputV[(i * inIncr) + inputOffset];
+        const x = inputV[i * inIncr + inputOffset];
         publicAPI.getColor(x, rgb);
         outputV[i] = Math.floor(
-          (rgb[0] * 76.5) + (rgb[1] * 150.45)
-          + (rgb[2] * 28.05) + 0.5);
+          rgb[0] * 76.5 + rgb[1] * 150.45 + rgb[2] * 28.05 + 0.5
+        );
       }
     }
 
     if (outFormat === ScalarMappingTarget.LUMINANCE_ALPHA) {
       for (let i = 0; i < length; i++) {
-        const x = inputV[(i * inIncr) + inputOffset];
+        const x = inputV[i * inIncr + inputOffset];
         publicAPI.getColor(x, rgb);
         outputV[i * 2] = Math.floor(
-          (rgb[0] * 76.5) + (rgb[1] * 150.45)
-          + (rgb[2] * 28.05) + 0.5);
-        outputV[(i * 2) + 1] = alpha;
+          rgb[0] * 76.5 + rgb[1] * 150.45 + rgb[2] * 28.05 + 0.5
+        );
+        outputV[i * 2 + 1] = alpha;
       }
     }
   };
@@ -1073,7 +1112,9 @@ function vtkColorTransferFunction(publicAPI, model) {
     if (colorMap.ColorSpace) {
       model.colorSpace = ColorSpace[colorMap.ColorSpace.toUpperCase()];
       if (model.colorSpace === undefined) {
-        vtkErrorMacro(`ColorSpace ${colorMap.ColorSpace} not supported, using RGB instead`);
+        vtkErrorMacro(
+          `ColorSpace ${colorMap.ColorSpace} not supported, using RGB instead`
+        );
         model.colorSpace = ColorSpace.RGB;
       }
     }
@@ -1139,7 +1180,6 @@ const DEFAULT_VALUES = {
 export function extend(publicAPI, model, initialValues = {}) {
   Object.assign(model, DEFAULT_VALUES, initialValues);
 
-
   // Inheritance
   vtkScalarsToColors.extend(publicAPI, model, initialValues);
 
@@ -1155,22 +1195,17 @@ export function extend(publicAPI, model, initialValues = {}) {
   macro.obj(model.buildTime);
 
   // Create get-only macros
-  macro.get(publicAPI, model, [
-    'buildTime',
-    'mappingRange',
-  ]);
+  macro.get(publicAPI, model, ['buildTime', 'mappingRange']);
 
   // Create get-set macros
-  macro.setGet(publicAPI, model, [
-    'useAboveRangeColor',
-    'useBelowRangeColor',
-  ]);
+  macro.setGet(publicAPI, model, ['useAboveRangeColor', 'useBelowRangeColor']);
 
-  macro.setArray(publicAPI, model, [
-    'nanColor',
-    'belowRangeColor',
-    'aboveRangeColor',
-  ], 4);
+  macro.setArray(
+    publicAPI,
+    model,
+    ['nanColor', 'belowRangeColor', 'aboveRangeColor'],
+    4
+  );
 
   // Create get macros for array
   macro.getArray(publicAPI, model, [
@@ -1187,7 +1222,10 @@ export function extend(publicAPI, model, initialValues = {}) {
 
 // ----------------------------------------------------------------------------
 
-export const newInstance = macro.newInstance(extend, 'vtkColorTransferFunction');
+export const newInstance = macro.newInstance(
+  extend,
+  'vtkColorTransferFunction'
+);
 
 // ----------------------------------------------------------------------------
 

@@ -5,14 +5,14 @@
 import 'babel-polyfill';
 import 'vtk.js/Sources/favicon';
 
-import vtkFullScreenRenderWindow  from 'vtk.js/Sources/Rendering/Misc/FullScreenRenderWindow';
+import vtkFullScreenRenderWindow from 'vtk.js/Sources/Rendering/Misc/FullScreenRenderWindow';
 
-import vtkHttpSceneLoader         from 'vtk.js/Sources/IO/Core/HttpSceneLoader';
-import DataAccessHelper           from 'vtk.js/Sources/IO/Core/DataAccessHelper';
-import vtkURLExtract              from 'vtk.js/Sources/Common/Core/URLExtract';
-import vtkOBJReader               from 'vtk.js/Sources/IO/Misc/OBJReader';
-import vtkMapper                  from 'vtk.js/Sources/Rendering/Core/Mapper';
-import vtkActor                   from 'vtk.js/Sources/Rendering/Core/Actor';
+import vtkHttpSceneLoader from 'vtk.js/Sources/IO/Core/HttpSceneLoader';
+import DataAccessHelper from 'vtk.js/Sources/IO/Core/DataAccessHelper';
+import vtkURLExtract from 'vtk.js/Sources/Common/Core/URLExtract';
+import vtkOBJReader from 'vtk.js/Sources/IO/Misc/OBJReader';
+import vtkMapper from 'vtk.js/Sources/Rendering/Core/Mapper';
+import vtkActor from 'vtk.js/Sources/Rendering/Core/Actor';
 
 import controlWidget from './SceneControllerWidget';
 import style from './SceneLoader.mcss';
@@ -69,7 +69,11 @@ export function load(container, options) {
       // Add UI to dynamically change rendering settings
       if (!widgetCreated) {
         widgetCreated = true;
-        controlWidget(document.querySelector('body'), sceneImporter.getScene(), renderWindow.render);
+        controlWidget(
+          document.querySelector('body'),
+          sceneImporter.getScene(),
+          renderWindow.render
+        );
       }
     });
 
@@ -84,19 +88,19 @@ export function load(container, options) {
     sceneImporter.setUrl(options.url);
     onReady(sceneImporter);
   } else if (options.fileURL) {
-    downloadZipFile(options.fileURL)
-      .then((zipContent) => {
-        const dataAccessHelper = DataAccessHelper.get(
-          'zip',
-          {
-            zipContent,
-            callback: (zip) => {
-              const sceneImporter = vtkHttpSceneLoader.newInstance({ renderer, dataAccessHelper });
-              sceneImporter.setUrl('index.json');
-              onReady(sceneImporter);
-            },
+    downloadZipFile(options.fileURL).then((zipContent) => {
+      const dataAccessHelper = DataAccessHelper.get('zip', {
+        zipContent,
+        callback: (zip) => {
+          const sceneImporter = vtkHttpSceneLoader.newInstance({
+            renderer,
+            dataAccessHelper,
           });
+          sceneImporter.setUrl('index.json');
+          onReady(sceneImporter);
+        },
       });
+    });
   } else if (options.file) {
     if (options.ext === 'obj') {
       const scene = [];
@@ -120,8 +124,12 @@ export function load(container, options) {
           });
         }
         onReady({
-          getScene() { return scene; },
-          resetScene() { renderer.resetCamera(); },
+          getScene() {
+            return scene;
+          },
+          resetScene() {
+            renderer.resetCamera();
+          },
           onReady(fn) {
             renderer.resetCamera();
             renderWindow.render();
@@ -131,16 +139,17 @@ export function load(container, options) {
       };
       reader.readAsText(options.file);
     } else {
-      const dataAccessHelper = DataAccessHelper.get(
-        'zip',
-        {
-          zipContent: options.file,
-          callback: (zip) => {
-            const sceneImporter = vtkHttpSceneLoader.newInstance({ renderer, dataAccessHelper });
-            sceneImporter.setUrl('index.json');
-            onReady(sceneImporter);
-          },
-        });
+      const dataAccessHelper = DataAccessHelper.get('zip', {
+        zipContent: options.file,
+        callback: (zip) => {
+          const sceneImporter = vtkHttpSceneLoader.newInstance({
+            renderer,
+            dataAccessHelper,
+          });
+          sceneImporter.setUrl('index.json');
+          onReady(sceneImporter);
+        },
+      });
     }
   }
 }

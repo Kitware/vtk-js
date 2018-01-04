@@ -1,15 +1,15 @@
 import test from 'tape-catch';
 import testUtils from 'vtk.js/Sources/Testing/testUtils';
 
-import vtkOpenGLRenderWindow      from 'vtk.js/Sources/Rendering/OpenGL/RenderWindow';
-import vtkOpenGLHardwareSelector  from 'vtk.js/Sources/Rendering/OpenGL/HardwareSelector';
-import vtkRenderWindow            from 'vtk.js/Sources/Rendering/Core/RenderWindow';
-import vtkRenderer                from 'vtk.js/Sources/Rendering/Core/Renderer';
-import vtkActor                   from 'vtk.js/Sources/Rendering/Core/Actor';
-import vtkMapper                  from 'vtk.js/Sources/Rendering/Core/Mapper';
-import vtkPlaneSource             from 'vtk.js/Sources/Filters/Sources/PlaneSource';
-import vtkSphereSource            from 'vtk.js/Sources/Filters/Sources/SphereSource';
-import { FieldAssociations }      from 'vtk.js/Sources/Common/DataModel/DataSet/Constants';
+import vtkOpenGLRenderWindow from 'vtk.js/Sources/Rendering/OpenGL/RenderWindow';
+import vtkOpenGLHardwareSelector from 'vtk.js/Sources/Rendering/OpenGL/HardwareSelector';
+import vtkRenderWindow from 'vtk.js/Sources/Rendering/Core/RenderWindow';
+import vtkRenderer from 'vtk.js/Sources/Rendering/Core/Renderer';
+import vtkActor from 'vtk.js/Sources/Rendering/Core/Actor';
+import vtkMapper from 'vtk.js/Sources/Rendering/Core/Mapper';
+import vtkPlaneSource from 'vtk.js/Sources/Filters/Sources/PlaneSource';
+import vtkSphereSource from 'vtk.js/Sources/Filters/Sources/SphereSource';
+import { FieldAssociations } from 'vtk.js/Sources/Common/DataModel/DataSet/Constants';
 
 test.onlyIfWebGL('Test HardwareSelector', (tapeContext) => {
   const gc = testUtils.createGarbageCollector(tapeContext);
@@ -17,7 +17,9 @@ test.onlyIfWebGL('Test HardwareSelector', (tapeContext) => {
 
   // Create some control UI
   const container = document.querySelector('body');
-  const renderWindowContainer = gc.registerDOMElement(document.createElement('div'));
+  const renderWindowContainer = gc.registerDOMElement(
+    document.createElement('div')
+  );
   container.appendChild(renderWindowContainer);
 
   // create what we will view
@@ -32,7 +34,9 @@ test.onlyIfWebGL('Test HardwareSelector', (tapeContext) => {
   const mapper = gc.registerResource(vtkMapper.newInstance());
   actor.setMapper(mapper);
 
-  const PlaneSource = gc.registerResource(vtkPlaneSource.newInstance({ xResolution: 5, yResolution: 10 }));
+  const PlaneSource = gc.registerResource(
+    vtkPlaneSource.newInstance({ xResolution: 5, yResolution: 10 })
+  );
   mapper.setInputConnection(PlaneSource.getOutputPort());
 
   const actor2 = gc.registerResource(vtkActor.newInstance());
@@ -67,9 +71,10 @@ test.onlyIfWebGL('Test HardwareSelector', (tapeContext) => {
 
   sel.setArea(200, 200, 300, 300);
   const res = sel.select();
-  const allGood = (res.length === 2 &&
+  const allGood =
+    res.length === 2 &&
     res[0].getProperties().prop === actor &&
-    res[1].getProperties().prop === actor3);
+    res[1].getProperties().prop === actor3;
 
   tapeContext.ok(res.length === 2, 'Two props selected');
   tapeContext.ok(allGood, 'Correct props were selected');

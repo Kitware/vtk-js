@@ -55,7 +55,8 @@ function vtkProp(publicAPI, model) {
   publicAPI.getSupportsSelection = () => false;
 
   publicAPI.getTextures = () => model.textures;
-  publicAPI.hasTexture = texture => !!model.textures.filter(item => item === texture).length;
+  publicAPI.hasTexture = (texture) =>
+    !!model.textures.filter((item) => item === texture).length;
   publicAPI.addTexture = (texture) => {
     if (texture && !publicAPI.hasTexture(texture)) {
       model.textures = model.textures.concat(texture);
@@ -64,7 +65,7 @@ function vtkProp(publicAPI, model) {
   };
 
   publicAPI.removeTexture = (texture) => {
-    const newTextureList = model.textures.filter(item => item === texture);
+    const newTextureList = model.textures.filter((item) => item === texture);
     if (model.texture.length !== newTextureList.length) {
       model.textures = newTextureList;
       publicAPI.modified();
@@ -101,10 +102,7 @@ export function extend(publicAPI, model, initialValues = {}) {
 
   // Build VTK API
   macro.obj(publicAPI, model);
-  macro.get(publicAPI, model, [
-    'estimatedRenderTime',
-    'allocatedRenderTime',
-  ]);
+  macro.get(publicAPI, model, ['estimatedRenderTime', 'allocatedRenderTime']);
   macro.setGet(publicAPI, model, [
     'visibility',
     'pickable',

@@ -1,4 +1,4 @@
-import macro        from 'vtk.js/Sources/macro';
+import macro from 'vtk.js/Sources/macro';
 import vtkAbstractPicker from 'vtk.js/Sources/Rendering/Core/AbstractPicker';
 import vtkBox from 'vtk.js/Sources/Common/DataModel/Box';
 import vtkMath from 'vtk.js/Sources/Common/Core/Math';
@@ -54,7 +54,11 @@ function vtkPicker(publicAPI, model) {
     }
 
     // Project the center point onto the ray and determine its parametric value
-    const t = ((ray[0] * (center[0] - p1[0])) + (ray[1] * (center[1] - p1[1])) + (ray[2] * (center[2] - p1[2]))) / rayFactor;
+    const t =
+      (ray[0] * (center[0] - p1[0]) +
+        ray[1] * (center[1] - p1[1]) +
+        ray[2] * (center[2] - p1[2])) /
+      rayFactor;
     return t;
   };
 
@@ -110,15 +114,32 @@ function vtkPicker(publicAPI, model) {
     cameraPos = camera.getPosition();
     cameraFP = camera.getFocalPoint();
 
-    displayCoords = renderer.worldToNormalizedDisplay(cameraFP[0], cameraFP[1], cameraFP[2]);
-    displayCoords = view.normalizedDisplayToDisplay(displayCoords[0], displayCoords[1], displayCoords[2]);
+    displayCoords = renderer.worldToNormalizedDisplay(
+      cameraFP[0],
+      cameraFP[1],
+      cameraFP[2]
+    );
+    displayCoords = view.normalizedDisplayToDisplay(
+      displayCoords[0],
+      displayCoords[1],
+      displayCoords[2]
+    );
     selectionZ = displayCoords[2];
 
     // Convert the selection point into world coordinates.
-    const normalizedDisplay = view.displayToNormalizedDisplay(selectionX, selectionY, selectionZ);
+    const normalizedDisplay = view.displayToNormalizedDisplay(
+      selectionX,
+      selectionY,
+      selectionZ
+    );
     const dims = view.getViewportSize(renderer);
     const aspect = dims[0] / dims[1];
-    worldCoords = renderer.normalizedDisplayToWorld(normalizedDisplay[0], normalizedDisplay[1], normalizedDisplay[2], aspect);
+    worldCoords = renderer.normalizedDisplayToWorld(
+      normalizedDisplay[0],
+      normalizedDisplay[1],
+      normalizedDisplay[2],
+      aspect
+    );
 
     for (let i = 0; i < 3; i++) {
       model.pickPosition[i] = worldCoords[i];
@@ -149,20 +170,19 @@ function vtkPicker(publicAPI, model) {
       tF = clipRange[0] - rayLength;
       tB = clipRange[1] - rayLength;
       for (let i = 0; i < 3; i++) {
-        p1World[i] = model.pickPosition[i] + (tF * cameraDOP[i]);
-        p2World[i] = model.pickPosition[i] + (tB * cameraDOP[i]);
+        p1World[i] = model.pickPosition[i] + tF * cameraDOP[i];
+        p2World[i] = model.pickPosition[i] + tB * cameraDOP[i];
       }
     } else {
       tF = clipRange[0] / rayLength;
       tB = clipRange[1] / rayLength;
       for (let i = 0; i < 3; i++) {
-        p1World[i] = cameraPos[i] + (tF * ray[i]);
-        p2World[i] = cameraPos[i] + (tB * ray[i]);
+        p1World[i] = cameraPos[i] + tF * ray[i];
+        p2World[i] = cameraPos[i] + tB * ray[i];
       }
     }
     p1World[3] = 1.0;
     p2World[3] = 1.0;
-
 
     // Compute the tolerance in world coordinates.  Do this by
     // determining the world coordinates of the diagonal points of the
@@ -170,20 +190,43 @@ function vtkPicker(publicAPI, model) {
     // multiplying by the tolerance.
     viewport = renderer.getViewport();
     if (renderer.getRenderWindow()) {
-      winSize = renderer.getRenderWindow().getViews()[0].getSize();
+      winSize = renderer
+        .getRenderWindow()
+        .getViews()[0]
+        .getSize();
     }
     x = winSize[0] * viewport[0];
     y = winSize[1] * viewport[1];
-    const normalizedLeftDisplay = view.displayToNormalizedDisplay(x, y, selectionZ);
-    windowLowerLeft = renderer.normalizedDisplayToWorld(normalizedLeftDisplay[0], normalizedLeftDisplay[1], normalizedLeftDisplay[2], aspect);
+    const normalizedLeftDisplay = view.displayToNormalizedDisplay(
+      x,
+      y,
+      selectionZ
+    );
+    windowLowerLeft = renderer.normalizedDisplayToWorld(
+      normalizedLeftDisplay[0],
+      normalizedLeftDisplay[1],
+      normalizedLeftDisplay[2],
+      aspect
+    );
 
     x = winSize[0] * viewport[2];
     y = winSize[1] * viewport[3];
-    const normalizedRightDisplay = view.displayToNormalizedDisplay(x, y, selectionZ);
-    windowUpperRight = renderer.normalizedDisplayToWorld(normalizedRightDisplay[0], normalizedRightDisplay[1], normalizedRightDisplay[2], aspect);
+    const normalizedRightDisplay = view.displayToNormalizedDisplay(
+      x,
+      y,
+      selectionZ
+    );
+    windowUpperRight = renderer.normalizedDisplayToWorld(
+      normalizedRightDisplay[0],
+      normalizedRightDisplay[1],
+      normalizedRightDisplay[2],
+      aspect
+    );
 
     for (let i = 0; i < 3; i++) {
-      tol += (windowUpperRight[i] - windowLowerLeft[i]) * (windowUpperRight[i] - windowLowerLeft[i]);
+      tol +=
+        (windowUpperRight[i] - windowLowerLeft[i]) *
+        (windowUpperRight[i] - windowLowerLeft[i]);
     }
 
     tol = Math.sqrt(tol) * model.tolerance;
@@ -207,9 +250,21 @@ function vtkPicker(publicAPI, model) {
         mat4.transpose(model.transformMatrix, model.transformMatrix);
         mat4.invert(model.transformMatrix, model.transformMatrix);
         // Extract scale
-        const col1 = [model.transformMatrix[0], model.transformMatrix[1], model.transformMatrix[2]];
-        const col2 = [model.transformMatrix[4], model.transformMatrix[5], model.transformMatrix[6]];
-        const col3 = [model.transformMatrix[8], model.transformMatrix[9], model.transformMatrix[10]];
+        const col1 = [
+          model.transformMatrix[0],
+          model.transformMatrix[1],
+          model.transformMatrix[2],
+        ];
+        const col2 = [
+          model.transformMatrix[4],
+          model.transformMatrix[5],
+          model.transformMatrix[6],
+        ];
+        const col3 = [
+          model.transformMatrix[8],
+          model.transformMatrix[9],
+          model.transformMatrix[10],
+        ];
         scale[0] = vtkMath.norm(col1);
         scale[1] = vtkMath.norm(col2);
         scale[2] = vtkMath.norm(col3);
@@ -234,12 +289,17 @@ function vtkPicker(publicAPI, model) {
         }
 
         if (vtkBox.intersectBox(bounds, p1Mapper, ray, hitPosition, t)) {
-          t[0] = publicAPI.intersectWithLine(p1Mapper, p2Mapper, tol * 0.333 * (scale[0] + scale[1] + scale[2]), mapper);
+          t[0] = publicAPI.intersectWithLine(
+            p1Mapper,
+            p2Mapper,
+            tol * 0.333 * (scale[0] + scale[1] + scale[2]),
+            mapper
+          );
           if (t[0] < Number.MAX_VALUE) {
             const p = [];
-            p[0] = ((1.0 - t[0]) * p1World[0]) + (t[0] * p2World[0]);
-            p[1] = ((1.0 - t[0]) * p1World[1]) + (t[0] * p2World[1]);
-            p[2] = ((1.0 - t[0]) * p1World[2]) + (t[0] * p2World[2]);
+            p[0] = (1.0 - t[0]) * p1World[0] + t[0] * p2World[0];
+            p[1] = (1.0 - t[0]) * p1World[1] + t[0] * p2World[1];
+            p[2] = (1.0 - t[0]) * p1World[2] + t[0] * p2World[2];
 
             // Check if the current actor is already in the list
             let actorID = -1;
@@ -291,9 +351,7 @@ export function extend(publicAPI, model, initialValues = {}) {
   // Inheritance
   vtkAbstractPicker.extend(publicAPI, model, initialValues);
 
-  macro.setGet(publicAPI, model, [
-    'tolerance',
-  ]);
+  macro.setGet(publicAPI, model, ['tolerance']);
   macro.setGetArray(publicAPI, model, ['mapperPosition'], 3);
   macro.get(publicAPI, model, [
     'mapper',

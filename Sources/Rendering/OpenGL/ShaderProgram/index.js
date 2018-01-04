@@ -1,4 +1,4 @@
-import macro     from 'vtk.js/Sources/macro';
+import macro from 'vtk.js/Sources/macro';
 import vtkShader from 'vtk.js/Sources/Rendering/OpenGL/Shader';
 
 const { vtkErrorMacro } = macro;
@@ -6,7 +6,7 @@ const { vtkErrorMacro } = macro;
 // perform in place string substitutions, indicate if a substitution was done
 // this is useful for building up shader strings which typically involve
 // lots of string substitutions. Return true if a substitution was done.
-export function substitute(source, search, replace, all = true) {
+function substitute(source, search, replace, all = true) {
   const replaceStr = Array.isArray(replace) ? replace.join('\n') : replace;
   let replaced = false;
   if (source.search(search) !== -1) {
@@ -31,18 +31,24 @@ function vtkShaderProgram(publicAPI, model) {
 
   publicAPI.compileShader = () => {
     if (!model.vertexShader.compile()) {
-      vtkErrorMacro(model.vertexShader.getSource()
-        .split('\n')
-        .map((line, index) => `${index}: ${line}`)
-        .join('\n'));
+      vtkErrorMacro(
+        model.vertexShader
+          .getSource()
+          .split('\n')
+          .map((line, index) => `${index}: ${line}`)
+          .join('\n')
+      );
       vtkErrorMacro(model.vertexShader.getError());
       return 0;
     }
     if (!model.fragmentShader.compile()) {
-      vtkErrorMacro(model.fragmentShader.getSource()
-        .split('\n')
-        .map((line, index) => `${index}: ${line}`)
-        .join('\n'));
+      vtkErrorMacro(
+        model.fragmentShader
+          .getSource()
+          .split('\n')
+          .map((line, index) => `${index}: ${line}`)
+          .join('\n')
+      );
       vtkErrorMacro(model.fragmentShader.getError());
       return 0;
     }
@@ -103,7 +109,8 @@ function vtkShaderProgram(publicAPI, model) {
     }
 
     if (model.handle === 0) {
-      model.error = 'Program has not been initialized, and/or does not have shaders.';
+      model.error =
+        'Program has not been initialized, and/or does not have shaders.';
       return false;
     }
 
@@ -111,7 +118,10 @@ function vtkShaderProgram(publicAPI, model) {
     model.uniformLocs = {};
 
     model.context.linkProgram(model.handle);
-    const isCompiled = model.context.getProgramParameter(model.handle, model.context.LINK_STATUS);
+    const isCompiled = model.context.getProgramParameter(
+      model.handle,
+      model.context.LINK_STATUS
+    );
     if (!isCompiled) {
       const lastError = model.context.getProgramInfoLog(model.handle);
       vtkErrorMacro(`Error linking shader ${lastError}`);
@@ -390,11 +400,13 @@ function vtkShaderProgram(publicAPI, model) {
     // see if we have cached the result
     let loc = model.uniformLocs[name];
     if (loc !== undefined) {
-      return (loc !== null);
+      return loc !== null;
     }
 
     if (!model.linked) {
-      vtkErrorMacro('attempt to find uniform when the shader program is not linked');
+      vtkErrorMacro(
+        'attempt to find uniform when the shader program is not linked'
+      );
       return false;
     }
 
@@ -420,7 +432,9 @@ function vtkShaderProgram(publicAPI, model) {
     }
 
     if (!model.linked) {
-      vtkErrorMacro('attempt to find uniform when the shader program is not linked');
+      vtkErrorMacro(
+        'attempt to find uniform when the shader program is not linked'
+      );
       return false;
     }
 
@@ -567,7 +581,7 @@ const DEFAULT_VALUES = {
 
 // ----------------------------------------------------------------------------
 
-export function extend(publicAPI, model, initialValues = {}) {
+function extend(publicAPI, model, initialValues = {}) {
   Object.assign(model, DEFAULT_VALUES, initialValues);
 
   // Instanciate internal objects
@@ -582,9 +596,7 @@ export function extend(publicAPI, model, initialValues = {}) {
 
   // Build VTK API
   macro.obj(publicAPI, model);
-  macro.get(publicAPI, model, [
-    'lastCameraMTime',
-  ]);
+  macro.get(publicAPI, model, ['lastCameraMTime']);
   macro.setGet(publicAPI, model, [
     'error',
     'handle',
@@ -603,7 +615,7 @@ export function extend(publicAPI, model, initialValues = {}) {
 
 // ----------------------------------------------------------------------------
 
-export const newInstance = macro.newInstance(extend, 'vtkShaderProgram');
+const newInstance = macro.newInstance(extend, 'vtkShaderProgram');
 
 // ----------------------------------------------------------------------------
 

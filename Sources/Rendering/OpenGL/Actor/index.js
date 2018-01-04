@@ -1,6 +1,6 @@
 import { mat3, mat4 } from 'gl-matrix';
 
-import macro       from 'vtk.js/Sources/macro';
+import macro from 'vtk.js/Sources/macro';
 import vtkViewNode from 'vtk.js/Sources/Rendering/SceneGraph/ViewNode';
 
 // ----------------------------------------------------------------------------
@@ -14,7 +14,9 @@ function vtkOpenGLActor(publicAPI, model) {
   // Builds myself.
   publicAPI.buildPass = (prepass) => {
     if (prepass) {
-      model.openGLRenderWindow = publicAPI.getFirstAncestorOfType('vtkOpenGLRenderWindow');
+      model.openGLRenderWindow = publicAPI.getFirstAncestorOfType(
+        'vtkOpenGLRenderWindow'
+      );
       model.context = model.openGLRenderWindow.getContext();
       publicAPI.prepareNodes();
       publicAPI.addMissingNodes(model.renderable.getTextures());
@@ -44,9 +46,11 @@ function vtkOpenGLActor(publicAPI, model) {
 
   // we draw textures, then mapper, then post pass textures
   publicAPI.traverseOpaquePass = (renderPass) => {
-    if (!model.renderable ||
-        !model.renderable.getVisibility() ||
-        !model.renderable.getIsOpaque()) {
+    if (
+      !model.renderable ||
+      !model.renderable.getVisibility() ||
+      !model.renderable.getIsOpaque()
+    ) {
       return;
     }
 
@@ -59,9 +63,11 @@ function vtkOpenGLActor(publicAPI, model) {
 
   // we draw textures, then mapper, then post pass textures
   publicAPI.traverseTranslucentPass = (renderPass) => {
-    if (!model.renderable ||
-        !model.renderable.getVisibility() ||
-        model.renderable.getIsOpaque()) {
+    if (
+      !model.renderable ||
+      !model.renderable.getVisibility() ||
+      model.renderable.getIsOpaque()
+    ) {
       return;
     }
 
@@ -90,8 +96,7 @@ function vtkOpenGLActor(publicAPI, model) {
 
   publicAPI.queryPass = (prepass, renderPass) => {
     if (prepass) {
-      if (!model.renderable ||
-          !model.renderable.getVisibility()) {
+      if (!model.renderable || !model.renderable.getVisibility()) {
         return;
       }
       if (model.renderable.getIsOpaque()) {
@@ -102,7 +107,8 @@ function vtkOpenGLActor(publicAPI, model) {
     }
   };
 
-  publicAPI.opaqueZBufferPass = (prepass, renderPass) => publicAPI.opaquePass(prepass, renderPass);
+  publicAPI.opaqueZBufferPass = (prepass, renderPass) =>
+    publicAPI.opaquePass(prepass, renderPass);
 
   publicAPI.opaquePass = (prepass, renderPass) => {
     if (prepass) {
@@ -138,7 +144,10 @@ function vtkOpenGLActor(publicAPI, model) {
         mat3.identity(model.keyMatrices.normalMatrix);
       } else {
         mat3.fromMat4(model.keyMatrices.normalMatrix, model.keyMatrices.mcwc);
-        mat3.invert(model.keyMatrices.normalMatrix, model.keyMatrices.normalMatrix);
+        mat3.invert(
+          model.keyMatrices.normalMatrix,
+          model.keyMatrices.normalMatrix
+        );
       }
       model.keyMatrixTime.modified();
     }
@@ -174,13 +183,9 @@ export function extend(publicAPI, model, initialValues = {}) {
   };
 
   // Build VTK API
-  macro.setGet(publicAPI, model, [
-    'context',
-  ]);
+  macro.setGet(publicAPI, model, ['context']);
 
-  macro.get(publicAPI, model, [
-    'activeTextures',
-  ]);
+  macro.get(publicAPI, model, ['activeTextures']);
 
   // Object methods
   vtkOpenGLActor(publicAPI, model);

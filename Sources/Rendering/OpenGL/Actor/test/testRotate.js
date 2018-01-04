@@ -1,12 +1,12 @@
-import test      from 'tape-catch';
+import test from 'tape-catch';
 import testUtils from 'vtk.js/Sources/Testing/testUtils';
 
-import vtkActor              from 'vtk.js/Sources/Rendering/Core/Actor';
+import vtkActor from 'vtk.js/Sources/Rendering/Core/Actor';
 import vtkOpenGLRenderWindow from 'vtk.js/Sources/Rendering/OpenGL/RenderWindow';
-import vtkPlaneSource        from 'vtk.js/Sources/Filters/Sources/PlaneSource';
-import vtkMapper             from 'vtk.js/Sources/Rendering/Core/Mapper';
-import vtkRenderer           from 'vtk.js/Sources/Rendering/Core/Renderer';
-import vtkRenderWindow       from 'vtk.js/Sources/Rendering/Core/RenderWindow';
+import vtkPlaneSource from 'vtk.js/Sources/Filters/Sources/PlaneSource';
+import vtkMapper from 'vtk.js/Sources/Rendering/Core/Mapper';
+import vtkRenderer from 'vtk.js/Sources/Rendering/Core/Renderer';
+import vtkRenderWindow from 'vtk.js/Sources/Rendering/Core/RenderWindow';
 
 import baseline from './testRotate.png';
 
@@ -16,7 +16,9 @@ test.onlyIfWebGL('Test Actor', (t) => {
 
   // Create some control UI
   const container = document.querySelector('body');
-  const renderWindowContainer = gc.registerDOMElement(document.createElement('div'));
+  const renderWindowContainer = gc.registerDOMElement(
+    document.createElement('div')
+  );
   container.appendChild(renderWindowContainer);
 
   // create what we will view
@@ -53,5 +55,12 @@ test.onlyIfWebGL('Test Actor', (t) => {
   glwindow.setSize(400, 400);
 
   const image = glwindow.captureImage();
-  testUtils.compareImages(image, [baseline], 'Rendering/OpenGL/Actor', t, 1, gc.releaseResources);
+  testUtils.compareImages(
+    image,
+    [baseline],
+    'Rendering/OpenGL/Actor',
+    t,
+    1,
+    gc.releaseResources
+  );
 });

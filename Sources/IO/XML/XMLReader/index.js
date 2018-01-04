@@ -2,9 +2,9 @@ import pako from 'pako';
 import { toByteArray } from 'base64-js';
 
 import DataAccessHelper from 'vtk.js/Sources/IO/Core/DataAccessHelper';
-import macro            from 'vtk.js/Sources/macro';
-import vtkDataArray     from 'vtk.js/Sources/Common/Core/DataArray';
-import BinaryHelper     from 'vtk.js/Sources/IO/Core/BinaryHelper';
+import macro from 'vtk.js/Sources/macro';
+import vtkDataArray from 'vtk.js/Sources/Common/Core/DataArray';
+import BinaryHelper from 'vtk.js/Sources/IO/Core/BinaryHelper';
 
 // ----------------------------------------------------------------------------
 // Global methods
@@ -16,7 +16,7 @@ function stringToXML(xmlStr) {
     oXML.loadXML(xmlStr);
     return oXML;
   }
-  return (new DOMParser()).parseFromString(xmlStr, 'application/xml');
+  return new DOMParser().parseFromString(xmlStr, 'application/xml');
 }
 
 function extractAppendedData(buffer) {
@@ -60,7 +60,7 @@ const TYPED_ARRAY_BYTES = {
 
 function integer64to32(array) {
   const maxIdx = array.length - 1; // Skip last
-  return array.filter((v, i) => (i < maxIdx) && (i % 2) === 0);
+  return array.filter((v, i) => i < maxIdx && i % 2 === 0);
 }
 
 // ----------------------------------------------------------------------------
@@ -104,11 +104,20 @@ function uncompressBlock(compressedUint8, output) {
 
 // ----------------------------------------------------------------------------
 
-function processDataArray(size, dataArrayElem, compressor, byteOrder, headerType, binaryBuffer) {
+function processDataArray(
+  size,
+  dataArrayElem,
+  compressor,
+  byteOrder,
+  headerType,
+  binaryBuffer
+) {
   const dataType = dataArrayElem.getAttribute('type');
   const name = dataArrayElem.getAttribute('Name');
   const format = dataArrayElem.getAttribute('format'); // binary, ascii, appended
-  const numberOfComponents = Number(dataArrayElem.getAttribute('NumberOfComponents') || '1');
+  const numberOfComponents = Number(
+    dataArrayElem.getAttribute('NumberOfComponents') || '1'
+  );
   let values = null;
 
   if (format === 'ascii') {
@@ -122,7 +131,9 @@ function processDataArray(size, dataArrayElem, compressor, byteOrder, headerType
   } else if (format === 'binary') {
     const uint8 = toByteArray(dataArrayElem.firstChild.nodeValue.trim());
     if (compressor === 'vtkZLibDataCompressor') {
-      const buffer = new ArrayBuffer(TYPED_ARRAY_BYTES[dataType] * size * numberOfComponents);
+      const buffer = new ArrayBuffer(
+        TYPED_ARRAY_BYTES[dataType] * size * numberOfComponents
+      );
       values = new TYPED_ARRAY[dataType](buffer);
       const output = {
         offset: 0,
@@ -139,7 +150,10 @@ function processDataArray(size, dataArrayElem, compressor, byteOrder, headerType
       // Header reading
       const header = readerHeader(uint8, headerType);
       const nbBlocks = header[1];
-      let offset = uint8.length - (header.reduce((a, b) => a + b, 0) - (header[0] + header[1] + header[2] + header[3]));
+      let offset =
+        uint8.length -
+        (header.reduce((a, b) => a + b, 0) -
+          (header[0] + header[1] + header[2] + header[3]));
       for (let i = 0; i < nbBlocks; i++) {
         const blockSize = header[4 + i];
         const compressedBlock = new Uint8Array(uint8.buffer, offset, blockSize);
@@ -152,7 +166,10 @@ function processDataArray(size, dataArrayElem, compressor, byteOrder, headerType
         values = integer64to32(values);
       }
     } else {
-      values = new TYPED_ARRAY[dataType](uint8.buffer, TYPED_ARRAY_BYTES[headerType]); // Skip the count
+      values = new TYPED_ARRAY[dataType](
+        uint8.buffer,
+        TYPED_ARRAY_BYTES[headerType]
+      ); // Skip the count
 
       // Handle (u)int64 hoping no overflow...
       if (dataType.indexOf('Int64') !== -1) {
@@ -180,7 +197,9 @@ function processDataArray(size, dataArrayElem, compressor, byteOrder, headerType
     if (offset % TYPED_ARRAY_BYTES[dataType] === 0) {
       values = new TYPED_ARRAY[dataType](binaryBuffer, offset, arraySize);
     } else {
-      values = new TYPED_ARRAY[dataType](binaryBuffer.slice(offset, offset + header[0]));
+      values = new TYPED_ARRAY[dataType](
+        binaryBuffer.slice(offset, offset + header[0])
+      );
     }
     // remove higher order 32 bits assuming they're not used.
     if (dataType.indexOf('Int64') !== -1) {
@@ -195,7 +214,14 @@ function processDataArray(size, dataArrayElem, compressor, byteOrder, headerType
 
 // ----------------------------------------------------------------------------
 
-function processCells(size, containerElem, compressor, byteOrder, headerType, binaryBuffer) {
+function processCells(
+  size,
+  containerElem,
+  compressor,
+  byteOrder,
+  headerType,
+  binaryBuffer
+) {
   const arrayElems = {};
   const dataArrayElems = containerElem.getElementsByTagName('DataArray');
   for (let elIdx = 0; elIdx < dataArrayElems.length; elIdx++) {
@@ -203,9 +229,23 @@ function processCells(size, containerElem, compressor, byteOrder, headerType, bi
     arrayElems[el.getAttribute('Name')] = el;
   }
 
-  const offsets = processDataArray(size, arrayElems.offsets, compressor, byteOrder, headerType, binaryBuffer).values;
+  const offsets = processDataArray(
+    size,
+    arrayElems.offsets,
+    compressor,
+    byteOrder,
+    headerType,
+    binaryBuffer
+  ).values;
   const connectivitySize = offsets[offsets.length - 1];
-  const connectivity = processDataArray(connectivitySize, arrayElems.connectivity, compressor, byteOrder, headerType, binaryBuffer).values;
+  const connectivity = processDataArray(
+    connectivitySize,
+    arrayElems.connectivity,
+    compressor,
+    byteOrder,
+    headerType,
+    binaryBuffer
+  ).values;
   const values = new Uint32Array(size + connectivitySize);
   let writeOffset = 0;
   let previousOffset = 0;
@@ -226,7 +266,15 @@ function processCells(size, containerElem, compressor, byteOrder, headerType, bi
 
 // ----------------------------------------------------------------------------
 
-function processFieldData(size, fieldElem, fieldContainer, compressor, byteOrder, headerType, binaryBuffer) {
+function processFieldData(
+  size,
+  fieldElem,
+  fieldContainer,
+  compressor,
+  byteOrder,
+  headerType,
+  binaryBuffer
+) {
   if (fieldElem) {
     const attributes = ['Scalars', 'Vectors', 'Normals', 'Tensors', 'TCoords'];
     const nameBinding = {};
@@ -241,7 +289,16 @@ function processFieldData(size, fieldElem, fieldContainer, compressor, byteOrder
     const nbArrays = arrays.length;
     for (let idx = 0; idx < nbArrays; idx++) {
       const array = arrays[idx];
-      const dataArray = vtkDataArray.newInstance(processDataArray(size, array, compressor, byteOrder, headerType, binaryBuffer));
+      const dataArray = vtkDataArray.newInstance(
+        processDataArray(
+          size,
+          array,
+          compressor,
+          byteOrder,
+          headerType,
+          binaryBuffer
+        )
+      );
       const name = dataArray.getName();
       (nameBinding[name] || fieldContainer.addArray)(dataArray);
     }
@@ -265,7 +322,10 @@ function vtkXMLReader(publicAPI, model) {
   function fetchData(url, option = {}) {
     const compression = model.compression;
     const progressCallback = model.progressCallback;
-    return model.dataAccessHelper.fetchText(publicAPI, url, { compression, progressCallback });
+    return model.dataAccessHelper.fetchText(publicAPI, url, {
+      compression,
+      progressCallback,
+    });
   }
 
   // Set DataSet url
@@ -355,10 +415,15 @@ function vtkXMLReader(publicAPI, model) {
         }
 
         if (encoding === 'base64') {
-          dataArrays.push(toByteArray(appendedBuffer.substring(offset, nextOffset)));
-        } else { // encoding === 'raw'
+          dataArrays.push(
+            toByteArray(appendedBuffer.substring(offset, nextOffset))
+          );
+        } else {
+          // encoding === 'raw'
           // Need to slice the ArrayBuffer so readerHeader() works properly
-          dataArrays.push(new Uint8Array(appendedBuffer.slice(offset, nextOffset)));
+          dataArrays.push(
+            new Uint8Array(appendedBuffer.slice(offset, nextOffset))
+          );
         }
       }
 
@@ -372,11 +437,12 @@ function vtkXMLReader(publicAPI, model) {
           const nbBlocks = header[1];
           let compressedOffset =
             dataArray.length -
-            (header.reduce((a, b) => a + b, 0) - (header[0] + header[1] + header[2] + header[3]));
+            (header.reduce((a, b) => a + b, 0) -
+              (header[0] + header[1] + header[2] + header[3]));
 
           let buffer = null;
           if (nbBlocks > 0) {
-            buffer = new ArrayBuffer((header[2] * (nbBlocks - 1)) + header[3]);
+            buffer = new ArrayBuffer(header[2] * (nbBlocks - 1) + header[3]);
           } else {
             // if there is no blocks, then default to a zero array of size 0.
             buffer = new ArrayBuffer(0);
@@ -389,18 +455,23 @@ function vtkXMLReader(publicAPI, model) {
             uint8: uncompressed,
           };
 
-
           for (let i = 0; i < nbBlocks; i++) {
             const blockSize = header[4 + i];
-            const compressedBlock = new Uint8Array(dataArray.buffer, compressedOffset, blockSize);
+            const compressedBlock = new Uint8Array(
+              dataArray.buffer,
+              compressedOffset,
+              blockSize
+            );
             uncompressBlock(compressedBlock, output);
             compressedOffset += blockSize;
           }
 
-          const data = new Uint8Array(uncompressed.length + TYPED_ARRAY_BYTES[headerType]);
+          const data = new Uint8Array(
+            uncompressed.length + TYPED_ARRAY_BYTES[headerType]
+          );
           // set length header
           // TODO this does not work for lengths that are greater than the max Uint32 value.
-          (new TYPED_ARRAY[headerType](data.buffer))[0] = uncompressed.length;
+          new TYPED_ARRAY[headerType](data.buffer)[0] = uncompressed.length;
           data.set(uncompressed, TYPED_ARRAY_BYTES[headerType]);
 
           dataArrays[arrayidx] = data;
@@ -422,7 +493,9 @@ function vtkXMLReader(publicAPI, model) {
       model.binaryBuffer = buffer;
 
       if (!model.binaryBuffer) {
-        console.error('Processing appended data format: requires binaryBuffer to parse');
+        console.error(
+          'Processing appended data format: requires binaryBuffer to parse'
+        );
         return;
       }
     }
@@ -447,19 +520,13 @@ const DEFAULT_VALUES = {
 
 // ----------------------------------------------------------------------------
 
-
 export function extend(publicAPI, model, initialValues = {}) {
   Object.assign(model, DEFAULT_VALUES, initialValues);
 
   // Build VTK API
   macro.obj(publicAPI, model);
-  macro.get(publicAPI, model, [
-    'url',
-    'baseURL',
-  ]);
-  macro.setGet(publicAPI, model, [
-    'dataAccessHelper',
-  ]);
+  macro.get(publicAPI, model, ['url', 'baseURL']);
+  macro.setGet(publicAPI, model, ['dataAccessHelper']);
   macro.algo(publicAPI, model, 0, 1);
 
   // vtkXMLReader methods

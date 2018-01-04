@@ -5,7 +5,7 @@ const { StructuredType } = Constants;
 export function getDataDescriptionFromExtent(inExt) {
   let dataDim = 0;
   for (let i = 0; i < 3; ++i) {
-    if (inExt[i * 2] < inExt[(i * 2) + 1]) {
+    if (inExt[i * 2] < inExt[i * 2 + 1]) {
       dataDim++;
     }
   }

@@ -1,13 +1,13 @@
-import test      from 'tape-catch';
+import test from 'tape-catch';
 import testUtils from 'vtk.js/Sources/Testing/testUtils';
 
-import vtkActor              from 'vtk.js/Sources/Rendering/Core/Actor';
-import vtkCubeSource          from 'vtk.js/Sources/Filters/Sources/CubeSource';
-import vtkMapper             from 'vtk.js/Sources/Rendering/Core/Mapper';
+import vtkActor from 'vtk.js/Sources/Rendering/Core/Actor';
+import vtkCubeSource from 'vtk.js/Sources/Filters/Sources/CubeSource';
+import vtkMapper from 'vtk.js/Sources/Rendering/Core/Mapper';
 import vtkOpenGLRenderWindow from 'vtk.js/Sources/Rendering/OpenGL/RenderWindow';
-import vtkPlane              from 'vtk.js/Sources/Common/DataModel/Plane';
-import vtkRenderer           from 'vtk.js/Sources/Rendering/Core/Renderer';
-import vtkRenderWindow       from 'vtk.js/Sources/Rendering/Core/RenderWindow';
+import vtkPlane from 'vtk.js/Sources/Common/DataModel/Plane';
+import vtkRenderer from 'vtk.js/Sources/Rendering/Core/Renderer';
+import vtkRenderWindow from 'vtk.js/Sources/Rendering/Core/RenderWindow';
 
 import baseline from './testClippingPlanes.png';
 
@@ -17,7 +17,9 @@ test.onlyIfWebGL('Test Clipping planes', (t) => {
 
   // Create some control UI
   const container = document.querySelector('body');
-  const renderWindowContainer = gc.registerDOMElement(document.createElement('div'));
+  const renderWindowContainer = gc.registerDOMElement(
+    document.createElement('div')
+  );
   container.appendChild(renderWindowContainer);
 
   // create what we will view
@@ -40,25 +42,32 @@ test.onlyIfWebGL('Test Clipping planes', (t) => {
   actorCube0.setMapper(mapperCube0);
   renderer.addActor(actorCube0);
 
+  const planeX = gc.registerResource(
+    vtkPlane.newInstance({
+      origin: [2.0, 0.0, 0.0],
+      normal: [1.0, 0.0, 0.0],
+    })
+  );
 
-  const planeX = gc.registerResource(vtkPlane.newInstance({
-    origin: [2.0, 0.0, 0.0],
-    normal: [1.0, 0.0, 0.0],
-  }));
+  const planeY = gc.registerResource(
+    vtkPlane.newInstance({
+      origin: [2.0, 0.0, 0.0],
+      normal: [0.0, 1.0, 0.0],
+    })
+  );
 
-  const planeY = gc.registerResource(vtkPlane.newInstance({
-    origin: [2.0, 0.0, 0.0],
-    normal: [0.0, 1.0, 0.0],
-  }));
+  const planeZ = gc.registerResource(
+    vtkPlane.newInstance({
+      origin: [2.0, 0.0, 0.0],
+      normal: [0.0, 0.0, 1.0],
+    })
+  );
 
-  const planeZ = gc.registerResource(vtkPlane.newInstance({
-    origin: [2.0, 0.0, 0.0],
-    normal: [0.0, 0.0, 1.0],
-  }));
-
-  const cube1 = gc.registerResource(vtkCubeSource.newInstance({
-    center: [2.0, 0.0, 0.0],
-  }));
+  const cube1 = gc.registerResource(
+    vtkCubeSource.newInstance({
+      center: [2.0, 0.0, 0.0],
+    })
+  );
   const mapperCube1 = gc.registerResource(vtkMapper.newInstance());
   mapperCube1.setInputConnection(cube1.getOutputPort());
   mapperCube1.addClippingPlane(planeX);
@@ -75,5 +84,12 @@ test.onlyIfWebGL('Test Clipping planes', (t) => {
   glwindow.setSize(400, 400);
 
   const image = glwindow.captureImage();
-  testUtils.compareImages(image, [baseline], 'TestClippingPlanes', t, 2.5, gc.releaseResources);
+  testUtils.compareImages(
+    image,
+    [baseline],
+    'TestClippingPlanes',
+    t,
+    2.5,
+    gc.releaseResources
+  );
 });

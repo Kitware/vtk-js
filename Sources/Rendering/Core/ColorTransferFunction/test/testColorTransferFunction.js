@@ -1,14 +1,14 @@
-import test      from 'tape-catch';
+import test from 'tape-catch';
 import testUtils from 'vtk.js/Sources/Testing/testUtils';
 
-import vtkOpenGLRenderWindow    from 'vtk.js/Sources/Rendering/OpenGL/RenderWindow';
-import vtkRenderWindow          from 'vtk.js/Sources/Rendering/Core/RenderWindow';
-import vtkRenderer              from 'vtk.js/Sources/Rendering/Core/Renderer';
+import vtkOpenGLRenderWindow from 'vtk.js/Sources/Rendering/OpenGL/RenderWindow';
+import vtkRenderWindow from 'vtk.js/Sources/Rendering/Core/RenderWindow';
+import vtkRenderer from 'vtk.js/Sources/Rendering/Core/Renderer';
 import vtkColorTransferFunction from 'vtk.js/Sources/Rendering/Core/ColorTransferFunction';
-import vtkActor                 from 'vtk.js/Sources/Rendering/Core/Actor';
-import vtkMapper                from 'vtk.js/Sources/Rendering/Core/Mapper';
-import vtkDataArray             from 'vtk.js/Sources/Common/Core/DataArray';
-import vtkPolyData              from 'vtk.js/Sources/Common/DataModel/PolyData';
+import vtkActor from 'vtk.js/Sources/Rendering/Core/Actor';
+import vtkMapper from 'vtk.js/Sources/Rendering/Core/Mapper';
+import vtkDataArray from 'vtk.js/Sources/Common/Core/DataArray';
+import vtkPolyData from 'vtk.js/Sources/Common/DataModel/PolyData';
 
 import baseline from './testColorTransferFunction.png';
 
@@ -18,7 +18,9 @@ test.onlyIfWebGL('Test Interpolate Scalars Before Colors', (t) => {
 
   // Create some control UI
   const container = document.querySelector('body');
-  const renderWindowContainer = gc.registerDOMElement(document.createElement('div'));
+  const renderWindowContainer = gc.registerDOMElement(
+    document.createElement('div')
+  );
   container.appendChild(renderWindowContainer);
 
   // create what we will view
@@ -62,13 +64,13 @@ test.onlyIfWebGL('Test Interpolate Scalars Before Colors', (t) => {
 
   for (let i = 0; i < res; i++) {
     for (let j = 0; j < res; j++) {
-      const idx = (i * res) + j;
+      const idx = i * res + j;
       points[idx * 3] = j;
-      points[(idx * 3) + 1] = i;
-      points[(idx * 3) + 2] = 0.0;
+      points[idx * 3 + 1] = i;
+      points[idx * 3 + 2] = 0.0;
       // set scalars to be -0.5 to 1.5 so we have above and below range
       // data.
-      scalars[idx] = -0.5 + (2.0 * j / (res - 1.0));
+      scalars[idx] = -0.5 + 2.0 * j / (res - 1.0);
       // also add nan for some data
       if (i === 4) {
         scalars[idx] = NaN;
@@ -76,9 +78,9 @@ test.onlyIfWebGL('Test Interpolate Scalars Before Colors', (t) => {
     }
   }
 
-  for (let i = 0; i < (res - 1); i++) {
-    for (let j = 0; j < (res - 1); j++) {
-      const idx = ((i * res) + j);
+  for (let i = 0; i < res - 1; i++) {
+    for (let j = 0; j < res - 1; j++) {
+      const idx = i * res + j;
       polys[cellLocation++] = 3;
       polys[cellLocation++] = idx;
       polys[cellLocation++] = idx + 1;
@@ -90,7 +92,9 @@ test.onlyIfWebGL('Test Interpolate Scalars Before Colors', (t) => {
     }
   }
 
-  const da = gc.registerResource(vtkDataArray.newInstance({ numberOfComponents: 1, values: scalars }));
+  const da = gc.registerResource(
+    vtkDataArray.newInstance({ numberOfComponents: 1, values: scalars })
+  );
   pd.getPointData().setScalars(da);
 
   mapper.setInputData(pd);
@@ -104,5 +108,12 @@ test.onlyIfWebGL('Test Interpolate Scalars Before Colors', (t) => {
 
   const image = glwindow.captureImage();
 
-  testUtils.compareImages(image, [baseline], 'Rendering/Core/ColorTransferFunction/testColorTransferFunction', t, 1.5, gc.releaseResources);
+  testUtils.compareImages(
+    image,
+    [baseline],
+    'Rendering/Core/ColorTransferFunction/testColorTransferFunction',
+    t,
+    1.5,
+    gc.releaseResources
+  );
 });

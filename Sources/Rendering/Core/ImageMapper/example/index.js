@@ -1,10 +1,10 @@
 import 'vtk.js/Sources/favicon';
 
-import vtkFullScreenRenderWindow  from 'vtk.js/Sources/Rendering/Misc/FullScreenRenderWindow';
-import vtkRTAnalyticSource        from 'vtk.js/Sources/Filters/Sources/RTAnalyticSource';
-import vtkImageMapper             from 'vtk.js/Sources/Rendering/Core/ImageMapper';
-import vtkImageSlice              from 'vtk.js/Sources/Rendering/Core/ImageSlice';
-import vtkInteractorStyleImage    from 'vtk.js/Sources/Interaction/Style/InteractorStyleImage';
+import vtkFullScreenRenderWindow from 'vtk.js/Sources/Rendering/Misc/FullScreenRenderWindow';
+import vtkRTAnalyticSource from 'vtk.js/Sources/Filters/Sources/RTAnalyticSource';
+import vtkImageMapper from 'vtk.js/Sources/Rendering/Core/ImageMapper';
+import vtkImageSlice from 'vtk.js/Sources/Rendering/Core/ImageSlice';
+import vtkInteractorStyleImage from 'vtk.js/Sources/Interaction/Style/InteractorStyleImage';
 
 // ----------------------------------------------------------------------------
 // Standard rendering code setup

@@ -1,5 +1,5 @@
 import vtkMath from 'vtk.js/Sources/Common/Core/Math';
-import macro   from 'vtk.js/Sources/macro';
+import macro from 'vtk.js/Sources/macro';
 
 const PLANE_TOLERANCE = 1.0e-6;
 
@@ -8,15 +8,18 @@ const PLANE_TOLERANCE = 1.0e-6;
 // ----------------------------------------------------------------------------
 
 function evaluate(normal, origin, x) {
-  return (normal[0] * (x[0] - origin[0]))
-    + (normal[1] * (x[1] - origin[1]))
-    + (normal[2] * (x[2] - origin[2]));
+  return (
+    normal[0] * (x[0] - origin[0]) +
+    normal[1] * (x[1] - origin[1]) +
+    normal[2] * (x[2] - origin[2])
+  );
 }
 
 function distanceToPlane(x, origin, normal) {
-  const distance = (normal[0] * (x[0] - origin[0]))
-    + (normal[1] * (x[1] - origin[1]))
-    + (normal[2] * (x[2] - origin[2]));
+  const distance =
+    normal[0] * (x[0] - origin[0]) +
+    normal[1] * (x[1] - origin[1]) +
+    normal[2] * (x[2] - origin[2]);
 
   return Math.abs(distance);
 }
@@ -27,9 +30,9 @@ function projectPoint(x, origin, normal, xproj) {
 
   const t = vtkMath.dot(normal, xo);
 
-  xproj[0] = x[0] - (t * normal[0]);
-  xproj[1] = x[1] - (t * normal[1]);
-  xproj[2] = x[2] - (t * normal[2]);
+  xproj[0] = x[0] - t * normal[0];
+  xproj[1] = x[1] - t * normal[1];
+  xproj[2] = x[2] - t * normal[2];
 }
 
 function projectVector(v, normal, vproj) {
@@ -40,9 +43,9 @@ function projectVector(v, normal, vproj) {
     n2 = 1.0;
   }
 
-  vproj[0] = v[0] - ((t * normal[0]) / n2);
-  vproj[1] = v[1] - ((t * normal[1]) / n2);
-  vproj[2] = v[2] - ((t * normal[2]) / n2);
+  vproj[0] = v[0] - t * normal[0] / n2;
+  vproj[1] = v[1] - t * normal[1] / n2;
+  vproj[2] = v[2] - t * normal[2] / n2;
 }
 
 function generalizedProjectPoint(x, origin, normal, xproj) {
@@ -53,9 +56,9 @@ function generalizedProjectPoint(x, origin, normal, xproj) {
   const n2 = vtkMath.dot(normal, normal);
 
   if (n2 !== 0) {
-    xproj[0] = x[0] - ((t * normal[0]) / n2);
-    xproj[1] = x[1] - ((t * normal[1]) / n2);
-    xproj[2] = x[2] - ((t * normal[2]) / n2);
+    xproj[0] = x[0] - t * normal[0] / n2;
+    xproj[1] = x[1] - t * normal[1] / n2;
+    xproj[2] = x[2] - t * normal[2] / n2;
   } else {
     xproj[0] = x[0];
     xproj[1] = x[1];
@@ -97,9 +100,9 @@ function intersectWithLine(p1, p2, origin, normal) {
   // Valid intersection
   outObj.t = num / den;
 
-  outObj.x[0] = p1[0] + (outObj.t * p21[0]);
-  outObj.x[1] = p1[1] + (outObj.t * p21[1]);
-  outObj.x[2] = p1[2] + (outObj.t * p21[2]);
+  outObj.x[0] = p1[0] + outObj.t * p21[0];
+  outObj.x[1] = p1[1] + outObj.t * p21[1];
+  outObj.x[2] = p1[2] + outObj.t * p21[2];
 
   outObj.intersection = outObj.t >= 0.0 && outObj.t <= 1.0;
   return outObj;
@@ -118,7 +121,6 @@ export const STATIC = {
   intersectWithLine,
 };
 
-
 // ----------------------------------------------------------------------------
 // vtkPlane methods
 // ----------------------------------------------------------------------------
@@ -127,7 +129,8 @@ export function vtkPlane(publicAPI, model) {
   // Set our className
   model.classHierarchy.push('vtkPlane');
 
-  publicAPI.distanceToPlane = x => distanceToPlane(x, model.origin, model.normal);
+  publicAPI.distanceToPlane = (x) =>
+    distanceToPlane(x, model.origin, model.normal);
 
   publicAPI.projectPoint = (x, xproj) => {
     projectPoint(x, model.origin, model.normal, xproj);
@@ -161,22 +164,19 @@ export function vtkPlane(publicAPI, model) {
     }
 
     return (
-      (model.normal[0] * (point[0] - model.origin[0])) +
-      (model.normal[1] * (point[1] - model.origin[1])) +
-      (model.normal[2] * (point[2] - model.origin[2]))
+      model.normal[0] * (point[0] - model.origin[0]) +
+      model.normal[1] * (point[1] - model.origin[1]) +
+      model.normal[2] * (point[2] - model.origin[2])
     );
   };
 
   publicAPI.evaluateGradient = (xyz) => {
-    const retVal = [
-      model.normal[0],
-      model.normal[1],
-      model.normal[2],
-    ];
+    const retVal = [model.normal[0], model.normal[1], model.normal[2]];
     return retVal;
   };
 
-  publicAPI.intersectWithLine = (p1, p2) => intersectWithLine(p1, p2, model.origin, model.normal);
+  publicAPI.intersectWithLine = (p1, p2) =>
+    intersectWithLine(p1, p2, model.origin, model.normal);
 }
 
 // ----------------------------------------------------------------------------
@@ -196,10 +196,7 @@ export function extend(publicAPI, model, initialValues = {}) {
   // Object methods
   macro.obj(publicAPI, model);
 
-  macro.setGetArray(publicAPI, model, [
-    'normal',
-    'origin',
-  ], 3);
+  macro.setGetArray(publicAPI, model, ['normal', 'origin'], 3);
 
   vtkPlane(publicAPI, model);
 }

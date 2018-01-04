@@ -1,5 +1,5 @@
-import macro     from 'vtk.js/Sources/macro';
-import vtkMath   from 'vtk.js/Sources/Common/Core/Math';
+import macro from 'vtk.js/Sources/macro';
+import vtkMath from 'vtk.js/Sources/Common/Core/Math';
 import vtkPicker from 'vtk.js/Sources/Rendering/Core/Picker';
 
 const { vtkErrorMacro } = macro;
@@ -51,29 +51,38 @@ function vtkPointPicker(publicAPI, model) {
       const nbCells = input.getPolys().getNumberOfCells();
 
       for (let cellID = 0; cellID < nbCells; cellID++) {
-        const firstPointIndex = (cellID * nbPointsPerCell) + 1;
+        const firstPointIndex = cellID * nbPointsPerCell + 1;
         const lastPointIndex = firstPointIndex + nbPointsPerCell;
 
-        for (let pointIndex = firstPointIndex; pointIndex < lastPointIndex; pointIndex++) {
+        for (
+          let pointIndex = firstPointIndex;
+          pointIndex < lastPointIndex;
+          pointIndex++
+        ) {
           const pointDataIndex = cellData[pointIndex];
           points.getPoint(pointDataIndex, x);
 
-          t = ((ray[0] * (x[0] - p1[0])) + (ray[1] * (x[1] - p1[1])) + (ray[2] * (x[2] - p1[2]))) / rayFactor;
+          t =
+            (ray[0] * (x[0] - p1[0]) +
+              ray[1] * (x[1] - p1[1]) +
+              ray[2] * (x[2] - p1[2])) /
+            rayFactor;
 
           // If we find a point closer than we currently have, see whether it
           // lies within the pick tolerance and clipping planes. We keep track
           // of the point closest to the line (use a fudge factor for points
           // nearly the same distance away.)
-          if (t >= 0.0 && t <= 1.0 && t <= (tMin + model.tolerance)) {
+          if (t >= 0.0 && t <= 1.0 && t <= tMin + model.tolerance) {
             let maxDist = 0.0;
             for (let i = 0; i < 3; i++) {
-              projXYZ[i] = p1[i] + (t * ray[i]);
+              projXYZ[i] = p1[i] + t * ray[i];
               const dist = Math.abs(x[i] - projXYZ[i]);
               if (dist > maxDist) {
                 maxDist = dist;
               }
             } // end for i
-            if (maxDist <= tol && maxDist < minPtDist) { // within tolerance
+            if (maxDist <= tol && maxDist < minPtDist) {
+              // within tolerance
               minPtId = ptId;
               minXYZ[0] = x[0];
               minXYZ[1] = x[1];
@@ -84,26 +93,32 @@ function vtkPointPicker(publicAPI, model) {
           }
         } // end for pointIndex
       } // end for cellID
-    } else { // end if model.useCells
+    } else {
+      // end if model.useCells
       for (ptId = 0; ptId < numPts; ptId++) {
         points.getPoint(ptId, x);
 
-        t = ((ray[0] * (x[0] - p1[0])) + (ray[1] * (x[1] - p1[1])) + (ray[2] * (x[2] - p1[2]))) / rayFactor;
+        t =
+          (ray[0] * (x[0] - p1[0]) +
+            ray[1] * (x[1] - p1[1]) +
+            ray[2] * (x[2] - p1[2])) /
+          rayFactor;
 
         // If we find a point closer than we currently have, see whether it
         // lies within the pick tolerance and clipping planes. We keep track
         // of the point closest to the line (use a fudge factor for points
         // nearly the same distance away.)
-        if (t >= 0.0 && t <= 1.0 && t <= (tMin + model.tolerance)) {
+        if (t >= 0.0 && t <= 1.0 && t <= tMin + model.tolerance) {
           let maxDist = 0.0;
           for (let i = 0; i < 3; i++) {
-            projXYZ[i] = p1[i] + (t * ray[i]);
+            projXYZ[i] = p1[i] + t * ray[i];
             const dist = Math.abs(x[i] - projXYZ[i]);
             if (dist > maxDist) {
               maxDist = dist;
             }
           } // end for i
-          if (maxDist <= tol && maxDist < minPtDist) { // within tolerance
+          if (maxDist <= tol && maxDist < minPtDist) {
+            // within tolerance
             minPtId = ptId;
             minXYZ[0] = x[0];
             minXYZ[1] = x[1];

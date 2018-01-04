@@ -1,9 +1,9 @@
 import 'vtk.js/Sources/favicon';
 
-import vtkActor                   from 'vtk.js/Sources/Rendering/Core/Actor';
-import vtkFullScreenRenderWindow  from 'vtk.js/Sources/Rendering/Misc/FullScreenRenderWindow';
-import vtkMapper                  from 'vtk.js/Sources/Rendering/Core/Mapper';
-import vtkSTLReader               from 'vtk.js/Sources/IO/Geometry/STLReader';
+import vtkActor from 'vtk.js/Sources/Rendering/Core/Actor';
+import vtkFullScreenRenderWindow from 'vtk.js/Sources/Rendering/Misc/FullScreenRenderWindow';
+import vtkMapper from 'vtk.js/Sources/Rendering/Core/Mapper';
+import vtkSTLReader from 'vtk.js/Sources/IO/Geometry/STLReader';
 
 // ----------------------------------------------------------------------------
 // Example code
@@ -64,4 +64,3 @@ fileInput.addEventListener('change', handleFile);
 // ----------------------------------------------------------------------------
 
 // reader.setUrl(`${__BASE_PATH__}/data/stl/segmentation.stl`, { binary: true }).then(update);
-

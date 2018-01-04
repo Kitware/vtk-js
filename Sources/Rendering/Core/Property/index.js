@@ -1,4 +1,4 @@
-import macro     from 'vtk.js/Sources/macro';
+import macro from 'vtk.js/Sources/macro';
 import Constants from 'vtk.js/Sources/Rendering/Core/Property/Constants';
 
 const { Representation, Interpolation } = Constants;
@@ -32,15 +32,16 @@ function vtkProperty(publicAPI, model) {
   publicAPI.getColor = () => {
     // Inline computeCompositeColor
     let norm = 0.0;
-    if ((model.ambient + model.diffuse + model.specular) > 0) {
+    if (model.ambient + model.diffuse + model.specular > 0) {
       norm = 1.0 / (model.ambient + model.diffuse + model.specular);
     }
 
     for (let i = 0; i < 3; i++) {
-      model.color[i] = norm * (
-        (model.ambient * model.ambientColor[i]) +
-        (model.diffuse * model.diffuseColor[i]) +
-        (model.specular * model.specularColor[i]));
+      model.color[i] =
+        norm *
+        (model.ambient * model.ambientColor[i] +
+          model.diffuse * model.diffuseColor[i] +
+          model.specular * model.specularColor[i]);
     }
 
     return [].concat(model.color);
@@ -48,15 +49,23 @@ function vtkProperty(publicAPI, model) {
 
   publicAPI.addShaderVariable = notImplemented('AddShaderVariable');
 
-  publicAPI.setInterpolationToFlat = () => publicAPI.setInterpolation(Interpolation.FLAT);
-  publicAPI.setInterpolationToGouraud = () => publicAPI.setInterpolation(Interpolation.GOURAUD);
-  publicAPI.setInterpolationToPhong = () => publicAPI.setInterpolation(Interpolation.PHONG);
-  publicAPI.getInterpolationAsString = () => macro.enumToString(Interpolation, model.interpolation);
+  publicAPI.setInterpolationToFlat = () =>
+    publicAPI.setInterpolation(Interpolation.FLAT);
+  publicAPI.setInterpolationToGouraud = () =>
+    publicAPI.setInterpolation(Interpolation.GOURAUD);
+  publicAPI.setInterpolationToPhong = () =>
+    publicAPI.setInterpolation(Interpolation.PHONG);
+  publicAPI.getInterpolationAsString = () =>
+    macro.enumToString(Interpolation, model.interpolation);
 
-  publicAPI.setRepresentationToWireframe = () => publicAPI.setRepresentation(Representation.WIREFRAME);
-  publicAPI.setRepresentationToSurface = () => publicAPI.setRepresentation(Representation.SURFACE);
-  publicAPI.setRepresentationToPoints = () => publicAPI.setRepresentation(Representation.POINTS);
-  publicAPI.getRepresentationAsString = () => macro.enumToString(Representation, model.representation);
+  publicAPI.setRepresentationToWireframe = () =>
+    publicAPI.setRepresentation(Representation.WIREFRAME);
+  publicAPI.setRepresentationToSurface = () =>
+    publicAPI.setRepresentation(Representation.SURFACE);
+  publicAPI.setRepresentationToPoints = () =>
+    publicAPI.setRepresentation(Representation.POINTS);
+  publicAPI.getRepresentationAsString = () =>
+    macro.enumToString(Representation, model.representation);
 }
 
 // ----------------------------------------------------------------------------
@@ -111,12 +120,12 @@ export function extend(publicAPI, model, initialValues = {}) {
     'frontfaceCulling',
     'representation',
   ]);
-  macro.setGetArray(publicAPI, model, [
-    'ambientColor',
-    'specularColor',
-    'diffuseColor',
-    'edgeColor',
-  ], 3);
+  macro.setGetArray(
+    publicAPI,
+    model,
+    ['ambientColor', 'specularColor', 'diffuseColor', 'edgeColor'],
+    3
+  );
 
   // Object methods
   vtkProperty(publicAPI, model);

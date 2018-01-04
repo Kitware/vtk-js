@@ -1,6 +1,6 @@
-import macro        from 'vtk.js/Sources/macro';
+import macro from 'vtk.js/Sources/macro';
 import vtkFieldData from 'vtk.js/Sources/Common/DataModel/DataSetAttributes/FieldData';
-import Constants    from 'vtk.js/Sources/Common/DataModel/DataSetAttributes/Constants';
+import Constants from 'vtk.js/Sources/Common/DataModel/DataSetAttributes/Constants';
 import vtkDataArray from 'vtk.js/Sources/Common/Core/DataArray';
 
 const { AttributeTypes, AttributeCopyOperations } = Constants;
@@ -11,17 +11,26 @@ const { vtkWarningMacro } = macro;
 // ----------------------------------------------------------------------------
 
 function vtkDataSetAttributes(publicAPI, model) {
-  const attrTypes = ['Scalars', 'Vectors', 'Normals',
-    'TCoords', 'Tensors', 'GlobalIds', 'PedigreeIds'];
+  const attrTypes = [
+    'Scalars',
+    'Vectors',
+    'Normals',
+    'TCoords',
+    'Tensors',
+    'GlobalIds',
+    'PedigreeIds',
+  ];
 
   function cleanAttributeType(attType) {
     // Given an integer or string, convert the result to one of the
     // strings in the "attrTypes" array above or null (if
     // no match is found)
     let cleanAttType = attrTypes.find(
-      ee => (
+      (ee) =>
         AttributeTypes[ee.toUpperCase()] === attType ||
-        (typeof attType !== 'number' && ee.toLowerCase() === attType.toLowerCase())));
+        (typeof attType !== 'number' &&
+          ee.toLowerCase() === attType.toLowerCase())
+    );
     if (typeof cleanAttType === 'undefined') {
       cleanAttType = null;
     }
@@ -31,20 +40,28 @@ function vtkDataSetAttributes(publicAPI, model) {
   // Set our className
   model.classHierarchy.push('vtkDataSetAttributes');
 
-  publicAPI.checkNumberOfComponents = x => true; // TODO
+  publicAPI.checkNumberOfComponents = (x) => true; // TODO
 
   publicAPI.setAttribute = (arr, uncleanAttType) => {
     const attType = cleanAttributeType(uncleanAttType);
-    if (arr && attType.toUpperCase() === 'PEDIGREEIDS' && !arr.isA('vtkDataArray')) {
-      vtkWarningMacro(`Cannot set attribute ${attType}. The attribute must be a vtkDataArray.`);
+    if (
+      arr &&
+      attType.toUpperCase() === 'PEDIGREEIDS' &&
+      !arr.isA('vtkDataArray')
+    ) {
+      vtkWarningMacro(
+        `Cannot set attribute ${attType}. The attribute must be a vtkDataArray.`
+      );
       return -1;
     }
     if (arr && !publicAPI.checkNumberOfComponents(arr, attType)) {
-      vtkWarningMacro(`Cannot set attribute ${attType}. Incorrect number of components.`);
+      vtkWarningMacro(
+        `Cannot set attribute ${attType}. Incorrect number of components.`
+      );
       return -1;
     }
     let currentAttribute = model[`active${attType}`];
-    if ((currentAttribute >= 0) && (currentAttribute < model.arrays.length)) {
+    if (currentAttribute >= 0 && currentAttribute < model.arrays.length) {
       if (model.arrays[currentAttribute] === arr) {
         return currentAttribute;
       }
@@ -63,7 +80,9 @@ function vtkDataSetAttributes(publicAPI, model) {
 
   publicAPI.setActiveAttributeByName = (arrayName, attType) =>
     publicAPI.setActiveAttributeByIndex(
-      publicAPI.getArrayWithIndex(arrayName).index, attType);
+      publicAPI.getArrayWithIndex(arrayName).index,
+      attType
+    );
 
   publicAPI.setActiveAttributeByIndex = (arrayIdx, uncleanAttType) => {
     const attType = cleanAttributeType(uncleanAttType);
@@ -71,11 +90,15 @@ function vtkDataSetAttributes(publicAPI, model) {
       if (attType.toUpperCase() !== 'PEDIGREEIDS') {
         const arr = publicAPI.getArrayByIndex(arrayIdx);
         if (!arr.isA('vtkDataArray')) {
-          vtkWarningMacro(`Cannot set attribute ${attType}. Only vtkDataArray subclasses can be set as active attributes.`);
+          vtkWarningMacro(
+            `Cannot set attribute ${attType}. Only vtkDataArray subclasses can be set as active attributes.`
+          );
           return -1;
         }
         if (!publicAPI.checkNumberOfComponents(arr, attType)) {
-          vtkWarningMacro(`Cannot set attribute ${attType}. Incorrect number of components.`);
+          vtkWarningMacro(
+            `Cannot set attribute ${attType}. Incorrect number of components.`
+          );
           return -1;
         }
       }
@@ -132,32 +155,50 @@ function vtkDataSetAttributes(publicAPI, model) {
 
   attrTypes.forEach((value) => {
     const activeVal = `active${value}`;
-    publicAPI[`get${value}`] = () => publicAPI.getArrayByIndex(model[activeVal]);
-    publicAPI[`set${value}`] = da => publicAPI.setAttribute(da, value);
-    publicAPI[`setActive${value}`] =
-      arrayName => publicAPI.setActiveAttributeByIndex(
-        publicAPI.getArrayWithIndex(arrayName).index, value);
+    publicAPI[`get${value}`] = () =>
+      publicAPI.getArrayByIndex(model[activeVal]);
+    publicAPI[`set${value}`] = (da) => publicAPI.setAttribute(da, value);
+    publicAPI[`setActive${value}`] = (arrayName) =>
+      publicAPI.setActiveAttributeByIndex(
+        publicAPI.getArrayWithIndex(arrayName).index,
+        value
+      );
   });
 
   publicAPI.initialize = macro.chain(publicAPI.initialize, () => {
     // Default to copying all attributes in every circumstance:
     model.copyAttributeFlags = [];
     Object.keys(AttributeCopyOperations)
-      .filter(op => op !== 'ALLCOPY').forEach((attCopyOp) => {
-        model.copyAttributeFlags[AttributeCopyOperations[attCopyOp]] =
-          Object.keys(AttributeTypes).filter(ty => ty !== 'NUM_ATTRIBUTES').reduce(
-            (a, b) => { a[AttributeTypes[b]] = true; return a; }, []);
+      .filter((op) => op !== 'ALLCOPY')
+      .forEach((attCopyOp) => {
+        model.copyAttributeFlags[
+          AttributeCopyOperations[attCopyOp]
+        ] = Object.keys(AttributeTypes)
+          .filter((ty) => ty !== 'NUM_ATTRIBUTES')
+          .reduce((a, b) => {
+            a[AttributeTypes[b]] = true;
+            return a;
+          }, []);
       });
     // Override some operations where we don't want to copy:
-    model.copyAttributeFlags[AttributeCopyOperations.COPYTUPLE][AttributeTypes.GLOBALIDS] = false;
-    model.copyAttributeFlags[AttributeCopyOperations.INTERPOLATE][AttributeTypes.GLOBALIDS] = false;
-    model.copyAttributeFlags[AttributeCopyOperations.COPYTUPLE][AttributeTypes.PEDIGREEIDS] = false;
+    model.copyAttributeFlags[AttributeCopyOperations.COPYTUPLE][
+      AttributeTypes.GLOBALIDS
+    ] = false;
+    model.copyAttributeFlags[AttributeCopyOperations.INTERPOLATE][
+      AttributeTypes.GLOBALIDS
+    ] = false;
+    model.copyAttributeFlags[AttributeCopyOperations.COPYTUPLE][
+      AttributeTypes.PEDIGREEIDS
+    ] = false;
   });
 
   // Process dataArrays if any
   if (model.dataArrays && Object.keys(model.dataArrays).length) {
     Object.keys(model.dataArrays).forEach((name) => {
-      if (!model.dataArrays[name].ref && model.dataArrays[name].type === 'vtkDataArray') {
+      if (
+        !model.dataArrays[name].ref &&
+        model.dataArrays[name].type === 'vtkDataArray'
+      ) {
         publicAPI.addArray(vtkDataArray.newInstance(model.dataArrays[name]));
       }
     });

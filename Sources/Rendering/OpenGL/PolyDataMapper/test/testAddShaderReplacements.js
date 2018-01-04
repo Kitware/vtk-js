@@ -1,12 +1,12 @@
-import test      from 'tape-catch';
+import test from 'tape-catch';
 import testUtils from 'vtk.js/Sources/Testing/testUtils';
 
 import vtkOpenGLRenderWindow from 'vtk.js/Sources/Rendering/OpenGL/RenderWindow';
-import vtkRenderWindow       from 'vtk.js/Sources/Rendering/Core/RenderWindow';
-import vtkRenderer           from 'vtk.js/Sources/Rendering/Core/Renderer';
-import vtkActor              from 'vtk.js/Sources/Rendering/Core/Actor';
-import vtkMapper             from 'vtk.js/Sources/Rendering/Core/Mapper';
-import vtkOBJReader          from 'vtk.js/Sources/IO/Misc/OBJReader';
+import vtkRenderWindow from 'vtk.js/Sources/Rendering/Core/RenderWindow';
+import vtkRenderer from 'vtk.js/Sources/Rendering/Core/Renderer';
+import vtkActor from 'vtk.js/Sources/Rendering/Core/Actor';
+import vtkMapper from 'vtk.js/Sources/Rendering/Core/Mapper';
+import vtkOBJReader from 'vtk.js/Sources/IO/Misc/OBJReader';
 
 import baseline from './testAddShaderReplacement.png';
 
@@ -16,7 +16,9 @@ test.onlyIfWebGL('Test Add Shader Replacements', (t) => {
 
   // Create some control UI
   const container = document.querySelector('body');
-  const renderWindowContainer = gc.registerDOMElement(document.createElement('div'));
+  const renderWindowContainer = gc.registerDOMElement(
+    document.createElement('div')
+  );
   container.appendChild(renderWindowContainer);
 
   // create what we will view
@@ -28,7 +30,9 @@ test.onlyIfWebGL('Test Add Shader Replacements', (t) => {
   // ----------------------------------------------------------------------------
   // Test code
   // ----------------------------------------------------------------------------
-  const reader = gc.registerResource(vtkOBJReader.newInstance({ splitMode: 'usemtl' }));
+  const reader = gc.registerResource(
+    vtkOBJReader.newInstance({ splitMode: 'usemtl' })
+  );
 
   const mapper = gc.registerResource(vtkMapper.newInstance());
   mapper.setInputConnection(reader.getOutputPort());
@@ -39,16 +43,21 @@ test.onlyIfWebGL('Test Add Shader Replacements', (t) => {
     ShaderReplacements: [],
   };
 
-  mapperViewProp.addShaderReplacements =
-    (_shaderType, _originalValue, _replaceFirst, _replacementValue, _replaceAll) => {
-      mapperViewProp.OpenGL.ShaderReplacements.push({
-        shaderType: _shaderType,
-        originalValue: _originalValue,
-        replaceFirst: _replaceFirst,
-        replacementValue: _replacementValue,
-        replaceAll: _replaceAll,
-      });
-    };
+  mapperViewProp.addShaderReplacements = (
+    _shaderType,
+    _originalValue,
+    _replaceFirst,
+    _replacementValue,
+    _replaceAll
+  ) => {
+    mapperViewProp.OpenGL.ShaderReplacements.push({
+      shaderType: _shaderType,
+      originalValue: _originalValue,
+      replaceFirst: _replaceFirst,
+      replacementValue: _replacementValue,
+      replaceAll: _replaceAll,
+    });
+  };
 
   const actor = gc.registerResource(vtkActor.newInstance());
   actor.setMapper(mapper);
@@ -62,55 +71,65 @@ test.onlyIfWebGL('Test Add Shader Replacements', (t) => {
   actor.getProperty().setOpacity(1.0);
   renderer.addActor(actor);
 
-  reader.setUrl(`${__BASE_PATH__}/Data/obj/space-shuttle-orbiter/space-shuttle-orbiter.obj`).then(() => {
-    mapperViewProp.addShaderReplacements(
-      'Vertex',
-      '//VTK::Normal::Dec',
-      true,
-      '//VTK::Normal::Dec\n  varying vec3 myNormalMCVSOutput;\n',
-      false,
-    );
+  reader
+    .setUrl(
+      `${__BASE_PATH__}/Data/obj/space-shuttle-orbiter/space-shuttle-orbiter.obj`
+    )
+    .then(() => {
+      mapperViewProp.addShaderReplacements(
+        'Vertex',
+        '//VTK::Normal::Dec',
+        true,
+        '//VTK::Normal::Dec\n  varying vec3 myNormalMCVSOutput;\n',
+        false
+      );
 
-    mapperViewProp.addShaderReplacements(
-      'Vertex',
-      '//VTK::Normal::Impl',
-      true,
-      '//VTK::Normal::Impl\n  myNormalMCVSOutput = normalMC;\n',
-      false,
-    );
+      mapperViewProp.addShaderReplacements(
+        'Vertex',
+        '//VTK::Normal::Impl',
+        true,
+        '//VTK::Normal::Impl\n  myNormalMCVSOutput = normalMC;\n',
+        false
+      );
 
-    mapperViewProp.addShaderReplacements(
-      'Fragment',
-      '//VTK::Normal::Dec',
-      true,
-      '//VTK::Normal::Dec\n  varying vec3 myNormalMCVSOutput;\n',
-      false,
-    );
+      mapperViewProp.addShaderReplacements(
+        'Fragment',
+        '//VTK::Normal::Dec',
+        true,
+        '//VTK::Normal::Dec\n  varying vec3 myNormalMCVSOutput;\n',
+        false
+      );
 
-    mapperViewProp.addShaderReplacements(
-      'Fragment',
-      '//VTK::Normal::Impl',
-      true,
-      '//VTK::Normal::Impl\n  diffuseColor = abs(myNormalMCVSOutput) / diffuse;\n',
-      false,
-    );
+      mapperViewProp.addShaderReplacements(
+        'Fragment',
+        '//VTK::Normal::Impl',
+        true,
+        '//VTK::Normal::Impl\n  diffuseColor = abs(myNormalMCVSOutput) / diffuse;\n',
+        false
+      );
 
-    renderWindow.render();
-    const camera = renderer.getActiveCamera();
-    camera.setPosition(-755.42, 861.83, -1700.66);
-    camera.setFocalPoint(13.24, 31.25, -147.31);
-    camera.setViewUp(0.28, 0.89, 0.33);
-    renderer.resetCamera();
-    camera.zoom(1.6);
-    renderWindow.render();
+      renderWindow.render();
+      const camera = renderer.getActiveCamera();
+      camera.setPosition(-755.42, 861.83, -1700.66);
+      camera.setFocalPoint(13.24, 31.25, -147.31);
+      camera.setViewUp(0.28, 0.89, 0.33);
+      renderer.resetCamera();
+      camera.zoom(1.6);
+      renderWindow.render();
 
-    const glwindow = gc.registerResource(vtkOpenGLRenderWindow.newInstance());
-    glwindow.setContainer(renderWindowContainer);
-    renderWindow.addView(glwindow);
-    glwindow.setSize(400, 400);
+      const glwindow = gc.registerResource(vtkOpenGLRenderWindow.newInstance());
+      glwindow.setContainer(renderWindowContainer);
+      renderWindow.addView(glwindow);
+      glwindow.setSize(400, 400);
 
-    const image = glwindow.captureImage();
-    testUtils.compareImages(image, [baseline], 'Rendering/OpenGL/PolyDataMapper/testShaderReplacementsAdd', t, 1.5, gc.releaseResources);
-  });
+      const image = glwindow.captureImage();
+      testUtils.compareImages(
+        image,
+        [baseline],
+        'Rendering/OpenGL/PolyDataMapper/testShaderReplacementsAdd',
+        t,
+        1.5,
+        gc.releaseResources
+      );
+    });
 });
-

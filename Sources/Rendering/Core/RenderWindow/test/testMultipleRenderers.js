@@ -1,14 +1,14 @@
-import test      from 'tape-catch';
+import test from 'tape-catch';
 import testUtils from 'vtk.js/Sources/Testing/testUtils';
 
-import vtkActor               from 'vtk.js/Sources/Rendering/Core/Actor';
-import vtkMapper              from 'vtk.js/Sources/Rendering/Core/Mapper';
-import vtkOpenGLRenderWindow  from 'vtk.js/Sources/Rendering/OpenGL/RenderWindow';
-import vtkRenderer            from 'vtk.js/Sources/Rendering/Core/Renderer';
-import vtkRenderWindow        from 'vtk.js/Sources/Rendering/Core/RenderWindow';
-import vtkConeSource          from 'vtk.js/Sources/Filters/Sources/ConeSource';
-import vtkSphereSource        from 'vtk.js/Sources/Filters/Sources/SphereSource';
-import vtkCubeSource          from 'vtk.js/Sources/Filters/Sources/CubeSource';
+import vtkActor from 'vtk.js/Sources/Rendering/Core/Actor';
+import vtkMapper from 'vtk.js/Sources/Rendering/Core/Mapper';
+import vtkOpenGLRenderWindow from 'vtk.js/Sources/Rendering/OpenGL/RenderWindow';
+import vtkRenderer from 'vtk.js/Sources/Rendering/Core/Renderer';
+import vtkRenderWindow from 'vtk.js/Sources/Rendering/Core/RenderWindow';
+import vtkConeSource from 'vtk.js/Sources/Filters/Sources/ConeSource';
+import vtkSphereSource from 'vtk.js/Sources/Filters/Sources/SphereSource';
+import vtkCubeSource from 'vtk.js/Sources/Filters/Sources/CubeSource';
 
 import baseline from './testMultipleRenderers.png';
 
@@ -17,7 +17,9 @@ test.onlyIfWebGL('Test multiple renderers', (t) => {
 
   // Create some control UI
   const container = document.querySelector('body');
-  const renderWindowContainer = gc.registerDOMElement(document.createElement('div'));
+  const renderWindowContainer = gc.registerDOMElement(
+    document.createElement('div')
+  );
   container.appendChild(renderWindowContainer);
 
   // create what we will view
@@ -35,7 +37,9 @@ test.onlyIfWebGL('Test multiple renderers', (t) => {
   const coneMapper = gc.registerResource(vtkMapper.newInstance());
   coneActor.setMapper(coneMapper);
 
-  const coneSource = gc.registerResource(vtkConeSource.newInstance({ height: 1.0 }));
+  const coneSource = gc.registerResource(
+    vtkConeSource.newInstance({ height: 1.0 })
+  );
   coneMapper.setInputConnection(coneSource.getOutputPort());
 
   // Lower left renderer
@@ -80,5 +84,12 @@ test.onlyIfWebGL('Test multiple renderers', (t) => {
   renderWindow.render();
 
   const image = glwindow.captureImage();
-  testUtils.compareImages(image, [baseline], 'Rendering/Core/RenderWindow/testMultipleRenderers', t, 5, gc.releaseResources);
+  testUtils.compareImages(
+    image,
+    [baseline],
+    'Rendering/Core/RenderWindow/testMultipleRenderers',
+    t,
+    5,
+    gc.releaseResources
+  );
 });

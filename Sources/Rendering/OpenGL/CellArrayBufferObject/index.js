@@ -1,7 +1,7 @@
-import macro               from 'vtk.js/Sources/macro';
-import vtkBufferObject     from 'vtk.js/Sources/Rendering/OpenGL/BufferObject';
-import { ObjectType }      from 'vtk.js/Sources/Rendering/OpenGL/BufferObject/Constants';
-import { Representation }  from 'vtk.js/Sources/Rendering/Core/Property/Constants';
+import macro from 'vtk.js/Sources/macro';
+import vtkBufferObject from 'vtk.js/Sources/Rendering/OpenGL/BufferObject';
+import { ObjectType } from 'vtk.js/Sources/Rendering/OpenGL/BufferObject/Constants';
+import { Representation } from 'vtk.js/Sources/Rendering/Core/Property/Constants';
 
 const { vtkDebugMacro, vtkErrorMacro } = macro;
 
@@ -35,8 +35,12 @@ function vtkOpenGLCellArrayBufferObject(publicAPI, model) {
     let tcoordData = null;
     let colorData = null;
 
-    const colorComponents = (options.colors ? options.colors.getNumberOfComponents() : 0);
-    const textureComponents = (options.tcoords ? options.tcoords.getNumberOfComponents() : 0);
+    const colorComponents = options.colors
+      ? options.colors.getNumberOfComponents()
+      : 0;
+    const textureComponents = options.tcoords
+      ? options.tcoords.getNumberOfComponents()
+      : 0;
 
     // the values of 4 below are because floats are 4 bytes
 
@@ -91,7 +95,7 @@ function vtkOpenGLCellArrayBufferObject(publicAPI, model) {
         // for polys we add a bunch of segments and close it
         for (let i = 0; i < numPoints; ++i) {
           addAPoint(cellPts[offset + i]);
-          addAPoint(cellPts[offset + ((i + 1) % numPoints)]);
+          addAPoint(cellPts[offset + (i + 1) % numPoints]);
         }
       },
       stripsToWireframe(numPoints, cellPts, offset) {
@@ -120,8 +124,8 @@ function vtkOpenGLCellArrayBufferObject(publicAPI, model) {
       stripsToSurface(npts, cellPts, offset) {
         for (let i = 0; i < npts - 2; i++) {
           addAPoint(cellPts[offset + i]);
-          addAPoint(cellPts[offset + i + 1 + (i % 2)]);
-          addAPoint(cellPts[offset + i + 1 + ((i + 1) % 2)]);
+          addAPoint(cellPts[offset + i + 1 + i % 2]);
+          addAPoint(cellPts[offset + i + 1 + (i + 1) % 2]);
         }
       },
     };
@@ -138,7 +142,7 @@ function vtkOpenGLCellArrayBufferObject(publicAPI, model) {
         return numPoints * 2;
       },
       stripsToWireframe(numPoints, cellPts) {
-        return (numPoints * 4) - 6;
+        return numPoints * 4 - 6;
       },
       polysToSurface(npts, cellPts) {
         if (npts < 3) {
@@ -167,9 +171,9 @@ function vtkOpenGLCellArrayBufferObject(publicAPI, model) {
     const array = cellArray.getData();
     const size = array.length;
     let caboCount = 0;
-    for (let index = 0; index < size;) {
+    for (let index = 0; index < size; ) {
       caboCount += countFunc(array[index], array);
-      index += (array[index] + 1);
+      index += array[index] + 1;
     }
 
     let packedUCVBO = null;
@@ -216,13 +220,13 @@ function vtkOpenGLCellArrayBufferObject(publicAPI, model) {
         packedUCVBO[ucidx++] = colorData[colorIdx++];
         packedUCVBO[ucidx++] = colorData[colorIdx++];
         packedUCVBO[ucidx++] =
-          (colorComponents === 4 ? colorData[colorIdx++] : 255);
+          colorComponents === 4 ? colorData[colorIdx++] : 255;
       }
     };
 
-    for (let index = 0; index < size;) {
+    for (let index = 0; index < size; ) {
       func(array[index], array, index + 1);
-      index += (array[index] + 1);
+      index += array[index] + 1;
       cellCount++;
     }
     model.elementCount = caboCount;

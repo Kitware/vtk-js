@@ -1,6 +1,6 @@
-import macro       from 'vtk.js/Sources/macro';
+import macro from 'vtk.js/Sources/macro';
 import vtkPolyData from 'vtk.js/Sources/Common/DataModel/PolyData';
-import vtkMath     from 'vtk.js/Sources/Common/Core/Math';
+import vtkMath from 'vtk.js/Sources/Common/Core/Math';
 
 const { vtkWarningMacro } = macro;
 
@@ -20,7 +20,9 @@ function vtkLineSource(publicAPI, model) {
     const dataset = outData[0];
 
     // Check input
-    const pointDataType = dataset ? dataset.getPoints().getDataType() : 'Float32Array';
+    const pointDataType = dataset
+      ? dataset.getPoints().getDataType()
+      : 'Float32Array';
     const pd = vtkPolyData.newInstance();
     const v21 = new Float32Array(3);
     vtkMath.subtract(model.point2, model.point1, v21);
@@ -41,15 +43,14 @@ function vtkLineSource(publicAPI, model) {
     const lines = new Uint32Array(numPts + 1);
     pd.getLines().setData(lines, 1);
 
-
     let idx = 0;
     let t = 0.0;
-    for (let i = 0; i < (xres + 1); i++) {
+    for (let i = 0; i < xres + 1; i++) {
       t = i / xres;
 
-      points[(idx * 3)] = model.point1[0] + (t * v21[0]);
-      points[(idx * 3) + 1] = model.point1[1] + (t * v21[1]);
-      points[(idx * 3) + 2] = model.point1[2] + (t * v21[2]);
+      points[idx * 3] = model.point1[0] + t * v21[0];
+      points[idx * 3 + 1] = model.point1[1] + t * v21[1];
+      points[idx * 3 + 2] = model.point1[2] + t * v21[2];
 
       idx++;
     }
@@ -85,13 +86,8 @@ export function extend(publicAPI, model, initialValues = {}) {
 
   // Build VTK API
   macro.obj(publicAPI, model);
-  macro.setGet(publicAPI, model, [
-    'resolution',
-  ]);
-  macro.setGetArray(publicAPI, model, [
-    'point1',
-    'point2',
-  ], 3);
+  macro.setGet(publicAPI, model, ['resolution']);
+  macro.setGetArray(publicAPI, model, ['point1', 'point2'], 3);
   macro.algo(publicAPI, model, 0, 1);
   vtkLineSource(publicAPI, model);
 }

@@ -5,5 +5,4 @@ const Corners = {
   BOTTOM_RIGHT: 'BOTTOM_RIGHT',
 };
 
-
 export default { Corners };

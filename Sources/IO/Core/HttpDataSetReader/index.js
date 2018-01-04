@@ -2,11 +2,11 @@
 import 'vtk.js/Sources/Common/DataModel/ImageData';
 import 'vtk.js/Sources/Common/DataModel/PolyData';
 
-import vtk              from 'vtk.js/Sources/vtk';
-import macro            from 'vtk.js/Sources/macro';
+import vtk from 'vtk.js/Sources/vtk';
+import macro from 'vtk.js/Sources/macro';
 import DataAccessHelper from 'vtk.js/Sources/IO/Core/DataAccessHelper';
-import vtkDataArray     from 'vtk.js/Sources/Common/Core/DataArray';
-import vtkStringArray   from 'vtk.js/Sources/Common/Core/StringArray';
+import vtkDataArray from 'vtk.js/Sources/Common/Core/DataArray';
+import vtkStringArray from 'vtk.js/Sources/Common/Core/StringArray';
 
 const fieldDataLocations = ['pointData', 'cellData', 'fieldData'];
 const HTTP_DATA_ACCESS = DataAccessHelper.get('http');
@@ -55,7 +55,15 @@ const GEOMETRY_ARRAYS = {
   },
 };
 
-function processDataSet(publicAPI, model, dataset, fetchArray, resolve, reject, loadData) {
+function processDataSet(
+  publicAPI,
+  model,
+  dataset,
+  fetchArray,
+  resolve,
+  reject,
+  loadData
+) {
   const enable = model.enableArray;
 
   // Generate array list
@@ -63,8 +71,14 @@ function processDataSet(publicAPI, model, dataset, fetchArray, resolve, reject, 
 
   fieldDataLocations.forEach((location) => {
     if (dataset[location]) {
-      dataset[location].arrays.map(i => i.data).forEach((array) => {
-        model.arrays.push({ name: array.name, enable, location, array, registration: array.ref.registration || 'addArray' });
+      dataset[location].arrays.map((i) => i.data).forEach((array) => {
+        model.arrays.push({
+          name: array.name,
+          enable,
+          location,
+          array,
+          registration: array.ref.registration || 'addArray',
+        });
       });
 
       // Reset data arrays
@@ -86,28 +100,22 @@ function processDataSet(publicAPI, model, dataset, fetchArray, resolve, reject, 
       model.output[0] = model.dataset;
       resolve(publicAPI, model.output[0]);
     } else {
-      publicAPI.loadData().then(
-        () => {
-          model.output[0] = model.dataset;
-          resolve(publicAPI, model.output[0]);
-        });
+      publicAPI.loadData().then(() => {
+        model.output[0] = model.dataset;
+        resolve(publicAPI, model.output[0]);
+      });
     }
   }
 
   // Wait for all geometry array to be fetched
   if (pendingPromises.length) {
-    Promise.all(pendingPromises)
-      .then(
-        success,
-        (err) => {
-          reject(err);
-        },
-      );
+    Promise.all(pendingPromises).then(success, (err) => {
+      reject(err);
+    });
   } else {
     success();
   }
 }
-
 
 // ----------------------------------------------------------------------------
 // vtkHttpDataSetReader methods
@@ -127,7 +135,12 @@ function vtkHttpDataSetReader(publicAPI, model) {
 
   // Internal method to fetch Array
   function fetchArray(array, options = {}) {
-    return model.dataAccessHelper.fetchArray(publicAPI, model.baseURL, array, options);
+    return model.dataAccessHelper.fetchArray(
+      publicAPI,
+      model.baseURL,
+      array,
+      options
+    );
   }
 
   // Fetch dataset (metadata)
@@ -136,44 +149,53 @@ function vtkHttpDataSetReader(publicAPI, model) {
       return new Promise((resolve, reject) => {
         HTTP_DATA_ACCESS.fetchBinary(model.url).then(
           (zipContent) => {
-            model.dataAccessHelper = DataAccessHelper.get(
-              'zip',
-              {
-                zipContent,
-                callback: (zip) => {
-                  model.baseURL = '';
-                  model.dataAccessHelper
-                    .fetchJSON(publicAPI, 'index.json')
-                    .then(
-                      (dataset) => {
-                        processDataSet(publicAPI, model, dataset, fetchArray, resolve, reject, loadData);
-                      },
-                      (xhr, e) => {
-                        reject(xhr, e);
-                      },
+            model.dataAccessHelper = DataAccessHelper.get('zip', {
+              zipContent,
+              callback: (zip) => {
+                model.baseURL = '';
+                model.dataAccessHelper.fetchJSON(publicAPI, 'index.json').then(
+                  (dataset) => {
+                    processDataSet(
+                      publicAPI,
+                      model,
+                      dataset,
+                      fetchArray,
+                      resolve,
+                      reject,
+                      loadData
                     );
-                },
+                  },
+                  (xhr, e) => {
+                    reject(xhr, e);
+                  }
+                );
               },
-            );
+            });
           },
           (xhr, e) => {
             reject(xhr, e);
-          },
+          }
         );
       });
     }
 
     return new Promise((resolve, reject) => {
-      model.dataAccessHelper
-        .fetchJSON(publicAPI, model.url)
-        .then(
-          (dataset) => {
-            processDataSet(publicAPI, model, dataset, fetchArray, resolve, reject, loadData);
-          },
-          (xhr, e) => {
-            reject(xhr, e);
-          },
-        );
+      model.dataAccessHelper.fetchJSON(publicAPI, model.url).then(
+        (dataset) => {
+          processDataSet(
+            publicAPI,
+            model,
+            dataset,
+            fetchArray,
+            resolve,
+            reject,
+            loadData
+          );
+        },
+        (xhr, e) => {
+          reject(xhr, e);
+        }
+      );
     });
   };
 
@@ -201,9 +223,9 @@ function vtkHttpDataSetReader(publicAPI, model) {
   publicAPI.loadData = () => {
     const datasetObj = model.dataset;
     const arrayToFecth = model.arrays
-      .filter(array => array.enable)
-      .filter(array => array.array.ref)
-      .map(array => array.array);
+      .filter((array) => array.enable)
+      .filter((array) => array.array.ref)
+      .map((array) => array.array);
 
     return new Promise((resolve, reject) => {
       const error = (xhr, e) => {
@@ -214,14 +236,21 @@ function vtkHttpDataSetReader(publicAPI, model) {
         if (arrayToFecth.length) {
           const progressCallback = model.progressCallback;
           const compression = model.fetchGzip ? 'gz' : null;
-          fetchArray(arrayToFecth.pop(), { compression, progressCallback }).then(processNext, error);
+          fetchArray(arrayToFecth.pop(), {
+            compression,
+            progressCallback,
+          }).then(processNext, error);
         } else if (datasetObj) {
           // Perform array registration
           model.arrays
-            .filter(array => array.registration)
+            .filter((array) => array.registration)
             .forEach((metaArray) => {
-              const newArray = ARRAY_BUILDERS[metaArray.array.vtkClass].newInstance(metaArray.array);
-              datasetObj[`get${macro.capitalize(metaArray.location)}`]()[metaArray.registration](newArray);
+              const newArray = ARRAY_BUILDERS[
+                metaArray.array.vtkClass
+              ].newInstance(metaArray.array);
+              datasetObj[`get${macro.capitalize(metaArray.location)}`]()[
+                metaArray.registration
+              ](newArray);
               delete metaArray.registration;
             });
           datasetObj.modified();
@@ -234,14 +263,15 @@ function vtkHttpDataSetReader(publicAPI, model) {
     });
   };
 
-
   publicAPI.requestData = (inData, outData) => {
     // do nothing loadData will eventually load up the data
   };
 
   // Toggle arrays to load
   publicAPI.enableArray = (location, name, enable = true) => {
-    const activeArray = model.arrays.filter(array => array.name === name && array.location === location);
+    const activeArray = model.arrays.filter(
+      (array) => array.name === name && array.location === location
+    );
     if (activeArray.length === 1) {
       activeArray[0].enable = enable;
     }
@@ -266,7 +296,6 @@ const DEFAULT_VALUES = {
 };
 
 // ----------------------------------------------------------------------------
-
 
 export function extend(publicAPI, model, initialValues = {}) {
   Object.assign(model, DEFAULT_VALUES, initialValues);

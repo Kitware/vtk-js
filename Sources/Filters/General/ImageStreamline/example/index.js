@@ -1,15 +1,15 @@
 import 'vtk.js/Sources/favicon';
 
-import vtkFullScreenRenderWindow  from 'vtk.js/Sources/Rendering/Misc/FullScreenRenderWindow';
-import vtkOutlineFilter           from 'vtk.js/Sources/Filters/General/OutlineFilter';
-import vtkPlaneSource             from 'vtk.js/Sources/Filters/Sources/PlaneSource';
-import vtkImageStreamline         from 'vtk.js/Sources/Filters/General/ImageStreamline';
-import vtkActor                   from 'vtk.js/Sources/Rendering/Core/Actor';
-import vtkMapper                  from 'vtk.js/Sources/Rendering/Core/Mapper';
-import { Representation }         from 'vtk.js/Sources/Rendering/Core/Property/Constants';
-import vtkDataArray               from 'vtk.js/Sources/Common/Core/DataArray';
-import vtkImageData               from 'vtk.js/Sources/Common/DataModel/ImageData';
-import macro                      from 'vtk.js/Sources/macro';
+import vtkFullScreenRenderWindow from 'vtk.js/Sources/Rendering/Misc/FullScreenRenderWindow';
+import vtkOutlineFilter from 'vtk.js/Sources/Filters/General/OutlineFilter';
+import vtkPlaneSource from 'vtk.js/Sources/Filters/Sources/PlaneSource';
+import vtkImageStreamline from 'vtk.js/Sources/Filters/General/ImageStreamline';
+import vtkActor from 'vtk.js/Sources/Rendering/Core/Actor';
+import vtkMapper from 'vtk.js/Sources/Rendering/Core/Mapper';
+import { Representation } from 'vtk.js/Sources/Rendering/Core/Property/Constants';
+import vtkDataArray from 'vtk.js/Sources/Common/Core/DataArray';
+import vtkImageData from 'vtk.js/Sources/Common/DataModel/ImageData';
+import macro from 'vtk.js/Sources/macro';
 
 import controlPanel from './controller.html';
 
@@ -17,7 +17,9 @@ import controlPanel from './controller.html';
 // Standard rendering code setup
 // ----------------------------------------------------------------------------
 
-const fullScreenRenderer = vtkFullScreenRenderWindow.newInstance({ background: [0, 0, 0] });
+const fullScreenRenderer = vtkFullScreenRenderWindow.newInstance({
+  background: [0, 0, 0],
+});
 const renderer = fullScreenRenderer.getRenderer();
 const renderWindow = fullScreenRenderer.getRenderWindow();
 
@@ -43,7 +45,8 @@ function addRepresentation(name, filter, props = {}) {
 const vecSource = macro.newInstance((publicAPI, model) => {
   macro.obj(publicAPI, model); // make it an object
   macro.algo(publicAPI, model, 0, 1); // mixin algorithm code 1 in, 1 out
-  publicAPI.requestData = (inData, outData) => { // implement requestData
+  publicAPI.requestData = (inData, outData) => {
+    // implement requestData
     if (!outData[0]) {
       const id = vtkImageData.newInstance();
       id.setSpacing(0.1, 0.1, 0.1);
@@ -58,13 +61,16 @@ const vecSource = macro.newInstance((publicAPI, model) => {
           for (let x = 0; x <= 9; x++) {
             newArray[i++] = 0.1 * x;
             const v = 0.1 * y;
-            newArray[i++] = (v * v);
+            newArray[i++] = v * v;
             newArray[i++] = 0;
           }
         }
       }
 
-      const da = vtkDataArray.newInstance({ numberOfComponents: 3, values: newArray });
+      const da = vtkDataArray.newInstance({
+        numberOfComponents: 3,
+        values: newArray,
+      });
       da.setName('vectors');
 
       const cpd = id.getPointData();
@@ -89,9 +95,18 @@ sline.setInputConnection(planeSource.getOutputPort(), 1);
 const outlineFilter = vtkOutlineFilter.newInstance();
 outlineFilter.setInputConnection(vecSource.getOutputPort());
 
-addRepresentation('streamLine', sline, { diffuseColor: [0, 1, 1], lineWidth: 5 });
-addRepresentation('outline', outlineFilter, { diffuseColor: [1, 0, 0], lineWidth: 3 });
-addRepresentation('seed', planeSource, { representation: Representation.POINTS, pointSize: 10 });
+addRepresentation('streamLine', sline, {
+  diffuseColor: [0, 1, 1],
+  lineWidth: 5,
+});
+addRepresentation('outline', outlineFilter, {
+  diffuseColor: [1, 0, 0],
+  lineWidth: 3,
+});
+addRepresentation('seed', planeSource, {
+  representation: Representation.POINTS,
+  pointSize: 10,
+});
 
 // -----------------------------------------------------------
 

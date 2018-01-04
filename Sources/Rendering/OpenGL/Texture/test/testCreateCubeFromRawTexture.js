@@ -1,12 +1,12 @@
-import vtkActor              from 'vtk.js/Sources/Rendering/Core/Actor';
-import vtkCubeSource         from 'vtk.js/Sources/Filters/Sources/CubeSource';
-import vtkHttpDataSetReader  from 'vtk.js/Sources/IO/Core/HttpDataSetReader';
-import vtkMapper             from 'vtk.js/Sources/Rendering/Core/Mapper';
+import vtkActor from 'vtk.js/Sources/Rendering/Core/Actor';
+import vtkCubeSource from 'vtk.js/Sources/Filters/Sources/CubeSource';
+import vtkHttpDataSetReader from 'vtk.js/Sources/IO/Core/HttpDataSetReader';
+import vtkMapper from 'vtk.js/Sources/Rendering/Core/Mapper';
 import vtkOpenGLRenderWindow from 'vtk.js/Sources/Rendering/OpenGL/RenderWindow';
-import vtkTexture            from 'vtk.js/Sources/Rendering/Core/Texture';
-import vtkRenderer           from 'vtk.js/Sources/Rendering/Core/Renderer';
-import vtkRenderWindow       from 'vtk.js/Sources/Rendering/Core/RenderWindow';
-import vtkSphereSource       from 'vtk.js/Sources/Filters/Sources/SphereSource';
+import vtkTexture from 'vtk.js/Sources/Rendering/Core/Texture';
+import vtkRenderer from 'vtk.js/Sources/Rendering/Core/Renderer';
+import vtkRenderWindow from 'vtk.js/Sources/Rendering/Core/RenderWindow';
+import vtkSphereSource from 'vtk.js/Sources/Filters/Sources/SphereSource';
 
 import test from 'tape-catch';
 import testUtils from 'vtk.js/Sources/Testing/testUtils';
@@ -20,7 +20,9 @@ test.onlyIfWebGL('Test vtkOpenGLTexture Rendering', (t) => {
   function callBackfunction(loadedTextures) {
     // Create come control UI
     const container = document.querySelector('body');
-    const renderWindowContainer = gc.registerDOMElement(document.createElement('div'));
+    const renderWindowContainer = gc.registerDOMElement(
+      document.createElement('div')
+    );
     container.appendChild(renderWindowContainer);
 
     // Create view
@@ -37,7 +39,10 @@ test.onlyIfWebGL('Test vtkOpenGLTexture Rendering', (t) => {
 
     const texture = gc.registerResource(vtkTexture.newInstance());
     for (let i = 0; i < 6; i++) {
-      const scalarName = loadedTextures[i].getPointData().getArrayByIndex(0).getName();
+      const scalarName = loadedTextures[i]
+        .getPointData()
+        .getArrayByIndex(0)
+        .getName();
       loadedTextures[i].getPointData().setActiveScalars(scalarName);
       texture.setInputData(loadedTextures[i], i);
     }
@@ -46,8 +51,14 @@ test.onlyIfWebGL('Test vtkOpenGLTexture Rendering', (t) => {
     const scale = 500;
     const cube = gc.registerResource(vtkCubeSource.newInstance());
     cube.setGenerate3DTextureCoordinates(true);
-    cube.setBounds(bounds[0] * scale, bounds[1] * scale, bounds[2] * scale,
-                   bounds[3] * scale, bounds[4] * scale, bounds[5] * scale);
+    cube.setBounds(
+      bounds[0] * scale,
+      bounds[1] * scale,
+      bounds[2] * scale,
+      bounds[3] * scale,
+      bounds[4] * scale,
+      bounds[5] * scale
+    );
 
     // Update shaders in order to map texture to a cube
     const mapper = gc.registerResource(vtkMapper.newInstance());
@@ -71,26 +82,41 @@ test.onlyIfWebGL('Test vtkOpenGLTexture Rendering', (t) => {
     glwindow.setSize(400, 400);
 
     const image = glwindow.captureImage();
-    testUtils.compareImages(image, [baseline], 'Rendering/OpenGL/Texture/', t, 0.5, gc.releaseResources);
+    testUtils.compareImages(
+      image,
+      [baseline],
+      'Rendering/OpenGL/Texture/',
+      t,
+      0.5,
+      gc.releaseResources
+    );
   }
 
   // Recursive function to load texture one by one
-  function loadTexture(idTexture, texturePathList, textureImageList, endCallBack) {
+  function loadTexture(
+    idTexture,
+    texturePathList,
+    textureImageList,
+    endCallBack
+  ) {
     if (idTexture === texturePathList.length) {
-      if (endCallBack) { // check if endcallback exists
+      if (endCallBack) {
+        // check if endcallback exists
         endCallBack(textureImageList);
       }
       return;
     }
 
-    const reader = gc.registerResource(vtkHttpDataSetReader.newInstance({ fetchGzip: true }));
+    const reader = gc.registerResource(
+      vtkHttpDataSetReader.newInstance({ fetchGzip: true })
+    );
     reader.setUrl(texturePathList[idTexture]).then(() => {
       reader.loadData().then(() => {
         textureImageList.push(reader.getOutputData());
         const nextID = idTexture + 1;
         loadTexture(nextID, texturePathList, textureImageList, endCallBack);
-      });// end loadData
-    });// end set url
+      }); // end loadData
+    }); // end set url
   }
 
   const path = `${__BASE_PATH__}/Data/skybox/mountains/`;

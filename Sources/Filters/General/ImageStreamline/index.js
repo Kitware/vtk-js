@@ -1,4 +1,4 @@
-import macro       from 'vtk.js/Sources/macro';
+import macro from 'vtk.js/Sources/macro';
 import vtkPolyData from 'vtk.js/Sources/Common/DataModel/PolyData';
 
 const { vtkErrorMacro } = macro;
@@ -38,11 +38,15 @@ function vtkImageStreamline(publicAPI, model) {
     sf[7] = r * s * t;
   };
 
-  publicAPI.computeStructuredCoordinates = (x, ijk, pcoords,
-                                            extent,
-                                            spacing,
-                                            origin,
-                                            bounds) => {
+  publicAPI.computeStructuredCoordinates = (
+    x,
+    ijk,
+    pcoords,
+    extent,
+    spacing,
+    origin,
+    bounds
+  ) => {
     // tolerance is needed for 2D data (this is squared tolerance)
     const tol2 = 1e-12;
     //
@@ -58,7 +62,7 @@ function vtkImageStreamline(publicAPI, model) {
 
       let tmpInBounds = false;
       const minExt = extent[i * 2];
-      const maxExt = extent[(i * 2) + 1];
+      const maxExt = extent[i * 2 + 1];
 
       // check if data is one pixel thick
       if (minExt === maxExt) {
@@ -69,15 +73,19 @@ function vtkImageStreamline(publicAPI, model) {
           tmpInBounds = true;
         }
       } else if (ijk[i] < minExt) {
-        if ((spacing[i] >= 0 && x[i] >= bounds[i * 2]) ||
-             (spacing[i] < 0 && x[i] <= bounds[(i * 2) + 1])) {
+        if (
+          (spacing[i] >= 0 && x[i] >= bounds[i * 2]) ||
+          (spacing[i] < 0 && x[i] <= bounds[i * 2 + 1])
+        ) {
           pcoords[i] = 0.0;
           ijk[i] = minExt;
           tmpInBounds = true;
         }
       } else if (ijk[i] >= maxExt) {
-        if ((spacing[i] >= 0 && x[i] <= bounds[(i * 2) + 1]) ||
-             (spacing[i] < 0 && x[i] >= bounds[(i * 2)])) {
+        if (
+          (spacing[i] >= 0 && x[i] <= bounds[i * 2 + 1]) ||
+          (spacing[i] < 0 && x[i] >= bounds[i * 2])
+        ) {
           // make sure index is within the allowed cell index range
           pcoords[i] = 1.0;
           ijk[i] = maxExt - 1;
@@ -95,20 +103,28 @@ function vtkImageStreamline(publicAPI, model) {
   };
 
   publicAPI.getVoxelIndices = (ijk, dims, ids) => {
-    ids[0] = (ijk[2] * dims[0] * dims[1]) + (ijk[1] * dims[0]) + ijk[0];
+    ids[0] = ijk[2] * dims[0] * dims[1] + ijk[1] * dims[0] + ijk[0];
     ids[1] = ids[0] + 1; // i+1, j, k
     ids[2] = ids[0] + dims[0]; // i, j+1, k
     ids[3] = ids[2] + 1; // i+1, j+1, k
-    ids[4] = ids[0] + (dims[0] * dims[1]); // i, j, k+1
+    ids[4] = ids[0] + dims[0] * dims[1]; // i, j, k+1
     ids[5] = ids[4] + 1; // i+1, j, k+1
     ids[6] = ids[4] + dims[0]; // i, j+1, k+1
     ids[7] = ids[6] + 1; // i+1, j+1, k+1
   };
 
   publicAPI.vectorAt = (xyz, velArray, image, velAtArg) => {
-    if (!publicAPI.computeStructuredCoordinates(xyz, indices, paramCoords,
-      image.getExtent(), image.getSpacing(),
-      image.getOrigin(), image.getBounds())) {
+    if (
+      !publicAPI.computeStructuredCoordinates(
+        xyz,
+        indices,
+        paramCoords,
+        image.getExtent(),
+        image.getSpacing(),
+        image.getOrigin(),
+        image.getBounds()
+      )
+    ) {
       return false;
     }
 
@@ -140,7 +156,7 @@ function vtkImageStreamline(publicAPI, model) {
     }
     // Now find the mid point
     for (let i = 0; i < 3; i++) {
-      xtmp[i] = xyz[i] + ((delT / 2.0) * velAt[i]);
+      xtmp[i] = xyz[i] + delT / 2.0 * velAt[i];
     }
     // Use the velocity @ that point to project
     if (!publicAPI.vectorAt(xtmp, velArray, image, velAt)) {
@@ -175,7 +191,7 @@ function vtkImageStreamline(publicAPI, model) {
         break;
       }
       for (let i = 0; i < 3; i++) {
-        pointsBuffer[(3 * step) + i] = xyz[i];
+        pointsBuffer[3 * step + i] = xyz[i];
       }
     }
 
@@ -199,7 +215,8 @@ function vtkImageStreamline(publicAPI, model) {
     return retVal;
   };
 
-  publicAPI.requestData = (inData, outData) => { // implement requestData
+  publicAPI.requestData = (inData, outData) => {
+    // implement requestData
     const input = inData[0];
     const seeds = inData[1];
 
@@ -220,7 +237,12 @@ function vtkImageStreamline(publicAPI, model) {
     const datas = [];
     const vectors = input.getPointData().getVectors();
     for (let i = 0; i < nSeeds; i++) {
-      const retVal = publicAPI.streamIntegrate(vectors, input, seedPts.getTuple(i), offset);
+      const retVal = publicAPI.streamIntegrate(
+        vectors,
+        input,
+        seedPts.getTuple(i),
+        offset
+      );
       offset += retVal[0].length / 3;
       datas.push(retVal);
     }
@@ -271,10 +293,7 @@ export function extend(publicAPI, model, initialValues = {}) {
   macro.algo(publicAPI, model, 2, 1);
 
   // Generate macros for properties
-  macro.setGet(publicAPI, model, [
-    'integrationStep',
-    'maximumNumberOfSteps',
-  ]);
+  macro.setGet(publicAPI, model, ['integrationStep', 'maximumNumberOfSteps']);
 
   // Object specific methods
   vtkImageStreamline(publicAPI, model);

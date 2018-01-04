@@ -2,7 +2,15 @@ import macro from 'vtk.js/Sources/macro';
 
 // ----------------------------------------------------------------------------
 
-const MOLECULE_FIELDS = ['chemical json', 'name', 'inchi', 'formula', 'atoms', 'bonds', 'properties'];
+const MOLECULE_FIELDS = [
+  'chemical json',
+  'name',
+  'inchi',
+  'formula',
+  'atoms',
+  'bonds',
+  'properties',
+];
 
 // ----------------------------------------------------------------------------
 // vtkMolecule methods

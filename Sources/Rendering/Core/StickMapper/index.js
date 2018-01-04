@@ -1,4 +1,4 @@
-import macro     from 'vtk.js/Sources/macro';
+import macro from 'vtk.js/Sources/macro';
 import vtkMapper from 'vtk.js/Sources/Rendering/Core/Mapper';
 
 // ----------------------------------------------------------------------------
@@ -47,4 +47,3 @@ export const newInstance = macro.newInstance(extend, 'vtkStickMapper');
 // ----------------------------------------------------------------------------
 
 export default { newInstance, extend };
-

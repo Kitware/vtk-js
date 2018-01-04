@@ -1,4 +1,4 @@
-import macro       from 'vtk.js/Sources/macro';
+import macro from 'vtk.js/Sources/macro';
 import vtkViewNode from 'vtk.js/Sources/Rendering/SceneGraph/ViewNode';
 
 // ----------------------------------------------------------------------------
@@ -14,8 +14,7 @@ function vtkGenericWidgetRepresentation(publicAPI, model) {
 // Object factory
 // ----------------------------------------------------------------------------
 
-const DEFAULT_VALUES = {
-};
+const DEFAULT_VALUES = {};
 
 // ----------------------------------------------------------------------------
 

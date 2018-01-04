@@ -1,11 +1,11 @@
 import 'vtk.js/Sources/favicon';
 
-import vtkActor                   from 'vtk.js/Sources/Rendering/Core/Actor';
-import vtkFullScreenRenderWindow  from 'vtk.js/Sources/Rendering/Misc/FullScreenRenderWindow';
-import vtkImageMarchingCubes      from 'vtk.js/Sources/Filters/General/ImageMarchingCubes';
-import vtkMapper                  from 'vtk.js/Sources/Rendering/Core/Mapper';
-import vtkSampleFunction          from 'vtk.js/Sources/Imaging/Hybrid/SampleFunction';
-import vtkSphere                  from 'vtk.js/Sources/Common/DataModel/Sphere';
+import vtkActor from 'vtk.js/Sources/Rendering/Core/Actor';
+import vtkFullScreenRenderWindow from 'vtk.js/Sources/Rendering/Misc/FullScreenRenderWindow';
+import vtkImageMarchingCubes from 'vtk.js/Sources/Filters/General/ImageMarchingCubes';
+import vtkMapper from 'vtk.js/Sources/Rendering/Core/Mapper';
+import vtkSampleFunction from 'vtk.js/Sources/Imaging/Hybrid/SampleFunction';
+import vtkSphere from 'vtk.js/Sources/Common/DataModel/Sphere';
 
 import controlPanel from './controller.html';
 
@@ -28,7 +28,11 @@ actor.setMapper(mapper);
 
 // Build pipeline
 const sphere = vtkSphere.newInstance({ center: [0.0, 0.0, 0.0], radius: 0.5 });
-const sample = vtkSampleFunction.newInstance({ implicitFunction: sphere, sampleDimensions: [50, 50, 50], modelBounds: [-0.5, 0.5, -0.5, 0.5, -0.5, 0.5] });
+const sample = vtkSampleFunction.newInstance({
+  implicitFunction: sphere,
+  sampleDimensions: [50, 50, 50],
+  modelBounds: [-0.5, 0.5, -0.5, 0.5, -0.5, 0.5],
+});
 const mCubes = vtkImageMarchingCubes.newInstance({ contourValue: 0.0 });
 
 // Connect the pipeline proper
@@ -72,7 +76,6 @@ document.querySelector('.mergePoints').addEventListener('change', (e) => {
   mCubes.setMergePoints(!!e.target.checked);
   renderWindow.render();
 });
-
 
 // -----------------------------------------------------------
 

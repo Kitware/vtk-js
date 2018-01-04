@@ -17,24 +17,24 @@ export const AttributeLimitTypes = {
 };
 
 export const CellGhostTypes = {
-  DUPLICATECELL: 1,        // the cell is present on multiple processors
+  DUPLICATECELL: 1, // the cell is present on multiple processors
   HIGHCONNECTIVITYCELL: 2, // the cell has more neighbors than in a regular mesh
-  LOWCONNECTIVITYCELL: 4,  // the cell has less neighbors than in a regular mesh
-  REFINEDCELL: 8,          // other cells are present that refines it.
-  EXTERIORCELL: 16,        // the cell is on the exterior of the data set
-  HIDDENCELL: 32,          // the cell is needed to maintain connectivity, but the data values should be ignored.
+  LOWCONNECTIVITYCELL: 4, // the cell has less neighbors than in a regular mesh
+  REFINEDCELL: 8, // other cells are present that refines it.
+  EXTERIORCELL: 16, // the cell is on the exterior of the data set
+  HIDDENCELL: 32, // the cell is needed to maintain connectivity, but the data values should be ignored.
 };
 
 export const PointGhostTypes = {
   DUPLICATEPOINT: 1, // the cell is present on multiple processors
-  HIDDENPOINT: 2,    // the point is needed to maintain connectivity, but the data values should be ignored.
+  HIDDENPOINT: 2, // the point is needed to maintain connectivity, but the data values should be ignored.
 };
 
 export const AttributeCopyOperations = {
   COPYTUPLE: 0,
   INTERPOLATE: 1,
   PASSDATA: 2,
-  ALLCOPY: 3,  //all of the above
+  ALLCOPY: 3, //all of the above
 };
 
 export const ghostArrayName = 'vtkGhostType';

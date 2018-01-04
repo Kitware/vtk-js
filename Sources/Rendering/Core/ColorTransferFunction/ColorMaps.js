@@ -3,9 +3,9 @@ import vtkColorMaps from 'vtk.js/Sources/Rendering/Core/ColorTransferFunction/Co
 const uniqueNames = {};
 
 vtkColorMaps
-  .filter(p => p.RGBPoints)
-  .filter(p => p.ColorSpace !== 'CIELAB')
-  .map(p => p.Name)
+  .filter((p) => p.RGBPoints)
+  .filter((p) => p.ColorSpace !== 'CIELAB')
+  .map((p) => p.Name)
   .forEach((name) => {
     uniqueNames[name] = true;
   });
@@ -18,7 +18,7 @@ rgbPresetNames.sort();
 // ----------------------------------------------------------------------------
 
 function getPresetByName(name) {
-  return vtkColorMaps.find(p => p.Name === name);
+  return vtkColorMaps.find((p) => p.Name === name);
 }
 
 // ----------------------------------------------------------------------------

@@ -1,11 +1,11 @@
-import macro                        from 'vtk.js/Sources/macro';
-import vtkForwardPass               from 'vtk.js/Sources/Rendering/OpenGL/ForwardPass';
-import vtkOpenGLViewNodeFactory     from 'vtk.js/Sources/Rendering/OpenGL/ViewNodeFactory';
-import vtkRenderPass                from 'vtk.js/Sources/Rendering/SceneGraph/RenderPass';
-import vtkShaderCache               from 'vtk.js/Sources/Rendering/OpenGL/ShaderCache';
-import vtkViewNode                  from 'vtk.js/Sources/Rendering/SceneGraph/ViewNode';
-import vtkOpenGLTextureUnitManager  from 'vtk.js/Sources/Rendering/OpenGL/TextureUnitManager';
-import { VtkDataTypes }             from 'vtk.js/Sources/Common/Core/DataArray/Constants';
+import macro from 'vtk.js/Sources/macro';
+import vtkForwardPass from 'vtk.js/Sources/Rendering/OpenGL/ForwardPass';
+import vtkOpenGLViewNodeFactory from 'vtk.js/Sources/Rendering/OpenGL/ViewNodeFactory';
+import vtkRenderPass from 'vtk.js/Sources/Rendering/SceneGraph/RenderPass';
+import vtkShaderCache from 'vtk.js/Sources/Rendering/OpenGL/ShaderCache';
+import vtkViewNode from 'vtk.js/Sources/Rendering/SceneGraph/ViewNode';
+import vtkOpenGLTextureUnitManager from 'vtk.js/Sources/Rendering/OpenGL/TextureUnitManager';
+import { VtkDataTypes } from 'vtk.js/Sources/Common/Core/DataArray/Constants';
 
 const { vtkDebugMacro, vtkErrorMacro } = macro;
 
@@ -60,8 +60,12 @@ function vtkOpenGLRenderWindow(publicAPI, model) {
       model.shaderCache.setContext(model.context);
       // initialize blending for transparency
       const gl = model.context;
-      gl.blendFuncSeparate(gl.SRC_ALPHA, gl.ONE_MINUS_SRC_ALPHA,
-                       gl.ONE, gl.ONE_MINUS_SRC_ALPHA);
+      gl.blendFuncSeparate(
+        gl.SRC_ALPHA,
+        gl.ONE_MINUS_SRC_ALPHA,
+        gl.ONE,
+        gl.ONE_MINUS_SRC_ALPHA
+      );
       gl.enable(gl.BLEND);
       model.initialized = true;
     }
@@ -95,10 +99,12 @@ function vtkOpenGLRenderWindow(publicAPI, model) {
   publicAPI.isInViewport = (x, y, viewport) => {
     const vCoords = viewport.getViewportByReference();
     const size = model.size;
-    if ((vCoords[0] * size[0] <= x) &&
-        (vCoords[2] * size[0] >= x) &&
-        (vCoords[1] * size[1] <= y) &&
-        (vCoords[3] * size[1] >= y)) {
+    if (
+      vCoords[0] * size[0] <= x &&
+      vCoords[2] * size[0] >= x &&
+      vCoords[1] * size[1] <= y &&
+      vCoords[3] * size[1] >= y
+    ) {
       return true;
     }
     return false;
@@ -107,7 +113,10 @@ function vtkOpenGLRenderWindow(publicAPI, model) {
   publicAPI.getViewportSize = (viewport) => {
     const vCoords = viewport.getViewportByReference();
     const size = model.size;
-    return [(vCoords[2] - vCoords[0]) * size[0], (vCoords[3] - vCoords[1]) * size[1]];
+    return [
+      (vCoords[2] - vCoords[0]) * size[0],
+      (vCoords[3] - vCoords[1]) * size[1],
+    ];
   };
 
   publicAPI.getViewportCenter = (viewport) => {
@@ -115,11 +124,17 @@ function vtkOpenGLRenderWindow(publicAPI, model) {
     return [size[0] * 0.5, size[1] * 0.5];
   };
 
-  publicAPI.displayToNormalizedDisplay = (x, y, z) =>
-    [x / model.size[0], y / model.size[1], z];
+  publicAPI.displayToNormalizedDisplay = (x, y, z) => [
+    x / model.size[0],
+    y / model.size[1],
+    z,
+  ];
 
-  publicAPI.normalizedDisplayToDisplay = (x, y, z) =>
-    [x * model.size[0], y * model.size[1], z];
+  publicAPI.normalizedDisplayToDisplay = (x, y, z) => [
+    x * model.size[0],
+    y * model.size[1],
+    z,
+  ];
 
   publicAPI.worldToView = (x, y, z, renderer) => {
     const dims = publicAPI.getViewportSize(renderer);
@@ -158,11 +173,13 @@ function vtkOpenGLRenderWindow(publicAPI, model) {
     return [x, y, z];
   };
 
-  publicAPI.normalizedViewportToViewport = (x, y, z) =>
-    [x * (model.size[0] - 1.0), y * (model.size[1] - 1.0), z];
+  publicAPI.normalizedViewportToViewport = (x, y, z) => [
+    x * (model.size[0] - 1.0),
+    y * (model.size[1] - 1.0),
+    z,
+  ];
 
-  publicAPI.displayToLocalDisplay = (x, y, z) =>
-    [x, model.size[1] - y - 1, z];
+  publicAPI.displayToLocalDisplay = (x, y, z) => [x, model.size[1] - y - 1, z];
 
   publicAPI.viewportToNormalizedDisplay = (x, y, z, renderer) => {
     let vCoords = renderer.getViewportByReference();
@@ -175,19 +192,25 @@ function vtkOpenGLRenderWindow(publicAPI, model) {
   publicAPI.getPixelData = (x1, y1, x2, y2) => {
     const pixels = new Uint8Array((x2 - x1 + 1) * (y2 - y1 + 1) * 4);
     model.context.readPixels(
-      x1, y1, x2 - x1 + 1, y2 - y1 + 1,
+      x1,
+      y1,
+      x2 - x1 + 1,
+      y2 - y1 + 1,
       model.context.RGBA,
       model.context.UNSIGNED_BYTE,
-      pixels);
+      pixels
+    );
     return pixels;
   };
 
   publicAPI.get2DContext = () => model.canvas.getContext('2d');
 
-  publicAPI.get3DContext = (options = { preserveDrawingBuffer: false, depth: true, alpha: true }) => {
+  publicAPI.get3DContext = (
+    options = { preserveDrawingBuffer: false, depth: true, alpha: true }
+  ) => {
     let result = null;
 
-    const webgl2Supported = (typeof WebGL2RenderingContext !== 'undefined');
+    const webgl2Supported = typeof WebGL2RenderingContext !== 'undefined';
     model.webgl2 = false;
     if (model.defaultToWebgl2 && webgl2Supported) {
       result = model.canvas.getContext('webgl2'); // , options);
@@ -197,8 +220,9 @@ function vtkOpenGLRenderWindow(publicAPI, model) {
       }
     }
     if (!result) {
-      result = model.canvas.getContext('webgl', options)
-        || model.canvas.getContext('experimental-webgl', options);
+      result =
+        model.canvas.getContext('webgl', options) ||
+        model.canvas.getContext('experimental-webgl', options);
     }
 
     // Do we have webvr support
@@ -215,12 +239,19 @@ function vtkOpenGLRenderWindow(publicAPI, model) {
     }
 
     // prevent default context lost handler
-    model.canvas.addEventListener('webglcontextlost', (event) => {
-      event.preventDefault();
-    }, false);
+    model.canvas.addEventListener(
+      'webglcontextlost',
+      (event) => {
+        event.preventDefault();
+      },
+      false
+    );
 
     model.canvas.addEventListener(
-      'webglcontextrestored', publicAPI.restoreContext, false);
+      'webglcontextrestored',
+      publicAPI.restoreContext,
+      false
+    );
 
     return result;
   };
@@ -254,7 +285,6 @@ function vtkOpenGLRenderWindow(publicAPI, model) {
     model.canvas.width = model.oldCanvasSize[0];
     model.canvas.height = model.oldCanvasSize[1];
 
-
     const ren = model.renderable.getRenderers()[0];
     ren.getActiveCamera().setProjectionMatrix(null);
 
@@ -264,7 +294,9 @@ function vtkOpenGLRenderWindow(publicAPI, model) {
 
   publicAPI.vrRender = () => {
     model.renderable.getInteractor().updateGamepads(model.vrDisplay.displayId);
-    model.vrSceneFrame = model.vrDisplay.requestAnimationFrame(publicAPI.vrRender);
+    model.vrSceneFrame = model.vrDisplay.requestAnimationFrame(
+      publicAPI.vrRender
+    );
     model.vrDisplay.getFrameData(model.vrFrameData);
 
     // get the first renderer
@@ -272,17 +304,25 @@ function vtkOpenGLRenderWindow(publicAPI, model) {
 
     // do the left eye
     ren.setViewport(0, 0, 0.5, 1.0);
-    ren.getActiveCamera().computeViewParametersFromPhysicalMatrix(
-      model.vrFrameData.leftViewMatrix);
-    ren.getActiveCamera().setProjectionMatrix(
-      model.vrFrameData.leftProjectionMatrix);
+    ren
+      .getActiveCamera()
+      .computeViewParametersFromPhysicalMatrix(
+        model.vrFrameData.leftViewMatrix
+      );
+    ren
+      .getActiveCamera()
+      .setProjectionMatrix(model.vrFrameData.leftProjectionMatrix);
     publicAPI.traverseAllPasses();
 
     ren.setViewport(0.5, 0, 1.0, 1.0);
-    ren.getActiveCamera().computeViewParametersFromPhysicalMatrix(
-      model.vrFrameData.rightViewMatrix);
-    ren.getActiveCamera().setProjectionMatrix(
-      model.vrFrameData.rightProjectionMatrix);
+    ren
+      .getActiveCamera()
+      .computeViewParametersFromPhysicalMatrix(
+        model.vrFrameData.rightViewMatrix
+      );
+    ren
+      .getActiveCamera()
+      .setProjectionMatrix(model.vrFrameData.rightProjectionMatrix);
     publicAPI.traverseAllPasses();
 
     model.vrDisplay.submitFrame();
@@ -304,7 +344,9 @@ function vtkOpenGLRenderWindow(publicAPI, model) {
 
     const activeUnit = publicAPI.getTextureUnitManager().allocate();
     if (activeUnit < 0) {
-      vtkErrorMacro('Hardware does not support the number of textures defined.');
+      vtkErrorMacro(
+        'Hardware does not support the number of textures defined.'
+      );
       return;
     }
 
@@ -334,9 +376,12 @@ function vtkOpenGLRenderWindow(publicAPI, model) {
       switch (vtktype) {
         case VtkDataTypes.UNSIGNED_CHAR:
           switch (numComps) {
-            case 1: return model.context.R8;
-            case 2: return model.context.RG8;
-            case 3: return model.context.RGB8;
+            case 1:
+              return model.context.R8;
+            case 2:
+              return model.context.RG8;
+            case 3:
+              return model.context.RGB8;
             case 4:
             default:
               return model.context.RGBA8;
@@ -344,9 +389,12 @@ function vtkOpenGLRenderWindow(publicAPI, model) {
         default:
         case VtkDataTypes.FLOAT:
           switch (numComps) {
-            case 1: return model.context.R16F;
-            case 2: return model.context.RG16F;
-            case 3: return model.context.RGB16F;
+            case 1:
+              return model.context.R16F;
+            case 2:
+              return model.context.RG16F;
+            case 3:
+              return model.context.RGB16F;
             case 4:
             default:
               return model.context.RGBA16F;
@@ -356,9 +404,12 @@ function vtkOpenGLRenderWindow(publicAPI, model) {
 
     // webgl1 only supports four types
     switch (numComps) {
-      case 1: return model.context.LUMINANCE;
-      case 2: return model.context.LUMINANCE_ALPHA;
-      case 3: return model.context.RGB;
+      case 1:
+        return model.context.LUMINANCE;
+      case 2:
+        return model.context.LUMINANCE_ALPHA;
+      case 3:
+        return model.context.RGB;
       case 4:
       default:
         return model.context.RGBA;
@@ -475,11 +526,7 @@ export function extend(publicAPI, model, initialValues = {}) {
   }
 
   // Build VTK API
-  macro.get(publicAPI, model, [
-    'shaderCache',
-    'textureUnitManager',
-    'webgl2',
-  ]);
+  macro.get(publicAPI, model, ['shaderCache', 'textureUnitManager', 'webgl2']);
 
   macro.setGet(publicAPI, model, [
     'initialized',
@@ -491,9 +538,7 @@ export function extend(publicAPI, model, initialValues = {}) {
     'cursor',
   ]);
 
-  macro.setGetArray(publicAPI, model, [
-    'size',
-  ], 2);
+  macro.setGetArray(publicAPI, model, ['size'], 2);
 
   // Object methods
   vtkOpenGLRenderWindow(publicAPI, model);

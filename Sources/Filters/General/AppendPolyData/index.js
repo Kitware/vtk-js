@@ -1,10 +1,10 @@
-import macro            from 'vtk.js/Sources/macro';
-import vtkDataArray     from 'vtk.js/Sources/Common/Core/DataArray';
-import vtkPoints        from 'vtk.js/Sources/Common/Core/Points';
-import vtkPolyData      from 'vtk.js/Sources/Common/DataModel/PolyData';
+import macro from 'vtk.js/Sources/macro';
+import vtkDataArray from 'vtk.js/Sources/Common/Core/DataArray';
+import vtkPoints from 'vtk.js/Sources/Common/Core/Points';
+import vtkPolyData from 'vtk.js/Sources/Common/DataModel/PolyData';
 import { VtkDataTypes } from 'vtk.js/Sources/Common/Core/DataArray/Constants';
 
-import Constants        from 'vtk.js/Sources/Filters/General/AppendPolyData/Constants';
+import Constants from 'vtk.js/Sources/Filters/General/AppendPolyData/Constants';
 
 const { PointPrecision } = Constants;
 const { vtkErrorMacro } = macro;
@@ -32,7 +32,8 @@ function vtkAppendPolyData(publicAPI, model) {
   // Set our classname
   model.classHierarchy.push('vtkAppendPolyData');
 
-  publicAPI.requestData = (inData, outData) => { // implement requestData
+  publicAPI.requestData = (inData, outData) => {
+    // implement requestData
     const numberOfInputs = publicAPI.getNumberOfInputPorts();
     if (!numberOfInputs) {
       vtkErrorMacro('No input specified.');
@@ -86,9 +87,9 @@ function vtkAppendPolyData(publicAPI, model) {
 
       const ptD = ds.getPointData();
       if (ptD) {
-        hasPtNormals = hasPtNormals && (ptD.getNormals() !== null);
-        hasPtTCoords = hasPtTCoords && (ptD.getTCoords() !== null);
-        hasPtScalars = hasPtScalars && (ptD.getScalars() !== null);
+        hasPtNormals = hasPtNormals && ptD.getNormals() !== null;
+        hasPtTCoords = hasPtTCoords && ptD.getTCoords() !== null;
+        hasPtScalars = hasPtScalars && ptD.getScalars() !== null;
       } else {
         hasPtNormals = false;
         hasPtTCoords = false;
@@ -123,7 +124,8 @@ function vtkAppendPolyData(publicAPI, model) {
         numberOfTuples: numPts,
         size: 3 * numPts,
         dataType: dsNormals.getDataType(),
-        name: dsNormals.getName() });
+        name: dsNormals.getName(),
+      });
     }
     if (hasPtTCoords) {
       const dsTCoords = lds.getPointData().getTCoords();
@@ -132,7 +134,8 @@ function vtkAppendPolyData(publicAPI, model) {
         numberOfTuples: numPts,
         size: 2 * numPts,
         dataType: dsTCoords.getDataType(),
-        name: dsTCoords.getName() });
+        name: dsTCoords.getName(),
+      });
     }
     if (hasPtScalars) {
       const dsScalars = lds.getPointData().getScalars();
@@ -141,7 +144,8 @@ function vtkAppendPolyData(publicAPI, model) {
         numberOfTuples: numPts,
         size: numPts * dsScalars.getNumberOfComponents(),
         dataType: dsScalars.getDataType(),
-        name: dsScalars.getName() });
+        name: dsScalars.getName(),
+      });
     }
 
     numPts = 0;
@@ -172,8 +176,12 @@ function vtkAppendPolyData(publicAPI, model) {
       }
       if (hasPtScalars) {
         const ptScalars = dsPD.getScalars();
-        newPtScalars.getData().set(ptScalars.getData(),
-                                   numPts * newPtScalars.getNumberOfComponents());
+        newPtScalars
+          .getData()
+          .set(
+            ptScalars.getData(),
+            numPts * newPtScalars.getNumberOfComponents()
+          );
       }
 
       numPts += ds.getPoints().getNumberOfPoints();
@@ -210,11 +218,8 @@ const DEFAULT_VALUES = {
 export function extend(publicAPI, model, initialValues = {}) {
   Object.assign(model, DEFAULT_VALUES, initialValues);
 
-
   // Build VTK API
-  macro.setGet(publicAPI, model, [
-    'outputPointsPrecision',
-  ]);
+  macro.setGet(publicAPI, model, ['outputPointsPrecision']);
 
   // Make this a VTK object
   macro.obj(publicAPI, model);

@@ -2,7 +2,14 @@ import resemble from 'resemblejs';
 
 let REMOVE_DOM_ELEMENTS = true;
 
-function compareImages(image, baselines, testName, tapeContext, threshold = 0.5, nextCallback = null) {
+function compareImages(
+  image,
+  baselines,
+  testName,
+  tapeContext,
+  threshold = 0.5,
+  nextCallback = null
+) {
   const nbBaselines = baselines.length;
   let minDelta = 100;
   let isSameDimensions = false;
@@ -12,7 +19,9 @@ function compareImages(image, baselines, testName, tapeContext, threshold = 0.5,
     tapeContext.ok(isSameDimensions, 'Image match resolution');
 
     if (minDelta >= threshold) {
-      tapeContext.fail(`<img src="${image}" /> vs <img src="${baselines[0]}" />`);
+      tapeContext.fail(
+        `<img src="${image}" /> vs <img src="${baselines[0]}" />`
+      );
     }
 
     if (nextCallback) {
@@ -23,14 +32,19 @@ function compareImages(image, baselines, testName, tapeContext, threshold = 0.5,
   }
 
   baselines.forEach((baseline, idx) => {
-    resemble(baseline).compareTo(image).onComplete((data) => {
-      minDelta = (minDelta < data.misMatchPercentage) ? minDelta : data.misMatchPercentage;
-      isSameDimensions = isSameDimensions || data.isSameDimensions;
+    resemble(baseline)
+      .compareTo(image)
+      .onComplete((data) => {
+        minDelta =
+          minDelta < data.misMatchPercentage
+            ? minDelta
+            : data.misMatchPercentage;
+        isSameDimensions = isSameDimensions || data.isSameDimensions;
 
-      if (idx + 1 === nbBaselines) {
-        done();
-      }
-    });
+        if (idx + 1 === nbBaselines) {
+          done();
+        }
+      });
   });
 }
 
@@ -62,7 +76,7 @@ function createGarbageCollector(testContext) {
     }
 
     // vtkObject handling
-    resources.sort((a, b) => (b.priority - a.priority));
+    resources.sort((a, b) => b.priority - a.priority);
     resources.forEach(({ vtkObj }) => {
       if (vtkObj) {
         vtkObj.delete();
@@ -92,7 +106,6 @@ function keepDOM() {
 function removeDOM() {
   REMOVE_DOM_ELEMENTS = true;
 }
-
 
 export default {
   compareImages,

@@ -1,4 +1,4 @@
-import macro     from 'vtk.js/Sources/macro';
+import macro from 'vtk.js/Sources/macro';
 import Constants from 'vtk.js/Sources/Rendering/OpenGL/BufferObject/Constants';
 
 const { ObjectType } = Constants;
@@ -60,7 +60,7 @@ function vtkOpenGLBufferObject(publicAPI, model) {
       internalHandle = model.context.createBuffer();
       internalType = type;
     }
-    return (convertType(internalType) === objectTypeGL);
+    return convertType(internalType) === objectTypeGL;
   };
 
   publicAPI.upload = (data, type) => {
@@ -71,7 +71,11 @@ function vtkOpenGLBufferObject(publicAPI, model) {
       return false;
     }
     model.context.bindBuffer(convertType(internalType), internalHandle);
-    model.context.bufferData(convertType(internalType), data, model.context.STATIC_DRAW);
+    model.context.bufferData(
+      convertType(internalType),
+      data,
+      model.context.STATIC_DRAW
+    );
     dirty = false;
     return true;
   };
@@ -133,9 +137,7 @@ export function extend(publicAPI, model, initialValues = {}) {
   // Object methods
   macro.obj(publicAPI, model);
 
-  macro.get(publicAPI, model, [
-    'openGLRenderWindow',
-  ]);
+  macro.get(publicAPI, model, ['openGLRenderWindow']);
 
   vtkOpenGLBufferObject(publicAPI, model);
 }

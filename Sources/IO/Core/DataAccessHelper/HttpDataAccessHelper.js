@@ -1,7 +1,7 @@
 import pako from 'pako';
 
-import macro                from 'vtk.js/Sources/macro';
-import Endian               from 'vtk.js/Sources/Common/Core/Endian';
+import macro from 'vtk.js/Sources/macro';
+import Endian from 'vtk.js/Sources/Common/Core/Endian';
 import { DataTypeByteSize } from 'vtk.js/Sources/Common/Core/DataArray/Constants';
 
 const { vtkErrorMacro, vtkDebugMacro } = macro;
@@ -37,7 +37,11 @@ function fetchArray(instance = {}, baseURL, array, options = {}) {
   if (array.ref && !array.ref.pending) {
     return new Promise((resolve, reject) => {
       const xhr = new XMLHttpRequest();
-      const url = [baseURL, array.ref.basepath, options.compression ? `${array.ref.id}.gz` : array.ref.id].join('/');
+      const url = [
+        baseURL,
+        array.ref.basepath,
+        options.compression ? `${array.ref.id}.gz` : array.ref.id,
+      ].join('/');
 
       xhr.onreadystatechange = (e) => {
         if (xhr.readyState === 1) {
@@ -53,9 +57,13 @@ function fetchArray(instance = {}, baseURL, array, options = {}) {
 
             if (options.compression) {
               if (array.dataType === 'string' || array.dataType === 'JSON') {
-                array.buffer = pako.inflate(new Uint8Array(array.buffer), { to: 'string' });
+                array.buffer = pako.inflate(new Uint8Array(array.buffer), {
+                  to: 'string',
+                });
               } else {
-                array.buffer = pako.inflate(new Uint8Array(array.buffer)).buffer;
+                array.buffer = pako.inflate(
+                  new Uint8Array(array.buffer)
+                ).buffer;
               }
             }
 
@@ -65,14 +73,23 @@ function fetchArray(instance = {}, baseURL, array, options = {}) {
               if (Endian.ENDIANNESS !== array.ref.encode && Endian.ENDIANNESS) {
                 // Need to swap bytes
                 vtkDebugMacro(`Swap bytes of ${array.name}`);
-                Endian.swapBytes(array.buffer, DataTypeByteSize[array.dataType]);
+                Endian.swapBytes(
+                  array.buffer,
+                  DataTypeByteSize[array.dataType]
+                );
               }
 
               array.values = new window[array.dataType](array.buffer);
             }
 
             if (array.values.length !== array.size) {
-              vtkErrorMacro(`Error in FetchArray: ${array.name}, does not have the proper array size. Got ${array.values.length}, instead of ${array.size}`);
+              vtkErrorMacro(
+                `Error in FetchArray: ${
+                  array.name
+                }, does not have the proper array size. Got ${
+                  array.values.length
+                }, instead of ${array.size}`
+              );
             }
 
             // Done with the ref and work
@@ -96,7 +113,10 @@ function fetchArray(instance = {}, baseURL, array, options = {}) {
 
       // Make request
       xhr.open('GET', url, true);
-      xhr.responseType = (options.compression || array.dataType !== 'string') ? 'arraybuffer' : 'text';
+      xhr.responseType =
+        options.compression || array.dataType !== 'string'
+          ? 'arraybuffer'
+          : 'text';
       xhr.send();
     });
   }
@@ -124,7 +144,11 @@ function fetchJSON(instance = {}, url, options = {}) {
         }
         if (xhr.status === 200 || xhr.status === 0) {
           if (options.compression) {
-            resolve(JSON.parse(pako.inflate(new Uint8Array(xhr.response), { to: 'string' })));
+            resolve(
+              JSON.parse(
+                pako.inflate(new Uint8Array(xhr.response), { to: 'string' })
+              )
+            );
           } else {
             resolve(JSON.parse(xhr.responseText));
           }
@@ -168,7 +192,9 @@ function fetchText(instance = {}, url, options = {}) {
         }
         if (xhr.status === 200 || xhr.status === 0) {
           if (options.compression) {
-            resolve(pako.inflate(new Uint8Array(xhr.response), { to: 'string' }));
+            resolve(
+              pako.inflate(new Uint8Array(xhr.response), { to: 'string' })
+            );
           } else {
             resolve(xhr.responseText);
           }
@@ -188,7 +214,6 @@ function fetchText(instance = {}, url, options = {}) {
     xhr.send();
   });
 }
-
 
 // ----------------------------------------------------------------------------
 

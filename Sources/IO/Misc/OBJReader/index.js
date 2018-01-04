@@ -1,7 +1,7 @@
-import macro            from 'vtk.js/Sources/macro';
+import macro from 'vtk.js/Sources/macro';
 import DataAccessHelper from 'vtk.js/Sources/IO/Core/DataAccessHelper';
-import vtkDataArray     from 'vtk.js/Sources/Common/Core/DataArray';
-import vtkPolyData      from 'vtk.js/Sources/Common/DataModel/PolyData';
+import vtkDataArray from 'vtk.js/Sources/Common/Core/DataArray';
+import vtkPolyData from 'vtk.js/Sources/Common/DataModel/PolyData';
 
 // ----------------------------------------------------------------------------
 
@@ -30,10 +30,10 @@ function begin(splitMode) {
 // ----------------------------------------------------------------------------
 
 function faceMap(str) {
-  const idxs = str.split('/').map(i => Number(i));
+  const idxs = str.split('/').map((i) => Number(i));
   const vertexIdx = idxs[0] - 1;
-  const textCoordIdx = idxs[1] ? (idxs[1] - 1) : vertexIdx;
-  const vertexNormal = idxs[2] ? (idxs[2] - 1) : vertexIdx;
+  const textCoordIdx = idxs[1] ? idxs[1] - 1 : vertexIdx;
+  const vertexNormal = idxs[2] ? idxs[2] - 1 : vertexIdx;
   return [vertexIdx, textCoordIdx, vertexNormal];
 }
 
@@ -67,7 +67,7 @@ function parseLine(line) {
     }
     const cells = data.f[data.size - 1];
     tokens.shift();
-    const faces = tokens.filter(s => s.length);
+    const faces = tokens.filter((s) => s.length);
     const size = faces.length;
     cells.push(size);
     for (let i = 0; i < size; i++) {
@@ -79,8 +79,8 @@ function parseLine(line) {
 // ----------------------------------------------------------------------------
 
 function end(model) {
-  const hasTcoords = !!(data.vt.length);
-  const hasNormals = !!(data.vn.length);
+  const hasTcoords = !!data.vt.length;
+  const hasNormals = !!data.vn.length;
   if (model.splitMode) {
     model.numberOfOutputs = data.size;
     for (let idx = 0; idx < data.size; idx++) {
@@ -119,12 +119,20 @@ function end(model) {
       polydata.getPolys().setData(Uint32Array.from(polys));
 
       if (hasTcoords) {
-        const tcoords = vtkDataArray.newInstance({ numberOfComponents: 2, values: Float32Array.from(tc), name: 'TextureCoordinates' });
+        const tcoords = vtkDataArray.newInstance({
+          numberOfComponents: 2,
+          values: Float32Array.from(tc),
+          name: 'TextureCoordinates',
+        });
         polydata.getPointData().setTCoords(tcoords);
       }
 
       if (hasNormals) {
-        const normalsArray = vtkDataArray.newInstance({ numberOfComponents: 3, values: Float32Array.from(normals), name: 'Normals' });
+        const normalsArray = vtkDataArray.newInstance({
+          numberOfComponents: 3,
+          values: Float32Array.from(normals),
+          name: 'Normals',
+        });
         polydata.getPointData().setNormals(normalsArray);
       }
 
@@ -135,12 +143,20 @@ function end(model) {
     model.numberOfOutputs = 1;
     const polydata = vtkPolyData.newInstance();
     polydata.getPoints().setData(Float32Array.from(data.v), 3);
-    if (hasTcoords && (data.v.length / 3) === (data.vt.length / 2)) {
-      const tcoords = vtkDataArray.newInstance({ numberOfComponents: 2, values: Float32Array.from(data.vt), name: 'TextureCoordinates' });
+    if (hasTcoords && data.v.length / 3 === data.vt.length / 2) {
+      const tcoords = vtkDataArray.newInstance({
+        numberOfComponents: 2,
+        values: Float32Array.from(data.vt),
+        name: 'TextureCoordinates',
+      });
       polydata.getPointData().setTCoords(tcoords);
     }
-    if (hasNormals && (data.v.length === data.vn.length)) {
-      const normalsArray = vtkDataArray.newInstance({ numberOfComponents: 3, values: Float32Array.from(data.vn), name: 'Normals' });
+    if (hasNormals && data.v.length === data.vn.length) {
+      const normalsArray = vtkDataArray.newInstance({
+        numberOfComponents: 3,
+        values: Float32Array.from(data.vn),
+        name: 'Normals',
+      });
       polydata.getPointData().setNormals(normalsArray);
     }
 
@@ -179,7 +195,10 @@ function vtkOBJReader(publicAPI, model) {
   function fetchData(url, option = {}) {
     const compression = model.compression;
     const progressCallback = model.progressCallback;
-    return model.dataAccessHelper.fetchText(publicAPI, url, { compression, progressCallback });
+    return model.dataAccessHelper.fetchText(publicAPI, url, {
+      compression,
+      progressCallback,
+    });
   }
 
   // Set DataSet url
@@ -248,20 +267,13 @@ const DEFAULT_VALUES = {
 
 // ----------------------------------------------------------------------------
 
-
 export function extend(publicAPI, model, initialValues = {}) {
   Object.assign(model, DEFAULT_VALUES, initialValues);
 
   // Build VTK API
   macro.obj(publicAPI, model);
-  macro.get(publicAPI, model, [
-    'url',
-    'baseURL',
-  ]);
-  macro.setGet(publicAPI, model, [
-    'dataAccessHelper',
-    'splitMode',
-  ]);
+  macro.get(publicAPI, model, ['url', 'baseURL']);
+  macro.setGet(publicAPI, model, ['dataAccessHelper', 'splitMode']);
   macro.algo(publicAPI, model, 0, 1);
   macro.event(publicAPI, model, 'busy');
 

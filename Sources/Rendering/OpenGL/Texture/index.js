@@ -1,9 +1,9 @@
-import Constants    from 'vtk.js/Sources/Rendering/OpenGL/Texture/Constants';
-import macro        from 'vtk.js/Sources/macro';
+import Constants from 'vtk.js/Sources/Rendering/OpenGL/Texture/Constants';
+import macro from 'vtk.js/Sources/macro';
 import vtkDataArray from 'vtk.js/Sources/Common/Core/DataArray';
-import vtkMath      from 'vtk.js/Sources/Common/Core/Math';
-import vtkViewNode  from 'vtk.js/Sources/Rendering/SceneGraph/ViewNode';
-import { vec3 }     from 'gl-matrix';
+import vtkMath from 'vtk.js/Sources/Common/Core/Math';
+import vtkViewNode from 'vtk.js/Sources/Rendering/SceneGraph/ViewNode';
+import { vec3 } from 'gl-matrix';
 
 const { Wrap, Filter } = Constants;
 const { VtkDataTypes } = vtkDataArray;
@@ -18,7 +18,9 @@ function vtkOpenGLTexture(publicAPI, model) {
   model.classHierarchy.push('vtkOpenGLTexture');
   // Renders myself
   publicAPI.render = () => {
-    model.openGLRenderer = publicAPI.getFirstAncestorOfType('vtkOpenGLRenderer');
+    model.openGLRenderer = publicAPI.getFirstAncestorOfType(
+      'vtkOpenGLRenderer'
+    );
     // sync renderable properties
     model.openGLRenderWindow = model.openGLRenderer.getParent();
     model.context = model.openGLRenderWindow.getContext();
@@ -43,8 +45,10 @@ function vtkOpenGLTexture(publicAPI, model) {
       model.renderable.setImage(null);
     }
     // create the texture if it is not done already
-    if (!model.handle ||
-        model.renderable.getMTime() > model.textureBuildTime.getMTime()) {
+    if (
+      !model.handle ||
+      model.renderable.getMTime() > model.textureBuildTime.getMTime()
+    ) {
       // if we have an Image
       if (model.renderable.getImage() !== null) {
         if (model.renderable.getInterpolate()) {
@@ -69,21 +73,39 @@ function vtkOpenGLTexture(publicAPI, model) {
         const data = [];
         for (let i = 0; i < 6; ++i) {
           const indata = model.renderable.getInputData(i);
-          const scalars = indata ? indata.getPointData().getScalars().getData() : null;
+          const scalars = indata
+            ? indata
+                .getPointData()
+                .getScalars()
+                .getData()
+            : null;
           if (scalars) {
             data.push(scalars);
           }
         }
         if (data.length === 6) {
-          publicAPI.createCubeFromRaw(ext[1] - ext[0] + 1, ext[3] - ext[2] + 1,
-            inScalars.getNumberOfComponents(), inScalars.getDataType(), data);
+          publicAPI.createCubeFromRaw(
+            ext[1] - ext[0] + 1,
+            ext[3] - ext[2] + 1,
+            inScalars.getNumberOfComponents(),
+            inScalars.getDataType(),
+            data
+          );
         } else {
-          if (model.renderable.getInterpolate() && inScalars.getNumberOfComponents() === 4) {
+          if (
+            model.renderable.getInterpolate() &&
+            inScalars.getNumberOfComponents() === 4
+          ) {
             model.generateMipmap = true;
             publicAPI.setMinificationFilter(Filter.LINEAR_MIPMAP_LINEAR);
           }
-          publicAPI.create2DFromRaw(ext[1] - ext[0] + 1, ext[3] - ext[2] + 1,
-            inScalars.getNumberOfComponents(), inScalars.getDataType(), inScalars.getData());
+          publicAPI.create2DFromRaw(
+            ext[1] - ext[0] + 1,
+            ext[3] - ext[2] + 1,
+            inScalars.getNumberOfComponents(),
+            inScalars.getDataType(),
+            inScalars.getData()
+          );
         }
         publicAPI.activate();
         publicAPI.sendParameters();
@@ -125,15 +147,27 @@ function vtkOpenGLTexture(publicAPI, model) {
         // See: http://www.openmodel.context..org/wiki/Common_Mistakes#Creating_a_complete_texture
         // turn off mip map filter or set the base and max level correctly. here
         // both are done.
-        model.context.texParameteri(model.target, model.context.TEXTURE_MIN_FILTER,
-                        publicAPI.getOpenGLFilterMode(model.minificationFilter));
-        model.context.texParameteri(model.target, model.context.TEXTURE_MAG_FILTER,
-                        publicAPI.getOpenGLFilterMode(model.magnificationFilter));
+        model.context.texParameteri(
+          model.target,
+          model.context.TEXTURE_MIN_FILTER,
+          publicAPI.getOpenGLFilterMode(model.minificationFilter)
+        );
+        model.context.texParameteri(
+          model.target,
+          model.context.TEXTURE_MAG_FILTER,
+          publicAPI.getOpenGLFilterMode(model.magnificationFilter)
+        );
 
-        model.context.texParameteri(model.target, model.context.TEXTURE_WRAP_S,
-                        publicAPI.getOpenGLWrapMode(model.wrapS));
-        model.context.texParameteri(model.target, model.context.TEXTURE_WRAP_T,
-                        publicAPI.getOpenGLWrapMode(model.wrapT));
+        model.context.texParameteri(
+          model.target,
+          model.context.TEXTURE_WRAP_S,
+          publicAPI.getOpenGLWrapMode(model.wrapS)
+        );
+        model.context.texParameteri(
+          model.target,
+          model.context.TEXTURE_WRAP_T,
+          publicAPI.getOpenGLWrapMode(model.wrapT)
+        );
 
         model.context.bindTexture(model.target, null);
       }
@@ -190,7 +224,10 @@ function vtkOpenGLTexture(publicAPI, model) {
   //----------------------------------------------------------------------------
   publicAPI.bind = () => {
     model.context.bindTexture(model.target, model.handle);
-    if (model.autoParameters && (publicAPI.getMTime() > model.sendParametersTime.getMTime())) {
+    if (
+      model.autoParameters &&
+      publicAPI.getMTime() > model.sendParametersTime.getMTime()
+    ) {
       publicAPI.sendParameters();
     }
   };
@@ -216,24 +253,35 @@ function vtkOpenGLTexture(publicAPI, model) {
 
   //----------------------------------------------------------------------------
   publicAPI.sendParameters = () => {
-    model.context.texParameteri(model.target, model.context.TEXTURE_WRAP_S,
-      publicAPI.getOpenGLWrapMode(model.wrapS));
-    model.context.texParameteri(model.target, model.context.TEXTURE_WRAP_T,
-      publicAPI.getOpenGLWrapMode(model.wrapT));
+    model.context.texParameteri(
+      model.target,
+      model.context.TEXTURE_WRAP_S,
+      publicAPI.getOpenGLWrapMode(model.wrapS)
+    );
+    model.context.texParameteri(
+      model.target,
+      model.context.TEXTURE_WRAP_T,
+      publicAPI.getOpenGLWrapMode(model.wrapT)
+    );
     if (model.openGLRenderWindow.getWebgl2()) {
-      model.context.texParameteri(model.target, model.context.TEXTURE_WRAP_R,
-        publicAPI.getOpenGLWrapMode(model.wrapR));
+      model.context.texParameteri(
+        model.target,
+        model.context.TEXTURE_WRAP_R,
+        publicAPI.getOpenGLWrapMode(model.wrapR)
+      );
     }
 
     model.context.texParameteri(
       model.target,
       model.context.TEXTURE_MIN_FILTER,
-      publicAPI.getOpenGLFilterMode(model.minificationFilter));
+      publicAPI.getOpenGLFilterMode(model.minificationFilter)
+    );
 
     model.context.texParameteri(
       model.target,
       model.context.TEXTURE_MAG_FILTER,
-      publicAPI.getOpenGLFilterMode(model.magnificationFilter));
+      publicAPI.getOpenGLFilterMode(model.magnificationFilter)
+    );
 
     // model.context.texParameterf(model.target, model.context.TEXTURE_MIN_LOD, model.minLOD);
     // model.context.texParameterf(model.target, model.context.TEXTURE_MAX_LOD, model.maxLOD);
@@ -249,11 +297,15 @@ function vtkOpenGLTexture(publicAPI, model) {
       return model.internalFormat;
     }
 
-    model.internalFormat =
-      publicAPI.getDefaultInternalFormat(vtktype, numComps);
+    model.internalFormat = publicAPI.getDefaultInternalFormat(
+      vtktype,
+      numComps
+    );
 
     if (!model.internalFormat) {
-      vtkDebugMacro(`Unable to find suitable internal format for T=${vtktype} NC= ${numComps}`);
+      vtkDebugMacro(
+        `Unable to find suitable internal format for T=${vtktype} NC= ${numComps}`
+      );
     }
 
     return model.internalFormat;
@@ -265,23 +317,30 @@ function vtkOpenGLTexture(publicAPI, model) {
 
     // try default next
     result = model.openGLRenderWindow.getDefaultTextureInternalFormat(
-      vtktype, numComps, false);
+      vtktype,
+      numComps,
+      false
+    );
     if (result) {
       return result;
     }
 
     // try floating point
     result = this.openGLRenderWindow.getDefaultTextureInternalFormat(
-      vtktype, numComps, true);
+      vtktype,
+      numComps,
+      true
+    );
 
     if (!result) {
       vtkDebugMacro('Unsupported internal texture type!');
-      vtkDebugMacro(`Unable to find suitable internal format for T=${vtktype} NC= ${numComps}`);
+      vtkDebugMacro(
+        `Unable to find suitable internal format for T=${vtktype} NC= ${numComps}`
+      );
     }
 
     return result;
   };
-
 
   //----------------------------------------------------------------------------
   publicAPI.setInternalFormat = (iFormat) => {
@@ -377,8 +436,10 @@ function vtkOpenGLTexture(publicAPI, model) {
       case VtkDataTypes.FLOAT:
       case VtkDataTypes.VOID: // used for depth component textures.
       default:
-        if (model.context.getExtension('OES_texture_float') &&
-          model.context.getExtension('OES_texture_float_linear')) {
+        if (
+          model.context.getExtension('OES_texture_float') &&
+          model.context.getExtension('OES_texture_float_linear')
+        ) {
           return model.context.FLOAT;
         }
         return model.context.UNSIGNED_BYTE;
@@ -470,7 +531,10 @@ function vtkOpenGLTexture(publicAPI, model) {
     const pixData = [];
     // if the opengl data type is float
     // then the data array must be float
-    if (dataType !== VtkDataTypes.FLOAT && model.openGLDataType === model.context.FLOAT) {
+    if (
+      dataType !== VtkDataTypes.FLOAT &&
+      model.openGLDataType === model.context.FLOAT
+    ) {
       const pixCount = model.width * model.height * model.components;
       for (let idx = 0; idx < data.length; idx++) {
         const newArray = new Float32Array(pixCount);
@@ -483,7 +547,10 @@ function vtkOpenGLTexture(publicAPI, model) {
 
     // if the opengl data type is ubyte
     // then the data array must be u8, we currently simply truncate the data
-    if (dataType !== VtkDataTypes.UNSIGNED_CHAR && model.openGLDataType === model.context.UNSIGNED_BYTE) {
+    if (
+      dataType !== VtkDataTypes.UNSIGNED_CHAR &&
+      model.openGLDataType === model.context.UNSIGNED_BYTE
+    ) {
       const pixCount = model.width * model.height * model.components;
       for (let idx = 0; idx < data.length; idx++) {
         const newArray = new Uint8Array(pixCount);
@@ -510,7 +577,10 @@ function vtkOpenGLTexture(publicAPI, model) {
     const width = model.width;
     const height = model.height;
     const numComps = model.components;
-    if (data && (!vtkMath.isPowerOfTwo(width) || !vtkMath.isPowerOfTwo(height))) {
+    if (
+      data &&
+      (!vtkMath.isPowerOfTwo(width) || !vtkMath.isPowerOfTwo(height))
+    ) {
       // Scale up the texture to the next highest power of two dimensions.
       const newWidth = vtkMath.nearestPowerOfTwo(width);
       const newHeight = vtkMath.nearestPowerOfTwo(height);
@@ -554,10 +624,10 @@ function vtkOpenGLTexture(publicAPI, model) {
               ihi *= numComps;
               for (let c = 0; c < numComps; c++) {
                 newArray[joff + ioff + c] =
-                  (data[idx][jlow + ilow + c] * jmix1 * (1.0 - imix)) +
-                  (data[idx][jlow + ihi + c] * jmix1 * imix) +
-                  (data[idx][jhi + ilow + c] * jmix * (1.0 - imix)) +
-                  (data[idx][jhi + ihi + c] * jmix * imix);
+                  data[idx][jlow + ilow + c] * jmix1 * (1.0 - imix) +
+                  data[idx][jlow + ihi + c] * jmix1 * imix +
+                  data[idx][jhi + ilow + c] * jmix * (1.0 - imix) +
+                  data[idx][jhi + ihi + c] * jmix * imix;
               }
             }
           }
@@ -612,14 +682,16 @@ function vtkOpenGLTexture(publicAPI, model) {
     model.context.pixelStorei(model.context.UNPACK_ALIGNMENT, 1);
 
     model.context.texImage2D(
-          model.target,
-          0,
-          model.internalFormat,
-          model.width, model.height,
-          0,
-          model.format,
-          model.openGLDataType,
-          scaledData[0]);
+      model.target,
+      0,
+      model.internalFormat,
+      model.width,
+      model.height,
+      0,
+      model.format,
+      model.openGLDataType,
+      scaledData[0]
+    );
 
     if (model.generateMipmap) {
       model.context.generateMipmap(model.target);
@@ -663,11 +735,13 @@ function vtkOpenGLTexture(publicAPI, model) {
           model.context.TEXTURE_CUBE_MAP_POSITIVE_X + i,
           0,
           model.internalFormat,
-          model.width, model.height,
+          model.width,
+          model.height,
           0,
           model.format,
           model.openGLDataType,
-          scaledData[i]);
+          scaledData[i]
+        );
       }
     }
 
@@ -702,14 +776,16 @@ function vtkOpenGLTexture(publicAPI, model) {
     model.context.pixelStorei(model.context.UNPACK_ALIGNMENT, 1);
 
     model.context.texImage2D(
-          model.target,
-          0,
-          model.internalFormat,
-          model.width, model.height,
-          0,
-          model.format,
-          model.openGLDataType,
-          data);
+      model.target,
+      0,
+      model.internalFormat,
+      model.width,
+      model.height,
+      0,
+      model.format,
+      model.openGLDataType,
+      data
+    );
 
     if (model.generateMipmap) {
       model.context.generateMipmap(model.target);
@@ -746,23 +822,39 @@ function vtkOpenGLTexture(publicAPI, model) {
     model.context.pixelStorei(model.context.UNPACK_ALIGNMENT, 1);
 
     // Scale up the texture to the next highest power of two dimensions (if needed) and flip y.
-    const needNearestPowerOfTwo = (!vtkMath.isPowerOfTwo(image.width) || !vtkMath.isPowerOfTwo(image.height));
+    const needNearestPowerOfTwo =
+      !vtkMath.isPowerOfTwo(image.width) || !vtkMath.isPowerOfTwo(image.height);
     const canvas = document.createElement('canvas');
-    canvas.width = needNearestPowerOfTwo ? vtkMath.nearestPowerOfTwo(image.width) : image.width;
-    canvas.height = needNearestPowerOfTwo ? vtkMath.nearestPowerOfTwo(image.height) : image.height;
+    canvas.width = needNearestPowerOfTwo
+      ? vtkMath.nearestPowerOfTwo(image.width)
+      : image.width;
+    canvas.height = needNearestPowerOfTwo
+      ? vtkMath.nearestPowerOfTwo(image.height)
+      : image.height;
     const ctx = canvas.getContext('2d');
     ctx.translate(0, canvas.height);
     ctx.scale(1, -1);
-    ctx.drawImage(image, 0, 0, image.width, image.height, 0, 0, canvas.width, canvas.height);
+    ctx.drawImage(
+      image,
+      0,
+      0,
+      image.width,
+      image.height,
+      0,
+      0,
+      canvas.width,
+      canvas.height
+    );
     const safeImage = canvas;
 
     model.context.texImage2D(
-          model.target,
-          0,
-          model.internalFormat,
-          model.format,
-          model.openGLDataType,
-          safeImage);
+      model.target,
+      0,
+      model.internalFormat,
+      model.format,
+      model.openGLDataType,
+      safeImage
+    );
 
     if (model.generateMipmap) {
       model.context.generateMipmap(model.target);
@@ -773,7 +865,14 @@ function vtkOpenGLTexture(publicAPI, model) {
   };
 
   //----------------------------------------------------------------------------
-  publicAPI.create3DFromRaw = (width, height, depth, numComps, dataType, data) => {
+  publicAPI.create3DFromRaw = (
+    width,
+    height,
+    depth,
+    numComps,
+    dataType,
+    data
+  ) => {
     // Now determine the texture parameters using the arguments.
     publicAPI.getOpenGLDataType(dataType);
     publicAPI.getInternalFormat(dataType, numComps);
@@ -799,14 +898,17 @@ function vtkOpenGLTexture(publicAPI, model) {
     // model.context.pixelStorei(model.context.UNPACK_ALIGNMENT, 1);
 
     model.context.texImage3D(
-          model.target,
-          0,
-          model.internalFormat,
-          model.width, model.height, model.depth,
-          0,
-          model.format,
-          model.openGLDataType,
-          data);
+      model.target,
+      0,
+      model.internalFormat,
+      model.width,
+      model.height,
+      model.depth,
+      0,
+      model.format,
+      model.openGLDataType,
+      data
+    );
 
     if (model.generateMipmap) {
       model.context.generateMipmap(model.target);
@@ -818,7 +920,13 @@ function vtkOpenGLTexture(publicAPI, model) {
 
   //----------------------------------------------------------------------------
   // This method simulates a 3D texture using 2D
-  publicAPI.create3DOneComponentFromRaw = (width, height, depth, dataType, data) => {
+  publicAPI.create3DOneComponentFromRaw = (
+    width,
+    height,
+    depth,
+    dataType,
+    data
+  ) => {
     const numPixelsIn = width * height * depth;
 
     // compute min and max values
@@ -844,9 +952,11 @@ function vtkOpenGLTexture(publicAPI, model) {
     if (dataType === VtkDataTypes.UNSIGNED_CHAR) {
       model.volumeInfo.min = 0.0;
       model.volumeInfo.max = 255.0;
-    } else if (model.openGLRenderWindow.getWebgl2() ||
-        (model.context.getExtension('OES_texture_float') &&
-         model.context.getExtension('OES_texture_float_linear'))) {
+    } else if (
+      model.openGLRenderWindow.getWebgl2() ||
+      (model.context.getExtension('OES_texture_float') &&
+        model.context.getExtension('OES_texture_float_linear'))
+    ) {
       dataTypeToUse = VtkDataTypes.FLOAT;
       volCopyData = (outArray, outIdx, inValue, smin, smax) => {
         outArray[outIdx] = (inValue - smin) / (smax - smin);
@@ -858,10 +968,10 @@ function vtkOpenGLTexture(publicAPI, model) {
       volCopyData = (outArray, outIdx, inValue, smin, smax) => {
         let fval = (inValue - smin) / (smax - smin);
         const r = Math.floor(fval * 255.0);
-        fval = (fval * 255.0) - r;
+        fval = fval * 255.0 - r;
         outArray[outIdx] = r;
         const g = Math.floor(fval * 255.0);
-        fval = (fval * 255.0) - g;
+        fval = fval * 255.0 - g;
         outArray[outIdx + 1] = g;
         const b = Math.floor(fval * 255.0);
         outArray[outIdx + 2] = b;
@@ -874,7 +984,14 @@ function vtkOpenGLTexture(publicAPI, model) {
         for (let i = 0; i < numPixelsIn; ++i) {
           newArray[i] = (data[i] - min) / (max - min);
         }
-        return publicAPI.create3DFromRaw(width, height, depth, 1, VtkDataTypes.FLOAT, newArray);
+        return publicAPI.create3DFromRaw(
+          width,
+          height,
+          depth,
+          1,
+          VtkDataTypes.FLOAT,
+          newArray
+        );
       }
       return publicAPI.create3DFromRaw(width, height, depth, 1, dataType, data);
     }
@@ -895,7 +1012,9 @@ function vtkOpenGLTexture(publicAPI, model) {
     model.numberOfDimensions = 2;
 
     // have to pack this 3D texture into pot 2D texture
-    const maxTexDim = model.context.getParameter(model.context.MAX_TEXTURE_SIZE);
+    const maxTexDim = model.context.getParameter(
+      model.context.MAX_TEXTURE_SIZE
+    );
 
     // compute estimate for XY subsample
     let xstride = 1;
@@ -918,7 +1037,18 @@ function vtkOpenGLTexture(publicAPI, model) {
     publicAPI.bind();
 
     // store the information, we will need it later
-    model.volumeInfo = { encodedScalars, min, max, width, height, depth, xreps, yreps, xstride, ystride };
+    model.volumeInfo = {
+      encodedScalars,
+      min,
+      max,
+      width,
+      height,
+      depth,
+      xreps,
+      yreps,
+      xstride,
+      ystride,
+    };
 
     // OK stuff the data into the 2d TEXTURE
 
@@ -936,19 +1066,19 @@ function vtkOpenGLTexture(publicAPI, model) {
     let outIdx = 0;
 
     for (let yRep = 0; yRep < yreps; yRep++) {
-      const xrepsThisRow = Math.min(xreps, depth - (yRep * xreps));
-      const outXContIncr = model.width - (xrepsThisRow * Math.floor(width / xstride));
+      const xrepsThisRow = Math.min(xreps, depth - yRep * xreps);
+      const outXContIncr =
+        model.width - xrepsThisRow * Math.floor(width / xstride);
       for (let inY = 0; inY < height; inY += ystride) {
         for (let xRep = 0; xRep < xrepsThisRow; xRep++) {
-          const inOffset = (((yRep * xreps) + xRep) * width * height)
-           + (inY * width);
+          const inOffset = (yRep * xreps + xRep) * width * height + inY * width;
           for (let inX = 0; inX < width; inX += xstride) {
             // copy value
             volCopyData(newArray, outIdx, data[inOffset + inX], min, max);
             outIdx += numCompsToUse;
           }
         }
-        outIdx += (outXContIncr * numCompsToUse);
+        outIdx += outXContIncr * numCompsToUse;
       }
     }
 
@@ -957,14 +1087,16 @@ function vtkOpenGLTexture(publicAPI, model) {
     model.context.pixelStorei(model.context.UNPACK_ALIGNMENT, 1);
 
     model.context.texImage2D(
-          model.target,
-          0,
-          model.internalFormat,
-          model.width, model.height,
-          0,
-          model.format,
-          model.openGLDataType,
-          newArray);
+      model.target,
+      0,
+      model.internalFormat,
+      model.width,
+      model.height,
+      0,
+      model.format,
+      model.openGLDataType,
+      newArray
+    );
 
     publicAPI.deactivate();
     return true;
@@ -988,10 +1120,12 @@ function vtkOpenGLTexture(publicAPI, model) {
     let outPtr = 0;
     const sliceSize = width * height;
     const grad = vec3.create();
-    vec3.set(grad,
+    vec3.set(
+      grad,
       (data[inPtr + 1] - data[inPtr]) / spacing[0],
       (data[inPtr + width] - data[inPtr]) / spacing[1],
-      (data[inPtr + sliceSize] - data[inPtr]) / spacing[2]);
+      (data[inPtr + sliceSize] - data[inPtr]) / spacing[2]
+    );
     let minMag = vec3.length(grad);
     let maxMag = -1.0;
     for (let z = 0; z < depth; ++z) {
@@ -1009,10 +1143,12 @@ function vtkOpenGLTexture(publicAPI, model) {
           if (x === width - 1) {
             edge--;
           }
-          vec3.set(grad,
+          vec3.set(
+            grad,
             (data[edge + 1] - data[edge]) / spacing[0],
             (data[edge + width] - data[edge]) / spacing[1],
-            (data[edge + sliceSize] - data[edge]) / spacing[2]);
+            (data[edge + sliceSize] - data[edge]) / spacing[2]
+          );
 
           const mag = vec3.length(grad);
           minMag = Math.min(mag, minMag);
@@ -1037,16 +1173,21 @@ function vtkOpenGLTexture(publicAPI, model) {
       const newArray = new Uint8Array(numPixelsIn * 4);
       for (let p = 0; p < numPixelsIn; ++p) {
         const pp = p * 4;
-        newArray[outIdx++] = 127.5 + (127.5 * tmpArray[pp]);
-        newArray[outIdx++] = 127.5 + (127.5 * tmpArray[pp + 1]);
-        newArray[outIdx++] = 127.5 + (127.5 * tmpArray[pp + 2]);
+        newArray[outIdx++] = 127.5 + 127.5 * tmpArray[pp];
+        newArray[outIdx++] = 127.5 + 127.5 * tmpArray[pp + 1];
+        newArray[outIdx++] = 127.5 + 127.5 * tmpArray[pp + 2];
         // we encode gradient magnitude using sqrt so that
         // we have nonlinear resolution
-        newArray[outIdx++] = 255.0 *
-          (Math.sqrt(tmpArray[pp + 3] / maxMag));
+        newArray[outIdx++] = 255.0 * Math.sqrt(tmpArray[pp + 3] / maxMag);
       }
-      return publicAPI.create3DFromRaw(width, height, depth, 4,
-        VtkDataTypes.UNSIGNED_CHAR, newArray);
+      return publicAPI.create3DFromRaw(
+        width,
+        height,
+        depth,
+        4,
+        VtkDataTypes.UNSIGNED_CHAR,
+        newArray
+      );
     }
 
     // Now determine the texture parameters using the arguments.
@@ -1064,7 +1205,6 @@ function vtkOpenGLTexture(publicAPI, model) {
     model.depth = 1;
     model.numberOfDimensions = 2;
 
-
     // now store the computed values into the packed 2D
     // texture using the same packing as volumeInfo
     model.width = scalarTexture.getWidth();
@@ -1072,24 +1212,27 @@ function vtkOpenGLTexture(publicAPI, model) {
     const newArray = new Uint8Array(model.width * model.height * 4);
 
     for (let yRep = 0; yRep < vinfo.yreps; yRep++) {
-      const xrepsThisRow = Math.min(vinfo.xreps, depth - (yRep * vinfo.xreps));
-      const outXContIncr = model.width - (xrepsThisRow * Math.floor(width / vinfo.xstride));
+      const xrepsThisRow = Math.min(vinfo.xreps, depth - yRep * vinfo.xreps);
+      const outXContIncr =
+        model.width - xrepsThisRow * Math.floor(width / vinfo.xstride);
       for (let inY = 0; inY < height; inY += vinfo.ystride) {
         for (let xRep = 0; xRep < xrepsThisRow; xRep++) {
-          const inOffset = 4 * ((((yRep * vinfo.xreps) + xRep) * width * height)
-           + (inY * width));
+          const inOffset =
+            4 * ((yRep * vinfo.xreps + xRep) * width * height + inY * width);
           for (let inX = 0; inX < width; inX += vinfo.xstride) {
             // copy value
-            newArray[outIdx++] = 127.5 + (127.5 * tmpArray[inOffset + (inX * 4)]);
-            newArray[outIdx++] = 127.5 + (127.5 * tmpArray[inOffset + (inX * 4) + 1]);
-            newArray[outIdx++] = 127.5 + (127.5 * tmpArray[inOffset + (inX * 4) + 2]);
+            newArray[outIdx++] = 127.5 + 127.5 * tmpArray[inOffset + inX * 4];
+            newArray[outIdx++] =
+              127.5 + 127.5 * tmpArray[inOffset + inX * 4 + 1];
+            newArray[outIdx++] =
+              127.5 + 127.5 * tmpArray[inOffset + inX * 4 + 2];
             // we encode gradient magnitude using sqrt so that
             // we have nonlinear resolution
-            newArray[outIdx++] = 255.0 *
-              (Math.sqrt(tmpArray[inOffset + (inX * 4) + 3] / maxMag));
+            newArray[outIdx++] =
+              255.0 * Math.sqrt(tmpArray[inOffset + inX * 4 + 3] / maxMag);
           }
         }
-        outIdx += (outXContIncr * 4);
+        outIdx += outXContIncr * 4;
       }
     }
 
@@ -1102,14 +1245,16 @@ function vtkOpenGLTexture(publicAPI, model) {
     model.context.pixelStorei(model.context.UNPACK_ALIGNMENT, 1);
 
     model.context.texImage2D(
-          model.target,
-          0,
-          model.internalFormat,
-          model.width, model.height,
-          0,
-          model.format,
-          model.openGLDataType,
-          newArray);
+      model.target,
+      0,
+      model.internalFormat,
+      model.width,
+      model.height,
+      0,
+      model.format,
+      model.openGLDataType,
+      newArray
+    );
 
     publicAPI.deactivate();
     return true;
@@ -1183,10 +1328,7 @@ export function extend(publicAPI, model, initialValues = {}) {
   macro.obj(model.textureBuildTime, { mtime: 0 });
 
   // Build VTK API
-  macro.set(publicAPI, model, [
-    'format',
-    'openGLDataType',
-  ]);
+  macro.set(publicAPI, model, ['format', 'openGLDataType']);
 
   macro.setGet(publicAPI, model, [
     'keyMatrixTime',

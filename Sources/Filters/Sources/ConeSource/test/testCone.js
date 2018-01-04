@@ -1,13 +1,13 @@
-import test      from 'tape-catch';
+import test from 'tape-catch';
 import testUtils from 'vtk.js/Sources/Testing/testUtils';
 
-import vtkOpenGLRenderWindow  from 'vtk.js/Sources/Rendering/OpenGL/RenderWindow';
-import vtkRenderWindow        from 'vtk.js/Sources/Rendering/Core/RenderWindow';
-import vtkRenderer            from 'vtk.js/Sources/Rendering/Core/Renderer';
-import vtkConeSource          from 'vtk.js/Sources/Filters/Sources/ConeSource';
-import vtkActor               from 'vtk.js/Sources/Rendering/Core/Actor';
-import vtkLight               from 'vtk.js/Sources/Rendering/Core/Light';
-import vtkMapper              from 'vtk.js/Sources/Rendering/Core/Mapper';
+import vtkOpenGLRenderWindow from 'vtk.js/Sources/Rendering/OpenGL/RenderWindow';
+import vtkRenderWindow from 'vtk.js/Sources/Rendering/Core/RenderWindow';
+import vtkRenderer from 'vtk.js/Sources/Rendering/Core/Renderer';
+import vtkConeSource from 'vtk.js/Sources/Filters/Sources/ConeSource';
+import vtkActor from 'vtk.js/Sources/Rendering/Core/Actor';
+import vtkLight from 'vtk.js/Sources/Rendering/Core/Light';
+import vtkMapper from 'vtk.js/Sources/Rendering/Core/Mapper';
 
 import baseline from './testCone.png';
 
@@ -17,7 +17,9 @@ test.onlyIfWebGL('Test vtkConeSource Rendering', (t) => {
 
   // Create some control UI
   const container = document.querySelector('body');
-  const renderWindowContainer = gc.registerDOMElement(document.createElement('div'));
+  const renderWindowContainer = gc.registerDOMElement(
+    document.createElement('div')
+  );
   container.appendChild(renderWindowContainer);
 
   // create what we will view
@@ -41,7 +43,9 @@ test.onlyIfWebGL('Test vtkConeSource Rendering', (t) => {
   const mapper = gc.registerResource(vtkMapper.newInstance());
   actor.setMapper(mapper);
 
-  const coneSource = gc.registerResource(vtkConeSource.newInstance({ height: 1.0 }));
+  const coneSource = gc.registerResource(
+    vtkConeSource.newInstance({ height: 1.0 })
+  );
   coneSource.setResolution(40);
   mapper.setInputConnection(coneSource.getOutputPort());
 
@@ -52,5 +56,12 @@ test.onlyIfWebGL('Test vtkConeSource Rendering', (t) => {
   glwindow.setSize(400, 400);
 
   const image = glwindow.captureImage();
-  testUtils.compareImages(image, [baseline], 'Filters/Sources/ConeSource/testCone', t, 2.5, gc.releaseResources);
+  testUtils.compareImages(
+    image,
+    [baseline],
+    'Filters/Sources/ConeSource/testCone',
+    t,
+    2.5,
+    gc.releaseResources
+  );
 });

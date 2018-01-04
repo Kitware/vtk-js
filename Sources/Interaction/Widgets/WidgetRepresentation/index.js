@@ -1,6 +1,6 @@
-import macro                 from 'vtk.js/Sources/macro';
+import macro from 'vtk.js/Sources/macro';
 import vtkInteractorObserver from 'vtk.js/Sources/Rendering/Core/InteractorObserver';
-import vtkProp               from 'vtk.js/Sources/Rendering/Core/Prop';
+import vtkProp from 'vtk.js/Sources/Rendering/Core/Prop';
 
 const { vtkErrorMacro } = macro;
 
@@ -19,7 +19,9 @@ function vtkWidgetRepresentation(publicAPI, model) {
 
   publicAPI.adjustBounds = (bounds, newBounds, center) => {
     if (bounds.length !== 6) {
-      vtkErrorMacro("vtkWidgetRepresentation::adjustBounds Can't process bounds, not enough values...");
+      vtkErrorMacro(
+        "vtkWidgetRepresentation::adjustBounds Can't process bounds, not enough values..."
+      );
       return;
     }
 
@@ -27,64 +29,96 @@ function vtkWidgetRepresentation(publicAPI, model) {
     center[1] = (bounds[2] + bounds[3]) / 2.0;
     center[2] = (bounds[4] + bounds[5]) / 2.0;
 
-    newBounds[0] = center[0] + (model.placeFactor * (bounds[0] - center[0]));
-    newBounds[1] = center[0] + (model.placeFactor * (bounds[1] - center[0]));
-    newBounds[2] = center[1] + (model.placeFactor * (bounds[2] - center[1]));
-    newBounds[3] = center[1] + (model.placeFactor * (bounds[3] - center[1]));
-    newBounds[4] = center[2] + (model.placeFactor * (bounds[4] - center[2]));
-    newBounds[5] = center[2] + (model.placeFactor * (bounds[5] - center[2]));
+    newBounds[0] = center[0] + model.placeFactor * (bounds[0] - center[0]);
+    newBounds[1] = center[0] + model.placeFactor * (bounds[1] - center[0]);
+    newBounds[2] = center[1] + model.placeFactor * (bounds[2] - center[1]);
+    newBounds[3] = center[1] + model.placeFactor * (bounds[3] - center[1]);
+    newBounds[4] = center[2] + model.placeFactor * (bounds[4] - center[2]);
+    newBounds[5] = center[2] + model.placeFactor * (bounds[5] - center[2]);
   };
 
   publicAPI.sizeHandlesInPixels = (factor, pos) => {
     const renderer = model.renderer;
     if (!model.validPick || !renderer || !renderer.getActiveCamera()) {
-      return (model.handleSize * factor * model.initialLength);
+      return model.handleSize * factor * model.initialLength;
     }
 
-    const focalPoint = vtkInteractorObserver.computeWorldToDisplay(renderer, pos[0], pos[1], pos[2]);
+    const focalPoint = vtkInteractorObserver.computeWorldToDisplay(
+      renderer,
+      pos[0],
+      pos[1],
+      pos[2]
+    );
     const z = focalPoint[2];
 
-    let x = focalPoint[0] - (model.handleSize / 2.0);
-    let y = focalPoint[1] - (model.handleSize / 2.0);
-    const lowerLeft = vtkInteractorObserver.computeDisplayToWorld(renderer, x, y, z);
+    let x = focalPoint[0] - model.handleSize / 2.0;
+    let y = focalPoint[1] - model.handleSize / 2.0;
+    const lowerLeft = vtkInteractorObserver.computeDisplayToWorld(
+      renderer,
+      x,
+      y,
+      z
+    );
 
-    x = focalPoint[0] + (model.handleSize / 2.0);
-    y = focalPoint[1] + (model.handleSize / 2.0);
-    const upperRight = vtkInteractorObserver.computeDisplayToWorld(renderer, x, y, z);
+    x = focalPoint[0] + model.handleSize / 2.0;
+    y = focalPoint[1] + model.handleSize / 2.0;
+    const upperRight = vtkInteractorObserver.computeDisplayToWorld(
+      renderer,
+      x,
+      y,
+      z
+    );
 
     let radius = 0.0;
     for (let i = 0; i < 3; i++) {
       radius += (upperRight[i] - lowerLeft[i]) * (upperRight[i] - lowerLeft[i]);
     }
-    return (factor * (Math.sqrt(radius) / 2.0));
+    return factor * (Math.sqrt(radius) / 2.0);
   };
 
   publicAPI.sizeHandlesRelativeToViewport = (factor, pos) => {
     const renderer = model.renderer;
     if (!model.validPick || !renderer || !renderer.getActiveCamera()) {
-      return (model.handleSize * factor * model.initialLength);
+      return model.handleSize * factor * model.initialLength;
     }
 
     const viewport = renderer.getViewport();
     const view = renderer.getRenderWindow().getViews()[0];
     const winSize = view.getViewportSize(renderer);
 
-    const focalPoint = vtkInteractorObserver.computeWorldToDisplay(renderer, pos[0], pos[1], pos[2]);
+    const focalPoint = vtkInteractorObserver.computeWorldToDisplay(
+      renderer,
+      pos[0],
+      pos[1],
+      pos[2]
+    );
     const z = focalPoint[2];
 
     let x = winSize[0] * viewport[0];
     let y = winSize[1] * viewport[1];
-    const windowLowerLeft = vtkInteractorObserver.computeDisplayToWorld(renderer, x, y, z);
+    const windowLowerLeft = vtkInteractorObserver.computeDisplayToWorld(
+      renderer,
+      x,
+      y,
+      z
+    );
 
     x = winSize[0] * viewport[2];
     y = winSize[1] * viewport[3];
-    const windowUpperRight = vtkInteractorObserver.computeDisplayToWorld(renderer, x, y, z);
+    const windowUpperRight = vtkInteractorObserver.computeDisplayToWorld(
+      renderer,
+      x,
+      y,
+      z
+    );
 
     let radius = 0.0;
     for (let i = 0; i < 3; i++) {
-      radius += (windowUpperRight[i] - windowLowerLeft[i]) * (windowUpperRight[i] - windowLowerLeft[i]);
+      radius +=
+        (windowUpperRight[i] - windowLowerLeft[i]) *
+        (windowUpperRight[i] - windowLowerLeft[i]);
     }
-    return (factor * (Math.sqrt(radius) / 2.0));
+    return factor * (Math.sqrt(radius) / 2.0);
   };
 }
 

@@ -51,23 +51,38 @@ const SETTINGS_OPTIONS = {
   },
 };
 
-const OPTIONS_HTML_STR = Object.keys(SETTINGS_OPTIONS).map(name => `<option value="${name}">${name}</option>`).join('');
+const OPTIONS_HTML_STR = Object.keys(SETTINGS_OPTIONS)
+  .map((name) => `<option value="${name}">${name}</option>`)
+  .join('');
 
 export default function addWidget(container, sceneItems, render) {
   function handleChange(e) {
     const itemIdx = Number(e.target.name);
     const value = e.target.value;
     if (sceneItems[itemIdx][value]) {
-      vtkHttpSceneLoader.applySettings(sceneItems[itemIdx], sceneItems[itemIdx][value]);
+      vtkHttpSceneLoader.applySettings(
+        sceneItems[itemIdx],
+        sceneItems[itemIdx][value]
+      );
     } else if (SETTINGS_OPTIONS[value]) {
-      vtkHttpSceneLoader.applySettings(sceneItems[itemIdx], SETTINGS_OPTIONS[value]);
+      vtkHttpSceneLoader.applySettings(
+        sceneItems[itemIdx],
+        SETTINGS_OPTIONS[value]
+      );
     }
     if (render) {
       render();
     }
   }
 
-  const listStr = sceneItems.map((item, idx) => `<li><select name="${idx}">${OPTIONS_HTML_STR}</select>&nbsp;&nbsp;${item.name}</li>`).join('');
+  const listStr = sceneItems
+    .map(
+      (item, idx) =>
+        `<li><select name="${idx}">${OPTIONS_HTML_STR}</select>&nbsp;&nbsp;${
+          item.name
+        }</li>`
+    )
+    .join('');
 
   const listContainer = document.createElement('ul');
   listContainer.innerHTML = listStr;

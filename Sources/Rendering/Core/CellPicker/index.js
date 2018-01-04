@@ -1,4 +1,4 @@
-import macro          from 'vtk.js/Sources/macro';
+import macro from 'vtk.js/Sources/macro';
 import vtkMath from 'vtk.js/Sources/Common/Core/Math';
 import vtkPicker from 'vtk.js/Sources/Rendering/Core/Picker';
 import vtkPoints from 'vtk.js/Sources/Common/Core/Points';
@@ -17,13 +17,16 @@ function clipLineWithPlane(mapper, matrix, p1, p2) {
   for (let i = 0; i < nbClippingPlanes; i++) {
     mapper.getClippingPlaneInDataCoords(matrix, i, plane);
 
-    const d1 = (plane[0] * p1[0]) + (plane[1] * p1[1]) + (plane[2] * p1[2]) + plane[3];
-    const d2 = (plane[0] * p2[0]) + (plane[1] * p2[1]) + (plane[2] * p2[2]) + plane[3];
+    const d1 =
+      plane[0] * p1[0] + plane[1] * p1[1] + plane[2] * p1[2] + plane[3];
+    const d2 =
+      plane[0] * p2[0] + plane[1] * p2[1] + plane[2] * p2[2] + plane[3];
 
     // If both distances are negative, both points are outside
     if (d1 < 0 && d2 < 0) {
       return 0;
-    } else if (d1 < 0 || d2 < 0) { // If only one of the distances is negative, the line crosses the plane
+    } else if (d1 < 0 || d2 < 0) {
+      // If only one of the distances is negative, the line crosses the plane
       // Compute fractional distance "t" of the crossing between p1 & p2
       let t = 0.0;
 
@@ -39,7 +42,8 @@ function clipLineWithPlane(mapper, matrix, p1, p2) {
           outObj.t1 = t;
           outObj.planeId = i;
         }
-      } else if (t <= outObj.t2) { // else point p2 was clipped, so adjust t2
+      } else if (t <= outObj.t2) {
+        // else point p2 was clipped, so adjust t2
         outObj.t2 = t;
       }
       // If this happens, there's no line left
@@ -118,9 +122,9 @@ function vtkCellPicker(publicAPI, model) {
       const pointNormal = [];
       for (let i = 0; i < 3; i++) {
         normals.getTuple(cell.getPointsIds()[i], pointNormal);
-        normal[0] += (pointNormal[0] * weights[i]);
-        normal[1] += (pointNormal[1] * weights[i]);
-        normal[2] += (pointNormal[2] * weights[i]);
+        normal[0] += pointNormal[0] * weights[i];
+        normal[1] += pointNormal[1] * weights[i];
+        normal[2] += pointNormal[2] * weights[i];
       }
       vtkMath.normalize(normal);
     } else if (cellDimension === 2) {
@@ -163,7 +167,14 @@ function vtkCellPicker(publicAPI, model) {
 
     const vtkCellPickerPlaneTol = 1e-14;
 
-    const clipLine = clipLineWithPlane(mapper, model.transformMatrix, p1, p2, t1, t2);
+    const clipLine = clipLineWithPlane(
+      mapper,
+      model.transformMatrix,
+      p1,
+      p2,
+      t1,
+      t2
+    );
     if (mapper && !clipLine.intersect) {
       return Number.MAX_VALUE;
     }
@@ -181,24 +192,44 @@ function vtkCellPicker(publicAPI, model) {
 
     if (tMin < model.globalTMin) {
       model.globalTMin = tMin;
-      if (Math.abs(tMin - t1) < vtkCellPickerPlaneTol && clipLine.clippingPlaneId >= 0) {
-        model.mapperPosition[0] = (p1[0] * (1 - t1)) + (p2[0] * t1);
-        model.mapperPosition[1] = (p1[1] * (1 - t1)) + (p2[1] * t1);
-        model.mapperPosition[2] = (p1[2] * (1 - t1)) + (p2[2] * t1);
+      if (
+        Math.abs(tMin - t1) < vtkCellPickerPlaneTol &&
+        clipLine.clippingPlaneId >= 0
+      ) {
+        model.mapperPosition[0] = p1[0] * (1 - t1) + p2[0] * t1;
+        model.mapperPosition[1] = p1[1] * (1 - t1) + p2[1] * t1;
+        model.mapperPosition[2] = p1[2] * (1 - t1) + p2[2] * t1;
         const plane = [];
-        mapper.getClippingPlaneInDataCoords(model.transformMatrix, clipLine.clippingPlaneId, plane);
+        mapper.getClippingPlaneInDataCoords(
+          model.transformMatrix,
+          clipLine.clippingPlaneId,
+          plane
+        );
         vtkMath.normalize(plane);
         // Want normal outward from the planes, not inward
         model.mapperNormal[0] = -plane[0];
         model.mapperNormal[1] = -plane[1];
         model.mapperNormal[2] = -plane[2];
       }
-      vec3.transformMat4(model.pickPosition, model.mapperPosition, model.transformMatrix);
+      vec3.transformMat4(
+        model.pickPosition,
+        model.mapperPosition,
+        model.transformMatrix
+      );
       // Transform vector
       const mat = model.transformMatrix;
-      model.mapperNormal[0] = (mat[0] * model.pickNormal[0]) + (mat[4] * model.pickNormal[1]) + (mat[8] * model.pickNormal[2]);
-      model.mapperNormal[1] = (mat[1] * model.pickNormal[0]) + (mat[5] * model.pickNormal[1]) + (mat[9] * model.pickNormal[2]);
-      model.mapperNormal[2] = (mat[2] * model.pickNormal[0]) + (mat[6] * model.pickNormal[1]) + (mat[10] * model.pickNormal[2]);
+      model.mapperNormal[0] =
+        mat[0] * model.pickNormal[0] +
+        mat[4] * model.pickNormal[1] +
+        mat[8] * model.pickNormal[2];
+      model.mapperNormal[1] =
+        mat[1] * model.pickNormal[0] +
+        mat[5] * model.pickNormal[1] +
+        mat[9] * model.pickNormal[2];
+      model.mapperNormal[2] =
+        mat[2] * model.pickNormal[0] +
+        mat[6] * model.pickNormal[1] +
+        mat[10] * model.pickNormal[2];
     }
 
     return tMin;
@@ -226,8 +257,8 @@ function vtkCellPicker(publicAPI, model) {
     q2[2] = p2[2];
     if (t1 !== 0.0 || t2 !== 1.0) {
       for (let j = 0; j < 3; j++) {
-        q1[j] = (p1[j] * (1.0 - t1)) + (p2[j] * t1);
-        q2[j] = (p1[j] * (1.0 - t2)) + (p2[j] * t2);
+        q1[j] = p1[j] * (1.0 - t1) + p2[j] * t1;
+        q2[j] = p1[j] * (1.0 - t2) + p2[j] * t2;
       }
     }
 
@@ -256,13 +287,17 @@ function vtkCellPicker(publicAPI, model) {
         for (let j = 0; j < nbPointsInCell; j++) {
           pointsIdList[j] = cellData[i++];
           cellPointsData[cpt++] = pointsData[pointsIdList[j] * 3];
-          cellPointsData[cpt++] = pointsData[(pointsIdList[j] * 3) + 1];
-          cellPointsData[cpt++] = pointsData[(pointsIdList[j] * 3) + 2];
+          cellPointsData[cpt++] = pointsData[pointsIdList[j] * 3 + 1];
+          cellPointsData[cpt++] = pointsData[pointsIdList[j] * 3 + 2];
         }
         cellPoints.setData(cellPointsData);
 
         // Create cell from points
-        cell.initialize(cellPoints.getNumberOfPoints(), pointsIdList, cellPoints);
+        cell.initialize(
+          cellPoints.getNumberOfPoints(),
+          pointsIdList,
+          cellPoints
+        );
 
         let cellPicked;
         if (isPolyData) {
@@ -270,12 +305,16 @@ function vtkCellPicker(publicAPI, model) {
         } else {
           cellPicked = cell.intersectWithLine(q1, q2, tol, x, pCoords);
           if (t1 !== 0.0 || t2 !== 1.0) {
-            cellPicked.t = (t1 * (1.0 - cellPicked.t)) + (t2 * cellPicked.t);
+            cellPicked.t = t1 * (1.0 - cellPicked.t) + t2 * cellPicked.t;
           }
         }
 
-        if (cellPicked.intersect === 1 && cellPicked.t <= (tMin + model.tolerance) &&
-          cellPicked.t >= t1 && cellPicked.t <= t2) {
+        if (
+          cellPicked.intersect === 1 &&
+          cellPicked.t <= tMin + model.tolerance &&
+          cellPicked.t >= t1 &&
+          cellPicked.t <= t2
+        ) {
           const pDist = cell.getParametricDistance(pCoords);
           if (pDist < pDistMin || (pDist === pDistMin && cellPicked.t < tMin)) {
             tMin = cellPicked.t;
@@ -329,7 +368,14 @@ function vtkCellPicker(publicAPI, model) {
       model.mapperPosition[2] = minXYZ[2];
 
       // COmpute the normal
-      if (!publicAPI.computeSurfaceNormal(data, minCell, weights, model.mapperNormal)) {
+      if (
+        !publicAPI.computeSurfaceNormal(
+          data,
+          minCell,
+          weights,
+          model.mapperNormal
+        )
+      ) {
         // By default, the normal points back along view ray
         model.mapperNormal[0] = p1[0] - p2[0];
         model.mapperNormal[1] = p1[1] - p2[1];

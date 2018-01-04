@@ -1,7 +1,7 @@
 // import { mat4, vec3 }     from 'gl-matrix';
 
-import macro              from 'vtk.js/Sources/macro';
-import vtkViewNode        from 'vtk.js/Sources/Rendering/SceneGraph/ViewNode';
+import macro from 'vtk.js/Sources/macro';
+import vtkViewNode from 'vtk.js/Sources/Rendering/SceneGraph/ViewNode';
 
 const { vtkDebugMacro } = macro;
 
@@ -13,10 +13,14 @@ function vtkOpenGLPixelSpaceCallbackMapper(publicAPI, model) {
   model.classHierarchy.push('vtkOpenGLPixelSpaceCallbackMapper');
 
   publicAPI.opaquePass = (prepass, renderPass) => {
-    model.openGLRenderer = publicAPI.getFirstAncestorOfType('vtkOpenGLRenderer');
+    model.openGLRenderer = publicAPI.getFirstAncestorOfType(
+      'vtkOpenGLRenderer'
+    );
     model.openGLRenderWindow = model.openGLRenderer.getParent();
     const aspectRatio = model.openGLRenderer.getAspectRatio();
-    const camera = model.openGLRenderer ? model.openGLRenderer.getRenderable().getActiveCamera() : null;
+    const camera = model.openGLRenderer
+      ? model.openGLRenderer.getRenderable().getActiveCamera()
+      : null;
     const tsize = model.openGLRenderer.getTiledSizeAndOrigin();
     let texels = null;
 
@@ -39,9 +43,17 @@ function vtkOpenGLPixelSpaceCallbackMapper(publicAPI, model) {
 
       const framebuffer = gl.createFramebuffer();
       gl.bindFramebuffer(gl.FRAMEBUFFER, framebuffer);
-      gl.framebufferTexture2D(gl.FRAMEBUFFER, gl.COLOR_ATTACHMENT0, gl.TEXTURE_2D, zbt.getHandle(), 0);
+      gl.framebufferTexture2D(
+        gl.FRAMEBUFFER,
+        gl.COLOR_ATTACHMENT0,
+        gl.TEXTURE_2D,
+        zbt.getHandle(),
+        0
+      );
 
-      if (gl.checkFramebufferStatus(gl.FRAMEBUFFER) === gl.FRAMEBUFFER_COMPLETE) {
+      if (
+        gl.checkFramebufferStatus(gl.FRAMEBUFFER) === gl.FRAMEBUFFER_COMPLETE
+      ) {
         texels = new Uint8Array(width * height * 4);
         gl.viewport(0, 0, width, height);
         gl.readPixels(0, 0, width, height, gl.RGBA, gl.UNSIGNED_BYTE, texels);
@@ -55,7 +67,13 @@ function vtkOpenGLPixelSpaceCallbackMapper(publicAPI, model) {
       gl.deleteFramebuffer(framebuffer);
     }
 
-    model.renderable.invokeCallback(model.renderable.getInputData(), camera, aspectRatio, tsize, texels);
+    model.renderable.invokeCallback(
+      model.renderable.getInputData(),
+      camera,
+      aspectRatio,
+      tsize,
+      texels
+    );
   };
 
   publicAPI.queryPass = (prepass, renderPass) => {
@@ -89,7 +107,10 @@ export function extend(publicAPI, model, initialValues = {}) {
 
 // ----------------------------------------------------------------------------
 
-export const newInstance = macro.newInstance(extend, 'vtkOpenGLPixelSpaceCallbackMapper');
+export const newInstance = macro.newInstance(
+  extend,
+  'vtkOpenGLPixelSpaceCallbackMapper'
+);
 
 // ----------------------------------------------------------------------------
 

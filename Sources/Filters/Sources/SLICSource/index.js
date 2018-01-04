@@ -1,4 +1,4 @@
-import macro        from 'vtk.js/Sources/macro';
+import macro from 'vtk.js/Sources/macro';
 import vtkImageData from 'vtk.js/Sources/Common/DataModel/ImageData';
 import vtkDataArray from 'vtk.js/Sources/Common/Core/DataArray';
 
@@ -7,14 +7,16 @@ import vtkDataArray from 'vtk.js/Sources/Common/Core/DataArray';
 // ----------------------------------------------------------------------------
 
 function generateCoordinates(origin, dimensions, spacing) {
-  const coordinates = new Float32Array(dimensions[0] * dimensions[1] * dimensions[2] * 3);
+  const coordinates = new Float32Array(
+    dimensions[0] * dimensions[1] * dimensions[2] * 3
+  );
   let offset = 0;
   for (let k = 0; k < dimensions[2]; k++) {
-    const z = origin[2] + (spacing[2] * k);
+    const z = origin[2] + spacing[2] * k;
     for (let j = 0; j < dimensions[1]; j++) {
-      const y = origin[1] + (spacing[1] * j);
+      const y = origin[1] + spacing[1] * j;
       for (let i = 0; i < dimensions[0]; i++) {
-        const x = origin[0] + (spacing[0] * i);
+        const x = origin[0] + spacing[0] * i;
         coordinates[offset++] = x;
         coordinates[offset++] = y;
         coordinates[offset++] = z;
@@ -32,9 +34,27 @@ function vtkSLICSource(publicAPI, model) {
   // Set our className
   model.classHierarchy.push('vtkSLICSource');
 
-  publicAPI.addCluster = (centerX, centerY, centerZ, fnConst, fnDfDx, fnDfDy, fnDfDz) => {
+  publicAPI.addCluster = (
+    centerX,
+    centerY,
+    centerZ,
+    fnConst,
+    fnDfDx,
+    fnDfDy,
+    fnDfDz
+  ) => {
     const id = model.clusters.length;
-    model.clusters.push(new Float32Array([centerX, centerY, centerZ, fnConst, fnDfDx, fnDfDy, fnDfDz]));
+    model.clusters.push(
+      new Float32Array([
+        centerX,
+        centerY,
+        centerZ,
+        fnConst,
+        fnDfDx,
+        fnDfDy,
+        fnDfDz,
+      ])
+    );
     publicAPI.modified();
     return id;
   };
@@ -49,7 +69,16 @@ function vtkSLICSource(publicAPI, model) {
     publicAPI.modified();
   };
 
-  publicAPI.updateCluster = (id, centerX, centerY, centerZ, fnConst, fnDfDx, fnDfDy, fnDfDz) => {
+  publicAPI.updateCluster = (
+    id,
+    centerX,
+    centerY,
+    centerZ,
+    fnConst,
+    fnDfDx,
+    fnDfDy,
+    fnDfDz
+  ) => {
     if (!model.clusters[id]) {
       model.clusters[id] = new Float32Array(7);
     }
@@ -70,44 +99,68 @@ function vtkSLICSource(publicAPI, model) {
       return;
     }
 
-    const dataSize = model.dimensions[0] * model.dimensions[1] * model.dimensions[2];
+    const dataSize =
+      model.dimensions[0] * model.dimensions[1] * model.dimensions[2];
 
     const imageData = vtkImageData.newInstance();
     imageData.setSpacing(...model.spacing);
-    imageData.setExtent(0, model.dimensions[0] - 1, 0, model.dimensions[1] - 1, 0, model.dimensions[2] - 1);
+    imageData.setExtent(
+      0,
+      model.dimensions[0] - 1,
+      0,
+      model.dimensions[1] - 1,
+      0,
+      model.dimensions[2] - 1
+    );
     imageData.setOrigin(...model.origin);
 
     // Pixel centers
-    const centers = generateCoordinates(model.origin, model.dimensions, model.spacing);
+    const centers = generateCoordinates(
+      model.origin,
+      model.dimensions,
+      model.spacing
+    );
 
     // Fill clusterIdxValues
-    const nbBytes = (model.clusters.length < 256) ? 8 : ((model.clusters.length < 65536) ? 16 : 32);
+    const nbBytes =
+      model.clusters.length < 256 ? 8 : model.clusters.length < 65536 ? 16 : 32;
     const clusterIdxValues = new window[`Uint${nbBytes}Array`](dataSize);
     for (let i = 0; i < dataSize; i++) {
       let clusterDistance = Number.MAX_VALUE;
       model.clusters.forEach((cluster, idx) => {
-        const dist = ((cluster[0] - centers[i * 3]) * (cluster[0] - centers[i * 3]))
-          + ((cluster[1] - centers[(i * 3) + 1]) * (cluster[1] - centers[(i * 3) + 1]))
-          + ((cluster[2] - centers[(i * 3) + 2]) * (cluster[2] - centers[(i * 3) + 2]));
+        const dist =
+          (cluster[0] - centers[i * 3]) * (cluster[0] - centers[i * 3]) +
+          (cluster[1] - centers[i * 3 + 1]) *
+            (cluster[1] - centers[i * 3 + 1]) +
+          (cluster[2] - centers[i * 3 + 2]) * (cluster[2] - centers[i * 3 + 2]);
         if (dist < clusterDistance) {
           clusterDistance = dist;
           clusterIdxValues[i] = idx;
         }
       });
     }
-    const clusters = vtkDataArray.newInstance({ name: model.clusterArrayName, numberOfComponents: 1, values: clusterIdxValues });
+    const clusters = vtkDataArray.newInstance({
+      name: model.clusterArrayName,
+      numberOfComponents: 1,
+      values: clusterIdxValues,
+    });
     imageData.getPointData().addArray(clusters);
 
     // Fill scalarValues
     const scalarValues = new Float32Array(dataSize);
     for (let i = 0; i < dataSize; i++) {
       const cluster = model.clusters[clusterIdxValues[i]];
-      scalarValues[i] = cluster[3]
-        + (cluster[4] * (centers[(i * 3) + 0] - cluster[0]))
-        + (cluster[5] * (centers[(i * 3) + 1] - cluster[1]))
-        + (cluster[6] * (centers[(i * 3) + 2] - cluster[2]));
+      scalarValues[i] =
+        cluster[3] +
+        cluster[4] * (centers[i * 3 + 0] - cluster[0]) +
+        cluster[5] * (centers[i * 3 + 1] - cluster[1]) +
+        cluster[6] * (centers[i * 3 + 2] - cluster[2]);
     }
-    const scalars = vtkDataArray.newInstance({ name: model.scalarArrayName, numberOfComponents: 1, values: scalarValues });
+    const scalars = vtkDataArray.newInstance({
+      name: model.scalarArrayName,
+      numberOfComponents: 1,
+      values: scalarValues,
+    });
     imageData.getPointData().addArray(scalars);
 
     // Update output

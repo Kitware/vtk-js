@@ -1,8 +1,8 @@
-import macro                         from 'vtk.js/Sources/macro';
-import vtkAbstractWidget             from 'vtk.js/Sources/Interaction/Widgets/AbstractWidget';
+import macro from 'vtk.js/Sources/macro';
+import vtkAbstractWidget from 'vtk.js/Sources/Interaction/Widgets/AbstractWidget';
 import vtkSphereHandleRepresentation from 'vtk.js/Sources/Interaction/Widgets/SphereHandleRepresentation';
-import vtkHandleRepresentation       from 'vtk.js/Sources/Interaction/Widgets/HandleRepresentation';
-import Constants                     from 'vtk.js/Sources/Interaction/Widgets/HandleWidget/Constants';
+import vtkHandleRepresentation from 'vtk.js/Sources/Interaction/Widgets/HandleRepresentation';
+import Constants from 'vtk.js/Sources/Interaction/Widgets/HandleWidget/Constants';
 
 const { InteractionState } = vtkHandleRepresentation;
 const { WidgetState } = Constants;
@@ -61,11 +61,12 @@ function vtkHandleWidget(publicAPI, model) {
     }
     events.forEach((eventName) => {
       model.unsubscribes.push(
-      model.interactor[`on${eventName}`](() => {
-        if (publicAPI[`handle${eventName}`]) {
-          publicAPI[`handle${eventName}`]();
-        }
-      }));
+        model.interactor[`on${eventName}`](() => {
+          if (publicAPI[`handle${eventName}`]) {
+            publicAPI[`handle${eventName}`]();
+          }
+        })
+      );
     });
   };
 
@@ -117,9 +118,16 @@ function vtkHandleWidget(publicAPI, model) {
   };
 
   publicAPI.selectAction = () => {
-    const pos = model.interactor.getEventPosition(model.interactor.getPointerIndex());
-    const boundingContainer = model.interactor.getCanvas().getBoundingClientRect();
-    const position = [pos.x - boundingContainer.left, pos.y + boundingContainer.top];
+    const pos = model.interactor.getEventPosition(
+      model.interactor.getPointerIndex()
+    );
+    const boundingContainer = model.interactor
+      .getCanvas()
+      .getBoundingClientRect();
+    const position = [
+      pos.x - boundingContainer.left,
+      pos.y + boundingContainer.top,
+    ];
     model.widgetRep.computeInteractionState(position);
     if (model.widgetRep.getInteractionState() === InteractionState.OUTSIDE) {
       return;
@@ -132,9 +140,16 @@ function vtkHandleWidget(publicAPI, model) {
   };
 
   publicAPI.translateAction = () => {
-    const pos = model.interactor.getEventPosition(model.interactor.getPointerIndex());
-    const boundingContainer = model.interactor.getCanvas().getBoundingClientRect();
-    const position = [pos.x - boundingContainer.left, pos.y + boundingContainer.top];
+    const pos = model.interactor.getEventPosition(
+      model.interactor.getPointerIndex()
+    );
+    const boundingContainer = model.interactor
+      .getCanvas()
+      .getBoundingClientRect();
+    const position = [
+      pos.x - boundingContainer.left,
+      pos.y + boundingContainer.top,
+    ];
     model.widgetRep.startComplexWidgetInteraction(position);
     if (model.widgetRep.getInteractionState() === InteractionState.OUTSIDE) {
       return;
@@ -146,9 +161,16 @@ function vtkHandleWidget(publicAPI, model) {
 
   publicAPI.scaleAction = () => {
     if (model.allowHandleResize) {
-      const pos = model.interactor.getEventPosition(model.interactor.getPointerIndex());
-      const boundingContainer = model.interactor.getCanvas().getBoundingClientRect();
-      const position = [pos.x - boundingContainer.left, pos.y + boundingContainer.top];
+      const pos = model.interactor.getEventPosition(
+        model.interactor.getPointerIndex()
+      );
+      const boundingContainer = model.interactor
+        .getCanvas()
+        .getBoundingClientRect();
+      const position = [
+        pos.x - boundingContainer.left,
+        pos.y + boundingContainer.top,
+      ];
       model.widgetRep.startComplexWidgetInteraction(position);
       if (model.widgetRep.getInteractionState() === InteractionState.OUTSIDE) {
         return;
@@ -170,14 +192,24 @@ function vtkHandleWidget(publicAPI, model) {
   };
 
   publicAPI.moveAction = () => {
-    const pos = model.interactor.getEventPosition(model.interactor.getPointerIndex());
-    const boundingContainer = model.interactor.getCanvas().getBoundingClientRect();
-    const position = [pos.x - boundingContainer.left, pos.y + boundingContainer.top];
+    const pos = model.interactor.getEventPosition(
+      model.interactor.getPointerIndex()
+    );
+    const boundingContainer = model.interactor
+      .getCanvas()
+      .getBoundingClientRect();
+    const position = [
+      pos.x - boundingContainer.left,
+      pos.y + boundingContainer.top,
+    ];
     if (model.widgetState === WidgetState.START) {
       const state = model.widgetRep.getInteractionState();
       model.widgetRep.computeInteractionState(position);
       setCursor(model.widgetRep.getInteractionState());
-      if (model.widgetRep.getActiveRepresentation() && state !== model.widgetRep.getInteractionState()) {
+      if (
+        model.widgetRep.getActiveRepresentation() &&
+        state !== model.widgetRep.getInteractionState()
+      ) {
         publicAPI.render();
       }
       return;

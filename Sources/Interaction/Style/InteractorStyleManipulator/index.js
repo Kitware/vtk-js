@@ -1,4 +1,4 @@
-import macro              from 'vtk.js/Sources/macro';
+import macro from 'vtk.js/Sources/macro';
 import vtkInteractorStyle from 'vtk.js/Sources/Rendering/Core/InteractorStyle';
 
 const { vtkDebugMacro } = macro;
@@ -13,11 +13,17 @@ function translateCamera(renderer, rwi, toX, toY, fromX, fromY) {
   const cam = renderer.getActiveCamera();
   let viewFocus = cam.getFocalPoint();
 
-  viewFocus = rwi.getInteractorStyle().computeWorldToDisplay(viewFocus[0], viewFocus[1], viewFocus[2]);
+  viewFocus = rwi
+    .getInteractorStyle()
+    .computeWorldToDisplay(viewFocus[0], viewFocus[1], viewFocus[2]);
   const focalDepth = viewFocus[2];
 
-  const newPickPoint = rwi.getInteractorStyle().computeDisplayToWorld(toX, toY, focalDepth);
-  const oldPickPoint = rwi.getInteractorStyle().computeDisplayToWorld(fromX, fromY, focalDepth);
+  const newPickPoint = rwi
+    .getInteractorStyle()
+    .computeDisplayToWorld(toX, toY, focalDepth);
+  const oldPickPoint = rwi
+    .getInteractorStyle()
+    .computeDisplayToWorld(fromX, fromY, focalDepth);
 
   // camera motion is reversed
   const motionVector = [
@@ -29,8 +35,16 @@ function translateCamera(renderer, rwi, toX, toY, fromX, fromY) {
   viewFocus = cam.getFocalPoint();
   const viewPoint = cam.getPosition();
 
-  cam.setFocalPoint(motionVector[0] + viewFocus[0], motionVector[1] + viewFocus[1], motionVector[2] + viewFocus[2]);
-  cam.setPosition(motionVector[0] + viewPoint[0], motionVector[1] + viewPoint[1], motionVector[2] + viewPoint[2]);
+  cam.setFocalPoint(
+    motionVector[0] + viewFocus[0],
+    motionVector[1] + viewFocus[1],
+    motionVector[2] + viewFocus[2]
+  );
+  cam.setPosition(
+    motionVector[0] + viewPoint[0],
+    motionVector[1] + viewPoint[1],
+    motionVector[2] + viewPoint[2]
+  );
 }
 
 function dollyToPosition(fact, position, renderer, rwi) {
@@ -55,8 +69,12 @@ function dollyToPosition(fact, position, renderer, rwi) {
     let viewFocus = cam.getFocalPoint();
     const norm = cam.getViewPlaneNormal();
 
-    viewFocus = rwi.getInteractorStyle().computeWorldToDisplay(viewFocus[0], viewFocus[1], viewFocus[2]);
-    const newFp = rwi.getInteractorStyle().computeDisplayToWorld(position.x, position.y, viewFocus[2]);
+    viewFocus = rwi
+      .getInteractorStyle()
+      .computeWorldToDisplay(viewFocus[0], viewFocus[1], viewFocus[2]);
+    const newFp = rwi
+      .getInteractorStyle()
+      .computeDisplayToWorld(position.x, position.y, viewFocus[2]);
 
     cam.setFocalPoint(newFp[0], newFp[1], newFp[2]);
 
@@ -68,13 +86,14 @@ function dollyToPosition(fact, position, renderer, rwi) {
     const newCameraPos = cam.getPosition();
     viewFocus = cam.getFocalPoint();
     const newPoint = [0, 0, 0];
-    let t = (norm[0] * (viewFocus[0] - newCameraPos[0])) +
-      (norm[1] * (viewFocus[1] - newCameraPos[1])) +
-      (norm[2] * (viewFocus[2] - newCameraPos[2]));
-    t /= (Math.pow(norm[0], 2) + Math.pow(norm[1], 2) + Math.pow(norm[2], 2));
-    newPoint[0] = newCameraPos[0] + (norm[0] * t);
-    newPoint[1] = newCameraPos[1] + (norm[1] * t);
-    newPoint[2] = newCameraPos[2] + (norm[2] * t);
+    let t =
+      norm[0] * (viewFocus[0] - newCameraPos[0]) +
+      norm[1] * (viewFocus[1] - newCameraPos[1]) +
+      norm[2] * (viewFocus[2] - newCameraPos[2]);
+    t /= Math.pow(norm[0], 2) + Math.pow(norm[1], 2) + Math.pow(norm[2], 2);
+    newPoint[0] = newCameraPos[0] + norm[0] * t;
+    newPoint[1] = newCameraPos[1] + norm[1] * t;
+    newPoint[2] = newCameraPos[2] + norm[2] * t;
 
     cam.setFocalPoint(newPoint[0], newPoint[1], newPoint[2]);
     renderer.resetCameraClippingRange();
@@ -105,7 +124,9 @@ function vtkInteractorStyleManipulator(publicAPI, model) {
   model.rotationFactor = 1;
 
   function updateCurrentRenderer() {
-    const pos = model.interactor.getEventPosition(model.interactor.getPointerIndex()) || DEFAULT_EVENT_POSITION;
+    const pos =
+      model.interactor.getEventPosition(model.interactor.getPointerIndex()) ||
+      DEFAULT_EVENT_POSITION;
     publicAPI.findPokedRenderer(pos.x, pos.y);
     return model.currentRenderer;
   }
@@ -174,17 +195,32 @@ function vtkInteractorStyleManipulator(publicAPI, model) {
 
   //-------------------------------------------------------------------------
   publicAPI.handleLeftButtonPress = () => {
-    publicAPI.onButtonDown(1, model.interactor.getShiftKey(), model.interactor.getControlKey(), model.interactor.getAltKey());
+    publicAPI.onButtonDown(
+      1,
+      model.interactor.getShiftKey(),
+      model.interactor.getControlKey(),
+      model.interactor.getAltKey()
+    );
   };
 
   //-------------------------------------------------------------------------
   publicAPI.handleMiddleButtonPress = () => {
-    publicAPI.onButtonDown(2, model.interactor.getShiftKey(), model.interactor.getControlKey(), model.interactor.getAltKey());
+    publicAPI.onButtonDown(
+      2,
+      model.interactor.getShiftKey(),
+      model.interactor.getControlKey(),
+      model.interactor.getAltKey()
+    );
   };
 
   //-------------------------------------------------------------------------
   publicAPI.handleRightButtonPress = () => {
-    publicAPI.onButtonDown(3, model.interactor.getShiftKey(), model.interactor.getControlKey(), model.interactor.getAltKey());
+    publicAPI.onButtonDown(
+      3,
+      model.interactor.getShiftKey(),
+      model.interactor.getControlKey(),
+      model.interactor.getAltKey()
+    );
   };
 
   //-------------------------------------------------------------------------
@@ -202,10 +238,21 @@ function vtkInteractorStyleManipulator(publicAPI, model) {
     }
 
     // Look for a matching 3D camera interactor.
-    model.currentManipulator = publicAPI.find3DManipulator(ed.device, ed.input, ed.pressed);
+    model.currentManipulator = publicAPI.find3DManipulator(
+      ed.device,
+      ed.input,
+      ed.pressed
+    );
     if (model.currentManipulator) {
       publicAPI.invokeStartInteractionEvent({ type: 'StartInteractionEvent' });
-      model.currentManipulator.onButton3D(publicAPI, model.currentRenderer, model.state, ed.device, ed.input, ed.pressed);
+      model.currentManipulator.onButton3D(
+        publicAPI,
+        model.currentRenderer,
+        model.state,
+        ed.device,
+        ed.input,
+        ed.pressed
+      );
       publicAPI.setAnimationStateOn();
     } else {
       vtkDebugMacro('No manipulator found');
@@ -216,7 +263,12 @@ function vtkInteractorStyleManipulator(publicAPI, model) {
   publicAPI.handleMove3D = (arg) => {
     const ed = arg.calldata;
     if (model.currentManipulator) {
-      model.currentManipulator.onMove3D(publicAPI, model.currentRenderer, model.state, ed);
+      model.currentManipulator.onMove3D(
+        publicAPI,
+        model.currentRenderer,
+        model.state,
+        ed
+      );
     }
   };
 
@@ -228,7 +280,12 @@ function vtkInteractorStyleManipulator(publicAPI, model) {
     }
 
     // Look for a matching camera interactor.
-    model.currentManipulator = publicAPI.findManipulator(button, shift, control, alt);
+    model.currentManipulator = publicAPI.findManipulator(
+      button,
+      shift,
+      control,
+      alt
+    );
     if (model.currentManipulator) {
       publicAPI.invokeStartInteractionEvent({ type: 'StartInteractionEvent' });
       model.currentManipulator.setCenter(model.centerOfRotation);
@@ -246,11 +303,13 @@ function vtkInteractorStyleManipulator(publicAPI, model) {
     // Look for a matching camera manipulator
     let manipulator = null;
     model.cameraManipulators.forEach((manip) => {
-      if (manip
-          && manip.getButton() === button
-          && manip.getShift() === shift
-          && manip.getControl() === control
-          && manip.getAlt() === alt) {
+      if (
+        manip &&
+        manip.getButton() === button &&
+        manip.getShift() === shift &&
+        manip.getControl() === control &&
+        manip.getAlt() === alt
+      ) {
         manipulator = manip;
       }
     });
@@ -261,9 +320,7 @@ function vtkInteractorStyleManipulator(publicAPI, model) {
     // Look for a matching camera manipulator
     let manipulator = null;
     model.camera3DManipulators.forEach((manip) => {
-      if (manip
-          && manip.getDevice() === device
-          && manip.getInput() === input) {
+      if (manip && manip.getDevice() === device && manip.getInput() === input) {
         manipulator = manip;
       }
     });
@@ -300,7 +357,7 @@ function vtkInteractorStyleManipulator(publicAPI, model) {
   };
 
   publicAPI.handlePinch = () => {
-    model.cameraManipulators.filter(m => m.onPinch).forEach((manipulator) => {
+    model.cameraManipulators.filter((m) => m.onPinch).forEach((manipulator) => {
       manipulator.onPinch(model.interactor);
     });
     publicAPI.invokeInteractionEvent({ type: 'InteractionEvent' });
@@ -308,15 +365,21 @@ function vtkInteractorStyleManipulator(publicAPI, model) {
 
   //-------------------------------------------------------------------------
   publicAPI.handleAnimation = () => {
-    if (model.currentManipulator && (model.currentRenderer || updateCurrentRenderer())) {
-      model.currentManipulator.onAnimation(model.interactor, model.currentRenderer);
+    if (
+      model.currentManipulator &&
+      (model.currentRenderer || updateCurrentRenderer())
+    ) {
+      model.currentManipulator.onAnimation(
+        model.interactor,
+        model.currentRenderer
+      );
       publicAPI.invokeInteractionEvent({ type: 'InteractionEvent' });
     }
   };
 
   //-------------------------------------------------------------------------
   publicAPI.handleChar = () => {
-    model.cameraManipulators.filter(m => m.onChar).forEach((manipulator) => {
+    model.cameraManipulators.filter((m) => m.onChar).forEach((manipulator) => {
       manipulator.onChar(model.interactor);
     });
     publicAPI.invokeInteractionEvent({ type: 'InteractionEvent' });
@@ -333,14 +396,16 @@ function vtkInteractorStyleManipulator(publicAPI, model) {
 
   //-------------------------------------------------------------------------
   publicAPI.handleKeyPress = () => {
-    model.cameraManipulators.filter(m => m.onKeyDown).forEach((manipulator) => {
-      manipulator.onKeyDown(model.interactor);
-    });
+    model.cameraManipulators
+      .filter((m) => m.onKeyDown)
+      .forEach((manipulator) => {
+        manipulator.onKeyDown(model.interactor);
+      });
   };
 
   //-------------------------------------------------------------------------
   publicAPI.handleKeyUp = () => {
-    model.cameraManipulators.filter(m => m.onKeyUp).forEach((manipulator) => {
+    model.cameraManipulators.filter((m) => m.onKeyUp).forEach((manipulator) => {
       manipulator.onKeyUp(model.interactor);
     });
   };
@@ -369,9 +434,7 @@ export function extend(publicAPI, model, initialValues = {}) {
   // Create get-set macros
   macro.setGet(publicAPI, model, ['rotationFactor']);
 
-  macro.setGetArray(publicAPI, model, [
-    'centerOfRotation',
-  ], 3);
+  macro.setGetArray(publicAPI, model, ['centerOfRotation'], 3);
 
   // Object specific methods
   vtkInteractorStyleManipulator(publicAPI, model);
@@ -379,7 +442,10 @@ export function extend(publicAPI, model, initialValues = {}) {
 
 // ----------------------------------------------------------------------------
 
-export const newInstance = macro.newInstance(extend, 'vtkInteractorStyleManipulator');
+export const newInstance = macro.newInstance(
+  extend,
+  'vtkInteractorStyleManipulator'
+);
 
 // ----------------------------------------------------------------------------
 

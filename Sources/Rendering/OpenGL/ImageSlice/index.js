@@ -1,6 +1,6 @@
 import { mat3, mat4 } from 'gl-matrix';
 
-import macro       from 'vtk.js/Sources/macro';
+import macro from 'vtk.js/Sources/macro';
 import vtkViewNode from 'vtk.js/Sources/Rendering/SceneGraph/ViewNode';
 
 // ----------------------------------------------------------------------------
@@ -33,9 +33,11 @@ function vtkOpenGLImageSlice(publicAPI, model) {
 
   // we draw textures, then mapper, then post pass textures
   publicAPI.traverseOpaquePass = (renderPass) => {
-    if (!model.renderable ||
-        !model.renderable.getVisibility() ||
-        !model.renderable.getIsOpaque()) {
+    if (
+      !model.renderable ||
+      !model.renderable.getVisibility() ||
+      !model.renderable.getIsOpaque()
+    ) {
       return;
     }
 
@@ -48,9 +50,11 @@ function vtkOpenGLImageSlice(publicAPI, model) {
 
   // we draw textures, then mapper, then post pass textures
   publicAPI.traverseTranslucentPass = (renderPass) => {
-    if (!model.renderable ||
-        !model.renderable.getVisibility() ||
-        model.renderable.getIsOpaque()) {
+    if (
+      !model.renderable ||
+      !model.renderable.getVisibility() ||
+      model.renderable.getIsOpaque()
+    ) {
       return;
     }
 
@@ -63,8 +67,7 @@ function vtkOpenGLImageSlice(publicAPI, model) {
 
   publicAPI.queryPass = (prepass, renderPass) => {
     if (prepass) {
-      if (!model.renderable ||
-          !model.renderable.getVisibility()) {
+      if (!model.renderable || !model.renderable.getVisibility()) {
         return;
       }
       if (model.renderable.getIsOpaque()) {
@@ -75,12 +78,15 @@ function vtkOpenGLImageSlice(publicAPI, model) {
     }
   };
 
-  publicAPI.opaqueZBufferPass = (prepass, renderPass) => publicAPI.opaquePass(prepass, renderPass);
+  publicAPI.opaqueZBufferPass = (prepass, renderPass) =>
+    publicAPI.opaquePass(prepass, renderPass);
 
   // Renders myself
   publicAPI.opaquePass = (prepass, renderPass) => {
     if (prepass) {
-      model.context = publicAPI.getFirstAncestorOfType('vtkOpenGLRenderWindow').getContext();
+      model.context = publicAPI
+        .getFirstAncestorOfType('vtkOpenGLRenderWindow')
+        .getContext();
       model.context.depthMask(true);
     }
   };
@@ -88,7 +94,9 @@ function vtkOpenGLImageSlice(publicAPI, model) {
   // Renders myself
   publicAPI.translucentPass = (prepass, renderPass) => {
     if (prepass) {
-      model.context = publicAPI.getFirstAncestorOfType('vtkOpenGLRenderWindow').getContext();
+      model.context = publicAPI
+        .getFirstAncestorOfType('vtkOpenGLRenderWindow')
+        .getContext();
       model.context.depthMask(false);
     } else {
       model.context.depthMask(true);
@@ -140,9 +148,7 @@ export function extend(publicAPI, model, initialValues = {}) {
   model.MCWCMatrix = mat4.create();
 
   // Build VTK API
-  macro.setGet(publicAPI, model, [
-    'context',
-  ]);
+  macro.setGet(publicAPI, model, ['context']);
 
   // Object methods
   vtkOpenGLImageSlice(publicAPI, model);

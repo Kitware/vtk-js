@@ -1,6 +1,6 @@
-import macro        from 'vtk.js/Sources/macro';
+import macro from 'vtk.js/Sources/macro';
 import vtkDataArray from 'vtk.js/Sources/Common/Core/DataArray';
-import vtkPolyData  from 'vtk.js/Sources/Common/DataModel/PolyData';
+import vtkPolyData from 'vtk.js/Sources/Common/DataModel/PolyData';
 
 // ----------------------------------------------------------------------------
 // vtkConeSource methods
@@ -26,7 +26,11 @@ function vtkCubeSource(publicAPI, model) {
     polyData.getPoints().setData(points, 3);
 
     const normals = new window[model.pointType](numberOfPoints * 3);
-    const normalArray = vtkDataArray.newInstance({ name: 'Normals', values: normals, numberOfComponents: 3 });
+    const normalArray = vtkDataArray.newInstance({
+      name: 'Normals',
+      values: normals,
+      numberOfComponents: 3,
+    });
     polyData.getPointData().setNormals(normalArray);
 
     let tcdim = 2;
@@ -35,7 +39,11 @@ function vtkCubeSource(publicAPI, model) {
     }
 
     const textureCoords = new window[model.pointType](numberOfPoints * tcdim);
-    const tcoords = vtkDataArray.newInstance({ name: 'TextureCoordinates', values: textureCoords, numberOfComponents: tcdim });
+    const tcoords = vtkDataArray.newInstance({
+      name: 'TextureCoordinates',
+      values: textureCoords,
+      numberOfComponents: tcdim,
+    });
     polyData.getPointData().setTCoords(tcoords);
 
     const x = [0.0, 0.0, 0.0];
@@ -44,34 +52,34 @@ function vtkCubeSource(publicAPI, model) {
 
     let pointIndex = 0;
 
-    x[0] = model.center[0] - (model.xLength / 2.0);
-    n[0] = (-1.0);
+    x[0] = model.center[0] - model.xLength / 2.0;
+    n[0] = -1.0;
     n[1] = 0.0;
     n[2] = 0.0;
     for (let i = 0; i < 2; i++) {
-      x[1] = model.center[1] - (model.yLength / 2.0);
+      x[1] = model.center[1] - model.yLength / 2.0;
 
       for (let j = 0; j < 2; j++) {
         tc[1] = x[1] + 0.5;
-        x[2] = model.center[2] - (model.zLength / 2.0);
+        x[2] = model.center[2] - model.zLength / 2.0;
 
         for (let k = 0; k < 2; k++) {
-          tc[0] = (x[2] + 0.5) * (1 - (2 * i));
-          points[(pointIndex * 3)] = x[0];
-          points[(pointIndex * 3) + 1] = x[1];
-          points[(pointIndex * 3) + 2] = x[2];
+          tc[0] = (x[2] + 0.5) * (1 - 2 * i);
+          points[pointIndex * 3] = x[0];
+          points[pointIndex * 3 + 1] = x[1];
+          points[pointIndex * 3 + 2] = x[2];
 
-          normals[(pointIndex * 3)] = n[0];
-          normals[(pointIndex * 3) + 1] = n[1];
-          normals[(pointIndex * 3) + 2] = n[2];
+          normals[pointIndex * 3] = n[0];
+          normals[pointIndex * 3 + 1] = n[1];
+          normals[pointIndex * 3 + 2] = n[2];
 
           if (tcdim === 2) {
-            textureCoords[(pointIndex * tcdim)] = tc[0];
-            textureCoords[(pointIndex * tcdim) + 1] = tc[1];
+            textureCoords[pointIndex * tcdim] = tc[0];
+            textureCoords[pointIndex * tcdim + 1] = tc[1];
           } else {
-            textureCoords[(pointIndex * tcdim)] = (2 * i) - 1;
-            textureCoords[(pointIndex * tcdim) + 1] = (2 * j) - 1;
-            textureCoords[(pointIndex * tcdim) + 2] = (2 * k) - 1;
+            textureCoords[pointIndex * tcdim] = 2 * i - 1;
+            textureCoords[pointIndex * tcdim + 1] = 2 * j - 1;
+            textureCoords[pointIndex * tcdim + 2] = 2 * k - 1;
           }
 
           pointIndex++;
@@ -84,35 +92,35 @@ function vtkCubeSource(publicAPI, model) {
       n[0] += 2.0;
     }
 
-    x[1] = model.center[1] - (model.yLength / 2.0);
-    n[1] = (-1.0);
+    x[1] = model.center[1] - model.yLength / 2.0;
+    n[1] = -1.0;
     n[0] = 0.0;
     n[2] = 0.0;
     for (let i = 0; i < 2; i++) {
-      x[0] = model.center[0] - (model.xLength / 2.0);
+      x[0] = model.center[0] - model.xLength / 2.0;
 
       for (let j = 0; j < 2; j++) {
-        tc[0] = (x[0] + 0.5) * ((2 * i) - 1);
-        x[2] = model.center[2] - (model.zLength / 2.0);
+        tc[0] = (x[0] + 0.5) * (2 * i - 1);
+        x[2] = model.center[2] - model.zLength / 2.0;
 
         for (let k = 0; k < 2; k++) {
-          tc[1] = (x[2] + 0.5) * (-1);
+          tc[1] = (x[2] + 0.5) * -1;
 
-          points[(pointIndex * 3)] = x[0];
-          points[(pointIndex * 3) + 1] = x[1];
-          points[(pointIndex * 3) + 2] = x[2];
+          points[pointIndex * 3] = x[0];
+          points[pointIndex * 3 + 1] = x[1];
+          points[pointIndex * 3 + 2] = x[2];
 
-          normals[(pointIndex * 3)] = n[0];
-          normals[(pointIndex * 3) + 1] = n[1];
-          normals[(pointIndex * 3) + 2] = n[2];
+          normals[pointIndex * 3] = n[0];
+          normals[pointIndex * 3 + 1] = n[1];
+          normals[pointIndex * 3 + 2] = n[2];
 
           if (tcdim === 2) {
-            textureCoords[(pointIndex * tcdim)] = tc[0];
-            textureCoords[(pointIndex * tcdim) + 1] = tc[1];
+            textureCoords[pointIndex * tcdim] = tc[0];
+            textureCoords[pointIndex * tcdim + 1] = tc[1];
           } else {
-            textureCoords[(pointIndex * tcdim)] = (2 * j) - 1;
-            textureCoords[(pointIndex * tcdim) + 1] = (2 * i) - 1;
-            textureCoords[(pointIndex * tcdim) + 2] = (2 * k) - 1;
+            textureCoords[pointIndex * tcdim] = 2 * j - 1;
+            textureCoords[pointIndex * tcdim + 1] = 2 * i - 1;
+            textureCoords[pointIndex * tcdim + 2] = 2 * k - 1;
           }
 
           pointIndex++;
@@ -124,35 +132,35 @@ function vtkCubeSource(publicAPI, model) {
       n[1] += 2.0;
     }
 
-    x[2] = model.center[2] - (model.zLength / 2.0);
-    n[2] = (-1.0);
+    x[2] = model.center[2] - model.zLength / 2.0;
+    n[2] = -1.0;
     n[0] = 0.0;
     n[1] = 0.0;
     for (let i = 0; i < 2; i++) {
-      x[1] = model.center[1] - (model.yLength / 2.0);
+      x[1] = model.center[1] - model.yLength / 2.0;
 
       for (let j = 0; j < 2; j++) {
         tc[1] = x[1] + 0.5;
-        x[0] = model.center[0] - (model.xLength / 2.0);
+        x[0] = model.center[0] - model.xLength / 2.0;
 
         for (let k = 0; k < 2; k++) {
-          tc[0] = (x[0] + 0.5) * ((2 * i) - 1);
+          tc[0] = (x[0] + 0.5) * (2 * i - 1);
 
-          points[(pointIndex * 3)] = x[0];
-          points[(pointIndex * 3) + 1] = x[1];
-          points[(pointIndex * 3) + 2] = x[2];
+          points[pointIndex * 3] = x[0];
+          points[pointIndex * 3 + 1] = x[1];
+          points[pointIndex * 3 + 2] = x[2];
 
-          normals[(pointIndex * 3)] = n[0];
-          normals[(pointIndex * 3) + 1] = n[1];
-          normals[(pointIndex * 3) + 2] = n[2];
+          normals[pointIndex * 3] = n[0];
+          normals[pointIndex * 3 + 1] = n[1];
+          normals[pointIndex * 3 + 2] = n[2];
 
           if (tcdim === 2) {
-            textureCoords[(pointIndex * tcdim)] = tc[0];
-            textureCoords[(pointIndex * tcdim) + 1] = tc[1];
+            textureCoords[pointIndex * tcdim] = tc[0];
+            textureCoords[pointIndex * tcdim + 1] = tc[1];
           } else {
-            textureCoords[(pointIndex * tcdim)] = (2 * k) - 1;
-            textureCoords[(pointIndex * tcdim) + 1] = (2 * j) - 1;
-            textureCoords[(pointIndex * tcdim) + 2] = (2 * i) - 1;
+            textureCoords[pointIndex * tcdim] = 2 * k - 1;
+            textureCoords[pointIndex * tcdim + 1] = 2 * j - 1;
+            textureCoords[pointIndex * tcdim + 2] = 2 * i - 1;
           }
 
           pointIndex++;
@@ -262,9 +270,7 @@ export function extend(publicAPI, model, initialValues = {}) {
     'zLength',
     'generate3DTextureCoordinates',
   ]);
-  macro.setGetArray(publicAPI, model, [
-    'center',
-  ], 3);
+  macro.setGetArray(publicAPI, model, ['center'], 3);
 
   macro.algo(publicAPI, model, 0, 1);
   vtkCubeSource(publicAPI, model);

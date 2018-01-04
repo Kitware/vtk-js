@@ -1,6 +1,6 @@
-import macro       from 'vtk.js/Sources/macro';
+import macro from 'vtk.js/Sources/macro';
 import vtkRenderer from 'vtk.js/Sources/Rendering/Core/Renderer';
-import Constants   from 'vtk.js/Sources/Interaction/Widgets/OrientationMarkerWidget/Constants';
+import Constants from 'vtk.js/Sources/Interaction/Widgets/OrientationMarkerWidget/Constants';
 
 // ----------------------------------------------------------------------------
 // vtkOrientationMarkerWidget
@@ -8,10 +8,10 @@ import Constants   from 'vtk.js/Sources/Interaction/Widgets/OrientationMarkerWid
 
 // depends on Constants.Corners
 const VIEWPORTS = {
-  TOP_LEFT: size => [0, (1 - size), size, 1],
-  TOP_RIGHT: size => [(1 - size), (1 - size), 1, 1],
-  BOTTOM_LEFT: size => [0, 0, size, size],
-  BOTTOM_RIGHT: size => [(1 - size), 0, 1, size],
+  TOP_LEFT: (size) => [0, 1 - size, size, 1],
+  TOP_RIGHT: (size) => [1 - size, 1 - size, 1, 1],
+  BOTTOM_LEFT: (size) => [0, 0, size, size],
+  BOTTOM_RIGHT: (size) => [1 - size, 0, 1, size],
 };
 
 function vtkOrientationMarkerWidget(publicAPI, model) {
@@ -26,7 +26,9 @@ function vtkOrientationMarkerWidget(publicAPI, model) {
   // private methods
 
   function updateMarkerOrientation() {
-    const currentCamera = model.interactor.findPokedRenderer().getActiveCamera();
+    const currentCamera = model.interactor
+      .findPokedRenderer()
+      .getActiveCamera();
 
     if (!currentCamera) {
       return;
@@ -59,11 +61,15 @@ function vtkOrientationMarkerWidget(publicAPI, model) {
       }
 
       if (!model.interactor) {
-        console.error('Must set interactor before enabling orientation marker.');
+        console.error(
+          'Must set interactor before enabling orientation marker.'
+        );
         return;
       }
 
-      const renderWindow = model.interactor.findPokedRenderer().getRenderWindow();
+      const renderWindow = model.interactor
+        .findPokedRenderer()
+        .getRenderWindow();
       renderWindow.addRenderer(selfRenderer);
       if (renderWindow.getNumberOfLayers() < 2) {
         renderWindow.setNumberOfLayers(2);
@@ -77,7 +83,9 @@ function vtkOrientationMarkerWidget(publicAPI, model) {
 
       selfRenderer.setViewport(...getViewport());
 
-      const { unsubscribe } = model.interactor.onAnimation(updateMarkerOrientation);
+      const { unsubscribe } = model.interactor.onAnimation(
+        updateMarkerOrientation
+      );
       interactorUnsubscribe = unsubscribe;
 
       model.enabled = true;
@@ -93,7 +101,9 @@ function vtkOrientationMarkerWidget(publicAPI, model) {
       model.actor.setVisibility(false);
       selfRenderer.removeViewProp(model.actor);
 
-      const renderWindow = model.interactor.findPokedRenderer().getRenderWindow();
+      const renderWindow = model.interactor
+        .findPokedRenderer()
+        .getRenderWindow();
       if (renderWindow) {
         renderWindow.removeRenderer(selfRenderer);
       }
@@ -140,18 +150,11 @@ export function extend(publicAPI, model, initialValues = {}) {
   // Build VTK API
   macro.obj(publicAPI, model);
 
-  macro.get(publicAPI, model, [
-    'enabled',
-    'viewportCorner',
-    'viewportSize',
-  ]);
+  macro.get(publicAPI, model, ['enabled', 'viewportCorner', 'viewportSize']);
 
   // NOTE: setting these while the widget is enabled will
   // not update the widget.
-  macro.setGet(publicAPI, model, [
-    'actor',
-    'interactor',
-  ]);
+  macro.setGet(publicAPI, model, ['actor', 'interactor']);
 
   // Object methods
   vtkOrientationMarkerWidget(publicAPI, model);
@@ -159,7 +162,10 @@ export function extend(publicAPI, model, initialValues = {}) {
 
 // ----------------------------------------------------------------------------
 
-export const newInstance = macro.newInstance(extend, 'vtkOrientationMarkerWidget');
+export const newInstance = macro.newInstance(
+  extend,
+  'vtkOrientationMarkerWidget'
+);
 
 // ----------------------------------------------------------------------------
 

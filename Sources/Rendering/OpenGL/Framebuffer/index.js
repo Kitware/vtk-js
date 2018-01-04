@@ -1,7 +1,7 @@
-import * as macro     from 'vtk.js/Sources/macro';
+import * as macro from 'vtk.js/Sources/macro';
 import vtkOpenGLTexture from 'vtk.js/Sources/Rendering/OpenGL/Texture';
 import { VtkDataTypes } from 'vtk.js/Sources/Common/Core/DataArray/Constants';
-import { Filter }       from 'vtk.js/Sources/Rendering/OpenGL/Texture/Constants';
+import { Filter } from 'vtk.js/Sources/Rendering/OpenGL/Texture/Constants';
 
 // ----------------------------------------------------------------------------
 // vtkFramebuffer methods
@@ -15,14 +15,17 @@ function vtkFramebuffer(publicAPI, model) {
   // publicAPI.getReadMode = () => model.context.READ_FRAMEBUFFER;
 
   publicAPI.saveCurrentBindingsAndBuffers = (modeIn) => {
-    const mode = (typeof modeIn !== 'undefined') ? modeIn : publicAPI.getBothMode();
+    const mode =
+      typeof modeIn !== 'undefined' ? modeIn : publicAPI.getBothMode();
     publicAPI.saveCurrentBindings(mode);
     publicAPI.saveCurrentBuffers(mode);
   };
 
   publicAPI.saveCurrentBindings = (modeIn) => {
     const gl = model.context;
-    model.previousDrawBinding = gl.getParameter(model.context.FRAMEBUFFER_BINDING);
+    model.previousDrawBinding = gl.getParameter(
+      model.context.FRAMEBUFFER_BINDING
+    );
   };
 
   publicAPI.saveCurrentBuffers = (modeIn) => {
@@ -30,7 +33,8 @@ function vtkFramebuffer(publicAPI, model) {
   };
 
   publicAPI.restorePreviousBindingsAndBuffers = (modeIn) => {
-    const mode = (typeof modeIn !== 'undefined') ? modeIn : publicAPI.getBothMode();
+    const mode =
+      typeof modeIn !== 'undefined' ? modeIn : publicAPI.getBothMode();
     publicAPI.restorePreviousBindings(mode);
     publicAPI.restorePreviousBuffers(mode);
   };
@@ -46,7 +50,9 @@ function vtkFramebuffer(publicAPI, model) {
 
   publicAPI.bind = () => {
     model.context.bindFramebuffer(
-      model.context.FRAMEBUFFER, model.glFramebuffer);
+      model.context.FRAMEBUFFER,
+      model.glFramebuffer
+    );
     if (model.colorTexture) {
       model.colorTexture.bind();
     }
@@ -61,7 +67,13 @@ function vtkFramebuffer(publicAPI, model) {
   publicAPI.setColorBuffer = (texture, mode) => {
     const gl = model.context;
     model.colorTexture = texture;
-    gl.framebufferTexture2D(gl.FRAMEBUFFER, gl.COLOR_ATTACHMENT0, gl.TEXTURE_2D, texture.getHandle(), 0);
+    gl.framebufferTexture2D(
+      gl.FRAMEBUFFER,
+      gl.COLOR_ATTACHMENT0,
+      gl.TEXTURE_2D,
+      texture.getHandle(),
+      0
+    );
   };
 
   // publicAPI.setDepthBuffer = (texture, mode) => {
@@ -114,16 +126,29 @@ function vtkFramebuffer(publicAPI, model) {
     texture.setMagnificationFilter(Filter.LINEAR);
     texture.create2DFromRaw(
       model.glFramebuffer.width,
-      model.glFramebuffer.height, 4, VtkDataTypes.UNSIGNED_CHAR, null);
+      model.glFramebuffer.height,
+      4,
+      VtkDataTypes.UNSIGNED_CHAR,
+      null
+    );
     publicAPI.setColorBuffer(texture);
 
     // for now do not count of having a depth buffer texture
     // as they are not standard webgl 1
     model.depthTexture = gl.createRenderbuffer();
     gl.bindRenderbuffer(gl.RENDERBUFFER, model.depthTexture);
-    gl.renderbufferStorage(gl.RENDERBUFFER, gl.DEPTH_COMPONENT16,
-      model.glFramebuffer.width, model.glFramebuffer.height);
-    gl.framebufferRenderbuffer(gl.FRAMEBUFFER, gl.DEPTH_ATTACHMENT, gl.RENDERBUFFER, model.depthTexture);
+    gl.renderbufferStorage(
+      gl.RENDERBUFFER,
+      gl.DEPTH_COMPONENT16,
+      model.glFramebuffer.width,
+      model.glFramebuffer.height
+    );
+    gl.framebufferRenderbuffer(
+      gl.FRAMEBUFFER,
+      gl.DEPTH_ATTACHMENT,
+      gl.RENDERBUFFER,
+      model.depthTexture
+    );
   };
 }
 
@@ -148,9 +173,7 @@ export function extend(publicAPI, model, initialValues = {}) {
   // Build VTK API
   macro.obj(publicAPI, model);
 
-  macro.setGet(publicAPI, model, [
-    'colorTexture',
-  ]);
+  macro.setGet(publicAPI, model, ['colorTexture']);
 
   // For more macro methods, see "Sources/macro.js"
   // Object specific methods

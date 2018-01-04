@@ -1,9 +1,9 @@
-import Common       from './Common';
-import Filters      from './Filters';
-import Imaging      from './Imaging';
-import Interaction  from './Interaction';
-import IO           from './IO';
-import Rendering    from './Rendering';
+import Common from './Common';
+import Filters from './Filters';
+import Imaging from './Imaging';
+import Interaction from './Interaction';
+import IO from './IO';
+import Rendering from './Rendering';
 
 import { getCurrentGlobalMTime } from './macro';
 

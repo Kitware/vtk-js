@@ -33,9 +33,7 @@ export function extend(publicAPI, model, initialValues = {}) {
     'pointSize',
     'displayLocation',
   ]);
-  macro.setGetArray(publicAPI, model, [
-    'color',
-  ], 3);
+  macro.setGetArray(publicAPI, model, ['color'], 3);
 
   // Object methods
   vtkProperty2D(publicAPI, model);

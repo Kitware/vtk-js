@@ -1,8 +1,8 @@
-import macro                from 'vtk.js/Sources/macro';
-import Constants            from 'vtk.js/Sources/Rendering/OpenGL/HardwareSelector/Constants';
+import macro from 'vtk.js/Sources/macro';
+import Constants from 'vtk.js/Sources/Rendering/OpenGL/HardwareSelector/Constants';
 import vtkOpenGLFramebuffer from 'vtk.js/Sources/Rendering/OpenGL/Framebuffer';
-import vtkSelectionNode     from 'vtk.js/Sources/Common/DataModel/SelectionNode';
-import vtkDataSet           from 'vtk.js/Sources/Common/DataModel/DataSet';
+import vtkSelectionNode from 'vtk.js/Sources/Common/DataModel/SelectionNode';
+import vtkDataSet from 'vtk.js/Sources/Common/DataModel/DataSet';
 
 const { PassTypes } = Constants;
 const { SelectionContent, SelectionField } = vtkSelectionNode;
@@ -24,7 +24,9 @@ function vtkOpenGLHardwareSelector(publicAPI, model) {
 
   //----------------------------------------------------------------------------
   publicAPI.beginSelection = () => {
-    model.openGLRenderer = model.openGLRenderWindow.getViewNodeFor(model.renderer);
+    model.openGLRenderer = model.openGLRenderWindow.getViewNodeFor(
+      model.renderer
+    );
     model.maxAttributeId = 0;
 
     model.framebuffer = vtkOpenGLFramebuffer.newInstance();
@@ -50,19 +52,20 @@ function vtkOpenGLHardwareSelector(publicAPI, model) {
     model.framebuffer.restorePreviousBindingsAndBuffers();
   };
 
-  publicAPI.preCapturePass = () => {
-  };
+  publicAPI.preCapturePass = () => {};
 
-  publicAPI.postCapturePass = () => {
-  };
+  publicAPI.postCapturePass = () => {};
 
   //----------------------------------------------------------------------------
   publicAPI.select = () => {
     let sel = null;
     if (publicAPI.captureBuffers()) {
       sel = publicAPI.generateSelection(
-        model.area[0], model.area[1],
-        model.area[2], model.area[3]);
+        model.area[0],
+        model.area[1],
+        model.area[2],
+        model.area[3]
+      );
       publicAPI.releasePixBuffers();
     }
     return sel;
@@ -75,7 +78,9 @@ function vtkOpenGLHardwareSelector(publicAPI, model) {
       return false;
     }
 
-    model.openGLRenderer = model.openGLRenderWindow.getViewNodeFor(model.renderer);
+    model.openGLRenderer = model.openGLRenderWindow.getViewNodeFor(
+      model.renderer
+    );
 
     // int rgba[4];
     // rwin.getColorBufferSizes(rgba);
@@ -92,8 +97,11 @@ function vtkOpenGLHardwareSelector(publicAPI, model) {
     model.renderer.setBackground(0.0, 0.0, 0.0);
 
     publicAPI.beginSelection();
-    for (model.currentPass = PassTypes.MIN_KNOWN_PASS;
-      model.currentPass <= PassTypes.MAX_KNOWN_PASS; model.currentPass++) {
+    for (
+      model.currentPass = PassTypes.MIN_KNOWN_PASS;
+      model.currentPass <= PassTypes.MAX_KNOWN_PASS;
+      model.currentPass++
+    ) {
       if (publicAPI.passRequired(model.currentPass)) {
         publicAPI.preCapturePass(model.currentPass);
         model.openGLRenderWindow.traverseAllPasses();
@@ -114,12 +122,16 @@ function vtkOpenGLHardwareSelector(publicAPI, model) {
   };
 
   //----------------------------------------------------------------------------
-  publicAPI.passRequired = pass => true;
+  publicAPI.passRequired = (pass) => true;
 
   //----------------------------------------------------------------------------
   publicAPI.savePixelBuffer = (passNo) => {
     model.pixBuffer[passNo] = model.openGLRenderWindow.getPixelData(
-      model.area[0], model.area[1], model.area[2], model.area[3]);
+      model.area[0],
+      model.area[1],
+      model.area[2],
+      model.area[3]
+    );
     if (passNo === PassTypes.ACTOR_PASS) {
       publicAPI.buildPropHitList(model.pixBuffer[passNo]);
     }
@@ -143,8 +155,7 @@ function vtkOpenGLHardwareSelector(publicAPI, model) {
   //----------------------------------------------------------------------------
   publicAPI.renderProp = (prop) => {
     if (model.currentPass === PassTypes.ACTOR_PASS) {
-      publicAPI.setPropColorValueFromInt(
-        model.props.length + model.idOffset);
+      publicAPI.setPropColorValueFromInt(model.props.length + model.idOffset);
       model.props.push(prop);
     }
   };
@@ -165,8 +176,8 @@ function vtkOpenGLHardwareSelector(publicAPI, model) {
       return;
     }
 
-    model.maxAttributeId = (attribid > model.maxAttributeId)
-      ? attribid : model.maxAttributeId;
+    model.maxAttributeId =
+      attribid > model.maxAttributeId ? attribid : model.maxAttributeId;
 
     // if (model.currentPass < PassTypes.ID_LOW24) {
     //   return; // useless...
@@ -182,16 +193,16 @@ function vtkOpenGLHardwareSelector(publicAPI, model) {
   };
 
   //----------------------------------------------------------------------------
-  publicAPI.passTypeToString = type => macro.enumToString(PassTypes, type);
+  publicAPI.passTypeToString = (type) => macro.enumToString(PassTypes, type);
 
   //----------------------------------------------------------------------------
-  publicAPI.isPropHit = id => model.hitProps.hasKey(id);
+  publicAPI.isPropHit = (id) => model.hitProps.hasKey(id);
 
   publicAPI.convert = (xx, yy, pb) => {
     if (!pb) {
       return 0;
     }
-    const offset = ((yy * (model.area[2] - model.area[0] + 1)) + xx) * 4;
+    const offset = (yy * (model.area[2] - model.area[0] + 1) + xx) * 4;
     const rgb = [];
     rgb[0] = pb[offset];
     rgb[1] = pb[offset + 1];
@@ -221,24 +232,33 @@ function vtkOpenGLHardwareSelector(publicAPI, model) {
   publicAPI.getPixelInformation = (
     inDisplayPosition,
     maxDistance,
-    outSelectedPosition) => {
+    outSelectedPosition
+  ) => {
     // Base case
-    const maxDist = (maxDistance < 0) ? 0 : maxDistance;
+    const maxDist = maxDistance < 0 ? 0 : maxDistance;
     if (maxDist === 0) {
       outSelectedPosition[0] = inDisplayPosition[0];
       outSelectedPosition[1] = inDisplayPosition[1];
-      if (inDisplayPosition[0] < model.area[0] || inDisplayPosition[0] > model.area[2] ||
-        inDisplayPosition[1] < model.area[1] || inDisplayPosition[1] > model.area[3]) {
+      if (
+        inDisplayPosition[0] < model.area[0] ||
+        inDisplayPosition[0] > model.area[2] ||
+        inDisplayPosition[1] < model.area[1] ||
+        inDisplayPosition[1] > model.area[3]
+      ) {
         return null;
       }
 
       // offset inDisplayPosition based on the lower-left-corner of the Area.
       const displayPosition = [
         inDisplayPosition[0] - model.area[0],
-        inDisplayPosition[1] - model.area[1]];
+        inDisplayPosition[1] - model.area[1],
+      ];
 
       const actorid = publicAPI.convert(
-        displayPosition[0], displayPosition[1], model.pixBuffer[PassTypes.ACTOR_PASS]);
+        displayPosition[0],
+        displayPosition[1],
+        model.pixBuffer[PassTypes.ACTOR_PASS]
+      );
       if (actorid <= 0) {
         // the pixel did not hit any actor.
         return null;
@@ -274,13 +294,21 @@ function vtkOpenGLHardwareSelector(publicAPI, model) {
     // They recursively call the base case to handle single pixels.
     const dispPos = [inDisplayPosition[0], inDisplayPosition[1]];
     const curPos = [0, 0];
-    let info = publicAPI.getPixelInformation(inDisplayPosition, 0, outSelectedPosition);
+    let info = publicAPI.getPixelInformation(
+      inDisplayPosition,
+      0,
+      outSelectedPosition
+    );
     if (info && info.valid) {
       return info;
     }
     for (let dist = 1; dist < maxDist; ++dist) {
       // Vertical sides of box.
-      for (let y = ((dispPos[1] > dist) ? (dispPos[1] - dist) : 0); y <= dispPos[1] + dist; ++y) {
+      for (
+        let y = dispPos[1] > dist ? dispPos[1] - dist : 0;
+        y <= dispPos[1] + dist;
+        ++y
+      ) {
         curPos[1] = y;
         if (dispPos[0] >= dist) {
           curPos[0] = dispPos[0] - dist;
@@ -296,7 +324,11 @@ function vtkOpenGLHardwareSelector(publicAPI, model) {
         }
       }
       // Horizontal sides of box.
-      for (let x = ((dispPos[0] >= dist) ? (dispPos[0] - (dist - 1)) : 0); x <= dispPos[0] + (dist - 1); ++x) {
+      for (
+        let x = dispPos[0] >= dist ? dispPos[0] - (dist - 1) : 0;
+        x <= dispPos[0] + (dist - 1);
+        ++x
+      ) {
         curPos[0] = x;
         if (dispPos[1] >= dist) {
           curPos[1] = dispPos[1] - dist;
@@ -320,8 +352,7 @@ function vtkOpenGLHardwareSelector(publicAPI, model) {
   };
 
   //-----------------------------------------------------------------------------
-  publicAPI.convertSelection = (
-    fieldassociation, dataMap) => {
+  publicAPI.convertSelection = (fieldassociation, dataMap) => {
     const sel = [];
 
     let count = 0;
@@ -351,12 +382,10 @@ function vtkOpenGLHardwareSelector(publicAPI, model) {
     return sel;
   };
 
-  publicAPI.getInfoHash = info => `${info.propID} ${info.compositeID}`;
+  publicAPI.getInfoHash = (info) => `${info.propID} ${info.compositeID}`;
 
   //----------------------------------------------------------------------------
-  publicAPI.generateSelection = (
-    x1, y1,
-    x2, y2) => {
+  publicAPI.generateSelection = (x1, y1, x2, y2) => {
     const dataMap = new Map();
 
     const outSelectedPosition = [0, 0];
@@ -368,10 +397,16 @@ function vtkOpenGLHardwareSelector(publicAPI, model) {
         if (info && info.valid) {
           const hash = publicAPI.getInfoHash(info);
           if (!dataMap.has(hash)) {
-            dataMap.set(hash, { info, pixelCount: 1, attributeIDs: [info.attributeID] });
+            dataMap.set(hash, {
+              info,
+              pixelCount: 1,
+              attributeIDs: [info.attributeID],
+            });
           } else {
             dataMap.get(hash).pixelCount++;
-            if (dataMap.get(hash).attributeIDs.indexOf(info.attributeID) === -1) {
+            if (
+              dataMap.get(hash).attributeIDs.indexOf(info.attributeID) === -1
+            ) {
               dataMap.get(hash).attributeIDs.push(info.attributeID);
             }
           }
@@ -421,12 +456,8 @@ export function extend(publicAPI, model, initialValues = {}) {
     'currentPass',
   ]);
 
-  macro.setGetArray(publicAPI, model, [
-    'area',
-  ], 4);
-  macro.setGetArray(publicAPI, model, [
-    'propColorValue',
-  ], 3);
+  macro.setGetArray(publicAPI, model, ['area'], 4);
+  macro.setGetArray(publicAPI, model, ['propColorValue'], 3);
   macro.event(publicAPI, model, 'event');
 
   // Object methods
@@ -435,7 +466,10 @@ export function extend(publicAPI, model, initialValues = {}) {
 
 // ----------------------------------------------------------------------------
 
-export const newInstance = macro.newInstance(extend, 'vtkOpenGLHardwareSelector');
+export const newInstance = macro.newInstance(
+  extend,
+  'vtkOpenGLHardwareSelector'
+);
 
 // ----------------------------------------------------------------------------
 

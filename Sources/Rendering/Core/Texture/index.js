@@ -58,9 +58,7 @@ export function extend(publicAPI, model, initialValues = {}) {
   macro.obj(publicAPI, model);
   macro.algo(publicAPI, model, 6, 0);
 
-  macro.get(publicAPI, model, [
-    'imageLoaded',
-  ]);
+  macro.get(publicAPI, model, ['imageLoaded']);
 
   macro.setGet(publicAPI, model, [
     'repeat',

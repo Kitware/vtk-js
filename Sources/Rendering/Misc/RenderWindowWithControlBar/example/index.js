@@ -1,10 +1,10 @@
 import vtkRenderWindowWithControlBar from 'vtk.js/Sources/Rendering/Misc/RenderWindowWithControlBar';
-import vtkSlider                     from 'vtk.js/Sources/Interaction/UI/Slider';
-import vtkCornerAnnotation           from 'vtk.js/Sources/Interaction/UI/CornerAnnotation';
+import vtkSlider from 'vtk.js/Sources/Interaction/UI/Slider';
+import vtkCornerAnnotation from 'vtk.js/Sources/Interaction/UI/CornerAnnotation';
 
-import vtkActor      from 'vtk.js/Sources/Rendering/Core/Actor';
+import vtkActor from 'vtk.js/Sources/Rendering/Core/Actor';
 import vtkConeSource from 'vtk.js/Sources/Filters/Sources/ConeSource';
-import vtkMapper     from 'vtk.js/Sources/Rendering/Core/Mapper';
+import vtkMapper from 'vtk.js/Sources/Rendering/Core/Mapper';
 
 // Define container size/position
 const body = document.querySelector('body');
@@ -17,7 +17,9 @@ body.appendChild(rootContainer);
 body.style.margin = '0';
 
 // Create render window inside container
-const renderWindow = vtkRenderWindowWithControlBar.newInstance({ controlSize: 25 });
+const renderWindow = vtkRenderWindowWithControlBar.newInstance({
+  controlSize: 25,
+});
 renderWindow.setContainer(rootContainer);
 
 // Add some content to the renderer
@@ -55,12 +57,16 @@ cornerAnnotation.updateTemplates({
     return `<b>Resolution: </b> ${meta.resolution}`;
   },
   se(meta) {
-    return `<span style="font-size: 50%"><i style="color: red;">mtime:</i>${meta.mtime}</span><br/>Annotation Corner`;
+    return `<span style="font-size: 50%"><i style="color: red;">mtime:</i>${
+      meta.mtime
+    }</span><br/>Annotation Corner`;
   },
 });
 
 // Add slider to the control bar
-const sliderContainer = renderWindow.getControlContainer().querySelector('.js-slider');
+const sliderContainer = renderWindow
+  .getControlContainer()
+  .querySelector('.js-slider');
 sliderContainer.style.flex = '1';
 sliderContainer.style.position = 'relative';
 sliderContainer.style.minWidth = '25px';
@@ -79,7 +85,9 @@ slider.onValueChange((resolution) => {
 function updateSizeAndOrientation() {
   renderWindow.resize();
   slider.resize();
-  renderWindow.getControlContainer().style.flexFlow = slider.getOrientation() ? 'row' : 'column';
+  renderWindow.getControlContainer().style.flexFlow = slider.getOrientation()
+    ? 'row'
+    : 'column';
   setTimeout(slider.resize, 0);
 }
 updateSizeAndOrientation();

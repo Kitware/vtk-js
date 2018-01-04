@@ -16,7 +16,8 @@ function vtkViewport(publicAPI, model) {
 
   // Public API methods
   publicAPI.getViewProps = () => model.props;
-  publicAPI.hasViewProp = prop => !!model.props.filter(item => item === prop).length;
+  publicAPI.hasViewProp = (prop) =>
+    !!model.props.filter((item) => item === prop).length;
   publicAPI.addViewProp = (prop) => {
     if (prop && !publicAPI.hasViewProp(prop)) {
       model.props = model.props.concat(prop);
@@ -24,7 +25,7 @@ function vtkViewport(publicAPI, model) {
   };
 
   publicAPI.removeViewProp = (prop) => {
-    const newPropList = model.props.filter(item => item !== prop);
+    const newPropList = model.props.filter((item) => item !== prop);
     if (model.props.length !== newPropList.length) {
       model.props = newPropList;
     }
@@ -60,8 +61,10 @@ function vtkViewport(publicAPI, model) {
     return model.actors2D;
   };
 
-  publicAPI.displayToView = () => vtkErrorMacro('call displayToView on your view instead');
-  publicAPI.viewToDisplay = () => vtkErrorMacro('callviewtodisplay on your view instead');
+  publicAPI.displayToView = () =>
+    vtkErrorMacro('call displayToView on your view instead');
+  publicAPI.viewToDisplay = () =>
+    vtkErrorMacro('callviewtodisplay on your view instead');
   publicAPI.getSize = () => vtkErrorMacro('call getSize on your View instead');
 
   publicAPI.normalizedDisplayToView = (x, y, z) => {
@@ -73,30 +76,52 @@ function vtkViewport(publicAPI, model) {
   };
 
   publicAPI.normalizedDisplayToNormalizedViewport = (x, y, z) => {
-    const scale = [model.viewport[2] - model.viewport[0],
-      model.viewport[3] - model.viewport[1]];
-    return [(x - model.viewport[0]) / scale[0], (y - model.viewport[1]) / scale[1], z];
+    const scale = [
+      model.viewport[2] - model.viewport[0],
+      model.viewport[3] - model.viewport[1],
+    ];
+    return [
+      (x - model.viewport[0]) / scale[0],
+      (y - model.viewport[1]) / scale[1],
+      z,
+    ];
   };
 
-  publicAPI.normalizedViewportToView = (x, y, z) =>
-    [(x * 2.0) - 1.0, (y * 2.0) - 1.0, (z * 2.0) - 1.0];
+  publicAPI.normalizedViewportToView = (x, y, z) => [
+    x * 2.0 - 1.0,
+    y * 2.0 - 1.0,
+    z * 2.0 - 1.0,
+  ];
 
   publicAPI.viewToNormalizedDisplay = (x, y, z) => {
     // first to nvp
     const nvp = publicAPI.viewToNormalizedViewport(x, y, z);
 
     // then to ndp
-    return publicAPI.normalizedViewportToNormalizedDisplay(nvp[0], nvp[1], nvp[2]);
+    return publicAPI.normalizedViewportToNormalizedDisplay(
+      nvp[0],
+      nvp[1],
+      nvp[2]
+    );
   };
 
   publicAPI.normalizedViewportToNormalizedDisplay = (x, y, z) => {
-    const scale = [model.viewport[2] - model.viewport[0],
-      model.viewport[3] - model.viewport[1]];
-    return [(x * scale[0]) + model.viewport[0], (y * scale[1]) + model.viewport[1], z];
+    const scale = [
+      model.viewport[2] - model.viewport[0],
+      model.viewport[3] - model.viewport[1],
+    ];
+    return [
+      x * scale[0] + model.viewport[0],
+      y * scale[1] + model.viewport[1],
+      z,
+    ];
   };
 
-  publicAPI.viewToNormalizedViewport = (x, y, z) =>
-    [(x + 1.0) * 0.5, (y + 1.0) * 0.5, (z + 1.0) * 0.5];
+  publicAPI.viewToNormalizedViewport = (x, y, z) => [
+    (x + 1.0) * 0.5,
+    (y + 1.0) * 0.5,
+    (z + 1.0) * 0.5,
+  ];
 
   publicAPI.PickPropFrom = notImplemented('PickPropFrom');
 }
@@ -126,14 +151,9 @@ export function extend(publicAPI, model, initialValues = {}) {
   macro.obj(publicAPI, model);
   macro.event(publicAPI, model, 'event');
 
-  macro.setGetArray(publicAPI, model, [
-    'viewport',
-  ], 4);
+  macro.setGetArray(publicAPI, model, ['viewport'], 4);
 
-  macro.setGetArray(publicAPI, model, [
-    'background',
-    'background2',
-  ], 3);
+  macro.setGetArray(publicAPI, model, ['background', 'background2'], 3);
 
   vtkViewport(publicAPI, model);
 }
