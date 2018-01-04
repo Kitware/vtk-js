@@ -1,4 +1,4 @@
-import macro   from 'vtk.js/Sources/macro';
+import macro from 'vtk.js/Sources/macro';
 import vtkMath from 'vtk.js/Sources/Common/Core/Math';
 
 // ----------------------------------------------------------------------------

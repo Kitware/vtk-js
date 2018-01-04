@@ -2,7 +2,7 @@ import vtk from './vtk';
 
 let globalMTime = 0;
 
-export function getCurrentGlobalMTime() {
+function getCurrentGlobalMTime() {
   return globalMTime;
 }
 
@@ -14,10 +14,24 @@ export function getCurrentGlobalMTime() {
 const fakeConsole = {};
 function noOp() {}
 
-const consoleMethods = ['log', 'debug', 'info', 'warn', 'error', 'time', 'timeEnd', 'group', 'groupEnd'];
-consoleMethods.forEach((methodName) => { (fakeConsole[methodName] = noOp); });
+const consoleMethods = [
+  'log',
+  'debug',
+  'info',
+  'warn',
+  'error',
+  'time',
+  'timeEnd',
+  'group',
+  'groupEnd',
+];
+consoleMethods.forEach((methodName) => {
+  fakeConsole[methodName] = noOp;
+});
 
-global.console = (window.console.hasOwnProperty('log') ? window.console : fakeConsole);
+global.console = window.console.hasOwnProperty('log')
+  ? window.console
+  : fakeConsole;
 
 const loggerFunctions = {
   debug: noOp, // Don't print debug by default
@@ -65,7 +79,7 @@ export function capitalize(str) {
 // Array helper
 // ----------------------------------------------------------------------------
 
-export function safeArrays(model) {
+function safeArrays(model) {
   Object.keys(model).forEach((key) => {
     if (Array.isArray(model[key])) {
       model[key] = [].concat(model[key]);
@@ -75,11 +89,11 @@ export function safeArrays(model) {
 
 // ----------------------------------------------------------------------------
 
-export function enumToString(e, value) {
-  return Object.keys(e).find(key => e[key] === value);
+function enumToString(e, value) {
+  return Object.keys(e).find((key) => e[key] === value);
 }
 
-export function getStateArrayMapFunc(item) {
+function getStateArrayMapFunc(item) {
   if (item.isA) {
     return item.getState();
   }
@@ -95,7 +109,7 @@ export function obj(publicAPI = {}, model = {}) {
   safeArrays(model);
 
   const callbacks = [];
-  model.mtime = (Number.isInteger(model.mtime) ? model.mtime : ++globalMTime);
+  model.mtime = Number.isInteger(model.mtime) ? model.mtime : ++globalMTime;
   model.classHierarchy = ['vtkObject'];
 
   function off(index) {
@@ -122,7 +136,7 @@ export function obj(publicAPI = {}, model = {}) {
     }
 
     model.mtime = ++globalMTime;
-    callbacks.forEach(callback => callback && callback(publicAPI));
+    callbacks.forEach((callback) => callback && callback(publicAPI));
   };
 
   publicAPI.onModified = (callback) => {
@@ -150,7 +164,8 @@ export function obj(publicAPI = {}, model = {}) {
     return false;
   };
 
-  publicAPI.getClassName = (depth = 0) => model.classHierarchy[model.classHierarchy.length - 1 - depth];
+  publicAPI.getClassName = (depth = 0) =>
+    model.classHierarchy[model.classHierarchy.length - 1 - depth];
 
   publicAPI.set = (map = {}, noWarning = false, noFunction = false) => {
     let ret = false;
@@ -163,7 +178,9 @@ export function obj(publicAPI = {}, model = {}) {
       } else {
         // Set data on model directly
         if (['mtime'].indexOf(name) === -1 && !noWarning) {
-          vtkWarningMacro(`Warning: Set value to model directly ${name}, ${map[name]}`);
+          vtkWarningMacro(
+            `Warning: Set value to model directly ${name}, ${map[name]}`
+          );
         }
         model[name] = map[name];
         ret = true;
@@ -183,10 +200,10 @@ export function obj(publicAPI = {}, model = {}) {
     return subset;
   };
 
-  publicAPI.getReferenceByName = val => model[val];
+  publicAPI.getReferenceByName = (val) => model[val];
 
   publicAPI.delete = () => {
-    Object.keys(model).forEach(field => delete model[field]);
+    Object.keys(model).forEach((field) => delete model[field]);
     callbacks.forEach((el, index) => off(index));
 
     // Flag the instance being deleted
@@ -195,7 +212,9 @@ export function obj(publicAPI = {}, model = {}) {
 
   // Add serialization support
   publicAPI.getState = () => {
-    const jsonArchive = Object.assign({}, model, { vtkClass: publicAPI.getClassName() });
+    const jsonArchive = Object.assign({}, model, {
+      vtkClass: publicAPI.getClassName(),
+    });
 
     // Convert every vtkObject to its serializable form
     Object.keys(jsonArchive).forEach((keyName) => {
@@ -210,9 +229,11 @@ export function obj(publicAPI = {}, model = {}) {
 
     // Sort resulting object by key name
     const sortedObj = {};
-    Object.keys(jsonArchive).sort().forEach((name) => {
-      sortedObj[name] = jsonArchive[name];
-    });
+    Object.keys(jsonArchive)
+      .sort()
+      .forEach((name) => {
+        sortedObj[name] = jsonArchive[name];
+      });
 
     // Remove mtime
     if (sortedObj.mtime) {
@@ -225,7 +246,9 @@ export function obj(publicAPI = {}, model = {}) {
   // Add shallowCopy(otherInstance) support
   publicAPI.shallowCopy = (other, debug = false) => {
     if (other.getClassName() !== publicAPI.getClassName()) {
-      throw new Error(`Cannot ShallowCopy ${other.getClassName()} into ${publicAPI.getClassName()}`);
+      throw new Error(
+        `Cannot ShallowCopy ${other.getClassName()} into ${publicAPI.getClassName()}`
+      );
     }
     const otherModel = other.get();
 
@@ -286,7 +309,11 @@ const objectSetterMap = {
       }
       if (typeof value === 'number') {
         if (model[field.name] !== value) {
-          if (Object.keys(field.enum).map(key => field.enum[key]).indexOf(value) !== -1) {
+          if (
+            Object.keys(field.enum)
+              .map((key) => field.enum[key])
+              .indexOf(value) !== -1
+          ) {
             model[field.name] = value;
             publicAPI.modified();
             return true;
@@ -296,7 +323,9 @@ const objectSetterMap = {
         }
         return false;
       }
-      vtkErrorMacro(`Set Enum with invalid argument (String/Number) ${field}, ${value}`);
+      vtkErrorMacro(
+        `Set Enum with invalid argument (String/Number) ${field}, ${value}`
+      );
       throw new TypeError('Set Enum with invalid argument (String/Number)');
     };
   },
@@ -332,9 +361,15 @@ function findSetter(field) {
 export function set(publicAPI, model, fields) {
   fields.forEach((field) => {
     if (typeof field === 'object') {
-      publicAPI[`set${capitalize(field.name)}`] = findSetter(field)(publicAPI, model);
+      publicAPI[`set${capitalize(field.name)}`] = findSetter(field)(
+        publicAPI,
+        model
+      );
     } else {
-      publicAPI[`set${capitalize(field)}`] = findSetter(field)(publicAPI, model);
+      publicAPI[`set${capitalize(field)}`] = findSetter(field)(
+        publicAPI,
+        model
+      );
     }
   });
 }
@@ -366,7 +401,13 @@ export function getArray(publicAPI, model, fieldNames) {
 // set...From: fast path to copy the content of an array to the current one without call to modified.
 // ----------------------------------------------------------------------------
 
-export function setArray(publicAPI, model, fieldNames, size, defaultVal = undefined) {
+export function setArray(
+  publicAPI,
+  model,
+  fieldNames,
+  size,
+  defaultVal = undefined
+) {
   fieldNames.forEach((field) => {
     publicAPI[`set${capitalize(field)}`] = (...args) => {
       if (model.deleted) {
@@ -377,7 +418,9 @@ export function setArray(publicAPI, model, fieldNames, size, defaultVal = undefi
       let array = args;
       // allow an array passed as a single arg.
       if (array.length === 1 && Array.isArray(array[0])) {
+        /* eslint-disable prefer-destructuring */
         array = array[0];
+        /* eslint-enable prefer-destructuring */
       }
 
       if (array.length !== size) {
@@ -418,7 +461,13 @@ export function setArray(publicAPI, model, fieldNames, size, defaultVal = undefi
 // set/get XXX: add setter and getter for object of type array
 // ----------------------------------------------------------------------------
 
-export function setGetArray(publicAPI, model, fieldNames, size, defaultVal = undefined) {
+export function setGetArray(
+  publicAPI,
+  model,
+  fieldNames,
+  size,
+  defaultVal = undefined
+) {
   getArray(publicAPI, model, fieldNames);
   setArray(publicAPI, model, fieldNames, size, defaultVal);
 }
@@ -553,14 +602,20 @@ export function algo(publicAPI, model, numberOfInputs, numberOfOutputs) {
 
     count = model.numberOfInputs;
     while (count--) {
-      if (model.inputConnection[count] && model.inputConnection[count].filter.shouldUpdate()) {
+      if (
+        model.inputConnection[count] &&
+        model.inputConnection[count].filter.shouldUpdate()
+      ) {
         return true;
       }
     }
 
     count = model.numberOfInputs;
     while (count--) {
-      if (publicAPI.getInputData(count) && publicAPI.getInputData(count).getMTime() > minOutputMTime) {
+      if (
+        publicAPI.getInputData(count) &&
+        publicAPI.getInputData(count).getMTime() > minOutputMTime
+      ) {
         return true;
       }
     }
@@ -618,15 +673,26 @@ export function algo(publicAPI, model, numberOfInputs, numberOfOutputs) {
     const arrayDesc = model.inputArrayToProcess[inputPort];
     const ds = model.inputData[inputPort];
     if (arrayDesc && ds) {
-      return ds[`get${arrayDesc.fieldAssociation}`]().getArray(arrayDesc.arrayName);
+      return ds[`get${arrayDesc.fieldAssociation}`]().getArray(
+        arrayDesc.arrayName
+      );
     }
     return null;
   };
-  publicAPI.setInputArrayToProcess = (inputPort, arrayName, fieldAssociation, attributeType = 'Scalars') => {
+  publicAPI.setInputArrayToProcess = (
+    inputPort,
+    arrayName,
+    fieldAssociation,
+    attributeType = 'Scalars'
+  ) => {
     while (model.inputArrayToProcess.length < inputPort) {
       model.inputArrayToProcess.push(null);
     }
-    model.inputArrayToProcess[inputPort] = { arrayName, fieldAssociation, attributeType };
+    model.inputArrayToProcess[inputPort] = {
+      arrayName,
+      fieldAssociation,
+      attributeType,
+    };
   };
 }
 
@@ -708,7 +774,7 @@ export function newInstance(extend, className) {
 // ----------------------------------------------------------------------------
 
 export function chain(...fn) {
-  return (...args) => fn.filter(i => !!i).forEach(i => i(...args));
+  return (...args) => fn.filter((i) => !!i).forEach((i) => i(...args));
 }
 
 // ----------------------------------------------------------------------------
@@ -719,7 +785,12 @@ export function isVtkObject(instance) {
   return instance && instance.isA && instance.isA('vtkObject');
 }
 
-export function traverseInstanceTree(instance, extractFunction, accumulator = [], visitedInstances = []) {
+export function traverseInstanceTree(
+  instance,
+  extractFunction,
+  accumulator = [],
+  visitedInstances = []
+) {
   if (isVtkObject(instance)) {
     if (visitedInstances.indexOf(instance) >= 0) {
       // avoid cycles
@@ -738,10 +809,20 @@ export function traverseInstanceTree(instance, extractFunction, accumulator = []
       const modelObj = model[key];
       if (Array.isArray(modelObj)) {
         modelObj.forEach((subObj) => {
-          traverseInstanceTree(subObj, extractFunction, accumulator, visitedInstances);
+          traverseInstanceTree(
+            subObj,
+            extractFunction,
+            accumulator,
+            visitedInstances
+          );
         });
       } else {
-        traverseInstanceTree(modelObj, extractFunction, accumulator, visitedInstances);
+        traverseInstanceTree(
+          modelObj,
+          extractFunction,
+          accumulator,
+          visitedInstances
+        );
       }
     });
   }
@@ -756,16 +837,16 @@ export function traverseInstanceTree(instance, extractFunction, accumulator = []
 // leading edge, instead of the trailing.
 
 export function debounce(func, wait, immediate) {
-  var timeout;
+  let timeout;
   return (...args) => {
-    var context = this;
-    var later = () => {
+    const context = this;
+    const later = () => {
       timeout = null;
       if (!immediate) {
         func.apply(context, args);
       }
     };
-    var callNow = immediate && !timeout;
+    const callNow = immediate && !timeout;
     clearTimeout(timeout);
     timeout = setTimeout(later, wait);
     if (callNow) {
@@ -788,7 +869,7 @@ export function debounce(func, wait, immediate) {
 // ----------------------------------------------------------------------------
 let nextProxyId = 1;
 
-function proxy(publicAPI, model, sectionName, uiDescription = []) {
+export function proxy(publicAPI, model, sectionName, uiDescription = []) {
   const parentDelete = publicAPI.delete;
 
   // getProxyId
@@ -796,13 +877,13 @@ function proxy(publicAPI, model, sectionName, uiDescription = []) {
   publicAPI.getProxyId = () => model.proxyId;
 
   // list
-  const propertyNames = uiDescription.map(p => p.name);
+  const propertyNames = uiDescription.map((p) => p.name);
   publicAPI.listProxyProperties = () => propertyNames;
 
   // ui handling
-  const ui = uiDescription.map(i => Object.assign({}, i));
+  const ui = uiDescription.map((i) => Object.assign({}, i));
   publicAPI.updateProxyProperty = (propertyName, propUI) => {
-    const prop = ui.find(p => p.name === propertyName);
+    const prop = ui.find((p) => p.name === propertyName);
     if (prop) {
       Object.assign(prop, propUI);
     }
@@ -836,7 +917,9 @@ function proxy(publicAPI, model, sectionName, uiDescription = []) {
         }
       }
 
-      const newValue = sourceLink.instance[`get${capitalize(sourceLink.propertyName)}`]();
+      const newValue = sourceLink.instance[
+        `get${capitalize(sourceLink.propertyName)}`
+      ]();
       if (newValue !== value) {
         value = newValue;
         updateInProgress = true;
@@ -921,7 +1004,7 @@ function proxy(publicAPI, model, sectionName, uiDescription = []) {
 //  Elevate set/get methods from internal object stored in the model to current one
 // ----------------------------------------------------------------------------
 
-function proxyPropertyMapping(publicAPI, model, map) {
+export function proxyPropertyMapping(publicAPI, model, map) {
   const parentDelete = publicAPI.delete;
   const subscriptions = [];
 
@@ -965,7 +1048,12 @@ function proxyPropertyMapping(publicAPI, model, map) {
 //   get / set Representation ( string ) => push state to various internal objects
 // ----------------------------------------------------------------------------
 
-function proxyPropertyState(publicAPI, model, state = {}, defaults = {}) {
+export function proxyPropertyState(
+  publicAPI,
+  model,
+  state = {},
+  defaults = {}
+) {
   model.this = publicAPI;
 
   function applyState(map) {

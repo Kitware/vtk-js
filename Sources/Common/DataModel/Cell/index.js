@@ -1,4 +1,4 @@
-import macro            from 'vtk.js/Sources/macro';
+import macro from 'vtk.js/Sources/macro';
 import vtkMath from 'vtk.js/Sources/Common/Core/Math';
 import vtkPoints from 'vtk.js/Sources/Common/Core/Points';
 
@@ -30,12 +30,12 @@ function vtkCell(publicAPI, model) {
 
       for (let i = 1; i < nbPoints; i++) {
         model.points.getPoint(i, x);
-        model.bounds[0] = (x[0] < model.bounds[0] ? x[0] : model.bounds[0]);
-        model.bounds[1] = (x[0] > model.bounds[1] ? x[0] : model.bounds[1]);
-        model.bounds[2] = (x[1] < model.bounds[2] ? x[1] : model.bounds[2]);
-        model.bounds[3] = (x[1] > model.bounds[3] ? x[1] : model.bounds[3]);
-        model.bounds[4] = (x[2] < model.bounds[4] ? x[2] : model.bounds[4]);
-        model.bounds[5] = (x[2] > model.bounds[5] ? x[2] : model.bounds[5]);
+        model.bounds[0] = x[0] < model.bounds[0] ? x[0] : model.bounds[0];
+        model.bounds[1] = x[0] > model.bounds[1] ? x[0] : model.bounds[1];
+        model.bounds[2] = x[1] < model.bounds[2] ? x[1] : model.bounds[2];
+        model.bounds[3] = x[1] > model.bounds[3] ? x[1] : model.bounds[3];
+        model.bounds[4] = x[2] < model.bounds[4] ? x[2] : model.bounds[4];
+        model.bounds[5] = x[2] > model.bounds[5] ? x[2] : model.bounds[5];
       }
     } else {
       vtkMath.uninitializeBounds(model.bounds);
@@ -48,7 +48,7 @@ function vtkCell(publicAPI, model) {
     let length = 0.0;
     let diff = 0;
     for (let i = 0; i < 3; i++) {
-      diff = model.bounds[(2 * i) + 1] - model.bounds[2 * i];
+      diff = model.bounds[2 * i + 1] - model.bounds[2 * i];
       length += diff * diff;
     }
     return length;
@@ -63,7 +63,8 @@ function vtkCell(publicAPI, model) {
         pDist = -pcoords[i];
       } else if (pcoords[i] > 1.0) {
         pDist = pcoords[i] - 1.0;
-      } else { // inside the cell in the parametric direction
+      } else {
+        // inside the cell in the parametric direction
         pDist = 0.0;
       }
       if (pDist > pDistMax) {
@@ -76,12 +77,23 @@ function vtkCell(publicAPI, model) {
   publicAPI.getNumberOfPoints = () => model.points.getNumberOfPoints();
 
   publicAPI.deepCopy = (cell) => {
-    cell.initialize(model.points.getNumberOfPoints(), model.pointsIds, model.points);
+    cell.initialize(
+      model.points.getNumberOfPoints(),
+      model.pointsIds,
+      model.points
+    );
   };
 
   publicAPI.getCellDimension = () => {}; // virtual
   publicAPI.intersectWithLine = (p1, p2, tol, t, x, pcoords, subId) => {}; // virtual
-  publicAPI.evaluatePosition = (x, closestPoint, subId, pcoords, dist2, weights) => {}; // virtual
+  publicAPI.evaluatePosition = (
+    x,
+    closestPoint,
+    subId,
+    pcoords,
+    dist2,
+    weights
+  ) => {}; // virtual
 }
 
 // ----------------------------------------------------------------------------

@@ -1,7 +1,7 @@
-import macro                             from 'vtk.js/Sources/macro';
+import macro from 'vtk.js/Sources/macro';
 import vtkInteractorStyleTrackballCamera from 'vtk.js/Sources/Interaction/Style/InteractorStyleTrackballCamera';
-import vtkMath                           from 'vtk.js/Sources/Common/Core/Math';
-import { States }                        from 'vtk.js/Sources/Rendering/Core/InteractorStyle/Constants';
+import vtkMath from 'vtk.js/Sources/Common/Core/Math';
+import { States } from 'vtk.js/Sources/Rendering/Core/InteractorStyle/Constants';
 
 // ----------------------------------------------------------------------------
 // vtkInteractorStyleImage methods
@@ -21,9 +21,14 @@ function vtkInteractorStyleImage(publicAPI, model) {
     // Get the last (the topmost) image
     publicAPI.setCurrentImageNumber(model.currentImageNumber);
 
-    if (model.handleObservers &&
-        typeof publicAPI.invokeStartWindowLevelEvent === 'function') {
-      publicAPI.invokeStartWindowLevelEvent({ type: 'StartWindowLevelEvent', style: publicAPI });
+    if (
+      model.handleObservers &&
+      typeof publicAPI.invokeStartWindowLevelEvent === 'function'
+    ) {
+      publicAPI.invokeStartWindowLevelEvent({
+        type: 'StartWindowLevelEvent',
+        style: publicAPI,
+      });
     } else if (model.currentImageProperty) {
       const property = model.currentImageProperty;
       model.windowLevelInitial[0] = property.getColorWindow();
@@ -36,9 +41,14 @@ function vtkInteractorStyleImage(publicAPI, model) {
     if (model.state !== States.IS_WINDOW_LEVEL) {
       return;
     }
-    if (model.handleObservers &&
-        typeof publicAPI.invokeEndWindowLevelEvent === 'function') {
-      publicAPI.invokeEndWindowLevelEvent({ type: 'EndWindowLevelEvent', style: publicAPI });
+    if (
+      model.handleObservers &&
+      typeof publicAPI.invokeEndWindowLevelEvent === 'function'
+    ) {
+      publicAPI.invokeEndWindowLevelEvent({
+        type: 'EndWindowLevelEvent',
+        style: publicAPI,
+      });
     }
     publicAPI.stopState();
   };
@@ -62,7 +72,9 @@ function vtkInteractorStyleImage(publicAPI, model) {
   // Public API methods
   publicAPI.superHandleAnimation = publicAPI.handleAnimation;
   publicAPI.handleAnimation = () => {
-    const pos = model.interactor.getEventPosition(model.interactor.getPointerIndex());
+    const pos = model.interactor.getEventPosition(
+      model.interactor.getPointerIndex()
+    );
 
     switch (model.state) {
       case States.IS_WINDOW_LEVEL:
@@ -86,7 +98,9 @@ function vtkInteractorStyleImage(publicAPI, model) {
   //----------------------------------------------------------------------------
   publicAPI.superHandleLeftButtonPress = publicAPI.handleLeftButtonPress;
   publicAPI.handleLeftButtonPress = () => {
-    const pos = model.interactor.getEventPosition(model.interactor.getPointerIndex());
+    const pos = model.interactor.getEventPosition(
+      model.interactor.getPointerIndex()
+    );
     publicAPI.findPokedRenderer(pos.x, pos.y);
     if (model.currentRenderer === null) {
       return;
@@ -98,13 +112,17 @@ function vtkInteractorStyleImage(publicAPI, model) {
       model.windowLevelStartPosition[1] = pos.y;
       publicAPI.startWindowLevel();
       publicAPI.setAnimationStateOn();
-    } else if (model.interactionMode === 'IMAGE3D' &&
-             model.interactor.getShiftKey()) {
+    } else if (
+      model.interactionMode === 'IMAGE3D' &&
+      model.interactor.getShiftKey()
+    ) {
       // If shift is held down, do a rotation
       publicAPI.startRotate();
       publicAPI.setAnimationStateOn();
-    } else if (model.interactionMode === 'IMAGE_SLICING' &&
-             model.interactor.getControlKey()) {
+    } else if (
+      model.interactionMode === 'IMAGE_SLICING' &&
+      model.interactor.getControlKey()
+    ) {
       // If ctrl is held down in slicing mode, slice the image
       model.lastSlicePosition = pos.y;
       publicAPI.startSlice();
@@ -143,15 +161,22 @@ function vtkInteractorStyleImage(publicAPI, model) {
 
   //----------------------------------------------------------------------------
   publicAPI.windowLevel = () => {
-    const pos = model.interactor.getEventPosition(model.interactor.getPointerIndex());
+    const pos = model.interactor.getEventPosition(
+      model.interactor.getPointerIndex()
+    );
 
     model.windowLevelCurrentPosition[0] = pos.x;
     model.windowLevelCurrentPosition[1] = pos.y;
     const rwi = model.interactor;
 
-    if (model.handleObservers &&
-        typeof publicAPI.invokeWindowLevelEvent === 'function') {
-      publicAPI.invokeWindowLevelEvent({ type: 'WindowLevelEvent', style: publicAPI });
+    if (
+      model.handleObservers &&
+      typeof publicAPI.invokeWindowLevelEvent === 'function'
+    ) {
+      publicAPI.invokeWindowLevelEvent({
+        type: 'WindowLevelEvent',
+        style: publicAPI,
+      });
     } else if (model.currentImageProperty) {
       const size = rwi.getView().getViewportSize(model.currentRenderer);
 
@@ -159,21 +184,27 @@ function vtkInteractorStyleImage(publicAPI, model) {
       const level = model.windowLevelInitial[1];
 
       // Compute normalized delta
-      let dx = (model.windowLevelCurrentPosition[0] -
-                   model.windowLevelStartPosition[0]) * 4.0 / size[0];
-      let dy = (model.windowLevelStartPosition[1] -
-                   model.windowLevelCurrentPosition[1]) * 4.0 / size[1];
+      let dx =
+        (model.windowLevelCurrentPosition[0] -
+          model.windowLevelStartPosition[0]) *
+        4.0 /
+        size[0];
+      let dy =
+        (model.windowLevelStartPosition[1] -
+          model.windowLevelCurrentPosition[1]) *
+        4.0 /
+        size[1];
 
       // Scale by current values
       if (Math.abs(mWindow) > 0.01) {
         dx *= mWindow;
       } else {
-        dx *= (mWindow < 0 ? -0.01 : 0.01);
+        dx *= mWindow < 0 ? -0.01 : 0.01;
       }
       if (Math.abs(level) > 0.01) {
         dy *= level;
       } else {
-        dy *= (level < 0 ? -0.01 : 0.01);
+        dy *= level < 0 ? -0.01 : 0.01;
       }
 
       // Abs so that direction does not flip
@@ -229,16 +260,15 @@ function vtkInteractorStyleImage(publicAPI, model) {
 
     // clamp the distance to the clipping range
     if (distance < range[0]) {
-      distance = range[0] + (viewportHeight * 1e-3);
+      distance = range[0] + viewportHeight * 1e-3;
     }
     if (distance > range[1]) {
-      distance = range[1] - (viewportHeight * 1e-3);
+      distance = range[1] - viewportHeight * 1e-3;
     }
     camera.setDistance(distance);
 
     model.lastSlicePosition = pos.y;
   };
-
 
   //----------------------------------------------------------------------------
   // This is a way of dealing with images as if they were layers.
@@ -254,8 +284,11 @@ function vtkInteractorStyleImage(publicAPI, model) {
     }
 
     function propMatch(j, prop, targetIndex) {
-      if (prop.isA('vtkImageSlice') &&
-        j === targetIndex && prop.getPickable()) {
+      if (
+        prop.isA('vtkImageSlice') &&
+        j === targetIndex &&
+        prop.getPickable()
+      ) {
         return true;
       }
       return false;
@@ -311,10 +344,7 @@ export function extend(publicAPI, model, initialValues = {}) {
   vtkInteractorStyleTrackballCamera.extend(publicAPI, model, initialValues);
 
   // Create get-set macros
-  macro.setGet(publicAPI, model, [
-    'motionFactor',
-    'interactionMode',
-  ]);
+  macro.setGet(publicAPI, model, ['motionFactor', 'interactionMode']);
 
   // For more macro methods, see "Sources/macro.js"
 

@@ -50,5 +50,6 @@ function extractBinary(arrayBuffer, prefixRegex, suffixRegex = null) {
 }
 
 export default {
-  arrayBufferToString, extractBinary,
+  arrayBufferToString,
+  extractBinary,
 };

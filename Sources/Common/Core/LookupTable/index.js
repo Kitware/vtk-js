@@ -1,7 +1,7 @@
-import macro                    from 'vtk.js/Sources/macro';
-import vtkMath                  from 'vtk.js/Sources/Common/Core/Math';
-import vtkScalarsToColors       from 'vtk.js/Sources/Common/Core/ScalarsToColors';
-import { ScalarMappingTarget }  from 'vtk.js/Sources/Common/Core/ScalarsToColors/Constants';
+import macro from 'vtk.js/Sources/macro';
+import vtkMath from 'vtk.js/Sources/Common/Core/Math';
+import vtkScalarsToColors from 'vtk.js/Sources/Common/Core/ScalarsToColors';
+import { ScalarMappingTarget } from 'vtk.js/Sources/Common/Core/ScalarsToColors/Constants';
 
 // ----------------------------------------------------------------------------
 // Global methods
@@ -33,9 +33,15 @@ function vtkLookupTable(publicAPI, model) {
   publicAPI.isOpaque = () => {
     if (model.opaqueFlagBuildTime.getMTime() < publicAPI.getMTime()) {
       let opaque = true;
-      if (model.nanColor[3] < 1.0) { opaque = 0; }
-      if (model.useBelowRangeColor && model.belowRangeColor[3] < 1.0) { opaque = 0; }
-      if (model.useAboveRangeColor && model.aboveRangeColor[3] < 1.0) { opaque = 0; }
+      if (model.nanColor[3] < 1.0) {
+        opaque = 0;
+      }
+      if (model.useBelowRangeColor && model.belowRangeColor[3] < 1.0) {
+        opaque = 0;
+      }
+      if (model.useAboveRangeColor && model.aboveRangeColor[3] < 1.0) {
+        opaque = 0;
+      }
       for (let i = 3; i < model.table.length && opaque; i += 4) {
         if (model.table[i] < 255) {
           opaque = false;
@@ -68,7 +74,7 @@ function vtkLookupTable(publicAPI, model) {
       // This conditional is needed because when v is very close to
       // p.Range[1], it may map above p.MaxIndex in the linear mapping
       // above.
-      dIndex = (dIndex < p.maxIndex ? dIndex : p.maxIndex);
+      dIndex = dIndex < p.maxIndex ? dIndex : p.maxIndex;
     }
 
     return Math.floor(dIndex);
@@ -81,12 +87,22 @@ function vtkLookupTable(publicAPI, model) {
     } else {
       index = publicAPI.linearIndexLookup(v, p);
     }
-    return [table[4 * index], table[(4 * index) + 1], table[(4 * index) + 2], table[(4 * index) + 3]];
+    return [
+      table[4 * index],
+      table[4 * index + 1],
+      table[4 * index + 2],
+      table[4 * index + 3],
+    ];
   };
 
   publicAPI.indexedLookupFunction = (v, table, p) => {
     const index = publicAPI.getAnnotatedValueIndexInternal(v);
-    return [table[4 * index], table[(4 * index) + 1], table[(4 * index) + 2], table[(4 * index) + 3]];
+    return [
+      table[4 * index],
+      table[4 * index + 1],
+      table[4 * index + 2],
+      table[4 * index + 3],
+    ];
   };
 
   //----------------------------------------------------------------------------
@@ -99,7 +115,12 @@ function vtkLookupTable(publicAPI, model) {
   };
 
   // Public API methods
-  publicAPI.mapScalarsThroughTable = (input, output, outFormat, inputOffset) => {
+  publicAPI.mapScalarsThroughTable = (
+    input,
+    output,
+    outFormat,
+    inputOffset
+  ) => {
     let lookupFunc = publicAPI.linearLookup;
     if (model.indexedLookup) {
       lookupFunc = publicAPI.indexedLookupFunction;
@@ -125,25 +146,30 @@ function vtkLookupTable(publicAPI, model) {
     if (alpha >= 1.0) {
       if (outFormat === ScalarMappingTarget.RGBA) {
         for (let i = 0; i < length; i++) {
-          const cptr =
-            lookupFunc(inputV[(i * inIncr) + inputOffset],
-              model.table, p);
-          outputV[(i * 4)] = cptr[0];
-          outputV[(i * 4) + 1] = cptr[1];
-          outputV[(i * 4) + 2] = cptr[2];
-          outputV[(i * 4) + 3] = cptr[3];
+          const cptr = lookupFunc(
+            inputV[i * inIncr + inputOffset],
+            model.table,
+            p
+          );
+          outputV[i * 4] = cptr[0];
+          outputV[i * 4 + 1] = cptr[1];
+          outputV[i * 4 + 2] = cptr[2];
+          outputV[i * 4 + 3] = cptr[3];
         }
       }
     } else {
       /* eslint-disable no-lonely-if */
       if (outFormat === ScalarMappingTarget.RGBA) {
         for (let i = 0; i < length; i++) {
-          const cptr =
-            lookupFunc(inputV[(i * inIncr) + inputOffset], model.table, p);
-          outputV[(i * 4)] = cptr[0];
-          outputV[(i * 4) + 1] = cptr[1];
-          outputV[(i * 4) + 2] = cptr[2];
-          outputV[(i * 4) + 3] = Math.floor((cptr[3] * alpha) + 0.5);
+          const cptr = lookupFunc(
+            inputV[i * inIncr + inputOffset],
+            model.table,
+            p
+          );
+          outputV[i * 4] = cptr[0];
+          outputV[i * 4 + 1] = cptr[1];
+          outputV[i * 4 + 2] = cptr[2];
+          outputV[i * 4 + 3] = Math.floor(cptr[3] * alpha + 0.5);
         }
       }
     } // alpha blending
@@ -167,18 +193,18 @@ function vtkLookupTable(publicAPI, model) {
     const hsv = [];
     const rgba = [];
     for (let i = 0; i <= maxIndex; i++) {
-      hsv[0] = model.hueRange[0] + (i * hinc);
-      hsv[1] = model.saturationRange[0] + (i * sinc);
-      hsv[2] = model.valueRange[0] + (i * vinc);
+      hsv[0] = model.hueRange[0] + i * hinc;
+      hsv[1] = model.saturationRange[0] + i * sinc;
+      hsv[2] = model.valueRange[0] + i * vinc;
 
       vtkMath.hsv2rgb(hsv, rgba);
-      rgba[3] = model.alphaRange[0] + (i * ainc);
+      rgba[3] = model.alphaRange[0] + i * ainc;
 
       //  case VTK_RAMP_LINEAR:
-      model.table[(i * 4)] = (rgba[0] * 255.0) + 0.5;
-      model.table[(i * 4) + 1] = (rgba[1] * 255.0) + 0.5;
-      model.table[(i * 4) + 2] = (rgba[2] * 255.0) + 0.5;
-      model.table[(i * 4) + 3] = (rgba[3] * 255.0) + 0.5;
+      model.table[i * 4] = rgba[0] * 255.0 + 0.5;
+      model.table[i * 4 + 1] = rgba[1] * 255.0 + 0.5;
+      model.table[i * 4 + 2] = rgba[2] * 255.0 + 0.5;
+      model.table[i * 4 + 3] = rgba[3] * 255.0 + 0.5;
     }
 
     publicAPI.buildSpecialColors();
@@ -195,10 +221,10 @@ function vtkLookupTable(publicAPI, model) {
 
     // Below range color
     if (model.useBelowRangeColor || numberOfColors === 0) {
-      tptr[base] = (model.belowRangeColor[0] * 255.0) + 0.5;
-      tptr[base + 1] = (model.belowRangeColor[1] * 255.0) + 0.5;
-      tptr[base + 2] = (model.belowRangeColor[2] * 255.0) + 0.5;
-      tptr[base + 3] = (model.belowRangeColor[3] * 255.0) + 0.5;
+      tptr[base] = model.belowRangeColor[0] * 255.0 + 0.5;
+      tptr[base + 1] = model.belowRangeColor[1] * 255.0 + 0.5;
+      tptr[base + 2] = model.belowRangeColor[2] * 255.0 + 0.5;
+      tptr[base + 3] = model.belowRangeColor[3] * 255.0 + 0.5;
     } else {
       // Duplicate the first color in the table.
       tptr[base] = tptr[0];
@@ -210,29 +236,31 @@ function vtkLookupTable(publicAPI, model) {
     // Above range color
     base = (model.numberOfColors + ABOVE_RANGE_COLOR_INDEX) * 4;
     if (model.useAboveRangeColor || numberOfColors === 0) {
-      tptr[base] = (model.aboveRangeColor[0] * 255.0) + 0.5;
-      tptr[base + 1] = (model.aboveRangeColor[1] * 255.0) + 0.5;
-      tptr[base + 2] = (model.aboveRangeColor[2] * 255.0) + 0.5;
-      tptr[base + 3] = (model.aboveRangeColor[3] * 255.0) + 0.5;
+      tptr[base] = model.aboveRangeColor[0] * 255.0 + 0.5;
+      tptr[base + 1] = model.aboveRangeColor[1] * 255.0 + 0.5;
+      tptr[base + 2] = model.aboveRangeColor[2] * 255.0 + 0.5;
+      tptr[base + 3] = model.aboveRangeColor[3] * 255.0 + 0.5;
     } else {
       // Duplicate the last color in the table.
-      tptr[base] = tptr[(4 * (numberOfColors - 1)) + 0];
-      tptr[base + 1] = tptr[(4 * (numberOfColors - 1)) + 1];
-      tptr[base + 2] = tptr[(4 * (numberOfColors - 1)) + 2];
-      tptr[base + 3] = tptr[(4 * (numberOfColors - 1)) + 3];
+      tptr[base] = tptr[4 * (numberOfColors - 1) + 0];
+      tptr[base + 1] = tptr[4 * (numberOfColors - 1) + 1];
+      tptr[base + 2] = tptr[4 * (numberOfColors - 1) + 2];
+      tptr[base + 3] = tptr[4 * (numberOfColors - 1) + 3];
     }
 
     // Always use NanColor
     base = (model.numberOfColors + NAN_COLOR_INDEX) * 4;
-    tptr[base] = (model.nanColor[0] * 255.0) + 0.5;
-    tptr[base + 1] = (model.nanColor[1] * 255.0) + 0.5;
-    tptr[base + 2] = (model.nanColor[2] * 255.0) + 0.5;
-    tptr[base + 3] = (model.nanColor[3] * 255.0) + 0.5;
+    tptr[base] = model.nanColor[0] * 255.0 + 0.5;
+    tptr[base + 1] = model.nanColor[1] * 255.0 + 0.5;
+    tptr[base + 2] = model.nanColor[2] * 255.0 + 0.5;
+    tptr[base + 3] = model.nanColor[3] * 255.0 + 0.5;
   };
 
   publicAPI.build = () => {
-    if (model.table.length < 1 ||
-        publicAPI.getMTime() > model.buildTime.getMTime()) {
+    if (
+      model.table.length < 1 ||
+      publicAPI.getMTime() > model.buildTime.getMTime()
+    ) {
       publicAPI.forceBuild();
     }
   };
@@ -267,7 +295,6 @@ const DEFAULT_VALUES = {
 export function extend(publicAPI, model, initialValues = {}) {
   Object.assign(model, DEFAULT_VALUES, initialValues);
 
-
   // Inheritance
   vtkScalarsToColors.extend(publicAPI, model, initialValues);
 
@@ -276,7 +303,6 @@ export function extend(publicAPI, model, initialValues = {}) {
     model.table = [];
   }
 
-
   model.buildTime = {};
   macro.obj(model.buildTime);
 
@@ -284,9 +310,7 @@ export function extend(publicAPI, model, initialValues = {}) {
   macro.obj(model.opaqueFlagBuildTime, { mtime: 0 });
 
   // Create get-only macros
-  macro.get(publicAPI, model, [
-    'buildTime',
-  ]);
+  macro.get(publicAPI, model, ['buildTime']);
 
   // Create get-set macros
   macro.setGet(publicAPI, model, [
@@ -296,18 +320,19 @@ export function extend(publicAPI, model, initialValues = {}) {
   ]);
 
   // Create set macros for array (needs to know size)
-  macro.setArray(publicAPI, model, [
-    'alphaRange',
-    'hueRange',
-    'saturationRange',
-    'valueRange',
-  ], 2);
+  macro.setArray(
+    publicAPI,
+    model,
+    ['alphaRange', 'hueRange', 'saturationRange', 'valueRange'],
+    2
+  );
 
-  macro.setArray(publicAPI, model, [
-    'nanColor',
-    'belowRangeColor',
-    'aboveRangeColor',
-  ], 4);
+  macro.setArray(
+    publicAPI,
+    model,
+    ['nanColor', 'belowRangeColor', 'aboveRangeColor'],
+    4
+  );
 
   // Create get macros for array
   macro.getArray(publicAPI, model, [

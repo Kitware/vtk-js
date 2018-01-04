@@ -1,18 +1,21 @@
-import { mat4 }           from 'gl-matrix';
-import Constants          from 'vtk.js/Sources/Rendering/Core/ImageMapper/Constants';
-import macro              from 'vtk.js/Sources/macro';
-import vtkDataArray       from 'vtk.js/Sources/Common/Core/DataArray';
-import { VtkDataTypes }   from 'vtk.js/Sources/Common/Core/DataArray/Constants';
-import vtkHelper          from 'vtk.js/Sources/Rendering/OpenGL/Helper';
-import vtkMath            from 'vtk.js/Sources/Common/Core/Math';
-import vtkOpenGLTexture   from 'vtk.js/Sources/Rendering/OpenGL/Texture';
-import vtkShaderProgram   from 'vtk.js/Sources/Rendering/OpenGL/ShaderProgram';
-import vtkViewNode        from 'vtk.js/Sources/Rendering/SceneGraph/ViewNode';
+import { mat4 } from 'gl-matrix';
+import Constants from 'vtk.js/Sources/Rendering/Core/ImageMapper/Constants';
+import macro from 'vtk.js/Sources/macro';
+import vtkDataArray from 'vtk.js/Sources/Common/Core/DataArray';
+import { VtkDataTypes } from 'vtk.js/Sources/Common/Core/DataArray/Constants';
+import vtkHelper from 'vtk.js/Sources/Rendering/OpenGL/Helper';
+import vtkMath from 'vtk.js/Sources/Common/Core/Math';
+import vtkOpenGLTexture from 'vtk.js/Sources/Rendering/OpenGL/Texture';
+import vtkShaderProgram from 'vtk.js/Sources/Rendering/OpenGL/ShaderProgram';
+import vtkViewNode from 'vtk.js/Sources/Rendering/SceneGraph/ViewNode';
 import { Representation } from 'vtk.js/Sources/Rendering/Core/Property/Constants';
-import { Wrap, Filter }   from 'vtk.js/Sources/Rendering/OpenGL/Texture/Constants';
+import {
+  Wrap,
+  Filter,
+} from 'vtk.js/Sources/Rendering/OpenGL/Texture/Constants';
 
-import vtkPolyDataVS      from 'vtk.js/Sources/Rendering/OpenGL/glsl/vtkPolyDataVS.glsl';
-import vtkPolyDataFS      from 'vtk.js/Sources/Rendering/OpenGL/glsl/vtkPolyDataFS.glsl';
+import vtkPolyDataVS from 'vtk.js/Sources/Rendering/OpenGL/glsl/vtkPolyDataVS.glsl';
+import vtkPolyDataFS from 'vtk.js/Sources/Rendering/OpenGL/glsl/vtkPolyDataFS.glsl';
 
 const { vtkErrorMacro } = macro;
 
@@ -28,15 +31,21 @@ function vtkOpenGLImageMapper(publicAPI, model) {
 
   publicAPI.buildPass = (prepass) => {
     if (prepass) {
-      model.openGLImageSlice = publicAPI.getFirstAncestorOfType('vtkOpenGLImageSlice');
-      model.openGLRenderer = publicAPI.getFirstAncestorOfType('vtkOpenGLRenderer');
+      model.openGLImageSlice = publicAPI.getFirstAncestorOfType(
+        'vtkOpenGLImageSlice'
+      );
+      model.openGLRenderer = publicAPI.getFirstAncestorOfType(
+        'vtkOpenGLRenderer'
+      );
       model.openGLRenderWindow = model.openGLRenderer.getParent();
       model.context = model.openGLRenderWindow.getContext();
       model.tris.setOpenGLRenderWindow(model.openGLRenderWindow);
       model.openGLTexture.setOpenGLRenderWindow(model.openGLRenderWindow);
       model.colorTexture.setOpenGLRenderWindow(model.openGLRenderWindow);
       const ren = model.openGLRenderer.getRenderable();
-      model.openGLCamera = model.openGLRenderer.getViewNodeFor(ren.getActiveCamera());
+      model.openGLCamera = model.openGLRenderer.getViewNodeFor(
+        ren.getActiveCamera()
+      );
       // is zslice set by the camera
       if (model.renderable.getSliceAtFocalPoint()) {
         model.renderable.setZSliceFromCamera(ren.getActiveCamera());
@@ -78,50 +87,68 @@ function vtkOpenGLImageMapper(publicAPI, model) {
     let VSSource = shaders.Vertex;
     let FSSource = shaders.Fragment;
 
-    VSSource = vtkShaderProgram.substitute(VSSource,
-      '//VTK::Camera::Dec', [
-        'uniform mat4 MCDCMatrix;']).result;
-    VSSource = vtkShaderProgram.substitute(VSSource,
-      '//VTK::PositionVC::Impl', [
-        '  gl_Position = MCDCMatrix * vertexMC;']).result;
+    VSSource = vtkShaderProgram.substitute(VSSource, '//VTK::Camera::Dec', [
+      'uniform mat4 MCDCMatrix;',
+    ]).result;
+    VSSource = vtkShaderProgram.substitute(
+      VSSource,
+      '//VTK::PositionVC::Impl',
+      ['  gl_Position = MCDCMatrix * vertexMC;']
+    ).result;
 
-    VSSource = vtkShaderProgram.substitute(VSSource,
+    VSSource = vtkShaderProgram.substitute(
+      VSSource,
       '//VTK::TCoord::Impl',
-      'tcoordVCVSOutput = tcoordMC;').result;
+      'tcoordVCVSOutput = tcoordMC;'
+    ).result;
 
     const tNumComp = model.openGLTexture.getComponents();
 
-    VSSource = vtkShaderProgram.substitute(VSSource,
+    VSSource = vtkShaderProgram.substitute(
+      VSSource,
       '//VTK::TCoord::Dec',
-      'attribute vec2 tcoordMC; varying vec2 tcoordVCVSOutput;').result;
-    FSSource = vtkShaderProgram.substitute(FSSource,
-      '//VTK::TCoord::Dec', [
-        'varying vec2 tcoordVCVSOutput;',
-        'uniform float shift;',
-        'uniform float scale;',
-        'uniform sampler2D texture1;',
-        'uniform sampler2D colorTexture1;']).result;
+      'attribute vec2 tcoordMC; varying vec2 tcoordVCVSOutput;'
+    ).result;
+    FSSource = vtkShaderProgram.substitute(FSSource, '//VTK::TCoord::Dec', [
+      'varying vec2 tcoordVCVSOutput;',
+      'uniform float shift;',
+      'uniform float scale;',
+      'uniform sampler2D texture1;',
+      'uniform sampler2D colorTexture1;',
+    ]).result;
     switch (tNumComp) {
       case 1:
-        FSSource = vtkShaderProgram.substitute(FSSource,
-          '//VTK::TCoord::Impl', [
+        FSSource = vtkShaderProgram.substitute(
+          FSSource,
+          '//VTK::TCoord::Impl',
+          [
             'float intensity = texture2D(texture1, tcoordVCVSOutput).r*scale + shift;',
-            'gl_FragData[0] = texture2D(colorTexture1, vec2(intensity, 0.5));']).result;
+            'gl_FragData[0] = texture2D(colorTexture1, vec2(intensity, 0.5));',
+          ]
+        ).result;
         break;
       case 2:
-        FSSource = vtkShaderProgram.substitute(FSSource,
-          '//VTK::TCoord::Impl', [
+        FSSource = vtkShaderProgram.substitute(
+          FSSource,
+          '//VTK::TCoord::Impl',
+          [
             'vec4 tcolor = texture2D(texture1, tcoordVCVSOutput);',
             'float intensity = tcolor.r*scale + shift;',
-            'gl_FragData[0] = vec4(texture2D(colorTexture1, vec2(intensity, 0.5)), scale*tcolor.g + shift);']).result;
+            'gl_FragData[0] = vec4(texture2D(colorTexture1, vec2(intensity, 0.5)), scale*tcolor.g + shift);',
+          ]
+        ).result;
         break;
       default:
-        FSSource = vtkShaderProgram.substitute(FSSource,
-          '//VTK::TCoord::Impl', [
+        FSSource = vtkShaderProgram.substitute(
+          FSSource,
+          '//VTK::TCoord::Impl',
+          [
             'vec4 tcolor = scale*texture2D(texture1, tcoordVCVSOutput.st) + shift;',
             'gl_FragData[0] = vec4(texture2D(colorTexture1, vec2(tcolor.r,0.5)),',
             '  texture2D(colorTexture1, vec2(tcolor.g,0.5)),',
-            '  texture2D(colorTexture1, vec2(tcolor.b,0.5)), tcolor.a);']).result;
+            '  texture2D(colorTexture1, vec2(tcolor.b,0.5)), tcolor.a);',
+          ]
+        ).result;
     }
     shaders.Vertex = VSSource;
     shaders.Fragment = FSSource;
@@ -133,10 +160,12 @@ function vtkOpenGLImageMapper(publicAPI, model) {
     // property modified (representation interpolation and lighting)
     // input modified
     // light complexity changed
-    if (cellBO.getProgram() === 0 ||
-        cellBO.getShaderSourceTime().getMTime() < publicAPI.getMTime() ||
-        cellBO.getShaderSourceTime().getMTime() < actor.getMTime() ||
-        cellBO.getShaderSourceTime().getMTime() < model.currentInput.getMTime()) {
+    if (
+      cellBO.getProgram() === 0 ||
+      cellBO.getShaderSourceTime().getMTime() < publicAPI.getMTime() ||
+      cellBO.getShaderSourceTime().getMTime() < actor.getMTime() ||
+      cellBO.getShaderSourceTime().getMTime() < model.currentInput.getMTime()
+    ) {
       return true;
     }
 
@@ -153,8 +182,13 @@ function vtkOpenGLImageMapper(publicAPI, model) {
       publicAPI.buildShaders(shaders, ren, actor);
 
       // compile and bind the program if needed
-      const newShader =
-        model.openGLRenderWindow.getShaderCache().readyShaderProgramArray(shaders.Vertex, shaders.Fragment, shaders.Geometry);
+      const newShader = model.openGLRenderWindow
+        .getShaderCache()
+        .readyShaderProgramArray(
+          shaders.Vertex,
+          shaders.Fragment,
+          shaders.Geometry
+        );
 
       // if the shader changed reinitialize the VAO
       if (newShader !== cellBO.getProgram()) {
@@ -165,7 +199,9 @@ function vtkOpenGLImageMapper(publicAPI, model) {
 
       cellBO.getShaderSourceTime().modified();
     } else {
-      model.openGLRenderWindow.getShaderCache().readyShaderProgram(cellBO.getProgram());
+      model.openGLRenderWindow
+        .getShaderCache()
+        .readyShaderProgram(cellBO.getProgram());
     }
 
     cellBO.getVAO().bind();
@@ -177,23 +213,48 @@ function vtkOpenGLImageMapper(publicAPI, model) {
   publicAPI.setMapperShaderParameters = (cellBO, ren, actor) => {
     // Now to update the VAO too, if necessary.
 
-    if (cellBO.getCABO().getElementCount() && (model.VBOBuildTime > cellBO.getAttributeUpdateTime().getMTime() ||
-        cellBO.getShaderSourceTime().getMTime() > cellBO.getAttributeUpdateTime().getMTime())) {
+    if (
+      cellBO.getCABO().getElementCount() &&
+      (model.VBOBuildTime > cellBO.getAttributeUpdateTime().getMTime() ||
+        cellBO.getShaderSourceTime().getMTime() >
+          cellBO.getAttributeUpdateTime().getMTime())
+    ) {
       if (cellBO.getProgram().isAttributeUsed('vertexMC')) {
-        if (!cellBO.getVAO().addAttributeArray(cellBO.getProgram(), cellBO.getCABO(),
-                                           'vertexMC', cellBO.getCABO().getVertexOffset(),
-                                           cellBO.getCABO().getStride(), model.context.FLOAT, 3,
-                                           model.context.FALSE)) {
+        if (
+          !cellBO
+            .getVAO()
+            .addAttributeArray(
+              cellBO.getProgram(),
+              cellBO.getCABO(),
+              'vertexMC',
+              cellBO.getCABO().getVertexOffset(),
+              cellBO.getCABO().getStride(),
+              model.context.FLOAT,
+              3,
+              model.context.FALSE
+            )
+        ) {
           vtkErrorMacro('Error setting vertexMC in shader VAO.');
         }
       }
-      if (cellBO.getProgram().isAttributeUsed('tcoordMC') &&
-          cellBO.getCABO().getTCoordOffset()) {
-        if (!cellBO.getVAO().addAttributeArray(cellBO.getProgram(), cellBO.getCABO(),
-                                           'tcoordMC', cellBO.getCABO().getTCoordOffset(),
-                                           cellBO.getCABO().getStride(), model.context.FLOAT,
-                                           cellBO.getCABO().getTCoordComponents(),
-                                           model.context.FALSE)) {
+      if (
+        cellBO.getProgram().isAttributeUsed('tcoordMC') &&
+        cellBO.getCABO().getTCoordOffset()
+      ) {
+        if (
+          !cellBO
+            .getVAO()
+            .addAttributeArray(
+              cellBO.getProgram(),
+              cellBO.getCABO(),
+              'tcoordMC',
+              cellBO.getCABO().getTCoordOffset(),
+              cellBO.getCABO().getStride(),
+              model.context.FLOAT,
+              cellBO.getCABO().getTCoordComponents(),
+              model.context.FALSE
+            )
+        ) {
           vtkErrorMacro('Error setting tcoordMC in shader VAO.');
         }
       }
@@ -214,7 +275,7 @@ function vtkOpenGLImageMapper(publicAPI, model) {
     const oglShiftScale = model.openGLTexture.getShiftAndScale();
 
     const scale = oglShiftScale.scale / cw;
-    const shift = ((oglShiftScale.shift - cl) / cw) + 0.5;
+    const shift = (oglShiftScale.shift - cl) / cw + 0.5;
 
     cellBO.getProgram().setUniformf('shift', shift);
     cellBO.getProgram().setUniformf('scale', scale);
@@ -262,8 +323,7 @@ function vtkOpenGLImageMapper(publicAPI, model) {
     if (model.tris.getCABO().getElementCount()) {
       // First we do the triangles, update the shader, set uniforms, etc.
       publicAPI.updateShaders(model.tris, ren, actor);
-      gl.drawArrays(gl.TRIANGLES, 0,
-        model.tris.getCABO().getElementCount());
+      gl.drawArrays(gl.TRIANGLES, 0, model.tris.getCABO().getElementCount());
       model.tris.getVAO().release();
     }
 
@@ -271,8 +331,7 @@ function vtkOpenGLImageMapper(publicAPI, model) {
     model.colorTexture.deactivate();
   };
 
-  publicAPI.renderPieceFinish = (ren, actor) => {
-  };
+  publicAPI.renderPieceFinish = (ren, actor) => {};
 
   publicAPI.renderPiece = (ren, actor) => {
     // Make sure that we have been properly initialized.
@@ -312,11 +371,13 @@ function vtkOpenGLImageMapper(publicAPI, model) {
 
   publicAPI.getNeedToRebuildBufferObjects = (ren, actor) => {
     // first do a coarse check
-    if (model.VBOBuildTime.getMTime() < publicAPI.getMTime() ||
-        model.VBOBuildTime.getMTime() < actor.getMTime() ||
-        model.VBOBuildTime.getMTime() < model.renderable.getMTime() ||
-        model.VBOBuildTime.getMTime() < actor.getProperty().getMTime() ||
-        model.VBOBuildTime.getMTime() < model.currentInput.getMTime()) {
+    if (
+      model.VBOBuildTime.getMTime() < publicAPI.getMTime() ||
+      model.VBOBuildTime.getMTime() < actor.getMTime() ||
+      model.VBOBuildTime.getMTime() < model.renderable.getMTime() ||
+      model.VBOBuildTime.getMTime() < actor.getProperty().getMTime() ||
+      model.VBOBuildTime.getMTime() < model.currentInput.getMTime()
+    ) {
       return true;
     }
     return false;
@@ -344,8 +405,13 @@ function vtkOpenGLImageMapper(publicAPI, model) {
         model.colorTextureString = cfunToString;
         model.colorTexture.setMinificationFilter(Filter.LINEAR);
         model.colorTexture.setMagnificationFilter(Filter.LINEAR);
-        model.colorTexture.create2DFromRaw(cWidth, 1, 3,
-          VtkDataTypes.UNSIGNED_CHAR, cTable);
+        model.colorTexture.create2DFromRaw(
+          cWidth,
+          1,
+          3,
+          VtkDataTypes.UNSIGNED_CHAR,
+          cTable
+        );
       }
     } else {
       const cfunToString = '0';
@@ -358,8 +424,13 @@ function vtkOpenGLImageMapper(publicAPI, model) {
         model.colorTextureString = cfunToString;
         model.colorTexture.setMinificationFilter(Filter.LINEAR);
         model.colorTexture.setMagnificationFilter(Filter.LINEAR);
-        model.colorTexture.create2DFromRaw(cWidth, 1, 3,
-          VtkDataTypes.UNSIGNED_CHAR, cTable);
+        model.colorTexture.create2DFromRaw(
+          cWidth,
+          1,
+          3,
+          VtkDataTypes.UNSIGNED_CHAR,
+          cTable
+        );
       }
     }
 
@@ -375,11 +446,19 @@ function vtkOpenGLImageMapper(publicAPI, model) {
       nSlice = model.renderable.getYSlice();
       sliceOffset = nSlice - ext[2];
     }
-    const toString = `${nSlice}A${image.getMTime()}A${image.getPointData().getScalars().getMTime()}B${publicAPI.getMTime()}`;
+    const toString = `${nSlice}A${image.getMTime()}A${image
+      .getPointData()
+      .getScalars()
+      .getMTime()}B${publicAPI.getMTime()}`;
     if (model.VBOBuildString !== toString) {
       // Build the VBOs
       const dims = image.getDimensions();
-      if (image.getPointData().getScalars().getNumberOfComponents() === 4) {
+      if (
+        image
+          .getPointData()
+          .getScalars()
+          .getNumberOfComponents() === 4
+      ) {
         model.openGLTexture.setGenerateMipmap(true);
         model.openGLTexture.setMinificationFilter(Filter.LINEAR_MIPMAP_LINEAR);
       } else {
@@ -388,24 +467,32 @@ function vtkOpenGLImageMapper(publicAPI, model) {
       model.openGLTexture.setMagnificationFilter(Filter.LINEAR);
       model.openGLTexture.setWrapS(Wrap.CLAMP_TO_EDGE);
       model.openGLTexture.setWrapT(Wrap.CLAMP_TO_EDGE);
-      const numComp = image.getPointData().getScalars().getNumberOfComponents();
+      const numComp = image
+        .getPointData()
+        .getScalars()
+        .getNumberOfComponents();
       const sliceSize = dims[0] * dims[1] * numComp;
 
       const ptsArray = new Float32Array(12);
       const tcoordArray = new Float32Array(8);
       for (let i = 0; i < 4; i++) {
-        tcoordArray[(i * 2)] = (i % 2) ? 1.0 : 0.0;
-        tcoordArray[(i * 2) + 1] = (i > 1) ? 1.0 : 0.0;
+        tcoordArray[i * 2] = i % 2 ? 1.0 : 0.0;
+        tcoordArray[i * 2 + 1] = i > 1 ? 1.0 : 0.0;
       }
 
-      const basicScalars = image.getPointData().getScalars().getData();
+      const basicScalars = image
+        .getPointData()
+        .getScalars()
+        .getData();
       let scalars = null;
       // Get right scalars according to slicing mode
       if (model.renderable.getCurrentSlicingMode() === SlicingMode.X) {
         scalars = [];
         for (let k = 0; k < dims[2]; k++) {
           for (let j = 0; j < dims[1]; j++) {
-            scalars.push(basicScalars[sliceOffset + j * dims[0] + k * dims[0] * dims[1]]);
+            scalars.push(
+              basicScalars[sliceOffset + j * dims[0] + k * dims[0] * dims[1]]
+            );
           }
         }
         dims[0] = dims[1];
@@ -426,7 +513,9 @@ function vtkOpenGLImageMapper(publicAPI, model) {
         scalars = [];
         for (let k = 0; k < dims[2]; k++) {
           for (let i = 0; i < dims[0]; i++) {
-            scalars.push(basicScalars[i + (sliceOffset * dims[0]) + (k * dims[0] * dims[1])]);
+            scalars.push(
+              basicScalars[i + sliceOffset * dims[0] + k * dims[0] * dims[1]]
+            );
           }
         }
         dims[1] = dims[2];
@@ -443,7 +532,10 @@ function vtkOpenGLImageMapper(publicAPI, model) {
         ptsArray[10] = nSlice;
         ptsArray[11] = ext[5];
       } else {
-        scalars = basicScalars.subarray(sliceOffset * sliceSize, (sliceOffset + 1) * sliceSize);
+        scalars = basicScalars.subarray(
+          sliceOffset * sliceSize,
+          (sliceOffset + 1) * sliceSize
+        );
         ptsArray[0] = ext[0];
         ptsArray[1] = ext[2];
         ptsArray[2] = nSlice;
@@ -458,17 +550,29 @@ function vtkOpenGLImageMapper(publicAPI, model) {
         ptsArray[11] = nSlice;
       }
 
-      model.openGLTexture.create2DFromRaw(dims[0], dims[1],
+      model.openGLTexture.create2DFromRaw(
+        dims[0],
+        dims[1],
         numComp,
-        image.getPointData().getScalars().getDataType(),
-        scalars);
+        image
+          .getPointData()
+          .getScalars()
+          .getDataType(),
+        scalars
+      );
       model.openGLTexture.activate();
       model.openGLTexture.sendParameters();
       model.openGLTexture.deactivate();
 
-      const points = vtkDataArray.newInstance({ numberOfComponents: 3, values: ptsArray });
+      const points = vtkDataArray.newInstance({
+        numberOfComponents: 3,
+        values: ptsArray,
+      });
       points.setName('points');
-      const tcoords = vtkDataArray.newInstance({ numberOfComponents: 2, values: tcoordArray });
+      const tcoords = vtkDataArray.newInstance({
+        numberOfComponents: 2,
+        values: tcoordArray,
+      });
       tcoords.setName('tcoords');
 
       const cellArray = new Uint16Array(8);
@@ -480,11 +584,16 @@ function vtkOpenGLImageMapper(publicAPI, model) {
       cellArray[5] = 0;
       cellArray[6] = 3;
       cellArray[7] = 2;
-      const cells = vtkDataArray.newInstance({ numberOfComponents: 1, values: cellArray });
+      const cells = vtkDataArray.newInstance({
+        numberOfComponents: 1,
+        values: cellArray,
+      });
 
-      model.tris.getCABO().createVBO(cells,
-        'polys', Representation.SURFACE,
-        { points, tcoords, cellOffset: 0 });
+      model.tris.getCABO().createVBO(cells, 'polys', Representation.SURFACE, {
+        points,
+        tcoords,
+        cellOffset: 0,
+      });
       model.VBOBuildTime.modified();
       model.VBOBuildString = toString;
     }
@@ -519,8 +628,7 @@ export function extend(publicAPI, model, initialValues = {}) {
   model.imagemat = mat4.create();
 
   // Build VTK API
-  macro.setGet(publicAPI, model, [
-  ]);
+  macro.setGet(publicAPI, model, []);
 
   model.VBOBuildTime = {};
   macro.obj(model.VBOBuildTime);

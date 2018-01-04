@@ -8,7 +8,7 @@ module.exports = {
         }, {
           test: /\.js$/,
           include: /node_modules(\/|\\)vtk\.js(\/|\\)/,
-          loader: 'babel-loader?presets[]=es2015',
+          loader: 'babel-loader?presets[]=env',
         },
       ],
     },
@@ -21,7 +21,7 @@ module.exports = {
         }, {
           test: /\.js$/,
           include: /node_modules(\/|\\)vtk\.js(\/|\\)/,
-          loader: 'babel-loader?presets[]=es2015',
+          loader: 'babel-loader?presets[]=env',
         },
       ],
     },

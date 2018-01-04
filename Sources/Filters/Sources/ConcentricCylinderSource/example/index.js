@@ -1,9 +1,9 @@
 import 'vtk.js/Sources/favicon';
 
-import vtkFullScreenRenderWindow    from 'vtk.js/Sources/Rendering/Misc/FullScreenRenderWindow';
-import vtkActor                     from 'vtk.js/Sources/Rendering/Core/Actor';
-import vtkConcentricCylinderSource  from 'vtk.js/Sources/Filters/Sources/ConcentricCylinderSource';
-import vtkMapper                    from 'vtk.js/Sources/Rendering/Core/Mapper';
+import vtkFullScreenRenderWindow from 'vtk.js/Sources/Rendering/Misc/FullScreenRenderWindow';
+import vtkActor from 'vtk.js/Sources/Rendering/Core/Actor';
+import vtkConcentricCylinderSource from 'vtk.js/Sources/Filters/Sources/ConcentricCylinderSource';
+import vtkMapper from 'vtk.js/Sources/Rendering/Core/Mapper';
 
 // import { ColorMode, ScalarMode }    from 'vtk.js/Sources/Rendering/Core/Mapper/Constants';
 
@@ -13,7 +13,9 @@ import controlPanel from './controlPanel.html';
 // Standard rendering code setup
 // ----------------------------------------------------------------------------
 
-const fullScreenRenderer = vtkFullScreenRenderWindow.newInstance({ background: [0.5, 0.5, 0.5] });
+const fullScreenRenderer = vtkFullScreenRenderWindow.newInstance({
+  background: [0.5, 0.5, 0.5],
+});
 const renderer = fullScreenRenderer.getRenderer();
 const renderWindow = fullScreenRenderer.getRenderWindow();
 
@@ -49,7 +51,7 @@ renderWindow.render();
 fullScreenRenderer.addController(controlPanel);
 
 document.querySelector('.skipInnerFaces').addEventListener('change', (e) => {
-  const skipInnerFaces = !!(e.target.checked);
+  const skipInnerFaces = !!e.target.checked;
   cylinder.setSkipInnerFaces(skipInnerFaces);
   renderWindow.render();
 });
@@ -58,7 +60,7 @@ const masksButtons = document.querySelectorAll('.mask');
 let count = masksButtons.length;
 while (count--) {
   masksButtons[count].addEventListener('change', (e) => {
-    const mask = !!(e.target.checked);
+    const mask = !!e.target.checked;
     const index = Number(e.target.dataset.layer);
     cylinder.setMaskLayer(index, mask);
     renderWindow.render();

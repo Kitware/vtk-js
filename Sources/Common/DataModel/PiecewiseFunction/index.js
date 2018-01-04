@@ -1,4 +1,4 @@
-import macro                    from 'vtk.js/Sources/macro';
+import macro from 'vtk.js/Sources/macro';
 
 const { vtkErrorMacro } = macro;
 
@@ -51,22 +51,23 @@ function vtkPiecewiseFunction(publicAPI, model) {
           switch (functionType) {
             case 0:
             case 1:
-              functionType = 1;  // NonDecreasing
+              functionType = 1; // NonDecreasing
               break;
             default:
             case 2:
-              functionType = 3;  // Varied
+              functionType = 3; // Varied
               break;
           }
-        } else { // value < prev_value
+        } else {
+          // value < prev_value
           switch (functionType) {
             case 0:
             case 2:
-              functionType = 2;  // NonIncreasing
+              functionType = 2; // NonIncreasing
               break;
             default:
             case 1:
-              functionType = 3;  // Varied
+              functionType = 3; // Varied
               break;
           }
         }
@@ -105,7 +106,7 @@ function vtkPiecewiseFunction(publicAPI, model) {
       model.function = [];
       for (let i = 0; i < size; i++) {
         model.function[2 * i] = model.nodes[i].x;
-        model.function[(2 * i) + 1] = model.nodes[i].y;
+        model.function[2 * i + 1] = model.nodes[i].y;
       }
     }
     return model.function;
@@ -133,8 +134,9 @@ function vtkPiecewiseFunction(publicAPI, model) {
     // a large value
     if (allZero) {
       x = Number.MAX_VALUE;
-    } else if (i > 0) { // A point was found with a non-zero value
-        // Return the value of the point that precedes this one
+    } else if (i > 0) {
+      // A point was found with a non-zero value
+      // Return the value of the point that precedes this one
       x = model.nodes[i - 1].x;
     } else if (model.clamping) {
       // If this is the first point in the function, return its
@@ -317,7 +319,7 @@ function vtkPiecewiseFunction(publicAPI, model) {
   publicAPI.addSegment = (x1, y1, x2, y2) => {
     // First, find all points in this range and remove them
     publicAPI.sortAndUpdateRange();
-    for (let i = 0; i < model.nodes.length;) {
+    for (let i = 0; i < model.nodes.length; ) {
       if (model.nodes[i].x >= x1 && model.nodes[i].x <= x2) {
         model.nodes.splice(i, 1);
       } else {
@@ -362,7 +364,7 @@ function vtkPiecewiseFunction(publicAPI, model) {
 
     // Remove all points out-of-range
     publicAPI.sortAndUpdateRange();
-    for (let i = 0; i < model.nodes.length;) {
+    for (let i = 0; i < model.nodes.length; ) {
       if (model.nodes[i].x >= range[0] && model.nodes[i].x <= range[1]) {
         model.nodes.splice(i, 1);
       } else {
@@ -429,14 +431,13 @@ function vtkPiecewiseFunction(publicAPI, model) {
       // it halfway between start and end (usually start and end will
       // be the same in this case)
       if (size > 1) {
-        x = xStart + ((i / (size - 1.0)) * (xEnd - xStart));
+        x = xStart + i / (size - 1.0) * (xEnd - xStart);
       } else {
         x = 0.5 * (xStart + xEnd);
       }
 
       // Do we need to move to the next node?
-      while (idx < numNodes &&
-              x > model.nodes[idx].x) {
+      while (idx < numNodes && x > model.nodes[idx].x) {
         idx++;
         // If we are at a valid point index, fill in
         // the value at this node, and the one before (the
@@ -470,10 +471,10 @@ function vtkPiecewiseFunction(publicAPI, model) {
       if (idx >= numNodes) {
         table[tidx] = model.clamping ? lastValue : 0.0;
       } else if (idx === 0) {
-      // Are we before the first node? If so, duplicate this nodes values
+        // Are we before the first node? If so, duplicate this nodes values
         table[tidx] = model.clamping ? model.nodes[0].y : 0.0;
       } else {
-      // Otherwise, we are between two nodes - interpolate
+        // Otherwise, we are between two nodes - interpolate
         // Our first attempt at a normalized location [0,1] -
         // we will be modifying this based on midpoint and
         // sharpness to get the curve shape we want and to have
@@ -484,7 +485,7 @@ function vtkPiecewiseFunction(publicAPI, model) {
         if (s < midpoint) {
           s = 0.5 * s / midpoint;
         } else {
-          s = 0.5 + (0.5 * (s - midpoint) / (1.0 - midpoint));
+          s = 0.5 + 0.5 * (s - midpoint) / (1.0 - midpoint);
         }
 
         // override for sharpness > 0.99
@@ -495,7 +496,7 @@ function vtkPiecewiseFunction(publicAPI, model) {
             table[tidx] = y1;
             continue;
           } else {
-          // Use the second value at or above the midpoint
+            // Use the second value at or above the midpoint
             table[tidx] = y2;
             continue;
           }
@@ -505,7 +506,7 @@ function vtkPiecewiseFunction(publicAPI, model) {
         // In this case we want piecewise linear
         if (sharpness < 0.01) {
           // Simple linear interpolation
-          table[tidx] = ((1 - s) * y1) + (s * y2);
+          table[tidx] = (1 - s) * y1 + s * y2;
           continue;
         }
 
@@ -517,18 +518,18 @@ function vtkPiecewiseFunction(publicAPI, model) {
         // First, we will adjust our position based on sharpness in
         // order to make the curve sharper (closer to piecewise constant)
         if (s < 0.5) {
-          s = 0.5 * Math.pow(s * 2, 1.0 + (10 * sharpness));
+          s = 0.5 * Math.pow(s * 2, 1.0 + 10 * sharpness);
         } else if (s > 0.5) {
-          s = 1.0 - (0.5 * Math.pow((1.0 - s) * 2, 1 + (10 * sharpness)));
+          s = 1.0 - 0.5 * Math.pow((1.0 - s) * 2, 1 + 10 * sharpness);
         }
 
         // Compute some coefficients we will need for the hermite curve
         const ss = s * s;
         const sss = ss * s;
 
-        const h1 = (2 * sss) - (3 * ss) + 1;
-        const h2 = (-2 * sss) + (3 * ss);
-        const h3 = sss - (2 * ss) + s;
+        const h1 = 2 * sss - 3 * ss + 1;
+        const h2 = -2 * sss + 3 * ss;
+        const h3 = sss - 2 * ss + s;
         const h4 = sss - ss;
 
         // Use one slope for both end points
@@ -536,15 +537,15 @@ function vtkPiecewiseFunction(publicAPI, model) {
         const t = (1.0 - sharpness) * slope;
 
         // Compute the value
-        table[tidx] = (h1 * y1) + (h2 * y2) + (h3 * t) + (h4 * t);
+        table[tidx] = h1 * y1 + h2 * y2 + h3 * t + h4 * t;
 
         // Final error check to make sure we don't go outside
         // the Y range
-        const min = (y1 < y2) ? y1 : y2;
-        const max = (y1 > y2) ? y1 : y2;
+        const min = y1 < y2 ? y1 : y2;
+        const max = y1 > y2 ? y1 : y2;
 
-        table[tidx] = (table[tidx] < min) ? min : table[tidx];
-        table[tidx] = (table[tidx] > max) ? max : table[tidx];
+        table[tidx] = table[tidx] < min ? min : table[tidx];
+        table[tidx] = table[tidx] > max ? max : table[tidx];
       }
     }
   };
@@ -573,19 +574,12 @@ export function extend(publicAPI, model, initialValues = {}) {
   model.nodes = [];
 
   // Create get-set macros
-  macro.setGet(publicAPI, model, [
-    'allowDuplicateScalars',
-    'clamping',
-  ]);
+  macro.setGet(publicAPI, model, ['allowDuplicateScalars', 'clamping']);
 
-  macro.setArray(publicAPI, model, [
-    'range',
-  ], 2);
+  macro.setArray(publicAPI, model, ['range'], 2);
 
   // Create get macros for array
-  macro.getArray(publicAPI, model, [
-    'range',
-  ]);
+  macro.getArray(publicAPI, model, ['range']);
 
   // For more macro methods, see "Sources/macro.js"
 

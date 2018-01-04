@@ -1,18 +1,17 @@
-import test                             from 'tape-catch';
-import testUtils                        from 'vtk.js/Sources/Testing/testUtils';
+import test from 'tape-catch';
+import testUtils from 'vtk.js/Sources/Testing/testUtils';
 
-import vtkActor                         from 'vtk.js/Sources/Rendering/Core/Actor';
-import vtkMolecule                      from 'vtk.js/Sources/Common/DataModel/Molecule';
-import vtkMoleculeToRepresentation      from 'vtk.js/Sources/Filters/General/MoleculeToRepresentation';
-import vtkSphereMapper                  from 'vtk.js/Sources/Rendering/Core/SphereMapper';
-import vtkStickMapper                   from 'vtk.js/Sources/Rendering/Core/StickMapper';
-import vtkRenderer                      from 'vtk.js/Sources/Rendering/Core/Renderer';
-import vtkRenderWindow                  from 'vtk.js/Sources/Rendering/Core/RenderWindow';
-import vtkOpenGLRenderWindow            from 'vtk.js/Sources/Rendering/OpenGL/RenderWindow';
+import vtkActor from 'vtk.js/Sources/Rendering/Core/Actor';
+import vtkMolecule from 'vtk.js/Sources/Common/DataModel/Molecule';
+import vtkMoleculeToRepresentation from 'vtk.js/Sources/Filters/General/MoleculeToRepresentation';
+import vtkSphereMapper from 'vtk.js/Sources/Rendering/Core/SphereMapper';
+import vtkStickMapper from 'vtk.js/Sources/Rendering/Core/StickMapper';
+import vtkRenderer from 'vtk.js/Sources/Rendering/Core/Renderer';
+import vtkRenderWindow from 'vtk.js/Sources/Rendering/Core/RenderWindow';
+import vtkOpenGLRenderWindow from 'vtk.js/Sources/Rendering/OpenGL/RenderWindow';
 
-import testMolecule                     from 'vtk.js/Data/molecule/test-multiple-bonds.cjson';
-import baseline                         from './testMolecule_multiple_bonds.png';
-
+import testMolecule from 'vtk.js/Data/molecule/test-multiple-bonds.cjson';
+import baseline from './testMolecule_multiple_bonds.png';
 
 test.onlyIfWebGL('Test MultipleBonds', (t) => {
   const gc = testUtils.createGarbageCollector(t);
@@ -20,7 +19,9 @@ test.onlyIfWebGL('Test MultipleBonds', (t) => {
 
   // Create some control UI
   const container = document.querySelector('body');
-  const renderWindowContainer = gc.registerDOMElement(document.createElement('div'));
+  const renderWindowContainer = gc.registerDOMElement(
+    document.createElement('div')
+  );
   container.appendChild(renderWindowContainer);
 
   // create what we will view
@@ -72,5 +73,12 @@ test.onlyIfWebGL('Test MultipleBonds', (t) => {
   // capturing and comparing the images
   const image = glwindow.captureImage();
 
-  testUtils.compareImages(image, [baseline], 'Filters/General/MoleculeToRepresentation/testMultipleBonds', t, 1, gc.releaseResources);
+  testUtils.compareImages(
+    image,
+    [baseline],
+    'Filters/General/MoleculeToRepresentation/testMultipleBonds',
+    t,
+    1,
+    gc.releaseResources
+  );
 });

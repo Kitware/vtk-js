@@ -1,14 +1,14 @@
-import macro                    from 'vtk.js/Sources/macro';
-import vtkAbstractMapper3D      from 'vtk.js/Sources/Rendering/Core/AbstractMapper3D';
-import vtkDataArray             from 'vtk.js/Sources/Common/Core/DataArray';
-import vtkImageData             from 'vtk.js/Sources/Common/DataModel/ImageData';
-import vtkLookupTable           from 'vtk.js/Sources/Common/Core/LookupTable';
-import vtkMath                  from 'vtk.js/Sources/Common/Core/Math';
-import vtkScalarsToColors       from 'vtk.js/Sources/Common/Core/ScalarsToColors/Constants'; // Need to go inside Constants otherwise dependency loop
+import macro from 'vtk.js/Sources/macro';
+import vtkAbstractMapper3D from 'vtk.js/Sources/Rendering/Core/AbstractMapper3D';
+import vtkDataArray from 'vtk.js/Sources/Common/Core/DataArray';
+import vtkImageData from 'vtk.js/Sources/Common/DataModel/ImageData';
+import vtkLookupTable from 'vtk.js/Sources/Common/Core/LookupTable';
+import vtkMath from 'vtk.js/Sources/Common/Core/Math';
+import vtkScalarsToColors from 'vtk.js/Sources/Common/Core/ScalarsToColors/Constants'; // Need to go inside Constants otherwise dependency loop
 
 import CoincidentTopologyHelper from 'vtk.js/Sources/Rendering/Core/Mapper/CoincidentTopologyHelper';
-import otherStaticMethods       from 'vtk.js/Sources/Rendering/Core/Mapper/Static';
-import Constants                from 'vtk.js/Sources/Rendering/Core/Mapper/Constants';
+import otherStaticMethods from 'vtk.js/Sources/Rendering/Core/Mapper/Static';
+import Constants from 'vtk.js/Sources/Rendering/Core/Mapper/Constants';
 
 const { ColorMode, ScalarMode, GetArray } = Constants;
 const { VectorMode } = vtkScalarsToColors;
@@ -32,8 +32,10 @@ const staticOffsetAPI = {};
 CoincidentTopologyHelper.addCoincidentTopologyMethods(
   staticOffsetAPI,
   staticOffsetModel,
-  CoincidentTopologyHelper.CATEGORIES
-    .map(key => ({ key, method: `ResolveCoincidentTopology${key}OffsetParameters` })),
+  CoincidentTopologyHelper.CATEGORIES.map((key) => ({
+    key,
+    method: `ResolveCoincidentTopology${key}OffsetParameters`,
+  }))
 );
 
 // ----------------------------------------------------------------------------
@@ -66,13 +68,15 @@ function vtkMapper(publicAPI, model) {
     model.lookupTable = vtkLookupTable.newInstance();
   };
 
-  publicAPI.getColorModeAsString = () => macro.enumToString(ColorMode, model.colorMode);
+  publicAPI.getColorModeAsString = () =>
+    macro.enumToString(ColorMode, model.colorMode);
 
   publicAPI.setColorModeToDefault = () => publicAPI.setColorMode(0);
   publicAPI.setColorModeToMapScalars = () => publicAPI.setColorMode(1);
   publicAPI.setColorModeToDirectScalars = () => publicAPI.setColorMode(2);
 
-  publicAPI.getScalarModeAsString = () => macro.enumToString(ScalarMode, model.scalarMode);
+  publicAPI.getScalarModeAsString = () =>
+    macro.enumToString(ScalarMode, model.scalarMode);
 
   publicAPI.setScalarModeToDefault = () => publicAPI.setScalarMode(0);
   publicAPI.setScalarModeToUsePointData = () => publicAPI.setScalarMode(1);
@@ -99,8 +103,10 @@ function vtkMapper(publicAPI, model) {
   CoincidentTopologyHelper.addCoincidentTopologyMethods(
     publicAPI,
     model.topologyOffset,
-    CoincidentTopologyHelper.CATEGORIES
-      .map(key => ({ key, method: `RelativeCoincidentTopology${key}OffsetParameters` })),
+    CoincidentTopologyHelper.CATEGORIES.map((key) => ({
+      key,
+      method: `RelativeCoincidentTopology${key}OffsetParameters`,
+    }))
   );
   /* eslint-enable arrow-body-style */
 
@@ -131,8 +137,13 @@ function vtkMapper(publicAPI, model) {
     };
   };
 
-  publicAPI.getAbstractScalars = (input, scalarMode, arrayAccessMode,
-    arrayId, arrayName) => {
+  publicAPI.getAbstractScalars = (
+    input,
+    scalarMode,
+    arrayAccessMode,
+    arrayId,
+    arrayName
+  ) => {
     // make sure we have an input
     if (!input || !model.scalarVisibility) {
       return null;
@@ -177,8 +188,13 @@ function vtkMapper(publicAPI, model) {
   };
 
   publicAPI.mapScalars = (input, alpha) => {
-    const scalars = publicAPI.getAbstractScalars(input, model.scalarMode,
-      model.arrayAccessMode, model.arrayId, model.colorByArrayName);
+    const scalars = publicAPI.getAbstractScalars(
+      input,
+      model.scalarMode,
+      model.arrayAccessMode,
+      model.arrayId,
+      model.colorByArrayName
+    );
 
     if (!scalars) {
       model.colorCoordinates = null;
@@ -188,8 +204,9 @@ function vtkMapper(publicAPI, model) {
     }
 
     if (!model.useLookupTableScalarRange) {
-      publicAPI.getLookupTable().setRange(
-        model.scalarRange[0], model.scalarRange[1]);
+      publicAPI
+        .getLookupTable()
+        .setRange(model.scalarRange[0], model.scalarRange[1]);
     }
 
     // Decide betweeen texture color or vertex color.
@@ -213,11 +230,13 @@ function vtkMapper(publicAPI, model) {
 
   //-----------------------------------------------------------------------------
   publicAPI.scalarToTextureCoordinate = (
-    scalarValue,         // Input scalar
-    rangeMin,       // range[0]
-    invRangeWidth) => { // 1/(range[1]-range[0])
-    let texCoordS = 0.5;  // Scalar value is arbitrary when NaN
-    let texCoordT = 1.0;  // 1.0 in t coordinate means NaN
+    scalarValue, // Input scalar
+    rangeMin, // range[0]
+    invRangeWidth
+  ) => {
+    // 1/(range[1]-range[0])
+    let texCoordS = 0.5; // Scalar value is arbitrary when NaN
+    let texCoordT = 1.0; // 1.0 in t coordinate means NaN
     if (!vtkMath.isNan(scalarValue)) {
       // 0.0 in t coordinate means not NaN.  So why am I setting it to 0.49?
       // Because when you are mapping scalars and you have a NaN adjacent to
@@ -256,13 +275,13 @@ function vtkMapper(publicAPI, model) {
     range,
     tableRange,
     tableNumberOfColors,
-    useLogScale) => {
+    useLogScale
+  ) => {
     // We have to change the range used for computing texture
     // coordinates slightly to accomodate the special above- and
     // below-range colors that are the first and last texels,
     // respectively.
-    const scalarTexelWidth =
-      (range[1] - range[0]) / tableNumberOfColors;
+    const scalarTexelWidth = (range[1] - range[0]) / tableNumberOfColors;
 
     const paddedRange = [];
     paddedRange[0] = range[0] - scalarTexelWidth;
@@ -278,18 +297,22 @@ function vtkMapper(publicAPI, model) {
       for (let scalarIdx = 0; scalarIdx < numScalars; ++scalarIdx) {
         let sum = 0;
         for (let compIdx = 0; compIdx < numComps; ++compIdx) {
-          sum += (inputV[count] * inputV[count]);
+          sum += inputV[count] * inputV[count];
           count++;
         }
         let magnitude = Math.sqrt(sum);
         if (useLogScale) {
           magnitude = vtkLookupTable.applyLogScale(
-            magnitude, tableRange, range);
+            magnitude,
+            tableRange,
+            range
+          );
         }
-        const outputs =
-          publicAPI.scalarToTextureCoordinate(
-            magnitude, paddedRange[0],
-            invRangeWidth);
+        const outputs = publicAPI.scalarToTextureCoordinate(
+          magnitude,
+          paddedRange[0],
+          invRangeWidth
+        );
         outputV[outputCount] = outputs.texCoordS;
         outputV[outputCount + 1] = outputs.texCoordT;
         outputCount += 2;
@@ -300,11 +323,16 @@ function vtkMapper(publicAPI, model) {
         let inputValue = inputV[count];
         if (useLogScale) {
           inputValue = vtkLookupTable.applyLogScale(
-            inputValue, tableRange, range);
+            inputValue,
+            tableRange,
+            range
+          );
         }
-        const outputs =
-          publicAPI.scalarToTextureCoordinate(
-            inputValue, paddedRange[0], invRangeWidth);
+        const outputs = publicAPI.scalarToTextureCoordinate(
+          inputValue,
+          paddedRange[0],
+          invRangeWidth
+        );
         outputV[outputCount] = outputs.texCoordS;
         outputV[outputCount + 1] = outputs.texCoordT;
         outputCount += 2;
@@ -330,10 +358,12 @@ function vtkMapper(publicAPI, model) {
 
     // If the lookup table has changed, then recreate the color texture map.
     // Set a new lookup table changes this->MTime.
-    if (model.colorTextureMap == null ||
-        publicAPI.getMTime() > model.colorTextureMap.getMTime() ||
-        model.lookupTable.getMTime() > model.colorTextureMap.getMTime() ||
-        model.lookupTable.getAlpha() !== alpha) {
+    if (
+      model.colorTextureMap == null ||
+      publicAPI.getMTime() > model.colorTextureMap.getMTime() ||
+      model.lookupTable.getMTime() > model.colorTextureMap.getMTime() ||
+      model.lookupTable.getAlpha() !== alpha
+    ) {
       model.lookupTable.setAlpha(alpha);
       model.colorTextureMap = null;
 
@@ -351,7 +381,7 @@ function vtkMapper(publicAPI, model) {
       const newArray = new Float64Array(numberOfColors * 2);
 
       for (let i = 0; i < numberOfColors; ++i) {
-        newArray[i] = range[0] + (i * k) - k; // minus k to start at below range color
+        newArray[i] = range[0] + i * k - k; // minus k to start at below range color
         if (useLogScale) {
           newArray[i] = Math.pow(10.0, newArray[i]);
         }
@@ -362,23 +392,28 @@ function vtkMapper(publicAPI, model) {
       }
 
       model.colorTextureMap = vtkImageData.newInstance();
-      model.colorTextureMap.setExtent(
-        0, numberOfColors - 1, 0, 1, 0, 0);
+      model.colorTextureMap.setExtent(0, numberOfColors - 1, 0, 1, 0, 0);
 
-      const tmp = vtkDataArray.newInstance({ numberOfComponents: 1, values: newArray });
+      const tmp = vtkDataArray.newInstance({
+        numberOfComponents: 1,
+        values: newArray,
+      });
 
-      model.colorTextureMap.getPointData().setScalars(
-           model.lookupTable.mapScalars(tmp, model.colorMode, 0));
+      model.colorTextureMap
+        .getPointData()
+        .setScalars(model.lookupTable.mapScalars(tmp, model.colorMode, 0));
       model.lookupTable.setAlpha(origAlpha);
     }
 
     // Create new coordinates if necessary.
     // Need to compare lookup table incase the range has changed.
-    if (!model.colorCoordinates ||
-        publicAPI.getMTime() > model.colorCoordinates.getMTime() ||
-        publicAPI.getInputData(0).getMTime() >
+    if (
+      !model.colorCoordinates ||
+      publicAPI.getMTime() > model.colorCoordinates.getMTime() ||
+      publicAPI.getInputData(0).getMTime() >
         model.colorCoordinates.getMTime() ||
-        model.lookupTable.getMTime() > model.colorCoordinates.getMTime()) {
+      model.lookupTable.getMTime() > model.colorCoordinates.getMTime()
+    ) {
       // Get rid of old colors
       model.colorCoordinates = null;
 
@@ -387,25 +422,37 @@ function vtkMapper(publicAPI, model) {
       const num = scalars.getNumberOfTuples();
 
       // const fArray = new FloatArray(num * 2);
-      model.colorCoordinates =
-        vtkDataArray.newInstance({ numberOfComponents: 2, values: new Float32Array(num * 2) });
+      model.colorCoordinates = vtkDataArray.newInstance({
+        numberOfComponents: 2,
+        values: new Float32Array(num * 2),
+      });
 
       let scalarComponent = model.lookupTable.getVectorComponent();
       // Although I like the feature of applying magnitude to single component
       // scalars, it is not how the old MapScalars for vertex coloring works.
-      if (model.lookupTable.getVectorMode() === VectorMode.MAGNITUDE &&
-          scalars.getNumberOfComponents() > 1) {
+      if (
+        model.lookupTable.getVectorMode() === VectorMode.MAGNITUDE &&
+        scalars.getNumberOfComponents() > 1
+      ) {
         scalarComponent = -1;
       }
 
       publicAPI.createColorTextureCoordinates(
         scalars,
         model.colorCoordinates,
-        num, numComps,
-        scalarComponent, range,
+        num,
+        numComps,
+        scalarComponent,
+        range,
         model.lookupTable.getRange(),
-        (model.colorTextureMap.getPointData().getScalars().getNumberOfTuples() / 2) - 2,
-        useLogScale);
+        model.colorTextureMap
+          .getPointData()
+          .getScalars()
+          .getNumberOfTuples() /
+          2 -
+          2,
+        useLogScale
+      );
     }
   };
 
@@ -425,8 +472,7 @@ function vtkMapper(publicAPI, model) {
     }
 
     // index color does not use textures
-    if (model.lookupTable &&
-        model.lookupTable.getIndexedLookup()) {
+    if (model.lookupTable && model.lookupTable.getIndexedLookup()) {
       return false;
     }
 
@@ -450,7 +496,7 @@ function vtkMapper(publicAPI, model) {
     let mt = model.mtime;
     if (model.lookupTable !== null) {
       const time = model.lookupTable.getMTime();
-      mt = (time > mt ? time : mt);
+      mt = time > mt ? time : mt;
     }
     return mt;
   };
@@ -459,14 +505,22 @@ function vtkMapper(publicAPI, model) {
     const input = publicAPI.getInputData();
     const pcount = {
       points: input.getPoints().getNumberOfValues(),
-      verts: input.getVerts().getNumberOfValues() - input.getVerts().getNumberOfCells(),
-      lines: input.getLines().getNumberOfValues() - (2 * input.getLines().getNumberOfCells()),
-      triangles: input.getPolys().getNumberOfValues() - (3 * input.getLines().getNumberOfCells()),
+      verts:
+        input.getVerts().getNumberOfValues() -
+        input.getVerts().getNumberOfCells(),
+      lines:
+        input.getLines().getNumberOfValues() -
+        2 * input.getLines().getNumberOfCells(),
+      triangles:
+        input.getPolys().getNumberOfValues() -
+        3 * input.getLines().getNumberOfCells(),
     };
     return pcount;
   };
 
-  publicAPI.acquireInvertibleLookupTable = notImplemented('AcquireInvertibleLookupTable');
+  publicAPI.acquireInvertibleLookupTable = notImplemented(
+    'AcquireInvertibleLookupTable'
+  );
   publicAPI.valueToColor = notImplemented('ValueToColor');
   publicAPI.colorToValue = notImplemented('ColorToValue');
   publicAPI.useInvertibleColorFor = notImplemented('UseInvertibleColorFor');
@@ -538,9 +592,7 @@ export function extend(publicAPI, model, initialValues = {}) {
     'useLookupTableScalarRange',
     'viewSpecificProperties',
   ]);
-  macro.setGetArray(publicAPI, model, [
-    'scalarRange',
-  ], 2);
+  macro.setGetArray(publicAPI, model, ['scalarRange'], 2);
 
   if (!model.viewSpecificProperties) {
     model.viewSpecificProperties = {};
@@ -556,4 +608,9 @@ export const newInstance = macro.newInstance(extend, 'vtkMapper');
 
 // ----------------------------------------------------------------------------
 
-export default Object.assign({ newInstance, extend }, staticOffsetAPI, otherStaticMethods, Constants);
+export default Object.assign(
+  { newInstance, extend },
+  staticOffsetAPI,
+  otherStaticMethods,
+  Constants
+);

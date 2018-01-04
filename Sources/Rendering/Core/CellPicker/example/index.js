@@ -1,11 +1,11 @@
 import 'vtk.js/Sources/favicon';
 
-import vtkActor                  from 'vtk.js/Sources/Rendering/Core/Actor';
-import vtkConeSource             from 'vtk.js/Sources/Filters/Sources/ConeSource';
+import vtkActor from 'vtk.js/Sources/Rendering/Core/Actor';
+import vtkConeSource from 'vtk.js/Sources/Filters/Sources/ConeSource';
 import vtkFullScreenRenderWindow from 'vtk.js/Sources/Rendering/Misc/FullScreenRenderWindow';
-import vtkMapper                 from 'vtk.js/Sources/Rendering/Core/Mapper';
-import vtkPickerInteractorStyle  from 'vtk.js/Sources/Rendering/Core/CellPicker/example/PickerInteractorStyle';
-import vtkCellPicker             from 'vtk.js/Sources/Rendering/Core/CellPicker';
+import vtkMapper from 'vtk.js/Sources/Rendering/Core/Mapper';
+import vtkPickerInteractorStyle from 'vtk.js/Sources/Rendering/Core/CellPicker/example/PickerInteractorStyle';
+import vtkCellPicker from 'vtk.js/Sources/Rendering/Core/CellPicker';
 
 // ----------------------------------------------------------------------------
 // Standard rendering code setup

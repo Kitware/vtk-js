@@ -1,8 +1,8 @@
 import { toByteArray } from 'base64-js';
-import pako            from 'pako';
+import pako from 'pako';
 
-import macro                from 'vtk.js/Sources/macro';
-import Endian               from 'vtk.js/Sources/Common/Core/Endian';
+import macro from 'vtk.js/Sources/macro';
+import Endian from 'vtk.js/Sources/Common/Core/Endian';
 import { DataTypeByteSize } from 'vtk.js/Sources/Common/Core/DataArray/Constants';
 
 const { vtkErrorMacro, vtkDebugMacro } = macro;
@@ -14,11 +14,9 @@ function getContent(url) {
   return el ? el.innerHTML : null;
 }
 
-
 function removeLeadingSlash(str) {
-  return (str[0] === '/') ? str.substr(1) : str;
+  return str[0] === '/' ? str.substr(1) : str;
 }
-
 
 function fetchText(instance = {}, url, options = {}) {
   return new Promise((resolve, reject) => {
@@ -31,7 +29,6 @@ function fetchText(instance = {}, url, options = {}) {
   });
 }
 
-
 function fetchJSON(instance = {}, url, options = {}) {
   return new Promise((resolve, reject) => {
     const txt = getContent(removeLeadingSlash(url));
@@ -43,10 +40,15 @@ function fetchJSON(instance = {}, url, options = {}) {
   });
 }
 
-
 function fetchArray(instance = {}, baseURL, array, options = {}) {
   return new Promise((resolve, reject) => {
-    const url = removeLeadingSlash([baseURL, array.ref.basepath, options.compression ? `${array.ref.id}.gz` : array.ref.id].join('/'));
+    const url = removeLeadingSlash(
+      [
+        baseURL,
+        array.ref.basepath,
+        options.compression ? `${array.ref.id}.gz` : array.ref.id,
+      ].join('/')
+    );
 
     const txt = getContent(url);
     if (txt === null) {
@@ -69,7 +71,9 @@ function fetchArray(instance = {}, baseURL, array, options = {}) {
 
         if (options.compression) {
           if (array.dataType === 'string' || array.dataType === 'JSON') {
-            array.buffer = pako.inflate(new Uint8Array(array.buffer), { to: 'string' });
+            array.buffer = pako.inflate(new Uint8Array(array.buffer), {
+              to: 'string',
+            });
           } else {
             array.buffer = pako.inflate(new Uint8Array(array.buffer)).buffer;
           }
@@ -88,7 +92,13 @@ function fetchArray(instance = {}, baseURL, array, options = {}) {
         }
 
         if (array.values.length !== array.size) {
-          vtkErrorMacro(`Error in FetchArray: ${array.name} does not have the proper array size. Got ${array.values.length}, instead of ${array.size}`);
+          vtkErrorMacro(
+            `Error in FetchArray: ${
+              array.name
+            } does not have the proper array size. Got ${
+              array.values.length
+            }, instead of ${array.size}`
+          );
         }
       }
 

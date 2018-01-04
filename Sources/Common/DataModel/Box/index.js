@@ -1,4 +1,4 @@
-import macro   from 'vtk.js/Sources/macro';
+import macro from 'vtk.js/Sources/macro';
 import vtkBoundingBox from 'vtk.js/Sources/Common/DataModel/BoundingBox';
 
 // ----------------------------------------------------------------------------
@@ -26,9 +26,9 @@ function intersectBox(bounds, origin, dir, coord, tolerance) {
       quadrant[i] = LEFT;
       candidatePlane[i] = bounds[2 * i];
       inside = false;
-    } else if (origin[i] > bounds[(2 * i) + 1]) {
+    } else if (origin[i] > bounds[2 * i + 1]) {
       quadrant[i] = RIGHT;
-      candidatePlane[i] = bounds[(2 * i) + 1];
+      candidatePlane[i] = bounds[2 * i + 1];
       inside = false;
     } else {
       quadrant[i] = MIDDLE;
@@ -70,8 +70,8 @@ function intersectBox(bounds, origin, dir, coord, tolerance) {
   // Intersection point along line is okay. Check bbox.
   for (let i = 0; i < 3; i++) {
     if (whichPlane !== i) {
-      coord[i] = origin[i] + (maxT[whichPlane] * dir[i]);
-      if (coord[i] < bounds[2 * i] || coord[i] > bounds[(2 * i) + 1]) {
+      coord[i] = origin[i] + maxT[whichPlane] * dir[i];
+      if (coord[i] < bounds[2 * i] || coord[i] > bounds[2 * i + 1]) {
         return 0;
       }
     } else {
@@ -146,13 +146,15 @@ function vtkBox(publicAPI, model) {
         } else if (t > 1.0) {
           inside = 0;
           dist = point[i] - maxPoint[i];
-        } else { // want negative distance, we are inside
+        } else {
+          // want negative distance, we are inside
           if (t <= 0.5) {
             dist = minPoint[i] - point[i];
           } else {
             dist = point[i] - maxPoint[i];
           }
-          if (dist > minDistance) { // remember, it's engative
+          if (dist > minDistance) {
+            // remember, it's engative
             minDistance = dist;
           }
         } // end if inside
@@ -197,8 +199,7 @@ function vtkBox(publicAPI, model) {
 // Object factory
 // ----------------------------------------------------------------------------
 
-const DEFAULT_VALUES = {
-};
+const DEFAULT_VALUES = {};
 
 // ----------------------------------------------------------------------------
 

@@ -1,4 +1,4 @@
-import test   from 'tape-catch';
+import test from 'tape-catch';
 import vtkLine from 'vtk.js/Sources/Common/DataModel/Line';
 import vtkPoints from 'vtk.js/Sources/Common/Core/Points';
 
@@ -141,4 +141,3 @@ test('Test vtkLine intersectWithLine', (t) => {
   // t and pcoords do not matter
   t.end();
 });
-

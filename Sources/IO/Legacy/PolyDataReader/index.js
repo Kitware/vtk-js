@@ -1,5 +1,5 @@
-import macro                from 'vtk.js/Sources/macro';
-import DataAccessHelper     from 'vtk.js/Sources/IO/Core/DataAccessHelper';
+import macro from 'vtk.js/Sources/macro';
+import DataAccessHelper from 'vtk.js/Sources/IO/Core/DataAccessHelper';
 import vtkLegacyAsciiParser from 'vtk.js/Sources/IO/Legacy/LegacyAsciiParser';
 
 // ----------------------------------------------------------------------------
@@ -19,7 +19,10 @@ function vtkPolyDataReader(publicAPI, model) {
   function fetchData(url, option = {}) {
     const compression = model.compression;
     const progressCallback = model.progressCallback;
-    return model.dataAccessHelper.fetchText(publicAPI, url, { compression, progressCallback });
+    return model.dataAccessHelper.fetchText(publicAPI, url, {
+      compression,
+      progressCallback,
+    });
   }
 
   // Set DataSet url
@@ -55,7 +58,9 @@ function vtkPolyDataReader(publicAPI, model) {
     }
 
     model.parseData = content;
-    model.output[0] = vtkLegacyAsciiParser.parseLegacyASCII(model.parseData).dataset;
+    model.output[0] = vtkLegacyAsciiParser.parseLegacyASCII(
+      model.parseData
+    ).dataset;
   };
 
   publicAPI.requestData = (inData, outData) => {
@@ -75,19 +80,13 @@ const DEFAULT_VALUES = {
 
 // ----------------------------------------------------------------------------
 
-
 export function extend(publicAPI, model, initialValues = {}) {
   Object.assign(model, DEFAULT_VALUES, initialValues);
 
   // Build VTK API
   macro.obj(publicAPI, model);
-  macro.get(publicAPI, model, [
-    'url',
-    'baseURL',
-  ]);
-  macro.setGet(publicAPI, model, [
-    'dataAccessHelper',
-  ]);
+  macro.get(publicAPI, model, ['url', 'baseURL']);
+  macro.setGet(publicAPI, model, ['dataAccessHelper']);
   macro.algo(publicAPI, model, 0, 1);
 
   // vtkPolyDataReader methods

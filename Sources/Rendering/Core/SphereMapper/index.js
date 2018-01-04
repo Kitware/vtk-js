@@ -1,4 +1,4 @@
-import macro     from 'vtk.js/Sources/macro';
+import macro from 'vtk.js/Sources/macro';
 import vtkMapper from 'vtk.js/Sources/Rendering/Core/Mapper';
 
 // ----------------------------------------------------------------------------
@@ -27,10 +27,7 @@ export function extend(publicAPI, model, initialValues = {}) {
   // Inheritance
   vtkMapper.extend(publicAPI, model, initialValues);
 
-  macro.setGet(publicAPI, model, [
-    'radius',
-    'scaleArray',
-  ]);
+  macro.setGet(publicAPI, model, ['radius', 'scaleArray']);
 
   // Object methods
   vtkSphereMapper(publicAPI, model);
@@ -43,4 +40,3 @@ export const newInstance = macro.newInstance(extend, 'vtkSphereMapper');
 // ----------------------------------------------------------------------------
 
 export default { newInstance, extend };
-

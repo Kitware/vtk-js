@@ -1,6 +1,6 @@
 import { vec3, mat4, glMatrix } from 'gl-matrix';
 
-const NoOp = v => v;
+const NoOp = (v) => v;
 
 const IDENTITY = mat4.create();
 
@@ -67,27 +67,30 @@ class Transform {
   }
 
   apply(typedArray, offset = 0, nbIterations = -1) {
-    if (IDENTITY[0] === this.matrix[0]
-      && IDENTITY[1] === this.matrix[1]
-      && IDENTITY[2] === this.matrix[2]
-      && IDENTITY[3] === this.matrix[3]
-      && IDENTITY[4] === this.matrix[4]
-      && IDENTITY[5] === this.matrix[5]
-      && IDENTITY[6] === this.matrix[6]
-      && IDENTITY[7] === this.matrix[7]
-      && IDENTITY[8] === this.matrix[8]
-      && IDENTITY[9] === this.matrix[9]
-      && IDENTITY[10] === this.matrix[10]
-      && IDENTITY[11] === this.matrix[11]
-      && IDENTITY[12] === this.matrix[12]
-      && IDENTITY[13] === this.matrix[13]
-      && IDENTITY[14] === this.matrix[14]
-      && IDENTITY[15] === this.matrix[15]) {
+    if (
+      IDENTITY[0] === this.matrix[0] &&
+      IDENTITY[1] === this.matrix[1] &&
+      IDENTITY[2] === this.matrix[2] &&
+      IDENTITY[3] === this.matrix[3] &&
+      IDENTITY[4] === this.matrix[4] &&
+      IDENTITY[5] === this.matrix[5] &&
+      IDENTITY[6] === this.matrix[6] &&
+      IDENTITY[7] === this.matrix[7] &&
+      IDENTITY[8] === this.matrix[8] &&
+      IDENTITY[9] === this.matrix[9] &&
+      IDENTITY[10] === this.matrix[10] &&
+      IDENTITY[11] === this.matrix[11] &&
+      IDENTITY[12] === this.matrix[12] &&
+      IDENTITY[13] === this.matrix[13] &&
+      IDENTITY[14] === this.matrix[14] &&
+      IDENTITY[15] === this.matrix[15]
+    ) {
       // Make sure we can chain apply...
       return this;
     }
 
-    const size = (nbIterations === -1) ? typedArray.length : offset + (nbIterations * 3);
+    const size =
+      nbIterations === -1 ? typedArray.length : offset + nbIterations * 3;
     for (let i = offset; i < size; i += 3) {
       vec3.set(this.tmp, typedArray[i], typedArray[i + 1], typedArray[i + 2]);
       vec3.transformMat4(this.tmp, this.tmp, this.matrix);
@@ -104,7 +107,6 @@ class Transform {
     return this.matrix;
   }
 }
-
 
 function buildFromDegree() {
   return new Transform(true);

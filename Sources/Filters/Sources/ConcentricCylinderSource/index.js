@@ -1,4 +1,4 @@
-import macro       from 'vtk.js/Sources/macro';
+import macro from 'vtk.js/Sources/macro';
 import vtkPolyData from 'vtk.js/Sources/Common/DataModel/PolyData';
 import vtkMatrixBuilder from 'vtk.js/Sources/Common/Core/MatrixBuilder';
 import vtkDataArray from 'vtk.js/Sources/Common/Core/DataArray';
@@ -35,9 +35,14 @@ function vtkConcentricCylinderSource(publicAPI, model) {
 
   publicAPI.getNumberOfRadius = () => model.radius.length;
   publicAPI.getRadius = (index = 0) => model.radius[index];
-  publicAPI.setRadius = (index, radius) => { model.radius[index] = radius; publicAPI.modified(); };
-  publicAPI.setCellField = (index, field) => { model.cellFields[index] = field; publicAPI.modified(); };
-
+  publicAPI.setRadius = (index, radius) => {
+    model.radius[index] = radius;
+    publicAPI.modified();
+  };
+  publicAPI.setCellField = (index, field) => {
+    model.cellFields[index] = field;
+    publicAPI.modified();
+  };
 
   publicAPI.removeMask = () => {
     model.mask = null;
@@ -64,7 +69,8 @@ function vtkConcentricCylinderSource(publicAPI, model) {
     }
   };
 
-  publicAPI.getMaskLayer = index => ((index === undefined) ? model.mask : model.mask[index]);
+  publicAPI.getMaskLayer = (index) =>
+    index === undefined ? model.mask : model.mask[index];
 
   function requestData(inData, outData) {
     if (model.deleted || !model.radius.length) {
@@ -87,13 +93,16 @@ function vtkConcentricCylinderSource(publicAPI, model) {
 
     if (!model.skipInnerFaces && !model.mask) {
       // We keep everything
-      cellArraySize = (2 * (model.resolution + 1)) + (5 * model.resolution) + ((nbLayers - 1) * model.resolution * 20);
-      nbCells = 2 + model.resolution + ((nbLayers - 1) * 4 * model.resolution);
+      cellArraySize =
+        2 * (model.resolution + 1) +
+        5 * model.resolution +
+        (nbLayers - 1) * model.resolution * 20;
+      nbCells = 2 + model.resolution + (nbLayers - 1) * 4 * model.resolution;
     } else if (!model.skipInnerFaces && model.mask) {
       // We skip some cylinders
       // Handle core
       if (!model.mask[0]) {
-        cellArraySize += (2 * (model.resolution + 1)) + (5 * model.resolution);
+        cellArraySize += 2 * (model.resolution + 1) + 5 * model.resolution;
         nbCells += 2 + model.resolution;
       }
       // Handle inside cylinders
@@ -108,9 +117,13 @@ function vtkConcentricCylinderSource(publicAPI, model) {
       // We skip cylinders and internal faces
       if (!model.skipInnerFaces || !model.mask || !model.mask[0]) {
         // core handling
-        cellArraySize += (2 * (model.resolution + 1));
+        cellArraySize += 2 * (model.resolution + 1);
         nbCells += 2;
-        if (model.radius.length === 1 || !model.skipInnerFaces || (model.mask && model.mask[1])) {
+        if (
+          model.radius.length === 1 ||
+          !model.skipInnerFaces ||
+          (model.mask && model.mask[1])
+        ) {
           // add side faces
           cellArraySize += 5 * model.resolution;
           nbCells += model.resolution;
@@ -120,7 +133,7 @@ function vtkConcentricCylinderSource(publicAPI, model) {
       // Handle inside cylinders
       for (let layer = 1; layer < nbLayers; layer++) {
         if (!model.skipInnerFaces || !model.mask || !model.mask[layer]) {
-          const lastLayer = (nbLayers - 1 === layer);
+          const lastLayer = nbLayers - 1 === layer;
 
           // Add inside cylinder
           cellArraySize += model.resolution * 10;
@@ -133,7 +146,11 @@ function vtkConcentricCylinderSource(publicAPI, model) {
           }
 
           // Do we add outterFaces
-          if (lastLayer || !model.skipInnerFaces || (model.mask && model.mask[layer + 1])) {
+          if (
+            lastLayer ||
+            !model.skipInnerFaces ||
+            (model.mask && model.mask[layer + 1])
+          ) {
             cellArraySize += model.resolution * 5;
             nbCells += model.resolution;
           }
@@ -158,17 +175,17 @@ function vtkConcentricCylinderSource(publicAPI, model) {
       const radius = model.radius[layer];
       // Create top
       for (let i = 0; i < model.resolution; i++) {
-        points[(pointIdx * 3) + 0] = radius * Math.cos(i * angle);
-        points[(pointIdx * 3) + 1] = radius * Math.sin(i * angle);
-        points[(pointIdx * 3) + 2] = zRef;
+        points[pointIdx * 3 + 0] = radius * Math.cos(i * angle);
+        points[pointIdx * 3 + 1] = radius * Math.sin(i * angle);
+        points[pointIdx * 3 + 2] = zRef;
         pointIdx++;
       }
 
       // Create bottom
       for (let i = 0; i < model.resolution; i++) {
-        points[(pointIdx * 3) + 0] = radius * Math.cos(i * angle);
-        points[(pointIdx * 3) + 1] = radius * Math.sin(i * angle);
-        points[(pointIdx * 3) + 2] = -zRef;
+        points[pointIdx * 3 + 0] = radius * Math.cos(i * angle);
+        points[pointIdx * 3 + 1] = radius * Math.sin(i * angle);
+        points[pointIdx * 3 + 2] = -zRef;
         pointIdx++;
       }
     }
@@ -189,17 +206,21 @@ function vtkConcentricCylinderSource(publicAPI, model) {
       field[fieldLocation++] = currentField;
       polys[cellLocation++] = model.resolution;
       for (let i = 0; i < model.resolution; i++) {
-        polys[cellLocation++] = (2 * model.resolution) - i - 1;
+        polys[cellLocation++] = 2 * model.resolution - i - 1;
       }
 
       // Core: sides
-      if (!model.skipInnerFaces || (model.mask && model.mask[1]) || nbLayers === 1) {
+      if (
+        !model.skipInnerFaces ||
+        (model.mask && model.mask[1]) ||
+        nbLayers === 1
+      ) {
         for (let i = 0; i < model.resolution; i++) {
           polys[cellLocation++] = 4;
           polys[cellLocation++] = (i + 1) % model.resolution;
           polys[cellLocation++] = i;
           polys[cellLocation++] = i + model.resolution;
-          polys[cellLocation++] = ((i + 1) % model.resolution) + model.resolution;
+          polys[cellLocation++] = (i + 1) % model.resolution + model.resolution;
 
           field[fieldLocation++] = currentField;
         }
@@ -216,16 +237,17 @@ function vtkConcentricCylinderSource(publicAPI, model) {
       }
 
       const offset = model.resolution * 2 * (layer - 1);
-      const lastLayer = (nbLayers - 1 === layer);
+      const lastLayer = nbLayers - 1 === layer;
       currentField = model.cellFields[layer];
 
       // Create top
       for (let i = 0; i < model.resolution; i++) {
         polys[cellLocation++] = 4;
         polys[cellLocation++] = i + offset;
-        polys[cellLocation++] = ((i + 1) % model.resolution) + offset;
-        polys[cellLocation++] = ((i + 1) % model.resolution) + (2 * model.resolution) + offset;
-        polys[cellLocation++] = i + (2 * model.resolution) + offset;
+        polys[cellLocation++] = (i + 1) % model.resolution + offset;
+        polys[cellLocation++] =
+          (i + 1) % model.resolution + 2 * model.resolution + offset;
+        polys[cellLocation++] = i + 2 * model.resolution + offset;
 
         field[fieldLocation++] = currentField;
       }
@@ -233,10 +255,16 @@ function vtkConcentricCylinderSource(publicAPI, model) {
       // Create bottom
       for (let i = 0; i < model.resolution; i++) {
         polys[cellLocation++] = 4;
-        polys[cellLocation++] = ((i + 1) % model.resolution) + offset + model.resolution;
+        polys[cellLocation++] =
+          (i + 1) % model.resolution + offset + model.resolution;
         polys[cellLocation++] = i + offset + model.resolution;
-        polys[cellLocation++] = i + (2 * model.resolution) + offset + model.resolution;
-        polys[cellLocation++] = ((i + 1) % model.resolution) + (2 * model.resolution) + offset + model.resolution;
+        polys[cellLocation++] =
+          i + 2 * model.resolution + offset + model.resolution;
+        polys[cellLocation++] =
+          (i + 1) % model.resolution +
+          2 * model.resolution +
+          offset +
+          model.resolution;
 
         field[fieldLocation++] = currentField;
       }
@@ -246,8 +274,9 @@ function vtkConcentricCylinderSource(publicAPI, model) {
         for (let i = 0; i < model.resolution; i++) {
           polys[cellLocation++] = 4;
           polys[cellLocation++] = i + offset;
-          polys[cellLocation++] = ((i + 1) % model.resolution) + offset;
-          polys[cellLocation++] = ((i + 1) % model.resolution) + model.resolution + offset;
+          polys[cellLocation++] = (i + 1) % model.resolution + offset;
+          polys[cellLocation++] =
+            (i + 1) % model.resolution + model.resolution + offset;
           polys[cellLocation++] = i + model.resolution + offset;
 
           field[fieldLocation++] = currentField;
@@ -255,13 +284,23 @@ function vtkConcentricCylinderSource(publicAPI, model) {
       }
 
       // Create outter
-      if (!model.skipInnerFaces || lastLayer || (model.mask && (model.mask[layer + 1] || lastLayer))) {
+      if (
+        !model.skipInnerFaces ||
+        lastLayer ||
+        (model.mask && (model.mask[layer + 1] || lastLayer))
+      ) {
         for (let i = 0; i < model.resolution; i++) {
           polys[cellLocation++] = 4;
-          polys[cellLocation++] = ((i + 1) % model.resolution) + offset + (2 * model.resolution);
-          polys[cellLocation++] = i + offset + (2 * model.resolution);
-          polys[cellLocation++] = i + model.resolution + offset + (2 * model.resolution);
-          polys[cellLocation++] = ((i + 1) % model.resolution) + model.resolution + offset + (2 * model.resolution);
+          polys[cellLocation++] =
+            (i + 1) % model.resolution + offset + 2 * model.resolution;
+          polys[cellLocation++] = i + offset + 2 * model.resolution;
+          polys[cellLocation++] =
+            i + model.resolution + offset + 2 * model.resolution;
+          polys[cellLocation++] =
+            (i + 1) % model.resolution +
+            model.resolution +
+            offset +
+            2 * model.resolution;
 
           field[fieldLocation++] = currentField;
         }
@@ -278,7 +317,9 @@ function vtkConcentricCylinderSource(publicAPI, model) {
     dataset = vtkPolyData.newInstance();
     dataset.getPoints().setData(points, 3);
     dataset.getPolys().setData(polys, 1);
-    dataset.getCellData().setScalars(vtkDataArray.newInstance({ name: 'layer', values: field }));
+    dataset
+      .getCellData()
+      .setScalars(vtkDataArray.newInstance({ name: 'layer', values: field }));
 
     // Update output
     outData[0] = dataset;
@@ -311,15 +352,8 @@ export function extend(publicAPI, model, initialValues = {}) {
 
   // Build VTK API
   macro.obj(publicAPI, model);
-  macro.setGet(publicAPI, model, [
-    'height',
-    'resolution',
-    'skipInnerFaces',
-  ]);
-  macro.setGetArray(publicAPI, model, [
-    'center',
-    'direction',
-  ], 3);
+  macro.setGet(publicAPI, model, ['height', 'resolution', 'skipInnerFaces']);
+  macro.setGetArray(publicAPI, model, ['center', 'direction'], 3);
   macro.getArray(publicAPI, model, ['cellFields']);
   macro.algo(publicAPI, model, 0, 1);
   vtkConcentricCylinderSource(publicAPI, model);
@@ -327,7 +361,10 @@ export function extend(publicAPI, model, initialValues = {}) {
 
 // ----------------------------------------------------------------------------
 
-export const newInstance = macro.newInstance(extend, 'vtkConcentricCylinderSource');
+export const newInstance = macro.newInstance(
+  extend,
+  'vtkConcentricCylinderSource'
+);
 
 // ----------------------------------------------------------------------------
 

@@ -1,10 +1,10 @@
 import 'vtk.js/Sources/favicon';
 
-import vtkFullScreenRenderWindow  from 'vtk.js/Sources/Rendering/Misc/FullScreenRenderWindow';
-import vtkActor                   from 'vtk.js/Sources/Rendering/Core/Actor';
-import vtkPointSource             from 'vtk.js/Sources/Filters/Sources/PointSource';
-import vtkMapper                  from 'vtk.js/Sources/Rendering/Core/Mapper';
-import vtkMath                    from 'vtk.js/Sources/Common/Core/Math';
+import vtkFullScreenRenderWindow from 'vtk.js/Sources/Rendering/Misc/FullScreenRenderWindow';
+import vtkActor from 'vtk.js/Sources/Rendering/Core/Actor';
+import vtkPointSource from 'vtk.js/Sources/Filters/Sources/PointSource';
+import vtkMapper from 'vtk.js/Sources/Rendering/Core/Mapper';
+import vtkMath from 'vtk.js/Sources/Common/Core/Math';
 
 import controlPanel from './controlPanel.html';
 
@@ -12,7 +12,9 @@ import controlPanel from './controlPanel.html';
 // Standard rendering code setup
 // ----------------------------------------------------------------------------
 
-const fullScreenRenderer = vtkFullScreenRenderWindow.newInstance({ background: [0, 0, 0] });
+const fullScreenRenderer = vtkFullScreenRenderWindow.newInstance({
+  background: [0, 0, 0],
+});
 const renderer = fullScreenRenderer.getRenderer();
 const renderWindow = fullScreenRenderer.getRenderWindow();
 
@@ -22,7 +24,10 @@ const renderWindow = fullScreenRenderer.getRenderWindow();
 
 vtkMath.randomSeed(141592);
 
-const pointSource = vtkPointSource.newInstance({ numberOfPoints: 25, radius: 0.25 });
+const pointSource = vtkPointSource.newInstance({
+  numberOfPoints: 25,
+  radius: 0.25,
+});
 // pointSource.setNumberOfPoints(25);
 // pointSource.setRadius(0.25);
 

@@ -1,15 +1,17 @@
 import 'vtk.js/Sources/favicon';
 
 import vtkFullScreenRenderWindow from 'vtk.js/Sources/Rendering/Misc/FullScreenRenderWindow';
-import vtk                       from 'vtk.js/Sources/vtk';
-import vtkActor                  from 'vtk.js/Sources/Rendering/Core/Actor';
-import vtkMapper                 from 'vtk.js/Sources/Rendering/Core/Mapper';
+import vtk from 'vtk.js/Sources/vtk';
+import vtkActor from 'vtk.js/Sources/Rendering/Core/Actor';
+import vtkMapper from 'vtk.js/Sources/Rendering/Core/Mapper';
 
 // ----------------------------------------------------------------------------
 // Standard rendering code setup
 // ----------------------------------------------------------------------------
 
-const fullScreenRenderer = vtkFullScreenRenderWindow.newInstance({ background: [0, 0, 0] });
+const fullScreenRenderer = vtkFullScreenRenderWindow.newInstance({
+  background: [0, 0, 0],
+});
 const renderer = fullScreenRenderer.getRenderer();
 const renderWindow = fullScreenRenderer.getRenderWindow();
 
@@ -17,6 +19,7 @@ const renderWindow = fullScreenRenderer.getRenderWindow();
 // Inline PolyData definition
 // ----------------------------------------------------------------------------
 
+// prettier-ignore
 const polydata = vtk({
   vtkClass: 'vtkPolyData',
   points: {
@@ -88,4 +91,3 @@ global.actor = actor;
 global.lut = lut;
 global.renderer = renderer;
 global.renderWindow = renderWindow;
-

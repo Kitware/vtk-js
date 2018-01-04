@@ -1,6 +1,6 @@
 import { mat3, mat4 } from 'gl-matrix';
 
-import macro       from 'vtk.js/Sources/macro';
+import macro from 'vtk.js/Sources/macro';
 import vtkViewNode from 'vtk.js/Sources/Rendering/SceneGraph/ViewNode';
 
 // ----------------------------------------------------------------------------
@@ -25,8 +25,7 @@ function vtkOpenGLVolume(publicAPI, model) {
 
   publicAPI.queryPass = (prepass, renderPass) => {
     if (prepass) {
-      if (!model.renderable ||
-          !model.renderable.getVisibility()) {
+      if (!model.renderable || !model.renderable.getVisibility()) {
         return;
       }
       renderPass.incrementVolumeCount();
@@ -34,8 +33,7 @@ function vtkOpenGLVolume(publicAPI, model) {
   };
 
   publicAPI.traverseVolumePass = (renderPass) => {
-    if (!model.renderable ||
-        !model.renderable.getVisibility()) {
+    if (!model.renderable || !model.renderable.getVisibility()) {
       return;
     }
 
@@ -52,7 +50,9 @@ function vtkOpenGLVolume(publicAPI, model) {
       return;
     }
     if (prepass) {
-      model.context = publicAPI.getFirstAncestorOfType('vtkOpenGLRenderWindow').getContext();
+      model.context = publicAPI
+        .getFirstAncestorOfType('vtkOpenGLRenderWindow')
+        .getContext();
       model.context.depthMask(false);
     } else {
       model.context.depthMask(true);
@@ -104,9 +104,7 @@ export function extend(publicAPI, model, initialValues = {}) {
   model.MCWCMatrix = mat4.create();
 
   // Build VTK API
-  macro.setGet(publicAPI, model, [
-    'context',
-  ]);
+  macro.setGet(publicAPI, model, ['context']);
 
   // Object methods
   vtkOpenGLVolume(publicAPI, model);

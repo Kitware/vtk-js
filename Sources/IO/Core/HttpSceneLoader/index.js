@@ -1,10 +1,10 @@
-import macro                from 'vtk.js/Sources/macro';
-import vtkActor             from 'vtk.js/Sources/Rendering/Core/Actor';
+import macro from 'vtk.js/Sources/macro';
+import vtkActor from 'vtk.js/Sources/Rendering/Core/Actor';
 import vtkHttpDataSetReader from 'vtk.js/Sources/IO/Core/HttpDataSetReader';
-import vtkMapper            from 'vtk.js/Sources/Rendering/Core/Mapper';
-import vtkTexture           from 'vtk.js/Sources/Rendering/Core/Texture';
+import vtkMapper from 'vtk.js/Sources/Rendering/Core/Mapper';
+import vtkTexture from 'vtk.js/Sources/Rendering/Core/Texture';
 
-import DataAccessHelper     from 'vtk.js/Sources/IO/Core/DataAccessHelper';
+import DataAccessHelper from 'vtk.js/Sources/IO/Core/DataAccessHelper';
 
 const { vtkWarningMacro, vtkErrorMacro } = macro;
 
@@ -20,7 +20,8 @@ function applySettings(sceneItem, settings) {
       settings.actorRotation[0],
       settings.actorRotation[1],
       settings.actorRotation[2],
-      settings.actorRotation[3]);
+      settings.actorRotation[3]
+    );
   }
 
   if (settings.property) {
@@ -29,7 +30,10 @@ function applySettings(sceneItem, settings) {
 
   if (settings.mapper) {
     if (settings.mapper.colorByArrayName) {
-      sceneItem.source.enableArray(settings.mapper.colorByArrayName, settings.mapper.colorByArrayName);
+      sceneItem.source.enableArray(
+        settings.mapper.colorByArrayName,
+        settings.mapper.colorByArrayName
+      );
       sceneItem.source.loadData();
     }
 
@@ -47,7 +51,10 @@ function applySettings(sceneItem, settings) {
 // ----------------------------------------------------------------------------
 
 function loadHttpDataSetReader(item, model, publicAPI) {
-  const source = vtkHttpDataSetReader.newInstance({ fetchGzip: model.fetchGzip, dataAccessHelper: model.dataAccessHelper });
+  const source = vtkHttpDataSetReader.newInstance({
+    fetchGzip: model.fetchGzip,
+    dataAccessHelper: model.dataAccessHelper,
+  });
   const actor = vtkActor.newInstance();
   const mapper = vtkMapper.newInstance();
   const sceneItem = {
@@ -58,7 +65,10 @@ function loadHttpDataSetReader(item, model, publicAPI) {
     defaultSettings: item,
   };
   if (item.texture) {
-    const textureSource = vtkHttpDataSetReader.newInstance({ fetchGzip: model.fetchGzip, dataAccessHelper: model.dataAccessHelper });
+    const textureSource = vtkHttpDataSetReader.newInstance({
+      fetchGzip: model.fetchGzip,
+      dataAccessHelper: model.dataAccessHelper,
+    });
     textureSource
       .setUrl([model.baseURL, item.texture].join('/'), { loadData: true })
       .then(() => {
@@ -132,32 +142,32 @@ function vtkHttpSceneLoader(publicAPI, model) {
       return;
     }
 
-    model.dataAccessHelper.fetchJSON(publicAPI, model.url)
-      .then(
-        (data) => {
-          if (data.fetchGzip !== undefined) {
-            model.fetchGzip = data.fetchGzip;
-          }
-          if (data.background) {
-            model.renderer.setBackground(...data.background);
-          }
-          if (data.camera) {
-            originalSceneParameters.camera = data.camera;
-            setCameraParameters(data.camera);
-          }
-          if (data.scene) {
-            data.scene.forEach((item) => {
-              const builder = TYPE_MAPPING[item.type];
-              if (builder) {
-                builder(item, model, publicAPI);
-              }
-            });
-            global.scene = model.scene;
-          }
-        },
-        (error) => {
-          vtkErrorMacro(`Error fetching scene ${error}`);
-        });
+    model.dataAccessHelper.fetchJSON(publicAPI, model.url).then(
+      (data) => {
+        if (data.fetchGzip !== undefined) {
+          model.fetchGzip = data.fetchGzip;
+        }
+        if (data.background) {
+          model.renderer.setBackground(...data.background);
+        }
+        if (data.camera) {
+          originalSceneParameters.camera = data.camera;
+          setCameraParameters(data.camera);
+        }
+        if (data.scene) {
+          data.scene.forEach((item) => {
+            const builder = TYPE_MAPPING[item.type];
+            if (builder) {
+              builder(item, model, publicAPI);
+            }
+          });
+          global.scene = model.scene;
+        }
+      },
+      (error) => {
+        vtkErrorMacro(`Error fetching scene ${error}`);
+      }
+    );
   };
 
   publicAPI.resetScene = () => {
@@ -197,21 +207,13 @@ const DEFAULT_VALUES = {
 
 // ----------------------------------------------------------------------------
 
-
 export function extend(publicAPI, model, initialValues = {}) {
   Object.assign(model, DEFAULT_VALUES, initialValues);
 
   // Build VTK API
   macro.obj(publicAPI, model);
-  macro.get(publicAPI, model, [
-    'fetchGzip',
-    'url',
-    'baseURL',
-    'scene',
-  ]);
-  macro.setGet(publicAPI, model, [
-    'renderer',
-  ]);
+  macro.get(publicAPI, model, ['fetchGzip', 'url', 'baseURL', 'scene']);
+  macro.setGet(publicAPI, model, ['renderer']);
   macro.event(publicAPI, model, 'ready');
 
   // Object methods

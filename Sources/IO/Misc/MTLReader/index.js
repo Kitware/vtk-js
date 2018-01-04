@@ -1,6 +1,6 @@
 import * as macro from '../../../macro';
 import DataAccessHelper from '../../Core/DataAccessHelper';
-import vtkTexture        from '../../../Rendering/Core/Texture';
+import vtkTexture from '../../../Rendering/Core/Texture';
 
 // ----------------------------------------------------------------------------
 // vtkMTLReader methods
@@ -22,7 +22,10 @@ function vtkMTLReader(publicAPI, model) {
       return;
     }
 
-    const tokens = line.split(/[ \t]+/).map(s => s.trim()).filter(s => s.length);
+    const tokens = line
+      .split(/[ \t]+/)
+      .map((s) => s.trim())
+      .filter((s) => s.length);
     if (tokens[0] === 'newmtl') {
       tokens.shift();
       model.currentMaterial = tokens.join(' ').trim();
@@ -53,7 +56,10 @@ function vtkMTLReader(publicAPI, model) {
   function fetchData(url) {
     const compression = model.compression;
     const progressCallback = model.progressCallback;
-    return model.dataAccessHelper.fetchText(publicAPI, url, { compression, progressCallback });
+    return model.dataAccessHelper.fetchText(publicAPI, url, {
+      compression,
+      progressCallback,
+    });
   }
 
   // Set DataSet url
@@ -79,15 +85,15 @@ function vtkMTLReader(publicAPI, model) {
   // Fetch the actual data arrays
   publicAPI.loadData = () =>
     new Promise((resolve, reject) => {
-      fetchData(model.url)
-        .then(
-          (content) => {
-            publicAPI.parse(content);
-            resolve();
-          },
-          (err) => {
-            reject();
-          });
+      fetchData(model.url).then(
+        (content) => {
+          publicAPI.parse(content);
+          resolve();
+        },
+        (err) => {
+          reject();
+        }
+      );
     });
 
   publicAPI.parse = (content) => {
@@ -100,19 +106,20 @@ function vtkMTLReader(publicAPI, model) {
   publicAPI.isBusy = () => !!model.requestCount;
 
   publicAPI.getMaterialNames = () => Object.keys(model.materials);
-  publicAPI.getMaterial = name => model.materials[name];
+  publicAPI.getMaterial = (name) => model.materials[name];
 
   publicAPI.listImages = () =>
     Object.keys(model.materials)
-      .map(name => model.materials[name].map_Kd)
-      .filter(fileName => !!fileName)
-      .map(s => s[0].trim());
+      .map((name) => model.materials[name].map_Kd)
+      .filter((fileName) => !!fileName)
+      .map((s) => s[0].trim());
 
   publicAPI.setImageSrc = (imagePath, src) => {
-    const selectedName = Object.keys(model.materials)
-      .find(name =>
-        (model.materials[name].map_Kd
-          && model.materials[name].map_Kd[0].trim() === imagePath.trim()));
+    const selectedName = Object.keys(model.materials).find(
+      (name) =>
+        model.materials[name].map_Kd &&
+        model.materials[name].map_Kd[0].trim() === imagePath.trim()
+    );
     const material = model.materials[selectedName];
     if (material && material.image) {
       material.image.src = src;
@@ -124,15 +131,15 @@ function vtkMTLReader(publicAPI, model) {
     if (material && actor) {
       const white = [1, 1, 1];
       const actorProp = {
-        ambientColor: material.Ka ? material.Ka.map(i => Number(i)) : white,
-        specularColor: material.Ks ? material.Ks.map(i => Number(i)) : white,
-        diffuseColor: material.Kd ? material.Kd.map(i => Number(i)) : white,
+        ambientColor: material.Ka ? material.Ka.map((i) => Number(i)) : white,
+        specularColor: material.Ks ? material.Ks.map((i) => Number(i)) : white,
+        diffuseColor: material.Kd ? material.Kd.map((i) => Number(i)) : white,
         opacity: material.d ? Number(material.d) : 1,
         specularPower: material.Ns ? Number(material.Ns) : 1,
       };
       const illum = Number(material.illum || 2);
       ['ambient', 'diffuse', 'specular'].forEach((k, idx) => {
-        actorProp[k] = (idx <= illum) ? 1.0 : 0.0;
+        actorProp[k] = idx <= illum ? 1.0 : 0.0;
       });
       if (material.image) {
         const texture = vtkTexture.newInstance({ interpolate: true });
@@ -159,20 +166,13 @@ const DEFAULT_VALUES = {
 
 // ----------------------------------------------------------------------------
 
-
 export function extend(publicAPI, model, initialValues = {}) {
   Object.assign(model, DEFAULT_VALUES, initialValues);
 
   // Build VTK API
   macro.obj(publicAPI, model);
-  macro.get(publicAPI, model, [
-    'url',
-    'baseURL',
-  ]);
-  macro.setGet(publicAPI, model, [
-    'dataAccessHelper',
-    'splitGroup',
-  ]);
+  macro.get(publicAPI, model, ['url', 'baseURL']);
+  macro.setGet(publicAPI, model, ['dataAccessHelper', 'splitGroup']);
   macro.event(publicAPI, model, 'busy');
 
   // Object methods

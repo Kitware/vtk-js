@@ -1,6 +1,6 @@
-import macro     from 'vtk.js/Sources/macro';
+import macro from 'vtk.js/Sources/macro';
 import Constants from 'vtk.js/Sources/Rendering/Core/Coordinate/Constants';
-import vtkMath   from 'vtk.js/Sources/Common/Core/Math';
+import vtkMath from 'vtk.js/Sources/Common/Core/Math';
 
 const { Coordinate } = Constants;
 const { vtkErrorMacro } = macro;
@@ -73,7 +73,8 @@ function vtkCoordinate(publicAPI, model) {
     publicAPI.setCoordinateSystem(Coordinate.WORLD);
   };
 
-  publicAPI.getCoordinateSystemAsString = () => macro.enumToString(Coordinate, model.coordinateSystem);
+  publicAPI.getCoordinateSystemAsString = () =>
+    macro.enumToString(Coordinate, model.coordinateSystem);
 
   publicAPI.getComputedWorldValue = (ren) => {
     let val = model.computedWorldValue;
@@ -94,14 +95,18 @@ function vtkCoordinate(publicAPI, model) {
     if (!renderer) {
       if (model.coordinateSystem === Coordinate.WORLD) {
         if (model.referenceCoordinate) {
-          const refValue = model.referenceCoordinate.getComputedWorldValue(renderer);
+          const refValue = model.referenceCoordinate.getComputedWorldValue(
+            renderer
+          );
           val[0] += refValue[0];
           val[1] += refValue[1];
           val[2] += refValue[2];
         }
         model.computing = 0;
       } else {
-        vtkErrorMacro('Attempt to compute world coordinates from another coordinate system without a renderer');
+        vtkErrorMacro(
+          'Attempt to compute world coordinates from another coordinate system without a renderer'
+        );
       }
       return val;
     }
@@ -114,28 +119,78 @@ function vtkCoordinate(publicAPI, model) {
       return model.computedWorldValue;
     }
 
-    if (model.referenceCoordinate && model.coordinateSystem !== Coordinate.WORLD) {
-      const fval = model.referenceCoordinate.getComputedDoubleDisplayValue(renderer);
+    if (
+      model.referenceCoordinate &&
+      model.coordinateSystem !== Coordinate.WORLD
+    ) {
+      const fval = model.referenceCoordinate.getComputedDoubleDisplayValue(
+        renderer
+      );
       let refValue = [fval[0], fval[1], 0.0];
 
       switch (model.coordinateSystem) {
         case Coordinate.NORMALIZED_DISPLAY:
-          refValue = view.displayToNormalizedDisplay(refValue[0], refValue[1], refValue[2]);
+          refValue = view.displayToNormalizedDisplay(
+            refValue[0],
+            refValue[1],
+            refValue[2]
+          );
           break;
         case Coordinate.VIEWPORT:
-          refValue = view.displayToNormalizedDisplay(refValue[0], refValue[1], refValue[2]);
-          refValue = view.normalizedDisplayToViewport(refValue[0], refValue[1], refValue[2], renderer);
+          refValue = view.displayToNormalizedDisplay(
+            refValue[0],
+            refValue[1],
+            refValue[2]
+          );
+          refValue = view.normalizedDisplayToViewport(
+            refValue[0],
+            refValue[1],
+            refValue[2],
+            renderer
+          );
           break;
         case Coordinate.NORMALIZED_VIEWPORT:
-          refValue = view.displayToNormalizedDisplay(refValue[0], refValue[1], refValue[2]);
-          refValue = view.normalizedDisplayToViewport(refValue[0], refValue[1], refValue[2], renderer);
-          refValue = view.viewportToNormalizedViewport(refValue[0], refValue[1], refValue[2], renderer);
+          refValue = view.displayToNormalizedDisplay(
+            refValue[0],
+            refValue[1],
+            refValue[2]
+          );
+          refValue = view.normalizedDisplayToViewport(
+            refValue[0],
+            refValue[1],
+            refValue[2],
+            renderer
+          );
+          refValue = view.viewportToNormalizedViewport(
+            refValue[0],
+            refValue[1],
+            refValue[2],
+            renderer
+          );
           break;
         case Coordinate.VIEW:
-          refValue = view.displayToNormalizedDisplay(refValue[0], refValue[1], refValue[2]);
-          refValue = view.normalizedDisplayToViewport(refValue[0], refValue[1], refValue[2], renderer);
-          refValue = view.viewportToNormalizedViewport(refValue[0], refValue[1], refValue[2], renderer);
-          refValue = renderer.normalizedViewportToView(refValue[0], refValue[1], refValue[2]);
+          refValue = view.displayToNormalizedDisplay(
+            refValue[0],
+            refValue[1],
+            refValue[2]
+          );
+          refValue = view.normalizedDisplayToViewport(
+            refValue[0],
+            refValue[1],
+            refValue[2],
+            renderer
+          );
+          refValue = view.viewportToNormalizedViewport(
+            refValue[0],
+            refValue[1],
+            refValue[2],
+            renderer
+          );
+          refValue = renderer.normalizedViewportToView(
+            refValue[0],
+            refValue[1],
+            refValue[2]
+          );
           break;
         default:
           break;
@@ -152,19 +207,44 @@ function vtkCoordinate(publicAPI, model) {
     switch (model.coordinateSystem) {
       case Coordinate.DISPLAY:
         val = view.displayToNormalizedDisplay(val[0], val[1], val[2]);
-        val = view.normalizedDisplayToViewport(val[0], val[1], val[2], renderer);
-        val = view.viewportToNormalizedViewport(val[0], val[1], val[2], renderer);
+        val = view.normalizedDisplayToViewport(
+          val[0],
+          val[1],
+          val[2],
+          renderer
+        );
+        val = view.viewportToNormalizedViewport(
+          val[0],
+          val[1],
+          val[2],
+          renderer
+        );
         val = renderer.normalizedViewportToView(val[0], val[1], val[2]);
         val = renderer.viewToWorld(val[0], val[1], val[2], aspect);
         break;
       case Coordinate.NORMALIZED_DISPLAY:
-        val = view.normalizedDisplayToViewport(val[0], val[1], val[2], renderer);
-        val = view.viewportToNormalizedViewport(val[0], val[1], val[2], renderer);
+        val = view.normalizedDisplayToViewport(
+          val[0],
+          val[1],
+          val[2],
+          renderer
+        );
+        val = view.viewportToNormalizedViewport(
+          val[0],
+          val[1],
+          val[2],
+          renderer
+        );
         val = renderer.normalizedViewportToView(val[0], val[1], val[2]);
         val = renderer.viewToWorld(val[0], val[1], val[2], aspect);
         break;
       case Coordinate.VIEWPORT:
-        val = view.viewportToNormalizedViewport(val[0], val[1], val[2], renderer);
+        val = view.viewportToNormalizedViewport(
+          val[0],
+          val[1],
+          val[2],
+          renderer
+        );
         val = renderer.normalizedViewportToView(val[0], val[1], val[2]);
         val = renderer.viewToWorld(val[0], val[1], val[2], aspect);
         break;
@@ -179,7 +259,10 @@ function vtkCoordinate(publicAPI, model) {
         break;
     }
 
-    if (model.referenceCoordinate && model.coordinateSystem === Coordinate.WORLD) {
+    if (
+      model.referenceCoordinate &&
+      model.coordinateSystem === Coordinate.WORLD
+    ) {
       const refValue = publicAPI.getComputedWorldValue(renderer);
       val[0] += refValue[0];
       val[1] += refValue[1];
@@ -210,7 +293,9 @@ function vtkCoordinate(publicAPI, model) {
     let val = publicAPI.getComputedDisplayValue(renderer);
 
     if (!renderer) {
-      vtkErrorMacro('Attempt to convert to local display coordinates without a renderer');
+      vtkErrorMacro(
+        'Attempt to convert to local display coordinates without a renderer'
+      );
       return val;
     }
 
@@ -271,7 +356,9 @@ function vtkCoordinate(publicAPI, model) {
         model.computedDoubleDisplayValue[0] = Number.MAX_VALUE;
         model.computedDoubleDisplayValue[1] = Number.MAX_VALUE;
 
-        vtkErrorMacro('Request for coordinate transformation without required viewport');
+        vtkErrorMacro(
+          'Request for coordinate transformation without required viewport'
+        );
       }
       return model.computedDoubleDisplayValue;
     }
@@ -288,7 +375,9 @@ function vtkCoordinate(publicAPI, model) {
     switch (model.coordinateSystem) {
       case Coordinate.WORLD: {
         if (model.referenceCoordinate) {
-          const refValue = model.referenceCoordinate.getComputedWorldValue(renderer);
+          const refValue = model.referenceCoordinate.getComputedWorldValue(
+            renderer
+          );
           val[0] += refValue[0];
           val[1] += refValue[1];
           val[2] += refValue[2];
@@ -297,14 +386,24 @@ function vtkCoordinate(publicAPI, model) {
 
         val = renderer.viewToNormalizedViewport(val[0], val[1], val[2]);
         val = view.normalizedViewportToViewport(val[0], val[1], val[2]);
-        val = view.viewportToNormalizedDisplay(val[0], val[1], val[2], renderer);
+        val = view.viewportToNormalizedDisplay(
+          val[0],
+          val[1],
+          val[2],
+          renderer
+        );
         val = view.normalizedDisplayToDisplay(val[0], val[1], val[2]);
         break;
       }
       case Coordinate.VIEW: {
         val = renderer.viewToNormalizedViewport(val[0], val[1], val[2]);
         val = view.normalizedViewportToViewport(val[0], val[1], val[2]);
-        val = view.viewportToNormalizedDisplay(val[0], val[1], val[2], renderer);
+        val = view.viewportToNormalizedDisplay(
+          val[0],
+          val[1],
+          val[2],
+          renderer
+        );
         val = view.normalizedDisplayToDisplay(val[0], val[1], val[2]);
         break;
       }
@@ -312,22 +411,36 @@ function vtkCoordinate(publicAPI, model) {
         val = view.normalizedViewportToViewport(val[0], val[1], val[2]);
 
         if (model.referenceCoordinate) {
-          const refValue = model.referenceCoordinate.getComputedDoubleViewportValue(renderer);
+          const refValue = model.referenceCoordinate.getComputedDoubleViewportValue(
+            renderer
+          );
           val[0] += refValue[0];
           val[1] += refValue[1];
         }
 
-        val = view.viewportToNormalizedDisplay(val[0], val[1], val[2], renderer);
+        val = view.viewportToNormalizedDisplay(
+          val[0],
+          val[1],
+          val[2],
+          renderer
+        );
         val = view.normalizedDisplayToDisplay(val[0], val[1], val[2]);
         break;
       }
       case Coordinate.VIEWPORT: {
         if (model.referenceCoordinate) {
-          const refValue = model.referenceCoordinate.getComputedDoubleViewportValue(renderer);
+          const refValue = model.referenceCoordinate.getComputedDoubleViewportValue(
+            renderer
+          );
           val[0] += refValue[0];
           val[1] += refValue[1];
         }
-        val = view.viewportToNormalizedDisplay(val[0], val[1], val[2], renderer);
+        val = view.viewportToNormalizedDisplay(
+          val[0],
+          val[1],
+          val[2],
+          renderer
+        );
         val = view.normalizedDisplayToDisplay(val[0], val[1], val[2]);
         break;
       }
@@ -343,10 +456,14 @@ function vtkCoordinate(publicAPI, model) {
     }
 
     // if we have a reference coordinate and we haven't handled it yet
-    if (model.referenceCoordinate &&
+    if (
+      model.referenceCoordinate &&
       (model.coordinateSystem === Coordinate.DISPLAY ||
-       model.coordinateSystem === Coordinate.NORMALIZED_DISPLAY)) {
-      const refValue = model.referenceCoordinate.getComputedDoubleDisplayValue(renderer);
+        model.coordinateSystem === Coordinate.NORMALIZED_DISPLAY)
+    ) {
+      const refValue = model.referenceCoordinate.getComputedDoubleDisplayValue(
+        renderer
+      );
       val[0] += refValue[0];
       val[1] += refValue[1];
     }
@@ -419,9 +536,7 @@ export function extend(publicAPI, model, initialValues = {}) {
     'renderer',
   ]);
 
-  macro.getArray(publicAPI, model, [
-    'value',
-  ], 3);
+  macro.getArray(publicAPI, model, ['value'], 3);
 
   // Object methods
   vtkCoordinate(publicAPI, model);

@@ -1,12 +1,12 @@
 import 'vtk.js/Sources/favicon';
 
-import vtkActor                          from 'vtk.js/Sources/Rendering/Core/Actor';
-import vtkCubeSource                     from 'vtk.js/Sources/Filters/Sources/CubeSource';
-import vtkFullScreenRenderWindow         from 'vtk.js/Sources/Rendering/Misc/FullScreenRenderWindow';
-import vtkMapper                         from 'vtk.js/Sources/Rendering/Core/Mapper';
-import vtkOutlineFilter                  from 'vtk.js/Sources/Filters/General/OutlineFilter';
-import vtkPickerInteractorStyle          from 'vtk.js/Sources/Rendering/Core/PointPicker/example/PickerInteractorStyle';
-import vtkPointPicker                    from 'vtk.js/Sources/Rendering/Core/PointPicker';
+import vtkActor from 'vtk.js/Sources/Rendering/Core/Actor';
+import vtkCubeSource from 'vtk.js/Sources/Filters/Sources/CubeSource';
+import vtkFullScreenRenderWindow from 'vtk.js/Sources/Rendering/Misc/FullScreenRenderWindow';
+import vtkMapper from 'vtk.js/Sources/Rendering/Core/Mapper';
+import vtkOutlineFilter from 'vtk.js/Sources/Filters/General/OutlineFilter';
+import vtkPickerInteractorStyle from 'vtk.js/Sources/Rendering/Core/PointPicker/example/PickerInteractorStyle';
+import vtkPointPicker from 'vtk.js/Sources/Rendering/Core/PointPicker';
 
 // ----------------------------------------------------------------------------
 // Standard rendering code setup

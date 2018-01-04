@@ -1,13 +1,13 @@
-import macro                   from 'vtk.js/Sources/macro';
-import vtkActor                from 'vtk.js/Sources/Rendering/Core/Actor';
-import vtkCellPicker           from 'vtk.js/Sources/Rendering/Core/CellPicker';
+import macro from 'vtk.js/Sources/macro';
+import vtkActor from 'vtk.js/Sources/Rendering/Core/Actor';
+import vtkCellPicker from 'vtk.js/Sources/Rendering/Core/CellPicker';
 import vtkHandleRepresentation from 'vtk.js/Sources/Interaction/Widgets/HandleRepresentation';
-import vtkInteractorObserver   from 'vtk.js/Sources/Rendering/Core/InteractorObserver';
-import vtkMapper               from 'vtk.js/Sources/Rendering/Core/Mapper';
-import vtkMath                 from 'vtk.js/Sources/Common/Core/Math';
-import vtkProperty             from 'vtk.js/Sources/Rendering/Core/Property';
-import vtkSphereSource         from 'vtk.js/Sources/Filters/Sources/SphereSource';
-import { InteractionState }    from '../HandleRepresentation/Constants';
+import vtkInteractorObserver from 'vtk.js/Sources/Rendering/Core/InteractorObserver';
+import vtkMapper from 'vtk.js/Sources/Rendering/Core/Mapper';
+import vtkMath from 'vtk.js/Sources/Common/Core/Math';
+import vtkProperty from 'vtk.js/Sources/Rendering/Core/Property';
+import vtkSphereSource from 'vtk.js/Sources/Filters/Sources/SphereSource';
+import { InteractionState } from '../HandleRepresentation/Constants';
 
 // ----------------------------------------------------------------------------
 // vtkSphereHandleRepresentation methods
@@ -45,9 +45,10 @@ function vtkSphereHandleRepresentation(publicAPI, model) {
       model.initialBounds[i] = newBounds[i];
     }
     model.initialLength = Math.sqrt(
-        ((newBounds[1] - newBounds[0]) * (newBounds[1] - newBounds[0])) +
-        ((newBounds[3] - newBounds[2]) * (newBounds[3] - newBounds[2])) +
-        ((newBounds[5] - newBounds[4]) * (newBounds[5] - newBounds[4])));
+      (newBounds[1] - newBounds[0]) * (newBounds[1] - newBounds[0]) +
+        (newBounds[3] - newBounds[2]) * (newBounds[3] - newBounds[2]) +
+        (newBounds[5] - newBounds[4]) * (newBounds[5] - newBounds[4])
+    );
   };
 
   publicAPI.setSphereRadius = (radius) => {
@@ -112,9 +113,12 @@ function vtkSphereHandleRepresentation(publicAPI, model) {
     // outside the hot spot
     if (!model.waitingForMotion) {
       const pickedPosition = model.cursorPicker.getPickPosition();
-      const d2 = vtkMath.distance2BetweenPoints(pickedPosition, model.startEventPosition);
+      const d2 = vtkMath.distance2BetweenPoints(
+        pickedPosition,
+        model.startEventPosition
+      );
       const tol = model.hotSpotSize * model.initialLength;
-      if (d2 > (tol * tol)) {
+      if (d2 > tol * tol) {
         model.waitingForMotion = 0;
         return model.cursorPicker.getCellId();
       }
@@ -127,7 +131,7 @@ function vtkSphereHandleRepresentation(publicAPI, model) {
       v[0] = Math.abs(x[0] - model.startEventPosition[0]);
       v[1] = Math.abs(x[1] - model.startEventPosition[1]);
       v[2] = Math.abs(x[2] - model.startEventPosition[2]);
-      return (v[0] > v[1] ? (v[0] > v[2] ? 0 : 2) : (v[1] > v[2] ? 1 : 2));
+      return v[0] > v[1] ? (v[0] > v[2] ? 0 : 2) : v[1] > v[2] ? 1 : 2;
     }
     return -1;
   };
@@ -154,22 +158,43 @@ function vtkSphereHandleRepresentation(publicAPI, model) {
     }
   };
 
-  publicAPI.displayToWorld = (eventPos, z) => vtkInteractorObserver.computeDisplayToWorld(model.renderer,
-      eventPos[0], eventPos[1], z);
+  publicAPI.displayToWorld = (eventPos, z) =>
+    vtkInteractorObserver.computeDisplayToWorld(
+      model.renderer,
+      eventPos[0],
+      eventPos[1],
+      z
+    );
 
   publicAPI.complexWidgetInteraction = (eventPos) => {
-    const focalPoint = vtkInteractorObserver.computeDisplayToWorld(model.renderer,
-        model.lastPickPosition[0], model.lastPickPosition[1], model.lastPickPosition[2]);
+    const focalPoint = vtkInteractorObserver.computeDisplayToWorld(
+      model.renderer,
+      model.lastPickPosition[0],
+      model.lastPickPosition[1],
+      model.lastPickPosition[2]
+    );
     const z = focalPoint[2];
-    const prevPickPoint = vtkInteractorObserver.computeDisplayToWorld(model.renderer,
-        model.lastEventPosition[0], model.lastEventPosition[1], z);
+    const prevPickPoint = vtkInteractorObserver.computeDisplayToWorld(
+      model.renderer,
+      model.lastEventPosition[0],
+      model.lastEventPosition[1],
+      z
+    );
     const pickPoint = publicAPI.displayToWorld(eventPos, z);
 
-    if (model.interactionState === InteractionState.SELECTING ||
-      model.interactionState === InteractionState.TRANSLATING) {
+    if (
+      model.interactionState === InteractionState.SELECTING ||
+      model.interactionState === InteractionState.TRANSLATING
+    ) {
       if (!model.waitingForMotion || model.waitCount++ > 3) {
-        model.constraintAxis = publicAPI.determineConstraintAxis(model.constraintAxis, pickPoint);
-        if (model.interactionState === InteractionState.SELECTING && !model.translationMode) {
+        model.constraintAxis = publicAPI.determineConstraintAxis(
+          model.constraintAxis,
+          pickPoint
+        );
+        if (
+          model.interactionState === InteractionState.SELECTING &&
+          !model.translationMode
+        ) {
           publicAPI.moveFocus(prevPickPoint, pickPoint);
         } else {
           publicAPI.translate(prevPickPoint, pickPoint);
@@ -248,10 +273,13 @@ function vtkSphereHandleRepresentation(publicAPI, model) {
     const bounds = publicAPI.getBounds();
 
     // Compute the scale factor
-    let sf = vtkMath.norm(v) /
-        Math.sqrt(((bounds[1] - bounds[0]) * (bounds[1] - bounds[0])) +
-            ((bounds[3] - bounds[2]) * (bounds[3] - bounds[2])) +
-            ((bounds[5] - bounds[4]) * (bounds[5] - bounds[4])));
+    let sf =
+      vtkMath.norm(v) /
+      Math.sqrt(
+        (bounds[1] - bounds[0]) * (bounds[1] - bounds[0]) +
+          (bounds[3] - bounds[2]) * (bounds[3] - bounds[2]) +
+          (bounds[5] - bounds[4]) * (bounds[5] - bounds[4])
+      );
 
     if (eventPos[1] > model.lastEventPosition[1]) {
       sf += 1.0;
@@ -260,7 +288,8 @@ function vtkSphereHandleRepresentation(publicAPI, model) {
     }
 
     model.currentHandleSize *= sf;
-    model.currentHandleSize = (model.currentHandleSize < 0.001 ? 0.001 : model.currentHandleSize);
+    model.currentHandleSize =
+      model.currentHandleSize < 0.001 ? 0.001 : model.currentHandleSize;
     publicAPI.sizeBounds();
   };
 
@@ -349,7 +378,10 @@ export function extend(publicAPI, model, initialValues = {}) {
 
 // ----------------------------------------------------------------------------
 
-export const newInstance = macro.newInstance(extend, 'vtkSphereHandleRepresentation');
+export const newInstance = macro.newInstance(
+  extend,
+  'vtkSphereHandleRepresentation'
+);
 
 // ----------------------------------------------------------------------------
 

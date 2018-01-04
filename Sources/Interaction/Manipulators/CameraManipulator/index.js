@@ -18,7 +18,11 @@ function vtkCameraManipulator(publicAPI, model) {
 
   //-------------------------------------------------------------------------
   publicAPI.computeDisplayCenter = (iObserver) => {
-    const pt = iObserver.computeWorldToDisplay(model.center[0], model.center[1], model.center[2]);
+    const pt = iObserver.computeWorldToDisplay(
+      model.center[0],
+      model.center[1],
+      model.center[2]
+    );
     model.displayCenter[0] = pt[0];
     model.displayCenter[1] = pt[1];
   };
@@ -59,13 +63,9 @@ export function extend(publicAPI, model, initialValues = {}) {
     'rotationFactor',
   ]);
 
-  macro.setGetArray(publicAPI, model, [
-    'displayCenter',
-  ], 2);
+  macro.setGetArray(publicAPI, model, ['displayCenter'], 2);
 
-  macro.setGetArray(publicAPI, model, [
-    'center',
-  ], 3);
+  macro.setGetArray(publicAPI, model, ['center'], 3);
 
   // Object specific methods
   vtkCameraManipulator(publicAPI, model);

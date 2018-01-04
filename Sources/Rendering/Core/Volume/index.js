@@ -1,7 +1,7 @@
 import { vec3, mat4 } from 'gl-matrix';
-import macro          from 'vtk.js/Sources/macro';
-import vtkProp3D      from 'vtk.js/Sources/Rendering/Core/Prop3D';
-import vtkVolumeProperty    from 'vtk.js/Sources/Rendering/Core/VolumeProperty';
+import macro from 'vtk.js/Sources/macro';
+import vtkProp3D from 'vtk.js/Sources/Rendering/Core/Prop3D';
+import vtkVolumeProperty from 'vtk.js/Sources/Rendering/Core/VolumeProperty';
 
 const { vtkDebugMacro } = macro;
 
@@ -48,12 +48,17 @@ function vtkVolume(publicAPI, model) {
     // of caching. If the values returned this time are different, or
     // the modified time of this class is newer than the cached time,
     // then we need to rebuild.
-    const zip = rows => rows[0].map((_, c) => rows.map(row => row[c]));
-    if (!model.mapperBounds ||
-      !zip([bds, model.mapperBounds]).reduce((a, b) => (a && b[0] === b[1]), true) ||
-      publicAPI.getMTime() > model.boundsMTime.getMTime()) {
+    const zip = (rows) => rows[0].map((_, c) => rows.map((row) => row[c]));
+    if (
+      !model.mapperBounds ||
+      !zip([bds, model.mapperBounds]).reduce(
+        (a, b) => a && b[0] === b[1],
+        true
+      ) ||
+      publicAPI.getMTime() > model.boundsMTime.getMTime()
+    ) {
       vtkDebugMacro('Recomputing bounds...');
-      model.mapperBounds = bds.map(x => x);
+      model.mapperBounds = bds.map((x) => x);
       const bbox = [
         vec3.fromValues(bds[1], bds[3], bds[5]),
         vec3.fromValues(bds[1], bds[2], bds[5]),
@@ -68,15 +73,21 @@ function vtkVolume(publicAPI, model) {
       publicAPI.computeMatrix();
       const tmp4 = mat4.create();
       mat4.transpose(tmp4, model.matrix);
-      bbox.forEach(pt => vec3.transformMat4(pt, pt, tmp4));
+      bbox.forEach((pt) => vec3.transformMat4(pt, pt, tmp4));
 
       /* eslint-disable no-multi-assign */
       model.bounds[0] = model.bounds[2] = model.bounds[4] = Number.MAX_VALUE;
       model.bounds[1] = model.bounds[3] = model.bounds[5] = -Number.MAX_VALUE;
       /* eslint-enable no-multi-assign */
-      model.bounds = model.bounds.map((d, i) => ((i % 2 === 0) ?
-        bbox.reduce((a, b) => (a > b[i / 2] ? b[i / 2] : a), d) :
-        bbox.reduce((a, b) => (a < b[(i - 1) / 2] ? b[(i - 1) / 2] : a), d)));
+      model.bounds = model.bounds.map(
+        (d, i) =>
+          i % 2 === 0
+            ? bbox.reduce((a, b) => (a > b[i / 2] ? b[i / 2] : a), d)
+            : bbox.reduce(
+                (a, b) => (a < b[(i - 1) / 2] ? b[(i - 1) / 2] : a),
+                d
+              )
+      );
       model.boundsMTime.modified();
     }
     return model.bounds;
@@ -86,7 +97,7 @@ function vtkVolume(publicAPI, model) {
     let mt = model.mtime;
     if (model.property !== null) {
       const time = model.property.getMTime();
-      mt = (time > mt ? time : mt);
+      mt = time > mt ? time : mt;
     }
     return mt;
   };
@@ -95,12 +106,12 @@ function vtkVolume(publicAPI, model) {
     let mt = model.mtime;
     if (model.mapper !== null) {
       let time = model.mapper.getMTime();
-      mt = (time > mt ? time : mt);
+      mt = time > mt ? time : mt;
       if (model.mapper.getInput() !== null) {
         // FIXME !!! getInputAlgorithm / getInput
         model.mapper.getInputAlgorithm().update();
         time = model.mapper.getInput().getMTime();
-        mt = (time > mt ? time : mt);
+        mt = time > mt ? time : mt;
       }
     }
     return mt;
@@ -131,9 +142,7 @@ export function extend(publicAPI, model, initialValues = {}) {
 
   // Build VTK API
   macro.set(publicAPI, model, ['property']);
-  macro.setGet(publicAPI, model, [
-    'mapper',
-  ]);
+  macro.setGet(publicAPI, model, ['mapper']);
   macro.getArray(publicAPI, model, ['bounds'], 6);
 
   // Object methods

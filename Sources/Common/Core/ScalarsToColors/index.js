@@ -1,7 +1,7 @@
-import macro        from 'vtk.js/Sources/macro';
+import macro from 'vtk.js/Sources/macro';
 import vtkDataArray from 'vtk.js/Sources/Common/Core/DataArray';
-import Constants    from 'vtk.js/Sources/Common/Core/ScalarsToColors/Constants';
-import vtkMapper    from 'vtk.js/Sources/Rendering/Core/Mapper/Constants'; // Need to go inside Constants otherwise dependency loop
+import Constants from 'vtk.js/Sources/Common/Core/ScalarsToColors/Constants';
+import vtkMapper from 'vtk.js/Sources/Rendering/Core/Mapper/Constants'; // Need to go inside Constants otherwise dependency loop
 
 const { ScalarMappingTarget, VectorMode } = Constants;
 const { VtkDataTypes } = vtkDataArray;
@@ -19,8 +19,12 @@ const { vtkErrorMacro } = macro;
 // Static API
 // ----------------------------------------------------------------------------
 
-function intColorToUChar(c) { return c; }
-function floatColorToUChar(c) { return Math.floor((c * 255.0) + 0.5); }
+function intColorToUChar(c) {
+  return c;
+}
+function floatColorToUChar(c) {
+  return Math.floor(c * 255.0 + 0.5);
+}
 
 // ----------------------------------------------------------------------------
 // vtkScalarsToColors methods
@@ -30,9 +34,12 @@ function vtkScalarsToColors(publicAPI, model) {
   // Set our className
   model.classHierarchy.push('vtkScalarsToColors');
 
-  publicAPI.setVectorModeToMagnitude = () => publicAPI.setVectorMode(VectorMode.MAGNITUDE);
-  publicAPI.setVectorModeToComponent = () => publicAPI.setVectorMode(VectorMode.COMPONENT);
-  publicAPI.setVectorModeToRGBColors = () => publicAPI.setVectorMode(VectorMode.RGBCOLORS);
+  publicAPI.setVectorModeToMagnitude = () =>
+    publicAPI.setVectorMode(VectorMode.MAGNITUDE);
+  publicAPI.setVectorModeToComponent = () =>
+    publicAPI.setVectorMode(VectorMode.COMPONENT);
+  publicAPI.setVectorModeToRGBColors = () =>
+    publicAPI.setVectorMode(VectorMode.RGBCOLORS);
 
   publicAPI.build = () => {};
 
@@ -40,15 +47,18 @@ function vtkScalarsToColors(publicAPI, model) {
 
   //----------------------------------------------------------------------------
   publicAPI.setAnnotations = (values, annotations) => {
-    if ((values && !annotations) ||
-      (!values && annotations)) {
+    if ((values && !annotations) || (!values && annotations)) {
       return;
     }
 
-    if (values && annotations &&
-      values.getNumberOfTuples() !== annotations.getNumberOfTuples()) {
+    if (
+      values &&
+      annotations &&
+      values.getNumberOfTuples() !== annotations.getNumberOfTuples()
+    ) {
       vtkErrorMacro(
-        'Values and annotations do not have the same number of tuples so ignoring');
+        'Values and annotations do not have the same number of tuples so ignoring'
+      );
       return;
     }
 
@@ -57,7 +67,10 @@ function vtkScalarsToColors(publicAPI, model) {
     if (annotations && values) {
       const num = annotations.getNumberOfTuples();
       for (let i = 0; i < num; i++) {
-        model.annotationArray.push({ value: values[i], annotation: annotations[i] });
+        model.annotationArray.push({
+          value: values[i],
+          annotation: annotations[i],
+        });
       }
     }
 
@@ -106,13 +119,13 @@ function vtkScalarsToColors(publicAPI, model) {
   };
 
   //----------------------------------------------------------------------------
-  publicAPI.getAnnotatedValueIndex = val =>
-    (model.annotationArray.length ? publicAPI.checkForAnnotatedValue(val) : -1);
+  publicAPI.getAnnotatedValueIndex = (val) =>
+    model.annotationArray.length ? publicAPI.checkForAnnotatedValue(val) : -1;
 
   //----------------------------------------------------------------------------
   publicAPI.removeAnnotation = (value) => {
     const i = publicAPI.checkForAnnotatedValue(value);
-    const needToRemove = (i >= 0);
+    const needToRemove = i >= 0;
     if (needToRemove) {
       model.annotationArray.splice(i, 1);
       publicAPI.updateAnnotatedValueMap();
@@ -140,7 +153,7 @@ function vtkScalarsToColors(publicAPI, model) {
   };
 
   //----------------------------------------------------------------------------
-  publicAPI.checkForAnnotatedValue = value =>
+  publicAPI.checkForAnnotatedValue = (value) =>
     publicAPI.getAnnotatedValueIndexInternal(value);
 
   //----------------------------------------------------------------------------
@@ -194,11 +207,16 @@ function vtkScalarsToColors(publicAPI, model) {
     let newColors = null;
 
     // map scalars through lookup table only if needed
-    if ((colorMode === ColorMode.DEFAULT &&
-         scalars.getDataType() === VtkDataTypes.UNSIGNED_CHAR) ||
-        (colorMode === ColorMode.DIRECT_SCALARS && scalars)) {
-      newColors = publicAPI.convertToRGBA(scalars, numberOfComponents,
-                        scalars.getNumberOfTuples());
+    if (
+      (colorMode === ColorMode.DEFAULT &&
+        scalars.getDataType() === VtkDataTypes.UNSIGNED_CHAR) ||
+      (colorMode === ColorMode.DIRECT_SCALARS && scalars)
+    ) {
+      newColors = publicAPI.convertToRGBA(
+        scalars,
+        numberOfComponents,
+        scalars.getNumberOfTuples()
+      );
     } else {
       const newscalars = {
         type: 'vtkDataArray',
@@ -207,7 +225,9 @@ function vtkScalarsToColors(publicAPI, model) {
         dataType: VtkDataTypes.UNSIGNED_CHAR,
       };
 
-      const s = new window[newscalars.dataType](4 * scalars.getNumberOfTuples());
+      const s = new window[newscalars.dataType](
+        4 * scalars.getNumberOfTuples()
+      );
       newscalars.values = s;
       newscalars.size = s.length;
       newColors = vtkDataArray.newInstance(newscalars);
@@ -216,7 +236,13 @@ function vtkScalarsToColors(publicAPI, model) {
 
       // If mapper did not specify a component, use the VectorMode
       if (component < 0 && numberOfComponents > 1) {
-        publicAPI.mapVectorsThroughTable(scalars, newColors, ScalarMappingTarget.RGBA, -1, -1);
+        publicAPI.mapVectorsThroughTable(
+          scalars,
+          newColors,
+          ScalarMappingTarget.RGBA,
+          -1,
+          -1
+        );
       } else {
         if (component < 0) {
           component = 0;
@@ -226,7 +252,12 @@ function vtkScalarsToColors(publicAPI, model) {
         }
 
         // Map the scalars to colors
-        publicAPI.mapScalarsThroughTable(scalars, newColors, ScalarMappingTarget.RGBA, component);
+        publicAPI.mapScalarsThroughTable(
+          scalars,
+          newColors,
+          ScalarMappingTarget.RGBA,
+          component
+        );
       }
     }
 
@@ -243,7 +274,7 @@ function vtkScalarsToColors(publicAPI, model) {
     for (let i = 0; i < length; i++) {
       let sum = 0.0;
       for (let j = 0; j < compsToUse; j++) {
-        sum += inputV[(i * inIncr) + j];
+        sum += inputV[i * inIncr + j];
       }
       outputV[i] = Math.sqrt(sum);
     }
@@ -252,10 +283,12 @@ function vtkScalarsToColors(publicAPI, model) {
   //----------------------------------------------------------------------------
   // Map a set of vector values through the table
   publicAPI.mapVectorsThroughTable = (
-    input, output,
+    input,
+    output,
     outputFormat,
     vectorComponentIn,
-    vectorSizeIn) => {
+    vectorSizeIn
+  ) => {
     let vectorMode = publicAPI.getVectorMode();
     let vectorSize = vectorSizeIn;
     let vectorComponent = vectorComponentIn;
@@ -294,8 +327,10 @@ function vtkScalarsToColors(publicAPI, model) {
         }
       }
 
-      if (vectorMode === VectorMode.MAGNITUDE &&
-          (inComponents === 1 || vectorSize === 1)) {
+      if (
+        vectorMode === VectorMode.MAGNITUDE &&
+        (inComponents === 1 || vectorSize === 1)
+      ) {
         vectorMode = VectorMode.COMPONENT;
       }
     }
@@ -310,18 +345,23 @@ function vtkScalarsToColors(publicAPI, model) {
     switch (vectorMode) {
       case VectorMode.COMPONENT: {
         publicAPI.mapScalarsThroughTable(
-          input, output, outputFormat, inputOffset);
+          input,
+          output,
+          outputFormat,
+          inputOffset
+        );
         break;
       }
 
       default:
       case VectorMode.MAGNITUDE: {
-        const magValues =
-          vtkDataArray.newInstance({ numberOfComponents: 1, values: new Float32Array(input.getNumberOfTuples()) });
+        const magValues = vtkDataArray.newInstance({
+          numberOfComponents: 1,
+          values: new Float32Array(input.getNumberOfTuples()),
+        });
 
         publicAPI.mapVectorsToMagnitude(input, magValues, vectorSize);
-        publicAPI.mapScalarsThroughTable(
-          magValues, output, outputFormat, 0);
+        publicAPI.mapScalarsThroughTable(magValues, output, outputFormat, 0);
         break;
       }
 
@@ -346,10 +386,10 @@ function vtkScalarsToColors(publicAPI, model) {
     let count = 0;
     for (let i = component; i < size; i += tuple) {
       const l = convtFun(values[i]);
-      newValues[(count * 4)] = l;
-      newValues[(count * 4) + 1] = l;
-      newValues[(count * 4) + 2] = l;
-      newValues[(count * 4) + 3] = a;
+      newValues[count * 4] = l;
+      newValues[count * 4 + 1] = l;
+      newValues[count * 4 + 2] = l;
+      newValues[count * 4 + 3] = a;
       count++;
     }
   };
@@ -383,10 +423,10 @@ function vtkScalarsToColors(publicAPI, model) {
 
     let count = 0;
     for (let i = component; i < size; i += tuple) {
-      newValues[(count * 4)] = convtFun(values[i]);
-      newValues[(count * 4) + 1] = convtFun(values[i + 1]);
-      newValues[(count * 4) + 2] = convtFun(values[i + 2]);
-      newValues[(count * 4) + 3] = a;
+      newValues[count * 4] = convtFun(values[i]);
+      newValues[count * 4 + 1] = convtFun(values[i + 1]);
+      newValues[count * 4 + 2] = convtFun(values[i + 2]);
+      newValues[count * 4 + 3] = a;
       count++;
     }
   };
@@ -400,18 +440,21 @@ function vtkScalarsToColors(publicAPI, model) {
 
     let count = 0;
     for (let i = component; i < size; i += tuple) {
-      newValues[(count * 4)] = convtFun(values[i]);
-      newValues[(count * 4) + 1] = convtFun(values[i + 1]);
-      newValues[(count * 4) + 2] = convtFun(values[i + 2]);
-      newColors[(count * 4) + 3] = convtFun(values[i + 3]) * alpha;
+      newValues[count * 4] = convtFun(values[i]);
+      newValues[count * 4 + 1] = convtFun(values[i + 1]);
+      newValues[count * 4 + 2] = convtFun(values[i + 2]);
+      newColors[count * 4 + 3] = convtFun(values[i + 3]) * alpha;
       count++;
     }
   };
 
   //----------------------------------------------------------------------------
   publicAPI.convertToRGBA = (colors, numComp, numTuples) => {
-    if (numComp === 4 && model.alpha >= 1.0 &&
-        colors.getDataType() === VtkDataTypes.UNSIGNED_CHAR) {
+    if (
+      numComp === 4 &&
+      model.alpha >= 1.0 &&
+      colors.getDataType() === VtkDataTypes.UNSIGNED_CHAR
+    ) {
       return colors;
     }
 
@@ -427,12 +470,14 @@ function vtkScalarsToColors(publicAPI, model) {
     }
 
     let alpha = model.alpha;
-    alpha = (alpha > 0 ? alpha : 0);
-    alpha = (alpha < 1 ? alpha : 1);
+    alpha = alpha > 0 ? alpha : 0;
+    alpha = alpha < 1 ? alpha : 1;
 
     let convtFun = intColorToUChar;
-    if ((colors.getDataType() === VtkDataTypes.FLOAT) ||
-      colors.getDataType() === VtkDataTypes.DOUBLE) {
+    if (
+      colors.getDataType() === VtkDataTypes.FLOAT ||
+      colors.getDataType() === VtkDataTypes.DOUBLE
+    ) {
       convtFun = floatColorToUChar;
     }
 
@@ -506,14 +551,10 @@ export function extend(publicAPI, model, initialValues = {}) {
   ]);
 
   // Create set macros for array (needs to know size)
-  macro.setArray(publicAPI, model, [
-    'mappingRange',
-  ], 2);
+  macro.setArray(publicAPI, model, ['mappingRange'], 2);
 
   // Create get macros for array
-  macro.getArray(publicAPI, model, [
-    'mappingRange',
-  ]);
+  macro.getArray(publicAPI, model, ['mappingRange']);
 
   // For more macro methods, see "Sources/macro.js"
 

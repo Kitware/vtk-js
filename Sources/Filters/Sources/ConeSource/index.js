@@ -1,4 +1,4 @@
-import macro       from 'vtk.js/Sources/macro';
+import macro from 'vtk.js/Sources/macro';
 import vtkPolyData from 'vtk.js/Sources/Common/DataModel/PolyData';
 import vtkMatrixBuilder from 'vtk.js/Sources/Common/Core/MatrixBuilder';
 
@@ -20,7 +20,7 @@ function vtkConeSource(publicAPI, model) {
     const angle = 2 * Math.PI / model.resolution;
     const xbot = -model.height / 2.0;
     const numberOfPoints = model.resolution + 1;
-    const cellArraySize = (4 * model.resolution) + 1 + model.resolution;
+    const cellArraySize = 4 * model.resolution + 1 + model.resolution;
 
     // Points
     let pointIdx = 0;
@@ -43,9 +43,9 @@ function vtkConeSource(publicAPI, model) {
     // Add all points
     for (let i = 0; i < model.resolution; i++) {
       pointIdx++;
-      points[(pointIdx * 3) + 0] = xbot;
-      points[(pointIdx * 3) + 1] = model.radius * Math.cos(i * angle);
-      points[(pointIdx * 3) + 2] = model.radius * Math.sin(i * angle);
+      points[pointIdx * 3 + 0] = xbot;
+      points[pointIdx * 3 + 1] = model.radius * Math.cos(i * angle);
+      points[pointIdx * 3 + 2] = model.radius * Math.sin(i * angle);
 
       // Add points to bottom cell in reverse order
       if (model.capping) {
@@ -101,16 +101,8 @@ export function extend(publicAPI, model, initialValues = {}) {
 
   // Build VTK API
   macro.obj(publicAPI, model);
-  macro.setGet(publicAPI, model, [
-    'height',
-    'radius',
-    'resolution',
-    'capping',
-  ]);
-  macro.setGetArray(publicAPI, model, [
-    'center',
-    'direction',
-  ], 3);
+  macro.setGet(publicAPI, model, ['height', 'radius', 'resolution', 'capping']);
+  macro.setGetArray(publicAPI, model, ['center', 'direction'], 3);
   macro.algo(publicAPI, model, 0, 1);
   vtkConeSource(publicAPI, model);
 }

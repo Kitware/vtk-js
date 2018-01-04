@@ -1,7 +1,7 @@
-import macro                             from 'vtk.js/Sources/macro';
-import vtkMath                           from 'vtk.js/Sources/Common/Core/Math';
+import macro from 'vtk.js/Sources/macro';
+import vtkMath from 'vtk.js/Sources/Common/Core/Math';
 import vtkInteractorStyleTrackballCamera from 'vtk.js/Sources/Interaction/Style/InteractorStyleTrackballCamera';
-import Constants                         from 'vtk.js/Sources/Rendering/Core/RenderWindowInteractor/Constants';
+import Constants from 'vtk.js/Sources/Rendering/Core/RenderWindowInteractor/Constants';
 
 const { Device, Input } = Constants;
 const { vtkWarningMacro, vtkErrorMacro } = macro;
@@ -73,11 +73,11 @@ function vtkRenderWindowInteractor(publicAPI, model) {
 
   //----------------------------------------------------------------------
   publicAPI.start = () => {
-  // Let the compositing handle the event loop if it wants to.
-  // if (publicAPI.HasObserver(vtkCommand::StartEvent) && !publicAPI.HandleEventLoop) {
-  //   publicAPI.invokeEvent({ type: 'StartEvent' });
-  //   return;
-  // }
+    // Let the compositing handle the event loop if it wants to.
+    // if (publicAPI.HasObserver(vtkCommand::StartEvent) && !publicAPI.HandleEventLoop) {
+    //   publicAPI.invokeEvent({ type: 'StartEvent' });
+    //   return;
+    // }
 
     // As a convenience, initialize if we aren't initialized yet.
     if (!model.initialized) {
@@ -93,7 +93,9 @@ function vtkRenderWindowInteractor(publicAPI, model) {
 
   //----------------------------------------------------------------------
   publicAPI.setRenderWindow = (aren) => {
-    vtkErrorMacro('you want to call setView(view) instead of setRenderWindow on a vtk.js  interactor');
+    vtkErrorMacro(
+      'you want to call setView(view) instead of setRenderWindow on a vtk.js  interactor'
+    );
   };
 
   //----------------------------------------------------------------------
@@ -131,17 +133,23 @@ function vtkRenderWindowInteractor(publicAPI, model) {
   };
 
   publicAPI.setAnimationEventPosition = (xv, yv, zv, pointer) => {
-    model.lastAnimationEventPositions.set(pointer, model.animationEventPositions.get(pointer));
+    model.lastAnimationEventPositions.set(
+      pointer,
+      model.animationEventPositions.get(pointer)
+    );
     model.animationEventPositions.set(pointer, { x: xv, y: yv, z: zv });
   };
 
-  publicAPI.getEventPosition = pointer => model.eventPositions.get(pointer);
+  publicAPI.getEventPosition = (pointer) => model.eventPositions.get(pointer);
 
-  publicAPI.getLastEventPosition = pointer => model.lastEventPositions.get(pointer);
+  publicAPI.getLastEventPosition = (pointer) =>
+    model.lastEventPositions.get(pointer);
 
-  publicAPI.getAnimationEventPosition = pointer => model.animationEventPositions.get(pointer);
+  publicAPI.getAnimationEventPosition = (pointer) =>
+    model.animationEventPositions.get(pointer);
 
-  publicAPI.getLastAnimationEventPosition = pointer => model.lastAnimationEventPositions.get(pointer);
+  publicAPI.getLastAnimationEventPosition = (pointer) =>
+    model.lastAnimationEventPositions.get(pointer);
 
   publicAPI.bindEvents = (canvas) => {
     model.canvas = canvas;
@@ -151,8 +159,12 @@ function vtkRenderWindowInteractor(publicAPI, model) {
     canvas.addEventListener('DOMMouseScroll', publicAPI.handleWheel);
 
     canvas.addEventListener('mousedown', publicAPI.handleMouseDown);
-    document.querySelector('body').addEventListener('keypress', publicAPI.handleKeyPress);
-    document.querySelector('body').addEventListener('keyup', publicAPI.handleKeyUp);
+    document
+      .querySelector('body')
+      .addEventListener('keypress', publicAPI.handleKeyPress);
+    document
+      .querySelector('body')
+      .addEventListener('keyup', publicAPI.handleKeyUp);
     canvas.addEventListener('mouseup', publicAPI.handleMouseUp);
     canvas.addEventListener('mousemove', publicAPI.handleMouseMove);
     canvas.addEventListener('touchstart', publicAPI.handleTouchStart, false);
@@ -168,8 +180,12 @@ function vtkRenderWindowInteractor(publicAPI, model) {
     canvas.removeEventListener('DOMMouseScroll', publicAPI.handleWheel);
 
     canvas.removeEventListener('mousedown', publicAPI.handleMouseDown);
-    document.querySelector('body').removeEventListener('keypress', publicAPI.handleKeyPress);
-    document.querySelector('body').removeEventListener('keyup', publicAPI.handleKeyUp);
+    document
+      .querySelector('body')
+      .removeEventListener('keypress', publicAPI.handleKeyPress);
+    document
+      .querySelector('body')
+      .removeEventListener('keyup', publicAPI.handleKeyUp);
     canvas.removeEventListener('mouseup', publicAPI.handleMouseUp);
     canvas.removeEventListener('mousemove', publicAPI.handleMouseMove);
     canvas.removeEventListener('touchstart', publicAPI.handleTouchStart);
@@ -201,8 +217,18 @@ function vtkRenderWindowInteractor(publicAPI, model) {
     event.preventDefault();
 
     // intentioanlly done twice
-    publicAPI.setEventPosition(event.clientX, model.canvas.clientHeight - event.clientY + 1, 0, 0);
-    publicAPI.setEventPosition(event.clientX, model.canvas.clientHeight - event.clientY + 1, 0, 0);
+    publicAPI.setEventPosition(
+      event.clientX,
+      model.canvas.clientHeight - event.clientY + 1,
+      0,
+      0
+    );
+    publicAPI.setEventPosition(
+      event.clientX,
+      model.canvas.clientHeight - event.clientY + 1,
+      0,
+      0
+    );
     model.controlKey = event.ctrlKey;
     model.altKey = event.altKey;
     model.shiftKey = event.shiftKey;
@@ -228,7 +254,10 @@ function vtkRenderWindowInteractor(publicAPI, model) {
   }
 
   function updateAnimationEventPositionsAtHandle(value, key) {
-    model.lastAnimationEventPositions.set(key, model.animationEventPositions.get(key));
+    model.lastAnimationEventPositions.set(
+      key,
+      model.animationEventPositions.get(key)
+    );
     model.animationEventPositions.set(key, value);
   }
 
@@ -242,7 +271,8 @@ function vtkRenderWindowInteractor(publicAPI, model) {
     }
   };
 
-  publicAPI.isAnimating = () => (model.vrAnimation || model.animationRequest !== null);
+  publicAPI.isAnimating = () =>
+    model.vrAnimation || model.animationRequest !== null;
 
   publicAPI.cancelAnimation = (requestor) => {
     model.requestAnimationCount -= 1;
@@ -281,23 +311,36 @@ function vtkRenderWindowInteractor(publicAPI, model) {
           if (!(b in model.lastGamepadValues[gp.index].buttons)) {
             model.lastGamepadValues[gp.index].buttons[b] = false;
           }
-          if (model.lastGamepadValues[gp.index].buttons[b] !== gp.buttons[b].pressed) {
+          if (
+            model.lastGamepadValues[gp.index].buttons[b] !==
+            gp.buttons[b].pressed
+          ) {
             publicAPI.button3DEvent({
               gamepad: gp,
               position: gp.pose.position,
               orientation: gp.pose.orientation,
               pressed: gp.buttons[b].pressed,
-              device: (gp.hand === 'left' ? Device.LeftController : Device.RightController),
-              input: (deviceInputMap[gp.id] && deviceInputMap[gp.id][b] ? deviceInputMap[gp.id][b] : Input.Trigger),
+              device:
+                gp.hand === 'left'
+                  ? Device.LeftController
+                  : Device.RightController,
+              input:
+                deviceInputMap[gp.id] && deviceInputMap[gp.id][b]
+                  ? deviceInputMap[gp.id][b]
+                  : Input.Trigger,
             });
-            model.lastGamepadValues[gp.index].buttons[b] = gp.buttons[b].pressed;
+            model.lastGamepadValues[gp.index].buttons[b] =
+              gp.buttons[b].pressed;
           }
           if (model.lastGamepadValues[gp.index].buttons[b]) {
             publicAPI.move3DEvent({
               gamepad: gp,
               position: gp.pose.position,
               orientation: gp.pose.orientation,
-              device: (gp.hand === 'left' ? Device.LeftController : Device.RightController),
+              device:
+                gp.hand === 'left'
+                  ? Device.LeftController
+                  : Device.RightController,
             });
           }
         }
@@ -306,7 +349,12 @@ function vtkRenderWindowInteractor(publicAPI, model) {
   };
 
   publicAPI.handleMouseMove = (event) => {
-    publicAPI.setEventPosition(event.clientX, model.canvas.clientHeight - event.clientY + 1, 0, 0);
+    publicAPI.setEventPosition(
+      event.clientX,
+      model.canvas.clientHeight - event.clientY + 1,
+      0,
+      0
+    );
     // Do not consume event for move
     // event.stopPropagation();
     // event.preventDefault();
@@ -342,8 +390,9 @@ function vtkRenderWindowInteractor(publicAPI, model) {
       // mode = 'wheelDeltaY';
       wheelDelta = event.wheelDeltaY;
     }
-    publicAPI.setScale(publicAPI.getScale() *
-      Math.max(0.01, (wheelDelta + 1000.0) / 1000.0));
+    publicAPI.setScale(
+      publicAPI.getScale() * Math.max(0.01, (wheelDelta + 1000.0) / 1000.0)
+    );
 
     publicAPI.pinchEvent();
 
@@ -367,7 +416,12 @@ function vtkRenderWindowInteractor(publicAPI, model) {
     event.stopPropagation();
     event.preventDefault();
 
-    publicAPI.setEventPosition(event.clientX, model.canvas.clientHeight - event.clientY + 1, 0, 0);
+    publicAPI.setEventPosition(
+      event.clientX,
+      model.canvas.clientHeight - event.clientY + 1,
+      0,
+      0
+    );
     switch (event.which) {
       case 1:
         publicAPI.leftButtonReleaseEvent();
@@ -391,7 +445,12 @@ function vtkRenderWindowInteractor(publicAPI, model) {
     const touches = event.changedTouches;
     for (let i = 0; i < touches.length; i++) {
       const touch = touches[i];
-      publicAPI.setEventPosition(touch.clientX, model.canvas.clientHeight - touch.clientY + 1, 0, touch.identifier);
+      publicAPI.setEventPosition(
+        touch.clientX,
+        model.canvas.clientHeight - touch.clientY + 1,
+        0,
+        touch.identifier
+      );
       publicAPI.setPointerIndex(touch.identifier);
       publicAPI.startTouchEvent();
     }
@@ -404,7 +463,12 @@ function vtkRenderWindowInteractor(publicAPI, model) {
     const touches = event.changedTouches;
     for (let i = 0; i < touches.length; i++) {
       const touch = touches[i];
-      publicAPI.setEventPosition(touch.clientX, model.canvas.clientHeight - touch.clientY + 1, 0, touch.identifier);
+      publicAPI.setEventPosition(
+        touch.clientX,
+        model.canvas.clientHeight - touch.clientY + 1,
+        0,
+        touch.identifier
+      );
       publicAPI.setPointerIndex(touch.identifier);
       publicAPI.mouseMoveEvent();
     }
@@ -417,7 +481,12 @@ function vtkRenderWindowInteractor(publicAPI, model) {
     const touches = event.changedTouches;
     for (let i = 0; i < touches.length; i++) {
       const touch = touches[i];
-      publicAPI.setEventPosition(touch.clientX, model.canvas.clientHeight - touch.clientY + 1, 0, touch.identifier);
+      publicAPI.setEventPosition(
+        touch.clientX,
+        model.canvas.clientHeight - touch.clientY + 1,
+        0,
+        touch.identifier
+      );
       publicAPI.setPointerIndex(touch.identifier);
       publicAPI.endTouchEvent();
     }
@@ -547,8 +616,7 @@ function vtkRenderWindowInteractor(publicAPI, model) {
     // store the initial positions
     if (event === 'LeftButtonPress') {
       model.pointersDown.forEach((value, key) => {
-        model.startingEventPositions.set(key,
-          model.eventPositions.get(key));
+        model.startingEventPositions.set(key, model.eventPositions.get(key));
       });
       // we do not know what the gesture is yet
       model.currentGesture = 'Start';
@@ -581,9 +649,10 @@ function vtkRenderWindowInteractor(publicAPI, model) {
     const posVals = [];
     const startVals = [];
     model.pointersDown.forEach((value, key) => {
-      posVals[count] = (model.animationRequest === null)
-        ? model.eventPositions.get(key)
-        : model.animationEventPositions.get(key);
+      posVals[count] =
+        model.animationRequest === null
+          ? model.eventPositions.get(key)
+          : model.animationEventPositions.get(key);
       startVals[count] = model.startingEventPositions.get(key);
       count++;
     });
@@ -593,32 +662,42 @@ function vtkRenderWindowInteractor(publicAPI, model) {
     // of movement it is and then deal with it.
     // calculate the distances
     const originalDistance = Math.sqrt(
-        ((startVals[0].x - startVals[1].x) * (startVals[0].x - startVals[1].x))
-        + ((startVals[0].y - startVals[1].y) * (startVals[0].y - startVals[1].y)));
+      (startVals[0].x - startVals[1].x) * (startVals[0].x - startVals[1].x) +
+        (startVals[0].y - startVals[1].y) * (startVals[0].y - startVals[1].y)
+    );
     const newDistance = Math.sqrt(
-        ((posVals[0].x - posVals[1].x) * (posVals[0].x - posVals[1].x))
-        + ((posVals[0].y - posVals[1].y) * (posVals[0].y - posVals[1].y)));
+      (posVals[0].x - posVals[1].x) * (posVals[0].x - posVals[1].x) +
+        (posVals[0].y - posVals[1].y) * (posVals[0].y - posVals[1].y)
+    );
 
     // calculate rotations
-    let originalAngle =
-      vtkMath.degreesFromRadians(Math.atan2(startVals[1].y - startVals[0].y,
-                                         startVals[1].x - startVals[0].x));
-    let newAngle =
-      vtkMath.degreesFromRadians(Math.atan2(posVals[1].y - posVals[0].y,
-                                          posVals[1].x - posVals[0].x));
+    let originalAngle = vtkMath.degreesFromRadians(
+      Math.atan2(
+        startVals[1].y - startVals[0].y,
+        startVals[1].x - startVals[0].x
+      )
+    );
+    let newAngle = vtkMath.degreesFromRadians(
+      Math.atan2(posVals[1].y - posVals[0].y, posVals[1].x - posVals[0].x)
+    );
 
     // angles are cyclic so watch for that, 1 and 359 are only 2 apart :)
     let angleDeviation = newAngle - originalAngle;
-    newAngle = (newAngle + 180.0 >= 360.0 ? newAngle - 180.0 : newAngle + 180.0);
-    originalAngle = (originalAngle + 180.0 >= 360.0 ? originalAngle - 180.0 : originalAngle + 180.0);
+    newAngle = newAngle + 180.0 >= 360.0 ? newAngle - 180.0 : newAngle + 180.0;
+    originalAngle =
+      originalAngle + 180.0 >= 360.0
+        ? originalAngle - 180.0
+        : originalAngle + 180.0;
     if (Math.abs(newAngle - originalAngle) < Math.abs(angleDeviation)) {
       angleDeviation = newAngle - originalAngle;
     }
 
     // calculate the translations
     const trans = [];
-    trans[0] = (posVals[0].x - startVals[0].x + posVals[1].x - startVals[1].x) / 2.0;
-    trans[1] = (posVals[0].y - startVals[0].y + posVals[1].y - startVals[1].y) / 2.0;
+    trans[0] =
+      (posVals[0].x - startVals[0].x + posVals[1].x - startVals[1].x) / 2.0;
+    trans[1] =
+      (posVals[0].y - startVals[0].y + posVals[1].y - startVals[1].y) / 2.0;
 
     if (event === 'MouseMove') {
       // OK we want to
@@ -634,24 +713,31 @@ function vtkRenderWindowInteractor(publicAPI, model) {
         // pan is a move of the center point
         // compute the distance along each of these axes in pixels
         // the first to break thresh wins
-        let thresh = 0.01 * Math.sqrt(
-          (model.canvas.clientWidth * model.canvas.clientWidth)
-          + (model.canvas.clientHeight * model.canvas.clientHeight));
+        let thresh =
+          0.01 *
+          Math.sqrt(
+            model.canvas.clientWidth * model.canvas.clientWidth +
+              model.canvas.clientHeight * model.canvas.clientHeight
+          );
         if (thresh < 15.0) {
           thresh = 15.0;
         }
         const pinchDistance = Math.abs(newDistance - originalDistance);
-        const rotateDistance = newDistance * 3.1415926 * Math.abs(angleDeviation) / 360.0;
-        const panDistance = Math.sqrt((trans[0] * trans[0]) + (trans[1] * trans[1]));
-        if (pinchDistance > thresh
-            && pinchDistance > rotateDistance
-            && pinchDistance > panDistance) {
+        const rotateDistance =
+          newDistance * 3.1415926 * Math.abs(angleDeviation) / 360.0;
+        const panDistance = Math.sqrt(
+          trans[0] * trans[0] + trans[1] * trans[1]
+        );
+        if (
+          pinchDistance > thresh &&
+          pinchDistance > rotateDistance &&
+          pinchDistance > panDistance
+        ) {
           model.currentGesture = 'Pinch';
           model.scale = 1.0;
           publicAPI.startPinchEvent();
           model.interactorStyle.setAnimationStateOn();
-        } else if (rotateDistance > thresh
-            && rotateDistance > panDistance) {
+        } else if (rotateDistance > thresh && rotateDistance > panDistance) {
           model.currentGesture = 'Rotate';
           model.rotation = 0.0;
           publicAPI.startRotateEvent();
@@ -828,8 +914,9 @@ export function extend(publicAPI, model, initialValues = {}) {
   macro.obj(publicAPI, model);
 
   macro.event(publicAPI, model, 'RenderEvent');
-  eventsWeHandle.forEach(eventName =>
-    macro.event(publicAPI, model, eventName));
+  eventsWeHandle.forEach((eventName) =>
+    macro.event(publicAPI, model, eventName)
+  );
 
   // Create get-only macros
   macro.get(publicAPI, model, [
@@ -862,10 +949,7 @@ export function extend(publicAPI, model, initialValues = {}) {
     'picker',
   ]);
 
-  macro.getArray(publicAPI, model, [
-    'translation',
-    'lastTranslation',
-  ]);
+  macro.getArray(publicAPI, model, ['translation', 'lastTranslation']);
 
   // For more macro methods, see "Sources/macro.js"
 
@@ -877,7 +961,10 @@ export function extend(publicAPI, model, initialValues = {}) {
 
 // ----------------------------------------------------------------------------
 
-export const newInstance = macro.newInstance(extend, 'vtkRenderWindowInteractor');
+export const newInstance = macro.newInstance(
+  extend,
+  'vtkRenderWindowInteractor'
+);
 
 // ----------------------------------------------------------------------------
 

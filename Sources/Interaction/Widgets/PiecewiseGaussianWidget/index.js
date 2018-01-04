@@ -27,18 +27,23 @@ const ACTIONS = {
     gaussian.position = x + xOffset;
   },
   adjustHeight(x, y, originalXY, gaussian, originalGaussian) {
-    gaussian.height = (1 - y);
+    gaussian.height = 1 - y;
     gaussian.height = Math.min(1, Math.max(0, gaussian.height));
   },
   adjustBias(x, y, originalXY, gaussian, originalGaussian) {
-    gaussian.xBias = originalGaussian.xBias - ((originalXY[0] - x) / gaussian.height);
-    gaussian.yBias = originalGaussian.yBias + (4 * (originalXY[1] - y) / gaussian.height);
+    gaussian.xBias =
+      originalGaussian.xBias - (originalXY[0] - x) / gaussian.height;
+    gaussian.yBias =
+      originalGaussian.yBias + 4 * (originalXY[1] - y) / gaussian.height;
     // Clamps
     gaussian.xBias = Math.max(-1, Math.min(1, gaussian.xBias));
     gaussian.yBias = Math.max(0, Math.min(2, gaussian.yBias));
   },
   adjustWidth(x, y, originalXY, gaussian, originalGaussian, side) {
-    gaussian.width = (side < 0) ? originalGaussian.width - (originalXY[0] - x) : originalGaussian.width + (originalXY[0] - x);
+    gaussian.width =
+      side < 0
+        ? originalGaussian.width - (originalXY[0] - x)
+        : originalGaussian.width + (originalXY[0] - x);
     if (gaussian.width < MIN_GAUSSIAN_WIDTH) {
       gaussian.width = MIN_GAUSSIAN_WIDTH;
     }
@@ -60,7 +65,7 @@ function computeOpacities(gaussians, sampling = 256) {
       const x = i / (sampling - 1);
 
       // clamp non-zero values to pos +/- width
-      if (x > (position + width) || x < (position - width)) {
+      if (x > position + width || x < position - width) {
         if (opacities[i] < 0.0) {
           opacities[i] = 0.0;
         }
@@ -68,22 +73,29 @@ function computeOpacities(gaussians, sampling = 256) {
       }
 
       // non-zero width
-      const correctedWidth = (width < MIN_GAUSSIAN_WIDTH) ? MIN_GAUSSIAN_WIDTH : width;
+      const correctedWidth =
+        width < MIN_GAUSSIAN_WIDTH ? MIN_GAUSSIAN_WIDTH : width;
 
       // translate the original x to a new x based on the xbias
       let x0 = 0;
-      if (xBias === 0 || x === (position + xBias)) {
+      if (xBias === 0 || x === position + xBias) {
         x0 = x;
-      } else if (x > (position + xBias)) {
+      } else if (x > position + xBias) {
         if (correctedWidth === xBias) {
           x0 = position;
         } else {
-          x0 = position + ((x - position - xBias) * (correctedWidth / (correctedWidth - xBias)));
+          x0 =
+            position +
+            (x - position - xBias) *
+              (correctedWidth / (correctedWidth - xBias));
         }
-      } else if (-correctedWidth === xBias) { // (x < pos+xBias)
+      } else if (-correctedWidth === xBias) {
+        // (x < pos+xBias)
         x0 = position;
       } else {
-        x0 = position - ((x - position - xBias) * (correctedWidth / (correctedWidth + xBias)));
+        x0 =
+          position -
+          (x - position - xBias) * (correctedWidth / (correctedWidth + xBias));
       }
 
       // center around 0 and normalize to -1,1
@@ -93,13 +105,13 @@ function computeOpacities(gaussians, sampling = 256) {
       //    a gaussian and a parabola        if 0 < yBias <1
       //    a parabola and a step function   if 1 < yBias <2
       const h0a = Math.exp(-(4 * x1 * x1));
-      const h0b = 1.0 - (x1 * x1);
+      const h0b = 1.0 - x1 * x1;
       const h0c = 1.0;
       let h1;
       if (yBias < 1) {
-        h1 = (yBias * h0b) + ((1 - yBias) * h0a);
+        h1 = yBias * h0b + (1 - yBias) * h0a;
       } else {
-        h1 = ((2 - yBias) * h0b) + ((yBias - 1) * h0c);
+        h1 = (2 - yBias) * h0b + (yBias - 1) * h0c;
       }
       const h2 = height * h1;
 
@@ -115,7 +127,12 @@ function computeOpacities(gaussians, sampling = 256) {
 
 // ----------------------------------------------------------------------------
 
-function drawChart(ctx, area, values, style = { lineWidth: 1, strokeStyle: '#000' }) {
+function drawChart(
+  ctx,
+  area,
+  values,
+  style = { lineWidth: 1, strokeStyle: '#000' }
+) {
   const verticalScale = area[3];
   const horizontalScale = area[2] / (values.length - 1);
   const height = ctx.canvas.height;
@@ -128,7 +145,10 @@ function drawChart(ctx, area, values, style = { lineWidth: 1, strokeStyle: '#000
   ctx.moveTo(area[0], height - area[1]);
 
   for (let index = 0; index < values.length; index++) {
-    ctx.lineTo(area[0] + (index * horizontalScale), Math.max(area[1], height - (area[1] + (values[index] * verticalScale))));
+    ctx.lineTo(
+      area[0] + index * horizontalScale,
+      Math.max(area[1], height - (area[1] + values[index] * verticalScale))
+    );
   }
 
   if (fill) {
@@ -153,7 +173,12 @@ function updateColorCanvas(colorTransferFunction, width, rangeToUse, canvas) {
   workCanvas.setAttribute('height', 256);
   const ctx = workCanvas.getContext('2d');
 
-  const rgba = colorTransferFunction.getUint8Table(rangeToUse[0], rangeToUse[1], width, 4);
+  const rgba = colorTransferFunction.getUint8Table(
+    rangeToUse[0],
+    rangeToUse[1],
+    width,
+    4
+  );
   const pixelsArea = ctx.getImageData(0, 0, width, 256);
   for (let lineIdx = 0; lineIdx < 256; lineIdx++) {
     pixelsArea.data.set(rgba, lineIdx * 4 * width);
@@ -192,7 +217,7 @@ function normalizeCoordinates(x, y, subRectangeArea) {
 // ----------------------------------------------------------------------------
 
 function findGaussian(x, gaussians) {
-  const distances = gaussians.map(g => Math.abs(g.position - x));
+  const distances = gaussians.map((g) => Math.abs(g.position - x));
   const min = Math.min(...distances);
   return distances.indexOf(min);
 }
@@ -213,16 +238,25 @@ function createListener(callback, preventDefault = true) {
 
 function createTouchClickListener(...callbacks) {
   const id = TOUCH_CLICK.length;
-  TOUCH_CLICK.push({ callbacks, timeout: 0, deltaT: 200, count: 0, ready: false });
+  TOUCH_CLICK.push({
+    callbacks,
+    timeout: 0,
+    deltaT: 200,
+    count: 0,
+    ready: false,
+  });
   return id;
 }
 
 // ----------------------------------------------------------------------------
 
 function processTouchClicks() {
-  TOUCH_CLICK.filter(t => t.ready).forEach((touchHandle) => {
+  TOUCH_CLICK.filter((t) => t.ready).forEach((touchHandle) => {
     touchHandle.callbacks.forEach((callback) => {
-      if (callback.touches === touchHandle.touches && callback.clicks === touchHandle.count) {
+      if (
+        callback.touches === touchHandle.touches &&
+        callback.clicks === touchHandle.count
+      ) {
         callback.action(...touchHandle.singleTouche);
       }
     });
@@ -237,11 +271,21 @@ function processTouchClicks() {
 
 // ----------------------------------------------------------------------------
 
-function createTouchListener(id, callback, nbTouches = 1, preventDefault = true) {
+function createTouchListener(
+  id,
+  callback,
+  nbTouches = 1,
+  preventDefault = true
+) {
   return (e) => {
     const targetBounds = e.target.getBoundingClientRect();
-    const relativeTouches = Array.prototype.map.call(e.touches, t => [t.pageX - targetBounds.left, t.pageY - targetBounds.top]);
-    const singleTouche = relativeTouches.reduce((a, b) => [a[0] + b[0], a[1] + b[1]], [0, 0]).map(v => v / e.touches.length);
+    const relativeTouches = Array.prototype.map.call(e.touches, (t) => [
+      t.pageX - targetBounds.left,
+      t.pageY - targetBounds.top,
+    ]);
+    const singleTouche = relativeTouches
+      .reduce((a, b) => [a[0] + b[0], a[1] + b[1]], [0, 0])
+      .map((v) => v / e.touches.length);
 
     if (e.type === 'touchstart') {
       clearTimeout(TOUCH_CLICK[id].timeout);
@@ -259,7 +303,10 @@ function createTouchListener(id, callback, nbTouches = 1, preventDefault = true)
         if (preventDefault) {
           e.preventDefault();
         }
-        TOUCH_CLICK[id].timeout = setTimeout(processTouchClicks, TOUCH_CLICK[id].deltaT);
+        TOUCH_CLICK[id].timeout = setTimeout(
+          processTouchClicks,
+          TOUCH_CLICK[id].deltaT
+        );
       } else {
         TOUCH_CLICK[id].ready = false;
       }
@@ -277,7 +324,7 @@ function createTouchListener(id, callback, nbTouches = 1, preventDefault = true)
 // ----------------------------------------------------------------------------
 
 function listenerSelector(condition, ok, ko) {
-  return e => (condition() ? ok(e) : ko(e));
+  return (e) => (condition() ? ok(e) : ko(e));
 }
 
 // ----------------------------------------------------------------------------
@@ -360,7 +407,11 @@ function vtkPiecewiseGaussianWidget(publicAPI, model) {
     publicAPI.modified();
   };
 
-  publicAPI.setDataArray = (array, numberOfBinToConsider = 1, numberOfBinsToSkip = 1) => {
+  publicAPI.setDataArray = (
+    array,
+    numberOfBinToConsider = 1,
+    numberOfBinsToSkip = 1
+  ) => {
     model.histogramArray = array;
     const size = array.length;
     let max = array[0];
@@ -370,21 +421,26 @@ function vtkPiecewiseGaussianWidget(publicAPI, model) {
       min = Math.min(min, array[i]);
     }
 
-    const delta = (max - min);
+    const delta = max - min;
     model.dataRange = [min, max];
     model.histogram = [];
     while (model.histogram.length < model.numberOfBins) {
       model.histogram.push(0);
     }
     array.forEach((value) => {
-      const idx = Math.floor((model.numberOfBins - 1) * (Number(value) - min) / delta);
+      const idx = Math.floor(
+        (model.numberOfBins - 1) * (Number(value) - min) / delta
+      );
       model.histogram[idx] += 1;
     });
 
     // Smart Rescale Histogram
-    const sampleSize = Math.min(numberOfBinToConsider, model.histogram.length - numberOfBinsToSkip);
+    const sampleSize = Math.min(
+      numberOfBinToConsider,
+      model.histogram.length - numberOfBinsToSkip
+    );
     const sortedArray = [].concat(model.histogram);
-    sortedArray.sort((a, b) => (Number(a) - Number(b)));
+    sortedArray.sort((a, b) => Number(a) - Number(b));
     for (let i = 0; i < numberOfBinsToSkip; i++) {
       sortedArray.pop();
     }
@@ -393,12 +449,16 @@ function vtkPiecewiseGaussianWidget(publicAPI, model) {
     }
     const mean = sortedArray.reduce((a, b) => a + b, 0) / sampleSize;
 
-    model.histogram = model.histogram.map(v => v / mean);
+    model.histogram = model.histogram.map((v) => v / mean);
     publicAPI.modified();
   };
 
   publicAPI.onClick = (x, y) => {
-    const [xNormalized, yNormalized] = normalizeCoordinates(x, y, model.graphArea);
+    const [xNormalized, yNormalized] = normalizeCoordinates(
+      x,
+      y,
+      model.graphArea
+    );
     if (xNormalized < 0 && model.style.iconSize > 1) {
       // Control buttons
       const delta = model.style.iconSize + model.style.padding;
@@ -420,7 +480,12 @@ function vtkPiecewiseGaussianWidget(publicAPI, model) {
           // Fake active action
           setImmediate(() => {
             publicAPI.onDown(x, y);
-            model.dragAction = { position: [0, 0], action, gaussian, originalGaussian };
+            model.dragAction = {
+              position: [0, 0],
+              action,
+              gaussian,
+              originalGaussian,
+            };
           });
           break;
         }
@@ -435,7 +500,12 @@ function vtkPiecewiseGaussianWidget(publicAPI, model) {
           model.dragAction = null;
         }
       }
-    } else if (xNormalized < 0 || xNormalized > 1 || yNormalized < 0 || yNormalized > 1) {
+    } else if (
+      xNormalized < 0 ||
+      xNormalized > 1 ||
+      yNormalized < 0 ||
+      yNormalized > 1
+    ) {
       model.selectedGaussian = -1;
       model.dragAction = null;
     } else {
@@ -449,8 +519,15 @@ function vtkPiecewiseGaussianWidget(publicAPI, model) {
   };
 
   publicAPI.onHover = (x, y) => {
-    const [xNormalized, yNormalized] = normalizeCoordinates(x, y, model.graphArea);
-    const newActive = (xNormalized < 0) ? model.selectedGaussian : findGaussian(xNormalized, model.gaussians);
+    const [xNormalized, yNormalized] = normalizeCoordinates(
+      x,
+      y,
+      model.graphArea
+    );
+    const newActive =
+      xNormalized < 0
+        ? model.selectedGaussian
+        : findGaussian(xNormalized, model.gaussians);
     model.canvas.style.cursor = 'default';
     const gaussian = model.gaussians[newActive];
     if (gaussian && xNormalized >= 0) {
@@ -465,9 +542,9 @@ function vtkPiecewiseGaussianWidget(publicAPI, model) {
         } else {
           actionName = 'adjustPosition';
         }
-      } else if (invY > (gaussian.height * 0.5) + tolerance) {
+      } else if (invY > gaussian.height * 0.5 + tolerance) {
         actionName = 'adjustPosition';
-      } else if (invY > (gaussian.height * 0.5) - tolerance) {
+      } else if (invY > gaussian.height * 0.5 - tolerance) {
         if (Math.abs(xNormalized - gaussian.position) < tolerance) {
           actionName = 'adjustBias';
         } else {
@@ -481,7 +558,12 @@ function vtkPiecewiseGaussianWidget(publicAPI, model) {
       model.canvas.style.cursor = ACTION_TO_CURSOR[actionName];
       const action = ACTIONS[actionName];
       const originalGaussian = Object.assign({}, gaussian);
-      model.dragAction = { position: [xNormalized, yNormalized], action, gaussian, originalGaussian };
+      model.dragAction = {
+        position: [xNormalized, yNormalized],
+        action,
+        gaussian,
+        originalGaussian,
+      };
     }
 
     if (newActive !== model.activeGaussian) {
@@ -513,9 +595,20 @@ function vtkPiecewiseGaussianWidget(publicAPI, model) {
 
   publicAPI.onDrag = (x, y) => {
     if (model.dragAction) {
-      const [xNormalized, yNormalized] = normalizeCoordinates(x, y, model.graphArea);
+      const [xNormalized, yNormalized] = normalizeCoordinates(
+        x,
+        y,
+        model.graphArea
+      );
       const { position, gaussian, originalGaussian, action } = model.dragAction;
-      action(xNormalized, yNormalized, position, gaussian, originalGaussian, model.gaussianSide);
+      action(
+        xNormalized,
+        yNormalized,
+        position,
+        gaussian,
+        originalGaussian,
+        model.gaussianSide
+      );
       model.opacities = computeOpacities(model.gaussians, model.piecewiseSize);
       publicAPI.invokeOpacityChange(publicAPI, true);
       publicAPI.modified();
@@ -540,7 +633,11 @@ function vtkPiecewiseGaussianWidget(publicAPI, model) {
   };
 
   publicAPI.onAddGaussian = (x, y) => {
-    const [xNormalized, yNormalized] = normalizeCoordinates(x, y, model.graphArea);
+    const [xNormalized, yNormalized] = normalizeCoordinates(
+      x,
+      y,
+      model.graphArea
+    );
     if (xNormalized >= 0) {
       publicAPI.addGaussian(xNormalized, 1 - yNormalized, 0.1, 0, 0);
     }
@@ -564,18 +661,25 @@ function vtkPiecewiseGaussianWidget(publicAPI, model) {
           clicks: 1,
           touches: 1,
           action: publicAPI.onClick,
-        }, {
+        },
+        {
           clicks: 2,
           touches: 1,
           action: publicAPI.onAddGaussian,
-        }, {
+        },
+        {
           clicks: 2,
           touches: 2,
           action: publicAPI.onRemoveGaussian,
-        });
+        }
+      );
 
       model.listeners = {
-        mousemove: listenerSelector(isDown, createListener(publicAPI.onDrag), createListener(publicAPI.onHover)),
+        mousemove: listenerSelector(
+          isDown,
+          createListener(publicAPI.onDrag),
+          createListener(publicAPI.onHover)
+        ),
         dblclick: createListener(publicAPI.onAddGaussian),
         contextmenu: createListener(publicAPI.onRemoveGaussian),
         click: createListener(publicAPI.onClick),
@@ -583,12 +687,23 @@ function vtkPiecewiseGaussianWidget(publicAPI, model) {
         mousedown: createListener(publicAPI.onDown),
         mouseout: createListener(publicAPI.onLeave),
 
-        touchstart: createTouchListener(touchId, macro.chain(publicAPI.onHover, publicAPI.onDown)),
-        touchmove: listenerSelector(isDown, createTouchListener(touchId, publicAPI.onDrag), createTouchListener(touchId, publicAPI.onHover)),
+        touchstart: createTouchListener(
+          touchId,
+          macro.chain(publicAPI.onHover, publicAPI.onDown)
+        ),
+        touchmove: listenerSelector(
+          isDown,
+          createTouchListener(touchId, publicAPI.onDrag),
+          createTouchListener(touchId, publicAPI.onHover)
+        ),
         touchend: createTouchListener(touchId, publicAPI.onUp, 0), // touchend have 0 touch event...
       };
       Object.keys(model.listeners).forEach((eventType) => {
-        model.canvas.addEventListener(eventType, model.listeners[eventType], false);
+        model.canvas.addEventListener(
+          eventType,
+          model.listeners[eventType],
+          false
+        );
       });
     }
   };
@@ -611,8 +726,8 @@ function vtkPiecewiseGaussianWidget(publicAPI, model) {
     const graphArea = [
       Math.floor(model.style.iconSize + offset),
       Math.floor(offset),
-      Math.ceil(width - (2 * offset) - model.style.iconSize),
-      Math.ceil(height - (2 * offset)),
+      Math.ceil(width - 2 * offset - model.style.iconSize),
+      Math.ceil(height - 2 * offset),
     ];
     model.graphArea = graphArea;
 
@@ -625,20 +740,34 @@ function vtkPiecewiseGaussianWidget(publicAPI, model) {
     if (model.style.iconSize > 1) {
       // Draw icons
       // +
-      const halfSize = Math.round((model.style.iconSize / 2) - model.style.strokeWidth);
+      const halfSize = Math.round(
+        model.style.iconSize / 2 - model.style.strokeWidth
+      );
       const center = Math.round(halfSize + offset + model.style.strokeWidth);
       ctx.beginPath();
       ctx.lineWidth = model.style.buttonStrokeWidth;
       ctx.strokeStyle = model.style.buttonStrokeColor;
-      ctx.arc(center - (offset / 2), center, halfSize, 0, 2 * Math.PI, false);
+      ctx.arc(center - offset / 2, center, halfSize, 0, 2 * Math.PI, false);
       ctx.fillStyle = model.style.buttonFillColor;
       ctx.fill();
       ctx.stroke();
-      ctx.moveTo(center - halfSize + model.style.strokeWidth + 2 - (offset / 2), center);
-      ctx.lineTo(center + halfSize - model.style.strokeWidth - 2 - (offset / 2), center);
+      ctx.moveTo(
+        center - halfSize + model.style.strokeWidth + 2 - offset / 2,
+        center
+      );
+      ctx.lineTo(
+        center + halfSize - model.style.strokeWidth - 2 - offset / 2,
+        center
+      );
       ctx.stroke();
-      ctx.moveTo(center - (offset / 2), center - halfSize + model.style.strokeWidth + 2);
-      ctx.lineTo(center - (offset / 2), center + halfSize - model.style.strokeWidth - 2);
+      ctx.moveTo(
+        center - offset / 2,
+        center - halfSize + model.style.strokeWidth + 2
+      );
+      ctx.lineTo(
+        center - offset / 2,
+        center + halfSize - model.style.strokeWidth - 2
+      );
       ctx.stroke();
 
       // -
@@ -652,67 +781,119 @@ function vtkPiecewiseGaussianWidget(publicAPI, model) {
         ctx.strokeStyle = model.style.buttonStrokeColor;
       }
       ctx.beginPath();
-      ctx.arc(center - (offset / 2), center + (offset / 2) + model.style.iconSize, halfSize, 0, 2 * Math.PI, false);
+      ctx.arc(
+        center - offset / 2,
+        center + offset / 2 + model.style.iconSize,
+        halfSize,
+        0,
+        2 * Math.PI,
+        false
+      );
       ctx.fill();
       ctx.stroke();
-      ctx.moveTo(center - halfSize + model.style.strokeWidth + 2 - (offset / 2), center + (offset / 2) + model.style.iconSize);
-      ctx.lineTo(center + halfSize - model.style.strokeWidth - 2 - (offset / 2), center + (offset / 2) + model.style.iconSize);
+      ctx.moveTo(
+        center - halfSize + model.style.strokeWidth + 2 - offset / 2,
+        center + offset / 2 + model.style.iconSize
+      );
+      ctx.lineTo(
+        center + halfSize - model.style.strokeWidth - 2 - offset / 2,
+        center + offset / 2 + model.style.iconSize
+      );
       ctx.stroke();
     }
 
     // Draw histogram
-    drawChart(ctx, graphArea, model.histogram, { lineWidth: 1, strokeStyle: model.style.histogramColor, fillStyle: model.style.histogramColor });
+    drawChart(ctx, graphArea, model.histogram, {
+      lineWidth: 1,
+      strokeStyle: model.style.histogramColor,
+      fillStyle: model.style.histogramColor,
+    });
 
     // Draw gaussians
-    drawChart(ctx, graphArea, model.opacities, { lineWidth: model.style.strokeWidth, strokeStyle: model.style.strokeColor });
+    drawChart(ctx, graphArea, model.opacities, {
+      lineWidth: model.style.strokeWidth,
+      strokeStyle: model.style.strokeColor,
+    });
 
     // Draw color function if any
     if (model.colorTransferFunction) {
-      const rangeToUse = model.dataRange || model.colorTransferFunction.getMappingRange();
-      if (!model.colorCanvas || model.colorCanvasMTime < model.colorTransferFunction.getMTime()) {
+      const rangeToUse =
+        model.dataRange || model.colorTransferFunction.getMappingRange();
+      if (
+        !model.colorCanvas ||
+        model.colorCanvasMTime < model.colorTransferFunction.getMTime()
+      ) {
         model.colorCanvasMTime = model.colorTransferFunction.getMTime();
-        model.colorCanvas = updateColorCanvas(model.colorTransferFunction, graphArea[2], rangeToUse, model.colorCanvas);
+        model.colorCanvas = updateColorCanvas(
+          model.colorTransferFunction,
+          graphArea[2],
+          rangeToUse,
+          model.colorCanvas
+        );
       }
       ctx.save();
-      drawChart(ctx, graphArea, model.opacities, { lineWidth: 1, strokeStyle: 'rgba(0,0,0,0)', fillStyle: 'rgba(0,0,0,1)', clip: true });
+      drawChart(ctx, graphArea, model.opacities, {
+        lineWidth: 1,
+        strokeStyle: 'rgba(0,0,0,0)',
+        fillStyle: 'rgba(0,0,0,1)',
+        clip: true,
+      });
       ctx.drawImage(model.colorCanvas, graphArea[0], graphArea[1]);
       ctx.restore();
     } else if (model.backgroundImage) {
-      model.colorCanvas = updateColorCanvasFromImage(model.backgroundImage, graphArea[2], model.colorCanvas);
+      model.colorCanvas = updateColorCanvasFromImage(
+        model.backgroundImage,
+        graphArea[2],
+        model.colorCanvas
+      );
       ctx.save();
-      drawChart(ctx, graphArea, model.opacities, { lineWidth: 1, strokeStyle: 'rgba(0,0,0,0)', fillStyle: 'rgba(0,0,0,1)', clip: true });
+      drawChart(ctx, graphArea, model.opacities, {
+        lineWidth: 1,
+        strokeStyle: 'rgba(0,0,0,0)',
+        fillStyle: 'rgba(0,0,0,1)',
+        clip: true,
+      });
       ctx.drawImage(model.colorCanvas, graphArea[0], graphArea[1]);
       ctx.restore();
     }
 
     // Draw active guassian
-    const activeGaussian = model.gaussians[model.activeGaussian] || model.gaussians[model.selectedGaussian];
+    const activeGaussian =
+      model.gaussians[model.activeGaussian] ||
+      model.gaussians[model.selectedGaussian];
     if (activeGaussian) {
       const activeOpacities = computeOpacities([activeGaussian], graphArea[2]);
-      drawChart(ctx, graphArea, activeOpacities, { lineWidth: model.style.activeStrokeWidth, strokeStyle: model.style.activeColor });
+      drawChart(ctx, graphArea, activeOpacities, {
+        lineWidth: model.style.activeStrokeWidth,
+        strokeStyle: model.style.activeColor,
+      });
       // Draw controls
-      const xCenter = graphArea[0] + (activeGaussian.position * graphArea[2]);
-      const yTop = graphArea[1] + ((1 - activeGaussian.height) * graphArea[3]);
-      const yMiddle = graphArea[1] + ((1 - (0.5 * activeGaussian.height)) * graphArea[3]);
+      const xCenter = graphArea[0] + activeGaussian.position * graphArea[2];
+      const yTop = graphArea[1] + (1 - activeGaussian.height) * graphArea[3];
+      const yMiddle =
+        graphArea[1] + (1 - 0.5 * activeGaussian.height) * graphArea[3];
       const yBottom = graphArea[1] + graphArea[3];
       const widthInPixel = activeGaussian.width * graphArea[2];
       ctx.lineWidth = model.style.handleWidth;
       ctx.strokeStyle = model.style.handleColor;
       ctx.fillStyle = model.style.backgroundColor;
       ctx.beginPath();
-      ctx.moveTo(xCenter, graphArea[1] + ((1 - activeGaussian.height) * graphArea[3]));
+      ctx.moveTo(
+        xCenter,
+        graphArea[1] + (1 - activeGaussian.height) * graphArea[3]
+      );
       ctx.lineTo(xCenter, graphArea[1] + graphArea[3]);
       ctx.stroke();
       // Height
       ctx.beginPath();
-      ctx.arc(
-        xCenter,
-        yTop,
-        6, 0, 2 * Math.PI);
+      ctx.arc(xCenter, yTop, 6, 0, 2 * Math.PI);
       ctx.fill();
       ctx.stroke();
       // Bias
-      const radius = Math.min(widthInPixel * 0.1, activeGaussian.height * graphArea[3] * 0.2);
+      const radius = Math.min(
+        widthInPixel * 0.1,
+        activeGaussian.height * graphArea[3] * 0.2
+      );
       ctx.beginPath();
       ctx.rect(xCenter - radius, yMiddle - radius, radius * 2, radius * 2);
       ctx.fill();
@@ -728,12 +909,13 @@ function vtkPiecewiseGaussianWidget(publicAPI, model) {
 
   publicAPI.getOpacityNodes = (dataRange) => {
     const rangeToUse = dataRange || model.dataRange;
-    const delta = (rangeToUse[1] - rangeToUse[0]) / (model.opacities.length - 1);
+    const delta =
+      (rangeToUse[1] - rangeToUse[0]) / (model.opacities.length - 1);
     const nodes = [];
     const midpoint = 0.5;
     const sharpness = 0;
     for (let index = 0; index < model.opacities.length; index++) {
-      const x = rangeToUse[0] + (delta * index);
+      const x = rangeToUse[0] + delta * index;
       const y = model.opacities[index];
       nodes.push({ x, y, midpoint, sharpness });
     }
@@ -794,7 +976,12 @@ export function extend(publicAPI, model, initialValues = {}) {
 
   // Object methods
   macro.obj(publicAPI, model);
-  macro.setGet(publicAPI, model, ['piecewiseSize', 'numberOfBins', 'colorTransferFunction', 'backgroundImage']);
+  macro.setGet(publicAPI, model, [
+    'piecewiseSize',
+    'numberOfBins',
+    'colorTransferFunction',
+    'backgroundImage',
+  ]);
   macro.get(publicAPI, model, ['size', 'canvas']);
   macro.event(publicAPI, model, 'opacityChange');
   macro.event(publicAPI, model, 'animation');
@@ -805,7 +992,10 @@ export function extend(publicAPI, model, initialValues = {}) {
 
 // ----------------------------------------------------------------------------
 
-export const newInstance = macro.newInstance(extend, 'vtkPiecewiseGaussianWidget');
+export const newInstance = macro.newInstance(
+  extend,
+  'vtkPiecewiseGaussianWidget'
+);
 
 // ----------------------------------------------------------------------------
 

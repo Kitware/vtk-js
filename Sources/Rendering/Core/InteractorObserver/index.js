@@ -42,16 +42,16 @@ function vtkInteractorObserver(publicAPI, model) {
       return;
     }
 
-  // Since the observer mediator is bound to the interactor, reset it to
-  // 0 so that the next time it is requested, it is queried from the
-  // new interactor.
-  // Furthermore, remove ourself from the mediator queue.
+    // Since the observer mediator is bound to the interactor, reset it to
+    // 0 so that the next time it is requested, it is queried from the
+    // new interactor.
+    // Furthermore, remove ourself from the mediator queue.
 
-  // if (this->ObserverMediator)
-  //   {
-  //   this->ObserverMediator->RemoveAllCursorShapeRequests(this);
-  //   this->ObserverMediator = 0;
-  //   }
+    // if (this->ObserverMediator)
+    //   {
+    //   this->ObserverMediator->RemoveAllCursorShapeRequests(this);
+    //   this->ObserverMediator = 0;
+    //   }
 
     // if we already have an Interactor then stop observing it
     if (model.interactor) {
@@ -66,12 +66,12 @@ function vtkInteractorObserver(publicAPI, model) {
 
     // add observers for each of the events handled in ProcessEvents
     if (i) {
-      model.charObserverTag = i.onCharEvent(
-        publicAPI.keyPressCallbackCommand);
-    //                                           this->Priority);
+      model.charObserverTag = i.onCharEvent(publicAPI.keyPressCallbackCommand);
+      //                                           this->Priority);
       model.deleteObserverTag = i.onDeleteEvent(
-        publicAPI.keyPressCallbackCommand);
-    //                                           this->Priority);
+        publicAPI.keyPressCallbackCommand
+      );
+      //                                           this->Priority);
       // publicAPI.registerPickers();
     }
 
@@ -86,8 +86,9 @@ function vtkInteractorObserver(publicAPI, model) {
       return null;
     }
 
-    return model.interactor.getView().displayToWorld(
-      x, y, z, model.currentRenderer);
+    return model.interactor
+      .getView()
+      .displayToWorld(x, y, z, model.currentRenderer);
   };
 
   //----------------------------------------------------------------------------
@@ -98,31 +99,30 @@ function vtkInteractorObserver(publicAPI, model) {
       return null;
     }
 
-    return model.interactor.getView().worldToDisplay(
-      x, y, z, model.currentRenderer);
+    return model.interactor
+      .getView()
+      .worldToDisplay(x, y, z, model.currentRenderer);
   };
 
   //----------------------------------------------------------------------------
   publicAPI.grabFocus = () => {
-  // void vtkInteractorObserver::GrabFocus(vtkCommand *mouseEvents, vtkCommand *keypressEvents)
-  // {
-  //   if ( this->Interactor )
-  //     {
-  //     this->Interactor->GrabFocus(mouseEvents,keypressEvents);
-  //     }
+    // void vtkInteractorObserver::GrabFocus(vtkCommand *mouseEvents, vtkCommand *keypressEvents)
+    // {
+    //   if ( this->Interactor )
+    //     {
+    //     this->Interactor->GrabFocus(mouseEvents,keypressEvents);
+    //     }
   };
-
 
   //----------------------------------------------------------------------------
   publicAPI.releaseFocus = () => {
-  // void vtkInteractorObserver::ReleaseFocus()
-  // {
-  //   if ( this->Interactor )
-  //     {
-  //     this->Interactor->ReleaseFocus();
-  //     }
+    // void vtkInteractorObserver::ReleaseFocus()
+    // {
+    //   if ( this->Interactor )
+    //     {
+    //     this->Interactor->ReleaseFocus();
+    //     }
   };
-
 
   // //----------------------------------------------------------------------------
   // void vtkInteractorObserver::StartInteraction()
@@ -165,15 +165,10 @@ export function extend(publicAPI, model, initialValues = {}) {
   macro.event(publicAPI, model, 'EndInteractionEvent');
 
   // Create get-only macros
-  macro.get(publicAPI, model, [
-    'interactor',
-  ]);
+  macro.get(publicAPI, model, ['interactor']);
 
   // Create get-set macros
-  macro.setGet(publicAPI, model, [
-    'priority',
-    'currentRenderer',
-  ]);
+  macro.setGet(publicAPI, model, ['priority', 'currentRenderer']);
 
   // For more macro methods, see "Sources/macro.js"
 

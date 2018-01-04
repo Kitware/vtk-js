@@ -1,4 +1,4 @@
-import macro            from 'vtk.js/Sources/macro';
+import macro from 'vtk.js/Sources/macro';
 import vtkCell from 'vtk.js/Sources/Common/DataModel/Cell';
 import vtkMath from 'vtk.js/Sources/Common/Core/Math';
 import vtkLine from 'vtk.js/Sources/Common/DataModel/Line';
@@ -17,21 +17,20 @@ function computeNormalDirection(v1, v2, v3, n) {
   const by = v1[1] - v2[1];
   const bz = v1[2] - v2[2];
 
-  n[0] = (ay * bz) - (az * by);
-  n[1] = (az * bx) - (ax * bz);
-  n[2] = (ax * by) - (ay * bx);
+  n[0] = ay * bz - az * by;
+  n[1] = az * bx - ax * bz;
+  n[2] = ax * by - ay * bx;
 }
 
 function computeNormal(v1, v2, v3, n) {
   computeNormalDirection(v1, v2, v3, n);
-  const length = Math.sqrt(((n[0] * n[0]) + (n[1] * n[1]) + (n[2] * n[2])));
+  const length = Math.sqrt(n[0] * n[0] + n[1] * n[1] + n[2] * n[2]);
   if (length !== 0.0) {
     n[0] /= length;
     n[1] /= length;
     n[2] /= length;
   }
 }
-
 
 // ----------------------------------------------------------------------------
 // Static API
@@ -82,7 +81,12 @@ function vtkTriangle(publicAPI, model) {
       }
 
       // Evaluate position
-      const inside = publicAPI.evaluatePosition(x, closestPoint, pcoords, weights);
+      const inside = publicAPI.evaluatePosition(
+        x,
+        closestPoint,
+        pcoords,
+        weights
+      );
       if (inside.evaluation >= 0) {
         if (inside.dist2 <= tol2) {
           outObj.intersect = 1;
@@ -216,9 +220,14 @@ function vtkTriangle(publicAPI, model) {
     weights[1] = pcoords[0];
     weights[2] = pcoords[1];
 
-    if (weights[0] >= 0.0 && weights[0] <= 1.0 &&
-         weights[1] >= 0.0 && weights[1] <= 1.0 &&
-         weights[2] >= 0.0 && weights[2] <= 1.0) {
+    if (
+      weights[0] >= 0.0 &&
+      weights[0] <= 1.0 &&
+      weights[1] >= 0.0 &&
+      weights[1] <= 1.0 &&
+      weights[2] >= 0.0 &&
+      weights[2] <= 1.0
+    ) {
       // projection distance
       if (closestPoint) {
         outObj.dist2 = vtkMath.distance2BetweenPoints(cp, x);
@@ -285,13 +294,28 @@ function vtkTriangle(publicAPI, model) {
             closestPoint[i] = closest[i];
           }
         } else if (weights[0] < 0.0) {
-          const lineDistance = vtkLine.distanceToLine(x, pt1, pt2, closestPoint);
+          const lineDistance = vtkLine.distanceToLine(
+            x,
+            pt1,
+            pt2,
+            closestPoint
+          );
           outObj.dist2 = lineDistance.distance;
         } else if (weights[1] < 0.0) {
-          const lineDistance = vtkLine.distanceToLine(x, pt2, pt3, closestPoint);
+          const lineDistance = vtkLine.distanceToLine(
+            x,
+            pt2,
+            pt3,
+            closestPoint
+          );
           outObj.dist2 = lineDistance.distance;
         } else if (weights[2] < 0.0) {
-          const lineDistance = vtkLine.distanceToLine(x, pt1, pt3, closestPoint);
+          const lineDistance = vtkLine.distanceToLine(
+            x,
+            pt1,
+            pt3,
+            closestPoint
+          );
           outObj.dist2 = lineDistance.distance;
         }
       }
@@ -311,7 +335,7 @@ function vtkTriangle(publicAPI, model) {
     const u3 = 1.0 - pcoords[0] - pcoords[1];
 
     for (let i = 0; i < 3; i++) {
-      x[i] = (p0[i] * u3) + (p1[i] * pcoords[0]) + (p2[i] * pcoords[1]);
+      x[i] = p0[i] * u3 + p1[i] * pcoords[0] + p2[i] * pcoords[1];
     }
 
     weights[0] = u3;
@@ -332,7 +356,8 @@ function vtkTriangle(publicAPI, model) {
         pDist = -pc[i];
       } else if (pc[i] > 1.0) {
         pDist = pc[i] - 1.0;
-      } else { // inside the cell in the parametric direction
+      } else {
+        // inside the cell in the parametric direction
         pDist = 0.0;
       }
       if (pDist > pDistMax) {
@@ -347,8 +372,7 @@ function vtkTriangle(publicAPI, model) {
 // Object factory
 // ----------------------------------------------------------------------------
 
-const DEFAULT_VALUES = {
-};
+const DEFAULT_VALUES = {};
 
 // ----------------------------------------------------------------------------
 

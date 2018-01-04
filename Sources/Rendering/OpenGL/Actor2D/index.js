@@ -25,9 +25,11 @@ function vtkOpenGLActor2D(publicAPI, model) {
 
   // we draw textures, then mapper, then post pass textures
   publicAPI.traverseOpaquePass = (renderPass) => {
-    if (!model.renderable ||
-        !model.renderable.getVisibility() ||
-        !model.renderable.getIsOpaque()) {
+    if (
+      !model.renderable ||
+      !model.renderable.getVisibility() ||
+      !model.renderable.getIsOpaque()
+    ) {
       return;
     }
 
@@ -42,9 +44,11 @@ function vtkOpenGLActor2D(publicAPI, model) {
 
   // we draw textures, then mapper, then post pass textures
   publicAPI.traverseTranslucentPass = (renderPass) => {
-    if (!model.renderable ||
-        !model.renderable.getVisibility() ||
-        model.renderable.getIsOpaque()) {
+    if (
+      !model.renderable ||
+      !model.renderable.getVisibility() ||
+      model.renderable.getIsOpaque()
+    ) {
       return;
     }
 
@@ -73,7 +77,9 @@ function vtkOpenGLActor2D(publicAPI, model) {
   // Renders myself
   publicAPI.opaquePass = (prepass, renderPass) => {
     if (prepass) {
-      model.context = publicAPI.getFirstAncestorOfType('vtkOpenGLRenderWindow').getContext();
+      model.context = publicAPI
+        .getFirstAncestorOfType('vtkOpenGLRenderWindow')
+        .getContext();
       model.context.depthMask(true);
       publicAPI.activateTextures();
     } else {
@@ -87,7 +93,9 @@ function vtkOpenGLActor2D(publicAPI, model) {
   // Renders myself
   publicAPI.translucentPass = (prepass, renderPass) => {
     if (prepass) {
-      model.context = publicAPI.getFirstAncestorOfType('vtkOpenGLRenderWindow').getContext();
+      model.context = publicAPI
+        .getFirstAncestorOfType('vtkOpenGLRenderWindow')
+        .getContext();
       model.context.depthMask(false);
       publicAPI.activateTextures();
     } else {
@@ -118,13 +126,9 @@ export function extend(publicAPI, model, initialValues = {}) {
   vtkViewNode.extend(publicAPI, model, initialValues);
 
   // Build VTK API
-  macro.setGet(publicAPI, model, [
-    'context',
-  ]);
+  macro.setGet(publicAPI, model, ['context']);
 
-  macro.get(publicAPI, model, [
-    'activeTextures',
-  ]);
+  macro.get(publicAPI, model, ['activeTextures']);
 
   // Object methods
   vtkOpenGLActor2D(publicAPI, model);

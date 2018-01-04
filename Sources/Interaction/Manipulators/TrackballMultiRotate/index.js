@@ -1,7 +1,7 @@
-import macro                from 'vtk.js/Sources/macro';
+import macro from 'vtk.js/Sources/macro';
 import vtkCameraManipulator from 'vtk.js/Sources/Interaction/Manipulators/CameraManipulator';
-import vtkTrackballRotate   from 'vtk.js/Sources/Interaction/Manipulators/TrackballRotate';
-import vtkTrackballRoll     from 'vtk.js/Sources/Interaction/Manipulators/TrackballRoll';
+import vtkTrackballRotate from 'vtk.js/Sources/Interaction/Manipulators/TrackballRotate';
+import vtkTrackballRoll from 'vtk.js/Sources/Interaction/Manipulators/TrackballRoll';
 
 function max(x, y) {
   return x < y ? y : x;
@@ -36,7 +36,7 @@ function vtkTrackballMultiRotate(publicAPI, model) {
     const rotateRadius = 0.9 * max(viewCenter[0], viewCenter[1]);
     const dist2 = sqr(viewCenter[0] - pos.x) + sqr(viewCenter[1] - pos.y);
 
-    if ((rotateRadius * rotateRadius) > dist2) {
+    if (rotateRadius * rotateRadius > dist2) {
       currentManipulator = rotateManipulator;
     } else {
       currentManipulator = rollManipulator;

@@ -1,8 +1,8 @@
-import JSZip  from 'jszip';
-import pako   from 'pako';
+import JSZip from 'jszip';
+import pako from 'pako';
 
-import macro                from 'vtk.js/Sources/macro';
-import Endian               from 'vtk.js/Sources/Common/Core/Endian';
+import macro from 'vtk.js/Sources/macro';
+import Endian from 'vtk.js/Sources/Common/Core/Endian';
 import { DataTypeByteSize } from 'vtk.js/Sources/Common/Core/DataArray/Constants';
 
 const { vtkErrorMacro, vtkDebugMacro } = macro;
@@ -17,7 +17,9 @@ function handleUint8Array(array, compression, done) {
 
     if (compression) {
       if (array.dataType === 'string' || array.dataType === 'JSON') {
-        array.buffer = pako.inflate(new Uint8Array(array.buffer), { to: 'string' });
+        array.buffer = pako.inflate(new Uint8Array(array.buffer), {
+          to: 'string',
+        });
       } else {
         array.buffer = pako.inflate(new Uint8Array(array.buffer)).buffer;
       }
@@ -36,7 +38,13 @@ function handleUint8Array(array, compression, done) {
     }
 
     if (array.values.length !== array.size) {
-      vtkErrorMacro(`Error in FetchArray: ${array.name} does not have the proper array size. Got ${array.values.length}, instead of ${array.size}`);
+      vtkErrorMacro(
+        `Error in FetchArray: ${
+          array.name
+        } does not have the proper array size. Got ${
+          array.values.length
+        }, instead of ${array.size}`
+      );
     }
 
     done();
@@ -60,7 +68,7 @@ const handlers = {
 };
 
 function removeLeadingSlash(str) {
-  return (str[0] === '/') ? str.substr(1) : str;
+  return str[0] === '/' ? str.substr(1) : str;
 }
 
 function create(createOptions) {
@@ -68,35 +76,40 @@ function create(createOptions) {
   let requestCount = 0;
   const zip = new JSZip();
   let zipRoot = zip;
-  zip.loadAsync(createOptions.zipContent)
-    .then(() => {
-      ready = true;
+  zip.loadAsync(createOptions.zipContent).then(() => {
+    ready = true;
 
-      // Find root index.json
-      const metaFiles = [];
-      zip.forEach((relativePath, zipEntry) => {
-        if (relativePath.indexOf('index.json') !== -1) {
-          metaFiles.push(relativePath);
-        }
-      });
-      metaFiles.sort((a, b) => a.length - b.length);
-      const fullRootPath = metaFiles[0].split('/');
-      while (fullRootPath.length > 1) {
-        const dirName = fullRootPath.shift();
-        zipRoot = zipRoot.folder(dirName);
-      }
-
-      if (createOptions.callback) {
-        createOptions.callback(zip);
+    // Find root index.json
+    const metaFiles = [];
+    zip.forEach((relativePath, zipEntry) => {
+      if (relativePath.indexOf('index.json') !== -1) {
+        metaFiles.push(relativePath);
       }
     });
+    metaFiles.sort((a, b) => a.length - b.length);
+    const fullRootPath = metaFiles[0].split('/');
+    while (fullRootPath.length > 1) {
+      const dirName = fullRootPath.shift();
+      zipRoot = zipRoot.folder(dirName);
+    }
+
+    if (createOptions.callback) {
+      createOptions.callback(zip);
+    }
+  });
   return {
     fetchArray(instance = {}, baseURL, array, options = {}) {
       return new Promise((resolve, reject) => {
         if (!ready) {
           vtkErrorMacro('ERROR!!! zip not ready...');
         }
-        const url = removeLeadingSlash([baseURL, array.ref.basepath, options.compression ? `${array.ref.id}.gz` : array.ref.id].join('/'));
+        const url = removeLeadingSlash(
+          [
+            baseURL,
+            array.ref.basepath,
+            options.compression ? `${array.ref.id}.gz` : array.ref.id,
+          ].join('/')
+        );
 
         if (++requestCount === 1 && instance.invokeBusy) {
           instance.invokeBusy(true);
@@ -114,10 +127,18 @@ function create(createOptions) {
           resolve(array);
         }
 
-        const asyncType = array.dataType === 'string' && !options.compression ? 'string' : 'uint8array';
-        const asyncCallback = handlers[asyncType](array, options.compression, doneCleanUp);
+        const asyncType =
+          array.dataType === 'string' && !options.compression
+            ? 'string'
+            : 'uint8array';
+        const asyncCallback = handlers[asyncType](
+          array,
+          options.compression,
+          doneCleanUp
+        );
 
-        zipRoot.file(url)
+        zipRoot
+          .file(url)
           .async(asyncType)
           .then(asyncCallback);
       });
@@ -131,15 +152,21 @@ function create(createOptions) {
 
       if (options.compression) {
         if (options.compression === 'gz') {
-          return zipRoot.file(path).async('uint8array').then((uint8array) => {
-            const str = pako.inflate(uint8array, { to: 'string' });
-            return new Promise(ok => ok(JSON.parse(str)));
-          });
+          return zipRoot
+            .file(path)
+            .async('uint8array')
+            .then((uint8array) => {
+              const str = pako.inflate(uint8array, { to: 'string' });
+              return new Promise((ok) => ok(JSON.parse(str)));
+            });
         }
         return new Promise((a, r) => r('Invalid compression'));
       }
 
-      return zipRoot.file(path).async('string').then(str => new Promise(ok => ok(JSON.parse(str))));
+      return zipRoot
+        .file(path)
+        .async('string')
+        .then((str) => new Promise((ok) => ok(JSON.parse(str))));
     },
 
     fetchText(instance = {}, url, options = {}) {
@@ -150,15 +177,21 @@ function create(createOptions) {
 
       if (options.compression) {
         if (options.compression === 'gz') {
-          return zipRoot.file(path).async('uint8array').then((uint8array) => {
-            const str = pako.inflate(uint8array, { to: 'string' });
-            return new Promise(ok => ok(str));
-          });
+          return zipRoot
+            .file(path)
+            .async('uint8array')
+            .then((uint8array) => {
+              const str = pako.inflate(uint8array, { to: 'string' });
+              return new Promise((ok) => ok(str));
+            });
         }
         return new Promise((a, r) => r('Invalid compression'));
       }
 
-      return zipRoot.file(path).async('string').then(str => new Promise(ok => ok(str)));
+      return zipRoot
+        .file(path)
+        .async('string')
+        .then((str) => new Promise((ok) => ok(str)));
     },
   };
 }

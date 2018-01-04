@@ -84,7 +84,6 @@ module.exports = {
     ].concat(vtkRules),
   },
   resolve: {
-    extensions: ['.webpack-loader.js', '.web-loader.js', '.loader.js', '.js', '.jsx'],
     modules: [
       path.resolve(__dirname, 'node_modules'),
       sourcePath,
@@ -106,7 +105,7 @@ You should extend the generated **package.json** file with the following set of 
     "start": "webpack-dev-server --content-base ./dist",
 
     "commit": "git cz",
-    "semantic-release": "semantic-release pre && npm publish && semantic-release post"
+    "semantic-release": "semantic-release"
   }
 }
 ```

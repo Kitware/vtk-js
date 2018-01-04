@@ -1,4 +1,4 @@
-import macro            from 'vtk.js/Sources/macro';
+import macro from 'vtk.js/Sources/macro';
 import Constants from 'vtk.js/Sources/Common/DataModel/Line/Constants';
 import vtkCell from 'vtk.js/Sources/Common/DataModel/Cell';
 import vtkMath from 'vtk.js/Sources/Common/Core/Math';
@@ -18,11 +18,12 @@ function distanceToLine(x, p1, p2, closestPoint = null) {
   p21[2] = p2[2] - p1[2];
 
   // Get parametric location
-  const num = (p21[0] * (x[0] - p1[0])) + (p21[1] * (x[1] - p1[1])) + (p21[2] * (x[2] - p1[2]));
+  const num =
+    p21[0] * (x[0] - p1[0]) + p21[1] * (x[1] - p1[1]) + p21[2] * (x[2] - p1[2]);
   const denom = vtkMath.dot(p21, p21);
 
   // trying to avoid an expensive fabs
-  let tolerance = 1.e-05 * num;
+  let tolerance = 1e-5 * num;
   if (denom !== 0.0) {
     outObj.t = num / denom;
   }
@@ -39,9 +40,9 @@ function distanceToLine(x, p1, p2, closestPoint = null) {
     closest = p2;
   } else {
     closest = p21;
-    p21[0] = p1[0] + (outObj.t * p21[0]);
-    p21[1] = p1[1] + (outObj.t * p21[1]);
-    p21[2] = p1[2] + (outObj.t * p21[2]);
+    p21[0] = p1[0] + outObj.t * p21[0];
+    p21[1] = p1[1] + outObj.t * p21[1];
+    p21[2] = p1[2] + outObj.t * p21[2];
   }
 
   if (closestPoint) {
@@ -107,7 +108,7 @@ function intersection(a1, a2, b1, b2, u, v) {
   v[0] = c[1];
 
   // Check parametric coordinates for intersection.
-  if ((u[0] >= 0.0) && (u[0] <= 1.0) && (v[0] >= 0.0) && (v[0] <= 1.0)) {
+  if (u[0] >= 0.0 && u[0] <= 1.0 && v[0] >= 0.0 && v[0] <= 1.0) {
     return IntersectionState.YES_INTERSECTION;
   }
 
@@ -152,10 +153,10 @@ function vtkLine(publicAPI, model) {
     if (intersect === IntersectionState.YES_INTERSECTION) {
       // make sure we are within tolerance
       for (let i = 0; i < 3; i++) {
-        x[i] = a1[i] + (pcoords[0] * (a2[i] - a1[i]));
-        projXYZ[i] = p1[i] + (outObj.t * (p2[i] - p1[i]));
+        x[i] = a1[i] + pcoords[0] * (a2[i] - a1[i]);
+        projXYZ[i] = p1[i] + outObj.t * (p2[i] - p1[i]);
       }
-      if (vtkMath.distance2BetweenPoints(x, projXYZ) <= (tol * tol)) {
+      if (vtkMath.distance2BetweenPoints(x, projXYZ) <= tol * tol) {
         outObj.intersect = 1;
         return outObj;
       }
@@ -167,7 +168,7 @@ function vtkLine(publicAPI, model) {
         outObj.t = 0.0;
         outDistance = distanceToLine(p1, a1, a2, x);
         pcoords[0] = outDistance.t;
-        if (outDistance.distance <= (tol * tol)) {
+        if (outDistance.distance <= tol * tol) {
           outObj.intersect = 1;
           return outObj;
         }
@@ -177,7 +178,7 @@ function vtkLine(publicAPI, model) {
         outObj.t = 1.0;
         outDistance = distanceToLine(p2, a1, a2, x);
         pcoords[0] = outDistance.t;
-        if (outDistance.distance <= (tol * tol)) {
+        if (outDistance.distance <= tol * tol) {
           outObj.intersect = 1;
           return outObj;
         }
@@ -187,7 +188,7 @@ function vtkLine(publicAPI, model) {
         pcoords[0] = 0.0;
         outDistance = distanceToLine(a1, p1, p2, x);
         outObj.t = outDistance.t;
-        if (outDistance.distance <= (tol * tol)) {
+        if (outDistance.distance <= tol * tol) {
           outObj.intersect = 1;
           return outObj;
         }
@@ -197,7 +198,7 @@ function vtkLine(publicAPI, model) {
         pcoords[1] = 1.0;
         outDistance = distanceToLine(a2, p1, p2, x);
         outObj.t = outDistance.t;
-        if (outDistance.distance <= (tol * tol)) {
+        if (outDistance.distance <= tol * tol) {
           outObj.intersect = 1;
           return outObj;
         }
@@ -206,15 +207,21 @@ function vtkLine(publicAPI, model) {
     }
     return outObj;
   };
-  publicAPI.evaluatePosition = (x, closestPoint, subId, pcoords, dist2, weights) => {}; // virtual
+  publicAPI.evaluatePosition = (
+    x,
+    closestPoint,
+    subId,
+    pcoords,
+    dist2,
+    weights
+  ) => {}; // virtual
 }
 
 // ----------------------------------------------------------------------------
 // Object factory
 // ----------------------------------------------------------------------------
 
-const DEFAULT_VALUES = {
-};
+const DEFAULT_VALUES = {};
 
 // ----------------------------------------------------------------------------
 

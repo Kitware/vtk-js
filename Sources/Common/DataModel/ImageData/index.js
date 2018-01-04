@@ -1,6 +1,6 @@
-import macro              from 'vtk.js/Sources/macro';
-import vtkDataSet         from 'vtk.js/Sources/Common/DataModel/DataSet';
-import vtkStructuredData  from 'vtk.js/Sources/Common/DataModel/StructuredData';
+import macro from 'vtk.js/Sources/macro';
+import vtkDataSet from 'vtk.js/Sources/Common/DataModel/DataSet';
+import vtkStructuredData from 'vtk.js/Sources/Common/DataModel/StructuredData';
 import { StructuredType } from 'vtk.js/Sources/Common/DataModel/StructuredData/Constants';
 import { quat, vec3, mat3, mat4 } from 'gl-matrix';
 
@@ -36,7 +36,9 @@ function vtkImageData(publicAPI, model) {
 
     if (changeDetected) {
       model.extent = [].concat(inExtent);
-      model.dataDescription = vtkStructuredData.getDataDescriptionFromExtent(model.extent);
+      model.dataDescription = vtkStructuredData.getDataDescriptionFromExtent(
+        model.extent
+      );
       publicAPI.modified();
     }
   };
@@ -69,9 +71,9 @@ function vtkImageData(publicAPI, model) {
   };
 
   publicAPI.getDimensions = () => [
-    (model.extent[1] - model.extent[0]) + 1,
-    (model.extent[3] - model.extent[2]) + 1,
-    (model.extent[5] - model.extent[4]) + 1,
+    model.extent[1] - model.extent[0] + 1,
+    model.extent[3] - model.extent[2] + 1,
+    model.extent[5] - model.extent[4] + 1,
   ];
 
   publicAPI.getNumberOfCells = () => {
@@ -83,7 +85,7 @@ function vtkImageData(publicAPI, model) {
         return 0;
       }
       if (dims[i] > 1) {
-        nCells *= (dims[i] - 1);
+        nCells *= dims[i] - 1;
       }
     }
 
@@ -186,6 +188,7 @@ function vtkImageData(publicAPI, model) {
   publicAPI.getBounds = () => publicAPI.extentToBounds(model.extent);
 
   publicAPI.extentToBounds = (ex) => {
+    // prettier-ignore
     const corners = [
       ex[0], ex[2], ex[4],
       ex[1], ex[2], ex[4],
@@ -203,12 +206,24 @@ function vtkImageData(publicAPI, model) {
     for (let i = 3; i < 24; i += 3) {
       vec3.set(idx, corners[i], corners[i + 1], corners[i + 2]);
       publicAPI.indexToWorldVec3(idx, vout);
-      if (vout[0] < bounds[0]) { bounds[0] = vout[0]; }
-      if (vout[1] < bounds[2]) { bounds[2] = vout[1]; }
-      if (vout[2] < bounds[4]) { bounds[4] = vout[2]; }
-      if (vout[0] > bounds[1]) { bounds[1] = vout[0]; }
-      if (vout[1] > bounds[3]) { bounds[3] = vout[1]; }
-      if (vout[2] > bounds[5]) { bounds[5] = vout[2]; }
+      if (vout[0] < bounds[0]) {
+        bounds[0] = vout[0];
+      }
+      if (vout[1] < bounds[2]) {
+        bounds[2] = vout[1];
+      }
+      if (vout[2] < bounds[4]) {
+        bounds[4] = vout[2];
+      }
+      if (vout[0] > bounds[1]) {
+        bounds[1] = vout[0];
+      }
+      if (vout[1] > bounds[3]) {
+        bounds[3] = vout[1];
+      }
+      if (vout[2] > bounds[5]) {
+        bounds[5] = vout[2];
+      }
     }
 
     return bounds;
@@ -218,9 +233,15 @@ function vtkImageData(publicAPI, model) {
     const rotq = quat.create();
     quat.fromMat3(rotq, model.direction);
     const trans = vec3.fromValues(
-      model.origin[0], model.origin[1], model.origin[2]);
+      model.origin[0],
+      model.origin[1],
+      model.origin[2]
+    );
     const scale = vec3.fromValues(
-      model.spacing[0], model.spacing[1], model.spacing[2]);
+      model.spacing[0],
+      model.spacing[1],
+      model.spacing[2]
+    );
     mat4.fromRotationTranslationScale(model.indexToWorld, rotq, trans, scale);
     mat4.invert(model.worldToIndex, model.indexToWorld);
   };
@@ -302,7 +323,7 @@ function vtkImageData(publicAPI, model) {
 // ----------------------------------------------------------------------------
 
 const DEFAULT_VALUES = {
-  direction: null,  // a mat3
+  direction: null, // a mat3
   indexToWorld: null, // a mat4
   worldToIndex: null, // a mat4
   spacing: [1.0, 1.0, 1.0],
@@ -333,11 +354,7 @@ export function extend(publicAPI, model, initialValues = {}) {
   model.worldToIndex = mat4.create();
 
   // Set/Get methods
-  macro.get(publicAPI, model, [
-    'direction',
-    'indexToWorld',
-    'worldToIndex',
-  ]);
+  macro.get(publicAPI, model, ['direction', 'indexToWorld', 'worldToIndex']);
   macro.setGetArray(publicAPI, model, ['origin', 'spacing'], 3);
   macro.getArray(publicAPI, model, ['extent'], 6);
 

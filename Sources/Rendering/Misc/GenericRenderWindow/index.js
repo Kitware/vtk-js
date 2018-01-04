@@ -1,8 +1,8 @@
-import macro                      from 'vtk.js/Sources/macro';
-import vtkOpenGLRenderWindow      from 'vtk.js/Sources/Rendering/OpenGL/RenderWindow';
-import vtkRenderer                from 'vtk.js/Sources/Rendering/Core/Renderer';
-import vtkRenderWindow            from 'vtk.js/Sources/Rendering/Core/RenderWindow';
-import vtkRenderWindowInteractor  from 'vtk.js/Sources/Rendering/Core/RenderWindowInteractor';
+import macro from 'vtk.js/Sources/macro';
+import vtkOpenGLRenderWindow from 'vtk.js/Sources/Rendering/OpenGL/RenderWindow';
+import vtkRenderer from 'vtk.js/Sources/Rendering/Core/Renderer';
+import vtkRenderWindow from 'vtk.js/Sources/Rendering/Core/RenderWindow';
+import vtkRenderWindowInteractor from 'vtk.js/Sources/Rendering/Core/RenderWindowInteractor';
 
 // Load basic classes for vtk() factory
 import 'vtk.js/Sources/Common/Core/Points';
@@ -40,7 +40,10 @@ function vtkGenericRenderWindow(publicAPI, model) {
   publicAPI.resize = () => {
     if (model.container) {
       const dims = model.container.getBoundingClientRect();
-      model.openGlRenderWindow.setSize(Math.floor(dims.width), Math.floor(dims.height));
+      model.openGlRenderWindow.setSize(
+        Math.floor(dims.width),
+        Math.floor(dims.height)
+      );
       invokeResize();
       model.renderWindow.render();
     }

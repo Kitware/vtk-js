@@ -1,14 +1,14 @@
-import test      from 'tape-catch';
+import test from 'tape-catch';
 import testUtils from 'vtk.js/Sources/Testing/testUtils';
 
-import vtkActor                    from 'vtk.js/Sources/Rendering/Core/Actor';
+import vtkActor from 'vtk.js/Sources/Rendering/Core/Actor';
 import vtkMoleculeToRepresentation from 'vtk.js/Sources/Filters/General/MoleculeToRepresentation';
-import vtkOpenGLRenderWindow       from 'vtk.js/Sources/Rendering/OpenGL/RenderWindow';
-import vtkPDBReader                from 'vtk.js/Sources/IO/Misc/PDBReader';
-import vtkSphereMapper             from 'vtk.js/Sources/Rendering/Core/SphereMapper';
-import vtkStickMapper              from 'vtk.js/Sources/Rendering/Core/StickMapper';
-import vtkRenderer                 from 'vtk.js/Sources/Rendering/Core/Renderer';
-import vtkRenderWindow             from 'vtk.js/Sources/Rendering/Core/RenderWindow';
+import vtkOpenGLRenderWindow from 'vtk.js/Sources/Rendering/OpenGL/RenderWindow';
+import vtkPDBReader from 'vtk.js/Sources/IO/Misc/PDBReader';
+import vtkSphereMapper from 'vtk.js/Sources/Rendering/Core/SphereMapper';
+import vtkStickMapper from 'vtk.js/Sources/Rendering/Core/StickMapper';
+import vtkRenderer from 'vtk.js/Sources/Rendering/Core/Renderer';
+import vtkRenderWindow from 'vtk.js/Sources/Rendering/Core/RenderWindow';
 
 import baseline from './testMolecule_with_bonds.png';
 
@@ -18,7 +18,9 @@ test.onlyIfWebGL('Test MoleculeMapper', (t) => {
 
   // Create some control UI
   const container = document.querySelector('body');
-  const renderWindowContainer = gc.registerDOMElement(document.createElement('div'));
+  const renderWindowContainer = gc.registerDOMElement(
+    document.createElement('div')
+  );
   container.appendChild(renderWindowContainer);
 
   // create what we will view
@@ -80,6 +82,13 @@ test.onlyIfWebGL('Test MoleculeMapper', (t) => {
     // the data have to be uploaded before capturing and comparing the images
     const image = glwindow.captureImage();
 
-    testUtils.compareImages(image, [baseline], 'IO/Misc/PDBReader', t, 1, gc.releaseResources);
+    testUtils.compareImages(
+      image,
+      [baseline],
+      'IO/Misc/PDBReader',
+      t,
+      1,
+      gc.releaseResources
+    );
   });
 });

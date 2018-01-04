@@ -1,12 +1,12 @@
-import test      from 'tape-catch';
+import test from 'tape-catch';
 import testUtils from 'vtk.js/Sources/Testing/testUtils';
 
-import vtkActor               from 'vtk.js/Sources/Rendering/Core/Actor';
-import vtkCubeSource          from 'vtk.js/Sources/Filters/Sources/CubeSource';
-import vtkMapper              from 'vtk.js/Sources/Rendering/Core/Mapper';
-import vtkOpenGLRenderWindow  from 'vtk.js/Sources/Rendering/OpenGL/RenderWindow';
-import vtkRenderer            from 'vtk.js/Sources/Rendering/Core/Renderer';
-import vtkRenderWindow        from 'vtk.js/Sources/Rendering/Core/RenderWindow';
+import vtkActor from 'vtk.js/Sources/Rendering/Core/Actor';
+import vtkCubeSource from 'vtk.js/Sources/Filters/Sources/CubeSource';
+import vtkMapper from 'vtk.js/Sources/Rendering/Core/Mapper';
+import vtkOpenGLRenderWindow from 'vtk.js/Sources/Rendering/OpenGL/RenderWindow';
+import vtkRenderer from 'vtk.js/Sources/Rendering/Core/Renderer';
+import vtkRenderWindow from 'vtk.js/Sources/Rendering/Core/RenderWindow';
 
 import baseline from './testCube.png';
 
@@ -16,7 +16,9 @@ test.onlyIfWebGL('Test vtkCubeSource Rendering', (t) => {
 
   // Create some control UI
   const container = document.querySelector('body');
-  const renderWindowContainer = gc.registerDOMElement(document.createElement('div'));
+  const renderWindowContainer = gc.registerDOMElement(
+    document.createElement('div')
+  );
   container.appendChild(renderWindowContainer);
 
   // create what we will view
@@ -25,7 +27,6 @@ test.onlyIfWebGL('Test vtkCubeSource Rendering', (t) => {
   renderWindow.addRenderer(renderer);
   renderer.setBackground(0.32, 0.34, 0.43);
 
-
   const cube0 = gc.registerResource(vtkCubeSource.newInstance());
   const mapperCube0 = gc.registerResource(vtkMapper.newInstance());
   mapperCube0.setInputConnection(cube0.getOutputPort());
@@ -33,12 +34,14 @@ test.onlyIfWebGL('Test vtkCubeSource Rendering', (t) => {
   actorCube0.setMapper(mapperCube0);
   renderer.addActor(actorCube0);
 
-  const cube1 = gc.registerResource(vtkCubeSource.newInstance({
-    xLength: 2.0,
-    yLength: 2.0,
-    zLength: 2.0,
-    center: [3.0, 0.0, 0.0],
-  }));
+  const cube1 = gc.registerResource(
+    vtkCubeSource.newInstance({
+      xLength: 2.0,
+      yLength: 2.0,
+      zLength: 2.0,
+      center: [3.0, 0.0, 0.0],
+    })
+  );
   const mapperCube1 = gc.registerResource(vtkMapper.newInstance());
   mapperCube1.setInputConnection(cube1.getOutputPort());
   const actorCube1 = gc.registerResource(vtkActor.newInstance());
@@ -70,5 +73,12 @@ test.onlyIfWebGL('Test vtkCubeSource Rendering', (t) => {
   glwindow.setSize(400, 400);
 
   const image = glwindow.captureImage();
-  testUtils.compareImages(image, [baseline], 'Filters/Sources/CubeSource/testCube', t, 2.5, gc.releaseResources);
+  testUtils.compareImages(
+    image,
+    [baseline],
+    'Filters/Sources/CubeSource/testCube',
+    t,
+    2.5,
+    gc.releaseResources
+  );
 });

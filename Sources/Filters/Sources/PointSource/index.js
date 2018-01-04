@@ -1,5 +1,5 @@
-import macro       from 'vtk.js/Sources/macro';
-import vtkMath     from 'vtk.js/Sources/Common/Core/Math';
+import macro from 'vtk.js/Sources/macro';
+import vtkMath from 'vtk.js/Sources/Common/Core/Math';
 import vtkPolyData from 'vtk.js/Sources/Common/DataModel/PolyData';
 
 // ----------------------------------------------------------------------------
@@ -18,7 +18,9 @@ function vtkPointSource(publicAPI, model) {
     const dataset = outData[0];
 
     // Check input
-    const pointDataType = dataset ? dataset.getPoints().getDataType() : 'Float32Array';
+    const pointDataType = dataset
+      ? dataset.getPoints().getDataType()
+      : 'Float32Array';
     const pd = vtkPolyData.newInstance();
 
     // hand create a point cloud
@@ -38,14 +40,14 @@ function vtkPointSource(publicAPI, model) {
     let radius;
     let theta;
     for (let i = 0; i < numPts; i++) {
-      cosphi = 1 - (2.0 * vtkMath.random());
-      sinphi = Math.sqrt(1 - (cosphi * cosphi));
+      cosphi = 1 - 2.0 * vtkMath.random();
+      sinphi = Math.sqrt(1 - cosphi * cosphi);
       rho = model.radius * Math.pow(vtkMath.random(), 0.33333333);
       radius = rho * sinphi;
       theta = 2.0 * Math.PI * vtkMath.random();
-      points[(i * 3)] = model.center[0] + (radius * Math.cos(theta));
-      points[(i * 3) + 1] = model.center[1] + (radius * Math.sin(theta));
-      points[(i * 3) + 2] = model.center[2] + (rho * cosphi);
+      points[i * 3] = model.center[0] + radius * Math.cos(theta);
+      points[i * 3 + 1] = model.center[1] + radius * Math.sin(theta);
+      points[i * 3 + 2] = model.center[2] + rho * cosphi;
     }
 
     // Generate point connectivity
@@ -78,13 +80,8 @@ export function extend(publicAPI, model, initialValues = {}) {
 
   // Build VTK API
   macro.obj(publicAPI, model);
-  macro.setGet(publicAPI, model, [
-    'numberOfPoints',
-    'radius',
-  ]);
-  macro.setGetArray(publicAPI, model, [
-    'center',
-  ], 3);
+  macro.setGet(publicAPI, model, ['numberOfPoints', 'radius']);
+  macro.setGetArray(publicAPI, model, ['center'], 3);
   macro.algo(publicAPI, model, 0, 1);
   vtkPointSource(publicAPI, model);
 }

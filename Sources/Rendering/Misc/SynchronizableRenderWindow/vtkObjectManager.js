@@ -1,13 +1,13 @@
-import vtkActor                   from 'vtk.js/Sources/Rendering/Core/Actor';
-import vtkCamera                  from 'vtk.js/Sources/Rendering/Core/Camera';
-import vtkColorTransferFunction   from 'vtk.js/Sources/Rendering/Core/ColorTransferFunction';
-import vtkLookupTable             from 'vtk.js/Sources/Common/Core/LookupTable';
-import vtkMapper                  from 'vtk.js/Sources/Rendering/Core/Mapper';
-import vtkPolyData                from 'vtk.js/Sources/Common/DataModel/PolyData';
-import vtkProperty                from 'vtk.js/Sources/Rendering/Core/Property';
-import vtkRenderer                from 'vtk.js/Sources/Rendering/Core/Renderer';
-import vtkRenderWindow            from 'vtk.js/Sources/Rendering/Core/RenderWindow';
-import vtkDataArray               from 'vtk.js/Sources/Common/Core/DataArray';
+import vtkActor from 'vtk.js/Sources/Rendering/Core/Actor';
+import vtkCamera from 'vtk.js/Sources/Rendering/Core/Camera';
+import vtkColorTransferFunction from 'vtk.js/Sources/Rendering/Core/ColorTransferFunction';
+import vtkLookupTable from 'vtk.js/Sources/Common/Core/LookupTable';
+import vtkMapper from 'vtk.js/Sources/Rendering/Core/Mapper';
+import vtkPolyData from 'vtk.js/Sources/Common/DataModel/PolyData';
+import vtkProperty from 'vtk.js/Sources/Rendering/Core/Property';
+import vtkRenderer from 'vtk.js/Sources/Rendering/Core/Renderer';
+import vtkRenderWindow from 'vtk.js/Sources/Rendering/Core/RenderWindow';
+import vtkDataArray from 'vtk.js/Sources/Common/Core/DataArray';
 
 // ----------------------------------------------------------------------------
 // Some internal, module-level variables and methods
@@ -28,7 +28,10 @@ function extractCallArgs(synchronizerContext, argList) {
 }
 
 function extractInstanceIds(argList) {
-  return argList.map(arg => WRAPPED_ID_RE.exec(arg)).filter(m => m).map(m => m[1]);
+  return argList
+    .map((arg) => WRAPPED_ID_RE.exec(arg))
+    .filter((m) => m)
+    .map((m) => m[1]);
 }
 
 function extractDependencyIds(state, depList = []) {
@@ -134,7 +137,9 @@ function genericUpdater(instance, state, context) {
   }
 
   if (state.calls) {
-    state.calls.forEach(call => instance[call[0]].apply(null, extractCallArgs(context, call[1])));
+    state.calls.forEach((call) =>
+      instance[call[0]].apply(null, extractCallArgs(context, call[1]))
+    );
   }
 
   context.end();
@@ -179,7 +184,7 @@ function rendererUpdater(instance, state, context) {
       if (viewPropInstance) {
         const flattenedDepIds = extractDependencyIds(childState);
         viewPropInstance.set({ flattenedDepIds }, true);
-        flattenedDepIds.forEach(depId => allActorsDeps.add(depId));
+        flattenedDepIds.forEach((depId) => allActorsDeps.add(depId));
       }
     });
   }
@@ -189,26 +194,31 @@ function rendererUpdater(instance, state, context) {
   const unregisterCandidates = new Set();
 
   if (state.calls) {
-    state.calls.filter(call => call[0] === 'removeViewProp').forEach((call) => {
-      // extract any ids associated with a 'removeViewProp' call (though really there
-      // should just be a single one), and use them to build a flat list of all
-      // representation dependency ids which we can then use our synchronizer context
-      // to unregister
-      extractInstanceIds(call[1]).forEach((vpId) => {
-        const deps = context.getInstance(vpId).get('flattenedDepIds').flattenedDepIds;
-        if (deps) {
-          // Consider each dependency for unregistering
-          deps.forEach(depId => unregisterCandidates.add(depId));
-        }
-        // Consider the viewProp itself for unresistering
-        unregisterCandidates.add(vpId);
+    state.calls
+      .filter((call) => call[0] === 'removeViewProp')
+      .forEach((call) => {
+        // extract any ids associated with a 'removeViewProp' call (though really there
+        // should just be a single one), and use them to build a flat list of all
+        // representation dependency ids which we can then use our synchronizer context
+        // to unregister
+        extractInstanceIds(call[1]).forEach((vpId) => {
+          const deps = context.getInstance(vpId).get('flattenedDepIds')
+            .flattenedDepIds;
+          if (deps) {
+            // Consider each dependency for unregistering
+            deps.forEach((depId) => unregisterCandidates.add(depId));
+          }
+          // Consider the viewProp itself for unresistering
+          unregisterCandidates.add(vpId);
+        });
       });
-    });
   }
 
   // Now unregister any instances that are no longer needed
-  const idsToUnregister = [...unregisterCandidates].filter(depId => !allActorsDeps.has(depId));
-  idsToUnregister.forEach(depId => context.unregisterInstance(depId));
+  const idsToUnregister = [...unregisterCandidates].filter(
+    (depId) => !allActorsDeps.has(depId)
+  );
+  idsToUnregister.forEach((depId) => context.unregisterInstance(depId));
 }
 
 // ----------------------------------------------------------------------------
@@ -219,23 +229,25 @@ function vtkRenderWindowUpdater(instance, state, context) {
   // itself.  This will clear the screen, at which point we can go about the normal
   // updater process.
   if (state.calls) {
-    state.calls.filter(call => call[0] === 'removeRenderer').forEach((call) => {
-      extractInstanceIds(call[1]).forEach((renId) => {
-        const renderer = context.getInstance(renId);
-        // Take brief detour through the view props to unregister the dependencies
-        // of each one
-        const viewProps = renderer.getViewProps();
-        viewProps.forEach((viewProp) => {
-          const deps = viewProp.get('flattenedDepIds').flattenedDepIds;
-          if (deps) {
-            deps.forEach(depId => context.unregisterInstance(depId));
-          }
-          context.unregisterInstance(context.getInstanceId(viewProp));
+    state.calls
+      .filter((call) => call[0] === 'removeRenderer')
+      .forEach((call) => {
+        extractInstanceIds(call[1]).forEach((renId) => {
+          const renderer = context.getInstance(renId);
+          // Take brief detour through the view props to unregister the dependencies
+          // of each one
+          const viewProps = renderer.getViewProps();
+          viewProps.forEach((viewProp) => {
+            const deps = viewProp.get('flattenedDepIds').flattenedDepIds;
+            if (deps) {
+              deps.forEach((depId) => context.unregisterInstance(depId));
+            }
+            context.unregisterInstance(context.getInstanceId(viewProp));
+          });
+          // Now just remove all the view props
+          renderer.removeAllViewProps();
         });
-        // Now just remove all the view props
-        renderer.removeAllViewProps();
       });
-    });
   }
 
   instance.render();
@@ -248,7 +260,9 @@ function vtkRenderWindowUpdater(instance, state, context) {
 
 function colorTransferFunctionUpdater(instance, state, context) {
   context.start();
-  const nodes = state.properties.nodes.map(([x, r, g, b, midpoint, sharpness]) => ({ x, r, g, b, midpoint, sharpness }));
+  const nodes = state.properties.nodes.map(
+    ([x, r, g, b, midpoint, sharpness]) => ({ x, r, g, b, midpoint, sharpness })
+  );
   instance.set(Object.assign({}, state.properties, { nodes }), true);
   instance.sortAndUpdateRange();
   instance.modified();
@@ -268,7 +282,7 @@ function polydataUpdater(instance, state, context) {
   ];
 
   function validateDataset() {
-    if ((arraysToBind.length - 2) === nbArrayToDownload) {
+    if (arraysToBind.length - 2 === nbArrayToDownload) {
       while (arraysToBind.length) {
         const [fn, args] = arraysToBind.shift();
         fn(...args);
@@ -283,31 +297,45 @@ function polydataUpdater(instance, state, context) {
     if (props[arrayName]) {
       nbArrayToDownload += 1;
       const arrayMetadata = props[arrayName];
-      context.getArray(arrayMetadata.hash, arrayMetadata.dataType, context)
+      context
+        .getArray(arrayMetadata.hash, arrayMetadata.dataType, context)
         .then(
           (values) => {
-            arraysToBind.push([instance.get(arrayName)[arrayName].setData, [values, arrayMetadata.numberOfComponents]]);
+            arraysToBind.push([
+              instance.get(arrayName)[arrayName].setData,
+              [values, arrayMetadata.numberOfComponents],
+            ]);
             validateDataset();
           },
           (error) => {
             console.log('error geometry fetching array', error);
-          });
+          }
+        );
     }
   });
 
   // Fetch needed data arrays...
   props.fields.forEach((arrayMetadata) => {
-    context.getArray(arrayMetadata.hash, arrayMetadata.dataType, context)
-      .then(
-        (values) => {
-          const array = vtkDataArray.newInstance(Object.assign({ values }, arrayMetadata));
-          const regMethod = arrayMetadata.registration ? arrayMetadata.registration : 'addArray';
-          arraysToBind.push([instance.get(arrayMetadata.location)[arrayMetadata.location][regMethod], [array]]);
-          validateDataset();
-        },
-        (error) => {
-          console.log('error field fetching array', error);
-        });
+    context.getArray(arrayMetadata.hash, arrayMetadata.dataType, context).then(
+      (values) => {
+        const array = vtkDataArray.newInstance(
+          Object.assign({ values }, arrayMetadata)
+        );
+        const regMethod = arrayMetadata.registration
+          ? arrayMetadata.registration
+          : 'addArray';
+        arraysToBind.push([
+          instance.get(arrayMetadata.location)[arrayMetadata.location][
+            regMethod
+          ],
+          [array],
+        ]);
+        validateDataset();
+      },
+      (error) => {
+        console.log('error field fetching array', error);
+      }
+    );
   });
 }
 
@@ -357,7 +385,6 @@ const DEFAULT_MAPPING = {
     update: vtkRenderWindowUpdater,
   },
 };
-
 
 function setDefaultMapping(reset = true) {
   if (reset) {

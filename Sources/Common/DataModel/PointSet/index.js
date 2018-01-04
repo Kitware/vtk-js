@@ -1,7 +1,7 @@
-import vtk        from 'vtk.js/Sources/vtk';
-import macro      from 'vtk.js/Sources/macro';
+import vtk from 'vtk.js/Sources/vtk';
+import macro from 'vtk.js/Sources/macro';
 import vtkDataSet from 'vtk.js/Sources/Common/DataModel/DataSet';
-import vtkPoints  from 'vtk.js/Sources/Common/Core/Points';
+import vtkPoints from 'vtk.js/Sources/Common/Core/Points';
 
 // ----------------------------------------------------------------------------
 // Global methods

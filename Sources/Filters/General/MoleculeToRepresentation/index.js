@@ -1,9 +1,9 @@
-import macro        from 'vtk.js/Sources/macro';
-import vtkPolyData  from 'vtk.js/Sources/Common/DataModel/PolyData';
+import macro from 'vtk.js/Sources/macro';
+import vtkPolyData from 'vtk.js/Sources/Common/DataModel/PolyData';
 import vtkDataArray from 'vtk.js/Sources/Common/Core/DataArray';
-import vtkMath      from 'vtk.js/Sources/Common/Core/Math';
+import vtkMath from 'vtk.js/Sources/Common/Core/Math';
 
-import atomElem     from 'vtk.js/Utilities/XMLConverter/chemistry/elements.json';
+import atomElem from 'vtk.js/Utilities/XMLConverter/chemistry/elements.json';
 
 const { vtkErrorMacro, vtkDebugMacro } = macro;
 
@@ -12,7 +12,9 @@ const { vtkErrorMacro, vtkDebugMacro } = macro;
 // ----------------------------------------------------------------------------
 
 const ATOMS = {};
-atomElem.atoms.forEach((a) => { ATOMS[a.atomicNumber] = a; });
+atomElem.atoms.forEach((a) => {
+  ATOMS[a.atomicNumber] = a;
+});
 
 // ----------------------------------------------------------------------------
 // vtkMoleculeToRepresentation methods
@@ -146,22 +148,27 @@ function vtkMoleculeToRepresentation(publicAPI, model) {
           const cutoff = covalentArray[i] + covalentArray[j] + model.tolerance;
           const jPtsIdx = j * 3;
           const iPtsIdx = i * 3;
-          const diff = [pointsArray[jPtsIdx],
+          const diff = [
+            pointsArray[jPtsIdx],
             pointsArray[jPtsIdx + 1],
-            pointsArray[jPtsIdx + 2]];
+            pointsArray[jPtsIdx + 2],
+          ];
           diff[0] -= pointsArray[iPtsIdx];
           diff[1] -= pointsArray[iPtsIdx + 1];
           diff[2] -= pointsArray[iPtsIdx + 2];
 
-          if (Math.abs(diff[0]) > cutoff ||
-              Math.abs(diff[1]) > cutoff ||
-              Math.abs(diff[2]) > cutoff) {
+          if (
+            Math.abs(diff[0]) > cutoff ||
+            Math.abs(diff[1]) > cutoff ||
+            Math.abs(diff[2]) > cutoff
+          ) {
             continue;
           }
 
           // Check radius and add bond if needed
           const cutoffSq = cutoff * cutoff;
-          const diffsq = (diff[0] * diff[0]) + (diff[1] * diff[1]) + (diff[2] * diff[2]);
+          const diffsq =
+            diff[0] * diff[0] + diff[1] * diff[1] + diff[2] * diff[2];
           if (diffsq < cutoffSq && diffsq > 0.1) {
             // appendBond between i and j
             bondIndex.push(i);
@@ -177,33 +184,48 @@ function vtkMoleculeToRepresentation(publicAPI, model) {
     for (let index = 0; index < numBonds; index++) {
       // appendBond between i and j
       const i = bondIndex[index * 2];
-      const j = bondIndex[(index * 2) + 1];
+      const j = bondIndex[index * 2 + 1];
 
       // Do not append if i or j belong to element to not display
-      if (model.hideElements.includes(ATOMS[atomicNumber[i]].id) ||
-        model.hideElements.includes(ATOMS[atomicNumber[j]].id)) {
+      if (
+        model.hideElements.includes(ATOMS[atomicNumber[i]].id) ||
+        model.hideElements.includes(ATOMS[atomicNumber[j]].id)
+      ) {
         continue;
       }
 
       const jPtsIdx = j * 3;
       const iPtsIdx = i * 3;
-      const diff = [pointsArray[jPtsIdx],
+      const diff = [
+        pointsArray[jPtsIdx],
         pointsArray[jPtsIdx + 1],
-        pointsArray[jPtsIdx + 2]];
+        pointsArray[jPtsIdx + 2],
+      ];
       diff[0] -= pointsArray[iPtsIdx];
       diff[1] -= pointsArray[iPtsIdx + 1];
       diff[2] -= pointsArray[iPtsIdx + 2];
-      const diffsq = (diff[0] * diff[0]) + (diff[1] * diff[1]) + (diff[2] * diff[2]);
+      const diffsq = diff[0] * diff[0] + diff[1] * diff[1] + diff[2] * diff[2];
 
-      const radiusJsq = radiusArray[j] * model.atomicRadiusScaleFactor * radiusArray[j] * model.atomicRadiusScaleFactor;
-      const radiusIsq = radiusArray[i] * model.atomicRadiusScaleFactor * radiusArray[i] * model.atomicRadiusScaleFactor;
+      const radiusJsq =
+        radiusArray[j] *
+        model.atomicRadiusScaleFactor *
+        radiusArray[j] *
+        model.atomicRadiusScaleFactor;
+      const radiusIsq =
+        radiusArray[i] *
+        model.atomicRadiusScaleFactor *
+        radiusArray[i] *
+        model.atomicRadiusScaleFactor;
       let bondDelta = (2 + model.deltaBondFactor) * model.bondRadius; // distance between 2 bonds
 
       // scale bonds if total distance from bonds is bigger than 2r*factor with r = min(r_i, r_j)
-      const r = Math.min(radiusArray[i] * model.atomicRadiusScaleFactor, radiusArray[j] * model.atomicRadiusScaleFactor);
-      const t = ((bondOrder[index] - 1) * bondDelta) + (2 * model.bondRadius);
+      const r = Math.min(
+        radiusArray[i] * model.atomicRadiusScaleFactor,
+        radiusArray[j] * model.atomicRadiusScaleFactor
+      );
+      const t = (bondOrder[index] - 1) * bondDelta + 2 * model.bondRadius;
       if (t > 2 * r * 0.6) {
-        model.bondRadius *= ((2 * r * 0.6) / t);
+        model.bondRadius *= 2 * r * 0.6 / t;
         // recompute bondDelta
         bondDelta = (2 + model.deltaBondFactor) * model.bondRadius; // distance between 2 bonds
       }
@@ -219,37 +241,55 @@ function vtkMoleculeToRepresentation(publicAPI, model) {
       //   - odd order: x * 2 <=> x * 2 + 1 - 1
       //   - even order: x * 2 + 1
       // (with x the loop <=> floor(k/2))
-      const oddOrEven = ((bondOrder[index]) % 2); // zero if even order / one if odd order
+      const oddOrEven = bondOrder[index] % 2; // zero if even order / one if odd order
       for (let k = oddOrEven; k < bondOrder[index] + oddOrEven; k++) {
         // dist from center to bond depending of number of bond
-        let offset = ((((Math.floor(k / 2) * 2) + 1) - oddOrEven) * bondDelta) / 2;
+        let offset = (Math.floor(k / 2) * 2 + 1 - oddOrEven) * bondDelta / 2;
 
         // offset between center of SphereJ (resp. SphereI) and the start of the bond
-        const offsetJ = Math.sqrt(radiusJsq - Math.pow(model.bondRadius + offset, 2));
-        const offsetI = Math.sqrt(radiusIsq - Math.pow(model.bondRadius + offset, 2));
+        const offsetJ = Math.sqrt(
+          radiusJsq - Math.pow(model.bondRadius + offset, 2)
+        );
+        const offsetI = Math.sqrt(
+          radiusIsq - Math.pow(model.bondRadius + offset, 2)
+        );
         const vectUnitJI = [
           diff[0] / Math.sqrt(diffsq),
           diff[1] / Math.sqrt(diffsq),
-          diff[2] / Math.sqrt(diffsq)];
+          diff[2] / Math.sqrt(diffsq),
+        ];
         const vectUnitJIperp = [0, 0, 0];
         // Search perp to vectUnitJI: find axis != 0 to create vectUnitJIperp such as dot(vectUnitJIperp,vectUnitJI) = 0
         for (let coord = 0; coord < 3; coord++) {
           if (Math.abs(vectUnitJI[coord]) < 0.000001) {
             continue;
           }
-          vectUnitJIperp[coord] = (-((vectUnitJI[(coord + 2) % 3] * vectUnitJI[(coord + 2) % 3]) +
-            (vectUnitJI[(coord + 1) % 3] * vectUnitJI[(coord + 1) % 3])) / vectUnitJI[coord]);
-          vectUnitJIperp[(coord + 1) % 3] = (vectUnitJI[(coord + 1) % 3]);
-          vectUnitJIperp[(coord + 2) % 3] = (vectUnitJI[(coord + 2) % 3]);
+          vectUnitJIperp[coord] =
+            -(
+              vectUnitJI[(coord + 2) % 3] * vectUnitJI[(coord + 2) % 3] +
+              vectUnitJI[(coord + 1) % 3] * vectUnitJI[(coord + 1) % 3]
+            ) / vectUnitJI[coord];
+          vectUnitJIperp[(coord + 1) % 3] = vectUnitJI[(coord + 1) % 3];
+          vectUnitJIperp[(coord + 2) % 3] = vectUnitJI[(coord + 2) % 3];
           vtkMath.normalize(vectUnitJIperp);
           break;
         }
 
         offset *= Math.pow(-1, k % 2);
         const bondPos = [
-          pointsArray[jPtsIdx] - (((offsetJ - offsetI) * vectUnitJI[0]) / 2.0) - (diff[0] / 2.0) + (offset * vectUnitJIperp[0]),
-          pointsArray[jPtsIdx + 1] - (((offsetJ - offsetI) * vectUnitJI[1]) / 2.0) - (diff[1] / 2.0) + (offset * vectUnitJIperp[1]),
-          pointsArray[jPtsIdx + 2] - (((offsetJ - offsetI) * vectUnitJI[2]) / 2.0) - (diff[2] / 2.0) + (offset * vectUnitJIperp[2])];
+          pointsArray[jPtsIdx] -
+            (offsetJ - offsetI) * vectUnitJI[0] / 2.0 -
+            diff[0] / 2.0 +
+            offset * vectUnitJIperp[0],
+          pointsArray[jPtsIdx + 1] -
+            (offsetJ - offsetI) * vectUnitJI[1] / 2.0 -
+            diff[1] / 2.0 +
+            offset * vectUnitJIperp[1],
+          pointsArray[jPtsIdx + 2] -
+            (offsetJ - offsetI) * vectUnitJI[2] / 2.0 -
+            diff[2] / 2.0 +
+            offset * vectUnitJIperp[2],
+        ];
         const bondLenght = Math.sqrt(diffsq) - offsetJ - offsetI;
 
         addBond(bondPos, vectUnitJI, bondLenght);
@@ -259,22 +299,37 @@ function vtkMoleculeToRepresentation(publicAPI, model) {
     SphereData.getPoints().setData(pointsData, 3);
 
     if (radiusArray) {
-      const scales = vtkDataArray.newInstance({ numberOfComponents: 1, values: scaleData, name: publicAPI.getSphereScaleArrayName() });
+      const scales = vtkDataArray.newInstance({
+        numberOfComponents: 1,
+        values: scaleData,
+        name: publicAPI.getSphereScaleArrayName(),
+      });
       SphereData.getPointData().addArray(scales);
     }
 
     if (colorArray) {
-      const colors = vtkDataArray.newInstance({ numberOfComponents: 3, values: Uint8Array.from(colorData), name: 'colors' });
+      const colors = vtkDataArray.newInstance({
+        numberOfComponents: 3,
+        values: Uint8Array.from(colorData),
+        name: 'colors',
+      });
       SphereData.getPointData().setScalars(colors);
     }
 
-
     StickData.getPoints().setData(bondPositionData, 3);
 
-    const stickScales = vtkDataArray.newInstance({ numberOfComponents: 2, values: bondScaleData, name: 'stickScales' });
+    const stickScales = vtkDataArray.newInstance({
+      numberOfComponents: 2,
+      values: bondScaleData,
+      name: 'stickScales',
+    });
     StickData.getPointData().addArray(stickScales);
 
-    const orientation = vtkDataArray.newInstance({ numberOfComponents: 3, values: bondOrientationData, name: 'orientation' });
+    const orientation = vtkDataArray.newInstance({
+      numberOfComponents: 3,
+      values: bondOrientationData,
+      name: 'orientation',
+    });
     StickData.getPointData().addArray(orientation);
 
     // Update output
@@ -317,7 +372,10 @@ export function extend(publicAPI, model, initialValues = {}) {
 
 // ----------------------------------------------------------------------------
 
-export const newInstance = macro.newInstance(extend, 'vtkMoleculeToRepresentation');
+export const newInstance = macro.newInstance(
+  extend,
+  'vtkMoleculeToRepresentation'
+);
 
 // ----------------------------------------------------------------------------
 

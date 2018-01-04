@@ -1,4 +1,4 @@
-import test      from 'tape-catch';
+import test from 'tape-catch';
 import testUtils from 'vtk.js/Sources/Testing/testUtils';
 
 import vtkCamera from 'vtk.js/Sources/Rendering/Core/Camera';
@@ -10,12 +10,26 @@ import vtkRenderWindow from 'vtk.js/Sources/Rendering/Core/RenderWindow';
 test('Test vtkCoordinate publicAPI', (t) => {
   const gc = testUtils.createGarbageCollector(t);
 
-  const testGetters = (coords, ren, value, world, display, localDisplay, viewPort) => {
+  const testGetters = (
+    coords,
+    ren,
+    value,
+    world,
+    display,
+    localDisplay,
+    viewPort
+  ) => {
     coords.setValue(value);
     const currWorld = coords.getComputedWorldValue(ren);
-    const v0 = Number(parseFloat(Math.round(currWorld[0] * 100) / 100).toFixed(2));
-    const v1 = Number(parseFloat(Math.round(currWorld[1] * 100) / 100).toFixed(2));
-    const v2 = Number(parseFloat(Math.round(currWorld[2] * 100) / 100).toFixed(2));
+    const v0 = Number(
+      parseFloat(Math.round(currWorld[0] * 100) / 100).toFixed(2)
+    );
+    const v1 = Number(
+      parseFloat(Math.round(currWorld[1] * 100) / 100).toFixed(2)
+    );
+    const v2 = Number(
+      parseFloat(Math.round(currWorld[2] * 100) / 100).toFixed(2)
+    );
     t.deepEqual([v0, v1, v2], world);
 
     const currDisplay = coords.getComputedDisplayValue(ren);
@@ -30,7 +44,9 @@ test('Test vtkCoordinate publicAPI', (t) => {
 
   // Create some control UI
   const container = document.querySelector('body');
-  const renderWindowContainer = gc.registerDOMElement(document.createElement('div'));
+  const renderWindowContainer = gc.registerDOMElement(
+    document.createElement('div')
+  );
   container.appendChild(renderWindowContainer);
 
   // create what we will view

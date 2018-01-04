@@ -1,17 +1,20 @@
-import macro                from 'vtk.js/Sources/macro';
+import macro from 'vtk.js/Sources/macro';
 import { vec3, mat3, mat4 } from 'gl-matrix';
 // import vtkBoundingBox       from 'vtk.js/Sources/Common/DataModel/BoundingBox';
-import vtkDataArray         from 'vtk.js/Sources/Common/Core/DataArray';
-import { VtkDataTypes }     from 'vtk.js/Sources/Common/Core/DataArray/Constants';
-import vtkHelper            from 'vtk.js/Sources/Rendering/OpenGL/Helper';
-import vtkMath              from 'vtk.js/Sources/Common/Core/Math';
+import vtkDataArray from 'vtk.js/Sources/Common/Core/DataArray';
+import { VtkDataTypes } from 'vtk.js/Sources/Common/Core/DataArray/Constants';
+import vtkHelper from 'vtk.js/Sources/Rendering/OpenGL/Helper';
+import vtkMath from 'vtk.js/Sources/Common/Core/Math';
 import vtkOpenGLFramebuffer from 'vtk.js/Sources/Rendering/OpenGL/Framebuffer';
-import vtkOpenGLTexture     from 'vtk.js/Sources/Rendering/OpenGL/Texture';
-import vtkShaderProgram     from 'vtk.js/Sources/Rendering/OpenGL/ShaderProgram';
+import vtkOpenGLTexture from 'vtk.js/Sources/Rendering/OpenGL/Texture';
+import vtkShaderProgram from 'vtk.js/Sources/Rendering/OpenGL/ShaderProgram';
 import vtkVertexArrayObject from 'vtk.js/Sources/Rendering/OpenGL/VertexArrayObject';
-import vtkViewNode          from 'vtk.js/Sources/Rendering/SceneGraph/ViewNode';
-import { Representation }   from 'vtk.js/Sources/Rendering/Core/Property/Constants';
-import { Wrap, Filter }     from 'vtk.js/Sources/Rendering/OpenGL/Texture/Constants';
+import vtkViewNode from 'vtk.js/Sources/Rendering/SceneGraph/ViewNode';
+import { Representation } from 'vtk.js/Sources/Rendering/Core/Property/Constants';
+import {
+  Wrap,
+  Filter,
+} from 'vtk.js/Sources/Rendering/OpenGL/Texture/Constants';
 import { InterpolationType } from 'vtk.js/Sources/Rendering/Core/VolumeProperty/Constants';
 
 import vtkVolumeVS from 'vtk.js/Sources/Rendering/OpenGL/glsl/vtkVolumeVS.glsl';
@@ -46,7 +49,9 @@ function vtkOpenGLVolumeMapper(publicAPI, model) {
   // Renders myself
   publicAPI.volumePass = (prepass, renderPass) => {
     if (prepass) {
-      model.openGLRenderWindow = publicAPI.getFirstAncestorOfType('vtkOpenGLRenderWindow');
+      model.openGLRenderWindow = publicAPI.getFirstAncestorOfType(
+        'vtkOpenGLRenderWindow'
+      );
       model.context = model.openGLRenderWindow.getContext();
       model.tris.setOpenGLRenderWindow(model.openGLRenderWindow);
       model.scalarTexture.setOpenGLRenderWindow(model.openGLRenderWindow);
@@ -58,9 +63,13 @@ function vtkOpenGLVolumeMapper(publicAPI, model) {
 
       model.openGLVolume = publicAPI.getFirstAncestorOfType('vtkOpenGLVolume');
       const actor = model.openGLVolume.getRenderable();
-      model.openGLRenderer = publicAPI.getFirstAncestorOfType('vtkOpenGLRenderer');
+      model.openGLRenderer = publicAPI.getFirstAncestorOfType(
+        'vtkOpenGLRenderer'
+      );
       const ren = model.openGLRenderer.getRenderable();
-      model.openGLCamera = model.openGLRenderer.getViewNodeFor(ren.getActiveCamera());
+      model.openGLCamera = model.openGLRenderer.getViewNodeFor(
+        ren.getActiveCamera()
+      );
       publicAPI.renderPiece(ren, actor);
     }
   };
@@ -92,65 +101,77 @@ function vtkOpenGLVolumeMapper(publicAPI, model) {
       // for lighting and gradient opacity we need the
       // normal texture
       if (gopacity || model.lastLightComplexity > 0) {
-        FSSource = vtkShaderProgram.substitute(FSSource,
-          '//VTK::Normal::Dec', [
-            'uniform highp sampler3D normalTexture;',
-          ]).result;
-        FSSource = vtkShaderProgram.substitute(FSSource,
-          '//VTK::Normal::Impl', [
-            'vec4 normal = texture(normalTexture, ijk);',
-          ]).result;
+        FSSource = vtkShaderProgram.substitute(FSSource, '//VTK::Normal::Dec', [
+          'uniform highp sampler3D normalTexture;',
+        ]).result;
+        FSSource = vtkShaderProgram.substitute(
+          FSSource,
+          '//VTK::Normal::Impl',
+          ['vec4 normal = texture(normalTexture, ijk);']
+        ).result;
       }
-    } else { // WebGL1
+    } else {
+      // WebGL1
       // compute the tcoords
       if (iType === InterpolationType.LINEAR) {
-        FSSource = vtkShaderProgram.substitute(FSSource,
-          '//VTK::ComputeTCoords', [
+        FSSource = vtkShaderProgram.substitute(
+          FSSource,
+          '//VTK::ComputeTCoords',
+          [
             'vec2 tpos = getTextureCoord(ijk, 0.0);',
             'vec2 tpos2 = getTextureCoord(ijk, 1.0);',
             'float zmix = ijk.z - floor(ijk.z);',
-          ]).result;
+          ]
+        ).result;
       } else {
-        FSSource = vtkShaderProgram.substitute(FSSource,
-          '//VTK::ComputeTCoords', [
-            'vec2 tpos = getTextureCoord(ijk, 0.5);',
-          ]).result;
+        FSSource = vtkShaderProgram.substitute(
+          FSSource,
+          '//VTK::ComputeTCoords',
+          ['vec2 tpos = getTextureCoord(ijk, 0.5);']
+        ).result;
       }
 
       // compute the scalar value
       if (iType === InterpolationType.LINEAR) {
-        FSSource = vtkShaderProgram.substitute(FSSource,
-          '//VTK::ScalarFunction', [
+        FSSource = vtkShaderProgram.substitute(
+          FSSource,
+          '//VTK::ScalarFunction',
+          [
             'scalar = getScalarValue(tpos);',
             'float scalar2 = getScalarValue(tpos2);',
             'scalar = mix(scalar, scalar2, zmix);',
-          ]).result;
+          ]
+        ).result;
       } else {
-        FSSource = vtkShaderProgram.substitute(FSSource,
-          '//VTK::ScalarFunction', [
-            'scalar = getScalarValue(tpos);',
-          ]).result;
+        FSSource = vtkShaderProgram.substitute(
+          FSSource,
+          '//VTK::ScalarFunction',
+          ['scalar = getScalarValue(tpos);']
+        ).result;
       }
 
       // for lighting and gradient opacity we need the
       // normal texture
       if (gopacity || model.lastLightComplexity > 0) {
-        FSSource = vtkShaderProgram.substitute(FSSource,
-          '//VTK::Normal::Dec', [
-            'uniform sampler2D normalTexture;',
-          ]).result;
+        FSSource = vtkShaderProgram.substitute(FSSource, '//VTK::Normal::Dec', [
+          'uniform sampler2D normalTexture;',
+        ]).result;
         if (iType === InterpolationType.LINEAR) {
-          FSSource = vtkShaderProgram.substitute(FSSource,
-            '//VTK::Normal::Impl', [
+          FSSource = vtkShaderProgram.substitute(
+            FSSource,
+            '//VTK::Normal::Impl',
+            [
               'vec4 normal = texture2D(normalTexture, tpos);',
               'vec4 normal2 = texture2D(normalTexture, tpos2);',
               'normal = mix(normal, normal2, zmix);',
-            ]).result;
+            ]
+          ).result;
         } else {
-          FSSource = vtkShaderProgram.substitute(FSSource,
-            '//VTK::Normal::Impl', [
-              'vec4 normal = texture2D(normalTexture,tpos);',
-            ]).result;
+          FSSource = vtkShaderProgram.substitute(
+            FSSource,
+            '//VTK::Normal::Impl',
+            ['vec4 normal = texture2D(normalTexture,tpos);']
+          ).result;
         }
       }
 
@@ -158,15 +179,20 @@ function vtkOpenGLVolumeMapper(publicAPI, model) {
       // rgb then add the right call to decode them
       // otherwise the generic texture lookup
       if (volInfo.encodedScalars) {
-        FSSource = vtkShaderProgram.substitute(FSSource,
-          '//VTK::ScalarValueFunction::Impl', [
+        FSSource = vtkShaderProgram.substitute(
+          FSSource,
+          '//VTK::ScalarValueFunction::Impl',
+          [
             'vec4 scalarComps = texture2D(texture1, tpos);',
             'return scalarComps.r + scalarComps.g/255.0 + scalarComps.b/65025.0;',
-          ]).result;
+          ]
+        ).result;
       } else {
-        FSSource = vtkShaderProgram.substitute(FSSource,
+        FSSource = vtkShaderProgram.substitute(
+          FSSource,
           '//VTK::ScalarValueFunction::Impl',
-          'return texture2D(texture1, tpos).r;').result;
+          'return texture2D(texture1, tpos).r;'
+        ).result;
       }
 
       // WebGL only supports loops over constants
@@ -179,49 +205,58 @@ function vtkOpenGLVolumeMapper(publicAPI, model) {
       const ext = model.currentInput.getExtent();
       const spc = model.currentInput.getSpacing();
       const vsize = vec3.create();
-      vec3.set(vsize,
+      vec3.set(
+        vsize,
         (ext[1] - ext[0]) * spc[0],
         (ext[3] - ext[2]) * spc[1],
-        (ext[5] - ext[4]) * spc[2]);
-      const maxSamples = vec3.length(vsize) / model.renderable.getSampleDistance();
+        (ext[5] - ext[4]) * spc[2]
+      );
+      const maxSamples =
+        vec3.length(vsize) / model.renderable.getSampleDistance();
 
-      FSSource = vtkShaderProgram.substitute(FSSource,
+      FSSource = vtkShaderProgram.substitute(
+        FSSource,
         '//VTK::MaximumSamplesValue',
-        `${Math.ceil(maxSamples)}`).result;
+        `${Math.ceil(maxSamples)}`
+      ).result;
     }
 
     // if using gradient opacity apply that
     if (gopacity) {
-      FSSource = vtkShaderProgram.substitute(FSSource,
-        '//VTK::GradientOpacity::Dec', [
+      FSSource = vtkShaderProgram.substitute(
+        FSSource,
+        '//VTK::GradientOpacity::Dec',
+        [
           'uniform float goscale;',
           'uniform float goshift;',
           'uniform float gomin;',
           'uniform float gomax;',
-        ]).result;
-      FSSource = vtkShaderProgram.substitute(FSSource,
-        '//VTK::GradientOpacity::Impl', [
+        ]
+      ).result;
+      FSSource = vtkShaderProgram.substitute(
+        FSSource,
+        '//VTK::GradientOpacity::Impl',
+        [
           'tcolor.a = tcolor.a*clamp(normal.a*normal.a*goscale + goshift, gomin, gomax);',
-        ]).result;
+        ]
+      ).result;
     }
 
     // if we have a ztexture then declare it and use it
     if (model.zBufferTexture !== null) {
-      FSSource = vtkShaderProgram.substitute(FSSource,
-        '//VTK::ZBuffer::Dec', [
-          'uniform sampler2D zBufferTexture;',
-          'uniform float vpWidth;',
-          'uniform float vpHeight;',
-        ]).result;
-      FSSource = vtkShaderProgram.substitute(FSSource,
-        '//VTK::ZBuffer::Impl', [
-          'vec4 depthVec = texture2D(zBufferTexture, vec2(gl_FragCoord.x / vpWidth, gl_FragCoord.y/vpHeight));',
-          'float zdepth = (depthVec.r*256.0 + depthVec.g)/257.0;',
-          'zdepth = zdepth * 2.0 - 1.0;',
-          'zdepth = -2.0 * camFar * camNear / (zdepth*(camFar-camNear)-(camFar+camNear)) - camNear;',
-          'zdepth = -zdepth/rayDir.z;',
-          'tbounds.y = min(zdepth,tbounds.y);',
-        ]).result;
+      FSSource = vtkShaderProgram.substitute(FSSource, '//VTK::ZBuffer::Dec', [
+        'uniform sampler2D zBufferTexture;',
+        'uniform float vpWidth;',
+        'uniform float vpHeight;',
+      ]).result;
+      FSSource = vtkShaderProgram.substitute(FSSource, '//VTK::ZBuffer::Impl', [
+        'vec4 depthVec = texture2D(zBufferTexture, vec2(gl_FragCoord.x / vpWidth, gl_FragCoord.y/vpHeight));',
+        'float zdepth = (depthVec.r*256.0 + depthVec.g)/257.0;',
+        'zdepth = zdepth * 2.0 - 1.0;',
+        'zdepth = -2.0 * camFar * camNear / (zdepth*(camFar-camNear)-(camFar+camNear)) - camNear;',
+        'zdepth = -zdepth/rayDir.z;',
+        'tbounds.y = min(zdepth,tbounds.y);',
+      ]).result;
     }
 
     shaders.Fragment = FSSource;
@@ -240,16 +275,24 @@ function vtkOpenGLVolumeMapper(publicAPI, model) {
       case 0: // no lighting, tcolor is fine as is
         break;
 
-      case 1:  // headlight
+      case 1: // headlight
       case 2: // light kit
-      case 3: { // positional not implemented fallback to directional
-        FSSource = vtkShaderProgram.substitute(FSSource, '//VTK::Light::Dec', [
-          'uniform float vSpecularPower;',
-          'uniform float vAmbient;',
-          'uniform float vDiffuse;',
-          'uniform float vSpecular;',
-          '//VTK::Light::Dec'], false).result;
-        FSSource = vtkShaderProgram.substitute(FSSource,
+      case 3: {
+        // positional not implemented fallback to directional
+        FSSource = vtkShaderProgram.substitute(
+          FSSource,
+          '//VTK::Light::Dec',
+          [
+            'uniform float vSpecularPower;',
+            'uniform float vAmbient;',
+            'uniform float vDiffuse;',
+            'uniform float vSpecular;',
+            '//VTK::Light::Dec',
+          ],
+          false
+        ).result;
+        FSSource = vtkShaderProgram.substitute(
+          FSSource,
           '//VTK::Light::Impl',
           [
             '  normal.rgb = 2.0*(normal.rgb - 0.5);',
@@ -258,31 +301,41 @@ function vtkOpenGLVolumeMapper(publicAPI, model) {
             '  //VTK::Light::Impl',
             '  tcolor.rgb = tcolor.rgb*(diffuse*vDiffuse + vAmbient) + specular*vSpecular;',
           ],
-          false,
-          ).result;
+          false
+        ).result;
         let lightNum = 0;
         ren.getLights().forEach((light) => {
           const status = light.getSwitch();
           if (status > 0) {
-            FSSource = vtkShaderProgram.substitute(FSSource, '//VTK::Light::Dec', [
-              // intensity weighted color
-              `uniform vec3 lightColor${lightNum};`,
-              `uniform vec3 lightDirectionWC${lightNum}; // normalized`,
-              `uniform vec3 lightHalfAngleWC${lightNum}; // normalized`,
-              '//VTK::Light::Dec'], false).result;
-            FSSource = vtkShaderProgram.substitute(FSSource, '//VTK::Light::Impl', [
-//              `  float df = max(0.0, dot(normal.rgb, -lightDirectionWC${lightNum}));`,
-              `  float df = abs(dot(normal.rgb, -lightDirectionWC${lightNum}));`,
-              `  diffuse += ((df${shadowFactor}) * lightColor${lightNum});`,
-              // '  if (df > 0.0)',
-              // '    {',
-//              `    float sf = pow( max(0.0, dot(lightHalfAngleWC${lightNum},normal.rgb)), specularPower);`,
-              `    float sf = pow( abs(dot(lightHalfAngleWC${lightNum},normal.rgb)), vSpecularPower);`,
-              `    specular += ((sf${shadowFactor}) * lightColor${lightNum});`,
-//              '    }',
-              '  //VTK::Light::Impl'],
-              false,
-              ).result;
+            FSSource = vtkShaderProgram.substitute(
+              FSSource,
+              '//VTK::Light::Dec',
+              [
+                // intensity weighted color
+                `uniform vec3 lightColor${lightNum};`,
+                `uniform vec3 lightDirectionWC${lightNum}; // normalized`,
+                `uniform vec3 lightHalfAngleWC${lightNum}; // normalized`,
+                '//VTK::Light::Dec',
+              ],
+              false
+            ).result;
+            FSSource = vtkShaderProgram.substitute(
+              FSSource,
+              '//VTK::Light::Impl',
+              [
+                //              `  float df = max(0.0, dot(normal.rgb, -lightDirectionWC${lightNum}));`,
+                `  float df = abs(dot(normal.rgb, -lightDirectionWC${lightNum}));`,
+                `  diffuse += ((df${shadowFactor}) * lightColor${lightNum});`,
+                // '  if (df > 0.0)',
+                // '    {',
+                //              `    float sf = pow( max(0.0, dot(lightHalfAngleWC${lightNum},normal.rgb)), specularPower);`,
+                `    float sf = pow( abs(dot(lightHalfAngleWC${lightNum},normal.rgb)), vSpecularPower);`,
+                `    specular += ((sf${shadowFactor}) * lightColor${lightNum});`,
+                //              '    }',
+                '  //VTK::Light::Impl',
+              ],
+              false
+            ).result;
             lightNum++;
           }
         });
@@ -310,14 +363,15 @@ function vtkOpenGLVolumeMapper(publicAPI, model) {
           }
         }
 
-        if (lightComplexity === 1
-            && (model.numberOfLights > 1
-              || light.getIntensity() !== 1.0
-              || !light.lightTypeIsHeadLight())) {
+        if (
+          lightComplexity === 1 &&
+          (model.numberOfLights > 1 ||
+            light.getIntensity() !== 1.0 ||
+            !light.lightTypeIsHeadLight())
+        ) {
           lightComplexity = 2;
         }
-        if (lightComplexity < 3
-            && (light.getPositional())) {
+        if (lightComplexity < 3 && light.getPositional()) {
           lightComplexity = 3;
         }
       });
@@ -330,12 +384,14 @@ function vtkOpenGLVolumeMapper(publicAPI, model) {
     }
 
     // has something changed that would require us to recreate the shader?
-    if (cellBO.getProgram() === 0 ||
-        needRebuild ||
-        model.lastZBufferTexture !== model.zBufferTexture ||
-        cellBO.getShaderSourceTime().getMTime() < publicAPI.getMTime() ||
-        cellBO.getShaderSourceTime().getMTime() < actor.getMTime() ||
-        cellBO.getShaderSourceTime().getMTime() < model.currentInput.getMTime()) {
+    if (
+      cellBO.getProgram() === 0 ||
+      needRebuild ||
+      model.lastZBufferTexture !== model.zBufferTexture ||
+      cellBO.getShaderSourceTime().getMTime() < publicAPI.getMTime() ||
+      cellBO.getShaderSourceTime().getMTime() < actor.getMTime() ||
+      cellBO.getShaderSourceTime().getMTime() < model.currentInput.getMTime()
+    ) {
       model.lastZBufferTexture = model.zBufferTexture;
       return true;
     }
@@ -353,8 +409,13 @@ function vtkOpenGLVolumeMapper(publicAPI, model) {
       publicAPI.buildShaders(shaders, ren, actor);
 
       // compile and bind the program if needed
-      const newShader =
-        model.openGLRenderWindow.getShaderCache().readyShaderProgramArray(shaders.Vertex, shaders.Fragment, shaders.Geometry);
+      const newShader = model.openGLRenderWindow
+        .getShaderCache()
+        .readyShaderProgramArray(
+          shaders.Vertex,
+          shaders.Fragment,
+          shaders.Geometry
+        );
 
       // if the shader changed reinitialize the VAO
       if (newShader !== cellBO.getProgram()) {
@@ -365,7 +426,9 @@ function vtkOpenGLVolumeMapper(publicAPI, model) {
 
       cellBO.getShaderSourceTime().modified();
     } else {
-      model.openGLRenderWindow.getShaderCache().readyShaderProgram(cellBO.getProgram());
+      model.openGLRenderWindow
+        .getShaderCache()
+        .readyShaderProgram(cellBO.getProgram());
     }
 
     cellBO.getVAO().bind();
@@ -378,29 +441,43 @@ function vtkOpenGLVolumeMapper(publicAPI, model) {
     // Now to update the VAO too, if necessary.
     const program = cellBO.getProgram();
 
-    if (cellBO.getCABO().getElementCount() &&
-        (model.VBOBuildTime.getMTime() > cellBO.getAttributeUpdateTime().getMTime() ||
-        cellBO.getShaderSourceTime().getMTime() > cellBO.getAttributeUpdateTime().getMTime())) {
+    if (
+      cellBO.getCABO().getElementCount() &&
+      (model.VBOBuildTime.getMTime() >
+        cellBO.getAttributeUpdateTime().getMTime() ||
+        cellBO.getShaderSourceTime().getMTime() >
+          cellBO.getAttributeUpdateTime().getMTime())
+    ) {
       if (program.isAttributeUsed('vertexDC')) {
-        if (!cellBO.getVAO().addAttributeArray(program, cellBO.getCABO(),
-                                           'vertexDC', cellBO.getCABO().getVertexOffset(),
-                                           cellBO.getCABO().getStride(), model.context.FLOAT, 3,
-                                           model.context.FALSE)) {
+        if (
+          !cellBO
+            .getVAO()
+            .addAttributeArray(
+              program,
+              cellBO.getCABO(),
+              'vertexDC',
+              cellBO.getCABO().getVertexOffset(),
+              cellBO.getCABO().getStride(),
+              model.context.FLOAT,
+              3,
+              model.context.FALSE
+            )
+        ) {
           vtkErrorMacro('Error setting vertexDC in shader VAO.');
         }
       }
       cellBO.getAttributeUpdateTime().modified();
     }
 
-    program.setUniformi('texture1',
-      model.scalarTexture.getTextureUnit());
-    program.setUniformf('sampleDistance',
-      model.renderable.getSampleDistance());
+    program.setUniformi('texture1', model.scalarTexture.getTextureUnit());
+    program.setUniformf('sampleDistance', model.renderable.getSampleDistance());
 
     // if we have a zbuffer texture then set it
     if (model.zBufferTexture !== null) {
-      program.setUniformi('zBufferTexture',
-        model.zBufferTexture.getTextureUnit());
+      program.setUniformi(
+        'zBufferTexture',
+        model.zBufferTexture.getTextureUnit()
+      );
       const size = publicAPI.getRenderTargetSize();
       program.setUniformf('vpWidth', size[0]);
       program.setUniformf('vpHeight', size[1]);
@@ -432,9 +509,12 @@ function vtkOpenGLVolumeMapper(publicAPI, model) {
     let dcymin = 1.0;
     let dcymax = -1.0;
     for (let i = 0; i < 8; ++i) {
-      vec3.set(pos, bounds[i % 2],
-        bounds[2 + (Math.floor(i / 2) % 2)],
-        bounds[4 + Math.floor(i / 4)]);
+      vec3.set(
+        pos,
+        bounds[i % 2],
+        bounds[2 + Math.floor(i / 2) % 2],
+        bounds[4 + Math.floor(i / 4)]
+      );
       vec3.transformMat4(pos, pos, keyMats.wcvc);
       vec3.normalize(dir, pos);
 
@@ -462,10 +542,12 @@ function vtkOpenGLVolumeMapper(publicAPI, model) {
     const ext = model.currentInput.getExtent();
     const spc = model.currentInput.getSpacing();
     const vsize = vec3.create();
-    vec3.set(vsize,
+    vec3.set(
+      vsize,
       (ext[1] - ext[0]) * spc[0],
       (ext[3] - ext[2]) * spc[1],
-      (ext[5] - ext[4]) * spc[2]);
+      (ext[5] - ext[4]) * spc[2]
+    );
     program.setUniform3f('vSize', vsize[0], vsize[1], vsize[2]);
 
     vec3.set(pos, ext[0], ext[2], ext[4]);
@@ -479,12 +561,18 @@ function vtkOpenGLVolumeMapper(publicAPI, model) {
     mat4.multiply(model.idxToView, keyMats.wcvc, i2wmat4);
 
     mat3.copy(model.idxNormalMatrix, model.currentInput.getDirection());
-    mat3.multiply(model.idxNormalMatrix, keyMats.normalMatrix,
-      model.idxNormalMatrix);
+    mat3.multiply(
+      model.idxNormalMatrix,
+      keyMats.normalMatrix,
+      model.idxNormalMatrix
+    );
 
-    const maxSamples = vec3.length(vsize) / model.renderable.getSampleDistance();
+    const maxSamples =
+      vec3.length(vsize) / model.renderable.getSampleDistance();
     if (maxSamples > model.renderable.getMaximumSamplesPerRay()) {
-      vtkWarningMacro(`The number of steps required ${Math.ceil(maxSamples)} is larger than the
+      vtkWarningMacro(`The number of steps required ${Math.ceil(
+        maxSamples
+      )} is larger than the
         specified maximum number of steps ${model.renderable.getMaximumSamplesPerRay()}.
         Please either change the
         volumeMapper sampleDistance or its maximum number of samples.`);
@@ -517,22 +605,28 @@ function vtkOpenGLVolumeMapper(publicAPI, model) {
     for (let i = 0; i < 6; ++i) {
       switch (i) {
         default:
-        case 0: vec3.set(normal, 1.0, 0.0, 0.0);
+        case 0:
+          vec3.set(normal, 1.0, 0.0, 0.0);
           vec3.set(pos2, ext[1], ext[3], ext[5]);
           break;
-        case 1: vec3.set(normal, -1.0, 0.0, 0.0);
+        case 1:
+          vec3.set(normal, -1.0, 0.0, 0.0);
           vec3.set(pos2, ext[0], ext[2], ext[4]);
           break;
-        case 2: vec3.set(normal, 0.0, 1.0, 0.0);
+        case 2:
+          vec3.set(normal, 0.0, 1.0, 0.0);
           vec3.set(pos2, ext[1], ext[3], ext[5]);
           break;
-        case 3: vec3.set(normal, 0.0, -1.0, 0.0);
+        case 3:
+          vec3.set(normal, 0.0, -1.0, 0.0);
           vec3.set(pos2, ext[0], ext[2], ext[4]);
           break;
-        case 4: vec3.set(normal, 0.0, 0.0, 1.0);
+        case 4:
+          vec3.set(normal, 0.0, 0.0, 1.0);
           vec3.set(pos2, ext[1], ext[3], ext[5]);
           break;
-        case 5: vec3.set(normal, 0.0, 0.0, -1.0);
+        case 5:
+          vec3.set(normal, 0.0, 0.0, -1.0);
           vec3.set(pos2, ext[0], ext[2], ext[4]);
           break;
       }
@@ -556,9 +650,10 @@ function vtkOpenGLVolumeMapper(publicAPI, model) {
       case 0: // no lighting, tcolor is fine as is
         break;
 
-      case 1:  // headlight
+      case 1: // headlight
       case 2: // light kit
-      case 3: { // positional not implemented fallback to directional
+      case 3: {
+        // positional not implemented fallback to directional
         let lightNum = 0;
         const camDOP = cam.getDirectionOfProjection();
         const lightColor = [];
@@ -576,7 +671,8 @@ function vtkOpenGLVolumeMapper(publicAPI, model) {
             const halfAngle = [
               -0.5 * (lightDir[0] + camDOP[0]),
               -0.5 * (lightDir[1] + camDOP[1]),
-              -0.5 * (lightDir[2] + camDOP[2])];
+              -0.5 * (lightDir[2] + camDOP[2]),
+            ];
             program.setUniform3fArray(`lightHalfAngleWC${lightNum}`, halfAngle);
             lightNum++;
           }
@@ -588,12 +684,9 @@ function vtkOpenGLVolumeMapper(publicAPI, model) {
   publicAPI.setPropertyShaderParameters = (cellBO, ren, actor) => {
     const program = cellBO.getProgram();
 
-    program.setUniformi('ctexture',
-      model.colorTexture.getTextureUnit());
-    program.setUniformi('otexture',
-      model.opacityTexture.getTextureUnit());
-    program.setUniformi('jtexture',
-      model.jitterTexture.getTextureUnit());
+    program.setUniformi('ctexture', model.colorTexture.getTextureUnit());
+    program.setUniformi('otexture', model.opacityTexture.getTextureUnit());
+    program.setUniformi('jtexture', model.jitterTexture.getTextureUnit());
 
     const volInfo = model.scalarTexture.getVolumeInfo();
     const sscale = volInfo.max - volInfo.min;
@@ -601,12 +694,18 @@ function vtkOpenGLVolumeMapper(publicAPI, model) {
     const vprop = actor.getProperty();
     const ofun = vprop.getScalarOpacity(0);
     const oRange = ofun.getRange();
-    program.setUniformf('oshift', (volInfo.min - oRange[0]) / (oRange[1] - oRange[0]));
+    program.setUniformf(
+      'oshift',
+      (volInfo.min - oRange[0]) / (oRange[1] - oRange[0])
+    );
     program.setUniformf('oscale', sscale / (oRange[1] - oRange[0]));
 
     const cfun = vprop.getRGBTransferFunction(0);
     const cRange = cfun.getRange();
-    program.setUniformf('cshift', (volInfo.min - cRange[0]) / (cRange[1] - cRange[0]));
+    program.setUniformf(
+      'cshift',
+      (volInfo.min - cRange[0]) / (cRange[1] - cRange[0])
+    );
     program.setUniformf('cscale', sscale / (cRange[1] - cRange[0]));
 
     if (vprop.getUseGradientOpacity(0)) {
@@ -617,15 +716,23 @@ function vtkOpenGLVolumeMapper(publicAPI, model) {
       program.setUniformf('gomax', gomax);
       const goRange = [
         vprop.getGradientOpacityMinimumValue(0),
-        vprop.getGradientOpacityMaximumValue(0)];
-      program.setUniformf('goscale', lightingInfo.max * (gomax - gomin) / (goRange[1] - goRange[0]));
-      program.setUniformf('goshift',
-        (-goRange[0] * (gomax - gomin) / (goRange[1] - goRange[0])) + gomin);
+        vprop.getGradientOpacityMaximumValue(0),
+      ];
+      program.setUniformf(
+        'goscale',
+        lightingInfo.max * (gomax - gomin) / (goRange[1] - goRange[0])
+      );
+      program.setUniformf(
+        'goshift',
+        -goRange[0] * (gomax - gomin) / (goRange[1] - goRange[0]) + gomin
+      );
     }
 
     if (model.lastLightComplexity > 0 || vprop.getUseGradientOpacity(0)) {
-      program.setUniformi('normalTexture',
-        model.lightingTexture.getTextureUnit());
+      program.setUniformi(
+        'normalTexture',
+        model.lightingTexture.getTextureUnit()
+      );
     }
 
     if (model.lastLightComplexity > 0) {
@@ -653,14 +760,20 @@ function vtkOpenGLVolumeMapper(publicAPI, model) {
       // frame time is typically for a couple frames prior
       // which makes it messy, so keep long running averages
       // of frame times and pixels rendered
-      model.avgFrameTime =
-        (0.97 * model.avgFrameTime) + (0.03 * rft);
+      model.avgFrameTime = 0.97 * model.avgFrameTime + 0.03 * rft;
       model.avgWindowArea =
-        (0.97 * model.avgWindowArea) + (0.03 / (model.lastXYF * model.lastXYF));
+        0.97 * model.avgWindowArea + 0.03 / (model.lastXYF * model.lastXYF);
 
-      if (ren.getVTKWindow().getInteractor().isAnimating()) {
+      if (
+        ren
+          .getVTKWindow()
+          .getInteractor()
+          .isAnimating()
+      ) {
         // compute target xy factor
-        let txyf = Math.sqrt((model.avgFrameTime * rwi.getDesiredUpdateRate()) / model.avgWindowArea);
+        let txyf = Math.sqrt(
+          model.avgFrameTime * rwi.getDesiredUpdateRate() / model.avgWindowArea
+        );
 
         // limit subsampling to a factor of 10
         if (txyf > 10.0) {
@@ -669,7 +782,9 @@ function vtkOpenGLVolumeMapper(publicAPI, model) {
 
         model.targetXYF = txyf;
       } else {
-        model.targetXYF = Math.sqrt((model.avgFrameTime * rwi.getStillUpdateRate()) / model.avgWindowArea);
+        model.targetXYF = Math.sqrt(
+          model.avgFrameTime * rwi.getStillUpdateRate() / model.avgWindowArea
+        );
       }
 
       // have some inertia to change states around 1.43
@@ -678,7 +793,7 @@ function vtkOpenGLVolumeMapper(publicAPI, model) {
       }
 
       // and add some inertia to change at all
-      if (Math.abs(1.0 - (model.targetXYF / model.lastXYF)) < 0.1) {
+      if (Math.abs(1.0 - model.targetXYF / model.lastXYF) < 0.1) {
         model.targetXYF = model.lastXYF;
       }
       model.lastXYF = model.targetXYF;
@@ -720,16 +835,20 @@ function vtkOpenGLVolumeMapper(publicAPI, model) {
       if (model.framebuffer.getGLFramebuffer() === null) {
         model.framebuffer.create(
           Math.floor(size[0] * 0.7),
-          Math.floor(size[1] * 0.7));
+          Math.floor(size[1] * 0.7)
+        );
         model.framebuffer.populateFramebuffer();
       } else {
         const fbSize = model.framebuffer.getSize();
-        if (fbSize[0] !== Math.floor(size[0] * 0.7) ||
-            fbSize[1] !== Math.floor(size[1] * 0.7)) {
+        if (
+          fbSize[0] !== Math.floor(size[0] * 0.7) ||
+          fbSize[1] !== Math.floor(size[1] * 0.7)
+        ) {
           console.log('resizing');
           model.framebuffer.create(
             Math.floor(size[0] * 0.7),
-            Math.floor(size[1] * 0.7));
+            Math.floor(size[1] * 0.7)
+          );
           model.framebuffer.populateFramebuffer();
         }
       }
@@ -738,10 +857,11 @@ function vtkOpenGLVolumeMapper(publicAPI, model) {
       gl.clearColor(0.0, 0.0, 0.0, 0.0);
       gl.colorMask(true, true, true, true);
       gl.clear(gl.COLOR_BUFFER_BIT);
-      gl.viewport(0, 0,
-        size[0] / xyf, size[1] / xyf);
-      model.fvp = [Math.floor(size[0] / xyf) / Math.floor(size[0] * 0.7),
-        Math.floor(size[1] / xyf) / Math.floor(size[1] * 0.7)];
+      gl.viewport(0, 0, size[0] / xyf, size[1] / xyf);
+      model.fvp = [
+        Math.floor(size[0] / xyf) / Math.floor(size[0] * 0.7),
+        Math.floor(size[1] / xyf) / Math.floor(size[1] * 0.7),
+      ];
     }
     model.context.disable(model.context.DEPTH_TEST);
 
@@ -779,8 +899,10 @@ function vtkOpenGLVolumeMapper(publicAPI, model) {
     model.opacityTexture.activate();
     model.colorTexture.activate();
     model.jitterTexture.activate();
-    if (actor.getProperty().getShade() ||
-        actor.getProperty().getUseGradientOpacity(0)) {
+    if (
+      actor.getProperty().getShade() ||
+      actor.getProperty().getUseGradientOpacity(0)
+    ) {
       model.lightingTexture.activate();
     }
 
@@ -790,16 +912,17 @@ function vtkOpenGLVolumeMapper(publicAPI, model) {
     // for (let i = 0; i < 11; ++i) {
     //   gl.drawArrays(gl.TRIANGLES, 66 * i, 66);
     // }
-    gl.drawArrays(gl.TRIANGLES, 0,
-      model.tris.getCABO().getElementCount());
+    gl.drawArrays(gl.TRIANGLES, 0, model.tris.getCABO().getElementCount());
     model.tris.getVAO().release();
 
     model.scalarTexture.deactivate();
     model.colorTexture.deactivate();
     model.opacityTexture.deactivate();
     model.jitterTexture.deactivate();
-    if (actor.getProperty().getShade() ||
-        actor.getProperty().getUseGradientOpacity(0)) {
+    if (
+      actor.getProperty().getShade() ||
+      actor.getProperty().getUseGradientOpacity(0)
+    ) {
       model.lightingTexture.deactivate();
     }
   };
@@ -816,8 +939,9 @@ function vtkOpenGLVolumeMapper(publicAPI, model) {
       model.framebuffer.restorePreviousBindingsAndBuffers();
 
       if (model.copyShader === null) {
-        model.copyShader =
-          model.openGLRenderWindow.getShaderCache().readyShaderProgramArray(
+        model.copyShader = model.openGLRenderWindow
+          .getShaderCache()
+          .readyShaderProgramArray(
             [
               '//VTK::System::Dec',
               'attribute vec4 vertexDC;',
@@ -832,22 +956,32 @@ function vtkOpenGLVolumeMapper(publicAPI, model) {
               'varying vec2 tcoord;',
               'void main() { gl_FragData[0] = texture2D(texture1,tcoord); }',
             ].join('\n'),
-            '');
+            ''
+          );
         const program = model.copyShader;
 
         model.copyVAO = vtkVertexArrayObject.newInstance();
         model.copyVAO.setOpenGLRenderWindow(model.openGLRenderWindow);
 
         model.tris.getCABO().bind();
-        if (!model.copyVAO.addAttributeArray(
-            program, model.tris.getCABO(),
-           'vertexDC', model.tris.getCABO().getVertexOffset(),
-            model.tris.getCABO().getStride(), model.context.FLOAT, 3,
-           model.context.FALSE)) {
+        if (
+          !model.copyVAO.addAttributeArray(
+            program,
+            model.tris.getCABO(),
+            'vertexDC',
+            model.tris.getCABO().getVertexOffset(),
+            model.tris.getCABO().getStride(),
+            model.context.FLOAT,
+            3,
+            model.context.FALSE
+          )
+        ) {
           vtkErrorMacro('Error setting vertexDC in copy shader VAO.');
         }
       } else {
-        model.openGLRenderWindow.getShaderCache().readyShaderProgram(model.copyShader);
+        model.openGLRenderWindow
+          .getShaderCache()
+          .readyShaderProgram(model.copyShader);
       }
 
       const size = model.openGLRenderWindow.getSize();
@@ -856,22 +990,32 @@ function vtkOpenGLVolumeMapper(publicAPI, model) {
       // activate texture
       const tex = model.framebuffer.getColorTexture();
       tex.activate();
-      model.copyShader.setUniformi('texture',
-        tex.getTextureUnit());
+      model.copyShader.setUniformi('texture', tex.getTextureUnit());
 
       model.copyShader.setUniform2f('tfactor', model.fvp[0], model.fvp[1]);
 
       const gl = model.context;
-      gl.blendFuncSeparate(gl.ONE, gl.ONE_MINUS_SRC_ALPHA,
-                       gl.ONE, gl.ONE_MINUS_SRC_ALPHA);
+      gl.blendFuncSeparate(
+        gl.ONE,
+        gl.ONE_MINUS_SRC_ALPHA,
+        gl.ONE,
+        gl.ONE_MINUS_SRC_ALPHA
+      );
 
       // render quad
-      model.context.drawArrays(model.context.TRIANGLES, 0,
-        model.tris.getCABO().getElementCount());
+      model.context.drawArrays(
+        model.context.TRIANGLES,
+        0,
+        model.tris.getCABO().getElementCount()
+      );
       tex.deactivate();
 
-      gl.blendFuncSeparate(gl.SRC_ALPHA, gl.ONE_MINUS_SRC_ALPHA,
-                       gl.ONE, gl.ONE_MINUS_SRC_ALPHA);
+      gl.blendFuncSeparate(
+        gl.SRC_ALPHA,
+        gl.ONE_MINUS_SRC_ALPHA,
+        gl.ONE,
+        gl.ONE_MINUS_SRC_ALPHA
+      );
     }
   };
 
@@ -908,11 +1052,13 @@ function vtkOpenGLVolumeMapper(publicAPI, model) {
 
   publicAPI.getNeedToRebuildBufferObjects = (ren, actor) => {
     // first do a coarse check
-    if (model.VBOBuildTime.getMTime() < publicAPI.getMTime() ||
-        model.VBOBuildTime.getMTime() < actor.getMTime() ||
-        model.VBOBuildTime.getMTime() < model.renderable.getMTime() ||
-        model.VBOBuildTime.getMTime() < actor.getProperty().getMTime() ||
-        model.VBOBuildTime.getMTime() < model.currentInput.getMTime()) {
+    if (
+      model.VBOBuildTime.getMTime() < publicAPI.getMTime() ||
+      model.VBOBuildTime.getMTime() < actor.getMTime() ||
+      model.VBOBuildTime.getMTime() < model.renderable.getMTime() ||
+      model.VBOBuildTime.getMTime() < actor.getProperty().getMTime() ||
+      model.VBOBuildTime.getMTime() < model.currentInput.getMTime()
+    ) {
       return true;
     }
     return false;
@@ -934,13 +1080,19 @@ function vtkOpenGLVolumeMapper(publicAPI, model) {
       }
       model.jitterTexture.setMinificationFilter(Filter.LINEAR);
       model.jitterTexture.setMagnificationFilter(Filter.LINEAR);
-      model.jitterTexture.create2DFromRaw(32, 32, 1,
-        VtkDataTypes.UNSIGNED_CHAR, oTable);
+      model.jitterTexture.create2DFromRaw(
+        32,
+        32,
+        1,
+        VtkDataTypes.UNSIGNED_CHAR,
+        oTable
+      );
     }
 
     // rebuild opacity tfun?
     const ofun = vprop.getScalarOpacity(0);
-    const opacityFactor = model.renderable.getSampleDistance() /
+    const opacityFactor =
+      model.renderable.getSampleDistance() /
       vprop.getScalarOpacityUnitDistance(0);
     let toString = `${ofun.getMTime()}A${opacityFactor}`;
     if (model.opacityTextureString !== toString) {
@@ -954,8 +1106,13 @@ function vtkOpenGLVolumeMapper(publicAPI, model) {
       }
       model.opacityTexture.setMinificationFilter(Filter.LINEAR);
       model.opacityTexture.setMagnificationFilter(Filter.LINEAR);
-      model.opacityTexture.create2DFromRaw(oWidth, 1, 1,
-        VtkDataTypes.UNSIGNED_CHAR, oTable);
+      model.opacityTexture.create2DFromRaw(
+        oWidth,
+        1,
+        1,
+        VtkDataTypes.UNSIGNED_CHAR,
+        oTable
+      );
       model.opacityTextureString = toString;
     }
 
@@ -973,8 +1130,13 @@ function vtkOpenGLVolumeMapper(publicAPI, model) {
       }
       model.colorTexture.setMinificationFilter(Filter.LINEAR);
       model.colorTexture.setMagnificationFilter(Filter.LINEAR);
-      model.colorTexture.create2DFromRaw(cWidth, 1, 3,
-        VtkDataTypes.UNSIGNED_CHAR, cTable);
+      model.colorTexture.create2DFromRaw(
+        cWidth,
+        1,
+        3,
+        VtkDataTypes.UNSIGNED_CHAR,
+        cTable
+      );
       model.colorTextureString = toString;
     }
 
@@ -984,9 +1146,19 @@ function vtkOpenGLVolumeMapper(publicAPI, model) {
       // Build the textures
       const dims = image.getDimensions();
       model.scalarTexture.resetFormatAndType();
-      model.scalarTexture.create3DOneComponentFromRaw(dims[0], dims[1], dims[2],
-        image.getPointData().getScalars().getDataType(),
-        image.getPointData().getScalars().getData());
+      model.scalarTexture.create3DOneComponentFromRaw(
+        dims[0],
+        dims[1],
+        dims[2],
+        image
+          .getPointData()
+          .getScalars()
+          .getDataType(),
+        image
+          .getPointData()
+          .getScalars()
+          .getData()
+      );
       model.scalarTextureString = toString;
     }
 
@@ -997,9 +1169,14 @@ function vtkOpenGLVolumeMapper(publicAPI, model) {
     toString = `${image.getMTime()}`;
     if ((shading || gopacity) && model.lightingTextureString !== toString) {
       model.lightingTexture.resetFormatAndType();
-      model.lightingTexture.create3DLighting(model.scalarTexture,
-        image.getPointData().getScalars().getData(),
-        image.getSpacing());
+      model.lightingTexture.create3DLighting(
+        model.scalarTexture,
+        image
+          .getPointData()
+          .getScalars()
+          .getData(),
+        image.getSpacing()
+      );
       model.lightingTextureString = toString;
     }
 
@@ -1007,9 +1184,9 @@ function vtkOpenGLVolumeMapper(publicAPI, model) {
       // build the CABO
       const ptsArray = new Float32Array(12);
       for (let i = 0; i < 4; i++) {
-        ptsArray[(i * 3)] = ((i % 2) * 2) - 1.0;
-        ptsArray[(i * 3) + 1] = (i > 1) ? 1.0 : -1.0;
-        ptsArray[(i * 3) + 2] = -1.0;
+        ptsArray[i * 3] = (i % 2) * 2 - 1.0;
+        ptsArray[i * 3 + 1] = i > 1 ? 1.0 : -1.0;
+        ptsArray[i * 3 + 2] = -1.0;
       }
 
       const cellArray = new Uint16Array(8);
@@ -1048,12 +1225,19 @@ function vtkOpenGLVolumeMapper(publicAPI, model) {
       //   }
       // }
 
-      const points = vtkDataArray.newInstance({ numberOfComponents: 3, values: ptsArray });
+      const points = vtkDataArray.newInstance({
+        numberOfComponents: 3,
+        values: ptsArray,
+      });
       points.setName('points');
-      const cells = vtkDataArray.newInstance({ numberOfComponents: 1, values: cellArray });
-      model.tris.getCABO().createVBO(cells,
-        'polys', Representation.SURFACE,
-        { points, cellOffset: 0 });
+      const cells = vtkDataArray.newInstance({
+        numberOfComponents: 1,
+        values: cellArray,
+      });
+      model.tris.getCABO().createVBO(cells, 'polys', Representation.SURFACE, {
+        points,
+        cellOffset: 0,
+      });
     }
 
     model.VBOBuildTime.modified();
@@ -1117,9 +1301,7 @@ export function extend(publicAPI, model, initialValues = {}) {
   model.idxNormalMatrix = mat3.create();
 
   // Build VTK API
-  macro.setGet(publicAPI, model, [
-    'context',
-  ]);
+  macro.setGet(publicAPI, model, ['context']);
 
   // Object methods
   vtkOpenGLVolumeMapper(publicAPI, model);

@@ -1,14 +1,14 @@
-import test      from 'tape-catch';
+import test from 'tape-catch';
 import testUtils from 'vtk.js/Sources/Testing/testUtils';
 
-import vtkOpenGLRenderWindow  from 'vtk.js/Sources/Rendering/OpenGL/RenderWindow';
-import vtkRenderWindow        from 'vtk.js/Sources/Rendering/Core/RenderWindow';
-import vtkRenderer            from 'vtk.js/Sources/Rendering/Core/Renderer';
-import vtkCone                from 'vtk.js/Sources/Common/DataModel/Cone';
-import vtkSampleFunction      from 'vtk.js/Sources/Imaging/Hybrid/SampleFunction';
-import vtkImageMarchingCubes  from 'vtk.js/Sources/Filters/General/ImageMarchingCubes';
-import vtkMapper              from 'vtk.js/Sources/Rendering/Core/Mapper';
-import vtkActor               from 'vtk.js/Sources/Rendering/Core/Actor';
+import vtkOpenGLRenderWindow from 'vtk.js/Sources/Rendering/OpenGL/RenderWindow';
+import vtkRenderWindow from 'vtk.js/Sources/Rendering/Core/RenderWindow';
+import vtkRenderer from 'vtk.js/Sources/Rendering/Core/Renderer';
+import vtkCone from 'vtk.js/Sources/Common/DataModel/Cone';
+import vtkSampleFunction from 'vtk.js/Sources/Imaging/Hybrid/SampleFunction';
+import vtkImageMarchingCubes from 'vtk.js/Sources/Filters/General/ImageMarchingCubes';
+import vtkMapper from 'vtk.js/Sources/Rendering/Core/Mapper';
+import vtkActor from 'vtk.js/Sources/Rendering/Core/Actor';
 
 import baseline from './testConeImplicitFunction.png';
 
@@ -18,7 +18,9 @@ test.onlyIfWebGL('Test Cone Implicit Function', (t) => {
 
   // Create some control UI
   const container = document.querySelector('body');
-  const renderWindowContainer = gc.registerDOMElement(document.createElement('div'));
+  const renderWindowContainer = gc.registerDOMElement(
+    document.createElement('div')
+  );
   container.appendChild(renderWindowContainer);
 
   // Rendering stuff
@@ -29,9 +31,16 @@ test.onlyIfWebGL('Test Cone Implicit Function', (t) => {
 
   // Pipeline
   const cone = gc.registerResource(vtkCone.newInstance({ angle: 12.0 }));
-  const sample = gc.registerResource(vtkSampleFunction.newInstance({
-    implicitFunction: cone, sampleDimensions: [50, 50, 50], modelBounds: [-1, 1, -1, 1, -1, 1] }));
-  const mCubes = gc.registerResource(vtkImageMarchingCubes.newInstance({ contourValue: 0.0 }));
+  const sample = gc.registerResource(
+    vtkSampleFunction.newInstance({
+      implicitFunction: cone,
+      sampleDimensions: [50, 50, 50],
+      modelBounds: [-1, 1, -1, 1, -1, 1],
+    })
+  );
+  const mCubes = gc.registerResource(
+    vtkImageMarchingCubes.newInstance({ contourValue: 0.0 })
+  );
   mCubes.setInputConnection(sample.getOutputPort());
 
   const mapper = gc.registerResource(vtkMapper.newInstance());
@@ -51,5 +60,12 @@ test.onlyIfWebGL('Test Cone Implicit Function', (t) => {
   renderWindow.render();
 
   const image = glwindow.captureImage();
-  testUtils.compareImages(image, [baseline], 'Common/DataModel/Cone/testConeImplicitFunction', t, 1.0, gc.releaseResources);
+  testUtils.compareImages(
+    image,
+    [baseline],
+    'Common/DataModel/Cone/testConeImplicitFunction',
+    t,
+    1.0,
+    gc.releaseResources
+  );
 });

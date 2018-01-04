@@ -1,15 +1,15 @@
-import test      from 'tape-catch';
+import test from 'tape-catch';
 import testUtils from 'vtk.js/Sources/Testing/testUtils';
 
-import vtkColorTransferFunction   from 'vtk.js/Sources/Rendering/Core/ColorTransferFunction';
-import vtkHttpDataSetReader       from 'vtk.js/Sources/IO/Core/HttpDataSetReader';
+import vtkColorTransferFunction from 'vtk.js/Sources/Rendering/Core/ColorTransferFunction';
+import vtkHttpDataSetReader from 'vtk.js/Sources/IO/Core/HttpDataSetReader';
 import vtkOpenGLRenderWindow from 'vtk.js/Sources/Rendering/OpenGL/RenderWindow';
-import vtkPiecewiseFunction  from 'vtk.js/Sources/Common/DataModel/PiecewiseFunction';
-import vtkRenderWindow       from 'vtk.js/Sources/Rendering/Core/RenderWindow';
-import vtkRenderWindowInteractor  from 'vtk.js/Sources/Rendering/Core/RenderWindowInteractor';
-import vtkRenderer           from 'vtk.js/Sources/Rendering/Core/Renderer';
-import vtkVolume             from 'vtk.js/Sources/Rendering/Core/Volume';
-import vtkVolumeMapper       from 'vtk.js/Sources/Rendering/Core/VolumeMapper';
+import vtkPiecewiseFunction from 'vtk.js/Sources/Common/DataModel/PiecewiseFunction';
+import vtkRenderWindow from 'vtk.js/Sources/Rendering/Core/RenderWindow';
+import vtkRenderWindowInteractor from 'vtk.js/Sources/Rendering/Core/RenderWindowInteractor';
+import vtkRenderer from 'vtk.js/Sources/Rendering/Core/Renderer';
+import vtkVolume from 'vtk.js/Sources/Rendering/Core/Volume';
+import vtkVolumeMapper from 'vtk.js/Sources/Rendering/Core/VolumeMapper';
 
 import baseline1 from './testComposite16Bit.png';
 import baseline2 from './testComposite16Bit_2.png';
@@ -21,7 +21,9 @@ test.onlyIfWebGL('Test Composite Volume Rendering', (t) => {
 
   // Create some control UI
   const container = document.querySelector('body');
-  const renderWindowContainer = gc.registerDOMElement(document.createElement('div'));
+  const renderWindowContainer = gc.registerDOMElement(
+    document.createElement('div')
+  );
   container.appendChild(renderWindowContainer);
 
   // create what we will view
@@ -74,9 +76,14 @@ test.onlyIfWebGL('Test Composite Volume Rendering', (t) => {
       renderer.resetCamera();
       renderWindow.render();
       const image = glwindow.captureImage();
-      testUtils.compareImages(image, [baseline1, baseline2],
+      testUtils.compareImages(
+        image,
+        [baseline1, baseline2],
         'Rendering/OpenGL/VolumeMapper/testComposite16Bit',
-          t, 1.5, gc.releaseResources);
+        t,
+        1.5,
+        gc.releaseResources
+      );
     });
   });
 });

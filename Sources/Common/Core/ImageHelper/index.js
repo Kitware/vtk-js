@@ -12,14 +12,22 @@ import vtkDataArray from 'vtk.js/Sources/Common/Core/DataArray';
 function canvasToImageData(canvas, boundingBox = [0, 0, 0, 0]) {
   const [top, left, width, height] = boundingBox;
   const ctxt = canvas.getContext('2d');
-  const idata = ctxt.getImageData(top, left, width || canvas.width, height || canvas.height);
+  const idata = ctxt.getImageData(
+    top,
+    left,
+    width || canvas.width,
+    height || canvas.height
+  );
 
   const imageData = vtkImageData.newInstance({ type: 'vtkImageData' });
   imageData.setOrigin(0, 0, 0);
   imageData.setSpacing(1, 1, 1);
   imageData.setExtent(0, canvas.width - 1, 0, canvas.height - 1, 0, 0);
 
-  const scalars = vtkDataArray.newInstance({ numberOfComponents: 4, values: idata.data });
+  const scalars = vtkDataArray.newInstance({
+    numberOfComponents: 4,
+    values: idata.data,
+  });
   scalars.setName('scalars');
   imageData.getPointData().setScalars(scalars);
 

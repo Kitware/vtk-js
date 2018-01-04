@@ -1,17 +1,19 @@
 import 'vtk.js/Sources/favicon';
 
-import vtkColorTransferFunction   from 'vtk.js/Sources/Rendering/Core/ColorTransferFunction';
-import vtkFullScreenRenderWindow  from 'vtk.js/Sources/Rendering/Misc/FullScreenRenderWindow';
-import vtkSLICSource              from 'vtk.js/Sources/Filters/Sources/SLICSource';
-import vtkPiecewiseFunction       from 'vtk.js/Sources/Common/DataModel/PiecewiseFunction';
-import vtkVolume                  from 'vtk.js/Sources/Rendering/Core/Volume';
-import vtkVolumeMapper            from 'vtk.js/Sources/Rendering/Core/VolumeMapper';
+import vtkColorTransferFunction from 'vtk.js/Sources/Rendering/Core/ColorTransferFunction';
+import vtkFullScreenRenderWindow from 'vtk.js/Sources/Rendering/Misc/FullScreenRenderWindow';
+import vtkSLICSource from 'vtk.js/Sources/Filters/Sources/SLICSource';
+import vtkPiecewiseFunction from 'vtk.js/Sources/Common/DataModel/PiecewiseFunction';
+import vtkVolume from 'vtk.js/Sources/Rendering/Core/Volume';
+import vtkVolumeMapper from 'vtk.js/Sources/Rendering/Core/VolumeMapper';
 
 // ----------------------------------------------------------------------------
 // Standard rendering code setup
 // ----------------------------------------------------------------------------
 
-const fullScreenRenderer = vtkFullScreenRenderWindow.newInstance({ background: [0, 0, 0] });
+const fullScreenRenderer = vtkFullScreenRenderWindow.newInstance({
+  background: [0, 0, 0],
+});
 const renderer = fullScreenRenderer.getRenderer();
 const renderWindow = fullScreenRenderer.getRenderWindow();
 
@@ -32,9 +34,9 @@ for (let i = 0; i < NB_CLUSTERS; i++) {
   const y = Math.random() * GRID_SIZE[1];
   const z = Math.random() * GRID_SIZE[2];
   const fnConst = Math.random() * NB_CLUSTERS;
-  const sx = (Math.random() * 2) - 1;
-  const sy = (Math.random() * 2) - 1;
-  const sz = (Math.random() * 2) - 1;
+  const sx = Math.random() * 2 - 1;
+  const sy = Math.random() * 2 - 1;
+  const sz = Math.random() * 2 - 1;
   source.addCluster(x, y, z, fnConst, sx, sy, sz);
 }
 

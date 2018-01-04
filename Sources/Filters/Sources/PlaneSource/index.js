@@ -1,7 +1,7 @@
-import macro          from 'vtk.js/Sources/macro';
-import vtkDataArray   from 'vtk.js/Sources/Common/Core/DataArray';
-import vtkMath        from 'vtk.js/Sources/Common/Core/Math';
-import vtkPolyData    from 'vtk.js/Sources/Common/DataModel/PolyData';
+import macro from 'vtk.js/Sources/macro';
+import vtkDataArray from 'vtk.js/Sources/Common/Core/DataArray';
+import vtkMath from 'vtk.js/Sources/Common/Core/Math';
+import vtkPolyData from 'vtk.js/Sources/Common/DataModel/PolyData';
 
 const { vtkWarningMacro } = macro;
 
@@ -21,7 +21,9 @@ function vtkPlaneSource(publicAPI, model) {
     const dataset = outData[0];
 
     // Check input
-    const pointDataType = dataset ? dataset.getPoints().getDataType() : 'Float32Array';
+    const pointDataType = dataset
+      ? dataset.getPoints().getDataType()
+      : 'Float32Array';
     const pd = vtkPolyData.newInstance();
     const v10 = new Float32Array(3);
     const v20 = new Float32Array(3);
@@ -50,23 +52,26 @@ function vtkPlaneSource(publicAPI, model) {
 
     // Texture coords
     const tcData = new Float32Array(numPts * 2);
-    const tcoords = vtkDataArray.newInstance({ numberOfComponents: 2, values: tcData, name: 'TextureCoordinates' });
+    const tcoords = vtkDataArray.newInstance({
+      numberOfComponents: 2,
+      values: tcData,
+      name: 'TextureCoordinates',
+    });
     pd.getPointData().setTCoords(tcoords);
-
 
     const tc = new Float32Array(2);
     let idx = 0;
-    for (let j = 0; j < (yres + 1); j++) {
+    for (let j = 0; j < yres + 1; j++) {
       tc[1] = j / yres;
-      for (let i = 0; i < (xres + 1); i++) {
+      for (let i = 0; i < xres + 1; i++) {
         tc[0] = i / xres;
 
-        points[(idx * 3)] = model.origin[0] + (tc[0] * v10[0]) + (tc[1] * v20[0]);
-        points[(idx * 3) + 1] = model.origin[1] + (tc[0] * v10[1]) + (tc[1] * v20[1]);
-        points[(idx * 3) + 2] = model.origin[2] + (tc[0] * v10[2]) + (tc[1] * v20[2]);
+        points[idx * 3] = model.origin[0] + tc[0] * v10[0] + tc[1] * v20[0];
+        points[idx * 3 + 1] = model.origin[1] + tc[0] * v10[1] + tc[1] * v20[1];
+        points[idx * 3 + 2] = model.origin[2] + tc[0] * v10[2] + tc[1] * v20[2];
 
-        tcData[(idx * 2)] = tc[0];
-        tcData[(idx * 2) + 1] = tc[1];
+        tcData[idx * 2] = tc[0];
+        tcData[idx * 2 + 1] = tc[1];
 
         idx++;
       }
@@ -77,11 +82,11 @@ function vtkPlaneSource(publicAPI, model) {
     idx = 0;
     for (let j = 0; j < yres; j++) {
       for (let i = 0; i < xres; i++) {
-        polys[(idx * 5) + 0] = 4;
-        polys[(idx * 5) + 1] = i + (j * (xres + 1));
-        polys[(idx * 5) + 2] = polys[(idx * 5) + 1] + 1;
-        polys[(idx * 5) + 3] = polys[(idx * 5) + 1] + xres + 2;
-        polys[(idx * 5) + 4] = polys[(idx * 5) + 1] + xres + 1;
+        polys[idx * 5 + 0] = 4;
+        polys[idx * 5 + 1] = i + j * (xres + 1);
+        polys[idx * 5 + 2] = polys[idx * 5 + 1] + 1;
+        polys[idx * 5 + 3] = polys[idx * 5 + 1] + xres + 2;
+        polys[idx * 5 + 4] = polys[idx * 5 + 1] + xres + 1;
 
         idx++;
       }
@@ -112,15 +117,8 @@ export function extend(publicAPI, model, initialValues = {}) {
 
   // Build VTK API
   macro.obj(publicAPI, model);
-  macro.setGet(publicAPI, model, [
-    'xResolution',
-    'yResolution',
-  ]);
-  macro.setGetArray(publicAPI, model, [
-    'origin',
-    'point1',
-    'point2',
-  ], 3);
+  macro.setGet(publicAPI, model, ['xResolution', 'yResolution']);
+  macro.setGetArray(publicAPI, model, ['origin', 'point1', 'point2'], 3);
   macro.algo(publicAPI, model, 0, 1);
   vtkPlaneSource(publicAPI, model);
 }

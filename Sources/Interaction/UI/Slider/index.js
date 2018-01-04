@@ -1,6 +1,6 @@
-import macro     from 'vtk.js/Sources/macro';
+import macro from 'vtk.js/Sources/macro';
 import Constants from 'vtk.js/Sources/Interaction/UI/Slider/Constants';
-import style     from 'vtk.js/Sources/Interaction/UI/Slider/Slider.mcss';
+import style from 'vtk.js/Sources/Interaction/UI/Slider/Slider.mcss';
 
 // ----------------------------------------------------------------------------
 // Helper methods
@@ -17,7 +17,7 @@ function findClosestValue(value, values) {
       index = count;
     }
   }
-  return (index !== -1) ? values[index] : undefined;
+  return index !== -1 ? values[index] : undefined;
 }
 
 // ----------------------------------------------------------------------------
@@ -36,8 +36,11 @@ function vtkSlider(publicAPI, model) {
   // --------------------------------------------------------------------------
 
   function getDisplacementRatio() {
-    return ((model.containerSizes[1] - model.containerSizes[0])
-      * (model.value - model.values[0]) / (model.values[model.values.length - 1] - model.values[0]));
+    return (
+      (model.containerSizes[1] - model.containerSizes[0]) *
+      (model.value - model.values[0]) /
+      (model.values[model.values.length - 1] - model.values[0])
+    );
   }
 
   function updateCursorPosition() {
@@ -80,8 +83,11 @@ function vtkSlider(publicAPI, model) {
   function onMouseMove(e) {
     e.preventDefault();
     if (isDragging) {
-      const newRatio = ratio + (((model.orientation ? e.clientX : e.clientY) - offset) / (model.containerSizes[1] - model.containerSizes[0]));
-      const value = (newRatio * model.range) + model.values[0];
+      const newRatio =
+        ratio +
+        ((model.orientation ? e.clientX : e.clientY) - offset) /
+          (model.containerSizes[1] - model.containerSizes[0]);
+      const value = newRatio * model.range + model.values[0];
       const newValue = findClosestValue(value, model.values);
       if (newValue !== undefined) {
         publicAPI.setValue(newValue);
@@ -93,9 +99,15 @@ function vtkSlider(publicAPI, model) {
     if (!isDragging) {
       const isClick = !((model.orientation ? e.clientX : e.clientY) - offset);
       if (isClick) {
-        const absValue = model.values[0] + (model.range *
-          (offset - model.container.getBoundingClientRect()[model.orientation ? 'left' : 'top'] - (0.5 * model.containerSizes[0])) /
-          (model.containerSizes[1] - model.containerSizes[0]));
+        const absValue =
+          model.values[0] +
+          model.range *
+            (offset -
+              model.container.getBoundingClientRect()[
+                model.orientation ? 'left' : 'top'
+              ] -
+              0.5 * model.containerSizes[0]) /
+            (model.containerSizes[1] - model.containerSizes[0]);
         const newValue = findClosestValue(absValue, model.values);
         if (newValue !== undefined) {
           publicAPI.setValue(newValue);
@@ -148,7 +160,11 @@ function vtkSlider(publicAPI, model) {
       const height = Math.floor(dims.height);
       const min = Math.min(width, height);
       const max = Math.max(width, height);
-      publicAPI.setOrientation(height === max ? Constants.SliderOrientation.VERTICAL : Constants.SliderOrientation.HORIZONTAL);
+      publicAPI.setOrientation(
+        height === max
+          ? Constants.SliderOrientation.VERTICAL
+          : Constants.SliderOrientation.HORIZONTAL
+      );
       model.containerSizes = [min, max];
       updateCursorPosition();
     }
@@ -176,7 +192,7 @@ function vtkSlider(publicAPI, model) {
     const step = (max - min) / (nbSteps - 1);
     model.values = [];
     for (let i = 0; i < nbSteps; i++) {
-      model.values.push(min + (i * step));
+      model.values.push(min + i * step);
     }
     model.range = max - min;
     updateCursorPosition();

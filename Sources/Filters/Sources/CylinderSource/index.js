@@ -1,6 +1,6 @@
-import macro          from 'vtk.js/Sources/macro';
-import vtkDataArray   from 'vtk.js/Sources/Common/Core/DataArray';
-import vtkPolyData    from 'vtk.js/Sources/Common/DataModel/PolyData';
+import macro from 'vtk.js/Sources/macro';
+import vtkDataArray from 'vtk.js/Sources/Common/Core/DataArray';
+import vtkPolyData from 'vtk.js/Sources/Common/DataModel/PolyData';
 
 // ----------------------------------------------------------------------------
 // vtkCylinderSource methods
@@ -23,7 +23,7 @@ function vtkCylinderSource(publicAPI, model) {
 
     if (model.capping) {
       numberOfPoints = 4 * model.resolution;
-      numberOfPolys = (7 * model.resolution) + 2;
+      numberOfPolys = 7 * model.resolution + 2;
     }
 
     // Points
@@ -35,13 +35,19 @@ function vtkCylinderSource(publicAPI, model) {
 
     // Normals
     const normalsData = new Float32Array(numberOfPoints * 3);
-    const normals = vtkDataArray.newInstance(
-      { numberOfComponents: 3, values: normalsData, name: 'Normals' });
+    const normals = vtkDataArray.newInstance({
+      numberOfComponents: 3,
+      values: normalsData,
+      name: 'Normals',
+    });
 
     // Texture coords
     const tcData = new Float32Array(numberOfPoints * 2);
-    const tcoords = vtkDataArray.newInstance(
-      { numberOfComponents: 2, values: tcData, name: 'TCoords' });
+    const tcoords = vtkDataArray.newInstance({
+      numberOfComponents: 2,
+      values: tcData,
+      name: 'TCoords',
+    });
 
     // Generate points for all sides
     const nbot = [0.0, 0.0, 0.0];
@@ -54,32 +60,32 @@ function vtkCylinderSource(publicAPI, model) {
       // x coordinate
       nbot[0] = Math.cos(i * angle);
       ntop[0] = nbot[0];
-      xbot[0] = (model.radius * nbot[0]) + model.center[0];
+      xbot[0] = model.radius * nbot[0] + model.center[0];
       xtop[0] = xbot[0];
-      tcbot[0] = Math.abs((2.0 * i / model.resolution) - 1.0);
+      tcbot[0] = Math.abs(2.0 * i / model.resolution - 1.0);
       tctop[0] = tcbot[0];
 
       // y coordinate
-      xbot[1] = (0.5 * model.height) + model.center[1];
-      xtop[1] = (-0.5 * model.height) + model.center[1];
+      xbot[1] = 0.5 * model.height + model.center[1];
+      xtop[1] = -0.5 * model.height + model.center[1];
       tcbot[1] = 0.0;
       tctop[1] = 1.0;
 
       // z coordinate
-      nbot[2] = -(Math.sin(i * angle));
+      nbot[2] = -Math.sin(i * angle);
       ntop[2] = nbot[2];
-      xbot[2] = (model.radius * nbot[2]) + model.center[2];
+      xbot[2] = model.radius * nbot[2] + model.center[2];
       xtop[2] = xbot[2];
 
       const pointIdx = 2 * i;
       for (let j = 0; j < 3; j++) {
-        normalsData[(pointIdx * 3) + j] = nbot[j];
-        normalsData[((pointIdx + 1) * 3) + j] = ntop[j];
-        points[(pointIdx * 3) + j] = xbot[j];
-        points[((pointIdx + 1) * 3) + j] = xtop[j];
+        normalsData[pointIdx * 3 + j] = nbot[j];
+        normalsData[(pointIdx + 1) * 3 + j] = ntop[j];
+        points[pointIdx * 3 + j] = xbot[j];
+        points[(pointIdx + 1) * 3 + j] = xtop[j];
         if (j < 2) {
-          tcData[(pointIdx * 2) + j] = tcbot[j];
-          tcData[((pointIdx + 1) * 2) + j] = tctop[j];
+          tcData[pointIdx * 2 + j] = tcbot[j];
+          tcData[(pointIdx + 1) * 2 + j] = tctop[j];
         }
       }
     }
@@ -88,8 +94,8 @@ function vtkCylinderSource(publicAPI, model) {
     for (let i = 0; i < model.resolution; i++) {
       polys[cellLocation++] = 4;
       polys[cellLocation++] = 2 * i;
-      polys[cellLocation++] = (2 * i) + 1;
-      const pt = ((2 * i) + 3) % (2 * model.resolution);
+      polys[cellLocation++] = 2 * i + 1;
+      const pt = (2 * i + 3) % (2 * model.resolution);
       polys[cellLocation++] = pt;
       polys[cellLocation++] = pt - 1;
     }
@@ -108,8 +114,8 @@ function vtkCylinderSource(publicAPI, model) {
         // y coordinate
         nbot[1] = 1.0;
         ntop[1] = -1.0;
-        xbot[1] = (0.5 * model.height) + model.center[1];
-        xtop[1] = (-0.5 * model.height) + model.center[1];
+        xbot[1] = 0.5 * model.height + model.center[1];
+        xtop[1] = -0.5 * model.height + model.center[1];
 
         // z coordinate
         xbot[2] = -model.radius * Math.sin(i * angle);
@@ -118,16 +124,16 @@ function vtkCylinderSource(publicAPI, model) {
         tctop[1] = xbot[2];
         xbot[2] += model.center[2];
         xtop[2] += model.center[2];
-        const botIdx = (2 * model.resolution) + i;
-        const topIdx = (3 * model.resolution) + model.resolution - i - 1;
+        const botIdx = 2 * model.resolution + i;
+        const topIdx = 3 * model.resolution + model.resolution - i - 1;
         for (let j = 0; j < 3; j++) {
-          normalsData[(3 * botIdx) + j] = nbot[j];
-          normalsData[(3 * topIdx) + j] = ntop[j];
-          points[(3 * botIdx) + j] = xbot[j];
-          points[(3 * topIdx) + j] = xtop[j];
+          normalsData[3 * botIdx + j] = nbot[j];
+          normalsData[3 * topIdx + j] = ntop[j];
+          points[3 * botIdx + j] = xbot[j];
+          points[3 * topIdx + j] = xtop[j];
           if (j < 2) {
-            tcData[(2 * botIdx) + j] = tcbot[j];
-            tcData[(2 * topIdx) + j] = tctop[j];
+            tcData[2 * botIdx + j] = tcbot[j];
+            tcData[2 * topIdx + j] = tctop[j];
           }
         }
       }
@@ -135,11 +141,11 @@ function vtkCylinderSource(publicAPI, model) {
       // Generate polygons for top/bottom
       polys[cellLocation++] = model.resolution;
       for (let i = 0; i < model.resolution; i++) {
-        polys[cellLocation++] = (2 * model.resolution) + i;
+        polys[cellLocation++] = 2 * model.resolution + i;
       }
       polys[cellLocation++] = model.resolution;
       for (let i = 0; i < model.resolution; i++) {
-        polys[cellLocation++] = (3 * model.resolution) + i;
+        polys[cellLocation++] = 3 * model.resolution + i;
       }
     }
 
@@ -177,15 +183,8 @@ export function extend(publicAPI, model, initialValues = {}) {
 
   // Build VTK API
   macro.obj(publicAPI, model);
-  macro.setGet(publicAPI, model, [
-    'height',
-    'radius',
-    'resolution',
-    'capping',
-  ]);
-  macro.setGetArray(publicAPI, model, [
-    'center',
-  ], 3);
+  macro.setGet(publicAPI, model, ['height', 'radius', 'resolution', 'capping']);
+  macro.setGetArray(publicAPI, model, ['center'], 3);
   macro.algo(publicAPI, model, 0, 1);
   vtkCylinderSource(publicAPI, model);
 }

@@ -1,4 +1,4 @@
-import macro                  from 'vtk.js/Sources/macro';
+import macro from 'vtk.js/Sources/macro';
 import vtkGenericRenderWindow from 'vtk.js/Sources/Rendering/Misc/GenericRenderWindow';
 import style from 'vtk.js/Sources/Rendering/Misc/RenderWindowWithControlBar/RenderWindowWithControlBar.mcss';
 
@@ -74,8 +74,14 @@ function vtkRenderWindowWithControlBar(publicAPI, model) {
 
   function updateControlerStyle() {
     ['left', 'right', 'top', 'bottom'].forEach(resetStyleToZero);
-    model.renderWindowContainer.style[model.controlPosition] = `${model.controlSize}px`;
-    applyControlStyle(model.controlContainer, model.controlPosition, model.controlSize);
+    model.renderWindowContainer.style[model.controlPosition] = `${
+      model.controlSize
+    }px`;
+    applyControlStyle(
+      model.controlContainer,
+      model.controlPosition,
+      model.controlSize
+    );
   }
 
   // Create container for the vtkGenericRenderWindow
@@ -157,7 +163,10 @@ export function extend(publicAPI, model, initialValues = {}) {
 
 // ----------------------------------------------------------------------------
 
-export const newInstance = macro.newInstance(extend, 'vtkRenderWindowWithControlBar');
+export const newInstance = macro.newInstance(
+  extend,
+  'vtkRenderWindowWithControlBar'
+);
 
 // ----------------------------------------------------------------------------
 

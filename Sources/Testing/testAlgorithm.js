@@ -1,4 +1,4 @@
-import test  from 'tape-catch';
+import test from 'tape-catch';
 import macro from 'vtk.js/Sources/macro';
 
 const model = {};
@@ -16,19 +16,20 @@ for (let i = 0; i < inLeft.length; i++) {
 // const daLeft = vtkDataArray.newInstance({ name: 'left', values: inLeft });
 // const daRight = vtkDataArray.newInstance({ name: 'left', values: inLeft });
 
-publicAPI.requestData = (inData, outData) => { // implement requestData
-  outData[0] = inData.reduce((inArray1, inArray2) => (
-    inArray2.map((d, i) => (d + inArray1[i]))
-  ));
-  outData[1] = inData.reduce((inArray1, inArray2) => (
-    inArray2.map((d, i) => (d - inArray1[i]))
-  ));
-  outData[2] = inData.reduce((inArray1, inArray2) => (
-    inArray2.map((d, i) => (d * inArray1[i]))
-  ));
-  outData[3] = inData.reduce((inArray1, inArray2) => (
-    inArray2.map((d, i) => (d / inArray1[i]))
-  ));
+publicAPI.requestData = (inData, outData) => {
+  // implement requestData
+  outData[0] = inData.reduce((inArray1, inArray2) =>
+    inArray2.map((d, i) => d + inArray1[i])
+  );
+  outData[1] = inData.reduce((inArray1, inArray2) =>
+    inArray2.map((d, i) => d - inArray1[i])
+  );
+  outData[2] = inData.reduce((inArray1, inArray2) =>
+    inArray2.map((d, i) => d * inArray1[i])
+  );
+  outData[3] = inData.reduce((inArray1, inArray2) =>
+    inArray2.map((d, i) => d / inArray1[i])
+  );
 };
 
 test('Macro methods algo tests', (t) => {
@@ -54,7 +55,11 @@ test('Macro methods algo tests', (t) => {
   t.deepEqual(output, { 0: 0, 1: 4, 2: 10 }, 'Multiply two input arrays');
 
   const outputPort = publicAPI.getOutputPort(3);
-  t.deepEqual(outputPort(), { 0: Infinity, 1: 4, 2: 2.5 }, 'Divide two input arrays, using outputPort');
+  t.deepEqual(
+    outputPort(),
+    { 0: Infinity, 1: 4, 2: 2.5 },
+    'Divide two input arrays, using outputPort'
+  );
 
   t.end();
 });

@@ -1,16 +1,16 @@
-import test      from 'tape-catch';
+import test from 'tape-catch';
 import testUtils from 'vtk.js/Sources/Testing/testUtils';
 
-import vtkCalculator          from 'vtk.js/Sources/Filters/General/Calculator';
-import vtkOpenGLRenderWindow  from 'vtk.js/Sources/Rendering/OpenGL/RenderWindow';
-import vtkRenderWindow        from 'vtk.js/Sources/Rendering/Core/RenderWindow';
-import vtkRenderer            from 'vtk.js/Sources/Rendering/Core/Renderer';
-import vtkConeSource          from 'vtk.js/Sources/Filters/Sources/ConeSource';
-import vtkActor               from 'vtk.js/Sources/Rendering/Core/Actor';
-import vtkSphereMapper        from 'vtk.js/Sources/Rendering/Core/SphereMapper';
+import vtkCalculator from 'vtk.js/Sources/Filters/General/Calculator';
+import vtkOpenGLRenderWindow from 'vtk.js/Sources/Rendering/OpenGL/RenderWindow';
+import vtkRenderWindow from 'vtk.js/Sources/Rendering/Core/RenderWindow';
+import vtkRenderer from 'vtk.js/Sources/Rendering/Core/Renderer';
+import vtkConeSource from 'vtk.js/Sources/Filters/Sources/ConeSource';
+import vtkActor from 'vtk.js/Sources/Rendering/Core/Actor';
+import vtkSphereMapper from 'vtk.js/Sources/Rendering/Core/SphereMapper';
 
-import { AttributeTypes }     from 'vtk.js/Sources/Common/DataModel/DataSetAttributes/Constants';
-import { FieldDataTypes }     from 'vtk.js/Sources/Common/DataModel/DataSet/Constants';
+import { AttributeTypes } from 'vtk.js/Sources/Common/DataModel/DataSetAttributes/Constants';
+import { FieldDataTypes } from 'vtk.js/Sources/Common/DataModel/DataSet/Constants';
 
 import baseline from './testDisableScalarColoring.png';
 
@@ -20,7 +20,9 @@ test.onlyIfWebGL('Test vtkSphereMapper Rendering', (t) => {
 
   // Create some control UI
   const container = document.querySelector('body');
-  const renderWindowContainer = gc.registerDOMElement(document.createElement('div'));
+  const renderWindowContainer = gc.registerDOMElement(
+    document.createElement('div')
+  );
   container.appendChild(renderWindowContainer);
 
   // create what we will view
@@ -35,29 +37,34 @@ test.onlyIfWebGL('Test vtkSphereMapper Rendering', (t) => {
   const mapper = gc.registerResource(vtkSphereMapper.newInstance());
   actor.setMapper(mapper);
 
-  const coneSource = gc.registerResource(vtkConeSource.newInstance({ height: 1.0 }));
+  const coneSource = gc.registerResource(
+    vtkConeSource.newInstance({ height: 1.0 })
+  );
 
   const scalarRange = [1000000, -1000000];
 
   const filter = gc.registerResource(vtkCalculator.newInstance());
   filter.setInputConnection(coneSource.getOutputPort());
   filter.setFormula({
-    getArrays: inputDataSets => ({
-      input: [
-        { location: FieldDataTypes.COORDINATE },
-      ],
+    getArrays: (inputDataSets) => ({
+      input: [{ location: FieldDataTypes.COORDINATE }],
       output: [
-        { location: FieldDataTypes.POINT, name: 'distance magnitude', dataType: 'Float32Array', attribute: AttributeTypes.SCALARS },
+        {
+          location: FieldDataTypes.POINT,
+          name: 'distance magnitude',
+          dataType: 'Float32Array',
+          attribute: AttributeTypes.SCALARS,
+        },
       ],
     }),
     evaluate: (arraysIn, arraysOut) => {
-      const [coords] = arraysIn.map(d => d.getData());
-      const [dmag] = arraysOut.map(d => d.getData());
+      const [coords] = arraysIn.map((d) => d.getData());
+      const [dmag] = arraysOut.map((d) => d.getData());
 
       for (let i = 0, sz = coords.length / 3; i < sz; ++i) {
         const idx = i * 3;
         const [x, y, z] = [coords[idx], coords[idx + 1], coords[idx + 2]];
-        dmag[i] = Math.sqrt((x * x) + (y * y) + (z * z));
+        dmag[i] = Math.sqrt(x * x + y * y + z * z);
         if (dmag[i] > scalarRange[1]) {
           scalarRange[1] = dmag[i];
         }
@@ -65,7 +72,7 @@ test.onlyIfWebGL('Test vtkSphereMapper Rendering', (t) => {
           scalarRange[0] = dmag[i];
         }
       }
-      arraysOut.forEach(arr => arr.modified());
+      arraysOut.forEach((arr) => arr.modified());
     },
   });
 
@@ -74,7 +81,9 @@ test.onlyIfWebGL('Test vtkSphereMapper Rendering', (t) => {
 
   mapper.setInputConnection(filter.getOutputPort());
 
-  console.log(`Setting mapper scalar range to [${scalarRange[0]}, ${scalarRange[1]}]`);
+  console.log(
+    `Setting mapper scalar range to [${scalarRange[0]}, ${scalarRange[1]}]`
+  );
   mapper.setScalarRange(scalarRange);
   mapper.setColorByArrayName('distance magnitude');
   mapper.setColorModeToMapScalars();
@@ -95,5 +104,12 @@ test.onlyIfWebGL('Test vtkSphereMapper Rendering', (t) => {
   renderWindow.render();
 
   const image = glwindow.captureImage();
-  testUtils.compareImages(image, [baseline], 'Rendering/Core/SphereMapper/testDisableScalarColoring', t, 1.0, gc.releaseResources);
+  testUtils.compareImages(
+    image,
+    [baseline],
+    'Rendering/Core/SphereMapper/testDisableScalarColoring',
+    t,
+    1.0,
+    gc.releaseResources
+  );
 });

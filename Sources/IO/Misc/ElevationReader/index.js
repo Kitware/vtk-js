@@ -1,7 +1,7 @@
-import macro            from 'vtk.js/Sources/macro';
-import vtkDataArray     from 'vtk.js/Sources/Common/Core/DataArray';
-import vtkPolyData      from 'vtk.js/Sources/Common/DataModel/PolyData';
-import vtkCellArray     from 'vtk.js/Sources/Common/Core/CellArray';
+import macro from 'vtk.js/Sources/macro';
+import vtkDataArray from 'vtk.js/Sources/Common/Core/DataArray';
+import vtkPolyData from 'vtk.js/Sources/Common/DataModel/PolyData';
+import vtkCellArray from 'vtk.js/Sources/Common/Core/CellArray';
 import DataAccessHelper from 'vtk.js/Sources/IO/Core/DataAccessHelper';
 
 // ----------------------------------------------------------------------------
@@ -44,22 +44,20 @@ function vtkElevationReader(publicAPI, model) {
   publicAPI.loadData = () => {
     const promise = fetchCSV(model.url);
 
-    promise.then(
-      (csv) => {
-        model.csv = csv;
-        model.elevation = [];
+    promise.then((csv) => {
+      model.csv = csv;
+      model.elevation = [];
 
-        // Parse data
-        const lines = model.csv.split('\n');
-        lines.forEach((line, lineIdx) => {
-          model.elevation.push(line.split(',').map(str => Number(str)));
-        });
-        publicAPI.modified();
+      // Parse data
+      const lines = model.csv.split('\n');
+      lines.forEach((line, lineIdx) => {
+        model.elevation.push(line.split(',').map((str) => Number(str)));
       });
+      publicAPI.modified();
+    });
 
     return promise;
   };
-
 
   publicAPI.requestData = (inData, outData) => {
     const polydata = vtkPolyData.newInstance();
@@ -73,29 +71,38 @@ function vtkElevationReader(publicAPI, model) {
       points.setNumberOfPoints(iSize * jSize, 3);
       const pointValues = points.getData();
 
-      const polys = vtkCellArray.newInstance({ size: (5 * (iSize - 1) * (jSize - 1)) });
+      const polys = vtkCellArray.newInstance({
+        size: 5 * (iSize - 1) * (jSize - 1),
+      });
       polydata.setPolys(polys);
       const polysValues = polys.getData();
       let cellOffset = 0;
 
       // Texture coords
       const tcData = new Float32Array(iSize * jSize * 2);
-      const tcoords = vtkDataArray.newInstance({ numberOfComponents: 2, values: tcData, name: 'TextureCoordinates' });
+      const tcoords = vtkDataArray.newInstance({
+        numberOfComponents: 2,
+        values: tcData,
+        name: 'TextureCoordinates',
+      });
       polydata.getPointData().setTCoords(tcoords);
 
       for (let j = 0; j < jSize; j++) {
         for (let i = 0; i < iSize; i++) {
-          const offsetIdx = ((j * iSize) + i);
+          const offsetIdx = j * iSize + i;
           const offsetPt = 3 * offsetIdx;
 
           // Fill points coordinates
-          pointValues[offsetPt + 0] = model.origin[0] + (i * model.xSpacing * model.xDirection);
-          pointValues[offsetPt + 1] = model.origin[1] + (j * model.ySpacing * model.yDirection);
-          pointValues[offsetPt + 2] = model.origin[2] + (model.elevation[j][i] * model.zScaling);
+          pointValues[offsetPt + 0] =
+            model.origin[0] + i * model.xSpacing * model.xDirection;
+          pointValues[offsetPt + 1] =
+            model.origin[1] + j * model.ySpacing * model.yDirection;
+          pointValues[offsetPt + 2] =
+            model.origin[2] + model.elevation[j][i] * model.zScaling;
 
           // fill in tcoords
-          tcData[(offsetIdx * 2)] = i / (iSize - 1.0);
-          tcData[(offsetIdx * 2) + 1] = 1.0 - (j / (jSize - 1.0));
+          tcData[offsetIdx * 2] = i / (iSize - 1.0);
+          tcData[offsetIdx * 2 + 1] = 1.0 - j / (jSize - 1.0);
 
           // Fill polys
           if (i > 0 && j > 0) {
@@ -135,16 +142,12 @@ const DEFAULT_VALUES = {
 
 // ----------------------------------------------------------------------------
 
-
 export function extend(publicAPI, model, initialValues = {}) {
   Object.assign(model, DEFAULT_VALUES, initialValues);
 
   // Build VTK API
   macro.obj(publicAPI, model);
-  macro.get(publicAPI, model, [
-    'url',
-    'baseURL',
-  ]);
+  macro.get(publicAPI, model, ['url', 'baseURL']);
   macro.setGet(publicAPI, model, [
     'dataAccessHelper',
     'xSpacing',

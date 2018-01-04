@@ -1,8 +1,8 @@
-import Constants          from 'vtk.js/Sources/Rendering/Core/ImageMapper/Constants';
-import macro              from 'vtk.js/Sources/macro';
-import vtkAbstractMapper  from 'vtk.js/Sources/Rendering/Core/AbstractMapper';
-import vtkMath            from 'vtk.js/Sources/Common/Core/Math';
-import vtkPlane           from 'vtk.js/Sources/Common/DataModel/Plane';
+import Constants from 'vtk.js/Sources/Rendering/Core/ImageMapper/Constants';
+import macro from 'vtk.js/Sources/macro';
+import vtkAbstractMapper from 'vtk.js/Sources/Rendering/Core/AbstractMapper';
+import vtkMath from 'vtk.js/Sources/Common/Core/Math';
+import vtkPlane from 'vtk.js/Sources/Common/DataModel/Plane';
 
 import { vec3 } from 'gl-matrix';
 
@@ -67,7 +67,11 @@ function vtkImageMapper(publicAPI, model) {
     const extent = imageData.getExtent();
 
     // Slice origin
-    const ijk = [model.xSlice + extent[0], model.ySlice + extent[2], model.zSlice + extent[4]];
+    const ijk = [
+      model.xSlice + extent[0],
+      model.ySlice + extent[2],
+      model.zSlice + extent[4],
+    ];
     const worldOrigin = [0, 0, 0];
     imageData.indexToWorld(ijk, worldOrigin);
 
@@ -80,16 +84,26 @@ function vtkImageMapper(publicAPI, model) {
     worldNormal[2] -= worldOrigin[2];
     vec3.normalize(worldNormal, worldNormal);
 
-    const intersect = vtkPlane.intersectWithLine(p1, p2, worldOrigin, worldNormal);
+    const intersect = vtkPlane.intersectWithLine(
+      p1,
+      p2,
+      worldOrigin,
+      worldNormal
+    );
     if (intersect.intersection) {
       const point = intersect.x;
       const absoluteIJK = [0, 0, 0];
       imageData.worldToIndex(point, absoluteIJK);
 
       // Are we outside our actual extent/bounds
-      if (absoluteIJK[0] < extent[0] || absoluteIJK[0] > extent[1]
-        || absoluteIJK[1] < extent[2] || absoluteIJK[1] > extent[3]
-        || absoluteIJK[2] < extent[4] || absoluteIJK[2] > extent[5]) {
+      if (
+        absoluteIJK[0] < extent[0] ||
+        absoluteIJK[0] > extent[1] ||
+        absoluteIJK[1] < extent[2] ||
+        absoluteIJK[1] > extent[3] ||
+        absoluteIJK[2] < extent[4] ||
+        absoluteIJK[2] > extent[5]
+      ) {
         return null;
       }
 
@@ -112,7 +126,11 @@ function vtkImageMapper(publicAPI, model) {
     const extent = imageData.getExtent();
 
     // Slice origin
-    const ijk = [model.xSlice + extent[0], model.ySlice + extent[2], model.zSlice + extent[4]];
+    const ijk = [
+      model.xSlice + extent[0],
+      model.ySlice + extent[2],
+      model.zSlice + extent[4],
+    ];
     const worldOrigin = [0, 0, 0];
     imageData.indexToWorld(ijk, worldOrigin);
 
@@ -125,17 +143,26 @@ function vtkImageMapper(publicAPI, model) {
     worldNormal[2] -= worldOrigin[2];
     vec3.normalize(worldNormal, worldNormal);
 
-    const intersect = vtkPlane.intersectWithLine(p1, p2, worldOrigin, worldNormal);
+    const intersect = vtkPlane.intersectWithLine(
+      p1,
+      p2,
+      worldOrigin,
+      worldNormal
+    );
     if (intersect.intersection) {
       const point = intersect.x;
       const absoluteIJK = [0, 0, 0];
       imageData.worldToIndex(point, absoluteIJK);
 
-
       // Are we outside our actual extent/bounds
-      if (absoluteIJK[0] < extent[0] || absoluteIJK[0] > extent[1]
-        || absoluteIJK[1] < extent[2] || absoluteIJK[1] > extent[3]
-        || absoluteIJK[2] < extent[4] || absoluteIJK[2] > extent[5]) {
+      if (
+        absoluteIJK[0] < extent[0] ||
+        absoluteIJK[0] > extent[1] ||
+        absoluteIJK[1] < extent[2] ||
+        absoluteIJK[1] > extent[3] ||
+        absoluteIJK[2] < extent[4] ||
+        absoluteIJK[2] > extent[5]
+      ) {
         return null;
       }
 
@@ -187,9 +214,7 @@ export function extend(publicAPI, model, initialValues = {}) {
     'renderToRectangle',
     'sliceAtFocalPoint',
   ]);
-  macro.setGetArray(publicAPI, model, [
-    'customDisplayExtent',
-  ], 4);
+  macro.setGetArray(publicAPI, model, ['customDisplayExtent'], 4);
 
   // Object methods
   vtkImageMapper(publicAPI, model);

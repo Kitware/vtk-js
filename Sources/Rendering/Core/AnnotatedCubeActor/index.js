@@ -1,9 +1,9 @@
-import macro          from 'vtk.js/Sources/macro';
-import vtkActor       from 'vtk.js/Sources/Rendering/Core/Actor';
-import vtkMapper      from 'vtk.js/Sources/Rendering/Core/Mapper';
-import vtkTexture     from 'vtk.js/Sources/Rendering/Core/Texture';
-import vtkCubeSource  from 'vtk.js/Sources/Filters/Sources/CubeSource';
-import ImageHelper    from 'vtk.js/Sources/Common/Core/ImageHelper';
+import macro from 'vtk.js/Sources/macro';
+import vtkActor from 'vtk.js/Sources/Rendering/Core/Actor';
+import vtkMapper from 'vtk.js/Sources/Rendering/Core/Mapper';
+import vtkTexture from 'vtk.js/Sources/Rendering/Core/Texture';
+import vtkCubeSource from 'vtk.js/Sources/Filters/Sources/CubeSource';
+import ImageHelper from 'vtk.js/Sources/Common/Core/ImageHelper';
 
 const FACE_TO_INDEX = {
   xPlus: 0,
@@ -46,7 +46,11 @@ function vtkAnnotatedCubeActor(publicAPI, model) {
       Object.assign(model[`${faceName}FaceProperty`], newProp);
     }
 
-    const prop = Object.assign({}, model.defaultStyle, model[`${faceName}FaceProperty`]);
+    const prop = Object.assign(
+      {},
+      model.defaultStyle,
+      model[`${faceName}FaceProperty`]
+    );
 
     // set canvas resolution
     canvas.width = prop.resolution;
@@ -99,12 +103,12 @@ function vtkAnnotatedCubeActor(publicAPI, model) {
     updateAllFaceTextures();
   };
 
-  publicAPI.setXPlusFaceProperty = prop => updateFaceTexture('xPlus', prop);
-  publicAPI.setXMinusFaceProperty = prop => updateFaceTexture('xMinus', prop);
-  publicAPI.setYPlusFaceProperty = prop => updateFaceTexture('yPlus', prop);
-  publicAPI.setYMinusFaceProperty = prop => updateFaceTexture('yMinus', prop);
-  publicAPI.setZPlusFaceProperty = prop => updateFaceTexture('zPlus', prop);
-  publicAPI.setZMinusFaceProperty = prop => updateFaceTexture('zMinus', prop);
+  publicAPI.setXPlusFaceProperty = (prop) => updateFaceTexture('xPlus', prop);
+  publicAPI.setXMinusFaceProperty = (prop) => updateFaceTexture('xMinus', prop);
+  publicAPI.setYPlusFaceProperty = (prop) => updateFaceTexture('yPlus', prop);
+  publicAPI.setYMinusFaceProperty = (prop) => updateFaceTexture('yMinus', prop);
+  publicAPI.setZPlusFaceProperty = (prop) => updateFaceTexture('zPlus', prop);
+  publicAPI.setZMinusFaceProperty = (prop) => updateFaceTexture('zMinus', prop);
 
   // constructor
 
@@ -129,7 +133,7 @@ export const DEFAULT_VALUES = {
     fontFamily: 'Arial',
     fontColor: 'black',
     fontStyle: 'normal',
-    fontSizeScale: resolution => resolution / 1.8,
+    fontSizeScale: (resolution) => resolution / 1.8,
     edgeThickness: 0.1,
     edgeColor: 'black',
     resolution: 200,

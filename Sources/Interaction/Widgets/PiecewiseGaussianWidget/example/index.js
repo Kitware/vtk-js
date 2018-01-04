@@ -1,12 +1,12 @@
 import 'vtk.js/Sources/favicon';
 
-import vtkColorTransferFunction   from 'vtk.js/Sources/Rendering/Core/ColorTransferFunction';
-import vtkFullScreenRenderWindow  from 'vtk.js/Sources/Rendering/Misc/FullScreenRenderWindow';
-import vtkHttpDataSetReader       from 'vtk.js/Sources/IO/Core/HttpDataSetReader';
-import vtkPiecewiseFunction       from 'vtk.js/Sources/Common/DataModel/PiecewiseFunction';
+import vtkColorTransferFunction from 'vtk.js/Sources/Rendering/Core/ColorTransferFunction';
+import vtkFullScreenRenderWindow from 'vtk.js/Sources/Rendering/Misc/FullScreenRenderWindow';
+import vtkHttpDataSetReader from 'vtk.js/Sources/IO/Core/HttpDataSetReader';
+import vtkPiecewiseFunction from 'vtk.js/Sources/Common/DataModel/PiecewiseFunction';
 import vtkPiecewiseGaussianWidget from 'vtk.js/Sources/Interaction/Widgets/PiecewiseGaussianWidget';
-import vtkVolume                  from 'vtk.js/Sources/Rendering/Core/Volume';
-import vtkVolumeMapper            from 'vtk.js/Sources/Rendering/Core/VolumeMapper';
+import vtkVolume from 'vtk.js/Sources/Rendering/Core/Volume';
+import vtkVolumeMapper from 'vtk.js/Sources/Rendering/Core/VolumeMapper';
 
 import vtkColorMaps from 'vtk.js/Sources/Rendering/Core/ColorTransferFunction/ColorMaps';
 
@@ -14,11 +14,20 @@ import vtkColorMaps from 'vtk.js/Sources/Rendering/Core/ColorTransferFunction/Co
 // Standard rendering code setup
 // ----------------------------------------------------------------------------
 
-const rootContainer = document.querySelector('.vtk-js-example-piecewise-gaussian-widget');
+const rootContainer = document.querySelector(
+  '.vtk-js-example-piecewise-gaussian-widget'
+);
 const containerStyle = rootContainer ? { height: '100%' } : null;
-const urlToLoad = rootContainer ? rootContainer.dataset.url || 'https://kitware.github.io/vtk-js/data/volume/LIDC2.vti' : `${__BASE_PATH__}/data/volume/LIDC2.vti`;
+const urlToLoad = rootContainer
+  ? rootContainer.dataset.url ||
+    'https://kitware.github.io/vtk-js/data/volume/LIDC2.vti'
+  : `${__BASE_PATH__}/data/volume/LIDC2.vti`;
 
-const fullScreenRenderer = vtkFullScreenRenderWindow.newInstance({ background: [0, 0, 0], rootContainer, containerStyle });
+const fullScreenRenderer = vtkFullScreenRenderWindow.newInstance({
+  background: [0, 0, 0],
+  rootContainer,
+  containerStyle,
+});
 const renderer = fullScreenRenderer.getRenderer();
 const renderWindow = fullScreenRenderer.getRenderWindow();
 
@@ -55,8 +64,12 @@ const globalDataRange = [0, 255];
 const lookupTable = vtkColorTransferFunction.newInstance();
 
 function changePreset(delta = 1) {
-  presetIndex = (presetIndex + delta + vtkColorMaps.rgbPresetNames.length) % vtkColorMaps.rgbPresetNames.length;
-  lookupTable.applyColorMap(vtkColorMaps.getPresetByName(vtkColorMaps.rgbPresetNames[presetIndex]));
+  presetIndex =
+    (presetIndex + delta + vtkColorMaps.rgbPresetNames.length) %
+    vtkColorMaps.rgbPresetNames.length;
+  lookupTable.applyColorMap(
+    vtkColorMaps.getPresetByName(vtkColorMaps.rgbPresetNames[presetIndex])
+  );
   lookupTable.setMappingRange(...globalDataRange);
   lookupTable.updateRange();
   labelContainer.innerHTML = vtkColorMaps.rgbPresetNames[presetIndex];
@@ -84,8 +97,10 @@ labelContainer.addEventListener('click', (event) => {
 // Example code
 // ----------------------------------------------------------------------------
 
-
-const widget = vtkPiecewiseGaussianWidget.newInstance({ numberOfBins: 256, size: [400, 150] });
+const widget = vtkPiecewiseGaussianWidget.newInstance({
+  numberOfBins: 256,
+  size: [400, 150],
+});
 widget.updateStyle({
   backgroundColor: 'rgba(255, 255, 255, 0.6)',
   histogramColor: 'rgba(100, 100, 100, 0.5)',

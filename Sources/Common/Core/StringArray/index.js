@@ -14,7 +14,7 @@ function vtkStringArray(publicAPI, model) {
   // Return the data component at the location specified by tupleIdx and
   // compIdx.
   publicAPI.getComponent = (tupleIdx, compIdx = 0) =>
-    model.values[(tupleIdx * model.numberOfComponents) + compIdx];
+    model.values[tupleIdx * model.numberOfComponents + compIdx];
 
   // Description:
   // Set the data component at the location specified by tupleIdx and compIdx
@@ -23,8 +23,8 @@ function vtkStringArray(publicAPI, model) {
   //  NumberOfComponents. Make sure enough memory has been allocated
   // (use SetNumberOfTuples() and SetNumberOfComponents()).
   publicAPI.setComponent = (tupleIdx, compIdx, value) => {
-    if (value !== model.values[(tupleIdx * model.numberOfComponents) + compIdx]) {
-      model.values[(tupleIdx * model.numberOfComponents) + compIdx] = value;
+    if (value !== model.values[tupleIdx * model.numberOfComponents + compIdx]) {
+      model.values[tupleIdx * model.numberOfComponents + compIdx] = value;
       publicAPI.modified();
     }
   };
@@ -46,13 +46,15 @@ function vtkStringArray(publicAPI, model) {
   publicAPI.getTupleLocation = (idx = 1) => idx * model.numberOfComponents;
   publicAPI.getNumberOfComponents = () => model.numberOfComponents;
   publicAPI.getNumberOfValues = () => model.values.length;
-  publicAPI.getNumberOfTuples = () => model.values.length / model.numberOfComponents;
+  publicAPI.getNumberOfTuples = () =>
+    model.values.length / model.numberOfComponents;
   publicAPI.getDataType = () => model.dataType;
   /* eslint-disable no-use-before-define */
-  publicAPI.newClone = () => newInstance({
-    name: model.name,
-    numberOfComponents: model.numberOfComponents,
-  });
+  publicAPI.newClone = () =>
+    newInstance({
+      name: model.name,
+      numberOfComponents: model.numberOfComponents,
+    });
   /* eslint-enable no-use-before-define */
 
   publicAPI.getName = () => {
@@ -93,8 +95,10 @@ const DEFAULT_VALUES = {
 export function extend(publicAPI, model, initialValues = {}) {
   Object.assign(model, DEFAULT_VALUES, initialValues);
 
-  if ((!model.empty && !model.values && !model.size)) {
-    throw new TypeError('Cannot create vtkStringArray object without: size > 0, values');
+  if (!model.empty && !model.values && !model.size) {
+    throw new TypeError(
+      'Cannot create vtkStringArray object without: size > 0, values'
+    );
   }
 
   if (!model.values) {

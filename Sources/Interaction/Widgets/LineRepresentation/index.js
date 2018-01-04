@@ -10,7 +10,6 @@ import vtkSphereHandleRepresentation from 'vtk.js/Sources/Interaction/Widgets/Sp
 import vtkWidgetRepresentation from 'vtk.js/Sources/Interaction/Widgets/WidgetRepresentation';
 import { InteractionState } from '../HandleRepresentation/Constants';
 
-
 const { State, Restrict } = Constants;
 
 // ----------------------------------------------------------------------------
@@ -40,10 +39,14 @@ function vtkLineRepresentation(publicAPI, model) {
   };
 
   publicAPI.getResolution = () => model.lineSource.getResolution();
-  publicAPI.getPoint1WorldPosition = () => model.point1Representation.getWorldPosition();
-  publicAPI.getPoint2WorldPosition = () => model.point2Representation.getWorldPosition();
-  publicAPI.getPoint1DisplayPosition = () => model.point1Representation.getDisplayPosition();
-  publicAPI.getPoint2DisplayPosition = () => model.point2Representation.getDisplayPosition();
+  publicAPI.getPoint1WorldPosition = () =>
+    model.point1Representation.getWorldPosition();
+  publicAPI.getPoint2WorldPosition = () =>
+    model.point2Representation.getWorldPosition();
+  publicAPI.getPoint1DisplayPosition = () =>
+    model.point1Representation.getDisplayPosition();
+  publicAPI.getPoint2DisplayPosition = () =>
+    model.point2Representation.getDisplayPosition();
   publicAPI.setPoint1WorldPosition = (pos) => {
     model.point1Representation.setWorldPosition(pos);
     model.lineSource.setPoint1(...pos);
@@ -85,7 +88,10 @@ function vtkLineRepresentation(publicAPI, model) {
     if (model.interactionState === State.SCALING) {
       const dp1 = model.point1Representation.getDisplayPosition();
       const dp2 = model.point2Representation.getDisplayPosition();
-      model.length = Math.sqrt(((dp1[0] - dp2[0]) * (dp1[0] - dp2[0])) + ((dp1[1] - dp2[1]) * (dp1[1] - dp2[1])));
+      model.length = Math.sqrt(
+        (dp1[0] - dp2[0]) * (dp1[0] - dp2[0]) +
+          (dp1[1] - dp2[1]) * (dp1[1] - dp2[1])
+      );
     }
   };
 
@@ -94,7 +100,7 @@ function vtkLineRepresentation(publicAPI, model) {
       if (model.restrictFlag !== 0) {
         const x = model.point1Representation.getWorldPosition();
         for (let i = 0; i < 3; i++) {
-          x[i] = (model.restrictFlag === (i + 1)) ? x[i] : model.startP1[i];
+          x[i] = model.restrictFlag === i + 1 ? x[i] : model.startP1[i];
         }
         model.point1Representation.setWorldPosition(x);
       }
@@ -102,7 +108,7 @@ function vtkLineRepresentation(publicAPI, model) {
       if (model.restrictFlag !== 0) {
         const x = model.point2Representation.getWorldPosition();
         for (let i = 0; i < 3; i++) {
-          x[i] = (model.restrictFlag === (i + 1)) ? x[i] : model.startP2[i];
+          x[i] = model.restrictFlag === i + 1 ? x[i] : model.startP2[i];
         }
         model.point2Representation.setWorldPosition(x);
       }
@@ -158,9 +164,10 @@ function vtkLineRepresentation(publicAPI, model) {
       model.initialBounds[i] = newBounds[i];
     }
     model.initialLength = Math.sqrt(
-      ((newBounds[1] - newBounds[0]) * (newBounds[1] - newBounds[0])) +
-      ((newBounds[3] - newBounds[2]) * (newBounds[3] - newBounds[2])) +
-      ((newBounds[5] - newBounds[4]) * (newBounds[5] - newBounds[4])));
+      (newBounds[1] - newBounds[0]) * (newBounds[1] - newBounds[0]) +
+        (newBounds[3] - newBounds[2]) * (newBounds[3] - newBounds[2]) +
+        (newBounds[5] - newBounds[4]) * (newBounds[5] - newBounds[4])
+    );
 
     // When PlaceWidget() is invoked, the widget orientation is preserved, but it
     // is allowed to translate and scale. This means it is centered in the
@@ -175,11 +182,7 @@ function vtkLineRepresentation(publicAPI, model) {
       model.initialLength * (p1[1] - p2[1]),
       model.initialLength * (p1[2] - p2[2]),
     ];
-    const o = [
-      center[0] - r[0],
-      center[1] - r[1],
-      center[2] - r[2],
-    ];
+    const o = [center[0] - r[0], center[1] - r[1], center[2] - r[2]];
 
     const placedP1 = [];
     const t = [];
@@ -363,8 +366,8 @@ function vtkLineRepresentation(publicAPI, model) {
       if (x[i] < model.initialBounds[2 * i]) {
         x[i] = model.initialBounds[2 * i];
       }
-      if (x[i] > model.initialBounds[(2 * i) + 1]) {
-        x[i] = model.initialBounds[(2 * i) + 1];
+      if (x[i] > model.initialBounds[2 * i + 1]) {
+        x[i] = model.initialBounds[2 * i + 1];
       }
     }
   };

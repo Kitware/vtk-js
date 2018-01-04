@@ -73,9 +73,9 @@ With GitGutter, you can see which lines have been added, deleted or modified in 
 
 This plugin adds proper syntax highlighting to your ES6/2015 and React JSX code.
 
-### JsFormat
+### JsPrettier
 
-Once installed, to use JSFormat, go to your JS file and hit Ctrl/Cmd + Alt + f. Alternatively, use the context menu.
+[More information available here](https://packagecontrol.io/packages/JsPrettier)
 
 ### SublimeLinter + SublimeLinter-contrib-eslint
 

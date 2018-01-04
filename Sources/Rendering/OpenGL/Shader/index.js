@@ -15,7 +15,11 @@ function vtkShader(publicAPI, model) {
   publicAPI.compile = () => {
     let stype = model.context.VERTEX_SHADER;
 
-    if (!model.source || !model.source.length || model.shaderType === 'Unknown') {
+    if (
+      !model.source ||
+      !model.source.length ||
+      model.shaderType === 'Unknown'
+    ) {
       return false;
     }
 
@@ -41,7 +45,10 @@ function vtkShader(publicAPI, model) {
     model.handle = model.context.createShader(stype);
     model.context.shaderSource(model.handle, model.source);
     model.context.compileShader(model.handle);
-    const isCompiled = model.context.getShaderParameter(model.handle, model.context.COMPILE_STATUS);
+    const isCompiled = model.context.getShaderParameter(
+      model.handle,
+      model.context.COMPILE_STATUS
+    );
     if (!isCompiled) {
       const lastError = model.context.getShaderInfoLog(model.handle);
       vtkErrorMacro(`Error compiling shader '${model.source}': ${lastError}`);

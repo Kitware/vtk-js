@@ -1,18 +1,20 @@
 import 'vtk.js/Sources/favicon';
 
-import vtkActor                     from 'vtk.js/Sources/Rendering/Core/Actor';
-import vtkHttpDataSetReader         from 'vtk.js/Sources/IO/Core/HttpDataSetReader';
-import vtkFullScreenRenderWindow    from 'vtk.js/Sources/Rendering/Misc/FullScreenRenderWindow';
-import vtkMapper                    from 'vtk.js/Sources/Rendering/Core/Mapper';
-import vtkCubeSource                from 'vtk.js/Sources/Filters/Sources/CubeSource';
-import vtkTexture                   from 'vtk.js/Sources/Rendering/Core/Texture';
+import vtkActor from 'vtk.js/Sources/Rendering/Core/Actor';
+import vtkHttpDataSetReader from 'vtk.js/Sources/IO/Core/HttpDataSetReader';
+import vtkFullScreenRenderWindow from 'vtk.js/Sources/Rendering/Misc/FullScreenRenderWindow';
+import vtkMapper from 'vtk.js/Sources/Rendering/Core/Mapper';
+import vtkCubeSource from 'vtk.js/Sources/Filters/Sources/CubeSource';
+import vtkTexture from 'vtk.js/Sources/Rendering/Core/Texture';
 import vtkDeviceOrientationToCamera from 'vtk.js/Sources/Interaction/Misc/DeviceOrientationToCamera';
 
 // ----------------------------------------------------------------------------
 // Standard rendering code setup
 // ----------------------------------------------------------------------------
 
-const fullScreenRenderer = vtkFullScreenRenderWindow.newInstance({ background: [0, 0, 0] });
+const fullScreenRenderer = vtkFullScreenRenderWindow.newInstance({
+  background: [0, 0, 0],
+});
 const renderer = fullScreenRenderer.getRenderer();
 const renderWindow = fullScreenRenderer.getRenderWindow();
 const interactor = fullScreenRenderer.getInteractor();
@@ -54,8 +56,14 @@ function render() {
 function dataReady() {
   const bounds = renderer.computeVisiblePropBounds();
   const scale = 500;
-  cube.setBounds(bounds[0] * scale, bounds[1] * scale, bounds[2] * scale,
-                 bounds[3] * scale, bounds[4] * scale, bounds[5] * scale);
+  cube.setBounds(
+    bounds[0] * scale,
+    bounds[1] * scale,
+    bounds[2] * scale,
+    bounds[3] * scale,
+    bounds[4] * scale,
+    bounds[5] * scale
+  );
   renderer.addActor(actor);
 
   renderer.getActiveCamera().setPhysicalViewUp(0, -1, 0);
@@ -71,7 +79,10 @@ function loadTexture(url, index) {
   const reader = vtkHttpDataSetReader.newInstance({ fetchGzip: true });
   reader.setUrl(url, { loadData: true }).then(() => {
     const dataset = reader.getOutputData();
-    const scalarName = dataset.getPointData().getArrayByIndex(0).getName();
+    const scalarName = dataset
+      .getPointData()
+      .getArrayByIndex(0)
+      .getName();
     dataset.getPointData().setActiveScalars(scalarName);
     texture.setInputData(dataset, index);
     nbTextureLoaded += 1;
@@ -95,10 +106,15 @@ texturePathList.forEach(loadTexture);
 // If device support motion bind it to the camera
 if (vtkDeviceOrientationToCamera.isDeviceOrientationSupported()) {
   vtkDeviceOrientationToCamera.addWindowListeners();
-  cameraListenerId = vtkDeviceOrientationToCamera.addCameraToSynchronize(interactor, renderer.getActiveCamera(), renderer.resetCameraClippingRange);
+  cameraListenerId = vtkDeviceOrientationToCamera.addCameraToSynchronize(
+    interactor,
+    renderer.getActiveCamera(),
+    renderer.resetCameraClippingRange
+  );
 } else {
-  alert('Your device does not support motion detection so regular interaction will be available');
+  alert(
+    'Your device does not support motion detection so regular interaction will be available'
+  );
 }
 
 setTimeout(validateMotionDetectionAgain, 100);
-

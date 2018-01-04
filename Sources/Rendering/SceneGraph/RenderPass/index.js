@@ -10,7 +10,9 @@ function vtkRenderPass(publicAPI, model) {
 
   publicAPI.setCurrentOperation = (val) => {
     model.currentOperation = val;
-    model.currentTraverseOperation = `traverse${macro.capitalize(model.currentOperation)}`;
+    model.currentTraverseOperation = `traverse${macro.capitalize(
+      model.currentOperation
+    )}`;
   };
 
   publicAPI.getTraverseOperation = () => model.currentTraverseOperation;
@@ -60,9 +62,7 @@ export function extend(publicAPI, model, initialValues = {}) {
 
   // Build VTK API
   macro.obj(publicAPI, model);
-  macro.get(publicAPI, model, [
-    'currentOperation',
-  ]);
+  macro.get(publicAPI, model, ['currentOperation']);
   macro.setGet(publicAPI, model, [
     'delegates',
     'currentParent',

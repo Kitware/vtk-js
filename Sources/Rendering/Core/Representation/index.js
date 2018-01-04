@@ -21,7 +21,7 @@ function vtkRepresentation(publicAPI, model) {
 
   publicAPI.removeActor = function removeActor(...actors) {
     const size = model.actors.length;
-    model.actors = model.actors.filter(a => actors.indexOf(a) === -1);
+    model.actors = model.actors.filter((a) => actors.indexOf(a) === -1);
     if (model.actors.length < size) {
       publicAPI.modified();
     }
@@ -32,23 +32,17 @@ function vtkRepresentation(publicAPI, model) {
 // Object factory
 // ----------------------------------------------------------------------------
 
-const DEFAULT_VALUES = {
-};
+const DEFAULT_VALUES = {};
 
 // ----------------------------------------------------------------------------
-
 
 export function extend(publicAPI, model, initialValues = {}) {
   Object.assign(model, DEFAULT_VALUES, initialValues);
 
   // Build VTK API
   macro.obj(publicAPI, model);
-  macro.get(publicAPI, model, [
-    'actors',
-  ]);
-  macro.setGet(publicAPI, model, [
-    'input',
-  ]);
+  macro.get(publicAPI, model, ['actors']);
+  macro.setGet(publicAPI, model, ['input']);
 
   // Object methods
   vtkRepresentation(publicAPI, model);

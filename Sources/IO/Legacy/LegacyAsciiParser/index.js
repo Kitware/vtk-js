@@ -1,5 +1,5 @@
 import vtkDataArray from 'vtk.js/Sources/Common/Core/DataArray';
-import vtkPolyData  from 'vtk.js/Sources/Common/DataModel/PolyData';
+import vtkPolyData from 'vtk.js/Sources/Common/DataModel/PolyData';
 
 const METHOD_MAPPING = {
   POINTS: 'getPoints',
@@ -60,7 +60,11 @@ const GENERIC_CELL_HANDLER = {
     const [name, nbCells, nbValues] = line.split(' ');
     const cellArray = dataModel.dataset[METHOD_MAPPING[name]]();
     cellArray.set({ numberOfCells: Number(nbCells) }, true); // Force numberOfCells update
-    dataModel.arrayHandler = createArrayHandler(new Uint32Array(Number(nbValues)), cellArray.setData, 1);
+    dataModel.arrayHandler = createArrayHandler(
+      new Uint32Array(Number(nbValues)),
+      cellArray.setData,
+      1
+    );
     return true;
   },
   parse(line, dataModel) {
@@ -88,7 +92,10 @@ const TYPE_PARSER = {
   POINTS: {
     init(line, dataModel) {
       const [name, size, type] = line.split(' ');
-      const array = (type === 'float') ? new Float32Array(3 * Number(size)) : new Float64Array(3 * Number(size));
+      const array =
+        type === 'float'
+          ? new Float32Array(3 * Number(size))
+          : new Float64Array(3 * Number(size));
       const dataArray = dataModel.dataset.getPoints();
       dataArray.setName(name);
       dataModel.arrayHandler = createArrayHandler(array, dataArray.setData, 3);
@@ -99,7 +106,9 @@ const TYPE_PARSER = {
     },
   },
   METADATA: {
-    init(line, dataModel) { return true; },
+    init(line, dataModel) {
+      return true;
+    },
     parse(line, dataModel) {
       return !!line.length;
     },
@@ -134,8 +143,14 @@ const TYPE_PARSER = {
       const size = dataModel[dataModel.activeFieldLocation] * Number(numComp);
       const array = new DATATYPES[dataType](size);
       const dataArray = vtkDataArray.newInstance({ name, empty: true });
-      dataModel.dataset[METHOD_MAPPING[dataModel.activeFieldLocation]]()[REGISTER_MAPPING[type]](dataArray);
-      dataModel.arrayHandler = createArrayHandler(array, dataArray.setData, Number(numComp));
+      dataModel.dataset[METHOD_MAPPING[dataModel.activeFieldLocation]]()[
+        REGISTER_MAPPING[type]
+      ](dataArray);
+      dataModel.arrayHandler = createArrayHandler(
+        array,
+        dataArray.setData,
+        Number(numComp)
+      );
       return true;
     },
     parse(line, dataModel) {
@@ -151,8 +166,14 @@ const TYPE_PARSER = {
       const size = dataModel[dataModel.activeFieldLocation] * Number(numComp);
       const array = new Uint8Array(size);
       const dataArray = vtkDataArray.newInstance({ name, empty: true });
-      dataModel.dataset[METHOD_MAPPING[dataModel.activeFieldLocation]]()[REGISTER_MAPPING[type]](dataArray);
-      dataModel.arrayHandler = createArrayHandler(array, dataArray.setData, Number(numComp));
+      dataModel.dataset[METHOD_MAPPING[dataModel.activeFieldLocation]]()[
+        REGISTER_MAPPING[type]
+      ](dataArray);
+      dataModel.arrayHandler = createArrayHandler(
+        array,
+        dataArray.setData,
+        Number(numComp)
+      );
       return true;
     },
     parse(line, dataModel) {
@@ -168,7 +189,9 @@ const TYPE_PARSER = {
       const size = dataModel[dataModel.activeFieldLocation] * 3;
       const array = new DATATYPES[dataType](size);
       const dataArray = vtkDataArray.newInstance({ name, empty: true });
-      dataModel.dataset[METHOD_MAPPING[dataModel.activeFieldLocation]]()[REGISTER_MAPPING[type]](dataArray);
+      dataModel.dataset[METHOD_MAPPING[dataModel.activeFieldLocation]]()[
+        REGISTER_MAPPING[type]
+      ](dataArray);
       dataModel.arrayHandler = createArrayHandler(array, dataArray.setData, 3);
       return true;
     },
@@ -182,7 +205,9 @@ const TYPE_PARSER = {
       const size = dataModel[dataModel.activeFieldLocation] * 3;
       const array = new Float32Array(size);
       const dataArray = vtkDataArray.newInstance({ name, empty: true });
-      dataModel.dataset[METHOD_MAPPING[dataModel.activeFieldLocation]]()[REGISTER_MAPPING[type]](dataArray);
+      dataModel.dataset[METHOD_MAPPING[dataModel.activeFieldLocation]]()[
+        REGISTER_MAPPING[type]
+      ](dataArray);
       dataModel.arrayHandler = createArrayHandler(array, dataArray.setData, 3);
       return true;
     },
@@ -193,10 +218,13 @@ const TYPE_PARSER = {
   TEXTURE_COORDINATES: {
     init(line, dataModel) {
       const [type, name, numberOfComponents, dataType] = line.split(' ');
-      const size = dataModel[dataModel.activeFieldLocation] * Number(numberOfComponents);
+      const size =
+        dataModel[dataModel.activeFieldLocation] * Number(numberOfComponents);
       const array = new DATATYPES[dataType](size);
       const dataArray = vtkDataArray.newInstance({ name, empty: true });
-      dataModel.dataset[METHOD_MAPPING[dataModel.activeFieldLocation]]()[REGISTER_MAPPING[type]](dataArray);
+      dataModel.dataset[METHOD_MAPPING[dataModel.activeFieldLocation]]()[
+        REGISTER_MAPPING[type]
+      ](dataArray);
       dataModel.arrayHandler = createArrayHandler(array, dataArray.setData, 3);
       return true;
     },
@@ -210,7 +238,9 @@ const TYPE_PARSER = {
       const size = dataModel[dataModel.activeFieldLocation] * 9;
       const array = new DATATYPES[dataType](size);
       const dataArray = vtkDataArray.newInstance({ name, empty: true });
-      dataModel.dataset[METHOD_MAPPING[dataModel.activeFieldLocation]]()[REGISTER_MAPPING[type]](dataArray);
+      dataModel.dataset[METHOD_MAPPING[dataModel.activeFieldLocation]]()[
+        REGISTER_MAPPING[type]
+      ](dataArray);
       dataModel.arrayHandler = createArrayHandler(array, dataArray.setData, 9);
       return true;
     },
@@ -250,4 +280,3 @@ function parseLegacyASCII(content, dataModel = {}) {
 export default {
   parseLegacyASCII,
 };
-

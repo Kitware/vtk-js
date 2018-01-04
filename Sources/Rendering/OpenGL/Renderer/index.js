@@ -1,6 +1,6 @@
-import macro        from 'vtk.js/Sources/macro';
-import vtkViewNode  from 'vtk.js/Sources/Rendering/SceneGraph/ViewNode';
-import vtkMath      from 'vtk.js/Sources/Common/Core/Math';
+import macro from 'vtk.js/Sources/macro';
+import vtkViewNode from 'vtk.js/Sources/Rendering/SceneGraph/ViewNode';
+import vtkMath from 'vtk.js/Sources/Common/Core/Math';
 
 const { vtkDebugMacro } = macro;
 
@@ -27,8 +27,7 @@ function vtkOpenGLRenderer(publicAPI, model) {
       publicAPI.updateLights();
       publicAPI.prepareNodes();
       publicAPI.addMissingNode(model.renderable.getActiveCamera());
-      publicAPI.addMissingNodes(
-        model.renderable.getViewPropsWithNestedProps());
+      publicAPI.addMissingNodes(model.renderable.getViewPropsWithNestedProps());
       publicAPI.removeUnusedNodes();
     }
   };
@@ -83,7 +82,11 @@ function vtkOpenGLRenderer(publicAPI, model) {
   publicAPI.getAspectRatio = () => {
     const size = model.parent.getSizeByReference();
     const viewport = model.renderable.getViewportByReference();
-    return size[0] * (viewport[2] - viewport[0]) / ((viewport[3] - viewport[1]) * size[1]);
+    return (
+      size[0] *
+      (viewport[2] - viewport[0]) /
+      ((viewport[3] - viewport[1]) * size[1])
+    );
   };
 
   publicAPI.getTiledSizeAndOrigin = () => {
@@ -107,10 +110,10 @@ function vtkOpenGLRenderer(publicAPI, model) {
     let vpu2 = vtkMath.clampValue(vport[2] - tileViewPort[0], 0.0, 1.0);
     let vpv2 = vtkMath.clampValue(vport[3] - tileViewPort[1], 0.0, 1.0);
     // also watch for the upper right boundary of the tile
-    if (vpu2 > (tileViewPort[2] - tileViewPort[0])) {
+    if (vpu2 > tileViewPort[2] - tileViewPort[0]) {
       vpu2 = tileViewPort[2] - tileViewPort[0];
     }
-    if (vpv2 > (tileViewPort[3] - tileViewPort[1])) {
+    if (vpv2 > tileViewPort[3] - tileViewPort[1]) {
       vpv2 = tileViewPort[3] - tileViewPort[1];
     }
     const ndvp2 = model.parent.normalizedDisplayToDisplay(vpu2, vpv2);
@@ -137,7 +140,12 @@ function vtkOpenGLRenderer(publicAPI, model) {
     if (!model.renderable.getTransparent()) {
       const background = model.renderable.getBackgroundByReference();
       // renderable ensures that background has 4 entries.
-      model.context.clearColor(background[0], background[1], background[2], background[3]);
+      model.context.clearColor(
+        background[0],
+        background[1],
+        background[2],
+        background[3]
+      );
       clearMask |= gl.COLOR_BUFFER_BIT;
     }
 
@@ -199,9 +207,7 @@ export function extend(publicAPI, model, initialValues = {}) {
   // Build VTK API
   macro.get(publicAPI, model, ['shaderCache']);
 
-  macro.setGet(publicAPI, model, [
-    'selector',
-  ]);
+  macro.setGet(publicAPI, model, ['selector']);
 
   // Object methods
   vtkOpenGLRenderer(publicAPI, model);

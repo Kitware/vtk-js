@@ -1,4 +1,4 @@
-import test   from 'tape-catch';
+import test from 'tape-catch';
 import vtkBox from 'vtk.js/Sources/Common/DataModel/Box';
 
 test('Test vtkBox instance', (t) => {
@@ -77,4 +77,3 @@ test('Test vtkBox evaluateFunction', (t) => {
 
   t.end();
 });
-

@@ -1,6 +1,9 @@
-import macro                from 'vtk.js/Sources/macro';
+import macro from 'vtk.js/Sources/macro';
 import vtkCamera3DManipulator from 'vtk.js/Sources/Interaction/Manipulators/Camera3DManipulator';
-import { Device, Input }  from 'vtk.js/Sources/Rendering/Core/RenderWindowInteractor/Constants';
+import {
+  Device,
+  Input,
+} from 'vtk.js/Sources/Rendering/Core/RenderWindowInteractor/Constants';
 import { States } from 'vtk.js/Sources/Rendering/Core/InteractorStyle/Constants';
 
 // ----------------------------------------------------------------------------
@@ -11,7 +14,14 @@ function vtkButton3DPan(publicAPI, model) {
   // Set our className
   model.classHierarchy.push('vtkButton3DPan');
 
-  publicAPI.onButton3D = (interactorStyle, renderer, state, device, input, pressed) => {
+  publicAPI.onButton3D = (
+    interactorStyle,
+    renderer,
+    state,
+    device,
+    input,
+    pressed
+  ) => {
     if (pressed) {
       interactorStyle.startCameraPose();
       interactorStyle.setAnimationStateOn();
@@ -41,9 +51,10 @@ function vtkButton3DPan(publicAPI, model) {
     const dir = camera.physicalOrientationToWorldDirection(data.orientation);
 
     camera.setPhysicalTranslation(
-      oldTrans[0] + (dir[0] * pscale),
-      oldTrans[1] + (dir[1] * pscale),
-      oldTrans[2] + (dir[2] * pscale));
+      oldTrans[0] + dir[0] * pscale,
+      oldTrans[1] + dir[1] * pscale,
+      oldTrans[2] + dir[2] * pscale
+    );
   };
 }
 

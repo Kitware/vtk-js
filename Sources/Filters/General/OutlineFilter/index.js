@@ -1,8 +1,9 @@
-import macro       from 'vtk.js/Sources/macro';
+import macro from 'vtk.js/Sources/macro';
 import vtkPolyData from 'vtk.js/Sources/Common/DataModel/PolyData';
 
 const { vtkErrorMacro } = macro;
 
+// prettier-ignore
 const BOUNDS_MAP = [
   0, 2, 4, // pt 0
   1, 2, 4, // pt 1
@@ -14,6 +15,7 @@ const BOUNDS_MAP = [
   1, 3, 5, // pt 7
 ];
 
+// prettier-ignore
 const LINE_ARRAY = [
   2, 0, 1,
   2, 2, 3,
@@ -37,7 +39,8 @@ function vtkOutlineFilter(publicAPI, model) {
   // Set our className
   model.classHierarchy.push('vtkOutlineFilter');
 
-  publicAPI.requestData = (inData, outData) => { // implement requestData
+  publicAPI.requestData = (inData, outData) => {
+    // implement requestData
     const input = inData[0];
 
     if (!input) {
@@ -48,7 +51,9 @@ function vtkOutlineFilter(publicAPI, model) {
     const bounds = input.getBounds();
     const output = vtkPolyData.newInstance();
 
-    output.getPoints().setData(Float32Array.from(BOUNDS_MAP.map(idx => bounds[idx])), 3);
+    output
+      .getPoints()
+      .setData(Float32Array.from(BOUNDS_MAP.map((idx) => bounds[idx])), 3);
     output.getLines().setData(Uint16Array.from(LINE_ARRAY));
 
     outData[0] = output;
@@ -59,8 +64,7 @@ function vtkOutlineFilter(publicAPI, model) {
 // Object factory
 // ----------------------------------------------------------------------------
 
-const DEFAULT_VALUES = {
-};
+const DEFAULT_VALUES = {};
 
 // ----------------------------------------------------------------------------
 

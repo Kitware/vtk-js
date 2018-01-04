@@ -1,8 +1,8 @@
-import macro                             from 'vtk.js/Sources/macro';
+import macro from 'vtk.js/Sources/macro';
 import vtkInteractorStyleTrackballCamera from 'vtk.js/Sources/Interaction/Style/InteractorStyleTrackballCamera';
-import vtkSphereSource                   from 'vtk.js/Sources/Filters/Sources/SphereSource';
-import vtkActor                          from 'vtk.js/Sources/Rendering/Core/Actor';
-import vtkMapper                         from 'vtk.js/Sources/Rendering/Core/Mapper';
+import vtkSphereSource from 'vtk.js/Sources/Filters/Sources/SphereSource';
+import vtkActor from 'vtk.js/Sources/Rendering/Core/Actor';
+import vtkMapper from 'vtk.js/Sources/Rendering/Core/Mapper';
 
 // ----------------------------------------------------------------------------
 // vtkInteractorStyleTrackballCamera2 methods
@@ -15,7 +15,9 @@ function vtkPickerInteractorStyle(publicAPI, model) {
   const superClass = Object.assign({}, publicAPI);
 
   publicAPI.handleLeftButtonPress = () => {
-    const pos = model.interactor.getEventPosition(model.interactor.getPointerIndex());
+    const pos = model.interactor.getEventPosition(
+      model.interactor.getPointerIndex()
+    );
     publicAPI.findPokedRenderer(pos.x, pos.y);
     if (model.currentRenderer === null) {
       return;
@@ -59,9 +61,7 @@ function vtkPickerInteractorStyle(publicAPI, model) {
 // ----------------------------------------------------------------------------
 // Object factory
 // ----------------------------------------------------------------------------
-const DEFAULT_VALUES = {
-
-};
+const DEFAULT_VALUES = {};
 
 export function extend(publicAPI, model, initialValues = {}) {
   Object.assign(model, DEFAULT_VALUES, initialValues);
@@ -69,14 +69,16 @@ export function extend(publicAPI, model, initialValues = {}) {
   // Inheritance
   vtkInteractorStyleTrackballCamera.extend(publicAPI, model, initialValues);
 
-
   // Object specific methods
   vtkPickerInteractorStyle(publicAPI, model);
 }
 
 // ----------------------------------------------------------------------------
 
-export const newInstance = macro.newInstance(extend, 'vtkPickerInteractorStyle');
+export const newInstance = macro.newInstance(
+  extend,
+  'vtkPickerInteractorStyle'
+);
 
 // ----------------------------------------------------------------------------
 

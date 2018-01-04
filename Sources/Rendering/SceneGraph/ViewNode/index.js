@@ -2,7 +2,7 @@ import macro from 'vtk.js/Sources/macro';
 
 const { vtkErrorMacro } = macro;
 
-export const PASS_TYPES = ['Build', 'Render'];
+const PASS_TYPES = ['Build', 'Render'];
 
 // ----------------------------------------------------------------------------
 // vtkViewNode methods
@@ -13,12 +13,10 @@ function vtkViewNode(publicAPI, model) {
   model.classHierarchy.push('vtkViewNode');
 
   // Builds myself.
-  publicAPI.build = (prepass) => {
-  };
+  publicAPI.build = (prepass) => {};
 
   // Renders myself
-  publicAPI.render = (prepass) => {
-  };
+  publicAPI.render = (prepass) => {};
 
   publicAPI.traverse = (renderPass) => {
     // we can choose to do special
@@ -80,7 +78,8 @@ function vtkViewNode(publicAPI, model) {
     // if found just mark as visited
     if (result !== undefined) {
       result.setVisited(true);
-    } else { // otherwise create a node
+    } else {
+      // otherwise create a node
       const newNode = publicAPI.createViewNode(dobj);
       if (newNode) {
         newNode.setParent(publicAPI);
@@ -102,7 +101,8 @@ function vtkViewNode(publicAPI, model) {
       // if found just mark as visited
       if (result !== undefined) {
         result.setVisited(true);
-      } else { // otherwise create a node
+      } else {
+        // otherwise create a node
         const newNode = publicAPI.createViewNode(dobj);
         if (newNode) {
           newNode.setParent(publicAPI);
@@ -145,7 +145,7 @@ function vtkViewNode(publicAPI, model) {
 
     if (deleted) {
       // slow does alloc but not as common
-      model.children = model.children.filter(el => !deleted.includes(el));
+      model.children = model.children.filter((el) => !deleted.includes(el));
     }
   };
 
@@ -176,7 +176,7 @@ const DEFAULT_VALUES = {
 
 // ----------------------------------------------------------------------------
 
-export function extend(publicAPI, model, initialValues = {}) {
+function extend(publicAPI, model, initialValues = {}) {
   Object.assign(model, DEFAULT_VALUES, initialValues);
 
   // Build VTK API
@@ -185,14 +185,8 @@ export function extend(publicAPI, model, initialValues = {}) {
 
   model.renderableChildMap = new Map();
 
-  macro.get(publicAPI, model, [
-    'visited',
-  ]);
-  macro.setGet(publicAPI, model, [
-    'parent',
-    'renderable',
-    'myFactory',
-  ]);
+  macro.get(publicAPI, model, ['visited']);
+  macro.setGet(publicAPI, model, ['parent', 'renderable', 'myFactory']);
   macro.getArray(publicAPI, model, ['children']);
 
   // Object methods
@@ -201,7 +195,7 @@ export function extend(publicAPI, model, initialValues = {}) {
 
 // ----------------------------------------------------------------------------
 
-export const newInstance = macro.newInstance(extend, 'vtkViewNode');
+const newInstance = macro.newInstance(extend, 'vtkViewNode');
 
 // ----------------------------------------------------------------------------
 

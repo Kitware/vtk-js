@@ -1,7 +1,7 @@
-import macro                from 'vtk.js/Sources/macro';
-import vtk                  from 'vtk.js/Sources/vtk';
+import macro from 'vtk.js/Sources/macro';
+import vtk from 'vtk.js/Sources/vtk';
 import vtkDataSetAttributes from 'vtk.js/Sources/Common/DataModel/DataSetAttributes';
-import Constants            from 'vtk.js/Sources/Common/DataModel/DataSet/Constants';
+import Constants from 'vtk.js/Sources/Common/DataModel/DataSet/Constants';
 
 // import vtkBoundingBox from '../BoundingBox';
 // import vtkMath from '../../Core/Math';

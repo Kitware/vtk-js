@@ -1,9 +1,9 @@
 import { mat3, mat4, vec3 } from 'gl-matrix';
 
 import Constants from 'vtk.js/Sources/Rendering/Core/Glyph3DMapper/Constants';
-import macro     from 'vtk.js/Sources/macro';
+import macro from 'vtk.js/Sources/macro';
 import vtkMapper from 'vtk.js/Sources/Rendering/Core/Mapper';
-import vtkMath   from 'vtk.js/Sources/Common/Core/Math';
+import vtkMath from 'vtk.js/Sources/Common/Core/Math';
 import vtkBoundingBox from 'vtk.js/Sources/Common/DataModel/BoundingBox';
 
 const { OrientationModes, ScaleModes } = Constants;
@@ -80,9 +80,11 @@ function vtkGlyph3DMapper(publicAPI, model) {
     // if the mtgime requires it, rebuild
     const idata = publicAPI.getInputData(0);
     const gdata = publicAPI.getInputData(1);
-    if (model.buildTime.getMTime() < gdata.getMTime() ||
-        model.buildTime.getMTime() < idata.getMTime() ||
-        model.buildTime.getMTime() < publicAPI.getMTime()) {
+    if (
+      model.buildTime.getMTime() < gdata.getMTime() ||
+      model.buildTime.getMTime() < idata.getMTime() ||
+      model.buildTime.getMTime() < publicAPI.getMTime()
+    ) {
       const pts = idata.getPoints().getData();
       let sArray = publicAPI.getScaleArrayData();
       let sData = null;
@@ -92,10 +94,15 @@ function vtkGlyph3DMapper(publicAPI, model) {
         numSComp = sArray.getNumberOfComponents();
       }
 
-      if (model.scaling && sArray &&
-          model.scaleMode === ScaleModes.SCALE_BY_COMPONENTS &&
-          sArray.getNumberOfComponents() !== 3) {
-        vtkErrorMacro('Cannot scale by components since scale array does not have 3 components.');
+      if (
+        model.scaling &&
+        sArray &&
+        model.scaleMode === ScaleModes.SCALE_BY_COMPONENTS &&
+        sArray.getNumberOfComponents() !== 3
+      ) {
+        vtkErrorMacro(
+          'Cannot scale by components since scale array does not have 3 components.'
+        );
         sArray = null;
       }
 
@@ -128,8 +135,8 @@ function vtkGlyph3DMapper(publicAPI, model) {
       for (let i = 0; i < numPts; ++i) {
         const z = new Float32Array(mbuff, i * 64, 16);
         trans[0] = pts[i * 3];
-        trans[1] = pts[(i * 3) + 1];
-        trans[2] = pts[(i * 3) + 2];
+        trans[1] = pts[i * 3 + 1];
+        trans[2] = pts[i * 3 + 2];
         mat4.translate(z, identity, trans);
 
         if (oArray) {
@@ -171,7 +178,7 @@ function vtkGlyph3DMapper(publicAPI, model) {
             switch (model.scaleMode) {
               case ScaleModes.SCALE_BY_MAGNITUDE:
                 for (let t = 0; t < numSComp; ++t) {
-                  tuple[t] = sData[(i * numSComp) + t];
+                  tuple[t] = sData[i * numSComp + t];
                 }
                 scale[0] *= vtkMath.norm(tuple, numSComp);
                 scale[1] = scale[0];
@@ -179,7 +186,7 @@ function vtkGlyph3DMapper(publicAPI, model) {
                 break;
               case ScaleModes.SCALE_BY_COMPONENTS:
                 for (let t = 0; t < numSComp; ++t) {
-                  tuple[t] = sData[(i * numSComp) + t];
+                  tuple[t] = sData[i * numSComp + t];
                 }
                 scale[0] *= tuple[0];
                 scale[1] *= tuple[1];
@@ -233,14 +240,17 @@ function vtkGlyph3DMapper(publicAPI, model) {
 
       // map scalars as well
       const scalars = publicAPI.getAbstractScalars(
-        idata, model.scalarMode,
+        idata,
+        model.scalarMode,
         model.arrayAccessMode,
         model.arrayId,
-        model.colorByArrayName);
+        model.colorByArrayName
+      );
 
       if (!model.useLookupTableScalarRange) {
-        publicAPI.getLookupTable().setRange(
-          model.scalarRange[0], model.scalarRange[1]);
+        publicAPI
+          .getLookupTable()
+          .setRange(model.scalarRange[0], model.scalarRange[1]);
       }
 
       model.colorArray = null;
@@ -314,4 +324,3 @@ export const newInstance = macro.newInstance(extend, 'vtkGlyph3DMapper');
 // ----------------------------------------------------------------------------
 
 export default Object.assign({ newInstance, extend }, Constants);
-

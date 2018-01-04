@@ -1,7 +1,7 @@
 import { mat3, mat4 } from 'gl-matrix';
-import Constants      from 'vtk.js/Sources/Common/Transform/LandmarkTransform/Constants';
-import macro          from 'vtk.js/Sources/macro';
-import vtkMath        from 'vtk.js/Sources/Common/Core/Math';
+import Constants from 'vtk.js/Sources/Common/Transform/LandmarkTransform/Constants';
+import macro from 'vtk.js/Sources/macro';
+import vtkMath from 'vtk.js/Sources/Common/Core/Math';
 
 const { Mode } = Constants;
 
@@ -33,8 +33,12 @@ function vtkLandmarkTransform(publicAPI, model) {
   function update() {
     mat4.identity(model.matrix);
     const N_PTS = model.sourceLandmark.getNumberOfPoints();
-    if (model.targetLandmark.getNumberOfPoints() !== N_PTS
-      || model.sourceLandmark === null || model.targetLandmark === null || N_PTS === 0) {
+    if (
+      model.targetLandmark.getNumberOfPoints() !== N_PTS ||
+      model.sourceLandmark === null ||
+      model.targetLandmark === null ||
+      N_PTS === 0
+    ) {
       console.error('Error : Bad inputs of vtkLandmarkTransform');
       return model.matrix;
     }
@@ -101,21 +105,21 @@ function vtkLandmarkTransform(publicAPI, model) {
 
       // accumulate the products a*T(b) into the matrix M
       for (let i = 0; i < 3; i++) {
-        M[(3 * 0) + i] += a[i] * b[0];
-        M[(3 * 1) + i] += a[i] * b[1];
-        M[(3 * 2) + i] += a[i] * b[2];
+        M[3 * 0 + i] += a[i] * b[0];
+        M[3 * 1 + i] += a[i] * b[1];
+        M[3 * 2 + i] += a[i] * b[2];
 
         // for the affine transform, compute ((a.a^t)^-1 . a.b^t)^t.
         // a.b^t is already in M.  here we put a.a^t in AAT.
         if (model.mode === Mode.AFFINE) {
-          AAT[(3 * 0) + i] += a[i] * a[0];
-          AAT[(3 * 1) + i] += a[i] * a[1];
-          AAT[(3 * 2) + i] += a[i] * a[2];
+          AAT[3 * 0 + i] += a[i] * a[0];
+          AAT[3 * 1 + i] += a[i] * a[1];
+          AAT[3 * 2 + i] += a[i] * a[2];
         }
       }
       // accumulate scale factors (if desired)
-      sa += (a[0] * a[0]) + (a[1] * a[1]) + (a[2] * a[2]);
-      sb += (b[0] * b[0]) + (b[1] * b[1]) + (b[2] * b[2]);
+      sa += a[0] * a[0] + a[1] * a[1] + a[2] * a[2];
+      sb += b[0] * b[0] + b[1] * b[1] + b[2] * b[2];
     }
 
     if (model.mode === Mode.AFFINE) {
@@ -128,7 +132,7 @@ function vtkLandmarkTransform(publicAPI, model) {
       // this->Matrix = M^t
       for (let i = 0; i < 3; ++i) {
         for (let j = 0; j < 3; ++j) {
-          model.matrix[(4 * j) + i] = M[(4 * i) + j];
+          model.matrix[4 * j + i] = M[4 * i + j];
         }
       }
     } else {
@@ -149,21 +153,23 @@ function vtkLandmarkTransform(publicAPI, model) {
       N[15] = -M[0] - M[4] + M[8];
       // off-diagonal elements
       /* eslint-disable no-multi-assign */
-      N[4] = N[1] = (M[7] - M[5]);
-      N[8] = N[2] = (M[2] - M[6]);
-      N[12] = N[3] = (M[3] - M[1]);
+      N[4] = N[1] = M[7] - M[5];
+      N[8] = N[2] = M[2] - M[6];
+      N[12] = N[3] = M[3] - M[1];
 
-      N[9] = N[6] = (M[3] + M[1]);
-      N[13] = N[7] = (M[2] + M[6]);
-      N[14] = N[11] = (M[7] + M[5]);
+      N[9] = N[6] = M[3] + M[1];
+      N[13] = N[7] = M[2] + M[6];
+      N[14] = N[11] = M[7] + M[5];
       /* eslint-enable no-multi-assign */
 
       // -- eigen-decompose N (is symmetric) --
 
-      const eigenVectors = [[0.0, 0.0, 0.0, 0.0],
-                            [0.0, 0.0, 0.0, 0.0],
-                            [0.0, 0.0, 0.0, 0.0],
-                            [0.0, 0.0, 0.0, 0.0]];
+      const eigenVectors = [
+        [0.0, 0.0, 0.0, 0.0],
+        [0.0, 0.0, 0.0, 0.0],
+        [0.0, 0.0, 0.0, 0.0],
+        [0.0, 0.0, 0.0, 0.0],
+      ];
       const eigenValues = [0.0, 0.0, 0.0, 0.0];
 
       const NMatrix = mat4To2DArray(N);
@@ -194,9 +200,9 @@ function vtkLandmarkTransform(publicAPI, model) {
         let rt = 0;
         for (let i = 0; i < 3; i++) {
           ds[i] = s1[i] - s0[i]; // vector between points
-          rs = (ds[i] * ds[i]) + rs;
+          rs = ds[i] * ds[i] + rs;
           dt[i] = t1[i] - t0[i];
-          rt = (dt[i] * dt[i]) + rt;
+          rt = dt[i] * dt[i] + rt;
         }
 
         // normalize the two vectors
@@ -210,12 +216,12 @@ function vtkLandmarkTransform(publicAPI, model) {
         dt[2] /= rt;
 
         // take dot & cross product
-        w = (ds[0] * dt[0]) + (ds[1] * dt[1]) + (ds[2] * dt[2]);
-        x = (ds[1] * dt[2]) - (ds[2] * dt[1]);
-        y = (ds[2] * dt[0]) - (ds[0] * dt[2]);
-        z = (ds[0] * dt[1]) - (ds[1] * dt[0]);
+        w = ds[0] * dt[0] + ds[1] * dt[1] + ds[2] * dt[2];
+        x = ds[1] * dt[2] - ds[2] * dt[1];
+        y = ds[2] * dt[0] - ds[0] * dt[2];
+        z = ds[0] * dt[1] - ds[1] * dt[0];
 
-        let r = Math.sqrt((x * x) + (y * y) + (z * z));
+        let r = Math.sqrt(x * x + y * y + z * z);
         const theta = Math.atan2(r, w);
 
         // construct quaternion
@@ -225,7 +231,8 @@ function vtkLandmarkTransform(publicAPI, model) {
           x *= r;
           y *= r;
           z *= r;
-        } else { // rotation by 180 degrees : special case
+        } else {
+          // rotation by 180 degrees : special case
           // Rotate around a vector perpendicular to ds
           vtkMath.perpendiculars(ds, dt, 0, 0);
           r = Math.sin(theta / 2);
@@ -233,7 +240,8 @@ function vtkLandmarkTransform(publicAPI, model) {
           y = dt[1] * r;
           z = dt[2] * r;
         }
-      } else { // points are not collinear
+      } else {
+        // points are not collinear
         w = eigenVectors[0][0];
         x = eigenVectors[1][0];
         y = eigenVectors[2][0];
@@ -270,24 +278,27 @@ function vtkLandmarkTransform(publicAPI, model) {
       // add in the scale factor (if desired)
       if (model.mode !== Mode.RIGID_BODY) {
         for (let i = 0; i < 3; i++) {
-          model.matrix[(4 * 0) + i] = model.matrix[(4 * 0) + i] * scale;
-          model.matrix[(4 * 1) + i] = model.matrix[(4 * 1) + i] * scale;
-          model.matrix[(4 * 2) + i] = model.matrix[(4 * 2) + i] * scale;
+          model.matrix[4 * 0 + i] = model.matrix[4 * 0 + i] * scale;
+          model.matrix[4 * 1 + i] = model.matrix[4 * 1 + i] * scale;
+          model.matrix[4 * 2 + i] = model.matrix[4 * 2 + i] * scale;
         }
       }
     }
 
     // the translation is given by the difference in the transformed source
     // centroid and the target centroid
-    const sx = (model.matrix[0] * sourceCentroid[0]) +
-               (model.matrix[4] * sourceCentroid[1]) +
-               (model.matrix[8] * sourceCentroid[2]);
-    const sy = (model.matrix[1] * sourceCentroid[0]) +
-               (model.matrix[5] * sourceCentroid[1]) +
-               (model.matrix[9] * sourceCentroid[2]);
-    const sz = (model.matrix[2] * sourceCentroid[0]) +
-               (model.matrix[6] * sourceCentroid[1]) +
-               (model.matrix[10] * sourceCentroid[2]);
+    const sx =
+      model.matrix[0] * sourceCentroid[0] +
+      model.matrix[4] * sourceCentroid[1] +
+      model.matrix[8] * sourceCentroid[2];
+    const sy =
+      model.matrix[1] * sourceCentroid[0] +
+      model.matrix[5] * sourceCentroid[1] +
+      model.matrix[9] * sourceCentroid[2];
+    const sz =
+      model.matrix[2] * sourceCentroid[0] +
+      model.matrix[6] * sourceCentroid[1] +
+      model.matrix[10] * sourceCentroid[2];
 
     model.matrix[12] = targetCentroid[0] - sx;
     model.matrix[13] = targetCentroid[1] - sy;

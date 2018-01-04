@@ -1,10 +1,10 @@
 import { mat4, vec3 } from 'gl-matrix';
 
-import macro            from 'vtk.js/Sources/macro';
-import vtkCamera        from 'vtk.js/Sources/Rendering/Core/Camera';
-import vtkLight         from 'vtk.js/Sources/Rendering/Core/Light';
-import vtkMath          from 'vtk.js/Sources/Common/Core/Math';
-import vtkViewport      from 'vtk.js/Sources/Rendering/Core/Viewport';
+import macro from 'vtk.js/Sources/macro';
+import vtkCamera from 'vtk.js/Sources/Rendering/Core/Camera';
+import vtkLight from 'vtk.js/Sources/Rendering/Core/Light';
+import vtkMath from 'vtk.js/Sources/Common/Core/Math';
+import vtkViewport from 'vtk.js/Sources/Rendering/Core/Viewport';
 import vtkBoundingBox from 'vtk.js/Sources/Common/DataModel/BoundingBox';
 
 const { vtkDebugMacro, vtkErrorMacro, vtkWarningMacro } = macro;
@@ -94,7 +94,12 @@ function vtkRenderer(publicAPI, model) {
   publicAPI.getVTKWindow = () => model.renderWindow;
 
   publicAPI.setLayer = (layer) => {
-    vtkDebugMacro(publicAPI.getClassName(), publicAPI, 'setting Layer to ', layer);
+    vtkDebugMacro(
+      publicAPI.getClassName(),
+      publicAPI,
+      'setting Layer to ',
+      layer
+    );
     if (model.layer !== layer) {
       model.layer = layer;
       publicAPI.modified();
@@ -141,12 +146,12 @@ function vtkRenderer(publicAPI, model) {
   publicAPI.addVolume = publicAPI.addViewProp;
 
   publicAPI.removeActor = (actor) => {
-    model.actors = model.actors.filter(a => a !== actor);
+    model.actors = model.actors.filter((a) => a !== actor);
     publicAPI.removeViewProp(actor);
   };
 
   publicAPI.removeVolume = (volume) => {
-    model.volumes = model.volumes.filter(v => v !== volume);
+    model.volumes = model.volumes.filter((v) => v !== volume);
     publicAPI.removeViewProp(volume);
   };
 
@@ -172,11 +177,13 @@ function vtkRenderer(publicAPI, model) {
   };
 
   publicAPI.removeLight = (light) => {
-    model.lights = model.lights.filter(l => l !== light);
+    model.lights = model.lights.filter((l) => l !== light);
     publicAPI.modified();
   };
 
-  publicAPI.removeAllLights = () => { model.lights = []; };
+  publicAPI.removeAllLights = () => {
+    model.lights = [];
+  };
 
   // FIXME
   publicAPI.addCuller = notImplemented('addCuller');
@@ -208,7 +215,9 @@ function vtkRenderer(publicAPI, model) {
     // set these values just to have a good default should LightFollowCamera
     // be turned off.
     model.createdLight.setPosition(publicAPI.getActiveCamera().getPosition());
-    model.createdLight.setFocalPoint(publicAPI.getActiveCamera().getFocalPoint());
+    model.createdLight.setFocalPoint(
+      publicAPI.getActiveCamera().getFocalPoint()
+    );
   };
 
   // requires the aspect ratio of the viewport as X/Y
@@ -225,17 +234,21 @@ function vtkRenderer(publicAPI, model) {
     return publicAPI.viewToNormalizedDisplay(vpd[0], vpd[1], vpd[2], aspect);
   };
 
-
   // requires the aspect ratio of the viewport as X/Y
   publicAPI.viewToWorld = (x, y, z, aspect) => {
     if (model.activeCamera === null) {
-      vtkErrorMacro('ViewToWorld: no active camera, cannot compute view to world, returning 0,0,0');
+      vtkErrorMacro(
+        'ViewToWorld: no active camera, cannot compute view to world, returning 0,0,0'
+      );
       return [0, 0, 0];
     }
 
     // get the perspective transformation from the active camera
-    const matrix = model.activeCamera
-      .getCompositeProjectionMatrix(aspect, -1.0, 1.0);
+    const matrix = model.activeCamera.getCompositeProjectionMatrix(
+      aspect,
+      -1.0,
+      1.0
+    );
 
     mat4.invert(matrix, matrix);
     mat4.transpose(matrix, matrix);
@@ -250,13 +263,18 @@ function vtkRenderer(publicAPI, model) {
   // requires the aspect ratio of the viewport as X/Y
   publicAPI.worldToView = (x, y, z, aspect) => {
     if (model.activeCamera === null) {
-      vtkErrorMacro('ViewToWorld: no active camera, cannot compute view to world, returning 0,0,0');
+      vtkErrorMacro(
+        'ViewToWorld: no active camera, cannot compute view to world, returning 0,0,0'
+      );
       return [0, 0, 0];
     }
 
     // get the perspective transformation from the active camera
-    const matrix = model.activeCamera
-      .getCompositeProjectionMatrix(aspect, -1.0, 1.0);
+    const matrix = model.activeCamera.getCompositeProjectionMatrix(
+      aspect,
+      -1.0,
+      1.0
+    );
     mat4.transpose(matrix, matrix);
 
     const result = vec3.fromValues(x, y, z);
@@ -307,7 +325,7 @@ function vtkRenderer(publicAPI, model) {
 
     if (nothingVisible) {
       vtkMath.uninitializeBounds(model.allBounds);
-      vtkDebugMacro('Can\'t compute bounds, no 3D props are visible');
+      vtkDebugMacro("Can't compute bounds, no 3D props are visible");
     }
 
     return model.allBounds;
@@ -348,7 +366,7 @@ function vtkRenderer(publicAPI, model) {
     let radius = w1 + w2 + w3;
 
     // If we have just a single point, pick a radius of 1.0
-    radius = (radius === 0) ? (1.0) : (radius);
+    radius = radius === 0 ? 1.0 : radius;
 
     // compute the radius of the enclosing sphere
     radius = Math.sqrt(radius) * 0.5;
@@ -380,9 +398,10 @@ function vtkRenderer(publicAPI, model) {
     // update the camera
     model.activeCamera.setFocalPoint(center[0], center[1], center[2]);
     model.activeCamera.setPosition(
-      center[0] + (distance * vn[0]),
-      center[1] + (distance * vn[1]),
-      center[2] + (distance * vn[2]));
+      center[0] + distance * vn[0],
+      center[1] + distance * vn[1],
+      center[2] + distance * vn[2]
+    );
 
     publicAPI.resetCameraClippingRange(boundsToUse);
 
@@ -391,7 +410,11 @@ function vtkRenderer(publicAPI, model) {
 
     // update reasonable world to physical values
     model.activeCamera.setPhysicalScale(1.0 / radius);
-    model.activeCamera.setPhysicalTranslation(-center[0], -center[1], -center[2]);
+    model.activeCamera.setPhysicalTranslation(
+      -center[0],
+      -center[1],
+      -center[2]
+    );
 
     // Here to let parallel/distributed compositing intercept
     // and do the right thing.
@@ -415,25 +438,33 @@ function vtkRenderer(publicAPI, model) {
       return false;
     }
 
-    let vn = null; let position = null;
+    let vn = null;
+    let position = null;
     vn = model.activeCamera.getViewPlaneNormalByReference();
     position = model.activeCamera.getPositionByReference();
 
     const a = -vn[0];
     const b = -vn[1];
     const c = -vn[2];
-    const d = -((a * position[0]) + (b * position[1]) + (c * position[2]));
+    const d = -(a * position[0] + b * position[1] + c * position[2]);
 
     // Set the max near clipping plane and the min far clipping plane
-    const range = [(a * boundsToUse[0]) + (b * boundsToUse[2]) + (c * boundsToUse[4]) + d, 1e-18];
+    const range = [
+      a * boundsToUse[0] + b * boundsToUse[2] + c * boundsToUse[4] + d,
+      1e-18,
+    ];
 
     // Find the closest / farthest bounding box vertex
     for (let k = 0; k < 2; k++) {
       for (let j = 0; j < 2; j++) {
         for (let i = 0; i < 2; i++) {
-          const dist = (a * boundsToUse[i]) + (b * boundsToUse[2 + j]) + (c * boundsToUse[4 + k]) + d;
-          range[0] = (dist < range[0]) ? (dist) : (range[0]);
-          range[1] = (dist > range[1]) ? (dist) : (range[1]);
+          const dist =
+            a * boundsToUse[i] +
+            b * boundsToUse[2 + j] +
+            c * boundsToUse[4 + k] +
+            d;
+          range[0] = dist < range[0] ? dist : range[0];
+          range[1] = dist > range[1] ? dist : range[1];
         }
       }
     }
@@ -444,7 +475,9 @@ function vtkRenderer(publicAPI, model) {
     if (model.activeCamera.getParallelProjection()) {
       minGap = 0.1 * model.activeCamera.getParallelScale();
     } else {
-      const angle = vtkMath.radiansFromDegrees(model.activeCamera.getViewAngle());
+      const angle = vtkMath.radiansFromDegrees(
+        model.activeCamera.getViewAngle()
+      );
       minGap = 0.2 * Math.tan(angle / 2.0) * range[1];
     }
 
@@ -460,11 +493,13 @@ function vtkRenderer(publicAPI, model) {
     }
 
     // Give ourselves a little breathing room
-    range[0] = (0.99 * range[0]) - ((range[1] - range[0]) * model.clippingRangeExpansion);
-    range[1] = (1.01 * range[1]) + ((range[1] - range[0]) * model.clippingRangeExpansion);
+    range[0] =
+      0.99 * range[0] - (range[1] - range[0]) * model.clippingRangeExpansion;
+    range[1] =
+      1.01 * range[1] + (range[1] - range[0]) * model.clippingRangeExpansion;
 
     // Make sure near is not bigger than far
-    range[0] = (range[0] >= range[1]) ? (0.01 * range[1]) : (range[0]);
+    range[0] = range[0] >= range[1] ? 0.01 * range[1] : range[0];
 
     // Make sure near is at least some fraction of far - this prevents near
     // from being behind the camera or too close in front. How close is too
@@ -494,7 +529,8 @@ function vtkRenderer(publicAPI, model) {
     }
   };
 
-  publicAPI.visibleActorCount = () => model.props.filter(prop => prop.getVisibility()).length;
+  publicAPI.visibleActorCount = () =>
+    model.props.filter((prop) => prop.getVisibility()).length;
   publicAPI.visibleVolumeCount = publicAPI.visibleActorCount;
 
   publicAPI.getMTime = () => {

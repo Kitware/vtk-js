@@ -1,14 +1,14 @@
-import test      from 'tape-catch';
+import test from 'tape-catch';
 import testUtils from 'vtk.js/Sources/Testing/testUtils';
 
-import vtkOpenGLRenderWindow    from 'vtk.js/Sources/Rendering/OpenGL/RenderWindow';
-import vtkRenderWindow          from 'vtk.js/Sources/Rendering/Core/RenderWindow';
-import vtkRenderer              from 'vtk.js/Sources/Rendering/Core/Renderer';
+import vtkOpenGLRenderWindow from 'vtk.js/Sources/Rendering/OpenGL/RenderWindow';
+import vtkRenderWindow from 'vtk.js/Sources/Rendering/Core/RenderWindow';
+import vtkRenderer from 'vtk.js/Sources/Rendering/Core/Renderer';
 
 import colorMaps from '../ColorMaps.json';
 
 import createScalarMap from './createScalarMap';
-import baseline        from './testColorTransferFunctionInterpolation.png';
+import baseline from './testColorTransferFunctionInterpolation.png';
 
 test.onlyIfWebGL('Test Interpolate Scalars Before Colors', (t) => {
   const gc = testUtils.createGarbageCollector(t);
@@ -18,7 +18,9 @@ test.onlyIfWebGL('Test Interpolate Scalars Before Colors', (t) => {
 
   // Create some control UI
   const container = document.querySelector('body');
-  const renderWindowContainer = gc.registerDOMElement(document.createElement('div'));
+  const renderWindowContainer = gc.registerDOMElement(
+    document.createElement('div')
+  );
   container.appendChild(renderWindowContainer);
 
   // create what we will view
@@ -28,7 +30,7 @@ test.onlyIfWebGL('Test Interpolate Scalars Before Colors', (t) => {
   renderer.setBackground(0.0, 0.0, 0.0);
 
   // FIXME ---- magic flag underneath
-  const preset = colorMaps.find(p => p.Name === 'Cool to Warm');
+  const preset = colorMaps.find((p) => p.Name === 'Cool to Warm');
   const actor = createScalarMap(0, 0, preset, gc, 0, 10000);
   actor.getMapper().setScalarRange(0, 10000);
   // console.log('preset', JSON.stringify(preset, null, 2));
@@ -47,5 +49,12 @@ test.onlyIfWebGL('Test Interpolate Scalars Before Colors', (t) => {
   renderWindow.render();
 
   const image = glwindow.captureImage();
-  testUtils.compareImages(image, [baseline], 'Rendering/Core/ColorTransferFunction/testColorTransferFunctionInterpolation', t, 5, gc.releaseResources);
+  testUtils.compareImages(
+    image,
+    [baseline],
+    'Rendering/Core/ColorTransferFunction/testColorTransferFunctionInterpolation',
+    t,
+    5,
+    gc.releaseResources
+  );
 });

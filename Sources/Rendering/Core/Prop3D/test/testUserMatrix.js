@@ -1,12 +1,12 @@
-import test      from 'tape-catch';
+import test from 'tape-catch';
 import testUtils from 'vtk.js/Sources/Testing/testUtils';
 
-import vtkActor              from 'vtk.js/Sources/Rendering/Core/Actor';
-import vtkMapper             from 'vtk.js/Sources/Rendering/Core/Mapper';
-import vtkOBJReader          from 'vtk.js/Sources/IO/Misc/OBJReader';
+import vtkActor from 'vtk.js/Sources/Rendering/Core/Actor';
+import vtkMapper from 'vtk.js/Sources/Rendering/Core/Mapper';
+import vtkOBJReader from 'vtk.js/Sources/IO/Misc/OBJReader';
 import vtkOpenGLRenderWindow from 'vtk.js/Sources/Rendering/OpenGL/RenderWindow';
-import vtkRenderWindow       from 'vtk.js/Sources/Rendering/Core/RenderWindow';
-import vtkRenderer           from 'vtk.js/Sources/Rendering/Core/Renderer';
+import vtkRenderWindow from 'vtk.js/Sources/Rendering/Core/RenderWindow';
+import vtkRenderer from 'vtk.js/Sources/Rendering/Core/Renderer';
 
 import { mat4 } from 'gl-matrix';
 
@@ -18,7 +18,9 @@ test.onlyIfWebGL('Test Set Actor User Matrix', (t) => {
 
   // Create some control UI
   const container = document.querySelector('body');
-  const renderWindowContainer = gc.registerDOMElement(document.createElement('div'));
+  const renderWindowContainer = gc.registerDOMElement(
+    document.createElement('div')
+  );
   container.appendChild(renderWindowContainer);
 
   // create what we will view
@@ -30,7 +32,9 @@ test.onlyIfWebGL('Test Set Actor User Matrix', (t) => {
   // ----------------------------------------------------------------------------
   // Test code
   // ----------------------------------------------------------------------------
-  const reader = gc.registerResource(vtkOBJReader.newInstance({ splitMode: 'usemtl' }));
+  const reader = gc.registerResource(
+    vtkOBJReader.newInstance({ splitMode: 'usemtl' })
+  );
 
   const mapper = gc.registerResource(vtkMapper.newInstance());
   mapper.setInputConnection(reader.getOutputPort());
@@ -45,17 +49,27 @@ test.onlyIfWebGL('Test Set Actor User Matrix', (t) => {
 
   actor.rotateZ(45);
 
-  reader.setUrl(`${__BASE_PATH__}/Data/obj/space-shuttle-orbiter/space-shuttle-orbiter.obj`).then(() => {
-    renderer.resetCamera();
-    renderWindow.render();
+  reader
+    .setUrl(
+      `${__BASE_PATH__}/Data/obj/space-shuttle-orbiter/space-shuttle-orbiter.obj`
+    )
+    .then(() => {
+      renderer.resetCamera();
+      renderWindow.render();
 
-    const glwindow = gc.registerResource(vtkOpenGLRenderWindow.newInstance());
-    glwindow.setContainer(renderWindowContainer);
-    renderWindow.addView(glwindow);
-    glwindow.setSize(400, 400);
+      const glwindow = gc.registerResource(vtkOpenGLRenderWindow.newInstance());
+      glwindow.setContainer(renderWindowContainer);
+      renderWindow.addView(glwindow);
+      glwindow.setSize(400, 400);
 
-    const image = glwindow.captureImage();
-    testUtils.compareImages(image, [baseline], 'Rendering/Core/Prop3D/testUserMatrix', t, 1.5, gc.releaseResources);
-  });
+      const image = glwindow.captureImage();
+      testUtils.compareImages(
+        image,
+        [baseline],
+        'Rendering/Core/Prop3D/testUserMatrix',
+        t,
+        1.5,
+        gc.releaseResources
+      );
+    });
 });
-

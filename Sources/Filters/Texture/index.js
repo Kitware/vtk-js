@@ -1,4 +1,4 @@
-import vtkTextureMapToSphere  from './TextureMapToSphere';
+import vtkTextureMapToSphere from './TextureMapToSphere';
 
 export default {
   vtkTextureMapToSphere,

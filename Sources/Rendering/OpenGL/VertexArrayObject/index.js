@@ -1,4 +1,4 @@
-import macro          from 'vtk.js/Sources/macro';
+import macro from 'vtk.js/Sources/macro';
 import { ObjectType } from 'vtk.js/Sources/Rendering/OpenGL/BufferObject/Constants';
 
 // ----------------------------------------------------------------------------
@@ -17,11 +17,15 @@ function vtkOpenGLVertexArrayObject(publicAPI, model) {
   publicAPI.initialize = () => {
     model.instancingExtension = null;
     if (!model.openGLRenderWindow.getWebgl2()) {
-      model.instancingExtension = model.context.getExtension('ANGLE_instanced_arrays');
+      model.instancingExtension = model.context.getExtension(
+        'ANGLE_instanced_arrays'
+      );
     }
-    if (!model.forceEmulation &&
-         model.openGLRenderWindow &&
-         model.openGLRenderWindow.getWebgl2()) {
+    if (
+      !model.forceEmulation &&
+      model.openGLRenderWindow &&
+      model.openGLRenderWindow.getWebgl2()
+    ) {
       model.extension = null;
       model.supported = true;
       model.handleVAO = model.context.createVertexArray();
@@ -40,8 +44,7 @@ function vtkOpenGLVertexArrayObject(publicAPI, model) {
   publicAPI.isReady = () =>
     // We either probed and allocated a VAO, or are falling back as the current
     // hardware does not support VAOs.
-    (model.handleVAO !== 0 || model.supported === false);
-
+    model.handleVAO !== 0 || model.supported === false;
 
   publicAPI.bind = () => {
     // Either simply bind the VAO, or emulate behavior by binding all attributes.
@@ -64,12 +67,20 @@ function vtkOpenGLVertexArrayObject(publicAPI, model) {
           const matrixCount = attrIt.isMatrix ? attrIt.size : 1;
           for (let i = 0; i < matrixCount; ++i) {
             gl.enableVertexAttribArray(attrIt.index + i);
-            gl.vertexAttribPointer(attrIt.index + i, attrIt.size, attrIt.type,
-                                  attrIt.normalize, attrIt.stride,
-                                  attrIt.offset + ((attrIt.stride * i) / attrIt.size));
+            gl.vertexAttribPointer(
+              attrIt.index + i,
+              attrIt.size,
+              attrIt.type,
+              attrIt.normalize,
+              attrIt.stride,
+              attrIt.offset + attrIt.stride * i / attrIt.size
+            );
             if (attrIt.divisor > 0) {
               if (model.instancingExtension) {
-                model.instancingExtension.vertexAttribDivisorANGLE(attrIt.index + i, 1);
+                model.instancingExtension.vertexAttribDivisorANGLE(
+                  attrIt.index + i,
+                  1
+                );
               } else {
                 gl.vertexAttribDivisor(attrIt.index + i, 1);
               }
@@ -98,12 +109,20 @@ function vtkOpenGLVertexArrayObject(publicAPI, model) {
           const matrixCount = attrIt.isMatrix ? attrIt.size : 1;
           for (let i = 0; i < matrixCount; ++i) {
             gl.enableVertexAttribArray(attrIt.index + i);
-            gl.vertexAttribPointer(attrIt.index + i, attrIt.size, attrIt.type,
-                                  attrIt.normalize, attrIt.stride,
-                                  attrIt.offset + ((attrIt.stride * i) / attrIt.size));
+            gl.vertexAttribPointer(
+              attrIt.index + i,
+              attrIt.size,
+              attrIt.type,
+              attrIt.normalize,
+              attrIt.stride,
+              attrIt.offset + attrIt.stride * i / attrIt.size
+            );
             if (attrIt.divisor > 0) {
               if (model.instancingExtension) {
-                model.instancingExtension.vertexAttribDivisorANGLE(attrIt.index + i, 0);
+                model.instancingExtension.vertexAttribDivisorANGLE(
+                  attrIt.index + i,
+                  0
+                );
               } else {
                 gl.vertexAttribDivisor(attrIt.index + i, 0);
               }
@@ -142,17 +161,51 @@ function vtkOpenGLVertexArrayObject(publicAPI, model) {
     model.handleProgram = 0;
   };
 
-  publicAPI.addAttributeArray = (program, buffer, name, offset, stride, elementType, elementTupleSize, normalize) =>
-    publicAPI.addAttributeArrayWithDivisor(program, buffer, name, offset, stride, elementType, elementTupleSize, normalize, 0, false);
+  publicAPI.addAttributeArray = (
+    program,
+    buffer,
+    name,
+    offset,
+    stride,
+    elementType,
+    elementTupleSize,
+    normalize
+  ) =>
+    publicAPI.addAttributeArrayWithDivisor(
+      program,
+      buffer,
+      name,
+      offset,
+      stride,
+      elementType,
+      elementTupleSize,
+      normalize,
+      0,
+      false
+    );
 
-  publicAPI.addAttributeArrayWithDivisor = (program, buffer, name, offset, stride, elementType, elementTupleSize, normalize, divisor, isMatrix) => {
+  publicAPI.addAttributeArrayWithDivisor = (
+    program,
+    buffer,
+    name,
+    offset,
+    stride,
+    elementType,
+    elementTupleSize,
+    normalize,
+    divisor,
+    isMatrix
+  ) => {
     if (!program) {
       return false;
     }
 
     // Check the program is bound, and the buffer is valid.
-    if (!program.isBound() || buffer.getHandle() === 0 ||
-         buffer.getType() !== ObjectType.ARRAY_BUFFER) {
+    if (
+      !program.isBound() ||
+      buffer.getHandle() === 0 ||
+      buffer.getType() !== ObjectType.ARRAY_BUFFER
+    ) {
       return false;
     }
 
@@ -188,10 +241,14 @@ function vtkOpenGLVertexArrayObject(publicAPI, model) {
     // up when we are emulating.
     buffer.bind();
     gl.enableVertexAttribArray(attribs.index);
-    gl.vertexAttribPointer(attribs.index, attribs.size, attribs.type,
-                          attribs.normalize, attribs.stride,
-                          attribs.offset);
-
+    gl.vertexAttribPointer(
+      attribs.index,
+      attribs.size,
+      attribs.type,
+      attribs.normalize,
+      attribs.stride,
+      attribs.offset
+    );
 
     if (divisor > 0) {
       if (model.instancingExtension) {
@@ -231,11 +288,30 @@ function vtkOpenGLVertexArrayObject(publicAPI, model) {
     return true;
   };
 
-  publicAPI.addAttributeMatrixWithDivisor = (program, buffer, name, offset, stride, elementType, elementTupleSize, normalize, divisor) => {
+  publicAPI.addAttributeMatrixWithDivisor = (
+    program,
+    buffer,
+    name,
+    offset,
+    stride,
+    elementType,
+    elementTupleSize,
+    normalize,
+    divisor
+  ) => {
     // bind the first row of values
-    const result =
-      publicAPI.addAttributeArrayWithDivisor(program, buffer, name,
-        offset, stride, elementType, elementTupleSize, normalize, divisor, true);
+    const result = publicAPI.addAttributeArrayWithDivisor(
+      program,
+      buffer,
+      name,
+      offset,
+      stride,
+      elementType,
+      elementTupleSize,
+      normalize,
+      divisor,
+      true
+    );
 
     if (!result) {
       return result;
@@ -247,9 +323,14 @@ function vtkOpenGLVertexArrayObject(publicAPI, model) {
 
     for (let i = 1; i < elementTupleSize; i++) {
       gl.enableVertexAttribArray(index + i);
-      gl.vertexAttribPointer(index + i, elementTupleSize, elementType,
-                            normalize, stride,
-                            offset + ((stride * i) / elementTupleSize));
+      gl.vertexAttribPointer(
+        index + i,
+        elementTupleSize,
+        elementType,
+        normalize,
+        stride,
+        offset + stride * i / elementTupleSize
+      );
       if (divisor > 0) {
         if (model.instancingExtension) {
           model.instancingExtension.vertexAttribDivisorANGLE(index + i, 1);
@@ -339,7 +420,10 @@ export function extend(publicAPI, model, initialValues = {}) {
 
 // ----------------------------------------------------------------------------
 
-export const newInstance = macro.newInstance(extend, 'vtkOpenGLVertexArrayObject');
+export const newInstance = macro.newInstance(
+  extend,
+  'vtkOpenGLVertexArrayObject'
+);
 
 // ----------------------------------------------------------------------------
 

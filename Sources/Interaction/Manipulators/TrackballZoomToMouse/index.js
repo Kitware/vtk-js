@@ -1,6 +1,6 @@
-import macro                         from 'vtk.js/Sources/macro';
+import macro from 'vtk.js/Sources/macro';
 import vtkInteractorStyleManipulator from 'vtk.js/Sources/Interaction/Style/InteractorStyleManipulator';
-import vtkTrackballZoom              from 'vtk.js/Sources/Interaction/Manipulators/TrackballZoom';
+import vtkTrackballZoom from 'vtk.js/Sources/Interaction/Manipulators/TrackballZoom';
 
 // ----------------------------------------------------------------------------
 // vtkTrackballZoomToMouse methods
@@ -14,7 +14,9 @@ function vtkTrackballZoomToMouse(publicAPI, model) {
 
   publicAPI.onButtonDown = (interactor) => {
     superOnButtonDown(interactor);
-    model.zoomPosition = interactor.getEventPosition(interactor.getPointerIndex());
+    model.zoomPosition = interactor.getEventPosition(
+      interactor.getPointerIndex()
+    );
   };
 
   publicAPI.onAnimation = (interactor, renderer) => {
@@ -28,7 +30,12 @@ function vtkTrackballZoomToMouse(publicAPI, model) {
 
     const dy = lastPos.y - pos.y;
     const k = dy * model.zoomScale;
-    vtkInteractorStyleManipulator.dollyToPosition((1.0 - k), model.zoomPosition, renderer, interactor);
+    vtkInteractorStyleManipulator.dollyToPosition(
+      1.0 - k,
+      model.zoomPosition,
+      renderer,
+      interactor
+    );
   };
 }
 

@@ -1,4 +1,4 @@
-import macro     from 'vtk.js/Sources/macro';
+import macro from 'vtk.js/Sources/macro';
 import vtkColorTransferFunction from 'vtk.js/Sources/Rendering/Core/ColorTransferFunction';
 import vtkPiecewiseFunction from 'vtk.js/Sources/Common/DataModel/PiecewiseFunction';
 import Constants from 'vtk.js/Sources/Rendering/Core/VolumeProperty/Constants';
@@ -26,13 +26,13 @@ function vtkVolumeProperty(publicAPI, model) {
         if (model.componentData[index].grayTransferFunction) {
           // time that Gray transfer function was last modified
           time = model.componentData[index].grayTransferFunction.getMTime();
-          mTime = (mTime > time ? mTime : time);
+          mTime = mTime > time ? mTime : time;
         }
       } else if (model.componentData[index].colorChannels === 3) {
         if (model.componentData[index].rGBTransferFunction) {
           // time that RGB transfer function was last modified
           time = model.componentData[index].rGBTransferFunction.getMTime();
-          mTime = (mTime > time ? mTime : time);
+          mTime = mTime > time ? mTime : time;
         }
       }
 
@@ -40,14 +40,14 @@ function vtkVolumeProperty(publicAPI, model) {
       if (model.componentData[index].scalarOpacity) {
         // time that Scalar opacity transfer function was last modified
         time = model.componentData[index].scalarOpacity.getMTime();
-        mTime = (mTime > time ? mTime : time);
+        mTime = mTime > time ? mTime : time;
       }
 
       if (model.componentData[index].gradientOpacity) {
         if (!model.componentData[index].disableGradientOpacity) {
           // time that Gradient opacity transfer function was last modified
           time = model.componentData[index].gradientOpacity.getMTime();
-          mTime = (mTime > time ? mTime : time);
+          mTime = mTime > time ? mTime : time;
         }
       }
     }
@@ -80,7 +80,9 @@ function vtkVolumeProperty(publicAPI, model) {
   // Get the currently set gray transfer function. Create one if none set.
   publicAPI.getGrayTransferFunction = (index) => {
     if (model.componentData[index].grayTransferFunction === null) {
-      model.componentData[index].grayTransferFunction = vtkPiecewiseFunction.newInstance();
+      model.componentData[
+        index
+      ].grayTransferFunction = vtkPiecewiseFunction.newInstance();
       model.componentData[index].grayTransferFunction.addPoint(0, 0.0);
       model.componentData[index].grayTransferFunction.addPoint(1024, 1.0);
       if (model.componentData[index].colorChannels !== 1) {
@@ -108,9 +110,21 @@ function vtkVolumeProperty(publicAPI, model) {
   // Get the currently set RGB transfer function. Create one if none set.
   publicAPI.getRGBTransferFunction = (index) => {
     if (model.componentData[index].rGBTransferFunction === null) {
-      model.componentData[index].rGBTransferFunction = vtkColorTransferFunction.newInstance();
-      model.componentData[index].rGBTransferFunction.addRGBPoint(0, 0.0, 0.0, 0.0);
-      model.componentData[index].rGBTransferFunction.addRGBPoint(1024, 1.0, 1.0, 1.0);
+      model.componentData[
+        index
+      ].rGBTransferFunction = vtkColorTransferFunction.newInstance();
+      model.componentData[index].rGBTransferFunction.addRGBPoint(
+        0,
+        0.0,
+        0.0,
+        0.0
+      );
+      model.componentData[index].rGBTransferFunction.addRGBPoint(
+        1024,
+        1.0,
+        1.0,
+        1.0
+      );
       if (model.componentData[index].colorChannels !== 3) {
         model.componentData[index].colorChannels = 3;
       }
@@ -131,7 +145,9 @@ function vtkVolumeProperty(publicAPI, model) {
   // Get the scalar opacity transfer function. Create one if none set.
   publicAPI.getScalarOpacity = (index) => {
     if (model.componentData[index].scalarOpacity === null) {
-      model.componentData[index].scalarOpacity = vtkPiecewiseFunction.newInstance();
+      model.componentData[
+        index
+      ].scalarOpacity = vtkPiecewiseFunction.newInstance();
       model.componentData[index].scalarOpacity.addPoint(0, 1.0);
       model.componentData[index].scalarOpacity.addPoint(1024, 1.0);
       publicAPI.modified();
@@ -146,7 +162,7 @@ function vtkVolumeProperty(publicAPI, model) {
       return;
     }
 
-    const val = value < 0.0 ? 0.0 : (value > 1.0 ? 1.0 : value);
+    const val = value < 0.0 ? 0.0 : value > 1.0 ? 1.0 : value;
     if (model.componentData[index].componentWeight !== val) {
       model.componentData[index].componentWeight = val;
       publicAPI.modified();
@@ -174,12 +190,17 @@ function vtkVolumeProperty(publicAPI, model) {
     publicAPI.setInterpolationType(InterpolationType.FAST_LINEAR);
   };
 
-  publicAPI.getInterpolationTypeAsString = () => macro.enumToString(InterpolationType, model.interpolationType);
+  publicAPI.getInterpolationTypeAsString = () =>
+    macro.enumToString(InterpolationType, model.interpolationType);
 
   const sets = [
-    'useGradientOpacity', 'scalarOpacityUnitDistance',
-    'gradientOpacityMinimumValue', 'gradientOpacityMinimumOpacity',
-    'gradientOpacityMaximumValue', 'gradientOpacityMaximumOpacity'];
+    'useGradientOpacity',
+    'scalarOpacityUnitDistance',
+    'gradientOpacityMinimumValue',
+    'gradientOpacityMinimumOpacity',
+    'gradientOpacityMaximumValue',
+    'gradientOpacityMaximumOpacity',
+  ];
   sets.forEach((val) => {
     const cap = macro.capitalize(val);
     publicAPI[`set${cap}`] = (index, value) => {
@@ -191,12 +212,16 @@ function vtkVolumeProperty(publicAPI, model) {
   });
 
   const gets = [
-    'useGradientOpacity', 'scalarOpacityUnitDistance',
-    'gradientOpacityMinimumValue', 'gradientOpacityMinimumOpacity',
-    'gradientOpacityMaximumValue', 'gradientOpacityMaximumOpacity'];
+    'useGradientOpacity',
+    'scalarOpacityUnitDistance',
+    'gradientOpacityMinimumValue',
+    'gradientOpacityMinimumOpacity',
+    'gradientOpacityMaximumValue',
+    'gradientOpacityMaximumOpacity',
+  ];
   gets.forEach((val) => {
     const cap = macro.capitalize(val);
-    publicAPI[`get${cap}`] = index => model.componentData[index][`${val}`];
+    publicAPI[`get${cap}`] = (index) => model.componentData[index][`${val}`];
   });
 }
 

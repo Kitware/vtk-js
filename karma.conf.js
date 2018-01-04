@@ -24,7 +24,7 @@ module.exports = function init(config) {
     basePath: '',
     frameworks: ['tap'],
     files: [
-      './node_modules/babel-polyfill/dist/polyfill.min.js',
+      // './node_modules/babel-polyfill/dist/polyfill.min.js',
       'Sources/tests.js',
       { pattern: 'Data/**', watched: false, served: true, included: false },
     ],

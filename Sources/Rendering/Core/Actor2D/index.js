@@ -1,7 +1,7 @@
-import macro          from 'vtk.js/Sources/macro';
-import vtkCoordinate  from 'vtk.js/Sources/Rendering/Core/Coordinate';
-import vtkProp        from 'vtk.js/Sources/Rendering/Core/Prop';
-import vtkProperty2D  from 'vtk.js/Sources/Rendering/Core/Property2D';
+import macro from 'vtk.js/Sources/macro';
+import vtkCoordinate from 'vtk.js/Sources/Rendering/Core/Coordinate';
+import vtkProp from 'vtk.js/Sources/Rendering/Core/Prop';
+import vtkProperty2D from 'vtk.js/Sources/Rendering/Core/Property2D';
 import { Coordinate } from 'vtk.js/Sources/Rendering/Core/Coordinate/Constants';
 
 // ----------------------------------------------------------------------------
@@ -21,7 +21,7 @@ function vtkActor2D(publicAPI, model) {
       publicAPI.getProperty();
     }
 
-    let isOpaque = (model.property.getOpacity() >= 1.0);
+    let isOpaque = model.property.getOpacity() >= 1.0;
 
     // are we using an opaque texture, if any?
     isOpaque = isOpaque && (!model.texture || !model.texture.isTranslucent());
@@ -86,13 +86,17 @@ function vtkActor2D(publicAPI, model) {
     let mt = model.mtime;
     if (model.property !== null) {
       const time = model.property.getMTime();
-      mt = (time > mt ? time : mt);
+      mt = time > mt ? time : mt;
     }
 
-    mt = (model.positionCoordinate.getMTime() > mt ?
-      model.positionCoordinate.getMTime() : mt);
-    mt = (model.positionCoordinate2.getMTime() > mt ?
-      model.positionCoordinate2.getMTime() : mt);
+    mt =
+      model.positionCoordinate.getMTime() > mt
+        ? model.positionCoordinate.getMTime()
+        : mt;
+    mt =
+      model.positionCoordinate2.getMTime() > mt
+        ? model.positionCoordinate2.getMTime()
+        : mt;
 
     // TBD: Handle array of textures here.
 
@@ -103,12 +107,12 @@ function vtkActor2D(publicAPI, model) {
     let mt = model.mtime;
     if (model.mapper !== null) {
       let time = model.mapper.getMTime();
-      mt = (time > mt ? time : mt);
+      mt = time > mt ? time : mt;
       if (model.mapper.getInput() !== null) {
         // FIXME !!! getInputAlgorithm / getInput
         model.mapper.getInputAlgorithm().update();
         time = model.mapper.getInput().getMTime();
-        mt = (time > mt ? time : mt);
+        mt = time > mt ? time : mt;
       }
     }
     return mt;
@@ -161,9 +165,7 @@ export function extend(publicAPI, model, initialValues = {}) {
 
   // Build VTK API
   macro.set(publicAPI, model, ['property']);
-  macro.setGet(publicAPI, model, [
-    'mapper',
-  ]);
+  macro.setGet(publicAPI, model, ['mapper']);
 
   // Object methods
   vtkActor2D(publicAPI, model);
