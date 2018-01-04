@@ -16,7 +16,7 @@ import vtkRenderer from 'vtk.js/Sources/Rendering/Core/Renderer';
 import { VtkDataTypes } from 'vtk.js/Sources/Common/Core/DataArray/Constants';
 import { AttributeTypes } from 'vtk.js/Sources/Common/DataModel/DataSetAttributes/Constants';
 import { FieldDataTypes } from 'vtk.js/Sources/Common/DataModel/DataSet/Constants';
-import { PointPrecision } from 'vtk.js/Sources/Filters/General/Constants';
+import { VtkPointPrecision } from 'vtk.js/Sources/Filters/General/Constants';
 
 import baseline from './testAppendPolyData.png';
 
@@ -37,7 +37,7 @@ test('Test vtkAppendPolyData execution', (t) => {
   const filter = vtkAppendPolyData.newInstance();
   filter.setInputConnection(cone.getOutputPort(), 0);
   filter.addInputConnection(cylinder.getOutputPort());
-  filter.setOutputPointsPrecision(PointPrecision.DEFAULT);
+  filter.setOutputPointsPrecision(VtkPointPrecision.DEFAULT);
 
   const outPD = filter.getOutputData();
 
