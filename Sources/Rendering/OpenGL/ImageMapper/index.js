@@ -365,11 +365,15 @@ function vtkOpenGLImageMapper(publicAPI, model) {
 
     // rebuild the VBO if the data has changed
     let nSlice = model.renderable.getZSlice();
+    const ext = image.getExtent();
+    let sliceOffset = nSlice - ext[4];
     if (model.renderable.getCurrentSlicingMode() === SlicingMode.X) {
       nSlice = model.renderable.getXSlice();
+      sliceOffset = nSlice - ext[0];
     }
     if (model.renderable.getCurrentSlicingMode() === SlicingMode.Y) {
       nSlice = model.renderable.getYSlice();
+      sliceOffset = nSlice - ext[2];
     }
     const toString = `${nSlice}A${image.getMTime()}A${image.getPointData().getScalars().getMTime()}B${publicAPI.getMTime()}`;
     if (model.VBOBuildString !== toString) {
@@ -387,25 +391,21 @@ function vtkOpenGLImageMapper(publicAPI, model) {
       const numComp = image.getPointData().getScalars().getNumberOfComponents();
       const sliceSize = dims[0] * dims[1] * numComp;
 
-      const ext = image.getExtent();
       const ptsArray = new Float32Array(12);
       const tcoordArray = new Float32Array(8);
       for (let i = 0; i < 4; i++) {
-        ptsArray[(i * 3)] = ((i % 2) ? ext[1] : ext[0]);
-        ptsArray[(i * 3) + 1] = ((i > 1) ? ext[3] : ext[2]);
-        ptsArray[(i * 3) + 2] = nSlice;
         tcoordArray[(i * 2)] = (i % 2) ? 1.0 : 0.0;
         tcoordArray[(i * 2) + 1] = (i > 1) ? 1.0 : 0.0;
       }
 
       const basicScalars = image.getPointData().getScalars().getData();
-      let scalars = basicScalars.subarray(nSlice * sliceSize, (nSlice + 1) * sliceSize);
+      let scalars = null;
       // Get right scalars according to slicing mode
       if (model.renderable.getCurrentSlicingMode() === SlicingMode.X) {
         scalars = [];
         for (let k = 0; k < dims[2]; k++) {
           for (let j = 0; j < dims[1]; j++) {
-            scalars.push(basicScalars[nSlice + (j * dims[0]) + (k * dims[0] * dims[1])]);
+            scalars.push(basicScalars[sliceOffset + j * dims[0] + k * dims[0] * dims[1]]);
           }
         }
         dims[0] = dims[1];
@@ -422,12 +422,11 @@ function vtkOpenGLImageMapper(publicAPI, model) {
         ptsArray[9] = nSlice;
         ptsArray[10] = ext[3];
         ptsArray[11] = ext[5];
-      }
-      if (model.renderable.getCurrentSlicingMode() === SlicingMode.Y) {
+      } else if (model.renderable.getCurrentSlicingMode() === SlicingMode.Y) {
         scalars = [];
         for (let k = 0; k < dims[2]; k++) {
           for (let i = 0; i < dims[0]; i++) {
-            scalars.push(basicScalars[i + (nSlice * dims[0]) + (k * dims[0] * dims[1])]);
+            scalars.push(basicScalars[i + (sliceOffset * dims[0]) + (k * dims[0] * dims[1])]);
           }
         }
         dims[1] = dims[2];
@@ -443,9 +442,8 @@ function vtkOpenGLImageMapper(publicAPI, model) {
         ptsArray[9] = ext[1];
         ptsArray[10] = nSlice;
         ptsArray[11] = ext[5];
-      }
-
-      if (model.renderable.getCurrentSlicingMode() === SlicingMode.Z) {
+      } else {
+        scalars = basicScalars.subarray(sliceOffset * sliceSize, (sliceOffset + 1) * sliceSize);
         ptsArray[0] = ext[0];
         ptsArray[1] = ext[2];
         ptsArray[2] = nSlice;
