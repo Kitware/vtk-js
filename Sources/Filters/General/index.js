@@ -1,3 +1,4 @@
+import vtkAppendPolyData           from './AppendPolyData';
 import vtkCalculator               from './Calculator';
 import vtkImageMarchingCubes       from './ImageMarchingCubes';
 import vtkImageMarchingSquares     from './ImageMarchingSquares';
@@ -7,6 +8,7 @@ import vtkOutlineFilter            from './OutlineFilter';
 import vtkWarpScalar               from './WarpScalar';
 
 export default {
+  vtkAppendPolyData,
   vtkCalculator,
   vtkImageMarchingCubes,
   vtkImageMarchingSquares,

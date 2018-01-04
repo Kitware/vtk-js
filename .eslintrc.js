@@ -31,6 +31,14 @@ module.exports = {
 
     // May want to remove at some point
     'no-restricted-properties': 0,
+    'function-paren-newline': 0,
+    'indent': 0,
+    'no-multi-spaces': 0,
+    'object-curly-newline': 0,
+    'prefer-destructuring': 0,
+    'prefer-promise-reject-errors': 0,
+    'switch-colon-spacing': 0,
+    'spaced-comment': 0,
   },
   // plugins: [
   //   'prettier'

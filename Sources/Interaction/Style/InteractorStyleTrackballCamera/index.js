@@ -289,7 +289,7 @@ function vtkInteractorStyleTrackballCamera(publicAPI, model) {
     const ryf = dy * deltaElevation * model.motionFactor;
 
     const camera = model.currentRenderer.getActiveCamera();
-    if (!isNaN(rxf) && !isNaN(ryf)) {
+    if (!Number.isNaN(rxf) && !Number.isNaN(ryf)) {
       camera.azimuth(rxf);
       camera.elevation(ryf);
       camera.orthogonalizeViewUp();
@@ -326,7 +326,7 @@ function vtkInteractorStyleTrackballCamera(publicAPI, model) {
       vtkMath.degreesFromRadians(Math.atan2(pos.y - center[1],
                                           pos.x - center[0])) - oldAngle;
 
-    if (!isNaN(newAngle)) {
+    if (!Number.isNaN(newAngle)) {
       camera.roll(newAngle);
       camera.orthogonalizeViewUp();
     }
@@ -400,7 +400,7 @@ function vtkInteractorStyleTrackballCamera(publicAPI, model) {
 
   //----------------------------------------------------------------------------
   publicAPI.dollyByFactor = (factor) => {
-    if (model.currentRenderer === null || isNaN(factor)) {
+    if (model.currentRenderer === null || Number.isNaN(factor)) {
       return;
     }
 
