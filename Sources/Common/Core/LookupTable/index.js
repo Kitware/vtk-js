@@ -214,7 +214,7 @@ function vtkLookupTable(publicAPI, model) {
 
   publicAPI.buildSpecialColors = () => {
     // Add "special" colors (NaN, below range, above range) to table here.
-    const numberOfColors = model.numberOfColors;
+    const { numberOfColors } = model;
 
     const tptr = model.table;
     let base = (model.numberOfColors + BELOW_RANGE_COLOR_INDEX) * 4;

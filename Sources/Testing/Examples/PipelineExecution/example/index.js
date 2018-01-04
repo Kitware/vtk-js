@@ -168,7 +168,7 @@ const buttons = document.querySelectorAll('button');
 for (let i = 0; i < buttons.length; i++) {
   buttons[i].addEventListener('click', (e) => {
     const idx = Number(e.target.name);
-    if (!isNaN(idx)) {
+    if (!Number.isNaN(idx)) {
       const filter = global.filters[idx];
       filter.modified();
       renderWindow.render();
