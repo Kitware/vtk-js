@@ -41,8 +41,8 @@
     },
     "scripts": {
         "size": "size-limit --why --config ./webpack.config.js",
-        "validate": "prettier --config ./prettier.config.js --list-different \"Sources/**/*.js\"",
-        "reformat": "prettier --config ./prettier.config.js --write \"Sources/**/*.js\"",
+        "validate": "prettier --config ./prettier.config.js --list-different \"Sources/**/*.js\" \"Examples/**/*.js\"",
+        "reformat": "prettier --config ./prettier.config.js --write \"Sources/**/*.js\" \"Examples/**/*.js\"",
         "reformat-only": "prettier --single-quote --trailing-comma es5 --print-width 80 --arrow-parens always --write",
         "doc": "kw-doc -c ./Documentation/config.js",
         "doc:www": "npm t -- --single-run && kw-doc -c ./Documentation/config.js -s",
