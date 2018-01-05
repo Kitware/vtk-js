@@ -271,7 +271,7 @@ function vtkMoleculeToRepresentation(publicAPI, model) {
           break;
         }
 
-        offset *= -(1 ** (k % 2));
+        offset *= (-1) ** (k % 2);
         const bondPos = [
           pointsArray[jPtsIdx] -
             (offsetJ - offsetI) * vectUnitJI[0] / 2.0 -
