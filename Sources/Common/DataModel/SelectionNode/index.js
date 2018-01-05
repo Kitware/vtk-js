@@ -1,5 +1,5 @@
 import macro from 'vtk.js/Sources/macro';
-import Constants from 'vtk.js/Sources/Common/DataModel/SelectionNode/Constants.js';
+import Constants from 'vtk.js/Sources/Common/DataModel/SelectionNode/Constants';
 
 // ----------------------------------------------------------------------------
 // vtkSelectionNode methods
