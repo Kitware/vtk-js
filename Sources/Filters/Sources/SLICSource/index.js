@@ -123,7 +123,8 @@ function vtkSLICSource(publicAPI, model) {
 
     // Fill clusterIdxValues
     const nbBytes =
-      model.clusters.length < 256 ? 8 : model.clusters.length < 65536 ? 16 : 32;
+      (model.clusters.length < 256 ? 8 : 0) ||
+      (model.clusters.length < 65536 ? 16 : 32);
     const clusterIdxValues = new window[`Uint${nbBytes}Array`](dataSize);
     for (let i = 0; i < dataSize; i++) {
       let clusterDistance = Number.MAX_VALUE;
