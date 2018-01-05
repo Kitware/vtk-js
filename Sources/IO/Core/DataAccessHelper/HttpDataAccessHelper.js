@@ -6,6 +6,8 @@ import { DataTypeByteSize } from 'vtk.js/Sources/Common/Core/DataArray/Constants
 
 const { vtkErrorMacro, vtkDebugMacro } = macro;
 
+/* eslint-disable prefer-promise-reject-errors */
+
 let requestCount = 0;
 
 function fetchBinary(url, options = {}) {
@@ -17,7 +19,7 @@ function fetchBinary(url, options = {}) {
         if (xhr.status === 200 || xhr.status === 0) {
           resolve(xhr.response);
         } else {
-          reject(xhr, e);
+          reject({ xhr, e });
         }
       }
     };
@@ -102,7 +104,7 @@ function fetchArray(instance = {}, baseURL, array, options = {}) {
             }
             resolve(array);
           } else {
-            reject(xhr, e);
+            reject({ xhr, e });
           }
         }
       };
@@ -121,9 +123,7 @@ function fetchArray(instance = {}, baseURL, array, options = {}) {
     });
   }
 
-  return new Promise((resolve, reject) => {
-    resolve(array);
-  });
+  return Promise.resolve(array);
 }
 
 // ----------------------------------------------------------------------------
@@ -153,7 +153,7 @@ function fetchJSON(instance = {}, url, options = {}) {
             resolve(JSON.parse(xhr.responseText));
           }
         } else {
-          reject(xhr, e);
+          reject({ xhr, e });
         }
       }
     };
@@ -199,7 +199,7 @@ function fetchText(instance = {}, url, options = {}) {
             resolve(xhr.responseText);
           }
         } else {
-          reject(xhr, e);
+          reject({ xhr, e });
         }
       }
     };
@@ -223,3 +223,5 @@ export default {
   fetchText,
   fetchBinary, // Only for HTTP
 };
+
+/* eslint-enable prefer-promise-reject-errors */
