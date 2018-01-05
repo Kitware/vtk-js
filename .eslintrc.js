@@ -11,7 +11,7 @@ module.exports = {
     'no-unused-vars': ["error", { args: 'none' }],
     'prefer-destructuring': ["error", { VariableDeclarator: { array: false, object: true }, AssignmentExpression: { array: false, object: false } }, { enforceForRenamedProperties: false }],
     'import/no-extraneous-dependencies': 0, // Needed for tests
-    // 'no-mixed-operators': 'error',
+    // 'no-mixed-operators': 'error', // Wish we can put it back with prettier
 
     // Not for us
     'jsx-a11y/label-has-for': 0,
@@ -19,17 +19,11 @@ module.exports = {
     'no-plusplus': 0,
     'import/no-named-as-default': 0,
     'import/no-named-as-default-member': 0,
+    'prefer-destructuring': 0, // Can have unwanted side effect
 
     // Introduced with new eslint
     // and no time to fix them...
-
-    // 'no-nested-ternary': 0,
-    // 'no-restricted-properties': 0,
-    // 'no-multi-spaces': 0,
-    // 'prefer-promise-reject-errors': 0,
-    // 'spaced-comment': 0,
-    // 'no-var': 0,
-    // 'import/extensions': 0,
+    // [...]
   },
   plugins: [
     'prettier'
