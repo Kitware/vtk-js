@@ -82,7 +82,7 @@ function vtkVolumeController(publicAPI, model) {
       );
     model.actor
       .getMapper()
-      .setSampleDistance(sampleDistance * Math.pow(2, value * 3.0 - 1.5));
+      .setSampleDistance(sampleDistance * 2 ** (value * 3.0 - 1.5));
     model.renderWindow.render();
   }
 

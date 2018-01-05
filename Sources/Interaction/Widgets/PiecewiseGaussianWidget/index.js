@@ -135,7 +135,7 @@ function drawChart(
 ) {
   const verticalScale = area[3];
   const horizontalScale = area[2] / (values.length - 1);
-  const height = ctx.canvas.height;
+  const { height } = ctx.canvas;
   const fill = !!style.fillStyle;
 
   ctx.lineWidth = style.lineWidth;

@@ -27,8 +27,7 @@ function vtkTrackballRotate(publicAPI, model) {
     const trans = mat4.create();
     mat4.identity(trans);
 
-    const center = model.center;
-    const rotationFactor = model.rotationFactor;
+    const { center, rotationFactor } = model;
 
     // Translate to center
     mat4.translate(

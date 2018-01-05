@@ -54,7 +54,7 @@ function vtkTrackballPan(publicAPI, model) {
       camera.setPosition(camPos[0], camPos[1], camPos[2]);
       camera.setFocalPoint(fp[0], fp[1], fp[2]);
     } else {
-      const center = model.center;
+      const { center } = model;
       const style = interactor.getInteractorStyle();
       const focalDepth = style.computeWorldToDisplay(
         center[0],

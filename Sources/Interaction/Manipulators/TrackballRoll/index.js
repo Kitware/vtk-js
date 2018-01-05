@@ -52,7 +52,7 @@ function vtkTrackballRoll(publicAPI, model) {
         (Math.sqrt(x1 * x1 + y1 * y1) * Math.sqrt(x2 * x2 + y2 * y2))
     );
 
-    const center = model.center;
+    const { center } = model;
     const transform = mat4.create();
     mat4.identity(transform);
 
