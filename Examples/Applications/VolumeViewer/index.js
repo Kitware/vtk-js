@@ -4,16 +4,16 @@
 import 'babel-polyfill';
 import 'vtk.js/Sources/favicon';
 
-import HttpDataAccessHelper       from 'vtk.js/Sources/IO/Core/DataAccessHelper/HttpDataAccessHelper';
-import vtkBoundingBox             from 'vtk.js/Sources/Common/DataModel/BoundingBox';
-import vtkColorTransferFunction   from 'vtk.js/Sources/Rendering/Core/ColorTransferFunction';
-import vtkFullScreenRenderWindow  from 'vtk.js/Sources/Rendering/Misc/FullScreenRenderWindow';
-import vtkPiecewiseFunction       from 'vtk.js/Sources/Common/DataModel/PiecewiseFunction';
-import vtkVolumeController        from 'vtk.js/Sources/Interaction/UI/VolumeController';
-import vtkURLExtract              from 'vtk.js/Sources/Common/Core/URLExtract';
-import vtkVolume                  from 'vtk.js/Sources/Rendering/Core/Volume';
-import vtkVolumeMapper            from 'vtk.js/Sources/Rendering/Core/VolumeMapper';
-import vtkXMLImageDataReader      from 'vtk.js/Sources/IO/XML/XMLImageDataReader';
+import HttpDataAccessHelper from 'vtk.js/Sources/IO/Core/DataAccessHelper/HttpDataAccessHelper';
+import vtkBoundingBox from 'vtk.js/Sources/Common/DataModel/BoundingBox';
+import vtkColorTransferFunction from 'vtk.js/Sources/Rendering/Core/ColorTransferFunction';
+import vtkFullScreenRenderWindow from 'vtk.js/Sources/Rendering/Misc/FullScreenRenderWindow';
+import vtkPiecewiseFunction from 'vtk.js/Sources/Common/DataModel/PiecewiseFunction';
+import vtkVolumeController from 'vtk.js/Sources/Interaction/UI/VolumeController';
+import vtkURLExtract from 'vtk.js/Sources/Common/Core/URLExtract';
+import vtkVolume from 'vtk.js/Sources/Rendering/Core/Volume';
+import vtkVolumeMapper from 'vtk.js/Sources/Rendering/Core/VolumeMapper';
+import vtkXMLImageDataReader from 'vtk.js/Sources/IO/XML/XMLImageDataReader';
 
 import style from './VolumeViewer.mcss';
 
@@ -48,9 +48,15 @@ function preventDefaults(e) {
 // ----------------------------------------------------------------------------
 
 function createViewer(rootContainer, fileContents, options) {
-  const background = options.background ? options.background.split(',').map(s => Number(s)) : [0, 0, 0];
+  const background = options.background
+    ? options.background.split(',').map((s) => Number(s))
+    : [0, 0, 0];
   const containerStyle = options.containerStyle;
-  const fullScreenRenderer = vtkFullScreenRenderWindow.newInstance({ background, rootContainer, containerStyle });
+  const fullScreenRenderer = vtkFullScreenRenderWindow.newInstance({
+    background,
+    rootContainer,
+    containerStyle,
+  });
   const renderer = fullScreenRenderer.getRenderer();
   const renderWindow = fullScreenRenderer.getRenderWindow();
   renderWindow.getInteractor().setDesiredUpdateRate(15);
@@ -62,7 +68,8 @@ function createViewer(rootContainer, fileContents, options) {
   const mapper = vtkVolumeMapper.newInstance();
   const actor = vtkVolume.newInstance();
 
-  const dataArray = source.getPointData().getScalars() || source.getPointData().getArrays()[0];
+  const dataArray =
+    source.getPointData().getScalars() || source.getPointData().getArrays()[0];
   const dataRange = dataArray.getRange();
 
   const lookupTable = vtkColorTransferFunction.newInstance();
@@ -74,7 +81,14 @@ function createViewer(rootContainer, fileContents, options) {
   renderer.addActor(actor);
 
   // Configuration
-  const sampleDistance = 0.7 * Math.sqrt(source.getSpacing().map(v => v * v).reduce((a, b) => a + b, 0));
+  const sampleDistance =
+    0.7 *
+    Math.sqrt(
+      source
+        .getSpacing()
+        .map((v) => v * v)
+        .reduce((a, b) => a + b, 0)
+    );
   mapper.setSampleDistance(sampleDistance);
   actor.getProperty().setRGBTransferFunction(0, lookupTable);
   actor.getProperty().setScalarOpacity(0, piecewiseFunction);
@@ -83,7 +97,13 @@ function createViewer(rootContainer, fileContents, options) {
 
   // For better looking volume rendering
   // - distance in world coordinates a scalar opacity of 1.0
-  actor.getProperty().setScalarOpacityUnitDistance(0, vtkBoundingBox.getDiagonalLength(source.getBounds()) / Math.max(...source.getDimensions()));
+  actor
+    .getProperty()
+    .setScalarOpacityUnitDistance(
+      0,
+      vtkBoundingBox.getDiagonalLength(source.getBounds()) /
+        Math.max(...source.getDimensions())
+    );
   // - control how we emphasize surface boundaries
   //  => max should be around the average gradient magnitude for the
   //     volume or maybe average plus one std dev of the gradient magnitude
@@ -91,7 +111,9 @@ function createViewer(rootContainer, fileContents, options) {
   //     pixel gradient)
   //  => max hack: (dataRange[1] - dataRange[0]) * 0.05
   actor.getProperty().setGradientOpacityMinimumValue(0, 0);
-  actor.getProperty().setGradientOpacityMaximumValue(0, (dataRange[1] - dataRange[0]) * 0.05);
+  actor
+    .getProperty()
+    .setGradientOpacityMaximumValue(0, (dataRange[1] - dataRange[0]) * 0.05);
   // - Use shading based on gradient
   actor.getProperty().setShade(true);
   actor.getProperty().setUseGradientOpacity(0, true);
@@ -104,8 +126,10 @@ function createViewer(rootContainer, fileContents, options) {
   actor.getProperty().setSpecularPower(8.0);
 
   // Control UI
-  const controllerWidget = vtkVolumeController.newInstance({ size: [400, 150] });
-  const isBackgroundDark = (background[0] + background[1] + background[2]) < 1.5;
+  const controllerWidget = vtkVolumeController.newInstance({
+    size: [400, 150],
+  });
+  const isBackgroundDark = background[0] + background[1] + background[2] < 1.5;
   controllerWidget.setContainer(rootContainer);
   controllerWidget.setupContent(renderWindow, actor, isBackgroundDark);
   fullScreenRenderer.setResizeCallback(({ width, height }) => {
@@ -156,11 +180,15 @@ export function load(container, options) {
     container.appendChild(progressContainer);
 
     const progressCallback = (progressEvent) => {
-      const percent = Math.floor(100 * progressEvent.loaded / progressEvent.total);
+      const percent = Math.floor(
+        100 * progressEvent.loaded / progressEvent.total
+      );
       progressContainer.innerHTML = `Loading ${percent}%`;
     };
 
-    HttpDataAccessHelper.fetchBinary(options.fileURL, { progressCallback }).then((binary) => {
+    HttpDataAccessHelper.fetchBinary(options.fileURL, {
+      progressCallback,
+    }).then((binary) => {
       container.removeChild(progressContainer);
       createViewer(container, binary, options);
     });
@@ -173,7 +201,9 @@ export function initLocalFileLoader(container) {
   const myContainer = container || exampleContainer || rootBody;
 
   const fileContainer = document.createElement('div');
-  fileContainer.innerHTML = `<div class="${style.bigFileDrop}"/><input type="file" accept=".vti" style="display: none;"/>`;
+  fileContainer.innerHTML = `<div class="${
+    style.bigFileDrop
+  }"/><input type="file" accept=".vti" style="display: none;"/>`;
   myContainer.appendChild(fileContainer);
 
   const fileInput = fileContainer.querySelector('input');
@@ -192,10 +222,9 @@ export function initLocalFileLoader(container) {
 
   fileInput.addEventListener('change', handleFile);
   fileContainer.addEventListener('drop', handleFile);
-  fileContainer.addEventListener('click', e => fileInput.click());
+  fileContainer.addEventListener('click', (e) => fileInput.click());
   fileContainer.addEventListener('dragover', preventDefaults);
 }
-
 
 // Look at URL an see if we should load a file
 // ?fileURL=https://data.kitware.com/api/v1/item/59cdbb588d777f31ac63de08/download
@@ -211,7 +240,11 @@ let nbViewers = viewerContainers.length;
 while (nbViewers--) {
   const viewerContainer = viewerContainers[nbViewers];
   const fileURL = viewerContainer.dataset.url;
-  const options = Object.assign({ containerStyle: { height: '100%' } }, userParams, { fileURL });
+  const options = Object.assign(
+    { containerStyle: { height: '100%' } },
+    userParams,
+    { fileURL }
+  );
   load(viewerContainer, options);
 }
 

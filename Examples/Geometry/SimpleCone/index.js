@@ -1,12 +1,12 @@
 import 'vtk.js/Sources/favicon';
 
-import vtkActor                  from 'vtk.js/Sources/Rendering/Core/Actor';
-import vtkConeSource             from 'vtk.js/Sources/Filters/Sources/ConeSource';
-import vtkMapper                 from 'vtk.js/Sources/Rendering/Core/Mapper';
-import vtkOpenGLRenderWindow     from 'vtk.js/Sources/Rendering/OpenGL/RenderWindow';
-import vtkRenderWindow           from 'vtk.js/Sources/Rendering/Core/RenderWindow';
+import vtkActor from 'vtk.js/Sources/Rendering/Core/Actor';
+import vtkConeSource from 'vtk.js/Sources/Filters/Sources/ConeSource';
+import vtkMapper from 'vtk.js/Sources/Rendering/Core/Mapper';
+import vtkOpenGLRenderWindow from 'vtk.js/Sources/Rendering/OpenGL/RenderWindow';
+import vtkRenderWindow from 'vtk.js/Sources/Rendering/Core/RenderWindow';
 import vtkRenderWindowInteractor from 'vtk.js/Sources/Rendering/Core/RenderWindowInteractor';
-import vtkRenderer               from 'vtk.js/Sources/Rendering/Core/Renderer';
+import vtkRenderer from 'vtk.js/Sources/Rendering/Core/Renderer';
 
 // ----------------------------------------------------------------------------
 // Standard rendering code setup

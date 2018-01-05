@@ -2,20 +2,22 @@ import 'vtk.js/Sources/favicon';
 
 import vtkFullScreenRenderWindow from 'vtk.js/Sources/Rendering/Misc/FullScreenRenderWindow';
 
-import macro                     from 'vtk.js/Sources/macro';
-import vtkActor                  from 'vtk.js/Sources/Rendering/Core/Actor';
-import vtkDataArray              from 'vtk.js/Sources/Common/Core/DataArray';
-import vtkImageGridSource        from 'vtk.js/Sources/Filters/Sources/ImageGridSource';
-import vtkMapper                 from 'vtk.js/Sources/Rendering/Core/Mapper';
-import vtkPolyData               from 'vtk.js/Sources/Common/DataModel/PolyData';
-import vtkSphereSource           from 'vtk.js/Sources/Filters/Sources/SphereSource';
-import vtkTexture                from 'vtk.js/Sources/Rendering/Core/Texture';
+import macro from 'vtk.js/Sources/macro';
+import vtkActor from 'vtk.js/Sources/Rendering/Core/Actor';
+import vtkDataArray from 'vtk.js/Sources/Common/Core/DataArray';
+import vtkImageGridSource from 'vtk.js/Sources/Filters/Sources/ImageGridSource';
+import vtkMapper from 'vtk.js/Sources/Rendering/Core/Mapper';
+import vtkPolyData from 'vtk.js/Sources/Common/DataModel/PolyData';
+import vtkSphereSource from 'vtk.js/Sources/Filters/Sources/SphereSource';
+import vtkTexture from 'vtk.js/Sources/Rendering/Core/Texture';
 
 // ----------------------------------------------------------------------------
 // Standard rendering code setup
 // ----------------------------------------------------------------------------
 
-const fullScreenRenderer = vtkFullScreenRenderWindow.newInstance({ background: [0, 0, 0] });
+const fullScreenRenderer = vtkFullScreenRenderWindow.newInstance({
+  background: [0, 0, 0],
+});
 const renderer = fullScreenRenderer.getRenderer();
 const renderWindow = fullScreenRenderer.getRenderWindow();
 
@@ -37,7 +39,8 @@ sphereSource.setPhiResolution(32);
 const tcoordFilter = macro.newInstance((publicAPI, model) => {
   macro.obj(publicAPI, model); // make it an object
   macro.algo(publicAPI, model, 1, 1); // mixin algorithm code 1 in, 1 out
-  publicAPI.requestData = (inData, outData) => { // implement requestData
+  publicAPI.requestData = (inData, outData) => {
+    // implement requestData
     if (!outData[0] || inData[0].getMTime() > outData[0].getMTime()) {
       // use the normals to generate tcoords :-)
       const norms = inData[0].getPointData().getNormals();
@@ -45,11 +48,16 @@ const tcoordFilter = macro.newInstance((publicAPI, model) => {
       const newArray = new Float32Array(norms.getNumberOfTuples() * 2);
       const ndata = norms.getData();
       for (let i = 0; i < newArray.length; i += 2) {
-        newArray[i] = Math.abs(Math.atan2(ndata[i / 2 * 3], ndata[(i / 2 * 3) + 1])) / 3.1415927;
-        newArray[i + 1] = Math.asin((ndata[(i / 2 * 3) + 2]) / 3.1415927) + 0.5;
+        newArray[i] =
+          Math.abs(Math.atan2(ndata[i / 2 * 3], ndata[i / 2 * 3 + 1])) /
+          3.1415927;
+        newArray[i + 1] = Math.asin(ndata[i / 2 * 3 + 2] / 3.1415927) + 0.5;
       }
 
-      const da = vtkDataArray.newInstance({ numberOfComponents: 2, values: newArray });
+      const da = vtkDataArray.newInstance({
+        numberOfComponents: 2,
+        values: newArray,
+      });
       da.setName('tcoord');
 
       const pd = vtkPolyData.newInstance();

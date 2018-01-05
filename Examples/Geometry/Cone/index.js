@@ -1,12 +1,12 @@
 import 'vtk.js/Sources/favicon';
 
-import vtkActor                  from 'vtk.js/Sources/Rendering/Core/Actor';
-import vtkCalculator             from 'vtk.js/Sources/Filters/General/Calculator';
-import vtkConeSource             from 'vtk.js/Sources/Filters/Sources/ConeSource';
+import vtkActor from 'vtk.js/Sources/Rendering/Core/Actor';
+import vtkCalculator from 'vtk.js/Sources/Filters/General/Calculator';
+import vtkConeSource from 'vtk.js/Sources/Filters/Sources/ConeSource';
 import vtkFullScreenRenderWindow from 'vtk.js/Sources/Rendering/Misc/FullScreenRenderWindow';
-import vtkMapper                 from 'vtk.js/Sources/Rendering/Core/Mapper';
-import { AttributeTypes }        from 'vtk.js/Sources/Common/DataModel/DataSetAttributes/Constants';
-import { FieldDataTypes }        from 'vtk.js/Sources/Common/DataModel/DataSet/Constants';
+import vtkMapper from 'vtk.js/Sources/Rendering/Core/Mapper';
+import { AttributeTypes } from 'vtk.js/Sources/Common/DataModel/DataSetAttributes/Constants';
+import { FieldDataTypes } from 'vtk.js/Sources/Common/DataModel/DataSet/Constants';
 
 import controlPanel from './controller.html';
 
@@ -14,7 +14,9 @@ import controlPanel from './controller.html';
 // Standard rendering code setup
 // ----------------------------------------------------------------------------
 
-const fullScreenRenderer = vtkFullScreenRenderWindow.newInstance({ background: [0, 0, 0] });
+const fullScreenRenderer = vtkFullScreenRenderWindow.newInstance({
+  background: [0, 0, 0],
+});
 const renderer = fullScreenRenderer.getRenderer();
 const renderWindow = fullScreenRenderer.getRenderWindow();
 
@@ -32,14 +34,19 @@ const filter = vtkCalculator.newInstance();
 filter.setInputConnection(coneSource.getOutputPort());
 // filter.setFormulaSimple(FieldDataTypes.CELL, [], 'random', () => Math.random());
 filter.setFormula({
-  getArrays: inputDataSets => ({
+  getArrays: (inputDataSets) => ({
     input: [],
     output: [
-      { location: FieldDataTypes.CELL, name: 'Random', dataType: 'Float32Array', attribute: AttributeTypes.SCALARS },
+      {
+        location: FieldDataTypes.CELL,
+        name: 'Random',
+        dataType: 'Float32Array',
+        attribute: AttributeTypes.SCALARS,
+      },
     ],
   }),
   evaluate: (arraysIn, arraysOut) => {
-    const [scalars] = arraysOut.map(d => d.getData());
+    const [scalars] = arraysOut.map((d) => d.getData());
     for (let i = 0; i < scalars.length; i++) {
       scalars[i] = Math.random();
     }

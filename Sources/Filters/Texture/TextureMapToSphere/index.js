@@ -116,7 +116,9 @@ function vtkTextureMapToSphere(publicAPI, model) {
     });
 
     const output = vtkPolyData.newInstance();
-    output.getPoints().setData(new Float32Array(input.getPoints().getData()), 3);
+    output
+      .getPoints()
+      .setData(new Float32Array(input.getPoints().getData()), 3);
     output.getPolys().setData(new Uint32Array(input.getPolys().getData()));
     output.getPointData().setTCoords(tCoords);
 
