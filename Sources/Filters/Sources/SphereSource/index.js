@@ -25,7 +25,7 @@ function vtkSphereSource(publicAPI, model) {
     let numPoles = 0;
 
     // Check data, determine increments, and convert to radians
-    let thetaResolution = model.thetaResolution;
+    let { thetaResolution } = model;
     let startTheta =
       model.startTheta < model.endTheta ? model.startTheta : model.endTheta;
     startTheta *= Math.PI / 180.0;
