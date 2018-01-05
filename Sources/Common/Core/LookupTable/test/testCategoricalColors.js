@@ -72,7 +72,7 @@ test.onlyIfWebGL('Test Categorical Colors', (t) => {
       points[idx * 3] = j;
       points[idx * 3 + 1] = i;
       points[idx * 3 + 2] = 0.0;
-      scalars[idx] = Math.pow(10.0, Math.floor(j / 2));
+      scalars[idx] = 10.0 ** Math.floor(j / 2);
       // also add nan for some data
       if (i === 4) {
         scalars[idx] = NaN;

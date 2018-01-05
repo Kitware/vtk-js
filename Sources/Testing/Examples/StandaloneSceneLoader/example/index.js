@@ -167,7 +167,7 @@ export function initLocalFileLoader(container) {
   myContainer.setAttribute('class', style.fullScreen);
 
   function handleFile(e) {
-    var files = this.files;
+    const files = this.files;
     if (files.length === 1) {
       myContainer.removeChild(fileSelector);
       const ext = files[0].name.split('.').slice(-1)[0];
