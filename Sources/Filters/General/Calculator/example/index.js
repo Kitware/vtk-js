@@ -99,7 +99,7 @@ fullScreenRenderer.addController(controlPanel);
 function updateScalarRange() {
   const min = Number(document.querySelector('.min').value);
   const max = Number(document.querySelector('.max').value);
-  if (!isNaN(min) && !isNaN(max)) {
+  if (!Number.isNaN(min) && !Number.isNaN(max)) {
     lookupTable.setMappingRange(min, max);
     renderWindow.render();
   }

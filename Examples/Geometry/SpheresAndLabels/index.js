@@ -1,13 +1,13 @@
 import 'vtk.js/Sources/favicon';
 
-import vtkActor                  from 'vtk.js/Sources/Rendering/Core/Actor';
-import vtkConeSource             from 'vtk.js/Sources/Filters/Sources/ConeSource';
-import vtkSphereMapper           from 'vtk.js/Sources/Rendering/Core/SphereMapper';
-import vtkOpenGLRenderWindow     from 'vtk.js/Sources/Rendering/OpenGL/RenderWindow';
+import vtkActor from 'vtk.js/Sources/Rendering/Core/Actor';
+import vtkConeSource from 'vtk.js/Sources/Filters/Sources/ConeSource';
+import vtkSphereMapper from 'vtk.js/Sources/Rendering/Core/SphereMapper';
+import vtkOpenGLRenderWindow from 'vtk.js/Sources/Rendering/OpenGL/RenderWindow';
 import vtkPixelSpaceCallbackMapper from 'vtk.js/Sources/Rendering/Core/PixelSpaceCallbackMapper';
-import vtkRenderWindow           from 'vtk.js/Sources/Rendering/Core/RenderWindow';
+import vtkRenderWindow from 'vtk.js/Sources/Rendering/Core/RenderWindow';
 import vtkRenderWindowInteractor from 'vtk.js/Sources/Rendering/Core/RenderWindowInteractor';
-import vtkRenderer               from 'vtk.js/Sources/Rendering/Core/Renderer';
+import vtkRenderer from 'vtk.js/Sources/Rendering/Core/Renderer';
 
 import style from './style.mcss';
 

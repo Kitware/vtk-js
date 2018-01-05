@@ -1,16 +1,16 @@
 import 'vtk.js/Sources/favicon';
 
-import { mat4, vec3 }              from 'gl-matrix';
+import { mat4, vec3 } from 'gl-matrix';
 
-import vtkActor                    from 'vtk.js/Sources/Rendering/Core/Actor';
-import vtkSphereMapper             from 'vtk.js/Sources/Rendering/Core/SphereMapper';
-import vtkMapper                   from 'vtk.js/Sources/Rendering/Core/Mapper';
-import vtkOpenGLRenderWindow       from 'vtk.js/Sources/Rendering/OpenGL/RenderWindow';
+import vtkActor from 'vtk.js/Sources/Rendering/Core/Actor';
+import vtkSphereMapper from 'vtk.js/Sources/Rendering/Core/SphereMapper';
+import vtkMapper from 'vtk.js/Sources/Rendering/Core/Mapper';
+import vtkOpenGLRenderWindow from 'vtk.js/Sources/Rendering/OpenGL/RenderWindow';
 import vtkPixelSpaceCallbackMapper from 'vtk.js/Sources/Rendering/Core/PixelSpaceCallbackMapper';
-import vtkRenderWindow             from 'vtk.js/Sources/Rendering/Core/RenderWindow';
-import vtkRenderWindowInteractor   from 'vtk.js/Sources/Rendering/Core/RenderWindowInteractor';
-import vtkRenderer                 from 'vtk.js/Sources/Rendering/Core/Renderer';
-import vtk                         from 'vtk.js/Sources/vtk';
+import vtkRenderWindow from 'vtk.js/Sources/Rendering/Core/RenderWindow';
+import vtkRenderWindowInteractor from 'vtk.js/Sources/Rendering/Core/RenderWindowInteractor';
+import vtkRenderer from 'vtk.js/Sources/Rendering/Core/Renderer';
+import vtk from 'vtk.js/Sources/vtk';
 
 // Need polydata registered in the vtk factory
 import 'vtk.js/Sources/Common/Core/Points';
@@ -21,7 +21,7 @@ import 'vtk.js/Sources/Common/DataModel/PolyData';
 import style from './style.mcss';
 
 function affine(val, inMin, inMax, outMin, outMax) {
-  return (((val - inMin) / (inMax - inMin)) * (outMax - outMin)) + outMin;
+  return (val - inMin) / (inMax - inMin) * (outMax - outMin) + outMin;
 }
 
 // ----------------------------------------------------------------------------
@@ -49,27 +49,25 @@ const pointPoly = vtk({
     vtkClass: 'vtkPoints',
     dataType: 'Float32Array',
     numberOfComponents: 3,
-    values: [
-      0, 0, -1,
-    ],
+    values: [0, 0, -1],
   },
   polys: {
     vtkClass: 'vtkCellArray',
     dataType: 'Uint16Array',
-    values: [
-      1, 0,
-    ],
+    values: [1, 0],
   },
   pointData: {
     vtkClass: 'vtkDataSetAttributes',
-    arrays: [{
-      data: {
-        vtkClass: 'vtkStringArray',
-        name: 'pointLabels',
-        dataType: 'string',
-        values: ['Neo'],
+    arrays: [
+      {
+        data: {
+          vtkClass: 'vtkStringArray',
+          name: 'pointLabels',
+          dataType: 'string',
+          values: ['Neo'],
+        },
       },
-    }],
+    ],
   },
 });
 
@@ -79,20 +77,12 @@ const planePoly = vtk({
     vtkClass: 'vtkPoints',
     dataType: 'Float32Array',
     numberOfComponents: 3,
-    values: [
-      -1, -1, 0,
-      1, -1, 0,
-      1, 1, 0,
-      -1, 1, 0,
-    ],
+    values: [-1, -1, 0, 1, -1, 0, 1, 1, 0, -1, 1, 0],
   },
   polys: {
     vtkClass: 'vtkCellArray',
     dataType: 'Uint16Array',
-    values: [
-      3, 0, 1, 2,
-      3, 0, 2, 3,
-    ],
+    values: [3, 0, 1, 2, 3, 0, 2, 3],
   },
 });
 
@@ -124,11 +114,12 @@ function initializeDebugHandler() {
     const y = (evt.pageY - debugCanvas.offsetTop) / debugCanvasSize;
 
     if (lastDepthBuffer && dbgWidth > 0 && dbgHeight > 0) {
-      const dIdx = (((dbgHeight - 1 - Math.floor(y)) * dbgWidth) + Math.floor(x)) * 4;
+      const dIdx =
+        ((dbgHeight - 1 - Math.floor(y)) * dbgWidth + Math.floor(x)) * 4;
       const r = lastDepthBuffer[dIdx] / 255;
       const g = lastDepthBuffer[dIdx + 1] / 255;
-      let z = ((r * 256) + g) / 257;
-      z = (z * 2) - 1;   // scale depths from [0, 1] into [-1, 1]
+      let z = (r * 256 + g) / 257;
+      z = z * 2 - 1; // scale depths from [0, 1] into [-1, 1]
       console.log(`depth at (${x}, ${y}) is ${z}`);
 
       const activeCamera = renderWindow.getRenderers()[0].getActiveCamera();
@@ -167,14 +158,14 @@ function initializeDebugHandler() {
         for (let x = 0; x < imageData.width; x += 1) {
           // Going back to the raw pixels again here, so they need to be
           // flipped in y as the Core/PixelSpaceCallbackMapper already did.
-          const dIdx = (((imageData.height - 1 - y) * imageData.width) + x) * 4;
+          const dIdx = ((imageData.height - 1 - y) * imageData.width + x) * 4;
 
           const r = depthBuffer[dIdx] / 255;
           const g = depthBuffer[dIdx + 1] / 255;
-          const z = ((r * 256) + g) / 257;
+          const z = (r * 256 + g) / 257;
           // z = (z * 2) - 1;   // scale depths from [0, 1] into [-1, 1]
           const zColor = affine(z, 0, 1, 0, 255);
-          const pIdx = ((y * imageData.width) + x) * 4;
+          const pIdx = (y * imageData.width + x) * 4;
           data[pIdx] = zColor;
           data[pIdx + 1] = zColor;
           data[pIdx + 2] = zColor;
@@ -247,8 +238,10 @@ psMapper.setCallback((coordsList, camera, aspect, depthBuffer) => {
       vc[2] += 0.5; // sphere mapper's radius
       vec3.transformMat4(vc, vc, projMatrix);
 
-      console.log(`Distance to camera: point = ${xy[2]}, depth buffer = ${xy[3]}`);
-      if ((vc[2] - 0.001) < xy[3]) {
+      console.log(
+        `Distance to camera: point = ${xy[2]}, depth buffer = ${xy[3]}`
+      );
+      if (vc[2] - 0.001 < xy[3]) {
         textCtx.font = '12px serif';
         textCtx.textAlign = 'center';
         textCtx.textBaseline = 'middle';

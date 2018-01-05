@@ -1,17 +1,19 @@
 import 'vtk.js/Sources/favicon';
 
-import vtkColorTransferFunction   from 'vtk.js/Sources/Rendering/Core/ColorTransferFunction';
-import vtkFullScreenRenderWindow  from 'vtk.js/Sources/Rendering/Misc/FullScreenRenderWindow';
-import vtkHttpDataSetReader       from 'vtk.js/Sources/IO/Core/HttpDataSetReader';
-import vtkPiecewiseFunction       from 'vtk.js/Sources/Common/DataModel/PiecewiseFunction';
-import vtkVolume                  from 'vtk.js/Sources/Rendering/Core/Volume';
-import vtkVolumeMapper            from 'vtk.js/Sources/Rendering/Core/VolumeMapper';
+import vtkColorTransferFunction from 'vtk.js/Sources/Rendering/Core/ColorTransferFunction';
+import vtkFullScreenRenderWindow from 'vtk.js/Sources/Rendering/Misc/FullScreenRenderWindow';
+import vtkHttpDataSetReader from 'vtk.js/Sources/IO/Core/HttpDataSetReader';
+import vtkPiecewiseFunction from 'vtk.js/Sources/Common/DataModel/PiecewiseFunction';
+import vtkVolume from 'vtk.js/Sources/Rendering/Core/Volume';
+import vtkVolumeMapper from 'vtk.js/Sources/Rendering/Core/VolumeMapper';
 
 // ----------------------------------------------------------------------------
 // Standard rendering code setup
 // ----------------------------------------------------------------------------
 
-const fullScreenRenderer = vtkFullScreenRenderWindow.newInstance({ background: [0, 0, 0] });
+const fullScreenRenderer = vtkFullScreenRenderWindow.newInstance({
+  background: [0, 0, 0],
+});
 const renderer = fullScreenRenderer.getRenderer();
 const renderWindow = fullScreenRenderer.getRenderWindow();
 
@@ -55,19 +57,29 @@ actor.getProperty().setSpecularPower(8.0);
 mapper.setInputConnection(reader.getOutputPort());
 
 // we first load a small dataset 64x64x91
-reader.setUrl('https://data.kitware.com/api/v1/file/58e79a8b8d777f16d095fcd7/download', { fullPath: true, compression: 'zip', loadData: true }).then(() => {
-  renderer.addVolume(actor);
-  renderer.resetCamera();
-  renderer.getActiveCamera().zoom(1.5);
-  renderer.getActiveCamera().elevation(70);
-  renderer.updateLightsGeometryToFollowCamera();
-  renderWindow.render();
-  // now that the small dataset is loaded we pull down the
-  // full resolution 256x256x91 dataset
-  reader.setUrl('https://data.kitware.com/api/v1/file/58e665158d777f16d095fc2e/download', { fullPath: true, compression: 'zip', loadData: true }).then(() => {
+reader
+  .setUrl(
+    'https://data.kitware.com/api/v1/file/58e79a8b8d777f16d095fcd7/download',
+    { fullPath: true, compression: 'zip', loadData: true }
+  )
+  .then(() => {
+    renderer.addVolume(actor);
+    renderer.resetCamera();
+    renderer.getActiveCamera().zoom(1.5);
+    renderer.getActiveCamera().elevation(70);
+    renderer.updateLightsGeometryToFollowCamera();
     renderWindow.render();
+    // now that the small dataset is loaded we pull down the
+    // full resolution 256x256x91 dataset
+    reader
+      .setUrl(
+        'https://data.kitware.com/api/v1/file/58e665158d777f16d095fc2e/download',
+        { fullPath: true, compression: 'zip', loadData: true }
+      )
+      .then(() => {
+        renderWindow.render();
+      });
   });
-});
 
 // -----------------------------------------------------------
 // Make some variables global so that you can inspect and

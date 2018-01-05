@@ -5,14 +5,14 @@ import 'babel-polyfill';
 import 'vtk.js/Sources/favicon';
 import JSZip from 'jszip';
 
-import HttpDataAccessHelper       from 'vtk.js/Sources/IO/Core/DataAccessHelper/HttpDataAccessHelper';
-import vtkFullScreenRenderWindow  from 'vtk.js/Sources/Rendering/Misc/FullScreenRenderWindow';
-import vtkURLExtract              from 'vtk.js/Sources/Common/Core/URLExtract';
+import HttpDataAccessHelper from 'vtk.js/Sources/IO/Core/DataAccessHelper/HttpDataAccessHelper';
+import vtkFullScreenRenderWindow from 'vtk.js/Sources/Rendering/Misc/FullScreenRenderWindow';
+import vtkURLExtract from 'vtk.js/Sources/Common/Core/URLExtract';
 
 import vtkOBJReader from 'vtk.js/Sources/IO/Misc/OBJReader';
 import vtkMTLReader from 'vtk.js/Sources/IO/Misc/MTLReader';
-import vtkMapper    from 'vtk.js/Sources/Rendering/Core/Mapper';
-import vtkActor     from 'vtk.js/Sources/Rendering/Core/Actor';
+import vtkMapper from 'vtk.js/Sources/Rendering/Core/Mapper';
+import vtkActor from 'vtk.js/Sources/Rendering/Core/Actor';
 
 import style from './OBJViewer.mcss';
 
@@ -39,89 +39,90 @@ function emptyContainer(container) {
 function loadZipContent(zipContent, renderWindow, renderer) {
   const fileContents = { obj: {}, mtl: {}, img: {} };
   const zip = new JSZip();
-  zip
-    .loadAsync(zipContent)
-    .then(() => {
-      let workLoad = 0;
+  zip.loadAsync(zipContent).then(() => {
+    let workLoad = 0;
 
-      function done() {
-        if (workLoad !== 0) {
-          return;
-        }
-        // Attach images to MTLs
-        Object.keys(fileContents.mtl).forEach((mtlFilePath) => {
-          const mtlReader = fileContents.mtl[mtlFilePath];
-          const basePath = mtlFilePath.split('/').filter((v, i, a) => i < (a.length - 1)).join('/');
-          mtlReader.listImages().forEach((relPath) => {
-            const key = `${basePath}/${relPath}`;
-            const imgSRC = fileContents.img[key];
-            if (imgSRC) {
-              mtlReader.setImageSrc(relPath, imgSRC);
-            }
-          });
-        });
-
-        // Create pipeline from obj
-        Object.keys(fileContents.obj).forEach((objFilePath) => {
-          const mtlFilePath = objFilePath.replace(/\.obj$/, '.mtl');
-          const objReader = fileContents.obj[objFilePath];
-          const mtlReader = fileContents.mtl[mtlFilePath];
-
-          const size = objReader.getNumberOfOutputPorts();
-          for (let i = 0; i < size; i++) {
-            const source = objReader.getOutputData(i);
-            const mapper = vtkMapper.newInstance();
-            const actor = vtkActor.newInstance();
-            const name = source.get('name').name;
-
-            actor.setMapper(mapper);
-            mapper.setInputData(source);
-            renderer.addActor(actor);
-
-            if (mtlReader && name) {
-              mtlReader.applyMaterialToActor(name, actor);
-            }
+    function done() {
+      if (workLoad !== 0) {
+        return;
+      }
+      // Attach images to MTLs
+      Object.keys(fileContents.mtl).forEach((mtlFilePath) => {
+        const mtlReader = fileContents.mtl[mtlFilePath];
+        const basePath = mtlFilePath
+          .split('/')
+          .filter((v, i, a) => i < a.length - 1)
+          .join('/');
+        mtlReader.listImages().forEach((relPath) => {
+          const key = `${basePath}/${relPath}`;
+          const imgSRC = fileContents.img[key];
+          if (imgSRC) {
+            mtlReader.setImageSrc(relPath, imgSRC);
           }
         });
-        renderer.resetCamera();
-        renderWindow.render();
+      });
 
-        // Rerender with hopefully all the textures loaded
-        setTimeout(renderWindow.render, 500);
-      }
+      // Create pipeline from obj
+      Object.keys(fileContents.obj).forEach((objFilePath) => {
+        const mtlFilePath = objFilePath.replace(/\.obj$/, '.mtl');
+        const objReader = fileContents.obj[objFilePath];
+        const mtlReader = fileContents.mtl[mtlFilePath];
 
-      zip.forEach((relativePath, zipEntry) => {
-        if (relativePath.match(/\.obj$/i)) {
-          workLoad++;
-          zipEntry.async('string').then((txt) => {
-            const reader = vtkOBJReader.newInstance({ splitMode: 'usemtl' });
-            reader.parse(txt);
-            fileContents.obj[relativePath] = reader;
-            workLoad--;
-            done();
-          });
-        }
-        if (relativePath.match(/\.mtl$/i)) {
-          workLoad++;
-          zipEntry.async('string').then((txt) => {
-            const reader = vtkMTLReader.newInstance();
-            reader.parse(txt);
-            fileContents.mtl[relativePath] = reader;
-            workLoad--;
-            done();
-          });
-        }
-        if (relativePath.match(/\.jpg$/i) || relativePath.match(/\.png$/i)) {
-          workLoad++;
-          zipEntry.async('base64').then((txt) => {
-            const ext = relativePath.slice(-3).toLowerCase();
-            fileContents.img[relativePath] = `data:image/${ext};base64,${txt}`;
-            workLoad--;
-            done();
-          });
+        const size = objReader.getNumberOfOutputPorts();
+        for (let i = 0; i < size; i++) {
+          const source = objReader.getOutputData(i);
+          const mapper = vtkMapper.newInstance();
+          const actor = vtkActor.newInstance();
+          const name = source.get('name').name;
+
+          actor.setMapper(mapper);
+          mapper.setInputData(source);
+          renderer.addActor(actor);
+
+          if (mtlReader && name) {
+            mtlReader.applyMaterialToActor(name, actor);
+          }
         }
       });
+      renderer.resetCamera();
+      renderWindow.render();
+
+      // Rerender with hopefully all the textures loaded
+      setTimeout(renderWindow.render, 500);
+    }
+
+    zip.forEach((relativePath, zipEntry) => {
+      if (relativePath.match(/\.obj$/i)) {
+        workLoad++;
+        zipEntry.async('string').then((txt) => {
+          const reader = vtkOBJReader.newInstance({ splitMode: 'usemtl' });
+          reader.parse(txt);
+          fileContents.obj[relativePath] = reader;
+          workLoad--;
+          done();
+        });
+      }
+      if (relativePath.match(/\.mtl$/i)) {
+        workLoad++;
+        zipEntry.async('string').then((txt) => {
+          const reader = vtkMTLReader.newInstance();
+          reader.parse(txt);
+          fileContents.mtl[relativePath] = reader;
+          workLoad--;
+          done();
+        });
+      }
+      if (relativePath.match(/\.jpg$/i) || relativePath.match(/\.png$/i)) {
+        workLoad++;
+        zipEntry.async('base64').then((txt) => {
+          const ext = relativePath.slice(-3).toLowerCase();
+          fileContents.img[relativePath] = `data:image/${ext};base64,${txt}`;
+          workLoad--;
+          done();
+        });
+      }
     });
+  });
 }
 
 export function load(container, options) {
@@ -164,15 +165,18 @@ export function load(container, options) {
     container.appendChild(progressContainer);
 
     const progressCallback = (progressEvent) => {
-      const percent = Math.floor(100 * progressEvent.loaded / progressEvent.total);
+      const percent = Math.floor(
+        100 * progressEvent.loaded / progressEvent.total
+      );
       progressContainer.innerHTML = `Loading ${percent}%`;
     };
 
-    HttpDataAccessHelper.fetchBinary(options.fileURL, { progressCallback })
-      .then((content) => {
-        container.removeChild(progressContainer);
-        loadZipContent(content, renderWindow, renderer);
-      });
+    HttpDataAccessHelper.fetchBinary(options.fileURL, {
+      progressCallback,
+    }).then((content) => {
+      container.removeChild(progressContainer);
+      loadZipContent(content, renderWindow, renderer);
+    });
   }
 }
 
@@ -191,7 +195,9 @@ export function initLocalFileLoader(container) {
   }
 
   const fileContainer = document.createElement('div');
-  fileContainer.innerHTML = `<div class="${style.bigFileDrop}"/><input type="file" accept=".zip,.obj" style="display: none;"/>`;
+  fileContainer.innerHTML = `<div class="${
+    style.bigFileDrop
+  }"/><input type="file" accept=".zip,.obj" style="display: none;"/>`;
   myContainer.appendChild(fileContainer);
 
   const fileInput = fileContainer.querySelector('input');
@@ -209,10 +215,9 @@ export function initLocalFileLoader(container) {
 
   fileInput.addEventListener('change', handleFile);
   fileContainer.addEventListener('drop', handleFile);
-  fileContainer.addEventListener('click', e => fileInput.click());
+  fileContainer.addEventListener('click', (e) => fileInput.click());
   fileContainer.addEventListener('dragover', preventDefaults);
 }
-
 
 // Look at URL an see if we should load a file
 // ?fileURL=https://data.kitware.com/api/v1/item/59cdbb588d777f31ac63de08/download

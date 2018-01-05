@@ -4,11 +4,11 @@
 import 'babel-polyfill';
 import 'vtk.js/Sources/favicon';
 
-import DataAccessHelper           from 'vtk.js/Sources/IO/Core/DataAccessHelper';
-import HttpDataAccessHelper       from 'vtk.js/Sources/IO/Core/DataAccessHelper/HttpDataAccessHelper';
-import vtkFullScreenRenderWindow  from 'vtk.js/Sources/Rendering/Misc/FullScreenRenderWindow';
-import vtkHttpSceneLoader         from 'vtk.js/Sources/IO/Core/HttpSceneLoader';
-import vtkURLExtract              from 'vtk.js/Sources/Common/Core/URLExtract';
+import DataAccessHelper from 'vtk.js/Sources/IO/Core/DataAccessHelper';
+import HttpDataAccessHelper from 'vtk.js/Sources/IO/Core/DataAccessHelper/HttpDataAccessHelper';
+import vtkFullScreenRenderWindow from 'vtk.js/Sources/Rendering/Misc/FullScreenRenderWindow';
+import vtkHttpSceneLoader from 'vtk.js/Sources/IO/Core/HttpSceneLoader';
+import vtkURLExtract from 'vtk.js/Sources/Common/Core/URLExtract';
 
 import controlWidget from './SceneExplorerWidget';
 import style from './SceneExplorer.mcss';
@@ -54,7 +54,11 @@ export function load(container, options) {
       // Add UI to dynamically change rendering settings
       if (!widgetCreated) {
         widgetCreated = true;
-        controlWidget(document.querySelector('body'), sceneImporter.getScene(), renderWindow.render);
+        controlWidget(
+          document.querySelector('body'),
+          sceneImporter.getScene(),
+          renderWindow.render
+        );
       }
     });
 
@@ -74,35 +78,40 @@ export function load(container, options) {
     container.appendChild(progressContainer);
 
     const progressCallback = (progressEvent) => {
-      const percent = Math.floor(100 * progressEvent.loaded / progressEvent.total);
+      const percent = Math.floor(
+        100 * progressEvent.loaded / progressEvent.total
+      );
       progressContainer.innerHTML = `Loading ${percent}%`;
     };
 
-    HttpDataAccessHelper.fetchBinary(options.fileURL, { progressCallback })
-      .then((zipContent) => {
-        container.removeChild(progressContainer);
-        const dataAccessHelper = DataAccessHelper.get(
-          'zip',
-          {
-            zipContent,
-            callback: (zip) => {
-              const sceneImporter = vtkHttpSceneLoader.newInstance({ renderer, dataAccessHelper });
-              sceneImporter.setUrl('index.json');
-              onReady(sceneImporter);
-            },
-          });
-      });
-  } else if (options.file) {
-    const dataAccessHelper = DataAccessHelper.get(
-      'zip',
-      {
-        zipContent: options.file,
+    HttpDataAccessHelper.fetchBinary(options.fileURL, {
+      progressCallback,
+    }).then((zipContent) => {
+      container.removeChild(progressContainer);
+      const dataAccessHelper = DataAccessHelper.get('zip', {
+        zipContent,
         callback: (zip) => {
-          const sceneImporter = vtkHttpSceneLoader.newInstance({ renderer, dataAccessHelper });
+          const sceneImporter = vtkHttpSceneLoader.newInstance({
+            renderer,
+            dataAccessHelper,
+          });
           sceneImporter.setUrl('index.json');
           onReady(sceneImporter);
         },
       });
+    });
+  } else if (options.file) {
+    const dataAccessHelper = DataAccessHelper.get('zip', {
+      zipContent: options.file,
+      callback: (zip) => {
+        const sceneImporter = vtkHttpSceneLoader.newInstance({
+          renderer,
+          dataAccessHelper,
+        });
+        sceneImporter.setUrl('index.json');
+        onReady(sceneImporter);
+      },
+    });
   }
 }
 
@@ -122,7 +131,9 @@ export function initLocalFileLoader(container) {
   }
 
   const fileContainer = document.createElement('div');
-  fileContainer.innerHTML = `<div class="${style.bigFileDrop}"/><input type="file" accept=".zip,.vtkjs" style="display: none;"/>`;
+  fileContainer.innerHTML = `<div class="${
+    style.bigFileDrop
+  }"/><input type="file" accept=".zip,.vtkjs" style="display: none;"/>`;
   myContainer.appendChild(fileContainer);
 
   const fileInput = fileContainer.querySelector('input');
@@ -140,7 +151,7 @@ export function initLocalFileLoader(container) {
 
   fileInput.addEventListener('change', handleFile);
   fileContainer.addEventListener('drop', handleFile);
-  fileContainer.addEventListener('click', e => fileInput.click());
+  fileContainer.addEventListener('click', (e) => fileInput.click());
   fileContainer.addEventListener('dragover', preventDefaults);
 }
 

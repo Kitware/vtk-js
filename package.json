@@ -33,7 +33,6 @@
         "kw-doc": "1.1.1",
         "kw-web-suite": "5.0.0",
         "resemblejs": "2.2.6",
-        "canvas": "1.6.9",
         "tap-markdown": "1.2.1",
         "tap-spec": "4.1.1",
         "tape": "4.8.0",
@@ -42,8 +41,8 @@
     },
     "scripts": {
         "size": "size-limit --why --config ./webpack.config.js",
-        "validate": "prettier --config ./prettier.config.js --list-different \"Sources/**/*.js\"",
-        "reformat": "prettier --config ./prettier.config.js --write \"Sources/**/*.js\"",
+        "validate": "prettier --config ./prettier.config.js --list-different \"Sources/**/*.js\" \"Examples/**/*.js\"",
+        "reformat": "prettier --config ./prettier.config.js --write \"Sources/**/*.js\" \"Examples/**/*.js\"",
         "reformat-only": "prettier --single-quote --trailing-comma es5 --print-width 80 --arrow-parens always --write",
         "doc": "kw-doc -c ./Documentation/config.js",
         "doc:www": "npm t -- --single-run && kw-doc -c ./Documentation/config.js -s",

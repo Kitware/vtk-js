@@ -54,14 +54,11 @@ In general VTK tries to be as portable as possible; the specific configurations 
 
 vtk.js supports the following development environments:
 
-- Node 5+
-- NPM 3+
+- Node 8+
+- NPM 5+
 
-and the following browsers:
-
-- Firefox 45+
-- Chrome 50+
-- Safari 9.1+
+and we use [babel-preset-env](https://github.com/babel/babel/tree/master/packages/babel-preset-env) with the last 2 versions to browsers target. 
+But when built from source this could be adjusted to support any browser as long they provide WebGL.
 
 Documentation
 =============
