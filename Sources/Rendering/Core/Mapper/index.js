@@ -383,7 +383,7 @@ function vtkMapper(publicAPI, model) {
       for (let i = 0; i < numberOfColors; ++i) {
         newArray[i] = range[0] + i * k - k; // minus k to start at below range color
         if (useLogScale) {
-          newArray[i] = Math.pow(10.0, newArray[i]);
+          newArray[i] = 10.0 ** newArray[i];
         }
       }
       // Dimension on NaN.
