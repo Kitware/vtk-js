@@ -144,9 +144,9 @@ function vtkOpenGLImageMapper(publicAPI, model) {
           '//VTK::TCoord::Impl',
           [
             'vec4 tcolor = scale*texture2D(texture1, tcoordVCVSOutput.st) + shift;',
-            'gl_FragData[0] = vec4(texture2D(colorTexture1, vec2(tcolor.r,0.5)),',
-            '  texture2D(colorTexture1, vec2(tcolor.g,0.5)),',
-            '  texture2D(colorTexture1, vec2(tcolor.b,0.5)), tcolor.a);',
+            'gl_FragData[0] = vec4(texture2D(colorTexture1, vec2(tcolor.r,0.5)).r,',
+            '  texture2D(colorTexture1, vec2(tcolor.g,0.5)).r,',
+            '  texture2D(colorTexture1, vec2(tcolor.b,0.5)).r, tcolor.a);',
           ]
         ).result;
     }
