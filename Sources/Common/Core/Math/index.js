@@ -1931,7 +1931,7 @@ const inf = Infinity;
 const negInf = -Infinity;
 
 const isInf = (value) => !Number.isFinite(value);
-const { isFinite, isNaN } = Number.isFinite;
+const { isFinite, isNaN } = Number;
 
 // JavaScript - add-on ----------------------
 
