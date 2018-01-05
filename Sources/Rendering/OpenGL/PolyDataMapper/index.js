@@ -1600,7 +1600,8 @@ function vtkOpenGLPolyDataMapper(publicAPI, model) {
         const mode = publicAPI.getOpenGLMode(representation, i);
         gl.drawArrays(mode, 0, cabo.getElementCount());
 
-        const stride = mode === gl.POINTS ? 1 : mode === gl.LINES ? 2 : 3;
+        const stride =
+          (mode === gl.POINTS ? 1 : 0) || (mode === gl.LINES ? 2 : 3);
         model.primitiveIDOffset += cabo.getElementCount() / stride;
       }
     }
