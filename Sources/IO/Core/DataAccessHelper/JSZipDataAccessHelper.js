@@ -157,16 +157,16 @@ function create(createOptions) {
             .async('uint8array')
             .then((uint8array) => {
               const str = pako.inflate(uint8array, { to: 'string' });
-              return new Promise((ok) => ok(JSON.parse(str)));
+              return Promise.resolve(JSON.parse(str));
             });
         }
-        return new Promise((a, r) => r('Invalid compression'));
+        return Promise.reject(new Error('Invalid compression'));
       }
 
       return zipRoot
         .file(path)
         .async('string')
-        .then((str) => new Promise((ok) => ok(JSON.parse(str))));
+        .then((str) => Promise.resolve(JSON.parse(str)));
     },
 
     fetchText(instance = {}, url, options = {}) {
@@ -182,16 +182,16 @@ function create(createOptions) {
             .async('uint8array')
             .then((uint8array) => {
               const str = pako.inflate(uint8array, { to: 'string' });
-              return new Promise((ok) => ok(str));
+              return Promise.resolve(str);
             });
         }
-        return new Promise((a, r) => r('Invalid compression'));
+        return Promise.reject(new Error('Invalid compression'));
       }
 
       return zipRoot
         .file(path)
         .async('string')
-        .then((str) => new Promise((ok) => ok(str)));
+        .then((str) => Promise.resolve(str));
     },
   };
 }

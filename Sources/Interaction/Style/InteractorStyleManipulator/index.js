@@ -90,7 +90,7 @@ function dollyToPosition(fact, position, renderer, rwi) {
       norm[0] * (viewFocus[0] - newCameraPos[0]) +
       norm[1] * (viewFocus[1] - newCameraPos[1]) +
       norm[2] * (viewFocus[2] - newCameraPos[2]);
-    t /= Math.pow(norm[0], 2) + Math.pow(norm[1], 2) + Math.pow(norm[2], 2);
+    t /= norm[0] ** 2 + norm[1] ** 2 + norm[2] ** 2;
     newPoint[0] = newCameraPos[0] + norm[0] * t;
     newPoint[1] = newCameraPos[1] + norm[1] * t;
     newPoint[2] = newCameraPos[2] + norm[2] * t;

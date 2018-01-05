@@ -19,8 +19,7 @@ function vtkPDBReader(publicAPI, model) {
 
   // Internal method to fetch Array
   function fetchPDB(url) {
-    const compression = model.compression;
-    const progressCallback = model.progressCallback;
+    const { compression, progressCallback } = model;
     return model.dataAccessHelper.fetchText(publicAPI, url, {
       compression,
       progressCallback,
@@ -190,6 +189,14 @@ export function extend(publicAPI, model, initialValues = {}) {
 
   // Object methods
   vtkPDBReader(publicAPI, model);
+
+  // To support destructuring
+  if (!model.compression) {
+    model.compression = null;
+  }
+  if (!model.progressCallback) {
+    model.progressCallback = null;
+  }
 }
 
 // ----------------------------------------------------------------------------

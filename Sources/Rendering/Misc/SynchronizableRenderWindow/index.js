@@ -27,11 +27,11 @@ function createArrayHandler() {
     }
 
     if (!arrayFetcher) {
-      return new Promise((resolve, reject) => {
-        reject(
+      return Promise.reject(
+        new Error(
           'No array fetcher found, please use "setArrayFetcher" to provide one'
-        );
-      });
+        )
+      );
     }
 
     return new Promise((resolve, reject) => {

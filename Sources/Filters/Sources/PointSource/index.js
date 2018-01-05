@@ -42,7 +42,7 @@ function vtkPointSource(publicAPI, model) {
     for (let i = 0; i < numPts; i++) {
       cosphi = 1 - 2.0 * vtkMath.random();
       sinphi = Math.sqrt(1 - cosphi * cosphi);
-      rho = model.radius * Math.pow(vtkMath.random(), 0.33333333);
+      rho = model.radius * vtkMath.random() ** 0.33333333;
       radius = rho * sinphi;
       theta = 2.0 * Math.PI * vtkMath.random();
       points[i * 3] = model.center[0] + radius * Math.cos(theta);

@@ -17,8 +17,7 @@ function vtkPolyDataReader(publicAPI, model) {
 
   // Internal method to fetch Array
   function fetchData(url, option = {}) {
-    const compression = model.compression;
-    const progressCallback = model.progressCallback;
+    const { compression, progressCallback } = model;
     return model.dataAccessHelper.fetchText(publicAPI, url, {
       compression,
       progressCallback,
@@ -91,6 +90,14 @@ export function extend(publicAPI, model, initialValues = {}) {
 
   // vtkPolyDataReader methods
   vtkPolyDataReader(publicAPI, model);
+
+  // To support destructuring
+  if (!model.compression) {
+    model.compression = null;
+  }
+  if (!model.progressCallback) {
+    model.progressCallback = null;
+  }
 }
 
 // ----------------------------------------------------------------------------

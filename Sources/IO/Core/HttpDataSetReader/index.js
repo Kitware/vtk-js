@@ -88,7 +88,7 @@ function processDataSet(
 
   // Fetch geometry arrays
   const pendingPromises = [];
-  const progressCallback = model.progressCallback;
+  const { progressCallback } = model;
   const compression = model.fetchGzip ? 'gz' : null;
   GEOMETRY_ARRAYS[dataset.vtkClass](dataset).forEach((array) => {
     pendingPromises.push(fetchArray(array, { compression, progressCallback }));
@@ -165,15 +165,15 @@ function vtkHttpDataSetReader(publicAPI, model) {
                       loadData
                     );
                   },
-                  (xhr, e) => {
-                    reject(xhr, e);
+                  (error) => {
+                    reject(error);
                   }
                 );
               },
             });
           },
-          (xhr, e) => {
-            reject(xhr, e);
+          (error) => {
+            reject(error);
           }
         );
       });
@@ -192,8 +192,8 @@ function vtkHttpDataSetReader(publicAPI, model) {
             loadData
           );
         },
-        (xhr, e) => {
-          reject(xhr, e);
+        (error) => {
+          reject(error);
         }
       );
     });
@@ -228,13 +228,13 @@ function vtkHttpDataSetReader(publicAPI, model) {
       .map((array) => array.array);
 
     return new Promise((resolve, reject) => {
-      const error = (xhr, e) => {
-        reject(xhr, e);
+      const error = (e) => {
+        reject(e);
       };
 
       const processNext = () => {
         if (arrayToFecth.length) {
-          const progressCallback = model.progressCallback;
+          const { progressCallback } = model;
           const compression = model.fetchGzip ? 'gz' : null;
           fetchArray(arrayToFecth.pop(), {
             compression,
@@ -316,6 +316,11 @@ export function extend(publicAPI, model, initialValues = {}) {
 
   // Object methods
   vtkHttpDataSetReader(publicAPI, model);
+
+  // Make sure we can destructuring progressCallback from model
+  if (model.progressCallback === undefined) {
+    model.progressCallback = null;
+  }
 }
 
 // ----------------------------------------------------------------------------

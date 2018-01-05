@@ -474,13 +474,13 @@ function vtkColorTransferFunction(publicAPI, model) {
       if (size > 1) {
         if (usingLogScale) {
           logX = logStart + i / (size - 1.0) * (logEnd - logStart);
-          x = Math.pow(10.0, logX);
+          x = 10.0 ** logX;
         } else {
           x = xStart + i / (size - 1.0) * (xEnd - xStart);
         }
       } else if (usingLogScale) {
         logX = 0.5 * (logStart + logEnd);
-        x = Math.pow(10.0, logX);
+        x = 10.0 ** logX;
       } else {
         x = 0.5 * (xStart + xEnd);
       }
@@ -680,9 +680,9 @@ function vtkColorTransferFunction(publicAPI, model) {
         // First, we will adjust our position based on sharpness in
         // order to make the curve sharper (closer to piecewise constant)
         if (s < 0.5) {
-          s = 0.5 * Math.pow(s * 2.0, 1.0 + 10.0 * sharpness);
+          s = 0.5 * (s * 2.0) ** (1.0 + 10.0 * sharpness);
         } else if (s > 0.5) {
-          s = 1.0 - 0.5 * Math.pow((1.0 - s) * 2, 1 + 10.0 * sharpness);
+          s = 1.0 - 0.5 * ((1.0 - s) * 2) ** (1 + 10.0 * sharpness);
         }
 
         // Compute some coefficients we will need for the hermite curve

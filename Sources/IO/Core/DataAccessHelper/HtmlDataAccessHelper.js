@@ -22,7 +22,7 @@ function fetchText(instance = {}, url, options = {}) {
   return new Promise((resolve, reject) => {
     const txt = getContent(url);
     if (txt === null) {
-      reject(`No such text ${url}`);
+      reject(new Error(`No such text ${url}`));
     } else {
       resolve(txt);
     }
@@ -33,7 +33,7 @@ function fetchJSON(instance = {}, url, options = {}) {
   return new Promise((resolve, reject) => {
     const txt = getContent(removeLeadingSlash(url));
     if (txt === null) {
-      reject(`No such JSON ${url}`);
+      reject(new Error(`No such JSON ${url}`));
     } else {
       resolve(JSON.parse(txt));
     }
@@ -52,7 +52,7 @@ function fetchArray(instance = {}, baseURL, array, options = {}) {
 
     const txt = getContent(url);
     if (txt === null) {
-      reject(`No such array ${url}`);
+      reject(new Error(`No such array ${url}`));
     } else {
       if (array.dataType === 'string') {
         let bText = atob(txt);

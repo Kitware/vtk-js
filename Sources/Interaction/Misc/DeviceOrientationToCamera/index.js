@@ -71,7 +71,7 @@ function addCameraToSynchronize(
   function onAnimation() {
     if (orientation.update) {
       const { alpha, beta, gamma } = orientation.device;
-      const screen = orientation.screen;
+      const { screen } = orientation;
       camera.setDeviceAngles(alpha, beta, gamma, screen);
       if (onCameraUpdate) {
         onCameraUpdate();

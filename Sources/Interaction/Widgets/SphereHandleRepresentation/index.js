@@ -131,7 +131,10 @@ function vtkSphereHandleRepresentation(publicAPI, model) {
       v[0] = Math.abs(x[0] - model.startEventPosition[0]);
       v[1] = Math.abs(x[1] - model.startEventPosition[1]);
       v[2] = Math.abs(x[2] - model.startEventPosition[2]);
-      return v[0] > v[1] ? (v[0] > v[2] ? 0 : 2) : v[1] > v[2] ? 1 : 2;
+      if (v[0] > v[1]) {
+        return v[0] > v[2] ? 0 : 2;
+      }
+      return v[1] > v[2] ? 1 : 2;
     }
     return -1;
   };

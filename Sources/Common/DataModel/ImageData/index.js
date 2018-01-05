@@ -44,9 +44,9 @@ function vtkImageData(publicAPI, model) {
   };
 
   publicAPI.setDimensions = (...dims) => {
-    var i;
-    var j;
-    var k;
+    let i;
+    let j;
+    let k;
 
     if (model.deleted) {
       vtkErrorMacro('instance deleted - cannot call any method');

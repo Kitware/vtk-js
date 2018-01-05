@@ -450,9 +450,10 @@ function vtkScalarsToColors(publicAPI, model) {
 
   //----------------------------------------------------------------------------
   publicAPI.convertToRGBA = (colors, numComp, numTuples) => {
+    let { alpha } = model;
     if (
       numComp === 4 &&
-      model.alpha >= 1.0 &&
+      alpha >= 1.0 &&
       colors.getDataType() === VtkDataTypes.UNSIGNED_CHAR
     ) {
       return colors;
@@ -469,7 +470,6 @@ function vtkScalarsToColors(publicAPI, model) {
       return newColors;
     }
 
-    let alpha = model.alpha;
     alpha = alpha > 0 ? alpha : 0;
     alpha = alpha < 1 ? alpha : 1;
 

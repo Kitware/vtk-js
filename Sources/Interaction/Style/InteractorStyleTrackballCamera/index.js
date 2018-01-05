@@ -444,7 +444,7 @@ function vtkInteractorStyleTrackballCamera(publicAPI, model) {
     const center = rwi.getView().getViewportCenter(model.currentRenderer);
     const dyf = model.motionFactor * dy / center[1];
 
-    publicAPI.dollyByFactor(Math.pow(1.1, dyf));
+    publicAPI.dollyByFactor(1.1 ** dyf);
   };
 
   //----------------------------------------------------------------------------

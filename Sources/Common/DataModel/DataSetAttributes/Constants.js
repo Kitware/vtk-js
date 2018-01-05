@@ -34,7 +34,7 @@ export const AttributeCopyOperations = {
   COPYTUPLE: 0,
   INTERPOLATE: 1,
   PASSDATA: 2,
-  ALLCOPY: 3, //all of the above
+  ALLCOPY: 3, // all of the above
 };
 
 export const ghostArrayName = 'vtkGhostType';

@@ -54,8 +54,7 @@ function vtkMTLReader(publicAPI, model) {
 
   // Internal method to fetch Array
   function fetchData(url) {
-    const compression = model.compression;
-    const progressCallback = model.progressCallback;
+    const { compression, progressCallback } = model;
     return model.dataAccessHelper.fetchText(publicAPI, url, {
       compression,
       progressCallback,
@@ -177,6 +176,14 @@ export function extend(publicAPI, model, initialValues = {}) {
 
   // Object methods
   vtkMTLReader(publicAPI, model);
+
+  // To support destructuring
+  if (!model.compression) {
+    model.compression = null;
+  }
+  if (!model.progressCallback) {
+    model.progressCallback = null;
+  }
 }
 
 // ----------------------------------------------------------------------------

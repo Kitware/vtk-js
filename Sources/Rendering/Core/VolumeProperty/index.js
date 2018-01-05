@@ -162,7 +162,7 @@ function vtkVolumeProperty(publicAPI, model) {
       return;
     }
 
-    const val = value < 0.0 ? 0.0 : value > 1.0 ? 1.0 : value;
+    const val = Math.min(1, Math.max(0, value));
     if (model.componentData[index].componentWeight !== val) {
       model.componentData[index].componentWeight = val;
       publicAPI.modified();

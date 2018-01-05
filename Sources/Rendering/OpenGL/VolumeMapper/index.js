@@ -1102,7 +1102,7 @@ function vtkOpenGLVolumeMapper(publicAPI, model) {
       ofun.getTable(oRange[0], oRange[1], oWidth, ofTable, 1);
       const oTable = new Uint8Array(oWidth);
       for (let i = 0; i < oWidth; ++i) {
-        oTable[i] = 255.0 * (1.0 - Math.pow(1.0 - ofTable[i], opacityFactor));
+        oTable[i] = 255.0 * (1.0 - (1.0 - ofTable[i]) ** opacityFactor);
       }
       model.opacityTexture.setMinificationFilter(Filter.LINEAR);
       model.opacityTexture.setMagnificationFilter(Filter.LINEAR);
