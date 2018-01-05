@@ -247,12 +247,8 @@ function vtkMoleculeToRepresentation(publicAPI, model) {
         let offset = (Math.floor(k / 2) * 2 + 1 - oddOrEven) * bondDelta / 2;
 
         // offset between center of SphereJ (resp. SphereI) and the start of the bond
-        const offsetJ = Math.sqrt(
-          radiusJsq - Math.pow(model.bondRadius + offset, 2)
-        );
-        const offsetI = Math.sqrt(
-          radiusIsq - Math.pow(model.bondRadius + offset, 2)
-        );
+        const offsetJ = Math.sqrt(radiusJsq - (model.bondRadius + offset) ** 2);
+        const offsetI = Math.sqrt(radiusIsq - (model.bondRadius + offset) ** 2);
         const vectUnitJI = [
           diff[0] / Math.sqrt(diffsq),
           diff[1] / Math.sqrt(diffsq),
@@ -275,7 +271,7 @@ function vtkMoleculeToRepresentation(publicAPI, model) {
           break;
         }
 
-        offset *= Math.pow(-1, k % 2);
+        offset *= -(1 ** (k % 2));
         const bondPos = [
           pointsArray[jPtsIdx] -
             (offsetJ - offsetI) * vectUnitJI[0] / 2.0 -
