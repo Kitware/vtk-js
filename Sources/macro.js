@@ -755,7 +755,7 @@ export function event(publicAPI, model, eventName) {
 
   publicAPI.delete = () => {
     previousDelete();
-    callbacks.forEach((el, index) => off(index));
+    callbacks.forEach(([cb]) => off(cb));
   };
 }
 
