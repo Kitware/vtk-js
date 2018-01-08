@@ -3,7 +3,7 @@ import vtkAbstractWidget                     from 'vtk.js/Sources/Interaction/Wi
 import vtkImageCroppingRegionsRepresentation from 'vtk.js/Sources/Interaction/Widgets/ImageCroppingRegionsRepresentation';
 import Constants                             from 'vtk.js/Sources/Interaction/Widgets/ImageCroppingRegionsWidget/Constants';
 
-const { vtkErrorMacro } = macro;
+const { vtkErrorMacro, VOID, EVENT_ABORT } = macro;
 const { WidgetState, SliceNormals } = Constants;
 
 const events = [
@@ -168,21 +168,21 @@ function vtkImageCroppingRegionsWidget(publicAPI, model) {
 
   publicAPI.pressAction = () => {
     if (widgetState === WidgetState.IDLE) {
-      return true;
+      return VOID;
     }
     isCropMoving = true;
     // prevent low-priority observers from receiving the event
-    return false;
+    return EVENT_ABORT;
   };
 
   publicAPI.hoverAction = () => {
     if (!model.widgetRep) {
-      return;
+      return VOID;
     }
 
     // Do not change widget state if moving the crop region.
     if (isCropMoving) {
-      return;
+      return VOID;
     }
 
     const sliceOrientation = model.imageMapper.getCurrentSlicingMode();
@@ -217,7 +217,7 @@ function vtkImageCroppingRegionsWidget(publicAPI, model) {
         break;
       default:
         vtkErrorMacro('Invalid slice orientation');
-        return;
+        return VOID;
     }
 
     let leftBottom, // [left, bottom]
@@ -244,7 +244,7 @@ function vtkImageCroppingRegionsWidget(publicAPI, model) {
         break;
       default:
         vtkErrorMacro('Invalid camera view-up');
-        return;
+        return VOID;
     }
 
     let left,
@@ -309,12 +309,13 @@ function vtkImageCroppingRegionsWidget(publicAPI, model) {
 
     // console.log('state', widgetState);
     setCursor(widgetState);
+    return VOID;
   };
 
 
   publicAPI.moveAction = () => {
     if (widgetState === WidgetState.IDLE) {
-      return true;
+      return VOID;
     }
 
     const mouse = publicAPI.get2DPointerPosition();
@@ -360,7 +361,7 @@ function vtkImageCroppingRegionsWidget(publicAPI, model) {
         break;
       default:
         vtkErrorMacro('Invalid slice orientation');
-        return true;
+        return VOID;
     }
 
     let left,
@@ -391,7 +392,7 @@ function vtkImageCroppingRegionsWidget(publicAPI, model) {
         break;
       default:
         vtkErrorMacro('Invalid camera view-up');
-        return true;
+        return VOID;
     }
 
     // Is there a better way than using a fudge factor?
@@ -450,7 +451,7 @@ function vtkImageCroppingRegionsWidget(publicAPI, model) {
         break;
       default:
         vtkErrorMacro('Invalid camera view-up');
-        return true;
+        return VOID;
     }
 
     // assign new plane values
@@ -469,13 +470,13 @@ function vtkImageCroppingRegionsWidget(publicAPI, model) {
         break;
       default:
         vtkErrorMacro('Invalid slice orientation');
-        return true;
+        return VOID;
     }
 
     model.widgetRep.setPlanePositions(...planes);
     model.interactor.render();
 
-    return false;
+    return EVENT_ABORT;
   };
 
   publicAPI.endMoveAction = () => {
