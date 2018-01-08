@@ -240,10 +240,6 @@ function vtkImageCroppingRegionsRepresentation(publicAPI, model) {
 // ----------------------------------------------------------------------------
 
 const DEFAULT_VALUES = {
-  constraintAxis: -1,
-  translationMode: 1,
-  waitingForMotion: 0,
-  hotSpotSize: 0.05,
   opacity: 0.5,
 };
 
@@ -254,8 +250,6 @@ export function extend(publicAPI, model, initialValues = {}) {
 
   // Inheritance
   vtkWidgetRepresentation.extend(publicAPI, model, initialValues);
-
-  macro.setGet(publicAPI, model, ['translationMode']);
 
   macro.get(publicAPI, model, [
     'initialBounds',

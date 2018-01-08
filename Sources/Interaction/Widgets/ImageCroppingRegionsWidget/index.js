@@ -274,14 +274,6 @@ function vtkImageCroppingRegionsWidget(publicAPI, model) {
     const bottomDist = Math.abs(bottom - mousePos[1]);
     const topDist = Math.abs(top - mousePos[1]);
 
-    // useful for debugging which direction is positive X/Y/Z
-    // console.log('mouse coord in world', view.displayToWorld(...mousePos, 0, model.currentRenderer));
-    // console.log('lrbtmous', left, right, bottom, top, mousePos);
-
-    window.view = view;
-    window.renderer = model.currentRenderer;
-    window.planes = planes;
-
     const tolerance = 3;
     if (leftDist < tolerance) {
       if (bottomDist < tolerance) {
@@ -307,7 +299,6 @@ function vtkImageCroppingRegionsWidget(publicAPI, model) {
       widgetState = WidgetState.IDLE;
     }
 
-    // console.log('state', widgetState);
     setCursor(widgetState);
     return VOID;
   };
@@ -326,7 +317,6 @@ function vtkImageCroppingRegionsWidget(publicAPI, model) {
     const camUp = model.currentRenderer.getActiveCamera().getViewUp();
 
     let newPos = view.displayToWorld(...mouse, 0, model.currentRenderer);
-    console.log('mouse in world', newPos);
 
     let ax1,
       ax2,
@@ -437,7 +427,6 @@ function vtkImageCroppingRegionsWidget(publicAPI, model) {
     // revert cam view up transform
     switch (camUp2DHash) {
       case 1: // [1, 0]
-        // [ax1[0], ax2[1], ax1[1], ax2[0]] = [left, bottom, right, top];
         [ax2[1], ax1[0], ax2[0], ax1[1]] = [left, bottom, right, top];
         break;
       case -1: // [-1, 0]
@@ -490,9 +479,7 @@ function vtkImageCroppingRegionsWidget(publicAPI, model) {
 
 const DEFAULT_VALUES = {
   // imageMapper: null,
-  allowHandleResize: 1,
-  // Use a priority of 0.5, since default priority is 0.0
-  priority: 0.5,
+  priority: 0.5, // Use a priority of 0.5, since default priority is 0.0
 };
 
 // ----------------------------------------------------------------------------
