@@ -707,20 +707,21 @@ export const EVENT_ABORT = Symbol('Event abort');
 export function event(publicAPI, model, eventName) {
   const callbacks = [];
   const previousDelete = publicAPI.delete;
+  let curCallbackID = 1;
 
-  function off(callback) {
+  function off(callbackID) {
     for (let i = 0; i < callbacks.length; ++i) {
-      const [cb] = callbacks[i];
-      if (cb === callback) {
+      const [cbID] = callbacks[i];
+      if (cbID === callbackID) {
         callbacks.splice(i, 1);
         return;
       }
     }
   }
 
-  function on(callback) {
+  function on(callbackID) {
     function unsubscribe() {
-      off(callback);
+      off(callbackID);
     }
     return Object.freeze({ unsubscribe });
   }
@@ -732,7 +733,7 @@ export function event(publicAPI, model, eventName) {
     }
     /* eslint-disable prefer-rest-params */
     for (let index = 0; index < callbacks.length; ++index) {
-      const [cb, priority] = callbacks[index];
+      const [, cb, priority] = callbacks[index];
       if (priority < 0) {
         setTimeout(() => cb.apply(publicAPI, arguments), 1 - priority);
       } else if (cb) {
@@ -754,14 +755,15 @@ export function event(publicAPI, model, eventName) {
       return null;
     }
 
-    callbacks.push([callback, priority]);
-    callbacks.sort(([cb1, pri1], [cb2, pri2]) => pri2 - pri1);
-    return on(callback);
+    const callbackID = curCallbackID++;
+    callbacks.push([callbackID, callback, priority]);
+    callbacks.sort(([, cb1, pri1], [, cb2, pri2]) => pri2 - pri1);
+    return on(callbackID);
   };
 
   publicAPI.delete = () => {
     previousDelete();
-    callbacks.forEach(([cb]) => off(cb));
+    callbacks.forEach(([cbID]) => off(cbID));
   };
 }
 

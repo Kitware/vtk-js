@@ -7,6 +7,11 @@ const MY_ENUM = {
   SECOND: 2,
   THIRD: 3,
 };
+
+const EVENTS = [
+  'A',
+];
+
 // ----------------------------------------------------------------------------
 // vtkMyClass methods
 // ----------------------------------------------------------------------------
@@ -52,6 +57,9 @@ function extend(publicAPI, model, initialValues = {}) {
   ]);
   // Object specific methods
   myClass(publicAPI, model);
+
+  // event methods
+  EVENTS.forEach(name => macro.event(publicAPI, model, `Event${name}`));
 }
 
 const newInstance = macro.newInstance(extend, 'vtkMyClass');
@@ -274,4 +282,46 @@ test('Macro methods object tests', (t) => {
   t.notOk(myTestClass.getMyProp4(), 'All calls should do nothing after delete');
 
   t.end();
+});
+
+test('Macro methods event tests', (t) => {
+  const myTestClass = newInstance();
+  const called = Array(3).fill(0);
+
+  const callbackEndTests = () => {
+    t.ok(called[0] && called[1] && called[2], 'callbackEndTests should be called last after 101ms');
+
+    // ensure callback2 was only invoked twice
+    t.equal(called[2], 2, 'callback2 should have been called exactly twice');
+
+    t.end();
+  };
+
+  const callback0 = () => {
+    called[0]++;
+    t.ok(called[1] && called[2], 'callback0 should be called third');
+  };
+
+  const callback1 = () => {
+    called[1]++;
+    t.ok(!called[0] && called[2], 'callback1 should be called second');
+  };
+
+  const callback2 = () => {
+    called[2]++;
+    t.ok(!called[0] && !called[1], 'callback2 should be called first');
+  };
+
+  myTestClass.onEventA(callbackEndTests, -100);
+  myTestClass.onEventA(callback0);
+  myTestClass.onEventA(callback1, 1.0);
+  myTestClass.onEventA(callback2, 2.0);
+  // test duplicate listeners and unsubscribe
+  const { unsubscribe: unsub2dup1 } = myTestClass.onEventA(callback2, 2.0);
+  myTestClass.onEventA(callback2, 2.0);
+
+  // test unsubscribe
+  unsub2dup1();
+
+  myTestClass.invokeEventA();
 });
