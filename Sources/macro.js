@@ -661,7 +661,7 @@ export function algo(publicAPI, model, numberOfInputs, numberOfOutputs) {
         count++;
       }
     }
-    if (publicAPI.shouldUpdate()) {
+    if (publicAPI.shouldUpdate() && publicAPI.requestData) {
       publicAPI.requestData(ins, model.output);
     }
   };
