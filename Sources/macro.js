@@ -2,6 +2,8 @@ import vtk from './vtk';
 
 let globalMTime = 0;
 
+export const VOID = Symbol('void');
+
 function getCurrentGlobalMTime() {
   return globalMTime;
 }
@@ -700,6 +702,8 @@ export function algo(publicAPI, model, numberOfInputs, numberOfOutputs) {
 // Event handling: onXXX(callback), invokeXXX(args...)
 // ----------------------------------------------------------------------------
 
+export const EVENT_ABORT = Symbol('Event abort');
+
 export function event(publicAPI, model, eventName) {
   const callbacks = [];
   const previousDelete = publicAPI.delete;
@@ -728,11 +732,13 @@ export function event(publicAPI, model, eventName) {
     }
     /* eslint-disable prefer-rest-params */
     for (let index = 0; index < callbacks.length; ++index) {
-      const [cb] = callbacks[index];
-      if (cb) {
+      const [cb, priority] = callbacks[index];
+      if (priority < 0) {
+        setTimeout(() => cb.apply(publicAPI, arguments), 1 - priority);
+      } else if (cb) {
         // Abort only if the callback explicitly returns false
         const continueNext = cb.apply(publicAPI, arguments);
-        if (continueNext === false) {
+        if (continueNext === EVENT_ABORT) {
           break;
         }
       }
@@ -1105,6 +1111,8 @@ export function proxyPropertyState(
 // ----------------------------------------------------------------------------
 
 export default {
+  EVENT_ABORT,
+  VOID,
   algo,
   capitalize,
   chain,
