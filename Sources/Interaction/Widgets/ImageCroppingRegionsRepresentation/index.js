@@ -1,10 +1,10 @@
-import macro                   from 'vtk.js/Sources/macro';
-import vtkActor                from 'vtk.js/Sources/Rendering/Core/Actor';
-import vtkCellPicker           from 'vtk.js/Sources/Rendering/Core/CellPicker';
+import macro from 'vtk.js/Sources/macro';
+import vtkActor from 'vtk.js/Sources/Rendering/Core/Actor';
+import vtkCellPicker from 'vtk.js/Sources/Rendering/Core/CellPicker';
 import vtkWidgetRepresentation from 'vtk.js/Sources/Interaction/Widgets/WidgetRepresentation';
-import vtkMapper               from 'vtk.js/Sources/Rendering/Core/Mapper';
-import vtkPolyData             from 'vtk.js/Sources/Common/DataModel/PolyData';
-import Constants               from 'vtk.js/Sources/Interaction/Widgets/ImageCroppingRegionsRepresentation/Constants';
+import vtkMapper from 'vtk.js/Sources/Rendering/Core/Mapper';
+import vtkPolyData from 'vtk.js/Sources/Common/DataModel/PolyData';
+import Constants from 'vtk.js/Sources/Interaction/Widgets/ImageCroppingRegionsRepresentation/Constants';
 
 const { vtkErrorMacro } = macro;
 const { Orientation } = Constants;
@@ -42,16 +42,23 @@ function vtkImageCroppingRegionsRepresentation(publicAPI, model) {
     0--1------4--5
     */
     // set polys
-    model.regionPolyData.getPolys().setData(new Uint32Array([
-      4, 0, 1, 2, 3,
-      4, 1, 4, 7, 2,
-      4, 4, 5, 6, 7,
-      4, 7, 6, 9, 8,
-      4, 8, 9, 10, 11,
-      4, 13, 8, 11, 14,
-      4, 12, 13, 14, 15,
-      4, 3, 2, 13, 12,
-    ]), 1);
+
+    // prettier-ignore
+    model.regionPolyData
+      .getPolys()
+      .setData(
+        new Uint32Array([
+          4, 0, 1, 2, 3,
+          4, 1, 4, 7, 2,
+          4, 4, 5, 6, 7,
+          4, 7, 6, 9, 8,
+          4, 8, 9, 10, 11,
+          4, 13, 8, 11, 14,
+          4, 12, 13, 14, 15,
+          4, 3, 2, 13, 12,
+        ]),
+        1,
+      );
 
     model.mapper = vtkMapper.newInstance();
     model.actor = vtkActor.newInstance();
@@ -104,18 +111,27 @@ function vtkImageCroppingRegionsRepresentation(publicAPI, model) {
     }
 
     model.initialLength = Math.sqrt(
-        ((newBounds[1] - newBounds[0]) * (newBounds[1] - newBounds[0])) +
-        ((newBounds[3] - newBounds[2]) * (newBounds[3] - newBounds[2])) +
-        ((newBounds[5] - newBounds[4]) * (newBounds[5] - newBounds[4])));
+      (newBounds[1] - newBounds[0]) * (newBounds[1] - newBounds[0]) +
+        (newBounds[3] - newBounds[2]) * (newBounds[3] - newBounds[2]) +
+        (newBounds[5] - newBounds[4]) * (newBounds[5] - newBounds[4])
+    );
 
     // set plane positions
     publicAPI.setPlanePositions(...model.initialBounds);
   };
 
-  publicAPI.setSlice = (slice, sliceOrientation) => {
-    model.slice = slice;
-    model.sliceOrientation = sliceOrientation;
-    publicAPI.updateGeometry();
+  publicAPI.setSlice = (slice) => {
+    if (slice !== model.slice) {
+      model.slice = slice;
+      publicAPI.updateGeometry();
+    }
+  };
+
+  publicAPI.setSliceOrientation = (sliceOrientation) => {
+    if (sliceOrientation !== model.sliceOrientation) {
+      model.sliceOrientation = sliceOrientation;
+      publicAPI.updateGeometry();
+    }
   };
 
   publicAPI.setOpacity = (opacityValue) => {
@@ -134,10 +150,16 @@ function vtkImageCroppingRegionsRepresentation(publicAPI, model) {
 
     // make sure each position is within the bounds
     for (let i = 0; i < 6; i += 2) {
-      if (positions[i] < model.initialBounds[i] || positions[i] > model.initialBounds[i + 1]) {
+      if (
+        positions[i] < model.initialBounds[i] ||
+        positions[i] > model.initialBounds[i + 1]
+      ) {
         positions[i] = model.initialBounds[i];
       }
-      if (positions[i + 1] < model.initialBounds[i] || positions[i + 1] > model.initialBounds[i + 1]) {
+      if (
+        positions[i + 1] < model.initialBounds[i] ||
+        positions[i + 1] > model.initialBounds[i + 1]
+      ) {
         positions[i + 1] = model.initialBounds[i + 1];
       }
     }
@@ -151,68 +173,81 @@ function vtkImageCroppingRegionsRepresentation(publicAPI, model) {
     const slicePos = model.slice;
     const verts = model.regionPolyData.getPoints().getData();
     const [xBMin, xBMax, yBMin, yBMax, zBMin, zBMax] = model.initialBounds;
-    const [xPLower, xPUpper, yPLower, yPUpper, zPLower, zPUpper] = model.planePositions;
+    const [
+      xPLower,
+      xPUpper,
+      yPLower,
+      yPUpper,
+      zPLower,
+      zPUpper,
+    ] = model.planePositions;
 
     // set vert coordinates depending on slice orientation
+    // slicePos offsets are a hack to get polydata edges to render correctly.
     switch (model.sliceOrientation) {
       case Orientation.YZ:
         verts.set([slicePos, yBMin, zBMin], 0);
         verts.set([slicePos, yPLower, zBMin], 3);
-        verts.set([slicePos, yPLower, zPLower], 6);
+        verts.set([slicePos + 0.01, yPLower, zPLower], 6);
         verts.set([slicePos, yBMin, zPLower], 9);
-        verts.set([slicePos, yPUpper, zBMin], 12);
+        verts.set([slicePos + 0.01, yPUpper, zBMin], 12);
         verts.set([slicePos, yBMax, zBMin], 15);
-        verts.set([slicePos, yBMax, zPLower], 18);
+        verts.set([slicePos + 0.01, yBMax, zPLower], 18);
         verts.set([slicePos, yPUpper, zPLower], 21);
-        verts.set([slicePos, yPUpper, zPUpper], 24);
+        verts.set([slicePos + 0.01, yPUpper, zPUpper], 24);
         verts.set([slicePos, yBMax, zPUpper], 27);
         verts.set([slicePos, yBMax, zBMax], 30);
         verts.set([slicePos, yPUpper, zBMax], 33);
-        verts.set([slicePos, yBMin, zPUpper], 36);
+        verts.set([slicePos + 0.01, yBMin, zPUpper], 36);
         verts.set([slicePos, yPLower, zPUpper], 39);
-        verts.set([slicePos, yPLower, zBMax], 42);
+        verts.set([slicePos + 0.01, yPLower, zBMax], 42);
         verts.set([slicePos, yBMin, zBMax], 45);
         break;
       case Orientation.XZ:
         verts.set([xBMin, slicePos, zBMin], 0);
         verts.set([xPLower, slicePos, zBMin], 3);
-        verts.set([xPLower, slicePos, zPLower], 6);
+        verts.set([xPLower, slicePos + 0.01, zPLower], 6);
         verts.set([xBMin, slicePos, zPLower], 9);
-        verts.set([xPUpper, slicePos, zBMin], 12);
+        verts.set([xPUpper, slicePos + 0.01, zBMin], 12);
         verts.set([xBMax, slicePos, zBMin], 15);
-        verts.set([xBMax, slicePos, zPLower], 18);
+        verts.set([xBMax, slicePos + 0.01, zPLower], 18);
         verts.set([xPUpper, slicePos, zPLower], 21);
-        verts.set([xPUpper, slicePos, zPUpper], 24);
+        verts.set([xPUpper, slicePos + 0.01, zPUpper], 24);
         verts.set([xBMax, slicePos, zPUpper], 27);
         verts.set([xBMax, slicePos, zBMax], 30);
         verts.set([xPUpper, slicePos, zBMax], 33);
         verts.set([xBMin, slicePos, zPUpper], 36);
         verts.set([xPLower, slicePos, zPUpper], 39);
-        verts.set([xPLower, slicePos, zBMax], 42);
+        verts.set([xPLower, slicePos + 0.01, zBMax], 42);
         verts.set([xBMin, slicePos, zBMax], 45);
         break;
       case Orientation.XY:
         verts.set([xBMin, yBMin, slicePos], 0);
         verts.set([xPLower, yBMin, slicePos], 3);
-        verts.set([xPLower, yPLower, slicePos], 6);
+        verts.set([xPLower, yPLower, slicePos + 0.01], 6);
         verts.set([xBMin, yPLower, slicePos], 9);
-        verts.set([xPUpper, yBMin, slicePos], 12);
+        verts.set([xPUpper, yBMin, slicePos + 0.01], 12);
         verts.set([xBMax, yBMin, slicePos], 15);
-        verts.set([xBMax, yPLower, slicePos], 18);
+        verts.set([xBMax, yPLower, slicePos + 0.01], 18);
         verts.set([xPUpper, yPLower, slicePos], 21);
-        verts.set([xPUpper, yPUpper, slicePos], 24);
+        verts.set([xPUpper, yPUpper, slicePos + 0.01], 24);
         verts.set([xBMax, yPUpper, slicePos], 27);
         verts.set([xBMax, yBMax, slicePos], 30);
         verts.set([xPUpper, yBMax, slicePos], 33);
-        verts.set([xBMin, yPUpper, slicePos], 36);
+        verts.set([xBMin, yPUpper, slicePos + 0.01], 36);
         verts.set([xPLower, yPUpper, slicePos], 39);
-        verts.set([xPLower, yBMax, slicePos], 42);
+        verts.set([xPLower, yBMax, slicePos + 0.01], 42);
         verts.set([xBMin, yBMax, slicePos], 45);
         break;
       default:
-        // noop
+      // noop
     }
+    // TODO set center polydata
+
     model.regionPolyData.modified();
+
+    console.log('slice position:', model.slice);
+    console.log('plane positions:', model.planePositions);
   };
 
   publicAPI.getBounds = () => model.initialBounds;
@@ -265,7 +300,10 @@ export function extend(publicAPI, model, initialValues = {}) {
 
 // ----------------------------------------------------------------------------
 
-export const newInstance = macro.newInstance(extend, 'vtkImageCroppingRegionsRepresentation');
+export const newInstance = macro.newInstance(
+  extend,
+  'vtkImageCroppingRegionsRepresentation'
+);
 
 // ----------------------------------------------------------------------------
 

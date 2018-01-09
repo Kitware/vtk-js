@@ -1,10 +1,10 @@
-import macro                                 from 'vtk.js/Sources/macro';
-import vtkAbstractWidget                     from 'vtk.js/Sources/Interaction/Widgets/AbstractWidget';
+import macro from 'vtk.js/Sources/macro';
+import vtkAbstractWidget from 'vtk.js/Sources/Interaction/Widgets/AbstractWidget';
 import vtkImageCroppingRegionsRepresentation from 'vtk.js/Sources/Interaction/Widgets/ImageCroppingRegionsRepresentation';
-import Constants                             from 'vtk.js/Sources/Interaction/Widgets/ImageCroppingRegionsWidget/Constants';
+import Constants from 'vtk.js/Sources/Interaction/Widgets/ImageCroppingRegionsWidget/Constants';
 
 const { vtkErrorMacro, VOID, EVENT_ABORT } = macro;
-const { WidgetState, SliceNormals } = Constants;
+const { WidgetState } = Constants;
 
 const events = [
   'MouseMove',
@@ -54,13 +54,22 @@ function vtkImageCroppingRegionsWidget(publicAPI, model) {
     }
   }
 
+  function updateWidget() {
+    const data = model.volumeMapper.getInputData();
+    const origin = data.getOrigin();
+    const spacing = data.getSpacing();
+    const slice =
+      origin[model.sliceOrientation] +
+      spacing[model.sliceOrientation] * model.slice;
+
+    model.widgetRep.setSliceOrientation(model.sliceOrientation);
+    // set the widget slice + 1 to prevent z fighting
+    model.widgetRep.setSlice(slice + 1);
+  }
+
   // Overriden method
   publicAPI.createDefaultRepresentation = () => {
     if (!model.widgetRep) {
-      if (!model.imageMapper) {
-        vtkErrorMacro('Widget representation requires an image mapper');
-        return;
-      }
       model.widgetRep = vtkImageCroppingRegionsRepresentation.newInstance();
       publicAPI.updateRepresentation();
     }
@@ -74,12 +83,13 @@ function vtkImageCroppingRegionsWidget(publicAPI, model) {
     }
     events.forEach((eventName) => {
       model.unsubscribes.push(
-      model.interactor[`on${eventName}`](() => {
-        if (publicAPI[`handle${eventName}`]) {
-          return publicAPI[`handle${eventName}`]();
-        }
-        return true;
-      }, model.priority));
+        model.interactor[`on${eventName}`](() => {
+          if (publicAPI[`handle${eventName}`]) {
+            return publicAPI[`handle${eventName}`]();
+          }
+          return true;
+        }, model.priority)
+      );
     });
   };
 
@@ -102,49 +112,41 @@ function vtkImageCroppingRegionsWidget(publicAPI, model) {
     }
   };
 
-  publicAPI.setImageMapper = (imageMapper) => {
-    if (model.imageMapperUnsubscribe) {
-      model.imageMapperUnsubscribe();
-      model.imageMapperUnsubscribe = null;
-    }
-
-    model.imageMapper = imageMapper;
-    model.imageMapperUnsubscribe = imageMapper.onModified(publicAPI.updateSlice);
-
+  publicAPI.setVolumeMapper = (volumeMapper) => {
+    model.volumeMapper = volumeMapper;
     if (model.enabled) {
       publicAPI.updateRepresentation();
     }
   };
 
   publicAPI.updateRepresentation = () => {
-    if (!model.imageMapper) {
-      vtkErrorMacro('Image mapper must be set to update representation');
+    if (!model.volumeMapper) {
+      vtkErrorMacro('Volume mapper must be set to update representation');
+      return;
+    }
+    if (!model.volumeMapper.getInputData()) {
+      vtkErrorMacro('Volume mapper has no input data');
       return;
     }
 
-    const bounds = model.imageMapper.getBounds();
+    const bounds = model.volumeMapper.getBounds();
+
     model.widgetRep.placeWidget(...bounds);
-    publicAPI.updateSlice();
+    updateWidget();
   };
 
-  publicAPI.updateSlice = () => {
-    if (!model.enabled || !model.imageMapper) {
-      return;
+  publicAPI.setSlice = (slice) => {
+    model.slice = slice;
+    if (model.enabled) {
+      updateWidget();
     }
+  };
 
-    const sliceOrientation = model.imageMapper.getCurrentSlicingMode();
-    const normal = SliceNormals[sliceOrientation];
-    // The + 1 is to put the crop region actor above the current slice
-    let slice = model.imageMapper[`get${normal}Slice`]() + 1;
-
-    // transform slice pos
-    const data = model.imageMapper.getInputData();
-    const origin = data.getOrigin();
-    const spacing = data.getSpacing();
-    // TODO handle image direction?
-    slice = origin[sliceOrientation] + (spacing[sliceOrientation] * slice);
-
-    model.widgetRep.setSlice(slice, sliceOrientation);
+  publicAPI.setSliceOrientation = (sliceOrientation) => {
+    model.sliceOrientation = sliceOrientation;
+    if (model.enabled) {
+      updateWidget();
+    }
   };
 
   publicAPI.handleLeftButtonPress = () => publicAPI.pressAction();
@@ -185,9 +187,6 @@ function vtkImageCroppingRegionsWidget(publicAPI, model) {
       return VOID;
     }
 
-    const sliceOrientation = model.imageMapper.getCurrentSlicingMode();
-    const normal = SliceNormals[sliceOrientation];
-    const slice = model.imageMapper[`get${normal}Slice`]();
     const mousePos = publicAPI.get2DPointerPosition();
     const planes = model.widgetRep.getPlanePositions();
     // Assume we should use the first view
@@ -195,10 +194,11 @@ function vtkImageCroppingRegionsWidget(publicAPI, model) {
     const camUp = model.currentRenderer.getActiveCamera().getViewUp();
     // TODO verify camUp is axis-aligned
 
-    let ax1,
-      ax2,
-      camUp2D;
-    switch (sliceOrientation) {
+    let ax1;
+    let ax2;
+    let camUp2D;
+
+    switch (model.sliceOrientation) {
       case 0: // YZ
         ax1 = [planes[2], planes[3]]; // Y crop bounds
         ax2 = [planes[4], planes[5]]; // Z crop bounds
@@ -220,11 +220,11 @@ function vtkImageCroppingRegionsWidget(publicAPI, model) {
         return VOID;
     }
 
-    let leftBottom, // [left, bottom]
-      rightTop; // [right, top]
+    let leftBottom; // [left, bottom]
+    let rightTop; // [right, top]
 
     // handle camera view up
-    const camUp2DHash = camUp2D[0] + (10 * camUp2D[1]);
+    const camUp2DHash = camUp2D[0] + 10 * camUp2D[1];
     switch (camUp2DHash) {
       case 1: // [1, 0]
         leftBottom = [ax1[0], ax2[1]];
@@ -247,26 +247,56 @@ function vtkImageCroppingRegionsWidget(publicAPI, model) {
         return VOID;
     }
 
-    let left,
-      bottom,
-      right,
-      top;
+    let left;
+    let bottom;
+    let right;
+    let top;
 
-    switch (sliceOrientation) {
+    switch (model.sliceOrientation) {
       case 0: // YZ
-        [left, bottom] = view.worldToDisplay(slice, leftBottom[0], leftBottom[1], model.currentRenderer);
-        [right, top] = view.worldToDisplay(slice, rightTop[0], rightTop[1], model.currentRenderer);
+        [left, bottom] = view.worldToDisplay(
+          model.slice,
+          leftBottom[0],
+          leftBottom[1],
+          model.currentRenderer
+        );
+        [right, top] = view.worldToDisplay(
+          model.slice,
+          rightTop[0],
+          rightTop[1],
+          model.currentRenderer
+        );
         break;
       case 1: // ZX
-        [left, bottom] = view.worldToDisplay(leftBottom[0], slice, leftBottom[1], model.currentRenderer);
-        [right, top] = view.worldToDisplay(rightTop[0], slice, rightTop[1], model.currentRenderer);
+        [left, bottom] = view.worldToDisplay(
+          leftBottom[0],
+          model.slice,
+          leftBottom[1],
+          model.currentRenderer
+        );
+        [right, top] = view.worldToDisplay(
+          rightTop[0],
+          model.slice,
+          rightTop[1],
+          model.currentRenderer
+        );
         break;
       case 2: // XY
-        [left, bottom] = view.worldToDisplay(leftBottom[0], leftBottom[1], slice, model.currentRenderer);
-        [right, top] = view.worldToDisplay(rightTop[0], rightTop[1], slice, model.currentRenderer);
+        [left, bottom] = view.worldToDisplay(
+          leftBottom[0],
+          leftBottom[1],
+          model.slice,
+          model.currentRenderer
+        );
+        [right, top] = view.worldToDisplay(
+          rightTop[0],
+          rightTop[1],
+          model.slice,
+          model.currentRenderer
+        );
         break;
       default:
-        // noop
+      // noop
     }
 
     const leftDist = Math.abs(left - mousePos[0]);
@@ -303,7 +333,6 @@ function vtkImageCroppingRegionsWidget(publicAPI, model) {
     return VOID;
   };
 
-
   publicAPI.moveAction = () => {
     if (widgetState === WidgetState.IDLE) {
       return VOID;
@@ -312,18 +341,18 @@ function vtkImageCroppingRegionsWidget(publicAPI, model) {
     const mouse = publicAPI.get2DPointerPosition();
     const view = model.interactor.getView();
     const planes = model.widgetRep.getPlanePositions();
-    const sliceOrientation = model.imageMapper.getCurrentSlicingMode();
     const bounds = model.widgetRep.getInitialBounds();
     const camUp = model.currentRenderer.getActiveCamera().getViewUp();
 
     let newPos = view.displayToWorld(...mouse, 0, model.currentRenderer);
 
-    let ax1,
-      ax2,
-      bounds1,
-      bounds2,
-      camUp2D;
-    switch (sliceOrientation) {
+    let ax1;
+    let ax2;
+    let bounds1;
+    let bounds2;
+    let camUp2D;
+
+    switch (model.sliceOrientation) {
       case 0: // YZ
         ax1 = [planes[2], planes[3]]; // Y crop pos
         ax2 = [planes[4], planes[5]]; // Z crop pos
@@ -354,13 +383,13 @@ function vtkImageCroppingRegionsWidget(publicAPI, model) {
         return VOID;
     }
 
-    let left,
-      bottom,
-      right,
-      top;
+    let left;
+    let bottom;
+    let right;
+    let top;
 
     // handle camera view up
-    const camUp2DHash = camUp2D[0] + (10 * camUp2D[1]);
+    const camUp2DHash = camUp2D[0] + 10 * camUp2D[1];
     switch (camUp2DHash) {
       case 1: // [1, 0]
         [left, bottom, right, top] = [ax2[1], ax1[0], ax2[0], ax1[1]];
@@ -387,36 +416,44 @@ function vtkImageCroppingRegionsWidget(publicAPI, model) {
 
     // Is there a better way than using a fudge factor?
     const fudge = 1e-12;
-    if (widgetState === WidgetState.MOVE_LEFT
-        || widgetState === WidgetState.MOVE_LEFT_TOP
-        || widgetState === WidgetState.MOVE_LEFT_BOTTOM) {
+    if (
+      widgetState === WidgetState.MOVE_LEFT ||
+      widgetState === WidgetState.MOVE_LEFT_TOP ||
+      widgetState === WidgetState.MOVE_LEFT_BOTTOM
+    ) {
       if (left > right) {
         left = Math.max(right + fudge, Math.min(bounds1[1], newPos[0]));
       } else {
         left = Math.max(bounds1[0], Math.min(right, newPos[0]));
       }
     }
-    if (widgetState === WidgetState.MOVE_RIGHT
-        || widgetState === WidgetState.MOVE_RIGHT_TOP
-        || widgetState === WidgetState.MOVE_RIGHT_BOTTOM) {
+    if (
+      widgetState === WidgetState.MOVE_RIGHT ||
+      widgetState === WidgetState.MOVE_RIGHT_TOP ||
+      widgetState === WidgetState.MOVE_RIGHT_BOTTOM
+    ) {
       if (left > right) {
         right = Math.max(bounds1[0], Math.min(left - fudge, newPos[0]));
       } else {
         right = Math.max(left, Math.min(bounds1[1], newPos[0]));
       }
     }
-    if (widgetState === WidgetState.MOVE_BOTTOM
-        || widgetState === WidgetState.MOVE_LEFT_BOTTOM
-        || widgetState === WidgetState.MOVE_RIGHT_BOTTOM) {
+    if (
+      widgetState === WidgetState.MOVE_BOTTOM ||
+      widgetState === WidgetState.MOVE_LEFT_BOTTOM ||
+      widgetState === WidgetState.MOVE_RIGHT_BOTTOM
+    ) {
       if (bottom > top) {
         bottom = Math.max(top + fudge, Math.min(bounds2[1], newPos[1]));
       } else {
         bottom = Math.max(bounds2[0], Math.min(top, newPos[1]));
       }
     }
-    if (widgetState === WidgetState.MOVE_TOP
-        || widgetState === WidgetState.MOVE_LEFT_TOP
-        || widgetState === WidgetState.MOVE_RIGHT_TOP) {
+    if (
+      widgetState === WidgetState.MOVE_TOP ||
+      widgetState === WidgetState.MOVE_LEFT_TOP ||
+      widgetState === WidgetState.MOVE_RIGHT_TOP
+    ) {
       if (bottom > top) {
         top = Math.max(bounds2[0], Math.min(bottom - fudge, newPos[1]));
       } else {
@@ -444,7 +481,7 @@ function vtkImageCroppingRegionsWidget(publicAPI, model) {
     }
 
     // assign new plane values
-    switch (sliceOrientation) {
+    switch (model.sliceOrientation) {
       case 0: // YZ
         [planes[2], planes[3]] = ax1;
         [planes[4], planes[5]] = ax2;
@@ -478,8 +515,10 @@ function vtkImageCroppingRegionsWidget(publicAPI, model) {
 // ----------------------------------------------------------------------------
 
 const DEFAULT_VALUES = {
-  // imageMapper: null,
+  // volumeMapper: null,
   priority: 0.5, // Use a priority of 0.5, since default priority is 0.0
+  slice: 0,
+  sliceOrientation: 2, // XY
 };
 
 // ----------------------------------------------------------------------------
@@ -491,9 +530,7 @@ export function extend(publicAPI, model, initialValues = {}) {
   // Have our default values override whatever is from parent class
   vtkAbstractWidget.extend(publicAPI, model, DEFAULT_VALUES, initialValues);
 
-  macro.setGet(publicAPI, model, [
-    'imageMapper',
-  ]);
+  macro.get(publicAPI, model, ['volumeMapper', 'slice', 'sliceOrientation']);
 
   // Object methods
   vtkImageCroppingRegionsWidget(publicAPI, model);
@@ -501,7 +538,10 @@ export function extend(publicAPI, model, initialValues = {}) {
 
 // ----------------------------------------------------------------------------
 
-export const newInstance = macro.newInstance(extend, 'vtkImageCroppingRegionsWidget');
+export const newInstance = macro.newInstance(
+  extend,
+  'vtkImageCroppingRegionsWidget'
+);
 
 // ----------------------------------------------------------------------------
 

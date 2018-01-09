@@ -10,6 +10,4 @@ const WidgetState = {
   MOVE_RIGHT_TOP: 8,
 };
 
-const SliceNormals = ['X', 'Y', 'Z'];
-
-export default { WidgetState, SliceNormals };
+export default { WidgetState };

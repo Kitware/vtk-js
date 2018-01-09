@@ -1,10 +1,11 @@
 import 'vtk.js/Sources/favicon';
 
-import vtkFullScreenRenderWindow     from 'vtk.js/Sources/Rendering/Misc/FullScreenRenderWindow';
-import vtkHttpDataSetReader          from 'vtk.js/Sources/IO/Core/HttpDataSetReader';
-import vtkImageMapper                from 'vtk.js/Sources/Rendering/Core/ImageMapper';
-import vtkImageSlice                 from 'vtk.js/Sources/Rendering/Core/ImageSlice';
-import vtkInteractorStyleImage       from 'vtk.js/Sources/Interaction/Style/InteractorStyleImage';
+import vtkFullScreenRenderWindow from 'vtk.js/Sources/Rendering/Misc/FullScreenRenderWindow';
+import vtkHttpDataSetReader from 'vtk.js/Sources/IO/Core/HttpDataSetReader';
+import vtkVolumeMapper from 'vtk.js/Sources/Rendering/Core/VolumeMapper';
+import vtkImageMapper from 'vtk.js/Sources/Rendering/Core/ImageMapper';
+import vtkImageSlice from 'vtk.js/Sources/Rendering/Core/ImageSlice';
+import vtkInteractorStyleImage from 'vtk.js/Sources/Interaction/Style/InteractorStyleImage';
 import vtkImageCroppingRegionsWidget from 'vtk.js/Sources/Interaction/Widgets/ImageCroppingRegionsWidget';
 
 // ----------------------------------------------------------------------------
@@ -29,9 +30,21 @@ const widget = vtkImageCroppingRegionsWidget.newInstance();
 widget.setInteractor(renderWindow.getInteractor());
 
 // called when the volume is loaded
-function setupWidget(imageMapper) {
-  widget.setImageMapper(imageMapper);
+function setupWidget(volumeMapper, imageMapper) {
+  widget.setVolumeMapper(volumeMapper);
   widget.setEnable(true);
+  // getWidgetRep() returns a widget AFTER setEnable(true).
+  widget.getWidgetRep().setOpacity(0.8);
+  // TODO widget.getWidgetRep().setLineColor(1.0, 0.0, 0.0);
+
+  imageMapper.onModified(() => {
+    // update slice and slice orientation
+    const sliceMode = imageMapper.getCurrentSlicingMode();
+    const sliceNormal = ['X', 'Y', 'Z'][sliceMode];
+    const slice = imageMapper[`get${sliceNormal}Slice`]();
+    widget.setSlice(slice);
+    widget.setSliceOrientation(sliceMode);
+  });
 
   renderWindow.render();
 }
@@ -39,37 +52,48 @@ function setupWidget(imageMapper) {
 // ----------------------------------------------------------------------------
 // Set up volume
 // ----------------------------------------------------------------------------
-const mapper = vtkImageMapper.newInstance();
+const volumeMapper = vtkVolumeMapper.newInstance();
+const imageMapper = vtkImageMapper.newInstance();
 const actor = vtkImageSlice.newInstance();
-actor.setMapper(mapper);
+actor.setMapper(imageMapper);
 renderer.addViewProp(actor);
 
 const reader = vtkHttpDataSetReader.newInstance({ fetchGzip: true });
-reader.setUrl(`${__BASE_PATH__}/data/volume/headsq.vti`, { loadData: true }).then(() => {
-  const data = reader.getOutputData();
-  // we don't care about image direction here
-  data.setDirection(1, 0, 0, 0, 1, 0, 0, 0, 1);
+reader
+  .setUrl(`${__BASE_PATH__}/data/volume/headsq.vti`, { loadData: true })
+  .then(() => {
+    const data = reader.getOutputData();
+    // NOTE we don't care about image direction here
+    data.setDirection(1, 0, 0, 0, 1, 0, 0, 0, 1);
 
-  mapper.setInputData(data);
-  // change me!
-  const sliceMode = 0;
-  const sliceNormal = ['X', 'Y', 'Z'][sliceMode];
-  mapper.setCurrentSlicingMode(sliceMode);
-  mapper[`set${sliceNormal}Slice`](32);
+    volumeMapper.setInputData(data);
+    imageMapper.setInputData(data);
 
-  const camPosition = renderer.getActiveCamera().getFocalPoint().map((v, idx) => (idx === sliceMode ? (v + 1) : v));
-  const viewUp = [0, 0, 0];
-  // viewUp[(sliceMode + 2) % 3] = 1;
-  viewUp[2] = 1;
-  renderer.getActiveCamera().set({ position: camPosition, viewUp });
-  console.log(renderer.getActiveCamera().getViewUp());
+    // create our cropping widget
+    setupWidget(volumeMapper, imageMapper);
 
-  // create our cropping widget
-  setupWidget(mapper);
+    // After creating our cropping widget, we can now update our image mapper
 
-  renderer.resetCamera();
-  renderWindow.render();
-});
+    // These values can be tweaked
+    const sliceMode = 2;
+    const viewUp = [0, 1, 0];
+
+    const sliceNormal = ['X', 'Y', 'Z'][sliceMode];
+    imageMapper.setCurrentSlicingMode(sliceMode);
+    imageMapper[`set${sliceNormal}Slice`](30);
+
+    const camPosition = renderer
+      .getActiveCamera()
+      .getFocalPoint()
+      .map((v, idx) => (idx === sliceMode ? v + 1 : v));
+    renderer.getActiveCamera().set({ position: camPosition, viewUp });
+
+    console.log('position', renderer.getActiveCamera().getPosition());
+    console.log('camera', camPosition);
+
+    renderer.resetCamera();
+    renderWindow.render();
+  });
 
 renderWindow.render();
 
