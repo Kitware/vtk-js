@@ -8,9 +8,7 @@ const MY_ENUM = {
   THIRD: 3,
 };
 
-const EVENTS = [
-  'A',
-];
+const EVENTS = ['A'];
 
 // ----------------------------------------------------------------------------
 // vtkMyClass methods
@@ -59,7 +57,7 @@ function extend(publicAPI, model, initialValues = {}) {
   myClass(publicAPI, model);
 
   // event methods
-  EVENTS.forEach(name => macro.event(publicAPI, model, `Event${name}`));
+  EVENTS.forEach((name) => macro.event(publicAPI, model, `Event${name}`));
 }
 
 const newInstance = macro.newInstance(extend, 'vtkMyClass');
@@ -289,7 +287,10 @@ test('Macro methods event tests', (t) => {
   const called = Array(3).fill(0);
 
   const callbackEndTests = () => {
-    t.ok(called[0] && called[1] && called[2], 'callbackEndTests should be called last after 101ms');
+    t.ok(
+      called[0] && called[1] && called[2],
+      'callbackEndTests should be called last after 101ms'
+    );
 
     // ensure callback2 was only invoked twice
     t.equal(called[2], 2, 'callback2 should have been called exactly twice');
