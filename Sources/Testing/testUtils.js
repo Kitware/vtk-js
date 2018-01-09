@@ -12,6 +12,7 @@ function compareImages(
 ) {
   const nbBaselines = baselines.length;
   let minDelta = 100;
+  let minDiff = '';
   let isSameDimensions = false;
 
   function done() {
@@ -20,7 +21,9 @@ function compareImages(
 
     if (minDelta >= threshold) {
       tapeContext.fail(
-        `<img src="${image}" /> vs <img src="${baselines[0]}" />`
+        `<img src="${image}" /> vs <img src="${
+          baselines[0]
+        }" /> === <img src="${minDiff}" />`
       );
     }
 
@@ -31,14 +34,17 @@ function compareImages(
     }
   }
 
+  resemble.outputSettings({
+    transparency: 0.5,
+  });
   baselines.forEach((baseline, idx) => {
     resemble(baseline)
       .compareTo(image)
       .onComplete((data) => {
-        minDelta =
-          minDelta < data.misMatchPercentage
-            ? minDelta
-            : data.misMatchPercentage;
+        if (minDelta >= data.misMatchPercentage) {
+          minDelta = data.misMatchPercentage;
+          minDiff = data.getImageDataUrl();
+        }
         isSameDimensions = isSameDimensions || data.isSameDimensions;
 
         if (idx + 1 === nbBaselines) {
