@@ -4,7 +4,7 @@ import vtkImageCroppingRegionsRepresentation from 'vtk.js/Sources/Interaction/Wi
 import Constants from 'vtk.js/Sources/Interaction/Widgets/ImageCroppingRegionsWidget/Constants';
 
 const { vtkErrorMacro, VOID, EVENT_ABORT } = macro;
-const { WidgetState } = Constants;
+const { WidgetState, CropWidgetEvents } = Constants;
 
 const events = [
   'MouseMove',
@@ -71,6 +71,11 @@ function vtkImageCroppingRegionsWidget(publicAPI, model) {
   publicAPI.createDefaultRepresentation = () => {
     if (!model.widgetRep) {
       model.widgetRep = vtkImageCroppingRegionsRepresentation.newInstance();
+
+      model.widgetRep.onPlanesPositionChanged(
+        publicAPI.invokeCroppingPlanesPositionChanged
+      );
+
       publicAPI.updateRepresentation();
     }
   };
@@ -529,6 +534,10 @@ export function extend(publicAPI, model, initialValues = {}) {
   // Inheritance
   // Have our default values override whatever is from parent class
   vtkAbstractWidget.extend(publicAPI, model, DEFAULT_VALUES, initialValues);
+
+  CropWidgetEvents.forEach((eventName) =>
+    macro.event(publicAPI, model, eventName)
+  );
 
   macro.get(publicAPI, model, ['volumeMapper', 'slice', 'sliceOrientation']);
 

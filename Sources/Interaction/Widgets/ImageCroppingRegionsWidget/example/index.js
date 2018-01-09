@@ -28,6 +28,9 @@ interactorStyle2D.setCurrentImageNumber(0);
 // ----------------------------------------------------------------------------
 const widget = vtkImageCroppingRegionsWidget.newInstance();
 widget.setInteractor(renderWindow.getInteractor());
+widget.onCroppingPlanesPositionChanged(() => {
+  console.log('planes changed:', widget.getWidgetRep().getPlanePositions());
+});
 
 // called when the volume is loaded
 function setupWidget(volumeMapper, imageMapper) {

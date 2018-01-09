@@ -4,4 +4,6 @@ const Orientation = {
   XY: 2,
 };
 
-export default { Orientation };
+const Events = ['PlanesPositionChanged'];
+
+export default { Orientation, Events };

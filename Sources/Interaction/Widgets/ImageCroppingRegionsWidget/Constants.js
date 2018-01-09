@@ -10,4 +10,6 @@ const WidgetState = {
   MOVE_RIGHT_TOP: 8,
 };
 
-export default { WidgetState };
+const CropWidgetEvents = ['CroppingPlanesPositionChanged'];
+
+export default { WidgetState, CropWidgetEvents };

@@ -7,7 +7,7 @@ import vtkPolyData from 'vtk.js/Sources/Common/DataModel/PolyData';
 import Constants from 'vtk.js/Sources/Interaction/Widgets/ImageCroppingRegionsRepresentation/Constants';
 
 const { vtkErrorMacro } = macro;
-const { Orientation } = Constants;
+const { Orientation, Events } = Constants;
 
 // ----------------------------------------------------------------------------
 // vtkImageCroppingRegionsRepresentation methods
@@ -245,9 +245,7 @@ function vtkImageCroppingRegionsRepresentation(publicAPI, model) {
     // TODO set center polydata
 
     model.regionPolyData.modified();
-
-    console.log('slice position:', model.slice);
-    console.log('plane positions:', model.planePositions);
+    publicAPI.invokePlanesPositionChanged();
   };
 
   publicAPI.getBounds = () => model.initialBounds;
@@ -285,6 +283,8 @@ export function extend(publicAPI, model, initialValues = {}) {
 
   // Inheritance
   vtkWidgetRepresentation.extend(publicAPI, model, initialValues);
+
+  Events.forEach((eventName) => macro.event(publicAPI, model, eventName));
 
   macro.get(publicAPI, model, [
     'initialBounds',
