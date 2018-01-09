@@ -470,7 +470,8 @@ function vtkXMLReader(publicAPI, model) {
           );
           // set length header
           // TODO this does not work for lengths that are greater than the max Uint32 value.
-          new TYPED_ARRAY[headerType](data.buffer)[0] = uncompressed.length;
+          new TYPED_ARRAY[headerType](data.buffer, 0, 1)[0] =
+            uncompressed.length;
           data.set(uncompressed, TYPED_ARRAY_BYTES[headerType]);
 
           dataArrays[arrayidx] = data;
