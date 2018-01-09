@@ -24,6 +24,7 @@ module.exports = {
     // Introduced with new eslint
     // and no time to fix them...
     // [...]
+    'linebreak-style': 0,
   },
   plugins: [
     'prettier'
