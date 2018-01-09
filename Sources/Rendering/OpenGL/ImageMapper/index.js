@@ -287,11 +287,14 @@ function vtkOpenGLImageMapper(publicAPI, model) {
   publicAPI.setCameraShaderParameters = (cellBO, ren, actor) => {
     const program = cellBO.getProgram();
 
+    const actMats = model.openGLImageSlice.getKeyMatrices();
     const image = model.currentInput;
     const i2wmat4 = image.getIndexToWorld();
+    mat4.multiply(model.imagemat, actMats.mcwc, i2wmat4);
 
     const keyMats = model.openGLCamera.getKeyMatrices(ren);
-    mat4.multiply(model.imagemat, keyMats.wcdc, i2wmat4);
+    mat4.multiply(model.imagemat, keyMats.wcdc, model.imagemat);
+
     program.setUniformMatrix('MCDCMatrix', model.imagemat);
   };
 

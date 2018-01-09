@@ -1,4 +1,4 @@
-import { mat3, mat4 } from 'gl-matrix';
+import { mat4 } from 'gl-matrix';
 
 import macro from 'vtk.js/Sources/macro';
 import vtkViewNode from 'vtk.js/Sources/Rendering/SceneGraph/ViewNode';
@@ -106,20 +106,12 @@ function vtkOpenGLImageSlice(publicAPI, model) {
   publicAPI.getKeyMatrices = () => {
     // has the actor changed?
     if (model.renderable.getMTime() > model.keyMatrixTime.getMTime()) {
-      model.renderable.computeMatrix();
-      mat4.copy(model.MCWCMatrix, model.renderable.getMatrix());
-      mat4.transpose(model.MCWCMatrix, model.MCWCMatrix);
-
-      if (model.renderable.getIsIdentity()) {
-        mat3.identity(model.normalMatrix);
-      } else {
-        mat3.fromMat4(model.normalMatrix, model.MCWCMatrix);
-        mat3.invert(model.normalMatrix, model.normalMatrix);
-      }
+      mat4.copy(model.keyMatrices.mcwc, model.renderable.getMatrix());
+      mat4.transpose(model.keyMatrices.mcwc, model.keyMatrices.mcwc);
       model.keyMatrixTime.modified();
     }
 
-    return { mcwc: model.MCWCMatrix, normalMatrix: model.normalMatrix };
+    return model.keyMatrices;
   };
 }
 
@@ -130,8 +122,7 @@ function vtkOpenGLImageSlice(publicAPI, model) {
 const DEFAULT_VALUES = {
   context: null,
   keyMatrixTime: null,
-  normalMatrix: null,
-  MCWCMatrix: null,
+  keyMatrices: null,
 };
 
 // ----------------------------------------------------------------------------
@@ -143,9 +134,10 @@ export function extend(publicAPI, model, initialValues = {}) {
   vtkViewNode.extend(publicAPI, model, initialValues);
 
   model.keyMatrixTime = {};
-  macro.obj(model.keyMatrixTime);
-  model.normalMatrix = mat3.create();
-  model.MCWCMatrix = mat4.create();
+  macro.obj(model.keyMatrixTime, { mtime: 0 });
+  model.keyMatrices = {
+    mcwc: mat4.create(),
+  };
 
   // Build VTK API
   macro.setGet(publicAPI, model, ['context']);
