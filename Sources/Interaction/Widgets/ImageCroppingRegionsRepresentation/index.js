@@ -65,8 +65,8 @@ function vtkImageCroppingRegionsRepresentation(publicAPI, model) {
 
     model.mapper.setInputData(model.regionPolyData);
     model.actor.setMapper(model.mapper);
-    model.actor.getProperty().setEdgeColor(1.0, 0, 0);
     model.actor.getProperty().setEdgeVisibility(true);
+    publicAPI.setEdgeColor(...model.edgeColor);
     publicAPI.setOpacity(model.opacity);
 
     // set picker
@@ -137,6 +137,11 @@ function vtkImageCroppingRegionsRepresentation(publicAPI, model) {
   publicAPI.setOpacity = (opacityValue) => {
     const opacity = Math.max(0, Math.min(1, opacityValue));
     model.actor.getProperty().setOpacity(opacity);
+  };
+
+  publicAPI.setEdgeColor = (...edgeColor) => {
+    model.edgeColor = edgeColor;
+    model.actor.getProperty().setEdgeColor(...model.edgeColor);
   };
 
   publicAPI.setPlanePositions = (...positions) => {
@@ -274,6 +279,7 @@ function vtkImageCroppingRegionsRepresentation(publicAPI, model) {
 
 const DEFAULT_VALUES = {
   opacity: 0.5,
+  edgeColor: [1.0, 1.0, 1.0],
 };
 
 // ----------------------------------------------------------------------------
@@ -292,6 +298,7 @@ export function extend(publicAPI, model, initialValues = {}) {
     'sliceOrientation',
     'slice',
     'opacity',
+    'edgeColor',
   ]);
 
   // Object methods

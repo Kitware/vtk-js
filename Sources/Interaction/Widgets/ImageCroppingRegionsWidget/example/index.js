@@ -38,7 +38,7 @@ function setupWidget(volumeMapper, imageMapper) {
   widget.setEnable(true);
   // getWidgetRep() returns a widget AFTER setEnable(true).
   widget.getWidgetRep().setOpacity(0.8);
-  // TODO widget.getWidgetRep().setLineColor(1.0, 0.0, 0.0);
+  widget.getWidgetRep().setEdgeColor(0.0, 0.0, 1.0);
 
   imageMapper.onModified(() => {
     // update slice and slice orientation
