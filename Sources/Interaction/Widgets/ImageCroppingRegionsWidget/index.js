@@ -309,26 +309,25 @@ function vtkImageCroppingRegionsWidget(publicAPI, model) {
     const bottomDist = Math.abs(bottom - mousePos[1]);
     const topDist = Math.abs(top - mousePos[1]);
 
-    const tolerance = 3;
-    if (leftDist < tolerance) {
-      if (bottomDist < tolerance) {
+    if (leftDist < model.handleSize) {
+      if (bottomDist < model.handleSize) {
         widgetState = WidgetState.MOVE_LEFT_BOTTOM;
-      } else if (topDist < tolerance) {
+      } else if (topDist < model.handleSize) {
         widgetState = WidgetState.MOVE_LEFT_TOP;
       } else {
         widgetState = WidgetState.MOVE_LEFT;
       }
-    } else if (rightDist < tolerance) {
-      if (bottomDist < tolerance) {
+    } else if (rightDist < model.handleSize) {
+      if (bottomDist < model.handleSize) {
         widgetState = WidgetState.MOVE_RIGHT_BOTTOM;
-      } else if (topDist < tolerance) {
+      } else if (topDist < model.handleSize) {
         widgetState = WidgetState.MOVE_RIGHT_TOP;
       } else {
         widgetState = WidgetState.MOVE_RIGHT;
       }
-    } else if (bottomDist < tolerance) {
+    } else if (bottomDist < model.handleSize) {
       widgetState = WidgetState.MOVE_BOTTOM;
-    } else if (topDist < tolerance) {
+    } else if (topDist < model.handleSize) {
       widgetState = WidgetState.MOVE_TOP;
     } else {
       widgetState = WidgetState.IDLE;
@@ -524,6 +523,7 @@ const DEFAULT_VALUES = {
   priority: 0.5, // Use a priority of 0.5, since default priority is 0.0
   slice: 0,
   sliceOrientation: 2, // XY
+  handleSize: 3,
 };
 
 // ----------------------------------------------------------------------------
@@ -539,6 +539,7 @@ export function extend(publicAPI, model, initialValues = {}) {
     macro.event(publicAPI, model, eventName)
   );
 
+  macro.setGet(publicAPI, model, ['handleSize']);
   macro.get(publicAPI, model, ['volumeMapper', 'slice', 'sliceOrientation']);
 
   // Object methods
