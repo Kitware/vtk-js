@@ -441,7 +441,13 @@ function vtkXMLReader(publicAPI, model) {
 
           let buffer = null;
           if (nbBlocks > 0) {
-            buffer = new ArrayBuffer(header[2] * (nbBlocks - 1) + header[3]);
+            // If the last block's size is labeled as 0, that means the last block
+            // really has size header[2].
+            if (header[3] === 0) {
+              buffer = new ArrayBuffer(header[2] * nbBlocks);
+            } else {
+              buffer = new ArrayBuffer(header[2] * (nbBlocks - 1) + header[3]);
+            }
           } else {
             // if there is no blocks, then default to a zero array of size 0.
             buffer = new ArrayBuffer(0);
