@@ -757,7 +757,7 @@ export function event(publicAPI, model, eventName) {
 
     const callbackID = curCallbackID++;
     callbacks.push([callbackID, callback, priority]);
-    callbacks.sort(([, cb1, pri1], [, cb2, pri2]) => pri2 - pri1);
+    callbacks.sort((cb1, cb2) => cb2[2] - cb1[2]);
     return on(callbackID);
   };
 
