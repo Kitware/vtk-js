@@ -197,7 +197,6 @@ function vtkImageCroppingRegionsWidget(publicAPI, model) {
     // Assume we should use the first view
     const view = model.interactor.getView();
     const camUp = model.currentRenderer.getActiveCamera().getViewUp();
-    // TODO verify camUp is axis-aligned
 
     let ax1;
     let ax2;

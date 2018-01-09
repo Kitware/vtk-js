@@ -69,7 +69,6 @@ function setupControlPanel(data, imageMapper) {
       .map((v, idx) => (idx === sliceMode ? v + 1 : v));
     const viewUp = [0, 0, 0];
     viewUp[(sliceMode + 2) % 3] = 1;
-    console.log(viewUp);
     renderer.getActiveCamera().set({ position: camPosition, viewUp });
     renderer.resetCamera();
 
@@ -82,6 +81,8 @@ function setupControlPanel(data, imageMapper) {
 // ----------------------------------------------------------------------------
 const widget = vtkImageCroppingRegionsWidget.newInstance();
 widget.setInteractor(renderWindow.getInteractor());
+
+// Demonstrate cropping planes event update
 widget.onCroppingPlanesPositionChanged(() => {
   console.log('planes changed:', widget.getWidgetRep().getPlanePositions());
 });
@@ -89,10 +90,12 @@ widget.onCroppingPlanesPositionChanged(() => {
 // called when the volume is loaded
 function setupWidget(volumeMapper, imageMapper) {
   widget.setVolumeMapper(volumeMapper);
-  widget.setEnable(true);
   widget.setHandleSize(10); // in pixels
+  widget.setEnable(true);
 
   // getWidgetRep() returns a widget AFTER setEnable(true).
+
+  // Demonstrate widget representation APIs
   widget.getWidgetRep().setOpacity(0.8);
   widget.getWidgetRep().setEdgeColor(0.0, 0.0, 1.0);
 
@@ -138,7 +141,7 @@ reader
 
     const sliceNormal = ['X', 'Y', 'Z'][sliceMode];
     imageMapper.setCurrentSlicingMode(sliceMode);
-    imageMapper[`set${sliceNormal}Slice`](30);
+    imageMapper[`set${sliceNormal}Slice`](0);
 
     const camPosition = renderer
       .getActiveCamera()
