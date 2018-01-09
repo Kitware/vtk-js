@@ -32,6 +32,11 @@ function vtkImageCroppingRegionsRepresentation(publicAPI, model) {
     // construct region polydata
     model.regionPolyData = vtkPolyData.newInstance();
     model.regionPolyData.getPoints().setData(new Float32Array(16 * 3), 3);
+
+    // This is a separate vtkPolyData for the center region
+    model.centerRegionPolyData = vtkPolyData.newInstance();
+    model.centerRegionPolyData.getPoints().setData(new Float32Array(4 * 3), 3);
+
     /*
     15-14-----11-10
     |            |
@@ -59,9 +64,14 @@ function vtkImageCroppingRegionsRepresentation(publicAPI, model) {
         ]),
         1,
       );
+    model.centerRegionPolyData
+      .getPolys()
+      .setData(new Uint32Array([4, 0, 1, 2, 3]), 1);
 
     model.mapper = vtkMapper.newInstance();
     model.actor = vtkActor.newInstance();
+    model.centerMapper = vtkMapper.newInstance();
+    model.centerActor = vtkActor.newInstance();
 
     model.mapper.setInputData(model.regionPolyData);
     model.actor.setMapper(model.mapper);
@@ -69,11 +79,14 @@ function vtkImageCroppingRegionsRepresentation(publicAPI, model) {
     publicAPI.setEdgeColor(...model.edgeColor);
     publicAPI.setOpacity(model.opacity);
 
+    model.centerMapper.setInputData(model.centerRegionPolyData);
+    model.centerActor.setMapper(model.centerMapper);
+
     // set picker
     model.cursorPicker = vtkCellPicker.newInstance();
   }
 
-  publicAPI.getActors = () => model.actor;
+  publicAPI.getActors = () => [model.actor, model.centerActor];
   publicAPI.getNestedProps = () => publicAPI.getActors();
 
   // Reorders a bounds array such that each (a,b) pairing is a
@@ -86,6 +99,37 @@ function vtkImageCroppingRegionsRepresentation(publicAPI, model) {
         bounds[i] = tmp;
       }
     }
+  }
+
+  function updateCenterOpacity() {
+    const slicePos = model.slice;
+    const [
+      xPLower,
+      xPUpper,
+      yPLower,
+      yPUpper,
+      zPLower,
+      zPUpper,
+    ] = model.planePositions;
+
+    let centerInvisible = true;
+    switch (model.sliceOrientation) {
+      case Orientation.YZ:
+        centerInvisible = xPLower < slicePos && slicePos < xPUpper;
+        break;
+      case Orientation.XZ:
+        centerInvisible = yPLower < slicePos && slicePos < yPUpper;
+        break;
+      case Orientation.XY:
+        centerInvisible = zPLower < slicePos && slicePos < zPUpper;
+        break;
+      default:
+      // noop
+    }
+
+    model.centerActor
+      .getProperty()
+      .setOpacity(centerInvisible ? 0 : model.opacity);
   }
 
   publicAPI.placeWidget = (...bounds) => {
@@ -136,7 +180,9 @@ function vtkImageCroppingRegionsRepresentation(publicAPI, model) {
 
   publicAPI.setOpacity = (opacityValue) => {
     const opacity = Math.max(0, Math.min(1, opacityValue));
+    model.opacity = opacity;
     model.actor.getProperty().setOpacity(opacity);
+    updateCenterOpacity();
   };
 
   publicAPI.setEdgeColor = (...edgeColor) => {
@@ -177,6 +223,7 @@ function vtkImageCroppingRegionsRepresentation(publicAPI, model) {
   publicAPI.updateGeometry = () => {
     const slicePos = model.slice;
     const verts = model.regionPolyData.getPoints().getData();
+    const centerVerts = model.centerRegionPolyData.getPoints().getData();
     const [xBMin, xBMax, yBMin, yBMax, zBMin, zBMax] = model.initialBounds;
     const [
       xPLower,
@@ -207,6 +254,11 @@ function vtkImageCroppingRegionsRepresentation(publicAPI, model) {
         verts.set([slicePos, yPLower, zPUpper], 39);
         verts.set([slicePos + 0.01, yPLower, zBMax], 42);
         verts.set([slicePos, yBMin, zBMax], 45);
+
+        centerVerts.set([slicePos, yPLower, zPLower], 0);
+        centerVerts.set([slicePos, yPUpper, zPLower], 3);
+        centerVerts.set([slicePos, yPUpper, zPUpper], 6);
+        centerVerts.set([slicePos, yPLower, zPUpper], 9);
         break;
       case Orientation.XZ:
         verts.set([xBMin, slicePos, zBMin], 0);
@@ -225,6 +277,11 @@ function vtkImageCroppingRegionsRepresentation(publicAPI, model) {
         verts.set([xPLower, slicePos, zPUpper], 39);
         verts.set([xPLower, slicePos + 0.01, zBMax], 42);
         verts.set([xBMin, slicePos, zBMax], 45);
+
+        centerVerts.set([xPLower, slicePos, zPLower], 0);
+        centerVerts.set([xPUpper, slicePos, zPLower], 3);
+        centerVerts.set([xPUpper, slicePos, zPUpper], 6);
+        centerVerts.set([xPLower, slicePos, zPUpper], 9);
         break;
       case Orientation.XY:
         verts.set([xBMin, yBMin, slicePos], 0);
@@ -243,13 +300,21 @@ function vtkImageCroppingRegionsRepresentation(publicAPI, model) {
         verts.set([xPLower, yPUpper, slicePos], 39);
         verts.set([xPLower, yBMax, slicePos + 0.01], 42);
         verts.set([xBMin, yBMax, slicePos], 45);
+
+        centerVerts.set([xPLower, yPLower, slicePos], 0);
+        centerVerts.set([xPUpper, yPLower, slicePos], 3);
+        centerVerts.set([xPUpper, yPUpper, slicePos], 6);
+        centerVerts.set([xPLower, yPUpper, slicePos], 9);
         break;
       default:
       // noop
     }
-    // TODO set center polydata
+
+    // This requires updating whenever geometry updates
+    updateCenterOpacity();
 
     model.regionPolyData.modified();
+    model.centerRegionPolyData.modified();
     publicAPI.invokePlanesPositionChanged();
   };
 
