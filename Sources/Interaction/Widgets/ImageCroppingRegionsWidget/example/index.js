@@ -8,6 +8,8 @@ import vtkImageSlice from 'vtk.js/Sources/Rendering/Core/ImageSlice';
 import vtkInteractorStyleImage from 'vtk.js/Sources/Interaction/Style/InteractorStyleImage';
 import vtkImageCroppingRegionsWidget from 'vtk.js/Sources/Interaction/Widgets/ImageCroppingRegionsWidget';
 
+import controlPanel from './controlPanel.html';
+
 // ----------------------------------------------------------------------------
 // Standard rendering code setup
 // ----------------------------------------------------------------------------
@@ -16,12 +18,64 @@ const fullScreenRenderer = vtkFullScreenRenderWindow.newInstance();
 const renderer = fullScreenRenderer.getRenderer();
 const renderWindow = fullScreenRenderer.getRenderWindow();
 const interactorStyle2D = vtkInteractorStyleImage.newInstance();
-console.log(interactorStyle2D);
+fullScreenRenderer.addController(controlPanel);
 renderWindow.getInteractor().setInteractorStyle(interactorStyle2D);
 renderer.getActiveCamera().setParallelProjection(true);
 
 // set the current image number to the first image
 interactorStyle2D.setCurrentImageNumber(0);
+
+// ----------------------------------------------------------------------------
+// Helper methods for setting up control panel
+// ----------------------------------------------------------------------------
+
+function setupControlPanel(data, imageMapper) {
+  const sliceInputs = [
+    document.querySelector('.sliceX'),
+    document.querySelector('.sliceY'),
+    document.querySelector('.sliceZ'),
+  ];
+  const viewAxisInput = document.querySelector('.viewAxis');
+
+  const extent = data.getExtent();
+  sliceInputs.forEach((el, idx) => {
+    const lowerExtent = extent[idx * 2];
+    const upperExtent = extent[idx * 2 + 1];
+    el.setAttribute('min', lowerExtent);
+    el.setAttribute('max', upperExtent);
+    el.setAttribute('value', (upperExtent - lowerExtent) / 2);
+  });
+
+  viewAxisInput.value = ['X', 'Y', 'Z'][imageMapper.getCurrentSlicingMode()];
+
+  sliceInputs.forEach((el, idx) => {
+    el.addEventListener('input', (ev) => {
+      const sliceNormal = ['X', 'Y', 'Z'][idx];
+      imageMapper[`set${sliceNormal}Slice`](Number(ev.target.value));
+
+      renderWindow.render();
+    });
+  });
+
+  viewAxisInput.addEventListener('input', (ev) => {
+    const sliceMode = ['X', 'Y', 'Z'].indexOf(ev.target.value);
+    imageMapper.setCurrentSlicingMode(sliceMode);
+    const slice = sliceInputs[sliceMode].value;
+    imageMapper[`set${ev.target.value}Slice`](slice);
+
+    const camPosition = renderer
+      .getActiveCamera()
+      .getFocalPoint()
+      .map((v, idx) => (idx === sliceMode ? v + 1 : v));
+    const viewUp = [0, 0, 0];
+    viewUp[(sliceMode + 2) % 3] = 1;
+    console.log(viewUp);
+    renderer.getActiveCamera().set({ position: camPosition, viewUp });
+    renderer.resetCamera();
+
+    renderWindow.render();
+  });
+}
 
 // ----------------------------------------------------------------------------
 // Create widget
@@ -78,8 +132,7 @@ reader
     setupWidget(volumeMapper, imageMapper);
 
     // After creating our cropping widget, we can now update our image mapper
-
-    // These values can be tweaked
+    // with default slice orientation/mode and camera view.
     const sliceMode = 2;
     const viewUp = [0, 1, 0];
 
@@ -93,14 +146,12 @@ reader
       .map((v, idx) => (idx === sliceMode ? v + 1 : v));
     renderer.getActiveCamera().set({ position: camPosition, viewUp });
 
-    console.log('position', renderer.getActiveCamera().getPosition());
-    console.log('camera', camPosition);
+    // setup control panel
+    setupControlPanel(data, imageMapper);
 
     renderer.resetCamera();
     renderWindow.render();
   });
-
-renderWindow.render();
 
 // -----------------------------------------------------------
 // Make some variables global so that you can inspect and
