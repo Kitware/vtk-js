@@ -112,6 +112,10 @@ export function extend(publicAPI, model, initialValues = {}) {
   // Inheritance
   vtkInteractorObserver.extend(publicAPI, model, initialValues);
 
+  // Use a priority of 0.5, since default priority from
+  // vtkInteractorObserver is 0.0.
+  publicAPI.setPriority(0.5);
+
   macro.setGet(publicAPI, model, ['widgetRep', 'parent']);
 
   model.unsubscribes = [];
