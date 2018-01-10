@@ -519,7 +519,6 @@ function vtkImageCroppingRegionsWidget(publicAPI, model) {
 
 const DEFAULT_VALUES = {
   // volumeMapper: null,
-  priority: 0.5, // Use a priority of 0.5, since default priority is 0.0
   slice: 0,
   sliceOrientation: 2, // XY
   handleSize: 3,
