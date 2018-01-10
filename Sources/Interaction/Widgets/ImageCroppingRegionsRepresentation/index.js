@@ -185,11 +185,13 @@ function vtkImageCroppingRegionsRepresentation(publicAPI, model) {
     model.opacity = opacity;
     model.actor.getProperty().setOpacity(opacity);
     updateCenterOpacity();
+    publicAPI.modified();
   };
 
   publicAPI.setEdgeColor = (...edgeColor) => {
     model.edgeColor = edgeColor;
     model.actor.getProperty().setEdgeColor(...model.edgeColor);
+    publicAPI.modified();
   };
 
   publicAPI.setPlanePositions = (...positions) => {
@@ -317,7 +319,9 @@ function vtkImageCroppingRegionsRepresentation(publicAPI, model) {
 
     model.regionPolyData.modified();
     model.centerRegionPolyData.modified();
+
     publicAPI.invokePlanesPositionChanged();
+    publicAPI.modified();
   };
 
   publicAPI.getBounds = () => model.initialBounds;
