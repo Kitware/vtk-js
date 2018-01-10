@@ -182,16 +182,24 @@ function vtkImageCroppingRegionsRepresentation(publicAPI, model) {
 
   publicAPI.setOpacity = (opacityValue) => {
     const opacity = Math.max(0, Math.min(1, opacityValue));
-    model.opacity = opacity;
-    model.actor.getProperty().setOpacity(opacity);
-    updateCenterOpacity();
-    publicAPI.modified();
+    if (opacity !== model.opacity) {
+      model.opacity = opacity;
+      model.actor.getProperty().setOpacity(opacity);
+      updateCenterOpacity();
+      publicAPI.modified();
+    }
   };
 
   publicAPI.setEdgeColor = (...edgeColor) => {
-    model.edgeColor = edgeColor;
-    model.actor.getProperty().setEdgeColor(...model.edgeColor);
-    publicAPI.modified();
+    if (
+      model.edgeColor[0] !== edgeColor[0] ||
+      model.edgeColor[1] !== edgeColor[1] ||
+      model.edgeColor[2] !== edgeColor[2]
+    ) {
+      model.edgeColor = edgeColor;
+      model.actor.getProperty().setEdgeColor(...model.edgeColor);
+      publicAPI.modified();
+    }
   };
 
   publicAPI.setPlanePositions = (...positions) => {
