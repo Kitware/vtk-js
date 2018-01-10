@@ -122,7 +122,7 @@ renderer.addViewProp(actor);
 
 const reader = vtkHttpDataSetReader.newInstance({ fetchGzip: true });
 reader
-  .setUrl(`${__BASE_PATH__}/data/volume/headsq.vti`, { loadData: true })
+  .setUrl(`${__BASE_PATH__}/data/volume/LIDC2.vti`, { loadData: true })
   .then(() => {
     const data = reader.getOutputData();
     // NOTE we don't care about image direction here
