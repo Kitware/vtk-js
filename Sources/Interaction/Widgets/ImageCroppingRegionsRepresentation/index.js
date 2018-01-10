@@ -5,9 +5,11 @@ import vtkWidgetRepresentation from 'vtk.js/Sources/Interaction/Widgets/WidgetRe
 import vtkMapper from 'vtk.js/Sources/Rendering/Core/Mapper';
 import vtkPolyData from 'vtk.js/Sources/Common/DataModel/PolyData';
 import Constants from 'vtk.js/Sources/Interaction/Widgets/ImageCroppingRegionsRepresentation/Constants';
+import WidgetConstants from 'vtk.js/Sources/Interaction/Widgets/ImageCroppingRegionsWidget/Constants';
 
 const { vtkErrorMacro } = macro;
-const { Orientation, Events } = Constants;
+const { Events } = Constants;
+const { Orientation } = WidgetConstants;
 
 // ----------------------------------------------------------------------------
 // vtkImageCroppingRegionsRepresentation methods

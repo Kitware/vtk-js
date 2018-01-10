@@ -4,7 +4,7 @@ import vtkImageCroppingRegionsRepresentation from 'vtk.js/Sources/Interaction/Wi
 import Constants from 'vtk.js/Sources/Interaction/Widgets/ImageCroppingRegionsWidget/Constants';
 
 const { vtkErrorMacro, VOID, EVENT_ABORT } = macro;
-const { WidgetState, CropWidgetEvents } = Constants;
+const { WidgetState, CropWidgetEvents, Orientation } = Constants;
 
 const events = [
   'MouseMove',
@@ -203,18 +203,18 @@ function vtkImageCroppingRegionsWidget(publicAPI, model) {
     let camUp2D;
 
     switch (model.sliceOrientation) {
-      case 0: // YZ
+      case Orientation.YZ:
         ax1 = [planes[2], planes[3]]; // Y crop bounds
         ax2 = [planes[4], planes[5]]; // Z crop bounds
         camUp2D = [camUp[1], camUp[2]];
         break;
-      case 1: // ZX
+      case Orientation.XZ: // ZX
         ax1 = [planes[0], planes[1]]; // X crop bounds
         ax2 = [planes[4], planes[5]]; // Z crop bounds
         // reverse camUp to be -Z, then X
         camUp2D = [-camUp[2], camUp[0]];
         break;
-      case 2: // XY
+      case Orientation.XY:
         ax1 = [planes[0], planes[1]]; // X crop bounds
         ax2 = [planes[2], planes[3]]; // Y crop bounds
         camUp2D = [camUp[0], camUp[1]];
@@ -257,7 +257,7 @@ function vtkImageCroppingRegionsWidget(publicAPI, model) {
     let top;
 
     switch (model.sliceOrientation) {
-      case 0: // YZ
+      case Orientation.YZ:
         [left, bottom] = view.worldToDisplay(
           model.slice,
           leftBottom[0],
@@ -271,7 +271,7 @@ function vtkImageCroppingRegionsWidget(publicAPI, model) {
           model.currentRenderer
         );
         break;
-      case 1: // ZX
+      case Orientation.XZ: // ZX
         [left, bottom] = view.worldToDisplay(
           leftBottom[0],
           model.slice,
@@ -285,7 +285,7 @@ function vtkImageCroppingRegionsWidget(publicAPI, model) {
           model.currentRenderer
         );
         break;
-      case 2: // XY
+      case Orientation.XY:
         [left, bottom] = view.worldToDisplay(
           leftBottom[0],
           leftBottom[1],
@@ -356,7 +356,7 @@ function vtkImageCroppingRegionsWidget(publicAPI, model) {
     let camUp2D;
 
     switch (model.sliceOrientation) {
-      case 0: // YZ
+      case Orientation.YZ:
         ax1 = [planes[2], planes[3]]; // Y crop pos
         ax2 = [planes[4], planes[5]]; // Z crop pos
         bounds1 = [bounds[2], bounds[3]];
@@ -364,7 +364,7 @@ function vtkImageCroppingRegionsWidget(publicAPI, model) {
         camUp2D = [camUp[1], camUp[2]];
         newPos = [newPos[1], newPos[2]];
         break;
-      case 1: // ZX
+      case Orientation.XZ: // ZX
         ax1 = [planes[4], planes[5]]; // Z crop pos
         ax2 = [planes[0], planes[1]]; // X crop pos
         bounds1 = [bounds[4], bounds[5]];
@@ -373,7 +373,7 @@ function vtkImageCroppingRegionsWidget(publicAPI, model) {
         camUp2D = [camUp[2], camUp[0]];
         newPos = [newPos[2], newPos[0]];
         break;
-      case 2: // XY
+      case Orientation.XY:
         ax1 = [planes[0], planes[1]]; // X crop pos
         ax2 = [planes[2], planes[3]]; // Y crop pos
         bounds1 = [bounds[0], bounds[1]];
@@ -485,15 +485,15 @@ function vtkImageCroppingRegionsWidget(publicAPI, model) {
 
     // assign new plane values
     switch (model.sliceOrientation) {
-      case 0: // YZ
+      case Orientation.YZ:
         [planes[2], planes[3]] = ax1;
         [planes[4], planes[5]] = ax2;
         break;
-      case 1: // ZX
+      case Orientation.XZ: // ZX
         [planes[0], planes[1]] = ax2;
         [planes[4], planes[5]] = ax1;
         break;
-      case 2: // XY
+      case Orientation.XY:
         [planes[0], planes[1]] = ax1;
         [planes[2], planes[3]] = ax2;
         break;
