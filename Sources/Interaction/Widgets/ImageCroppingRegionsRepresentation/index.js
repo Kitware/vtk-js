@@ -1,6 +1,5 @@
 import macro from 'vtk.js/Sources/macro';
 import vtkActor from 'vtk.js/Sources/Rendering/Core/Actor';
-import vtkCellPicker from 'vtk.js/Sources/Rendering/Core/CellPicker';
 import vtkWidgetRepresentation from 'vtk.js/Sources/Interaction/Widgets/WidgetRepresentation';
 import vtkMapper from 'vtk.js/Sources/Rendering/Core/Mapper';
 import vtkPolyData from 'vtk.js/Sources/Common/DataModel/PolyData';
@@ -15,93 +14,45 @@ const { Orientation } = WidgetConstants;
 // vtkImageCroppingRegionsRepresentation methods
 // ----------------------------------------------------------------------------
 
+// Reorders a bounds array such that each (a,b) pairing is a
+// (min,max) pairing.
+function reorderBounds(bounds) {
+  for (let i = 0; i < 6; i += 2) {
+    if (bounds[i] > bounds[i + 1]) {
+      const tmp = bounds[i + 1];
+      bounds[i + 1] = bounds[i];
+      bounds[i] = tmp;
+    }
+  }
+}
+
 function vtkImageCroppingRegionsRepresentation(publicAPI, model) {
   // Set our className
   model.classHierarchy.push('vtkImageCroppingRegionsRepresentation');
 
-  // this is called at the end of the enclosing function.
-  function constructor() {
-    // set fields from parent classes
-    model.placeFactor = 1;
+  // set fields from parent classes
+  model.placeFactor = 1;
 
-    model.initialBounds = [0, 1, 0, 1, 0, 1];
-    // Format:
-    // [xmin, xmax, ymin, ymax, zmin, zmax]
-    model.planePositions = [0, 0, 0, 0, 0, 0];
-    model.sliceOrientation = Orientation.XY;
-    model.slice = 0;
+  model.initialBounds = [0, 1, 0, 1, 0, 1];
+  // Format:
+  // [xmin, xmax, ymin, ymax, zmin, zmax]
+  model.planePositions = [0, 0, 0, 0, 0, 0];
+  model.sliceOrientation = Orientation.XY;
+  model.slice = 0;
 
-    // construct region polydata
-    model.regionPolyData = vtkPolyData.newInstance();
-    model.regionPolyData.getPoints().setData(new Float32Array(16 * 3), 3);
+  model.regionPolyData = vtkPolyData.newInstance();
+  model.regionPolyData.getPoints().setData(new Float32Array(16 * 3), 3);
 
-    // This is a separate vtkPolyData for the center region
-    model.centerRegionPolyData = vtkPolyData.newInstance();
-    model.centerRegionPolyData.getPoints().setData(new Float32Array(4 * 3), 3);
+  // This is a separate vtkPolyData for the center region
+  model.centerRegionPolyData = vtkPolyData.newInstance();
+  model.centerRegionPolyData.getPoints().setData(new Float32Array(4 * 3), 3);
 
-    /*
-    15-14-----11-10
-    |            |
-    12 13-----8  9
-    |  |      |  |
-    3  2------7  6
-    |            |
-    0--1------4--5
-    */
-    // set polys
+  model.mapper = vtkMapper.newInstance();
+  model.actor = vtkActor.newInstance();
+  model.centerMapper = vtkMapper.newInstance();
+  model.centerActor = vtkActor.newInstance();
 
-    // prettier-ignore
-    model.regionPolyData
-      .getPolys()
-      .setData(
-        new Uint32Array([
-          4, 0, 1, 2, 3,
-          4, 1, 4, 7, 2,
-          4, 4, 5, 6, 7,
-          4, 7, 6, 9, 8,
-          4, 8, 9, 10, 11,
-          4, 13, 8, 11, 14,
-          4, 12, 13, 14, 15,
-          4, 3, 2, 13, 12,
-        ]),
-        1,
-      );
-    model.centerRegionPolyData
-      .getPolys()
-      .setData(new Uint32Array([4, 0, 1, 2, 3]), 1);
-
-    model.mapper = vtkMapper.newInstance();
-    model.actor = vtkActor.newInstance();
-    model.centerMapper = vtkMapper.newInstance();
-    model.centerActor = vtkActor.newInstance();
-
-    model.mapper.setInputData(model.regionPolyData);
-    model.actor.setMapper(model.mapper);
-    model.actor.getProperty().setEdgeVisibility(true);
-    publicAPI.setEdgeColor(...model.edgeColor);
-    publicAPI.setOpacity(model.opacity);
-
-    model.centerMapper.setInputData(model.centerRegionPolyData);
-    model.centerActor.setMapper(model.centerMapper);
-
-    // set picker
-    model.cursorPicker = vtkCellPicker.newInstance();
-  }
-
-  publicAPI.getActors = () => [model.actor, model.centerActor];
-  publicAPI.getNestedProps = () => publicAPI.getActors();
-
-  // Reorders a bounds array such that each (a,b) pairing is a
-  // (min,max) pairing.
-  function reorderBounds(bounds) {
-    for (let i = 0; i < 6; i += 2) {
-      if (bounds[i] > bounds[i + 1]) {
-        const tmp = bounds[i + 1];
-        bounds[i + 1] = bounds[i];
-        bounds[i] = tmp;
-      }
-    }
-  }
+  // methods
 
   function updateCenterOpacity() {
     const slicePos = model.slice;
@@ -133,6 +84,9 @@ function vtkImageCroppingRegionsRepresentation(publicAPI, model) {
       .getProperty()
       .setOpacity(centerInvisible ? 0 : model.opacity);
   }
+
+  publicAPI.getActors = () => [model.actor, model.centerActor];
+  publicAPI.getNestedProps = () => publicAPI.getActors();
 
   publicAPI.placeWidget = (...bounds) => {
     const boundsArray = [];
@@ -232,6 +186,7 @@ function vtkImageCroppingRegionsRepresentation(publicAPI, model) {
     publicAPI.updateGeometry();
   };
 
+  // Force update the geometry
   publicAPI.updateGeometry = () => {
     const slicePos = model.slice;
     const verts = model.regionPolyData.getPoints().getData();
@@ -340,6 +295,48 @@ function vtkImageCroppingRegionsRepresentation(publicAPI, model) {
         model.validPick = 1;
         model.placed = 1;
       }
+
+      /*
+      15-14-----11-10
+      |            |
+      12 13-----8  9
+      |  |      |  |
+      3  2------7  6
+      |            |
+      0--1------4--5
+      */
+      // set polys
+
+      // prettier-ignore
+      model.regionPolyData
+        .getPolys()
+        .setData(
+          new Uint32Array([
+            4, 0, 1, 2, 3,
+            4, 1, 4, 7, 2,
+            4, 4, 5, 6, 7,
+            4, 7, 6, 9, 8,
+            4, 8, 9, 10, 11,
+            4, 13, 8, 11, 14,
+            4, 12, 13, 14, 15,
+            4, 3, 2, 13, 12,
+          ]),
+          1,
+        );
+      model.centerRegionPolyData
+        .getPolys()
+        .setData(new Uint32Array([4, 0, 1, 2, 3]), 1);
+
+      model.mapper.setInputData(model.regionPolyData);
+      model.actor.setMapper(model.mapper);
+      model.actor.getProperty().setEdgeVisibility(true);
+
+      model.centerMapper.setInputData(model.centerRegionPolyData);
+      model.centerActor.setMapper(model.centerMapper);
+
+      publicAPI.setEdgeColor(...model.edgeColor);
+      publicAPI.setOpacity(model.opacity);
+
       publicAPI.modified();
     }
   };
@@ -347,9 +344,6 @@ function vtkImageCroppingRegionsRepresentation(publicAPI, model) {
   publicAPI.setProperty = (property) => {
     model.actor.setProperty(property);
   };
-
-  // invoke the constructor after setting up public methods
-  constructor();
 }
 
 // ----------------------------------------------------------------------------

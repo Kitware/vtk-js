@@ -20,6 +20,29 @@ const events = [
 // vtkImageCroppingRegionsWidget methods
 // ----------------------------------------------------------------------------
 
+// Returns cursor name based on widget state
+function getCursorState(state) {
+  switch (state) {
+    case WidgetState.MOVE_LEFT:
+    case WidgetState.MOVE_RIGHT:
+      return 'ew-resize';
+
+    case WidgetState.MOVE_BOTTOM:
+    case WidgetState.MOVE_TOP:
+      return 'ns-resize';
+
+    case WidgetState.MOVE_LEFT_BOTTOM:
+    case WidgetState.MOVE_LEFT_TOP:
+    case WidgetState.MOVE_RIGHT_BOTTOM:
+    case WidgetState.MOVE_RIGHT_TOP:
+      return 'all-scroll';
+
+    case WidgetState.IDLE:
+    default:
+      return 'default';
+  }
+}
+
 function vtkImageCroppingRegionsWidget(publicAPI, model) {
   // Set our className
   model.classHierarchy.push('vtkImageCroppingRegionsWidget');
@@ -27,45 +50,6 @@ function vtkImageCroppingRegionsWidget(publicAPI, model) {
   // private variables
   let widgetState = WidgetState.IDLE;
   let isCropMoving = false;
-
-  // sets cursor based on widget state
-  function setCursor(state) {
-    switch (state) {
-      case WidgetState.MOVE_LEFT:
-      case WidgetState.MOVE_RIGHT:
-        model.interactor.getView().setCursor('ew-resize');
-        break;
-
-      case WidgetState.MOVE_BOTTOM:
-      case WidgetState.MOVE_TOP:
-        model.interactor.getView().setCursor('ns-resize');
-        break;
-
-      case WidgetState.MOVE_LEFT_BOTTOM:
-      case WidgetState.MOVE_LEFT_TOP:
-      case WidgetState.MOVE_RIGHT_BOTTOM:
-      case WidgetState.MOVE_RIGHT_TOP:
-        model.interactor.getView().setCursor('all-scroll');
-        break;
-
-      case WidgetState.IDLE:
-      default:
-        model.interactor.getView().setCursor('default');
-    }
-  }
-
-  function updateWidget() {
-    const data = model.volumeMapper.getInputData();
-    const origin = data.getOrigin();
-    const spacing = data.getSpacing();
-    const slice =
-      origin[model.sliceOrientation] +
-      spacing[model.sliceOrientation] * model.slice;
-
-    model.widgetRep.setSliceOrientation(model.sliceOrientation);
-    // set the widget slice + 1 to prevent z fighting
-    model.widgetRep.setSlice(slice + 1);
-  }
 
   // Overriden method
   publicAPI.createDefaultRepresentation = () => {
@@ -115,12 +99,16 @@ function vtkImageCroppingRegionsWidget(publicAPI, model) {
     if (i) {
       publicAPI.listenEvents();
     }
+
+    publicAPI.modified();
   };
 
   publicAPI.setVolumeMapper = (volumeMapper) => {
-    model.volumeMapper = volumeMapper;
-    if (model.enabled) {
-      publicAPI.updateRepresentation();
+    if (volumeMapper !== model.volumeMapper) {
+      model.volumeMapper = volumeMapper;
+      if (model.enabled) {
+        publicAPI.updateRepresentation();
+      }
     }
   };
 
@@ -137,20 +125,40 @@ function vtkImageCroppingRegionsWidget(publicAPI, model) {
     const bounds = model.volumeMapper.getBounds();
 
     model.widgetRep.placeWidget(...bounds);
-    updateWidget();
+    publicAPI.updateWidget();
+  };
+
+  // Force a widget update
+  publicAPI.updateWidget = () => {
+    const data = model.volumeMapper.getInputData();
+    const origin = data.getOrigin();
+    const spacing = data.getSpacing();
+    const slice =
+      origin[model.sliceOrientation] +
+      spacing[model.sliceOrientation] * model.slice;
+
+    model.widgetRep.setSliceOrientation(model.sliceOrientation);
+    // set the widget representation slice + 1 to prevent z fighting
+    model.widgetRep.setSlice(slice + 1);
+
+    publicAPI.modified();
   };
 
   publicAPI.setSlice = (slice) => {
-    model.slice = slice;
-    if (model.enabled) {
-      updateWidget();
+    if (slice !== model.slice) {
+      model.slice = slice;
+      if (model.enabled) {
+        publicAPI.updateWidget();
+      }
     }
   };
 
   publicAPI.setSliceOrientation = (sliceOrientation) => {
-    model.sliceOrientation = sliceOrientation;
-    if (model.enabled) {
-      updateWidget();
+    if (sliceOrientation !== model.sliceOrientation) {
+      model.sliceOrientation = sliceOrientation;
+      if (model.enabled) {
+        publicAPI.updateWidget();
+      }
     }
   };
 
@@ -332,7 +340,7 @@ function vtkImageCroppingRegionsWidget(publicAPI, model) {
       widgetState = WidgetState.IDLE;
     }
 
-    setCursor(widgetState);
+    model.interactor.getView().setCursor(getCursorState(widgetState));
     return VOID;
   };
 
