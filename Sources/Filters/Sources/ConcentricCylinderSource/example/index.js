@@ -27,7 +27,7 @@ const cylinder = vtkConcentricCylinderSource.newInstance({
   height: 0.25,
   radius: [0.2, 0.3, 0.4, 0.6, 0.7, 0.8, 0.9, 1],
   cellFields: [0, 0.2, 0.4, 0.6, 0.7, 0.8, 0.9, 1],
-  resolution: 120,
+  resolution: 60,
   skipInnerFaces: true,
 });
 const actor = vtkActor.newInstance();
@@ -66,6 +66,13 @@ while (count--) {
     renderWindow.render();
   });
 }
+['startTheta', 'endTheta', 'resolution'].forEach((propertyName) => {
+  document.querySelector(`.${propertyName}`).addEventListener('input', (e) => {
+    const value = Number(e.target.value);
+    cylinder.set({ [propertyName]: value });
+    renderWindow.render();
+  });
+});
 
 // -----------------------------------------------------------
 // Make some variables global so that you can inspect and

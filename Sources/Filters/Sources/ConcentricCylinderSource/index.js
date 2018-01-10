@@ -77,82 +77,110 @@ function vtkConcentricCylinderSource(publicAPI, model) {
       return;
     }
 
-    // Make sure we have concistency
+    // Make sure we have consistency
     validateCellFields();
 
     let dataset = outData[0];
 
-    const nbLayers = model.radius.length;
-    const angle = 2 * Math.PI / model.resolution;
+    const numLayers = model.radius.length;
     const zRef = model.height / 2.0;
-    const numberOfPoints = model.resolution * nbLayers * 2;
 
     // Compute cell count
     let cellArraySize = 0;
-    let nbCells = 0;
+    let numCells = 0;
 
+    let startTheta =
+      model.startTheta < model.endTheta ? model.startTheta : model.endTheta;
+    startTheta *= Math.PI / 180.0;
+    let endTheta =
+      model.endTheta > model.startTheta ? model.endTheta : model.startTheta;
+    endTheta *= Math.PI / 180.0;
+    let thetaResolution = model.resolution;
+    let partialDisk = false;
+    if (endTheta >= startTheta + 2 * Math.PI) {
+      // complete, closed cylinder
+      endTheta = startTheta + 2 * Math.PI;
+    } else {
+      // We add an extra point at endTheta, since the cylinder isn't closed.
+      // We cap the sides of the partial cylinder, so set the partialDisk flag.
+      ++thetaResolution;
+      partialDisk = true;
+    }
+    const deltaTheta = (endTheta - startTheta) / model.resolution;
+
+    const numberOfPoints = thetaResolution * numLayers * 2 + 2;
+
+    // 5 entries per poly, 4 polys (top, bottom, in, out) per resolution
     if (!model.skipInnerFaces && !model.mask) {
       // We keep everything
       cellArraySize =
-        2 * (model.resolution + 1) +
-        5 * model.resolution +
-        (nbLayers - 1) * model.resolution * 20;
-      nbCells = 2 + model.resolution + (nbLayers - 1) * 4 * model.resolution;
+        2 * (thetaResolution + 1) +
+        5 * thetaResolution +
+        (numLayers - 1) * thetaResolution * 20 +
+        (partialDisk ? 10 * numLayers : 0);
+      numCells =
+        2 +
+        thetaResolution +
+        (numLayers - 1) * 4 * thetaResolution +
+        (partialDisk ? 2 * numLayers : 0);
     } else if (!model.skipInnerFaces && model.mask) {
       // We skip some cylinders
       // Handle core
       if (!model.mask[0]) {
-        cellArraySize += 2 * (model.resolution + 1) + 5 * model.resolution;
-        nbCells += 2 + model.resolution;
+        cellArraySize +=
+          2 * (thetaResolution + 1) +
+          5 * thetaResolution +
+          (partialDisk ? 10 : 0);
+        numCells += 2 + thetaResolution + (partialDisk ? 2 : 0);
       }
       // Handle inside cylinders
-      for (let layer = 1; layer < nbLayers; layer++) {
+      for (let layer = 1; layer < numLayers; layer++) {
         if (!model.mask[layer]) {
           // Add inside cylinder count
-          cellArraySize += model.resolution * 20;
-          nbCells += 4 * model.resolution;
+          cellArraySize += thetaResolution * 20 + (partialDisk ? 10 : 0);
+          numCells += 4 * thetaResolution + (partialDisk ? 2 : 0);
         }
       }
     } else {
       // We skip cylinders and internal faces
       if (!model.skipInnerFaces || !model.mask || !model.mask[0]) {
         // core handling
-        cellArraySize += 2 * (model.resolution + 1);
-        nbCells += 2;
+        cellArraySize += 2 * (thetaResolution + 1) + (partialDisk ? 10 : 0);
+        numCells += 2 + (partialDisk ? 2 : 0);
         if (
           model.radius.length === 1 ||
           !model.skipInnerFaces ||
           (model.mask && model.mask[1])
         ) {
           // add side faces
-          cellArraySize += 5 * model.resolution;
-          nbCells += model.resolution;
+          cellArraySize += 5 * thetaResolution;
+          numCells += thetaResolution;
         }
       }
 
       // Handle inside cylinders
-      for (let layer = 1; layer < nbLayers; layer++) {
+      for (let layer = 1; layer < numLayers; layer++) {
         if (!model.skipInnerFaces || !model.mask || !model.mask[layer]) {
-          const lastLayer = nbLayers - 1 === layer;
+          const lastLayer = numLayers - 1 === layer;
 
           // Add inside cylinder
-          cellArraySize += model.resolution * 10;
-          nbCells += model.resolution * 2; // top + bottom
+          cellArraySize += thetaResolution * 10 + (partialDisk ? 10 : 0);
+          numCells += thetaResolution * 2 + (partialDisk ? 2 : 0); // top + bottom + side caps
 
           // Do we add innerFaces
           if (!model.skipInnerFaces || (model.mask && model.mask[layer - 1])) {
-            cellArraySize += model.resolution * 5;
-            nbCells += model.resolution;
+            cellArraySize += thetaResolution * 5;
+            numCells += thetaResolution;
           }
 
-          // Do we add outterFaces
+          // Do we add outerFaces
           if (
             lastLayer ||
             !model.skipInnerFaces ||
             (model.mask && model.mask[layer + 1])
           ) {
-            cellArraySize += model.resolution * 5;
-            nbCells += model.resolution;
+            cellArraySize += thetaResolution * 5;
+            numCells += thetaResolution;
           }
         }
       }
@@ -168,23 +196,34 @@ function vtkConcentricCylinderSource(publicAPI, model) {
 
     // CellFields
     let fieldLocation = 0;
-    const field = new Float32Array(nbCells);
+    const field = new Float32Array(numCells);
 
     // Create points
-    for (let layer = 0; layer < nbLayers; layer++) {
+    // First two are centered, top and bottom. Used only if partialDisk is true.
+    points[pointIdx * 3 + 0] = 0;
+    points[pointIdx * 3 + 1] = 0;
+    points[pointIdx * 3 + 2] = zRef;
+    pointIdx++;
+    points[pointIdx * 3 + 0] = 0;
+    points[pointIdx * 3 + 1] = 0;
+    points[pointIdx * 3 + 2] = -zRef;
+    pointIdx++;
+    for (let layer = 0; layer < numLayers; layer++) {
       const radius = model.radius[layer];
       // Create top
-      for (let i = 0; i < model.resolution; i++) {
-        points[pointIdx * 3 + 0] = radius * Math.cos(i * angle);
-        points[pointIdx * 3 + 1] = radius * Math.sin(i * angle);
+      for (let i = 0; i < thetaResolution; i++) {
+        const theta = startTheta + i * deltaTheta;
+        points[pointIdx * 3 + 0] = radius * Math.cos(theta);
+        points[pointIdx * 3 + 1] = radius * Math.sin(theta);
         points[pointIdx * 3 + 2] = zRef;
         pointIdx++;
       }
 
       // Create bottom
-      for (let i = 0; i < model.resolution; i++) {
-        points[pointIdx * 3 + 0] = radius * Math.cos(i * angle);
-        points[pointIdx * 3 + 1] = radius * Math.sin(i * angle);
+      for (let i = 0; i < thetaResolution; i++) {
+        const theta = startTheta + i * deltaTheta;
+        points[pointIdx * 3 + 0] = radius * Math.cos(theta);
+        points[pointIdx * 3 + 1] = radius * Math.sin(theta);
         points[pointIdx * 3 + 2] = -zRef;
         pointIdx++;
       }
@@ -197,38 +236,59 @@ function vtkConcentricCylinderSource(publicAPI, model) {
     if (!model.mask || !model.mask[0]) {
       // Core: Top disk
       field[fieldLocation++] = currentField;
-      polys[cellLocation++] = model.resolution;
-      for (let i = 0; i < model.resolution; i++) {
-        polys[cellLocation++] = i;
+      // partial adds the center point and the last point.
+      polys[cellLocation++] = thetaResolution + (partialDisk ? 1 : 0);
+      if (partialDisk) polys[cellLocation++] = 0;
+      for (let i = 0; i < thetaResolution; i++) {
+        polys[cellLocation++] = i + 2;
       }
 
       // Core: Bottom disk
       field[fieldLocation++] = currentField;
-      polys[cellLocation++] = model.resolution;
-      for (let i = 0; i < model.resolution; i++) {
-        polys[cellLocation++] = 2 * model.resolution - i - 1;
+      polys[cellLocation++] = thetaResolution + (partialDisk ? 1 : 0);
+      if (partialDisk) polys[cellLocation++] = 1;
+      for (let i = 0; i < thetaResolution; i++) {
+        polys[cellLocation++] = 2 * thetaResolution - i - 1 + 2;
       }
 
       // Core: sides
       if (
         !model.skipInnerFaces ||
         (model.mask && model.mask[1]) ||
-        nbLayers === 1
+        numLayers === 1
       ) {
         for (let i = 0; i < model.resolution; i++) {
           polys[cellLocation++] = 4;
-          polys[cellLocation++] = (i + 1) % model.resolution;
-          polys[cellLocation++] = i;
-          polys[cellLocation++] = i + model.resolution;
-          polys[cellLocation++] = (i + 1) % model.resolution + model.resolution;
+          polys[cellLocation++] = (i + 1) % thetaResolution + 2;
+          polys[cellLocation++] = i + 2;
+          polys[cellLocation++] = i + thetaResolution + 2;
+          polys[cellLocation++] =
+            (i + 1) % thetaResolution + thetaResolution + 2;
 
           field[fieldLocation++] = currentField;
         }
       }
+      if (partialDisk) {
+        polys[cellLocation++] = 4;
+        polys[cellLocation++] = 2;
+        polys[cellLocation++] = 0;
+        polys[cellLocation++] = 1;
+        polys[cellLocation++] = thetaResolution + 2;
+
+        field[fieldLocation++] = currentField;
+
+        polys[cellLocation++] = 4;
+        polys[cellLocation++] = 0;
+        polys[cellLocation++] = thetaResolution + 1;
+        polys[cellLocation++] = 2 * thetaResolution + 1;
+        polys[cellLocation++] = 1;
+
+        field[fieldLocation++] = currentField;
+      }
     }
 
     // Create cells for the layers
-    for (let layer = 1; layer < nbLayers; layer++) {
+    for (let layer = 1; layer < numLayers; layer++) {
       // Skip layer if masked
       if (model.mask && model.mask[layer]) {
         /* eslint-disable no-continue */
@@ -236,18 +296,19 @@ function vtkConcentricCylinderSource(publicAPI, model) {
         /* eslint-enable no-continue */
       }
 
-      const offset = model.resolution * 2 * (layer - 1);
-      const lastLayer = nbLayers - 1 === layer;
+      // two for center points, then skip previous layer's points
+      const offset = thetaResolution * 2 * (layer - 1) + 2;
+      const a = offset + 2 * thetaResolution; // next layer offset
+      const lastLayer = numLayers - 1 === layer;
       currentField = model.cellFields[layer];
 
       // Create top
       for (let i = 0; i < model.resolution; i++) {
         polys[cellLocation++] = 4;
         polys[cellLocation++] = i + offset;
-        polys[cellLocation++] = (i + 1) % model.resolution + offset;
-        polys[cellLocation++] =
-          (i + 1) % model.resolution + 2 * model.resolution + offset;
-        polys[cellLocation++] = i + 2 * model.resolution + offset;
+        polys[cellLocation++] = (i + 1) % thetaResolution + offset;
+        polys[cellLocation++] = (i + 1) % thetaResolution + a;
+        polys[cellLocation++] = i + a;
 
         field[fieldLocation++] = currentField;
       }
@@ -256,15 +317,10 @@ function vtkConcentricCylinderSource(publicAPI, model) {
       for (let i = 0; i < model.resolution; i++) {
         polys[cellLocation++] = 4;
         polys[cellLocation++] =
-          (i + 1) % model.resolution + offset + model.resolution;
-        polys[cellLocation++] = i + offset + model.resolution;
-        polys[cellLocation++] =
-          i + 2 * model.resolution + offset + model.resolution;
-        polys[cellLocation++] =
-          (i + 1) % model.resolution +
-          2 * model.resolution +
-          offset +
-          model.resolution;
+          (i + 1) % thetaResolution + offset + thetaResolution;
+        polys[cellLocation++] = i + offset + thetaResolution;
+        polys[cellLocation++] = i + a + thetaResolution;
+        polys[cellLocation++] = (i + 1) % thetaResolution + a + thetaResolution;
 
         field[fieldLocation++] = currentField;
       }
@@ -274,16 +330,16 @@ function vtkConcentricCylinderSource(publicAPI, model) {
         for (let i = 0; i < model.resolution; i++) {
           polys[cellLocation++] = 4;
           polys[cellLocation++] = i + offset;
-          polys[cellLocation++] = (i + 1) % model.resolution + offset;
+          polys[cellLocation++] = (i + 1) % thetaResolution + offset;
           polys[cellLocation++] =
-            (i + 1) % model.resolution + model.resolution + offset;
-          polys[cellLocation++] = i + model.resolution + offset;
+            (i + 1) % thetaResolution + thetaResolution + offset;
+          polys[cellLocation++] = i + thetaResolution + offset;
 
           field[fieldLocation++] = currentField;
         }
       }
 
-      // Create outter
+      // Create outer
       if (
         !model.skipInnerFaces ||
         lastLayer ||
@@ -291,23 +347,36 @@ function vtkConcentricCylinderSource(publicAPI, model) {
       ) {
         for (let i = 0; i < model.resolution; i++) {
           polys[cellLocation++] = 4;
+          polys[cellLocation++] = (i + 1) % thetaResolution + a;
+          polys[cellLocation++] = i + a;
+          polys[cellLocation++] = i + thetaResolution + a;
           polys[cellLocation++] =
-            (i + 1) % model.resolution + offset + 2 * model.resolution;
-          polys[cellLocation++] = i + offset + 2 * model.resolution;
-          polys[cellLocation++] =
-            i + model.resolution + offset + 2 * model.resolution;
-          polys[cellLocation++] =
-            (i + 1) % model.resolution +
-            model.resolution +
-            offset +
-            2 * model.resolution;
+            (i + 1) % thetaResolution + thetaResolution + a;
 
           field[fieldLocation++] = currentField;
         }
       }
+      // create caps
+      if (partialDisk) {
+        polys[cellLocation++] = 4;
+        polys[cellLocation++] = a; // from first outer
+        polys[cellLocation++] = offset; // first inner
+        polys[cellLocation++] = thetaResolution + offset; // first inner
+        polys[cellLocation++] = thetaResolution + a; // first outer
+
+        field[fieldLocation++] = currentField;
+
+        polys[cellLocation++] = 4;
+        polys[cellLocation++] = model.resolution + a; // last outer
+        polys[cellLocation++] = model.resolution + offset; // last inner
+        polys[cellLocation++] = model.resolution + thetaResolution + offset; // last inner
+        polys[cellLocation++] = model.resolution + thetaResolution + a; // last outer
+
+        field[fieldLocation++] = currentField;
+      }
     }
 
-    // Apply tranformation to the points coordinates
+    // Apply transformation to the point coordinates
     vtkMatrixBuilder
       .buildFromRadian()
       .translate(...model.center)
@@ -338,6 +407,8 @@ const DEFAULT_VALUES = {
   radius: [0.5],
   cellFields: [1],
   resolution: 6,
+  startTheta: 0.0,
+  endTheta: 360.0,
   center: [0, 0, 0],
   direction: [0.0, 0.0, 1.0],
   skipInnerFaces: true,
@@ -352,7 +423,13 @@ export function extend(publicAPI, model, initialValues = {}) {
 
   // Build VTK API
   macro.obj(publicAPI, model);
-  macro.setGet(publicAPI, model, ['height', 'resolution', 'skipInnerFaces']);
+  macro.setGet(publicAPI, model, [
+    'height',
+    'resolution',
+    'startTheta',
+    'endTheta',
+    'skipInnerFaces',
+  ]);
   macro.setGetArray(publicAPI, model, ['center', 'direction'], 3);
   macro.getArray(publicAPI, model, ['cellFields']);
   macro.algo(publicAPI, model, 0, 1);
