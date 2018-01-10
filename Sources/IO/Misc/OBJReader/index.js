@@ -67,7 +67,7 @@ function parseLine(line) {
     }
     const cells = data.f[data.size - 1];
     tokens.shift();
-    const faces = tokens.filter((s) => s.length);
+    const faces = tokens.filter((s) => s.length > 0 && s !== '\r');
     const size = faces.length;
     cells.push(size);
     for (let i = 0; i < size; i++) {
