@@ -7,6 +7,9 @@ const MY_ENUM = {
   SECOND: 2,
   THIRD: 3,
 };
+
+const EVENTS = ['TestAbort', 'TestPriority'];
+
 // ----------------------------------------------------------------------------
 // vtkMyClass methods
 // ----------------------------------------------------------------------------
@@ -52,6 +55,9 @@ function extend(publicAPI, model, initialValues = {}) {
   ]);
   // Object specific methods
   myClass(publicAPI, model);
+
+  // event methods
+  EVENTS.forEach((name) => macro.event(publicAPI, model, name));
 }
 
 const newInstance = macro.newInstance(extend, 'vtkMyClass');
@@ -274,4 +280,88 @@ test('Macro methods object tests', (t) => {
   t.notOk(myTestClass.getMyProp4(), 'All calls should do nothing after delete');
 
   t.end();
+});
+
+test('Macro methods event tests', (t) => {
+  const myTestClass = newInstance();
+
+  //
+  // Test event abortion
+  //
+  const { VOID, EVENT_ABORT } = macro;
+  let callCount = 0;
+
+  const cbAbort1 = () => {
+    ++callCount;
+    t.equal(callCount, 1, 'cbAbort1 should be called first');
+  };
+
+  const cbAbort2 = () => {
+    ++callCount;
+    t.equal(callCount, 2, 'cbAbort2 should be called second');
+
+    // this is a demonstration of the VOID and EVENT_ABORT return symbols.
+    if (callCount !== 2) {
+      return VOID;
+    }
+
+    return EVENT_ABORT;
+  };
+
+  const cbAbort3 = () => {
+    ++callCount;
+    t.fail('cbAbort3 should not be called');
+  };
+
+  myTestClass.onTestAbort(cbAbort1);
+  myTestClass.onTestAbort(cbAbort2);
+  myTestClass.onTestAbort(cbAbort3);
+
+  myTestClass.invokeTestAbort();
+  t.equal(callCount, 2, 'Only 2 callbacks should be invoked, not 3');
+
+  //
+  // Test callback priority and subscription
+  //
+  const called = Array(3).fill(0);
+
+  const cbPriorityLast = () => {
+    t.ok(
+      called[0] && called[1] && called[2],
+      'cbPriorityLast should be called last after 101ms'
+    );
+
+    // ensure callback2 was only invoked twice
+    t.equal(called[2], 2, 'cbPriority2 should be called exactly twice');
+
+    t.end();
+  };
+
+  const cbPriority0 = () => {
+    called[0]++;
+    t.ok(called[1] && called[2], 'cbPriority0 should be called third');
+  };
+
+  const cbPriority1 = () => {
+    called[1]++;
+    t.ok(!called[0] && called[2], 'cbPriority1 should be called second');
+  };
+
+  const cbPriority2 = () => {
+    called[2]++;
+    t.ok(!called[0] && !called[1], 'cbPriority2 should be called first');
+  };
+
+  myTestClass.onTestPriority(cbPriorityLast, -100);
+  myTestClass.onTestPriority(cbPriority0);
+  myTestClass.onTestPriority(cbPriority1, 1.0);
+  myTestClass.onTestPriority(cbPriority2, 2.0);
+  // test duplicate listeners and unsubscribe
+  const { unsubscribe } = myTestClass.onTestPriority(cbPriority2, 2.0);
+  myTestClass.onTestPriority(cbPriority2, 2.0);
+
+  // test unsubscribe for the secon cbPriority2 callback
+  unsubscribe();
+
+  myTestClass.invokeTestPriority();
 });

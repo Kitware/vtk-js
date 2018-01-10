@@ -2,6 +2,8 @@ import vtk from './vtk';
 
 let globalMTime = 0;
 
+export const VOID = Symbol('void');
+
 function getCurrentGlobalMTime() {
   return globalMTime;
 }
@@ -700,17 +702,26 @@ export function algo(publicAPI, model, numberOfInputs, numberOfOutputs) {
 // Event handling: onXXX(callback), invokeXXX(args...)
 // ----------------------------------------------------------------------------
 
+export const EVENT_ABORT = Symbol('Event abort');
+
 export function event(publicAPI, model, eventName) {
   const callbacks = [];
   const previousDelete = publicAPI.delete;
+  let curCallbackID = 1;
 
-  function off(index) {
-    callbacks[index] = null;
+  function off(callbackID) {
+    for (let i = 0; i < callbacks.length; ++i) {
+      const [cbID] = callbacks[i];
+      if (cbID === callbackID) {
+        callbacks.splice(i, 1);
+        return;
+      }
+    }
   }
 
-  function on(index) {
+  function on(callbackID) {
     function unsubscribe() {
-      off(index);
+      off(callbackID);
     }
     return Object.freeze({ unsubscribe });
   }
@@ -722,9 +733,15 @@ export function event(publicAPI, model, eventName) {
     }
     /* eslint-disable prefer-rest-params */
     for (let index = 0; index < callbacks.length; ++index) {
-      const cb = callbacks[index];
-      if (cb) {
-        cb.apply(publicAPI, arguments);
+      const [, cb, priority] = callbacks[index];
+      if (priority < 0) {
+        setTimeout(() => cb.apply(publicAPI, arguments), 1 - priority);
+      } else if (cb) {
+        // Abort only if the callback explicitly returns false
+        const continueNext = cb.apply(publicAPI, arguments);
+        if (continueNext === EVENT_ABORT) {
+          break;
+        }
       }
     }
     /* eslint-enable prefer-rest-params */
@@ -732,20 +749,21 @@ export function event(publicAPI, model, eventName) {
 
   publicAPI[`invoke${capitalize(eventName)}`] = invoke;
 
-  publicAPI[`on${capitalize(eventName)}`] = (callback) => {
+  publicAPI[`on${capitalize(eventName)}`] = (callback, priority = 0.0) => {
     if (model.deleted) {
       vtkErrorMacro('instance deleted - cannot call any method');
       return null;
     }
 
-    const index = callbacks.length;
-    callbacks.push(callback);
-    return on(index);
+    const callbackID = curCallbackID++;
+    callbacks.push([callbackID, callback, priority]);
+    callbacks.sort((cb1, cb2) => cb2[2] - cb1[2]);
+    return on(callbackID);
   };
 
   publicAPI.delete = () => {
     previousDelete();
-    callbacks.forEach((el, index) => off(index));
+    callbacks.forEach(([cbID]) => off(cbID));
   };
 }
 
@@ -1095,6 +1113,8 @@ export function proxyPropertyState(
 // ----------------------------------------------------------------------------
 
 export default {
+  EVENT_ABORT,
+  VOID,
   algo,
   capitalize,
   chain,
