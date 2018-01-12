@@ -2,34 +2,61 @@ import macro from 'vtk.js/Sources/macro';
 import Constants from 'vtk.js/Sources/Common/Core/DataArray/Constants';
 
 const { DefaultDataType } = Constants;
-const { vtkErrorMacro } = macro;
 const TUPLE_HOLDER = [];
 
 // ----------------------------------------------------------------------------
 // Global methods
 // ----------------------------------------------------------------------------
 
-function computeRange(values, component = 0, tuple = 1) {
-  const range = { min: Number.MAX_VALUE, max: -Number.MAX_VALUE };
+function createRangeHelper() {
+  let min = Number.MAX_VALUE;
+  let max = -Number.MAX_VALUE;
+  let count = 0;
+  let sum = 0;
+
+  return {
+    add(value) {
+      if (min > value) {
+        min = value;
+      }
+      if (max < value) {
+        max = value;
+      }
+      count++;
+      sum += value;
+    },
+    get() {
+      return { min, max, count, sum, mean: sum / count };
+    },
+    getRange() {
+      return { min, max };
+    },
+  };
+}
+
+function computeRange(values, component = 0, numberOfComponents = 1) {
+  const helper = createRangeHelper();
+  const size = values.length;
+  let value = 0;
 
   if (component < 0) {
     // Compute magnitude
-    vtkErrorMacro('vtkDataArray: Compute magnitude - NOT IMPLEMENTED');
-    return range;
+    for (let i = 0; i < size; i += numberOfComponents) {
+      value = 0;
+      for (let j = 0; j < numberOfComponents; j++) {
+        value += values[i + j] * values[i + j];
+      }
+      value **= 0.5;
+      helper.add(value);
+    }
+    return helper.getRange();
   }
 
-  const size = values.length;
-  for (let i = component; i < size; i += tuple) {
-    const value = values[i];
-    if (range.min > value) {
-      range.min = value;
-    }
-    if (range.max < value) {
-      range.max = value;
-    }
+  for (let i = component; i < size; i += numberOfComponents) {
+    helper.add(values[i]);
   }
 
-  return range;
+  return helper.getRange();
 }
 
 function ensureRangeSize(rangeArray, size = 0) {
@@ -55,6 +82,7 @@ function getDataType(typedArray) {
 export const STATIC = {
   computeRange,
   getDataType,
+  createRangeHelper,
 };
 
 // ----------------------------------------------------------------------------
@@ -93,7 +121,7 @@ function vtkDataArray(publicAPI, model) {
 
   publicAPI.getData = () => model.values;
 
-  publicAPI.getRange = (componentIndex = 0) => {
+  publicAPI.getRange = (componentIndex = -1) => {
     const rangeIdx =
       componentIndex < 0 ? model.numberOfComponents : componentIndex;
     let range = null;
