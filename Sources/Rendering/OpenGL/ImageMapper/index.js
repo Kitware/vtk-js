@@ -59,6 +59,15 @@ function vtkOpenGLImageMapper(publicAPI, model) {
     }
   };
 
+  publicAPI.opaqueZBufferPass = (prepass) => {
+    if (prepass) {
+      model.haveSeenDepthRequest = true;
+      model.renderDepth = true;
+      publicAPI.render();
+      model.renderDepth = false;
+    }
+  };
+
   publicAPI.opaquePass = (prepass) => {
     if (prepass) {
       publicAPI.render();
@@ -109,6 +118,7 @@ function vtkOpenGLImageMapper(publicAPI, model) {
       '//VTK::TCoord::Dec',
       'attribute vec2 tcoordMC; varying vec2 tcoordVCVSOutput;'
     ).result;
+
     FSSource = vtkShaderProgram.substitute(FSSource, '//VTK::TCoord::Dec', [
       'varying vec2 tcoordVCVSOutput;',
       'uniform float shift;',
@@ -150,6 +160,22 @@ function vtkOpenGLImageMapper(publicAPI, model) {
           ]
         ).result;
     }
+
+    if (model.haveSeenDepthRequest) {
+      FSSource = vtkShaderProgram.substitute(
+        FSSource,
+        '//VTK::ZBuffer::Dec',
+        'uniform int depthRequest;'
+      ).result;
+      FSSource = vtkShaderProgram.substitute(FSSource, '//VTK::ZBuffer::Impl', [
+        'if (depthRequest == 1) {',
+        'float iz = floor(gl_FragCoord.z*65535.0 + 0.1);',
+        'float rf = floor(iz/256.0)/255.0;',
+        'float gf = mod(iz,256.0)/255.0;',
+        'gl_FragData[0] = vec4(rf, gf, 0.0, 1.0); }',
+      ]).result;
+    }
+
     shaders.Vertex = VSSource;
     shaders.Fragment = FSSource;
   };
@@ -161,11 +187,13 @@ function vtkOpenGLImageMapper(publicAPI, model) {
     // input modified
     // light complexity changed
     if (
+      model.lastHaveSeenDepthRequest !== model.haveSeenDepthRequest ||
       cellBO.getProgram() === 0 ||
       cellBO.getShaderSourceTime().getMTime() < publicAPI.getMTime() ||
       cellBO.getShaderSourceTime().getMTime() < actor.getMTime() ||
       cellBO.getShaderSourceTime().getMTime() < model.currentInput.getMTime()
     ) {
+      model.lastHaveSeenDepthRequest = model.haveSeenDepthRequest;
       return true;
     }
 
@@ -276,6 +304,12 @@ function vtkOpenGLImageMapper(publicAPI, model) {
 
     const scale = oglShiftScale.scale / cw;
     const shift = (oglShiftScale.shift - cl) / cw + 0.5;
+
+    if (model.haveSeenDepthRequest) {
+      cellBO
+        .getProgram()
+        .setUniformi('depthRequest', model.renderDepth ? 1 : 0);
+    }
 
     cellBO.getProgram().setUniformf('shift', shift);
     cellBO.getProgram().setUniformf('scale', scale);
@@ -614,6 +648,8 @@ const DEFAULT_VALUES = {
   tris: null,
   imagemat: null,
   colorTexture: null,
+  lastHaveSeenDepthRequest: false,
+  haveSeenDepthRequest: false,
 };
 
 // ----------------------------------------------------------------------------

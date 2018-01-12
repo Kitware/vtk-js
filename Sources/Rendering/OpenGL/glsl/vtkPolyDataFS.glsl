@@ -51,6 +51,8 @@ uniform int PrimitiveIDOffset;
 // handle coincident offsets
 //VTK::Coincident::Dec
 
+//VTK::ZBuffer::Dec
+
 void main()
 {
   // VC position of this fragment. This should not branch/return/discard.

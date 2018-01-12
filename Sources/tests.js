@@ -43,6 +43,7 @@ import './Rendering/OpenGL/Texture/test/testCreateCubeFromRawTexture';
 import './Rendering/OpenGL/VolumeMapper/test/testComposite';
 import './Rendering/OpenGL/VolumeMapper/test/testComposite16Bit';
 import './Rendering/OpenGL/VolumeMapper/test/testIntermixed';
+import './Rendering/OpenGL/VolumeMapper/test/testIntermixedImage';
 import './Rendering/OpenGL/VolumeMapper/test/testLighting';
 import './Testing/testAlgorithm';
 import './Testing/testMacro';
