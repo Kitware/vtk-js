@@ -65,6 +65,7 @@ function vtkOpenGLPolyDataMapper(publicAPI, model) {
 
   publicAPI.opaqueZBufferPass = (prepass) => {
     if (prepass) {
+      model.haveSeenDepthRequest = true;
       model.renderDepth = true;
       publicAPI.render();
       model.renderDepth = false;
@@ -1007,13 +1008,19 @@ function vtkOpenGLPolyDataMapper(publicAPI, model) {
     publicAPI.replaceShaderCoincidentOffset(shaders, ren, actor);
     publicAPI.replaceShaderPositionVC(shaders, ren, actor);
 
-    if (model.renderDepth) {
+    if (model.haveSeenDepthRequest) {
       let FSSource = shaders.Fragment;
+      FSSource = vtkShaderProgram.substitute(
+        FSSource,
+        '//VTK::ZBuffer::Dec',
+        'uniform int depthRequest;'
+      ).result;
       FSSource = vtkShaderProgram.substitute(FSSource, '//VTK::ZBuffer::Impl', [
+        'if (depthRequest == 1) {',
         'float iz = floor(gl_FragCoord.z*65535.0 + 0.1);',
         'float rf = floor(iz/256.0)/255.0;',
         'float gf = mod(iz,256.0)/255.0;',
-        'gl_FragData[0] = vec4(rf, gf, 0.0, 1.0);',
+        'gl_FragData[0] = vec4(rf, gf, 0.0, 1.0); }',
       ]).result;
       shaders.Fragment = FSSource;
     }
@@ -1102,15 +1109,13 @@ function vtkOpenGLPolyDataMapper(publicAPI, model) {
       needRebuild = true;
     }
 
-    const toString = `${model.renderDepth}`;
-
     // has something changed that would require us to recreate the shader?
     // candidates are
     // property modified (representation interpolation and lighting)
     // input modified
     // light complexity changed
     if (
-      model.shaderRebuildString !== toString ||
+      model.lastHaveSeenDepthRequest !== model.haveSeenDepthRequest ||
       cellBO.getProgram() === 0 ||
       cellBO.getShaderSourceTime().getMTime() < publicAPI.getMTime() ||
       cellBO.getShaderSourceTime().getMTime() < actor.getMTime() ||
@@ -1118,7 +1123,7 @@ function vtkOpenGLPolyDataMapper(publicAPI, model) {
       cellBO.getShaderSourceTime().getMTime() < model.currentInput.getMTime() ||
       needRebuild
     ) {
-      model.shaderRebuildString = toString;
+      model.lastHaveSeenDepthRequest = model.haveSeenDepthRequest;
       return true;
     }
 
@@ -1325,6 +1330,13 @@ function vtkOpenGLPolyDataMapper(publicAPI, model) {
           cellBO.getProgram().setUniformi(tname, texUnit);
         }
       }
+    }
+
+    // handle depth requests
+    if (model.haveSeenDepthRequest) {
+      cellBO
+        .getProgram()
+        .setUniformi('depthRequest', model.renderDepth ? 1 : 0);
     }
 
     // handle coincident
@@ -1876,6 +1888,8 @@ const DEFAULT_VALUES = {
   lightColor: [], // used internally
   lightHalfAngle: [], // used internally
   lightDirection: [], // used internally
+  lastHaveSeenDepthRequest: false,
+  haveSeenDepthRequest: false,
 };
 
 // ----------------------------------------------------------------------------
