@@ -127,6 +127,30 @@ function computeOpacities(gaussians, sampling = 256) {
 
 // ----------------------------------------------------------------------------
 
+function applyGaussianToPiecewiseFunction(
+  gaussians,
+  sampling,
+  rangeToUse,
+  piecewiseFunction
+) {
+  const opacities = computeOpacities(gaussians, sampling);
+  const nodes = [];
+  const delta = (rangeToUse[1] - rangeToUse[0]) / (opacities.length - 1);
+  const midpoint = 0.5;
+  const sharpness = 0;
+  for (let index = 0; index < opacities.length; index++) {
+    const x = rangeToUse[0] + delta * index;
+    const y = opacities[index];
+    nodes.push({ x, y, midpoint, sharpness });
+  }
+
+  piecewiseFunction.removeAllPoints();
+  piecewiseFunction.set({ nodes }, true);
+  piecewiseFunction.sortAndUpdateRange();
+}
+
+// ----------------------------------------------------------------------------
+
 function drawChart(
   ctx,
   area,
@@ -332,12 +356,13 @@ function listenerSelector(condition, ok, ko) {
 // ----------------------------------------------------------------------------
 
 export const STATIC = {
+  applyGaussianToPiecewiseFunction,
   computeOpacities,
-  drawChart,
-  normalizeCoordinates,
-  findGaussian,
   createListener,
+  drawChart,
+  findGaussian,
   listenerSelector,
+  normalizeCoordinates,
 };
 
 // ----------------------------------------------------------------------------

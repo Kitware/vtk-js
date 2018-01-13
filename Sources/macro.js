@@ -886,6 +886,7 @@ export function debounce(func, wait, immediate) {
 //  getProxySection() => List of properties for UI generation
 // ----------------------------------------------------------------------------
 let nextProxyId = 1;
+const ROOT_GROUP_NAME = '__root__';
 
 export function proxy(publicAPI, model, sectionName, uiDescription = []) {
   const parentDelete = publicAPI.delete;
@@ -894,9 +895,30 @@ export function proxy(publicAPI, model, sectionName, uiDescription = []) {
   model.proxyId = `${nextProxyId++}`;
   publicAPI.getProxyId = () => model.proxyId;
 
+  // group properties
+  const groupChildrenNames = {};
+  function registerProperties(descriptionList, currentGroupName) {
+    if (!groupChildrenNames[currentGroupName]) {
+      groupChildrenNames[currentGroupName] = [];
+    }
+    const childrenNames = groupChildrenNames[currentGroupName];
+
+    for (let i = 0; i < descriptionList.length; i++) {
+      childrenNames.push(descriptionList[i].name);
+
+      if (descriptionList[i].children && descriptionList[i].children.length) {
+        registerProperties(
+          descriptionList[i].children,
+          descriptionList[i].name
+        );
+      }
+    }
+  }
+  registerProperties(uiDescription, ROOT_GROUP_NAME);
+
   // list
-  const propertyNames = uiDescription.map((p) => p.name);
-  publicAPI.listProxyProperties = () => propertyNames;
+  publicAPI.listProxyProperties = (gName = ROOT_GROUP_NAME) =>
+    groupChildrenNames[gName];
 
   // ui handling
   const ui = uiDescription.map((i) => Object.assign({}, i));
@@ -981,13 +1003,20 @@ export function proxy(publicAPI, model, sectionName, uiDescription = []) {
   };
 
   // extract values
-  function getProperties() {
+  function getProperties(groupName = ROOT_GROUP_NAME) {
     const values = [];
     const id = model.proxyId;
+    const propertyNames = publicAPI.listProxyProperties(groupName) || [];
     for (let i = 0; i < propertyNames.length; i++) {
       const name = propertyNames[i];
-      const value = publicAPI[`get${capitalize(name)}`]();
-      values.push({ id, name, value });
+      const method = publicAPI[`get${capitalize(name)}`];
+      const value = method ? method() : undefined;
+      const prop = { id, name, value };
+      const children = getProperties(name);
+      if (children.length) {
+        prop.children = children;
+      }
+      values.push(prop);
     }
     return values;
   }
