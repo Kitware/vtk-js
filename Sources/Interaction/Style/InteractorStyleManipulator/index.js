@@ -356,9 +356,12 @@ function vtkInteractorStyleManipulator(publicAPI, model) {
     }
   };
 
+  //-------------------------------------------------------------------------
   publicAPI.handlePinch = () => {
     model.cameraManipulators.filter((m) => m.onPinch).forEach((manipulator) => {
-      manipulator.onPinch(model.interactor);
+      if (manipulator && manipulator.getPinch()) {
+        manipulator.onPinch(model.interactor);
+      }
     });
     publicAPI.invokeInteractionEvent({ type: 'InteractionEvent' });
   };
