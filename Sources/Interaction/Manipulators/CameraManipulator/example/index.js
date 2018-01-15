@@ -67,6 +67,7 @@ const selectMap = {
   controlLeftButton: { button: 1, shift: false, control: true },
   controlMiddleButton: { button: 2, shift: false, control: true },
   controlRightButton: { button: 3, shift: false, control: true },
+  scrollMiddleButton: { pinch: true },
 };
 
 const manipulatorFactory = {
@@ -88,6 +89,7 @@ function reassignManipulators() {
     manipulator.setButton(selectMap[keyName].button);
     manipulator.setShift(selectMap[keyName].shift);
     manipulator.setControl(selectMap[keyName].control);
+    manipulator.setPinch(selectMap[keyName].pinch);
     interactorStyle.addManipulator(manipulator);
   });
 }
