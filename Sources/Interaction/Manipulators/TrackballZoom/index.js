@@ -76,6 +76,31 @@ function vtkTrackballZoom(publicAPI, model) {
       renderer.resetCameraClippingRange();
     }
   };
+
+  publicAPI.onPinch = (interactor) => {
+    const { x, y } =
+      interactor.getAnimationEventPosition(interactor.getPointerIndex()) ||
+      DEFAULT_POSITION;
+    const interactorStyle = interactor.getInteractorStyle();
+    const renderer =
+      interactorStyle.getCurrentRenderer() ||
+      interactor.findPokedRenderer(x, y);
+
+    const camera = renderer.getActiveCamera();
+
+    const dyf = interactor.getScale() / interactor.getLastScale();
+
+    if (camera.getParallelProjection()) {
+      camera.setParallelScale(camera.getParallelScale() / dyf);
+    } else {
+      camera.dolly(dyf);
+      renderer.resetCameraClippingRange();
+    }
+
+    if (interactor.getLightFollowCamera()) {
+      renderer.updateLightsGeometryToFollowCamera();
+    }
+  };
 }
 
 // ----------------------------------------------------------------------------

@@ -43,6 +43,8 @@ const DEFAULT_VALUES = {
   center: [0, 0, 0],
   rotationFactor: 1,
   displayCenter: [0, 0],
+
+  pinch: false,
 };
 
 // ----------------------------------------------------------------------------
@@ -61,6 +63,7 @@ export function extend(publicAPI, model, initialValues = {}) {
     'control',
     'alt',
     'rotationFactor',
+    'pinch',
   ]);
 
   macro.setGetArray(publicAPI, model, ['displayCenter'], 2);
