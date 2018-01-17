@@ -1557,6 +1557,39 @@ function solveLeastSquares(
   return successFlag;
 }
 
+function hex2float(hexStr, outFloatArray = [0, 0.5, 1]) {
+  switch (hexStr.length) {
+    case 3: // abc => #aabbcc
+      outFloatArray[0] = parseInt(hexStr[0], 16) * 17 / 255;
+      outFloatArray[1] = parseInt(hexStr[1], 16) * 17 / 255;
+      outFloatArray[2] = parseInt(hexStr[2], 16) * 17 / 255;
+      return outFloatArray;
+    case 4: // #abc => #aabbcc
+      outFloatArray[0] = parseInt(hexStr[1], 16) * 17 / 255;
+      outFloatArray[1] = parseInt(hexStr[2], 16) * 17 / 255;
+      outFloatArray[2] = parseInt(hexStr[3], 16) * 17 / 255;
+      return outFloatArray;
+    case 6: // ab01df => #ab01df
+      outFloatArray[0] = parseInt(hexStr.substr(0, 2), 16) / 255;
+      outFloatArray[1] = parseInt(hexStr.substr(2, 2), 16) / 255;
+      outFloatArray[2] = parseInt(hexStr.substr(4, 2), 16) / 255;
+      return outFloatArray;
+    case 7: // #ab01df
+      outFloatArray[0] = parseInt(hexStr.substr(1, 2), 16) / 255;
+      outFloatArray[1] = parseInt(hexStr.substr(3, 2), 16) / 255;
+      outFloatArray[2] = parseInt(hexStr.substr(5, 2), 16) / 255;
+      return outFloatArray;
+    case 9: // #ab01df00
+      outFloatArray[0] = parseInt(hexStr.substr(1, 2), 16) / 255;
+      outFloatArray[1] = parseInt(hexStr.substr(3, 2), 16) / 255;
+      outFloatArray[2] = parseInt(hexStr.substr(5, 2), 16) / 255;
+      outFloatArray[3] = parseInt(hexStr.substr(7, 2), 16) / 255;
+      return outFloatArray;
+    default:
+      return outFloatArray;
+  }
+}
+
 function rgb2hsv(rgb, hsv) {
   let h;
   let s;
@@ -2017,6 +2050,7 @@ export default {
   jacobiN,
   solveHomogeneousLeastSquares,
   solveLeastSquares,
+  hex2float,
   rgb2hsv,
   hsv2rgb,
   lab2xyz,
