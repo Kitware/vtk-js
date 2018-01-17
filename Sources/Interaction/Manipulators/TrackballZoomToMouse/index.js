@@ -36,6 +36,10 @@ function vtkTrackballZoomToMouse(publicAPI, model) {
       renderer,
       interactor
     );
+
+    if (interactor.getLightFollowCamera()) {
+      renderer.updateLightsGeometryToFollowCamera();
+    }
   };
 }
 
