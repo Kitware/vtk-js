@@ -896,6 +896,7 @@ export function proxy(publicAPI, model, sectionName, uiDescription = []) {
   publicAPI.getProxyId = () => model.proxyId;
 
   // group properties
+  const propertyMap = {};
   const groupChildrenNames = {};
   function registerProperties(descriptionList, currentGroupName) {
     if (!groupChildrenNames[currentGroupName]) {
@@ -905,6 +906,7 @@ export function proxy(publicAPI, model, sectionName, uiDescription = []) {
 
     for (let i = 0; i < descriptionList.length; i++) {
       childrenNames.push(descriptionList[i].name);
+      propertyMap[descriptionList[i].name] = descriptionList[i];
 
       if (descriptionList[i].children && descriptionList[i].children.length) {
         registerProperties(
@@ -923,7 +925,7 @@ export function proxy(publicAPI, model, sectionName, uiDescription = []) {
   // ui handling
   const ui = uiDescription.map((i) => Object.assign({}, i));
   publicAPI.updateProxyProperty = (propertyName, propUI) => {
-    const prop = ui.find((p) => p.name === propertyName);
+    const prop = propertyMap[propertyName];
     if (prop) {
       Object.assign(prop, propUI);
     }
