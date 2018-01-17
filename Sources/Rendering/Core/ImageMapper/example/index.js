@@ -37,6 +37,7 @@ const iStyle = vtkInteractorStyleImage.newInstance();
 iStyle.setInteractionMode('IMAGE_SLICING');
 renderWindow.getInteractor().setInteractorStyle(iStyle);
 
+renderer.getActiveCamera().setParallelProjection(true);
 renderer.addActor(actor);
 renderer.resetCamera();
 renderWindow.render();
