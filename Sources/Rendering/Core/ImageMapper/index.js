@@ -21,7 +21,11 @@ function vtkImageMapper(publicAPI, model) {
     const fp = cam.getFocalPoint();
     const idx = [];
     image.worldToIndex(fp, idx);
-    publicAPI.setZSlice(Math.floor(idx[2] + 0.5));
+    const bds = publicAPI.getBounds();
+    let zid = Math.floor(idx[2] + 0.5);
+    zid = Math.min(zid, bds[5]);
+    zid = Math.max(zid, bds[4]);
+    publicAPI.setZSlice(zid);
   };
 
   publicAPI.setZSliceIndex = (id) => {
