@@ -85,6 +85,10 @@ function vtkTrackballPan(publicAPI, model) {
     }
 
     renderer.resetCameraClippingRange();
+
+    if (interactor.getLightFollowCamera()) {
+      renderer.updateLightsGeometryToFollowCamera();
+    }
   };
 }
 
