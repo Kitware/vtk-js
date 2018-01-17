@@ -15,6 +15,24 @@ const KEY_MAPPING = {
 };
 
 // ----------------------------------------------------------------------------
+// Static helpers
+// ----------------------------------------------------------------------------
+
+function get(path, obj, fb = `$\{${path}}`) {
+  return path
+    .split('.')
+    .reduce((res, key) => (res[key] !== undefined ? res[key] : fb), obj);
+}
+
+/* from https://gist.github.com/smeijer/6580740a0ff468960a5257108af1384e */
+function applyTemplate(template, map, fallback) {
+  return template.replace(/\${([^{]+)}/g, (match) => {
+    const path = match.substr(2, match.length - 3).trim();
+    return get(path, map, fallback);
+  });
+}
+
+// ----------------------------------------------------------------------------
 // vtkCornerAnnotation methods
 // ----------------------------------------------------------------------------
 
@@ -143,4 +161,4 @@ export const newInstance = macro.newInstance(extend, 'vtkCornerAnnotation');
 
 // ----------------------------------------------------------------------------
 
-export default { newInstance, extend };
+export default { newInstance, extend, applyTemplate };
