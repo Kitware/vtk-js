@@ -2,6 +2,8 @@ import macro from 'vtk.js/Sources/macro';
 import vtkRenderer from 'vtk.js/Sources/Rendering/Core/Renderer';
 import Constants from 'vtk.js/Sources/Interaction/Widgets/OrientationMarkerWidget/Constants';
 
+const { vtkErrorMacro } = macro;
+
 // ----------------------------------------------------------------------------
 // vtkOrientationMarkerWidget
 // ----------------------------------------------------------------------------
@@ -59,12 +61,12 @@ function vtkOrientationMarkerWidget(publicAPI, model) {
       }
 
       if (!model.actor) {
-        console.error('Must set actor before enabling orientation marker.');
+        vtkErrorMacro('Must set actor before enabling orientation marker.');
         return;
       }
 
       if (!model.interactor) {
-        console.error(
+        vtkErrorMacro(
           'Must set interactor before enabling orientation marker.'
         );
         return;
