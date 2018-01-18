@@ -73,6 +73,10 @@ orientationWidget.setViewportCorner(
   vtkOrientationMarkerWidget.Corners.BOTTOM_RIGHT
 );
 orientationWidget.setViewportSize(0.15);
+orientationWidget.setMinPixelSize(100);
+orientationWidget.setMaxPixelSize(300);
 
 renderer.resetCamera();
 renderWindow.render();
+
+global.renderWindow = renderWindow;
