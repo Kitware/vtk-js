@@ -14,6 +14,7 @@ function getCurrentGlobalMTime() {
 /* eslint-disable no-prototype-builtins                                      */
 
 const fakeConsole = {};
+
 function noOp() {}
 
 const consoleMethods = [
@@ -122,7 +123,9 @@ export function obj(publicAPI = {}, model = {}) {
     function unsubscribe() {
       off(index);
     }
-    return Object.freeze({ unsubscribe });
+    return Object.freeze({
+      unsubscribe,
+    });
   }
 
   publicAPI.isDeleted = () => !!model.deleted;
@@ -723,7 +726,9 @@ export function event(publicAPI, model, eventName) {
     function unsubscribe() {
       off(callbackID);
     }
-    return Object.freeze({ unsubscribe });
+    return Object.freeze({
+      unsubscribe,
+    });
   }
 
   function invoke() {
@@ -895,9 +900,13 @@ export function proxy(publicAPI, model, sectionName, uiDescription = []) {
   model.proxyId = `${nextProxyId++}`;
   publicAPI.getProxyId = () => model.proxyId;
 
+  // ui handling
+  const ui = JSON.parse(JSON.stringify(uiDescription)); // deep copy
+
   // group properties
   const propertyMap = {};
   const groupChildrenNames = {};
+
   function registerProperties(descriptionList, currentGroupName) {
     if (!groupChildrenNames[currentGroupName]) {
       groupChildrenNames[currentGroupName] = [];
@@ -907,7 +916,6 @@ export function proxy(publicAPI, model, sectionName, uiDescription = []) {
     for (let i = 0; i < descriptionList.length; i++) {
       childrenNames.push(descriptionList[i].name);
       propertyMap[descriptionList[i].name] = descriptionList[i];
-
       if (descriptionList[i].children && descriptionList[i].children.length) {
         registerProperties(
           descriptionList[i].children,
@@ -916,14 +924,12 @@ export function proxy(publicAPI, model, sectionName, uiDescription = []) {
       }
     }
   }
-  registerProperties(uiDescription, ROOT_GROUP_NAME);
+  registerProperties(ui, ROOT_GROUP_NAME);
 
   // list
   publicAPI.listProxyProperties = (gName = ROOT_GROUP_NAME) =>
     groupChildrenNames[gName];
 
-  // ui handling
-  const ui = uiDescription.map((i) => Object.assign({}, i));
   publicAPI.updateProxyProperty = (propertyName, propUI) => {
     const prop = propertyMap[propertyName];
     if (prop) {
@@ -967,7 +973,9 @@ export function proxy(publicAPI, model, sectionName, uiDescription = []) {
         updateInProgress = true;
         while (needUpdate.length) {
           const linkToUpdate = needUpdate.pop();
-          linkToUpdate.instance.set({ [linkToUpdate.propertyName]: value });
+          linkToUpdate.instance.set({
+            [linkToUpdate.propertyName]: value,
+          });
         }
         updateInProgress = false;
       }
@@ -975,7 +983,11 @@ export function proxy(publicAPI, model, sectionName, uiDescription = []) {
 
     function bind(instance, propertyName) {
       const subscription = instance.onModified(update);
-      links.push({ instance, propertyName, subscription });
+      links.push({
+        instance,
+        propertyName,
+        subscription,
+      });
     }
 
     function unbind(instance, propertyName) {
@@ -999,7 +1011,11 @@ export function proxy(publicAPI, model, sectionName, uiDescription = []) {
       }
     }
 
-    const linkHandler = { bind, unbind, unsubscribe };
+    const linkHandler = {
+      bind,
+      unbind,
+      unsubscribe,
+    };
     model.propertyLinkMap[id] = linkHandler;
     return linkHandler;
   };
@@ -1013,7 +1029,11 @@ export function proxy(publicAPI, model, sectionName, uiDescription = []) {
       const name = propertyNames[i];
       const method = publicAPI[`get${capitalize(name)}`];
       const value = method ? method() : undefined;
-      const prop = { id, name, value };
+      const prop = {
+        id,
+        name,
+        value,
+      };
       const children = getProperties(name);
       if (children.length) {
         prop.children = children;
