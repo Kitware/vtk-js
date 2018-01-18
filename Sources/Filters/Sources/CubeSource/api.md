@@ -4,7 +4,7 @@
 import vtkCubeSource from 'vtk.js/Sources/Filters/Sources/CubeSource';
 
 const cubeSource = vtkCubeSource.newInstance({ xLength: 5, yLength: 5, zLength: 5 });
-const cubePolydata = cubeSource.getOutput();
+const cubePolydata = cubeSource.getOutputData();
 ```
 
 ### xLength (set/get)

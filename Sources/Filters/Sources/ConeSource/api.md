@@ -4,7 +4,7 @@
 import ConeSource from 'vtk.js/Sources/Filters/Sources/ConeSource';
 
 const coneSource = ConeSource.New({ height: 2, radius: 1, resolution: 80 });
-const polydata = coneSource.getOutput();
+const polydata = coneSource.getOutputData();
 ```
 
 ### Height (set/get)

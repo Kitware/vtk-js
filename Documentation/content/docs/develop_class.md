@@ -192,7 +192,7 @@ For that you need to add an __api.md__ within the class directory like the follo
 import ConeSource from 'vtk.js/Sources/Filters/Sources/ConeSource';
 
 const coneSource = ConeSource.New({ height: 2, radius: 1, resolution: 80 });
-const polydata = coneSource.getOutput();
+const polydata = coneSource.getOutputData();
 ``` 
 
 ### Height (set/get)

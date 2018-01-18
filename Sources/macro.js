@@ -478,7 +478,7 @@ export function setGetArray(
 }
 
 // ----------------------------------------------------------------------------
-// vtkAlgorithm: setInputData(), setInputConnection(), getOutput(), getOutputPort()
+// vtkAlgorithm: setInputData(), setInputConnection(), getOutputData(), getOutputPort()
 // ----------------------------------------------------------------------------
 
 export function algo(publicAPI, model, numberOfInputs, numberOfOutputs) {
