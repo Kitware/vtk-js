@@ -4,7 +4,7 @@
 import PointSource from 'vtk.js/Sources/Filters/Sources/PointSource';
 
 const pointSource = PointSource.New({ numberOfPoints: 10 });
-const polydata = pointSource.getOutput();
+const polydata = pointSource.getOutputData();
 ```
 
 ### Number Of Points (set/get)

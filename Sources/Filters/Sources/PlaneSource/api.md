@@ -4,7 +4,7 @@
 import PlaneSource from 'vtk.js/Sources/Filters/Sources/PlaneSource';
 
 const planeSource = PlaneSource.New({ xResolution: 10, yResolution: 10 });
-const polydata = planeSource.getOutput();
+const polydata = planeSource.getOutputData();
 ```
 
 ### XResolution (set/get)

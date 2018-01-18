@@ -4,7 +4,7 @@
 import LineSource from 'vtk.js/Sources/Filters/Sources/LineSource';
 
 const lineSource = LineSource.New({ resolution: 10 });
-const polydata = lineSource.getOutput();
+const polydata = lineSource.getOutputData();
 ```
 
 ### Resolution (set/get)

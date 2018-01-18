@@ -113,7 +113,7 @@ reader.enableBlock('Face Sets', false);
 reader.enableBlock('Edge Sets', false);
 ```
 
-### getOutput() : { datatset }
+### getOutputData() : { dataset }
 
 Return the dataset in its current state. 
 Some arrays could be loaded (no more ref), while others could still be remote and have their ref.

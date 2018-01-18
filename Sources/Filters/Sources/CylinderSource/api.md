@@ -4,7 +4,7 @@
 import CylinderSource from 'vtk.js/Sources/Filters/Sources/CylinderSource';
 
 const CylinderSource = CylinderSource.New({ height: 2, radius: 1, resolution: 80 });
-const polydata = CylinderSource.getOutput();
+const polydata = CylinderSource.getOutputData();
 ```
 
 ### Height (set/get)

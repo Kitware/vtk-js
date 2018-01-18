@@ -10,7 +10,7 @@ const ArrowSource = ArrowSource.New({
   shaftResolution: 6,
   shaftRadius: 0.03,
   invert: false });
-const polydata = ArrowSource.getOutput();
+const polydata = ArrowSource.getOutputData();
 ```
 
 ### TipResolution (set/get)
