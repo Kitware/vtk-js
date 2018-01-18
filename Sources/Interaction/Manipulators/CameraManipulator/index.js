@@ -1,4 +1,5 @@
 import macro from 'vtk.js/Sources/macro';
+import vtkMouseManipulator from 'vtk.js/Sources/Interaction/Manipulators/MouseManipulator';
 
 // ----------------------------------------------------------------------------
 // vtkCameraManipulator methods
@@ -7,14 +8,6 @@ import macro from 'vtk.js/Sources/macro';
 function vtkCameraManipulator(publicAPI, model) {
   // Set our className
   model.classHierarchy.push('vtkCameraManipulator');
-
-  publicAPI.startInteraction = () => {};
-  publicAPI.endInteraction = () => {};
-  publicAPI.onButtonDown = (interactor) => {};
-  publicAPI.onButtonUp = (interactor) => {};
-  publicAPI.onAnimation = (interactor, renderer) => {};
-  publicAPI.onKeyUp = (interactor) => {};
-  publicAPI.onKeyDown = (interactor) => {};
 
   //-------------------------------------------------------------------------
   publicAPI.computeDisplayCenter = (iObserver) => {
@@ -33,18 +26,9 @@ function vtkCameraManipulator(publicAPI, model) {
 // ----------------------------------------------------------------------------
 
 const DEFAULT_VALUES = {
-  manipulatorName: 'goldschlager',
-
-  button: 1,
-  shift: false,
-  control: false,
-  alt: false,
-
   center: [0, 0, 0],
   rotationFactor: 1,
   displayCenter: [0, 0],
-
-  pinch: false,
 };
 
 // ----------------------------------------------------------------------------
@@ -52,19 +36,11 @@ const DEFAULT_VALUES = {
 export function extend(publicAPI, model, initialValues = {}) {
   Object.assign(model, DEFAULT_VALUES, initialValues);
 
-  // Object methods
-  macro.obj(publicAPI, model);
+  // Inheritance
+  vtkMouseManipulator.extend(publicAPI, model, initialValues);
 
   // Create get-set macros
-  macro.setGet(publicAPI, model, [
-    'manipulatorName',
-    'button',
-    'shift',
-    'control',
-    'alt',
-    'rotationFactor',
-    'pinch',
-  ]);
+  macro.setGet(publicAPI, model, ['rotationFactor']);
 
   macro.setGetArray(publicAPI, model, ['displayCenter'], 2);
 
