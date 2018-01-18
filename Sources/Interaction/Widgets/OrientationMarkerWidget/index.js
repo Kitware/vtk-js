@@ -19,10 +19,12 @@ function vtkOrientationMarkerWidget(publicAPI, model) {
 
   publicAPI.computeViewport = () => {
     const [viewXSize, viewYSize] = model.interactor.getView().getSize();
-    let pixelSize = model.viewportSize * Math.min(viewXSize, viewYSize);
+    const minViewSize = Math.min(viewXSize, viewYSize);
+
+    let pixelSize = model.viewportSize * minViewSize;
     // clamp pixel size
     pixelSize = Math.max(
-      model.minPixelSize,
+      Math.min(model.minPixelSize, minViewSize),
       Math.min(model.maxPixelSize, pixelSize)
     );
 
