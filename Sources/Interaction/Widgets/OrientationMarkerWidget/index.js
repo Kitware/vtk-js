@@ -16,6 +16,7 @@ function vtkOrientationMarkerWidget(publicAPI, model) {
 
   const selfRenderer = vtkRenderer.newInstance();
   let interactorUnsubscribe = null;
+  let viewUnsubscribe = null;
 
   publicAPI.computeViewport = () => {
     const [viewXSize, viewYSize] = model.interactor.getView().getSize();
@@ -88,12 +89,13 @@ function vtkOrientationMarkerWidget(publicAPI, model) {
       selfRenderer.addViewProp(model.actor);
       model.actor.setVisibility(true);
 
-      const { unsubscribe } = model.interactor.onAnimation(
+      ({ unsubscribe: interactorUnsubscribe } = model.interactor.onAnimation(
         publicAPI.updateMarkerOrientation
-      );
-      interactorUnsubscribe = unsubscribe;
+      ));
 
-      window.addEventListener('resize', publicAPI.updateViewport);
+      ({ unsubscribe: viewUnsubscribe } = model.interactor
+        .getView()
+        .onModified(publicAPI.updateViewport));
 
       publicAPI.updateViewport();
       publicAPI.updateMarkerOrientation();
@@ -105,8 +107,8 @@ function vtkOrientationMarkerWidget(publicAPI, model) {
       }
       model.enabled = false;
 
-      window.removeEventListener('resize', publicAPI.updateViewport);
-
+      viewUnsubscribe();
+      viewUnsubscribe = null;
       interactorUnsubscribe();
       interactorUnsubscribe = null;
 
