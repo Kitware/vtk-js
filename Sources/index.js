@@ -4,6 +4,7 @@ import Imaging from './Imaging';
 import Interaction from './Interaction';
 import IO from './IO';
 import Rendering from './Rendering';
+import VTKProxy from './Proxy';
 
 import { getCurrentGlobalMTime } from './macro';
 
@@ -15,6 +16,7 @@ vtk.Imaging = Imaging;
 vtk.Interaction = Interaction;
 vtk.IO = IO;
 vtk.Rendering = Rendering;
+vtk.Proxy = VTKProxy;
 
 vtk.mtime = getCurrentGlobalMTime;
 
