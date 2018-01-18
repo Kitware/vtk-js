@@ -46,9 +46,9 @@ function vtkOpenGLImageMapper(publicAPI, model) {
       model.openGLCamera = model.openGLRenderer.getViewNodeFor(
         ren.getActiveCamera()
       );
-      // is zslice set by the camera
+      // is slice set by the camera
       if (model.renderable.getSliceAtFocalPoint()) {
-        model.renderable.setZSliceFromCamera(ren.getActiveCamera());
+        model.renderable.setSliceFromCamera(ren.getActiveCamera());
       }
     }
   };

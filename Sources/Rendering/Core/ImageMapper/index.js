@@ -16,12 +16,38 @@ function vtkImageMapper(publicAPI, model) {
   // Set our className
   model.classHierarchy.push('vtkImageMapper');
 
-  publicAPI.setZSliceFromCamera = (cam) => {
+  publicAPI.setSliceFromCamera = (cam) => {
     const image = publicAPI.getInputData();
     const fp = cam.getFocalPoint();
     const idx = [];
     image.worldToIndex(fp, idx);
-    publicAPI.setZSlice(Math.floor(idx[2] + 0.5));
+
+    let id = 0;
+    const bds = publicAPI.getBounds();
+    switch (publicAPI.getCurrentSlicingMode()) {
+      case SlicingMode.X:
+        id = idx[0];
+        id = Math.floor(id + 0.5);
+        id = Math.min(id, bds[1]);
+        id = Math.max(id, bds[0]);
+        publicAPI.setXSlice(id);
+        break;
+      case SlicingMode.Y:
+        id = idx[1];
+        id = Math.floor(id + 0.5);
+        id = Math.min(id, bds[3]);
+        id = Math.max(id, bds[2]);
+        publicAPI.setYSlice(id);
+        break;
+      case SlicingMode.Z:
+        id = idx[2];
+        id = Math.floor(id + 0.5);
+        id = Math.min(id, bds[5]);
+        id = Math.max(id, bds[4]);
+        publicAPI.setZSlice(id);
+        break;
+      default:
+    }
   };
 
   publicAPI.setZSliceIndex = (id) => {
