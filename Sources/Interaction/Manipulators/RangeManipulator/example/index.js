@@ -40,25 +40,25 @@ const range = data
   .getRange();
 const wMin = 1;
 const wMax = range[1] - range[0];
-const wCurrent = actor.getProperty().getColorWindow();
-const wCallback = actor.getProperty().setColorWindow;
+const wGet = actor.getProperty().getColorWindow;
+const wSet = actor.getProperty().setColorWindow;
 const lMin = range[0];
 const lMax = range[1];
-const lCurrent = actor.getProperty().getColorLevel();
-const lCallback = actor.getProperty().setColorLevel;
+const lGet = actor.getProperty().getColorLevel;
+const lSet = actor.getProperty().setColorLevel;
 const bounds = data.getBounds();
 const zMin = bounds[4];
 const zMax = bounds[5];
-const zCurrent = mapper.getZSlice();
-const zCallback = mapper.setZSlice;
+const zGet = mapper.getZSlice;
+const zSet = mapper.setZSlice;
 
 const rangeManipulator = Manipulators.vtkRangeManipulator.newInstance({
   button: 1,
   pinch: true,
 });
-rangeManipulator.setVerticalListener(wMin, wMax, wCurrent, 1, wCallback);
-rangeManipulator.setHorizontalListener(lMin, lMax, lCurrent, 1, lCallback);
-rangeManipulator.setScrollListener(zMin, zMax, zCurrent, 1, zCallback);
+rangeManipulator.setVerticalListener(wMin, wMax, 1, wGet, wSet);
+rangeManipulator.setHorizontalListener(lMin, lMax, 1, lGet, lSet);
+rangeManipulator.setScrollListener(zMin, zMax, 1, zGet, zSet);
 
 const iStyle = vtkInteractorStyleManipulator.newInstance();
 iStyle.addManipulator(rangeManipulator);

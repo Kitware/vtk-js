@@ -13,7 +13,7 @@ function vtkRangeManipulator(publicAPI, model) {
   function processDelta(listener, delta) {
     let normDelta = delta;
     normDelta *= (listener.max - listener.min) / listener.step + 1;
-    let value = listener.value + normDelta;
+    let value = listener.getValue() + normDelta;
 
     const difference = value - listener.min;
     const stepsToDifference = Math.round(difference / listener.step);
@@ -21,25 +21,27 @@ function vtkRangeManipulator(publicAPI, model) {
     value = Math.max(value, listener.min);
     value = Math.min(value, listener.max);
 
-    listener.callback(value);
-    listener.value = value;
+    listener.setValue(value);
   }
 
   //-------------------------------------------------------------------------
-  publicAPI.setHorizontalListener = (min, max, value, step, callback) => {
-    model.horizontalListener = { min, max, value, step, callback };
+  publicAPI.setHorizontalListener = (min, max, step, getValue, setValue) => {
+    const getFn = Number.isFinite(getValue) ? () => getValue : getValue;
+    model.horizontalListener = { min, max, step, getValue: getFn, setValue };
     publicAPI.modified();
   };
 
   //-------------------------------------------------------------------------
-  publicAPI.setVerticalListener = (min, max, value, step, callback) => {
-    model.verticalListener = { min, max, value, step, callback };
+  publicAPI.setVerticalListener = (min, max, step, getValue, setValue) => {
+    const getFn = Number.isFinite(getValue) ? () => getValue : getValue;
+    model.verticalListener = { min, max, step, getValue: getFn, setValue };
     publicAPI.modified();
   };
 
   //-------------------------------------------------------------------------
-  publicAPI.setScrollListener = (min, max, value, step, callback) => {
-    model.scrollListener = { min, max, value, step, callback };
+  publicAPI.setScrollListener = (min, max, step, getValue, setValue) => {
+    const getFn = Number.isFinite(getValue) ? () => getValue : getValue;
+    model.scrollListener = { min, max, step, getValue: getFn, setValue };
     publicAPI.modified();
   };
 
