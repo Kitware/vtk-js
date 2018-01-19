@@ -3,6 +3,7 @@ import vtkRenderer from 'vtk.js/Sources/Rendering/Core/Renderer';
 import Constants from 'vtk.js/Sources/Interaction/Widgets/OrientationMarkerWidget/Constants';
 
 const { vtkErrorMacro } = macro;
+const { Corners } = Constants;
 
 // ----------------------------------------------------------------------------
 // vtkOrientationMarkerWidget
@@ -32,7 +33,19 @@ function vtkOrientationMarkerWidget(publicAPI, model) {
     const xFrac = pixelSize / viewXSize;
     const yFrac = pixelSize / viewYSize;
     // [left bottom right top]
-    return [0, 1 - yFrac, xFrac, 1];
+    switch (model.viewportCorner) {
+      case Corners.TOP_LEFT:
+        return [0, 1 - yFrac, xFrac, 1];
+      case Corners.TOP_RIGHT:
+        return [1 - xFrac, 1 - yFrac, 1, 1];
+      case Corners.BOTTOM_LEFT:
+        return [0, 0, xFrac, yFrac];
+      case Corners.BOTTOM_RIGHT:
+        return [1 - xFrac, 0, 1, yFrac];
+      default:
+        vtkErrorMacro('Invalid widget corner');
+        return null;
+    }
   };
 
   publicAPI.updateViewport = () => {
