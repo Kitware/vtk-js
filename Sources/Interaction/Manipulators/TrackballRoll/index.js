@@ -11,6 +11,14 @@ function vtkTrackballRoll(publicAPI, model) {
   // Set our className
   model.classHierarchy.push('vtkTrackballRoll');
 
+  const axis = new Float64Array(3);
+  const direction = new Float64Array(3);
+  const centerNeg = new Float64Array(3);
+  const transform = new Float64Array(16);
+  const newCamPos = new Float64Array(3);
+  const newFp = new Float64Array(3);
+  const newViewUp = new Float64Array(3);
+
   publicAPI.onAnimation = (interactor, renderer) => {
     const lastPtr = interactor.getPointerIndex();
     const pos = interactor.getAnimationEventPosition(lastPtr);
@@ -27,11 +35,9 @@ function vtkTrackballRoll(publicAPI, model) {
     const cameraFp = camera.getFocalPoint();
     const viewUp = camera.getViewUp();
 
-    const axis = [
-      cameraFp[0] - cameraPos[0],
-      cameraFp[1] - cameraPos[1],
-      cameraFp[2] - cameraPos[2],
-    ];
+    axis[0] = cameraFp[0] - cameraPos[0];
+    axis[1] = cameraFp[1] - cameraPos[1];
+    axis[2] = cameraFp[2] - cameraPos[2];
 
     // compute the angle of rotation
     // - first compute the two vectors (center to mouse)
@@ -53,55 +59,28 @@ function vtkTrackballRoll(publicAPI, model) {
     );
 
     const { center } = model;
-    const transform = mat4.create();
     mat4.identity(transform);
+    centerNeg[0] = -center[0];
+    centerNeg[1] = -center[1];
+    centerNeg[2] = -center[2];
 
     // Translate to center
-    mat4.translate(
-      transform,
-      transform,
-      vec3.fromValues(center[0], center[1], center[2])
-    );
+    mat4.translate(transform, transform, center);
 
     // roll
-    mat4.rotate(
-      transform,
-      transform,
-      vtkMath.radiansFromDegrees(angle),
-      vec3.fromValues(axis[0], axis[1], axis[2])
-    );
+    mat4.rotate(transform, transform, vtkMath.radiansFromDegrees(angle), axis);
 
     // Translate back
-    mat4.translate(
-      transform,
-      transform,
-      vec3.fromValues(-center[0], -center[1], -center[2])
-    );
-
-    const newCamPos = vec3.create();
-    const newFp = vec3.create();
-    const newViewUp = vec3.create();
+    mat4.translate(transform, transform, centerNeg);
 
     // Apply transformation to camera position, focal point, and view up
-    vec3.transformMat4(
-      newCamPos,
-      vec3.fromValues(cameraPos[0], cameraPos[1], cameraPos[2]),
-      transform
-    );
-    vec3.transformMat4(
-      newFp,
-      vec3.fromValues(cameraFp[0], cameraFp[1], cameraFp[2]),
-      transform
-    );
-    vec3.transformMat4(
-      newViewUp,
-      vec3.fromValues(
-        viewUp[0] + cameraPos[0],
-        viewUp[1] + cameraPos[1],
-        viewUp[2] + cameraPos[2]
-      ),
-      transform
-    );
+    vec3.transformMat4(newCamPos, cameraPos, transform);
+    vec3.transformMat4(newFp, cameraFp, transform);
+
+    direction[0] = viewUp[0] + cameraPos[0];
+    direction[1] = viewUp[1] + cameraPos[1];
+    direction[2] = viewUp[2] + cameraPos[2];
+    vec3.transformMat4(newViewUp, direction, transform);
 
     camera.setPosition(newCamPos[0], newCamPos[1], newCamPos[2]);
     camera.setFocalPoint(newFp[0], newFp[1], newFp[2]);
