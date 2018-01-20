@@ -51,18 +51,45 @@ function vtkImageMapper(publicAPI, model) {
   };
 
   publicAPI.setZSliceIndex = (id) => {
-    model.currentSlicingMode = SlicingMode.Z;
+    const mtime = publicAPI.getMTime();
+    let changeDetected = false;
+    if (model.currentSlicingMode !== SlicingMode.Z) {
+      model.currentSlicingMode = SlicingMode.Z;
+      changeDetected = true;
+    }
     publicAPI.setZSlice(id);
+
+    if (changeDetected && mtime === publicAPI.getMTime()) {
+      publicAPI.modified();
+    }
   };
 
   publicAPI.setYSliceIndex = (id) => {
-    model.currentSlicingMode = SlicingMode.Y;
+    const mtime = publicAPI.getMTime();
+    let changeDetected = false;
+    if (model.currentSlicingMode !== SlicingMode.Y) {
+      model.currentSlicingMode = SlicingMode.Y;
+      changeDetected = true;
+    }
     publicAPI.setYSlice(id);
+
+    if (changeDetected && mtime === publicAPI.getMTime()) {
+      publicAPI.modified();
+    }
   };
 
   publicAPI.setXSliceIndex = (id) => {
-    model.currentSlicingMode = SlicingMode.X;
+    const mtime = publicAPI.getMTime();
+    let changeDetected = false;
+    if (model.currentSlicingMode !== SlicingMode.X) {
+      model.currentSlicingMode = SlicingMode.X;
+      changeDetected = true;
+    }
     publicAPI.setXSlice(id);
+
+    if (changeDetected && mtime === publicAPI.getMTime()) {
+      publicAPI.modified();
+    }
   };
 
   publicAPI.getBounds = () => {
