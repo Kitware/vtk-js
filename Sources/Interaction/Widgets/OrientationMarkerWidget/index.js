@@ -135,6 +135,7 @@ function vtkOrientationMarkerWidget(publicAPI, model) {
         renderWindow.removeRenderer(selfRenderer);
       }
     }
+    publicAPI.modified();
   };
 
   /**
