@@ -582,7 +582,6 @@ export function algo(publicAPI, model, numberOfInputs, numberOfOutputs) {
       return null;
     }
     if (publicAPI.shouldUpdate()) {
-      // console.log('update filter', publicAPI.getClassName());
       publicAPI.update();
     }
     return model.output[port];
@@ -970,9 +969,9 @@ export function proxy(publicAPI, model) {
     let count = 0;
     let updateInProgress = false;
 
-    function update(source) {
+    function update(source, force = false) {
       if (updateInProgress) {
-        return;
+        return null;
       }
 
       const needUpdate = [];
@@ -990,7 +989,7 @@ export function proxy(publicAPI, model) {
       const newValue = sourceLink.instance[
         `get${capitalize(sourceLink.propertyName)}`
       ]();
-      if (newValue !== value) {
+      if (newValue !== value || force) {
         value = newValue;
         updateInProgress = true;
         while (needUpdate.length) {
@@ -1001,15 +1000,7 @@ export function proxy(publicAPI, model) {
         }
         updateInProgress = false;
       }
-    }
-
-    function bind(instance, propertyName) {
-      const subscription = instance.onModified(update);
-      links.push({
-        instance,
-        propertyName,
-        subscription,
-      });
+      return newValue;
     }
 
     function unbind(instance, propertyName) {
@@ -1028,6 +1019,22 @@ export function proxy(publicAPI, model) {
       while (indexToDelete.length) {
         links.splice(indexToDelete.pop(), 1);
       }
+    }
+
+    function bind(instance, propertyName, updateMe = false) {
+      const subscription = instance.onModified(update);
+      const other = links[0];
+      links.push({
+        instance,
+        propertyName,
+        subscription,
+      });
+      if (updateMe && other) {
+        update(other.instance, true);
+      }
+      return {
+        unsubscribe: () => unbind(instance, propertyName),
+      };
     }
 
     function unsubscribe() {
