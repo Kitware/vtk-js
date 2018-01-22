@@ -1,18 +1,20 @@
 import 'vtk.js/Sources/favicon';
 
-import vtkFullScreenRenderWindow  from 'vtk.js/Sources/Rendering/Misc/FullScreenRenderWindow';
+import Constants                  from 'vtk.js/Sources/Filters/General/TubeFilter/Constants';
 import vtkActor                   from 'vtk.js/Sources/Rendering/Core/Actor';
-// import vtkPointSource             from 'vtk.js/Sources/Filters/Sources/PointSource';
-// import vtkOutlineFilter           from 'vtk.js/Sources/Filters/General/OutlineFilter';
+import vtkDataArray               from 'vtk.js/Sources/Common/Core/DataArray';
+import vtkFullScreenRenderWindow  from 'vtk.js/Sources/Rendering/Misc/FullScreenRenderWindow';
 import vtkMapper                  from 'vtk.js/Sources/Rendering/Core/Mapper';
 import vtkMath                    from 'vtk.js/Sources/Common/Core/Math';
-import vtkTubeFilter              from 'vtk.js/Sources/Filters/General/TubeFilter';
 import vtkPoints                  from 'vtk.js/Sources/Common/Core/Points';
 import vtkPolyData                from 'vtk.js/Sources/Common/DataModel/PolyData';
-import { VtkPointPrecision }         from 'vtk.js/Sources/Filters/General/Constants';
+import vtkTubeFilter              from 'vtk.js/Sources/Filters/General/TubeFilter';
 import { VtkDataTypes }           from 'vtk.js/Sources/Common/Core/DataArray/Constants';
+import { VtkPointPrecision }      from 'vtk.js/Sources/Filters/General/Constants';
 
 import controlPanel from './controlPanel.html';
+
+const { VtkVaryRadius } = Constants;
 
 // ----------------------------------------------------------------------------
 // Standard rendering code setup
@@ -43,8 +45,8 @@ function addRepresentation(name, filter, props = {}) {
   global[`${name}Mapper`] = mapper;
 }
 
-vtkMath.randomSeed(1);
-const numSegments = 2;
+vtkMath.randomSeed(15222);
+const numSegments = 3;
 
 function initializePolyData(dType) {
   let pointType = VtkDataTypes.FLOAT;
@@ -56,43 +58,45 @@ function initializePolyData(dType) {
   const polyData = vtkPolyData.newInstance();
   const points = vtkPoints.newInstance({ dataType: pointType });
   points.setNumberOfPoints(numSegments + 1);
-  // const pointData = points.getData();
+  const pointData = new Float32Array(3 * (numSegments + 1));
   const verts = new Uint32Array(2 * (numSegments + 1));
   const lines = new Uint32Array(numSegments + 2);
   lines[0] = numSegments + 1;
+  const scalarsData = new Float32Array(numSegments + 1);
+  const scalars = vtkDataArray.newInstance(
+    { name: 'Scalars', values: scalarsData });
 
-  const pointData = [0, 0, 0, -0.13, -0.51, 0, -0.41, -0.48, 0];
-  points.setData(pointData);
   for (let i = 0; i < (numSegments + 1); ++i) {
-//    for (let j = 0; j < 3; ++j) {
-//      pointData[(3 * i) + j] = Math.random();
-//    }
+    for (let j = 0; j < 3; ++j) {
+      pointData[(3 * i) + j] = vtkMath.random();
+    }
+    scalarsData[i] = i * 0.1;
     verts[i] = 1;
     verts[i + 1] = i;
     lines[i + 1] = i;
   }
 
+  points.setData(pointData);
   polyData.setPoints(points);
-  // polyData.getVerts().setData(verts);
+  polyData.getVerts().setData(verts);
   polyData.getLines().setData(lines);
+  polyData.getPointData().setScalars(scalars);
   return polyData;
 }
 
 // ----------------------------------------------------------------------------
 
 
-// const pointSource = vtkPointSource.newInstance({ numberOfPoints: 25, radius: 0.25 });
 const polyData = initializePolyData(VtkPointPrecision.DOUBLE);
 const tubeFilter = vtkTubeFilter.newInstance();
-tubeFilter.setCapping(true);
-tubeFilter.setNumberOfSides(30);
-tubeFilter.setRadius(0.083);
-tubeFilter.setRadiusFactor(10);
+tubeFilter.setCapping(false);
+tubeFilter.setNumberOfSides(50);
+tubeFilter.setRadius(0.1);
 
 tubeFilter.setInputData(polyData);
+tubeFilter.setInputArrayToProcess(0, 'Scalars', 'PointData', 'Scalars');
 
 addRepresentation('polyData', polyData, {});
-// addRepresentation('pointSource', pointSource, { pointSize: 5 });
 addRepresentation('tubeFilter', tubeFilter, {});
 
 renderer.resetCamera();
@@ -104,13 +108,31 @@ renderWindow.render();
 
 fullScreenRenderer.addController(controlPanel);
 
-// ['numberOfPoints', 'radius'].forEach((propertyName) => {
-//   document.querySelector(`.${propertyName}`).addEventListener('input', (e) => {
-//     const value = Number(e.target.value);
-//     pointSource.set({ [propertyName]: value });
-//     renderWindow.render();
-//   });
-// });
+['numberOfSides', 'radius', 'onRatio'].forEach((propertyName) => {
+  document.querySelector(`.${propertyName}`).addEventListener('input', (e) => {
+    const value = Number(e.target.value);
+    tubeFilter.set({ [propertyName]: value });
+    renderWindow.render();
+  });
+});
+
+document.querySelector('.varyRadius').addEventListener('change', (e) => {
+  const value = e.target.value;
+  tubeFilter.set({ varyRadius: VtkVaryRadius[value] });
+  renderWindow.render();
+});
+
+document.querySelector('.capping').addEventListener('change', (e) => {
+  const capping = !!(e.target.checked);
+  tubeFilter.set({ capping });
+  renderWindow.render();
+});
+
+document.querySelector('.tubing').addEventListener('change', (e) => {
+  const tubing = !!(e.target.checked);
+  global.tubeFilterActor.setVisibility(tubing);
+  renderWindow.render();
+});
 
 // // ----- Console play ground -----
 // global.pointSource = pointSource;

@@ -86,7 +86,7 @@ function vtkFieldData(publicAPI, model) {
         if (((fromId < 1) && (toId < 1)) || !destArr) {
           publicAPI.addArray(arr);
         } else if ((idx >= fromId) && ((toId > -1) || (idx < toId))) {
-          destArr.setTuple(arr.getTuple(idx));
+          destArr.setTuple(idx, arr.getTuple(idx));
         }
       }
     });

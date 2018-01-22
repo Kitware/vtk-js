@@ -215,25 +215,18 @@ function vtkTubeFilter(publicAPI, model) {
           sPrev[i] = sNext[i];
           startCapNorm[i] = -sPrev[i];
         }
-        console.log(`First Point: ${p}`);
-        console.log(`startCapNorm: ${startCapNorm}`);
         vtkMath.normalize(startCapNorm);
-        console.log(`startCapNorm: ${startCapNorm}`);
       } else if (j === (npts - 1)) {
         for (let i = 0; i < 3; ++i) {
           sPrev[i] = sNext[i];
           p[i] = pNext[i];
           endCapNorm[i] = sNext[i];
         }
-        console.log(`Third Point: ${p}`);
-        console.log(`endCapNorm: ${endCapNorm}`);
         vtkMath.normalize(endCapNorm);
-        console.log(`endCapNorm: ${endCapNorm}`);
       } else {
         for (let i = 0; i < 3; ++i) {
           p[i] = pNext[i];
         }
-        console.log(`Second Point: ${p}`);
         pNext = inPts.slice(3 * pts[j + 1], 3 * (pts[j + 1] + 1));
         for (let i = 0; i < 3; ++i) {
           sPrev[i] = sNext[i];
@@ -249,10 +242,8 @@ function vtkTubeFilter(publicAPI, model) {
       for (let i = 0; i < 3; ++i) {
         s[i] = (sPrev[i] + sNext[i]) / 2.0; // average vector
       }
-      console.log(`Average Vector: ${s}`);
 
       n = inNormals.slice(3 * pts[j], 3 * (pts[j] + 1));
-      console.log(`Normal for point ${pts[j]}: ${n}`);
       // if s is zero then just use sPrev cross n
       if (vtkMath.normalize(s) === 0.0) {
         vtkMath.cross(sPrev, n, s);
@@ -293,14 +284,12 @@ function vtkTubeFilter(publicAPI, model) {
       // create points around line
       if (model.sidesShareVertices) {
         for (let k = 0; k < model.numberOfSides; ++k) {
-          console.log(`Point ${ptId}`);
           for (let i = 0; i < 3; ++i) {
             normal[i] = (w[i] * Math.cos(k * theta)) + (nP[i] * Math.sin(k * theta));
             s[i] = p[i] + (model.radius * sFactor * normal[i]);
             newPts[(3 * ptId) + i] = s[i];
             newNormals[(3 * ptId) + i] = normal[i];
           }
-          console.log(`${s}`);
           outPD.passData(pd, pts[j], ptId);
           ptId++;
         } // for each side
@@ -330,7 +319,6 @@ function vtkTubeFilter(publicAPI, model) {
       } // else separate vertices
     } // for all points in the polyline
 
-    console.log(`NewNormals size: ${newNormals.length}`);
     // Produce end points for cap. They are placed at tail end of points.
     if (model.capping) {
       let numCapSides = model.numberOfSides;
@@ -347,11 +335,9 @@ function vtkTubeFilter(publicAPI, model) {
           newPts[(3 * ptId) + i] = s[i];
           newNormals[(3 * ptId) + i] = startCapNorm[i];
         }
-        console.log(`Start cap Id: ${ptId} : ${startCapNorm}`);
         outPD.passData(pd, pts[0], ptId);
         ptId++;
       }
-      console.log(`NewNormals size: ${newNormals.length}`);
 
       // the end cap
       let endOffset = offset + ((npts - 1) * model.numberOfSides);
@@ -364,7 +350,6 @@ function vtkTubeFilter(publicAPI, model) {
           newPts[(3 * ptId) + i] = s[i];
           newNormals[(3 * ptId) + i] = endCapNorm[i];
         }
-        console.log(`end cap Id: ${ptId} : ${endCapNorm}`);
         outPD.passData(pd, pts[npts - 1], ptId);
         ptId++;
       }
@@ -578,7 +563,10 @@ function vtkTubeFilter(publicAPI, model) {
       return;
     }
 
-    const numNewPts = numPts * model.numberOfSides;
+    let numNewPts = numPts * model.numberOfSides;
+    if (model.capping) {
+      numNewPts = (numPts + 2) * model.numberOfSides;
+    }
     let pointType = inPts.getDataType();
     if (model.outputPointsPrecision === VtkPointPrecision.SINGLE) {
       pointType = VtkDataTypes.FLOAT;
@@ -587,7 +575,6 @@ function vtkTubeFilter(publicAPI, model) {
     }
     const newPts = vtkPoints.newInstance(
       { dataType: pointType, size: (numNewPts * 3), numberOfComponents: 3 });
-    // const newPtsData = newPts.getData();
     let numNormals = 3 * numNewPts;
     if (model.capping) {
       numNormals = 3 * (numNewPts + (2 * model.numberOfSides));
@@ -633,7 +620,6 @@ function vtkTubeFilter(publicAPI, model) {
       maxSpeed = inVectors.getMaxNorm();
     }
 
-    // const numNewCells = (numLines * model.numberOfSides) + 2;
     const outCD = output.getCellData();
     outCD.copyNormalsOff();
     outCD.passData(input.getCellData());
@@ -696,8 +682,6 @@ function vtkTubeFilter(publicAPI, model) {
     output.setStrips(newStrips);
     output.setPointData(outPD);
     outPD.setNormals(newNormals);
-    const s = JSON.stringify(output.getState());
-    console.log(`${s}`);
     outData[0] = output;
   };
 }
