@@ -52,12 +52,6 @@ function updateDomains(dataset, dataArray, { slicingMode }, updateProp) {
   updateProp('colorLevel', propToUpdate.colorLevel);
 
   return {
-    sliceIndex: Math.floor(
-      mean(
-        propToUpdate.sliceIndex.domain.min,
-        propToUpdate.sliceIndex.domain.max
-      )
-    ),
     colorWindow: propToUpdate.colorWindow.domain.max,
     colorLevel: Math.floor(
       mean(
@@ -99,6 +93,12 @@ function vtkSliceRepresentationProxy(publicAPI, model) {
     );
     publicAPI.set(state);
 
+    // Init slice location
+    const extent = publicAPI.getInputDataSet().getExtent();
+    publicAPI.setXSlice(Math.floor(mean(extent[0], extent[1])));
+    publicAPI.setYSlice(Math.floor(mean(extent[2], extent[3])));
+    publicAPI.setZSlice(Math.floor(mean(extent[4], extent[5])));
+
     // connect rendering pipeline
     model.actor.setMapper(model.mapper);
     model.actors.push(model.actor);
@@ -114,17 +114,39 @@ function vtkSliceRepresentationProxy(publicAPI, model) {
 
     source.getPropertyLink('ColorWindow').bind(publicAPI, 'colorWindow');
     source.getPropertyLink('ColorLevel').bind(publicAPI, 'colorLevel');
-    source
-      .getPropertyLink(`Slice${model.slicingMode}`)
-      .bind(publicAPI, 'sliceIndex');
+    source.getPropertyLink('SliceX').bind(publicAPI, 'xSlice');
+    source.getPropertyLink('SliceY').bind(publicAPI, 'ySlice');
+    source.getPropertyLink('SliceZ').bind(publicAPI, 'zSlice');
   };
 
-  publicAPI.setSliceIndex = (index) => {
-    model.mapper[`set${model.slicingMode}SliceIndex`](index);
-    model.sliceIndex = index;
-    publicAPI.modified();
+  publicAPI.setSliceIndex = (index) =>
+    model.mapper[`set${model.slicingMode}Slice`](index);
+
+  publicAPI.getSliceIndex = () =>
+    model.mapper[`get${model.slicingMode}Slice`]();
+
+  publicAPI.setSlicingMode = (mode) => {
+    if (!mode) {
+      console.log('skip setSlicingMode', mode);
+      return;
+    }
+    if (model.input && model.slicingMode !== mode) {
+      // Update Mode
+      model.slicingMode = mode;
+      model.mapper.setCurrentSlicingMode(vtkImageMapper.SlicingMode[mode]);
+
+      // Update domains for UI...
+      const state = updateDomains(
+        publicAPI.getInputDataSet(),
+        publicAPI.getDataArray(),
+        model,
+        publicAPI.updateProxyProperty
+      );
+      publicAPI.set(state);
+    }
   };
 
+  // Used for UI
   publicAPI.getSliceIndexValues = () => {
     const values = [];
     const extent = publicAPI.getInputDataSet().getExtent();
@@ -137,32 +159,6 @@ function vtkSliceRepresentationProxy(publicAPI, model) {
     }
     return values;
   };
-
-  publicAPI.setSlicingMode = (mode) => {
-    if (!mode) {
-      console.log('skip setSlicingMode', mode);
-      return;
-    }
-    if (model.input && model.slicingMode !== mode) {
-      model.input
-        .getPropertyLink(`Slice${model.slicingMode}`)
-        .unbind(publicAPI, 'sliceIndex');
-      model.slicingMode = mode;
-      model.input
-        .getPropertyLink(`Slice${model.slicingMode}`)
-        .bind(publicAPI, 'sliceIndex');
-
-      // Update domains for UI...
-      const state = updateDomains(
-        publicAPI.getInputDataSet(),
-        publicAPI.getDataArray(),
-        model,
-        publicAPI.updateProxyProperty
-      );
-      publicAPI.set(state);
-      publicAPI.modified();
-    }
-  };
 }
 
 // ----------------------------------------------------------------------------
@@ -171,7 +167,6 @@ function vtkSliceRepresentationProxy(publicAPI, model) {
 
 const DEFAULT_VALUES = {
   slicingMode: 'X',
-  sliceIndex: 0,
 };
 
 // ----------------------------------------------------------------------------
@@ -181,7 +176,7 @@ export function extend(publicAPI, model, initialValues = {}) {
 
   // Object methods
   vtkAbstractRepresentationProxy.extend(publicAPI, model);
-  macro.get(publicAPI, model, ['sliceIndex', 'slicingMode']);
+  macro.get(publicAPI, model, ['slicingMode']);
 
   // Object specific methods
   vtkSliceRepresentationProxy(publicAPI, model);
@@ -191,6 +186,9 @@ export function extend(publicAPI, model, initialValues = {}) {
     visibility: { modelKey: 'actor', property: 'visibility' },
     colorWindow: { modelKey: 'property', property: 'colorWindow' },
     colorLevel: { modelKey: 'property', property: 'colorLevel' },
+    xSlice: { modelKey: 'mapper', property: 'xSlice' },
+    ySlice: { modelKey: 'mapper', property: 'ySlice' },
+    zSlice: { modelKey: 'mapper', property: 'zSlice' },
   });
 }
 
