@@ -65,6 +65,11 @@ function vtkOpenGLRenderer(publicAPI, model) {
         gl.depthMask(true);
       }
 
+      const ts = publicAPI.getTiledSizeAndOrigin();
+      gl.enable(gl.SCISSOR_TEST);
+      gl.scissor(ts.lowerLeftU, ts.lowerLeftV, ts.usize, ts.vsize);
+      gl.viewport(ts.lowerLeftU, ts.lowerLeftV, ts.usize, ts.vsize);
+
       gl.colorMask(true, true, true, true);
       gl.clear(clearMask);
 
@@ -160,6 +165,7 @@ function vtkOpenGLRenderer(publicAPI, model) {
     const ts = publicAPI.getTiledSizeAndOrigin();
     gl.enable(gl.SCISSOR_TEST);
     gl.scissor(ts.lowerLeftU, ts.lowerLeftV, ts.usize, ts.vsize);
+    gl.viewport(ts.lowerLeftU, ts.lowerLeftV, ts.usize, ts.vsize);
 
     gl.clear(clearMask);
 
