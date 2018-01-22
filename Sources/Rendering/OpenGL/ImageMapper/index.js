@@ -486,7 +486,7 @@ function vtkOpenGLImageMapper(publicAPI, model) {
     const toString = `${nSlice}A${image.getMTime()}A${image
       .getPointData()
       .getScalars()
-      .getMTime()}B${publicAPI.getMTime()}`;
+      .getMTime()}B${publicAPI.getMTime()}C${model.renderable.getCurrentSlicingMode()}`;
     if (model.VBOBuildString !== toString) {
       // Build the VBOs
       const dims = image.getDimensions();
