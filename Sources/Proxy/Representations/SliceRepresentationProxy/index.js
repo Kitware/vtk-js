@@ -159,15 +159,16 @@ function vtkSliceRepresentationProxy(publicAPI, model) {
     }
     return values;
   };
+
+  // Initialize slicing mode
+  publicAPI.setSlicingMode(model.slicingMode || 'X');
 }
 
 // ----------------------------------------------------------------------------
 // Object factory
 // ----------------------------------------------------------------------------
 
-const DEFAULT_VALUES = {
-  slicingMode: 'X',
-};
+const DEFAULT_VALUES = {};
 
 // ----------------------------------------------------------------------------
 
