@@ -186,14 +186,16 @@ function vtkOpenGLImageMapper(publicAPI, model) {
     // property modified (representation interpolation and lighting)
     // input modified
     // light complexity changed
+
+    const tNumComp = model.openGLTexture.getComponents();
+
     if (
       model.lastHaveSeenDepthRequest !== model.haveSeenDepthRequest ||
       cellBO.getProgram() === 0 ||
-      cellBO.getShaderSourceTime().getMTime() < publicAPI.getMTime() ||
-      cellBO.getShaderSourceTime().getMTime() < actor.getMTime() ||
-      cellBO.getShaderSourceTime().getMTime() < model.currentInput.getMTime()
+      model.lastTextureComponents !== tNumComp
     ) {
       model.lastHaveSeenDepthRequest = model.haveSeenDepthRequest;
+      model.lastTextureComponents = tNumComp;
       return true;
     }
 
@@ -650,6 +652,7 @@ const DEFAULT_VALUES = {
   colorTexture: null,
   lastHaveSeenDepthRequest: false,
   haveSeenDepthRequest: false,
+  lastTextureComponents: 0,
 };
 
 // ----------------------------------------------------------------------------
