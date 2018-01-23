@@ -18,7 +18,7 @@ import {
 } from 'vtk.js/Sources/Rendering/Core/Mapper/Constants';
 import { VtkDataTypes } from 'vtk.js/Sources/Common/Core/DataArray/Constants';
 import { VtkPointPrecision } from 'vtk.js/Sources/Filters/General/Constants';
-import { VtkVaryRadius } from 'vtk.js/Sources/Filters/General/TubeFilter/Constants';
+import { VaryRadius } from 'vtk.js/Sources/Filters/General/TubeFilter/Constants';
 
 import baseline from './testTubeFilter.png';
 
@@ -149,7 +149,7 @@ test.onlyIfWebGL('Test vtkTubeFilter rendering', (t) => {
   tubeFilter.setCapping(false);
   tubeFilter.setNumberOfSides(50);
   tubeFilter.setRadius(0.05);
-  tubeFilter.setVaryRadius(VtkVaryRadius.VARY_RADIUS_BY_SCALAR);
+  tubeFilter.setVaryRadius(VaryRadius.VARY_RADIUS_BY_SCALAR);
 
   tubeFilter.setInputData(polyData);
   tubeFilter.setInputArrayToProcess(0, 'Scalars', 'PointData', 'Scalars');

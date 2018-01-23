@@ -17,7 +17,7 @@ import {
   ColorMode,
   ScalarMode,
 } from 'vtk.js/Sources/Rendering/Core/Mapper/Constants';
-import { VtkVaryRadius } from 'vtk.js/Sources/Filters/General/TubeFilter/Constants';
+import { VaryRadius } from 'vtk.js/Sources/Filters/General/TubeFilter/Constants';
 
 import style from './TubesViewer.mcss';
 import icon from '../../../Documentation/content/icon/favicon-96x96.png';
@@ -193,7 +193,7 @@ function createPipeline(fileName, fileContents) {
   tubeFilter.setRadius(0.2);
   tubeFilter.setInputConnection(vtpReader.getOutputPort());
   tubeFilter.setInputArrayToProcess(0, 'Radius', 'PointData', 'Scalars');
-  tubeFilter.setVaryRadius(VtkVaryRadius.VARY_RADIUS_BY_SCALAR);
+  tubeFilter.setVaryRadius(VaryRadius.VARY_RADIUS_BY_SCALAR);
 
   const lookupTable = vtkColorTransferFunction.newInstance();
   // const source = tubeFilter.getOutputData(0);

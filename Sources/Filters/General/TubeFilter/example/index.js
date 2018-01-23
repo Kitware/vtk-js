@@ -14,7 +14,7 @@ import { VtkPointPrecision } from 'vtk.js/Sources/Filters/General/Constants';
 
 import controlPanel from './controlPanel.html';
 
-const { VtkVaryRadius } = Constants;
+const { VaryRadius } = Constants;
 
 // ----------------------------------------------------------------------------
 // Standard rendering code setup
@@ -121,7 +121,7 @@ fullScreenRenderer.addController(controlPanel);
 
 document.querySelector('.varyRadius').addEventListener('change', (e) => {
   const value = e.target.value;
-  tubeFilter.set({ varyRadius: VtkVaryRadius[value] });
+  tubeFilter.set({ varyRadius: VaryRadius[value] });
   renderWindow.render();
 });
 

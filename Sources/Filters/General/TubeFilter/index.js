@@ -10,7 +10,7 @@ import { VtkPointPrecision } from 'vtk.js/Sources/Filters/General/Constants';
 
 import Constants from './Constants';
 
-const { VtkVaryRadius, VtkTCoords } = Constants;
+const { VaryRadius, GenerateTCoords } = Constants;
 const { vtkDebugMacro, vtkErrorMacro, vtkWarningMacro } = macro;
 
 // ----------------------------------------------------------------------------
@@ -286,10 +286,7 @@ function vtkTubeFilter(publicAPI, model) {
       vtkMath.normalize(nP);
 
       // Compute a scalar factor based on scalars or vectors
-      if (
-        inScalars &&
-        model.varyRadius === VtkVaryRadius.VARY_RADIUS_BY_SCALAR
-      ) {
+      if (inScalars && model.varyRadius === VaryRadius.VARY_RADIUS_BY_SCALAR) {
         sFactor =
           1.0 +
           (model.radiusFactor - 1.0) *
@@ -297,7 +294,7 @@ function vtkTubeFilter(publicAPI, model) {
             (range[1] - range[0]);
       } else if (
         inVectors &&
-        model.varyRadius === VtkVaryRadius.VARY_RADIUS_BY_VECTOR
+        model.varyRadius === VaryRadius.VARY_RADIUS_BY_VECTOR
       ) {
         sFactor = Math.sqrt(
           maxSpeed / vtkMath.norm(inVectors.getTuple(pts[j]))
@@ -307,7 +304,7 @@ function vtkTubeFilter(publicAPI, model) {
         }
       } else if (
         inScalars &&
-        model.varyRadius === VtkVaryRadius.VARY_RADIUS_BY_ABSOLUTE_SCALAR
+        model.varyRadius === VaryRadius.VARY_RADIUS_BY_ABSOLUTE_SCALAR
       ) {
         sFactor = inScalars.getComponent(pts[j], 0);
         if (sFactor < 0.0) {
@@ -513,7 +510,7 @@ function vtkTubeFilter(publicAPI, model) {
     let s0 = 0.0;
     let s = 0.0;
     const inScalarsData = inScalars.getData();
-    if (model.generateTCoords === VtkTCoords.TCOORDS_FROM_SCALARS) {
+    if (model.generateTCoords === GenerateTCoords.TCOORDS_FROM_SCALARS) {
       s0 = inScalarsData[pts[0]];
       for (let i = 0; i < npts; ++i) {
         s = inScalarsData[pts[i]];
@@ -525,7 +522,7 @@ function vtkTubeFilter(publicAPI, model) {
           newTCoords[tcId + 1] = tcy;
         }
       }
-    } else if (model.generateTCoords === VtkTCoords.TCOORDS_FROM_LENGTH) {
+    } else if (model.generateTCoords === GenerateTCoords.TCOORDS_FROM_LENGTH) {
       let len = 0.0;
       const xPrev = inPts.slice(3 * pts[0], 3 * (pts[0] + 1));
       for (let i = 0; i < npts; ++i) {
@@ -543,7 +540,7 @@ function vtkTubeFilter(publicAPI, model) {
         }
       }
     } else if (
-      model.generateTCoords === VtkTCoords.TCOORDS_FROM_NORMALIZED_LENGTH
+      model.generateTCoords === GenerateTCoords.TCOORDS_FROM_NORMALIZED_LENGTH
     ) {
       let len = 0.0;
       let len1 = 0.0;
@@ -676,7 +673,7 @@ function vtkTubeFilter(publicAPI, model) {
     if (inScalars) {
       range = inScalars.getRange();
       if (range[1] - range[0] === 0.0) {
-        if (model.varyRadius === VtkVaryRadius.VARY_RADIUS_BY_SCALAR) {
+        if (model.varyRadius === VaryRadius.VARY_RADIUS_BY_SCALAR) {
           vtkWarningMacro('Scalar range is zero!');
         }
         range[1] = range[0] + 1.0;
@@ -699,10 +696,10 @@ function vtkTubeFilter(publicAPI, model) {
     // TCoords
     let newTCoords = null;
     if (
-      (model.generateTCoords === VtkTCoords.TCOORDS_FROM_SCALARS &&
+      (model.generateTCoords === GenerateTCoords.TCOORDS_FROM_SCALARS &&
         inScalars) ||
-      model.generateTCoords === VtkTCoords.TCOORDS_FROM_LENGTH ||
-      model.generateTCoords === VtkTCoords.TCOORDS_FROM_NORMALIZED_LENGTH
+      model.generateTCoords === GenerateTCoords.TCOORDS_FROM_LENGTH ||
+      model.generateTCoords === GenerateTCoords.TCOORDS_FROM_NORMALIZED_LENGTH
     ) {
       const newTCoordsData = new Float32Array(2 * numNewPts);
       newTCoords = vtkDataArray.newInstance({
@@ -798,7 +795,7 @@ function vtkTubeFilter(publicAPI, model) {
 const DEFAULT_VALUES = {
   outputPointsPrecision: VtkPointPrecision.DEFAULT,
   radius: 0.5,
-  varyRadius: VtkVaryRadius.VARY_RADIUS_OFF,
+  varyRadius: VaryRadius.VARY_RADIUS_OFF,
   numberOfSides: 3,
   radiusFactor: 10,
   defaultNormal: [0, 0, 1],
@@ -807,7 +804,7 @@ const DEFAULT_VALUES = {
   capping: false,
   onRatio: 1,
   offset: 0,
-  generateTCoords: VtkTCoords.TCOORDS_OFF,
+  generateTCoords: GenerateTCoords.TCOORDS_OFF,
   textureLength: 1.0,
 };
 
