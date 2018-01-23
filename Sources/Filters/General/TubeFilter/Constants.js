@@ -5,6 +5,14 @@ export const VtkVaryRadius = {
   VARY_RADIUS_BY_ABSOLUTE_SCALAR: 3,
 };
 
+export const VtkTCoords = {
+  TCOORDS_OFF: 0, // default
+  TCOORDS_FROM_NORMALIZED_LENGTH: 1,
+  TCOORDS_FROM_LENGTH: 2,
+  TCOORDS_FROM_SCALARS: 3,
+};
+
 export default {
   VtkVaryRadius,
+  VtkTCoords,
 };

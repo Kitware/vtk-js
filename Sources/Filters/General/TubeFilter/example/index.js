@@ -56,24 +56,24 @@ function initializePolyData(dType) {
   const polyData = vtkPolyData.newInstance();
   const points = vtkPoints.newInstance({ dataType: pointType });
   points.setNumberOfPoints(numSegments + 1);
-  const pointData = points.getData();
+  // const pointData = points.getData();
   const verts = new Uint32Array(2 * (numSegments + 1));
   const lines = new Uint32Array(numSegments + 2);
   lines[0] = numSegments + 1;
 
+  const pointData = [0, 0, 0, -0.13, -0.51, 0, -0.41, -0.48, 0];
+  points.setData(pointData);
   for (let i = 0; i < (numSegments + 1); ++i) {
-    for (let j = 0; j < 3; ++j) {
-      pointData[(3 * i) + j] = Math.random();
-    }
-    console.log(`${pointData[3 * i]}, ${pointData[(3 * i) + 1]}, ${pointData[(3 * i) + 2]}`);
+//    for (let j = 0; j < 3; ++j) {
+//      pointData[(3 * i) + j] = Math.random();
+//    }
     verts[i] = 1;
     verts[i + 1] = i;
     lines[i + 1] = i;
-    console.log(`Line = ${lines[i + 1]}`);
   }
 
   polyData.setPoints(points);
-  polyData.getVerts().setData(verts);
+  // polyData.getVerts().setData(verts);
   polyData.getLines().setData(lines);
   return polyData;
 }
@@ -84,8 +84,10 @@ function initializePolyData(dType) {
 // const pointSource = vtkPointSource.newInstance({ numberOfPoints: 25, radius: 0.25 });
 const polyData = initializePolyData(VtkPointPrecision.DOUBLE);
 const tubeFilter = vtkTubeFilter.newInstance();
-tubeFilter.setCapping(false);
-tubeFilter.setNumberOfSides(20);
+tubeFilter.setCapping(true);
+tubeFilter.setNumberOfSides(30);
+tubeFilter.setRadius(0.083);
+tubeFilter.setRadiusFactor(10);
 
 tubeFilter.setInputData(polyData);
 

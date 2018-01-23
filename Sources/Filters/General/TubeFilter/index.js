@@ -10,7 +10,7 @@ import { VtkPointPrecision }    from 'vtk.js/Sources/Filters/General/Constants';
 
 import Constants        from './Constants';
 
-const { VtkVaryRadius } = Constants;
+const { VtkVaryRadius, VtkTCoords } = Constants;
 const { vtkDebugMacro, vtkErrorMacro, vtkWarningMacro } = macro;
 
 // ----------------------------------------------------------------------------
@@ -52,7 +52,7 @@ function vtkTubeFilter(publicAPI, model) {
   }
 
   function generateSlidingNormals(pts, lines, normals, firstNormal = null) {
-    var normal = [0.0, 0.0, 0.0];
+    var normal = [0.0, 0.0, 1.0];
     const lineData = lines;
     // lid = 0;
     let npts = lineData[0];
@@ -215,18 +215,25 @@ function vtkTubeFilter(publicAPI, model) {
           sPrev[i] = sNext[i];
           startCapNorm[i] = -sPrev[i];
         }
+        console.log(`First Point: ${p}`);
+        console.log(`startCapNorm: ${startCapNorm}`);
         vtkMath.normalize(startCapNorm);
+        console.log(`startCapNorm: ${startCapNorm}`);
       } else if (j === (npts - 1)) {
         for (let i = 0; i < 3; ++i) {
           sPrev[i] = sNext[i];
           p[i] = pNext[i];
           endCapNorm[i] = sNext[i];
         }
+        console.log(`Third Point: ${p}`);
+        console.log(`endCapNorm: ${endCapNorm}`);
         vtkMath.normalize(endCapNorm);
+        console.log(`endCapNorm: ${endCapNorm}`);
       } else {
         for (let i = 0; i < 3; ++i) {
           p[i] = pNext[i];
         }
+        console.log(`Second Point: ${p}`);
         pNext = inPts.slice(3 * pts[j + 1], 3 * (pts[j + 1] + 1));
         for (let i = 0; i < 3; ++i) {
           sPrev[i] = sNext[i];
@@ -234,7 +241,7 @@ function vtkTubeFilter(publicAPI, model) {
         }
       }
 
-      if (vtkMath.norm(sNext) === 0.0) {
+      if (vtkMath.normalize(sNext) === 0.0) {
         vtkWarningMacro('Coincident points!');
         return 0;
       }
@@ -242,18 +249,20 @@ function vtkTubeFilter(publicAPI, model) {
       for (let i = 0; i < 3; ++i) {
         s[i] = (sPrev[i] + sNext[i]) / 2.0; // average vector
       }
+      console.log(`Average Vector: ${s}`);
 
       n = inNormals.slice(3 * pts[j], 3 * (pts[j] + 1));
+      console.log(`Normal for point ${pts[j]}: ${n}`);
       // if s is zero then just use sPrev cross n
-      if (vtkMath.norm(s) === 0.0) {
+      if (vtkMath.normalize(s) === 0.0) {
         vtkMath.cross(sPrev, n, s);
-        if (vtkMath.norm(s) === 0.0) {
+        if (vtkMath.normalize(s) === 0.0) {
           vtkDebugMacro('Using alternate bevel vector');
         }
       }
 
       vtkMath.cross(s, n, w);
-      if (vtkMath.norm(w) === 0.0) {
+      if (vtkMath.normalize(w) === 0.0) {
         let msg = 'Bad normal: s = ';
         msg += `${s[0]},  ${s[1]}, ${s[2]}`;
         msg += ` n = ${n[0]},  ${n[1]}, ${n[2]}`;
@@ -284,12 +293,14 @@ function vtkTubeFilter(publicAPI, model) {
       // create points around line
       if (model.sidesShareVertices) {
         for (let k = 0; k < model.numberOfSides; ++k) {
+          console.log(`Point ${ptId}`);
           for (let i = 0; i < 3; ++i) {
             normal[i] = (w[i] * Math.cos(k * theta)) + (nP[i] * Math.sin(k * theta));
             s[i] = p[i] + (model.radius * sFactor * normal[i]);
             newPts[(3 * ptId) + i] = s[i];
             newNormals[(3 * ptId) + i] = normal[i];
           }
+          console.log(`${s}`);
           outPD.passData(pd, pts[j], ptId);
           ptId++;
         } // for each side
@@ -319,6 +330,7 @@ function vtkTubeFilter(publicAPI, model) {
       } // else separate vertices
     } // for all points in the polyline
 
+    console.log(`NewNormals size: ${newNormals.length}`);
     // Produce end points for cap. They are placed at tail end of points.
     if (model.capping) {
       let numCapSides = model.numberOfSides;
@@ -335,9 +347,11 @@ function vtkTubeFilter(publicAPI, model) {
           newPts[(3 * ptId) + i] = s[i];
           newNormals[(3 * ptId) + i] = startCapNorm[i];
         }
+        console.log(`Start cap Id: ${ptId} : ${startCapNorm}`);
         outPD.passData(pd, pts[0], ptId);
         ptId++;
       }
+      console.log(`NewNormals size: ${newNormals.length}`);
 
       // the end cap
       let endOffset = offset + ((npts - 1) * model.numberOfSides);
@@ -350,6 +364,7 @@ function vtkTubeFilter(publicAPI, model) {
           newPts[(3 * ptId) + i] = s[i];
           newNormals[(3 * ptId) + i] = endCapNorm[i];
         }
+        console.log(`end cap Id: ${ptId} : ${endCapNorm}`);
         outPD.passData(pd, pts[npts - 1], ptId);
         ptId++;
       }
@@ -372,7 +387,7 @@ function vtkTubeFilter(publicAPI, model) {
       for (let k = offset; k < (model.numberOfSides + offset); k += model.onRatio) {
         i1 = k % model.numberOfSides;
         i2 = (k + 1) % model.numberOfSides;
-        outCellId = newStrips.getNumberOfCells();
+        outCellId = newStrips.getNumberOfCells(true);
         newStripsData[newStripsData.length] = (npts * 2);
         for (let i = 0; i < npts; ++i) {
           i3 = i * model.numberOfSides;
@@ -385,7 +400,7 @@ function vtkTubeFilter(publicAPI, model) {
       for (let k = offset; k < (model.numberOfSides + offset); k += model.onRatio) {
         i1 = (2 * (k % model.numberOfSides)) + 1;
         i2 = 2 * ((k + 1) % model.numberOfSides);
-        outCellId = newStrips.getNumberOfCells();
+        outCellId = newStrips.getNumberOfCells(true);
         newStripsData[newStripsData.length] = (npts * 2);
         for (let i = 0; i < npts; ++i) {
           i3 = i * 2 * model.numberOfSides;
@@ -407,7 +422,7 @@ function vtkTubeFilter(publicAPI, model) {
       }
 
       // The start cap
-      outCellId = newStrips.getNumberOfCells();
+      outCellId = newStrips.getNumberOfCells(true);
       newStripsData[newStripsData.length] = model.numberOfSides;
       newStripsData[newStripsData.length] = startIdx;
       newStripsData[newStripsData.length] = startIdx + 1;
@@ -427,7 +442,7 @@ function vtkTubeFilter(publicAPI, model) {
 
       // The end cap - reversed order to be consistent with normal
       startIdx += model.numberOfSides;
-      outCellId = newStrips.getNumberOfCells();
+      outCellId = newStrips.getNumberOfCells(true);
       newStripsData[newStripsData.length] = model.numberOfSides;
       newStripsData[newStripsData.length] = startIdx;
       newStripsData[newStripsData.length] = startIdx + model.numberOfSides - 1;
@@ -443,6 +458,93 @@ function vtkTubeFilter(publicAPI, model) {
         }
       }
       outCD.passData(inCD, inCellId, outCellId);
+    }
+  }
+
+  function generateTCoords(offset, npts, pts, inPts, inScalars, newTCoords) {
+    let numSides = model.numberOfSides;
+    if (!model.sidesShareVertices) {
+      numSides = 2 * model.numberOfSides;
+    }
+
+    let tc = 0.0;
+    let s0 = 0.0;
+    let s = 0.0;
+    const inScalarsData = inScalars.getData();
+    if (model.generateTCoords === VtkTCoords.TCOORDS_FROM_SCALARS) {
+      s0 = inScalarsData[pts[0]];
+      for (let i = 0; i < npts; ++i) {
+        s = inScalarsData[pts[i]];
+        tc = (s - s0) / model.textureLength;
+        for (let k = 0; k < numSides; ++k) {
+          const tcy = k / (numSides - 1);
+          const tcId = 2 * (offset + (i * numSides) + k);
+          newTCoords[tcId] = tc;
+          newTCoords[tcId + 1] = tcy;
+        }
+      }
+    } else if (model.generateTCoords === VtkTCoords.TCOORDS_FROM_LENGTH) {
+      let len = 0.0;
+      const xPrev = inPts.slice(3 * pts[0], 3 * (pts[0] + 1));
+      for (let i = 0; i < npts; ++i) {
+        const x = inPts.slice(3 * pts[i], 3 * (pts[i] + 1));
+        len += Math.sqrt(vtkMath.distance2BetweenPoints(x, xPrev));
+        tc = len / model.textureLength;
+        for (let k = 0; k < numSides; ++k) {
+          const tcy = k / (numSides - 1);
+          const tcId = 2 * (offset + (i * numSides) + k);
+          newTCoords[tcId] = tc;
+          newTCoords[tcId + 1] = tcy;
+        }
+        for (let k = 0; k < 3; ++k) {
+          xPrev[k] = x[k];
+        }
+      }
+    } else if (model.generateTCoords === VtkTCoords.TCOORDS_FROM_NORMALIZED_LENGTH) {
+      let len = 0.0;
+      let len1 = 0.0;
+      let xPrev = inPts.slice(3 * pts[0], 3 * (pts[0] + 1));
+      for (let i = 0; i < npts; ++i) {
+        const x = inPts.slice(3 * pts[i], 3 * (pts[i] + 1));
+        len1 += Math.sqrt(vtkMath.distance2BetweenPoints(x, xPrev));
+        for (let k = 0; k < 3; ++k) {
+          xPrev[k] = x[k];
+        }
+      }
+      xPrev = inPts.slice(3 * pts[0], 3 * (pts[0] + 1));
+      for (let i = 0; i < npts; ++i) {
+        const x = inPts.slice(3 * pts[i], 3 * (pts[i] + 1));
+        len += Math.sqrt(vtkMath.distance2BetweenPoints(x, xPrev));
+        tc = len / len1;
+        for (let k = 0; k < numSides; ++k) {
+          const tcy = k / (numSides - 1);
+          const tcId = 2 * (offset + (i * numSides) + k);
+          newTCoords[tcId] = tc;
+          newTCoords[tcId + 1] = tcy;
+        }
+        for (let k = 0; k < 3; ++k) {
+          xPrev[k] = x[k];
+        }
+      }
+    }
+
+    // Capping, set the endpoints as appropriate
+    if (model.capping) {
+      const startIdx = offset + (npts * numSides);
+
+      // start cap
+      for (let ik = 0; ik < model.numberOfSides; ++ik) {
+        const tcId = 2 * (startIdx + ik);
+        newTCoords[tcId] = 0.0;
+        newTCoords[tcId + 1] = 0.0;
+      }
+
+      // end cap
+      for (let ik = 0; ik < model.numberOfSides; ++ik) {
+        const tcId = 2 * (startIdx + model.numberOfSides + ik);
+        newTCoords[tcId] = 0.0;
+        newTCoords[tcId + 1] = 0.0;
+      }
     }
   }
 
@@ -486,7 +588,11 @@ function vtkTubeFilter(publicAPI, model) {
     const newPts = vtkPoints.newInstance(
       { dataType: pointType, size: (numNewPts * 3), numberOfComponents: 3 });
     // const newPtsData = newPts.getData();
-    const newNormalsData = new Float32Array(3 * numNewPts);
+    let numNormals = 3 * numNewPts;
+    if (model.capping) {
+      numNormals = 3 * (numNewPts + (2 * model.numberOfSides));
+    }
+    const newNormalsData = new Float32Array(numNormals);
     const newNormals = vtkDataArray.newInstance(
       { numberOfComponents: 3, values: newNormalsData, name: 'TubeNormals' });
     const newStripsData = new Uint32Array(0);
@@ -534,7 +640,18 @@ function vtkTubeFilter(publicAPI, model) {
 
     const outPD = output.getPointData();
     outPD.copyNormalsOff();
+
     // TCoords
+    let newTCoords = null;
+    if ((model.generateTCoords === VtkTCoords.TCOORDS_FROM_SCALARS && inScalars) ||
+        model.generateTCoords === VtkTCoords.TCOORDS_FROM_LENGTH ||
+        model.generateTCoords === VtkTCoords.TCOORDS_FROM_NORMALIZED_LENGTH) {
+      const newTCoordsData = new Float32Array(2 * numNewPts);
+      newTCoords = vtkDataArray.newInstance(
+        { numberOfComponents: 2, values: newTCoordsData, name: 'TCoords' });
+      outPD.copyTCoordsOff();
+    }
+
     outPD.passData(input.getPointData());
 
     // Create points along each polyline that are connected into numberOfSides
@@ -562,6 +679,9 @@ function vtkTubeFilter(publicAPI, model) {
         // generate strips for the polyline
         generateStrips(offset, npts, inCellId, input.getCellData(), outCD, newStrips);
         // generate texture coordinates for the polyline
+        if (newTCoords) {
+          generateTCoords(offset, npts, pts, inPts.getData(), inScalars, newTCoords.getData());
+        }
       } else {
         // skip tubing this line
         vtkWarningMacro('Could not generate points');
@@ -574,7 +694,10 @@ function vtkTubeFilter(publicAPI, model) {
 
     output.setPoints(newPts);
     output.setStrips(newStrips);
+    output.setPointData(outPD);
     outPD.setNormals(newNormals);
+    const s = JSON.stringify(output.getState());
+    console.log(`${s}`);
     outData[0] = output;
   };
 }
@@ -595,6 +718,8 @@ const DEFAULT_VALUES = {
   capping: false,
   onRatio: 1,
   offset: 0,
+  generateTCoords: VtkTCoords.TCOORDS_OFF,
+  textureLength: 1.0,
 };
 
 // ----------------------------------------------------------------------------
@@ -616,6 +741,8 @@ export function extend(publicAPI, model, initialValues = {}) {
     'capping',
     'onRatio',
     'offset',
+    'generateTCoords',
+    'textureLength',
   ]);
 
   // Make this a VTK object
