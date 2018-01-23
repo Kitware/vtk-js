@@ -78,15 +78,16 @@ function vtkFieldData(publicAPI, model) {
   };
   publicAPI.getCopyFieldFlags = () => model.copyFieldFlags;
   publicAPI.getFlag = (arrayName) => model.copyFieldFlags[arrayName];
-  publicAPI.passData = (other) => {
+  publicAPI.passData = (other, fromId = -1, toId = -1) => {
     other.getArrays().forEach((arr, idx) => {
       const copyFlag = publicAPI.getFlag(arr.getName());
-      if (
-        copyFlag !== false &&
-        !(model.doCopyAllOff && copyFlag !== true) &&
-        arr
-      ) {
-        publicAPI.addArray(arr);
+      if (copyFlag !== false && !(model.doCopyAllOff && copyFlag !== true) && arr) {
+        const destArr = publicAPI.getArrayByName(arr.getName());
+        if (((fromId < 1) && (toId < 1)) || !destArr) {
+          publicAPI.addArray(arr);
+        } else if ((idx >= fromId) && ((toId > -1) || (idx < toId))) {
+          destArr.setTuple(arr.getTuple(idx));
+        }
       }
     });
   };

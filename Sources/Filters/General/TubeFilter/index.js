@@ -1,0 +1,637 @@
+import macro            from 'vtk.js/Sources/macro';
+import vtkDataArray     from 'vtk.js/Sources/Common/Core/DataArray';
+import vtkMath          from 'vtk.js/Sources/Common/Core/Math';
+import vtkPoints        from 'vtk.js/Sources/Common/Core/Points';
+import vtkPolyData      from 'vtk.js/Sources/Common/DataModel/PolyData';
+import vtkCellArray     from 'vtk.js/Sources/Common/Core/CellArray';
+
+import { VtkDataTypes }         from 'vtk.js/Sources/Common/Core/DataArray/Constants';
+import { VtkPointPrecision }    from 'vtk.js/Sources/Filters/General/Constants';
+
+import Constants        from './Constants';
+
+const { VtkVaryRadius } = Constants;
+const { vtkDebugMacro, vtkErrorMacro, vtkWarningMacro } = macro;
+
+// ----------------------------------------------------------------------------
+// vtkTubeFilter methods
+// ----------------------------------------------------------------------------
+
+function vtkTubeFilter(publicAPI, model) {
+  // Set our classname
+  model.classHierarchy.push('vtkTubeFilter');
+
+  function computeOffset(offset, npts) {
+    var newOffset = offset;
+    if (model.sidesShareVertices) {
+      newOffset += model.numberOfSides * npts;
+    } else {
+      // points are duplicated
+      newOffset += 2 * model.numberOfSides * npts;
+    }
+    if (model.capping) {
+      // cap points are duplicated
+      newOffset += 2 * model.numberOfSides;
+    }
+    return newOffset;
+  }
+
+  function findNextValidSegment(points, pointIds, start) {
+    const ptId = pointIds[start];
+    const ps = points.slice(3 * ptId, 3 * (ptId + 1));
+    let end = start + 1;
+    while (end < pointIds.length) {
+      const endPtId = pointIds[end];
+      const pe = points.slice(3 * endPtId, 3 * (endPtId + 1));
+      if (ps !== pe) {
+        return end - 1;
+      }
+      ++end;
+    }
+    return pointIds.length;
+  }
+
+  function generateSlidingNormals(pts, lines, normals, firstNormal = null) {
+    var normal = [0.0, 0.0, 0.0];
+    const lineData = lines;
+    // lid = 0;
+    let npts = lineData[0];
+    for (let i = 0; i < lineData.length; i += (npts + 1)) {
+      npts = lineData[i];
+      if (npts === 1) { // return arbitary
+        normals.setTuple(lineData[i + 1], normal);
+      } else if (npts > 1) {
+        let sNextId = 0;
+        let sPrev = [0, 0, 0];
+        const sNext = [0, 0, 0];
+
+        const linePts = lineData.slice(i + 1, (i + 1) + npts);
+        sNextId = findNextValidSegment(pts, linePts, 0);
+        if (sNextId !== npts) { // atleast one valid segment
+          let pt1Id = linePts[sNextId];
+          let pt1 = pts.slice(3 * pt1Id, 3 * (pt1Id + 1));
+          let pt2Id = linePts[sNextId + 1];
+          let pt2 = pts.slice(3 * pt2Id, 3 * (pt2Id + 1));
+          sPrev = pt2.map((elem, idx) => elem - pt1[idx]);
+          vtkMath.normalize(sPrev);
+
+          // compute first normal
+          if (firstNormal) {
+            normal = firstNormal;
+          } else {
+            // find the next valid, non-parallel segment
+            while (++sNextId < npts) {
+              sNextId = findNextValidSegment(pts, linePts, sNextId);
+              if (sNextId !== npts) {
+                pt1Id = linePts[sNextId];
+                pt1 = pts.slice(3 * pt1Id, 3 * (pt1Id + 1));
+                pt2Id = linePts[sNextId + 1];
+                pt2 = pts.slice(3 * pt2Id, 3 * (pt2Id + 1));
+                for (let j = 0; j < 3; ++j) {
+                  sNext[j] = pt2[j] - pt1[j];
+                }
+                vtkMath.normalize(sNext);
+
+                // now the starting normal should simply be the cross product.
+                // In the following if statement, we check for the case where
+                // the two segments are parallel, in which case, continue
+                // searching for the next valid segment
+                const n = [0.0, 0.0, 0.0];
+                vtkMath.cross(sPrev, sNext, n);
+                if (vtkMath.norm(n) > 1.0e-3) {
+                  normal = n;
+                  sPrev = sNext;
+                  break;
+                }
+              }
+            }
+
+            if (sNextId >= npts) { // only one valid segment
+              // a little trick to find orthogonal normal
+              for (let j = 0; j < 3; ++j) {
+                if (sPrev[j] !== 0.0) {
+                  normal[(j + 2) % 3] = 0.0;
+                  normal[(j + 1) % 3] = 1.0;
+                  normal[j] = -sPrev[(j + 1) % 3] / sPrev[j];
+                  break;
+                }
+              }
+            }
+          }
+
+          vtkMath.normalize(normal);
+
+          // compute remaining normals
+          let lastNormalId = 0;
+          while (++sNextId < npts) {
+            sNextId = findNextValidSegment(pts, linePts, sNextId);
+            if (sNextId === npts) {
+              break;
+            }
+
+            pt1Id = linePts[sNextId];
+            pt1 = pts.slice(3 * pt1Id, 3 * (pt1Id + 1));
+            pt2Id = linePts[sNextId + 1];
+            pt2 = pts.slice(3 * pt2Id, 3 * (pt2Id + 1));
+            for (let j = 0; j < 3; ++j) {
+              sNext[j] = pt2[j] - pt1[j];
+            }
+            vtkMath.normalize(sNext);
+
+            // compute rotation vector
+            const w = [0.0, 0.0, 0.0];
+            vtkMath.cross(sPrev, normal, w);
+            if (vtkMath.normalize(w) !== 0.0) { // can't use this segment otherwise
+              const q = [0.0, 0.0, 0.0];
+              vtkMath.cross(sNext, sPrev, q);
+              if (vtkMath.normalize(q) !== 0.0) { // can't use this segment otherwise
+                const f1 = vtkMath.dot(q, normal);
+                let f2 = 1.0 - (f1 * f1);
+                if (f2 > 0.0) {
+                  f2 = Math.sqrt(f2);
+                } else {
+                  f2 = 0.0;
+                }
+                const c = [0, 0, 0];
+                for (let j = 0; j < 3; ++j) {
+                  c[j] = sNext[j] + sPrev[j];
+                }
+                vtkMath.normalize(c);
+                vtkMath.cross(c, q, w);
+                vtkMath.cross(sPrev, q, c);
+                if ((vtkMath.dot(normal, c) * vtkMath.dot(w, c)) < 0.0) {
+                  f2 *= -1.0;
+                }
+
+                // insert current normal before updating
+                for (let j = lastNormalId; j < sNextId; ++j) {
+                  normals.setTuple(linePts[j], normal);
+                }
+                lastNormalId = sNextId;
+                sPrev = sNext;
+
+                // compute next normal
+                normal = (f1 * q) + (f2 * w);
+              }
+            }
+          }
+
+          // insert last normal for the remaining points
+          for (let j = lastNormalId; j < npts; ++j) {
+            normals.setTuple(linePts[j], normal);
+          }
+        } else { // no valid segments
+          for (let j = 0; j < npts; ++j) {
+            normals.setTuple(linePts[j], normal);
+          }
+        }
+      }
+    }
+    return 1;
+  }
+
+  function generatePoints(offset, npts, pts, inPts, newPts, pd, outPD, newNormals, inScalars, range, inVectors, maxSpeed, inNormals, theta) {
+    // Use averaged segment to create beveled effect.
+    var sNext = [0.0, 0.0, 0.0];
+    var sPrev = [0.0, 0.0, 0.0];
+    var startCapNorm = [0.0, 0.0, 0.0];
+    var endCapNorm = [0.0, 0.0, 0.0];
+    var p = [0.0, 0.0, 0.0];
+    var pNext = [0.0, 0.0, 0.0];
+    var s = [0.0, 0.0, 0.0];
+    var n = [0.0, 0.0, 0.0];
+    var w = [0.0, 0.0, 0.0];
+    var nP = [0.0, 0.0, 0.0];
+    var normal = [0.0, 0.0, 0.0];
+    var sFactor = 1.0;
+    var ptId = offset;
+    for (let j = 0; j < npts; ++j) {
+      // First point
+      if (j === 0) {
+        p = inPts.slice(3 * pts[0], 3 * (pts[0] + 1));
+        pNext = inPts.slice(3 * pts[1], 3 * (pts[1] + 1));
+        for (let i = 0; i < 3; ++i) {
+          sNext[i] = pNext[i] - p[i];
+          sPrev[i] = sNext[i];
+          startCapNorm[i] = -sPrev[i];
+        }
+        vtkMath.normalize(startCapNorm);
+      } else if (j === (npts - 1)) {
+        for (let i = 0; i < 3; ++i) {
+          sPrev[i] = sNext[i];
+          p[i] = pNext[i];
+          endCapNorm[i] = sNext[i];
+        }
+        vtkMath.normalize(endCapNorm);
+      } else {
+        for (let i = 0; i < 3; ++i) {
+          p[i] = pNext[i];
+        }
+        pNext = inPts.slice(3 * pts[j + 1], 3 * (pts[j + 1] + 1));
+        for (let i = 0; i < 3; ++i) {
+          sPrev[i] = sNext[i];
+          sNext[i] = pNext[i] - p[i];
+        }
+      }
+
+      if (vtkMath.norm(sNext) === 0.0) {
+        vtkWarningMacro('Coincident points!');
+        return 0;
+      }
+
+      for (let i = 0; i < 3; ++i) {
+        s[i] = (sPrev[i] + sNext[i]) / 2.0; // average vector
+      }
+
+      n = inNormals.slice(3 * pts[j], 3 * (pts[j] + 1));
+      // if s is zero then just use sPrev cross n
+      if (vtkMath.norm(s) === 0.0) {
+        vtkMath.cross(sPrev, n, s);
+        if (vtkMath.norm(s) === 0.0) {
+          vtkDebugMacro('Using alternate bevel vector');
+        }
+      }
+
+      vtkMath.cross(s, n, w);
+      if (vtkMath.norm(w) === 0.0) {
+        let msg = 'Bad normal: s = ';
+        msg += `${s[0]},  ${s[1]}, ${s[2]}`;
+        msg += ` n = ${n[0]},  ${n[1]}, ${n[2]}`;
+        vtkWarningMacro(msg);
+        return 0;
+      }
+
+      vtkMath.cross(w, s, nP); // create orthogonal coordinate system
+      vtkMath.normalize(nP);
+
+      // Compute a scalar factor based on scalars or vectors
+      if (inScalars && (model.varyRadius === VtkVaryRadius.VARY_RADIUS_BY_SCALAR)) {
+        sFactor = 1.0 + ((model.radiusFactor - 1.0) *
+          (inScalars.getComponent(pts[j], 0) - range[0]) / (range[1] - range[0]));
+      } else if (inVectors && (model.varyRadius === VtkVaryRadius.VARY_RADIUS_BY_VECTOR)) {
+        sFactor = Math.sqrt(maxSpeed / vtkMath.norm(inVectors.getTuple(pts[j])));
+        if (sFactor > model.radiusFactor) {
+          sFactor = model.radiusFactor;
+        }
+      } else if (inScalars && (model.varyRadius === VtkVaryRadius.VARY_RADIUS_BY_ABSOLUTE_SCALAR)) {
+        sFactor = inScalars.getComponent(pts[j], 0);
+        if (sFactor < 0.0) {
+          vtkWarningMacro('Scalar value less than zero, skipping line');
+          return 0;
+        }
+      }
+
+      // create points around line
+      if (model.sidesShareVertices) {
+        for (let k = 0; k < model.numberOfSides; ++k) {
+          for (let i = 0; i < 3; ++i) {
+            normal[i] = (w[i] * Math.cos(k * theta)) + (nP[i] * Math.sin(k * theta));
+            s[i] = p[i] + (model.radius * sFactor * normal[i]);
+            newPts[(3 * ptId) + i] = s[i];
+            newNormals[(3 * ptId) + i] = normal[i];
+          }
+          outPD.passData(pd, pts[j], ptId);
+          ptId++;
+        } // for each side
+      } else {
+        const nRight = [0, 0, 0];
+        const nLeft = [0, 0, 0];
+        for (let k = 0; k < model.numberOfSides; ++k) {
+          for (let i = 0; i < 3; ++i) {
+            // Create duplicate vertices at each point
+            // and adjust the associated normals so that they are
+            // oriented with the facets. This preserves the tube's
+            // polygonal appearance, as if by flat-shading around the tube,
+            // while still allowing smooth (gouraud) shading along the
+            // tube as it bends.
+            normal[i] = (w[i] * Math.cos(k * theta)) + (nP[i] * Math.sin(k * theta));
+            nRight[i] = (w[i] * Math.cos((k - 0.5) * theta)) + (nP[i] * Math.sin((k - 0.5) * theta));
+            nLeft[i] = (w[i] * Math.cos((k + 0.5) * theta)) + (nP[i] * Math.sin((k + 0.5) * theta));
+            s[i] = p[i] + (model.radius * sFactor * normal[i]);
+            newPts[(3 * ptId) + i] = s[i];
+            newNormals[(3 * ptId) + i] = nRight[i];
+            newPts[(3 * (ptId + 1)) + i] = s[i];
+            newNormals[(3 * (ptId + 1)) + i] = nLeft[i];
+          }
+          outPD.passData(pd, pts[j], ptId + 1);
+          ptId += 2;
+        }  // for each side
+      } // else separate vertices
+    } // for all points in the polyline
+
+    // Produce end points for cap. They are placed at tail end of points.
+    if (model.capping) {
+      let numCapSides = model.numberOfSides;
+      let capIncr = 1;
+      if (!model.sidesShareVertices) {
+        numCapSides = 2 * model.numberOfSides;
+        capIncr = 2;
+      }
+
+      // the start cap
+      for (let k = 0; k < numCapSides; k += capIncr) {
+        s = newPts.slice(3 * (offset + k), 3 * (offset + k + 1));
+        for (let i = 0; i < 3; ++i) {
+          newPts[(3 * ptId) + i] = s[i];
+          newNormals[(3 * ptId) + i] = startCapNorm[i];
+        }
+        outPD.passData(pd, pts[0], ptId);
+        ptId++;
+      }
+
+      // the end cap
+      let endOffset = offset + ((npts - 1) * model.numberOfSides);
+      if (!model.sidesShareVertices) {
+        endOffset = offset + (2 * (npts - 1) * model.numberOfSides);
+      }
+      for (let k = 0; k < numCapSides; k += capIncr) {
+        s = newPts.slice(3 * (endOffset + k), 3 * (endOffset + k + 1));
+        for (let i = 0; i < 3; ++i) {
+          newPts[(3 * ptId) + i] = s[i];
+          newNormals[(3 * ptId) + i] = endCapNorm[i];
+        }
+        outPD.passData(pd, pts[npts - 1], ptId);
+        ptId++;
+      }
+    } // if capping
+
+    return 1;
+  }
+
+  function generateStrips(offset, npts, inCellId, inCD, outCD, newStrips) {
+    let i1 = 0;
+    let i2 = 0;
+    let i3 = 0;
+    let outCellId = 0;
+    let newStripsData = newStrips.getData();
+    if (newStripsData.length === 0) {
+      newStripsData = [];
+      newStrips.setData(newStripsData);
+    }
+    if (model.sidesShareVertices) {
+      for (let k = offset; k < (model.numberOfSides + offset); k += model.onRatio) {
+        i1 = k % model.numberOfSides;
+        i2 = (k + 1) % model.numberOfSides;
+        outCellId = newStrips.getNumberOfCells();
+        newStripsData[newStripsData.length] = (npts * 2);
+        for (let i = 0; i < npts; ++i) {
+          i3 = i * model.numberOfSides;
+          newStripsData[newStripsData.length] = offset + i2 + i3;
+          newStripsData[newStripsData.length] = offset + i1 + i3;
+        }
+        outCD.passData(inCD, inCellId, outCellId);
+      } // for each side of the tube
+    } else {
+      for (let k = offset; k < (model.numberOfSides + offset); k += model.onRatio) {
+        i1 = (2 * (k % model.numberOfSides)) + 1;
+        i2 = 2 * ((k + 1) % model.numberOfSides);
+        outCellId = newStrips.getNumberOfCells();
+        newStripsData[newStripsData.length] = (npts * 2);
+        for (let i = 0; i < npts; ++i) {
+          i3 = i * 2 * model.numberOfSides;
+          newStripsData[newStripsData.length] = offset + i2 + i3;
+          newStripsData[newStripsData.length] = offset + i1 + i3;
+        }
+        outCD.passData(inCD, inCellId, outCellId);
+      } // for each side of the tube
+    }
+
+    // Take care of capping. The caps are n-sided polygons that can be easily
+    // triangle stripped.
+    if (model.capping) {
+      let startIdx = offset + (npts * model.numberOfSides);
+      let idx = 0;
+
+      if (!model.sidesShareVertices) {
+        startIdx = offset + (2 * npts * model.numberOfSides);
+      }
+
+      // The start cap
+      outCellId = newStrips.getNumberOfCells();
+      newStripsData[newStripsData.length] = model.numberOfSides;
+      newStripsData[newStripsData.length] = startIdx;
+      newStripsData[newStripsData.length] = startIdx + 1;
+      let k = 0;
+      for (i1 = model.numberOfSides - 1, i2 = 2, k = 0; k < (model.numberOfSides - 2); ++k) {
+        if ((k % 2)) {
+          idx = startIdx + i2;
+          newStripsData[newStripsData.length] = idx;
+          i2++;
+        } else {
+          idx = startIdx + i1;
+          newStripsData[newStripsData.length] = idx;
+          i1--;
+        }
+      }
+      outCD.passData(inCD, inCellId, outCellId);
+
+      // The end cap - reversed order to be consistent with normal
+      startIdx += model.numberOfSides;
+      outCellId = newStrips.getNumberOfCells();
+      newStripsData[newStripsData.length] = model.numberOfSides;
+      newStripsData[newStripsData.length] = startIdx;
+      newStripsData[newStripsData.length] = startIdx + model.numberOfSides - 1;
+      for (i1 = model.numberOfSides - 2, i2 = 1, k = 0; k < (model.numberOfSides - 2); ++k) {
+        if ((k % 2)) {
+          idx = startIdx + i1;
+          newStripsData[newStripsData.length] = idx;
+          i1--;
+        } else {
+          idx = startIdx + i2;
+          newStripsData[newStripsData.length] = idx;
+          i2++;
+        }
+      }
+      outCD.passData(inCD, inCellId, outCellId);
+    }
+  }
+
+  publicAPI.requestData = (inData, outData) => { // implement requestData
+    // pass through for now
+    outData[0] = inData[0];
+
+    const input = inData[0];
+    if (!input) {
+      vtkErrorMacro('Invalid or missing input');
+      return;
+    }
+
+    // Allocate output
+    const output = vtkPolyData.newInstance();
+
+    const inPts = input.getPoints();
+    if (!inPts) {
+      return;
+    }
+    const numPts = inPts.getNumberOfPoints();
+    if (numPts < 1) {
+      return;
+    }
+    const inLines = input.getLines();
+    if (!inLines) {
+      return;
+    }
+    const numLines = inLines.getNumberOfCells();
+    if (numLines < 1) {
+      return;
+    }
+
+    const numNewPts = numPts * model.numberOfSides;
+    let pointType = inPts.getDataType();
+    if (model.outputPointsPrecision === VtkPointPrecision.SINGLE) {
+      pointType = VtkDataTypes.FLOAT;
+    } else if (model.outputPointsPrecision === VtkPointPrecision.DOUBLE) {
+      pointType = VtkDataTypes.DOUBLE;
+    }
+    const newPts = vtkPoints.newInstance(
+      { dataType: pointType, size: (numNewPts * 3), numberOfComponents: 3 });
+    // const newPtsData = newPts.getData();
+    const newNormalsData = new Float32Array(3 * numNewPts);
+    const newNormals = vtkDataArray.newInstance(
+      { numberOfComponents: 3, values: newNormalsData, name: 'TubeNormals' });
+    const newStripsData = new Uint32Array(0);
+    const newStrips = vtkCellArray.newInstance({ values: newStripsData });
+
+    let inNormals = input.getPointData().getNormals();
+    let inNormalsData = null;
+    let generateNormals = false;
+    if (!inNormals || model.useDefaultNormal) {
+      inNormalsData = new Float32Array(3 * numPts);
+      inNormals = vtkDataArray.newInstance(
+        { numberOfComponents: 3, values: inNormalsData, name: 'Normals' });
+      if (model.useDefaultNormal) {
+        inNormalsData = inNormalsData.map((elem, index) => {
+          var i = index % 3;
+          return model.defaultNormal[i];
+        });
+      } else {
+        generateNormals = true;
+      }
+    }
+
+    const inScalars = publicAPI.getInputArrayToProcess(0);
+    let range = [];
+    if (inScalars) {
+      range = inScalars.getRange();
+      if ((range[1] - range[0]) === 0.0) {
+        if (model.varyRadius === VtkVaryRadius.VARY_RADIUS_BY_SCALAR) {
+          vtkWarningMacro('Scalar range is zero!');
+        }
+        range[1] = range[0] + 1.0;
+      }
+    }
+
+    const inVectors = publicAPI.getInputArrayToProcess(1);
+    let maxSpeed = 0;
+    if (inVectors) {
+      maxSpeed = inVectors.getMaxNorm();
+    }
+
+    // const numNewCells = (numLines * model.numberOfSides) + 2;
+    const outCD = output.getCellData();
+    outCD.copyNormalsOff();
+    outCD.passData(input.getCellData());
+
+    const outPD = output.getPointData();
+    outPD.copyNormalsOff();
+    // TCoords
+    outPD.passData(input.getPointData());
+
+    // Create points along each polyline that are connected into numberOfSides
+    // triangle strips.
+    const theta = 2.0 * Math.PI / model.numberOfSides;
+    const inLinesData = inLines.getData();
+    // const lineSizes = inLines.extractCellSizes();
+    // let lineIdx = 0;
+    let npts = inLinesData[0];
+    let offset = 0;
+    let inCellId = input.getVerts().getNumberOfCells();
+    for (let i = 0; i < inLinesData.length; i += (npts + 1)) {
+      npts = inLinesData[i];
+      const pts = inLinesData.slice(i + 1, i + 1 + npts);
+      if (npts > 1) { // if not, skip tubing this line
+        if (generateNormals) {
+          const polyLine = inLinesData.slice(i, i + npts + 1);
+          generateSlidingNormals(inPts.getData(), polyLine, inNormals);
+        }
+      }
+      // generate points
+      if (generatePoints(offset, npts, pts, inPts.getData(), newPts.getData(),
+                         input.getPointData(), outPD, newNormalsData, inScalars,
+                         range, inVectors, maxSpeed, inNormalsData, theta)) {
+        // generate strips for the polyline
+        generateStrips(offset, npts, inCellId, input.getCellData(), outCD, newStrips);
+        // generate texture coordinates for the polyline
+      } else {
+        // skip tubing this line
+        vtkWarningMacro('Could not generate points');
+      }
+      // lineIdx += npts;
+      // Compute the new offset for the next polyline
+      offset = computeOffset(offset, npts);
+      inCellId++;
+    }
+
+    output.setPoints(newPts);
+    output.setStrips(newStrips);
+    outPD.setNormals(newNormals);
+    outData[0] = output;
+  };
+}
+
+// ----------------------------------------------------------------------------
+// Object factory
+// ----------------------------------------------------------------------------
+
+const DEFAULT_VALUES = {
+  outputPointsPrecision: VtkPointPrecision.DEFAULT,
+  radius: 0.5,
+  varyRadius: VtkVaryRadius.VARY_RADIUS_OFF,
+  numberOfSides: 3,
+  radiusFactor: 10,
+  defaultNormal: [0, 0, 1],
+  useDefaultNormal: false,
+  sidesShareVertices: true,
+  capping: false,
+  onRatio: 1,
+  offset: 0,
+};
+
+// ----------------------------------------------------------------------------
+
+export function extend(publicAPI, model, initialValues = {}) {
+  Object.assign(model, DEFAULT_VALUES, initialValues);
+
+
+  // Build VTK API
+  macro.setGet(publicAPI, model, [
+    'outputPointsPrecision',
+    'radius',
+    'varyRadius',
+    'numberOfSides',
+    'radiusFactor',
+    'defaultNormal',
+    'useDefaultNormal',
+    'sidesShareVertices',
+    'capping',
+    'onRatio',
+    'offset',
+  ]);
+
+  // Make this a VTK object
+  macro.obj(publicAPI, model);
+
+  // Also make it an algorithm with one input and one output
+  macro.algo(publicAPI, model, 1, 1);
+
+  // Object specific methods
+  vtkTubeFilter(publicAPI, model);
+}
+
+// ----------------------------------------------------------------------------
+
+export const newInstance = macro.newInstance(extend, 'vtkTubeFilter');
+
+// ----------------------------------------------------------------------------
+
+export default Object.assign({ newInstance, extend });
