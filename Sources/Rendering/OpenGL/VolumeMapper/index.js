@@ -387,7 +387,8 @@ function vtkOpenGLVolumeMapper(publicAPI, model) {
     if (
       cellBO.getProgram() === 0 ||
       needRebuild ||
-      model.lastZBufferTexture !== model.zBufferTexture ||
+      model.lastHaveSeenDepthRequest !== model.haveSeenDepthRequest ||
+      !!model.lastZBufferTexture !== !!model.zBufferTexture ||
       cellBO.getShaderSourceTime().getMTime() < publicAPI.getMTime() ||
       cellBO.getShaderSourceTime().getMTime() < actor.getMTime() ||
       cellBO.getShaderSourceTime().getMTime() < model.currentInput.getMTime()
