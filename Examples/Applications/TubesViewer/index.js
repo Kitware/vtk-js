@@ -169,7 +169,10 @@ function createPipeline(fileName, fileContents) {
   vtpReader.parseArrayBuffer(fileContents);
 
   const tubeFilter = vtkTubeFilter.newInstance();
+  tubeFilter.setRadius(0.2);
   tubeFilter.setInputConnection(vtpReader.getOutputPort());
+  tubeFilter.setInputArrayToProcess(0, 'Radius', 'PointData', 'Scalars');
+  tubeFilter.setVaryRadius(VtkVaryRadius.VARY_RADIUS_BY_SCALAR);
 
   const lookupTable = vtkColorTransferFunction.newInstance();
   // const source = tubeFilter.getOutputData(0);
@@ -272,7 +275,6 @@ function createPipeline(fileName, fileContents) {
       scalarVisibility,
     });
     applyPreset();
-    tubeFilter.setInputArrayToProcess(0, colorByArrayName, location, 'SCALARS');
   }
   colorBySelector.addEventListener('change', updateColorBy);
   updateColorBy({ target: colorBySelector });
