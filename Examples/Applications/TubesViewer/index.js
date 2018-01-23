@@ -4,17 +4,20 @@
 import 'babel-polyfill';
 import 'vtk.js/Sources/favicon';
 
-import HttpDataAccessHelper       from 'vtk.js/Sources/IO/Core/DataAccessHelper/HttpDataAccessHelper';
-import vtkActor                   from 'vtk.js/Sources/Rendering/Core/Actor';
-import vtkColorMaps               from 'vtk.js/Sources/Rendering/Core/ColorTransferFunction/ColorMaps';
-import vtkColorTransferFunction   from 'vtk.js/Sources/Rendering/Core/ColorTransferFunction';
-import vtkFullScreenRenderWindow  from 'vtk.js/Sources/Rendering/Misc/FullScreenRenderWindow';
-import vtkMapper                  from 'vtk.js/Sources/Rendering/Core/Mapper';
-import vtkURLExtract              from 'vtk.js/Sources/Common/Core/URLExtract';
-import vtkXMLPolyDataReader       from 'vtk.js/Sources/IO/XML/XMLPolyDataReader';
-import vtkTubeFilter              from 'vtk.js/Sources/Filters/General/TubeFilter';
-import { ColorMode, ScalarMode }  from 'vtk.js/Sources/Rendering/Core/Mapper/Constants';
-import { VtkVaryRadius }          from 'vtk.js/Sources/Filters/General/TubeFilter/Constants';
+import HttpDataAccessHelper from 'vtk.js/Sources/IO/Core/DataAccessHelper/HttpDataAccessHelper';
+import vtkActor from 'vtk.js/Sources/Rendering/Core/Actor';
+import vtkColorMaps from 'vtk.js/Sources/Rendering/Core/ColorTransferFunction/ColorMaps';
+import vtkColorTransferFunction from 'vtk.js/Sources/Rendering/Core/ColorTransferFunction';
+import vtkFullScreenRenderWindow from 'vtk.js/Sources/Rendering/Misc/FullScreenRenderWindow';
+import vtkMapper from 'vtk.js/Sources/Rendering/Core/Mapper';
+import vtkURLExtract from 'vtk.js/Sources/Common/Core/URLExtract';
+import vtkXMLPolyDataReader from 'vtk.js/Sources/IO/XML/XMLPolyDataReader';
+import vtkTubeFilter from 'vtk.js/Sources/Filters/General/TubeFilter';
+import {
+  ColorMode,
+  ScalarMode,
+} from 'vtk.js/Sources/Rendering/Core/Mapper/Constants';
+import { VtkVaryRadius } from 'vtk.js/Sources/Filters/General/TubeFilter/Constants';
 
 import style from './TubesViewer.mcss';
 import icon from '../../../Documentation/content/icon/favicon-96x96.png';
@@ -31,12 +34,12 @@ const userParams = vtkURLExtract.extractURLParameters();
 
 // Background handling
 if (userParams.background) {
-  background = userParams.background.split(',').map(s => Number(s));
+  background = userParams.background.split(',').map((s) => Number(s));
 }
 const selectorClass =
-  (background.length === 3 && background.reduce((a, b) => a + b, 0) < 1.5)
-  ? style.dark
-  : style.light;
+  background.length === 3 && background.reduce((a, b) => a + b, 0) < 1.5
+    ? style.dark
+    : style.light;
 
 // name
 const defaultName = userParams.name || '';
@@ -49,12 +52,14 @@ const field = userParams.field || '';
 
 // camera
 function updateCamera(camera) {
-  ['zoom', 'pitch', 'elevation', 'yaw', 'azimuth', 'roll', 'dolly'].forEach((key) => {
-    if (userParams[key]) {
-      camera[key](userParams[key]);
+  ['zoom', 'pitch', 'elevation', 'yaw', 'azimuth', 'roll', 'dolly'].forEach(
+    (key) => {
+      if (userParams[key]) {
+        camera[key](userParams[key]);
+      }
+      renderWindow.render();
     }
-    renderWindow.render();
-  });
+  );
 }
 
 function preventDefaults(e) {
@@ -117,15 +122,31 @@ function createPipeline(fileName, fileContents) {
   // Create UI
   const presetSelector = document.createElement('select');
   presetSelector.setAttribute('class', selectorClass);
-  presetSelector.innerHTML = vtkColorMaps
-    .rgbPresetNames
-    .map(name => `<option value="${name}" ${lutName === name ? 'selected="selected"' : ''}>${name}</option>`)
+  presetSelector.innerHTML = vtkColorMaps.rgbPresetNames
+    .map(
+      (name) =>
+        `<option value="${name}" ${
+          lutName === name ? 'selected="selected"' : ''
+        }>${name}</option>`
+    )
     .join('');
 
   const representationSelector = document.createElement('select');
   representationSelector.setAttribute('class', selectorClass);
-  representationSelector.innerHTML = ['Hidden', 'Points', 'Wireframe', 'Surface', 'Surface with Edge']
-    .map((name, idx) => `<option value="${idx === 0 ? 0 : 1}:${idx < 4 ? idx - 1 : 2}:${idx === 4 ? 1 : 0}">${name}</option>`).join('');
+  representationSelector.innerHTML = [
+    'Hidden',
+    'Points',
+    'Wireframe',
+    'Surface',
+    'Surface with Edge',
+  ]
+    .map(
+      (name, idx) =>
+        `<option value="${idx === 0 ? 0 : 1}:${idx < 4 ? idx - 1 : 2}:${
+          idx === 4 ? 1 : 0
+        }">${name}</option>`
+    )
+    .join('');
   representationSelector.value = '1:2:0';
 
   const colorBySelector = document.createElement('select');
@@ -183,7 +204,10 @@ function createPipeline(fileName, fileContents) {
     scalarVisibility: false,
   });
   const actor = vtkActor.newInstance();
-  const scalars = tubeFilter.getOutputData().getPointData().getScalars();
+  const scalars = tubeFilter
+    .getOutputData()
+    .getPointData()
+    .getScalars();
   const dataRange = [].concat(scalars ? scalars.getRange() : [0, 1]);
 
   // --------------------------------------------------------------------
@@ -204,7 +228,11 @@ function createPipeline(fileName, fileContents) {
   // --------------------------------------------------------------------
 
   function updateRepresentation(event) {
-    const [visibility, representation, edgeVisibility] = event.target.value.split(':').map(Number);
+    const [
+      visibility,
+      representation,
+      edgeVisibility,
+    ] = event.target.value.split(':').map(Number);
     actor.getProperty().set({ representation, edgeVisibility });
     actor.setVisibility(!!visibility);
     renderWindow.render();
@@ -228,25 +256,51 @@ function createPipeline(fileName, fileContents) {
   // --------------------------------------------------------------------
 
   const colorByOptions = [{ value: ':', label: 'Solid color' }].concat(
-    tubeFilter.getOutputData().getPointData().getArrays().map(a => ({ label: `(p) ${a.getName()}`, value: `PointData:${a.getName()}` })),
-    tubeFilter.getOutputData().getCellData().getArrays().map(a => ({ label: `(c) ${a.getName()}`, value: `CellData:${a.getName()}` })));
+    tubeFilter
+      .getOutputData()
+      .getPointData()
+      .getArrays()
+      .map((a) => ({
+        label: `(p) ${a.getName()}`,
+        value: `PointData:${a.getName()}`,
+      })),
+    tubeFilter
+      .getOutputData()
+      .getCellData()
+      .getArrays()
+      .map((a) => ({
+        label: `(c) ${a.getName()}`,
+        value: `CellData:${a.getName()}`,
+      }))
+  );
   colorBySelector.innerHTML = colorByOptions
-    .map(({ label, value }) => `<option value="${value}" ${field === value ? 'selected="selected"' : ''}>${label}</option>`)
+    .map(
+      ({ label, value }) =>
+        `<option value="${value}" ${
+          field === value ? 'selected="selected"' : ''
+        }>${label}</option>`
+    )
     .join('');
 
   function updateColorBy(event) {
     const [location, colorByArrayName] = event.target.value.split(':');
-    const interpolateScalarsBeforeMapping = (location === 'PointData');
+    const interpolateScalarsBeforeMapping = location === 'PointData';
     let colorMode = ColorMode.DEFAULT;
     let scalarMode = ScalarMode.DEFAULT;
-    const scalarVisibility = (location.length > 0);
+    const scalarVisibility = location.length > 0;
     if (scalarVisibility) {
-      const activeArray = tubeFilter.getOutputData()[`get${location}`]().getArrayByName(colorByArrayName);
+      const activeArray = tubeFilter
+        .getOutputData()
+        [`get${location}`]()
+        .getArrayByName(colorByArrayName);
       const newDataRange = activeArray.getRange();
       dataRange[0] = newDataRange[0];
       dataRange[1] = newDataRange[1];
       colorMode = ColorMode.MAP_SCALARS;
-      scalarMode = (location === 'PointData') ? ScalarMode.USE_POINT_FIELD_DATA : ScalarMode.USE_CELL_FIELD_DATA;
+      scalarMode =
+        location === 'PointData'
+          ? ScalarMode.USE_POINT_FIELD_DATA
+          : ScalarMode.USE_CELL_FIELD_DATA;
 
       const numberOfComponents = activeArray.getNumberOfComponents();
       if (numberOfComponents > 1) {
@@ -260,7 +314,9 @@ function createPipeline(fileName, fileContents) {
         while (compOpts.length <= numberOfComponents) {
           compOpts.push(`Component ${compOpts.length}`);
         }
-        componentSelector.innerHTML = compOpts.map((t, index) => `<option value="${index - 1}">${t}</option>`).join('');
+        componentSelector.innerHTML = compOpts
+          .map((t, index) => `<option value="${index - 1}">${t}</option>`)
+          .join('');
       } else {
         componentSelector.style.display = 'none';
       }
@@ -322,7 +378,14 @@ function createPipeline(fileName, fileContents) {
   renderer.resetCamera();
   renderWindow.render();
 
-  global.pipeline[fileName] = { actor, tubeFilter, mapper, lookupTable, renderer, renderWindow };
+  global.pipeline[fileName] = {
+    actor,
+    tubeFilter,
+    mapper,
+    lookupTable,
+    renderer,
+    renderWindow,
+  };
 }
 
 // ----------------------------------------------------------------------------
@@ -354,11 +417,15 @@ export function load(container, options) {
     container.appendChild(progressContainer);
 
     const progressCallback = (progressEvent) => {
-      const percent = Math.floor(100 * progressEvent.loaded / progressEvent.total);
+      const percent = Math.floor(
+        100 * progressEvent.loaded / progressEvent.total
+      );
       progressContainer.innerHTML = `Loading ${percent}%`;
     };
 
-    HttpDataAccessHelper.fetchBinary(options.fileURL, { progressCallback }).then((binary) => {
+    HttpDataAccessHelper.fetchBinary(options.fileURL, {
+      progressCallback,
+    }).then((binary) => {
       container.removeChild(progressContainer);
       createViewer(container);
       createPipeline(defaultName, binary);
@@ -382,7 +449,9 @@ export function initLocalFileLoader(container) {
   }
 
   const fileContainer = document.createElement('div');
-  fileContainer.innerHTML = `<div class="${style.bigFileDrop}"/><input type="file" multiple accept=".vtp" style="display: none;"/>`;
+  fileContainer.innerHTML = `<div class="${
+    style.bigFileDrop
+  }"/><input type="file" multiple accept=".vtp" style="display: none;"/>`;
   myContainer.appendChild(fileContainer);
 
   const fileInput = fileContainer.querySelector('input');
@@ -399,10 +468,9 @@ export function initLocalFileLoader(container) {
 
   fileInput.addEventListener('change', handleFile);
   fileContainer.addEventListener('drop', handleFile);
-  fileContainer.addEventListener('click', e => fileInput.click());
+  fileContainer.addEventListener('click', (e) => fileInput.click());
   fileContainer.addEventListener('dragover', preventDefaults);
 }
-
 
 // Look at URL an see if we should load a file
 // ?fileURL=https://data.kitware.com/api/v1/item/59cdbb588d777f31ac63de08/download

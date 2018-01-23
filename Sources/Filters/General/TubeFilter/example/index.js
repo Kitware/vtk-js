@@ -1,16 +1,16 @@
 import 'vtk.js/Sources/favicon';
 
-import Constants                  from 'vtk.js/Sources/Filters/General/TubeFilter/Constants';
-import vtkActor                   from 'vtk.js/Sources/Rendering/Core/Actor';
-import vtkDataArray               from 'vtk.js/Sources/Common/Core/DataArray';
-import vtkFullScreenRenderWindow  from 'vtk.js/Sources/Rendering/Misc/FullScreenRenderWindow';
-import vtkMapper                  from 'vtk.js/Sources/Rendering/Core/Mapper';
-import vtkMath                    from 'vtk.js/Sources/Common/Core/Math';
-import vtkPoints                  from 'vtk.js/Sources/Common/Core/Points';
-import vtkPolyData                from 'vtk.js/Sources/Common/DataModel/PolyData';
-import vtkTubeFilter              from 'vtk.js/Sources/Filters/General/TubeFilter';
-import { VtkDataTypes }           from 'vtk.js/Sources/Common/Core/DataArray/Constants';
-import { VtkPointPrecision }      from 'vtk.js/Sources/Filters/General/Constants';
+import Constants from 'vtk.js/Sources/Filters/General/TubeFilter/Constants';
+import vtkActor from 'vtk.js/Sources/Rendering/Core/Actor';
+import vtkDataArray from 'vtk.js/Sources/Common/Core/DataArray';
+import vtkFullScreenRenderWindow from 'vtk.js/Sources/Rendering/Misc/FullScreenRenderWindow';
+import vtkMapper from 'vtk.js/Sources/Rendering/Core/Mapper';
+import vtkMath from 'vtk.js/Sources/Common/Core/Math';
+import vtkPoints from 'vtk.js/Sources/Common/Core/Points';
+import vtkPolyData from 'vtk.js/Sources/Common/DataModel/PolyData';
+import vtkTubeFilter from 'vtk.js/Sources/Filters/General/TubeFilter';
+import { VtkDataTypes } from 'vtk.js/Sources/Common/Core/DataArray/Constants';
+import { VtkPointPrecision } from 'vtk.js/Sources/Filters/General/Constants';
 
 import controlPanel from './controlPanel.html';
 
@@ -20,7 +20,9 @@ const { VtkVaryRadius } = Constants;
 // Standard rendering code setup
 // ----------------------------------------------------------------------------
 
-const fullScreenRenderer = vtkFullScreenRenderWindow.newInstance({ background: [0, 0, 0] });
+const fullScreenRenderer = vtkFullScreenRenderWindow.newInstance({
+  background: [0, 0, 0],
+});
 const renderer = fullScreenRenderer.getRenderer();
 const renderWindow = fullScreenRenderer.getRenderWindow();
 
@@ -63,12 +65,14 @@ function initializePolyData(dType) {
   const lines = new Uint32Array(numSegments + 2);
   lines[0] = numSegments + 1;
   const scalarsData = new Float32Array(numSegments + 1);
-  const scalars = vtkDataArray.newInstance(
-    { name: 'Scalars', values: scalarsData });
+  const scalars = vtkDataArray.newInstance({
+    name: 'Scalars',
+    values: scalarsData,
+  });
 
-  for (let i = 0; i < (numSegments + 1); ++i) {
+  for (let i = 0; i < numSegments + 1; ++i) {
     for (let j = 0; j < 3; ++j) {
-      pointData[(3 * i) + j] = vtkMath.random();
+      pointData[3 * i + j] = vtkMath.random();
     }
     scalarsData[i] = i * 0.1;
     verts[i] = 1;
@@ -85,7 +89,6 @@ function initializePolyData(dType) {
 }
 
 // ----------------------------------------------------------------------------
-
 
 const polyData = initializePolyData(VtkPointPrecision.DOUBLE);
 const tubeFilter = vtkTubeFilter.newInstance();
@@ -123,13 +126,13 @@ document.querySelector('.varyRadius').addEventListener('change', (e) => {
 });
 
 document.querySelector('.capping').addEventListener('change', (e) => {
-  const capping = !!(e.target.checked);
+  const capping = !!e.target.checked;
   tubeFilter.set({ capping });
   renderWindow.render();
 });
 
 document.querySelector('.tubing').addEventListener('change', (e) => {
-  const tubing = !!(e.target.checked);
+  const tubing = !!e.target.checked;
   global.tubeFilterActor.setVisibility(tubing);
   renderWindow.render();
 });

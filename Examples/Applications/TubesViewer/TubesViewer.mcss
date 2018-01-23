@@ -55,7 +55,7 @@
   top: 50%;
   transform: translate(-50%, -50%);
   background-color: white;
-  background-image: url('./dropBG.svg');
+  background-image: url('./dropBG.png');
   background-repeat: no-repeat;
   background-position: center;
   background-size: contain;

@@ -166,10 +166,9 @@ function vtkDataSetAttributes(publicAPI, model) {
     publicAPI[`copy${value}Off`] = () => {
       publicAPI.initialize();
       const attType = value.toUpperCase();
-      model.copyAttributeFlags[
-        AttributeCopyOperations.PASSDATA][
-          AttributeTypes[attType]]
-        = false;
+      model.copyAttributeFlags[AttributeCopyOperations.PASSDATA][
+        AttributeTypes[attType]
+      ] = false;
     };
   });
 
