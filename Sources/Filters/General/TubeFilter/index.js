@@ -5,8 +5,8 @@ import vtkMath from 'vtk.js/Sources/Common/Core/Math';
 import vtkPoints from 'vtk.js/Sources/Common/Core/Points';
 import vtkPolyData from 'vtk.js/Sources/Common/DataModel/PolyData';
 
+import { DesiredOutputPrecision } from 'vtk.js/Sources/Common/DataModel/DataSetAttributes/Constants';
 import { VtkDataTypes } from 'vtk.js/Sources/Common/Core/DataArray/Constants';
-import { VtkPointPrecision } from 'vtk.js/Sources/Filters/General/Constants';
 
 import Constants from './Constants';
 
@@ -625,9 +625,9 @@ function vtkTubeFilter(publicAPI, model) {
       numNewPts = (numPts + 2) * model.numberOfSides;
     }
     let pointType = inPts.getDataType();
-    if (model.outputPointsPrecision === VtkPointPrecision.SINGLE) {
+    if (model.outputPointsPrecision === DesiredOutputPrecision.SINGLE) {
       pointType = VtkDataTypes.FLOAT;
-    } else if (model.outputPointsPrecision === VtkPointPrecision.DOUBLE) {
+    } else if (model.outputPointsPrecision === DesiredOutputPrecision.DOUBLE) {
       pointType = VtkDataTypes.DOUBLE;
     }
     const newPts = vtkPoints.newInstance({
@@ -793,7 +793,7 @@ function vtkTubeFilter(publicAPI, model) {
 // ----------------------------------------------------------------------------
 
 const DEFAULT_VALUES = {
-  outputPointsPrecision: VtkPointPrecision.DEFAULT,
+  outputPointsPrecision: DesiredOutputPrecision.DEFAULT,
   radius: 0.5,
   varyRadius: VaryRadius.VARY_RADIUS_OFF,
   numberOfSides: 3,

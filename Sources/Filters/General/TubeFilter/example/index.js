@@ -9,8 +9,9 @@ import vtkMath from 'vtk.js/Sources/Common/Core/Math';
 import vtkPoints from 'vtk.js/Sources/Common/Core/Points';
 import vtkPolyData from 'vtk.js/Sources/Common/DataModel/PolyData';
 import vtkTubeFilter from 'vtk.js/Sources/Filters/General/TubeFilter';
+
+import { DesiredOutputPrecision } from 'vtk.js/Sources/Common/DataModel/DataSetAttributes/Constants';
 import { VtkDataTypes } from 'vtk.js/Sources/Common/Core/DataArray/Constants';
-import { VtkPointPrecision } from 'vtk.js/Sources/Filters/General/Constants';
 
 import controlPanel from './controlPanel.html';
 
@@ -52,9 +53,9 @@ const numSegments = 3;
 
 function initializePolyData(dType) {
   let pointType = VtkDataTypes.FLOAT;
-  if (dType === VtkPointPrecision.SINGLE) {
+  if (dType === DesiredOutputPrecision.SINGLE) {
     pointType = VtkDataTypes.FLOAT;
-  } else if (dType === VtkPointPrecision.DOUBLE) {
+  } else if (dType === DesiredOutputPrecision.DOUBLE) {
     pointType = VtkDataTypes.DOUBLE;
   }
   const polyData = vtkPolyData.newInstance();
@@ -90,7 +91,7 @@ function initializePolyData(dType) {
 
 // ----------------------------------------------------------------------------
 
-const polyData = initializePolyData(VtkPointPrecision.DOUBLE);
+const polyData = initializePolyData(DesiredOutputPrecision.DOUBLE);
 const tubeFilter = vtkTubeFilter.newInstance();
 tubeFilter.setCapping(false);
 tubeFilter.setNumberOfSides(50);

@@ -16,8 +16,8 @@ import {
   ColorMode,
   ScalarMode,
 } from 'vtk.js/Sources/Rendering/Core/Mapper/Constants';
+import { DesiredOutputPrecision } from 'vtk.js/Sources/Common/DataModel/DataSetAttributes/Constants';
 import { VtkDataTypes } from 'vtk.js/Sources/Common/Core/DataArray/Constants';
-import { VtkPointPrecision } from 'vtk.js/Sources/Filters/General/Constants';
 import { VaryRadius } from 'vtk.js/Sources/Filters/General/TubeFilter/Constants';
 
 import baseline from './testTubeFilter.png';
@@ -34,9 +34,9 @@ const numSegments = 3;
 
 function initializePolyData(dType) {
   let pointType = VtkDataTypes.FLOAT;
-  if (dType === VtkPointPrecision.SINGLE) {
+  if (dType === DesiredOutputPrecision.SINGLE) {
     pointType = VtkDataTypes.FLOAT;
-  } else if (dType === VtkPointPrecision.DOUBLE) {
+  } else if (dType === DesiredOutputPrecision.DOUBLE) {
     pointType = VtkDataTypes.DOUBLE;
   }
   const polyData = vtkPolyData.newInstance();
@@ -71,10 +71,10 @@ function initializePolyData(dType) {
 }
 
 test('Test vtkTubeFilter execution', (t) => {
-  const polyData = initializePolyData(VtkPointPrecision.DOUBLE);
+  const polyData = initializePolyData(DesiredOutputPrecision.DOUBLE);
 
   const tubeFilter1 = vtkTubeFilter.newInstance({
-    outputPointsPrecision: VtkPointPrecision.DOUBLE,
+    outputPointsPrecision: DesiredOutputPrecision.DOUBLE,
     capping: false,
     numberOfSides: 3,
   });
@@ -97,7 +97,7 @@ test('Test vtkTubeFilter execution', (t) => {
   );
 
   const tubeFilter2 = vtkTubeFilter.newInstance({
-    outputPointsPrecision: VtkPointPrecision.SINGLE,
+    outputPointsPrecision: DesiredOutputPrecision.SINGLE,
     capping: true,
     numberOfSides: 3,
   });
@@ -144,7 +144,7 @@ test.onlyIfWebGL('Test vtkTubeFilter rendering', (t) => {
   const mapper = gc.registerResource(vtkMapper.newInstance());
   actor.setMapper(mapper);
 
-  const polyData = initializePolyData(VtkPointPrecision.DOUBLE);
+  const polyData = initializePolyData(DesiredOutputPrecision.DOUBLE);
   const tubeFilter = vtkTubeFilter.newInstance();
   tubeFilter.setCapping(false);
   tubeFilter.setNumberOfSides(50);
