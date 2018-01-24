@@ -625,7 +625,7 @@ function vtkOpenGLPolyDataMapper(publicAPI, model) {
           `  gl_PointSize = ${actor
             .getProperty()
             .getPointSize()
-            .toFixed(1)};`,
+            }.0;`,
         ],
         false
       ).result;
