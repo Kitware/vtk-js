@@ -1,71 +1,57 @@
-### setResolution(resolution)
+All `propertyObject`s may have any of the following keys:
 
-Sets the cube face resolution. Defaults to 200.
+- text: the face text (default "")
+- faceColor: the face color (default "white")
+- faceRotation: the face rotation, in degrees (default 0)
+- fontFamily: the font family to use (default Arial)
+- fontColor: the font color (default "black")
+- fontStyle: the CSS style for the text (default "normal")
+- fontSizeScale: A function that takes the face resolution and returns the
+  pixel size of the font (default `(resolution) => resolution / 1.8`)
+- edgeThickness: the face edge/border thickness, which is a fraction of the
+  cube resolution (default 0.1)
+- edgeColor: the color of each face's edge/border (default "white")
+- resolution: the pixel resolution of a face, i.e. pixel side length
+  (default 200)
 
-### setFontStyle(style)
+If a key is not specified, then the default value is used.
 
-Sets the font style. This is any valid CSS font style, e.g. normal,
-bold, etc. Defaults to "normal".
+### defaultStyle (get/set)
 
-### setFontFamily(family)
+The default style for all faces.
 
-Sets the font family. This is any valid CSS font family name. Defaults
-to "Arial".
+### xPlusFaceProperty (get/set)
 
-### setFontColor(color)
+The +X face property.
 
-Sets the font color. This is any valid CSS color. Defaults to "black".
+The setter takes a `propertyObject` as detailed above.
 
-### setEdgeThickness(thickness)
+### xMinusFaceProperty (get/set)
 
-Edge thickness is a value between 0.0 and 1.0, and represents the
-fraction of the face resolution to cover (for one edge). Defaults to
-0.1.
+The -X face property.
 
-If the thickness is 0, then no edge is rendered.
+The setter takes a `propertyObject` as detailed above.
 
-### setEdgeColor(color)
+### yPlusFaceProperty (get/set)
 
-Sets the edge color. Defaults to black.
+The +Y face property.
 
-### setXPlusFaceProperty({ text, faceColor})
+The setter takes a `propertyObject` as detailed above.
 
-Sets the +X face property.
+### yMinusFaceProperty (get/set)
 
-This takes an object, where you can optionally set the face text
-or the face color, e.g. { text: 'Text', faceColor: '#0000ff' }.
+The -Y face property.
 
-### setXMinusFaceProperty({ text, faceColor})
+The setter takes a `propertyObject` as detailed above.
 
-Sets the -X face property.
+### zPlusFaceProperty (get/set)
 
-This takes an object, where you can optionally set the face text
-or the face color, e.g. { text: 'Text', faceColor: '#0000ff' }.
+The +Z face property.
 
-### setYPlusFaceProperty({ text, faceColor})
+The setter takes a `propertyObject` as detailed above.
 
-Sets the +Y face property.
+### zMinusFaceProperty (get/set)
 
-This takes an object, where you can optionally set the face text
-or the face color, e.g. { text: 'Text', faceColor: '#0000ff' }.
+The -Z face property.
 
-### setYMinusFaceProperty({ text, faceColor})
-
-Sets the -Y face property.
-
-This takes an object, where you can optionally set the face text
-or the face color, e.g. { text: 'Text', faceColor: '#0000ff' }.
-
-### setZPlusFaceProperty({ text, faceColor})
-
-Sets the +Z face property.
-
-This takes an object, where you can optionally set the face text
-or the face color, e.g. { text: 'Text', faceColor: '#0000ff' }.
-
-### setZMinusFaceProperty({ text, faceColor})
-
-Sets the -Z face property.
-
-This takes an object, where you can optionally set the face text
-or the face color, e.g. { text: 'Text', faceColor: '#0000ff' }.
+The setter takes a `propertyObject` as detailed above.

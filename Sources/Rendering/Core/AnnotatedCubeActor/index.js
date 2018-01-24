@@ -163,14 +163,13 @@ export function extend(publicAPI, model, initialValues = {}) {
   vtkActor.extend(publicAPI, model, initialValues);
 
   macro.get(publicAPI, model, [
-    'defaultFontStyle',
+    'defaultStyle',
     'xPlusFaceProperty',
     'xMinusFaceProperty',
     'yPlusFaceProperty',
     'yMinusFaceProperty',
     'zPlusFaceProperty',
     'zMinusFaceProperty',
-    'resolution',
   ]);
 
   // Object methods
