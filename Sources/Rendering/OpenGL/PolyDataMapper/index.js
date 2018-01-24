@@ -622,10 +622,7 @@ function vtkOpenGLPolyDataMapper(publicAPI, model) {
         '//VTK::PositionVC::Impl',
         [
           '//VTK::PositionVC::Impl',
-          `  gl_PointSize = ${actor
-            .getProperty()
-            .getPointSize()
-            }.0;`,
+          `  gl_PointSize = ${actor.getProperty().getPointSize()}.0;`,
         ],
         false
       ).result;
