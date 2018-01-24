@@ -91,6 +91,7 @@ export function extend(publicAPI, model, initialValues = {}) {
       modelKey: 'mapper',
       property: 'interpolateScalarsBeforeMapping',
     },
+    pointSize: { modelKey: 'property', property: 'pointSize' },
   });
 }
 
