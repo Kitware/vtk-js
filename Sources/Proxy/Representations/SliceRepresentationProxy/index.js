@@ -123,7 +123,7 @@ function vtkSliceRepresentationProxy(publicAPI, model) {
     model.mapper[`set${model.slicingMode}Slice`](index);
 
   publicAPI.getSliceIndex = () =>
-    model.mapper[`get${model.slicingMode}Slice`]();
+    model.slicingMode ? model.mapper[`get${model.slicingMode}Slice`]() : 0;
 
   publicAPI.setSlicingMode = (mode) => {
     if (!mode) {
@@ -148,8 +148,12 @@ function vtkSliceRepresentationProxy(publicAPI, model) {
 
   // Used for UI
   publicAPI.getSliceIndexValues = () => {
+    const ds = publicAPI.getInputDataSet();
+    if (!ds) {
+      return [];
+    }
     const values = [];
-    const extent = publicAPI.getInputDataSet().getExtent();
+    const extent = ds.getExtent();
     const axisIndex = 'XYZ'.indexOf(model.slicingMode);
     const endValue = extent[axisIndex * 2 + 1];
     let currentValue = extent[axisIndex * 2];
