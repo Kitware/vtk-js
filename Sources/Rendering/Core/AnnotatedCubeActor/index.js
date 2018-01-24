@@ -69,13 +69,20 @@ function vtkAnnotatedCubeActor(publicAPI, model) {
       ctxt.strokeRect(0, 0, canvas.width, canvas.height);
     }
 
+    // set face rotation
+    ctxt.save();
+    ctxt.translate(canvas.width / 2, canvas.height / 2);
+    ctxt.rotate(-Math.PI * (prop.faceRotation / 180.0));
+
     // set foreground text
     const textSize = prop.fontSizeScale(prop.resolution);
     ctxt.fillStyle = prop.fontColor;
     ctxt.textAlign = 'center';
     ctxt.textBaseline = 'middle';
     ctxt.font = `${prop.fontStyle} ${textSize}px "${prop.fontFamily}"`;
-    ctxt.fillText(prop.text, canvas.width / 2, canvas.height / 2);
+    ctxt.fillText(prop.text, 0, 0);
+
+    ctxt.restore();
 
     const vtkImage = ImageHelper.canvasToImageData(canvas);
     texture.setInputData(vtkImage, FACE_TO_INDEX[faceName]);
@@ -130,6 +137,7 @@ export const DEFAULT_VALUES = {
   defaultStyle: {
     text: '',
     faceColor: 'white',
+    faceRotation: 0,
     fontFamily: 'Arial',
     fontColor: 'black',
     fontStyle: 'normal',

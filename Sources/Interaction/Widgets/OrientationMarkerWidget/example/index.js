@@ -40,6 +40,7 @@ axes.setDefaultStyle({
   fontColor: 'black',
   fontSizeScale: (res) => res / 2,
   faceColor: '#0000ff',
+  faceRotation: 0,
   edgeThickness: 0.1,
   edgeColor: 'black',
   resolution: 400,
@@ -48,6 +49,7 @@ axes.setDefaultStyle({
 axes.setXMinusFaceProperty({
   text: '-X',
   faceColor: '#ffff00',
+  faceRotation: 90,
   fontStyle: 'italic',
 });
 axes.setYPlusFaceProperty({
@@ -60,8 +62,11 @@ axes.setYMinusFaceProperty({
   faceColor: '#00ffff',
   fontColor: 'white',
 });
-axes.setZPlusFaceProperty({ text: '+Z', edgeColor: 'yellow' });
-axes.setZMinusFaceProperty({ text: '-Z', edgeThickness: 0 });
+axes.setZPlusFaceProperty({
+  text: '+Z',
+  edgeColor: 'yellow',
+});
+axes.setZMinusFaceProperty({ text: '-Z', faceRotation: 45, edgeThickness: 0 });
 
 // create orientation widget
 const orientationWidget = vtkOrientationMarkerWidget.newInstance({
