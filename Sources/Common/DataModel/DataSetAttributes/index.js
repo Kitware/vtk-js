@@ -163,6 +163,13 @@ function vtkDataSetAttributes(publicAPI, model) {
         publicAPI.getArrayWithIndex(arrayName).index,
         value
       );
+    publicAPI[`copy${value}Off`] = () => {
+      publicAPI.initialize();
+      const attType = value.toUpperCase();
+      model.copyAttributeFlags[AttributeCopyOperations.PASSDATA][
+        AttributeTypes[attType]
+      ] = false;
+    };
   });
 
   publicAPI.initialize = macro.chain(publicAPI.initialize, () => {

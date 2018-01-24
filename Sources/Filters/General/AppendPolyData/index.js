@@ -2,11 +2,10 @@ import macro from 'vtk.js/Sources/macro';
 import vtkDataArray from 'vtk.js/Sources/Common/Core/DataArray';
 import vtkPoints from 'vtk.js/Sources/Common/Core/Points';
 import vtkPolyData from 'vtk.js/Sources/Common/DataModel/PolyData';
+
+import { DesiredOutputPrecision } from 'vtk.js/Sources/Common/DataModel/DataSetAttributes/Constants';
 import { VtkDataTypes } from 'vtk.js/Sources/Common/Core/DataArray/Constants';
 
-import Constants from 'vtk.js/Sources/Filters/General/AppendPolyData/Constants';
-
-const { PointPrecision } = Constants;
 const { vtkErrorMacro } = macro;
 
 function offsetCellArray(typedArray, offset) {
@@ -97,9 +96,9 @@ function vtkAppendPolyData(publicAPI, model) {
       }
     }
 
-    if (model.outputPointsPrecision === PointPrecision.SINGLE) {
+    if (model.outputPointsPrecision === DesiredOutputPrecision.SINGLE) {
       pointType = VtkDataTypes.FLOAT;
-    } else if (model.outputPointsPrecision === PointPrecision.DOUBLE) {
+    } else if (model.outputPointsPrecision === DesiredOutputPrecision.DOUBLE) {
       pointType = VtkDataTypes.DOUBLE;
     }
 
@@ -210,7 +209,7 @@ function vtkAppendPolyData(publicAPI, model) {
 // ----------------------------------------------------------------------------
 
 const DEFAULT_VALUES = {
-  outputPointsPrecision: PointPrecision.DEFAULT,
+  outputPointsPrecision: DesiredOutputPrecision.DEFAULT,
 };
 
 // ----------------------------------------------------------------------------
@@ -237,4 +236,4 @@ export const newInstance = macro.newInstance(extend, 'vtkAppendPolyData');
 
 // ----------------------------------------------------------------------------
 
-export default Object.assign({ newInstance, extend }, Constants);
+export default Object.assign({ newInstance, extend });

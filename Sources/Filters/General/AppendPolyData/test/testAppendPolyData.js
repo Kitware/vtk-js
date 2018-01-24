@@ -13,13 +13,14 @@ import vtkOpenGLRenderWindow from 'vtk.js/Sources/Rendering/OpenGL/RenderWindow'
 import vtkRenderWindow from 'vtk.js/Sources/Rendering/Core/RenderWindow';
 import vtkRenderer from 'vtk.js/Sources/Rendering/Core/Renderer';
 
-import { VtkDataTypes } from 'vtk.js/Sources/Common/Core/DataArray/Constants';
-import { AttributeTypes } from 'vtk.js/Sources/Common/DataModel/DataSetAttributes/Constants';
+import {
+  AttributeTypes,
+  DesiredOutputPrecision,
+} from 'vtk.js/Sources/Common/DataModel/DataSetAttributes/Constants';
 import { FieldDataTypes } from 'vtk.js/Sources/Common/DataModel/DataSet/Constants';
+import { VtkDataTypes } from 'vtk.js/Sources/Common/Core/DataArray/Constants';
 
 import baseline from './testAppendPolyData.png';
-
-const PointPrecision = vtkAppendPolyData;
 
 test('Test vtkAppendPolyData instance', (t) => {
   t.ok(vtkAppendPolyData, 'Make sure the class definition exists.');
@@ -38,7 +39,7 @@ test('Test vtkAppendPolyData execution', (t) => {
   const filter = vtkAppendPolyData.newInstance();
   filter.setInputConnection(cone.getOutputPort(), 0);
   filter.addInputConnection(cylinder.getOutputPort());
-  filter.setOutputPointsPrecision(PointPrecision.DEFAULT);
+  filter.setOutputPointsPrecision(DesiredOutputPrecision.DEFAULT);
 
   const outPD = filter.getOutputData();
 

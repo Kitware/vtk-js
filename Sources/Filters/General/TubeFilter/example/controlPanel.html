@@ -1,0 +1,54 @@
+<table>
+  <tr>
+    <td>Tubing</td>
+    <td colspan="3">
+      <input class='tubing' type="checkbox" checked />
+    </td>
+  </tr>
+  <tr>
+    <td>Number of Sides</td>
+    <td>
+      <form name='numberOfSidesForm'>
+        <input class='numberOfSides' id="numberOfSidesInputId" type="range"
+          min="3" max="100" step="1" value="50"
+          oninput="numberOfSidesOutputId.value = numberOfSidesInputId.value"/>
+        <output id="numberOfSidesOutputId">50</output>
+      </form>
+    </td>
+  </tr>
+  <tr>
+    <td>Radius</td>
+    <td>
+      <form name='radiusForm'>
+        <input class='radius' id="radiusInputId" type="range"
+          min="0.01" max="1.0" step=".01" value="0.1"
+          oninput="radiusOutputId.value = radiusInputId.value"/>
+        <output id="radiusOutputId">0.1</output>
+      </form>
+    </td>
+  </tr>
+  <tr>
+    <td>Vary Radius</td>
+    <td>
+      <select class="varyRadius">
+        <option value="VARY_RADIUS_OFF">VARY_RADIUS_OFF</option>
+        <option value="VARY_RADIUS_BY_SCALAR">VARY_RADIUS_BY_SCALAR</option>
+        <option value="VARY_RADIUS_BY_VECTOR">VARY_RADIUS_BY_VECTOR</option>
+        <option value="VARY_RADIUS_BY_ABSOLUTE_SCALAR">VARY_RADIUS_BY_ABSOLUTE_SCALAR</option>
+      </select>
+    </td>
+  </tr>
+  <tr>
+    <td>Capping</td>
+    <td colspan="3">
+      <input class='capping' type="checkbox" />
+    </td>
+  </tr>
+  <tr>
+    <td>OnRatio</td>
+    <td>
+      <input class='onRatio' id="onRatioInputId" type="number"
+        min="1" max="4.0" step="1" value="1"/>
+    </td>
+  </tr>
+</table>
