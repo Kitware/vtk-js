@@ -73,11 +73,15 @@ function vtkSlider(publicAPI, model) {
   let offset = 0;
   let ratio = 0;
 
-  function onMouseDown(e) {
-    e.preventDefault();
-    isDragging = e.target === model.el;
-    offset = model.orientation ? e.clientX : e.clientY;
-    ratio = (model.value - model.values[0]) / model.range;
+  function handleDragEvents(enable) {
+    const rootElm = document.querySelector('body');
+    const method = enable ? 'addEventListener' : 'removeEventListener';
+
+    /* eslint-disable no-use-before-define */
+    rootElm[method]('mousemove', onMouseMove);
+    rootElm[method]('mouseleave', onMouseOut);
+    rootElm[method]('mouseup', onMouseUp);
+    /* eslint-enable no-use-before-define */
   }
 
   function onMouseMove(e) {
@@ -95,7 +99,12 @@ function vtkSlider(publicAPI, model) {
     }
   }
 
+  function onMouseOut(e) {
+    isDragging = false;
+  }
+
   function onMouseUp(e) {
+    handleDragEvents(false);
     if (!isDragging) {
       const isClick = !((model.orientation ? e.clientX : e.clientY) - offset);
       if (isClick) {
@@ -117,22 +126,21 @@ function vtkSlider(publicAPI, model) {
     isDragging = false;
   }
 
-  function onMouseOut(e) {
-    isDragging = false;
+  function onMouseDown(e) {
+    handleDragEvents(true);
+    e.preventDefault();
+    isDragging = e.target === model.el;
+    offset = model.orientation ? e.clientX : e.clientY;
+    ratio = (model.value - model.values[0]) / model.range;
   }
 
   function bindEvents() {
     model.container.addEventListener('mousedown', onMouseDown);
-    model.container.addEventListener('mouseup', onMouseUp);
-    model.container.addEventListener('mousemove', onMouseMove);
-    model.container.addEventListener('mouseleave', onMouseOut);
   }
 
   function unbindEvents() {
+    handleDragEvents(false);
     model.container.removeEventListener('mousedown', onMouseDown);
-    model.container.removeEventListener('mouseup', onMouseUp);
-    model.container.removeEventListener('mousemove', onMouseMove);
-    model.container.removeEventListener('mouseleave', onMouseOut);
   }
 
   // --------------------------------------------------------------------------
