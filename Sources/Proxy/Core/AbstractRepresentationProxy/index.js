@@ -201,7 +201,7 @@ function vtkAbstractRepresentationProxy(publicAPI, model) {
       'scalarVisibility'
     );
 
-    if (scalarVisibility) {
+    if (scalarVisibility && colorByArrayName) {
       result.push(colorByArrayName);
       result.push(
         scalarMode === vtkMapper.ScalarMode.USE_POINT_FIELD_DATA
@@ -210,7 +210,7 @@ function vtkAbstractRepresentationProxy(publicAPI, model) {
       );
     }
 
-    if (colorMode === vtkMapper.ColorMode.MAP_SCALARS) {
+    if (colorMode === vtkMapper.ColorMode.MAP_SCALARS && colorByArrayName) {
       const lut = publicAPI
         .getLookupTableProxy(colorByArrayName)
         .getLookupTable();
