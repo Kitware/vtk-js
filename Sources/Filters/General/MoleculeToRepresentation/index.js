@@ -112,7 +112,7 @@ function vtkMoleculeToRepresentation(publicAPI, model) {
 
       // skip atoms specified by hideElements
       // model.hideHydrogen = false; // show hydrogen
-      if (model.hideElements.includes(ATOMS[atomicNumber[i]].id)) {
+      if (model.hideElements.indexOf(ATOMS[atomicNumber[i]].id) !== -1) {
         continue;
       }
 
@@ -188,8 +188,8 @@ function vtkMoleculeToRepresentation(publicAPI, model) {
 
       // Do not append if i or j belong to element to not display
       if (
-        model.hideElements.includes(ATOMS[atomicNumber[i]].id) ||
-        model.hideElements.includes(ATOMS[atomicNumber[j]].id)
+        model.hideElements.indexOf(ATOMS[atomicNumber[i]].id) !== -1 ||
+        model.hideElements.indexOf(ATOMS[atomicNumber[j]].id) !== -1
       ) {
         continue;
       }
@@ -347,7 +347,7 @@ const DEFAULT_VALUES = {
   bondRadius: 0.075,
   deltaBondFactor: 0.6,
   radiusType: 'radiusVDW',
-  hideElements: [],
+  hideElements: '',
 };
 
 // ----------------------------------------------------------------------------
@@ -358,9 +358,13 @@ export function extend(publicAPI, model, initialValues = {}) {
   // Build VTK API
   macro.obj(publicAPI, model);
   macro.setGet(publicAPI, model, [
-    'sphereScaleArrayName',
-    'radiusType',
+    'atomicRadiusScaleFactor',
+    'bondRadius',
+    'deltaBondFactor',
     'hideElements',
+    'radiusType',
+    'sphereScaleArrayName',
+    'tolerance',
   ]);
   macro.algo(publicAPI, model, 1, 2);
   vtkMoleculeToRepresentation(publicAPI, model);
