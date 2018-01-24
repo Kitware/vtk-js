@@ -846,7 +846,7 @@ function vtkPiecewiseGaussianWidget(publicAPI, model) {
         model.dataRange || model.colorTransferFunction.getMappingRange();
       if (
         !model.colorCanvas ||
-        model.colorCanvasMTime < model.colorTransferFunction.getMTime()
+        model.colorCanvasMTime !== model.colorTransferFunction.getMTime()
       ) {
         model.colorCanvasMTime = model.colorTransferFunction.getMTime();
         model.colorCanvas = updateColorCanvas(
