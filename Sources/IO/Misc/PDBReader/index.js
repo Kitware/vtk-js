@@ -45,20 +45,14 @@ function vtkPDBReader(publicAPI, model) {
   };
 
   // Fetch the actual data arrays
-  publicAPI.loadData = () => {
-    const promise = fetchPDB(model.url);
+  publicAPI.loadData = () => fetchPDB(model.url).then(publicAPI.parseText);
 
-    promise.then((pdb) => {
-      model.pdb = pdb;
-      model.molecule = [];
-
-      // Parse data
-      model.molecule = model.pdb.split('\n');
-
-      publicAPI.modified();
-    });
-
-    return promise;
+  publicAPI.parseText = (txt) => {
+    model.pdb = txt;
+    model.molecule = [];
+    model.molecule = model.pdb.split('\n');
+    publicAPI.modified();
+    return true;
   };
 
   publicAPI.requestData = (inData, outData) => {
