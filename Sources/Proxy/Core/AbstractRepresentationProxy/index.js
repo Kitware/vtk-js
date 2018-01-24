@@ -27,7 +27,8 @@ function vtkAbstractRepresentationProxy(publicAPI, model) {
     publicAPI.updateColorByDomain();
   };
 
-  publicAPI.getInputDataSet = () => model.input ? model.input.getDataset() : null;
+  publicAPI.getInputDataSet = () =>
+    model.input ? model.input.getDataset() : null;
 
   publicAPI.getDataArray = (arrayName, arrayLocation) => {
     const [selectedArray, selectedLocation] = publicAPI.getColorBy();
