@@ -295,7 +295,46 @@ function extend(publicAPI, model, initialValues = {}) {
   // Proxy handling
   macro.proxy(publicAPI, model);
   macro.proxyPropertyMapping(publicAPI, model, {
-    orientationAxes: { modelKey: 'orientationWidget', property: 'enabled' },
+    orientationAxesVisible: {
+      modelKey: 'orientationWidget',
+      property: 'enabled',
+    },
+    orientationAxesCorner: {
+      modelKey: 'orientationWidget',
+      property: 'viewportCorner',
+    },
+    orientationAxesSize: {
+      modelKey: 'orientationWidget',
+      property: 'viewportSize',
+    },
+    orientationAxesDefaultStyle: {
+      modelKey: 'orientationAxes',
+      property: 'defaultStyle',
+    },
+    orientationAxesXMinusFaceProperty: {
+      modelKey: 'orientationAxes',
+      property: 'XMinusFaceProperty',
+    },
+    orientationAxesXPlusFaceProperty: {
+      modelKey: 'orientationAxes',
+      property: 'XPlusFaceProperty',
+    },
+    orientationAxesYMinusFaceProperty: {
+      modelKey: 'orientationAxes',
+      property: 'YMinusFaceProperty',
+    },
+    orientationAxesYPlusFaceProperty: {
+      modelKey: 'orientationAxes',
+      property: 'YPlusFaceProperty',
+    },
+    orientationAxesZMinusFaceProperty: {
+      modelKey: 'orientationAxes',
+      property: 'ZMinusFaceProperty',
+    },
+    orientationAxesZPlusFaceProperty: {
+      modelKey: 'orientationAxes',
+      property: 'ZPlusFaceProperty',
+    },
   });
 }
 
