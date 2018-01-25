@@ -183,25 +183,28 @@ function vtkInteractorStyleTrackballCamera(publicAPI, model) {
     const pos = model.interactor.getEventPosition(
       model.interactor.getPointerIndex()
     );
-    publicAPI.findPokedRenderer(pos.x, pos.y);
-    if (model.currentRenderer === null) {
-      return;
-    }
 
-    const camera = model.currentRenderer.getActiveCamera();
-
-    const dyf = model.interactor.getScale() / model.interactor.getLastScale();
-    if (camera.getParallelProjection()) {
-      camera.setParallelScale(camera.getParallelScale() / dyf);
-    } else {
-      camera.dolly(dyf);
-      if (model.autoAdjustCameraClippingRange) {
-        model.currentRenderer.resetCameraClippingRange();
+    if (pos) {
+      publicAPI.findPokedRenderer(pos.x, pos.y);
+      if (model.currentRenderer === null) {
+        return;
       }
-    }
 
-    if (model.interactor.getLightFollowCamera()) {
-      model.currentRenderer.updateLightsGeometryToFollowCamera();
+      const camera = model.currentRenderer.getActiveCamera();
+
+      const dyf = model.interactor.getScale() / model.interactor.getLastScale();
+      if (camera.getParallelProjection()) {
+        camera.setParallelScale(camera.getParallelScale() / dyf);
+      } else {
+        camera.dolly(dyf);
+        if (model.autoAdjustCameraClippingRange) {
+          model.currentRenderer.resetCameraClippingRange();
+        }
+      }
+
+      if (model.interactor.getLightFollowCamera()) {
+        model.currentRenderer.updateLightsGeometryToFollowCamera();
+      }
     }
   };
 
