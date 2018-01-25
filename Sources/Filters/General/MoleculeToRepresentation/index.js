@@ -62,6 +62,11 @@ function vtkMoleculeToRepresentation(publicAPI, model) {
     let bondIndex = null;
     let bondOrder = null;
 
+    // Empty arrays
+    bondPositionData.length = 0;
+    bondScaleData.length = 0;
+    bondOrientationData.length = 0;
+
     if (moleculedata.getAtoms()) {
       if (moleculedata.getAtoms().coords !== undefined) {
         if (moleculedata.getAtoms().coords['3d'] !== undefined) {
