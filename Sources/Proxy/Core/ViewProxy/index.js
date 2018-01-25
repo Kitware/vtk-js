@@ -206,6 +206,8 @@ function vtkViewProxy(publicAPI, model) {
 
   publicAPI.captureImage = () => model.renderWindow.captureImages()[0];
 
+  // --------------------------------------------------------------------------
+
   publicAPI.openCaptureImage = (target = '_blank') => {
     const image = new Image();
     image.src = publicAPI.captureImage();
@@ -224,8 +226,12 @@ function vtkViewProxy(publicAPI, model) {
     });
   };
 
+  // --------------------------------------------------------------------------
+
   publicAPI.updateCornerAnnotation = (meta) =>
     model.cornerAnnotation.updateMetadata(meta);
+
+  // --------------------------------------------------------------------------
 
   publicAPI.setAnnotationOpacity = (opacity) => {
     if (model.annotationOpacity !== Number(opacity)) {
@@ -235,6 +241,8 @@ function vtkViewProxy(publicAPI, model) {
     }
   };
 
+  // --------------------------------------------------------------------------
+
   function updateAnnotationColor() {
     const [r, g, b] = model.renderer.getBackground();
     model.cornerAnnotation.getAnnotationContainer().style.color =
@@ -242,11 +250,15 @@ function vtkViewProxy(publicAPI, model) {
   }
   updateAnnotationColor();
 
+  // --------------------------------------------------------------------------
+
   publicAPI.setBackground = macro.chain(
     model.renderer.setBackground,
     updateAnnotationColor
   );
   publicAPI.getBackground = model.renderer.getBackground;
+
+  // --------------------------------------------------------------------------
 
   publicAPI.setAnimation = (enable) => {
     if (enable) {
