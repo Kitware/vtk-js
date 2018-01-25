@@ -109,6 +109,25 @@ export default function addRegistrationAPI(publicAPI, model) {
         proxyManager: publicAPI,
       })
     );
+
+    // Handle property setting
+    if (definition.props) {
+      proxy.set(definition.props);
+    }
+
+    // Handle proxy property settings
+    if (definition.proxyProps) {
+      const proxyMap = {};
+      Object.keys(definition.proxyProps).forEach((key) => {
+        const newProxyDef = definition.proxyProps[key];
+        proxyMap[key] = publicAPI.createProxy(
+          newProxyDef.group,
+          newProxyDef.name,
+          newProxyDef.options
+        );
+      });
+      proxy.set(proxyMap);
+    }
     registerProxy(proxy);
 
     // Automatically make it active if possible

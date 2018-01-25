@@ -3,6 +3,7 @@ import macro from 'vtk.js/Sources/macro';
 import vtkAnnotatedCubeActor from 'vtk.js/Sources/Rendering/Core/AnnotatedCubeActor';
 import vtkCornerAnnotation from 'vtk.js/Sources/Interaction/UI/CornerAnnotation';
 import vtkInteractorStyleManipulator from 'vtk.js/Sources/Interaction/Style/InteractorStyleManipulator';
+import vtkMatrixBuilder from 'vtk.js/Sources/Common/Core/MatrixBuilder';
 import vtkOpenGLRenderWindow from 'vtk.js/Sources/Rendering/OpenGL/RenderWindow';
 import vtkOrientationMarkerWidget from 'vtk.js/Sources/Interaction/Widgets/OrientationMarkerWidget';
 import vtkRenderer from 'vtk.js/Sources/Rendering/Core/Renderer';
@@ -20,6 +21,14 @@ import vtkTrackballZoom from 'vtk.js/Sources/Interaction/Manipulators/TrackballZ
 function vtkViewProxy(publicAPI, model) {
   // Set our className
   model.classHierarchy.push('vtkViewProxy');
+
+  // Private --------------------------------------------------------------------
+
+  function updateAnnotationColor() {
+    const [r, g, b] = model.renderer.getBackground();
+    model.cornerAnnotation.getAnnotationContainer().style.color =
+      r + g + b > 1.5 ? 'black' : 'white';
+  }
 
   // Setup --------------------------------------------------------------------
   model.renderWindow = vtkRenderWindow.newInstance();
@@ -206,6 +215,8 @@ function vtkViewProxy(publicAPI, model) {
 
   publicAPI.captureImage = () => model.renderWindow.captureImages()[0];
 
+  // --------------------------------------------------------------------------
+
   publicAPI.openCaptureImage = (target = '_blank') => {
     const image = new Image();
     image.src = publicAPI.captureImage();
@@ -224,8 +235,12 @@ function vtkViewProxy(publicAPI, model) {
     });
   };
 
+  // --------------------------------------------------------------------------
+
   publicAPI.updateCornerAnnotation = (meta) =>
     model.cornerAnnotation.updateMetadata(meta);
+
+  // --------------------------------------------------------------------------
 
   publicAPI.setAnnotationOpacity = (opacity) => {
     if (model.annotationOpacity !== Number(opacity)) {
@@ -235,18 +250,18 @@ function vtkViewProxy(publicAPI, model) {
     }
   };
 
-  function updateAnnotationColor() {
-    const [r, g, b] = model.renderer.getBackground();
-    model.cornerAnnotation.getAnnotationContainer().style.color =
-      r + g + b > 1.5 ? 'black' : 'white';
-  }
-  updateAnnotationColor();
+  // --------------------------------------------------------------------------
 
   publicAPI.setBackground = macro.chain(
     model.renderer.setBackground,
     updateAnnotationColor
   );
+
+  // --------------------------------------------------------------------------
+
   publicAPI.getBackground = model.renderer.getBackground;
+
+  // --------------------------------------------------------------------------
 
   publicAPI.setAnimation = (enable) => {
     if (enable) {
@@ -255,6 +270,58 @@ function vtkViewProxy(publicAPI, model) {
       model.renderWindow.getInteractor().cancelAnimation('proxy');
     }
   };
+
+  // --------------------------------------------------------------------------
+
+  publicAPI.updateOrientation = (axisIndex, orientation, viewUp) => {
+    if (axisIndex === undefined) {
+      return;
+    }
+    model.axis = axisIndex;
+    model.orientation = orientation;
+    model.viewUp = viewUp;
+    const position = model.camera.getFocalPoint();
+    position[model.axis] += model.orientation;
+    model.camera.setPosition(...position);
+    model.camera.setViewUp(...viewUp);
+  };
+
+  // --------------------------------------------------------------------------
+
+  publicAPI.resetOrientation = () => {
+    publicAPI.updateOrientation(model.axis, model.orientation, model.viewUp);
+  };
+
+  // --------------------------------------------------------------------------
+
+  publicAPI.rotate = (angle) => {
+    const { viewUp, focalPoint, position } = model.camera.get(
+      'viewUp',
+      'focalPoint',
+      'position'
+    );
+    const axis = [
+      focalPoint[0] - position[0],
+      focalPoint[1] - position[1],
+      focalPoint[2] - position[2],
+    ];
+
+    vtkMatrixBuilder
+      .buildFromDegree()
+      .rotate(Number.isNaN(angle) ? 90 : angle, axis)
+      .apply(viewUp);
+
+    model.camera.setViewUp(...viewUp);
+    model.camera.modified();
+    model.renderWindow.render();
+  };
+
+  // --------------------------------------------------------------------------
+  // Initialization from state or input
+  // --------------------------------------------------------------------------
+
+  publicAPI.updateOrientation(model.axis, model.orientation, model.viewUp);
+  updateAnnotationColor();
 }
 
 // ----------------------------------------------------------------------------
@@ -296,6 +363,9 @@ function extend(publicAPI, model, initialValues = {}) {
   macro.proxy(publicAPI, model);
   macro.proxyPropertyMapping(publicAPI, model, {
     orientationAxes: { modelKey: 'orientationWidget', property: 'enabled' },
+    cameraViewUp: { modelKey: 'camera', property: 'viewUp' },
+    cameraPosition: { modelKey: 'camera', property: 'position' },
+    cameraFocalPoint: { modelKey: 'camera', property: 'focalPoint' },
   });
 }
 
