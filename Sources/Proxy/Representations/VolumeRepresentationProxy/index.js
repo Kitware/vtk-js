@@ -332,7 +332,6 @@ export function extend(publicAPI, model, initialValues = {}) {
 
   // Object methods
   vtkAbstractRepresentationProxy.extend(publicAPI, model);
-  macro.setGet(publicAPI, model, ['lookupTable', 'piecewiseFunction']);
   macro.get(publicAPI, model, ['sampleDistance', 'edgeGradient']);
 
   // Object specific methods
