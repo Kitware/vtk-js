@@ -13,6 +13,7 @@ module.exports = {
   output: {
     path: outputPath,
     filename: 'vtk.js',
+    libraryTarget: 'umd',
   },
   module: {
     rules: [
