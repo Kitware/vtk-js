@@ -154,6 +154,11 @@ function vtkRenderWindowInteractor(publicAPI, model) {
   function interactionRegistration(addListeners) {
     const rootElm = document.querySelector('body');
     const method = addListeners ? 'addEventListener' : 'removeEventListener';
+    const invMethod = addListeners ? 'removeEventListener' : 'addEventListener';
+
+    if (model.canvas) {
+      model.canvas[invMethod]('mousemove', publicAPI.handleMouseMove);
+    }
 
     rootElm[method]('mouseup', publicAPI.handleMouseUp);
     rootElm[method]('mousemove', publicAPI.handleMouseMove);
@@ -168,7 +173,7 @@ function vtkRenderWindowInteractor(publicAPI, model) {
     canvas.addEventListener('click', preventDefault);
     canvas.addEventListener('mousewheel', publicAPI.handleWheel);
     canvas.addEventListener('DOMMouseScroll', publicAPI.handleWheel);
-
+    canvas.addEventListener('mousemove', publicAPI.handleMouseMove);
     canvas.addEventListener('mousedown', publicAPI.handleMouseDown);
     document
       .querySelector('body')
@@ -180,21 +185,22 @@ function vtkRenderWindowInteractor(publicAPI, model) {
     canvas.addEventListener('touchstart', publicAPI.handleTouchStart, false);
   };
 
-  publicAPI.unbindEvents = (canvas) => {
+  publicAPI.unbindEvents = () => {
     interactionRegistration(false);
-    canvas.removeEventListener('contextmenu', preventDefault);
-    canvas.removeEventListener('click', preventDefault);
-    canvas.removeEventListener('mousewheel', publicAPI.handleWheel);
-    canvas.removeEventListener('DOMMouseScroll', publicAPI.handleWheel);
-
-    canvas.removeEventListener('mousedown', publicAPI.handleMouseDown);
+    model.canvas.removeEventListener('contextmenu', preventDefault);
+    model.canvas.removeEventListener('click', preventDefault);
+    model.canvas.removeEventListener('mousewheel', publicAPI.handleWheel);
+    model.canvas.removeEventListener('DOMMouseScroll', publicAPI.handleWheel);
+    model.canvas.removeEventListener('mousemove', publicAPI.handleMouseMove);
+    model.canvas.removeEventListener('mousedown', publicAPI.handleMouseDown);
     document
       .querySelector('body')
       .removeEventListener('keypress', publicAPI.handleKeyPress);
     document
       .querySelector('body')
       .removeEventListener('keyup', publicAPI.handleKeyUp);
-    canvas.removeEventListener('touchstart', publicAPI.handleTouchStart);
+    model.canvas.removeEventListener('touchstart', publicAPI.handleTouchStart);
+    model.canvas = null;
   };
 
   publicAPI.handleKeyPress = (event) => {
