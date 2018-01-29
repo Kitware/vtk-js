@@ -5,6 +5,11 @@
  * expect proper Unicode or any other encoding.
  */
 function arrayBufferToString(arrayBuffer) {
+  if ('TextDecoder' in window) {
+    const decoder = new TextDecoder();
+    return decoder.decode(arrayBuffer);
+  }
+  // fallback on platforms w/o TextDecoder
   const byteArray = new Uint8Array(arrayBuffer);
   const strArr = [];
   for (let i = 0; i < byteArray.length; ++i) {
@@ -43,9 +48,6 @@ function extractBinary(arrayBuffer, prefixRegex, suffixRegex = null) {
     };
   }
 
-  // TODO Maybe delete the internal ref to strArr from the match objs?
-  retVal.prefixMatch = prefixMatch;
-  retVal.suffixMatch = suffixMatch;
   return retVal;
 }
 
