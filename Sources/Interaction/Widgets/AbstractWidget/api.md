@@ -21,8 +21,10 @@ It defines the representation of the widget
 
 ## listenEvents()
 
-Virtual method, needs to be overrides in derived class.
-It defined which methods will be invoked for each event (see vtkHandleWidget)
+Attaches interactor events to callbacks. Events are defined in
+vtkRenderWindowInteractor.handledEvents, and callbacks need to be formatted
+as handle${eventToHandle} and implemented in derived classes.
+example: handleMouseMove, handleLeftButtonPress...
 
 ## render()
 

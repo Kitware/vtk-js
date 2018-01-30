@@ -6,23 +6,12 @@ import vtkLineRepresentation from 'vtk.js/Sources/Interaction/Widgets/LineRepres
 import { State } from 'vtk.js/Sources/Interaction/Widgets/LineRepresentation/Constants';
 import Constants from './Constants';
 
-const { vtkErrorMacro } = macro;
 const { WidgetState } = Constants;
 const { InteractionState } = HandleRepConstants;
 
 // ----------------------------------------------------------------------------
 // vtkHandleWidget methods
 // ----------------------------------------------------------------------------
-
-const events = [
-  'MouseMove',
-  'LeftButtonPress',
-  'LeftButtonRelease',
-  'MiddleButtonPress',
-  'MiddleButtonRelease',
-  'RightButtonPress',
-  'RightButtonRelease',
-];
 
 function vtkLineWidget(publicAPI, model) {
   // Set our className
@@ -41,42 +30,6 @@ function vtkLineWidget(publicAPI, model) {
       }
     }
   }
-
-  // Implemented method
-  publicAPI.listenEvents = () => {
-    if (!model.interactor) {
-      vtkErrorMacro('The interactor must be set before listening events');
-      return;
-    }
-    events.forEach((eventName) => {
-      model.unsubscribes.push(
-        model.interactor[`on${eventName}`](() => {
-          if (publicAPI[`handle${eventName}`]) {
-            publicAPI[`handle${eventName}`]();
-          }
-        })
-      );
-    });
-  };
-
-  publicAPI.setInteractor = (i) => {
-    if (i === model.interactor) {
-      return;
-    }
-
-    // if we already have an Interactor then stop observing it
-    if (model.interactor) {
-      while (model.unsubscribes.length) {
-        model.unsubscribes.pop().unsubscribe();
-      }
-    }
-
-    model.interactor = i;
-
-    if (i) {
-      publicAPI.listenEvents();
-    }
-  };
 
   publicAPI.setEnable = (enabling) => {
     const enable = model.enabled;

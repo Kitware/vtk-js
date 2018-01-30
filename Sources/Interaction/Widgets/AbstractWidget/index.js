@@ -1,5 +1,6 @@
 import macro from 'vtk.js/Sources/macro';
 import vtkInteractorObserver from 'vtk.js/Sources/Rendering/Core/InteractorObserver';
+import vtkRenderWindowInteractor from 'vtk.js/Sources/Rendering/Core/RenderWindowInteractor';
 
 const { vtkErrorMacro } = macro;
 
@@ -14,8 +15,43 @@ function vtkAbstractWidget(publicAPI, model) {
   // Virtual method
   publicAPI.createDefaultRepresentation = () => {};
 
-  // Virtual method
-  publicAPI.listenEvents = () => {};
+  publicAPI.listenEvents = () => {
+    if (!model.interactor) {
+      vtkErrorMacro('The interactor must be set before listening events');
+      return;
+    }
+    vtkRenderWindowInteractor.handledEvents.forEach((eventName) => {
+      if (publicAPI[`handle${eventName}`]) {
+        model.unsubscribes.push(
+          model.interactor[`on${eventName}`](
+            publicAPI[`handle${eventName}`],
+            model.priority
+          )
+        );
+      }
+    });
+  };
+
+  publicAPI.setInteractor = (i) => {
+    if (i === model.interactor) {
+      return;
+    }
+
+    // if we already have an Interactor then stop observing it
+    if (model.interactor) {
+      while (model.unsubscribes.length) {
+        model.unsubscribes.pop().unsubscribe();
+      }
+    }
+
+    model.interactor = i;
+
+    if (i) {
+      publicAPI.listenEvents();
+    }
+
+    publicAPI.modified();
+  };
 
   publicAPI.render = () => {
     if (!model.parent && model.interactor) {

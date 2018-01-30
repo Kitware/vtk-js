@@ -6,21 +6,10 @@ import Constants from 'vtk.js/Sources/Interaction/Widgets/HandleWidget/Constants
 
 const { InteractionState } = vtkHandleRepresentation;
 const { WidgetState } = Constants;
-const { vtkErrorMacro } = macro;
 
 // ----------------------------------------------------------------------------
 // vtkHandleWidget methods
 // ----------------------------------------------------------------------------
-
-const events = [
-  'MouseMove',
-  'LeftButtonPress',
-  'LeftButtonRelease',
-  'MiddleButtonPress',
-  'MiddleButtonRelease',
-  'RightButtonPress',
-  'RightButtonRelease',
-];
 
 function vtkHandleWidget(publicAPI, model) {
   // Set our className
@@ -50,42 +39,6 @@ function vtkHandleWidget(publicAPI, model) {
   publicAPI.createDefaultRepresentation = () => {
     if (!model.widgetRep) {
       model.widgetRep = vtkSphereHandleRepresentation.newInstance();
-    }
-  };
-
-  // Implemented method
-  publicAPI.listenEvents = () => {
-    if (!model.interactor) {
-      vtkErrorMacro('The interactor must be set before listening events');
-      return;
-    }
-    events.forEach((eventName) => {
-      model.unsubscribes.push(
-        model.interactor[`on${eventName}`](() => {
-          if (publicAPI[`handle${eventName}`]) {
-            publicAPI[`handle${eventName}`]();
-          }
-        })
-      );
-    });
-  };
-
-  publicAPI.setInteractor = (i) => {
-    if (i === model.interactor) {
-      return;
-    }
-
-    // if we already have an Interactor then stop observing it
-    if (model.interactor) {
-      while (model.unsubscribes.length) {
-        model.unsubscribes.pop().unsubscribe();
-      }
-    }
-
-    model.interactor = i;
-
-    if (i) {
-      publicAPI.listenEvents();
     }
   };
 
