@@ -8,37 +8,67 @@ function vtkSourceProxy(publicAPI, model) {
   // Set our className
   model.classHierarchy.push('vtkSourceProxy');
 
-  function updateDataset() {
-    if (model.algo) {
-      publicAPI.setDataset(model.algo.getOutputData(), model.type);
-    }
-  }
-
   // API ----------------------------------------------------------------------
+
+  publicAPI.setInputProxy = (source) => {
+    if (model.inputSubscription) {
+      model.inputSubscription();
+      model.inputSubscription = null;
+    }
+    model.inputProxy = source;
+    if (model.inputProxy) {
+      model.inputSubscription = source.onModified(
+        publicAPI.update,
+        -1
+      ).unsubscribe; // Trigger at next cycle
+    }
+    publicAPI.update();
+  };
+
+  // --------------------------------------------------------------------------
 
   publicAPI.setInputData = (ds, type) => {
     if (model.dataset !== ds) {
       model.dataset = ds;
       model.type = type || ds.getClassName();
       publicAPI.modified();
+      publicAPI.invokeDatasetChange();
     }
   };
 
   // --------------------------------------------------------------------------
 
-  publicAPI.setInputAlgorithm = (algo, type) => {
+  publicAPI.setInputAlgorithm = (algo, type, autoUpdate = true) => {
     if (model.algo !== algo) {
       model.algo = algo;
       if (model.algoSubscription) {
         model.algoSubscription();
         model.algoSubscription = null;
       }
-      if (algo) {
-        publicAPI.setInputData(algo.getOutputData(), type);
-        model.algoSubscription = algo.onModified(updateDataset, -1).unsubscribe; // Trigger at next cycle
+      if (algo && autoUpdate) {
+        model.algoSubscription = algo.onModified(() => {
+          publicAPI.update();
+        }, -1).unsubscribe; // Trigger at next cycle
+        publicAPI.update();
       }
     }
   };
+
+  // --------------------------------------------------------------------------
+
+  publicAPI.update = () => {
+    if (model.algo && model.inputProxy) {
+      model.algo.setInputData(model.inputProxy.getDataset());
+    }
+    if (model.updateDomain && model.inputProxy) {
+      model.updateDomain(publicAPI, model.inputProxy.getDataset());
+    }
+    if (model.algo) {
+      publicAPI.setInputData(model.algo.getOutputData(), model.type);
+    }
+  };
+
+  publicAPI.getUpdate = () => model.algo.getMTime() > model.dataset.getMTime();
 
   // --------------------------------------------------------------------------
 
@@ -47,7 +77,29 @@ function vtkSourceProxy(publicAPI, model) {
       model.algoSubscription();
       model.algoSubscription = null;
     }
+    if (model.inputSubscription) {
+      model.inputSubscription();
+      model.inputSubscription = null;
+    }
   }, publicAPI.delete);
+
+  // --------------------------------------------------------------------------
+  // Initialisation
+  // --------------------------------------------------------------------------
+
+  if (model.inputProxy) {
+    model.inputSubscription = model.inputProxy.onModified(() => {
+      publicAPI.update();
+    }, -1).unsubscribe; // Trigger at next cycle
+  }
+  if (model.algoFactory) {
+    publicAPI.setInputAlgorithm(
+      model.algoFactory.newInstance(),
+      null,
+      model.autoUpdate
+    );
+  }
+  publicAPI.update();
 }
 
 // ----------------------------------------------------------------------------
@@ -71,11 +123,16 @@ export function extend(publicAPI, model, initialValues = {}) {
     'algo',
     'inputProxy',
   ]);
-  macro.set(publicAPI, model, ['name', 'inputProxy']);
+  macro.set(publicAPI, model, ['name']);
+  macro.event(publicAPI, model, 'DatasetChange');
+  macro.proxy(publicAPI, model);
 
   // Object specific methods
   vtkSourceProxy(publicAPI, model);
-  macro.proxy(publicAPI, model);
+
+  if (model.proxyPropertyMapping) {
+    macro.proxyPropertyMapping(publicAPI, model, model.proxyPropertyMapping);
+  }
 }
 
 // ----------------------------------------------------------------------------
@@ -84,4 +141,7 @@ export const newInstance = macro.newInstance(extend, 'vtkSourceProxy');
 
 // ----------------------------------------------------------------------------
 
-export default { newInstance, extend };
+export default {
+  newInstance,
+  extend,
+};

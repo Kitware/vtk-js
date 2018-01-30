@@ -26,10 +26,6 @@ const PROPERTIES_DEFAULT = {
 function vtkGeometryRepresentationProxy(publicAPI, model) {
   // Set our className
   model.classHierarchy.push('vtkGeometryRepresentationProxy');
-  const superSetInput = publicAPI.setInput;
-
-  // parent methods
-  model.selectedArray = null; // Default use solid color
 
   // Internals
   model.mapper = vtkMapper.newInstance({
@@ -40,21 +36,11 @@ function vtkGeometryRepresentationProxy(publicAPI, model) {
   model.actor = vtkActor.newInstance();
   model.property = model.actor.getProperty();
 
-  // API ----------------------------------------------------------------------
-
-  publicAPI.setInput = (source) => {
-    superSetInput(source);
-
-    if (!source) {
-      return;
-    }
-
-    vtkAbstractRepresentationProxy.connectMapper(model.mapper, source);
-
-    // connect rendering pipeline
-    model.actor.setMapper(model.mapper);
-    model.actors.push(model.actor);
-  };
+  // Auto connect mappers
+  model.sourceDependencies.push(model.mapper);
+  // connect rendering pipeline
+  model.actor.setMapper(model.mapper);
+  model.actors.push(model.actor);
 }
 
 // ----------------------------------------------------------------------------

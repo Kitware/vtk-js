@@ -3,17 +3,6 @@ import vtkMapper from 'vtk.js/Sources/Rendering/Core/Mapper';
 import vtkScalarsToColors from 'vtk.js/Sources/Common/Core/ScalarsToColors';
 
 // ----------------------------------------------------------------------------
-
-function connectMapper(mapper, input) {
-  const algo = input.getAlgo();
-  if (algo) {
-    mapper.setInputConnection(algo.getOutputPort());
-  } else {
-    mapper.setInputData(input.getDataset());
-  }
-}
-
-// ----------------------------------------------------------------------------
 // vtkAbstractRepresentationProxy methods
 // ----------------------------------------------------------------------------
 
@@ -21,10 +10,30 @@ function vtkAbstractRepresentationProxy(publicAPI, model) {
   // Set our className
   model.classHierarchy.push('vtkAbstractRepresentationProxy');
 
+  function updateConnectivity() {
+    if (model.input) {
+      let count = model.sourceDependencies.length;
+      while (count--) {
+        model.sourceDependencies[count].setInputData(model.input.getDataset());
+      }
+    }
+  }
+
   publicAPI.setInput = (source) => {
+    if (model.sourceSubscription) {
+      model.sourceSubscription.unsubscribe();
+      model.sourceSubscription = null;
+    }
     publicAPI.gcPropertyLinks();
     model.input = source;
     publicAPI.updateColorByDomain();
+
+    if (model.input) {
+      updateConnectivity();
+      model.sourceSubscription = model.input.onDatasetChange(
+        updateConnectivity
+      );
+    }
   };
 
   publicAPI.getInputDataSet = () =>
@@ -268,6 +277,13 @@ function vtkAbstractRepresentationProxy(publicAPI, model) {
       },
     });
   };
+
+  publicAPI.delete = macro.chain(() => {
+    if (model.sourceSubscription) {
+      model.sourceSubscription.unsubscribe();
+      model.sourceSubscription = null;
+    }
+  }, publicAPI.delete);
 }
 
 // ----------------------------------------------------------------------------
@@ -277,6 +293,7 @@ function vtkAbstractRepresentationProxy(publicAPI, model) {
 const DEFAULT_VALUES = {
   actors: [],
   volumes: [],
+  sourceDependencies: [],
 };
 
 // ----------------------------------------------------------------------------
@@ -292,4 +309,4 @@ function extend(publicAPI, model, initialValues = {}) {
   macro.proxy(publicAPI, model);
 }
 
-export default { extend, connectMapper };
+export default { extend };

@@ -151,6 +151,8 @@ function vtkVolumeRepresentationProxy(publicAPI, model) {
   model.volume = vtkVolume.newInstance();
   model.property = model.volume.getProperty();
 
+  model.sourceDependencies.push(model.mapper);
+
   // Slices
   model.mapperX = vtkImageMapper.newInstance({
     currentSlicingMode: vtkImageMapper.SlicingMode.X,
@@ -172,17 +174,23 @@ function vtkVolumeRepresentationProxy(publicAPI, model) {
     property: model.propertySlices,
   });
 
-  // API ----------------------------------------------------------------------
+  model.sourceDependencies.push(model.mapperX);
+  model.sourceDependencies.push(model.mapperY);
+  model.sourceDependencies.push(model.mapperZ);
 
-  publicAPI.setInput = (source) => {
-    superSetInput(source);
+  // connect rendering pipeline
+  model.volume.setMapper(model.mapper);
+  model.volumes.push(model.volume);
 
-    if (!source) {
-      return;
-    }
+  // Connect slice pipeline
+  model.actorX.setMapper(model.mapperX);
+  model.actors.push(model.actorX);
+  model.actorY.setMapper(model.mapperY);
+  model.actors.push(model.actorY);
+  model.actorZ.setMapper(model.mapperZ);
+  model.actors.push(model.actorZ);
 
-    vtkAbstractRepresentationProxy.connectMapper(model.mapper, source);
-
+  function setInputData(inputDataset) {
     const [name, location] = publicAPI.getColorBy();
     publicAPI.rescaleTransferFunctionToDataRange(name, location);
 
@@ -197,36 +205,29 @@ function vtkVolumeRepresentationProxy(publicAPI, model) {
     model.property.setRGBTransferFunction(0, lutProxy.getLookupTable());
     model.property.setScalarOpacity(0, pwfProxy.getPiecewiseFunction());
 
-    updateConfiguration(
-      publicAPI.getInputDataSet(),
-      publicAPI.getDataArray(),
-      model
-    );
+    updateConfiguration(inputDataset, publicAPI.getDataArray(), model);
     publicAPI.setSampleDistance();
     publicAPI.setEdgeGradient();
 
     // Update domains
     const state = updateDomains(
-      publicAPI.getInputDataSet(),
+      inputDataset,
       publicAPI.getDataArray(),
       publicAPI.updateProxyProperty
     );
     publicAPI.set(state);
+  }
 
-    // connect rendering pipeline
-    model.volume.setMapper(model.mapper);
-    model.volumes.push(model.volume);
+  model.sourceDependencies.push({ setInputData });
 
-    // Connect slice pipeline
-    vtkAbstractRepresentationProxy.connectMapper(model.mapperX, source);
-    model.actorX.setMapper(model.mapperX);
-    model.actors.push(model.actorX);
-    vtkAbstractRepresentationProxy.connectMapper(model.mapperY, source);
-    model.actorY.setMapper(model.mapperY);
-    model.actors.push(model.actorY);
-    vtkAbstractRepresentationProxy.connectMapper(model.mapperZ, source);
-    model.actorZ.setMapper(model.mapperZ);
-    model.actors.push(model.actorZ);
+  // API ----------------------------------------------------------------------
+
+  publicAPI.setInput = (source) => {
+    superSetInput(source);
+
+    if (!source) {
+      return;
+    }
 
     // Create a link handler on source
     ['SliceX', 'SliceY', 'SliceZ', 'ColorWindow', 'ColorLevel'].forEach(
