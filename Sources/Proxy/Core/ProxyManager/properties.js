@@ -58,7 +58,14 @@ export default function addVPropertyHandlingAPI(publicAPI, model) {
       if (!groupBy[id]) {
         groupBy[id] = {};
       }
-      groupBy[id][prop] = changeSet[key];
+      if (changeSet[key] === '__command_execute__') {
+        const obj = publicAPI.getProxyById(id);
+        if (obj) {
+          obj[prop]();
+        }
+      } else {
+        groupBy[id][prop] = changeSet[key];
+      }
     }
 
     // Apply changes
