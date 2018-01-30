@@ -6,7 +6,7 @@
  */
 function arrayBufferToString(arrayBuffer) {
   if ('TextDecoder' in window) {
-    const decoder = new TextDecoder();
+    const decoder = new TextDecoder('latin1');
     return decoder.decode(arrayBuffer);
   }
   // fallback on platforms w/o TextDecoder
