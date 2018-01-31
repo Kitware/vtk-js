@@ -40,7 +40,7 @@ function computeRange(values, component = 0, numberOfComponents = 1) {
   const size = values.length;
   let value = 0;
 
-  if (component < 0) {
+  if (component < 0 && numberOfComponents > 1) {
     // Compute magnitude
     for (let i = 0; i < size; i += numberOfComponents) {
       value = 0;
@@ -53,7 +53,8 @@ function computeRange(values, component = 0, numberOfComponents = 1) {
     return helper.getRange();
   }
 
-  for (let i = component; i < size; i += numberOfComponents) {
+  const offset = component < 0 ? 0 : component;
+  for (let i = offset; i < size; i += numberOfComponents) {
     helper.add(values[i]);
   }
 
