@@ -1,5 +1,6 @@
 import vtk from 'vtk.js/Sources/vtk';
 import macro from 'vtk.js/Sources/macro';
+import vtkDataArray from 'vtk.js/Sources/Common/Core/DataArray';
 
 // ----------------------------------------------------------------------------
 // vtkFieldData methods
@@ -79,18 +80,46 @@ function vtkFieldData(publicAPI, model) {
   publicAPI.getCopyFieldFlags = () => model.copyFieldFlags;
   publicAPI.getFlag = (arrayName) => model.copyFieldFlags[arrayName];
   publicAPI.passData = (other, fromId = -1, toId = -1) => {
-    other.getArrays().forEach((arr, idx) => {
+    other.getArrays().forEach((arr) => {
       const copyFlag = publicAPI.getFlag(arr.getName());
       if (
         copyFlag !== false &&
         !(model.doCopyAllOff && copyFlag !== true) &&
         arr
       ) {
-        const destArr = publicAPI.getArrayByName(arr.getName());
-        if ((fromId < 1 && toId < 1) || !destArr) {
-          publicAPI.addArray(arr);
-        } else if (idx >= fromId && (toId > -1 || idx < toId)) {
-          destArr.setTuple(idx, arr.getTuple(idx));
+        let destArr = publicAPI.getArrayByName(arr.getName());
+        if (!destArr) {
+          if (fromId < 0 || fromId > arr.getNumberOfTuples()) {
+            publicAPI.addArray(arr);
+          } else {
+            const ncomps = arr.getNumberOfComponents();
+            let newSize = arr.getNumberOfValues();
+            const tId = toId > -1 ? toId : fromId;
+            if (newSize < tId * ncomps) {
+              newSize = (tId + 1) * ncomps;
+            }
+            destArr = vtkDataArray.newInstance({
+              name: arr.getName(),
+              dataType: arr.getDataType(),
+              numberOfComponents: arr.getNumberOfComponents(),
+              size: newSize,
+            });
+            destArr.setTuple(tId, arr.getTuple(fromId));
+            publicAPI.addArray(destArr);
+          }
+        } else if (
+          arr.getNumberOfComponents() === destArr.getNumberOfComponents()
+        ) {
+          if (fromId > -1 && fromId < arr.getNumberOfTuples()) {
+            const tId = toId > -1 ? toId : fromId;
+            destArr.setTuple(tId, arr.getTuple(fromId));
+          } else {
+            // if fromId and not provided, just copy all (or as much possible)
+            // of arr to destArr.
+            for (let i = 0; i < arr.getNumberOfTuples(); ++i) {
+              destArr.setTuple(i, arr.getTuple(i));
+            }
+          }
         }
       }
     });
