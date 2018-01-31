@@ -20,6 +20,13 @@ function vtkAbstractWidget(publicAPI, model) {
       vtkErrorMacro('The interactor must be set before listening events');
       return;
     }
+
+    // Remove current events
+    while (model.unsubscribes.length) {
+      model.unsubscribes.pop().unsubscribe();
+    }
+
+    // Check what events we can handle and register callbacks
     vtkRenderWindowInteractor.handledEvents.forEach((eventName) => {
       if (publicAPI[`handle${eventName}`]) {
         model.unsubscribes.push(
@@ -36,17 +43,9 @@ function vtkAbstractWidget(publicAPI, model) {
     if (i === model.interactor) {
       return;
     }
-
-    // if we already have an Interactor then stop observing it
-    if (model.interactor) {
-      while (model.unsubscribes.length) {
-        model.unsubscribes.pop().unsubscribe();
-      }
-    }
-
     model.interactor = i;
 
-    if (i) {
+    if (i && model.enabled) {
       publicAPI.listenEvents();
     }
 
@@ -60,11 +59,11 @@ function vtkAbstractWidget(publicAPI, model) {
   };
 
   publicAPI.setEnable = (enable) => {
+    if (enable === model.enabled) {
+      return;
+    }
+
     if (enable) {
-      if (model.enabled) {
-        // widget already enabled
-        return;
-      }
       if (!model.interactor) {
         vtkErrorMacro(
           'The interactor must be set prior to enabling the widget'
@@ -97,13 +96,9 @@ function vtkAbstractWidget(publicAPI, model) {
       model.widgetRep.buildRepresentation();
       model.currentRenderer.addViewProp(model.widgetRep);
     } else {
-      if (!model.enabled) {
-        // already
-        return;
-      }
       model.enabled = 0;
 
-      // Don't listen events
+      // Don't listen to events
       while (model.unsubscribes.length) {
         model.unsubscribes.pop().unsubscribe();
       }
