@@ -19,7 +19,7 @@ const deviceInputMap = {
   ],
 };
 
-const eventsWeHandle = [
+const handledEvents = [
   'Animation',
   'Enter',
   'Leave',
@@ -581,7 +581,7 @@ function vtkRenderWindowInteractor(publicAPI, model) {
   };
 
   // create the generic Event methods
-  eventsWeHandle.forEach((eventName) => {
+  handledEvents.forEach((eventName) => {
     const lowerFirst = eventName.charAt(0).toLowerCase() + eventName.slice(1);
     publicAPI[`${lowerFirst}Event`] = (arg) => {
       if (!model.enabled) {
@@ -927,7 +927,7 @@ export function extend(publicAPI, model, initialValues = {}) {
   macro.obj(publicAPI, model);
 
   macro.event(publicAPI, model, 'RenderEvent');
-  eventsWeHandle.forEach((eventName) =>
+  handledEvents.forEach((eventName) =>
     macro.event(publicAPI, model, eventName)
   );
 
@@ -981,4 +981,4 @@ export const newInstance = macro.newInstance(
 
 // ----------------------------------------------------------------------------
 
-export default Object.assign({ newInstance, extend }, Constants);
+export default Object.assign({ newInstance, extend, handledEvents }, Constants);

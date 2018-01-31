@@ -736,8 +736,11 @@ export function event(publicAPI, model, eventName) {
       return;
     }
     /* eslint-disable prefer-rest-params */
-    for (let index = 0; index < callbacks.length; ++index) {
-      const [, cb, priority] = callbacks[index];
+    // Go through a copy of the callbacks array in case new callbacks
+    // get prepended within previous callbacks
+    const currentCallbacks = callbacks.slice();
+    for (let index = 0; index < currentCallbacks.length; ++index) {
+      const [, cb, priority] = currentCallbacks[index];
       if (priority < 0) {
         setTimeout(() => cb.apply(publicAPI, arguments), 1 - priority);
       } else if (cb) {

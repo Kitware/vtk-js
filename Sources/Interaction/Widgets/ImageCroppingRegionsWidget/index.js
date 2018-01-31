@@ -6,16 +6,6 @@ import Constants from 'vtk.js/Sources/Interaction/Widgets/ImageCroppingRegionsWi
 const { vtkErrorMacro, VOID, EVENT_ABORT } = macro;
 const { WidgetState, CropWidgetEvents, Orientation } = Constants;
 
-const events = [
-  'MouseMove',
-  'LeftButtonPress',
-  'LeftButtonRelease',
-  'MiddleButtonPress',
-  'MiddleButtonRelease',
-  'RightButtonPress',
-  'RightButtonRelease',
-];
-
 // ----------------------------------------------------------------------------
 // vtkImageCroppingRegionsWidget methods
 // ----------------------------------------------------------------------------
@@ -62,45 +52,6 @@ function vtkImageCroppingRegionsWidget(publicAPI, model) {
 
       publicAPI.updateRepresentation();
     }
-  };
-
-  // Implemented method
-  publicAPI.listenEvents = () => {
-    if (!model.interactor) {
-      vtkErrorMacro('The interactor must be set before listening events');
-      return;
-    }
-    events.forEach((eventName) => {
-      model.unsubscribes.push(
-        model.interactor[`on${eventName}`](() => {
-          if (publicAPI[`handle${eventName}`]) {
-            return publicAPI[`handle${eventName}`]();
-          }
-          return true;
-        }, model.priority)
-      );
-    });
-  };
-
-  publicAPI.setInteractor = (i) => {
-    if (i === model.interactor) {
-      return;
-    }
-
-    // if we already have an Interactor then stop observing it
-    if (model.interactor) {
-      while (model.unsubscribes.length) {
-        model.unsubscribes.pop().unsubscribe();
-      }
-    }
-
-    model.interactor = i;
-
-    if (i) {
-      publicAPI.listenEvents();
-    }
-
-    publicAPI.modified();
   };
 
   publicAPI.setVolumeMapper = (volumeMapper) => {

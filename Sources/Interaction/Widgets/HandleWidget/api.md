@@ -8,7 +8,7 @@ General widget for moving handles (translate and scale)
 
 ## Caught events
 
-List of event catch by the widget :
+List of events caught by the widget :
 - MouseMove
 - LeftButtonPress
 - LeftButtonRelease
@@ -20,13 +20,6 @@ List of event catch by the widget :
 ## createDefaultRepresentation()
 
 Create a vtkSphereHandleRepresentation as a default representation.
-
-## listenEvents()
-
-For each events, define a method called when event is caught :
-- onMouseMove then call handleMouseMove
-- onLeftButtonPress then call handleLeftButtonPress
-- ...
 
 ## allowHandleResize (set/get bool)
 
