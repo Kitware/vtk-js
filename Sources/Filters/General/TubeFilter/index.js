@@ -641,7 +641,7 @@ function vtkTubeFilter(publicAPI, model) {
 
     let numNewPts = numPts * model.numberOfSides;
     if (model.capping) {
-      numNewPts = (numPts + 2) * model.numberOfSides;
+      numNewPts = (numPts + 2 * numLines) * model.numberOfSides;
     }
     let pointType = inPts.getDataType();
     if (model.outputPointsPrecision === DesiredOutputPrecision.SINGLE) {
