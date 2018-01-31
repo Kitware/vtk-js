@@ -4,6 +4,7 @@ import vtkSphereHandleRepresentation from 'vtk.js/Sources/Interaction/Widgets/Sp
 import vtkHandleRepresentation from 'vtk.js/Sources/Interaction/Widgets/HandleRepresentation';
 import Constants from 'vtk.js/Sources/Interaction/Widgets/HandleWidget/Constants';
 
+const { VOID, EVENT_ABORT } = macro;
 const { InteractionState } = vtkHandleRepresentation;
 const { WidgetState } = Constants;
 
@@ -42,33 +43,19 @@ function vtkHandleWidget(publicAPI, model) {
     }
   };
 
-  publicAPI.handleMouseMove = () => {
-    publicAPI.moveAction();
-  };
+  publicAPI.handleMouseMove = () => publicAPI.moveAction();
 
-  publicAPI.handleLeftButtonPress = () => {
-    publicAPI.selectAction();
-  };
+  publicAPI.handleLeftButtonPress = () => publicAPI.selectAction();
 
-  publicAPI.handleLeftButtonRelease = () => {
-    publicAPI.endSelectAction();
-  };
+  publicAPI.handleLeftButtonRelease = () => publicAPI.endSelectAction();
 
-  publicAPI.handleMiddleButtonPress = () => {
-    publicAPI.translateAction();
-  };
+  publicAPI.handleMiddleButtonPress = () => publicAPI.translateAction();
 
-  publicAPI.handleMiddleButtonRelease = () => {
-    publicAPI.endSelectAction();
-  };
+  publicAPI.handleMiddleButtonRelease = () => publicAPI.endSelectAction();
 
-  publicAPI.handleRightButtonPress = () => {
-    publicAPI.scaleAction();
-  };
+  publicAPI.handleRightButtonPress = () => publicAPI.scaleAction();
 
-  publicAPI.handleRightButtonRelease = () => {
-    publicAPI.endSelectAction();
-  };
+  publicAPI.handleRightButtonRelease = () => publicAPI.endSelectAction();
 
   publicAPI.selectAction = () => {
     const pos = model.interactor.getEventPosition(
@@ -83,13 +70,13 @@ function vtkHandleWidget(publicAPI, model) {
     ];
     model.widgetRep.computeInteractionState(position);
     if (model.widgetRep.getInteractionState() === InteractionState.OUTSIDE) {
-      return;
+      return VOID;
     }
-
     model.widgetRep.startComplexWidgetInteraction(position);
     model.widgetState = WidgetState.ACTIVE;
     model.widgetRep.setInteractionState(InteractionState.SELECTING);
     genericAction();
+    return EVENT_ABORT;
   };
 
   publicAPI.translateAction = () => {
@@ -105,43 +92,47 @@ function vtkHandleWidget(publicAPI, model) {
     ];
     model.widgetRep.startComplexWidgetInteraction(position);
     if (model.widgetRep.getInteractionState() === InteractionState.OUTSIDE) {
-      return;
+      return VOID;
     }
     model.widgetState = WidgetState.ACTIVE;
     model.widgetRep.setInteractionState(InteractionState.TRANSLATING);
     genericAction();
+    return EVENT_ABORT;
   };
 
   publicAPI.scaleAction = () => {
-    if (model.allowHandleResize) {
-      const pos = model.interactor.getEventPosition(
-        model.interactor.getPointerIndex()
-      );
-      const boundingContainer = model.interactor
-        .getCanvas()
-        .getBoundingClientRect();
-      const position = [
-        pos.x - boundingContainer.left,
-        pos.y + boundingContainer.top,
-      ];
-      model.widgetRep.startComplexWidgetInteraction(position);
-      if (model.widgetRep.getInteractionState() === InteractionState.OUTSIDE) {
-        return;
-      }
-      model.widgetState = WidgetState.ACTIVE;
-      model.widgetRep.setInteractionState(InteractionState.SCALING);
-      genericAction();
+    if (!model.allowHandleResize) {
+      return VOID;
     }
+    const pos = model.interactor.getEventPosition(
+      model.interactor.getPointerIndex()
+    );
+    const boundingContainer = model.interactor
+      .getCanvas()
+      .getBoundingClientRect();
+    const position = [
+      pos.x - boundingContainer.left,
+      pos.y + boundingContainer.top,
+    ];
+    model.widgetRep.startComplexWidgetInteraction(position);
+    if (model.widgetRep.getInteractionState() === InteractionState.OUTSIDE) {
+      return VOID;
+    }
+    model.widgetState = WidgetState.ACTIVE;
+    model.widgetRep.setInteractionState(InteractionState.SCALING);
+    genericAction();
+    return EVENT_ABORT;
   };
 
   publicAPI.endSelectAction = () => {
     if (model.widgetState !== WidgetState.ACTIVE) {
-      return;
+      return VOID;
     }
     model.widgetState = WidgetState.START;
     model.widgetRep.highlight(0);
     publicAPI.invokeEndInteractionEvent();
     publicAPI.render();
+    return EVENT_ABORT;
   };
 
   publicAPI.moveAction = () => {
@@ -165,12 +156,13 @@ function vtkHandleWidget(publicAPI, model) {
       ) {
         publicAPI.render();
       }
-      return;
+      return VOID;
     }
 
     model.widgetRep.complexWidgetInteraction(position);
     publicAPI.invokeInteractionEvent();
     publicAPI.render();
+    return EVENT_ABORT;
   };
 }
 
