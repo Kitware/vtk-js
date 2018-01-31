@@ -669,8 +669,17 @@ function vtkTubeFilter(publicAPI, model) {
     }
 
     const inScalars = publicAPI.getInputArrayToProcess(0);
+    let outScalars = null;
     let range = [];
     if (inScalars) {
+      // allocate output scalar array
+      // assuming point scalars for now
+      outScalars = vtkDataArray.newInstance({
+        name: inScalars.getName(),
+        dataType: inScalars.getDataType(),
+        numberOfComponents: inScalars.getNumberOfComponents(),
+        size: numNewPts * inScalars.getNumberOfComponents(),
+      });
       range = inScalars.getRange();
       if (range[1] - range[0] === 0.0) {
         if (model.varyRadius === VaryRadius.VARY_RADIUS_BY_SCALAR) {
@@ -692,6 +701,9 @@ function vtkTubeFilter(publicAPI, model) {
 
     const outPD = output.getPointData();
     outPD.copyNormalsOff();
+    if (inScalars && outScalars) {
+      outPD.setScalars(outScalars);
+    }
 
     // TCoords
     let newTCoords = null;
