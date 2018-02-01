@@ -396,15 +396,28 @@ function vtkTubeFilter(publicAPI, model) {
     return 1;
   }
 
-  function generateStrips(offset, npts, inCellId, inCD, outCD, newStrips) {
+  function generateStrips(
+    offset,
+    npts,
+    inCellId,
+    outCellId,
+    inCD,
+    outCD,
+    newStrips
+  ) {
     let i1 = 0;
     let i2 = 0;
     let i3 = 0;
-    let outCellId = 0;
-    let newStripsData = newStrips.getData();
-    if (newStripsData.length === 0) {
-      newStripsData = [];
-      newStrips.setData(newStripsData);
+    let newOutCellId = outCellId;
+    let outCellIdx = 0;
+    const newStripsData = newStrips.getData();
+    let cellId = 0;
+    while (outCellIdx < newStripsData.length) {
+      if (cellId === outCellId) {
+        break;
+      }
+      outCellIdx += newStripsData[outCellIdx] + 1;
+      cellId++;
     }
     if (model.sidesShareVertices) {
       for (
@@ -414,14 +427,13 @@ function vtkTubeFilter(publicAPI, model) {
       ) {
         i1 = k % model.numberOfSides;
         i2 = (k + 1) % model.numberOfSides;
-        outCellId = newStrips.getNumberOfCells(true);
-        newStripsData[newStripsData.length] = npts * 2;
+        newStripsData[outCellIdx++] = npts * 2;
         for (let i = 0; i < npts; ++i) {
           i3 = i * model.numberOfSides;
-          newStripsData[newStripsData.length] = offset + i2 + i3;
-          newStripsData[newStripsData.length] = offset + i1 + i3;
+          newStripsData[outCellIdx++] = offset + i2 + i3;
+          newStripsData[outCellIdx++] = offset + i1 + i3;
         }
-        outCD.passData(inCD, inCellId, outCellId);
+        outCD.passData(inCD, inCellId, newOutCellId++);
       } // for each side of the tube
     } else {
       for (
@@ -431,14 +443,15 @@ function vtkTubeFilter(publicAPI, model) {
       ) {
         i1 = 2 * (k % model.numberOfSides) + 1;
         i2 = 2 * ((k + 1) % model.numberOfSides);
-        outCellId = newStrips.getNumberOfCells(true);
-        newStripsData[newStripsData.length] = npts * 2;
+        // outCellId = newStrips.getNumberOfCells(true);
+        newStripsData[outCellIdx] = npts * 2;
+        outCellIdx++;
         for (let i = 0; i < npts; ++i) {
           i3 = i * 2 * model.numberOfSides;
-          newStripsData[newStripsData.length] = offset + i2 + i3;
-          newStripsData[newStripsData.length] = offset + i1 + i3;
+          newStripsData[outCellIdx++] = offset + i2 + i3;
+          newStripsData[outCellIdx++] = offset + i1 + i3;
         }
-        outCD.passData(inCD, inCellId, outCellId);
+        outCD.passData(inCD, inCellId, newOutCellId++);
       } // for each side of the tube
     }
 
@@ -453,10 +466,9 @@ function vtkTubeFilter(publicAPI, model) {
       }
 
       // The start cap
-      outCellId = newStrips.getNumberOfCells(true);
-      newStripsData[newStripsData.length] = model.numberOfSides;
-      newStripsData[newStripsData.length] = startIdx;
-      newStripsData[newStripsData.length] = startIdx + 1;
+      newStripsData[outCellIdx++] = model.numberOfSides;
+      newStripsData[outCellIdx++] = startIdx;
+      newStripsData[outCellIdx++] = startIdx + 1;
       let k = 0;
       for (
         i1 = model.numberOfSides - 1, i2 = 2, k = 0;
@@ -465,22 +477,21 @@ function vtkTubeFilter(publicAPI, model) {
       ) {
         if (k % 2) {
           idx = startIdx + i2;
-          newStripsData[newStripsData.length] = idx;
+          newStripsData[outCellIdx++] = idx;
           i2++;
         } else {
           idx = startIdx + i1;
-          newStripsData[newStripsData.length] = idx;
+          newStripsData[outCellIdx++] = idx;
           i1--;
         }
       }
-      outCD.passData(inCD, inCellId, outCellId);
+      outCD.passData(inCD, inCellId, newOutCellId++);
 
       // The end cap - reversed order to be consistent with normal
       startIdx += model.numberOfSides;
-      outCellId = newStrips.getNumberOfCells(true);
-      newStripsData[newStripsData.length] = model.numberOfSides;
-      newStripsData[newStripsData.length] = startIdx;
-      newStripsData[newStripsData.length] = startIdx + model.numberOfSides - 1;
+      newStripsData[outCellIdx++] = model.numberOfSides;
+      newStripsData[outCellIdx++] = startIdx;
+      newStripsData[outCellIdx++] = startIdx + model.numberOfSides - 1;
       for (
         i1 = model.numberOfSides - 2, i2 = 1, k = 0;
         k < model.numberOfSides - 2;
@@ -488,16 +499,17 @@ function vtkTubeFilter(publicAPI, model) {
       ) {
         if (k % 2) {
           idx = startIdx + i1;
-          newStripsData[newStripsData.length] = idx;
+          newStripsData[outCellIdx++] = idx;
           i1--;
         } else {
           idx = startIdx + i2;
-          newStripsData[newStripsData.length] = idx;
+          newStripsData[outCellIdx++] = idx;
           i2++;
         }
       }
-      outCD.passData(inCD, inCellId, outCellId);
+      outCD.passData(inCD, inCellId, newOutCellId++);
     }
+    return newOutCellId;
   }
 
   function generateTCoords(offset, npts, pts, inPts, inScalars, newTCoords) {
@@ -622,7 +634,7 @@ function vtkTubeFilter(publicAPI, model) {
 
     let numNewPts = numPts * model.numberOfSides;
     if (model.capping) {
-      numNewPts = (numPts + 2) * model.numberOfSides;
+      numNewPts = (numPts + 2 * numLines) * model.numberOfSides;
     }
     let pointType = inPts.getDataType();
     if (model.outputPointsPrecision === DesiredOutputPrecision.SINGLE) {
@@ -645,8 +657,20 @@ function vtkTubeFilter(publicAPI, model) {
       values: newNormalsData,
       name: 'TubeNormals',
     });
-    const newStripsData = new Uint32Array(0);
+    let numStrips = 0;
+    const inLinesData = inLines.getData();
+    let npts = inLinesData[0];
+    for (let i = 0; i < inLinesData.length; i += npts + 1) {
+      npts = inLinesData[i];
+      numStrips +=
+        (2 * npts + 1) * Math.ceil(model.numberOfSides / model.onRatio);
+      if (model.capping) {
+        numStrips += 2 * (model.numberOfSides + 1);
+      }
+    }
+    const newStripsData = new Uint32Array(numStrips);
     const newStrips = vtkCellArray.newInstance({ values: newStripsData });
+    let newStripId = 0;
 
     let inNormals = input.getPointData().getNormals();
     let inNormalsData = null;
@@ -669,8 +693,17 @@ function vtkTubeFilter(publicAPI, model) {
     }
 
     const inScalars = publicAPI.getInputArrayToProcess(0);
+    let outScalars = null;
     let range = [];
     if (inScalars) {
+      // allocate output scalar array
+      // assuming point scalars for now
+      outScalars = vtkDataArray.newInstance({
+        name: inScalars.getName(),
+        dataType: inScalars.getDataType(),
+        numberOfComponents: inScalars.getNumberOfComponents(),
+        size: numNewPts * inScalars.getNumberOfComponents(),
+      });
       range = inScalars.getRange();
       if (range[1] - range[0] === 0.0) {
         if (model.varyRadius === VaryRadius.VARY_RADIUS_BY_SCALAR) {
@@ -692,6 +725,9 @@ function vtkTubeFilter(publicAPI, model) {
 
     const outPD = output.getPointData();
     outPD.copyNormalsOff();
+    if (inScalars && outScalars) {
+      outPD.setScalars(outScalars);
+    }
 
     // TCoords
     let newTCoords = null;
@@ -715,10 +751,7 @@ function vtkTubeFilter(publicAPI, model) {
     // Create points along each polyline that are connected into numberOfSides
     // triangle strips.
     const theta = 2.0 * Math.PI / model.numberOfSides;
-    const inLinesData = inLines.getData();
-    // const lineSizes = inLines.extractCellSizes();
-    // let lineIdx = 0;
-    let npts = inLinesData[0];
+    npts = inLinesData[0];
     let offset = 0;
     let inCellId = input.getVerts().getNumberOfCells();
     for (let i = 0; i < inLinesData.length; i += npts + 1) {
@@ -751,10 +784,11 @@ function vtkTubeFilter(publicAPI, model) {
         )
       ) {
         // generate strips for the polyline
-        generateStrips(
+        newStripId = generateStrips(
           offset,
           npts,
           inCellId,
+          newStripId,
           input.getCellData(),
           outCD,
           newStrips
