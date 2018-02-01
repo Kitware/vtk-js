@@ -150,7 +150,7 @@ export default function addRegistrationAPI(publicAPI, model) {
     const viewToUse = view || publicAPI.getActiveView();
 
     // Can only get a representation for a source and a view
-    if (!sourceToUse || !viewToUse) {
+    if (!sourceToUse || !viewToUse || !sourceToUse.getType()) {
       return null;
     }
 

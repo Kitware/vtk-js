@@ -75,6 +75,30 @@ function vtkSliceRepresentationProxy(publicAPI, model) {
   model.actor = vtkImageSlice.newInstance();
   model.property = model.actor.getProperty();
 
+  // connect rendering pipeline
+  model.actor.setMapper(model.mapper);
+  model.actors.push(model.actor);
+
+  function setInputData(inputDataset) {
+    const state = updateDomains(
+      inputDataset,
+      publicAPI.getDataArray(),
+      model,
+      publicAPI.updateProxyProperty
+    );
+    publicAPI.set(state);
+
+    // Init slice location
+    const extent = inputDataset.getExtent();
+    publicAPI.setXSlice(Math.floor(mean(extent[0], extent[1])));
+    publicAPI.setYSlice(Math.floor(mean(extent[2], extent[3])));
+    publicAPI.setZSlice(Math.floor(mean(extent[4], extent[5])));
+  }
+
+  // Keep things updated
+  model.sourceDependencies.push(model.mapper);
+  model.sourceDependencies.push({ setInputData });
+
   // API ----------------------------------------------------------------------
 
   publicAPI.setInput = (source) => {
@@ -84,27 +108,7 @@ function vtkSliceRepresentationProxy(publicAPI, model) {
       return;
     }
 
-    vtkAbstractRepresentationProxy.connectMapper(model.mapper, source);
-    const state = updateDomains(
-      publicAPI.getInputDataSet(),
-      publicAPI.getDataArray(),
-      model,
-      publicAPI.updateProxyProperty
-    );
-    publicAPI.set(state);
-
-    // Init slice location
-    const extent = publicAPI.getInputDataSet().getExtent();
-    publicAPI.setXSlice(Math.floor(mean(extent[0], extent[1])));
-    publicAPI.setYSlice(Math.floor(mean(extent[2], extent[3])));
-    publicAPI.setZSlice(Math.floor(mean(extent[4], extent[5])));
-
-    // connect rendering pipeline
-    model.actor.setMapper(model.mapper);
-    model.actors.push(model.actor);
-
     // Create a link handler on source
-
     // Ensure the delete will clear all possible conbinaison
     ['SliceX', 'SliceY', 'SliceZ', 'ColorWindow', 'ColorLevel'].forEach(
       (linkName) => {

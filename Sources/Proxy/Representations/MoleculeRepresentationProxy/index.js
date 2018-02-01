@@ -13,7 +13,6 @@ import vtkAbstractRepresentationProxy from 'vtk.js/Sources/Proxy/Core/AbstractRe
 function vtkMoleculeRepresentationProxy(publicAPI, model) {
   // Set our className
   model.classHierarchy.push('vtkMoleculeRepresentationProxy');
-  const superSetInput = publicAPI.setInput;
 
   // Internals
   model.filter = vtkMoleculeToRepresentation.newInstance();
@@ -22,32 +21,24 @@ function vtkMoleculeRepresentationProxy(publicAPI, model) {
   model.sphereActor = vtkActor.newInstance();
   model.stickActor = vtkActor.newInstance();
 
+  model.sourceDependencies.push(model.filter);
+
+  // render sphere
+  model.sphereMapper.setInputConnection(model.filter.getOutputPort(0));
+  model.sphereMapper.setScaleArray(model.filter.getSphereScaleArrayName());
+  model.sphereActor.setMapper(model.sphereMapper);
+
+  // render sticks
+  model.stickMapper.setInputConnection(model.filter.getOutputPort(1));
+  model.stickMapper.setScaleArray('stickScales');
+  model.stickMapper.setOrientationArray('orientation');
+  model.stickActor.setMapper(model.stickMapper);
+
+  // Add actors
+  model.actors.push(model.sphereActor);
+  model.actors.push(model.stickActor);
+
   // API ----------------------------------------------------------------------
-
-  publicAPI.setInput = (source) => {
-    superSetInput(source);
-
-    if (!source) {
-      return;
-    }
-
-    vtkAbstractRepresentationProxy.connectMapper(model.filter, source);
-
-    // render sphere
-    model.sphereMapper.setInputConnection(model.filter.getOutputPort(0));
-    model.sphereMapper.setScaleArray(model.filter.getSphereScaleArrayName());
-    model.sphereActor.setMapper(model.sphereMapper);
-
-    // render sticks
-    model.stickMapper.setInputConnection(model.filter.getOutputPort(1));
-    model.stickMapper.setScaleArray('stickScales');
-    model.stickMapper.setOrientationArray('orientation');
-    model.stickActor.setMapper(model.stickMapper);
-
-    // Add actors
-    model.actors.push(model.sphereActor);
-    model.actors.push(model.stickActor);
-  };
 
   publicAPI.setColorBy = () => {};
   publicAPI.getColorBy = () => [];
