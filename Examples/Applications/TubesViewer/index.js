@@ -163,16 +163,55 @@ function createPipeline(fileName, fileContents) {
   opacitySelector.setAttribute('max', '100');
   opacitySelector.setAttribute('min', '1');
 
-  // const radiusSelector = document.createElement('input');
-  // radiusSelector.setAttribute('class', selectorClass);
-  // radiusSelector.setAttribute('type', 'range');
-  // radiusSelector.setAttribute('value', '10');
-  // radiusSelector.setAttribute('max', '100');
-  // radiusSelector.setAttribute('min', '1');
+  const tubingRLabel = document.createElement('label');
+  tubingRLabel.setAttribute('class', selectorClass);
+  tubingRLabel.innerHTML = 'Radius';
+  const radiusSelector = document.createElement('input');
+  radiusSelector.setAttribute('class', selectorClass);
+  radiusSelector.setAttribute('type', 'range');
+  radiusSelector.setAttribute('value', '5');
+  radiusSelector.setAttribute('max', '100');
+  radiusSelector.setAttribute('min', '1');
+
+  const tubingnSLabel = document.createElement('label');
+  tubingnSLabel.setAttribute('class', selectorClass);
+  tubingnSLabel.innerHTML = 'No. of Sides';
+  const nsidesSelector = document.createElement('input');
+  nsidesSelector.setAttribute('class', selectorClass);
+  nsidesSelector.setAttribute('type', 'range');
+  nsidesSelector.setAttribute('value', '20');
+  nsidesSelector.setAttribute('max', '100');
+  nsidesSelector.setAttribute('min', '3');
+
+  const tubingCLabel = document.createElement('label');
+  tubingCLabel.setAttribute('class', selectorClass);
+  tubingCLabel.innerHTML = 'Capping';
+  const cappingSelector = document.createElement('input');
+  cappingSelector.setAttribute('class', 'checkbox');
+  cappingSelector.setAttribute('type', 'checkbox');
+  cappingSelector.setAttribute('checked', 'true');
+
+  const tubingoRLabel = document.createElement('label');
+  tubingoRLabel.setAttribute('class', selectorClass);
+  tubingoRLabel.innerHTML = 'On Ratio';
+  const onRatioSelector = document.createElement('input');
+  onRatioSelector.setAttribute('type', 'number');
+  onRatioSelector.setAttribute('value', '1');
+  onRatioSelector.setAttribute('max', '6');
+  onRatioSelector.setAttribute('min', '1');
 
   const labelSelector = document.createElement('label');
   labelSelector.setAttribute('class', selectorClass);
   labelSelector.innerHTML = fileName;
+
+  const tubeCheckBox = document.createElement('input');
+  tubeCheckBox.setAttribute('class', 'checkbox');
+  tubeCheckBox.setAttribute('type', 'checkbox');
+  tubeCheckBox.setAttribute('checked', true);
+
+  const tubingLabel = document.createElement('label');
+  tubingLabel.setAttribute('class', selectorClass);
+  tubingLabel.innerHTML = 'Tubing';
 
   const controlContainer = document.createElement('div');
   controlContainer.setAttribute('class', style.control);
@@ -182,15 +221,30 @@ function createPipeline(fileName, fileContents) {
   controlContainer.appendChild(colorBySelector);
   controlContainer.appendChild(componentSelector);
   controlContainer.appendChild(opacitySelector);
-  // controlContainer.appendChild(radiusSelector);
+  controlContainer.appendChild(tubingLabel);
+  controlContainer.appendChild(tubeCheckBox);
   rootControllerContainer.appendChild(controlContainer);
+
+  const tubeControlContainer = document.createElement('div');
+  tubeControlContainer.setAttribute('class', style.control);
+  tubeControlContainer.appendChild(tubingRLabel);
+  tubeControlContainer.appendChild(radiusSelector);
+  tubeControlContainer.appendChild(tubingnSLabel);
+  tubeControlContainer.appendChild(nsidesSelector);
+  tubeControlContainer.appendChild(tubingoRLabel);
+  tubeControlContainer.appendChild(onRatioSelector);
+  tubeControlContainer.appendChild(tubingCLabel);
+  tubeControlContainer.appendChild(cappingSelector);
+  rootControllerContainer.appendChild(tubeControlContainer);
 
   // VTK pipeline
   const vtpReader = vtkXMLPolyDataReader.newInstance();
   vtpReader.parseArrayBuffer(fileContents);
 
   const tubeFilter = vtkTubeFilter.newInstance();
-  tubeFilter.setRadius(0.2);
+  tubeFilter.setRadius(0.05);
+  tubeFilter.setCapping(true);
+  tubeFilter.setNumberOfSides(20);
   tubeFilter.setInputConnection(vtpReader.getOutputPort());
   tubeFilter.setInputArrayToProcess(0, 'Radius', 'PointData', 'Scalars');
   tubeFilter.setVaryRadius(VaryRadius.VARY_RADIUS_BY_SCALAR);
@@ -203,7 +257,14 @@ function createPipeline(fileName, fileContents) {
     lookupTable,
     scalarVisibility: false,
   });
+  const tubeMapper = vtkMapper.newInstance({
+    interpolateScalarsBeforeMapping: false,
+    useLookupTableScalarRange: true,
+    lookupTable,
+    scalarVisibility: false,
+  });
   const actor = vtkActor.newInstance();
+  const tubeActor = vtkActor.newInstance();
   const scalars = tubeFilter
     .getOutputData()
     .getPointData()
@@ -233,8 +294,8 @@ function createPipeline(fileName, fileContents) {
       representation,
       edgeVisibility,
     ] = event.target.value.split(':').map(Number);
-    actor.getProperty().set({ representation, edgeVisibility });
-    actor.setVisibility(!!visibility);
+    tubeActor.getProperty().set({ representation, edgeVisibility });
+    tubeActor.setVisibility(!!visibility);
     renderWindow.render();
   }
   representationSelector.addEventListener('change', updateRepresentation);
@@ -246,6 +307,7 @@ function createPipeline(fileName, fileContents) {
   function updateOpacity(event) {
     const opacity = Number(event.target.value) / 100;
     actor.getProperty().setOpacity(opacity);
+    tubeActor.getProperty().setOpacity(opacity);
     renderWindow.render();
   }
 
@@ -305,8 +367,8 @@ function createPipeline(fileName, fileContents) {
       const numberOfComponents = activeArray.getNumberOfComponents();
       if (numberOfComponents > 1) {
         // always start on magnitude setting
-        if (mapper.getLookupTable()) {
-          const lut = mapper.getLookupTable();
+        if (tubeMapper.getLookupTable()) {
+          const lut = tubeMapper.getLookupTable();
           lut.setVectorModeToMagnitude();
         }
         componentSelector.style.display = 'block';
@@ -330,19 +392,26 @@ function createPipeline(fileName, fileContents) {
       scalarMode,
       scalarVisibility,
     });
+    tubeMapper.set({
+      colorByArrayName,
+      colorMode,
+      interpolateScalarsBeforeMapping,
+      scalarMode,
+      scalarVisibility,
+    });
     applyPreset();
   }
   colorBySelector.addEventListener('change', updateColorBy);
   updateColorBy({ target: colorBySelector });
 
   function updateColorByComponent(event) {
-    if (mapper.getLookupTable()) {
-      const lut = mapper.getLookupTable();
+    if (tubeMapper.getLookupTable()) {
+      const tubeLut = tubeMapper.getLookupTable();
       if (event.target.value === -1) {
-        lut.setVectorModeToMagnitude();
+        tubeLut.setVectorModeToMagnitude();
       } else {
-        lut.setVectorModeToComponent();
-        lut.setVectorComponent(Number(event.target.value));
+        tubeLut.setVectorModeToComponent();
+        tubeLut.setVectorComponent(Number(event.target.value));
       }
       renderWindow.render();
     }
@@ -352,21 +421,61 @@ function createPipeline(fileName, fileContents) {
   // --------------------------------------------------------------------
   // Tube handling
   // --------------------------------------------------------------------
-  // function updateTubeRadius(event) {
-  //   const radius = Number(event.target.value) / 100;
-  //   tubeFilter.setRadius(radius);
-  //   renderWindow.render();
-  // }
+  function showTubingControl(event) {
+    const check = event.target.checked;
+    if (check) {
+      tubeControlContainer.style.display = 'block';
+      tubeActor.setVisibility(true);
+    } else {
+      tubeControlContainer.style.display = 'none';
+      tubeActor.setVisibility(false);
+    }
+    renderWindow.render();
+  }
 
-  // radiusSelector.addEventListener('input', updateTubeRadius);
+  tubeCheckBox.addEventListener('change', showTubingControl);
+
+  function updateTubeRadius(event) {
+    const radius = Number(event.target.value) / 100;
+    tubeFilter.setRadius(radius);
+    renderWindow.render();
+  }
+
+  radiusSelector.addEventListener('input', updateTubeRadius);
+
+  function updateTubeNumberOfSides(event) {
+    const nSides = Number(event.target.value);
+    tubeFilter.setNumberOfSides(nSides);
+    renderWindow.render();
+  }
+
+  nsidesSelector.addEventListener('input', updateTubeNumberOfSides);
+
+  function updateTubeOnRatio(event) {
+    const onRatio = Number(event.target.value);
+    tubeFilter.setOnRatio(onRatio);
+    renderWindow.render();
+  }
+
+  onRatioSelector.addEventListener('input', updateTubeOnRatio);
+
+  function updateTubeCapping(event) {
+    const checked = event.target.checked;
+    tubeFilter.setCapping(checked);
+    renderWindow.render();
+  }
+
+  cappingSelector.addEventListener('change', updateTubeCapping);
 
   // --------------------------------------------------------------------
   // Pipeline handling
   // --------------------------------------------------------------------
 
+  tubeActor.setMapper(tubeMapper);
+  tubeMapper.setInputConnection(tubeFilter.getOutputPort());
+  renderer.addActor(tubeActor);
   actor.setMapper(mapper);
-  // mapper.setInputData(source);
-  mapper.setInputConnection(tubeFilter.getOutputPort());
+  mapper.setInputConnection(vtpReader.getOutputPort());
   renderer.addActor(actor);
 
   // Manage update when lookupTable change
@@ -380,11 +489,14 @@ function createPipeline(fileName, fileContents) {
 
   global.pipeline[fileName] = {
     actor,
+    tubeActor,
     tubeFilter,
+    tubeMapper,
     mapper,
     lookupTable,
     renderer,
     renderWindow,
+    vtpReader,
   };
 }
 
