@@ -61,13 +61,7 @@ function vtkHandleWidget(publicAPI, model) {
     const pos = model.interactor.getEventPosition(
       model.interactor.getPointerIndex()
     );
-    const boundingContainer = model.interactor
-      .getCanvas()
-      .getBoundingClientRect();
-    const position = [
-      pos.x - boundingContainer.left,
-      pos.y + boundingContainer.top,
-    ];
+    const position = [pos.x, pos.y];
     model.widgetRep.computeInteractionState(position);
     if (model.widgetRep.getInteractionState() === InteractionState.OUTSIDE) {
       return VOID;
@@ -83,13 +77,7 @@ function vtkHandleWidget(publicAPI, model) {
     const pos = model.interactor.getEventPosition(
       model.interactor.getPointerIndex()
     );
-    const boundingContainer = model.interactor
-      .getCanvas()
-      .getBoundingClientRect();
-    const position = [
-      pos.x - boundingContainer.left,
-      pos.y + boundingContainer.top,
-    ];
+    const position = [pos.x, pos.y];
     model.widgetRep.startComplexWidgetInteraction(position);
     if (model.widgetRep.getInteractionState() === InteractionState.OUTSIDE) {
       return VOID;
@@ -107,13 +95,7 @@ function vtkHandleWidget(publicAPI, model) {
     const pos = model.interactor.getEventPosition(
       model.interactor.getPointerIndex()
     );
-    const boundingContainer = model.interactor
-      .getCanvas()
-      .getBoundingClientRect();
-    const position = [
-      pos.x - boundingContainer.left,
-      pos.y + boundingContainer.top,
-    ];
+    const position = [pos.x, pos.y];
     model.widgetRep.startComplexWidgetInteraction(position);
     if (model.widgetRep.getInteractionState() === InteractionState.OUTSIDE) {
       return VOID;
@@ -139,13 +121,7 @@ function vtkHandleWidget(publicAPI, model) {
     const pos = model.interactor.getEventPosition(
       model.interactor.getPointerIndex()
     );
-    const boundingContainer = model.interactor
-      .getCanvas()
-      .getBoundingClientRect();
-    const position = [
-      pos.x - boundingContainer.left,
-      pos.y + boundingContainer.top,
-    ];
+    const position = [pos.x, pos.y];
     if (model.widgetState === WidgetState.START) {
       const state = model.widgetRep.getInteractionState();
       model.widgetRep.computeInteractionState(position);

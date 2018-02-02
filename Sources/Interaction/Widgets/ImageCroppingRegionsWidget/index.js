@@ -151,7 +151,10 @@ function vtkImageCroppingRegionsWidget(publicAPI, model) {
       return VOID;
     }
 
-    const mousePos = publicAPI.get2DPointerPosition();
+    const pos = model.interactor.getEventPosition(
+      model.interactor.getPointerIndex()
+    );
+    const mousePos = [pos.x, pos.y];
     const planes = model.widgetRep.getPlanePositions();
     // Assume we should use the first view
     const view = model.interactor.getView();
@@ -300,7 +303,10 @@ function vtkImageCroppingRegionsWidget(publicAPI, model) {
       return VOID;
     }
 
-    const mouse = publicAPI.get2DPointerPosition();
+    const pos = model.interactor.getEventPosition(
+      model.interactor.getPointerIndex()
+    );
+    const mouse = [pos.x, pos.y];
     const view = model.interactor.getView();
     const planes = model.widgetRep.getPlanePositions();
     const bounds = model.widgetRep.getInitialBounds();

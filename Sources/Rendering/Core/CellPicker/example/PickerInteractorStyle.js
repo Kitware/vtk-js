@@ -27,13 +27,7 @@ function vtkPickerInteractorStyle(publicAPI, model) {
     if (model.interactor.getShiftKey()) {
       const renderer = model.currentRenderer;
       const interactor = model.interactor;
-      const boundingContainer = model.container.getBoundingClientRect();
-      const point = [
-        pos.x - boundingContainer.left,
-        pos.y + boundingContainer.top,
-        0.0,
-      ];
-      interactor.getPicker().pick(point, renderer);
+      interactor.getPicker().pick([pos.x, pos.y, 0], renderer);
 
       const pickedPoints = interactor.getPicker().getPickedPositions();
       const pickedCellId = interactor.getPicker().getCellId();

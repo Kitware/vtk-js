@@ -126,7 +126,10 @@ function vtkLineWidget(publicAPI, model) {
     if (model.widgetRep.getInteractionState === InteractionState.OUTSIDE) {
       return;
     }
-    const position = publicAPI.get2DPointerPosition();
+    const pos = model.interactor.getEventPosition(
+      model.interactor.getPointerIndex()
+    );
+    const position = [pos.x, pos.y];
 
     if (model.widgetState === WidgetState.START) {
       const pos3D = model.point1Widget
@@ -180,7 +183,10 @@ function vtkLineWidget(publicAPI, model) {
       model.widgetRep.setInteractionState(State.ONLINE);
     }
 
-    const position = publicAPI.get2DPointerPosition();
+    const pos = model.interactor.getEventPosition(
+      model.interactor.getPointerIndex()
+    );
+    const position = [pos.x, pos.y];
     model.widgetState = WidgetState.ACTIVE;
     model.widgetRep.startComplexWidgetInteraction(position);
     publicAPI.invokeStartInteractionEvent();
@@ -191,14 +197,20 @@ function vtkLineWidget(publicAPI, model) {
       return;
     }
     model.widgetRep.setInteractionState(State.SCALING);
-    const position = publicAPI.get2DPointerPosition();
+    const pos = model.interactor.getEventPosition(
+      model.interactor.getPointerIndex()
+    );
+    const position = [pos.x, pos.y];
     model.widgetState = WidgetState.ACTIVE;
     model.widgetRep.startComplexWidgetInteraction(position);
     publicAPI.invokeStartInteractionEvent();
   };
 
   publicAPI.moveAction = () => {
-    const position = publicAPI.get2DPointerPosition();
+    const pos = model.interactor.getEventPosition(
+      model.interactor.getPointerIndex()
+    );
+    const position = [pos.x, pos.y];
 
     // Need to check where the mouse is
     if (model.widgetState === WidgetState.MANIPULATE) {
@@ -251,7 +263,10 @@ function vtkLineWidget(publicAPI, model) {
     if (model.widgetState === WidgetState.START) {
       return;
     }
-    const position = publicAPI.get2DPointerPosition();
+    const pos = model.interactor.getEventPosition(
+      model.interactor.getPointerIndex()
+    );
+    const position = [pos.x, pos.y];
     model.widgetRep.complexWidgetInteraction(position);
     model.widgetRep.setPoint1WorldPosition(
       model.point1Widget.getWidgetRep().getWorldPosition()

@@ -122,10 +122,11 @@ function vtkRenderWindowInteractor(publicAPI, model) {
 
   function setScreenEventPositionFor(source) {
     const c = model.canvas;
+    const bounds = c.getBoundingClientRect();
     const id = source.identifier ? source.identifier : 0;
     publicAPI.setEventPosition(
-      source.clientX,
-      c.clientHeight - source.clientY + 1,
+      source.clientX - bounds.left,
+      bounds.height - source.clientY + bounds.top,
       0,
       id
     );
