@@ -58,6 +58,9 @@ function extend(publicAPI, model, initialValues = {}) {
 
   // event methods
   EVENTS.forEach((name) => macro.event(publicAPI, model, name));
+
+  // keystore methods
+  macro.keystore(publicAPI, model, { key1: 'value1', key2: 'value2' });
 }
 
 const newInstance = macro.newInstance(extend, 'vtkMyClass');
@@ -364,4 +367,24 @@ test('Macro methods event tests', (t) => {
   unsubscribe();
 
   myTestClass.invokeTestPriority();
+});
+
+test('Macro methods keystore tests', (t) => {
+  const testClass = newInstance();
+
+  testClass.setKey('key3', 'value3');
+
+  t.equal(testClass.getKey('key1'), 'value1', 'key1 should exist in keystore');
+  t.equal(testClass.getKey('key2'), 'value2', 'key2 should exist in keystore');
+  t.equal(testClass.getKey('key3'), 'value3', 'key3 should exist in keystore');
+
+  t.ok(testClass.deleteKey('key2'), 'Delete key2 should succeed');
+
+  testClass.clearKeystore();
+
+  t.equal(
+    testClass.getAllKeys().length,
+    0,
+    'There should be no keys after clearing'
+  );
 });

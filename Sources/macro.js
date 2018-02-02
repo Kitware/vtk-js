@@ -9,7 +9,7 @@ function getCurrentGlobalMTime() {
 }
 
 // ----------------------------------------------------------------------------
-// Loggins function calls
+// Logging function calls
 // ----------------------------------------------------------------------------
 /* eslint-disable no-prototype-builtins                                      */
 
@@ -1201,6 +1201,37 @@ export function proxyPropertyState(
 }
 
 // ----------------------------------------------------------------------------
+// keystore(publicAPI, model, initialKeystore)
+//
+//    - initialKeystore: Initial keystore. This can be either a Map or an
+//      object.
+//
+// Generated API
+//  setKey(key, value) : undefined
+//  getKey(key) : mixed
+//  getAllKeys() : [mixed]
+//  deleteKey(key) : Boolean
+// ----------------------------------------------------------------------------
+
+export function keystore(publicAPI, model, initialKeystore = {}) {
+  const store = new Map();
+
+  if (initialKeystore instanceof Map) {
+    initialKeystore.forEach((value, key) => store.set(key, value));
+  } else {
+    Object.keys(initialKeystore).forEach((key) =>
+      store.set(key, initialKeystore[key])
+    );
+  }
+
+  publicAPI.setKey = (key, value) => store.set(key, value);
+  publicAPI.getKey = (key, value) => store.get(key, value);
+  publicAPI.getAllKeys = (key, value) => [...store.keys()];
+  publicAPI.deleteKey = (key, value) => store.delete(key);
+  publicAPI.clearKeystore = () => store.clear();
+}
+
+// ----------------------------------------------------------------------------
 // Default export
 // ----------------------------------------------------------------------------
 
@@ -1217,6 +1248,7 @@ export default {
   getCurrentGlobalMTime,
   getStateArrayMapFunc,
   isVtkObject,
+  keystore,
   newInstance,
   obj,
   safeArrays,
