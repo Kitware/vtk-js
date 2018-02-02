@@ -120,13 +120,29 @@ function vtkRenderWindowInteractor(publicAPI, model) {
     model.eventPositions.set(pointer, { x: xv, y: yv, z: zv });
   };
 
-  publicAPI.setAnimationEventPosition = (xv, yv, zv, pointer) => {
-    model.lastAnimationEventPositions.set(
-      pointer,
-      model.animationEventPositions.get(pointer)
+  function setScreenEventPositionFor(source) {
+    const c = model.canvas;
+    const id = source.identifier ? source.identifier : 0;
+    publicAPI.setEventPosition(
+      source.clientX,
+      c.clientHeight - source.clientY + 1,
+      0,
+      id
     );
-    model.animationEventPositions.set(pointer, { x: xv, y: yv, z: zv });
-  };
+    publicAPI.setPointerIndex(id);
+  }
+
+  function setModifierKeysFor(event) {
+    model.controlKey = event.ctrlKey;
+    model.altKey = event.altKey;
+    model.shiftKey = event.shiftKey;
+  }
+
+  function setKeysFor(event) {
+    model.key = event.key;
+    model.keyCode = event.charCode;
+    setModifierKeysFor(event);
+  }
 
   publicAPI.getEventPosition = (pointer) => model.eventPositions.get(pointer);
 
@@ -192,19 +208,12 @@ function vtkRenderWindowInteractor(publicAPI, model) {
   };
 
   publicAPI.handleKeyPress = (event) => {
-    model.controlKey = event.ctrlKey;
-    model.altKey = event.altKey;
-    model.shiftKey = event.shiftKey;
-    model.key = event.key;
-    model.keyCode = String.fromCharCode(event.charCode);
+    setKeysFor(event);
     publicAPI.keyPressEvent();
   };
 
   publicAPI.handleKeyUp = (event) => {
-    model.controlKey = event.ctrlKey;
-    model.altKey = event.altKey;
-    model.shiftKey = event.shiftKey;
-    model.key = event.key;
+    setKeysFor(event);
     publicAPI.keyUpEvent();
   };
 
@@ -213,22 +222,8 @@ function vtkRenderWindowInteractor(publicAPI, model) {
     event.stopPropagation();
     event.preventDefault();
 
-    // intentioanlly done twice
-    publicAPI.setEventPosition(
-      event.clientX,
-      model.canvas.clientHeight - event.clientY + 1,
-      0,
-      0
-    );
-    publicAPI.setEventPosition(
-      event.clientX,
-      model.canvas.clientHeight - event.clientY + 1,
-      0,
-      0
-    );
-    model.controlKey = event.ctrlKey;
-    model.altKey = event.altKey;
-    model.shiftKey = event.shiftKey;
+    setScreenEventPositionFor(event);
+    setModifierKeysFor(event);
     switch (event.which) {
       case 1:
         publicAPI.leftButtonPressEvent();
@@ -346,16 +341,11 @@ function vtkRenderWindowInteractor(publicAPI, model) {
   };
 
   publicAPI.handleMouseMove = (event) => {
-    publicAPI.setEventPosition(
-      event.clientX,
-      model.canvas.clientHeight - event.clientY + 1,
-      0,
-      0
-    );
     // Do not consume event for move
     // event.stopPropagation();
     // event.preventDefault();
-    publicAPI.setPointerIndex(0);
+    setScreenEventPositionFor(event);
+    setModifierKeysFor(event);
     publicAPI.mouseMoveEvent();
   };
 
@@ -410,12 +400,8 @@ function vtkRenderWindowInteractor(publicAPI, model) {
     event.stopPropagation();
     event.preventDefault();
 
-    publicAPI.setEventPosition(
-      event.clientX,
-      model.canvas.clientHeight - event.clientY + 1,
-      0,
-      0
-    );
+    setScreenEventPositionFor(event);
+    setModifierKeysFor(event);
     switch (event.which) {
       case 1:
         publicAPI.leftButtonReleaseEvent();
@@ -432,60 +418,30 @@ function vtkRenderWindowInteractor(publicAPI, model) {
     }
   };
 
-  publicAPI.handleTouchStart = (event) => {
-    interactionRegistration(true);
+  function handleTouchEvent(event, invokeFunction) {
     event.stopPropagation();
     event.preventDefault();
 
     const touches = event.changedTouches;
     for (let i = 0; i < touches.length; i++) {
       const touch = touches[i];
-      publicAPI.setEventPosition(
-        touch.clientX,
-        model.canvas.clientHeight - touch.clientY + 1,
-        0,
-        touch.identifier
-      );
-      publicAPI.setPointerIndex(touch.identifier);
-      publicAPI.startTouchEvent();
+      setScreenEventPositionFor(touch);
+      invokeFunction();
     }
+  }
+
+  publicAPI.handleTouchStart = (event) => {
+    interactionRegistration(true);
+    handleTouchEvent(event, publicAPI.startTouchEvent);
   };
 
   publicAPI.handleTouchMove = (event) => {
-    event.stopPropagation();
-    event.preventDefault();
-
-    const touches = event.changedTouches;
-    for (let i = 0; i < touches.length; i++) {
-      const touch = touches[i];
-      publicAPI.setEventPosition(
-        touch.clientX,
-        model.canvas.clientHeight - touch.clientY + 1,
-        0,
-        touch.identifier
-      );
-      publicAPI.setPointerIndex(touch.identifier);
-      publicAPI.mouseMoveEvent();
-    }
+    handleTouchEvent(event, publicAPI.mouseMoveEvent);
   };
 
   publicAPI.handleTouchEnd = (event) => {
     interactionRegistration(false);
-    event.stopPropagation();
-    event.preventDefault();
-
-    const touches = event.changedTouches;
-    for (let i = 0; i < touches.length; i++) {
-      const touch = touches[i];
-      publicAPI.setEventPosition(
-        touch.clientX,
-        model.canvas.clientHeight - touch.clientY + 1,
-        0,
-        touch.identifier
-      );
-      publicAPI.setPointerIndex(touch.identifier);
-      publicAPI.endTouchEvent();
-    }
+    handleTouchEvent(event, publicAPI.endTouchEvent);
   };
 
   publicAPI.setView = (val) => {
