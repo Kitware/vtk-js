@@ -126,7 +126,6 @@ function vtkInteractorStyleTrackballCamera(publicAPI, model) {
       return;
     }
 
-    publicAPI.grabFocus(model.eventCallbackCommand);
     if (model.interactor.getShiftKey()) {
       if (model.interactor.getControlKey() || model.interactor.getAltKey()) {
         publicAPI.startDolly();
@@ -171,10 +170,6 @@ function vtkInteractorStyleTrackballCamera(publicAPI, model) {
 
       default:
         break;
-    }
-
-    if (model.interactor) {
-      publicAPI.releaseFocus();
     }
   };
 

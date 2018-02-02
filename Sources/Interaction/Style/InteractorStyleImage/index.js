@@ -106,7 +106,6 @@ function vtkInteractorStyleImage(publicAPI, model) {
       return;
     }
 
-    publicAPI.grabFocus(model.eventCallbackCommand);
     if (!model.interactor.getShiftKey() && !model.interactor.getControlKey()) {
       model.windowLevelStartPosition[0] = pos.x;
       model.windowLevelStartPosition[1] = pos.y;
@@ -140,7 +139,6 @@ function vtkInteractorStyleImage(publicAPI, model) {
       case States.IS_WINDOW_LEVEL:
         publicAPI.endWindowLevel();
         if (model.interactor) {
-          publicAPI.releaseFocus();
           publicAPI.setAnimationStateOff();
         }
         break;
@@ -148,7 +146,6 @@ function vtkInteractorStyleImage(publicAPI, model) {
       case States.IS_SLICE:
         publicAPI.endSlice();
         if (model.interactor) {
-          publicAPI.releaseFocus();
           publicAPI.setAnimationStateOff();
         }
         break;

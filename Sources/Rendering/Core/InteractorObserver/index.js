@@ -103,38 +103,6 @@ function vtkInteractorObserver(publicAPI, model) {
       .getView()
       .worldToDisplay(x, y, z, model.currentRenderer);
   };
-
-  //----------------------------------------------------------------------------
-  publicAPI.grabFocus = () => {
-    // void vtkInteractorObserver::GrabFocus(vtkCommand *mouseEvents, vtkCommand *keypressEvents)
-    // {
-    //   if ( this->Interactor )
-    //     {
-    //     this->Interactor->GrabFocus(mouseEvents,keypressEvents);
-    //     }
-  };
-
-  //----------------------------------------------------------------------------
-  publicAPI.releaseFocus = () => {
-    // void vtkInteractorObserver::ReleaseFocus()
-    // {
-    //   if ( this->Interactor )
-    //     {
-    //     this->Interactor->ReleaseFocus();
-    //     }
-  };
-
-  // //----------------------------------------------------------------------------
-  // void vtkInteractorObserver::StartInteraction()
-  // {
-  //   this->Interactor->GetRenderWindow()->SetDesiredUpdateRate(this->Interactor->GetDesiredUpdateRate());
-  // }
-
-  // //----------------------------------------------------------------------------
-  // void vtkInteractorObserver::EndInteraction()
-  // {
-  //   this->Interactor->GetRenderWindow()->SetDesiredUpdateRate(this->Interactor->GetStillUpdateRate());
-  // }
 }
 
 // ----------------------------------------------------------------------------
@@ -147,7 +115,6 @@ const DEFAULT_VALUES = {
   currentRenderer: null,
   defaultRenderer: null,
   priority: 0.0,
-  keyPressActivationValue: 'i',
   charObserverTag: null,
   deleteObserverTag: null,
 };
