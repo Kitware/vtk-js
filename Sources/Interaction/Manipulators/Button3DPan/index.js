@@ -24,10 +24,8 @@ function vtkButton3DPan(publicAPI, model) {
   ) => {
     if (pressed) {
       interactorStyle.startCameraPose();
-      interactorStyle.setAnimationStateOn();
     } else if (state === States.IS_CAMERA_POSE) {
       interactorStyle.endCameraPose();
-      interactorStyle.setAnimationStateOff();
     }
   };
 

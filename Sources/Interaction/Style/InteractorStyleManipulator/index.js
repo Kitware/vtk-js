@@ -2,6 +2,7 @@ import macro from 'vtk.js/Sources/macro';
 import vtkInteractorStyle from 'vtk.js/Sources/Rendering/Core/InteractorStyle';
 
 const { vtkDebugMacro } = macro;
+const { States } = vtkInteractorStyle;
 
 const DEFAULT_EVENT_POSITION = { x: 0, y: 0, z: 0 };
 
@@ -244,7 +245,6 @@ function vtkInteractorStyleManipulator(publicAPI, model) {
       ed.pressed
     );
     if (model.currentManipulator) {
-      publicAPI.invokeStartInteractionEvent({ type: 'StartInteractionEvent' });
       model.currentManipulator.onButton3D(
         publicAPI,
         model.currentRenderer,
@@ -253,7 +253,11 @@ function vtkInteractorStyleManipulator(publicAPI, model) {
         ed.input,
         ed.pressed
       );
-      publicAPI.setAnimationStateOn();
+      if (ed.pressed) {
+        publicAPI.startCameraPose();
+      } else {
+        publicAPI.endCameraPose();
+      }
     } else {
       vtkDebugMacro('No manipulator found');
     }
@@ -262,7 +266,7 @@ function vtkInteractorStyleManipulator(publicAPI, model) {
   //-------------------------------------------------------------------------
   publicAPI.handleMove3D = (arg) => {
     const ed = arg.calldata;
-    if (model.currentManipulator) {
+    if (model.currentManipulator && model.state === States.IS_CAMERA_POSE) {
       model.currentManipulator.onMove3D(
         publicAPI,
         model.currentRenderer,
@@ -287,7 +291,6 @@ function vtkInteractorStyleManipulator(publicAPI, model) {
       alt
     );
     if (model.currentManipulator) {
-      publicAPI.invokeStartInteractionEvent({ type: 'StartInteractionEvent' });
       if (model.currentManipulator.setCenter) {
         model.currentManipulator.setCenter(model.centerOfRotation);
       }
@@ -296,7 +299,8 @@ function vtkInteractorStyleManipulator(publicAPI, model) {
       }
       model.currentManipulator.startInteraction();
       model.currentManipulator.onButtonDown(model.interactor);
-      publicAPI.setAnimationStateOn();
+      model.interactor.requestAnimation(publicAPI);
+      publicAPI.invokeStartInteractionEvent({ type: 'StartInteractionEvent' });
     } else {
       vtkDebugMacro('No manipulator found');
     }
@@ -355,11 +359,11 @@ function vtkInteractorStyleManipulator(publicAPI, model) {
       model.currentManipulator.getButton &&
       model.currentManipulator.getButton() === button
     ) {
-      publicAPI.setAnimationStateOff();
       model.currentManipulator.onButtonUp(model.interactor);
       model.currentManipulator.endInteraction();
-      publicAPI.invokeEndInteractionEvent({ type: 'EndInteractionEvent' });
       model.currentManipulator = null;
+      model.interactor.cancelAnimation(publicAPI);
+      publicAPI.invokeEndInteractionEvent({ type: 'EndInteractionEvent' });
     }
   };
 
@@ -411,6 +415,7 @@ function vtkInteractorStyleManipulator(publicAPI, model) {
       .filter((m) => m.onKeyDown)
       .forEach((manipulator) => {
         manipulator.onKeyDown(model.interactor);
+        publicAPI.invokeInteractionEvent({ type: 'InteractionEvent' });
       });
   };
 
@@ -418,6 +423,7 @@ function vtkInteractorStyleManipulator(publicAPI, model) {
   publicAPI.handleKeyUp = () => {
     model.mouseManipulators.filter((m) => m.onKeyUp).forEach((manipulator) => {
       manipulator.onKeyUp(model.interactor);
+      publicAPI.invokeInteractionEvent({ type: 'InteractionEvent' });
     });
   };
 

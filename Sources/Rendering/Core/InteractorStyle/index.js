@@ -17,11 +17,9 @@ const stateNames = {
   Pan: States.IS_PAN,
   Spin: States.IS_SPIN,
   Dolly: States.IS_DOLLY,
-  Zoom: States.IS_ZOOM,
-  Timer: States.IS_TIMER,
-  TwoPointer: States.IS_TWO_POINTER,
-  UniformScale: States.IS_USCALE,
   CameraPose: States.IS_CAMERA_POSE,
+  WindowLevel: States.IS_WINDOW_LEVEL,
+  Slice: States.IS_SLICE,
 };
 
 const events = [
@@ -44,9 +42,12 @@ const events = [
   'KeyUp',
   'Char',
   'Delete',
-  'Pinch',
-  'Pan',
-  'Rotate',
+  'StartPinch',
+  'EndPinch',
+  'StartPan',
+  'EndPan',
+  'StartRotate',
+  'EndRotate',
   'Tap',
   'LongTap',
   'Swipe',
@@ -92,17 +93,26 @@ function vtkInteractorStyle(publicAPI, model) {
 
   // create bunch of Start/EndState methods
   Object.keys(stateNames).forEach((key) => {
+    macro.event(publicAPI, model, `Start${key}Event`);
     publicAPI[`start${key}`] = () => {
       if (model.state !== States.IS_NONE) {
         return;
       }
-      publicAPI.startState(stateNames[key]);
+      model.state = stateNames[key];
+      model.interactor.requestAnimation(publicAPI);
+      publicAPI.invokeStartInteractionEvent({ type: 'StartInteractionEvent' });
+      publicAPI[`invokeStart${key}Event`]({ type: `Start${key}Event` });
     };
+    macro.event(publicAPI, model, `End${key}Event`);
     publicAPI[`end${key}`] = () => {
       if (model.state !== stateNames[key]) {
         return;
       }
-      publicAPI.stopState();
+      model.state = States.IS_NONE;
+      model.interactor.cancelAnimation(publicAPI);
+      publicAPI.invokeEndInteractionEvent({ type: 'EndInteractionEvent' });
+      publicAPI[`invokeEnd${key}Event`]({ type: `End${key}Event` });
+      model.interactor.render();
     };
   });
 
@@ -179,38 +189,6 @@ function vtkInteractorStyle(publicAPI, model) {
   publicAPI.findPokedRenderer = (x, y) => {
     publicAPI.setCurrentRenderer(model.interactor.findPokedRenderer(x, y));
   };
-
-  publicAPI.setAnimationStateOn = () => {
-    if (model.animationState === States.IS_ANIM_ON) {
-      return;
-    }
-    model.animationState = States.IS_ANIM_ON;
-    model.interactor.requestAnimation(publicAPI);
-  };
-
-  publicAPI.setAnimationStateOff = () => {
-    if (model.animationState === States.IS_ANIM_OFF) {
-      return;
-    }
-    model.animationState = States.IS_ANIM_OFF;
-    model.interactor.cancelAnimation(publicAPI);
-  };
-
-  publicAPI.startState = (state) => {
-    model.state = state;
-    if (model.animationState === States.IS_ANIM_OFF) {
-      publicAPI.invokeStartInteractionEvent({ type: 'StartInteractionEvent' });
-    }
-  };
-
-  publicAPI.stopState = () => {
-    model.state = States.IS_NONE;
-    if (model.animationState === States.IS_ANIM_OFF) {
-      const rwi = model.interactor;
-      publicAPI.invokeEndInteractionEvent({ type: 'EndInteractionEvent' });
-      rwi.render();
-    }
-  };
 }
 
 // ----------------------------------------------------------------------------
@@ -219,7 +197,6 @@ function vtkInteractorStyle(publicAPI, model) {
 
 const DEFAULT_VALUES = {
   state: States.IS_NONE,
-  animationState: States.IS_ANIM_OFF,
   handleObservers: 1,
   autoAdjustCameraClippingRange: 1,
   unsubscribes: null,

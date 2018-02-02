@@ -11,67 +11,9 @@ function vtkInteractorStyleImage(publicAPI, model) {
   // Set our className
   model.classHierarchy.push('vtkInteractorStyleImage');
 
-  //----------------------------------------------------------------------------
-  publicAPI.startWindowLevel = () => {
-    if (model.state !== States.IS_NONE) {
-      return;
-    }
-    publicAPI.startState(States.IS_WINDOW_LEVEL);
-
-    // Get the last (the topmost) image
-    publicAPI.setCurrentImageNumber(model.currentImageNumber);
-
-    if (
-      model.handleObservers &&
-      typeof publicAPI.invokeStartWindowLevelEvent === 'function'
-    ) {
-      publicAPI.invokeStartWindowLevelEvent({
-        type: 'StartWindowLevelEvent',
-        style: publicAPI,
-      });
-    } else if (model.currentImageProperty) {
-      const property = model.currentImageProperty;
-      model.windowLevelInitial[0] = property.getColorWindow();
-      model.windowLevelInitial[1] = property.getColorLevel();
-    }
-  };
-
-  //----------------------------------------------------------------------------
-  publicAPI.endWindowLevel = () => {
-    if (model.state !== States.IS_WINDOW_LEVEL) {
-      return;
-    }
-    if (
-      model.handleObservers &&
-      typeof publicAPI.invokeEndWindowLevelEvent === 'function'
-    ) {
-      publicAPI.invokeEndWindowLevelEvent({
-        type: 'EndWindowLevelEvent',
-        style: publicAPI,
-      });
-    }
-    publicAPI.stopState();
-  };
-
-  //----------------------------------------------------------------------------
-  publicAPI.startSlice = () => {
-    if (model.state !== States.IS_NONE) {
-      return;
-    }
-    publicAPI.startState(States.IS_SLICE);
-  };
-
-  //----------------------------------------------------------------------------
-  publicAPI.endSlice = () => {
-    if (model.state !== States.IS_SLICE) {
-      return;
-    }
-    publicAPI.stopState();
-  };
-
   // Public API methods
-  publicAPI.superHandleAnimation = publicAPI.handleAnimation;
-  publicAPI.handleAnimation = () => {
+  publicAPI.superHandleMouseMove = publicAPI.handleMouseMove;
+  publicAPI.handleMouseMove = () => {
     const pos = model.interactor.getEventPosition(
       model.interactor.getPointerIndex()
     );
@@ -92,7 +34,7 @@ function vtkInteractorStyleImage(publicAPI, model) {
       default:
         break;
     }
-    publicAPI.superHandleAnimation();
+    publicAPI.superHandleMouseMove();
   };
 
   //----------------------------------------------------------------------------
@@ -109,15 +51,20 @@ function vtkInteractorStyleImage(publicAPI, model) {
     if (!model.interactor.getShiftKey() && !model.interactor.getControlKey()) {
       model.windowLevelStartPosition[0] = pos.x;
       model.windowLevelStartPosition[1] = pos.y;
+      // Get the last (the topmost) image
+      publicAPI.setCurrentImageNumber(model.currentImageNumber);
+      const property = model.currentImageProperty;
+      if (property) {
+        model.windowLevelInitial[0] = property.getColorWindow();
+        model.windowLevelInitial[1] = property.getColorLevel();
+      }
       publicAPI.startWindowLevel();
-      publicAPI.setAnimationStateOn();
     } else if (
       model.interactionMode === 'IMAGE3D' &&
       model.interactor.getShiftKey()
     ) {
       // If shift is held down, do a rotation
       publicAPI.startRotate();
-      publicAPI.setAnimationStateOn();
     } else if (
       model.interactionMode === 'IMAGE_SLICING' &&
       model.interactor.getControlKey()
@@ -125,7 +72,6 @@ function vtkInteractorStyleImage(publicAPI, model) {
       // If ctrl is held down in slicing mode, slice the image
       model.lastSlicePosition = pos.y;
       publicAPI.startSlice();
-      publicAPI.setAnimationStateOn();
     } else {
       // The rest of the button + key combinations remain the same
       publicAPI.superHandleLeftButtonPress();
@@ -138,22 +84,16 @@ function vtkInteractorStyleImage(publicAPI, model) {
     switch (model.state) {
       case States.IS_WINDOW_LEVEL:
         publicAPI.endWindowLevel();
-        if (model.interactor) {
-          publicAPI.setAnimationStateOff();
-        }
         break;
 
       case States.IS_SLICE:
         publicAPI.endSlice();
-        if (model.interactor) {
-          publicAPI.setAnimationStateOff();
-        }
         break;
 
       default:
+        publicAPI.superHandleLeftButtonRelease();
         break;
     }
-    publicAPI.superHandleLeftButtonRelease();
   };
 
   //----------------------------------------------------------------------------
@@ -166,15 +106,7 @@ function vtkInteractorStyleImage(publicAPI, model) {
     model.windowLevelCurrentPosition[1] = pos.y;
     const rwi = model.interactor;
 
-    if (
-      model.handleObservers &&
-      typeof publicAPI.invokeWindowLevelEvent === 'function'
-    ) {
-      publicAPI.invokeWindowLevelEvent({
-        type: 'WindowLevelEvent',
-        style: publicAPI,
-      });
-    } else if (model.currentImageProperty) {
+    if (model.currentImageProperty) {
       const size = rwi.getView().getViewportSize(model.currentRenderer);
 
       const mWindow = model.windowLevelInitial[0];

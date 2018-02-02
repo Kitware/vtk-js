@@ -404,22 +404,18 @@ function vtkRenderWindowInteractor(publicAPI, model) {
       publicAPI.getScale() * Math.max(0.01, (wheelDelta + 1000.0) / 1000.0)
     );
 
-    publicAPI.pinchEvent();
+    if (model.wheelTimeoutID === 0) {
+      publicAPI.startPinchEvent();
+    } else {
+      publicAPI.pinchEvent();
+      clearTimeout(model.wheelTimeoutID);
+    }
 
     // start a timer to keep us animating while we get wheel events
-    if (model.wheelTimeoutID === 0) {
-      publicAPI.requestAnimation(publicAPI);
-      model.wheelTimeoutID = setTimeout(() => {
-        publicAPI.cancelAnimation(publicAPI);
-        model.wheelTimeoutID = 0;
-      }, 200);
-    } else {
-      clearTimeout(model.wheelTimeoutID);
-      model.wheelTimeoutID = setTimeout(() => {
-        publicAPI.cancelAnimation(publicAPI);
-        model.wheelTimeoutID = 0;
-      }, 200);
-    }
+    model.wheelTimeoutID = setTimeout(() => {
+      publicAPI.endPinchEvent();
+      model.wheelTimeoutID = 0;
+    }, 200);
   };
 
   publicAPI.handleMouseUp = (event) => {
@@ -639,17 +635,14 @@ function vtkRenderWindowInteractor(publicAPI, model) {
     // end the gesture if needed
     if (event === 'LeftButtonRelease') {
       if (model.currentGesture === 'Pinch') {
-        model.interactorStyle.setAnimationStateOff();
         publicAPI.render();
         publicAPI.endPinchEvent();
       }
       if (model.currentGesture === 'Rotate') {
-        model.interactorStyle.setAnimationStateOff();
         publicAPI.render();
         publicAPI.endRotateEvent();
       }
       if (model.currentGesture === 'Pan') {
-        model.interactorStyle.setAnimationStateOff();
         publicAPI.render();
         publicAPI.endPanEvent();
       }
@@ -749,18 +742,15 @@ function vtkRenderWindowInteractor(publicAPI, model) {
           model.currentGesture = 'Pinch';
           model.scale = 1.0;
           publicAPI.startPinchEvent();
-          model.interactorStyle.setAnimationStateOn();
         } else if (rotateDistance > thresh && rotateDistance > panDistance) {
           model.currentGesture = 'Rotate';
           model.rotation = 0.0;
           publicAPI.startRotateEvent();
-          model.interactorStyle.setAnimationStateOn();
         } else if (panDistance > thresh) {
           model.currentGesture = 'Pan';
           model.translation[0] = 0.0;
           model.translation[1] = 0.0;
           publicAPI.startPanEvent();
-          model.interactorStyle.setAnimationStateOn();
         }
       }
     }
