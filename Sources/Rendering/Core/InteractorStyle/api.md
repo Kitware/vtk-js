@@ -19,25 +19,6 @@ RightButtonReleaseEvent, KeyPressEvent, KeyUpEvent,
 vtkInteractorStyle subclasses may implement various styles of 
 interaction. Some common controls are
 
-### Left Mouse Move: rotate the camera around its focal point (if camera mode) or
-rotate the actor around its origin (if actor mode). The rotation is in the
-direction defined from the center of the renderer's viewport towards
-the mouse position. In joystick mode, the magnitude of the rotation is
-determined by the distance the mouse is from the center of the render
-window.
-
-### Shift Left Mouse Move: pan the camera (if camera mode) or translate the actor (if
-actor mode). In joystick mode, the direction of pan or translation is
-from the center of the viewport towards the mouse position. In trackball
-mode, the direction of motion is the direction the mouse moves.
-
-### Ctrl/Cmd Left Mouse Move: zoom the camera (if camera mode) or scale the actor (if
-actor mode). Zoom in/increase scale if the mouse position is in the top
-half of the viewport; zoom out/decrease scale if the mouse position is in
-the bottom half. In joystick mode, the amount of zoom is controlled by the
-distance of the mouse pointer from the horizontal centerline of the
-window.
-
 ### Keypress r: reset the camera view along the current view
 direction. Centers the actors and moves the camera so that all actors are
 visible.
