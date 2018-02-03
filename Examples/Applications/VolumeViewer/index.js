@@ -128,6 +128,7 @@ function createViewer(rootContainer, fileContents, options) {
   // Control UI
   const controllerWidget = vtkVolumeController.newInstance({
     size: [400, 150],
+    rescaleColorMap: true,
   });
   const isBackgroundDark = background[0] + background[1] + background[2] < 1.5;
   controllerWidget.setContainer(rootContainer);
