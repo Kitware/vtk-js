@@ -58,7 +58,9 @@ function vtkVolumeController(publicAPI, model) {
     const dataArray =
       sourceDS.getPointData().getScalars() ||
       sourceDS.getPointData().getArrays()[0];
-    const dataRange = dataArray.getRange();
+    const dataRange = model.rescaleColorMap
+      ? model.colorDataRange
+      : dataArray.getRange();
     const preset = vtkColorMaps.getPresetByName(
       model.el.querySelector('.js-color-preset').value
     );
@@ -196,6 +198,7 @@ function vtkVolumeController(publicAPI, model) {
     model.widget.applyOpacity(piecewiseFunction);
     model.widget.setContainer(widgetContainer);
     model.widget.bindMouseListeners();
+    model.colorDataRange = model.widget.getOpacityRange();
 
     // Attach listeners
     domToggleButton.addEventListener('click', toggleVisibility);
@@ -206,6 +209,11 @@ function vtkVolumeController(publicAPI, model) {
 
     model.widget.onOpacityChange(() => {
       model.widget.applyOpacity(piecewiseFunction);
+      model.colorDataRange = model.widget.getOpacityRange();
+      if (model.rescaleColorMap) {
+        updateColorMapPreset();
+      }
+
       if (!model.renderWindow.getInteractor().isAnimating()) {
         model.renderWindow.render();
       }
@@ -251,6 +259,15 @@ function vtkVolumeController(publicAPI, model) {
     }
   };
 
+  const rescaleColorMap = publicAPI.setRescaleColorMap;
+  publicAPI.setSescaleColorMap = (value) => {
+    if (rescaleColorMap(value)) {
+      updateColorMapPreset();
+      return true;
+    }
+    return false;
+  };
+
   publicAPI.setSize = model.widget.setSize;
   publicAPI.render = model.widget.render;
   publicAPI.onAnimation = model.widget.onAnimation;
@@ -267,6 +284,7 @@ function vtkVolumeController(publicAPI, model) {
 const DEFAULT_VALUES = {
   size: [600, 300],
   expanded: true,
+  rescaleColorMap: false,
 };
 
 // ----------------------------------------------------------------------------
@@ -276,7 +294,7 @@ export function extend(publicAPI, model, initialValues = {}) {
 
   // Object methods
   macro.obj(publicAPI, model);
-  macro.setGet(publicAPI, model, ['actor', 'renderWindow']);
+  macro.setGet(publicAPI, model, ['actor', 'renderWindow', 'rescaleColorMap']);
   macro.get(publicAPI, model, ['widget']);
 
   // Object specific methods

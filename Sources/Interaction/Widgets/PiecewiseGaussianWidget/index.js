@@ -954,6 +954,23 @@ function vtkPiecewiseGaussianWidget(publicAPI, model) {
     piecewiseFunction.sortAndUpdateRange();
   };
 
+  publicAPI.getOpacityRange = (dataRange) => {
+    const rangeToUse = dataRange || model.dataRange;
+    const delta =
+      (rangeToUse[1] - rangeToUse[0]) / (model.opacities.length - 1);
+    let minIndex = model.opacities.length - 1;
+    let maxIndex = 0;
+    for (let index = 0; index < model.opacities.length; index++) {
+      if (model.opacities[index] > 0) {
+        minIndex = Math.min(minIndex, index);
+      }
+      if (model.opacities[index] > 0) {
+        maxIndex = Math.max(maxIndex, index);
+      }
+    }
+    return [rangeToUse[0] + minIndex * delta, rangeToUse[0] + maxIndex * delta];
+  };
+
   // Trigger rendering for any modified event
   publicAPI.onModified(publicAPI.render);
   publicAPI.setSize(...model.size);
