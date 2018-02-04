@@ -260,7 +260,7 @@ function vtkVolumeController(publicAPI, model) {
   };
 
   const rescaleColorMap = publicAPI.setRescaleColorMap;
-  publicAPI.setSescaleColorMap = (value) => {
+  publicAPI.setRescaleColorMap = (value) => {
     if (rescaleColorMap(value)) {
       updateColorMapPreset();
       return true;
