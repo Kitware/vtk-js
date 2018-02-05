@@ -225,16 +225,18 @@ function vtkOpenGLGlyph3DMapper(publicAPI, model) {
         GSSource = vtkShaderProgram.substitute(GSSource, '//VTK::Color::Impl', [
           'vertexColorGSOutput = vertexColorVSOutput[i];',
         ]).result;
+
+        colorImpl = colorImpl.concat([
+          '  diffuseColor = vertexColorVSOutput.rgb;',
+          '  ambientColor = vertexColorVSOutput.rgb;',
+          '  opacity = opacity*vertexColorVSOutput.a;',
+        ]);
       }
 
       FSSource = vtkShaderProgram.substitute(
         FSSource,
         '//VTK::Color::Impl',
-        colorImpl.concat([
-          '  diffuseColor = vertexColorVSOutput.rgb;',
-          '  ambientColor = vertexColorVSOutput.rgb;',
-          '  opacity = opacity*vertexColorVSOutput.a;',
-        ])
+        colorImpl
       ).result;
 
       FSSource = vtkShaderProgram.substitute(
