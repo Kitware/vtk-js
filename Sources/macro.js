@@ -9,7 +9,7 @@ function getCurrentGlobalMTime() {
 }
 
 // ----------------------------------------------------------------------------
-// Loggins function calls
+// Logging function calls
 // ----------------------------------------------------------------------------
 /* eslint-disable no-prototype-builtins                                      */
 
@@ -881,6 +881,32 @@ export function debounce(func, wait, immediate) {
 }
 
 // ----------------------------------------------------------------------------
+// keystore(publicAPI, model, initialKeystore)
+//
+//    - initialKeystore: Initial keystore. This can be either a Map or an
+//      object.
+//
+// Generated API
+//  setKey(key, value) : mixed (returns value)
+//  getKey(key) : mixed
+//  getAllKeys() : [mixed]
+//  deleteKey(key) : Boolean
+// ----------------------------------------------------------------------------
+
+export function keystore(publicAPI, model, initialKeystore = {}) {
+  model.keystore = Object.assign(model.keystore || {}, initialKeystore);
+
+  publicAPI.setKey = (key, value) => {
+    model.keystore[key] = value;
+  };
+  publicAPI.getKey = (key, value) => model.keystore[key];
+  publicAPI.getAllKeys = (key, value) => Object.keys(model.keystore);
+  publicAPI.deleteKey = (key, value) => delete model.keystore[key];
+  publicAPI.clearKeystore = () =>
+    publicAPI.getAllKeys().forEach((key) => delete model.keystore[key]);
+}
+
+// ----------------------------------------------------------------------------
 // proxy(publicAPI, model, sectionName, propertyUI)
 //
 //    - sectionName: Name of the section for UI
@@ -896,6 +922,9 @@ let nextProxyId = 1;
 const ROOT_GROUP_NAME = '__root__';
 
 export function proxy(publicAPI, model) {
+  // Proxies are keystores
+  keystore(publicAPI, model);
+
   const parentDelete = publicAPI.delete;
 
   // getProxyId
@@ -1220,6 +1249,7 @@ export default {
   getCurrentGlobalMTime,
   getStateArrayMapFunc,
   isVtkObject,
+  keystore,
   newInstance,
   obj,
   safeArrays,
