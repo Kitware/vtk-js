@@ -24,8 +24,6 @@ const stateNames = {
 
 const events = [
   'Animation',
-  'Enter',
-  'Leave',
   'MouseMove',
   'LeftButtonPress',
   'LeftButtonRelease',
@@ -33,24 +31,17 @@ const events = [
   'MiddleButtonRelease',
   'RightButtonPress',
   'RightButtonRelease',
-  'MouseWheelForward',
-  'MouseWheelBackward',
-  'Expose',
-  'Configure',
-  'Timer',
   'KeyPress',
   'KeyUp',
-  'Char',
-  'Delete',
   'StartPinch',
+  'Pinch',
   'EndPinch',
   'StartPan',
+  'Pan',
   'EndPan',
   'StartRotate',
+  'Rotate',
   'EndRotate',
-  'Tap',
-  'LongTap',
-  'Swipe',
   'Button3D',
   'Move3D',
 ];
@@ -117,7 +108,7 @@ function vtkInteractorStyle(publicAPI, model) {
   });
 
   //----------------------------------------------------------------------------
-  publicAPI.handleChar = () => {
+  publicAPI.handleKeyPress = () => {
     const rwi = model.interactor;
 
     let pos = null;
@@ -125,7 +116,7 @@ function vtkInteractorStyle(publicAPI, model) {
     switch (rwi.getKeyCode()) {
       case 'r':
       case 'R':
-        pos = model.interactor.getEventPosition(rwi.getPointerIndex());
+        pos = rwi.getEventPosition();
         publicAPI.findPokedRenderer(pos.x, pos.y);
         if (model.currentRenderer !== 0) {
           model.currentRenderer.resetCamera();
@@ -137,7 +128,7 @@ function vtkInteractorStyle(publicAPI, model) {
 
       case 'w':
       case 'W':
-        pos = model.interactor.getEventPosition(rwi.getPointerIndex());
+        pos = rwi.getEventPosition();
         publicAPI.findPokedRenderer(pos.x, pos.y);
         if (model.currentRenderer !== 0) {
           const ac = model.currentRenderer.getActors();
@@ -152,7 +143,7 @@ function vtkInteractorStyle(publicAPI, model) {
 
       case 's':
       case 'S':
-        pos = model.interactor.getEventPosition(rwi.getPointerIndex());
+        pos = rwi.getEventPosition();
         publicAPI.findPokedRenderer(pos.x, pos.y);
         if (model.currentRenderer !== 0) {
           const ac = model.currentRenderer.getActors();
@@ -167,7 +158,7 @@ function vtkInteractorStyle(publicAPI, model) {
 
       case 'v':
       case 'V':
-        pos = model.interactor.getEventPosition(rwi.getPointerIndex());
+        pos = rwi.getEventPosition();
         publicAPI.findPokedRenderer(pos.x, pos.y);
         if (model.currentRenderer !== 0) {
           const ac = model.currentRenderer.getActors();

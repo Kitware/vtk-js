@@ -21,8 +21,6 @@ const deviceInputMap = {
 
 const handledEvents = [
   'Animation',
-  'Enter',
-  'Leave',
   'MouseMove',
   'LeftButtonPress',
   'LeftButtonRelease',
@@ -30,15 +28,8 @@ const handledEvents = [
   'MiddleButtonRelease',
   'RightButtonPress',
   'RightButtonRelease',
-  'MouseWheelForward',
-  'MouseWheelBackward',
-  'Expose',
-  'Configure',
-  'Timer',
   'KeyPress',
   'KeyUp',
-  'Char',
-  'Delete',
   'StartPinch',
   'Pinch',
   'EndPinch',
@@ -48,9 +39,6 @@ const handledEvents = [
   'StartRotate',
   'Rotate',
   'EndRotate',
-  'Tap',
-  'LongTap',
-  'Swipe',
   'Button3D',
   'Move3D',
 ];
@@ -210,7 +198,6 @@ function vtkRenderWindowInteractor(publicAPI, model) {
     model.key = event.key;
     model.keyCode = String.fromCharCode(event.charCode);
     publicAPI.keyPressEvent();
-    publicAPI.charEvent();
   };
 
   publicAPI.handleKeyUp = (event) => {

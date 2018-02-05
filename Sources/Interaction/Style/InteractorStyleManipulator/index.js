@@ -393,14 +393,6 @@ function vtkInteractorStyleManipulator(publicAPI, model) {
   };
 
   //-------------------------------------------------------------------------
-  publicAPI.handleChar = () => {
-    model.mouseManipulators.filter((m) => m.onChar).forEach((manipulator) => {
-      manipulator.onChar(model.interactor);
-    });
-    publicAPI.invokeInteractionEvent({ type: 'InteractionEvent' });
-  };
-
-  //-------------------------------------------------------------------------
   publicAPI.resetLights = () => {
     if (!model.currentRenderer) {
       return;

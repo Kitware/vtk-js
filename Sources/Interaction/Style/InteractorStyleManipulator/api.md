@@ -67,11 +67,6 @@ don't have a mechanism to activate a manipulator by key presses currently.
 
 Unlike mouse events, this is forwarded to all camera manipulators as `onKeyUp(interactor)` since we
 don't have a mechanism to activate a manipulator by key presses currently.
-
-### handleChar()
-
-Unlike mouse events, this is forwarded to all camera manipulators as `onChar(interactor)` since we
-don't have a mechanism to activate a manipulator by char currently.
   
 ### addManipulator(vtkCameraManipulator)
 
