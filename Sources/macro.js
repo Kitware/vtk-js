@@ -884,28 +884,23 @@ export function debounce(func, wait, immediate) {
 //      object.
 //
 // Generated API
-//  setKey(key, value) : undefined
+//  setKey(key, value) : mixed (returns value)
 //  getKey(key) : mixed
 //  getAllKeys() : [mixed]
 //  deleteKey(key) : Boolean
 // ----------------------------------------------------------------------------
 
 export function keystore(publicAPI, model, initialKeystore = {}) {
-  model.keystore = new Map();
+  model.keystore = Object.assign(model.keystore || {}, initialKeystore);
 
-  if (initialKeystore instanceof Map) {
-    initialKeystore.forEach((value, key) => model.keystore.set(key, value));
-  } else {
-    Object.keys(initialKeystore).forEach((key) =>
-      model.keystore.set(key, initialKeystore[key])
-    );
-  }
-
-  publicAPI.setKey = (key, value) => model.keystore.set(key, value);
-  publicAPI.getKey = (key, value) => model.keystore.get(key, value);
-  publicAPI.getAllKeys = (key, value) => [...model.keystore.keys()];
-  publicAPI.deleteKey = (key, value) => model.keystore.delete(key);
-  publicAPI.clearKeystore = () => model.keystore.clear();
+  publicAPI.setKey = (key, value) => {
+    model.keystore[key] = value;
+  };
+  publicAPI.getKey = (key, value) => model.keystore[key];
+  publicAPI.getAllKeys = (key, value) => Object.keys(model.keystore);
+  publicAPI.deleteKey = (key, value) => delete model.keystore[key];
+  publicAPI.clearKeystore = () =>
+    publicAPI.getAllKeys().forEach((key) => delete model.keystore[key]);
 }
 
 // ----------------------------------------------------------------------------

@@ -387,4 +387,6 @@ test('Macro methods keystore tests', (t) => {
     0,
     'There should be no keys after clearing'
   );
+
+  t.end();
 });
