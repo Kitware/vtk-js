@@ -1214,21 +1214,21 @@ export function proxyPropertyState(
 // ----------------------------------------------------------------------------
 
 export function keystore(publicAPI, model, initialKeystore = {}) {
-  const store = new Map();
+  model.keystore = new Map();
 
   if (initialKeystore instanceof Map) {
-    initialKeystore.forEach((value, key) => store.set(key, value));
+    initialKeystore.forEach((value, key) => model.keystore.set(key, value));
   } else {
     Object.keys(initialKeystore).forEach((key) =>
-      store.set(key, initialKeystore[key])
+      model.keystore.set(key, initialKeystore[key])
     );
   }
 
-  publicAPI.setKey = (key, value) => store.set(key, value);
-  publicAPI.getKey = (key, value) => store.get(key, value);
-  publicAPI.getAllKeys = (key, value) => [...store.keys()];
-  publicAPI.deleteKey = (key, value) => store.delete(key);
-  publicAPI.clearKeystore = () => store.clear();
+  publicAPI.setKey = (key, value) => model.keystore.set(key, value);
+  publicAPI.getKey = (key, value) => model.keystore.get(key, value);
+  publicAPI.getAllKeys = (key, value) => [...model.keystore.keys()];
+  publicAPI.deleteKey = (key, value) => model.keystore.delete(key);
+  publicAPI.clearKeystore = () => model.keystore.clear();
 }
 
 // ----------------------------------------------------------------------------
