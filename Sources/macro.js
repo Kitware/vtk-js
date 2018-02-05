@@ -878,6 +878,37 @@ export function debounce(func, wait, immediate) {
 }
 
 // ----------------------------------------------------------------------------
+// keystore(publicAPI, model, initialKeystore)
+//
+//    - initialKeystore: Initial keystore. This can be either a Map or an
+//      object.
+//
+// Generated API
+//  setKey(key, value) : undefined
+//  getKey(key) : mixed
+//  getAllKeys() : [mixed]
+//  deleteKey(key) : Boolean
+// ----------------------------------------------------------------------------
+
+export function keystore(publicAPI, model, initialKeystore = {}) {
+  model.keystore = new Map();
+
+  if (initialKeystore instanceof Map) {
+    initialKeystore.forEach((value, key) => model.keystore.set(key, value));
+  } else {
+    Object.keys(initialKeystore).forEach((key) =>
+      model.keystore.set(key, initialKeystore[key])
+    );
+  }
+
+  publicAPI.setKey = (key, value) => model.keystore.set(key, value);
+  publicAPI.getKey = (key, value) => model.keystore.get(key, value);
+  publicAPI.getAllKeys = (key, value) => [...model.keystore.keys()];
+  publicAPI.deleteKey = (key, value) => model.keystore.delete(key);
+  publicAPI.clearKeystore = () => model.keystore.clear();
+}
+
+// ----------------------------------------------------------------------------
 // proxy(publicAPI, model, sectionName, propertyUI)
 //
 //    - sectionName: Name of the section for UI
@@ -893,6 +924,9 @@ let nextProxyId = 1;
 const ROOT_GROUP_NAME = '__root__';
 
 export function proxy(publicAPI, model) {
+  // Proxies are keystores
+  keystore(publicAPI, model);
+
   const parentDelete = publicAPI.delete;
 
   // getProxyId
@@ -1198,37 +1232,6 @@ export function proxyPropertyState(
   if (modelKeys.length) {
     get(publicAPI, model, modelKeys);
   }
-}
-
-// ----------------------------------------------------------------------------
-// keystore(publicAPI, model, initialKeystore)
-//
-//    - initialKeystore: Initial keystore. This can be either a Map or an
-//      object.
-//
-// Generated API
-//  setKey(key, value) : undefined
-//  getKey(key) : mixed
-//  getAllKeys() : [mixed]
-//  deleteKey(key) : Boolean
-// ----------------------------------------------------------------------------
-
-export function keystore(publicAPI, model, initialKeystore = {}) {
-  model.keystore = new Map();
-
-  if (initialKeystore instanceof Map) {
-    initialKeystore.forEach((value, key) => model.keystore.set(key, value));
-  } else {
-    Object.keys(initialKeystore).forEach((key) =>
-      model.keystore.set(key, initialKeystore[key])
-    );
-  }
-
-  publicAPI.setKey = (key, value) => model.keystore.set(key, value);
-  publicAPI.getKey = (key, value) => model.keystore.get(key, value);
-  publicAPI.getAllKeys = (key, value) => [...model.keystore.keys()];
-  publicAPI.deleteKey = (key, value) => model.keystore.delete(key);
-  publicAPI.clearKeystore = () => model.keystore.clear();
 }
 
 // ----------------------------------------------------------------------------
