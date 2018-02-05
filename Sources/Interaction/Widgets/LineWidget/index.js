@@ -32,65 +32,44 @@ function vtkLineWidget(publicAPI, model) {
   }
 
   publicAPI.setEnabled = (enabling) => {
-    const enable = model.enabled;
     superClass.setEnabled(enabling);
 
-    if (model.interactor) {
-      model.point1Widget.setInteractor(model.interactor);
-      model.point2Widget.setInteractor(model.interactor);
+    if (!model.widgetRep) {
+      return;
     }
-
-    publicAPI.createDefaultRepresentation();
+    // Use the representations from the line widget
+    // for the point widgets to avoid creating
+    // default representations when setting the
+    // interactor below
     model.point1Widget.setWidgetRep(model.widgetRep.getPoint1Representation());
     model.point2Widget.setWidgetRep(model.widgetRep.getPoint2Representation());
+    model.point1Widget.setInteractor(model.interactor);
+    model.point2Widget.setInteractor(model.interactor);
 
-    if (enabling) {
-      model.point1Widget.setEnabled(1);
-      model.point2Widget.setEnabled(1);
-      if (model.widgetState === WidgetState.START) {
-        model.widgetRep.setLineVisibility(0);
-        model.widgetRep.setPoint1Visibility(0);
-        model.widgetRep.setPoint2Visibility(0);
-        model.point1Widget.setEnabled(0);
-        model.point2Widget.setEnabled(0);
-      } else {
-        model.widgetRep.setLineVisibility(1);
-        model.widgetRep.setPoint1Visibility(1);
-        model.widgetRep.setPoint2Visibility(1);
-
-        // // Widgets can't be enabled together because of interaction event which doesn't
-        // // manage priority
-        // model.point1Widget.setEnabled(1);
-        // model.point2Widget.setEnabled(1);
-      }
-    }
-
-    if (enabling && !enable) {
-      model.point1Widget.setWidgetRep(
-        model.widgetRep.getPoint1Representation()
-      );
-      model.point2Widget.setWidgetRep(
-        model.widgetRep.getPoint2Representation()
-      );
-      model.point1Widget.getWidgetRep().setRenderer(model.currentRenderer);
-      model.point2Widget.getWidgetRep().setRenderer(model.currentRenderer);
-    } else if (!enabling && enable) {
+    if (model.widgetState === WidgetState.START) {
       model.point1Widget.setEnabled(0);
       model.point2Widget.setEnabled(0);
+      model.widgetRep.setLineVisibility(0);
+      model.widgetRep.setPoint1Visibility(1);
+      model.widgetRep.setPoint2Visibility(0);
+    } else {
+      model.point1Widget.setEnabled(enabling);
+      model.point2Widget.setEnabled(enabling);
+      model.widgetRep.setLineVisibility(1);
+      model.widgetRep.setPoint1Visibility(1);
+      model.widgetRep.setPoint2Visibility(1);
     }
   };
 
   publicAPI.setWidgetStateToStart = () => {
     model.widgetState = WidgetState.START;
     model.currentHandle = 0;
-    model.widgetRep.buildRepresentation();
     publicAPI.setEnabled(model.enabled);
   };
 
   publicAPI.setWidgetStateToManipulate = () => {
     model.widgetState = WidgetState.MANIPULATE;
     model.currentHandle = -1;
-    model.widgetRep.buildRepresentation();
     publicAPI.setEnabled(model.enabled);
   };
 
@@ -123,9 +102,6 @@ function vtkLineWidget(publicAPI, model) {
   };
 
   publicAPI.selectAction = () => {
-    if (model.widgetRep.getInteractionState === InteractionState.OUTSIDE) {
-      return;
-    }
     const pos = model.interactor.getEventPosition(
       model.interactor.getPointerIndex()
     );
@@ -136,12 +112,8 @@ function vtkLineWidget(publicAPI, model) {
         .getWidgetRep()
         .displayToWorld(position, 0);
       // The first time we click, the method is called twice
-      if (model.currentHandle <= 1) {
-        model.point1Widget.setEnabled(0);
-        model.point2Widget.setEnabled(0);
-        model.widgetRep.setPoint1Visibility(1);
+      if (model.currentHandle < 1) {
         model.widgetRep.setLineVisibility(1);
-        model.widgetRep.setPoint2Visibility(0);
         model.widgetRep.setPoint1WorldPosition(pos3D);
         // Trick to avoid a line with a zero length
         // If the line has a zero length, it appears with bad extremities
@@ -149,19 +121,18 @@ function vtkLineWidget(publicAPI, model) {
         model.widgetRep.setPoint2WorldPosition(pos3D);
         model.currentHandle++;
       } else {
-        model.point1Widget.setEnabled(0);
-        model.widgetRep.setPoint1Visibility(1);
-        model.widgetRep.setLineVisibility(1);
         model.widgetRep.setPoint2Visibility(1);
-        model.point2Widget.setEnabled(0);
         model.widgetRep.setPoint2WorldPosition(pos3D);
         // When two points are placed, we go back to the native
-        publicAPI.setWidgetStateToManipulate();
-        model.currentHandle++;
+        model.widgetState = WidgetState.MANIPULATE;
+        model.currentHandle = -1;
       }
     } else {
+      const state = model.widgetRep.computeInteractionState(position);
+      if (state === InteractionState.OUTSIDE) {
+        return;
+      }
       model.widgetState = WidgetState.ACTIVE;
-      model.currentHandle = 0;
       publicAPI.invokeStartInteractionEvent();
     }
 
@@ -171,36 +142,30 @@ function vtkLineWidget(publicAPI, model) {
   };
 
   publicAPI.translateAction = () => {
-    if (model.widgetRep.getInteractionState === InteractionState.OUTSIDE) {
-      return;
-    }
-    const state = model.widgetRep.getInteractionState();
-    if (state === State.ONP1) {
-      model.widgetRep.setInteractionState(State.TRANSLATINGP1);
-    } else if (state === State.ONP2) {
-      model.widgetRep.setInteractionState(State.TRANSLATINGP2);
-    } else {
-      model.widgetRep.setInteractionState(State.ONLINE);
-    }
-
     const pos = model.interactor.getEventPosition(
       model.interactor.getPointerIndex()
     );
     const position = [pos.x, pos.y];
+    const state = model.widgetRep.computeInteractionState(position);
+    if (state === InteractionState.OUTSIDE) {
+      return;
+    }
+
     model.widgetState = WidgetState.ACTIVE;
     model.widgetRep.startComplexWidgetInteraction(position);
     publicAPI.invokeStartInteractionEvent();
   };
 
   publicAPI.scaleAction = () => {
-    if (model.widgetRep.getInteractionState === InteractionState.OUTSIDE) {
-      return;
-    }
-    model.widgetRep.setInteractionState(State.SCALING);
     const pos = model.interactor.getEventPosition(
       model.interactor.getPointerIndex()
     );
     const position = [pos.x, pos.y];
+    const state = model.widgetRep.computeInteractionState(position);
+    if (state === InteractionState.OUTSIDE) {
+      return;
+    }
+
     model.widgetState = WidgetState.ACTIVE;
     model.widgetRep.startComplexWidgetInteraction(position);
     publicAPI.invokeStartInteractionEvent();
@@ -212,41 +177,38 @@ function vtkLineWidget(publicAPI, model) {
     );
     const position = [pos.x, pos.y];
 
-    // Need to check where the mouse is
     if (model.widgetState === WidgetState.MANIPULATE) {
-      model.interactor.disable(); // to avoid extra renders()
-
-      model.point1Widget.setEnabled(0);
-      model.point2Widget.setEnabled(0);
-
-      if (model.currentHandle === 1) {
-        model.point1Widget.setEnabled(1);
-      }
-      if (model.currentHandle === 2) {
-        model.widgetRep.complexWidgetInteraction(position);
-      }
-
+      // In MANIPULATE, we are hovering above the widget
+      // Check if above a sphere and enable/disable if needed
       const state = model.widgetRep.computeInteractionState(position);
       setCursor(state);
       if (state !== State.OUTSIDE) {
         if (state === State.ONP1) {
           model.point1Widget.setEnabled(1);
+          model.point2Widget.setEnabled(0);
         } else if (state === State.ONP2) {
+          model.point1Widget.setEnabled(0);
           model.point2Widget.setEnabled(1);
         }
+      } else {
+        model.point1Widget.setEnabled(0);
+        model.point2Widget.setEnabled(0);
       }
-      model.interactor.enable();
     } else if (model.widgetState === WidgetState.START) {
-      model.widgetRep.setPoint1Visibility(1);
+      // In START, we are placing the sphere widgets.
+      // Move current handle along the mouse position.
       model.widgetRep.complexWidgetInteraction(position);
       const pos3D = model.point1Widget
         .getWidgetRep()
         .displayToWorld(position, 0);
       if (model.currentHandle === 0) {
         model.widgetRep.setPoint1WorldPosition(pos3D);
+      } else {
+        model.widgetRep.setPoint2WorldPosition(pos3D);
       }
-      model.widgetRep.setPoint2WorldPosition(pos3D);
     } else if (model.widgetState === WidgetState.ACTIVE) {
+      // In ACTIVE, we are moving a sphere widget.
+      // Update the line extremities to follow the spheres.
       model.widgetRep.setPoint1WorldPosition(
         model.point1Widget.getWidgetRep().getWorldPosition()
       );
