@@ -41,6 +41,9 @@ attribute vec4 vertexMC;
 // Apple Bug
 //VTK::PrimID::Dec
 
+// picking support
+//VTK::Picking::Dec
+
 void main()
 {
   //VTK::Color::Impl
@@ -56,4 +59,6 @@ void main()
   //VTK::PositionVC::Impl
 
   //VTK::Light::Impl
+
+  //VTK::Picking::Impl
 }
