@@ -259,12 +259,23 @@ function vtkOpenGLRenderWindow(publicAPI, model) {
   publicAPI.startVR = () => {
     if (model.vrDisplay.isConnected) {
       model.vrDisplay.requestPresent([{ source: model.canvas }]).then(() => {
-        model.oldCanvasSize = [model.canvas.width, model.canvas.height];
+        model.oldCanvasSize = model.size.slice();
 
-        // const leftEye = model.vrDisplay.getEyeParameters('left');
-        // const rightEye = model.vrDisplay.getEyeParameters('right');
-        // model.canvas.width = Math.max(leftEye.renderWidth, rightEye.renderWidth) * 2;
-        // model.canvas.height = Math.max(leftEye.renderHeight, rightEye.renderHeight);
+        if (model.el && model.hideInVR) {
+          model.el.style.display = 'none';
+        }
+        if (model.queryVRSize) {
+          const leftEye = model.vrDisplay.getEyeParameters('left');
+          const rightEye = model.vrDisplay.getEyeParameters('right');
+          const width = Math.floor(leftEye.renderWidth + rightEye.renderWidth);
+          const height = Math.floor(
+            Math.max(leftEye.renderHeight, rightEye.renderHeight)
+          );
+          publicAPI.setSize(width, height);
+        } else {
+          publicAPI.setSize(model.vrResolution);
+        }
+
         const ren = model.renderable.getRenderers()[0];
         ren.resetCamera();
         model.vrFrameData = new VRFrameData();
@@ -282,8 +293,10 @@ function vtkOpenGLRenderWindow(publicAPI, model) {
     model.vrDisplay.exitPresent();
     model.vrDisplay.cancelAnimationFrame(model.vrSceneFrame);
 
-    model.canvas.width = model.oldCanvasSize[0];
-    model.canvas.height = model.oldCanvasSize[1];
+    publicAPI.setSize(...model.oldCanvasSize);
+    if (model.el && model.hideInVR) {
+      model.el.style.display = 'block';
+    }
 
     const ren = model.renderable.getRenderers()[0];
     ren.getActiveCamera().setProjectionMatrix(null);
@@ -487,6 +500,9 @@ const DEFAULT_VALUES = {
   notifyImageReady: false,
   webgl2: false,
   defaultToWebgl2: false, // turned off by default
+  vrResolution: [2160, 1200],
+  queryVRSize: false,
+  hideInVR: true,
 };
 
 // ----------------------------------------------------------------------------
@@ -536,9 +552,11 @@ export function extend(publicAPI, model, initialValues = {}) {
     'notifyImageReady',
     'defaultToWebgl2',
     'cursor',
+    'hideInVR',
+    'queryVRSize',
   ]);
 
-  macro.setGetArray(publicAPI, model, ['size'], 2);
+  macro.setGetArray(publicAPI, model, ['size', 'vrResolution'], 2);
 
   // Object methods
   vtkOpenGLRenderWindow(publicAPI, model);
