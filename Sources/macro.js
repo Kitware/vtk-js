@@ -881,6 +881,35 @@ export function debounce(func, wait, immediate) {
 }
 
 // ----------------------------------------------------------------------------
+// Creates a throttled function that only invokes `func` at most once per
+// every `wait` milliseconds.
+
+export function throttle(callback, delay) {
+  let isThrottled = false;
+  let argsToUse = null;
+
+  function next() {
+    isThrottled = false;
+    if (argsToUse !== null) {
+      wrapper(...argsToUse); // eslint-disable-line
+      argsToUse = null;
+    }
+  }
+
+  function wrapper(...args) {
+    if (isThrottled) {
+      argsToUse = args;
+      return;
+    }
+    isThrottled = true;
+    callback(...args);
+    setTimeout(next, delay);
+  }
+
+  return wrapper;
+}
+
+// ----------------------------------------------------------------------------
 // keystore(publicAPI, model, initialKeystore)
 //
 //    - initialKeystore: Initial keystore. This can be either a Map or an
@@ -1265,6 +1294,7 @@ export default {
   vtkLogMacro,
   vtkWarningMacro,
   debounce,
+  throttle,
   proxy,
   proxyPropertyMapping,
   proxyPropertyState,
