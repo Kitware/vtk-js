@@ -3,7 +3,6 @@ import vtkInteractorObserver from 'vtk.js/Sources/Rendering/Core/InteractorObser
 import Constants from 'vtk.js/Sources/Rendering/Core/InteractorStyle/Constants';
 
 const { States } = Constants;
-const { vtkWarningMacro } = macro;
 
 // ----------------------------------------------------------------------------
 // Global methods
@@ -57,66 +56,40 @@ function vtkInteractorStyle(publicAPI, model) {
   });
 
   //----------------------------------------------------------------------------
-  publicAPI.handleKeyPress = () => {
+  publicAPI.handleKeyPress = (callData) => {
     const rwi = model.interactor;
-
-    let pos = null;
-
-    switch (rwi.getKeyCode()) {
+    let ac = null;
+    switch (callData.key) {
       case 'r':
       case 'R':
-        pos = rwi.getEventPosition();
-        publicAPI.findPokedRenderer(pos.x, pos.y);
-        if (model.currentRenderer !== 0) {
-          model.currentRenderer.resetCamera();
-        } else {
-          vtkWarningMacro('no current renderer on the interactor style.');
-        }
+        callData.pokedRenderer.resetCamera();
         rwi.render();
         break;
 
       case 'w':
       case 'W':
-        pos = rwi.getEventPosition();
-        publicAPI.findPokedRenderer(pos.x, pos.y);
-        if (model.currentRenderer !== 0) {
-          const ac = model.currentRenderer.getActors();
-          ac.forEach((anActor) => {
-            anActor.getProperty().setRepresentationToWireframe();
-          });
-        } else {
-          vtkWarningMacro('no current renderer on the interactor style.');
-        }
+        ac = callData.pokedRenderer.getActors();
+        ac.forEach((anActor) => {
+          anActor.getProperty().setRepresentationToWireframe();
+        });
         rwi.render();
         break;
 
       case 's':
       case 'S':
-        pos = rwi.getEventPosition();
-        publicAPI.findPokedRenderer(pos.x, pos.y);
-        if (model.currentRenderer !== 0) {
-          const ac = model.currentRenderer.getActors();
-          ac.forEach((anActor) => {
-            anActor.getProperty().setRepresentationToSurface();
-          });
-        } else {
-          vtkWarningMacro('no current renderer on the interactor style.');
-        }
+        ac = callData.pokedRenderer.getActors();
+        ac.forEach((anActor) => {
+          anActor.getProperty().setRepresentationToSurface();
+        });
         rwi.render();
         break;
 
       case 'v':
       case 'V':
-        pos = rwi.getEventPosition();
-        publicAPI.findPokedRenderer(pos.x, pos.y);
-        if (model.currentRenderer !== 0) {
-          const ac = model.currentRenderer.getActors();
-          ac.forEach((anActor) => {
-            anActor.getProperty().setRepresentationToPoints();
-          });
-        } else {
-          vtkWarningMacro('no current renderer on the interactor style.');
-        }
+        ac = callData.pokedRenderer.getActors();
+        ac.forEach((anActor) => {
+          anActor.getProperty().setRepresentationToPoints();
+        });
         rwi.render();
         break;
 

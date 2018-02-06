@@ -15,17 +15,11 @@ function vtkPickerInteractorStyle(publicAPI, model) {
   // Capture "parentClass" api for internal use
   const superClass = Object.assign({}, publicAPI);
 
-  publicAPI.handleLeftButtonPress = () => {
-    const pos = model.interactor.getEventPosition(
-      model.interactor.getPointerIndex()
-    );
-    publicAPI.findPokedRenderer(pos.x, pos.y);
-    if (model.currentRenderer === null) {
-      return;
-    }
+  publicAPI.handleLeftButtonPress = (callData) => {
+    const pos = callData.position;
 
-    if (model.interactor.getShiftKey()) {
-      const renderer = model.currentRenderer;
+    if (callData.shiftKey) {
+      const renderer = callData.pokedRenderer;
       const interactor = model.interactor;
       interactor.getPicker().pick([pos.x, pos.y, 0], renderer);
 
@@ -33,7 +27,7 @@ function vtkPickerInteractorStyle(publicAPI, model) {
       const pickedCellId = interactor.getPicker().getCellId();
       console.log('cell id : ', pickedCellId);
 
-      const cameraCenter = model.currentRenderer
+      const cameraCenter = callData.pokedRenderer
         .getActiveCamera()
         .getPosition();
       let minDistance = Number.MAX_VALUE;
@@ -52,11 +46,11 @@ function vtkPickerInteractorStyle(publicAPI, model) {
         const actor = vtkActor.newInstance();
         actor.setMapper(mapper);
         actor.getProperty().setColor(1.0, 0.0, 0.0);
-        model.currentRenderer.addActor(actor);
+        callData.pokedRenderer.addActor(actor);
       }
       model.interactor.render();
     }
-    superClass.handleLeftButtonPress();
+    superClass.handleLeftButtonPress(callData);
   };
 }
 

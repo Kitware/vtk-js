@@ -93,8 +93,3 @@ Translate the renderer's camera
 Invokes either static "dollyToPosition" method in this class, or else
 defers to the parents "dolly" method, depending on whether the control
 key is pressed.
-
-### resetLights()
-
-Update current renderers lights to match its active camera position and
-focal point

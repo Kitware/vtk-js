@@ -10,11 +10,14 @@ function vtkMouseManipulator(publicAPI, model) {
 
   publicAPI.startInteraction = () => {};
   publicAPI.endInteraction = () => {};
-  publicAPI.onButtonDown = (interactor) => {};
+  publicAPI.onButtonDown = (interactor, renderer, position) => {};
   publicAPI.onButtonUp = (interactor) => {};
-  publicAPI.onAnimation = (interactor, renderer) => {};
-  publicAPI.onKeyUp = (interactor) => {};
-  publicAPI.onKeyDown = (interactor) => {};
+  publicAPI.onMouseMove = (interactor, renderer, position) => {};
+  publicAPI.onKeyUp = (interactor, key) => {};
+  publicAPI.onKeyDown = (interactor, key) => {};
+  publicAPI.onStartScroll = (interactor, renderer, delta) => {};
+  publicAPI.onScroll = (interactor, renderer, delta) => {};
+  publicAPI.onEndScroll = (interactor) => {};
 }
 
 // ----------------------------------------------------------------------------
@@ -28,7 +31,7 @@ const DEFAULT_VALUES = {
   shift: false,
   control: false,
   alt: false,
-  pinch: false,
+  scroll: false,
 };
 
 // ----------------------------------------------------------------------------
@@ -46,7 +49,7 @@ export function extend(publicAPI, model, initialValues = {}) {
     'shift',
     'control',
     'alt',
-    'pinch',
+    'scroll',
   ]);
 
   // Object specific methods

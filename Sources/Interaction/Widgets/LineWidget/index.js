@@ -73,39 +73,28 @@ function vtkLineWidget(publicAPI, model) {
     publicAPI.setEnabled(model.enabled);
   };
 
-  publicAPI.handleMouseMove = () => {
-    publicAPI.moveAction();
-  };
+  publicAPI.handleMouseMove = (callData) => publicAPI.moveAction(callData);
 
-  publicAPI.handleLeftButtonPress = () => {
-    publicAPI.selectAction();
-  };
+  publicAPI.handleLeftButtonPress = (callData) =>
+    publicAPI.selectAction(callData);
 
-  publicAPI.handleLeftButtonRelease = () => {
-    publicAPI.endSelectAction();
-  };
+  publicAPI.handleLeftButtonRelease = (callData) =>
+    publicAPI.endSelectAction(callData);
 
-  publicAPI.handleMiddleButtonPress = () => {
-    publicAPI.translateAction();
-  };
+  publicAPI.handleMiddleButtonPress = (callData) =>
+    publicAPI.translateAction(callData);
 
-  publicAPI.handleMiddleButtonRelease = () => {
-    publicAPI.endSelectAction();
-  };
+  publicAPI.handleMiddleButtonRelease = (callData) =>
+    publicAPI.endSelectAction(callData);
 
-  publicAPI.handleRightButtonPress = () => {
-    publicAPI.scaleAction();
-  };
+  publicAPI.handleRightButtonPress = (callData) =>
+    publicAPI.scaleAction(callData);
 
-  publicAPI.handleRightButtonRelease = () => {
-    publicAPI.endSelectAction();
-  };
+  publicAPI.handleRightButtonRelease = (callData) =>
+    publicAPI.endSelectAction(callData);
 
-  publicAPI.selectAction = () => {
-    const pos = model.interactor.getEventPosition(
-      model.interactor.getPointerIndex()
-    );
-    const position = [pos.x, pos.y];
+  publicAPI.selectAction = (callData) => {
+    const position = [callData.position.x, callData.position.y];
 
     if (model.widgetState === WidgetState.START) {
       const pos3D = model.point1Widget
@@ -141,11 +130,8 @@ function vtkLineWidget(publicAPI, model) {
     publicAPI.render();
   };
 
-  publicAPI.translateAction = () => {
-    const pos = model.interactor.getEventPosition(
-      model.interactor.getPointerIndex()
-    );
-    const position = [pos.x, pos.y];
+  publicAPI.translateAction = (callData) => {
+    const position = [callData.position.x, callData.position.y];
     const state = model.widgetRep.computeInteractionState(position);
     if (state === InteractionState.OUTSIDE) {
       return;
@@ -156,11 +142,8 @@ function vtkLineWidget(publicAPI, model) {
     publicAPI.invokeStartInteractionEvent();
   };
 
-  publicAPI.scaleAction = () => {
-    const pos = model.interactor.getEventPosition(
-      model.interactor.getPointerIndex()
-    );
-    const position = [pos.x, pos.y];
+  publicAPI.scaleAction = (callData) => {
+    const position = [callData.position.x, callData.position.y];
     const state = model.widgetRep.computeInteractionState(position);
     if (state === InteractionState.OUTSIDE) {
       return;
@@ -171,11 +154,8 @@ function vtkLineWidget(publicAPI, model) {
     publicAPI.invokeStartInteractionEvent();
   };
 
-  publicAPI.moveAction = () => {
-    const pos = model.interactor.getEventPosition(
-      model.interactor.getPointerIndex()
-    );
-    const position = [pos.x, pos.y];
+  publicAPI.moveAction = (callData) => {
+    const position = [callData.position.x, callData.position.y];
 
     if (model.widgetState === WidgetState.MANIPULATE) {
       // In MANIPULATE, we are hovering above the widget
@@ -221,14 +201,11 @@ function vtkLineWidget(publicAPI, model) {
     publicAPI.render();
   };
 
-  publicAPI.endSelectAction = () => {
+  publicAPI.endSelectAction = (callData) => {
     if (model.widgetState === WidgetState.START) {
       return;
     }
-    const pos = model.interactor.getEventPosition(
-      model.interactor.getPointerIndex()
-    );
-    const position = [pos.x, pos.y];
+    const position = [callData.position.x, callData.position.y];
     model.widgetRep.complexWidgetInteraction(position);
     model.widgetRep.setPoint1WorldPosition(
       model.point1Widget.getWidgetRep().getWorldPosition()

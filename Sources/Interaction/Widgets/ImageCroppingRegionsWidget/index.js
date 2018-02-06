@@ -113,26 +113,32 @@ function vtkImageCroppingRegionsWidget(publicAPI, model) {
     }
   };
 
-  publicAPI.handleLeftButtonPress = () => publicAPI.pressAction();
+  publicAPI.handleLeftButtonPress = (callData) =>
+    publicAPI.pressAction(callData);
 
-  publicAPI.handleLeftButtonRelease = () => publicAPI.endMoveAction();
+  publicAPI.handleLeftButtonRelease = (callData) =>
+    publicAPI.endMoveAction(callData);
 
-  publicAPI.handleMiddleButtonPress = () => publicAPI.pressAction();
+  publicAPI.handleMiddleButtonPress = (callData) =>
+    publicAPI.pressAction(callData);
 
-  publicAPI.handleMiddleButtonRelease = () => publicAPI.endMoveAction();
+  publicAPI.handleMiddleButtonRelease = (callData) =>
+    publicAPI.endMoveAction(callData);
 
-  publicAPI.handleRightButtonPress = () => publicAPI.pressAction();
+  publicAPI.handleRightButtonPress = (callData) =>
+    publicAPI.pressAction(callData);
 
-  publicAPI.handleRightButtonRelease = () => publicAPI.endMoveAction();
+  publicAPI.handleRightButtonRelease = (callData) =>
+    publicAPI.endMoveAction(callData);
 
-  publicAPI.handleMouseMove = () => {
+  publicAPI.handleMouseMove = (callData) => {
     if (isCropMoving) {
-      return publicAPI.moveAction();
+      return publicAPI.moveAction(callData);
     }
-    return publicAPI.hoverAction();
+    return publicAPI.hoverAction(callData);
   };
 
-  publicAPI.pressAction = () => {
+  publicAPI.pressAction = (callData) => {
     if (widgetState === WidgetState.IDLE) {
       return VOID;
     }
@@ -141,7 +147,7 @@ function vtkImageCroppingRegionsWidget(publicAPI, model) {
     return EVENT_ABORT;
   };
 
-  publicAPI.hoverAction = () => {
+  publicAPI.hoverAction = (callData) => {
     if (!model.widgetRep) {
       return VOID;
     }
@@ -151,14 +157,11 @@ function vtkImageCroppingRegionsWidget(publicAPI, model) {
       return VOID;
     }
 
-    const pos = model.interactor.getEventPosition(
-      model.interactor.getPointerIndex()
-    );
-    const mousePos = [pos.x, pos.y];
+    const mousePos = [callData.position.x, callData.position.y];
     const planes = model.widgetRep.getPlanePositions();
     // Assume we should use the first view
     const view = model.interactor.getView();
-    const camUp = model.currentRenderer.getActiveCamera().getViewUp();
+    const camUp = callData.pokedRenderer.getActiveCamera().getViewUp();
 
     let ax1;
     let ax2;
@@ -224,13 +227,13 @@ function vtkImageCroppingRegionsWidget(publicAPI, model) {
           model.slice,
           leftBottom[0],
           leftBottom[1],
-          model.currentRenderer
+          callData.pokedRenderer
         );
         [right, top] = view.worldToDisplay(
           model.slice,
           rightTop[0],
           rightTop[1],
-          model.currentRenderer
+          callData.pokedRenderer
         );
         break;
       case Orientation.XZ: // ZX
@@ -238,13 +241,13 @@ function vtkImageCroppingRegionsWidget(publicAPI, model) {
           leftBottom[0],
           model.slice,
           leftBottom[1],
-          model.currentRenderer
+          callData.pokedRenderer
         );
         [right, top] = view.worldToDisplay(
           rightTop[0],
           model.slice,
           rightTop[1],
-          model.currentRenderer
+          callData.pokedRenderer
         );
         break;
       case Orientation.XY:
@@ -252,13 +255,13 @@ function vtkImageCroppingRegionsWidget(publicAPI, model) {
           leftBottom[0],
           leftBottom[1],
           model.slice,
-          model.currentRenderer
+          callData.pokedRenderer
         );
         [right, top] = view.worldToDisplay(
           rightTop[0],
           rightTop[1],
           model.slice,
-          model.currentRenderer
+          callData.pokedRenderer
         );
         break;
       default:
@@ -298,21 +301,18 @@ function vtkImageCroppingRegionsWidget(publicAPI, model) {
     return VOID;
   };
 
-  publicAPI.moveAction = () => {
+  publicAPI.moveAction = (callData) => {
     if (widgetState === WidgetState.IDLE) {
       return VOID;
     }
 
-    const pos = model.interactor.getEventPosition(
-      model.interactor.getPointerIndex()
-    );
-    const mouse = [pos.x, pos.y];
+    const mouse = [callData.position.x, callData.position.y];
     const view = model.interactor.getView();
     const planes = model.widgetRep.getPlanePositions();
     const bounds = model.widgetRep.getInitialBounds();
-    const camUp = model.currentRenderer.getActiveCamera().getViewUp();
+    const camUp = callData.pokedRenderer.getActiveCamera().getViewUp();
 
-    let newPos = view.displayToWorld(...mouse, 0, model.currentRenderer);
+    let newPos = view.displayToWorld(...mouse, 0, callData.pokedRenderer);
 
     let ax1;
     let ax2;

@@ -19,49 +19,40 @@ function vtkInteractorStyleTrackballCamera(publicAPI, model) {
   model.classHierarchy.push('vtkInteractorStyleTrackballCamera');
 
   // Public API methods
-  publicAPI.handleMouseMove = () => {
-    const pos = model.interactor.getEventPosition(
-      model.interactor.getPointerIndex()
-    );
+  publicAPI.handleMouseMove = (callData) => {
+    const pos = callData.position;
+    const renderer = callData.pokedRenderer;
 
     switch (model.state) {
       case States.IS_ROTATE:
-        publicAPI.findPokedRenderer(pos.x, pos.y);
-        publicAPI.handleMouseRotate();
+        publicAPI.handleMouseRotate(renderer, pos);
         publicAPI.invokeInteractionEvent({ type: 'InteractionEvent' });
         break;
 
       case States.IS_PAN:
-        publicAPI.findPokedRenderer(pos.x, pos.y);
-        publicAPI.handleMousePan();
+        publicAPI.handleMousePan(renderer, pos);
         publicAPI.invokeInteractionEvent({ type: 'InteractionEvent' });
         break;
 
       case States.IS_DOLLY:
-        publicAPI.findPokedRenderer(pos.x, pos.y);
-        publicAPI.handleMouseDolly();
+        publicAPI.handleMouseDolly(renderer, pos);
         publicAPI.invokeInteractionEvent({ type: 'InteractionEvent' });
         break;
 
       case States.IS_SPIN:
-        publicAPI.findPokedRenderer(pos.x, pos.y);
-        publicAPI.handleMouseSpin();
+        publicAPI.handleMouseSpin(renderer, pos);
         publicAPI.invokeInteractionEvent({ type: 'InteractionEvent' });
         break;
 
       default:
         break;
     }
+
+    model.previousPosition = pos;
   };
 
   //----------------------------------------------------------------------------
-  publicAPI.handleButton3D = (arg) => {
-    const ed = arg.calldata;
-    publicAPI.findPokedRenderer(0, 0);
-    if (model.currentRenderer === null) {
-      return;
-    }
-
+  publicAPI.handleButton3D = (ed) => {
     if (
       ed &&
       ed.pressed &&
@@ -83,8 +74,7 @@ function vtkInteractorStyleTrackballCamera(publicAPI, model) {
     }
   };
 
-  publicAPI.handleMove3D = (arg) => {
-    const ed = arg.calldata;
+  publicAPI.handleMove3D = (ed) => {
     switch (model.state) {
       case States.IS_CAMERA_POSE:
         publicAPI.updateCameraPose(ed);
@@ -96,7 +86,7 @@ function vtkInteractorStyleTrackballCamera(publicAPI, model) {
   publicAPI.updateCameraPose = (ed) => {
     // move the world in the direction of the
     // controller
-    const camera = model.currentRenderer.getActiveCamera();
+    const camera = ed.pokedRenderer.getActiveCamera();
     const oldTrans = camera.getPhysicalTranslation();
 
     // look at the y axis to determine how fast / what direction to move
@@ -116,23 +106,18 @@ function vtkInteractorStyleTrackballCamera(publicAPI, model) {
   };
 
   //----------------------------------------------------------------------------
-  publicAPI.handleLeftButtonPress = () => {
-    const pos = model.interactor.getEventPosition(
-      model.interactor.getPointerIndex()
-    );
-    publicAPI.findPokedRenderer(pos.x, pos.y);
-    if (model.currentRenderer === null) {
-      return;
-    }
+  publicAPI.handleLeftButtonPress = (callData) => {
+    const pos = callData.position;
+    model.previousPosition = pos;
 
-    if (model.interactor.getShiftKey()) {
-      if (model.interactor.getControlKey() || model.interactor.getAltKey()) {
+    if (callData.shiftKey) {
+      if (callData.controlKey || callData.altKey) {
         publicAPI.startDolly();
       } else {
         publicAPI.startPan();
       }
     } else {
-      if (model.interactor.getControlKey() || model.interactor.getAltKey()) {
+      if (callData.controlKey || callData.altKey) {
         publicAPI.startSpin();
       } else {
         publicAPI.startRotate();
@@ -162,15 +147,18 @@ function vtkInteractorStyleTrackballCamera(publicAPI, model) {
   };
 
   //----------------------------------------------------------------------------
-  publicAPI.handleStartPinch = () => {
-    const pos = model.interactor.getEventPosition(
-      model.interactor.getPointerIndex()
-    );
-    publicAPI.findPokedRenderer(pos.x, pos.y);
-    if (model.currentRenderer === null) {
-      return;
-    }
+  publicAPI.handleStartMouseWheel = () => {
+    publicAPI.startDolly();
+  };
 
+  //--------------------------------------------------------------------------
+  publicAPI.handleEndMouseWheel = () => {
+    publicAPI.endDolly();
+  };
+
+  //----------------------------------------------------------------------------
+  publicAPI.handleStartPinch = (callData) => {
+    model.previousScale = callData.scale;
     publicAPI.startDolly();
   };
 
@@ -180,15 +168,8 @@ function vtkInteractorStyleTrackballCamera(publicAPI, model) {
   };
 
   //----------------------------------------------------------------------------
-  publicAPI.handleStartRotate = () => {
-    const pos = model.interactor.getEventPosition(
-      model.interactor.getPointerIndex()
-    );
-    publicAPI.findPokedRenderer(pos.x, pos.y);
-    if (model.currentRenderer === null) {
-      return;
-    }
-
+  publicAPI.handleStartRotate = (callData) => {
+    model.previousRotation = callData.rotation;
     publicAPI.startRotate();
   };
 
@@ -198,15 +179,8 @@ function vtkInteractorStyleTrackballCamera(publicAPI, model) {
   };
 
   //----------------------------------------------------------------------------
-  publicAPI.handleStartPan = () => {
-    const pos = model.interactor.getEventPosition(
-      model.interactor.getPointerIndex()
-    );
-    publicAPI.findPokedRenderer(pos.x, pos.y);
-    if (model.currentRenderer === null) {
-      return;
-    }
-
+  publicAPI.handleStartPan = (callData) => {
+    model.previousTranslation = callData.translation;
     publicAPI.startPan();
   };
 
@@ -216,68 +190,33 @@ function vtkInteractorStyleTrackballCamera(publicAPI, model) {
   };
 
   //----------------------------------------------------------------------------
-  publicAPI.handlePinch = () => {
-    const pos = model.interactor.getEventPosition(
-      model.interactor.getPointerIndex()
+  publicAPI.handlePinch = (callData) => {
+    publicAPI.dollyByFactor(
+      callData.pokedRenderer,
+      callData.scale / model.previousScale
     );
-
-    if (pos) {
-      publicAPI.findPokedRenderer(pos.x, pos.y);
-      if (model.currentRenderer === null) {
-        return;
-      }
-
-      const camera = model.currentRenderer.getActiveCamera();
-
-      const dyf = model.interactor.getScale() / model.interactor.getLastScale();
-      if (camera.getParallelProjection()) {
-        camera.setParallelScale(camera.getParallelScale() / dyf);
-      } else {
-        camera.dolly(dyf);
-        if (model.autoAdjustCameraClippingRange) {
-          model.currentRenderer.resetCameraClippingRange();
-        }
-      }
-
-      if (model.interactor.getLightFollowCamera()) {
-        model.currentRenderer.updateLightsGeometryToFollowCamera();
-      }
-    }
+    model.previousScale = callData.scale;
   };
 
   //----------------------------------------------------------------------------
-  publicAPI.handlePan = () => {
-    const pos = model.interactor.getEventPosition(
-      model.interactor.getPointerIndex()
-    );
-    publicAPI.findPokedRenderer(pos.x, pos.y);
-    if (model.currentRenderer === null) {
-      return;
-    }
-
-    const camera = model.currentRenderer.getActiveCamera();
-
-    const rwi = model.interactor;
+  publicAPI.handlePan = (callData) => {
+    const camera = callData.pokedRenderer.getActiveCamera();
 
     // Calculate the focal depth since we'll be using it a lot
     let viewFocus = camera.getFocalPoint();
 
     viewFocus = publicAPI.computeWorldToDisplay(
+      callData.pokedRenderer,
       viewFocus[0],
       viewFocus[1],
       viewFocus[2]
     );
     const focalDepth = viewFocus[2];
 
-    let newPickPoint = publicAPI.computeDisplayToWorld(
-      pos.x,
-      pos.y,
-      focalDepth
-    );
-
-    const trans = rwi.getTranslation();
-    const lastTrans = rwi.getLastTranslation();
-    newPickPoint = publicAPI.computeDisplayToWorld(
+    const trans = callData.translation;
+    const lastTrans = model.previousTranslation;
+    const newPickPoint = publicAPI.computeDisplayToWorld(
+      callData.pokedRenderer,
       viewFocus[0] + trans[0] - lastTrans[0],
       viewFocus[1] + trans[1] - lastTrans[1],
       focalDepth
@@ -286,6 +225,7 @@ function vtkInteractorStyleTrackballCamera(publicAPI, model) {
     // Has to recalc old mouse point since the viewport has moved,
     // so can't move it outside the loop
     const oldPickPoint = publicAPI.computeDisplayToWorld(
+      callData.pokedRenderer,
       viewFocus[0],
       viewFocus[1],
       focalDepth
@@ -312,47 +252,30 @@ function vtkInteractorStyleTrackballCamera(publicAPI, model) {
     );
 
     if (model.interactor.getLightFollowCamera()) {
-      model.currentRenderer.updateLightsGeometryToFollowCamera();
+      callData.pokedRenderer.updateLightsGeometryToFollowCamera();
     }
 
     camera.orthogonalizeViewUp();
+
+    model.previousTranslation = callData.translation;
   };
 
   //----------------------------------------------------------------------------
-  publicAPI.handleRotate = () => {
-    const pos = model.interactor.getEventPosition(
-      model.interactor.getPointerIndex()
-    );
-    publicAPI.findPokedRenderer(pos.x, pos.y);
-    if (model.currentRenderer === null) {
-      return;
-    }
-
-    const camera = model.currentRenderer.getActiveCamera();
-
-    camera.roll(
-      model.interactor.getRotation() - model.interactor.getLastRotation()
-    );
-
+  publicAPI.handleRotate = (callData) => {
+    const camera = callData.pokedRenderer.getActiveCamera();
+    camera.roll(callData.rotation - model.previousRotation);
     camera.orthogonalizeViewUp();
+    model.previousRotation = callData.rotation;
   };
 
   //--------------------------------------------------------------------------
-  publicAPI.handleMouseRotate = () => {
-    if (model.currentRenderer === null) {
-      return;
-    }
-
+  publicAPI.handleMouseRotate = (renderer, position) => {
     const rwi = model.interactor;
 
-    const lastPtr = model.interactor.getPointerIndex();
-    const pos = model.interactor.getEventPosition(lastPtr);
-    const lastPos = model.interactor.getLastEventPosition(lastPtr);
+    const dx = position.x - model.previousPosition.x;
+    const dy = position.y - model.previousPosition.y;
 
-    const dx = pos.x - lastPos.x;
-    const dy = pos.y - lastPos.y;
-
-    const size = rwi.getView().getViewportSize(model.currentRenderer);
+    const size = rwi.getView().getViewportSize(renderer);
 
     let deltaElevation = -0.1;
     let deltaAzimuth = -0.1;
@@ -364,7 +287,7 @@ function vtkInteractorStyleTrackballCamera(publicAPI, model) {
     const rxf = dx * deltaAzimuth * model.motionFactor;
     const ryf = dy * deltaElevation * model.motionFactor;
 
-    const camera = model.currentRenderer.getActiveCamera();
+    const camera = renderer.getActiveCamera();
     if (!Number.isNaN(rxf) && !Number.isNaN(ryf)) {
       camera.azimuth(rxf);
       camera.elevation(ryf);
@@ -372,35 +295,29 @@ function vtkInteractorStyleTrackballCamera(publicAPI, model) {
     }
 
     if (model.autoAdjustCameraClippingRange) {
-      model.currentRenderer.resetCameraClippingRange();
+      renderer.resetCameraClippingRange();
     }
 
     if (rwi.getLightFollowCamera()) {
-      model.currentRenderer.updateLightsGeometryToFollowCamera();
+      renderer.updateLightsGeometryToFollowCamera();
     }
   };
 
   //--------------------------------------------------------------------------
-  publicAPI.handleMouseSpin = () => {
-    if (model.currentRenderer === null) {
-      return;
-    }
-
+  publicAPI.handleMouseSpin = (renderer, position) => {
     const rwi = model.interactor;
-
-    const lastPtr = model.interactor.getPointerIndex();
-    const pos = model.interactor.getEventPosition(lastPtr);
-    const lastPos = model.interactor.getLastEventPosition(lastPtr);
-
-    const camera = model.currentRenderer.getActiveCamera();
-    const center = rwi.getView().getViewportCenter(model.currentRenderer);
+    const camera = renderer.getActiveCamera();
+    const center = rwi.getView().getViewportCenter(renderer);
 
     const oldAngle = vtkMath.degreesFromRadians(
-      Math.atan2(lastPos.y - center[1], lastPos.x - center[0])
+      Math.atan2(
+        model.previousPosition.y - center[1],
+        model.previousPosition.x - center[0]
+      )
     );
     const newAngle =
       vtkMath.degreesFromRadians(
-        Math.atan2(pos.y - center[1], pos.x - center[0])
+        Math.atan2(position.y - center[1], position.x - center[0])
       ) - oldAngle;
 
     if (!Number.isNaN(newAngle)) {
@@ -410,22 +327,13 @@ function vtkInteractorStyleTrackballCamera(publicAPI, model) {
   };
 
   //--------------------------------------------------------------------------
-  publicAPI.handleMousePan = () => {
-    if (model.currentRenderer === null) {
-      return;
-    }
-
-    const rwi = model.interactor;
-
-    const lastPtr = model.interactor.getPointerIndex();
-    const pos = model.interactor.getEventPosition(lastPtr);
-    const lastPos = model.interactor.getLastEventPosition(lastPtr);
-
-    const camera = model.currentRenderer.getActiveCamera();
+  publicAPI.handleMousePan = (renderer, position) => {
+    const camera = renderer.getActiveCamera();
 
     // Calculate the focal depth since we'll be using it a lot
     let viewFocus = camera.getFocalPoint();
     viewFocus = publicAPI.computeWorldToDisplay(
+      renderer,
       viewFocus[0],
       viewFocus[1],
       viewFocus[2]
@@ -433,16 +341,18 @@ function vtkInteractorStyleTrackballCamera(publicAPI, model) {
     const focalDepth = viewFocus[2];
 
     const newPickPoint = publicAPI.computeDisplayToWorld(
-      pos.x,
-      pos.y,
+      renderer,
+      position.x,
+      position.y,
       focalDepth
     );
 
     // Has to recalc old mouse point since the viewport has moved,
     // so can't move it outside the loop
     const oldPickPoint = publicAPI.computeDisplayToWorld(
-      lastPos.x,
-      lastPos.y,
+      renderer,
+      model.previousPosition.x,
+      model.previousPosition.y,
       focalDepth
     );
 
@@ -466,49 +376,44 @@ function vtkInteractorStyleTrackballCamera(publicAPI, model) {
       motionVector[2] + viewPoint[2]
     );
 
-    if (rwi.getLightFollowCamera()) {
-      model.currentRenderer.updateLightsGeometryToFollowCamera();
+    if (model.interactor.getLightFollowCamera()) {
+      renderer.updateLightsGeometryToFollowCamera();
     }
   };
 
   //----------------------------------------------------------------------------
-  publicAPI.handleMouseDolly = () => {
-    if (model.currentRenderer === null) {
-      return;
-    }
-
-    const lastPtr = model.interactor.getPointerIndex();
-    const pos = model.interactor.getEventPosition(lastPtr);
-    const lastPos = model.interactor.getLastEventPosition(lastPtr);
-
-    const dy = pos.y - lastPos.y;
+  publicAPI.handleMouseDolly = (renderer, position) => {
+    const dy = position.y - model.previousPosition.y;
     const rwi = model.interactor;
-    const center = rwi.getView().getViewportCenter(model.currentRenderer);
+    const center = rwi.getView().getViewportCenter(renderer);
     const dyf = model.motionFactor * dy / center[1];
 
-    publicAPI.dollyByFactor(1.1 ** dyf);
+    publicAPI.dollyByFactor(renderer, 1.1 ** dyf);
   };
 
   //----------------------------------------------------------------------------
-  publicAPI.dollyByFactor = (factor) => {
-    if (model.currentRenderer === null || Number.isNaN(factor)) {
+  publicAPI.handleMouseWheel = (callData) => {
+    publicAPI.dollyByFactor(callData.pokedRenderer, callData.wheelDelta);
+  };
+
+  //----------------------------------------------------------------------------
+  publicAPI.dollyByFactor = (renderer, factor) => {
+    if (Number.isNaN(factor)) {
       return;
     }
 
-    const rwi = model.interactor;
-
-    const camera = model.currentRenderer.getActiveCamera();
+    const camera = renderer.getActiveCamera();
     if (camera.getParallelProjection()) {
       camera.setParallelScale(camera.getParallelScale() / factor);
     } else {
       camera.dolly(factor);
       if (model.autoAdjustCameraClippingRange) {
-        model.currentRenderer.resetCameraClippingRange();
+        renderer.resetCameraClippingRange();
       }
     }
 
-    if (rwi.getLightFollowCamera()) {
-      model.currentRenderer.updateLightsGeometryToFollowCamera();
+    if (model.interactor.getLightFollowCamera()) {
+      renderer.updateLightsGeometryToFollowCamera();
     }
   };
 }

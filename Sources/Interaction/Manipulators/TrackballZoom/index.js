@@ -1,9 +1,6 @@
 import macro from 'vtk.js/Sources/macro';
 import vtkCameraManipulator from 'vtk.js/Sources/Interaction/Manipulators/CameraManipulator';
 
-const { vtkWarningMacro } = macro;
-const DEFAULT_POSITION = { x: 0, y: 0 };
-
 // ----------------------------------------------------------------------------
 // vtkTrackballZoom methods
 // ----------------------------------------------------------------------------
@@ -12,39 +9,25 @@ function vtkTrackballZoom(publicAPI, model) {
   // Set our className
   model.classHierarchy.push('vtkTrackballZoom');
 
-  publicAPI.onButtonDown = (interactor) => {
+  publicAPI.onButtonDown = (interactor, renderer, position) => {
+    model.previousPosition = position;
     const size = interactor.getView().getSize();
 
-    try {
-      const { x, y } =
-        interactor.getAnimationEventPosition(interactor.getPointerIndex()) ||
-        DEFAULT_POSITION;
-      const interactorStyle = interactor.getInteractorStyle();
-      const renderer =
-        interactorStyle.getCurrentRenderer() ||
-        interactor.findPokedRenderer(x, y);
-      const camera = renderer.getActiveCamera();
-      if (camera.getParallelProjection()) {
-        model.zoomScale = 1.5 / size[1];
-      } else {
-        const range = camera.getClippingRange();
-        model.zoomScale = 1.5 * (range[1] / size[1]);
-      }
-    } catch (e) {
-      vtkWarningMacro('Unable to set model.zoomScale');
+    const camera = renderer.getActiveCamera();
+    if (camera.getParallelProjection()) {
+      model.zoomScale = 1.5 / size[1];
+    } else {
+      const range = camera.getClippingRange();
+      model.zoomScale = 1.5 * (range[1] / size[1]);
     }
   };
 
-  publicAPI.onAnimation = (interactor, renderer) => {
-    const lastPtr = interactor.getPointerIndex();
-    const pos = interactor.getAnimationEventPosition(lastPtr);
-    const lastPos = interactor.getLastAnimationEventPosition(lastPtr);
-
-    if (!pos || !lastPos || !renderer) {
+  publicAPI.onMouseMove = (interactor, renderer, position) => {
+    if (!position) {
       return;
     }
 
-    const dy = lastPos.y - pos.y;
+    const dy = model.previousPosition.y - position.y;
     const camera = renderer.getActiveCamera();
 
     if (camera.getParallelProjection()) {
@@ -79,20 +62,18 @@ function vtkTrackballZoom(publicAPI, model) {
     if (interactor.getLightFollowCamera()) {
       renderer.updateLightsGeometryToFollowCamera();
     }
+
+    model.previousPosition = position;
   };
 
-  publicAPI.onPinch = (interactor) => {
-    const { x, y } =
-      interactor.getAnimationEventPosition(interactor.getPointerIndex()) ||
-      DEFAULT_POSITION;
-    const interactorStyle = interactor.getInteractorStyle();
-    const renderer =
-      interactorStyle.getCurrentRenderer() ||
-      interactor.findPokedRenderer(x, y);
+  publicAPI.onScroll = (interactor, renderer, delta) => {
+    if (!delta) {
+      return;
+    }
 
     const camera = renderer.getActiveCamera();
 
-    const dyf = interactor.getScale() / interactor.getLastScale();
+    const dyf = delta;
 
     if (camera.getParallelProjection()) {
       camera.setParallelScale(camera.getParallelScale() / dyf);

@@ -70,7 +70,6 @@ function vtkInteractorObserver(publicAPI, model) {
     }
 
     unsubscribeFromEvents();
-    model.currentRenderer = null;
 
     model.interactor = i;
 
@@ -88,21 +87,10 @@ function vtkInteractorObserver(publicAPI, model) {
     }
 
     unsubscribeFromEvents();
-    model.currentRenderer = null;
 
     if (enable) {
       if (model.interactor) {
         subscribeToEvents();
-
-        // Update CurrentRenderer
-        const eventPosition = model.interactor.getEventPosition();
-        let X = 0;
-        let Y = 0;
-        if (eventPosition) {
-          X = eventPosition[0];
-          Y = eventPosition[1];
-        }
-        publicAPI.findPokedRenderer(X, Y);
       } else {
         vtkErrorMacro(`
           The interactor must be set before subscribing to events
@@ -115,34 +103,25 @@ function vtkInteractorObserver(publicAPI, model) {
   };
 
   //----------------------------------------------------------------------------
-  publicAPI.findPokedRenderer = (x, y) => {
-    publicAPI.setCurrentRenderer(model.interactor.findPokedRenderer(x, y));
-  };
-
-  //----------------------------------------------------------------------------
   // Description:
   // Transform from display to world coordinates.
-  publicAPI.computeDisplayToWorld = (x, y, z) => {
-    if (!model.currentRenderer) {
+  publicAPI.computeDisplayToWorld = (renderer, x, y, z) => {
+    if (!renderer) {
       return null;
     }
 
-    return model.interactor
-      .getView()
-      .displayToWorld(x, y, z, model.currentRenderer);
+    return model.interactor.getView().displayToWorld(x, y, z, renderer);
   };
 
   //----------------------------------------------------------------------------
   // Description:
   // Transform from world to display coordinates.
-  publicAPI.computeWorldToDisplay = (x, y, z) => {
-    if (!model.currentRenderer) {
+  publicAPI.computeWorldToDisplay = (renderer, x, y, z) => {
+    if (!renderer) {
       return null;
     }
 
-    return model.interactor
-      .getView()
-      .worldToDisplay(x, y, z, model.currentRenderer);
+    return model.interactor.getView().worldToDisplay(x, y, z, renderer);
   };
 }
 
@@ -153,8 +132,6 @@ function vtkInteractorObserver(publicAPI, model) {
 const DEFAULT_VALUES = {
   enabled: true,
   interactor: null,
-  currentRenderer: null,
-  defaultRenderer: null,
   priority: 0.0,
   subscribedEvents: [],
 };
@@ -175,7 +152,7 @@ export function extend(publicAPI, model, initialValues = {}) {
   macro.get(publicAPI, model, ['interactor']);
 
   // Create get-set macros
-  macro.setGet(publicAPI, model, ['priority', 'currentRenderer']);
+  macro.setGet(publicAPI, model, ['priority']);
 
   // For more macro methods, see "Sources/macro.js"
 

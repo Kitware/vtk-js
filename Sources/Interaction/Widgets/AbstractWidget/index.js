@@ -22,21 +22,28 @@ function vtkAbstractWidget(publicAPI, model) {
       return;
     }
 
-    if (model.currentRenderer && model.widgetRep) {
-      model.currentRenderer.removeViewProp(model.widgetRep);
+    if (model.interactor) {
+      const renderer = model.interactor.getCurrentRenderer();
+      if (renderer && model.widgetRep) {
+        renderer.removeViewProp(model.widgetRep);
+      }
     }
 
     // Enable/disable in superclass
     superClass.setEnabled(enable);
 
     // Add representation to new interactor's renderer
-    if (!model.currentRenderer) {
+    if (!model.interactor) {
+      return;
+    }
+    const renderer = model.interactor.getCurrentRenderer();
+    if (!renderer) {
       return;
     }
     publicAPI.createDefaultRepresentation();
-    model.widgetRep.setRenderer(model.currentRenderer);
+    model.widgetRep.setRenderer(renderer);
     model.widgetRep.buildRepresentation();
-    model.currentRenderer.addViewProp(model.widgetRep);
+    renderer.addViewProp(model.widgetRep);
   };
 
   //----------------------------------------------------------------------------
