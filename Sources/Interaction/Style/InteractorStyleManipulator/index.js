@@ -348,10 +348,13 @@ function vtkInteractorStyleManipulator(publicAPI, model) {
 
   //-------------------------------------------------------------------------
   publicAPI.onButtonUp = (button) => {
-    if (model.currentManipulator === null) {
+    if (!model.currentManipulator) {
       return;
     }
-    if (model.currentManipulator.getButton() === button) {
+    if (
+      model.currentManipulator.getButton &&
+      model.currentManipulator.getButton() === button
+    ) {
       publicAPI.setAnimationStateOff();
       model.currentManipulator.onButtonUp(model.interactor);
       model.currentManipulator.endInteraction();
@@ -374,6 +377,7 @@ function vtkInteractorStyleManipulator(publicAPI, model) {
   publicAPI.handleAnimation = () => {
     if (
       model.currentManipulator &&
+      model.currentManipulator.onAnimation &&
       (model.currentRenderer || updateCurrentRenderer())
     ) {
       model.currentManipulator.onAnimation(
@@ -416,6 +420,11 @@ function vtkInteractorStyleManipulator(publicAPI, model) {
       manipulator.onKeyUp(model.interactor);
     });
   };
+
+  //-------------------------------------------------------------------------
+  publicAPI.resetCurrentManipulator = () => {
+    model.currentManipulator = null;
+  }
 }
 
 // ----------------------------------------------------------------------------
