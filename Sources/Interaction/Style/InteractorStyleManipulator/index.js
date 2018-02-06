@@ -424,7 +424,7 @@ function vtkInteractorStyleManipulator(publicAPI, model) {
   //-------------------------------------------------------------------------
   publicAPI.resetCurrentManipulator = () => {
     model.currentManipulator = null;
-  }
+  };
 }
 
 // ----------------------------------------------------------------------------
