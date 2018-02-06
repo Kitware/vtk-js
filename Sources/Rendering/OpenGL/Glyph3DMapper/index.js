@@ -3,6 +3,7 @@ import { mat3, mat4 } from 'gl-matrix';
 import macro from 'vtk.js/Sources/macro';
 
 import vtkBufferObject from 'vtk.js/Sources/Rendering/OpenGL/BufferObject';
+import vtkHardwareSelector from 'vtk.js/Sources/Rendering/OpenGL/HardwareSelector';
 import vtkProperty from 'vtk.js/Sources/Rendering/Core/Property';
 import vtkOpenGLPolyDataMapper from 'vtk.js/Sources/Rendering/OpenGL/PolyDataMapper';
 import vtkShaderProgram from 'vtk.js/Sources/Rendering/OpenGL/ShaderProgram';
@@ -10,6 +11,7 @@ import vtkShaderProgram from 'vtk.js/Sources/Rendering/OpenGL/ShaderProgram';
 const { vtkErrorMacro } = macro;
 const { Representation } = vtkProperty;
 const { ObjectType } = vtkBufferObject;
+const { PassTypes } = vtkHardwareSelector;
 
 const StartEvent = { type: 'StartEvent' };
 const EndEvent = { type: 'EndEvent' };
@@ -55,6 +57,9 @@ function vtkOpenGLGlyph3DMapper(publicAPI, model) {
       model.extension = model.context.getExtension('ANGLE_instanced_arrays');
       model.hardwareSupport = !!model.extension;
     }
+    // to test without extension support uncomment the next two lines
+    // model.extension = null;
+    // model.hardwareSupport = !!model.extension;
 
     const backfaceCulling = actor.getProperty().getBackfaceCulling();
     const frontfaceCulling = actor.getProperty().getFrontfaceCulling();
@@ -294,6 +299,68 @@ function vtkOpenGLGlyph3DMapper(publicAPI, model) {
     superClass.replaceShaderPositionVC(shaders, ren, actor);
   };
 
+  publicAPI.replaceShaderPicking = (shaders, ren, actor) => {
+    if (model.openGLRenderer.getSelector()) {
+      let FSSource = shaders.Fragment;
+      switch (model.openGLRenderer.getSelector().getCurrentPass()) {
+        case PassTypes.ID_LOW24:
+          break;
+        case PassTypes.COMPOSITE_INDEX_PASS:
+          if (model.hardwareSupport) {
+            let VSSource = shaders.Vertex;
+            VSSource = vtkShaderProgram.substitute(
+              VSSource,
+              '//VTK::Picking::Dec',
+              [
+                'attribute vec3 mapperIndexVS;',
+                'varying vec3 mapperIndexVSOutput;',
+              ]
+            ).result;
+            VSSource = vtkShaderProgram.substitute(
+              VSSource,
+              '//VTK::Picking::Impl',
+              '  mapperIndexVSOutput = mapperIndexVS;'
+            ).result;
+            shaders.Vertex = VSSource;
+            FSSource = vtkShaderProgram.substitute(
+              FSSource,
+              '//VTK::Picking::Dec',
+              'varying vec3 mapperIndexVSOutput;'
+            ).result;
+            FSSource = vtkShaderProgram.substitute(
+              FSSource,
+              '//VTK::Picking::Impl',
+              '  gl_FragData[0] = vec4(mapperIndexVSOutput,1.0);'
+            ).result;
+          } else {
+            FSSource = vtkShaderProgram.substitute(
+              FSSource,
+              '//VTK::Picking::Dec',
+              'uniform vec3 mapperIndex;'
+            ).result;
+            FSSource = vtkShaderProgram.substitute(
+              FSSource,
+              '//VTK::Picking::Impl',
+              '  gl_FragData[0] = vec4(mapperIndex,1.0);'
+            ).result;
+          }
+          break;
+        default:
+          FSSource = vtkShaderProgram.substitute(
+            FSSource,
+            '//VTK::Picking::Dec',
+            'uniform vec3 mapperIndex;'
+          ).result;
+          FSSource = vtkShaderProgram.substitute(
+            FSSource,
+            '//VTK::Picking::Impl',
+            '  gl_FragData[0] = vec4(mapperIndex,1.0);'
+          ).result;
+      }
+      shaders.Fragment = FSSource;
+    }
+  };
+
   publicAPI.updateGlyphShaderParameters = (
     normalMatrixUsed,
     mcvcMatrixUsed,
@@ -301,7 +368,8 @@ function vtkOpenGLGlyph3DMapper(publicAPI, model) {
     carray,
     garray,
     narray,
-    p
+    p,
+    selector
   ) => {
     const program = cellBO.getProgram();
 
@@ -371,6 +439,10 @@ function vtkOpenGLGlyph3DMapper(publicAPI, model) {
       program.setUniform3fArray('ambientColorUniform', model.tmpColor);
       program.setUniform3fArray('diffuseColorUniform', model.tmpColor);
     }
+
+    if (selector) {
+      program.setUniform3fArray('mapperIndex', selector.getPropColorValue());
+    }
   };
 
   publicAPI.renderPieceDraw = (ren, actor) => {
@@ -400,6 +472,16 @@ function vtkOpenGLGlyph3DMapper(publicAPI, model) {
     const narray = model.renderable.getNormalArray();
     const carray = model.renderable.getColorArray();
     const numPts = garray.length / 16;
+
+    let compositePass = false;
+    if (model.openGLRenderer.getSelector()) {
+      if (
+        model.openGLRenderer.getSelector().getCurrentPass() ===
+        PassTypes.COMPOSITE_INDEX_PASS
+      ) {
+        compositePass = true;
+      }
+    }
 
     // for every primitive type
     for (let i = model.primTypes.Start; i < model.primTypes.End; i++) {
@@ -432,6 +514,9 @@ function vtkOpenGLGlyph3DMapper(publicAPI, model) {
         } else {
           // draw the array multiple times with different cam matrix
           for (let p = 0; p < numPts; ++p) {
+            if (compositePass) {
+              model.openGLRenderer.getSelector().renderCompositeIndex(p);
+            }
             publicAPI.updateGlyphShaderParameters(
               normalMatrixUsed,
               mcvcMatrixUsed,
@@ -439,7 +524,8 @@ function vtkOpenGLGlyph3DMapper(publicAPI, model) {
               carray,
               garray,
               narray,
-              p
+              p,
+              compositePass ? model.openGLRenderer.getSelector() : null
             );
             gl.drawArrays(mode, 0, cabo.getElementCount());
           }
@@ -520,6 +606,28 @@ function vtkOpenGLGlyph3DMapper(publicAPI, model) {
       } else {
         cellBO.getVAO().removeAttributeArray('gColor');
       }
+      if (cellBO.getProgram().isAttributeUsed('mapperIndexVS')) {
+        if (
+          !cellBO
+            .getVAO()
+            .addAttributeArrayWithDivisor(
+              cellBO.getProgram(),
+              model.pickBuffer,
+              'mapperIndexVS',
+              0,
+              4,
+              model.context.UNSIGNED_BYTE,
+              4,
+              true,
+              1,
+              false
+            )
+        ) {
+          vtkErrorMacro('Error setting mapperIndexVS in shader VAO.');
+        }
+      } else {
+        cellBO.getVAO().removeAttributeArray('mapperIndexVS');
+      }
       superClass.setMapperShaderParameters(cellBO, ren, actor);
       cellBO.getAttributeUpdateTime().modified();
       return;
@@ -553,6 +661,8 @@ function vtkOpenGLGlyph3DMapper(publicAPI, model) {
         model.normalBuffer.setOpenGLRenderWindow(model.openGLRenderWindow);
         model.colorBuffer = vtkBufferObject.newInstance();
         model.colorBuffer.setOpenGLRenderWindow(model.openGLRenderWindow);
+        model.pickBuffer = vtkBufferObject.newInstance();
+        model.pickBuffer.setOpenGLRenderWindow(model.openGLRenderWindow);
       }
       if (
         model.renderable.getBuildTime().getMTime() >
@@ -565,6 +675,21 @@ function vtkOpenGLGlyph3DMapper(publicAPI, model) {
         } else {
           model.colorBuffer.releaseGraphicsResources();
         }
+        const numPts = garray.length / 16;
+        const parray = new Uint8Array(4 * numPts);
+        for (let i = 0; i < numPts; ++i) {
+          let value = i + 1;
+          const offset = i * 4;
+          parray[offset] = value % 256;
+          value -= parray[offset];
+          value /= 256;
+          parray[offset + 1] = value % 256;
+          value -= parray[offset + 1];
+          value /= 256;
+          parray[offset + 2] = value % 256;
+          parray[offset + 3] = 255;
+        }
+        model.pickBuffer.upload(parray, ObjectType.ARRAY_BUFFER);
         model.glyphBOBuildTime.modified();
       }
     }

@@ -38,7 +38,6 @@ function vtkOpenGLHardwareSelector(publicAPI, model) {
 
     model.openGLRenderer.clear();
     model.openGLRenderer.setSelector(publicAPI);
-    model.renderer.setPreserveDepthBuffer(1);
     model.hitProps = [];
     model.props = [];
     publicAPI.releasePixBuffers();
@@ -48,7 +47,6 @@ function vtkOpenGLHardwareSelector(publicAPI, model) {
   publicAPI.endSelection = () => {
     model.hitProps = [];
     model.openGLRenderer.setSelector(null);
-    model.renderer.setPreserveDepthBuffer(0);
     model.framebuffer.restorePreviousBindingsAndBuffers();
   };
 
@@ -162,8 +160,8 @@ function vtkOpenGLHardwareSelector(publicAPI, model) {
 
   //----------------------------------------------------------------------------
   publicAPI.renderCompositeIndex = (index) => {
-    if (index > 0xffffff) {
-      vtkErrorMacro('Indices > 0xffffff are not supported.');
+    if (model.currentPass === PassTypes.COMPOSITE_INDEX_PASS) {
+      publicAPI.setPropColorValueFromInt(index + model.idOffset);
     }
   };
 
@@ -270,13 +268,15 @@ function vtkOpenGLHardwareSelector(publicAPI, model) {
       info.propID = actorid - model.idOffset;
       info.prop = publicAPI.getPropFromID(info.propID);
 
-      // let compositeID = publicAPI.convert(
-      //   displayPosition[0], displayPosition[1],
-      //   model.pixBuffer[PassTypes.COMPOSITE_INDEX_PASS]);
-      // if (compositeID < 0 || compositeID > 0xffffff) {
-      //   compositeID = 0;
-      // }
-      // info.compositeID = compositeID - model.idOffset;
+      let compositeID = publicAPI.convert(
+        displayPosition[0],
+        displayPosition[1],
+        model.pixBuffer[PassTypes.COMPOSITE_INDEX_PASS]
+      );
+      if (compositeID < 0 || compositeID > 0xffffff) {
+        compositeID = 0;
+      }
+      info.compositeID = compositeID - model.idOffset;
 
       // const low24 = publicAPI.convert(
       //   displayPosition[0], displayPosition[1], model.pixBuffer[PassTypes.ID_LOW24]);
