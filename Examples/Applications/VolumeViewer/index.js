@@ -1,7 +1,6 @@
 /* eslint-disable import/prefer-default-export */
 /* eslint-disable import/no-extraneous-dependencies */
 
-import 'babel-polyfill';
 import 'vtk.js/Sources/favicon';
 
 import HttpDataAccessHelper from 'vtk.js/Sources/IO/Core/DataAccessHelper/HttpDataAccessHelper';
@@ -62,7 +61,7 @@ function createViewer(rootContainer, fileContents, options) {
   renderWindow.getInteractor().setDesiredUpdateRate(15);
 
   const vtiReader = vtkXMLImageDataReader.newInstance();
-  vtiReader.parseArrayBuffer(fileContents);
+  vtiReader.parseAsArrayBuffer(fileContents);
 
   const source = vtiReader.getOutputData(0);
   const mapper = vtkVolumeMapper.newInstance();

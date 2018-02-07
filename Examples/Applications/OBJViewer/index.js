@@ -1,7 +1,6 @@
 /* eslint-disable import/prefer-default-export */
 /* eslint-disable import/no-extraneous-dependencies */
 
-import 'babel-polyfill';
 import 'vtk.js/Sources/favicon';
 import JSZip from 'jszip';
 
@@ -96,7 +95,7 @@ function loadZipContent(zipContent, renderWindow, renderer) {
         workLoad++;
         zipEntry.async('string').then((txt) => {
           const reader = vtkOBJReader.newInstance({ splitMode: 'usemtl' });
-          reader.parse(txt);
+          reader.parseAsText(txt);
           fileContents.obj[relativePath] = reader;
           workLoad--;
           done();
@@ -106,7 +105,7 @@ function loadZipContent(zipContent, renderWindow, renderer) {
         workLoad++;
         zipEntry.async('string').then((txt) => {
           const reader = vtkMTLReader.newInstance();
-          reader.parse(txt);
+          reader.parseAsText(txt);
           fileContents.mtl[relativePath] = reader;
           workLoad--;
           done();
@@ -142,7 +141,7 @@ export function load(container, options) {
       const reader = new FileReader();
       reader.onload = function onLoad(e) {
         const objReader = vtkOBJReader.newInstance();
-        objReader.parse(reader.result);
+        objReader.parseAsText(reader.result);
         const nbOutputs = objReader.getNumberOfOutputPorts();
         for (let idx = 0; idx < nbOutputs; idx++) {
           const source = objReader.getOutputData(idx);
