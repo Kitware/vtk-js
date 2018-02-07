@@ -25,7 +25,8 @@ Add more consistency in Readers
 - Affected readers:
   - STLReader
   - Legacy/PolyDataReader
-  
+  - ElevationReader 
+
 
 ## From 4.x to 5
 
