@@ -22,30 +22,6 @@ const stateNames = {
   Slice: States.IS_SLICE,
 };
 
-const events = [
-  'Animation',
-  'MouseMove',
-  'LeftButtonPress',
-  'LeftButtonRelease',
-  'MiddleButtonPress',
-  'MiddleButtonRelease',
-  'RightButtonPress',
-  'RightButtonRelease',
-  'KeyPress',
-  'KeyUp',
-  'StartPinch',
-  'Pinch',
-  'EndPinch',
-  'StartPan',
-  'Pan',
-  'EndPan',
-  'StartRotate',
-  'Rotate',
-  'EndRotate',
-  'Button3D',
-  'Move3D',
-];
-
 // ----------------------------------------------------------------------------
 // vtkInteractorStyle methods
 // ----------------------------------------------------------------------------
@@ -55,33 +31,6 @@ function vtkInteractorStyle(publicAPI, model) {
   model.classHierarchy.push('vtkInteractorStyle');
 
   // Public API methods
-  publicAPI.setInteractor = (i) => {
-    if (i === model.interactor) {
-      return;
-    }
-
-    // if we already have an Interactor then stop observing it
-    if (model.interactor) {
-      while (model.unsubscribes.length) {
-        model.unsubscribes.pop().unsubscribe();
-      }
-    }
-
-    model.interactor = i;
-
-    if (i) {
-      events.forEach((eventName) => {
-        model.unsubscribes.push(
-          i[`on${eventName}`]((data) => {
-            if (publicAPI[`handle${eventName}`]) {
-              publicAPI[`handle${eventName}`](data);
-            }
-          })
-        );
-      });
-    }
-  };
-
   // create bunch of Start/EndState methods
   Object.keys(stateNames).forEach((key) => {
     macro.event(publicAPI, model, `Start${key}Event`);
@@ -175,11 +124,6 @@ function vtkInteractorStyle(publicAPI, model) {
         break;
     }
   };
-
-  //----------------------------------------------------------------------------
-  publicAPI.findPokedRenderer = (x, y) => {
-    publicAPI.setCurrentRenderer(model.interactor.findPokedRenderer(x, y));
-  };
 }
 
 // ----------------------------------------------------------------------------
@@ -190,7 +134,6 @@ const DEFAULT_VALUES = {
   state: States.IS_NONE,
   handleObservers: 1,
   autoAdjustCameraClippingRange: 1,
-  unsubscribes: null,
 };
 
 // ----------------------------------------------------------------------------
@@ -200,8 +143,6 @@ export function extend(publicAPI, model, initialValues = {}) {
 
   // Inheritance
   vtkInteractorObserver.extend(publicAPI, model, initialValues);
-
-  model.unsubscribes = [];
 
   // Object specific methods
   vtkInteractorStyle(publicAPI, model);

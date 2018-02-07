@@ -30,8 +30,8 @@ example: handleMouseMove, handleLeftButtonPress...
 
 Render the interactor.
 
-## setEnable(bool)
+## setEnabled(bool)
 
-Enable or disable the widget.
+Enables or disables the widget.
 When the widget is enabled, then the default representation is created.
 

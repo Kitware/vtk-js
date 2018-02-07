@@ -1,4 +1,7 @@
 import macro from 'vtk.js/Sources/macro';
+import vtkRenderWindowInteractor from 'vtk.js/Sources/Rendering/Core/RenderWindowInteractor';
+
+const { vtkErrorMacro } = macro;
 
 // ----------------------------------------------------------------------------
 // Global methods
@@ -36,46 +39,84 @@ function vtkInteractorObserver(publicAPI, model) {
   // Set our className
   model.classHierarchy.push('vtkInteractorObserver');
 
+  //----------------------------------------------------------------------------
+  function unsubscribeFromEvents() {
+    while (model.subscribedEvents.length) {
+      model.subscribedEvents.pop().unsubscribe();
+    }
+  }
+
+  //----------------------------------------------------------------------------
+  // Check what events we can handle and register callbacks
+  function subscribeToEvents() {
+    vtkRenderWindowInteractor.handledEvents.forEach((eventName) => {
+      if (publicAPI[`handle${eventName}`]) {
+        model.subscribedEvents.push(
+          model.interactor[`on${eventName}`](
+            publicAPI[`handle${eventName}`],
+            model.priority
+          )
+        );
+      }
+    });
+  }
+
+  //----------------------------------------------------------------------------
   // Public API methods
+  //----------------------------------------------------------------------------
   publicAPI.setInteractor = (i) => {
     if (i === model.interactor) {
       return;
     }
 
-    // Since the observer mediator is bound to the interactor, reset it to
-    // 0 so that the next time it is requested, it is queried from the
-    // new interactor.
-    // Furthermore, remove ourself from the mediator queue.
-
-    // if (this->ObserverMediator)
-    //   {
-    //   this->ObserverMediator->RemoveAllCursorShapeRequests(this);
-    //   this->ObserverMediator = 0;
-    //   }
-
-    // if we already have an Interactor then stop observing it
-    if (model.interactor) {
-      publicAPI.setEnabled(false); // disable the old interactor
-      model.charObserverTag();
-      model.charObserverTag = null;
-      model.deleteObserverTag();
-      model.deleteObserverTag = null;
-    }
+    unsubscribeFromEvents();
+    model.currentRenderer = null;
 
     model.interactor = i;
 
-    // add observers for each of the events handled in ProcessEvents
-    if (i) {
-      model.charObserverTag = i.onCharEvent(publicAPI.keyPressCallbackCommand);
-      //                                           this->Priority);
-      model.deleteObserverTag = i.onDeleteEvent(
-        publicAPI.keyPressCallbackCommand
-      );
-      //                                           this->Priority);
-      // publicAPI.registerPickers();
+    if (i && model.enabled) {
+      subscribeToEvents();
     }
 
     publicAPI.modified();
+  };
+
+  //----------------------------------------------------------------------------
+  publicAPI.setEnabled = (enable) => {
+    if (enable === model.enabled) {
+      return;
+    }
+
+    unsubscribeFromEvents();
+    model.currentRenderer = null;
+
+    if (enable) {
+      if (model.interactor) {
+        subscribeToEvents();
+
+        // Update CurrentRenderer
+        const eventPosition = model.interactor.getEventPosition();
+        let X = 0;
+        let Y = 0;
+        if (eventPosition) {
+          X = eventPosition[0];
+          Y = eventPosition[1];
+        }
+        publicAPI.findPokedRenderer(X, Y);
+      } else {
+        vtkErrorMacro(`
+          The interactor must be set before subscribing to events
+        `);
+      }
+    }
+
+    model.enabled = enable;
+    publicAPI.modified();
+  };
+
+  //----------------------------------------------------------------------------
+  publicAPI.findPokedRenderer = (x, y) => {
+    publicAPI.setCurrentRenderer(model.interactor.findPokedRenderer(x, y));
   };
 
   //----------------------------------------------------------------------------
@@ -110,13 +151,12 @@ function vtkInteractorObserver(publicAPI, model) {
 // ----------------------------------------------------------------------------
 
 const DEFAULT_VALUES = {
-  enabled: false,
+  enabled: true,
   interactor: null,
   currentRenderer: null,
   defaultRenderer: null,
   priority: 0.0,
-  charObserverTag: null,
-  deleteObserverTag: null,
+  subscribedEvents: [],
 };
 
 // ----------------------------------------------------------------------------

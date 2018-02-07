@@ -91,9 +91,9 @@ widget.onCroppingPlanesPositionChanged(() => {
 function setupWidget(volumeMapper, imageMapper) {
   widget.setVolumeMapper(volumeMapper);
   widget.setHandleSize(10); // in pixels
-  widget.setEnable(true);
+  widget.setEnabled(true);
 
-  // getWidgetRep() returns a widget AFTER setEnable(true).
+  // getWidgetRep() returns a widget AFTER setEnabled(true).
 
   // Demonstrate widget representation APIs
   widget.getWidgetRep().setOpacity(0.8);

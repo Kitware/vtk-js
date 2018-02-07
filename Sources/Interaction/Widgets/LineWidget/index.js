@@ -31,9 +31,9 @@ function vtkLineWidget(publicAPI, model) {
     }
   }
 
-  publicAPI.setEnable = (enabling) => {
+  publicAPI.setEnabled = (enabling) => {
     const enable = model.enabled;
-    superClass.setEnable(enabling);
+    superClass.setEnabled(enabling);
 
     if (model.interactor) {
       model.point1Widget.setInteractor(model.interactor);
@@ -45,14 +45,14 @@ function vtkLineWidget(publicAPI, model) {
     model.point2Widget.setWidgetRep(model.widgetRep.getPoint2Representation());
 
     if (enabling) {
-      model.point1Widget.setEnable(1);
-      model.point2Widget.setEnable(1);
+      model.point1Widget.setEnabled(1);
+      model.point2Widget.setEnabled(1);
       if (model.widgetState === WidgetState.START) {
         model.widgetRep.setLineVisibility(0);
         model.widgetRep.setPoint1Visibility(0);
         model.widgetRep.setPoint2Visibility(0);
-        model.point1Widget.setEnable(0);
-        model.point2Widget.setEnable(0);
+        model.point1Widget.setEnabled(0);
+        model.point2Widget.setEnabled(0);
       } else {
         model.widgetRep.setLineVisibility(1);
         model.widgetRep.setPoint1Visibility(1);
@@ -60,8 +60,8 @@ function vtkLineWidget(publicAPI, model) {
 
         // // Widgets can't be enabled together because of interaction event which doesn't
         // // manage priority
-        // model.point1Widget.setEnable(1);
-        // model.point2Widget.setEnable(1);
+        // model.point1Widget.setEnabled(1);
+        // model.point2Widget.setEnabled(1);
       }
     }
 
@@ -75,8 +75,8 @@ function vtkLineWidget(publicAPI, model) {
       model.point1Widget.getWidgetRep().setRenderer(model.currentRenderer);
       model.point2Widget.getWidgetRep().setRenderer(model.currentRenderer);
     } else if (!enabling && enable) {
-      model.point1Widget.setEnable(0);
-      model.point2Widget.setEnable(0);
+      model.point1Widget.setEnabled(0);
+      model.point2Widget.setEnabled(0);
     }
   };
 
@@ -84,14 +84,14 @@ function vtkLineWidget(publicAPI, model) {
     model.widgetState = WidgetState.START;
     model.currentHandle = 0;
     model.widgetRep.buildRepresentation();
-    publicAPI.setEnable(model.enabled);
+    publicAPI.setEnabled(model.enabled);
   };
 
   publicAPI.setWidgetStateToManipulate = () => {
     model.widgetState = WidgetState.MANIPULATE;
     model.currentHandle = -1;
     model.widgetRep.buildRepresentation();
-    publicAPI.setEnable(model.enabled);
+    publicAPI.setEnabled(model.enabled);
   };
 
   publicAPI.handleMouseMove = () => {
@@ -134,8 +134,8 @@ function vtkLineWidget(publicAPI, model) {
         .displayToWorld(position, 0);
       // The first time we click, the method is called twice
       if (model.currentHandle <= 1) {
-        model.point1Widget.setEnable(0);
-        model.point2Widget.setEnable(0);
+        model.point1Widget.setEnabled(0);
+        model.point2Widget.setEnabled(0);
         model.widgetRep.setPoint1Visibility(1);
         model.widgetRep.setLineVisibility(1);
         model.widgetRep.setPoint2Visibility(0);
@@ -146,11 +146,11 @@ function vtkLineWidget(publicAPI, model) {
         model.widgetRep.setPoint2WorldPosition(pos3D);
         model.currentHandle++;
       } else {
-        model.point1Widget.setEnable(0);
+        model.point1Widget.setEnabled(0);
         model.widgetRep.setPoint1Visibility(1);
         model.widgetRep.setLineVisibility(1);
         model.widgetRep.setPoint2Visibility(1);
-        model.point2Widget.setEnable(0);
+        model.point2Widget.setEnabled(0);
         model.widgetRep.setPoint2WorldPosition(pos3D);
         // When two points are placed, we go back to the native
         publicAPI.setWidgetStateToManipulate();
@@ -204,11 +204,11 @@ function vtkLineWidget(publicAPI, model) {
     if (model.widgetState === WidgetState.MANIPULATE) {
       model.interactor.disable(); // to avoid extra renders()
 
-      model.point1Widget.setEnable(0);
-      model.point2Widget.setEnable(0);
+      model.point1Widget.setEnabled(0);
+      model.point2Widget.setEnabled(0);
 
       if (model.currentHandle === 1) {
-        model.point1Widget.setEnable(1);
+        model.point1Widget.setEnabled(1);
       }
       if (model.currentHandle === 2) {
         model.widgetRep.complexWidgetInteraction(position);
@@ -218,9 +218,9 @@ function vtkLineWidget(publicAPI, model) {
       setCursor(state);
       if (state !== State.OUTSIDE) {
         if (state === State.ONP1) {
-          model.point1Widget.setEnable(1);
+          model.point1Widget.setEnabled(1);
         } else if (state === State.ONP2) {
-          model.point2Widget.setEnable(1);
+          model.point2Widget.setEnabled(1);
         }
       }
       model.interactor.enable();

@@ -498,6 +498,9 @@ function vtkRenderWindowInteractor(publicAPI, model) {
   };
 
   publicAPI.findPokedRenderer = (x = 0, y = 0) => {
+    if (!model.view) {
+      return null;
+    }
     const rc = model.view.getRenderable().getRenderersByReference();
     let interactiveren = null;
     let viewportren = null;
