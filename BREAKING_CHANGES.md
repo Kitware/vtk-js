@@ -29,6 +29,7 @@ Add more consistency in Readers
   - ElevationReader 
   - MTLReader
   - OBJReader
+  - PDBReader
 
 
 ## From 4.x to 5
