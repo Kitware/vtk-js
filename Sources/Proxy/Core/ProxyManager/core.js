@@ -23,6 +23,8 @@ export default function addRegistrationAPI(publicAPI, model) {
     publicAPI.invokeProxyRegistrationChange({
       action: 'register',
       proxyId: proxy.getProxyId(),
+      proxyName: proxy.getProxyName(),
+      proxyGroup: proxy.getProxyGroup(),
       proxy,
     });
   }
@@ -47,6 +49,8 @@ export default function addRegistrationAPI(publicAPI, model) {
     publicAPI.invokeProxyRegistrationChange({
       action: 'unregister',
       proxyId: id,
+      proxyName: proxy.getProxyName(),
+      proxyGroup: proxy.getProxyGroup(),
     });
     return proxy;
   }
