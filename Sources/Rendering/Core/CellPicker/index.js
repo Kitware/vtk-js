@@ -184,7 +184,7 @@ function vtkCellPicker(publicAPI, model) {
       if (pickData) {
         tMin = 0;
         model.cellIJK = pickData.ijk;
-        model.pCoords = pickData.x;
+        model.pCoords = pickData.point;
       }
     } else if (mapper.isA('vtkMapper')) {
       tMin = publicAPI.intersectActorWithLine(p1, p2, t1, t2, tol, mapper);
