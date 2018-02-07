@@ -21,11 +21,13 @@ This switch focuses on simplifying the interactor observers, and forwarding even
 Add more consistency in Readers
 - Readers should have the following set of API
   - setURL(url, options)
+  - fetchData(options) // OPTIONAL and should not be required
   - parseAsArrayBuffer(ArrayBuffer) or parseAsText(String)
 - Affected readers:
   - STLReader
   - Legacy/PolyDataReader
   - ElevationReader 
+  - MTLReader
 
 
 ## From 4.x to 5

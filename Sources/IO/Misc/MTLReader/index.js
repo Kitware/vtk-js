@@ -53,12 +53,8 @@ function vtkMTLReader(publicAPI, model) {
   }
 
   // Internal method to fetch Array
-  function fetchData(url) {
-    const { compression, progressCallback } = model;
-    return model.dataAccessHelper.fetchText(publicAPI, url, {
-      compression,
-      progressCallback,
-    });
+  function fetchData(url, options) {
+    return model.dataAccessHelper.fetchText(publicAPI, url, options);
   }
 
   // Set DataSet url
@@ -75,18 +71,16 @@ function vtkMTLReader(publicAPI, model) {
       model.baseURL = path.join('/');
     }
 
-    model.compression = option.compression;
-
     // Fetch metadata
-    return publicAPI.loadData();
+    return publicAPI.loadData(option);
   };
 
   // Fetch the actual data arrays
-  publicAPI.loadData = () =>
+  publicAPI.loadData = (option) =>
     new Promise((resolve, reject) => {
-      fetchData(model.url).then(
+      fetchData(model.url, option).then(
         (content) => {
-          publicAPI.parse(content);
+          publicAPI.parseAsText(content);
           resolve();
         },
         (err) => {
@@ -95,7 +89,7 @@ function vtkMTLReader(publicAPI, model) {
       );
     });
 
-  publicAPI.parse = (content) => {
+  publicAPI.parseAsText = (content) => {
     publicAPI.modified();
     model.materials = {};
     content.split('\n').forEach(parseLine);
@@ -176,14 +170,6 @@ export function extend(publicAPI, model, initialValues = {}) {
 
   // Object methods
   vtkMTLReader(publicAPI, model);
-
-  // To support destructuring
-  if (!model.compression) {
-    model.compression = null;
-  }
-  if (!model.progressCallback) {
-    model.progressCallback = null;
-  }
 }
 
 // ----------------------------------------------------------------------------
