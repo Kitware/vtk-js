@@ -50,7 +50,7 @@ function handleFile(event) {
     myContainer.removeChild(fileContainer);
     const fileReader = new FileReader();
     fileReader.onload = function onLoad(e) {
-      reader.parseBinary(fileReader.result);
+      reader.parseAsArrayBuffer(fileReader.result);
       update();
     };
     fileReader.readAsArrayBuffer(files[0]);

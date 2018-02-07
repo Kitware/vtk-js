@@ -18,6 +18,13 @@ This switch focuses on simplifying the interactor observers, and forwarding even
 - Remove `findPokedRenderer` from the InteractorStyle/Observer. Instead, the latest poked renderer is passed through the callback as `callData.pokedRenderer`. That renderer is never `null` within callbacks since the event won't forward if it is. _You can also query the renderer through `RenderWindowInteractor.getCurrentRenderer()` but this is not recommended._
 - Add `renderer` as a parameter to `computeWorldToDisplay` and `computeDisplayToWorld` in InteractorObserver
 
+Add more consistency in Readers
+- Readers should have the following set of API
+  - setURL(url, options)
+  - parseAsArrayBuffer(ArrayBuffer) or parseAsText(String)
+- Affected readers:
+  - STLReader
+
 ## From 4.x to 5
 
 Improve and normalize methods inside DataAccessHelper to allow network progress monitoring:
