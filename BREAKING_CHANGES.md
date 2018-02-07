@@ -24,6 +24,8 @@ Add more consistency in Readers
   - parseAsArrayBuffer(ArrayBuffer) or parseAsText(String)
 - Affected readers:
   - STLReader
+  - Legacy/PolyDataReader
+  
 
 ## From 4.x to 5
 

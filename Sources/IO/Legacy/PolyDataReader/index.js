@@ -42,11 +42,11 @@ function vtkPolyDataReader(publicAPI, model) {
   // Fetch the actual data arrays
   publicAPI.loadData = (option = {}) => {
     const promise = fetchData(model.url, option);
-    promise.then(publicAPI.parse);
+    promise.then(publicAPI.parseAsText);
     return promise;
   };
 
-  publicAPI.parse = (content) => {
+  publicAPI.parseAsText = (content) => {
     if (!content) {
       return;
     }
@@ -63,7 +63,7 @@ function vtkPolyDataReader(publicAPI, model) {
   };
 
   publicAPI.requestData = (inData, outData) => {
-    publicAPI.parse(model.parseData);
+    publicAPI.parseAsText(model.parseData);
   };
 }
 
