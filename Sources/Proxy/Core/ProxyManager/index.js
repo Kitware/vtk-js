@@ -31,6 +31,7 @@ export function extend(publicAPI, model, initialValues = {}) {
   ]);
   macro.event(publicAPI, model, 'ActiveSourceChange');
   macro.event(publicAPI, model, 'ActiveViewChange');
+  macro.event(publicAPI, model, 'ProxyRegistrationChange');
 
   core(publicAPI, model);
   view(publicAPI, model);
