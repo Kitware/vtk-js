@@ -28,6 +28,7 @@ Add more consistency in Readers
   - Legacy/PolyDataReader
   - ElevationReader 
   - MTLReader
+  - OBJReader
 
 
 ## From 4.x to 5
