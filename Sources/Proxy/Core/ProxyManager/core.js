@@ -20,6 +20,11 @@ export default function addRegistrationAPI(publicAPI, model) {
       model.proxyByGroup[group].push(proxy);
     }
     proxy.setProxyManager(publicAPI);
+    publicAPI.invokeProxyRegistrationChange({
+      action: 'register',
+      proxyId: proxy.getProxyId(),
+      proxy,
+    });
   }
 
   // --------------------------------------------------------------------------
@@ -39,6 +44,10 @@ export default function addRegistrationAPI(publicAPI, model) {
 
     delete model.proxyIdMapping[id];
     proxy.setProxyManager(null);
+    publicAPI.invokeProxyRegistrationChange({
+      action: 'unregister',
+      proxyId: id,
+    });
     return proxy;
   }
 
