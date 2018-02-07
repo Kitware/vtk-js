@@ -30,7 +30,7 @@ Add more consistency in Readers
   - MTLReader
   - OBJReader
   - PDBReader
-
+  - XMLReader
 
 ## From 4.x to 5
 
