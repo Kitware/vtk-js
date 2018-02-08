@@ -1,7 +1,8 @@
 import macro from 'vtk.js/Sources/macro';
-import vtkCameraManipulator from 'vtk.js/Sources/Interaction/Manipulators/CameraManipulator';
-import vtkTrackballRotate from 'vtk.js/Sources/Interaction/Manipulators/TrackballRotate';
-import vtkTrackballRoll from 'vtk.js/Sources/Interaction/Manipulators/TrackballRoll';
+import vtkCompositeCameraManipulator from 'vtk.js/Sources/Interaction/Manipulators/CompositeCameraManipulator';
+import vtkCompositeMouseManipulator from 'vtk.js/Sources/Interaction/Manipulators/CompositeMouseManipulator';
+import vtkMouseCameraTrackballRotateManipulator from 'vtk.js/Sources/Interaction/Manipulators/MouseCameraTrackballRotateManipulator';
+import vtkMouseCameraTrackballRollManipulator from 'vtk.js/Sources/Interaction/Manipulators/MouseCameraTrackballRollManipulator';
 
 function max(x, y) {
   return x < y ? y : x;
@@ -12,15 +13,15 @@ function sqr(x) {
 }
 
 // ----------------------------------------------------------------------------
-// vtkTrackballMultiRotate methods
+// vtkMouseCameraTrackballMultiRotateManipulator methods
 // ----------------------------------------------------------------------------
 
-function vtkTrackballMultiRotate(publicAPI, model) {
+function vtkMouseCameraTrackballMultiRotateManipulator(publicAPI, model) {
   // Set our className
-  model.classHierarchy.push('vtkTrackballMultiRotate');
+  model.classHierarchy.push('vtkMouseCameraTrackballMultiRotateManipulator');
 
-  const rotateManipulator = vtkTrackballRotate.newInstance();
-  const rollManipulator = vtkTrackballRoll.newInstance();
+  const rotateManipulator = vtkMouseCameraTrackballRotateManipulator.newInstance();
+  const rollManipulator = vtkMouseCameraTrackballRollManipulator.newInstance();
   let currentManipulator = null;
 
   publicAPI.onButtonDown = (interactor, renderer, position) => {
@@ -69,16 +70,21 @@ export function extend(publicAPI, model, initialValues = {}) {
   Object.assign(model, DEFAULT_VALUES, initialValues);
 
   // Inheritance
-  vtkCameraManipulator.extend(publicAPI, model, initialValues);
+  macro.obj(publicAPI, model);
+  vtkCompositeMouseManipulator.extend(publicAPI, model, initialValues);
+  vtkCompositeCameraManipulator.extend(publicAPI, model, initialValues);
 
   // Object specific methods
-  vtkTrackballMultiRotate(publicAPI, model);
+  vtkMouseCameraTrackballMultiRotateManipulator(publicAPI, model);
 }
 
 // ----------------------------------------------------------------------------
 
-export const newInstance = macro.newInstance(extend, 'vtkTrackballMultiRotate');
+export const newInstance = macro.newInstance(
+  extend,
+  'vtkMouseCameraTrackballMultiRotateManipulator'
+);
 
 // ----------------------------------------------------------------------------
 
-export default Object.assign({ newInstance, extend });
+export default { newInstance, extend };

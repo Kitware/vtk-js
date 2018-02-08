@@ -1,14 +1,15 @@
 import macro from 'vtk.js/Sources/macro';
-import vtkCameraManipulator from 'vtk.js/Sources/Interaction/Manipulators/CameraManipulator';
+import vtkCompositeCameraManipulator from 'vtk.js/Sources/Interaction/Manipulators/CompositeCameraManipulator';
+import vtkCompositeMouseManipulator from 'vtk.js/Sources/Interaction/Manipulators/CompositeMouseManipulator';
 import vtkMath from 'vtk.js/Sources/Common/Core/Math';
 
 // ----------------------------------------------------------------------------
-// vtkSliceManipulator methods
+// vtkMouseCameraSliceManipulator methods
 // ----------------------------------------------------------------------------
 
-function vtkSliceManipulator(publicAPI, model) {
+function vtkMouseCameraSliceManipulator(publicAPI, model) {
   // Set our className
-  model.classHierarchy.push('vtkSliceManipulator');
+  model.classHierarchy.push('vtkMouseCameraSliceManipulator');
 
   publicAPI.onButtonDown = (interactor, renderer, position) => {
     model.previousPosition = position;
@@ -86,16 +87,21 @@ export function extend(publicAPI, model, initialValues = {}) {
   Object.assign(model, DEFAULT_VALUES, initialValues);
 
   // Inheritance
-  vtkCameraManipulator.extend(publicAPI, model, initialValues);
+  macro.obj(publicAPI, model);
+  vtkCompositeCameraManipulator.extend(publicAPI, model, initialValues);
+  vtkCompositeMouseManipulator.extend(publicAPI, model, initialValues);
 
   // Object specific methods
-  vtkSliceManipulator(publicAPI, model);
+  vtkMouseCameraSliceManipulator(publicAPI, model);
 }
 
 // ----------------------------------------------------------------------------
 
-export const newInstance = macro.newInstance(extend, 'vtkSliceManipulator');
+export const newInstance = macro.newInstance(
+  extend,
+  'vtkMouseCameraSliceManipulator'
+);
 
 // ----------------------------------------------------------------------------
 
-export default Object.assign({ newInstance, extend });
+export default { newInstance, extend };

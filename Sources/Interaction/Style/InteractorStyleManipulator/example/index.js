@@ -8,13 +8,12 @@ import vtkConeSource from 'vtk.js/Sources/Filters/Sources/ConeSource';
 import vtkMapper from 'vtk.js/Sources/Rendering/Core/Mapper';
 import vtkInteractorStyleManipulator from 'vtk.js/Sources/Interaction/Style/InteractorStyleManipulator';
 
-import vtkCameraManipulator from 'vtk.js/Sources/Interaction/Manipulators/CameraManipulator';
-import vtkTrackballMultiRotate from 'vtk.js/Sources/Interaction/Manipulators/TrackballMultiRotate';
-import vtkTrackballPan from 'vtk.js/Sources/Interaction/Manipulators/TrackballPan';
-import vtkTrackballRoll from 'vtk.js/Sources/Interaction/Manipulators/TrackballRoll';
-import vtkTrackballRotate from 'vtk.js/Sources/Interaction/Manipulators/TrackballRotate';
-import vtkTrackballZoom from 'vtk.js/Sources/Interaction/Manipulators/TrackballZoom';
-import vtkTrackballZoomToMouse from 'vtk.js/Sources/Interaction/Manipulators/TrackballZoomToMouse';
+import vtkMouseCameraTrackballMultiRotateManipulator from 'vtk.js/Sources/Interaction/Manipulators/MouseCameraTrackballMultiRotateManipulator';
+import vtkMouseCameraTrackballPanManipulator from 'vtk.js/Sources/Interaction/Manipulators/MouseCameraTrackballPanManipulator';
+import vtkMouseCameraTrackballRollManipulator from 'vtk.js/Sources/Interaction/Manipulators/MouseCameraTrackballRollManipulator';
+import vtkMouseCameraTrackballRotateManipulator from 'vtk.js/Sources/Interaction/Manipulators/MouseCameraTrackballRotateManipulator';
+import vtkMouseCameraTrackballZoomManipulator from 'vtk.js/Sources/Interaction/Manipulators/MouseCameraTrackballZoomManipulator';
+import vtkMouseCameraTrackballZoomToMouseManipulator from 'vtk.js/Sources/Interaction/Manipulators/MouseCameraTrackballZoomToMouseManipulator';
 
 import controlPanel from './controller.html';
 
@@ -58,39 +57,49 @@ fullScreenRenderer.addController(controlPanel);
 
 const uiComponents = {};
 const selectMap = {
-  leftButton: { button: 1, shift: false, control: false },
-  middleButton: { button: 2, shift: false, control: false },
-  rightButton: { button: 3, shift: false, control: false },
-  shiftLeftButton: { button: 1, shift: true, control: false },
-  shiftMiddleButton: { button: 2, shift: true, control: false },
-  shiftRightButton: { button: 3, shift: true, control: false },
-  controlLeftButton: { button: 1, shift: false, control: true },
-  controlMiddleButton: { button: 2, shift: false, control: true },
-  controlRightButton: { button: 3, shift: false, control: true },
-  scrollMiddleButton: { scroll: true },
+  leftButton: { button: 1 },
+  middleButton: { button: 2 },
+  rightButton: { button: 3 },
+  shiftLeftButton: { button: 1, shift: true },
+  shiftMiddleButton: { button: 2, shift: true },
+  shiftRightButton: { button: 3, shift: true },
+  controlLeftButton: { button: 1, control: true },
+  controlMiddleButton: { button: 2, control: true },
+  controlRightButton: { button: 3, control: true },
+  altLeftButton: { button: 1, alt: true },
+  altMiddleButton: { button: 2, alt: true },
+  altRightButton: { button: 3, alt: true },
+  scrollMiddleButton: { scrollEnabled: true, dragEnabled: false },
 };
 
 const manipulatorFactory = {
-  None: vtkCameraManipulator,
-  Pan: vtkTrackballPan,
-  Zoom: vtkTrackballZoom,
-  Roll: vtkTrackballRoll,
-  Rotate: vtkTrackballRotate,
-  MultiRotate: vtkTrackballMultiRotate,
-  ZoomToMouse: vtkTrackballZoomToMouse,
+  None: null,
+  Pan: vtkMouseCameraTrackballPanManipulator,
+  Zoom: vtkMouseCameraTrackballZoomManipulator,
+  Roll: vtkMouseCameraTrackballRollManipulator,
+  Rotate: vtkMouseCameraTrackballRotateManipulator,
+  MultiRotate: vtkMouseCameraTrackballMultiRotateManipulator,
+  ZoomToMouse: vtkMouseCameraTrackballZoomToMouseManipulator,
 };
 
 function reassignManipulators() {
-  interactorStyle.removeAllManipulators();
+  interactorStyle.removeAllMouseManipulators();
   Object.keys(uiComponents).forEach((keyName) => {
-    const manipulator = manipulatorFactory[
-      uiComponents[keyName].manipName
-    ].newInstance();
-    manipulator.setButton(selectMap[keyName].button);
-    manipulator.setShift(selectMap[keyName].shift);
-    manipulator.setControl(selectMap[keyName].control);
-    manipulator.setScroll(selectMap[keyName].scroll);
-    interactorStyle.addManipulator(manipulator);
+    const klass = manipulatorFactory[uiComponents[keyName].manipName];
+    if (klass) {
+      const manipulator = klass.newInstance();
+      manipulator.setButton(selectMap[keyName].button);
+      manipulator.setShift(!!selectMap[keyName].shift);
+      manipulator.setControl(!!selectMap[keyName].control);
+      manipulator.setAlt(!!selectMap[keyName].alt);
+      if (selectMap[keyName].scrollEnabled !== undefined) {
+        manipulator.setScrollEnabled(selectMap[keyName].scrollEnabled);
+      }
+      if (selectMap[keyName].dragEnabled !== undefined) {
+        manipulator.setDragEnabled(selectMap[keyName].dragEnabled);
+      }
+      interactorStyle.addMouseManipulator(manipulator);
+    }
   });
 }
 

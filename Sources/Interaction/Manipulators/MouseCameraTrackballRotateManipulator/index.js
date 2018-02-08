@@ -1,23 +1,24 @@
 import { vec3, mat4 } from 'gl-matrix';
 import macro from 'vtk.js/Sources/macro';
-import vtkCameraManipulator from 'vtk.js/Sources/Interaction/Manipulators/CameraManipulator';
+import vtkCompositeCameraManipulator from 'vtk.js/Sources/Interaction/Manipulators/CompositeCameraManipulator';
+import vtkCompositeMouseManipulator from 'vtk.js/Sources/Interaction/Manipulators/CompositeMouseManipulator';
 import vtkMath from 'vtk.js/Sources/Common/Core/Math';
 
 // ----------------------------------------------------------------------------
-// vtkTrackballRoll methods
+// vtkMouseCameraTrackballRotateManipulator methods
 // ----------------------------------------------------------------------------
 
-function vtkTrackballRoll(publicAPI, model) {
+function vtkMouseCameraTrackballRotateManipulator(publicAPI, model) {
   // Set our className
-  model.classHierarchy.push('vtkTrackballRoll');
+  model.classHierarchy.push('vtkMouseCameraTrackballRotateManipulator');
 
-  const axis = new Float64Array(3);
-  const direction = new Float64Array(3);
-  const centerNeg = new Float64Array(3);
-  const transform = new Float64Array(16);
   const newCamPos = new Float64Array(3);
   const newFp = new Float64Array(3);
   const newViewUp = new Float64Array(3);
+  const trans = new Float64Array(16);
+  const v2 = new Float64Array(3);
+  const centerNeg = new Float64Array(3);
+  const direction = new Float64Array(3);
 
   publicAPI.onButtonDown = (interactor, renderer, position) => {
     model.previousPosition = position;
@@ -29,58 +30,52 @@ function vtkTrackballRoll(publicAPI, model) {
     }
 
     const camera = renderer.getActiveCamera();
-
-    // compute view vector (rotation axis)
     const cameraPos = camera.getPosition();
     const cameraFp = camera.getFocalPoint();
+
+    mat4.identity(trans);
+
+    const { center, rotationFactor } = model;
+
+    // Translate to center
+    mat4.translate(trans, trans, center);
+
+    const dx = model.previousPosition.x - position.x;
+    const dy = model.previousPosition.y - position.y;
+
+    const size = interactor.getView().getSize();
+
+    // Azimuth
     const viewUp = camera.getViewUp();
-
-    axis[0] = cameraFp[0] - cameraPos[0];
-    axis[1] = cameraFp[1] - cameraPos[1];
-    axis[2] = cameraFp[2] - cameraPos[2];
-
-    // compute the angle of rotation
-    // - first compute the two vectors (center to mouse)
-    publicAPI.computeDisplayCenter(interactor.getInteractorStyle(), renderer);
-
-    const x1 = model.previousPosition.x - model.displayCenter[0];
-    const x2 = position.x - model.displayCenter[0];
-    const y1 = model.previousPosition.y - model.displayCenter[1];
-    const y2 = position.y - model.displayCenter[1];
-    if ((x2 === 0 && y2 === 0) || (x1 === 0 && y1 === 0)) {
-      // don't ever want to divide by zero
-      return;
-    }
-
-    // - divide by magnitudes to get angle
-    const angle = vtkMath.degreesFromRadians(
-      (x1 * y2 - y1 * x2) /
-        (Math.sqrt(x1 * x1 + y1 * y1) * Math.sqrt(x2 * x2 + y2 * y2))
+    mat4.rotate(
+      trans,
+      trans,
+      vtkMath.radiansFromDegrees(360.0 * dx / size[0] * rotationFactor),
+      viewUp
     );
 
-    const { center } = model;
-    mat4.identity(transform);
+    // Elevation
+    vtkMath.cross(camera.getDirectionOfProjection(), viewUp, v2);
+    mat4.rotate(
+      trans,
+      trans,
+      vtkMath.radiansFromDegrees(-360.0 * dy / size[1] * rotationFactor),
+      v2
+    );
+
+    // Translate back
     centerNeg[0] = -center[0];
     centerNeg[1] = -center[1];
     centerNeg[2] = -center[2];
-
-    // Translate to center
-    mat4.translate(transform, transform, center);
-
-    // roll
-    mat4.rotate(transform, transform, vtkMath.radiansFromDegrees(angle), axis);
-
-    // Translate back
-    mat4.translate(transform, transform, centerNeg);
+    mat4.translate(trans, trans, centerNeg);
 
     // Apply transformation to camera position, focal point, and view up
-    vec3.transformMat4(newCamPos, cameraPos, transform);
-    vec3.transformMat4(newFp, cameraFp, transform);
-
+    vec3.transformMat4(newCamPos, cameraPos, trans);
+    vec3.transformMat4(newFp, cameraFp, trans);
     direction[0] = viewUp[0] + cameraPos[0];
     direction[1] = viewUp[1] + cameraPos[1];
     direction[2] = viewUp[2] + cameraPos[2];
-    vec3.transformMat4(newViewUp, direction, transform);
+    vec3.transformMat4(newViewUp, direction, trans);
 
     camera.setPosition(newCamPos[0], newCamPos[1], newCamPos[2]);
     camera.setFocalPoint(newFp[0], newFp[1], newFp[2]);
@@ -113,16 +108,21 @@ export function extend(publicAPI, model, initialValues = {}) {
   Object.assign(model, DEFAULT_VALUES, initialValues);
 
   // Inheritance
-  vtkCameraManipulator.extend(publicAPI, model, initialValues);
+  macro.obj(publicAPI, model);
+  vtkCompositeMouseManipulator.extend(publicAPI, model, initialValues);
+  vtkCompositeCameraManipulator.extend(publicAPI, model, initialValues);
 
   // Object specific methods
-  vtkTrackballRoll(publicAPI, model);
+  vtkMouseCameraTrackballRotateManipulator(publicAPI, model);
 }
 
 // ----------------------------------------------------------------------------
 
-export const newInstance = macro.newInstance(extend, 'vtkTrackballRoll');
+export const newInstance = macro.newInstance(
+  extend,
+  'vtkMouseCameraTrackballRotateManipulator'
+);
 
 // ----------------------------------------------------------------------------
 
-export default Object.assign({ newInstance, extend });
+export default { newInstance, extend };

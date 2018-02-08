@@ -32,6 +32,11 @@ Add more consistency in Readers
   - PDBReader
   - XMLReader
 
+Refactor InteractorStyleManipulator with its manipulator
+- Rename all the classes to make them concistent
+- Update API to distinguish mode vs state (mode[drag/scroll], state[button,alt,control,shift])
+- Update impacted code and example
+
 ## From 4.x to 5
 
 Improve and normalize methods inside DataAccessHelper to allow network progress monitoring:

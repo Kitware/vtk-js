@@ -5,6 +5,14 @@ const { vtkDebugMacro } = macro;
 const { States } = vtkInteractorStyle;
 
 // ----------------------------------------------------------------------------
+// Event Types
+// ----------------------------------------------------------------------------
+
+const START_INTERACTION_EVENT = { type: 'StartInteractionEvent' };
+const INTERACTION_EVENT = { type: 'InteractionEvent' };
+const END_INTERACTION_EVENT = { type: 'EndInteractionEvent' };
+
+// ----------------------------------------------------------------------------
 // Global methods
 // ----------------------------------------------------------------------------
 
@@ -122,37 +130,37 @@ function vtkInteractorStyleManipulator(publicAPI, model) {
   model.classHierarchy.push('vtkInteractorStyleManipulator');
 
   model.mouseManipulators = [];
-  model.camera3DManipulators = [];
+  model.vrManipulators = [];
   model.currentManipulator = null;
   model.centerOfRotation = [0, 0, 0];
   model.rotationFactor = 1;
 
   //-------------------------------------------------------------------------
-  publicAPI.removeAllManipulators = () => {
+  publicAPI.removeAllMouseManipulators = () => {
     model.mouseManipulators = [];
   };
 
   //-------------------------------------------------------------------------
-  publicAPI.removeAll3DManipulators = () => {
-    model.camera3DManipulators = [];
+  publicAPI.removeAllVRManipulators = () => {
+    model.vrManipulators = [];
   };
 
   //-------------------------------------------------------------------------
-  publicAPI.removeManipulator = (index) => {
+  publicAPI.removeMouseManipulator = (index) => {
     if (model.mouseManipulators.length > index) {
       model.mouseManipulators[index] = null;
     }
   };
 
   //-------------------------------------------------------------------------
-  publicAPI.remove3DManipulator = (index) => {
-    if (model.camera3DManipulators.length > index) {
-      model.camera3DManipulators[index] = null;
+  publicAPI.removeVRManipulator = (index) => {
+    if (model.vrManipulators.length > index) {
+      model.vrManipulators[index] = null;
     }
   };
 
   //-------------------------------------------------------------------------
-  publicAPI.getManipulator = (index) => {
+  publicAPI.getMouseManipulator = (index) => {
     let manipulator = null;
     if (model.mouseManipulators.length > index) {
       manipulator = model.mouseManipulators[index];
@@ -161,33 +169,33 @@ function vtkInteractorStyleManipulator(publicAPI, model) {
   };
 
   //-------------------------------------------------------------------------
-  publicAPI.get3DManipulator = (index) => {
+  publicAPI.getVRManipulator = (index) => {
     let manipulator = null;
-    if (model.camera3DManipulators.length > index) {
-      manipulator = model.camera3DManipulators[index];
+    if (model.vrManipulators.length > index) {
+      manipulator = model.vrManipulators[index];
     }
     return manipulator;
   };
 
   //-------------------------------------------------------------------------
-  publicAPI.addManipulator = (manipulator) => {
+  publicAPI.addMouseManipulator = (manipulator) => {
     const index = model.mouseManipulators.length;
     model.mouseManipulators.push(manipulator);
     return index;
   };
 
   //-------------------------------------------------------------------------
-  publicAPI.add3DManipulator = (manipulator) => {
-    const index = model.camera3DManipulators.length;
-    model.camera3DManipulators.push(manipulator);
+  publicAPI.addVRManipulator = (manipulator) => {
+    const index = model.vrManipulators.length;
+    model.vrManipulators.push(manipulator);
     return index;
   };
 
   //-------------------------------------------------------------------------
-  publicAPI.getNumberOfManipulators = () => model.mouseManipulators.length;
+  publicAPI.getNumberOfMouseManipulators = () => model.mouseManipulators.length;
 
   //-------------------------------------------------------------------------
-  publicAPI.getNumberOf3DManipulators = () => model.camera3DManipulators.length;
+  publicAPI.getNumberOfVRManipulators = () => model.vrManipulators.length;
 
   //-------------------------------------------------------------------------
   publicAPI.handleLeftButtonPress = (callData) => {
@@ -214,7 +222,7 @@ function vtkInteractorStyleManipulator(publicAPI, model) {
     }
 
     // Look for a matching 3D camera interactor.
-    model.currentManipulator = publicAPI.find3DManipulator(
+    model.currentManipulator = publicAPI.findVRManipulator(
       ed.device,
       ed.input,
       ed.pressed
@@ -258,7 +266,7 @@ function vtkInteractorStyleManipulator(publicAPI, model) {
     }
 
     // Look for a matching camera interactor.
-    model.currentManipulator = publicAPI.findManipulator(
+    model.currentManipulator = publicAPI.findMouseManipulator(
       button,
       callData.shiftKey,
       callData.controlKey,
@@ -278,38 +286,43 @@ function vtkInteractorStyleManipulator(publicAPI, model) {
         callData.position
       );
       model.interactor.requestAnimation(publicAPI);
-      publicAPI.invokeStartInteractionEvent({ type: 'StartInteractionEvent' });
+      publicAPI.invokeStartInteractionEvent(START_INTERACTION_EVENT);
     } else {
       vtkDebugMacro('No manipulator found');
     }
   };
 
   //-------------------------------------------------------------------------
-  publicAPI.findManipulator = (button, shift, control, alt) => {
+  publicAPI.findMouseManipulator = (button, shift, control, alt) => {
     // Look for a matching camera manipulator
     let manipulator = null;
-    model.mouseManipulators.forEach((manip) => {
+    let count = model.mouseManipulators.length;
+    while (count--) {
+      const manip = model.mouseManipulators[count];
       if (
         manip &&
         manip.getButton() === button &&
         manip.getShift() === shift &&
         manip.getControl() === control &&
-        manip.getAlt() === alt
+        manip.getAlt() === alt &&
+        manip.isDragEnabled()
       ) {
         manipulator = manip;
       }
-    });
+    }
     return manipulator;
   };
   //-------------------------------------------------------------------------
-  publicAPI.find3DManipulator = (device, input) => {
+  publicAPI.findVRManipulator = (device, input) => {
     // Look for a matching camera manipulator
     let manipulator = null;
-    model.camera3DManipulators.forEach((manip) => {
+    let count = model.vrManipulators.length;
+    while (count--) {
+      const manip = model.vrManipulators[count];
       if (manip && manip.getDevice() === device && manip.getInput() === input) {
         manipulator = manip;
       }
-    });
+    }
     return manipulator;
   };
 
@@ -341,46 +354,52 @@ function vtkInteractorStyleManipulator(publicAPI, model) {
       model.currentManipulator.endInteraction();
       model.currentManipulator = null;
       model.interactor.cancelAnimation(publicAPI);
-      publicAPI.invokeEndInteractionEvent({ type: 'EndInteractionEvent' });
+      publicAPI.invokeEndInteractionEvent(END_INTERACTION_EVENT);
     }
   };
 
   //-------------------------------------------------------------------------
   publicAPI.handleStartMouseWheel = (callData) => {
-    model.mouseManipulators
-      .filter((m) => m.getScroll())
-      .forEach((manipulator) => {
+    let count = model.mouseManipulators.length;
+    while (count--) {
+      const manipulator = model.mouseManipulators[count];
+      if (manipulator.isScrollEnabled()) {
         manipulator.onStartScroll(model.interactor, callData.wheelDelta);
         manipulator.startInteraction();
-      });
+      }
+    }
     model.interactor.requestAnimation(publicAPI);
-    publicAPI.invokeStartInteractionEvent({ type: 'StartInteractionEvent' });
+    publicAPI.invokeStartInteractionEvent(START_INTERACTION_EVENT);
   };
 
   //-------------------------------------------------------------------------
   publicAPI.handleEndMouseWheel = (callData) => {
-    model.mouseManipulators
-      .filter((m) => m.getScroll())
-      .forEach((manipulator) => {
+    let count = model.mouseManipulators.length;
+    while (count--) {
+      const manipulator = model.mouseManipulators[count];
+      if (manipulator.isScrollEnabled()) {
         manipulator.onEndScroll(model.interactor, callData.wheelDelta);
         manipulator.endInteraction();
-      });
+      }
+    }
     model.interactor.cancelAnimation(publicAPI);
-    publicAPI.invokeEndInteractionEvent({ type: 'EndInteractionEvent' });
+    publicAPI.invokeEndInteractionEvent(END_INTERACTION_EVENT);
   };
 
   //-------------------------------------------------------------------------
   publicAPI.handleMouseWheel = (callData) => {
-    model.mouseManipulators
-      .filter((m) => m.getScroll())
-      .forEach((manipulator) => {
+    let count = model.mouseManipulators.length;
+    while (count--) {
+      const manipulator = model.mouseManipulators[count];
+      if (manipulator.isScrollEnabled()) {
         manipulator.onScroll(
           model.interactor,
           callData.pokedRenderer,
           callData.wheelDelta
         );
-      });
-    publicAPI.invokeInteractionEvent({ type: 'InteractionEvent' });
+      }
+    }
+    publicAPI.invokeInteractionEvent(INTERACTION_EVENT);
   };
 
   //-------------------------------------------------------------------------
@@ -391,7 +410,7 @@ function vtkInteractorStyleManipulator(publicAPI, model) {
         callData.pokedRenderer,
         callData.position
       );
-      publicAPI.invokeInteractionEvent({ type: 'InteractionEvent' });
+      publicAPI.invokeInteractionEvent(INTERACTION_EVENT);
     }
   };
 
@@ -401,7 +420,7 @@ function vtkInteractorStyleManipulator(publicAPI, model) {
       .filter((m) => m.onKeyDown)
       .forEach((manipulator) => {
         manipulator.onKeyDown(model.interactor, callData.key);
-        publicAPI.invokeInteractionEvent({ type: 'InteractionEvent' });
+        publicAPI.invokeInteractionEvent(INTERACTION_EVENT);
       });
   };
 
@@ -409,7 +428,7 @@ function vtkInteractorStyleManipulator(publicAPI, model) {
   publicAPI.handleKeyUp = (callData) => {
     model.mouseManipulators.filter((m) => m.onKeyUp).forEach((manipulator) => {
       manipulator.onKeyUp(model.interactor, callData.key);
-      publicAPI.invokeInteractionEvent({ type: 'InteractionEvent' });
+      publicAPI.invokeInteractionEvent(INTERACTION_EVENT);
     });
   };
 
@@ -425,8 +444,8 @@ function vtkInteractorStyleManipulator(publicAPI, model) {
 
 const DEFAULT_VALUES = {
   currentManipulator: null,
-  mouseManipulators: null,
-  camera3DManipulators: null,
+  // mouseManipulators: null,
+  // vrManipulators: null,
   centerOfRotation: [0, 0, 0],
   rotationFactor: 1,
 };

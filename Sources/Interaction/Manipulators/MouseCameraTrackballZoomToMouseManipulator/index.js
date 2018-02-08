@@ -1,14 +1,14 @@
 import macro from 'vtk.js/Sources/macro';
 import vtkInteractorStyleManipulator from 'vtk.js/Sources/Interaction/Style/InteractorStyleManipulator';
-import vtkTrackballZoom from 'vtk.js/Sources/Interaction/Manipulators/TrackballZoom';
+import vtkMouseCameraTrackballZoomManipulator from 'vtk.js/Sources/Interaction/Manipulators/MouseCameraTrackballZoomManipulator';
 
 // ----------------------------------------------------------------------------
-// vtkTrackballZoomToMouse methods
+// vtkMouseCameraTrackballZoomToMouseManipulator methods
 // ----------------------------------------------------------------------------
 
-function vtkTrackballZoomToMouse(publicAPI, model) {
+function vtkMouseCameraTrackballZoomToMouseManipulator(publicAPI, model) {
   // Set our className
-  model.classHierarchy.push('vtkTrackballZoomToMouse');
+  model.classHierarchy.push('vtkMouseCameraTrackballZoomToMouseManipulator');
 
   const superOnButtonDown = publicAPI.onButtonDown;
   publicAPI.onButtonDown = (interactor, renderer, position) => {
@@ -52,16 +52,23 @@ export function extend(publicAPI, model, initialValues = {}) {
   Object.assign(model, DEFAULT_VALUES, initialValues);
 
   // Inheritance
-  vtkTrackballZoom.extend(publicAPI, model, initialValues);
+  vtkMouseCameraTrackballZoomManipulator.extend(
+    publicAPI,
+    model,
+    initialValues
+  );
 
   // Object specific methods
-  vtkTrackballZoomToMouse(publicAPI, model);
+  vtkMouseCameraTrackballZoomToMouseManipulator(publicAPI, model);
 }
 
 // ----------------------------------------------------------------------------
 
-export const newInstance = macro.newInstance(extend, 'vtkTrackballZoomToMouse');
+export const newInstance = macro.newInstance(
+  extend,
+  'vtkMouseCameraTrackballZoomToMouseManipulator'
+);
 
 // ----------------------------------------------------------------------------
 
-export default Object.assign({ newInstance, extend });
+export default { newInstance, extend };

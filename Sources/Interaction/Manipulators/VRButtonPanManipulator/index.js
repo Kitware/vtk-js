@@ -1,5 +1,5 @@
 import macro from 'vtk.js/Sources/macro';
-import vtkCamera3DManipulator from 'vtk.js/Sources/Interaction/Manipulators/Camera3DManipulator';
+import vtkCompositeVRManipulator from 'vtk.js/Sources/Interaction/Manipulators/CompositeVRManipulator';
 import {
   Device,
   Input,
@@ -7,12 +7,12 @@ import {
 import { States } from 'vtk.js/Sources/Rendering/Core/InteractorStyle/Constants';
 
 // ----------------------------------------------------------------------------
-// vtkButton3DPan methods
+// vtkVRButtonPanManipulator methods
 // ----------------------------------------------------------------------------
 
-function vtkButton3DPan(publicAPI, model) {
+function vtkVRButtonPanManipulator(publicAPI, model) {
   // Set our className
-  model.classHierarchy.push('vtkButton3DPan');
+  model.classHierarchy.push('vtkVRButtonPanManipulator');
 
   publicAPI.onButton3D = (
     interactorStyle,
@@ -70,16 +70,19 @@ const DEFAULT_VALUES = {
 export function extend(publicAPI, model, initialValues = {}) {
   Object.assign(model, DEFAULT_VALUES, initialValues);
 
-  // Inheritance
-  vtkCamera3DManipulator.extend(publicAPI, model, initialValues);
+  macro.obj(publicAPI, model);
+  vtkCompositeVRManipulator.extend(publicAPI, model, initialValues);
 
   // Object specific methods
-  vtkButton3DPan(publicAPI, model);
+  vtkVRButtonPanManipulator(publicAPI, model);
 }
 
 // ----------------------------------------------------------------------------
 
-export const newInstance = macro.newInstance(extend, 'vtkButton3DPan');
+export const newInstance = macro.newInstance(
+  extend,
+  'vtkVRButtonPanManipulator'
+);
 
 // ----------------------------------------------------------------------------
 

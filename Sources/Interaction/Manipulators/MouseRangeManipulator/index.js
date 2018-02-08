@@ -1,13 +1,13 @@
 import macro from 'vtk.js/Sources/macro';
-import vtkMouseManipulator from 'vtk.js/Sources/Interaction/Manipulators/MouseManipulator';
+import vtkCompositeMouseManipulator from 'vtk.js/Sources/Interaction/Manipulators/CompositeMouseManipulator';
 
 // ----------------------------------------------------------------------------
-// vtkRangeManipulator methods
+// vtkMouseRangeManipulator methods
 // ----------------------------------------------------------------------------
 
-function vtkRangeManipulator(publicAPI, model) {
+function vtkMouseRangeManipulator(publicAPI, model) {
   // Set our className
-  model.classHierarchy.push('vtkRangeManipulator');
+  model.classHierarchy.push('vtkMouseRangeManipulator');
 
   //-------------------------------------------------------------------------
   function processDelta(listener, delta) {
@@ -130,16 +130,20 @@ export function extend(publicAPI, model, initialValues = {}) {
   Object.assign(model, DEFAULT_VALUES, initialValues);
 
   // Inheritance
-  vtkMouseManipulator.extend(publicAPI, model, initialValues);
+  macro.obj(publicAPI, model);
+  vtkCompositeMouseManipulator.extend(publicAPI, model, initialValues);
 
   // Object specific methods
-  vtkRangeManipulator(publicAPI, model);
+  vtkMouseRangeManipulator(publicAPI, model);
 }
 
 // ----------------------------------------------------------------------------
 
-export const newInstance = macro.newInstance(extend, 'vtkRangeManipulator');
+export const newInstance = macro.newInstance(
+  extend,
+  'vtkMouseRangeManipulator'
+);
 
 // ----------------------------------------------------------------------------
 
-export default Object.assign({ newInstance, extend });
+export default { newInstance, extend };

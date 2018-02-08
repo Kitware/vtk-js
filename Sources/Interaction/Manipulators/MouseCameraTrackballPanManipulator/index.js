@@ -1,14 +1,15 @@
 import macro from 'vtk.js/Sources/macro';
-import vtkCameraManipulator from 'vtk.js/Sources/Interaction/Manipulators/CameraManipulator';
+import vtkCompositeCameraManipulator from 'vtk.js/Sources/Interaction/Manipulators/CompositeCameraManipulator';
+import vtkCompositeMouseManipulator from 'vtk.js/Sources/Interaction/Manipulators/CompositeMouseManipulator';
 import vtkMath from 'vtk.js/Sources/Common/Core/Math';
 
 // ----------------------------------------------------------------------------
-// vtkTrackballPan methods
+// vtkMouseCameraTrackballPanManipulator methods
 // ----------------------------------------------------------------------------
 
-function vtkTrackballPan(publicAPI, model) {
+function vtkMouseCameraTrackballPanManipulator(publicAPI, model) {
   // Set our className
-  model.classHierarchy.push('vtkTrackballPan');
+  model.classHierarchy.push('vtkMouseCameraTrackballPanManipulator');
 
   publicAPI.onButtonDown = (interactor, renderer, position) => {
     model.previousPosition = position;
@@ -115,16 +116,21 @@ export function extend(publicAPI, model, initialValues = {}) {
   Object.assign(model, DEFAULT_VALUES, initialValues);
 
   // Inheritance
-  vtkCameraManipulator.extend(publicAPI, model, initialValues);
+  macro.obj(publicAPI, model);
+  vtkCompositeCameraManipulator.extend(publicAPI, model, initialValues);
+  vtkCompositeMouseManipulator.extend(publicAPI, model, initialValues);
 
   // Object specific methods
-  vtkTrackballPan(publicAPI, model);
+  vtkMouseCameraTrackballPanManipulator(publicAPI, model);
 }
 
 // ----------------------------------------------------------------------------
 
-export const newInstance = macro.newInstance(extend, 'vtkTrackballPan');
+export const newInstance = macro.newInstance(
+  extend,
+  'vtkMouseCameraTrackballPanManipulator'
+);
 
 // ----------------------------------------------------------------------------
 
-export default Object.assign({ newInstance, extend });
+export default { newInstance, extend };
