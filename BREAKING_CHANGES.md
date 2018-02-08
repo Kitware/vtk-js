@@ -33,7 +33,7 @@ Add more consistency in Readers
   - XMLReader
 
 Refactor InteractorStyleManipulator with its manipulator
-- Rename all the classes to make them concistent
+- Rename all the classes to make them consistent
 - Update API to distinguish mode vs state (mode[drag/scroll], state[button,alt,control,shift])
 - Update impacted code and example
 
