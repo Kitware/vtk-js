@@ -9,10 +9,9 @@ import vtkOrientationMarkerWidget from 'vtk.js/Sources/Interaction/Widgets/Orien
 import vtkRenderer from 'vtk.js/Sources/Rendering/Core/Renderer';
 import vtkRenderWindow from 'vtk.js/Sources/Rendering/Core/RenderWindow';
 import vtkRenderWindowInteractor from 'vtk.js/Sources/Rendering/Core/RenderWindowInteractor';
-import vtkTrackballPan from 'vtk.js/Sources/Interaction/Manipulators/TrackballPan';
-import vtkTrackballRoll from 'vtk.js/Sources/Interaction/Manipulators/TrackballRoll';
-import vtkTrackballRotate from 'vtk.js/Sources/Interaction/Manipulators/TrackballRotate';
-import vtkTrackballZoom from 'vtk.js/Sources/Interaction/Manipulators/TrackballZoom';
+
+import InteractionPresets from 'vtk.js/Sources/Interaction/Style/InteractorStyleManipulator/Presets';
+import AnnotatedCubePresets from 'vtk.js/Sources/Rendering/Core/AnnotatedCubeActor/Presets';
 
 // ----------------------------------------------------------------------------
 // vtkViewProxy methods
@@ -44,38 +43,11 @@ function vtkViewProxy(publicAPI, model) {
   model.interactorStyle3D = vtkInteractorStyleManipulator.newInstance();
   model.interactorStyle2D = vtkInteractorStyleManipulator.newInstance();
 
-  model.cornerAnnotation = vtkCornerAnnotation.newInstance();
+  // Apply default interaction styles
+  InteractionPresets.applyPreset('3D', model.interactorStyle3D);
+  InteractionPresets.applyPreset('2D', model.interactorStyle2D);
 
-  // Rotate
-  model.interactorStyle3D.addManipulator(vtkTrackballRotate.newInstance());
-  // Pan
-  model.interactorStyle2D.addManipulator(vtkTrackballPan.newInstance());
-  model.interactorStyle2D.addManipulator(
-    vtkTrackballPan.newInstance({ shift: true })
-  );
-  model.interactorStyle3D.addManipulator(
-    vtkTrackballPan.newInstance({ shift: true })
-  );
-  // Zoom
-  model.interactorStyle2D.addManipulator(
-    vtkTrackballZoom.newInstance({ control: true, pinch: true })
-  );
-  model.interactorStyle2D.addManipulator(
-    vtkTrackballZoom.newInstance({ alt: true, pinch: true })
-  );
-  model.interactorStyle3D.addManipulator(
-    vtkTrackballZoom.newInstance({ control: true, pinch: true })
-  );
-  model.interactorStyle3D.addManipulator(
-    vtkTrackballZoom.newInstance({ alt: true, pinch: true })
-  );
-  // Roll
-  model.interactorStyle3D.addManipulator(
-    vtkTrackballRoll.newInstance({ shift: true, control: true })
-  );
-  model.interactorStyle3D.addManipulator(
-    vtkTrackballRoll.newInstance({ shift: true, alt: true })
-  );
+  model.cornerAnnotation = vtkCornerAnnotation.newInstance();
 
   // Setup interaction
   model.interactor.setInteractorStyle(
@@ -89,36 +61,7 @@ function vtkViewProxy(publicAPI, model) {
   // Orientation a cube setup -------------------------------------------------
 
   model.orientationAxes = vtkAnnotatedCubeActor.newInstance();
-  model.orientationAxes.setDefaultStyle({
-    fontStyle: 'bold',
-    fontFamily: 'Arial',
-    fontColor: 'black',
-    fontSizeScale: (res) => res / 2,
-    faceColor: 'white',
-    edgeThickness: 0.1,
-    edgeColor: 'black',
-    resolution: 400,
-  });
-
-  model.orientationAxes.setXMinusFaceProperty({
-    text: 'X-',
-    faceColor: 'yellow',
-  });
-  model.orientationAxes.setXPlusFaceProperty({
-    text: 'X+',
-    faceColor: 'yellow',
-  });
-  model.orientationAxes.setYMinusFaceProperty({ text: 'Y-', faceColor: 'red' });
-  model.orientationAxes.setYPlusFaceProperty({ text: 'Y+', faceColor: 'red' });
-  model.orientationAxes.setZMinusFaceProperty({
-    text: 'Z-',
-    faceColor: '#008000',
-  });
-  model.orientationAxes.setZPlusFaceProperty({
-    text: 'Z+',
-    faceColor: '#008000',
-  });
-
+  AnnotatedCubePresets.applyPreset('default', model.orientationAxes);
   model.orientationWidget = vtkOrientationMarkerWidget.newInstance({
     actor: model.orientationAxes,
     interactor: model.renderWindow.getInteractor(),
@@ -130,6 +73,51 @@ function vtkViewProxy(publicAPI, model) {
   model.orientationWidget.setViewportSize(0.1);
 
   // API ----------------------------------------------------------------------
+
+  publicAPI.setPresetToInteractor3D = (nameOrDefinitions) => {
+    if (Array.isArray(nameOrDefinitions)) {
+      return InteractionPresets.applyDefinitions(
+        nameOrDefinitions,
+        model.interactorStyle3D
+      );
+    }
+    return InteractionPresets.applyPreset(
+      nameOrDefinitions,
+      model.interactorStyle3D
+    );
+  };
+
+  // --------------------------------------------------------------------------
+
+  publicAPI.setPresetToInteractor2D = (nameOrDefinitions) => {
+    if (Array.isArray(nameOrDefinitions)) {
+      return InteractionPresets.applyDefinitions(
+        nameOrDefinitions,
+        model.interactorStyle2D
+      );
+    }
+    return InteractionPresets.applyPreset(
+      nameOrDefinitions,
+      model.interactorStyle2D
+    );
+  };
+
+  // --------------------------------------------------------------------------
+
+  publicAPI.setPresetToOrientationAxes = (nameOrDefinitions) => {
+    if (typeof nameOrDefinitions === 'string') {
+      return AnnotatedCubePresets.applyPreset(
+        nameOrDefinitions,
+        model.orientationAxes
+      );
+    }
+    return AnnotatedCubePresets.applyDefinitions(
+      nameOrDefinitions,
+      model.orientationAxes
+    );
+  };
+
+  // --------------------------------------------------------------------------
 
   publicAPI.setContainer = (container) => {
     if (model.container) {
