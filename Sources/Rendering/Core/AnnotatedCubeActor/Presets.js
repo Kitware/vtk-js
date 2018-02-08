@@ -35,6 +35,32 @@ const STYLES = {
       faceColor: '#008000',
     },
   },
+  lps: {
+    xMinusFaceProperty: {
+      text: 'R',
+      faceRotation: -90,
+    },
+    xPlusFaceProperty: {
+      text: 'L',
+      faceRotation: 90,
+    },
+    yMinusFaceProperty: {
+      text: 'A',
+      faceRotation: 0,
+    },
+    yPlusFaceProperty: {
+      text: 'P',
+      faceRotation: 180,
+    },
+    zMinusFaceProperty: {
+      text: 'I',
+      faceRotation: 180,
+    },
+    zPlusFaceProperty: {
+      text: 'S',
+      faceRotation: 0,
+    },
+  },
 };
 
 function applyDefinitions(definitions, cubeActor) {
