@@ -52,16 +52,16 @@ const zMax = bounds[5];
 const zGet = mapper.getZSlice;
 const zSet = mapper.setZSlice;
 
-const rangeManipulator = Manipulators.vtkRangeManipulator.newInstance({
+const rangeManipulator = Manipulators.vtkMouseRangeManipulator.newInstance({
   button: 1,
-  scroll: true,
+  scrollEnabled: true,
 });
 rangeManipulator.setVerticalListener(wMin, wMax, 1, wGet, wSet);
 rangeManipulator.setHorizontalListener(lMin, lMax, 1, lGet, lSet);
 rangeManipulator.setScrollListener(zMin, zMax, 1, zGet, zSet);
 
 const iStyle = vtkInteractorStyleManipulator.newInstance();
-iStyle.addManipulator(rangeManipulator);
+iStyle.addMouseManipulator(rangeManipulator);
 renderWindow.getInteractor().setInteractorStyle(iStyle);
 
 renderer.getActiveCamera().setParallelProjection(true);
