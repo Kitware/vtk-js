@@ -10,8 +10,9 @@ function vtkCameraManipulator(publicAPI, model) {
   model.classHierarchy.push('vtkCameraManipulator');
 
   //-------------------------------------------------------------------------
-  publicAPI.computeDisplayCenter = (iObserver) => {
+  publicAPI.computeDisplayCenter = (iObserver, renderer) => {
     const pt = iObserver.computeWorldToDisplay(
+      renderer,
       model.center[0],
       model.center[1],
       model.center[2]

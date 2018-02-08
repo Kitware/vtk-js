@@ -1,4 +1,7 @@
 import macro from 'vtk.js/Sources/macro';
+import vtkRenderWindowInteractor from 'vtk.js/Sources/Rendering/Core/RenderWindowInteractor';
+
+const { vtkErrorMacro } = macro;
 
 // ----------------------------------------------------------------------------
 // Global methods
@@ -36,105 +39,90 @@ function vtkInteractorObserver(publicAPI, model) {
   // Set our className
   model.classHierarchy.push('vtkInteractorObserver');
 
+  //----------------------------------------------------------------------------
+  function unsubscribeFromEvents() {
+    while (model.subscribedEvents.length) {
+      model.subscribedEvents.pop().unsubscribe();
+    }
+  }
+
+  //----------------------------------------------------------------------------
+  // Check what events we can handle and register callbacks
+  function subscribeToEvents() {
+    vtkRenderWindowInteractor.handledEvents.forEach((eventName) => {
+      if (publicAPI[`handle${eventName}`]) {
+        model.subscribedEvents.push(
+          model.interactor[`on${eventName}`](
+            publicAPI[`handle${eventName}`],
+            model.priority
+          )
+        );
+      }
+    });
+  }
+
+  //----------------------------------------------------------------------------
   // Public API methods
+  //----------------------------------------------------------------------------
   publicAPI.setInteractor = (i) => {
     if (i === model.interactor) {
       return;
     }
 
-    // Since the observer mediator is bound to the interactor, reset it to
-    // 0 so that the next time it is requested, it is queried from the
-    // new interactor.
-    // Furthermore, remove ourself from the mediator queue.
-
-    // if (this->ObserverMediator)
-    //   {
-    //   this->ObserverMediator->RemoveAllCursorShapeRequests(this);
-    //   this->ObserverMediator = 0;
-    //   }
-
-    // if we already have an Interactor then stop observing it
-    if (model.interactor) {
-      publicAPI.setEnabled(false); // disable the old interactor
-      model.charObserverTag();
-      model.charObserverTag = null;
-      model.deleteObserverTag();
-      model.deleteObserverTag = null;
-    }
+    unsubscribeFromEvents();
 
     model.interactor = i;
 
-    // add observers for each of the events handled in ProcessEvents
-    if (i) {
-      model.charObserverTag = i.onCharEvent(publicAPI.keyPressCallbackCommand);
-      //                                           this->Priority);
-      model.deleteObserverTag = i.onDeleteEvent(
-        publicAPI.keyPressCallbackCommand
-      );
-      //                                           this->Priority);
-      // publicAPI.registerPickers();
+    if (i && model.enabled) {
+      subscribeToEvents();
     }
 
     publicAPI.modified();
   };
 
   //----------------------------------------------------------------------------
+  publicAPI.setEnabled = (enable) => {
+    if (enable === model.enabled) {
+      return;
+    }
+
+    unsubscribeFromEvents();
+
+    if (enable) {
+      if (model.interactor) {
+        subscribeToEvents();
+      } else {
+        vtkErrorMacro(`
+          The interactor must be set before subscribing to events
+        `);
+      }
+    }
+
+    model.enabled = enable;
+    publicAPI.modified();
+  };
+
+  //----------------------------------------------------------------------------
   // Description:
   // Transform from display to world coordinates.
-  publicAPI.computeDisplayToWorld = (x, y, z) => {
-    if (!model.currentRenderer) {
+  publicAPI.computeDisplayToWorld = (renderer, x, y, z) => {
+    if (!renderer) {
       return null;
     }
 
-    return model.interactor
-      .getView()
-      .displayToWorld(x, y, z, model.currentRenderer);
+    return model.interactor.getView().displayToWorld(x, y, z, renderer);
   };
 
   //----------------------------------------------------------------------------
   // Description:
   // Transform from world to display coordinates.
-  publicAPI.computeWorldToDisplay = (x, y, z) => {
-    if (!model.currentRenderer) {
+  publicAPI.computeWorldToDisplay = (renderer, x, y, z) => {
+    if (!renderer) {
       return null;
     }
 
-    return model.interactor
-      .getView()
-      .worldToDisplay(x, y, z, model.currentRenderer);
+    return model.interactor.getView().worldToDisplay(x, y, z, renderer);
   };
-
-  //----------------------------------------------------------------------------
-  publicAPI.grabFocus = () => {
-    // void vtkInteractorObserver::GrabFocus(vtkCommand *mouseEvents, vtkCommand *keypressEvents)
-    // {
-    //   if ( this->Interactor )
-    //     {
-    //     this->Interactor->GrabFocus(mouseEvents,keypressEvents);
-    //     }
-  };
-
-  //----------------------------------------------------------------------------
-  publicAPI.releaseFocus = () => {
-    // void vtkInteractorObserver::ReleaseFocus()
-    // {
-    //   if ( this->Interactor )
-    //     {
-    //     this->Interactor->ReleaseFocus();
-    //     }
-  };
-
-  // //----------------------------------------------------------------------------
-  // void vtkInteractorObserver::StartInteraction()
-  // {
-  //   this->Interactor->GetRenderWindow()->SetDesiredUpdateRate(this->Interactor->GetDesiredUpdateRate());
-  // }
-
-  // //----------------------------------------------------------------------------
-  // void vtkInteractorObserver::EndInteraction()
-  // {
-  //   this->Interactor->GetRenderWindow()->SetDesiredUpdateRate(this->Interactor->GetStillUpdateRate());
-  // }
 }
 
 // ----------------------------------------------------------------------------
@@ -142,14 +130,10 @@ function vtkInteractorObserver(publicAPI, model) {
 // ----------------------------------------------------------------------------
 
 const DEFAULT_VALUES = {
-  enabled: false,
+  enabled: true,
   interactor: null,
-  currentRenderer: null,
-  defaultRenderer: null,
   priority: 0.0,
-  keyPressActivationValue: 'i',
-  charObserverTag: null,
-  deleteObserverTag: null,
+  subscribedEvents: [],
 };
 
 // ----------------------------------------------------------------------------
@@ -168,7 +152,7 @@ export function extend(publicAPI, model, initialValues = {}) {
   macro.get(publicAPI, model, ['interactor']);
 
   // Create get-set macros
-  macro.setGet(publicAPI, model, ['priority', 'currentRenderer']);
+  macro.setGet(publicAPI, model, ['priority']);
 
   // For more macro methods, see "Sources/macro.js"
 

@@ -11,24 +11,17 @@ function vtkTrackballZoomToMouse(publicAPI, model) {
   model.classHierarchy.push('vtkTrackballZoomToMouse');
 
   const superOnButtonDown = publicAPI.onButtonDown;
-
-  publicAPI.onButtonDown = (interactor) => {
-    superOnButtonDown(interactor);
-    model.zoomPosition = interactor.getEventPosition(
-      interactor.getPointerIndex()
-    );
+  publicAPI.onButtonDown = (interactor, renderer, position) => {
+    superOnButtonDown(interactor, renderer, position);
+    model.zoomPosition = position;
   };
 
-  publicAPI.onAnimation = (interactor, renderer) => {
-    const lastPtr = interactor.getPointerIndex();
-    const pos = interactor.getAnimationEventPosition(lastPtr);
-    const lastPos = interactor.getLastAnimationEventPosition(lastPtr);
-
-    if (!pos || !lastPos || !renderer) {
+  publicAPI.onMouseMove = (interactor, renderer, position) => {
+    if (!position) {
       return;
     }
 
-    const dy = lastPos.y - pos.y;
+    const dy = model.previousPosition.y - position.y;
     const k = dy * model.zoomScale;
     vtkInteractorStyleManipulator.dollyToPosition(
       1.0 - k,
@@ -40,6 +33,8 @@ function vtkTrackballZoomToMouse(publicAPI, model) {
     if (interactor.getLightFollowCamera()) {
       renderer.updateLightsGeometryToFollowCamera();
     }
+
+    model.previousPosition = position;
   };
 }
 

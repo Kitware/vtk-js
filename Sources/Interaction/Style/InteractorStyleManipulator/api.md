@@ -67,11 +67,6 @@ don't have a mechanism to activate a manipulator by key presses currently.
 
 Unlike mouse events, this is forwarded to all camera manipulators as `onKeyUp(interactor)` since we
 don't have a mechanism to activate a manipulator by key presses currently.
-
-### handleChar()
-
-Unlike mouse events, this is forwarded to all camera manipulators as `onChar(interactor)` since we
-don't have a mechanism to activate a manipulator by char currently.
   
 ### addManipulator(vtkCameraManipulator)
 
@@ -98,8 +93,3 @@ Translate the renderer's camera
 Invokes either static "dollyToPosition" method in this class, or else
 defers to the parents "dolly" method, depending on whether the control
 key is pressed.
-
-### resetLights()
-
-Update current renderers lights to match its active camera position and
-focal point

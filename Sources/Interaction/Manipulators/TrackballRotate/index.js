@@ -21,12 +21,12 @@ function vtkTrackballRotate(publicAPI, model) {
   const centerNeg = new Float64Array(3);
   const direction = new Float64Array(3);
 
-  publicAPI.onAnimation = (interactor, renderer) => {
-    const lastPtr = interactor.getPointerIndex();
-    const pos = interactor.getAnimationEventPosition(lastPtr);
-    const lastPos = interactor.getLastAnimationEventPosition(lastPtr);
+  publicAPI.onButtonDown = (interactor, renderer, position) => {
+    model.previousPosition = position;
+  };
 
-    if (!pos || !lastPos || !renderer) {
+  publicAPI.onMouseMove = (interactor, renderer, position) => {
+    if (!position) {
       return;
     }
 
@@ -41,8 +41,8 @@ function vtkTrackballRotate(publicAPI, model) {
     // Translate to center
     mat4.translate(trans, trans, center);
 
-    const dx = lastPos.x - pos.x;
-    const dy = lastPos.y - pos.y;
+    const dx = model.previousPosition.x - position.x;
+    const dy = model.previousPosition.y - position.y;
 
     const size = interactor.getView().getSize();
 
@@ -92,6 +92,8 @@ function vtkTrackballRotate(publicAPI, model) {
     if (interactor.getLightFollowCamera()) {
       renderer.updateLightsGeometryToFollowCamera();
     }
+
+    model.previousPosition = position;
   };
 }
 

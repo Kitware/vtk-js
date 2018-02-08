@@ -54,7 +54,7 @@ const zSet = mapper.setZSlice;
 
 const rangeManipulator = Manipulators.vtkRangeManipulator.newInstance({
   button: 1,
-  pinch: true,
+  scroll: true,
 });
 rangeManipulator.setVerticalListener(wMin, wMax, 1, wGet, wSet);
 rangeManipulator.setHorizontalListener(lMin, lMax, 1, lGet, lSet);

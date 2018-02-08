@@ -77,16 +77,16 @@ function vtkRangeManipulator(publicAPI, model) {
   };
 
   //-------------------------------------------------------------------------
-  publicAPI.onAnimation = (interactor, renderer) => {
+  publicAPI.onButtonDown = (interactor, renderer, position) => {
+    model.previousPosition = position;
+  };
+
+  //-------------------------------------------------------------------------
+  publicAPI.onMouseMove = (interactor, renderer, position) => {
     if (!model.verticalListener && !model.horizontalListener) {
       return;
     }
-
-    const lastPtr = interactor.getPointerIndex();
-    const pos = interactor.getAnimationEventPosition(lastPtr);
-    const lastPos = interactor.getLastAnimationEventPosition(lastPtr);
-
-    if (!pos || !lastPos || !renderer) {
+    if (!position) {
       return;
     }
 
@@ -94,38 +94,23 @@ function vtkRangeManipulator(publicAPI, model) {
     const size = interactor.getView().getViewportSize(renderer);
 
     if (model.horizontalListener) {
-      const dx = (pos.x - lastPos.x) / size[0];
+      const dx = (position.x - model.previousPosition.x) / size[0];
       processDelta(model.horizontalListener, dx);
     }
     if (model.verticalListener) {
-      const dy = (pos.y - lastPos.y) / size[1];
+      const dy = (position.y - model.previousPosition.y) / size[1];
       processDelta(model.verticalListener, dy);
     }
+
+    model.previousPosition = position;
   };
 
   //-------------------------------------------------------------------------
-  publicAPI.onPinch = (interactor) => {
-    if (!model.scrollListener) {
+  publicAPI.onScroll = (interactor, renderer, delta) => {
+    if (!delta) {
       return;
     }
-
-    const interactorStyle = interactor.getInteractorStyle();
-    let renderer = interactorStyle.getCurrentRenderer();
-
-    if (!renderer) {
-      const pos = interactor.getAnimationEventPosition(
-        interactor.getPointerIndex()
-      );
-      renderer = interactor.findPokedRenderer(pos);
-      if (!renderer) {
-        return;
-      }
-    }
-
-    const scale = interactor.getScale();
-    const lastScale = interactor.getLastScale();
-    const delta = 1.0 - scale / lastScale;
-    processDelta(model.scrollListener, delta);
+    processDelta(model.scrollListener, 1.0 - delta);
   };
 }
 

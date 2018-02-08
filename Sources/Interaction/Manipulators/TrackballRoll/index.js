@@ -19,12 +19,12 @@ function vtkTrackballRoll(publicAPI, model) {
   const newFp = new Float64Array(3);
   const newViewUp = new Float64Array(3);
 
-  publicAPI.onAnimation = (interactor, renderer) => {
-    const lastPtr = interactor.getPointerIndex();
-    const pos = interactor.getAnimationEventPosition(lastPtr);
-    const lastPos = interactor.getLastAnimationEventPosition(lastPtr);
+  publicAPI.onButtonDown = (interactor, renderer, position) => {
+    model.previousPosition = position;
+  };
 
-    if (!pos || !lastPos || !renderer) {
+  publicAPI.onMouseMove = (interactor, renderer, position) => {
+    if (!position) {
       return;
     }
 
@@ -41,12 +41,12 @@ function vtkTrackballRoll(publicAPI, model) {
 
     // compute the angle of rotation
     // - first compute the two vectors (center to mouse)
-    publicAPI.computeDisplayCenter(interactor.getInteractorStyle());
+    publicAPI.computeDisplayCenter(interactor.getInteractorStyle(), renderer);
 
-    const x1 = lastPos.x - model.displayCenter[0];
-    const x2 = pos.x - model.displayCenter[0];
-    const y1 = lastPos.y - model.displayCenter[1];
-    const y2 = pos.y - model.displayCenter[1];
+    const x1 = model.previousPosition.x - model.displayCenter[0];
+    const x2 = position.x - model.displayCenter[0];
+    const y1 = model.previousPosition.y - model.displayCenter[1];
+    const y2 = position.y - model.displayCenter[1];
     if ((x2 === 0 && y2 === 0) || (x1 === 0 && y1 === 0)) {
       // don't ever want to divide by zero
       return;
@@ -96,6 +96,8 @@ function vtkTrackballRoll(publicAPI, model) {
     if (interactor.getLightFollowCamera()) {
       renderer.updateLightsGeometryToFollowCamera();
     }
+
+    model.previousPosition = position;
   };
 }
 

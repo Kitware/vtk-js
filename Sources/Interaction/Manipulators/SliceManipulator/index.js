@@ -10,16 +10,16 @@ function vtkSliceManipulator(publicAPI, model) {
   // Set our className
   model.classHierarchy.push('vtkSliceManipulator');
 
-  publicAPI.onAnimation = (interactor, renderer) => {
-    const lastPtr = interactor.getPointerIndex();
-    const pos = interactor.getAnimationEventPosition(lastPtr);
-    const lastPos = interactor.getLastAnimationEventPosition(lastPtr);
+  publicAPI.onButtonDown = (interactor, renderer, position) => {
+    model.previousPosition = position;
+  };
 
-    if (!pos || !lastPos || !renderer) {
+  publicAPI.onMouseMove = (interactor, renderer, position) => {
+    if (!position) {
       return;
     }
 
-    const dy = pos.y - lastPos.y;
+    const dy = position.y - model.previousPosition.y;
 
     const camera = renderer.getActiveCamera();
     const range = camera.getClippingRange();
@@ -46,30 +46,22 @@ function vtkSliceManipulator(publicAPI, model) {
       distance = range[1] - viewportHeight * 1e-3;
     }
     camera.setDistance(distance);
+
+    model.previousPosition = position;
   };
 
-  publicAPI.onPinch = (interactor) => {
-    const interactorStyle = interactor.getInteractorStyle();
-    let renderer = interactorStyle.getCurrentRenderer();
-
-    if (!renderer) {
-      const pos = interactor.getAnimationEventPosition(
-        interactor.getPointerIndex()
-      );
-      renderer = interactor.findPokedRenderer(pos);
-      if (!renderer) {
-        return;
-      }
+  publicAPI.onScroll = (interactor, renderer, delta) => {
+    if (!delta) {
+      return;
     }
 
-    let delta = interactor.getScale() / interactor.getLastScale();
-    delta = 1.0 - delta;
-    delta *= 25; // TODO: expose factor?
+    let scrollDelta = 1.0 - delta;
+    scrollDelta *= 25; // TODO: expose factor?
 
     const camera = renderer.getActiveCamera();
     const range = camera.getClippingRange();
     let distance = camera.getDistance();
-    distance += delta;
+    distance += scrollDelta;
 
     // clamp the distance to the clipping range
     if (distance < range[0]) {

@@ -10,14 +10,18 @@ function vtkTrackballPan(publicAPI, model) {
   // Set our className
   model.classHierarchy.push('vtkTrackballPan');
 
-  publicAPI.onAnimation = (interactor, renderer) => {
-    const lastPtr = interactor.getPointerIndex();
-    const pos = interactor.getAnimationEventPosition(lastPtr);
-    const lastPos = interactor.getLastAnimationEventPosition(lastPtr);
+  publicAPI.onButtonDown = (interactor, renderer, position) => {
+    model.previousPosition = position;
+  };
 
-    if (!pos || !lastPos || !renderer) {
+  publicAPI.onMouseMove = (interactor, renderer, position) => {
+    if (!position) {
       return;
     }
+
+    const pos = position;
+    const lastPos = model.previousPosition;
+    model.previousPosition = position;
 
     const camera = renderer.getActiveCamera();
     const camPos = camera.getPosition();
@@ -57,12 +61,19 @@ function vtkTrackballPan(publicAPI, model) {
       const { center } = model;
       const style = interactor.getInteractorStyle();
       const focalDepth = style.computeWorldToDisplay(
+        renderer,
         center[0],
         center[1],
         center[2]
       )[2];
-      const worldPoint = style.computeDisplayToWorld(pos.x, pos.y, focalDepth);
+      const worldPoint = style.computeDisplayToWorld(
+        renderer,
+        pos.x,
+        pos.y,
+        focalDepth
+      );
       const lastWorldPoint = style.computeDisplayToWorld(
+        renderer,
         lastPos.x,
         lastPos.y,
         focalDepth
