@@ -1,12 +1,13 @@
 import macro from 'vtk.js/Sources/macro';
 import vtkInteractorStyle from 'vtk.js/Sources/Rendering/Core/InteractorStyle';
+import vtkInteractorStyleConstants from 'vtk.js/Sources/Rendering/Core/InteractorStyle/Constants';
 import vtkMath from 'vtk.js/Sources/Common/Core/Math';
 import {
   Device,
   Input,
 } from 'vtk.js/Sources/Rendering/Core/RenderWindowInteractor/Constants';
 
-const { States } = vtkInteractorStyle;
+const { States } = vtkInteractorStyleConstants;
 
 /* eslint-disable no-lonely-if */
 
