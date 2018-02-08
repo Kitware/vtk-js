@@ -225,6 +225,18 @@ function vtkViewProxy(publicAPI, model) {
 
   // --------------------------------------------------------------------------
 
+  publicAPI.setCornerAnnotations = (annotations, useTemplateString = false) => {
+    if (useTemplateString) {
+      Object.keys(annotations).forEach((key) => {
+        publicAPI.setCornerAnnotation(key, annotations[key]);
+      });
+    } else {
+      model.cornerAnnotation.updateTemplates(annotations);
+    }
+  };
+
+  // --------------------------------------------------------------------------
+
   publicAPI.updateCornerAnnotation = (meta) =>
     model.cornerAnnotation.updateMetadata(meta);
 
