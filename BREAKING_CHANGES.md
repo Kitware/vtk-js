@@ -6,7 +6,6 @@ This switch focuses on simplifying the interactor observers, and forwarding even
 - Rename `setEnable*(` to `setEnabled()` in AbstractWidget.
 - Remove `get2DPointerPosition()` from AbstractWidget: the position will now be properly positioned based on the canvas bounds as soon as it is caught by the Interactor.
 - Rename `Pinch` events to `MouseWheel` events when those events are triggered by the mouse wheel, and use the wheel delta instead of a scale.
-- Rename `pinch` to `scroll` for the state flag in the mouse manipulators.
 - The interaction state is now passed through the callbacks to the events instead of being stored within the RenderWindowInteractor. That means the following API is replaced as such:
   - `i.getEventPosition` -> `callData.position` (no need for an index)
   - `i.getScale` -> `callData.scale` if pinching, or use `callData.wheelDelta` if you are in a MouseWheel event instead
