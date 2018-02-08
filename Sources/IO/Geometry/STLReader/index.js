@@ -58,20 +58,13 @@ function vtkSTLReader(publicAPI, model) {
 
   publicAPI.parse = (content) => {
     if (typeof content === 'string') {
-      publicAPI.parseASCII(content);
+      publicAPI.parseAsText(content);
     } else {
-      const decoder = new TextDecoder();
-      const bytes = new Uint8Array(content);
-      const strContent = decoder.decode(bytes);
-      if (strContent.startsWith('solid')) {
-        publicAPI.parseASCII(content);
-      } else {
-        publicAPI.parseBinary(content);
-      }
+      publicAPI.parseAsArrayBuffer(content);
     }
   };
 
-  publicAPI.parseBinary = (content) => {
+  publicAPI.parseAsArrayBuffer = (content) => {
     if (!content) {
       return;
     }
@@ -137,7 +130,7 @@ function vtkSTLReader(publicAPI, model) {
     model.output[0] = polydata;
   };
 
-  publicAPI.parseASCII = (content) => {
+  publicAPI.parseAsText = (content) => {
     if (!content) {
       return;
     }
@@ -150,7 +143,7 @@ function vtkSTLReader(publicAPI, model) {
     model.parseData = content;
 
     // ASCII parsing
-    console.error('Not yet implemented');
+    console.error('STL ASCII parsing is not implemented');
   };
 
   publicAPI.requestData = (inData, outData) => {

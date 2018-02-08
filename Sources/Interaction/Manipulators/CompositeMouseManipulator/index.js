@@ -1,20 +1,26 @@
 import macro from 'vtk.js/Sources/macro';
 
 // ----------------------------------------------------------------------------
-// vtkMouseManipulator methods
+// vtkCompositeMouseManipulator methods
 // ----------------------------------------------------------------------------
 
-function vtkMouseManipulator(publicAPI, model) {
+function vtkCompositeMouseManipulator(publicAPI, model) {
   // Set our className
-  model.classHierarchy.push('vtkMouseManipulator');
+  model.classHierarchy.push('vtkCompositeMouseManipulator');
 
   publicAPI.startInteraction = () => {};
   publicAPI.endInteraction = () => {};
-  publicAPI.onButtonDown = (interactor) => {};
+  publicAPI.onButtonDown = (interactor, renderer, position) => {};
   publicAPI.onButtonUp = (interactor) => {};
-  publicAPI.onAnimation = (interactor, renderer) => {};
-  publicAPI.onKeyUp = (interactor) => {};
-  publicAPI.onKeyDown = (interactor) => {};
+  publicAPI.onMouseMove = (interactor, renderer, position) => {};
+  publicAPI.onKeyUp = (interactor, key) => {};
+  publicAPI.onKeyDown = (interactor, key) => {};
+  publicAPI.onStartScroll = (interactor, renderer, delta) => {};
+  publicAPI.onScroll = (interactor, renderer, delta) => {};
+  publicAPI.onEndScroll = (interactor) => {};
+
+  publicAPI.isDragEnabled = () => model.dragEnabled;
+  publicAPI.isScrollEnabled = () => model.scrollEnabled;
 }
 
 // ----------------------------------------------------------------------------
@@ -22,13 +28,12 @@ function vtkMouseManipulator(publicAPI, model) {
 // ----------------------------------------------------------------------------
 
 const DEFAULT_VALUES = {
-  manipulatorName: 'goldschlager',
-
   button: 1,
   shift: false,
   control: false,
   alt: false,
-  pinch: false,
+  dragEnabled: true,
+  scrollEnabled: false,
 };
 
 // ----------------------------------------------------------------------------
@@ -36,27 +41,14 @@ const DEFAULT_VALUES = {
 export function extend(publicAPI, model, initialValues = {}) {
   Object.assign(model, DEFAULT_VALUES, initialValues);
 
-  // Object methods
-  macro.obj(publicAPI, model);
-
   // Create get-set macros
-  macro.setGet(publicAPI, model, [
-    'manipulatorName',
-    'button',
-    'shift',
-    'control',
-    'alt',
-    'pinch',
-  ]);
+  macro.setGet(publicAPI, model, ['button', 'shift', 'control', 'alt']);
+  macro.set(publicAPI, model, ['dragEnabled', 'scrollEnabled']);
 
   // Object specific methods
-  vtkMouseManipulator(publicAPI, model);
+  vtkCompositeMouseManipulator(publicAPI, model);
 }
 
 // ----------------------------------------------------------------------------
 
-export const newInstance = macro.newInstance(extend, 'vtkMouseManipulator');
-
-// ----------------------------------------------------------------------------
-
-export default Object.assign({ newInstance, extend });
+export default { extend };

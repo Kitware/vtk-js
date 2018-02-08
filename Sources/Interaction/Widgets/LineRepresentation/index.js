@@ -286,6 +286,9 @@ function vtkLineRepresentation(publicAPI, model) {
   };
 
   publicAPI.buildRepresentation = () => {
+    model.point1Representation.buildRepresentation();
+    model.point2Representation.buildRepresentation();
+
     if (model.initializeDisplayPosition === 0 && model.renderer) {
       publicAPI.setPoint1WorldPosition(model.lineSource.getPoint1());
       publicAPI.setPoint2WorldPosition(model.lineSource.getPoint2());
@@ -373,7 +376,6 @@ function vtkLineRepresentation(publicAPI, model) {
   };
 
   publicAPI.getBounds = () => {
-    publicAPI.buildRepresentation();
     model.boundingBox.setBounds(model.lineActor.getBounds());
     model.boundingBox.addBounds(model.point1Representation.getBounds());
     model.boundingBox.addBounds(model.point2Representation.getBounds());

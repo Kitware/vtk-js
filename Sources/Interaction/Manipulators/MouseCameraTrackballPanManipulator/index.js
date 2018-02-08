@@ -1,23 +1,28 @@
 import macro from 'vtk.js/Sources/macro';
-import vtkCameraManipulator from 'vtk.js/Sources/Interaction/Manipulators/CameraManipulator';
+import vtkCompositeCameraManipulator from 'vtk.js/Sources/Interaction/Manipulators/CompositeCameraManipulator';
+import vtkCompositeMouseManipulator from 'vtk.js/Sources/Interaction/Manipulators/CompositeMouseManipulator';
 import vtkMath from 'vtk.js/Sources/Common/Core/Math';
 
 // ----------------------------------------------------------------------------
-// vtkTrackballPan methods
+// vtkMouseCameraTrackballPanManipulator methods
 // ----------------------------------------------------------------------------
 
-function vtkTrackballPan(publicAPI, model) {
+function vtkMouseCameraTrackballPanManipulator(publicAPI, model) {
   // Set our className
-  model.classHierarchy.push('vtkTrackballPan');
+  model.classHierarchy.push('vtkMouseCameraTrackballPanManipulator');
 
-  publicAPI.onAnimation = (interactor, renderer) => {
-    const lastPtr = interactor.getPointerIndex();
-    const pos = interactor.getAnimationEventPosition(lastPtr);
-    const lastPos = interactor.getLastAnimationEventPosition(lastPtr);
+  publicAPI.onButtonDown = (interactor, renderer, position) => {
+    model.previousPosition = position;
+  };
 
-    if (!pos || !lastPos || !renderer) {
+  publicAPI.onMouseMove = (interactor, renderer, position) => {
+    if (!position) {
       return;
     }
+
+    const pos = position;
+    const lastPos = model.previousPosition;
+    model.previousPosition = position;
 
     const camera = renderer.getActiveCamera();
     const camPos = camera.getPosition();
@@ -57,12 +62,19 @@ function vtkTrackballPan(publicAPI, model) {
       const { center } = model;
       const style = interactor.getInteractorStyle();
       const focalDepth = style.computeWorldToDisplay(
+        renderer,
         center[0],
         center[1],
         center[2]
       )[2];
-      const worldPoint = style.computeDisplayToWorld(pos.x, pos.y, focalDepth);
+      const worldPoint = style.computeDisplayToWorld(
+        renderer,
+        pos.x,
+        pos.y,
+        focalDepth
+      );
       const lastWorldPoint = style.computeDisplayToWorld(
+        renderer,
         lastPos.x,
         lastPos.y,
         focalDepth
@@ -104,16 +116,21 @@ export function extend(publicAPI, model, initialValues = {}) {
   Object.assign(model, DEFAULT_VALUES, initialValues);
 
   // Inheritance
-  vtkCameraManipulator.extend(publicAPI, model, initialValues);
+  macro.obj(publicAPI, model);
+  vtkCompositeCameraManipulator.extend(publicAPI, model, initialValues);
+  vtkCompositeMouseManipulator.extend(publicAPI, model, initialValues);
 
   // Object specific methods
-  vtkTrackballPan(publicAPI, model);
+  vtkMouseCameraTrackballPanManipulator(publicAPI, model);
 }
 
 // ----------------------------------------------------------------------------
 
-export const newInstance = macro.newInstance(extend, 'vtkTrackballPan');
+export const newInstance = macro.newInstance(
+  extend,
+  'vtkMouseCameraTrackballPanManipulator'
+);
 
 // ----------------------------------------------------------------------------
 
-export default Object.assign({ newInstance, extend });
+export default { newInstance, extend };

@@ -320,11 +320,7 @@ function vtkXMLReader(publicAPI, model) {
 
   // Internal method to fetch Array
   function fetchData(url, option = {}) {
-    const { compression, progressCallback } = model;
-    return model.dataAccessHelper.fetchText(publicAPI, url, {
-      compression,
-      progressCallback,
-    });
+    return model.dataAccessHelper.fetchText(publicAPI, url, option);
   }
 
   // Set DataSet url
@@ -336,27 +332,22 @@ function vtkXMLReader(publicAPI, model) {
     path.pop();
     model.baseURL = path.join('/');
 
-    model.compression = option.compression;
-
     // Fetch metadata
-    return publicAPI.loadData({ progressCallback: option.progressCallback });
+    return publicAPI.loadData(option);
   };
 
   // Fetch the actual data arrays
-  publicAPI.loadData = (option = {}) => {
-    const promise = fetchData(model.url, option);
-    promise.then(publicAPI.parse);
-    return promise;
-  };
+  publicAPI.loadData = (option = {}) =>
+    fetchData(model.url, option).then(publicAPI.parseAsArrayBuffer);
 
-  publicAPI.parseArrayBuffer = (arrayBuffer) => {
+  publicAPI.parseAsArrayBuffer = (arrayBuffer) => {
     if (!arrayBuffer) {
-      return;
+      return false;
     }
     if (arrayBuffer !== model.rawDataBuffer) {
       publicAPI.modified();
     } else {
-      return;
+      return true;
     }
 
     const { text: content, binaryBuffer } = extractAppendedData(arrayBuffer);
@@ -374,17 +365,17 @@ function vtkXMLReader(publicAPI, model) {
 
     if (compressor && compressor !== 'vtkZLibDataCompressor') {
       console.error('Invalid compressor', compressor);
-      return;
+      return false;
     }
 
     if (byteOrder && byteOrder !== 'LittleEndian') {
       console.error('Only LittleEndian encoding is supported');
-      return;
+      return false;
     }
 
     if (type !== model.dataType) {
       console.error('Invalid data type', type, 'expecting', model.dataType);
-      return;
+      return false;
     }
 
     // appended format
@@ -502,15 +493,16 @@ function vtkXMLReader(publicAPI, model) {
         console.error(
           'Processing appended data format: requires binaryBuffer to parse'
         );
-        return;
+        return false;
       }
     }
 
     publicAPI.parseXML(rootElem, type, compressor, byteOrder, headerType);
+    return true;
   };
 
   publicAPI.requestData = (inData, outData) => {
-    publicAPI.parseArrayBuffer(model.rawDataBuffer);
+    publicAPI.parseAsArrayBuffer(model.rawDataBuffer);
   };
 }
 
@@ -537,14 +529,6 @@ export function extend(publicAPI, model, initialValues = {}) {
 
   // vtkXMLReader methods
   vtkXMLReader(publicAPI, model);
-
-  // To support destructuring
-  if (!model.compression) {
-    model.compression = null;
-  }
-  if (!model.progressCallback) {
-    model.progressCallback = null;
-  }
 }
 
 // ----------------------------------------------------------------------------

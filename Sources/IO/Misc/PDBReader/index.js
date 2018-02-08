@@ -18,16 +18,12 @@ function vtkPDBReader(publicAPI, model) {
   }
 
   // Internal method to fetch Array
-  function fetchPDB(url) {
-    const { compression, progressCallback } = model;
-    return model.dataAccessHelper.fetchText(publicAPI, url, {
-      compression,
-      progressCallback,
-    });
+  function fetchPDB(url, option) {
+    return model.dataAccessHelper.fetchText(publicAPI, url, option);
   }
 
   // Set DataSet url
-  publicAPI.setUrl = (url) => {
+  publicAPI.setUrl = (url, option) => {
     if (url.indexOf('.pdb') === -1) {
       model.baseURL = url;
       model.url = `${url}`; // `${url}/index.pdb`;
@@ -41,13 +37,14 @@ function vtkPDBReader(publicAPI, model) {
     }
 
     // Fetch metadata
-    return publicAPI.loadData();
+    return publicAPI.loadData(option);
   };
 
   // Fetch the actual data arrays
-  publicAPI.loadData = () => fetchPDB(model.url).then(publicAPI.parseText);
+  publicAPI.loadData = (option) =>
+    fetchPDB(model.url, option).then(publicAPI.parseAsText);
 
-  publicAPI.parseText = (txt) => {
+  publicAPI.parseAsText = (txt) => {
     model.pdb = txt;
     model.molecule = [];
     model.molecule = model.pdb.split('\n');
@@ -183,14 +180,6 @@ export function extend(publicAPI, model, initialValues = {}) {
 
   // Object methods
   vtkPDBReader(publicAPI, model);
-
-  // To support destructuring
-  if (!model.compression) {
-    model.compression = null;
-  }
-  if (!model.progressCallback) {
-    model.progressCallback = null;
-  }
 }
 
 // ----------------------------------------------------------------------------

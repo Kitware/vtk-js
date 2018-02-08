@@ -1,34 +1,27 @@
 import macro from 'vtk.js/Sources/macro';
 import vtkInteractorStyleManipulator from 'vtk.js/Sources/Interaction/Style/InteractorStyleManipulator';
-import vtkTrackballZoom from 'vtk.js/Sources/Interaction/Manipulators/TrackballZoom';
+import vtkMouseCameraTrackballZoomManipulator from 'vtk.js/Sources/Interaction/Manipulators/MouseCameraTrackballZoomManipulator';
 
 // ----------------------------------------------------------------------------
-// vtkTrackballZoomToMouse methods
+// vtkMouseCameraTrackballZoomToMouseManipulator methods
 // ----------------------------------------------------------------------------
 
-function vtkTrackballZoomToMouse(publicAPI, model) {
+function vtkMouseCameraTrackballZoomToMouseManipulator(publicAPI, model) {
   // Set our className
-  model.classHierarchy.push('vtkTrackballZoomToMouse');
+  model.classHierarchy.push('vtkMouseCameraTrackballZoomToMouseManipulator');
 
   const superOnButtonDown = publicAPI.onButtonDown;
-
-  publicAPI.onButtonDown = (interactor) => {
-    superOnButtonDown(interactor);
-    model.zoomPosition = interactor.getEventPosition(
-      interactor.getPointerIndex()
-    );
+  publicAPI.onButtonDown = (interactor, renderer, position) => {
+    superOnButtonDown(interactor, renderer, position);
+    model.zoomPosition = position;
   };
 
-  publicAPI.onAnimation = (interactor, renderer) => {
-    const lastPtr = interactor.getPointerIndex();
-    const pos = interactor.getAnimationEventPosition(lastPtr);
-    const lastPos = interactor.getLastAnimationEventPosition(lastPtr);
-
-    if (!pos || !lastPos || !renderer) {
+  publicAPI.onMouseMove = (interactor, renderer, position) => {
+    if (!position) {
       return;
     }
 
-    const dy = lastPos.y - pos.y;
+    const dy = model.previousPosition.y - position.y;
     const k = dy * model.zoomScale;
     vtkInteractorStyleManipulator.dollyToPosition(
       1.0 - k,
@@ -40,6 +33,8 @@ function vtkTrackballZoomToMouse(publicAPI, model) {
     if (interactor.getLightFollowCamera()) {
       renderer.updateLightsGeometryToFollowCamera();
     }
+
+    model.previousPosition = position;
   };
 }
 
@@ -57,16 +52,23 @@ export function extend(publicAPI, model, initialValues = {}) {
   Object.assign(model, DEFAULT_VALUES, initialValues);
 
   // Inheritance
-  vtkTrackballZoom.extend(publicAPI, model, initialValues);
+  vtkMouseCameraTrackballZoomManipulator.extend(
+    publicAPI,
+    model,
+    initialValues
+  );
 
   // Object specific methods
-  vtkTrackballZoomToMouse(publicAPI, model);
+  vtkMouseCameraTrackballZoomToMouseManipulator(publicAPI, model);
 }
 
 // ----------------------------------------------------------------------------
 
-export const newInstance = macro.newInstance(extend, 'vtkTrackballZoomToMouse');
+export const newInstance = macro.newInstance(
+  extend,
+  'vtkMouseCameraTrackballZoomToMouseManipulator'
+);
 
 // ----------------------------------------------------------------------------
 
-export default Object.assign({ newInstance, extend });
+export default { newInstance, extend };

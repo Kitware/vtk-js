@@ -1,7 +1,8 @@
 import macro from 'vtk.js/Sources/macro';
-import vtkCameraManipulator from 'vtk.js/Sources/Interaction/Manipulators/CameraManipulator';
-import vtkTrackballRotate from 'vtk.js/Sources/Interaction/Manipulators/TrackballRotate';
-import vtkTrackballRoll from 'vtk.js/Sources/Interaction/Manipulators/TrackballRoll';
+import vtkCompositeCameraManipulator from 'vtk.js/Sources/Interaction/Manipulators/CompositeCameraManipulator';
+import vtkCompositeMouseManipulator from 'vtk.js/Sources/Interaction/Manipulators/CompositeMouseManipulator';
+import vtkMouseCameraTrackballRotateManipulator from 'vtk.js/Sources/Interaction/Manipulators/MouseCameraTrackballRotateManipulator';
+import vtkMouseCameraTrackballRollManipulator from 'vtk.js/Sources/Interaction/Manipulators/MouseCameraTrackballRollManipulator';
 
 function max(x, y) {
   return x < y ? y : x;
@@ -12,29 +13,23 @@ function sqr(x) {
 }
 
 // ----------------------------------------------------------------------------
-// vtkTrackballMultiRotate methods
+// vtkMouseCameraTrackballMultiRotateManipulator methods
 // ----------------------------------------------------------------------------
 
-function vtkTrackballMultiRotate(publicAPI, model) {
+function vtkMouseCameraTrackballMultiRotateManipulator(publicAPI, model) {
   // Set our className
-  model.classHierarchy.push('vtkTrackballMultiRotate');
+  model.classHierarchy.push('vtkMouseCameraTrackballMultiRotateManipulator');
 
-  const rotateManipulator = vtkTrackballRotate.newInstance();
-  const rollManipulator = vtkTrackballRoll.newInstance();
+  const rotateManipulator = vtkMouseCameraTrackballRotateManipulator.newInstance();
+  const rollManipulator = vtkMouseCameraTrackballRollManipulator.newInstance();
   let currentManipulator = null;
 
-  publicAPI.onButtonDown = (interactor) => {
-    const lastPtr = interactor.getPointerIndex();
-    const pos = interactor.getAnimationEventPosition(lastPtr);
-
-    if (!pos) {
-      return;
-    }
-
+  publicAPI.onButtonDown = (interactor, renderer, position) => {
     const viewSize = interactor.getView().getSize();
     const viewCenter = [0.5 * viewSize[0], 0.5 * viewSize[1]];
     const rotateRadius = 0.9 * max(viewCenter[0], viewCenter[1]);
-    const dist2 = sqr(viewCenter[0] - pos.x) + sqr(viewCenter[1] - pos.y);
+    const dist2 =
+      sqr(viewCenter[0] - position.x) + sqr(viewCenter[1] - position.y);
 
     if (rotateRadius * rotateRadius > dist2) {
       currentManipulator = rotateManipulator;
@@ -47,7 +42,7 @@ function vtkTrackballMultiRotate(publicAPI, model) {
     currentManipulator.setControl(publicAPI.getControl());
     currentManipulator.setCenter(publicAPI.getCenter());
 
-    currentManipulator.onButtonDown(interactor);
+    currentManipulator.onButtonDown(interactor, position);
   };
 
   publicAPI.onButtonUp = (interactor) => {
@@ -56,9 +51,9 @@ function vtkTrackballMultiRotate(publicAPI, model) {
     }
   };
 
-  publicAPI.onAnimation = (interactor, renderer) => {
+  publicAPI.onMouseMove = (interactor, renderer, position) => {
     if (currentManipulator) {
-      currentManipulator.onAnimation(interactor, renderer);
+      currentManipulator.onMouseMove(interactor, renderer, position);
     }
   };
 }
@@ -75,16 +70,21 @@ export function extend(publicAPI, model, initialValues = {}) {
   Object.assign(model, DEFAULT_VALUES, initialValues);
 
   // Inheritance
-  vtkCameraManipulator.extend(publicAPI, model, initialValues);
+  macro.obj(publicAPI, model);
+  vtkCompositeMouseManipulator.extend(publicAPI, model, initialValues);
+  vtkCompositeCameraManipulator.extend(publicAPI, model, initialValues);
 
   // Object specific methods
-  vtkTrackballMultiRotate(publicAPI, model);
+  vtkMouseCameraTrackballMultiRotateManipulator(publicAPI, model);
 }
 
 // ----------------------------------------------------------------------------
 
-export const newInstance = macro.newInstance(extend, 'vtkTrackballMultiRotate');
+export const newInstance = macro.newInstance(
+  extend,
+  'vtkMouseCameraTrackballMultiRotateManipulator'
+);
 
 // ----------------------------------------------------------------------------
 
-export default Object.assign({ newInstance, extend });
+export default { newInstance, extend };

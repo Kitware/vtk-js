@@ -1,17 +1,17 @@
 import macro from 'vtk.js/Sources/macro';
-import vtkMouseManipulator from 'vtk.js/Sources/Interaction/Manipulators/MouseManipulator';
 
 // ----------------------------------------------------------------------------
-// vtkCameraManipulator methods
+// vtkCompositeCameraManipulator methods
 // ----------------------------------------------------------------------------
 
-function vtkCameraManipulator(publicAPI, model) {
+function vtkCompositeCameraManipulator(publicAPI, model) {
   // Set our className
-  model.classHierarchy.push('vtkCameraManipulator');
+  model.classHierarchy.push('vtkCompositeCameraManipulator');
 
   //-------------------------------------------------------------------------
-  publicAPI.computeDisplayCenter = (iObserver) => {
+  publicAPI.computeDisplayCenter = (iObserver, renderer) => {
     const pt = iObserver.computeWorldToDisplay(
+      renderer,
       model.center[0],
       model.center[1],
       model.center[2]
@@ -36,24 +36,15 @@ const DEFAULT_VALUES = {
 export function extend(publicAPI, model, initialValues = {}) {
   Object.assign(model, DEFAULT_VALUES, initialValues);
 
-  // Inheritance
-  vtkMouseManipulator.extend(publicAPI, model, initialValues);
-
   // Create get-set macros
   macro.setGet(publicAPI, model, ['rotationFactor']);
-
   macro.setGetArray(publicAPI, model, ['displayCenter'], 2);
-
   macro.setGetArray(publicAPI, model, ['center'], 3);
 
   // Object specific methods
-  vtkCameraManipulator(publicAPI, model);
+  vtkCompositeCameraManipulator(publicAPI, model);
 }
 
 // ----------------------------------------------------------------------------
 
-export const newInstance = macro.newInstance(extend, 'vtkCameraManipulator');
-
-// ----------------------------------------------------------------------------
-
-export default Object.assign({ newInstance, extend });
+export default { extend };

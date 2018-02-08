@@ -1,3 +1,42 @@
+## From 5.x to 6
+
+This switch focuses on simplifying the interactor observers, and forwarding events data to the callbacks:
+- Remove `set/getAnimationState` and `start/stopState` in InteractorStyle. Instead, use `start/stop${stateName}`.
+- Remove `CharEvent` whcih was a duplicate of `KeyPressEvent`.
+- Rename `setEnable*(` to `setEnabled()` in AbstractWidget.
+- Remove `get2DPointerPosition()` from AbstractWidget: the position will now be properly positioned based on the canvas bounds as soon as it is caught by the Interactor.
+- Rename `Pinch` events to `MouseWheel` events when those events are triggered by the mouse wheel, and use the wheel delta instead of a scale.
+- Rename `pinch` to `scroll` for the state flag in the mouse manipulators.
+- The interaction state is now passed through the callbacks to the events instead of being stored within the RenderWindowInteractor. That means the following API is replaced as such:
+  - `i.getEventPosition` -> `callData.position` (no need for an index)
+  - `i.getScale` -> `callData.scale` if pinching, or use `callData.wheelDelta` if you are in a MouseWheel event instead
+  - `i.getTranslation` -> `callData.translation`
+  - `i.getRotation` -> `callData.rotation`
+  - for multitouch, touch positions are forwarded in `callData.positions` as `{touchid1: {x:x1, y:y1, z:z1}, touchid2: {x:x2, y:y2, z:z2}`}
+  - every "previous" state (`lastEventPosition`, `lastScale`...) needs to be stored from the observer, for example initialized in a `handleStart${event}` callback and updated in the `handle${event}` callback
+  - every callback data also holds `type` which is the event name
+- Remove `findPokedRenderer` from the InteractorStyle/Observer. Instead, the latest poked renderer is passed through the callback as `callData.pokedRenderer`. That renderer is never `null` within callbacks since the event won't forward if it is. _You can also query the renderer through `RenderWindowInteractor.getCurrentRenderer()` but this is not recommended._
+- Add `renderer` as a parameter to `computeWorldToDisplay` and `computeDisplayToWorld` in InteractorObserver
+
+Add more consistency in Readers
+- Readers should have the following set of API
+  - setURL(url, options)
+  - fetchData(options) // OPTIONAL and should not be required
+  - parseAsArrayBuffer(ArrayBuffer) or parseAsText(String)
+- Affected readers:
+  - STLReader
+  - Legacy/PolyDataReader
+  - ElevationReader 
+  - MTLReader
+  - OBJReader
+  - PDBReader
+  - XMLReader
+
+Refactor InteractorStyleManipulator with its manipulator
+- Rename all the classes to make them consistent
+- Update API to distinguish mode vs state (mode[drag/scroll], state[button,alt,control,shift])
+- Update impacted code and example
+
 ## From 4.x to 5
 
 Improve and normalize methods inside DataAccessHelper to allow network progress monitoring:

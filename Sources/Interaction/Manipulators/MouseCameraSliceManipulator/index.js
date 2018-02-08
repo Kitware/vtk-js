@@ -1,25 +1,26 @@
 import macro from 'vtk.js/Sources/macro';
-import vtkCameraManipulator from 'vtk.js/Sources/Interaction/Manipulators/CameraManipulator';
+import vtkCompositeCameraManipulator from 'vtk.js/Sources/Interaction/Manipulators/CompositeCameraManipulator';
+import vtkCompositeMouseManipulator from 'vtk.js/Sources/Interaction/Manipulators/CompositeMouseManipulator';
 import vtkMath from 'vtk.js/Sources/Common/Core/Math';
 
 // ----------------------------------------------------------------------------
-// vtkSliceManipulator methods
+// vtkMouseCameraSliceManipulator methods
 // ----------------------------------------------------------------------------
 
-function vtkSliceManipulator(publicAPI, model) {
+function vtkMouseCameraSliceManipulator(publicAPI, model) {
   // Set our className
-  model.classHierarchy.push('vtkSliceManipulator');
+  model.classHierarchy.push('vtkMouseCameraSliceManipulator');
 
-  publicAPI.onAnimation = (interactor, renderer) => {
-    const lastPtr = interactor.getPointerIndex();
-    const pos = interactor.getAnimationEventPosition(lastPtr);
-    const lastPos = interactor.getLastAnimationEventPosition(lastPtr);
+  publicAPI.onButtonDown = (interactor, renderer, position) => {
+    model.previousPosition = position;
+  };
 
-    if (!pos || !lastPos || !renderer) {
+  publicAPI.onMouseMove = (interactor, renderer, position) => {
+    if (!position) {
       return;
     }
 
-    const dy = pos.y - lastPos.y;
+    const dy = position.y - model.previousPosition.y;
 
     const camera = renderer.getActiveCamera();
     const range = camera.getClippingRange();
@@ -46,30 +47,22 @@ function vtkSliceManipulator(publicAPI, model) {
       distance = range[1] - viewportHeight * 1e-3;
     }
     camera.setDistance(distance);
+
+    model.previousPosition = position;
   };
 
-  publicAPI.onPinch = (interactor) => {
-    const interactorStyle = interactor.getInteractorStyle();
-    let renderer = interactorStyle.getCurrentRenderer();
-
-    if (!renderer) {
-      const pos = interactor.getAnimationEventPosition(
-        interactor.getPointerIndex()
-      );
-      renderer = interactor.findPokedRenderer(pos);
-      if (!renderer) {
-        return;
-      }
+  publicAPI.onScroll = (interactor, renderer, delta) => {
+    if (!delta) {
+      return;
     }
 
-    let delta = interactor.getScale() / interactor.getLastScale();
-    delta = 1.0 - delta;
-    delta *= 25; // TODO: expose factor?
+    let scrollDelta = 1.0 - delta;
+    scrollDelta *= 25; // TODO: expose factor?
 
     const camera = renderer.getActiveCamera();
     const range = camera.getClippingRange();
     let distance = camera.getDistance();
-    distance += delta;
+    distance += scrollDelta;
 
     // clamp the distance to the clipping range
     if (distance < range[0]) {
@@ -94,16 +87,21 @@ export function extend(publicAPI, model, initialValues = {}) {
   Object.assign(model, DEFAULT_VALUES, initialValues);
 
   // Inheritance
-  vtkCameraManipulator.extend(publicAPI, model, initialValues);
+  macro.obj(publicAPI, model);
+  vtkCompositeCameraManipulator.extend(publicAPI, model, initialValues);
+  vtkCompositeMouseManipulator.extend(publicAPI, model, initialValues);
 
   // Object specific methods
-  vtkSliceManipulator(publicAPI, model);
+  vtkMouseCameraSliceManipulator(publicAPI, model);
 }
 
 // ----------------------------------------------------------------------------
 
-export const newInstance = macro.newInstance(extend, 'vtkSliceManipulator');
+export const newInstance = macro.newInstance(
+  extend,
+  'vtkMouseCameraSliceManipulator'
+);
 
 // ----------------------------------------------------------------------------
 
-export default Object.assign({ newInstance, extend });
+export default { newInstance, extend };

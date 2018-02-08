@@ -23,7 +23,7 @@ renderWindow.getInteractor().setInteractorStyle(null);
 // ----------------------------------------------------------------------------
 const widget = vtkHandleWidget.newInstance();
 widget.setInteractor(renderWindow.getInteractor());
-widget.setEnable(1);
+widget.setEnabled(1);
 
 renderWindow.render();
 

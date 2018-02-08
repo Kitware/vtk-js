@@ -1,15 +1,16 @@
 import { vec3, mat4 } from 'gl-matrix';
 import macro from 'vtk.js/Sources/macro';
-import vtkCameraManipulator from 'vtk.js/Sources/Interaction/Manipulators/CameraManipulator';
+import vtkCompositeCameraManipulator from 'vtk.js/Sources/Interaction/Manipulators/CompositeCameraManipulator';
+import vtkCompositeMouseManipulator from 'vtk.js/Sources/Interaction/Manipulators/CompositeMouseManipulator';
 import vtkMath from 'vtk.js/Sources/Common/Core/Math';
 
 // ----------------------------------------------------------------------------
-// vtkTrackballRoll methods
+// vtkMouseCameraTrackballRollManipulator methods
 // ----------------------------------------------------------------------------
 
-function vtkTrackballRoll(publicAPI, model) {
+function vtkMouseCameraTrackballRollManipulator(publicAPI, model) {
   // Set our className
-  model.classHierarchy.push('vtkTrackballRoll');
+  model.classHierarchy.push('vtkMouseCameraTrackballRollManipulator');
 
   const axis = new Float64Array(3);
   const direction = new Float64Array(3);
@@ -19,12 +20,12 @@ function vtkTrackballRoll(publicAPI, model) {
   const newFp = new Float64Array(3);
   const newViewUp = new Float64Array(3);
 
-  publicAPI.onAnimation = (interactor, renderer) => {
-    const lastPtr = interactor.getPointerIndex();
-    const pos = interactor.getAnimationEventPosition(lastPtr);
-    const lastPos = interactor.getLastAnimationEventPosition(lastPtr);
+  publicAPI.onButtonDown = (interactor, renderer, position) => {
+    model.previousPosition = position;
+  };
 
-    if (!pos || !lastPos || !renderer) {
+  publicAPI.onMouseMove = (interactor, renderer, position) => {
+    if (!position) {
       return;
     }
 
@@ -41,12 +42,12 @@ function vtkTrackballRoll(publicAPI, model) {
 
     // compute the angle of rotation
     // - first compute the two vectors (center to mouse)
-    publicAPI.computeDisplayCenter(interactor.getInteractorStyle());
+    publicAPI.computeDisplayCenter(interactor.getInteractorStyle(), renderer);
 
-    const x1 = lastPos.x - model.displayCenter[0];
-    const x2 = pos.x - model.displayCenter[0];
-    const y1 = lastPos.y - model.displayCenter[1];
-    const y2 = pos.y - model.displayCenter[1];
+    const x1 = model.previousPosition.x - model.displayCenter[0];
+    const x2 = position.x - model.displayCenter[0];
+    const y1 = model.previousPosition.y - model.displayCenter[1];
+    const y2 = position.y - model.displayCenter[1];
     if ((x2 === 0 && y2 === 0) || (x1 === 0 && y1 === 0)) {
       // don't ever want to divide by zero
       return;
@@ -96,6 +97,8 @@ function vtkTrackballRoll(publicAPI, model) {
     if (interactor.getLightFollowCamera()) {
       renderer.updateLightsGeometryToFollowCamera();
     }
+
+    model.previousPosition = position;
   };
 }
 
@@ -111,16 +114,21 @@ export function extend(publicAPI, model, initialValues = {}) {
   Object.assign(model, DEFAULT_VALUES, initialValues);
 
   // Inheritance
-  vtkCameraManipulator.extend(publicAPI, model, initialValues);
+  macro.obj(publicAPI, model);
+  vtkCompositeCameraManipulator.extend(publicAPI, model, initialValues);
+  vtkCompositeMouseManipulator.extend(publicAPI, model, initialValues);
 
   // Object specific methods
-  vtkTrackballRoll(publicAPI, model);
+  vtkMouseCameraTrackballRollManipulator(publicAPI, model);
 }
 
 // ----------------------------------------------------------------------------
 
-export const newInstance = macro.newInstance(extend, 'vtkTrackballRoll');
+export const newInstance = macro.newInstance(
+  extend,
+  'vtkMouseCameraTrackballRollManipulator'
+);
 
 // ----------------------------------------------------------------------------
 
-export default Object.assign({ newInstance, extend });
+export default { newInstance, extend };

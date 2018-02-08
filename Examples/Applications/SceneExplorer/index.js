@@ -1,7 +1,6 @@
 /* eslint-disable import/prefer-default-export */
 /* eslint-disable import/no-extraneous-dependencies */
 
-import 'babel-polyfill';
 import 'vtk.js/Sources/favicon';
 
 import DataAccessHelper from 'vtk.js/Sources/IO/Core/DataAccessHelper';

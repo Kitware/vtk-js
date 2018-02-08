@@ -193,11 +193,7 @@ function vtkOBJReader(publicAPI, model) {
 
   // Internal method to fetch Array
   function fetchData(url, option = {}) {
-    const { compression, progressCallback } = model;
-    return model.dataAccessHelper.fetchText(publicAPI, url, {
-      compression,
-      progressCallback,
-    });
+    return model.dataAccessHelper.fetchText(publicAPI, url, option);
   }
 
   // Set DataSet url
@@ -214,22 +210,17 @@ function vtkOBJReader(publicAPI, model) {
       model.baseURL = path.join('/');
     }
 
-    model.compression = option.compression;
-
     // Fetch metadata
-    return publicAPI.loadData({ progressCallback: option.progressCallback });
+    return publicAPI.loadData(option);
   };
 
   // Fetch the actual data arrays
-  publicAPI.loadData = (option = {}) => {
-    const promise = fetchData(model.url, option);
-    promise.then(publicAPI.parse);
-    return promise;
-  };
+  publicAPI.loadData = (option = {}) =>
+    fetchData(model.url, option).then(publicAPI.parseAsText);
 
-  publicAPI.parse = (content) => {
+  publicAPI.parseAsText = (content) => {
     if (!content) {
-      return;
+      return true;
     }
     if (content !== model.parseData) {
       publicAPI.modified();
@@ -239,10 +230,11 @@ function vtkOBJReader(publicAPI, model) {
     begin(model.splitMode);
     content.split('\n').forEach(parseLine);
     end(model);
+    return true;
   };
 
   publicAPI.requestData = (inData, outData) => {
-    publicAPI.parse(model.parseData);
+    publicAPI.parseAsText(model.parseData);
   };
 
   // return Busy state
@@ -278,14 +270,6 @@ export function extend(publicAPI, model, initialValues = {}) {
 
   // Object methods
   vtkOBJReader(publicAPI, model);
-
-  // To support destructuring
-  if (!model.compression) {
-    model.compression = null;
-  }
-  if (!model.progressCallback) {
-    model.progressCallback = null;
-  }
 }
 
 // ----------------------------------------------------------------------------

@@ -18,49 +18,40 @@ function vtkElevationReader(publicAPI, model) {
   }
 
   // Internal method to fetch Array
-  function fetchCSV(url) {
-    return model.dataAccessHelper.fetchText(publicAPI, url);
+  function fetchCSV(url, options) {
+    return model.dataAccessHelper.fetchText(publicAPI, url, options);
   }
 
   // Set DataSet url
-  publicAPI.setUrl = (url) => {
-    if (url.indexOf('.csv') === -1) {
-      model.baseURL = url;
-      model.url = `${url}/index.csv`;
-    } else {
-      model.url = url;
-
-      // Remove the file in the URL
-      const path = url.split('/');
-      path.pop();
-      model.baseURL = path.join('/');
-    }
+  publicAPI.setUrl = (url, options) => {
+    model.url = url;
 
     // Fetch metadata
-    return publicAPI.loadData();
+    return publicAPI.loadData(options);
   };
 
   // Fetch the actual data arrays
-  publicAPI.loadData = () => {
-    const promise = fetchCSV(model.url);
-
-    promise.then((csv) => {
-      model.csv = csv;
-      model.elevation = [];
-
-      // Parse data
-      const lines = model.csv.split('\n');
-      lines.forEach((line, lineIdx) => {
-        model.elevation.push(line.split(',').map((str) => Number(str)));
-      });
-      publicAPI.modified();
+  publicAPI.loadData = (options) =>
+    fetchCSV(model.url, options).then((csv) => {
+      publicAPI.parseAsText(csv);
+      return true;
     });
 
-    return promise;
+  publicAPI.parseAsText = (csv) => {
+    model.csv = csv;
+    model.elevation = [];
+
+    // Parse data
+    const lines = model.csv.split('\n');
+    lines.forEach((line, lineIdx) => {
+      model.elevation.push(line.split(',').map((str) => Number(str)));
+    });
+    publicAPI.modified();
   };
 
   publicAPI.requestData = (inData, outData) => {
     const polydata = vtkPolyData.newInstance();
+    polydata.getPoints().setData(new Float32Array(0, 0, 0, 1, 1, 1), 3);
 
     if (model.elevation) {
       const jSize = model.elevation.length;
@@ -135,7 +126,6 @@ const DEFAULT_VALUES = {
   xDirection: 1,
   yDirection: -1,
   requestCount: 0,
-  // baseURL: null,
   // dataAccessHelper: null,
   // url: null,
 };
@@ -147,7 +137,7 @@ export function extend(publicAPI, model, initialValues = {}) {
 
   // Build VTK API
   macro.obj(publicAPI, model);
-  macro.get(publicAPI, model, ['url', 'baseURL']);
+  macro.get(publicAPI, model, ['url']);
   macro.setGet(publicAPI, model, [
     'dataAccessHelper',
     'xSpacing',

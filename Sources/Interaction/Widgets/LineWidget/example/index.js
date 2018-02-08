@@ -24,8 +24,7 @@ renderWindow.getInteractor().setInteractorStyle(null);
 
 const widget = vtkLineWidget.newInstance();
 widget.setInteractor(renderWindow.getInteractor());
-widget.createDefaultRepresentation();
-widget.setEnable(1);
+widget.setEnabled(1);
 widget.setWidgetStateToStart();
 // widget.setWidgetStateToManipulate();
 
