@@ -200,15 +200,16 @@ function vtkOpenGLStickMapper(publicAPI, model) {
       }
     }
 
-    if (model.renderDepth) {
+    if (model.haveSeenDepthRequest) {
+      // special depth impl
       FSSource = vtkShaderProgram.substitute(FSSource, '//VTK::ZBuffer::Impl', [
+        'if (depthRequest == 1) {',
         'float computedZ = (pos.z / pos.w + 1.0) / 2.0;',
         'float iz = floor(computedZ * 65535.0 + 0.1);',
         'float rf = floor(iz/256.0)/255.0;',
         'float gf = mod(iz,256.0)/255.0;',
-        'gl_FragData[0] = vec4(rf, gf, 0.0, 1.0);',
+        'gl_FragData[0] = vec4(rf, gf, 0.0, 1.0); }',
       ]).result;
-      shaders.Fragment = FSSource;
     }
 
     shaders.Vertex = VSSource;
