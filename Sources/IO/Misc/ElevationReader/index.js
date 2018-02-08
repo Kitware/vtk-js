@@ -51,6 +51,7 @@ function vtkElevationReader(publicAPI, model) {
 
   publicAPI.requestData = (inData, outData) => {
     const polydata = vtkPolyData.newInstance();
+    polydata.getPoints().setData(new Float32Array(0, 0, 0, 1, 1, 1), 3);
 
     if (model.elevation) {
       const jSize = model.elevation.length;
