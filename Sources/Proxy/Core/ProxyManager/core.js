@@ -110,11 +110,6 @@ export default function addRegistrationAPI(publicAPI, model) {
       })
     );
 
-    // Handle property setting
-    if (definition.props) {
-      proxy.set(definition.props);
-    }
-
     // Handle proxy property settings
     if (definition.proxyProps) {
       const proxyMap = {};
@@ -128,6 +123,12 @@ export default function addRegistrationAPI(publicAPI, model) {
       });
       proxy.set(proxyMap);
     }
+
+    // Handle property setting
+    if (definition.props) {
+      proxy.set(definition.props);
+    }
+
     registerProxy(proxy);
 
     // Automatically make it active if possible
