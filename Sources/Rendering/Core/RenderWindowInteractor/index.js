@@ -261,8 +261,15 @@ function vtkRenderWindowInteractor(publicAPI, model) {
   };
 
   publicAPI.requestAnimation = (requestor) => {
-    model.requestAnimationCount += 1;
-    if (model.requestAnimationCount === 1) {
+    if (requestor === undefined) {
+      vtkErrorMacro(`undefined requester, can not start animating`);
+      return;
+    }
+    if (model.animationRequesters.has(requestor)) {
+      return;
+    }
+    model.animationRequesters.add(requestor);
+    if (model.animationRequesters.size === 1) {
       model.lastFrameTime = 0.1;
       model.lastFrameStart = new Date().getTime();
       model.animationRequest = requestAnimationFrame(publicAPI.handleAnimation);
@@ -274,9 +281,12 @@ function vtkRenderWindowInteractor(publicAPI, model) {
     model.vrAnimation || model.animationRequest !== null;
 
   publicAPI.cancelAnimation = (requestor) => {
-    model.requestAnimationCount -= 1;
-
-    if (model.animationRequest && model.requestAnimationCount === 0) {
+    if (!model.animationRequesters.has(requestor)) {
+      vtkWarningMacro(`${requestor} did not request an animation`);
+      return;
+    }
+    model.animationRequesters.delete(requestor);
+    if (model.animationRequest && model.animationRequesters.size === 0) {
       cancelAnimationFrame(model.animationRequest);
       model.animationRequest = null;
       publicAPI.endAnimationEvent();
@@ -622,7 +632,7 @@ function vtkRenderWindowInteractor(publicAPI, model) {
   // do not want extra renders as the make the apparent interaction
   // rate slower.
   publicAPI.render = () => {
-    if (model.requestAnimationCount === 0) {
+    if (model.animationRequest === null) {
       publicAPI.forceRender();
     }
   };
@@ -858,7 +868,7 @@ const DEFAULT_VALUES = {
   recognizeGestures: true,
   currentGesture: 'Start',
   animationRequest: null,
-  requestAnimationCount: 0,
+  animationRequesters: new Set(),
   lastFrameTime: 0.1,
   wheelTimeoutID: 0,
   moveTimeoutID: 0,

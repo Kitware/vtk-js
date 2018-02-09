@@ -43,7 +43,7 @@ function addWindowListeners() {
   orientation.update = true;
   listeners
     .filter((i) => !!i)
-    .forEach((i) => i.renderWindowInteractor.requestAnimation());
+    .forEach((i) => i.renderWindowInteractor.requestAnimation(i));
 }
 
 function removeWindowListeners() {
@@ -60,7 +60,7 @@ function removeWindowListeners() {
   orientation.update = false;
   listeners
     .filter((i) => !!i)
-    .forEach((i) => i.renderWindowInteractor.cancelAnimation());
+    .forEach((i) => i.renderWindowInteractor.cancelAnimation(i));
 }
 
 function addCameraToSynchronize(
