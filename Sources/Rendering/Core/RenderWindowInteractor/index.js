@@ -20,7 +20,9 @@ const deviceInputMap = {
 };
 
 const handledEvents = [
+  'StartAnimation',
   'Animation',
+  'EndAnimation',
   'StartMouseMove',
   'MouseMove',
   'EndMouseMove',
@@ -264,6 +266,7 @@ function vtkRenderWindowInteractor(publicAPI, model) {
       model.lastFrameTime = 0.1;
       model.lastFrameStart = new Date().getTime();
       model.animationRequest = requestAnimationFrame(publicAPI.handleAnimation);
+      publicAPI.startAnimationEvent();
     }
   };
 
@@ -276,6 +279,7 @@ function vtkRenderWindowInteractor(publicAPI, model) {
     if (model.animationRequest && model.requestAnimationCount === 0) {
       cancelAnimationFrame(model.animationRequest);
       model.animationRequest = null;
+      publicAPI.endAnimationEvent();
       publicAPI.forceRender();
     }
   };
