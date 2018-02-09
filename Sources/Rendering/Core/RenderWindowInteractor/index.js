@@ -21,7 +21,9 @@ const deviceInputMap = {
 
 const handledEvents = [
   'Animation',
+  'StartMouseMove',
   'MouseMove',
+  'EndMouseMove',
   'LeftButtonPress',
   'LeftButtonRelease',
   'MiddleButtonPress',
@@ -352,7 +354,19 @@ function vtkRenderWindowInteractor(publicAPI, model) {
     };
     const keys = getModifierKeysFor(event);
     Object.assign(callData, keys);
-    publicAPI.mouseMoveEvent(callData);
+
+    if (model.moveTimeoutID === 0) {
+      publicAPI.startMouseMoveEvent(callData);
+    } else {
+      publicAPI.mouseMoveEvent(callData);
+      clearTimeout(model.moveTimeoutID);
+    }
+
+    // start a timer to keep us animating while we get mouse move events
+    model.moveTimeoutID = setTimeout(() => {
+      publicAPI.endMouseMoveEvent();
+      model.moveTimeoutID = 0;
+    }, 200);
   };
 
   publicAPI.handleAnimation = () => {
@@ -843,6 +857,7 @@ const DEFAULT_VALUES = {
   requestAnimationCount: 0,
   lastFrameTime: 0.1,
   wheelTimeoutID: 0,
+  moveTimeoutID: 0,
   lastGamepadValues: {},
 };
 
