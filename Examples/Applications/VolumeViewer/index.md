@@ -1,6 +1,6 @@
 ## Volume Viewer
 
-The Volume Viewer is a standalone single page web application that can be user to visualizer and explore VTI files. The only requirement is the single [HTML] file without any web server. This application can be use to load vti file and use volume rendering to render them.
+The Volume Viewer is a standalone single page web application that can be used to visualize and explore VTI files. The only requirement is the single [HTML] file without any web server. This application can be use to load vti file and use volume rendering to render them.
 The current vti supported format is __ascii__, __binary__ and __binary+zlib__ compression.
 
 Some sample files can be found [here](https://data.kitware.com/#collection/586fef9f8d777f05f44a5c86/folder/59de9cf48d777f31ac641dbc)

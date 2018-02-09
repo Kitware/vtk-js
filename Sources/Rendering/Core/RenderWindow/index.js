@@ -81,6 +81,7 @@ function vtkRenderWindow(publicAPI, model) {
     results.str = Object.keys(results)
       .map((keyName) => `${keyName}: ${results[keyName]}`)
       .join('\n');
+
     return results;
   };
 

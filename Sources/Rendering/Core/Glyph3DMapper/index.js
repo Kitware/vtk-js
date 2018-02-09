@@ -264,6 +264,32 @@ function vtkGlyph3DMapper(publicAPI, model) {
       model.buildTime.modified();
     }
   };
+
+  publicAPI.getPrimativeCount = () => {
+    const glyph = publicAPI.getInputData(1);
+    const mult =
+      publicAPI
+        .getInputData()
+        .getPoints()
+        .getNumberOfValues() / 3;
+
+    const pcount = {
+      points: mult * glyph.getPoints().getNumberOfValues() / 3,
+      verts:
+        mult *
+        (glyph.getVerts().getNumberOfValues() -
+          glyph.getVerts().getNumberOfCells()),
+      lines:
+        mult *
+        (glyph.getLines().getNumberOfValues() -
+          2 * glyph.getLines().getNumberOfCells()),
+      triangles:
+        mult *
+        (glyph.getPolys().getNumberOfValues() -
+          3 * glyph.getLines().getNumberOfCells()),
+    };
+    return pcount;
+  };
 }
 
 // ----------------------------------------------------------------------------

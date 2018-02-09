@@ -11,6 +11,8 @@ import vtkFullScreenRenderWindow from 'vtk.js/Sources/Rendering/Misc/FullScreenR
 import vtkMapper from 'vtk.js/Sources/Rendering/Core/Mapper';
 import vtkURLExtract from 'vtk.js/Sources/Common/Core/URLExtract';
 import vtkXMLPolyDataReader from 'vtk.js/Sources/IO/XML/XMLPolyDataReader';
+import vtkFPSMonitor from 'vtk.js/Sources/Interaction/UI/FPSMonitor';
+
 import {
   ColorMode,
   ScalarMode,
@@ -79,6 +81,10 @@ addDataSetButton.addEventListener('click', () => {
   rootControllerContainer.style.display = isVisible ? 'none' : 'flex';
 });
 
+const fpsMonitor = vtkFPSMonitor.newInstance();
+const fpsElm = fpsMonitor.getFpsMonitorContainer();
+fpsElm.classList.add(style.fpsMonitor);
+
 // ----------------------------------------------------------------------------
 // Add class to body if iOS device
 // ----------------------------------------------------------------------------
@@ -92,6 +98,7 @@ if (iOS) {
 // ----------------------------------------------------------------------------
 
 function emptyContainer(container) {
+  fpsMonitor.setContainer(null);
   while (container.firstChild) {
     container.removeChild(container.firstChild);
   }
@@ -111,6 +118,12 @@ function createViewer(container) {
 
   container.appendChild(rootControllerContainer);
   container.appendChild(addDataSetButton);
+
+  if (userParams.fps) {
+    fpsMonitor.setRenderWindow(renderWindow);
+    fpsMonitor.setContainer(container);
+    fullScreenRenderer.setResizeCallback(fpsMonitor.update);
+  }
 }
 
 // ----------------------------------------------------------------------------
@@ -351,6 +364,9 @@ function createPipeline(fileName, fileContents) {
     renderer,
     renderWindow,
   };
+
+  // Update stats
+  fpsMonitor.update();
 }
 
 // ----------------------------------------------------------------------------
