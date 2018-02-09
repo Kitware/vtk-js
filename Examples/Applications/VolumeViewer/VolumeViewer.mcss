@@ -93,3 +93,12 @@ select:focus {
   border-radius: 10px;
   user-select: none;
 }
+
+.fpsMonitor {
+  position: absolute;
+  bottom: 10px;
+  left: 10px;
+  background-color: rgba(255, 255, 255, 0.5);
+  border-radius: 5px;
+  border: solid 1px gray;
+}

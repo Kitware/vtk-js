@@ -8,6 +8,8 @@ import vtkMapper from 'vtk.js/Sources/Rendering/Core/Mapper';
 import { AttributeTypes } from 'vtk.js/Sources/Common/DataModel/DataSetAttributes/Constants';
 import { FieldDataTypes } from 'vtk.js/Sources/Common/DataModel/DataSet/Constants';
 
+import vtkFPSMonitor from 'vtk.js/Sources/Interaction/UI/FPSMonitor';
+
 import controlPanel from './controller.html';
 
 // ----------------------------------------------------------------------------
@@ -19,6 +21,17 @@ const fullScreenRenderer = vtkFullScreenRenderWindow.newInstance({
 });
 const renderer = fullScreenRenderer.getRenderer();
 const renderWindow = fullScreenRenderer.getRenderWindow();
+
+const fpsMonitor = vtkFPSMonitor.newInstance();
+const fpsElm = fpsMonitor.getFpsMonitorContainer();
+fpsElm.style.position = 'absolute';
+fpsElm.style.left = '10px';
+fpsElm.style.bottom = '10px';
+fpsElm.style.background = 'rgba(255,255,255,0.5)';
+fpsElm.style.borderRadius = '5px';
+
+fpsMonitor.setContainer(document.querySelector('body'));
+fpsMonitor.setRenderWindow(renderWindow);
 
 // ----------------------------------------------------------------------------
 // Example code
@@ -62,6 +75,7 @@ actor.setMapper(mapper);
 renderer.addActor(actor);
 renderer.resetCamera();
 renderWindow.render();
+fpsMonitor.update();
 
 // -----------------------------------------------------------
 // UI control handling
@@ -75,12 +89,14 @@ representationSelector.addEventListener('change', (e) => {
   const newRepValue = Number(e.target.value);
   actor.getProperty().setRepresentation(newRepValue);
   renderWindow.render();
+  fpsMonitor.update();
 });
 
 resolutionChange.addEventListener('input', (e) => {
   const resolution = Number(e.target.value);
   coneSource.setResolution(resolution);
   renderWindow.render();
+  fpsMonitor.update();
 });
 
 // -----------------------------------------------------------

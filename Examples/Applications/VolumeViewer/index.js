@@ -13,6 +13,7 @@ import vtkURLExtract from 'vtk.js/Sources/Common/Core/URLExtract';
 import vtkVolume from 'vtk.js/Sources/Rendering/Core/Volume';
 import vtkVolumeMapper from 'vtk.js/Sources/Rendering/Core/VolumeMapper';
 import vtkXMLImageDataReader from 'vtk.js/Sources/IO/XML/XMLImageDataReader';
+import vtkFPSMonitor from 'vtk.js/Sources/Interaction/UI/FPSMonitor';
 
 import style from './VolumeViewer.mcss';
 
@@ -156,6 +157,15 @@ function createViewer(rootContainer, fileContents, options) {
     piecewiseFunction,
     fullScreenRenderer,
   };
+
+  if (userParams.fps) {
+    const fpsMonitor = vtkFPSMonitor.newInstance();
+    const fpsElm = fpsMonitor.getFpsMonitorContainer();
+    fpsElm.classList.add(style.fpsMonitor);
+    fpsMonitor.setRenderWindow(renderWindow);
+    fpsMonitor.setContainer(rootContainer);
+    fpsMonitor.update();
+  }
 }
 
 // ----------------------------------------------------------------------------
