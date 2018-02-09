@@ -1,6 +1,8 @@
 export const WidgetState = {
   START: 0,
-  ACTIVE: 1,
+  SELECTING: 1,
+  TRANSLATING: 2,
+  SCALING: 3,
 };
 
 export default {

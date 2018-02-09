@@ -1,11 +1,9 @@
-export const InteractionState = {
+export const IntersectionState = {
   OUTSIDE: 0,
   NEARBY: 1,
-  SELECTING: 2,
-  TRANSLATING: 3,
-  SCALING: 4,
+  HANDLE: 2,
 };
 
 export default {
-  InteractionState,
+  IntersectionState,
 };

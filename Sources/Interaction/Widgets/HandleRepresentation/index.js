@@ -4,8 +4,6 @@ import vtkCoordinate from 'vtk.js/Sources/Rendering/Core/Coordinate';
 import vtkPointPlacer from 'vtk.js/Sources/Interaction/Widgets/PointPlacer';
 import vtkWidgetRepresentation from 'vtk.js/Sources/Interaction/Widgets/WidgetRepresentation';
 
-const { InteractionState } = Constants;
-
 // ----------------------------------------------------------------------------
 // vtkHandleRepresentation methods
 // ----------------------------------------------------------------------------
@@ -30,6 +28,7 @@ function vtkHandleRepresentation(publicAPI, model) {
     } else {
       model.displayPosition.setValue(displayPos);
     }
+    publicAPI.modified();
   };
 
   publicAPI.getDisplayPosition = (pos) => {
@@ -52,6 +51,7 @@ function vtkHandleRepresentation(publicAPI, model) {
 
   publicAPI.setWorldPosition = (pos) => {
     model.worldPosition.setValue(pos);
+    publicAPI.modified();
   };
 
   publicAPI.getWorldPosition = (pos) => {
@@ -69,7 +69,6 @@ const DEFAULT_VALUES = {
   displayPosition: null,
   worldPosition: null,
   tolerance: 15,
-  activeRepresentation: 0,
   constrained: 0,
   pointPlacer: null,
 };
@@ -87,9 +86,8 @@ export function extend(publicAPI, model, initialValues = {}) {
   model.worldPosition = vtkCoordinate.newInstance();
   model.worldPosition.setCoordinateSystemToWorld();
   model.pointPlacer = vtkPointPlacer.newInstance();
-  model.interactionState = InteractionState.OUTSIDE;
 
-  macro.setGet(publicAPI, model, ['activeRepresentation', 'tolerance']);
+  macro.setGet(publicAPI, model, ['tolerance']);
 
   // Object methods
   vtkHandleRepresentation(publicAPI, model);
