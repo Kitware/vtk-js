@@ -85,7 +85,7 @@ function vtkRenderWindowInteractor(publicAPI, model) {
   //----------------------------------------------------------------------
   publicAPI.setRenderWindow = (aren) => {
     vtkErrorMacro(
-      'you want to call setView(view) instead of setRenderWindow on a vtk.js  interactor'
+      'you want to call setView(view) instead of setRenderWindow on a vtk.js interactor'
     );
   };
 
@@ -260,7 +260,7 @@ function vtkRenderWindowInteractor(publicAPI, model) {
     model.requestAnimationCount += 1;
     if (model.requestAnimationCount === 1) {
       model.lastFrameTime = 0.1;
-      model.lastFrameStart = new Date().getTime();
+      model.lastFrameStart = Date.now();
       model.animationRequest = requestAnimationFrame(publicAPI.handleAnimation);
     }
   };
@@ -356,7 +356,7 @@ function vtkRenderWindowInteractor(publicAPI, model) {
   };
 
   publicAPI.handleAnimation = () => {
-    const currTime = new Date().getTime();
+    const currTime = Date.now();
     if (model.FrameTime === -1.0) {
       model.lastFrameTime = 0.1;
     } else {
