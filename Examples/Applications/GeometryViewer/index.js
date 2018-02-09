@@ -122,6 +122,7 @@ function createViewer(container) {
   if (userParams.fps) {
     fpsMonitor.setRenderWindow(renderWindow);
     fpsMonitor.setContainer(container);
+    fullScreenRenderer.setResizeCallback(fpsMonitor.update);
   }
 }
 

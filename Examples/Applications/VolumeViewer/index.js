@@ -19,6 +19,7 @@ import style from './VolumeViewer.mcss';
 
 let autoInit = true;
 const userParams = vtkURLExtract.extractURLParameters();
+const fpsMonitor = vtkFPSMonitor.newInstance();
 
 // ----------------------------------------------------------------------------
 // Add class to body if iOS device
@@ -141,6 +142,7 @@ function createViewer(rootContainer, fileContents, options) {
       controllerWidget.setSize(width - 14, 150);
     }
     controllerWidget.render();
+    fpsMonitor.update();
   });
 
   // First render
@@ -159,7 +161,6 @@ function createViewer(rootContainer, fileContents, options) {
   };
 
   if (userParams.fps) {
-    const fpsMonitor = vtkFPSMonitor.newInstance();
     const fpsElm = fpsMonitor.getFpsMonitorContainer();
     fpsElm.classList.add(style.fpsMonitor);
     fpsMonitor.setRenderWindow(renderWindow);

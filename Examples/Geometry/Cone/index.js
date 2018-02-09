@@ -33,6 +33,8 @@ fpsElm.style.borderRadius = '5px';
 fpsMonitor.setContainer(document.querySelector('body'));
 fpsMonitor.setRenderWindow(renderWindow);
 
+fullScreenRenderer.setResizeCallback(fpsMonitor.update);
+
 // ----------------------------------------------------------------------------
 // Example code
 // ----------------------------------------------------------------------------
