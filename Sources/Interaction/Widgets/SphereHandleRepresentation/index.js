@@ -318,7 +318,25 @@ function vtkSphereHandleRepresentation(publicAPI, model) {
   };
 
   publicAPI.setProperty = (property) => {
-    model.actor.setProperty(property);
+    if (property === model.property) {
+      return;
+    }
+    if (model.actor.getProperty() === model.property) {
+      model.actor.setProperty(property);
+    }
+    model.property = property;
+    publicAPI.modified();
+  };
+
+  publicAPI.setSelectProperty = (property) => {
+    if (property === model.selectProperty) {
+      return;
+    }
+    if (model.actor.getProperty() === model.selectProperty) {
+      model.actor.setProperty(property);
+    }
+    model.selectProperty = property;
+    publicAPI.modified();
   };
 }
 
