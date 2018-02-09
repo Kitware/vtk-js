@@ -113,6 +113,30 @@ function vtkImageMapper(publicAPI, model) {
     return image.extentToBounds(ex);
   };
 
+  publicAPI.getBoundsForSlice = (slice, thickness = 0) => {
+    const image = publicAPI.getInputData();
+    if (!image) {
+      return vtkMath.createUninitializedBounds();
+    }
+    const extent = image.getExtent();
+    switch (publicAPI.getCurrentSlicingMode()) {
+      case SlicingMode.X:
+        extent[0] = slice - thickness;
+        extent[1] = slice + thickness;
+        break;
+      case SlicingMode.Y:
+        extent[2] = slice - thickness;
+        extent[3] = slice + thickness;
+        break;
+      case SlicingMode.Z:
+        extent[4] = slice - thickness;
+        extent[5] = slice + thickness;
+        break;
+      default:
+    }
+    return image.extentToBounds(extent);
+  };
+
   publicAPI.getIsOpaque = () => true;
 
   publicAPI.intersectWithLineForPointPicking = (p1, p2) => {

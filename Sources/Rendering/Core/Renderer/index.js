@@ -438,36 +438,8 @@ function vtkRenderer(publicAPI, model) {
       return false;
     }
 
-    let vn = null;
-    let position = null;
-    vn = model.activeCamera.getViewPlaneNormalByReference();
-    position = model.activeCamera.getPositionByReference();
-
-    const a = -vn[0];
-    const b = -vn[1];
-    const c = -vn[2];
-    const d = -(a * position[0] + b * position[1] + c * position[2]);
-
-    // Set the max near clipping plane and the min far clipping plane
-    const range = [
-      a * boundsToUse[0] + b * boundsToUse[2] + c * boundsToUse[4] + d,
-      1e-18,
-    ];
-
-    // Find the closest / farthest bounding box vertex
-    for (let k = 0; k < 2; k++) {
-      for (let j = 0; j < 2; j++) {
-        for (let i = 0; i < 2; i++) {
-          const dist =
-            a * boundsToUse[i] +
-            b * boundsToUse[2 + j] +
-            c * boundsToUse[4 + k] +
-            d;
-          range[0] = dist < range[0] ? dist : range[0];
-          range[1] = dist > range[1] ? dist : range[1];
-        }
-      }
-    }
+    // Get the exact range for the bounds
+    const range = model.activeCamera.computeClippingRange(boundsToUse);
 
     // do not let far - near be less than 0.1 of the window height
     // this is for cases such as 2D images which may have zero range
