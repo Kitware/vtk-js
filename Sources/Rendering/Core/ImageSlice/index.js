@@ -103,6 +103,51 @@ function vtkImageSlice(publicAPI, model) {
     return model.bounds;
   };
 
+  publicAPI.getBoundsForSlice = (slice, thickness = 0) => {
+    // Check for the special case when the mapper's bounds are unknown
+    const bds = model.mapper.getBoundsForSlice(slice, thickness);
+    if (!bds || bds.length !== 6) {
+      return bds;
+    }
+
+    // Check for the special case when the actor is empty.
+    if (bds[0] > bds[1]) {
+      return bds;
+    }
+
+    const bbox = [
+      vec3.fromValues(bds[1], bds[3], bds[5]),
+      vec3.fromValues(bds[1], bds[2], bds[5]),
+      vec3.fromValues(bds[0], bds[2], bds[5]),
+      vec3.fromValues(bds[0], bds[3], bds[5]),
+      vec3.fromValues(bds[1], bds[3], bds[4]),
+      vec3.fromValues(bds[1], bds[2], bds[4]),
+      vec3.fromValues(bds[0], bds[2], bds[4]),
+      vec3.fromValues(bds[0], bds[3], bds[4]),
+    ];
+
+    publicAPI.computeMatrix();
+    const tmp4 = mat4.create();
+    mat4.transpose(tmp4, model.matrix);
+    bbox.forEach((pt) => vec3.transformMat4(pt, pt, tmp4));
+
+    let newBounds = [
+      Number.MAX_VALUE,
+      -Number.MAX_VALUE,
+      Number.MAX_VALUE,
+      -Number.MAX_VALUE,
+      Number.MAX_VALUE,
+      -Number.MAX_VALUE,
+    ];
+    newBounds = newBounds.map(
+      (d, i) =>
+        i % 2 === 0
+          ? bbox.reduce((a, b) => (a > b[i / 2] ? b[i / 2] : a), d)
+          : bbox.reduce((a, b) => (a < b[(i - 1) / 2] ? b[(i - 1) / 2] : a), d)
+    );
+    return newBounds;
+  };
+
   //----------------------------------------------------------------------------
   // Get the minimum X bound
   publicAPI.getMinXBound = () => {
