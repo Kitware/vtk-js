@@ -1,0 +1,50 @@
+.container {
+  display: flex;
+  flex-direction: row;
+  justify-content: flex-start;
+}
+
+.leftPane {
+  flex: none;
+  display: flex;
+  flex-direction: column;
+  justify-content: flex-start;
+  align-items: stretch;
+}
+
+.rightPane {
+  flex: 1;
+  display: grid;
+  grid-template-columns: auto auto;
+  grid-auto-rows: 1.5em;
+  grid-column-gap: 5px;
+  grid-row-gap: 2px;
+  padding: 10px;
+}
+
+.title {
+  flex: 1;
+  font-weight: bold;
+  padding: 5px 0 0 10px;
+}
+
+.graph {
+  flex: none;
+  border: solid 1px black;
+  margin: 10px ;
+  border-radius: 2px;
+  overflow: hidden;
+}
+
+.label {
+  font-weight: bold;
+  text-transform: capitalize;
+  text-align: right;
+  align-self: center;
+}
+
+.value {
+  font-style: italic;
+  text-align: center;
+  align-self: center;
+}
