@@ -648,6 +648,36 @@ function vtkCamera(publicAPI, model) {
     publicAPI.setViewUp(newvup[0], newvup[1], newvup[2]);
     publicAPI.modified();
   };
+
+  publicAPI.computeClippingRange = (bounds) => {
+    let vn = null;
+    let position = null;
+
+    vn = model.viewPlaneNormal;
+    position = model.position;
+
+    const a = -vn[0];
+    const b = -vn[1];
+    const c = -vn[2];
+    const d = -(a * position[0] + b * position[1] + c * position[2]);
+
+    // Set the max near clipping plane and the min far clipping plane
+    const range = [a * bounds[0] + b * bounds[2] + c * bounds[4] + d, 1e-18];
+
+    // Find the closest / farthest bounding box vertex
+    for (let k = 0; k < 2; k++) {
+      for (let j = 0; j < 2; j++) {
+        for (let i = 0; i < 2; i++) {
+          const dist =
+            a * bounds[i] + b * bounds[2 + j] + c * bounds[4 + k] + d;
+          range[0] = dist < range[0] ? dist : range[0];
+          range[1] = dist > range[1] ? dist : range[1];
+        }
+      }
+    }
+
+    return range;
+  };
 }
 
 // ----------------------------------------------------------------------------
