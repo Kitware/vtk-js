@@ -302,7 +302,7 @@ function extend(publicAPI, model, initialValues = {}) {
   Object.assign(model, DEFAULT_VALUES, initialValues);
 
   macro.obj(publicAPI, model);
-  macro.get(publicAPI, model, ['input', 'actors', 'volumes']);
+  macro.get(publicAPI, model, ['input', 'mapper', 'actors', 'volumes']);
 
   // Object specific methods
   vtkAbstractRepresentationProxy(publicAPI, model);
