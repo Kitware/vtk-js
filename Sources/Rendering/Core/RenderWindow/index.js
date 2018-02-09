@@ -82,9 +82,6 @@ function vtkRenderWindow(publicAPI, model) {
       .map((keyName) => `${keyName}: ${results[keyName]}`)
       .join('\n');
 
-    if (results.points) {
-      results.points /= 3;
-    }
     return results;
   };
 

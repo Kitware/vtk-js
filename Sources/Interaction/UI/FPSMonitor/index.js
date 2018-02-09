@@ -62,6 +62,15 @@ function vtkFPSMonitor(publicAPI, model) {
   function updateInformations() {
     const infoItems = [];
     if (model.renderWindow) {
+      const realView = model.renderWindow.getViews()[0];
+      if (realView && realView.getSize) {
+        infoItems.push(
+          `<label class="${style.label}">Resolution</label><span class="${
+            style.value
+          }">${realView.getSize().join('x')}</span>`
+        );
+      }
+
       const stats = model.renderWindow.getStatistics();
       const keys = Object.keys(stats);
       keys.sort();
