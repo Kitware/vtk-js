@@ -64,6 +64,9 @@ function vtkRenderWindowInteractor(publicAPI, model) {
   // Set our className
   model.classHierarchy.push('vtkRenderWindowInteractor');
 
+  // Initialize list of requesters
+  model.animationRequesters = new Set();
+
   // Public API methods
 
   //----------------------------------------------------------------------
@@ -868,7 +871,7 @@ const DEFAULT_VALUES = {
   recognizeGestures: true,
   currentGesture: 'Start',
   animationRequest: null,
-  animationRequesters: new Set(),
+  animationRequesters: null,
   lastFrameTime: 0.1,
   wheelTimeoutID: 0,
   moveTimeoutID: 0,
