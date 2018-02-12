@@ -1,4 +1,5 @@
 import macro from 'vtk.js/Sources/macro';
+import vtkMath from 'vtk.js/Sources/Common/Core/Math';
 
 /* eslint-disable no-continue */
 
@@ -438,13 +439,8 @@ function vtkPiecewiseGaussianWidget(publicAPI, model) {
     numberOfBinsToSkip = 1
   ) => {
     model.histogramArray = array;
-    const size = array.length;
-    let max = array[0];
-    let min = array[0];
-    for (let i = 1; i < size; i++) {
-      max = Math.max(max, array[i]);
-      min = Math.min(min, array[i]);
-    }
+    const max = vtkMath.arrayMax(array);
+    const min = vtkMath.arrayMin(array);
 
     const delta = max - min;
     model.dataRange = [min, max];

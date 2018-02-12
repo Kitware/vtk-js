@@ -12,6 +12,7 @@ const { vtkErrorMacro, vtkWarningMacro } = macro;
 let randomSeedValue = 0;
 const VTK_MAX_ROTATIONS = 20;
 const VTK_SMALL_NUMBER = 1.0e-12;
+const MAX_FUNCTION_ARGUMENTS = 32768;
 
 function notImplemented(method) {
   return () => vtkErrorMacro(`vtkMath::${method} - NOT IMPLEMENTED`);
@@ -41,6 +42,33 @@ const Pi = () => Math.PI;
 const radiansFromDegrees = (deg) => deg / 180 * Math.PI;
 const degreesFromRadians = (rad) => rad * 180 / Math.PI;
 const { round, floor, ceil, min, max } = Math;
+
+function arrayMin(arr) {
+  let minValue = Infinity;
+  for (let i = 0, len = arr.length; i < len; i += MAX_FUNCTION_ARGUMENTS) {
+    const submin = Math.min.apply(
+      null,
+      arr.slice(i, Math.min(i + MAX_FUNCTION_ARGUMENTS, len))
+    );
+    minValue = Math.min(submin, minValue);
+  }
+
+  return minValue;
+}
+
+function arrayMax(arr) {
+  let maxValue = -Infinity;
+  for (let i = 0, len = arr.length; i < len; i += MAX_FUNCTION_ARGUMENTS) {
+    const submax = Math.max.apply(
+      null,
+      arr.slice(i, Math.min(i + MAX_FUNCTION_ARGUMENTS, len))
+    );
+    maxValue = Math.max(submax, maxValue);
+  }
+
+  return maxValue;
+}
+
 const ceilLog2 = notImplemented('ceilLog2');
 const factorial = notImplemented('factorial');
 
@@ -1993,6 +2021,8 @@ export default {
   ceilLog2,
   min,
   max,
+  arrayMin,
+  arrayMax,
   isPowerOfTwo,
   nearestPowerOfTwo,
   factorial,
