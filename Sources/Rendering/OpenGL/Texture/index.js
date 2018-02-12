@@ -1153,7 +1153,7 @@ function vtkOpenGLTexture(publicAPI, model) {
           tmpArray[outPtr++] = grad[1];
           tmpArray[outPtr++] = grad[2];
           tmpArray[outPtr++] = mag;
-	  tmpMagArray[inPtr] = mag;
+          tmpMagArray[inPtr] = mag;
           inPtr++;
         }
       }

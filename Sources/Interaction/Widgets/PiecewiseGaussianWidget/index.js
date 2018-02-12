@@ -448,7 +448,7 @@ function vtkPiecewiseGaussianWidget(publicAPI, model) {
     while (model.histogram.length < model.numberOfBins) {
       model.histogram.push(0);
     }
-    for(let i = 0, len = array.length; i < len; i++) {
+    for (let i = 0, len = array.length; i < len; i++) {
       const idx = Math.floor(
         (model.numberOfBins - 1) * (Number(array[i]) - min) / delta
       );
