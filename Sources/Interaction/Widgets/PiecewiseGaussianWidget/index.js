@@ -448,12 +448,12 @@ function vtkPiecewiseGaussianWidget(publicAPI, model) {
     while (model.histogram.length < model.numberOfBins) {
       model.histogram.push(0);
     }
-    array.forEach((value) => {
+    for(let i = 0, len = array.length; i < len; i++) {
       const idx = Math.floor(
-        (model.numberOfBins - 1) * (Number(value) - min) / delta
+        (model.numberOfBins - 1) * (Number(array[i]) - min) / delta
       );
       model.histogram[idx] += 1;
-    });
+    }
 
     // Smart Rescale Histogram
     const sampleSize = Math.min(
