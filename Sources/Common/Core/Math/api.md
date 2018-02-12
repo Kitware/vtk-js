@@ -34,13 +34,13 @@ Same as Math.min().
 
 Same as Math.max().
 
-### isPowerOfTwo(number) : Boolean
+### arrayMin(array)
 
-NOT IMPLEMENTED
+Minimum of the array.
 
-### nearestPowerOfTwo(number) : int
+### arrayMax(a, b)
 
-NOT IMPLEMENTED
+Maximum of the array.
 
 ### factorial(n) : number
 

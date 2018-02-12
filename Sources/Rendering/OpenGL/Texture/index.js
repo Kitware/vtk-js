@@ -930,12 +930,8 @@ function vtkOpenGLTexture(publicAPI, model) {
     const numPixelsIn = width * height * depth;
 
     // compute min and max values
-    let min = data[0];
-    let max = data[0];
-    for (let i = 0; i < numPixelsIn; ++i) {
-      min = Math.min(min, data[i]);
-      max = Math.max(max, data[i]);
-    }
+    const min = vtkMath.arrayMin(data);
+    let max = vtkMath.arrayMax(data);
     if (min === max) {
       max = min + 1.0;
     }
@@ -1115,6 +1111,7 @@ function vtkOpenGLTexture(publicAPI, model) {
     // have to compute the gradient to get the normal
     // and magnitude
     const tmpArray = new Float32Array(width * height * depth * 4);
+    const tmpMagArray = new Float32Array(width * height * depth);
 
     let inPtr = 0;
     let outPtr = 0;
@@ -1151,18 +1148,20 @@ function vtkOpenGLTexture(publicAPI, model) {
           );
 
           const mag = vec3.length(grad);
-          minMag = Math.min(mag, minMag);
-          maxMag = Math.max(mag, maxMag);
-
           vec3.normalize(grad, grad);
           tmpArray[outPtr++] = grad[0];
           tmpArray[outPtr++] = grad[1];
           tmpArray[outPtr++] = grad[2];
           tmpArray[outPtr++] = mag;
+          tmpMagArray[inPtr] = mag;
           inPtr++;
         }
       }
     }
+    const arrayMinMag = vtkMath.arrayMin(tmpMagArray);
+    const arrayMaxMag = vtkMath.arrayMax(tmpMagArray);
+    minMag = Math.min(arrayMinMag, minMag);
+    maxMag = Math.max(arrayMaxMag, maxMag);
 
     // store the information, we will need it later
     model.volumeInfo = { min: minMag, max: maxMag };
