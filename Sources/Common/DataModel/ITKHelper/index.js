@@ -6,14 +6,14 @@ import vtkDataArray from 'vtk.js/Sources/Common/Core/DataArray';
  *
  * Requires an itk.js image as input.
  */
-function convertItkToVtkImage(itkImage) {
+function convertItkToVtkImage(itkImage, options) {
   // create VTK image data
   const imageData = vtkImageData.newInstance({
     origin: itkImage.origin.slice(),
     spacing: itkImage.spacing.slice(),
   });
   const scalars = vtkDataArray.newInstance({
-    name: 'Scalars',
+    name: options.scalarArrayName || 'Scalars',
     values: itkImage.data,
     numberOfComponents: itkImage.imageType.components,
   });
