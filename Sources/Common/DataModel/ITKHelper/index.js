@@ -6,7 +6,7 @@ import vtkDataArray from 'vtk.js/Sources/Common/Core/DataArray';
  *
  * Requires an itk.js image as input.
  */
-function convertItkToVtkImage(itkImage, options) {
+function convertItkToVtkImage(itkImage, options = {}) {
   // create VTK image data
   const imageData = vtkImageData.newInstance({
     origin: itkImage.origin.slice(),
