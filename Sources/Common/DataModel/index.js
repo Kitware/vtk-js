@@ -5,6 +5,7 @@ import vtkCone from './Cone';
 import vtkCylinder from './Cylinder';
 import vtkDataSet from './DataSet';
 import vtkDataSetAttributes from './DataSetAttributes';
+import vtkITKHelper from './ITKHelper';
 import vtkImageData from './ImageData';
 import vtkImplicitBoolean from './ImplicitBoolean';
 import vtkLine from './Line';
@@ -25,6 +26,7 @@ export default {
   vtkCylinder,
   vtkDataSet,
   vtkDataSetAttributes,
+  vtkITKHelper,
   vtkImageData,
   vtkImplicitBoolean,
   vtkLine,
