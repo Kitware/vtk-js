@@ -107,8 +107,10 @@ function vtkFPSMonitor(publicAPI, model) {
   // --------------------------------------------------------------------------
 
   publicAPI.update = () => {
-    model.canvas.setAttribute('width', model.bufferSize);
-    model.canvas.setAttribute('height', model.graphHeight);
+    if (model.canvas) {
+      model.canvas.setAttribute('width', model.bufferSize);
+      model.canvas.setAttribute('height', model.graphHeight);
+    }
     updateInformations();
     publicAPI.render();
   };

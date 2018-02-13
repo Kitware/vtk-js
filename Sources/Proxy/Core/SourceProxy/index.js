@@ -39,6 +39,7 @@ function vtkSourceProxy(publicAPI, model) {
   // --------------------------------------------------------------------------
 
   publicAPI.setInputAlgorithm = (algo, type, autoUpdate = true) => {
+    model.type = type;
     if (model.algo !== algo) {
       model.algo = algo;
       if (model.algoSubscription) {
