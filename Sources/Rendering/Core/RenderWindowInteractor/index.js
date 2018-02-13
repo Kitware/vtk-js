@@ -65,7 +65,7 @@ function vtkRenderWindowInteractor(publicAPI, model) {
   model.classHierarchy.push('vtkRenderWindowInteractor');
 
   // Initialize list of requesters
-  model.animationRequesters = new Set();
+  const animationRequesters = new Set();
 
   // Public API methods
 
@@ -268,11 +268,11 @@ function vtkRenderWindowInteractor(publicAPI, model) {
       vtkErrorMacro(`undefined requester, can not start animating`);
       return;
     }
-    if (model.animationRequesters.has(requestor)) {
+    if (animationRequesters.has(requestor)) {
       return;
     }
-    model.animationRequesters.add(requestor);
-    if (model.animationRequesters.size === 1) {
+    animationRequesters.add(requestor);
+    if (animationRequesters.size === 1) {
       model.lastFrameTime = 0.1;
       model.lastFrameStart = Date.now();
       model.animationRequest = requestAnimationFrame(publicAPI.handleAnimation);
@@ -284,12 +284,12 @@ function vtkRenderWindowInteractor(publicAPI, model) {
     model.vrAnimation || model.animationRequest !== null;
 
   publicAPI.cancelAnimation = (requestor) => {
-    if (!model.animationRequesters.has(requestor)) {
+    if (!animationRequesters.has(requestor)) {
       vtkWarningMacro(`${requestor} did not request an animation`);
       return;
     }
-    model.animationRequesters.delete(requestor);
-    if (model.animationRequest && model.animationRequesters.size === 0) {
+    animationRequesters.delete(requestor);
+    if (model.animationRequest && animationRequesters.size === 0) {
       cancelAnimationFrame(model.animationRequest);
       model.animationRequest = null;
       publicAPI.endAnimationEvent();
@@ -871,7 +871,6 @@ const DEFAULT_VALUES = {
   recognizeGestures: true,
   currentGesture: 'Start',
   animationRequest: null,
-  animationRequesters: null,
   lastFrameTime: 0.1,
   wheelTimeoutID: 0,
   moveTimeoutID: 0,
