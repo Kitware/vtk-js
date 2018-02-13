@@ -1,4 +1,11 @@
-.container {
+.verticalContainer {
+  display: flex;
+  flex-direction: column;
+  justify-content: flex-start;
+  align-items: stretch;
+}
+
+.horizontalContainer {
   display: flex;
   flex-direction: row;
   justify-content: flex-start;
@@ -25,7 +32,7 @@
 .title {
   flex: 1;
   font-weight: bold;
-  padding: 5px 0 0 10px;
+  padding: 5px 10px 0 10px;
 }
 
 .graph {

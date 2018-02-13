@@ -11,6 +11,11 @@ function toNativeType(str) {
     return false;
   } else if (str === undefined || str === 'undefined') {
     return undefined;
+  } else if (str[0] === '[' && str[str.length - 1] === ']') {
+    return str
+      .substring(1, str.length - 1)
+      .split(',')
+      .map((s) => toNativeType(s.trim()));
   } else if (str === '' || Number.isNaN(Number(str))) {
     return str;
   }

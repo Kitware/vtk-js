@@ -15,6 +15,7 @@ function vtkOrientationMarkerWidget(publicAPI, model) {
 
   // Private variables
 
+  const previousCameraInput = [];
   const selfRenderer = vtkRenderer.newInstance();
   let interactorUnsubscribe = null;
   let viewUnsubscribe = null;
@@ -62,9 +63,35 @@ function vtkOrientationMarkerWidget(publicAPI, model) {
       return;
     }
 
-    const state = currentCamera.get('position', 'focalPoint', 'viewUp');
-    selfRenderer.getActiveCamera().set(state);
-    selfRenderer.resetCamera();
+    const position = currentCamera.getReferenceByName('position');
+    const focalPoint = currentCamera.getReferenceByName('focalPoint');
+    const viewUp = currentCamera.getReferenceByName('viewUp');
+    if (
+      previousCameraInput[0] !== position[0] ||
+      previousCameraInput[1] !== position[1] ||
+      previousCameraInput[2] !== position[2] ||
+      previousCameraInput[3] !== focalPoint[0] ||
+      previousCameraInput[4] !== focalPoint[1] ||
+      previousCameraInput[5] !== focalPoint[2] ||
+      previousCameraInput[6] !== viewUp[0] ||
+      previousCameraInput[7] !== viewUp[1] ||
+      previousCameraInput[8] !== viewUp[2]
+    ) {
+      previousCameraInput[0] = position[0];
+      previousCameraInput[1] = position[1];
+      previousCameraInput[2] = position[2];
+      previousCameraInput[3] = focalPoint[0];
+      previousCameraInput[4] = focalPoint[1];
+      previousCameraInput[5] = focalPoint[2];
+      previousCameraInput[6] = viewUp[0];
+      previousCameraInput[7] = viewUp[1];
+      previousCameraInput[8] = viewUp[2];
+      const activeCamera = selfRenderer.getActiveCamera();
+      activeCamera.setPosition(position[0], position[1], position[2]);
+      activeCamera.setFocalPoint(focalPoint[0], focalPoint[1], focalPoint[2]);
+      activeCamera.setViewUp(viewUp[0], viewUp[1], viewUp[2]);
+      selfRenderer.resetCamera();
+    }
   };
 
   /**
