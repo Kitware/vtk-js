@@ -120,6 +120,12 @@ function createViewer(container) {
   container.appendChild(addDataSetButton);
 
   if (userParams.fps) {
+    if (Array.isArray(userParams.fps)) {
+      fpsMonitor.setMonitorVisibility(...userParams.fps);
+      if (userParams.fps.length === 4) {
+        fpsMonitor.setOrientation(userParams.fps[3]);
+      }
+    }
     fpsMonitor.setRenderWindow(renderWindow);
     fpsMonitor.setContainer(container);
     fullScreenRenderer.setResizeCallback(fpsMonitor.update);
