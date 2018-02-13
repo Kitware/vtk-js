@@ -26,7 +26,7 @@ function vtkFPSMonitor(publicAPI, model) {
   model.classHierarchy.push('vtkFPSMonitor');
 
   model.fpsMonitorContainer = document.createElement('div');
-  model.fpsMonitorContainer.setAttribute('class', style.container);
+  model.fpsMonitorContainer.setAttribute('class', model.orientationClass);
   model.fpsMonitorContainer.innerHTML = `
     <div class="${style.leftPane}">
       <div class="js-title ${style.title}">Mean N/A - Current N/A</div>
@@ -52,14 +52,23 @@ function vtkFPSMonitor(publicAPI, model) {
       while (model.buffer.length > model.bufferSize) {
         model.fpsSum -= model.buffer.shift();
       }
-      model.title.innerHTML = `Mean: ${(
+      const newTxt = `Mean: ${Math.round(
         model.fpsSum / model.buffer.length
-      ).toFixed(1)} - Current: ${nextFPS.toFixed(0)}`;
-      publicAPI.render();
+      )} - Current: ${Math.round(nextFPS)}`;
+      if (newTxt !== model.lastText) {
+        model.lastText = newTxt;
+        model.title.innerHTML = newTxt;
+      }
+      if (model.canvasVisibility) {
+        publicAPI.render();
+      }
     }
   }
 
   function updateInformations() {
+    if (!model.infoVisibility) {
+      return;
+    }
     const infoItems = [];
     if (model.renderWindow) {
       const realView = model.renderWindow.getViews()[0];
@@ -133,22 +142,23 @@ function vtkFPSMonitor(publicAPI, model) {
   // --------------------------------------------------------------------------
 
   publicAPI.render = () => {
-    if (model.canvas) {
+    if (model.canvas && model.canvasVisibility) {
       const ctx = model.canvas.getContext('2d');
-      ctx.clearRect(0, 0, model.canvas.width, model.canvas.height);
+      const { width, height } = model.canvas;
+      ctx.clearRect(0, 0, width, height);
       // Current fps
       ctx.strokeStyle = 'green';
       ctx.beginPath();
-      ctx.moveTo(0, model.canvas.height - model.buffer[0]);
+      ctx.moveTo(0, height - model.buffer[0]);
       for (let i = 1; i < model.buffer.length; i++) {
-        ctx.lineTo(i, model.canvas.height - model.buffer[i]);
+        ctx.lineTo(i, height - model.buffer[i]);
       }
       ctx.stroke();
       // 60 fps ref
       ctx.strokeStyle = 'black';
       ctx.beginPath();
-      ctx.moveTo(0, model.canvas.height - 60);
-      ctx.lineTo(model.canvas.width, model.canvas.height - 60);
+      ctx.moveTo(0, height - 60);
+      ctx.lineTo(width, height - 60);
       ctx.stroke();
     }
   };
@@ -156,6 +166,49 @@ function vtkFPSMonitor(publicAPI, model) {
   // --------------------------------------------------------------------------
 
   publicAPI.resize = noOp;
+
+  // --------------------------------------------------------------------------
+
+  publicAPI.setOrientationToHorizontal = () => {
+    model.fpsMonitorContainer.classList.remove(model.orientationClass);
+    model.orientationClass = style.horizontalContainer;
+    model.fpsMonitorContainer.classList.add(model.orientationClass);
+  };
+
+  // --------------------------------------------------------------------------
+
+  publicAPI.setOrientationToVertical = () => {
+    model.fpsMonitorContainer.classList.remove(model.orientationClass);
+    model.orientationClass = style.verticalContainer;
+    model.fpsMonitorContainer.classList.add(model.orientationClass);
+  };
+
+  // --------------------------------------------------------------------------
+
+  publicAPI.setOrientation = (mode = 'horizontal') => {
+    console.log('setOrientation', mode);
+    if (mode === 'horizontal') {
+      publicAPI.setOrientationToHorizontal();
+    } else {
+      publicAPI.setOrientationToVertical();
+    }
+  };
+
+  // --------------------------------------------------------------------------
+
+  publicAPI.setMonitorVisibility = (
+    title = true,
+    graph = true,
+    info = true
+  ) => {
+    model.titleVisibility = !!title;
+    model.canvasVisibility = !!graph;
+    model.infoVisibility = !!info;
+
+    model.canvas.style.display = graph ? 'block' : 'none';
+    model.title.style.display = title ? 'block' : 'none';
+    model.info.style.display = info ? 'grid' : 'none';
+  };
 
   // --------------------------------------------------------------------------
   const superDelete = publicAPI.delete;
@@ -179,6 +232,10 @@ const DEFAULT_VALUES = {
   buffer: [60],
   subscriptions: [],
   fpsSum: 0,
+  orientationClass: style.horizontalContainer,
+  canvasVisibility: true,
+  titleVisibility: true,
+  infoVisibility: true,
 };
 
 // ----------------------------------------------------------------------------
