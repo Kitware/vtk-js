@@ -37,4 +37,10 @@ module.exports = [
     test: /\.svg$/,
     use: [{ loader: 'raw-loader' }],
   },
+  {
+    test: /\.worker\.js$/,
+    use: [
+      { loader: 'worker-loader', options: { inline: true, fallback: false } },
+    ],
+  },
 ];

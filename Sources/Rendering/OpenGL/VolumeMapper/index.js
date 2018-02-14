@@ -93,7 +93,9 @@ function vtkOpenGLVolumeMapper(publicAPI, model) {
     let FSSource = shaders.Fragment;
 
     const iType = actor.getProperty().getInterpolationType();
-    const gopacity = actor.getProperty().getUseGradientOpacity(0);
+    const gopacity =
+      actor.getProperty().getUseGradientOpacity(0) &&
+      model.lightingTexture.getComputedGradients();
     const volInfo = model.scalarTexture.getVolumeInfo();
 
     // WebGL2
@@ -391,7 +393,9 @@ function vtkOpenGLVolumeMapper(publicAPI, model) {
       !!model.lastZBufferTexture !== !!model.zBufferTexture ||
       cellBO.getShaderSourceTime().getMTime() < publicAPI.getMTime() ||
       cellBO.getShaderSourceTime().getMTime() < actor.getMTime() ||
-      cellBO.getShaderSourceTime().getMTime() < model.currentInput.getMTime()
+      cellBO.getShaderSourceTime().getMTime() < model.currentInput.getMTime() ||
+      cellBO.getShaderSourceTime().getMTime() <
+        model.lightingTexture.getGradientsBuildTime().getMTime()
     ) {
       model.lastZBufferTexture = model.zBufferTexture;
       return true;
@@ -709,7 +713,8 @@ function vtkOpenGLVolumeMapper(publicAPI, model) {
     );
     program.setUniformf('cscale', sscale / (cRange[1] - cRange[0]));
 
-    if (vprop.getUseGradientOpacity(0)) {
+    const computedGradients = model.lightingTexture.getComputedGradients();
+    if (vprop.getUseGradientOpacity(0) && computedGradients) {
       const lightingInfo = model.lightingTexture.getVolumeInfo();
       const gomin = vprop.getGradientOpacityMinimumOpacity(0);
       const gomax = vprop.getGradientOpacityMaximumOpacity(0);
@@ -729,7 +734,10 @@ function vtkOpenGLVolumeMapper(publicAPI, model) {
       );
     }
 
-    if (model.lastLightComplexity > 0 || vprop.getUseGradientOpacity(0)) {
+    if (
+      (model.lastLightComplexity > 0 || vprop.getUseGradientOpacity(0)) &&
+      computedGradients
+    ) {
       program.setUniformi(
         'normalTexture',
         model.lightingTexture.getTextureUnit()
@@ -892,6 +900,7 @@ function vtkOpenGLVolumeMapper(publicAPI, model) {
     }
   };
 
+  let computedGradientsRenderTimeout = null;
   publicAPI.renderPieceDraw = (ren, actor) => {
     const gl = model.context;
 
@@ -904,7 +913,20 @@ function vtkOpenGLVolumeMapper(publicAPI, model) {
       actor.getProperty().getShade() ||
       actor.getProperty().getUseGradientOpacity(0)
     ) {
-      model.lightingTexture.activate();
+      // Only activate once volumeInfo has been populated.
+      if (model.lightingTexture.getComputedGradients()) {
+        model.lightingTexture.activate();
+      } else {
+        // We wanted to render, but the gradients have not finished computing.
+        // So, re-render later.
+        if (computedGradientsRenderTimeout !== null) {
+          clearTimeout(computedGradientsRenderTimeout);
+        }
+        computedGradientsRenderTimeout = setTimeout(
+          model.openGLRenderWindow.modified,
+          20
+        );
+      }
     }
 
     publicAPI.updateShaders(model.tris, ren, actor);

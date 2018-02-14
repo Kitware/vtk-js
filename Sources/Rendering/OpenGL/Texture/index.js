@@ -1,9 +1,12 @@
+import WebworkerPromise from 'webworker-promise';
+
 import Constants from 'vtk.js/Sources/Rendering/OpenGL/Texture/Constants';
 import macro from 'vtk.js/Sources/macro';
 import vtkDataArray from 'vtk.js/Sources/Common/Core/DataArray';
 import vtkMath from 'vtk.js/Sources/Common/Core/Math';
 import vtkViewNode from 'vtk.js/Sources/Rendering/SceneGraph/ViewNode';
-import { vec3 } from 'gl-matrix';
+
+import ComputeGradientsWorker from './ComputeGradients.worker';
 
 const { Wrap, Filter } = Constants;
 const { VtkDataTypes } = vtkDataArray;
@@ -1102,161 +1105,163 @@ function vtkOpenGLTexture(publicAPI, model) {
   // This method creates a normal/gradient texture for 3D volume
   // rendering
   publicAPI.create3DLighting = (scalarTexture, data, spacing) => {
+    model.computedGradients = false;
     const vinfo = scalarTexture.getVolumeInfo();
 
     const width = vinfo.width;
     const height = vinfo.height;
     const depth = vinfo.depth;
 
-    // have to compute the gradient to get the normal
-    // and magnitude
-    const tmpArray = new Float32Array(width * height * depth * 4);
-    const tmpMagArray = new Float32Array(width * height * depth);
+    const haveWebgl2 = model.openGLRenderWindow.getWebgl2();
 
-    let inPtr = 0;
-    let outPtr = 0;
-    const sliceSize = width * height;
-    const grad = vec3.create();
-    vec3.set(
-      grad,
-      (data[inPtr + 1] - data[inPtr]) / spacing[0],
-      (data[inPtr + width] - data[inPtr]) / spacing[1],
-      (data[inPtr + sliceSize] - data[inPtr]) / spacing[2]
-    );
-    let minMag = vec3.length(grad);
-    let maxMag = -1.0;
-    for (let z = 0; z < depth; ++z) {
-      let zedge = 0;
-      if (z === depth - 1) {
-        zedge = -sliceSize;
-      }
-      for (let y = 0; y < height; ++y) {
-        let yedge = 0;
-        if (y === height - 1) {
-          yedge = -width;
-        }
-        for (let x = 0; x < width; ++x) {
-          let edge = inPtr + zedge + yedge;
-          if (x === width - 1) {
-            edge--;
-          }
-          vec3.set(
-            grad,
-            (data[edge + 1] - data[edge]) / spacing[0],
-            (data[edge + width] - data[edge]) / spacing[1],
-            (data[edge + sliceSize] - data[edge]) / spacing[2]
-          );
-
-          const mag = vec3.length(grad);
-          vec3.normalize(grad, grad);
-          tmpArray[outPtr++] = grad[0];
-          tmpArray[outPtr++] = grad[1];
-          tmpArray[outPtr++] = grad[2];
-          tmpArray[outPtr++] = mag;
-          tmpMagArray[inPtr] = mag;
-          inPtr++;
-        }
-      }
-    }
-    const arrayMinMag = vtkMath.arrayMin(tmpMagArray);
-    const arrayMaxMag = vtkMath.arrayMax(tmpMagArray);
-    minMag = Math.min(arrayMinMag, minMag);
-    maxMag = Math.max(arrayMaxMag, maxMag);
-
-    // store the information, we will need it later
-    model.volumeInfo = { min: minMag, max: maxMag };
-    let outIdx = 0;
-
-    if (model.openGLRenderWindow.getWebgl2()) {
-      const numPixelsIn = width * height * depth;
-      const newArray = new Uint8Array(numPixelsIn * 4);
-      for (let p = 0; p < numPixelsIn; ++p) {
-        const pp = p * 4;
-        newArray[outIdx++] = 127.5 + 127.5 * tmpArray[pp];
-        newArray[outIdx++] = 127.5 + 127.5 * tmpArray[pp + 1];
-        newArray[outIdx++] = 127.5 + 127.5 * tmpArray[pp + 2];
-        // we encode gradient magnitude using sqrt so that
-        // we have nonlinear resolution
-        newArray[outIdx++] = 255.0 * Math.sqrt(tmpArray[pp + 3] / maxMag);
-      }
-      return publicAPI.create3DFromRaw(
-        width,
-        height,
-        depth,
-        4,
-        VtkDataTypes.UNSIGNED_CHAR,
-        newArray
+    const maxNumberOfWorkers = 4;
+    const depthStride = Math.floor(depth / maxNumberOfWorkers) || 1;
+    const workers = [];
+    let depthIndex = 0;
+    while (depthIndex < depth) {
+      const worker = new ComputeGradientsWorker();
+      const workerPromise = new WebworkerPromise(worker);
+      const depthStart = depthIndex;
+      const depthEnd = Math.min(depthIndex + depthStride, depth - 1);
+      const subData = new data.constructor(
+        data.slice(depthStart * width * height, (depthEnd + 1) * width * height)
       );
+      workers.push(
+        workerPromise.postMessage(
+          {
+            width,
+            height,
+            depth,
+            spacing,
+            data: subData,
+            haveWebgl2,
+            depthStart,
+            depthEnd,
+          },
+          [subData.buffer]
+        )
+      );
+      depthIndex += depthStride;
     }
+    Promise.all(workers).then((workerResults) => {
+      const gradients = new Float32Array(width * height * depth * 4);
+      let minMag = Infinity;
+      let maxMag = -Infinity;
 
-    // Now determine the texture parameters using the arguments.
-    publicAPI.getOpenGLDataType(VtkDataTypes.UNSIGNED_CHAR);
-    publicAPI.getInternalFormat(VtkDataTypes.UNSIGNED_CHAR, 4);
-    publicAPI.getFormat(VtkDataTypes.UNSIGNED_CHAR, 4);
-
-    if (!model.internalFormat || !model.format || !model.openGLDataType) {
-      vtkErrorMacro('Failed to determine texture parameters.');
-      return false;
-    }
-
-    model.target = model.context.TEXTURE_2D;
-    model.components = 4;
-    model.depth = 1;
-    model.numberOfDimensions = 2;
-
-    // now store the computed values into the packed 2D
-    // texture using the same packing as volumeInfo
-    model.width = scalarTexture.getWidth();
-    model.height = scalarTexture.getHeight();
-    const newArray = new Uint8Array(model.width * model.height * 4);
-
-    for (let yRep = 0; yRep < vinfo.yreps; yRep++) {
-      const xrepsThisRow = Math.min(vinfo.xreps, depth - yRep * vinfo.xreps);
-      const outXContIncr =
-        model.width - xrepsThisRow * Math.floor(width / vinfo.xstride);
-      for (let inY = 0; inY < height; inY += vinfo.ystride) {
-        for (let xRep = 0; xRep < xrepsThisRow; xRep++) {
-          const inOffset =
-            4 * ((yRep * vinfo.xreps + xRep) * width * height + inY * width);
-          for (let inX = 0; inX < width; inX += vinfo.xstride) {
-            // copy value
-            newArray[outIdx++] = 127.5 + 127.5 * tmpArray[inOffset + inX * 4];
-            newArray[outIdx++] =
-              127.5 + 127.5 * tmpArray[inOffset + inX * 4 + 1];
-            newArray[outIdx++] =
-              127.5 + 127.5 * tmpArray[inOffset + inX * 4 + 2];
-            // we encode gradient magnitude using sqrt so that
-            // we have nonlinear resolution
-            newArray[outIdx++] =
-              255.0 * Math.sqrt(tmpArray[inOffset + inX * 4 + 3] / maxMag);
-          }
+      workerResults.forEach(
+        ({ subGradients, subMinMag, subMaxMag, subDepthStart }) => {
+          const start = subDepthStart * width * height * 4;
+          gradients.set(subGradients, start);
+          minMag = Math.min(subMinMag, minMag);
+          maxMag = Math.max(subMaxMag, maxMag);
         }
-        outIdx += outXContIncr * 4;
+      );
+
+      const numPixelsIn = width * height * depth;
+      const reformattedGradients = new Uint8Array(numPixelsIn * 4);
+      if (haveWebgl2) {
+        let outIdx = 0;
+        for (let p = 0; p < numPixelsIn; ++p) {
+          const pp = p * 4;
+          reformattedGradients[outIdx++] = 127.5 + 127.5 * gradients[pp];
+          reformattedGradients[outIdx++] = 127.5 + 127.5 * gradients[pp + 1];
+          reformattedGradients[outIdx++] = 127.5 + 127.5 * gradients[pp + 2];
+          // we encode gradient magnitude using sqrt so that
+          // we have nonlinear resolution
+          reformattedGradients[outIdx++] =
+            255.0 * Math.sqrt(gradients[pp + 3] / maxMag);
+        }
       }
-    }
 
-    model.openGLRenderWindow.activateTexture(publicAPI);
-    publicAPI.createTexture();
-    publicAPI.bind();
+      // store the information, we will need it later
+      model.volumeInfo = { min: minMag, max: maxMag };
 
-    // Source texture data from the PBO.
-    // model.context.pixelStorei(gl.UNPACK_FLIP_Y_WEBGL, true);
-    model.context.pixelStorei(model.context.UNPACK_ALIGNMENT, 1);
+      if (haveWebgl2) {
+        const create3DFromRawReturn = publicAPI.create3DFromRaw(
+          width,
+          height,
+          depth,
+          4,
+          VtkDataTypes.UNSIGNED_CHAR,
+          reformattedGradients
+        );
+        model.computedGradients = true;
+        model.gradientsBuildTime.modified();
+        return create3DFromRawReturn;
+      }
 
-    model.context.texImage2D(
-      model.target,
-      0,
-      model.internalFormat,
-      model.width,
-      model.height,
-      0,
-      model.format,
-      model.openGLDataType,
-      newArray
-    );
+      // Now determine the texture parameters using the arguments.
+      publicAPI.getOpenGLDataType(VtkDataTypes.UNSIGNED_CHAR);
+      publicAPI.getInternalFormat(VtkDataTypes.UNSIGNED_CHAR, 4);
+      publicAPI.getFormat(VtkDataTypes.UNSIGNED_CHAR, 4);
 
-    publicAPI.deactivate();
-    return true;
+      if (!model.internalFormat || !model.format || !model.openGLDataType) {
+        vtkErrorMacro('Failed to determine texture parameters.');
+        return false;
+      }
+
+      model.target = model.context.TEXTURE_2D;
+      model.components = 4;
+      model.depth = 1;
+      model.numberOfDimensions = 2;
+
+      // now store the computed values into the packed 2D
+      // texture using the same packing as volumeInfo
+      model.width = scalarTexture.getWidth();
+      model.height = scalarTexture.getHeight();
+
+      let outIdx = 0;
+      for (let yRep = 0; yRep < vinfo.yreps; yRep++) {
+        const xrepsThisRow = Math.min(vinfo.xreps, depth - yRep * vinfo.xreps);
+        const outXContIncr =
+          model.width - xrepsThisRow * Math.floor(width / vinfo.xstride);
+        for (let inY = 0; inY < height; inY += vinfo.ystride) {
+          for (let xRep = 0; xRep < xrepsThisRow; xRep++) {
+            const inOffset =
+              4 * ((yRep * vinfo.xreps + xRep) * width * height + inY * width);
+            for (let inX = 0; inX < width; inX += vinfo.xstride) {
+              // copy value
+              reformattedGradients[outIdx++] =
+                127.5 + 127.5 * gradients[inOffset + inX * 4];
+              reformattedGradients[outIdx++] =
+                127.5 + 127.5 * gradients[inOffset + inX * 4 + 1];
+              reformattedGradients[outIdx++] =
+                127.5 + 127.5 * gradients[inOffset + inX * 4 + 2];
+              // we encode gradient magnitude using sqrt so that
+              // we have nonlinear resolution
+              reformattedGradients[outIdx++] =
+                255.0 * Math.sqrt(gradients[inOffset + inX * 4 + 3] / maxMag);
+            }
+          }
+          outIdx += outXContIncr * 4;
+        }
+      }
+
+      model.openGLRenderWindow.activateTexture(publicAPI);
+      publicAPI.createTexture();
+      publicAPI.bind();
+
+      // Source texture data from the PBO.
+      // model.context.pixelStorei(gl.UNPACK_FLIP_Y_WEBGL, true);
+      model.context.pixelStorei(model.context.UNPACK_ALIGNMENT, 1);
+
+      model.context.texImage2D(
+        model.target,
+        0,
+        model.internalFormat,
+        model.width,
+        model.height,
+        0,
+        model.format,
+        model.openGLDataType,
+        reformattedGradients
+      );
+
+      publicAPI.deactivate();
+      model.computedGradients = true;
+      model.gradientsBuildTime.modified();
+      return true;
+    });
   };
 
   publicAPI.setOpenGLRenderWindow = (rw) => {
@@ -1310,6 +1315,7 @@ const DEFAULT_VALUES = {
   baseLevel: 0,
   maxLevel: 0,
   generateMipmap: false,
+  computedGradients: false,
 };
 
 // ----------------------------------------------------------------------------
@@ -1325,6 +1331,9 @@ export function extend(publicAPI, model, initialValues = {}) {
 
   model.textureBuildTime = {};
   macro.obj(model.textureBuildTime, { mtime: 0 });
+
+  model.gradientsBuildTime = {};
+  macro.obj(model.gradientsBuildTime, { mtime: 0 });
 
   // Build VTK API
   macro.set(publicAPI, model, ['format', 'openGLDataType']);
@@ -1346,6 +1355,8 @@ export function extend(publicAPI, model, initialValues = {}) {
     'components',
     'handle',
     'target',
+    'computedGradients',
+    'gradientsBuildTime',
   ]);
 
   // Object methods
