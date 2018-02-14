@@ -269,6 +269,7 @@ function vtkRenderWindowInteractor(publicAPI, model) {
       return;
     }
     if (animationRequesters.has(requestor)) {
+      vtkWarningMacro(`requester is already registered for animating`);
       return;
     }
     animationRequesters.add(requestor);

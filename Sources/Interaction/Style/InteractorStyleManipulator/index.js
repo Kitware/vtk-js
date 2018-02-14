@@ -285,7 +285,7 @@ function vtkInteractorStyleManipulator(publicAPI, model) {
         callData.pokedRenderer,
         callData.position
       );
-      model.interactor.requestAnimation(publicAPI);
+      model.interactor.requestAnimation(publicAPI.onButtonDown);
       publicAPI.invokeStartInteractionEvent(START_INTERACTION_EVENT);
     } else {
       vtkDebugMacro('No manipulator found');
@@ -353,7 +353,7 @@ function vtkInteractorStyleManipulator(publicAPI, model) {
       model.currentManipulator.onButtonUp(model.interactor);
       model.currentManipulator.endInteraction();
       model.currentManipulator = null;
-      model.interactor.cancelAnimation(publicAPI);
+      model.interactor.cancelAnimation(publicAPI.onButtonDown);
       publicAPI.invokeEndInteractionEvent(END_INTERACTION_EVENT);
     }
   };
@@ -368,7 +368,7 @@ function vtkInteractorStyleManipulator(publicAPI, model) {
         manipulator.startInteraction();
       }
     }
-    model.interactor.requestAnimation(publicAPI);
+    model.interactor.requestAnimation(publicAPI.handleStartMouseWheel);
     publicAPI.invokeStartInteractionEvent(START_INTERACTION_EVENT);
   };
 
@@ -382,7 +382,7 @@ function vtkInteractorStyleManipulator(publicAPI, model) {
         manipulator.endInteraction();
       }
     }
-    model.interactor.cancelAnimation(publicAPI);
+    model.interactor.cancelAnimation(publicAPI.handleStartMouseWheel);
     publicAPI.invokeEndInteractionEvent(END_INTERACTION_EVENT);
   };
 
