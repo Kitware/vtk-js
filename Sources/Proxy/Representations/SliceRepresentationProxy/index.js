@@ -69,7 +69,6 @@ function updateDomains(dataset, dataArray, { slicingMode }, updateProp) {
 function vtkSliceRepresentationProxy(publicAPI, model) {
   // Set our className
   model.classHierarchy.push('vtkSliceRepresentation');
-  const superSetInput = publicAPI.setInput;
 
   model.mapper = vtkImageMapper.newInstance();
   model.actor = vtkImageSlice.newInstance();
@@ -100,28 +99,6 @@ function vtkSliceRepresentationProxy(publicAPI, model) {
   model.sourceDependencies.push({ setInputData });
 
   // API ----------------------------------------------------------------------
-
-  publicAPI.setInput = (source) => {
-    superSetInput(source);
-
-    if (!source) {
-      return;
-    }
-
-    // Create a link handler on source
-    // Ensure the delete will clear all possible conbinaison
-    ['SliceX', 'SliceY', 'SliceZ', 'ColorWindow', 'ColorLevel'].forEach(
-      (linkName) => {
-        publicAPI.registerPropertyLinkForGC(source.getPropertyLink(linkName));
-      }
-    );
-
-    source.getPropertyLink('ColorWindow').bind(publicAPI, 'colorWindow');
-    source.getPropertyLink('ColorLevel').bind(publicAPI, 'colorLevel');
-    source.getPropertyLink('SliceX').bind(publicAPI, 'xSlice');
-    source.getPropertyLink('SliceY').bind(publicAPI, 'ySlice');
-    source.getPropertyLink('SliceZ').bind(publicAPI, 'zSlice');
-  };
 
   publicAPI.setSliceIndex = (index) =>
     model.mapper[`set${model.slicingMode}Slice`](index);
