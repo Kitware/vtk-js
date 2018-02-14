@@ -61,20 +61,24 @@ function vtkRenderWindow(publicAPI, model) {
   };
 
   publicAPI.getStatistics = () => {
-    const results = { propCount: 0 };
+    const results = { propCount: 0, invisiblePropCount: 0 };
     model.renderers.forEach((ren) => {
       const props = ren.getViewProps();
       props.forEach((prop) => {
-        results.propCount += 1;
-        const mpr = prop.getMapper();
-        if (mpr && mpr.getPrimativeCount) {
-          const pcount = mpr.getPrimativeCount();
-          Object.keys(pcount).forEach((keyName) => {
-            if (!results[keyName]) {
-              results[keyName] = 0;
-            }
-            results[keyName] += pcount[keyName];
-          });
+        if (prop.getVisibility()) {
+          results.propCount += 1;
+          const mpr = prop.getMapper();
+          if (mpr && mpr.getPrimativeCount) {
+            const pcount = mpr.getPrimativeCount();
+            Object.keys(pcount).forEach((keyName) => {
+              if (!results[keyName]) {
+                results[keyName] = 0;
+              }
+              results[keyName] += pcount[keyName];
+            });
+          }
+        } else {
+          results.invisiblePropCount += 1;
         }
       });
     });
