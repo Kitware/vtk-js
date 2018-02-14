@@ -34,6 +34,16 @@ function vtkAbstractRepresentationProxy(publicAPI, model) {
         updateConnectivity
       );
     }
+
+    // Allow dynamic registration of links
+    if (model.links) {
+      for (let i = 0; i < model.links.length; i++) {
+        const { link, property } = model.links[i];
+        const sLink = source.getPropertyLink(link);
+        publicAPI.registerPropertyLinkForGC(sLink);
+        sLink.bind(publicAPI, property);
+      }
+    }
   };
 
   publicAPI.getInputDataSet = () =>
