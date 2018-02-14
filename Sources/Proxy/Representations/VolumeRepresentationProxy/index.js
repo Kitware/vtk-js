@@ -144,7 +144,6 @@ function updateConfiguration(dataset, dataArray, { mapper, property }) {
 function vtkVolumeRepresentationProxy(publicAPI, model) {
   // Set our className
   model.classHierarchy.push('vtkVolumeRepresentationProxy');
-  const superSetInput = publicAPI.setInput;
 
   // Volume
   model.mapper = vtkVolumeMapper.newInstance();
@@ -221,27 +220,6 @@ function vtkVolumeRepresentationProxy(publicAPI, model) {
   model.sourceDependencies.push({ setInputData });
 
   // API ----------------------------------------------------------------------
-
-  publicAPI.setInput = (source) => {
-    superSetInput(source);
-
-    if (!source) {
-      return;
-    }
-
-    // Create a link handler on source
-    ['SliceX', 'SliceY', 'SliceZ', 'ColorWindow', 'ColorLevel'].forEach(
-      (linkName) => {
-        publicAPI.registerPropertyLinkForGC(source.getPropertyLink(linkName));
-      }
-    );
-
-    source.getPropertyLink('SliceX').bind(publicAPI, 'xSliceIndex');
-    source.getPropertyLink('SliceY').bind(publicAPI, 'ySliceIndex');
-    source.getPropertyLink('SliceZ').bind(publicAPI, 'zSliceIndex');
-    source.getPropertyLink('ColorWindow').bind(publicAPI, 'colorWindow');
-    source.getPropertyLink('ColorLevel').bind(publicAPI, 'colorLevel');
-  };
 
   publicAPI.isVisible = () => model.volume.getVisibility();
 
