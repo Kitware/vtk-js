@@ -41,10 +41,23 @@ function createArrayHandler() {
           if (typeof data === 'string') {
             buffer = toByteArray(data).buffer;
           }
-          const array = new window[dataType](buffer);
-          const mtimes = { [context.getActiveViewId()]: context.getMTime() };
-          dataArrayCache[sha] = { mtimes, array };
-          resolve(array);
+          if (buffer instanceof Blob) {
+            const fileReader = new FileReader();
+            fileReader.onload = () => {
+              const array = new window[dataType](fileReader.result);
+              const mtimes = {
+                [context.getActiveViewId()]: context.getMTime(),
+              };
+              dataArrayCache[sha] = { mtimes, array };
+              resolve(array);
+            };
+            fileReader.readAsArrayBuffer(buffer);
+          } else {
+            const array = new window[dataType](buffer);
+            const mtimes = { [context.getActiveViewId()]: context.getMTime() };
+            dataArrayCache[sha] = { mtimes, array };
+            resolve(array);
+          }
         },
         (error) => {
           console.log('Error getting data array:');
