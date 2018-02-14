@@ -24,19 +24,36 @@ function convertItkToVtkImage(itkImage, options = {}) {
       return null;
   }
 
+  const vtkImage = {
+    origin: [0, 0, 0],
+    spacing: [1, 1, 1],
+  };
+
+  const dimensions = [1, 1, 1];
+  const direction = [1, 0, 0, 0, 1, 0, 0, 0, 1];
+
+  for (let idx = 0; idx < itkImage.imageType.dimension; ++idx) {
+    vtkImage.origin[idx] = itkImage.origin[idx];
+    vtkImage.spacing[idx] = itkImage.spacing[idx];
+    dimensions[idx] = itkImage.size[idx];
+    for (let col = 0; col < itkImage.imageType.dimension; ++col) {
+      direction[col + idx * 3] =
+        itkImage.direction.data[col + idx * itkImage.imageType.dimension];
+    }
+  }
+
+  // Create VTK Image Data
+  const imageData = vtkImageData.newInstance(vtkImage);
+
   // create VTK image data
-  const imageData = vtkImageData.newInstance({
-    origin: itkImage.origin.slice(),
-    spacing: itkImage.spacing.slice(),
-  });
   const scalars = vtkDataArray.newInstance({
     name: options.scalarArrayName || 'Scalars',
     values: itkImage.data,
     numberOfComponents: itkImage.imageType.components,
   });
 
-  imageData.setDirection(itkImage.direction.data);
-  imageData.setDimensions(...itkImage.size);
+  imageData.setDirection(direction);
+  imageData.setDimensions(...dimensions);
   imageData.getPointData().setScalars(scalars);
 
   return imageData;
