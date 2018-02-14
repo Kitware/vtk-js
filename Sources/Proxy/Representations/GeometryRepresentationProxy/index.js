@@ -78,6 +78,8 @@ export function extend(publicAPI, model, initialValues = {}) {
       property: 'interpolateScalarsBeforeMapping',
     },
     pointSize: { modelKey: 'property', property: 'pointSize' },
+    useShadow: { modelKey: 'property', property: 'lighting' },
+    useBounds: { modelKey: 'actor', property: 'useBounds' },
   });
 }
 
