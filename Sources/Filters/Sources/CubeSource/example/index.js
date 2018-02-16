@@ -54,7 +54,6 @@ fullScreenRenderer.addController(controlPanel);
     const value = Number(e.target.value);
     pipelines[0].cubeSource.set({ [propertyName]: value });
     pipelines[1].cubeSource.set({ [propertyName]: value });
-    renderer.resetCamera();
     renderer.resetCameraClippingRange();
     renderWindow.render();
   });
@@ -73,7 +72,6 @@ function updateTransformedCube() {
     );
   }
   pipelines[1].cubeSource.set({ center, rotations });
-  renderer.resetCamera();
   renderer.resetCameraClippingRange();
   renderWindow.render();
 }
