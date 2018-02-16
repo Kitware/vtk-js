@@ -25,7 +25,7 @@ Float array of size 3 representing the center of the cube.
 
 ### rotations (set/get)
 
-Float array of size 3 representing the angles of rotation for the cube.
+Float array of size 3 representing the angles, in degrees, of rotation for the cube.
 
 ### requestData(inData, outData)
 
