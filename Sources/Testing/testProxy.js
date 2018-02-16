@@ -79,23 +79,17 @@ test('Proxy activation via config', (t) => {
 });
 
 test('Proxy activation via .activate()', (t) => {
-  const proxyManager = newProxyManager({
-    definitions: {
-      Sources: {
-        TrivialProducer: {
-          class: vtkTestProxyClass,
-          options: {},
-        },
-      },
-    },
-  });
+  const proxyManager = newProxyManager();
   t.equal(
     proxyManager.getActiveSource(),
     undefined,
     'No initial active source'
   );
 
-  const proxy = proxyManager.createProxy('Sources', 'TrivialProducer');
+  const proxy = proxyManager.createProxy('Sources', 'TrivialProducer', {
+    // Inhibit the default { activateOnCreate: true }
+    activateOnCreate: false,
+  });
   t.equal(
     proxyManager.getActiveSource(),
     undefined,

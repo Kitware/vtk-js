@@ -115,8 +115,9 @@ export default function addRegistrationAPI(publicAPI, model) {
       return null;
     }
     const definition = definitions[group][name];
+    const definitionOptions = Object.assign({}, definition.options, options);
     const proxy = definition.class.newInstance(
-      Object.assign({}, definition.options, options, {
+      Object.assign({}, definitionOptions, {
         proxyGroup: group,
         proxyName: name,
         proxyManager: publicAPI,
@@ -144,7 +145,7 @@ export default function addRegistrationAPI(publicAPI, model) {
 
     registerProxy(proxy);
 
-    if ((definition.options || {}).activateOnCreate) {
+    if (definitionOptions.activateOnCreate) {
       proxy.activate();
     }
 
