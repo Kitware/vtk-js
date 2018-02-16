@@ -175,7 +175,7 @@ function vtkCubeSource(publicAPI, model) {
 
     // Apply rotation to the points coordinates and normals
     vtkMatrixBuilder
-      .buildFromRadian()
+      .buildFromDegree()
       .rotateX(model.rotations[0])
       .rotateY(model.rotations[1])
       .rotateZ(model.rotations[2])
