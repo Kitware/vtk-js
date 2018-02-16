@@ -9,7 +9,8 @@ const ArrowSource = ArrowSource.New({
   tipLength: 0.35,
   shaftResolution: 6,
   shaftRadius: 0.03,
-  invert: false });
+  invert: false,
+  direction: [1.0, 0.0, 0.0]});
 const polydata = ArrowSource.getOutputData();
 ```
 
@@ -41,3 +42,7 @@ Floating point number representing the radius of the shaft. Defaults to 0.03.
 Boolean that inverts the arrow direction. When set to true, base is at (1, 0, 0)
 while tip is at (0, 0, 0). Defaults to false, i.e. base at (0, 0, 0) and the tip
 at (1, 0, 0).
+
+### direction (set/get)
+
+Float array of size 3 representing the direction for the arrow. Defaults to [1, 0, 0].
