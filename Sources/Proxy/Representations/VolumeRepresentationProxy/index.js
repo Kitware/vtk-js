@@ -316,9 +316,9 @@ export function extend(publicAPI, model, initialValues = {}) {
   // Object specific methods
   vtkVolumeRepresentationProxy(publicAPI, model);
   macro.proxyPropertyMapping(publicAPI, model, {
-    xSliceIndex: { modelKey: 'mapperX', property: 'xSlice' },
-    ySliceIndex: { modelKey: 'mapperY', property: 'ySlice' },
-    zSliceIndex: { modelKey: 'mapperZ', property: 'zSlice' },
+    xSliceIndex: { modelKey: 'mapperX', property: 'slice' },
+    ySliceIndex: { modelKey: 'mapperY', property: 'slice' },
+    zSliceIndex: { modelKey: 'mapperZ', property: 'slice' },
     colorWindow: { modelKey: 'propertySlices', property: 'colorWindow' },
     colorLevel: { modelKey: 'propertySlices', property: 'colorLevel' },
     useShadow: { modelKey: 'property', property: 'shade' },

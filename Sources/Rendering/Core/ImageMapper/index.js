@@ -6,6 +6,7 @@ import vtkPlane from 'vtk.js/Sources/Common/DataModel/Plane';
 
 import { vec3 } from 'gl-matrix';
 
+const { vtkErrorMacro } = macro;
 const { SlicingMode } = Constants;
 
 // ----------------------------------------------------------------------------
@@ -23,73 +24,135 @@ function vtkImageMapper(publicAPI, model) {
     image.worldToIndex(fp, idx);
 
     let id = 0;
-    const bds = publicAPI.getBounds();
-    switch (publicAPI.getCurrentSlicingMode()) {
-      case SlicingMode.X:
+    const ex = image.getExtent();
+    const { ijkMode } = publicAPI.getClosestIJKSlice();
+    switch (ijkMode) {
+      case SlicingMode.I:
         id = idx[0];
         id = Math.floor(id + 0.5);
-        id = Math.min(id, bds[1]);
-        id = Math.max(id, bds[0]);
-        publicAPI.setXSlice(id);
+        id = Math.min(id, ex[1]);
+        id = Math.max(id, ex[0]);
         break;
-      case SlicingMode.Y:
+      case SlicingMode.J:
         id = idx[1];
         id = Math.floor(id + 0.5);
-        id = Math.min(id, bds[3]);
-        id = Math.max(id, bds[2]);
-        publicAPI.setYSlice(id);
+        id = Math.min(id, ex[3]);
+        id = Math.max(id, ex[2]);
         break;
-      case SlicingMode.Z:
+      case SlicingMode.K:
         id = idx[2];
         id = Math.floor(id + 0.5);
-        id = Math.min(id, bds[5]);
-        id = Math.max(id, bds[4]);
-        publicAPI.setZSlice(id);
+        id = Math.min(id, ex[5]);
+        id = Math.max(id, ex[4]);
         break;
       default:
+        break;
     }
+    publicAPI.setSlice(id);
   };
 
-  publicAPI.setZSliceIndex = (id) => {
+  publicAPI.setSlice = (id, mode = model.currentSlicingMode) => {
     const mtime = publicAPI.getMTime();
     let changeDetected = false;
-    if (model.currentSlicingMode !== SlicingMode.Z) {
-      model.currentSlicingMode = SlicingMode.Z;
+
+    if (model.currentSlicingMode !== mode) {
+      model.currentSlicingMode = mode;
       changeDetected = true;
     }
-    publicAPI.setZSlice(id);
+
+    if (model.slice !== id || changeDetected) {
+      model.slice = id;
+      changeDetected = true;
+    }
 
     if (changeDetected && mtime === publicAPI.getMTime()) {
       publicAPI.modified();
     }
   };
 
-  publicAPI.setYSliceIndex = (id) => {
-    const mtime = publicAPI.getMTime();
-    let changeDetected = false;
-    if (model.currentSlicingMode !== SlicingMode.Y) {
-      model.currentSlicingMode = SlicingMode.Y;
-      changeDetected = true;
-    }
-    publicAPI.setYSlice(id);
+  publicAPI.setXSlice = (id) => publicAPI.setSlice(id, SlicingMode.X);
 
-    if (changeDetected && mtime === publicAPI.getMTime()) {
-      publicAPI.modified();
+  publicAPI.setYSlice = (id) => publicAPI.setSlice(id, SlicingMode.Y);
+
+  publicAPI.setZSlice = (id) => publicAPI.setSlice(id, SlicingMode.Z);
+
+  publicAPI.setISlice = (id) => publicAPI.setSlice(id, SlicingMode.I);
+
+  publicAPI.setJSlice = (id) => publicAPI.setSlice(id, SlicingMode.J);
+
+  publicAPI.setKSlice = (id) => publicAPI.setSlice(id, SlicingMode.K);
+
+  publicAPI.findClosestIJK = (inVec3, t = 0.99) => {
+    // Project vec3 onto direction cosines
+    const out = [0, 0, 0];
+    const a = publicAPI.getInputData().getDirection();
+    const mat3 = [[a[0], a[3], a[6]], [a[1], a[4], a[7]], [a[2], a[5], a[8]]];
+    vtkMath.multiply3x3_vect3(mat3, inVec3, out);
+
+    // Using `t` as treshold for fuzzy search
+    if (out[0] > t) {
+      return { ijkMode: SlicingMode.I, flip: false };
+    } else if (out[0] < -t) {
+      return { ijkMode: SlicingMode.I, flip: true };
+    } else if (out[1] > t) {
+      return { ijkMode: SlicingMode.J, flip: false };
+    } else if (out[1] < -t) {
+      return { ijkMode: SlicingMode.J, flip: true };
+    } else if (out[2] > t) {
+      return { ijkMode: SlicingMode.K, flip: false };
+    } else if (out[2] < -t) {
+      return { ijkMode: SlicingMode.K, flip: true };
     }
+    return { ijkMode: SlicingMode.NONE, flip: false };
   };
 
-  publicAPI.setXSliceIndex = (id) => {
-    const mtime = publicAPI.getMTime();
-    let changeDetected = false;
-    if (model.currentSlicingMode !== SlicingMode.X) {
-      model.currentSlicingMode = SlicingMode.X;
-      changeDetected = true;
+  publicAPI.getClosestIJKSlice = () => {
+    let ijkMode = publicAPI.getCurrentSlicingMode();
+    let flip = false;
+    switch (publicAPI.getCurrentSlicingMode()) {
+      case SlicingMode.X:
+        ({ ijkMode, flip } = publicAPI.findClosestIJK([1, 0, 0]));
+        break;
+      case SlicingMode.Y:
+        ({ ijkMode, flip } = publicAPI.findClosestIJK([0, 1, 0]));
+        break;
+      case SlicingMode.Z:
+        ({ ijkMode, flip } = publicAPI.findClosestIJK([0, 0, 1]));
+        break;
+      default:
+        break;
     }
-    publicAPI.setXSlice(id);
 
-    if (changeDetected && mtime === publicAPI.getMTime()) {
-      publicAPI.modified();
+    if (ijkMode === SlicingMode.NONE) {
+      const axisLabel = 'IJKXYZ'[publicAPI.getCurrentSlicingMode()];
+      vtkErrorMacro(
+        `Error slicing along ${axisLabel} axis: ` +
+          `not close enough to any IJK axis of the image data, ` +
+          `necessitates slice reformat that is not yet implemented. ` +
+          `You can switch your mapper to do IJK slicing instead.`
+      );
+      return { ijkMode, nSlice: 0 };
     }
+
+    let nSlice = model.slice;
+    if (flip) {
+      const image = publicAPI.getInputData();
+      const extent = image.getExtent();
+      switch (ijkMode) {
+        case SlicingMode.I:
+          nSlice = extent[1] - model.slice;
+          break;
+        case SlicingMode.J:
+          nSlice = extent[3] - model.slice;
+          break;
+        case SlicingMode.K:
+          nSlice = extent[5] - model.slice;
+          break;
+        default:
+          break;
+      }
+    }
+    return { ijkMode, nSlice };
   };
 
   publicAPI.getBounds = () => {
@@ -101,14 +164,24 @@ function vtkImageMapper(publicAPI, model) {
       return image.getBounds();
     }
 
-    const ex = [
-      model.customDisplayExtent[0],
-      model.customDisplayExtent[1],
-      model.customDisplayExtent[2],
-      model.customDisplayExtent[3],
-      model.zSlice,
-      model.zSlice,
-    ];
+    const ex = model.customDisplayExtent.slice();
+    const { ijkMode, nSlice } = publicAPI.getClosestIJKSlice();
+    switch (ijkMode) {
+      case SlicingMode.I:
+        ex[0] = nSlice;
+        ex[1] = nSlice;
+        break;
+      case SlicingMode.J:
+        ex[2] = nSlice;
+        ex[3] = nSlice;
+        break;
+      case SlicingMode.K:
+        ex[4] = nSlice;
+        ex[5] = nSlice;
+        break;
+      default:
+        break;
+    }
 
     return image.extentToBounds(ex);
   };
@@ -119,20 +192,22 @@ function vtkImageMapper(publicAPI, model) {
       return vtkMath.createUninitializedBounds();
     }
     const extent = image.getExtent();
-    switch (publicAPI.getCurrentSlicingMode()) {
-      case SlicingMode.X:
-        extent[0] = slice - thickness;
-        extent[1] = slice + thickness;
+    const { ijkMode, nSlice } = publicAPI.getClosestIJKSlice();
+    switch (ijkMode) {
+      case SlicingMode.I:
+        extent[0] = nSlice - thickness;
+        extent[1] = nSlice + thickness;
         break;
-      case SlicingMode.Y:
-        extent[2] = slice - thickness;
-        extent[3] = slice + thickness;
+      case SlicingMode.J:
+        extent[2] = nSlice - thickness;
+        extent[3] = nSlice + thickness;
         break;
-      case SlicingMode.Z:
-        extent[4] = slice - thickness;
-        extent[5] = slice + thickness;
+      case SlicingMode.K:
+        extent[4] = nSlice - thickness;
+        extent[5] = nSlice + thickness;
         break;
       default:
+        break;
     }
     return image.extentToBounds(extent);
   };
@@ -144,16 +219,14 @@ function vtkImageMapper(publicAPI, model) {
     const extent = imageData.getExtent();
 
     // Slice origin
-    const ijk = [
-      model.xSlice + extent[0],
-      model.ySlice + extent[2],
-      model.zSlice + extent[4],
-    ];
+    const ijk = [extent[0], extent[2], extent[4]];
+    const { ijkMode, nSlice } = publicAPI.getClosestIJKSlice();
+    ijk[ijkMode] += nSlice;
     const worldOrigin = [0, 0, 0];
     imageData.indexToWorld(ijk, worldOrigin);
 
     // Normal computation
-    ijk[model.currentSlicingMode] += 1;
+    ijk[ijkMode] += 1;
     const worldNormal = [0, 0, 0];
     imageData.indexToWorld(ijk, worldNormal);
     worldNormal[0] -= worldOrigin[0];
@@ -203,16 +276,14 @@ function vtkImageMapper(publicAPI, model) {
     const extent = imageData.getExtent();
 
     // Slice origin
-    const ijk = [
-      model.xSlice + extent[0],
-      model.ySlice + extent[2],
-      model.zSlice + extent[4],
-    ];
+    const ijk = [extent[0], extent[2], extent[4]];
+    const { ijkMode, nSlice } = publicAPI.getClosestIJKSlice();
+    ijk[ijkMode] += nSlice;
     const worldOrigin = [0, 0, 0];
     imageData.indexToWorld(ijk, worldOrigin);
 
     // Normal computation
-    ijk[model.currentSlicingMode] += 1;
+    ijk[ijkMode] += 1;
     const worldNormal = [0, 0, 0];
     imageData.indexToWorld(ijk, worldNormal);
     worldNormal[0] -= worldOrigin[0];
@@ -266,9 +337,7 @@ const DEFAULT_VALUES = {
   displayExtent: [0, 0, 0, 0, 0, 0],
   customDisplayExtent: [0, 0, 0, 0],
   useCustomExtents: false,
-  xSlice: 0,
-  ySlice: 0,
-  zSlice: 0,
+  slice: 0,
   currentSlicingMode: SlicingMode.NONE,
   renderToRectangle: false,
   sliceAtFocalPoint: false,
@@ -282,11 +351,9 @@ export function extend(publicAPI, model, initialValues = {}) {
   // Build VTK API
   vtkAbstractMapper.extend(publicAPI, model, initialValues);
 
+  macro.get(publicAPI, model, ['slice']);
   macro.setGet(publicAPI, model, [
     'currentSlicingMode',
-    'xSlice',
-    'ySlice',
-    'zSlice',
     'useCustomExtents',
     'renderToRectangle',
     'sliceAtFocalPoint',

@@ -89,9 +89,20 @@ function vtkSliceRepresentationProxy(publicAPI, model) {
 
     // Init slice location
     const extent = inputDataset.getExtent();
-    publicAPI.setXSlice(Math.floor(mean(extent[0], extent[1])));
-    publicAPI.setYSlice(Math.floor(mean(extent[2], extent[3])));
-    publicAPI.setZSlice(Math.floor(mean(extent[4], extent[5])));
+    const { ijkMode } = model.mapper.getClosestIJKSlice();
+    switch (ijkMode) {
+      case vtkImageMapper.SlicingMode.I:
+        publicAPI.setSlice(Math.floor(mean(extent[0], extent[1])));
+        break;
+      case vtkImageMapper.SlicingMode.J:
+        publicAPI.setSlice(Math.floor(mean(extent[2], extent[3])));
+        break;
+      case vtkImageMapper.SlicingMode.K:
+        publicAPI.setSlice(Math.floor(mean(extent[4], extent[5])));
+        break;
+      default:
+        break;
+    }
   }
 
   // Keep things updated
@@ -99,12 +110,6 @@ function vtkSliceRepresentationProxy(publicAPI, model) {
   model.sourceDependencies.push({ setInputData });
 
   // API ----------------------------------------------------------------------
-
-  publicAPI.setSliceIndex = (index) =>
-    model.mapper[`set${model.slicingMode}Slice`](index);
-
-  publicAPI.getSliceIndex = () =>
-    model.slicingMode ? model.mapper[`get${model.slicingMode}Slice`]() : 0;
 
   publicAPI.setSlicingMode = (mode) => {
     if (!mode) {
@@ -172,9 +177,7 @@ export function extend(publicAPI, model, initialValues = {}) {
     visibility: { modelKey: 'actor', property: 'visibility' },
     colorWindow: { modelKey: 'property', property: 'colorWindow' },
     colorLevel: { modelKey: 'property', property: 'colorLevel' },
-    xSlice: { modelKey: 'mapper', property: 'xSlice' },
-    ySlice: { modelKey: 'mapper', property: 'ySlice' },
-    zSlice: { modelKey: 'mapper', property: 'zSlice' },
+    sliceIndex: { modelKey: 'mapper', property: 'slice' },
   });
 }
 

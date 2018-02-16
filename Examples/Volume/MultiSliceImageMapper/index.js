@@ -57,17 +57,17 @@ reader
 
     const imageMapperZ = vtkImageMapper.newInstance();
     imageMapperZ.setInputData(data);
-    imageMapperZ.setZSliceIndex(30);
+    imageMapperZ.setZSlice(30);
     imageActorZ.setMapper(imageMapperZ);
 
     const imageMapperY = vtkImageMapper.newInstance();
     imageMapperY.setInputData(data);
-    imageMapperY.setYSliceIndex(30);
+    imageMapperY.setYSlice(30);
     imageActorY.setMapper(imageMapperY);
 
     const imageMapperX = vtkImageMapper.newInstance();
     imageMapperX.setInputData(data);
-    imageMapperX.setXSliceIndex(30);
+    imageMapperX.setXSlice(30);
     imageActorX.setMapper(imageMapperX);
 
     renderer.resetCamera();
@@ -93,17 +93,17 @@ reader
   });
 
 document.querySelector('.sliceX').addEventListener('input', (e) => {
-  imageActorX.getMapper().setXSliceIndex(Number(e.target.value));
+  imageActorX.getMapper().setXSlice(Number(e.target.value));
   renderWindow.render();
 });
 
 document.querySelector('.sliceY').addEventListener('input', (e) => {
-  imageActorY.getMapper().setYSliceIndex(Number(e.target.value));
+  imageActorY.getMapper().setYSlice(Number(e.target.value));
   renderWindow.render();
 });
 
 document.querySelector('.sliceZ').addEventListener('input', (e) => {
-  imageActorZ.getMapper().setZSliceIndex(Number(e.target.value));
+  imageActorZ.getMapper().setZSlice(Number(e.target.value));
   renderWindow.render();
 });
 
