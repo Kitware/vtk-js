@@ -1,9 +1,10 @@
 import macro from 'vtk.js/Sources/macro';
 import vtkDataArray from 'vtk.js/Sources/Common/Core/DataArray';
 import vtkPolyData from 'vtk.js/Sources/Common/DataModel/PolyData';
+import vtkMatrixBuilder from 'vtk.js/Sources/Common/Core/MatrixBuilder';
 
 // ----------------------------------------------------------------------------
-// vtkConeSource methods
+// vtkCubeSource methods
 // ----------------------------------------------------------------------------
 
 function vtkCubeSource(publicAPI, model) {
@@ -172,6 +173,21 @@ function vtkCubeSource(publicAPI, model) {
       n[2] += 2.0;
     }
 
+    // Apply rotation to the points coordinates and normals
+    vtkMatrixBuilder
+      .buildFromRadian()
+      .rotateX(model.rotations[0])
+      .rotateY(model.rotations[1])
+      .rotateZ(model.rotations[2])
+      .apply(points)
+      .apply(normals);
+
+    // Apply transformation to the points coordinates
+    vtkMatrixBuilder
+      .buildFromRadian()
+      .translate(...model.center)
+      .apply(points);
+
     // Define quads
     const polys = new window[model.pointType](numberOfPolys * 5);
     polyData.getPolys().setData(polys, 1);
@@ -253,6 +269,7 @@ const DEFAULT_VALUES = {
   yLength: 1.0,
   zLength: 1.0,
   center: [0.0, 0.0, 0.0],
+  rotations: [0.0, 0.0, 0.0],
   pointType: 'Float32Array',
   generate3DTextureCoordinates: false,
 };
@@ -270,7 +287,7 @@ export function extend(publicAPI, model, initialValues = {}) {
     'zLength',
     'generate3DTextureCoordinates',
   ]);
-  macro.setGetArray(publicAPI, model, ['center'], 3);
+  macro.setGetArray(publicAPI, model, ['center', 'rotations'], 3);
 
   macro.algo(publicAPI, model, 0, 1);
   vtkCubeSource(publicAPI, model);
