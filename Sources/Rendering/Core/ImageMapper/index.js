@@ -82,6 +82,36 @@ function vtkImageMapper(publicAPI, model) {
 
   publicAPI.setKSlice = (id) => publicAPI.setSlice(id, SlicingMode.K);
 
+  publicAPI.getSlicingModeNormal = () => {
+    const out = [0, 0, 0];
+    const a = publicAPI.getInputData().getDirection();
+    const mat3 = [[a[0], a[1], a[2]], [a[3], a[4], a[5]], [a[6], a[7], a[8]]];
+
+    switch (publicAPI.getCurrentSlicingMode()) {
+      case SlicingMode.X:
+        out[0] = 1;
+        break;
+      case SlicingMode.Y:
+        out[1] = 1;
+        break;
+      case SlicingMode.Z:
+        out[2] = 1;
+        break;
+      case SlicingMode.I:
+        vtkMath.multiply3x3_vect3(mat3, [1, 0, 0], out);
+        break;
+      case SlicingMode.J:
+        vtkMath.multiply3x3_vect3(mat3, [0, 1, 0], out);
+        break;
+      case SlicingMode.K:
+        vtkMath.multiply3x3_vect3(mat3, [0, 0, 1], out);
+        break;
+      default:
+        break;
+    }
+    return out;
+  };
+
   publicAPI.findClosestIJK = (inVec3, t = 0.99) => {
     // Project vec3 onto direction cosines
     const out = [0, 0, 0];

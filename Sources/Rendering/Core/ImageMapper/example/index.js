@@ -44,10 +44,13 @@ renderWindow.getInteractor().setInteractorStyle(iStyle);
 
 const camera = renderer.getActiveCamera();
 const position = camera.getFocalPoint();
-const axis = mapper.getCurrentSlicingMode();
-position[axis] += 1; // offset along the slicing axis
+// offset along the slicing axis
+const normal = mapper.getSlicingModeNormal();
+position[0] += normal[0];
+position[1] += normal[1];
+position[2] += normal[2];
 camera.setPosition(...position);
-switch (axis) {
+switch (mapper.getCurrentSlicingMode()) {
   case SlicingMode.X:
     camera.setViewUp([0, 1, 0]);
     break;
