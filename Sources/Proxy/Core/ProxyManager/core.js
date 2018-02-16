@@ -1,6 +1,6 @@
 import macro from 'vtk.js/Sources/macro';
 
-const { capitalize, vtkErrorMacro } = macro;
+const { vtkErrorMacro } = macro;
 
 // ----------------------------------------------------------------------------
 // Proxy Registration Handling
@@ -115,8 +115,9 @@ export default function addRegistrationAPI(publicAPI, model) {
       return null;
     }
     const definition = definitions[group][name];
+    const definitionOptions = Object.assign({}, definition.options, options);
     const proxy = definition.class.newInstance(
-      Object.assign({}, definition.options, options, {
+      Object.assign({}, definitionOptions, {
         proxyGroup: group,
         proxyName: name,
         proxyManager: publicAPI,
@@ -144,14 +145,8 @@ export default function addRegistrationAPI(publicAPI, model) {
 
     registerProxy(proxy);
 
-    // Automatically make it active if possible
-    const getActiveMethod = `getActive${capitalize(
-      proxy.getProxyGroup().slice(0, -1)
-    )}`;
-    if (publicAPI[getActiveMethod] && !publicAPI[getActiveMethod]()) {
-      publicAPI[`setActive${capitalize(proxy.getProxyGroup().slice(0, -1))}`](
-        proxy
-      );
+    if (definitionOptions.activateOnCreate) {
+      proxy.activate();
     }
 
     return proxy;

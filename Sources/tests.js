@@ -50,3 +50,4 @@ import './Rendering/OpenGL/VolumeMapper/test/testLighting';
 import './Testing/testAlgorithm';
 import './Testing/testMacro';
 import './Testing/testSerialization';
+import './Testing/testProxy';

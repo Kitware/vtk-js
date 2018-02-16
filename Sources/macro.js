@@ -1008,6 +1008,17 @@ export function proxy(publicAPI, model) {
     }
   };
 
+  publicAPI.activate = () => {
+    if (model.proxyManager) {
+      const setActiveMethod = `setActive${capitalize(
+        publicAPI.getProxyGroup().slice(0, -1)
+      )}`;
+      if (model.proxyManager[setActiveMethod]) {
+        model.proxyManager[setActiveMethod](publicAPI);
+      }
+    }
+  };
+
   // property link
   model.propertyLinkSubscribers = [];
   publicAPI.registerPropertyLinkForGC = (otherLink) => {
