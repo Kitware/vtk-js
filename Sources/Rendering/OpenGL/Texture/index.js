@@ -724,7 +724,11 @@ function vtkOpenGLTexture(publicAPI, model) {
     publicAPI.bind();
 
     const pixData = updateArrayDataType(dataType, data);
-    const scaledData = scaleTextureToHighestPowerOfTwo(pixData);
+
+    let scaledData = pixData;
+    if (!model.openGLRenderWindow.getWebgl2()) {
+      scaledData = scaleTextureToHighestPowerOfTwo(pixData);
+    }
 
     // Source texture data from the PBO.
     model.context.pixelStorei(model.context.UNPACK_ALIGNMENT, 1);
