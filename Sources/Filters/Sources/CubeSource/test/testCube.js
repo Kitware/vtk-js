@@ -8,7 +8,8 @@ import vtkOpenGLRenderWindow from 'vtk.js/Sources/Rendering/OpenGL/RenderWindow'
 import vtkRenderer from 'vtk.js/Sources/Rendering/Core/Renderer';
 import vtkRenderWindow from 'vtk.js/Sources/Rendering/Core/RenderWindow';
 
-import baseline from './testCube.png';
+import baseline1 from './testCube.png';
+import baseline2 from './testCube_2.png';
 
 test.onlyIfWebGL('Test vtkCubeSource Rendering', (t) => {
   const gc = testUtils.createGarbageCollector(t);
@@ -75,7 +76,7 @@ test.onlyIfWebGL('Test vtkCubeSource Rendering', (t) => {
   const image = glwindow.captureImage();
   testUtils.compareImages(
     image,
-    [baseline],
+    [baseline1, baseline2],
     'Filters/Sources/CubeSource/testCube',
     t,
     2.5,
