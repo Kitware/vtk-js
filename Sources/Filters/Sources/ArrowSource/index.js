@@ -55,19 +55,31 @@ function vtkArrowSource(publicAPI, model) {
     append.setInputData(cylinderPD);
     append.addInputData(conePD);
 
+    const appendPD = append.getOutputData();
+    const appendPts = appendPD.getPoints().getData();
+    // Center the arrow about [0, 0, 0]
+    vtkMatrixBuilder
+      .buildFromRadian()
+      .translate(-0.5 + model.tipLength * 0.5, 0.0, 0.0)
+      .apply(appendPts);
     if (model.invert) {
-      const appendPD = append.getOutputData();
-      const appendPts = appendPD.getPoints().getData();
       // Apply transformation to the arrow
       vtkMatrixBuilder
-        .buildFromDegree()
-        .translate(1, 0, 0)
-        .scale(-1, 1, 1)
+        .buildFromRadian()
+        .rotateFromDirections([1, 0, 0], model.direction)
+        .scale(-1, -1, -1)
         .apply(appendPts);
 
       // Update output
       outData[0] = appendPD;
     } else {
+      // Apply transformation to the arrow
+      vtkMatrixBuilder
+        .buildFromRadian()
+        .rotateFromDirections([1, 0, 0], model.direction)
+        .scale(1, 1, 1)
+        .apply(appendPts);
+
       // Update output
       outData[0] = append.getOutputData();
     }
@@ -88,6 +100,7 @@ const DEFAULT_VALUES = {
   shaftResolution: 6,
   shaftRadius: 0.03,
   invert: false,
+  direction: [1.0, 0.0, 0.0],
   pointType: 'Float32Array',
 };
 
@@ -106,6 +119,7 @@ export function extend(publicAPI, model, initialValues = {}) {
     'shaftRadius',
     'invert',
   ]);
+  macro.setGetArray(publicAPI, model, ['direction'], 3);
   macro.algo(publicAPI, model, 0, 1);
   vtkArrowSource(publicAPI, model);
 }
