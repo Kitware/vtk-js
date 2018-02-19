@@ -57,11 +57,15 @@ function vtkArrowSource(publicAPI, model) {
 
     const appendPD = append.getOutputData();
     const appendPts = appendPD.getPoints().getData();
+    // Center the arrow about [0, 0, 0]
+    vtkMatrixBuilder
+      .buildFromRadian()
+      .translate(-0.5 + model.tipLength * 0.5, 0.0, 0.0)
+      .apply(appendPts);
     if (model.invert) {
       // Apply transformation to the arrow
       vtkMatrixBuilder
         .buildFromRadian()
-        .translate(1, 0, 0)
         .rotateFromDirections([1, 0, 0], model.direction)
         .scale(-1, -1, -1)
         .apply(appendPts);
@@ -73,6 +77,7 @@ function vtkArrowSource(publicAPI, model) {
       vtkMatrixBuilder
         .buildFromRadian()
         .rotateFromDirections([1, 0, 0], model.direction)
+        .scale(1, 1, 1)
         .apply(appendPts);
 
       // Update output
