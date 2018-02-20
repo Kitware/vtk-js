@@ -916,16 +916,19 @@ function vtkOpenGLVolumeMapper(publicAPI, model) {
       // Only activate once volumeInfo has been populated.
       if (model.lightingTexture.getComputedGradients()) {
         model.lightingTexture.activate();
+        const onLightingActivated = model.renderable.getOnLightingActivated();
+        if (typeof onLightingActivated === 'function') {
+          onLightingActivated();
+        }
       } else {
         // We wanted to render, but the gradients have not finished computing.
         // So, re-render later.
         if (computedGradientsRenderTimeout !== null) {
           clearTimeout(computedGradientsRenderTimeout);
         }
-        computedGradientsRenderTimeout = setTimeout(
-          model.openGLRenderWindow.modified,
-          20
-        );
+        computedGradientsRenderTimeout = setTimeout(() => {
+          model.openGLRenderWindow.modified();
+        }, 20);
       }
     }
 
