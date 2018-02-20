@@ -478,7 +478,7 @@ function vtkOpenGLImageMapper(publicAPI, model) {
 
     // Find the IJK slice
     let nSlice = model.renderable.getSlice();
-    if (ijkMode !== model.renderable.getCurrentSlicingMode()) {
+    if (ijkMode !== model.renderable.getSlicingMode()) {
       // If not IJK slicing, get the IJK slice from the XYZ position/slice
       nSlice = model.renderable.getSliceAtPosition(nSlice);
     }
@@ -500,7 +500,7 @@ function vtkOpenGLImageMapper(publicAPI, model) {
     const toString = `${nSlice}A${image.getMTime()}A${image
       .getPointData()
       .getScalars()
-      .getMTime()}B${publicAPI.getMTime()}C${model.renderable.getCurrentSlicingMode()}`;
+      .getMTime()}B${publicAPI.getMTime()}C${model.renderable.getSlicingMode()}`;
     if (model.VBOBuildString !== toString) {
       // Build the VBOs
       const dims = image.getDimensions();

@@ -122,7 +122,7 @@ function vtkSliceRepresentationProxy(publicAPI, model) {
     // Init slice location
     const bounds = inputDataset.getBounds();
     const extent = inputDataset.getExtent();
-    switch (model.mapper.getCurrentSlicingMode()) {
+    switch (model.mapper.getSlicingMode()) {
       case vtkImageMapper.SlicingMode.I:
         publicAPI.setSlice(Math.floor(mean(extent[0], extent[1])));
         break;
@@ -160,7 +160,7 @@ function vtkSliceRepresentationProxy(publicAPI, model) {
     if (model.slicingMode !== mode) {
       // Update Mode
       model.slicingMode = mode;
-      model.mapper.setCurrentSlicingMode(vtkImageMapper.SlicingMode[mode]);
+      model.mapper.setSlicingMode(vtkImageMapper.SlicingMode[mode]);
 
       if (model.input) {
         // Update domains for UI...

@@ -153,19 +153,19 @@ function vtkVolumeRepresentationProxy(publicAPI, model) {
 
   // Slices
   model.mapperX = vtkImageMapper.newInstance({
-    currentSlicingMode: vtkImageMapper.SlicingMode.X,
+    slicingMode: vtkImageMapper.SlicingMode.X,
   });
   model.actorX = vtkImageSlice.newInstance({ visibility: false });
   model.propertySlices = model.actorX.getProperty();
   model.mapperY = vtkImageMapper.newInstance({
-    currentSlicingMode: vtkImageMapper.SlicingMode.Y,
+    slicingMode: vtkImageMapper.SlicingMode.Y,
   });
   model.actorY = vtkImageSlice.newInstance({
     visibility: false,
     property: model.propertySlices,
   });
   model.mapperZ = vtkImageMapper.newInstance({
-    currentSlicingMode: vtkImageMapper.SlicingMode.Z,
+    slicingMode: vtkImageMapper.SlicingMode.Z,
   });
   model.actorZ = vtkImageSlice.newInstance({
     visibility: false,

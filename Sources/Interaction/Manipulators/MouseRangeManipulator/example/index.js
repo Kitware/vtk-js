@@ -29,7 +29,7 @@ rtSource.setStandardDeviation(0.3);
 
 const mapper = vtkImageMapper.newInstance();
 mapper.setInputConnection(rtSource.getOutputPort());
-mapper.setCurrentSlicingMode(SlicingMode.K);
+mapper.setSlicingMode(SlicingMode.K);
 
 const actor = vtkImageSlice.newInstance();
 actor.getProperty().setColorWindow(100);

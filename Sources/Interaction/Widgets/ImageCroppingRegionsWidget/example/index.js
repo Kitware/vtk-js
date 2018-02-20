@@ -46,7 +46,7 @@ function setupControlPanel(data, imageMapper) {
     el.setAttribute('value', (upperExtent - lowerExtent) / 2);
   });
 
-  viewAxisInput.value = ['X', 'Y', 'Z'][imageMapper.getCurrentSlicingMode()];
+  viewAxisInput.value = ['X', 'Y', 'Z'][imageMapper.getSlicingMode()];
 
   sliceInputs.forEach((el, idx) => {
     el.addEventListener('input', (ev) => {
@@ -59,7 +59,7 @@ function setupControlPanel(data, imageMapper) {
 
   viewAxisInput.addEventListener('input', (ev) => {
     const sliceMode = ['X', 'Y', 'Z'].indexOf(ev.target.value);
-    imageMapper.setCurrentSlicingMode(sliceMode);
+    imageMapper.setSlicingMode(sliceMode);
     const slice = sliceInputs[sliceMode].value;
     imageMapper[`set${ev.target.value}Slice`](slice);
 
@@ -101,7 +101,7 @@ function setupWidget(volumeMapper, imageMapper) {
 
   imageMapper.onModified(() => {
     // update slice and slice orientation
-    const sliceMode = imageMapper.getCurrentSlicingMode();
+    const sliceMode = imageMapper.getSlicingMode();
     const sliceNormal = ['X', 'Y', 'Z'][sliceMode];
     const slice = imageMapper[`get${sliceNormal}Slice`]();
     widget.setSlice(slice);
@@ -140,7 +140,7 @@ reader
     const viewUp = [0, 1, 0];
 
     const sliceNormal = ['X', 'Y', 'Z'][sliceMode];
-    imageMapper.setCurrentSlicingMode(sliceMode);
+    imageMapper.setSlicingMode(sliceMode);
     imageMapper[`set${sliceNormal}Slice`](0);
 
     const camPosition = renderer

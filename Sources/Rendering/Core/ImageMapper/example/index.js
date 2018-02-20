@@ -29,7 +29,7 @@ rtSource.setStandardDeviation(0.3);
 const mapper = vtkImageMapper.newInstance();
 mapper.setInputConnection(rtSource.getOutputPort());
 mapper.setSliceAtFocalPoint(true);
-mapper.setCurrentSlicingMode(SlicingMode.Z);
+mapper.setSlicingMode(SlicingMode.Z);
 // mapper.setZSlice(5);
 
 const actor = vtkImageSlice.newInstance();
@@ -50,7 +50,7 @@ position[0] += normal[0];
 position[1] += normal[1];
 position[2] += normal[2];
 camera.setPosition(...position);
-switch (mapper.getCurrentSlicingMode()) {
+switch (mapper.getSlicingMode()) {
   case SlicingMode.X:
     camera.setViewUp([0, 1, 0]);
     break;
