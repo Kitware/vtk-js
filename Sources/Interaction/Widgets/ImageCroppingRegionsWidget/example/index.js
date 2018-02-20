@@ -31,9 +31,9 @@ interactorStyle2D.setCurrentImageNumber(0);
 
 function setupControlPanel(data, imageMapper) {
   const sliceInputs = [
-    document.querySelector('.sliceX'),
-    document.querySelector('.sliceY'),
-    document.querySelector('.sliceZ'),
+    document.querySelector('.sliceI'),
+    document.querySelector('.sliceJ'),
+    document.querySelector('.sliceK'),
   ];
   const viewAxisInput = document.querySelector('.viewAxis');
 
@@ -46,22 +46,23 @@ function setupControlPanel(data, imageMapper) {
     el.setAttribute('value', (upperExtent - lowerExtent) / 2);
   });
 
-  viewAxisInput.value = ['X', 'Y', 'Z'][imageMapper.getSlicingMode()];
+  viewAxisInput.value = 'IJKXYZ'[imageMapper.getSlicingMode()];
 
   sliceInputs.forEach((el, idx) => {
     el.addEventListener('input', (ev) => {
-      const sliceNormal = ['X', 'Y', 'Z'][idx];
-      imageMapper[`set${sliceNormal}Slice`](Number(ev.target.value));
-
-      renderWindow.render();
+      const sliceMode = sliceInputs.indexOf(el);
+      if (imageMapper.getSlicingMode() === sliceMode) {
+        imageMapper.setSlice(Number(ev.target.value));
+        renderWindow.render();
+      }
     });
   });
 
   viewAxisInput.addEventListener('input', (ev) => {
-    const sliceMode = ['X', 'Y', 'Z'].indexOf(ev.target.value);
+    const sliceMode = 'IJKXYZ'.indexOf(ev.target.value);
     imageMapper.setSlicingMode(sliceMode);
     const slice = sliceInputs[sliceMode].value;
-    imageMapper[`set${ev.target.value}Slice`](slice);
+    imageMapper.setSlice(slice);
 
     const camPosition = renderer
       .getActiveCamera()
@@ -102,8 +103,7 @@ function setupWidget(volumeMapper, imageMapper) {
   imageMapper.onModified(() => {
     // update slice and slice orientation
     const sliceMode = imageMapper.getSlicingMode();
-    const sliceNormal = ['X', 'Y', 'Z'][sliceMode];
-    const slice = imageMapper[`get${sliceNormal}Slice`]();
+    const slice = imageMapper.getSlice();
     widget.setSlice(slice);
     widget.setSliceOrientation(sliceMode);
   });
@@ -136,12 +136,11 @@ reader
 
     // After creating our cropping widget, we can now update our image mapper
     // with default slice orientation/mode and camera view.
-    const sliceMode = 2;
+    const sliceMode = vtkImageMapper.SlicingMode.K;
     const viewUp = [0, 1, 0];
 
-    const sliceNormal = ['X', 'Y', 'Z'][sliceMode];
     imageMapper.setSlicingMode(sliceMode);
-    imageMapper[`set${sliceNormal}Slice`](0);
+    imageMapper.setSlice(0);
 
     const camPosition = renderer
       .getActiveCamera()
