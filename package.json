@@ -21,8 +21,7 @@
     "pako": "1.0.6",
     "seedrandom": "2.4.3",
     "shelljs": "0.7.8",
-    "webworker-promise": "^0.4.1",
-    "worker-loader": "^1.1.0"
+    "webworker-promise": "^0.4.1"
   },
   "devDependencies": {
     "babel-plugin-istanbul": "4.1.5",
