@@ -474,7 +474,14 @@ function vtkOpenGLImageMapper(publicAPI, model) {
     }
 
     // Find what IJK axis and what direction to slice along
-    const { ijkMode, nSlice } = model.renderable.getClosestIJKSlice();
+    const { ijkMode } = model.renderable.getClosestIJKAxis();
+
+    // Find the IJK slice
+    let nSlice = model.renderable.getSlice();
+    if (ijkMode !== model.renderable.getCurrentSlicingMode()) {
+      // If not IJK slicing, get the IJK slice from the XYZ position/slice
+      nSlice = model.renderable.getSliceAtPosition(nSlice);
+    }
 
     // Find sliceOffset
     const ext = image.getExtent();

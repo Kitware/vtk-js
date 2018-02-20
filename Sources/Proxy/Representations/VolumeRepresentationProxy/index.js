@@ -21,30 +21,35 @@ function mean(...array) {
 
 // ----------------------------------------------------------------------------
 
-function updateDomains(dataset, dataArray, updateProp) {
+function updateDomains(dataset, dataArray, model, updateProp) {
   const dataRange = dataArray.getRange();
-  const extent = dataset.getExtent();
+  const spacing = dataset.getSpacing();
+  const bounds = dataset.getBounds();
+
+  const { xIJKAxis } = model.mapperX.getClosestIJKAxis();
+  const { yIJKAxis } = model.mapperY.getClosestIJKAxis();
+  const { zIJKAxis } = model.mapperZ.getClosestIJKAxis();
 
   const propToUpdate = {
-    xSliceIndex: {
+    xSlice: {
       domain: {
-        min: extent[0],
-        max: extent[1],
-        step: 1,
+        min: bounds[0],
+        max: bounds[1],
+        step: spacing[xIJKAxis],
       },
     },
-    ySliceIndex: {
+    ySlice: {
       domain: {
-        min: extent[2],
-        max: extent[3],
-        step: 1,
+        min: bounds[2],
+        max: bounds[3],
+        step: spacing[yIJKAxis],
       },
     },
-    zSliceIndex: {
+    zSlice: {
       domain: {
-        min: extent[4],
-        max: extent[5],
-        step: 1,
+        min: bounds[4],
+        max: bounds[5],
+        step: spacing[zIJKAxis],
       },
     },
     colorWindow: {
@@ -63,30 +68,24 @@ function updateDomains(dataset, dataArray, updateProp) {
     },
   };
 
-  updateProp('xSliceIndex', propToUpdate.xSliceIndex);
-  updateProp('ySliceIndex', propToUpdate.ySliceIndex);
-  updateProp('zSliceIndex', propToUpdate.zSliceIndex);
+  updateProp('xSlice', propToUpdate.xSlice);
+  updateProp('ySlice', propToUpdate.ySlice);
+  updateProp('zSlice', propToUpdate.zSlice);
   updateProp('colorWindow', propToUpdate.colorWindow);
   updateProp('colorLevel', propToUpdate.colorLevel);
 
   return {
-    xSliceIndex: Math.floor(
-      mean(
-        propToUpdate.xSliceIndex.domain.min,
-        propToUpdate.xSliceIndex.domain.max
-      )
+    xSlice: mean(
+      propToUpdate.xSlice.domain.min,
+      propToUpdate.xSlice.domain.max
     ),
-    ySliceIndex: Math.floor(
-      mean(
-        propToUpdate.ySliceIndex.domain.min,
-        propToUpdate.ySliceIndex.domain.max
-      )
+    ySlice: mean(
+      propToUpdate.ySlice.domain.min,
+      propToUpdate.ySlice.domain.max
     ),
-    zSliceIndex: Math.floor(
-      mean(
-        propToUpdate.zSliceIndex.domain.min,
-        propToUpdate.zSliceIndex.domain.max
-      )
+    zSlice: mean(
+      propToUpdate.zSlice.domain.min,
+      propToUpdate.zSlice.domain.max
     ),
     colorWindow: propToUpdate.colorWindow.domain.max,
     colorLevel: Math.floor(
@@ -212,6 +211,7 @@ function vtkVolumeRepresentationProxy(publicAPI, model) {
     const state = updateDomains(
       inputDataset,
       publicAPI.getDataArray(),
+      model,
       publicAPI.updateProxyProperty
     );
     publicAPI.set(state);
@@ -316,9 +316,9 @@ export function extend(publicAPI, model, initialValues = {}) {
   // Object specific methods
   vtkVolumeRepresentationProxy(publicAPI, model);
   macro.proxyPropertyMapping(publicAPI, model, {
-    xSliceIndex: { modelKey: 'mapperX', property: 'slice' },
-    ySliceIndex: { modelKey: 'mapperY', property: 'slice' },
-    zSliceIndex: { modelKey: 'mapperZ', property: 'slice' },
+    xSlice: { modelKey: 'mapperX', property: 'slice' },
+    ySlice: { modelKey: 'mapperY', property: 'slice' },
+    zSlice: { modelKey: 'mapperZ', property: 'slice' },
     colorWindow: { modelKey: 'propertySlices', property: 'colorWindow' },
     colorLevel: { modelKey: 'propertySlices', property: 'colorLevel' },
     useShadow: { modelKey: 'property', property: 'shade' },

@@ -12,9 +12,8 @@ function vtkAbstractRepresentationProxy(publicAPI, model) {
 
   function updateConnectivity() {
     if (model.input) {
-      let count = model.sourceDependencies.length;
-      while (count--) {
-        model.sourceDependencies[count].setInputData(model.input.getDataset());
+      for (let i = 0; i < model.sourceDependencies.length; ++i) {
+        model.sourceDependencies[i].setInputData(model.input.getDataset());
       }
     }
   }
