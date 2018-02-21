@@ -473,22 +473,34 @@ function vtkOpenGLImageMapper(publicAPI, model) {
       }
     }
 
-    // rebuild the VBO if the data has changed
-    let nSlice = model.renderable.getZSlice();
+    // Find what IJK axis and what direction to slice along
+    const { ijkMode } = model.renderable.getClosestIJKAxis();
+
+    // Find the IJK slice
+    let nSlice = model.renderable.getSlice();
+    if (ijkMode !== model.renderable.getSlicingMode()) {
+      // If not IJK slicing, get the IJK slice from the XYZ position/slice
+      nSlice = model.renderable.getSliceAtPosition(nSlice);
+    }
+
+    // Find sliceOffset
     const ext = image.getExtent();
-    let sliceOffset = nSlice - ext[4];
-    if (model.renderable.getCurrentSlicingMode() === SlicingMode.X) {
-      nSlice = model.renderable.getXSlice();
+    let sliceOffset;
+    if (ijkMode === SlicingMode.I) {
       sliceOffset = nSlice - ext[0];
     }
-    if (model.renderable.getCurrentSlicingMode() === SlicingMode.Y) {
-      nSlice = model.renderable.getYSlice();
+    if (ijkMode === SlicingMode.J) {
       sliceOffset = nSlice - ext[2];
     }
+    if (ijkMode === SlicingMode.K || ijkMode === SlicingMode.NONE) {
+      sliceOffset = nSlice - ext[4];
+    }
+
+    // rebuild the VBO if the data has changed
     const toString = `${nSlice}A${image.getMTime()}A${image
       .getPointData()
       .getScalars()
-      .getMTime()}B${publicAPI.getMTime()}C${model.renderable.getCurrentSlicingMode()}`;
+      .getMTime()}B${publicAPI.getMTime()}C${model.renderable.getSlicingMode()}`;
     if (model.VBOBuildString !== toString) {
       // Build the VBOs
       const dims = image.getDimensions();
@@ -525,7 +537,7 @@ function vtkOpenGLImageMapper(publicAPI, model) {
         .getData();
       let scalars = null;
       // Get right scalars according to slicing mode
-      if (model.renderable.getCurrentSlicingMode() === SlicingMode.X) {
+      if (ijkMode === SlicingMode.I) {
         scalars = [];
         for (let k = 0; k < dims[2]; k++) {
           for (let j = 0; j < dims[1]; j++) {
@@ -548,7 +560,7 @@ function vtkOpenGLImageMapper(publicAPI, model) {
         ptsArray[9] = nSlice;
         ptsArray[10] = ext[3];
         ptsArray[11] = ext[5];
-      } else if (model.renderable.getCurrentSlicingMode() === SlicingMode.Y) {
+      } else if (ijkMode === SlicingMode.J) {
         scalars = [];
         for (let k = 0; k < dims[2]; k++) {
           for (let i = 0; i < dims[0]; i++) {
@@ -570,7 +582,7 @@ function vtkOpenGLImageMapper(publicAPI, model) {
         ptsArray[9] = ext[1];
         ptsArray[10] = nSlice;
         ptsArray[11] = ext[5];
-      } else {
+      } else if (ijkMode === SlicingMode.K || ijkMode === SlicingMode.NONE) {
         scalars = basicScalars.subarray(
           sliceOffset * sliceSize,
           (sliceOffset + 1) * sliceSize
@@ -587,6 +599,8 @@ function vtkOpenGLImageMapper(publicAPI, model) {
         ptsArray[9] = ext[1];
         ptsArray[10] = ext[3];
         ptsArray[11] = nSlice;
+      } else {
+        vtkErrorMacro('Reformat slicing not yet supported.');
       }
 
       model.openGLTexture.create2DFromRaw(

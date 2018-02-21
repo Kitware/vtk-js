@@ -37,8 +37,9 @@ function convertItkToVtkImage(itkImage, options = {}) {
     vtkImage.spacing[idx] = itkImage.spacing[idx];
     dimensions[idx] = itkImage.size[idx];
     for (let col = 0; col < itkImage.imageType.dimension; ++col) {
+      // Transpose direction matrix
       direction[col + idx * 3] =
-        itkImage.direction.data[col + idx * itkImage.imageType.dimension];
+        itkImage.direction.data[idx + col * itkImage.imageType.dimension];
     }
   }
 

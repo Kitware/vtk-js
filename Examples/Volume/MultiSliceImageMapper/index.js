@@ -14,21 +14,21 @@ const renderWindow = fullScreenRenderWindow.getRenderWindow();
 const renderer = fullScreenRenderWindow.getRenderer();
 fullScreenRenderWindow.addController(controlPanel);
 
-const imageActorX = vtkImageSlice.newInstance();
-const imageActorY = vtkImageSlice.newInstance();
-const imageActorZ = vtkImageSlice.newInstance();
+const imageActorI = vtkImageSlice.newInstance();
+const imageActorJ = vtkImageSlice.newInstance();
+const imageActorK = vtkImageSlice.newInstance();
 
-renderer.addActor(imageActorZ);
-renderer.addActor(imageActorY);
-renderer.addActor(imageActorX);
+renderer.addActor(imageActorK);
+renderer.addActor(imageActorJ);
+renderer.addActor(imageActorI);
 
 function updateColorLevel(e) {
   const colorLevel = Number(
     (e ? e.target : document.querySelector('.colorLevel')).value
   );
-  imageActorX.getProperty().setColorLevel(colorLevel);
-  imageActorY.getProperty().setColorLevel(colorLevel);
-  imageActorZ.getProperty().setColorLevel(colorLevel);
+  imageActorI.getProperty().setColorLevel(colorLevel);
+  imageActorJ.getProperty().setColorLevel(colorLevel);
+  imageActorK.getProperty().setColorLevel(colorLevel);
   renderWindow.render();
 }
 
@@ -36,9 +36,9 @@ function updateColorWindow(e) {
   const colorLevel = Number(
     (e ? e.target : document.querySelector('.colorWindow')).value
   );
-  imageActorX.getProperty().setColorWindow(colorLevel);
-  imageActorY.getProperty().setColorWindow(colorLevel);
-  imageActorZ.getProperty().setColorWindow(colorLevel);
+  imageActorI.getProperty().setColorWindow(colorLevel);
+  imageActorJ.getProperty().setColorWindow(colorLevel);
+  imageActorK.getProperty().setColorWindow(colorLevel);
   renderWindow.render();
 }
 
@@ -55,26 +55,26 @@ reader
       .getRange();
     const extent = data.getExtent();
 
-    const imageMapperZ = vtkImageMapper.newInstance();
-    imageMapperZ.setInputData(data);
-    imageMapperZ.setZSliceIndex(30);
-    imageActorZ.setMapper(imageMapperZ);
+    const imageMapperK = vtkImageMapper.newInstance();
+    imageMapperK.setInputData(data);
+    imageMapperK.setKSlice(30);
+    imageActorK.setMapper(imageMapperK);
 
-    const imageMapperY = vtkImageMapper.newInstance();
-    imageMapperY.setInputData(data);
-    imageMapperY.setYSliceIndex(30);
-    imageActorY.setMapper(imageMapperY);
+    const imageMapperJ = vtkImageMapper.newInstance();
+    imageMapperJ.setInputData(data);
+    imageMapperJ.setJSlice(30);
+    imageActorJ.setMapper(imageMapperJ);
 
-    const imageMapperX = vtkImageMapper.newInstance();
-    imageMapperX.setInputData(data);
-    imageMapperX.setXSliceIndex(30);
-    imageActorX.setMapper(imageMapperX);
+    const imageMapperI = vtkImageMapper.newInstance();
+    imageMapperI.setInputData(data);
+    imageMapperI.setISlice(30);
+    imageActorI.setMapper(imageMapperI);
 
     renderer.resetCamera();
     renderer.resetCameraClippingRange();
     renderWindow.render();
 
-    ['.sliceX', '.sliceY', '.sliceZ'].forEach((selector, idx) => {
+    ['.sliceI', '.sliceJ', '.sliceK'].forEach((selector, idx) => {
       const el = document.querySelector(selector);
       el.setAttribute('min', extent[idx * 2 + 0]);
       el.setAttribute('max', extent[idx * 2 + 1]);
@@ -92,18 +92,18 @@ reader
     updateColorWindow();
   });
 
-document.querySelector('.sliceX').addEventListener('input', (e) => {
-  imageActorX.getMapper().setXSliceIndex(Number(e.target.value));
+document.querySelector('.sliceI').addEventListener('input', (e) => {
+  imageActorI.getMapper().setISlice(Number(e.target.value));
   renderWindow.render();
 });
 
-document.querySelector('.sliceY').addEventListener('input', (e) => {
-  imageActorY.getMapper().setYSliceIndex(Number(e.target.value));
+document.querySelector('.sliceJ').addEventListener('input', (e) => {
+  imageActorJ.getMapper().setJSlice(Number(e.target.value));
   renderWindow.render();
 });
 
-document.querySelector('.sliceZ').addEventListener('input', (e) => {
-  imageActorZ.getMapper().setZSliceIndex(Number(e.target.value));
+document.querySelector('.sliceK').addEventListener('input', (e) => {
+  imageActorK.getMapper().setKSlice(Number(e.target.value));
   renderWindow.render();
 });
 
@@ -115,6 +115,6 @@ document
   .addEventListener('input', updateColorWindow);
 
 global.fullScreen = fullScreenRenderWindow;
-global.imageActorX = imageActorX;
-global.imageActorY = imageActorY;
-global.imageActorZ = imageActorZ;
+global.imageActorI = imageActorI;
+global.imageActorJ = imageActorJ;
+global.imageActorK = imageActorK;

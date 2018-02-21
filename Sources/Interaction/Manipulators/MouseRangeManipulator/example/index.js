@@ -8,6 +8,8 @@ import vtkInteractorStyleManipulator from 'vtk.js/Sources/Interaction/Style/Inte
 
 import Manipulators from 'vtk.js/Sources/Interaction/Manipulators';
 
+const { SlicingMode } = vtkImageMapper;
+
 // ----------------------------------------------------------------------------
 // Standard rendering code setup
 // ----------------------------------------------------------------------------
@@ -27,6 +29,7 @@ rtSource.setStandardDeviation(0.3);
 
 const mapper = vtkImageMapper.newInstance();
 mapper.setInputConnection(rtSource.getOutputPort());
+mapper.setSlicingMode(SlicingMode.K);
 
 const actor = vtkImageSlice.newInstance();
 actor.getProperty().setColorWindow(100);
@@ -46,11 +49,11 @@ const lMin = range[0];
 const lMax = range[1];
 const lGet = actor.getProperty().getColorLevel;
 const lSet = actor.getProperty().setColorLevel;
-const bounds = data.getBounds();
-const zMin = bounds[4];
-const zMax = bounds[5];
-const zGet = mapper.getZSlice;
-const zSet = mapper.setZSlice;
+const extent = data.getExtent();
+const kMin = extent[4];
+const kMax = extent[5];
+const kGet = mapper.getSlice;
+const kSet = mapper.setSlice;
 
 const rangeManipulator = Manipulators.vtkMouseRangeManipulator.newInstance({
   button: 1,
@@ -58,7 +61,7 @@ const rangeManipulator = Manipulators.vtkMouseRangeManipulator.newInstance({
 });
 rangeManipulator.setVerticalListener(wMin, wMax, 1, wGet, wSet);
 rangeManipulator.setHorizontalListener(lMin, lMax, 1, lGet, lSet);
-rangeManipulator.setScrollListener(zMin, zMax, 1, zGet, zSet);
+rangeManipulator.setScrollListener(kMin, kMax, 1, kGet, kSet);
 
 const iStyle = vtkInteractorStyleManipulator.newInstance();
 iStyle.addMouseManipulator(rangeManipulator);

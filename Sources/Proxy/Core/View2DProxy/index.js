@@ -28,10 +28,7 @@ function vtkView2DProxy(publicAPI, model) {
 
   // Setup default corner annotation
   /* eslint-disable no-template-curly-in-string */
-  publicAPI.setCornerAnnotation(
-    'nw',
-    'Orientation ${axis}<br>Slice ${sliceIndex}'
-  );
+  publicAPI.setCornerAnnotation('nw', 'Orientation ${axis}<br>Slice ${slice}');
   publicAPI.setCornerAnnotation('se', 'CW ${colorWindow}<br>CL ${colorLevel}');
   /* eslint-enable no-template-curly-in-string */
 
