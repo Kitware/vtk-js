@@ -53,16 +53,16 @@ function vtkCubeSource(publicAPI, model) {
 
     let pointIndex = 0;
 
-    x[0] = model.center[0] - model.xLength / 2.0;
+    x[0] = -model.xLength / 2.0;
     n[0] = -1.0;
     n[1] = 0.0;
     n[2] = 0.0;
     for (let i = 0; i < 2; i++) {
-      x[1] = model.center[1] - model.yLength / 2.0;
+      x[1] = -model.yLength / 2.0;
 
       for (let j = 0; j < 2; j++) {
         tc[1] = x[1] + 0.5;
-        x[2] = model.center[2] - model.zLength / 2.0;
+        x[2] = -model.zLength / 2.0;
 
         for (let k = 0; k < 2; k++) {
           tc[0] = (x[2] + 0.5) * (1 - 2 * i);
@@ -93,16 +93,16 @@ function vtkCubeSource(publicAPI, model) {
       n[0] += 2.0;
     }
 
-    x[1] = model.center[1] - model.yLength / 2.0;
+    x[1] = -model.yLength / 2.0;
     n[1] = -1.0;
     n[0] = 0.0;
     n[2] = 0.0;
     for (let i = 0; i < 2; i++) {
-      x[0] = model.center[0] - model.xLength / 2.0;
+      x[0] = -model.xLength / 2.0;
 
       for (let j = 0; j < 2; j++) {
         tc[0] = (x[0] + 0.5) * (2 * i - 1);
-        x[2] = model.center[2] - model.zLength / 2.0;
+        x[2] = -model.zLength / 2.0;
 
         for (let k = 0; k < 2; k++) {
           tc[1] = (x[2] + 0.5) * -1;
@@ -133,16 +133,16 @@ function vtkCubeSource(publicAPI, model) {
       n[1] += 2.0;
     }
 
-    x[2] = model.center[2] - model.zLength / 2.0;
+    x[2] = -model.zLength / 2.0;
     n[2] = -1.0;
     n[0] = 0.0;
     n[1] = 0.0;
     for (let i = 0; i < 2; i++) {
-      x[1] = model.center[1] - model.yLength / 2.0;
+      x[1] = -model.yLength / 2.0;
 
       for (let j = 0; j < 2; j++) {
         tc[1] = x[1] + 0.5;
-        x[0] = model.center[0] - model.xLength / 2.0;
+        x[0] = -model.xLength / 2.0;
 
         for (let k = 0; k < 2; k++) {
           tc[0] = (x[0] + 0.5) * (2 * i - 1);
