@@ -403,7 +403,7 @@ export function load(container, options) {
 
     const progressCallback = (progressEvent) => {
       const percent = Math.floor(
-        100 * progressEvent.loaded / progressEvent.total / urls.length
+        100 * progressEvent.loaded / progressEvent.total / (urls.length + 1)
       );
       progressContainer.innerHTML = `Loading ${percent}%`;
     };
