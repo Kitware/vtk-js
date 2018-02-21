@@ -59,7 +59,7 @@ function vtkSphereSource(publicAPI, model) {
 
     // Cells
     let cellLocation = 0;
-    let polys = new Uint32Array(numPolys * 5); // FIXME array size
+    let polys = new Uint32Array(numPolys * 5);
 
     // Create north pole if needed
     if (model.startPhi <= 0.0) {
