@@ -29,12 +29,12 @@ test.onlyIfWebGL('Test Interpolate Scalars Before Colors', (t) => {
   renderWindow.addRenderer(renderer);
   renderer.setBackground(0.0, 0.0, 0.0);
 
-  // FIXME ---- magic flag underneath
+  // ---- magic flag underneath
   const preset = colorMaps.find((p) => p.Name === 'Cool to Warm');
   const actor = createScalarMap(0, 0, preset, gc, 0, 10000);
   actor.getMapper().setScalarRange(0, 10000);
   // console.log('preset', JSON.stringify(preset, null, 2));
-  // FIXME ---- end
+  // ---- end
 
   renderer.addActor(actor);
   renderer.addActor(createScalarMap(0.5, 0, preset, gc));

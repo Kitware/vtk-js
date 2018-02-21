@@ -32,11 +32,6 @@ function vtkProp3D(publicAPI, model) {
     return [vtkMath.degreesFromRadians(w), oaxis[0], oaxis[1], oaxis[2]];
   };
 
-  // FIXME
-  publicAPI.addOrientation = notImplemented('addOrientation');
-  publicAPI.getOrientation = notImplemented('getOrientation');
-  publicAPI.setOrientation = notImplemented('setOrientation');
-
   publicAPI.rotateX = (val) => {
     if (val === 0.0) {
       return;

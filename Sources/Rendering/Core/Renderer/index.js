@@ -185,10 +185,6 @@ function vtkRenderer(publicAPI, model) {
     model.lights = [];
   };
 
-  // FIXME
-  publicAPI.addCuller = notImplemented('addCuller');
-  publicAPI.removeCuller = notImplemented('removeCuller');
-
   publicAPI.setLightCollection = (lights) => {
     model.lights = lights;
     publicAPI.modified();
@@ -518,17 +514,7 @@ function vtkRenderer(publicAPI, model) {
     return m1;
   };
 
-  // FIXME
-  publicAPI.pickProp = notImplemented('pickProp');
-  publicAPI.pickRender = notImplemented('PickRender');
-  publicAPI.pickGeometry = notImplemented('PickGeometry');
-
-  // ExpandBounds => global
-
   publicAPI.getTransparent = () => !!model.preserveColorBuffer;
-
-  // FIXME
-  publicAPI.getTiledAspectRatio = notImplemented('GetTiledAspectRatio');
 
   publicAPI.isActiveCameraCreated = () => !!model.activeCamera;
 }
