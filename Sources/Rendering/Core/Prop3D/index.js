@@ -5,10 +5,6 @@ import vtkBoundingBox from 'vtk.js/Sources/Common/DataModel/BoundingBox';
 import vtkMath from 'vtk.js/Sources/Common/Core/Math';
 import vtkProp from 'vtk.js/Sources/Rendering/Core/Prop';
 
-function notImplemented(method) {
-  return () => macro.vtkErrorMacro(`vtkProp3D::${method} - NOT IMPLEMENTED`);
-}
-
 // ----------------------------------------------------------------------------
 // vtkProp3D methods
 // ----------------------------------------------------------------------------
