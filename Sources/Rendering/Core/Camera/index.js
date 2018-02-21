@@ -36,6 +36,11 @@ function vtkCamera(publicAPI, model) {
   const tmpvec2 = vec3.create();
   const tmpvec3 = vec3.create();
 
+  const rotateMatrix = mat4.create();
+  const trans = mat4.create();
+  const newPosition = vec3.create();
+  const newFocalPoint = vec3.create();
+
   publicAPI.orthogonalizeViewUp = () => {
     const vt = publicAPI.getViewMatrix();
     model.viewUp[0] = vt[4];
@@ -171,7 +176,7 @@ function vtkCamera(publicAPI, model) {
     const up = model.viewUp;
     const viewUpVec4 = vec4.fromValues(up[0], up[1], up[2], 0.0);
 
-    const rotateMatrix = mat4.create(); // FIXME: don't create a new one each time?
+    mat4.identity(rotateMatrix);
     const viewDir = vec3.fromValues(
       at[0] - eye[0],
       at[1] - eye[1],
@@ -193,10 +198,8 @@ function vtkCamera(publicAPI, model) {
   };
 
   publicAPI.azimuth = (angle) => {
-    const newPosition = vec3.create();
     const fp = model.focalPoint;
 
-    const trans = mat4.create();
     mat4.identity(trans);
 
     // translate the focal point to the origin,
@@ -221,10 +224,8 @@ function vtkCamera(publicAPI, model) {
   };
 
   publicAPI.yaw = (angle) => {
-    const newFocalPoint = vec3.create();
     const position = model.position;
 
-    const trans = mat4.create();
     mat4.identity(trans);
 
     // translate the camera to the origin,
@@ -265,13 +266,11 @@ function vtkCamera(publicAPI, model) {
   };
 
   publicAPI.elevation = (angle) => {
-    const newPosition = vec3.create();
     const fp = model.focalPoint;
 
     const vt = publicAPI.getViewMatrix();
     const axis = [-vt[0], -vt[1], -vt[2]];
 
-    const trans = mat4.create();
     mat4.identity(trans);
 
     // translate the focal point to the origin,
@@ -296,13 +295,11 @@ function vtkCamera(publicAPI, model) {
   };
 
   publicAPI.pitch = (angle) => {
-    const newFocalPoint = vec3.create();
     const position = model.position;
 
     const vt = publicAPI.getViewMatrix();
     const axis = [vt[0], vt[1], vt[2]];
 
-    const trans = mat4.create();
     mat4.identity(trans);
 
     // translate the camera to the origin,
