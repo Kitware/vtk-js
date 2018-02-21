@@ -901,6 +901,7 @@ function vtkOpenGLVolumeMapper(publicAPI, model) {
   };
 
   let computedGradientsRenderTimeout = null;
+  let lightingActivatedInvoked = false;
   publicAPI.renderPieceDraw = (ren, actor) => {
     const gl = model.context;
 
@@ -916,9 +917,10 @@ function vtkOpenGLVolumeMapper(publicAPI, model) {
       // Only activate once volumeInfo has been populated.
       if (model.lightingTexture.getComputedGradients()) {
         model.lightingTexture.activate();
-        const onLightingActivated = model.renderable.getOnLightingActivated();
-        if (typeof onLightingActivated === 'function') {
-          onLightingActivated();
+        if (!lightingActivatedInvoked) {
+          // Break recursion
+          lightingActivatedInvoked = true;
+          model.renderable.invokeLightingActivated();
         }
       } else {
         // We wanted to render, but the gradients have not finished computing.
@@ -929,6 +931,7 @@ function vtkOpenGLVolumeMapper(publicAPI, model) {
         computedGradientsRenderTimeout = setTimeout(() => {
           model.openGLRenderWindow.modified();
         }, 20);
+        lightingActivatedInvoked = false;
       }
     }
 
