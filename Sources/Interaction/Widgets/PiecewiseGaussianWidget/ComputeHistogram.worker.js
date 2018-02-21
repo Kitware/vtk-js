@@ -1,6 +1,6 @@
 import registerWebworker from 'webworker-promise/lib/register';
 
-registerWebworker(async ({ array, min, max, numberOfBins }, emit) => {
+registerWebworker(({ array, min, max, numberOfBins }, emit) => {
   const delta = max - min;
   const histogram = new Float32Array(numberOfBins);
   histogram.fill(0);
@@ -11,7 +11,7 @@ registerWebworker(async ({ array, min, max, numberOfBins }, emit) => {
     histogram[idx] += 1;
   }
 
-  return new registerWebworker.TransferableResponse(histogram, [
-    histogram.buffer,
-  ]);
+  return Promise.resolve(
+    new registerWebworker.TransferableResponse(histogram, [histogram.buffer])
+  );
 });

@@ -4,7 +4,7 @@ import registerWebworker from 'webworker-promise/lib/register';
 import vtkMath from 'vtk.js/Sources/Common/Core/Math';
 
 registerWebworker(
-  async (
+  (
     { width, height, depth, spacing, data, haveWebgl2, depthStart, depthEnd },
     emit
   ) => {
@@ -70,8 +70,8 @@ registerWebworker(
       subMaxMag: maxMag,
       subDepthStart: depthStart,
     };
-    return new registerWebworker.TransferableResponse(result, [
-      gradients.buffer,
-    ]);
+    return Promise.resolve(
+      new registerWebworker.TransferableResponse(result, [gradients.buffer])
+    );
   }
 );
