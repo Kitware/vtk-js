@@ -40,9 +40,6 @@ const selectorClass =
     ? style.dark
     : style.light;
 
-// name
-const defaultName = userParams.name || '';
-
 // lut
 const lutName = userParams.lut || 'erdc_rainbow_bright';
 
@@ -399,25 +396,39 @@ export function load(container, options) {
     }
     updateCamera(renderer.getActiveCamera());
   } else if (options.fileURL) {
+    const urls = [].concat(options.fileURL);
     const progressContainer = document.createElement('div');
     progressContainer.setAttribute('class', style.progress);
     container.appendChild(progressContainer);
 
     const progressCallback = (progressEvent) => {
       const percent = Math.floor(
-        100 * progressEvent.loaded / progressEvent.total
+        100 * progressEvent.loaded / progressEvent.total / urls.length
       );
       progressContainer.innerHTML = `Loading ${percent}%`;
     };
 
-    HttpDataAccessHelper.fetchBinary(options.fileURL, {
-      progressCallback,
-    }).then((binary) => {
-      container.removeChild(progressContainer);
-      createViewer(container);
-      createPipeline(defaultName, binary);
-      updateCamera(renderer.getActiveCamera());
-    });
+    createViewer(container);
+    const nbURLs = urls.length;
+    let nbLoadedData = 0;
+
+    /* eslint-disable no-loop-func */
+    while (urls.length) {
+      const url = urls.pop();
+      const name = Array.isArray(userParams.name)
+        ? userParams.name[urls.length]
+        : `Data ${urls.length + 1}`;
+      HttpDataAccessHelper.fetchBinary(url, {
+        progressCallback,
+      }).then((binary) => {
+        nbLoadedData++;
+        if (nbLoadedData === nbURLs) {
+          container.removeChild(progressContainer);
+        }
+        createPipeline(name, binary);
+        updateCamera(renderer.getActiveCamera());
+      });
+    }
   }
 }
 
