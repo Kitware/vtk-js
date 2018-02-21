@@ -90,16 +90,20 @@ test.onlyIfWebGL('Test Lighted Volume Rendering', (t) => {
       renderer.getActiveCamera().zoom(1.4);
       renderer.resetCameraClippingRange();
       renderer.updateLightsGeometryToFollowCamera();
+      mapper.onLightingActivated(() => {
+        renderWindow.render();
+        const image = glwindow.captureImage();
+        testUtils.compareImages(
+          image,
+          [baseline1, baseline2],
+          'Rendering/OpenGL/VolumeMapper/testLighting',
+          t,
+          1.5,
+          gc.releaseResources
+        );
+      });
       renderWindow.render();
-      const image = glwindow.captureImage();
-      testUtils.compareImages(
-        image,
-        [baseline1, baseline2],
-        'Rendering/OpenGL/VolumeMapper/testLighting',
-        t,
-        1.5,
-        gc.releaseResources
-      );
+      interactor.requestAnimation('test');
     });
   });
 });

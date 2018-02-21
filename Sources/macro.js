@@ -32,9 +32,7 @@ consoleMethods.forEach((methodName) => {
   fakeConsole[methodName] = noOp;
 });
 
-global.console = window.console.hasOwnProperty('log')
-  ? window.console
-  : fakeConsole;
+global.console = console.hasOwnProperty('log') ? console : fakeConsole;
 
 const loggerFunctions = {
   debug: noOp, // Don't print debug by default

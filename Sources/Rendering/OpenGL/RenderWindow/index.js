@@ -443,8 +443,10 @@ function vtkOpenGLRenderWindow(publicAPI, model) {
   };
 
   publicAPI.traverseAllPasses = () => {
-    for (let index = 0; index < model.renderPasses.length; ++index) {
-      model.renderPasses[index].traverse(publicAPI, null);
+    if (model.renderPasses) {
+      for (let index = 0; index < model.renderPasses.length; ++index) {
+        model.renderPasses[index].traverse(publicAPI, null);
+      }
     }
     if (model.notifyImageReady) {
       publicAPI.invokeImageReady(getCanvasDataURL());

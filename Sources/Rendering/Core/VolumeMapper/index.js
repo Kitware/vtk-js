@@ -55,6 +55,8 @@ export function extend(publicAPI, model, initialValues = {}) {
     'autoAdjustSampleDistances',
   ]);
 
+  macro.event(publicAPI, model, 'lightingActivated');
+
   // Object methods
   vtkVolumeMapper(publicAPI, model);
 }

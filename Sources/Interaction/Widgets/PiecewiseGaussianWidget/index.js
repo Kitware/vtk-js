@@ -1,6 +1,10 @@
 import macro from 'vtk.js/Sources/macro';
 import vtkMath from 'vtk.js/Sources/Common/Core/Math';
 
+import WebworkerPromise from 'webworker-promise';
+
+import ComputeHistogramWorker from './ComputeHistogram.worker';
+
 /* eslint-disable no-continue */
 
 // ----------------------------------------------------------------------------
@@ -438,39 +442,63 @@ function vtkPiecewiseGaussianWidget(publicAPI, model) {
     numberOfBinToConsider = 1,
     numberOfBinsToSkip = 1
   ) => {
+    model.histogram = null;
     model.histogramArray = array;
     const max = vtkMath.arrayMax(array);
     const min = vtkMath.arrayMin(array);
-
-    const delta = max - min;
     model.dataRange = [min, max];
-    model.histogram = [];
-    while (model.histogram.length < model.numberOfBins) {
-      model.histogram.push(0);
-    }
-    for (let i = 0, len = array.length; i < len; i++) {
-      const idx = Math.floor(
-        (model.numberOfBins - 1) * (Number(array[i]) - min) / delta
+
+    const maxNumberOfWorkers = 4;
+    const arrayStride = Math.floor(array.length / maxNumberOfWorkers) || 1;
+    let arrayIndex = 0;
+    const workers = [];
+    while (arrayIndex < array.length) {
+      const worker = new ComputeHistogramWorker();
+      const workerPromise = new WebworkerPromise(worker);
+      const arrayStart = arrayIndex;
+      const arrayEnd = Math.min(arrayIndex + arrayStride, array.length - 1);
+      const subArray = new array.constructor(
+        array.slice(arrayStart, arrayEnd + 1)
       );
-      model.histogram[idx] += 1;
+      workers.push(
+        workerPromise.postMessage(
+          { array: subArray, min, max, numberOfBins: model.numberOfBins },
+          [subArray.buffer]
+        )
+      );
+      arrayIndex += arrayStride;
     }
+    Promise.all(workers).then((workerResults) => {
+      model.histogram = new Float32Array(model.numberOfBins);
+      model.histogram.fill(0);
+      workerResults.forEach((subHistogram) => {
+        for (let i = 0, len = subHistogram.length; i < len; ++i) {
+          model.histogram[i] += subHistogram[i];
+        }
+      });
 
-    // Smart Rescale Histogram
-    const sampleSize = Math.min(
-      numberOfBinToConsider,
-      model.histogram.length - numberOfBinsToSkip
-    );
-    const sortedArray = [].concat(model.histogram);
-    sortedArray.sort((a, b) => Number(a) - Number(b));
-    for (let i = 0; i < numberOfBinsToSkip; i++) {
-      sortedArray.pop();
-    }
-    while (sortedArray.length > sampleSize) {
-      sortedArray.shift();
-    }
-    const mean = sortedArray.reduce((a, b) => a + b, 0) / sampleSize;
+      // Smart Rescale Histogram
+      const sampleSize = Math.min(
+        numberOfBinToConsider,
+        model.histogram.length - numberOfBinsToSkip
+      );
+      const sortedArray = Array.from(model.histogram);
+      sortedArray.sort((a, b) => Number(a) - Number(b));
+      for (let i = 0; i < numberOfBinsToSkip; i++) {
+        sortedArray.pop();
+      }
+      while (sortedArray.length > sampleSize) {
+        sortedArray.shift();
+      }
+      const mean = sortedArray.reduce((a, b) => a + b, 0) / sampleSize;
 
-    model.histogram = model.histogram.map((v) => v / mean);
+      for (let i = 0, len = model.histogram.length; i < len; ++i) {
+        model.histogram[i] /= mean;
+      }
+      publicAPI.modified();
+      setTimeout(publicAPI.render, 0);
+    });
+
     publicAPI.modified();
   };
 
@@ -824,11 +852,13 @@ function vtkPiecewiseGaussianWidget(publicAPI, model) {
     }
 
     // Draw histogram
-    drawChart(ctx, graphArea, model.histogram, {
-      lineWidth: 1,
-      strokeStyle: model.style.histogramColor,
-      fillStyle: model.style.histogramColor,
-    });
+    if (model.histogram) {
+      drawChart(ctx, graphArea, model.histogram, {
+        lineWidth: 1,
+        strokeStyle: model.style.histogramColor,
+        fillStyle: model.style.histogramColor,
+      });
+    }
 
     // Draw gaussians
     drawChart(ctx, graphArea, model.opacities, {
