@@ -1,7 +1,26 @@
+import BinaryHelper from 'vtk.js/Sources/IO/Core/BinaryHelper';
 import DataAccessHelper from 'vtk.js/Sources/IO/Core/DataAccessHelper';
 import macro from 'vtk.js/Sources/macro';
 import vtkDataArray from 'vtk.js/Sources/Common/Core/DataArray';
+import vtkMatrixBuilder from 'vtk.js/Sources/Common/Core/MatrixBuilder';
 import vtkPolyData from 'vtk.js/Sources/Common/DataModel/PolyData';
+
+const { vtkErrorMacro } = macro;
+
+function parseHeader(headerString) {
+  const headerSubStr = headerString.split(' ');
+  const fieldValues = headerSubStr.filter((e) => e.indexOf('=') > -1);
+
+  const header = {};
+  for (let i = 0; i < fieldValues.length; ++i) {
+    const fieldValueStr = fieldValues[i];
+    const fieldValueSubStr = fieldValueStr.split('=');
+    if (fieldValueSubStr.length === 2) {
+      header[fieldValueSubStr[0]] = fieldValueSubStr[1];
+    }
+  }
+  return header;
+}
 
 // ----------------------------------------------------------------------------
 // vtkSTLReader methods
@@ -77,6 +96,12 @@ function vtkSTLReader(publicAPI, model) {
     model.parseData = content;
 
     // Binary parsing
+    // Header
+    const headerData = content.slice(0, 80);
+    const headerStr = BinaryHelper.arrayBufferToString(headerData);
+    const header = parseHeader(headerStr);
+
+    // Data
     const dataView = new DataView(content, 84);
     global.dataview = dataView;
     const nbFaces = (content.byteLength - 84) / 50;
@@ -108,6 +133,61 @@ function vtkSTLReader(publicAPI, model) {
       cellValues[cellOffset++] = faceIdx * 3 + 2;
 
       cellDataValues[faceIdx] = dataView.getUint16(offset + 48, true);
+    }
+
+    // Rotate points
+    const orientationField = 'SPACE';
+    if (orientationField in header && header[orientationField] !== 'LPS') {
+      const XYZ = header[orientationField];
+      const mat4 = new Float32Array(16);
+      mat4[15] = 1;
+      switch (XYZ[0]) {
+        case 'L':
+          mat4[0] = 1;
+          break;
+        case 'R':
+          mat4[0] = -1;
+          break;
+        default:
+          vtkErrorMacro(
+            `Can not convert STL file from ${XYZ} to LPS space: ` +
+              `permutations not supported. Use itk.js STL reader instead.`
+          );
+          return;
+      }
+      switch (XYZ[1]) {
+        case 'P':
+          mat4[5] = 1;
+          break;
+        case 'A':
+          mat4[5] = -1;
+          break;
+        default:
+          vtkErrorMacro(
+            `Can not convert STL file from ${XYZ} to LPS space: ` +
+              `permutations not supported. Use itk.js STL reader instead.`
+          );
+          return;
+      }
+      switch (XYZ[2]) {
+        case 'S':
+          mat4[10] = 1;
+          break;
+        case 'I':
+          mat4[10] = -1;
+          break;
+        default:
+          vtkErrorMacro(
+            `Can not convert STL file from ${XYZ} to LPS space: ` +
+              `permutations not supported. Use itk.js STL reader instead.`
+          );
+          return;
+      }
+      vtkMatrixBuilder
+        .buildFromDegree()
+        .setMatrix(mat4)
+        .apply(pointValues)
+        .apply(normalValues);
     }
 
     const polydata = vtkPolyData.newInstance();
