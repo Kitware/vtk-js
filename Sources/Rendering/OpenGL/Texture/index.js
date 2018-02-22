@@ -576,6 +576,10 @@ function vtkOpenGLTexture(publicAPI, model) {
 
   //----------------------------------------------------------------------------
   function scaleTextureToHighestPowerOfTwo(data) {
+    if (model.openGLRenderWindow.getWebgl2()) {
+      // No need if webGL2
+      return data;
+    }
     const pixData = [];
     const width = model.width;
     const height = model.height;
@@ -727,11 +731,7 @@ function vtkOpenGLTexture(publicAPI, model) {
     publicAPI.bind();
 
     const pixData = updateArrayDataType(dataType, data);
-
-    let scaledData = pixData;
-    if (!model.openGLRenderWindow.getWebgl2()) {
-      scaledData = scaleTextureToHighestPowerOfTwo(pixData);
-    }
+    const scaledData = scaleTextureToHighestPowerOfTwo(pixData);
 
     // Source texture data from the PBO.
     model.context.pixelStorei(model.context.UNPACK_ALIGNMENT, 1);
