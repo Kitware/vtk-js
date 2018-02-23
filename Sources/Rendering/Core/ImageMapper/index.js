@@ -6,7 +6,7 @@ import vtkPlane from 'vtk.js/Sources/Common/DataModel/Plane';
 
 import { vec3 } from 'gl-matrix';
 
-const { vtkErrorMacro } = macro;
+const { vtkWarningMacro } = macro;
 const { SlicingMode } = Constants;
 
 // ----------------------------------------------------------------------------
@@ -151,7 +151,7 @@ function vtkImageMapper(publicAPI, model) {
     return out;
   };
 
-  publicAPI.getClosestIJKAxis = (t = 0.99) => {
+  publicAPI.getClosestIJKAxis = () => {
     let inVec3;
     switch (model.slicingMode) {
       case SlicingMode.X:
@@ -185,29 +185,31 @@ function vtkImageMapper(publicAPI, model) {
     const mat3 = [[a[0], a[1], a[2]], [a[3], a[4], a[5]], [a[6], a[7], a[8]]];
     vtkMath.multiply3x3_vect3(mat3, inVec3, out);
 
-    // Using `t` as treshold for fuzzy search
-    if (out[0] > t) {
-      return { ijkMode: SlicingMode.I, flip: false };
-    } else if (out[0] < -t) {
-      return { ijkMode: SlicingMode.I, flip: true };
-    } else if (out[1] > t) {
-      return { ijkMode: SlicingMode.J, flip: false };
-    } else if (out[1] < -t) {
-      return { ijkMode: SlicingMode.J, flip: true };
-    } else if (out[2] > t) {
-      return { ijkMode: SlicingMode.K, flip: false };
-    } else if (out[2] < -t) {
-      return { ijkMode: SlicingMode.K, flip: true };
+    let maxAbs = 0.0;
+    let ijkMode = -1;
+    let flip = false;
+    for (let axis = 0; axis < out.length; ++axis) {
+      const absValue = Math.abs(out[axis]);
+      if (absValue > maxAbs) {
+        maxAbs = absValue;
+        flip = out[axis] < 0.0;
+        ijkMode = axis;
+      }
     }
 
-    const axisLabel = 'IJKXYZ'[model.slicingMode];
-    vtkErrorMacro(
-      `Error slicing along ${axisLabel} axis: ` +
-        `not close enough to any IJK axis of the image data, ` +
-        `necessitates slice reformat that is not yet implemented. ` +
-        `You can switch your mapper to do IJK slicing instead.`
-    );
-    return { ijkMode: SlicingMode.NONE, flip: false };
+    if (maxAbs !== 1.0) {
+      const xyzLabel = 'IJKXYZ'[model.slicingMode];
+      const ijkLabel = 'IJKXYZ'[ijkMode];
+      vtkWarningMacro(
+        `Unaccurate slicing along ${xyzLabel} axis which ` +
+          `is not aligned with any IJK axis of the image data. ` +
+          `Using ${ijkLabel} axis  as a fallback (${maxAbs}% aligned). ` +
+          `Necessitates slice reformat that is not yet implemented.  ` +
+          `You can switch the slicing mode on your mapper to do IJK slicing instead.`
+      );
+    }
+
+    return { ijkMode, flip };
   };
 
   publicAPI.getBounds = () => {
