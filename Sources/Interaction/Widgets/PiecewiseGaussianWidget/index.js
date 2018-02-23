@@ -1050,7 +1050,7 @@ export function extend(publicAPI, model, initialValues = {}) {
     'colorTransferFunction',
     'backgroundImage',
   ]);
-  macro.get(publicAPI, model, ['size', 'canvas']);
+  macro.get(publicAPI, model, ['size', 'canvas', 'gaussians']);
   macro.event(publicAPI, model, 'opacityChange');
   macro.event(publicAPI, model, 'animation');
 
