@@ -172,9 +172,17 @@ function vtkImageMapper(publicAPI, model) {
 
     // Project vec3 onto direction cosines
     const out = [0, 0, 0];
+    // The direction matrix in vtkImageData is the indexToWorld rotation matrix
+    // with a column-major data layout since it is stored as a WebGL matrix.
+    // We need the worldToIndex rotation matrix for the projection, and it needs
+    // to be in a row-major data layout to use vtkMath for operations.
+    // To go from the indexToWorld column-major matrix to the worldToIndex
+    // row-major matrix, we need to transpose it (column -> row) then inverse it.
+    // However, that 3x3 matrix is a rotation matrix which is orthonormal, meaning
+    // that its inverse is equal to its transpose. We therefore need to apply two
+    // transpositions resulting in a no-op.
     const a = publicAPI.getInputData().getDirection();
-    // XYZ -> IJK = inverse of direction matrix = transpose of direction matrix
-    const mat3 = [[a[0], a[3], a[6]], [a[1], a[4], a[7]], [a[2], a[5], a[8]]];
+    const mat3 = [[a[0], a[1], a[2]], [a[3], a[4], a[5]], [a[6], a[7], a[8]]];
     vtkMath.multiply3x3_vect3(mat3, inVec3, out);
 
     // Using `t` as treshold for fuzzy search
