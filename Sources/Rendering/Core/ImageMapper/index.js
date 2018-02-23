@@ -151,7 +151,7 @@ function vtkImageMapper(publicAPI, model) {
     return out;
   };
 
-  publicAPI.getClosestIJKAxis = () => {
+  function computeClosestIJKAxis() {
     let inVec3;
     switch (model.slicingMode) {
       case SlicingMode.X:
@@ -164,10 +164,11 @@ function vtkImageMapper(publicAPI, model) {
         inVec3 = [0, 0, 1];
         break;
       default:
-        return {
+        model.closestIJKAxis = {
           ijkMode: model.slicingMode,
           flip: false,
         };
+        return;
     }
 
     // Project vec3 onto direction cosines
@@ -209,7 +210,29 @@ function vtkImageMapper(publicAPI, model) {
       );
     }
 
-    return { ijkMode, flip };
+    model.closestIJKAxis = { ijkMode, flip };
+  }
+
+  publicAPI.setSlicingMode = (mode) => {
+    if (model.slicingMode === mode) {
+      return;
+    }
+    model.slicingMode = mode;
+    if (publicAPI.getInputData()) {
+      computeClosestIJKAxis();
+    }
+    publicAPI.modified();
+  };
+
+  publicAPI.getClosestIJKAxis = () => {
+    if (
+      (model.closestIJKAxis === undefined ||
+        model.closestIJKAxis.ijkMode === SlicingMode.NONE) &&
+      publicAPI.getInputData()
+    ) {
+      computeClosestIJKAxis();
+    }
+    return model.closestIJKAxis;
   };
 
   publicAPI.getBounds = () => {
@@ -416,6 +439,7 @@ const DEFAULT_VALUES = {
   useCustomExtents: false,
   slice: 0,
   slicingMode: SlicingMode.NONE,
+  closestIJKAxis: { ijkMode: SlicingMode.NONE, flip: false },
   renderToRectangle: false,
   sliceAtFocalPoint: false,
 };
@@ -428,9 +452,10 @@ export function extend(publicAPI, model, initialValues = {}) {
   // Build VTK API
   vtkAbstractMapper.extend(publicAPI, model, initialValues);
 
+  macro.get(publicAPI, model, ['slicingMode']);
   macro.setGet(publicAPI, model, [
     'slice',
-    'slicingMode',
+    'closestIJKAxis',
     'useCustomExtents',
     'renderToRectangle',
     'sliceAtFocalPoint',
