@@ -26,9 +26,9 @@ function updateDomains(dataset, dataArray, model, updateProp) {
   const spacing = dataset.getSpacing();
   const bounds = dataset.getBounds();
 
-  const { xIJKAxis } = model.mapperX.getClosestIJKAxis();
-  const { yIJKAxis } = model.mapperY.getClosestIJKAxis();
-  const { zIJKAxis } = model.mapperZ.getClosestIJKAxis();
+  const { ijkMode: xIJKAxis } = model.mapperX.getClosestIJKAxis();
+  const { ijkMode: yIJKAxis } = model.mapperY.getClosestIJKAxis();
+  const { ijkMode: zIJKAxis } = model.mapperZ.getClosestIJKAxis();
 
   const propToUpdate = {
     xSlice: {
