@@ -263,11 +263,11 @@ function vtkViewProxy(publicAPI, model) {
 
   // --------------------------------------------------------------------------
 
-  publicAPI.setAnimation = (enable) => {
+  publicAPI.setAnimation = (enable, requester = publicAPI) => {
     if (enable) {
-      model.renderWindow.getInteractor().requestAnimation(publicAPI);
+      model.renderWindow.getInteractor().requestAnimation(requester);
     } else {
-      model.renderWindow.getInteractor().cancelAnimation(publicAPI);
+      model.renderWindow.getInteractor().cancelAnimation(requester);
     }
   };
 

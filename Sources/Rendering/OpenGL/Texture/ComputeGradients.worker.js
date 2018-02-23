@@ -1,55 +1,66 @@
-import { vec3 } from 'gl-matrix';
+import glMatrix from 'gl-matrix';
 import registerWebworker from 'webworker-promise/lib/register';
 
 import vtkMath from 'vtk.js/Sources/Common/Core/Math';
 
+/* eslint-disable */
+// prettier-ignore
 registerWebworker(
-  (
-    { width, height, depth, spacing, data, haveWebgl2, depthStart, depthEnd },
+  function (
+    message,
     emit
-  ) => {
+  ) {
+    var width = message.width;
+    var height = message.height;
+    var depth = message.depth;
+    var spacing = message.spacing;
+    var data = message.data;
+    var haveWebgl2 = message.haveWebgl2;
+    var depthStart = message.depthStart;
+    var depthEnd = message.depthEnd;
+
     // have to compute the gradient to get the normal
     // and magnitude
-    const depthLength = depthEnd - depthStart + 1;
-    const gradients = new Float32Array(width * height * depthLength * 4);
-    const gradientMagnitudes = new Float32Array(width * height * depthLength);
+    var depthLength = depthEnd - depthStart + 1;
+    var gradients = new Float32Array(width * height * depthLength * 4);
+    var gradientMagnitudes = new Float32Array(width * height * depthLength);
 
-    const sliceSize = width * height;
-    let inPtr = 0;
-    let outPtr = 0;
-    const grad = vec3.create();
-    vec3.set(
+    var sliceSize = width * height;
+    var inPtr = 0;
+    var outPtr = 0;
+    var grad = glMatrix.vec3.create();
+    glMatrix.vec3.set(
       grad,
       (data[inPtr + 1] - data[inPtr]) / spacing[0],
       (data[inPtr + width] - data[inPtr]) / spacing[1],
       (data[inPtr + sliceSize] - data[inPtr]) / spacing[2]
     );
-    let minMag = vec3.length(grad);
-    let maxMag = -1.0;
-    for (let z = depthStart; z < depthEnd + 1; ++z) {
-      let zedge = 0;
+    var minMag = glMatrix.vec3.length(grad);
+    var maxMag = -1.0;
+    for (var z = depthStart; z < depthEnd + 1; ++z) {
+      var zedge = 0;
       if (z === depth - 1) {
         zedge = -sliceSize;
       }
-      for (let y = 0; y < height; ++y) {
-        let yedge = 0;
+      for (var y = 0; y < height; ++y) {
+        var yedge = 0;
         if (y === height - 1) {
           yedge = -width;
         }
-        for (let x = 0; x < width; ++x) {
-          let edge = inPtr + zedge + yedge;
+        for (var x = 0; x < width; ++x) {
+          var edge = inPtr + zedge + yedge;
           if (x === width - 1) {
             edge--;
           }
-          vec3.set(
+          glMatrix.vec3.set(
             grad,
             (data[edge + 1] - data[edge]) / spacing[0],
             (data[edge + width] - data[edge]) / spacing[1],
             (data[edge + sliceSize] - data[edge]) / spacing[2]
           );
 
-          const mag = vec3.length(grad);
-          vec3.normalize(grad, grad);
+          var mag = glMatrix.vec3.length(grad);
+          glMatrix.vec3.normalize(grad, grad);
           gradients[outPtr++] = grad[0];
           gradients[outPtr++] = grad[1];
           gradients[outPtr++] = grad[2];
@@ -59,19 +70,22 @@ registerWebworker(
         }
       }
     }
-    const arrayMinMag = vtkMath.arrayMin(gradientMagnitudes);
-    const arrayMaxMag = vtkMath.arrayMax(gradientMagnitudes);
+    var arrayMinMag = vtkMath.arrayMin(gradientMagnitudes);
+    var arrayMaxMag = vtkMath.arrayMax(gradientMagnitudes);
     minMag = Math.min(arrayMinMag, minMag);
     maxMag = Math.max(arrayMaxMag, maxMag);
 
-    const result = {
+    var result = {
       subGradients: gradients,
       subMinMag: minMag,
       subMaxMag: maxMag,
       subDepthStart: depthStart,
     };
     return Promise.resolve(
-      new registerWebworker.TransferableResponse(result, [gradients.buffer])
+      new registerWebworker.TransferableResponse(
+        result,
+        [result.subGradients.buffer]
+      )
     );
   }
 );

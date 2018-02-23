@@ -1003,6 +1003,8 @@ export function proxy(publicAPI, model) {
     const prop = propertyMap[propertyName];
     if (prop) {
       Object.assign(prop, propUI);
+    } else {
+      propertyMap[propertyName] = Object.assign({}, propUI);
     }
   };
 
@@ -1149,6 +1151,8 @@ export function proxy(publicAPI, model) {
 
   publicAPI.getPropertyByName = (name) =>
     getProperties().find((p) => p.name === name);
+
+  publicAPI.getPropertyDomainByName = (name) => propertyMap[name].domain;
 
   // ui section
   publicAPI.getProxySection = () => ({

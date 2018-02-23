@@ -1,11 +1,18 @@
 import registerWebworker from 'webworker-promise/lib/register';
 
-registerWebworker(({ array, min, max, numberOfBins }, emit) => {
-  const delta = max - min;
-  const histogram = new Float32Array(numberOfBins);
+/* eslint-disable */
+// prettier-ignore
+registerWebworker(function (message, emit) {
+  var array = message.array;
+  var min = message.min;
+  var max = message.max;
+  var numberOfBins = message.numberOfBins;
+  var delta = max - min;
+  var histogram = new Float32Array(numberOfBins);
   histogram.fill(0);
-  for (let i = 0, len = array.length; i < len; i++) {
-    const idx = Math.floor(
+  var len = array.length;
+  for (var i = 0; i < len; i++) {
+    var idx = Math.floor(
       (numberOfBins - 1) * (Number(array[i]) - min) / delta
     );
     histogram[idx] += 1;

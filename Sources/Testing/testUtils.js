@@ -40,6 +40,7 @@ function compareImages(
   baselines.forEach((baseline, idx) => {
     resemble(baseline)
       .compareTo(image)
+      .ignoreAntialiasing()
       .onComplete((data) => {
         if (minDelta >= data.misMatchPercentage) {
           minDelta = data.misMatchPercentage;

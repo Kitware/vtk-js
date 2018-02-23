@@ -37,7 +37,10 @@ function convertItkToVtkImage(itkImage, options = {}) {
     vtkImage.spacing[idx] = itkImage.spacing[idx];
     dimensions[idx] = itkImage.size[idx];
     for (let col = 0; col < itkImage.imageType.dimension; ++col) {
-      // Transpose direction matrix
+      // ITK (and VTKMath) use a row-major index axis, but the direction
+      // matrix on the vtkImageData is a webGL matrix, which uses a
+      // column-major data layout. Transpose the direction matrix from
+      // itkImage when instantiating that vtkImageData direction matrix.
       direction[col + idx * 3] =
         itkImage.direction.data[idx + col * itkImage.imageType.dimension];
     }
