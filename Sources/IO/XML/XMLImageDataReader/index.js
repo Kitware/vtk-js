@@ -54,7 +54,7 @@ function vtkXMLImageDataReader(publicAPI, model) {
       );
 
       // Add new output
-      model.output[outputIndex++] = imageData;
+      model.output[outputIndex] = imageData;
     }
   };
 

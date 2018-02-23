@@ -123,7 +123,7 @@ function vtkXMLPolyDataReader(publicAPI, model) {
       );
 
       // Add new output
-      model.output[outputIndex++] = polydata;
+      model.output[outputIndex] = polydata;
     }
   };
 
