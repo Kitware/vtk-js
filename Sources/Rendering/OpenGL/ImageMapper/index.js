@@ -538,12 +538,13 @@ function vtkOpenGLImageMapper(publicAPI, model) {
       let scalars = null;
       // Get right scalars according to slicing mode
       if (ijkMode === SlicingMode.I) {
-        scalars = [];
+        scalars = new basicScalars.constructor(dims[2] * dims[1]);
+        let id = 0;
         for (let k = 0; k < dims[2]; k++) {
           for (let j = 0; j < dims[1]; j++) {
-            scalars.push(
-              basicScalars[sliceOffset + j * dims[0] + k * dims[0] * dims[1]]
-            );
+            id = k * dims[1] + j;
+            scalars[id] =
+              basicScalars[sliceOffset + j * dims[0] + k * dims[0] * dims[1]];
           }
         }
         dims[0] = dims[1];
@@ -561,12 +562,13 @@ function vtkOpenGLImageMapper(publicAPI, model) {
         ptsArray[10] = ext[3];
         ptsArray[11] = ext[5];
       } else if (ijkMode === SlicingMode.J) {
-        scalars = [];
+        scalars = new basicScalars.constructor(dims[2] * dims[0]);
+        let id = 0;
         for (let k = 0; k < dims[2]; k++) {
           for (let i = 0; i < dims[0]; i++) {
-            scalars.push(
-              basicScalars[i + sliceOffset * dims[0] + k * dims[0] * dims[1]]
-            );
+            id = k * dims[0] + i;
+            scalars[id] =
+              basicScalars[i + sliceOffset * dims[0] + k * dims[0] * dims[1]];
           }
         }
         dims[1] = dims[2];
