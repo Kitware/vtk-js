@@ -1,4 +1,4 @@
-import glMatrix from 'gl-matrix';
+import { vec3 } from 'gl-matrix';
 import registerWebworker from 'webworker-promise/lib/register';
 
 import vtkMath from 'vtk.js/Sources/Common/Core/Math';
@@ -28,14 +28,14 @@ registerWebworker(
     var sliceSize = width * height;
     var inPtr = 0;
     var outPtr = 0;
-    var grad = glMatrix.vec3.create();
-    glMatrix.vec3.set(
+    var grad = vec3.create();
+    vec3.set(
       grad,
       (data[inPtr + 1] - data[inPtr]) / spacing[0],
       (data[inPtr + width] - data[inPtr]) / spacing[1],
       (data[inPtr + sliceSize] - data[inPtr]) / spacing[2]
     );
-    var minMag = glMatrix.vec3.length(grad);
+    var minMag = vec3.length(grad);
     var maxMag = -1.0;
     for (var z = depthStart; z < depthEnd + 1; ++z) {
       var zedge = 0;
@@ -52,15 +52,15 @@ registerWebworker(
           if (x === width - 1) {
             edge--;
           }
-          glMatrix.vec3.set(
+          vec3.set(
             grad,
             (data[edge + 1] - data[edge]) / spacing[0],
             (data[edge + width] - data[edge]) / spacing[1],
             (data[edge + sliceSize] - data[edge]) / spacing[2]
           );
 
-          var mag = glMatrix.vec3.length(grad);
-          glMatrix.vec3.normalize(grad, grad);
+          var mag = vec3.length(grad);
+          vec3.normalize(grad, grad);
           gradients[outPtr++] = grad[0];
           gradients[outPtr++] = grad[1];
           gradients[outPtr++] = grad[2];
