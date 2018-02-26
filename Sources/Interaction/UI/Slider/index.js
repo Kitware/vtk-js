@@ -184,6 +184,11 @@ function vtkSlider(publicAPI, model) {
       updateCursorPosition();
       publicAPI.modified();
       publicAPI.invokeValueChange(v);
+    } else if (model.values[0] <= v && v <= model.values.slice(-1)[0]) {
+      model.value = v;
+      updateCursorPosition();
+      publicAPI.modified();
+      publicAPI.invokeValueChange(v);
     }
   };
 
