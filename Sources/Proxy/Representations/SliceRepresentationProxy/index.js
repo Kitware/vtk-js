@@ -162,6 +162,12 @@ function vtkSliceRepresentationProxy(publicAPI, model) {
       model.slicingMode = mode;
       model.mapper.setSlicingMode(vtkImageMapper.SlicingMode[mode]);
 
+      // Update to previously set position
+      const modelKey = `${mode.toLowerCase()}Slice`;
+      if (modelKey in model && model[modelKey] !== undefined) {
+        model.mapper.setSlice(model[modelKey]);
+      }
+
       if (model.input) {
         // Update domains for UI...
         const state = updateDomains(
@@ -172,18 +178,19 @@ function vtkSliceRepresentationProxy(publicAPI, model) {
         );
         publicAPI.set(state);
       }
+      publicAPI.modified();
     }
   };
 
   // Used for UI
-  publicAPI.getSliceValues = () => {
+  publicAPI.getSliceValues = (slicingMode = model.slicingMode) => {
     const ds = publicAPI.getInputDataSet();
     if (!ds) {
       return [];
     }
     const values = [];
     const bds = ds.getBounds();
-    const axisIndex = 'XYZ'.indexOf(model.slicingMode);
+    const axisIndex = 'XYZ'.indexOf(slicingMode);
     const endValue = bds[axisIndex * 2 + 1];
     let currentValue = bds[axisIndex * 2];
     while (currentValue <= endValue) {
@@ -193,6 +200,45 @@ function vtkSliceRepresentationProxy(publicAPI, model) {
     return values;
   };
 
+  publicAPI.setXSlice = (value) => {
+    if (model.xSlice !== value) {
+      model.xSlice = value;
+      if (model.slicingMode === 'X') {
+        publicAPI.setSlice(model.xSlice);
+      }
+      publicAPI.modified();
+    }
+  };
+
+  publicAPI.setYSlice = (value) => {
+    if (model.ySlice !== value) {
+      model.ySlice = value;
+      if (model.slicingMode === 'Y') {
+        publicAPI.setSlice(model.ySlice);
+      }
+      publicAPI.modified();
+    }
+  };
+
+  publicAPI.setZSlice = (value) => {
+    if (model.zSlice !== value) {
+      model.zSlice = value;
+      if (model.slicingMode === 'Z') {
+        publicAPI.setSlice(model.zSlice);
+      }
+      publicAPI.modified();
+    }
+  };
+
+  publicAPI.getXSlice = (value) =>
+    model.slicingMode === 'X' ? publicAPI.getSlice() : model.xSlice;
+
+  publicAPI.getYSlice = (value) =>
+    model.slicingMode === 'Y' ? publicAPI.getSlice() : model.ySlice;
+
+  publicAPI.getZSlice = (value) =>
+    model.slicingMode === 'Z' ? publicAPI.getSlice() : model.zSlice;
+
   // Initialize slicing mode
   publicAPI.setSlicingMode(model.slicingMode || 'X');
 }
@@ -201,7 +247,11 @@ function vtkSliceRepresentationProxy(publicAPI, model) {
 // Object factory
 // ----------------------------------------------------------------------------
 
-const DEFAULT_VALUES = {};
+const DEFAULT_VALUES = {
+  xSlice: 0,
+  ySlice: 0,
+  zSlice: 0,
+};
 
 // ----------------------------------------------------------------------------
 

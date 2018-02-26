@@ -2,19 +2,21 @@ import { vec3, mat4, glMatrix } from 'gl-matrix';
 
 const NoOp = (v) => v;
 
-const IDENTITY = mat4.create();
+const IDENTITY = new Float64Array(16);
+mat4.identity(IDENTITY);
 
 class Transform {
   constructor(useDegre = false) {
-    this.matrix = mat4.create();
-    this.tmp = vec3.create();
+    this.matrix = new Float64Array(16);
+    mat4.identity(this.matrix);
+    this.tmp = new Float64Array(3);
     this.angleConv = useDegre ? glMatrix.toRadian : NoOp;
   }
 
   rotateFromDirections(originDirection, targetDirection) {
-    const src = vec3.create();
-    const dst = vec3.create();
-    const transf = mat4.create();
+    const src = new Float64Array(3);
+    const dst = new Float64Array(3);
+    const transf = new Float64Array(16);
 
     vec3.set(src, originDirection[0], originDirection[1], originDirection[2]);
     vec3.set(dst, targetDirection[0], targetDirection[1], targetDirection[2]);
@@ -126,6 +128,11 @@ class Transform {
       this.matrix[14] = mat4x4[14];
       this.matrix[15] = mat4x4[15];
     }
+    return this;
+  }
+
+  identity() {
+    mat4.identity(this.matrix);
     return this;
   }
 }

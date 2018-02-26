@@ -285,7 +285,6 @@ function vtkVolumeRepresentationProxy(publicAPI, model) {
 
   const parentSetColorBy = publicAPI.setColorBy;
   publicAPI.setColorBy = (arrayName, arrayLocation, componentIndex = -1) => {
-    console.log('setColorBy', arrayName, arrayLocation, componentIndex);
     parentSetColorBy(arrayName, arrayLocation, componentIndex);
     const lutProxy = publicAPI.getLookupTableProxy(arrayName);
     const pwfProxy = publicAPI.getPiecewiseFunctionProxy(arrayName);

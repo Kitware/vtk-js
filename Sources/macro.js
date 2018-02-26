@@ -1196,12 +1196,14 @@ export function proxyPropertyMapping(publicAPI, model, map) {
   let count = propertyNames.length;
   while (count--) {
     const propertyName = propertyNames[count];
-    const { modelKey, property } = map[propertyName];
+    const { modelKey, property, modified = true } = map[propertyName];
     const methodSrc = capitalize(property);
     const methodDst = capitalize(propertyName);
     publicAPI[`get${methodDst}`] = model[modelKey][`get${methodSrc}`];
     publicAPI[`set${methodDst}`] = model[modelKey][`set${methodSrc}`];
-    subscriptions.push(model[modelKey].onModified(publicAPI.modified));
+    if (modified) {
+      subscriptions.push(model[modelKey].onModified(publicAPI.modified));
+    }
   }
 
   publicAPI.delete = () => {
