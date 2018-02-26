@@ -110,7 +110,7 @@ class Transform {
   }
 
   setMatrix(mat4x4) {
-    if (Array.isArray(mat4x4) && mat4x4.length === 16) {
+    if (!!mat4x4 && mat4x4.length === 16) {
       this.matrix[0] = mat4x4[0];
       this.matrix[1] = mat4x4[1];
       this.matrix[2] = mat4x4[2];
