@@ -265,7 +265,7 @@ function vtkGlyph3DMapper(publicAPI, model) {
     }
   };
 
-  publicAPI.getPrimativeCount = () => {
+  publicAPI.getPrimitiveCount = () => {
     const glyph = publicAPI.getInputData(1);
     const mult =
       publicAPI

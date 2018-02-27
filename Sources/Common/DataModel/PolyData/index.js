@@ -15,11 +15,7 @@ function vtkPolyData(publicAPI, model) {
 
   function camelize(str) {
     return str
-      .replace(
-        /(?:^\w|[A-Z]|\b\w)/g,
-        (letter, index) =>
-          index === 0 ? letter.toLowerCase() : letter.toUpperCase()
-      )
+      .replace(/(?:^\w|[A-Z]|\b\w)/g, (letter) => letter.toUpperCase())
       .replace(/\s+/g, '');
   }
 

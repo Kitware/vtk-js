@@ -501,7 +501,7 @@ function vtkMapper(publicAPI, model) {
     return mt;
   };
 
-  publicAPI.getPrimativeCount = () => {
+  publicAPI.getPrimitiveCount = () => {
     const input = publicAPI.getInputData();
     const pcount = {
       points: input.getPoints().getNumberOfValues() / 3,
