@@ -313,6 +313,7 @@ function vtkViewProxy(publicAPI, model) {
 
     model.camera.setViewUp(...viewUp);
     model.camera.modified();
+    model.orientationWidget.updateMarkerOrientation();
     model.renderWindow.render();
   };
 
