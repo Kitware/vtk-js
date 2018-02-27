@@ -200,45 +200,6 @@ function vtkSliceRepresentationProxy(publicAPI, model) {
     return values;
   };
 
-  publicAPI.setXSlice = (value) => {
-    if (model.xSlice !== value) {
-      model.xSlice = value;
-      if (model.slicingMode === 'X') {
-        publicAPI.setSlice(model.xSlice);
-      }
-      publicAPI.modified();
-    }
-  };
-
-  publicAPI.setYSlice = (value) => {
-    if (model.ySlice !== value) {
-      model.ySlice = value;
-      if (model.slicingMode === 'Y') {
-        publicAPI.setSlice(model.ySlice);
-      }
-      publicAPI.modified();
-    }
-  };
-
-  publicAPI.setZSlice = (value) => {
-    if (model.zSlice !== value) {
-      model.zSlice = value;
-      if (model.slicingMode === 'Z') {
-        publicAPI.setSlice(model.zSlice);
-      }
-      publicAPI.modified();
-    }
-  };
-
-  publicAPI.getXSlice = (value) =>
-    model.slicingMode === 'X' ? publicAPI.getSlice() : model.xSlice;
-
-  publicAPI.getYSlice = (value) =>
-    model.slicingMode === 'Y' ? publicAPI.getSlice() : model.ySlice;
-
-  publicAPI.getZSlice = (value) =>
-    model.slicingMode === 'Z' ? publicAPI.getSlice() : model.zSlice;
-
   // Initialize slicing mode
   publicAPI.setSlicingMode(model.slicingMode || 'X');
 }
@@ -247,11 +208,7 @@ function vtkSliceRepresentationProxy(publicAPI, model) {
 // Object factory
 // ----------------------------------------------------------------------------
 
-const DEFAULT_VALUES = {
-  xSlice: 0,
-  ySlice: 0,
-  zSlice: 0,
-};
+const DEFAULT_VALUES = {};
 
 // ----------------------------------------------------------------------------
 
