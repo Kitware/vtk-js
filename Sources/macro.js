@@ -77,6 +77,38 @@ export function capitalize(str) {
 }
 
 // ----------------------------------------------------------------------------
+// Convert byte size into a well formatted string
+// ----------------------------------------------------------------------------
+
+export function formatBytesToProperUnit(size, precision = 2, chunkSize = 1000) {
+  const units = ['TB', 'GB', 'MB', 'KB'];
+  let value = Number(size);
+  let currentUnit = 'B';
+  while (value > chunkSize) {
+    value /= chunkSize;
+    currentUnit = units.pop();
+  }
+  return `${value.toFixed(precision)} ${currentUnit}`;
+}
+// ----------------------------------------------------------------------------
+// Convert thousand number with proper seperator
+// ----------------------------------------------------------------------------
+
+export function formatNumbersWithThousandSeparator(n, separator = ' ') {
+  const sections = [];
+  let size = n;
+  while (size > 1000) {
+    sections.push(`000${size % 1000}`.slice(-3));
+    size = Math.floor(size / 1000);
+  }
+  if (size > 0) {
+    sections.push(size);
+  }
+  sections.reverse();
+  return sections.join(separator);
+}
+
+// ----------------------------------------------------------------------------
 // Array helper
 // ----------------------------------------------------------------------------
 
@@ -1313,4 +1345,6 @@ export default {
   proxy,
   proxyPropertyMapping,
   proxyPropertyState,
+  formatBytesToProperUnit,
+  formatNumbersWithThousandSeparator,
 };

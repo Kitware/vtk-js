@@ -4,6 +4,8 @@
 import 'vtk.js/Sources/favicon';
 import JSZip from 'jszip';
 
+import macro from 'vtk.js/Sources/macro';
+
 import HttpDataAccessHelper from 'vtk.js/Sources/IO/Core/DataAccessHelper/HttpDataAccessHelper';
 import vtkFullScreenRenderWindow from 'vtk.js/Sources/Rendering/Misc/FullScreenRenderWindow';
 import vtkURLExtract from 'vtk.js/Sources/Common/Core/URLExtract';
@@ -164,10 +166,16 @@ export function load(container, options) {
     container.appendChild(progressContainer);
 
     const progressCallback = (progressEvent) => {
-      const percent = Math.floor(
-        100 * progressEvent.loaded / progressEvent.total
-      );
-      progressContainer.innerHTML = `Loading ${percent}%`;
+      if (progressEvent.lengthComputable) {
+        const percent = Math.floor(
+          100 * progressEvent.loaded / progressEvent.total
+        );
+        progressContainer.innerHTML = `Loading ${percent}%`;
+      } else {
+        progressContainer.innerHTML = macro.formatBytesToProperUnit(
+          progressEvent.loaded
+        );
+      }
     };
 
     HttpDataAccessHelper.fetchBinary(options.fileURL, {
