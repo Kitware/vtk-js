@@ -420,6 +420,7 @@ function vtkRenderWindowInteractor(publicAPI, model) {
 
     if (model.wheelTimeoutID === 0) {
       publicAPI.startMouseWheelEvent(callData);
+      publicAPI.mouseWheelEvent(callData);
     } else {
       publicAPI.mouseWheelEvent(callData);
       clearTimeout(model.wheelTimeoutID);
