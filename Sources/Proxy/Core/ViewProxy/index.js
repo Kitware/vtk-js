@@ -363,7 +363,18 @@ function extend(publicAPI, model, initialValues = {}) {
   // Proxy handling
   macro.proxy(publicAPI, model);
   macro.proxyPropertyMapping(publicAPI, model, {
-    orientationAxes: { modelKey: 'orientationWidget', property: 'enabled' },
+    orientationAxesVisibility: {
+      modelKey: 'orientationWidget',
+      property: 'enabled',
+    },
+    orientationAxesCorner: {
+      modelKey: 'orientationWidget',
+      property: 'viewportCorner',
+    },
+    orientationAxesSize: {
+      modelKey: 'orientationWidget',
+      property: 'viewportSize',
+    },
     cameraViewUp: { modelKey: 'camera', property: 'viewUp', modified: false },
     cameraPosition: {
       modelKey: 'camera',
