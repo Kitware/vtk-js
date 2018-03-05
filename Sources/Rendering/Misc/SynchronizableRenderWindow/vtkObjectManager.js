@@ -1,13 +1,14 @@
 import vtkActor from 'vtk.js/Sources/Rendering/Core/Actor';
 import vtkCamera from 'vtk.js/Sources/Rendering/Core/Camera';
 import vtkColorTransferFunction from 'vtk.js/Sources/Rendering/Core/ColorTransferFunction';
+import vtkDataArray from 'vtk.js/Sources/Common/Core/DataArray';
+import vtkLight from 'vtk.js/Sources/Rendering/Core/Light';
 import vtkLookupTable from 'vtk.js/Sources/Common/Core/LookupTable';
 import vtkMapper from 'vtk.js/Sources/Rendering/Core/Mapper';
 import vtkPolyData from 'vtk.js/Sources/Common/DataModel/PolyData';
 import vtkProperty from 'vtk.js/Sources/Rendering/Core/Property';
 import vtkRenderer from 'vtk.js/Sources/Rendering/Core/Renderer';
 import vtkRenderWindow from 'vtk.js/Sources/Rendering/Core/RenderWindow';
-import vtkDataArray from 'vtk.js/Sources/Common/Core/DataArray';
 
 // ----------------------------------------------------------------------------
 // Some internal, module-level variables and methods
@@ -383,6 +384,14 @@ const DEFAULT_MAPPING = {
   vtkRenderWindow: {
     build: vtkRenderWindow.newInstance,
     update: vtkRenderWindowUpdater,
+  },
+  vtkOpenGLLight: {
+    build: vtkLight.newInstance,
+    update: genericUpdater,
+  },
+  vtkPVLight: {
+    build: vtkLight.newInstance,
+    update: genericUpdater,
   },
 };
 
