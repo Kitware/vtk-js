@@ -60,11 +60,16 @@ mapper.setInputConnection(reader.getOutputPort());
 reader.setUrl(`${__BASE_PATH__}/data/volume/LIDC2.vti`).then(() => {
   reader.loadData().then(() => {
     renderer.addVolume(actor);
-    renderWindow.getInteractor().setDesiredUpdateRate(15.0);
+    const interactor = renderWindow.getInteractor();
+    interactor.setDesiredUpdateRate(15.0);
     renderer.resetCamera();
     renderer.getActiveCamera().zoom(1.5);
     renderer.getActiveCamera().elevation(70);
     renderWindow.render();
+    interactor.requestAnimation('lighting');
+    mapper.onLightingActivated(() => {
+      interactor.cancelAnimation('lighting');
+    });
   });
 });
 
