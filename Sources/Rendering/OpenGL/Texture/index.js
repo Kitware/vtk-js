@@ -1161,9 +1161,12 @@ function vtkOpenGLTexture(publicAPI, model) {
         }
       );
 
+      // store the information, we will need it later
+      model.volumeInfo = { min: minMag, max: maxMag };
+
       const numPixelsIn = width * height * depth;
-      const reformattedGradients = new Uint8Array(numPixelsIn * 4);
       if (haveWebgl2) {
+        const reformattedGradients = new Uint8Array(numPixelsIn * 4);
         let outIdx = 0;
         for (let p = 0; p < numPixelsIn; ++p) {
           const pp = p * 4;
@@ -1175,12 +1178,7 @@ function vtkOpenGLTexture(publicAPI, model) {
           reformattedGradients[outIdx++] =
             255.0 * Math.sqrt(gradients[pp + 3] / maxMag);
         }
-      }
 
-      // store the information, we will need it later
-      model.volumeInfo = { min: minMag, max: maxMag };
-
-      if (haveWebgl2) {
         const create3DFromRawReturn = publicAPI.create3DFromRaw(
           width,
           height,
@@ -1213,6 +1211,9 @@ function vtkOpenGLTexture(publicAPI, model) {
       // texture using the same packing as volumeInfo
       model.width = scalarTexture.getWidth();
       model.height = scalarTexture.getHeight();
+      const reformattedGradients = new Uint8Array(
+        model.width * model.height * 4
+      );
 
       let outIdx = 0;
       for (let yRep = 0; yRep < vinfo.yreps; yRep++) {
