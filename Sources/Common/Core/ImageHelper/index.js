@@ -22,11 +22,18 @@ function canvasToImageData(canvas, boundingBox = [0, 0, 0, 0]) {
   const imageData = vtkImageData.newInstance({ type: 'vtkImageData' });
   imageData.setOrigin(0, 0, 0);
   imageData.setSpacing(1, 1, 1);
-  imageData.setExtent(0, canvas.width - 1, 0, canvas.height - 1, 0, 0);
+  imageData.setExtent(
+    0,
+    (width || canvas.width) - 1,
+    0,
+    (height || canvas.height) - 1,
+    0,
+    0
+  );
 
   const scalars = vtkDataArray.newInstance({
     numberOfComponents: 4,
-    values: idata.data,
+    values: new Uint8Array(idata.data.buffer),
   });
   scalars.setName('scalars');
   imageData.getPointData().setScalars(scalars);
@@ -37,11 +44,22 @@ function canvasToImageData(canvas, boundingBox = [0, 0, 0, 0]) {
 /**
  * Converts an Image object to a vtkImageData.
  */
-function imageToImageData(image) {
+function imageToImageData(
+  image,
+  transform = { flipX: false, flipY: false, rotate: 0 }
+) {
   const canvas = document.createElement('canvas');
   canvas.width = image.width;
   canvas.height = image.height;
-  canvas.getContext('2d').drawImage(image, 0, 0);
+
+  const ctx = canvas.getContext('2d');
+
+  const { flipX, flipY, rotate } = transform;
+  ctx.translate(canvas.width / 2, canvas.height / 2);
+  ctx.scale(flipX ? -1 : 1, flipY ? -1 : 1);
+  ctx.rotate(rotate * Math.PI / 180);
+  ctx.drawImage(image, -image.width / 2, -image.width / 2);
+
   return canvasToImageData(canvas);
 }
 
