@@ -20,12 +20,16 @@ function vtkOpenGLTexture(publicAPI, model) {
   // Set our className
   model.classHierarchy.push('vtkOpenGLTexture');
   // Renders myself
-  publicAPI.render = () => {
-    model.openGLRenderer = publicAPI.getFirstAncestorOfType(
-      'vtkOpenGLRenderer'
-    );
-    // sync renderable properties
-    model.openGLRenderWindow = model.openGLRenderer.getParent();
+  publicAPI.render = (renWin = null) => {
+    if (renWin) {
+      model.openGLRenderWindow = renWin;
+    } else {
+      model.openGLRenderer = publicAPI.getFirstAncestorOfType(
+        'vtkOpenGLRenderer'
+      );
+      // sync renderable properties
+      model.openGLRenderWindow = model.openGLRenderer.getParent();
+    }
     model.context = model.openGLRenderWindow.getContext();
     if (model.renderable.getInterpolate()) {
       if (model.generateMipmap) {

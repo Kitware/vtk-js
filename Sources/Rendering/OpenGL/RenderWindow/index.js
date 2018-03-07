@@ -66,6 +66,7 @@ function vtkOpenGLRenderWindow(publicAPI, model) {
         gl.ONE,
         gl.ONE_MINUS_SRC_ALPHA
       );
+      gl.depthFunc(gl.LEQUAL);
       gl.enable(gl.BLEND);
       model.initialized = true;
     }

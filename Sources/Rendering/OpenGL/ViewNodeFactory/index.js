@@ -11,6 +11,7 @@ import vtkOpenGLPixelSpaceCallbackMapper from 'vtk.js/Sources/Rendering/OpenGL/P
 import vtkOpenGLPolyDataMapper from 'vtk.js/Sources/Rendering/OpenGL/PolyDataMapper';
 import vtkOpenGLRenderWindow from 'vtk.js/Sources/Rendering/OpenGL/RenderWindow';
 import vtkOpenGLRenderer from 'vtk.js/Sources/Rendering/OpenGL/Renderer';
+import vtkOpenGLSkybox from 'vtk.js/Sources/Rendering/OpenGL/Skybox';
 import vtkOpenGLSphereMapper from 'vtk.js/Sources/Rendering/OpenGL/SphereMapper';
 import vtkOpenGLStickMapper from 'vtk.js/Sources/Rendering/OpenGL/StickMapper';
 import vtkOpenGLTexture from 'vtk.js/Sources/Rendering/OpenGL/Texture';
@@ -66,6 +67,7 @@ export function extend(publicAPI, model, initialValues = {}) {
     vtkOpenGLRenderWindow.newInstance
   );
   publicAPI.registerOverride('vtkRenderer', vtkOpenGLRenderer.newInstance);
+  publicAPI.registerOverride('vtkSkybox', vtkOpenGLSkybox.newInstance);
   publicAPI.registerOverride(
     'vtkSphereMapper',
     vtkOpenGLSphereMapper.newInstance

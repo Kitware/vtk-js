@@ -15,6 +15,7 @@ import vtkRenderWindow from './RenderWindow';
 import vtkShader from './Shader';
 import vtkShaderCache from './ShaderCache';
 import vtkShaderProgram from './ShaderProgram';
+import vtkSkybox from './Skybox';
 import vtkSphereMapper from './SphereMapper';
 import vtkStickMapper from './StickMapper';
 import vtkTexture from './Texture';
@@ -42,6 +43,7 @@ export default {
   vtkShader,
   vtkShaderCache,
   vtkShaderProgram,
+  vtkSkybox,
   vtkSphereMapper,
   vtkStickMapper,
   vtkTexture,
