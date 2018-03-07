@@ -307,6 +307,9 @@ export function obj(publicAPI = {}, model = {}) {
 
     publicAPI.modified();
   };
+
+  // Allow usage as decorator
+  return publicAPI;
 }
 
 // ----------------------------------------------------------------------------

@@ -4,9 +4,7 @@
 import 'vtk.js/Sources/favicon';
 
 import vtkFullScreenRenderWindow from 'vtk.js/Sources/Rendering/Misc/FullScreenRenderWindow';
-import vtkMapper from 'vtk.js/Sources/Rendering/Core/Mapper';
-import vtkActor from 'vtk.js/Sources/Rendering/Core/Actor';
-import vtkCubeSource from 'vtk.js/Sources/Filters/Sources/CubeSource';
+import vtkSkybox from 'vtk.js/Sources/Rendering/Core/Skybox';
 import vtkSkyboxReader from 'vtk.js/Sources/IO/Misc/SkyboxReader';
 
 import style from './SkyboxViewer.mcss';
@@ -41,21 +39,8 @@ function createVisualization(container, mapReader) {
   });
   const renderer = fullScreenRenderer.getRenderer();
   const renderWindow = fullScreenRenderer.getRenderWindow();
-  const source = vtkCubeSource.newInstance({
-    generate3DTextureCoordinates: true,
-  });
-  const mapper = vtkMapper.newInstance();
-  const actor = vtkActor.newInstance();
-
-  // Hide the cube perception from the user
-  actor.getProperty().setAmbient(1);
-  actor.getProperty().setDiffuse(0);
-
-  // Add texture
+  const actor = vtkSkybox.newInstance();
   actor.addTexture(mapReader.getOutputData());
-
-  actor.setMapper(mapper);
-  mapper.setInputData(source.getOutputData());
   renderer.addActor(actor);
   renderWindow.render();
 
@@ -71,12 +56,6 @@ function createVisualization(container, mapReader) {
       reader.setPosition(e.target.value);
       reader.update();
       actor.addTexture(mapReader.getOutputData());
-      renderWindow.render();
-    });
-    document.querySelector('.resetCamera').addEventListener('click', (e) => {
-      renderer.getActiveCamera().setPosition(0, 0, 0);
-      renderer.getActiveCamera().setViewUp(0, 0, 1);
-      renderer.getActiveCamera().setFocalPoint(1, 0, 0);
       renderWindow.render();
     });
   }

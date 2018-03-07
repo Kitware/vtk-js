@@ -108,7 +108,7 @@ function vtkSkyboxReader(publicAPI, model) {
       model.positions = Object.keys(model.dataMapping);
       model.position = model.positions[0];
     });
-    return true;
+    return publicAPI.getReadyPromise();
   };
 
   publicAPI.requestData = (inData, outData) => {
@@ -135,6 +135,9 @@ function vtkSkyboxReader(publicAPI, model) {
       });
     });
   };
+
+  // return Busy state
+  publicAPI.isBusy = () => model.busy;
 }
 
 // ----------------------------------------------------------------------------
