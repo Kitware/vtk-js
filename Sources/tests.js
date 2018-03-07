@@ -40,6 +40,7 @@ import './Rendering/OpenGL/PolyDataMapper/test/testClearShaderReplacements';
 import './Rendering/OpenGL/PolyDataMapper/test/testClippingPlanes';
 import './Rendering/OpenGL/PolyDataMapper/test/testInterpolateScalarsBeforeMapping';
 import './Rendering/OpenGL/SphereMapper/test/testSphere';
+import './Rendering/OpenGL/Skybox/test/testSkybox';
 import './Rendering/OpenGL/StickMapper/test/testStick';
 import './Rendering/OpenGL/Texture/test/testCreateCubeFromRawTexture';
 import './Rendering/OpenGL/VolumeMapper/test/testComposite';

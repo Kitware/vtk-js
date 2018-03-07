@@ -1,0 +1,45 @@
+import macro from 'vtk.js/Sources/macro';
+import vtkActor from 'vtk.js/Sources/Rendering/Core/Actor';
+
+// ----------------------------------------------------------------------------
+// vtkSkybox methods
+// ----------------------------------------------------------------------------
+
+function vtkSkybox(publicAPI, model) {
+  // Set our className
+  model.classHierarchy.push('vtkSkybox');
+
+  publicAPI.getIsOpaque = () => true;
+
+  publicAPI.hasTranslucentPolygonalGeometry = () => false;
+
+  publicAPI.getSupportsSelection = () => false;
+}
+
+// ----------------------------------------------------------------------------
+// Object fSkyboxy
+// ----------------------------------------------------------------------------
+
+const DEFAULT_VALUES = {};
+
+// ----------------------------------------------------------------------------
+
+export function extend(publicAPI, model, initialValues = {}) {
+  Object.assign(model, DEFAULT_VALUES, initialValues);
+
+  // Inheritance
+  vtkActor.extend(publicAPI, model, initialValues);
+
+  // Build VTK API
+
+  // Object methods
+  vtkSkybox(publicAPI, model);
+}
+
+// ----------------------------------------------------------------------------
+
+export const newInstance = macro.newInstance(extend, 'vtkSkybox');
+
+// ----------------------------------------------------------------------------
+
+export default { newInstance, extend };
