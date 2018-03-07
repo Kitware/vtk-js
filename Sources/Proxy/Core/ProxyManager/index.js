@@ -37,6 +37,9 @@ export function extend(publicAPI, model, initialValues = {}) {
   view(publicAPI, model);
   properties(publicAPI, model);
 
+  // Add proxy API
+  macro.proxy(publicAPI, model);
+
   model.classHierarchy.push('vtkProxyManager');
 }
 
