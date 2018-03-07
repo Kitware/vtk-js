@@ -37,10 +37,10 @@ function vtkAbstractRepresentationProxy(publicAPI, model) {
     // Allow dynamic registration of links
     if (model.links) {
       for (let i = 0; i < model.links.length; i++) {
-        const { link, property } = model.links[i];
-        const sLink = source.getPropertyLink(link);
+        const { link, property, persistent, updateOnBind } = model.links[i];
+        const sLink = source.getPropertyLink(link, persistent);
         publicAPI.registerPropertyLinkForGC(sLink);
-        sLink.bind(publicAPI, property);
+        sLink.bind(publicAPI, property, updateOnBind);
       }
     }
   };

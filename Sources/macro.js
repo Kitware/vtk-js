@@ -1067,7 +1067,7 @@ export function proxy(publicAPI, model) {
   };
 
   model.propertyLinkMap = {};
-  publicAPI.getPropertyLink = (id) => {
+  publicAPI.getPropertyLink = (id, persistent = false) => {
     if (model.propertyLinkMap[id]) {
       return model.propertyLinkMap[id];
     }
@@ -1107,6 +1107,11 @@ export function proxy(publicAPI, model) {
         }
         updateInProgress = false;
       }
+
+      if (model.propertyLinkMap[id].persistent) {
+        model.propertyLinkMap[id].value = newValue;
+      }
+
       return newValue;
     }
 
@@ -1136,8 +1141,17 @@ export function proxy(publicAPI, model) {
         propertyName,
         subscription,
       });
-      if (updateMe && other) {
-        update(other.instance, true);
+      if (updateMe) {
+        if (
+          model.propertyLinkMap[id].persistent &&
+          model.propertyLinkMap[id].value !== undefined
+        ) {
+          instance.set({
+            [propertyName]: model.propertyLinkMap[id].value,
+          });
+        } else if (other) {
+          update(other.instance, true);
+        }
       }
       return {
         unsubscribe: () => unbind(instance, propertyName),
@@ -1154,6 +1168,7 @@ export function proxy(publicAPI, model) {
       bind,
       unbind,
       unsubscribe,
+      persistent,
     };
     model.propertyLinkMap[id] = linkHandler;
     return linkHandler;
