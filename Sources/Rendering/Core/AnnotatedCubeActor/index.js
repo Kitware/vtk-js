@@ -86,6 +86,7 @@ function vtkAnnotatedCubeActor(publicAPI, model) {
 
     const vtkImage = ImageHelper.canvasToImageData(canvas);
     texture.setInputData(vtkImage, FACE_TO_INDEX[faceName]);
+    publicAPI.modified();
   }
 
   function updateAllFaceTextures() {
