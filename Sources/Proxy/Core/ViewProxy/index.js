@@ -105,16 +105,25 @@ function vtkViewProxy(publicAPI, model) {
   // --------------------------------------------------------------------------
 
   publicAPI.setPresetToOrientationAxes = (nameOrDefinitions) => {
+    let changeDetected = false;
     if (typeof nameOrDefinitions === 'string') {
-      return AnnotatedCubePresets.applyPreset(
-        nameOrDefinitions,
-        model.orientationAxes
-      );
+      if (model.presetToOrientationAxes !== nameOrDefinitions) {
+        model.presetToOrientationAxes = nameOrDefinitions;
+        changeDetected = AnnotatedCubePresets.applyPreset(
+          nameOrDefinitions,
+          model.orientationAxes
+        );
+        publicAPI.modified();
+      }
+      return changeDetected;
     }
-    return AnnotatedCubePresets.applyDefinitions(
+    model.presetToOrientationAxes = 'Custom';
+    changeDetected = AnnotatedCubePresets.applyDefinitions(
       nameOrDefinitions,
       model.orientationAxes
     );
+    publicAPI.modified();
+    return changeDetected;
   };
 
   // --------------------------------------------------------------------------
@@ -334,6 +343,7 @@ const DEFAULT_VALUES = {
   sectionName: 'view',
   annotationOpacity: 1,
   resetCameraOnFirstRender: true,
+  presetToOrientationAxes: 'default',
 };
 
 // ----------------------------------------------------------------------------
@@ -355,6 +365,7 @@ function extend(publicAPI, model, initialValues = {}) {
     'camera',
     'cornerAnnotation',
     'annotationOpacity',
+    'presetToOrientationAxes',
   ]);
 
   // Object specific methods
@@ -387,6 +398,16 @@ function extend(publicAPI, model, initialValues = {}) {
       modified: false,
     },
   });
+
+  // Allow dynamic registration of links
+  if (model.links && model.proxyManager) {
+    for (let i = 0; i < model.links.length; i++) {
+      const { link, property, persistent, updateOnBind } = model.links[i];
+      const sLink = model.proxyManager.getPropertyLink(link, persistent);
+      publicAPI.registerPropertyLinkForGC(sLink);
+      sLink.bind(publicAPI, property, updateOnBind);
+    }
+  }
 }
 
 // ----------------------------------------------------------------------------
