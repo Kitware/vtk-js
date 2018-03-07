@@ -66,6 +66,8 @@ reader.setUrl(`${__BASE_PATH__}/data/volume/LIDC2.vti`).then(() => {
     renderer.getActiveCamera().zoom(1.5);
     renderer.getActiveCamera().elevation(70);
     renderWindow.render();
+    // Ensure the volume rendering is updated with gradient opacity lighting
+    // effects after the gradients have finished computing.
     interactor.requestAnimation('lighting');
     mapper.onLightingActivated(() => {
       interactor.cancelAnimation('lighting');
