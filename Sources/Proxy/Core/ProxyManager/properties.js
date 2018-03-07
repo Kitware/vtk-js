@@ -48,6 +48,13 @@ export default function addVPropertyHandlingAPI(publicAPI, model) {
 
   // --------------------------------------------------------------------------
 
+  publicAPI.updateCollapseState = (name, state) => {
+    model.collapseState[name] = state;
+    publicAPI.modified();
+  }
+
+  // --------------------------------------------------------------------------
+
   publicAPI.applyChanges = (changeSet) => {
     const groupBy = {};
     const keys = Object.keys(changeSet);
