@@ -10,6 +10,8 @@ registerWebworker(
     message,
     emit
   ) {
+    // have to compute the gradient to get the normal
+    // and magnitude
     var width = message.width;
     var height = message.height;
     var depth = message.depth;
@@ -19,10 +21,13 @@ registerWebworker(
     var depthStart = message.depthStart;
     var depthEnd = message.depthEnd;
 
-    // have to compute the gradient to get the normal
-    // and magnitude
+    // only compute gradient for last slice of the web worker
+    // if it is the last slice of the volume data
+    if (depthEnd !== depth - 1) {
+      depthEnd--;
+    }
     var depthLength = depthEnd - depthStart + 1;
-    var gradients = new Float32Array(width * height * depthLength * 4);
+    var gradients = new Uint8Array(width * height * depthLength * 3);
     var gradientMagnitudes = new Float32Array(width * height * depthLength);
 
     var sliceSize = width * height;
@@ -37,7 +42,7 @@ registerWebworker(
     );
     var minMag = vec3.length(grad);
     var maxMag = -1.0;
-    for (var z = depthStart; z < depthEnd + 1; ++z) {
+    for (var z = depthStart; z <= depthEnd; ++z) {
       var zedge = 0;
       if (z === depth - 1) {
         zedge = -sliceSize;
@@ -61,12 +66,10 @@ registerWebworker(
 
           var mag = vec3.length(grad);
           vec3.normalize(grad, grad);
-          gradients[outPtr++] = grad[0];
-          gradients[outPtr++] = grad[1];
-          gradients[outPtr++] = grad[2];
-          gradients[outPtr++] = mag;
-          gradientMagnitudes[inPtr] = mag;
-          inPtr++;
+          gradients[outPtr++] = 127.5 + 127.5 * grad[0];
+          gradients[outPtr++] = 127.5 + 127.5 * grad[1];
+          gradients[outPtr++] = 127.5 + 127.5 * grad[2];
+          gradientMagnitudes[inPtr++] = mag;
         }
       }
     }
@@ -77,9 +80,11 @@ registerWebworker(
 
     var result = {
       subGradients: gradients,
+      subMagnitudes: gradientMagnitudes,
       subMinMag: minMag,
       subMaxMag: maxMag,
       subDepthStart: depthStart,
+      subDepthEnd: depthEnd,
     };
     return Promise.resolve(
       new registerWebworker.TransferableResponse(
