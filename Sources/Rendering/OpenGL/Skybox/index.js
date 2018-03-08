@@ -169,7 +169,7 @@ function vtkOpenGLSkybox(publicAPI, model) {
       vtkErrorMacro('vtkSkybox requires a texture map');
     }
     if (model.openGLTexture.getRenderable() !== tmaps[0]) {
-      model.openGLTexture.releaseGraphicsResources();
+      model.openGLTexture.releaseGraphicsResources(model.openGLRenderWindow);
       model.openGLTexture.setRenderable(tmaps[0]);
     }
   };
