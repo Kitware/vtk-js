@@ -51,7 +51,7 @@ export default function addVPropertyHandlingAPI(publicAPI, model) {
   publicAPI.updateCollapseState = (name, state) => {
     model.collapseState[name] = state;
     publicAPI.modified();
-  }
+  };
 
   // --------------------------------------------------------------------------
 
