@@ -206,8 +206,6 @@ function vtkOpenGLTexture(publicAPI, model) {
   //---------------------------------------------------------------------------
   publicAPI.releaseGraphicsResources = (rwin) => {
     if (rwin && model.handle) {
-      rwin.makeCurrent();
-
       rwin.activateTexture(publicAPI);
       rwin.deactivateTexture(publicAPI);
       model.context.deleteTexture(model.handle);
