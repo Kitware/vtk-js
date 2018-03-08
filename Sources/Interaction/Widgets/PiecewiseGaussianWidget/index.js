@@ -867,7 +867,7 @@ function vtkPiecewiseGaussianWidget(publicAPI, model) {
     });
 
     // Draw color function if any
-    if (model.colorTransferFunction) {
+    if (model.colorTransferFunction && model.colorTransferFunction.getSize()) {
       const rangeToUse =
         model.dataRange || model.colorTransferFunction.getMappingRange();
       if (
