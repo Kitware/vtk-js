@@ -85,88 +85,92 @@ function vtkOpenGLSkybox(publicAPI, model) {
   };
 
   publicAPI.updateBufferObjects = () => {
-    if (model.tris.getCABO().getElementCount()) {
-      return;
+    // build the VBO if needed, only happens once
+    if (!model.tris.getCABO().getElementCount()) {
+      const ptsArray = new Float32Array(12);
+      for (let i = 0; i < 4; i++) {
+        ptsArray[i * 3] = (i % 2) * 2 - 1.0;
+        ptsArray[i * 3 + 1] = i > 1 ? 1.0 : -1.0;
+        ptsArray[i * 3 + 2] = 1.0;
+      }
+      const points = vtkDataArray.newInstance({
+        numberOfComponents: 3,
+        values: ptsArray,
+      });
+      points.setName('points');
+
+      const cellArray = new Uint16Array(8);
+      cellArray[0] = 3;
+      cellArray[1] = 0;
+      cellArray[2] = 1;
+      cellArray[3] = 3;
+      cellArray[4] = 3;
+      cellArray[5] = 0;
+      cellArray[6] = 3;
+      cellArray[7] = 2;
+      const cells = vtkDataArray.newInstance({
+        numberOfComponents: 1,
+        values: cellArray,
+      });
+
+      model.tris.getCABO().createVBO(cells, 'polys', Representation.SURFACE, {
+        points,
+        cellOffset: 0,
+      });
+
+      model.tris.setProgram(
+        model.openGLRenderWindow.getShaderCache().readyShaderProgramArray(
+          `//VTK::System::Dec
+           attribute vec3 vertexMC;
+           varying vec3 TexCoords;
+           uniform mat4 IMCDCMatrix;
+           uniform vec3 camPos;
+           void main () {
+            gl_Position = vec4(vertexMC.xyz, 1.0);
+            vec4 wpos = IMCDCMatrix * gl_Position;
+            TexCoords = normalize(wpos.xyz/wpos.w - camPos);
+           }`,
+          `//VTK::System::Dec
+           //VTK::Output::Dec
+           varying vec3 TexCoords;
+           uniform samplerCube sbtexture;
+           void main () {
+             gl_FragData[0] = textureCube(sbtexture, TexCoords);
+           }`,
+          ''
+        )
+      );
+
+      model.tris.getShaderSourceTime().modified();
+
+      model.tris.getVAO().bind();
+
+      if (
+        !model.tris
+          .getVAO()
+          .addAttributeArray(
+            model.tris.getProgram(),
+            model.tris.getCABO(),
+            'vertexMC',
+            model.tris.getCABO().getVertexOffset(),
+            model.tris.getCABO().getStride(),
+            model.context.FLOAT,
+            3,
+            model.context.FALSE
+          )
+      ) {
+        vtkErrorMacro('Error setting vertexMC in shader VAO.');
+      }
     }
 
-    const ptsArray = new Float32Array(12);
-    for (let i = 0; i < 4; i++) {
-      ptsArray[i * 3] = (i % 2) * 2 - 1.0;
-      ptsArray[i * 3 + 1] = i > 1 ? 1.0 : -1.0;
-      ptsArray[i * 3 + 2] = 1.0;
-    }
-    const points = vtkDataArray.newInstance({
-      numberOfComponents: 3,
-      values: ptsArray,
-    });
-    points.setName('points');
-
-    const cellArray = new Uint16Array(8);
-    cellArray[0] = 3;
-    cellArray[1] = 0;
-    cellArray[2] = 1;
-    cellArray[3] = 3;
-    cellArray[4] = 3;
-    cellArray[5] = 0;
-    cellArray[6] = 3;
-    cellArray[7] = 2;
-    const cells = vtkDataArray.newInstance({
-      numberOfComponents: 1,
-      values: cellArray,
-    });
-
-    model.tris.getCABO().createVBO(cells, 'polys', Representation.SURFACE, {
-      points,
-      cellOffset: 0,
-    });
-
+    // set/update the texture map if needed
     const tmaps = model.renderable.getTextures();
     if (!tmaps.length) {
       vtkErrorMacro('vtkSkybox requires a texture map');
     }
-    model.openGLTexture.setRenderable(tmaps[0]);
-
-    model.tris.setProgram(
-      model.openGLRenderWindow.getShaderCache().readyShaderProgramArray(
-        `//VTK::System::Dec
-         attribute vec3 vertexMC;
-         varying vec3 TexCoords;
-         uniform mat4 IMCDCMatrix;
-         uniform vec3 camPos;
-         void main () {
-          gl_Position = vec4(vertexMC.xyz, 1.0);
-          vec4 wpos = IMCDCMatrix * gl_Position;
-          TexCoords = normalize(wpos.xyz/wpos.w - camPos);
-         }`,
-        `//VTK::System::Dec
-         //VTK::Output::Dec
-         varying vec3 TexCoords;
-         uniform samplerCube sbtexture;
-         void main () {
-           gl_FragData[0] = textureCube(sbtexture, TexCoords);
-         }`,
-        ''
-      )
-    );
-
-    model.tris.getShaderSourceTime().modified();
-    model.tris.getVAO().bind();
-
-    if (
-      !model.tris
-        .getVAO()
-        .addAttributeArray(
-          model.tris.getProgram(),
-          model.tris.getCABO(),
-          'vertexMC',
-          model.tris.getCABO().getVertexOffset(),
-          model.tris.getCABO().getStride(),
-          model.context.FLOAT,
-          3,
-          model.context.FALSE
-        )
-    ) {
-      vtkErrorMacro('Error setting vertexMC in shader VAO.');
+    if (model.openGLTexture.getRenderable() !== tmaps[0]) {
+      model.openGLTexture.releaseGraphicsResources();
+      model.openGLTexture.setRenderable(tmaps[0]);
     }
   };
 }
