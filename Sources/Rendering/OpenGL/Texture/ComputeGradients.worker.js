@@ -89,7 +89,7 @@ registerWebworker(
     return Promise.resolve(
       new registerWebworker.TransferableResponse(
         result,
-        [result.subGradients.buffer]
+        [result.subGradients.buffer, result.subMagnitudes.buffer]
       )
     );
   }
