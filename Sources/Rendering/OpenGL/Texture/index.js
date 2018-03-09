@@ -983,6 +983,7 @@ function vtkOpenGLTexture(publicAPI, model) {
       };
     }
 
+    // WebGL2
     if (model.openGLRenderWindow.getWebgl2()) {
       if (dataType !== VtkDataTypes.UNSIGNED_CHAR) {
         const newArray = new Float32Array(numPixelsIn);
@@ -1001,6 +1002,7 @@ function vtkOpenGLTexture(publicAPI, model) {
       return publicAPI.create3DFromRaw(width, height, depth, 1, dataType, data);
     }
 
+    // WebGL1
     // Now determine the texture parameters using the arguments.
     publicAPI.getOpenGLDataType(dataTypeToUse);
     publicAPI.getInternalFormat(dataTypeToUse, numCompsToUse);
@@ -1011,15 +1013,28 @@ function vtkOpenGLTexture(publicAPI, model) {
       return false;
     }
 
+    // have to pack this 3D texture into pot 2D texture
     model.target = model.context.TEXTURE_2D;
     model.components = numCompsToUse;
     model.depth = 1;
     model.numberOfDimensions = 2;
 
-    // have to pack this 3D texture into pot 2D texture
-    const maxTexDim = model.context.getParameter(
-      model.context.MAX_TEXTURE_SIZE
-    );
+    // MAX_TEXTURE_SIZE gives the max dimensions that can be supported by the GPU,
+    // but it doesn't mean it will fit in memory. If we have to use a float data type
+    // or 4 components, there are good chances that the texture size will blow up
+    // and coud not fit in the GPU memory. Use a smaller texture size in that case,
+    // which will force a downsampling of the dataset.
+    // That problem does not occur when using webGL2 since we can pack the data in
+    // denser textures based on our data type.
+    // TODO: try to fit in the biggest supported texture, catch the gl error if it
+    // does not fix (OUT_OF_MEMORY), then attempt with smaller texture
+    let maxTexDim = model.context.getParameter(model.context.MAX_TEXTURE_SIZE);
+    if (
+      maxTexDim > 4096 &&
+      (dataTypeToUse === VtkDataTypes.FLOAT || numCompsToUse === 4)
+    ) {
+      maxTexDim = 4096;
+    }
 
     // compute estimate for XY subsample
     let xstride = 1;
