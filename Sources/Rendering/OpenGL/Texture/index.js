@@ -1022,7 +1022,7 @@ function vtkOpenGLTexture(publicAPI, model) {
     // MAX_TEXTURE_SIZE gives the max dimensions that can be supported by the GPU,
     // but it doesn't mean it will fit in memory. If we have to use a float data type
     // or 4 components, there are good chances that the texture size will blow up
-    // and coud not fit in the GPU memory. Use a smaller texture size in that case,
+    // and could not fit in the GPU memory. Use a smaller texture size in that case,
     // which will force a downsampling of the dataset.
     // That problem does not occur when using webGL2 since we can pack the data in
     // denser textures based on our data type.

@@ -66,6 +66,7 @@ registerWebworker(
 
           var mag = vec3.length(grad);
           vec3.normalize(grad, grad);
+          // Compact normal encoding (from [-1.0, 1.0] to [0, 255])
           gradients[outPtr++] = 127.5 + 127.5 * grad[0];
           gradients[outPtr++] = 127.5 + 127.5 * grad[1];
           gradients[outPtr++] = 127.5 + 127.5 * grad[2];
