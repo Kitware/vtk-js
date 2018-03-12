@@ -1268,6 +1268,7 @@ function vtkOpenGLTexture(publicAPI, model) {
 
     const maxNumberOfWorkers = 4;
     const depthStride = Math.ceil(depth / maxNumberOfWorkers);
+    const workerPromises = [];
     const workers = [];
     let depthIndex = 0;
     while (depthIndex < depth - 1) {
@@ -1279,7 +1280,8 @@ function vtkOpenGLTexture(publicAPI, model) {
       const subData = new data.constructor(
         data.slice(depthStart * width * height, (depthEnd + 1) * width * height) // +1 to include data from slice at depthEnd
       );
-      workers.push(
+      workers.push(worker);
+      workerPromises.push(
         workerPromise.postMessage(
           {
             width,
@@ -1296,7 +1298,10 @@ function vtkOpenGLTexture(publicAPI, model) {
       );
       depthIndex += depthStride;
     }
-    Promise.all(workers).then((workerResults) => {
+    Promise.all(workerPromises).then((workerResults) => {
+      // close workers
+      workers.forEach((worker) => worker.terminate());
+
       // compute min/max across all workers
       let minMag = Infinity;
       let maxMag = -Infinity;
