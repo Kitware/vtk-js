@@ -112,6 +112,22 @@ function vtkOpenGLVolumeMapper(publicAPI, model) {
           ['vec4 normal = texture(normalTexture, ijk);']
         ).result;
       }
+      const ext = model.currentInput.getExtent();
+      const spc = model.currentInput.getSpacing();
+      const vsize = vec3.create();
+      vec3.set(
+        vsize,
+        (ext[1] - ext[0]) * spc[0],
+        (ext[3] - ext[2]) * spc[1],
+        (ext[5] - ext[4]) * spc[2]
+      );
+      const maxSamples =
+        vec3.length(vsize) / model.renderable.getSampleDistance();
+      FSSource = vtkShaderProgram.substitute(
+        FSSource,
+        '//VTK::MaximumSamplesValue',
+        `${Math.ceil(maxSamples)}`
+      ).result;
     } else {
       // WebGL1
       // compute the tcoords
@@ -393,6 +409,7 @@ function vtkOpenGLVolumeMapper(publicAPI, model) {
       !!model.lastZBufferTexture !== !!model.zBufferTexture ||
       cellBO.getShaderSourceTime().getMTime() < publicAPI.getMTime() ||
       cellBO.getShaderSourceTime().getMTime() < actor.getMTime() ||
+      cellBO.getShaderSourceTime().getMTime() < model.renderable.getMTime() ||
       cellBO.getShaderSourceTime().getMTime() < model.currentInput.getMTime() ||
       cellBO.getShaderSourceTime().getMTime() <
         model.lightingTexture.getGradientsBuildTime().getMTime()
