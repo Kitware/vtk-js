@@ -204,8 +204,12 @@ function vtkVolumeRepresentationProxy(publicAPI, model) {
     model.property.setScalarOpacity(0, pwfProxy.getPiecewiseFunction());
 
     updateConfiguration(inputDataset, publicAPI.getDataArray(), model);
-    publicAPI.setSampleDistance();
-    publicAPI.setEdgeGradient();
+    if (model.sampleDistance < 0 || model.sampleDistance > 1) {
+      publicAPI.setSampleDistance();
+    }
+    if (model.edgeGradient < 0 || model.edgeGradient > 1) {
+      publicAPI.setEdgeGradient();
+    }
 
     // Update domains
     const state = updateDomains(
