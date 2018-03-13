@@ -69,6 +69,21 @@ export function vtkWarningMacro(...args) {
 }
 
 // ----------------------------------------------------------------------------
+// TypedArray
+// ----------------------------------------------------------------------------
+
+export const TYPED_ARRAYS = {
+  Float32Array,
+  Float64Array,
+  Uint8Array,
+  Int8Array,
+  Uint16Array,
+  Int16Array,
+  Uint32Array,
+  Int32Array,
+};
+
+// ----------------------------------------------------------------------------
 // capitilze provided string
 // ----------------------------------------------------------------------------
 
@@ -1333,6 +1348,7 @@ export function proxyPropertyState(
 export default {
   EVENT_ABORT,
   VOID,
+  TYPED_ARRAYS,
   algo,
   capitalize,
   chain,
