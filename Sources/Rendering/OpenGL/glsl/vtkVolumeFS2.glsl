@@ -165,17 +165,18 @@ void main()
       dot(endVC, vPlaneNormal4));
     vec3 vdelta = endvpos - vpos;
     float numSteps = length(vdelta) / sampleDistance;
-    vdelta = vdelta / numSteps;
+    vdelta = vdelta / float(numSteps);
 
     // start slightly inside and apply some jitter
     float jitter = texture2D(jtexture, gl_FragCoord.xy/32.0).r;
     vpos = vpos + vdelta*(0.01 + 0.98*jitter);
     vec4 color = vec4(0.0, 0.0, 0.0, 0.0);
 
+    int count = int(numSteps - 0.2); // end slightly inside
+
     vec3 ijk = vpos * vVCToIJK;
     vdelta = vdelta * vVCToIJK;
-    float i = 0.0;
-    while (i < numSteps - 0.2)
+    for (int i = 0; i < //VTK::MaximumSamplesValue ; ++i)
     {
       // compute the scalar
       scalar = texture(texture1, ijk).r;
@@ -197,8 +198,8 @@ void main()
 
       color = color + vec4(tcolor.rgb*tcolor.a, tcolor.a)*mix;
       if (color.a > 0.99) { color.a = 1.0; break; }
+      if (i >= count) { break; }
       ijk += vdelta;
-      i += 1.0;
     }
 
     gl_FragData[0] = vec4(color.rgb/color.a, color.a);

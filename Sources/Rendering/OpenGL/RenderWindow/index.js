@@ -522,7 +522,6 @@ export function extend(publicAPI, model, initialValues = {}) {
   vtkViewNode.extend(publicAPI, model, initialValues);
 
   model.myFactory = vtkOpenGLViewNodeFactory.newInstance();
-  model.shaderCache = vtkShaderCache.newInstance();
 
   // setup default forward pass rendering
   model.renderPasses[0] = vtkForwardPass.newInstance();
@@ -543,6 +542,10 @@ export function extend(publicAPI, model, initialValues = {}) {
   if (typeof InstallTrigger !== 'undefined') {
     model.defaultToWebgl2 = true;
   }
+  model.defaultToWebgl2 = true;
+
+  model.shaderCache = vtkShaderCache.newInstance();
+  model.shaderCache.setOpenGLRenderWindow(publicAPI);
 
   // Build VTK API
   macro.get(publicAPI, model, ['shaderCache', 'textureUnitManager', 'webgl2']);

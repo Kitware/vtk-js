@@ -35,7 +35,8 @@ registerWebworker(
       (data[inPtr + width] - data[inPtr]) / spacing[1],
       (data[inPtr + sliceSize] - data[inPtr]) / spacing[2]
     );
-    var minMag = vec3.length(grad);
+    // var minMag = vec3.length(grad);
+    var minMag = 10.0;
     var maxMag = -1.0;
     for (var z = depthStart; z < depthEnd + 1; ++z) {
       var zedge = 0;
@@ -64,6 +65,9 @@ registerWebworker(
           gradients[outPtr++] = grad[0];
           gradients[outPtr++] = grad[1];
           gradients[outPtr++] = grad[2];
+          if (mag === NaN) {
+            console.log('oh shit');
+          }
           gradients[outPtr++] = mag;
           gradientMagnitudes[inPtr] = mag;
           inPtr++;

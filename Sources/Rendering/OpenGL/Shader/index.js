@@ -57,6 +57,12 @@ function vtkShader(publicAPI, model) {
       return false;
     }
 
+    // const hlsl = model.context
+    //   .getExtension('WEBGL_debug_shaders')
+    //   .getTranslatedShaderSource(model.handle);
+    // console.log("Your shader's HLSL code:", hlsl);
+    // console.log('original glsl:', model.source);
+
     // The shader compiled, store its handle and return success.
     return true;
   };
