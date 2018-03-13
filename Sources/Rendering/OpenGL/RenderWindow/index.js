@@ -9,6 +9,33 @@ import { VtkDataTypes } from 'vtk.js/Sources/Common/Core/DataArray/Constants';
 
 const { vtkDebugMacro, vtkErrorMacro } = macro;
 
+function checkRenderTargetSupport(gl, format, type) {
+  // create temporary frame buffer and texture
+  const framebuffer = gl.createFramebuffer();
+  const texture = gl.createTexture();
+
+  gl.bindTexture(gl.TEXTURE_2D, texture);
+  gl.texImage2D(gl.TEXTURE_2D, 0, format, 2, 2, 0, format, type, null);
+
+  gl.bindFramebuffer(gl.FRAMEBUFFER, framebuffer);
+  gl.framebufferTexture2D(
+    gl.FRAMEBUFFER,
+    gl.COLOR_ATTACHMENT0,
+    gl.TEXTURE_2D,
+    texture,
+    0
+  );
+
+  // check frame buffer status
+  const status = gl.checkFramebufferStatus(gl.FRAMEBUFFER);
+
+  // clean up
+  gl.bindFramebuffer(gl.FRAMEBUFFER, null);
+  gl.bindTexture(gl.TEXTURE_2D, null);
+
+  return status === gl.FRAMEBUFFER_COMPLETE;
+}
+
 // ----------------------------------------------------------------------------
 // vtkOpenGLRenderWindow methods
 // ----------------------------------------------------------------------------
@@ -442,6 +469,411 @@ function vtkOpenGLRenderWindow(publicAPI, model) {
 
     publicAPI.traverseAllPasses();
     return getCanvasDataURL(format);
+  };
+
+  publicAPI.getGLInformations = () => {
+    const gl = publicAPI.get3DContext();
+
+    const glTextureFloat = gl.getExtension('OES_texture_float');
+    const glTextureHalfFloat = gl.getExtension('OES_texture_half_float');
+    const glDebugRendererInfo = gl.getExtension('WEBGL_debug_renderer_info');
+    const glDrawBuffers = gl.getExtension('WEBGL_draw_buffers');
+    const glAnisotropic =
+      gl.getExtension('EXT_texture_filter_anisotropic') ||
+      gl.getExtension('WEBKIT_EXT_texture_filter_anisotropic');
+
+    const params = [
+      [
+        'Max Vertex Attributes',
+        'MAX_VERTEX_ATTRIBS',
+        gl.getParameter(gl.MAX_VERTEX_ATTRIBS),
+      ],
+      [
+        'Max Varying Vectors',
+        'MAX_VARYING_VECTORS',
+        gl.getParameter(gl.MAX_VARYING_VECTORS),
+      ],
+      [
+        'Max Vertex Uniform Vectors',
+        'MAX_VERTEX_UNIFORM_VECTORS',
+        gl.getParameter(gl.MAX_VERTEX_UNIFORM_VECTORS),
+      ],
+      [
+        'Max Fragment Uniform Vectors',
+        'MAX_FRAGMENT_UNIFORM_VECTORS',
+        gl.getParameter(gl.MAX_FRAGMENT_UNIFORM_VECTORS),
+      ],
+      [
+        'Max Fragment Texture Image Units',
+        'MAX_TEXTURE_IMAGE_UNITS',
+        gl.getParameter(gl.MAX_TEXTURE_IMAGE_UNITS),
+      ],
+      [
+        'Max Vertex Texture Image Units',
+        'MAX_VERTEX_TEXTURE_IMAGE_UNITS',
+        gl.getParameter(gl.MAX_VERTEX_TEXTURE_IMAGE_UNITS),
+      ],
+      [
+        'Max Combined Texture Image Units',
+        'MAX_COMBINED_TEXTURE_IMAGE_UNITS',
+        gl.getParameter(gl.MAX_COMBINED_TEXTURE_IMAGE_UNITS),
+      ],
+      [
+        'Max 2D Texture Size',
+        'MAX_TEXTURE_SIZE',
+        gl.getParameter(gl.MAX_TEXTURE_SIZE),
+      ],
+      [
+        'Max Cube Texture Size',
+        'MAX_CUBE_MAP_TEXTURE_SIZE',
+        gl.getParameter(gl.MAX_CUBE_MAP_TEXTURE_SIZE),
+      ],
+      [
+        'Max Texture Anisotropy',
+        'MAX_TEXTURE_MAX_ANISOTROPY_EXT',
+        glAnisotropic &&
+          gl.getParameter(glAnisotropic.MAX_TEXTURE_MAX_ANISOTROPY_EXT),
+      ],
+      [
+        'Point Size Range',
+        'ALIASED_POINT_SIZE_RANGE',
+        gl.getParameter(gl.ALIASED_POINT_SIZE_RANGE).join(' - '),
+      ],
+      [
+        'Line Width Range',
+        'ALIASED_LINE_WIDTH_RANGE',
+        gl.getParameter(gl.ALIASED_LINE_WIDTH_RANGE).join(' - '),
+      ],
+      [
+        'Max Viewport Dimensions',
+        'MAX_VIEWPORT_DIMS',
+        gl.getParameter(gl.MAX_VIEWPORT_DIMS).join(' - '),
+      ],
+      [
+        'Max Renderbuffer Size',
+        'MAX_RENDERBUFFER_SIZE',
+        gl.getParameter(gl.MAX_RENDERBUFFER_SIZE),
+      ],
+      ['Framebuffer Red Bits', 'RED_BITS', gl.getParameter(gl.RED_BITS)],
+      ['Framebuffer Green Bits', 'GREEN_BITS', gl.getParameter(gl.GREEN_BITS)],
+      ['Framebuffer Blue Bits', 'BLUE_BITS', gl.getParameter(gl.BLUE_BITS)],
+      ['Framebuffer Alpha Bits', 'ALPHA_BITS', gl.getParameter(gl.ALPHA_BITS)],
+      ['Framebuffer Depth Bits', 'DEPTH_BITS', gl.getParameter(gl.DEPTH_BITS)],
+      [
+        'Framebuffer Stencil Bits',
+        'STENCIL_BITS',
+        gl.getParameter(gl.STENCIL_BITS),
+      ],
+      [
+        'Framebuffer Subpixel Bits',
+        'SUBPIXEL_BITS',
+        gl.getParameter(gl.SUBPIXEL_BITS),
+      ],
+      ['MSAA Samples', 'SAMPLES', gl.getParameter(gl.SAMPLES)],
+      [
+        'MSAA Sample Buffers',
+        'SAMPLE_BUFFERS',
+        gl.getParameter(gl.SAMPLE_BUFFERS),
+      ],
+      [
+        'Supported Formats for UByte Render Targets     ',
+        'UNSIGNED_BYTE RENDER TARGET FORMATS',
+        [
+          glTextureFloat &&
+          checkRenderTargetSupport(gl, gl.RGBA, gl.UNSIGNED_BYTE)
+            ? 'RGBA'
+            : '',
+          glTextureFloat &&
+          checkRenderTargetSupport(gl, gl.RGB, gl.UNSIGNED_BYTE)
+            ? 'RGB'
+            : '',
+          glTextureFloat &&
+          checkRenderTargetSupport(gl, gl.LUMINANCE, gl.UNSIGNED_BYTE)
+            ? 'LUMINANCE'
+            : '',
+          glTextureFloat &&
+          checkRenderTargetSupport(gl, gl.ALPHA, gl.UNSIGNED_BYTE)
+            ? 'ALPHA'
+            : '',
+          glTextureFloat &&
+          checkRenderTargetSupport(gl, gl.LUMINANCE_ALPHA, gl.UNSIGNED_BYTE)
+            ? 'LUMINANCE_ALPHA'
+            : '',
+        ].join(' '),
+      ],
+      [
+        'Supported Formats for Half Float Render Targets',
+        'HALF FLOAT RENDER TARGET FORMATS',
+        [
+          glTextureHalfFloat &&
+          checkRenderTargetSupport(
+            gl,
+            gl.RGBA,
+            glTextureHalfFloat.HALF_FLOAT_OES
+          )
+            ? 'RGBA'
+            : '',
+          glTextureHalfFloat &&
+          checkRenderTargetSupport(
+            gl,
+            gl.RGB,
+            glTextureHalfFloat.HALF_FLOAT_OES
+          )
+            ? 'RGB'
+            : '',
+          glTextureHalfFloat &&
+          checkRenderTargetSupport(
+            gl,
+            gl.LUMINANCE,
+            glTextureHalfFloat.HALF_FLOAT_OES
+          )
+            ? 'LUMINANCE'
+            : '',
+          glTextureHalfFloat &&
+          checkRenderTargetSupport(
+            gl,
+            gl.ALPHA,
+            glTextureHalfFloat.HALF_FLOAT_OES
+          )
+            ? 'ALPHA'
+            : '',
+          glTextureHalfFloat &&
+          checkRenderTargetSupport(
+            gl,
+            gl.LUMINANCE_ALPHA,
+            glTextureHalfFloat.HALF_FLOAT_OES
+          )
+            ? 'LUMINANCE_ALPHA'
+            : '',
+        ].join(' '),
+      ],
+      [
+        'Supported Formats for Full Float Render Targets',
+        'FLOAT RENDER TARGET FORMATS',
+        [
+          glTextureFloat && checkRenderTargetSupport(gl, gl.RGBA, gl.FLOAT)
+            ? 'RGBA'
+            : '',
+          glTextureFloat && checkRenderTargetSupport(gl, gl.RGB, gl.FLOAT)
+            ? 'RGB'
+            : '',
+          glTextureFloat && checkRenderTargetSupport(gl, gl.LUMINANCE, gl.FLOAT)
+            ? 'LUMINANCE'
+            : '',
+          glTextureFloat && checkRenderTargetSupport(gl, gl.ALPHA, gl.FLOAT)
+            ? 'ALPHA'
+            : '',
+          glTextureFloat &&
+          checkRenderTargetSupport(gl, gl.LUMINANCE_ALPHA, gl.FLOAT)
+            ? 'LUMINANCE_ALPHA'
+            : '',
+        ].join(' '),
+      ],
+      [
+        'Max Multiple Render Targets Buffers',
+        'MAX_DRAW_BUFFERS_WEBGL',
+        glDrawBuffers
+          ? gl.getParameter(glDrawBuffers.MAX_DRAW_BUFFERS_WEBGL)
+          : 0,
+      ],
+      [
+        'High Float Precision in Vertex Shader',
+        'HIGH_FLOAT VERTEX_SHADER',
+        [
+          gl.getShaderPrecisionFormat(gl.VERTEX_SHADER, gl.HIGH_FLOAT)
+            .precision,
+          ' (-2<sup>',
+          gl.getShaderPrecisionFormat(gl.VERTEX_SHADER, gl.HIGH_FLOAT).rangeMin,
+          '</sup> - 2<sup>',
+          gl.getShaderPrecisionFormat(gl.VERTEX_SHADER, gl.HIGH_FLOAT).rangeMax,
+          '</sup>)',
+        ].join(''),
+      ],
+      [
+        'Medium Float Precision in Vertex Shader',
+        'MEDIUM_FLOAT VERTEX_SHADER',
+        [
+          gl.getShaderPrecisionFormat(gl.VERTEX_SHADER, gl.MEDIUM_FLOAT)
+            .precision,
+          ' (-2<sup>',
+          gl.getShaderPrecisionFormat(gl.VERTEX_SHADER, gl.MEDIUM_FLOAT)
+            .rangeMin,
+          '</sup> - 2<sup>',
+          gl.getShaderPrecisionFormat(gl.VERTEX_SHADER, gl.MEDIUM_FLOAT)
+            .rangeMax,
+          '</sup>)',
+        ].join(''),
+      ],
+      [
+        'Low Float Precision in Vertex Shader',
+        'LOW_FLOAT VERTEX_SHADER',
+        [
+          gl.getShaderPrecisionFormat(gl.VERTEX_SHADER, gl.LOW_FLOAT).precision,
+          ' (-2<sup>',
+          gl.getShaderPrecisionFormat(gl.VERTEX_SHADER, gl.LOW_FLOAT).rangeMin,
+          '</sup> - 2<sup>',
+          gl.getShaderPrecisionFormat(gl.VERTEX_SHADER, gl.LOW_FLOAT).rangeMax,
+          '</sup>)',
+        ].join(''),
+      ],
+      [
+        'High Float Precision in Fragment Shader',
+        'HIGH_FLOAT FRAGMENT_SHADER',
+        [
+          gl.getShaderPrecisionFormat(gl.FRAGMENT_SHADER, gl.HIGH_FLOAT)
+            .precision,
+          ' (-2<sup>',
+          gl.getShaderPrecisionFormat(gl.FRAGMENT_SHADER, gl.HIGH_FLOAT)
+            .rangeMin,
+          '</sup> - 2<sup>',
+          gl.getShaderPrecisionFormat(gl.FRAGMENT_SHADER, gl.HIGH_FLOAT)
+            .rangeMax,
+          '</sup>)',
+        ].join(''),
+      ],
+      [
+        'Medium Float Precision in Fragment Shader',
+        'MEDIUM_FLOAT FRAGMENT_SHADER',
+        [
+          gl.getShaderPrecisionFormat(gl.FRAGMENT_SHADER, gl.MEDIUM_FLOAT)
+            .precision,
+          ' (-2<sup>',
+          gl.getShaderPrecisionFormat(gl.FRAGMENT_SHADER, gl.MEDIUM_FLOAT)
+            .rangeMin,
+          '</sup> - 2<sup>',
+          gl.getShaderPrecisionFormat(gl.FRAGMENT_SHADER, gl.MEDIUM_FLOAT)
+            .rangeMax,
+          '</sup>)',
+        ].join(''),
+      ],
+      [
+        'Low Float Precision in Fragment Shader',
+        'LOW_FLOAT FRAGMENT_SHADER',
+        [
+          gl.getShaderPrecisionFormat(gl.FRAGMENT_SHADER, gl.LOW_FLOAT)
+            .precision,
+          ' (-2<sup>',
+          gl.getShaderPrecisionFormat(gl.FRAGMENT_SHADER, gl.LOW_FLOAT)
+            .rangeMin,
+          '</sup> - 2<sup>',
+          gl.getShaderPrecisionFormat(gl.FRAGMENT_SHADER, gl.LOW_FLOAT)
+            .rangeMax,
+          '</sup>)',
+        ].join(''),
+      ],
+      [
+        'High Int Precision in Vertex Shader',
+        'HIGH_INT VERTEX_SHADER',
+        [
+          gl.getShaderPrecisionFormat(gl.VERTEX_SHADER, gl.HIGH_INT).precision,
+          ' (-2<sup>',
+          gl.getShaderPrecisionFormat(gl.VERTEX_SHADER, gl.HIGH_INT).rangeMin,
+          '</sup> - 2<sup>',
+          gl.getShaderPrecisionFormat(gl.VERTEX_SHADER, gl.HIGH_INT).rangeMax,
+          '</sup>)',
+        ].join(''),
+      ],
+      [
+        'Medium Int Precision in Vertex Shader',
+        'MEDIUM_INT VERTEX_SHADER',
+        [
+          gl.getShaderPrecisionFormat(gl.VERTEX_SHADER, gl.MEDIUM_INT)
+            .precision,
+          ' (-2<sup>',
+          gl.getShaderPrecisionFormat(gl.VERTEX_SHADER, gl.MEDIUM_INT).rangeMin,
+          '</sup> - 2<sup>',
+          gl.getShaderPrecisionFormat(gl.VERTEX_SHADER, gl.MEDIUM_INT).rangeMax,
+          '</sup>)',
+        ].join(''),
+      ],
+      [
+        'Low Int Precision in Vertex Shader',
+        'LOW_INT VERTEX_SHADER',
+        [
+          gl.getShaderPrecisionFormat(gl.VERTEX_SHADER, gl.LOW_INT).precision,
+          ' (-2<sup>',
+          gl.getShaderPrecisionFormat(gl.VERTEX_SHADER, gl.LOW_INT).rangeMin,
+          '</sup> - 2<sup>',
+          gl.getShaderPrecisionFormat(gl.VERTEX_SHADER, gl.LOW_INT).rangeMax,
+          '</sup>)',
+        ].join(''),
+      ],
+      [
+        'High Int Precision in Fragment Shader',
+        'HIGH_INT FRAGMENT_SHADER',
+        [
+          gl.getShaderPrecisionFormat(gl.FRAGMENT_SHADER, gl.HIGH_INT)
+            .precision,
+          ' (-2<sup>',
+          gl.getShaderPrecisionFormat(gl.FRAGMENT_SHADER, gl.HIGH_INT).rangeMin,
+          '</sup> - 2<sup>',
+          gl.getShaderPrecisionFormat(gl.FRAGMENT_SHADER, gl.HIGH_INT).rangeMax,
+          '</sup>)',
+        ].join(''),
+      ],
+      [
+        'Medium Int Precision in Fragment Shader',
+        'MEDIUM_INT FRAGMENT_SHADER',
+        [
+          gl.getShaderPrecisionFormat(gl.FRAGMENT_SHADER, gl.MEDIUM_INT)
+            .precision,
+          ' (-2<sup>',
+          gl.getShaderPrecisionFormat(gl.FRAGMENT_SHADER, gl.MEDIUM_INT)
+            .rangeMin,
+          '</sup> - 2<sup>',
+          gl.getShaderPrecisionFormat(gl.FRAGMENT_SHADER, gl.MEDIUM_INT)
+            .rangeMax,
+          '</sup>)',
+        ].join(''),
+      ],
+      [
+        'Low Int Precision in Fragment Shader',
+        'LOW_INT FRAGMENT_SHADER',
+        [
+          gl.getShaderPrecisionFormat(gl.FRAGMENT_SHADER, gl.LOW_INT).precision,
+          ' (-2<sup>',
+          gl.getShaderPrecisionFormat(gl.FRAGMENT_SHADER, gl.LOW_INT).rangeMin,
+          '</sup> - 2<sup>',
+          gl.getShaderPrecisionFormat(gl.FRAGMENT_SHADER, gl.LOW_INT).rangeMax,
+          '</sup>)',
+        ].join(''),
+      ],
+      [
+        'Supported Extensions',
+        'EXTENSIONS',
+        gl.getSupportedExtensions().join('<br/>\t\t\t\t\t    '),
+      ],
+      ['WebGL Renderer', 'RENDERER', gl.getParameter(gl.RENDERER)],
+      ['WebGL Vendor', 'VENDOR', gl.getParameter(gl.VENDOR)],
+      ['WebGL Version', 'VERSION', gl.getParameter(gl.VERSION)],
+      [
+        'Shading Language Version',
+        'SHADING_LANGUAGE_VERSION',
+        gl.getParameter(gl.SHADING_LANGUAGE_VERSION),
+      ],
+      [
+        'Unmasked Renderer',
+        'UNMASKED_RENDERER',
+        glDebugRendererInfo &&
+          gl.getParameter(glDebugRendererInfo.UNMASKED_RENDERER_WEBGL),
+      ],
+      [
+        'Unmasked Vendor',
+        'UNMASKED_VENDOR',
+        glDebugRendererInfo &&
+          gl.getParameter(glDebugRendererInfo.UNMASKED_VENDOR_WEBGL),
+      ],
+      ['WebGL Version', 'WEBGL_VERSION', model.webgl2 ? 2 : 1],
+    ];
+
+    const result = {};
+    while (params.length) {
+      const [label, key, value] = params.pop();
+      if (key) {
+        result[key] = { label, value };
+      }
+    }
+    return result;
   };
 
   publicAPI.traverseAllPasses = () => {
