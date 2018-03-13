@@ -523,6 +523,7 @@ export function extend(publicAPI, model, initialValues = {}) {
 
   model.myFactory = vtkOpenGLViewNodeFactory.newInstance();
   model.shaderCache = vtkShaderCache.newInstance();
+  model.shaderCache.setOpenGLRenderWindow(publicAPI);
 
   // setup default forward pass rendering
   model.renderPasses[0] = vtkForwardPass.newInstance();
