@@ -5,7 +5,7 @@ import vtkShaderProgram from 'vtk.js/Sources/Rendering/OpenGL/ShaderProgram';
 
 // ----------------------------------------------------------------------------
 
-const SET_GET_FIELDS = ['lastShaderBound', 'context'];
+const SET_GET_FIELDS = ['lastShaderBound', 'context', 'openGLRenderWindow'];
 
 // ----------------------------------------------------------------------------
 // vtkShaderCache methods
@@ -22,21 +22,15 @@ function vtkShaderCache(publicAPI, model) {
     // have a Geometry shader we rename the frament shader inputs
     // to come from the geometry shader
 
-    model.context.getExtension('OES_standard_derivatives');
     let nFSSource = FSSource;
     if (GSSource.length > 0) {
       nFSSource = vtkShaderProgram.substitute(nFSSource, 'VSOut', 'GSOut')
         .result;
     }
 
-    let fragDepthString = '\n';
-    if (model.context.getExtension('EXT_frag_depth')) {
-      fragDepthString = '#extension GL_EXT_frag_depth : enable\n';
-    }
+    const gl2 = model.openGLRenderWindow.getWebgl2();
 
-    const gl2 =
-      model.context.getParameter(model.context.VERSION).indexOf('WebGL 2.0') !==
-      -1;
+    let fragDepthString = '\n';
 
     let version = '#version 100\n';
     if (gl2) {
@@ -45,6 +39,11 @@ function vtkShaderCache(publicAPI, model) {
         '#define attribute in\n' +
         '#define textureCube texture\n' +
         '#define texture2D texture\n';
+    } else {
+      model.context.getExtension('OES_standard_derivatives');
+      if (model.context.getExtension('EXT_frag_depth')) {
+        fragDepthString = '#extension GL_EXT_frag_depth : enable\n';
+      }
     }
 
     nFSSource = vtkShaderProgram.substitute(nFSSource, '//VTK::System::Dec', [
@@ -215,6 +214,7 @@ const DEFAULT_VALUES = {
   lastShaderBound: null,
   shaderPrograms: null,
   context: null,
+  openGLRenderWindow: null,
 };
 
 // ----------------------------------------------------------------------------

@@ -221,6 +221,7 @@ function vtkOpenGLRenderWindow(publicAPI, model) {
       }
     }
     if (!result) {
+      vtkDebugMacro('using webgl1');
       result =
         model.canvas.getContext('webgl', options) ||
         model.canvas.getContext('experimental-webgl', options);
@@ -502,7 +503,7 @@ const DEFAULT_VALUES = {
   renderPasses: [],
   notifyImageReady: false,
   webgl2: false,
-  defaultToWebgl2: false, // turned off by default
+  defaultToWebgl2: true, // attempt webgl2 on by default
   vrResolution: [2160, 1200],
   queryVRSize: false,
   hideInVR: true,
@@ -523,26 +524,12 @@ export function extend(publicAPI, model, initialValues = {}) {
 
   model.myFactory = vtkOpenGLViewNodeFactory.newInstance();
   model.shaderCache = vtkShaderCache.newInstance();
+  model.shaderCache.setOpenGLRenderWindow(publicAPI);
 
   // setup default forward pass rendering
   model.renderPasses[0] = vtkForwardPass.newInstance();
 
   macro.event(publicAPI, model, 'imageReady');
-
-  // on mac default to webgl2
-  if (navigator.appVersion.indexOf('Mac') !== -1) {
-    model.defaultToWebgl2 = true;
-  }
-
-  // on linux default to webgl2
-  if (navigator.platform.indexOf('Linux') !== -1) {
-    model.defaultToWebgl2 = true;
-  }
-
-  // on firefox default to webgl2
-  if (typeof InstallTrigger !== 'undefined') {
-    model.defaultToWebgl2 = true;
-  }
 
   // Build VTK API
   macro.get(publicAPI, model, ['shaderCache', 'textureUnitManager', 'webgl2']);
