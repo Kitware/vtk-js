@@ -173,12 +173,30 @@ function vtkDataArray(publicAPI, model) {
 
   publicAPI.getTuple = (idx, tupleToFill = TUPLE_HOLDER) => {
     const numberOfComponents = model.numberOfComponents || 1;
-    if (tupleToFill.length) {
+    if (tupleToFill.length !== numberOfComponents) {
       tupleToFill.length = numberOfComponents;
     }
     const offset = idx * numberOfComponents;
-    for (let i = 0; i < numberOfComponents; i++) {
-      tupleToFill[i] = model.values[offset + i];
+    // Check most common component sizes first
+    // to avoid doing a for loop if possible
+    if (numberOfComponents === 1) {
+      tupleToFill[0] = model.values[offset];
+    } else if (numberOfComponents === 2) {
+      tupleToFill[0] = model.values[offset];
+      tupleToFill[1] = model.values[offset + 1];
+    } else if (numberOfComponents === 3) {
+      tupleToFill[0] = model.values[offset];
+      tupleToFill[1] = model.values[offset + 1];
+      tupleToFill[2] = model.values[offset + 2];
+    } else if (numberOfComponents === 4) {
+      tupleToFill[0] = model.values[offset];
+      tupleToFill[1] = model.values[offset + 1];
+      tupleToFill[2] = model.values[offset + 2];
+      tupleToFill[3] = model.values[offset + 3];
+    } else {
+      for (let i = 0; i < numberOfComponents; i++) {
+        tupleToFill[i] = model.values[offset + i];
+      }
     }
     return tupleToFill;
   };
