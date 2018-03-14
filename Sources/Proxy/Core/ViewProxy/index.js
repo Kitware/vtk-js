@@ -398,16 +398,6 @@ function extend(publicAPI, model, initialValues = {}) {
       modified: false,
     },
   });
-
-  // Allow dynamic registration of links
-  if (model.links && model.proxyManager) {
-    for (let i = 0; i < model.links.length; i++) {
-      const { link, property, persistent, updateOnBind } = model.links[i];
-      const sLink = model.proxyManager.getPropertyLink(link, persistent);
-      publicAPI.registerPropertyLinkForGC(sLink);
-      sLink.bind(publicAPI, property, updateOnBind);
-    }
-  }
 }
 
 // ----------------------------------------------------------------------------
