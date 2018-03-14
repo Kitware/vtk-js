@@ -118,15 +118,8 @@ function vtkBox(publicAPI, model) {
 
   publicAPI.getBounds = () => model.bbox.getBounds();
 
-  publicAPI.evaluateFunction = (...x) => {
-    let point = [].concat(x);
-    if (Array.isArray(x[0])) {
-      point = x[0];
-    }
-
-    if (point.length !== 3) {
-      return Number.MAX_VALUE;
-    }
+  publicAPI.evaluateFunction = (x, y, z) => {
+    const point = Array.isArray(x) ? x : [x, y, z];
 
     let diff;
     let dist;

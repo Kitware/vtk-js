@@ -63,17 +63,20 @@ test('Test vtkBox evaluateFunction', (t) => {
   const box = vtkBox.newInstance();
   box.setBounds(bounds);
 
-  const point1 = [0.0, 0.0, 0.0];
-  const evaluation1 = box.evaluateFunction(point1);
-  t.equal(evaluation1, -50);
+  let point = [0.0, 0.0, 0.0];
+  let res = box.evaluateFunction(point);
+  t.equal(res, -50);
 
-  const point2 = [100.0, 0.0, 0.0];
-  const evaluation2 = box.evaluateFunction(point2);
-  t.equal(evaluation2, 50);
+  point = [100.0, 0.0, 0.0];
+  res = box.evaluateFunction(point);
+  t.equal(res, 50);
 
-  const point3 = [50.0, 0.0, 0.0];
-  const evaluation3 = box.evaluateFunction(point3);
-  t.equal(evaluation3, 0);
+  point = [50.0, 0.0, 0.0];
+  res = box.evaluateFunction(point);
+  t.equal(res, 0);
+
+  res = box.evaluateFunction(...point);
+  t.equal(res, 0);
 
   t.end();
 });

@@ -153,20 +153,18 @@ export function vtkPlane(publicAPI, model) {
     generalizedProjectPoint(x, model.origin, model.normal, xproj);
   };
 
-  publicAPI.evaluateFunction = (...x) => {
-    let point = [].concat(x);
-    if (Array.isArray(x[0])) {
-      point = x[0];
+  publicAPI.evaluateFunction = (x, y, z) => {
+    if (!Array.isArray(x)) {
+      return (
+        model.normal[0] * (x - model.origin[0]) +
+        model.normal[1] * (y - model.origin[1]) +
+        model.normal[2] * (z - model.origin[2])
+      );
     }
-
-    if (point.length !== 3) {
-      return Number.MAX_VALUE;
-    }
-
     return (
-      model.normal[0] * (point[0] - model.origin[0]) +
-      model.normal[1] * (point[1] - model.origin[1]) +
-      model.normal[2] * (point[2] - model.origin[2])
+      model.normal[0] * (x[0] - model.origin[0]) +
+      model.normal[1] * (x[1] - model.origin[1]) +
+      model.normal[2] * (x[2] - model.origin[2])
     );
   };
 
