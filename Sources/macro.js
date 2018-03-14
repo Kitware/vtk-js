@@ -1070,14 +1070,18 @@ export function proxy(publicAPI, model) {
   };
 
   // property link
-  model.propertyLinkSubscribers = [];
-  publicAPI.registerPropertyLinkForGC = (otherLink) => {
-    model.propertyLinkSubscribers.push(otherLink);
+  model.propertyLinkSubscribers = {};
+  publicAPI.registerPropertyLinkForGC = (otherLink, type) => {
+    if (!(type in model.propertyLinkSubscribers)) {
+      model.propertyLinkSubscribers[type] = [];
+    }
+    model.propertyLinkSubscribers[type].push(otherLink);
   };
 
-  publicAPI.gcPropertyLinks = () => {
-    while (model.propertyLinkSubscribers.length) {
-      model.propertyLinkSubscribers.pop().unbind(publicAPI);
+  publicAPI.gcPropertyLinks = (type) => {
+    const subscribers = model.propertyLinkSubscribers[type] || [];
+    while (subscribers.length) {
+      subscribers.pop().unbind(publicAPI);
     }
   };
 
@@ -1234,12 +1238,28 @@ export function proxy(publicAPI, model) {
     while (count--) {
       model.propertyLinkMap[list[count]].unsubscribe();
     }
-    count = model.propertyLinkSubscribers.length;
-    while (count--) {
-      model.propertyLinkSubscribers[count].unbind(publicAPI);
-    }
+    Object.keys(model.propertyLinkSubscribers).forEach(
+      publicAPI.gcPropertyLinks
+    );
     parentDelete();
   };
+
+  function registerLinks() {
+    // Allow dynamic registration of links at the application level
+    if (model.links) {
+      for (let i = 0; i < model.links.length; i++) {
+        const { link, property, persistent, updateOnBind, type } = model.links[
+          i
+        ];
+        if (type === 'application') {
+          const sLink = model.proxyManager.getPropertyLink(link, persistent);
+          publicAPI.registerPropertyLinkForGC(sLink, 'application');
+          sLink.bind(publicAPI, property, updateOnBind);
+        }
+      }
+    }
+  }
+  setImmediate(registerLinks);
 }
 
 // ----------------------------------------------------------------------------

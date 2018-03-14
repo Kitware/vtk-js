@@ -23,7 +23,7 @@ function vtkAbstractRepresentationProxy(publicAPI, model) {
       model.sourceSubscription.unsubscribe();
       model.sourceSubscription = null;
     }
-    publicAPI.gcPropertyLinks();
+    publicAPI.gcPropertyLinks('source');
     model.input = source;
     publicAPI.updateColorByDomain();
 
@@ -34,13 +34,17 @@ function vtkAbstractRepresentationProxy(publicAPI, model) {
       );
     }
 
-    // Allow dynamic registration of links
+    // Allow dynamic registration of links at the source level
     if (model.links) {
       for (let i = 0; i < model.links.length; i++) {
-        const { link, property, persistent, updateOnBind } = model.links[i];
-        const sLink = source.getPropertyLink(link, persistent);
-        publicAPI.registerPropertyLinkForGC(sLink);
-        sLink.bind(publicAPI, property, updateOnBind);
+        const { link, property, persistent, updateOnBind, type } = model.links[
+          i
+        ];
+        if (type === undefined || type === 'source') {
+          const sLink = source.getPropertyLink(link, persistent);
+          publicAPI.registerPropertyLinkForGC(sLink, 'source');
+          sLink.bind(publicAPI, property, updateOnBind);
+        }
       }
     }
   };
