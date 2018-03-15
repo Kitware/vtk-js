@@ -12,7 +12,7 @@ this object. The ScalarVisibility flag controls whether scalar data (if
 any) controls the color of the associated actor(s) that refer to the
 mapper. The ScalarMode ivar is used to determine whether scalar point data
 or cell data is used to color the object. By default, point data scalars
-are used unless there are none, in which cell scalars are used. Or you can
+are used unless there are none, then cell scalars are used. Or you can
 explicitly control whether to use point or cell scalar data. Finally, the
 mapping of scalars through the lookup table varies depending on the
 setting of the ColorMode flag. See the documentation for the appropriate
@@ -23,7 +23,7 @@ rendering (ImmediateModeRenderingOn) or display list rendering
 (ImmediateModeRenderingOff). If display lists are used, a data structure
 is constructed (generally in the rendering library) which can then be
 rapidly traversed and rendered by the rendering library. The disadvantage
-of display lists is that they require additionally memory which may affect
+of display lists is that they require additional memory which may affect
 the performance of the system.
 
 Another important feature of the mapper is the ability to shift the
