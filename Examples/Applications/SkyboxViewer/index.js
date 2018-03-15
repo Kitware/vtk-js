@@ -184,14 +184,23 @@ function createVisualization(container, mapReader) {
 
   // Update camera control
   if (vtkDeviceOrientationToCamera.isDeviceOrientationSupported()) {
-    console.log('orientation detected');
     vtkDeviceOrientationToCamera.addWindowListeners();
-    vtkDeviceOrientationToCamera.addCameraToSynchronize(
+    const cameraListenerId = vtkDeviceOrientationToCamera.addCameraToSynchronize(
       interactor,
       camera,
       updateCameraCallBack
     );
     interactor.requestAnimation('deviceOrientation');
+    // Test again after 100ms
+    setTimeout(() => {
+      if (!vtkDeviceOrientationToCamera.isDeviceOrientationSupported()) {
+        vtkDeviceOrientationToCamera.removeCameraToSynchronize(
+          cameraListenerId
+        );
+        vtkDeviceOrientationToCamera.removeWindowListeners();
+        interactor.cancelAnimation('deviceOrientation');
+      }
+    }, 100);
   }
 
   function updateSkybox(position) {
