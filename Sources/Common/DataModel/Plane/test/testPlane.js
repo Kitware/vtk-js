@@ -141,14 +141,15 @@ test('Test vtkPlane evaluateFunction', (t) => {
   plane.setOrigin(0.0, 0.0, 0.0);
   plane.setNormal(1.0, 1.0, 1.0);
 
-  let res = plane.evaluateFunction([1.0, 1.0, 1.0]);
+  const point = [1.0, 1.0, 1.0];
+  let res = plane.evaluateFunction(point);
   t.equal(res, 3);
 
-  res = plane.evaluateFunction(1.0, 1.0, 1.0);
+  res = plane.evaluateFunction(...point);
   t.equal(res, 3);
 
-  res = plane.evaluateFunction(1.0, 1.0, 1.0, 0.0);
-  t.equal(res, Number.MAX_VALUE);
+  res = plane.evaluateFunction(...point, 1.0); // ignore last value
+  t.equal(res, 3);
 
   t.end();
 });
