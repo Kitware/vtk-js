@@ -40,12 +40,30 @@ function vtkSlicedGeometryRepresentationProxy(publicAPI, model) {
     model.cutter.modified();
   }
 
+  function updateOffset(offset) {
+    model.offset = offset;
+    const normal = model.plane.getNormal();
+    model.actor.setPosition(
+      offset * normal[0],
+      offset * normal[1],
+      offset * normal[2]
+    );
+  }
+
   // API ----------------------------------------------------------------------
   publicAPI.setSlice = (slice) => {
     if (slice === model.slice || slice === undefined) {
       return;
     }
     updateSlice(slice);
+    publicAPI.modified();
+  };
+
+  publicAPI.setOffset = (offset) => {
+    if (offset === model.offset || offset === undefined) {
+      return;
+    }
+    updateOffset(offset);
     publicAPI.modified();
   };
 
@@ -70,6 +88,7 @@ function vtkSlicedGeometryRepresentationProxy(publicAPI, model) {
     }
     // Reslice properly along that new axis
     updateSlice(model.slice);
+    updateOffset(model.offset);
 
     // Update pipeline
     publicAPI.modified();
@@ -83,6 +102,7 @@ function vtkSlicedGeometryRepresentationProxy(publicAPI, model) {
 const DEFAULT_VALUES = {
   slicingMode: vtkImageMapper.SlicingMode.NONE,
   slice: 0,
+  offset: 0,
 };
 
 // ----------------------------------------------------------------------------
@@ -92,7 +112,7 @@ export function extend(publicAPI, model, initialValues = {}) {
 
   // Object methods
   vtkAbstractRepresentationProxy.extend(publicAPI, model);
-  macro.get(publicAPI, model, ['slicingMode', 'slice']);
+  macro.get(publicAPI, model, ['slicingMode', 'slice', 'offset']);
 
   // Object specific methods
   vtkSlicedGeometryRepresentationProxy(publicAPI, model);
