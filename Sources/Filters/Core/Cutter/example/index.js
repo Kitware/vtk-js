@@ -70,7 +70,6 @@ const state = {
 const updatePlaneFunction = () => {
   plane.setOrigin(state.originX, state.originY, state.originZ);
   plane.setNormal(state.normalX, state.normalY, state.normalZ);
-  cutter.modified();
   renderWindow.render();
 };
 

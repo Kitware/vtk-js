@@ -11,6 +11,19 @@ function vtkCutter(publicAPI, model) {
   // Set our className
   model.classHierarchy.push('vtkCutter');
 
+  // Capture "parentClass" api for internal use
+  const superClass = Object.assign({}, publicAPI);
+
+  publicAPI.getMTime = () => {
+    let mTime = superClass.getMTime();
+    if (!model.cutFunction) {
+      return mTime;
+    }
+
+    mTime = Math.max(mTime, model.cutFunction.getMTime());
+    return mTime;
+  };
+
   function dataSetCutter(input, output) {
     const numCells = input.getNumberOfCells();
     const points = input.getPoints();

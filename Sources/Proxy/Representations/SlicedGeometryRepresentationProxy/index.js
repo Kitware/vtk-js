@@ -42,12 +42,7 @@ function vtkSlicedGeometryRepresentationProxy(publicAPI, model) {
       n[1] * slice,
       n[2] * slice
     );
-    if (planeModified) {
-      model.cutter.modified();
-      publicAPI.modified();
-      return true;
-    }
-    if (stateModified) {
+    if (planeModified || stateModified) {
       publicAPI.modified();
       return true;
     }
