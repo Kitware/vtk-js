@@ -528,6 +528,7 @@ function vtkRenderWindowInteractor(publicAPI, model) {
             controlKey: false,
           };
           publicAPI.leftButtonReleaseEvent(callData);
+          interactionRegistration(false);
         } else {
           // If more than one finger released, recognize touchend
           const positions = getTouchEventPositionsFor(event.changedTouches);
