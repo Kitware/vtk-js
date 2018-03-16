@@ -32,39 +32,42 @@ function vtkSlicedGeometryRepresentationProxy(publicAPI, model) {
   // Keep things updated
   model.sourceDependencies.push(model.cutter);
 
-  // Internal functions -------------------------------------------------------
-  function updateSlice(slice) {
+  // API ----------------------------------------------------------------------
+  publicAPI.setSlice = (slice = 0) => {
+    const stateModified = model.slice !== slice;
     model.slice = slice;
     const n = model.plane.getNormal();
-    model.plane.setOrigin(n[0] * slice, n[1] * slice, n[2] * slice);
-    model.cutter.modified();
-  }
+    const planeModified = model.plane.setOrigin(
+      n[0] * slice,
+      n[1] * slice,
+      n[2] * slice
+    );
+    if (planeModified) {
+      model.cutter.modified();
+      publicAPI.modified();
+      return true;
+    }
+    if (stateModified) {
+      publicAPI.modified();
+      return true;
+    }
+    return false;
+  };
 
-  function updateOffset(offset) {
+  publicAPI.setOffset = (offset = 0) => {
+    const stateModified = model.offset !== offset;
     model.offset = offset;
     const normal = model.plane.getNormal();
-    model.actor.setPosition(
+    const actorModified = model.actor.setPosition(
       offset * normal[0],
       offset * normal[1],
       offset * normal[2]
     );
-  }
-
-  // API ----------------------------------------------------------------------
-  publicAPI.setSlice = (slice) => {
-    if (slice === model.slice || slice === undefined) {
-      return;
+    if (actorModified || stateModified) {
+      publicAPI.modified();
+      return true;
     }
-    updateSlice(slice);
-    publicAPI.modified();
-  };
-
-  publicAPI.setOffset = (offset) => {
-    if (offset === model.offset || offset === undefined) {
-      return;
-    }
-    updateOffset(offset);
-    publicAPI.modified();
+    return false;
   };
 
   publicAPI.setSlicingMode = (mode) => {
@@ -87,11 +90,13 @@ function vtkSlicedGeometryRepresentationProxy(publicAPI, model) {
         return;
     }
     // Reslice properly along that new axis
-    updateSlice(model.slice);
-    updateOffset(model.offset);
+    let alreadyModified = publicAPI.setSlice(model.slice);
+    alreadyModified = publicAPI.setOffset(model.offset) || alreadyModified;
 
     // Update pipeline
-    publicAPI.modified();
+    if (!alreadyModified) {
+      publicAPI.modified();
+    }
   };
 }
 
