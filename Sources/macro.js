@@ -161,7 +161,9 @@ export function obj(publicAPI = {}, model = {}) {
   safeArrays(model);
 
   const callbacks = [];
-  model.mtime = Number.isInteger(model.mtime) ? model.mtime : ++globalMTime;
+  if (!Number.isInteger(model.mtime)) {
+    model.mtime = ++globalMTime;
+  }
   model.classHierarchy = ['vtkObject'];
 
   function off(index) {
@@ -185,7 +187,7 @@ export function obj(publicAPI = {}, model = {}) {
       return;
     }
 
-    if (otherMTime && otherMTime < model.mtime) {
+    if (otherMTime && otherMTime < publicAPI.getMTime()) {
       return;
     }
 
@@ -640,7 +642,7 @@ export function algo(publicAPI, model, numberOfInputs, numberOfOutputs) {
   }
 
   publicAPI.shouldUpdate = () => {
-    const localMTime = model.mtime;
+    const localMTime = publicAPI.getMTime();
     let count = numberOfOutputs;
     let minOutputMTime = Infinity;
     while (count--) {
