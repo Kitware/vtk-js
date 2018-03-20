@@ -85,8 +85,9 @@ function vtkInteractorStyleImage(publicAPI, model) {
   };
 
   //--------------------------------------------------------------------------
-  publicAPI.handleStartMouseWheel = () => {
+  publicAPI.handleStartMouseWheel = (callData) => {
     publicAPI.startSlice();
+    publicAPI.handleMouseWheel(callData);
   };
 
   //--------------------------------------------------------------------------

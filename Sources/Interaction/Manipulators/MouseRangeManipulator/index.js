@@ -112,6 +112,7 @@ function vtkMouseRangeManipulator(publicAPI, model) {
     }
     processDelta(model.scrollListener, 1.0 - delta);
   };
+  publicAPI.onStartScroll = publicAPI.onScroll;
 }
 
 // ----------------------------------------------------------------------------

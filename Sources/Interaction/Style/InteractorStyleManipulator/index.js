@@ -364,7 +364,11 @@ function vtkInteractorStyleManipulator(publicAPI, model) {
     while (count--) {
       const manipulator = model.mouseManipulators[count];
       if (manipulator.isScrollEnabled()) {
-        manipulator.onStartScroll(model.interactor, callData.wheelDelta);
+        manipulator.onStartScroll(
+          model.interactor,
+          callData.pokedRenderer,
+          callData.spinY
+        );
         manipulator.startInteraction();
       }
     }
@@ -373,12 +377,12 @@ function vtkInteractorStyleManipulator(publicAPI, model) {
   };
 
   //-------------------------------------------------------------------------
-  publicAPI.handleEndMouseWheel = (callData) => {
+  publicAPI.handleEndMouseWheel = () => {
     let count = model.mouseManipulators.length;
     while (count--) {
       const manipulator = model.mouseManipulators[count];
       if (manipulator.isScrollEnabled()) {
-        manipulator.onEndScroll(model.interactor, callData.wheelDelta);
+        manipulator.onEndScroll(model.interactor);
         manipulator.endInteraction();
       }
     }

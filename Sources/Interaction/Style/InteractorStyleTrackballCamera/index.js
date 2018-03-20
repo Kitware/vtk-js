@@ -148,8 +148,9 @@ function vtkInteractorStyleTrackballCamera(publicAPI, model) {
   };
 
   //----------------------------------------------------------------------------
-  publicAPI.handleStartMouseWheel = () => {
+  publicAPI.handleStartMouseWheel = (callData) => {
     publicAPI.startDolly();
+    publicAPI.handleMouseWheel(callData);
   };
 
   //--------------------------------------------------------------------------
