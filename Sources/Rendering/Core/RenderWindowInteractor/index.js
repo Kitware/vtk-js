@@ -195,7 +195,7 @@ function vtkRenderWindowInteractor(publicAPI, model) {
     model.canvas = canvas;
     canvas.addEventListener('contextmenu', preventDefault);
     canvas.addEventListener('click', preventDefault);
-    canvas.addEventListener('mousewheel', publicAPI.handleWheel);
+    canvas.addEventListener('wheel', publicAPI.handleWheel);
     canvas.addEventListener('DOMMouseScroll', publicAPI.handleWheel);
     canvas.addEventListener('mousemove', publicAPI.handleMouseMove);
     canvas.addEventListener('mousedown', publicAPI.handleMouseDown);
@@ -213,7 +213,7 @@ function vtkRenderWindowInteractor(publicAPI, model) {
     interactionRegistration(false);
     model.canvas.removeEventListener('contextmenu', preventDefault);
     model.canvas.removeEventListener('click', preventDefault);
-    model.canvas.removeEventListener('mousewheel', publicAPI.handleWheel);
+    model.canvas.removeEventListener('wheel', publicAPI.handleWheel);
     model.canvas.removeEventListener('DOMMouseScroll', publicAPI.handleWheel);
     model.canvas.removeEventListener('mousemove', publicAPI.handleMouseMove);
     model.canvas.removeEventListener('mousedown', publicAPI.handleMouseDown);
