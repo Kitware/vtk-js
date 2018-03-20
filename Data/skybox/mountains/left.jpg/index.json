@@ -1,0 +1,73 @@
+{
+  "origin": [
+    0.0, 
+    0.0, 
+    0.0
+  ], 
+  "cellData": {
+    "arrays": [], 
+    "vtkClass": "vtkDataSetAttributes"
+  }, 
+  "FieldData": {
+    "arrays": [], 
+    "vtkClass": "vtkDataSetAttributes"
+  }, 
+  "vtkClass": "vtkImageData", 
+  "pointData": {
+    "arrays": [
+      {
+        "data": {
+          "numberOfComponents": 3, 
+          "name": "JPEGImage", 
+          "vtkClass": "vtkDataArray", 
+          "dataType": "Uint8Array", 
+          "ranges": [
+            {
+              "max": 243.0, 
+              "component": null, 
+              "min": 8.0
+            }, 
+            {
+              "max": 244.0, 
+              "component": null, 
+              "min": 14.0
+            }, 
+            {
+              "max": 247.0, 
+              "component": null, 
+              "min": 20.0
+            }, 
+            {
+              "max": 418.60363113570816, 
+              "component": null, 
+              "min": 26.019223662515376
+            }
+          ], 
+          "ref": {
+            "encode": "LittleEndian", 
+            "basepath": "data", 
+            "id": "d30793d2f67c1a46b068aaef7eee0c39"
+          }, 
+          "size": 12582912
+        }
+      }
+    ], 
+    "vtkClass": "vtkDataSetAttributes"
+  }, 
+  "spacing": [
+    1.0, 
+    1.0, 
+    1.0
+  ], 
+  "extent": [
+    0, 
+    2047, 
+    0, 
+    2047, 
+    0, 
+    0
+  ], 
+  "metadata": {
+    "name": "left.jpg"
+  }
+}

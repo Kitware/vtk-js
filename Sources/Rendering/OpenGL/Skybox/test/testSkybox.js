@@ -41,11 +41,6 @@ test.onlyIfWebGL('Test vtkOpenGLSkybox Rendering', (t) => {
     actor.addTexture(texture);
     renderer.addActor(actor);
 
-    renderer.getActiveCamera().setViewUp(0, -1, 0);
-    renderer.getActiveCamera().setFocalPoint(0, 0, 1);
-    renderer.getActiveCamera().setPosition(0, 0, -50);
-    renderer.resetCameraClippingRange();
-
     const glwindow = gc.registerResource(vtkOpenGLRenderWindow.newInstance());
     glwindow.setContainer(renderWindowContainer);
     renderWindow.addView(glwindow);
@@ -91,12 +86,12 @@ test.onlyIfWebGL('Test vtkOpenGLSkybox Rendering', (t) => {
 
   const path = `${__BASE_PATH__}/Data/skybox/mountains/`;
   const texturePathList = [];
-  texturePathList.push(`${path}px.vti`);
-  texturePathList.push(`${path}nx.vti`);
-  texturePathList.push(`${path}py.vti`);
-  texturePathList.push(`${path}ny.vti`);
-  texturePathList.push(`${path}pz.vti`);
-  texturePathList.push(`${path}nz.vti`);
+  texturePathList.push(`${path}right.jpg`); // +x
+  texturePathList.push(`${path}left.jpg`); // -x
+  texturePathList.push(`${path}top.jpg`); // y
+  texturePathList.push(`${path}bottom.jpg`); // -y
+  texturePathList.push(`${path}back.jpg`); // +z
+  texturePathList.push(`${path}front.jpg`); // -z is front from inside a cube
 
   // It will contains all vtkImageData which will textured the cube
   const textures = [];

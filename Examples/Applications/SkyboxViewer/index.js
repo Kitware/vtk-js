@@ -27,7 +27,7 @@ import style from './SkyboxViewer.mcss';
 // ----------------------------------------------
 const userParams = vtkURLExtract.extractURLParameters();
 let autoInit = true;
-const cameraFocalPoint = userParams.direction || [1, 0, 0];
+const cameraFocalPoint = userParams.direction || [0, 0, -1];
 const cameraViewUp = userParams.up || [0, 1, 0];
 const cameraViewAngle = userParams.viewAngle || 60;
 const enableVR = !!userParams.vr;
@@ -134,8 +134,8 @@ function createVisualization(container, mapReader) {
 
   // Update Camera configuration
   const cameraConfiguration = {
-    position: [0, 0, 0],
     focalPoint: cameraFocalPoint,
+    position: [0, 0, 0],
     viewAngle: cameraViewAngle,
     physicalViewNorth: cameraFocalPoint,
     viewUp: cameraViewUp,
