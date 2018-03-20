@@ -399,7 +399,7 @@ function vtkInteractorStyleManipulator(publicAPI, model) {
         manipulator.onScroll(
           model.interactor,
           callData.pokedRenderer,
-          callData.wheelDelta
+          callData.spinY
         );
       }
     }

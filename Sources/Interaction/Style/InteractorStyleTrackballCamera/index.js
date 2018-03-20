@@ -395,7 +395,8 @@ function vtkInteractorStyleTrackballCamera(publicAPI, model) {
 
   //----------------------------------------------------------------------------
   publicAPI.handleMouseWheel = (callData) => {
-    publicAPI.dollyByFactor(callData.pokedRenderer, callData.wheelDelta);
+    const dyf = 1 - callData.spinY / 10; // divide by 10 to lower the zoom factor
+    publicAPI.dollyByFactor(callData.pokedRenderer, dyf);
   };
 
   //----------------------------------------------------------------------------

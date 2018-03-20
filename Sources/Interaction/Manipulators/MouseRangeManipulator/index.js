@@ -9,11 +9,22 @@ function vtkMouseRangeManipulator(publicAPI, model) {
   // Set our className
   model.classHierarchy.push('vtkMouseRangeManipulator');
 
+  // Keep track of delta that is below the value
+  // of one step to progressively increment it
+  model.incrementalDelta = {};
+
+  // Internal methods
+  //-------------------------------------------------------------------------
+  function scaleDeltaToRange(listener, normalizedDelta) {
+    return (
+      normalizedDelta * ((listener.max - listener.min) / listener.step + 1)
+    );
+  }
+
   //-------------------------------------------------------------------------
   function processDelta(listener, delta) {
-    let normDelta = delta;
-    normDelta *= (listener.max - listener.min) / listener.step + 1;
-    let value = listener.getValue() + normDelta;
+    const oldValue = listener.getValue();
+    let value = oldValue + delta + model.incrementalDelta[listener];
 
     const difference = value - listener.min;
     const stepsToDifference = Math.round(difference / listener.step);
@@ -21,13 +32,22 @@ function vtkMouseRangeManipulator(publicAPI, model) {
     value = Math.max(value, listener.min);
     value = Math.min(value, listener.max);
 
-    listener.setValue(value);
+    // Check if value will change or if we need to store
+    // the delta to append at the next iteration
+    if (value !== oldValue) {
+      listener.setValue(value);
+      model.incrementalDelta[listener] = 0;
+    } else if (value !== listener.min && value !== listener.max) {
+      model.incrementalDelta[listener] += delta;
+    }
   }
 
+  // Public API methods
   //-------------------------------------------------------------------------
   publicAPI.setHorizontalListener = (min, max, step, getValue, setValue) => {
     const getFn = Number.isFinite(getValue) ? () => getValue : getValue;
     model.horizontalListener = { min, max, step, getValue: getFn, setValue };
+    model.incrementalDelta[model.horizontalListener] = 0;
     publicAPI.modified();
   };
 
@@ -35,6 +55,7 @@ function vtkMouseRangeManipulator(publicAPI, model) {
   publicAPI.setVerticalListener = (min, max, step, getValue, setValue) => {
     const getFn = Number.isFinite(getValue) ? () => getValue : getValue;
     model.verticalListener = { min, max, step, getValue: getFn, setValue };
+    model.incrementalDelta[model.verticalListener] = 0;
     publicAPI.modified();
   };
 
@@ -42,6 +63,7 @@ function vtkMouseRangeManipulator(publicAPI, model) {
   publicAPI.setScrollListener = (min, max, step, getValue, setValue) => {
     const getFn = Number.isFinite(getValue) ? () => getValue : getValue;
     model.scrollListener = { min, max, step, getValue: getFn, setValue };
+    model.incrementalDelta[model.scrollListener] = 0;
     publicAPI.modified();
   };
 
@@ -90,27 +112,36 @@ function vtkMouseRangeManipulator(publicAPI, model) {
       return;
     }
 
-    // Scale by viewport size
+    // Normalize by viewport size
     const size = interactor.getView().getViewportSize(renderer);
 
     if (model.horizontalListener) {
-      const dx = (position.x - model.previousPosition.x) / size[0];
+      const dxNorm = (position.x - model.previousPosition.x) / size[0];
+      const dx = scaleDeltaToRange(model.horizontalListener, dxNorm);
       processDelta(model.horizontalListener, dx);
     }
     if (model.verticalListener) {
-      const dy = (position.y - model.previousPosition.y) / size[1];
+      const dyNorm = (position.y - model.previousPosition.y) / size[1];
+      const dy = scaleDeltaToRange(model.verticalListener, dyNorm);
       processDelta(model.verticalListener, dy);
     }
 
     model.previousPosition = position;
   };
 
+  let prevValue = 0;
   //-------------------------------------------------------------------------
   publicAPI.onScroll = (interactor, renderer, delta) => {
     if (!delta) {
       return;
     }
-    processDelta(model.scrollListener, 1.0 - delta);
+    processDelta(model.scrollListener, delta * model.scrollListener.step);
+    const val = model.scrollListener.getValue();
+    const steps = Math.round(
+      Math.abs(prevValue - val) / model.scrollListener.step
+    );
+    prevValue = val;
+    console.log(`slice: ${val}, steps: ${steps}`);
   };
   publicAPI.onStartScroll = publicAPI.onScroll;
 }

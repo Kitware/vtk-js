@@ -100,7 +100,7 @@ function vtkInteractorStyleImage(publicAPI, model) {
     const camera = callData.pokedRenderer.getActiveCamera();
 
     let distance = camera.getDistance();
-    distance += model.motionFactor * (1 - callData.wheelDelta);
+    distance += callData.spinY;
 
     // clamp the distance to the clipping range
     const range = camera.getClippingRange();
@@ -254,7 +254,6 @@ function vtkInteractorStyleImage(publicAPI, model) {
 // ----------------------------------------------------------------------------
 
 const DEFAULT_VALUES = {
-  motionFactor: 10.0,
   windowLevelStartPosition: [0, 0],
   windowLevelCurrentPosition: [0, 0],
   lastSlicePosition: 0,
@@ -279,7 +278,7 @@ export function extend(publicAPI, model, initialValues = {}) {
   vtkInteractorStyleTrackballCamera.extend(publicAPI, model, initialValues);
 
   // Create get-set macros
-  macro.setGet(publicAPI, model, ['motionFactor', 'interactionMode']);
+  macro.setGet(publicAPI, model, ['interactionMode']);
 
   // For more macro methods, see "Sources/macro.js"
 
