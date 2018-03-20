@@ -74,7 +74,7 @@ function vtkMouseCameraTrackballZoomManipulator(publicAPI, model) {
 
     const camera = renderer.getActiveCamera();
 
-    const dyf = delta;
+    const dyf = 1 - delta / 10;
 
     if (camera.getParallelProjection()) {
       camera.setParallelScale(camera.getParallelScale() / dyf);

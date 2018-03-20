@@ -4,7 +4,7 @@ import vtkInteractorStyleTrackballCamera from 'vtk.js/Sources/Interaction/Style/
 import Constants from 'vtk.js/Sources/Rendering/Core/RenderWindowInteractor/Constants';
 
 const { Device, Input } = Constants;
-const { vtkWarningMacro, vtkErrorMacro } = macro;
+const { vtkWarningMacro, vtkErrorMacro, normalizeWheel } = macro;
 
 // ----------------------------------------------------------------------------
 // Global methods
@@ -195,7 +195,7 @@ function vtkRenderWindowInteractor(publicAPI, model) {
     model.canvas = canvas;
     canvas.addEventListener('contextmenu', preventDefault);
     canvas.addEventListener('click', preventDefault);
-    canvas.addEventListener('mousewheel', publicAPI.handleWheel);
+    canvas.addEventListener('wheel', publicAPI.handleWheel);
     canvas.addEventListener('DOMMouseScroll', publicAPI.handleWheel);
     canvas.addEventListener('mousemove', publicAPI.handleMouseMove);
     canvas.addEventListener('mousedown', publicAPI.handleMouseDown);
@@ -213,7 +213,7 @@ function vtkRenderWindowInteractor(publicAPI, model) {
     interactionRegistration(false);
     model.canvas.removeEventListener('contextmenu', preventDefault);
     model.canvas.removeEventListener('click', preventDefault);
-    model.canvas.removeEventListener('mousewheel', publicAPI.handleWheel);
+    model.canvas.removeEventListener('wheel', publicAPI.handleWheel);
     model.canvas.removeEventListener('DOMMouseScroll', publicAPI.handleWheel);
     model.canvas.removeEventListener('mousemove', publicAPI.handleMouseMove);
     model.canvas.removeEventListener('mousedown', publicAPI.handleMouseDown);
@@ -405,22 +405,26 @@ function vtkRenderWindowInteractor(publicAPI, model) {
     event.stopPropagation();
     event.preventDefault();
 
-    let wheelDelta = 0;
-    // let mode = '';
-    if (event.wheelDeltaX === undefined) {
-      // mode = 'detail';
-      wheelDelta = -event.detail * 2;
-    } else {
-      // mode = 'wheelDeltaY';
-      wheelDelta = event.wheelDeltaY;
-    }
-    const callData = {
-      wheelDelta: Math.max(0.01, (wheelDelta + 1000.0) / 1000.0),
-    };
+    /**
+     * wheel event values can vary significantly across browsers, platforms
+     * and devices [1]. `normalizeWheel` uses facebook's solution from their
+     * fixed-data-table repository [2].
+     *
+     * [1] https://developer.mozilla.org/en-US/docs/Web/Events/mousewheel
+     * [2] https://github.com/facebookarchive/fixed-data-table/blob/master/src/vendor_upstream/dom/normalizeWheel.js
+     *
+     * This code will return an object with properties:
+     *
+     *   spinX   -- normalized spin speed (use for zoom) - x plane
+     *   spinY   -- " - y plane
+     *   pixelX  -- normalized distance (to pixels) - x plane
+     *   pixelY  -- " - y plane
+     *
+     */
+    const callData = normalizeWheel(event);
 
     if (model.wheelTimeoutID === 0) {
       publicAPI.startMouseWheelEvent(callData);
-      publicAPI.mouseWheelEvent(callData);
     } else {
       publicAPI.mouseWheelEvent(callData);
       clearTimeout(model.wheelTimeoutID);
