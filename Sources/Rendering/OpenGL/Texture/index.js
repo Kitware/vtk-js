@@ -738,21 +738,18 @@ function vtkOpenGLTexture(publicAPI, model) {
     // invert the data because opengl is messed up with cube maps
     // and uses the old renderman standard with Y going down
     // even though it is completely at odds with OpenGL standards
-    const halfHeight = model.height / 2;
-    const tmpData = new window[dataType](model.width * model.components);
+    const invertedData = [];
     for (let i = 0; i < scaledData.length; i++) {
-      for (let y = 0; y < halfHeight; ++y) {
+      invertedData[i] = new window[dataType](
+        model.height * model.width * model.components
+      );
+      for (let y = 0; y < model.height; ++y) {
         const row1 = y * model.width * model.components;
         const row2 = (model.height - y - 1) * model.width * model.components;
-        tmpData.set(
-          scaledData[i].slice(row1, row1 + model.width * model.components)
+        invertedData[i].set(
+          scaledData[i].slice(row2, row2 + model.width * model.components),
+          row1
         );
-        scaledData[i].copyWithin(
-          row1,
-          row2,
-          row2 + model.width * model.components
-        );
-        scaledData[i].set(tmpData, row2);
       }
     }
 
@@ -760,7 +757,7 @@ function vtkOpenGLTexture(publicAPI, model) {
     model.context.pixelStorei(model.context.UNPACK_ALIGNMENT, 1);
 
     for (let i = 0; i < 6; i++) {
-      if (scaledData[i]) {
+      if (invertedData[i]) {
         model.context.texImage2D(
           model.context.TEXTURE_CUBE_MAP_POSITIVE_X + i,
           0,
@@ -770,7 +767,7 @@ function vtkOpenGLTexture(publicAPI, model) {
           0,
           model.format,
           model.openGLDataType,
-          scaledData[i]
+          invertedData[i]
         );
       }
     }
