@@ -1,0 +1,73 @@
+{
+  "origin": [
+    0.0, 
+    0.0, 
+    0.0
+  ], 
+  "cellData": {
+    "arrays": [], 
+    "vtkClass": "vtkDataSetAttributes"
+  }, 
+  "FieldData": {
+    "arrays": [], 
+    "vtkClass": "vtkDataSetAttributes"
+  }, 
+  "vtkClass": "vtkImageData", 
+  "pointData": {
+    "arrays": [
+      {
+        "data": {
+          "numberOfComponents": 3, 
+          "name": "JPEGImage", 
+          "vtkClass": "vtkDataArray", 
+          "dataType": "Uint8Array", 
+          "ranges": [
+            {
+              "max": 255.0, 
+              "component": null, 
+              "min": 8.0
+            }, 
+            {
+              "max": 255.0, 
+              "component": null, 
+              "min": 14.0
+            }, 
+            {
+              "max": 255.0, 
+              "component": null, 
+              "min": 22.0
+            }, 
+            {
+              "max": 441.6729559300637, 
+              "component": null, 
+              "min": 28.600699292150182
+            }
+          ], 
+          "ref": {
+            "encode": "LittleEndian", 
+            "basepath": "data", 
+            "id": "461b3d3a7e19817b01dcfa06cee730e4"
+          }, 
+          "size": 12582912
+        }
+      }
+    ], 
+    "vtkClass": "vtkDataSetAttributes"
+  }, 
+  "spacing": [
+    1.0, 
+    1.0, 
+    1.0
+  ], 
+  "extent": [
+    0, 
+    2047, 
+    0, 
+    2047, 
+    0, 
+    0
+  ], 
+  "metadata": {
+    "name": "back.jpg"
+  }
+}

@@ -147,13 +147,15 @@ function vtkSkyboxReader(publicAPI, model) {
 const DEFAULT_VALUES = {
   // url: null,
   busy: false,
+  // everything must be flipped in Y due to canvas
+  // versus vtk ordering
   faceMapping: [
-    { fileName: 'f.jpg', transform: { flipX: true } },
-    { fileName: 'b.jpg', transform: { flipX: true } },
-    { fileName: 'u.jpg', transform: { flipX: true, rotate: 90 } },
-    { fileName: 'd.jpg', transform: { flipX: true, rotate: -90 } },
-    { fileName: 'r.jpg', transform: { flipX: true } },
-    { fileName: 'l.jpg', transform: { flipX: true } },
+    { fileName: 'right.jpg', transform: { flipY: true } },
+    { fileName: 'left.jpg', transform: { flipY: true } },
+    { fileName: 'up.jpg', transform: { flipY: true } },
+    { fileName: 'down.jpg', transform: { flipY: true } },
+    { fileName: 'back.jpg', transform: { flipY: true } },
+    { fileName: 'front.jpg', transform: { flipY: true } },
   ],
 };
 

@@ -735,6 +735,27 @@ function vtkOpenGLTexture(publicAPI, model) {
     const pixData = updateArrayDataType(dataType, data);
     const scaledData = scaleTextureToHighestPowerOfTwo(pixData);
 
+    // invert the data because opengl is messed up with cube maps
+    // and uses the old renderman standard with Y going down
+    // even though it is completely at odds with OpenGL standards
+    const halfHeight = model.height / 2;
+    const tmpData = new window[dataType](model.width * model.components);
+    for (let i = 0; i < scaledData.length; i++) {
+      for (let y = 0; y < halfHeight; ++y) {
+        const row1 = y * model.width * model.components;
+        const row2 = (model.height - y - 1) * model.width * model.components;
+        tmpData.set(
+          scaledData[i].slice(row1, row1 + model.width * model.components)
+        );
+        scaledData[i].copyWithin(
+          row1,
+          row2,
+          row2 + model.width * model.components
+        );
+        scaledData[i].set(tmpData, row2);
+      }
+    }
+
     // Source texture data from the PBO.
     model.context.pixelStorei(model.context.UNPACK_ALIGNMENT, 1);
 

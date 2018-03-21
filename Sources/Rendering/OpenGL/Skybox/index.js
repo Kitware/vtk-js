@@ -118,6 +118,17 @@ function vtkOpenGLSkybox(publicAPI, model) {
         cellOffset: 0,
       });
 
+      // we invert Y below because opengl is messed up!
+      // Cube Maps have been specified to follow the RenderMan
+      // specification (for whatever reason), and RenderMan
+      // assumes the images' origin being in the upper left,
+      // contrary to the usual OpenGL behaviour of having the
+      // image origin in the lower left. That's why things get
+      // swapped in the Y direction. It totally breaks with the usual
+      // OpenGL semantics and doesn't make sense at all.
+      // But now we're stuck with it.  From
+      // https://stackoverflow.com/questions/11685608/convention-of-faces-in-opengl-cubemapping
+      //
       model.tris.setProgram(
         model.openGLRenderWindow.getShaderCache().readyShaderProgramArray(
           `//VTK::System::Dec
@@ -135,7 +146,20 @@ function vtkOpenGLSkybox(publicAPI, model) {
            varying vec3 TexCoords;
            uniform samplerCube sbtexture;
            void main () {
-             gl_FragData[0] = textureCube(sbtexture, TexCoords);
+             // skybox looks from inside out
+             // which means we have to adjust
+             // our tcoords. Otherwise text would
+             // be flipped
+             vec3 tc = TexCoords;
+             if (abs(tc.z) < max(abs(tc.x),abs(tc.y)))
+             {
+               tc = vec3(1.0, 1.0, -1.0) * tc;
+             }
+             else
+             {
+               tc = vec3(-1.0, 1.0, 1.0) * tc;
+             }
+             gl_FragData[0] = textureCube(sbtexture, tc);
            }`,
           ''
         )
