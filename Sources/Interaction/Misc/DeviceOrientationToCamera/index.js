@@ -13,6 +13,10 @@ const SCREEN_ORIENTATION_MAP = {
   'portrait-primary': 0,
 };
 
+function isEventValid(evt) {
+  return Number.isFinite(evt.alpha);
+}
+
 function onDeviceOrientationChangeEvent(evt) {
   orientation.device = evt;
   if (!Number.isFinite(evt.alpha)) {
@@ -69,7 +73,7 @@ function addCameraToSynchronize(
   onCameraUpdate
 ) {
   function onAnimation() {
-    if (orientation.update) {
+    if (orientation.update && isEventValid(orientation.device)) {
       const { alpha, beta, gamma } = orientation.device;
       const { screen } = orientation;
       camera.setDeviceAngles(alpha, beta, gamma, screen);
