@@ -1,4 +1,4 @@
-import { quat, vec3, vec4, mat3, mat4 } from 'gl-matrix';
+import { quat, vec3, vec4, mat4 } from 'gl-matrix';
 
 import macro from 'vtk.js/Sources/macro';
 import vtkMath from 'vtk.js/Sources/Common/Core/Math';
@@ -586,39 +586,58 @@ function vtkCamera(publicAPI, model) {
   // device orientation such that the physicalViewUp you set
   // in world coordinates looks up, and the physicalViewNorth
   // you set in world coorindates will (maybe) point north
+  //
+  // NOTE WARNING - much of the documentaiton out there on how
+  // orientation works is seriously wrong. Even worse the Chrome
+  // device orientation simulator is completely wrong and should
+  // never be used. OMG it is so messed up.
+  //
+  // how it seems to work on iOS is that the device orientation
+  // is specified in extrinsic angles with a alpha, beta, gamma
+  // convention with axes of Z, X, Y (the code below substitutes
+  // the physical coordinate system for these axes to get the right
+  // modified coordinate system.
   publicAPI.setDeviceAngles = (alpha, beta, gamma, screen) => {
-    const rotmat = mat4.create(); // phone to physical coordinates
-    mat4.rotateZ(rotmat, rotmat, vtkMath.radiansFromDegrees(alpha));
-    mat4.rotateX(rotmat, rotmat, vtkMath.radiansFromDegrees(beta));
-    mat4.rotateY(rotmat, rotmat, vtkMath.radiansFromDegrees(gamma));
-    mat4.rotateZ(rotmat, rotmat, vtkMath.radiansFromDegrees(-screen));
-
-    const dop = vec3.fromValues(0.0, 0.0, -1.0);
-    const vup = vec3.fromValues(0.0, 1.0, 0.0);
-    const newdop = vec3.create();
-    const newvup = vec3.create();
-    vec3.transformMat4(newdop, dop, rotmat);
-    vec3.transformMat4(newvup, vup, rotmat);
-
-    // now the physical to vtk world tform
     const physVRight = [3];
     vtkMath.cross(model.physicalViewNorth, model.physicalViewUp, physVRight);
-    const phystoworld = mat3.create();
-    phystoworld[0] = physVRight[0];
-    phystoworld[1] = physVRight[1];
-    phystoworld[2] = physVRight[2];
-    phystoworld[3] = model.physicalViewNorth[0];
-    phystoworld[4] = model.physicalViewNorth[1];
-    phystoworld[5] = model.physicalViewNorth[2];
-    phystoworld[6] = model.physicalViewUp[0];
-    phystoworld[7] = model.physicalViewUp[1];
-    phystoworld[8] = model.physicalViewUp[2];
-    mat3.transpose(phystoworld, phystoworld);
-    vec3.transformMat3(newdop, newdop, phystoworld);
-    vec3.transformMat3(newvup, newvup, phystoworld);
 
-    publicAPI.setDirectionOfProjection(newdop[0], newdop[1], newdop[2]);
-    publicAPI.setViewUp(newvup[0], newvup[1], newvup[2]);
+    const rotmat = mat4.create(); // phone to physical coordinates
+    mat4.rotate(
+      rotmat,
+      rotmat,
+      vtkMath.radiansFromDegrees(alpha),
+      model.physicalViewUp
+    );
+    mat4.rotate(rotmat, rotmat, vtkMath.radiansFromDegrees(beta), physVRight);
+    mat4.rotate(
+      rotmat,
+      rotmat,
+      vtkMath.radiansFromDegrees(gamma),
+      model.physicalViewNorth
+    );
+
+    mat4.rotate(
+      rotmat,
+      rotmat,
+      vtkMath.radiansFromDegrees(-screen),
+      model.physicalViewUp
+    );
+
+    const dop = vec3.fromValues(
+      -model.physicalViewUp[0],
+      -model.physicalViewUp[1],
+      -model.physicalViewUp[2]
+    );
+    const vup = vec3.fromValues(
+      model.physicalViewNorth[0],
+      model.physicalViewNorth[1],
+      model.physicalViewNorth[2]
+    );
+    vec3.transformMat4(dop, dop, rotmat);
+    vec3.transformMat4(vup, vup, rotmat);
+
+    publicAPI.setDirectionOfProjection(dop[0], dop[1], dop[2]);
+    publicAPI.setViewUp(vup[0], vup[1], vup[2]);
     publicAPI.modified();
   };
 
