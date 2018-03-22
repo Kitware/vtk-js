@@ -244,7 +244,7 @@ function vtkPicker(publicAPI, model) {
       }
 
       if (pickable) {
-        model.transformMatrix = prop.getMatrix();
+        model.transformMatrix = prop.getMatrix().slice(0);
         // Webgl need a transpose matrix but we need the untransposed one to project world points
         // into the right referential
         mat4.transpose(model.transformMatrix, model.transformMatrix);
