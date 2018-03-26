@@ -73,7 +73,6 @@ function vtkImageMapper(publicAPI, model) {
       case SlicingMode.K:
         {
           const slice = publicAPI.getSliceAtPosition(fp);
-          console.log(slice);
           publicAPI.setSlice(slice);
         }
         break;
