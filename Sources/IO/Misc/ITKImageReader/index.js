@@ -1,10 +1,12 @@
 import macro from 'vtk.js/Sources/macro';
 import ITKHelper from 'vtk.js/Sources/Common/DataModel/ITKHelper';
 
-// Dependency needs to be added inside your project
-import readImageArrayBuffer from 'itk/readImageArrayBuffer';
-
 const { convertItkToVtkImage } = ITKHelper;
+let readImageArrayBuffer = null;
+
+function setReadImageArrayBufferFromITK(fn) {
+  readImageArrayBuffer = fn;
+}
 
 // ----------------------------------------------------------------------------
 // vtkITKImageReader methods
@@ -57,6 +59,15 @@ export function extend(publicAPI, model, initialValues = {}) {
 
   // vtkITKImageReader methods
   vtkITKImageReader(publicAPI, model);
+
+  // Check that ITK function has been injected
+  if (!readImageArrayBuffer) {
+    console.error(`
+      // Dependency needs to be added inside your project
+      import readImageArrayBuffer from 'itk/readImageArrayBuffer';
+      vtkITKImageReader.setReadImageArrayBufferFromITK(readImageArrayBuffer);
+      `);
+  }
 }
 
 // ----------------------------------------------------------------------------
@@ -65,4 +76,4 @@ export const newInstance = macro.newInstance(extend, 'vtkITKImageReader');
 
 // ----------------------------------------------------------------------------
 
-export default { newInstance, extend };
+export default { newInstance, extend, setReadImageArrayBufferFromITK };
