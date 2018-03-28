@@ -136,6 +136,7 @@ function vtkCellPicker(publicAPI, model) {
   };
 
   publicAPI.pick = (selection, renderer) => {
+    publicAPI.initialize();
     const pickResult = superClass.pick(selection, renderer);
     if (pickResult) {
       const camera = renderer.getActiveCamera();
