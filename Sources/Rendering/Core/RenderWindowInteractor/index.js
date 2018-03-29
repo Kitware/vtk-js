@@ -33,6 +33,7 @@ const handledEvents = [
   'RightButtonPress',
   'RightButtonRelease',
   'KeyPress',
+  'KeyDown',
   'KeyUp',
   'StartMouseWheel',
   'MouseWheel',
@@ -204,6 +205,9 @@ function vtkRenderWindowInteractor(publicAPI, model) {
       .addEventListener('keypress', publicAPI.handleKeyPress);
     document
       .querySelector('body')
+      .addEventListener('keydown', publicAPI.handleKeyDown);
+    document
+      .querySelector('body')
       .addEventListener('keyup', publicAPI.handleKeyUp);
 
     canvas.addEventListener('touchstart', publicAPI.handleTouchStart, false);
@@ -222,6 +226,9 @@ function vtkRenderWindowInteractor(publicAPI, model) {
       .removeEventListener('keypress', publicAPI.handleKeyPress);
     document
       .querySelector('body')
+      .removeEventListener('keydown', publicAPI.handleKeyDown);
+    document
+      .querySelector('body')
       .removeEventListener('keyup', publicAPI.handleKeyUp);
     model.canvas.removeEventListener('touchstart', publicAPI.handleTouchStart);
     model.canvas = null;
@@ -230,6 +237,11 @@ function vtkRenderWindowInteractor(publicAPI, model) {
   publicAPI.handleKeyPress = (event) => {
     const data = getKeysFor(event);
     publicAPI.keyPressEvent(data);
+  };
+
+  publicAPI.handleKeyDown = (event) => {
+    const data = getKeysFor(event);
+    publicAPI.keyDownEvent(data);
   };
 
   publicAPI.handleKeyUp = (event) => {
