@@ -129,19 +129,12 @@ function vtkMouseRangeManipulator(publicAPI, model) {
     model.previousPosition = position;
   };
 
-  let prevValue = 0;
   //-------------------------------------------------------------------------
   publicAPI.onScroll = (interactor, renderer, delta) => {
     if (!delta) {
       return;
     }
     processDelta(model.scrollListener, delta * model.scrollListener.step);
-    const val = model.scrollListener.getValue();
-    const steps = Math.round(
-      Math.abs(prevValue - val) / model.scrollListener.step
-    );
-    prevValue = val;
-    console.log(`slice: ${val}, steps: ${steps}`);
   };
   publicAPI.onStartScroll = publicAPI.onScroll;
 }
