@@ -71,6 +71,11 @@ function vtkAnnotatedCubeActor(publicAPI, model) {
 
     // set face rotation
     ctxt.save();
+
+    // vertical flip
+    ctxt.translate(0, canvas.height);
+    ctxt.scale(1, -1);
+
     ctxt.translate(canvas.width / 2, canvas.height / 2);
     ctxt.rotate(-Math.PI * (prop.faceRotation / 180.0));
 
