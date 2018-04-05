@@ -34,6 +34,7 @@ module.exports = function init(config) {
     },
 
     webpack: {
+      mode: 'development',
       node: {
         fs: 'empty',
       },

@@ -9,6 +9,7 @@ var webpack = require('webpack');
 var path = require('path');
 
 module.exports = {
+  mode: 'development',
   plugins: [
     new HtmlWebpackPlugin({
       inject: 'body',
