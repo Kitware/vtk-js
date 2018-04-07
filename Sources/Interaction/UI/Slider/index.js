@@ -202,9 +202,10 @@ function vtkSlider(publicAPI, model) {
   };
 
   publicAPI.generateValues = (min, max, nbSteps) => {
-    const step = (max - min) / (nbSteps - 1);
+    const nbStepsAbs = Math.abs(nbSteps);
+    const step = (max - min) / (nbStepsAbs - 1);
     model.values = [];
-    for (let i = 0; i < nbSteps; i++) {
+    for (let i = 0; i < nbStepsAbs; i++) {
       model.values.push(min + i * step);
     }
     model.range = max - min;
