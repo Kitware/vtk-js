@@ -338,9 +338,11 @@ function vtkImageMapper(publicAPI, model) {
       const point = intersect.x;
       const absoluteIJK = [0, 0, 0];
       imageData.worldToIndex(point, absoluteIJK);
+      // `t` is the parametric position along the line
+      // defined in Plane.intersectWithLine
       return {
+        t: intersect.t,
         absoluteIJK,
-        point,
       };
     }
     return null;
@@ -373,9 +375,8 @@ function vtkImageMapper(publicAPI, model) {
       }
 
       return {
+        t: pickingData.t,
         ijk,
-        absoluteIJK: pickingData.absoluteIJK,
-        point: pickingData.point,
       };
     }
     return null;
@@ -386,13 +387,14 @@ function vtkImageMapper(publicAPI, model) {
     if (pickingData) {
       const imageData = publicAPI.getInputData();
       const extent = imageData.getExtent();
+      const absIJK = pickingData.absoluteIJK;
 
       // Get closer integer ijk
       // NB: cell picking means closest voxel, means flooring
       const ijk = [
-        Math.floor(pickingData.absoluteIJK[0]),
-        Math.floor(pickingData.absoluteIJK[1]),
-        Math.floor(pickingData.absoluteIJK[2]),
+        Math.floor(absIJK[0]),
+        Math.floor(absIJK[1]),
+        Math.floor(absIJK[2]),
       ];
 
       // Are we outside our actual extent
@@ -407,10 +409,17 @@ function vtkImageMapper(publicAPI, model) {
         return null;
       }
 
+      // Parametric coordinates within cell
+      const pCoords = [
+        absIJK[0] - ijk[0],
+        absIJK[1] - ijk[1],
+        absIJK[2] - ijk[2],
+      ];
+
       return {
+        t: pickingData.t,
         ijk,
-        absoluteIJK: pickingData.absoluteIJK,
-        point: pickingData.point,
+        pCoords,
       };
     }
     return null;

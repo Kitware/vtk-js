@@ -178,9 +178,9 @@ function vtkCellPicker(publicAPI, model) {
     if (mapper.isA('vtkImageMapper')) {
       const pickData = mapper.intersectWithLineForCellPicking(p1, p2);
       if (pickData) {
-        tMin = 0;
+        tMin = pickData.t;
         model.cellIJK = pickData.ijk;
-        model.pCoords = pickData.point;
+        model.pCoords = pickData.pCoords;
       }
     } else if (mapper.isA('vtkMapper')) {
       tMin = publicAPI.intersectActorWithLine(p1, p2, t1, t2, tol, mapper);

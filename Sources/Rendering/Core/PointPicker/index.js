@@ -18,9 +18,8 @@ function vtkPointPicker(publicAPI, model) {
     if (mapper.isA('vtkImageMapper')) {
       const pickData = mapper.intersectWithLineForPointPicking(p1, p2);
       if (pickData) {
-        tMin = 0;
+        tMin = pickData.t;
         model.pointIJK = pickData.ijk;
-        model.pCoords = pickData.point;
       }
     } else if (mapper.isA('vtkMapper')) {
       tMin = publicAPI.intersectActorWithLine(p1, p2, tol, mapper);
@@ -157,7 +156,6 @@ function vtkPointPicker(publicAPI, model) {
 
 const DEFAULT_VALUES = {
   pointId: -1,
-  pCoords: [],
   pointIJK: [],
   useCells: false,
 };
@@ -170,7 +168,7 @@ export function extend(publicAPI, model, initialValues = {}) {
   // Inheritance
   vtkPicker.extend(publicAPI, model, initialValues);
 
-  macro.getArray(publicAPI, model, ['pCoords', 'pointIJK']);
+  macro.getArray(publicAPI, model, ['pointIJK']);
   macro.get(publicAPI, model, ['pointId']);
   macro.setGet(publicAPI, model, ['useCells']);
 
