@@ -76,7 +76,6 @@ function vtkCellPicker(publicAPI, model) {
   const superClass = Object.assign({}, publicAPI);
 
   function resetCellPickerInfo() {
-    model.pointId = -1;
     model.cellId = -1;
 
     model.pCoords[0] = 0.0;
@@ -86,10 +85,6 @@ function vtkCellPicker(publicAPI, model) {
     model.cellIJK[0] = 0.0;
     model.cellIJK[1] = 0.0;
     model.cellIJK[2] = 0.0;
-
-    model.pointIJK[0] = 0.0;
-    model.pointIJK[1] = 0.0;
-    model.pointIJK[2] = 0.0;
 
     model.mapperNormal[0] = 0.0;
     model.mapperNormal[1] = 0.0;
@@ -394,15 +389,11 @@ function vtkCellPicker(publicAPI, model) {
 // ----------------------------------------------------------------------------
 
 const DEFAULT_VALUES = {
-  pointId: -1,
   cellId: -1,
-  subId: -1,
   pCoords: [],
-  pointIJK: [],
   cellIJK: [],
   pickNormal: [],
   mapperNormal: [],
-  pointIds: [],
 };
 
 // ----------------------------------------------------------------------------
@@ -413,14 +404,13 @@ export function extend(publicAPI, model, initialValues = {}) {
   // Inheritance
   vtkPicker.extend(publicAPI, model, initialValues);
 
-  macro.getArray(publicAPI, model, ['pickNormal', 'mapperNormal', 'pCoords']);
-  macro.get(publicAPI, model, [
-    'pointId',
-    'cellId',
-    'subId',
-    'pointIJK',
+  macro.getArray(publicAPI, model, [
+    'pickNormal',
+    'mapperNormal',
+    'pCoords',
     'cellIJK',
   ]);
+  macro.get(publicAPI, model, ['cellId']);
 
   // Object methods
   vtkCellPicker(publicAPI, model);
