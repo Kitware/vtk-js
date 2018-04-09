@@ -24,6 +24,7 @@ import style from './SkyboxViewer.mcss';
 //   - eye
 //   - viewAngle
 //   - debug
+//   - autoIncrement
 // ----------------------------------------------
 const userParams = vtkURLExtract.extractURLParameters();
 let autoInit = true;
@@ -33,6 +34,7 @@ const cameraViewAngle = userParams.viewAngle || 60;
 const enableVR = !!userParams.vr;
 const eyeSpacing = userParams.eye || -0.05;
 const grid = userParams.debug || false;
+const autoIncrementTimer = userParams.timer || 0;
 
 function preventDefaults(e) {
   e.preventDefault();
@@ -182,6 +184,29 @@ function createVisualization(container, mapReader) {
 
   renderWindow.render();
 
+  function updateSkybox(position) {
+    const selector = document.querySelector('.position');
+    if (selector && selector.value !== position) {
+      selector.value = position;
+    }
+    actor.removeAllTextures();
+    mapReader.setPosition(`${position}`);
+    mapReader.update();
+    actor.addTexture(mapReader.getOutputData());
+    renderWindow.render();
+  }
+
+  // handle auto incrmenting position
+  if (autoIncrementTimer !== 0) {
+    setInterval(() => {
+      const currentPosition = mapReader.getPosition();
+      const allPositions = mapReader.getPositions();
+      const nextIdx =
+        (allPositions.indexOf(currentPosition) + 1) % allPositions.length;
+      updateSkybox(allPositions[nextIdx]);
+    }, autoIncrementTimer * 1000);
+  }
+
   // Update camera control
   if (vtkDeviceOrientationToCamera.isDeviceOrientationSupported()) {
     vtkDeviceOrientationToCamera.addWindowListeners();
@@ -201,18 +226,6 @@ function createVisualization(container, mapReader) {
         interactor.cancelAnimation('deviceOrientation');
       }
     }, 100);
-  }
-
-  function updateSkybox(position) {
-    const selector = document.querySelector('.position');
-    if (selector && selector.value !== position) {
-      selector.value = position;
-    }
-    actor.removeAllTextures();
-    mapReader.setPosition(`${position}`);
-    mapReader.update();
-    actor.addTexture(mapReader.getOutputData());
-    renderWindow.render();
   }
 
   // Add Control UI
