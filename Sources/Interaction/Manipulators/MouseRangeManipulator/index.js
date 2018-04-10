@@ -37,8 +37,15 @@ function vtkMouseRangeManipulator(publicAPI, model) {
     if (value !== oldValue) {
       listener.setValue(value);
       model.incrementalDelta[listener] = 0;
-    } else if (value !== listener.min && value !== listener.max) {
+    } else {
       model.incrementalDelta[listener] += delta;
+      // Do not allow incremental delta to go past range
+      if (
+        (value === listener.min && model.incrementalDelta[listener] < 0) ||
+        (value === listener.max && model.incrementalDelta[listener] > 0)
+      ) {
+        model.incrementalDelta[listener] = 0;
+      }
     }
   }
 
