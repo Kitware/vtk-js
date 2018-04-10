@@ -28,6 +28,7 @@ import style from './SkyboxViewer.mcss';
 // ----------------------------------------------
 const userParams = vtkURLExtract.extractURLParameters();
 let autoInit = true;
+let fullscreenMode = false;
 const cameraFocalPoint = userParams.direction || [0, 0, -1];
 const cameraViewUp = userParams.up || [0, 1, 0];
 const cameraViewAngle = userParams.viewAngle || 60;
@@ -144,6 +145,35 @@ function createVisualization(container, mapReader) {
     physicalViewUp: cameraViewUp,
   };
 
+  function updateSkybox(position) {
+    const selector = document.querySelector('.position');
+    if (selector && selector.value !== position) {
+      selector.value = position;
+    }
+    actor.removeAllTextures();
+    mapReader.setPosition(`${position}`);
+    mapReader.update();
+    actor.addTexture(mapReader.getOutputData());
+    renderWindow.render();
+  }
+
+  function nextPosition() {
+    const currentPosition = mapReader.getPosition();
+    const allPositions = mapReader.getPositions();
+    const nextIdx =
+      (allPositions.indexOf(currentPosition) + 1) % allPositions.length;
+    updateSkybox(allPositions[nextIdx]);
+  }
+
+  function toggleFullScreen() {
+    fullscreenMode = !fullscreenMode;
+    const body = document.querySelector('body');
+    const methods = fullscreenMode
+      ? ['requestFullscreen', 'msRequestFullscreen', 'webkitRequestFullscreen']
+      : ['exitFullscreen', 'msExitFullscreen', 'webkitExitFullscreen'];
+    methods.filter((m) => body[m]).forEach((m) => body[m]());
+  }
+
   if (enableVR && vtkDeviceOrientationToCamera.isDeviceOrientationSupported()) {
     leftRenderer = vtkRenderer.newInstance();
     rightRenderer = vtkRenderer.newInstance();
@@ -177,6 +207,22 @@ function createVisualization(container, mapReader) {
     renderWindow.addRenderer(leftRenderer);
     renderWindow.addRenderer(rightRenderer);
     renderWindow.removeRenderer(mainRenderer);
+
+    // Hide any controller
+    fullScreenRenderer.setControllerVisibility(false);
+    fullScreenRenderer.getRootContainer().addEventListener(
+      'touchstart',
+      (e) => {
+        if (e.touches.length === 1) {
+          // Move to next
+          nextPosition();
+        } else {
+          // Toggle fullscreen
+          toggleFullScreen();
+        }
+      },
+      true
+    );
   } else {
     camera.set(cameraConfiguration);
     mainRenderer.addActor(actor);
@@ -184,27 +230,9 @@ function createVisualization(container, mapReader) {
 
   renderWindow.render();
 
-  function updateSkybox(position) {
-    const selector = document.querySelector('.position');
-    if (selector && selector.value !== position) {
-      selector.value = position;
-    }
-    actor.removeAllTextures();
-    mapReader.setPosition(`${position}`);
-    mapReader.update();
-    actor.addTexture(mapReader.getOutputData());
-    renderWindow.render();
-  }
-
   // handle auto incrmenting position
   if (autoIncrementTimer !== 0) {
-    setInterval(() => {
-      const currentPosition = mapReader.getPosition();
-      const allPositions = mapReader.getPositions();
-      const nextIdx =
-        (allPositions.indexOf(currentPosition) + 1) % allPositions.length;
-      updateSkybox(allPositions[nextIdx]);
-    }, autoIncrementTimer * 1000);
+    setInterval(nextPosition, autoIncrementTimer * 1000);
   }
 
   // Update camera control
