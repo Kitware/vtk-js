@@ -2,6 +2,22 @@
   "name": "vtk.js",
   "version": "0.0.0-semantically-release",
   "description": "Visualization Toolkit for the Web",
+  "keywords": [
+    "3d",
+    "visualization",
+    "webgl",
+    "medical",
+    "scientific",
+    "vtk",
+    "paraview",
+    "geometry",
+    "point cloud",
+    "mesh",
+    "gl-vis",
+    "volume",
+    "graphics",
+    "paraviewweb"
+  ],
   "repository": {
     "type": "git",
     "url": "git+https://github.com/kitware/vtk-js.git"
@@ -32,7 +48,7 @@
     "karma-tap-pretty-reporter": "3.0.5",
     "karma-webpack": "2.0.4",
     "kw-doc": "1.1.2",
-    "kw-web-suite": "6.0.1",
+    "kw-web-suite": "6.0.2",
     "resemblejs": "2.2.6",
     "tap-markdown": "1.2.1",
     "tap-spec": "4.1.1",
