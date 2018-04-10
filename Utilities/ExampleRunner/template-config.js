@@ -12,7 +12,7 @@ module.exports = {
   mode: 'development',
   plugins: [
     new HtmlWebpackPlugin({
-      inject: 'body',
+      template: '${root.replace(/\\/g, '\\\\')}/Utilities/ExampleRunner/template.html',
     }),
     new webpack.DefinePlugin({
       __BASE_PATH__: "''",
