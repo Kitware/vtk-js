@@ -23,3 +23,7 @@ The Skybox Viewer can be used as a link that encode both the Viewer path, the da
 
 - [Basic viewer](https://kitware.github.io/vtk-js/examples/SkyboxViewer/SkyboxViewer.html?fileURL=https://data.kitware.com/api/v1/file/5aaa9ef58d777f068578d4e7/download&position=6)
 - [VR Viewer](https://kitware.github.io/vtk-js/examples/SkyboxViewer/SkyboxViewer.html?fileURL=https://data.kitware.com/api/v1/file/5aaaa4d68d777f068578d4ed/download&vr)
+
+### VR Mode
+
+In VR mode, a `tap` can be used to move to the next position while a `tab with 2 fingers` can be use to toggle the full screen mode. 

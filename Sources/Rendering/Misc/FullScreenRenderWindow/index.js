@@ -82,6 +82,21 @@ function vtkFullScreenRenderWindow(publicAPI, model) {
     }
   };
 
+  publicAPI.setControllerVisibility = (visible) => {
+    model.controllerVisibility = visible;
+    if (model.controlContainer) {
+      if (visible) {
+        model.controlContainer.style.display = 'block';
+      } else {
+        model.controlContainer.style.display = 'none';
+      }
+    }
+  };
+
+  publicAPI.toggleControllerVisibility = () => {
+    publicAPI.setControllerVisibility(!model.controllerVisibility);
+  };
+
   publicAPI.addController = (html) => {
     model.controlContainer = document.createElement('div');
     applyStyle(
@@ -91,13 +106,11 @@ function vtkFullScreenRenderWindow(publicAPI, model) {
     model.rootContainer.appendChild(model.controlContainer);
     model.controlContainer.innerHTML = html;
 
+    publicAPI.setControllerVisibility(model.controllerVisibility);
+
     model.rootContainer.addEventListener('keypress', (e) => {
       if (String.fromCharCode(e.charCode) === 'c') {
-        if (model.controlContainer.style.display === 'none') {
-          model.controlContainer.style.display = 'block';
-        } else {
-          model.controlContainer.style.display = 'none';
-        }
+        publicAPI.toggleControllerVisibility();
       }
     });
   };
@@ -151,6 +164,7 @@ const DEFAULT_VALUES = {
   controlPanelStyle: null,
   listenWindowResize: true,
   resizeCallback: null,
+  controllerVisibility: true,
 };
 
 // ----------------------------------------------------------------------------
@@ -165,6 +179,7 @@ export function extend(publicAPI, model, initialValues = {}) {
     'renderer',
     'openGLRenderWindow',
     'interactor',
+    'rootContainer',
     'container',
     'controlContainer',
   ]);
