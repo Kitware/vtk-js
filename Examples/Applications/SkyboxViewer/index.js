@@ -32,6 +32,7 @@ const enableVR = !!userParams.vr;
 const eyeSpacing = userParams.eye || -0.05;
 const grid = userParams.debug || false;
 const autoIncrementTimer = userParams.timer || 0;
+const disableTouchNext = userParams.disableTouch || false;
 
 const body = document.querySelector('body');
 let fullScreenMetod = null;
@@ -208,18 +209,23 @@ function createVisualization(container, mapReader) {
     // Hide any controller
     fullScreenRenderer.setControllerVisibility(false);
 
+    // Remove window interactions
+    interactor.unbindEvents();
+
     // Attach touch control
-    fullScreenRenderer
-      .getRootContainer()
-      .addEventListener('touchstart', nextPosition, true);
-    if (fullScreenMetod) {
-      fullScreenRenderer.getRootContainer().addEventListener(
-        'touchend',
-        (e) => {
-          body[fullScreenMetod]();
-        },
-        true
-      );
+    if (!disableTouchNext) {
+      fullScreenRenderer
+        .getRootContainer()
+        .addEventListener('touchstart', nextPosition, true);
+      if (fullScreenMetod) {
+        fullScreenRenderer.getRootContainer().addEventListener(
+          'touchend',
+          (e) => {
+            body[fullScreenMetod]();
+          },
+          true
+        );
+      }
     }
 
     // Warning if browser does not support fullscreen
