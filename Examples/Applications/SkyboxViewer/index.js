@@ -1,6 +1,3 @@
-/* eslint-disable import/prefer-default-export */
-/* eslint-disable import/no-extraneous-dependencies */
-
 import 'vtk.js/Sources/favicon';
 
 import HttpDataAccessHelper from 'vtk.js/Sources/IO/Core/DataAccessHelper/HttpDataAccessHelper';
@@ -28,7 +25,6 @@ import style from './SkyboxViewer.mcss';
 // ----------------------------------------------
 const userParams = vtkURLExtract.extractURLParameters();
 let autoInit = true;
-let fullscreenMode = false;
 const cameraFocalPoint = userParams.direction || [0, 0, -1];
 const cameraViewUp = userParams.up || [0, 1, 0];
 const cameraViewAngle = userParams.viewAngle || 60;
@@ -36,6 +32,17 @@ const enableVR = !!userParams.vr;
 const eyeSpacing = userParams.eye || -0.05;
 const grid = userParams.debug || false;
 const autoIncrementTimer = userParams.timer || 0;
+
+const body = document.querySelector('body');
+let fullScreenMetod = null;
+
+['requestFullscreen', 'msRequestFullscreen', 'webkitRequestFullscreen'].forEach(
+  (m) => {
+    if (body[m] && !fullScreenMetod) {
+      fullScreenMetod = m;
+    }
+  }
+);
 
 function preventDefaults(e) {
   e.preventDefault();
@@ -62,7 +69,6 @@ function drawLine(ctx, x, y, text, delta = 10) {
 }
 
 function createGrid(width, height) {
-  const body = document.querySelector('body');
   const canvas = document.createElement('canvas');
   canvas.width = width;
   canvas.height = height;
@@ -165,15 +171,6 @@ function createVisualization(container, mapReader) {
     updateSkybox(allPositions[nextIdx]);
   }
 
-  function toggleFullScreen() {
-    fullscreenMode = !fullscreenMode;
-    const body = document.querySelector('body');
-    const methods = fullscreenMode
-      ? ['requestFullscreen', 'msRequestFullscreen', 'webkitRequestFullscreen']
-      : ['exitFullscreen', 'msExitFullscreen', 'webkitExitFullscreen'];
-    methods.filter((m) => body[m]).forEach((m) => body[m]());
-  }
-
   if (enableVR && vtkDeviceOrientationToCamera.isDeviceOrientationSupported()) {
     leftRenderer = vtkRenderer.newInstance();
     rightRenderer = vtkRenderer.newInstance();
@@ -210,19 +207,34 @@ function createVisualization(container, mapReader) {
 
     // Hide any controller
     fullScreenRenderer.setControllerVisibility(false);
-    fullScreenRenderer.getRootContainer().addEventListener(
-      'touchstart',
-      (e) => {
-        if (e.touches.length === 1) {
-          // Move to next
-          nextPosition();
-        } else {
-          // Toggle fullscreen
-          toggleFullScreen();
-        }
-      },
-      true
-    );
+
+    // Attach touch control
+    fullScreenRenderer
+      .getRootContainer()
+      .addEventListener('touchstart', nextPosition, true);
+    if (fullScreenMetod) {
+      fullScreenRenderer.getRootContainer().addEventListener(
+        'touchend',
+        (e) => {
+          body[fullScreenMetod]();
+        },
+        true
+      );
+    }
+
+    // Warning if browser does not support fullscreen
+    /* eslint-disable */
+    if (navigator.userAgent.match('CriOS')) {
+      alert(
+        'Chrome on iOS does not support fullscreen. Please use Safari instead.'
+      );
+    }
+    if (navigator.userAgent.match('FxiOS')) {
+      alert(
+        'Firefox on iOS does not support fullscreen. Please use Safari instead.'
+      );
+    }
+    /* eslint-enable */
   } else {
     camera.set(cameraConfiguration);
     mainRenderer.addActor(actor);
@@ -277,6 +289,9 @@ function createVisualization(container, mapReader) {
     createGrid(...fullScreenRenderer.getOpenGLRenderWindow().getSize());
   }
 }
+
+/* eslint-disable import/prefer-default-export */
+/* eslint-disable import/no-extraneous-dependencies */
 
 export function initLocalFileLoader(container) {
   autoInit = false;

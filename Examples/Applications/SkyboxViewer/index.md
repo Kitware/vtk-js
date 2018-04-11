@@ -26,4 +26,6 @@ The Skybox Viewer can be used as a link that encode both the Viewer path, the da
 
 ### VR Mode
 
-In VR mode, a `tap` can be used to move to the next position while a `tab with 2 fingers` can be use to toggle the full screen mode. 
+In VR mode, a `tap` can be used to move to the next position.
+On Android a `tap` will also trigger the fullscreen mode.
+For iOS devices, the landscape mode should switch to fullscreen on Safari while on Chrome and Firefox, that fullscreen mode is not available.
