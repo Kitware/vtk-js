@@ -37,37 +37,54 @@ function vtkSkyboxReader(publicAPI, model) {
     if (!content) {
       return false;
     }
+    model.textures = {};
     model.busy = true;
     publicAPI.invokeBusy(model.busy);
     model.dataMapping = {};
     let workCount = 0;
+    let canStartProcessing = false;
+    const imageReady = [];
 
     function workDone() {
       workCount--;
 
       // Finish data processing
-      if (workCount === 0) {
-        model.textures = {};
+      if (workCount === 0 || canStartProcessing) {
         for (let i = 0; i < model.positions.length; i++) {
           const key = model.positions[i];
           const images = model.dataMapping[key];
-          const texture = vtkTexture.newInstance({ interpolate: true });
-          for (let idx = 0; idx < 6; idx++) {
-            const { fileName, transform } = model.faceMapping[idx];
-            texture.setInputData(
-              ImageHelper.imageToImageData(images[fileName], transform),
-              idx
-            );
-            // Free image
-            URL.revokeObjectURL(images[fileName].src);
-            delete images[fileName];
+          if (!model.textures[key]) {
+            model.textures[key] = vtkTexture.newInstance({ interpolate: true });
           }
-          model.textures[key] = texture;
+          if (images) {
+            const texture = model.textures[key];
+
+            for (let idx = 0; idx < 6; idx++) {
+              const { fileName, transform } = model.faceMapping[idx];
+              const readyIndex = imageReady.indexOf(`${key}/${fileName}`);
+
+              if (readyIndex !== -1) {
+                texture.setInputData(
+                  ImageHelper.imageToImageData(images[fileName], transform),
+                  idx
+                );
+
+                // Free image
+                URL.revokeObjectURL(images[fileName].src);
+                delete images[fileName];
+
+                // Don't process again
+                imageReady.splice(readyIndex, 1);
+              }
+            }
+          }
         }
 
-        model.busy = false;
-        publicAPI.modified();
-        publicAPI.invokeBusy(model.busy);
+        if (workCount === 0) {
+          model.busy = false;
+          publicAPI.modified();
+          publicAPI.invokeBusy(model.busy);
+        }
       }
     }
 
@@ -89,6 +106,7 @@ function vtkSkyboxReader(publicAPI, model) {
             ) {
               model.faceMapping = config.metadata.skybox.faceMapping;
             }
+            canStartProcessing = true;
             workDone();
           });
         }
@@ -102,8 +120,12 @@ function vtkSkyboxReader(publicAPI, model) {
           }
           zipEntry.async('blob').then((blob) => {
             const img = new Image();
+            const readyKey = `${key}/${fileName}`;
             model.dataMapping[key][fileName] = img;
-            img.onload = workDone;
+            img.onload = () => {
+              imageReady.push(readyKey);
+              workDone();
+            };
             img.src = URL.createObjectURL(blob);
           });
         }
