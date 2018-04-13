@@ -40,9 +40,10 @@ function vtkGenericRenderWindow(publicAPI, model) {
   publicAPI.resize = () => {
     if (model.container) {
       const dims = model.container.getBoundingClientRect();
+      const devicePixelRatio = window.devicePixelRatio || 1;
       model.openGlRenderWindow.setSize(
-        Math.floor(dims.width),
-        Math.floor(dims.height)
+        Math.floor(dims.width * devicePixelRatio),
+        Math.floor(dims.height * devicePixelRatio)
       );
       invokeResize();
       model.renderWindow.render();

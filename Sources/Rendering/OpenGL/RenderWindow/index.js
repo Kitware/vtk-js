@@ -948,6 +948,7 @@ export function extend(publicAPI, model, initialValues = {}) {
 
   // Create internal instances
   model.canvas = document.createElement('canvas');
+  model.canvas.style.width = '100%';
 
   model.textureResourceIds = new Map();
 

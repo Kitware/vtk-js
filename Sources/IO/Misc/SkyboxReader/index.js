@@ -58,6 +58,9 @@ function vtkSkyboxReader(publicAPI, model) {
               ImageHelper.imageToImageData(images[fileName], transform),
               idx
             );
+            // Free image
+            URL.revokeObjectURL(images[fileName].src);
+            delete images[fileName];
           }
           model.textures[key] = texture;
         }
@@ -97,11 +100,11 @@ function vtkSkyboxReader(publicAPI, model) {
           if (!model.dataMapping[key]) {
             model.dataMapping[key] = {};
           }
-          zipEntry.async('base64').then((txt) => {
+          zipEntry.async('blob').then((blob) => {
             const img = new Image();
             model.dataMapping[key][fileName] = img;
             img.onload = workDone;
-            img.src = `data:image/jpg;base64,${txt}`;
+            img.src = URL.createObjectURL(blob);
           });
         }
       });
