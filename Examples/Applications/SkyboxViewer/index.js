@@ -73,6 +73,7 @@ function createGrid(width, height) {
   const canvas = document.createElement('canvas');
   canvas.width = width;
   canvas.height = height;
+  canvas.style.width = '100%';
   const ctx = canvas.getContext('2d');
   ctx.strokeStyle = '#FFFFFF';
   ctx.fillStyle = '#FFFFFF';
