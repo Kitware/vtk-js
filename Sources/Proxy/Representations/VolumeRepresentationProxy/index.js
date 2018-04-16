@@ -194,11 +194,6 @@ function vtkVolumeRepresentationProxy(publicAPI, model) {
 
     const lutProxy = publicAPI.getLookupTableProxy(name);
     const pwfProxy = publicAPI.getPiecewiseFunctionProxy(name);
-    if (pwfProxy.getGaussians().length === 0) {
-      pwfProxy.setGaussians([
-        { position: 0.5, height: 1, width: 0.5, xBias: 0.5, yBias: 0.5 },
-      ]);
-    }
 
     model.property.setRGBTransferFunction(0, lutProxy.getLookupTable());
     model.property.setScalarOpacity(0, pwfProxy.getPiecewiseFunction());
