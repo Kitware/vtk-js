@@ -26,6 +26,7 @@ function vtkFramebuffer(publicAPI, model) {
     model.previousDrawBinding = gl.getParameter(
       model.context.FRAMEBUFFER_BINDING
     );
+    model.previousActiveFramebuffer = model.openGLRenderWindow.getActiveFramebuffer();
   };
 
   publicAPI.saveCurrentBuffers = (modeIn) => {
@@ -42,6 +43,9 @@ function vtkFramebuffer(publicAPI, model) {
   publicAPI.restorePreviousBindings = (modeIn) => {
     const gl = model.context;
     gl.bindFramebuffer(gl.FRAMEBUFFER, model.previousDrawBinding);
+    model.openGLRenderWindow.setActiveFramebuffer(
+      model.previousActiveFramebuffer
+    );
   };
 
   publicAPI.restorePreviousBuffers = (modeIn) => {
@@ -56,6 +60,7 @@ function vtkFramebuffer(publicAPI, model) {
     if (model.colorTexture) {
       model.colorTexture.bind();
     }
+    model.openGLRenderWindow.setActiveFramebuffer(publicAPI);
   };
 
   publicAPI.create = (width, height) => {
@@ -164,6 +169,7 @@ const DEFAULT_VALUES = {
   previousReadBinding: 0,
   previousDrawBuffer: 0,
   previousReadBuffer: 0,
+  previousActiveFramebuffer: null,
 };
 
 // ----------------------------------------------------------------------------

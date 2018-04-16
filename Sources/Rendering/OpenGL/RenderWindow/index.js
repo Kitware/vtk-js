@@ -124,9 +124,16 @@ function vtkOpenGLRenderWindow(publicAPI, model) {
     }
   };
 
+  publicAPI.getFramebufferSize = () => {
+    if (model.activeFramebuffer) {
+      return model.activeFramebuffer.getSize();
+    }
+    return model.size;
+  };
+
   publicAPI.isInViewport = (x, y, viewport) => {
     const vCoords = viewport.getViewportByReference();
-    const size = model.size;
+    const size = publicAPI.getFramebufferSize();
     if (
       vCoords[0] * size[0] <= x &&
       vCoords[2] * size[0] >= x &&
@@ -140,7 +147,7 @@ function vtkOpenGLRenderWindow(publicAPI, model) {
 
   publicAPI.getViewportSize = (viewport) => {
     const vCoords = viewport.getViewportByReference();
-    const size = model.size;
+    const size = publicAPI.getFramebufferSize();
     return [
       (vCoords[2] - vCoords[0]) * size[0],
       (vCoords[3] - vCoords[1]) * size[1],
@@ -152,17 +159,15 @@ function vtkOpenGLRenderWindow(publicAPI, model) {
     return [size[0] * 0.5, size[1] * 0.5];
   };
 
-  publicAPI.displayToNormalizedDisplay = (x, y, z) => [
-    x / model.size[0],
-    y / model.size[1],
-    z,
-  ];
+  publicAPI.displayToNormalizedDisplay = (x, y, z) => {
+    const size = publicAPI.getFramebufferSize();
+    return [x / size[0], y / size[1], z];
+  };
 
-  publicAPI.normalizedDisplayToDisplay = (x, y, z) => [
-    x * model.size[0],
-    y * model.size[1],
-    z,
-  ];
+  publicAPI.normalizedDisplayToDisplay = (x, y, z) => {
+    const size = publicAPI.getFramebufferSize();
+    return [x * size[0], y * size[1], z];
+  };
 
   publicAPI.worldToView = (x, y, z, renderer) => {
     const dims = publicAPI.getViewportSize(renderer);
@@ -201,13 +206,15 @@ function vtkOpenGLRenderWindow(publicAPI, model) {
     return [x, y, z];
   };
 
-  publicAPI.normalizedViewportToViewport = (x, y, z) => [
-    x * (model.size[0] - 1.0),
-    y * (model.size[1] - 1.0),
-    z,
-  ];
+  publicAPI.normalizedViewportToViewport = (x, y, z) => {
+    const size = publicAPI.getFramebufferSize();
+    return [x * (size[0] - 1.0), y * (size[1] - 1.0), z];
+  };
 
-  publicAPI.displayToLocalDisplay = (x, y, z) => [x, model.size[1] - y - 1, z];
+  publicAPI.displayToLocalDisplay = (x, y, z) => {
+    const size = publicAPI.getFramebufferSize();
+    return [x, size[1] - y - 1, z];
+  };
 
   publicAPI.viewportToNormalizedDisplay = (x, y, z, renderer) => {
     let vCoords = renderer.getViewportByReference();
@@ -939,6 +946,7 @@ const DEFAULT_VALUES = {
   vrResolution: [2160, 1200],
   queryVRSize: false,
   hideInVR: true,
+  activeFramebuffer: null,
 };
 
 // ----------------------------------------------------------------------------
@@ -977,6 +985,7 @@ export function extend(publicAPI, model, initialValues = {}) {
     'cursor',
     'hideInVR',
     'queryVRSize',
+    'activeFramebuffer',
   ]);
 
   macro.setGetArray(publicAPI, model, ['size', 'vrResolution'], 2);

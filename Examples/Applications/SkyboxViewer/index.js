@@ -3,7 +3,9 @@ import 'vtk.js/Sources/favicon';
 import HttpDataAccessHelper from 'vtk.js/Sources/IO/Core/DataAccessHelper/HttpDataAccessHelper';
 import macro from 'vtk.js/Sources/macro';
 import vtkDeviceOrientationToCamera from 'vtk.js/Sources/Interaction/Misc/DeviceOrientationToCamera';
+import vtkForwardPass from 'vtk.js/Sources/Rendering/OpenGL/ForwardPass';
 import vtkFullScreenRenderWindow from 'vtk.js/Sources/Rendering/Misc/FullScreenRenderWindow';
+import vtkRadialDistortionPass from 'vtk.js/Sources/Rendering/OpenGL/RadialDistortionPass';
 import vtkRenderer from 'vtk.js/Sources/Rendering/Core/Renderer';
 import vtkSkybox from 'vtk.js/Sources/Rendering/Core/Skybox';
 import vtkSkyboxReader from 'vtk.js/Sources/IO/Misc/SkyboxReader';
@@ -22,17 +24,23 @@ import style from './SkyboxViewer.mcss';
 //   - viewAngle
 //   - debug
 //   - autoIncrement
+//   - k1
+//   - k2
+//   - centerY
 // ----------------------------------------------
 const userParams = vtkURLExtract.extractURLParameters();
 let autoInit = true;
 const cameraFocalPoint = userParams.direction || [0, 0, -1];
 const cameraViewUp = userParams.up || [0, 1, 0];
-const cameraViewAngle = userParams.viewAngle || 60;
+const cameraViewAngle = userParams.viewAngle || 100;
 const enableVR = !!userParams.vr;
-const eyeSpacing = userParams.eye || -0.05;
+const eyeSpacing = userParams.eye || 0.0;
 const grid = userParams.debug || false;
 const autoIncrementTimer = userParams.timer || 0;
 const disableTouchNext = userParams.disableTouch || false;
+const distk1 = userParams.k1 || 0.2;
+const distk2 = userParams.k2 || 0.0;
+const cameraCenterY = userParams.centerY || 0.0;
 
 const body = document.querySelector('body');
 let fullScreenMetod = null;
@@ -182,13 +190,13 @@ function createVisualization(container, mapReader) {
     leftRenderer.addActor(actor);
     const leftCamera = leftRenderer.getActiveCamera();
     leftCamera.set(cameraConfiguration);
-    leftCamera.setWindowCenter(-eyeSpacing, 0);
+    leftCamera.setWindowCenter(-eyeSpacing, -cameraCenterY);
 
     rightRenderer.setViewport(0.5, 0, 1, 1);
     rightRenderer.addActor(actor);
     const rightCamera = rightRenderer.getActiveCamera();
     rightCamera.set(cameraConfiguration);
-    rightCamera.setWindowCenter(eyeSpacing, 0);
+    rightCamera.setWindowCenter(eyeSpacing, -cameraCenterY);
 
     // Provide custom update callback + fake camera
     updateCameraCallBack = () => {
@@ -206,6 +214,15 @@ function createVisualization(container, mapReader) {
     renderWindow.addRenderer(leftRenderer);
     renderWindow.addRenderer(rightRenderer);
     renderWindow.removeRenderer(mainRenderer);
+
+    const distPass = vtkRadialDistortionPass.newInstance();
+    distPass.setK1(distk1);
+    distPass.setK2(distk2);
+    distPass.setCameraCenterY(cameraCenterY);
+    distPass.setCameraCenterX1(-eyeSpacing);
+    distPass.setCameraCenterX2(eyeSpacing);
+    distPass.setDelegates([vtkForwardPass.newInstance()]);
+    fullScreenRenderer.getOpenGLRenderWindow().setRenderPasses([distPass]);
 
     // Hide any controller
     fullScreenRenderer.setControllerVisibility(false);
