@@ -20,6 +20,7 @@ import './Filters/Sources/PlaneSource/test/testPlane';
 import './Filters/Sources/PointSource/test/testPointSource';
 import './Filters/Texture/TextureMapToSphere/test/testTextureMapToSphere';
 import './IO/Misc/PDBReader/test/testMolecule';
+import './Proxy/Core/PiecewiseFunctionProxy/test/testPiecewiseFunctionProxy';
 import './Rendering/Core/AbstractMapper/test/testAbstractMapper';
 import './Rendering/Core/CellPicker/test/testCellPicker';
 import './Rendering/Core/ColorTransferFunction/test/testColorTransferFunction';

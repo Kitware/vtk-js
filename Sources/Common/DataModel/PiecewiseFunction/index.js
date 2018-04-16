@@ -149,8 +149,8 @@ function vtkPiecewiseFunction(publicAPI, model) {
 
     val[0] = model.nodes[index].x;
     val[1] = model.nodes[index].y;
-    val[2] = model.nodes[index].Midpoint;
-    val[3] = model.nodes[index].Sharpness;
+    val[2] = model.nodes[index].midpoint;
+    val[3] = model.nodes[index].sharpness;
 
     return 1;
   };
@@ -167,8 +167,8 @@ function vtkPiecewiseFunction(publicAPI, model) {
     const oldX = model.nodes[index].x;
     model.nodes[index].x = val[0];
     model.nodes[index].y = val[1];
-    model.nodes[index].Midpoint = val[2];
-    model.nodes[index].Sharpness = val[3];
+    model.nodes[index].midpoint = val[2];
+    model.nodes[index].sharpness = val[3];
 
     if (oldX !== val[0]) {
       // The point has been moved, the order of points or the range might have
