@@ -42,7 +42,7 @@ function vtkForwardPass(publicAPI, model) {
         (model.opaqueActorCount > 0 && model.volumeCount > 0) ||
         model.depthRequested
       ) {
-        const size = viewNode.getSize();
+        const size = viewNode.getFramebufferSize();
         // make sure the framebuffer is setup
         if (model.framebuffer === null) {
           model.framebuffer = vtkOpenGLFramebuffer.newInstance();

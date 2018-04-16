@@ -18,6 +18,10 @@ The Skybox Viewer can be used as a link that encode both the Viewer path, the da
 | viewAngle | Adjust view angle of the camera             | 60                |
 | debug     | Show grid for eye separation                | false             |
 | timer     | automatically increment position in seconds | 0                 |
+| k1        | first radial distortion constant            | 0.2               |
+| k2        | second radial distortion constant           | 0.0               |
+| centerY   | Y center of the window (-1, 1)              | 0.0               |
+
 
 ### Examples
 

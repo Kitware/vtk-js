@@ -774,7 +774,7 @@ function vtkOpenGLVolumeMapper(publicAPI, model) {
       const sz = model.framebuffer.getSize();
       return [model.fvp[0] * sz[0], model.fvp[1] * sz[1]];
     }
-    return model.openGLRenderWindow.getSize();
+    return model.openGLRenderWindow.getFramebufferSize();
   };
 
   publicAPI.renderPieceStart = (ren, actor) => {
@@ -836,7 +836,7 @@ function vtkOpenGLVolumeMapper(publicAPI, model) {
     // console.log(`awin aft  ${model.avgWindowArea} ${model.avgFrameTime}`);
     const xyf = model.lastXYF;
 
-    const size = model.openGLRenderWindow.getSize();
+    const size = model.openGLRenderWindow.getFramebufferSize();
     // const newSize = [
     //   Math.floor((size[0] / xyf) + 0.5),
     //   Math.floor((size[1] / xyf) + 0.5)];
@@ -1030,7 +1030,7 @@ function vtkOpenGLVolumeMapper(publicAPI, model) {
           .readyShaderProgram(model.copyShader);
       }
 
-      const size = model.openGLRenderWindow.getSize();
+      const size = model.openGLRenderWindow.getFramebufferSize();
       model.context.viewport(0, 0, size[0], size[1]);
 
       // activate texture

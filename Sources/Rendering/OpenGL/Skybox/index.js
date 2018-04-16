@@ -133,24 +133,24 @@ function vtkOpenGLSkybox(publicAPI, model) {
         model.openGLRenderWindow.getShaderCache().readyShaderProgramArray(
           `//VTK::System::Dec
            attribute vec3 vertexMC;
-           varying vec3 TexCoords;
            uniform mat4 IMCDCMatrix;
-           uniform vec3 camPos;
+           varying vec3 TexCoords;
            void main () {
             gl_Position = vec4(vertexMC.xyz, 1.0);
             vec4 wpos = IMCDCMatrix * gl_Position;
-            TexCoords = normalize(wpos.xyz/wpos.w - camPos);
+            TexCoords = wpos.xyz/wpos.w;
            }`,
           `//VTK::System::Dec
            //VTK::Output::Dec
            varying vec3 TexCoords;
            uniform samplerCube sbtexture;
+           uniform vec3 camPos;
            void main () {
              // skybox looks from inside out
              // which means we have to adjust
              // our tcoords. Otherwise text would
              // be flipped
-             vec3 tc = TexCoords;
+             vec3 tc = normalize(TexCoords - camPos);
              if (abs(tc.z) < max(abs(tc.x),abs(tc.y)))
              {
                tc = vec3(1.0, 1.0, -1.0) * tc;
