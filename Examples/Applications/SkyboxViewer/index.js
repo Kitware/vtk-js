@@ -10,6 +10,7 @@ import vtkRenderer from 'vtk.js/Sources/Rendering/Core/Renderer';
 import vtkSkybox from 'vtk.js/Sources/Rendering/Core/Skybox';
 import vtkSkyboxReader from 'vtk.js/Sources/IO/Misc/SkyboxReader';
 import vtkURLExtract from 'vtk.js/Sources/Common/Core/URLExtract';
+// import vtkMobileVR from 'vtk.js/Sources/Common/System/MobileVR';
 
 import style from './SkyboxViewer.mcss';
 
@@ -182,6 +183,12 @@ function createVisualization(container, mapReader) {
   }
 
   if (enableVR && vtkDeviceOrientationToCamera.isDeviceOrientationSupported()) {
+    // vtkMobileVR.getVRHeadset().then((headset) => {
+    //   console.log('got headset');
+    //   console.log(headset);
+    //   console.log(vtkMobileVR.hardware);
+    // });
+
     leftRenderer = vtkRenderer.newInstance();
     rightRenderer = vtkRenderer.newInstance();
 
