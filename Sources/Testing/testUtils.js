@@ -114,9 +114,37 @@ function removeDOM() {
   REMOVE_DOM_ELEMENTS = true;
 }
 
+function arrayEquals(a, b) {
+  if (a.length !== b.length) {
+    return false;
+  }
+  for (let i = 0; i < a.length; ++i) {
+    if (a[i] !== b[i]) {
+      return false;
+    }
+  }
+  return true;
+}
+
+function objEquals(a, b) {
+  const k1 = Object.keys(a).sort();
+  const k2 = Object.keys(b).sort();
+  if (!arrayEquals(k1, k2)) {
+    return false;
+  }
+  for (let i = 0; i < k1.length; ++i) {
+    if (a[k1[i]] !== b[k1[i]]) {
+      return false;
+    }
+  }
+  return true;
+}
+
 export default {
+  arrayEquals,
   compareImages,
   createGarbageCollector,
   keepDOM,
+  objEquals,
   removeDOM,
 };
