@@ -15,7 +15,6 @@ function applyPointsToPiecewiseFunction(points, range, pwf) {
 
   pwf.removeAllPoints();
   rescaled.forEach(([x, y]) => pwf.addPoint(x, y));
-  pwf.sortAndUpdateRange();
 }
 
 // ----------------------------------------------------------------------------
@@ -26,9 +25,7 @@ function applyNodesToPiecewiseFunction(nodes, range, pwf) {
     Object.assign({}, n, { x: n.x * width + range[0] })
   );
 
-  pwf.removeAllPoints();
-  pwf.set({ nodes: rescaled }, true);
-  pwf.sortAndUpdateRange();
+  pwf.setNodes(rescaled);
 }
 
 // ----------------------------------------------------------------------------

@@ -149,9 +149,7 @@ function applyGaussianToPiecewiseFunction(
     nodes.push({ x, y, midpoint, sharpness });
   }
 
-  piecewiseFunction.removeAllPoints();
-  piecewiseFunction.set({ nodes }, true);
-  piecewiseFunction.sortAndUpdateRange();
+  piecewiseFunction.setNodes(nodes);
 }
 
 // ----------------------------------------------------------------------------
@@ -975,9 +973,7 @@ function vtkPiecewiseGaussianWidget(publicAPI, model) {
 
   publicAPI.applyOpacity = (piecewiseFunction, dataRange) => {
     const nodes = publicAPI.getOpacityNodes(dataRange);
-    piecewiseFunction.removeAllPoints();
-    piecewiseFunction.set({ nodes }, true);
-    piecewiseFunction.sortAndUpdateRange();
+    piecewiseFunction.setNodes(nodes);
   };
 
   publicAPI.getOpacityRange = (dataRange) => {

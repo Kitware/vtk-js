@@ -231,6 +231,13 @@ function vtkPiecewiseFunction(publicAPI, model) {
     return -1;
   };
 
+  publicAPI.setNodes = (nodes) => {
+    if (model.nodes !== nodes) {
+      model.nodes = nodes;
+      publicAPI.sortAndUpdateRange();
+    }
+  };
+
   // Sort the vector in increasing order, then fill in
   // the Range
   publicAPI.sortAndUpdateRange = () => {
