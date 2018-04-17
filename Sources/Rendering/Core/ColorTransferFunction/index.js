@@ -212,6 +212,15 @@ function vtkColorTransferFunction(publicAPI, model) {
   };
 
   //----------------------------------------------------------------------------
+  // Set nodes directly
+  publicAPI.setNodes = (nodes) => {
+    if (model.nodes !== nodes) {
+      model.nodes = nodes;
+      publicAPI.sortAndUpdateRange();
+    }
+  };
+
+  //----------------------------------------------------------------------------
   // Sort the vector in increasing order, then fill in
   // the Range
   publicAPI.sortAndUpdateRange = () => {
