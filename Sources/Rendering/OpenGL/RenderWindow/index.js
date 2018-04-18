@@ -6,6 +6,7 @@ import vtkShaderCache from 'vtk.js/Sources/Rendering/OpenGL/ShaderCache';
 import vtkViewNode from 'vtk.js/Sources/Rendering/SceneGraph/ViewNode';
 import vtkOpenGLTextureUnitManager from 'vtk.js/Sources/Rendering/OpenGL/TextureUnitManager';
 import { VtkDataTypes } from 'vtk.js/Sources/Common/Core/DataArray/Constants';
+import WebVRPolyfill from 'webvr-polyfill';
 
 const { vtkDebugMacro, vtkErrorMacro } = macro;
 
@@ -261,6 +262,19 @@ function vtkOpenGLRenderWindow(publicAPI, model) {
         model.canvas.getContext('experimental-webgl', options);
     }
 
+    /* eslint-disable */
+    const polyfill = new WebVRPolyfill({
+      // Ensures the polyfill is always active on mobile, due to providing
+      // a polyfilled CardboardVRDisplay when no native API is available,
+      // and also polyfilling even when the native API is available, due to
+      // providing a CardboardVRDisplay when no native VRDisplays exist.
+      PROVIDE_MOBILE_VRDISPLAY: true,
+      // Polyfill optimizations
+      DIRTY_SUBMIT_FRAME_BINDINGS: false,
+      BUFFER_SCALE: 0.75,
+    });
+    /* eslint-enable */
+
     // Do we have webvr support
     if (navigator.getVRDisplays) {
       navigator.getVRDisplays().then((displays) => {
@@ -270,6 +284,7 @@ function vtkOpenGLRenderWindow(publicAPI, model) {
           // set the clipping ranges
           model.vrDisplay.depthNear = 0.01; // meters
           model.vrDisplay.depthFar = 100.0; // meters
+          publicAPI.invokeHaveVRDisplay();
         }
       });
     }
@@ -293,32 +308,39 @@ function vtkOpenGLRenderWindow(publicAPI, model) {
   };
 
   publicAPI.startVR = () => {
-    if (model.vrDisplay.isConnected) {
-      model.vrDisplay.requestPresent([{ source: model.canvas }]).then(() => {
-        model.oldCanvasSize = model.size.slice();
+    if (model.vrDisplay.capabilities.canPresent) {
+      model.vrDisplay
+        .requestPresent([{ source: model.canvas }])
+        .then(() => {
+          model.oldCanvasSize = model.size.slice();
 
-        if (model.el && model.hideInVR) {
-          model.el.style.display = 'none';
-        }
-        if (model.queryVRSize) {
-          const leftEye = model.vrDisplay.getEyeParameters('left');
-          const rightEye = model.vrDisplay.getEyeParameters('right');
-          const width = Math.floor(leftEye.renderWidth + rightEye.renderWidth);
-          const height = Math.floor(
-            Math.max(leftEye.renderHeight, rightEye.renderHeight)
-          );
-          publicAPI.setSize(width, height);
-        } else {
-          publicAPI.setSize(model.vrResolution);
-        }
+          if (model.el && model.vrDisplay.capabilities.hasExternalDisplay) {
+            model.el.style.display = 'none';
+          }
+          if (model.queryVRSize) {
+            const leftEye = model.vrDisplay.getEyeParameters('left');
+            const rightEye = model.vrDisplay.getEyeParameters('right');
+            const width = Math.floor(
+              leftEye.renderWidth + rightEye.renderWidth
+            );
+            const height = Math.floor(
+              Math.max(leftEye.renderHeight, rightEye.renderHeight)
+            );
+            publicAPI.setSize(width, height);
+          } else {
+            publicAPI.setSize(model.vrResolution);
+          }
 
-        const ren = model.renderable.getRenderers()[0];
-        ren.resetCamera();
-        model.vrFrameData = new VRFrameData();
-        model.renderable.getInteractor().switchToVRAnimation();
+          const ren = model.renderable.getRenderers()[0];
+          ren.resetCamera();
+          model.vrFrameData = new VRFrameData();
+          model.renderable.getInteractor().switchToVRAnimation();
 
-        publicAPI.vrRender();
-      });
+          publicAPI.vrRender();
+        })
+        .catch(() => {
+          console.log('failed to requestPresent');
+        });
     } else {
       vtkErrorMacro('vrDisplay is not connected');
     }
@@ -330,7 +352,7 @@ function vtkOpenGLRenderWindow(publicAPI, model) {
     model.vrDisplay.cancelAnimationFrame(model.vrSceneFrame);
 
     publicAPI.setSize(...model.oldCanvasSize);
-    if (model.el && model.hideInVR) {
+    if (model.el && model.vrDisplay.capabilities.hasExternalDisplay) {
       model.el.style.display = 'block';
     }
 
@@ -945,8 +967,8 @@ const DEFAULT_VALUES = {
   defaultToWebgl2: true, // attempt webgl2 on by default
   vrResolution: [2160, 1200],
   queryVRSize: false,
-  hideInVR: true,
   activeFramebuffer: null,
+  vrDisplay: null,
 };
 
 // ----------------------------------------------------------------------------
@@ -971,9 +993,15 @@ export function extend(publicAPI, model, initialValues = {}) {
   model.renderPasses[0] = vtkForwardPass.newInstance();
 
   macro.event(publicAPI, model, 'imageReady');
+  macro.event(publicAPI, model, 'haveVRDisplay');
 
   // Build VTK API
-  macro.get(publicAPI, model, ['shaderCache', 'textureUnitManager', 'webgl2']);
+  macro.get(publicAPI, model, [
+    'shaderCache',
+    'textureUnitManager',
+    'webgl2',
+    'vrDisplay',
+  ]);
 
   macro.setGet(publicAPI, model, [
     'initialized',
@@ -983,7 +1011,6 @@ export function extend(publicAPI, model, initialValues = {}) {
     'notifyImageReady',
     'defaultToWebgl2',
     'cursor',
-    'hideInVR',
     'queryVRSize',
     'activeFramebuffer',
   ]);
