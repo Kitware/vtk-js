@@ -262,6 +262,31 @@ function createVisualization(container, mapReader) {
   } else {
     camera.set(cameraConfiguration);
     mainRenderer.addActor(actor);
+
+    // add vr option button if supported
+    fullScreenRenderer.getOpenGLRenderWindow().onHaveVRDisplay(() => {
+      if (
+        fullScreenRenderer.getOpenGLRenderWindow().getVrDisplay().capabilities
+          .canPresent
+      ) {
+        const button = document.createElement('button');
+        button.style.position = 'absolute';
+        button.style.left = '10px';
+        button.style.bottom = '10px';
+        button.style.zIndex = 10000;
+        button.textContent = 'Send To VR';
+        document.querySelector('body').appendChild(button);
+        button.addEventListener('click', () => {
+          if (button.textContent === 'Send To VR') {
+            fullScreenRenderer.getOpenGLRenderWindow().startVR();
+            button.textContent = 'Return From VR';
+          } else {
+            fullScreenRenderer.getOpenGLRenderWindow().stopVR();
+            button.textContent = 'Send To VR';
+          }
+        });
+      }
+    });
   }
 
   renderWindow.render();
