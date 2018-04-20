@@ -14,16 +14,10 @@ function vtkPickerInteractorStyle(publicAPI, model) {
   // Capture "parentClass" api for internal use
   const superClass = Object.assign({}, publicAPI);
 
-  publicAPI.handleLeftButtonPress = () => {
-    const pos = model.interactor.getEventPosition(
-      model.interactor.getPointerIndex()
-    );
-    publicAPI.findPokedRenderer(pos.x, pos.y);
-    if (model.currentRenderer === null) {
-      return;
-    }
+  publicAPI.handleLeftButtonPress = (callData) => {
+    const pos = callData.position;
 
-    const renderer = model.currentRenderer;
+    const renderer = callData.pokedRenderer;
     const interactor = model.interactor;
     const point = [pos.x, pos.y, 0.0];
     interactor.getPicker().pick(point, renderer);
@@ -38,7 +32,7 @@ function vtkPickerInteractorStyle(publicAPI, model) {
     const actor = vtkActor.newInstance();
     actor.setMapper(mapper);
     actor.getProperty().setColor(1.0, 0.0, 0.0);
-    model.currentRenderer.addActor(actor);
+    renderer.addActor(actor);
 
     // Display picked point from an actor
     const pickedPoint = interactor.getPicker().getPickedPositions();
@@ -54,7 +48,7 @@ function vtkPickerInteractorStyle(publicAPI, model) {
       model.currentRenderer.addActor(a);
     }
     model.interactor.render();
-    superClass.handleLeftButtonPress();
+    superClass.handleLeftButtonPress(callData);
   };
 }
 
