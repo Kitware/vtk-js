@@ -1,11 +1,11 @@
 import 'vtk.js/Sources/favicon';
 
 import vtkActor from 'vtk.js/Sources/Rendering/Core/Actor';
+import vtkCellPicker from 'vtk.js/Sources/Rendering/Core/CellPicker';
 import vtkConeSource from 'vtk.js/Sources/Filters/Sources/ConeSource';
 import vtkFullScreenRenderWindow from 'vtk.js/Sources/Rendering/Misc/FullScreenRenderWindow';
 import vtkMapper from 'vtk.js/Sources/Rendering/Core/Mapper';
-import vtkPickerInteractorStyle from 'vtk.js/Sources/Rendering/Core/CellPicker/example/PickerInteractorStyle';
-import vtkCellPicker from 'vtk.js/Sources/Rendering/Core/CellPicker';
+import vtkSphereSource from 'vtk.js/Sources/Filters/Sources/SphereSource';
 
 // ----------------------------------------------------------------------------
 // Standard rendering code setup
@@ -14,16 +14,6 @@ import vtkCellPicker from 'vtk.js/Sources/Rendering/Core/CellPicker';
 const fullScreenRenderer = vtkFullScreenRenderWindow.newInstance();
 const renderer = fullScreenRenderer.getRenderer();
 const renderWindow = fullScreenRenderer.getRenderWindow();
-
-// Press shift+click to pick
-const picker = vtkCellPicker.newInstance();
-picker.setPickFromList(1);
-picker.initializePickList();
-
-const iStyle = vtkPickerInteractorStyle.newInstance();
-iStyle.setContainer(fullScreenRenderer.getContainer());
-renderWindow.getInteractor().setInteractorStyle(iStyle);
-renderWindow.getInteractor().setPicker(picker);
 
 // ----------------------------------------------------------------------------
 // Add a cube source
@@ -36,12 +26,62 @@ actor.setMapper(mapper);
 actor.getProperty().setColor(0.0, 0.0, 1.0);
 
 renderer.addActor(actor);
-
-// Only try to pick cone
-picker.addPickList(actor);
-
 renderer.resetCamera();
 renderWindow.render();
+
+// ----------------------------------------------------------------------------
+// Setup picking interaction
+// ----------------------------------------------------------------------------
+// Only try to pick cone
+const picker = vtkCellPicker.newInstance();
+picker.setPickFromList(1);
+picker.initializePickList();
+picker.addPickList(actor);
+
+// Pick on mouse right click
+renderWindow.getInteractor().onRightButtonPress((callData) => {
+  if (renderer !== callData.pokedRenderer) {
+    return;
+  }
+
+  const pos = callData.position;
+  const point = [pos.x, pos.y, 0.0];
+  console.log(`Pick at: ${point}`);
+  picker.pick(point, renderer);
+
+  if (picker.getActors().length === 0) {
+    const pickedPoint = picker.getPickPosition();
+    console.log(`No cells picked, default: ${pickedPoint}`);
+    const sphere = vtkSphereSource.newInstance();
+    sphere.setCenter(pickedPoint);
+    sphere.setRadius(0.01);
+    const sphereMapper = vtkMapper.newInstance();
+    sphereMapper.setInputData(sphere.getOutputData());
+    const sphereActor = vtkActor.newInstance();
+    sphereActor.setMapper(sphereMapper);
+    sphereActor.getProperty().setColor(1.0, 0.0, 0.0);
+    renderer.addActor(sphereActor);
+  } else {
+    const pickedCellId = picker.getCellId();
+    console.log('Picked cell: ', pickedCellId);
+
+    const pickedPoints = picker.getPickedPositions();
+    for (let i = 0; i < pickedPoints.length; i++) {
+      const pickedPoint = pickedPoints[i];
+      console.log(`Picked: ${pickedPoint}`);
+      const sphere = vtkSphereSource.newInstance();
+      sphere.setCenter(pickedPoint);
+      sphere.setRadius(0.01);
+      const sphereMapper = vtkMapper.newInstance();
+      sphereMapper.setInputData(sphere.getOutputData());
+      const sphereActor = vtkActor.newInstance();
+      sphereActor.setMapper(sphereMapper);
+      sphereActor.getProperty().setColor(0.0, 1.0, 0.0);
+      renderer.addActor(sphereActor);
+    }
+  }
+  renderWindow.render();
+});
 
 // -----------------------------------------------------------
 // Make some variables global so that you can inspect and
