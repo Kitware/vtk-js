@@ -138,11 +138,14 @@ function vtkRenderWindowInteractor(publicAPI, model) {
   };
 
   function getScreenEventPositionFor(source) {
-    const c = model.canvas;
-    const bounds = c.getBoundingClientRect();
+    const div = model.canvas;
+    const bounds = div.getBoundingClientRect();
+    const canvas = model.view.getCanvas();
+    const scaleX = canvas.width / bounds.width;
+    const scaleY = canvas.height / bounds.height;
     const position = {
-      x: source.clientX - bounds.left,
-      y: bounds.height - source.clientY + bounds.top,
+      x: scaleX * (source.clientX - bounds.left),
+      y: scaleY * (bounds.height - source.clientY + bounds.top),
       z: 0,
     };
     updateCurrentRenderer(position.x, position.y);
