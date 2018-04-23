@@ -3,9 +3,24 @@ import ITKHelper from 'vtk.js/Sources/Common/DataModel/ITKHelper';
 
 const { convertItkToVtkImage } = ITKHelper;
 let readImageArrayBuffer = null;
+let resultPreprocessor = (result) => result;
 
 function setReadImageArrayBufferFromITK(fn) {
   readImageArrayBuffer = fn;
+
+  // itk.js 9.0.0 introduced breaking changes, which can be detected
+  // by an updated function signature.
+  if (readImageArrayBuffer.length === 4) {
+    // first arg is a webworker if reuse is desired.
+    readImageArrayBuffer = (...args) => fn(null, ...args);
+
+    // an object is now passed out which includes a webworker which we
+    // should terminate
+    resultPreprocessor = ({ webWorker, image }) => {
+      webWorker.terminate();
+      return image;
+    };
+  }
 }
 
 // ----------------------------------------------------------------------------
@@ -24,14 +39,14 @@ function vtkITKImageReader(publicAPI, model) {
 
     model.rawDataBuffer = arrayBuffer;
 
-    return readImageArrayBuffer(arrayBuffer, model.fileName).then(
-      (itkImage) => {
+    return readImageArrayBuffer(arrayBuffer, model.fileName)
+      .then(resultPreprocessor)
+      .then((itkImage) => {
         const imageData = convertItkToVtkImage(itkImage);
         model.output[0] = imageData;
 
         publicAPI.modified();
-      }
-    );
+      });
   };
 
   publicAPI.requestData = (inData, outData) => {
