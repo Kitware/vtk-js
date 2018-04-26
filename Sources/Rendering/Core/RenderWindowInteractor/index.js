@@ -138,11 +138,13 @@ function vtkRenderWindowInteractor(publicAPI, model) {
   };
 
   function getScreenEventPositionFor(source) {
-    const c = model.canvas;
-    const bounds = c.getBoundingClientRect();
+    const bounds = model.container.getBoundingClientRect();
+    const canvas = model.view.getCanvas();
+    const scaleX = canvas.width / bounds.width;
+    const scaleY = canvas.height / bounds.height;
     const position = {
-      x: source.clientX - bounds.left,
-      y: bounds.height - source.clientY + bounds.top,
+      x: scaleX * (source.clientX - bounds.left),
+      y: scaleY * (bounds.height - source.clientY + bounds.top),
       z: 0,
     };
     updateCurrentRenderer(position.x, position.y);
@@ -181,8 +183,8 @@ function vtkRenderWindowInteractor(publicAPI, model) {
     const method = addListeners ? 'addEventListener' : 'removeEventListener';
     const invMethod = addListeners ? 'removeEventListener' : 'addEventListener';
 
-    if (model.canvas) {
-      model.canvas[invMethod]('mousemove', publicAPI.handleMouseMove);
+    if (model.container) {
+      model.container[invMethod]('mousemove', publicAPI.handleMouseMove);
     }
 
     rootElm[method]('mouseup', publicAPI.handleMouseUp);
@@ -192,14 +194,14 @@ function vtkRenderWindowInteractor(publicAPI, model) {
     rootElm[method]('touchmove', publicAPI.handleTouchMove, false);
   }
 
-  publicAPI.bindEvents = (canvas) => {
-    model.canvas = canvas;
-    canvas.addEventListener('contextmenu', preventDefault);
-    // canvas.addEventListener('click', preventDefault); // Avoid stopping event propagation
-    canvas.addEventListener('wheel', publicAPI.handleWheel);
-    canvas.addEventListener('DOMMouseScroll', publicAPI.handleWheel);
-    canvas.addEventListener('mousemove', publicAPI.handleMouseMove);
-    canvas.addEventListener('mousedown', publicAPI.handleMouseDown);
+  publicAPI.bindEvents = (container) => {
+    model.container = container;
+    container.addEventListener('contextmenu', preventDefault);
+    // container.addEventListener('click', preventDefault); // Avoid stopping event propagation
+    container.addEventListener('wheel', publicAPI.handleWheel);
+    container.addEventListener('DOMMouseScroll', publicAPI.handleWheel);
+    container.addEventListener('mousemove', publicAPI.handleMouseMove);
+    container.addEventListener('mousedown', publicAPI.handleMouseDown);
     document
       .querySelector('body')
       .addEventListener('keypress', publicAPI.handleKeyPress);
@@ -210,17 +212,20 @@ function vtkRenderWindowInteractor(publicAPI, model) {
       .querySelector('body')
       .addEventListener('keyup', publicAPI.handleKeyUp);
 
-    canvas.addEventListener('touchstart', publicAPI.handleTouchStart, false);
+    container.addEventListener('touchstart', publicAPI.handleTouchStart, false);
   };
 
   publicAPI.unbindEvents = () => {
     interactionRegistration(false);
-    model.canvas.removeEventListener('contextmenu', preventDefault);
-    // model.canvas.removeEventListener('click', preventDefault); // Avoid stopping event propagation
-    model.canvas.removeEventListener('wheel', publicAPI.handleWheel);
-    model.canvas.removeEventListener('DOMMouseScroll', publicAPI.handleWheel);
-    model.canvas.removeEventListener('mousemove', publicAPI.handleMouseMove);
-    model.canvas.removeEventListener('mousedown', publicAPI.handleMouseDown);
+    model.container.removeEventListener('contextmenu', preventDefault);
+    // model.container.removeEventListener('click', preventDefault); // Avoid stopping event propagation
+    model.container.removeEventListener('wheel', publicAPI.handleWheel);
+    model.container.removeEventListener(
+      'DOMMouseScroll',
+      publicAPI.handleWheel
+    );
+    model.container.removeEventListener('mousemove', publicAPI.handleMouseMove);
+    model.container.removeEventListener('mousedown', publicAPI.handleMouseDown);
     document
       .querySelector('body')
       .removeEventListener('keypress', publicAPI.handleKeyPress);
@@ -230,8 +235,11 @@ function vtkRenderWindowInteractor(publicAPI, model) {
     document
       .querySelector('body')
       .removeEventListener('keyup', publicAPI.handleKeyUp);
-    model.canvas.removeEventListener('touchstart', publicAPI.handleTouchStart);
-    model.canvas = null;
+    model.container.removeEventListener(
+      'touchstart',
+      publicAPI.handleTouchStart
+    );
+    model.container = null;
   };
 
   publicAPI.handleKeyPress = (event) => {
@@ -800,8 +808,8 @@ function vtkRenderWindowInteractor(publicAPI, model) {
         let thresh =
           0.01 *
           Math.sqrt(
-            model.canvas.clientWidth * model.canvas.clientWidth +
-              model.canvas.clientHeight * model.canvas.clientHeight
+            model.container.clientWidth * model.container.clientWidth +
+              model.container.clientHeight * model.container.clientHeight
           );
         if (thresh < 15.0) {
           thresh = 15.0;
@@ -885,7 +893,7 @@ const DEFAULT_VALUES = {
   lightFollowCamera: true,
   desiredUpdateRate: 30.0,
   stillUpdateRate: 2.0,
-  canvas: null,
+  container: null,
   view: null,
   recognizeGestures: true,
   currentGesture: 'Start',
@@ -912,7 +920,7 @@ export function extend(publicAPI, model, initialValues = {}) {
   // Create get-only macros
   macro.get(publicAPI, model, [
     'initialized',
-    'canvas',
+    'container',
     'enabled',
     'enableRender',
     'interactorStyle',
