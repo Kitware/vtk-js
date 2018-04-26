@@ -149,7 +149,7 @@ export function extend(publicAPI, model, initialValues = {}) {
   macro.event(publicAPI, model, 'EndInteractionEvent');
 
   // Create get-only macros
-  macro.get(publicAPI, model, ['interactor']);
+  macro.get(publicAPI, model, ['interactor', 'enabled']);
 
   // Create get-set macros
   macro.setGet(publicAPI, model, ['priority']);

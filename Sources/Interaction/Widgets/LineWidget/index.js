@@ -156,23 +156,24 @@ function vtkLineWidget(publicAPI, model) {
 
   publicAPI.moveAction = (callData) => {
     const position = [callData.position.x, callData.position.y];
+    let modified = false;
 
     if (model.widgetState === WidgetState.MANIPULATE) {
       // In MANIPULATE, we are hovering above the widget
       // Check if above a sphere and enable/disable if needed
       const state = model.widgetRep.computeInteractionState(position);
       setCursor(state);
-      if (state !== State.OUTSIDE) {
-        if (state === State.ONP1) {
-          model.point1Widget.setEnabled(1);
-          model.point2Widget.setEnabled(0);
-        } else if (state === State.ONP2) {
-          model.point1Widget.setEnabled(0);
-          model.point2Widget.setEnabled(1);
-        }
-      } else {
-        model.point1Widget.setEnabled(0);
-        model.point2Widget.setEnabled(0);
+
+      const enablePoint1Widget = state === State.ONP1;
+      const enablePoint2Widget = state === State.ONP2;
+
+      if (enablePoint1Widget !== model.point1Widget.getEnabled()) {
+        model.point1Widget.setEnabled(enablePoint1Widget);
+        modified = true;
+      }
+      if (enablePoint2Widget !== model.point2Widget.getEnabled()) {
+        model.point2Widget.setEnabled(enablePoint2Widget);
+        modified = true;
       }
     } else if (model.widgetState === WidgetState.START) {
       // In START, we are placing the sphere widgets.
@@ -186,6 +187,7 @@ function vtkLineWidget(publicAPI, model) {
       } else {
         model.widgetRep.setPoint2WorldPosition(pos3D);
       }
+      modified = true;
     } else if (model.widgetState === WidgetState.ACTIVE) {
       // In ACTIVE, we are moving a sphere widget.
       // Update the line extremities to follow the spheres.
@@ -195,10 +197,13 @@ function vtkLineWidget(publicAPI, model) {
       model.widgetRep.setPoint2WorldPosition(
         model.point2Widget.getWidgetRep().getWorldPosition()
       );
+      modified = true;
     }
 
-    publicAPI.invokeInteractionEvent();
-    publicAPI.render();
+    if (modified) {
+      publicAPI.invokeInteractionEvent();
+      publicAPI.render();
+    }
   };
 
   publicAPI.endSelectAction = (callData) => {
