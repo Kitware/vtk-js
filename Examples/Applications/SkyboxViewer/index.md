@@ -25,8 +25,8 @@ The Skybox Viewer can be used as a link that encode both the Viewer path, the da
 
 ### Examples
 
-- [Basic viewer](https://kitware.github.io/vtk-js/examples/SkyboxViewer/SkyboxViewer.html?fileURL=https://data.kitware.com/api/v1/file/5aaa9ef58d777f068578d4e7/download&position=6)
-- [VR Viewer](https://kitware.github.io/vtk-js/examples/SkyboxViewer/SkyboxViewer.html?fileURL=https://data.kitware.com/api/v1/file/5aaaa4d68d777f068578d4ed/download&vr)
+- [Basic viewer](https://kitware.github.io/vtk-js/examples/SkyboxViewer/SkyboxViewer.html?fileURL=https://data.kitware.com/api/v1/file/5ae8a89c8d777f0685796bae/download)
+- [VR Viewer](https://kitware.github.io/vtk-js/examples/SkyboxViewer/SkyboxViewer.html?fileURL=https://data.kitware.com/api/v1/file/5ae8a89c8d777f0685796bae/download&vr)
 
 ### VR Mode
 
