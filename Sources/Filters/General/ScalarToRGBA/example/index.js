@@ -12,6 +12,8 @@ import vtkScalarToRGBA from 'vtk.js/Sources/Filters/General/ScalarToRGBA';
 import vtkPlaneSource from 'vtk.js/Sources/Filters/Sources/PlaneSource';
 import vtkPiecewiseFunction from 'vtk.js/Sources/Common/DataModel/PiecewiseFunction';
 
+import controller from './controller.html';
+
 // ----------------------------------------------------------------------------
 // Standard rendering code setup
 // ----------------------------------------------------------------------------
@@ -44,14 +46,6 @@ const wavelet = vtkRTAnalyticSource.newInstance();
 const actor = vtkActor.newInstance();
 const mapper = vtkMapper.newInstance();
 
-console.log(
-  wavelet
-    .getOutputData()
-    .getPointData()
-    .getScalars()
-    .getRange()
-);
-
 const sliceFilter = vtkImageSliceFilter.newInstance({ sliceIndex: 10 });
 sliceFilter.setInputConnection(wavelet.getOutputPort());
 
@@ -71,3 +65,12 @@ actor.addTexture(texture);
 renderer.addActor(actor);
 renderer.resetCamera();
 renderWindow.render();
+
+// UI slider
+fullScreenRenderer.addController(controller);
+document.querySelector('.sliceIndex').addEventListener('input', (e) => {
+  const sliceIndex = Number(e.target.value);
+  sliceFilter.setSliceIndex(sliceIndex);
+  texture.modified();
+  renderWindow.render();
+});
