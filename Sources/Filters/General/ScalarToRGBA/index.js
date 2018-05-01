@@ -46,7 +46,6 @@ function vtkScalarToRGBA(publicAPI, model) {
       const x = data[idx];
       model.lookupTable.getColor(x, rgba);
       rgba[3] = model.piecewiseFunction.getValue(x);
-      console.log(x, model.piecewiseFunction.getValue(x));
       rgbaArray[offset++] = 255 * rgba[0];
       rgbaArray[offset++] = 255 * rgba[1];
       rgbaArray[offset++] = 255 * rgba[2];

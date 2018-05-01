@@ -29,7 +29,7 @@ function vtkImageSliceFilter(publicAPI, model) {
     }
 
     const datasetDefinition = input.get('extent', 'spacing', 'origin');
-    datasetDefinition.extent[4] += model.sliceIndex;
+    datasetDefinition.extent[4] = model.sliceIndex;
     datasetDefinition.extent[5] = datasetDefinition.extent[4];
 
     const numberOfComponents = scalars.getNumberOfComponents();
