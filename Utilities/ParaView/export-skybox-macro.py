@@ -70,31 +70,33 @@ except NameError:
 # Light settings
 # -----------------------------------------------------------------------------
 
-view.UseLight = 0
-renderer = view.GetClientSideObject().GetRenderer()
-lightA = vtkLight()
-lightA.SetPosition(0.0, 1.0, 0.0)
-lightA.SetIntensity(1.0)
-lightA.SetLightTypeToSceneLight()
-renderer.AddLight(lightA)
 
-lightB = vtkLight()
-lightB.SetPosition(0.8, -0.2, 0.0)
-lightB.SetIntensity(0.8)
-lightB.SetLightTypeToSceneLight()
-renderer.AddLight(lightB)
+if view.UseLight:
+  view.UseLight = 0
+  renderer = view.GetClientSideObject().GetRenderer()
+  lightA = vtkLight()
+  lightA.SetPosition(0.0, 1.0, 0.0)
+  lightA.SetIntensity(1.0)
+  lightA.SetLightTypeToSceneLight()
+  renderer.AddLight(lightA)
 
-lightC = vtkLight()
-lightC.SetPosition(-0.3, -0.2, 0.7)
-lightC.SetIntensity(0.6)
-lightC.SetLightTypeToSceneLight()
-renderer.AddLight(lightC)
+  lightB = vtkLight()
+  lightB.SetPosition(0.8, -0.2, 0.0)
+  lightB.SetIntensity(0.8)
+  lightB.SetLightTypeToSceneLight()
+  renderer.AddLight(lightB)
 
-lightD = vtkLight()
-lightD.SetPosition(-0.3, -0.2, -0.7)
-lightD.SetIntensity(0.4)
-lightD.SetLightTypeToSceneLight()
-renderer.AddLight(lightD)
+  lightC = vtkLight()
+  lightC.SetPosition(-0.3, -0.2, 0.7)
+  lightC.SetIntensity(0.6)
+  lightC.SetLightTypeToSceneLight()
+  renderer.AddLight(lightC)
+
+  lightD = vtkLight()
+  lightD.SetPosition(-0.3, -0.2, -0.7)
+  lightD.SetIntensity(0.4)
+  lightD.SetLightTypeToSceneLight()
+  renderer.AddLight(lightD)
 
 # -----------------------------------------------------------------------------
 # Prepare rendering
@@ -133,12 +135,12 @@ camera = {
 METADATA = {
   'skybox': {
     'faceMapping': [
-      { 'fileName': 'f.jpg', 'transform': { 'flipX': True } },
-      { 'fileName': 'b.jpg', 'transform': { 'flipX': True } },
-      { 'fileName': 'u.jpg', 'transform': { 'flipX': True, 'rotate': 90 } },
-      { 'fileName': 'd.jpg', 'transform': { 'flipX': True, 'rotate': -90 } },
-      { 'fileName': 'r.jpg', 'transform': { 'flipX': True } },
-      { 'fileName': 'l.jpg', 'transform': { 'flipX': True } },
+      { 'fileName': 'f.jpg', 'transform': { 'flipX': False } },
+      { 'fileName': 'b.jpg', 'transform': { 'flipX': False } },
+      { 'fileName': 'd.jpg', 'transform': { 'flipX': False, 'rotate': 90 } },
+      { 'fileName': 'u.jpg', 'transform': { 'flipX': False, 'rotate': -90 } },
+      { 'fileName': 'r.jpg', 'transform': { 'flipX': False } },
+      { 'fileName': 'l.jpg', 'transform': { 'flipX': False } },
     ]
   }
 }
