@@ -398,7 +398,7 @@ function vtkPiecewiseFunction(publicAPI, model) {
   // Returns a table of function values evaluated at regular intervals
   /* eslint-disable prefer-destructuring */
   /* eslint-disable no-continue */
-  publicAPI.getTable = (xStart, xEnd, size, table, stride) => {
+  publicAPI.getTable = (xStart, xEnd, size, table, stride = 1) => {
     let i;
     let idx = 0;
     const numNodes = model.nodes.length;
