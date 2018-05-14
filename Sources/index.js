@@ -6,7 +6,7 @@ import IO from './IO';
 import Rendering from './Rendering';
 import VTKProxy from './Proxy';
 
-import { getCurrentGlobalMTime } from './macro';
+import macro from './macro';
 
 import vtk from './vtk';
 
@@ -18,7 +18,8 @@ vtk.IO = IO;
 vtk.Rendering = Rendering;
 vtk.Proxy = VTKProxy;
 
-vtk.mtime = getCurrentGlobalMTime;
+vtk.mtime = macro.getCurrentGlobalMTime;
+vtk.macro = macro;
 
 /* eslint-disable */
 module.exports = vtk;
