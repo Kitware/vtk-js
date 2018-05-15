@@ -32,7 +32,7 @@
     "base64-js": "1.2.1",
     "blueimp-md5": "2.10.0",
     "commander": "2.11.0",
-    "gl-matrix": "2.3.1",
+    "gl-matrix": "2.5.1",
     "jszip": "3.1.4",
     "pako": "1.0.6",
     "seedrandom": "2.4.3",
