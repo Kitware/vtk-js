@@ -1,4 +1,5 @@
 import test from 'tape-catch';
+import testUtils from 'vtk.js/Sources/Testing/testUtils';
 
 import vtkOpenGLRenderWindow from 'vtk.js/Sources/Rendering/OpenGL/RenderWindow';
 import vtkRenderWindow from 'vtk.js/Sources/Rendering/Core/RenderWindow';
@@ -10,18 +11,19 @@ import vtkCellPicker from 'vtk.js/Sources/Rendering/Core/CellPicker';
 
 const { SlicingMode } = vtkImageMapper;
 
-test('Test vtkCellPicker instance', (t) => {
-  t.ok(vtkCellPicker, 'Make sure the class definition exists');
-  const instance = vtkCellPicker.newInstance();
-  t.ok(instance);
-  t.end();
-});
-
 test.onlyIfWebGL('Test vtkCellPicker image mapper', (t) => {
   // Create some control UI
+  const gc = testUtils.createGarbageCollector(t);
   const container = document.querySelector('body');
-  const renderWindowContainer = document.createElement('div');
+  const renderWindowContainer = gc.registerDOMElement(
+    document.createElement('div')
+  );
   container.appendChild(renderWindowContainer);
+
+  // create what we will view
+  const renderWindow = gc.registerResource(vtkRenderWindow.newInstance());
+  const renderer = gc.registerResource(vtkRenderer.newInstance());
+  renderWindow.addRenderer(renderer);
 
   // create what we will view
   const rtSource = vtkRTAnalyticSource.newInstance();
@@ -39,14 +41,10 @@ test.onlyIfWebGL('Test vtkCellPicker image mapper', (t) => {
   actor.getProperty().setColorLevel(50);
   actor.setMapper(mapper);
 
-  const renderer = vtkRenderer.newInstance();
   renderer.addActor(actor);
 
-  const renderWindow = vtkRenderWindow.newInstance();
-  renderWindow.addRenderer(renderer);
-
   // now create something to view it, in this case webgl
-  const glwindow = vtkOpenGLRenderWindow.newInstance();
+  const glwindow = gc.registerResource(vtkOpenGLRenderWindow.newInstance());
   glwindow.setContainer(renderWindowContainer);
   renderWindow.addView(glwindow);
   glwindow.setSize(400, 400);
@@ -75,5 +73,12 @@ test.onlyIfWebGL('Test vtkCellPicker image mapper', (t) => {
   t.equal(ijk[1], 75);
   t.equal(ijk[2], 12);
 
+  gc.releaseResources();
+});
+
+test('Test vtkCellPicker instance', (t) => {
+  t.ok(vtkCellPicker, 'Make sure the class definition exists');
+  const instance = vtkCellPicker.newInstance();
+  t.ok(instance);
   t.end();
 });

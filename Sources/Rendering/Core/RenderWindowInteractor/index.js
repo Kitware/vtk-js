@@ -283,6 +283,18 @@ function vtkRenderWindowInteractor(publicAPI, model) {
     }
   };
 
+  //----------------------------------------------------------------------
+  function forceRender() {
+    if (model.view && model.enabled && model.enableRender) {
+      model.inRender = true;
+      model.view.traverseAllPasses();
+      model.inRender = false;
+    }
+    // outside the above test so that third-party code can redirect
+    // the render to the appropriate class
+    publicAPI.invokeRenderEvent();
+  }
+
   publicAPI.requestAnimation = (requestor) => {
     if (requestor === undefined) {
       vtkErrorMacro(`undefined requester, can not start animating`);
@@ -314,7 +326,7 @@ function vtkRenderWindowInteractor(publicAPI, model) {
       cancelAnimationFrame(model.animationRequest);
       model.animationRequest = null;
       publicAPI.endAnimationEvent();
-      publicAPI.forceRender();
+      publicAPI.render();
     }
   };
 
@@ -417,7 +429,7 @@ function vtkRenderWindowInteractor(publicAPI, model) {
     model.lastFrameTime = Math.max(0.01, model.lastFrameTime);
     model.lastFrameStart = currTime;
     publicAPI.animationEvent();
-    publicAPI.forceRender();
+    forceRender();
     model.animationRequest = requestAnimationFrame(publicAPI.handleAnimation);
   };
 
@@ -647,23 +659,13 @@ function vtkRenderWindowInteractor(publicAPI, model) {
     return currentRenderer;
   };
 
-  //----------------------------------------------------------------------
-  publicAPI.forceRender = () => {
-    if (model.view && model.enabled && model.enableRender) {
-      model.view.traverseAllPasses();
-    }
-    // outside the above test so that third-party code can redirect
-    // the render to the appropriate class
-    publicAPI.invokeRenderEvent();
-  };
-
   // only render if we are not animating. If we are animating
   // then renders will happen naturally anyhow and we definitely
   // do not want extra renders as the make the apparent interaction
   // rate slower.
   publicAPI.render = () => {
-    if (model.animationRequest === null) {
-      publicAPI.forceRender();
+    if (model.animationRequest === null && !model.inRender) {
+      forceRender();
     }
   };
 
