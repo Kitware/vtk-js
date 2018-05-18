@@ -1012,6 +1012,10 @@ export function extend(publicAPI, model, initialValues = {}) {
     'defaultToWebgl2',
     'cursor',
     'queryVRSize',
+    // might want to make this not call modified as
+    // we change the active framebuffer a lot. Or maybe
+    // only mark modified if the size or depth
+    // of the buffer has changed
     'activeFramebuffer',
   ]);
 

@@ -14,8 +14,11 @@ import vtkRenderer from 'vtk.js/Sources/Rendering/Core/Renderer';
 import vtkVolume from 'vtk.js/Sources/Rendering/Core/Volume';
 import vtkVolumeMapper from 'vtk.js/Sources/Rendering/Core/VolumeMapper';
 
+import vtkOrientationMarkerWidget from 'vtk.js/Sources/Interaction/Widgets/OrientationMarkerWidget';
+import vtkAnnotatedCubeActor from 'vtk.js/Sources/Rendering/Core/AnnotatedCubeActor';
+
 import baseline1 from './testIntermixedImage.png';
-import baseline2 from './testIntermixedImage_1.png';
+// import baseline2 from './testIntermixedImage_1.png';
 
 test.onlyIfWebGL('Test Composite Volume Rendering', (t) => {
   const gc = testUtils.createGarbageCollector(t);
@@ -76,17 +79,76 @@ test.onlyIfWebGL('Test Composite Volume Rendering', (t) => {
   const iactor = gc.registerResource(vtkImageSlice.newInstance());
   iactor.getProperty().setColorWindow(255);
   iactor.getProperty().setColorLevel(127);
+  iactor.getProperty().setOpacity(0.5);
   iactor.setMapper(imapper);
   iactor.setPosition(200, 100, 100);
   iactor.rotateX(45);
   renderer.addActor(iactor);
 
   // Interactor
-  const interactor = vtkRenderWindowInteractor.newInstance();
+  const interactor = gc.registerResource(
+    vtkRenderWindowInteractor.newInstance()
+  );
   interactor.setStillUpdateRate(0.01);
   interactor.setView(glwindow);
   interactor.initialize();
   interactor.bindEvents(renderWindowContainer);
+
+  // create axes
+  const axes = gc.registerResource(vtkAnnotatedCubeActor.newInstance());
+  axes.setDefaultStyle({
+    text: '+X',
+    fontStyle: 'bold',
+    fontFamily: 'Arial',
+    fontColor: 'black',
+    fontSizeScale: (res) => res / 2,
+    faceColor: '#0000ff',
+    faceRotation: 0,
+    edgeThickness: 0.1,
+    edgeColor: 'black',
+    resolution: 400,
+  });
+  // axes.setXPlusFaceProperty({ text: '+X' });
+  axes.setXMinusFaceProperty({
+    text: '-X',
+    faceColor: '#ffff00',
+    faceRotation: 90,
+    fontStyle: 'italic',
+  });
+  axes.setYPlusFaceProperty({
+    text: '+Y',
+    faceColor: '#00ff00',
+    fontSizeScale: (res) => res / 4,
+  });
+  axes.setYMinusFaceProperty({
+    text: '-Y',
+    faceColor: '#00ffff',
+    fontColor: 'white',
+  });
+  axes.setZPlusFaceProperty({
+    text: '+Z',
+    edgeColor: 'yellow',
+  });
+  axes.setZMinusFaceProperty({
+    text: '-Z',
+    faceRotation: 45,
+    edgeThickness: 0,
+  });
+
+  // create orientation widget
+  const orientationWidget = gc.registerResource(
+    vtkOrientationMarkerWidget.newInstance({
+      actor: axes,
+      interactor: renderWindow.getInteractor(),
+    })
+  );
+  orientationWidget.setEnabled(true);
+  orientationWidget.setViewportCorner(
+    vtkOrientationMarkerWidget.Corners.BOTTOM_RIGHT
+  );
+  orientationWidget.setViewportSize(0.15);
+  orientationWidget.setMinPixelSize(100);
+  orientationWidget.setMaxPixelSize(300);
 
   reader.setUrl(`${__BASE_PATH__}/Data/volume/LIDC2.vti`).then(() => {
     reader.loadData().then(() => {
@@ -97,11 +159,13 @@ test.onlyIfWebGL('Test Composite Volume Rendering', (t) => {
       renderer.getActiveCamera().orthogonalizeViewUp();
       renderer.getActiveCamera().azimuth(-20);
       renderer.resetCameraClippingRange();
+      renderWindow.render();
 
       const image = glwindow.captureImage();
+
       testUtils.compareImages(
         image,
-        [baseline1, baseline2],
+        [baseline1],
         'Rendering/OpenGL/VolumeMapper/testIntermixedImage',
         t,
         1.8,
