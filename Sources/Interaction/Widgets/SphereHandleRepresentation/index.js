@@ -298,9 +298,9 @@ function vtkSphereHandleRepresentation(publicAPI, model) {
 
   publicAPI.highlight = (highlight) => {
     if (highlight) {
-      model.actor.setProperty(model.selectProperty);
+      publicAPI.applyProperty(model.selectProperty);
     } else {
-      model.actor.setProperty(model.property);
+      publicAPI.applyProperty(model.property);
     }
   };
 
@@ -317,7 +317,7 @@ function vtkSphereHandleRepresentation(publicAPI, model) {
     }
   };
 
-  publicAPI.setProperty = (property) => {
+  publicAPI.applyProperty = (property) => {
     model.actor.setProperty(property);
   };
 }
@@ -350,7 +350,11 @@ export function extend(publicAPI, model, initialValues = {}) {
   // Inheritance
   vtkHandleRepresentation.extend(publicAPI, model, initialValues);
 
-  macro.setGet(publicAPI, model, ['translationMode']);
+  macro.setGet(publicAPI, model, [
+    'translationMode',
+    'property',
+    'selectProperty',
+  ]);
   macro.get(publicAPI, model, ['actor']);
 
   model.sphere = vtkSphereSource.newInstance();
