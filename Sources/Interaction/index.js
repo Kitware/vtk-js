@@ -3,6 +3,7 @@ import Misc from './Misc';
 import Style from './Style';
 import UI from './UI';
 import Widgets from './Widgets';
+import Widgets2 from './Widgets2';
 
 export default {
   Manipulators,
@@ -10,4 +11,5 @@ export default {
   Style,
   UI,
   Widgets,
+  Widgets2,
 };
