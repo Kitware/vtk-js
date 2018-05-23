@@ -8,6 +8,7 @@ function vtkAbstractRepresentation(publicAPI, model) {
   // --------------------------------------------------------------------------
 
   // Virtual method
+  // Should return a vtkPicker
   publicAPI.getEventIntersection = (event) => {};
 
   // --------------------------------------------------------------------------
@@ -20,7 +21,9 @@ function vtkAbstractRepresentation(publicAPI, model) {
 // Object factory
 // ----------------------------------------------------------------------------
 
-const DEFAULT_VALUES = {};
+const DEFAULT_VALUES = {
+  renderer: null,
+};
 
 // ----------------------------------------------------------------------------
 
@@ -28,6 +31,8 @@ export function extend(publicAPI, model, initialValues = {}) {
   Object.assign(model, DEFAULT_VALUES, initialValues);
 
   vtkProp.extend(publicAPI, model, initialValues);
+
+  macro.setGet(publicAPI, model, ['renderer']);
 
   // mixin
   vtkStateObserver(publicAPI, model);

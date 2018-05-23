@@ -21,10 +21,14 @@ function vtkHandleWidget(publicAPI, model) {
   //----------------------------------------------------------------------------
 
   publicAPI.selectAction = (callData) => {
-    const intersection = model.representation.getEventIntersection(callData);
-    if (intersection.intersects) {
-      state.updateData({ selected: true });
+    const state = publicAPI.getWidgetState();
+    if (state.getData().selected) {
+      return VOID;
+    }
 
+    const picker = model.representation.getEventIntersection(callData);
+    if (picker.getActors().length) {
+      state.updateData({ selected: true });
       publicAPI.render();
       return EVENT_ABORT;
     }
@@ -39,9 +43,34 @@ function vtkHandleWidget(publicAPI, model) {
       state.updateData({ selected: false });
 
       publicAPI.render();
-      return EVENT_ABORT;
     }
-    return VOID;
+  };
+
+  //----------------------------------------------------------------------------
+
+  publicAPI.moveAction = (callData) => {
+    const state = publicAPI.getWidgetState();
+    const { selected, position } = state.getData();
+
+    if (!selected) {
+      return VOID;
+    }
+
+    const coords = [callData.position.x, callData.position.y];
+    const objPos = position.getValue();
+    const renderer = publicAPI.getInteractor().getCurrentRenderer();
+    const camera = renderer.getActiveCamera();
+    const dop = camera.getDirectionOfProjection();
+
+    // plane point is object position, normal is dop
+    const point = publicAPI.displayToPlane(coords, objPos, dop);
+    if (point) {
+      position.setValue(...point);
+      state.updateData({ position });
+      publicAPI.render();
+    }
+
+    return EVENT_ABORT;
   };
 
   //----------------------------------------------------------------------------
@@ -49,12 +78,14 @@ function vtkHandleWidget(publicAPI, model) {
   // Set listeners
   publicAPI.handleLeftButtonPress = publicAPI.selectAction;
   publicAPI.handleLeftButtonRelease = publicAPI.endSelectAction;
+  publicAPI.handleMouseMove = publicAPI.moveAction;
 
   //----------------------------------------------------------------------------
 
   // initialize handle state
   publicAPI.setWidgetState({
     position: vtkCoordinate.newInstance(),
+    size: 0.01,
     selected: false,
   });
 }

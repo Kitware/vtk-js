@@ -37,12 +37,15 @@ function vtkHandleRepresentation(publicAPI, model) {
 
   // virtual override (vtkStateObserver mixin)
   publicAPI.onStateChanged = (state) => {
-    const { selected } = state.getData();
+    const { position, size, selected } = state.getData();
     if (selected) {
       model.actor.setProperty(model.selectProperty);
     } else {
       model.actor.setProperty(model.property);
     }
+
+    model.source.setCenter(position.getValue());
+    model.source.setRadius(size);
   };
 
   // --------------------------------------------------------------------------
@@ -51,11 +54,7 @@ function vtkHandleRepresentation(publicAPI, model) {
   publicAPI.getEventIntersection = (event) => {
     const { x, y, z } = event.position;
     model.picker.pick([x, y, z], event.pokedRenderer);
-    // Should the contents of this object be standardized?
-    return {
-      intersects: !!model.picker.getDataSet(),
-      pickPosition: model.picker.getPickPosition(),
-    };
+    return model.picker;
   };
 
   // --------------------------------------------------------------------------
