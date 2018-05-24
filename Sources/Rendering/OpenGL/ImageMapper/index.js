@@ -526,9 +526,7 @@ function vtkOpenGLImageMapper(publicAPI, model) {
       if (iType === InterpolationType.NEAREST) {
         if (numComponents === 4) {
           model.openGLTexture.setGenerateMipmap(true);
-          model.openGLTexture.setMinificationFilter(
-            Filter.NEAREST_MIPMAP_NEAREST
-          );
+          model.openGLTexture.setMinificationFilter(Filter.NEAREST);
         } else {
           model.openGLTexture.setMinificationFilter(Filter.NEAREST);
         }
