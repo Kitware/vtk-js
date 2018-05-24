@@ -10,6 +10,18 @@ of an image slice.
 [vtkImageMapper](./Rendering_Core_ImageMapper.html)
 [vtkImageProperty](./Rendering_Core_ImageProperty.html)
 
+## Methods
+
+### getInterpolationType
+### getInterpolationTypeAsString
+### setInterpolationTypeToNearest
+### setInterpolationTypeToLinear
+
+Set/Get the interpolation type for sampling a volume. The initial
+value is LINEAR. NEAREST interpolation will snap to the closest
+voxel, LINEAR will perform bilinear interpolation to compute a
+scalar value from surrounding voxels.
+
 ### colorWindow
 
 Controls the window in a window level mapping of the input image. Window
