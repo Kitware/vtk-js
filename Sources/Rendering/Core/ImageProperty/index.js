@@ -1,4 +1,7 @@
 import macro from 'vtk.js/Sources/macro';
+import Constants from 'vtk.js/Sources/Rendering/Core/ImageProperty/Constants';
+
+const { InterpolationType } = Constants;
 
 // ----------------------------------------------------------------------------
 // vtkImageProperty methods
@@ -7,12 +10,24 @@ import macro from 'vtk.js/Sources/macro';
 function vtkImageProperty(publicAPI, model) {
   // Set our className
   model.classHierarchy.push('vtkImageProperty');
+
+  publicAPI.setInterpolationTypeToNearest = () => {
+    publicAPI.setInterpolationType(InterpolationType.NEAREST);
+  };
+
+  publicAPI.setInterpolationTypeToLinear = () => {
+    publicAPI.setInterpolationType(InterpolationType.LINEAR);
+  };
+
+  publicAPI.getInterpolationTypeAsString = () =>
+    macro.enumToString(InterpolationType, model.interpolationType);
 }
 
 // ----------------------------------------------------------------------------
 // Object factory
 // ----------------------------------------------------------------------------
 const DEFAULT_VALUES = {
+  interpolationType: InterpolationType.LINEAR,
   colorWindow: 255,
   colorLevel: 127.5,
   ambient: 1.0,
@@ -30,6 +45,7 @@ export function extend(publicAPI, model, initialValues = {}) {
   macro.obj(publicAPI, model);
 
   macro.setGet(publicAPI, model, [
+    'interpolationType',
     'colorWindow',
     'colorLevel',
     'ambient',

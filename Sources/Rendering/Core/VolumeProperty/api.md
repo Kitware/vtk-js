@@ -63,7 +63,7 @@ midpoint and sharpness.
 ### getInterpolationType
 ### getInterpolationTypeAsString
 ### setInterpolationTypeToNearest
-### setInterpolationTypeToLastLinear
+### setInterpolationTypeToFastLinear
 ### setInterpolationTypeToLinear
 
 Set/Get the interpolation type for sampling a volume. The initial

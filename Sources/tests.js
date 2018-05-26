@@ -38,6 +38,7 @@ import './Rendering/OpenGL/Actor/test/testRotate';
 import './Rendering/OpenGL/HardwareSelector/test/testHardwareSelector';
 import './Rendering/OpenGL/HardwareSelector/test/testHardwareSelectorGlyph';
 import './Rendering/OpenGL/ImageMapper/test/testImage';
+import './Rendering/OpenGL/ImageMapper/test/testImageNearestNeighbor';
 import './Rendering/OpenGL/ImageMapper/test/testImageColorTransferFunction';
 import './Rendering/OpenGL/PolyDataMapper/test/testAddShaderReplacements';
 import './Rendering/OpenGL/PolyDataMapper/test/testClearShaderReplacements';
