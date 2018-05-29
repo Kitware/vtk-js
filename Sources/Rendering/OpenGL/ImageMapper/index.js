@@ -430,6 +430,16 @@ function vtkOpenGLImageMapper(publicAPI, model) {
       return;
     }
 
+    // set interpolation on the texture based on property setting
+    const iType = actor.getProperty().getInterpolationType();
+    if (iType === InterpolationType.NEAREST) {
+      model.colorTexture.setMinificationFilter(Filter.NEAREST);
+      model.colorTexture.setMagnificationFilter(Filter.NEAREST);
+    } else {
+      model.colorTexture.setMinificationFilter(Filter.LINEAR);
+      model.colorTexture.setMagnificationFilter(Filter.LINEAR);
+    }
+
     const cWidth = 1024;
     const cTable = new Uint8Array(cWidth * 3);
     const cfun = actor.getProperty().getRGBTransferFunction();
@@ -443,15 +453,6 @@ function vtkOpenGLImageMapper(publicAPI, model) {
           cTable[i] = 255.0 * cfTable[i];
         }
         model.colorTextureString = cfunToString;
-        // set interpolation on the texture based on property setting
-        const iType = actor.getProperty().getInterpolationType();
-        if (iType === InterpolationType.NEAREST) {
-          model.colorTexture.setMinificationFilter(Filter.NEAREST);
-          model.colorTexture.setMagnificationFilter(Filter.NEAREST);
-        } else {
-          model.colorTexture.setMinificationFilter(Filter.LINEAR);
-          model.colorTexture.setMagnificationFilter(Filter.LINEAR);
-        }
         model.colorTexture.create2DFromRaw(
           cWidth,
           1,
@@ -469,14 +470,6 @@ function vtkOpenGLImageMapper(publicAPI, model) {
           cTable[i + 2] = 255.0 * i / ((cWidth - 1) * 3);
         }
         model.colorTextureString = cfunToString;
-        const iType = actor.getProperty().getInterpolationType();
-        if (iType === InterpolationType.NEAREST) {
-          model.colorTexture.setMinificationFilter(Filter.NEAREST);
-          model.colorTexture.setMagnificationFilter(Filter.NEAREST);
-        } else {
-          model.colorTexture.setMinificationFilter(Filter.LINEAR);
-          model.colorTexture.setMagnificationFilter(Filter.LINEAR);
-        }
         model.colorTexture.create2DFromRaw(
           cWidth,
           1,
@@ -514,11 +507,12 @@ function vtkOpenGLImageMapper(publicAPI, model) {
     const toString = `${nSlice}A${image.getMTime()}A${image
       .getPointData()
       .getScalars()
-      .getMTime()}B${publicAPI.getMTime()}C${model.renderable.getSlicingMode()}`;
+      .getMTime()}B${publicAPI.getMTime()}C${model.renderable.getSlicingMode()}D${actor
+      .getProperty()
+      .getMTime()}`;
     if (model.VBOBuildString !== toString) {
       // Build the VBOs
       const dims = image.getDimensions();
-      const iType = actor.getProperty().getInterpolationType();
       const numComponents = image
         .getPointData()
         .getScalars()
