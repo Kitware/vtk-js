@@ -384,7 +384,7 @@ function vtkOpenGLImageMapper(publicAPI, model) {
     model.currentInput = model.renderable.getInputData();
     publicAPI.invokeEvent({ type: 'EndEvent' });
 
-    if (model.currentInput === null) {
+    if (!model.currentInput) {
       vtkErrorMacro('No input!');
       return;
     }
