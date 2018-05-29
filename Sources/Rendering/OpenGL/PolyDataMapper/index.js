@@ -1653,7 +1653,7 @@ function vtkOpenGLPolyDataMapper(publicAPI, model) {
     model.currentInput = model.renderable.getInputData();
     publicAPI.invokeEvent(EndEvent);
 
-    if (model.currentInput === null) {
+    if (!model.currentInput) {
       vtkErrorMacro('No input!');
       return;
     }

@@ -35,7 +35,7 @@ function vtkOpenGLGlyph3DMapper(publicAPI, model) {
     model.currentInput = model.renderable.getInputData(1);
     publicAPI.invokeEvent(EndEvent);
 
-    if (model.currentInput === null) {
+    if (!model.currentInput) {
       vtkErrorMacro('No input!');
       return;
     }
