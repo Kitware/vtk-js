@@ -1,5 +1,7 @@
 const WidgetState = {
   IDLE: 0,
+  CROPPING: 10,
+
   MOVE_LEFT: 1,
   MOVE_RIGHT: 2,
   MOVE_BOTTOM: 3,
