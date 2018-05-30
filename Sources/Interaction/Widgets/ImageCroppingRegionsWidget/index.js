@@ -119,24 +119,6 @@ function vtkImageCroppingRegionsWidget(publicAPI, model) {
     });
   };
 
-  publicAPI.handlesToPlanes = (handles) => {
-    if (!model.volumeMapper || !model.volumeMapper.getInputData()) {
-      return null;
-    }
-
-    const worldToIndex = model.volumeMapper.getInputData().getWorldToIndex();
-
-    return handles.map((handle, i) => {
-      const vin = vec3.fromValues(...handle);
-      const vout = vec3.create();
-      vec3.transformMat4(vout, vin, worldToIndex);
-
-      // handle in index space
-      const indexHandle = [vout[0], vout[1], vout[2]];
-      return indexHandle[Math.floor(i / 2)];
-    });
-  };
-
   publicAPI.resetWidgetState = () => {
     if (!model.volumeMapper) {
       vtkErrorMacro('Volume mapper must be set to update representation');
@@ -284,11 +266,18 @@ function vtkImageCroppingRegionsWidget(publicAPI, model) {
   };
 
   publicAPI.moveAction = (callData) => {
-    const { controlState, handles, activeHandleIndex } = model.widgetState;
+    const {
+      controlState,
+      handles,
+      planes,
+      activeHandleIndex,
+    } = model.widgetState;
     if (controlState === WidgetState.IDLE || activeHandleIndex === -1) {
       return VOID;
     }
 
+    // activeHandleIndex should be > -1 here
+    const moveAxis = Math.floor(activeHandleIndex / 2);
     const mouse = [callData.position.x, callData.position.y];
     const handlePos = handles[activeHandleIndex];
     const renderer = publicAPI.getInteractor().getCurrentRenderer();
@@ -299,26 +288,26 @@ function vtkImageCroppingRegionsWidget(publicAPI, model) {
     if (point) {
       // Constrain point to axis
       const orientation = model.volumeMapper.getInputData().getDirection();
-      const offset = Math.floor(activeHandleIndex / 2) * 3;
-      const axis = orientation.slice(offset, offset + 3);
+      const offset = moveAxis * 3;
+      const constraintAxis = orientation.slice(offset, offset + 3);
 
       const newPos = [0, 0, 0];
       const relMoveVect = [0, 0, 0];
       const projection = [0, 0, 0];
       vtkMath.subtract(point, handlePos, relMoveVect);
-      vtkMath.projectVector(relMoveVect, axis, projection);
+      vtkMath.projectVector(relMoveVect, constraintAxis, projection);
       vtkMath.add(handlePos, projection, newPos);
 
-      const newHandles = handles.slice();
-      newHandles[activeHandleIndex] = newPos;
+      const indexHandle = [0, 0, 0];
+      model.volumeMapper.getInputData().worldToIndex(newPos, indexHandle);
 
-      // perf enhancement: only transform newPos back to index space,
-      // since only one plane changed.
-      const newPlanes = publicAPI.handlesToPlanes(newHandles);
+      const newPlanes = planes.slice();
+      // set correct plane value
+      newPlanes[activeHandleIndex] = indexHandle[moveAxis];
 
       publicAPI.updateWidgetState({
         planes: newPlanes,
-        handles: newHandles,
+        handles: publicAPI.planesToHandles(newPlanes),
       });
     }
     return EVENT_ABORT;
