@@ -95,6 +95,30 @@ function vtkImageCroppingRegionsWidget(publicAPI, model) {
       });
   };
 
+  publicAPI.planesToBBoxCorners = (planes) => {
+    if (!model.volumeMapper || !model.volumeMapper.getInputData()) {
+      return null;
+    }
+
+    const indexToWorld = model.volumeMapper.getInputData().getIndexToWorld();
+    return [
+      [planes[0], planes[2], planes[4]],
+      [planes[0], planes[2], planes[5]],
+      [planes[0], planes[3], planes[4]],
+      [planes[0], planes[3], planes[5]],
+      [planes[1], planes[2], planes[4]],
+      [planes[1], planes[2], planes[5]],
+      [planes[1], planes[3], planes[4]],
+      [planes[1], planes[3], planes[5]],
+    ].map((coord) => {
+      const vin = vec3.fromValues(...coord);
+      const vout = vec3.create();
+      vec3.transformMat4(vout, vin, indexToWorld);
+
+      return [vout[0], vout[1], vout[2]];
+    });
+  };
+
   publicAPI.handlesToPlanes = (handles) => {
     if (!model.volumeMapper || !model.volumeMapper.getInputData()) {
       return null;
@@ -144,10 +168,13 @@ function vtkImageCroppingRegionsWidget(publicAPI, model) {
       const bounds = model.volumeMapper.getBounds();
       model.widgetRep.placeWidget(...bounds);
 
-      const { activeHandleIndex, handles } = model.widgetState;
+      const { activeHandleIndex, handles, planes } = model.widgetState;
+      const bboxCorners = publicAPI.planesToBBoxCorners(planes);
+
       model.widgetRep.set({
         activeHandleIndex,
         handlePositions: handles,
+        bboxCorners,
       });
 
       publicAPI.render();

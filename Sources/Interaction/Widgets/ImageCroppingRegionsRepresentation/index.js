@@ -12,6 +12,22 @@ import WidgetConstants from 'vtk.js/Sources/Interaction/Widgets/ImageCroppingReg
 const { Events } = Constants;
 const { Orientation } = WidgetConstants;
 
+// prettier-ignore
+const LINE_ARRAY = [
+  2, 0, 1,
+  2, 2, 3,
+  2, 4, 5,
+  2, 6, 7,
+  2, 0, 2,
+  2, 1, 3,
+  2, 4, 6,
+  2, 5, 7,
+  2, 0, 4,
+  2, 1, 5,
+  2, 2, 6,
+  2, 3, 7,
+];
+
 // ----------------------------------------------------------------------------
 // vtkImageCroppingRegionsRepresentation methods
 // ----------------------------------------------------------------------------
@@ -64,6 +80,17 @@ function vtkImageCroppingRegionsRepresentation(publicAPI, model) {
     .fill([])
     .map(() => [0, 0, 0]);
 
+  model.outline = {
+    polydata: vtkPolyData.newInstance(),
+    mapper: vtkMapper.newInstance(),
+    actor: vtkActor.newInstance(),
+  };
+  // 8 corners for a box
+  model.outline.polydata.getPoints().setData(new Float32Array(8 * 3), 3);
+  model.outline.polydata.getLines().setData(Uint16Array.from(LINE_ARRAY));
+  model.outline.mapper.setInputData(model.outline.polydata);
+  model.outline.actor.setMapper(model.outline.mapper);
+
   model.regionPolyData = vtkPolyData.newInstance();
   model.regionPolyData.getPoints().setData(new Float32Array(16 * 3), 3);
 
@@ -109,7 +136,9 @@ function vtkImageCroppingRegionsRepresentation(publicAPI, model) {
       .setOpacity(centerInvisible ? 0 : model.opacity);
   }
 
-  publicAPI.getActors = () => model.handles.map(({ actor }) => actor);
+  // publicAPI.getActors = () => [model.actor, model.centerActor];
+  publicAPI.getActors = () =>
+    [model.outline.actor].concat(model.handles.map(({ actor }) => actor));
   publicAPI.getNestedProps = () => publicAPI.getActors();
 
   publicAPI.getEventIntersection = (callData) => {
@@ -208,6 +237,8 @@ function vtkImageCroppingRegionsRepresentation(publicAPI, model) {
 
   // Force update the geometry
   publicAPI.updateGeometry = () => {
+    const outlinePoints = model.outline.polydata.getPoints().getData();
+
     for (let i = 0; i < model.handles.length; ++i) {
       const { actor, source } = model.handles[i];
       source.setRadius(5);
@@ -219,8 +250,14 @@ function vtkImageCroppingRegionsRepresentation(publicAPI, model) {
         actor.getProperty().setColor(1, 1, 1);
       }
     }
+
+    for (let i = 0; i < model.bboxCorners.length; ++i) {
+      outlinePoints.set(model.bboxCorners[i], i * 3);
     }
-    publicAPI.modified();
+
+    model.outline.polydata.getPoints().setData(outlinePoints);
+
+    model.outline.polydata.modified();
   };
 
   publicAPI.getBounds = () => model.initialBounds;
@@ -251,6 +288,7 @@ function vtkImageCroppingRegionsRepresentation(publicAPI, model) {
 const DEFAULT_VALUES = {
   activeHandleIndex: -1,
   handlePositions: Array(6).fill([0, 0, 0]),
+  bboxCorners: Array(8).fill([0, 0, 0]),
   opacity: 0.5,
   edgeColor: [1.0, 1.0, 1.0],
 };
@@ -276,6 +314,8 @@ export function extend(publicAPI, model, initialValues = {}) {
 
   macro.setGet(publicAPI, model, ['activeHandleIndex']);
   macro.setGetArray(publicAPI, model, ['handlePositions'], 6);
+  macro.setGetArray(publicAPI, model, ['bboxCorners'], 8);
+
   // Object methods
   vtkImageCroppingRegionsRepresentation(publicAPI, model);
 }
