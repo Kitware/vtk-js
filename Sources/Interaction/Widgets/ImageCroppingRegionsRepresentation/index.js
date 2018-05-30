@@ -172,33 +172,15 @@ function vtkImageCroppingRegionsRepresentation(publicAPI, model) {
     publicAPI.modified();
   };
 
-  publicAPI.highlight = (handleIndex) => {
-    model.handles.forEach((h, i) => {
-      if (handleIndex === i) {
-        h.actor.getProperty().setColor(0, 1, 0);
-      } else {
-        h.actor.getProperty().setColor(1, 1, 1);
-      }
-    });
-  };
-
-  publicAPI.setHandles = (handles) => {
-    // TODO deep equality check
-    model.handlePositions = handles;
-    publicAPI.updateGeometry();
-  };
-
   publicAPI.setSlice = (slice) => {
     if (slice !== model.slice) {
       model.slice = slice;
-      publicAPI.updateGeometry();
     }
   };
 
   publicAPI.setSliceOrientation = (sliceOrientation) => {
     if (sliceOrientation !== model.sliceOrientation) {
       model.sliceOrientation = sliceOrientation;
-      publicAPI.updateGeometry();
     }
   };
 
@@ -227,9 +209,16 @@ function vtkImageCroppingRegionsRepresentation(publicAPI, model) {
   // Force update the geometry
   publicAPI.updateGeometry = () => {
     for (let i = 0; i < model.handles.length; ++i) {
-      const { source } = model.handles[i];
+      const { actor, source } = model.handles[i];
       source.setRadius(5);
       source.setCenter(model.handlePositions[i]);
+
+      if (model.activeHandleIndex === i) {
+        actor.getProperty().setColor(0, 1, 0);
+      } else {
+        actor.getProperty().setColor(1, 1, 1);
+      }
+    }
     }
     publicAPI.modified();
   };
@@ -250,6 +239,9 @@ function vtkImageCroppingRegionsRepresentation(publicAPI, model) {
   publicAPI.setProperty = (property) => {
     model.actor.setProperty(property);
   };
+
+  // modifications will result in geometry updates
+  publicAPI.onModified(publicAPI.updateGeometry);
 }
 
 // ----------------------------------------------------------------------------
@@ -257,7 +249,8 @@ function vtkImageCroppingRegionsRepresentation(publicAPI, model) {
 // ----------------------------------------------------------------------------
 
 const DEFAULT_VALUES = {
-  handlePositions: [],
+  activeHandleIndex: -1,
+  handlePositions: Array(6).fill([0, 0, 0]),
   opacity: 0.5,
   edgeColor: [1.0, 1.0, 1.0],
 };
@@ -281,6 +274,8 @@ export function extend(publicAPI, model, initialValues = {}) {
     'edgeColor',
   ]);
 
+  macro.setGet(publicAPI, model, ['activeHandleIndex']);
+  macro.setGetArray(publicAPI, model, ['handlePositions'], 6);
   // Object methods
   vtkImageCroppingRegionsRepresentation(publicAPI, model);
 }

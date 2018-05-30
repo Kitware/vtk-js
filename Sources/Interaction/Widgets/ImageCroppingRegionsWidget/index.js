@@ -31,8 +31,9 @@ function vtkImageCroppingRegionsWidget(publicAPI, model) {
 
   model.widgetState = {
     activeHandleIndex: -1,
-    // xmin, xmax, ymin, ymax, zmin, zmax
+    // index space: xmin, xmax, ymin, ymax, zmin, zmax
     planes: Array(6).fill(0),
+    // world space coords
     handles: Array(6)
       .fill([])
       .map(() => [0, 0, 0]),
@@ -143,8 +144,12 @@ function vtkImageCroppingRegionsWidget(publicAPI, model) {
       const bounds = model.volumeMapper.getBounds();
       model.widgetRep.placeWidget(...bounds);
 
-      model.widgetRep.highlight(model.widgetState.activeHandleIndex);
-      model.widgetRep.setHandles(model.widgetState.handles);
+      const { activeHandleIndex, handles } = model.widgetState;
+      model.widgetRep.set({
+        activeHandleIndex,
+        handlePositions: handles,
+      });
+
       publicAPI.render();
     }
   };
