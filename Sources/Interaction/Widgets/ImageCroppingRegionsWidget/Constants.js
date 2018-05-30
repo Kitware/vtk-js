@@ -18,6 +18,6 @@ const Orientation = {
   XY: 2,
 };
 
-const CropWidgetEvents = ['CroppingPlanesPositionChanged'];
+const CropWidgetEvents = ['CroppingPlanesChanged'];
 
 export default { WidgetState, CropWidgetEvents, Orientation };

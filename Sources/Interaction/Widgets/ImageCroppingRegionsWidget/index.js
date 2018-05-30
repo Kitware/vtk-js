@@ -13,6 +13,18 @@ const { WidgetState, CropWidgetEvents } = Constants;
 // vtkImageCroppingRegionsWidget methods
 // ----------------------------------------------------------------------------
 
+function arrayEquals(a, b) {
+  if (a.length === b.length) {
+    for (let i = 0; i < a.length; ++i) {
+      if (a[i] !== b[i]) {
+        return false;
+      }
+    }
+    return true;
+  }
+  return false;
+}
+
 function vtkImageCroppingRegionsWidget(publicAPI, model) {
   // Set our className
   model.classHierarchy.push('vtkImageCroppingRegionsWidget');
@@ -36,8 +48,13 @@ function vtkImageCroppingRegionsWidget(publicAPI, model) {
   };
 
   publicAPI.updateWidgetState = (state) => {
-    model.widgetState = Object.assign({}, model.widgetState, state);
+    const oldState = model.widgetState;
+    model.widgetState = Object.assign({}, oldState, state);
     publicAPI.updateRepresentation();
+
+    if (!arrayEquals(oldState.planes, model.widgetState.planes)) {
+      publicAPI.invokeCroppingPlanesChanged(model.widgetState.planes);
+    }
     publicAPI.modified();
   };
 
@@ -49,6 +66,50 @@ function vtkImageCroppingRegionsWidget(publicAPI, model) {
         publicAPI.updateRepresentation();
       }
     }
+  };
+
+  publicAPI.planesToHandles = (planes) => {
+    if (!model.volumeMapper || !model.volumeMapper.getInputData()) {
+      return null;
+    }
+
+    const indexToWorld = model.volumeMapper.getInputData().getIndexToWorld();
+
+    return Array(6)
+      .fill([0, 0, 0])
+      .map((_, i) => {
+        const center = [0, 0, 0].map((c, j) => {
+          if (j === Math.floor(i / 2)) {
+            return planes[i];
+          }
+          return (planes[j * 2] + planes[j * 2 + 1]) / 2;
+        });
+
+        // transform points
+        const vin = vec3.fromValues(...center);
+        const vout = vec3.create();
+        vec3.transformMat4(vout, vin, indexToWorld);
+
+        return [vout[0], vout[1], vout[2]];
+      });
+  };
+
+  publicAPI.handlesToPlanes = (handles) => {
+    if (!model.volumeMapper || !model.volumeMapper.getInputData()) {
+      return null;
+    }
+
+    const worldToIndex = model.volumeMapper.getInputData().getWorldToIndex();
+
+    return handles.map((handle, i) => {
+      const vin = vec3.fromValues(...handle);
+      const vout = vec3.create();
+      vec3.transformMat4(vout, vin, worldToIndex);
+
+      // handle in index space
+      const indexHandle = [vout[0], vout[1], vout[2]];
+      return indexHandle[Math.floor(i / 2)];
+    });
   };
 
   publicAPI.resetWidgetState = () => {
@@ -63,23 +124,7 @@ function vtkImageCroppingRegionsWidget(publicAPI, model) {
 
     const data = model.volumeMapper.getInputData();
     const planes = data.getExtent();
-    const transform = data.getIndexToWorld();
-
-    const handles = model.widgetState.handles.map((h, i) => {
-      const center = [0, 0, 0].map((c, j) => {
-        if (j === Math.floor(i / 2)) {
-          return planes[i];
-        }
-        return (planes[j * 2] + planes[j * 2 + 1]) / 2;
-      });
-
-      // transform points
-      const vin = vec3.fromValues(...center);
-      const vout = vec3.create();
-      vec3.transformMat4(vout, vin, transform);
-
-      return [vout[0], vout[1], vout[2]];
-    });
+    const handles = publicAPI.planesToHandles(planes);
 
     publicAPI.updateWidgetState({
       handles,
@@ -235,7 +280,12 @@ function vtkImageCroppingRegionsWidget(publicAPI, model) {
       const newHandles = handles.slice();
       newHandles[activeHandleIndex] = newPos;
 
+      // perf enhancement: only transform newPos back to index space,
+      // since only one plane changed.
+      const newPlanes = publicAPI.handlesToPlanes(newHandles);
+
       publicAPI.updateWidgetState({
+        planes: newPlanes,
         handles: newHandles,
       });
     }

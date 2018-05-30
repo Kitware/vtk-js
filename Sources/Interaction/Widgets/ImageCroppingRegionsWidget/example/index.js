@@ -84,8 +84,8 @@ const widget = vtkImageCroppingRegionsWidget.newInstance();
 widget.setInteractor(renderWindow.getInteractor());
 
 // Demonstrate cropping planes event update
-widget.onCroppingPlanesPositionChanged(() => {
-  console.log('planes changed:', widget.getWidgetRep().getPlanePositions());
+widget.onCroppingPlanesChanged((planes) => {
+  console.log('planes changed:', planes);
 });
 
 // called when the volume is loaded
