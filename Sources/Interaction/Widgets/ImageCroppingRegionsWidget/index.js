@@ -209,8 +209,8 @@ function vtkImageCroppingRegionsWidget(publicAPI, model) {
       const tF = clipRange[0] - rayLength;
       const tB = clipRange[1] - rayLength;
       for (let i = 0; i < 3; i++) {
-        p1World[i] = planePoint[i] + tF * dop[i];
-        p2World[i] = planePoint[i] + tB * dop[i];
+        p1World[i] = worldCoords[i] + tF * dop[i];
+        p2World[i] = worldCoords[i] + tB * dop[i];
       }
     } else {
       const tF = clipRange[0] / rayLength;
