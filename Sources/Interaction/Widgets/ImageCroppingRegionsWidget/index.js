@@ -163,10 +163,6 @@ function vtkImageCroppingRegionsWidget(publicAPI, model) {
     }
   };
 
-  publicAPI.setSlice = (slice) => {};
-
-  publicAPI.setSliceOrientation = (sliceOrientation) => {};
-
   // Given display coordinates and a plane, returns the
   // point on the plane that corresponds to display coordinates.
   publicAPI.displayToPlane = (displayCoords, planePoint, planeNormal) => {
@@ -327,8 +323,6 @@ function vtkImageCroppingRegionsWidget(publicAPI, model) {
 
 const DEFAULT_VALUES = {
   // volumeMapper: null,
-  slice: 0,
-  sliceOrientation: 2, // XY
   handleSize: 3,
 };
 
@@ -346,7 +340,7 @@ export function extend(publicAPI, model, initialValues = {}) {
   );
 
   macro.setGet(publicAPI, model, ['handleSize']);
-  macro.get(publicAPI, model, ['volumeMapper', 'slice', 'sliceOrientation']);
+  macro.get(publicAPI, model, ['volumeMapper']);
 
   // Object methods
   vtkImageCroppingRegionsWidget(publicAPI, model);

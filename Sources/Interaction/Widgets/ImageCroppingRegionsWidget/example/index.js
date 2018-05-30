@@ -95,18 +95,8 @@ function setupWidget(volumeMapper, imageMapper) {
   widget.setEnabled(true);
 
   // getWidgetRep() returns a widget AFTER setEnabled(true).
-
   // Demonstrate widget representation APIs
-  widget.getWidgetRep().setOpacity(0.8);
   widget.getWidgetRep().setEdgeColor(0.0, 0.0, 1.0);
-
-  imageMapper.onModified(() => {
-    // update slice and slice orientation
-    const sliceMode = imageMapper.getSlicingMode();
-    const slice = imageMapper.getSlice();
-    widget.setSlice(slice);
-    widget.setSliceOrientation(sliceMode);
-  });
 
   renderWindow.render();
 }
