@@ -9,7 +9,12 @@ import { vec3 } from 'gl-matrix';
 const { vtkErrorMacro, VOID, EVENT_ABORT } = macro;
 const { WidgetState, CropWidgetEvents } = Constants;
 
-// Determines the ordering of edge handles for some axis
+// first 6 are face handles,
+// next 12 are edge handles,
+// last 8 are corner handles.
+const TOTAL_NUM_HANDLES = 26;
+
+// Determines the ordering of edge handles for some fixed axis
 const EDGE_ORDER = [[0, 0], [0, 1], [1, 0], [1, 1]];
 
 // ----------------------------------------------------------------------------
@@ -36,11 +41,9 @@ function vtkImageCroppingRegionsWidget(publicAPI, model) {
     activeHandleIndex: -1,
     // index space: xmin, xmax, ymin, ymax, zmin, zmax
     planes: Array(6).fill(0),
-    // coords are in world space
-    // first 6 are face handles, last 12 are edge handles
-    handles: Array(18)
-      .fill([])
-      .map(() => [0, 0, 0]),
+    // coords are in world space.
+    // a null handle means it is disabled
+    handles: Array(TOTAL_NUM_HANDLES).fill(null),
     controlState: WidgetState.IDLE,
   };
 
@@ -80,58 +83,69 @@ function vtkImageCroppingRegionsWidget(publicAPI, model) {
 
     const indexToWorld = model.volumeMapper.getInputData().getIndexToWorld();
 
+    const handles = Array(TOTAL_NUM_HANDLES).fill(null);
+
     // construct face handles
-    const faceHandles = Array(6)
-      .fill([0, 0, 0])
-      .map((_, i) => {
-        const center = [0, 0, 0].map((c, j) => {
-          if (j === Math.floor(i / 2)) {
-            return planes[i];
-          }
-          return (planes[j * 2] + planes[j * 2 + 1]) / 2;
-        });
-
-        // transform points
-        const vin = vec3.fromValues(...center);
-        const vout = vec3.create();
-        vec3.transformMat4(vout, vin, indexToWorld);
-
-        return [vout[0], vout[1], vout[2]];
+    for (let i = 0; i < 6; ++i) {
+      const center = [0, 0, 0].map((c, j) => {
+        if (j === Math.floor(i / 2)) {
+          return planes[i];
+        }
+        return (planes[j * 2] + planes[j * 2 + 1]) / 2;
       });
+
+      handles[i] = [center[0], center[1], center[2]];
+    }
 
     // construct edge handles
-    const edgeHandles = Array(12)
-      .fill([0, 0, 0])
-      .map((_, i) => {
-        // the axis around which edge handles will be placed
-        const fixedAxis = Math.floor(i / 4);
-        const edgeSpec = EDGE_ORDER[i % 4].slice();
-        const center = [];
+    for (let i = 0; i < 12; ++i) {
+      // the axis around which edge handles will be placed
+      const fixedAxis = Math.floor(i / 4);
+      const edgeSpec = EDGE_ORDER[i % 4].slice();
+      const center = [];
 
-        for (let j = 0; j < 3; ++j) {
-          if (j !== fixedAxis) {
-            // edgeSpec[j] determines whether to pick a min or max cropping
-            // plane for edge selection.
-            center.push(planes[j * 2 + edgeSpec.shift()]);
-          }
+      for (let j = 0; j < 3; ++j) {
+        if (j !== fixedAxis) {
+          // edgeSpec[j] determines whether to pick a min or max cropping
+          // plane for edge selection.
+          center.push(planes[j * 2 + edgeSpec.shift()]);
         }
+      }
 
-        // set fixed axis coordinate
-        center.splice(
-          fixedAxis,
-          0,
-          (planes[fixedAxis * 2] + planes[fixedAxis * 2 + 1]) / 2
-        );
+      // set fixed axis coordinate
+      center.splice(
+        fixedAxis,
+        0,
+        (planes[fixedAxis * 2] + planes[fixedAxis * 2 + 1]) / 2
+      );
 
+      handles[i + 6] = [center[0], center[1], center[2]];
+    }
+
+    // construct corner handles
+    for (let i = 0; i < 8; ++i) {
+      /* eslint-disable no-bitwise */
+      handles[i + 18] = [
+        planes[0 + ((i >> 2) & 0x1)],
+        planes[2 + ((i >> 1) & 0x1)],
+        planes[4 + ((i >> 0) & 0x1)],
+      ];
+      /* eslint-enable no-bitwise */
+    }
+
+    // transform handles from index to world space
+    for (let i = 0; i < handles.length; ++i) {
+      if (handles[i]) {
         // transform points
-        const vin = vec3.fromValues(...center);
+        const vin = vec3.fromValues(...handles[i]);
         const vout = vec3.create();
         vec3.transformMat4(vout, vin, indexToWorld);
 
-        return [vout[0], vout[1], vout[2]];
-      });
+        handles[i] = [vout[0], vout[1], vout[2]];
+      }
+    }
 
-    return [].concat(faceHandles, edgeHandles);
+    return handles;
   };
 
   publicAPI.planesToBBoxCorners = (planes) => {
@@ -346,7 +360,7 @@ function vtkImageCroppingRegionsWidget(publicAPI, model) {
 
       // set correct plane value
       newPlanes[activeHandleIndex] = indexHandle[moveAxis];
-    } else {
+    } else if (activeHandleIndex < 18) {
       // edge handle, so constrain to plane
       const edgeHandleIndex = activeHandleIndex - 6;
       const fixedAxis = Math.floor(edgeHandleIndex / 4);
@@ -383,6 +397,28 @@ function vtkImageCroppingRegionsWidget(publicAPI, model) {
           modifiedPlanes.push(i * 2 + edgeSpec.shift());
         }
       }
+
+      // set correct plane value
+      modifiedPlanes.forEach((planeIndex) => {
+        // Math.floor(planeIndex / 2) is the corresponding changed
+        // coordinate (that dictates the plane position)
+        newPlanes[planeIndex] = indexHandle[Math.floor(planeIndex / 2)];
+      });
+    } else {
+      // corner handles, so no constraints
+      const cornerHandleIndex = activeHandleIndex - 18;
+
+      const indexHandle = [0, 0, 0];
+      model.volumeMapper.getInputData().worldToIndex(point, indexHandle);
+
+      // get the three planes that are being adjusted
+      /* eslint-disable no-bitwise */
+      const modifiedPlanes = [
+        0 + ((cornerHandleIndex >> 2) & 0x1),
+        2 + ((cornerHandleIndex >> 1) & 0x1),
+        4 + ((cornerHandleIndex >> 0) & 0x1),
+      ];
+      /* eslint-enable no-bitwise */
 
       // set correct plane value
       modifiedPlanes.forEach((planeIndex) => {

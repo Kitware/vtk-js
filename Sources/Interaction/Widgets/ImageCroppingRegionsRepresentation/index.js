@@ -23,6 +23,11 @@ const LINE_ARRAY = [
   2, 3, 7,
 ];
 
+// first 6 are face handles,
+// next 12 are edge handles,
+// last 8 are corner handles.
+const TOTAL_NUM_HANDLES = 26;
+
 // ----------------------------------------------------------------------------
 // vtkImageCroppingRegionsRepresentation methods
 // ----------------------------------------------------------------------------
@@ -50,8 +55,7 @@ function vtkImageCroppingRegionsRepresentation(publicAPI, model) {
   model.picker.setPickFromList(1);
   model.picker.initializePickList();
 
-  // order: xmin, xmax, ymin, ymax, zmin, zmax
-  model.handles = Array(18)
+  model.handles = Array(TOTAL_NUM_HANDLES)
     .fill(null)
     .map(() => {
       const source = vtkSphereSource.newInstance();
@@ -66,10 +70,6 @@ function vtkImageCroppingRegionsRepresentation(publicAPI, model) {
       return { source, mapper, actor };
     });
 
-  model.handlePositions = Array(18)
-    .fill([])
-    .map(() => [0, 0, 0]);
-
   model.outline = {
     polydata: vtkPolyData.newInstance(),
     mapper: vtkMapper.newInstance(),
@@ -83,8 +83,16 @@ function vtkImageCroppingRegionsRepresentation(publicAPI, model) {
 
   // methods
 
-  publicAPI.getActors = () =>
-    [model.outline.actor].concat(model.handles.map(({ actor }) => actor));
+  publicAPI.getActors = () => {
+    const actors = [model.outline.actor];
+    for (let i = 0; i < model.handlePositions.length; ++i) {
+      if (model.handlePositions[i]) {
+        actors.push(model.handles[i].actor);
+      }
+    }
+    return actors;
+  };
+
   publicAPI.getNestedProps = () => publicAPI.getActors();
 
   publicAPI.getEventIntersection = (callData) => {
@@ -152,14 +160,16 @@ function vtkImageCroppingRegionsRepresentation(publicAPI, model) {
     const outlinePoints = model.outline.polydata.getPoints().getData();
 
     for (let i = 0; i < model.handles.length; ++i) {
-      const { actor, source } = model.handles[i];
-      source.setRadius(5);
-      source.setCenter(model.handlePositions[i]);
+      if (model.handlePositions[i]) {
+        const { actor, source } = model.handles[i];
+        source.setRadius(5);
+        source.setCenter(model.handlePositions[i]);
 
-      if (model.activeHandleIndex === i) {
-        actor.getProperty().setColor(0, 1, 0);
-      } else {
-        actor.getProperty().setColor(1, 1, 1);
+        if (model.activeHandleIndex === i) {
+          actor.getProperty().setColor(0, 1, 0);
+        } else {
+          actor.getProperty().setColor(1, 1, 1);
+        }
       }
     }
 
@@ -200,7 +210,7 @@ function vtkImageCroppingRegionsRepresentation(publicAPI, model) {
 
 const DEFAULT_VALUES = {
   activeHandleIndex: -1,
-  handlePositions: Array(6).fill([0, 0, 0]),
+  handlePositions: Array(TOTAL_NUM_HANDLES).fill(null),
   bboxCorners: Array(8).fill([0, 0, 0]),
   edgeColor: [1.0, 1.0, 1.0],
 };
@@ -215,7 +225,7 @@ export function extend(publicAPI, model, initialValues = {}) {
 
   macro.setGet(publicAPI, model, ['activeHandleIndex']);
   macro.setGetArray(publicAPI, model, ['edgeColor'], 3);
-  macro.setGetArray(publicAPI, model, ['handlePositions'], 18);
+  macro.setGetArray(publicAPI, model, ['handlePositions'], TOTAL_NUM_HANDLES);
   macro.setGetArray(publicAPI, model, ['bboxCorners'], 8);
 
   // Object methods
