@@ -37,6 +37,9 @@ function vtkImageCroppingRegionsWidget(publicAPI, model) {
   // Set our className
   model.classHierarchy.push('vtkImageCroppingRegionsWidget');
 
+  // camera subscription
+  let cameraSub = null;
+
   model.widgetState = {
     activeHandleIndex: -1,
     // index space: xmin, xmax, ymin, ymax, zmin, zmax
@@ -199,8 +202,18 @@ function vtkImageCroppingRegionsWidget(publicAPI, model) {
   };
 
   publicAPI.setEnabled = macro.chain(publicAPI.setEnabled, (enable) => {
+    if (cameraSub) {
+      cameraSub.unsubscribe();
+    }
+
     if (enable) {
       publicAPI.resetWidgetState();
+
+      const camera = publicAPI
+        .getInteractor()
+        .getCurrentRenderer()
+        .getActiveCamera();
+      cameraSub = camera.onModified(publicAPI.updateRepresentation);
     }
   });
 
@@ -231,22 +244,75 @@ function vtkImageCroppingRegionsWidget(publicAPI, model) {
     }
   };
 
+  publicAPI.setHandleSize = (size) => {
+    if (model.handleSize !== size) {
+      model.handleSize = size;
+      publicAPI.updateRepresentation();
+    }
+  };
+
   publicAPI.updateRepresentation = () => {
     if (model.widgetRep) {
       const bounds = model.volumeMapper.getBounds();
       model.widgetRep.placeWidget(...bounds);
 
       const { activeHandleIndex, handles, planes } = model.widgetState;
+
       const bboxCorners = publicAPI.planesToBBoxCorners(planes);
+      const handleSizes = handles.map((handle) => {
+        if (!handle) {
+          return model.handleSize;
+        }
+        return publicAPI.adjustHandleSize(handle, model.handleSize);
+      });
 
       model.widgetRep.set({
         activeHandleIndex,
         handlePositions: handles,
         bboxCorners,
+        handleSizes,
       });
 
       publicAPI.render();
     }
+  };
+
+  publicAPI.adjustHandleSize = (pos, size) => {
+    const interactor = publicAPI.getInteractor();
+    if (!interactor && !interactor.getCurrentRenderer()) {
+      return null;
+    }
+    const renderer = interactor.getCurrentRenderer();
+    if (!renderer.getActiveCamera()) {
+      return null;
+    }
+
+    const worldCoords = publicAPI.computeWorldToDisplay(
+      renderer,
+      pos[0],
+      pos[1],
+      pos[2]
+    );
+
+    const lowerLeft = publicAPI.computeDisplayToWorld(
+      renderer,
+      worldCoords[0] - size / 2.0,
+      worldCoords[1] - size / 2.0,
+      worldCoords[2]
+    );
+
+    const upperRight = publicAPI.computeDisplayToWorld(
+      renderer,
+      worldCoords[0] + size / 2.0,
+      worldCoords[1] + size / 2.0,
+      worldCoords[2]
+    );
+
+    let radius = 0.0;
+    for (let i = 0; i < 3; i++) {
+      radius += (upperRight[i] - lowerLeft[i]) * (upperRight[i] - lowerLeft[i]);
+    }
+    return Math.sqrt(radius) / 2.0;
   };
 
   // Given display coordinates and a plane, returns the
@@ -470,10 +536,12 @@ function vtkImageCroppingRegionsWidget(publicAPI, model) {
   };
 
   publicAPI.endMoveAction = () => {
-    publicAPI.updateWidgetState({
-      activeHandleIndex: -1,
-      controlState: WidgetState.IDLE,
-    });
+    if (model.widgetState.activeHandleIndex > -1) {
+      publicAPI.updateWidgetState({
+        activeHandleIndex: -1,
+        controlState: WidgetState.IDLE,
+      });
+    }
   };
 }
 
@@ -483,7 +551,7 @@ function vtkImageCroppingRegionsWidget(publicAPI, model) {
 
 const DEFAULT_VALUES = {
   // volumeMapper: null,
-  handleSize: 3,
+  handleSize: 5,
   faceHandlesEnabled: false,
   edgeHandlesEnabled: false,
   cornerHandlesEnabled: true,
@@ -502,9 +570,9 @@ export function extend(publicAPI, model, initialValues = {}) {
     macro.event(publicAPI, model, eventName)
   );
 
-  macro.setGet(publicAPI, model, ['handleSize']);
   macro.get(publicAPI, model, [
     'volumeMapper',
+    'handleSize',
     'faceHandlesEnabled',
     'edgeHandlesEnabled',
     'cornerHandlesEnabled',

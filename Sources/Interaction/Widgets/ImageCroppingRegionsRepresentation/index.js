@@ -162,7 +162,7 @@ function vtkImageCroppingRegionsRepresentation(publicAPI, model) {
     for (let i = 0; i < model.handles.length; ++i) {
       if (model.handlePositions[i]) {
         const { actor, source } = model.handles[i];
-        source.setRadius(5);
+        source.setRadius(model.handleSizes[i]);
         source.setCenter(model.handlePositions[i]);
 
         if (model.activeHandleIndex === i) {
@@ -211,6 +211,7 @@ function vtkImageCroppingRegionsRepresentation(publicAPI, model) {
 const DEFAULT_VALUES = {
   activeHandleIndex: -1,
   handlePositions: Array(TOTAL_NUM_HANDLES).fill(null),
+  handleSizes: Array(TOTAL_NUM_HANDLES).fill(0),
   bboxCorners: Array(8).fill([0, 0, 0]),
   edgeColor: [1.0, 1.0, 1.0],
 };
@@ -226,6 +227,7 @@ export function extend(publicAPI, model, initialValues = {}) {
   macro.setGet(publicAPI, model, ['activeHandleIndex']);
   macro.setGetArray(publicAPI, model, ['edgeColor'], 3);
   macro.setGetArray(publicAPI, model, ['handlePositions'], TOTAL_NUM_HANDLES);
+  macro.setGetArray(publicAPI, model, ['handleSizes'], TOTAL_NUM_HANDLES);
   macro.setGetArray(publicAPI, model, ['bboxCorners'], 8);
 
   // Object methods
