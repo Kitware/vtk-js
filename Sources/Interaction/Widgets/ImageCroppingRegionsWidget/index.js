@@ -7,12 +7,7 @@ import Constants from 'vtk.js/Sources/Interaction/Widgets/ImageCroppingRegionsWi
 import { vec3 } from 'gl-matrix';
 
 const { vtkErrorMacro, VOID, EVENT_ABORT } = macro;
-const { WidgetState, CropWidgetEvents } = Constants;
-
-// first 6 are face handles,
-// next 12 are edge handles,
-// last 8 are corner handles.
-const TOTAL_NUM_HANDLES = 26;
+const { TOTAL_NUM_HANDLES, WidgetState, CropWidgetEvents } = Constants;
 
 // Determines the ordering of edge handles for some fixed axis
 const EDGE_ORDER = [[0, 0], [0, 1], [1, 0], [1, 1]];

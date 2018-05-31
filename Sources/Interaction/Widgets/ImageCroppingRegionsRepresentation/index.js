@@ -6,6 +6,9 @@ import vtkWidgetRepresentation from 'vtk.js/Sources/Interaction/Widgets/WidgetRe
 import vtkMapper from 'vtk.js/Sources/Rendering/Core/Mapper';
 import vtkPolyData from 'vtk.js/Sources/Common/DataModel/PolyData';
 import vtkSphereSource from 'vtk.js/Sources/Filters/Sources/SphereSource';
+import Constants from 'vtk.js/Sources/Interaction/Widgets/ImageCroppingRegionsWidget/Constants';
+
+const { TOTAL_NUM_HANDLES } = Constants;
 
 // prettier-ignore
 const LINE_ARRAY = [
@@ -22,11 +25,6 @@ const LINE_ARRAY = [
   2, 2, 6,
   2, 3, 7,
 ];
-
-// first 6 are face handles,
-// next 12 are edge handles,
-// last 8 are corner handles.
-const TOTAL_NUM_HANDLES = 26;
 
 // ----------------------------------------------------------------------------
 // vtkImageCroppingRegionsRepresentation methods
