@@ -85,52 +85,58 @@ function vtkImageCroppingRegionsWidget(publicAPI, model) {
 
     const handles = Array(TOTAL_NUM_HANDLES).fill(null);
 
-    // construct face handles
-    for (let i = 0; i < 6; ++i) {
-      const center = [0, 0, 0].map((c, j) => {
-        if (j === Math.floor(i / 2)) {
-          return planes[i];
-        }
-        return (planes[j * 2] + planes[j * 2 + 1]) / 2;
-      });
+    if (model.faceHandlesEnabled) {
+      // construct face handles
+      for (let i = 0; i < 6; ++i) {
+        const center = [0, 0, 0].map((c, j) => {
+          if (j === Math.floor(i / 2)) {
+            return planes[i];
+          }
+          return (planes[j * 2] + planes[j * 2 + 1]) / 2;
+        });
 
-      handles[i] = [center[0], center[1], center[2]];
-    }
-
-    // construct edge handles
-    for (let i = 0; i < 12; ++i) {
-      // the axis around which edge handles will be placed
-      const fixedAxis = Math.floor(i / 4);
-      const edgeSpec = EDGE_ORDER[i % 4].slice();
-      const center = [];
-
-      for (let j = 0; j < 3; ++j) {
-        if (j !== fixedAxis) {
-          // edgeSpec[j] determines whether to pick a min or max cropping
-          // plane for edge selection.
-          center.push(planes[j * 2 + edgeSpec.shift()]);
-        }
+        handles[i] = [center[0], center[1], center[2]];
       }
-
-      // set fixed axis coordinate
-      center.splice(
-        fixedAxis,
-        0,
-        (planes[fixedAxis * 2] + planes[fixedAxis * 2 + 1]) / 2
-      );
-
-      handles[i + 6] = [center[0], center[1], center[2]];
     }
 
-    // construct corner handles
-    for (let i = 0; i < 8; ++i) {
-      /* eslint-disable no-bitwise */
-      handles[i + 18] = [
-        planes[0 + ((i >> 2) & 0x1)],
-        planes[2 + ((i >> 1) & 0x1)],
-        planes[4 + ((i >> 0) & 0x1)],
-      ];
-      /* eslint-enable no-bitwise */
+    if (model.edgeHandlesEnabled) {
+      // construct edge handles
+      for (let i = 0; i < 12; ++i) {
+        // the axis around which edge handles will be placed
+        const fixedAxis = Math.floor(i / 4);
+        const edgeSpec = EDGE_ORDER[i % 4].slice();
+        const center = [];
+
+        for (let j = 0; j < 3; ++j) {
+          if (j !== fixedAxis) {
+            // edgeSpec[j] determines whether to pick a min or max cropping
+            // plane for edge selection.
+            center.push(planes[j * 2 + edgeSpec.shift()]);
+          }
+        }
+
+        // set fixed axis coordinate
+        center.splice(
+          fixedAxis,
+          0,
+          (planes[fixedAxis * 2] + planes[fixedAxis * 2 + 1]) / 2
+        );
+
+        handles[i + 6] = [center[0], center[1], center[2]];
+      }
+    }
+
+    if (model.cornerHandlesEnabled) {
+      // construct corner handles
+      for (let i = 0; i < 8; ++i) {
+        /* eslint-disable no-bitwise */
+        handles[i + 18] = [
+          planes[0 + ((i >> 2) & 0x1)],
+          planes[2 + ((i >> 1) & 0x1)],
+          planes[4 + ((i >> 0) & 0x1)],
+        ];
+        /* eslint-enable no-bitwise */
+      }
     }
 
     // transform handles from index to world space
@@ -197,6 +203,33 @@ function vtkImageCroppingRegionsWidget(publicAPI, model) {
       publicAPI.resetWidgetState();
     }
   });
+
+  publicAPI.setFaceHandlesEnabled = (enabled) => {
+    if (model.faceHandlesEnabled !== enabled) {
+      model.faceHandlesEnabled = enabled;
+      publicAPI.updateWidgetState({
+        handles: publicAPI.planesToHandles(model.widgetState.planes),
+      });
+    }
+  };
+
+  publicAPI.setEdgeHandlesEnabled = (enabled) => {
+    if (model.edgeHandlesEnabled !== enabled) {
+      model.edgeHandlesEnabled = enabled;
+      publicAPI.updateWidgetState({
+        handles: publicAPI.planesToHandles(model.widgetState.planes),
+      });
+    }
+  };
+
+  publicAPI.setCornerHandlesEnabled = (enabled) => {
+    if (model.cornerHandlesEnabled !== enabled) {
+      model.cornerHandlesEnabled = enabled;
+      publicAPI.updateWidgetState({
+        handles: publicAPI.planesToHandles(model.widgetState.planes),
+      });
+    }
+  };
 
   publicAPI.updateRepresentation = () => {
     if (model.widgetRep) {
@@ -451,6 +484,9 @@ function vtkImageCroppingRegionsWidget(publicAPI, model) {
 const DEFAULT_VALUES = {
   // volumeMapper: null,
   handleSize: 3,
+  faceHandlesEnabled: false,
+  edgeHandlesEnabled: false,
+  cornerHandlesEnabled: true,
 };
 
 // ----------------------------------------------------------------------------
@@ -467,7 +503,12 @@ export function extend(publicAPI, model, initialValues = {}) {
   );
 
   macro.setGet(publicAPI, model, ['handleSize']);
-  macro.get(publicAPI, model, ['volumeMapper']);
+  macro.get(publicAPI, model, [
+    'volumeMapper',
+    'faceHandlesEnabled',
+    'edgeHandlesEnabled',
+    'cornerHandlesEnabled',
+  ]);
 
   // Object methods
   vtkImageCroppingRegionsWidget(publicAPI, model);
