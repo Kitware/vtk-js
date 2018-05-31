@@ -9,6 +9,9 @@ import { vec3 } from 'gl-matrix';
 const { vtkErrorMacro, VOID, EVENT_ABORT } = macro;
 const { WidgetState, CropWidgetEvents } = Constants;
 
+// Determines the ordering of edge handles for some axis
+const EDGE_ORDER = [[0, 0], [0, 1], [1, 0], [1, 1]];
+
 // ----------------------------------------------------------------------------
 // vtkImageCroppingRegionsWidget methods
 // ----------------------------------------------------------------------------
@@ -33,8 +36,9 @@ function vtkImageCroppingRegionsWidget(publicAPI, model) {
     activeHandleIndex: -1,
     // index space: xmin, xmax, ymin, ymax, zmin, zmax
     planes: Array(6).fill(0),
-    // world space coords
-    handles: Array(6)
+    // coords are in world space
+    // first 6 are face handles, last 12 are edge handles
+    handles: Array(18)
       .fill([])
       .map(() => [0, 0, 0]),
     controlState: WidgetState.IDLE,
@@ -76,7 +80,8 @@ function vtkImageCroppingRegionsWidget(publicAPI, model) {
 
     const indexToWorld = model.volumeMapper.getInputData().getIndexToWorld();
 
-    return Array(6)
+    // construct face handles
+    const faceHandles = Array(6)
       .fill([0, 0, 0])
       .map((_, i) => {
         const center = [0, 0, 0].map((c, j) => {
@@ -93,6 +98,40 @@ function vtkImageCroppingRegionsWidget(publicAPI, model) {
 
         return [vout[0], vout[1], vout[2]];
       });
+
+    // construct edge handles
+    const edgeHandles = Array(12)
+      .fill([0, 0, 0])
+      .map((_, i) => {
+        // the axis around which edge handles will be placed
+        const fixedAxis = Math.floor(i / 4);
+        const edgeSpec = EDGE_ORDER[i % 4].slice();
+        const center = [];
+
+        for (let j = 0; j < 3; ++j) {
+          if (j !== fixedAxis) {
+            // edgeSpec[j] determines whether to pick a min or max cropping
+            // plane for edge selection.
+            center.push(planes[j * 2 + edgeSpec.shift()]);
+          }
+        }
+
+        // set fixed axis coordinate
+        center.splice(
+          fixedAxis,
+          0,
+          (planes[fixedAxis * 2] + planes[fixedAxis * 2 + 1]) / 2
+        );
+
+        // transform points
+        const vin = vec3.fromValues(...center);
+        const vout = vec3.create();
+        vec3.transformMat4(vout, vin, indexToWorld);
+
+        return [vout[0], vout[1], vout[2]];
+      });
+
+    return [].concat(faceHandles, edgeHandles);
   };
 
   publicAPI.planesToBBoxCorners = (planes) => {
@@ -272,8 +311,6 @@ function vtkImageCroppingRegionsWidget(publicAPI, model) {
       return VOID;
     }
 
-    // activeHandleIndex should be > -1 here
-    const moveAxis = Math.floor(activeHandleIndex / 2);
     const mouse = [callData.position.x, callData.position.y];
     const handlePos = handles[activeHandleIndex];
     const renderer = publicAPI.getInteractor().getCurrentRenderer();
@@ -281,7 +318,17 @@ function vtkImageCroppingRegionsWidget(publicAPI, model) {
     const dop = camera.getDirectionOfProjection();
 
     const point = publicAPI.displayToPlane(mouse, handlePos, dop);
-    if (point) {
+    if (!point) {
+      return EVENT_ABORT;
+    }
+
+    const newPlanes = planes.slice();
+
+    // activeHandleIndex should be > -1 here
+    if (activeHandleIndex < 6) {
+      // face handle, so constrain to axis
+      const moveAxis = Math.floor(activeHandleIndex / 2);
+
       // Constrain point to axis
       const orientation = model.volumeMapper.getInputData().getDirection();
       const offset = moveAxis * 3;
@@ -297,15 +344,59 @@ function vtkImageCroppingRegionsWidget(publicAPI, model) {
       const indexHandle = [0, 0, 0];
       model.volumeMapper.getInputData().worldToIndex(newPos, indexHandle);
 
-      const newPlanes = planes.slice();
       // set correct plane value
       newPlanes[activeHandleIndex] = indexHandle[moveAxis];
+    } else {
+      // edge handle, so constrain to plane
+      const edgeHandleIndex = activeHandleIndex - 6;
+      const fixedAxis = Math.floor(edgeHandleIndex / 4);
+      /**
+       * edgeHandleIndex: plane, plane
+       * 4: xmin, zmin
+       * 5: xmin, zmax
+       * 6: xmax, zmin
+       * 7: xmax, zmax
+       * 8: xmin, ymin
+       * 9: xmin, ymax
+       * 10: xmax, ymin
+       * 11: xmax, ymax
+       */
+      const orientation = model.volumeMapper.getInputData().getDirection();
+      const offset = fixedAxis * 3;
+      const constraintPlaneNormal = orientation.slice(offset, offset + 3);
 
-      publicAPI.updateWidgetState({
-        planes: newPlanes,
-        handles: publicAPI.planesToHandles(newPlanes),
+      const newPos = [0, 0, 0];
+      const relMoveVect = [0, 0, 0];
+      const projection = [0, 0, 0];
+      vtkMath.subtract(point, handlePos, relMoveVect);
+      vtkPlane.projectVector(relMoveVect, constraintPlaneNormal, projection);
+      vtkMath.add(handlePos, projection, newPos);
+
+      const indexHandle = [0, 0, 0];
+      model.volumeMapper.getInputData().worldToIndex(newPos, indexHandle);
+
+      // get the two planes that are being adjusted
+      const edgeSpec = EDGE_ORDER[edgeHandleIndex % 4].slice();
+      const modifiedPlanes = [];
+      for (let i = 0; i < 3; ++i) {
+        if (i !== fixedAxis) {
+          modifiedPlanes.push(i * 2 + edgeSpec.shift());
+        }
+      }
+
+      // set correct plane value
+      modifiedPlanes.forEach((planeIndex) => {
+        // Math.floor(planeIndex / 2) is the corresponding changed
+        // coordinate (that dictates the plane position)
+        newPlanes[planeIndex] = indexHandle[Math.floor(planeIndex / 2)];
       });
     }
+
+    publicAPI.updateWidgetState({
+      planes: newPlanes,
+      handles: publicAPI.planesToHandles(newPlanes),
+    });
+
     return EVENT_ABORT;
   };
 

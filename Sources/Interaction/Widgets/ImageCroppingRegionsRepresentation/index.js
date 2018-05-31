@@ -51,7 +51,7 @@ function vtkImageCroppingRegionsRepresentation(publicAPI, model) {
   model.picker.initializePickList();
 
   // order: xmin, xmax, ymin, ymax, zmin, zmax
-  model.handles = Array(6)
+  model.handles = Array(18)
     .fill(null)
     .map(() => {
       const source = vtkSphereSource.newInstance();
@@ -66,7 +66,7 @@ function vtkImageCroppingRegionsRepresentation(publicAPI, model) {
       return { source, mapper, actor };
     });
 
-  model.handlePositions = Array(6)
+  model.handlePositions = Array(18)
     .fill([])
     .map(() => [0, 0, 0]);
 
@@ -215,7 +215,7 @@ export function extend(publicAPI, model, initialValues = {}) {
 
   macro.setGet(publicAPI, model, ['activeHandleIndex']);
   macro.setGetArray(publicAPI, model, ['edgeColor'], 3);
-  macro.setGetArray(publicAPI, model, ['handlePositions'], 6);
+  macro.setGetArray(publicAPI, model, ['handlePositions'], 18);
   macro.setGetArray(publicAPI, model, ['bboxCorners'], 8);
 
   // Object methods
