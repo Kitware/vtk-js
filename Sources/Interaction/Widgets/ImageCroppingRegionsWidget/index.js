@@ -246,6 +246,8 @@ function vtkImageCroppingRegionsWidget(publicAPI, model) {
     }
   };
 
+  publicAPI.getCroppingPlanes = () => model.widgetState.planes.slice();
+
   publicAPI.updateRepresentation = () => {
     if (model.widgetRep) {
       const bounds = model.volumeMapper.getBounds();
