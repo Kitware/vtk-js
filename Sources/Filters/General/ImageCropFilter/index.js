@@ -1,0 +1,151 @@
+import macro from 'vtk.js/Sources/macro';
+import vtkImageData from 'vtk.js/Sources/Common/DataModel/ImageData';
+import vtkDataArray from 'vtk.js/Sources/Common/Core/DataArray';
+
+const { vtkErrorMacro } = macro;
+
+// ----------------------------------------------------------------------------
+// vtkImageCropFilter methods
+// ----------------------------------------------------------------------------
+
+function vtkImageCropFilter(publicAPI, model) {
+  // Set our className
+  model.classHierarchy.push('vtkImageCropFilter');
+
+  publicAPI.requestData = (inData, outData) => {
+    // implement requestData
+    const input = inData[0];
+
+    if (!input) {
+      vtkErrorMacro('Invalid or missing input');
+      return;
+    }
+
+    const scalars = input.getPointData().getScalars();
+
+    if (!scalars) {
+      vtkErrorMacro('No scalars from input');
+      return;
+    }
+
+    const extent = input.getExtent();
+    const cropped = extent.map((e, i) => {
+      if (i % 2 === 0) {
+        // min plane
+        return Math.max(e, Math.round(model.croppingPlanes[i]));
+      }
+      // max plane
+      return Math.min(e, Math.round(model.croppingPlanes[i]));
+    });
+
+    if (
+      cropped[0] === extent[0] &&
+      cropped[1] === extent[1] &&
+      cropped[2] === extent[2] &&
+      cropped[3] === extent[3] &&
+      cropped[4] === extent[4] &&
+      cropped[5] === extent[5]
+    ) {
+      outData[0] = input;
+      return;
+    }
+
+    // reorder if needed
+    for (let i = 0; i < 3; ++i) {
+      if (cropped[i * 2] > cropped[i * 2 + 1]) {
+        [cropped[i * 2], cropped[i * 2 + 1]] = [
+          cropped[i * 2 + 1],
+          cropped[i * 2],
+        ];
+      }
+    }
+
+    const numberOfComponents = scalars.getNumberOfComponents();
+    const croppedExtent = [
+      0,
+      cropped[1] - cropped[0],
+      0,
+      cropped[3] - cropped[2],
+      0,
+      cropped[5] - cropped[4],
+    ];
+    const byteSize =
+      (croppedExtent[1] + 1) *
+      (croppedExtent[3] + 1) *
+      (croppedExtent[5] + 1) *
+      numberOfComponents;
+    const scalarsData = scalars.getData();
+
+    const dims = input.getDimensions();
+    const jStride = dims[0];
+    const kStride = dims[0] * dims[1];
+
+    // crop image
+    const croppedArray = new scalarsData.constructor(byteSize);
+    let index = 0;
+    for (let k = cropped[4]; k <= cropped[5]; ++k) {
+      for (let j = cropped[2]; j <= cropped[3]; ++j) {
+        const begin = cropped[0] + j * jStride + k * kStride;
+        const end = begin - cropped[0] + cropped[1] + 1; // +1 b/c subarray end is exclusive
+        const slice = scalarsData.subarray(begin, end);
+        croppedArray.set(slice, index);
+        index += slice.length;
+      }
+    }
+
+    // set correct origin
+    const croppedOrigin = [cropped[0], cropped[2], cropped[4]];
+    input.indexToWorld(croppedOrigin, croppedOrigin);
+
+    const outImage = vtkImageData.newInstance({
+      extent: croppedExtent,
+      origin: croppedOrigin,
+      direction: input.getDirection(),
+      spacing: input.getSpacing(),
+    });
+
+    const croppedScalars = vtkDataArray.newInstance({
+      name: scalars.getName(),
+      numberOfComponents,
+      values: croppedArray,
+    });
+
+    outImage.getPointData().setScalars(croppedScalars);
+
+    outData[0] = outImage;
+  };
+}
+
+// ----------------------------------------------------------------------------
+// Object factory
+// ----------------------------------------------------------------------------
+
+const DEFAULT_VALUES = {
+  croppingPlanes: Array(6).fill(0),
+};
+
+// ----------------------------------------------------------------------------
+
+export function extend(publicAPI, model, initialValues = {}) {
+  Object.assign(model, DEFAULT_VALUES, initialValues);
+
+  // Make this a VTK object
+  macro.obj(publicAPI, model);
+
+  // Also make it an algorithm with one input and one output
+  macro.algo(publicAPI, model, 1, 1);
+
+  // no orientation support yet
+  macro.setGetArray(publicAPI, model, ['croppingPlanes'], 6);
+
+  // Object specific methods
+  vtkImageCropFilter(publicAPI, model);
+}
+
+// ----------------------------------------------------------------------------
+
+export const newInstance = macro.newInstance(extend, 'vtkImageCropFilter');
+
+// ----------------------------------------------------------------------------
+
+export default { newInstance, extend };
