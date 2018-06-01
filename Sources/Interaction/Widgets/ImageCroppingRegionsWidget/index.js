@@ -4,7 +4,7 @@ import vtkPlane from 'vtk.js/Sources/Common/DataModel/Plane';
 import vtkAbstractWidget from 'vtk.js/Sources/Interaction/Widgets/AbstractWidget';
 import vtkImageCroppingRegionsRepresentation from 'vtk.js/Sources/Interaction/Widgets/ImageCroppingRegionsRepresentation';
 import Constants from 'vtk.js/Sources/Interaction/Widgets/ImageCroppingRegionsWidget/Constants';
-import { vec3 } from 'gl-matrix';
+import { vec3, mat4 } from 'gl-matrix';
 
 const { vtkErrorMacro, VOID, EVENT_ABORT } = macro;
 const { TOTAL_NUM_HANDLES, WidgetState, CropWidgetEvents } = Constants;
@@ -35,6 +35,9 @@ function vtkImageCroppingRegionsWidget(publicAPI, model) {
   // camera subscription
   let cameraSub = null;
 
+  model.indexToWorld = mat4.create();
+  model.worldToIndex = mat4.create();
+
   model.widgetState = {
     activeHandleIndex: -1,
     // index space: xmin, xmax, ymin, ymax, zmin, zmax
@@ -44,6 +47,20 @@ function vtkImageCroppingRegionsWidget(publicAPI, model) {
     handles: Array(TOTAL_NUM_HANDLES).fill(null),
     controlState: WidgetState.IDLE,
   };
+
+  function worldToIndex(ain) {
+    const vin = vec3.fromValues(ain[0], ain[1], ain[2]);
+    const vout = vec3.create();
+    vec3.transformMat4(vout, vin, model.worldToIndex);
+    return [vout[0], vout[1], vout[2]];
+  }
+
+  function indexToWorld(ain) {
+    const vin = vec3.fromValues(ain[0], ain[1], ain[2]);
+    const vout = vec3.create();
+    vec3.transformMat4(vout, vin, model.indexToWorld);
+    return [vout[0], vout[1], vout[2]];
+  }
 
   // Overriden method
   publicAPI.createDefaultRepresentation = () => {
@@ -78,8 +95,6 @@ function vtkImageCroppingRegionsWidget(publicAPI, model) {
     if (!model.volumeMapper || !model.volumeMapper.getInputData()) {
       return null;
     }
-
-    const indexToWorld = model.volumeMapper.getInputData().getIndexToWorld();
 
     const handles = Array(TOTAL_NUM_HANDLES).fill(null);
 
@@ -140,12 +155,7 @@ function vtkImageCroppingRegionsWidget(publicAPI, model) {
     // transform handles from index to world space
     for (let i = 0; i < handles.length; ++i) {
       if (handles[i]) {
-        // transform points
-        const vin = vec3.fromValues(...handles[i]);
-        const vout = vec3.create();
-        vec3.transformMat4(vout, vin, indexToWorld);
-
-        handles[i] = [vout[0], vout[1], vout[2]];
+        handles[i] = indexToWorld(handles[i]);
       }
     }
 
@@ -157,7 +167,6 @@ function vtkImageCroppingRegionsWidget(publicAPI, model) {
       return null;
     }
 
-    const indexToWorld = model.volumeMapper.getInputData().getIndexToWorld();
     return [
       [planes[0], planes[2], planes[4]],
       [planes[0], planes[2], planes[5]],
@@ -167,13 +176,7 @@ function vtkImageCroppingRegionsWidget(publicAPI, model) {
       [planes[1], planes[2], planes[5]],
       [planes[1], planes[3], planes[4]],
       [planes[1], planes[3], planes[5]],
-    ].map((coord) => {
-      const vin = vec3.fromValues(...coord);
-      const vout = vec3.create();
-      vec3.transformMat4(vout, vin, indexToWorld);
-
-      return [vout[0], vout[1], vout[2]];
-    });
+    ].map((coord) => indexToWorld(coord));
   };
 
   publicAPI.resetWidgetState = () => {
@@ -187,6 +190,11 @@ function vtkImageCroppingRegionsWidget(publicAPI, model) {
     }
 
     const data = model.volumeMapper.getInputData();
+
+    // cache transforms
+    model.indexToWorld = data.getIndexToWorld();
+    model.worldToIndex = data.getWorldToIndex();
+
     const planes = data.getExtent();
     const handles = publicAPI.planesToHandles(planes);
 
@@ -451,8 +459,7 @@ function vtkImageCroppingRegionsWidget(publicAPI, model) {
       vtkMath.projectVector(relMoveVect, constraintAxis, projection);
       vtkMath.add(handlePos, projection, newPos);
 
-      const indexHandle = [0, 0, 0];
-      model.volumeMapper.getInputData().worldToIndex(newPos, indexHandle);
+      const indexHandle = worldToIndex(newPos);
 
       // set correct plane value
       newPlanes[activeHandleIndex] = indexHandle[moveAxis];
@@ -482,8 +489,7 @@ function vtkImageCroppingRegionsWidget(publicAPI, model) {
       vtkPlane.projectVector(relMoveVect, constraintPlaneNormal, projection);
       vtkMath.add(handlePos, projection, newPos);
 
-      const indexHandle = [0, 0, 0];
-      model.volumeMapper.getInputData().worldToIndex(newPos, indexHandle);
+      const indexHandle = worldToIndex(newPos);
 
       // get the two planes that are being adjusted
       const edgeSpec = EDGE_ORDER[edgeHandleIndex % 4].slice();
@@ -504,8 +510,7 @@ function vtkImageCroppingRegionsWidget(publicAPI, model) {
       // corner handles, so no constraints
       const cornerHandleIndex = activeHandleIndex - 18;
 
-      const indexHandle = [0, 0, 0];
-      model.volumeMapper.getInputData().worldToIndex(point, indexHandle);
+      const indexHandle = worldToIndex(point);
 
       // get the three planes that are being adjusted
       /* eslint-disable no-bitwise */
