@@ -24,11 +24,18 @@ function vtkMoleculeToRepresentation(publicAPI, model) {
   const bondPositionData = [];
   const bondScaleData = [];
   const bondOrientationData = [];
+  const bondColorData = [];
 
   // Set our className
   model.classHierarchy.push('vtkMoleculeToRepresentation');
 
-  function addBond(position, orientation, length, radius = model.bondRadius) {
+  function addBond(
+    position,
+    orientation,
+    length,
+    color = [255, 255, 255],
+    radius = model.bondRadius
+  ) {
     bondScaleData.push(length);
     bondScaleData.push(radius);
 
@@ -39,6 +46,10 @@ function vtkMoleculeToRepresentation(publicAPI, model) {
     bondPositionData.push(position[0]);
     bondPositionData.push(position[1]);
     bondPositionData.push(position[2]);
+
+    for (let i = 0; i < color.length; ++i) {
+      bondColorData.push(color[i]);
+    }
   }
 
   publicAPI.requestData = (inData, outData) => {
@@ -128,12 +139,12 @@ function vtkMoleculeToRepresentation(publicAPI, model) {
       pointsData.push(pointsArray[ptsIdx + 2]);
 
       // radius
-      if (radiusArray) {
+      if (radiusArray.length > 0) {
         scaleData.push(radiusArray[i] * model.atomicRadiusScaleFactor);
       }
 
       // colors
-      if (colorArray) {
+      if (colorArray.length > 0) {
         ptsIdx = i * 3;
         colorData.push(colorArray[ptsIdx] * 255);
         colorData.push(colorArray[ptsIdx + 1] * 255);
@@ -277,23 +288,85 @@ function vtkMoleculeToRepresentation(publicAPI, model) {
         }
 
         offset *= (-1) ** (k % 2);
-        const bondPos = [
-          pointsArray[jPtsIdx] -
-            (offsetJ - offsetI) * vectUnitJI[0] / 2.0 -
-            diff[0] / 2.0 +
-            offset * vectUnitJIperp[0],
-          pointsArray[jPtsIdx + 1] -
-            (offsetJ - offsetI) * vectUnitJI[1] / 2.0 -
-            diff[1] / 2.0 +
-            offset * vectUnitJIperp[1],
-          pointsArray[jPtsIdx + 2] -
-            (offsetJ - offsetI) * vectUnitJI[2] / 2.0 -
-            diff[2] / 2.0 +
-            offset * vectUnitJIperp[2],
-        ];
-        const bondLenght = Math.sqrt(diffsq) - offsetJ - offsetI;
+        /*
+        If atoms have a color associated, and if the atoms involved in the bond
+        are different species, then each bond will be represented by
+        two sticks, so that they can be colored with the same color as the atoms
+        involved in the bond.
+        */
+        let bondPos;
 
-        addBond(bondPos, vectUnitJI, bondLenght);
+        if (
+          atomicNumber &&
+          atomicNumber[i] !== atomicNumber[j] &&
+          colorArray.length > 0
+        ) {
+          const bondLength = (Math.sqrt(diffsq) - offsetJ - offsetI) / 2.0;
+
+          bondPos = [
+            pointsArray[jPtsIdx] -
+              (offsetJ + bondLength / 2.0) * vectUnitJI[0] / 1.0 +
+              offset * vectUnitJIperp[0],
+            pointsArray[jPtsIdx + 1] -
+              (offsetJ + bondLength / 2.0) * vectUnitJI[1] / 1.0 +
+              offset * vectUnitJIperp[1],
+            pointsArray[jPtsIdx + 2] -
+              (offsetJ + bondLength / 2.0) * vectUnitJI[2] / 1.0 +
+              offset * vectUnitJIperp[2],
+          ];
+
+          addBond(
+            bondPos,
+            vectUnitJI,
+            bondLength,
+            colorData.slice(jPtsIdx, jPtsIdx + 3)
+          );
+
+          bondPos = [
+            pointsArray[iPtsIdx] +
+              (offsetI + bondLength / 2.0) * vectUnitJI[0] / 1.0 +
+              offset * vectUnitJIperp[0],
+            pointsArray[iPtsIdx + 1] +
+              (offsetI + bondLength / 2.0) * vectUnitJI[1] / 1.0 +
+              offset * vectUnitJIperp[1],
+            pointsArray[iPtsIdx + 2] +
+              (offsetI + bondLength / 2.0) * vectUnitJI[2] / 1.0 +
+              offset * vectUnitJIperp[2],
+          ];
+          addBond(
+            bondPos,
+            vectUnitJI,
+            bondLength,
+            colorData.slice(iPtsIdx, iPtsIdx + 3)
+          );
+        } else {
+          const bondLength = Math.sqrt(diffsq) - offsetJ - offsetI;
+
+          bondPos = [
+            pointsArray[jPtsIdx] -
+              (offsetJ - offsetI) * vectUnitJI[0] / 2.0 -
+              diff[0] / 2.0 +
+              offset * vectUnitJIperp[0],
+            pointsArray[jPtsIdx + 1] -
+              (offsetJ - offsetI) * vectUnitJI[1] / 2.0 -
+              diff[1] / 2.0 +
+              offset * vectUnitJIperp[1],
+            pointsArray[jPtsIdx + 2] -
+              (offsetJ - offsetI) * vectUnitJI[2] / 2.0 -
+              diff[2] / 2.0 +
+              offset * vectUnitJIperp[2],
+          ];
+          if (colorArray.length > 0) {
+            addBond(
+              bondPos,
+              vectUnitJI,
+              bondLength,
+              colorData.slice(iPtsIdx, iPtsIdx + 3)
+            );
+          } else {
+            addBond(bondPos, vectUnitJI, bondLength);
+          }
+        }
       }
     }
 
@@ -308,7 +381,7 @@ function vtkMoleculeToRepresentation(publicAPI, model) {
       SphereData.getPointData().addArray(scales);
     }
 
-    if (colorArray) {
+    if (colorArray.length > 0) {
       const colors = vtkDataArray.newInstance({
         numberOfComponents: 3,
         values: Uint8Array.from(colorData),
@@ -332,6 +405,15 @@ function vtkMoleculeToRepresentation(publicAPI, model) {
       name: 'orientation',
     });
     StickData.getPointData().addArray(orientation);
+
+    if (colorArray.length > 0) {
+      const bondColors = vtkDataArray.newInstance({
+        numberOfComponents: 3,
+        values: Uint8Array.from(bondColorData),
+        name: 'colors',
+      });
+      StickData.getPointData().setScalars(bondColors);
+    }
 
     // Update output
     outData[0] = SphereData;
