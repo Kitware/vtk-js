@@ -417,6 +417,10 @@ function vtkCamera(publicAPI, model) {
     // invert to get hmd -> world
     mat4.invert(viewMatrix, viewMatrix);
 
+    publicAPI.computeViewParametersFromViewMatrix();
+  };
+
+  publicAPI.computeViewParametersFromViewMatrix = () => {
     // then extract the params position, orientation
     // push 0,0,0 through to get a translation
     vec3.transformMat4(tmpvec1, origin, viewMatrix);
@@ -436,12 +440,26 @@ function vtkCamera(publicAPI, model) {
     publicAPI.setDistance(oldDist);
   };
 
+  publicAPI.setViewMatrix = (mat) => {
+    model.viewMatrix = mat;
+    if (model.viewMatrix) {
+      mat4.copy(viewMatrix, model.viewMatrix);
+      publicAPI.computeViewParametersFromViewMatrix();
+    }
+  };
+
   publicAPI.getViewMatrix = () => {
+    const result = mat4.create();
+    if (model.viewMatrix) {
+      mat4.copy(result, model.viewMatrix);
+      mat4.transpose(result, result);
+      return result;
+    }
+
     const eye = model.position;
     const at = model.focalPoint;
     const up = model.viewUp;
 
-    const result = mat4.create();
     mat4.lookAt(
       viewMatrix,
       vec3.fromValues(eye[0], eye[1], eye[2]), // eye
@@ -720,6 +738,7 @@ export const DEFAULT_VALUES = {
   freezeFocalPoint: false,
   useScissor: false,
   projectionMatrix: null,
+  viewMatrix: null,
 
   // used for world to physical transformations
   physicalTranslation: [0, 0, 0],
