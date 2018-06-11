@@ -1,3 +1,5 @@
+import macro from 'vtk.js/Sources/macro';
+
 export default function addViewHandlingAPI(publicAPI, model) {
   publicAPI.create3DView = (options) =>
     publicAPI.createProxy('Views', 'View3D', options);
@@ -28,10 +30,36 @@ export default function addViewHandlingAPI(publicAPI, model) {
   // --------------------------------------------------------------------------
 
   publicAPI.setAnimationOnAllViews = (enable = false) => {
+    const allViews = publicAPI
+      .getViews()
+      .filter((v) => !enable || v.getContainer());
+    for (let i = 0; i < allViews.length; i++) {
+      allViews[i].setAnimation(enable, publicAPI);
+    }
+  };
+
+  // --------------------------------------------------------------------------
+
+  function clearAnimations() {
+    model.animating = false;
     const allViews = publicAPI.getViews();
     for (let i = 0; i < allViews.length; i++) {
-      allViews[i].setAnimation(enable);
+      allViews[i].setAnimation(false, publicAPI);
     }
+  }
+
+  // --------------------------------------------------------------------------
+
+  publicAPI.autoAnimateViews = (debouceTimout = 250) => {
+    if (!model.animating) {
+      model.animating = true;
+      const allViews = publicAPI.getViews().filter((v) => v.getContainer());
+      for (let i = 0; i < allViews.length; i++) {
+        allViews[i].setAnimation(true, publicAPI);
+      }
+      model.clearAnimations = macro.debounce(clearAnimations, debouceTimout);
+    }
+    model.clearAnimations();
   };
 
   // --------------------------------------------------------------------------
