@@ -18,6 +18,7 @@ export function extend(publicAPI, model, initialValues = {}) {
       collapseState: {},
       lookupTables: {},
       piecewiseFunctions: {},
+      animating: false,
     },
     initialValues
   );
