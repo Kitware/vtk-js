@@ -150,8 +150,7 @@ export default function addRegistrationAPI(publicAPI, model) {
     registerProxy(proxy);
 
     if (definitionOptions.activateOnCreate) {
-      // Activate the proxy after the current execution path
-      setImmediate(proxy.activate);
+      proxy.activate();
     }
 
     return proxy;
