@@ -77,6 +77,7 @@ function vtkMoleculeToRepresentation(publicAPI, model) {
     bondPositionData.length = 0;
     bondScaleData.length = 0;
     bondOrientationData.length = 0;
+    bondColorData.length = 0;
 
     if (moleculedata.getAtoms()) {
       if (moleculedata.getAtoms().coords !== undefined) {
