@@ -33,7 +33,7 @@ function vtkMoleculeToRepresentation(publicAPI, model) {
     position,
     orientation,
     length,
-    color = [255, 255, 255],
+    color = [1.0, 1.0, 1.0],
     radius = model.bondRadius
   ) {
     bondScaleData.push(length);
@@ -48,7 +48,7 @@ function vtkMoleculeToRepresentation(publicAPI, model) {
     bondPositionData.push(position[2]);
 
     for (let i = 0; i < color.length; ++i) {
-      bondColorData.push(color[i]);
+      bondColorData.push(color[i] * 255);
     }
   }
 
@@ -319,7 +319,7 @@ function vtkMoleculeToRepresentation(publicAPI, model) {
             bondPos,
             vectUnitJI,
             bondLength,
-            colorData.slice(jPtsIdx, jPtsIdx + 3)
+            colorArray.slice(jPtsIdx, jPtsIdx + 3)
           );
 
           bondPos = [
@@ -337,7 +337,7 @@ function vtkMoleculeToRepresentation(publicAPI, model) {
             bondPos,
             vectUnitJI,
             bondLength,
-            colorData.slice(iPtsIdx, iPtsIdx + 3)
+            colorArray.slice(iPtsIdx, iPtsIdx + 3)
           );
         } else {
           const bondLength = Math.sqrt(diffsq) - offsetJ - offsetI;
@@ -361,7 +361,7 @@ function vtkMoleculeToRepresentation(publicAPI, model) {
               bondPos,
               vectUnitJI,
               bondLength,
-              colorData.slice(iPtsIdx, iPtsIdx + 3)
+              colorArray.slice(iPtsIdx, iPtsIdx + 3)
             );
           } else {
             addBond(bondPos, vectUnitJI, bondLength);
