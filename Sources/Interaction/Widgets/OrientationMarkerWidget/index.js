@@ -193,6 +193,13 @@ function vtkOrientationMarkerWidget(publicAPI, model) {
       publicAPI.updateViewport();
     }
   };
+
+  publicAPI.setActor = (actor) => {
+    const previousState = model.enabled;
+    publicAPI.setEnabled(false);
+    model.actor = actor;
+    publicAPI.setEnabled(previousState);
+  };
 }
 
 // ----------------------------------------------------------------------------
@@ -221,10 +228,12 @@ export function extend(publicAPI, model, initialValues = {}) {
   // NOTE: setting these while the widget is enabled will
   // not update the widget.
   macro.setGet(publicAPI, model, [
-    'actor',
     'interactor',
     'minPixelSize',
     'maxPixelSize',
+  ]);
+  macro.get(publicAPI, model, [
+    'actor',
   ]);
 
   // Object methods
