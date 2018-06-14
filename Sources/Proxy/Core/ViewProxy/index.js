@@ -1,6 +1,7 @@
 import macro from 'vtk.js/Sources/macro';
 
 import vtkAnnotatedCubeActor from 'vtk.js/Sources/Rendering/Core/AnnotatedCubeActor';
+import vtkAxesActor from 'vtk.js/Sources/Rendering/Core/AxesActor';
 import vtkCornerAnnotation from 'vtk.js/Sources/Interaction/UI/CornerAnnotation';
 import vtkInteractorStyleManipulator from 'vtk.js/Sources/Interaction/Style/InteractorStyleManipulator';
 import vtkMatrixBuilder from 'vtk.js/Sources/Common/Core/MatrixBuilder';
@@ -60,10 +61,11 @@ function vtkViewProxy(publicAPI, model) {
 
   // Orientation a cube setup -------------------------------------------------
 
-  model.orientationAxes = vtkAnnotatedCubeActor.newInstance();
-  AnnotatedCubePresets.applyPreset('default', model.orientationAxes);
+  model.orientationAxesArrow = vtkAxesActor.newInstance();
+  model.orientationAxesCube = vtkAnnotatedCubeActor.newInstance();
+  AnnotatedCubePresets.applyPreset('default', model.orientationAxesCube);
   model.orientationWidget = vtkOrientationMarkerWidget.newInstance({
-    actor: model.orientationAxes,
+    actor: model.orientationAxesCube,
     interactor: model.renderWindow.getInteractor(),
   });
   model.orientationWidget.setEnabled(true);
@@ -104,6 +106,21 @@ function vtkViewProxy(publicAPI, model) {
 
   // --------------------------------------------------------------------------
 
+  publicAPI.setOrientationAxesType = (type) => {
+    switch (type) {
+      case 'arrow':
+        model.orientationWidget.setActor(model.orientationAxesArrow);
+        break;
+      case 'cube':
+      default:
+        model.orientationWidget.setActor(model.orientationAxesCube);
+        break;
+    }
+    publicAPI.renderLater();
+  };
+
+  // --------------------------------------------------------------------------
+
   publicAPI.setPresetToOrientationAxes = (nameOrDefinitions) => {
     let changeDetected = false;
     if (typeof nameOrDefinitions === 'string') {
@@ -111,7 +128,7 @@ function vtkViewProxy(publicAPI, model) {
         model.presetToOrientationAxes = nameOrDefinitions;
         changeDetected = AnnotatedCubePresets.applyPreset(
           nameOrDefinitions,
-          model.orientationAxes
+          model.orientationAxesCube
         );
         publicAPI.modified();
       }
@@ -120,7 +137,7 @@ function vtkViewProxy(publicAPI, model) {
     model.presetToOrientationAxes = 'Custom';
     changeDetected = AnnotatedCubePresets.applyDefinitions(
       nameOrDefinitions,
-      model.orientationAxes
+      model.orientationAxesCube
     );
     publicAPI.modified();
     return changeDetected;
