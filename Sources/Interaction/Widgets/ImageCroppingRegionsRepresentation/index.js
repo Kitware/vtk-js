@@ -1,14 +1,30 @@
 import macro from 'vtk.js/Sources/macro';
+import vtkMath from 'vtk.js/Sources/Common/Core/Math';
+import vtkCellPicker from 'vtk.js/Sources/Rendering/Core/CellPicker';
 import vtkActor from 'vtk.js/Sources/Rendering/Core/Actor';
 import vtkWidgetRepresentation from 'vtk.js/Sources/Interaction/Widgets/WidgetRepresentation';
 import vtkMapper from 'vtk.js/Sources/Rendering/Core/Mapper';
 import vtkPolyData from 'vtk.js/Sources/Common/DataModel/PolyData';
-import Constants from 'vtk.js/Sources/Interaction/Widgets/ImageCroppingRegionsRepresentation/Constants';
-import WidgetConstants from 'vtk.js/Sources/Interaction/Widgets/ImageCroppingRegionsWidget/Constants';
+import vtkSphereSource from 'vtk.js/Sources/Filters/Sources/SphereSource';
+import Constants from 'vtk.js/Sources/Interaction/Widgets/ImageCroppingRegionsWidget/Constants';
 
-const { vtkErrorMacro } = macro;
-const { Events } = Constants;
-const { Orientation } = WidgetConstants;
+const { TOTAL_NUM_HANDLES } = Constants;
+
+// prettier-ignore
+const LINE_ARRAY = [
+  2, 0, 1,
+  2, 2, 3,
+  2, 4, 5,
+  2, 6, 7,
+  2, 0, 2,
+  2, 1, 3,
+  2, 4, 6,
+  2, 5, 7,
+  2, 0, 4,
+  2, 1, 5,
+  2, 2, 6,
+  2, 3, 7,
+];
 
 // ----------------------------------------------------------------------------
 // vtkImageCroppingRegionsRepresentation methods
@@ -33,60 +49,78 @@ function vtkImageCroppingRegionsRepresentation(publicAPI, model) {
   // set fields from parent classes
   model.placeFactor = 1;
 
-  model.initialBounds = [0, 1, 0, 1, 0, 1];
-  // Format:
-  // [xmin, xmax, ymin, ymax, zmin, zmax]
-  model.planePositions = [0, 0, 0, 0, 0, 0];
-  model.sliceOrientation = Orientation.XY;
-  model.slice = 0;
+  model.picker = vtkCellPicker.newInstance();
+  model.picker.setPickFromList(1);
+  model.picker.initializePickList();
 
-  model.regionPolyData = vtkPolyData.newInstance();
-  model.regionPolyData.getPoints().setData(new Float32Array(16 * 3), 3);
+  model.handles = Array(TOTAL_NUM_HANDLES)
+    .fill(null)
+    .map(() => {
+      const source = vtkSphereSource.newInstance();
+      const mapper = vtkMapper.newInstance();
+      const actor = vtkActor.newInstance();
 
-  // This is a separate vtkPolyData for the center region
-  model.centerRegionPolyData = vtkPolyData.newInstance();
-  model.centerRegionPolyData.getPoints().setData(new Float32Array(4 * 3), 3);
+      mapper.setInputConnection(source.getOutputPort());
+      actor.setMapper(mapper);
 
-  model.mapper = vtkMapper.newInstance();
-  model.actor = vtkActor.newInstance();
-  model.centerMapper = vtkMapper.newInstance();
-  model.centerActor = vtkActor.newInstance();
+      model.picker.addPickList(actor);
+
+      return { source, mapper, actor };
+    });
+
+  model.outline = {
+    polydata: vtkPolyData.newInstance(),
+    mapper: vtkMapper.newInstance(),
+    actor: vtkActor.newInstance(),
+  };
+  // 8 corners for a box
+  model.outline.polydata.getPoints().setData(new Float32Array(8 * 3), 3);
+  model.outline.polydata.getLines().setData(Uint16Array.from(LINE_ARRAY));
+  model.outline.mapper.setInputData(model.outline.polydata);
+  model.outline.actor.setMapper(model.outline.mapper);
 
   // methods
 
-  function updateCenterOpacity() {
-    const slicePos = model.slice;
-    const [
-      xPLower,
-      xPUpper,
-      yPLower,
-      yPUpper,
-      zPLower,
-      zPUpper,
-    ] = model.planePositions;
-
-    let centerInvisible = true;
-    switch (model.sliceOrientation) {
-      case Orientation.YZ:
-        centerInvisible = xPLower < slicePos && slicePos < xPUpper;
-        break;
-      case Orientation.XZ:
-        centerInvisible = yPLower < slicePos && slicePos < yPUpper;
-        break;
-      case Orientation.XY:
-        centerInvisible = zPLower < slicePos && slicePos < zPUpper;
-        break;
-      default:
-      // noop
+  publicAPI.getActors = () => {
+    const actors = [model.outline.actor];
+    for (let i = 0; i < model.handlePositions.length; ++i) {
+      if (model.handlePositions[i]) {
+        actors.push(model.handles[i].actor);
+      }
     }
+    return actors;
+  };
 
-    model.centerActor
-      .getProperty()
-      .setOpacity(centerInvisible ? 0 : model.opacity);
-  }
-
-  publicAPI.getActors = () => [model.actor, model.centerActor];
   publicAPI.getNestedProps = () => publicAPI.getActors();
+
+  publicAPI.getEventIntersection = (callData) => {
+    const { x, y, z } = callData.position;
+    model.picker.pick([x, y, z], callData.pokedRenderer);
+    const actors = model.picker.getActors();
+    if (actors.length) {
+      let actorIndex = 0;
+
+      // get actor closest to camera
+      if (actors.length > 1) {
+        const dists = model.picker.getPickedPositions().map((pt) => {
+          const camPos = callData.pokedRenderer.getActiveCamera().getPosition();
+          return vtkMath.distance2BetweenPoints(camPos, pt);
+        });
+
+        let minDist = Infinity;
+        dists.forEach((d, i) => {
+          if (minDist > d) {
+            actorIndex = i;
+            minDist = d;
+          }
+        });
+      }
+
+      const actor = actors[actorIndex];
+      return model.handles.findIndex((h) => h.actor === actor);
+    }
+    return -1;
+  };
 
   publicAPI.placeWidget = (...bounds) => {
     const boundsArray = [];
@@ -116,175 +150,35 @@ function vtkImageCroppingRegionsRepresentation(publicAPI, model) {
         (newBounds[5] - newBounds[4]) * (newBounds[5] - newBounds[4])
     );
 
-    // set plane positions
-    publicAPI.setPlanePositions(...model.initialBounds);
-  };
-
-  publicAPI.setSlice = (slice) => {
-    if (slice !== model.slice) {
-      model.slice = slice;
-      publicAPI.updateGeometry();
-    }
-  };
-
-  publicAPI.setSliceOrientation = (sliceOrientation) => {
-    if (sliceOrientation !== model.sliceOrientation) {
-      model.sliceOrientation = sliceOrientation;
-      publicAPI.updateGeometry();
-    }
-  };
-
-  publicAPI.setOpacity = (opacityValue) => {
-    const opacity = Math.max(0, Math.min(1, opacityValue));
-    if (opacity !== model.opacity) {
-      model.opacity = opacity;
-      model.actor.getProperty().setOpacity(opacity);
-      updateCenterOpacity();
-      publicAPI.modified();
-    }
-  };
-
-  publicAPI.setEdgeColor = (...edgeColor) => {
-    if (
-      model.edgeColor[0] !== edgeColor[0] ||
-      model.edgeColor[1] !== edgeColor[1] ||
-      model.edgeColor[2] !== edgeColor[2]
-    ) {
-      model.edgeColor = edgeColor;
-      model.actor.getProperty().setEdgeColor(...model.edgeColor);
-      publicAPI.modified();
-    }
-  };
-
-  publicAPI.setPlanePositions = (...positions) => {
-    if (positions.length !== 6) {
-      vtkErrorMacro('setPlanePositions() must be given a 3D boundaries array');
-      return;
-    }
-
-    // swap around plane boundaries if not in order
-    reorderBounds(positions);
-
-    // make sure each position is within the bounds
-    for (let i = 0; i < 6; i += 2) {
-      if (
-        positions[i] < model.initialBounds[i] ||
-        positions[i] > model.initialBounds[i + 1]
-      ) {
-        positions[i] = model.initialBounds[i];
-      }
-      if (
-        positions[i + 1] < model.initialBounds[i] ||
-        positions[i + 1] > model.initialBounds[i + 1]
-      ) {
-        positions[i + 1] = model.initialBounds[i + 1];
-      }
-    }
-
-    // set plane positions
-    model.planePositions = positions;
-    publicAPI.updateGeometry();
+    publicAPI.modified();
   };
 
   // Force update the geometry
   publicAPI.updateGeometry = () => {
-    const slicePos = model.slice;
-    const verts = model.regionPolyData.getPoints().getData();
-    const centerVerts = model.centerRegionPolyData.getPoints().getData();
-    const [xBMin, xBMax, yBMin, yBMax, zBMin, zBMax] = model.initialBounds;
-    const [
-      xPLower,
-      xPUpper,
-      yPLower,
-      yPUpper,
-      zPLower,
-      zPUpper,
-    ] = model.planePositions;
+    const outlinePoints = model.outline.polydata.getPoints().getData();
 
-    // set vert coordinates depending on slice orientation
-    // slicePos offsets are a hack to get polydata edges to render correctly.
-    switch (model.sliceOrientation) {
-      case Orientation.YZ:
-        verts.set([slicePos, yBMin, zBMin], 0);
-        verts.set([slicePos, yPLower, zBMin], 3);
-        verts.set([slicePos + 0.01, yPLower, zPLower], 6);
-        verts.set([slicePos, yBMin, zPLower], 9);
-        verts.set([slicePos + 0.01, yPUpper, zBMin], 12);
-        verts.set([slicePos, yBMax, zBMin], 15);
-        verts.set([slicePos + 0.01, yBMax, zPLower], 18);
-        verts.set([slicePos, yPUpper, zPLower], 21);
-        verts.set([slicePos + 0.01, yPUpper, zPUpper], 24);
-        verts.set([slicePos, yBMax, zPUpper], 27);
-        verts.set([slicePos, yBMax, zBMax], 30);
-        verts.set([slicePos, yPUpper, zBMax], 33);
-        verts.set([slicePos + 0.01, yBMin, zPUpper], 36);
-        verts.set([slicePos, yPLower, zPUpper], 39);
-        verts.set([slicePos + 0.01, yPLower, zBMax], 42);
-        verts.set([slicePos, yBMin, zBMax], 45);
+    for (let i = 0; i < model.handles.length; ++i) {
+      if (model.handlePositions[i]) {
+        const { actor, source } = model.handles[i];
+        source.setRadius(model.handleSizes[i]);
+        source.setCenter(model.handlePositions[i]);
 
-        centerVerts.set([slicePos, yPLower, zPLower], 0);
-        centerVerts.set([slicePos, yPUpper, zPLower], 3);
-        centerVerts.set([slicePos, yPUpper, zPUpper], 6);
-        centerVerts.set([slicePos, yPLower, zPUpper], 9);
-        break;
-      case Orientation.XZ:
-        verts.set([xBMin, slicePos, zBMin], 0);
-        verts.set([xPLower, slicePos, zBMin], 3);
-        verts.set([xPLower, slicePos + 0.01, zPLower], 6);
-        verts.set([xBMin, slicePos, zPLower], 9);
-        verts.set([xPUpper, slicePos + 0.01, zBMin], 12);
-        verts.set([xBMax, slicePos, zBMin], 15);
-        verts.set([xBMax, slicePos + 0.01, zPLower], 18);
-        verts.set([xPUpper, slicePos, zPLower], 21);
-        verts.set([xPUpper, slicePos + 0.01, zPUpper], 24);
-        verts.set([xBMax, slicePos, zPUpper], 27);
-        verts.set([xBMax, slicePos, zBMax], 30);
-        verts.set([xPUpper, slicePos, zBMax], 33);
-        verts.set([xBMin, slicePos, zPUpper], 36);
-        verts.set([xPLower, slicePos, zPUpper], 39);
-        verts.set([xPLower, slicePos + 0.01, zBMax], 42);
-        verts.set([xBMin, slicePos, zBMax], 45);
-
-        centerVerts.set([xPLower, slicePos, zPLower], 0);
-        centerVerts.set([xPUpper, slicePos, zPLower], 3);
-        centerVerts.set([xPUpper, slicePos, zPUpper], 6);
-        centerVerts.set([xPLower, slicePos, zPUpper], 9);
-        break;
-      case Orientation.XY:
-        verts.set([xBMin, yBMin, slicePos], 0);
-        verts.set([xPLower, yBMin, slicePos], 3);
-        verts.set([xPLower, yPLower, slicePos + 0.01], 6);
-        verts.set([xBMin, yPLower, slicePos], 9);
-        verts.set([xPUpper, yBMin, slicePos + 0.01], 12);
-        verts.set([xBMax, yBMin, slicePos], 15);
-        verts.set([xBMax, yPLower, slicePos + 0.01], 18);
-        verts.set([xPUpper, yPLower, slicePos], 21);
-        verts.set([xPUpper, yPUpper, slicePos + 0.01], 24);
-        verts.set([xBMax, yPUpper, slicePos], 27);
-        verts.set([xBMax, yBMax, slicePos], 30);
-        verts.set([xPUpper, yBMax, slicePos], 33);
-        verts.set([xBMin, yPUpper, slicePos + 0.01], 36);
-        verts.set([xPLower, yPUpper, slicePos], 39);
-        verts.set([xPLower, yBMax, slicePos + 0.01], 42);
-        verts.set([xBMin, yBMax, slicePos], 45);
-
-        centerVerts.set([xPLower, yPLower, slicePos], 0);
-        centerVerts.set([xPUpper, yPLower, slicePos], 3);
-        centerVerts.set([xPUpper, yPUpper, slicePos], 6);
-        centerVerts.set([xPLower, yPUpper, slicePos], 9);
-        break;
-      default:
-      // noop
+        if (model.activeHandleIndex === i) {
+          actor.getProperty().setColor(0, 1, 0);
+        } else {
+          actor.getProperty().setColor(1, 1, 1);
+        }
+      }
     }
 
-    // This requires updating whenever geometry updates
-    updateCenterOpacity();
+    for (let i = 0; i < model.bboxCorners.length; ++i) {
+      outlinePoints.set(model.bboxCorners[i], i * 3);
+    }
 
-    model.regionPolyData.modified();
-    model.centerRegionPolyData.modified();
+    model.outline.polydata.getPoints().setData(outlinePoints);
+    model.outline.actor.getProperty().setEdgeColor(...model.edgeColor);
 
-    publicAPI.invokePlanesPositionChanged();
-    publicAPI.modified();
+    model.outline.polydata.modified();
   };
 
   publicAPI.getBounds = () => model.initialBounds;
@@ -296,54 +190,16 @@ function vtkImageCroppingRegionsRepresentation(publicAPI, model) {
         model.placed = 1;
       }
 
-      /*
-      15-14-----11-10
-      |            |
-      12 13-----8  9
-      |  |      |  |
-      3  2------7  6
-      |            |
-      0--1------4--5
-      */
-      // set polys
-
-      // prettier-ignore
-      model.regionPolyData
-        .getPolys()
-        .setData(
-          new Uint32Array([
-            4, 0, 1, 2, 3,
-            4, 1, 4, 7, 2,
-            4, 4, 5, 6, 7,
-            4, 7, 6, 9, 8,
-            4, 8, 9, 10, 11,
-            4, 13, 8, 11, 14,
-            4, 12, 13, 14, 15,
-            4, 3, 2, 13, 12,
-          ]),
-          1,
-        );
-      model.centerRegionPolyData
-        .getPolys()
-        .setData(new Uint32Array([4, 0, 1, 2, 3]), 1);
-
-      model.mapper.setInputData(model.regionPolyData);
-      model.actor.setMapper(model.mapper);
-      model.actor.getProperty().setEdgeVisibility(true);
-
-      model.centerMapper.setInputData(model.centerRegionPolyData);
-      model.centerActor.setMapper(model.centerMapper);
-
-      publicAPI.setEdgeColor(...model.edgeColor);
-      publicAPI.setOpacity(model.opacity);
-
-      publicAPI.modified();
+      publicAPI.updateGeometry();
     }
   };
 
   publicAPI.setProperty = (property) => {
     model.actor.setProperty(property);
   };
+
+  // modifications will result in geometry updates
+  publicAPI.onModified(publicAPI.updateGeometry);
 }
 
 // ----------------------------------------------------------------------------
@@ -351,7 +207,10 @@ function vtkImageCroppingRegionsRepresentation(publicAPI, model) {
 // ----------------------------------------------------------------------------
 
 const DEFAULT_VALUES = {
-  opacity: 0.5,
+  activeHandleIndex: -1,
+  handlePositions: Array(TOTAL_NUM_HANDLES).fill(null),
+  handleSizes: Array(TOTAL_NUM_HANDLES).fill(0),
+  bboxCorners: Array(8).fill([0, 0, 0]),
   edgeColor: [1.0, 1.0, 1.0],
 };
 
@@ -363,16 +222,11 @@ export function extend(publicAPI, model, initialValues = {}) {
   // Inheritance
   vtkWidgetRepresentation.extend(publicAPI, model, initialValues);
 
-  Events.forEach((eventName) => macro.event(publicAPI, model, eventName));
-
-  macro.get(publicAPI, model, [
-    'initialBounds',
-    'planePositions',
-    'sliceOrientation',
-    'slice',
-    'opacity',
-    'edgeColor',
-  ]);
+  macro.setGet(publicAPI, model, ['activeHandleIndex']);
+  macro.setGetArray(publicAPI, model, ['edgeColor'], 3);
+  macro.setGetArray(publicAPI, model, ['handlePositions'], TOTAL_NUM_HANDLES);
+  macro.setGetArray(publicAPI, model, ['handleSizes'], TOTAL_NUM_HANDLES);
+  macro.setGetArray(publicAPI, model, ['bboxCorners'], 8);
 
   // Object methods
   vtkImageCroppingRegionsRepresentation(publicAPI, model);

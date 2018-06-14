@@ -1,21 +1,13 @@
 const WidgetState = {
   IDLE: 0,
-  MOVE_LEFT: 1,
-  MOVE_RIGHT: 2,
-  MOVE_BOTTOM: 3,
-  MOVE_TOP: 4,
-  MOVE_LEFT_BOTTOM: 5,
-  MOVE_LEFT_TOP: 6,
-  MOVE_RIGHT_BOTTOM: 7,
-  MOVE_RIGHT_TOP: 8,
+  CROPPING: 1,
 };
 
-const Orientation = {
-  YZ: 0,
-  XZ: 1,
-  XY: 2,
-};
+const CropWidgetEvents = ['CroppingPlanesChanged'];
 
-const CropWidgetEvents = ['CroppingPlanesPositionChanged'];
+// first 6 are face handles,
+// next 12 are edge handles,
+// last 8 are corner handles.
+const TOTAL_NUM_HANDLES = 26;
 
-export default { WidgetState, CropWidgetEvents, Orientation };
+export default { TOTAL_NUM_HANDLES, WidgetState, CropWidgetEvents };

@@ -6,6 +6,7 @@ import vtkVolumeMapper from 'vtk.js/Sources/Rendering/Core/VolumeMapper';
 import vtkImageMapper from 'vtk.js/Sources/Rendering/Core/ImageMapper';
 import vtkImageSlice from 'vtk.js/Sources/Rendering/Core/ImageSlice';
 import vtkInteractorStyleImage from 'vtk.js/Sources/Interaction/Style/InteractorStyleImage';
+import vtkInteractorStyleTrackballCamera from 'vtk.js/Sources/Interaction/Style/InteractorStyleTrackballCamera';
 import vtkImageCroppingRegionsWidget from 'vtk.js/Sources/Interaction/Widgets/ImageCroppingRegionsWidget';
 
 import controlPanel from './controlPanel.html';
@@ -17,13 +18,16 @@ import controlPanel from './controlPanel.html';
 const fullScreenRenderer = vtkFullScreenRenderWindow.newInstance();
 const renderer = fullScreenRenderer.getRenderer();
 const renderWindow = fullScreenRenderer.getRenderWindow();
+/* eslint-disable */
 const interactorStyle2D = vtkInteractorStyleImage.newInstance();
-fullScreenRenderer.addController(controlPanel);
-renderWindow.getInteractor().setInteractorStyle(interactorStyle2D);
-renderer.getActiveCamera().setParallelProjection(true);
-
+const interactorStyle3D = vtkInteractorStyleTrackballCamera.newInstance();
+// switch to using interactorStyle2D if you want 2D controls
+renderWindow.getInteractor().setInteractorStyle(interactorStyle3D);
 // set the current image number to the first image
-interactorStyle2D.setCurrentImageNumber(0);
+// interactorStyle2D.setCurrentImageNumber(0);
+/* eslint-enable */
+fullScreenRenderer.addController(controlPanel);
+// renderer.getActiveCamera().setParallelProjection(true);
 
 // ----------------------------------------------------------------------------
 // Helper methods for setting up control panel
@@ -84,29 +88,20 @@ const widget = vtkImageCroppingRegionsWidget.newInstance();
 widget.setInteractor(renderWindow.getInteractor());
 
 // Demonstrate cropping planes event update
-widget.onCroppingPlanesPositionChanged(() => {
-  console.log('planes changed:', widget.getWidgetRep().getPlanePositions());
+widget.onCroppingPlanesChanged((planes) => {
+  console.log('planes changed:', planes);
 });
 
 // called when the volume is loaded
 function setupWidget(volumeMapper, imageMapper) {
   widget.setVolumeMapper(volumeMapper);
-  widget.setHandleSize(10); // in pixels
+  widget.setHandleSize(12); // in pixels
   widget.setEnabled(true);
 
-  // getWidgetRep() returns a widget AFTER setEnabled(true).
-
-  // Demonstrate widget representation APIs
-  widget.getWidgetRep().setOpacity(0.8);
-  widget.getWidgetRep().setEdgeColor(0.0, 0.0, 1.0);
-
-  imageMapper.onModified(() => {
-    // update slice and slice orientation
-    const sliceMode = imageMapper.getSlicingMode();
-    const slice = imageMapper.getSlice();
-    widget.setSlice(slice);
-    widget.setSliceOrientation(sliceMode);
-  });
+  // demonstration of setting various types of handles
+  widget.setFaceHandlesEnabled(true);
+  // widget.setEdgeHandlesEnabled(true);
+  widget.setCornerHandlesEnabled(true);
 
   renderWindow.render();
 }
@@ -122,11 +117,9 @@ renderer.addViewProp(actor);
 
 const reader = vtkHttpDataSetReader.newInstance({ fetchGzip: true });
 reader
-  .setUrl(`${__BASE_PATH__}/data/volume/LIDC2.vti`, { loadData: true })
+  .setUrl(`${__BASE_PATH__}/data/volume/headsq.vti`, { loadData: true })
   .then(() => {
     const data = reader.getOutputData();
-    // NOTE we don't care about image direction here
-    data.setDirection(1, 0, 0, 0, 1, 0, 0, 0, 1);
 
     volumeMapper.setInputData(data);
     imageMapper.setInputData(data);

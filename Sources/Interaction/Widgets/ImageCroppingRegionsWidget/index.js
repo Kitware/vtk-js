@@ -1,69 +1,185 @@
 import macro from 'vtk.js/Sources/macro';
+import vtkMath from 'vtk.js/Sources/Common/Core/Math';
+import vtkPlane from 'vtk.js/Sources/Common/DataModel/Plane';
 import vtkAbstractWidget from 'vtk.js/Sources/Interaction/Widgets/AbstractWidget';
 import vtkImageCroppingRegionsRepresentation from 'vtk.js/Sources/Interaction/Widgets/ImageCroppingRegionsRepresentation';
 import Constants from 'vtk.js/Sources/Interaction/Widgets/ImageCroppingRegionsWidget/Constants';
+import { vec3, mat4 } from 'gl-matrix';
 
 const { vtkErrorMacro, VOID, EVENT_ABORT } = macro;
-const { WidgetState, CropWidgetEvents, Orientation } = Constants;
+const { TOTAL_NUM_HANDLES, WidgetState, CropWidgetEvents } = Constants;
+
+// Determines the ordering of edge handles for some fixed axis
+const EDGE_ORDER = [[0, 0], [0, 1], [1, 0], [1, 1]];
 
 // ----------------------------------------------------------------------------
 // vtkImageCroppingRegionsWidget methods
 // ----------------------------------------------------------------------------
 
-// Returns cursor name based on widget state
-function getCursorState(state) {
-  switch (state) {
-    case WidgetState.MOVE_LEFT:
-    case WidgetState.MOVE_RIGHT:
-      return 'ew-resize';
-
-    case WidgetState.MOVE_BOTTOM:
-    case WidgetState.MOVE_TOP:
-      return 'ns-resize';
-
-    case WidgetState.MOVE_LEFT_BOTTOM:
-    case WidgetState.MOVE_LEFT_TOP:
-    case WidgetState.MOVE_RIGHT_BOTTOM:
-    case WidgetState.MOVE_RIGHT_TOP:
-      return 'all-scroll';
-
-    case WidgetState.IDLE:
-    default:
-      return 'default';
+function arrayEquals(a, b) {
+  if (a.length === b.length) {
+    for (let i = 0; i < a.length; ++i) {
+      if (a[i] !== b[i]) {
+        return false;
+      }
+    }
+    return true;
   }
+  return false;
 }
 
 function vtkImageCroppingRegionsWidget(publicAPI, model) {
   // Set our className
   model.classHierarchy.push('vtkImageCroppingRegionsWidget');
 
-  // private variables
-  let widgetState = WidgetState.IDLE;
-  let isCropMoving = false;
+  // camera subscription
+  let cameraSub = null;
+
+  model.indexToWorld = mat4.create();
+  model.worldToIndex = mat4.create();
+
+  model.widgetState = {
+    activeHandleIndex: -1,
+    // index space: xmin, xmax, ymin, ymax, zmin, zmax
+    planes: Array(6).fill(0),
+    // coords are in world space.
+    // a null handle means it is disabled
+    handles: Array(TOTAL_NUM_HANDLES).fill(null),
+    controlState: WidgetState.IDLE,
+  };
+
+  function worldToIndex(ain) {
+    const vin = vec3.fromValues(ain[0], ain[1], ain[2]);
+    const vout = vec3.create();
+    vec3.transformMat4(vout, vin, model.worldToIndex);
+    return [vout[0], vout[1], vout[2]];
+  }
+
+  function indexToWorld(ain) {
+    const vin = vec3.fromValues(ain[0], ain[1], ain[2]);
+    const vout = vec3.create();
+    vec3.transformMat4(vout, vin, model.indexToWorld);
+    return [vout[0], vout[1], vout[2]];
+  }
 
   // Overriden method
   publicAPI.createDefaultRepresentation = () => {
     if (!model.widgetRep) {
       model.widgetRep = vtkImageCroppingRegionsRepresentation.newInstance();
-
-      model.widgetRep.onPlanesPositionChanged(
-        publicAPI.invokeCroppingPlanesPositionChanged
-      );
-
       publicAPI.updateRepresentation();
     }
+  };
+
+  publicAPI.updateWidgetState = (state) => {
+    const oldState = model.widgetState;
+    model.widgetState = Object.assign({}, oldState, state);
+    publicAPI.updateRepresentation();
+
+    if (!arrayEquals(oldState.planes, model.widgetState.planes)) {
+      publicAPI.invokeCroppingPlanesChanged(model.widgetState.planes);
+    }
+    publicAPI.modified();
   };
 
   publicAPI.setVolumeMapper = (volumeMapper) => {
     if (volumeMapper !== model.volumeMapper) {
       model.volumeMapper = volumeMapper;
       if (model.enabled) {
+        publicAPI.resetWidgetState();
         publicAPI.updateRepresentation();
       }
     }
   };
 
-  publicAPI.updateRepresentation = () => {
+  publicAPI.planesToHandles = (planes) => {
+    if (!model.volumeMapper || !model.volumeMapper.getInputData()) {
+      return null;
+    }
+
+    const handles = Array(TOTAL_NUM_HANDLES).fill(null);
+
+    if (model.faceHandlesEnabled) {
+      // construct face handles
+      for (let i = 0; i < 6; ++i) {
+        const center = [0, 0, 0].map((c, j) => {
+          if (j === Math.floor(i / 2)) {
+            return planes[i];
+          }
+          return (planes[j * 2] + planes[j * 2 + 1]) / 2;
+        });
+
+        handles[i] = [center[0], center[1], center[2]];
+      }
+    }
+
+    if (model.edgeHandlesEnabled) {
+      // construct edge handles
+      for (let i = 0; i < 12; ++i) {
+        // the axis around which edge handles will be placed
+        const fixedAxis = Math.floor(i / 4);
+        const edgeSpec = EDGE_ORDER[i % 4].slice();
+        const center = [];
+
+        for (let j = 0; j < 3; ++j) {
+          if (j !== fixedAxis) {
+            // edgeSpec[j] determines whether to pick a min or max cropping
+            // plane for edge selection.
+            center.push(planes[j * 2 + edgeSpec.shift()]);
+          }
+        }
+
+        // set fixed axis coordinate
+        center.splice(
+          fixedAxis,
+          0,
+          (planes[fixedAxis * 2] + planes[fixedAxis * 2 + 1]) / 2
+        );
+
+        handles[i + 6] = [center[0], center[1], center[2]];
+      }
+    }
+
+    if (model.cornerHandlesEnabled) {
+      // construct corner handles
+      for (let i = 0; i < 8; ++i) {
+        /* eslint-disable no-bitwise */
+        handles[i + 18] = [
+          planes[0 + ((i >> 2) & 0x1)],
+          planes[2 + ((i >> 1) & 0x1)],
+          planes[4 + ((i >> 0) & 0x1)],
+        ];
+        /* eslint-enable no-bitwise */
+      }
+    }
+
+    // transform handles from index to world space
+    for (let i = 0; i < handles.length; ++i) {
+      if (handles[i]) {
+        handles[i] = indexToWorld(handles[i]);
+      }
+    }
+
+    return handles;
+  };
+
+  publicAPI.planesToBBoxCorners = (planes) => {
+    if (!model.volumeMapper || !model.volumeMapper.getInputData()) {
+      return null;
+    }
+
+    return [
+      [planes[0], planes[2], planes[4]],
+      [planes[0], planes[2], planes[5]],
+      [planes[0], planes[3], planes[4]],
+      [planes[0], planes[3], planes[5]],
+      [planes[1], planes[2], planes[4]],
+      [planes[1], planes[2], planes[5]],
+      [planes[1], planes[3], planes[4]],
+      [planes[1], planes[3], planes[5]],
+    ].map((coord) => indexToWorld(coord));
+  };
+
+  publicAPI.resetWidgetState = () => {
     if (!model.volumeMapper) {
       vtkErrorMacro('Volume mapper must be set to update representation');
       return;
@@ -73,44 +189,198 @@ function vtkImageCroppingRegionsWidget(publicAPI, model) {
       return;
     }
 
-    const bounds = model.volumeMapper.getBounds();
-
-    model.widgetRep.placeWidget(...bounds);
-    publicAPI.updateWidget();
-  };
-
-  // Force a widget update
-  publicAPI.updateWidget = () => {
     const data = model.volumeMapper.getInputData();
-    const origin = data.getOrigin();
-    const spacing = data.getSpacing();
-    const slice =
-      origin[model.sliceOrientation] +
-      spacing[model.sliceOrientation] * model.slice;
 
-    model.widgetRep.setSliceOrientation(model.sliceOrientation);
-    // set the widget representation slice + 1 to prevent z fighting
-    model.widgetRep.setSlice(slice + 1);
+    // cache transforms
+    model.indexToWorld = data.getIndexToWorld();
+    model.worldToIndex = data.getWorldToIndex();
 
-    publicAPI.modified();
+    const planes = data.getExtent();
+    const handles = publicAPI.planesToHandles(planes);
+
+    publicAPI.updateWidgetState({
+      handles,
+      planes,
+    });
   };
 
-  publicAPI.setSlice = (slice) => {
-    if (slice !== model.slice) {
-      model.slice = slice;
-      if (model.enabled) {
-        publicAPI.updateWidget();
-      }
+  publicAPI.setEnabled = macro.chain(publicAPI.setEnabled, (enable) => {
+    if (cameraSub) {
+      cameraSub.unsubscribe();
+    }
+
+    if (enable) {
+      publicAPI.resetWidgetState();
+
+      const camera = publicAPI
+        .getInteractor()
+        .getCurrentRenderer()
+        .getActiveCamera();
+      cameraSub = camera.onModified(publicAPI.updateRepresentation);
+    }
+  });
+
+  publicAPI.setFaceHandlesEnabled = (enabled) => {
+    if (model.faceHandlesEnabled !== enabled) {
+      model.faceHandlesEnabled = enabled;
+      publicAPI.updateWidgetState({
+        handles: publicAPI.planesToHandles(model.widgetState.planes),
+      });
     }
   };
 
-  publicAPI.setSliceOrientation = (sliceOrientation) => {
-    if (sliceOrientation !== model.sliceOrientation) {
-      model.sliceOrientation = sliceOrientation;
-      if (model.enabled) {
-        publicAPI.updateWidget();
+  publicAPI.setEdgeHandlesEnabled = (enabled) => {
+    if (model.edgeHandlesEnabled !== enabled) {
+      model.edgeHandlesEnabled = enabled;
+      publicAPI.updateWidgetState({
+        handles: publicAPI.planesToHandles(model.widgetState.planes),
+      });
+    }
+  };
+
+  publicAPI.setCornerHandlesEnabled = (enabled) => {
+    if (model.cornerHandlesEnabled !== enabled) {
+      model.cornerHandlesEnabled = enabled;
+      publicAPI.updateWidgetState({
+        handles: publicAPI.planesToHandles(model.widgetState.planes),
+      });
+    }
+  };
+
+  publicAPI.setHandleSize = (size) => {
+    if (model.handleSize !== size) {
+      model.handleSize = size;
+      publicAPI.updateRepresentation();
+    }
+  };
+
+  publicAPI.getCroppingPlanes = () => model.widgetState.planes.slice();
+
+  publicAPI.updateRepresentation = () => {
+    if (model.widgetRep) {
+      const bounds = model.volumeMapper.getBounds();
+      model.widgetRep.placeWidget(...bounds);
+
+      const { activeHandleIndex, handles, planes } = model.widgetState;
+
+      const bboxCorners = publicAPI.planesToBBoxCorners(planes);
+      const handleSizes = handles.map((handle) => {
+        if (!handle) {
+          return model.handleSize;
+        }
+        return publicAPI.adjustHandleSize(handle, model.handleSize);
+      });
+
+      model.widgetRep.set({
+        activeHandleIndex,
+        handlePositions: handles,
+        bboxCorners,
+        handleSizes,
+      });
+
+      publicAPI.render();
+    }
+  };
+
+  publicAPI.adjustHandleSize = (pos, size) => {
+    const interactor = publicAPI.getInteractor();
+    if (!interactor && !interactor.getCurrentRenderer()) {
+      return null;
+    }
+    const renderer = interactor.getCurrentRenderer();
+    if (!renderer.getActiveCamera()) {
+      return null;
+    }
+
+    const worldCoords = publicAPI.computeWorldToDisplay(
+      renderer,
+      pos[0],
+      pos[1],
+      pos[2]
+    );
+
+    const lowerLeft = publicAPI.computeDisplayToWorld(
+      renderer,
+      worldCoords[0] - size / 2.0,
+      worldCoords[1] - size / 2.0,
+      worldCoords[2]
+    );
+
+    const upperRight = publicAPI.computeDisplayToWorld(
+      renderer,
+      worldCoords[0] + size / 2.0,
+      worldCoords[1] + size / 2.0,
+      worldCoords[2]
+    );
+
+    let radius = 0.0;
+    for (let i = 0; i < 3; i++) {
+      radius += (upperRight[i] - lowerLeft[i]) * (upperRight[i] - lowerLeft[i]);
+    }
+    return Math.sqrt(radius) / 2.0;
+  };
+
+  // Given display coordinates and a plane, returns the
+  // point on the plane that corresponds to display coordinates.
+  publicAPI.displayToPlane = (displayCoords, planePoint, planeNormal) => {
+    const view = publicAPI.getInteractor().getView();
+    const renderer = publicAPI.getInteractor().getCurrentRenderer();
+    const camera = renderer.getActiveCamera();
+
+    const cameraFocalPoint = camera.getFocalPoint();
+    const cameraPos = camera.getPosition();
+
+    // Adapted from vtkPicker
+    const focalPointDispCoords = view.worldToDisplay(
+      ...cameraFocalPoint,
+      renderer
+    );
+    const worldCoords = view.displayToWorld(
+      displayCoords[0],
+      displayCoords[1],
+      focalPointDispCoords[2], // Use focal point for z coord
+      renderer
+    );
+
+    // compute ray from camera to selection
+    const ray = [0, 0, 0];
+    for (let i = 0; i < 3; ++i) {
+      ray[i] = worldCoords[i] - cameraPos[i];
+    }
+
+    const dop = camera.getDirectionOfProjection();
+    vtkMath.normalize(dop);
+    const rayLength = vtkMath.dot(dop, ray);
+
+    const clipRange = camera.getClippingRange();
+
+    const p1World = [0, 0, 0];
+    const p2World = [0, 0, 0];
+
+    // get line segment coords from ray based on clip range
+    if (camera.getParallelProjection()) {
+      const tF = clipRange[0] - rayLength;
+      const tB = clipRange[1] - rayLength;
+      for (let i = 0; i < 3; i++) {
+        p1World[i] = worldCoords[i] + tF * dop[i];
+        p2World[i] = worldCoords[i] + tB * dop[i];
+      }
+    } else {
+      const tF = clipRange[0] / rayLength;
+      const tB = clipRange[1] / rayLength;
+      for (let i = 0; i < 3; i++) {
+        p1World[i] = cameraPos[i] + tF * ray[i];
+        p2World[i] = cameraPos[i] + tB * ray[i];
       }
     }
+
+    const r = vtkPlane.intersectWithLine(
+      p1World,
+      p2World,
+      planePoint,
+      planeNormal
+    );
+    return r.intersection ? r.x : null;
   };
 
   publicAPI.handleLeftButtonPress = (callData) =>
@@ -131,350 +401,149 @@ function vtkImageCroppingRegionsWidget(publicAPI, model) {
   publicAPI.handleRightButtonRelease = (callData) =>
     publicAPI.endMoveAction(callData);
 
-  publicAPI.handleMouseMove = (callData) => {
-    if (isCropMoving) {
-      return publicAPI.moveAction(callData);
-    }
-    return publicAPI.hoverAction(callData);
-  };
+  publicAPI.handleMouseMove = (callData) => publicAPI.moveAction(callData);
 
   publicAPI.pressAction = (callData) => {
-    if (widgetState === WidgetState.IDLE) {
-      return VOID;
-    }
-    isCropMoving = true;
-    // prevent low-priority observers from receiving the event
-    return EVENT_ABORT;
-  };
-
-  publicAPI.hoverAction = (callData) => {
-    if (!model.widgetRep) {
-      return VOID;
-    }
-
-    // Do not change widget state if moving the crop region.
-    if (isCropMoving) {
-      return VOID;
-    }
-
-    const mousePos = [callData.position.x, callData.position.y];
-    const planes = model.widgetRep.getPlanePositions();
-    // Assume we should use the first view
-    const view = model.interactor.getView();
-    const camUp = callData.pokedRenderer.getActiveCamera().getViewUp();
-
-    let ax1;
-    let ax2;
-    let camUp2D;
-
-    switch (model.sliceOrientation) {
-      case Orientation.YZ:
-        ax1 = [planes[2], planes[3]]; // Y crop bounds
-        ax2 = [planes[4], planes[5]]; // Z crop bounds
-        camUp2D = [camUp[1], camUp[2]];
-        break;
-      case Orientation.XZ: // ZX
-        ax1 = [planes[0], planes[1]]; // X crop bounds
-        ax2 = [planes[4], planes[5]]; // Z crop bounds
-        // reverse camUp to be -Z, then X
-        camUp2D = [-camUp[2], camUp[0]];
-        break;
-      case Orientation.XY:
-        ax1 = [planes[0], planes[1]]; // X crop bounds
-        ax2 = [planes[2], planes[3]]; // Y crop bounds
-        camUp2D = [camUp[0], camUp[1]];
-        break;
-      default:
-        vtkErrorMacro('Invalid slice orientation');
-        return VOID;
-    }
-
-    let leftBottom; // [left, bottom]
-    let rightTop; // [right, top]
-
-    // handle camera view up
-    const camUp2DHash = camUp2D[0] + 10 * camUp2D[1];
-    switch (camUp2DHash) {
-      case 1: // [1, 0]
-        leftBottom = [ax1[0], ax2[1]];
-        rightTop = [ax1[1], ax2[0]];
-        break;
-      case -1: // [-1, 0]
-        leftBottom = [ax1[1], ax2[0]];
-        rightTop = [ax1[0], ax2[1]];
-        break;
-      case 10: // [0, 1]
-        leftBottom = [ax1[0], ax2[0]];
-        rightTop = [ax1[1], ax2[1]];
-        break;
-      case -10: // [0, -1]
-        leftBottom = [ax1[1], ax2[1]];
-        rightTop = [ax1[0], ax2[0]];
-        break;
-      default:
-        vtkErrorMacro('Invalid camera view-up');
-        return VOID;
-    }
-
-    let left;
-    let bottom;
-    let right;
-    let top;
-
-    switch (model.sliceOrientation) {
-      case Orientation.YZ:
-        [left, bottom] = view.worldToDisplay(
-          model.slice,
-          leftBottom[0],
-          leftBottom[1],
-          callData.pokedRenderer
-        );
-        [right, top] = view.worldToDisplay(
-          model.slice,
-          rightTop[0],
-          rightTop[1],
-          callData.pokedRenderer
-        );
-        break;
-      case Orientation.XZ: // ZX
-        [left, bottom] = view.worldToDisplay(
-          leftBottom[0],
-          model.slice,
-          leftBottom[1],
-          callData.pokedRenderer
-        );
-        [right, top] = view.worldToDisplay(
-          rightTop[0],
-          model.slice,
-          rightTop[1],
-          callData.pokedRenderer
-        );
-        break;
-      case Orientation.XY:
-        [left, bottom] = view.worldToDisplay(
-          leftBottom[0],
-          leftBottom[1],
-          model.slice,
-          callData.pokedRenderer
-        );
-        [right, top] = view.worldToDisplay(
-          rightTop[0],
-          rightTop[1],
-          model.slice,
-          callData.pokedRenderer
-        );
-        break;
-      default:
-      // noop
-    }
-
-    const leftDist = Math.abs(left - mousePos[0]);
-    const rightDist = Math.abs(right - mousePos[0]);
-    const bottomDist = Math.abs(bottom - mousePos[1]);
-    const topDist = Math.abs(top - mousePos[1]);
-
-    if (leftDist < model.handleSize) {
-      if (bottomDist < model.handleSize) {
-        widgetState = WidgetState.MOVE_LEFT_BOTTOM;
-      } else if (topDist < model.handleSize) {
-        widgetState = WidgetState.MOVE_LEFT_TOP;
-      } else {
-        widgetState = WidgetState.MOVE_LEFT;
+    if (model.widgetState.controlState === WidgetState.IDLE) {
+      const handleIndex = model.widgetRep.getEventIntersection(callData);
+      if (handleIndex > -1) {
+        model.activeHandleIndex = handleIndex;
+        publicAPI.updateWidgetState({
+          activeHandleIndex: handleIndex,
+          controlState: WidgetState.CROPPING,
+        });
+        return EVENT_ABORT;
       }
-    } else if (rightDist < model.handleSize) {
-      if (bottomDist < model.handleSize) {
-        widgetState = WidgetState.MOVE_RIGHT_BOTTOM;
-      } else if (topDist < model.handleSize) {
-        widgetState = WidgetState.MOVE_RIGHT_TOP;
-      } else {
-        widgetState = WidgetState.MOVE_RIGHT;
-      }
-    } else if (bottomDist < model.handleSize) {
-      widgetState = WidgetState.MOVE_BOTTOM;
-    } else if (topDist < model.handleSize) {
-      widgetState = WidgetState.MOVE_TOP;
-    } else {
-      widgetState = WidgetState.IDLE;
     }
-
-    model.interactor.getView().setCursor(getCursorState(widgetState));
     return VOID;
   };
 
   publicAPI.moveAction = (callData) => {
-    if (widgetState === WidgetState.IDLE) {
+    const {
+      controlState,
+      handles,
+      planes,
+      activeHandleIndex,
+    } = model.widgetState;
+    if (controlState === WidgetState.IDLE || activeHandleIndex === -1) {
       return VOID;
     }
 
     const mouse = [callData.position.x, callData.position.y];
-    const view = model.interactor.getView();
-    const planes = model.widgetRep.getPlanePositions();
-    const bounds = model.widgetRep.getInitialBounds();
-    const camUp = callData.pokedRenderer.getActiveCamera().getViewUp();
+    const handlePos = handles[activeHandleIndex];
+    const renderer = publicAPI.getInteractor().getCurrentRenderer();
+    const camera = renderer.getActiveCamera();
+    const dop = camera.getDirectionOfProjection();
 
-    let newPos = view.displayToWorld(...mouse, 0, callData.pokedRenderer);
-
-    let ax1;
-    let ax2;
-    let bounds1;
-    let bounds2;
-    let camUp2D;
-
-    switch (model.sliceOrientation) {
-      case Orientation.YZ:
-        ax1 = [planes[2], planes[3]]; // Y crop pos
-        ax2 = [planes[4], planes[5]]; // Z crop pos
-        bounds1 = [bounds[2], bounds[3]];
-        bounds2 = [bounds[4], bounds[5]];
-        camUp2D = [camUp[1], camUp[2]];
-        newPos = [newPos[1], newPos[2]];
-        break;
-      case Orientation.XZ: // ZX
-        ax1 = [planes[4], planes[5]]; // Z crop pos
-        ax2 = [planes[0], planes[1]]; // X crop pos
-        bounds1 = [bounds[4], bounds[5]];
-        bounds2 = [bounds[0], bounds[1]];
-        // reverse camUp and newPos to be Z (not -Z as before), then X
-        camUp2D = [camUp[2], camUp[0]];
-        newPos = [newPos[2], newPos[0]];
-        break;
-      case Orientation.XY:
-        ax1 = [planes[0], planes[1]]; // X crop pos
-        ax2 = [planes[2], planes[3]]; // Y crop pos
-        bounds1 = [bounds[0], bounds[1]];
-        bounds2 = [bounds[2], bounds[3]];
-        camUp2D = [camUp[0], camUp[1]];
-        newPos = [newPos[0], newPos[1]];
-        break;
-      default:
-        vtkErrorMacro('Invalid slice orientation');
-        return VOID;
+    const point = publicAPI.displayToPlane(mouse, handlePos, dop);
+    if (!point) {
+      return EVENT_ABORT;
     }
 
-    let left;
-    let bottom;
-    let right;
-    let top;
+    const newPlanes = planes.slice();
 
-    // handle camera view up
-    const camUp2DHash = camUp2D[0] + 10 * camUp2D[1];
-    switch (camUp2DHash) {
-      case 1: // [1, 0]
-        [left, bottom, right, top] = [ax2[1], ax1[0], ax2[0], ax1[1]];
-        // swap axes
-        newPos = [newPos[1], newPos[0]];
-        [bounds1, bounds2] = [bounds2, bounds1];
-        break;
-      case -1: // [-1, 0]
-        [left, bottom, right, top] = [ax2[0], ax1[1], ax2[1], ax1[0]];
-        // swap axes
-        newPos = [newPos[1], newPos[0]];
-        [bounds1, bounds2] = [bounds2, bounds1];
-        break;
-      case 10: // [0, 1]
-        [left, bottom, right, top] = [ax1[0], ax2[0], ax1[1], ax2[1]];
-        break;
-      case -10: // [0, -1]
-        [left, bottom, right, top] = [ax1[1], ax2[1], ax1[0], ax2[0]];
-        break;
-      default:
-        vtkErrorMacro('Invalid camera view-up');
-        return VOID;
-    }
+    // activeHandleIndex should be > -1 here
+    if (activeHandleIndex < 6) {
+      // face handle, so constrain to axis
+      const moveAxis = Math.floor(activeHandleIndex / 2);
 
-    // Is there a better way than using a fudge factor?
-    const fudge = 1e-12;
-    if (
-      widgetState === WidgetState.MOVE_LEFT ||
-      widgetState === WidgetState.MOVE_LEFT_TOP ||
-      widgetState === WidgetState.MOVE_LEFT_BOTTOM
-    ) {
-      if (left > right) {
-        left = Math.max(right + fudge, Math.min(bounds1[1], newPos[0]));
-      } else {
-        left = Math.max(bounds1[0], Math.min(right, newPos[0]));
+      // Constrain point to axis
+      const orientation = model.volumeMapper.getInputData().getDirection();
+      const offset = moveAxis * 3;
+      const constraintAxis = orientation.slice(offset, offset + 3);
+
+      const newPos = [0, 0, 0];
+      const relMoveVect = [0, 0, 0];
+      const projection = [0, 0, 0];
+      vtkMath.subtract(point, handlePos, relMoveVect);
+      vtkMath.projectVector(relMoveVect, constraintAxis, projection);
+      vtkMath.add(handlePos, projection, newPos);
+
+      const indexHandle = worldToIndex(newPos);
+
+      // set correct plane value
+      newPlanes[activeHandleIndex] = indexHandle[moveAxis];
+    } else if (activeHandleIndex < 18) {
+      // edge handle, so constrain to plane
+      const edgeHandleIndex = activeHandleIndex - 6;
+      const fixedAxis = Math.floor(edgeHandleIndex / 4);
+      /**
+       * edgeHandleIndex: plane, plane
+       * 4: xmin, zmin
+       * 5: xmin, zmax
+       * 6: xmax, zmin
+       * 7: xmax, zmax
+       * 8: xmin, ymin
+       * 9: xmin, ymax
+       * 10: xmax, ymin
+       * 11: xmax, ymax
+       */
+      const orientation = model.volumeMapper.getInputData().getDirection();
+      const offset = fixedAxis * 3;
+      const constraintPlaneNormal = orientation.slice(offset, offset + 3);
+
+      const newPos = [0, 0, 0];
+      const relMoveVect = [0, 0, 0];
+      const projection = [0, 0, 0];
+      vtkMath.subtract(point, handlePos, relMoveVect);
+      vtkPlane.projectVector(relMoveVect, constraintPlaneNormal, projection);
+      vtkMath.add(handlePos, projection, newPos);
+
+      const indexHandle = worldToIndex(newPos);
+
+      // get the two planes that are being adjusted
+      const edgeSpec = EDGE_ORDER[edgeHandleIndex % 4].slice();
+      const modifiedPlanes = [];
+      for (let i = 0; i < 3; ++i) {
+        if (i !== fixedAxis) {
+          modifiedPlanes.push(i * 2 + edgeSpec.shift());
+        }
       }
-    }
-    if (
-      widgetState === WidgetState.MOVE_RIGHT ||
-      widgetState === WidgetState.MOVE_RIGHT_TOP ||
-      widgetState === WidgetState.MOVE_RIGHT_BOTTOM
-    ) {
-      if (left > right) {
-        right = Math.max(bounds1[0], Math.min(left - fudge, newPos[0]));
-      } else {
-        right = Math.max(left, Math.min(bounds1[1], newPos[0]));
-      }
-    }
-    if (
-      widgetState === WidgetState.MOVE_BOTTOM ||
-      widgetState === WidgetState.MOVE_LEFT_BOTTOM ||
-      widgetState === WidgetState.MOVE_RIGHT_BOTTOM
-    ) {
-      if (bottom > top) {
-        bottom = Math.max(top + fudge, Math.min(bounds2[1], newPos[1]));
-      } else {
-        bottom = Math.max(bounds2[0], Math.min(top, newPos[1]));
-      }
-    }
-    if (
-      widgetState === WidgetState.MOVE_TOP ||
-      widgetState === WidgetState.MOVE_LEFT_TOP ||
-      widgetState === WidgetState.MOVE_RIGHT_TOP
-    ) {
-      if (bottom > top) {
-        top = Math.max(bounds2[0], Math.min(bottom - fudge, newPos[1]));
-      } else {
-        top = Math.max(bottom, Math.min(bounds2[1], newPos[1]));
-      }
+
+      // set correct plane value
+      modifiedPlanes.forEach((planeIndex) => {
+        // Math.floor(planeIndex / 2) is the corresponding changed
+        // coordinate (that dictates the plane position)
+        newPlanes[planeIndex] = indexHandle[Math.floor(planeIndex / 2)];
+      });
+    } else {
+      // corner handles, so no constraints
+      const cornerHandleIndex = activeHandleIndex - 18;
+
+      const indexHandle = worldToIndex(point);
+
+      // get the three planes that are being adjusted
+      /* eslint-disable no-bitwise */
+      const modifiedPlanes = [
+        0 + ((cornerHandleIndex >> 2) & 0x1),
+        2 + ((cornerHandleIndex >> 1) & 0x1),
+        4 + ((cornerHandleIndex >> 0) & 0x1),
+      ];
+      /* eslint-enable no-bitwise */
+
+      // set correct plane value
+      modifiedPlanes.forEach((planeIndex) => {
+        // Math.floor(planeIndex / 2) is the corresponding changed
+        // coordinate (that dictates the plane position)
+        newPlanes[planeIndex] = indexHandle[Math.floor(planeIndex / 2)];
+      });
     }
 
-    // revert cam view up transform
-    switch (camUp2DHash) {
-      case 1: // [1, 0]
-        [ax2[1], ax1[0], ax2[0], ax1[1]] = [left, bottom, right, top];
-        break;
-      case -1: // [-1, 0]
-        [ax2[0], ax1[1], ax2[1], ax1[0]] = [left, bottom, right, top];
-        break;
-      case 10: // [0, 1]
-        [ax1[0], ax2[0], ax1[1], ax2[1]] = [left, bottom, right, top];
-        break;
-      case -10: // [0, -1]
-        [ax1[1], ax2[1], ax1[0], ax2[0]] = [left, bottom, right, top];
-        break;
-      default:
-        vtkErrorMacro('Invalid camera view-up');
-        return VOID;
-    }
-
-    // assign new plane values
-    switch (model.sliceOrientation) {
-      case Orientation.YZ:
-        [planes[2], planes[3]] = ax1;
-        [planes[4], planes[5]] = ax2;
-        break;
-      case Orientation.XZ: // ZX
-        [planes[0], planes[1]] = ax2;
-        [planes[4], planes[5]] = ax1;
-        break;
-      case Orientation.XY:
-        [planes[0], planes[1]] = ax1;
-        [planes[2], planes[3]] = ax2;
-        break;
-      default:
-        vtkErrorMacro('Invalid slice orientation');
-        return VOID;
-    }
-
-    model.widgetRep.setPlanePositions(...planes);
-    model.interactor.render();
+    publicAPI.updateWidgetState({
+      planes: newPlanes,
+      handles: publicAPI.planesToHandles(newPlanes),
+    });
 
     return EVENT_ABORT;
   };
 
   publicAPI.endMoveAction = () => {
-    isCropMoving = false;
+    if (model.widgetState.activeHandleIndex > -1) {
+      publicAPI.updateWidgetState({
+        activeHandleIndex: -1,
+        controlState: WidgetState.IDLE,
+      });
+    }
   };
 }
 
@@ -484,9 +553,10 @@ function vtkImageCroppingRegionsWidget(publicAPI, model) {
 
 const DEFAULT_VALUES = {
   // volumeMapper: null,
-  slice: 0,
-  sliceOrientation: 2, // XY
-  handleSize: 3,
+  handleSize: 5,
+  faceHandlesEnabled: false,
+  edgeHandlesEnabled: false,
+  cornerHandlesEnabled: true,
 };
 
 // ----------------------------------------------------------------------------
@@ -502,8 +572,13 @@ export function extend(publicAPI, model, initialValues = {}) {
     macro.event(publicAPI, model, eventName)
   );
 
-  macro.setGet(publicAPI, model, ['handleSize']);
-  macro.get(publicAPI, model, ['volumeMapper', 'slice', 'sliceOrientation']);
+  macro.get(publicAPI, model, [
+    'volumeMapper',
+    'handleSize',
+    'faceHandlesEnabled',
+    'edgeHandlesEnabled',
+    'cornerHandlesEnabled',
+  ]);
 
   // Object methods
   vtkImageCroppingRegionsWidget(publicAPI, model);
