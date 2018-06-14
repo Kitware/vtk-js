@@ -49,6 +49,8 @@ export default function addRegistrationAPI(publicAPI, model) {
     });
 
     delete model.proxyIdMapping[id];
+    proxy.gcPropertyLinks('application');
+    proxy.gcPropertyLinks('source');
     proxy.setProxyManager(null);
     publicAPI.invokeProxyRegistrationChange({
       action: 'unregister',
