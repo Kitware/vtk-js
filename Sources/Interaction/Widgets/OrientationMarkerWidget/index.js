@@ -232,9 +232,7 @@ export function extend(publicAPI, model, initialValues = {}) {
     'minPixelSize',
     'maxPixelSize',
   ]);
-  macro.get(publicAPI, model, [
-    'actor',
-  ]);
+  macro.get(publicAPI, model, ['actor']);
 
   // Object methods
   vtkOrientationMarkerWidget(publicAPI, model);
