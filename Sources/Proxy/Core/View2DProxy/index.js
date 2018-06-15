@@ -1,5 +1,5 @@
 import macro from 'vtk.js/Sources/macro';
-
+import vtkMouseRangeManipulator from 'vtk.js/Sources/Interaction/Manipulators/MouseRangeManipulator';
 import vtkViewProxy from 'vtk.js/Sources/Proxy/Core/ViewProxy';
 
 // ----------------------------------------------------------------------------
@@ -30,6 +30,12 @@ function vtkView2DProxy(publicAPI, model) {
   /* eslint-disable no-template-curly-in-string */
   publicAPI.setCornerAnnotation('nw', 'Orientation ${axis}<br>Slice ${slice}');
   publicAPI.setCornerAnnotation('se', 'CW ${colorWindow}<br>CL ${colorLevel}');
+  publicAPI.updateCornerAnnotation({
+    axis: 'N/A',
+    slice: 'N/A',
+    colorWindow: 'N/A',
+    colorLevel: 'N/A',
+  });
   /* eslint-enable no-template-curly-in-string */
 
   const superAddRepresentation = publicAPI.addRepresentation;
@@ -37,7 +43,104 @@ function vtkView2DProxy(publicAPI, model) {
     superAddRepresentation(rep);
     if (rep.setSlicingMode) {
       rep.setSlicingMode('XYZ'[model.axis]);
+      publicAPI.bindRepresentationToManipulator(rep);
     }
+  };
+
+  const superRemoveRepresentation = publicAPI.removeRepresentation;
+  publicAPI.removeRepresentation = (rep) => {
+    superRemoveRepresentation(rep);
+    if (rep === model.sliceRepresentation) {
+      publicAPI.bindRepresentationToManipulator(null);
+      let count = model.representations.length;
+      while (count--) {
+        if (
+          publicAPI.bindRepresentationToManipulator(
+            model.representations[count]
+          )
+        ) {
+          count = 0;
+        }
+      }
+    }
+  };
+
+  // --------------------------------------------------------------------------
+  // Range Manipulator setup
+  // -------------------------------------------------------------------------
+
+  model.rangeManipulator = vtkMouseRangeManipulator.newInstance({
+    button: 1,
+    scrollEnabled: true,
+  });
+  model.interactorStyle2D.addMouseManipulator(model.rangeManipulator);
+
+  function setColorWindow(colorWindow) {
+    publicAPI.updateCornerAnnotation({ colorWindow });
+    if (model.sliceRepresentation && model.sliceRepresentation.setColorWindow) {
+      model.sliceRepresentation.setColorWindow(colorWindow);
+    }
+  }
+
+  function setColorLevel(colorLevel) {
+    publicAPI.updateCornerAnnotation({ colorLevel });
+    if (model.sliceRepresentation && model.sliceRepresentation.setColorLevel) {
+      model.sliceRepresentation.setColorLevel(colorLevel);
+    }
+  }
+
+  function setSlice(sliceRaw) {
+    const slice = Number.isInteger(sliceRaw) ? sliceRaw : sliceRaw.toFixed(2);
+    publicAPI.updateCornerAnnotation({ slice });
+    if (model.sliceRepresentation && model.sliceRepresentation.setSlice) {
+      model.sliceRepresentation.setSlice(sliceRaw);
+    }
+  }
+
+  publicAPI.bindRepresentationToManipulator = (representation) => {
+    let nbListeners = 0;
+    model.rangeManipulator.removeAllListeners();
+    model.sliceRepresentation = representation;
+    if (representation) {
+      if (representation.getColorWindow) {
+        const { min, max } = representation.getPropertyDomainByName(
+          'colorWindow'
+        );
+        model.rangeManipulator.setVerticalListener(
+          min,
+          max,
+          1,
+          representation.getColorWindow,
+          setColorWindow
+        );
+        nbListeners++;
+      }
+      if (representation.getColorLevel) {
+        const { min, max } = representation.getPropertyDomainByName(
+          'colorLevel'
+        );
+        model.rangeManipulator.setHorizontalListener(
+          min,
+          max,
+          1,
+          representation.getColorLevel,
+          setColorLevel
+        );
+        nbListeners++;
+      }
+      if (representation.getSlice && representation.getSliceValues) {
+        const values = representation.getSliceValues();
+        model.rangeManipulator.setScrollListener(
+          values[0],
+          values[values.length - 1],
+          values[1] - values[0],
+          representation.getSlice,
+          setSlice
+        );
+        nbListeners++;
+      }
+    }
+    return nbListeners;
   };
 }
 
