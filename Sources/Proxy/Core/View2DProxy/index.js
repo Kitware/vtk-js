@@ -101,6 +101,9 @@ function vtkView2DProxy(publicAPI, model) {
     let nbListeners = 0;
     model.rangeManipulator.removeAllListeners();
     model.sliceRepresentation = representation;
+    while (model.sliceRepresentationSubscriptions.length) {
+      model.sliceRepresentationSubscriptions.pop().unsubscribe();
+    }
     if (representation) {
       if (representation.getColorWindow) {
         const { min, max } = representation.getPropertyDomainByName(
@@ -112,6 +115,11 @@ function vtkView2DProxy(publicAPI, model) {
           1,
           representation.getColorWindow,
           setColorWindow
+        );
+        model.sliceRepresentationSubscriptions.push(
+          representation.onModified(() => {
+            setColorWindow(representation.getColorWindow());
+          })
         );
         nbListeners++;
       }
@@ -126,6 +134,11 @@ function vtkView2DProxy(publicAPI, model) {
           representation.getColorLevel,
           setColorLevel
         );
+        model.sliceRepresentationSubscriptions.push(
+          representation.onModified(() => {
+            setColorLevel(representation.getColorLevel());
+          })
+        );
         nbListeners++;
       }
       if (representation.getSlice && representation.getSliceValues) {
@@ -136,6 +149,11 @@ function vtkView2DProxy(publicAPI, model) {
           values[1] - values[0],
           representation.getSlice,
           setSlice
+        );
+        model.sliceRepresentationSubscriptions.push(
+          representation.onModified(() => {
+            setSlice(representation.getSlice());
+          })
         );
         nbListeners++;
       }
@@ -153,6 +171,7 @@ const DEFAULT_VALUES = {
   orientation: -1,
   viewUp: [0, 1, 0],
   useParallelRendering: true,
+  sliceRepresentationSubscriptions: [],
 };
 
 // ----------------------------------------------------------------------------
