@@ -1118,6 +1118,10 @@ export function proxy(publicAPI, model) {
         }
       }
 
+      if (!sourceLink) {
+        return null;
+      }
+
       const newValue = sourceLink.instance[
         `get${capitalize(sourceLink.propertyName)}`
       ]();
