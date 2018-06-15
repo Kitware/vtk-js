@@ -138,7 +138,7 @@ function vtkMouseRangeManipulator(publicAPI, model) {
 
   //-------------------------------------------------------------------------
   publicAPI.onScroll = (interactor, renderer, delta) => {
-    if (!delta) {
+    if (!model.scrollListener || !delta) {
       return;
     }
     processDelta(model.scrollListener, delta * model.scrollListener.step);
