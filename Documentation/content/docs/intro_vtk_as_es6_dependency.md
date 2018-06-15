@@ -100,8 +100,8 @@ You should extend the generated **package.json** file with the following set of 
 {
   [...],
   "scripts": {
-    "build": "webpack",
-    "build:release": "webpack -p",
+    "build": "webpack --progress --colors --mode development",
+    "build:release": "webpack --progress --colors --mode production",
     "start": "webpack-dev-server --content-base ./dist",
 
     "commit": "git cz",
