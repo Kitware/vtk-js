@@ -109,11 +109,13 @@ function vtkViewProxy(publicAPI, model) {
   publicAPI.setOrientationAxesType = (type) => {
     switch (type) {
       case 'arrow':
+        model.orientationAxesType = 'arrow';
         model.orientationWidget.setActor(model.orientationAxesArrow);
         break;
       case 'cube':
       default:
         model.orientationWidget.setActor(model.orientationAxesCube);
+        model.orientationAxesType = 'cube';
         break;
     }
     publicAPI.renderLater();
@@ -361,6 +363,7 @@ const DEFAULT_VALUES = {
   annotationOpacity: 1,
   resetCameraOnFirstRender: true,
   presetToOrientationAxes: 'default',
+  orientationAxesType: 'cube',
 };
 
 // ----------------------------------------------------------------------------
@@ -370,19 +373,20 @@ function extend(publicAPI, model, initialValues = {}) {
 
   macro.obj(publicAPI, model);
   macro.get(publicAPI, model, [
-    'representations',
-    'renderer',
-    'renderWindow',
-    'openglRenderWindow',
+    'annotationOpacity',
+    'camera',
+    'container',
+    'cornerAnnotation',
     'interactor',
     'interactorStyle2D',
     'interactorStyle3D',
-    'container',
-    'useParallelRendering',
-    'camera',
-    'cornerAnnotation',
-    'annotationOpacity',
+    'openglRenderWindow',
+    'orientationAxesType',
     'presetToOrientationAxes',
+    'renderer',
+    'renderWindow',
+    'representations',
+    'useParallelRendering',
   ]);
 
   // Object specific methods
