@@ -32,18 +32,20 @@ function vtkAbstractWidget(publicAPI, model) {
     // Enable/disable in superclass
     superClass.setEnabled(enable);
 
-    // Add representation to new interactor's renderer
-    if (!model.interactor) {
-      return;
+    if (enable) {
+      // Add representation to new interactor's renderer
+      if (!model.interactor) {
+        return;
+      }
+      const renderer = model.interactor.getCurrentRenderer();
+      if (!renderer) {
+        return;
+      }
+      publicAPI.createDefaultRepresentation();
+      model.widgetRep.setRenderer(renderer);
+      model.widgetRep.buildRepresentation();
+      renderer.addViewProp(model.widgetRep);
     }
-    const renderer = model.interactor.getCurrentRenderer();
-    if (!renderer) {
-      return;
-    }
-    publicAPI.createDefaultRepresentation();
-    model.widgetRep.setRenderer(renderer);
-    model.widgetRep.buildRepresentation();
-    renderer.addViewProp(model.widgetRep);
   };
 
   //----------------------------------------------------------------------------
