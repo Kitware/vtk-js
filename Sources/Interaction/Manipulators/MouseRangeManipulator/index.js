@@ -102,7 +102,7 @@ function vtkMouseRangeManipulator(publicAPI, model) {
   publicAPI.removeAllListeners = () => {
     publicAPI.removeHorizontalListener();
     publicAPI.removeVerticalListener();
-    publicAPI.removesCrollListener();
+    publicAPI.removeScrollListener();
   };
 
   //-------------------------------------------------------------------------
