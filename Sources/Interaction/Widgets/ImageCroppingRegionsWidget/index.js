@@ -70,22 +70,32 @@ function vtkImageCroppingRegionsWidget(publicAPI, model) {
     }
   };
 
-  publicAPI.updateWidgetState = (state) => {
-    const oldState = model.widgetState;
-    model.widgetState = Object.assign({}, oldState, state);
-    publicAPI.updateRepresentation();
+  publicAPI.getWidgetState = () => Object.assign({}, model.widgetState);
 
-    if (!arrayEquals(oldState.planes, model.widgetState.planes)) {
-      publicAPI.invokeCroppingPlanesChanged(model.widgetState.planes);
+  publicAPI.updateWidgetState = (state) => {
+    const needsUpdate = Object.keys(state).reduce(
+      (flag, key) => flag || model.widgetState[key] !== state[key],
+      false
+    );
+
+    if (needsUpdate) {
+      const oldState = model.widgetState;
+      model.widgetState = Object.assign({}, oldState, state);
+      publicAPI.updateRepresentation();
+
+      if (!arrayEquals(oldState.planes, model.widgetState.planes)) {
+        publicAPI.invokeCroppingPlanesChanged(model.widgetState.planes);
+      }
+      publicAPI.modified();
     }
-    publicAPI.modified();
   };
 
   publicAPI.setVolumeMapper = (volumeMapper) => {
     if (volumeMapper !== model.volumeMapper) {
       model.volumeMapper = volumeMapper;
+
+      publicAPI.resetWidgetState();
       if (model.enabled) {
-        publicAPI.resetWidgetState();
         publicAPI.updateRepresentation();
       }
     }
@@ -210,13 +220,12 @@ function vtkImageCroppingRegionsWidget(publicAPI, model) {
     }
 
     if (enable) {
-      publicAPI.resetWidgetState();
-
       const camera = publicAPI
         .getInteractor()
         .getCurrentRenderer()
         .getActiveCamera();
       cameraSub = camera.onModified(publicAPI.updateRepresentation);
+      publicAPI.updateRepresentation();
     }
   });
 
