@@ -93,6 +93,8 @@ function vtkImageCroppingRegionsRepresentation(publicAPI, model) {
 
   publicAPI.getNestedProps = () => publicAPI.getActors();
 
+  publicAPI.getMapper = () => null;
+
   publicAPI.getEventIntersection = (callData) => {
     const { x, y, z } = callData.position;
     model.picker.pick([x, y, z], callData.pokedRenderer);
