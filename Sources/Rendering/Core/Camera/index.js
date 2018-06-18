@@ -406,21 +406,7 @@ function vtkCamera(publicAPI, model) {
     mat4.multiply(result, w2pMatrix, phystoworld);
   };
 
-  // the provided matrix should include
-  // translation and orientation only
-  publicAPI.computeViewParametersFromPhysicalMatrix = (mat) => {
-    // get the WorldToPhysicalMatrix
-    publicAPI.getWorldToPhysicalMatrix(w2pMatrix);
-
-    // first convert the physical -> hmd matrix to be world -> hmd
-    mat4.multiply(viewMatrix, mat, w2pMatrix);
-    // invert to get hmd -> world
-    mat4.invert(viewMatrix, viewMatrix);
-
-    publicAPI.computeViewParametersFromViewMatrix();
-  };
-
-  publicAPI.computeViewParametersFromViewMatrix = () => {
+  function computeViewParametersFromViewMatrix() {
     // then extract the params position, orientation
     // push 0,0,0 through to get a translation
     vec3.transformMat4(tmpvec1, origin, viewMatrix);
@@ -438,24 +424,37 @@ function vtkCamera(publicAPI, model) {
     publicAPI.setViewUp(tmpvec3[0], tmpvec3[1], tmpvec3[2]);
 
     publicAPI.setDistance(oldDist);
+  }
+
+  // the provided matrix should include
+  // translation and orientation only
+  publicAPI.computeViewParametersFromPhysicalMatrix = (mat) => {
+    // get the WorldToPhysicalMatrix
+    publicAPI.getWorldToPhysicalMatrix(w2pMatrix);
+
+    // first convert the physical -> hmd matrix to be world -> hmd
+    mat4.multiply(viewMatrix, mat, w2pMatrix);
+    // invert to get hmd -> world
+    mat4.invert(viewMatrix, viewMatrix);
+
+    computeViewParametersFromViewMatrix();
   };
 
   publicAPI.setViewMatrix = (mat) => {
     model.viewMatrix = mat;
     if (model.viewMatrix) {
       mat4.copy(viewMatrix, model.viewMatrix);
-      publicAPI.computeViewParametersFromViewMatrix();
+      computeViewParametersFromViewMatrix();
+      mat4.transpose(model.viewMatrix, model.viewMatrix);
     }
   };
 
   publicAPI.getViewMatrix = () => {
-    const result = mat4.create();
     if (model.viewMatrix) {
-      mat4.copy(result, model.viewMatrix);
-      mat4.transpose(result, result);
-      return result;
+      return model.viewMatrix;
     }
 
+    const result = mat4.create();
     const eye = model.position;
     const at = model.focalPoint;
     const up = model.viewUp;
