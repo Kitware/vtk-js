@@ -93,7 +93,8 @@ function vtkImageCroppingRegionsRepresentation(publicAPI, model) {
 
   publicAPI.getNestedProps = () => publicAPI.getActors();
 
-  publicAPI.getMapper = () => null;
+  // outline mapper substitutes for the crop widget rep mapper
+  publicAPI.getMapper = () => model.outline.mapper;
 
   publicAPI.getEventIntersection = (callData) => {
     const { x, y, z } = callData.position;
@@ -177,9 +178,9 @@ function vtkImageCroppingRegionsRepresentation(publicAPI, model) {
       outlinePoints.set(model.bboxCorners[i], i * 3);
     }
 
-    model.outline.polydata.getPoints().setData(outlinePoints);
     model.outline.actor.getProperty().setEdgeColor(...model.edgeColor);
 
+    model.outline.polydata.getPoints().modified();
     model.outline.polydata.modified();
   };
 

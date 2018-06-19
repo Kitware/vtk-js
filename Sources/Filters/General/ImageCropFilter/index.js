@@ -64,18 +64,10 @@ function vtkImageCropFilter(publicAPI, model) {
     }
 
     const numberOfComponents = scalars.getNumberOfComponents();
-    const croppedExtent = [
-      0,
-      cropped[1] - cropped[0],
-      0,
-      cropped[3] - cropped[2],
-      0,
-      cropped[5] - cropped[4],
-    ];
     const byteSize =
-      (croppedExtent[1] + 1) *
-      (croppedExtent[3] + 1) *
-      (croppedExtent[5] + 1) *
+      (cropped[1] - cropped[0] + 1) *
+      (cropped[3] - cropped[2] + 1) *
+      (cropped[5] - cropped[4] + 1) *
       numberOfComponents;
     const scalarsData = scalars.getData();
 
@@ -96,13 +88,9 @@ function vtkImageCropFilter(publicAPI, model) {
       }
     }
 
-    // set correct origin
-    const croppedOrigin = [cropped[0], cropped[2], cropped[4]];
-    input.indexToWorld(croppedOrigin, croppedOrigin);
-
     const outImage = vtkImageData.newInstance({
-      extent: croppedExtent,
-      origin: croppedOrigin,
+      extent: cropped,
+      origin: input.getOrigin(),
       direction: input.getDirection(),
       spacing: input.getSpacing(),
     });
