@@ -106,6 +106,7 @@ function vtkView2DProxy(publicAPI, model) {
     }
     if (representation) {
       if (representation.getColorWindow) {
+        const update = () => setColorWindow(representation.getColorWindow());
         const { min, max } = representation.getPropertyDomainByName(
           'colorWindow'
         );
@@ -117,13 +118,13 @@ function vtkView2DProxy(publicAPI, model) {
           setColorWindow
         );
         model.sliceRepresentationSubscriptions.push(
-          representation.onModified(() => {
-            setColorWindow(representation.getColorWindow());
-          })
+          representation.onModified(update)
         );
+        update();
         nbListeners++;
       }
       if (representation.getColorLevel) {
+        const update = () => setColorLevel(representation.getColorLevel());
         const { min, max } = representation.getPropertyDomainByName(
           'colorLevel'
         );
@@ -135,13 +136,13 @@ function vtkView2DProxy(publicAPI, model) {
           setColorLevel
         );
         model.sliceRepresentationSubscriptions.push(
-          representation.onModified(() => {
-            setColorLevel(representation.getColorLevel());
-          })
+          representation.onModified(update)
         );
+        update();
         nbListeners++;
       }
       if (representation.getSlice && representation.getSliceValues) {
+        const update = () => setSlice(representation.getSlice());
         const values = representation.getSliceValues();
         model.rangeManipulator.setScrollListener(
           values[0],
@@ -151,10 +152,9 @@ function vtkView2DProxy(publicAPI, model) {
           setSlice
         );
         model.sliceRepresentationSubscriptions.push(
-          representation.onModified(() => {
-            setSlice(representation.getSlice());
-          })
+          representation.onModified(update)
         );
+        update();
         nbListeners++;
       }
     }
