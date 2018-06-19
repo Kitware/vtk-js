@@ -29,14 +29,17 @@ function vtkImageCropFilter(publicAPI, model) {
     }
 
     const extent = input.getExtent();
-    const cropped = extent.map((e, i) => {
-      if (i % 2 === 0) {
-        // min plane
-        return Math.max(e, Math.round(model.croppingPlanes[i]));
-      }
-      // max plane
-      return Math.min(e, Math.round(model.croppingPlanes[i]));
-    });
+    const cropped =
+      model.croppingPlanes.length === 6
+        ? extent.map((e, i) => {
+            if (i % 2 === 0) {
+              // min plane
+              return Math.max(e, Math.round(model.croppingPlanes[i]));
+            }
+            // max plane
+            return Math.min(e, Math.round(model.croppingPlanes[i]));
+          })
+        : extent;
 
     if (
       cropped[0] === extent[0] &&
@@ -121,7 +124,7 @@ function vtkImageCropFilter(publicAPI, model) {
 // ----------------------------------------------------------------------------
 
 const DEFAULT_VALUES = {
-  croppingPlanes: Array(6).fill(0),
+  croppingPlanes: [],
 };
 
 // ----------------------------------------------------------------------------
