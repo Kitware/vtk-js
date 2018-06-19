@@ -1,9 +1,10 @@
 import macro from 'vtk.js/Sources/macro';
 import vtkBoundingBox from 'vtk.js/Sources/Common/DataModel/BoundingBox';
+import vtkImageCropFilter from 'vtk.js/Sources/Filters/General/ImageCropFilter';
+import vtkImageMapper from 'vtk.js/Sources/Rendering/Core/ImageMapper';
+import vtkImageSlice from 'vtk.js/Sources/Rendering/Core/ImageSlice';
 import vtkVolume from 'vtk.js/Sources/Rendering/Core/Volume';
 import vtkVolumeMapper from 'vtk.js/Sources/Rendering/Core/VolumeMapper';
-import vtkImageSlice from 'vtk.js/Sources/Rendering/Core/ImageSlice';
-import vtkImageMapper from 'vtk.js/Sources/Rendering/Core/ImageMapper';
 
 import vtkAbstractRepresentationProxy from 'vtk.js/Sources/Proxy/Core/AbstractRepresentationProxy';
 
@@ -148,8 +149,10 @@ function vtkVolumeRepresentationProxy(publicAPI, model) {
   model.mapper = vtkVolumeMapper.newInstance();
   model.volume = vtkVolume.newInstance();
   model.property = model.volume.getProperty();
+  model.cropFilter = vtkImageCropFilter.newInstance();
+  model.mapper.setInputConnection(model.cropFilter.getOutputPort());
 
-  model.sourceDependencies.push(model.mapper);
+  model.sourceDependencies.push(model.cropFilter);
 
   // Slices
   model.mapperX = vtkImageMapper.newInstance({
@@ -172,9 +175,12 @@ function vtkVolumeRepresentationProxy(publicAPI, model) {
     property: model.propertySlices,
   });
 
-  model.sourceDependencies.push(model.mapperX);
-  model.sourceDependencies.push(model.mapperY);
-  model.sourceDependencies.push(model.mapperZ);
+  model.mapperX.setInputConnection(model.cropFilter.getOutputPort());
+  model.mapperY.setInputConnection(model.cropFilter.getOutputPort());
+  model.mapperZ.setInputConnection(model.cropFilter.getOutputPort());
+  // model.sourceDependencies.push(model.mapperX);
+  // model.sourceDependencies.push(model.mapperY);
+  // model.sourceDependencies.push(model.mapperZ);
 
   // connect rendering pipeline
   model.volume.setMapper(model.mapper);
@@ -222,11 +228,26 @@ function vtkVolumeRepresentationProxy(publicAPI, model) {
 
   publicAPI.isVisible = () => model.volume.getVisibility();
 
-  publicAPI.setVisibility = model.volume.setVisibility;
-  publicAPI.getVisibility = model.volume.getVisibility;
+  publicAPI.setVisibility = (isVisible) => {
+    if (isVisible) {
+      // Turn on only the volume
+      model.volume.setVisibility(true);
+    } else {
+      // Turn off everything
+      model.volume.setVisibility(false);
+      model.actorX.setVisibility(false);
+      model.actorY.setVisibility(false);
+      model.actorZ.setVisibility(false);
+    }
+  };
 
-  publicAPI.setVolumeVisibility = model.volume.setVisibility;
-  publicAPI.getVolumeVisibility = model.volume.getVisibility;
+  publicAPI.getVisibility = () =>
+    model.volume.getVisibility() ||
+    model.actorX.getVisibility() ||
+    model.actorY.getVisibility() ||
+    model.actorZ.getVisibility();
+
+  publicAPI.isVisible = publicAPI.getVisibility;
 
   publicAPI.setSliceVisibility = macro.chain(
     model.actorX.setVisibility,
@@ -317,12 +338,14 @@ export function extend(publicAPI, model, initialValues = {}) {
     xSlice: { modelKey: 'mapperX', property: 'slice' },
     ySlice: { modelKey: 'mapperY', property: 'slice' },
     zSlice: { modelKey: 'mapperZ', property: 'slice' },
+    volumeVisibility: { modelKey: 'volume', property: 'visibility' },
     xSliceVisibility: { modelKey: 'actorX', property: 'visibility' },
     ySliceVisibility: { modelKey: 'actorY', property: 'visibility' },
     zSliceVisibility: { modelKey: 'actorZ', property: 'visibility' },
     colorWindow: { modelKey: 'propertySlices', property: 'colorWindow' },
     colorLevel: { modelKey: 'propertySlices', property: 'colorLevel' },
     useShadow: { modelKey: 'property', property: 'shade' },
+    croppingPlanes: { modelKey: 'cropFilter', property: 'croppingPlanes' },
   });
 }
 
