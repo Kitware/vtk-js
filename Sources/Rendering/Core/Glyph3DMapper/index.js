@@ -327,9 +327,10 @@ export function extend(publicAPI, model, initialValues = {}) {
   macro.setGet(publicAPI, model, [
     'orient',
     'orientationArray',
-    'scaling',
-    'scaleFactor',
     'scaleArray',
+    'scaleFactor',
+    'scaleMode',
+    'scaling',
   ]);
 
   macro.get(publicAPI, model, [
