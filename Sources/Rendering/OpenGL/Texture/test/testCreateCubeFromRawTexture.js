@@ -63,15 +63,17 @@ test.onlyIfWebGL('Test vtkOpenGLTexture Rendering', (t) => {
     renderer.getActiveCamera().elevation(30);
     renderer.resetCameraClippingRange();
 
-    const image = glwindow.captureImage();
-    testUtils.compareImages(
-      image,
-      [baseline],
-      'Rendering/OpenGL/Texture/',
-      t,
-      0.5,
-      gc.releaseResources
-    );
+    glwindow.captureNextImage().then((image) => {
+      testUtils.compareImages(
+        image,
+        [baseline],
+        'Rendering/OpenGL/Texture/',
+        t,
+        0.5,
+        gc.releaseResources
+      );
+    });
+    renderWindow.render();
   }
 
   // Recursive function to load texture one by one

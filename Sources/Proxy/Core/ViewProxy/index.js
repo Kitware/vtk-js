@@ -235,11 +235,13 @@ function vtkViewProxy(publicAPI, model) {
 
   publicAPI.openCaptureImage = (target = '_blank') => {
     const image = new Image();
-    image.src = publicAPI.captureImage();
-    const w = window.open('', target);
-    w.document.write(image.outerHTML);
-    w.document.title = 'vtk.js Image Capture';
-    window.focus();
+    publicAPI.captureImage().then((imageURL) => {
+      image.src = imageURL;
+      const w = window.open('', target);
+      w.document.write(image.outerHTML);
+      w.document.title = 'vtk.js Image Capture';
+      window.focus();
+    });
   };
 
   // --------------------------------------------------------------------------

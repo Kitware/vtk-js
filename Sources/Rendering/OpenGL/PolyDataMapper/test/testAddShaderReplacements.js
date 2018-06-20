@@ -122,14 +122,16 @@ test.onlyIfWebGL('Test Add Shader Replacements', (t) => {
       renderWindow.addView(glwindow);
       glwindow.setSize(400, 400);
 
-      const image = glwindow.captureImage();
-      testUtils.compareImages(
-        image,
-        [baseline],
-        'Rendering/OpenGL/PolyDataMapper/testShaderReplacementsAdd',
-        t,
-        1.5,
-        gc.releaseResources
-      );
+      glwindow.captureNextImage().then((image) => {
+        testUtils.compareImages(
+          image,
+          [baseline],
+          'Rendering/OpenGL/PolyDataMapper/testShaderReplacementsAdd',
+          t,
+          1.5,
+          gc.releaseResources
+        );
+      });
+      renderWindow.render();
     });
 });

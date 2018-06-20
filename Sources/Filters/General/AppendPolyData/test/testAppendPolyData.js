@@ -142,13 +142,15 @@ test.onlyIfWebGL('Test vtkAppendPolyData rendering', (t) => {
   camera.azimuth(40);
   renderer.resetCamera();
 
-  const image = glwindow.captureImage();
-  testUtils.compareImages(
-    image,
-    [baseline],
-    'Filters/General/AppendPolyData/testAppendPolyData',
-    t,
-    2.5,
-    gc.releaseResources
-  );
+  glwindow.captureNextImage().then((image) => {
+    testUtils.compareImages(
+      image,
+      [baseline],
+      'Filters/General/AppendPolyData/testAppendPolyData',
+      t,
+      2.5,
+      gc.releaseResources
+    );
+  });
+  renderWindow.render();
 });

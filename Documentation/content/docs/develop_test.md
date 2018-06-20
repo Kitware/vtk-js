@@ -80,10 +80,11 @@ test.onlyIfWebGL('Test vtkClassName Rendering', (t) => {
   renderWindow.addView(glwindow);
   glwindow.setSize(400, 400);
 
-  const image = glwindow.captureImage();
-
-  // compareImages(image, baselines, testName, tapeContext, threshold = 5, nextCallback = null)
-  testUtils.compareImages(image, [baseline], 'Filters/Sources/ConeSource/', t);
+  glwindow.captureNextImage().then((image) => {
+    // compareImages(image, baselines, testName, tapeContext, threshold = 5, nextCallback = null)
+    testUtils.compareImages(image, [baseline], 'Filters/Sources/ConeSource/', t);
+  });
+  renderWindow.render();
 });
 ```
 

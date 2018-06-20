@@ -105,13 +105,15 @@ test.onlyIfWebGL('Test vtkGlyph3DMapper Rendering', (t) => {
 
   renderWindow.render();
 
-  const image = glwindow.captureImage();
-  testUtils.compareImages(
-    image,
-    [baseline],
-    'Rendering/Core/Glyph3DMapper/testGlyph3DMapper',
-    t,
-    1.0,
-    gc.releaseResources
-  );
+  glwindow.captureNextImage().then((image) => {
+    testUtils.compareImages(
+      image,
+      [baseline],
+      'Rendering/Core/Glyph3DMapper/testGlyph3DMapper',
+      t,
+      1.0,
+      gc.releaseResources
+    );
+  });
+  renderWindow.render();
 });

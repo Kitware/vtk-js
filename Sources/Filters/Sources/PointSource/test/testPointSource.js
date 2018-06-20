@@ -48,13 +48,15 @@ test.onlyIfWebGL('Test vtkPointSource Rendering', (t) => {
   renderWindow.addView(glwindow);
   glwindow.setSize(400, 400);
 
-  const image = glwindow.captureImage();
-  testUtils.compareImages(
-    image,
-    [basepoint],
-    'Filters/Sources/PointSource/testPointSource',
-    t,
-    1.0,
-    gc.releaseResources
-  );
+  glwindow.captureNextImage().then((image) => {
+    testUtils.compareImages(
+      image,
+      [basepoint],
+      'Filters/Sources/PointSource/testPointSource',
+      t,
+      1.0,
+      gc.releaseResources
+    );
+  });
+  renderWindow.render();
 });

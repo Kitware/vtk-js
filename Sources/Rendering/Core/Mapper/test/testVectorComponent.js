@@ -59,13 +59,15 @@ test.onlyIfWebGL('Test VectorComponent', (t) => {
 
   renderWindow.render();
 
-  const image = glwindow.captureImage();
-  testUtils.compareImages(
-    image,
-    [baseline],
-    'Rendering/Core/Mapper/testVectorComponent.js',
-    t,
-    5,
-    gc.releaseResources
-  );
+  glwindow.captureNextImage().then((image) => {
+    testUtils.compareImages(
+      image,
+      [baseline],
+      'Rendering/Core/Mapper/testVectorComponent.js',
+      t,
+      5,
+      gc.releaseResources
+    );
+  });
+  renderWindow.render();
 });

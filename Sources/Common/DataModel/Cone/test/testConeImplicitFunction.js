@@ -59,13 +59,15 @@ test.onlyIfWebGL('Test Cone Implicit Function', (t) => {
 
   renderWindow.render();
 
-  const image = glwindow.captureImage();
-  testUtils.compareImages(
-    image,
-    [baseline],
-    'Common/DataModel/Cone/testConeImplicitFunction',
-    t,
-    1.0,
-    gc.releaseResources
-  );
+  glwindow.captureNextImage().then((image) => {
+    testUtils.compareImages(
+      image,
+      [baseline],
+      'Common/DataModel/Cone/testConeImplicitFunction',
+      t,
+      1.0,
+      gc.releaseResources
+    );
+  });
+  renderWindow.render();
 });

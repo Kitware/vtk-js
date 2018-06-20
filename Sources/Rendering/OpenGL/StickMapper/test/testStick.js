@@ -128,13 +128,15 @@ test.onlyIfWebGL('Test StickMapper', (t) => {
   renderer.getActiveCamera().setClippingRange(1.0, 10.0);
   renderer.getActiveCamera().azimuth(10.0);
 
-  const image = glwindow.captureImage();
-  testUtils.compareImages(
-    image,
-    [baseline],
-    'Rendering/OpenGL/StickMapper',
-    t,
-    1,
-    gc.releaseResources
-  );
+  glwindow.captureNextImage().then((image) => {
+    testUtils.compareImages(
+      image,
+      [baseline],
+      'Rendering/OpenGL/StickMapper',
+      t,
+      1,
+      gc.releaseResources
+    );
+  });
+  renderWindow.render();
 });
