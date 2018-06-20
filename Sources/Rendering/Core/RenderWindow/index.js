@@ -90,10 +90,11 @@ function vtkRenderWindow(publicAPI, model) {
   };
 
   publicAPI.captureImages = (format = 'image/png') => {
-    publicAPI.render();
+    setImmediate(publicAPI.render);
     return model.views
       .map(
-        (view) => (view.captureImage ? view.captureImage(format) : undefined)
+        (view) =>
+          view.captureNextImage ? view.captureNextImage(format) : undefined
       )
       .filter((i) => !!i);
   };

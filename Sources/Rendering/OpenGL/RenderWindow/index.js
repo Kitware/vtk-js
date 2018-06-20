@@ -487,17 +487,25 @@ function vtkOpenGLRenderWindow(publicAPI, model) {
     }
   };
 
-  function getCanvasDataURL(format = 'image/png') {
+  function getCanvasDataURL(format = model.imageFormat) {
     return model.canvas.toDataURL(format);
   }
 
-  publicAPI.captureImage = (format = 'image/png') => {
+  publicAPI.captureNextImage = (format = 'image/png') => {
     if (model.deleted) {
       return null;
     }
+    model.imageFormat = format;
+    const previous = model.notifyImageReady;
+    model.notifyImageReady = true;
 
-    publicAPI.traverseAllPasses();
-    return getCanvasDataURL(format);
+    return new Promise((resolve, reject) => {
+      const subscription = publicAPI.onImageReady((imageURL) => {
+        model.notifyImageReady = previous;
+        subscription.unsubscribe();
+        resolve(imageURL);
+      });
+    });
   };
 
   publicAPI.getGLInformations = () => {
@@ -969,6 +977,7 @@ const DEFAULT_VALUES = {
   queryVRSize: false,
   activeFramebuffer: null,
   vrDisplay: null,
+  imageFormat: 'image/png',
 };
 
 // ----------------------------------------------------------------------------
