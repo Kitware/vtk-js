@@ -44,13 +44,15 @@ test.onlyIfWebGL('Test vtkLineSource Rendering', (t) => {
   renderWindow.addView(glwindow);
   glwindow.setSize(400, 400);
 
-  const image = glwindow.captureImage();
-  testUtils.compareImages(
-    image,
-    [baseline],
-    'Filters/Sources/LineSource/testLine',
-    t,
-    1,
-    gc.releaseResources
-  );
+  glwindow.captureNextImage().then((image) => {
+    testUtils.compareImages(
+      image,
+      [baseline],
+      'Filters/Sources/LineSource/testLine',
+      t,
+      1,
+      gc.releaseResources
+    );
+  });
+  renderWindow.render();
 });

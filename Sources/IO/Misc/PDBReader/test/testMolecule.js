@@ -80,15 +80,16 @@ test.onlyIfWebGL('Test MoleculeMapper', (t) => {
     renderWindow.render();
 
     // the data have to be uploaded before capturing and comparing the images
-    const image = glwindow.captureImage();
-
-    testUtils.compareImages(
-      image,
-      [baseline],
-      'IO/Misc/PDBReader',
-      t,
-      1,
-      gc.releaseResources
-    );
+    glwindow.captureNextImage().then((image) => {
+      testUtils.compareImages(
+        image,
+        [baseline],
+        'IO/Misc/PDBReader',
+        t,
+        1,
+        gc.releaseResources
+      );
+    });
+    renderWindow.render();
   });
 });

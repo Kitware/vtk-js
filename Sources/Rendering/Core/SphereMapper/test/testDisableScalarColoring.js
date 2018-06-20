@@ -101,15 +101,15 @@ test.onlyIfWebGL('Test vtkSphereMapper Rendering', (t) => {
   mapper.setScalarVisibility(false);
   mapper.setColorByArrayName(null);
 
+  glwindow.captureNextImage().then((image) => {
+    testUtils.compareImages(
+      image,
+      [baseline],
+      'Rendering/Core/SphereMapper/testDisableScalarColoring',
+      t,
+      1.0,
+      gc.releaseResources
+    );
+  });
   renderWindow.render();
-
-  const image = glwindow.captureImage();
-  testUtils.compareImages(
-    image,
-    [baseline],
-    'Rendering/Core/SphereMapper/testDisableScalarColoring',
-    t,
-    1.0,
-    gc.releaseResources
-  );
 });

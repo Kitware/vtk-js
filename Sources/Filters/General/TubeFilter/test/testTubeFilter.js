@@ -172,13 +172,15 @@ test.onlyIfWebGL('Test vtkTubeFilter rendering', (t) => {
   camera.yaw(40);
   renderer.resetCamera();
 
-  const image = glwindow.captureImage();
-  testUtils.compareImages(
-    image,
-    [baseline],
-    'Filters/General/TubeFilter/testTubeFilter',
-    t,
-    2.5,
-    gc.releaseResources
-  );
+  glwindow.captureNextImage().then((image) => {
+    testUtils.compareImages(
+      image,
+      [baseline],
+      'Filters/General/TubeFilter/testTubeFilter',
+      t,
+      2.5,
+      gc.releaseResources
+    );
+  });
+  renderWindow.render();
 });

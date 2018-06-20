@@ -76,15 +76,17 @@ test.onlyIfWebGL('Test Composite Volume Rendering', (t) => {
       renderer.getActiveCamera().elevation(70);
       renderer.resetCameraClippingRange();
 
-      const image = glwindow.captureImage();
-      testUtils.compareImages(
-        image,
-        [baseline1, baseline2],
-        'Rendering/OpenGL/VolumeMapper/testComposite',
-        t,
-        1.5,
-        gc.releaseResources
-      );
+      glwindow.captureNextImage().then((image) => {
+        testUtils.compareImages(
+          image,
+          [baseline1, baseline2],
+          'Rendering/OpenGL/VolumeMapper/testComposite',
+          t,
+          1.5,
+          gc.releaseResources
+        );
+      });
+      renderWindow.render();
     });
   });
 });

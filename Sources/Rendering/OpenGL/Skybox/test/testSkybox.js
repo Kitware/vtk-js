@@ -46,15 +46,17 @@ test.onlyIfWebGL('Test vtkOpenGLSkybox Rendering', (t) => {
     renderWindow.addView(glwindow);
     glwindow.setSize(400, 400);
 
-    const image = glwindow.captureImage();
-    testUtils.compareImages(
-      image,
-      [baseline],
-      'Rendering/OpenGL/Skybox/',
-      t,
-      0.5,
-      gc.releaseResources
-    );
+    glwindow.captureNextImage().then((image) => {
+      testUtils.compareImages(
+        image,
+        [baseline],
+        'Rendering/OpenGL/Skybox/',
+        t,
+        0.5,
+        gc.releaseResources
+      );
+    });
+    renderWindow.render();
   }
 
   // Recursive function to load texture one by one

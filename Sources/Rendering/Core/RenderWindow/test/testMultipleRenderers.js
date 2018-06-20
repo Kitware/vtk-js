@@ -83,13 +83,15 @@ test.onlyIfWebGL('Test multiple renderers', (t) => {
 
   renderWindow.render();
 
-  const image = glwindow.captureImage();
-  testUtils.compareImages(
-    image,
-    [baseline],
-    'Rendering/Core/RenderWindow/testMultipleRenderers',
-    t,
-    5,
-    gc.releaseResources
-  );
+  glwindow.captureNextImage().then((image) => {
+    testUtils.compareImages(
+      image,
+      [baseline],
+      'Rendering/Core/RenderWindow/testMultipleRenderers',
+      t,
+      5,
+      gc.releaseResources
+    );
+  });
+  renderWindow.render();
 });

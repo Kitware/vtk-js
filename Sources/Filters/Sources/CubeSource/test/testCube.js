@@ -73,13 +73,15 @@ test.onlyIfWebGL('Test vtkCubeSource Rendering', (t) => {
   renderWindow.addView(glwindow);
   glwindow.setSize(400, 400);
 
-  const image = glwindow.captureImage();
-  testUtils.compareImages(
-    image,
-    [baseline1, baseline2],
-    'Filters/Sources/CubeSource/testCube',
-    t,
-    2.5,
-    gc.releaseResources
-  );
+  glwindow.captureNextImage().then((image) => {
+    testUtils.compareImages(
+      image,
+      [baseline1, baseline2],
+      'Filters/Sources/CubeSource/testCube',
+      t,
+      2.5,
+      gc.releaseResources
+    );
+  });
+  renderWindow.render();
 });

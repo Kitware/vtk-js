@@ -74,16 +74,17 @@ test.onlyIfWebGL('Test Composite Volume Rendering', (t) => {
     reader.loadData().then(() => {
       renderer.addVolume(actor);
       renderer.resetCamera();
+      glwindow.captureNextImage().then((image) => {
+        testUtils.compareImages(
+          image,
+          [baseline1, baseline2],
+          'Rendering/OpenGL/VolumeMapper/testComposite16Bit',
+          t,
+          1.5,
+          gc.releaseResources
+        );
+      });
       renderWindow.render();
-      const image = glwindow.captureImage();
-      testUtils.compareImages(
-        image,
-        [baseline1, baseline2],
-        'Rendering/OpenGL/VolumeMapper/testComposite16Bit',
-        t,
-        1.5,
-        gc.releaseResources
-      );
     });
   });
 });

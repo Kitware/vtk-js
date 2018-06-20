@@ -71,14 +71,15 @@ test.onlyIfWebGL('Test MultipleBonds', (t) => {
   glwindow.setSize(400, 400);
 
   // capturing and comparing the images
-  const image = glwindow.captureImage();
-
-  testUtils.compareImages(
-    image,
-    [baseline],
-    'Filters/General/MoleculeToRepresentation/testMultipleBonds',
-    t,
-    1,
-    gc.releaseResources
-  );
+  glwindow.captureNextImage().then((image) => {
+    testUtils.compareImages(
+      image,
+      [baseline],
+      'Filters/General/MoleculeToRepresentation/testMultipleBonds',
+      t,
+      1,
+      gc.releaseResources
+    );
+  });
+  renderWindow.render();
 });

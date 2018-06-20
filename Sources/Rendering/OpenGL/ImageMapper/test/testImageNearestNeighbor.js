@@ -63,14 +63,16 @@ test.onlyIfWebGL(
     renderWindow.addView(glwindow);
     glwindow.setSize(400, 400);
 
-    const image = glwindow.captureImage();
-    testUtils.compareImages(
-      image,
-      [baseline],
-      'Rendering/OpenGL/ImageMapperNearestNeighbor',
-      t,
-      1,
-      gc.releaseResources
-    );
+    glwindow.captureNextImage().then((image) => {
+      testUtils.compareImages(
+        image,
+        [baseline],
+        'Rendering/OpenGL/ImageMapperNearestNeighbor',
+        t,
+        1,
+        gc.releaseResources
+      );
+    });
+    renderWindow.render();
   }
 );

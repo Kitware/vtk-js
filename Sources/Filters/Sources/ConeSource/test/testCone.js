@@ -55,13 +55,15 @@ test.onlyIfWebGL('Test vtkConeSource Rendering', (t) => {
   renderWindow.addView(glwindow);
   glwindow.setSize(400, 400);
 
-  const image = glwindow.captureImage();
-  testUtils.compareImages(
-    image,
-    [baseline],
-    'Filters/Sources/ConeSource/testCone',
-    t,
-    2.5,
-    gc.releaseResources
-  );
+  glwindow.captureNextImage().then((image) => {
+    testUtils.compareImages(
+      image,
+      [baseline],
+      'Filters/Sources/ConeSource/testCone',
+      t,
+      2.5,
+      gc.releaseResources
+    );
+  });
+  renderWindow.render();
 });
