@@ -64,8 +64,9 @@ function vtkViewProxy(publicAPI, model) {
   model.orientationAxesArrow = vtkAxesActor.newInstance();
   model.orientationAxesCube = vtkAnnotatedCubeActor.newInstance();
   AnnotatedCubePresets.applyPreset('default', model.orientationAxesCube);
+  AnnotatedCubePresets.applyPreset('lps', model.orientationAxesCube);
   model.orientationWidget = vtkOrientationMarkerWidget.newInstance({
-    actor: model.orientationAxesCube,
+    actor: model.orientationAxesArrow,
     interactor: model.renderWindow.getInteractor(),
   });
   model.orientationWidget.setEnabled(true);
@@ -351,7 +352,7 @@ function vtkViewProxy(publicAPI, model) {
   // Initialization from state or input
   // --------------------------------------------------------------------------
 
-  publicAPI.updateOrientation(model.axis, model.orientation, model.viewUp);
+  publicAPI.resetOrientation();
   updateAnnotationColor();
 }
 
@@ -364,8 +365,11 @@ const DEFAULT_VALUES = {
   sectionName: 'view',
   annotationOpacity: 1,
   resetCameraOnFirstRender: true,
-  presetToOrientationAxes: 'default',
-  orientationAxesType: 'cube',
+  presetToOrientationAxes: 'lps',
+  orientationAxesType: 'arrow',
+  axis: 1,
+  orientation: 0,
+  viewUp: [0, 0, 1],
 };
 
 // ----------------------------------------------------------------------------
