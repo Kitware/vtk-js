@@ -63,6 +63,14 @@ function vtkImageCropFilter(publicAPI, model) {
       }
     }
 
+    // restrict crop bounds based on extent bounds
+    for (let i = 0; i < 6; i += 2) {
+      // min case
+      cropped[i] = Math.max(cropped[i], extent[i]);
+      // max case
+      cropped[i + 1] = Math.min(cropped[i + 1], extent[i + 1]);
+    }
+
     const numberOfComponents = scalars.getNumberOfComponents();
     const byteSize =
       (cropped[1] - cropped[0] + 1) *
