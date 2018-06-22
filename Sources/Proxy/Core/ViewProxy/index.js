@@ -183,7 +183,6 @@ function vtkViewProxy(publicAPI, model) {
   publicAPI.renderLater = () => {
     if (model.representations.length > 0 && model.resetCameraOnFirstRender) {
       model.resetCameraOnFirstRender = false;
-      // console.log('==> resetCamera before renderLater', model.proxyId);
       publicAPI.resetCamera();
     }
     model.orientationWidget.updateMarkerOrientation();
@@ -215,6 +214,10 @@ function vtkViewProxy(publicAPI, model) {
       );
       representation.getActors().forEach(model.renderer.removeActor);
       representation.getVolumes().forEach(model.renderer.removeVolume);
+    }
+
+    if (model.representations.length === 0) {
+      model.resetCameraOnFirstRender = true;
     }
   };
 
