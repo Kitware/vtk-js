@@ -12,6 +12,17 @@ function vtkImageCropFilter(publicAPI, model) {
   // Set our className
   model.classHierarchy.push('vtkImageCropFilter');
 
+  // --------------------------------------------------------------------------
+
+  publicAPI.reset = () => {
+    const data = publicAPI.getInputData();
+    if (data) {
+      publicAPI.setCroppingPlanes(...data.getExtent());
+    }
+  };
+
+  // --------------------------------------------------------------------------
+
   publicAPI.requestData = (inData, outData) => {
     // implement requestData
     const input = inData[0];
@@ -61,6 +72,14 @@ function vtkImageCropFilter(publicAPI, model) {
           cropped[i * 2],
         ];
       }
+    }
+
+    // restrict crop bounds based on extent bounds
+    for (let i = 0; i < 6; i += 2) {
+      // min case
+      cropped[i] = Math.max(cropped[i], extent[i]);
+      // max case
+      cropped[i + 1] = Math.min(cropped[i + 1], extent[i + 1]);
     }
 
     const numberOfComponents = scalars.getNumberOfComponents();
