@@ -188,6 +188,7 @@ function vtkViewProxy(publicAPI, model) {
       publicAPI.resetCamera();
     }
     model.orientationWidget.updateMarkerOrientation();
+    model.renderer.resetCameraClippingRange();
     setTimeout(model.renderWindow.render, 0);
   };
 
