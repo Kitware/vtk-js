@@ -330,7 +330,7 @@ export function extend(publicAPI, model, initialValues = {}) {
 
   // Object methods
   vtkAbstractRepresentationProxy.extend(publicAPI, model);
-  macro.get(publicAPI, model, ['sampleDistance', 'edgeGradient']);
+  macro.get(publicAPI, model, ['sampleDistance', 'edgeGradient', 'cropFilter']);
 
   // Object specific methods
   vtkVolumeRepresentationProxy(publicAPI, model);
