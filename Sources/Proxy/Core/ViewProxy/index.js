@@ -304,10 +304,19 @@ function vtkViewProxy(publicAPI, model) {
 
   // --------------------------------------------------------------------------
 
-  publicAPI.updateOrientation = (axisIndex, orientation, viewUp) => {
+  publicAPI.updateOrientation = (
+    axisIndex,
+    orientation,
+    viewUp,
+    animateSteps = 0
+  ) => {
     if (axisIndex === undefined) {
-      return;
+      return Promise.resolve();
     }
+
+    const originalPosition = model.camera.getPosition();
+    const originalViewUp = model.camera.getViewUp();
+
     model.axis = axisIndex;
     model.orientation = orientation;
     model.viewUp = viewUp;
@@ -315,6 +324,73 @@ function vtkViewProxy(publicAPI, model) {
     position[model.axis] += model.orientation;
     model.camera.setPosition(...position);
     model.camera.setViewUp(...viewUp);
+    model.renderer.resetCamera();
+
+    const destPosition = model.camera.getPosition();
+    const destViewUp = model.camera.getViewUp();
+
+    const animationStack = [{ position: destPosition, viewUp: destViewUp }];
+
+    if (animateSteps) {
+      const deltaPosition = [
+        (originalPosition[0] - destPosition[0]) / animateSteps,
+        (originalPosition[1] - destPosition[1]) / animateSteps,
+        (originalPosition[2] - destPosition[2]) / animateSteps,
+      ];
+      const deltaViewUp = [
+        (originalViewUp[0] - destViewUp[0]) / animateSteps,
+        (originalViewUp[1] - destViewUp[1]) / animateSteps,
+        (originalViewUp[2] - destViewUp[2]) / animateSteps,
+      ];
+
+      const needSteps =
+        deltaPosition[0] ||
+        deltaPosition[1] ||
+        deltaPosition[2] ||
+        deltaViewUp[0] ||
+        deltaViewUp[1] ||
+        deltaViewUp[2];
+
+      for (let i = 0; i < animateSteps && needSteps; i++) {
+        animationStack.push({
+          position: [
+            destPosition[0] + (i + 1) * deltaPosition[0],
+            destPosition[1] + (i + 1) * deltaPosition[1],
+            destPosition[2] + (i + 1) * deltaPosition[2],
+          ],
+          viewUp: [
+            viewUp[0] + (i + 1) * deltaViewUp[0],
+            viewUp[1] + (i + 1) * deltaViewUp[1],
+            viewUp[2] + (i + 1) * deltaViewUp[2],
+          ],
+        });
+      }
+    }
+
+    return new Promise((resolve, reject) => {
+      publicAPI.setAnimation(true, publicAPI);
+      let intervalId = null;
+      const consumeAnimationStack = () => {
+        if (animationStack.length) {
+          const {
+            position: cameraPosition,
+            viewUp: cameraViewUp,
+          } = animationStack.pop();
+          model.camera.setPosition(...cameraPosition);
+          model.camera.setViewUp(...cameraViewUp);
+          model.renderer.resetCameraClippingRange();
+
+          if (model.interactor.getLightFollowCamera()) {
+            model.renderer.updateLightsGeometryToFollowCamera();
+          }
+        } else {
+          clearInterval(intervalId);
+          publicAPI.setAnimation(false, publicAPI);
+          resolve();
+        }
+      };
+      intervalId = setInterval(consumeAnimationStack, 1);
+    });
   };
 
   // --------------------------------------------------------------------------
