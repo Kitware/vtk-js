@@ -124,6 +124,21 @@ function vtkImageCropFilter(publicAPI, model) {
 
     outData[0] = outImage;
   };
+
+  publicAPI.isResetAvailable = () => {
+    if (model.croppingPlanes.length === 0) {
+      return false;
+    }
+    const data = publicAPI.getInputData();
+    if (data) {
+      const originalExtent = data.getExtent();
+      const findDifference = originalExtent.find(
+        (v, i) => Math.abs(model.croppingPlanes[i] - v) > Number.EPSILON
+      );
+      return findDifference !== undefined;
+    }
+    return false;
+  };
 }
 
 // ----------------------------------------------------------------------------
