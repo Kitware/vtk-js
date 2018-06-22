@@ -12,6 +12,17 @@ function vtkImageCropFilter(publicAPI, model) {
   // Set our className
   model.classHierarchy.push('vtkImageCropFilter');
 
+  // --------------------------------------------------------------------------
+
+  publicAPI.reset = () => {
+    const data = publicAPI.getInputData();
+    if (data) {
+      publicAPI.setCroppingPlanes(...data.getExtent());
+    }
+  };
+
+  // --------------------------------------------------------------------------
+
   publicAPI.requestData = (inData, outData) => {
     // implement requestData
     const input = inData[0];
