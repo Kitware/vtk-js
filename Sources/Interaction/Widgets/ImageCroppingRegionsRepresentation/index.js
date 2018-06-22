@@ -182,8 +182,14 @@ function vtkImageCroppingRegionsRepresentation(publicAPI, model) {
 
     model.outline.polydata.getPoints().modified();
     model.outline.polydata.modified();
+
+    // FIXME: Ken we need your feedback
+    // Move our mtime without triggering a modified()
+    // model.mtime = model.outline.polydata.getMTime();
   };
 
+  // FIXME: Ken we need your feedback
+  // model.outline.polydata.getPoints().getBounds();
   publicAPI.getBounds = () => model.initialBounds;
 
   publicAPI.buildRepresentation = () => {

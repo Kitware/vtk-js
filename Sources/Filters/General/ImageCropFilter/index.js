@@ -50,7 +50,7 @@ function vtkImageCropFilter(publicAPI, model) {
             // max plane
             return Math.min(e, Math.round(model.croppingPlanes[i]));
           })
-        : extent;
+        : extent.slice();
 
     if (
       cropped[0] === extent[0] &&
@@ -60,7 +60,9 @@ function vtkImageCropFilter(publicAPI, model) {
       cropped[4] === extent[4] &&
       cropped[5] === extent[5]
     ) {
-      outData[0] = input;
+      const sameAsInput = vtkImageData.newInstance();
+      sameAsInput.shallowCopy(input); // Force new mtime
+      outData[0] = sameAsInput;
       return;
     }
 
@@ -123,6 +125,21 @@ function vtkImageCropFilter(publicAPI, model) {
     outImage.getPointData().setScalars(croppedScalars);
 
     outData[0] = outImage;
+  };
+
+  publicAPI.isResetAvailable = () => {
+    if (model.croppingPlanes.length === 0) {
+      return false;
+    }
+    const data = publicAPI.getInputData();
+    if (data) {
+      const originalExtent = data.getExtent();
+      const findDifference = originalExtent.find(
+        (v, i) => Math.abs(model.croppingPlanes[i] - v) > Number.EPSILON
+      );
+      return findDifference !== undefined;
+    }
+    return false;
   };
 }
 
