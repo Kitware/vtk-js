@@ -22,6 +22,66 @@ function parseHeader(headerString) {
   return header;
 }
 
+function addValuesToArray(src, dst) {
+  for (let i = 0; i < src.length; i++) {
+    dst.push(src[i]);
+  }
+}
+
+// facet normal ni nj nk
+//     outer loop
+//         vertex v1x v1y v1z
+//         vertex v2x v2y v2z
+//         vertex v3x v3y v3z
+//     endloop
+// endfacet
+function readTriangle(lines, offset, points, cellArray, cellNormals) {
+  const normalLine = lines[offset];
+  if (normalLine === undefined) {
+    return -1;
+  }
+  if (normalLine.indexOf('endfacet') !== -1) {
+    return offset + 1;
+  }
+  if (normalLine.indexOf('facet') === -1) {
+    return offset + 1; // Move to next line
+  }
+  let nbVertex = 0;
+  let nbConsumedLines = 2;
+  const firstVertexIndex = points.length / 3;
+  const normal = normalLine
+    .split(/[ \t]+/)
+    .filter((i) => i)
+    .slice(-3)
+    .map(Number);
+  addValuesToArray(normal, cellNormals);
+  while (lines[offset + nbConsumedLines].indexOf('vertex') !== -1) {
+    const line = lines[offset + nbConsumedLines];
+    const coords = line
+      .split(/[ \t]+/)
+      .filter((i) => i)
+      .slice(-3)
+      .map(Number);
+    addValuesToArray(coords, points);
+    nbVertex++;
+    nbConsumedLines++;
+  }
+
+  cellArray.push(nbVertex);
+  for (let i = 0; i < nbVertex; i++) {
+    cellArray.push(firstVertexIndex + i);
+  }
+
+  while (
+    lines[offset + nbConsumedLines] &&
+    lines[offset + nbConsumedLines].indexOf('endfacet') !== -1
+  ) {
+    nbConsumedLines++;
+  }
+  // +1 (endfacet) +1 (next facet)
+  return offset + nbConsumedLines + 2;
+}
+
 // ----------------------------------------------------------------------------
 // vtkSTLReader methods
 // ----------------------------------------------------------------------------
@@ -100,6 +160,13 @@ function vtkSTLReader(publicAPI, model) {
     const headerData = content.slice(0, 80);
     const headerStr = BinaryHelper.arrayBufferToString(headerData);
     const header = parseHeader(headerStr);
+
+    // Check if ascii format
+    const solidIndex = headerStr.indexOf('solid ');
+    if (solidIndex !== -1 && solidIndex < 10) {
+      publicAPI.parseAsText(BinaryHelper.arrayBufferToString(content));
+      return;
+    }
 
     // Data
     const dataView = new DataView(content, 84);
@@ -222,8 +289,29 @@ function vtkSTLReader(publicAPI, model) {
 
     model.parseData = content;
 
-    // ASCII parsing
-    console.error('STL ASCII parsing is not implemented');
+    const lines = content.split('\n');
+    let offset = 1;
+    const points = [];
+    const cellArray = [];
+    const cellNormals = [];
+
+    while (offset !== -1) {
+      offset = readTriangle(lines, offset, points, cellArray, cellNormals);
+    }
+
+    const polydata = vtkPolyData.newInstance();
+    polydata.getPoints().setData(Float32Array.from(points), 3);
+    polydata.getPolys().setData(Uint32Array.from(cellArray));
+    polydata.getCellData().setNormals(
+      vtkDataArray.newInstance({
+        name: 'Normals',
+        values: Float32Array.from(cellNormals),
+        numberOfComponents: 3,
+      })
+    );
+
+    // Add new output
+    model.output[0] = polydata;
   };
 
   publicAPI.requestData = (inData, outData) => {
