@@ -183,11 +183,14 @@ function vtkSliceRepresentationProxy(publicAPI, model) {
   };
 
   publicAPI.getSliceIndex = () => {
-    if (['X', 'Y', 'Z'].indexOf(model.slicingMode) !== -1) {
+    if ('XYZ'.indexOf(model.slicingMode) !== -1) {
       return model.mapper.getSliceAtPosition(model.mapper.getSlice());
     }
     return model.mapper.getSlice();
   };
+
+  publicAPI.getSliceThickness = () => model.mapper.getSliceThickness();
+  publicAPI.getSliceLocation = () => model.mapper.getSliceLocation();
 
   // Used for UI
   publicAPI.getSliceValues = (slicingMode = model.slicingMode) => {
