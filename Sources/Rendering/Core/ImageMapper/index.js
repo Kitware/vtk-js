@@ -301,6 +301,39 @@ function vtkImageMapper(publicAPI, model) {
     return image.extentToBounds(extent);
   };
 
+  publicAPI.getSliceThickness = () => {
+    const image = publicAPI.getInputData();
+    if (!image) {
+      return 1;
+    }
+    const { ijkMode } = publicAPI.getClosestIJKAxis();
+    switch (ijkMode) {
+      case SlicingMode.I:
+        return image.getSpacing()[0];
+      case SlicingMode.J:
+        return image.getSpacing()[1];
+      case SlicingMode.K:
+        return image.getSpacing()[2];
+      default:
+        return 1;
+    }
+  };
+
+  publicAPI.getSliceLocation = () => {
+    const sliceBound = publicAPI.getBoundsForSlice();
+    const { ijkMode } = publicAPI.getClosestIJKAxis();
+    switch (ijkMode) {
+      case SlicingMode.I:
+        return sliceBound[0];
+      case SlicingMode.J:
+        return sliceBound[2];
+      case SlicingMode.K:
+        return sliceBound[4];
+      default:
+        return 0;
+    }
+  };
+
   publicAPI.getIsOpaque = () => true;
 
   function doPicking(p1, p2) {

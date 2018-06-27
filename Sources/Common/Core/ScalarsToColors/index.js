@@ -274,7 +274,7 @@ function vtkScalarsToColors(publicAPI, model) {
     for (let i = 0; i < length; i++) {
       let sum = 0.0;
       for (let j = 0; j < compsToUse; j++) {
-        sum += inputV[i * inIncr + j];
+        sum += inputV[i * inIncr + j] * inputV[i * inIncr + j];
       }
       outputV[i] = Math.sqrt(sum);
     }

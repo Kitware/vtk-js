@@ -53,14 +53,14 @@ function updateDomains(dataset, dataArray, model, updateProp) {
         step: spacing[zIJKAxis],
       },
     },
-    colorWindow: {
+    windowWidth: {
       domain: {
         min: 0,
         max: dataRange[1] - dataRange[0],
         step: 'any',
       },
     },
-    colorLevel: {
+    windowLevel: {
       domain: {
         min: dataRange[0],
         max: dataRange[1],
@@ -72,8 +72,8 @@ function updateDomains(dataset, dataArray, model, updateProp) {
   updateProp('xSlice', propToUpdate.xSlice);
   updateProp('ySlice', propToUpdate.ySlice);
   updateProp('zSlice', propToUpdate.zSlice);
-  updateProp('colorWindow', propToUpdate.colorWindow);
-  updateProp('colorLevel', propToUpdate.colorLevel);
+  updateProp('windowWidth', propToUpdate.windowWidth);
+  updateProp('windowLevel', propToUpdate.windowLevel);
 
   return {
     xSlice: mean(
@@ -88,11 +88,11 @@ function updateDomains(dataset, dataArray, model, updateProp) {
       propToUpdate.zSlice.domain.min,
       propToUpdate.zSlice.domain.max
     ),
-    colorWindow: propToUpdate.colorWindow.domain.max,
-    colorLevel: Math.floor(
+    windowWidth: propToUpdate.windowWidth.domain.max,
+    windowLevel: Math.floor(
       mean(
-        propToUpdate.colorLevel.domain.min,
-        propToUpdate.colorWindow.domain.max
+        propToUpdate.windowLevel.domain.min,
+        propToUpdate.windowWidth.domain.max
       )
     ),
   };
@@ -342,8 +342,8 @@ export function extend(publicAPI, model, initialValues = {}) {
     xSliceVisibility: { modelKey: 'actorX', property: 'visibility' },
     ySliceVisibility: { modelKey: 'actorY', property: 'visibility' },
     zSliceVisibility: { modelKey: 'actorZ', property: 'visibility' },
-    colorWindow: { modelKey: 'propertySlices', property: 'colorWindow' },
-    colorLevel: { modelKey: 'propertySlices', property: 'colorLevel' },
+    windowWidth: { modelKey: 'propertySlices', property: 'colorWindow' },
+    windowLevel: { modelKey: 'propertySlices', property: 'colorLevel' },
     useShadow: { modelKey: 'property', property: 'shade' },
     croppingPlanes: { modelKey: 'cropFilter', property: 'croppingPlanes' },
   });

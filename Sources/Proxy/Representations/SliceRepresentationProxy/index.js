@@ -62,14 +62,14 @@ function updateDomains(dataset, dataArray, model, updateProp) {
         step: stepVal,
       },
     },
-    colorWindow: {
+    windowWidth: {
       domain: {
         min: 0,
         max: dataRange[1] - dataRange[0],
         step: 'any',
       },
     },
-    colorLevel: {
+    windowLevel: {
       domain: {
         min: dataRange[0],
         max: dataRange[1],
@@ -79,16 +79,16 @@ function updateDomains(dataset, dataArray, model, updateProp) {
   };
 
   updateProp('slice', propToUpdate.slice);
-  updateProp('colorWindow', propToUpdate.colorWindow);
-  updateProp('colorLevel', propToUpdate.colorLevel);
+  updateProp('windowWidth', propToUpdate.windowWidth);
+  updateProp('windowLevel', propToUpdate.windowLevel);
 
   return {
     slice: mean(propToUpdate.slice.domain.min, propToUpdate.slice.domain.max),
-    colorWindow: propToUpdate.colorWindow.domain.max,
-    colorLevel: Math.floor(
+    windowWidth: propToUpdate.windowWidth.domain.max,
+    windowLevel: Math.floor(
       mean(
-        propToUpdate.colorLevel.domain.min,
-        propToUpdate.colorWindow.domain.max
+        propToUpdate.windowLevel.domain.min,
+        propToUpdate.windowWidth.domain.max
       )
     ),
   };
@@ -182,6 +182,16 @@ function vtkSliceRepresentationProxy(publicAPI, model) {
     }
   };
 
+  publicAPI.getSliceIndex = () => {
+    if ('XYZ'.indexOf(model.slicingMode) !== -1) {
+      return model.mapper.getSliceAtPosition(model.mapper.getSlice());
+    }
+    return model.mapper.getSlice();
+  };
+
+  publicAPI.getSliceThickness = () => model.mapper.getSliceThickness();
+  publicAPI.getSliceLocation = () => model.mapper.getSliceLocation();
+
   // Used for UI
   publicAPI.getSliceValues = (slicingMode = model.slicingMode) => {
     const ds = publicAPI.getInputDataSet();
@@ -225,8 +235,8 @@ export function extend(publicAPI, model, initialValues = {}) {
   // Proxyfy
   macro.proxyPropertyMapping(publicAPI, model, {
     visibility: { modelKey: 'actor', property: 'visibility' },
-    colorWindow: { modelKey: 'property', property: 'colorWindow' },
-    colorLevel: { modelKey: 'property', property: 'colorLevel' },
+    windowWidth: { modelKey: 'property', property: 'colorWindow' },
+    windowLevel: { modelKey: 'property', property: 'colorLevel' },
     slice: { modelKey: 'mapper', property: 'slice' },
   });
 }

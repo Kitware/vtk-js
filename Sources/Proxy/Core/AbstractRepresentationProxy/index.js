@@ -148,7 +148,9 @@ function vtkAbstractRepresentationProxy(publicAPI, model) {
           ? vtkMapper.ScalarMode.USE_POINT_FIELD_DATA
           : vtkMapper.ScalarMode.USE_CELL_FIELD_DATA;
 
-      model.mapper.setLookupTable(lookupTable);
+      if (model.mapper.setLookupTable) {
+        model.mapper.setLookupTable(lookupTable);
+      }
       publicAPI.rescaleTransferFunctionToDataRange(
         arrayName,
         arrayLocation,

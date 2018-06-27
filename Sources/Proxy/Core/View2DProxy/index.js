@@ -29,12 +29,12 @@ function vtkView2DProxy(publicAPI, model) {
   // Setup default corner annotation
   /* eslint-disable no-template-curly-in-string */
   publicAPI.setCornerAnnotation('nw', 'Orientation ${axis}<br>Slice ${slice}');
-  publicAPI.setCornerAnnotation('se', 'CW ${colorWindow}<br>CL ${colorLevel}');
+  publicAPI.setCornerAnnotation('se', 'WW ${windowWidth}<br>WL ${windowLevel}');
   publicAPI.updateCornerAnnotation({
     axis: 'N/A',
     slice: 'N/A',
-    colorWindow: 'N/A',
-    colorLevel: 'N/A',
+    windowWidth: 'N/A',
+    windowLevel: 'N/A',
   });
   /* eslint-enable no-template-curly-in-string */
 
@@ -75,26 +75,49 @@ function vtkView2DProxy(publicAPI, model) {
   });
   model.interactorStyle2D.addMouseManipulator(model.rangeManipulator);
 
-  function setColorWindow(colorWindow) {
-    publicAPI.updateCornerAnnotation({ colorWindow });
-    if (model.sliceRepresentation && model.sliceRepresentation.setColorWindow) {
-      model.sliceRepresentation.setColorWindow(colorWindow);
+  function setWindowWidth(windowWidth) {
+    publicAPI.updateCornerAnnotation({ windowWidth });
+    if (model.sliceRepresentation && model.sliceRepresentation.setWindowWidth) {
+      model.sliceRepresentation.setWindowWidth(windowWidth);
     }
   }
 
-  function setColorLevel(colorLevel) {
-    publicAPI.updateCornerAnnotation({ colorLevel });
-    if (model.sliceRepresentation && model.sliceRepresentation.setColorLevel) {
-      model.sliceRepresentation.setColorLevel(colorLevel);
+  function setWindowLevel(windowLevel) {
+    publicAPI.updateCornerAnnotation({ windowLevel });
+    if (model.sliceRepresentation && model.sliceRepresentation.setWindowLevel) {
+      model.sliceRepresentation.setWindowLevel(windowLevel);
     }
   }
 
   function setSlice(sliceRaw) {
-    const slice = Number.isInteger(sliceRaw) ? sliceRaw : sliceRaw.toFixed(2);
-    publicAPI.updateCornerAnnotation({ slice });
+    const numberSliceRaw = Number(sliceRaw);
+    const slice = Number.isInteger(numberSliceRaw)
+      ? sliceRaw
+      : numberSliceRaw.toFixed(2);
+    const annotation = { slice };
     if (model.sliceRepresentation && model.sliceRepresentation.setSlice) {
-      model.sliceRepresentation.setSlice(sliceRaw);
+      model.sliceRepresentation.setSlice(numberSliceRaw);
     }
+    if (model.sliceRepresentation && model.sliceRepresentation.getSliceIndex) {
+      annotation.sliceIndex = model.sliceRepresentation.getSliceIndex();
+    }
+    if (
+      model.sliceRepresentation &&
+      model.sliceRepresentation.getSliceThickness
+    ) {
+      annotation.sliceThickness = model.sliceRepresentation
+        .getSliceThickness()
+        .toFixed(2);
+    }
+    if (
+      model.sliceRepresentation &&
+      model.sliceRepresentation.getSliceLocation
+    ) {
+      annotation.sliceLocation = model.sliceRepresentation
+        .getSliceLocation()
+        .toFixed(2);
+    }
+    publicAPI.updateCornerAnnotation(annotation);
   }
 
   publicAPI.bindRepresentationToManipulator = (representation) => {
@@ -105,17 +128,17 @@ function vtkView2DProxy(publicAPI, model) {
       model.sliceRepresentationSubscriptions.pop().unsubscribe();
     }
     if (representation) {
-      if (representation.getColorWindow) {
-        const update = () => setColorWindow(representation.getColorWindow());
+      if (representation.getWindowWidth) {
+        const update = () => setWindowWidth(representation.getWindowWidth());
         const { min, max } = representation.getPropertyDomainByName(
-          'colorWindow'
+          'windowWidth'
         );
         model.rangeManipulator.setVerticalListener(
           min,
           max,
           1,
-          representation.getColorWindow,
-          setColorWindow
+          representation.getWindowWidth,
+          setWindowWidth
         );
         model.sliceRepresentationSubscriptions.push(
           representation.onModified(update)
@@ -123,17 +146,17 @@ function vtkView2DProxy(publicAPI, model) {
         update();
         nbListeners++;
       }
-      if (representation.getColorLevel) {
-        const update = () => setColorLevel(representation.getColorLevel());
+      if (representation.getWindowLevel) {
+        const update = () => setWindowLevel(representation.getWindowLevel());
         const { min, max } = representation.getPropertyDomainByName(
-          'colorLevel'
+          'windowLevel'
         );
         model.rangeManipulator.setHorizontalListener(
           min,
           max,
           1,
-          representation.getColorLevel,
-          setColorLevel
+          representation.getWindowLevel,
+          setWindowLevel
         );
         model.sliceRepresentationSubscriptions.push(
           representation.onModified(update)
