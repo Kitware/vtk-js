@@ -25,8 +25,21 @@ export default function addStateAPI(publicAPI, model) {
       proxyMapping[id] = proxy;
     });
 
+    const views = publicAPI.getViews();
     state.views.forEach(({ id, group, name, props, camera }) => {
-      const proxy = publicAPI.createProxy(group, name);
+      let proxy = null;
+      if (state.options.recycleViews) {
+        proxy = views.find(
+          (v) =>
+            v.getProxyGroup() === group &&
+            v.getProxyName() === name &&
+            v.getName() === props.name
+        );
+      }
+      if (!proxy) {
+        proxy = publicAPI.createProxy(group, name);
+      }
+
       proxy.set(props, true);
       proxyMapping[id] = proxy;
       cameras[id] = camera;
