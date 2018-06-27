@@ -503,6 +503,7 @@ function extend(publicAPI, model, initialValues = {}) {
   Object.assign(model, DEFAULT_VALUES, initialValues);
 
   macro.obj(publicAPI, model);
+  macro.setGet(publicAPI, model, ['name']);
   macro.get(publicAPI, model, [
     'annotationOpacity',
     'camera',
