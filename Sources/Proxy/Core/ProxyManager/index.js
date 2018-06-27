@@ -1,6 +1,7 @@
 import macro from 'vtk.js/Sources/macro';
 
 import core from './core';
+import state from './state';
 import view from './view';
 import properties from './properties';
 
@@ -35,6 +36,7 @@ export function extend(publicAPI, model, initialValues = {}) {
   macro.event(publicAPI, model, 'ProxyRegistrationChange');
 
   core(publicAPI, model);
+  state(publicAPI, model);
   view(publicAPI, model);
   properties(publicAPI, model);
 
