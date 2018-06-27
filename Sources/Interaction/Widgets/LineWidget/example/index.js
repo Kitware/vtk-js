@@ -1,5 +1,6 @@
 import 'vtk.js/Sources/favicon';
 
+import vtkDistanceWidget from 'vtk.js/Sources/Interaction/Widgets/DistanceWidget';
 import vtkFullScreenRenderWindow from 'vtk.js/Sources/Rendering/Misc/FullScreenRenderWindow';
 import vtkLineWidget from 'vtk.js/Sources/Interaction/Widgets/LineWidget';
 
@@ -22,7 +23,8 @@ renderWindow.getInteractor().setInteractorStyle(null);
 // Create widget
 // ----------------------------------------------------------------------------
 
-const widget = vtkLineWidget.newInstance();
+const widget = vtkDistanceWidget.newInstance();
+// const widget = vtkLineWidget.newInstance();
 widget.setInteractor(renderWindow.getInteractor());
 widget.setEnabled(1);
 widget.setWidgetStateToStart();
