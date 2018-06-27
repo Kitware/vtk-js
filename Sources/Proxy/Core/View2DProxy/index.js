@@ -90,10 +90,13 @@ function vtkView2DProxy(publicAPI, model) {
   }
 
   function setSlice(sliceRaw) {
-    const slice = Number.isInteger(sliceRaw) ? sliceRaw : sliceRaw.toFixed(2);
+    const numberSliceRaw = Number(sliceRaw);
+    const slice = Number.isInteger(numberSliceRaw)
+      ? sliceRaw
+      : numberSliceRaw.toFixed(2);
     const annotation = { slice };
     if (model.sliceRepresentation && model.sliceRepresentation.setSlice) {
-      model.sliceRepresentation.setSlice(sliceRaw);
+      model.sliceRepresentation.setSlice(numberSliceRaw);
     }
     if (model.sliceRepresentation && model.sliceRepresentation.getSliceIndex) {
       annotation.sliceIndex = model.sliceRepresentation.getSliceIndex();
