@@ -2,7 +2,8 @@ import 'vtk.js/Sources/favicon';
 
 import vtkDistanceWidget from 'vtk.js/Sources/Interaction/Widgets/DistanceWidget';
 import vtkFullScreenRenderWindow from 'vtk.js/Sources/Rendering/Misc/FullScreenRenderWindow';
-import vtkLineWidget from 'vtk.js/Sources/Interaction/Widgets/LineWidget';
+
+import controlPanel from './controlPanel.html';
 
 // ----------------------------------------------------------------------------
 // USER AVAILABLE INTERACTIONS
@@ -24,15 +25,23 @@ renderWindow.getInteractor().setInteractorStyle(null);
 // ----------------------------------------------------------------------------
 
 const widget = vtkDistanceWidget.newInstance();
-// const widget = vtkLineWidget.newInstance();
 widget.setInteractor(renderWindow.getInteractor());
 widget.setEnabled(1);
 widget.setWidgetStateToStart();
-// widget.setWidgetStateToManipulate();
 
 renderer.resetCamera();
 renderer.resetCameraClippingRange();
 renderWindow.render();
+
+fullScreenRenderer.addController(controlPanel);
+
+document.querySelector('.visibility').addEventListener('change', (e) => {
+  const representation = widget.getWidgetRep();
+  if (representation) {
+    representation.setLabelVisibility(e.target.checked);
+    renderWindow.render();
+  }
+});
 
 // -----------------------------------------------------------
 // Make some variables global so that you can inspect and
