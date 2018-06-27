@@ -98,6 +98,22 @@ function vtkView2DProxy(publicAPI, model) {
     if (model.sliceRepresentation && model.sliceRepresentation.getSliceIndex) {
       annotation.sliceIndex = model.sliceRepresentation.getSliceIndex();
     }
+    if (
+      model.sliceRepresentation &&
+      model.sliceRepresentation.getSliceThickness
+    ) {
+      annotation.sliceThickness = model.sliceRepresentation
+        .getSliceThickness()
+        .toFixed(2);
+    }
+    if (
+      model.sliceRepresentation &&
+      model.sliceRepresentation.getSliceLocation
+    ) {
+      annotation.sliceLocation = model.sliceRepresentation
+        .getSliceLocation()
+        .toFixed(2);
+    }
     publicAPI.updateCornerAnnotation(annotation);
   }
 
