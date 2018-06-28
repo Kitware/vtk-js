@@ -215,7 +215,7 @@ function vtkImageCroppingRegionsWidget(publicAPI, model) {
     model.worldToIndex = data.getWorldToIndex();
 
     const planes = data.getExtent();
-    publicAPI.setCroppingPlanes(planes);
+    publicAPI.setCroppingPlanes(...planes);
   };
 
   publicAPI.setEnabled = macro.chain(publicAPI.setEnabled, (enable) => {
