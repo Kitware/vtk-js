@@ -38,13 +38,12 @@ function vtkImageCroppingRegionsWidget(publicAPI, model) {
   model.indexToWorld = mat4.create();
   model.worldToIndex = mat4.create();
 
+  let handlesCache = null;
+
   model.widgetState = {
     activeHandleIndex: -1,
     // index space: xmin, xmax, ymin, ymax, zmin, zmax
     planes: Array(6).fill(0),
-    // coords are in world space.
-    // a null handle means it is disabled
-    handles: Array(TOTAL_NUM_HANDLES).fill(null),
     controlState: WidgetState.IDLE,
   };
 
@@ -81,11 +80,14 @@ function vtkImageCroppingRegionsWidget(publicAPI, model) {
     if (needsUpdate) {
       const oldState = model.widgetState;
       model.widgetState = Object.assign({}, oldState, state);
-      publicAPI.updateRepresentation();
 
       if (!arrayEquals(oldState.planes, model.widgetState.planes)) {
+        // invalidate handles cache
+        handlesCache = null;
         publicAPI.invokeCroppingPlanesChanged(model.widgetState.planes);
       }
+
+      publicAPI.updateRepresentation();
       publicAPI.modified();
     }
   };
@@ -106,6 +108,12 @@ function vtkImageCroppingRegionsWidget(publicAPI, model) {
       return null;
     }
 
+    if (handlesCache) {
+      return handlesCache;
+    }
+
+    // coords are in world space.
+    // a null handle means it is disabled
     const handles = Array(TOTAL_NUM_HANDLES).fill(null);
 
     if (model.faceHandlesEnabled) {
@@ -169,6 +177,7 @@ function vtkImageCroppingRegionsWidget(publicAPI, model) {
       }
     }
 
+    handlesCache = handles;
     return handles;
   };
 
@@ -206,12 +215,7 @@ function vtkImageCroppingRegionsWidget(publicAPI, model) {
     model.worldToIndex = data.getWorldToIndex();
 
     const planes = data.getExtent();
-    const handles = publicAPI.planesToHandles(planes);
-
-    publicAPI.updateWidgetState({
-      handles,
-      planes,
-    });
+    publicAPI.setCroppingPlanes(planes);
   };
 
   publicAPI.setEnabled = macro.chain(publicAPI.setEnabled, (enable) => {
@@ -232,27 +236,24 @@ function vtkImageCroppingRegionsWidget(publicAPI, model) {
   publicAPI.setFaceHandlesEnabled = (enabled) => {
     if (model.faceHandlesEnabled !== enabled) {
       model.faceHandlesEnabled = enabled;
-      publicAPI.updateWidgetState({
-        handles: publicAPI.planesToHandles(model.widgetState.planes),
-      });
+      publicAPI.updateRepresentation();
+      publicAPI.modified();
     }
   };
 
   publicAPI.setEdgeHandlesEnabled = (enabled) => {
     if (model.edgeHandlesEnabled !== enabled) {
       model.edgeHandlesEnabled = enabled;
-      publicAPI.updateWidgetState({
-        handles: publicAPI.planesToHandles(model.widgetState.planes),
-      });
+      publicAPI.updateRepresentation();
+      publicAPI.modified();
     }
   };
 
   publicAPI.setCornerHandlesEnabled = (enabled) => {
     if (model.cornerHandlesEnabled !== enabled) {
       model.cornerHandlesEnabled = enabled;
-      publicAPI.updateWidgetState({
-        handles: publicAPI.planesToHandles(model.widgetState.planes),
-      });
+      publicAPI.updateRepresentation();
+      publicAPI.modified();
     }
   };
 
@@ -260,20 +261,26 @@ function vtkImageCroppingRegionsWidget(publicAPI, model) {
     if (model.handleSize !== size) {
       model.handleSize = size;
       publicAPI.updateRepresentation();
+      publicAPI.modified();
     }
   };
 
   publicAPI.getCroppingPlanes = () => model.widgetState.planes.slice();
+
+  publicAPI.setCroppingPlanes = (...planes) => {
+    publicAPI.updateWidgetState({ planes });
+  };
 
   publicAPI.updateRepresentation = () => {
     if (model.widgetRep) {
       const bounds = model.volumeMapper.getBounds();
       model.widgetRep.placeWidget(...bounds);
 
-      const { activeHandleIndex, handles, planes } = model.widgetState;
+      const { activeHandleIndex, planes } = model.widgetState;
 
       const bboxCorners = publicAPI.planesToBBoxCorners(planes);
-      const handleSizes = handles.map((handle) => {
+      const handlePositions = publicAPI.planesToHandles(planes);
+      const handleSizes = handlePositions.map((handle) => {
         if (!handle) {
           return model.handleSize;
         }
@@ -282,7 +289,7 @@ function vtkImageCroppingRegionsWidget(publicAPI, model) {
 
       model.widgetRep.set({
         activeHandleIndex,
-        handlePositions: handles,
+        handlePositions,
         bboxCorners,
         handleSizes,
       });
@@ -428,16 +435,12 @@ function vtkImageCroppingRegionsWidget(publicAPI, model) {
   };
 
   publicAPI.moveAction = (callData) => {
-    const {
-      controlState,
-      handles,
-      planes,
-      activeHandleIndex,
-    } = model.widgetState;
+    const { controlState, planes, activeHandleIndex } = model.widgetState;
     if (controlState === WidgetState.IDLE || activeHandleIndex === -1) {
       return VOID;
     }
 
+    const handles = publicAPI.planesToHandles(planes);
     const mouse = [callData.position.x, callData.position.y];
     const handlePos = handles[activeHandleIndex];
     const renderer = publicAPI.getInteractor().getCurrentRenderer();
@@ -538,10 +541,7 @@ function vtkImageCroppingRegionsWidget(publicAPI, model) {
       });
     }
 
-    publicAPI.updateWidgetState({
-      planes: newPlanes,
-      handles: publicAPI.planesToHandles(newPlanes),
-    });
+    publicAPI.setCroppingPlanes(...newPlanes);
 
     return EVENT_ABORT;
   };
