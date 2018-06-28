@@ -149,6 +149,7 @@ export function extend(publicAPI, model, initialValues = {}) {
     'southWestContainer',
     'southContainer',
     'southEastContainer',
+    'metadata',
   ]);
 
   // Object specific methods

@@ -189,8 +189,63 @@ function vtkSliceRepresentationProxy(publicAPI, model) {
     return model.mapper.getSlice();
   };
 
-  publicAPI.getSliceThickness = () => model.mapper.getSliceThickness();
-  publicAPI.getSliceLocation = () => model.mapper.getSliceLocation();
+  publicAPI.getAnnotations = () => {
+    const dynamicAddOn = {};
+    const sliceIndex = publicAPI.getSliceIndex();
+    const sliceBounds = model.mapper.getBoundsForSlice();
+    const sliceNormal = model.mapper.getSlicingModeNormal();
+    const { ijkMode } = model.mapper.getClosestIJKAxis();
+    const sliceOrigin = [
+      (sliceBounds[0] + sliceBounds[1]) * 0.5,
+      (sliceBounds[2] + sliceBounds[3]) * 0.5,
+      (sliceBounds[4] + sliceBounds[5]) * 0.5,
+    ];
+    let slicePosition = 0;
+    if (sliceBounds[1] - sliceBounds[0] < Number.EPSILON) {
+      slicePosition = sliceBounds[0];
+    }
+    if (sliceBounds[3] - sliceBounds[2] < Number.EPSILON) {
+      slicePosition = sliceBounds[2];
+    }
+    if (sliceBounds[5] - sliceBounds[4] < Number.EPSILON) {
+      slicePosition = sliceBounds[4];
+    }
+
+    const imageData = model.mapper.getInputData();
+    if (imageData) {
+      dynamicAddOn.sliceSpacing = imageData.getSpacing()[ijkMode];
+      dynamicAddOn.dimensions = imageData.getDimensions();
+      dynamicAddOn.sliceCount = imageData.getDimensions()[ijkMode];
+      const ijkOrientation = [];
+      for (let i = 0; i < 3; i++) {
+        const extent = [0, 0, 0, 0, 0, 0];
+        extent[i * 2 + 1] = 1;
+        const tmpBounds = imageData.extentToBounds(extent);
+        if (tmpBounds[1] - tmpBounds[0] > Number.EPSILON) {
+          ijkOrientation[0] = 'IJK'[i];
+        }
+        if (tmpBounds[3] - tmpBounds[2] > Number.EPSILON) {
+          ijkOrientation[1] = 'IJK'[i];
+        }
+        if (tmpBounds[5] - tmpBounds[4] > Number.EPSILON) {
+          ijkOrientation[2] = 'IJK'[i];
+        }
+      }
+      dynamicAddOn.ijkOrientation = ijkOrientation.join('');
+    }
+
+    return Object.assign(
+      {
+        ijkMode,
+        sliceBounds,
+        sliceIndex,
+        sliceNormal,
+        sliceOrigin,
+        slicePosition,
+      },
+      dynamicAddOn
+    );
+  };
 
   // Used for UI
   publicAPI.getSliceValues = (slicingMode = model.slicingMode) => {
