@@ -1,4 +1,6 @@
 import vtkAbstractWidget from './AbstractWidget';
+import vtkDistanceRepresentation from './DistanceRepresentation';
+import vtkDistanceWidget from './DistanceWidget';
 import vtkHandleRepresentation from './HandleRepresentation';
 import vtkHandleWidget from './HandleWidget';
 import vtkImageCroppingRegionsRepresentation from './ImageCroppingRegionsRepresentation';
@@ -13,6 +15,8 @@ import vtkWidgetRepresentation from './WidgetRepresentation';
 
 export default {
   vtkAbstractWidget,
+  vtkDistanceRepresentation,
+  vtkDistanceWidget,
   vtkHandleRepresentation,
   vtkHandleWidget,
   vtkImageCroppingRegionsRepresentation,
