@@ -1,6 +1,23 @@
 import macro from 'vtk.js/Sources/macro';
 import vtkMouseRangeManipulator from 'vtk.js/Sources/Interaction/Manipulators/MouseRangeManipulator';
 import vtkViewProxy from 'vtk.js/Sources/Proxy/Core/ViewProxy';
+import vtkMath from 'vtk.js/Sources/Common/Core/Math';
+
+function formatAnnotationValue(value) {
+  if (Array.isArray(value)) {
+    return value.map(formatAnnotationValue).join(', ');
+  }
+  if (Number.isInteger(value)) {
+    return value;
+  }
+  if (Number.isFinite(value)) {
+    if (Math.abs(value) < 0.01) {
+      return '0';
+    }
+    return value.toFixed(2);
+  }
+  return value;
+}
 
 // ----------------------------------------------------------------------------
 // vtkView2DProxy methods
@@ -9,6 +26,26 @@ import vtkViewProxy from 'vtk.js/Sources/Proxy/Core/ViewProxy';
 function vtkView2DProxy(publicAPI, model) {
   // Set our className
   model.classHierarchy.push('vtkView2DProxy');
+
+  publicAPI.updateWidthHeightAnnotation = () => {
+    const { ijkOrientation, dimensions } = model.cornerAnnotation.getMetadata();
+    if (ijkOrientation && dimensions) {
+      let realDimensions = dimensions;
+      if (dimensions.length > 3) {
+        // the dimensions is a string
+        realDimensions = dimensions.split(',').map(Number);
+      }
+      const dop = model.camera.getDirectionOfProjection();
+      const viewUp = model.camera.getViewUp();
+      const viewRight = [0, 0, 0];
+      vtkMath.cross(dop, viewUp, viewRight);
+      const wIdx = vtkMath.getMajorAxisIndex(viewRight);
+      const hIdx = vtkMath.getMajorAxisIndex(viewUp);
+      const sliceWidth = realDimensions['IJK'.indexOf(ijkOrientation[wIdx])];
+      const sliceHeight = realDimensions['IJK'.indexOf(ijkOrientation[hIdx])];
+      publicAPI.updateCornerAnnotation({ sliceWidth, sliceHeight });
+    }
+  };
 
   const superUpdateOrientation = publicAPI.updateOrientation;
   publicAPI.updateOrientation = (axisIndex, orientation, viewUp) => {
@@ -25,18 +62,6 @@ function vtkView2DProxy(publicAPI, model) {
 
     publicAPI.updateCornerAnnotation({ axis: 'XYZ'[axisIndex] });
   };
-
-  // Setup default corner annotation
-  /* eslint-disable no-template-curly-in-string */
-  publicAPI.setCornerAnnotation('nw', 'Orientation ${axis}<br>Slice ${slice}');
-  publicAPI.setCornerAnnotation('se', 'WW ${windowWidth}<br>WL ${windowLevel}');
-  publicAPI.updateCornerAnnotation({
-    axis: 'N/A',
-    slice: 'N/A',
-    windowWidth: 'N/A',
-    windowLevel: 'N/A',
-  });
-  /* eslint-enable no-template-curly-in-string */
 
   const superAddRepresentation = publicAPI.addRepresentation;
   publicAPI.addRepresentation = (rep) => {
@@ -94,29 +119,21 @@ function vtkView2DProxy(publicAPI, model) {
     const slice = Number.isInteger(numberSliceRaw)
       ? sliceRaw
       : numberSliceRaw.toFixed(2);
+
+    // add 'slice' in annotation
     const annotation = { slice };
     if (model.sliceRepresentation && model.sliceRepresentation.setSlice) {
       model.sliceRepresentation.setSlice(numberSliceRaw);
     }
-    if (model.sliceRepresentation && model.sliceRepresentation.getSliceIndex) {
-      annotation.sliceIndex = model.sliceRepresentation.getSliceIndex();
+
+    // extend annotation
+    if (model.sliceRepresentation && model.sliceRepresentation.getAnnotations) {
+      const addOn = model.sliceRepresentation.getAnnotations();
+      Object.keys(addOn).forEach((key) => {
+        annotation[key] = formatAnnotationValue(addOn[key]);
+      });
     }
-    if (
-      model.sliceRepresentation &&
-      model.sliceRepresentation.getSliceThickness
-    ) {
-      annotation.sliceThickness = model.sliceRepresentation
-        .getSliceThickness()
-        .toFixed(2);
-    }
-    if (
-      model.sliceRepresentation &&
-      model.sliceRepresentation.getSliceLocation
-    ) {
-      annotation.sliceLocation = model.sliceRepresentation
-        .getSliceLocation()
-        .toFixed(2);
-    }
+
     publicAPI.updateCornerAnnotation(annotation);
   }
 
@@ -128,6 +145,9 @@ function vtkView2DProxy(publicAPI, model) {
       model.sliceRepresentationSubscriptions.pop().unsubscribe();
     }
     if (representation) {
+      model.sliceRepresentationSubscriptions.push(
+        model.camera.onModified(publicAPI.updateWidthHeightAnnotation)
+      );
       if (representation.getWindowWidth) {
         const update = () => setWindowWidth(representation.getWindowWidth());
         const { min, max } = representation.getPropertyDomainByName(
