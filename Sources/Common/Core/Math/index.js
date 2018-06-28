@@ -2002,6 +2002,20 @@ function createUninitializedBounds() {
   ]);
 }
 
+function getMajorAxisIndex(vector) {
+  let maxValue = -1;
+  let axisIndex = -1;
+  for (let i = 0; i < vector.length; i++) {
+    const value = Math.abs(vector[i]);
+    if (value > maxValue) {
+      axisIndex = i;
+      maxValue = value;
+    }
+  }
+
+  return axisIndex;
+}
+
 // ----------------------------------------------------------------------------
 // Only Static API
 // ----------------------------------------------------------------------------
@@ -2103,4 +2117,5 @@ export default {
 
   // JS add-on
   createUninitializedBounds,
+  getMajorAxisIndex,
 };
