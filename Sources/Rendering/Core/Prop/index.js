@@ -65,8 +65,8 @@ function vtkProp(publicAPI, model) {
   };
 
   publicAPI.removeTexture = (texture) => {
-    const newTextureList = model.textures.filter((item) => item === texture);
-    if (model.texture.length !== newTextureList.length) {
+    const newTextureList = model.textures.filter((item) => item !== texture);
+    if (model.textures.length !== newTextureList.length) {
       model.textures = newTextureList;
       publicAPI.modified();
     }
