@@ -55,8 +55,7 @@ function vtkProp(publicAPI, model) {
   publicAPI.getSupportsSelection = () => false;
 
   publicAPI.getTextures = () => model.textures;
-  publicAPI.hasTexture = (texture) =>
-    !!model.textures.filter((item) => item === texture).length;
+  publicAPI.hasTexture = (texture) => model.textures.indexOf(texture) !== -1;
   publicAPI.addTexture = (texture) => {
     if (texture && !publicAPI.hasTexture(texture)) {
       model.textures = model.textures.concat(texture);
