@@ -133,6 +133,9 @@ def dumpAttributes(datasetDir, dataDir, dataset, root = {}, compress = True):
     if array:
       _array = dumpDataArray(datasetDir, dataDir, array, {}, compress)
       if _array:
+        if (root['vtkClass'] == 'vtkImageData'):
+          _array['ref']['registration']="setScalars"
+
         _pointData['arrays'].append({ "data": _array })
     elif abstractArray:
       _array = dumpStringArray(datasetDir, dataDir, abstractArray, {}, compress)
