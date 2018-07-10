@@ -56,7 +56,6 @@ function vtkInteractorObserver(publicAPI, model) {
             if (model.processEvents) {
               return publicAPI[`handle${eventName}`](callData);
             }
-
             return VOID;
           }, model.priority)
         );

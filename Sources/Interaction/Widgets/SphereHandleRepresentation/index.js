@@ -170,19 +170,16 @@ function vtkSphereHandleRepresentation(publicAPI, model) {
     );
 
   publicAPI.complexWidgetInteraction = (eventPos) => {
-    const focalPoint = vtkInteractorObserver.computeDisplayToWorld(
+    const focalPoint = vtkInteractorObserver.computeWorldToDisplay(
       model.renderer,
       model.lastPickPosition[0],
       model.lastPickPosition[1],
       model.lastPickPosition[2]
     );
+
     const z = focalPoint[2];
-    const prevPickPoint = vtkInteractorObserver.computeDisplayToWorld(
-      model.renderer,
-      model.lastEventPosition[0],
-      model.lastEventPosition[1],
-      z
-    );
+
+    const prevPickPoint = publicAPI.displayToWorld(model.lastEventPosition, z);
     const pickPoint = publicAPI.displayToWorld(eventPos, z);
 
     if (
