@@ -50,7 +50,7 @@ To list the examples you can run the following command:
 $ npm run example
 ```
 
-Then base on the list of examples you get, you can run a given one by providing its name as argument like follow:
+Then, based on the list of examples you get, you can run a given one by providing its name as argument like the following:
 
 ```sh
 $ npm run example -- ConeSource
