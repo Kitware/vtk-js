@@ -62,7 +62,7 @@ export default function addStateAPI(publicAPI, model) {
         proxyMapping[view].getRenderWindow().render();
         proxyMapping[view].getCamera().set(cameras[view]);
         proxyMapping[view].renderLater();
-      }, 1000);
+      }, 0);
     });
     return state.userData;
   };
