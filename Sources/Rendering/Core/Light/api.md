@@ -24,16 +24,14 @@ their transformation matrix (if it exists).
 ## newInstance()
 
 Create a light with the focal point at the origin and its position
-set to (0,0,1). The light is a SceneLight, its color is white
-(black ambient, white diffuse, white specular),
+set to (0,0,1). The light is a SceneLight, its color is white,
 intensity=1, the light is turned on, positional lighting is off,
 ConeAngle=30, AttenuationValues=(1,0,0), Exponent=1 and the
 TransformMatrix is NULL.
 
-### ambientColor, diffuseColor, specularColor
+### color
 
-Set/Get the color of the light. It is possible to set the ambient,
-diffuse and specular colors separately.
+Set/Get the color of the light.
 
 ### position
 
