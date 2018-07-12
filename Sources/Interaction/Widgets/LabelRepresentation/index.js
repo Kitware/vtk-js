@@ -18,6 +18,16 @@ function vtkLabelRepresentation(publicAPI, model) {
 
   const superClass = Object.assign({}, publicAPI);
 
+  function getCanvasPosition() {
+    if (model.canvas) {
+      return {
+        left: Number(model.canvas.style.left.split('px')[0]),
+        bottom: Number(model.canvas.style.bottom.split('px')[0]),
+      };
+    }
+    return null;
+  }
+
   publicAPI.buildRepresentation = () => {
     if (model.labelText !== null) {
       publicAPI.setLabelText(model.labelText);
@@ -35,18 +45,19 @@ function vtkLabelRepresentation(publicAPI, model) {
       const height = model.canvas.height;
       const width = model.canvas.width;
 
+      const canvasPosition = getCanvasPosition();
+
       if (
-        pos[0] >= model.canvasPosition.left &&
-        pos[0] <= model.canvasPosition.left + width &&
-        pos[1] >= model.canvasPosition.bottom &&
-        pos[1] <= model.canvasPosition.bottom + height
+        pos[0] >= canvasPosition.left &&
+        pos[0] <= canvasPosition.left + width &&
+        pos[1] >= canvasPosition.bottom &&
+        pos[1] <= canvasPosition.bottom + height
       ) {
         model.interactionState = InteractionState.SELECTING;
       } else {
         model.interactionState = InteractionState.OUTSIDE;
       }
     }
-
     return model.interactionState;
   };
 
@@ -144,34 +155,9 @@ function vtkLabelRepresentation(publicAPI, model) {
     }
   };
 
-  publicAPI.setLabelVisibility = (visible) => {
-    model.canvas.style.visibility = visible ? 'visible' : 'hidden';
-
-    publicAPI.updateLabel();
-    publicAPI.modified();
-  };
-
-  publicAPI.setLabelText = (labelText) => {
-    model.labelText = labelText;
-
-    publicAPI.updateLabel();
-    publicAPI.modified();
-  };
-
-  publicAPI.setLabelPosition = (position) => {
-    // Display text
-    if (model.canvas) {
-      model.canvas.style.left = `${position[0]}px`;
-      model.canvas.style.bottom = `${position[1]}px`;
-
-      publicAPI.modified();
-    }
-  };
-
   publicAPI.setLabelStyle = (labelStyle) => {
     model.labelStyle = Object.assign({}, model.labelStyle, labelStyle);
 
-    publicAPI.updateLabel();
     publicAPI.modified();
   };
 
@@ -182,7 +168,6 @@ function vtkLabelRepresentation(publicAPI, model) {
       selectLabelStyle
     );
 
-    publicAPI.updateLabel();
     publicAPI.modified();
   };
 
@@ -192,11 +177,10 @@ function vtkLabelRepresentation(publicAPI, model) {
       model.context.clearRect(0, 0, model.canvas.width, model.canvas.height);
 
       // Render text
-      if (model.labelVisibility) {
-        const currentLabelStyle = model.higlight
+      if (model.actor.getVisibility()) {
+        const currentLabelStyle = model.highlight
           ? model.selectLabelStyle
           : model.labelStyle;
-
         const lines = model.labelText.split('\n ');
 
         const lineSpace =
@@ -244,10 +228,18 @@ function vtkLabelRepresentation(publicAPI, model) {
   };
 
   publicAPI.highlight = (highlight) => {
-    model.higlight = highlight;
-
-    publicAPI.updateLabel();
+    model.highlight = highlight;
     publicAPI.modified();
+  };
+
+  publicAPI.getCanvasSize = () => {
+    if (model.canvas) {
+      return {
+        height: model.canvas.height,
+        width: model.canvas.width,
+      };
+    }
+    return null;
   };
 }
 
@@ -267,7 +259,6 @@ const DEFAULT_VALUES = {
     lineSpace: 0.2,
   },
   labelText: '',
-  labelVisibility: true,
   selectLabelStyle: {
     fontColor: 'rgb(0, 255, 0)',
     fontStyle: 'normal',
@@ -292,39 +283,46 @@ export function extend(publicAPI, model, initialValues = {}) {
   // Canvas
   model.canvas = document.createElement('canvas');
   model.canvas.style.position = 'absolute';
-  model.canvasPosition = {
-    bottom: 0,
-    left: 0,
-  };
 
   // Context
   model.context = model.canvas.getContext('2d');
 
+  // PixelSpaceCallbackMapper
   model.point = vtkPointSource.newInstance();
   model.point.setNumberOfPoints(1);
   model.point.setRadius(0);
 
   model.mapper = vtkPixelSpaceCallbackMapper.newInstance();
   model.mapper.setInputConnection(model.point.getOutputPort());
-  model.mapper.setUseZValues(true);
   model.mapper.setCallback((coordList) => {
-    model.canvasPosition.left = coordList[0][0];
-    model.canvasPosition.bottom = coordList[0][1];
+    if (model.canvas) {
+      model.canvas.style.left = `${Math.round(coordList[0][0])}px`;
+      model.canvas.style.bottom = `${Math.round(coordList[0][1])}px`;
 
-    publicAPI.setLabelPosition(coordList[0]);
+      publicAPI.modified();
+    }
   });
 
   model.actor = vtkActor.newInstance();
   model.actor.setMapper(model.mapper);
+  model.actorVisibility = true;
 
-  model.higlight = false;
+  model.highlight = false;
 
-  macro.get(publicAPI, model, [
-    'container',
-    'labelText',
-    'labelVisibility',
-    'labelStyle',
-  ]);
+  model.actor.onModified(() => {
+    if (model.actorVisibility !== model.actor.getVisibility()) {
+      model.actorVisibility = model.actor.getVisibility();
+
+      publicAPI.modified();
+    }
+  });
+
+  publicAPI.onModified(() => {
+    publicAPI.updateLabel();
+  });
+
+  macro.setGet(publicAPI, model, ['labelText']);
+  macro.get(publicAPI, model, ['container', 'labelText', 'labelStyle']);
 
   // Object methods
   vtkLabelRepresentation(publicAPI, model);

@@ -39,27 +39,35 @@ function vtkLineRepresentation(publicAPI, model) {
   };
 
   publicAPI.getResolution = () => model.lineSource.getResolution();
+
   publicAPI.getPoint1WorldPosition = () =>
     model.point1Representation.getWorldPosition();
+
   publicAPI.getPoint2WorldPosition = () =>
     model.point2Representation.getWorldPosition();
+
   publicAPI.getPoint1DisplayPosition = () =>
     model.point1Representation.getDisplayPosition();
+
   publicAPI.getPoint2DisplayPosition = () =>
     model.point2Representation.getDisplayPosition();
+
   publicAPI.setPoint1WorldPosition = (pos) => {
     model.point1Representation.setWorldPosition(pos);
     model.lineSource.setPoint1(...pos);
   };
+
   publicAPI.setPoint2WorldPosition = (pos) => {
     model.point2Representation.setWorldPosition(pos);
     model.lineSource.setPoint2(...pos);
   };
+
   publicAPI.setPoint1DisplayPosition = (pos) => {
     model.point1Representation.setDisplayPosition(pos);
     const p = model.point1Representation.getWorldPosition();
     model.point1Representation.setWorldPosition(p);
   };
+
   publicAPI.setPoint2DisplayPosition = (pos) => {
     model.point2Representation.setDisplayPosition(pos);
     const p = model.point2Representation.getWorldPosition();

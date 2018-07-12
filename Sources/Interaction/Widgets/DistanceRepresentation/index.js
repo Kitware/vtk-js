@@ -1,8 +1,7 @@
 import macro from 'vtk.js/Sources/macro';
-import vtkActor from 'vtk.js/Sources/Rendering/Core/Actor';
+import vtkLabelRepresentation from 'vtk.js/Sources/Interaction/Widgets/LabelRepresentation';
 import vtkLineRepresentation from 'vtk.js/Sources/Interaction/Widgets/LineRepresentation';
 import vtkMath from 'vtk.js/Sources/Common/Core/Math';
-import vtkPixelSpaceCallbackMapper from 'vtk.js/Sources/Rendering/Core/PixelSpaceCallbackMapper';
 
 // ----------------------------------------------------------------------------
 // vtkDistanceRepresentation methods
@@ -14,89 +13,75 @@ function vtkDistanceRepresentation(publicAPI, model) {
 
   const superClass = Object.assign({}, publicAPI);
 
-  publicAPI.displayLabel = (displayPoint1, displayPoint2) => {
-    if (model.container) {
-      // Clear label
-      model.labelContext.clearRect(
-        0,
-        0,
-        model.labelCanvas.width,
-        model.labelCanvas.height
-      );
+  publicAPI.setRenderer = (renderer) => {
+    model.labelRepresentation.setRenderer(renderer);
 
-      if (model.labelVisibility) {
-        // Compute distance
-        const distance = Math.sqrt(
-          vtkMath.distance2BetweenPoints(
-            publicAPI.getPoint1WorldPosition(),
-            publicAPI.getPoint2WorldPosition()
-          )
-        ).toFixed(model.numberOfDecimals);
-
-        model.labelCanvas.width = Math.round(
-          model.labelContext.measureText(distance).width
-        );
-        model.labelCanvas.height = Math.round(model.labelStyle.fontSize);
-
-        // Update label style
-        model.labelContext.strokeStyle = model.labelStyle.strokeColor;
-        model.labelContext.lineWidth = model.labelStyle.strokeSize;
-        model.labelContext.fillStyle = model.labelStyle.fontColor;
-        model.labelContext.font = `${model.labelStyle.fontStyle} ${
-          model.labelStyle.fontSize
-        }px ${model.labelStyle.fontFamily}`;
-
-        // Compute label position
-        const x =
-          displayPoint1[0] +
-          (displayPoint2[0] - displayPoint1[0]) * model.labelPosition;
-        const y =
-          displayPoint1[1] +
-          (displayPoint2[1] - displayPoint1[1]) * model.labelPosition +
-          publicAPI.getLineProperty().getLineWidth();
-
-        model.labelCanvas.style.left = `${x}px`;
-        model.labelCanvas.style.bottom = `${y}px`;
-
-        // Render label
-        model.labelContext.strokeText(distance, 0, model.labelCanvas.height);
-        model.labelContext.fillText(distance, 0, model.labelCanvas.height);
-      }
-    }
-  };
-
-  publicAPI.setContainer = (container) => {
-    if (model.container && model.container !== container) {
-      model.container.removeChild(model.labelCanvas);
-    }
-
-    if (model.container !== container) {
-      model.container = container;
-
-      if (model.container) {
-        model.container.appendChild(model.labelCanvas);
-      }
-
-      publicAPI.modified();
-    }
-  };
-
-  publicAPI.setLabelVisibility = (visibility) => {
-    model.labelCanvas.style.visibility = visibility ? 'visible' : 'hidden';
+    superClass.setRenderer(renderer);
 
     publicAPI.modified();
   };
 
+  publicAPI.getContainer = () => model.labelRepresentation.getContainer();
+
+  publicAPI.setContainer = (container) => {
+    model.labelRepresentation.setContainer(container);
+
+    publicAPI.modified();
+  };
+
+  publicAPI.getLabelStyle = () => model.labelRepresentation.getLabelStyle();
+
   publicAPI.setLabelStyle = (labelStyle) => {
-    model.labelStyle = Object.assign({}, model.labelStyle, labelStyle);
+    model.labelRepresentation.setLabelStyle(labelStyle);
 
     publicAPI.modified();
   };
 
   publicAPI.getActors = () => {
-    const actors = superClass.getActors();
-    actors.push(model.labelActor);
+    let actors = superClass.getActors();
+
+    actors = [...actors, model.labelRepresentation.getActors()];
+
     return actors;
+  };
+
+  publicAPI.getDistance = () =>
+    Math.sqrt(
+      vtkMath.distance2BetweenPoints(
+        publicAPI.getPoint1WorldPosition(),
+        publicAPI.getPoint2WorldPosition()
+      )
+    ).toFixed(model.numberOfDecimals);
+
+  publicAPI.setPoint1WorldPosition = (pos) => {
+    superClass.setPoint1WorldPosition(pos);
+
+    publicAPI.updateLabelRepresentation();
+    publicAPI.modified();
+  };
+
+  publicAPI.setPoint2WorldPosition = (pos) => {
+    superClass.setPoint2WorldPosition(pos);
+
+    publicAPI.updateLabelRepresentation();
+    publicAPI.modified();
+  };
+
+  publicAPI.updateLabelRepresentation = () => {
+    model.labelRepresentation.setLabelText(publicAPI.getDistance());
+
+    const p1Position = model.point1Representation.getWorldPosition();
+    const p2Position = model.point2Representation.getWorldPosition();
+
+    const coord = [];
+
+    for (let i = 0; i < 3; i++) {
+      coord[i] =
+        p1Position[i] +
+        (p2Position[i] - p1Position[i]) * model.labelPositionInLine;
+    }
+
+    model.labelRepresentation.setWorldPosition(coord);
   };
 }
 
@@ -115,7 +100,7 @@ const DEFAULT_VALUES = {
     strokeSize: '1',
   },
   numberOfDecimals: 2,
-  labelPosition: 0.5,
+  labelPositionInLine: 0.5,
   container: null,
 };
 
@@ -127,23 +112,10 @@ export function extend(publicAPI, model, initialValues = {}) {
   // Inheritance
   vtkLineRepresentation.extend(publicAPI, model, initialValues);
 
-  // private variable
-  model.labelCanvas = document.createElement('canvas');
-  model.labelCanvas.style.position = 'absolute';
-  model.labelContext = model.labelCanvas.getContext('2d');
-
-  model.labelMapper = vtkPixelSpaceCallbackMapper.newInstance();
-  model.labelMapper.setInputConnection(model.lineSource.getOutputPort());
-  model.labelMapper.setCallback((coordList) => {
-    publicAPI.displayLabel(coordList[0], coordList[coordList.length - 1]);
-  });
-
-  model.labelActor = vtkActor.newInstance();
-  model.labelActor.setMapper(model.labelMapper);
+  model.labelRepresentation = vtkLabelRepresentation.newInstance();
 
   macro.setGet(publicAPI, model, ['numberOfDecimals', 'labelPosition']);
-
-  macro.get(publicAPI, model, ['labelVisibility', 'container']);
+  macro.get(publicAPI, model, ['labelRepresentation']);
 
   // Object methods
   vtkDistanceRepresentation(publicAPI, model);

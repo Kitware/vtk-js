@@ -31,6 +31,19 @@ function vtkLineWidget(publicAPI, model) {
     }
   }
 
+  publicAPI.setCurrentHandle = (value) => {
+    model.currentHandle = value;
+  };
+
+  publicAPI.setInteractor = (i) => {
+    superClass.setInteractor(i);
+
+    model.point1Widget.setInteractor(model.interactor);
+    model.point2Widget.setInteractor(model.interactor);
+
+    publicAPI.modified();
+  };
+
   publicAPI.setEnabled = (enabling) => {
     superClass.setEnabled(enabling);
 
@@ -43,8 +56,6 @@ function vtkLineWidget(publicAPI, model) {
     // interactor below
     model.point1Widget.setWidgetRep(model.widgetRep.getPoint1Representation());
     model.point2Widget.setWidgetRep(model.widgetRep.getPoint2Representation());
-    model.point1Widget.setInteractor(model.interactor);
-    model.point2Widget.setInteractor(model.interactor);
 
     if (model.widgetState === WidgetState.START) {
       model.point1Widget.setEnabled(0);
@@ -63,13 +74,13 @@ function vtkLineWidget(publicAPI, model) {
 
   publicAPI.setWidgetStateToStart = () => {
     model.widgetState = WidgetState.START;
-    model.currentHandle = 0;
+    publicAPI.setCurrentHandle(0);
     publicAPI.setEnabled(model.enabled);
   };
 
   publicAPI.setWidgetStateToManipulate = () => {
     model.widgetState = WidgetState.MANIPULATE;
-    model.currentHandle = -1;
+    publicAPI.setCurrentHandle(-1);
     publicAPI.setEnabled(model.enabled);
   };
 
@@ -108,13 +119,15 @@ function vtkLineWidget(publicAPI, model) {
         // If the line has a zero length, it appears with bad extremities
         pos3D[0] += 0.000000001;
         model.widgetRep.setPoint2WorldPosition(pos3D);
-        model.currentHandle++;
+
+        publicAPI.setCurrentHandle(model.currentHandle + 1);
       } else {
         model.widgetRep.setPoint2Visibility(1);
         model.widgetRep.setPoint2WorldPosition(pos3D);
         // When two points are placed, we go back to the native
         model.widgetState = WidgetState.MANIPULATE;
-        model.currentHandle = -1;
+
+        publicAPI.setCurrentHandle(-1);
       }
     } else {
       const state = model.widgetRep.computeInteractionState(position);
