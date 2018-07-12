@@ -118,19 +118,24 @@ function vtkHandleWidget(publicAPI, model) {
 
   publicAPI.moveAction = (callData) => {
     const position = [callData.position.x, callData.position.y];
+
+    let state = model.widgetRep.getInteractionState();
+
     if (model.widgetState === WidgetState.START) {
-      const state = model.widgetRep.getInteractionState();
       model.widgetRep.computeInteractionState(position);
-      setCursor(model.widgetRep.getInteractionState());
+      state = model.widgetRep.getInteractionState();
+      setCursor(state);
       if (
         model.widgetRep.getActiveRepresentation() &&
         state !== model.widgetRep.getInteractionState()
       ) {
         publicAPI.render();
       }
-      return VOID;
+
+      return state === InteractionState.OUTSIDE ? VOID : EVENT_ABORT;
     }
 
+    setCursor(state);
     model.widgetRep.complexWidgetInteraction(position);
     publicAPI.invokeInteractionEvent();
     publicAPI.render();
