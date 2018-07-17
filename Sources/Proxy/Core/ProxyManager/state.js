@@ -70,7 +70,9 @@ export default function addStateAPI(publicAPI, model) {
           setTimeout(() => {
             proxyMapping[view].getRenderWindow().render();
             proxyMapping[view].getCamera().set(cameras[view]);
-            proxyMapping[view].getRenderer().updateLightsGeometryToFollowCamera();
+            proxyMapping[view]
+              .getRenderer()
+              .updateLightsGeometryToFollowCamera();
             proxyMapping[view].renderLater();
           }, 0);
         });
