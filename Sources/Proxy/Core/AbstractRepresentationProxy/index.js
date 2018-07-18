@@ -157,12 +157,11 @@ function vtkAbstractRepresentationProxy(publicAPI, model) {
       );
     }
 
-    model.mapper.set({
-      colorByArrayName,
-      colorMode,
-      scalarMode,
-      scalarVisibility,
-    });
+    // Not all mappers have those methods
+    model.mapper.setColorByArrayName && model.mapper.setColorByArrayName(colorByArrayName);
+    model.mapper.setColorMode && model.mapper.setColorMode(colorMode);
+    model.mapper.setScalarMode && model.mapper.setScalarMode(scalarMode);
+    model.mapper.setScalarVisibility && model.mapper.setScalarVisibility(scalarVisibility);
   };
 
   publicAPI.getColorBy = () => {
