@@ -301,10 +301,13 @@ function vtkViewProxy(publicAPI, model) {
   // --------------------------------------------------------------------------
 
   publicAPI.setAnimation = (enable, requester = publicAPI) => {
+    if (model.disableAnimation && enable) {
+      return;
+    }
     if (enable) {
       model.renderWindow.getInteractor().requestAnimation(requester);
     } else {
-      model.renderWindow.getInteractor().cancelAnimation(requester);
+      model.renderWindow.getInteractor().cancelAnimation(requester, requester === publicAPI);
     }
   };
 
@@ -492,6 +495,7 @@ const DEFAULT_VALUES = {
   resetCameraOnFirstRender: true,
   presetToOrientationAxes: 'lps',
   orientationAxesType: 'arrow',
+  disableAnimation: false,
   axis: 1,
   orientation: 0,
   viewUp: [0, 0, 1],
@@ -503,7 +507,7 @@ function extend(publicAPI, model, initialValues = {}) {
   Object.assign(model, DEFAULT_VALUES, initialValues);
 
   macro.obj(publicAPI, model);
-  macro.setGet(publicAPI, model, ['name']);
+  macro.setGet(publicAPI, model, ['name', 'disableAnimation']);
   macro.get(publicAPI, model, [
     'annotationOpacity',
     'camera',
