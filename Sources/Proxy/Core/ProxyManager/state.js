@@ -46,7 +46,11 @@ export default function addStateAPI(publicAPI, model) {
             );
           }
           if (!proxy) {
-            proxy = publicAPI.createProxy(group, name);
+            proxy = publicAPI.createProxy(group, name, {
+              disableAnimation: true,
+            });
+          } else {
+            proxy.setDisableAnimation(true);
           }
 
           proxy.set(props, true);
@@ -81,6 +85,11 @@ export default function addStateAPI(publicAPI, model) {
         Object.keys(proxyMapping).forEach((originalId) => {
           const newId = proxyMapping[originalId].getProxyId();
           $oldToNewIdMapping[originalId] = newId;
+        });
+
+        // Re-enable animation on views
+        state.views.forEach(({ id }) => {
+          proxyMapping[id].setDisableAnimation(false);
         });
 
         resolve(Object.assign({}, state.userData, { $oldToNewIdMapping }));
