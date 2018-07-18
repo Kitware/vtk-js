@@ -382,7 +382,6 @@ function vtkViewProxy(publicAPI, model) {
           const axisCorrectionIndex = availableAxes.find(
             (v) => Math.abs(deltaViewUp[v]) < EPSILON
           );
-          console.log('axisCorrectionIndex', axisCorrectionIndex);
           for (let i = 0; i < animateSteps; i++) {
             const newViewUp = [
               viewUp[0] + (i + 1) * deltaViewUp[0],
