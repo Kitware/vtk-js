@@ -382,7 +382,6 @@ function vtkViewProxy(publicAPI, model) {
           const axisCorrectionIndex = availableAxes.find(
             (v) => Math.abs(deltaViewUp[v]) < EPSILON
           );
-          console.log('axisCorrectionIndex', axisCorrectionIndex);
           for (let i = 0; i < animateSteps; i++) {
             const newViewUp = [
               viewUp[0] + (i + 1) * deltaViewUp[0],
@@ -417,7 +416,9 @@ function vtkViewProxy(publicAPI, model) {
     }
 
     return new Promise((resolve, reject) => {
-      publicAPI.setAnimation(true, publicAPI);
+      const now = performance.now().toString();
+      const animationRequester = `ViewProxy.updateOrientation.${now}`;
+      publicAPI.setAnimation(true, animationRequester);
       let intervalId = null;
       const consumeAnimationStack = () => {
         if (animationStack.length) {
@@ -434,7 +435,7 @@ function vtkViewProxy(publicAPI, model) {
           }
         } else {
           clearInterval(intervalId);
-          publicAPI.setAnimation(false, publicAPI);
+          publicAPI.setAnimation(false, animationRequester);
           resolve();
         }
       };
