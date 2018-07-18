@@ -46,7 +46,9 @@ export default function addStateAPI(publicAPI, model) {
             );
           }
           if (!proxy) {
-            proxy = publicAPI.createProxy(group, name, { disableAnimation: true });
+            proxy = publicAPI.createProxy(group, name, {
+              disableAnimation: true,
+            });
           } else {
             proxy.setDisableAnimation(true);
           }

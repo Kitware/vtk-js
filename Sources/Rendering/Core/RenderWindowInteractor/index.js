@@ -319,7 +319,10 @@ function vtkRenderWindowInteractor(publicAPI, model) {
   publicAPI.cancelAnimation = (requestor, skipWarning = false) => {
     if (!animationRequesters.has(requestor)) {
       if (!skipWarning) {
-        const requestStr = requestor && requestor.getClassName ? requestor.getClassName() : requestor;
+        const requestStr =
+          requestor && requestor.getClassName
+            ? requestor.getClassName()
+            : requestor;
         vtkWarningMacro(`${requestStr} did not request an animation`);
       }
 

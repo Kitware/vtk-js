@@ -307,7 +307,9 @@ function vtkViewProxy(publicAPI, model) {
     if (enable) {
       model.renderWindow.getInteractor().requestAnimation(requester);
     } else {
-      model.renderWindow.getInteractor().cancelAnimation(requester, requester === publicAPI);
+      model.renderWindow
+        .getInteractor()
+        .cancelAnimation(requester, requester === publicAPI);
     }
   };
 
