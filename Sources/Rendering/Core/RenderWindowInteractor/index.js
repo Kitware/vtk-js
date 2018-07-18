@@ -316,9 +316,13 @@ function vtkRenderWindowInteractor(publicAPI, model) {
   publicAPI.isAnimating = () =>
     model.vrAnimation || model.animationRequest !== null;
 
-  publicAPI.cancelAnimation = (requestor) => {
+  publicAPI.cancelAnimation = (requestor, skipWarning = false) => {
     if (!animationRequesters.has(requestor)) {
-      vtkWarningMacro(`${requestor} did not request an animation`);
+      if (!skipWarning) {
+        const requestStr = requestor && requestor.getClassName ? requestor.getClassName() : requestor;
+        vtkWarningMacro(`${requestStr} did not request an animation`);
+      }
+
       return;
     }
     animationRequesters.delete(requestor);
