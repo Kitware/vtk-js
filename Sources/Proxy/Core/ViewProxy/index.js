@@ -307,9 +307,12 @@ function vtkViewProxy(publicAPI, model) {
     if (enable) {
       model.renderWindow.getInteractor().requestAnimation(requester);
     } else {
+      const skipWarning =
+        requester === publicAPI ||
+        `${requester}`.indexOf('ViewProxy.updateOrientation.') === 0;
       model.renderWindow
         .getInteractor()
-        .cancelAnimation(requester, requester === publicAPI);
+        .cancelAnimation(requester, skipWarning);
     }
   };
 
