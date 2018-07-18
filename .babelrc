@@ -2,7 +2,7 @@
   presets: [
     ['env', {
       targets: {
-        browsers: ['last 2 versions'],
+        browsers: ['last 2 versions', 'Explorer 11'],
       },
     }],
   ],
