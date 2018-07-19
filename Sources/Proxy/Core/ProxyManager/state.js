@@ -1,4 +1,5 @@
 import vtk from 'vtk.js/Sources/vtk';
+import vtkPiecewiseFunctionProxy from 'vtk.js/Sources/Proxy/Core/PiecewiseFunctionProxy';
 
 function getProperties(proxy) {
   const props = {};
@@ -60,8 +61,23 @@ export default function addStateAPI(publicAPI, model) {
 
         Object.keys(state.fields).forEach((fieldName) => {
           const { lookupTable, piecewiseFunction } = state.fields[fieldName];
-          publicAPI.getLookupTable(fieldName, lookupTable);
-          publicAPI.getPiecewiseFunction(fieldName, piecewiseFunction);
+          const lutProxy = publicAPI.getLookupTable(fieldName, lookupTable);
+          lutProxy.setPresetName(lookupTable.presetName);
+          lutProxy.setDataRange(lookupTable.dataRange);
+          const pwfProxy = publicAPI.getPiecewiseFunction(fieldName, piecewiseFunction);
+          switch (piecewiseFunction.mode) {
+            case vtkPiecewiseFunctionProxy.Mode.Gaussians:
+              pwfProxy.setGaussians(piecewiseFunction.gaussians);
+            break;
+            case vtkPiecewiseFunctionProxy.Mode.Points:
+              pwfProxy.setPoints(piecewiseFunction.points);
+            break;
+            case vtkPiecewiseFunctionProxy.Mode.Nodes:
+              pwfProxy.setNodes(piecewiseFunction.nodes);
+            break;
+          }
+          pwfProxy.setMode(piecewiseFunction.mode);
+          pwfProxy.setDataRange(piecewiseFunction.dataRange);
         });
 
         state.representations.forEach(({ source, view, props }) => {
