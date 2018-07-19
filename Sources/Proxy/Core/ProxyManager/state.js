@@ -64,17 +64,20 @@ export default function addStateAPI(publicAPI, model) {
           const lutProxy = publicAPI.getLookupTable(fieldName, lookupTable);
           lutProxy.setPresetName(lookupTable.presetName);
           lutProxy.setDataRange(lookupTable.dataRange);
-          const pwfProxy = publicAPI.getPiecewiseFunction(fieldName, piecewiseFunction);
+          const pwfProxy = publicAPI.getPiecewiseFunction(
+            fieldName,
+            piecewiseFunction
+          );
           switch (piecewiseFunction.mode) {
             case vtkPiecewiseFunctionProxy.Mode.Gaussians:
               pwfProxy.setGaussians(piecewiseFunction.gaussians);
-            break;
+              break;
             case vtkPiecewiseFunctionProxy.Mode.Points:
               pwfProxy.setPoints(piecewiseFunction.points);
-            break;
+              break;
             case vtkPiecewiseFunctionProxy.Mode.Nodes:
               pwfProxy.setNodes(piecewiseFunction.nodes);
-            break;
+              break;
           }
           pwfProxy.setMode(piecewiseFunction.mode);
           pwfProxy.setDataRange(piecewiseFunction.dataRange);
