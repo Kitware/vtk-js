@@ -70,15 +70,13 @@ export default function addStateAPI(publicAPI, model) {
             proxyMapping[view]
           );
           proxy.set(props, true);
-          proxyMapping[view].resetOrientation();
-          setTimeout(() => {
-            proxyMapping[view].getRenderWindow().render();
+          proxyMapping[view].resetOrientation().then(() => {
             proxyMapping[view].getCamera().set(cameras[view]);
             proxyMapping[view]
               .getRenderer()
               .updateLightsGeometryToFollowCamera();
-            proxyMapping[view].renderLater();
-          }, 0);
+            proxyMapping[view].getRenderWindow().render();
+          });
         });
 
         // Create id mapping

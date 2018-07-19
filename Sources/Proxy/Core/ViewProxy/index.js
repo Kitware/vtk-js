@@ -453,9 +453,13 @@ function vtkViewProxy(publicAPI, model) {
 
   // --------------------------------------------------------------------------
 
-  publicAPI.resetOrientation = () => {
-    publicAPI.updateOrientation(model.axis, model.orientation, model.viewUp);
-  };
+  publicAPI.resetOrientation = (animateSteps = 0) =>
+    publicAPI.updateOrientation(
+      model.axis,
+      model.orientation,
+      model.viewUp,
+      animateSteps
+    );
 
   // --------------------------------------------------------------------------
 
