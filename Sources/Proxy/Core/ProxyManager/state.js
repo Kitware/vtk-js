@@ -78,6 +78,9 @@ export default function addStateAPI(publicAPI, model) {
             case vtkPiecewiseFunctionProxy.Mode.Nodes:
               pwfProxy.setNodes(piecewiseFunction.nodes);
               break;
+            default:
+              // nothing that we can do
+              break;
           }
           pwfProxy.setMode(piecewiseFunction.mode);
           pwfProxy.setDataRange(piecewiseFunction.dataRange);
@@ -94,7 +97,7 @@ export default function addStateAPI(publicAPI, model) {
             proxyMapping[view]
               .getRenderer()
               .updateLightsGeometryToFollowCamera();
-            proxyMapping[view].getRenderWindow().render();
+            proxyMapping[view].renderLater();
           });
         });
 
