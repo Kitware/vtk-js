@@ -191,7 +191,7 @@ function vtkView2DProxy(publicAPI, model) {
         model.rangeManipulator.setScrollListener(
           values[0],
           values[values.length - 1],
-          values[1] - values[0],
+          values[1] - values[0] || 1,
           representation.getSlice,
           setSlice
         );
