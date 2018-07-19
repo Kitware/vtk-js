@@ -112,6 +112,24 @@ function dollyToPosition(fact, position, renderer, rwi) {
   }
 }
 
+function dollyByFactor(interactor, renderer, factor) {
+  if (Number.isNaN(factor)) {
+    return;
+  }
+
+  const camera = renderer.getActiveCamera();
+  if (camera.getParallelProjection()) {
+    camera.setParallelScale(camera.getParallelScale() / factor);
+  } else {
+    camera.dolly(factor);
+    renderer.resetCameraClippingRange();
+  }
+
+  if (interactor.getLightFollowCamera()) {
+    renderer.updateLightsGeometryToFollowCamera();
+  }
+}
+
 // ----------------------------------------------------------------------------
 // Static API
 // ----------------------------------------------------------------------------
@@ -119,6 +137,7 @@ function dollyToPosition(fact, position, renderer, rwi) {
 export const STATIC = {
   dollyToPosition,
   translateCamera,
+  dollyByFactor,
 };
 
 // ----------------------------------------------------------------------------
@@ -131,9 +150,17 @@ function vtkInteractorStyleManipulator(publicAPI, model) {
 
   model.mouseManipulators = [];
   model.vrManipulators = [];
+  model.gestureManipulators = [];
   model.currentManipulator = null;
   model.centerOfRotation = [0, 0, 0];
   model.rotationFactor = 1;
+
+  //-------------------------------------------------------------------------
+  publicAPI.removeAllManipulators = () => {
+    publicAPI.removeAllMouseManipulators();
+    publicAPI.removeAllVRManipulators();
+    publicAPI.removeAllGestureManipulators();
+  };
 
   //-------------------------------------------------------------------------
   publicAPI.removeAllMouseManipulators = () => {
@@ -143,6 +170,11 @@ function vtkInteractorStyleManipulator(publicAPI, model) {
   //-------------------------------------------------------------------------
   publicAPI.removeAllVRManipulators = () => {
     model.vrManipulators = [];
+  };
+
+  //-------------------------------------------------------------------------
+  publicAPI.removeAllGestureManipulators = () => {
+    model.gestureManipulators = [];
   };
 
   //-------------------------------------------------------------------------
@@ -156,6 +188,13 @@ function vtkInteractorStyleManipulator(publicAPI, model) {
   publicAPI.removeVRManipulator = (index) => {
     if (model.vrManipulators.length > index) {
       model.vrManipulators[index] = null;
+    }
+  };
+
+  //-------------------------------------------------------------------------
+  publicAPI.removeGestureManipulator = (index) => {
+    if (model.gestureManipulators.length > index) {
+      model.gestureManipulators[index] = null;
     }
   };
 
@@ -178,6 +217,15 @@ function vtkInteractorStyleManipulator(publicAPI, model) {
   };
 
   //-------------------------------------------------------------------------
+  publicAPI.getGestureManipulator = (index) => {
+    let manipulator = null;
+    if (model.gestureManipulators.length > index) {
+      manipulator = model.gestureManipulators[index];
+    }
+    return manipulator;
+  };
+
+  //-------------------------------------------------------------------------
   publicAPI.addMouseManipulator = (manipulator) => {
     const index = model.mouseManipulators.length;
     model.mouseManipulators.push(manipulator);
@@ -192,11 +240,30 @@ function vtkInteractorStyleManipulator(publicAPI, model) {
   };
 
   //-------------------------------------------------------------------------
+  publicAPI.addGestureManipulator = (manipulator) => {
+    const index = model.gestureManipulators.length;
+    model.gestureManipulators.push(manipulator);
+    manipulator.setInteractorStyle(publicAPI);
+    return index;
+  };
+
+  //-------------------------------------------------------------------------
   publicAPI.getNumberOfMouseManipulators = () => model.mouseManipulators.length;
 
   //-------------------------------------------------------------------------
   publicAPI.getNumberOfVRManipulators = () => model.vrManipulators.length;
 
+  //-------------------------------------------------------------------------
+  publicAPI.getNumberOfGestureManipulators = () =>
+    model.gestureManipulators.length;
+
+  //-------------------------------------------------------------------------
+  publicAPI.resetCurrentManipulator = () => {
+    model.currentManipulator = null;
+  };
+
+  //-------------------------------------------------------------------------
+  // Mouse
   //-------------------------------------------------------------------------
   publicAPI.handleLeftButtonPress = (callData) => {
     model.previousPosition = callData.position;
@@ -437,8 +504,156 @@ function vtkInteractorStyleManipulator(publicAPI, model) {
   };
 
   //-------------------------------------------------------------------------
-  publicAPI.resetCurrentManipulator = () => {
-    model.currentManipulator = null;
+  // Gesture
+  //-------------------------------------------------------------------------
+
+  publicAPI.handleStartPinch = (callData) => {
+    publicAPI.startDolly();
+    let count = model.gestureManipulators.length;
+    while (count--) {
+      const manipulator = model.gestureManipulators[count];
+      if (manipulator.isPinchEnabled()) {
+        manipulator.onStartPinch(model.interactor, callData.scale);
+        manipulator.startInteraction();
+      }
+    }
+    model.interactor.requestAnimation(publicAPI.handleStartPinch);
+    publicAPI.invokeStartInteractionEvent(START_INTERACTION_EVENT);
+  };
+
+  //--------------------------------------------------------------------------
+  publicAPI.handleEndPinch = () => {
+    publicAPI.endDolly();
+    let count = model.gestureManipulators.length;
+    while (count--) {
+      const manipulator = model.gestureManipulators[count];
+      if (manipulator.isPinchEnabled()) {
+        manipulator.onEndPinch(model.interactor);
+        manipulator.endInteraction();
+      }
+    }
+    model.interactor.cancelAnimation(publicAPI.handleStartPinch);
+    publicAPI.invokeEndInteractionEvent(END_INTERACTION_EVENT);
+  };
+
+  //----------------------------------------------------------------------------
+  publicAPI.handleStartRotate = (callData) => {
+    publicAPI.startRotate();
+    let count = model.gestureManipulators.length;
+    while (count--) {
+      const manipulator = model.gestureManipulators[count];
+      if (manipulator.isRotateEnabled()) {
+        manipulator.onStartRotate(model.interactor, callData.rotation);
+        manipulator.startInteraction();
+      }
+    }
+    model.interactor.requestAnimation(publicAPI.handleStartRotate);
+    publicAPI.invokeStartInteractionEvent(START_INTERACTION_EVENT);
+  };
+
+  //--------------------------------------------------------------------------
+  publicAPI.handleEndRotate = () => {
+    publicAPI.endRotate();
+    let count = model.gestureManipulators.length;
+    while (count--) {
+      const manipulator = model.gestureManipulators[count];
+      if (manipulator.isRotateEnabled()) {
+        manipulator.onEndRotate(model.interactor);
+        manipulator.endInteraction();
+      }
+    }
+    model.interactor.cancelAnimation(publicAPI.handleStartRotate);
+    publicAPI.invokeEndInteractionEvent(END_INTERACTION_EVENT);
+  };
+
+  //----------------------------------------------------------------------------
+  publicAPI.handleStartPan = (callData) => {
+    publicAPI.startPan();
+    let count = model.gestureManipulators.length;
+    while (count--) {
+      const manipulator = model.gestureManipulators[count];
+      if (manipulator.isPanEnabled()) {
+        manipulator.onStartPan(model.interactor, callData.translation);
+        manipulator.startInteraction();
+      }
+    }
+    model.interactor.requestAnimation(publicAPI.handleStartPan);
+    publicAPI.invokeStartInteractionEvent(START_INTERACTION_EVENT);
+  };
+
+  //--------------------------------------------------------------------------
+  publicAPI.handleEndPan = () => {
+    publicAPI.endPan();
+    let count = model.gestureManipulators.length;
+    while (count--) {
+      const manipulator = model.gestureManipulators[count];
+      if (manipulator.isPanEnabled()) {
+        manipulator.onEndPan(model.interactor);
+        manipulator.endInteraction();
+      }
+    }
+    model.interactor.cancelAnimation(publicAPI.handleStartPan);
+    publicAPI.invokeEndInteractionEvent(END_INTERACTION_EVENT);
+  };
+
+  //----------------------------------------------------------------------------
+  publicAPI.handlePinch = (callData) => {
+    let count = model.gestureManipulators.length;
+    let actionCount = 0;
+    while (count--) {
+      const manipulator = model.gestureManipulators[count];
+      if (manipulator.isPinchEnabled()) {
+        manipulator.onPinch(
+          model.interactor,
+          callData.pokedRenderer,
+          callData.scale
+        );
+        actionCount++;
+      }
+    }
+    if (actionCount) {
+      publicAPI.invokeInteractionEvent(INTERACTION_EVENT);
+    }
+  };
+
+  //----------------------------------------------------------------------------
+  publicAPI.handlePan = (callData) => {
+    let count = model.gestureManipulators.length;
+    let actionCount = 0;
+    while (count--) {
+      const manipulator = model.gestureManipulators[count];
+      if (manipulator.isPanEnabled()) {
+        manipulator.onPan(
+          model.interactor,
+          callData.pokedRenderer,
+          callData.translation
+        );
+        actionCount++;
+      }
+    }
+    if (actionCount) {
+      publicAPI.invokeInteractionEvent(INTERACTION_EVENT);
+    }
+  };
+
+  //----------------------------------------------------------------------------
+  publicAPI.handleRotate = (callData) => {
+    let count = model.gestureManipulators.length;
+    let actionCount = 0;
+    while (count--) {
+      const manipulator = model.gestureManipulators[count];
+      if (manipulator.isRotateEnabled()) {
+        manipulator.onRotate(
+          model.interactor,
+          callData.pokedRenderer,
+          callData.rotation
+        );
+        actionCount++;
+      }
+    }
+    if (actionCount) {
+      publicAPI.invokeInteractionEvent(INTERACTION_EVENT);
+    }
   };
 }
 
@@ -450,6 +665,7 @@ const DEFAULT_VALUES = {
   currentManipulator: null,
   // mouseManipulators: null,
   // vrManipulators: null,
+  // gestureManipulators: null,
   centerOfRotation: [0, 0, 0],
   rotationFactor: 1,
 };
