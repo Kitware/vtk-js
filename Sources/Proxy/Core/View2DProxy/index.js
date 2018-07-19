@@ -49,7 +49,7 @@ function vtkView2DProxy(publicAPI, model) {
 
   const superUpdateOrientation = publicAPI.updateOrientation;
   publicAPI.updateOrientation = (axisIndex, orientation, viewUp) => {
-    superUpdateOrientation(axisIndex, orientation, viewUp);
+    const promise = superUpdateOrientation(axisIndex, orientation, viewUp);
 
     let count = model.representations.length;
     while (count--) {
@@ -61,6 +61,7 @@ function vtkView2DProxy(publicAPI, model) {
     }
 
     publicAPI.updateCornerAnnotation({ axis: 'XYZ'[axisIndex] });
+    return promise;
   };
 
   const superAddRepresentation = publicAPI.addRepresentation;
