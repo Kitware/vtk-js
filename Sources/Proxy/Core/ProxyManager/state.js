@@ -34,86 +34,88 @@ export default function addStateAPI(publicAPI, model) {
         );
       });
 
-      Promise.all(sourcePromises).then(() => {
-        const views = publicAPI.getViews();
-        state.views.forEach(({ id, group, name, props, camera }) => {
-          let proxy = null;
-          if (state.options.recycleViews) {
-            proxy = views.find(
-              (v) =>
-                v.getProxyGroup() === group &&
-                v.getProxyName() === name &&
-                v.getName() === props.name
-            );
-          }
-          if (!proxy) {
-            proxy = publicAPI.createProxy(group, name, {
-              disableAnimation: true,
-            });
-          } else {
-            proxy.setDisableAnimation(true);
-          }
+      Promise.all(sourcePromises)
+        .then(() => {
+          const views = publicAPI.getViews();
+          state.views.forEach(({ id, group, name, props, camera }) => {
+            let proxy = null;
+            if (state.options.recycleViews) {
+              proxy = views.find(
+                (v) =>
+                  v.getProxyGroup() === group &&
+                  v.getProxyName() === name &&
+                  v.getName() === props.name
+              );
+            }
+            if (!proxy) {
+              proxy = publicAPI.createProxy(group, name, {
+                disableAnimation: true,
+              });
+            } else {
+              proxy.setDisableAnimation(true);
+            }
 
-          proxy.set(props, true);
-          proxyMapping[id] = proxy;
-          cameras[id] = camera;
-        });
-
-        Object.keys(state.fields).forEach((fieldName) => {
-          const { lookupTable, piecewiseFunction } = state.fields[fieldName];
-          const lutProxy = publicAPI.getLookupTable(fieldName, lookupTable);
-          lutProxy.setPresetName(lookupTable.presetName);
-          lutProxy.setDataRange(lookupTable.dataRange);
-          const pwfProxy = publicAPI.getPiecewiseFunction(
-            fieldName,
-            piecewiseFunction
-          );
-          switch (piecewiseFunction.mode) {
-            case vtkPiecewiseFunctionProxy.Mode.Gaussians:
-              pwfProxy.setGaussians(piecewiseFunction.gaussians);
-              break;
-            case vtkPiecewiseFunctionProxy.Mode.Points:
-              pwfProxy.setPoints(piecewiseFunction.points);
-              break;
-            case vtkPiecewiseFunctionProxy.Mode.Nodes:
-              pwfProxy.setNodes(piecewiseFunction.nodes);
-              break;
-            default:
-              // nothing that we can do
-              break;
-          }
-          pwfProxy.setMode(piecewiseFunction.mode);
-          pwfProxy.setDataRange(piecewiseFunction.dataRange);
-        });
-
-        state.representations.forEach(({ source, view, props }) => {
-          const proxy = publicAPI.getRepresentation(
-            proxyMapping[source],
-            proxyMapping[view]
-          );
-          proxy.set(props, true);
-          proxyMapping[view].resetOrientation().then(() => {
-            proxyMapping[view].getCamera().set(cameras[view]);
-            proxyMapping[view]
-              .getRenderer()
-              .updateLightsGeometryToFollowCamera();
-            proxyMapping[view].renderLater();
+            proxy.set(props, true);
+            proxyMapping[id] = proxy;
+            cameras[id] = camera;
           });
-        });
 
-        // Create id mapping
-        Object.keys(proxyMapping).forEach((originalId) => {
-          const newId = proxyMapping[originalId].getProxyId();
-          $oldToNewIdMapping[originalId] = newId;
-        });
+          Object.keys(state.fields).forEach((fieldName) => {
+            const { lookupTable, piecewiseFunction } = state.fields[fieldName];
+            const lutProxy = publicAPI.getLookupTable(fieldName, lookupTable);
+            lutProxy.setPresetName(lookupTable.presetName);
+            lutProxy.setDataRange(lookupTable.dataRange);
+            const pwfProxy = publicAPI.getPiecewiseFunction(
+              fieldName,
+              piecewiseFunction
+            );
+            switch (piecewiseFunction.mode) {
+              case vtkPiecewiseFunctionProxy.Mode.Gaussians:
+                pwfProxy.setGaussians(piecewiseFunction.gaussians);
+                break;
+              case vtkPiecewiseFunctionProxy.Mode.Points:
+                pwfProxy.setPoints(piecewiseFunction.points);
+                break;
+              case vtkPiecewiseFunctionProxy.Mode.Nodes:
+                pwfProxy.setNodes(piecewiseFunction.nodes);
+                break;
+              default:
+                // nothing that we can do
+                break;
+            }
+            pwfProxy.setMode(piecewiseFunction.mode);
+            pwfProxy.setDataRange(piecewiseFunction.dataRange);
+          });
 
-        // Re-enable animation on views
-        state.views.forEach(({ id }) => {
-          proxyMapping[id].setDisableAnimation(false);
-        });
+          state.representations.forEach(({ source, view, props }) => {
+            const proxy = publicAPI.getRepresentation(
+              proxyMapping[source],
+              proxyMapping[view]
+            );
+            proxy.set(props, true);
+            proxyMapping[view].resetOrientation().then(() => {
+              proxyMapping[view].getCamera().set(cameras[view]);
+              proxyMapping[view]
+                .getRenderer()
+                .updateLightsGeometryToFollowCamera();
+              proxyMapping[view].renderLater();
+            });
+          });
 
-        resolve(Object.assign({}, state.userData, { $oldToNewIdMapping }));
-      });
+          // Create id mapping
+          Object.keys(proxyMapping).forEach((originalId) => {
+            const newId = proxyMapping[originalId].getProxyId();
+            $oldToNewIdMapping[originalId] = newId;
+          });
+
+          // Re-enable animation on views
+          state.views.forEach(({ id }) => {
+            proxyMapping[id].setDisableAnimation(false);
+          });
+
+          resolve(Object.assign({}, state.userData, { $oldToNewIdMapping }));
+        })
+        .catch(reject);
     });
 
   publicAPI.saveState = (options = {}, userData = {}) =>
@@ -205,16 +207,18 @@ export default function addStateAPI(publicAPI, model) {
         };
       });
 
-      Promise.all(datasets).then(() => {
-        // Patch datasets in state to the result of the promises
-        for (let i = 0; i < state.sources.length; i++) {
-          state.sources[i].props.dataset.then((value) => {
-            state.sources[i].props.dataset = value;
-          });
-        }
+      Promise.all(datasets)
+        .then(() => {
+          // Patch datasets in state to the result of the promises
+          for (let i = 0; i < state.sources.length; i++) {
+            state.sources[i].props.dataset.then((value) => {
+              state.sources[i].props.dataset = value;
+            });
+          }
 
-        // provide valide state
-        resolve(state);
-      });
+          // provide valide state
+          resolve(state);
+        })
+        .catch(reject);
     });
 }
