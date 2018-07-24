@@ -30,6 +30,18 @@ function vtkImageReslice(publicAPI, model) {
   let indexMatrix = null;
   let optimizedTransform = null;
 
+  publicAPI.setResliceAxes = (resliceAxes) => {
+    if (!model.resliceAxes) {
+      model.resliceAxes = mat4.create();
+    }
+
+    if (!mat4.exactEquals(model.resliceAxes, resliceAxes)) {
+      mat4.copy(model.resliceAxes, resliceAxes);
+
+      publicAPI.modified();
+    }
+  };
+
   publicAPI.requestData = (inData, outData) => {
     // implement requestData
     const input = inData[0];
@@ -948,7 +960,6 @@ export function extend(publicAPI, model, initialValues = {}) {
   macro.algo(publicAPI, model, 1, 1);
 
   macro.setGet(publicAPI, model, [
-    'resliceAxes',
     'outputDimensionality',
     'outputOrigin',
     'outputSpacing',
@@ -963,6 +974,8 @@ export function extend(publicAPI, model, initialValues = {}) {
     'border',
     'backgroundColor',
   ]);
+
+  macro.get(publicAPI, model, ['resliceAxes']);
 
   // Object specific methods
   macro.algo(publicAPI, model, 1, 1);

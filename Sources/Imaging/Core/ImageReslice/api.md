@@ -109,11 +109,11 @@ the limits of the output data type.
 
 ### Wrap (set/get)
 
-Turn on wrap-pad feature (default: Off).
+Turn on wrap-pad feature (default: false).
 
 ### Mirror (set/get)
 
-Turn on mirror-pad feature (default: Off). This will override the wrap-pad.
+Turn on mirror-pad feature (default: false). This will override the wrap-pad.
 
 ### Border (set/get)
 
@@ -129,3 +129,18 @@ This has no effect if Mirror or Wrap are on.
 ### BackgroundColor (set/get)
 
 Set the background color (for multi-component images).
+
+
+### TransformInputSampling (set/get)
+
+Specify whether to transform the spacing, origin and extent
+of the Input (or the InformationInput) according to the
+direction cosines and origin of the ResliceAxes before applying
+them as the default output spacing, origin and extent
+(default: true).
+
+### AutoCropOutput (set/get)
+
+Turn this on if you want to guarantee that the extent of the
+output will be large enough to ensure that none of the
+data will be cropped (default: false).

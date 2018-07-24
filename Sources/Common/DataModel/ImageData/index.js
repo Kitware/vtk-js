@@ -329,6 +329,17 @@ function vtkImageData(publicAPI, model) {
   // Make sure the transform is correct
   publicAPI.onModified(publicAPI.computeTransforms);
   publicAPI.computeTransforms();
+
+  publicAPI.getCenter = () => {
+    const bounds = publicAPI.getBounds();
+    const center = [];
+
+    for (let i = 0; i < 3; i++) {
+      center[i] = (bounds[2 * i + 1] + bounds[2 * i]) / 2;
+    }
+
+    return center;
+  };
 }
 
 // ----------------------------------------------------------------------------

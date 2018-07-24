@@ -363,7 +363,7 @@ function vtkCellPicker(publicAPI, model) {
       model.mapperPosition[1] = minXYZ[1];
       model.mapperPosition[2] = minXYZ[2];
 
-      // COmpute the normal
+      // Compute the normal
       if (
         !publicAPI.computeSurfaceNormal(
           data,
