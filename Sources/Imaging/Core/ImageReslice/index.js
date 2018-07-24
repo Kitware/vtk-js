@@ -1,4 +1,4 @@
-import { vec3, mat4 } from 'gl-matrix';
+import { vec4, mat4 } from 'gl-matrix';
 
 import macro from 'vtk.js/Sources/macro';
 import vtkDataArray from 'vtk.js/Sources/Common/Core/DataArray';
@@ -66,6 +66,11 @@ function vtkImageReslice(publicAPI, model) {
       origin[2] + 0.5 * (inWholeExt[4] + inWholeExt[5]) * inSpacing[0],
     ];
 
+    let maxBounds = null;
+    if (model.autoCropOutput) {
+      maxBounds = publicAPI.getAutoCroppedOutputBounds(input);
+    }
+
     for (let i = 0; i < 3; i++) {
       let s = 0; // default output spacing
       let d = 0; // default linear dimension
@@ -106,7 +111,7 @@ function vtkImageReslice(publicAPI, model) {
         outWholeExt[2 * i + 1] = 0;
       } else if (model.outputExtent == null) {
         if (model.autoCropOutput) {
-          // d = maxBounds[2*i+1] - maxBounds[2*i];
+          d = maxBounds[2 * i + 1] - maxBounds[2 * i];
         }
         outWholeExt[2 * i] = Math.round(e);
         outWholeExt[2 * i + 1] = Math.round(
@@ -122,7 +127,7 @@ function vtkImageReslice(publicAPI, model) {
       } else if (model.outputOrigin == null) {
         if (model.autoCropOutput) {
           // set origin so edge of extent is edge of bounds
-          // outOrigin[i] = maxBounds[2*i] - outWholeExt[2*i]*outSpacing[i];
+          outOrigin[i] = maxBounds[2 * i] - outWholeExt[2 * i] * outSpacing[i];
         } else {
           // center new bounds over center of input bounds
           outOrigin[i] =
@@ -660,6 +665,58 @@ function vtkImageReslice(publicAPI, model) {
     return indexMatrix;
   };
 
+  publicAPI.getAutoCroppedOutputBounds = (input) => {
+    const inOrigin = input.getOrigin();
+    const inSpacing = input.getSpacing();
+    const dims = input.getDimensions();
+    const inWholeExt = [0, dims[0] - 1, 0, dims[1] - 1, 0, dims[2] - 1];
+
+    const matrix = mat4.create();
+    if (model.resliceAxes) {
+      mat4.invert(matrix, model.resliceAxes);
+    }
+
+    const bounds = [
+      Number.MAX_VALUE,
+      -Number.MAX_VALUE,
+      Number.MAX_VALUE,
+      -Number.MAX_VALUE,
+      Number.MAX_VALUE,
+      -Number.MAX_VALUE,
+    ];
+
+    const point = [0, 0, 0, 0];
+    for (let i = 0; i < 8; ++i) {
+      point[0] = inOrigin[0] + inWholeExt[i % 2] * inSpacing[0];
+      point[1] =
+        inOrigin[1] + inWholeExt[2 + Math.floor(i / 2) % 2] * inSpacing[1];
+      point[2] =
+        inOrigin[2] + inWholeExt[4 + Math.floor(i / 4) % 2] * inSpacing[2];
+      point[3] = 1.0;
+
+      if (model.resliceTransform) {
+        // TODO
+      }
+
+      vec4.transformMat4(point, point, matrix);
+
+      const f = 1.0 / point[3];
+      point[0] *= f;
+      point[1] *= f;
+      point[2] *= f;
+
+      for (let j = 0; j < 3; ++j) {
+        if (point[j] > bounds[2 * j + 1]) {
+          bounds[2 * j + 1] = point[j];
+        }
+        if (point[j] < bounds[2 * j]) {
+          bounds[2 * j] = point[j];
+        }
+      }
+    }
+    return bounds;
+  };
+
   publicAPI.getDataTypeMinMax = (dataType) => {
     switch (dataType) {
       case 'Int8Array':
@@ -758,7 +815,8 @@ function vtkImageReslice(publicAPI, model) {
   publicAPI.getCompositeFunc = (slabMode, slabTrapezoidIntegration) => null;
 
   publicAPI.applyTransform = (newTrans, inPoint, inOrigin, inInvSpacing) => {
-    vec3.transformMat4(inPoint, inPoint, newTrans);
+    inPoint[3] = 1;
+    vec4.transformMat4(inPoint, inPoint, newTrans);
     inPoint[0] -= inOrigin[0];
     inPoint[1] -= inOrigin[1];
     inPoint[2] -= inOrigin[2];
@@ -898,6 +956,8 @@ export function extend(publicAPI, model, initialValues = {}) {
     'outputScalarType',
     'scalarShift',
     'scalarScale',
+    'transformInputSampling',
+    'autoCropOutput',
     'wrap',
     'mirror',
     'border',

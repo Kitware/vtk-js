@@ -71,6 +71,7 @@ test.onlyIfWebGL('Test vtkImageReslice Rendering', (t) => {
   imageReslice.setBorder(true);
   imageReslice.setOutputScalarType('Uint16Array');
   imageReslice.setScalarScale(65535 / 255);
+  imageReslice.setAutoCropOutput(true);
   // imageReslice.setOutputOrigin([
   //   dims[0] * s / 2,
   //   dims[1] * s / 2,
@@ -93,11 +94,6 @@ test.onlyIfWebGL('Test vtkImageReslice Rendering', (t) => {
   renderWindow.addView(glwindow);
   glwindow.setSize(400, 400);
 
-  // function sleep(delay) {
-  //   const start = new Date().getTime();
-  //   while (new Date().getTime() < start + delay);
-  // }
-
   glwindow.captureNextImage().then((image) => {
     testUtils.compareImages(
       image,
@@ -109,6 +105,11 @@ test.onlyIfWebGL('Test vtkImageReslice Rendering', (t) => {
     );
   });
   renderWindow.render();
+  // function sleep(delay) {
+  //   const start = new Date().getTime();
+  //   while (new Date().getTime() < start + delay);
+  // }
+  // sleep(500);
 });
 
 // For comparison purpose, see below the same test in VTK/Python:
@@ -133,6 +134,7 @@ test.onlyIfWebGL('Test vtkImageReslice Rendering', (t) => {
 // reslice.BorderOn();
 // reslice.SetOutputScalarType(vtk.VTK_UNSIGNED_SHORT);
 // reslice.SetScalarScale(65535 / 255);
+// reslice.SetAutoCropOutput(1);
 // # reslice.SetOutputOrigin(dims[0] * s/2, dims[1] * s/2, dims[2] *s/2);
 
 // mapper = vtk.vtkImageSliceMapper();
@@ -141,9 +143,9 @@ test.onlyIfWebGL('Test vtkImageReslice Rendering', (t) => {
 // actor = vtk.vtkImageActor();
 // actor.SetMapper(mapper);
 
-// ip = actor.GetProperty()
-// ip.SetColorLevel(65535/2)
-// ip.SetColorWindow(65535)
+// ip = actor.GetProperty();
+// ip.SetColorLevel(65535/2);
+// ip.SetColorWindow(65535);
 
 // renderer = vtk.vtkRenderer();
 // renderer.AddActor(actor);
@@ -176,6 +178,7 @@ test.onlyIfWebGL('Test vtkImageReslice Rendering', (t) => {
 // # renderer.AddViewProp(volume);
 
 // renderWindow = vtk.vtkRenderWindow();
+// renderWindow.SetSize(400,400);
 // renderWindow.AddRenderer(renderer);
 
 // renderWindowInteractor = vtk.vtkRenderWindowInteractor();
