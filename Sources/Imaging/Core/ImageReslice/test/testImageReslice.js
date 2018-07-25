@@ -66,7 +66,7 @@ test.onlyIfWebGL('Test vtkImageReslice Rendering', (t) => {
   imageReslice.setInputData(imageData);
   imageReslice.setOutputDimensionality(2);
   const axes = mat4.create();
-  mat4.rotateX(axes, axes, 45 * Math.PI / 180);
+  mat4.rotateZ(axes, axes, 45 * Math.PI / 180);
   imageReslice.setResliceAxes(axes);
   imageReslice.setBorder(true);
   imageReslice.setOutputScalarType('Uint16Array');
@@ -126,7 +126,7 @@ test.onlyIfWebGL('Test vtkImageReslice Rendering', (t) => {
 //             imageData.SetScalarComponentFromDouble(x, y, z, 0, 256 * ((z * dims[0] * dims[1] + y * dims[0] + x) % (dims[0] * dims[1])) / (dims[0] * dims[1]));
 
 // axes = vtk.vtkTransform();
-// axes.RotateX(45);
+// axes.RotateZ(45);
 // reslice = vtk.vtkImageReslice();
 // reslice.SetOutputDimensionality(2);
 // reslice.SetInputData(imageData);

@@ -468,7 +468,7 @@ function vtkImageReslice(publicAPI, model) {
 
               if (convertScalars) {
                 convertScalars(
-                  floatPtr, // tmpPtr - inComponents*(idX-startIdX),
+                  floatPtr.subarray(startIdX * inComponents),
                   outPtr,
                   inputScalarType,
                   inComponents,
@@ -483,7 +483,7 @@ function vtkImageReslice(publicAPI, model) {
               } else {
                 outPtr = convertpixels(
                   outPtr,
-                  floatPtr, // tmpPtr - inComponents * (idX - startIdX),
+                  floatPtr.subarray(startIdX * inComponents),
                   outComponents,
                   numpixels
                 );
