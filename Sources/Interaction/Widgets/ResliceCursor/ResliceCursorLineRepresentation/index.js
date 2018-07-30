@@ -374,7 +374,9 @@ function vtkResliceCursorLineRepresentation(publicAPI, model) {
     const resliceCursor = publicAPI.getResliceCursor();
 
     if (resliceCursor) {
-      bounds = resliceCursor.getImage().getBounds();
+      if (resliceCursor.getImage()) {
+        bounds = resliceCursor.getImage().getBounds();
+      }
     }
 
     return bounds;
