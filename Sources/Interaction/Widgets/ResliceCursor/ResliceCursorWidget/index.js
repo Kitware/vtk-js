@@ -1,6 +1,7 @@
 import macro from 'vtk.js/Sources/macro';
 
 import vtkAbstractWidget from 'vtk.js/Sources/Interaction/Widgets/AbstractWidget';
+import vtkInteractorStyleImage from 'vtk.js/Sources/Interaction/Style/InteractorStyleImage';
 import vtkResliceCursorLineRepresentation from 'vtk.js/Sources/Interaction/Widgets/ResliceCursor/ResliceCursorLineRepresentation';
 
 import { WidgetState } from 'vtk.js/Sources/Interaction/Widgets/ResliceCursor/ResliceCursorWidget/Constants';
@@ -16,7 +17,7 @@ function vtkResliceCursorWidget(publicAPI, model) {
   // Set our className
   model.classHierarchy.push('vtkResliceCursorWidget');
 
-  // const superClass = Object.assign({}, publicAPI);
+  const superClass = Object.assign({}, publicAPI);
 
   function setCursor(state) {
     switch (state) {
@@ -37,7 +38,7 @@ function vtkResliceCursorWidget(publicAPI, model) {
   //----------------------------------------------------------------------------
   publicAPI.createDefaultRepresentation = () => {
     if (!model.widgetRep) {
-      model.widgetRep = vtkResliceCursorLineRepresentation.newInstance();
+      publicAPI.setWidgetRep(vtkResliceCursorLineRepresentation.newInstance());
     }
   };
 
@@ -55,24 +56,31 @@ function vtkResliceCursorWidget(publicAPI, model) {
     const state = model.widgetRep.computeInteractionState(position);
 
     if (state === InteractionState.OUTSIDE) {
-      return VOID;
+      model.widgetState = WidgetState.WINDOW_LEVEL;
+      model.imageInteractorStyle.handleLeftButtonPress(callData);
+    } else {
+      model.widgetRep.startComplexWidgetInteraction(position);
+      model.widgetState = WidgetState.ACTIVE;
+      setCursor(state);
     }
 
-    model.widgetRep.startComplexWidgetInteraction(position);
-    model.widgetState = WidgetState.ACTIVE;
-    setCursor(state);
     publicAPI.invokeStartInteractionEvent();
     publicAPI.render();
 
     return EVENT_ABORT;
   };
 
-  publicAPI.endSelectAction = () => {
-    if (model.widgetState !== WidgetState.ACTIVE) {
+  publicAPI.endSelectAction = (callData) => {
+    if (model.widgetState === WidgetState.START) {
       return VOID;
     }
 
+    if (model.widgetState === WidgetState.WINDOW_LEVEL) {
+      model.imageInteractorStyle.handleLeftButtonRelease(callData);
+    }
+
     model.widgetState = WidgetState.START;
+
     publicAPI.invokeEndInteractionEvent();
     publicAPI.render();
 
@@ -84,17 +92,40 @@ function vtkResliceCursorWidget(publicAPI, model) {
 
     if (model.widgetState === WidgetState.START) {
       const state = model.widgetRep.getInteractionState();
+
       model.widgetRep.computeInteractionState(position);
+
       setCursor(model.widgetRep.getInteractionState());
+
       if (state !== model.widgetRep.getInteractionState()) {
         publicAPI.render();
       }
       return VOID;
+    } else if (model.widgetState === WidgetState.WINDOW_LEVEL) {
+      model.imageInteractorStyle.handleMouseMove(callData);
+    } else {
+      model.widgetRep.complexWidgetInteraction(position);
     }
-    model.widgetRep.complexWidgetInteraction(position);
+
     publicAPI.invokeInteractionEvent();
+
     publicAPI.render();
     return EVENT_ABORT;
+  };
+
+  publicAPI.setWidgetRep = (widgetRep) => {
+    superClass.setWidgetRep(widgetRep);
+
+    model.imageInteractorStyle.setCurrentImageProperty(
+      model.widgetRep.getImageActor().getProperty()
+    );
+  };
+
+  publicAPI.setInteractor = (i) => {
+    superClass.setInteractor(i);
+
+    model.imageInteractorStyle.setInteractor(model.interactor);
+    model.imageInteractorStyle.setEnabled(false);
   };
 }
 
@@ -112,6 +143,10 @@ export function extend(publicAPI, model, initialValues = {}) {
   Object.assign(model, DEFAULT_VALUES, initialValues);
 
   vtkAbstractWidget.extend(publicAPI, model, DEFAULT_VALUES, initialValues);
+
+  model.imageInteractorStyle = vtkInteractorStyleImage.newInstance({
+    currentImageNumber: null,
+  });
 
   // Object methods
   vtkResliceCursorWidget(publicAPI, model);

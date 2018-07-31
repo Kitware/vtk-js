@@ -160,7 +160,7 @@ function vtkResliceCursor(publicAPI, model) {
         center[0] < bounds[0] ||
         center[0] > bounds[1] ||
         center[1] < bounds[2] ||
-        center[4] > bounds[3] ||
+        center[1] > bounds[3] ||
         center[2] < bounds[4] ||
         center[2] > bounds[5]
       ) {

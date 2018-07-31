@@ -477,7 +477,7 @@ export function extend(publicAPI, model, initialValues = {}) {
     'showReslicedImage',
   ]);
 
-  macro.get(publicAPI, model, ['resliceAxes', 'reslice']);
+  macro.get(publicAPI, model, ['resliceAxes', 'reslice', 'imageActor']);
 
   // Object methods
   vtkResliceCursorRepresentation(publicAPI, model);
