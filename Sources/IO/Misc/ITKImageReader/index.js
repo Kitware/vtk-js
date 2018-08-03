@@ -5,6 +5,12 @@ const { convertItkToVtkImage } = ITKHelper;
 let readImageArrayBuffer = null;
 let resultPreprocessor = (result) => result;
 
+function getArrayName(filename) {
+  const idx = filename.lastIndexOf('.');
+  const name = idx > -1 ? filename.substring(0, idx) : filename;
+  return `Scalars ${name}`;
+}
+
 function setReadImageArrayBufferFromITK(fn) {
   readImageArrayBuffer = fn;
 
@@ -42,7 +48,9 @@ function vtkITKImageReader(publicAPI, model) {
     return readImageArrayBuffer(arrayBuffer, model.fileName)
       .then(resultPreprocessor)
       .then((itkImage) => {
-        const imageData = convertItkToVtkImage(itkImage);
+        const imageData = convertItkToVtkImage(itkImage, {
+          scalarArrayName: model.arrayName || getArrayName(model.fileName),
+        });
         model.output[0] = imageData;
 
         publicAPI.modified();
@@ -60,6 +68,8 @@ function vtkITKImageReader(publicAPI, model) {
 
 const DEFAULT_VALUES = {
   fileName: '',
+  // If null/undefined a unique array will be generated
+  arrayName: null,
 };
 
 // ----------------------------------------------------------------------------
@@ -70,7 +80,7 @@ export function extend(publicAPI, model, initialValues = {}) {
   // Build VTK API
   macro.obj(publicAPI, model);
   macro.algo(publicAPI, model, 0, 1);
-  macro.setGet(publicAPI, model, ['fileName']);
+  macro.setGet(publicAPI, model, ['fileName', 'arrayName']);
 
   // vtkITKImageReader methods
   vtkITKImageReader(publicAPI, model);
