@@ -16,7 +16,10 @@ import vtkRenderWindow from 'vtk.js/Sources/Rendering/Core/RenderWindow';
 
 const TYPE_HANDLERS = {};
 const WRAPPED_ID_RE = /instance:\${([^}]+)}/;
+const WRAP_ID = (id) => `instance:$\{${id}}`;
 const ONE_TIME_INSTANCE_TRACKERS = {};
+const SKIPPED_INSTANCE_IDS = [];
+const EXCLUDE_INSTANCE_MAP = {};
 
 function extractCallArgs(synchronizerContext, argList) {
   return argList.map((arg) => {
@@ -50,6 +53,9 @@ function extractDependencyIds(state, depList = []) {
 // ----------------------------------------------------------------------------
 
 function update(type, instance, props, context) {
+  if (!instance) {
+    return;
+  }
   const handler = TYPE_HANDLERS[type];
   if (handler && handler.update) {
     handler.update(instance, props, context);
@@ -76,6 +82,13 @@ function setTypeMapping(type, buildFn = null, updateFn = null) {
   }
 
   TYPE_HANDLERS[type] = { build: buildFn, update: updateFn };
+}
+
+function excludeInstance(type, propertyName, propertyValue) {
+  EXCLUDE_INSTANCE_MAP[type] = {
+    key: propertyName,
+    value: propertyValue,
+  };
 }
 
 function getSupportedTypes() {
@@ -114,6 +127,17 @@ function clearOneTimeUpdaters(...ids) {
   return array;
 }
 
+function notSkippedInstance(call) {
+  if (call[1].length === 1) {
+    return SKIPPED_INSTANCE_IDS.indexOf(call[1][0]) === -1;
+  }
+  let keep = false;
+  for (let i = 0; i < call[1]; i++) {
+    keep = keep || SKIPPED_INSTANCE_IDS.indexOf(call[1][i]) === -1;
+  }
+  return keep;
+}
+
 // ----------------------------------------------------------------------------
 // Updater functions
 // ----------------------------------------------------------------------------
@@ -128,6 +152,15 @@ function genericUpdater(instance, state, context) {
   if (state.dependencies) {
     state.dependencies.forEach((childState) => {
       const { id, type } = childState;
+
+      if (EXCLUDE_INSTANCE_MAP[type]) {
+        const { key, value } = EXCLUDE_INSTANCE_MAP[type];
+        if (!key || childState.properties[key] === value) {
+          SKIPPED_INSTANCE_IDS.push(WRAP_ID(id));
+          return;
+        }
+      }
+
       let childInstance = context.getInstance(id);
       if (!childInstance) {
         childInstance = build(type, { managedInstanceId: id });
@@ -138,9 +171,11 @@ function genericUpdater(instance, state, context) {
   }
 
   if (state.calls) {
-    state.calls.forEach((call) =>
-      instance[call[0]].apply(null, extractCallArgs(context, call[1]))
-    );
+    state.calls
+      .filter(notSkippedInstance)
+      .forEach((call) =>
+        instance[call[0]].apply(null, extractCallArgs(context, call[1]))
+      );
   }
 
   context.end();
@@ -196,6 +231,7 @@ function rendererUpdater(instance, state, context) {
 
   if (state.calls) {
     state.calls
+      .filter(notSkippedInstance)
       .filter((call) => call[0] === 'removeViewProp')
       .forEach((call) => {
         // extract any ids associated with a 'removeViewProp' call (though really there
@@ -231,6 +267,7 @@ function vtkRenderWindowUpdater(instance, state, context) {
   // updater process.
   if (state.calls) {
     state.calls
+      .filter(notSkippedInstance)
       .filter((call) => call[0] === 'removeRenderer')
       .forEach((call) => {
         extractInstanceIds(call[1]).forEach((renId) => {
@@ -408,6 +445,10 @@ function setDefaultMapping(reset = true) {
 
 setDefaultMapping();
 
+// Avoid handling any lights at the moment
+EXCLUDE_INSTANCE_MAP.vtkOpenGLLight = {};
+EXCLUDE_INSTANCE_MAP.vtkPVLight = {};
+
 // ----------------------------------------------------------------------------
 // Publicly exposed methods
 // ----------------------------------------------------------------------------
@@ -420,4 +461,5 @@ export default {
   getSupportedTypes,
   clearOneTimeUpdaters,
   updateRenderWindow,
+  excludeInstance,
 };
