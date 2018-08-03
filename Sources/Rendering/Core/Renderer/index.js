@@ -71,9 +71,9 @@ function vtkRenderer(publicAPI, model) {
         light.setFocalPointFrom(camera.getFocalPointByReference());
         light.modified(camera.getMTime());
       } else if (light.lightTypeIsCameraLight()) {
-        vtkErrorMacro('camera lights not supported yet', light);
+        vtkErrorMacro('camera lights not supported yet', light.get());
       } else {
-        vtkErrorMacro('light has unknown light type', light);
+        vtkErrorMacro('light has unknown light type', light.get());
       }
     });
   };
