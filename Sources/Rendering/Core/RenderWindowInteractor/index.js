@@ -4,7 +4,12 @@ import vtkInteractorStyleTrackballCamera from 'vtk.js/Sources/Interaction/Style/
 import Constants from 'vtk.js/Sources/Rendering/Core/RenderWindowInteractor/Constants';
 
 const { Device, Input } = Constants;
-const { vtkWarningMacro, vtkErrorMacro, normalizeWheel } = macro;
+const {
+  vtkWarningMacro,
+  vtkErrorMacro,
+  normalizeWheel,
+  vtkOnceErrorMacro,
+} = macro;
 
 // ----------------------------------------------------------------------------
 // Global methods
@@ -688,7 +693,7 @@ function vtkRenderWindowInteractor(publicAPI, model) {
       // Check that a poked renderer exists
       const renderer = publicAPI.getCurrentRenderer();
       if (!renderer) {
-        vtkErrorMacro(`
+        vtkOnceErrorMacro(`
           Can not forward events without a current renderer on the interactor.
         `);
         return;
