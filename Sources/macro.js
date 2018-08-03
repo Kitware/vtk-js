@@ -68,6 +68,14 @@ export function vtkWarningMacro(...args) {
   loggerFunctions.warn(...args);
 }
 
+const ERROR_ONCE_MAP = {};
+export function vtkOnceErrorMacro(str) {
+  if (!ERROR_ONCE_MAP[str]) {
+    loggerFunctions.error(str);
+    ERROR_ONCE_MAP[str] = true;
+  }
+}
+
 // ----------------------------------------------------------------------------
 // TypedArray
 // ----------------------------------------------------------------------------
@@ -1583,6 +1591,7 @@ export default {
   traverseInstanceTree,
   vtkDebugMacro,
   vtkErrorMacro,
+  vtkOnceErrorMacro,
   vtkInfoMacro,
   vtkLogMacro,
   vtkWarningMacro,

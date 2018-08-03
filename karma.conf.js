@@ -86,7 +86,10 @@ module.exports = function init(config) {
     customLaunchers: {
       ChromeHeadlessNoSandbox: {
         base: 'ChromeHeadless',
-        flags: ['--no-sandbox'],
+        flags: [
+          '--no-sandbox',
+          '--ignore-gpu-blacklist',
+        ],
       },
     },
     // browserNoActivityTimeout: 600000,
