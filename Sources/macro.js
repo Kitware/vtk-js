@@ -235,7 +235,7 @@ export function obj(publicAPI = {}, model = {}) {
     let ret = false;
     Object.keys(map).forEach((name) => {
       const fn = noFunction ? null : publicAPI[`set${capitalize(name)}`];
-      if (fn && Array.isArray(map[name])) {
+      if (fn && Array.isArray(map[name]) && fn.length > 1) {
         ret = fn(...map[name]) || ret;
       } else if (fn) {
         ret = fn(map[name]) || ret;
