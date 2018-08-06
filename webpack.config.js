@@ -16,9 +16,7 @@ module.exports = {
     libraryTarget: 'umd',
   },
   module: {
-    rules: [
-      { test: entry, loader: 'expose-loader?vtk' },
-    ].concat(linterRules, vtkRules),
+    rules: [].concat(linterRules, vtkRules),
   },
   resolve: {
     modules: [
