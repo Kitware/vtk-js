@@ -21,5 +21,6 @@ vtk.Proxy = VTKProxy;
 vtk.mtime = macro.getCurrentGlobalMTime;
 vtk.macro = macro;
 
-/* eslint-disable */
-module.exports = vtk;
+// Expose vtk to global scope without exporting it so nested namespace
+// do not pollute the global one.
+window.vtk = vtk;

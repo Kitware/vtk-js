@@ -288,10 +288,20 @@ function vtkOpenGLTexture(publicAPI, model) {
       publicAPI.getOpenGLFilterMode(model.magnificationFilter)
     );
 
+    model.context.texParameteri(
+      model.target,
+      model.context.TEXTURE_BASE_LEVEL,
+      model.baseLevel
+    );
+
+    model.context.texParameteri(
+      model.target,
+      model.context.TEXTURE_MAX_LEVEL,
+      model.maxLevel
+    );
+
     // model.context.texParameterf(model.target, model.context.TEXTURE_MIN_LOD, model.minLOD);
     // model.context.texParameterf(model.target, model.context.TEXTURE_MAX_LOD, model.maxLOD);
-    // model.context.texParameteri(model.target, model.context.TEXTURE_BASE_LEVEL, model.baseLevel);
-    // model.context.texParameteri(model.target, model.context.TEXTURE_MAX_LEVEL, model.maxLevel);
 
     model.sendParametersTime.modified();
   };
@@ -785,9 +795,8 @@ function vtkOpenGLTexture(publicAPI, model) {
       }
     }
 
-    if (model.generateMipmap) {
-      model.context.generateMipmap(model.target);
-    }
+    // generateMipmap must not be called here because we manually upload all levels
+    // if it is called, all levels will be overwritten
 
     publicAPI.deactivate();
     return true;
@@ -1415,7 +1424,7 @@ const DEFAULT_VALUES = {
   minLOD: -1000.0,
   maxLOD: 1000.0,
   baseLevel: 0,
-  maxLevel: 0,
+  maxLevel: 1000,
   generateMipmap: false,
   computedGradients: false,
 };
