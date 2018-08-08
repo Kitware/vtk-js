@@ -72,6 +72,9 @@ function vtkOpenGLStickMapper(publicAPI, model) {
     if (model.context.getExtension('EXT_frag_depth')) {
       fragString = '  gl_FragDepthEXT = (pos.z / pos.w + 1.0) / 2.0;\n';
     }
+    if (model.openGLRenderWindow.getWebgl2()) {
+      fragString = 'gl_FragDepth = (pos.z / pos.w + 1.0) / 2.0;\n';
+    }
     // see https://www.cl.cam.ac.uk/teaching/1999/AGraphHCI/SMAG/node2.html
     FSSource = vtkShaderProgram.substitute(FSSource, '//VTK::Depth::Impl', [
       // compute the eye position and unit direction
