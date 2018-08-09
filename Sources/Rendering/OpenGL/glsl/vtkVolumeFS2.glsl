@@ -163,18 +163,22 @@ void main()
       dot(endVC, vPlaneNormal0),
       dot(endVC, vPlaneNormal2),
       dot(endVC, vPlaneNormal4));
-    vec3 vdelta = endvpos - vpos;
-    float numSteps = length(vdelta) / sampleDistance;
-    vdelta = vdelta / float(numSteps);
 
     // start slightly inside and apply some jitter
     float jitter = texture2D(jtexture, gl_FragCoord.xy/32.0).r;
-    vpos = vpos + vdelta*(0.01 + 0.98*jitter);
+    vec3 vdelta = endvpos - vpos;
+    vpos = vpos + normalize(vdelta)*(0.01 + 0.98*jitter)*sampleDistance;
+
+    // update vdelta post jitter
+    vdelta = endvpos - vpos;
+    float numSteps = length(vdelta) / sampleDistance;
+    vdelta = vdelta / float(numSteps);
+
     vec4 color = vec4(0.0, 0.0, 0.0, 0.0);
 
     vec3 ijk = vpos * vVCToIJK;
     vdelta = vdelta * vVCToIJK;
-    int count = int(numSteps - 0.2); // end slightly inside
+    int count = int(numSteps - 0.05); // end slightly inside
     for (int i = 0; i < //VTK::MaximumSamplesValue ; ++i)
     {
       // compute the scalar
@@ -197,8 +201,36 @@ void main()
 
       color = color + vec4(tcolor.rgb*tcolor.a, tcolor.a)*mix;
       if (color.a > 0.99) { color.a = 1.0; break; }
-      if (i >= count) { break; }
       ijk += vdelta;
+      if (i >= count)
+      {
+        break;
+      }
+    }
+
+    if (color.a < 0.99)
+    {
+      float residual = numSteps - float(count);
+      ijk += (residual - 1.0)*vdelta;
+
+      // compute the scalar
+      scalar = texture(texture1, ijk).r;
+
+      // now map through opacity and color
+      vec4 tcolor = texture2D(ctexture, vec2(scalar * cscale + cshift, 0.5));
+      tcolor.a = residual*texture2D(otexture, vec2(scalar * oscale + oshift, 0.5)).r;
+
+      // compute the normal if needed
+      //VTK::Normal::Impl
+
+      // handle gradient opacity
+      //VTK::GradientOpacity::Impl
+
+      // handle lighting
+      //VTK::Light::Impl
+
+      float mix = (1.0 - color.a);
+      color = color + vec4(tcolor.rgb*tcolor.a, tcolor.a)*mix;
     }
 
     gl_FragData[0] = vec4(color.rgb/color.a, color.a);

@@ -21,13 +21,13 @@ function vtkGenericRenderWindow(publicAPI, model) {
   model.renderer = vtkRenderer.newInstance();
   model.renderWindow.addRenderer(model.renderer);
 
-  // OpenGlRenderWindow
-  model.openGlRenderWindow = vtkOpenGLRenderWindow.newInstance();
-  model.renderWindow.addView(model.openGlRenderWindow);
+  // OpenGLRenderWindow
+  model.openGLRenderWindow = vtkOpenGLRenderWindow.newInstance();
+  model.renderWindow.addView(model.openGLRenderWindow);
 
   // Interactor
   model.interactor = vtkRenderWindowInteractor.newInstance();
-  model.interactor.setView(model.openGlRenderWindow);
+  model.interactor.setView(model.openGLRenderWindow);
   model.interactor.initialize();
 
   // Expose background
@@ -41,7 +41,7 @@ function vtkGenericRenderWindow(publicAPI, model) {
     if (model.container) {
       const dims = model.container.getBoundingClientRect();
       const devicePixelRatio = window.devicePixelRatio || 1;
-      model.openGlRenderWindow.setSize(
+      model.openGLRenderWindow.setSize(
         Math.floor(dims.width * devicePixelRatio),
         Math.floor(dims.height * devicePixelRatio)
       );
@@ -53,7 +53,7 @@ function vtkGenericRenderWindow(publicAPI, model) {
   // Handle DOM container relocation
   publicAPI.setContainer = (el) => {
     if (model.container) {
-      model.openGlRenderWindow.setContainer(model.container);
+      model.openGLRenderWindow.setContainer(model.container);
       model.interactor.unbindEvents(model.container);
     }
 
@@ -62,7 +62,7 @@ function vtkGenericRenderWindow(publicAPI, model) {
 
     // Bind to new container
     if (model.container) {
-      model.openGlRenderWindow.setContainer(model.container);
+      model.openGLRenderWindow.setContainer(model.container);
       model.interactor.bindEvents(model.container);
     }
   };
@@ -94,7 +94,7 @@ export function extend(publicAPI, model, initialValues = {}) {
   macro.get(publicAPI, model, [
     'renderWindow',
     'renderer',
-    'openGlRenderWindow',
+    'openGLRenderWindow',
     'interactor',
     'container',
   ]);

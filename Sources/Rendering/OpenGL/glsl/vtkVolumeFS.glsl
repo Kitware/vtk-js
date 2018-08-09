@@ -194,15 +194,19 @@ void main()
       dot(endVC, vPlaneNormal0),
       dot(endVC, vPlaneNormal2),
       dot(endVC, vPlaneNormal4));
-    vec3 vdelta = endvpos - vpos;
-    float numSteps = length(vdelta) / sampleDistance;
-    vdelta = vdelta / numSteps;
 
     // start slightly inside and apply some jitter
     float jitter = texture2D(jtexture, gl_FragCoord.xy/32.0).r;
-    vpos = vpos + vdelta*(0.01 + 0.98*jitter);
+    vec3 vdelta = endvpos - vpos;
+    vpos = vpos + normalize(vdelta)*(0.01 + 0.98*jitter)*sampleDistance;
+
+    // update vdelta post jitter
+    vdelta = endvpos - vpos;
+    float numSteps = length(vdelta) / sampleDistance;
+    vdelta = vdelta / float(numSteps);
+
     vec4 color = vec4(0.0, 0.0, 0.0, 0.0);
-    int count = int(numSteps - 0.2); // end slightly inside
+    int count = int(numSteps - 0.05); // end slightly inside
 
     vec3 ijk = vpos * vVCToIJK;
     vdelta = vdelta * vVCToIJK;
