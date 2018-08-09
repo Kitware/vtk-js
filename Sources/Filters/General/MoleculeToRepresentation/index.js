@@ -223,16 +223,6 @@ function vtkMoleculeToRepresentation(publicAPI, model) {
       diff[2] -= pointsArray[iPtsIdx + 2];
       const diffsq = diff[0] * diff[0] + diff[1] * diff[1] + diff[2] * diff[2];
 
-      const radiusJsq =
-        radiusArray[j] *
-        model.atomicRadiusScaleFactor *
-        radiusArray[j] *
-        model.atomicRadiusScaleFactor;
-      const radiusIsq =
-        radiusArray[i] *
-        model.atomicRadiusScaleFactor *
-        radiusArray[i] *
-        model.atomicRadiusScaleFactor;
       let bondDelta = (2 + model.deltaBondFactor) * model.bondRadius; // distance between 2 bonds
 
       // scale bonds if total distance from bonds is bigger than 2r*factor with r = min(r_i, r_j)
@@ -263,9 +253,6 @@ function vtkMoleculeToRepresentation(publicAPI, model) {
         // dist from center to bond depending of number of bond
         let offset = (Math.floor(k / 2) * 2 + 1 - oddOrEven) * bondDelta / 2;
 
-        // offset between center of SphereJ (resp. SphereI) and the start of the bond
-        const offsetJ = Math.sqrt(radiusJsq - (model.bondRadius + offset) ** 2);
-        const offsetI = Math.sqrt(radiusIsq - (model.bondRadius + offset) ** 2);
         const vectUnitJI = [
           diff[0] / Math.sqrt(diffsq),
           diff[1] / Math.sqrt(diffsq),
@@ -302,17 +289,17 @@ function vtkMoleculeToRepresentation(publicAPI, model) {
           atomicNumber[i] !== atomicNumber[j] &&
           colorArray.length > 0
         ) {
-          const bondLength = (Math.sqrt(diffsq) - offsetJ - offsetI) / 2.0;
+          const bondLength = Math.sqrt(diffsq) / 2.0;
 
           bondPos = [
             pointsArray[jPtsIdx] -
-              (offsetJ + bondLength / 2.0) * vectUnitJI[0] / 1.0 +
+              bondLength * vectUnitJI[0] / 2.0 +
               offset * vectUnitJIperp[0],
             pointsArray[jPtsIdx + 1] -
-              (offsetJ + bondLength / 2.0) * vectUnitJI[1] / 1.0 +
+              bondLength * vectUnitJI[1] / 2.0 +
               offset * vectUnitJIperp[1],
             pointsArray[jPtsIdx + 2] -
-              (offsetJ + bondLength / 2.0) * vectUnitJI[2] / 1.0 +
+              bondLength * vectUnitJI[2] / 2.0 +
               offset * vectUnitJIperp[2],
           ];
 
@@ -325,13 +312,13 @@ function vtkMoleculeToRepresentation(publicAPI, model) {
 
           bondPos = [
             pointsArray[iPtsIdx] +
-              (offsetI + bondLength / 2.0) * vectUnitJI[0] / 1.0 +
+              bondLength * vectUnitJI[0] / 2.0 +
               offset * vectUnitJIperp[0],
             pointsArray[iPtsIdx + 1] +
-              (offsetI + bondLength / 2.0) * vectUnitJI[1] / 1.0 +
+              bondLength * vectUnitJI[1] / 2.0 +
               offset * vectUnitJIperp[1],
             pointsArray[iPtsIdx + 2] +
-              (offsetI + bondLength / 2.0) * vectUnitJI[2] / 1.0 +
+              bondLength * vectUnitJI[2] / 2.0 +
               offset * vectUnitJIperp[2],
           ];
           addBond(
@@ -341,19 +328,14 @@ function vtkMoleculeToRepresentation(publicAPI, model) {
             colorArray.slice(iPtsIdx, iPtsIdx + 3)
           );
         } else {
-          const bondLength = Math.sqrt(diffsq) - offsetJ - offsetI;
+          const bondLength = Math.sqrt(diffsq);
 
           bondPos = [
-            pointsArray[jPtsIdx] -
-              (offsetJ - offsetI) * vectUnitJI[0] / 2.0 -
-              diff[0] / 2.0 +
-              offset * vectUnitJIperp[0],
+            pointsArray[jPtsIdx] - diff[0] / 2.0 + offset * vectUnitJIperp[0],
             pointsArray[jPtsIdx + 1] -
-              (offsetJ - offsetI) * vectUnitJI[1] / 2.0 -
               diff[1] / 2.0 +
               offset * vectUnitJIperp[1],
             pointsArray[jPtsIdx + 2] -
-              (offsetJ - offsetI) * vectUnitJI[2] / 2.0 -
               diff[2] / 2.0 +
               offset * vectUnitJIperp[2],
           ];
