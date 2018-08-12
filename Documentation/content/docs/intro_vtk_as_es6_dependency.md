@@ -62,7 +62,7 @@ $ npm install kw-web-suite --save-dev
 
 ## Webpack config
 
-``` js webpack.config.js
+``` js ./webpack.config.js
 var path = require('path');
 var webpack = require('webpack');
 var vtkRules = require('vtk.js/Utilities/config/dependency.js').webpack.v2.rules;
@@ -96,7 +96,7 @@ module.exports = {
 
 You should extend the generated **package.json** file with the following set of scripts.
 
-```json package.json
+```json ./package.json
 {
   [...],
   "scripts": {
@@ -114,7 +114,7 @@ You should extend the generated **package.json** file with the following set of 
 
 Here is an example of a vtk.js application similar to an [example](https://kitware.github.io/vtk-js/examples/ConeSource.html) available within the source code.
 
-```js src/index.js
+```js ./src/index.js
 import vtkFullScreenRenderWindow from 'vtk.js/Sources/Rendering/Misc/FullScreenRenderWindow';
 
 import vtkActor           from 'vtk.js/Sources/Rendering/Core/Actor';
@@ -190,7 +190,7 @@ resolutionChange.addEventListener('input', (e) => {
 
 The control template:
 
-```html src/controller.html
+```html ./src/controller.html
 <table>
   <tr>
     <td>
@@ -211,7 +211,7 @@ The control template:
 
 The main web page loading the generated application.
 
-```html dist/index.html
+```html ./dist/index.html
 <!DOCTYPE html>
 <html>
   <head>
