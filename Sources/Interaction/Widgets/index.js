@@ -5,6 +5,8 @@ import vtkHandleRepresentation from './HandleRepresentation';
 import vtkHandleWidget from './HandleWidget';
 import vtkImageCroppingRegionsRepresentation from './ImageCroppingRegionsRepresentation';
 import vtkImageCroppingRegionsWidget from './ImageCroppingRegionsWidget';
+import vtkLabelRepresentation from './LabelRepresentation';
+import vtkLabelWidget from './LabelWidget';
 import vtkLineRepresentation from './LineRepresentation';
 import vtkLineWidget from './LineWidget';
 import vtkOrientationMarkerWidget from './OrientationMarkerWidget';
@@ -21,6 +23,8 @@ export default {
   vtkHandleWidget,
   vtkImageCroppingRegionsRepresentation,
   vtkImageCroppingRegionsWidget,
+  vtkLabelRepresentation,
+  vtkLabelWidget,
   vtkLineRepresentation,
   vtkLineWidget,
   vtkOrientationMarkerWidget,

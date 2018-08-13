@@ -1,13 +1,12 @@
 import 'vtk.js/Sources/favicon';
 
+import vtkLabelWidget from 'vtk.js/Sources/Interaction/Widgets/LabelWidget';
 import vtkFullScreenRenderWindow from 'vtk.js/Sources/Rendering/Misc/FullScreenRenderWindow';
-import vtkLineWidget from 'vtk.js/Sources/Interaction/Widgets/LineWidget';
 
 // ----------------------------------------------------------------------------
 // USER AVAILABLE INTERACTIONS
 // ----------------------------------------------------------------------------
-// Sphere can be translated by clicking with mouse left on it
-// Sphere can be scaled by clicking with mouse right
+// Text can be translated
 
 // ----------------------------------------------------------------------------
 // Standard rendering code setup
@@ -22,20 +21,20 @@ renderWindow.getInteractor().setInteractorStyle(null);
 // Create widget
 // ----------------------------------------------------------------------------
 
-const widget = vtkLineWidget.newInstance();
+const widget = vtkLabelWidget.newInstance();
 widget.setInteractor(renderWindow.getInteractor());
 widget.setEnabled(1);
-widget.setWidgetStateToStart();
+widget.getWidgetRep().setLabelText('Hello world! \n This is an example!');
+
+const widget2 = vtkLabelWidget.newInstance();
+widget2.setInteractor(renderWindow.getInteractor());
+widget2.setEnabled(1);
+widget2.getWidgetRep().setLabelText('And I am the second one!');
+widget2.getWidgetRep().setLabelStyle({
+  fontSize: 12,
+  strokeColor: 'red',
+});
+widget2.getWidgetRep().setWorldPosition([3, 1, 10]);
 
 renderer.resetCamera();
-renderer.resetCameraClippingRange();
 renderWindow.render();
-
-// -----------------------------------------------------------
-// Make some variables global so that you can inspect and
-// modify objects in your browser's developer console:
-// -----------------------------------------------------------
-
-global.renderer = renderer;
-global.renderWindow = renderWindow;
-global.widget = widget;
