@@ -85,7 +85,7 @@ function vtkImageCropFilter(publicAPI, model) {
     }
 
     const numberOfComponents = scalars.getNumberOfComponents();
-    const byteSize =
+    const componentSize =
       (cropped[1] - cropped[0] + 1) *
       (cropped[3] - cropped[2] + 1) *
       (cropped[5] - cropped[4] + 1) *
@@ -93,16 +93,18 @@ function vtkImageCropFilter(publicAPI, model) {
     const scalarsData = scalars.getData();
 
     const dims = input.getDimensions();
-    const jStride = dims[0];
-    const kStride = dims[0] * dims[1];
+    const jStride = numberOfComponents * dims[0];
+    const kStride = numberOfComponents * dims[0] * dims[1];
+    const beginOffset = cropped[0] * numberOfComponents;
+    const stripSize = (cropped[1] - cropped[0] + 1) * numberOfComponents; // +1 because subarray end is exclusive
 
     // crop image
-    const croppedArray = new scalarsData.constructor(byteSize);
+    const croppedArray = new scalarsData.constructor(componentSize);
     let index = 0;
     for (let k = cropped[4]; k <= cropped[5]; ++k) {
       for (let j = cropped[2]; j <= cropped[3]; ++j) {
-        const begin = cropped[0] + j * jStride + k * kStride;
-        const end = begin - cropped[0] + cropped[1] + 1; // +1 b/c subarray end is exclusive
+        const begin = beginOffset + j * jStride + k * kStride;
+        const end = begin + stripSize;
         const slice = scalarsData.subarray(begin, end);
         croppedArray.set(slice, index);
         index += slice.length;
