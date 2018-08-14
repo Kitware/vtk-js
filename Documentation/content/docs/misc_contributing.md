@@ -58,4 +58,4 @@ The vtk.js documentation is part of the code repository and is entirely written 
 
 ## Reporting Issues
 
-When you encounter problems using vtk.js you may be able to find the solutions in [Troubleshooting](troubleshooting.html), on[GitHub](https://github.com/kitware/vtk-js/issues), or via the [Mailing list](http://www.vtk.org/mailman/listinfo/vtk). If you can't find the answer, please report it on GitHub.
+When you encounter problems using vtk.js you may be able to find the solutions in [Troubleshooting](troubleshooting.html), on[GitHub](https://github.com/kitware/vtk-js/issues), or via the [Mailing list](https://www.vtk.org/mailman/listinfo/vtkusers). If you can't find the answer, please report it on GitHub.
