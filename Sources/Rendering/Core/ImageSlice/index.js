@@ -16,7 +16,29 @@ function vtkImageSlice(publicAPI, model) {
   publicAPI.getActors = () => publicAPI;
   publicAPI.getImages = () => publicAPI;
 
-  publicAPI.getIsOpaque = () => true;
+  publicAPI.getIsOpaque = () => {
+    if (model.forceOpaque) {
+      return true;
+    }
+    if (model.forceTranslucent) {
+      return false;
+    }
+    // make sure we have a property
+    if (!model.property) {
+      // force creation of a property
+      publicAPI.getProperty();
+    }
+
+    let isOpaque = model.property.getOpacity() >= 1.0;
+
+    // are we using an opaque texture, if any?
+    isOpaque = isOpaque && (!model.texture || !model.texture.isTranslucent());
+
+    // are we using an opaque scalar array, if any?
+    isOpaque = isOpaque && (!model.mapper || model.mapper.getIsOpaque());
+
+    return isOpaque;
+  };
 
   // Always render during opaque pass, to keep the behavior
   // predictable and because depth-peeling kills alpha-blending.

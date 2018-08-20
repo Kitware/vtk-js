@@ -126,6 +126,7 @@ function vtkOpenGLImageMapper(publicAPI, model) {
       'uniform float scale;',
       'uniform sampler2D texture1;',
       'uniform sampler2D colorTexture1;',
+      'uniform float opacity;',
     ]).result;
     switch (tNumComp) {
       case 1:
@@ -134,7 +135,7 @@ function vtkOpenGLImageMapper(publicAPI, model) {
           '//VTK::TCoord::Impl',
           [
             'float intensity = texture2D(texture1, tcoordVCVSOutput).r*scale + shift;',
-            'gl_FragData[0] = texture2D(colorTexture1, vec2(intensity, 0.5));',
+            'gl_FragData[0] = vec4(texture2D(colorTexture1, vec2(intensity, 0.5)).rgb, opacity);',
           ]
         ).result;
         break;
@@ -341,7 +342,7 @@ function vtkOpenGLImageMapper(publicAPI, model) {
     const ppty = actor.getProperty();
 
     const opacity = ppty.getOpacity();
-    program.setUniformf('opacityUniform', opacity);
+    program.setUniformf('opacity', opacity);
   };
 
   publicAPI.renderPieceStart = (ren, actor) => {
