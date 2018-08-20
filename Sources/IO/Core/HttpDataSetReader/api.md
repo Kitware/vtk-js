@@ -1,9 +1,9 @@
 ## Usage
 
 ```js
-import HttpDataSetReader from 'vtk.js/Sources/IO/Core/HttpDataSetReader';
+import vtkHttpDataSetReader from 'vtk.js/Sources/IO/Core/HttpDataSetReader';
 
-const reader = HttpDataSetReader.newInstance();
+const reader = vtkHttpDataSetReader.newInstance();
 reader.setURL('/Data/can.ex2/index.json').then((reader, dataset) => {
   console.log('Metadata loaded with the geometry', dataset);
 
@@ -17,6 +17,8 @@ reader.setURL('/Data/can.ex2/index.json').then((reader, dataset) => {
     });
 });
 ```
+
+The vtkHttpDataSetReader is using a custom format that only exist in vtk.js which aims to simplify data fetching in an HTTP context. Basically the format is composed of a JSON metadata file referencing all the required data array as side binary files along with all the dataset configuration (i.e.: type, extent...). 
 
 ## newInstance({ enableArray = true, fetchGzip = false })
 
