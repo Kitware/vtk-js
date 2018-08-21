@@ -12,6 +12,7 @@ import Constants from 'vtk.js/Sources/Rendering/Core/Mapper/Constants';
 
 const { ColorMode, ScalarMode, GetArray } = Constants;
 const { VectorMode } = vtkScalarsToColors;
+const { VtkDataTypes } = vtkDataArray;
 
 // ----------------------------------------------------------------------------
 
@@ -146,21 +147,24 @@ function vtkMapper(publicAPI, model) {
   ) => {
     // make sure we have an input
     if (!input || !model.scalarVisibility) {
-      return null;
+      return { scalars: null, cellFLag: false };
     }
 
     let scalars = null;
+    let cellFlag = false;
 
     // get and scalar data according to scalar mode
     if (scalarMode === ScalarMode.DEFAULT) {
       scalars = input.getPointData().getScalars();
       if (!scalars) {
         scalars = input.getCellData().getScalars();
+        cellFlag = true;
       }
     } else if (scalarMode === ScalarMode.USE_POINT_DATA) {
       scalars = input.getPointData().getScalars();
     } else if (scalarMode === ScalarMode.USE_CELL_DATA) {
       scalars = input.getCellData().getScalars();
+      cellFlag = true;
     } else if (scalarMode === ScalarMode.USE_POINT_FIELD_DATA) {
       const pd = input.getPointData();
       if (arrayAccessMode === GetArray.BY_ID) {
@@ -170,6 +174,7 @@ function vtkMapper(publicAPI, model) {
       }
     } else if (scalarMode === ScalarMode.USE_CELL_FIELD_DATA) {
       const cd = input.getCellData();
+      cellFlag = true;
       if (arrayAccessMode === GetArray.BY_ID) {
         scalars = cd.getArrayByIndex(arrayId);
       } else {
@@ -184,7 +189,7 @@ function vtkMapper(publicAPI, model) {
       }
     }
 
-    return scalars;
+    return { scalars, cellFlag };
   };
 
   publicAPI.mapScalars = (input, alpha) => {
@@ -194,7 +199,7 @@ function vtkMapper(publicAPI, model) {
       model.arrayAccessMode,
       model.arrayId,
       model.colorByArrayName
-    );
+    ).scalars;
 
     if (!scalars) {
       model.colorCoordinates = null;
@@ -473,6 +478,34 @@ function vtkMapper(publicAPI, model) {
 
     // index color does not use textures
     if (model.lookupTable && model.lookupTable.getIndexedLookup()) {
+      return false;
+    }
+
+    const gasResult = publicAPI.getAbstractScalars(
+      input,
+      model.scalarMode,
+      model.arrayAccessMode,
+      model.arrayId,
+      model.arrayName
+    );
+    const scalars = gasResult.scalars;
+
+    if (!scalars) {
+      // no scalars on this dataset, we don't care if texture is used at all.
+      return false;
+    }
+
+    if (gasResult.cellFlag) {
+      return false; // cell data colors, don't use textures.
+    }
+
+    if (
+      (model.colorMode === ColorMode.DEFAULT &&
+        scalars.getDataType() === VtkDataTypes.UNSIGNED_CHAR) ||
+      model.colorMode === ColorMode.DIRECT_SCALARS
+    ) {
+      // Don't use texture is direct coloring using RGB unsigned chars is
+      // requested.
       return false;
     }
 

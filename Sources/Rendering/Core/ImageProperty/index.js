@@ -56,7 +56,7 @@ export function extend(publicAPI, model, initialValues = {}) {
 
   publicAPI.getMTime = () => {
     let mTime = model.mtime;
-    if (model.rGBTransferFunction !== null) {
+    if (model.rGBTransferFunction) {
       const time = model.rGBTransferFunction.getMTime();
       mTime = time > mTime ? time : mTime;
     }

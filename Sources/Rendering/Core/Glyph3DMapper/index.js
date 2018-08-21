@@ -245,7 +245,7 @@ function vtkGlyph3DMapper(publicAPI, model) {
         model.arrayAccessMode,
         model.arrayId,
         model.colorByArrayName
-      );
+      ).scalars;
 
       if (!model.useLookupTableScalarRange) {
         publicAPI
