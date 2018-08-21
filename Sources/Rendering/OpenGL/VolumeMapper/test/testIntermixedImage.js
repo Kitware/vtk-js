@@ -79,7 +79,7 @@ test.onlyIfWebGL('Test Composite Volume Rendering', (t) => {
   const iactor = gc.registerResource(vtkImageSlice.newInstance());
   iactor.getProperty().setColorWindow(255);
   iactor.getProperty().setColorLevel(127);
-  iactor.getProperty().setOpacity(0.5);
+  // iactor.getProperty().setOpacity(0.5); // not supported
   iactor.setMapper(imapper);
   iactor.setPosition(200, 100, 100);
   iactor.rotateX(45);
