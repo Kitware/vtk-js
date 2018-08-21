@@ -742,35 +742,37 @@ function vtkOpenGLPolyDataMapper(publicAPI, model) {
           'varying vec2 tcoordVCVSOutput;',
           'uniform sampler2D texture1;',
         ]).result;
-        switch (tNumComp) {
-          case 1:
-            FSSource = vtkShaderProgram.substitute(
-              FSSource,
-              '//VTK::TCoord::Impl',
-              [
-                'vec4 tcolor = texture2D(texture1, tcoordVCVSOutput);',
-                'gl_FragData[0] = clamp(gl_FragData[0],0.0,1.0)*',
-                '  vec4(tcolor.r,tcolor.r,tcolor.r,1.0);',
-              ]
-            ).result;
-            break;
-          case 2:
-            FSSource = vtkShaderProgram.substitute(
-              FSSource,
-              '//VTK::TCoord::Impl',
-              [
-                'vec4 tcolor = texture2D(texture1, tcoordVCVSOutput);',
-                'gl_FragData[0] = clamp(gl_FragData[0],0.0,1.0)*',
-                '  vec4(tcolor.r,tcolor.r,tcolor.r,tcolor.g);',
-              ]
-            ).result;
-            break;
-          default:
-            FSSource = vtkShaderProgram.substitute(
-              FSSource,
-              '//VTK::TCoord::Impl',
-              'gl_FragData[0] = clamp(gl_FragData[0],0.0,1.0)*texture2D(texture1, tcoordVCVSOutput.st);'
-            ).result;
+        if (tus && tus.length >= 1) {
+          switch (tNumComp) {
+            case 1:
+              FSSource = vtkShaderProgram.substitute(
+                FSSource,
+                '//VTK::TCoord::Impl',
+                [
+                  'vec4 tcolor = texture2D(texture1, tcoordVCVSOutput);',
+                  'gl_FragData[0] = clamp(gl_FragData[0],0.0,1.0)*',
+                  '  vec4(tcolor.r,tcolor.r,tcolor.r,1.0);',
+                ]
+              ).result;
+              break;
+            case 2:
+              FSSource = vtkShaderProgram.substitute(
+                FSSource,
+                '//VTK::TCoord::Impl',
+                [
+                  'vec4 tcolor = texture2D(texture1, tcoordVCVSOutput);',
+                  'gl_FragData[0] = clamp(gl_FragData[0],0.0,1.0)*',
+                  '  vec4(tcolor.r,tcolor.r,tcolor.r,tcolor.g);',
+                ]
+              ).result;
+              break;
+            default:
+              FSSource = vtkShaderProgram.substitute(
+                FSSource,
+                '//VTK::TCoord::Impl',
+                'gl_FragData[0] = clamp(gl_FragData[0],0.0,1.0)*texture2D(texture1, tcoordVCVSOutput.st);'
+              ).result;
+          }
         }
       } else {
         VSSource = vtkShaderProgram.substitute(
