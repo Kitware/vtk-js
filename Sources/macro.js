@@ -742,7 +742,7 @@ export function algo(publicAPI, model, numberOfInputs, numberOfOutputs) {
   };
 
   publicAPI.getNumberOfInputPorts = () => model.numberOfInputs;
-  publicAPI.getNumberOfOutputPorts = () => numberOfOutputs;
+  publicAPI.getNumberOfOutputPorts = () => numberOfOutputs || model.output.length;
 
   publicAPI.getInputArrayToProcess = (inputPort) => {
     const arrayDesc = model.inputArrayToProcess[inputPort];
