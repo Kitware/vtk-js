@@ -26,7 +26,7 @@ function vtkSphereState(publicAPI, model) {
   // --------------------------------------------------------------------------
 
   publicAPI.translate = (dx, dy, dz) => {
-    const [x, y, z] = publicAPI.getPosition();
+    const [x, y, z] = publicAPI.getPositionByReference();
     publicAPI.setPosition(x + dx, y + dy, z + dz);
   };
 }
