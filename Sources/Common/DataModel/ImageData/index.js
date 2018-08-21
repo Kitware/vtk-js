@@ -374,8 +374,8 @@ export function extend(publicAPI, model, initialValues = {}) {
     }
   }
 
-  model.indexToWorld = mat4.create();
-  model.worldToIndex = mat4.create();
+  model.indexToWorld = new Float64Array(16);
+  model.worldToIndex = new Float64Array(16);
 
   // Set/Get methods
   macro.get(publicAPI, model, ['direction', 'indexToWorld', 'worldToIndex']);
