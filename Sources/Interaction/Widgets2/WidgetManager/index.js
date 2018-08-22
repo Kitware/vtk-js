@@ -61,7 +61,6 @@ function vtkWidgetManager(publicAPI, model) {
     model.selector.setArea(0, 0, w, h);
     model.selector.releasePixBuffers();
     model.pickingAvailable = model.selector.captureBuffers();
-    console.log('captureBuffers', model.pickingAvailable);
     publicAPI.modified();
   }
 
@@ -127,9 +126,9 @@ function vtkWidgetManager(publicAPI, model) {
     }
     const { propID, compositeID } = model.selections.getProperties();
     const actor = model.renderer.getActors()[propID];
-    const widget = model.widgets.find((w) => w.isOwnerOf(actor));
-    const representation = widget.getRepresentationOf(actor);
-    const widgetState = representation.getWidgetState(compositeID);
+    const widget = model.widgets.find((w) => w.hasActor(actor));
+    const representation = widget.getRepresentationFromActor(actor);
+    const widgetState = representation.getStateList()[compositeID];
     return { actor, widget, representation, widgetState };
   };
 }
