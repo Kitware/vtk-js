@@ -9,6 +9,7 @@ function vtkAbstractWidget(publicAPI, model) {
   if (!model.representations) {
     model.representations = {};
   }
+  const actorsWeakMap = new WeakMap();
 
   // Expect sub-class to fill mapping
   // model.representationBuilder = {
@@ -23,14 +24,17 @@ function vtkAbstractWidget(publicAPI, model) {
       model.representations[key] = model.representationBuilder[key].map(
         ({ builder, labels }) => builder.newInstance({ labels })
       );
-      model.representations[key].forEach((rep) => {
+      model.representations[key].forEach((rep, idx) => {
         rep.setInputData(model.widgetState);
+        rep.getActors().forEach((actor) => {
+          actorsWeakMap[actor] = rep;
+        });
       });
     }
     return model.representations[key];
   };
-  publicAPI.hasActor = () => {};
-  publicAPI.getRepresentationFromActor = () => {};
+  publicAPI.hasActor = (actor) => actorsWeakMap.has(actor);
+  publicAPI.getRepresentationFromActor = (actor) => actorsWeakMap.get(actor);
 }
 
 // ----------------------------------------------------------------------------
