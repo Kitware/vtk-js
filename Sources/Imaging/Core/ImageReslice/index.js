@@ -63,7 +63,7 @@ function vtkImageReslice(publicAPI, model) {
     const inCenter = [
       origin[0] + 0.5 * (inWholeExt[0] + inWholeExt[1]) * inSpacing[0],
       origin[1] + 0.5 * (inWholeExt[2] + inWholeExt[3]) * inSpacing[1],
-      origin[2] + 0.5 * (inWholeExt[4] + inWholeExt[5]) * inSpacing[0],
+      origin[2] + 0.5 * (inWholeExt[4] + inWholeExt[5]) * inSpacing[2],
     ];
 
     let maxBounds = null;
