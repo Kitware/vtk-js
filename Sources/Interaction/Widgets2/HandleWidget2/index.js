@@ -3,6 +3,9 @@ import vtkAbstractWidget from 'vtk.js/Sources/Interaction/Widgets2/AbstractWidge
 import vtkSphereHandleRepresentation from 'vtk.js/Sources/Interaction/Widgets2/SphereHandleRepresentation';
 import vtkPlanePointManipulator from 'vtk.js/Sources/Interaction/Widgets2/PlanePointManipulator';
 import vtkStateBuilder from 'vtk.js/Sources/Interaction/Widgets2/StateBuilder';
+import Constants from 'vtk.js/Sources/Interaction/Widgets2/HandleWidget2/Constants';
+
+const { Type } = Constants;
 
 // ----------------------------------------------------------------------------
 
@@ -31,6 +34,20 @@ function vtkHandleWidget(publicAPI, model) {
   // --------------------------------------------------------------------------
 
   publicAPI.handleDrag = (callData) => {
+    if (model.type === Type.Drag) {
+      return publicAPI.handleEvent(callData);
+    }
+    return macro.VOID;
+  };
+
+  publicAPI.handleMouseMove = (callData) => {
+    if (model.type === Type.MouseMove) {
+      return publicAPI.handleEvent(callData);
+    }
+    return macro.VOID;
+  };
+
+  publicAPI.handleEvent = (callData) => {
     const widgetState = publicAPI.getWidgetState();
     if (widgetState && model.manipulator) {
       const worldCoords = model.manipulator.handleEvent(
@@ -49,23 +66,6 @@ function vtkHandleWidget(publicAPI, model) {
     }
 
     return macro.VOID;
-  };
-
-  publicAPI.handleMouseMove = (callData) => {
-    const widgetState = publicAPI.getWidgetState();
-    if (widgetState && model.manipulator) {
-      const worldCoords = model.manipulator.handleEvent(
-        callData,
-        publicAPI.getOpenGLRenderWindow()
-      );
-
-      if (worldCoords.length) {
-        model.widgetState.getHandle().setPosition(...worldCoords);
-      }
-
-      model.renderer.resetCameraClippingRange();
-      model.interactor.render();
-    }
   };
 
   // --------------------------------------------------------------------------
@@ -89,6 +89,7 @@ function vtkHandleWidget(publicAPI, model) {
 
 const DEFAULT_VALUES = {
   manipulator: null,
+  type: Type.Drag,
 };
 
 // ----------------------------------------------------------------------------
@@ -99,7 +100,7 @@ export function extend(publicAPI, model, initialValues = {}) {
   vtkAbstractWidget.extend(publicAPI, model, initialValues);
 
   macro.obj(publicAPI, model);
-  macro.setGet(publicAPI, model, ['manipulator']);
+  macro.setGet(publicAPI, model, ['manipulator', 'type']);
 
   vtkHandleWidget(publicAPI, model);
 }
