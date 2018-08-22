@@ -24,7 +24,7 @@ export function extend(publicAPI, model, initialValues = {}) {
 
   // Object methods
   macro.obj(publicAPI, model);
-  macro.set(publicAPI, model, ['actors']);
+  macro.get(publicAPI, model, ['actors']);
 
   // Object specific methods
   vtkWidgetRepresentation(publicAPI, model);

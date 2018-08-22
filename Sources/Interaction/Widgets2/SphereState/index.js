@@ -1,4 +1,5 @@
 import macro from 'vtk.js/Sources/macro';
+import vtkWidgetState from 'vtk.js/Sources/Interaction/Widgets2/WidgetState';
 
 // ----------------------------------------------------------------------------
 
@@ -25,7 +26,7 @@ const DEFAULT_VALUES = {
 export function extend(publicAPI, model, initialValues = {}) {
   Object.assign(model, DEFAULT_VALUES, initialValues);
 
-  macro.obj(publicAPI, model);
+  vtkWidgetState.extend(publicAPI, model);
   macro.setGet(publicAPI, model, ['radius']);
   macro.setGetArray(publicAPI, model, ['position'], 3);
 

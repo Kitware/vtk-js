@@ -29,7 +29,9 @@ function vtkSphereHandleRepresentation(publicAPI, model) {
   model.handlePolyData.getPointData().addArray(model.handleScale);
 
   // Generic rendering pipeline setup
-  model.mapper = vtkGlyph3DMapper.newInstance();
+  model.mapper = vtkGlyph3DMapper.newInstance({
+    scaleArray: 'scale',
+  });
   model.actor = vtkActor.newInstance();
   model.glyph = vtkSphereSource.newInstance();
 
@@ -39,16 +41,17 @@ function vtkSphereHandleRepresentation(publicAPI, model) {
   model.actors.push(model.actor);
 
   function updatePolyData() {
-    if (model.points.getNumberOfValues() !== model.stateMapping.length) {
+    console.log('updatePolyData', model.stateFields.length);
+    if (model.points.getNumberOfValues() !== model.stateFields.length) {
       // Need to resize dataset
-      model.points.setData(new Float32Array(3 * model.stateMapping.length));
-      model.handleScale.setData(new Float32Array(model.stateMapping.length));
+      model.points.setData(new Float32Array(3 * model.stateFields.length));
+      model.handleScale.setData(new Float32Array(model.stateFields.length));
     }
     const points = model.points.getData();
     const scale = model.handleScale.getData();
 
-    for (let i = 0; i < model.stateMapping.length; i++) {
-      const sphereState = model.state.getReferenceByName(model.stateMapping[i]);
+    for (let i = 0; i < model.stateFields.length; i++) {
+      const sphereState = model.state.getReferenceByName(model.stateFields[i]);
 
       const coord = sphereState.getPosition();
       points[i * 3 + 0] = coord[0];
@@ -59,6 +62,8 @@ function vtkSphereHandleRepresentation(publicAPI, model) {
     }
     model.points.modified();
     model.handleScale.modified();
+    model.handlePolyData.modified();
+    console.log('updatePolyData', points, scale);
   }
 
   function unsubscribe() {
