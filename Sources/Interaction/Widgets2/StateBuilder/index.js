@@ -1,9 +1,11 @@
 import macro from 'vtk.js/Sources/macro';
-import vtkSphereState from 'vtk.js/Sources/Interaction/Widgets2/SphereState';
 import vtkWidgetState from 'vtk.js/Sources/Interaction/Widgets2/WidgetState';
+import vtkSphereState from 'vtk.js/Sources/Interaction/Widgets2/SphereState';
+import vtkCubeState from 'vtk.js/Sources/Interaction/Widgets2/CubeState';
 
 const STATE_TYPES = {
   sphere: vtkSphereState,
+  cube: vtkCubeState,
 };
 
 class Builder {
@@ -14,11 +16,11 @@ class Builder {
     vtkWidgetState.extend(this.publicAPI, this.model);
   }
 
-  add(type, name, initialValues) {
+  add(labels, type, name, initialValues) {
     if (STATE_TYPES[type]) {
       const instance = STATE_TYPES[type].newInstance(initialValues);
       this.model[name] = instance;
-      this.publicAPI.bindState(instance);
+      this.publicAPI.bindState(instance, labels);
       macro.setGet(this.publicAPI, this.model, [name]);
     }
     return this;

@@ -2,6 +2,7 @@ import 'vtk.js/Sources/favicon';
 
 import vtkFullScreenRenderWindow from 'vtk.js/Sources/Rendering/Misc/FullScreenRenderWindow';
 import vtkSphereHandleRepresentation from 'vtk.js/Sources/Interaction/Widgets2/SphereHandleRepresentation';
+import vtkCubeHandleRepresentation from 'vtk.js/Sources/Interaction/Widgets2/CubeHandleRepresentation';
 import vtkStateBuilder from 'vtk.js/Sources/Interaction/Widgets2/StateBuilder';
 
 import controlPanel from './controlPanel.html';
@@ -23,16 +24,38 @@ const renderWindow = fullScreenRenderer.getRenderWindow();
 // State
 const compositeState = vtkStateBuilder
   .createBuilder()
-  .add('sphere', 'a', { radius: 0.5, position: [-1, 0, 0] })
-  .add('sphere', 'b', { radius: 0.5, position: [0, 0, 0] })
-  .add('sphere', 'c', { radius: 0.5, position: [1, 0, 0] })
+  .add(['all', 'a', 'ab', 'ac'], 'sphere', 'a', {
+    radius: 0.5,
+    position: [-1, 0, 0],
+  })
+  .add(['all', 'b', 'ab', 'bc'], 'sphere', 'b', {
+    radius: 0.5,
+    position: [0, 0, 0],
+  })
+  .add(['all', 'c', 'bc', 'ac'], 'sphere', 'c', {
+    radius: 0.5,
+    position: [1, 0, 0],
+  })
+  .add(['all', 'd'], 'cube', 'd', {
+    xLength: 0.5,
+    yLength: 1,
+    zLength: 2,
+    position: [0, 0, 2],
+  })
   .build();
 
 // Representation
-const widgetRep = vtkSphereHandleRepresentation.newInstance();
-widgetRep.setInputData(compositeState);
-widgetRep.setSphereStates(['a', 'b', 'c']);
-widgetRep.getActors().forEach(renderer.addActor);
+const widgetSphereRep = vtkSphereHandleRepresentation.newInstance();
+widgetSphereRep.setInputData(compositeState);
+widgetSphereRep.setLabels(['all']);
+widgetSphereRep.getActors().forEach(renderer.addActor);
+
+const widgetCubeRep = vtkCubeHandleRepresentation.newInstance();
+widgetCubeRep.setInputData(compositeState);
+widgetCubeRep.setLabels('all');
+widgetCubeRep.getActors().forEach(renderer.addActor);
+
+const reps = { sphere: widgetSphereRep, cube: widgetCubeRep };
 
 renderer.resetCamera();
 renderWindow.render();
@@ -78,9 +101,14 @@ for (let i = 0; i < toggleElems.length; i++) {
 const glyphElems = document.querySelectorAll('.glyph');
 for (let i = 0; i < glyphElems.length; i++) {
   glyphElems[i].addEventListener('input', (e) => {
-    const { field } = e.currentTarget.dataset;
-    const value = Number(e.currentTarget.value);
-    widgetRep.set({ [field]: value });
+    const { field, rep } = e.currentTarget.dataset;
+    const strValue = e.currentTarget.value;
+    const numValue = Number(strValue);
+    const arrayValue = strValue.split(',');
+    const value = Number.isNaN(numValue) ? strValue : numValue;
+    reps[rep || 'sphere'].set({
+      [field]: arrayValue.length > 1 ? arrayValue : value,
+    });
     renderWindow.render();
   });
 }
