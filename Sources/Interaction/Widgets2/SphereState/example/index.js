@@ -25,9 +25,9 @@ const renderWindow = fullScreenRenderer.getRenderWindow();
 // State
 const compositeState = {};
 const compositeStateModel = {
-  a: vtkSphereState.newInstance(),
-  b: vtkSphereState.newInstance(),
-  c: vtkSphereState.newInstance(),
+  a: vtkSphereState.newInstance({ radius: 0.5, position: [-1, 0, 0] }),
+  b: vtkSphereState.newInstance({ radius: 0.5, position: [0, 0, 0] }),
+  c: vtkSphereState.newInstance({ radius: 0.5, position: [1, 0, 0] }),
 };
 vtkWidgetState.extend(compositeState, compositeStateModel);
 macro.setGet(compositeState, compositeStateModel, ['a', 'b', 'c']);
@@ -37,7 +37,8 @@ compositeState.bindState(compositeStateModel.c);
 
 // Representation
 const widgetRep = vtkSphereHandleRepresentation.newInstance();
-widgetRep.setWidgetState(compositeState, ['a', 'b', 'c']);
+widgetRep.setInputData(compositeState);
+widgetRep.setSphereStates(['a', 'b', 'c']);
 widgetRep.getActors().forEach(renderer.addActor);
 
 renderer.resetCamera();
@@ -64,6 +65,7 @@ function updateState(e) {
     stateObj.setPosition(center);
   }
 
+  // widgetRep.update();
   renderWindow.render();
 }
 

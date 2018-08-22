@@ -19,6 +19,7 @@ function vtkSphereState(publicAPI, model) {
 const DEFAULT_VALUES = {
   position: [0, 0, 0],
   radius: 1,
+  color: 0.5,
 };
 
 // ----------------------------------------------------------------------------
@@ -27,7 +28,7 @@ export function extend(publicAPI, model, initialValues = {}) {
   Object.assign(model, DEFAULT_VALUES, initialValues);
 
   vtkWidgetState.extend(publicAPI, model);
-  macro.setGet(publicAPI, model, ['radius']);
+  macro.setGet(publicAPI, model, ['radius', 'color']);
   macro.setGetArray(publicAPI, model, ['position'], 3);
 
   vtkSphereState(publicAPI, model);

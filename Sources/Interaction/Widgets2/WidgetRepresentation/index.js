@@ -24,6 +24,7 @@ export function extend(publicAPI, model, initialValues = {}) {
 
   // Object methods
   macro.obj(publicAPI, model);
+  macro.algo(publicAPI, model, 1, 1);
   macro.get(publicAPI, model, ['actors']);
 
   // Object specific methods
