@@ -23,6 +23,7 @@ const widgetManager = vtkWidgetManager.newInstance();
 widgetManager.setRenderingContext(openGLRenderWindow, renderer);
 widgetManager.capture();
 widgetManager.registerWidget(vtkHandleWidget2.newInstance());
+widgetManager.registerWidget(vtkHandleWidget2.newInstance());
 
 // For now
 renderer.getActiveCamera().onModified(widgetManager.capture);
@@ -30,13 +31,6 @@ renderer.getActiveCamera().onModified(widgetManager.capture);
 renderWindow.getInteractor().onMouseMove(({ position }) => {
   widgetManager.updateSelectionFromXY(position.x, position.y);
 });
-// document
-//   .querySelector('body')
-//   .addEventListener('mousemouve', widgetManager.updateSelectionFromMouseEvent);
-
-// setTimeout(() => {
-//   console.log(widgetManager.getSelection());
-// }, 5000);
 
 setInterval(() => {
   const {
