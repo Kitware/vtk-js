@@ -11,19 +11,18 @@ export function intersectDisplayWithPlane({
   const p1 = renderWindow.displayToWorld(
     displayCoords[0],
     displayCoords[1],
-    -100,
+    0,
     renderer
   );
 
   const p2 = renderWindow.displayToWorld(
     displayCoords[0],
     displayCoords[1],
-    100,
+    1,
     renderer
   );
 
-  const r = vtkPlane.intersectWithLine(p1, p2, planeOrigin, planeNormal);
-  return r.intersection ? r.x : null;
+  return vtkPlane.intersectWithLine(p1, p2, planeOrigin, planeNormal).x;
 }
 
 // ----------------------------------------------------------------------------
