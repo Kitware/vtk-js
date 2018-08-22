@@ -18,13 +18,24 @@ function vtkWidgetState(publicAPI, model) {
     }
   };
 
+  publicAPI.activate = () => publicAPI.setActive(true);
+  publicAPI.desactivate = () => publicAPI.setActive(false);
+
   publicAPI.delete = macro.chain(publicAPI.unbindAll, publicAPI.delete);
 }
 
 // ----------------------------------------------------------------------------
 
+const DEFAULT_VALUES = {
+  active: false,
+};
+
+// ----------------------------------------------------------------------------
+
 export function extend(publicAPI, model, initialValues = {}) {
+  Object.assign(model, DEFAULT_VALUES, initialValues);
   macro.obj(publicAPI, model);
+  macro.setGet(publicAPI, model, ['active']);
   vtkWidgetState(publicAPI, model);
 }
 

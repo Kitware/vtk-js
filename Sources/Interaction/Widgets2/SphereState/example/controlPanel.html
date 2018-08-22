@@ -1,6 +1,27 @@
 <table>
   <tr style="text-align: center;">
-    <td>A</td>
+    <td colspan="4">Glyph</td>
+  </tr>
+  <tr style="text-align: center;">
+    <td>Resolution</td>
+    <td colspan="3">
+      <input class='glyph' data-field="glyphResolution" type="range" min="3" max="60" step="1" value="8" />
+    </td>
+  </tr>
+  <tr style="text-align: center;">
+    <td>Active Scale</td>
+    <td colspan="3">
+      <input class='glyph' data-field="activeScaleFactor" type="range" min="0.5" max="2" step="0.1" value="1.2" />
+    </td>
+  </tr>
+  <tr style="text-align: center;">
+    <td>Active Color</td>
+    <td colspan="3">
+      <input class='glyph' data-field="activeColor" type="range" min="0" max="1" step="0.1" value="0" />
+    </td>
+  </tr>
+  <tr style="text-align: center;">
+    <td><input class='active' type="checkbox" data-field="a" />A</td>
     <td>X</td>
     <td>Y</td>
     <td>Z</td>
@@ -30,7 +51,7 @@
     </td>
   </tr>
   <tr style="text-align: center;">
-    <td>B</td>
+    <td><input class='active' type="checkbox" data-field="b" />B</td>
     <td>X</td>
     <td>Y</td>
     <td>Z</td>
@@ -60,7 +81,7 @@
     </td>
   </tr>
   <tr style="text-align: center;">
-    <td>C</td>
+    <td><input class='active' type="checkbox" data-field="c" />C</td>
     <td>X</td>
     <td>Y</td>
     <td>Z</td>

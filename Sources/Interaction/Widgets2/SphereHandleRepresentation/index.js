@@ -17,7 +17,10 @@ function vtkSphereHandleRepresentation(publicAPI, model) {
   // Set our className
   model.classHierarchy.push('vtkSphereHandleRepresentation');
 
+  // --------------------------------------------------------------------------
   // Internal polydata dataset
+  // --------------------------------------------------------------------------
+
   model.internalPolyData = vtkPolyData.newInstance({ mtime: 0 });
   model.internalArrays = {
     points: model.internalPolyData.getPoints(),
@@ -35,14 +38,20 @@ function vtkSphereHandleRepresentation(publicAPI, model) {
   model.internalPolyData.getPointData().addArray(model.internalArrays.scale);
   model.internalPolyData.getPointData().addArray(model.internalArrays.color);
 
+  // --------------------------------------------------------------------------
   // Generic rendering pipeline
+  // --------------------------------------------------------------------------
+
   model.mapper = vtkGlyph3DMapper.newInstance({
     scaleArray: 'scale',
     colorByArrayName: 'color',
     scalarMode: ScalarMode.USE_POINT_FIELD_DATA,
   });
   model.actor = vtkActor.newInstance();
-  model.glyph = vtkSphereSource.newInstance();
+  model.glyph = vtkSphereSource.newInstance({
+    phiResolution: model.glyphResolution,
+    thetaResolution: model.glyphResolution,
+  });
 
   model.mapper.setInputConnection(publicAPI.getOutputPort(), 0);
   model.mapper.setInputConnection(model.glyph.getOutputPort(), 1);
@@ -50,17 +59,22 @@ function vtkSphereHandleRepresentation(publicAPI, model) {
 
   model.actors.push(model.actor);
 
+  publicAPI.setGlyphResolution = macro.chain(
+    publicAPI.setGlyphResolution,
+    (r) => model.glyph.setPhiResolution(r) && model.glyph.setThetaResolution(r)
+  );
+
+  // --------------------------------------------------------------------------
+  // Expose mapper methods
+  // --------------------------------------------------------------------------
+
+  publicAPI.setLookupTable = model.mapper.setLookupTable;
+  publicAPI.getLookupTable = model.mapper.getLookupTable;
+
   // --------------------------------------------------------------------------
 
   publicAPI.requestData = (inData, outData) => {
-    if (model.deleted) {
-      return;
-    }
     const rootState = inData[0];
-    if (rootState.getMTime() < model.internalPolyData.getMTime()) {
-      return;
-    }
-
     const { points, scale, color } = model.internalArrays;
 
     if (points.getNumberOfValues() !== model.sphereStates.length) {
@@ -75,25 +89,24 @@ function vtkSphereHandleRepresentation(publicAPI, model) {
 
     for (let i = 0; i < model.sphereStates.length; i++) {
       const sphereState = rootState.getReferenceByName(model.sphereStates[i]);
+      const isActive = sphereState.getActive();
+      const scaleFactor = isActive ? model.activeScaleFactor : 1;
 
       const coord = sphereState.getPosition();
       pointsTypedArray[i * 3 + 0] = coord[0];
       pointsTypedArray[i * 3 + 1] = coord[1];
       pointsTypedArray[i * 3 + 2] = coord[2];
 
-      scaleTypedArray[i] = sphereState.getRadius();
+      scaleTypedArray[i] = sphereState.getRadius() * scaleFactor;
 
-      colorTypedArray[i] = sphereState.getColor();
+      colorTypedArray[i] =
+        model.useActiveColor && isActive
+          ? model.activeColor
+          : sphereState.getColor();
     }
     model.internalPolyData.modified();
     outData[0] = model.internalPolyData;
   };
-
-  publicAPI.getMTime = () =>
-    Math.max(
-      (model.inputData[0] && model.inputData[0].getMTime()) || 0,
-      model.mtime
-    );
 }
 
 // ----------------------------------------------------------------------------
@@ -102,6 +115,10 @@ function vtkSphereHandleRepresentation(publicAPI, model) {
 
 const DEFAULT_VALUES = {
   sphereStates: [],
+  activeScaleFactor: 1.2,
+  activeColor: 1,
+  useActiveColor: true,
+  glyphResolution: 8,
 };
 
 // ----------------------------------------------------------------------------
@@ -110,7 +127,12 @@ export function extend(publicAPI, model, initialValues = {}) {
   Object.assign(model, DEFAULT_VALUES, initialValues);
 
   vtkHandleRepresentation.extend(publicAPI, model, initialValues);
-  macro.setGet(publicAPI, model, ['sphereStates']);
+  macro.setGet(publicAPI, model, [
+    'sphereStates',
+    'activeScaleFactor',
+    'activeColor',
+    'useActiveColor',
+  ]);
 
   // Object specific methods
   vtkSphereHandleRepresentation(publicAPI, model);

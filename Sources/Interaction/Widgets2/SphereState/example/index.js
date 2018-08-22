@@ -1,10 +1,8 @@
 import 'vtk.js/Sources/favicon';
 
-import macro from 'vtk.js/Sources/macro';
 import vtkFullScreenRenderWindow from 'vtk.js/Sources/Rendering/Misc/FullScreenRenderWindow';
 import vtkSphereHandleRepresentation from 'vtk.js/Sources/Interaction/Widgets2/SphereHandleRepresentation';
-import vtkSphereState from 'vtk.js/Sources/Interaction/Widgets2/SphereState';
-import vtkWidgetState from 'vtk.js/Sources/Interaction/Widgets2/WidgetState';
+import vtkStateBuilder from 'vtk.js/Sources/Interaction/Widgets2/StateBuilder';
 
 import controlPanel from './controlPanel.html';
 
@@ -23,17 +21,12 @@ const renderWindow = fullScreenRenderer.getRenderWindow();
 // ----------------------------------------------------------------------------
 
 // State
-const compositeState = {};
-const compositeStateModel = {
-  a: vtkSphereState.newInstance({ radius: 0.5, position: [-1, 0, 0] }),
-  b: vtkSphereState.newInstance({ radius: 0.5, position: [0, 0, 0] }),
-  c: vtkSphereState.newInstance({ radius: 0.5, position: [1, 0, 0] }),
-};
-vtkWidgetState.extend(compositeState, compositeStateModel);
-macro.setGet(compositeState, compositeStateModel, ['a', 'b', 'c']);
-compositeState.bindState(compositeStateModel.a);
-compositeState.bindState(compositeStateModel.b);
-compositeState.bindState(compositeStateModel.c);
+const compositeState = vtkStateBuilder
+  .createBuilder()
+  .add('sphere', 'a', { radius: 0.5, position: [-1, 0, 0] })
+  .add('sphere', 'b', { radius: 0.5, position: [0, 0, 0] })
+  .add('sphere', 'c', { radius: 0.5, position: [1, 0, 0] })
+  .build();
 
 // Representation
 const widgetRep = vtkSphereHandleRepresentation.newInstance();
@@ -50,13 +43,10 @@ renderWindow.render();
 
 fullScreenRenderer.addController(controlPanel);
 
-const fieldsElems = document.querySelectorAll('.stateField');
-
 function updateState(e) {
   const { name, field, index } = e.currentTarget.dataset;
   const value = Number(e.currentTarget.value);
-  console.log('field', field, name, value);
-  const stateObj = compositeStateModel[field];
+  const stateObj = compositeState.get(field)[field];
   if (name) {
     stateObj.set({ [name]: value });
   } else {
@@ -65,12 +55,34 @@ function updateState(e) {
     stateObj.setPosition(center);
   }
 
-  // widgetRep.update();
   renderWindow.render();
 }
 
+const fieldsElems = document.querySelectorAll('.stateField');
 for (let i = 0; i < fieldsElems.length; i++) {
   fieldsElems[i].addEventListener('input', updateState);
+}
+
+const toggleElems = document.querySelectorAll('.active');
+for (let i = 0; i < toggleElems.length; i++) {
+  toggleElems[i].addEventListener('change', (e) => {
+    const { field } = e.currentTarget.dataset;
+    const active = !!e.target.checked;
+    const stateObj = compositeState.get(field)[field];
+    stateObj.set({ active });
+
+    renderWindow.render();
+  });
+}
+
+const glyphElems = document.querySelectorAll('.glyph');
+for (let i = 0; i < glyphElems.length; i++) {
+  glyphElems[i].addEventListener('input', (e) => {
+    const { field } = e.currentTarget.dataset;
+    const value = Number(e.currentTarget.value);
+    widgetRep.set({ [field]: value });
+    renderWindow.render();
+  });
 }
 
 // -----------------------------------------------------------
