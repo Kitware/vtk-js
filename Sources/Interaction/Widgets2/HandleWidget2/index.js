@@ -30,7 +30,7 @@ function vtkHandleWidget(publicAPI, model) {
 
   // --------------------------------------------------------------------------
 
-  publicAPI.handleMouseMove = (callData) => {
+  publicAPI.handleDrag = (callData) => {
     const widgetState = publicAPI.getWidgetState();
     if (widgetState && model.manipulator) {
       const worldCoords = model.manipulator.handleEvent(
@@ -44,7 +44,11 @@ function vtkHandleWidget(publicAPI, model) {
 
       model.renderer.resetCameraClippingRange();
       model.interactor.render();
+
+      return macro.EVENT_ABORT;
     }
+
+    return macro.VOID;
   };
 
   // --------------------------------------------------------------------------

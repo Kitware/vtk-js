@@ -1,10 +1,16 @@
 import macro from 'vtk.js/Sources/macro';
 import vtkInteractorObserver from 'vtk.js/Sources/Rendering/Core/InteractorObserver';
+import Constants from 'vtk.js/Sources/Interaction/Widgets2/AbstractWidget/Constants';
+
+const { WIDGET_PRIORITY } = Constants;
 
 // ----------------------------------------------------------------------------
 
 function vtkAbstractWidget(publicAPI, model) {
   model.classHierarchy.push('vtkAbstractWidget');
+
+  const subscriptions = [];
+  let moveSubscription = null;
 
   if (!model.representations) {
     model.representations = {};
@@ -17,6 +23,8 @@ function vtkAbstractWidget(publicAPI, model) {
   //    SLICE: [{ builder: vtkSphereHandleRepresentation, labels: []}],
   // }
   // model.viewTypeAlias = [DEFAULT, DEFAULT, SLICE, DEFAULT];
+
+  // --------------------------------------------------------------------------
 
   publicAPI.getRepresentationsForViewType = (viewType) => {
     const key = model.viewTypeAlias[viewType];
@@ -33,8 +41,54 @@ function vtkAbstractWidget(publicAPI, model) {
     }
     return model.representations[key];
   };
+
+  // --------------------------------------------------------------------------
+
   publicAPI.hasActor = (actor) => actorsWeakMap.has(actor);
+
+  // --------------------------------------------------------------------------
+
   publicAPI.getRepresentationFromActor = (actor) => actorsWeakMap.get(actor);
+
+  // --------------------------------------------------------------------------
+
+  // only wire up drag logic if widget implements it
+  function setupDrag() {
+    while (subscriptions.length) {
+      subscriptions.pop().unsubscribe();
+    }
+
+    if (model.interactor) {
+      subscriptions.push(
+        model.interactor.onLeftButtonPress(() => {
+          if (moveSubscription) {
+            moveSubscription.unsubscribe();
+          }
+          moveSubscription = model.interactor.onMouseMove(publicAPI.handleDrag);
+          return macro.EVENT_ABORT;
+        }, WIDGET_PRIORITY)
+      );
+      subscriptions.push(
+        model.interactor.onLeftButtonRelease(() => {
+          if (moveSubscription) {
+            moveSubscription.unsubscribe();
+          }
+        }, WIDGET_PRIORITY)
+      );
+    }
+  }
+
+  // --------------------------------------------------------------------------
+
+  publicAPI.setInteractor = macro.chain(publicAPI.setInteractor, () => {
+    if (publicAPI.handleDrag) {
+      setupDrag();
+    }
+  });
+
+  // --------------------------------------------------------------------------
+
+  publicAPI.setPriority(WIDGET_PRIORITY);
 }
 
 // ----------------------------------------------------------------------------
