@@ -35,7 +35,7 @@ function vtkAbstractWidget(publicAPI, model) {
       model.representations[key].forEach((rep, idx) => {
         rep.setInputData(model.widgetState);
         rep.getActors().forEach((actor) => {
-          actorsWeakMap[actor] = rep;
+          actorsWeakMap.set(actor, rep);
         });
       });
     }

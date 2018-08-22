@@ -128,12 +128,22 @@ function vtkWidgetManager(publicAPI, model) {
     if (!model.selections || !model.selections.length) {
       return {};
     }
-    const { propID, compositeID } = model.selections.getProperties();
+    const { propID, compositeID } = model.selections[0].getProperties();
     const actor = model.renderer.getActors()[propID];
     const widget = model.widgets.find((w) => w.hasActor(actor));
-    const representation = widget.getRepresentationFromActor(actor);
-    const widgetState = representation.getStateList()[compositeID];
-    return { actor, widget, representation, widgetState };
+    if (widget) {
+      const representation = widget.getRepresentationFromActor(actor);
+      const selectedState = representation.getStateList()[compositeID];
+      return {
+        propID,
+        compositeID,
+        actor,
+        widget,
+        representation,
+        selectedState,
+      };
+    }
+    return {};
   };
 }
 
@@ -159,7 +169,7 @@ export function extend(publicAPI, model, initialValues = {}) {
   macro.setGet(publicAPI, model, [
     { type: 'enum', name: 'viewType', enum: ViewTypes },
   ]);
-  macro.get(publicAPI, model, ['selections']);
+  macro.get(publicAPI, model, ['selections', 'widgets']);
 
   // Object specific methods
   vtkWidgetManager(publicAPI, model);

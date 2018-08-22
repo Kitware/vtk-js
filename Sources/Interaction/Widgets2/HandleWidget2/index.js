@@ -51,6 +51,23 @@ function vtkHandleWidget(publicAPI, model) {
     return macro.VOID;
   };
 
+  publicAPI.handleMouseMove = (callData) => {
+    const widgetState = publicAPI.getWidgetState();
+    if (widgetState && model.manipulator) {
+      const worldCoords = model.manipulator.handleEvent(
+        callData,
+        publicAPI.getOpenGLRenderWindow()
+      );
+
+      if (worldCoords.length) {
+        model.widgetState.getHandle().setPosition(...worldCoords);
+      }
+
+      model.renderer.resetCameraClippingRange();
+      model.interactor.render();
+    }
+  };
+
   // --------------------------------------------------------------------------
 
   publicAPI.setRenderer = macro.chain(publicAPI.setRenderer, (renderer) => {

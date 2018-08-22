@@ -8,6 +8,7 @@ function vtkWidgetState(publicAPI, model) {
   model.classHierarchy.push('vtkWidgetState');
   const subscriptions = [];
   model.labels = {};
+  model.states = [];
 
   // --------------------------------------------------------------------------
 
@@ -19,6 +20,7 @@ function vtkWidgetState(publicAPI, model) {
         model.labels[label] = [];
       }
       model.labels[label].push(nested);
+      model.states.push(nested);
     }
   };
 
@@ -26,6 +28,13 @@ function vtkWidgetState(publicAPI, model) {
     while (subscriptions.length) {
       subscriptions.pop().unsubscribe();
     }
+    model.states = [];
+  };
+
+  publicAPI.desactivateAll = () => model.states.forEach((s) => s.deactivate());
+  publicAPI.activateOnly = (state) => {
+    publicAPI.desactivateAll();
+    state.activate();
   };
 
   publicAPI.activate = () => publicAPI.setActive(true);
