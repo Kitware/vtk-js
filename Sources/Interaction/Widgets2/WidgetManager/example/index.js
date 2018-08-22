@@ -21,7 +21,6 @@ const openGLRenderWindow = fullScreenRenderer.getOpenGLRenderWindow();
 
 const widgetManager = vtkWidgetManager.newInstance();
 widgetManager.setRenderingContext(openGLRenderWindow, renderer);
-widgetManager.capture();
 
 const w1 = vtkHandleWidget2.newInstance();
 const w2 = vtkHandleWidget2.newInstance();
@@ -35,13 +34,6 @@ w2
   .setPosition(1, 0, 0);
 widgetManager.registerWidget(w1);
 widgetManager.registerWidget(w2);
-
-// For now
-renderer.getActiveCamera().onModified(widgetManager.capture);
-
-renderWindow.getInteractor().onMouseMove(({ position }) => {
-  widgetManager.updateSelectionFromXY(position.x, position.y);
-});
 
 setInterval(() => {
   const {
@@ -60,3 +52,6 @@ setInterval(() => {
       .forEach((w) => w.getWidgetState().desactivateAll());
   }
 }, 100);
+
+renderer.resetCamera();
+renderWindow.render();

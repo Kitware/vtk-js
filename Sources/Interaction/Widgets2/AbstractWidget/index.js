@@ -26,6 +26,14 @@ function vtkAbstractWidget(publicAPI, model) {
 
   // --------------------------------------------------------------------------
 
+  publicAPI.activateHandle = ({ selectedState, representation }) => {};
+
+  // --------------------------------------------------------------------------
+
+  publicAPI.deactivateAllHandles = () => {};
+
+  // --------------------------------------------------------------------------
+
   publicAPI.getRepresentationsForViewType = (viewType) => {
     const key = model.viewTypeAlias[viewType];
     if (!model.representations[key]) {
@@ -107,7 +115,6 @@ export function extend(publicAPI, model, initialValues = {}) {
 
   vtkInteractorObserver.extend(publicAPI, model, initialValues);
 
-  macro.obj(publicAPI, model);
   macro.setGet(publicAPI, model, [
     'widgetState',
     'openGLRenderWindow',

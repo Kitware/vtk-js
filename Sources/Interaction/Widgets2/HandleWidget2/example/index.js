@@ -23,7 +23,6 @@ const openGLRenderWindow = fullScreenRenderer.getOpenGLRenderWindow();
 // Widget manager
 const widgetManager = vtkWidgetManager.newInstance();
 widgetManager.setRenderingContext(openGLRenderWindow, renderer);
-widgetManager.capture();
 
 // Widget
 const handleWidget = vtkHandleWidget.newInstance();

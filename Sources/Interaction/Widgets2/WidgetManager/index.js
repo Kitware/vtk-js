@@ -10,6 +10,8 @@ function vtkWidgetManager(publicAPI, model) {
   // Set our className
   model.classHierarchy.push('vtkWidgetManager');
 
+  const subscriptions = [];
+
   // --------------------------------------------------------------------------
   // Internal variable
   // --------------------------------------------------------------------------
@@ -71,10 +73,37 @@ function vtkWidgetManager(publicAPI, model) {
   publicAPI.capture = macro.debounce(captureBufferForSelection, 100);
 
   publicAPI.setRenderingContext = (openGLRenderWindow, renderer) => {
+    while (subscriptions.length) {
+      subscriptions.pop().unsubscribe();
+    }
+
     removeAllRepresentations();
     model.renderer = renderer;
     model.openGLRenderWindow = openGLRenderWindow;
     model.selector.attach(openGLRenderWindow, renderer);
+
+    if (renderer) {
+      const interactor = renderer.getRenderWindow().getInteractor();
+      subscriptions.push(interactor.onRenderEvent(() => publicAPI.capture()));
+
+      subscriptions.push(
+        interactor.onMouseMove(({ position }) => {
+          publicAPI.updateSelectionFromXY(position.x, position.y);
+          const {
+            selectedState,
+            representation,
+            widget,
+          } = publicAPI.getSelectedData();
+          model.widgets.forEach((w) => {
+            if (w === widget) {
+              w.activateHandle({ selectedState, representation });
+            } else {
+              w.deactivateAllHandles();
+            }
+          });
+        })
+      );
+    }
     addAllRepresentations();
     publicAPI.modified();
   };

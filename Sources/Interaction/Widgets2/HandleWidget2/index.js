@@ -99,7 +99,6 @@ export function extend(publicAPI, model, initialValues = {}) {
 
   vtkAbstractWidget.extend(publicAPI, model, initialValues);
 
-  macro.obj(publicAPI, model);
   macro.setGet(publicAPI, model, ['manipulator', 'type']);
 
   vtkHandleWidget(publicAPI, model);
