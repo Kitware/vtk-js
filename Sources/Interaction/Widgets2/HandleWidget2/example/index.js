@@ -69,8 +69,8 @@ window.handleWidget = handleWidget;
 // -----------------------------------------------------------
 
 compositeState.onModified(() => {
-  interactor.render();
   renderer.resetCameraClippingRange();
+  interactor.render();
 });
 
 // -----------------------------------------------------------
