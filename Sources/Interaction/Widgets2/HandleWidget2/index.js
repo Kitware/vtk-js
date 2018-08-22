@@ -1,55 +1,52 @@
 import macro from 'vtk.js/Sources/macro';
+import vtkAbstractWidget from 'vtk.js/Sources/Interaction/Widgets2/AbstractWidget';
+import vtkSphereHandleRepresentation from 'vtk.js/Sources/Interaction/Widgets2/SphereHandleRepresentation';
+import vtkStateBuilder from 'vtk.js/Sources/Interaction/Widgets2/StateBuilder';
 
 // ----------------------------------------------------------------------------
 
 function vtkHandleWidget(publicAPI, model) {
   model.classHierarchy.push('vtkHandleWidget');
 
-  let subscription = null;
-
-  // --------------------------------------------------------------------------
-
-  publicAPI.update = () => {
-    if (model.widgetState) {
-      const [x, y, z] = model.manipulator.getWorldCoordsByReference();
-      model.widgetState
-        .getListForLabel('all')
-        .forEach((state) => state.setPosition(x, y, z));
-    }
+  model.representationBuilder = {
+    DEFAULT: [{ builder: vtkSphereHandleRepresentation, labels: ['handle'] }],
   };
+  model.viewTypeAlias = ['DEFAULT', 'DEFAULT', 'DEFAULT', 'DEFAULT'];
+
+  // State
+  model.widgetState = vtkStateBuilder
+    .createBuilder()
+    .add(['handle'], 'sphere', 'handle', {
+      radius: 0.5,
+      position: [0, 0, 0],
+    })
+    .build();
 
   // --------------------------------------------------------------------------
 
-  publicAPI.setManipulator = (manipulator) => {
-    if (model.manipulator !== manipulator || !subscription) {
-      if (subscription) {
-        subscription.unsubscribe();
-        subscription = null;
+  publicAPI.handleMouseMove = (callData) => {
+    const widgetState = publicAPI.getWidgetState();
+    if (widgetState && model.manipulator) {
+      const worldCoords = model.manipulator.handleEvent(
+        callData,
+        publicAPI.getOpenGLRenderWindow()
+      );
+
+      if (worldCoords) {
+        console.log(worldCoords);
+        model.widgetState.getHandle().setPosition(...worldCoords);
       }
 
-      model.manipulator = manipulator;
-
-      if (manipulator) {
-        subscription = manipulator.onModified(publicAPI.update);
-      }
+      model.renderer.resetCameraClippingRange();
+      model.interactor.render();
     }
   };
-
-  // --------------------------------------------------------------------------
-
-  publicAPI.delete = macro.chain(publicAPI.delete, () =>
-    subscription.unsubscribe()
-  );
-
-  // --------------------------------------------------------------------------
-
-  publicAPI.setManipulator(model.manipulator);
 }
 
 // ----------------------------------------------------------------------------
 
 const DEFAULT_VALUES = {
-  widgetState: null,
+  manipulator: null,
 };
 
 // ----------------------------------------------------------------------------
@@ -57,10 +54,10 @@ const DEFAULT_VALUES = {
 export function extend(publicAPI, model, initialValues = {}) {
   Object.assign(model, DEFAULT_VALUES, initialValues);
 
+  vtkAbstractWidget.extend(publicAPI, model, initialValues);
+
   macro.obj(publicAPI, model);
-  macro.setGet(publicAPI, model, ['widgetState']);
-  macro.setGetArray(publicAPI, model, ['displayPosition'], 2);
-  macro.setGetArray(publicAPI, model, ['planeNormal', 'planePoint'], 3);
+  macro.setGet(publicAPI, model, ['manipulator']);
 
   vtkHandleWidget(publicAPI, model);
 }

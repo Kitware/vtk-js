@@ -1,4 +1,5 @@
 import macro from 'vtk.js/Sources/macro';
+import vtkInteractorObserver from 'vtk.js/Sources/Rendering/Core/InteractorObserver';
 
 // ----------------------------------------------------------------------------
 
@@ -19,7 +20,12 @@ function vtkAbstractWidget(publicAPI, model) {
   publicAPI.getRepresentationsForViewType = (viewType) => {
     const key = model.viewTypeAlias[viewType];
     if (!model.representations[key]) {
-      model.representations[key] = model.representationBuilder.map(({ builder, labels}) => builder.newInstance({ labels }));
+      model.representations[key] = model.representationBuilder[key].map(
+        ({ builder, labels }) => builder.newInstance({ labels })
+      );
+      model.representations[key].forEach((rep) => {
+        rep.setInputData(model.widgetState);
+      });
     }
     return model.representations[key];
   };
@@ -40,6 +46,8 @@ const DEFAULT_VALUES = {
 
 export function extend(publicAPI, model, initialValues = {}) {
   Object.assign(model, DEFAULT_VALUES, initialValues);
+
+  vtkInteractorObserver.extend(publicAPI, model, initialValues);
 
   macro.obj(publicAPI, model);
   macro.setGet(publicAPI, model, [

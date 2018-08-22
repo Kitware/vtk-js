@@ -24,6 +24,8 @@ function vtkWidgetRepresentation(publicAPI, model) {
     });
     return stateList;
   };
+
+  publicAPI.setLabels(model.labels);
 }
 
 // ----------------------------------------------------------------------------
