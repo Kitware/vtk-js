@@ -89,6 +89,7 @@ function vtkWidgetManager(publicAPI, model) {
           model.renderer.addActor(a);
         });
         w.setRenderer(model.renderer);
+        w.setInteractor(model.renderer.getRenderWindow().getInteractor());
       }
       if (model.openGLRenderWindow) {
         w.setOpenGLRenderWindow(model.openGLRenderWindow);

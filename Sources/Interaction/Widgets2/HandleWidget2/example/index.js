@@ -14,7 +14,6 @@ const fullScreenRenderer = vtkFullScreenRenderWindow.newInstance({
 });
 const renderer = fullScreenRenderer.getRenderer();
 const renderWindow = fullScreenRenderer.getRenderWindow();
-const interactor = renderWindow.getInteractor();
 const openGLRenderWindow = fullScreenRenderer.getOpenGLRenderWindow();
 
 // ----------------------------------------------------------------------------
@@ -28,7 +27,6 @@ widgetManager.capture();
 
 // Widget
 const handleWidget = vtkHandleWidget.newInstance();
-handleWidget.setInteractor(interactor);
 handleWidget.setType(Type.Drag);
 
 widgetManager.registerWidget(handleWidget);
