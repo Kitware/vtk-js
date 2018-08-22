@@ -29,7 +29,7 @@ function vtkWidgetState(publicAPI, model) {
   };
 
   publicAPI.activate = () => publicAPI.setActive(true);
-  publicAPI.desactivate = () => publicAPI.setActive(false);
+  publicAPI.deactivate = () => publicAPI.setActive(false);
 
   publicAPI.getListForLabel = (name) => model.labels[name];
 
