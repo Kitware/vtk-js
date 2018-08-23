@@ -3,10 +3,16 @@ import vtkWidgetState from 'vtk.js/Sources/Interaction/Widgets2/WidgetState';
 import vtkSphereState from 'vtk.js/Sources/Interaction/Widgets2/SphereState';
 import vtkCubeState from 'vtk.js/Sources/Interaction/Widgets2/CubeState';
 
+// ----------------------------------------------------------------------------
+// Global type lookup map
+// ----------------------------------------------------------------------------
+
 const STATE_TYPES = {
   sphere: vtkSphereState,
   cube: vtkCubeState,
 };
+
+// ----------------------------------------------------------------------------
 
 class Builder {
   constructor() {
@@ -16,7 +22,7 @@ class Builder {
     vtkWidgetState.extend(this.publicAPI, this.model);
   }
 
-  add(labels, type, name, initialValues) {
+  addState({ labels, type, name, initialValues }) {
     if (STATE_TYPES[type]) {
       const instance = STATE_TYPES[type].newInstance(initialValues);
       this.model[name] = instance;
@@ -30,6 +36,10 @@ class Builder {
     return Object.freeze(this.publicAPI);
   }
 }
+
+// ----------------------------------------------------------------------------
+// Public API
+// ----------------------------------------------------------------------------
 
 function createBuilder() {
   return new Builder();

@@ -23,9 +23,14 @@ function vtkHandleWidget(publicAPI, model) {
   // Default state
   model.widgetState = vtkStateBuilder
     .createBuilder()
-    .add(['handle'], 'sphere', 'handle', {
-      radius: 0.5,
-      position: [0, 0, 0],
+    .addState({
+      labels: ['handle'],
+      type: 'sphere',
+      name: 'handle',
+      initialValues: {
+        radius: 0.5,
+        position: [0, 0, 0],
+      },
     })
     .build();
 

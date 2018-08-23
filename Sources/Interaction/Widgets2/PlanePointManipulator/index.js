@@ -1,28 +1,18 @@
 import macro from 'vtk.js/Sources/macro';
 import vtkPlane from 'vtk.js/Sources/Common/DataModel/Plane';
 
-export function intersectDisplayWithPlane({
-  displayCoords,
+export function intersectDisplayWithPlane(
+  x,
+  y,
   planeOrigin,
   planeNormal,
   renderer,
-  renderWindow,
-}) {
-  const p1 = renderWindow.displayToWorld(
-    displayCoords[0],
-    displayCoords[1],
-    0,
-    renderer
-  );
+  glRenderWindow
+) {
+  const near = glRenderWindow.displayToWorld(x, y, 0, renderer);
+  const far = glRenderWindow.displayToWorld(x, y, 1, renderer);
 
-  const p2 = renderWindow.displayToWorld(
-    displayCoords[0],
-    displayCoords[1],
-    1,
-    renderer
-  );
-
-  return vtkPlane.intersectWithLine(p1, p2, planeOrigin, planeNormal).x;
+  return vtkPlane.intersectWithLine(near, far, planeOrigin, planeNormal).x;
 }
 
 // ----------------------------------------------------------------------------
@@ -35,16 +25,15 @@ function vtkPlanePointManipulator(publicAPI, model) {
 
   // --------------------------------------------------------------------------
 
-  publicAPI.handleEvent = (callData, renderWindow) => {
-    const displayCoords = [callData.position.x, callData.position.y];
-    return intersectDisplayWithPlane({
-      displayCoords,
-      planeOrigin: model.planeOrigin,
-      planeNormal: model.planeNormal,
-      renderer: callData.pokedRenderer,
-      renderWindow,
-    });
-  };
+  publicAPI.handleEvent = (callData, glRenderWindow) =>
+    intersectDisplayWithPlane(
+      callData.position.x,
+      callData.position.y,
+      model.planeOrigin,
+      model.planeNormal,
+      callData.pokedRenderer,
+      glRenderWindow
+    );
 }
 
 // ----------------------------------------------------------------------------
@@ -60,7 +49,6 @@ const DEFAULT_VALUES = {
 
 export function extend(publicAPI, model, initialValues = {}) {
   Object.assign(model, DEFAULT_VALUES, initialValues);
-
   macro.obj(publicAPI, model);
   macro.setGetArray(publicAPI, model, ['planeNormal', 'planeOrigin'], 3);
 

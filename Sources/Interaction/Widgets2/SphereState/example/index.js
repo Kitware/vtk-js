@@ -24,23 +24,43 @@ const renderWindow = fullScreenRenderer.getRenderWindow();
 // State
 const compositeState = vtkStateBuilder
   .createBuilder()
-  .add(['all', 'a', 'ab', 'ac'], 'sphere', 'a', {
-    radius: 0.5,
-    position: [-1, 0, 0],
+  .addState({
+    labels: ['all', 'a', 'ab', 'ac'],
+    type: 'sphere',
+    name: 'a',
+    initialValues: {
+      radius: 0.5,
+      position: [-1, 0, 0],
+    },
   })
-  .add(['all', 'b', 'ab', 'bc'], 'sphere', 'b', {
-    radius: 0.5,
-    position: [0, 0, 0],
+  .addState({
+    labels: ['all', 'b', 'ab', 'bc'],
+    type: 'sphere',
+    name: 'b',
+    initialValues: {
+      radius: 0.5,
+      position: [0, 0, 0],
+    },
   })
-  .add(['all', 'c', 'bc', 'ac'], 'sphere', 'c', {
-    radius: 0.5,
-    position: [1, 0, 0],
+  .addState({
+    labels: ['all', 'c', 'bc', 'ac'],
+    type: 'sphere',
+    name: 'c',
+    initialValues: {
+      radius: 0.5,
+      position: [1, 0, 0],
+    },
   })
-  .add(['all', 'd'], 'cube', 'd', {
-    xLength: 0.5,
-    yLength: 1,
-    zLength: 2,
-    position: [0, 0, 2],
+  .addState({
+    labels: ['all', 'd'],
+    type: 'cube',
+    name: 'd',
+    initialValues: {
+      xLength: 0.5,
+      yLength: 1,
+      zLength: 2,
+      position: [0, 0, 2],
+    },
   })
   .build();
 
