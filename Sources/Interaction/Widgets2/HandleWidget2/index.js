@@ -79,7 +79,6 @@ function vtkHandleWidget(publicAPI, model) {
 
       return macro.EVENT_ABORT;
     }
-    console.log('skip handle');
 
     return macro.VOID;
   };

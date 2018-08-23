@@ -52,20 +52,29 @@ function vtkWidgetState(publicAPI, model) {
   // Active flag API
   // --------------------------------------------------------------------------
 
-  publicAPI.activate = () => publicAPI.setActive(true);
-  publicAPI.deactivate = (excludingState) => {
+  function deactivateExcluding(excludingState) {
     if (excludingState !== publicAPI) {
       publicAPI.setActive(false);
     }
     for (let i = 0; i < model.nestedStates.length; i++) {
       model.nestedStates[i].deactivate(excludingState);
     }
+  }
+
+  publicAPI.activate = () => publicAPI.setActive(true);
+
+  publicAPI.deactivate = () => {
+    publicAPI.setActive(false);
+    for (let i = 0; i < model.nestedStates.length; i++) {
+      model.nestedStates[i].deactivate();
+    }
   };
+
   publicAPI.activateOnly = (state) => {
     if (state) {
       state.setActive(true);
     }
-    publicAPI.deactivate(state);
+    deactivateExcluding(state);
   };
 
   // --------------------------------------------------------------------------

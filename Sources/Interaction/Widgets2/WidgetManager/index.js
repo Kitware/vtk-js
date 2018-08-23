@@ -97,14 +97,17 @@ function vtkWidgetManager(publicAPI, model) {
             representation,
             widget,
           } = publicAPI.getSelectedData();
-          model.widgets.forEach((w) => {
+
+          for (let i = 0; i < model.widgets.length; i++) {
+            const w = model.widgets[i];
             if (w === widget) {
               w.activateHandle({ selectedState, representation });
               model.activeWidget = w;
             } else {
               w.deactivateAllHandles();
             }
-          });
+          }
+
           interactor.render();
         })
       );
