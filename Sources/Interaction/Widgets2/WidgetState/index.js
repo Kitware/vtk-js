@@ -31,9 +31,9 @@ function vtkWidgetState(publicAPI, model) {
     model.states = [];
   };
 
-  publicAPI.desactivateAll = () => model.states.forEach((s) => s.deactivate());
+  publicAPI.deactivateAll = () => model.states.forEach((s) => s.deactivate());
   publicAPI.activateOnly = (state) => {
-    publicAPI.desactivateAll();
+    publicAPI.deactivateAll();
     state.activate();
   };
 

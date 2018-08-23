@@ -35,7 +35,7 @@ function vtkAbstractWidget(publicAPI, model) {
   // --------------------------------------------------------------------------
 
   publicAPI.deactivateAllHandles = () => {
-    model.widgetState.desactivateAll();
+    model.widgetState.deactivateAll();
   };
 
   // --------------------------------------------------------------------------
@@ -92,7 +92,7 @@ function vtkAbstractWidget(publicAPI, model) {
           if (moveSubscription) {
             moveSubscription.unsubscribe();
           }
-          model.widgetState.desactivateAll();
+          model.widgetState.deactivateAll();
         }, WIDGET_PRIORITY)
       );
     }
