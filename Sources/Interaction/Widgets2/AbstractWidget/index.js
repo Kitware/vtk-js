@@ -26,11 +26,17 @@ function vtkAbstractWidget(publicAPI, model) {
 
   // --------------------------------------------------------------------------
 
-  publicAPI.activateHandle = ({ selectedState, representation }) => {};
+  publicAPI.activateHandle = ({ selectedState, representation }) => {
+    model.widgetState.activateOnly(selectedState);
+    model.keepHandleControl = false;
+    model.activeState = selectedState;
+  };
 
   // --------------------------------------------------------------------------
 
-  publicAPI.deactivateAllHandles = () => {};
+  publicAPI.deactivateAllHandles = () => {
+    model.widgetState.desactivateAll();
+  };
 
   // --------------------------------------------------------------------------
 
@@ -69,6 +75,10 @@ function vtkAbstractWidget(publicAPI, model) {
     if (model.interactor) {
       subscriptions.push(
         model.interactor.onLeftButtonPress(() => {
+          if (!model.activeState || !model.activeState.getActive()) {
+            return macro.VOID;
+          }
+          model.keepHandleControl = true;
           if (moveSubscription) {
             moveSubscription.unsubscribe();
           }
@@ -78,9 +88,11 @@ function vtkAbstractWidget(publicAPI, model) {
       );
       subscriptions.push(
         model.interactor.onLeftButtonRelease(() => {
+          model.keepHandleControl = false;
           if (moveSubscription) {
             moveSubscription.unsubscribe();
           }
+          model.widgetState.desactivateAll();
         }, WIDGET_PRIORITY)
       );
     }
@@ -97,6 +109,10 @@ function vtkAbstractWidget(publicAPI, model) {
   // --------------------------------------------------------------------------
 
   publicAPI.setPriority(WIDGET_PRIORITY);
+
+  // --------------------------------------------------------------------------
+
+  publicAPI.hasControl = () => model.keepHandleControl;
 }
 
 // ----------------------------------------------------------------------------
@@ -106,6 +122,7 @@ const DEFAULT_VALUES = {
   openGLRenderWindow: null,
   renderer: null,
   representations: null,
+  keepHandleControl: false,
 };
 
 // ----------------------------------------------------------------------------

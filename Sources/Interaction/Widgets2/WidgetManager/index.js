@@ -70,7 +70,7 @@ function vtkWidgetManager(publicAPI, model) {
   // API public
   // --------------------------------------------------------------------------
 
-  publicAPI.capture = macro.debounce(captureBufferForSelection, 100);
+  publicAPI.capture = macro.debounce(captureBufferForSelection, 50);
 
   publicAPI.setRenderingContext = (openGLRenderWindow, renderer) => {
     while (subscriptions.length) {
@@ -88,6 +88,9 @@ function vtkWidgetManager(publicAPI, model) {
 
       subscriptions.push(
         interactor.onMouseMove(({ position }) => {
+          if (model.activeWidget && model.activeWidget.hasControl()) {
+            return;
+          }
           publicAPI.updateSelectionFromXY(position.x, position.y);
           const {
             selectedState,
@@ -97,10 +100,12 @@ function vtkWidgetManager(publicAPI, model) {
           model.widgets.forEach((w) => {
             if (w === widget) {
               w.activateHandle({ selectedState, representation });
+              model.activeWidget = w;
             } else {
               w.deactivateAllHandles();
             }
           });
+          interactor.render();
         })
       );
     }

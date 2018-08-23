@@ -48,15 +48,18 @@ function vtkHandleWidget(publicAPI, model) {
   };
 
   publicAPI.handleEvent = (callData) => {
-    const widgetState = publicAPI.getWidgetState();
-    if (widgetState && model.manipulator) {
+    if (
+      model.manipulator &&
+      model.activeState &&
+      model.activeState.getActive()
+    ) {
       const worldCoords = model.manipulator.handleEvent(
         callData,
         publicAPI.getOpenGLRenderWindow()
       );
 
       if (worldCoords.length) {
-        model.widgetState.getHandle().setPosition(...worldCoords);
+        model.activeState.setPosition(...worldCoords);
       }
 
       model.renderer.resetCameraClippingRange();
@@ -64,6 +67,7 @@ function vtkHandleWidget(publicAPI, model) {
 
       return macro.EVENT_ABORT;
     }
+    console.log('skip handle');
 
     return macro.VOID;
   };

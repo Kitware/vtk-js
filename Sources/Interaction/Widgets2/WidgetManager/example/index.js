@@ -22,36 +22,18 @@ const openGLRenderWindow = fullScreenRenderer.getOpenGLRenderWindow();
 const widgetManager = vtkWidgetManager.newInstance();
 widgetManager.setRenderingContext(openGLRenderWindow, renderer);
 
-const w1 = vtkHandleWidget2.newInstance();
-const w2 = vtkHandleWidget2.newInstance();
-w1
-  .getWidgetState()
-  .getHandle()
-  .setPosition(-1, 0, 0);
-w2
-  .getWidgetState()
-  .getHandle()
-  .setPosition(1, 0, 0);
-widgetManager.registerWidget(w1);
-widgetManager.registerWidget(w2);
+for (let i = 0; i < 50; i++) {
+  const widget = vtkHandleWidget2.newInstance();
+  widget
+    .getRepresentationsForViewType(0)
+    .forEach((rep) => rep.setGlyphResolution(30));
+  widgetManager.registerWidget(widget);
 
-setInterval(() => {
-  const {
-    selectedState,
-    propID,
-    compositeID,
-    widget,
-  } = widgetManager.getSelectedData();
-  if (selectedState) {
-    widget.getWidgetState().activateOnly(selectedState);
-    console.log(`propID(${propID}) - compositeID(${compositeID})`);
-    renderWindow.render();
-  } else {
-    widgetManager
-      .getWidgets()
-      .forEach((w) => w.getWidgetState().desactivateAll());
-  }
-}, 100);
+  const localState = widget.getWidgetState().getHandle();
+  localState.setPosition(Math.random(), Math.random(), Math.random());
+  localState.setRadius(0.5 + Math.random());
+  localState.setColor(Math.random());
+}
 
 renderer.resetCamera();
 renderWindow.render();
