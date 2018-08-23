@@ -34,7 +34,7 @@ function vtkWidgetRepresentation(publicAPI, model) {
 
     // Fill states that are going to be used in the representation
     model.labels.forEach((name) => {
-      cache.states = cache.states.concat(input.getListForLabel(name) || []);
+      cache.states = cache.states.concat(input.getStatesWithLabel(name) || []);
     });
 
     return cache.states;
