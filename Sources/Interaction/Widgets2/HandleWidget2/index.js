@@ -13,6 +13,7 @@ function vtkHandleWidget(publicAPI, model) {
   model.classHierarchy.push('vtkHandleWidget');
 
   let subscription = null;
+  let isDragging = null;
 
   model.representationBuilder = {
     DEFAULT: [{ builder: vtkSphereHandleRepresentation, labels: ['handle'] }],
@@ -33,18 +34,29 @@ function vtkHandleWidget(publicAPI, model) {
 
   // --------------------------------------------------------------------------
 
-  publicAPI.handleDrag = (callData) => {
+  publicAPI.handleLeftButtonPress = () => {
+    if (!model.activeState || !model.activeState.getActive()) {
+      return macro.VOID;
+    }
     if (model.type === Type.Drag) {
-      return publicAPI.handleEvent(callData);
+      isDragging = true;
+      model.keepHandleControl = true;
+      return macro.EVENT_ABORT;
     }
     return macro.VOID;
   };
 
   publicAPI.handleMouseMove = (callData) => {
-    if (model.type === Type.MouseMove) {
+    if (isDragging || model.type === Type.MouseMove) {
       return publicAPI.handleEvent(callData);
     }
     return macro.VOID;
+  };
+
+  publicAPI.handleLeftButtonRelease = () => {
+    isDragging = false;
+    model.keepHandleControl = false;
+    model.widgetState.deactivateAll();
   };
 
   publicAPI.handleEvent = (callData) => {

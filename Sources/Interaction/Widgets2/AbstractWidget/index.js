@@ -9,9 +9,6 @@ const { WIDGET_PRIORITY } = Constants;
 function vtkAbstractWidget(publicAPI, model) {
   model.classHierarchy.push('vtkAbstractWidget');
 
-  const subscriptions = [];
-  let moveSubscription = null;
-
   if (!model.representations) {
     model.representations = {};
   }
@@ -63,48 +60,6 @@ function vtkAbstractWidget(publicAPI, model) {
   // --------------------------------------------------------------------------
 
   publicAPI.getRepresentationFromActor = (actor) => actorsWeakMap.get(actor);
-
-  // --------------------------------------------------------------------------
-
-  // only wire up drag logic if widget implements it
-  function setupDrag() {
-    while (subscriptions.length) {
-      subscriptions.pop().unsubscribe();
-    }
-
-    if (model.interactor) {
-      subscriptions.push(
-        model.interactor.onLeftButtonPress(() => {
-          if (!model.activeState || !model.activeState.getActive()) {
-            return macro.VOID;
-          }
-          model.keepHandleControl = true;
-          if (moveSubscription) {
-            moveSubscription.unsubscribe();
-          }
-          moveSubscription = model.interactor.onMouseMove(publicAPI.handleDrag);
-          return macro.EVENT_ABORT;
-        }, WIDGET_PRIORITY)
-      );
-      subscriptions.push(
-        model.interactor.onLeftButtonRelease(() => {
-          model.keepHandleControl = false;
-          if (moveSubscription) {
-            moveSubscription.unsubscribe();
-          }
-          model.widgetState.deactivateAll();
-        }, WIDGET_PRIORITY)
-      );
-    }
-  }
-
-  // --------------------------------------------------------------------------
-
-  publicAPI.setInteractor = macro.chain(publicAPI.setInteractor, () => {
-    if (publicAPI.handleDrag) {
-      setupDrag();
-    }
-  });
 
   // --------------------------------------------------------------------------
 
