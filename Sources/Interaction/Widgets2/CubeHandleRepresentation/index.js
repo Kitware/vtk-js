@@ -85,19 +85,13 @@ function vtkCubeHandleRepresentation(publicAPI, model) {
       typedArray.points[i * 3 + 1] = coord[1];
       typedArray.points[i * 3 + 2] = coord[2];
 
-      if (state.isA('vtkSphereState')) {
-        typedArray.scale[i * 3 + 0] = 0.5 * state.getRadius() * scaleFactor;
-        typedArray.scale[i * 3 + 1] = 0.5 * state.getRadius() * scaleFactor;
-        typedArray.scale[i * 3 + 2] = 0.5 * state.getRadius() * scaleFactor;
-      } else if (state.isA('vtkCubeState')) {
-        typedArray.scale[i * 3 + 0] = state.getXLength() * scaleFactor;
-        typedArray.scale[i * 3 + 1] = state.getYLength() * scaleFactor;
-        typedArray.scale[i * 3 + 2] = state.getZLength() * scaleFactor;
-      } else {
-        typedArray.scale[i * 3 + 0] = scaleFactor;
-        typedArray.scale[i * 3 + 1] = scaleFactor;
-        typedArray.scale[i * 3 + 2] = scaleFactor;
-      }
+      const scale3 = state.getScale3
+        ? state.getScale3()
+        : Array(3).fill(model.defaultScale);
+
+      typedArray.scale[i * 3 + 0] = scale3[0] * scaleFactor;
+      typedArray.scale[i * 3 + 1] = scale3[1] * scaleFactor;
+      typedArray.scale[i * 3 + 2] = scale3[2] * scaleFactor;
 
       typedArray.color[i] =
         model.useActiveColor && isActive ? model.activeColor : state.getColor();
@@ -112,7 +106,9 @@ function vtkCubeHandleRepresentation(publicAPI, model) {
 // Object factory
 // ----------------------------------------------------------------------------
 
-const DEFAULT_VALUES = {};
+const DEFAULT_VALUES = {
+  defaultScale: 1,
+};
 
 // ----------------------------------------------------------------------------
 
@@ -120,7 +116,7 @@ export function extend(publicAPI, model, initialValues = {}) {
   Object.assign(model, DEFAULT_VALUES, initialValues);
 
   vtkHandleRepresentation.extend(publicAPI, model, initialValues);
-  macro.get(publicAPI, model, ['glyph', 'mapper', 'actor']);
+  macro.get(publicAPI, model, ['glyph', 'mapper', 'actor', 'defaultScale']);
 
   // Object specific methods
   vtkCubeHandleRepresentation(publicAPI, model);

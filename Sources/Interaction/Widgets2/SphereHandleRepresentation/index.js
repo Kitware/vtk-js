@@ -95,15 +95,10 @@ function vtkSphereHandleRepresentation(publicAPI, model) {
       typedArray.points[i * 3 + 1] = coord[1];
       typedArray.points[i * 3 + 2] = coord[2];
 
-      if (state.isA('vtkSphereState')) {
-        typedArray.scale[i] = state.getRadius() * scaleFactor;
-      } else if (state.isA('vtkCubeState')) {
-        typedArray.scale[i] =
-          Math.min(state.getXLength(), state.getYLength(), state.getZLength()) *
-          scaleFactor;
-      } else {
-        typedArray.scale[i] = scaleFactor;
-      }
+
+      typedArray.scale[i] =
+        scaleFactor *
+        (state.getScale1 ? state.getScale1() : model.defaultScale);
 
       typedArray.color[i] =
         model.useActiveColor && isActive ? model.activeColor : state.getColor();
@@ -120,6 +115,7 @@ function vtkSphereHandleRepresentation(publicAPI, model) {
 
 const DEFAULT_VALUES = {
   glyphResolution: 8,
+  defaultScale: 1,
 };
 
 // ----------------------------------------------------------------------------
@@ -128,7 +124,7 @@ export function extend(publicAPI, model, initialValues = {}) {
   Object.assign(model, DEFAULT_VALUES, initialValues);
 
   vtkHandleRepresentation.extend(publicAPI, model, initialValues);
-  macro.setGet(publicAPI, model, ['glyphResolution']);
+  macro.setGet(publicAPI, model, ['glyphResolution', 'defaultScale']);
   macro.get(publicAPI, model, ['glyph', 'mapper', 'actor']);
 
   // Object specific methods

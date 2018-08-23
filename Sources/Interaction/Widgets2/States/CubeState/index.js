@@ -7,6 +7,15 @@ import vtkColorMixin from 'vtk.js/Sources/Interaction/Widgets2/States/ColorMixin
 
 function vtkCubeState(publicAPI, model) {
   model.classHierarchy.push('vtkCubeState');
+
+  // --------------------------------------------------------------------------
+
+  publicAPI.getScale1 = () =>
+    Math.min(model.xLength, model.yLength, model.zLength);
+
+  // --------------------------------------------------------------------------
+
+  publicAPI.getScale3 = () => [model.xLength, model.yLength, model.zLength];
 }
 
 // ----------------------------------------------------------------------------
@@ -22,11 +31,11 @@ const DEFAULT_VALUES = {
 export function extend(publicAPI, model, initialValues = {}) {
   Object.assign(model, DEFAULT_VALUES, initialValues);
 
-  vtkWidgetState.extend(publicAPI, model);
-  vtkPositionMixin.extend(publicAPI, model);
-  vtkColorMixin.extend(publicAPI, model);
+  vtkWidgetState.extend(publicAPI, model, initialValues);
+  vtkPositionMixin.extend(publicAPI, model, initialValues);
+  vtkColorMixin.extend(publicAPI, model, initialValues);
 
-  macro.setGet(publicAPI, model, ['radius', 'xLength', 'yLength', 'zLength']);
+  macro.setGet(publicAPI, model, ['xLength', 'yLength', 'zLength']);
 
   vtkCubeState(publicAPI, model);
 }
