@@ -84,7 +84,8 @@ function vtkWidgetManager(publicAPI, model) {
 
     if (renderer) {
       const interactor = renderer.getRenderWindow().getInteractor();
-      subscriptions.push(interactor.onRenderEvent(() => publicAPI.capture()));
+      subscriptions.push(interactor.onEndAnimation(publicAPI.capture));
+      publicAPI.capture();
 
       subscriptions.push(
         interactor.onMouseMove(({ position }) => {
