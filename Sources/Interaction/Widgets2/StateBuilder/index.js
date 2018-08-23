@@ -1,7 +1,7 @@
 import macro from 'vtk.js/Sources/macro';
 import vtkWidgetState from 'vtk.js/Sources/Interaction/Widgets2/WidgetState';
-import vtkSphereState from 'vtk.js/Sources/Interaction/Widgets2/SphereState';
-import vtkCubeState from 'vtk.js/Sources/Interaction/Widgets2/CubeState';
+import vtkSphereState from 'vtk.js/Sources/Interaction/Widgets2/States/SphereState';
+import vtkCubeState from 'vtk.js/Sources/Interaction/Widgets2/States/CubeState';
 
 // ----------------------------------------------------------------------------
 // Global type lookup map
