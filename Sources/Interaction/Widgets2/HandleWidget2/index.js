@@ -56,7 +56,7 @@ function vtkHandleWidget(publicAPI, model) {
   publicAPI.handleLeftButtonRelease = () => {
     isDragging = false;
     model.keepHandleControl = false;
-    model.widgetState.deactivateAll();
+    model.widgetState.deactivate();
   };
 
   publicAPI.handleEvent = (callData) => {

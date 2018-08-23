@@ -24,9 +24,10 @@ widgetManager.setRenderingContext(openGLRenderWindow, renderer);
 
 for (let i = 0; i < 50; i++) {
   const widget = vtkHandleWidget2.newInstance();
-  widget
-    .getRepresentationsForViewType(0)
-    .forEach((rep) => rep.setGlyphResolution(30));
+  widget.getRepresentationsForViewType(0).forEach((rep) => {
+    rep.setGlyphResolution(30);
+    rep.setActiveScaleFactor(1);
+  });
   widgetManager.registerWidget(widget);
 
   const localState = widget.getWidgetState().getHandle();

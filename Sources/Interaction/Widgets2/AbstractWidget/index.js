@@ -32,7 +32,7 @@ function vtkAbstractWidget(publicAPI, model) {
   // --------------------------------------------------------------------------
 
   publicAPI.deactivateAllHandles = () => {
-    model.widgetState.deactivateAll();
+    model.widgetState.deactivate();
   };
 
   // --------------------------------------------------------------------------

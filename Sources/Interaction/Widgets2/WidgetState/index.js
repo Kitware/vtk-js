@@ -8,39 +8,77 @@ function vtkWidgetState(publicAPI, model) {
   model.classHierarchy.push('vtkWidgetState');
   const subscriptions = [];
   model.labels = {};
-  model.states = [];
+  model.nestedStates = [];
 
+  // --------------------------------------------------------------------------
+  // labels can be a string or an array of strings.
+  // If nothing (or empty array) provided the default label will be used.
   // --------------------------------------------------------------------------
 
   publicAPI.bindState = (nested, labels = [DEFAULT_LABEL]) => {
+    model.nestedStates.push(nested);
     subscriptions.push(nested.onModified(publicAPI.modified));
-    for (let i = 0; i < labels.length; i++) {
-      const label = labels[i];
-      if (!model.labels[label]) {
-        model.labels[label] = [];
+
+    if (Array.isArray(labels) && labels.length) {
+      for (let i = 0; i < labels.length; i++) {
+        const label = labels[i];
+        if (!model.labels[label]) {
+          model.labels[label] = [];
+        }
+        model.labels[label].push(nested);
       }
-      model.labels[label].push(nested);
-      model.states.push(nested);
+    } else {
+      // Need to bind to a label
+      const labelToUse = Array.isArray(labels)
+        ? DEFAULT_LABEL
+        : labels || DEFAULT_LABEL;
+      if (!model.labels[labelToUse]) {
+        model.labels[labelToUse] = [];
+      }
+      model.labels[labelToUse].push(nested);
     }
   };
+
+  // --------------------------------------------------------------------------
 
   publicAPI.unbindAll = () => {
     while (subscriptions.length) {
       subscriptions.pop().unsubscribe();
     }
-    model.states = [];
+    model.nestedStates = [];
   };
 
-  publicAPI.deactivateAll = () => model.states.forEach((s) => s.deactivate());
-  publicAPI.activateOnly = (state) => {
-    publicAPI.deactivateAll();
-    state.activate();
-  };
+  // --------------------------------------------------------------------------
+  // Active flag API
+  // --------------------------------------------------------------------------
 
   publicAPI.activate = () => publicAPI.setActive(true);
-  publicAPI.deactivate = () => publicAPI.setActive(false);
+  publicAPI.deactivate = (excludingState) => {
+    if (excludingState !== publicAPI) {
+      publicAPI.setActive(false);
+    }
+    for (let i = 0; i < model.nestedStates.length; i++) {
+      model.nestedStates[i].deactivate(excludingState);
+    }
+  };
+  publicAPI.activateOnly = (state) => {
+    if (state) {
+      state.setActive(true);
+    }
+    publicAPI.deactivate(state);
+  };
+
+  // --------------------------------------------------------------------------
+  // Nested state methods
+  // --------------------------------------------------------------------------
 
   publicAPI.getListForLabel = (name) => model.labels[name];
+
+  publicAPI.getAllNestedStates = () => model.nestedStates;
+
+  // --------------------------------------------------------------------------
+  // Clean on delete
+  // --------------------------------------------------------------------------
 
   publicAPI.delete = macro.chain(publicAPI.unbindAll, publicAPI.delete);
 }
