@@ -63,11 +63,13 @@ function vtkAbstractWidget(publicAPI, model) {
 
   // --------------------------------------------------------------------------
 
-  publicAPI.setPriority(WIDGET_PRIORITY);
+  publicAPI.hasControl = () => model.keepHandleControl;
 
   // --------------------------------------------------------------------------
+  // Initialization calls
+  // --------------------------------------------------------------------------
 
-  publicAPI.hasControl = () => model.keepHandleControl;
+  publicAPI.setPriority(WIDGET_PRIORITY);
 }
 
 // ----------------------------------------------------------------------------
