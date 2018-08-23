@@ -70,7 +70,7 @@ function vtkSphereHandleRepresentation(publicAPI, model) {
 
   publicAPI.requestData = (inData, outData) => {
     const { points, scale, color } = model.internalArrays;
-    const list = publicAPI.getStateList(inData[0]);
+    const list = publicAPI.getRepresentationStates(inData[0]);
     const totalCount = list.length;
 
     if (color.getNumberOfValues() !== totalCount) {

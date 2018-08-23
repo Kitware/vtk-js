@@ -7,6 +7,8 @@ import macro from 'vtk.js/Sources/macro';
 function vtkWidgetRepresentation(publicAPI, model) {
   // Set our className
   model.classHierarchy.push('vtkWidgetRepresentation');
+  // Internal cache
+  const cache = { mtimes: {}, states: [] };
 
   publicAPI.setLabels = (...labels) => {
     if (labels.length === 1) {
@@ -17,14 +19,28 @@ function vtkWidgetRepresentation(publicAPI, model) {
     publicAPI.modified();
   };
 
-  publicAPI.getStateList = (input = model.inputData[0]) => {
-    let stateList = [];
+  publicAPI.getRepresentationStates = (input = model.inputData[0]) => {
+    if (
+      cache.mtimes.representation === publicAPI.getMTime() &&
+      cache.mtimes.input === input.getMTime()
+    ) {
+      return cache.states;
+    }
+
+    // Reinitialize cache
+    cache.mtimes.representation = publicAPI.getMTime();
+    cache.mtimes.input = input.getMTime();
+    cache.states = [];
+
+    // Fill states that are going to be used in the representation
     model.labels.forEach((name) => {
-      stateList = stateList.concat(input.getListForLabel(name) || []);
+      cache.states = cache.states.concat(input.getListForLabel(name) || []);
     });
-    return stateList;
+
+    return cache.states;
   };
 
+  // Make sure setting the labels at build time works with string/array...
   publicAPI.setLabels(model.labels);
 }
 

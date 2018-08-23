@@ -171,7 +171,9 @@ function vtkWidgetManager(publicAPI, model) {
     const widget = model.widgets.find((w) => w.hasActor(actor));
     if (widget) {
       const representation = widget.getRepresentationFromActor(actor);
-      const selectedState = representation.getStateList()[compositeID];
+      const selectedState = representation.getRepresentationStates()[
+        compositeID
+      ];
       return {
         propID,
         compositeID,
