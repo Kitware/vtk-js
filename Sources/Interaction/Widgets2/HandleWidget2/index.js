@@ -1,7 +1,7 @@
 import macro from 'vtk.js/Sources/macro';
 import vtkAbstractWidgetFactory from 'vtk.js/Sources/Interaction/Widgets2/AbstractWidgetFactory';
 import vtkSphereHandleRepresentation from 'vtk.js/Sources/Interaction/Widgets2/SphereHandleRepresentation';
-import vtkPlaneHandleRepresentation from 'vtk.js/Sources/Interaction/Widgets2/PlaneHandleRepresentation';
+import vtkCircleContextRepresentation from 'vtk.js/Sources/Interaction/Widgets2/CircleContextRepresentation';
 import vtkPlanePointManipulator from 'vtk.js/Sources/Interaction/Widgets2/PlanePointManipulator';
 import vtkStateBuilder from 'vtk.js/Sources/Interaction/Widgets2/StateBuilder';
 import Constants from 'vtk.js/Sources/Interaction/Widgets2/HandleWidget2/Constants';
@@ -110,7 +110,7 @@ function vtkHandleWidget(publicAPI, model) {
       case ViewTypes.VOLUME:
       default:
         return [
-          { builder: vtkPlaneHandleRepresentation, labels: ['plane'] },
+          { builder: vtkCircleContextRepresentation, labels: ['plane'] },
           { builder: vtkSphereHandleRepresentation, labels: ['handle'] },
         ];
     }
@@ -134,7 +134,7 @@ function vtkHandleWidget(publicAPI, model) {
       mixins: ['origin', 'color', 'scale1', 'direction', 'visible'],
       name: 'plane',
       initialValues: {
-        scale1: 2,
+        scale1: 1,
         origin: [0, 0, 0],
         direction: [0, 0, 1],
         visible: false,
