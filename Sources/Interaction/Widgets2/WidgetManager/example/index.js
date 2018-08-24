@@ -27,6 +27,11 @@ for (let i = 0; i < NB_HANDLES; i++) {
   const widget = vtkHandleWidget2.newInstance();
   const viewWidget = widgetManager.registerWidget(widget);
 
+  console.log(
+    widget.getWidgetForView({ viewId: widgetManager.getViewId() }) ===
+      viewWidget
+  );
+
   viewWidget.getRepresentations().forEach((rep) => {
     rep.setGlyphResolution(12);
     rep.setActiveScaleFactor(0.5);

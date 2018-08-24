@@ -18,6 +18,9 @@ function vtkAbstractWidgetFactory(publicAPI, model) {
     initialValues,
   }) => {
     if (!viewToWidget[viewId]) {
+      if (!openGLRenderWindow || !renderer) {
+        return null;
+      }
       const widgetModel = {};
       const widgetPublicAPI = {};
       const interactor = renderer.getRenderWindow().getInteractor();
@@ -45,7 +48,9 @@ function vtkAbstractWidgetFactory(publicAPI, model) {
       model.behavior(widgetPublicAPI, widgetModel);
 
       widgetPublicAPI.setInteractor(interactor);
-      return Object.freeze(widgetPublicAPI);
+      const viewWidget = Object.freeze(widgetPublicAPI);
+      viewToWidget[viewId] = viewWidget;
+      return viewWidget;
     }
     return viewToWidget[viewId];
   };
