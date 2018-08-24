@@ -165,6 +165,9 @@ function getStateArrayMapFunc(item) {
 // ----------------------------------------------------------------------------
 
 export function obj(publicAPI = {}, model = {}) {
+  // Ensure each instance as a unique ref of array
+  safeArrays(model);
+
   const callbacks = [];
   if (!Number.isInteger(model.mtime)) {
     model.mtime = ++globalMTime;
@@ -842,9 +845,6 @@ export function newInstance(extend, className) {
     const model = {};
     const publicAPI = {};
     extend(publicAPI, model, initialValues);
-
-    // Ensure each instance as a unique ref of array
-    safeArrays(model);
 
     return Object.freeze(publicAPI);
   };
