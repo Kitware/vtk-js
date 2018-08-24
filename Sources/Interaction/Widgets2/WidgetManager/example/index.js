@@ -22,15 +22,17 @@ const openGLRenderWindow = fullScreenRenderer.getOpenGLRenderWindow();
 const widgetManager = vtkWidgetManager.newInstance();
 widgetManager.setRenderingContext(openGLRenderWindow, renderer);
 
+const masterWidgets = [];
 const NB_HANDLES = 50;
 for (let i = 0; i < NB_HANDLES; i++) {
   const widget = vtkHandleWidget2.newInstance();
   const viewWidget = widgetManager.registerWidget(widget);
+  masterWidgets.push(widget);
 
-  console.log(
-    widget.getWidgetForView({ viewId: widgetManager.getViewId() }) ===
-      viewWidget
-  );
+  // console.log(
+  //   widget.getWidgetForView({ viewId: widgetManager.getViewId() }) ===
+  //     viewWidget
+  // );
 
   viewWidget.getRepresentations().forEach((rep) => {
     rep.setGlyphResolution(12);
@@ -50,3 +52,16 @@ for (let i = 0; i < NB_HANDLES; i++) {
 renderer.resetCamera();
 renderWindow.render();
 widgetManager.enablePicking();
+
+setInterval(() => {
+  if (masterWidgets.length) {
+    widgetManager.unregisterWidget(masterWidgets.pop());
+  }
+}, 2000);
+
+setInterval(() => {
+  widgetManager.getWidgets();
+  if (widgetManager.getWidgets().length) {
+    widgetManager.unregisterWidget(widgetManager.getWidgets()[0]);
+  }
+}, 3000);

@@ -141,15 +141,22 @@ function vtkWidgetManager(publicAPI, model) {
     return w;
   };
 
-  publicAPI.unregisterWidget = (w) => {
-    // FIXME not right widget (factory instead of viewWidget)
-    const index = model.widgets.indexOf(w);
+  publicAPI.unregisterWidget = (widget) => {
+    const viewWidget = widget.isA('vtkAbstractWidget')
+      ? widget
+      : widget.getWidgetForView({ viewId: model.viewId });
+    const index = model.widgets.indexOf(viewWidget);
     if (index !== -1) {
       model.widgets.splice(index, 1);
-      const actorsToRemove = getActors(w);
+      const actorsToRemove = getActors(viewWidget);
       while (actorsToRemove.length) {
         model.renderer.removeActor(actorsToRemove.pop());
       }
+      model.renderer
+        .getRenderWindow()
+        .getInteractor()
+        .render();
+      publicAPI.enablePicking();
     }
   };
 
