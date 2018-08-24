@@ -22,7 +22,8 @@ const openGLRenderWindow = fullScreenRenderer.getOpenGLRenderWindow();
 const widgetManager = vtkWidgetManager.newInstance();
 widgetManager.setRenderingContext(openGLRenderWindow, renderer);
 
-for (let i = 0; i < 50; i++) {
+const NB_HANDLES = 50;
+for (let i = 0; i < NB_HANDLES; i++) {
   const widget = vtkHandleWidget2.newInstance();
   widget.getRepresentationsForViewType(0).forEach((rep) => {
     rep.setGlyphResolution(30);
@@ -31,10 +32,15 @@ for (let i = 0; i < 50; i++) {
   widgetManager.registerWidget(widget);
 
   const localState = widget.getWidgetState().getHandle();
-  localState.setOrigin(Math.random(), Math.random(), Math.random());
+  localState.setOrigin(
+    Math.random() * Math.cbrt(NB_HANDLES),
+    Math.random() * Math.cbrt(NB_HANDLES),
+    Math.random() * Math.cbrt(NB_HANDLES)
+  );
   localState.setScale1(0.5 + 0.25 * Math.random());
   localState.setColor(Math.random());
 }
 
 renderer.resetCamera();
 renderWindow.render();
+widgetManager.capture();

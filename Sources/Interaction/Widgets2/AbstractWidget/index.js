@@ -25,7 +25,6 @@ function vtkAbstractWidget(publicAPI, model) {
 
   publicAPI.activateHandle = ({ selectedState, representation }) => {
     model.widgetState.activateOnly(selectedState);
-    model.keepHandleControl = false;
     model.activeState = selectedState;
   };
 
@@ -62,10 +61,6 @@ function vtkAbstractWidget(publicAPI, model) {
   publicAPI.getRepresentationFromActor = (actor) => actorsWeakMap.get(actor);
 
   // --------------------------------------------------------------------------
-
-  publicAPI.hasControl = () => model.keepHandleControl;
-
-  // --------------------------------------------------------------------------
   // Initialization calls
   // --------------------------------------------------------------------------
 
@@ -79,7 +74,6 @@ const DEFAULT_VALUES = {
   openGLRenderWindow: null,
   renderer: null,
   representations: null,
-  keepHandleControl: false,
 };
 
 // ----------------------------------------------------------------------------

@@ -58,19 +58,19 @@ function vtkWidgetManager(publicAPI, model) {
     }
   }
 
-  function captureBufferForSelection() {
-    const [w, h] = model.openGLRenderWindow.getSize();
-    model.selector.setArea(0, 0, w, h);
-    model.selector.releasePixBuffers();
-    model.pickingAvailable = model.selector.captureBuffers();
-    publicAPI.modified();
-  }
-
   // --------------------------------------------------------------------------
   // API public
   // --------------------------------------------------------------------------
 
-  publicAPI.capture = macro.debounce(captureBufferForSelection, 50);
+  publicAPI.capture = () => {
+    console.time('capture');
+    const [w, h] = model.openGLRenderWindow.getSize();
+    model.selector.setArea(0, 0, w, h);
+    model.selector.releasePixBuffers();
+    model.pickingAvailable = model.selector.captureBuffers();
+    console.timeEnd('capture');
+    publicAPI.modified();
+  };
 
   publicAPI.setRenderingContext = (openGLRenderWindow, renderer) => {
     while (subscriptions.length) {
@@ -85,11 +85,16 @@ function vtkWidgetManager(publicAPI, model) {
     if (renderer) {
       const interactor = renderer.getRenderWindow().getInteractor();
       subscriptions.push(interactor.onEndAnimation(publicAPI.capture));
+      subscriptions.push(
+        interactor.onStartAnimation(() => {
+          model.pickingAvailable = false;
+        })
+      );
       publicAPI.capture();
 
       subscriptions.push(
         interactor.onMouseMove(({ position }) => {
-          if (model.activeWidget && model.activeWidget.hasControl()) {
+          if (!model.pickingAvailable) {
             return;
           }
           publicAPI.updateSelectionFromXY(position.x, position.y);
@@ -108,7 +113,6 @@ function vtkWidgetManager(publicAPI, model) {
               w.deactivateAllHandles();
             }
           }
-
           interactor.render();
         })
       );
@@ -117,7 +121,7 @@ function vtkWidgetManager(publicAPI, model) {
     publicAPI.modified();
   };
 
-  publicAPI.registerWidget = (w) => {
+  publicAPI.registerWidget = (w, viewType) => {
     if (w && model.widgets.indexOf(w) === -1) {
       model.widgets.push(w);
       if (model.renderer) {

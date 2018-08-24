@@ -39,13 +39,22 @@ function vtkHandleWidget(publicAPI, model) {
 
   // --------------------------------------------------------------------------
 
+  publicAPI.activateHandle = macro.chain(
+    publicAPI.activateHandle,
+    ({ selectedState, representation }) => {
+      model.manipulator.setPlaneOrigin(selectedState.getOrigin());
+    }
+  );
+
+  // --------------------------------------------------------------------------
+
   publicAPI.handleLeftButtonPress = () => {
     if (!model.activeState || !model.activeState.getActive()) {
       return macro.VOID;
     }
     if (model.type === Type.Drag) {
       isDragging = true;
-      model.keepHandleControl = true;
+      model.interactor.requestAnimation(publicAPI);
       return macro.EVENT_ABORT;
     }
     return macro.VOID;
@@ -59,8 +68,10 @@ function vtkHandleWidget(publicAPI, model) {
   };
 
   publicAPI.handleLeftButtonRelease = () => {
+    if (isDragging) {
+      model.interactor.cancelAnimation(publicAPI);
+    }
     isDragging = false;
-    model.keepHandleControl = false;
     model.widgetState.deactivate();
   };
 
@@ -79,8 +90,7 @@ function vtkHandleWidget(publicAPI, model) {
         model.activeState.setOrigin(...worldCoords);
       }
 
-      model.renderer.resetCameraClippingRange();
-      model.interactor.render();
+      // model.renderer.resetCameraClippingRange();
 
       return macro.EVENT_ABORT;
     }
@@ -98,11 +108,30 @@ function vtkHandleWidget(publicAPI, model) {
 
     if (renderer) {
       renderer.getActiveCamera().onModified((camera) => {
-        model.manipulator.setPlaneOrigin(camera.getFocalPoint());
         model.manipulator.setPlaneNormal(camera.getDirectionOfProjection());
       });
     }
   });
+
+  // --------------------------------------------------------------------------
+
+  const parentSetType = publicAPI.setType;
+  publicAPI.setType = (type) => {
+    if (parentSetType(type)) {
+      if (model.type === Type.Drag) {
+        model.interactor.cancelAnimation(publicAPI);
+      } else {
+        model.interactor.requestAnimation(publicAPI);
+      }
+    }
+    return false;
+  };
+
+  // --------------------------------------------------------------------------
+
+  if (model.type === Type.MouseMove) {
+    model.interactor.requestAnimation(publicAPI);
+  }
 }
 
 // ----------------------------------------------------------------------------
@@ -119,7 +148,10 @@ export function extend(publicAPI, model, initialValues = {}) {
 
   vtkAbstractWidget.extend(publicAPI, model, initialValues);
 
-  macro.setGet(publicAPI, model, ['manipulator', 'type']);
+  macro.setGet(publicAPI, model, [
+    'manipulator',
+    { name: 'type', type: 'enum', enum: Type },
+  ]);
 
   vtkHandleWidget(publicAPI, model);
 }
