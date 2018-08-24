@@ -80,7 +80,7 @@ function vtkCubeHandleRepresentation(publicAPI, model) {
       const isActive = state.getActive();
       const scaleFactor = isActive ? model.activeScaleFactor : 1;
 
-      const coord = state.getPosition();
+      const coord = state.getOrigin();
       typedArray.points[i * 3 + 0] = coord[0];
       typedArray.points[i * 3 + 1] = coord[1];
       typedArray.points[i * 3 + 2] = coord[2];

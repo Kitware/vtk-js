@@ -1,25 +1,14 @@
 import macro from 'vtk.js/Sources/macro';
 
-// ----------------------------------------------------------------------------
-
-function vtkColorMixin(publicAPI, model) {
-  model.classHierarchy.push('vtkColorMixin');
-}
-
-// ----------------------------------------------------------------------------
-
 const DEFAULT_VALUES = {
-  color: 0.5,
+  scale3: [1, 1, 1],
 };
 
 // ----------------------------------------------------------------------------
 
 export function extend(publicAPI, model, initialValues = {}) {
   Object.assign(model, DEFAULT_VALUES, initialValues);
-
-  macro.setGet(publicAPI, model, ['color']);
-
-  vtkColorMixin(publicAPI, model);
+  macro.setGetArray(publicAPI, model, ['scale3'], 3);
 }
 
 // ----------------------------------------------------------------------------

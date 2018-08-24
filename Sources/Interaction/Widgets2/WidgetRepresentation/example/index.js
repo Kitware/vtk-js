@@ -24,42 +24,40 @@ const renderWindow = fullScreenRenderer.getRenderWindow();
 // State
 const compositeState = vtkStateBuilder
   .createBuilder()
-  .addState({
+  .addStateFromMixin({
     labels: ['all', 'a', 'ab', 'ac'],
-    type: 'sphere',
+    mixins: ['origin', 'color', 'scale1'],
     name: 'a',
     initialValues: {
-      radius: 0.5,
-      position: [-1, 0, 0],
+      scale1: 0.5,
+      origin: [-1, 0, 0],
     },
   })
-  .addState({
+  .addStateFromMixin({
     labels: ['all', 'b', 'ab', 'bc'],
-    type: 'sphere',
+    mixins: ['origin', 'color', 'scale1'],
     name: 'b',
     initialValues: {
-      radius: 0.5,
-      position: [0, 0, 0],
+      scale1: 0.5,
+      origin: [0, 0, 0],
     },
   })
-  .addState({
+  .addStateFromMixin({
     labels: ['all', 'c', 'bc', 'ac'],
-    type: 'sphere',
+    mixins: ['origin', 'color', 'scale1'],
     name: 'c',
     initialValues: {
-      radius: 0.5,
-      position: [1, 0, 0],
+      scale1: 0.5,
+      origin: [1, 0, 0],
     },
   })
-  .addState({
+  .addStateFromMixin({
     labels: ['all', 'd'],
-    type: 'cube',
+    mixins: ['origin', 'color', 'scale3'],
     name: 'd',
     initialValues: {
-      xLength: 0.5,
-      yLength: 1,
-      zLength: 2,
-      position: [0, 0, 2],
+      scale3: [0.5, 1, 2],
+      origin: [0, 0, 2],
     },
   })
   .build();

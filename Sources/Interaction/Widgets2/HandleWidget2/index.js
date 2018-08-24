@@ -23,13 +23,13 @@ function vtkHandleWidget(publicAPI, model) {
   // Default state
   model.widgetState = vtkStateBuilder
     .createBuilder()
-    .addState({
+    .addStateFromMixin({
       labels: ['handle'],
-      type: 'sphere',
+      mixins: ['origin', 'color', 'scale1'],
       name: 'handle',
       initialValues: {
-        radius: 0.5,
-        position: [0, 0, 0],
+        scale1: 0.5,
+        origin: [0, 0, 0],
       },
     })
     .build();
@@ -76,7 +76,7 @@ function vtkHandleWidget(publicAPI, model) {
       );
 
       if (worldCoords.length) {
-        model.activeState.setPosition(...worldCoords);
+        model.activeState.setOrigin(...worldCoords);
       }
 
       model.renderer.resetCameraClippingRange();

@@ -31,8 +31,8 @@ for (let i = 0; i < 50; i++) {
   widgetManager.registerWidget(widget);
 
   const localState = widget.getWidgetState().getHandle();
-  localState.setPosition(Math.random(), Math.random(), Math.random());
-  localState.setRadius(0.5 + Math.random());
+  localState.setOrigin(Math.random(), Math.random(), Math.random());
+  localState.setScale1(0.5 + 0.25 * Math.random());
   localState.setColor(Math.random());
 }
 
