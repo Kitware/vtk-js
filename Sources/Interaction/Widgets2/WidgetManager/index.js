@@ -68,6 +68,7 @@ function vtkWidgetManager(publicAPI, model) {
     model.selector.setArea(0, 0, w, h);
     model.selector.releasePixBuffers();
     model.pickingAvailable = model.selector.captureBuffers();
+    model.previousSelectedData = null;
     console.timeEnd('capture');
     publicAPI.modified();
   };
@@ -99,10 +100,16 @@ function vtkWidgetManager(publicAPI, model) {
           }
           publicAPI.updateSelectionFromXY(position.x, position.y);
           const {
+            requestCount,
             selectedState,
             representation,
             widget,
           } = publicAPI.getSelectedData();
+
+          if (requestCount) {
+            // Call activate only once
+            return;
+          }
 
           for (let i = 0; i < model.widgets.length; i++) {
             const w = model.widgets[i];
@@ -151,7 +158,7 @@ function vtkWidgetManager(publicAPI, model) {
 
   publicAPI.updateSelectionFromXY = (x, y) => {
     if (model.pickingAvailable) {
-      model.selections = model.selector.generateSelection(x, y, x + 1, y + 1);
+      model.selections = model.selector.generateSelection(x, y, x, y);
     }
   };
 
@@ -169,9 +176,19 @@ function vtkWidgetManager(publicAPI, model) {
 
   publicAPI.getSelectedData = () => {
     if (!model.selections || !model.selections.length) {
+      model.previousSelectedData = null;
       return {};
     }
     const { propID, compositeID } = model.selections[0].getProperties();
+    if (
+      model.previousSelectedData &&
+      model.previousSelectedData.propID === propID &&
+      model.previousSelectedData.compositeID === compositeID
+    ) {
+      model.previousSelectedData.requestCount++;
+      return model.previousSelectedData;
+    }
+
     const actor = model.renderer.getActors()[propID];
     const widget = model.widgets.find((w) => w.hasActor(actor));
     if (widget) {
@@ -179,7 +196,8 @@ function vtkWidgetManager(publicAPI, model) {
       const selectedState = representation.getRepresentationStates()[
         compositeID
       ];
-      return {
+      model.previousSelectedData = {
+        requestCount: 0,
         propID,
         compositeID,
         actor,
@@ -187,7 +205,9 @@ function vtkWidgetManager(publicAPI, model) {
         representation,
         selectedState,
       };
+      return model.previousSelectedData;
     }
+    model.previousSelectedData = null;
     return {};
   };
 }
@@ -203,6 +223,7 @@ const DEFAULT_VALUES = {
   viewType: 0,
   pickingAvailable: false,
   selections: null,
+  previousSelectedData: null,
 };
 
 // ----------------------------------------------------------------------------

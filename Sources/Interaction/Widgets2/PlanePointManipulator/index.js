@@ -29,8 +29,8 @@ function vtkPlanePointManipulator(publicAPI, model) {
     intersectDisplayWithPlane(
       callData.position.x,
       callData.position.y,
-      model.planeOrigin,
-      model.planeNormal,
+      model.origin,
+      model.normal,
       callData.pokedRenderer,
       glRenderWindow
     );
@@ -41,8 +41,8 @@ function vtkPlanePointManipulator(publicAPI, model) {
 // ----------------------------------------------------------------------------
 
 const DEFAULT_VALUES = {
-  planeNormal: [0, 0, 1],
-  planeOrigin: [0, 0, 0],
+  normal: [0, 0, 1],
+  origin: [0, 0, 0],
 };
 
 // ----------------------------------------------------------------------------
@@ -50,7 +50,7 @@ const DEFAULT_VALUES = {
 export function extend(publicAPI, model, initialValues = {}) {
   Object.assign(model, DEFAULT_VALUES, initialValues);
   macro.obj(publicAPI, model);
-  macro.setGetArray(publicAPI, model, ['planeNormal', 'planeOrigin'], 3);
+  macro.setGetArray(publicAPI, model, ['normal', 'origin'], 3);
 
   vtkPlanePointManipulator(publicAPI, model);
 }

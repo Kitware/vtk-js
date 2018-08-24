@@ -25,7 +25,7 @@ function vtkHandleWidget(publicAPI, model) {
     .createBuilder()
     .addStateFromMixin({
       labels: ['handle'],
-      mixins: ['origin', 'color', 'scale1'],
+      mixins: ['origin', 'color', 'scale1', 'manipulator'],
       name: 'handle',
       initialValues: {
         scale1: 0.5,
@@ -36,13 +36,14 @@ function vtkHandleWidget(publicAPI, model) {
 
   // Default manipulator
   model.manipulator = vtkPlanePointManipulator.newInstance();
+  model.widgetState.getHandle().setManipulator(model.manipulator);
 
   // --------------------------------------------------------------------------
 
   publicAPI.activateHandle = macro.chain(
     publicAPI.activateHandle,
     ({ selectedState, representation }) => {
-      model.manipulator.setPlaneOrigin(selectedState.getOrigin());
+      selectedState.updateManipulator();
     }
   );
 
@@ -108,7 +109,7 @@ function vtkHandleWidget(publicAPI, model) {
 
     if (renderer) {
       renderer.getActiveCamera().onModified((camera) => {
-        model.manipulator.setPlaneNormal(camera.getDirectionOfProjection());
+        model.manipulator.setNormal(camera.getDirectionOfProjection());
       });
     }
   });

@@ -4,6 +4,7 @@ import vtkWidgetState from 'vtk.js/Sources/Interaction/Widgets2/WidgetState';
 
 import color from 'vtk.js/Sources/Interaction/Widgets2/StateBuilder/colorMixin';
 import direction from 'vtk.js/Sources/Interaction/Widgets2/StateBuilder/directionMixin';
+import manipulator from 'vtk.js/Sources/Interaction/Widgets2/StateBuilder/manipulatorMixin';
 import origin from 'vtk.js/Sources/Interaction/Widgets2/StateBuilder/originMixin';
 import scale1 from 'vtk.js/Sources/Interaction/Widgets2/StateBuilder/scale1Mixin';
 import scale3 from 'vtk.js/Sources/Interaction/Widgets2/StateBuilder/scale3Mixin';
@@ -17,6 +18,7 @@ const { vtkErrorMacro } = macro;
 const MIXINS = {
   color,
   direction,
+  manipulator,
   origin,
   scale1,
   scale3,

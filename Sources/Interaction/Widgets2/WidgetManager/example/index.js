@@ -33,12 +33,12 @@ for (let i = 0; i < NB_HANDLES; i++) {
 
   const localState = widget.getWidgetState().getHandle();
   localState.setOrigin(
-    Math.random() * Math.cbrt(NB_HANDLES),
-    Math.random() * Math.cbrt(NB_HANDLES),
-    Math.random() * Math.cbrt(NB_HANDLES)
+    Math.random() * Math.sqrt(NB_HANDLES),
+    Math.random() * Math.sqrt(NB_HANDLES),
+    0
   );
-  localState.setScale1(0.5 + 0.25 * Math.random());
-  localState.setColor(Math.random());
+  localState.setScale1(0.75 + 0.25 * Math.random());
+  localState.setColor(Math.random() - 0.2); // Noone can get the active color 1.
 }
 
 renderer.resetCamera();
