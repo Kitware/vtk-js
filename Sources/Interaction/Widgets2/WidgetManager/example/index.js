@@ -25,11 +25,12 @@ widgetManager.setRenderingContext(openGLRenderWindow, renderer);
 const NB_HANDLES = 50;
 for (let i = 0; i < NB_HANDLES; i++) {
   const widget = vtkHandleWidget2.newInstance();
-  widget.getRepresentationsForViewType(0).forEach((rep) => {
+  const viewWidget = widgetManager.registerWidget(widget);
+
+  viewWidget.getRepresentations().forEach((rep) => {
     rep.setGlyphResolution(12);
     rep.setActiveScaleFactor(0.5);
   });
-  widgetManager.registerWidget(widget);
 
   const localState = widget.getWidgetState().getHandle();
   localState.setOrigin(
@@ -43,4 +44,4 @@ for (let i = 0; i < NB_HANDLES; i++) {
 
 renderer.resetCamera();
 renderWindow.render();
-widgetManager.capture();
+widgetManager.enablePicking();

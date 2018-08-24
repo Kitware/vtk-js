@@ -2,12 +2,18 @@ import macro from 'vtk.js/Sources/macro';
 import vtkOpenGLHardwareSelector from 'vtk.js/Sources/Rendering/OpenGL/HardwareSelector';
 import { FieldAssociations } from 'vtk.js/Sources/Common/DataModel/DataSet/Constants';
 import { ViewTypes } from 'vtk.js/Sources/Interaction/Widgets2/WidgetManager/Constants';
+
+const { vtkErrorMacro } = macro;
+let viewIdCount = 1;
+
 // ----------------------------------------------------------------------------
 // vtkWidgetManager methods
 // ----------------------------------------------------------------------------
 
 function vtkWidgetManager(publicAPI, model) {
-  // Set our className
+  if (!model.viewId) {
+    model.viewId = `view-${viewIdCount++}`;
+  }
   model.classHierarchy.push('vtkWidgetManager');
   const propsWeakMap = new WeakMap();
   const subscriptions = [];
@@ -25,48 +31,27 @@ function vtkWidgetManager(publicAPI, model) {
   // API internal
   // --------------------------------------------------------------------------
 
-  function removeAllRepresentations() {
-    if (model.renderer && model.actors) {
-      for (let i = 0; i < model.actors.length; i++) {
-        model.renderer.removeActor(model.actors[i]);
-      }
-      model.actors = [];
-    }
-  }
-
   function getActors(widget) {
     const actorList = [];
-    const representations = widget.getRepresentationsForViewType(
-      model.viewType
-    );
+    const representations = widget.getRepresentations();
     for (let i = 0; i < representations.length; i++) {
       const representation = representations[i];
+      const origin = { widget, representation };
       const actors = representation.getActors();
       for (let j = 0; j < actors.length; j++) {
         const actor = actors[j];
         actorList.push(actor);
-        // FIXME does not seem to work
-        propsWeakMap.set(actor, widget);
+        propsWeakMap.set(actor, origin);
       }
     }
     return actorList;
-  }
-
-  function addAllRepresentations() {
-    if (model.renderer && model.actors && model.actors === 0) {
-      for (let i = 0; i < model.widgets.length; i++) {
-        model.actors = model.actors.concat(getActors(model.widgets[i]));
-      }
-      // Register all actors to renderer
-      model.actors.forEach(model.renderer.addActor);
-    }
   }
 
   // --------------------------------------------------------------------------
   // API public
   // --------------------------------------------------------------------------
 
-  publicAPI.capture = () => {
+  publicAPI.enablePicking = () => {
     console.time('capture');
     const [w, h] = model.openGLRenderWindow.getSize();
     model.selector.setArea(0, 0, w, h);
@@ -77,86 +62,94 @@ function vtkWidgetManager(publicAPI, model) {
     publicAPI.modified();
   };
 
+  publicAPI.disablePicking = () => {
+    model.pickingAvailable = false;
+  };
+
   publicAPI.setRenderingContext = (openGLRenderWindow, renderer) => {
     while (subscriptions.length) {
       subscriptions.pop().unsubscribe();
     }
 
-    removeAllRepresentations();
     model.renderer = renderer;
     model.openGLRenderWindow = openGLRenderWindow;
     model.selector.attach(openGLRenderWindow, renderer);
+    const interactor = renderer.getRenderWindow().getInteractor();
 
-    if (renderer) {
-      const interactor = renderer.getRenderWindow().getInteractor();
-      subscriptions.push(interactor.onEndAnimation(publicAPI.capture));
-      subscriptions.push(
-        interactor.onStartAnimation(() => {
-          model.pickingAvailable = false;
-        })
-      );
-      publicAPI.capture();
+    subscriptions.push(interactor.onStartAnimation(publicAPI.disablePicking));
+    subscriptions.push(interactor.onEndAnimation(publicAPI.enablePicking));
 
-      subscriptions.push(
-        interactor.onMouseMove(({ position }) => {
-          if (!model.pickingAvailable) {
-            return;
+    subscriptions.push(
+      interactor.onMouseMove(({ position }) => {
+        if (!model.pickingAvailable) {
+          return;
+        }
+        publicAPI.updateSelectionFromXY(position.x, position.y);
+        const {
+          requestCount,
+          selectedState,
+          representation,
+          widget,
+        } = publicAPI.getSelectedData();
+
+        if (requestCount) {
+          // Call activate only once
+          return;
+        }
+
+        for (let i = 0; i < model.widgets.length; i++) {
+          const w = model.widgets[i];
+          if (w === widget) {
+            w.activateHandle({ selectedState, representation });
+            model.activeWidget = w;
+          } else {
+            w.deactivateAllHandles();
           }
-          publicAPI.updateSelectionFromXY(position.x, position.y);
-          const {
-            requestCount,
-            selectedState,
-            representation,
-            widget,
-          } = publicAPI.getSelectedData();
+        }
+        interactor.render();
+      })
+    );
 
-          if (requestCount) {
-            // Call activate only once
-            return;
-          }
-
-          for (let i = 0; i < model.widgets.length; i++) {
-            const w = model.widgets[i];
-            if (w === widget) {
-              w.activateHandle({ selectedState, representation });
-              model.activeWidget = w;
-            } else {
-              w.deactivateAllHandles();
-            }
-          }
-          interactor.render();
-        })
-      );
-    }
-    addAllRepresentations();
     publicAPI.modified();
+    publicAPI.enablePicking();
   };
 
-  publicAPI.registerWidget = (w, viewType) => {
-    if (w && model.widgets.indexOf(w) === -1) {
-      model.widgets.push(w);
-      if (model.renderer) {
-        // Register all new actors to renderer
-        getActors(w).forEach((a) => {
-          model.actors.push(a);
-          model.renderer.addActor(a);
-        });
-        w.setRenderer(model.renderer);
-        w.setInteractor(model.renderer.getRenderWindow().getInteractor());
-      }
-      if (model.openGLRenderWindow) {
-        w.setOpenGLRenderWindow(model.openGLRenderWindow);
-      }
-      publicAPI.modified();
+  publicAPI.registerWidget = (widget, viewType, initialValues) => {
+    if (!model.renderer) {
+      vtkErrorMacro(
+        'Widget manager MUST BE link to a view before registering widgets'
+      );
+      return null;
     }
+    const { viewId, openGLRenderWindow, renderer } = model;
+    const w = widget.getWidgetForView({
+      viewId,
+      openGLRenderWindow,
+      renderer,
+      viewType: viewType || ViewTypes.DEFAULT,
+      initialValues,
+    });
+
+    model.widgets.push(w);
+
+    // Register all new actors to renderer
+    getActors(w).forEach((a) => {
+      model.renderer.addActor(a);
+    });
+
+    publicAPI.modified();
+    return w;
   };
 
   publicAPI.unregisterWidget = (w) => {
+    // FIXME not right widget (factory instead of viewWidget)
     const index = model.widgets.indexOf(w);
     if (index !== -1) {
       model.widgets.splice(index, 1);
-      removeAllRepresentations();
-      addAllRepresentations();
+      const actorsToRemove = getActors(w);
+      while (actorsToRemove.length) {
+        model.renderer.removeActor(actorsToRemove.pop());
+      }
     }
   };
 
@@ -193,14 +186,7 @@ function vtkWidgetManager(publicAPI, model) {
       return model.previousSelectedData;
     }
 
-    console.time('mapLookup');
-    const widget = propsWeakMap.get(prop);
-    console.timeEnd('mapLookup');
-    console.time('findLookup');
-    const slowWidget = model.widgets.find((w) => w.hasActor(prop));
-    console.timeEnd('findLookup');
-    console.log('same widget', slowWidget === widget);
-    const representation = slowWidget.getRepresentationFromActor(prop);
+    const { widget, representation } = propsWeakMap.get(prop);
     if (widget && representation) {
       const selectedState = representation.getRepresentationStates()[
         compositeID
@@ -226,10 +212,10 @@ function vtkWidgetManager(publicAPI, model) {
 // ----------------------------------------------------------------------------
 
 const DEFAULT_VALUES = {
+  viewId: null,
   widgets: [],
   renderer: [],
-  actors: [],
-  viewType: 0,
+  viewType: ViewTypes.DEFAULT,
   pickingAvailable: false,
   selections: null,
   previousSelectedData: null,
@@ -244,7 +230,7 @@ export function extend(publicAPI, model, initialValues = {}) {
   macro.setGet(publicAPI, model, [
     { type: 'enum', name: 'viewType', enum: ViewTypes },
   ]);
-  macro.get(publicAPI, model, ['selections', 'widgets']);
+  macro.get(publicAPI, model, ['selections', 'widgets', 'viewId']);
 
   // Object specific methods
   vtkWidgetManager(publicAPI, model);

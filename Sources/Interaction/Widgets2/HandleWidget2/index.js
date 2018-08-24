@@ -1,28 +1,121 @@
 import macro from 'vtk.js/Sources/macro';
-import vtkAbstractWidget from 'vtk.js/Sources/Interaction/Widgets2/AbstractWidget';
+import vtkAbstractWidgetFactory from 'vtk.js/Sources/Interaction/Widgets2/AbstractWidgetFactory';
 import vtkSphereHandleRepresentation from 'vtk.js/Sources/Interaction/Widgets2/SphereHandleRepresentation';
 import vtkPlaneHandleRepresentation from 'vtk.js/Sources/Interaction/Widgets2/PlaneHandleRepresentation';
 import vtkPlanePointManipulator from 'vtk.js/Sources/Interaction/Widgets2/PlanePointManipulator';
 import vtkStateBuilder from 'vtk.js/Sources/Interaction/Widgets2/StateBuilder';
 import Constants from 'vtk.js/Sources/Interaction/Widgets2/HandleWidget2/Constants';
+import { ViewTypes } from 'vtk.js/Sources/Interaction/Widgets2/WidgetManager/Constants';
 
 const { Type } = Constants;
 
+// ----------------------------------------------------------------------------
+// Widget linked to a view
+// ----------------------------------------------------------------------------
+
+function widgetBehavior(publicAPI, model) {
+  let isDragging = null;
+
+  publicAPI.handleLeftButtonPress = () => {
+    if (!model.activeState || !model.activeState.getActive()) {
+      return macro.VOID;
+    }
+    if (model.type === Type.Drag) {
+      isDragging = true;
+      model.interactor.requestAnimation(publicAPI);
+      return macro.EVENT_ABORT;
+    }
+    return macro.VOID;
+  };
+
+  publicAPI.handleMouseMove = (callData) => {
+    if (isDragging || model.type === Type.MouseMove) {
+      return publicAPI.handleEvent(callData);
+    }
+    return macro.VOID;
+  };
+
+  publicAPI.handleLeftButtonRelease = () => {
+    if (isDragging) {
+      model.interactor.cancelAnimation(publicAPI);
+    }
+    isDragging = false;
+    model.widgetState.deactivate();
+  };
+
+  publicAPI.handleEvent = (callData) => {
+    if (
+      model.manipulator &&
+      model.activeState &&
+      model.activeState.getActive()
+    ) {
+      const worldCoords = model.manipulator.handleEvent(
+        callData,
+        model.openGLRenderWindow
+      );
+
+      if (worldCoords.length) {
+        model.activeState.setOrigin(...worldCoords);
+        model.widgetState.getPlane().setOrigin(...worldCoords);
+      }
+      return macro.EVENT_ABORT;
+    }
+    return macro.VOID;
+  };
+
+  macro.setGet(publicAPI, model, [{ name: 'type', type: 'enum', enum: Type }]);
+  const parentSetType = publicAPI.setType;
+  publicAPI.setType = (type) => {
+    if (parentSetType(type)) {
+      if (model.type === Type.Drag) {
+        model.interactor.cancelAnimation(publicAPI);
+      } else {
+        model.interactor.requestAnimation(publicAPI);
+      }
+    }
+    return false;
+  };
+
+  // --------------------------------------------------------------------------
+  // initialization
+  // --------------------------------------------------------------------------
+
+  model.renderer.getActiveCamera().onModified((camera) => {
+    model.manipulator.setNormal(camera.getDirectionOfProjection());
+    model.widgetState
+      .getPlane()
+      .setDirection(camera.getDirectionOfProjection());
+  });
+
+  if (model.type === Type.MouseMove) {
+    model.interactor.requestAnimation(publicAPI);
+  }
+}
+
+// ----------------------------------------------------------------------------
+// Factory
 // ----------------------------------------------------------------------------
 
 function vtkHandleWidget(publicAPI, model) {
   model.classHierarchy.push('vtkHandleWidget');
 
-  let subscription = null;
-  let isDragging = null;
+  // --- Widget Requirement ---------------------------------------------------
+  model.behavior = widgetBehavior;
 
-  model.representationBuilder = {
-    DEFAULT: [
-      { builder: vtkPlaneHandleRepresentation, labels: ['plane'] },
-      { builder: vtkSphereHandleRepresentation, labels: ['handle'] },
-    ],
+  publicAPI.getRepresentationsForViewType = (viewType) => {
+    switch (viewType) {
+      case ViewTypes.DEFAULT:
+      case ViewTypes.GEOMETRY:
+      case ViewTypes.SLICE:
+      case ViewTypes.VOLUME:
+      default:
+        return [
+          { builder: vtkPlaneHandleRepresentation, labels: ['plane'] },
+          { builder: vtkSphereHandleRepresentation, labels: ['handle'] },
+        ];
+    }
   };
-  model.viewTypeAlias = ['DEFAULT', 'DEFAULT', 'DEFAULT', 'DEFAULT'];
+  // --- Widget Requirement ---------------------------------------------------
 
   // Default state
   model.widgetState = vtkStateBuilder
@@ -60,97 +153,6 @@ function vtkHandleWidget(publicAPI, model) {
     plane.setOrigin(handle.getOrigin());
     plane.setVisible(handle.getActive());
   });
-
-  // --------------------------------------------------------------------------
-
-  publicAPI.handleLeftButtonPress = () => {
-    if (!model.activeState || !model.activeState.getActive()) {
-      return macro.VOID;
-    }
-    if (model.type === Type.Drag) {
-      isDragging = true;
-      model.interactor.requestAnimation(publicAPI);
-      return macro.EVENT_ABORT;
-    }
-    return macro.VOID;
-  };
-
-  publicAPI.handleMouseMove = (callData) => {
-    if (isDragging || model.type === Type.MouseMove) {
-      return publicAPI.handleEvent(callData);
-    }
-    return macro.VOID;
-  };
-
-  publicAPI.handleLeftButtonRelease = () => {
-    if (isDragging) {
-      model.interactor.cancelAnimation(publicAPI);
-    }
-    isDragging = false;
-    model.widgetState.deactivate();
-  };
-
-  publicAPI.handleEvent = (callData) => {
-    if (
-      model.manipulator &&
-      model.activeState &&
-      model.activeState.getActive()
-    ) {
-      const worldCoords = model.manipulator.handleEvent(
-        callData,
-        publicAPI.getOpenGLRenderWindow()
-      );
-
-      if (worldCoords.length) {
-        model.activeState.setOrigin(...worldCoords);
-        model.widgetState.getPlane().setOrigin(...worldCoords);
-      }
-
-      // model.renderer.resetCameraClippingRange();
-
-      return macro.EVENT_ABORT;
-    }
-
-    return macro.VOID;
-  };
-
-  // --------------------------------------------------------------------------
-
-  publicAPI.setRenderer = macro.chain(publicAPI.setRenderer, (renderer) => {
-    if (subscription) {
-      subscription.unsubscribe();
-      subscription = null;
-    }
-
-    if (renderer) {
-      renderer.getActiveCamera().onModified((camera) => {
-        model.manipulator.setNormal(camera.getDirectionOfProjection());
-        model.widgetState
-          .getPlane()
-          .setDirection(camera.getDirectionOfProjection());
-      });
-    }
-  });
-
-  // --------------------------------------------------------------------------
-
-  const parentSetType = publicAPI.setType;
-  publicAPI.setType = (type) => {
-    if (parentSetType(type)) {
-      if (model.type === Type.Drag) {
-        model.interactor.cancelAnimation(publicAPI);
-      } else {
-        model.interactor.requestAnimation(publicAPI);
-      }
-    }
-    return false;
-  };
-
-  // --------------------------------------------------------------------------
-
-  if (model.type === Type.MouseMove) {
-    model.interactor.requestAnimation(publicAPI);
-  }
 }
 
 // ----------------------------------------------------------------------------
@@ -165,7 +167,7 @@ const DEFAULT_VALUES = {
 export function extend(publicAPI, model, initialValues = {}) {
   Object.assign(model, DEFAULT_VALUES, initialValues);
 
-  vtkAbstractWidget.extend(publicAPI, model, initialValues);
+  vtkAbstractWidgetFactory.extend(publicAPI, model, initialValues);
 
   macro.setGet(publicAPI, model, [
     'manipulator',

@@ -8,18 +8,7 @@ const { WIDGET_PRIORITY } = Constants;
 
 function vtkAbstractWidget(publicAPI, model) {
   model.classHierarchy.push('vtkAbstractWidget');
-
-  if (!model.representations) {
-    model.representations = {};
-  }
-  const actorsWeakMap = new WeakMap();
-
-  // Expect sub-class to fill mapping
-  // model.representationBuilder = {
-  //    DEFAULT: [{ builder: vtkSphereHandleRepresentation, labels: []}],
-  //    SLICE: [{ builder: vtkSphereHandleRepresentation, labels: []}],
-  // }
-  // model.viewTypeAlias = [DEFAULT, DEFAULT, SLICE, DEFAULT];
+  model.actorToRepresentationMap = new WeakMap();
 
   // --------------------------------------------------------------------------
 
@@ -40,29 +29,12 @@ function vtkAbstractWidget(publicAPI, model) {
 
   // --------------------------------------------------------------------------
 
-  publicAPI.getRepresentationsForViewType = (viewType) => {
-    const key = model.viewTypeAlias[viewType];
-    if (!model.representations[key]) {
-      model.representations[key] = model.representationBuilder[key].map(
-        ({ builder, labels }) => builder.newInstance({ labels })
-      );
-      model.representations[key].forEach((rep, idx) => {
-        rep.setInputData(model.widgetState);
-        rep.getActors().forEach((actor) => {
-          actorsWeakMap.set(actor, rep);
-        });
-      });
-    }
-    return model.representations[key];
-  };
+  publicAPI.hasActor = (actor) => model.actorToRepresentationMap.has(actor);
 
   // --------------------------------------------------------------------------
 
-  publicAPI.hasActor = (actor) => actorsWeakMap.has(actor);
-
-  // --------------------------------------------------------------------------
-
-  publicAPI.getRepresentationFromActor = (actor) => actorsWeakMap.get(actor);
+  publicAPI.getRepresentationFromActor = (actor) =>
+    model.actorToRepresentationMap.get(actor);
 
   // --------------------------------------------------------------------------
   // Initialization calls
@@ -74,10 +46,10 @@ function vtkAbstractWidget(publicAPI, model) {
 // ----------------------------------------------------------------------------
 
 const DEFAULT_VALUES = {
-  widgetState: null,
-  openGLRenderWindow: null,
-  renderer: null,
-  representations: null,
+  // widgetState: null,
+  // openGLRenderWindow: null,
+  // renderer: null,
+  // representations: null,
 };
 
 // ----------------------------------------------------------------------------
@@ -87,11 +59,7 @@ export function extend(publicAPI, model, initialValues = {}) {
 
   vtkInteractorObserver.extend(publicAPI, model, initialValues);
 
-  macro.setGet(publicAPI, model, [
-    'widgetState',
-    'openGLRenderWindow',
-    'renderer',
-  ]);
+  macro.get(publicAPI, model, ['representations', 'widgetState']);
   macro.event(publicAPI, model, 'ActivateHandle');
 
   vtkAbstractWidget(publicAPI, model);
