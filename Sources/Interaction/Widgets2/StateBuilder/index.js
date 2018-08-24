@@ -8,6 +8,7 @@ import manipulator from 'vtk.js/Sources/Interaction/Widgets2/StateBuilder/manipu
 import origin from 'vtk.js/Sources/Interaction/Widgets2/StateBuilder/originMixin';
 import scale1 from 'vtk.js/Sources/Interaction/Widgets2/StateBuilder/scale1Mixin';
 import scale3 from 'vtk.js/Sources/Interaction/Widgets2/StateBuilder/scale3Mixin';
+import visible from 'vtk.js/Sources/Interaction/Widgets2/StateBuilder/visibleMixin';
 
 const { vtkErrorMacro } = macro;
 
@@ -22,6 +23,7 @@ const MIXINS = {
   origin,
   scale1,
   scale3,
+  visible,
 };
 
 // ----------------------------------------------------------------------------

@@ -1,6 +1,7 @@
 import macro from 'vtk.js/Sources/macro';
 import vtkAbstractWidget from 'vtk.js/Sources/Interaction/Widgets2/AbstractWidget';
 import vtkSphereHandleRepresentation from 'vtk.js/Sources/Interaction/Widgets2/SphereHandleRepresentation';
+import vtkPlaneHandleRepresentation from 'vtk.js/Sources/Interaction/Widgets2/PlaneHandleRepresentation';
 import vtkPlanePointManipulator from 'vtk.js/Sources/Interaction/Widgets2/PlanePointManipulator';
 import vtkStateBuilder from 'vtk.js/Sources/Interaction/Widgets2/StateBuilder';
 import Constants from 'vtk.js/Sources/Interaction/Widgets2/HandleWidget2/Constants';
@@ -16,7 +17,10 @@ function vtkHandleWidget(publicAPI, model) {
   let isDragging = null;
 
   model.representationBuilder = {
-    DEFAULT: [{ builder: vtkSphereHandleRepresentation, labels: ['handle'] }],
+    DEFAULT: [
+      { builder: vtkPlaneHandleRepresentation, labels: ['plane'] },
+      { builder: vtkSphereHandleRepresentation, labels: ['handle'] },
+    ],
   };
   model.viewTypeAlias = ['DEFAULT', 'DEFAULT', 'DEFAULT', 'DEFAULT'];
 
@@ -32,20 +36,30 @@ function vtkHandleWidget(publicAPI, model) {
         origin: [0, 0, 0],
       },
     })
+    .addStateFromMixin({
+      labels: ['plane'],
+      mixins: ['origin', 'color', 'scale1', 'direction', 'visible'],
+      name: 'plane',
+      initialValues: {
+        scale1: 2,
+        origin: [0, 0, 0],
+        direction: [0, 0, 1],
+        visible: false,
+      },
+    })
     .build();
+  const handle = model.widgetState.getHandle();
+  const plane = model.widgetState.getPlane();
 
   // Default manipulator
   model.manipulator = vtkPlanePointManipulator.newInstance();
-  model.widgetState.getHandle().setManipulator(model.manipulator);
+  handle.setManipulator(model.manipulator);
 
-  // --------------------------------------------------------------------------
-
-  publicAPI.activateHandle = macro.chain(
-    publicAPI.activateHandle,
-    ({ selectedState, representation }) => {
-      selectedState.updateManipulator();
-    }
-  );
+  // FIXME bad cleanup missing...
+  handle.onModified(() => {
+    plane.setOrigin(handle.getOrigin());
+    plane.setVisible(handle.getActive());
+  });
 
   // --------------------------------------------------------------------------
 
@@ -89,6 +103,7 @@ function vtkHandleWidget(publicAPI, model) {
 
       if (worldCoords.length) {
         model.activeState.setOrigin(...worldCoords);
+        model.widgetState.getPlane().setOrigin(...worldCoords);
       }
 
       // model.renderer.resetCameraClippingRange();
@@ -110,6 +125,9 @@ function vtkHandleWidget(publicAPI, model) {
     if (renderer) {
       renderer.getActiveCamera().onModified((camera) => {
         model.manipulator.setNormal(camera.getDirectionOfProjection());
+        model.widgetState
+          .getPlane()
+          .setDirection(camera.getDirectionOfProjection());
       });
     }
   });

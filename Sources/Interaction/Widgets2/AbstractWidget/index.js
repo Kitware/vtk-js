@@ -26,6 +26,10 @@ function vtkAbstractWidget(publicAPI, model) {
   publicAPI.activateHandle = ({ selectedState, representation }) => {
     model.widgetState.activateOnly(selectedState);
     model.activeState = selectedState;
+    if (selectedState && selectedState.updateManipulator) {
+      selectedState.updateManipulator();
+    }
+    publicAPI.invokeActivateHandle({ selectedState, representation });
   };
 
   // --------------------------------------------------------------------------
@@ -88,6 +92,7 @@ export function extend(publicAPI, model, initialValues = {}) {
     'openGLRenderWindow',
     'renderer',
   ]);
+  macro.event(publicAPI, model, 'ActivateHandle');
 
   vtkAbstractWidget(publicAPI, model);
 }
