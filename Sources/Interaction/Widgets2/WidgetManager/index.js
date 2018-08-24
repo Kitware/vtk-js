@@ -9,7 +9,7 @@ import { ViewTypes } from 'vtk.js/Sources/Interaction/Widgets2/WidgetManager/Con
 function vtkWidgetManager(publicAPI, model) {
   // Set our className
   model.classHierarchy.push('vtkWidgetManager');
-
+  const propsWeakMap = new WeakMap();
   const subscriptions = [];
 
   // --------------------------------------------------------------------------
@@ -40,9 +40,13 @@ function vtkWidgetManager(publicAPI, model) {
       model.viewType
     );
     for (let i = 0; i < representations.length; i++) {
-      const actors = representations[i].getActors();
+      const representation = representations[i];
+      const actors = representation.getActors();
       for (let j = 0; j < actors.length; j++) {
-        actorList.push(actors[j]);
+        const actor = actors[j];
+        actorList.push(actor);
+        // FIXME does not seem to work
+        propsWeakMap.set(actor, widget);
       }
     }
     return actorList;
@@ -179,20 +183,25 @@ function vtkWidgetManager(publicAPI, model) {
       model.previousSelectedData = null;
       return {};
     }
-    const { propID, compositeID } = model.selections[0].getProperties();
+    const { propID, compositeID, prop } = model.selections[0].getProperties();
     if (
       model.previousSelectedData &&
-      model.previousSelectedData.propID === propID &&
+      model.previousSelectedData.prop === prop &&
       model.previousSelectedData.compositeID === compositeID
     ) {
       model.previousSelectedData.requestCount++;
       return model.previousSelectedData;
     }
 
-    const actor = model.renderer.getActors()[propID];
-    const widget = model.widgets.find((w) => w.hasActor(actor));
-    if (widget) {
-      const representation = widget.getRepresentationFromActor(actor);
+    console.time('mapLookup');
+    const widget = propsWeakMap.get(prop);
+    console.timeEnd('mapLookup');
+    console.time('findLookup');
+    const slowWidget = model.widgets.find((w) => w.hasActor(prop));
+    console.timeEnd('findLookup');
+    console.log('same widget', slowWidget === widget);
+    const representation = slowWidget.getRepresentationFromActor(prop);
+    if (widget && representation) {
       const selectedState = representation.getRepresentationStates()[
         compositeID
       ];
@@ -200,7 +209,7 @@ function vtkWidgetManager(publicAPI, model) {
         requestCount: 0,
         propID,
         compositeID,
-        actor,
+        prop,
         widget,
         representation,
         selectedState,

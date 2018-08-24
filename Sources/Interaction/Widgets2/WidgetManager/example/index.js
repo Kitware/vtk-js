@@ -26,8 +26,8 @@ const NB_HANDLES = 50;
 for (let i = 0; i < NB_HANDLES; i++) {
   const widget = vtkHandleWidget2.newInstance();
   widget.getRepresentationsForViewType(0).forEach((rep) => {
-    rep.setGlyphResolution(30);
-    rep.setActiveScaleFactor(1);
+    rep.setGlyphResolution(12);
+    rep.setActiveScaleFactor(0.5);
   });
   widgetManager.registerWidget(widget);
 

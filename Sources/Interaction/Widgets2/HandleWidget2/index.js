@@ -32,7 +32,7 @@ function vtkHandleWidget(publicAPI, model) {
       mixins: ['origin', 'color', 'scale1', 'manipulator'],
       name: 'handle',
       initialValues: {
-        scale1: 0.5,
+        scale1: 0.9,
         origin: [0, 0, 0],
       },
     })
