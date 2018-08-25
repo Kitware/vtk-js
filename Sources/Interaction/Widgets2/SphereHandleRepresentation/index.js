@@ -6,6 +6,7 @@ import vtkSphereSource from 'vtk.js/Sources/Filters/Sources/SphereSource';
 import vtkPolyData from 'vtk.js/Sources/Common/DataModel/PolyData';
 import vtkDataArray from 'vtk.js/Sources/Common/Core/DataArray';
 import vtkGlyph3DMapper from 'vtk.js/Sources/Rendering/Core/Glyph3DMapper';
+import vtkPixelSpaceCallbackMapper from 'vtk.js/Sources/Rendering/Core/PixelSpaceCallbackMapper';
 
 import { ScalarMode } from 'vtk.js/Sources/Rendering/Core/Mapper/Constants';
 
@@ -42,6 +43,14 @@ function vtkSphereHandleRepresentation(publicAPI, model) {
   // Generic rendering pipeline
   // --------------------------------------------------------------------------
 
+  model.displayMapper = vtkPixelSpaceCallbackMapper.newInstance();
+  model.displayActor = vtkActor.newInstance();
+  // model.displayActor.getProperty().setOpacity(0); // don't show in 3D
+  model.displayActor.setMapper(model.displayMapper);
+  model.displayMapper.setInputConnection(publicAPI.getOutputPort());
+  model.actors.push(model.displayActor);
+  model.allwaysVisibleActors = [model.displayActor];
+
   model.mapper = vtkGlyph3DMapper.newInstance({
     scaleArray: 'scale',
     colorByArrayName: 'color',
@@ -68,6 +77,30 @@ function vtkSphereHandleRepresentation(publicAPI, model) {
 
   // --------------------------------------------------------------------------
 
+  function callbackProxy(coords) {
+    if (model.displayCallback) {
+      const filteredList = [];
+      const states = publicAPI.getRepresentationStates();
+      for (let i = 0; i < states.length; i++) {
+        if (states[i].getActive()) {
+          filteredList.push(coords[i]);
+        }
+      }
+      if (filteredList.length) {
+        model.displayCallback(filteredList);
+        return;
+      }
+    }
+    model.displayCallback();
+  }
+
+  publicAPI.setDisplayCallback = (callback) => {
+    model.displayCallback = callback;
+    model.displayMapper.setCallback(callback ? callbackProxy : null);
+  };
+
+  // --------------------------------------------------------------------------
+
   publicAPI.requestData = (inData, outData) => {
     const { points, scale, color } = model.internalArrays;
     const list = publicAPI.getRepresentationStates(inData[0]);
@@ -75,7 +108,7 @@ function vtkSphereHandleRepresentation(publicAPI, model) {
 
     if (color.getNumberOfValues() !== totalCount) {
       // Need to resize dataset
-      points.setData(new Float32Array(3 * totalCount));
+      points.setData(new Float32Array(3 * totalCount), 3);
       scale.setData(new Float32Array(totalCount));
       color.setData(new Float32Array(totalCount));
     }

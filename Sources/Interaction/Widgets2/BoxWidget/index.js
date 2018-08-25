@@ -13,8 +13,11 @@ import { ViewTypes } from 'vtk.js/Sources/Interaction/Widgets2/WidgetManager/Con
 function widgetBehavior(publicAPI, model) {
   let isDragging = null;
 
+  publicAPI.setDisplayCallback = (callback) =>
+    model.representations[0].setDisplayCallback(callback);
+
   publicAPI.handleLeftButtonPress = () => {
-    if (!model.activeState || !model.activeState.getActive()) {
+    if (!model.activeState || !model.activeState.getActive() || !model.active) {
       return macro.VOID;
     }
     isDragging = true;
@@ -23,14 +26,14 @@ function widgetBehavior(publicAPI, model) {
   };
 
   publicAPI.handleMouseMove = (callData) => {
-    if (isDragging) {
+    if (isDragging && model.active) {
       return publicAPI.handleEvent(callData);
     }
     return macro.VOID;
   };
 
   publicAPI.handleLeftButtonRelease = () => {
-    if (isDragging) {
+    if (isDragging && model.active) {
       model.interactor.cancelAnimation(publicAPI);
     }
     isDragging = false;
@@ -39,10 +42,12 @@ function widgetBehavior(publicAPI, model) {
 
   publicAPI.handleEvent = (callData) => {
     if (
+      model.active &&
       model.manipulator &&
       model.activeState &&
       model.activeState.getActive()
     ) {
+      model.manipulator.setNormal(model.camera.getDirectionOfProjection());
       const worldCoords = model.manipulator.handleEvent(
         callData,
         model.openGLRenderWindow
@@ -60,9 +65,7 @@ function widgetBehavior(publicAPI, model) {
   // initialization
   // --------------------------------------------------------------------------
 
-  model.renderer.getActiveCamera().onModified((camera) => {
-    model.manipulator.setNormal(camera.getDirectionOfProjection());
-  });
+  model.camera = model.renderer.getActiveCamera();
 }
 
 // ----------------------------------------------------------------------------
@@ -83,6 +86,7 @@ function vtkBoxWidget(publicAPI, model) {
       case ViewTypes.VOLUME:
       default:
         return [
+          { builder: vtkSphereHandleRepresentation, labels: ['handles'] },
           {
             builder: vtkQuadContextRepresentation,
             labels: ['---', '--+', '-++', '-+-'],
@@ -107,7 +111,6 @@ function vtkBoxWidget(publicAPI, model) {
             builder: vtkQuadContextRepresentation,
             labels: ['---', '+--', '++-', '-+-'],
           },
-          { builder: vtkSphereHandleRepresentation, labels: ['handles'] },
         ];
     }
   };

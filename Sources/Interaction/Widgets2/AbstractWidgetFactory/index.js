@@ -10,6 +10,7 @@ function vtkAbstractWidgetFactory(publicAPI, model) {
   const viewToWidget = {};
   // DO NOT share on the model ------------------------------------------------
 
+  // Can be called with just ViewId after the widget has been registered
   publicAPI.getWidgetForView = ({
     viewId,
     openGLRenderWindow,
@@ -47,12 +48,43 @@ function vtkAbstractWidgetFactory(publicAPI, model) {
 
       model.behavior(widgetPublicAPI, widgetModel);
 
+      // Custom delete to detatch from parent
+      widgetPublicAPI.delete = macro.chain(() => {
+        delete viewToWidget[viewId];
+      }, widgetPublicAPI.delete);
+
       widgetPublicAPI.setInteractor(interactor);
       const viewWidget = Object.freeze(widgetPublicAPI);
       viewToWidget[viewId] = viewWidget;
       return viewWidget;
     }
     return viewToWidget[viewId];
+  };
+
+  // Call methods on all its view widgets
+  publicAPI.setVisible = (value) => {
+    const viewIds = Object.keys(viewToWidget);
+    for (let i = 0; i < viewIds.length; i++) {
+      viewToWidget[viewIds[i]].setVisible(value);
+    }
+  };
+  publicAPI.setActive = (value) => {
+    const viewIds = Object.keys(viewToWidget);
+    for (let i = 0; i < viewIds.length; i++) {
+      viewToWidget[viewIds[i]].setActive(value);
+    }
+  };
+  publicAPI.setVisibleContext = (value) => {
+    const viewIds = Object.keys(viewToWidget);
+    for (let i = 0; i < viewIds.length; i++) {
+      viewToWidget[viewIds[i]].setVisibleContext(value);
+    }
+  };
+  publicAPI.setVisibleHandle = (value) => {
+    const viewIds = Object.keys(viewToWidget);
+    for (let i = 0; i < viewIds.length; i++) {
+      viewToWidget[viewIds[i]].setVisibleHandle(value);
+    }
   };
 }
 

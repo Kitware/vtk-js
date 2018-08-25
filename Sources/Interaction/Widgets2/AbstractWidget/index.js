@@ -2,6 +2,8 @@ import macro from 'vtk.js/Sources/macro';
 import vtkInteractorObserver from 'vtk.js/Sources/Rendering/Core/InteractorObserver';
 import Constants from 'vtk.js/Sources/Interaction/Widgets2/AbstractWidget/Constants';
 
+import { RenderingTypes } from 'vtk.js/Sources/Interaction/Widgets2/WidgetManager/Constants';
+
 const { WIDGET_PRIORITY } = Constants;
 
 // ----------------------------------------------------------------------------
@@ -37,6 +39,22 @@ function vtkAbstractWidget(publicAPI, model) {
     model.actorToRepresentationMap.get(actor);
 
   // --------------------------------------------------------------------------
+
+  publicAPI.updateRepresentationForRender = (
+    renderingType = RenderingTypes.FRONT_BUFFER
+  ) => {
+    for (let i = 0; i < model.representations.length; i++) {
+      const representation = model.representations[i];
+      representation.updateActorVisibility(
+        renderingType,
+        model.visible,
+        model.visibleContext,
+        model.visibleHandle
+      );
+    }
+  };
+
+  // --------------------------------------------------------------------------
   // Initialization calls
   // --------------------------------------------------------------------------
 
@@ -46,10 +64,10 @@ function vtkAbstractWidget(publicAPI, model) {
 // ----------------------------------------------------------------------------
 
 const DEFAULT_VALUES = {
-  // widgetState: null,
-  // openGLRenderWindow: null,
-  // renderer: null,
-  // representations: null,
+  visible: true,
+  active: true,
+  visibleContext: true,
+  visibleHandle: true,
 };
 
 // ----------------------------------------------------------------------------
@@ -59,6 +77,12 @@ export function extend(publicAPI, model, initialValues = {}) {
 
   vtkInteractorObserver.extend(publicAPI, model, initialValues);
 
+  macro.setGet(publicAPI, model, [
+    'visible',
+    'active',
+    'visibleContext',
+    'visibleHandle',
+  ]);
   macro.get(publicAPI, model, ['representations', 'widgetState']);
   macro.event(publicAPI, model, 'ActivateHandle');
 

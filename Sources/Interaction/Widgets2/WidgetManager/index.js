@@ -1,7 +1,10 @@
 import macro from 'vtk.js/Sources/macro';
 import vtkOpenGLHardwareSelector from 'vtk.js/Sources/Rendering/OpenGL/HardwareSelector';
 import { FieldAssociations } from 'vtk.js/Sources/Common/DataModel/DataSet/Constants';
-import { ViewTypes } from 'vtk.js/Sources/Interaction/Widgets2/WidgetManager/Constants';
+import {
+  ViewTypes,
+  RenderingTypes,
+} from 'vtk.js/Sources/Interaction/Widgets2/WidgetManager/Constants';
 
 const { vtkErrorMacro } = macro;
 let viewIdCount = 1;
@@ -51,7 +54,14 @@ function vtkWidgetManager(publicAPI, model) {
   // API public
   // --------------------------------------------------------------------------
 
+  function updateWidgetForRender(w) {
+    w.updateRepresentationForRender(model.renderingType);
+  }
+
   publicAPI.enablePicking = () => {
+    model.renderingType = RenderingTypes.PICKING_BUFFER;
+    model.widgets.forEach(updateWidgetForRender);
+
     console.time('capture');
     const [w, h] = model.openGLRenderWindow.getSize();
     model.selector.setArea(0, 0, w, h);
@@ -60,6 +70,9 @@ function vtkWidgetManager(publicAPI, model) {
     model.previousSelectedData = null;
     console.timeEnd('capture');
     publicAPI.modified();
+
+    model.renderingType = RenderingTypes.FRONT_BUFFER;
+    model.widgets.forEach(updateWidgetForRender);
   };
 
   publicAPI.disablePicking = () => {
@@ -99,7 +112,7 @@ function vtkWidgetManager(publicAPI, model) {
 
         for (let i = 0; i < model.widgets.length; i++) {
           const w = model.widgets[i];
-          if (w === widget) {
+          if (w === widget && w.getActive()) {
             w.activateHandle({ selectedState, representation });
             model.activeWidget = w;
           } else {
@@ -130,14 +143,17 @@ function vtkWidgetManager(publicAPI, model) {
       initialValues,
     });
 
-    model.widgets.push(w);
+    if (model.widgets.indexOf(w) === -1) {
+      model.widgets.push(w);
 
-    // Register all new actors to renderer
-    getActors(w).forEach((a) => {
-      model.renderer.addActor(a);
-    });
+      // Register all new actors to renderer
+      getActors(w).forEach((a) => {
+        model.renderer.addActor(a);
+      });
 
-    publicAPI.modified();
+      publicAPI.modified();
+    }
+
     return w;
   };
 
@@ -157,6 +173,9 @@ function vtkWidgetManager(publicAPI, model) {
         .getInteractor()
         .render();
       publicAPI.enablePicking();
+
+      // free internal model + unregister it from its parent
+      viewWidget.delete();
     }
   };
 
