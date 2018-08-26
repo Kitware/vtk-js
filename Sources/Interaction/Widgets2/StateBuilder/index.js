@@ -77,6 +77,7 @@ class Builder {
       macro.setGet(this.publicAPI, this.model, [name]);
     }
     this.model[name] = initialValue;
+    return this;
   }
 
   build() {

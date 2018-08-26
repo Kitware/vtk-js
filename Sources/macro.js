@@ -578,10 +578,11 @@ export function algo(publicAPI, model, numberOfInputs, numberOfOutputs) {
       return;
     }
     if (port >= model.numberOfInputs) {
-      let msg = `algorithm ${publicAPI.getClassName()} only has `;
-      msg += `${model.numberOfInputs}`;
-      msg += ' input ports. To add more input ports, use addInputData()';
-      vtkErrorMacro(msg);
+      vtkErrorMacro(
+        `algorithm ${publicAPI.getClassName()} only has ${
+          model.numberOfInputs
+        } input ports. To add more input ports, use addInputData()`
+      );
       return;
     }
     if (model.inputData[port] !== dataset || model.inputConnection[port]) {

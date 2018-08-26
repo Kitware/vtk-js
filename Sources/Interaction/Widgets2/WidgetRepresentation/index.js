@@ -1,5 +1,7 @@
 import macro from 'vtk.js/Sources/macro';
 
+const { vtkErrorMacro } = macro;
+
 // ----------------------------------------------------------------------------
 // vtkWidgetRepresentation
 // ----------------------------------------------------------------------------
@@ -38,6 +40,17 @@ function vtkWidgetRepresentation(publicAPI, model) {
     });
 
     return cache.states;
+  };
+
+  publicAPI.getSelectedState = (prop, compositeID) => {
+    const representationStates = publicAPI.getRepresentationStates();
+    if (compositeID < representationStates.length) {
+      return representationStates[compositeID];
+    }
+    vtkErrorMacro(
+      `Representation ${publicAPI.getClassName()} should implement getSelectedState(prop, compositeID) method.`
+    );
+    return null;
   };
 
   // Make sure setting the labels at build time works with string/array...

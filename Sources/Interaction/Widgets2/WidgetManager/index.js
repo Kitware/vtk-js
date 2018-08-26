@@ -214,9 +214,7 @@ function vtkWidgetManager(publicAPI, model) {
 
     const { widget, representation } = propsWeakMap.get(prop);
     if (widget && representation) {
-      const selectedState = representation.getRepresentationStates()[
-        compositeID
-      ];
+      const selectedState = representation.getSelectedState(prop, compositeID);
       model.previousSelectedData = {
         requestCount: 0,
         propID,
