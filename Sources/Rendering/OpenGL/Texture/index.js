@@ -288,17 +288,19 @@ function vtkOpenGLTexture(publicAPI, model) {
       publicAPI.getOpenGLFilterMode(model.magnificationFilter)
     );
 
-    model.context.texParameteri(
-      model.target,
-      model.context.TEXTURE_BASE_LEVEL,
-      model.baseLevel
-    );
+    if (model.openGLRenderWindow.getWebgl2()) {
+      model.context.texParameteri(
+        model.target,
+        model.context.TEXTURE_BASE_LEVEL,
+        model.baseLevel
+      );
 
-    model.context.texParameteri(
-      model.target,
-      model.context.TEXTURE_MAX_LEVEL,
-      model.maxLevel
-    );
+      model.context.texParameteri(
+        model.target,
+        model.context.TEXTURE_MAX_LEVEL,
+        model.maxLevel
+      );
+    }
 
     // model.context.texParameterf(model.target, model.context.TEXTURE_MIN_LOD, model.minLOD);
     // model.context.texParameterf(model.target, model.context.TEXTURE_MAX_LOD, model.maxLOD);
@@ -776,22 +778,31 @@ function vtkOpenGLTexture(publicAPI, model) {
     // We get the 6 images
     for (let i = 0; i < 6; i++) {
       // For each mipmap level
-      for (let j = 0; j <= model.maxLevel; j++) {
-        if (invertedData[6 * j + i]) {
-          const w = model.width / 2 ** j;
-          const h = model.height / 2 ** j;
-          model.context.texImage2D(
-            model.context.TEXTURE_CUBE_MAP_POSITIVE_X + i,
-            j,
-            model.internalFormat,
-            w,
-            h,
-            0,
-            model.format,
-            model.openGLDataType,
-            invertedData[6 * j + i]
-          );
+      let j = 0;
+      let w = model.width;
+      let h = model.height;
+      while (w >= 1 && h >= 1) {
+        // In webgl 1, all levels need to be defined. So if the latest level size is
+        // 8x8, we have to add 3 more null textures (4x4, 2x2, 1x1)
+        // In webgl 2, the attribtue maxLevel will be use.
+        let tempData = null;
+        if (j <= model.maxLevel) {
+          tempData = invertedData[6 * j + i];
         }
+        model.context.texImage2D(
+          model.context.TEXTURE_CUBE_MAP_POSITIVE_X + i,
+          j,
+          model.internalFormat,
+          w,
+          h,
+          0,
+          model.format,
+          model.openGLDataType,
+          tempData
+        );
+        j++;
+        w /= 2;
+        h /= 2;
       }
     }
 
