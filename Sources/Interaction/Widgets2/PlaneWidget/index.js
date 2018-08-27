@@ -111,7 +111,6 @@ function widgetBehavior(publicAPI, model) {
       ];
       vtkMath.normalize(normal);
 
-      console.log(model.activeState.getNormal(), normal);
       model.activeState.setNormal(normal);
     }
   };

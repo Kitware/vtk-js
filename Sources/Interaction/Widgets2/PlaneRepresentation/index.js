@@ -10,6 +10,7 @@ import vtkMapper from 'vtk.js/Sources/Rendering/Core/Mapper';
 import vtkMatrixBuilder from 'vtk.js/Sources/Common/Core/MatrixBuilder';
 import vtkPixelSpaceCallbackMapper from 'vtk.js/Sources/Rendering/Core/PixelSpaceCallbackMapper';
 import vtkPlane from 'vtk.js/Sources/Common/DataModel/Plane';
+import vtkPoints from 'vtk.js/Sources/Common/Core/Points';
 import vtkPolyData from 'vtk.js/Sources/Common/DataModel/PolyData';
 import vtkSphereSource from 'vtk.js/Sources/Filters/Sources/SphereSource';
 import vtkStateBuilder from 'vtk.js/Sources/Interaction/Widgets2/StateBuilder';
@@ -159,6 +160,9 @@ function vtkPlaneRepresentation(publicAPI, model) {
     .getProperty()
     .setInterpolation(Interpolation.FLAT);
 
+  // fixme
+  model.normalPipeline.actor.getProperty().setInterpolation(Interpolation.FLAT);
+
   // --------------------------------------------------------------------------
 
   publicAPI.requestData = (inData, outData) => {
@@ -188,13 +192,57 @@ function vtkPlaneRepresentation(publicAPI, model) {
       radius: model.handleSizeRatio * Math.min(xRange, yRange, zRange) * 0.25,
       resolution: 12,
     });
-    model.normalPipeline.actor.setUserMatrix(
-      model.matrix
-        .identity()
-        .rotateFromDirections([0, 1, 0], normal)
-        .getVTKMatrix()
+
+    // ------------------------------------------------------
+    // Option 1 (not fully working bu better)
+    // ------------------------------------------------------
+    // model.normalPipeline.actor.setUserMatrix(
+    //   model.matrix
+    //     .identity()
+    //     .rotateFromDirections(normal, [0, -1, 0])
+    //     .getVTKMatrix()
+    // );
+    // model.normalPipeline.actor.setPosition(origin[0], -origin[2], origin[1]);
+    // ------------------------------------------------------
+
+    // ------------------------------------------------------
+    // Option 2
+    // ------------------------------------------------------
+    const originalDS = model.normalPipeline.source.getOutputData();
+    const originalCoords = originalDS.getPoints().getData();
+    const originalNormals = originalDS
+      .getPointData()
+      .getNormals()
+      .getData();
+    const newAxis = vtkPolyData.newInstance();
+    newAxis.shallowCopy(model.normalPipeline.source.getOutputData());
+    newAxis.setPoints(
+      vtkPoints.newInstance({
+        numberOfComponents: 3,
+        values: Float32Array.from(originalCoords),
+      })
     );
-    model.normalPipeline.actor.setPosition(origin[0], -origin[2], origin[1]);
+    newAxis.getPointData().setNormals(
+      vtkDataArray.newInstance({
+        numberOfComponents: 3,
+        values: Float32Array.from(originalNormals),
+      })
+    );
+    model.matrix
+      // .identity()
+      // .rotateFromDirections([0, 1, 0], normal)
+      // .apply(
+      //   newAxis
+      //     .getPointData()
+      //     .getNormals()
+      //     .getData()
+      // )
+      .identity()
+      .translate(origin[0], origin[1], origin[2])
+      .rotateFromDirections([0, 1, 0], normal)
+      .apply(newAxis.getPoints().getData());
+    model.normalPipeline.mapper.setInputData(newAxis);
+    // ------------------------------------------------------
 
     const originCoord = glyphPolyData.getPoints().getData();
     originCoord[0] = origin[0];
@@ -220,6 +268,15 @@ function vtkPlaneRepresentation(publicAPI, model) {
       .setColor(
         ...(state.getActive() &&
         state.getActiveHandle() === model.planePipeline.actor
+          ? model.activePlaneColor
+          : model.planeColor)
+      );
+
+    model.normalPipeline.actor
+      .getProperty()
+      .setColor(
+        ...(state.getActive() &&
+        state.getActiveHandle() === model.normalPipeline.actor
           ? model.activePlaneColor
           : model.planeColor)
       );
@@ -257,11 +314,13 @@ function vtkPlaneRepresentation(publicAPI, model) {
       model.planePipeline.actor.setVisibility(widgetVisible);
       model.pointsPipeline.actor.setVisibility(widgetVisible);
       model.planePipeline.actor.getProperty().setOpacity(1);
+      model.normalPipeline.actor.setVisibility(widgetVisible);
     } else {
       model.outlinePipeline.actor.setVisibility(widgetVisible && ctxVisible);
       model.planePipeline.actor.setVisibility(widgetVisible && handleVisible);
       model.pointsPipeline.actor.setVisibility(widgetVisible && handleVisible);
       model.planePipeline.actor.getProperty().setOpacity(model.planeOpacity);
+      model.normalPipeline.actor.setVisibility(widgetVisible && handleVisible);
     }
   };
 
