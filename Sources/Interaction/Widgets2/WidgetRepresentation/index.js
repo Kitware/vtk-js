@@ -1,5 +1,8 @@
 import macro from 'vtk.js/Sources/macro';
 
+import { Behavior } from 'vtk.js/Sources/Interaction/Widgets2/WidgetRepresentation/Constants';
+import { RenderingTypes } from 'vtk.js/Sources/Interaction/Widgets2/WidgetManager/Constants';
+
 const { vtkErrorMacro } = macro;
 
 // ----------------------------------------------------------------------------
@@ -53,6 +56,42 @@ function vtkWidgetRepresentation(publicAPI, model) {
     return null;
   };
 
+  publicAPI.updateActorVisibility = (
+    renderingType = RenderingTypes.FRONT_BUFFER,
+    widgetVisible = true,
+    ctxVisible = true,
+    handleVisible = true
+  ) => {
+    let otherFlag = true;
+    switch (model.behavior) {
+      case Behavior.HANDLE:
+        otherFlag =
+          renderingType === RenderingTypes.PICKING_BUFFER || handleVisible;
+        break;
+      case Behavior.CONTEXT:
+        otherFlag = renderingType === RenderingTypes.FRONT_BUFFER && ctxVisible;
+        break;
+      default:
+        otherFlag = true;
+        break;
+    }
+    const visibilityFlag = widgetVisible && otherFlag;
+    for (let i = 0; i < model.actors.length; i++) {
+      if (model.visibilityFlagArray) {
+        model.actors[i].setVisibility(
+          visibilityFlag && model.visibilityFlagArray[i]
+        );
+      } else {
+        model.actors[i].setVisibility(visibilityFlag);
+      }
+    }
+    if (model.alwaysVisibleActors) {
+      for (let i = 0; i < model.alwaysVisibleActors.length; i++) {
+        model.alwaysVisibleActors[i].setVisibility(true);
+      }
+    }
+  };
+
   // Make sure setting the labels at build time works with string/array...
   publicAPI.setLabels(model.labels);
 }
@@ -64,6 +103,7 @@ function vtkWidgetRepresentation(publicAPI, model) {
 const DEFAULT_VALUES = {
   actors: [],
   labels: [],
+  behavior: Behavior.CONTEXT,
 };
 
 // ----------------------------------------------------------------------------

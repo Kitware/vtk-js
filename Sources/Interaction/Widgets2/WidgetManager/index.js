@@ -50,6 +50,12 @@ function vtkWidgetManager(publicAPI, model) {
     return actorList;
   }
 
+  function getViewWidget(widget) {
+    return widget.isA('vtkAbstractWidget')
+      ? widget
+      : widget.getWidgetForView({ viewId: model.viewId });
+  }
+
   // --------------------------------------------------------------------------
   // API public
   // --------------------------------------------------------------------------
@@ -110,13 +116,17 @@ function vtkWidgetManager(publicAPI, model) {
           return;
         }
 
-        for (let i = 0; i < model.widgets.length; i++) {
-          const w = model.widgets[i];
-          if (w === widget && w.getActive()) {
-            w.activateHandle({ selectedState, representation });
-            model.activeWidget = w;
-          } else {
-            w.deactivateAllHandles();
+        if (model.widgetInFocus === widget && widget.hasFocus()) {
+          widget.activateHandle({ selectedState, representation });
+        } else {
+          for (let i = 0; i < model.widgets.length; i++) {
+            const w = model.widgets[i];
+            if (w === widget && w.getActive()) {
+              w.activateHandle({ selectedState, representation });
+              model.activeWidget = w;
+            } else {
+              w.deactivateAllHandles();
+            }
           }
         }
         interactor.render();
@@ -145,6 +155,7 @@ function vtkWidgetManager(publicAPI, model) {
 
     if (model.widgets.indexOf(w) === -1) {
       model.widgets.push(w);
+      w.setWidgetManager(publicAPI);
 
       // Register all new actors to renderer
       getActors(w).forEach((a) => {
@@ -158,9 +169,7 @@ function vtkWidgetManager(publicAPI, model) {
   };
 
   publicAPI.unregisterWidget = (widget) => {
-    const viewWidget = widget.isA('vtkAbstractWidget')
-      ? widget
-      : widget.getWidgetForView({ viewId: model.viewId });
+    const viewWidget = getViewWidget(widget);
     const index = model.widgets.indexOf(viewWidget);
     if (index !== -1) {
       model.widgets.splice(index, 1);
@@ -212,6 +221,10 @@ function vtkWidgetManager(publicAPI, model) {
       return model.previousSelectedData;
     }
 
+    if (!propsWeakMap.has(prop)) {
+      return {};
+    }
+
     const { widget, representation } = propsWeakMap.get(prop);
     if (widget && representation) {
       const selectedState = representation.getSelectedState(prop, compositeID);
@@ -229,6 +242,19 @@ function vtkWidgetManager(publicAPI, model) {
     model.previousSelectedData = null;
     return {};
   };
+
+  publicAPI.grabFocus = (widget) => {
+    const viewWidget = getViewWidget(widget);
+    if (model.widgetInFocus && model.widgetInFocus !== viewWidget) {
+      model.widgetInFocus.loseFocus();
+    }
+    model.widgetInFocus = viewWidget;
+    if (model.widgetInFocus) {
+      model.widgetInFocus.grabFocus();
+    }
+  };
+
+  publicAPI.releaseFocus = () => publicAPI.grabFocus(null);
 }
 
 // ----------------------------------------------------------------------------
@@ -243,6 +269,7 @@ const DEFAULT_VALUES = {
   pickingAvailable: false,
   selections: null,
   previousSelectedData: null,
+  widgetInFocus: null,
 };
 
 // ----------------------------------------------------------------------------

@@ -56,14 +56,15 @@ class Builder {
     vtkWidgetState.extend(this.publicAPI, this.model);
   }
 
-  addDynamicMixinState({ labels, mixins, name }) {
+  addDynamicMixinState({ labels, mixins, name, initialValues }) {
     const listName = `${name}List`;
     this.model[listName] = [];
     // Create new Instance method
     this.publicAPI[`add${macro.capitalize(name)}`] = () => {
-      const instance = newInstance(mixins);
+      const instance = newInstance(mixins, initialValues);
       this.publicAPI.bindState(instance, labels);
       this.model[listName].push(instance);
+      this.publicAPI.modified();
       return instance;
     };
     this.publicAPI[`remove${macro.capitalize(name)}`] = (instanceOrIndex) => {
@@ -75,6 +76,7 @@ class Builder {
       if (instance) {
         this.publicAPI.unbindState(instance);
       }
+      this.publicAPI.modified();
     };
     this.publicAPI[`get${macro.capitalize(name)}List`] = () =>
       this.model[listName];

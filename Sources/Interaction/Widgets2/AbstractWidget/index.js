@@ -35,6 +35,16 @@ function vtkAbstractWidget(publicAPI, model) {
 
   // --------------------------------------------------------------------------
 
+  publicAPI.grabFocus = () => {
+    model.hasFocus = true;
+  };
+  publicAPI.loseFocus = () => {
+    model.hasFocus = false;
+  };
+  publicAPI.hasFocus = () => model.hasFocus;
+
+  // --------------------------------------------------------------------------
+
   publicAPI.getRepresentationFromActor = (actor) =>
     model.actorToRepresentationMap.get(actor);
 
@@ -82,6 +92,7 @@ export function extend(publicAPI, model, initialValues = {}) {
     'active',
     'visibleContext',
     'visibleHandle',
+    'widgetManager',
   ]);
   macro.get(publicAPI, model, ['representations', 'widgetState']);
   macro.event(publicAPI, model, 'ActivateHandle');

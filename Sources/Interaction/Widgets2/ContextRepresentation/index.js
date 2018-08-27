@@ -1,5 +1,5 @@
 import vtkWidgetRepresentation from 'vtk.js/Sources/Interaction/Widgets2/WidgetRepresentation';
-import { RenderingTypes } from 'vtk.js/Sources/Interaction/Widgets2/WidgetManager/Constants';
+import { Behavior } from 'vtk.js/Sources/Interaction/Widgets2/WidgetRepresentation/Constants';
 
 // ----------------------------------------------------------------------------
 // vtkWidgetRepresentation
@@ -7,21 +7,7 @@ import { RenderingTypes } from 'vtk.js/Sources/Interaction/Widgets2/WidgetManage
 
 function vtkContextRepresentation(publicAPI, model) {
   model.classHierarchy.push('vtkContextRepresentation');
-
-  publicAPI.updateActorVisibility = (
-    renderingType,
-    widgetVisible,
-    ctxVisible,
-    handleVisible
-  ) => {
-    const visibilityFlag =
-      widgetVisible &&
-      renderingType === RenderingTypes.FRONT_BUFFER &&
-      ctxVisible;
-    for (let i = 0; i < model.actors.length; i++) {
-      model.actors[i].setVisibility(visibilityFlag);
-    }
-  };
+  model.behavior = Behavior.CONTEXT;
 }
 
 // ----------------------------------------------------------------------------

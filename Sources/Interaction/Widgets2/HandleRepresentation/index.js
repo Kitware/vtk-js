@@ -1,7 +1,6 @@
 import macro from 'vtk.js/Sources/macro';
 import vtkWidgetRepresentation from 'vtk.js/Sources/Interaction/Widgets2/WidgetRepresentation';
-
-import { RenderingTypes } from 'vtk.js/Sources/Interaction/Widgets2/WidgetManager/Constants';
+import { Behavior } from 'vtk.js/Sources/Interaction/Widgets2/WidgetRepresentation/Constants';
 
 // ----------------------------------------------------------------------------
 // vtkHandleRepresentation methods
@@ -10,25 +9,7 @@ import { RenderingTypes } from 'vtk.js/Sources/Interaction/Widgets2/WidgetManage
 function vtkHandleRepresentation(publicAPI, model) {
   // Set our className
   model.classHierarchy.push('vtkHandleRepresentation');
-
-  publicAPI.updateActorVisibility = (
-    renderingType,
-    widgetVisible,
-    ctxVisible,
-    handleVisible
-  ) => {
-    const visibilityFlag =
-      widgetVisible &&
-      (renderingType === RenderingTypes.PICKING_BUFFER || handleVisible);
-    for (let i = 0; i < model.actors.length; i++) {
-      model.actors[i].setVisibility(visibilityFlag);
-    }
-    if (model.allwaysVisibleActors) {
-      for (let i = 0; i < model.allwaysVisibleActors.length; i++) {
-        model.allwaysVisibleActors[i].setVisibility(true);
-      }
-    }
-  };
+  model.behavior = Behavior.HANDLE;
 }
 
 // ----------------------------------------------------------------------------

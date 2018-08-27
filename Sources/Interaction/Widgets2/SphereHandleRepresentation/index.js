@@ -49,7 +49,7 @@ function vtkSphereHandleRepresentation(publicAPI, model) {
   model.displayActor.setMapper(model.displayMapper);
   model.displayMapper.setInputConnection(publicAPI.getOutputPort());
   model.actors.push(model.displayActor);
-  model.allwaysVisibleActors = [model.displayActor];
+  model.alwaysVisibleActors = [model.displayActor];
 
   model.mapper = vtkGlyph3DMapper.newInstance({
     scaleArray: 'scale',
@@ -130,6 +130,7 @@ function vtkSphereHandleRepresentation(publicAPI, model) {
 
       typedArray.scale[i] =
         scaleFactor *
+        (!state.isVisible || state.isVisible() ? 1 : 0) *
         (state.getScale1 ? state.getScale1() : model.defaultScale);
 
       typedArray.color[i] =

@@ -604,7 +604,9 @@ function vtkTubeFilter(publicAPI, model) {
   publicAPI.requestData = (inData, outData) => {
     // implement requestData
     // pass through for now
-    outData[0] = inData[0];
+    const output = vtkPolyData.newInstance();
+    output.shallowCopy(inData[0]);
+    outData[0] = output;
 
     const input = inData[0];
     if (!input) {
@@ -613,8 +615,6 @@ function vtkTubeFilter(publicAPI, model) {
     }
 
     // Allocate output
-    const output = vtkPolyData.newInstance();
-
     const inPts = input.getPoints();
     if (!inPts) {
       return;
