@@ -41,6 +41,7 @@ const widgetManager = vtkWidgetManager.newInstance();
 widgetManager.setRenderingContext(openGLRenderWindow, renderer);
 
 const widget = vtkPlaneWidget.newInstance();
+widget.getWidgetState().setNormal(0, 0, 1);
 
 /* eslint-disable */
 function widgetRegistration(e) {
@@ -74,7 +75,7 @@ function widgetRegistration(e) {
 widgetRegistration();
 renderer.resetCamera();
 renderer.resetCameraClippingRange();
-widgetRegistration()
+widgetRegistration();
 
 // -----------------------------------------------------------
 // UI control handling

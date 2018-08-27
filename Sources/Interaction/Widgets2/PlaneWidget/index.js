@@ -2,6 +2,7 @@ import macro from 'vtk.js/Sources/macro';
 import vtkAbstractWidgetFactory from 'vtk.js/Sources/Interaction/Widgets2/AbstractWidgetFactory';
 import vtkMath from 'vtk.js/Sources/Common/Core/Math';
 import vtkPlaneRepresentation from 'vtk.js/Sources/Interaction/Widgets2/PlaneRepresentation';
+import vtkPlanePointManipulator from 'vtk.js/Sources/Interaction/Widgets2/PlanePointManipulator';
 
 import { ViewTypes } from 'vtk.js/Sources/Interaction/Widgets2/WidgetManager/Constants';
 
@@ -20,6 +21,7 @@ function widgetBehavior(publicAPI, model) {
       return macro.VOID;
     }
     isDragging = true;
+    model.manipulator.setOrigin(model.widgetState.getOrigin());
     model.interactor.requestAnimation(publicAPI);
     return macro.EVENT_ABORT;
   };
@@ -41,27 +43,77 @@ function widgetBehavior(publicAPI, model) {
 
   publicAPI.handleEvent = (callData) => {
     if (model.active && model.activeState && model.activeState.getActive()) {
-      const manipulator = model.activeState.getManipulator();
-      const bounds = model.activeState.getBounds();
-      if (model.activeState.getUseCameraForManipulator()) {
-        // FIXME should be lineManipulator not plane in that case
-        manipulator.setNormal(model.camera.getDirectionOfProjection());
-      }
-      const worldCoords = manipulator.handleEvent(
-        callData,
-        model.openGLRenderWindow
-      );
-
-      if (worldCoords.length) {
-        model.activeState.setOrigin(
-          vtkMath.clampValue(worldCoords[0], bounds[0], bounds[1]),
-          vtkMath.clampValue(worldCoords[1], bounds[2], bounds[3]),
-          vtkMath.clampValue(worldCoords[2], bounds[4], bounds[5])
-        );
-      }
+      publicAPI[model.activeState.getUpdateMethodName()](callData);
       return macro.EVENT_ABORT;
     }
     return macro.VOID;
+  };
+
+  publicAPI.updateFromOrigin = (callData) => {
+    const bounds = model.activeState.getBounds();
+    model.manipulator.setNormal(model.widgetState.getNormal());
+    const worldCoords = model.manipulator.handleEvent(
+      callData,
+      model.openGLRenderWindow
+    );
+
+    if (worldCoords.length) {
+      model.activeState.setOrigin(
+        vtkMath.clampValue(worldCoords[0], bounds[0], bounds[1]),
+        vtkMath.clampValue(worldCoords[1], bounds[2], bounds[3]),
+        vtkMath.clampValue(worldCoords[2], bounds[4], bounds[5])
+      );
+    }
+  };
+
+  publicAPI.updateFromPlane = (callData) => {
+    // Move origin along normal axis
+    // FIXME currently on camera plane
+    const bounds = model.activeState.getBounds();
+    model.manipulator.setNormal(model.camera.getDirectionOfProjection());
+    const worldCoords = model.manipulator.handleEvent(
+      callData,
+      model.openGLRenderWindow
+    );
+
+    if (worldCoords.length) {
+      model.activeState.setOrigin(
+        vtkMath.clampValue(worldCoords[0], bounds[0], bounds[1]),
+        vtkMath.clampValue(worldCoords[1], bounds[2], bounds[3]),
+        vtkMath.clampValue(worldCoords[2], bounds[4], bounds[5])
+      );
+    }
+  };
+
+  publicAPI.updateFromNormal = (callData) => {
+    // Move origin along normal axis
+    // FIXME currently on camera plane
+    const origin = model.activeState.getOrigin();
+    const originalNormal = model.activeState.getNormal();
+    const newNormal = [0, 0, 0];
+    vtkMath.cross(
+      originalNormal,
+      model.camera.getDirectionOfProjection(),
+      newNormal
+    );
+    vtkMath.cross(originalNormal, newNormal, newNormal);
+    model.manipulator.setNormal(newNormal);
+    const worldCoords = model.manipulator.handleEvent(
+      callData,
+      model.openGLRenderWindow
+    );
+
+    if (worldCoords.length) {
+      const normal = [
+        worldCoords[0] - origin[0],
+        worldCoords[1] - origin[1],
+        worldCoords[2] - origin[2],
+      ];
+      vtkMath.normalize(normal);
+
+      console.log(model.activeState.getNormal(), normal);
+      model.activeState.setNormal(normal);
+    }
   };
 
   // --------------------------------------------------------------------------
@@ -69,6 +121,7 @@ function widgetBehavior(publicAPI, model) {
   // --------------------------------------------------------------------------
 
   model.camera = model.renderer.getActiveCamera();
+  model.manipulator = vtkPlanePointManipulator.newInstance();
 }
 
 // ----------------------------------------------------------------------------

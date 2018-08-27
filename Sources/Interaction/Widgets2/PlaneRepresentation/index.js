@@ -1,26 +1,26 @@
-// import vtkMatrixBuilder from 'vtk.js/Sources/Common/Core/MatrixBuilder';
 import macro from 'vtk.js/Sources/macro';
 import vtkActor from 'vtk.js/Sources/Rendering/Core/Actor';
 import vtkClosedPolyLineToSurfaceFilter from 'vtk.js/Sources/Filters/General/ClosedPolyLineToSurfaceFilter';
 import vtkCubeSource from 'vtk.js/Sources/Filters/Sources/CubeSource';
 import vtkCutter from 'vtk.js/Sources/Filters/Core/Cutter';
+import vtkCylinderSource from 'vtk.js/Sources/Filters/Sources/CylinderSource';
 import vtkDataArray from 'vtk.js/Sources/Common/Core/DataArray';
 import vtkGlyph3DMapper from 'vtk.js/Sources/Rendering/Core/Glyph3DMapper';
 import vtkMapper from 'vtk.js/Sources/Rendering/Core/Mapper';
+import vtkMatrixBuilder from 'vtk.js/Sources/Common/Core/MatrixBuilder';
 import vtkPixelSpaceCallbackMapper from 'vtk.js/Sources/Rendering/Core/PixelSpaceCallbackMapper';
 import vtkPlane from 'vtk.js/Sources/Common/DataModel/Plane';
-import vtkPlanePointManipulator from 'vtk.js/Sources/Interaction/Widgets2/PlanePointManipulator';
 import vtkPolyData from 'vtk.js/Sources/Common/DataModel/PolyData';
 import vtkSphereSource from 'vtk.js/Sources/Filters/Sources/SphereSource';
 import vtkStateBuilder from 'vtk.js/Sources/Interaction/Widgets2/StateBuilder';
 import vtkWidgetRepresentation from 'vtk.js/Sources/Interaction/Widgets2/WidgetRepresentation';
 
+import { RenderingTypes } from 'vtk.js/Sources/Interaction/Widgets2/WidgetManager/Constants';
+import { ScalarMode } from 'vtk.js/Sources/Rendering/Core/Mapper/Constants';
 import {
   Interpolation,
   Representation,
 } from 'vtk.js/Sources/Rendering/Core/Property/Constants';
-import { RenderingTypes } from 'vtk.js/Sources/Interaction/Widgets2/WidgetManager/Constants';
-import { ScalarMode } from 'vtk.js/Sources/Rendering/Core/Mapper/Constants';
 
 // ----------------------------------------------------------------------------
 // Helper methods to build state
@@ -76,12 +76,7 @@ function generateState() {
     })
     .addField({ name: 'activeHandle', initialValue: null })
     .addField({
-      name: 'manipulator',
-      initialValue: vtkPlanePointManipulator.newInstance(),
-    })
-    .addField({
-      name: 'useCameraForManipulator',
-      initialValue: false,
+      name: 'updateMethodName',
     })
     .build();
 }
@@ -99,6 +94,7 @@ function vtkPlaneRepresentation(publicAPI, model) {
   // --------------------------------------------------------------------------
 
   model.plane = vtkPlane.newInstance();
+  model.matrix = vtkMatrixBuilder.buildFromDegree();
 
   model.outlinePipeline = {
     source: vtkCubeSource.newInstance(),
@@ -123,6 +119,12 @@ function vtkPlaneRepresentation(publicAPI, model) {
     actor: vtkActor.newInstance(),
   };
 
+  model.normalPipeline = {
+    source: vtkCylinderSource.newInstance(),
+    mapper: vtkMapper.newInstance(),
+    actor: vtkActor.newInstance(),
+  };
+
   model.screen2DPipeline = {
     source: publicAPI,
     mapper: vtkPixelSpaceCallbackMapper.newInstance(),
@@ -141,11 +143,13 @@ function vtkPlaneRepresentation(publicAPI, model) {
   connectPipeline(model.outlinePipeline);
   connectPipeline(model.planePipeline);
   connectPipeline(model.pointsPipeline);
+  connectPipeline(model.normalPipeline);
   connectPipeline(model.screen2DPipeline);
 
   model.actors.push(model.outlinePipeline.actor);
   model.actors.push(model.planePipeline.actor);
   model.actors.push(model.pointsPipeline.actor);
+  model.actors.push(model.normalPipeline.actor);
   model.actors.push(model.screen2DPipeline.actor);
 
   model.outlinePipeline.actor
@@ -158,12 +162,12 @@ function vtkPlaneRepresentation(publicAPI, model) {
   // --------------------------------------------------------------------------
 
   publicAPI.requestData = (inData, outData) => {
-    console.log('execute');
     const state = inData[0];
     const origin = state.getOrigin();
+    const normal = state.getNormal();
     const bounds = state.getBounds();
     model.plane.setOrigin(origin);
-    model.plane.setNormal(state.getNormal());
+    model.plane.setNormal(normal);
 
     // Update cube parameters
     model.outlinePipeline.source.setCenter(
@@ -177,6 +181,20 @@ function vtkPlaneRepresentation(publicAPI, model) {
     model.outlinePipeline.source.setXLength(xRange);
     model.outlinePipeline.source.setYLength(yRange);
     model.outlinePipeline.source.setZLength(zRange);
+
+    // Update normal parameters
+    model.normalPipeline.source.set({
+      height: Math.max(xRange, yRange, zRange),
+      radius: model.handleSizeRatio * Math.min(xRange, yRange, zRange) * 0.25,
+      resolution: 12,
+    });
+    model.normalPipeline.actor.setUserMatrix(
+      model.matrix
+        .identity()
+        .rotateFromDirections([0, 1, 0], normal)
+        .getVTKMatrix()
+    );
+    model.normalPipeline.actor.setPosition(origin[0], -origin[2], origin[1]);
 
     const originCoord = glyphPolyData.getPoints().getData();
     originCoord[0] = origin[0];
@@ -255,9 +273,22 @@ function vtkPlaneRepresentation(publicAPI, model) {
     // selected handle later on...
     const state = model.inputData[0];
     state.setActiveHandle(prop);
-    state.getManipulator().setOrigin(...state.getOrigin());
-    state.getManipulator().setNormal(...state.getNormal());
-    state.setUseCameraForManipulator(prop !== model.pointsPipeline.actor);
+
+    switch (prop) {
+      case model.planePipeline.actor:
+        state.setUpdateMethodName('updateFromPlane');
+        break;
+      case model.pointsPipeline.actor:
+        state.setUpdateMethodName('updateFromOrigin');
+        break;
+      case model.normalPipeline.actor:
+        state.setUpdateMethodName('updateFromNormal');
+        break;
+      default:
+        state.setUpdateMethodName('updateFromPlane');
+        break;
+    }
+
     return state;
   };
 
