@@ -94,7 +94,7 @@ function vtkPolyLineRepresentation(publicAPI, model) {
 // ----------------------------------------------------------------------------
 
 const DEFAULT_VALUES = {
-  threshold: 0.1,
+  threshold: Number.EPSILON,
 };
 
 // ----------------------------------------------------------------------------

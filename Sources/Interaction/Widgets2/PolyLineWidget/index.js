@@ -14,6 +14,10 @@ import { ViewTypes } from 'vtk.js/Sources/Interaction/Widgets2/WidgetManager/Con
 function widgetBehavior(publicAPI, model) {
   let isDragging = null;
 
+  publicAPI.placeWidget = (bounds) => {
+    model.widgetState.setBounds(bounds);
+  };
+
   publicAPI.setDisplayCallback = (callback) =>
     model.representations[0].setDisplayCallback(callback);
 
@@ -43,8 +47,6 @@ function widgetBehavior(publicAPI, model) {
       model.interactor.requestAnimation(publicAPI);
     }
 
-    model.manipulator.setOrigin(model.activeState.getOrigin());
-
     return macro.EVENT_ABORT;
   };
 
@@ -56,6 +58,7 @@ function widgetBehavior(publicAPI, model) {
       model.activeState.getActive() &&
       !ignoreKey(callData)
     ) {
+      model.manipulator.setOrigin(model.activeState.getOrigin());
       model.manipulator.setNormal(model.camera.getDirectionOfProjection());
       const worldCoords = model.manipulator.handleEvent(
         callData,
@@ -170,6 +173,7 @@ function vtkPolyLineWidget(publicAPI, model) {
       initialValues: {
         scale1: 0.1,
         origin: [-1, -1, -1],
+        visible: false,
       },
     })
     .addDynamicMixinState({
@@ -181,10 +185,14 @@ function vtkPolyLineWidget(publicAPI, model) {
         origin: [-1, -1, -1],
       },
     })
-    .build();
+    .build('bounds');
 
   // Default manipulator
   model.manipulator = vtkPlanePointManipulator.newInstance();
+
+  publicAPI.placeWidget = (bounds) => {
+    model.widgetState.setBounds(bounds);
+  };
 }
 
 // ----------------------------------------------------------------------------

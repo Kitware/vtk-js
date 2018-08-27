@@ -78,6 +78,7 @@ const DEFAULT_VALUES = {
   active: true,
   visibleContext: true,
   visibleHandle: true,
+  hasFocus: false,
 };
 
 // ----------------------------------------------------------------------------

@@ -2,6 +2,7 @@ import macro from 'vtk.js/Sources/macro';
 
 import vtkWidgetState from 'vtk.js/Sources/Interaction/Widgets2/WidgetState';
 
+import bounds from 'vtk.js/Sources/Interaction/Widgets2/StateBuilder/boundsMixin';
 import color from 'vtk.js/Sources/Interaction/Widgets2/StateBuilder/colorMixin';
 import direction from 'vtk.js/Sources/Interaction/Widgets2/StateBuilder/directionMixin';
 import manipulator from 'vtk.js/Sources/Interaction/Widgets2/StateBuilder/manipulatorMixin';
@@ -17,6 +18,7 @@ const { vtkErrorMacro } = macro;
 // ----------------------------------------------------------------------------
 
 const MIXINS = {
+  bounds,
   color,
   direction,
   manipulator,
@@ -28,11 +30,17 @@ const MIXINS = {
 
 // ----------------------------------------------------------------------------
 
-function newInstance(mixins, initialValues) {
-  const publicAPI = {};
-  const model = {};
+function newInstance(
+  mixins,
+  initialValues,
+  publicAPI = {},
+  model = {},
+  skipWidgetState = false
+) {
+  if (!skipWidgetState) {
+    vtkWidgetState.extend(publicAPI, model, initialValues);
+  }
 
-  vtkWidgetState.extend(publicAPI, model, initialValues);
   for (let i = 0; i < mixins.length; i++) {
     const mixin = MIXINS[mixins[i]];
     if (mixin) {
@@ -113,9 +121,8 @@ class Builder {
     return this;
   }
 
-  build() {
-    macro.safeArrays(this.model);
-    return Object.freeze(this.publicAPI);
+  build(...mixins) {
+    return newInstance(mixins, {}, this.publicAPI, this.model, true);
   }
 }
 

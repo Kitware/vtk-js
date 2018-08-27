@@ -54,6 +54,7 @@ const widgetManager = vtkWidgetManager.newInstance();
 widgetManager.setRenderingContext(openGLRenderWindow, renderer);
 
 const widget = vtkPolyLineWidget.newInstance();
+widget.placeWidget(cone.getOutputData().getBounds());
 let viewWidget;
 
 function widgetRegistration(e) {
@@ -86,7 +87,6 @@ function widgetRegistration(e) {
 
 // Initial widget register
 widgetRegistration();
-widgetManager.grabFocus(widget);
 
 global.viewWidget = viewWidget;
 
