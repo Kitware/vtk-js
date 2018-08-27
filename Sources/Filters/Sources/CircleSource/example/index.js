@@ -26,6 +26,9 @@ function createCirclePipeline() {
   const actor = vtkActor.newInstance();
   const mapper = vtkMapper.newInstance();
 
+  cylinderSource.setLines(true);
+  cylinderSource.setFace(true);
+
   actor.setMapper(mapper);
   mapper.setInputConnection(cylinderSource.getOutputPort());
 
@@ -49,6 +52,13 @@ fullScreenRenderer.addController(controlPanel);
   document.querySelector(`.${propertyName}`).addEventListener('input', (e) => {
     const value = Number(e.target.value);
     pipelines[0].cylinderSource.set({ [propertyName]: value });
+    renderWindow.render();
+  });
+});
+
+['lines', 'face'].forEach((propertyName) => {
+  document.querySelector(`.${propertyName}`).addEventListener('input', (e) => {
+    pipelines[0].cylinderSource.set({ [propertyName]: e.target.checked });
     renderWindow.render();
   });
 });
