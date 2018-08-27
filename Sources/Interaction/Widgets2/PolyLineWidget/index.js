@@ -16,6 +16,12 @@ function widgetBehavior(publicAPI, model) {
 
   publicAPI.placeWidget = (bounds) => {
     model.widgetState.setBounds(bounds);
+    const center = [
+      (bounds[0] + bounds[1]) * 0.5,
+      (bounds[2] + bounds[3]) * 0.5,
+      (bounds[4] + bounds[5]) * 0.5,
+    ];
+    model.widgetState.getMoveHandle().setOrigin(center);
   };
 
   publicAPI.setDisplayCallback = (callback) =>
@@ -192,6 +198,12 @@ function vtkPolyLineWidget(publicAPI, model) {
 
   publicAPI.placeWidget = (bounds) => {
     model.widgetState.setBounds(bounds);
+    const center = [
+      (bounds[0] + bounds[1]) * 0.5,
+      (bounds[2] + bounds[3]) * 0.5,
+      (bounds[4] + bounds[5]) * 0.5,
+    ];
+    model.widgetState.getMoveHandle().setOrigin(center);
   };
 }
 
