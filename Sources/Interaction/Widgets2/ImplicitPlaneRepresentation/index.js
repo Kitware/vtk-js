@@ -327,7 +327,7 @@ function vtkImplicitPlaneRepresentation(publicAPI, model) {
   // --------------------------------------------------------------------------
 
   publicAPI.getSelectedState = (prop, compositeID) => {
-    // We only have on state to control us
+    // We only have one state to control us
     // we may want to update some field on the state to highlight the
     // selected handle later on...
     const state = model.inputData[0];

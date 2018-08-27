@@ -1,7 +1,9 @@
 import macro from 'vtk.js/Sources/macro';
 import vtkAbstractWidgetFactory from 'vtk.js/Sources/Interaction/Widgets2/AbstractWidgetFactory';
 import vtkMath from 'vtk.js/Sources/Common/Core/Math';
+import vtkBoundingBox from 'vtk.js/Sources/Common/DataModel/BoundingBox';
 import vtkImplicitPlaneRepresentation from 'vtk.js/Sources/Interaction/Widgets2/ImplicitPlaneRepresentation';
+import vtkLineManipulator from 'vtk.js/Sources/Interaction/Widgets2/LineManipulator';
 import vtkPlanePointManipulator from 'vtk.js/Sources/Interaction/Widgets2/PlanePointManipulator';
 
 import { ViewTypes } from 'vtk.js/Sources/Interaction/Widgets2/WidgetManager/Constants';
@@ -25,7 +27,8 @@ function widgetBehavior(publicAPI, model) {
       return macro.VOID;
     }
     isDragging = true;
-    model.manipulator.setOrigin(model.widgetState.getOrigin());
+    model.lineManipulator.setOrigin(model.widgetState.getOrigin());
+    model.planeManipulator.setOrigin(model.widgetState.getOrigin());
     model.interactor.requestAnimation(publicAPI);
     return macro.EVENT_ABORT;
   };
@@ -54,44 +57,31 @@ function widgetBehavior(publicAPI, model) {
   };
 
   publicAPI.updateFromOrigin = (callData) => {
-    const bounds = model.activeState.getBounds();
-    model.manipulator.setNormal(model.widgetState.getNormal());
-    const worldCoords = model.manipulator.handleEvent(
+    model.planeManipulator.setNormal(model.widgetState.getNormal());
+    const worldCoords = model.planeManipulator.handleEvent(
       callData,
       model.openGLRenderWindow
     );
 
-    if (worldCoords.length) {
-      model.activeState.setOrigin(
-        vtkMath.clampValue(worldCoords[0], bounds[0], bounds[1]),
-        vtkMath.clampValue(worldCoords[1], bounds[2], bounds[3]),
-        vtkMath.clampValue(worldCoords[2], bounds[4], bounds[5])
-      );
+    if (model.bbox.containsPoint(...worldCoords)) {
+      model.activeState.setOrigin(worldCoords);
     }
   };
 
   publicAPI.updateFromPlane = (callData) => {
     // Move origin along normal axis
-    // FIXME currently on camera plane
-    const bounds = model.activeState.getBounds();
-    model.manipulator.setNormal(model.camera.getDirectionOfProjection());
-    const worldCoords = model.manipulator.handleEvent(
+    model.lineManipulator.setNormal(model.activeState.getNormal());
+    const worldCoords = model.lineManipulator.handleEvent(
       callData,
       model.openGLRenderWindow
     );
 
-    if (worldCoords.length) {
-      model.activeState.setOrigin(
-        vtkMath.clampValue(worldCoords[0], bounds[0], bounds[1]),
-        vtkMath.clampValue(worldCoords[1], bounds[2], bounds[3]),
-        vtkMath.clampValue(worldCoords[2], bounds[4], bounds[5])
-      );
+    if (model.bbox.containsPoint(...worldCoords)) {
+      model.activeState.setOrigin(worldCoords);
     }
   };
 
   publicAPI.updateFromNormal = (callData) => {
-    // Move origin along normal axis
-    // FIXME currently on camera plane
     const origin = model.activeState.getOrigin();
     const originalNormal = model.activeState.getNormal();
     const newNormal = [0, 0, 0];
@@ -101,8 +91,8 @@ function widgetBehavior(publicAPI, model) {
       newNormal
     );
     vtkMath.cross(originalNormal, newNormal, newNormal);
-    model.manipulator.setNormal(newNormal);
-    const worldCoords = model.manipulator.handleEvent(
+    model.planeManipulator.setNormal(newNormal);
+    const worldCoords = model.planeManipulator.handleEvent(
       callData,
       model.openGLRenderWindow
     );
@@ -124,7 +114,9 @@ function widgetBehavior(publicAPI, model) {
   // --------------------------------------------------------------------------
 
   model.camera = model.renderer.getActiveCamera();
-  model.manipulator = vtkPlanePointManipulator.newInstance();
+  model.lineManipulator = vtkLineManipulator.newInstance();
+  model.planeManipulator = vtkPlanePointManipulator.newInstance();
+  model.bbox.setBounds(model.widgetState.getBounds());
 }
 
 // ----------------------------------------------------------------------------
@@ -136,6 +128,7 @@ function vtkImplicitPlaneWidget(publicAPI, model) {
 
   // --- Widget Requirement ---------------------------------------------------
   model.behavior = widgetBehavior;
+  model.bbox = vtkBoundingBox.newInstance();
 
   publicAPI.getRepresentationsForViewType = (viewType) => {
     switch (viewType) {
@@ -151,6 +144,7 @@ function vtkImplicitPlaneWidget(publicAPI, model) {
 
   publicAPI.placeWidget = (bounds) => {
     model.widgetState.setBounds(bounds);
+    model.bbox.setBounds(bounds);
   };
 
   // Default state
