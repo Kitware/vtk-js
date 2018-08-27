@@ -1,7 +1,7 @@
 import 'vtk.js/Sources/favicon';
 
 import vtkFullScreenRenderWindow from 'vtk.js/Sources/Rendering/Misc/FullScreenRenderWindow';
-import vtkPlaneRepresentation from 'vtk.js/Sources/Interaction/Widgets2/PlaneRepresentation';
+import vtkImplicitPlaneRepresentation from 'vtk.js/Sources/Interaction/Widgets2/ImplicitPlaneRepresentation';
 
 import controlPanel from './controlPanel.html';
 
@@ -20,9 +20,9 @@ const renderWindow = fullScreenRenderer.getRenderWindow();
 // State / Representation
 // ----------------------------------------------------------------------------
 
-const representation = vtkPlaneRepresentation.newInstance();
+const representation = vtkImplicitPlaneRepresentation.newInstance();
 
-const state = vtkPlaneRepresentation.generateState();
+const state = vtkImplicitPlaneRepresentation.generateState();
 representation.setInputData(state);
 
 representation.getActors().forEach(renderer.addActor);

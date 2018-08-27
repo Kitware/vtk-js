@@ -1,7 +1,7 @@
 import macro from 'vtk.js/Sources/macro';
 import vtkAbstractWidgetFactory from 'vtk.js/Sources/Interaction/Widgets2/AbstractWidgetFactory';
 import vtkMath from 'vtk.js/Sources/Common/Core/Math';
-import vtkPlaneRepresentation from 'vtk.js/Sources/Interaction/Widgets2/PlaneRepresentation';
+import vtkImplicitPlaneRepresentation from 'vtk.js/Sources/Interaction/Widgets2/ImplicitPlaneRepresentation';
 import vtkPlanePointManipulator from 'vtk.js/Sources/Interaction/Widgets2/PlanePointManipulator';
 
 import { ViewTypes } from 'vtk.js/Sources/Interaction/Widgets2/WidgetManager/Constants';
@@ -12,6 +12,10 @@ import { ViewTypes } from 'vtk.js/Sources/Interaction/Widgets2/WidgetManager/Con
 
 function widgetBehavior(publicAPI, model) {
   let isDragging = null;
+
+  publicAPI.placeWidget = (bounds) => {
+    model.widgetState.setBounds(bounds);
+  };
 
   publicAPI.setDisplayCallback = (callback) =>
     model.representations[0].setDisplayCallback(callback);
@@ -127,7 +131,7 @@ function widgetBehavior(publicAPI, model) {
 // Factory
 // ----------------------------------------------------------------------------
 
-function vtkPlaneWidget(publicAPI, model) {
+function vtkImplicitPlaneWidget(publicAPI, model) {
   model.classHierarchy.push('vtkPlaneWidget');
 
   // --- Widget Requirement ---------------------------------------------------
@@ -140,13 +144,17 @@ function vtkPlaneWidget(publicAPI, model) {
       case ViewTypes.SLICE:
       case ViewTypes.VOLUME:
       default:
-        return [{ builder: vtkPlaneRepresentation }];
+        return [{ builder: vtkImplicitPlaneRepresentation }];
     }
   };
   // --- Widget Requirement ---------------------------------------------------
 
+  publicAPI.placeWidget = (bounds) => {
+    model.widgetState.setBounds(bounds);
+  };
+
   // Default state
-  model.widgetState = vtkPlaneRepresentation.generateState();
+  model.widgetState = vtkImplicitPlaneRepresentation.generateState();
 }
 
 // ----------------------------------------------------------------------------
@@ -160,12 +168,12 @@ export function extend(publicAPI, model, initialValues = {}) {
 
   vtkAbstractWidgetFactory.extend(publicAPI, model, initialValues);
 
-  vtkPlaneWidget(publicAPI, model);
+  vtkImplicitPlaneWidget(publicAPI, model);
 }
 
 // ----------------------------------------------------------------------------
 
-export const newInstance = macro.newInstance(extend, 'vtkPlaneWidget');
+export const newInstance = macro.newInstance(extend, 'vtkImplicitPlaneWidget');
 
 // ----------------------------------------------------------------------------
 

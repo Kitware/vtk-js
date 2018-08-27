@@ -1,7 +1,7 @@
 import 'vtk.js/Sources/favicon';
 
 import vtkFullScreenRenderWindow from 'vtk.js/Sources/Rendering/Misc/FullScreenRenderWindow';
-import vtkPlaneWidget from 'vtk.js/Sources/Interaction/Widgets2/PlaneWidget';
+import vtkImplicitPlaneWidget from 'vtk.js/Sources/Interaction/Widgets2/ImplicitPlaneWidget';
 import vtkWidgetManager from 'vtk.js/Sources/Interaction/Widgets2/WidgetManager';
 
 // import controlPanel from './controlPanel.html';
@@ -40,7 +40,7 @@ const openGLRenderWindow = fullScreenRenderer.getOpenGLRenderWindow();
 const widgetManager = vtkWidgetManager.newInstance();
 widgetManager.setRenderingContext(openGLRenderWindow, renderer);
 
-const widget = vtkPlaneWidget.newInstance();
+const widget = vtkImplicitPlaneWidget.newInstance();
 widget.getWidgetState().setNormal(0, 0, 1);
 
 /* eslint-disable */

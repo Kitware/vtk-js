@@ -8,9 +8,9 @@ import vtkPolyData from 'vtk.js/Sources/Common/DataModel/PolyData';
 // vtkPlaneHandleRepresentation methods
 // ----------------------------------------------------------------------------
 
-function vtkQuadContextRepresentation(publicAPI, model) {
+function vtkConvexFaceContextRepresentation(publicAPI, model) {
   // Set our className
-  model.classHierarchy.push('vtkQuadContextRepresentation');
+  model.classHierarchy.push('vtkConvexFaceContextRepresentation');
 
   // --------------------------------------------------------------------------
   // Internal polydata dataset
@@ -18,8 +18,23 @@ function vtkQuadContextRepresentation(publicAPI, model) {
 
   model.internalPolyData = vtkPolyData.newInstance({ mtime: 0 });
   model.points = new Float32Array(3 * 4);
+  model.cells = new Uint8Array([4, 0, 1, 2, 3]);
   model.internalPolyData.getPoints().setData(model.points, 3);
-  model.internalPolyData.getPolys().setData(new Uint8Array([4, 0, 1, 2, 3]));
+  model.internalPolyData.getPolys().setData(model.cells);
+
+  function allocateSize(size) {
+    if (model.cells.length - 1 !== size) {
+      model.points = new Float32Array(size * 3);
+      model.cells = new Uint8Array(size + 1);
+      model.cells[0] = size;
+      for (let i = 0; i < size; i++) {
+        model.cells[i + 1] = i;
+      }
+      model.internalPolyData.getPoints().setData(model.points, 3);
+      model.internalPolyData.getPolys().setData(model.cells);
+    }
+    return model.points;
+  }
 
   // --------------------------------------------------------------------------
   // Generic rendering pipeline
@@ -41,11 +56,13 @@ function vtkQuadContextRepresentation(publicAPI, model) {
   publicAPI.requestData = (inData, outData) => {
     const list = publicAPI.getRepresentationStates(inData[0]);
 
-    for (let i = 0; i < 4; i++) {
+    const points = allocateSize(list.length);
+
+    for (let i = 0; i < list.length; i++) {
       const coords = list[i].getOrigin();
-      model.points[i * 3] = coords[0];
-      model.points[i * 3 + 1] = coords[1];
-      model.points[i * 3 + 2] = coords[2];
+      points[i * 3] = coords[0];
+      points[i * 3 + 1] = coords[1];
+      points[i * 3 + 2] = coords[2];
     }
     model.internalPolyData.modified();
     outData[0] = model.internalPolyData;
@@ -70,14 +87,14 @@ export function extend(publicAPI, model, initialValues = {}) {
   macro.get(publicAPI, model, ['mapper', 'actor']);
 
   // Object specific methods
-  vtkQuadContextRepresentation(publicAPI, model);
+  vtkConvexFaceContextRepresentation(publicAPI, model);
 }
 
 // ----------------------------------------------------------------------------
 
 export const newInstance = macro.newInstance(
   extend,
-  'vtkQuadContextRepresentation'
+  'vtkConvexFaceContextRepresentation'
 );
 
 // ----------------------------------------------------------------------------

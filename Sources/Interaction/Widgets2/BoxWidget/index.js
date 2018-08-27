@@ -1,9 +1,10 @@
 import macro from 'vtk.js/Sources/macro';
 import vtkAbstractWidgetFactory from 'vtk.js/Sources/Interaction/Widgets2/AbstractWidgetFactory';
-import vtkSphereHandleRepresentation from 'vtk.js/Sources/Interaction/Widgets2/SphereHandleRepresentation';
-import vtkQuadContextRepresentation from 'vtk.js/Sources/Interaction/Widgets2/QuadContextRepresentation';
+import vtkConvexFaceContextRepresentation from 'vtk.js/Sources/Interaction/Widgets2/ConvexFaceContextRepresentation';
 import vtkPlanePointManipulator from 'vtk.js/Sources/Interaction/Widgets2/PlanePointManipulator';
+import vtkSphereHandleRepresentation from 'vtk.js/Sources/Interaction/Widgets2/SphereHandleRepresentation';
 import vtkStateBuilder from 'vtk.js/Sources/Interaction/Widgets2/StateBuilder';
+
 import { ViewTypes } from 'vtk.js/Sources/Interaction/Widgets2/WidgetManager/Constants';
 
 // ----------------------------------------------------------------------------
@@ -88,27 +89,27 @@ function vtkBoxWidget(publicAPI, model) {
         return [
           { builder: vtkSphereHandleRepresentation, labels: ['handles'] },
           {
-            builder: vtkQuadContextRepresentation,
+            builder: vtkConvexFaceContextRepresentation,
             labels: ['---', '--+', '-++', '-+-'],
           },
           {
-            builder: vtkQuadContextRepresentation,
+            builder: vtkConvexFaceContextRepresentation,
             labels: ['---', '+--', '+-+', '--+'],
           },
           {
-            builder: vtkQuadContextRepresentation,
+            builder: vtkConvexFaceContextRepresentation,
             labels: ['+--', '++-', '+++', '+-+'],
           },
           {
-            builder: vtkQuadContextRepresentation,
+            builder: vtkConvexFaceContextRepresentation,
             labels: ['++-', '-+-', '-++', '+++'],
           },
           {
-            builder: vtkQuadContextRepresentation,
+            builder: vtkConvexFaceContextRepresentation,
             labels: ['--+', '+-+', '+++', '-++'],
           },
           {
-            builder: vtkQuadContextRepresentation,
+            builder: vtkConvexFaceContextRepresentation,
             labels: ['---', '+--', '++-', '-+-'],
           },
         ];

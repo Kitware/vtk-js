@@ -28,6 +28,26 @@ const MIXINS = {
 
 // ----------------------------------------------------------------------------
 
+function newInstance(mixins, initialValues) {
+  const publicAPI = {};
+  const model = {};
+
+  vtkWidgetState.extend(publicAPI, model, initialValues);
+  for (let i = 0; i < mixins.length; i++) {
+    const mixin = MIXINS[mixins[i]];
+    if (mixin) {
+      mixin.extend(publicAPI, model, initialValues);
+    } else {
+      vtkErrorMacro('Invalid mixin name:', mixins[i]);
+    }
+  }
+  macro.safeArrays(model);
+
+  return Object.freeze(publicAPI);
+}
+
+// ----------------------------------------------------------------------------
+
 class Builder {
   constructor() {
     this.publicAPI = {};
@@ -36,22 +56,33 @@ class Builder {
     vtkWidgetState.extend(this.publicAPI, this.model);
   }
 
-  addStateFromMixin({ labels, mixins, name, initialValues }) {
-    const publicAPI = {};
-    const model = {};
-
-    vtkWidgetState.extend(publicAPI, model, initialValues);
-    for (let i = 0; i < mixins.length; i++) {
-      const mixin = MIXINS[mixins[i]];
-      if (mixin) {
-        mixin.extend(publicAPI, model, initialValues);
-      } else {
-        vtkErrorMacro('Invalid mixin name:', mixins[i]);
+  addDynamicMixinState({ labels, mixins, name }) {
+    const listName = `${name}List`;
+    this.model[listName] = [];
+    // Create new Instance method
+    this.publicAPI[`add${macro.capitalize(name)}`] = () => {
+      const instance = newInstance(mixins);
+      this.publicAPI.bindState(instance, labels);
+      this.model[listName].push(instance);
+      return instance;
+    };
+    this.publicAPI[`remove${macro.capitalize(name)}`] = (instanceOrIndex) => {
+      let removeIndex = this.model[listName].indexOf(instanceOrIndex);
+      if (removeIndex === -1 && instanceOrIndex < this.model[listName].length) {
+        removeIndex = instanceOrIndex;
       }
-    }
-    macro.safeArrays(model);
+      const instance = this.model[listName][removeIndex];
+      if (instance) {
+        this.publicAPI.unbindState(instance);
+      }
+    };
+    this.publicAPI[`get${macro.capitalize(name)}List`] = () =>
+      this.model[listName];
+    return this;
+  }
 
-    const instance = Object.freeze(publicAPI);
+  addStateFromMixin({ labels, mixins, name, initialValues }) {
+    const instance = newInstance(mixins, initialValues);
     this.model[name] = instance;
     this.publicAPI.bindState(instance, labels);
     macro.setGet(this.publicAPI, this.model, [name]);

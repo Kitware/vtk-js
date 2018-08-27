@@ -83,12 +83,12 @@ function generateState() {
 }
 
 // ----------------------------------------------------------------------------
-// vtkPlaneHandleRepresentation methods
+// vtkImplicitPlaneRepresentation methods
 // ----------------------------------------------------------------------------
 
-function vtkPlaneRepresentation(publicAPI, model) {
+function vtkImplicitPlaneRepresentation(publicAPI, model) {
   // Set our className
-  model.classHierarchy.push('vtkPlaneRepresentation');
+  model.classHierarchy.push('vtkImplicitPlaneRepresentation');
 
   // --------------------------------------------------------------------------
   // Internal polydata dataset
@@ -194,7 +194,7 @@ function vtkPlaneRepresentation(publicAPI, model) {
     });
 
     // ------------------------------------------------------
-    // Option 1 (not fully working bu better)
+    // Option 1 (not fully working but better)
     // ------------------------------------------------------
     // model.normalPipeline.actor.setUserMatrix(
     //   model.matrix
@@ -387,12 +387,15 @@ export function extend(publicAPI, model, initialValues = {}) {
   ]);
 
   // Object specific methods
-  vtkPlaneRepresentation(publicAPI, model);
+  vtkImplicitPlaneRepresentation(publicAPI, model);
 }
 
 // ----------------------------------------------------------------------------
 
-export const newInstance = macro.newInstance(extend, 'vtkPlaneRepresentation');
+export const newInstance = macro.newInstance(
+  extend,
+  'vtkImplicitPlaneRepresentation'
+);
 
 // ----------------------------------------------------------------------------
 

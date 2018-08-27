@@ -2,6 +2,13 @@ import macro from 'vtk.js/Sources/macro';
 
 const DEFAULT_LABEL = 'default';
 
+function removeObjectInArray(array, obj) {
+  const idx = array.indexOf(obj);
+  if (idx !== -1) {
+    array.splice(idx, 1);
+  }
+}
+
 // ----------------------------------------------------------------------------
 
 function vtkWidgetState(publicAPI, model) {
@@ -37,6 +44,23 @@ function vtkWidgetState(publicAPI, model) {
       }
       model.labels[labelToUse].push(nested);
     }
+  };
+
+  // --------------------------------------------------------------------------
+
+  publicAPI.unbindState = (nested) => {
+    while (subscriptions.length) {
+      subscriptions.pop().unsubscribe();
+    }
+    removeObjectInArray(model.nestedStates, nested);
+    for (let i = 0; i < model.nestedStates.length; i++) {
+      subscriptions.push(model.nestedStates[i].onModified(publicAPI.modified));
+    }
+
+    Object.keys(model.labels).forEach((label) => {
+      const list = model.labels[label];
+      removeObjectInArray(list, nested);
+    });
   };
 
   // --------------------------------------------------------------------------
