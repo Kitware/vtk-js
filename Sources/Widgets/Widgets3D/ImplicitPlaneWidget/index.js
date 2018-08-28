@@ -3,7 +3,7 @@ import vtkAbstractWidgetFactory from 'vtk.js/Sources/Widgets/Core/AbstractWidget
 import vtkBoundingBox from 'vtk.js/Sources/Common/DataModel/BoundingBox';
 import vtkImplicitPlaneRepresentation from 'vtk.js/Sources/Widgets/Representations/ImplicitPlaneRepresentation';
 import vtkLineManipulator from 'vtk.js/Sources/Widgets/Manipulators/LineManipulator';
-import vtkMath from 'vtk.js/Sources/Common/Core/Math';
+import vtkTrackballManipulator from 'vtk.js/Sources/Widgets/Manipulators/TrackballManipulator';
 import vtkPlaneManipulator from 'vtk.js/Sources/Widgets/Manipulators/PlaneManipulator';
 
 import { ViewTypes } from 'vtk.js/Sources/Widgets/Core/WidgetManager/Constants';
@@ -23,13 +23,14 @@ function widgetBehavior(publicAPI, model) {
   publicAPI.setDisplayCallback = (callback) =>
     model.representations[0].setDisplayCallback(callback);
 
-  publicAPI.handleLeftButtonPress = () => {
+  publicAPI.handleLeftButtonPress = (callData) => {
     if (!model.activeState || !model.activeState.getActive() || !model.active) {
       return macro.VOID;
     }
     isDragging = true;
     model.lineManipulator.setOrigin(model.widgetState.getOrigin());
     model.planeManipulator.setOrigin(model.widgetState.getOrigin());
+    model.trackballManipulator.reset(callData); // setup trackball delta
     model.interactor.requestAnimation(publicAPI);
     return macro.EVENT_ABORT;
   };
@@ -83,31 +84,13 @@ function widgetBehavior(publicAPI, model) {
   };
 
   publicAPI.updateFromNormal = (callData) => {
-    const origin = model.activeState.getOrigin();
-    const originalNormal = model.activeState.getNormal();
-    const newNormal = [0, 0, 0];
-    vtkMath.cross(
-      originalNormal,
-      model.camera.getDirectionOfProjection(),
-      newNormal
-    );
-    vtkMath.cross(originalNormal, newNormal, newNormal);
-    model.planeManipulator.setNormal(newNormal);
-    const worldCoords = model.planeManipulator.handleEvent(
+    model.trackballManipulator.setNormal(model.activeState.getNormal());
+
+    const newNormal = model.trackballManipulator.handleEvent(
       callData,
       model.openGLRenderWindow
     );
-
-    if (worldCoords.length) {
-      const normal = [
-        worldCoords[0] - origin[0],
-        worldCoords[1] - origin[1],
-        worldCoords[2] - origin[2],
-      ];
-      vtkMath.normalize(normal);
-
-      model.activeState.setNormal(normal);
-    }
+    model.activeState.setNormal(newNormal);
   };
 
   // --------------------------------------------------------------------------
@@ -117,6 +100,7 @@ function widgetBehavior(publicAPI, model) {
   model.camera = model.renderer.getActiveCamera();
   model.lineManipulator = vtkLineManipulator.newInstance();
   model.planeManipulator = vtkPlaneManipulator.newInstance();
+  model.trackballManipulator = vtkTrackballManipulator.newInstance();
   model.bbox.setBounds(model.widgetState.getBounds());
 
   model.classHierarchy.push('vtkPlaneWidgetProp');
