@@ -15,7 +15,9 @@ function vtkOpenGLActor2D(publicAPI, model) {
       if (!model.renderable) {
         return;
       }
-
+      model.openGLRenderer = publicAPI.getFirstAncestorOfType(
+        'vtkOpenGLRenderer'
+      );
       publicAPI.prepareNodes();
       publicAPI.addMissingNodes(model.renderable.getTextures());
       publicAPI.addMissingNode(model.renderable.getMapper());
@@ -28,7 +30,8 @@ function vtkOpenGLActor2D(publicAPI, model) {
     if (
       !model.renderable ||
       !model.renderable.getVisibility() ||
-      !model.renderable.getIsOpaque()
+      !model.renderable.getIsOpaque() ||
+      (model.openGLRenderer.getSelector() && !model.renderable.getPickable())
     ) {
       return;
     }
@@ -47,7 +50,8 @@ function vtkOpenGLActor2D(publicAPI, model) {
     if (
       !model.renderable ||
       !model.renderable.getVisibility() ||
-      model.renderable.getIsOpaque()
+      model.renderable.getIsOpaque() ||
+      (model.openGLRenderer.getSelector() && !model.renderable.getPickable())
     ) {
       return;
     }

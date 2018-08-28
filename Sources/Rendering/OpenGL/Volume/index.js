@@ -17,6 +17,9 @@ function vtkOpenGLVolume(publicAPI, model) {
       return;
     }
     if (prepass) {
+      model.openGLRenderer = publicAPI.getFirstAncestorOfType(
+        'vtkOpenGLRenderer'
+      );
       publicAPI.prepareNodes();
       publicAPI.addMissingNode(model.renderable.getMapper());
       publicAPI.removeUnusedNodes();
@@ -33,7 +36,11 @@ function vtkOpenGLVolume(publicAPI, model) {
   };
 
   publicAPI.traverseVolumePass = (renderPass) => {
-    if (!model.renderable || !model.renderable.getVisibility()) {
+    if (
+      !model.renderable ||
+      !model.renderable.getVisibility() ||
+      (model.openGLRenderer.getSelector() && !model.renderable.getPickable())
+    ) {
       return;
     }
 
