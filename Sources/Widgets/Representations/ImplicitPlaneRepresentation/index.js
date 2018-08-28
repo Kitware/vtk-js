@@ -10,7 +10,6 @@ import vtkMapper from 'vtk.js/Sources/Rendering/Core/Mapper';
 import vtkMatrixBuilder from 'vtk.js/Sources/Common/Core/MatrixBuilder';
 import vtkPixelSpaceCallbackMapper from 'vtk.js/Sources/Rendering/Core/PixelSpaceCallbackMapper';
 import vtkPlane from 'vtk.js/Sources/Common/DataModel/Plane';
-import vtkPoints from 'vtk.js/Sources/Common/Core/Points';
 import vtkPolyData from 'vtk.js/Sources/Common/DataModel/PolyData';
 import vtkSphereSource from 'vtk.js/Sources/Filters/Sources/SphereSource';
 import vtkStateBuilder from 'vtk.js/Sources/Widgets/Core/StateBuilder';
@@ -161,9 +160,6 @@ function vtkImplicitPlaneRepresentation(publicAPI, model) {
     .getProperty()
     .setInterpolation(Interpolation.FLAT);
 
-  // fixme
-  model.normalPipeline.actor.getProperty().setInterpolation(Interpolation.FLAT);
-
   // --------------------------------------------------------------------------
 
   publicAPI.requestData = (inData, outData) => {
@@ -210,34 +206,13 @@ function vtkImplicitPlaneRepresentation(publicAPI, model) {
     // Option 2
     // ------------------------------------------------------
     const originalDS = model.normalPipeline.source.getOutputData();
-    const originalCoords = originalDS.getPoints().getData();
-    const originalNormals = originalDS
-      .getPointData()
-      .getNormals()
-      .getData();
     const newAxis = vtkPolyData.newInstance();
     newAxis.shallowCopy(model.normalPipeline.source.getOutputData());
-    newAxis.setPoints(
-      vtkPoints.newInstance({
-        numberOfComponents: 3,
-        values: Float32Array.from(originalCoords),
-      })
-    );
-    newAxis.getPointData().setNormals(
-      vtkDataArray.newInstance({
-        numberOfComponents: 3,
-        values: Float32Array.from(originalNormals),
-      })
-    );
+    newAxis
+      .getPoints()
+      .setData(Float32Array.from(originalDS.getPoints().getData()), 3);
+    newAxis.getPointData().removeAllArrays();
     model.matrix
-      // .identity()
-      // .rotateFromDirections([0, 1, 0], normal)
-      // .apply(
-      //   newAxis
-      //     .getPointData()
-      //     .getNormals()
-      //     .getData()
-      // )
       .identity()
       .translate(origin[0], origin[1], origin[2])
       .rotateFromDirections([0, 1, 0], normal)

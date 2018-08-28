@@ -238,10 +238,6 @@ function vtkDataArray(publicAPI, model) {
     dataChange();
   };
 
-  /* eslint-disable no-use-before-define */
-  publicAPI.shallowCopy = () => newInstance(Object.assign({}, model));
-  /* eslint-enable no-use-before-define */
-
   // Override serialization support
   publicAPI.getState = () => {
     const jsonArchive = Object.assign({}, model, {
