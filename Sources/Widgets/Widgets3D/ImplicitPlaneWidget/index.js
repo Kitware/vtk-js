@@ -117,6 +117,8 @@ function widgetBehavior(publicAPI, model) {
   model.lineManipulator = vtkLineManipulator.newInstance();
   model.planeManipulator = vtkPlaneManipulator.newInstance();
   model.bbox.setBounds(model.widgetState.getBounds());
+
+  model.classHierarchy.push('vtkPlaneWidgetProp');
 }
 
 // ----------------------------------------------------------------------------

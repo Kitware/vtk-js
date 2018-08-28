@@ -138,6 +138,8 @@ function widgetBehavior(publicAPI, model) {
   // --------------------------------------------------------------------------
 
   model.camera = model.renderer.getActiveCamera();
+
+  model.classHierarchy.push('vtkPolyLineWidgetProp');
 }
 
 // ----------------------------------------------------------------------------

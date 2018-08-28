@@ -1,8 +1,23 @@
 import 'vtk.js/Sources/favicon';
 
 import vtkFullScreenRenderWindow from 'vtk.js/Sources/Rendering/Misc/FullScreenRenderWindow';
-import vtkHandleWidget2 from 'vtk.js/Sources/Widgets/Widgets3D/HandleWidget2';
 import vtkWidgetManager from 'vtk.js/Sources/Widgets/Core/WidgetManager';
+
+import vtkActor from 'vtk.js/Sources/Rendering/Core/Actor';
+import vtkConeSource from 'vtk.js/Sources/Filters/Sources/ConeSource';
+import vtkMapper from 'vtk.js/Sources/Rendering/Core/Mapper';
+
+import vtkBoxWidget from 'vtk.js/Sources/Widgets/Widgets3D/BoxWidget';
+import vtkImplicitPlaneWidget from 'vtk.js/Sources/Widgets/Widgets3D/ImplicitPlaneWidget';
+import vtkPolyLineWidget from 'vtk.js/Sources/Widgets/Widgets3D/PolyLineWidget';
+
+import controlPanel from './controlPanel.html';
+
+const WIDGET_BUILDERS = {
+  vtkBoxWidget,
+  vtkImplicitPlaneWidget,
+  vtkPolyLineWidget,
+};
 
 // ----------------------------------------------------------------------------
 // Standard rendering code setup
@@ -16,52 +31,133 @@ const renderWindow = fullScreenRenderer.getRenderWindow();
 const openGLRenderWindow = fullScreenRenderer.getOpenGLRenderWindow();
 
 // ----------------------------------------------------------------------------
+// Add context to place widget
+// ----------------------------------------------------------------------------
+
+const cone = vtkConeSource.newInstance();
+const mapper = vtkMapper.newInstance();
+const actor = vtkActor.newInstance();
+
+actor.setMapper(mapper);
+mapper.setInputConnection(cone.getOutputPort());
+actor.getProperty().setOpacity(0.5);
+renderer.addActor(actor);
+
+renderer.resetCamera();
+renderWindow.render();
+
+// ----------------------------------------------------------------------------
 // Widget manager
 // ----------------------------------------------------------------------------
 
 const widgetManager = vtkWidgetManager.newInstance();
 widgetManager.setRenderingContext(openGLRenderWindow, renderer);
 
-const masterWidgets = [];
-const NB_HANDLES = 50;
-for (let i = 0; i < NB_HANDLES; i++) {
-  const widget = vtkHandleWidget2.newInstance();
-  const viewWidget = widgetManager.registerWidget(widget);
-  masterWidgets.push(widget);
+// -----------------------------------------------------------
+// UI control handling
+// -----------------------------------------------------------
+/* eslint-disable */
+fullScreenRenderer.addController(controlPanel);
 
-  // console.log(
-  //   widget.getWidgetForView({ viewId: widgetManager.getViewId() }) ===
-  //     viewWidget
-  // );
+const widgetListElem = document.querySelector('.widgetList');
+const selectElem = document.querySelector('select');
+const buttonCreate = document.querySelector('button.create');
 
-  viewWidget.getRepresentations().forEach((rep) => {
-    rep.setGlyphResolution(12);
-    rep.setActiveScaleFactor(0.5);
-  });
+// Create Widget
+buttonCreate.addEventListener('click', () => {
+  const widget = WIDGET_BUILDERS[selectElem.value].newInstance();
+  widgetManager.registerWidget(widget);
 
-  const localState = widget.getWidgetState().getHandle();
-  localState.setOrigin(
-    Math.random() * Math.sqrt(NB_HANDLES),
-    Math.random() * Math.sqrt(NB_HANDLES),
-    0
+  widgetManager.enablePicking();
+  renderWindow.render();
+  updateUI();
+});
+
+// Toggle flag
+function toggle(e) {
+  const value = !!e.target.checked;
+  const name = e.currentTarget.dataset.name;
+  const index = Number(
+    e.currentTarget.parentElement.parentElement.dataset.index
   );
-  localState.setScale1(0.75 + 0.25 * Math.random());
-  localState.setColor(Math.random() - 0.2); // Noone can get the active color 1.
+  // FIXME
+  console.log('toggle', index, name, value);
 }
 
-renderer.resetCamera();
-renderWindow.render();
-widgetManager.enablePicking();
+// Delete widget
+function deleteWidget(e) {
+  const index = Number(
+    e.currentTarget.parentElement.parentElement.dataset.index
+  );
+  const w = widgetManager.getWidgets()[index];
+  widgetManager.unregisterWidget(w);
+  updateUI();
+}
 
-setInterval(() => {
-  if (masterWidgets.length) {
-    widgetManager.unregisterWidget(masterWidgets.pop());
-  }
-}, 2000);
+// UI generation -------------------
+function toHTML(w, index) {
+  return `<tr data-index="${index}">
+    <td>
+      <input
+        type="checkbox"
+        data-name="focus"
+        ${w.focus ? 'checked' : ''}
+      />
+    </td>
+    <td>${w.name}</td>
+    <td>
+      <input
+        type="checkbox"
+        data-name="pickable"
+        ${w.pickable ? 'checked' : ''}
+      />
+    </td>
+    <td>
+      <input
+        type="checkbox"
+        data-name="visibility"
+        ${w.visibility ? 'checked' : ''}
+      />
+    </td>
+    <td>
+      <input
+        type="checkbox"
+        data-name="contextVisibility"
+        ${w.contextVisibility ? 'checked' : ''}
+      />
+    </td>
+    <td>
+      <input
+        type="checkbox"
+        data-name="handleVisibility"
+        ${w.handleVisibility ? 'checked' : ''}
+      />
+    </td>
+    <td>
+      <button class='delete'>x</button>
+    </td>
+  </tr>`;
+}
 
-setInterval(() => {
-  widgetManager.getWidgets();
-  if (widgetManager.getWidgets().length) {
-    widgetManager.unregisterWidget(widgetManager.getWidgets()[0]);
+function updateUI() {
+  const widgets = widgetManager.getWidgets();
+  widgetListElem.innerHTML = widgets
+    .map((w) => ({
+      name: w.getClassName(),
+      focus: w.hasFocus(),
+      pickable: w.getActive(),
+      visibility: w.getVisible(),
+      contextVisibility: w.getVisibleContext(),
+      handleVisibility: w.getVisibleHandle(),
+    }))
+    .map(toHTML)
+    .join('\n');
+  const toggleElems = document.querySelectorAll('input[type="checkbox"]');
+  for (let i = 0; i < toggleElems.length; i++) {
+    toggleElems[i].addEventListener('change', toggle);
   }
-}, 3000);
+  const deleteElems = document.querySelectorAll('button.delete');
+  for (let i = 0; i < deleteElems.length; i++) {
+    deleteElems[i].addEventListener('click', deleteWidget);
+  }
+}
