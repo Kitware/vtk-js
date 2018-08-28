@@ -91,9 +91,9 @@ function updateState(e) {
   if (name) {
     stateObj.set({ [name]: value });
   } else {
-    const center = stateObj.getPosition();
+    const center = stateObj.getOrigin();
     center[Number(index)] = value;
-    stateObj.setPosition(center);
+    stateObj.setOrigin(center);
   }
 
   renderWindow.render();
