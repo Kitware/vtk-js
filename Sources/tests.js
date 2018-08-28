@@ -38,6 +38,7 @@ import './Rendering/Core/SphereMapper/test/testDisableScalarColoring';
 import './Rendering/OpenGL/Actor/test/testRotate';
 import './Rendering/OpenGL/HardwareSelector/test/testHardwareSelector';
 import './Rendering/OpenGL/HardwareSelector/test/testHardwareSelectorGlyph';
+import './Rendering/OpenGL/HardwareSelector/test/testHardwareSelectorSpeed';
 import './Rendering/OpenGL/ImageMapper/test/testImage';
 import './Rendering/OpenGL/ImageMapper/test/testImageNearestNeighbor';
 import './Rendering/OpenGL/ImageMapper/test/testImageColorTransferFunction';
