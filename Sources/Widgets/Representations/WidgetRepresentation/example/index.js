@@ -138,4 +138,3 @@ for (let i = 0; i < glyphElems.length; i++) {
     renderWindow.render();
   });
 }
-
