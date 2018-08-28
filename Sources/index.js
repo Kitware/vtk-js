@@ -5,6 +5,7 @@ import Interaction from './Interaction';
 import IO from './IO';
 import Rendering from './Rendering';
 import VTKProxy from './Proxy';
+import Widgets from './Widgets';
 
 import macro from './macro';
 
@@ -15,8 +16,9 @@ vtk.Filters = Filters;
 vtk.Imaging = Imaging;
 vtk.Interaction = Interaction;
 vtk.IO = IO;
-vtk.Rendering = Rendering;
 vtk.Proxy = VTKProxy;
+vtk.Rendering = Rendering;
+vtk.Widgets = Widgets;
 
 vtk.mtime = macro.getCurrentGlobalMTime;
 vtk.macro = macro;

@@ -1,0 +1,153 @@
+<table>
+  <tr style="text-align: center;">
+    <td>Groups</td>
+    <td colspan="3">
+      <select class='glyph' data-rep="sphere" data-field="labels" style="width: 100%;">
+        <option value="all">All</option>
+        <option value="none">None</option>
+        <option value="a">A</option>
+        <option value="b">B</option>
+        <option value="c">C</option>
+        <option value="d">D</option>
+        <option value="ab">A+B</option>
+        <option value="ac">A+C</option>
+        <option value="bc">B+C</option>
+        <option value="b,c">[B,C]</option>
+        <option value="a,b,c">[A,B,C]</option>
+        <option value="b,c,d">[B,D]</option>
+        <option value="a,b,c,d">[A,B,C,D]</option>
+      </select>
+    </td>
+  </tr>
+  <tr style="text-align: center;">
+    <td>Groups</td>
+    <td colspan="3">
+      <select class='glyph' data-rep="cube" data-field="labels" style="width: 100%;">
+        <option value="all">All</option>
+        <option value="none">None</option>
+        <option value="a">A</option>
+        <option value="b">B</option>
+        <option value="c">C</option>
+        <option value="d">D</option>
+        <option value="ab">A+B</option>
+        <option value="ac">A+C</option>
+        <option value="bc">B+C</option>
+        <option value="b,c">[B,C]</option>
+        <option value="a,b,c">[A,B,C]</option>
+        <option value="b,c,d">[B,D]</option>
+        <option value="a,b,c,d">[A,B,C,D]</option>
+      </select>
+    </td>
+  </tr>
+  <tr>
+    <td colspan="4">Glyph</td>
+  </tr>
+  <tr style="text-align: center;">
+    <td>Resolution</td>
+    <td colspan="3">
+      <input class='glyph' data-field="glyphResolution" type="range" min="3" max="60" step="1" value="8" />
+    </td>
+  </tr>
+  <tr style="text-align: center;">
+    <td>Active Scale</td>
+    <td colspan="3">
+      <input class='glyph' data-field="activeScaleFactor" type="range" min="0.5" max="2" step="0.1" value="1.2" />
+    </td>
+  </tr>
+  <tr style="text-align: center;">
+    <td>Active Color</td>
+    <td colspan="3">
+      <input class='glyph' data-field="activeColor" type="range" min="0" max="1" step="0.1" value="0" />
+    </td>
+  </tr>
+  <tr style="text-align: center;">
+    <td><input class='active' type="checkbox" data-field="a" />A</td>
+    <td>X</td>
+    <td>Y</td>
+    <td>Z</td>
+  </tr>
+  <tr>
+    <td>Origin</td>
+    <td>
+      <input style="width: 50px" class='stateField' data-index="0" data-field="a" type="range" min="-1" max="1" step="0.1" value="-1" />
+    </td>
+    <td>
+      <input style="width: 50px" class='stateField' data-index="1" data-field="a" type="range" min="-1" max="1" step="0.1" value="0" />
+    </td>
+    <td>
+      <input style="width: 50px" class='stateField' data-index="2" data-field="a" type="range" min="-1" max="1" step="0.1" value="0" />
+    </td>
+  </tr>
+  <tr>
+    <td>Radius</td>
+    <td colspan="3">
+      <input class='stateField' type="range" min="0.1" max="1" step="0.1" value="0.5" data-name="scale1" data-field="a" />
+    </td>
+  </tr>
+  <tr>
+    <td>Color</td>
+    <td colspan="3">
+      <input class='stateField' type="range" min="0" max="1" step="0.1" value="0.5" data-name="color" data-field="a" />
+    </td>
+  </tr>
+  <tr style="text-align: center;">
+    <td><input class='active' type="checkbox" data-field="b" />B</td>
+    <td>X</td>
+    <td>Y</td>
+    <td>Z</td>
+  </tr>
+  <tr>
+    <td>Origin</td>
+    <td>
+      <input style="width: 50px" class='stateField' data-index="0" data-field="b" type="range" min="-1" max="1" step="0.1" value="0" />
+    </td>
+    <td>
+      <input style="width: 50px" class='stateField' data-index="1" data-field="b" type="range" min="-1" max="1" step="0.1" value="0" />
+    </td>
+    <td>
+      <input style="width: 50px" class='stateField' data-index="2" data-field="b" type="range" min="-1" max="1" step="0.1" value="0" />
+    </td>
+  </tr>
+  <tr>
+    <td>Radius</td>
+    <td colspan="3">
+      <input class='stateField' type="range" min="0.1" max="1" step="0.1" value="0.5" data-name="scale1" data-field="b" />
+    </td>
+  </tr>
+  <tr>
+    <td>Color</td>
+    <td colspan="3">
+      <input class='stateField' type="range" min="0" max="1" step="0.1" value="0.5" data-name="color" data-field="b" />
+    </td>
+  </tr>
+  <tr style="text-align: center;">
+    <td><input class='active' type="checkbox" data-field="c" />C</td>
+    <td>X</td>
+    <td>Y</td>
+    <td>Z</td>
+  </tr>
+  <tr>
+    <td>Origin</td>
+    <td>
+      <input style="width: 50px" class='stateField' data-index="0" data-field="c" type="range" min="-1" max="1" step="0.1" value="1" />
+    </td>
+    <td>
+      <input style="width: 50px" class='stateField' data-index="1" data-field="c" type="range" min="-1" max="1" step="0.1" value="0" />
+    </td>
+    <td>
+      <input style="width: 50px" class='stateField' data-index="2" data-field="c" type="range" min="-1" max="1" step="0.1" value="0" />
+    </td>
+  </tr>
+  <tr>
+    <td>Radius</td>
+    <td colspan="3">
+      <input class='stateField' type="range" min="0.1" max="1" step="0.1" value="0.5" data-name="scale1" data-field="c" />
+    </td>
+  </tr>
+  <tr>
+    <td>Color</td>
+    <td colspan="3">
+      <input class='stateField' type="range" min="0" max="1" step="0.1" value="0.5" data-name="color" data-field="c" />
+    </td>
+  </tr>
+</table>
