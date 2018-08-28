@@ -1,13 +1,12 @@
 import macro from 'vtk.js/Sources/macro';
-import vtkAbstractWidgetFactory from 'vtk.js/Sources/Interaction/Widgets2/AbstractWidgetFactory';
-import vtkSphereHandleRepresentation from 'vtk.js/Sources/Interaction/Widgets2/SphereHandleRepresentation';
-import vtkCircleContextRepresentation from 'vtk.js/Sources/Interaction/Widgets2/CircleContextRepresentation';
-import vtkPlanePointManipulator from 'vtk.js/Sources/Interaction/Widgets2/PlanePointManipulator';
-import vtkStateBuilder from 'vtk.js/Sources/Interaction/Widgets2/StateBuilder';
-import Constants from 'vtk.js/Sources/Interaction/Widgets2/HandleWidget2/Constants';
-import { ViewTypes } from 'vtk.js/Sources/Interaction/Widgets2/WidgetManager/Constants';
+import vtkAbstractWidgetFactory from 'vtk.js/Sources/Widgets/Core/AbstractWidgetFactory';
+import vtkCircleContextRepresentation from 'vtk.js/Sources/Widgets/Representations/CircleContextRepresentation';
+import vtkPlaneManipulator from 'vtk.js/Sources/Widgets/Manipulators/PlaneManipulator';
+import vtkSphereHandleRepresentation from 'vtk.js/Sources/Widgets/Representations/SphereHandleRepresentation';
+import vtkStateBuilder from 'vtk.js/Sources/Widgets/Core/StateBuilder';
 
-const { Type } = Constants;
+import { Type } from 'vtk.js/Sources/Widgets/Widgets3D/HandleWidget2/Constants';
+import { ViewTypes } from 'vtk.js/Sources/Widgets/Core/WidgetManager/Constants';
 
 // ----------------------------------------------------------------------------
 // Widget linked to a view
@@ -145,7 +144,7 @@ function vtkHandleWidget(publicAPI, model) {
   const plane = model.widgetState.getPlane();
 
   // Default manipulator
-  model.manipulator = vtkPlanePointManipulator.newInstance();
+  model.manipulator = vtkPlaneManipulator.newInstance();
   handle.setManipulator(model.manipulator);
 
   // FIXME bad cleanup missing...

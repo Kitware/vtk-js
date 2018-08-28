@@ -1,15 +1,15 @@
 import macro from 'vtk.js/Sources/macro';
 
-import vtkWidgetState from 'vtk.js/Sources/Interaction/Widgets2/WidgetState';
+import vtkWidgetState from 'vtk.js/Sources/Widgets/Core/WidgetState';
 
-import bounds from 'vtk.js/Sources/Interaction/Widgets2/StateBuilder/boundsMixin';
-import color from 'vtk.js/Sources/Interaction/Widgets2/StateBuilder/colorMixin';
-import direction from 'vtk.js/Sources/Interaction/Widgets2/StateBuilder/directionMixin';
-import manipulator from 'vtk.js/Sources/Interaction/Widgets2/StateBuilder/manipulatorMixin';
-import origin from 'vtk.js/Sources/Interaction/Widgets2/StateBuilder/originMixin';
-import scale1 from 'vtk.js/Sources/Interaction/Widgets2/StateBuilder/scale1Mixin';
-import scale3 from 'vtk.js/Sources/Interaction/Widgets2/StateBuilder/scale3Mixin';
-import visible from 'vtk.js/Sources/Interaction/Widgets2/StateBuilder/visibleMixin';
+import bounds from 'vtk.js/Sources/Widgets/Core/StateBuilder/boundsMixin';
+import color from 'vtk.js/Sources/Widgets/Core/StateBuilder/colorMixin';
+import direction from 'vtk.js/Sources/Widgets/Core/StateBuilder/directionMixin';
+import manipulator from 'vtk.js/Sources/Widgets/Core/StateBuilder/manipulatorMixin';
+import origin from 'vtk.js/Sources/Widgets/Core/StateBuilder/originMixin';
+import scale1 from 'vtk.js/Sources/Widgets/Core/StateBuilder/scale1Mixin';
+import scale3 from 'vtk.js/Sources/Widgets/Core/StateBuilder/scale3Mixin';
+import visible from 'vtk.js/Sources/Widgets/Core/StateBuilder/visibleMixin';
 
 const { vtkErrorMacro } = macro;
 

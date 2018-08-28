@@ -1,12 +1,11 @@
 import macro from 'vtk.js/Sources/macro';
 import vtkOpenGLHardwareSelector from 'vtk.js/Sources/Rendering/OpenGL/HardwareSelector';
 import { FieldAssociations } from 'vtk.js/Sources/Common/DataModel/DataSet/Constants';
-import {
-  ViewTypes,
-  RenderingTypes,
-} from 'vtk.js/Sources/Interaction/Widgets2/WidgetManager/Constants';
+import WMConstants from 'vtk.js/Sources/Widgets/Core/WidgetManager/Constants';
 
+const { ViewTypes, RenderingTypes } = WMConstants;
 const { vtkErrorMacro } = macro;
+
 let viewIdCount = 1;
 
 // ----------------------------------------------------------------------------

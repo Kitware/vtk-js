@@ -1,6 +1,6 @@
 import macro from 'vtk.js/Sources/macro';
-import vtkWidgetRepresentation from 'vtk.js/Sources/Interaction/Widgets2/WidgetRepresentation';
-import { Behavior } from 'vtk.js/Sources/Interaction/Widgets2/WidgetRepresentation/Constants';
+import vtkWidgetRepresentation from 'vtk.js/Sources/Widgets/Representations/WidgetRepresentation';
+import { Behavior } from 'vtk.js/Sources/Widgets/Representations/WidgetRepresentation/Constants';
 
 // ----------------------------------------------------------------------------
 // vtkHandleRepresentation methods

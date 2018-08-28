@@ -13,15 +13,16 @@ import vtkPlane from 'vtk.js/Sources/Common/DataModel/Plane';
 import vtkPoints from 'vtk.js/Sources/Common/Core/Points';
 import vtkPolyData from 'vtk.js/Sources/Common/DataModel/PolyData';
 import vtkSphereSource from 'vtk.js/Sources/Filters/Sources/SphereSource';
-import vtkStateBuilder from 'vtk.js/Sources/Interaction/Widgets2/StateBuilder';
-import vtkWidgetRepresentation from 'vtk.js/Sources/Interaction/Widgets2/WidgetRepresentation';
+import vtkStateBuilder from 'vtk.js/Sources/Widgets/Core/StateBuilder';
+import vtkWidgetRepresentation from 'vtk.js/Sources/Widgets/Representations/WidgetRepresentation';
 
-import { RenderingTypes } from 'vtk.js/Sources/Interaction/Widgets2/WidgetManager/Constants';
-import { ScalarMode } from 'vtk.js/Sources/Rendering/Core/Mapper/Constants';
-import {
-  Interpolation,
-  Representation,
-} from 'vtk.js/Sources/Rendering/Core/Property/Constants';
+import WidgetManagerConst from 'vtk.js/Sources/Widgets/Core/WidgetManager/Constants';
+import MapperConst from 'vtk.js/Sources/Rendering/Core/Mapper/Constants';
+import PropertyConst from 'vtk.js/Sources/Rendering/Core/Property/Constants';
+
+const { RenderingTypes } = WidgetManagerConst;
+const { ScalarMode } = MapperConst;
+const { Interpolation, Representation } = PropertyConst;
 
 // ----------------------------------------------------------------------------
 // Helper methods to build state

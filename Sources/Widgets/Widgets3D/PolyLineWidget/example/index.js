@@ -1,12 +1,11 @@
 import 'vtk.js/Sources/favicon';
 
-import vtkFullScreenRenderWindow from 'vtk.js/Sources/Rendering/Misc/FullScreenRenderWindow';
-import vtkPolyLineWidget from 'vtk.js/Sources/Interaction/Widgets2/PolyLineWidget';
-import vtkWidgetManager from 'vtk.js/Sources/Interaction/Widgets2/WidgetManager';
-
 import vtkActor from 'vtk.js/Sources/Rendering/Core/Actor';
 import vtkConeSource from 'vtk.js/Sources/Filters/Sources/ConeSource';
+import vtkFullScreenRenderWindow from 'vtk.js/Sources/Rendering/Misc/FullScreenRenderWindow';
 import vtkMapper from 'vtk.js/Sources/Rendering/Core/Mapper';
+import vtkPolyLineWidget from 'vtk.js/Sources/Widgets/Widgets3D/PolyLineWidget';
+import vtkWidgetManager from 'vtk.js/Sources/Widgets/Core/WidgetManager';
 
 import controlPanel from './controlPanel.html';
 

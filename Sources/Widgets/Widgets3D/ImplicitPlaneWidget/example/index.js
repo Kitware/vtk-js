@@ -1,8 +1,8 @@
 import 'vtk.js/Sources/favicon';
 
 import vtkFullScreenRenderWindow from 'vtk.js/Sources/Rendering/Misc/FullScreenRenderWindow';
-import vtkImplicitPlaneWidget from 'vtk.js/Sources/Interaction/Widgets2/ImplicitPlaneWidget';
-import vtkWidgetManager from 'vtk.js/Sources/Interaction/Widgets2/WidgetManager';
+import vtkImplicitPlaneWidget from 'vtk.js/Sources/Widgets/Widgets3D/ImplicitPlaneWidget';
+import vtkWidgetManager from 'vtk.js/Sources/Widgets/Core/WidgetManager';
 
 // import controlPanel from './controlPanel.html';
 

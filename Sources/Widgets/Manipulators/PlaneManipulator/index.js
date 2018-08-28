@@ -16,12 +16,12 @@ export function intersectDisplayWithPlane(
 }
 
 // ----------------------------------------------------------------------------
-// vtkPlanePointManipulator methods
+// vtkPlaneManipulator methods
 // ----------------------------------------------------------------------------
 
-function vtkPlanePointManipulator(publicAPI, model) {
+function vtkPlaneManipulator(publicAPI, model) {
   // Set our className
-  model.classHierarchy.push('vtkPlanePointManipulator');
+  model.classHierarchy.push('vtkPlaneManipulator');
 
   // --------------------------------------------------------------------------
 
@@ -52,15 +52,12 @@ export function extend(publicAPI, model, initialValues = {}) {
   macro.obj(publicAPI, model);
   macro.setGetArray(publicAPI, model, ['normal', 'origin'], 3);
 
-  vtkPlanePointManipulator(publicAPI, model);
+  vtkPlaneManipulator(publicAPI, model);
 }
 
 // ----------------------------------------------------------------------------
 
-export const newInstance = macro.newInstance(
-  extend,
-  'vtkPlanePointManipulator'
-);
+export const newInstance = macro.newInstance(extend, 'vtkPlaneManipulator');
 
 // ----------------------------------------------------------------------------
 

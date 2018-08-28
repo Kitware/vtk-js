@@ -1,5 +1,5 @@
 import macro from 'vtk.js/Sources/macro';
-import vtkAbstractWidget from 'vtk.js/Sources/Interaction/Widgets2/AbstractWidget';
+import vtkAbstractWidget from 'vtk.js/Sources/Widgets/Core/AbstractWidget';
 
 // ----------------------------------------------------------------------------
 

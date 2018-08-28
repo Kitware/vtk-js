@@ -1,9 +1,9 @@
 import 'vtk.js/Sources/favicon';
 
 import vtkFullScreenRenderWindow from 'vtk.js/Sources/Rendering/Misc/FullScreenRenderWindow';
-import vtkHandleWidget from 'vtk.js/Sources/Interaction/Widgets2/HandleWidget2';
-import vtkWidgetManager from 'vtk.js/Sources/Interaction/Widgets2/WidgetManager';
-import { Type } from 'vtk.js/Sources/Interaction/Widgets2/HandleWidget2/Constants';
+import vtkHandleWidget from 'vtk.js/Sources/Widgets/Widgets3D/HandleWidget2';
+import vtkWidgetManager from 'vtk.js/Sources/Widgets/Core/WidgetManager';
+import { Type } from 'vtk.js/Sources/Widgets/Widgets3D/HandleWidget2/Constants';
 
 // ----------------------------------------------------------------------------
 // Standard rendering code setup

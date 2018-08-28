@@ -1,9 +1,9 @@
 import 'vtk.js/Sources/favicon';
 
+import vtkCubeHandleRepresentation from 'vtk.js/Sources/Widgets/Representations/CubeHandleRepresentation';
 import vtkFullScreenRenderWindow from 'vtk.js/Sources/Rendering/Misc/FullScreenRenderWindow';
-import vtkSphereHandleRepresentation from 'vtk.js/Sources/Interaction/Widgets2/SphereHandleRepresentation';
-import vtkCubeHandleRepresentation from 'vtk.js/Sources/Interaction/Widgets2/CubeHandleRepresentation';
-import vtkStateBuilder from 'vtk.js/Sources/Interaction/Widgets2/StateBuilder';
+import vtkSphereHandleRepresentation from 'vtk.js/Sources/Widgets/Representations/SphereHandleRepresentation';
+import vtkStateBuilder from 'vtk.js/Sources/Widgets/Core/StateBuilder';
 
 import controlPanel from './controlPanel.html';
 

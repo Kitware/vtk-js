@@ -1,12 +1,12 @@
 import macro from 'vtk.js/Sources/macro';
-import vtkAbstractWidgetFactory from 'vtk.js/Sources/Interaction/Widgets2/AbstractWidgetFactory';
-import vtkMath from 'vtk.js/Sources/Common/Core/Math';
+import vtkAbstractWidgetFactory from 'vtk.js/Sources/Widgets/Core/AbstractWidgetFactory';
 import vtkBoundingBox from 'vtk.js/Sources/Common/DataModel/BoundingBox';
-import vtkImplicitPlaneRepresentation from 'vtk.js/Sources/Interaction/Widgets2/ImplicitPlaneRepresentation';
-import vtkLineManipulator from 'vtk.js/Sources/Interaction/Widgets2/LineManipulator';
-import vtkPlanePointManipulator from 'vtk.js/Sources/Interaction/Widgets2/PlanePointManipulator';
+import vtkImplicitPlaneRepresentation from 'vtk.js/Sources/Widgets/Representations/ImplicitPlaneRepresentation';
+import vtkLineManipulator from 'vtk.js/Sources/Widgets/Manipulators/LineManipulator';
+import vtkMath from 'vtk.js/Sources/Common/Core/Math';
+import vtkPlaneManipulator from 'vtk.js/Sources/Widgets/Manipulators/PlaneManipulator';
 
-import { ViewTypes } from 'vtk.js/Sources/Interaction/Widgets2/WidgetManager/Constants';
+import { ViewTypes } from 'vtk.js/Sources/Widgets/Core/WidgetManager/Constants';
 
 // ----------------------------------------------------------------------------
 // Widget linked to a view
@@ -115,7 +115,7 @@ function widgetBehavior(publicAPI, model) {
 
   model.camera = model.renderer.getActiveCamera();
   model.lineManipulator = vtkLineManipulator.newInstance();
-  model.planeManipulator = vtkPlanePointManipulator.newInstance();
+  model.planeManipulator = vtkPlaneManipulator.newInstance();
   model.bbox.setBounds(model.widgetState.getBounds());
 }
 

@@ -1,7 +1,7 @@
 import macro from 'vtk.js/Sources/macro';
 
-import { Behavior } from 'vtk.js/Sources/Interaction/Widgets2/WidgetRepresentation/Constants';
-import { RenderingTypes } from 'vtk.js/Sources/Interaction/Widgets2/WidgetManager/Constants';
+import { Behavior } from 'vtk.js/Sources/Widgets/Representations/WidgetRepresentation/Constants';
+import { RenderingTypes } from 'vtk.js/Sources/Widgets/Core/WidgetManager/Constants';
 
 const { vtkErrorMacro } = macro;
 

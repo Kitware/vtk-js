@@ -1,7 +1,7 @@
 import macro from 'vtk.js/Sources/macro';
 import vtkActor from 'vtk.js/Sources/Rendering/Core/Actor';
+import vtkContextRepresentation from 'vtk.js/Sources/Widgets/Representations/ContextRepresentation';
 import vtkMapper from 'vtk.js/Sources/Rendering/Core/Mapper';
-import vtkContextRepresentation from 'vtk.js/Sources/Interaction/Widgets2/ContextRepresentation';
 import vtkPolyData from 'vtk.js/Sources/Common/DataModel/PolyData';
 
 // ----------------------------------------------------------------------------

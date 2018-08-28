@@ -1,12 +1,11 @@
 import macro from 'vtk.js/Sources/macro';
-import vtkHandleRepresentation from 'vtk.js/Sources/Interaction/Widgets2/HandleRepresentation';
-
 import vtkActor from 'vtk.js/Sources/Rendering/Core/Actor';
-import vtkSphereSource from 'vtk.js/Sources/Filters/Sources/SphereSource';
-import vtkPolyData from 'vtk.js/Sources/Common/DataModel/PolyData';
 import vtkDataArray from 'vtk.js/Sources/Common/Core/DataArray';
 import vtkGlyph3DMapper from 'vtk.js/Sources/Rendering/Core/Glyph3DMapper';
+import vtkHandleRepresentation from 'vtk.js/Sources/Widgets/Representations/HandleRepresentation';
 import vtkPixelSpaceCallbackMapper from 'vtk.js/Sources/Rendering/Core/PixelSpaceCallbackMapper';
+import vtkPolyData from 'vtk.js/Sources/Common/DataModel/PolyData';
+import vtkSphereSource from 'vtk.js/Sources/Filters/Sources/SphereSource';
 
 import { ScalarMode } from 'vtk.js/Sources/Rendering/Core/Mapper/Constants';
 

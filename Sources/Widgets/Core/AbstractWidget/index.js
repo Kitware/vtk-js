@@ -1,10 +1,8 @@
 import macro from 'vtk.js/Sources/macro';
 import vtkInteractorObserver from 'vtk.js/Sources/Rendering/Core/InteractorObserver';
-import Constants from 'vtk.js/Sources/Interaction/Widgets2/AbstractWidget/Constants';
 
-import { RenderingTypes } from 'vtk.js/Sources/Interaction/Widgets2/WidgetManager/Constants';
-
-const { WIDGET_PRIORITY } = Constants;
+import { WIDGET_PRIORITY } from 'vtk.js/Sources/Widgets/Core/AbstractWidget/Constants';
+import { RenderingTypes } from 'vtk.js/Sources/Widgets/Core/WidgetManager/Constants';
 
 // ----------------------------------------------------------------------------
 

@@ -1,11 +1,11 @@
 import macro from 'vtk.js/Sources/macro';
-import vtkAbstractWidgetFactory from 'vtk.js/Sources/Interaction/Widgets2/AbstractWidgetFactory';
-import vtkPolyLineRepresentation from 'vtk.js/Sources/Interaction/Widgets2/PolyLineRepresentation';
-import vtkPlanePointManipulator from 'vtk.js/Sources/Interaction/Widgets2/PlanePointManipulator';
-import vtkSphereHandleRepresentation from 'vtk.js/Sources/Interaction/Widgets2/SphereHandleRepresentation';
-import vtkStateBuilder from 'vtk.js/Sources/Interaction/Widgets2/StateBuilder';
+import vtkAbstractWidgetFactory from 'vtk.js/Sources/Widgets/Core/AbstractWidgetFactory';
+import vtkPlanePointManipulator from 'vtk.js/Sources/Widgets/Manipulators/PlaneManipulator';
+import vtkPolyLineRepresentation from 'vtk.js/Sources/Widgets/Representations/PolyLineRepresentation';
+import vtkSphereHandleRepresentation from 'vtk.js/Sources/Widgets/Representations/SphereHandleRepresentation';
+import vtkStateBuilder from 'vtk.js/Sources/Widgets/Core/StateBuilder';
 
-import { ViewTypes } from 'vtk.js/Sources/Interaction/Widgets2/WidgetManager/Constants';
+import { ViewTypes } from 'vtk.js/Sources/Widgets/Core/WidgetManager/Constants';
 
 // ----------------------------------------------------------------------------
 // Widget linked to a view
