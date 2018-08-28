@@ -56,6 +56,15 @@ function vtkDataSet(publicAPI, model) {
       model[fieldName] = vtk(model[fieldName]);
     }
   });
+
+  const superShallowCopy = publicAPI.shallowCopy;
+  publicAPI.shallowCopy = (other, debug = false) => {
+    superShallowCopy(other, debug);
+    DATASET_FIELDS.forEach((fieldName) => {
+      model[fieldName] = vtkDataSetAttributes.newInstance();
+      model[fieldName].shallowCopy(other.getReferenceByName(fieldName));
+    });
+  };
 }
 
 // ----------------------------------------------------------------------------
