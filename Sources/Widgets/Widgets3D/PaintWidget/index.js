@@ -20,6 +20,7 @@ function widgetBehavior(publicAPI, model) {
     }
 
     painting = true;
+    publicAPI.invokeStartInteractionEvent();
     return macro.EVENT_ABORT;
   };
   // if (!model.activeState || !model.activeState.getActive()) {
@@ -35,6 +36,9 @@ function widgetBehavior(publicAPI, model) {
   publicAPI.handleMouseMove = (callData) => publicAPI.handleEvent(callData);
 
   publicAPI.handleLeftButtonRelease = () => {
+    if (painting) {
+      publicAPI.invokeEndInteractionEvent();
+    }
     painting = false;
     // if (isDragging) {
     //   model.interactor.cancelAnimation(publicAPI);
@@ -63,6 +67,7 @@ function widgetBehavior(publicAPI, model) {
       if (painting) {
         console.log('painting', worldCoords);
       }
+      publicAPI.invokeInteractionEvent();
       return macro.EVENT_ABORT;
     }
     return macro.VOID;
@@ -73,12 +78,14 @@ function widgetBehavior(publicAPI, model) {
       model.activeState = model.widgetState.getHandle();
       model.activeState.activate();
       model.interactor.requestAnimation(publicAPI);
+      publicAPI.invokeStartInteractionEvent();
     }
     model.hasFocus = true;
   };
 
   publicAPI.loseFocus = () => {
     if (model.hasFocus) {
+      publicAPI.invokeEndInteractionEvent();
       model.interactor.cancelAnimation(publicAPI);
     }
     model.widgetState.deactivate();

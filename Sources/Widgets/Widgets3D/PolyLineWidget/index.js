@@ -43,6 +43,7 @@ function widgetBehavior(publicAPI, model) {
       model.interactor.requestAnimation(publicAPI);
     }
 
+    publicAPI.invokeStartInteractionEvent();
     return macro.EVENT_ABORT;
   };
 
@@ -66,6 +67,7 @@ function widgetBehavior(publicAPI, model) {
         isDragging
       ) {
         model.activeState.setOrigin(worldCoords);
+        publicAPI.invokeInteractionEvent();
         return macro.EVENT_ABORT;
       }
     }
@@ -79,6 +81,7 @@ function widgetBehavior(publicAPI, model) {
     if (isDragging && model.pickable) {
       model.widgetState.deactivate();
       model.interactor.cancelAnimation(publicAPI);
+      publicAPI.invokeEndInteractionEvent();
     } else if (model.activeState !== model.widgetState.getMoveHandle()) {
       model.widgetState.deactivate();
     }
@@ -87,6 +90,7 @@ function widgetBehavior(publicAPI, model) {
       (model.hasFocus && !model.activeState) ||
       (model.activeState && !model.activeState.getActive())
     ) {
+      publicAPI.invokeEndInteractionEvent();
       model.widgetManager.enablePicking();
       model.interactor.render();
     }
@@ -106,6 +110,7 @@ function widgetBehavior(publicAPI, model) {
       model.activeState.activate();
       model.activeState.setVisible(true);
       model.interactor.requestAnimation(publicAPI);
+      publicAPI.invokeStartInteractionEvent();
     }
     model.hasFocus = true;
   };
@@ -113,6 +118,7 @@ function widgetBehavior(publicAPI, model) {
   publicAPI.loseFocus = () => {
     if (model.hasFocus) {
       model.interactor.cancelAnimation(publicAPI);
+      publicAPI.invokeEndInteractionEvent();
     }
     model.widgetState.deactivate();
     model.widgetState.getMoveHandle().deactivate();
