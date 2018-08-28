@@ -17,6 +17,7 @@ function widgetBehavior(publicAPI, model) {
 
   publicAPI.placeWidget = (bounds) => {
     model.widgetState.setBounds(bounds);
+    model.bbox.setBounds(bounds);
   };
 
   publicAPI.setDisplayCallback = (callback) =>
