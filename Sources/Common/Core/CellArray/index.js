@@ -56,6 +56,13 @@ function vtkCellArray(publicAPI, model) {
     model.cellSizes = extractCellSizes(model.values);
     return model.cellSizes;
   };
+
+  const superSetData = publicAPI.setData;
+  publicAPI.setData = (typedArray) => {
+    superSetData(typedArray, 1);
+    model.numberOfCells = undefined;
+    model.cellSizes = undefined;
+  };
 }
 
 // ----------------------------------------------------------------------------

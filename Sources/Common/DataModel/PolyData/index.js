@@ -35,6 +35,15 @@ function vtkPolyData(publicAPI, model) {
       (num, cellType) => num + model[cellType].getNumberOfCells(),
       0
     );
+
+  const superShallowCopy = publicAPI.shallowCopy;
+  publicAPI.shallowCopy = (other, debug = false) => {
+    superShallowCopy(other, debug);
+    POLYDATA_FIELDS.forEach((type) => {
+      model[type] = vtkCellArray.newInstance();
+      model[type].shallowCopy(other.getReferenceByName(type));
+    });
+  };
 }
 
 // ----------------------------------------------------------------------------

@@ -109,6 +109,11 @@ class Transform {
     return this.matrix;
   }
 
+  getVTKMatrix() {
+    mat4.transpose(this.matrix, this.matrix);
+    return this.matrix;
+  }
+
   setMatrix(mat4x4) {
     if (!!mat4x4 && mat4x4.length === 16) {
       this.matrix[0] = mat4x4[0];
