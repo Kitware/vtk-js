@@ -44,12 +44,16 @@ function vtkResliceCursorActor(publicAPI, model) {
       model.cursorAlgorithm.getOutputData(1)
     );
 
-    model.cursorCenterlineActor[axis1].setVisibility(1);
-    model.cursorCenterlineActor[axis2].setVisibility(1);
+    model.cursorCenterlineActor[axis1].setVisibility(model.visibility);
+    model.cursorCenterlineActor[axis2].setVisibility(model.visibility);
     model.cursorCenterlineActor[axisNormal].setVisibility(0);
 
-    model.cursorCenterlineActor[axis1].getProperty().setEdgeVisibility(1);
-    model.cursorCenterlineActor[axis2].getProperty().setEdgeVisibility(1);
+    model.cursorCenterlineActor[axis1]
+      .getProperty()
+      .setEdgeVisibility(model.visibility);
+    model.cursorCenterlineActor[axis2]
+      .getProperty()
+      .setEdgeVisibility(model.visibility);
     model.cursorCenterlineActor[axisNormal].getProperty().setEdgeVisibility(0);
   };
 

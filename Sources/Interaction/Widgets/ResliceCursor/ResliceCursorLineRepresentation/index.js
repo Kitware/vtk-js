@@ -109,7 +109,7 @@ function vtkResliceCursorLineRepresentation(publicAPI, model) {
   publicAPI.computeInteractionState = (displayPos) => {
     model.interactionState = InteractionState.OUTSIDE;
 
-    if (!model.renderer) {
+    if (!model.renderer || !model.resliceCursorActor.getVisibility()) {
       return model.interactionState;
     }
 
