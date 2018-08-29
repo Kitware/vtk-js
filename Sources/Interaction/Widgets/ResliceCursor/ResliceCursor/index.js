@@ -4,6 +4,7 @@ import vtkMath from 'vtk.js/Sources/Common/Core/Math';
 import vtkPolyData from 'vtk.js/Sources/Common/DataModel/PolyData';
 import vtkPlane from 'vtk.js/Sources/Common/DataModel/Plane';
 import vtkCellArray from 'vtk.js/Sources/Common/Core/CellArray';
+import { CenterProjectionType } from 'vtk.js/Sources/Interaction/Widgets/ResliceCursor/ResliceCursor/Constants';
 
 const { vtkErrorMacro } = macro;
 
@@ -17,6 +18,24 @@ function vtkResliceCursor(publicAPI, model) {
 
   const superClass = Object.assign({}, publicAPI);
 
+  function projectCenterToFitBounds(center, bounds) {
+    if (
+      center[0] >= bounds[0] &&
+      center[0] <= bounds[1] &&
+      center[1] >= bounds[2] &&
+      center[1] <= bounds[3] &&
+      center[2] >= bounds[4] &&
+      center[2] <= bounds[5]
+    ) {
+      return center;
+    }
+
+    center[0] = vtkMath.clampValue(center[0], bounds[0], bounds[1]);
+    center[1] = vtkMath.clampValue(center[1], bounds[2], bounds[3]);
+    center[2] = vtkMath.clampValue(center[2], bounds[4], bounds[5]);
+
+    return center;
+  }
   //----------------------------------------------------------------------------
   // Public API methods
   //----------------------------------------------------------------------------
@@ -144,7 +163,10 @@ function vtkResliceCursor(publicAPI, model) {
     return model.polyData;
   };
 
-  publicAPI.setCenter = (center) => {
+  publicAPI.setCenter = (
+    center,
+    centerProjectionType = CenterProjectionType.INSIDE_BOUNDS
+  ) => {
     if (
       model.center[0] === center[0] &&
       model.center[1] === center[1] &&
@@ -155,19 +177,27 @@ function vtkResliceCursor(publicAPI, model) {
 
     if (model.image) {
       const bounds = model.image.getBounds();
+      let newCenter = [...center];
 
       if (
-        center[0] < bounds[0] ||
-        center[0] > bounds[1] ||
-        center[1] < bounds[2] ||
-        center[1] > bounds[3] ||
-        center[2] < bounds[4] ||
-        center[2] > bounds[5]
+        centerProjectionType === CenterProjectionType.INSIDE_BOUNDS &&
+        (newCenter[0] < bounds[0] ||
+          newCenter[0] > bounds[1] ||
+          newCenter[1] < bounds[2] ||
+          newCenter[1] > bounds[3] ||
+          newCenter[2] < bounds[4] ||
+          newCenter[2] > bounds[5])
       ) {
         return;
+      } else if (centerProjectionType === CenterProjectionType.FIT_BOUNDS) {
+        newCenter = projectCenterToFitBounds(newCenter, bounds);
+
+        if (newCenter.length !== 3) {
+          return;
+        }
       }
 
-      model.center = center;
+      model.center = newCenter;
 
       publicAPI.getPlane(0).setOrigin(model.center);
       publicAPI.getPlane(1).setOrigin(model.center);
