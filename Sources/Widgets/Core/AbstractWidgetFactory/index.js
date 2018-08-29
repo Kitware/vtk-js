@@ -57,6 +57,25 @@ function vtkAbstractWidgetFactory(publicAPI, model) {
 
       model.behavior(widgetPublicAPI, widgetModel);
 
+      // Forward representation methods
+      if (model.methodsToLink) {
+        widgetModel.representations.forEach((representation) => {
+          model.methodsToLink.forEach((methodName) => {
+            const set = `set${macro.capitalize(methodName)}`;
+            const get = `get${macro.capitalize(methodName)}`;
+            if (representation[methodName]) {
+              widgetPublicAPI[methodName] = representation[methodName];
+            }
+            if (representation[set]) {
+              widgetPublicAPI[set] = representation[set];
+            }
+            if (representation[get]) {
+              widgetPublicAPI[get] = representation[get];
+            }
+          });
+        });
+      }
+
       // Custom delete to detatch from parent
       widgetPublicAPI.delete = macro.chain(() => {
         delete viewToWidget[viewId];

@@ -12,10 +12,28 @@ import { ViewTypes } from 'vtk.js/Sources/Widgets/Core/WidgetManager/Constants';
 // ----------------------------------------------------------------------------
 
 function widgetBehavior(publicAPI, model) {
+  model.classHierarchy.push('vtkPlaneWidget');
   let isDragging = null;
 
   publicAPI.setDisplayCallback = (callback) =>
     model.representations[0].setDisplayCallback(callback);
+
+  publicAPI.updateCursor = () => {
+    switch (model.activeState.getUpdateMethodName()) {
+      case 'updateFromOrigin':
+        model.openGLRenderWindow.setCursor('crosshair');
+        break;
+      case 'updateFromPlane':
+        model.openGLRenderWindow.setCursor('move');
+        break;
+      case 'updateFromNormal':
+        model.openGLRenderWindow.setCursor('alias');
+        break;
+      default:
+        model.openGLRenderWindow.setCursor('grabbing');
+        break;
+    }
+  };
 
   publicAPI.handleLeftButtonPress = (callData) => {
     if (
@@ -31,6 +49,7 @@ function widgetBehavior(publicAPI, model) {
     model.trackballManipulator.reset(callData); // setup trackball delta
     model.interactor.requestAnimation(publicAPI);
     publicAPI.invokeStartInteractionEvent();
+
     return macro.EVENT_ABORT;
   };
 
@@ -59,6 +78,10 @@ function widgetBehavior(publicAPI, model) {
     return macro.VOID;
   };
 
+  // --------------------------------------------------------------------------
+  // Event coordinate translation
+  // --------------------------------------------------------------------------
+
   publicAPI.updateFromOrigin = (callData) => {
     model.planeManipulator.setNormal(model.widgetState.getNormal());
     const worldCoords = model.planeManipulator.handleEvent(
@@ -70,6 +93,8 @@ function widgetBehavior(publicAPI, model) {
       model.activeState.setOrigin(worldCoords);
     }
   };
+
+  // --------------------------------------------------------------------------
 
   publicAPI.updateFromPlane = (callData) => {
     // Move origin along normal axis
@@ -83,6 +108,8 @@ function widgetBehavior(publicAPI, model) {
       model.activeState.setOrigin(worldCoords);
     }
   };
+
+  // --------------------------------------------------------------------------
 
   publicAPI.updateFromNormal = (callData) => {
     model.trackballManipulator.setNormal(model.activeState.getNormal());
@@ -101,8 +128,6 @@ function widgetBehavior(publicAPI, model) {
   model.lineManipulator = vtkLineManipulator.newInstance();
   model.planeManipulator = vtkPlaneManipulator.newInstance();
   model.trackballManipulator = vtkTrackballManipulator.newInstance();
-
-  model.classHierarchy.push('vtkPlaneWidgetProp');
 }
 
 // ----------------------------------------------------------------------------
@@ -113,7 +138,17 @@ function vtkImplicitPlaneWidget(publicAPI, model) {
   model.classHierarchy.push('vtkPlaneWidget');
 
   // --- Widget Requirement ---------------------------------------------------
+
+  model.widgetState = vtkImplicitPlaneRepresentation.generateState();
+
   model.behavior = widgetBehavior;
+
+  model.methodsToLink = [
+    'representationStyle',
+    'sphereResolution',
+    'handleSizeRatio',
+    'axisScale',
+  ];
 
   publicAPI.getRepresentationsForViewType = (viewType) => {
     switch (viewType) {
@@ -125,10 +160,6 @@ function vtkImplicitPlaneWidget(publicAPI, model) {
         return [{ builder: vtkImplicitPlaneRepresentation }];
     }
   };
-  // --- Widget Requirement ---------------------------------------------------
-
-  // Default state
-  model.widgetState = vtkImplicitPlaneRepresentation.generateState();
 }
 
 // ----------------------------------------------------------------------------

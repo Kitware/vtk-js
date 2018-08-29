@@ -7,6 +7,69 @@ import { RenderingTypes } from 'vtk.js/Sources/Widgets/Core/WidgetManager/Consta
 const { vtkErrorMacro } = macro;
 
 // ----------------------------------------------------------------------------
+const STYLE_CATEGORIES = ['active', 'inactive', 'static'];
+
+export function mergeStyles(elementNames, ...stylesToMerge) {
+  const newStyleObject = { active: {}, inactive: {}, static: {} };
+  STYLE_CATEGORIES.forEach((category) => {
+    const cat = newStyleObject[category];
+    elementNames.forEach((name) => {
+      if (!cat[name]) {
+        cat[name] = {};
+      }
+      stylesToMerge
+        .filter((s) => s && s[category] && s[category][name])
+        .forEach((s) => Object.assign(cat[name], s[category][name]));
+    });
+  });
+
+  return newStyleObject;
+}
+
+// ----------------------------------------------------------------------------
+
+export function applyStyles(pipelines, styles, activeActor) {
+  if (!activeActor) {
+    // static
+    Object.keys(styles.static).forEach((name) => {
+      if (pipelines[name]) {
+        pipelines[name].actor.getProperty().set(styles.static[name]);
+      }
+    });
+    // inactive
+    Object.keys(styles.inactive).forEach((name) => {
+      if (pipelines[name]) {
+        pipelines[name].actor.getProperty().set(styles.inactive[name]);
+      }
+    });
+  } else {
+    Object.keys(pipelines).forEach((name) => {
+      const style =
+        pipelines[name].actor === activeActor
+          ? styles.active[name]
+          : styles.inactive[name];
+      if (style) {
+        pipelines[name].actor.getProperty().set(style);
+      }
+    });
+  }
+}
+
+// ----------------------------------------------------------------------------
+
+export function connectPipeline(pipeline) {
+  if (pipeline.source.isA('vtkDataSet')) {
+    pipeline.mapper.setInputData(pipeline.source);
+  } else {
+    pipeline.mapper.setInputConnection(pipeline.source.getOutputPort());
+  }
+  if (pipeline.glyph) {
+    pipeline.mapper.setInputConnection(pipeline.glyph.getOutputPort(), 1);
+  }
+  pipeline.actor.setMapper(pipeline.mapper);
+}
+
+// ----------------------------------------------------------------------------
 // vtkWidgetRepresentation
 // ----------------------------------------------------------------------------
 
@@ -128,4 +191,4 @@ export function extend(publicAPI, model, initialValues = {}) {
 
 // ----------------------------------------------------------------------------
 
-export default { extend };
+export default { extend, mergeStyles, applyStyles, connectPipeline };

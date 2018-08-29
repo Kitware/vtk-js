@@ -23,6 +23,9 @@ function vtkAbstractWidget(publicAPI, model) {
       selectedState.updateManipulator();
     }
     publicAPI.invokeActivateHandle({ selectedState, representation });
+    if (publicAPI.updateCursor) {
+      publicAPI.updateCursor();
+    }
   };
 
   // --------------------------------------------------------------------------

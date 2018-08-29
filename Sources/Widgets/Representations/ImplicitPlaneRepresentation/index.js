@@ -4,8 +4,6 @@ import vtkClosedPolyLineToSurfaceFilter from 'vtk.js/Sources/Filters/General/Clo
 import vtkCubeSource from 'vtk.js/Sources/Filters/Sources/CubeSource';
 import vtkCutter from 'vtk.js/Sources/Filters/Core/Cutter';
 import vtkCylinderSource from 'vtk.js/Sources/Filters/Sources/CylinderSource';
-import vtkDataArray from 'vtk.js/Sources/Common/Core/DataArray';
-import vtkGlyph3DMapper from 'vtk.js/Sources/Rendering/Core/Glyph3DMapper';
 import vtkMapper from 'vtk.js/Sources/Rendering/Core/Mapper';
 import vtkMatrixBuilder from 'vtk.js/Sources/Common/Core/MatrixBuilder';
 import vtkPixelSpaceCallbackMapper from 'vtk.js/Sources/Rendering/Core/PixelSpaceCallbackMapper';
@@ -16,51 +14,10 @@ import vtkStateBuilder from 'vtk.js/Sources/Widgets/Core/StateBuilder';
 import vtkWidgetRepresentation from 'vtk.js/Sources/Widgets/Representations/WidgetRepresentation';
 
 import WidgetManagerConst from 'vtk.js/Sources/Widgets/Core/WidgetManager/Constants';
-import MapperConst from 'vtk.js/Sources/Rendering/Core/Mapper/Constants';
 import PropertyConst from 'vtk.js/Sources/Rendering/Core/Property/Constants';
 
 const { RenderingTypes } = WidgetManagerConst;
-const { ScalarMode } = MapperConst;
 const { Interpolation, Representation } = PropertyConst;
-
-// ----------------------------------------------------------------------------
-// Helper methods to build state
-// ----------------------------------------------------------------------------
-
-function allocatePointsInPolydata(polydata, numberOfPoints) {
-  polydata.getPoints().setData(new Float32Array(numberOfPoints * 3), 3);
-}
-
-function allocateGlyphArrays(polydata) {
-  const scale = vtkDataArray.newInstance({
-    name: 'scale',
-    numberOfComponents: 1,
-    values: new Float32Array(1),
-  });
-  const color = vtkDataArray.newInstance({
-    name: 'color',
-    numberOfComponents: 1,
-    values: new Float32Array(1),
-  });
-  polydata.getPointData().addArray(scale);
-  polydata.getPointData().addArray(color);
-  return {
-    scale,
-    color,
-  };
-}
-
-function connectPipeline(pipeline) {
-  if (pipeline.source.isA('vtkDataSet')) {
-    pipeline.mapper.setInputData(pipeline.source);
-  } else {
-    pipeline.mapper.setInputConnection(pipeline.source.getOutputPort());
-  }
-  if (pipeline.glyph) {
-    pipeline.mapper.setInputConnection(pipeline.glyph.getOutputPort(), 1);
-  }
-  pipeline.actor.setMapper(pipeline.mapper);
-}
 
 // ----------------------------------------------------------------------------
 // Static methods to build state
@@ -79,6 +36,59 @@ function generateState() {
 }
 
 // ----------------------------------------------------------------------------
+// Representation style
+// ----------------------------------------------------------------------------
+
+const STYLE_PIPELINE_NAMES = [
+  'plane',
+  'outline',
+  'normal',
+  'origin',
+  'display2D',
+];
+const STYLE_DEFAULT = {
+  active: {
+    plane: {
+      opacity: 1,
+      color: [0, 0.9, 0],
+    },
+    normal: {
+      opacity: 1,
+      color: [0, 0.9, 0],
+    },
+    origin: {
+      opacity: 1,
+      color: [0, 0.9, 0],
+    },
+  },
+  inactive: {
+    plane: {
+      opacity: 0.6,
+      color: [1, 1, 1],
+    },
+    normal: {
+      opacity: 1,
+      color: [0.9, 0, 0],
+    },
+    origin: {
+      opacity: 1,
+      color: [1, 0, 0],
+    },
+  },
+  static: {
+    display2D: {
+      representation: Representation.POINT,
+    },
+    outline: {
+      color: [1, 1, 1],
+      opacity: 1,
+      representation: Representation.WIREFRAME,
+      interpolation: Interpolation.FLAT,
+    },
+  },
+};
+
+// ----------------------------------------------------------------------------
 // vtkImplicitPlaneRepresentation methods
 // ----------------------------------------------------------------------------
 
@@ -93,68 +103,53 @@ function vtkImplicitPlaneRepresentation(publicAPI, model) {
   model.plane = vtkPlane.newInstance();
   model.matrix = vtkMatrixBuilder.buildFromDegree();
 
-  model.outlinePipeline = {
+  model.pipelines = {};
+  model.pipelines.outline = {
     source: vtkCubeSource.newInstance(),
     mapper: vtkMapper.newInstance(),
     actor: vtkActor.newInstance({ pickable: false }),
   };
 
-  model.planePipeline = {
+  model.pipelines.plane = {
     source: vtkClosedPolyLineToSurfaceFilter.newInstance(),
     mapper: vtkMapper.newInstance(),
     actor: vtkActor.newInstance({ pickable: true }),
   };
 
-  model.pointsPipeline = {
-    source: publicAPI,
-    glyph: vtkSphereSource.newInstance(),
-    mapper: vtkGlyph3DMapper.newInstance({
-      scaleArray: 'scale',
-      colorByArrayName: 'color',
-      scalarMode: ScalarMode.USE_POINT_FIELD_DATA,
-    }),
+  model.pipelines.origin = {
+    source: vtkSphereSource.newInstance(),
+    mapper: vtkMapper.newInstance(),
     actor: vtkActor.newInstance({ pickable: true }),
   };
 
-  model.normalPipeline = {
+  model.pipelines.normal = {
     source: vtkCylinderSource.newInstance(),
     mapper: vtkMapper.newInstance(),
     actor: vtkActor.newInstance({ pickable: true }),
   };
 
-  model.screen2DPipeline = {
+  model.pipelines.display2D = {
     source: publicAPI,
     mapper: vtkPixelSpaceCallbackMapper.newInstance(),
     actor: vtkActor.newInstance({ pickable: false }),
   };
 
-  const glyphPolyData = vtkPolyData.newInstance({ mtime: 0 });
-  allocatePointsInPolydata(glyphPolyData, 1);
-  const { color, scale } = allocateGlyphArrays(glyphPolyData);
-
   // Plane generation pipeline
   const cutter = vtkCutter.newInstance({ cutFunction: model.plane });
-  cutter.setInputConnection(model.outlinePipeline.source.getOutputPort());
-  model.planePipeline.source.setInputConnection(cutter.getOutputPort());
+  cutter.setInputConnection(model.pipelines.outline.source.getOutputPort());
+  model.pipelines.plane.source.setInputConnection(cutter.getOutputPort());
 
-  connectPipeline(model.outlinePipeline);
-  connectPipeline(model.planePipeline);
-  connectPipeline(model.pointsPipeline);
-  connectPipeline(model.normalPipeline);
-  connectPipeline(model.screen2DPipeline);
+  vtkWidgetRepresentation.connectPipeline(model.pipelines.outline);
+  vtkWidgetRepresentation.connectPipeline(model.pipelines.plane);
+  vtkWidgetRepresentation.connectPipeline(model.pipelines.origin);
+  vtkWidgetRepresentation.connectPipeline(model.pipelines.normal);
+  vtkWidgetRepresentation.connectPipeline(model.pipelines.display2D);
 
-  model.actors.push(model.outlinePipeline.actor);
-  model.actors.push(model.planePipeline.actor);
-  model.actors.push(model.pointsPipeline.actor);
-  model.actors.push(model.normalPipeline.actor);
-  model.actors.push(model.screen2DPipeline.actor);
-
-  model.outlinePipeline.actor
-    .getProperty()
-    .setRepresentation(Representation.WIREFRAME);
-  model.outlinePipeline.actor
-    .getProperty()
-    .setInterpolation(Interpolation.FLAT);
+  model.actors.push(model.pipelines.outline.actor);
+  model.actors.push(model.pipelines.plane.actor);
+  model.actors.push(model.pipelines.origin.actor);
+  model.actors.push(model.pipelines.normal.actor);
+  model.actors.push(model.pipelines.display2D.actor);
 
   // --------------------------------------------------------------------------
 
@@ -166,8 +161,11 @@ function vtkImplicitPlaneRepresentation(publicAPI, model) {
     model.plane.setOrigin(origin);
     model.plane.setNormal(normal);
 
+    // --------------------------------
     // Update cube parameters
-    model.outlinePipeline.source.setCenter(
+    // --------------------------------
+
+    model.pipelines.outline.source.setCenter(
       (bounds[0] + bounds[1]) * 0.5,
       (bounds[2] + bounds[3]) * 0.5,
       (bounds[4] + bounds[5]) * 0.5
@@ -175,83 +173,62 @@ function vtkImplicitPlaneRepresentation(publicAPI, model) {
     const xRange = bounds[1] - bounds[0];
     const yRange = bounds[3] - bounds[2];
     const zRange = bounds[5] - bounds[4];
-    model.outlinePipeline.source.setXLength(xRange);
-    model.outlinePipeline.source.setYLength(yRange);
-    model.outlinePipeline.source.setZLength(zRange);
+    model.pipelines.outline.source.setXLength(xRange);
+    model.pipelines.outline.source.setYLength(yRange);
+    model.pipelines.outline.source.setZLength(zRange);
 
+    // --------------------------------
     // Update normal parameters
-    model.normalPipeline.source.set({
+    // --------------------------------
+
+    model.pipelines.normal.source.set({
       height: Math.max(xRange, yRange, zRange),
-      radius: model.handleSizeRatio * Math.min(xRange, yRange, zRange) * 0.25,
-      resolution: 12,
+      radius:
+        model.handleSizeRatio *
+        Math.min(xRange, yRange, zRange) *
+        model.axisScale,
+      resolution: model.sphereResolution,
     });
-
-    // ------------------------------------------------------
-    // Option 1 (not fully working but better)
-    // ------------------------------------------------------
-    // model.normalPipeline.actor.setUserMatrix(
-    //   model.matrix
-    //     .identity()
-    //     .rotateFromDirections(normal, [0, -1, 0])
-    //     .getVTKMatrix()
-    // );
-    // model.normalPipeline.actor.setPosition(origin[0], -origin[2], origin[1]);
-    // ------------------------------------------------------
-
-    // ------------------------------------------------------
-    // Option 2
-    // ------------------------------------------------------
-    const originalDS = model.normalPipeline.source.getOutputData();
+    const yAxis = model.pipelines.normal.source.getOutputData();
     const newAxis = vtkPolyData.newInstance();
-    newAxis.shallowCopy(model.normalPipeline.source.getOutputData());
+    newAxis.shallowCopy(yAxis);
     newAxis
       .getPoints()
-      .setData(Float32Array.from(originalDS.getPoints().getData()), 3);
+      .setData(Float32Array.from(yAxis.getPoints().getData()), 3);
     newAxis.getPointData().removeAllArrays();
     model.matrix
       .identity()
       .translate(origin[0], origin[1], origin[2])
       .rotateFromDirections([0, 1, 0], normal)
       .apply(newAxis.getPoints().getData());
-    model.normalPipeline.mapper.setInputData(newAxis);
-    // ------------------------------------------------------
+    model.pipelines.normal.mapper.setInputData(newAxis);
 
-    const originCoord = glyphPolyData.getPoints().getData();
-    originCoord[0] = origin[0];
-    originCoord[1] = origin[1];
-    originCoord[2] = origin[2];
-    scale.getData()[0] =
+    // --------------------------------
+    // Update origin parameters
+    // --------------------------------
+
+    model.pipelines.origin.actor.setPosition(origin);
+    const handleScale =
       model.handleSizeRatio * Math.min(xRange, yRange, zRange);
-    color.getData()[0] =
-      state.getActive() &&
-      state.getActiveHandle() === model.pointsPipeline.actor
-        ? model.activeHandleColor
-        : model.handleColor;
-    scale.modified();
-    color.modified();
-    glyphPolyData.modified();
+    model.pipelines.origin.actor.setScale(
+      handleScale,
+      handleScale,
+      handleScale
+    );
 
-    outData[0] = glyphPolyData; // glyphPolyData;
-    outData[1] = state;
+    // --------------------------------
+    // Update style since state changed
+    // --------------------------------
 
-    // Handle active state
-    model.planePipeline.actor
-      .getProperty()
-      .setColor(
-        ...(state.getActive() &&
-        state.getActiveHandle() === model.planePipeline.actor
-          ? model.activePlaneColor
-          : model.planeColor)
-      );
+    vtkWidgetRepresentation.applyStyles(
+      model.pipelines,
+      model.representationStyle,
+      state.getActive() && state.getActiveHandle()
+    );
 
-    model.normalPipeline.actor
-      .getProperty()
-      .setColor(
-        ...(state.getActive() &&
-        state.getActiveHandle() === model.normalPipeline.actor
-          ? model.activePlaneColor
-          : model.planeColor)
-      );
+    const output = vtkPolyData.newInstance();
+    output.shallowCopy(model.pipelines.plane.source.getOutputData());
+    outData[0] = output;
   };
 
   // --------------------------------------------------------------------------
@@ -261,14 +238,26 @@ function vtkImplicitPlaneRepresentation(publicAPI, model) {
   publicAPI.setSphereResolution = (res) => {
     model.sphereResolution = res;
     return (
-      model.pointsPipeline.glyph.setPhiResolution(res) &&
-      model.pointsPipeline.glyph.setThetaResolution(res)
+      model.pipelines.origin.source.setPhiResolution(res) &&
+      model.pipelines.origin.source.setThetaResolution(res)
     );
   };
 
-  publicAPI.setPlaneOpacity = (opacity) => {
-    model.planeOpacity = opacity;
-    return model.planePipeline.actor.getProperty().setOpacity(opacity);
+  publicAPI.setRepresentationStyle = (style) => {
+    model.representationStyle = vtkWidgetRepresentation.mergeStyles(
+      STYLE_PIPELINE_NAMES,
+      model.representationStyle,
+      style
+    );
+
+    // Apply static and inactive
+    vtkWidgetRepresentation.applyStyles(
+      model.pipelines,
+      model.representationStyle
+    );
+
+    // Force requestData to execute
+    publicAPI.modified();
   };
 
   // --------------------------------------------------------------------------
@@ -277,21 +266,30 @@ function vtkImplicitPlaneRepresentation(publicAPI, model) {
 
   publicAPI.updateActorVisibility = (
     renderingType,
-    widgetVisible,
+    wVisible,
     ctxVisible,
-    handleVisible
+    hVisible
   ) => {
     if (renderingType === RenderingTypes.PICKING_BUFFER) {
-      model.planePipeline.actor.setVisibility(widgetVisible);
-      model.pointsPipeline.actor.setVisibility(widgetVisible);
-      model.planePipeline.actor.getProperty().setOpacity(1);
-      model.normalPipeline.actor.setVisibility(widgetVisible);
+      model.pipelines.plane.actor.setVisibility(wVisible);
+      model.pipelines.origin.actor.setVisibility(wVisible);
+      model.pipelines.normal.actor.setVisibility(wVisible);
+      //
+      model.pipelines.plane.actor.getProperty().setOpacity(1);
     } else {
-      model.outlinePipeline.actor.setVisibility(widgetVisible && ctxVisible);
-      model.planePipeline.actor.setVisibility(widgetVisible && handleVisible);
-      model.pointsPipeline.actor.setVisibility(widgetVisible && handleVisible);
-      model.planePipeline.actor.getProperty().setOpacity(model.planeOpacity);
-      model.normalPipeline.actor.setVisibility(widgetVisible && handleVisible);
+      model.pipelines.outline.actor.setVisibility(wVisible && ctxVisible);
+      model.pipelines.plane.actor.setVisibility(wVisible && hVisible);
+      model.pipelines.origin.actor.setVisibility(wVisible && hVisible);
+      model.pipelines.normal.actor.setVisibility(wVisible && hVisible);
+      //
+      const state = model.inputData[0];
+      if (state) {
+        vtkWidgetRepresentation.applyStyles(
+          model.pipelines,
+          model.representationStyle,
+          state.getActive() && state.getActiveHandle()
+        );
+      }
     }
   };
 
@@ -305,13 +303,13 @@ function vtkImplicitPlaneRepresentation(publicAPI, model) {
     state.setActiveHandle(prop);
 
     switch (prop) {
-      case model.planePipeline.actor:
+      case model.pipelines.plane.actor:
         state.setUpdateMethodName('updateFromPlane');
         break;
-      case model.pointsPipeline.actor:
+      case model.pipelines.origin.actor:
         state.setUpdateMethodName('updateFromOrigin');
         break;
-      case model.normalPipeline.actor:
+      case model.pipelines.normal.actor:
         state.setUpdateMethodName('updateFromNormal');
         break;
       default:
@@ -326,7 +324,8 @@ function vtkImplicitPlaneRepresentation(publicAPI, model) {
   // Initialization
   // --------------------------------------------------------------------------
 
-  publicAPI.setPlaneOpacity(model.planeOpacity);
+  publicAPI.setRepresentationStyle(STYLE_DEFAULT);
+  publicAPI.setSphereResolution(model.sphereResolution);
 }
 
 // ----------------------------------------------------------------------------
@@ -334,13 +333,9 @@ function vtkImplicitPlaneRepresentation(publicAPI, model) {
 // ----------------------------------------------------------------------------
 
 const DEFAULT_VALUES = {
+  sphereResolution: 24,
   handleSizeRatio: 0.05,
-  sphereResolution: 8,
-  planeOpacity: 0.2,
-  planeColor: [1, 1, 1],
-  activePlaneColor: [0, 1, 0],
-  handleColor: 0,
-  activeHandleColor: 0.5,
+  axisScale: 0.1,
 };
 
 // ----------------------------------------------------------------------------
@@ -349,13 +344,8 @@ export function extend(publicAPI, model, initialValues = {}) {
   Object.assign(model, DEFAULT_VALUES, initialValues);
 
   vtkWidgetRepresentation.extend(publicAPI, model, initialValues);
-  macro.get(publicAPI, model, ['sphereResolution', 'planeOpacity']);
-  macro.setGetArray(publicAPI, model, ['planeColor', 'activePlaneColor'], 3);
-  macro.setGet(publicAPI, model, [
-    'handleColor',
-    'activeHandleColor',
-    'handleSizeRatio',
-  ]);
+  macro.get(publicAPI, model, ['sphereResolution', 'representationStyle']);
+  macro.setGet(publicAPI, model, ['handleSizeRatio', 'axisScale']);
 
   // Object specific methods
   vtkImplicitPlaneRepresentation(publicAPI, model);
