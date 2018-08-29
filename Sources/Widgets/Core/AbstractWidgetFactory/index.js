@@ -59,18 +59,32 @@ function vtkAbstractWidgetFactory(publicAPI, model) {
 
       // Forward representation methods
       if (model.methodsToLink) {
-        widgetModel.representations.forEach((representation) => {
-          model.methodsToLink.forEach((methodName) => {
-            const set = `set${macro.capitalize(methodName)}`;
-            const get = `get${macro.capitalize(methodName)}`;
+        model.methodsToLink.forEach((methodName) => {
+          const set = `set${macro.capitalize(methodName)}`;
+          const get = `get${macro.capitalize(methodName)}`;
+          const methods = {
+            [methodName]: [],
+            [set]: [],
+            [get]: [],
+          };
+          widgetModel.representations.forEach((representation) => {
             if (representation[methodName]) {
-              widgetPublicAPI[methodName] = representation[methodName];
+              methods[methodName].push(representation[methodName]);
             }
             if (representation[set]) {
-              widgetPublicAPI[set] = representation[set];
+              methods[set].push(representation[set]);
             }
             if (representation[get]) {
-              widgetPublicAPI[get] = representation[get];
+              methods[get].push(representation[get]);
+            }
+          });
+
+          Object.keys(methods).forEach((name) => {
+            const calls = methods[name];
+            if (calls.length === 1) {
+              widgetPublicAPI[name] = calls[0];
+            } else if (calls.length > 1) {
+              widgetPublicAPI[name] = macro.chain(...calls);
             }
           });
         });
