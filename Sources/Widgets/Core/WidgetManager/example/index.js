@@ -7,7 +7,7 @@ import vtkActor from 'vtk.js/Sources/Rendering/Core/Actor';
 import vtkConeSource from 'vtk.js/Sources/Filters/Sources/ConeSource';
 import vtkMapper from 'vtk.js/Sources/Rendering/Core/Mapper';
 
-import vtkBoxWidget from 'vtk.js/Sources/Widgets/Widgets3D/BoxWidget';
+import vtkBoxWidget from 'vtk.js/Examples/Widgets/Box/BoxWidget';
 import vtkImplicitPlaneWidget from 'vtk.js/Sources/Widgets/Widgets3D/ImplicitPlaneWidget';
 import vtkPolyLineWidget from 'vtk.js/Sources/Widgets/Widgets3D/PolyLineWidget';
 
@@ -68,6 +68,10 @@ buttonCreate.addEventListener('click', () => {
   const w = widgetManager.addWidget(widget);
   w.placeWidget(cone.getOutputData().getBounds());
   w.setPlaceFactor(2);
+
+  // w.onWidgetChange((state) =>
+  //   console.log(JSON.stringify(state.get(), null, 2))
+  // );
 
   widgetManager.enablePicking();
   renderWindow.render();
