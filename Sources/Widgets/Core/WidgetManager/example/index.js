@@ -99,6 +99,22 @@ function toggle(e) {
   renderWindow.render();
 }
 
+function grabFocus(e) {
+  const index = Number(
+    e.currentTarget.parentElement.parentElement.dataset.index
+  );
+  const w = widgetManager.getWidgets()[index];
+
+  if (!w.hasFocus()) {
+    widgetManager.grabFocus(w);
+  } else {
+    widgetManager.releaseFocus();
+  }
+  widgetManager.enablePicking();
+  renderWindow.render();
+  updateUI();
+}
+
 // Delete widget
 function deleteWidget(e) {
   const index = Number(
@@ -115,11 +131,7 @@ function deleteWidget(e) {
 function toHTML(w, index) {
   return `<tr data-index="${index}">
     <td>
-      <input
-        type="checkbox"
-        data-name="focus"
-        ${w.focus ? 'checked' : ''}
-      />
+      <button class="focus">${!w.focus ? 'Grab' : 'Release'}</button>
     </td>
     <td>${w.name}</td>
     <td>
@@ -176,5 +188,9 @@ function updateUI() {
   const deleteElems = document.querySelectorAll('button.delete');
   for (let i = 0; i < deleteElems.length; i++) {
     deleteElems[i].addEventListener('click', deleteWidget);
+  }
+  const grabElems = document.querySelectorAll('button.focus');
+  for (let i = 0; i < grabElems.length; i++) {
+    grabElems[i].addEventListener('click', grabFocus);
   }
 }
