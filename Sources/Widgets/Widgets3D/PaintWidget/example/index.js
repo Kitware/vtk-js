@@ -223,7 +223,6 @@ reader
   });
 
 // set image mapper to paint widget
-paintWidget.setImageMapper(image.imageMapper);
 paintWidget.setRadius(2);
 
 // register readyAll to resize event
