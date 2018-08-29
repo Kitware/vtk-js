@@ -39,6 +39,8 @@ function vtkInteractorObserver(publicAPI, model) {
   // Set our className
   model.classHierarchy.push('vtkInteractorObserver');
 
+  const superClass = Object.assign({}, publicAPI);
+
   //----------------------------------------------------------------------------
   function unsubscribeFromEvents() {
     while (model.subscribedEvents.length) {
@@ -124,6 +126,17 @@ function vtkInteractorObserver(publicAPI, model) {
     }
 
     return model.interactor.getView().worldToDisplay(x, y, z, renderer);
+  };
+
+  //----------------------------------------------------------------------------
+
+  publicAPI.setPriority = (priority) => {
+    const modified = superClass.setPriority(priority);
+
+    if (modified && model.interactor) {
+      unsubscribeFromEvents();
+      subscribeToEvents();
+    }
   };
 }
 
