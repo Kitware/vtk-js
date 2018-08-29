@@ -18,6 +18,7 @@ import './Filters/Sources/CylinderSource/test/testCylinder';
 import './Filters/Sources/LineSource/test/testLine';
 import './Filters/Sources/PlaneSource/test/testPlane';
 import './Filters/Sources/PointSource/test/testPointSource';
+import './Filters/Texture/TextureMapToPlane/test/testTextureMapToPlane';
 import './Filters/Texture/TextureMapToSphere/test/testTextureMapToSphere';
 import './Imaging/Core/ImageReslice/test/testImageReslice';
 import './IO/Misc/PDBReader/test/testMolecule';
