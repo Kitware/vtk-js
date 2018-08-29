@@ -203,7 +203,7 @@ reader
         const normal = [0, 0, 0];
 
         // position
-        ijk[slicingMode] = image.imageMapper.getSlice() + 1; // +1 to be above slice for placing the 2D circle context
+        ijk[slicingMode] = image.imageMapper.getSlice();
         data.indexToWorldVec3(ijk, position);
 
         // circle/slice normal

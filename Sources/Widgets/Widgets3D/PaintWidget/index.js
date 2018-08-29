@@ -1,4 +1,5 @@
 import macro from 'vtk.js/Sources/macro';
+import vtkMath from 'vtk.js/Sources/Common/Core/Math';
 import vtkAbstractWidgetFactory from 'vtk.js/Sources/Widgets/Core/AbstractWidgetFactory';
 import vtkCircleContextRepresentation from 'vtk.js/Sources/Widgets/Representations/CircleContextRepresentation';
 import vtkPlaneManipulator from 'vtk.js/Sources/Widgets/Manipulators/PlaneManipulator';
@@ -59,6 +60,12 @@ function widgetBehavior(publicAPI, model) {
       );
 
       if (worldCoords.length) {
+        model.widgetState.setTrueOrigin(...worldCoords);
+
+        // offset origin for handle representation
+        const dir = model.activeState.getDirection();
+        vtkMath.normalize(dir);
+        vtkMath.add(worldCoords, dir, worldCoords);
         model.activeState.setOrigin(...worldCoords);
       }
 
@@ -121,6 +128,10 @@ function vtkPaintWidget(publicAPI, model) {
   // Default state
   model.widgetState = vtkStateBuilder
     .createBuilder()
+    .addField({
+      name: 'trueOrigin',
+      initialValue: [0, 0, 0],
+    })
     .addStateFromMixin({
       labels: ['handle'],
       mixins: ['origin', 'color', 'scale1', 'direction', 'manipulator'],
