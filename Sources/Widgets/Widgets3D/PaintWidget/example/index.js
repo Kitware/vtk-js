@@ -194,6 +194,31 @@ reader
 
     updateControlPanel(image.imageMapper, data);
 
+    image.imageMapper.onModified(() => {
+      const slicingMode = image.imageMapper.getSlicingMode() % 3;
+
+      if (slicingMode > -1) {
+        const ijk = [0, 0, 0];
+        const position = [0, 0, 0];
+        const normal = [0, 0, 0];
+
+        // position
+        ijk[slicingMode] = image.imageMapper.getSlice() + 1; // +1 to be above slice for placing the 2D circle context
+        data.indexToWorldVec3(ijk, position);
+
+        // circle/slice normal
+        ijk[slicingMode] = 1;
+        data.indexToWorldVec3(ijk, normal);
+
+        paintWidget.getManipulator().setOrigin(position);
+        paintWidget.getManipulator().setNormal(position);
+        paintWidget
+          .getWidgetState()
+          .getHandle()
+          .rotateFromDirections(paintWidget.getHandle().getDirection(), normal);
+      }
+    });
+
     readyAll();
   });
 
@@ -228,6 +253,3 @@ document.querySelector('.axis').addEventListener('input', (ev) => {
   S.two.renderWindow.render();
 });
 
-document.querySelector('.brushDesign').addEventListener('input', (ev) => {
-  paintWidget.setBrushDesign(Number(ev.target.checked));
-});

@@ -60,8 +60,6 @@ function widgetBehavior(publicAPI, model) {
 
       if (worldCoords.length) {
         model.activeState.setOrigin(...worldCoords);
-        model.widgetState.getCircle().setOrigin(...worldCoords);
-        model.widgetState.getHandle2D().setOrigin(...worldCoords);
       }
 
       if (painting) {
@@ -106,8 +104,6 @@ function widgetBehavior(publicAPI, model) {
 function vtkPaintWidget(publicAPI, model) {
   model.classHierarchy.push('vtkPaintWidget');
 
-  let imageMapperSub = null;
-
   // --- Widget Requirement ---------------------------------------------------
   model.behavior = widgetBehavior;
 
@@ -117,8 +113,7 @@ function vtkPaintWidget(publicAPI, model) {
       case ViewTypes.GEOMETRY:
       case ViewTypes.SLICE:
         return [
-          { builder: vtkSphereHandleRepresentation, labels: ['handle2D'] },
-          { builder: vtkCircleContextRepresentation, labels: ['circle'] },
+          { builder: vtkCircleContextRepresentation, labels: ['handle'] },
         ];
       case ViewTypes.VOLUME:
       default:
@@ -132,114 +127,29 @@ function vtkPaintWidget(publicAPI, model) {
     .createBuilder()
     .addStateFromMixin({
       labels: ['handle'],
-      mixins: ['origin', 'color', 'scale1', 'manipulator'],
+      mixins: ['origin', 'color', 'scale1', 'direction', 'manipulator'],
       name: 'handle',
       initialValues: {
         scale1: model.radius,
         origin: [0, 0, 0],
-      },
-    })
-    .addStateFromMixin({
-      labels: ['circle'],
-      mixins: ['origin', 'color', 'scale1', 'direction', 'visible'],
-      name: 'circle',
-      initialValues: {
-        scale1: model.radius / 2,
-        origin: [0, 0, 0],
         direction: [0, 0, 1],
-        visible: true,
-      },
-    })
-    .addStateFromMixin({
-      labels: ['handle2D'],
-      mixins: ['origin', 'color', 'scale1', 'visible'],
-      name: 'handle2D',
-      initialValues: {
-        scale1: model.radius,
-        origin: [0, 0, 0],
-        visible: true,
       },
     })
     .build();
 
   const handle = model.widgetState.getHandle();
-  const handle2D = model.widgetState.getHandle2D();
-  const circle = model.widgetState.getCircle();
 
   // Default manipulator
   model.manipulator = vtkPlaneManipulator.newInstance();
   handle.setManipulator(model.manipulator);
-
-  function onImageMapperModified() {
-    const ds = model.imageMapper.getInputData();
-    if (ds) {
-      const slicingMode = model.imageMapper.getSlicingMode() % 3;
-
-      if (slicingMode > -1) {
-        const ijk = [0, 0, 0];
-        const position = [0, 0, 0];
-        const normal = [0, 0, 0];
-
-        // position
-        ijk[slicingMode] = model.imageMapper.getSlice() + 1; // +1 to be above slice for placing the 2D circle context
-        ds.indexToWorldVec3(ijk, position);
-
-        // circle/slice normal
-        ijk[slicingMode] = 1;
-        ds.indexToWorldVec3(ijk, normal);
-
-        model.manipulator.setOrigin(position);
-        model.manipulator.setNormal(normal);
-        circle.rotateFromDirections(circle.getDirection(), normal);
-      }
-    }
-  }
-
-  // override
-  const superSetImageMapper = publicAPI.setImageMapper;
-  publicAPI.setImageMapper = (im) => {
-    if (superSetImageMapper(im)) {
-      if (imageMapperSub) {
-        imageMapperSub.unsubscribe();
-        imageMapperSub = null;
-      }
-
-      if (im) {
-        imageMapperSub = im.onModified(onImageMapperModified);
-        onImageMapperModified();
-      }
-    }
-  };
 
   // override
   const superSetRadius = publicAPI.setRadius;
   publicAPI.setRadius = (r) => {
     if (superSetRadius(r)) {
       handle.setScale1(r);
-      handle2D.setScale1(r);
-      // b/c there's a factor of 2 multipleid to circle's radius
-      circle.setScale1(r / 2);
     }
   };
-
-  // override
-  const superSetBrushDesign = publicAPI.setBrushDesign;
-  publicAPI.setBrushDesign = (b) => {
-    if (superSetBrushDesign(b)) {
-      model.widgetState.getCircle().setVisible(b === 0);
-      model.widgetState.getHandle2D().setVisible(b === 1);
-    }
-  };
-
-  publicAPI.delete = macro.chain(() => {
-    if (imageMapperSub) {
-      imageMapperSub.unsubscribe();
-    }
-  }, publicAPI.delete);
-
-  // --------------------------------------------------------------------------
-
-  publicAPI.setBrushDesign(1);
 }
 
 // ----------------------------------------------------------------------------
@@ -248,7 +158,6 @@ const DEFAULT_VALUES = {
   manipulator: null,
   imageMapper: null,
   radius: 1,
-  brushDesign: 0, // 0=circle, 1=sphere
 };
 
 // ----------------------------------------------------------------------------
@@ -258,12 +167,7 @@ export function extend(publicAPI, model, initialValues = {}) {
 
   vtkAbstractWidgetFactory.extend(publicAPI, model, initialValues);
 
-  macro.setGet(publicAPI, model, [
-    'manipulator',
-    'imageMapper',
-    'radius',
-    'brushDesign',
-  ]);
+  macro.setGet(publicAPI, model, ['manipulator', 'radius']);
 
   vtkPaintWidget(publicAPI, model);
 }
