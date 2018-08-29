@@ -212,10 +212,8 @@ reader
 
         paintWidget.getManipulator().setOrigin(position);
         paintWidget.getManipulator().setNormal(position);
-        paintWidget
-          .getWidgetState()
-          .getHandle()
-          .rotateFromDirections(paintWidget.getHandle().getDirection(), normal);
+        const handle = paintWidget.getWidgetState().getHandle();
+        handle.rotateFromDirections(handle.getDirection(), normal);
       }
     });
 
