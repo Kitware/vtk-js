@@ -220,7 +220,7 @@ function vtkCalculator(publicAPI, model) {
         let dsa = null;
         let tuples = 0;
         if ('location' in spec && spec.location in fetchArrayContainer) {
-          dsa = fetchArrayContainer[spec.location].getData(inData);
+          dsa = fetchArrayContainer[spec.location].getData(outData);
           tuples = fetchArrayContainer[spec.location].getSize(inData, fullSpec);
         }
         if (tuples <= 0) {

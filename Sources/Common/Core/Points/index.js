@@ -69,6 +69,11 @@ function vtkPoints(publicAPI, model) {
 
   // Trigger the computation of bounds
   publicAPI.computeBounds = publicAPI.getBounds;
+
+  // Initialize
+  publicAPI.setNumberOfComponents(
+    model.numberOfComponents < 2 ? 3 : model.numberOfComponents
+  );
 }
 
 // ----------------------------------------------------------------------------

@@ -36,15 +36,23 @@ function vtkViewport(publicAPI, model) {
   };
 
   // this method get all the props including any nested props
-  publicAPI.getViewPropsWithNestedProps = () => {
-    model.allprops = model.props;
-    for (let index = 0; index < model.props.length; ++index) {
-      const prop = model.props[index];
-      if (prop.getNestedProps()) {
-        model.allprops = model.allprops.concat(prop.getNestedProps());
+  function gatherProps(prop, allProps = []) {
+    allProps.push(prop);
+    const children = prop.getNestedProps();
+    if (children) {
+      for (let i = 0; i < children.length; i++) {
+        gatherProps(children[i], allProps);
       }
     }
-    return model.allprops;
+    return allProps;
+  }
+
+  publicAPI.getViewPropsWithNestedProps = () => {
+    const allPropsArray = [];
+    for (let i = 0; i < model.props.length; i++) {
+      gatherProps(model.props[i], allPropsArray);
+    }
+    return allPropsArray;
   };
 
   publicAPI.addActor2D = publicAPI.addViewProp;

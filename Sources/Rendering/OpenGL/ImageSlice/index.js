@@ -21,6 +21,9 @@ function vtkOpenGLImageSlice(publicAPI, model) {
         return;
       }
 
+      model.openGLRenderer = publicAPI.getFirstAncestorOfType(
+        'vtkOpenGLRenderer'
+      );
       publicAPI.prepareNodes();
       publicAPI.addMissingNode(model.renderable.getMapper());
       publicAPI.removeUnusedNodes();
@@ -36,7 +39,8 @@ function vtkOpenGLImageSlice(publicAPI, model) {
     if (
       !model.renderable ||
       !model.renderable.getVisibility() ||
-      !model.renderable.getIsOpaque()
+      !model.renderable.getIsOpaque() ||
+      (model.openGLRenderer.getSelector() && !model.renderable.getPickable())
     ) {
       return;
     }
@@ -53,7 +57,8 @@ function vtkOpenGLImageSlice(publicAPI, model) {
     if (
       !model.renderable ||
       !model.renderable.getVisibility() ||
-      model.renderable.getIsOpaque()
+      model.renderable.getIsOpaque() ||
+      (model.openGLRenderer.getSelector() && !model.renderable.getPickable())
     ) {
       return;
     }

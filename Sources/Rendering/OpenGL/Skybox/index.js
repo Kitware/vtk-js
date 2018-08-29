@@ -45,7 +45,7 @@ function vtkOpenGLSkybox(publicAPI, model) {
   };
 
   publicAPI.opaquePass = (prepass, renderPass) => {
-    if (prepass) {
+    if (prepass && !model.openGLRenderer.getSelector()) {
       publicAPI.updateBufferObjects();
 
       model.openGLRenderWindow.enableDepthMask();

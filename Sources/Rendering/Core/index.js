@@ -3,6 +3,8 @@ import vtkAbstractMapper3D from './AbstractMapper3D';
 import vtkAbstractPicker from './AbstractPicker';
 import vtkActor from './Actor';
 import vtkActor2D from './Actor2D';
+import vtkAnnotatedCubeActor from './AnnotatedCubeActor';
+import vtkAxesActor from './AxesActor';
 import vtkCamera from './Camera';
 import vtkCellPicker from './CellPicker';
 import vtkColorTransferFunction from './ColorTransferFunction';
@@ -16,6 +18,7 @@ import vtkInteractorStyle from './InteractorStyle';
 import vtkLight from './Light';
 import vtkMapper from './Mapper';
 import vtkPicker from './Picker';
+import vtkPixelSpaceCallbackMapper from './PixelSpaceCallbackMapper';
 import vtkPointPicker from './PointPicker';
 import vtkProp from './Prop';
 import vtkProp3D from './Prop3D';
@@ -40,6 +43,8 @@ export default {
   vtkAbstractPicker,
   vtkActor,
   vtkActor2D,
+  vtkAnnotatedCubeActor,
+  vtkAxesActor,
   vtkCamera,
   vtkCellPicker,
   vtkColorTransferFunction,
@@ -53,6 +58,7 @@ export default {
   vtkLight,
   vtkMapper,
   vtkPicker,
+  vtkPixelSpaceCallbackMapper,
   vtkPointPicker,
   vtkProp,
   vtkProp3D,

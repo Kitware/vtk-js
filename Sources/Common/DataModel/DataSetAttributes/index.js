@@ -210,6 +210,16 @@ function vtkDataSetAttributes(publicAPI, model) {
       }
     });
   }
+
+  const superShallowCopy = publicAPI.shallowCopy;
+  publicAPI.shallowCopy = (other, debug) => {
+    superShallowCopy(other, debug);
+    model.arrays = other.getArrays().map((arr) => {
+      const arrNew = arr.newClone();
+      arrNew.shallowCopy(arr, debug);
+      return { data: arrNew };
+    });
+  };
 }
 
 // ----------------------------------------------------------------------------
