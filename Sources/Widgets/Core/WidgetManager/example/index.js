@@ -14,9 +14,35 @@ import vtkPolyLineWidget from 'vtk.js/Sources/Widgets/Widgets3D/PolyLineWidget';
 import controlPanel from './controlPanel.html';
 
 const WIDGET_BUILDERS = {
-  vtkBoxWidget,
-  vtkImplicitPlaneWidget,
-  vtkPolyLineWidget,
+  Box(widgetManager) {
+    return widgetManager.addWidget(vtkBoxWidget.newInstance({ label: 'Box' }));
+  },
+  PlaneWidget(widgetManager) {
+    return widgetManager.addWidget(
+      vtkImplicitPlaneWidget.newInstance({ label: 'Plane' })
+    );
+  },
+  PolyLine(widgetManager) {
+    const instance = widgetManager.addWidget(
+      vtkPolyLineWidget.newInstance({
+        label: 'Polyline',
+      })
+    );
+    instance.setActiveScaleFactor(0.9);
+    instance.setGlyphResolution(60);
+    return instance;
+  },
+  ClosedPolyLine(widgetManager) {
+    const instance = widgetManager.addWidget(
+      vtkPolyLineWidget.newInstance({
+        label: 'Closed Polyline',
+      })
+    );
+    instance.setActiveScaleFactor(1.1);
+    instance.setGlyphResolution(30);
+    instance.setClosePolyLine(true);
+    return instance;
+  },
 };
 
 // ----------------------------------------------------------------------------
@@ -64,8 +90,7 @@ const buttonCreate = document.querySelector('button.create');
 
 // Create Widget
 buttonCreate.addEventListener('click', () => {
-  const widget = WIDGET_BUILDERS[selectElem.value].newInstance();
-  const w = widgetManager.addWidget(widget);
+  const w = WIDGET_BUILDERS[selectElem.value](widgetManager);
   w.placeWidget(cone.getOutputData().getBounds());
   w.setPlaceFactor(2);
 
@@ -172,7 +197,7 @@ function updateUI() {
   const widgets = widgetManager.getWidgets();
   widgetListElem.innerHTML = widgets
     .map((w) => ({
-      name: w.getClassName(),
+      name: w.getReferenceByName('label'),
       focus: w.hasFocus(),
       pickable: w.getPickable(),
       visibility: w.getVisibility(),
