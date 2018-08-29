@@ -3,7 +3,7 @@ import vtkActor from 'vtk.js/Sources/Rendering/Core/Actor';
 import vtkMapper from 'vtk.js/Sources/Rendering/Core/Mapper';
 import vtkMath from 'vtk.js/Sources/Common/Core/Math';
 import vtkPolyData from 'vtk.js/Sources/Common/DataModel/PolyData';
-import vtkTubeFilter from 'vtk.js/Sources/Filters/General/TubeFilter';
+// import vtkTubeFilter from 'vtk.js/Sources/Filters/General/TubeFilter';
 import vtkWidgetRepresentation from 'vtk.js/Sources/Widgets/Representations/WidgetRepresentation';
 
 // ----------------------------------------------------------------------------
@@ -21,16 +21,20 @@ function vtkPolyLineRepresentation(publicAPI, model) {
   model.internalPolyData = vtkPolyData.newInstance({ mtime: 0 });
   model.cells = [];
 
-  function allocateSize(size) {
+  function allocateSize(size, closePolyLine = false) {
     if (size === 0) {
       model.internalPolyData.getPoints().setData(new Float32Array([0, 0, 0]));
       model.internalPolyData.getLines().setData(new Uint8Array(0));
-    } else if (model.cells.length - 1 !== size) {
+    } else if (!model.points || model.points.length !== size * 3) {
       model.points = new Float32Array(size * 3);
-      model.cells = new Uint8Array(size + 1);
-      model.cells[0] = size;
-      for (let i = 0; i < size; i++) {
-        model.cells[i + 1] = i;
+      model.cells = new Uint8Array(size + 1 + (closePolyLine ? 1 : 0));
+      model.cells[0] = model.cells.length - 1;
+      for (let i = 1; i < model.cells.length; i++) {
+        model.cells[i] = i - 1;
+      }
+      if (closePolyLine) {
+        model.cells[model.cells.length - 1] = 0;
+        console.log('closePolyLine', closePolyLine, model.cells);
       }
       model.internalPolyData.getPoints().setData(model.points, 3);
       model.internalPolyData.getLines().setData(model.cells);
@@ -44,14 +48,15 @@ function vtkPolyLineRepresentation(publicAPI, model) {
 
   model.mapper = vtkMapper.newInstance();
   model.actor = vtkActor.newInstance();
-  model.tubes = vtkTubeFilter.newInstance({
-    radius: 0.01,
-    numberOfSides: 12,
-    capping: false,
-  });
+  // model.tubes = vtkTubeFilter.newInstance({
+  //   radius: 0.01,
+  //   numberOfSides: 12,
+  //   capping: false,
+  // });
 
-  model.tubes.setInputConnection(publicAPI.getOutputPort());
-  model.mapper.setInputConnection(model.tubes.getOutputPort());
+  // model.tubes.setInputConnection(publicAPI.getOutputPort());
+  // model.mapper.setInputConnection(model.tubes.getOutputPort());
+  model.mapper.setInputConnection(publicAPI.getOutputPort());
   model.actor.setMapper(model.mapper);
 
   model.actors.push(model.actor);
@@ -76,7 +81,7 @@ function vtkPolyLineRepresentation(publicAPI, model) {
       size -= delta;
     }
 
-    const points = allocateSize(size);
+    const points = allocateSize(size, model.closePolyLine && size > 2);
 
     for (let i = 0; i < size; i++) {
       const coords = list[i].getOrigin();
@@ -84,6 +89,7 @@ function vtkPolyLineRepresentation(publicAPI, model) {
       points[i * 3 + 1] = coords[1];
       points[i * 3 + 2] = coords[2];
     }
+
     model.internalPolyData.modified();
     outData[0] = model.internalPolyData;
   };
@@ -95,6 +101,7 @@ function vtkPolyLineRepresentation(publicAPI, model) {
 
 const DEFAULT_VALUES = {
   threshold: Number.EPSILON,
+  closePolyLine: false,
 };
 
 // ----------------------------------------------------------------------------
@@ -102,7 +109,7 @@ const DEFAULT_VALUES = {
 export function extend(publicAPI, model, initialValues = {}) {
   Object.assign(model, DEFAULT_VALUES, initialValues);
   vtkWidgetRepresentation.extend(publicAPI, model, initialValues);
-  macro.setGet(publicAPI, model, ['threshold']);
+  macro.setGet(publicAPI, model, ['threshold', 'closePolyLine']);
 
   vtkPolyLineRepresentation(publicAPI, model);
 }
