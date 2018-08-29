@@ -249,4 +249,3 @@ document.querySelector('.axis').addEventListener('input', (ev) => {
   setCamera(sliceMode, S.two.renderer, image.data);
   S.two.renderWindow.render();
 });
-
