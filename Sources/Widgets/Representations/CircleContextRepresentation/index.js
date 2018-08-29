@@ -108,7 +108,8 @@ function vtkCircleContextRepresentation(publicAPI, model) {
       typedArray.direction[i * 3 + 1] = orient[1];
       typedArray.direction[i * 3 + 2] = orient[2];
 
-      const scale1 = state.getScale1 ? state.getScale1() : model.defaultScale;
+      const scale1 =
+        (state.getScale1 ? state.getScale1() : model.defaultScale) / 2;
 
       let sFactor = scaleFactor;
       if (state.getVisible && !state.getVisible()) {
