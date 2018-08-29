@@ -21,6 +21,30 @@ function widgetBehavior(publicAPI, model) {
     return e.altKey || e.controlKey || e.shiftKey;
   }
 
+  publicAPI.handleRightButtonPress = (e) => {
+    if (
+      !model.activeState ||
+      !model.activeState.getActive() ||
+      !model.pickable ||
+      ignoreKey(e)
+    ) {
+      return macro.VOID;
+    }
+
+    if (model.activeState !== model.widgetState.getMoveHandle()) {
+      model.interactor.requestAnimation(publicAPI);
+      model.activeState.deactivate();
+      model.widgetState.removeHandle(model.activeState);
+      model.activeState = null;
+      model.interactor.cancelAnimation(publicAPI);
+    }
+
+    publicAPI.invokeStartInteractionEvent();
+    publicAPI.invokeInteractionEvent();
+    publicAPI.invokeEndInteractionEvent();
+    return macro.EVENT_ABORT;
+  };
+
   publicAPI.handleLeftButtonPress = (e) => {
     if (
       !model.activeState ||
@@ -40,6 +64,7 @@ function widgetBehavior(publicAPI, model) {
       newHandle.setScale1(moveHandle.getScale1());
     } else {
       isDragging = true;
+      model.openGLRenderWindow.setCursor('grabbing');
       model.interactor.requestAnimation(publicAPI);
     }
 
@@ -79,6 +104,7 @@ function widgetBehavior(publicAPI, model) {
 
   publicAPI.handleLeftButtonRelease = () => {
     if (isDragging && model.pickable) {
+      model.openGLRenderWindow.setCursor('pointer');
       model.widgetState.deactivate();
       model.interactor.cancelAnimation(publicAPI);
       publicAPI.invokeEndInteractionEvent();
