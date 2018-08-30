@@ -300,64 +300,31 @@ function vtkOpenGLGlyph3DMapper(publicAPI, model) {
   };
 
   publicAPI.replaceShaderPicking = (shaders, ren, actor) => {
-    if (model.openGLRenderer.getSelector()) {
+    if (model.hardwareSupport) {
       let FSSource = shaders.Fragment;
-      switch (model.openGLRenderer.getSelector().getCurrentPass()) {
-        case PassTypes.ID_LOW24:
-          break;
-        case PassTypes.COMPOSITE_INDEX_PASS:
-          if (model.hardwareSupport) {
-            let VSSource = shaders.Vertex;
-            VSSource = vtkShaderProgram.substitute(
-              VSSource,
-              '//VTK::Picking::Dec',
-              [
-                'attribute vec3 mapperIndexVS;',
-                'varying vec3 mapperIndexVSOutput;',
-              ]
-            ).result;
-            VSSource = vtkShaderProgram.substitute(
-              VSSource,
-              '//VTK::Picking::Impl',
-              '  mapperIndexVSOutput = mapperIndexVS;'
-            ).result;
-            shaders.Vertex = VSSource;
-            FSSource = vtkShaderProgram.substitute(
-              FSSource,
-              '//VTK::Picking::Dec',
-              'varying vec3 mapperIndexVSOutput;'
-            ).result;
-            FSSource = vtkShaderProgram.substitute(
-              FSSource,
-              '//VTK::Picking::Impl',
-              '  gl_FragData[0] = vec4(mapperIndexVSOutput,1.0);'
-            ).result;
-          } else {
-            FSSource = vtkShaderProgram.substitute(
-              FSSource,
-              '//VTK::Picking::Dec',
-              'uniform vec3 mapperIndex;'
-            ).result;
-            FSSource = vtkShaderProgram.substitute(
-              FSSource,
-              '//VTK::Picking::Impl',
-              '  gl_FragData[0] = vec4(mapperIndex,1.0);'
-            ).result;
-          }
-          break;
-        default:
-          FSSource = vtkShaderProgram.substitute(
-            FSSource,
-            '//VTK::Picking::Dec',
-            'uniform vec3 mapperIndex;'
-          ).result;
-          FSSource = vtkShaderProgram.substitute(
-            FSSource,
-            '//VTK::Picking::Impl',
-            '  gl_FragData[0] = vec4(mapperIndex,1.0);'
-          ).result;
-      }
+      let VSSource = shaders.Vertex;
+      VSSource = vtkShaderProgram.substitute(VSSource, '//VTK::Picking::Dec', [
+        'attribute vec3 mapperIndexVS;',
+        'varying vec3 mapperIndexVSOutput;',
+      ]).result;
+      VSSource = vtkShaderProgram.substitute(
+        VSSource,
+        '//VTK::Picking::Impl',
+        '  mapperIndexVSOutput = mapperIndexVS;'
+      ).result;
+      shaders.Vertex = VSSource;
+      FSSource = vtkShaderProgram.substitute(FSSource, '//VTK::Picking::Dec', [
+        'varying vec3 mapperIndexVSOutput;',
+        'uniform vec3 mapperIndex;',
+        'uniform int picking;',
+      ]).result;
+      FSSource = vtkShaderProgram.substitute(FSSource, '//VTK::Picking::Impl', [
+        '  vec4 pickColor = picking == 2 ? vec4(mapperIndexVSOutput,1.0) : vec4(mapperIndex,1.0);',
+        '  gl_FragData[0] = picking != 0 ? pickColor : gl_FragData[0];',
+      ]).result;
       shaders.Fragment = FSSource;
+    } else {
+      superClass.replaceShaderPicking(shaders, ren, actor);
     }
   };
 
