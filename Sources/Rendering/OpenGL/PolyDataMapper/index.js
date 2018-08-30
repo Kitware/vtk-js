@@ -1,7 +1,6 @@
 import { mat3, mat4, vec3 } from 'gl-matrix';
 
 import macro from 'vtk.js/Sources/macro';
-import vtkHardwareSelector from 'vtk.js/Sources/Rendering/OpenGL/HardwareSelector';
 import vtkHelper from 'vtk.js/Sources/Rendering/OpenGL/Helper';
 import vtkMapper from 'vtk.js/Sources/Rendering/Core/Mapper';
 import vtkMath from 'vtk.js/Sources/Common/Core/Math';
@@ -29,7 +28,6 @@ const primTypes = {
 const { Representation, Shading } = vtkProperty;
 const { ScalarMode } = vtkMapper;
 const { Filter, Wrap } = vtkOpenGLTexture;
-const { PassTypes } = vtkHardwareSelector;
 const { vtkErrorMacro } = macro;
 
 const StartEvent = { type: 'StartEvent' };
@@ -995,30 +993,17 @@ function vtkOpenGLPolyDataMapper(publicAPI, model) {
   };
 
   publicAPI.replaceShaderPicking = (shaders, ren, actor) => {
-    if (model.openGLRenderer.getSelector()) {
-      let FSSource = shaders.Fragment;
-      switch (model.openGLRenderer.getSelector().getCurrentPass()) {
-        case PassTypes.ID_LOW24:
-          // FSSource = vtkShaderProgram.substitute(FSSource,
-          //   '//VTK::Picking::Impl', [
-          //     '  int idx = gl_PrimitiveID + 1 + PrimitiveIDOffset;',
-          //     '  gl_FragData[0] = vec4(float(idx%256)/255.0, float((idx/256)%256)/255.0, float((idx/65536)%256)/255.0, 1.0);',
-          //   ], false).result;
-          break;
-        default:
-          FSSource = vtkShaderProgram.substitute(
-            FSSource,
-            '//VTK::Picking::Dec',
-            'uniform vec3 mapperIndex;'
-          ).result;
-          FSSource = vtkShaderProgram.substitute(
-            FSSource,
-            '//VTK::Picking::Impl',
-            '  gl_FragData[0] = vec4(mapperIndex,1.0);'
-          ).result;
-      }
-      shaders.Fragment = FSSource;
-    }
+    let FSSource = shaders.Fragment;
+    FSSource = vtkShaderProgram.substitute(FSSource, '//VTK::Picking::Dec', [
+      'uniform vec3 mapperIndex;',
+      'uniform int picking;',
+    ]).result;
+    FSSource = vtkShaderProgram.substitute(
+      FSSource,
+      '//VTK::Picking::Impl',
+      '  gl_FragData[0] = picking != 0 ? vec4(mapperIndex,1.0) : gl_FragData[0];'
+    ).result;
+    shaders.Fragment = FSSource;
   };
 
   publicAPI.replaceShaderValues = (shaders, ren, actor) => {
@@ -1119,16 +1104,6 @@ function vtkOpenGLPolyDataMapper(publicAPI, model) {
     ) {
       model.lastBoundBO.set({ lastLightComplexity: lightComplexity }, true);
       model.lastBoundBO.set({ lastLightCount: numberOfLights }, true);
-      needRebuild = true;
-    }
-
-    const selector = model.openGLRenderer.getSelector();
-    const selectionPass = selector === null ? -1 : selector.getCurrentPass();
-    if (
-      model.lastBoundBO.getReferenceByName('lastSelectionPass') !==
-      selectionPass
-    ) {
-      model.lastBoundBO.set({ lastSelectionPass: selectionPass }, true);
       needRebuild = true;
     }
 
@@ -1373,13 +1348,15 @@ function vtkOpenGLPolyDataMapper(publicAPI, model) {
     }
 
     const selector = model.openGLRenderer.getSelector();
-    if (selector && cellBO.getProgram().isUniformUsed('mapperIndex')) {
-      if (selector.getCurrentPass() < PassTypes.ID_LOW24) {
-        cellBO
-          .getProgram()
-          .setUniform3fArray('mapperIndex', selector.getPropColorValue());
-      }
-    }
+    cellBO
+      .getProgram()
+      .setUniform3fArray(
+        'mapperIndex',
+        selector ? selector.getPropColorValue() : [0.0, 0.0, 0.0]
+      );
+    cellBO
+      .getProgram()
+      .setUniformi('picking', selector ? selector.getCurrentPass() + 1 : 0);
   };
 
   publicAPI.setLightingShaderParameters = (cellBO, ren, actor) => {
@@ -1932,7 +1909,7 @@ export function extend(publicAPI, model, initialValues = {}) {
     model.primitives[i] = vtkHelper.newInstance();
     model.primitives[i].setPrimitiveType(i);
     model.primitives[i].set(
-      { lastLightComplexity: 0, lastLightCount: 0, lastSelectionPass: -1 },
+      { lastLightComplexity: 0, lastLightCount: 0, lastSelectionPass: false },
       true
     );
   }

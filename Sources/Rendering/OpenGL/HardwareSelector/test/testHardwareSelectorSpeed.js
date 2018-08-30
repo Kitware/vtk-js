@@ -82,8 +82,9 @@ test.onlyIfWebGL('Test HardwareSelector', (tapeContext) => {
   console.log(taTime, tbTime, tcTime);
 
   tapeContext.ok(
-    tcTime < tbTime * 200,
-    `Hardware selector is less than twice as slow as a normal render (${taTime}, ${tbTime}, ${tcTime})`
+    // should take about 3 normal renders but we give it some wiggle room
+    tcTime < tbTime * 6,
+    `Hardware selector takes less than six normal renders (${taTime}, ${tbTime}, ${tcTime})`
   );
 
   gc.releaseResources();
