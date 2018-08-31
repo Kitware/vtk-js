@@ -60,7 +60,7 @@ function vtkCircleContextRepresentation(publicAPI, model) {
   model.actor = vtkActor.newInstance();
   model.actor.getProperty().setOpacity(0.2);
   model.glyph = vtkCircleSource.newInstance({
-    resolution: 32,
+    resolution: model.glyphResolution,
     radius: 1,
   });
 
@@ -71,6 +71,13 @@ function vtkCircleContextRepresentation(publicAPI, model) {
   model.actors.push(model.actor);
 
   model.tranform = vtkMatrixBuilder.buildFromDegree();
+
+  // --------------------------------------------------------------------------
+
+  publicAPI.setGlyphResolution = macro.chain(
+    publicAPI.setGlyphResolution,
+    (r) => model.glyph.setResolution(r)
+  );
 
   // --------------------------------------------------------------------------
 
@@ -132,6 +139,7 @@ function vtkCircleContextRepresentation(publicAPI, model) {
 // ----------------------------------------------------------------------------
 
 const DEFAULT_VALUES = {
+  glyphResolution: 32,
   defaultScale: 1,
   defaultDirection: [0, 0, 1],
 };
