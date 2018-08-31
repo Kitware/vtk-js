@@ -73,6 +73,7 @@ test.onlyIfWebGL('Test HardwareSelector', (tapeContext) => {
   sel.attach(glwindow, renderer);
 
   sel.setArea(200, 200, 300, 300);
+  sel.select();
   console.time('hardware render');
   previousTime = Date.now();
   sel.select();
