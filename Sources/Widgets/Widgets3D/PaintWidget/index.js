@@ -13,14 +13,12 @@ import { ViewTypes } from 'vtk.js/Sources/Widgets/Core/WidgetManager/Constants';
 // ----------------------------------------------------------------------------
 
 function widgetBehavior(publicAPI, model) {
-  let painting = false;
-
-  publicAPI.handleLeftButtonPress = () => {
+  publicAPI.handleLeftButtonPress = (callData) => {
     if (!model.activeState || !model.activeState.getActive()) {
       return macro.VOID;
     }
 
-    painting = true;
+    model.painting = true;
     publicAPI.invokeStartInteractionEvent();
     return macro.EVENT_ABORT;
   };
@@ -37,10 +35,10 @@ function widgetBehavior(publicAPI, model) {
   publicAPI.handleMouseMove = (callData) => publicAPI.handleEvent(callData);
 
   publicAPI.handleLeftButtonRelease = () => {
-    if (painting) {
+    if (model.painting) {
       publicAPI.invokeEndInteractionEvent();
     }
-    painting = false;
+    model.painting = false;
     // if (isDragging) {
     //   model.interactor.cancelAnimation(publicAPI);
     // }
@@ -69,9 +67,6 @@ function widgetBehavior(publicAPI, model) {
         model.activeState.setOrigin(...worldCoords);
       }
 
-      if (painting) {
-        console.log('painting', worldCoords);
-      }
       publicAPI.invokeInteractionEvent();
       return macro.EVENT_ABORT;
     }
@@ -98,6 +93,8 @@ function widgetBehavior(publicAPI, model) {
     model.activeState = null;
     model.hasFocus = false;
   };
+
+  macro.get(publicAPI, model, ['painting']);
 }
 
 // ----------------------------------------------------------------------------
@@ -137,7 +134,7 @@ function vtkPaintWidget(publicAPI, model) {
       mixins: ['origin', 'color', 'scale1', 'direction', 'manipulator'],
       name: 'handle',
       initialValues: {
-        scale1: model.radius,
+        scale1: model.radius * 2,
         origin: [0, 0, 0],
         direction: [0, 0, 1],
       },
@@ -154,7 +151,7 @@ function vtkPaintWidget(publicAPI, model) {
   const superSetRadius = publicAPI.setRadius;
   publicAPI.setRadius = (r) => {
     if (superSetRadius(r)) {
-      handle.setScale1(r);
+      handle.setScale1(r * 2);
     }
   };
 }
@@ -165,6 +162,7 @@ const DEFAULT_VALUES = {
   manipulator: null,
   imageMapper: null,
   radius: 1,
+  painting: false,
 };
 
 // ----------------------------------------------------------------------------
@@ -174,6 +172,7 @@ export function extend(publicAPI, model, initialValues = {}) {
 
   vtkAbstractWidgetFactory.extend(publicAPI, model, initialValues);
 
+  macro.get(publicAPI, model, ['painting']);
   macro.setGet(publicAPI, model, ['manipulator', 'radius']);
 
   vtkPaintWidget(publicAPI, model);

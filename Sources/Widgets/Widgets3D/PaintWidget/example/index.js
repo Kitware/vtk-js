@@ -11,6 +11,7 @@ import vtkImageSlice from 'vtk.js/Sources/Rendering/Core/ImageSlice';
 import { ViewTypes } from 'vtk.js/Sources/Widgets/Core/WidgetManager/Constants';
 
 import controlPanel from './controlPanel.html';
+import vtkPaintFilter from '../PaintFilter';
 
 const bodyStyles = {
   display: 'flex',
@@ -124,6 +125,7 @@ setupWidgetManager(S.three);
 
 // Widget
 const paintWidget = vtkPaintWidget.newInstance();
+const painter = vtkPaintFilter.newInstance();
 
 S.two.viewHandle = S.two.widgetManager.addWidget(paintWidget, ViewTypes.SLICE);
 S.three.viewHandle = S.three.widgetManager.addWidget(
@@ -168,6 +170,7 @@ function updateControlPanel(im, ds) {
 const image = {};
 image.imageMapper = vtkImageMapper.newInstance();
 image.actor = vtkImageSlice.newInstance();
+image.imageMapper.setInputConnection(painter.getOutputPort(0));
 image.actor.setMapper(image.imageMapper);
 
 const reader = vtkHttpDataSetReader.newInstance({ fetchGzip: true });
@@ -177,7 +180,11 @@ reader
     const data = reader.getOutputData();
     image.data = data;
 
-    image.imageMapper.setInputData(data);
+    image.data.setSpacing(1, 1, 1);
+    image.data.setDirection(1, 0, 0, 0, 1, 0, 0, 0, 1);
+    image.data.computeTransforms();
+
+    painter.setInputData(image.data, 0);
 
     // default slice orientation/mode and camera view
     const sliceMode = vtkImageMapper.SlicingMode.K;
@@ -220,9 +227,6 @@ reader
     readyAll();
   });
 
-// set image mapper to paint widget
-paintWidget.setRadius(2);
-
 // register readyAll to resize event
 window.addEventListener('resize', readyAll);
 readyAll();
@@ -235,7 +239,14 @@ readyAll();
 // ----------------------------------------------------------------------------
 
 document.querySelector('.radius').addEventListener('input', (ev) => {
-  paintWidget.setRadius(Number(ev.target.value));
+  const r = Number(ev.target.value);
+  const spacing = image.data.getSpacing();
+
+  const indexRadius = [0, 0, 0];
+  image.data.worldToIndexVec3(spacing.map((s) => r / s), indexRadius);
+
+  paintWidget.setRadius(r);
+  painter.setRadius(indexRadius);
 });
 
 document.querySelector('.slice').addEventListener('input', (ev) => {
@@ -248,4 +259,34 @@ document.querySelector('.axis').addEventListener('input', (ev) => {
 
   setCamera(sliceMode, S.two.renderer, image.data);
   S.two.renderWindow.render();
+});
+
+// ----------------------------------------------------------------------------
+// Painting
+// ----------------------------------------------------------------------------
+
+const points = [];
+
+S.two.viewHandle.onStartInteractionEvent(() => {
+  points.length = 0;
+  points.push(paintWidget.getWidgetState().getTrueOrigin());
+});
+
+S.two.viewHandle.onInteractionEvent(() => {
+  if (S.two.viewHandle.getPainting()) {
+    points.push(paintWidget.getWidgetState().getTrueOrigin());
+  }
+});
+
+S.two.viewHandle.onEndInteractionEvent(() => {
+  if (points.length) {
+    points.forEach((pt) => image.data.worldToIndexVec3(pt, pt));
+    painter.setPoints(
+      points.map((pt) => [
+        Math.round(pt[0]),
+        Math.round(pt[1]),
+        Math.round(pt[2]),
+      ])
+    );
+  }
 });
