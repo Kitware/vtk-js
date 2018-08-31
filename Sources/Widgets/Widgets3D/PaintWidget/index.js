@@ -36,6 +36,7 @@ function widgetBehavior(publicAPI, model) {
 
   publicAPI.handleLeftButtonRelease = () => {
     if (model.painting) {
+      model.widgetState.clearTrailList();
       publicAPI.invokeEndInteractionEvent();
     }
     model.painting = false;
@@ -65,6 +66,13 @@ function widgetBehavior(publicAPI, model) {
         vtkMath.normalize(dir);
         vtkMath.add(worldCoords, dir, worldCoords);
         model.activeState.setOrigin(...worldCoords);
+
+        if (model.painting) {
+          const trailCircle = model.widgetState.addTrail();
+          trailCircle.set(
+            model.activeState.get('origin', 'direction', 'scale1')
+          );
+        }
       }
 
       publicAPI.invokeInteractionEvent();
@@ -113,7 +121,10 @@ function vtkPaintWidget(publicAPI, model) {
       case ViewTypes.GEOMETRY:
       case ViewTypes.SLICE:
         return [
-          { builder: vtkCircleContextRepresentation, labels: ['handle'] },
+          {
+            builder: vtkCircleContextRepresentation,
+            labels: ['handle', 'trail'],
+          },
         ];
       case ViewTypes.VOLUME:
       default:
@@ -133,6 +144,16 @@ function vtkPaintWidget(publicAPI, model) {
       labels: ['handle'],
       mixins: ['origin', 'color', 'scale1', 'direction', 'manipulator'],
       name: 'handle',
+      initialValues: {
+        scale1: model.radius * 2,
+        origin: [0, 0, 0],
+        direction: [0, 0, 1],
+      },
+    })
+    .addDynamicMixinState({
+      labels: ['trail'],
+      mixins: ['origin', 'color', 'scale1', 'direction'],
+      name: 'trail',
       initialValues: {
         scale1: model.radius * 2,
         origin: [0, 0, 0],
