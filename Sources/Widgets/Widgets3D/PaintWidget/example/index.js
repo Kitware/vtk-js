@@ -112,7 +112,7 @@ function setCamera(sliceMode, renderer, data) {
 linkInteractors(S.two, S.three);
 
 // ----------------------------------------------------------------------------
-// Widget manager
+// Widget manager and vtkPaintFilter
 // ----------------------------------------------------------------------------
 
 function setupWidgetManager(scope) {
@@ -181,6 +181,7 @@ reader
     image.data = data;
 
     painter.setInputData(image.data, 0);
+    painter.setColor([210]);
 
     // default slice orientation/mode and camera view
     const sliceMode = vtkImageMapper.SlicingMode.K;
@@ -217,6 +218,11 @@ reader
         paintWidget.getManipulator().setNormal(position);
         const handle = paintWidget.getWidgetState().getHandle();
         handle.rotateFromDirections(handle.getDirection(), normal);
+
+        // update UI
+        document
+          .querySelector('.slice')
+          .setAttribute('max', data.getDimensions()[slicingMode]);
       }
     });
 
@@ -273,13 +279,6 @@ S.two.viewHandle.onInteractionEvent(() => {
 
 S.two.viewHandle.onEndInteractionEvent(() => {
   if (points.length) {
-    points.forEach((pt) => image.data.worldToIndexVec3(pt, pt));
-    painter.setPoints(
-      points.map((pt) => [
-        Math.round(pt[0]),
-        Math.round(pt[1]),
-        Math.round(pt[2]),
-      ])
-    );
+    painter.paintWorldPoints(points);
   }
 });

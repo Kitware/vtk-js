@@ -184,6 +184,7 @@ const DEFAULT_VALUES = {
   imageMapper: null,
   radius: 1,
   painting: false,
+  color: [1],
 };
 
 // ----------------------------------------------------------------------------
@@ -194,7 +195,7 @@ export function extend(publicAPI, model, initialValues = {}) {
   vtkAbstractWidgetFactory.extend(publicAPI, model, initialValues);
 
   macro.get(publicAPI, model, ['painting']);
-  macro.setGet(publicAPI, model, ['manipulator', 'radius']);
+  macro.setGet(publicAPI, model, ['manipulator', 'radius', 'color']);
 
   vtkPaintWidget(publicAPI, model);
 }

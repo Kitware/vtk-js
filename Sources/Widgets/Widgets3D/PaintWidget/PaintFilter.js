@@ -2,6 +2,11 @@ import macro from 'vtk.js/Sources/macro';
 
 const { vtkErrorMacro } = macro;
 
+const PointType = {
+  World: 0,
+  Index: 1,
+};
+
 // ----------------------------------------------------------------------------
 // vtkPaintFilter methods
 // ----------------------------------------------------------------------------
@@ -9,6 +14,26 @@ const { vtkErrorMacro } = macro;
 function vtkPaintFilter(publicAPI, model) {
   // Set our className
   model.classHierarchy.push('vtkPaintFilter');
+
+  model.points = [];
+  model.pointType = PointType.Index;
+
+  // --------------------------------------------------------------------------
+
+  publicAPI.paintWorldPoints = (worldPoints) => {
+    model.points = worldPoints;
+    model.pointType = PointType.World;
+    publicAPI.modified();
+  };
+
+  // --------------------------------------------------------------------------
+
+  // Expects integer indices
+  publicAPI.paintIndexPoints = (indexPoints) => {
+    model.points = indexPoints;
+    model.pointType = PointType.Index;
+    publicAPI.modified();
+  };
 
   // --------------------------------------------------------------------------
 
@@ -26,6 +51,19 @@ function vtkPaintFilter(publicAPI, model) {
     if (!scalars) {
       vtkErrorMacro('No scalars from input');
       return;
+    }
+
+    // transform world points into index space
+    if (model.pointType === PointType.World) {
+      model.points = model.points.map((pt) => {
+        const indexPt = [0, 0, 0];
+        input.worldToIndexVec3(pt, indexPt);
+        return [
+          Math.round(indexPt[0]),
+          Math.round(indexPt[1]),
+          Math.round(indexPt[2]),
+        ];
+      });
     }
 
     const dims = input.getDimensions();
@@ -52,7 +90,7 @@ function vtkPaintFilter(publicAPI, model) {
             const jval = (j - y) / ry;
             const kval = (k - z) / rz;
             if (ival * ival + jval * jval + kval * kval <= 1) {
-              scalarsData[i + j * jStride + k * kStride] = 1;
+              scalarsData.set(model.color, i + j * jStride + k * kStride);
             }
           }
         }
@@ -74,8 +112,8 @@ function vtkPaintFilter(publicAPI, model) {
 // ----------------------------------------------------------------------------
 
 const DEFAULT_VALUES = {
-  points: [],
   radius: [1, 1, 1],
+  color: [1],
 };
 
 // ----------------------------------------------------------------------------
@@ -89,7 +127,7 @@ export function extend(publicAPI, model, initialValues = {}) {
   // Also make it an algorithm with one input and one output
   macro.algo(publicAPI, model, 1, 1);
 
-  macro.setGet(publicAPI, model, ['points']);
+  macro.setGet(publicAPI, model, ['color']);
   macro.setGetArray(publicAPI, model, ['radius'], 3);
 
   // Object specific methods
