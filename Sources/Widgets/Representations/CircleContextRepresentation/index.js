@@ -6,6 +6,7 @@ import vtkGlyph3DMapper from 'vtk.js/Sources/Rendering/Core/Glyph3DMapper';
 import vtkHandleRepresentation from 'vtk.js/Sources/Widgets/Representations/HandleRepresentation';
 import vtkMatrixBuilder from 'vtk.js/Sources/Common/Core/MatrixBuilder';
 import vtkPolyData from 'vtk.js/Sources/Common/DataModel/PolyData';
+import vtkWidgetRepresentation from 'vtk.js/Sources/Widgets/Representations/WidgetRepresentation';
 
 import { ScalarMode } from 'vtk.js/Sources/Rendering/Core/Mapper/Constants';
 
@@ -50,25 +51,29 @@ function vtkCircleContextRepresentation(publicAPI, model) {
   // Generic rendering pipeline
   // --------------------------------------------------------------------------
 
-  model.mapper = vtkGlyph3DMapper.newInstance({
-    orientationArray: 'direction',
-    scaleArray: 'scale',
-    colorByArrayName: 'color',
-    scalarMode: ScalarMode.USE_POINT_FIELD_DATA,
-  });
-  model.mapper.setOrientationModeToDirection();
-  model.actor = vtkActor.newInstance();
-  model.actor.getProperty().setOpacity(0.2);
-  model.glyph = vtkCircleSource.newInstance({
-    resolution: model.glyphResolution,
-    radius: 1,
-  });
+  model.pipelines = {
+    circle: {
+      source: publicAPI,
+      glyph: vtkCircleSource.newInstance({
+        resolution: model.glyphResolution,
+        radius: 1,
+      }),
+      mapper: vtkGlyph3DMapper.newInstance({
+        orientationArray: 'direction',
+        scaleArray: 'scale',
+        colorByArrayName: 'color',
+        scalarMode: ScalarMode.USE_POINT_FIELD_DATA,
+      }),
+      actor: vtkActor.newInstance({ pickable: false }),
+    },
+  };
 
-  model.mapper.setInputConnection(publicAPI.getOutputPort(), 0);
-  model.mapper.setInputConnection(model.glyph.getOutputPort(), 1);
-  model.actor.setMapper(model.mapper);
+  model.pipelines.circle.actor.getProperty().setOpacity(0.2);
+  model.pipelines.circle.mapper.setOrientationModeToDirection();
 
-  model.actors.push(model.actor);
+  vtkWidgetRepresentation.connectPipeline(model.pipelines.circle);
+
+  model.actors.push(model.pipelines.circle.actor);
 
   model.tranform = vtkMatrixBuilder.buildFromDegree();
 
@@ -132,6 +137,12 @@ function vtkCircleContextRepresentation(publicAPI, model) {
     model.internalPolyData.modified();
     outData[0] = model.internalPolyData;
   };
+
+  // --------------------------------------------------------------------------
+  // Initialization
+  // --------------------------------------------------------------------------
+
+  publicAPI.setActiveScaleFactor(1);
 }
 
 // ----------------------------------------------------------------------------
@@ -151,6 +162,7 @@ export function extend(publicAPI, model, initialValues = {}) {
 
   vtkHandleRepresentation.extend(publicAPI, model, initialValues);
   macro.setGet(publicAPI, model, ['glyphResolution', 'defaultScale']);
+  macro.setGetArray(publicAPI, model, ['defaultDirection']);
   macro.get(publicAPI, model, ['glyph', 'mapper', 'actor']);
 
   // Object specific methods
