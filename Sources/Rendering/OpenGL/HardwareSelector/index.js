@@ -29,12 +29,22 @@ function vtkOpenGLHardwareSelector(publicAPI, model) {
     );
     model.maxAttributeId = 0;
 
-    model.framebuffer = vtkOpenGLFramebuffer.newInstance();
-    model.framebuffer.setOpenGLRenderWindow(model.openGLRenderWindow);
-    model.framebuffer.saveCurrentBindingsAndBuffers();
     const size = model.openGLRenderWindow.getSize();
-    model.framebuffer.create(size[0], size[1]);
-    model.framebuffer.populateFramebuffer();
+    if (!model.framebuffer) {
+      model.framebuffer = vtkOpenGLFramebuffer.newInstance();
+      model.framebuffer.setOpenGLRenderWindow(model.openGLRenderWindow);
+      model.framebuffer.saveCurrentBindingsAndBuffers();
+      model.framebuffer.create(size[0], size[1]);
+      model.framebuffer.populateFramebuffer();
+    } else {
+      model.framebuffer.setOpenGLRenderWindow(model.openGLRenderWindow);
+      model.framebuffer.saveCurrentBindingsAndBuffers();
+      const fbSize = model.framebuffer.getSize();
+      if (fbSize[0] !== size[0] || fbSize[1] !== size[1]) {
+        model.framebuffer.create(size[0], size[1]);
+        model.framebuffer.populateFramebuffer();
+      }
+    }
 
     model.openGLRenderer.clear();
     model.openGLRenderer.setSelector(publicAPI);
@@ -115,8 +125,8 @@ function vtkOpenGLHardwareSelector(publicAPI, model) {
     model.renderer.setBackground(model.originalBackground);
     publicAPI.invokeEvent({ type: 'EndEvent' });
 
-    // restore image
-    model.openGLRenderWindow.traverseAllPasses();
+    // restore image, not needed?
+    // model.openGLRenderWindow.traverseAllPasses();
     return true;
   };
 
