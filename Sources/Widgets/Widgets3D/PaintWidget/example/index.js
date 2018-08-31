@@ -180,10 +180,6 @@ reader
     const data = reader.getOutputData();
     image.data = data;
 
-    image.data.setSpacing(1, 1, 1);
-    image.data.setDirection(1, 0, 0, 0, 1, 0, 0, 0, 1);
-    image.data.computeTransforms();
-
     painter.setInputData(image.data, 0);
 
     // default slice orientation/mode and camera view
@@ -242,11 +238,8 @@ document.querySelector('.radius').addEventListener('input', (ev) => {
   const r = Number(ev.target.value);
   const spacing = image.data.getSpacing();
 
-  const indexRadius = [0, 0, 0];
-  image.data.worldToIndexVec3(spacing.map((s) => r / s), indexRadius);
-
   paintWidget.setRadius(r);
-  painter.setRadius(indexRadius);
+  painter.setRadius(spacing.map((s) => r / s));
 });
 
 document.querySelector('.slice').addEventListener('input', (ev) => {
