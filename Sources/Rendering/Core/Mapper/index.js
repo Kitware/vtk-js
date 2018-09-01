@@ -486,7 +486,7 @@ function vtkMapper(publicAPI, model) {
       model.scalarMode,
       model.arrayAccessMode,
       model.arrayId,
-      model.arrayName
+      model.colorByArrayName
     );
     const scalars = gasResult.scalars;
 
