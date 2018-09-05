@@ -242,10 +242,9 @@ readyAll();
 
 document.querySelector('.radius').addEventListener('input', (ev) => {
   const r = Number(ev.target.value);
-  const spacing = image.data.getSpacing();
 
   paintWidget.setRadius(r);
-  painter.setRadius(spacing.map((s) => r / s));
+  painter.setRadius(r);
 });
 
 document.querySelector('.slice').addEventListener('input', (ev) => {

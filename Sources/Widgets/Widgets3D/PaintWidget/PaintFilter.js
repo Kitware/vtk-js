@@ -89,13 +89,14 @@ function vtkPaintFilter(publicAPI, model) {
       });
     }
 
-    const dims = model.backgroundImage.getDimensions();
+    const spacing = model.maskImage.getSpacing();
+    const dims = model.maskImage.getDimensions();
     const numberOfComponents = scalars.getNumberOfComponents();
     const jStride = numberOfComponents * dims[0];
     const kStride = numberOfComponents * dims[0] * dims[1];
     const scalarsData = scalars.getData();
 
-    const [rx, ry, rz] = model.radius;
+    const [rx, ry, rz] = spacing.map((s) => model.radius / s);
     for (let pti = 0; pti < model.points.length; pti++) {
       const [x, y, z] = model.points[pti];
       const xstart = Math.floor(Math.min(dims[0] - 1, Math.max(0, x - rx)));
@@ -137,7 +138,7 @@ function vtkPaintFilter(publicAPI, model) {
 const DEFAULT_VALUES = {
   backgroundImage: null,
   maskImage: null,
-  radius: [1, 1, 1],
+  radius: 1,
   color: [1],
 };
 
@@ -152,8 +153,12 @@ export function extend(publicAPI, model, initialValues = {}) {
   // Also make it an algorithm with no input and one output
   macro.algo(publicAPI, model, 0, 1);
 
-  macro.setGet(publicAPI, model, ['backgroundImage', 'maskImage', 'color']);
-  macro.setGetArray(publicAPI, model, ['radius'], 3);
+  macro.setGet(publicAPI, model, [
+    'backgroundImage',
+    'maskImage',
+    'color',
+    'radius',
+  ]);
 
   // Object specific methods
   vtkPaintFilter(publicAPI, model);
