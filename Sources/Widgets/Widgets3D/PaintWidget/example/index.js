@@ -167,11 +167,21 @@ function updateControlPanel(im, ds) {
 // Load image
 // ----------------------------------------------------------------------------
 
-const image = {};
-image.imageMapper = vtkImageMapper.newInstance();
-image.actor = vtkImageSlice.newInstance();
-image.imageMapper.setInputConnection(painter.getOutputPort(0));
+const image = {
+  imageMapper: vtkImageMapper.newInstance(),
+  actor: vtkImageSlice.newInstance(),
+};
+
+const mask = {
+  imageMapper: vtkImageMapper.newInstance(),
+  actor: vtkImageSlice.newInstance(),
+};
+
 image.actor.setMapper(image.imageMapper);
+
+mask.imageMapper.setInputConnection(painter.getOutputPort());
+mask.actor.setMapper(mask.imageMapper);
+mask.actor.getProperty().setOpacity(0.3);
 
 const reader = vtkHttpDataSetReader.newInstance({ fetchGzip: true });
 reader
@@ -180,21 +190,26 @@ reader
     const data = reader.getOutputData();
     image.data = data;
 
+    // set input data
+    image.imageMapper.setInputData(data);
+
+    // add actors to renderers
+    S.two.renderer.addViewProp(image.actor);
+    S.two.renderer.addViewProp(mask.actor);
+    S.three.renderer.addViewProp(image.actor);
+    S.three.renderer.addViewProp(mask.actor);
+
+    // update paint filter
     painter.setBackgroundImage(image.data);
-    painter.setColor([210]);
+    painter.setColor([255]);
 
     // default slice orientation/mode and camera view
     const sliceMode = vtkImageMapper.SlicingMode.K;
-
     image.imageMapper.setSlicingMode(sliceMode);
     image.imageMapper.setSlice(0);
 
     // set 2D camera position
     setCamera(sliceMode, S.two.renderer, image.data);
-
-    // add image/volume to renderers
-    S.two.renderer.addViewProp(image.actor);
-    S.three.renderer.addViewProp(image.actor);
 
     updateControlPanel(image.imageMapper, data);
 
@@ -218,6 +233,9 @@ reader
         paintWidget.getManipulator().setNormal(position);
         const handle = paintWidget.getWidgetState().getHandle();
         handle.rotateFromDirections(handle.getDirection(), normal);
+
+        // update mask layer
+        mask.imageMapper.set(image.imageMapper.get('slice', 'slicingMode'));
 
         // update UI
         document
