@@ -405,10 +405,29 @@ function vtkResliceCursorLineRepresentation(publicAPI, model) {
       vtkMath.distance2BetweenPoints(position, focalPoint)
     );
 
-    const newCameraPosition = [
+    const estimatedCameraPosition = [
       focalPoint[0] + distance * normal[0],
       focalPoint[1] + distance * normal[1],
       focalPoint[2] + distance * normal[2],
+    ];
+
+    // intersect with the plane to get updated focal point
+    const intersection = vtkPlane.intersectWithLine(
+      focalPoint,
+      estimatedCameraPosition,
+      normalPlane.getOrigin(),
+      normalPlane.getNormal()
+    );
+    const newFocalPoint = intersection.x;
+
+    model.renderer
+      .getActiveCamera()
+      .setFocalPoint(newFocalPoint[0], newFocalPoint[1], newFocalPoint[2]);
+
+    const newCameraPosition = [
+      newFocalPoint[0] + distance * normal[0],
+      newFocalPoint[1] + distance * normal[1],
+      newFocalPoint[2] + distance * normal[2],
     ];
 
     model.renderer
@@ -418,17 +437,6 @@ function vtkResliceCursorLineRepresentation(publicAPI, model) {
         newCameraPosition[1],
         newCameraPosition[2]
       );
-    // intersect with the plane to get updated focal point
-    const intersection = vtkPlane.intersectWithLine(
-      focalPoint,
-      newCameraPosition,
-      normalPlane.getOrigin(),
-      normalPlane.getNormal()
-    );
-
-    model.renderer
-      .getActiveCamera()
-      .setFocalPoint(intersection.x[0], intersection.x[1], intersection.x[2]);
 
     // Renderer may not have yet actor bounds
     const rendererBounds = model.renderer.computeVisiblePropBounds();
