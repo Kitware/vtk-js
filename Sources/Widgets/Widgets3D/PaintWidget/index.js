@@ -181,7 +181,6 @@ function vtkPaintWidget(publicAPI, model) {
 
 const DEFAULT_VALUES = {
   manipulator: null,
-  imageMapper: null,
   radius: 1,
   painting: false,
   color: [1],

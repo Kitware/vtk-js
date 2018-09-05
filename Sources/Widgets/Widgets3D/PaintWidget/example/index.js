@@ -180,7 +180,7 @@ reader
     const data = reader.getOutputData();
     image.data = data;
 
-    painter.setInputData(image.data, 0);
+    painter.setBackgroundImage(image.data);
     painter.setColor([210]);
 
     // default slice orientation/mode and camera view

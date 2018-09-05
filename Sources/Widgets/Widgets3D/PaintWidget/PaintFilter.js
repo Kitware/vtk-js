@@ -1,4 +1,6 @@
 import macro from 'vtk.js/Sources/macro';
+import vtkImageData from 'vtk.js/Sources/Common/DataModel/ImageData';
+import vtkDataArray from 'vtk.js/Sources/Common/Core/DataArray';
 
 const { vtkErrorMacro } = macro;
 
@@ -38,18 +40,39 @@ function vtkPaintFilter(publicAPI, model) {
   // --------------------------------------------------------------------------
 
   publicAPI.requestData = (inData, outData) => {
-    // implement requestData
-    const input = inData[0];
-
-    if (!input) {
-      vtkErrorMacro('Invalid or missing points and/or input');
+    if (!model.backgroundImage) {
+      vtkErrorMacro('No background image');
       return;
     }
 
-    const scalars = input.getPointData().getScalars();
+    if (!model.backgroundImage.getPointData().getScalars()) {
+      vtkErrorMacro('Background image has no scalars');
+      return;
+    }
+
+    if (!model.maskImage) {
+      // copy background image to blank mask image
+      model.maskImage = vtkImageData.newInstance(
+        model.backgroundImage.get('spacing', 'origin', 'direction')
+      );
+      model.maskImage.setDimensions(model.backgroundImage.getDimensions());
+
+      const pd = model.backgroundImage.getPointData();
+      const scalarsData = pd.getScalars().getData();
+      const values = new scalarsData.constructor(
+        model.backgroundImage.getNumberOfPoints()
+      );
+      const dataArray = vtkDataArray.newInstance({
+        numberOfComponents: pd.getNumberOfComponents(),
+        values,
+      });
+      model.maskImage.getPointData().setScalars(dataArray);
+    }
+
+    const scalars = model.maskImage.getPointData().getScalars();
 
     if (!scalars) {
-      vtkErrorMacro('No scalars from input');
+      vtkErrorMacro('Mask image has no scalars');
       return;
     }
 
@@ -57,7 +80,7 @@ function vtkPaintFilter(publicAPI, model) {
     if (model.pointType === PointType.World) {
       model.points = model.points.map((pt) => {
         const indexPt = [0, 0, 0];
-        input.worldToIndexVec3(pt, indexPt);
+        model.backgroundImage.worldToIndexVec3(pt, indexPt);
         return [
           Math.round(indexPt[0]),
           Math.round(indexPt[1]),
@@ -66,7 +89,7 @@ function vtkPaintFilter(publicAPI, model) {
       });
     }
 
-    const dims = input.getDimensions();
+    const dims = model.backgroundImage.getDimensions();
     const numberOfComponents = scalars.getNumberOfComponents();
     const jStride = numberOfComponents * dims[0];
     const kStride = numberOfComponents * dims[0] * dims[1];
@@ -99,11 +122,11 @@ function vtkPaintFilter(publicAPI, model) {
 
     scalars.setData(scalarsData);
     scalars.modified();
-    input.modified();
+    model.maskImage.modified();
 
     // clear points without triggering requestData
     model.points = [];
-    outData[0] = input;
+    outData[0] = model.maskImage;
   };
 }
 
@@ -112,6 +135,8 @@ function vtkPaintFilter(publicAPI, model) {
 // ----------------------------------------------------------------------------
 
 const DEFAULT_VALUES = {
+  backgroundImage: null,
+  maskImage: null,
   radius: [1, 1, 1],
   color: [1],
 };
@@ -124,10 +149,10 @@ export function extend(publicAPI, model, initialValues = {}) {
   // Make this a VTK object
   macro.obj(publicAPI, model);
 
-  // Also make it an algorithm with one input and one output
-  macro.algo(publicAPI, model, 1, 1);
+  // Also make it an algorithm with no input and one output
+  macro.algo(publicAPI, model, 0, 1);
 
-  macro.setGet(publicAPI, model, ['color']);
+  macro.setGet(publicAPI, model, ['backgroundImage', 'maskImage', 'color']);
   macro.setGetArray(publicAPI, model, ['radius'], 3);
 
   // Object specific methods
