@@ -430,8 +430,18 @@ function vtkResliceCursorLineRepresentation(publicAPI, model) {
       .getActiveCamera()
       .setFocalPoint(intersection.x[0], intersection.x[1], intersection.x[2]);
 
+    // Renderer may not have yet actor bounds
+    const rendererBounds = model.renderer.computeVisiblePropBounds();
+    const bounds = publicAPI.getBounds();
+    rendererBounds[0] = Math.min(bounds[0], rendererBounds[0]);
+    rendererBounds[1] = Math.max(bounds[1], rendererBounds[1]);
+    rendererBounds[2] = Math.min(bounds[2], rendererBounds[2]);
+    rendererBounds[3] = Math.max(bounds[3], rendererBounds[3]);
+    rendererBounds[4] = Math.min(bounds[4], rendererBounds[4]);
+    rendererBounds[5] = Math.max(bounds[5], rendererBounds[5]);
+
     // Don't clip away any part of the data.
-    model.renderer.resetCameraClippingRange();
+    model.renderer.resetCameraClippingRange(rendererBounds);
 
     return [model.imageActor, ...model.resliceCursorActor.getActors()];
   };
