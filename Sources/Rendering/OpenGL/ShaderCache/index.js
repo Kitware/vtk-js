@@ -38,11 +38,19 @@ function vtkShaderCache(publicAPI, model) {
         '#version 300 es\n' +
         '#define attribute in\n' +
         '#define textureCube texture\n' +
-        '#define texture2D texture\n';
+        '#define texture2D texture\n' +
+        '#define textureCubeLod textureLod\n' +
+        '#define texture2DLod textureLod\n';
     } else {
       model.context.getExtension('OES_standard_derivatives');
       if (model.context.getExtension('EXT_frag_depth')) {
         fragDepthString = '#extension GL_EXT_frag_depth : enable\n';
+      }
+      if (model.context.getExtension('EXT_shader_texture_lod')) {
+        fragDepthString +=
+          '#extension GL_EXT_shader_texture_lod : enable\n' +
+          '#define textureCubeLod textureCubeLodEXT\n' +
+          '#define texture2DLod texture2DLodEXT';
       }
     }
 
