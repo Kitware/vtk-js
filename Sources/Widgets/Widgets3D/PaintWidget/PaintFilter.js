@@ -114,7 +114,10 @@ function vtkPaintFilter(publicAPI, model) {
             const jval = (j - y) / ry;
             const kval = (k - z) / rz;
             if (ival * ival + jval * jval + kval * kval <= 1) {
-              scalarsData.set(model.color, i + j * jStride + k * kStride);
+              const voxel = model.voxelFunc
+                ? model.voxelFunc(i, j, k, model.color)
+                : model.color;
+              scalarsData.set(voxel, i + j * jStride + k * kStride);
             }
           }
         }
@@ -138,6 +141,7 @@ function vtkPaintFilter(publicAPI, model) {
 const DEFAULT_VALUES = {
   backgroundImage: null,
   maskImage: null,
+  voxelFunc: null,
   radius: 1,
   color: [1],
 };
@@ -156,6 +160,7 @@ export function extend(publicAPI, model, initialValues = {}) {
   macro.setGet(publicAPI, model, [
     'backgroundImage',
     'maskImage',
+    'voxelFunc',
     'color',
     'radius',
   ]);
