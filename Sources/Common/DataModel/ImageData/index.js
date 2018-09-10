@@ -2,7 +2,7 @@ import macro from 'vtk.js/Sources/macro';
 import vtkDataSet from 'vtk.js/Sources/Common/DataModel/DataSet';
 import vtkStructuredData from 'vtk.js/Sources/Common/DataModel/StructuredData';
 import { StructuredType } from 'vtk.js/Sources/Common/DataModel/StructuredData/Constants';
-import { quat, vec3, mat3, mat4 } from 'gl-matrix';
+import { vec3, mat3, mat4 } from 'gl-matrix';
 
 const { vtkErrorMacro } = macro;
 
@@ -230,19 +230,32 @@ function vtkImageData(publicAPI, model) {
   };
 
   publicAPI.computeTransforms = () => {
-    const rotq = quat.create();
-    quat.fromMat3(rotq, model.direction);
     const trans = vec3.fromValues(
       model.origin[0],
       model.origin[1],
       model.origin[2]
     );
+    mat4.fromTranslation(model.indexToWorld, trans);
+
+    model.indexToWorld[0] = model.direction[0];
+    model.indexToWorld[1] = model.direction[1];
+    model.indexToWorld[2] = model.direction[2];
+
+    model.indexToWorld[4] = model.direction[3];
+    model.indexToWorld[5] = model.direction[4];
+    model.indexToWorld[6] = model.direction[5];
+
+    model.indexToWorld[8] = model.direction[6];
+    model.indexToWorld[9] = model.direction[7];
+    model.indexToWorld[10] = model.direction[8];
+
     const scale = vec3.fromValues(
       model.spacing[0],
       model.spacing[1],
       model.spacing[2]
     );
-    mat4.fromRotationTranslationScale(model.indexToWorld, rotq, trans, scale);
+    mat4.scale(model.indexToWorld, model.indexToWorld, scale);
+
     mat4.invert(model.worldToIndex, model.indexToWorld);
   };
 
