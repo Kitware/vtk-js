@@ -193,6 +193,7 @@ function vtkRenderWindowInteractor(publicAPI, model) {
     }
 
     rootElm[method]('mouseup', publicAPI.handleMouseUp);
+    rootElm[method]('mouseleave', publicAPI.handleMouseUp);
     rootElm[method]('mousemove', publicAPI.handleMouseMove);
     rootElm[method]('touchend', publicAPI.handleTouchEnd, false);
     rootElm[method]('touchcancel', publicAPI.handleTouchEnd, false);
