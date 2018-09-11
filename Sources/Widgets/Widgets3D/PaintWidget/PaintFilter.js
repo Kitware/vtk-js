@@ -1,13 +1,10 @@
+import { vec3 } from 'gl-matrix';
+
 import macro from 'vtk.js/Sources/macro';
 import vtkImageData from 'vtk.js/Sources/Common/DataModel/ImageData';
 import vtkDataArray from 'vtk.js/Sources/Common/Core/DataArray';
 
 const { vtkErrorMacro } = macro;
-
-const PointType = {
-  World: 0,
-  Index: 1,
-};
 
 // ----------------------------------------------------------------------------
 // vtkPaintFilter methods
@@ -18,22 +15,11 @@ function vtkPaintFilter(publicAPI, model) {
   model.classHierarchy.push('vtkPaintFilter');
 
   model.points = [];
-  model.pointType = PointType.Index;
 
   // --------------------------------------------------------------------------
 
-  publicAPI.paintWorldPoints = (worldPoints) => {
-    model.points = worldPoints;
-    model.pointType = PointType.World;
-    publicAPI.modified();
-  };
-
-  // --------------------------------------------------------------------------
-
-  // Expects integer indices
-  publicAPI.paintIndexPoints = (indexPoints) => {
-    model.points = indexPoints;
-    model.pointType = PointType.Index;
+  publicAPI.paintPoints = (points) => {
+    model.points = points;
     publicAPI.modified();
   };
 
@@ -51,22 +37,25 @@ function vtkPaintFilter(publicAPI, model) {
     }
 
     if (!model.maskImage) {
-      // copy background image to blank mask image
+      // clone background image properties
       model.maskImage = vtkImageData.newInstance(
         model.backgroundImage.get('spacing', 'origin', 'direction')
       );
       model.maskImage.setDimensions(model.backgroundImage.getDimensions());
+      model.maskImage.computeTransforms();
 
-      const pd = model.backgroundImage.getPointData();
-      const scalarsData = pd.getScalars().getData();
-      const values = new scalarsData.constructor(
-        model.backgroundImage.getNumberOfPoints()
+      const values = new Uint8Array(
+        model.backgroundImage.getNumberOfPoints() * 4
       );
       const dataArray = vtkDataArray.newInstance({
-        numberOfComponents: pd.getNumberOfComponents(),
+        numberOfComponents: 4, // rgba
         values,
       });
       model.maskImage.getPointData().setScalars(dataArray);
+    }
+
+    if (!model.maskWorldToIndex) {
+      model.maskWorldToIndex = model.maskImage.getWorldToIndex();
     }
 
     const scalars = model.maskImage.getPointData().getScalars();
@@ -76,18 +65,17 @@ function vtkPaintFilter(publicAPI, model) {
       return;
     }
 
-    // transform world points into index space
-    if (model.pointType === PointType.World) {
-      model.points = model.points.map((pt) => {
-        const indexPt = [0, 0, 0];
-        model.backgroundImage.worldToIndexVec3(pt, indexPt);
-        return [
-          Math.round(indexPt[0]),
-          Math.round(indexPt[1]),
-          Math.round(indexPt[2]),
-        ];
-      });
-    }
+    // transform points into index space
+    const worldPoints = model.points.map((pt) => {
+      const worldPt = [pt[0], pt[1], pt[2]];
+      const indexPt = [0, 0, 0];
+      vec3.transformMat4(indexPt, worldPt, model.maskWorldToIndex);
+      return [
+        Math.round(indexPt[0]),
+        Math.round(indexPt[1]),
+        Math.round(indexPt[2]),
+      ];
+    });
 
     const spacing = model.maskImage.getSpacing();
     const dims = model.maskImage.getDimensions();
@@ -97,8 +85,8 @@ function vtkPaintFilter(publicAPI, model) {
     const scalarsData = scalars.getData();
 
     const [rx, ry, rz] = spacing.map((s) => model.radius / s);
-    for (let pti = 0; pti < model.points.length; pti++) {
-      const [x, y, z] = model.points[pti];
+    for (let pti = 0; pti < worldPoints.length; pti++) {
+      const [x, y, z] = worldPoints[pti];
       const xstart = Math.floor(Math.min(dims[0] - 1, Math.max(0, x - rx)));
       const xend = Math.floor(Math.min(dims[0] - 1, Math.max(0, x + rx)));
       const ystart = Math.floor(Math.min(dims[1] - 1, Math.max(0, y - ry)));
@@ -117,7 +105,10 @@ function vtkPaintFilter(publicAPI, model) {
               const voxel = model.voxelFunc
                 ? model.voxelFunc(i, j, k, model.color)
                 : model.color;
-              scalarsData.set(voxel, i + j * jStride + k * kStride);
+              scalarsData.set(
+                voxel,
+                i * numberOfComponents + j * jStride + k * kStride
+              );
             }
           }
         }
@@ -141,6 +132,7 @@ function vtkPaintFilter(publicAPI, model) {
 const DEFAULT_VALUES = {
   backgroundImage: null,
   maskImage: null,
+  maskWorldToIndex: null,
   voxelFunc: null,
   radius: 1,
   color: [1],
@@ -160,6 +152,7 @@ export function extend(publicAPI, model, initialValues = {}) {
   macro.setGet(publicAPI, model, [
     'backgroundImage',
     'maskImage',
+    'maskWorldToIndex',
     'voxelFunc',
     'color',
     'radius',

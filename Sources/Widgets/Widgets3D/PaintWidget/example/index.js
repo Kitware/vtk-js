@@ -201,7 +201,7 @@ reader
 
     // update paint filter
     painter.setBackgroundImage(image.data);
-    painter.setColor([255]);
+    painter.setColor([255, 0, 255, 80]);
 
     // default slice orientation/mode and camera view
     const sliceMode = vtkImageMapper.SlicingMode.K;
@@ -296,6 +296,6 @@ S.two.viewHandle.onInteractionEvent(() => {
 
 S.two.viewHandle.onEndInteractionEvent(() => {
   if (points.length) {
-    painter.paintWorldPoints(points);
+    painter.paintPoints(points);
   }
 });
