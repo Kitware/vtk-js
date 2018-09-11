@@ -57,7 +57,12 @@ function vtkScalarToRGBA(publicAPI, model) {
       numberOfComponents: 4,
       values: rgbaArray,
     });
-    const datasetDefinition = input.get('extent', 'spacing', 'origin');
+    const datasetDefinition = input.get(
+      'extent',
+      'spacing',
+      'origin',
+      'direction'
+    );
     const output = vtkImageData.newInstance(datasetDefinition);
     output.getPointData().setScalars(colorArray);
 
