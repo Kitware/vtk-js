@@ -36,29 +36,28 @@ function vtkPaintFilter(publicAPI, model) {
       return;
     }
 
-    if (!model.maskImage) {
+    if (!model.labelMap) {
       // clone background image properties
-      model.maskImage = vtkImageData.newInstance(
+      model.labelMap = vtkImageData.newInstance(
         model.backgroundImage.get('spacing', 'origin', 'direction')
       );
-      model.maskImage.setDimensions(model.backgroundImage.getDimensions());
-      model.maskImage.computeTransforms();
+      model.labelMap.setDimensions(model.backgroundImage.getDimensions());
+      model.labelMap.computeTransforms();
 
-      const values = new Uint8Array(
-        model.backgroundImage.getNumberOfPoints() * 4
-      );
+      // right now only support 256 labels
+      const values = new Uint8Array(model.backgroundImage.getNumberOfPoints());
       const dataArray = vtkDataArray.newInstance({
-        numberOfComponents: 4, // rgba
+        numberOfComponents: 1, // labelmap with single component
         values,
       });
-      model.maskImage.getPointData().setScalars(dataArray);
+      model.labelMap.getPointData().setScalars(dataArray);
     }
 
     if (!model.maskWorldToIndex) {
-      model.maskWorldToIndex = model.maskImage.getWorldToIndex();
+      model.maskWorldToIndex = model.labelMap.getWorldToIndex();
     }
 
-    const scalars = model.maskImage.getPointData().getScalars();
+    const scalars = model.labelMap.getPointData().getScalars();
 
     if (!scalars) {
       vtkErrorMacro('Mask image has no scalars');
@@ -77,8 +76,8 @@ function vtkPaintFilter(publicAPI, model) {
       ];
     });
 
-    const spacing = model.maskImage.getSpacing();
-    const dims = model.maskImage.getDimensions();
+    const spacing = model.labelMap.getSpacing();
+    const dims = model.labelMap.getDimensions();
     const numberOfComponents = scalars.getNumberOfComponents();
     const jStride = numberOfComponents * dims[0];
     const kStride = numberOfComponents * dims[0] * dims[1];
@@ -103,12 +102,11 @@ function vtkPaintFilter(publicAPI, model) {
             const kval = (k - z) / rz;
             if (ival * ival + jval * jval + kval * kval <= 1) {
               const voxel = model.voxelFunc
-                ? model.voxelFunc(i, j, k, model.color)
-                : model.color;
-              scalarsData.set(
-                voxel,
+                ? model.voxelFunc(i, j, k, model.label)
+                : model.label;
+              scalarsData[
                 i * numberOfComponents + j * jStride + k * kStride
-              );
+              ] = voxel;
             }
           }
         }
@@ -117,11 +115,11 @@ function vtkPaintFilter(publicAPI, model) {
 
     scalars.setData(scalarsData);
     scalars.modified();
-    model.maskImage.modified();
+    model.labelMap.modified();
 
     // clear points without triggering requestData
     model.points = [];
-    outData[0] = model.maskImage;
+    outData[0] = model.labelMap;
   };
 }
 
@@ -131,11 +129,11 @@ function vtkPaintFilter(publicAPI, model) {
 
 const DEFAULT_VALUES = {
   backgroundImage: null,
-  maskImage: null,
+  labelMap: null,
   maskWorldToIndex: null,
   voxelFunc: null,
   radius: 1,
-  color: [1],
+  label: 0,
 };
 
 // ----------------------------------------------------------------------------
@@ -151,10 +149,10 @@ export function extend(publicAPI, model, initialValues = {}) {
 
   macro.setGet(publicAPI, model, [
     'backgroundImage',
-    'maskImage',
-    'maskWorldToIndex',
+    'labelMap',
+    'labelWorldToIndex',
     'voxelFunc',
-    'color',
+    'label',
     'radius',
   ]);
 

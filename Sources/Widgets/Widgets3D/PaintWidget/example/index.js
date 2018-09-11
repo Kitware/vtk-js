@@ -7,6 +7,9 @@ import vtkInteractorStyleImage from 'vtk.js/Sources/Interaction/Style/Interactor
 import vtkHttpDataSetReader from 'vtk.js/Sources/IO/Core/HttpDataSetReader';
 import vtkImageMapper from 'vtk.js/Sources/Rendering/Core/ImageMapper';
 import vtkImageSlice from 'vtk.js/Sources/Rendering/Core/ImageSlice';
+import vtkColorTransferFunction from 'vtk.js/Sources/Rendering/Core/ColorTransferFunction';
+import vtkPiecewiseFunction from 'vtk.js/Sources/Common/DataModel/PiecewiseFunction';
+import vtkScalarToRGBA from 'vtk.js/Sources/Filters/General/ScalarToRGBA';
 
 import { ViewTypes } from 'vtk.js/Sources/Widgets/Core/WidgetManager/Constants';
 
@@ -125,7 +128,6 @@ setupWidgetManager(S.three);
 
 // Widget
 const paintWidget = vtkPaintWidget.newInstance();
-const painter = vtkPaintFilter.newInstance();
 
 S.two.viewHandle = S.two.widgetManager.addWidget(paintWidget, ViewTypes.SLICE);
 S.three.viewHandle = S.three.widgetManager.addWidget(
@@ -135,7 +137,13 @@ S.three.viewHandle = S.three.widgetManager.addWidget(
 
 S.two.widgetManager.grabFocus(paintWidget);
 
-// ready code
+// Paint filter
+const painter = vtkPaintFilter.newInstance();
+
+// ----------------------------------------------------------------------------
+// Ready logic
+// ----------------------------------------------------------------------------
+
 function ready(scope, picking = false) {
   scope.renderer.resetCamera();
   scope.fullScreenRenderer.resize();
@@ -145,10 +153,6 @@ function ready(scope, picking = false) {
     scope.widgetManager.disablePicking();
   }
 }
-
-// ----------------------------------------------------------------------------
-// Ready logic
-// ----------------------------------------------------------------------------
 
 function readyAll() {
   ready(S.two, true);
@@ -172,16 +176,29 @@ const image = {
   actor: vtkImageSlice.newInstance(),
 };
 
-const mask = {
+const labelMap = {
   imageMapper: vtkImageMapper.newInstance(),
   actor: vtkImageSlice.newInstance(),
+  lut: vtkColorTransferFunction.newInstance(),
+  pwf: vtkPiecewiseFunction.newInstance(),
+  scalarToRGBA: vtkScalarToRGBA.newInstance(),
 };
 
+// background image pipeline
 image.actor.setMapper(image.imageMapper);
 
-mask.imageMapper.setInputConnection(painter.getOutputPort());
-mask.actor.setMapper(mask.imageMapper);
-mask.actor.getProperty().setOpacity(0.3);
+// labelmap pipeline
+labelMap.actor.setMapper(labelMap.imageMapper);
+labelMap.scalarToRGBA.setInputConnection(painter.getOutputPort());
+labelMap.imageMapper.setInputConnection(labelMap.scalarToRGBA.getOutputPort());
+
+// set up labelMap color transfer function and pwf
+labelMap.lut.addRGBPoint(1, 0, 0, 1); // color for label value "1"
+labelMap.pwf.addPoint(0, 0); // empty label opacity
+labelMap.pwf.addPoint(1, 0.5); // set opacity for range [1, 255]
+labelMap.pwf.addPoint(255, 0.5); // set opacity for range [1, 255]
+labelMap.scalarToRGBA.setLookupTable(labelMap.lut);
+labelMap.scalarToRGBA.setPiecewiseFunction(labelMap.pwf);
 
 const reader = vtkHttpDataSetReader.newInstance({ fetchGzip: true });
 reader
@@ -195,13 +212,14 @@ reader
 
     // add actors to renderers
     S.two.renderer.addViewProp(image.actor);
-    S.two.renderer.addViewProp(mask.actor);
+    S.two.renderer.addViewProp(labelMap.actor);
     S.three.renderer.addViewProp(image.actor);
-    S.three.renderer.addViewProp(mask.actor);
+    S.three.renderer.addViewProp(labelMap.actor);
 
     // update paint filter
     painter.setBackgroundImage(image.data);
-    painter.setColor([255, 0, 255, 80]);
+    // don't set to 0, since that's our empty label color from our pwf
+    painter.setLabel(1);
 
     // default slice orientation/mode and camera view
     const sliceMode = vtkImageMapper.SlicingMode.K;
@@ -234,8 +252,8 @@ reader
         const handle = paintWidget.getWidgetState().getHandle();
         handle.rotateFromDirections(handle.getDirection(), normal);
 
-        // update mask layer
-        mask.imageMapper.set(image.imageMapper.get('slice', 'slicingMode'));
+        // update labelMap layer
+        labelMap.imageMapper.set(image.imageMapper.get('slice', 'slicingMode'));
 
         // update UI
         document
