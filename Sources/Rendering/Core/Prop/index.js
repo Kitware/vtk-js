@@ -24,9 +24,9 @@ function vtkProp(publicAPI, model) {
   };
 
   publicAPI.getNestedProps = () => null;
-  publicAPI.getActors = () => null;
-  publicAPI.getActors2D = () => null;
-  publicAPI.getVolumes = () => null;
+  publicAPI.getActors = () => [];
+  publicAPI.getActors2D = () => [];
+  publicAPI.getVolumes = () => [];
 
   publicAPI.pick = notImplemented('pick');
   publicAPI.hasKey = notImplemented('hasKey');
