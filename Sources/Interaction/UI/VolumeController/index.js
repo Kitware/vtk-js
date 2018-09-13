@@ -32,20 +32,6 @@ function vtkVolumeController(publicAPI, model) {
     size: model.size,
   });
 
-  function toggleVisibility() {
-    const elements = model.el.querySelectorAll('.js-toggle');
-    let count = elements.length;
-    model.expanded = !model.expanded;
-    if (model.expanded) {
-      while (count--) {
-        elements[count].style.display = 'flex';
-      }
-    } else {
-      while (count--) {
-        elements[count].style.display = 'none';
-      }
-    }
-  }
 
   function updateUseShadow() {
     const useShadow = !!Number(model.el.querySelector('.js-shadow').value);
@@ -201,7 +187,7 @@ function vtkVolumeController(publicAPI, model) {
     model.colorDataRange = model.widget.getOpacityRange();
 
     // Attach listeners
-    domToggleButton.addEventListener('click', toggleVisibility);
+    domToggleButton.addEventListener('click', publicAPI.toggleVisibility);
     domShadow.addEventListener('change', updateUseShadow);
     domPreset.addEventListener('change', updateColorMapPreset);
     domSpacing.addEventListener('input', updateSpacing);
@@ -267,6 +253,30 @@ function vtkVolumeController(publicAPI, model) {
     }
     return false;
   };
+
+  publicAPI.toggleVisibility = () => {
+    publicAPI.setExpanded(!publicAPI.getExpanded())
+  };
+
+  publicAPI.setExpanded = (expanded) => {
+    const elements = model.el.querySelectorAll('.js-toggle');
+    let count = elements.length;
+    model.expanded = expanded
+    if (model.expanded) {
+      while (count--) {
+        elements[count].style.display = 'flex';
+      }
+    } else {
+      while (count--) {
+        elements[count].style.display = 'none';
+      }
+    }
+  };
+
+  publicAPI.getExpanded = () => {
+    return model.expanded;
+  };
+
 
   publicAPI.setSize = model.widget.setSize;
   publicAPI.render = model.widget.render;
