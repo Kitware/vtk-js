@@ -39,7 +39,7 @@ function vtkViewport(publicAPI, model) {
   function gatherProps(prop, allProps = []) {
     allProps.push(prop);
     const children = prop.getNestedProps();
-    if (children) {
+    if (children && children.length) {
       for (let i = 0; i < children.length; i++) {
         gatherProps(children[i], allProps);
       }
