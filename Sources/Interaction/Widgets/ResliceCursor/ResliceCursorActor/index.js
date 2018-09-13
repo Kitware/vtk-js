@@ -137,6 +137,10 @@ export function extend(publicAPI, model, initialValues = {}) {
   for (let i = 0; i < 3; i++) {
     model.cursorCenterlineMapper[i] = vtkMapper.newInstance();
     model.cursorCenterlineMapper[i].setScalarVisibility(false);
+    model.cursorCenterlineMapper[i].setResolveCoincidentTopology(true);
+    model.cursorCenterlineMapper[
+      i
+    ].setResolveCoincidentTopologyPolygonOffsetParameters(-1, -1);
 
     model.cursorCenterlineActor[i] = vtkActor.newInstance();
     model.cursorCenterlineActor[i].setMapper(model.cursorCenterlineMapper[i]);
