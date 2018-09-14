@@ -32,7 +32,6 @@ function vtkVolumeController(publicAPI, model) {
     size: model.size,
   });
 
-
   function updateUseShadow() {
     const useShadow = !!Number(model.el.querySelector('.js-shadow').value);
     model.actor.getProperty().setShade(useShadow);
@@ -255,13 +254,13 @@ function vtkVolumeController(publicAPI, model) {
   };
 
   publicAPI.toggleVisibility = () => {
-    publicAPI.setExpanded(!publicAPI.getExpanded())
+    publicAPI.setExpanded(!publicAPI.getExpanded());
   };
 
   publicAPI.setExpanded = (expanded) => {
     const elements = model.el.querySelectorAll('.js-toggle');
     let count = elements.length;
-    model.expanded = expanded
+    model.expanded = expanded;
     if (model.expanded) {
       while (count--) {
         elements[count].style.display = 'flex';
@@ -273,10 +272,7 @@ function vtkVolumeController(publicAPI, model) {
     }
   };
 
-  publicAPI.getExpanded = () => {
-    return model.expanded;
-  };
-
+  publicAPI.getExpanded = () => model.expanded;
 
   publicAPI.setSize = model.widget.setSize;
   publicAPI.render = model.widget.render;

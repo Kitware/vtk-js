@@ -138,7 +138,7 @@ function createViewer(rootContainer, fileContents, options) {
 
   // setUpContent above sets the size to the container.
   // We need to set the size after that.
-  //controllerWidget.setExpanded(false);
+  // controllerWidget.setExpanded(false);
 
   fullScreenRenderer.setResizeCallback(({ width, height }) => {
     // 2px padding + 2x1px boder + 5px edge = 14
