@@ -54,6 +54,9 @@ const handledEvents = [
   'EndRotate',
   'Button3D',
   'Move3D',
+  'StartInteractionEvent',
+  'InteractionEvent',
+  'EndInteractionEvent',
 ];
 
 function preventDefault(event) {
