@@ -8,14 +8,12 @@ import vtkInteractorStyleImage from 'vtk.js/Sources/Interaction/Style/Interactor
 import vtkHttpDataSetReader from 'vtk.js/Sources/IO/Core/HttpDataSetReader';
 import vtkImageMapper from 'vtk.js/Sources/Rendering/Core/ImageMapper';
 import vtkImageSlice from 'vtk.js/Sources/Rendering/Core/ImageSlice';
-import vtkColorTransferFunction from 'vtk.js/Sources/Rendering/Core/ColorTransferFunction';
-import vtkPiecewiseFunction from 'vtk.js/Sources/Common/DataModel/PiecewiseFunction';
-import vtkScalarToRGBA from 'vtk.js/Sources/Filters/General/ScalarToRGBA';
 
 import { ViewTypes } from 'vtk.js/Sources/Widgets/Core/WidgetManager/Constants';
 
 import controlPanel from './controlPanel.html';
 import vtkPaintFilter from '../PaintFilter';
+import vtkFastScalarToRGBA from './fastScalarToRGBA';
 
 const bodyStyles = {
   display: 'flex',
@@ -180,9 +178,7 @@ const image = {
 const labelMap = {
   imageMapper: vtkImageMapper.newInstance(),
   actor: vtkImageSlice.newInstance(),
-  lut: vtkColorTransferFunction.newInstance(),
-  pwf: vtkPiecewiseFunction.newInstance(),
-  scalarToRGBA: vtkScalarToRGBA.newInstance(),
+  scalarToRGBA: vtkFastScalarToRGBA.newInstance(),
 };
 
 // background image pipeline
@@ -193,19 +189,10 @@ labelMap.actor.setMapper(labelMap.imageMapper);
 labelMap.scalarToRGBA.setInputConnection(painter.getOutputPort());
 labelMap.imageMapper.setInputConnection(labelMap.scalarToRGBA.getOutputPort());
 
-// set up labelMap color transfer function and pwf
-labelMap.lut.addRGBPoint(1, 0, 0, 1); // color for label value "1"
-labelMap.pwf.addPoint(0, 0); // empty label opacity
-labelMap.pwf.addPoint(1, 0.5); // set opacity for range [1, 255]
-labelMap.pwf.addPoint(255, 0.5); // set opacity for range [1, 255]
-labelMap.scalarToRGBA.setLookupTable(labelMap.lut);
-labelMap.scalarToRGBA.setPiecewiseFunction(labelMap.pwf);
+// set up labelMap color mapping
+labelMap.scalarToRGBA.addColor(0, [0, 0, 0, 0]);
+labelMap.scalarToRGBA.addColor(1, [0, 0, 1, 0.5]);
 
-const reader = vtkHttpDataSetReader.newInstance({ fetchGzip: true });
-reader
-  .setUrl(`${__BASE_PATH__}/data/volume/headsq.vti`, { loadData: true })
-  .then(() => {
-    const data = reader.getOutputData();
     image.data = data;
 
     // set input data
@@ -305,21 +292,17 @@ document.querySelector('.axis').addEventListener('input', (ev) => {
 // Painting
 // ----------------------------------------------------------------------------
 
-const points = [];
-
 S.two.viewHandle.onStartInteractionEvent(() => {
-  points.length = 0;
-  points.push(paintWidget.getWidgetState().getTrueOrigin());
+  painter.startStroke();
+  painter.addPoint(paintWidget.getWidgetState().getTrueOrigin());
 });
 
 S.two.viewHandle.onInteractionEvent(() => {
   if (S.two.viewHandle.getPainting()) {
-    points.push(paintWidget.getWidgetState().getTrueOrigin());
+    painter.addPoint(paintWidget.getWidgetState().getTrueOrigin());
   }
 });
 
 S.two.viewHandle.onEndInteractionEvent(() => {
-  if (points.length) {
-    painter.paintPoints(points);
-  }
+  painter.endStroke();
 });

@@ -1,8 +1,11 @@
 import { vec3 } from 'gl-matrix';
+import WebworkerPromise from 'webworker-promise';
 
 import macro from 'vtk.js/Sources/macro';
 import vtkImageData from 'vtk.js/Sources/Common/DataModel/ImageData';
 import vtkDataArray from 'vtk.js/Sources/Common/Core/DataArray';
+
+import PaintFilterWorker from './PaintFilter.worker';
 
 const { vtkErrorMacro } = macro;
 
@@ -14,13 +17,72 @@ function vtkPaintFilter(publicAPI, model) {
   // Set our className
   model.classHierarchy.push('vtkPaintFilter');
 
-  model.points = [];
+  let worker = null;
+  let workerPromise = null;
 
   // --------------------------------------------------------------------------
 
-  publicAPI.paintPoints = (points) => {
-    model.points = points;
-    publicAPI.modified();
+  publicAPI.startStroke = () => {
+    if (model.labelMap) {
+      worker = new PaintFilterWorker();
+      workerPromise = new WebworkerPromise(worker);
+      workerPromise.exec('start', {
+        bufferType: 'Uint8Array',
+        dimensions: model.labelMap.getDimensions(),
+      });
+    }
+  };
+
+  // --------------------------------------------------------------------------
+
+  publicAPI.endStroke = () => {
+    if (workerPromise) {
+      workerPromise.exec('end').then((strokeBuffer) => {
+        const scalars = model.labelMap.getPointData().getScalars();
+        const data = scalars.getData();
+
+        const strokeLabelMap = new Uint8Array(strokeBuffer);
+
+        if (model.voxelFunc) {
+          for (let i = 0; i < strokeLabelMap.length; i++) {
+            if (strokeLabelMap[i]) {
+              data[i] = model.voxelFunc(i, data[i]);
+            }
+          }
+        } else {
+          for (let i = 0; i < strokeLabelMap.length; i++) {
+            if (strokeLabelMap[i]) {
+              data[i] = model.label;
+            }
+          }
+        }
+
+        worker.terminate();
+        worker = null;
+        workerPromise = null;
+
+        scalars.setData(data);
+        scalars.modified();
+        model.labelMap.modified();
+        publicAPI.modified();
+      });
+    }
+  };
+
+  // --------------------------------------------------------------------------
+
+  publicAPI.addPoint = (point) => {
+    const worldPt = [point[0], point[1], point[2]];
+    const indexPt = [0, 0, 0];
+    vec3.transformMat4(indexPt, worldPt, model.maskWorldToIndex);
+    indexPt[0] = Math.round(indexPt[0]);
+    indexPt[1] = Math.round(indexPt[1]);
+    indexPt[2] = Math.round(indexPt[2]);
+
+    const spacing = model.labelMap.getSpacing();
+    const radius = spacing.map((s) => model.radius / s);
+
+    workerPromise.exec('paint', { point: indexPt, radius });
   };
 
   // --------------------------------------------------------------------------
@@ -64,61 +126,8 @@ function vtkPaintFilter(publicAPI, model) {
       return;
     }
 
-    // transform points into index space
-    const worldPoints = model.points.map((pt) => {
-      const worldPt = [pt[0], pt[1], pt[2]];
-      const indexPt = [0, 0, 0];
-      vec3.transformMat4(indexPt, worldPt, model.maskWorldToIndex);
-      return [
-        Math.round(indexPt[0]),
-        Math.round(indexPt[1]),
-        Math.round(indexPt[2]),
-      ];
-    });
-
-    const spacing = model.labelMap.getSpacing();
-    const dims = model.labelMap.getDimensions();
-    const numberOfComponents = scalars.getNumberOfComponents();
-    const jStride = numberOfComponents * dims[0];
-    const kStride = numberOfComponents * dims[0] * dims[1];
-    const scalarsData = scalars.getData();
-
-    const [rx, ry, rz] = spacing.map((s) => model.radius / s);
-    for (let pti = 0; pti < worldPoints.length; pti++) {
-      const [x, y, z] = worldPoints[pti];
-      const xstart = Math.floor(Math.min(dims[0] - 1, Math.max(0, x - rx)));
-      const xend = Math.floor(Math.min(dims[0] - 1, Math.max(0, x + rx)));
-      const ystart = Math.floor(Math.min(dims[1] - 1, Math.max(0, y - ry)));
-      const yend = Math.floor(Math.min(dims[1] - 1, Math.max(0, y + ry)));
-      const zstart = Math.floor(Math.min(dims[2] - 1, Math.max(0, z - rz)));
-      const zend = Math.floor(Math.min(dims[2] - 1, Math.max(0, z + rz)));
-
-      // naive algo
-      for (let i = xstart; i <= xend; i++) {
-        for (let j = ystart; j <= yend; j++) {
-          for (let k = zstart; k <= zend; k++) {
-            const ival = (i - x) / rx;
-            const jval = (j - y) / ry;
-            const kval = (k - z) / rz;
-            if (ival * ival + jval * jval + kval * kval <= 1) {
-              const voxel = model.voxelFunc
-                ? model.voxelFunc(i, j, k, model.label)
-                : model.label;
-              scalarsData[
-                i * numberOfComponents + j * jStride + k * kStride
-              ] = voxel;
-            }
-          }
-        }
-      }
-    }
-
-    scalars.setData(scalarsData);
-    scalars.modified();
     model.labelMap.modified();
 
-    // clear points without triggering requestData
-    model.points = [];
     outData[0] = model.labelMap;
   };
 }

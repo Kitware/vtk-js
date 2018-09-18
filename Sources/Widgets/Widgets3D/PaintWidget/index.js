@@ -22,29 +22,15 @@ function widgetBehavior(publicAPI, model) {
     publicAPI.invokeStartInteractionEvent();
     return macro.EVENT_ABORT;
   };
-  // if (!model.activeState || !model.activeState.getActive()) {
-  //   return macro.VOID;
-  // }
-  // if (model.type === Type.Drag) {
-  //   isDragging = true;
-  //   model.interactor.requestAnimation(publicAPI);
-  //   return macro.EVENT_ABORT;
-  // }
-  // return macro.VOID;
 
   publicAPI.handleMouseMove = (callData) => publicAPI.handleEvent(callData);
 
   publicAPI.handleLeftButtonRelease = () => {
     if (model.painting) {
-      model.widgetState.clearTrailList();
       publicAPI.invokeEndInteractionEvent();
+      model.widgetState.clearTrailList();
     }
     model.painting = false;
-    // if (isDragging) {
-    //   model.interactor.cancelAnimation(publicAPI);
-    // }
-    // isDragging = false;
-    // model.widgetState.deactivate();
   };
 
   publicAPI.handleEvent = (callData) => {
@@ -86,14 +72,12 @@ function widgetBehavior(publicAPI, model) {
       model.activeState = model.widgetState.getHandle();
       model.activeState.activate();
       model.interactor.requestAnimation(publicAPI);
-      publicAPI.invokeStartInteractionEvent();
     }
     model.hasFocus = true;
   };
 
   publicAPI.loseFocus = () => {
     if (model.hasFocus) {
-      publicAPI.invokeEndInteractionEvent();
       model.interactor.cancelAnimation(publicAPI);
     }
     model.widgetState.deactivate();
