@@ -1,5 +1,6 @@
 import 'vtk.js/Sources/favicon';
 
+import vtkMath from 'vtk.js/Sources/Common/Core/Math';
 import vtkFullScreenRenderWindow from 'vtk.js/Sources/Rendering/Misc/FullScreenRenderWindow';
 import vtkWidgetManager from 'vtk.js/Sources/Widgets/Core/WidgetManager';
 import vtkPaintWidget from 'vtk.js/Sources/Widgets/Widgets3D/PaintWidget';
@@ -231,7 +232,7 @@ reader
 
     updateControlPanel(image.imageMapper, data);
 
-    image.imageMapper.onModified(() => {
+    const update = () => {
       const slicingMode = image.imageMapper.getSlicingMode() % 3;
 
       if (slicingMode > -1) {
@@ -246,9 +247,11 @@ reader
         // circle/slice normal
         ijk[slicingMode] = 1;
         data.indexToWorldVec3(ijk, normal);
+        vtkMath.subtract(normal, data.getOrigin(), normal);
+        vtkMath.normalize(normal);
 
         paintWidget.getManipulator().setOrigin(position);
-        paintWidget.getManipulator().setNormal(position);
+        paintWidget.getManipulator().setNormal(normal);
         const handle = paintWidget.getWidgetState().getHandle();
         handle.rotateFromDirections(handle.getDirection(), normal);
 
@@ -260,7 +263,10 @@ reader
           .querySelector('.slice')
           .setAttribute('max', data.getDimensions()[slicingMode]);
       }
-    });
+    };
+    image.imageMapper.onModified(update);
+    // trigger initial update
+    update();
 
     readyAll();
   });
