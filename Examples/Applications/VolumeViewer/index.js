@@ -135,6 +135,11 @@ function createViewer(rootContainer, fileContents, options) {
   const isBackgroundDark = background[0] + background[1] + background[2] < 1.5;
   controllerWidget.setContainer(rootContainer);
   controllerWidget.setupContent(renderWindow, actor, isBackgroundDark);
+
+  // setUpContent above sets the size to the container.
+  // We need to set the size after that.
+  // controllerWidget.setExpanded(false);
+
   fullScreenRenderer.setResizeCallback(({ width, height }) => {
     // 2px padding + 2x1px boder + 5px edge = 14
     if (width > 414) {

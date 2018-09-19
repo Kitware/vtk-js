@@ -488,7 +488,46 @@ function vtkOpenGLRenderWindow(publicAPI, model) {
   };
 
   function getCanvasDataURL(format = model.imageFormat) {
-    return model.canvas.toDataURL(format);
+    // Copy current canvas to not modify the original
+    const temporaryCanvas = document.createElement('canvas');
+    const temporaryContext = temporaryCanvas.getContext('2d');
+    temporaryCanvas.width = model.canvas.width;
+    temporaryCanvas.height = model.canvas.height;
+    temporaryContext.drawImage(model.canvas, 0, 0);
+
+    // Get current client rect to place canvas
+    const mainBoundingClientRect = model.canvas.getBoundingClientRect();
+
+    const renderWindow = model.renderable;
+    const renderers = renderWindow.getRenderers();
+    renderers.forEach((renderer) => {
+      const viewProps = renderer.getViewProps();
+      viewProps.forEach((viewProp) => {
+        // Check if the prop has a container that should have canvas
+        if (viewProp.getContainer) {
+          const container = viewProp.getContainer();
+          const canvasList = container.getElementsByTagName('canvas');
+          // Go throughout all canvas and copy it into temporary main canvas
+          for (let i = 0; i < canvasList.length; i++) {
+            const currentCanvas = canvasList[i];
+            const boundingClientRect = currentCanvas.getBoundingClientRect();
+            const newXPosition =
+              boundingClientRect.x - mainBoundingClientRect.x;
+            const newYPosition =
+              boundingClientRect.y - mainBoundingClientRect.y;
+            temporaryContext.drawImage(
+              currentCanvas,
+              newXPosition,
+              newYPosition
+            );
+          }
+        }
+      });
+    });
+
+    const screenshot = temporaryCanvas.toDataURL(format);
+    temporaryCanvas.remove();
+    publicAPI.invokeImageReady(screenshot);
   }
 
   publicAPI.captureNextImage = (format = 'image/png') => {
@@ -496,12 +535,12 @@ function vtkOpenGLRenderWindow(publicAPI, model) {
       return null;
     }
     model.imageFormat = format;
-    const previous = model.notifyImageReady;
-    model.notifyImageReady = true;
+    const previous = model.notifyStartCaptureImage;
+    model.notifyStartCaptureImage = true;
 
     return new Promise((resolve, reject) => {
       const subscription = publicAPI.onImageReady((imageURL) => {
-        model.notifyImageReady = previous;
+        model.notifyStartCaptureImage = previous;
         subscription.unsubscribe();
         resolve(imageURL);
       });
@@ -919,8 +958,8 @@ function vtkOpenGLRenderWindow(publicAPI, model) {
         model.renderPasses[index].traverse(publicAPI, null);
       }
     }
-    if (model.notifyImageReady) {
-      publicAPI.invokeImageReady(getCanvasDataURL());
+    if (model.notifyStartCaptureImage) {
+      getCanvasDataURL();
     }
   };
 
@@ -970,7 +1009,7 @@ const DEFAULT_VALUES = {
   textureUnitManager: null,
   textureResourceIds: null,
   renderPasses: [],
-  notifyImageReady: false,
+  notifyStartCaptureImage: false,
   webgl2: false,
   defaultToWebgl2: true, // attempt webgl2 on by default
   vrResolution: [2160, 1200],
@@ -1017,7 +1056,7 @@ export function extend(publicAPI, model, initialValues = {}) {
     'context',
     'canvas',
     'renderPasses',
-    'notifyImageReady',
+    'notifyStartCaptureImage',
     'defaultToWebgl2',
     'cursor',
     'queryVRSize',
