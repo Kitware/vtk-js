@@ -41,23 +41,64 @@ function vtkRemotePass(publicAPI, model) {
     publicAPI.setCurrentOperation('buildPass');
     viewNode.traverse(publicAPI);
 
+    if (model.viewStream && model.viewStream.getLastImageEvent()) {
+      // Only update if size different
+      const size = viewNode.getSize();
+      model.viewStream.setSize(size[0], size[1]);
+
+      // Draw image
+      const img = model.viewStream.getLastImageEvent().image;
+      const canvas = viewNode.getCanvas();
+      const ctx = viewNode.get2DContext();
+      console.log(img, canvas, ctx);
+      // ctx.drawImage(
+      //   img,
+      //   0,
+      //   0,
+      //   img.with,
+      //   img.height,
+      //   0,
+      //   0,
+      //   canvas.width,
+      //   canvas.height
+      // );
+    }
+
+    // Local rendering on top
+    model.delegates.forEach((val) => {
+      val.traverse(viewNode, publicAPI);
+    });
+
     // send information to the remote ala
     // send viewNode.getFramebufferSize();
 
-    // iterate over renderers
-    const renderers = viewNode.getChildren();
-    // send renderers.length
-    for (let index = 0; index < renderers.length; index++) {
-      const renNode = renderers[index];
-      // send renNode.getRenderable().getBackground() etc
-      const camera = renNode.getRenderable().getActiveCamera();
-      // send camera.get... etc
-    }
+    // // iterate over renderers
+    // const renderers = viewNode.getChildren();
+    // // send renderers.length
+    // for (let index = 0; index < renderers.length; index++) {
+    //   const renNode = renderers[index];
+    //   // send renNode.getRenderable().getBackground() etc
+    //   const camera = renNode.getRenderable().getActiveCamera();
+    //   // send camera.get... etc
+    // }
 
     // paste the remote image, note that viewNode here
     // is the OpenGLRenderWindow and has a getCanvas()
     // method
     // viewNode.getCanvas()...
+  };
+
+  publicAPI.setViewStream = (stream) => {
+    if (model.viewStream === stream) {
+      return false;
+    }
+    if (model.subscription) {
+      model.subscription.unsubscribe();
+      model.subscription = null;
+    }
+    model.viewStream = stream;
+    publicAPI.modified();
+    return true;
   };
 }
 
@@ -77,7 +118,7 @@ export function extend(publicAPI, model, initialValues = {}) {
   // Build VTK API
   vtkRenderPass.extend(publicAPI, model, initialValues);
 
-  macro.setGet(publicAPI, model, ['useLocalRendering']);
+  macro.setGet(publicAPI, model, ['useLocalRendering', 'viewStream']);
 
   // Object methods
   vtkRemotePass(publicAPI, model);
