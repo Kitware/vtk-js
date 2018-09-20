@@ -193,6 +193,11 @@ labelMap.imageMapper.setInputConnection(labelMap.scalarToRGBA.getOutputPort());
 labelMap.scalarToRGBA.addColor(0, [0, 0, 0, 0]);
 labelMap.scalarToRGBA.addColor(1, [0, 0, 1, 0.5]);
 
+const reader = vtkHttpDataSetReader.newInstance({ fetchGzip: true });
+reader
+  .setUrl(`${__BASE_PATH__}/data/volume/headsq.vti`, { loadData: true })
+  .then(() => {
+    const data = reader.getOutputData();
     image.data = data;
 
     // set input data
