@@ -5,7 +5,7 @@ import macro from 'vtk.js/Sources/macro';
 import vtkImageData from 'vtk.js/Sources/Common/DataModel/ImageData';
 import vtkDataArray from 'vtk.js/Sources/Common/Core/DataArray';
 
-import PaintFilterWorker from './PaintFilter.worker';
+import PaintFilterWorker from 'vtk.js/Sources/Filters/General/PaintFilter/PaintFilter.worker';
 
 const { vtkErrorMacro } = macro;
 

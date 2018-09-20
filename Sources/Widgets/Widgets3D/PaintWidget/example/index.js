@@ -8,11 +8,11 @@ import vtkInteractorStyleImage from 'vtk.js/Sources/Interaction/Style/Interactor
 import vtkHttpDataSetReader from 'vtk.js/Sources/IO/Core/HttpDataSetReader';
 import vtkImageMapper from 'vtk.js/Sources/Rendering/Core/ImageMapper';
 import vtkImageSlice from 'vtk.js/Sources/Rendering/Core/ImageSlice';
+import vtkPaintFilter from 'vtk.js/Sources/Filters/General/PaintFilter';
 
 import { ViewTypes } from 'vtk.js/Sources/Widgets/Core/WidgetManager/Constants';
 
 import controlPanel from './controlPanel.html';
-import vtkPaintFilter from '../PaintFilter';
 import vtkFastScalarToRGBA from './fastScalarToRGBA';
 
 const bodyStyles = {
