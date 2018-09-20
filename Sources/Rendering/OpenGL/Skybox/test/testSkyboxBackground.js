@@ -59,11 +59,7 @@ test.onlyIfWebGL('Test vtkOpenGLSkybox Background Rendering', (t) => {
   }
 
   // function to load texture
-  function loadTexture(
-    texturePath,
-    textureImage,
-    endCallBack
-  ) {
+  function loadTexture(texturePath, textureImage, endCallBack) {
     const reader = gc.registerResource(
       vtkHttpDataSetReader.newInstance({ fetchGzip: true })
     );
