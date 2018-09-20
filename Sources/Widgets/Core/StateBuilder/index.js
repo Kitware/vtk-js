@@ -86,10 +86,20 @@ class Builder {
       if (instance) {
         this.publicAPI.unbindState(instance);
       }
+      this.model[listName].splice(removeIndex, 1);
       this.publicAPI.modified();
     };
     this.publicAPI[`get${macro.capitalize(name)}List`] = () =>
       this.model[listName];
+    this.publicAPI[`clear${macro.capitalize(name)}List`] = () => {
+      while (this.model[listName].length) {
+        const instance = this.model[listName].pop();
+        if (instance) {
+          this.publicAPI.unbindState(instance);
+        }
+      }
+      this.publicAPI.modified();
+    };
     return this;
   }
 

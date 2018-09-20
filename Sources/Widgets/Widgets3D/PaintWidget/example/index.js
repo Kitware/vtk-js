@@ -1,5 +1,6 @@
 import 'vtk.js/Sources/favicon';
 
+import vtkMath from 'vtk.js/Sources/Common/Core/Math';
 import vtkFullScreenRenderWindow from 'vtk.js/Sources/Rendering/Misc/FullScreenRenderWindow';
 import vtkWidgetManager from 'vtk.js/Sources/Widgets/Core/WidgetManager';
 import vtkPaintWidget from 'vtk.js/Sources/Widgets/Widgets3D/PaintWidget';
@@ -7,10 +8,12 @@ import vtkInteractorStyleImage from 'vtk.js/Sources/Interaction/Style/Interactor
 import vtkHttpDataSetReader from 'vtk.js/Sources/IO/Core/HttpDataSetReader';
 import vtkImageMapper from 'vtk.js/Sources/Rendering/Core/ImageMapper';
 import vtkImageSlice from 'vtk.js/Sources/Rendering/Core/ImageSlice';
+import vtkPaintFilter from 'vtk.js/Sources/Filters/General/PaintFilter';
 
 import { ViewTypes } from 'vtk.js/Sources/Widgets/Core/WidgetManager/Constants';
 
 import controlPanel from './controlPanel.html';
+import vtkFastScalarToRGBA from './fastScalarToRGBA';
 
 const bodyStyles = {
   display: 'flex',
@@ -111,7 +114,7 @@ function setCamera(sliceMode, renderer, data) {
 linkInteractors(S.two, S.three);
 
 // ----------------------------------------------------------------------------
-// Widget manager
+// Widget manager and vtkPaintFilter
 // ----------------------------------------------------------------------------
 
 function setupWidgetManager(scope) {
@@ -133,7 +136,13 @@ S.three.viewHandle = S.three.widgetManager.addWidget(
 
 S.two.widgetManager.grabFocus(paintWidget);
 
-// ready code
+// Paint filter
+const painter = vtkPaintFilter.newInstance();
+
+// ----------------------------------------------------------------------------
+// Ready logic
+// ----------------------------------------------------------------------------
+
 function ready(scope, picking = false) {
   scope.renderer.resetCamera();
   scope.fullScreenRenderer.resize();
@@ -143,10 +152,6 @@ function ready(scope, picking = false) {
     scope.widgetManager.disablePicking();
   }
 }
-
-// ----------------------------------------------------------------------------
-// Ready logic
-// ----------------------------------------------------------------------------
 
 function readyAll() {
   ready(S.two, true);
@@ -165,10 +170,28 @@ function updateControlPanel(im, ds) {
 // Load image
 // ----------------------------------------------------------------------------
 
-const image = {};
-image.imageMapper = vtkImageMapper.newInstance();
-image.actor = vtkImageSlice.newInstance();
+const image = {
+  imageMapper: vtkImageMapper.newInstance(),
+  actor: vtkImageSlice.newInstance(),
+};
+
+const labelMap = {
+  imageMapper: vtkImageMapper.newInstance(),
+  actor: vtkImageSlice.newInstance(),
+  scalarToRGBA: vtkFastScalarToRGBA.newInstance(),
+};
+
+// background image pipeline
 image.actor.setMapper(image.imageMapper);
+
+// labelmap pipeline
+labelMap.actor.setMapper(labelMap.imageMapper);
+labelMap.scalarToRGBA.setInputConnection(painter.getOutputPort());
+labelMap.imageMapper.setInputConnection(labelMap.scalarToRGBA.getOutputPort());
+
+// set up labelMap color mapping
+labelMap.scalarToRGBA.addColor(0, [0, 0, 0, 0]);
+labelMap.scalarToRGBA.addColor(1, [0, 0, 1, 0.5]);
 
 const reader = vtkHttpDataSetReader.newInstance({ fetchGzip: true });
 reader
@@ -177,24 +200,31 @@ reader
     const data = reader.getOutputData();
     image.data = data;
 
+    // set input data
     image.imageMapper.setInputData(data);
+
+    // add actors to renderers
+    S.two.renderer.addViewProp(image.actor);
+    S.two.renderer.addViewProp(labelMap.actor);
+    S.three.renderer.addViewProp(image.actor);
+    S.three.renderer.addViewProp(labelMap.actor);
+
+    // update paint filter
+    painter.setBackgroundImage(image.data);
+    // don't set to 0, since that's our empty label color from our pwf
+    painter.setLabel(1);
 
     // default slice orientation/mode and camera view
     const sliceMode = vtkImageMapper.SlicingMode.K;
-
     image.imageMapper.setSlicingMode(sliceMode);
     image.imageMapper.setSlice(0);
 
     // set 2D camera position
     setCamera(sliceMode, S.two.renderer, image.data);
 
-    // add image/volume to renderers
-    S.two.renderer.addViewProp(image.actor);
-    S.three.renderer.addViewProp(image.actor);
-
     updateControlPanel(image.imageMapper, data);
 
-    image.imageMapper.onModified(() => {
+    const update = () => {
       const slicingMode = image.imageMapper.getSlicingMode() % 3;
 
       if (slicingMode > -1) {
@@ -203,25 +233,35 @@ reader
         const normal = [0, 0, 0];
 
         // position
-        ijk[slicingMode] = image.imageMapper.getSlice() + 1; // +1 to be above slice for placing the 2D circle context
+        ijk[slicingMode] = image.imageMapper.getSlice();
         data.indexToWorldVec3(ijk, position);
 
         // circle/slice normal
         ijk[slicingMode] = 1;
         data.indexToWorldVec3(ijk, normal);
+        vtkMath.subtract(normal, data.getOrigin(), normal);
+        vtkMath.normalize(normal);
 
         paintWidget.getManipulator().setOrigin(position);
-        paintWidget.getManipulator().setNormal(position);
+        paintWidget.getManipulator().setNormal(normal);
         const handle = paintWidget.getWidgetState().getHandle();
         handle.rotateFromDirections(handle.getDirection(), normal);
+
+        // update labelMap layer
+        labelMap.imageMapper.set(image.imageMapper.get('slice', 'slicingMode'));
+
+        // update UI
+        document
+          .querySelector('.slice')
+          .setAttribute('max', data.getDimensions()[slicingMode]);
       }
-    });
+    };
+    image.imageMapper.onModified(update);
+    // trigger initial update
+    update();
 
     readyAll();
   });
-
-// set image mapper to paint widget
-paintWidget.setRadius(2);
 
 // register readyAll to resize event
 window.addEventListener('resize', readyAll);
@@ -235,7 +275,10 @@ readyAll();
 // ----------------------------------------------------------------------------
 
 document.querySelector('.radius').addEventListener('input', (ev) => {
-  paintWidget.setRadius(Number(ev.target.value));
+  const r = Number(ev.target.value);
+
+  paintWidget.setRadius(r);
+  painter.setRadius(r);
 });
 
 document.querySelector('.slice').addEventListener('input', (ev) => {
@@ -248,4 +291,23 @@ document.querySelector('.axis').addEventListener('input', (ev) => {
 
   setCamera(sliceMode, S.two.renderer, image.data);
   S.two.renderWindow.render();
+});
+
+// ----------------------------------------------------------------------------
+// Painting
+// ----------------------------------------------------------------------------
+
+S.two.viewHandle.onStartInteractionEvent(() => {
+  painter.startStroke();
+  painter.addPoint(paintWidget.getWidgetState().getTrueOrigin());
+});
+
+S.two.viewHandle.onInteractionEvent(() => {
+  if (S.two.viewHandle.getPainting()) {
+    painter.addPoint(paintWidget.getWidgetState().getTrueOrigin());
+  }
+});
+
+S.two.viewHandle.onEndInteractionEvent(() => {
+  painter.endStroke();
 });

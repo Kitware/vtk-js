@@ -5,12 +5,38 @@ import vtkDataArray from 'vtk.js/Sources/Common/Core/DataArray';
 const { vtkErrorMacro } = macro;
 
 // ----------------------------------------------------------------------------
-// vtkScalarToRGBA methods
+// vtkFastScalarToRGBA methods
 // ----------------------------------------------------------------------------
 
-function vtkScalarToRGBA(publicAPI, model) {
+// this is faster than vtkScalarToRGBA since we are using indexed LUT and pwf
+function vtkFastScalarToRGBA(publicAPI, model) {
   // Set our className
-  model.classHierarchy.push('vtkScalarToRGBA');
+  model.classHierarchy.push('vtkFastScalarToRGBA');
+
+  const lut = {};
+
+  publicAPI.addColor = (index, color) => {
+    const extra = Array(4 - color.length).fill(1);
+    const c = [].concat(color, extra);
+    c[0] *= 255;
+    c[1] *= 255;
+    c[2] *= 255;
+    c[3] *= 255;
+    lut[index] = c;
+    publicAPI.modified();
+  };
+
+  publicAPI.getColor = (index) => {
+    if (index in lut) {
+      const c = lut[index].slice();
+      c[0] /= 255;
+      c[1] /= 255;
+      c[2] /= 255;
+      c[3] /= 255;
+      return c;
+    }
+    return null;
+  };
 
   publicAPI.requestData = (inData, outData) => {
     // implement requestData
@@ -28,28 +54,15 @@ function vtkScalarToRGBA(publicAPI, model) {
       return;
     }
 
-    if (!model.lookupTable) {
-      vtkErrorMacro('No lookupTable available');
-      return;
-    }
-
-    if (!model.piecewiseFunction) {
-      vtkErrorMacro('No piecewiseFunction available');
-      return;
-    }
-
-    const rgba = [0, 0, 0, 0];
     const data = scalars.getData();
     const rgbaArray = new Uint8Array(data.length * 4);
     let offset = 0;
     for (let idx = 0; idx < data.length; idx++) {
-      const x = data[idx];
-      model.lookupTable.getColor(x, rgba);
-      rgba[3] = model.piecewiseFunction.getValue(x);
-      rgbaArray[offset++] = 255 * rgba[0];
-      rgbaArray[offset++] = 255 * rgba[1];
-      rgbaArray[offset++] = 255 * rgba[2];
-      rgbaArray[offset++] = 255 * rgba[3];
+      const rgba = lut[data[idx]];
+      rgbaArray[offset++] = rgba[0];
+      rgbaArray[offset++] = rgba[1];
+      rgbaArray[offset++] = rgba[2];
+      rgbaArray[offset++] = rgba[3];
     }
 
     const colorArray = vtkDataArray.newInstance({
@@ -87,15 +100,13 @@ export function extend(publicAPI, model, initialValues = {}) {
   // Also make it an algorithm with one input and one output
   macro.algo(publicAPI, model, 1, 1);
 
-  macro.setGet(publicAPI, model, ['lookupTable', 'piecewiseFunction']);
-
   // Object specific methods
-  vtkScalarToRGBA(publicAPI, model);
+  vtkFastScalarToRGBA(publicAPI, model);
 }
 
 // ----------------------------------------------------------------------------
 
-export const newInstance = macro.newInstance(extend, 'vtkScalarToRGBA');
+export const newInstance = macro.newInstance(extend, 'vtkFastScalarToRGBA');
 
 // ----------------------------------------------------------------------------
 
