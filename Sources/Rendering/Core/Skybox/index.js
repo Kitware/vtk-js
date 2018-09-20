@@ -20,7 +20,9 @@ function vtkSkybox(publicAPI, model) {
 // Object fSkyboxy
 // ----------------------------------------------------------------------------
 
-const DEFAULT_VALUES = {};
+const DEFAULT_VALUES = {
+  format: 'box',
+};
 
 // ----------------------------------------------------------------------------
 
@@ -31,6 +33,9 @@ export function extend(publicAPI, model, initialValues = {}) {
   vtkActor.extend(publicAPI, model, initialValues);
 
   // Build VTK API
+  macro.setGet(publicAPI, model, [
+    'format', // can be box or background, in the future sphere, floor as well
+  ]);
 
   // Object methods
   vtkSkybox(publicAPI, model);

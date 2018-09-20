@@ -49,6 +49,7 @@ import './Rendering/OpenGL/PolyDataMapper/test/testClippingPlanes';
 import './Rendering/OpenGL/PolyDataMapper/test/testInterpolateScalarsBeforeMapping';
 import './Rendering/OpenGL/SphereMapper/test/testSphere';
 import './Rendering/OpenGL/Skybox/test/testSkybox';
+import './Rendering/OpenGL/Skybox/test/testSkyboxBackground';
 import './Rendering/OpenGL/StickMapper/test/testStick';
 import './Rendering/OpenGL/Texture/test/testCreateCubeFromRawTexture';
 import './Rendering/OpenGL/VolumeMapper/test/testComposite';
