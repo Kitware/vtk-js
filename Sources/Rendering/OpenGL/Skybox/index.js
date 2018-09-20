@@ -66,10 +66,13 @@ function vtkOpenGLSkybox(publicAPI, model) {
       mat4.invert(imat, keyMats.wcdc);
       model.tris.getProgram().setUniformMatrix('IMCDCMatrix', imat);
 
-      const camPos = ren.getActiveCamera().getPosition();
-      model.tris
-        .getProgram()
-        .setUniform3f('camPos', camPos[0], camPos[1], camPos[2]);
+      if (model.lastFormat === 'box') {
+        const camPos = ren.getActiveCamera().getPosition();
+        model.tris
+          .getProgram()
+          .setUniform3f('camPos', camPos[0], camPos[1], camPos[2]);
+      }
+
       model.tris.getVAO().bind();
 
       // draw polygons
@@ -117,53 +120,85 @@ function vtkOpenGLSkybox(publicAPI, model) {
         points,
         cellOffset: 0,
       });
+    }
 
-      // we invert Y below because opengl is messed up!
-      // Cube Maps have been specified to follow the RenderMan
-      // specification (for whatever reason), and RenderMan
-      // assumes the images' origin being in the upper left,
-      // contrary to the usual OpenGL behaviour of having the
-      // image origin in the lower left. That's why things get
-      // swapped in the Y direction. It totally breaks with the usual
-      // OpenGL semantics and doesn't make sense at all.
-      // But now we're stuck with it.  From
-      // https://stackoverflow.com/questions/11685608/convention-of-faces-in-opengl-cubemapping
-      //
-      model.tris.setProgram(
-        model.openGLRenderWindow.getShaderCache().readyShaderProgramArray(
-          `//VTK::System::Dec
-           attribute vec3 vertexMC;
-           uniform mat4 IMCDCMatrix;
-           varying vec3 TexCoords;
-           void main () {
-            gl_Position = vec4(vertexMC.xyz, 1.0);
-            vec4 wpos = IMCDCMatrix * gl_Position;
-            TexCoords = wpos.xyz/wpos.w;
-           }`,
-          `//VTK::System::Dec
-           //VTK::Output::Dec
-           varying vec3 TexCoords;
-           uniform samplerCube sbtexture;
-           uniform vec3 camPos;
-           void main () {
-             // skybox looks from inside out
-             // which means we have to adjust
-             // our tcoords. Otherwise text would
-             // be flipped
-             vec3 tc = normalize(TexCoords - camPos);
-             if (abs(tc.z) < max(abs(tc.x),abs(tc.y)))
-             {
-               tc = vec3(1.0, 1.0, -1.0) * tc;
-             }
-             else
-             {
-               tc = vec3(-1.0, 1.0, 1.0) * tc;
-             }
-             gl_FragData[0] = textureCube(sbtexture, tc);
-           }`,
-          ''
-        )
-      );
+    // update the program?
+    if (model.renderable.getFormat() !== model.lastFormat) {
+      model.lastFormat = model.renderable.getFormat();
+
+      if (model.lastFormat === 'box') {
+        // we invert Y below because opengl is messed up!
+        // Cube Maps have been specified to follow the RenderMan
+        // specification (for whatever reason), and RenderMan
+        // assumes the images' origin being in the upper left,
+        // contrary to the usual OpenGL behaviour of having the
+        // image origin in the lower left. That's why things get
+        // swapped in the Y direction. It totally breaks with the usual
+        // OpenGL semantics and doesn't make sense at all.
+        // But now we're stuck with it.  From
+        // https://stackoverflow.com/questions/11685608/convention-of-faces-in-opengl-cubemapping
+        //
+        model.tris.setProgram(
+          model.openGLRenderWindow.getShaderCache().readyShaderProgramArray(
+            `//VTK::System::Dec
+             attribute vec3 vertexMC;
+             uniform mat4 IMCDCMatrix;
+             varying vec3 TexCoords;
+             void main () {
+              gl_Position = vec4(vertexMC.xyz, 1.0);
+              vec4 wpos = IMCDCMatrix * gl_Position;
+              TexCoords = wpos.xyz/wpos.w;
+             }`,
+            `//VTK::System::Dec
+             //VTK::Output::Dec
+             varying vec3 TexCoords;
+             uniform samplerCube sbtexture;
+             uniform vec3 camPos;
+             void main () {
+               // skybox looks from inside out
+               // which means we have to adjust
+               // our tcoords. Otherwise text would
+               // be flipped
+               vec3 tc = normalize(TexCoords - camPos);
+               if (abs(tc.z) < max(abs(tc.x),abs(tc.y)))
+               {
+                 tc = vec3(1.0, 1.0, -1.0) * tc;
+               }
+               else
+               {
+                 tc = vec3(-1.0, 1.0, 1.0) * tc;
+               }
+               gl_FragData[0] = textureCube(sbtexture, tc);
+             }`,
+            ''
+          )
+        );
+      }
+
+      if (model.lastFormat === 'background') {
+        // maps the texture to the window
+        model.tris.setProgram(
+          model.openGLRenderWindow.getShaderCache().readyShaderProgramArray(
+            `//VTK::System::Dec
+             attribute vec3 vertexMC;
+             uniform mat4 IMCDCMatrix;
+             varying vec2 TexCoords;
+             void main () {
+              gl_Position = vec4(vertexMC.xyz, 1.0);
+              vec4 wpos = IMCDCMatrix * gl_Position;
+              TexCoords = vec2(vertexMC.x, vertexMC.y)*0.5 + 0.5;
+             }`,
+            `//VTK::System::Dec
+             //VTK::Output::Dec
+             varying vec2 TexCoords;
+             uniform sampler2D sbtexture;
+             void main () {
+               gl_FragData[0] = textureCube(sbtexture, TexCoords);
+             }`,
+            ''
+          )
+        );
+      }
 
       model.tris.getShaderSourceTime().modified();
 
