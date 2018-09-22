@@ -52,6 +52,13 @@ function vtkOpenGLRenderWindow(publicAPI, model) {
       model.canvas.setAttribute('width', model.size[0]);
       model.canvas.setAttribute('height', model.size[1]);
     }
+
+    // ImageStream size
+    if (model.viewStream) {
+      // If same size that's a NoOp
+      model.viewStream.setSize(model.size[0], model.size[1]);
+    }
+
     // Offscreen ?
     model.canvas.style.display = model.useOffScreen ? 'none' : 'block';
 
@@ -109,6 +116,7 @@ function vtkOpenGLRenderWindow(publicAPI, model) {
       // Remove canvas from previous container
       if (model.canvas.parentNode === model.el) {
         model.el.removeChild(model.canvas);
+        model.el.removeChild(model.bgImage);
       } else {
         vtkErrorMacro('Error: canvas parent node does not match container');
       }
@@ -118,6 +126,7 @@ function vtkOpenGLRenderWindow(publicAPI, model) {
       model.el = el;
       if (model.el) {
         model.el.appendChild(model.canvas);
+        model.el.appendChild(model.bgImage);
       }
 
       // Trigger modified()
@@ -238,8 +247,6 @@ function vtkOpenGLRenderWindow(publicAPI, model) {
     );
     return pixels;
   };
-
-  publicAPI.get2DContext = () => model.canvas.getContext('2d');
 
   publicAPI.get3DContext = (
     options = { preserveDrawingBuffer: false, depth: true, alpha: true }
@@ -485,6 +492,10 @@ function vtkOpenGLRenderWindow(publicAPI, model) {
       default:
         return model.context.RGBA;
     }
+  };
+
+  publicAPI.setBackgroundImage = (img) => {
+    model.bgImage.src = img.src;
   };
 
   function getCanvasDataURL(format = model.imageFormat) {
@@ -951,6 +962,35 @@ function vtkOpenGLRenderWindow(publicAPI, model) {
       model.cullFaceEnabled = true;
     }
   };
+
+  publicAPI.setViewStream = (stream) => {
+    if (model.viewStream === stream) {
+      return false;
+    }
+    if (model.subscription) {
+      model.subscription.unsubscribe();
+      model.subscription = null;
+    }
+    model.viewStream = stream;
+    if (model.viewStream) {
+      // Force background to be transparent + render
+      const mainRenderer = model.renderable.getRenderers()[0];
+      mainRenderer.getBackgroundByReference()[3] = 0;
+
+      // Bind to remote stream
+      model.subscription = model.viewStream.onImageReady((e) =>
+        publicAPI.setBackgroundImage(e.image)
+      );
+      model.viewStream.setSize(model.size[0], model.size[1]);
+      model.viewStream.invalidateCache();
+      model.viewStream.render();
+
+      publicAPI.modified();
+    }
+    return true;
+  };
+
+  publicAPI.delete = macro.chain(publicAPI.delete, publicAPI.setViewStream);
 }
 
 // ----------------------------------------------------------------------------
@@ -988,6 +1028,15 @@ export function extend(publicAPI, model, initialValues = {}) {
   // Create internal instances
   model.canvas = document.createElement('canvas');
   model.canvas.style.width = '100%';
+
+  // Create internal bgImage
+  model.bgImage = new Image();
+  model.bgImage.style.position = 'absolute';
+  model.bgImage.style.left = '0';
+  model.bgImage.style.top = '0';
+  model.bgImage.style.width = '100%';
+  model.bgImage.style.height = '100%';
+  model.bgImage.style.zIndex = '-1';
 
   model.textureResourceIds = new Map();
 
