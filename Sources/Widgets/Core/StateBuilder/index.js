@@ -6,6 +6,7 @@ import bounds from 'vtk.js/Sources/Widgets/Core/StateBuilder/boundsMixin';
 import color from 'vtk.js/Sources/Widgets/Core/StateBuilder/colorMixin';
 import direction from 'vtk.js/Sources/Widgets/Core/StateBuilder/directionMixin';
 import manipulator from 'vtk.js/Sources/Widgets/Core/StateBuilder/manipulatorMixin';
+import orientation from 'vtk.js/Sources/Widgets/Core/StateBuilder/orientationMixin';
 import origin from 'vtk.js/Sources/Widgets/Core/StateBuilder/originMixin';
 import scale1 from 'vtk.js/Sources/Widgets/Core/StateBuilder/scale1Mixin';
 import scale3 from 'vtk.js/Sources/Widgets/Core/StateBuilder/scale3Mixin';
@@ -22,6 +23,7 @@ const MIXINS = {
   color,
   direction,
   manipulator,
+  orientation,
   origin,
   scale1,
   scale3,

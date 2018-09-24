@@ -4,6 +4,8 @@ import vtkContextRepresentation from 'vtk.js/Sources/Widgets/Representations/Con
 import vtkMapper from 'vtk.js/Sources/Rendering/Core/Mapper';
 import vtkPolyData from 'vtk.js/Sources/Common/DataModel/PolyData';
 
+import vtkStateBuilder from 'vtk.js/Sources/Widgets/Core/StateBuilder';
+
 // ----------------------------------------------------------------------------
 // vtkPlaneHandleRepresentation methods
 // ----------------------------------------------------------------------------
@@ -21,6 +23,9 @@ function vtkConvexFaceContextRepresentation(publicAPI, model) {
   model.cells = new Uint8Array([4, 0, 1, 2, 3]);
   model.internalPolyData.getPoints().setData(model.points, 3);
   model.internalPolyData.getPolys().setData(model.cells);
+
+  model.state = vtkStateBuilder.createBuilder().build('orientation');
+  model.stateValues = [];
 
   function allocateSize(size) {
     if (model.cells.length - 1 !== size) {
@@ -64,8 +69,25 @@ function vtkConvexFaceContextRepresentation(publicAPI, model) {
       points[i * 3 + 1] = coords[1];
       points[i * 3 + 2] = coords[2];
     }
+
+    if (inData[0].updateFromOriginRighUp) {
+      console.log('swap state');
+      model.state = inData[0];
+    }
+    model.state.updateFromOriginRighUp(
+      list[0].getOrigin(),
+      list[list.length - 1].getOrigin(),
+      list[1].getOrigin()
+    );
+
     model.internalPolyData.modified();
     outData[0] = model.internalPolyData;
+  };
+
+  // --------------------------------------------------------------------------
+
+  publicAPI.getSelectedState = (prop, compositeID) => {
+    return model.state;
   };
 }
 

@@ -44,9 +44,13 @@ function vtkAbstractWidgetFactory(publicAPI, model) {
       vtkAbstractWidget.extend(widgetPublicAPI, widgetModel, initialValues);
 
       // Create representations for that view
+      /* eslint-disable no-shadow */
       widgetModel.representations = publicAPI
         .getRepresentationsForViewType(viewType)
-        .map(({ builder, labels }) => builder.newInstance({ labels }));
+        .map(({ builder, labels, initialValues }) =>
+          builder.newInstance(Object.assign({ labels }, initialValues))
+        );
+      /* eslint-enable no-shadow */
 
       widgetModel.representations.forEach((r) => {
         r.setInputData(widgetModel.widgetState);

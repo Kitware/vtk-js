@@ -9,8 +9,6 @@ import { Behavior } from 'vtk.js/Sources/Widgets/Representations/WidgetRepresent
 function vtkHandleRepresentation(publicAPI, model) {
   // Set our className
   model.classHierarchy.push('vtkHandleRepresentation');
-  model.behavior = Behavior.HANDLE;
-  model.pickable = true;
 }
 
 // ----------------------------------------------------------------------------
@@ -21,13 +19,15 @@ const DEFAULT_VALUES = {
   activeScaleFactor: 1.2,
   activeColor: 1,
   useActiveColor: true,
+  behavior: Behavior.HANDLE,
+  pickable: true,
 };
 
 // ----------------------------------------------------------------------------
 
 export function extend(publicAPI, model, initialValues = {}) {
-  Object.assign(model, DEFAULT_VALUES, initialValues);
-  vtkWidgetRepresentation.extend(publicAPI, model, initialValues);
+  const newDefault = Object.assign({}, DEFAULT_VALUES, initialValues);
+  vtkWidgetRepresentation.extend(publicAPI, model, newDefault);
   macro.setGet(publicAPI, model, [
     'activeScaleFactor',
     'activeColor',
