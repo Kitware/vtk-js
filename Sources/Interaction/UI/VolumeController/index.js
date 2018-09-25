@@ -12,9 +12,7 @@ import style from 'vtk.js/Sources/Interaction/UI/VolumeController/VolumeControll
 // Global structures
 // ----------------------------------------------------------------------------
 
-const PRESETS_OPTIONS = vtkColorMaps.rgbPresetNames.map(
-  (name) => `<option value="${name}">${name}</option>`
-);
+let PRESETS_OPTIONS;
 
 // ----------------------------------------------------------------------------
 // vtkVolumeController methods
@@ -23,6 +21,10 @@ const PRESETS_OPTIONS = vtkColorMaps.rgbPresetNames.map(
 function vtkVolumeController(publicAPI, model) {
   // Set our className
   model.classHierarchy.push('vtkVolumeController');
+
+  PRESETS_OPTIONS = vtkColorMaps.rgbPresetNames.map(
+    (name) => `<option value="${name}">${name}</option>`
+  );
 
   model.el = document.createElement('div');
   model.el.setAttribute('class', style.container);
@@ -294,6 +296,12 @@ const DEFAULT_VALUES = {
 };
 
 // ----------------------------------------------------------------------------
+function addCustomPresets(presets) {
+  vtkColorMaps.removeAllPresets();
+  vtkColorMaps.addPresets(presets);
+}
+
+// ----------------------------------------------------------------------------
 
 export function extend(publicAPI, model, initialValues = {}) {
   Object.assign(model, DEFAULT_VALUES, initialValues);
@@ -303,6 +311,10 @@ export function extend(publicAPI, model, initialValues = {}) {
   macro.setGet(publicAPI, model, ['actor', 'renderWindow', 'rescaleColorMap']);
   macro.get(publicAPI, model, ['widget']);
 
+  // Add user custom presets if they exist.
+  if (Object.prototype.hasOwnProperty.call(initialValues, 'userLookupTable')) {
+    addCustomPresets(initialValues.userLookupTable);
+  }
   // Object specific methods
   vtkVolumeController(publicAPI, model);
 }
