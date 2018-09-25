@@ -46,10 +46,22 @@ function removePresetByName(name) {
 }
 
 // ----------------------------------------------------------------------------
+function addPresets(presets) {
+  presets.map(addPreset);
+}
+// ----------------------------------------------------------------------------
+function removeAllPresets() {
+  rgbPresetNames.length = 0;
+  presetMap.length = 0;
+}
+
+// ----------------------------------------------------------------------------
 
 export default {
   addPreset,
   removePresetByName,
   getPresetByName,
   rgbPresetNames,
+  removeAllPresets,
+  addPresets,
 };
