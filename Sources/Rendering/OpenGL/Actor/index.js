@@ -153,6 +153,10 @@ function vtkOpenGLActor(publicAPI, model) {
           model.keyMatrices.normalMatrix,
           model.keyMatrices.normalMatrix
         );
+        mat3.transpose(
+          model.keyMatrices.normalMatrix,
+          model.keyMatrices.normalMatrix
+        );
       }
       model.keyMatrixTime.modified();
     }
