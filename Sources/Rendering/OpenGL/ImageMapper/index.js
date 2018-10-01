@@ -43,6 +43,7 @@ function vtkOpenGLImageMapper(publicAPI, model) {
       model.tris.setOpenGLRenderWindow(model.openGLRenderWindow);
       model.openGLTexture.setOpenGLRenderWindow(model.openGLRenderWindow);
       model.colorTexture.setOpenGLRenderWindow(model.openGLRenderWindow);
+      model.opacityTexture.setOpenGLRenderWindow(model.openGLRenderWindow);
       const ren = model.openGLRenderer.getRenderable();
       model.openGLCamera = model.openGLRenderer.getViewNodeFor(
         ren.getActiveCamera()
@@ -122,10 +123,15 @@ function vtkOpenGLImageMapper(publicAPI, model) {
 
     FSSource = vtkShaderProgram.substitute(FSSource, '//VTK::TCoord::Dec', [
       'varying vec2 tcoordVCVSOutput;',
+      // color shift and scale
       'uniform float shift;',
       'uniform float scale;',
+      // opacity shift and scale
+      'uniform float oshift;',
+      'uniform float oscale;',
       'uniform sampler2D texture1;',
       'uniform sampler2D colorTexture1;',
+      'uniform sampler2D opacityTexture1;',
       'uniform float opacity;',
     ]).result;
     switch (tNumComp) {
@@ -134,8 +140,10 @@ function vtkOpenGLImageMapper(publicAPI, model) {
           FSSource,
           '//VTK::TCoord::Impl',
           [
-            'float intensity = texture2D(texture1, tcoordVCVSOutput).r*scale + shift;',
-            'gl_FragData[0] = vec4(texture2D(colorTexture1, vec2(intensity, 0.5)).rgb, opacity);',
+            'float intensity = texture2D(texture1, tcoordVCVSOutput).r;',
+            'vec3 tcolor = texture2D(colorTexture1, vec2(intensity * scale + shift, 0.5)).rgb;',
+            'float scalarOpacity = texture2D(opacityTexture1, vec2(intensity * oscale + oshift, 0.5)).r;',
+            'gl_FragData[0] = vec4(tcolor, scalarOpacity * opacity);',
           ]
         ).result;
         break;
@@ -309,6 +317,18 @@ function vtkOpenGLImageMapper(publicAPI, model) {
     const scale = oglShiftScale.scale / cw;
     const shift = (oglShiftScale.shift - cl) / cw + 0.5;
 
+    // opacity shift/scale
+    const ofun = actor.getProperty().getScalarOpacity();
+    let oscale = 1.0;
+    let oshift = 0.0;
+    if (ofun) {
+      const oRange = ofun.getRange();
+      const length = oRange[1] - oRange[0];
+      const mid = 0.5 * (oRange[0] + oRange[1]);
+      oscale = oglShiftScale.scale / length;
+      oshift = (oglShiftScale.shift - mid) / length + 0.5;
+    }
+
     if (model.haveSeenDepthRequest) {
       cellBO
         .getProgram()
@@ -318,8 +338,13 @@ function vtkOpenGLImageMapper(publicAPI, model) {
     cellBO.getProgram().setUniformf('shift', shift);
     cellBO.getProgram().setUniformf('scale', scale);
 
+    cellBO.getProgram().setUniformf('oshift', oshift);
+    cellBO.getProgram().setUniformf('oscale', oscale);
+
     const texColorUnit = model.colorTexture.getTextureUnit();
+    const texOpacityUnit = model.opacityTexture.getTextureUnit();
     cellBO.getProgram().setUniformi('colorTexture1', texColorUnit);
+    cellBO.getProgram().setUniformi('opacityTexture1', texOpacityUnit);
   };
 
   publicAPI.setCameraShaderParameters = (cellBO, ren, actor) => {
@@ -359,6 +384,7 @@ function vtkOpenGLImageMapper(publicAPI, model) {
     // activate the texture
     model.openGLTexture.activate();
     model.colorTexture.activate();
+    model.opacityTexture.activate();
 
     // draw polygons
     if (model.tris.getCABO().getElementCount()) {
@@ -370,6 +396,7 @@ function vtkOpenGLImageMapper(publicAPI, model) {
 
     model.openGLTexture.deactivate();
     model.colorTexture.deactivate();
+    model.opacityTexture.deactivate();
   };
 
   publicAPI.renderPieceFinish = (ren, actor) => {};
@@ -436,9 +463,13 @@ function vtkOpenGLImageMapper(publicAPI, model) {
     if (iType === InterpolationType.NEAREST) {
       model.colorTexture.setMinificationFilter(Filter.NEAREST);
       model.colorTexture.setMagnificationFilter(Filter.NEAREST);
+      model.opacityTexture.setMinificationFilter(Filter.NEAREST);
+      model.opacityTexture.setMagnificationFilter(Filter.NEAREST);
     } else {
       model.colorTexture.setMinificationFilter(Filter.LINEAR);
       model.colorTexture.setMagnificationFilter(Filter.LINEAR);
+      model.opacityTexture.setMinificationFilter(Filter.LINEAR);
+      model.opacityTexture.setMagnificationFilter(Filter.LINEAR);
     }
 
     const cWidth = 1024;
@@ -477,6 +508,43 @@ function vtkOpenGLImageMapper(publicAPI, model) {
           3,
           VtkDataTypes.UNSIGNED_CHAR,
           cTable
+        );
+      }
+    }
+
+    const oWidth = 1024;
+    const oTable = new Uint8Array(oWidth);
+    const ofun = actor.getProperty().getScalarOpacity();
+    if (ofun) {
+      const ofunToString = `${ofun.getMTime()}`;
+      if (model.opacityTextureString !== ofunToString) {
+        const oRange = ofun.getRange();
+        const ofTable = new Float32Array(oWidth);
+        ofun.getTable(oRange[0], oRange[1], oWidth, ofTable, 1);
+        for (let i = 0; i < oWidth; ++i) {
+          oTable[i] = 255.0 * ofTable[i];
+        }
+        model.opacityTextureString = ofunToString;
+        model.opacityTexture.create2DFromRaw(
+          oWidth,
+          1,
+          1,
+          VtkDataTypes.UNSIGNED_CHAR,
+          oTable
+        );
+      }
+    } else {
+      const ofunToString = '0';
+      if (model.opacityTextureString !== ofunToString) {
+        // default is opaque
+        oTable.fill(255.0);
+        model.opacityTextureString = ofunToString;
+        model.opacityTexture.create2DFromRaw(
+          oWidth,
+          1,
+          1,
+          VtkDataTypes.UNSIGNED_CHAR,
+          oTable
         );
       }
     }
@@ -689,6 +757,7 @@ const DEFAULT_VALUES = {
   tris: null,
   imagemat: null,
   colorTexture: null,
+  opacityTexture: null,
   lastHaveSeenDepthRequest: false,
   haveSeenDepthRequest: false,
   lastTextureComponents: 0,
@@ -705,6 +774,7 @@ export function extend(publicAPI, model, initialValues = {}) {
   model.tris = vtkHelper.newInstance();
   model.openGLTexture = vtkOpenGLTexture.newInstance();
   model.colorTexture = vtkOpenGLTexture.newInstance();
+  model.opacityTexture = vtkOpenGLTexture.newInstance();
 
   model.imagemat = mat4.create();
 

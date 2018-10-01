@@ -34,6 +34,7 @@ const DEFAULT_VALUES = {
   diffuse: 0.0,
   opacity: 1.0,
   rGBTransferFunction: null,
+  scalarOpacity: null,
 };
 
 // ----------------------------------------------------------------------------
@@ -52,6 +53,7 @@ export function extend(publicAPI, model, initialValues = {}) {
     'diffuse',
     'opacity',
     'rGBTransferFunction',
+    'scalarOpacity',
   ]);
 
   publicAPI.getMTime = () => {
