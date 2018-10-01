@@ -54,3 +54,9 @@ Control the opacity of this image.
 
 Specify vtkColorTransferFunction to map scalars to colors. If set, then
 colorWindow and colorLevel are not used.
+
+### scalarOpacity
+
+Specify a vtkPiecewiseFunction to map image intensities to opacities. This
+will only work on single-component images. The overall image opacity can
+still be affected by the `opacity` property.
