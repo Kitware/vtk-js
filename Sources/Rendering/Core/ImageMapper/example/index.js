@@ -6,6 +6,8 @@ import vtkRTAnalyticSource from 'vtk.js/Sources/Filters/Sources/RTAnalyticSource
 import vtkImageMapper from 'vtk.js/Sources/Rendering/Core/ImageMapper';
 import vtkImageSlice from 'vtk.js/Sources/Rendering/Core/ImageSlice';
 import vtkInteractorStyleImage from 'vtk.js/Sources/Interaction/Style/InteractorStyleImage';
+import vtkColorTransferFunction from 'vtk.js/Sources/Rendering/Core/ColorTransferFunction';
+import vtkPiecewiseFunction from 'vtk.js/Sources/Common/DataModel/PiecewiseFunction';
 
 const { SlicingMode } = Constants;
 
@@ -32,9 +34,24 @@ mapper.setSliceAtFocalPoint(true);
 mapper.setSlicingMode(SlicingMode.Z);
 // mapper.setZSlice(5);
 
+const rgb = vtkColorTransferFunction.newInstance();
+global.rgb = rgb;
+rgb.addRGBPoint(0, 0, 0, 0);
+rgb.addRGBPoint(255, 1, 1, 1);
+
+const ofun = vtkPiecewiseFunction.newInstance();
+global.ofun = ofun;
+ofun.addPoint(0, 1);
+ofun.addPoint(150, 1);
+ofun.addPoint(180, 0);
+ofun.addPoint(255, 0);
+
 const actor = vtkImageSlice.newInstance();
 actor.getProperty().setColorWindow(255);
 actor.getProperty().setColorLevel(127);
+// Uncomment this if you want to use a fixed colorwindow/level
+// actor.getProperty().setRGBTransferFunction(rgb);
+actor.getProperty().setScalarOpacity(ofun);
 actor.setMapper(mapper);
 renderer.addActor(actor);
 
