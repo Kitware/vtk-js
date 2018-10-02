@@ -423,6 +423,16 @@ function vtkViewProxy(publicAPI, model) {
       }
     }
 
+    if (animationStack.length === 1) {
+      // update camera directly
+      model.camera.set(animationStack.pop());
+      model.renderer.resetCameraClippingRange();
+      if (model.interactor.getLightFollowCamera()) {
+        model.renderer.updateLightsGeometryToFollowCamera();
+      }
+      return Promise.resolve();
+    }
+
     return new Promise((resolve, reject) => {
       const now = performance.now().toString();
       const animationRequester = `ViewProxy.updateOrientation.${now}`;
