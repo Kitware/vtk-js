@@ -2016,6 +2016,31 @@ function getMajorAxisIndex(vector) {
   return axisIndex;
 }
 
+function floatToHex2(value) {
+  const integer = Math.floor(value * 255);
+  if (integer > 15) {
+    return integer.toString(16);
+  }
+  return `0${integer.toString(16)}`;
+}
+
+function floatRGB2HexCode(rgbArray, prefix = '#') {
+  return `${prefix}${rgbArray.map(floatToHex2).join('')}`;
+}
+
+function floatToChar(f) {
+  return Math.round(f * 255);
+}
+
+function float2CssRGBA(rgbArray) {
+  if (rgbArray.length === 3) {
+    return `rgb(${rgbArray.map(floatToChar).join(', ')})`;
+  }
+  return `rgba(${floatToChar(rgbArray[0] || 0)}, ${floatToChar(
+    rgbArray[1] || 0
+  )}, ${floatToChar(rgbArray[2] || 0)}, ${rgbArray[3] || 0})`;
+}
+
 // ----------------------------------------------------------------------------
 // Only Static API
 // ----------------------------------------------------------------------------
@@ -2118,4 +2143,7 @@ export default {
   // JS add-on
   createUninitializedBounds,
   getMajorAxisIndex,
+  floatToHex2,
+  floatRGB2HexCode,
+  float2CssRGBA,
 };
