@@ -10,7 +10,7 @@ The important part on the client code is the following section:
 
 ```
 const imageStream = vtkImageStream.newInstance();
-const config = { sessionURL: 'ws://0.0.0.0:1234/ws' };
+const config = { sessionURL: 'ws://localhost:1234/ws' };
 const smartConnect = SmartConnect.newInstance({ config });
 smartConnect.onConnectionReady((connection) => {
   // Network
