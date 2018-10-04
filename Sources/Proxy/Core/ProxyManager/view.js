@@ -14,7 +14,7 @@ export default function addViewHandlingAPI(publicAPI, model) {
   publicAPI.render = (view) => {
     const viewToRender = view || publicAPI.getActiveView();
     if (viewToRender) {
-      view.renderLater();
+      viewToRender.renderLater();
     }
   };
 
