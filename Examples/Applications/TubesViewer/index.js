@@ -18,7 +18,7 @@ import {
 } from 'vtk.js/Sources/Rendering/Core/Mapper/Constants';
 import { VaryRadius } from 'vtk.js/Sources/Filters/General/TubeFilter/Constants';
 
-import style from './TubesViewer.mcss';
+import style from './TubesViewer.module.css';
 import icon from '../../../Documentation/content/icon/favicon-96x96.png';
 
 let autoInit = true;

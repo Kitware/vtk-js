@@ -15,7 +15,7 @@ import vtkMTLReader from 'vtk.js/Sources/IO/Misc/MTLReader';
 import vtkMapper from 'vtk.js/Sources/Rendering/Core/Mapper';
 import vtkActor from 'vtk.js/Sources/Rendering/Core/Actor';
 
-import style from './OBJViewer.mcss';
+import style from './OBJViewer.module.css';
 
 const iOS = /iPad|iPhone|iPod/.test(window.navigator.platform);
 let autoInit = true;

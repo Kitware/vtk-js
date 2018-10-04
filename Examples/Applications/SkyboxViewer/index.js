@@ -12,7 +12,7 @@ import vtkSkyboxReader from 'vtk.js/Sources/IO/Misc/SkyboxReader';
 import vtkURLExtract from 'vtk.js/Sources/Common/Core/URLExtract';
 // import vtkMobileVR from 'vtk.js/Sources/Common/System/MobileVR';
 
-import style from './SkyboxViewer.mcss';
+import style from './SkyboxViewer.module.css';
 
 // ----------------------------------------------
 // Possible URL parameters to look for:

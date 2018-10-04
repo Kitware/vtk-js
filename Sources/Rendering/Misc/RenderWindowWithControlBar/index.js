@@ -1,6 +1,6 @@
 import macro from 'vtk.js/Sources/macro';
 import vtkGenericRenderWindow from 'vtk.js/Sources/Rendering/Misc/GenericRenderWindow';
-import style from 'vtk.js/Sources/Rendering/Misc/RenderWindowWithControlBar/RenderWindowWithControlBar.mcss';
+import style from 'vtk.js/Sources/Rendering/Misc/RenderWindowWithControlBar/RenderWindowWithControlBar.module.css';
 
 // Load basic classes for vtk() factory
 import 'vtk.js/Sources/Common/Core/Points';

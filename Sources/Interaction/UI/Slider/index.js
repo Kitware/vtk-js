@@ -1,6 +1,6 @@
 import macro from 'vtk.js/Sources/macro';
 import Constants from 'vtk.js/Sources/Interaction/UI/Slider/Constants';
-import style from 'vtk.js/Sources/Interaction/UI/Slider/Slider.mcss';
+import style from 'vtk.js/Sources/Interaction/UI/Slider/Slider.module.css';
 
 // ----------------------------------------------------------------------------
 // Helper methods
