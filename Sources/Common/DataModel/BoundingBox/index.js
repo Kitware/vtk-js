@@ -55,9 +55,12 @@ function getMaxLength(bounds) {
       return l[0];
     }
     return l[2];
-  } else if (l[1] > l[2]) {
+  }
+
+  if (l[1] > l[2]) {
     return l[1];
   }
+
   return l[2];
 }
 

@@ -1284,7 +1284,9 @@ function solveLinearSystem(A, x, size) {
     x[0] = y[0];
     x[1] = y[1];
     return 1;
-  } else if (size === 1) {
+  }
+
+  if (size === 1) {
     if (A[0][0] === 0.0) {
       // Unable to solve linear system
       return 0;

@@ -16,19 +16,28 @@ export function getDataDescriptionFromExtent(inExt) {
 
   if (dataDim === 3) {
     return StructuredType.XYZ_GRID;
-  } else if (dataDim === 2) {
+  }
+
+  if (dataDim === 2) {
     if (inExt[0] === inExt[1]) {
       return StructuredType.YZ_PLANE;
-    } else if (inExt[2] === inExt[3]) {
+    }
+
+    if (inExt[2] === inExt[3]) {
       return StructuredType.XZ_PLANE;
     }
     return StructuredType.XY_PLANE;
-  } else if (dataDim === 1) {
+  }
+
+  if (dataDim === 1) {
     if (inExt[0] < inExt[1]) {
       return StructuredType.X_LINE;
-    } else if (inExt[2] < inExt[3]) {
+    }
+
+    if (inExt[2] < inExt[3]) {
       return StructuredType.Y_LINE;
     }
+
     return StructuredType.Z_LINE;
   }
 

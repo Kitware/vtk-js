@@ -1,5 +1,5 @@
 import macro from 'vtk.js/Sources/macro';
-import { Constants, ImageBorderMode } from './Constants';
+import { ImageBorderMode, InterpolationMode } from './Constants';
 import { vtkInterpolationInfo } from './InterpolationInfo';
 
 // ----------------------------------------------------------------------------
@@ -237,4 +237,4 @@ export const newInstance = macro.newInstance(
 
 // ----------------------------------------------------------------------------
 
-export default Object.assign({ newInstance, extend }, Constants);
+export default { newInstance, extend, ImageBorderMode, InterpolationMode };
