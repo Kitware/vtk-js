@@ -24,8 +24,8 @@ export function trackballRotate(
     .getInteractor()
     .getView()
     .getSize();
-  const xdeg = 360.0 * dx / size[0];
-  const ydeg = 360.0 * dy / size[1];
+  const xdeg = (360.0 * dx) / size[0];
+  const ydeg = (360.0 * dy) / size[1];
 
   const newDirection = vec3.fromValues(
     direction[0],

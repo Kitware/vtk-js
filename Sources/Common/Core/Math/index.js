@@ -38,8 +38,8 @@ function createArray(size = 3) {
 // ----------------------------------------------------------------------------
 
 const Pi = () => Math.PI;
-const radiansFromDegrees = (deg) => deg / 180 * Math.PI;
-const degreesFromRadians = (rad) => rad * 180 / Math.PI;
+const radiansFromDegrees = (deg) => (deg / 180) * Math.PI;
+const degreesFromRadians = (rad) => (rad * 180) / Math.PI;
 const { round, floor, ceil, min, max } = Math;
 
 function arrayMin(arr) {
@@ -254,9 +254,9 @@ function perpendiculars(x, y, z, theta) {
     }
 
     if (z) {
-      z[dx] = -a * b / tmp;
+      z[dx] = (-a * b) / tmp;
       z[dy] = tmp;
-      z[dz] = -b * c / tmp;
+      z[dz] = (-b * c) / tmp;
     }
   }
 }
@@ -321,8 +321,7 @@ function angleBetweenVectors(v1, v2) {
 function gaussianAmplitude(mean, variance, position) {
   const distanceFromMean = Math.abs(mean - position);
   return (
-    1 /
-    Math.sqrt(2 * Math.PI * variance) *
+    (1 / Math.sqrt(2 * Math.PI * variance)) *
     Math.exp(-(distanceFromMean ** 2) / (2 * variance))
   );
 }
@@ -711,7 +710,7 @@ function jacobiN(a, n, w, v) {
 
     // first 3 sweeps
     if (i < 3) {
-      tresh = 0.2 * sm / (n * n);
+      tresh = (0.2 * sm) / (n * n);
     } else {
       tresh = 0.0;
     }
@@ -732,7 +731,7 @@ function jacobiN(a, n, w, v) {
           if (Math.abs(h) + g === Math.abs(h)) {
             t = a[ip][iq] / h;
           } else {
-            theta = 0.5 * h / a[ip][iq];
+            theta = (0.5 * h) / a[ip][iq];
             t = 1.0 / (Math.abs(theta) + Math.sqrt(1.0 + theta * theta));
             if (theta < 0.0) {
               t = -t;
@@ -1583,14 +1582,14 @@ function solveLeastSquares(
 function hex2float(hexStr, outFloatArray = [0, 0.5, 1]) {
   switch (hexStr.length) {
     case 3: // abc => #aabbcc
-      outFloatArray[0] = parseInt(hexStr[0], 16) * 17 / 255;
-      outFloatArray[1] = parseInt(hexStr[1], 16) * 17 / 255;
-      outFloatArray[2] = parseInt(hexStr[2], 16) * 17 / 255;
+      outFloatArray[0] = (parseInt(hexStr[0], 16) * 17) / 255;
+      outFloatArray[1] = (parseInt(hexStr[1], 16) * 17) / 255;
+      outFloatArray[2] = (parseInt(hexStr[2], 16) * 17) / 255;
       return outFloatArray;
     case 4: // #abc => #aabbcc
-      outFloatArray[0] = parseInt(hexStr[1], 16) * 17 / 255;
-      outFloatArray[1] = parseInt(hexStr[2], 16) * 17 / 255;
-      outFloatArray[2] = parseInt(hexStr[3], 16) * 17 / 255;
+      outFloatArray[0] = (parseInt(hexStr[1], 16) * 17) / 255;
+      outFloatArray[1] = (parseInt(hexStr[2], 16) * 17) / 255;
+      outFloatArray[2] = (parseInt(hexStr[3], 16) * 17) / 255;
       return outFloatArray;
     case 6: // ab01df => #ab01df
       outFloatArray[0] = parseInt(hexStr.substr(0, 2), 16) / 255;
@@ -1643,11 +1642,11 @@ function rgb2hsv(rgb, hsv) {
   }
   if (s > 0) {
     if (r === cmax) {
-      h = onesixth * (g - b) / (cmax - cmin);
+      h = (onesixth * (g - b)) / (cmax - cmin);
     } else if (g === cmax) {
-      h = onethird + onesixth * (b - r) / (cmax - cmin);
+      h = onethird + (onesixth * (b - r)) / (cmax - cmin);
     } else {
-      h = twothird + onesixth * (r - g) / (cmax - cmin);
+      h = twothird + (onesixth * (r - g)) / (cmax - cmin);
     }
     if (h < 0.0) {
       h += 1.0;
@@ -1970,12 +1969,12 @@ function solve3PointCircle(p1, p2, p3, center) {
   cross(v21, v32, crossv21v32);
   const normCross = norm(crossv21v32);
 
-  const radius = norm12 * norm23 * norm13 / (2 * normCross);
+  const radius = (norm12 * norm23 * norm13) / (2 * normCross);
 
   const normCross22 = 2 * normCross * normCross;
-  const alpha = norm23 * norm23 * dot(v21, v31) / normCross22;
-  const beta = norm13 * norm13 * dot(v12, v32) / normCross22;
-  const gamma = norm12 * norm12 * dot(v13, v23) / normCross22;
+  const alpha = (norm23 * norm23 * dot(v21, v31)) / normCross22;
+  const beta = (norm13 * norm13 * dot(v12, v32)) / normCross22;
+  const gamma = (norm12 * norm12 * dot(v13, v23)) / normCross22;
 
   for (let i = 0; i < 3; ++i) {
     center[i] = alpha * p1[i] + beta * p2[i] + gamma * p3[i];

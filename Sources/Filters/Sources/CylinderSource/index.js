@@ -17,7 +17,7 @@ function vtkCylinderSource(publicAPI, model) {
 
     let dataset = outData[0];
 
-    const angle = 2.0 * Math.PI / model.resolution;
+    const angle = (2.0 * Math.PI) / model.resolution;
     let numberOfPoints = 2 * model.resolution;
     let numberOfPolys = 5 * model.resolution;
 
@@ -62,7 +62,7 @@ function vtkCylinderSource(publicAPI, model) {
       ntop[0] = nbot[0];
       xbot[0] = model.radius * nbot[0] + model.center[0];
       xtop[0] = xbot[0];
-      tcbot[0] = Math.abs(2.0 * i / model.resolution - 1.0);
+      tcbot[0] = Math.abs((2.0 * i) / model.resolution - 1.0);
       tctop[0] = tcbot[0];
 
       // y coordinate

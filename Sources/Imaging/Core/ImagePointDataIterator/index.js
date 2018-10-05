@@ -180,7 +180,7 @@ function vtkImagePointDataIterator(publicAPI, model) {
       const maxCount = sliceSpan * volumeSpan;
       model.target = maxCount / 50 + 1;
       model.count =
-        model.target * 50 - maxCount / model.target * model.target + 1;
+        model.target * 50 - (maxCount / model.target) * model.target + 1;
     } else {
       model.algorithm = null;
       model.target = 0;

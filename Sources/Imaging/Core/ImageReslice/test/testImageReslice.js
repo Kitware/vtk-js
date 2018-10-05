@@ -42,7 +42,7 @@ test.onlyIfWebGL('Test vtkImageReslice Rendering', (t) => {
   for (let z = 0; z < dims[2]; z++) {
     for (let y = 0; y < dims[1]; y++) {
       for (let x = 0; x < dims[0]; x++) {
-        newArray[i++] = 256 * (i % (dims[0] * dims[1])) / (dims[0] * dims[1]);
+        newArray[i++] = (256 * (i % (dims[0] * dims[1]))) / (dims[0] * dims[1]);
       }
     }
   }
@@ -66,7 +66,7 @@ test.onlyIfWebGL('Test vtkImageReslice Rendering', (t) => {
   imageReslice.setInputData(imageData);
   imageReslice.setOutputDimensionality(2);
   const axes = mat4.create();
-  mat4.rotateZ(axes, axes, 45 * Math.PI / 180);
+  mat4.rotateZ(axes, axes, (45 * Math.PI) / 180);
   imageReslice.setResliceAxes(axes);
   imageReslice.setBorder(true);
   imageReslice.setOutputScalarType('Uint16Array');

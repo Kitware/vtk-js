@@ -49,9 +49,9 @@ const tcoordFilter = macro.newInstance((publicAPI, model) => {
       const ndata = norms.getData();
       for (let i = 0; i < newArray.length; i += 2) {
         newArray[i] =
-          Math.abs(Math.atan2(ndata[i / 2 * 3], ndata[i / 2 * 3 + 1])) /
+          Math.abs(Math.atan2(ndata[(i / 2) * 3], ndata[(i / 2) * 3 + 1])) /
           3.1415927;
-        newArray[i + 1] = Math.asin(ndata[i / 2 * 3 + 2] / 3.1415927) + 0.5;
+        newArray[i + 1] = Math.asin(ndata[(i / 2) * 3 + 2] / 3.1415927) + 0.5;
       }
 
       const da = vtkDataArray.newInstance({

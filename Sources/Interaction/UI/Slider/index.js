@@ -37,8 +37,8 @@ function vtkSlider(publicAPI, model) {
 
   function getDisplacementRatio() {
     return (
-      (model.containerSizes[1] - model.containerSizes[0]) *
-      (model.value - model.values[0]) /
+      ((model.containerSizes[1] - model.containerSizes[0]) *
+        (model.value - model.values[0])) /
       (model.values[model.values.length - 1] - model.values[0])
     );
   }
@@ -110,12 +110,12 @@ function vtkSlider(publicAPI, model) {
       if (isClick) {
         const absValue =
           model.values[0] +
-          model.range *
+          (model.range *
             (offset -
               model.container.getBoundingClientRect()[
                 model.orientation ? 'left' : 'top'
               ] -
-              0.5 * model.containerSizes[0]) /
+              0.5 * model.containerSizes[0])) /
             (model.containerSizes[1] - model.containerSizes[0]);
         const newValue = findClosestValue(absValue, model.values);
         if (newValue !== undefined) {

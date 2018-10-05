@@ -428,7 +428,7 @@ function vtkPiecewiseFunction(publicAPI, model) {
       // it halfway between start and end (usually start and end will
       // be the same in this case)
       if (size > 1) {
-        x = xStart + i / (size - 1.0) * (xEnd - xStart);
+        x = xStart + (i / (size - 1.0)) * (xEnd - xStart);
       } else {
         x = 0.5 * (xStart + xEnd);
       }
@@ -480,9 +480,9 @@ function vtkPiecewiseFunction(publicAPI, model) {
 
         // Readjust based on the midpoint - linear adjustment
         if (s < midpoint) {
-          s = 0.5 * s / midpoint;
+          s = (0.5 * s) / midpoint;
         } else {
-          s = 0.5 + 0.5 * (s - midpoint) / (1.0 - midpoint);
+          s = 0.5 + (0.5 * (s - midpoint)) / (1.0 - midpoint);
         }
 
         // override for sharpness > 0.99

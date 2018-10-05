@@ -21,7 +21,7 @@ import 'vtk.js/Sources/Common/DataModel/PolyData';
 import style from './style.mcss';
 
 function affine(val, inMin, inMax, outMin, outMax) {
-  return (val - inMin) / (inMax - inMin) * (outMax - outMin) + outMin;
+  return ((val - inMin) / (inMax - inMin)) * (outMax - outMin) + outMin;
 }
 
 // ----------------------------------------------------------------------------

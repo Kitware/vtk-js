@@ -289,8 +289,8 @@ function vtkTubeFilter(publicAPI, model) {
       if (inScalars && model.varyRadius === VaryRadius.VARY_RADIUS_BY_SCALAR) {
         sFactor =
           1.0 +
-          (model.radiusFactor - 1.0) *
-            (inScalars.getComponent(pts[j], 0) - range[0]) /
+          ((model.radiusFactor - 1.0) *
+            (inScalars.getComponent(pts[j], 0) - range[0])) /
             (range[1] - range[0]);
       } else if (
         inVectors &&
@@ -750,7 +750,7 @@ function vtkTubeFilter(publicAPI, model) {
 
     // Create points along each polyline that are connected into numberOfSides
     // triangle strips.
-    const theta = 2.0 * Math.PI / model.numberOfSides;
+    const theta = (2.0 * Math.PI) / model.numberOfSides;
     npts = inLinesData[0];
     let offset = 0;
     let inCellId = input.getVerts().getNumberOfCells();

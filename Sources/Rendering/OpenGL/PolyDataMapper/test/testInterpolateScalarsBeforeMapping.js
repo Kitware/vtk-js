@@ -67,7 +67,7 @@ test.onlyIfWebGL('Test Interpolate Scalars Before Mapping', (t) => {
       points[idx * 3 + 2] = 0.0;
       // set scalars to be -0.5 to 1.5 so we have above and below range
       // data.
-      scalars[idx] = -0.5 + 2.0 * j / (res - 1.0);
+      scalars[idx] = -0.5 + (2.0 * j) / (res - 1.0);
       // also add nan for some data
       if (i === 4) {
         scalars[idx] = NaN;

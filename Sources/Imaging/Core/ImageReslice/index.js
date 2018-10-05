@@ -689,9 +689,9 @@ function vtkImageReslice(publicAPI, model) {
     for (let i = 0; i < 8; ++i) {
       point[0] = inOrigin[0] + inWholeExt[i % 2] * inSpacing[0];
       point[1] =
-        inOrigin[1] + inWholeExt[2 + Math.floor(i / 2) % 2] * inSpacing[1];
+        inOrigin[1] + inWholeExt[2 + (Math.floor(i / 2) % 2)] * inSpacing[1];
       point[2] =
-        inOrigin[2] + inWholeExt[4 + Math.floor(i / 4) % 2] * inSpacing[2];
+        inOrigin[2] + inWholeExt[4 + (Math.floor(i / 4) % 2)] * inSpacing[2];
       point[3] = 1.0;
 
       if (model.resliceTransform) {

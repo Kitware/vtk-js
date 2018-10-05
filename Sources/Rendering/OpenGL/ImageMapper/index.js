@@ -466,9 +466,9 @@ function vtkOpenGLImageMapper(publicAPI, model) {
       const cfunToString = '0';
       if (model.colorTextureString !== cfunToString) {
         for (let i = 0; i < cWidth * 3; ++i) {
-          cTable[i] = 255.0 * i / ((cWidth - 1) * 3);
-          cTable[i + 1] = 255.0 * i / ((cWidth - 1) * 3);
-          cTable[i + 2] = 255.0 * i / ((cWidth - 1) * 3);
+          cTable[i] = (255.0 * i) / ((cWidth - 1) * 3);
+          cTable[i + 1] = (255.0 * i) / ((cWidth - 1) * 3);
+          cTable[i + 2] = (255.0 * i) / ((cWidth - 1) * 3);
         }
         model.colorTextureString = cfunToString;
         model.colorTexture.create2DFromRaw(

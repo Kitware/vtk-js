@@ -834,7 +834,7 @@ function vtkRenderWindowInteractor(publicAPI, model) {
         }
         const pinchDistance = Math.abs(newDistance - originalDistance);
         const rotateDistance =
-          newDistance * 3.1415926 * Math.abs(angleDeviation) / 360.0;
+          (newDistance * 3.1415926 * Math.abs(angleDeviation)) / 360.0;
         const panDistance = Math.sqrt(
           trans[0] * trans[0] + trans[1] * trans[1]
         );

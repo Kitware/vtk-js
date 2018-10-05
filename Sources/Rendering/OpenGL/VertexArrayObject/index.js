@@ -73,7 +73,7 @@ function vtkOpenGLVertexArrayObject(publicAPI, model) {
               attrIt.type,
               attrIt.normalize,
               attrIt.stride,
-              attrIt.offset + attrIt.stride * i / attrIt.size
+              attrIt.offset + (attrIt.stride * i) / attrIt.size
             );
             if (attrIt.divisor > 0) {
               if (model.instancingExtension) {
@@ -115,7 +115,7 @@ function vtkOpenGLVertexArrayObject(publicAPI, model) {
               attrIt.type,
               attrIt.normalize,
               attrIt.stride,
-              attrIt.offset + attrIt.stride * i / attrIt.size
+              attrIt.offset + (attrIt.stride * i) / attrIt.size
             );
             if (attrIt.divisor > 0) {
               if (model.instancingExtension) {
@@ -329,7 +329,7 @@ function vtkOpenGLVertexArrayObject(publicAPI, model) {
         elementType,
         normalize,
         stride,
-        offset + stride * i / elementTupleSize
+        offset + (stride * i) / elementTupleSize
       );
       if (divisor > 0) {
         if (model.instancingExtension) {

@@ -50,7 +50,7 @@ function vtkMouseCameraTrackballRotateManipulator(publicAPI, model) {
     mat4.rotate(
       trans,
       trans,
-      vtkMath.radiansFromDegrees(360.0 * dx / size[0] * rotationFactor),
+      vtkMath.radiansFromDegrees(((360.0 * dx) / size[0]) * rotationFactor),
       viewUp
     );
 
@@ -59,7 +59,7 @@ function vtkMouseCameraTrackballRotateManipulator(publicAPI, model) {
     mat4.rotate(
       trans,
       trans,
-      vtkMath.radiansFromDegrees(-360.0 * dy / size[1] * rotationFactor),
+      vtkMath.radiansFromDegrees(((-360.0 * dy) / size[1]) * rotationFactor),
       v2
     );
 

@@ -1101,9 +1101,9 @@ function vtkOpenGLTexture(publicAPI, model) {
     let targetWidth = Math.sqrt(numPixelsIn) / xstride;
     targetWidth = vtkMath.nearestPowerOfTwo(targetWidth);
     // determine X reps
-    const xreps = Math.floor(targetWidth * xstride / width);
+    const xreps = Math.floor((targetWidth * xstride) / width);
     const yreps = Math.ceil(depth / xreps);
-    const targetHeight = vtkMath.nearestPowerOfTwo(height * yreps / ystride);
+    const targetHeight = vtkMath.nearestPowerOfTwo((height * yreps) / ystride);
 
     model.width = targetWidth;
     model.height = targetHeight;

@@ -534,7 +534,7 @@ function vtkOpenGLVolumeMapper(publicAPI, model) {
       vec3.set(
         pos,
         bounds[i % 2],
-        bounds[2 + Math.floor(i / 2) % 2],
+        bounds[2 + (Math.floor(i / 2) % 2)],
         bounds[4 + Math.floor(i / 4)]
       );
       vec3.transformMat4(pos, pos, keyMats.wcvc);
@@ -743,11 +743,11 @@ function vtkOpenGLVolumeMapper(publicAPI, model) {
       ];
       program.setUniformf(
         'goscale',
-        lightingInfo.max * (gomax - gomin) / (goRange[1] - goRange[0])
+        (lightingInfo.max * (gomax - gomin)) / (goRange[1] - goRange[0])
       );
       program.setUniformf(
         'goshift',
-        -goRange[0] * (gomax - gomin) / (goRange[1] - goRange[0]) + gomin
+        (-goRange[0] * (gomax - gomin)) / (goRange[1] - goRange[0]) + gomin
       );
     }
 
@@ -798,7 +798,8 @@ function vtkOpenGLVolumeMapper(publicAPI, model) {
       ) {
         // compute target xy factor
         let txyf = Math.sqrt(
-          model.avgFrameTime * rwi.getDesiredUpdateRate() / model.avgWindowArea
+          (model.avgFrameTime * rwi.getDesiredUpdateRate()) /
+            model.avgWindowArea
         );
 
         // limit subsampling to a factor of 10
@@ -809,7 +810,7 @@ function vtkOpenGLVolumeMapper(publicAPI, model) {
         model.targetXYF = txyf;
       } else {
         model.targetXYF = Math.sqrt(
-          model.avgFrameTime * rwi.getStillUpdateRate() / model.avgWindowArea
+          (model.avgFrameTime * rwi.getStillUpdateRate()) / model.avgWindowArea
         );
       }
 

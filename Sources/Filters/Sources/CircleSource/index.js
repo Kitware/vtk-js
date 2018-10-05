@@ -25,7 +25,7 @@ function vtkCircleSource(publicAPI, model) {
     edges[0] = model.resolution + 1;
 
     // generate polydata
-    const angle = 2.0 * Math.PI / model.resolution;
+    const angle = (2.0 * Math.PI) / model.resolution;
     for (let i = 0; i < model.resolution; i++) {
       const x = model.center[0];
       const y = model.radius * Math.cos(i * angle) + model.center[1];
