@@ -3,6 +3,7 @@ import vtkOpenGLRenderWindow from 'vtk.js/Sources/Rendering/OpenGL/RenderWindow'
 import vtkRenderer from 'vtk.js/Sources/Rendering/Core/Renderer';
 import vtkRenderWindow from 'vtk.js/Sources/Rendering/Core/RenderWindow';
 import vtkRenderWindowInteractor from 'vtk.js/Sources/Rendering/Core/RenderWindowInteractor';
+import vtkInteractorStyleTrackballCamera from 'vtk.js/Sources/Interaction/Style/InteractorStyleTrackballCamera';
 
 // Load basic classes for vtk() factory
 import 'vtk.js/Sources/Common/Core/Points';
@@ -68,6 +69,9 @@ function vtkFullScreenRenderWindow(publicAPI, model) {
 
   // Interactor
   model.interactor = vtkRenderWindowInteractor.newInstance();
+  model.interactor.setInteractorStyle(
+    vtkInteractorStyleTrackballCamera.newInstance()
+  );
   model.interactor.setView(model.openGLRenderWindow);
   model.interactor.initialize();
   model.interactor.bindEvents(model.container);

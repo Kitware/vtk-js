@@ -1083,6 +1083,10 @@ export function extend(publicAPI, model, initialValues = {}) {
   vtkViewNode.extend(publicAPI, model, initialValues);
 
   model.myFactory = vtkOpenGLViewNodeFactory.newInstance();
+  /* eslint-disable no-use-before-define */
+  model.myFactory.registerOverride('vtkRenderWindow', newInstance);
+  /* eslint-enable no-use-before-define */
+
   model.shaderCache = vtkShaderCache.newInstance();
   model.shaderCache.setOpenGLRenderWindow(publicAPI);
 

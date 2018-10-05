@@ -1,6 +1,6 @@
 import macro from 'vtk.js/Sources/macro';
 import vtkMath from 'vtk.js/Sources/Common/Core/Math';
-import vtkInteractorStyleTrackballCamera from 'vtk.js/Sources/Interaction/Style/InteractorStyleTrackballCamera';
+
 import Constants from 'vtk.js/Sources/Rendering/Core/RenderWindowInteractor/Constants';
 
 const { Device, Input } = Constants;
@@ -960,8 +960,6 @@ export function extend(publicAPI, model, initialValues = {}) {
 
   // Object specific methods
   vtkRenderWindowInteractor(publicAPI, model);
-
-  publicAPI.setInteractorStyle(vtkInteractorStyleTrackballCamera.newInstance());
 }
 
 // ----------------------------------------------------------------------------

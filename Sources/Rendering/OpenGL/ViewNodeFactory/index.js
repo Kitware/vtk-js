@@ -1,6 +1,5 @@
 import macro from 'vtk.js/Sources/macro';
 import vtkGenericWidgetRepresentation from 'vtk.js/Sources/Rendering/SceneGraph/GenericWidgetRepresentation';
-import vtkViewNodeFactory from 'vtk.js/Sources/Rendering/SceneGraph/ViewNodeFactory';
 import vtkOpenGLActor from 'vtk.js/Sources/Rendering/OpenGL/Actor';
 import vtkOpenGLActor2D from 'vtk.js/Sources/Rendering/OpenGL/Actor2D';
 import vtkOpenGLCamera from 'vtk.js/Sources/Rendering/OpenGL/Camera';
@@ -9,7 +8,6 @@ import vtkOpenGLImageMapper from 'vtk.js/Sources/Rendering/OpenGL/ImageMapper';
 import vtkOpenGLImageSlice from 'vtk.js/Sources/Rendering/OpenGL/ImageSlice';
 import vtkOpenGLPixelSpaceCallbackMapper from 'vtk.js/Sources/Rendering/OpenGL/PixelSpaceCallbackMapper';
 import vtkOpenGLPolyDataMapper from 'vtk.js/Sources/Rendering/OpenGL/PolyDataMapper';
-import vtkOpenGLRenderWindow from 'vtk.js/Sources/Rendering/OpenGL/RenderWindow';
 import vtkOpenGLRenderer from 'vtk.js/Sources/Rendering/OpenGL/Renderer';
 import vtkOpenGLSkybox from 'vtk.js/Sources/Rendering/OpenGL/Skybox';
 import vtkOpenGLSphereMapper from 'vtk.js/Sources/Rendering/OpenGL/SphereMapper';
@@ -17,6 +15,7 @@ import vtkOpenGLStickMapper from 'vtk.js/Sources/Rendering/OpenGL/StickMapper';
 import vtkOpenGLTexture from 'vtk.js/Sources/Rendering/OpenGL/Texture';
 import vtkOpenGLVolume from 'vtk.js/Sources/Rendering/OpenGL/Volume';
 import vtkOpenGLVolumeMapper from 'vtk.js/Sources/Rendering/OpenGL/VolumeMapper';
+import vtkViewNodeFactory from 'vtk.js/Sources/Rendering/SceneGraph/ViewNodeFactory';
 
 // ----------------------------------------------------------------------------
 // vtkOpenGLViewNodeFactory methods
@@ -61,10 +60,6 @@ export function extend(publicAPI, model, initialValues = {}) {
   publicAPI.registerOverride(
     'vtkPixelSpaceCallbackMapper',
     vtkOpenGLPixelSpaceCallbackMapper.newInstance
-  );
-  publicAPI.registerOverride(
-    'vtkRenderWindow',
-    vtkOpenGLRenderWindow.newInstance
   );
   publicAPI.registerOverride('vtkRenderer', vtkOpenGLRenderer.newInstance);
   publicAPI.registerOverride('vtkSkybox', vtkOpenGLSkybox.newInstance);
