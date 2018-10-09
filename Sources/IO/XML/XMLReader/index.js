@@ -287,8 +287,6 @@ function processFieldData(
 
     const dataArrayElems = fieldElem.getElementsByTagName('DataArray');
 
-    // const arrays = fieldElem.children;
-    console.log('arrays = ', dataArrayElems, ' ', fieldElem);
     const nbArrays = dataArrayElems.length;
     for (let idx = 0; idx < nbArrays; idx++) {
       const array = dataArrayElems[idx];
