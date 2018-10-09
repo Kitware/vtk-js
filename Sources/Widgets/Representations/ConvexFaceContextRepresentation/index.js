@@ -4,7 +4,8 @@ import vtkContextRepresentation from 'vtk.js/Sources/Widgets/Representations/Con
 import vtkMapper from 'vtk.js/Sources/Rendering/Core/Mapper';
 import vtkPolyData from 'vtk.js/Sources/Common/DataModel/PolyData';
 
-import vtkStateBuilder from 'vtk.js/Sources/Widgets/Core/StateBuilder';
+import { Behavior } from 'vtk.js/Sources/Widgets/Representations/WidgetRepresentation/Constants';
+import { RenderingTypes } from 'vtk.js/Sources/Widgets/Core/WidgetManager/Constants';
 
 // ----------------------------------------------------------------------------
 // vtkPlaneHandleRepresentation methods
@@ -23,9 +24,6 @@ function vtkConvexFaceContextRepresentation(publicAPI, model) {
   model.cells = new Uint8Array([4, 0, 1, 2, 3]);
   model.internalPolyData.getPoints().setData(model.points, 3);
   model.internalPolyData.getPolys().setData(model.cells);
-
-  model.state = vtkStateBuilder.createBuilder().build('orientation');
-  model.stateValues = [];
 
   function allocateSize(size) {
     if (model.cells.length - 1 !== size) {
@@ -49,7 +47,7 @@ function vtkConvexFaceContextRepresentation(publicAPI, model) {
     scalarVisibility: false,
   });
   model.actor = vtkActor.newInstance();
-  model.actor.getProperty().setOpacity(0.2);
+  model.actor.getProperty().setOpacity(model.opacity);
 
   model.mapper.setInputConnection(publicAPI.getOutputPort());
   model.actor.setMapper(model.mapper);
@@ -70,16 +68,6 @@ function vtkConvexFaceContextRepresentation(publicAPI, model) {
       points[i * 3 + 2] = coords[2];
     }
 
-    if (inData[0].updateFromOriginRighUp) {
-      console.log('swap state');
-      model.state = inData[0];
-    }
-    model.state.updateFromOriginRighUp(
-      list[0].getOrigin(),
-      list[list.length - 1].getOrigin(),
-      list[1].getOrigin()
-    );
-
     model.internalPolyData.modified();
     outData[0] = model.internalPolyData;
   };
@@ -87,7 +75,49 @@ function vtkConvexFaceContextRepresentation(publicAPI, model) {
   // --------------------------------------------------------------------------
 
   publicAPI.getSelectedState = (prop, compositeID) => {
-    return model.state;
+    const state = model.inputData[0];
+    const list = publicAPI.getRepresentationStates(state);
+
+    // Update state orientation based on face
+    if (state.updateFromOriginRighUp) {
+      state.updateFromOriginRighUp(
+        list[0].getOrigin(),
+        list[list.length - 1].getOrigin(),
+        list[1].getOrigin()
+      );
+    }
+
+    return state;
+  };
+
+  // --------------------------------------------------------------------------
+
+  const superUpdateActorVisibility = publicAPI.updateActorVisibility;
+  publicAPI.updateActorVisibility = (
+    renderingType = RenderingTypes.FRONT_BUFFER,
+    widgetVisible = true,
+    ctxVisible = true,
+    handleVisible = true
+  ) => {
+    switch (model.behavior) {
+      case Behavior.HANDLE:
+        if (renderingType === RenderingTypes.PICKING_BUFFER) {
+          model.actor.getProperty().setOpacity(1);
+        } else {
+          model.actor.getProperty().setOpacity(model.opacity);
+        }
+        break;
+      case Behavior.CONTEXT:
+      default:
+        model.actor.getProperty().setOpacity(model.opacity);
+        break;
+    }
+    superUpdateActorVisibility(
+      renderingType,
+      widgetVisible,
+      ctxVisible,
+      handleVisible
+    );
   };
 }
 
@@ -97,6 +127,7 @@ function vtkConvexFaceContextRepresentation(publicAPI, model) {
 
 const DEFAULT_VALUES = {
   defaultColor: [1, 0, 0.5],
+  opacity: 0.2,
 };
 
 // ----------------------------------------------------------------------------
@@ -107,6 +138,7 @@ export function extend(publicAPI, model, initialValues = {}) {
   vtkContextRepresentation.extend(publicAPI, model, initialValues);
   macro.setGetArray(publicAPI, model, ['defaultColor'], 3);
   macro.get(publicAPI, model, ['mapper', 'actor']);
+  macro.setGet(publicAPI, model, ['opacity']);
 
   // Object specific methods
   vtkConvexFaceContextRepresentation(publicAPI, model);
