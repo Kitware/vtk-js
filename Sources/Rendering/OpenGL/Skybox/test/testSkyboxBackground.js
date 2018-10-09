@@ -59,13 +59,13 @@ test.onlyIfWebGL('Test vtkOpenGLSkybox Background Rendering', (t) => {
   }
 
   // function to load texture
-  function loadTexture(texturePath, textureImage, endCallBack) {
+  function loadTexture(texturePath, endCallBack) {
     const reader = gc.registerResource(
       vtkHttpDataSetReader.newInstance({ fetchGzip: true })
     );
     reader.setUrl(texturePath).then(() => {
       reader.loadData().then(() => {
-        textureImage = reader.getOutputData();
+        const textureImage = reader.getOutputData();
         if (endCallBack) {
           // check if endcallback exists
           endCallBack(textureImage);
@@ -77,6 +77,5 @@ test.onlyIfWebGL('Test vtkOpenGLSkybox Background Rendering', (t) => {
   const path = `${__BASE_PATH__}/Data/skybox/mountains/right.jpg`;
 
   // It will contains all vtkImageData which will textured the cube
-  const texture = null;
-  loadTexture(path, texture, callBackfunction);
+  loadTexture(path, callBackfunction);
 });
