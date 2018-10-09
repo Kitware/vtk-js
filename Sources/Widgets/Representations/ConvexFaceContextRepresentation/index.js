@@ -79,8 +79,8 @@ function vtkConvexFaceContextRepresentation(publicAPI, model) {
     const list = publicAPI.getRepresentationStates(state);
 
     // Update state orientation based on face
-    if (state.updateFromOriginRighUp) {
-      state.updateFromOriginRighUp(
+    if (state.updateFromOriginRightUp) {
+      state.updateFromOriginRightUp(
         list[0].getOrigin(),
         list[list.length - 1].getOrigin(),
         list[1].getOrigin()

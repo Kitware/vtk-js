@@ -40,7 +40,7 @@ function vtkOrientationMixin(publicAPI, model) {
     publicAPI.modified();
   };
 
-  publicAPI.updateFromOriginRighUp = (o, p1, p2) => {
+  publicAPI.updateFromOriginRightUp = (o, p1, p2) => {
     if (isSame(o, p1, p2, previousPoints)) {
       return;
     }
