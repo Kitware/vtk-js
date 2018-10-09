@@ -229,7 +229,7 @@ function vtkMapper(publicAPI, model) {
     if (lut) {
       // Ensure that the lookup table is built
       lut.build();
-      model.colorMapColors = lut.mapScalars(scalars, model.colorMode, 0);
+      model.colorMapColors = lut.mapScalars(scalars, model.colorMode, -1);
     }
   };
 
