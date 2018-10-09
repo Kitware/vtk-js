@@ -200,6 +200,8 @@ function vtkOrientationMarkerWidget(publicAPI, model) {
     model.actor = actor;
     publicAPI.setEnabled(previousState);
   };
+
+  publicAPI.getRenderer = () => selfRenderer;
 }
 
 // ----------------------------------------------------------------------------

@@ -7,16 +7,22 @@ import { Behavior } from 'vtk.js/Sources/Widgets/Representations/WidgetRepresent
 
 function vtkContextRepresentation(publicAPI, model) {
   model.classHierarchy.push('vtkContextRepresentation');
-  model.behavior = Behavior.CONTEXT;
-  model.pickable = false;
 }
 
 // ----------------------------------------------------------------------------
 // Object factory
 // ----------------------------------------------------------------------------
 
+const DEFAULT_VALUES = {
+  behavior: Behavior.CONTEXT,
+  pickable: false,
+};
+
+// ----------------------------------------------------------------------------
+
 export function extend(publicAPI, model, initialValues = {}) {
-  vtkWidgetRepresentation.extend(publicAPI, model, initialValues);
+  const newDefault = Object.assign({}, DEFAULT_VALUES, initialValues);
+  vtkWidgetRepresentation.extend(publicAPI, model, newDefault);
   vtkContextRepresentation(publicAPI, model);
 }
 
