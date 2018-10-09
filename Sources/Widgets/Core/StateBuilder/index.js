@@ -6,6 +6,7 @@ import bounds from 'vtk.js/Sources/Widgets/Core/StateBuilder/boundsMixin';
 import color from 'vtk.js/Sources/Widgets/Core/StateBuilder/colorMixin';
 import direction from 'vtk.js/Sources/Widgets/Core/StateBuilder/directionMixin';
 import manipulator from 'vtk.js/Sources/Widgets/Core/StateBuilder/manipulatorMixin';
+import name from 'vtk.js/Sources/Widgets/Core/StateBuilder/nameMixin';
 import orientation from 'vtk.js/Sources/Widgets/Core/StateBuilder/orientationMixin';
 import origin from 'vtk.js/Sources/Widgets/Core/StateBuilder/originMixin';
 import scale1 from 'vtk.js/Sources/Widgets/Core/StateBuilder/scale1Mixin';
@@ -23,6 +24,7 @@ const MIXINS = {
   color,
   direction,
   manipulator,
+  name,
   orientation,
   origin,
   scale1,
@@ -68,6 +70,7 @@ class Builder {
     bounds.extend(this.publicAPI, this.model);
   }
 
+  /* eslint-disable no-shadow */
   addDynamicMixinState({ labels, mixins, name, initialValues }) {
     const listName = `${name}List`;
     this.model[listName] = [];
