@@ -285,10 +285,11 @@ function processFieldData(
       }
     });
 
-    const arrays = fieldElem.children;
-    const nbArrays = arrays.length;
+    const dataArrayElems = fieldElem.getElementsByTagName('DataArray');
+
+    const nbArrays = dataArrayElems.length;
     for (let idx = 0; idx < nbArrays; idx++) {
-      const array = arrays[idx];
+      const array = dataArrayElems[idx];
       const dataArray = vtkDataArray.newInstance(
         processDataArray(
           size,
