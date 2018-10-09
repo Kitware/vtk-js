@@ -500,8 +500,8 @@ function vtkCamera(publicAPI, model) {
     // this->ProjectionTransform->AdjustZBuffer( -1, +1, nearz, farz );
     const cWidth = model.clippingRange[1] - model.clippingRange[0];
     const cRange = [
-      model.clippingRange[0] + (nearz + 1) * cWidth / 2.0,
-      model.clippingRange[0] + (farz + 1) * cWidth / 2.0,
+      model.clippingRange[0] + ((nearz + 1) * cWidth) / 2.0,
+      model.clippingRange[0] + ((farz + 1) * cWidth) / 2.0,
     ];
 
     if (model.parallelProjection) {
@@ -532,7 +532,7 @@ function vtkCamera(publicAPI, model) {
       let height;
       if (model.useHorizontalViewAngle === true) {
         width = model.clippingRange[0] * tmp;
-        height = model.clippingRange[0] * tmp / aspect;
+        height = (model.clippingRange[0] * tmp) / aspect;
       } else {
         width = model.clippingRange[0] * tmp * aspect;
         height = model.clippingRange[0] * tmp;
@@ -545,13 +545,13 @@ function vtkCamera(publicAPI, model) {
       const znear = cRange[0];
       const zfar = cRange[1];
 
-      projectionMatrix[0] = 2.0 * znear / (xmax - xmin);
-      projectionMatrix[5] = 2.0 * znear / (ymax - ymin);
+      projectionMatrix[0] = (2.0 * znear) / (xmax - xmin);
+      projectionMatrix[5] = (2.0 * znear) / (ymax - ymin);
       projectionMatrix[2] = (xmin + xmax) / (xmax - xmin);
       projectionMatrix[6] = (ymin + ymax) / (ymax - ymin);
       projectionMatrix[10] = -(znear + zfar) / (zfar - znear);
       projectionMatrix[14] = -1.0;
-      projectionMatrix[11] = -2.0 * znear * zfar / (zfar - znear);
+      projectionMatrix[11] = (-2.0 * znear * zfar) / (zfar - znear);
       projectionMatrix[15] = 0.0;
     }
 

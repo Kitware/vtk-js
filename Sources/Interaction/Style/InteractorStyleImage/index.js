@@ -127,14 +127,14 @@ function vtkInteractorStyleImage(publicAPI, model) {
 
       // Compute normalized delta
       let dx =
-        (model.windowLevelCurrentPosition[0] -
+        ((model.windowLevelCurrentPosition[0] -
           model.windowLevelStartPosition[0]) *
-        4.0 /
+          4.0) /
         size[0];
       let dy =
-        (model.windowLevelStartPosition[1] -
+        ((model.windowLevelStartPosition[1] -
           model.windowLevelCurrentPosition[1]) *
-        4.0 /
+          4.0) /
         size[1];
 
       // Scale by current values
@@ -190,7 +190,7 @@ function vtkInteractorStyleImage(publicAPI, model) {
     }
 
     const size = rwi.getView().getViewportSize(renderer);
-    const delta = dy * viewportHeight / size[1];
+    const delta = (dy * viewportHeight) / size[1];
     distance += delta;
 
     // clamp the distance to the clipping range

@@ -88,8 +88,7 @@ function vtkOpenGLRenderer(publicAPI, model) {
     const size = model.parent.getSizeByReference();
     const viewport = model.renderable.getViewportByReference();
     return (
-      size[0] *
-      (viewport[2] - viewport[0]) /
+      (size[0] * (viewport[2] - viewport[0])) /
       ((viewport[3] - viewport[1]) * size[1])
     );
   };

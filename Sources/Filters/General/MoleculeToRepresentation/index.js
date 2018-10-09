@@ -232,7 +232,7 @@ function vtkMoleculeToRepresentation(publicAPI, model) {
       );
       const t = (bondOrder[index] - 1) * bondDelta + 2 * model.bondRadius;
       if (t > 2 * r * 0.6) {
-        model.bondRadius *= 2 * r * 0.6 / t;
+        model.bondRadius *= (2 * r * 0.6) / t;
         // recompute bondDelta
         bondDelta = (2 + model.deltaBondFactor) * model.bondRadius; // distance between 2 bonds
       }
@@ -251,7 +251,7 @@ function vtkMoleculeToRepresentation(publicAPI, model) {
       const oddOrEven = bondOrder[index] % 2; // zero if even order / one if odd order
       for (let k = oddOrEven; k < bondOrder[index] + oddOrEven; k++) {
         // dist from center to bond depending of number of bond
-        let offset = (Math.floor(k / 2) * 2 + 1 - oddOrEven) * bondDelta / 2;
+        let offset = ((Math.floor(k / 2) * 2 + 1 - oddOrEven) * bondDelta) / 2;
 
         const vectUnitJI = [
           diff[0] / Math.sqrt(diffsq),
@@ -293,13 +293,13 @@ function vtkMoleculeToRepresentation(publicAPI, model) {
 
           bondPos = [
             pointsArray[jPtsIdx] -
-              bondLength * vectUnitJI[0] / 2.0 +
+              (bondLength * vectUnitJI[0]) / 2.0 +
               offset * vectUnitJIperp[0],
             pointsArray[jPtsIdx + 1] -
-              bondLength * vectUnitJI[1] / 2.0 +
+              (bondLength * vectUnitJI[1]) / 2.0 +
               offset * vectUnitJIperp[1],
             pointsArray[jPtsIdx + 2] -
-              bondLength * vectUnitJI[2] / 2.0 +
+              (bondLength * vectUnitJI[2]) / 2.0 +
               offset * vectUnitJIperp[2],
           ];
 
@@ -312,13 +312,13 @@ function vtkMoleculeToRepresentation(publicAPI, model) {
 
           bondPos = [
             pointsArray[iPtsIdx] +
-              bondLength * vectUnitJI[0] / 2.0 +
+              (bondLength * vectUnitJI[0]) / 2.0 +
               offset * vectUnitJIperp[0],
             pointsArray[iPtsIdx + 1] +
-              bondLength * vectUnitJI[1] / 2.0 +
+              (bondLength * vectUnitJI[1]) / 2.0 +
               offset * vectUnitJIperp[1],
             pointsArray[iPtsIdx + 2] +
-              bondLength * vectUnitJI[2] / 2.0 +
+              (bondLength * vectUnitJI[2]) / 2.0 +
               offset * vectUnitJIperp[2],
           ];
           addBond(

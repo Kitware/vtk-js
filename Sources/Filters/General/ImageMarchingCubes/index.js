@@ -85,7 +85,7 @@ function vtkImageMarchingCubes(publicAPI, model) {
     } else {
       sp = s[i + 1 + j * dims[0] + k * slice];
       sm = s[i - 1 + j * dims[0] + k * slice];
-      g[0] = 0.5 * (sm - sp) / spacing[0];
+      g[0] = (0.5 * (sm - sp)) / spacing[0];
     }
 
     // y-direction
@@ -100,7 +100,7 @@ function vtkImageMarchingCubes(publicAPI, model) {
     } else {
       sp = s[i + (j + 1) * dims[0] + k * slice];
       sm = s[i + (j - 1) * dims[0] + k * slice];
-      g[1] = 0.5 * (sm - sp) / spacing[1];
+      g[1] = (0.5 * (sm - sp)) / spacing[1];
     }
 
     // z-direction
@@ -115,7 +115,7 @@ function vtkImageMarchingCubes(publicAPI, model) {
     } else {
       sp = s[i + j * dims[0] + (k + 1) * slice];
       sm = s[i + j * dims[0] + (k - 1) * slice];
-      g[2] = 0.5 * (sm - sp) / spacing[2];
+      g[2] = (0.5 * (sm - sp)) / spacing[2];
     }
   };
 

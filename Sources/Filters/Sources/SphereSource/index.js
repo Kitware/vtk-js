@@ -134,7 +134,7 @@ function vtkSphereSource(publicAPI, model) {
       for (let i = 0; i < thetaResolution; i++) {
         polys[cellLocation++] = 3;
         polys[cellLocation++] = phiResolution * i + numPoles;
-        polys[cellLocation++] = (phiResolution * (i + 1)) % base + numPoles;
+        polys[cellLocation++] = ((phiResolution * (i + 1)) % base) + numPoles;
         polys[cellLocation++] = 0;
       }
     }
@@ -147,7 +147,7 @@ function vtkSphereSource(publicAPI, model) {
         polys[cellLocation++] = 3;
         polys[cellLocation++] = phiResolution * i + numOffset;
         polys[cellLocation++] = numPoles - 1;
-        polys[cellLocation++] = (phiResolution * (i + 1)) % base + numOffset;
+        polys[cellLocation++] = ((phiResolution * (i + 1)) % base) + numOffset;
       }
     }
 
@@ -156,7 +156,7 @@ function vtkSphereSource(publicAPI, model) {
       for (let j = 0; j < phiResolution - 1; j++) {
         const a = phiResolution * i + j + numPoles;
         const b = a + 1;
-        const c = (phiResolution * (i + 1) + j) % base + numPoles + 1;
+        const c = ((phiResolution * (i + 1) + j) % base) + numPoles + 1;
 
         if (!model.latLongTessellation) {
           polys[cellLocation++] = 3;

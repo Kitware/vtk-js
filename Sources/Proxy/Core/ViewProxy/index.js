@@ -397,7 +397,7 @@ function vtkViewProxy(publicAPI, model) {
               viewUp[2] + (i + 1) * deltaViewUp[2],
             ];
             newViewUp[axisCorrectionIndex] = Math.sin(
-              Math.PI * i / (animateSteps - 1)
+              (Math.PI * i) / (animateSteps - 1)
             );
             animationStack.push({
               position: destPosition,

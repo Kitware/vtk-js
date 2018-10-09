@@ -274,7 +274,7 @@ function vtkGlyph3DMapper(publicAPI, model) {
         .getNumberOfValues() / 3;
 
     const pcount = {
-      points: mult * glyph.getPoints().getNumberOfValues() / 3,
+      points: (mult * glyph.getPoints().getNumberOfValues()) / 3,
       verts:
         mult *
         (glyph.getVerts().getNumberOfValues() -

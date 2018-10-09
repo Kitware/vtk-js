@@ -36,7 +36,7 @@ function vtkMouseCameraSliceManipulator(publicAPI, model) {
     }
 
     const size = interactor.getView().getViewportSize(renderer);
-    const delta = dy * viewportHeight / size[1];
+    const delta = (dy * viewportHeight) / size[1];
     distance += delta;
 
     // clamp the distance to the clipping range

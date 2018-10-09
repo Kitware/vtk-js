@@ -105,10 +105,13 @@ function vtkDataSetAttributes(publicAPI, model) {
       model[`active${attType}`] = arrayIdx;
       publicAPI.modified();
       return arrayIdx;
-    } else if (arrayIdx === -1) {
+    }
+
+    if (arrayIdx === -1) {
       model[`active${attType}`] = arrayIdx;
       publicAPI.modified();
     }
+
     return -1;
   };
 

@@ -259,11 +259,11 @@ function vtkConcentricCylinderSource(publicAPI, model) {
       ) {
         for (let i = 0; i < model.resolution; i++) {
           polys[cellLocation++] = 4;
-          polys[cellLocation++] = (i + 1) % thetaResolution + 2;
+          polys[cellLocation++] = ((i + 1) % thetaResolution) + 2;
           polys[cellLocation++] = i + 2;
           polys[cellLocation++] = i + thetaResolution + 2;
           polys[cellLocation++] =
-            (i + 1) % thetaResolution + thetaResolution + 2;
+            ((i + 1) % thetaResolution) + thetaResolution + 2;
 
           field[fieldLocation++] = currentField;
         }
@@ -306,8 +306,8 @@ function vtkConcentricCylinderSource(publicAPI, model) {
       for (let i = 0; i < model.resolution; i++) {
         polys[cellLocation++] = 4;
         polys[cellLocation++] = i + offset;
-        polys[cellLocation++] = (i + 1) % thetaResolution + offset;
-        polys[cellLocation++] = (i + 1) % thetaResolution + a;
+        polys[cellLocation++] = ((i + 1) % thetaResolution) + offset;
+        polys[cellLocation++] = ((i + 1) % thetaResolution) + a;
         polys[cellLocation++] = i + a;
 
         field[fieldLocation++] = currentField;
@@ -317,10 +317,11 @@ function vtkConcentricCylinderSource(publicAPI, model) {
       for (let i = 0; i < model.resolution; i++) {
         polys[cellLocation++] = 4;
         polys[cellLocation++] =
-          (i + 1) % thetaResolution + offset + thetaResolution;
+          ((i + 1) % thetaResolution) + offset + thetaResolution;
         polys[cellLocation++] = i + offset + thetaResolution;
         polys[cellLocation++] = i + a + thetaResolution;
-        polys[cellLocation++] = (i + 1) % thetaResolution + a + thetaResolution;
+        polys[cellLocation++] =
+          ((i + 1) % thetaResolution) + a + thetaResolution;
 
         field[fieldLocation++] = currentField;
       }
@@ -330,9 +331,9 @@ function vtkConcentricCylinderSource(publicAPI, model) {
         for (let i = 0; i < model.resolution; i++) {
           polys[cellLocation++] = 4;
           polys[cellLocation++] = i + offset;
-          polys[cellLocation++] = (i + 1) % thetaResolution + offset;
+          polys[cellLocation++] = ((i + 1) % thetaResolution) + offset;
           polys[cellLocation++] =
-            (i + 1) % thetaResolution + thetaResolution + offset;
+            ((i + 1) % thetaResolution) + thetaResolution + offset;
           polys[cellLocation++] = i + thetaResolution + offset;
 
           field[fieldLocation++] = currentField;
@@ -347,11 +348,11 @@ function vtkConcentricCylinderSource(publicAPI, model) {
       ) {
         for (let i = 0; i < model.resolution; i++) {
           polys[cellLocation++] = 4;
-          polys[cellLocation++] = (i + 1) % thetaResolution + a;
+          polys[cellLocation++] = ((i + 1) % thetaResolution) + a;
           polys[cellLocation++] = i + a;
           polys[cellLocation++] = i + thetaResolution + a;
           polys[cellLocation++] =
-            (i + 1) % thetaResolution + thetaResolution + a;
+            ((i + 1) % thetaResolution) + thetaResolution + a;
 
           field[fieldLocation++] = currentField;
         }

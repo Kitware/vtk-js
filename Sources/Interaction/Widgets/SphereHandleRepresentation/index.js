@@ -106,9 +106,12 @@ function vtkSphereHandleRepresentation(publicAPI, model) {
     // Look for trivial cases
     if (!model.constrained) {
       return -1;
-    } else if (constraint >= 0 && constraint < 3) {
+    }
+
+    if (constraint >= 0 && constraint < 3) {
       return constraint;
     }
+
     // Okay, figure out constraint. First see if the choice is
     // outside the hot spot
     if (!model.waitingForMotion) {
@@ -125,7 +128,9 @@ function vtkSphereHandleRepresentation(publicAPI, model) {
       model.waitingForMotion = 1;
       model.waitCount = 0;
       return -1;
-    } else if (model.waitingForMotion && x) {
+    }
+
+    if (model.waitingForMotion && x) {
       model.waitingForMotion = 0;
       const v = [];
       v[0] = Math.abs(x[0] - model.startEventPosition[0]);

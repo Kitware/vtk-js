@@ -25,7 +25,9 @@ function clipLineWithPlane(mapper, matrix, p1, p2) {
     // If both distances are negative, both points are outside
     if (d1 < 0 && d2 < 0) {
       return 0;
-    } else if (d1 < 0 || d2 < 0) {
+    }
+
+    if (d1 < 0 || d2 < 0) {
       // If only one of the distances is negative, the line crosses the plane
       // Compute fractional distance "t" of the crossing between p1 & p2
       let t = 0.0;

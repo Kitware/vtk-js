@@ -50,7 +50,7 @@
     "karma-tap-pretty-reporter": "3.0.5",
     "karma-webpack": "2.0.4",
     "kw-doc": "1.2.0",
-    "kw-web-suite": "6.1.0",
+    "kw-web-suite": "7.0.2",
     "resemblejs": "2.2.6",
     "tap-markdown": "1.2.1",
     "tap-spec": "4.1.1",
@@ -78,7 +78,7 @@
   },
   "config": {
     "commitizen": {
-      "path": "node_modules/cz-conventional-changelog"
+      "path": "cz-conventional-changelog"
     }
   },
   "size-limit": [

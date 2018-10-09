@@ -47,8 +47,7 @@ function vtkColorTransferFunctionAdjustHue(msh, unsatM) {
   // This equation is designed to make the perceptual change of the
   // interpolation to be close to constant.
   const hueSpin =
-    msh[1] *
-    Math.sqrt(unsatM * unsatM - msh[0] * msh[0]) /
+    (msh[1] * Math.sqrt(unsatM * unsatM - msh[0] * msh[0])) /
     (msh[0] * Math.sin(msh[1]));
   // Spin hue away from 0 except in purple hues.
   if (msh[2] > -0.3 * Math.PI) {
@@ -482,10 +481,10 @@ function vtkColorTransferFunction(publicAPI, model) {
       // be the same in this case)
       if (size > 1) {
         if (usingLogScale) {
-          logX = logStart + i / (size - 1.0) * (logEnd - logStart);
+          logX = logStart + (i / (size - 1.0)) * (logEnd - logStart);
           x = 10.0 ** logX;
         } else {
-          x = xStart + i / (size - 1.0) * (xEnd - xStart);
+          x = xStart + (i / (size - 1.0)) * (xEnd - xStart);
         }
       } else if (usingLogScale) {
         logX = 0.5 * (logStart + logEnd);
@@ -593,9 +592,9 @@ function vtkColorTransferFunction(publicAPI, model) {
 
         // Readjust based on the midpoint - linear adjustment
         if (s < midpoint) {
-          s = 0.5 * s / midpoint;
+          s = (0.5 * s) / midpoint;
         } else {
-          s = 0.5 + 0.5 * (s - midpoint) / (1.0 - midpoint);
+          s = 0.5 + (0.5 * (s - midpoint)) / (1.0 - midpoint);
         }
 
         // override for sharpness > 0.99

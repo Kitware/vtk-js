@@ -156,7 +156,7 @@ function vtkImageStreamline(publicAPI, model) {
     }
     // Now find the mid point
     for (let i = 0; i < 3; i++) {
-      xtmp[i] = xyz[i] + delT / 2.0 * velAt[i];
+      xtmp[i] = xyz[i] + (delT / 2.0) * velAt[i];
     }
     // Use the velocity @ that point to project
     if (!publicAPI.vectorAt(xtmp, velArray, image, velAt)) {

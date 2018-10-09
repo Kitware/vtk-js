@@ -17,7 +17,7 @@ function vtkConeSource(publicAPI, model) {
 
     let dataset = outData[0];
 
-    const angle = 2 * Math.PI / model.resolution;
+    const angle = (2 * Math.PI) / model.resolution;
     const xbot = -model.height / 2.0;
     const numberOfPoints = model.resolution + 1;
     const cellArraySize = 4 * model.resolution + 1 + model.resolution;

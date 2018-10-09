@@ -1,4 +1,3 @@
-const webpack = require('webpack');
 const path = require('path');
 
 const entry = path.join(__dirname, './Sources/index.js');
@@ -19,10 +18,7 @@ module.exports = {
     rules: [].concat(linterRules, vtkRules),
   },
   resolve: {
-    modules: [
-      path.resolve(__dirname, 'node_modules'),
-      sourcePath,
-    ],
+    modules: [path.resolve(__dirname, 'node_modules'), sourcePath],
     alias: {
       'vtk.js': __dirname,
     },

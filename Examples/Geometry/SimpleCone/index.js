@@ -7,6 +7,7 @@ import vtkOpenGLRenderWindow from 'vtk.js/Sources/Rendering/OpenGL/RenderWindow'
 import vtkRenderWindow from 'vtk.js/Sources/Rendering/Core/RenderWindow';
 import vtkRenderWindowInteractor from 'vtk.js/Sources/Rendering/Core/RenderWindowInteractor';
 import vtkRenderer from 'vtk.js/Sources/Rendering/Core/Renderer';
+import vtkInteractorStyleTrackballCamera from 'vtk.js/Sources/Interaction/Style/InteractorStyleTrackballCamera';
 
 // ----------------------------------------------------------------------------
 // Standard rendering code setup
@@ -51,6 +52,13 @@ document.querySelector('body').appendChild(container);
 openglRenderWindow.setContainer(container);
 
 // ----------------------------------------------------------------------------
+// Capture size of the container and set it to the renderWindow
+// ----------------------------------------------------------------------------
+
+const { width, height } = container.getBoundingClientRect();
+openglRenderWindow.setSize(width, height);
+
+// ----------------------------------------------------------------------------
 // Setup an interactor to handle mouse events
 // ----------------------------------------------------------------------------
 
@@ -58,3 +66,9 @@ const interactor = vtkRenderWindowInteractor.newInstance();
 interactor.setView(openglRenderWindow);
 interactor.initialize();
 interactor.bindEvents(container);
+
+// ----------------------------------------------------------------------------
+// Setup interactor style to use
+// ----------------------------------------------------------------------------
+
+interactor.setInteractorStyle(vtkInteractorStyleTrackballCamera.newInstance());

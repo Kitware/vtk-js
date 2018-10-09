@@ -43,9 +43,9 @@ function projectVector(v, normal, vproj) {
     n2 = 1.0;
   }
 
-  vproj[0] = v[0] - t * normal[0] / n2;
-  vproj[1] = v[1] - t * normal[1] / n2;
-  vproj[2] = v[2] - t * normal[2] / n2;
+  vproj[0] = v[0] - (t * normal[0]) / n2;
+  vproj[1] = v[1] - (t * normal[1]) / n2;
+  vproj[2] = v[2] - (t * normal[2]) / n2;
 }
 
 function generalizedProjectPoint(x, origin, normal, xproj) {
@@ -56,9 +56,9 @@ function generalizedProjectPoint(x, origin, normal, xproj) {
   const n2 = vtkMath.dot(normal, normal);
 
   if (n2 !== 0) {
-    xproj[0] = x[0] - t * normal[0] / n2;
-    xproj[1] = x[1] - t * normal[1] / n2;
-    xproj[2] = x[2] - t * normal[2] / n2;
+    xproj[0] = x[0] - (t * normal[0]) / n2;
+    xproj[1] = x[1] - (t * normal[1]) / n2;
+    xproj[2] = x[2] - (t * normal[2]) / n2;
   } else {
     xproj[0] = x[0];
     xproj[1] = x[1];

@@ -61,7 +61,7 @@ const [min, max] = sample
   .getScalars()
   .getRange();
 for (let i = 0; i < 20; ++i) {
-  cValues[i] = min + i / 19 * (max - min);
+  cValues[i] = min + (i / 19) * (max - min);
 }
 mSquares.setContourValues(cValues);
 

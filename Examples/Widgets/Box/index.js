@@ -51,12 +51,12 @@ function widgetRegistration(e) {
       if (coords) {
         const [w, h] = openGLRenderWindow.getSize();
         overlay.style.left = `${Math.round(
-          coords[0][0] / w * window.innerWidth -
+          (coords[0][0] / w) * window.innerWidth -
             overlaySize * 0.5 -
             overlayBorder
         )}px`;
         overlay.style.top = `${Math.round(
-          (h - coords[0][1]) / h * window.innerHeight -
+          ((h - coords[0][1]) / h) * window.innerHeight -
             overlaySize * 0.5 -
             overlayBorder
         )}px`;
