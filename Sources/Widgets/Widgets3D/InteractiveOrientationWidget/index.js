@@ -3,7 +3,10 @@ import vtkAbstractWidgetFactory from 'vtk.js/Sources/Widgets/Core/AbstractWidget
 import vtkConvexFaceContextRepresentation from 'vtk.js/Sources/Widgets/Representations/ConvexFaceContextRepresentation';
 
 import widgetBehavior from 'vtk.js/Sources/Widgets/Widgets3D/InteractiveOrientationWidget/behavior';
-import stateGenerator from 'vtk.js/Sources/Widgets/Widgets3D/InteractiveOrientationWidget/state';
+import {
+  INITIAL_POINTS,
+  generateState,
+} from 'vtk.js/Sources/Widgets/Widgets3D/InteractiveOrientationWidget/state';
 
 import { Behavior } from 'vtk.js/Sources/Widgets/Representations/WidgetRepresentation/Constants';
 import { ViewTypes } from 'vtk.js/Sources/Widgets/Core/WidgetManager/Constants';
@@ -26,7 +29,18 @@ function vtkInteractiveOrientationWidget(publicAPI, model) {
     'defaultScale',
   ];
   model.behavior = widgetBehavior;
-  model.widgetState = stateGenerator();
+  model.widgetState = generateState();
+
+  publicAPI.setBounds = (bounds) => {
+    const handles = model.widgetState.getStatesWithLabel('handles');
+    for (let i = 0; i < handles.length; i++) {
+      const xyz = INITIAL_POINTS[i];
+      const x = xyz[0] > 0 ? bounds[1] : bounds[0];
+      const y = xyz[1] > 0 ? bounds[3] : bounds[2];
+      const z = xyz[2] > 0 ? bounds[5] : bounds[4];
+      handles[i].setOrigin(x, y, z);
+    }
+  };
 
   publicAPI.getRepresentationsForViewType = (viewType) => {
     switch (viewType) {
@@ -45,6 +59,7 @@ function vtkInteractiveOrientationWidget(publicAPI, model) {
               activeScaleFactor: 1.2,
               activeColor: 1,
               useActiveColor: true,
+              name: 'Face 1',
             },
           },
           {
@@ -56,6 +71,7 @@ function vtkInteractiveOrientationWidget(publicAPI, model) {
               activeScaleFactor: 1.2,
               activeColor: 1,
               useActiveColor: true,
+              name: 'Face 2',
             },
           },
           {
@@ -67,6 +83,7 @@ function vtkInteractiveOrientationWidget(publicAPI, model) {
               activeScaleFactor: 1.2,
               activeColor: 1,
               useActiveColor: true,
+              name: 'Face 3',
             },
           },
           {
@@ -78,28 +95,31 @@ function vtkInteractiveOrientationWidget(publicAPI, model) {
               activeScaleFactor: 1.2,
               activeColor: 1,
               useActiveColor: true,
+              name: 'Face 4',
             },
           },
           {
             builder: vtkConvexFaceContextRepresentation,
-            labels: ['--+', '+-+', '+++', '-++'],
+            labels: ['-++', '--+', '+-+', '+++'],
             initialValues: {
               behavior: Behavior.HANDLE,
               pickable: true,
               activeScaleFactor: 1.2,
               activeColor: 1,
               useActiveColor: true,
+              name: 'Face 5',
             },
           },
           {
             builder: vtkConvexFaceContextRepresentation,
-            labels: ['---', '+--', '++-', '-+-'],
+            labels: ['-+-', '++-', '+--', '---'],
             initialValues: {
               behavior: Behavior.HANDLE,
               pickable: true,
               activeScaleFactor: 1.2,
               activeColor: 1,
               useActiveColor: true,
+              name: 'Face 6',
             },
           },
         ];

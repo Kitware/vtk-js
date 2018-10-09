@@ -2,6 +2,7 @@ import macro from 'vtk.js/Sources/macro';
 
 export default function widgetBehavior(publicAPI, model) {
   model.classHierarchy.push('vtkInteractiveOrientationWidgetProp');
+  macro.event(publicAPI, model, 'OrientationChange');
 
   // --------------------------------------------------------------------------
   // Right click: Delete handle
@@ -15,12 +16,12 @@ export default function widgetBehavior(publicAPI, model) {
     ) {
       return macro.VOID;
     }
-
-    console.log('right click');
-
-    publicAPI.invokeStartInteractionEvent();
-    publicAPI.invokeInteractionEvent();
-    publicAPI.invokeEndInteractionEvent();
+    publicAPI.invokeOrientationChange(
+      Object.assign(
+        { action: 'rightPress', event: e },
+        model.activeState.get('up', 'right', 'direction')
+      )
+    );
     return macro.EVENT_ABORT;
   };
 
@@ -36,33 +37,12 @@ export default function widgetBehavior(publicAPI, model) {
     ) {
       return macro.VOID;
     }
-
-    console.log(model.activeState.get());
-
-    console.log('left button press');
-
+    publicAPI.invokeOrientationChange(
+      Object.assign(
+        { action: 'leftPress', event: e },
+        model.activeState.get('up', 'right', 'direction')
+      )
+    );
     return macro.EVENT_ABORT;
-  };
-
-  // --------------------------------------------------------------------------
-  // Left release: Finish drag / Create new handle
-  // --------------------------------------------------------------------------
-
-  publicAPI.handleLeftButtonRelease = () => {
-    console.log('left button release');
-    model.widgetState.deactivate();
-    if (model.pickable) {
-      model.interactor.cancelAnimation(publicAPI);
-      publicAPI.invokeEndInteractionEvent();
-    }
-  };
-
-  publicAPI.handleRightButtonRelease = () => {
-    console.log('right button release');
-    model.widgetState.deactivate();
-    if (model.pickable) {
-      model.interactor.cancelAnimation(publicAPI);
-      publicAPI.invokeEndInteractionEvent();
-    }
   };
 }
