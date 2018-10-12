@@ -1,6 +1,5 @@
 import vtkDataArray from 'vtk.js/Sources/Common/Core/DataArray';
 import vtkPolyData from 'vtk.js/Sources/Common/DataModel/PolyData';
-import { min } from 'gl-matrix/src/gl-matrix/vec4';
 
 const METHOD_MAPPING = {
   POINTS: 'getPoints',
