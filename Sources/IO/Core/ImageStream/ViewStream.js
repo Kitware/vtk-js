@@ -146,7 +146,9 @@ function vtkViewStream(publicAPI, model) {
     if (model.viewId === id || !model.protocol) {
       return false;
     }
-    model.protocol.unregisterView(model.viewId);
+    if (model.viewId) {
+      model.protocol.unregisterView(model.viewId);
+    }
     model.viewId = id;
     if (model.viewId) {
       model.protocol.registerView(model.viewId).then(({ viewId }) => {
@@ -234,7 +236,7 @@ const DEFAULT_VALUES = {
   stillQuality: 100,
   interactiveQuality: 80,
   mimeType: 'image/jpeg',
-  viewId: -1,
+  viewId: null,
   size: [-1, -1],
   cameraUpdateRate: 30,
   isAnimating: false,
