@@ -257,7 +257,10 @@ function getParser(line, dataModel) {
 
 function parseLegacyASCII(content, dataModel = {}) {
   let parser = null;
-  content.split('\n').forEach((line, index) => {
+  const separatorRegExp = /\r?\n/;
+  const separatorRes = separatorRegExp.exec(content);
+  const separator = separatorRes !== null ? separatorRes[0] : null;
+  content.split(separator).forEach((line, index) => {
     if (index < 2) {
       return;
     }
