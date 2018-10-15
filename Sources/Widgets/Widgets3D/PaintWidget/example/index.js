@@ -300,6 +300,14 @@ document.querySelector('.axis').addEventListener('input', (ev) => {
   S.two.renderWindow.render();
 });
 
+document.querySelector('.undo').addEventListener('click', () => {
+  painter.undo();
+});
+
+document.querySelector('.redo').addEventListener('click', () => {
+  painter.redo();
+});
+
 // ----------------------------------------------------------------------------
 // Painting
 // ----------------------------------------------------------------------------
