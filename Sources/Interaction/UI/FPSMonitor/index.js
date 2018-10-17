@@ -264,7 +264,12 @@ export function extend(publicAPI, model, initialValues = {}) {
     'renderWindow',
     'addOnStats',
   ]);
-  macro.setGet(publicAPI, model, ['bufferSize']);
+  macro.setGet(publicAPI, model, [
+    'bufferSize',
+    'canvasVisibility',
+    'infoVisibility',
+    'titleVisibility',
+  ]);
 
   // Object specific methods
   vtkFPSMonitor(publicAPI, model);
