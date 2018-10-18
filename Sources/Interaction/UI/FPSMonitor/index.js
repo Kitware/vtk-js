@@ -44,26 +44,23 @@ function vtkFPSMonitor(publicAPI, model) {
   // Private methods
   // --------------------------------------------------------------------------
 
-  function addFrame() {
-    if (model.interactor) {
-      const nextFPS = 1 / model.interactor.getLastFrameTime();
-      model.buffer.push(nextFPS);
-      model.fpsSum += nextFPS;
-      while (model.buffer.length > model.bufferSize) {
-        model.fpsSum -= model.buffer.shift();
-      }
-      const newTxt = `Mean: ${Math.round(
-        model.fpsSum / model.buffer.length
-      )} - Current: ${Math.round(nextFPS)}`;
-      if (newTxt !== model.lastText) {
-        model.lastText = newTxt;
-        model.title.innerHTML = newTxt;
-      }
-      publicAPI.render();
+  function renderTitle() {
+    model.title.style.display = model.titleVisibility ? 'block' : 'none';
+    if (!model.titleVisibility) {
+      return;
+    }
+    const nextFPS = model.buffer[model.buffer.length - 1];
+    const newTxt = `Mean: ${Math.round(
+      model.fpsSum / model.buffer.length
+    )} - Current: ${Math.round(nextFPS)}`;
+    if (newTxt !== model.lastText) {
+      model.lastText = newTxt;
+      model.title.innerHTML = newTxt;
     }
   }
 
-  function updateInformations() {
+  function renderInfo() {
+    model.info.style.display = model.infoVisibility ? 'grid' : 'none';
     if (!model.infoVisibility) {
       return;
     }
@@ -101,17 +98,52 @@ function vtkFPSMonitor(publicAPI, model) {
     model.info.innerHTML = infoItems.join('');
   }
 
+  function renderCanvas() {
+    model.canvas.style.display = model.canvasVisibility ? 'block' : 'none';
+    if (!model.canvasVisibility) {
+      return;
+    }
+    // Although this is called frequently, setting an attribute to the same value is a no-op
+    model.canvas.setAttribute('width', model.bufferSize);
+    model.canvas.setAttribute('height', model.graphHeight);
+    const ctx = model.canvas.getContext('2d');
+    const { width, height } = model.canvas;
+    ctx.clearRect(0, 0, width, height);
+    // Current fps
+    ctx.strokeStyle = 'green';
+    ctx.beginPath();
+    ctx.moveTo(0, height - model.buffer[0]);
+    for (let i = 1; i < model.buffer.length; i++) {
+      ctx.lineTo(i, height - model.buffer[i]);
+    }
+    ctx.stroke();
+    // 60 fps ref
+    ctx.strokeStyle = 'black';
+    ctx.beginPath();
+    ctx.moveTo(0, height - 60);
+    ctx.lineTo(width, height - 60);
+    ctx.stroke();
+  }
+
+  function frameChanged() {
+    if (!model.interactor) {
+      return;
+    }
+    const nextFPS = 1 / model.interactor.getLastFrameTime();
+    model.buffer.push(nextFPS);
+    model.fpsSum += nextFPS;
+    while (model.buffer.length > model.bufferSize) {
+      model.fpsSum -= model.buffer.shift();
+    }
+    renderTitle();
+    renderCanvas();
+  }
+
   // --------------------------------------------------------------------------
+  // Public methods
   // --------------------------------------------------------------------------
 
   publicAPI.update = () => {
-    model.canvas.style.display = model.canvasVisibility ? 'block' : 'none';
-    model.title.style.display = model.titleVisibility ? 'block' : 'none';
-    model.info.style.display = model.infoVisibility ? 'grid' : 'none';
-    // Set width and height after visibility, to prevent unnecessary repaint when invisible
-    model.canvas.setAttribute('width', model.bufferSize);
-    model.canvas.setAttribute('height', model.graphHeight);
-    updateInformations();
     publicAPI.render();
   };
 
@@ -125,7 +157,7 @@ function vtkFPSMonitor(publicAPI, model) {
     model.interactor = rw ? rw.getInteractor() : null;
 
     if (model.interactor) {
-      model.subscriptions.push(model.interactor.onAnimation(addFrame));
+      model.subscriptions.push(model.interactor.onAnimation(frameChanged));
     }
   };
 
@@ -148,25 +180,9 @@ function vtkFPSMonitor(publicAPI, model) {
   // --------------------------------------------------------------------------
 
   publicAPI.render = () => {
-    if (model.canvasVisibility) {
-      const ctx = model.canvas.getContext('2d');
-      const { width, height } = model.canvas;
-      ctx.clearRect(0, 0, width, height);
-      // Current fps
-      ctx.strokeStyle = 'green';
-      ctx.beginPath();
-      ctx.moveTo(0, height - model.buffer[0]);
-      for (let i = 1; i < model.buffer.length; i++) {
-        ctx.lineTo(i, height - model.buffer[i]);
-      }
-      ctx.stroke();
-      // 60 fps ref
-      ctx.strokeStyle = 'black';
-      ctx.beginPath();
-      ctx.moveTo(0, height - 60);
-      ctx.lineTo(width, height - 60);
-      ctx.stroke();
-    }
+    renderTitle();
+    renderInfo();
+    renderCanvas();
   };
 
   // --------------------------------------------------------------------------
@@ -192,7 +208,6 @@ function vtkFPSMonitor(publicAPI, model) {
   // --------------------------------------------------------------------------
 
   publicAPI.setOrientation = (mode = 'horizontal') => {
-    console.log('setOrientation', mode);
     if (mode === 'horizontal') {
       publicAPI.setOrientationToHorizontal();
     } else {
@@ -200,12 +215,14 @@ function vtkFPSMonitor(publicAPI, model) {
     }
   };
 
+  // --------------------------------------------------------------------------
+
   publicAPI.setAddOnStats = (addOn) => {
     if (!model.addOnStats) {
       model.addOnStats = {};
     }
     Object.assign(model.addOnStats, addOn);
-    updateInformations();
+    renderInfo();
   };
 
   // --------------------------------------------------------------------------
@@ -221,6 +238,7 @@ function vtkFPSMonitor(publicAPI, model) {
   };
 
   // --------------------------------------------------------------------------
+
   const superDelete = publicAPI.delete;
   publicAPI.delete = () => {
     publicAPI.setRenderWindow(null);
@@ -229,6 +247,7 @@ function vtkFPSMonitor(publicAPI, model) {
   };
 
   // --------------------------------------------------------------------------
+
   model.subscriptions.push(publicAPI.onModified(publicAPI.update));
 }
 
