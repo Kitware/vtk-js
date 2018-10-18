@@ -59,9 +59,7 @@ function vtkFPSMonitor(publicAPI, model) {
         model.lastText = newTxt;
         model.title.innerHTML = newTxt;
       }
-      if (model.canvasVisibility) {
-        publicAPI.render();
-      }
+      publicAPI.render();
     }
   }
 
@@ -111,10 +109,8 @@ function vtkFPSMonitor(publicAPI, model) {
     model.title.style.display = model.titleVisibility ? 'block' : 'none';
     model.info.style.display = model.infoVisibility ? 'grid' : 'none';
     // Set width and height after visibility, to prevent unnecessary repaint when invisible
-    if (model.canvas) {
-      model.canvas.setAttribute('width', model.bufferSize);
-      model.canvas.setAttribute('height', model.graphHeight);
-    }
+    model.canvas.setAttribute('width', model.bufferSize);
+    model.canvas.setAttribute('height', model.graphHeight);
     updateInformations();
     publicAPI.render();
   };
@@ -152,7 +148,7 @@ function vtkFPSMonitor(publicAPI, model) {
   // --------------------------------------------------------------------------
 
   publicAPI.render = () => {
-    if (model.canvas && model.canvasVisibility) {
+    if (model.canvasVisibility) {
       const ctx = model.canvas.getContext('2d');
       const { width, height } = model.canvas;
       ctx.clearRect(0, 0, width, height);
