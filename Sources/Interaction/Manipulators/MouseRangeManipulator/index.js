@@ -17,7 +17,7 @@ function vtkMouseRangeManipulator(publicAPI, model) {
   //-------------------------------------------------------------------------
   function scaleDeltaToRange(listener, normalizedDelta) {
     return (
-      normalizedDelta * ((listener.max - listener.min) / listener.step + 1)
+      normalizedDelta * ((listener.max - listener.min) / (listener.step + 1))
     );
   }
 
@@ -27,7 +27,7 @@ function vtkMouseRangeManipulator(publicAPI, model) {
     let value = oldValue + delta + model.incrementalDelta[listener];
 
     const difference = value - listener.min;
-    const stepsToDifference = Math.round(difference / listener.step);
+    const stepsToDifference = difference / listener.step;
     value = listener.min + listener.step * stepsToDifference;
     value = Math.max(value, listener.min);
     value = Math.min(value, listener.max);
