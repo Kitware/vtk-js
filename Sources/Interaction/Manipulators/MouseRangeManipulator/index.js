@@ -11,7 +11,7 @@ function vtkMouseRangeManipulator(publicAPI, model) {
 
   // Keep track of delta that is below the value
   // of one step to progressively increment it
-  model.incrementalDelta = {};
+  const incrementalDelta = new Map();
 
   // Internal methods
   //-------------------------------------------------------------------------
@@ -24,7 +24,7 @@ function vtkMouseRangeManipulator(publicAPI, model) {
   //-------------------------------------------------------------------------
   function processDelta(listener, delta) {
     const oldValue = listener.getValue();
-    let value = oldValue + delta + model.incrementalDelta[listener];
+    let value = oldValue + delta + incrementalDelta.get(listener);
 
     const difference = value - listener.min;
     const stepsToDifference = difference / listener.step;
@@ -36,15 +36,16 @@ function vtkMouseRangeManipulator(publicAPI, model) {
     // the delta to append at the next iteration
     if (value !== oldValue) {
       listener.setValue(value);
-      model.incrementalDelta[listener] = 0;
+      incrementalDelta.set(listener, 0);
     } else {
-      model.incrementalDelta[listener] += delta;
+      const v = incrementalDelta.get(listener);
+      incrementalDelta.set(listener, v + delta);
       // Do not allow incremental delta to go past range
       if (
-        (value === listener.min && model.incrementalDelta[listener] < 0) ||
-        (value === listener.max && model.incrementalDelta[listener] > 0)
+        (value === listener.min && incrementalDelta.get(listener) < 0) ||
+        (value === listener.max && incrementalDelta.get(listener) > 0)
       ) {
-        model.incrementalDelta[listener] = 0;
+        incrementalDelta.set(listener, 0);
       }
     }
   }
@@ -54,7 +55,7 @@ function vtkMouseRangeManipulator(publicAPI, model) {
   publicAPI.setHorizontalListener = (min, max, step, getValue, setValue) => {
     const getFn = Number.isFinite(getValue) ? () => getValue : getValue;
     model.horizontalListener = { min, max, step, getValue: getFn, setValue };
-    model.incrementalDelta[model.horizontalListener] = 0;
+    incrementalDelta.set(model.horizontalListener, 0);
     publicAPI.modified();
   };
 
@@ -62,7 +63,7 @@ function vtkMouseRangeManipulator(publicAPI, model) {
   publicAPI.setVerticalListener = (min, max, step, getValue, setValue) => {
     const getFn = Number.isFinite(getValue) ? () => getValue : getValue;
     model.verticalListener = { min, max, step, getValue: getFn, setValue };
-    model.incrementalDelta[model.verticalListener] = 0;
+    incrementalDelta.set(model.verticalListener, 0);
     publicAPI.modified();
   };
 
@@ -70,7 +71,7 @@ function vtkMouseRangeManipulator(publicAPI, model) {
   publicAPI.setScrollListener = (min, max, step, getValue, setValue) => {
     const getFn = Number.isFinite(getValue) ? () => getValue : getValue;
     model.scrollListener = { min, max, step, getValue: getFn, setValue };
-    model.incrementalDelta[model.scrollListener] = 0;
+    incrementalDelta.set(model.scrollListener, 0);
     publicAPI.modified();
   };
 
