@@ -3,6 +3,8 @@ import vtkMouseRangeManipulator from 'vtk.js/Sources/Interaction/Manipulators/Mo
 import vtkViewProxy from 'vtk.js/Sources/Proxy/Core/ViewProxy';
 import vtkMath from 'vtk.js/Sources/Common/Core/Math';
 
+const DEFAULT_STEP_WIDTH = 512;
+
 function formatAnnotationValue(value) {
   if (Array.isArray(value)) {
     return value.map(formatAnnotationValue).join(', ');
@@ -151,13 +153,20 @@ function vtkView2DProxy(publicAPI, model) {
       );
       if (representation.getWindowWidth) {
         const update = () => setWindowWidth(representation.getWindowWidth());
-        const { min, max } = representation.getPropertyDomainByName(
+        const windowWidth = representation.getPropertyDomainByName(
           'windowWidth'
         );
+        const { min, max } = windowWidth;
+
+        let { step } = windowWidth;
+        if (!step || step === 'any') {
+          step = 1 / DEFAULT_STEP_WIDTH;
+        }
+
         model.rangeManipulator.setVerticalListener(
           min,
           max,
-          1,
+          step,
           representation.getWindowWidth,
           setWindowWidth
         );
@@ -169,13 +178,20 @@ function vtkView2DProxy(publicAPI, model) {
       }
       if (representation.getWindowLevel) {
         const update = () => setWindowLevel(representation.getWindowLevel());
-        const { min, max } = representation.getPropertyDomainByName(
+        const windowLevel = representation.getPropertyDomainByName(
           'windowLevel'
         );
+        const { min, max } = windowLevel;
+
+        let { step } = windowLevel;
+        if (!step || step === 'any') {
+          step = 1 / DEFAULT_STEP_WIDTH;
+        }
+
         model.rangeManipulator.setHorizontalListener(
           min,
           max,
-          1,
+          step,
           representation.getWindowLevel,
           setWindowLevel
         );

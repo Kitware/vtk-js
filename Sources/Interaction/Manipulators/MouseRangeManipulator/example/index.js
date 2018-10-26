@@ -53,7 +53,7 @@ const extent = data.getExtent();
 const kMin = extent[4];
 const kMax = extent[5];
 const kGet = mapper.getSlice;
-const kSet = mapper.setSlice;
+const kSet = (slice) => mapper.setSlice(Math.round(slice));
 
 const rangeManipulator = Manipulators.vtkMouseRangeManipulator.newInstance({
   button: 1,
