@@ -57,10 +57,15 @@ function vtkPaintFilter(publicAPI, model) {
         }
         history.colors.push(model.label);
 
+        const bgScalars = model.backgroundImage.getPointData().getScalars();
         if (model.voxelFunc) {
           for (let i = 0; i < strokeLabelMap.length; i++) {
             if (strokeLabelMap[i]) {
-              data[i] = model.voxelFunc(i, data[i]);
+              const voxel = bgScalars.getTuple(i);
+              const out = model.voxelFunc(voxel, strokeLabelMap[i], i);
+              if (out !== null) {
+                data[i] = out;
+              }
             }
           }
         } else {
