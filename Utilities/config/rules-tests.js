@@ -1,4 +1,5 @@
 module.exports = [
+  { test: /canvas.node/, loader: 'ignore-loader' },
   { test: /\.cjson$/, loader: 'hson-loader' },
   { test: /test[^\.]*\.(png|jpg)$/, use: 'url-loader?limit=1048576' },
   { test: /\.glsl$/i, loader: 'shader-loader' },
@@ -11,7 +12,7 @@ module.exports = [
   {
     test: /\.js$/,
     use: [
-      { loader: 'babel-loader', options: { presets: ['env'] } },
+      { loader: 'babel-loader' },
       {
         loader: 'string-replace-loader',
         options: {

@@ -42,10 +42,7 @@ module.exports = function init(config) {
         rules: [].concat(testsRules, linterRules),
       },
       resolve: {
-        modules: [
-          path.resolve(__dirname, 'node_modules'),
-          sourcePath,
-        ],
+        modules: [path.resolve(__dirname, 'node_modules'), sourcePath],
         alias: {
           'vtk.js': __dirname,
         },
@@ -61,22 +58,18 @@ module.exports = function init(config) {
       noInfo: true,
     },
 
-    reporters: [
-      'coverage',
-      'tap-pretty',
-    ],
+    reporters: ['coverage', 'tap-pretty'],
 
     tapReporter: {
       outputFile: 'Documentation/content/coverage/tests.md',
       prettifier: 'tap-markdown',
-      separator: '\n=========================================================\n=========================================================\n',
+      separator:
+        '\n=========================================================\n=========================================================\n',
     },
 
     coverageReporter: {
       dir: 'Documentation/build-tmp/public',
-      reporters: [
-        { type: 'html', subdir: 'coverage' },
-      ],
+      reporters: [{ type: 'html', subdir: 'coverage' }],
     },
 
     client: {
@@ -86,10 +79,7 @@ module.exports = function init(config) {
     customLaunchers: {
       ChromeHeadlessNoSandbox: {
         base: 'ChromeHeadless',
-        flags: [
-          '--no-sandbox',
-          '--ignore-gpu-blacklist',
-        ],
+        flags: ['--no-sandbox', '--ignore-gpu-blacklist'],
       },
     },
     // browserNoActivityTimeout: 600000,
