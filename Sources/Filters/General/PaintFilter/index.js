@@ -1,3 +1,4 @@
+/* eslint-disable no-bitwise */
 import { vec3 } from 'gl-matrix';
 import WebworkerPromise from 'webworker-promise';
 
@@ -19,6 +20,12 @@ function vtkPaintFilter(publicAPI, model) {
 
   let worker = null;
   let workerPromise = null;
+  const history = {
+    buffer: null,
+    // current painted layer index
+    cindex: -1,
+    colors: [],
+  };
 
   // --------------------------------------------------------------------------
 
@@ -43,16 +50,37 @@ function vtkPaintFilter(publicAPI, model) {
 
         const strokeLabelMap = new Uint8Array(strokeBuffer);
 
+        if (history.cindex === 7) {
+          history.colors.shift();
+        } else {
+          history.cindex++;
+        }
+        history.colors.push(model.label);
+
+        const bgScalars = model.backgroundImage.getPointData().getScalars();
         if (model.voxelFunc) {
           for (let i = 0; i < strokeLabelMap.length; i++) {
             if (strokeLabelMap[i]) {
-              data[i] = model.voxelFunc(i, data[i]);
+              const voxel = bgScalars.getTuple(i);
+              const out = model.voxelFunc(voxel, strokeLabelMap[i], i);
+              if (out !== null) {
+                data[i] = out;
+              }
             }
           }
         } else {
           for (let i = 0; i < strokeLabelMap.length; i++) {
+            if (history.cindex === 7) {
+              // last bit will be shifted off
+              const lastBit = history.buffer[i] & 0x1;
+              history.buffer[i] = (history.buffer[i] >> 1) | lastBit;
+            }
+
             if (strokeLabelMap[i]) {
               data[i] = model.label;
+              history.buffer[i] |= 1 << history.cindex;
+            } else {
+              history.buffer[i] &= ~(1 << history.cindex);
             }
           }
         }
@@ -87,6 +115,66 @@ function vtkPaintFilter(publicAPI, model) {
 
   // --------------------------------------------------------------------------
 
+  publicAPI.undo = () => {
+    if (history.cindex > -1) {
+      const scalars = model.labelMap.getPointData().getScalars();
+      const data = scalars.getData();
+
+      for (let i = 0; i < history.buffer.length; i++) {
+        let labeli = history.cindex - 1;
+        while (labeli > -1 && !(history.buffer[i] & (1 << labeli))) {
+          labeli--;
+        }
+        const label = history.colors[labeli] || 0;
+        data[i] = label;
+      }
+
+      history.cindex--;
+
+      scalars.setData(data);
+      scalars.modified();
+      model.labelMap.modified();
+      publicAPI.modified();
+    }
+  };
+
+  // --------------------------------------------------------------------------
+
+  publicAPI.redo = () => {
+    if (history.cindex < history.colors.length - 1) {
+      const scalars = model.labelMap.getPointData().getScalars();
+      const data = scalars.getData();
+      const labeli = history.cindex + 1;
+      const label = history.colors[labeli];
+
+      for (let i = 0; i < history.buffer.length; i++) {
+        if (history.buffer[i] & (1 << labeli)) {
+          data[i] = label;
+        }
+      }
+
+      history.cindex++;
+
+      scalars.setData(data);
+      scalars.modified();
+      model.labelMap.modified();
+      publicAPI.modified();
+    }
+  };
+
+  // --------------------------------------------------------------------------
+
+  const superSetLabelMap = publicAPI.setLabelMap;
+  publicAPI.setLabelMap = (lm) => {
+    if (superSetLabelMap(lm)) {
+      // reset history layer
+      history.buffer = new Uint8Array(lm.getNumberOfPoints());
+      history.cindex = -1;
+    }
+  };
+
+  // --------------------------------------------------------------------------
+
   publicAPI.requestData = (inData, outData) => {
     if (!model.backgroundImage) {
       vtkErrorMacro('No background image');
@@ -100,11 +188,11 @@ function vtkPaintFilter(publicAPI, model) {
 
     if (!model.labelMap) {
       // clone background image properties
-      model.labelMap = vtkImageData.newInstance(
+      const labelMap = vtkImageData.newInstance(
         model.backgroundImage.get('spacing', 'origin', 'direction')
       );
-      model.labelMap.setDimensions(model.backgroundImage.getDimensions());
-      model.labelMap.computeTransforms();
+      labelMap.setDimensions(model.backgroundImage.getDimensions());
+      labelMap.computeTransforms();
 
       // right now only support 256 labels
       const values = new Uint8Array(model.backgroundImage.getNumberOfPoints());
@@ -112,7 +200,9 @@ function vtkPaintFilter(publicAPI, model) {
         numberOfComponents: 1, // labelmap with single component
         values,
       });
-      model.labelMap.getPointData().setScalars(dataArray);
+      labelMap.getPointData().setScalars(dataArray);
+
+      publicAPI.setLabelMap(labelMap);
     }
 
     if (!model.maskWorldToIndex) {

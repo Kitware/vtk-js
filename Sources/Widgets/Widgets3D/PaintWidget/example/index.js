@@ -9,11 +9,12 @@ import vtkHttpDataSetReader from 'vtk.js/Sources/IO/Core/HttpDataSetReader';
 import vtkImageMapper from 'vtk.js/Sources/Rendering/Core/ImageMapper';
 import vtkImageSlice from 'vtk.js/Sources/Rendering/Core/ImageSlice';
 import vtkPaintFilter from 'vtk.js/Sources/Filters/General/PaintFilter';
+import vtkColorTransferFunction from 'vtk.js/Sources/Rendering/Core/ColorTransferFunction';
+import vtkPiecewiseFunction from 'vtk.js/Sources/Common/DataModel/PiecewiseFunction';
 
 import { ViewTypes } from 'vtk.js/Sources/Widgets/Core/WidgetManager/Constants';
 
 import controlPanel from './controlPanel.html';
-import vtkFastScalarToRGBA from './fastScalarToRGBA';
 
 const bodyStyles = {
   display: 'flex',
@@ -178,7 +179,8 @@ const image = {
 const labelMap = {
   imageMapper: vtkImageMapper.newInstance(),
   actor: vtkImageSlice.newInstance(),
-  scalarToRGBA: vtkFastScalarToRGBA.newInstance(),
+  cfun: vtkColorTransferFunction.newInstance(),
+  ofun: vtkPiecewiseFunction.newInstance(),
 };
 
 // background image pipeline
@@ -186,12 +188,17 @@ image.actor.setMapper(image.imageMapper);
 
 // labelmap pipeline
 labelMap.actor.setMapper(labelMap.imageMapper);
-labelMap.scalarToRGBA.setInputConnection(painter.getOutputPort());
-labelMap.imageMapper.setInputConnection(labelMap.scalarToRGBA.getOutputPort());
+labelMap.imageMapper.setInputConnection(painter.getOutputPort());
 
-// set up labelMap color mapping
-labelMap.scalarToRGBA.addColor(0, [0, 0, 0, 0]);
-labelMap.scalarToRGBA.addColor(1, [0, 0, 1, 0.5]);
+// set up labelMap color and opacity mapping
+labelMap.cfun.addRGBPoint(1, 0, 0, 1); // label "1" will be blue
+labelMap.ofun.addPoint(0, 0); // our background value, 0, will be invisible
+labelMap.ofun.addPoint(1, 1); // all values above 1 will be fully opaque
+
+labelMap.actor.getProperty().setRGBTransferFunction(labelMap.cfun);
+labelMap.actor.getProperty().setScalarOpacity(labelMap.ofun);
+// opacity is applied to entire labelmap
+labelMap.actor.getProperty().setOpacity(0.5);
 
 const reader = vtkHttpDataSetReader.newInstance({ fetchGzip: true });
 reader
@@ -213,6 +220,13 @@ reader
     painter.setBackgroundImage(image.data);
     // don't set to 0, since that's our empty label color from our pwf
     painter.setLabel(1);
+    // set custom threshold
+    painter.setVoxelFunc((bgValue, label, idx) => {
+      if (bgValue > 145) {
+        return label;
+      }
+      return null;
+    });
 
     // default slice orientation/mode and camera view
     const sliceMode = vtkImageMapper.SlicingMode.K;
@@ -291,6 +305,14 @@ document.querySelector('.axis').addEventListener('input', (ev) => {
 
   setCamera(sliceMode, S.two.renderer, image.data);
   S.two.renderWindow.render();
+});
+
+document.querySelector('.undo').addEventListener('click', () => {
+  painter.undo();
+});
+
+document.querySelector('.redo').addEventListener('click', () => {
+  painter.redo();
 });
 
 // ----------------------------------------------------------------------------
