@@ -1,18 +1,13 @@
 const autoprefixer = require('autoprefixer');
 
 module.exports = [
-  { test: /\.glsl$/i, loader: 'shader-loader' },
+  {
+    test: /\.glsl$/i,
+    loader: 'shader-loader',
+  },
   {
     test: /\.js$/,
-    use: [
-      {
-        loader: 'babel-loader',
-        options: {
-          presets: ['env'],
-          // presets: [['env', { targets: { browsers: 'last 2 versions' } }]],
-        },
-      },
-    ],
+    loader: 'babel-loader',
   },
   {
     test: /\.mcss$/,

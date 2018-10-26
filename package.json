@@ -37,8 +37,8 @@
     "pako": "1.0.6",
     "seedrandom": "2.4.3",
     "shelljs": "0.7.8",
-    "webvr-polyfill": "0.10.5",
-    "webworker-promise": "0.4.1"
+    "webvr-polyfill": "0.10.8",
+    "webworker-promise": "0.4.2"
   },
   "devDependencies": {
     "wslink": "0.1.7",
@@ -50,7 +50,7 @@
     "karma-tap-pretty-reporter": "3.0.5",
     "karma-webpack": "2.0.4",
     "kw-doc": "1.2.0",
-    "kw-web-suite": "7.0.2",
+    "kw-web-suite": "8.0.0",
     "resemblejs": "2.2.6",
     "tap-markdown": "1.2.1",
     "tap-spec": "4.1.1",

@@ -8,12 +8,20 @@ module.exports = [
       { loader: 'worker-loader', options: { inline: true, fallback: false } },
     ],
   },
-  { test: /\.js$/,
+  {
+    test: /\.js$/,
     use: [
       { loader: 'babel-loader', options: { presets: ['env'] } },
-      { loader: 'string-replace-loader',
+      {
+        loader: 'string-replace-loader',
         options: {
-          multiple: [{ search: 'test.onlyIfWebGL', replace: process.env.TRAVIS ? 'test.skip' : 'test', flags: 'g' }],
+          multiple: [
+            {
+              search: 'test.onlyIfWebGL',
+              replace: process.env.TRAVIS ? 'test.skip' : 'test',
+              flags: 'g',
+            },
+          ],
         },
       },
     ],

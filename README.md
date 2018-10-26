@@ -57,7 +57,7 @@ vtk.js supports the following development environments:
 - Node 8+
 - NPM 5+
 
-and we use [babel-preset-env](https://github.com/babel/babel/tree/master/packages/babel-preset-env) with the last 2 versions to browsers target. 
+and we use [@babel/preset-env](https://www.npmjs.com/package/@babel/preset-env) with the [defaults](https://github.com/Kitware/vtk-js/blob/master/.browserslistrc) set of [browsers target](https://browserl.ist/?q=defaults).
 But when built from source this could be adjusted to support any browser as long they provide WebGL.
 
 Documentation

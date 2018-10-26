@@ -6,7 +6,6 @@ group: travis_lts
 before_install:
   - sudo apt-get -qq update
   - sudo apt-get install -y libgif-dev
-  - npm i -g npm@6.0.1 # this should be deleted once 5.7.X is out of "pre-release"
   - npm install -g canvas@1.6.9
 addons:
   chrome: stable
