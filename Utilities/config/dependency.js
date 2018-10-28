@@ -28,12 +28,12 @@ module.exports = {
         {
           test: /\.js$/,
           include: /node_modules(\/|\\)vtk\.js(\/|\\)/,
-          use:[
-            {
-              options: {
+          use:{
+            loader: 'babel-loader',
+            options: {
               presets: ['@babel/preset-env'],
-            }
-            ]
+              }
+          }
         },
         {
           test: /\.worker\.js$/,
