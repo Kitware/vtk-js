@@ -36,7 +36,7 @@ function vtkLabelRepresentation(publicAPI, model) {
     publicAPI.modified();
   };
 
-  publicAPI.getActors = () => model.actor;
+  publicAPI.getActors = () => [model.actor];
 
   publicAPI.getNestedProps = () => publicAPI.getActors();
 
