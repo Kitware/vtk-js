@@ -31,11 +31,11 @@ function vtkLineRepresentation(publicAPI, model) {
   };
 
   publicAPI.setPoint1Visibility = (visibility) => {
-    model.point1Representation.getActors().setVisibility(visibility);
+    model.point1Representation.getActors()[0].setVisibility(visibility);
   };
 
   publicAPI.setPoint2Visibility = (visibility) => {
-    model.point2Representation.getActors().setVisibility(visibility);
+    model.point2Representation.getActors()[0].setVisibility(visibility);
   };
 
   publicAPI.getResolution = () => model.lineSource.getResolution();
@@ -397,8 +397,8 @@ function vtkLineRepresentation(publicAPI, model) {
 
   publicAPI.getActors = () => {
     const actors = [];
-    actors.push(model.point1Representation.getActors());
-    actors.push(model.point2Representation.getActors());
+    actors.push(...model.point1Representation.getActors());
+    actors.push(...model.point2Representation.getActors());
     actors.push(model.lineActor);
     return actors;
   };
