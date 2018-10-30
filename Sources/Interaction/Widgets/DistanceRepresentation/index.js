@@ -40,7 +40,7 @@ function vtkDistanceRepresentation(publicAPI, model) {
   publicAPI.getActors = () => {
     let actors = superClass.getActors();
 
-    actors = [...actors, model.labelRepresentation.getActors()];
+    actors = [...actors, ...model.labelRepresentation.getActors()];
 
     return actors;
   };
@@ -90,7 +90,6 @@ function vtkDistanceRepresentation(publicAPI, model) {
 // ----------------------------------------------------------------------------
 
 const DEFAULT_VALUES = {
-  labelVisibility: true,
   labelStyle: {
     fontColor: 'white',
     fontStyle: 'normal',
