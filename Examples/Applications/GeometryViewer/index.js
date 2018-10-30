@@ -20,7 +20,7 @@ import {
   ScalarMode,
 } from 'vtk.js/Sources/Rendering/Core/Mapper/Constants';
 
-import style from './GeometryViewer.mcss';
+import style from './GeometryViewer.module.css';
 import icon from '../../../Documentation/content/icon/favicon-96x96.png';
 
 let autoInit = true;

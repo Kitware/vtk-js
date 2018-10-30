@@ -1,5 +1,5 @@
 import macro from 'vtk.js/Sources/macro';
-import style from 'vtk.js/Sources/Interaction/UI/CornerAnnotation/CornerAnnotation.mcss';
+import style from 'vtk.js/Sources/Interaction/UI/CornerAnnotation/CornerAnnotation.module.css';
 
 function noOp() {}
 

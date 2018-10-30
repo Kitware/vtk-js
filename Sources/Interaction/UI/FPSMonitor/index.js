@@ -1,5 +1,5 @@
 import macro from 'vtk.js/Sources/macro';
-import style from 'vtk.js/Sources/Interaction/UI/FPSMonitor/FPSMonitor.mcss';
+import style from 'vtk.js/Sources/Interaction/UI/FPSMonitor/FPSMonitor.module.css';
 
 const noOp = Function.prototype;
 

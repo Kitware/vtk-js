@@ -16,7 +16,7 @@ import vtkVolumeMapper from 'vtk.js/Sources/Rendering/Core/VolumeMapper';
 import vtkXMLImageDataReader from 'vtk.js/Sources/IO/XML/XMLImageDataReader';
 import vtkFPSMonitor from 'vtk.js/Sources/Interaction/UI/FPSMonitor';
 
-import style from './VolumeViewer.mcss';
+import style from './VolumeViewer.module.css';
 
 let autoInit = true;
 const userParams = vtkURLExtract.extractURLParameters();

@@ -6,7 +6,7 @@ import svgLogo from 'vtk.js/Sources/Interaction/UI/Icons/Logo.svg';
 import svgEdge from 'vtk.js/Sources/Interaction/UI/Icons/Contrast.svg';
 import svgSpacing from 'vtk.js/Sources/Interaction/UI/Icons/Spacing.svg';
 
-import style from 'vtk.js/Sources/Interaction/UI/VolumeController/VolumeController.mcss';
+import style from 'vtk.js/Sources/Interaction/UI/VolumeController/VolumeController.module.css';
 
 // ----------------------------------------------------------------------------
 // Global structures

@@ -15,7 +15,7 @@ import vtkMapper from 'vtk.js/Sources/Rendering/Core/Mapper';
 import vtkActor from 'vtk.js/Sources/Rendering/Core/Actor';
 
 import controlWidget from './SceneControllerWidget';
-import style from './SceneLoader.mcss';
+import style from './SceneLoader.module.css';
 
 const iOS = /iPad|iPhone|iPod/.test(window.navigator.platform);
 let autoInit = true;

@@ -9,7 +9,7 @@ import vtkRenderWindow from 'vtk.js/Sources/Rendering/Core/RenderWindow';
 import vtkRenderWindowInteractor from 'vtk.js/Sources/Rendering/Core/RenderWindowInteractor';
 import vtkRenderer from 'vtk.js/Sources/Rendering/Core/Renderer';
 
-import style from './style.mcss';
+import style from './style.module.css';
 
 // ----------------------------------------------------------------------------
 // Standard rendering code setup
