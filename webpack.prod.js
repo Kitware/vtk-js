@@ -31,22 +31,14 @@ function configureBanner() {
 }
 
 // Configure Bundle Analyzer
-function configureBundleAnalyzer() {
+function configureBundleAnalyzer(name) {
   return {
     analyzerMode: 'static',
-    reportFilename: 'vtk-bundle.html',
+    reportFilename: `${name}-bundle.html`,
     openAnalyzer: settings.options.openAnalyzer(),
+    generateStatsFile: false,
   };
 }
-
-// Configure Html webpack
-// function configureHtml() {
-//   return {
-//     templateContent: '',
-//     filename: 'webapp.html',
-//     inject: false,
-//   };
-// }
 
 // Configure terser
 function configureTerser() {
@@ -60,6 +52,10 @@ function configureTerser() {
 // Configure optimization
 function configureOptimization() {
   return {
+    // namedModules: true,
+    // namedChunks: true,
+    occurrenceOrder: true,
+    // concatenateModules: false,
     minimizer: [new TerserPlugin(configureTerser())],
   };
 }
@@ -73,7 +69,17 @@ module.exports = [
     plugins: [
       new webpack.optimize.ModuleConcatenationPlugin(),
       new webpack.BannerPlugin(configureBanner()),
-      new BundleAnalyzerPlugin(configureBundleAnalyzer()),
+      new BundleAnalyzerPlugin(configureBundleAnalyzer('vtk')),
+    ],
+  }),
+  merge(common.liteConfig, {
+    mode: 'production',
+    devtool: 'source-map',
+    optimization: configureOptimization(),
+    plugins: [
+      new webpack.optimize.ModuleConcatenationPlugin(),
+      new webpack.BannerPlugin(configureBanner()),
+      new BundleAnalyzerPlugin(configureBundleAnalyzer('vtk-lite')),
     ],
   }),
 ];

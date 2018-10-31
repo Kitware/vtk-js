@@ -1,5 +1,6 @@
 // node modules
 const path = require('path');
+const merge = require('webpack-merge');
 
 // webpack plugins
 const WebpackNotifierPlugin = require('webpack-notifier');
@@ -100,7 +101,56 @@ const baseConfig = {
   ],
 };
 
+// vtk-lite.js
+// => Smaller list of color maps
+// => Remove
+//   - PDBReader
+//   - MoleculeToRepresentation
+//   - webvr-polyfill
+//   - Logo.svg
+//   - MobileVR
+const liteConfig = merge(
+  {
+    module: {
+      rules: [
+        {
+          test: /MobileVR/,
+          loader: 'ignore-loader',
+        },
+        {
+          test: /Logo\.svg/,
+          loader: 'ignore-loader',
+        },
+        {
+          test: /MoleculeToRepresentation/,
+          loader: 'ignore-loader',
+        },
+        {
+          test: /PDBReader/,
+          loader: 'ignore-loader',
+        },
+        { test: /webvr-polyfill/, loader: 'ignore-loader' },
+      ],
+    },
+    resolve: {
+      alias: {
+        'vtk.js/Sources/Rendering/Core/ColorTransferFunction/ColorMaps.json': path.join(
+          __dirname,
+          'Sources/Rendering/Core/ColorTransferFunction/LiteColorMaps.json'
+        ),
+      },
+    },
+  },
+  baseConfig,
+  {
+    output: {
+      filename: '[name]-lite.js',
+    },
+  }
+);
+
 // Common module exports
 module.exports = {
   baseConfig,
+  liteConfig,
 };

@@ -1,7 +1,57 @@
-import { vec3 } from 'gl-matrix';
 import registerWebworker from 'webworker-promise/lib/register';
 
-import vtkMath from 'vtk.js/Sources/Common/Core/Math';
+// ============================================================================
+// Inline functions to prevent bringing big dependency into the worker script
+// ============================================================================
+
+function arrayMin(arr) {
+  let minValue = Infinity;
+  for (let i = 0, len = arr.length; i < len; ++i) {
+    if (arr[i] < minValue) {
+      minValue = arr[i];
+    }
+  }
+  return minValue;
+}
+
+// ============================================================================
+
+function arrayMax(arr) {
+  let maxValue = -Infinity;
+  for (let i = 0, len = arr.length; i < len; ++i) {
+    if (maxValue < arr[i]) {
+      maxValue = arr[i];
+    }
+  }
+  return maxValue;
+}
+
+// ============================================================================
+
+function length(a) {
+  const x = a[0];
+  const y = a[1];
+  const z = a[2];
+  return Math.sqrt(x * x + y * y + z * z);
+}
+
+// ============================================================================
+
+function normalize(out, a) {
+  const x = a[0];
+  const y = a[1];
+  const z = a[2];
+  let len = x * x + y * y + z * z;
+  if (len > 0) {
+    len = 1 / Math.sqrt(len);
+    out[0] = a[0] * len;
+    out[1] = a[1] * len;
+    out[2] = a[2] * len;
+  }
+  return out;
+}
+
+// ============================================================================
 
 /* eslint-disable */
 // prettier-ignore
@@ -33,14 +83,11 @@ registerWebworker(
     var sliceSize = width * height;
     var inPtr = 0;
     var outPtr = 0;
-    var grad = vec3.create();
-    vec3.set(
-      grad,
-      (data[inPtr + 1] - data[inPtr]) / spacing[0],
-      (data[inPtr + width] - data[inPtr]) / spacing[1],
-      (data[inPtr + sliceSize] - data[inPtr]) / spacing[2]
-    );
-    var minMag = vec3.length(grad);
+    var grad = new Float64Array(3);
+    grad[0] = (data[inPtr + 1] - data[inPtr]) / spacing[0];
+    grad[1] = (data[inPtr + width] - data[inPtr]) / spacing[1];
+    grad[2] = (data[inPtr + sliceSize] - data[inPtr]) / spacing[2];
+    var minMag = length(grad);
     var maxMag = -1.0;
     for (var z = depthStart; z <= depthEnd; ++z) {
       var zedge = 0;
@@ -57,15 +104,12 @@ registerWebworker(
           if (x === width - 1) {
             edge--;
           }
-          vec3.set(
-            grad,
-            (data[edge + 1] - data[edge]) / spacing[0],
-            (data[edge + width] - data[edge]) / spacing[1],
-            (data[edge + sliceSize] - data[edge]) / spacing[2]
-          );
+          grad[0] = (data[edge + 1] - data[edge]) / spacing[0];
+          grad[1] = (data[edge + width] - data[edge]) / spacing[1];
+          grad[2] = (data[edge + sliceSize] - data[edge]) / spacing[2];
 
-          var mag = vec3.length(grad);
-          vec3.normalize(grad, grad);
+          var mag = length(grad);
+          normalize(grad, grad);
           // Compact normal encoding (from [-1.0, 1.0] to [0, 255])
           gradients[outPtr++] = 127.5 + 127.5 * grad[0];
           gradients[outPtr++] = 127.5 + 127.5 * grad[1];
@@ -74,8 +118,8 @@ registerWebworker(
         }
       }
     }
-    var arrayMinMag = vtkMath.arrayMin(gradientMagnitudes);
-    var arrayMaxMag = vtkMath.arrayMax(gradientMagnitudes);
+    var arrayMinMag = arrayMin(gradientMagnitudes);
+    var arrayMaxMag = arrayMax(gradientMagnitudes);
     minMag = Math.min(arrayMinMag, minMag);
     maxMag = Math.max(arrayMaxMag, maxMag);
 

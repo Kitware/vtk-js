@@ -41,4 +41,13 @@ module.exports = [
       new DashboardPlugin(dashboard.setData),
     ],
   }),
+  merge(common.liteConfig, {
+    mode: 'development',
+    devtool: 'inline-source-map',
+    devServer: configureDevServer(),
+    plugins: [
+      new webpack.HotModuleReplacementPlugin(),
+      new DashboardPlugin(dashboard.setData),
+    ],
+  }),
 ];
