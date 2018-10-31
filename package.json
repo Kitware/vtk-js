@@ -41,6 +41,7 @@
     "webworker-promise": "0.4.2"
   },
   "devDependencies": {
+    "dotenv": "^6.1.0",
     "wslink": "0.1.7",
     "babel-plugin-istanbul": "4.1.5",
     "karma": "3.1.1",
@@ -68,9 +69,8 @@
     "doc:www": "npm t -- --single-run && kw-doc -c ./Documentation/config.js -s",
     "doc:publish": "kw-doc -c ./Documentation/config.js -mp",
     "example": "node ./Utilities/ExampleRunner/example-runner-cli.js -c ./Documentation/config.js",
-    "build": "webpack --progress --colors --mode development",
-    "build:debug": "webpack --progress --colors --display-modules --mode development",
-    "build:release": "webpack --progress --colors --mode production",
+    "build": "webpack-dev-server --config webpack.dev.js",
+    "build:release": "webpack --config webpack.prod.js --progress --hide-modules",
     "test": "karma start ./karma.conf.js",
     "test:travis": "karma start ./karma.conf.js --browsers ChromeHeadlessNoSandbox --single-run",
     "test:debug": "karma start ./karma.conf.js --no-single-run",
