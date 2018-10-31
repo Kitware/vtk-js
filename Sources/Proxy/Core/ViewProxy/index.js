@@ -172,6 +172,9 @@ function vtkViewProxy(publicAPI, model) {
   publicAPI.resize = () => {
     if (model.container) {
       const dims = model.container.getBoundingClientRect();
+      if (dims.width === dims.height && dims.width === 0) {
+        return;
+      }
       model.openglRenderWindow.setSize(
         Math.max(10, Math.floor(dims.width)),
         Math.max(10, Math.floor(dims.height))
