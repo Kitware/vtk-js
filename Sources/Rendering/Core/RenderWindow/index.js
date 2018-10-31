@@ -90,7 +90,7 @@ function vtkRenderWindow(publicAPI, model) {
   };
 
   publicAPI.captureImages = (format = 'image/png') => {
-    setImmediate(publicAPI.render);
+    macro.setImmediate(publicAPI.render);
     return model.views
       .map(
         (view) =>

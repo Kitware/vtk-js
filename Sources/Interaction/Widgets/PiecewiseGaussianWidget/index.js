@@ -525,7 +525,7 @@ function vtkPiecewiseGaussianWidget(publicAPI, model) {
           model.selectedGaussian = gaussianIdx;
 
           // Fake active action
-          setImmediate(() => {
+          macro.setImmediate(() => {
             publicAPI.onDown(x, y);
             model.dragAction = {
               position: [0, 0],

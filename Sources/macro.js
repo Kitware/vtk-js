@@ -161,6 +161,14 @@ function getStateArrayMapFunc(item) {
 }
 
 // ----------------------------------------------------------------------------
+// setImmediate
+// ----------------------------------------------------------------------------
+
+export function setImmediateVTK(fn) {
+  setTimeout(fn, 0);
+}
+
+// ----------------------------------------------------------------------------
 // vtkObject: modified(), onModified(callback), delete()
 // ----------------------------------------------------------------------------
 
@@ -1279,7 +1287,7 @@ export function proxy(publicAPI, model) {
       }
     }
   }
-  setImmediate(registerLinks);
+  setImmediateVTK(registerLinks);
 }
 
 // ----------------------------------------------------------------------------
@@ -1567,15 +1575,15 @@ export function normalizeWheel(wheelEvent) {
 // ----------------------------------------------------------------------------
 
 export default {
-  EVENT_ABORT,
-  VOID,
-  TYPED_ARRAYS,
   algo,
   capitalize,
-  uncapitalize,
   chain,
+  debounce,
   enumToString,
   event,
+  EVENT_ABORT,
+  formatBytesToProperUnit,
+  formatNumbersWithThousandSeparator,
   get,
   getArray,
   getCurrentGlobalMTime,
@@ -1583,26 +1591,27 @@ export default {
   isVtkObject,
   keystore,
   newInstance,
+  normalizeWheel,
   obj,
+  proxy,
+  proxyPropertyMapping,
+  proxyPropertyState,
   safeArrays,
   set,
   setArray,
   setGet,
   setGetArray,
+  setImmediate: setImmediateVTK,
   setLoggerFunction,
+  throttle,
   traverseInstanceTree,
+  TYPED_ARRAYS,
+  uncapitalize,
+  VOID,
   vtkDebugMacro,
   vtkErrorMacro,
-  vtkOnceErrorMacro,
   vtkInfoMacro,
   vtkLogMacro,
+  vtkOnceErrorMacro,
   vtkWarningMacro,
-  debounce,
-  throttle,
-  proxy,
-  proxyPropertyMapping,
-  proxyPropertyState,
-  formatBytesToProperUnit,
-  formatNumbersWithThousandSeparator,
-  normalizeWheel,
 };
