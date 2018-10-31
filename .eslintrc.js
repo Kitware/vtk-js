@@ -6,10 +6,17 @@ module.exports = {
     'prettier/prettier': ['error', prettierConf],
 
     // But we want the following
-    'no-multi-spaces': ["error", { exceptions: { "ImportDeclaration": true } }],
-    'no-param-reassign': ["error", { props: false }],
-    'no-unused-vars': ["error", { args: 'none' }],
-    'prefer-destructuring': ["error", { VariableDeclarator: { array: false, object: true }, AssignmentExpression: { array: false, object: false } }, { enforceForRenamedProperties: false }],
+    'no-multi-spaces': ['error', { exceptions: { ImportDeclaration: true } }],
+    'no-param-reassign': ['error', { props: false }],
+    'no-unused-vars': ['error', { args: 'none' }],
+    'prefer-destructuring': [
+      'error',
+      {
+        VariableDeclarator: { array: false, object: true },
+        AssignmentExpression: { array: false, object: false },
+      },
+      { enforceForRenamedProperties: false },
+    ],
     'import/no-extraneous-dependencies': 0, // Needed for tests
     // 'no-mixed-operators': 'error', // Wish we can put it back with prettier
 
@@ -26,15 +33,23 @@ module.exports = {
     // [...]
     'linebreak-style': 0,
   },
-  plugins: [
-    'prettier'
-  ],
+  plugins: ['prettier'],
   globals: {
     __BASE_PATH__: false,
     VRFrameData: true,
   },
-  'settings': {
-    'import/resolver': 'webpack'
+  settings: {
+    'import/resolver': {
+      webpack: {
+        config: {
+          resolve: {
+            alias: {
+              'vtk.js': __dirname,
+            },
+          },
+        },
+      },
+    },
   },
   env: {
     es6: true,
