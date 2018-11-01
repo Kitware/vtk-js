@@ -405,7 +405,7 @@ function vtkRenderer(publicAPI, model) {
     model.activeCamera.setParallelScale(parallelScale);
 
     // update reasonable world to physical values
-    model.activeCamera.setPhysicalScale(1.0 / radius);
+    model.activeCamera.setPhysicalScale(radius);
     model.activeCamera.setPhysicalTranslation(
       -center[0],
       -center[1],
