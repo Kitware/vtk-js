@@ -22,6 +22,9 @@ module.exports = {
   parallelWebpack: {
     maxConcurrentWorkers: 2,
     rootPath: path.resolve(path.join(__dirname, '..')),
+    templatePath: path.resolve(
+      path.join(__dirname, '../Utilities/ExampleRunner/template.html')
+    ),
     plugins: [],
     rules: [
       `
@@ -32,7 +35,7 @@ module.exports = {
           {
             loader: 'babel-loader',
             options: {
-              presets: [["@babel/preset-env", { useBuiltIns: 'entry' }]]
+              presets: [["@babel/preset-env", { useBuiltIns: false }]]
             },
           },
         ],

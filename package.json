@@ -51,7 +51,7 @@
     "karma-tap": "4.1.4",
     "karma-tap-pretty-reporter": "4.1.0",
     "karma-webpack": "3.0.5",
-    "kw-doc": "1.2.0",
+    "kw-doc": "1.2.2",
     "kw-web-suite": "8.0.0",
     "resemblejs": "2.10.3",
     "tap-markdown": "1.2.1",

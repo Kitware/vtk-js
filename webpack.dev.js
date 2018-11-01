@@ -19,6 +19,7 @@ function configureDevServer() {
     contentBase: path.resolve(__dirname, settings.paths.dist.base),
     public: settings.devServerConfig.public(),
     host: settings.devServerConfig.host(),
+    port: settings.devServerConfig.port(),
     quiet: true,
     hot: true,
     hotOnly: true,

@@ -22,6 +22,7 @@ module.exports = {
   devServerConfig: {
     public: () => process.env.DEVSERVER_PUBLIC || 'http://localhost:8080',
     host: () => process.env.DEVSERVER_HOST || 'localhost',
+    port: () => process.env.DEVSERVER_PORT || 9999,
   },
   options: {
     openAnalyzer: () => process.env.BUNDLE_ANALYZER || false,
