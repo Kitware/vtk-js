@@ -8,7 +8,7 @@ import vtkOutlineFilter from 'vtk.js/Sources/Filters/General/OutlineFilter';
 import vtkPolyData from 'vtk.js/Sources/Common/DataModel/PolyData';
 
 import controlPanel from './controller.html';
-import style from './windtunnel.mcss';
+import style from './windtunnel.module.css';
 
 // ----------------------------------------------------------------------------
 // Standard rendering code setup

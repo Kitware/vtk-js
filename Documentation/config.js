@@ -22,7 +22,9 @@ module.exports = {
   parallelWebpack: {
     maxConcurrentWorkers: 2,
     rootPath: path.resolve(path.join(__dirname, '..')),
-    headers: ["const autoprefixer = require('autoprefixer');"],
+    templatePath: path.resolve(
+      path.join(__dirname, '../Utilities/ExampleRunner/template.html')
+    ),
     plugins: [],
     rules: [
       `
@@ -33,28 +35,32 @@ module.exports = {
           {
             loader: 'babel-loader',
             options: {
-              presets: ['env'],
+              presets: [["@babel/preset-env", { useBuiltIns: false }]]
             },
           },
         ],
       },
       {
-        test: /\\.mcss$/,
+        test: /\.css$/,
+        exclude: /\.module\.css$/,
+        use: [
+          { loader: 'style-loader' },
+          { loader: 'css-loader' },
+          { loader: 'postcss-loader' },
+        ],
+      },
+      {
+        test: /\.module\.css$/,
         use: [
           { loader: 'style-loader' },
           {
             loader: 'css-loader',
             options: {
-              localIdentName: '[name]-[local]_[sha512:hash:base32:5]',
+              localIdentName: '[name]-[local]_[sha512:hash:base64:5]',
               modules: true,
             },
           },
-          {
-            loader: 'postcss-loader',
-            options: {
-              plugins: () => [autoprefixer('last 2 version', 'ie >= 10')],
-            },
-          },
+          { loader: 'postcss-loader' },
         ],
       },
       {
@@ -72,7 +78,6 @@ module.exports = {
       },
       { test: /\\.(png|jpg)$/, use: 'url-loader?limit=81920' },
       { test: /\\.html$/, loader: 'html-loader' },
-      { test: /\\.css$/, use: ['style-loader', 'css-loader', 'postcss-loader'] },
       { test: /\\.cjson$/, loader: 'hson-loader' },
       { test: /\\.hson$/, loader: 'hson-loader' },
       `,

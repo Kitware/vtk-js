@@ -1,38 +1,29 @@
+const autoprefixer = require('autoprefixer');
+
 module.exports = {
   webpack: {
-    v1: {
-      loaders: [
-        {
-          test: /\.glsl$/i,
-          loader: 'shader-loader',
-        },
-        {
-          test: /\.js$/,
-          include: /node_modules(\/|\\)vtk\.js(\/|\\)/,
-          loader: 'babel-loader?presets[]=env',
-        },
-        {
-          test: /\.worker\.js$/,
-          include: /node_modules(\/|\\)vtk\.js(\/|\\)/,
-          loader: 'babel-loader?inline=true&fallback=false',
-        },
-      ],
-    },
-    v2: {
+    core: {
       rules: [
         {
           test: /\.glsl$/i,
-          include: /node_modules(\/|\\)vtk\.js(\/|\\)/,
+          include: /vtk\.js/,
           loader: 'shader-loader',
         },
         {
           test: /\.js$/,
-          include: /node_modules(\/|\\)vtk\.js(\/|\\)/,
-          loader: 'babel-loader?presets[]=env',
+          include: /vtk\.js/,
+          use: [
+            {
+              loader: 'babel-loader',
+              options: {
+                presets: ['@babel/preset-env'],
+              },
+            },
+          ],
         },
         {
           test: /\.worker\.js$/,
-          include: /node_modules(\/|\\)vtk\.js(\/|\\)/,
+          include: /vtk\.js/,
           use: [
             {
               loader: 'worker-loader',
@@ -42,5 +33,41 @@ module.exports = {
         },
       ],
     },
+    css: [
+      {
+        test: /\.css$/,
+        exclude: /\.module\.css$/,
+        use: [
+          'style-loader',
+          'css-loader',
+          {
+            loader: 'postcss-loader',
+            options: {
+              plugins: () => [autoprefixer('last 2 version', 'ie >= 10')],
+            },
+          },
+        ],
+      },
+      {
+        test: /\.css$/,
+        include: /\.module\.css$/,
+        use: [
+          { loader: 'style-loader' },
+          {
+            loader: 'css-loader',
+            options: {
+              localIdentName: '[name]-[local]_[sha512:hash:base64:5]',
+              modules: true,
+            },
+          },
+          {
+            loader: 'postcss-loader',
+            options: {
+              plugins: () => [autoprefixer('last 2 version', 'ie >= 10')],
+            },
+          },
+        ],
+      },
+    ],
   },
 };

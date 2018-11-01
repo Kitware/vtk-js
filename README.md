@@ -15,8 +15,8 @@ graphics, volume rendering and visualization. VTK includes many
 advanced algorithms (e.g., surface reconstruction, implicit modelling,
 decimation) and rendering techniques (e.g., hardware-accelerated
 volume rendering, LOD control). The JavaScript implementation remain
-a subset of the actual C++ library but efforts will be made to easily 
-port or compile native VTK code into WebAssembly to better blend 
+a subset of the actual C++ library but efforts will be made to easily
+port or compile native VTK code into WebAssembly to better blend
 both world.
 
 The origin of VTK is with the textbook "The Visualization Toolkit, an
@@ -55,9 +55,9 @@ In general VTK tries to be as portable as possible; the specific configurations 
 vtk.js supports the following development environments:
 
 - Node 8+
-- NPM 5+
+- NPM 6+
 
-and we use [babel-preset-env](https://github.com/babel/babel/tree/master/packages/babel-preset-env) with the last 2 versions to browsers target. 
+and we use [@babel/preset-env](https://www.npmjs.com/package/@babel/preset-env) with the [defaults](https://github.com/Kitware/vtk-js/blob/master/.browserslistrc) set of [browsers target](https://browserl.ist/?q=defaults).
 But when built from source this could be adjusted to support any browser as long they provide WebGL.
 
 Documentation

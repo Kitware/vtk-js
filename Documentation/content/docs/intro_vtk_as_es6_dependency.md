@@ -65,7 +65,10 @@ $ npm install kw-web-suite --save-dev
 ``` js ./webpack.config.js
 var path = require('path');
 var webpack = require('webpack');
-var vtkRules = require('vtk.js/Utilities/config/dependency.js').webpack.v2.rules;
+var vtkRules = require('vtk.js/Utilities/config/dependency.js').webpack.core.rules;
+
+// Optional if you want to load *.css and *.module.css files
+// var cssRules = require('vtk.js/Utilities/config/dependency.js').webpack.css.rules; 
 
 var entry = path.join(__dirname, './src/index.js');
 const sourcePath = path.join(__dirname, './src');
@@ -79,7 +82,6 @@ module.exports = {
   },
   module: {
     rules: [
-        { test: entry, loader: "expose-loader?MyWebApp" },
         { test: /\.html$/, loader: 'html-loader' },
     ].concat(vtkRules),
   },

@@ -5,9 +5,7 @@ dist: trusty
 group: travis_lts
 before_install:
   - sudo apt-get -qq update
-  - sudo apt-get install -y libgif-dev
-  - npm i -g npm@6.0.1 # this should be deleted once 5.7.X is out of "pre-release"
-  - npm install -g canvas@1.6.9
+  - sudo apt-get install build-essential libcairo2-dev libpango1.0-dev libjpeg-dev libgif-dev librsvg2-dev
 addons:
   chrome: stable
 node_js:

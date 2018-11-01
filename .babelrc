@@ -1,10 +1,9 @@
 {
   presets: [
-    ['env', {
-      targets: {
-        browsers: ['last 2 versions', 'Explorer 11'],
-      },
-    }],
+    ["@babel/preset-env", {
+      "debug": false,
+      "useBuiltIns": false,
+    }]
   ],
   env: {
     test: {

@@ -11,7 +11,7 @@ import vtkHttpSceneLoader from 'vtk.js/Sources/IO/Core/HttpSceneLoader';
 import vtkURLExtract from 'vtk.js/Sources/Common/Core/URLExtract';
 
 import controlWidget from './SceneExplorerWidget';
-import style from './SceneExplorer.mcss';
+import style from './SceneExplorer.module.css';
 
 const iOS = /iPad|iPhone|iPod/.test(window.navigator.platform);
 let autoInit = true;
