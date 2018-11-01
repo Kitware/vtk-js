@@ -315,13 +315,16 @@ function vtkOpenGLRenderWindow(publicAPI, model) {
   };
 
   publicAPI.startVR = () => {
+    model.oldCanvasSize = model.size.slice();
     if (model.vrDisplay.capabilities.canPresent) {
       model.vrDisplay
         .requestPresent([{ source: model.canvas }])
         .then(() => {
-          model.oldCanvasSize = model.size.slice();
-
-          if (model.el && model.vrDisplay.capabilities.hasExternalDisplay) {
+          if (
+            model.el &&
+            model.vrDisplay.capabilities.hasExternalDisplay &&
+            model.hideCanvasInVR
+          ) {
             model.el.style.display = 'none';
           }
           if (model.queryVRSize) {
@@ -346,7 +349,7 @@ function vtkOpenGLRenderWindow(publicAPI, model) {
           publicAPI.vrRender();
         })
         .catch(() => {
-          console.log('failed to requestPresent');
+          console.error('failed to requestPresent');
         });
     } else {
       vtkErrorMacro('vrDisplay is not connected');
@@ -1054,6 +1057,7 @@ const DEFAULT_VALUES = {
   defaultToWebgl2: true, // attempt webgl2 on by default
   vrResolution: [2160, 1200],
   queryVRSize: false,
+  hideCanvasInVR: true,
   activeFramebuffer: null,
   vrDisplay: null,
   imageFormat: 'image/png',
@@ -1113,6 +1117,7 @@ export function extend(publicAPI, model, initialValues = {}) {
     'defaultToWebgl2',
     'cursor',
     'queryVRSize',
+    'hideCanvasInVR',
     // might want to make this not call modified as
     // we change the active framebuffer a lot. Or maybe
     // only mark modified if the size or depth

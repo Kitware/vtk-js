@@ -382,10 +382,11 @@ function vtkCamera(publicAPI, model) {
     mat4.identity(w2pMatrix);
     vec3.set(
       tmpvec1,
-      model.physicalScale,
-      model.physicalScale,
-      model.physicalScale
+      1 / model.physicalScale,
+      1 / model.physicalScale,
+      1 / model.physicalScale
     );
+
     mat4.scale(w2pMatrix, w2pMatrix, tmpvec1);
     mat4.translate(w2pMatrix, w2pMatrix, model.physicalTranslation);
 
@@ -419,8 +420,10 @@ function vtkCamera(publicAPI, model) {
     vec3.subtract(tmpvec2, tmpvec2, tmpvec1);
     vec3.normalize(tmpvec2, tmpvec2);
     publicAPI.setDirectionOfProjection(tmpvec2[0], tmpvec2[1], tmpvec2[2]);
+
     vec3.transformMat4(tmpvec3, upbasis, viewMatrix);
     vec3.subtract(tmpvec3, tmpvec3, tmpvec1);
+    vec3.normalize(tmpvec3, tmpvec3);
     publicAPI.setViewUp(tmpvec3[0], tmpvec3[1], tmpvec3[2]);
 
     publicAPI.setDistance(oldDist);
@@ -482,9 +485,9 @@ function vtkCamera(publicAPI, model) {
     if (model.projectionMatrix) {
       vec3.set(
         tmpvec1,
-        model.physicalScale,
-        model.physicalScale,
-        model.physicalScale
+        1 / model.physicalScale,
+        1 / model.physicalScale,
+        1 / model.physicalScale
       );
 
       mat4.copy(result, model.projectionMatrix);
