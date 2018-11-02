@@ -49,7 +49,8 @@ function vtkOpenGLCamera(publicAPI, model) {
       ren !== model.lastRenderer ||
       model.openGLRenderWindow.getMTime() > model.keyMatrixTime.getMTime() ||
       publicAPI.getMTime() > model.keyMatrixTime.getMTime() ||
-      ren.getMTime() > model.keyMatrixTime.getMTime()
+      ren.getMTime() > model.keyMatrixTime.getMTime() ||
+      model.renderable.getMTime() > model.keyMatrixTime.getMTime()
     ) {
       mat4.copy(model.keyMatrices.wcvc, model.renderable.getViewMatrix());
 

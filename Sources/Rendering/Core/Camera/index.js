@@ -26,12 +26,10 @@ function vtkCamera(publicAPI, model) {
   model.classHierarchy.push('vtkCamera');
 
   // Set up private variables and methods
-  const viewMatrix = mat4.create();
-  const projectionMatrix = mat4.create();
-  const w2pMatrix = mat4.create();
   const origin = vec3.create();
   const dopbasis = vec3.fromValues(0.0, 0.0, -1.0);
   const upbasis = vec3.fromValues(0.0, 1.0, 0.0);
+  const tmpMatrix = mat4.create();
   const tmpvec1 = vec3.create();
   const tmpvec2 = vec3.create();
   const tmpvec3 = vec3.create();
@@ -356,9 +354,6 @@ function vtkCamera(publicAPI, model) {
   publicAPI.setObliqueAngles = (alpha, beta) => {};
 
   publicAPI.physicalOrientationToWorldDirection = (ori) => {
-    // get the PhysicalToWorldMatrix
-    publicAPI.getPhysicalToWorldMatrix(w2pMatrix);
-
     // push the x axis through the orientation quat
     const oriq = quat.fromValues(ori[0], ori[1], ori[2], ori[3]);
     const coriq = quat.create();
@@ -379,7 +374,22 @@ function vtkCamera(publicAPI, model) {
   };
 
   publicAPI.getWorldToPhysicalMatrix = (result) => {
-    mat4.identity(w2pMatrix);
+    mat4.identity(result);
+
+    // now the physical to vtk world rotation tform
+    const physVRight = [3];
+    vtkMath.cross(model.physicalViewNorth, model.physicalViewUp, physVRight);
+    result[0] = physVRight[0];
+    result[1] = physVRight[1];
+    result[2] = physVRight[2];
+    result[4] = model.physicalViewUp[0];
+    result[5] = model.physicalViewUp[1];
+    result[6] = model.physicalViewUp[2];
+    result[8] = -model.physicalViewNorth[0];
+    result[9] = -model.physicalViewNorth[1];
+    result[10] = -model.physicalViewNorth[2];
+    mat4.transpose(result, result);
+
     vec3.set(
       tmpvec1,
       1 / model.physicalScale,
@@ -387,67 +397,62 @@ function vtkCamera(publicAPI, model) {
       1 / model.physicalScale
     );
 
-    mat4.scale(w2pMatrix, w2pMatrix, tmpvec1);
-    mat4.translate(w2pMatrix, w2pMatrix, model.physicalTranslation);
-
-    // now the physical to vtk world rotation tform
-    const physVRight = [3];
-    vtkMath.cross(model.physicalViewNorth, model.physicalViewUp, physVRight);
-    const phystoworld = mat4.create();
-    phystoworld[0] = physVRight[0];
-    phystoworld[1] = physVRight[1];
-    phystoworld[2] = physVRight[2];
-    phystoworld[4] = model.physicalViewUp[0];
-    phystoworld[5] = model.physicalViewUp[1];
-    phystoworld[6] = model.physicalViewUp[2];
-    phystoworld[8] = -model.physicalViewNorth[0];
-    phystoworld[9] = -model.physicalViewNorth[1];
-    phystoworld[10] = -model.physicalViewNorth[2];
-    mat4.transpose(phystoworld, phystoworld);
-    mat4.multiply(result, w2pMatrix, phystoworld);
+    mat4.scale(result, result, tmpvec1);
+    mat4.translate(result, result, model.physicalTranslation);
   };
 
-  function computeViewParametersFromViewMatrix() {
+  publicAPI.computeViewParametersFromViewMatrix = (vmat) => {
+    // invert to get view to world
+    mat4.invert(tmpMatrix, vmat);
+
+    // note with glmatrix operations happen in
+    // the reverse order
+    // mat.scale
+    // mat.translate
+    // will result in the translation then the scale
+    // mat.mult(a,b)
+    // results in perform the B transformation then A
+
     // then extract the params position, orientation
     // push 0,0,0 through to get a translation
-    vec3.transformMat4(tmpvec1, origin, viewMatrix);
+    vec3.transformMat4(tmpvec1, origin, tmpMatrix);
     publicAPI.computeDistance();
     const oldDist = model.distance;
     publicAPI.setPosition(tmpvec1[0], tmpvec1[1], tmpvec1[2]);
 
     // push basis vectors to get orientation
-    vec3.transformMat4(tmpvec2, dopbasis, viewMatrix);
+    vec3.transformMat4(tmpvec2, dopbasis, tmpMatrix);
     vec3.subtract(tmpvec2, tmpvec2, tmpvec1);
     vec3.normalize(tmpvec2, tmpvec2);
     publicAPI.setDirectionOfProjection(tmpvec2[0], tmpvec2[1], tmpvec2[2]);
 
-    vec3.transformMat4(tmpvec3, upbasis, viewMatrix);
+    vec3.transformMat4(tmpvec3, upbasis, tmpMatrix);
     vec3.subtract(tmpvec3, tmpvec3, tmpvec1);
     vec3.normalize(tmpvec3, tmpvec3);
     publicAPI.setViewUp(tmpvec3[0], tmpvec3[1], tmpvec3[2]);
 
     publicAPI.setDistance(oldDist);
-  }
+  };
 
   // the provided matrix should include
   // translation and orientation only
+  // mat is physical to view
   publicAPI.computeViewParametersFromPhysicalMatrix = (mat) => {
     // get the WorldToPhysicalMatrix
-    publicAPI.getWorldToPhysicalMatrix(w2pMatrix);
+    publicAPI.getWorldToPhysicalMatrix(tmpMatrix);
 
-    // first convert the physical -> hmd matrix to be world -> hmd
-    mat4.multiply(viewMatrix, mat, w2pMatrix);
-    // invert to get hmd -> world
-    mat4.invert(viewMatrix, viewMatrix);
+    // first convert the physical -> view matrix to be
+    // world -> view
+    mat4.multiply(tmpMatrix, mat, tmpMatrix);
 
-    computeViewParametersFromViewMatrix();
+    publicAPI.computeViewParametersFromViewMatrix(tmpMatrix);
   };
 
   publicAPI.setViewMatrix = (mat) => {
     model.viewMatrix = mat;
     if (model.viewMatrix) {
-      mat4.copy(viewMatrix, model.viewMatrix);
-      computeViewParametersFromViewMatrix();
+      mat4.copy(tmpMatrix, model.viewMatrix);
+      publicAPI.computeViewParametersFromViewMatrix(tmpMatrix);
       mat4.transpose(model.viewMatrix, model.viewMatrix);
     }
   };
@@ -463,15 +468,15 @@ function vtkCamera(publicAPI, model) {
     const up = model.viewUp;
 
     mat4.lookAt(
-      viewMatrix,
+      tmpMatrix,
       vec3.fromValues(eye[0], eye[1], eye[2]), // eye
       vec3.fromValues(at[0], at[1], at[2]), // at
       vec3.fromValues(up[0], up[1], up[2])
     ); // up
 
-    mat4.transpose(viewMatrix, viewMatrix);
+    mat4.transpose(tmpMatrix, tmpMatrix);
 
-    mat4.copy(result, viewMatrix);
+    mat4.copy(result, tmpMatrix);
     return result;
   };
 
@@ -496,7 +501,7 @@ function vtkCamera(publicAPI, model) {
       return result;
     }
 
-    mat4.identity(projectionMatrix);
+    mat4.identity(tmpMatrix);
 
     // FIXME: Not sure what to do about adjust z buffer here
     // adjust Z-buffer range
@@ -517,16 +522,8 @@ function vtkCamera(publicAPI, model) {
       const ymin = (model.windowCenter[1] - 1.0) * height;
       const ymax = (model.windowCenter[1] + 1.0) * height;
 
-      mat4.ortho(
-        projectionMatrix,
-        xmin,
-        xmax,
-        ymin,
-        ymax,
-        cRange[0],
-        cRange[1]
-      );
-      mat4.transpose(projectionMatrix, projectionMatrix);
+      mat4.ortho(tmpMatrix, xmin, xmax, ymin, ymax, cRange[0], cRange[1]);
+      mat4.transpose(tmpMatrix, tmpMatrix);
     } else if (model.useOffAxisProjection) {
       throw new Error('Off-Axis projection is not supported at this time');
     } else {
@@ -548,17 +545,17 @@ function vtkCamera(publicAPI, model) {
       const znear = cRange[0];
       const zfar = cRange[1];
 
-      projectionMatrix[0] = (2.0 * znear) / (xmax - xmin);
-      projectionMatrix[5] = (2.0 * znear) / (ymax - ymin);
-      projectionMatrix[2] = (xmin + xmax) / (xmax - xmin);
-      projectionMatrix[6] = (ymin + ymax) / (ymax - ymin);
-      projectionMatrix[10] = -(znear + zfar) / (zfar - znear);
-      projectionMatrix[14] = -1.0;
-      projectionMatrix[11] = (-2.0 * znear * zfar) / (zfar - znear);
-      projectionMatrix[15] = 0.0;
+      tmpMatrix[0] = (2.0 * znear) / (xmax - xmin);
+      tmpMatrix[5] = (2.0 * znear) / (ymax - ymin);
+      tmpMatrix[2] = (xmin + xmax) / (xmax - xmin);
+      tmpMatrix[6] = (ymin + ymax) / (ymax - ymin);
+      tmpMatrix[10] = -(znear + zfar) / (zfar - znear);
+      tmpMatrix[14] = -1.0;
+      tmpMatrix[11] = (-2.0 * znear * zfar) / (zfar - znear);
+      tmpMatrix[15] = 0.0;
     }
 
-    mat4.copy(result, projectionMatrix);
+    mat4.copy(result, tmpMatrix);
 
     return result;
   };
@@ -567,6 +564,7 @@ function vtkCamera(publicAPI, model) {
     const vMat = publicAPI.getViewMatrix();
     const pMat = publicAPI.getProjectionMatrix(aspect, nearz, farz);
     const result = mat4.create();
+    // mats are transposed so the order is A then B
     mat4.multiply(result, vMat, pMat);
     return result;
   };
@@ -757,7 +755,7 @@ export function extend(publicAPI, model, initialValues = {}) {
   // Build VTK API
   macro.obj(publicAPI, model);
 
-  model.viewMatrix = macro.get(publicAPI, model, ['distance', 'thickness']);
+  macro.get(publicAPI, model, ['distance', 'thickness']);
 
   macro.setGet(publicAPI, model, [
     'parallelProjection',
