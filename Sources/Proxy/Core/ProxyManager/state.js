@@ -25,11 +25,14 @@ export default function addStateAPI(publicAPI, model) {
       state.sources.forEach(({ id, group, name, props }) => {
         sourcePromises.push(
           Promise.resolve(datasetHandler(props.dataset)).then((dataset) => {
-            const proxy = publicAPI.createProxy(group, name);
-            proxy.setName(props.name);
-            proxy.setInputData(dataset, props.type);
-            proxyMapping[id] = proxy;
-            return proxy;
+            if (dataset) {
+              const proxy = publicAPI.createProxy(group, name);
+              proxy.setName(props.name);
+              proxy.setInputData(dataset, props.type);
+              proxyMapping[id] = proxy;
+              return proxy;
+            }
+            return null;
           })
         );
       });
@@ -87,12 +90,10 @@ export default function addStateAPI(publicAPI, model) {
             pwfProxy.setDataRange(piecewiseFunction.dataRange);
           });
 
-          state.representations.forEach(({ source, view, props }) => {
-            const proxy = publicAPI.getRepresentation(
-              proxyMapping[source],
-              proxyMapping[view]
-            );
-            proxy.set(props, true);
+          function updateView(view) {
+            if (!proxyMapping[view] || !cameras[view]) {
+              return;
+            }
             proxyMapping[view].resetOrientation().then(() => {
               proxyMapping[view].getCamera().set(cameras[view]);
               proxyMapping[view]
@@ -100,7 +101,19 @@ export default function addStateAPI(publicAPI, model) {
                 .updateLightsGeometryToFollowCamera();
               proxyMapping[view].renderLater();
             });
+          }
+
+          state.representations.forEach(({ source, view, props }) => {
+            const proxy = publicAPI.getRepresentation(
+              proxyMapping[source],
+              proxyMapping[view]
+            );
+            proxy.set(props, true);
+            updateView(view);
           });
+
+          // Apply camera no matter what
+          Object.keys(cameras).forEach(updateView);
 
           // Create id mapping
           Object.keys(proxyMapping).forEach((originalId) => {
