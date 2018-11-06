@@ -10,6 +10,7 @@ import vtkStateBuilder from 'vtk.js/Sources/Widgets/Core/StateBuilder';
 
 import { ViewTypes } from 'vtk.js/Sources/Widgets/Core/WidgetManager/Constants';
 
+// Labels used to encode handle position in the handle state's name property
 const AXES = ['-', '=', '+'];
 
 // ----------------------------------------------------------------------------
@@ -173,6 +174,7 @@ function vtkImageCroppingWidget(publicAPI, model) {
     });
   }
 
+  // Set the visibility of the three classes of handles: face, edge, corner
   publicAPI.setFaceHandlesEnabled = (flag) => setHandlesEnabled('faces', flag);
   publicAPI.setEdgeHandlesEnabled = (flag) => setHandlesEnabled('edges', flag);
   publicAPI.setCornerHandlesEnabled = (flag) =>
@@ -180,6 +182,7 @@ function vtkImageCroppingWidget(publicAPI, model) {
 
   // --------------------------------------------------------------------------
 
+  // Copies the transforms and dimension of a vtkImageData
   publicAPI.copyImageDataDescription = (im) => {
     model.widgetState.setIndexToWorldT(...im.getIndexToWorld());
     model.widgetState.setWorldToIndexT(...im.getWorldToIndex());
@@ -193,6 +196,7 @@ function vtkImageCroppingWidget(publicAPI, model) {
 
   // --------------------------------------------------------------------------
 
+  // Updates handle positions based on cropping planes
   publicAPI.updateHandles = () => {
     const planes = model.widgetState.getCroppingPlanes().getPlanes();
     const midpts = [
@@ -227,6 +231,9 @@ function vtkImageCroppingWidget(publicAPI, model) {
   // --- Widget Requirement ---------------------------------------------------
   model.behavior = widgetBehavior;
 
+  // Given a view type (geometry, slice, volume), return a description
+  // of what representations to create and what widget state to pass
+  // to the respective representations.
   publicAPI.getRepresentationsForViewType = (viewType) => {
     switch (viewType) {
       case ViewTypes.DEFAULT:
@@ -235,23 +242,25 @@ function vtkImageCroppingWidget(publicAPI, model) {
       case ViewTypes.VOLUME:
       default:
         return [
-          // all states with the label "handles" can have
-          // origin, color, scale1, and/or visible
+          // Describes constructing a vtkSphereHandleRepresentation, and every
+          // time the widget state updates, we will give the representation
+          // a list of all handle states (which have the label "handles").
           { builder: vtkSphereHandleRepresentation, labels: ['handles'] },
           {
             builder: vtkOutlineContextRepresentation,
-            // outline is defined by corners
+            // outline is defined by corner points
             labels: ['corners'],
           },
         ];
     }
   };
+
   // --- Widget Requirement ---------------------------------------------------
 
-  // state builder
+  // create our state builder
   const builder = vtkStateBuilder.createBuilder();
 
-  // image data description fields
+  // add image data description fields
   builder
     .addField({
       name: 'indexToWorldT',
@@ -273,13 +282,14 @@ function vtkImageCroppingWidget(publicAPI, model) {
     })
     .build();
 
+  // add cropping planes state to our primary state
   builder.addStateFromInstance({
     labels: ['croppingPlanes'],
     name: 'croppingPlanes',
     instance: croppingState,
   });
 
-  // add all handles
+  // add all handle states
   // default bounds is [-1, 1] in all dimensions
   for (let i = -1; i < 2; i++) {
     for (let j = -1; j < 2; j++) {
@@ -289,6 +299,8 @@ function vtkImageCroppingWidget(publicAPI, model) {
           const name = AXES[i + 1] + AXES[j + 1] + AXES[k + 1];
           const type = handleTypeFromName(name);
 
+          // since handle states are rendered via vtkSphereHandleRepresentation,
+          // we can dictate the handle origin, size (scale1), color, and visibility.
           builder.addStateFromMixin({
             labels: ['handles', name, type],
             mixins: [
@@ -312,12 +324,13 @@ function vtkImageCroppingWidget(publicAPI, model) {
     }
   }
 
+  // construct our state from the fields and sub-state descriptions.
   model.widgetState = builder.build();
 
   // Update handle positions when cropping planes update
   croppingState.onModified(publicAPI.updateHandles);
 
-  // Default manipulators
+  // Add manipulators to our widgets.
   const planeManipulator = vtkPlaneManipulator.newInstance();
   const lineManipulator = vtkLineManipulator.newInstance();
 
