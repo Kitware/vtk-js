@@ -63,33 +63,6 @@ export default function addStateAPI(publicAPI, model) {
             cameras[id] = camera;
           });
 
-          Object.keys(state.fields).forEach((fieldName) => {
-            const { lookupTable, piecewiseFunction } = state.fields[fieldName];
-            const lutProxy = publicAPI.getLookupTable(fieldName, lookupTable);
-            lutProxy.setPresetName(lookupTable.presetName);
-            lutProxy.setDataRange(lookupTable.dataRange);
-            const pwfProxy = publicAPI.getPiecewiseFunction(
-              fieldName,
-              piecewiseFunction
-            );
-            switch (piecewiseFunction.mode) {
-              case vtkPiecewiseFunctionProxy.Mode.Gaussians:
-                pwfProxy.setGaussians(piecewiseFunction.gaussians);
-                break;
-              case vtkPiecewiseFunctionProxy.Mode.Points:
-                pwfProxy.setPoints(piecewiseFunction.points);
-                break;
-              case vtkPiecewiseFunctionProxy.Mode.Nodes:
-                pwfProxy.setNodes(piecewiseFunction.nodes);
-                break;
-              default:
-                // nothing that we can do
-                break;
-            }
-            pwfProxy.setMode(piecewiseFunction.mode);
-            pwfProxy.setDataRange(piecewiseFunction.dataRange);
-          });
-
           function updateView(view) {
             if (!proxyMapping[view] || !cameras[view]) {
               return;
@@ -110,6 +83,35 @@ export default function addStateAPI(publicAPI, model) {
             );
             proxy.set(props, true);
             updateView(view);
+          });
+
+          // restore luts and pwfs after restoring reps to avoid
+          // rep initialization from resetting restored luts/pwfs
+          Object.keys(state.fields).forEach((fieldName) => {
+            const { lookupTable, piecewiseFunction } = state.fields[fieldName];
+            const lutProxy = publicAPI.getLookupTable(fieldName, lookupTable);
+            lutProxy.setPresetName(lookupTable.presetName);
+            lutProxy.setDataRange(...lookupTable.dataRange);
+            const pwfProxy = publicAPI.getPiecewiseFunction(
+              fieldName,
+              piecewiseFunction
+            );
+            switch (piecewiseFunction.mode) {
+              case vtkPiecewiseFunctionProxy.Mode.Gaussians:
+                pwfProxy.setGaussians(piecewiseFunction.gaussians);
+                break;
+              case vtkPiecewiseFunctionProxy.Mode.Points:
+                pwfProxy.setPoints(piecewiseFunction.points);
+                break;
+              case vtkPiecewiseFunctionProxy.Mode.Nodes:
+                pwfProxy.setNodes(piecewiseFunction.nodes);
+                break;
+              default:
+                // nothing that we can do
+                break;
+            }
+            pwfProxy.setMode(piecewiseFunction.mode);
+            pwfProxy.setDataRange(...piecewiseFunction.dataRange);
           });
 
           // Apply camera no matter what
