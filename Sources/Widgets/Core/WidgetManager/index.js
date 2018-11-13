@@ -116,7 +116,10 @@ function vtkWidgetManager(publicAPI, model) {
         if (!model.pickingAvailable) {
           return;
         }
-        publicAPI.updateSelectionFromXY(position.x, position.y);
+        publicAPI.updateSelectionFromXY(
+          Math.round(position.x),
+          Math.round(position.y)
+        );
         const {
           requestCount,
           selectedState,
