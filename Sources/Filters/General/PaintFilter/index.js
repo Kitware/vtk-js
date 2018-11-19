@@ -100,17 +100,19 @@ function vtkPaintFilter(publicAPI, model) {
   // --------------------------------------------------------------------------
 
   publicAPI.addPoint = (point) => {
-    const worldPt = [point[0], point[1], point[2]];
-    const indexPt = [0, 0, 0];
-    vec3.transformMat4(indexPt, worldPt, model.maskWorldToIndex);
-    indexPt[0] = Math.round(indexPt[0]);
-    indexPt[1] = Math.round(indexPt[1]);
-    indexPt[2] = Math.round(indexPt[2]);
+    if (workerPromise) {
+      const worldPt = [point[0], point[1], point[2]];
+      const indexPt = [0, 0, 0];
+      vec3.transformMat4(indexPt, worldPt, model.maskWorldToIndex);
+      indexPt[0] = Math.round(indexPt[0]);
+      indexPt[1] = Math.round(indexPt[1]);
+      indexPt[2] = Math.round(indexPt[2]);
 
-    const spacing = model.labelMap.getSpacing();
-    const radius = spacing.map((s) => model.radius / s);
+      const spacing = model.labelMap.getSpacing();
+      const radius = spacing.map((s) => model.radius / s);
 
-    workerPromise.exec('paint', { point: indexPt, radius });
+      workerPromise.exec('paint', { point: indexPt, radius });
+    }
   };
 
   // --------------------------------------------------------------------------
