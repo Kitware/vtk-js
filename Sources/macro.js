@@ -604,7 +604,7 @@ export function algo(publicAPI, model, numberOfInputs, numberOfOutputs) {
 
   function getInputData(port = 0) {
     if (model.inputConnection[port]) {
-      model.inputData[port] = model.inputConnection[port]();
+      model.inputData[port] = model.inputConnection[port];
     }
     return model.inputData[port];
   }
