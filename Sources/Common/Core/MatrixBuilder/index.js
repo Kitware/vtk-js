@@ -5,12 +5,14 @@ const NoOp = (v) => v;
 const IDENTITY = new Float64Array(16);
 mat4.identity(IDENTITY);
 
+const EPSILON = 1e-16;
+
 class Transform {
-  constructor(useDegre = false) {
+  constructor(useDegree = false) {
     this.matrix = new Float64Array(16);
     mat4.identity(this.matrix);
     this.tmp = new Float64Array(3);
-    this.angleConv = useDegre ? glMatrix.toRadian : NoOp;
+    this.angleConv = useDegree ? glMatrix.toRadian : NoOp;
   }
 
   rotateFromDirections(originDirection, targetDirection) {
@@ -28,6 +30,15 @@ class Transform {
     }
 
     vec3.cross(this.tmp, src, dst);
+    if (vec3.length(this.tmp, this.tmp) < EPSILON) {
+      // cross product is 0, so pick arbitrary axis perpendicular
+      // to originDirection.
+      if (originDirection[0] === 0 && originDirection[1] === 0) {
+        vec3.set(this.tmp, 0, 1, 0);
+      } else {
+        vec3.set(this.tmp, 0, -originDirection[2], -originDirection[1]);
+      }
+    }
     mat4.fromRotation(transf, Math.acos(cosAlpha), this.tmp);
     mat4.multiply(this.matrix, this.matrix, transf);
 
