@@ -55,6 +55,7 @@ function vtkPaintFilter(publicAPI, model) {
         } else {
           history.cindex++;
         }
+        history.colors.splice(history.cindex, history.colors.length);
         history.colors.push(model.label);
 
         const bgScalars = model.backgroundImage.getPointData().getScalars();
