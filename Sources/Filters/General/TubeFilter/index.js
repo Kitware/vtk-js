@@ -392,7 +392,6 @@ function vtkTubeFilter(publicAPI, model) {
         ptId++;
       }
     } // if capping
-
     return 1;
   }
 
@@ -719,6 +718,18 @@ function vtkTubeFilter(publicAPI, model) {
       maxSpeed = inVectors.getMaxNorm();
     }
 
+    const inColors = publicAPI.getInputArrayToProcess(3);
+    let outColors = null;
+    if (inColors) {
+      // allocate output color array
+      outColors = vtkDataArray.newInstance({
+        name: inColors.getName(),
+        dataType: inColors.getDataType(),
+        numberOfComponents: inColors.getNumberOfComponents(),
+        size: numNewPts * inColors.getNumberOfComponents(),
+      });
+    }
+
     const outCD = output.getCellData();
     outCD.copyNormalsOff();
     outCD.passData(input.getCellData());
@@ -727,6 +738,9 @@ function vtkTubeFilter(publicAPI, model) {
     outPD.copyNormalsOff();
     if (inScalars && outScalars) {
       outPD.setScalars(outScalars);
+    }
+    if (inColors && outColors) {
+      outPD.addArray(outColors);
     }
 
     // TCoords
