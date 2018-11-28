@@ -693,11 +693,11 @@ function vtkTubeFilter(publicAPI, model) {
     }
 
     // loop over pointData arrays and resize based on numNewPts
-    const numArrays = output.getPointData().getNumberOfArrays();
+    const numArrays = input.getPointData().getNumberOfArrays();
     let oldArray = null;
     let newArray = null;
     for (let i = 0; i < numArrays; i++) {
-      oldArray = output.getPointData().getArrayByIndex(0);
+      oldArray = input.getPointData().getArrayByIndex(i);
       newArray = vtkDataArray.newInstance({
         name: oldArray.getName(),
         dataType: oldArray.getDataType(),
