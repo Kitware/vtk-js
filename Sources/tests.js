@@ -11,6 +11,7 @@ import './Filters/General/Calculator/test/testCalculator';
 import './Filters/General/ImageStreamline/test/testStreamline';
 import './Filters/General/MoleculeToRepresentation/test/testMultipleBonds';
 import './Filters/General/TubeFilter/test/testTubeFilter';
+import './Filters/General/TubeFilter/test/testTubeColors';
 import './Filters/General/WarpScalar/test/testWarp';
 import './Filters/Sources/ConeSource/test/testCone';
 import './Filters/Sources/CubeSource/test/testCube';
