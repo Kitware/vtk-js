@@ -5,6 +5,7 @@
       <td>Left Button</td>
       <td>Middle Button</td>
       <td>Right Button</td>
+      <td>Scroll</td>
     </tr>
   </thead>
   <tbody>
@@ -43,6 +44,12 @@
           <option value='ZoomToMouse'>ZoomToMouse</option>
         </select>
       </td>
+      <td>
+        <select class='scrollMiddleButton' style="width: 100%">
+          <option value='None'>None</option>
+          <option value='Zoom' selected >Zoom</option>
+        </select>
+      </td>
     </tr>
     <tr>
       <td>Shift +</td>
@@ -79,7 +86,13 @@
           <option value='ZoomToMouse'>ZoomToMouse</option>
         </select>
       </td>
-    </tr>
+      <td>
+        <select class='shiftScrollMiddleButton' style="width: 100%">
+          <option value='None' selected >None</option>
+          <option value='Zoom'>Zoom</option>
+        </select>
+      </td>
+    </tr>    
     <tr>
       <td>Ctrl +</td>
       <td>
@@ -113,6 +126,12 @@
           <option value='Rotate'>Rotate</option>
           <option value='MultiRotate'>MultiRotate</option>
           <option value='ZoomToMouse' selected>ZoomToMouse</option>
+        </select>
+      </td>
+      <td>
+        <select class='controlScrollMiddleButton' style="width: 100%">
+          <option value='None' selected >None</option>
+          <option value='Zoom'>Zoom</option>
         </select>
       </td>
     </tr>
@@ -151,8 +170,14 @@
           <option value='ZoomToMouse' selected>ZoomToMouse</option>
         </select>
       </td>
+      <td>
+        <select class='altScrollMiddleButton' style="width: 100%">
+          <option value='None' selected>None</option>
+          <option value='Zoom'>Zoom</option>
+        </select>
+      </td>
     </tr>
-    <tr>
+    <!-- <tr>
       <td>Scroll</td>
       <td colspan="3">
         <select class='scrollMiddleButton' style="width: 100%">
@@ -160,6 +185,6 @@
           <option value='Zoom'>Zoom</option>
         </select>
       </td>
-    </tr>
+    </tr> -->
   </tbody>
 </table>
