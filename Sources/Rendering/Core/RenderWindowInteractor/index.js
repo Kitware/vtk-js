@@ -470,6 +470,8 @@ function vtkRenderWindowInteractor(publicAPI, model) {
      *
      */
     const callData = normalizeWheel(event);
+    const keys = getModifierKeysFor(event);
+    Object.assign(callData, keys);
 
     if (model.wheelTimeoutID === 0) {
       publicAPI.startMouseWheelEvent(callData);
