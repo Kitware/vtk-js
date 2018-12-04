@@ -25,6 +25,7 @@ function vtkLookupTableProxy(publicAPI, model) {
   publicAPI.setPresetName = (presetName) => {
     if (model.presetName !== presetName) {
       model.presetName = presetName;
+      model.mode = Mode.Preset;
       publicAPI.applyMode();
     }
   };
