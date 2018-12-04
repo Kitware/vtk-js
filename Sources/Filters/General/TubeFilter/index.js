@@ -692,6 +692,22 @@ function vtkTubeFilter(publicAPI, model) {
       }
     }
 
+    // loop over pointData arrays and resize based on numNewPts
+    const numArrays = input.getPointData().getNumberOfArrays();
+    let oldArray = null;
+    let newArray = null;
+    for (let i = 0; i < numArrays; i++) {
+      oldArray = input.getPointData().getArrayByIndex(i);
+      newArray = vtkDataArray.newInstance({
+        name: oldArray.getName(),
+        dataType: oldArray.getDataType(),
+        numberOfComponents: oldArray.getNumberOfComponents(),
+        size: numNewPts * oldArray.getNumberOfComponents(),
+      });
+      output.getPointData().removeArrayByIndex(0); // remove oldArray from beginning
+      output.getPointData().addArray(newArray); // concat newArray to end
+    }
+
     const inScalars = publicAPI.getInputArrayToProcess(0);
     let outScalars = null;
     let range = [];
@@ -724,7 +740,9 @@ function vtkTubeFilter(publicAPI, model) {
     outCD.passData(input.getCellData());
 
     const outPD = output.getPointData();
-    outPD.copyNormalsOff();
+    if (outPD.getNormals() !== null) {
+      outPD.copyNormalsOff();
+    }
     if (inScalars && outScalars) {
       outPD.setScalars(outScalars);
     }
