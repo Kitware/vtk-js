@@ -48,14 +48,14 @@ function vtkOpenGLHardwareSelector(publicAPI, model) {
 
     model.openGLRenderer.clear();
     model.openGLRenderer.setSelector(publicAPI);
-    model.hitProps = [];
+    model.hitProps = {};
     model.props = [];
     publicAPI.releasePixBuffers();
   };
 
   //----------------------------------------------------------------------------
   publicAPI.endSelection = () => {
-    model.hitProps = [];
+    model.hitProps = {};
     model.openGLRenderer.setSelector(null);
     model.framebuffer.restorePreviousBindingsAndBuffers();
   };
@@ -153,8 +153,8 @@ function vtkOpenGLHardwareSelector(publicAPI, model) {
         let val = publicAPI.convert(xx, yy, pixelbuffer);
         if (val > 0) {
           val--;
-          if (model.hitProps.indexOf(val) === -1) {
-            model.hitProps.push(val);
+          if (!(val in model.hitProps)) {
+            model.hitProps[val] = true;
           }
         }
       }
@@ -205,7 +205,7 @@ function vtkOpenGLHardwareSelector(publicAPI, model) {
   publicAPI.passTypeToString = (type) => macro.enumToString(PassTypes, type);
 
   //----------------------------------------------------------------------------
-  publicAPI.isPropHit = (id) => model.hitProps.hasKey(id);
+  publicAPI.isPropHit = (id) => Boolean(model.hitProps[id]);
 
   publicAPI.convert = (xx, yy, pb) => {
     if (!pb) {
