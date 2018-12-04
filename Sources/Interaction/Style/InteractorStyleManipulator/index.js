@@ -427,50 +427,63 @@ function vtkInteractorStyleManipulator(publicAPI, model) {
 
   //-------------------------------------------------------------------------
   publicAPI.handleStartMouseWheel = (callData) => {
+    // Must not be processing an interaction to start another.
+    if (model.currentManipulator) {
+      return;
+    }
+
+    let manipulator = null;
     let count = model.mouseManipulators.length;
     while (count--) {
-      const manipulator = model.mouseManipulators[count];
-      if (manipulator.isScrollEnabled()) {
-        manipulator.onStartScroll(
-          model.interactor,
-          callData.pokedRenderer,
-          callData.spinY
-        );
-        manipulator.startInteraction();
+      const manip = model.mouseManipulators[count];
+      if (
+        manip.isScrollEnabled() &&
+        manip.getShift() === callData.shiftKey &&
+        manip.getControl() === callData.controlKey &&
+        manip.getAlt() === callData.altKey
+      ) {
+        manipulator = manip;
       }
     }
-    model.interactor.requestAnimation(publicAPI.handleStartMouseWheel);
-    publicAPI.invokeStartInteractionEvent(START_INTERACTION_EVENT);
+    if (manipulator) {
+      model.currentManipulator = manipulator;
+      model.currentManipulator.onStartScroll(
+        model.interactor,
+        callData.pokedRenderer,
+        callData.spinY
+      );
+      model.currentManipulator.startInteraction();
+      model.interactor.requestAnimation(publicAPI.handleStartMouseWheel);
+      publicAPI.invokeStartInteractionEvent(START_INTERACTION_EVENT);
+    } else {
+      vtkDebugMacro('No manipulator found');
+    }
   };
 
   //-------------------------------------------------------------------------
   publicAPI.handleEndMouseWheel = () => {
-    let count = model.mouseManipulators.length;
-    while (count--) {
-      const manipulator = model.mouseManipulators[count];
-      if (manipulator.isScrollEnabled()) {
-        manipulator.onEndScroll(model.interactor);
-        manipulator.endInteraction();
-      }
+    if (!model.currentManipulator) {
+      return;
     }
-    model.interactor.cancelAnimation(publicAPI.handleStartMouseWheel);
-    publicAPI.invokeEndInteractionEvent(END_INTERACTION_EVENT);
+    if (model.currentManipulator.onEndScroll) {
+      model.currentManipulator.onEndScroll(model.interactor);
+      model.currentManipulator.endInteraction();
+      model.currentManipulator = null;
+      model.interactor.cancelAnimation(publicAPI.handleStartMouseWheel);
+      publicAPI.invokeEndInteractionEvent(END_INTERACTION_EVENT);
+    }
   };
 
   //-------------------------------------------------------------------------
   publicAPI.handleMouseWheel = (callData) => {
-    let count = model.mouseManipulators.length;
-    while (count--) {
-      const manipulator = model.mouseManipulators[count];
-      if (manipulator.isScrollEnabled()) {
-        manipulator.onScroll(
-          model.interactor,
-          callData.pokedRenderer,
-          callData.spinY
-        );
-      }
+    if (model.currentManipulator && model.currentManipulator.onScroll) {
+      model.currentManipulator.onScroll(
+        model.interactor,
+        callData.pokedRenderer,
+        callData.spinY
+      );
+      publicAPI.invokeInteractionEvent(INTERACTION_EVENT);
     }
-    publicAPI.invokeInteractionEvent(INTERACTION_EVENT);
   };
 
   //-------------------------------------------------------------------------
