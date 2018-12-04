@@ -1206,7 +1206,11 @@ export function extend(publicAPI, model, initialValues = {}) {
   macro.get(publicAPI, model, ['buildTime', 'mappingRange']);
 
   // Create get-set macros
-  macro.setGet(publicAPI, model, ['useAboveRangeColor', 'useBelowRangeColor']);
+  macro.setGet(publicAPI, model, [
+    'useAboveRangeColor',
+    'useBelowRangeColor',
+    'colorSpace',
+  ]);
 
   macro.setArray(
     publicAPI,
