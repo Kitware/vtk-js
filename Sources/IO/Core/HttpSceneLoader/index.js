@@ -6,7 +6,7 @@ import vtkTexture from 'vtk.js/Sources/Rendering/Core/Texture';
 
 import DataAccessHelper from 'vtk.js/Sources/IO/Core/DataAccessHelper';
 
-const { vtkWarningMacro, vtkErrorMacro } = macro;
+const { vtkErrorMacro } = macro;
 
 let itemCount = 1;
 
