@@ -33,41 +33,43 @@ module.exports = {
         },
       ],
     },
-    css: [
-      {
-        test: /\.css$/,
-        exclude: /\.module\.css$/,
-        use: [
-          'style-loader',
-          'css-loader',
-          {
-            loader: 'postcss-loader',
-            options: {
-              plugins: () => [autoprefixer('last 2 version', 'ie >= 10')],
+    css: {
+      rules: [
+        {
+          test: /\.css$/,
+          exclude: /\.module\.css$/,
+          use: [
+            'style-loader',
+            'css-loader',
+            {
+              loader: 'postcss-loader',
+              options: {
+                plugins: () => [autoprefixer('last 2 version', 'ie >= 10')],
+              },
             },
-          },
-        ],
-      },
-      {
-        test: /\.css$/,
-        include: /\.module\.css$/,
-        use: [
-          { loader: 'style-loader' },
-          {
-            loader: 'css-loader',
-            options: {
-              localIdentName: '[name]-[local]_[sha512:hash:base64:5]',
-              modules: true,
+          ],
+        },
+        {
+          test: /\.css$/,
+          include: /\.module\.css$/,
+          use: [
+            { loader: 'style-loader' },
+            {
+              loader: 'css-loader',
+              options: {
+                localIdentName: '[name]-[local]_[sha512:hash:base64:5]',
+                modules: true,
+              },
             },
-          },
-          {
-            loader: 'postcss-loader',
-            options: {
-              plugins: () => [autoprefixer('last 2 version', 'ie >= 10')],
+            {
+              loader: 'postcss-loader',
+              options: {
+                plugins: () => [autoprefixer('last 2 version', 'ie >= 10')],
+              },
             },
-          },
-        ],
-      },
-    ],
+          ],
+        },
+      ],
+    },
   },
 };
