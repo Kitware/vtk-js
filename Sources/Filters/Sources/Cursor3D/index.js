@@ -25,9 +25,10 @@ function vtkCursor3D(publicAPI, model) {
       return;
     }
     publicAPI.modified();
-    for (let i = 0; i < bounds.length && i < model.modelBounds.length; ++i) {
-      model.modelBounds[i] = bounds[i];
-    }
+    // Doing type convert, make sure it is a number array.
+    // Without correct coversion, the array may contains string which cause
+    // the wrapping and clampping works incorrectly.
+    model.modelBounds = bounds.map((v) => Number(v));
     for (let i = 0; i < 3; ++i) {
       model.modelBounds[2 * i] = Math.min(
         model.modelBounds[2 * i],
