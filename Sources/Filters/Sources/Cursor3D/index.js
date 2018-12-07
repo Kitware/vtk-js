@@ -52,7 +52,7 @@ function vtkCursor3D(publicAPI, model) {
     const v = [];
     for (let i = 0; i < 3; i++) {
       v[i] = points[i] - model.focalPoint[i];
-      model.focalPoint[i] = points[i];
+      model.focalPoint[i] = Number(points[i]);
 
       if (model.translationMode) {
         model.modelBounds[2 * i] += v[i];
@@ -105,7 +105,7 @@ function vtkCursor3D(publicAPI, model) {
         model.focalPoint[i] =
           model.modelBounds[2 * i] +
           (((model.focalPoint[i] - model.modelBounds[2 * i]) * 1.0) %
-            (model.focalPoint[2 * i + 1] - model.modelBounds[2 * i]));
+            (model.modelBounds[2 * i + 1] - model.modelBounds[2 * i]));
       }
     } else {
       for (let i = 0; i < model.focalPoint.length; ++i) {
