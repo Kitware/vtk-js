@@ -422,7 +422,7 @@ export function extend(publicAPI, model, initialValues = {}) {
   macro.setGet(publicAPI, model, ['yShadows']);
   macro.setGet(publicAPI, model, ['zShadows']);
   macro.setGet(publicAPI, model, ['wrap']);
-  macro.setGet(publicAPI, model, ['translationModel']);
+  macro.setGet(publicAPI, model, ['translationMode']);
   macro.algo(publicAPI, model, 0, 1);
   vtkCursor3D(publicAPI, model);
 }
