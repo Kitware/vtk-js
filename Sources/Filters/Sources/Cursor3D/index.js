@@ -25,9 +25,10 @@ function vtkCursor3D(publicAPI, model) {
       return;
     }
     publicAPI.modified();
-    for (let i = 0; i < bounds.length && i < model.modelBounds.length; ++i) {
-      model.modelBounds[i] = bounds[i];
-    }
+    // Doing type convert, make sure it is a number array.
+    // Without correct coversion, the array may contains string which cause
+    // the wrapping and clampping works incorrectly.
+    model.modelBounds = bounds.map((v) => Number(v));
     for (let i = 0; i < 3; ++i) {
       model.modelBounds[2 * i] = Math.min(
         model.modelBounds[2 * i],
@@ -51,7 +52,7 @@ function vtkCursor3D(publicAPI, model) {
     const v = [];
     for (let i = 0; i < 3; i++) {
       v[i] = points[i] - model.focalPoint[i];
-      model.focalPoint[i] = points[i];
+      model.focalPoint[i] = Number(points[i]);
 
       if (model.translationMode) {
         model.modelBounds[2 * i] += v[i];
@@ -104,7 +105,7 @@ function vtkCursor3D(publicAPI, model) {
         model.focalPoint[i] =
           model.modelBounds[2 * i] +
           (((model.focalPoint[i] - model.modelBounds[2 * i]) * 1.0) %
-            (model.focalPoint[2 * i + 1] - model.modelBounds[2 * i]));
+            (model.modelBounds[2 * i + 1] - model.modelBounds[2 * i]));
       }
     } else {
       for (let i = 0; i < model.focalPoint.length; ++i) {
@@ -421,7 +422,7 @@ export function extend(publicAPI, model, initialValues = {}) {
   macro.setGet(publicAPI, model, ['yShadows']);
   macro.setGet(publicAPI, model, ['zShadows']);
   macro.setGet(publicAPI, model, ['wrap']);
-  macro.setGet(publicAPI, model, ['translationModel']);
+  macro.setGet(publicAPI, model, ['translationMode']);
   macro.algo(publicAPI, model, 0, 1);
   vtkCursor3D(publicAPI, model);
 }
