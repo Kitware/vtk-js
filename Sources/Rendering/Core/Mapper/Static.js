@@ -41,6 +41,7 @@ export function getResolveCoincidentTopologyAsString() {
 export default {
   getResolveCoincidentTopologyAsString,
   getResolveCoincidentTopologyPolygonOffsetFaces,
+  getResolveCoincidentTopology,
   setResolveCoincidentTopology,
   setResolveCoincidentTopologyPolygonOffsetFaces,
   setResolveCoincidentTopologyToDefault,
