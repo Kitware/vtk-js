@@ -152,6 +152,7 @@ function vtkInteractorStyleManipulator(publicAPI, model) {
   model.vrManipulators = [];
   model.gestureManipulators = [];
   model.currentManipulator = null;
+  model.currentWheelManipulator = null;
   model.centerOfRotation = [0, 0, 0];
   model.rotationFactor = 1;
 
@@ -260,6 +261,7 @@ function vtkInteractorStyleManipulator(publicAPI, model) {
   //-------------------------------------------------------------------------
   publicAPI.resetCurrentManipulator = () => {
     model.currentManipulator = null;
+    model.currentWheelManipulator = null;
   };
 
   //-------------------------------------------------------------------------
@@ -427,8 +429,8 @@ function vtkInteractorStyleManipulator(publicAPI, model) {
 
   //-------------------------------------------------------------------------
   publicAPI.handleStartMouseWheel = (callData) => {
-    // Must not be processing an interaction to start another.
-    if (model.currentManipulator) {
+    // Must not be processing a wheel interaction to start another.
+    if (model.currentWheelManipulator) {
       return;
     }
 
@@ -446,13 +448,13 @@ function vtkInteractorStyleManipulator(publicAPI, model) {
       }
     }
     if (manipulator) {
-      model.currentManipulator = manipulator;
-      model.currentManipulator.onStartScroll(
+      model.currentWheelManipulator = manipulator;
+      model.currentWheelManipulator.onStartScroll(
         model.interactor,
         callData.pokedRenderer,
         callData.spinY
       );
-      model.currentManipulator.startInteraction();
+      model.currentWheelManipulator.startInteraction();
       model.interactor.requestAnimation(publicAPI.handleStartMouseWheel);
       publicAPI.invokeStartInteractionEvent(START_INTERACTION_EVENT);
     } else {
@@ -462,13 +464,13 @@ function vtkInteractorStyleManipulator(publicAPI, model) {
 
   //-------------------------------------------------------------------------
   publicAPI.handleEndMouseWheel = () => {
-    if (!model.currentManipulator) {
+    if (!model.currentWheelManipulator) {
       return;
     }
-    if (model.currentManipulator.onEndScroll) {
-      model.currentManipulator.onEndScroll(model.interactor);
-      model.currentManipulator.endInteraction();
-      model.currentManipulator = null;
+    if (model.currentWheelManipulator.onEndScroll) {
+      model.currentWheelManipulator.onEndScroll(model.interactor);
+      model.currentWheelManipulator.endInteraction();
+      model.currentWheelManipulator = null;
       model.interactor.cancelAnimation(publicAPI.handleStartMouseWheel);
       publicAPI.invokeEndInteractionEvent(END_INTERACTION_EVENT);
     }
@@ -476,8 +478,11 @@ function vtkInteractorStyleManipulator(publicAPI, model) {
 
   //-------------------------------------------------------------------------
   publicAPI.handleMouseWheel = (callData) => {
-    if (model.currentManipulator && model.currentManipulator.onScroll) {
-      model.currentManipulator.onScroll(
+    if (
+      model.currentWheelManipulator &&
+      model.currentWheelManipulator.onScroll
+    ) {
+      model.currentWheelManipulator.onScroll(
         model.interactor,
         callData.pokedRenderer,
         callData.spinY
@@ -676,6 +681,7 @@ function vtkInteractorStyleManipulator(publicAPI, model) {
 
 const DEFAULT_VALUES = {
   currentManipulator: null,
+  currentWheelManipulator: null,
   // mouseManipulators: null,
   // vrManipulators: null,
   // gestureManipulators: null,
