@@ -61,7 +61,7 @@ function vtkRenderer(publicAPI, model) {
     const camera = publicAPI.getActiveCameraAndResetIfCreated();
 
     model.lights.forEach((light) => {
-      if (light.lightTypeIsSceneLight()) {
+      if (light.lightTypeIsSceneLight() || light.lightTypeIsCameraLight()) {
         // Do nothing. Don't reset the transform matrix because applications
         // may have set a custom matrix. Only reset the transform matrix in
         // vtkLight::SetLightTypeToSceneLight()
@@ -70,8 +70,6 @@ function vtkRenderer(publicAPI, model) {
         light.setPositionFrom(camera.getPositionByReference());
         light.setFocalPointFrom(camera.getFocalPointByReference());
         light.modified(camera.getMTime());
-      } else if (light.lightTypeIsCameraLight()) {
-        vtkErrorMacro('camera lights not supported yet', light.get());
       } else {
         vtkErrorMacro('light has unknown light type', light.get());
       }

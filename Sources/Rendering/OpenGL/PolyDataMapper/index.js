@@ -1385,9 +1385,22 @@ function vtkOpenGLPolyDataMapper(publicAPI, model) {
         model.lightColor[2] = dColor[2] * intensity;
         // get required info from light
         const ld = light.getDirection();
-        model.lightDirection[0] = ld[0];
-        model.lightDirection[1] = ld[1];
-        model.lightDirection[2] = ld[2];
+        const transform = ren.getActiveCamera().getViewMatrix();
+
+        const newLightDirection = [...ld];
+        if (light.lightTypeIsSceneLight()) {
+          newLightDirection[0] =
+            transform[0] * ld[0] + transform[1] * ld[1] + transform[2] * ld[2];
+          newLightDirection[1] =
+            transform[4] * ld[0] + transform[5] * ld[1] + transform[6] * ld[2];
+          newLightDirection[2] =
+            transform[8] * ld[0] + transform[9] * ld[1] + transform[10] * ld[2];
+          vtkMath.normalize(newLightDirection);
+        }
+
+        model.lightDirection[0] = newLightDirection[0];
+        model.lightDirection[1] = newLightDirection[1];
+        model.lightDirection[2] = newLightDirection[2];
         model.lightHalfAngle[0] = -model.lightDirection[0];
         model.lightHalfAngle[1] = -model.lightDirection[1];
         model.lightHalfAngle[2] = -model.lightDirection[2] + 1.0;
