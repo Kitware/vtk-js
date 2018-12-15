@@ -50,13 +50,34 @@ function vtkViewStream(publicAPI, model) {
     const focalPoint = model.camera.getReferenceByName('focalPoint');
     const viewUp = model.camera.getReferenceByName('viewUp');
     const position = model.camera.getReferenceByName('position');
-    const promise = model.protocol.updateCamera(
-      model.viewId,
-      focalPoint,
-      viewUp,
-      position,
-      false
-    );
+    const parallelProjection = model.camera.getParallelProjection();
+    const viewAngle = model.camera.getViewAngle();
+    const parallelScale = model.camera.getParallelScale();
+    let promise = null;
+
+    if (model.useCameraParameters) {
+      promise = model.protocol.updateCameraParameters(
+        model.viewId,
+        {
+          focalPoint,
+          viewUp,
+          position,
+          parallelProjection,
+          viewAngle,
+          parallelScale,
+        },
+        false
+      );
+    } else {
+      promise = model.protocol.updateCamera(
+        model.viewId,
+        focalPoint,
+        viewUp,
+        position,
+        false
+      );
+    }
+
     if (model.isAnimating) {
       setTimeout(publicAPI.pushCamera, 1000 / model.cameraUpdateRate);
     }
@@ -229,17 +250,18 @@ function vtkViewStream(publicAPI, model) {
 const DEFAULT_VALUES = {
   // protocol: null,
   // api: null,
+  cameraUpdateRate: 30,
   decodeImage: true,
   fpsWindowSize: 250,
-  stillRatio: 1,
-  interactiveRatio: 1,
-  stillQuality: 100,
   interactiveQuality: 80,
-  mimeType: 'image/jpeg',
-  viewId: null,
-  size: [-1, -1],
-  cameraUpdateRate: 30,
+  interactiveRatio: 1,
   isAnimating: false,
+  mimeType: 'image/jpeg',
+  size: [-1, -1],
+  stillQuality: 100,
+  stillRatio: 1,
+  useCameraParameters: false,
+  viewId: null,
 };
 
 // ----------------------------------------------------------------------------
@@ -252,14 +274,15 @@ export function extend(publicAPI, model, initialValues = {}) {
   macro.event(publicAPI, model, 'ImageReady');
   macro.get(publicAPI, model, ['viewId', 'size', 'fps', 'lastImageEvent']);
   macro.setGet(publicAPI, model, [
-    'stillQuality',
-    'stillRatio',
-    'interactiveQuality',
-    'interactiveRatio',
-    'fpsWindowSize',
-    'decodeImage',
     'camera',
     'cameraUpdateRate',
+    'decodeImage',
+    'fpsWindowSize',
+    'interactiveQuality',
+    'interactiveRatio',
+    'stillQuality',
+    'stillRatio',
+    'useCameraParameters',
   ]);
 
   // Object specific methods
