@@ -20,6 +20,12 @@ import style from './OBJViewer.module.css';
 const iOS = /iPad|iPhone|iPod/.test(window.navigator.platform);
 let autoInit = true;
 
+// Look at URL an see if we should load a file
+// ?fileURL=https://data.kitware.com/api/v1/item/59cdbb588d777f31ac63de08/download
+// &noInterpolation
+
+const userParams = vtkURLExtract.extractURLParameters();
+
 // Add class to body if iOS device --------------------------------------------
 
 if (iOS) {
@@ -47,7 +53,9 @@ function loadZipContent(zipContent, renderWindow, renderer) {
       if (workLoad !== 0) {
         return;
       }
+
       // Attach images to MTLs
+      const promises = [];
       Object.keys(fileContents.mtl).forEach((mtlFilePath) => {
         const mtlReader = fileContents.mtl[mtlFilePath];
         const basePath = mtlFilePath
@@ -55,41 +63,42 @@ function loadZipContent(zipContent, renderWindow, renderer) {
           .filter((v, i, a) => i < a.length - 1)
           .join('/');
         mtlReader.listImages().forEach((relPath) => {
-          const key = `${basePath}/${relPath}`;
+          const key = basePath.length ? `${basePath}/${relPath}` : relPath;
           const imgSRC = fileContents.img[key];
           if (imgSRC) {
-            mtlReader.setImageSrc(relPath, imgSRC);
+            promises.push(mtlReader.setImageSrc(relPath, imgSRC));
+            console.log('register promise');
           }
         });
       });
 
-      // Create pipeline from obj
-      Object.keys(fileContents.obj).forEach((objFilePath) => {
-        const mtlFilePath = objFilePath.replace(/\.obj$/, '.mtl');
-        const objReader = fileContents.obj[objFilePath];
-        const mtlReader = fileContents.mtl[mtlFilePath];
+      Promise.all(promises).then(() => {
+        console.log('load obj...');
+        // Create pipeline from obj
+        Object.keys(fileContents.obj).forEach((objFilePath) => {
+          const mtlFilePath = objFilePath.replace(/\.obj$/, '.mtl');
+          const objReader = fileContents.obj[objFilePath];
+          const mtlReader = fileContents.mtl[mtlFilePath];
 
-        const size = objReader.getNumberOfOutputPorts();
-        for (let i = 0; i < size; i++) {
-          const source = objReader.getOutputData(i);
-          const mapper = vtkMapper.newInstance();
-          const actor = vtkActor.newInstance();
-          const name = source.get('name').name;
+          const size = objReader.getNumberOfOutputPorts();
+          for (let i = 0; i < size; i++) {
+            const source = objReader.getOutputData(i);
+            const mapper = vtkMapper.newInstance();
+            const actor = vtkActor.newInstance();
+            const name = source.get('name').name;
 
-          actor.setMapper(mapper);
-          mapper.setInputData(source);
-          renderer.addActor(actor);
+            actor.setMapper(mapper);
+            mapper.setInputData(source);
+            renderer.addActor(actor);
 
-          if (mtlReader && name) {
-            mtlReader.applyMaterialToActor(name, actor);
+            if (mtlReader && name) {
+              mtlReader.applyMaterialToActor(name, actor);
+            }
           }
-        }
+        });
+        renderer.resetCamera();
+        renderWindow.render();
       });
-      renderer.resetCamera();
-      renderWindow.render();
-
-      // Rerender with hopefully all the textures loaded
-      setTimeout(renderWindow.render, 500);
     }
 
     zip.forEach((relativePath, zipEntry) => {
@@ -106,7 +115,9 @@ function loadZipContent(zipContent, renderWindow, renderer) {
       if (relativePath.match(/\.mtl$/i)) {
         workLoad++;
         zipEntry.async('string').then((txt) => {
-          const reader = vtkMTLReader.newInstance();
+          const reader = vtkMTLReader.newInstance({
+            interpolateTextures: !userParams.noInterpolation,
+          });
           reader.parseAsText(txt);
           fileContents.mtl[relativePath] = reader;
           workLoad--;
@@ -225,10 +236,6 @@ export function initLocalFileLoader(container) {
   fileContainer.addEventListener('click', (e) => fileInput.click());
   fileContainer.addEventListener('dragover', preventDefaults);
 }
-
-// Look at URL an see if we should load a file
-// ?fileURL=https://data.kitware.com/api/v1/item/59cdbb588d777f31ac63de08/download
-const userParams = vtkURLExtract.extractURLParameters();
 
 if (userParams.url || userParams.fileURL) {
   const exampleContainer = document.querySelector('.content');
