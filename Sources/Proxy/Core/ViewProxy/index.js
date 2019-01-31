@@ -175,9 +175,10 @@ function vtkViewProxy(publicAPI, model) {
       if (dims.width === dims.height && dims.width === 0) {
         return;
       }
+      const devicePixelRatio = window.devicePixelRatio || 1;
       model.openglRenderWindow.setSize(
-        Math.max(10, Math.floor(dims.width)),
-        Math.max(10, Math.floor(dims.height))
+        Math.max(10, devicePixelRatio * Math.floor(dims.width)),
+        Math.max(10, devicePixelRatio * Math.floor(dims.height))
       );
       publicAPI.renderLater();
     }
