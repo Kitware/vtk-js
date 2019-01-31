@@ -1061,6 +1061,7 @@ const DEFAULT_VALUES = {
   activeFramebuffer: null,
   vrDisplay: null,
   imageFormat: 'image/png',
+  useOffScreen: false,
 };
 
 // ----------------------------------------------------------------------------
@@ -1118,6 +1119,7 @@ export function extend(publicAPI, model, initialValues = {}) {
     'cursor',
     'queryVRSize',
     'hideCanvasInVR',
+    'useOffScreen',
     // might want to make this not call modified as
     // we change the active framebuffer a lot. Or maybe
     // only mark modified if the size or depth
