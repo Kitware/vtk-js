@@ -346,7 +346,9 @@ function vtkOpenGLRenderWindow(publicAPI, model) {
           model.vrFrameData = new VRFrameData();
           model.renderable.getInteractor().switchToVRAnimation();
 
-          publicAPI.vrRender();
+          model.vrSceneFrame = model.vrDisplay.requestAnimationFrame(
+            publicAPI.vrRender
+          );
         })
         .catch(() => {
           console.error('failed to requestPresent');
