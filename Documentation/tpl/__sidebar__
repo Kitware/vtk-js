@@ -11,6 +11,9 @@ docs:
     test: develop_test.html
     build: develop_build.html
 
+  concepts:
+    widgets: concepts_widgets.html
+
   miscellaneous:
     tools: misc_tools.html
     troubleshooting: misc_troubleshooting.html
