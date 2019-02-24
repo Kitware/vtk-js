@@ -113,12 +113,17 @@ function vtkOpenGLRenderWindow(publicAPI, model) {
 
   publicAPI.setContainer = (el) => {
     if (model.el && model.el !== el) {
-      // Remove canvas from previous container
-      if (model.canvas.parentNode === model.el) {
-        model.el.removeChild(model.canvas);
-        model.el.removeChild(model.bgImage);
-      } else {
+      if (model.canvas.parentNode !== model.el) {
         vtkErrorMacro('Error: canvas parent node does not match container');
+      }
+
+      // Remove canvas from previous container
+      model.el.removeChild(model.canvas);
+
+      // If the renderer has previously used
+      // a background image, remove it from the DOM.
+      if (model.bgImage.src) {
+        model.el.removeChild(model.bgImage);
       }
     }
 
@@ -126,6 +131,11 @@ function vtkOpenGLRenderWindow(publicAPI, model) {
       model.el = el;
       if (model.el) {
         model.el.appendChild(model.canvas);
+      }
+
+      // If the renderer has set a background image,
+      // attach it to the DOM.
+      if (model.el && model.bgImage.src) {
         model.el.appendChild(model.bgImage);
       }
 
