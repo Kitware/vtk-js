@@ -349,9 +349,8 @@ function vtkOpenGLRenderWindow(publicAPI, model) {
           model.vrSceneFrame = model.vrDisplay.requestAnimationFrame(
             publicAPI.vrRender
           );
-        
           // If Broswer is chrome we need to request animation again to canvas update
-          if(model.isChrome){
+          if (model.isChrome) {
             model.vrSceneFrame = model.vrDisplay.requestAnimationFrame(
               publicAPI.vrRender
             );
@@ -384,7 +383,7 @@ function vtkOpenGLRenderWindow(publicAPI, model) {
 
   publicAPI.vrRender = () => {
     // If no presneting for any resone we most stop submiting frame
-    if(!model.vrDisplay.isPresenting){
+    if (!model.vrDisplay.isPresenting) {
       return;
     }
     model.renderable.getInteractor().updateGamepads(model.vrDisplay.displayId);
