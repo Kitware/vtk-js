@@ -383,7 +383,8 @@ function vtkOpenGLRenderWindow(publicAPI, model) {
   };
 
   publicAPI.vrRender = () => {
-    if(!model.vrDisplay.isPresenting){// If no presneting for any resone we most stop submiting frame.
+    // If no presneting for any resone we most stop submiting frame
+    if(!model.vrDisplay.isPresenting){
       return;
     }
     model.renderable.getInteractor().updateGamepads(model.vrDisplay.displayId);
@@ -1074,7 +1075,7 @@ const DEFAULT_VALUES = {
   vrDisplay: null,
   imageFormat: 'image/png',
   useOffScreen: false,
-  isChrome: navigator.userAgent.indexOf("Chrome") != -1,
+  isChrome: navigator.userAgent.indexOf('Chrome') !== -1,
 };
 
 // ----------------------------------------------------------------------------
