@@ -349,6 +349,13 @@ function vtkOpenGLRenderWindow(publicAPI, model) {
           model.vrSceneFrame = model.vrDisplay.requestAnimationFrame(
             publicAPI.vrRender
           );
+        
+          // If Broswer is chrome we need to request animation again to canvas update
+          if(model.isChrome){
+            model.vrSceneFrame = model.vrDisplay.requestAnimationFrame(
+              publicAPI.vrRender
+            );
+          }
         })
         .catch(() => {
           console.error('failed to requestPresent');
@@ -376,6 +383,9 @@ function vtkOpenGLRenderWindow(publicAPI, model) {
   };
 
   publicAPI.vrRender = () => {
+    if(!model.vrDisplay.isPresenting){// If no presneting for any resone we most stop submiting frame.
+      return;
+    }
     model.renderable.getInteractor().updateGamepads(model.vrDisplay.displayId);
     model.vrSceneFrame = model.vrDisplay.requestAnimationFrame(
       publicAPI.vrRender
@@ -1064,6 +1074,7 @@ const DEFAULT_VALUES = {
   vrDisplay: null,
   imageFormat: 'image/png',
   useOffScreen: false,
+  isChrome: navigator.userAgent.indexOf("Chrome") != -1,
 };
 
 // ----------------------------------------------------------------------------
