@@ -29,6 +29,8 @@ sidebar:
     example: Create example
     test: Create test
     build: Build library
+    concepts: Concepts
+    widgets: Widgets
     miscellaneous: Miscellaneous
     tools: Tools
     troubleshooting: Troubleshooting

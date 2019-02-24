@@ -6,12 +6,12 @@ module.exports = {
       rules: [
         {
           test: /\.glsl$/i,
-          include: /vtk\.js\/Sources/,
+          include: /vtk\.js[\/\\]Sources/,
           loader: 'shader-loader',
         },
         {
           test: /\.js$/,
-          include: /vtk\.js\/Sources/,
+          include: /vtk\.js[\/\\]Sources/,
           use: [
             {
               loader: 'babel-loader',
@@ -23,7 +23,7 @@ module.exports = {
         },
         {
           test: /\.worker\.js$/,
-          include: /vtk\.js\/Sources/,
+          include: /vtk\.js[\/\\]Sources/,
           use: [
             {
               loader: 'worker-loader',
