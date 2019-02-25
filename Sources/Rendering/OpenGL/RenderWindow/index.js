@@ -120,9 +120,9 @@ function vtkOpenGLRenderWindow(publicAPI, model) {
       // Remove canvas from previous container
       model.el.removeChild(model.canvas);
 
-      // If the renderer has previously used
+      // If the renderer has previously added
       // a background image, remove it from the DOM.
-      if (model.bgImage.src) {
+      if (model.el.contains(model.bgImage)) {
         model.el.removeChild(model.bgImage);
       }
     }
@@ -133,9 +133,9 @@ function vtkOpenGLRenderWindow(publicAPI, model) {
         model.el.appendChild(model.canvas);
       }
 
-      // If the renderer has set a background image,
-      // attach it to the DOM.
-      if (model.el && model.bgImage.src) {
+      // If the renderer is set to use a background
+      // image, attach it to the DOM.
+      if (model.useBackgroundImage === true) {
         model.el.appendChild(model.bgImage);
       }
 
@@ -511,6 +511,24 @@ function vtkOpenGLRenderWindow(publicAPI, model) {
 
   publicAPI.setBackgroundImage = (img) => {
     model.bgImage.src = img.src;
+  };
+
+  publicAPI.setUseBackgroundImage = (value) => {
+    model.useBackgroundImage = value;
+
+    // Add or remove the background image from the
+    // DOM as specified.
+    if (
+      model.useBackgroundImage === true &&
+      model.el.contains(model.bgImage) === false
+    ) {
+      model.el.appendChild(model.bgImage);
+    } else if (
+      model.useBackgroundImage === false &&
+      model.el.contains(model.bgImage) === true
+    ) {
+      model.el.removeChild(model.bgImage);
+    }
   };
 
   function getCanvasDataURL(format = model.imageFormat) {
@@ -1031,6 +1049,9 @@ function vtkOpenGLRenderWindow(publicAPI, model) {
       const mainRenderer = model.renderable.getRenderers()[0];
       mainRenderer.getBackgroundByReference()[3] = 0;
 
+      // Enable display of the background image
+      publicAPI.setUseBackgroundImage(true);
+
       // Bind to remote stream
       model.subscription = model.viewStream.onImageReady((e) =>
         publicAPI.setBackgroundImage(e.image)
@@ -1074,6 +1095,7 @@ const DEFAULT_VALUES = {
   vrDisplay: null,
   imageFormat: 'image/png',
   useOffScreen: false,
+  useBackgroundImage: false,
 };
 
 // ----------------------------------------------------------------------------
