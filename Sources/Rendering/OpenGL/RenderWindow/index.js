@@ -9,6 +9,7 @@ import { VtkDataTypes } from 'vtk.js/Sources/Common/Core/DataArray/Constants';
 import WebVRPolyfill from 'webvr-polyfill';
 
 const { vtkDebugMacro, vtkErrorMacro } = macro;
+const IS_CHROME = navigator.userAgent.indexOf('Chrome') !== -1;
 
 function checkRenderTargetSupport(gl, format, type) {
   // create temporary frame buffer and texture
@@ -349,6 +350,12 @@ function vtkOpenGLRenderWindow(publicAPI, model) {
           model.vrSceneFrame = model.vrDisplay.requestAnimationFrame(
             publicAPI.vrRender
           );
+          // If Broswer is chrome we need to request animation again to canvas update
+          if (IS_CHROME) {
+            model.vrSceneFrame = model.vrDisplay.requestAnimationFrame(
+              publicAPI.vrRender
+            );
+          }
         })
         .catch(() => {
           console.error('failed to requestPresent');
@@ -376,6 +383,10 @@ function vtkOpenGLRenderWindow(publicAPI, model) {
   };
 
   publicAPI.vrRender = () => {
+    // If not presenting for any reason, we do not submit frame
+    if (!model.vrDisplay.isPresenting) {
+      return;
+    }
     model.renderable.getInteractor().updateGamepads(model.vrDisplay.displayId);
     model.vrSceneFrame = model.vrDisplay.requestAnimationFrame(
       publicAPI.vrRender
