@@ -9,6 +9,7 @@ import { VtkDataTypes } from 'vtk.js/Sources/Common/Core/DataArray/Constants';
 import WebVRPolyfill from 'webvr-polyfill';
 
 const { vtkDebugMacro, vtkErrorMacro } = macro;
+const IS_CHROME = navigator.userAgent.indexOf('Chrome') !== -1;
 
 function checkRenderTargetSupport(gl, format, type) {
   // create temporary frame buffer and texture
@@ -350,7 +351,7 @@ function vtkOpenGLRenderWindow(publicAPI, model) {
             publicAPI.vrRender
           );
           // If Broswer is chrome we need to request animation again to canvas update
-          if (model.isChrome) {
+          if (IS_CHROME) {
             model.vrSceneFrame = model.vrDisplay.requestAnimationFrame(
               publicAPI.vrRender
             );
@@ -382,7 +383,7 @@ function vtkOpenGLRenderWindow(publicAPI, model) {
   };
 
   publicAPI.vrRender = () => {
-    // If no presneting for any resone we most stop submiting frame
+    // If not presenting for any reason, we do not submit frame
     if (!model.vrDisplay.isPresenting) {
       return;
     }
@@ -1074,7 +1075,6 @@ const DEFAULT_VALUES = {
   vrDisplay: null,
   imageFormat: 'image/png',
   useOffScreen: false,
-  isChrome: navigator.userAgent.indexOf('Chrome') !== -1,
 };
 
 // ----------------------------------------------------------------------------
