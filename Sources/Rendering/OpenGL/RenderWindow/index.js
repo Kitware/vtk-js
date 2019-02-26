@@ -135,7 +135,7 @@ function vtkOpenGLRenderWindow(publicAPI, model) {
 
       // If the renderer is set to use a background
       // image, attach it to the DOM.
-      if (model.useBackgroundImage === true) {
+      if (model.useBackgroundImage) {
         model.el.appendChild(model.bgImage);
       }
 
@@ -518,15 +518,9 @@ function vtkOpenGLRenderWindow(publicAPI, model) {
 
     // Add or remove the background image from the
     // DOM as specified.
-    if (
-      model.useBackgroundImage === true &&
-      model.el.contains(model.bgImage) === false
-    ) {
+    if (model.useBackgroundImage && !model.el.contains(model.bgImage)) {
       model.el.appendChild(model.bgImage);
-    } else if (
-      model.useBackgroundImage === false &&
-      model.el.contains(model.bgImage) === true
-    ) {
+    } else if (!model.useBackgroundImage && model.el.contains(model.bgImage)) {
       model.el.removeChild(model.bgImage);
     }
   };
@@ -1141,6 +1135,7 @@ export function extend(publicAPI, model, initialValues = {}) {
     'textureUnitManager',
     'webgl2',
     'vrDisplay',
+    'useBackgroundImage',
   ]);
 
   macro.setGet(publicAPI, model, [
