@@ -1,4 +1,4 @@
-export default function chainWebpack(config) {
+module.exports = function chainWebpack(config) {
   config.module
     .rule('vtk-glsl')
     .test(/\.glsl$/i)
