@@ -1,5 +1,7 @@
 import macro from 'vtk.js/Sources/macro';
 
+import vtkImageStream from 'vtk.js/Sources/IO/Core/ImageStream';
+
 // ----------------------------------------------------------------------------
 // Dependency injection
 // ----------------------------------------------------------------------------
@@ -86,6 +88,8 @@ function vtkWSLinkClient(publicAPI, model) {
   // Public methods
   // --------------------------------------------------------------------------
 
+  publicAPI.beginBusy = () => updateBusy(+1);
+  publicAPI.endBusy = () => updateBusy(-1);
   publicAPI.isBusy = () => !!model.busyCount;
   publicAPI.isConnected = () => !!model.connection;
 
@@ -119,6 +123,12 @@ function vtkWSLinkClient(publicAPI, model) {
             model.notBusyList
           );
         });
+
+        // Handle image stream if needed
+        if (model.createImageStream) {
+          model.imageStream = vtkImageStream.newInstance();
+          model.imageStream.connect(session);
+        }
 
         // Forward ready info as well
         publicAPI.invokeConnectionReady(publicAPI);
@@ -161,10 +171,12 @@ const DEFAULT_VALUES = {
   // protocols: null,
   // connection: null,
   // config: null,
+  // imageStream
   notBusyList: [],
   busyCount: 0,
   timeoutId: 0,
   notificationTimeout: 50,
+  createImageStream: true,
 };
 
 // ----------------------------------------------------------------------------
@@ -174,8 +186,17 @@ export function extend(publicAPI, model, initialValues = {}) {
 
   // Object methods
   macro.obj(publicAPI, model);
-  macro.setGet(publicAPI, model, ['protocols', 'notBusyList']);
-  macro.get(publicAPI, model, ['connection', 'config', 'remote']);
+  macro.setGet(publicAPI, model, [
+    'protocols',
+    'notBusyList',
+    'createImageStream',
+  ]);
+  macro.get(publicAPI, model, [
+    'connection',
+    'config',
+    'remote',
+    'imageStream',
+  ]);
   macro.event(publicAPI, model, 'BusyChange');
   macro.event(publicAPI, model, 'ConnectionReady');
   macro.event(publicAPI, model, 'ConnectionError');
