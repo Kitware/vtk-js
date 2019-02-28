@@ -176,10 +176,10 @@ function vtkViewProxy(publicAPI, model) {
         return;
       }
       const devicePixelRatio = window.devicePixelRatio || 1;
-      model.openglRenderWindow.setSize(
-        Math.max(10, devicePixelRatio * Math.floor(dims.width)),
-        Math.max(10, devicePixelRatio * Math.floor(dims.height))
-      );
+      const width = Math.max(10, devicePixelRatio * Math.floor(dims.width));
+      const height = Math.max(10, devicePixelRatio * Math.floor(dims.height));
+      model.openglRenderWindow.setSize(width, height);
+      publicAPI.invokeResize({ width, height });
       publicAPI.renderLater();
     }
   };
@@ -548,6 +548,7 @@ function extend(publicAPI, model, initialValues = {}) {
     'representations',
     'useParallelRendering',
   ]);
+  macro.event(publicAPI, model, 'Resize');
 
   // Object specific methods
   vtkViewProxy(publicAPI, model);
