@@ -41,23 +41,24 @@
     "webworker-promise": "0.4.2"
   },
   "devDependencies": {
-    "node-pre-gyp": "0.11.0",
-    "dotenv": "^6.1.0",
-    "wslink": "0.1.8",
     "babel-plugin-istanbul": "4.1.5",
+    "dotenv": "^6.1.0",
     "karma": "3.1.1",
     "karma-chrome-launcher": "2.2.0",
     "karma-coverage": "1.1.2",
+    "karma-firefox-launcher": "^1.1.0",
     "karma-tap": "4.1.4",
     "karma-tap-pretty-reporter": "4.1.0",
     "karma-webpack": "3.0.5",
     "kw-doc": "1.2.2",
     "kw-web-suite": "8.0.0",
+    "node-pre-gyp": "0.11.0",
     "resemblejs": "2.10.3",
     "tap-markdown": "1.2.1",
     "tap-spec": "5.0.0",
     "tape": "4.9.1",
     "tape-catch": "1.0.6",
+    "wslink": "0.1.8",
     "xml2js": "0.4.19"
   },
   "peerDependencies": {
