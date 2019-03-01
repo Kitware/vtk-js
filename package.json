@@ -80,6 +80,8 @@
     "test": "karma start ./karma.conf.js",
     "test:travis": "karma start ./karma.conf.js --browsers ChromeHeadlessNoSandbox --single-run",
     "test:debug": "karma start ./karma.conf.js --no-single-run",
+    "test:firefox": "karma start ./karma.conf.js --browsers Firefox",
+    "test:firefox-debug": "karma start ./karma.conf.js --browsers Firefox --no-single-run",
     "commit": "git cz",
     "semantic-release": "semantic-release"
   },
