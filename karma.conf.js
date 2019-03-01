@@ -20,6 +20,7 @@ module.exports = function init(config) {
       require('karma-firefox-launcher'),
       require('karma-coverage'),
       require('karma-tap-pretty-reporter'),
+      require('karma-junit-reporter'),
     ],
 
     basePath: '',
@@ -59,7 +60,7 @@ module.exports = function init(config) {
       noInfo: true,
     },
 
-    reporters: ['coverage', 'tap-pretty'],
+    reporters: ['coverage', 'tap-pretty', 'junit'],
 
     tapReporter: {
       outputFile: 'Documentation/content/coverage/tests.md',
@@ -71,6 +72,10 @@ module.exports = function init(config) {
     coverageReporter: {
       dir: 'Documentation/build-tmp/public',
       reporters: [{ type: 'html', subdir: 'coverage' }],
+    },
+
+    junitReporter: {
+      outputDir: 'Utilities/TestResults',
     },
 
     client: {
