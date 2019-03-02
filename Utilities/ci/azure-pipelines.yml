@@ -1,0 +1,73 @@
+trigger:
+- master
+
+jobs:
+
+- job: 'BuildTest'
+  displayName: 'Build and test'
+
+  strategy:
+    matrix:
+      LinuxNode8:
+        nodeVersion: '8'
+      LinuxNode10:
+        nodeVersion: '10'
+
+  pool:
+    imageName: 'ubuntu-16.04'
+
+  steps:
+  - task: NodeTool@0
+    inputs:
+      versionSpec: '$(nodeVersion).x'
+    displayName: 'Install Node.js'
+
+  - script: |
+      npm install
+      npm run build
+    displayName: 'Build'
+
+  - bash: |
+      # Allow writing test/output.html
+      sudo chmod 777 test
+      # To debug, run `./Utilities/ci/run-tests-in-docker.sh -d`
+      ./Utilities/ci/run-tests-in-docker.sh
+    displayName: 'Test'
+
+  - task: PublishTestResults@2
+    condition: succeededOrFailed()
+    inputs:
+      testRunner: JUnit
+      testResultsFiles: 'Utilities/TestResults/TESTS-*.xml'
+
+- job: 'Build'
+  displayName: 'Build'
+
+  strategy:
+    matrix:
+      macOSNode8:
+        imageName: 'macos-10.13'
+        nodeVersion: '8'
+      macOSNode10:
+        imageName: 'macos-10.13'
+        nodeVersion: '10'
+      WindowsNode8:
+        imageName: 'vs2017-win2016'
+        nodeVersion: '8'
+      WindowsNode10:
+        imageName: 'vs2017-win2016'
+        nodeVersion: '10'
+
+  pool:
+    imageName: $(imageName)
+
+  steps:
+  - task: NodeTool@0
+    inputs:
+      versionSpec: '$(nodeVersion).x'
+    displayName: 'Install Node.js'
+
+  - script: |
+      npm install
+      npm run build
+    displayName: 'Build'
