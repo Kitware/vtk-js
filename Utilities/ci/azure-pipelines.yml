@@ -24,7 +24,7 @@ jobs:
 
   - script: |
       npm install
-      npm run build
+      npm run build:release
     displayName: 'Build'
 
   - bash: |
@@ -69,5 +69,5 @@ jobs:
 
   - script: |
       npm install
-      npm run build
+      npm run build:release
     displayName: 'Build'
