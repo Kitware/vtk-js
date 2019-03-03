@@ -32,6 +32,8 @@ jobs:
       sudo chmod 777 test
       # Allow writing Documentation/content/coverage/tests.md
       sudo chmod 777 Documentation/content/coverage
+      # Allow writing Utilities/TestResults/TESTS-*.xml
+      sudo chmod 777 Utilities/
       # To debug, run `./Utilities/ci/run-tests-in-docker.sh -d`
       ./Utilities/ci/run-tests-in-docker.sh
     displayName: 'Test'
