@@ -14,6 +14,7 @@ jobs:
         nodeVersion: '10'
 
   pool:
+    name: 'Hosted Ubuntu 1604'
     imageName: 'ubuntu-16.04'
 
   steps:
@@ -24,12 +25,16 @@ jobs:
 
   - script: |
       npm install
-      npm run build
+      npm run build:release
     displayName: 'Build'
 
   - bash: |
       # Allow writing test/output.html
       sudo chmod 777 test
+      # Allow writing Documentation/content/coverage/tests.md
+      sudo chmod 777 Documentation/content/coverage
+      # Allow writing Utilities/TestResults/TESTS-*.xml
+      sudo chmod 777 Utilities/
       # To debug, run `./Utilities/ci/run-tests-in-docker.sh -d`
       ./Utilities/ci/run-tests-in-docker.sh
     displayName: 'Test'
@@ -46,20 +51,25 @@ jobs:
   strategy:
     matrix:
       macOSNode8:
+        poolName: 'Hosted macOS'
         imageName: 'macos-10.13'
         nodeVersion: '8'
       macOSNode10:
+        poolName: 'Hosted macOS'
         imageName: 'macos-10.13'
         nodeVersion: '10'
       WindowsNode8:
+        poolName: 'Hosted VS2017'
         imageName: 'vs2017-win2016'
         nodeVersion: '8'
       WindowsNode10:
+        poolName: 'Hosted VS2017'
         imageName: 'vs2017-win2016'
         nodeVersion: '10'
 
   pool:
-    imageName: $(imageName)
+    name: '$(poolName)'
+    imageName: '$(imageName)'
 
   steps:
   - task: NodeTool@0
@@ -69,5 +79,5 @@ jobs:
 
   - script: |
       npm install
-      npm run build
+      npm run build:release
     displayName: 'Build'
