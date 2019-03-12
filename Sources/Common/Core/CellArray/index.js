@@ -63,6 +63,12 @@ function vtkCellArray(publicAPI, model) {
     model.numberOfCells = undefined;
     model.cellSizes = undefined;
   };
+
+  publicAPI.getCell = (loc) => {
+    let cellLoc = loc;
+    const numberOfPoints = model.values[cellLoc++];
+    return model.values.subarray(cellLoc, cellLoc + numberOfPoints);
+  };
 }
 
 // ----------------------------------------------------------------------------
