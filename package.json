@@ -38,7 +38,8 @@
     "seedrandom": "2.4.3",
     "shelljs": "0.7.8",
     "webvr-polyfill": "0.10.8",
-    "webworker-promise": "0.4.2"
+    "webworker-promise": "0.4.2",
+    "xmlbuilder": "9.0.7"
   },
   "devDependencies": {
     "node-pre-gyp": "0.11.0",

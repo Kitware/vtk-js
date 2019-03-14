@@ -5,16 +5,6 @@ import vtkXMLWriter from 'vtk.js/Sources/IO/XML/XMLWriter';
 // Global methods
 // ----------------------------------------------------------------------------
 
-function convertScalars(scalars, format) {
-  if (format === 'ascii') {
-    return scalars.join(' ');
-  }
-  if (format === 'binary') {
-    return 'not supported';
-  }
-  return 'unknown format';
-}
-
 // ----------------------------------------------------------------------------
 
 export const TYPED_ARRAY = {
@@ -67,12 +57,16 @@ function vtkXMLImageDataWriter(publicAPI, model) {
         {
           type: TYPED_ARRAY[scalars.getDataType()],
           Name: scalars.getName(),
-          format: model.format,
+          format: publicAPI.getFormat(),
           RangeMin: scalars.getRange()[0],
           RangeMax: scalars.getRange()[1],
           NumberOfComponents: scalars.getNumberOfComponents(),
         },
-        convertScalars(scalars.getData(), model.format)
+        vtkXMLWriter.processDataArray(
+          scalars,
+          publicAPI.getFormat(),
+          publicAPI.getBlockSize()
+        )
       );
     }
 

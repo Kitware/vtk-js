@@ -1,6 +1,7 @@
 export const FormatTypes = {
-  ascii: 'ascii',
-  binary: 'binary',
+  ASCII: 'ascii',
+  BINARY: 'binary',
+  APPENDED: 'appended',
 };
 
 export default {
