@@ -16,7 +16,7 @@ jsMapping = {
     'b': 'Int8Array',
     'B': 'Uint8Array',
     'h': 'Int16Array',
-    'H': 'Int16Array',
+    'H': 'Uint16Array',
     'i': 'Int32Array',
     'I': 'Uint32Array',
     'l': 'Int32Array',
