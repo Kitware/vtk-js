@@ -5,6 +5,8 @@ import vtkTexture from 'vtk.js/Sources/Rendering/Core/Texture';
 import vtkCubeSource from 'vtk.js/Sources/Filters/Sources/CubeSource';
 import ImageHelper from 'vtk.js/Sources/Common/Core/ImageHelper';
 
+import Presets from 'vtk.js/Sources/Rendering/Core/AnnotatedCubeActor/Presets';
+
 const FACE_TO_INDEX = {
   xPlus: 0,
   xMinus: 1,
@@ -188,4 +190,4 @@ export const newInstance = macro.newInstance(extend, 'vtkAnnotatedCubeActor');
 
 // ----------------------------------------------------------------------------
 
-export default { newInstance, extend };
+export default { newInstance, extend, Presets };
