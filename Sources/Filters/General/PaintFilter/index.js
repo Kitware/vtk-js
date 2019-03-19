@@ -67,6 +67,10 @@ function vtkPaintFilter(publicAPI, model) {
               if (out !== null) {
                 data[i] = out;
               }
+
+              history.buffer[i] |= 1 << history.cindex;
+            } else {
+              history.buffer[i] &= ~(1 << history.cindex);
             }
           }
         } else {
