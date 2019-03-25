@@ -2,8 +2,7 @@ import macro from 'vtk.js/Sources/macro';
 import vtk from 'vtk.js/Sources/vtk';
 import vtkCellArray from 'vtk.js/Sources/Common/Core/CellArray';
 import vtkPointSet from 'vtk.js/Sources/Common/DataModel/PointSet';
-
-const POLYDATA_FIELDS = ['verts', 'lines', 'polys', 'strips'];
+import { POLYDATA_FIELDS } from 'vtk.js/Sources/Common/DataModel/PolyData/Constants';
 
 // ----------------------------------------------------------------------------
 // vtkPolyData methods

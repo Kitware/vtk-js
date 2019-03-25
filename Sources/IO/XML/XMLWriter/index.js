@@ -3,7 +3,10 @@ import { fromByteArray } from 'base64-js';
 import pako from 'pako';
 
 import macro from 'vtk.js/Sources/macro';
-import { FormatTypes } from 'vtk.js/Sources/IO/XML/XMLWriter/Constants';
+import {
+  FormatTypes,
+  TYPED_ARRAY,
+} from 'vtk.js/Sources/IO/XML/XMLWriter/Constants';
 
 // ----------------------------------------------------------------------------
 // Global methods
@@ -104,6 +107,53 @@ function vtkXMLWriter(publicAPI, model) {
       );
 
   publicAPI.write = (object) => publicAPI.create(object).end({ pretty: true });
+
+  publicAPI.processDataSetAttributes = (
+    parentElement,
+    name,
+    datasetAttributes
+  ) => {
+    const activeAttributes = {};
+    const attrTypes = [
+      'Scalars',
+      'Vectors',
+      'Normals',
+      'TCoords',
+      'Tensors',
+      'GlobalIds',
+      'PedigreeIds',
+    ];
+    attrTypes.forEach((attrType) => {
+      const activeAttribute = datasetAttributes.getActiveAttribute(attrType);
+      if (activeAttribute) {
+        activeAttributes[attrType] = activeAttribute.getName();
+      }
+    });
+
+    const datasetAttributesEle = parentElement.ele(name, activeAttributes);
+
+    for (let i = 0; i < datasetAttributes.getNumberOfArrays(); ++i) {
+      publicAPI.processDataArray(
+        datasetAttributesEle,
+        datasetAttributes.getArrayByIndex(i)
+      );
+    }
+    return datasetAttributesEle;
+  };
+
+  publicAPI.processDataArray = (parentEle, scalars) =>
+    parentEle.ele(
+      'DataArray',
+      {
+        type: TYPED_ARRAY[scalars.getDataType()],
+        Name: scalars.getName(),
+        format: publicAPI.getFormat(),
+        RangeMin: scalars.getRange()[0],
+        RangeMax: scalars.getRange()[1],
+        NumberOfComponents: scalars.getNumberOfComponents(),
+      },
+      processDataArray(scalars, publicAPI.getFormat(), publicAPI.getBlockSize())
+    );
 
   publicAPI.requestData = (inData, outData) => {
     model.file = publicAPI.write(inData);
