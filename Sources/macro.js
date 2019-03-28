@@ -812,9 +812,14 @@ export function event(publicAPI, model, eventName) {
     const currentCallbacks = callbacks.slice();
     for (let index = 0; index < currentCallbacks.length; ++index) {
       const [, cb, priority] = currentCallbacks[index];
+
+      if (!cb) {
+        continue; // eslint-disable-line
+      }
+
       if (priority < 0) {
         setTimeout(() => cb.apply(publicAPI, arguments), 1 - priority);
-      } else if (cb) {
+      } else {
         // Abort only if the callback explicitly returns false
         const continueNext = cb.apply(publicAPI, arguments);
         if (continueNext === EVENT_ABORT) {
@@ -828,6 +833,11 @@ export function event(publicAPI, model, eventName) {
   publicAPI[`invoke${capitalize(eventName)}`] = invoke;
 
   publicAPI[`on${capitalize(eventName)}`] = (callback, priority = 0.0) => {
+    if (!callback.apply) {
+      console.error(`Invalid callback for event ${eventName}`);
+      return null;
+    }
+
     if (model.deleted) {
       vtkErrorMacro('instance deleted - cannot call any method');
       return null;
