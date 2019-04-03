@@ -175,9 +175,13 @@ function vtkPaintFilter(publicAPI, model) {
   publicAPI.setLabelMap = (lm) => {
     if (superSetLabelMap(lm)) {
       // reset history layer
-      history.buffer = new Uint8Array(lm.getNumberOfPoints());
+      history.buffer = lm ? new Uint8Array(lm.getNumberOfPoints()) : null;
       history.cindex = -1;
+
+      return true;
     }
+
+    return false;
   };
 
   // --------------------------------------------------------------------------
