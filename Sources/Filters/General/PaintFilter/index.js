@@ -1,4 +1,3 @@
-/* eslint-disable no-bitwise */
 import { vec3 } from 'gl-matrix';
 import WebworkerPromise from 'webworker-promise';
 
@@ -20,12 +19,15 @@ function vtkPaintFilter(publicAPI, model) {
 
   let worker = null;
   let workerPromise = null;
-  const history = {
-    buffer: null,
-    // current painted layer index
-    cindex: -1,
-    colors: [],
-  };
+  const history = {};
+
+  // --------------------------------------------------------------------------
+
+  function resetHistory() {
+    history.index = -1;
+    history.snapshots = [];
+    history.labels = [];
+  }
 
   // --------------------------------------------------------------------------
 
@@ -50,45 +52,51 @@ function vtkPaintFilter(publicAPI, model) {
 
         const strokeLabelMap = new Uint8Array(strokeBuffer);
 
-        if (history.cindex === 7) {
-          history.colors.shift();
-        } else {
-          history.cindex++;
+        let diffCount = 0;
+        for (let i = 0; i < strokeLabelMap.length; i++) {
+          // strokeLabelMap is binary mask of paint stroke
+          diffCount += strokeLabelMap[i];
         }
-        history.colors.splice(history.cindex, history.colors.length);
-        history.colors.push(model.label);
 
-        const bgScalars = model.backgroundImage.getPointData().getScalars();
+        // Format: [ [index, oldLabel], ...]
+        // I could use an ArrayBuffer, which would place limits
+        // on the values of index/old, but will be more efficient.
+        const snapshot = new Array(diffCount);
+        const label = model.label;
+
+        let diffIdx = 0;
         if (model.voxelFunc) {
+          const bgScalars = model.backgroundImage.getPointData().getScalars();
           for (let i = 0; i < strokeLabelMap.length; i++) {
             if (strokeLabelMap[i]) {
               const voxel = bgScalars.getTuple(i);
-              const out = model.voxelFunc(voxel, strokeLabelMap[i], i);
-              if (out !== null) {
-                data[i] = out;
+              // might not fill up snapshot
+              if (model.voxelFunc(voxel, i, label)) {
+                snapshot[diffIdx++] = [i, data[i]];
+                data[i] = label;
               }
-
-              history.buffer[i] |= 1 << history.cindex;
-            } else {
-              history.buffer[i] &= ~(1 << history.cindex);
             }
           }
         } else {
           for (let i = 0; i < strokeLabelMap.length; i++) {
-            if (history.cindex === 7) {
-              // last bit will be shifted off
-              const lastBit = history.buffer[i] & 0x1;
-              history.buffer[i] = (history.buffer[i] >> 1) | lastBit;
-            }
-
             if (strokeLabelMap[i]) {
-              data[i] = model.label;
-              history.buffer[i] |= 1 << history.cindex;
-            } else {
-              history.buffer[i] &= ~(1 << history.cindex);
+              if (data[i] !== label) {
+                snapshot[diffIdx++] = [i, data[i]];
+                data[i] = label;
+              }
             }
           }
         }
+
+        // clear any "redo" info
+        const spliceIndex = history.index + 1;
+        const spliceLength = history.snapshots.length - history.index;
+        history.snapshots.splice(spliceIndex, spliceLength);
+        history.labels.splice(spliceIndex, spliceLength);
+
+        history.snapshots.push(snapshot);
+        history.labels.push(label);
+        history.index++;
 
         worker.terminate();
         worker = null;
@@ -123,20 +131,21 @@ function vtkPaintFilter(publicAPI, model) {
   // --------------------------------------------------------------------------
 
   publicAPI.undo = () => {
-    if (history.cindex > -1) {
+    if (history.index > -1) {
       const scalars = model.labelMap.getPointData().getScalars();
       const data = scalars.getData();
 
-      for (let i = 0; i < history.buffer.length; i++) {
-        let labeli = history.cindex - 1;
-        while (labeli > -1 && !(history.buffer[i] & (1 << labeli))) {
-          labeli--;
+      const snapshot = history.snapshots[history.index];
+      for (let i = 0; i < snapshot.length; i++) {
+        if (!snapshot[i]) {
+          break;
         }
-        const label = history.colors[labeli] || 0;
-        data[i] = label;
+
+        const [index, oldLabel] = snapshot[i];
+        data[index] = oldLabel;
       }
 
-      history.cindex--;
+      history.index--;
 
       scalars.setData(data);
       scalars.modified();
@@ -148,19 +157,23 @@ function vtkPaintFilter(publicAPI, model) {
   // --------------------------------------------------------------------------
 
   publicAPI.redo = () => {
-    if (history.cindex < history.colors.length - 1) {
+    if (history.index < history.labels.length - 1) {
       const scalars = model.labelMap.getPointData().getScalars();
       const data = scalars.getData();
-      const labeli = history.cindex + 1;
-      const label = history.colors[labeli];
 
-      for (let i = 0; i < history.buffer.length; i++) {
-        if (history.buffer[i] & (1 << labeli)) {
-          data[i] = label;
+      const redoLabel = history.labels[history.index + 1];
+      const snapshot = history.snapshots[history.index + 1];
+
+      for (let i = 0; i < snapshot.length; i++) {
+        if (!snapshot[i]) {
+          break;
         }
+
+        const [index] = snapshot[i];
+        data[index] = redoLabel;
       }
 
-      history.cindex++;
+      history.index++;
 
       scalars.setData(data);
       scalars.modified();
@@ -174,13 +187,9 @@ function vtkPaintFilter(publicAPI, model) {
   const superSetLabelMap = publicAPI.setLabelMap;
   publicAPI.setLabelMap = (lm) => {
     if (superSetLabelMap(lm)) {
-      // reset history layer
-      history.buffer = lm ? new Uint8Array(lm.getNumberOfPoints()) : null;
-      history.cindex = -1;
-
+      resetHistory();
       return true;
     }
-
     return false;
   };
 
@@ -231,6 +240,12 @@ function vtkPaintFilter(publicAPI, model) {
 
     outData[0] = model.labelMap;
   };
+
+  // --------------------------------------------------------------------------
+  // Initialization
+  // --------------------------------------------------------------------------
+
+  resetHistory();
 }
 
 // ----------------------------------------------------------------------------
