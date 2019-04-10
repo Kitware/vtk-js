@@ -221,12 +221,7 @@ reader
     // don't set to 0, since that's our empty label color from our pwf
     painter.setLabel(1);
     // set custom threshold
-    painter.setVoxelFunc((bgValue, label, idx) => {
-      if (bgValue > 145) {
-        return label;
-      }
-      return null;
-    });
+    painter.setVoxelFunc((bgValue, idx) => bgValue > 145);
 
     // default slice orientation/mode and camera view
     const sliceMode = vtkImageMapper.SlicingMode.K;
