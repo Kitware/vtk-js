@@ -167,7 +167,10 @@ function vtkWidgetManager(publicAPI, model) {
     );
 
     publicAPI.modified();
-    publicAPI.enablePicking();
+
+    if (model.pickingEnabled) {
+      publicAPI.enablePicking();
+    }
   };
 
   publicAPI.addWidget = (widget, viewType, initialValues) => {
