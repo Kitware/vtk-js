@@ -38,7 +38,6 @@ function handlePaint({ point, radius }) {
       delta[i] = -delta[i];
       inc[i] = -1;
     }
-    delta[i]++;
   }
   const step = Math.max(...delta);
 
@@ -74,7 +73,7 @@ function handlePaint({ point, radius }) {
 
             for (let ii = 0; ii < 3; ii++) {
               thresh[ii] -= delta[ii];
-              if (thresh[ii] < 0) {
+              if (thresh[ii] <= 0) {
                 thresh[ii] = step;
                 pt[ii] += inc[ii];
               }
