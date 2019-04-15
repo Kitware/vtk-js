@@ -4,6 +4,7 @@ import vtkConvexFaceContextRepresentation from './ConvexFaceContextRepresentatio
 import vtkCubeHandleRepresentation from './CubeHandleRepresentation';
 import vtkHandleRepresentation from './HandleRepresentation';
 import vtkImplicitPlaneRepresentation from './ImplicitPlaneRepresentation';
+import vtkOutlineContextRepresentation from './OutlineContextRepresentation';
 import vtkPolyLineRepresentation from './PolyLineRepresentation';
 import vtkSphereHandleRepresentation from './SphereHandleRepresentation';
 import vtkWidgetRepresentation from './WidgetRepresentation';
@@ -15,6 +16,7 @@ export default {
   vtkCubeHandleRepresentation,
   vtkHandleRepresentation,
   vtkImplicitPlaneRepresentation,
+  vtkOutlineContextRepresentation,
   vtkPolyLineRepresentation,
   vtkSphereHandleRepresentation,
   vtkWidgetRepresentation,
