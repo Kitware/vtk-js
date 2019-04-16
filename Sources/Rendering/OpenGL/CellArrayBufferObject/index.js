@@ -29,6 +29,7 @@ function vtkOpenGLCellArrayBufferObject(publicAPI, model) {
     model.tCoordComponents = 0;
     model.colorComponents = 0;
     model.colorOffset = 0;
+    model.customData = [];
 
     const pointData = options.points.getData();
     let normalData = null;
@@ -48,6 +49,20 @@ function vtkOpenGLCellArrayBufferObject(publicAPI, model) {
       model.normalOffset = 4 * model.blockSize;
       model.blockSize += 3;
       normalData = options.normals.getData();
+    }
+
+    if (options.customAttributes) {
+      options.customAttributes.forEach((a) => {
+        if (a) {
+          model.customData.push({
+            data: a.getData(),
+            offset: 4 * model.blockSize,
+            components: a.getNumberOfComponents(),
+            name: a.getName(),
+          });
+          model.blockSize += a.getNumberOfComponents();
+        }
+      });
     }
 
     if (options.tcoords) {
@@ -74,6 +89,7 @@ function vtkOpenGLCellArrayBufferObject(publicAPI, model) {
     let normalIdx = 0;
     let tcoordIdx = 0;
     let colorIdx = 0;
+    let custIdx = 0;
     let cellCount = 0;
     let addAPoint;
 
@@ -203,6 +219,13 @@ function vtkOpenGLCellArrayBufferObject(publicAPI, model) {
         packedVBO[vboidx++] = normalData[normalIdx++];
       }
 
+      model.customData.forEach((attr) => {
+        custIdx = i * attr.components;
+        for (let j = 0; j < attr.components; ++j) {
+          packedVBO[vboidx++] = attr.data[custIdx++];
+        }
+      });
+
       if (tcoordData !== null) {
         tcoordIdx = i * textureComponents;
         for (let j = 0; j < textureComponents; ++j) {
@@ -266,6 +289,7 @@ const DEFAULT_VALUES = {
   colorOffset: 0,
   colorComponents: 0,
   tcoordBO: null,
+  customData: [],
 };
 
 // ----------------------------------------------------------------------------
@@ -287,6 +311,7 @@ export function extend(publicAPI, model, initialValues = {}) {
     'tCoordComponents',
     'colorOffset',
     'colorComponents',
+    'customData',
   ]);
 
   // Object specific methods

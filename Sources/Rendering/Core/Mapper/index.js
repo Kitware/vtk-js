@@ -595,6 +595,8 @@ const DEFAULT_VALUES = {
   resolveCoincidentTopology: false,
 
   viewSpecificProperties: null,
+
+  customShaderAttributes: [],
 };
 
 // ----------------------------------------------------------------------------
@@ -624,6 +626,7 @@ export function extend(publicAPI, model, initialValues = {}) {
     'static',
     'useLookupTableScalarRange',
     'viewSpecificProperties',
+    'customShaderAttributes', // point data array names that will be transfered to the VBO
   ]);
   macro.setGetArray(publicAPI, model, ['scalarRange'], 2);
 
