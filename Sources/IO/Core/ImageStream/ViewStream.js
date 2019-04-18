@@ -154,9 +154,9 @@ function vtkViewStream(publicAPI, model) {
     );
     if (model.camera) {
       promises.push(publicAPI.stopAnimation());
+      model.isAnimating = false;
+      promises.push(publicAPI.pushCamera());
     }
-    model.isAnimating = false;
-    promises.push(publicAPI.pushCamera());
 
     return Promise.all(promises);
   };
