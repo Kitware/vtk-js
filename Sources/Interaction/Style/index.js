@@ -1,11 +1,13 @@
 import vtkInteractorStyleImage from './InteractorStyleImage';
 import vtkInteractorStyleManipulator from './InteractorStyleManipulator';
-import vtkInteractorStyleTrackballCamera from './InteractorStyleTrackballCamera';
 import vtkInteractorStyleMPRSlice from './InteractorStyleMPRSlice';
+import vtkInteractorStyleRemoteMouse from './InteractorStyleRemoteMouse';
+import vtkInteractorStyleTrackballCamera from './InteractorStyleTrackballCamera';
 
 export default {
   vtkInteractorStyleImage,
   vtkInteractorStyleManipulator,
-  vtkInteractorStyleTrackballCamera,
   vtkInteractorStyleMPRSlice,
+  vtkInteractorStyleRemoteMouse,
+  vtkInteractorStyleTrackballCamera,
 };
