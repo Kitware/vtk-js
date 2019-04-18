@@ -133,12 +133,16 @@ function vtkInteractorStyleRemoteMouse(publicAPI, model) {
 
   //-------------------------------------------------------------------------
   publicAPI.handleMouseMove = (callData) => {
+    const ts = Date.now();
+    const needToSend = model.throttleDelay < ts - model.lastThrottleTime;
     if (
-      model.sendMouseMove ||
-      model.buttonLeft ||
-      model.buttonMiddle ||
-      model.buttonRight
+      needToSend &&
+      (model.sendMouseMove ||
+        model.buttonLeft ||
+        model.buttonMiddle ||
+        model.buttonRight)
     ) {
+      model.lastThrottleTime = ts;
       publicAPI.invokeRemoteMouseEvent(createRemoteEvent(callData));
     }
     publicAPI.invokeInteractionEvent(INTERACTION_EVENT);
@@ -234,6 +238,8 @@ const DEFAULT_VALUES = {
   buttonMiddle: 0,
   buttonRight: 0,
   sendMouseMove: false,
+  throttleDelay: 33.3, // 33.3 millisecond <=> 30 events/second
+  lastThrottleTime: 0,
   // remoteEventAddOn: null,
 };
 
@@ -244,7 +250,11 @@ export function extend(publicAPI, model, initialValues = {}) {
 
   // Inheritance
   vtkInteractorStyle.extend(publicAPI, model, initialValues);
-  macro.setGet(publicAPI, model, ['sendMouseMove', 'remoteEventAddOn']);
+  macro.setGet(publicAPI, model, [
+    'sendMouseMove',
+    'remoteEventAddOn',
+    'throttleDelay',
+  ]);
   macro.event(publicAPI, model, 'RemoteMouseEvent');
   macro.event(publicAPI, model, 'RemoteWheelEvent');
   macro.event(publicAPI, model, 'RemoteGestureEvent');
@@ -255,7 +265,7 @@ export function extend(publicAPI, model, initialValues = {}) {
 
 // ----------------------------------------------------------------------------
 
-const newInstance = macro.newInstance(extend, 'vtkInteractorStyleRemoteMouse');
+export const newInstance = macro.newInstance(extend, 'vtkInteractorStyleRemoteMouse');
 
 // ----------------------------------------------------------------------------
 
