@@ -14,6 +14,7 @@ import vtkPiecewiseFunction from './PiecewiseFunction';
 import vtkPlane from './Plane';
 import vtkPointSet from './PointSet';
 import vtkPolyData from './PolyData';
+import vtkSelectionNode from './SelectionNode';
 import vtkSphere from './Sphere';
 import vtkStructuredData from './StructuredData';
 import vtkTriangle from './Triangle';
@@ -35,6 +36,7 @@ export default {
   vtkPlane,
   vtkPointSet,
   vtkPolyData,
+  vtkSelectionNode,
   vtkSphere,
   vtkStructuredData,
   vtkTriangle,
