@@ -23,3 +23,6 @@ Integer representing the number of points used to build the base of the cone.
 
 Boolean letting you close the base of the cone.
 
+### Direction (set/get)
+
+Float array of size 3 representing the direction for the cone. Defaults to [1, 0, 0].
