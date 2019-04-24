@@ -97,16 +97,16 @@ function vtkInteractorStyleRemoteMouse(publicAPI, model) {
 
   //-------------------------------------------------------------------------
   publicAPI.onButtonDown = (button, callData) => {
-    publicAPI.invokeRemoteMouseEvent(createRemoteEvent(callData));
     model.interactor.requestAnimation(publicAPI.onButtonDown);
     publicAPI.invokeStartInteractionEvent(START_INTERACTION_EVENT);
+    publicAPI.invokeRemoteMouseEvent(createRemoteEvent(callData));
   };
 
   //-------------------------------------------------------------------------
   publicAPI.onButtonUp = (button, callData) => {
     publicAPI.invokeRemoteMouseEvent(createRemoteEvent(callData));
-    model.interactor.cancelAnimation(publicAPI.onButtonDown);
     publicAPI.invokeEndInteractionEvent(END_INTERACTION_EVENT);
+    model.interactor.cancelAnimation(publicAPI.onButtonDown);
   };
 
   //-------------------------------------------------------------------------
