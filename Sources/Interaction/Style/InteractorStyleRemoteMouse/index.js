@@ -26,7 +26,7 @@ function vtkInteractorStyleRemoteMouse(publicAPI, model) {
     //  - shiftKey, ctrlKey, altKey, metaKey
     const { buttonLeft, buttonMiddle, buttonRight } = model;
     const shiftKey = callData.shiftKey ? 1 : 0;
-    const ctrlKey = callData.ctrlKey ? 1 : 0;
+    const ctrlKey = callData.controlKey ? 1 : 0;
     const altKey = callData.altKey ? 1 : 0;
     const metaKey = callData.metaKey ? 1 : 0; // Might be platform specific
     const action = buttonLeft || buttonMiddle || buttonRight ? 'down' : 'up';
