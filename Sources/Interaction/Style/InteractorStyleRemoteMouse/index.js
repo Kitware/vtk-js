@@ -148,6 +148,9 @@ function vtkInteractorStyleRemoteMouse(publicAPI, model) {
     publicAPI.invokeInteractionEvent(INTERACTION_EVENT);
   };
 
+  // Override default handler
+  publicAPI.handleKeyPress = () => {};
+
   //-------------------------------------------------------------------------
   // Gesture
   //-------------------------------------------------------------------------
