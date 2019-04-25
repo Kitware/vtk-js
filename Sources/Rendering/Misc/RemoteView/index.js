@@ -128,7 +128,7 @@ function vtkRemoteView(publicAPI, model) {
   // --------------------------------------------------------------------------
   // viewStream setters
   // --------------------------------------------------------------------------
-  const internal = {};
+  const internal = { modified: publicAPI.modified };
   macro.set(internal, model, [
     'interactiveQuality',
     'interactiveRatio',
