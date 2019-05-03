@@ -1236,6 +1236,28 @@ function vtkOpenGLPolyDataMapper(publicAPI, model) {
       } else {
         cellBO.getVAO().removeAttributeArray('normalMC');
       }
+
+      model.renderable.getCustomShaderAttributes().forEach((attrName, idx) => {
+        if (cellBO.getProgram().isAttributeUsed(`${attrName}MC`)) {
+          if (
+            !cellBO
+              .getVAO()
+              .addAttributeArray(
+                cellBO.getProgram(),
+                cellBO.getCABO(),
+                `${attrName}MC`,
+                cellBO.getCABO().getCustomData()[idx].offset,
+                cellBO.getCABO().getStride(),
+                model.context.FLOAT,
+                cellBO.getCABO().getCustomData()[idx].components,
+                false
+              )
+          ) {
+            vtkErrorMacro(`Error setting ${attrName}MC in shader VAO.`);
+          }
+        }
+      });
+
       if (
         cellBO.getProgram().isAttributeUsed('tcoordMC') &&
         cellBO.getCABO().getTCoordOffset()
@@ -1825,6 +1847,9 @@ function vtkOpenGLPolyDataMapper(publicAPI, model) {
         cellOffset: 0,
         haveCellScalars: model.haveCellScalars,
         haveCellNormals: model.haveCellNormals,
+        customAttributes: model.renderable
+          .getCustomShaderAttributes()
+          .map((arrayName) => poly.getPointData().getArrayByName(arrayName)),
       };
       options.cellOffset += model.primitives[primTypes.Points]
         .getCABO()
