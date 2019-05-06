@@ -510,6 +510,10 @@ function vtkOpenGLVolumeMapper(publicAPI, model) {
     // // [WMVD]C == {world, model, view, display} coordinates
     // // E.g., WCDC == world to display coordinate transformation
     const keyMats = model.openGLCamera.getKeyMatrices(ren);
+    const actMats = model.openGLVolume.getKeyMatrices();
+
+    const mcvc = mat4.create();
+    mat4.multiply(mcvc, keyMats.wcvc, actMats.mcwc);
 
     const program = cellBO.getProgram();
 
@@ -537,7 +541,7 @@ function vtkOpenGLVolumeMapper(publicAPI, model) {
         bounds[2 + (Math.floor(i / 2) % 2)],
         bounds[4 + Math.floor(i / 4)]
       );
-      vec3.transformMat4(pos, pos, keyMats.wcvc);
+      vec3.transformMat4(pos, pos, mcvc);
       vec3.normalize(dir, pos);
 
       // now find the projection of this point onto a
@@ -575,12 +579,12 @@ function vtkOpenGLVolumeMapper(publicAPI, model) {
     vec3.set(pos, ext[0], ext[2], ext[4]);
     model.currentInput.indexToWorldVec3(pos, pos);
 
-    vec3.transformMat4(pos, pos, keyMats.wcvc);
+    vec3.transformMat4(pos, pos, mcvc);
     program.setUniform3f('vOriginVC', pos[0], pos[1], pos[2]);
 
     // apply the image directions
     const i2wmat4 = model.currentInput.getIndexToWorld();
-    mat4.multiply(model.idxToView, keyMats.wcvc, i2wmat4);
+    mat4.multiply(model.idxToView, mcvc, i2wmat4);
 
     mat3.copy(model.idxNormalMatrix, model.currentInput.getDirection());
     mat3.multiply(
