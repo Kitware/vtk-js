@@ -587,11 +587,9 @@ function vtkOpenGLVolumeMapper(publicAPI, model) {
     mat4.multiply(model.idxToView, mcvc, i2wmat4);
 
     mat3.copy(model.idxNormalMatrix, model.currentInput.getDirection());
-    mat3.multiply(
-      model.idxNormalMatrix,
-      keyMats.normalMatrix,
-      model.idxNormalMatrix
-    );
+    const normMat = mat3.create();
+    mat3.multiply(normMat, keyMats.normalMatrix, actMats.normalMatrix);
+    mat3.multiply(model.idxNormalMatrix, normMat, model.idxNormalMatrix);
 
     const maxSamples =
       vec3.length(vsize) / model.renderable.getSampleDistance();
