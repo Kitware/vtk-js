@@ -512,8 +512,7 @@ function vtkOpenGLVolumeMapper(publicAPI, model) {
     const keyMats = model.openGLCamera.getKeyMatrices(ren);
     const actMats = model.openGLVolume.getKeyMatrices();
 
-    const mcvc = mat4.create();
-    mat4.multiply(mcvc, keyMats.wcvc, actMats.mcwc);
+    mat4.multiply(model.modelToView, keyMats.wcvc, actMats.mcwc);
 
     const program = cellBO.getProgram();
 
@@ -541,7 +540,7 @@ function vtkOpenGLVolumeMapper(publicAPI, model) {
         bounds[2 + (Math.floor(i / 2) % 2)],
         bounds[4 + Math.floor(i / 4)]
       );
-      vec3.transformMat4(pos, pos, mcvc);
+      vec3.transformMat4(pos, pos, model.modelToView);
       vec3.normalize(dir, pos);
 
       // now find the projection of this point onto a
@@ -579,17 +578,23 @@ function vtkOpenGLVolumeMapper(publicAPI, model) {
     vec3.set(pos, ext[0], ext[2], ext[4]);
     model.currentInput.indexToWorldVec3(pos, pos);
 
-    vec3.transformMat4(pos, pos, mcvc);
+    vec3.transformMat4(pos, pos, model.modelToView);
     program.setUniform3f('vOriginVC', pos[0], pos[1], pos[2]);
 
     // apply the image directions
     const i2wmat4 = model.currentInput.getIndexToWorld();
-    mat4.multiply(model.idxToView, mcvc, i2wmat4);
+    mat4.multiply(model.idxToView, model.modelToView, i2wmat4);
 
-    mat3.copy(model.idxNormalMatrix, model.currentInput.getDirection());
-    const normMat = mat3.create();
-    mat3.multiply(normMat, keyMats.normalMatrix, actMats.normalMatrix);
-    mat3.multiply(model.idxNormalMatrix, normMat, model.idxNormalMatrix);
+    mat3.multiply(
+      model.idxNormalMatrix,
+      keyMats.normalMatrix,
+      actMats.normalMatrix
+    );
+    mat3.multiply(
+      model.idxNormalMatrix,
+      model.idxNormalMatrix,
+      model.currentInput.getDirection()
+    );
 
     const maxSamples =
       vec3.length(vsize) / model.renderable.getSampleDistance();
@@ -664,9 +669,8 @@ function vtkOpenGLVolumeMapper(publicAPI, model) {
       program.setUniformf(`vPlaneDistance${i}`, dist);
     }
 
-    const dcvc = mat4.create();
-    mat4.invert(dcvc, keyMats.vcdc);
-    program.setUniformMatrix('DCVCMatrix', dcvc);
+    mat4.invert(model.displayToView, keyMats.vcdc);
+    program.setUniformMatrix('DCVCMatrix', model.displayToView);
 
     // handle lighting values
     switch (model.lastLightComplexity) {
@@ -1321,6 +1325,8 @@ const DEFAULT_VALUES = {
   fullViewportTime: 1.0,
   idxToView: null,
   idxNormalMatrix: null,
+  modelToView: null,
+  displayToView: null,
   avgWindowArea: 0.0,
   avgFrameTime: 0.0,
 };
@@ -1348,6 +1354,8 @@ export function extend(publicAPI, model, initialValues = {}) {
 
   model.idxToView = mat4.create();
   model.idxNormalMatrix = mat3.create();
+  model.modelToView = mat4.create();
+  model.displayToView = mat4.create();
 
   // Build VTK API
   macro.setGet(publicAPI, model, ['context']);
