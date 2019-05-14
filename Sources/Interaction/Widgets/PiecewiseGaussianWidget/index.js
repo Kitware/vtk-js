@@ -748,8 +748,7 @@ function vtkPiecewiseGaussianWidget(publicAPI, model) {
       Object.keys(model.listeners).forEach((eventType) => {
         model.canvas.addEventListener(
           eventType,
-          model.listeners[eventType],
-          false
+          model.listeners[eventType]
         );
       });
     }

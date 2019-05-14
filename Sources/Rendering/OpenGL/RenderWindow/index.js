@@ -312,14 +312,12 @@ function vtkOpenGLRenderWindow(publicAPI, model) {
       'webglcontextlost',
       (event) => {
         event.preventDefault();
-      },
-      false
+      }
     );
 
     model.canvas.addEventListener(
       'webglcontextrestored',
-      publicAPI.restoreContext,
-      false
+      publicAPI.restoreContext
     );
 
     return result;

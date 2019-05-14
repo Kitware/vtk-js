@@ -36,13 +36,11 @@ function onScreenOrientationChangeEvent() {
 function addWindowListeners() {
   window.addEventListener(
     'orientationchange',
-    onScreenOrientationChangeEvent,
-    false
+    onScreenOrientationChangeEvent
   );
   window.addEventListener(
     'deviceorientation',
-    onDeviceOrientationChangeEvent,
-    false
+    onDeviceOrientationChangeEvent
   );
   orientation.update = true;
   listeners
