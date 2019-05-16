@@ -114,19 +114,25 @@ function vtkInteractorStyleRemoteMouse(publicAPI, model) {
     const { spinY } = callData;
     model.interactor.requestAnimation(publicAPI.handleStartMouseWheel);
     publicAPI.invokeStartInteractionEvent(START_INTERACTION_EVENT);
-    publicAPI.invokeRemoteWheelEvent({ type: 'StartMouseWheel', spinY });
+    publicAPI.invokeRemoteWheelEvent(
+      Object.assign({ type: 'StartMouseWheel', spinY }, model.remoteEventAddOn)
+    );
   };
 
   //-------------------------------------------------------------------------
   publicAPI.handleMouseWheel = (callData) => {
     const { spinY } = callData;
-    publicAPI.invokeRemoteWheelEvent({ type: 'MouseWheel', spinY });
+    publicAPI.invokeRemoteWheelEvent(
+      Object.assign({ type: 'MouseWheel', spinY }, model.remoteEventAddOn)
+    );
     publicAPI.invokeInteractionEvent(INTERACTION_EVENT);
   };
 
   //-------------------------------------------------------------------------
   publicAPI.handleEndMouseWheel = () => {
-    publicAPI.invokeRemoteWheelEvent({ type: 'EndMouseWheel' });
+    publicAPI.invokeRemoteWheelEvent(
+      Object.assign({ type: 'EndMouseWheel' }, model.remoteEventAddOn)
+    );
     model.interactor.cancelAnimation(publicAPI.handleStartMouseWheel);
     publicAPI.invokeEndInteractionEvent(END_INTERACTION_EVENT);
   };
@@ -160,21 +166,27 @@ function vtkInteractorStyleRemoteMouse(publicAPI, model) {
     const { scale } = callData;
     model.interactor.requestAnimation(publicAPI.handleStartPinch);
     publicAPI.invokeStartInteractionEvent(START_INTERACTION_EVENT);
-    publicAPI.invokeRemoteGestureEvent({ type: 'StartPinch', scale });
+    publicAPI.invokeRemoteGestureEvent(
+      Object.assign({ type: 'StartPinch', scale }, model.remoteEventAddOn)
+    );
   };
 
   //----------------------------------------------------------------------------
 
   publicAPI.handlePinch = (callData) => {
     const { scale } = callData;
-    publicAPI.invokeRemoteGestureEvent({ type: 'Pinch', scale });
+    publicAPI.invokeRemoteGestureEvent(
+      Object.assign({ type: 'Pinch', scale }, model.remoteEventAddOn)
+    );
   };
 
   //--------------------------------------------------------------------------
 
   publicAPI.handleEndPinch = () => {
     publicAPI.endDolly();
-    publicAPI.invokeRemoteGestureEvent({ type: 'EndPinch' });
+    publicAPI.invokeRemoteGestureEvent(
+      Object.assign({ type: 'EndPinch' }, model.remoteEventAddOn)
+    );
     model.interactor.cancelAnimation(publicAPI.handleStartPinch);
     publicAPI.invokeEndInteractionEvent(END_INTERACTION_EVENT);
   };
@@ -186,21 +198,27 @@ function vtkInteractorStyleRemoteMouse(publicAPI, model) {
     const { rotation } = callData;
     model.interactor.requestAnimation(publicAPI.handleStartRotate);
     publicAPI.invokeStartInteractionEvent(START_INTERACTION_EVENT);
-    publicAPI.invokeRemoteGestureEvent({ type: 'StartRotate', rotation });
+    publicAPI.invokeRemoteGestureEvent(
+      Object.assign({ type: 'StartRotate', rotation }, model.remoteEventAddOn)
+    );
   };
 
   //----------------------------------------------------------------------------
 
   publicAPI.handleRotate = (callData) => {
     const { rotation } = callData;
-    publicAPI.invokeRemoteGestureEvent({ type: 'Rotate', rotation });
+    publicAPI.invokeRemoteGestureEvent(
+      Object.assign({ type: 'Rotate', rotation }, model.remoteEventAddOn)
+    );
   };
 
   //--------------------------------------------------------------------------
 
   publicAPI.handleEndRotate = () => {
     publicAPI.endRotate();
-    publicAPI.invokeRemoteGestureEvent({ type: 'EndRotate' });
+    publicAPI.invokeRemoteGestureEvent(
+      Object.assign({ type: 'EndRotate' }, model.remoteEventAddOn)
+    );
     model.interactor.cancelAnimation(publicAPI.handleStartRotate);
     publicAPI.invokeEndInteractionEvent(END_INTERACTION_EVENT);
   };
@@ -212,21 +230,27 @@ function vtkInteractorStyleRemoteMouse(publicAPI, model) {
     const { translation } = callData;
     model.interactor.requestAnimation(publicAPI.handleStartPan);
     publicAPI.invokeStartInteractionEvent(START_INTERACTION_EVENT);
-    publicAPI.invokeRemoteGestureEvent({ type: 'StartPan', translation });
+    publicAPI.invokeRemoteGestureEvent(
+      Object.assign({ type: 'StartPan', translation }, model.remoteEventAddOn)
+    );
   };
 
   //----------------------------------------------------------------------------
 
   publicAPI.handlePan = (callData) => {
     const { translation } = callData;
-    publicAPI.invokeRemoteGestureEvent({ type: 'Pan', translation });
+    publicAPI.invokeRemoteGestureEvent(
+      Object.assign({ type: 'Pan', translation }, model.remoteEventAddOn)
+    );
   };
 
   //--------------------------------------------------------------------------
 
   publicAPI.handleEndPan = () => {
     publicAPI.endPan();
-    publicAPI.invokeRemoteGestureEvent({ type: 'EndPan' });
+    publicAPI.invokeRemoteGestureEvent(
+      Object.assign({ type: 'EndPan' }, model.remoteEventAddOn)
+    );
     model.interactor.cancelAnimation(publicAPI.handleStartPan);
     publicAPI.invokeEndInteractionEvent(END_INTERACTION_EVENT);
   };
