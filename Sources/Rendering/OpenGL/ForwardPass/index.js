@@ -24,55 +24,65 @@ function vtkForwardPass(publicAPI, model) {
     publicAPI.setCurrentOperation('buildPass');
     viewNode.traverse(publicAPI);
 
+    const numlayers = viewNode.getRenderable().getNumberOfLayers();
+
     // iterate over renderers
     const renderers = viewNode.getChildren();
-    for (let index = 0; index < renderers.length; index++) {
-      const renNode = renderers[index];
+    for (let i = 0; i < numlayers; i++) {
+      for (let index = 0; index < renderers.length; index++) {
+        const renNode = renderers[index];
+        const ren = viewNode.getRenderable().getRenderers()[index];
+        if (ren.getLayer() === i) {
+          // check for both opaque and volume actors
+          model.opaqueActorCount = 0;
+          model.translucentActorCount = 0;
+          model.volumeCount = 0;
+          publicAPI.setCurrentOperation('queryPass');
 
-      // check for both opaque and volume actors
-      model.opaqueActorCount = 0;
-      model.translucentActorCount = 0;
-      model.volumeCount = 0;
-      publicAPI.setCurrentOperation('queryPass');
+          renNode.traverse(publicAPI);
 
-      renNode.traverse(publicAPI);
+          // do we need to capture a zbuffer?
+          if (
+            (model.opaqueActorCount > 0 && model.volumeCount > 0) ||
+            model.depthRequested
+          ) {
+            const size = viewNode.getFramebufferSize();
+            // make sure the framebuffer is setup
+            if (model.framebuffer === null) {
+              model.framebuffer = vtkOpenGLFramebuffer.newInstance();
+            }
+            model.framebuffer.setOpenGLRenderWindow(viewNode);
+            model.framebuffer.saveCurrentBindingsAndBuffers();
+            const fbSize = model.framebuffer.getSize();
+            if (
+              fbSize === null ||
+              fbSize[0] !== size[0] ||
+              fbSize[1] !== size[1]
+            ) {
+              model.framebuffer.create(size[0], size[1]);
+              model.framebuffer.populateFramebuffer();
+            }
+            model.framebuffer.bind();
+            publicAPI.setCurrentOperation('opaqueZBufferPass');
+            renNode.traverse(publicAPI);
+            model.framebuffer.restorePreviousBindingsAndBuffers();
+          }
 
-      // do we need to capture a zbuffer?
-      if (
-        (model.opaqueActorCount > 0 && model.volumeCount > 0) ||
-        model.depthRequested
-      ) {
-        const size = viewNode.getFramebufferSize();
-        // make sure the framebuffer is setup
-        if (model.framebuffer === null) {
-          model.framebuffer = vtkOpenGLFramebuffer.newInstance();
+          publicAPI.setCurrentOperation('cameraPass');
+          renNode.traverse(publicAPI);
+          if (model.opaqueActorCount > 0) {
+            publicAPI.setCurrentOperation('opaquePass');
+            renNode.traverse(publicAPI);
+          }
+          if (model.translucentActorCount > 0) {
+            publicAPI.setCurrentOperation('translucentPass');
+            renNode.traverse(publicAPI);
+          }
+          if (model.volumeCount > 0) {
+            publicAPI.setCurrentOperation('volumePass');
+            renNode.traverse(publicAPI);
+          }
         }
-        model.framebuffer.setOpenGLRenderWindow(viewNode);
-        model.framebuffer.saveCurrentBindingsAndBuffers();
-        const fbSize = model.framebuffer.getSize();
-        if (fbSize === null || fbSize[0] !== size[0] || fbSize[1] !== size[1]) {
-          model.framebuffer.create(size[0], size[1]);
-          model.framebuffer.populateFramebuffer();
-        }
-        model.framebuffer.bind();
-        publicAPI.setCurrentOperation('opaqueZBufferPass');
-        renNode.traverse(publicAPI);
-        model.framebuffer.restorePreviousBindingsAndBuffers();
-      }
-
-      publicAPI.setCurrentOperation('cameraPass');
-      renNode.traverse(publicAPI);
-      if (model.opaqueActorCount > 0) {
-        publicAPI.setCurrentOperation('opaquePass');
-        renNode.traverse(publicAPI);
-      }
-      if (model.translucentActorCount > 0) {
-        publicAPI.setCurrentOperation('translucentPass');
-        renNode.traverse(publicAPI);
-      }
-      if (model.volumeCount > 0) {
-        publicAPI.setCurrentOperation('volumePass');
-        renNode.traverse(publicAPI);
       }
     }
   };
