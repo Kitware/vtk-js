@@ -181,7 +181,11 @@ function vtkLabelRepresentation(publicAPI, model) {
         const currentLabelStyle = model.highlight
           ? model.selectLabelStyle
           : model.labelStyle;
-        const lines = model.labelText.split('\n ');
+
+        const separatorRegExp = /\r?\n/;
+        const separatorRes = separatorRegExp.exec(model.labelText);
+        const separator = separatorRes !== null ? separatorRes[0] : null;
+        const lines = model.labelText.split(separator);
 
         const lineSpace =
           currentLabelStyle.fontSize * (1 + currentLabelStyle.lineSpace);
