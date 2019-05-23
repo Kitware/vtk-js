@@ -550,7 +550,7 @@ const DEFAULT_VALUES = {
 
   pathArray: null,
 
-  layer: 1,
+  layer: 0,
   preserveColorBuffer: false,
   preserveDepthBuffer: false,
 
