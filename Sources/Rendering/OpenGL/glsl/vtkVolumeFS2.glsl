@@ -179,46 +179,105 @@ void main()
     vec3 ijk = vpos * vVCToIJK;
     vdelta = vdelta * vVCToIJK;
     int count = int(numSteps - 0.05); // end slightly inside
-    for (int i = 0; i < //VTK::MaximumSamplesValue ; ++i)
+
+    int blendMode = //VTK::BlendMode;
+    if (blendMode == 0)
     {
-      // compute the scalar
-      scalar = texture(texture1, ijk).r;
-
-      // now map through opacity and color
-      vec4 tcolor = texture2D(ctexture, vec2(scalar * cscale + cshift, 0.5));
-      tcolor.a = texture2D(otexture, vec2(scalar * oscale + oshift, 0.5)).r;
-
-      // compute the normal if needed
-      //VTK::Normal::Impl
-
-      // handle gradient opacity
-      //VTK::GradientOpacity::Impl
-
-      // handle lighting
-      //VTK::Light::Impl
-
-      float mix = (1.0 - color.a);
-
-      color = color + vec4(tcolor.rgb*tcolor.a, tcolor.a)*mix;
-      if (color.a > 0.99) { color.a = 1.0; break; }
-      ijk += vdelta;
-      if (i >= count)
+      for (int i = 0; i < //VTK::MaximumSamplesValue ; ++i)
       {
-        break;
-      }
-    }
+        // compute the scalar
+        scalar = texture(texture1, ijk).r;
 
-    if (color.a < 0.99)
-    {
+        // now map through opacity and color
+        vec4 tcolor = texture2D(ctexture, vec2(scalar * cscale + cshift, 0.5));
+        tcolor.a = texture2D(otexture, vec2(scalar * oscale + oshift, 0.5)).r;
+
+        // compute the normal if needed
+        //VTK::Normal::Impl
+
+        // handle gradient opacity
+        //VTK::GradientOpacity::Impl
+
+        // handle lighting
+        //VTK::Light::Impl
+
+        float mix = (1.0 - color.a);
+
+        color = color + vec4(tcolor.rgb*tcolor.a, tcolor.a)*mix;
+        if (color.a > 0.99) { color.a = 1.0; break; }
+        ijk += vdelta;
+        if (i >= count)
+        {
+          break;
+        }
+      }
+
+      if (color.a < 0.99)
+      {
+        float residual = numSteps - float(count);
+        ijk += (residual - 1.0)*vdelta;
+
+        // compute the scalar
+        scalar = texture(texture1, ijk).r;
+
+        // now map through opacity and color
+        vec4 tcolor = texture2D(ctexture, vec2(scalar * cscale + cshift, 0.5));
+        tcolor.a = residual*texture2D(otexture, vec2(scalar * oscale + oshift, 0.5)).r;
+
+        // compute the normal if needed
+        //VTK::Normal::Impl
+
+        // handle gradient opacity
+        //VTK::GradientOpacity::Impl
+
+        // handle lighting
+        //VTK::Light::Impl
+
+        float mix = (1.0 - color.a);
+        color = color + vec4(tcolor.rgb*tcolor.a, tcolor.a)*mix;
+      }
+
+      gl_FragData[0] = vec4(color.rgb/color.a, color.a);
+      // gl_FragData[0] = vec4(tbounds.y/farDist, tbounds.x/farDist, color.b/color.a, 1.0);
+    }
+    else if (blendMode == 1) {
+      // Find maximum intensity along the ray before mapping to a color
+
+      float maxValue = texture(texture1, ijk).r;
+
+      // Sample along the ray until MaximumSamplesValue,
+      // ending slightly inside the total distance
+      for (int i = 0; i < //VTK::MaximumSamplesValue ; ++i)
+      {
+        // compute the scalar
+        scalar = texture(texture1, ijk).r;
+
+        if (scalar > maxValue) {
+          maxValue = scalar;
+        }
+
+        ijk += vdelta;
+        if (i >= count)
+        {
+          break;
+        }
+      }
+
+      // Perform the last step along the ray using the
+      // residual distance
       float residual = numSteps - float(count);
       ijk += (residual - 1.0)*vdelta;
 
       // compute the scalar
       scalar = texture(texture1, ijk).r;
 
+      if (scalar > maxValue) {
+        maxValue = scalar;
+      }
+
       // now map through opacity and color
-      vec4 tcolor = texture2D(ctexture, vec2(scalar * cscale + cshift, 0.5));
-      tcolor.a = residual*texture2D(otexture, vec2(scalar * oscale + oshift, 0.5)).r;
+      vec4 tcolor = texture2D(ctexture, vec2(maxValue * cscale + cshift, 0.5));
+      tcolor.a = residual*texture2D(otexture, vec2(maxValue * oscale + oshift, 0.5)).r;
 
       // compute the normal if needed
       //VTK::Normal::Impl
@@ -229,12 +288,8 @@ void main()
       // handle lighting
       //VTK::Light::Impl
 
-      float mix = (1.0 - color.a);
-      color = color + vec4(tcolor.rgb*tcolor.a, tcolor.a)*mix;
+      gl_FragData[0] = tcolor;
     }
-
-    gl_FragData[0] = vec4(color.rgb/color.a, color.a);
-    // gl_FragData[0] = vec4(tbounds.y/farDist, tbounds.x/farDist, color.b/color.a, 1.0);
   }
   else
   {

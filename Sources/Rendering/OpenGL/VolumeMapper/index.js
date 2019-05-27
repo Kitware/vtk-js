@@ -128,6 +128,18 @@ function vtkOpenGLVolumeMapper(publicAPI, model) {
         '//VTK::MaximumSamplesValue',
         `${Math.ceil(maxSamples)}`
       ).result;
+
+      const BLEND_MODE = {
+        COMPOSITE: 0,
+        MAXIMUM_INTENSITY_PROJECTION: 1,
+      };
+
+      const blendMode = BLEND_MODE.MAXIMUM_INTENSITY_PROJECTION;
+      FSSource = vtkShaderProgram.substitute(
+        FSSource,
+        '//VTK::BlendMode',
+        `${blendMode}`
+      ).result;
     } else {
       // WebGL1
       // compute the tcoords
@@ -1093,7 +1105,7 @@ function vtkOpenGLVolumeMapper(publicAPI, model) {
       vtkMath.uninitializeBounds(model.Bounds);
       return;
     }
-    model.bounnds = publicAPI.getInput().getBounds();
+    model.bounds = publicAPI.getInput().getBounds();
   };
 
   publicAPI.updateBufferObjects = (ren, actor) => {
@@ -1309,7 +1321,7 @@ const DEFAULT_VALUES = {
   opacityTexture: null,
   opacityTextureString: null,
   colorTexture: null,
-  colortextureString: null,
+  colorTextureString: null,
   lightingTexture: null,
   lightingTextureString: null,
   jitterTexture: null,
