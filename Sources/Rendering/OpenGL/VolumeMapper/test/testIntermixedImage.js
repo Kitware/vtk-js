@@ -6,6 +6,7 @@ import vtkHttpDataSetReader from 'vtk.js/Sources/IO/Core/HttpDataSetReader';
 import vtkImageGridSource from 'vtk.js/Sources/Filters/Sources/ImageGridSource';
 import vtkImageMapper from 'vtk.js/Sources/Rendering/Core/ImageMapper';
 import vtkImageSlice from 'vtk.js/Sources/Rendering/Core/ImageSlice';
+import vtkInteractorStyleTrackballCamera from 'vtk.js/Sources/Interaction/Style/InteractorStyleTrackballCamera';
 import vtkOpenGLRenderWindow from 'vtk.js/Sources/Rendering/OpenGL/RenderWindow';
 import vtkPiecewiseFunction from 'vtk.js/Sources/Common/DataModel/PiecewiseFunction';
 import vtkRenderWindow from 'vtk.js/Sources/Rendering/Core/RenderWindow';
@@ -93,6 +94,9 @@ test.onlyIfWebGL('Test Composite Volume Rendering', (t) => {
   interactor.setView(glwindow);
   interactor.initialize();
   interactor.bindEvents(renderWindowContainer);
+  interactor.setInteractorStyle(
+    vtkInteractorStyleTrackballCamera.newInstance()
+  );
 
   // create axes
   const axes = gc.registerResource(vtkAnnotatedCubeActor.newInstance());

@@ -3,6 +3,7 @@ import testUtils from 'vtk.js/Sources/Testing/testUtils';
 
 import vtkColorTransferFunction from 'vtk.js/Sources/Rendering/Core/ColorTransferFunction';
 import vtkHttpDataSetReader from 'vtk.js/Sources/IO/Core/HttpDataSetReader';
+import vtkInteractorStyleTrackballCamera from 'vtk.js/Sources/Interaction/Style/InteractorStyleTrackballCamera';
 import vtkOpenGLRenderWindow from 'vtk.js/Sources/Rendering/OpenGL/RenderWindow';
 import vtkPiecewiseFunction from 'vtk.js/Sources/Common/DataModel/PiecewiseFunction';
 import vtkRenderWindow from 'vtk.js/Sources/Rendering/Core/RenderWindow';
@@ -62,7 +63,7 @@ test.onlyIfWebGL('Test Lighted Volume Rendering', (t) => {
   actor.getProperty().setSpecularPower(8.0);
   // actor.getProperty().setInterpolationTypeToFastLinear();
   actor.getProperty().setInterpolationTypeToLinear();
-  //  actor.getProperty().setInterpolationTypeToNearest();
+  // actor.getProperty().setInterpolationTypeToNearest();
 
   const reader = vtkHttpDataSetReader.newInstance({ fetchGzip: true });
   mapper.setInputConnection(reader.getOutputPort());
@@ -79,6 +80,9 @@ test.onlyIfWebGL('Test Lighted Volume Rendering', (t) => {
   interactor.setView(glwindow);
   interactor.initialize();
   interactor.bindEvents(renderWindowContainer);
+  interactor.setInteractorStyle(
+    vtkInteractorStyleTrackballCamera.newInstance()
+  );
 
   reader.setUrl(`${__BASE_PATH__}/Data/volume/headsq.vti`).then(() => {
     reader.loadData().then(() => {
@@ -90,21 +94,18 @@ test.onlyIfWebGL('Test Lighted Volume Rendering', (t) => {
       renderer.getActiveCamera().zoom(1.4);
       renderer.resetCameraClippingRange();
       renderer.updateLightsGeometryToFollowCamera();
-      mapper.onLightingActivated(() => {
-        renderWindow.render();
-        glwindow.captureNextImage().then((image) => {
-          testUtils.compareImages(
-            image,
-            [baseline1, baseline2],
-            'Rendering/OpenGL/VolumeMapper/testLighting',
-            t,
-            1.5,
-            gc.releaseResources
-          );
-        });
+      renderWindow.render();
+      glwindow.captureNextImage().then((image) => {
+        testUtils.compareImages(
+          image,
+          [baseline1, baseline2],
+          'Rendering/OpenGL/VolumeMapper/testMultiComponentComposite',
+          t,
+          1.5,
+          gc.releaseResources
+        );
       });
       renderWindow.render();
-      interactor.requestAnimation('test');
     });
   });
 });

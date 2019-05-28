@@ -28,7 +28,8 @@ uniform float camFar;
 
 // values describing the volume geometry
 uniform vec3 vOriginVC;
-uniform vec3 vSize;
+uniform vec3 vSpacing;
+uniform ivec3 volumeDimensions; // 3d texture dimensions
 uniform vec3 vPlaneNormal0;
 uniform float vPlaneDistance0;
 uniform vec3 vPlaneNormal1;
@@ -54,17 +55,8 @@ uniform float cscale;
 uniform sampler2D jtexture;
 
 // some 3D texture values
-uniform sampler2D texture1;
 uniform float sampleDistance;
 uniform vec3 vVCToIJK;
-uniform float texWidth;
-uniform float texHeight;
-uniform int xreps;
-uniform float xstride;
-uniform float ystride;
-uniform int repWidth;
-uniform int repHeight;
-uniform int repDepth;
 
 // declaration for intermixed geometry
 //VTK::ZBuffer::Dec
@@ -78,21 +70,30 @@ uniform int repDepth;
 // gradient opacity
 //VTK::GradientOpacity::Dec
 
-vec2 getTextureCoord(vec3 ijk, float offset)
+//=======================================================================
+// Webgl2 specific version of functions
+#if __VERSION__ == 300
+
+uniform highp sampler3D texture1;
+
+vec4 getTextureValue(vec3 pos)
 {
-  // uncomment the following line to see  the  packed  texture
-  // return vec2(ijk.x/float(repWidth), ijk.y/float(repHeight));
-  int z = int(ijk.z + offset);
-  int yz = z / xreps;
-  int xz = z - yz*xreps;
-
-  float ni = (ijk.x + float(xz * repWidth))/xstride;
-  float nj = (ijk.y + float(yz * repHeight))/ystride;
-
-  vec2 tpos = vec2(ni/texWidth, nj/texHeight);
-
-  return tpos;
+  return texture(texture1, pos);
 }
+
+//=======================================================================
+// WebGL1 specific version of functions
+#else
+
+uniform sampler2D texture1;
+
+//VTK::UseTrilinear
+
+uniform float texWidth;
+uniform float texHeight;
+uniform int xreps;
+uniform float xstride;
+uniform float ystride;
 
 // because scalars may be encoded
 // this func will decode them as needed
@@ -101,16 +102,82 @@ float getScalarValue(vec2 tpos)
   //VTK::ScalarValueFunction::Impl
 }
 
-vec2 getRayPointIntersectionBounds(
+// act like a 3D texture even though we are 2D
+vec4 texture3D(vec3 ijk)
+{
+  vec3 tdims = vec3(volumeDimensions);
+
+  int z = int(ijk.z * tdims.z);
+  int yz = z / xreps;
+  int xz = z - yz*xreps;
+
+  float ni = (ijk.x + float(xz)) * tdims.x/xstride;
+  float nj = (ijk.y + float(yz)) * tdims.y/ystride;
+
+  vec2 tpos = vec2(ni/texWidth, nj/texHeight);
+  float val = getScalarValue(tpos);
+  return vec4(val);
+}
+
+// if computime triliear values from multiple z slices
+#ifdef vtkUseTriliear
+vec4 getTextureValue(vec3 ijk)
+{
+  float zoff = 1.0/float(volumeDimensions.z);
+  vec4 val1 = texture3D(ijk);
+  vec4 val2 = texture3D(vec3(ijk.xy, ijk.z + zoff));
+  float zmix = ijk.z - floor(ijk.z);
+  return mix(val1, val2, zmix);
+}
+#else // nearest or fast linear
+#define getTextureValue texture3D
+#endif
+// End of Webgl1 specific code
+//=======================================================================
+#endif
+
+
+//=======================================================================
+// compute the normal and gradient magnitude for a position
+vec4 computeNormal(vec3 pos, float scalar, vec3 tstep)
+{
+  vec4 result;
+  result.x = getTextureValue(pos + vec3(tstep.x, 0.0, 0.0)).r - scalar;
+  result.y = getTextureValue(pos + vec3(0.0, tstep.y, 0.0)).r - scalar;
+  result.z = getTextureValue(pos + vec3(0.0, 0.0, tstep.z)).r - scalar;
+
+  // divide by spacing
+  result.xyz /= vSpacing;
+
+  result.w = length(result.xyz);
+
+  // rotate to View Coords
+  result.xyz =
+    result.x * vPlaneNormal0 +
+    result.y * vPlaneNormal2 +
+    result.z * vPlaneNormal4;
+
+  if (result.w > 0.0)
+  {
+    result.xyz = normalize(result.xyz);
+  }
+  result.xyz = result.xyz*sign(result.z);
+  return result;
+}
+
+//=======================================================================
+// Compute a new start and end point for a given ray based
+// on the provided bounded clipping plane (aka a rectangle)
+void getRayPointIntersectionBounds(
   vec3 rayPos, vec3 rayDir,
   vec3 planeDir, float planeDist,
-  vec2 tbounds, vec3 vPlaneX, vec3 vPlaneY,
+  inout vec2 tbounds, vec3 vPlaneX, vec3 vPlaneY,
   float vSize1, float vSize2)
 {
   float result = dot(rayDir, planeDir);
   if (result == 0.0)
   {
-    return tbounds;
+    return;
   }
   result = -1.0 * (dot(rayPos, planeDir) + planeDist) / result;
   vec3 xposVC = rayPos + rayDir*result;
@@ -130,93 +197,132 @@ vec2 getRayPointIntersectionBounds(
   float xcheck = max(0.0, vpos.x * (vpos.x - vSize1)); //  0 means in bounds
   float check = sign(max(xcheck, vpos.y * (vpos.y - vSize2))); //  0 means in bounds, 1 = out
 
-  return mix(
+  tbounds = mix(
    vec2(min(tbounds.x, result), max(tbounds.y, result)), // in value
    tbounds, // out value
    check);  // 0 in 1 out
 }
 
-void main()
+//=======================================================================
+// given a
+// - ray direction (rayDir)
+// - starting point (vertexVCVSOutput)
+// - bounding planes of the volume
+// - optionally depth buffer values
+// - far clipping plane
+// compute the start/end distances of the ray we need to cast
+vec2 computeRayDistances(vec3 rayDir, vec3 tdims)
 {
-  float scalar;
-  vec4 scalarComps;
+  vec2 dists = vec2(100.0*camFar, -1.0);
 
-  // camera is at 0,0,0 so rayDir for perspective is just the vc coord
-  vec3 rayDir = normalize(vertexVCVSOutput);
-  vec2 tbounds = vec2(100.0*camFar, -1.0);
+  vec3 vSize = vSpacing*(tdims - 1.0);
 
   // all this is in View Coordinates
-  tbounds = getRayPointIntersectionBounds(vertexVCVSOutput, rayDir,
-    vPlaneNormal0, vPlaneDistance0, tbounds, vPlaneNormal2, vPlaneNormal4,
+  getRayPointIntersectionBounds(vertexVCVSOutput, rayDir,
+    vPlaneNormal0, vPlaneDistance0, dists, vPlaneNormal2, vPlaneNormal4,
     vSize.y, vSize.z);
-  tbounds = getRayPointIntersectionBounds(vertexVCVSOutput, rayDir,
-    vPlaneNormal1, vPlaneDistance1, tbounds, vPlaneNormal2, vPlaneNormal4,
+  getRayPointIntersectionBounds(vertexVCVSOutput, rayDir,
+    vPlaneNormal1, vPlaneDistance1, dists, vPlaneNormal2, vPlaneNormal4,
     vSize.y, vSize.z);
-  tbounds = getRayPointIntersectionBounds(vertexVCVSOutput, rayDir,
-    vPlaneNormal2, vPlaneDistance2, tbounds, vPlaneNormal0, vPlaneNormal4,
+  getRayPointIntersectionBounds(vertexVCVSOutput, rayDir,
+    vPlaneNormal2, vPlaneDistance2, dists, vPlaneNormal0, vPlaneNormal4,
     vSize.x, vSize.z);
-  tbounds = getRayPointIntersectionBounds(vertexVCVSOutput, rayDir,
-    vPlaneNormal3, vPlaneDistance3, tbounds, vPlaneNormal0, vPlaneNormal4,
+  getRayPointIntersectionBounds(vertexVCVSOutput, rayDir,
+    vPlaneNormal3, vPlaneDistance3, dists, vPlaneNormal0, vPlaneNormal4,
     vSize.x, vSize.z);
-  tbounds = getRayPointIntersectionBounds(vertexVCVSOutput, rayDir,
-    vPlaneNormal4, vPlaneDistance4, tbounds, vPlaneNormal0, vPlaneNormal2,
+  getRayPointIntersectionBounds(vertexVCVSOutput, rayDir,
+    vPlaneNormal4, vPlaneDistance4, dists, vPlaneNormal0, vPlaneNormal2,
     vSize.x, vSize.y);
-  tbounds = getRayPointIntersectionBounds(vertexVCVSOutput, rayDir,
-    vPlaneNormal5, vPlaneDistance5, tbounds, vPlaneNormal0, vPlaneNormal2,
+  getRayPointIntersectionBounds(vertexVCVSOutput, rayDir,
+    vPlaneNormal5, vPlaneDistance5, dists, vPlaneNormal0, vPlaneNormal2,
     vSize.x, vSize.y);
 
   // do not go behind front clipping plane
-  tbounds.x = max(0.0,tbounds.x);
+  dists.x = max(0.0,dists.x);
 
   // do not go PAST far clipping plane
   float farDist = -camThick/rayDir.z;
-  tbounds.y = min(farDist,tbounds.y);
+  dists.y = min(farDist,dists.y);
 
   // Do not go past the zbuffer value if set
   // This is used for intermixing opaque geometry
   //VTK::ZBuffer::Impl
 
-  // do we need to composite?
-  if (tbounds.y > tbounds.x)
+  return dists;
+}
+
+//=======================================================================
+// Compute the index space starting position (pos) and step
+// Also return the float number fo steps to take numSteps
+//
+void computeIndexSpaceValues(out vec3 pos, out vec3 step, out float numSteps, vec3 rayDir, vec2 dists)
+{
+  // compute starting and ending values in volume space
+  pos = vertexVCVSOutput + dists.x*rayDir;
+  pos = pos - vOriginVC;
+
+  // convert to volume basis and origin
+  pos = vec3(
+    dot(pos, vPlaneNormal0),
+    dot(pos, vPlaneNormal2),
+    dot(pos, vPlaneNormal4));
+  vec3 endPos = vertexVCVSOutput + dists.y*rayDir;
+  endPos = endPos - vOriginVC;
+  endPos = vec3(
+    dot(endPos, vPlaneNormal0),
+    dot(endPos, vPlaneNormal2),
+    dot(endPos, vPlaneNormal4));
+
+  // start slightly inside and apply some jitter
+  float jitter = texture2D(jtexture, gl_FragCoord.xy/32.0).r;
+  vec3 delta = endPos - pos;
+  pos = pos + normalize(delta)*(0.01 + 0.98*jitter)*sampleDistance;
+
+  // update vdelta post jitter
+  delta = endPos - pos;
+
+  numSteps = length(delta) / sampleDistance;
+  step = delta / numSteps;
+
+  // vVCToIJK handles spacing going from world distances to tcoord distances
+  pos *= vVCToIJK;
+  step *= vVCToIJK;
+}
+
+void main()
+{
+  // camera is at 0,0,0 so rayDir for perspective is just the vc coord
+  vec3 rayDirVC = normalize(vertexVCVSOutput);
+
+  vec3 tdims = vec3(volumeDimensions);
+
+  // compute the start and end points for the ray
+  vec2 rayStartEndDistancesVC = computeRayDistances(rayDirVC, tdims);
+
+  // do we need to composite? aka does the ray have any length
+  if (rayStartEndDistancesVC.y > rayStartEndDistancesVC.x)
   {
-    // compute starting and ending values in volume space
-    vec3 startVC = vertexVCVSOutput + tbounds.x*rayDir;
-    startVC = startVC - vOriginVC;
+    // IS = Index Space
+    vec3 posIS;
+    vec3 stepIS;
+    float numSteps;
+    computeIndexSpaceValues(posIS, stepIS, numSteps, rayDirVC, rayStartEndDistancesVC);
 
-    // vpos and endvpos are in VolumeCoords not Index yet
-    vec3 vpos = vec3(
-      dot(startVC, vPlaneNormal0),
-      dot(startVC, vPlaneNormal2),
-      dot(startVC, vPlaneNormal4));
-    vec3 endVC = vertexVCVSOutput + tbounds.y*rayDir;
-    endVC = endVC - vOriginVC;
-    vec3 endvpos = vec3(
-      dot(endVC, vPlaneNormal0),
-      dot(endVC, vPlaneNormal2),
-      dot(endVC, vPlaneNormal4));
-
-    // start slightly inside and apply some jitter
-    float jitter = texture2D(jtexture, gl_FragCoord.xy/32.0).r;
-    vec3 vdelta = endvpos - vpos;
-    vpos = vpos + normalize(vdelta)*(0.01 + 0.98*jitter)*sampleDistance;
-
-    // update vdelta post jitter
-    vdelta = endvpos - vpos;
-    float numSteps = length(vdelta) / sampleDistance;
-    vdelta = vdelta / float(numSteps);
-
-    vec4 color = vec4(0.0, 0.0, 0.0, 0.0);
+    // iteger number of steps to take and residual step size
     int count = int(numSteps - 0.05); // end slightly inside
+    float residual = numSteps - float(count);
 
-    vec3 ijk = vpos * vVCToIJK;
-    vdelta = vdelta * vVCToIJK;
+    // local vars for the loop
+    vec4 color = vec4(0.0, 0.0, 0.0, 0.0);
+    float scalar;
+    vec4 scalarComps;
+
+    vec3 tstep = 1.0/tdims;
+
     for (int i = 0; i < //VTK::MaximumSamplesValue ; ++i)
     {
-      // compute the 2d texture coordinate/s
-      //VTK::ComputeTCoords
-
       // compute the scalar
-      //VTK::ScalarFunction
+      scalar = getTextureValue(posIS).r;
 
       // now map through opacity and color
       vec4 tcolor = texture2D(ctexture, vec2(scalar * cscale + cshift, 0.5));
@@ -240,7 +346,31 @@ void main()
       color = color + vec4(tcolor.rgb*tcolor.a, tcolor.a)*mix;
       if (i >= count) { break; }
       if (color.a > 0.99) { color.a = 1.0; break; }
-      ijk += vdelta;
+      posIS += stepIS;
+    }
+
+    if (color.a < 0.99)
+    {
+      posIS += (residual - 1.0)*stepIS;
+
+      // compute the scalar
+      scalar = getTextureValue(posIS).r;
+
+      // now map through opacity and color
+      vec4 tcolor = texture2D(ctexture, vec2(scalar * cscale + cshift, 0.5));
+      tcolor.a = residual*texture2D(otexture, vec2(scalar * oscale + oshift, 0.5)).r;
+
+      // compute the normal if needed
+      //VTK::Normal::Impl
+
+      // handle gradient opacity
+      //VTK::GradientOpacity::Impl
+
+      // handle lighting
+      //VTK::Light::Impl
+
+      float mix = (1.0 - color.a);
+      color = color + vec4(tcolor.rgb*tcolor.a, tcolor.a)*mix;
     }
 
     gl_FragData[0] = vec4(color.rgb/color.a, color.a);
