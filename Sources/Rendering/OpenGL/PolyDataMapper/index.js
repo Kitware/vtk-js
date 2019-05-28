@@ -1039,27 +1039,27 @@ function vtkOpenGLPolyDataMapper(publicAPI, model) {
     let numberOfLights = 0;
 
     const primType = cellBO.getPrimitiveType();
-
-    let needLighting = true;
-
     const poly = model.currentInput;
 
-    let n =
-      actor.getProperty().getInterpolation() !== Shading.FLAT
-        ? poly.getPointData().getNormals()
-        : null;
-    if (n === null && poly.getCellData().getNormals()) {
-      n = poly.getCellData().getNormals();
+    // different algo from C++ as of 5/2019
+    let needLighting = false;
+    const pointNormals = poly.getPointData().getNormals();
+    const cellNormals = poly.getCellData().getNormals();
+    const flat = actor.getProperty().getInterpolation() === Shading.FLAT;
+    // 1) all surfaces need lighting
+    if (primType !== primTypes.Points && primType !== primType.Lines) {
+      needLighting = true;
+      // 2) all cell normals without point normals need lighting
+    } else if (cellNormals && !pointNormals) {
+      needLighting = true;
+      // 3) Phong + pointNormals need lighting
+    } else if (!flat && pointNormals) {
+      needLighting = true;
+      // 4) Phong Lines need lighting
+    } else if (!flat && primType === primTypes.Lines) {
+      needLighting = true;
     }
-
-    const haveNormals = n !== null;
-
-    if (
-      actor.getProperty().getRepresentation() === Representation.POINTS ||
-      primType === primTypes.Points
-    ) {
-      needLighting = haveNormals;
-    }
+    // 5) everthing else is unlit
 
     // do we need lighting?
     if (actor.getProperty().getLighting() && needLighting) {
