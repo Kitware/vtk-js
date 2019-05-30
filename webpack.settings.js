@@ -21,7 +21,7 @@ module.exports = {
   },
   devServerConfig: {
     public: () => process.env.DEVSERVER_PUBLIC || 'http://localhost:8080',
-    host: () => process.env.DEVSERVER_HOST || 'localhost',
+    host: () => process.env.DEVSERVER_HOST || '0.0.0.0',
     port: () => process.env.DEVSERVER_PORT || 9999,
   },
   options: {

@@ -21,6 +21,55 @@
 
 varying vec3 vertexVCVSOutput;
 
+// first declare the settings from the mapper
+// that impact the code paths in here
+
+// always set vtkNumComponents 1,2,3,4
+//VTK::NumComponents
+
+// possibly define vtkUseTriliear
+//VTK::TrilinearOn
+
+// possibly define vtkIndependentComponents
+//VTK::IndependentComponentsOn
+
+// define vtkLightComplexity
+//VTK::LightComplexity
+#if vtkLightComplexity > 0
+uniform float vSpecularPower;
+uniform float vAmbient;
+uniform float vDiffuse;
+uniform float vSpecular;
+//VTK::Light::Dec
+#endif
+
+// possibly define vtkGradientOpacityOn
+//VTK::GradientOpacityOn
+#ifdef vtkGradientOpacityOn
+uniform float goscale0;
+uniform float goshift0;
+uniform float gomin0;
+uniform float gomax0;
+#if defined(vtkIndependentComponentsOn) && (vtkNumComponents > 1)
+uniform float goscale1;
+uniform float goshift1;
+uniform float gomin1;
+uniform float gomax1;
+#if vtkNumComponents >= 3
+uniform float goscale2;
+uniform float goshift2;
+uniform float gomin2;
+uniform float gomax2;
+#endif
+#if vtkNumComponents >= 4
+uniform float goscale3;
+uniform float goshift3;
+uniform float gomin3;
+uniform float gomax3;
+#endif
+#endif
+#endif
+
 // camera values
 uniform float camThick;
 uniform float camNear;
@@ -45,11 +94,11 @@ uniform float vPlaneDistance5;
 
 // opacity and color textures
 uniform sampler2D otexture;
-uniform float oshift;
-uniform float oscale;
+uniform float oshift0;
+uniform float oscale0;
 uniform sampler2D ctexture;
-uniform float cshift;
-uniform float cscale;
+uniform float cshift0;
+uniform float cscale0;
 
 // jitter texture
 uniform sampler2D jtexture;
@@ -58,17 +107,62 @@ uniform sampler2D jtexture;
 uniform float sampleDistance;
 uniform vec3 vVCToIJK;
 
+// the heights defined below are the locations
+// for the up to four components of the tfuns
+// the tfuns have a height of 2XnumComps pixels so the
+// values are computed to hit the middle of the two rows
+// for that component
+#ifdef vtkIndependentComponentsOn
+#if vtkNumComponents == 2
+uniform float mix0;
+uniform float mix1;
+#define height0 0.25
+#define height1 0.75
+#endif
+#if vtkNumComponents == 3
+uniform float mix0;
+uniform float mix1;
+uniform float mix2;
+#define height0 0.17
+#define height1 0.5
+#define height2 0.83
+#endif
+#if vtkNumComponents == 4
+uniform float mix0;
+uniform float mix1;
+uniform float mix2;
+uniform float mix3;
+#define height0 0.125
+#define height1 0.375
+#define height2 0.625
+#define height3 0.875
+#endif
+#endif
+
+#if vtkNumComponents >= 2
+uniform float oshift1;
+uniform float oscale1;
+uniform float cshift1;
+uniform float cscale1;
+#endif
+#if vtkNumComponents >= 3
+uniform float oshift2;
+uniform float oscale2;
+uniform float cshift2;
+uniform float cscale2;
+#endif
+#if vtkNumComponents >= 4
+uniform float oshift3;
+uniform float oscale3;
+uniform float cshift3;
+uniform float cscale3;
+#endif
+
 // declaration for intermixed geometry
 //VTK::ZBuffer::Dec
 
 // Lighting values
 //VTK::Light::Dec
-
-// normal calc
-//VTK::Normal::Dec
-
-// gradient opacity
-//VTK::GradientOpacity::Dec
 
 //=======================================================================
 // Webgl2 specific version of functions
@@ -78,7 +172,17 @@ uniform highp sampler3D texture1;
 
 vec4 getTextureValue(vec3 pos)
 {
-  return texture(texture1, pos);
+  vec4 tmp = texture(texture1, pos);
+#if vtkNumComponents == 1
+  tmp.a = tmp.r;
+#endif
+#if vtkNumComponents == 2
+  tmp.a = tmp.g;
+#endif
+#if vtkNumComponents == 3
+  tmp.a = length(tmp.rgb);
+#endif
+  return tmp;
 }
 
 //=======================================================================
@@ -87,23 +191,27 @@ vec4 getTextureValue(vec3 pos)
 
 uniform sampler2D texture1;
 
-//VTK::UseTrilinear
-
 uniform float texWidth;
 uniform float texHeight;
 uniform int xreps;
 uniform float xstride;
 uniform float ystride;
 
-// because scalars may be encoded
-// this func will decode them as needed
-float getScalarValue(vec2 tpos)
+// if computime triliear values from multiple z slices
+#ifdef vtkTriliearOn
+vec4 getTextureValue(vec3 ijk)
 {
-  //VTK::ScalarValueFunction::Impl
+  float zoff = 1.0/float(volumeDimensions.z);
+  vec4 val1 = getOneTextureValue(ijk);
+  vec4 val2 = getOneTextureValue(vec3(ijk.xy, ijk.z + zoff));
+  float zmix = ijk.z - floor(ijk.z);
+  return mix(val1, val2, zmix);
 }
 
-// act like a 3D texture even though we are 2D
-vec4 texture3D(vec3 ijk)
+vec4 getOneTextureValue(vec3 ijk)
+#else // nearest or fast linear
+vec4 getTextureValue(vec3 ijk)
+#endif
 {
   vec3 tdims = vec3(volumeDimensions);
 
@@ -115,36 +223,33 @@ vec4 texture3D(vec3 ijk)
   float nj = (ijk.y + float(yz)) * tdims.y/ystride;
 
   vec2 tpos = vec2(ni/texWidth, nj/texHeight);
-  float val = getScalarValue(tpos);
-  return vec4(val);
+
+  vec4 tmp = texture2D(texture1, tpos);
+
+#if vtkNumComponents == 1
+  tmp.a = tmp.r;
+#endif
+#if vtkNumComponents == 2
+  tmp.g = tmp.a;
+#endif
+#if vtkNumComponents == 3
+  tmp.a = length(tmp.rgb);
+#endif
+  return tmp;
 }
 
-// if computime triliear values from multiple z slices
-#ifdef vtkUseTriliear
-vec4 getTextureValue(vec3 ijk)
-{
-  float zoff = 1.0/float(volumeDimensions.z);
-  vec4 val1 = texture3D(ijk);
-  vec4 val2 = texture3D(vec3(ijk.xy, ijk.z + zoff));
-  float zmix = ijk.z - floor(ijk.z);
-  return mix(val1, val2, zmix);
-}
-#else // nearest or fast linear
-#define getTextureValue texture3D
-#endif
 // End of Webgl1 specific code
 //=======================================================================
 #endif
-
 
 //=======================================================================
 // compute the normal and gradient magnitude for a position
 vec4 computeNormal(vec3 pos, float scalar, vec3 tstep)
 {
   vec4 result;
-  result.x = getTextureValue(pos + vec3(tstep.x, 0.0, 0.0)).r - scalar;
-  result.y = getTextureValue(pos + vec3(0.0, tstep.y, 0.0)).r - scalar;
-  result.z = getTextureValue(pos + vec3(0.0, 0.0, tstep.z)).r - scalar;
+  result.x = getTextureValue(pos + vec3(tstep.x, 0.0, 0.0)).a - scalar;
+  result.y = getTextureValue(pos + vec3(0.0, tstep.y, 0.0)).a - scalar;
+  result.z = getTextureValue(pos + vec3(0.0, 0.0, tstep.z)).a - scalar;
 
   // divide by spacing
   result.xyz /= vSpacing;
@@ -159,10 +264,209 @@ vec4 computeNormal(vec3 pos, float scalar, vec3 tstep)
 
   if (result.w > 0.0)
   {
-    result.xyz = normalize(result.xyz);
+    result.xyz /= result.w;
   }
-  result.xyz = result.xyz*sign(result.z);
   return result;
+}
+
+//=======================================================================
+// compute the normals and gradient magnitudes for a position
+// for independent components
+mat4 computeMat4Normal(vec3 pos, vec4 tValue, vec3 tstep)
+{
+  mat4 result;
+  vec4 distX = getTextureValue(pos + vec3(tstep.x, 0.0, 0.0)) - tValue;
+  vec4 distY = getTextureValue(pos + vec3(0.0, tstep.y, 0.0)) - tValue;
+  vec4 distZ = getTextureValue(pos + vec3(0.0, 0.0, tstep.z)) - tValue;
+
+  // divide by spacing
+  distX /= vSpacing.x;
+  distY /= vSpacing.y;
+  distZ /= vSpacing.z;
+
+  mat3 rot;
+  rot[0] = vPlaneNormal0;
+  rot[1] = vPlaneNormal2;
+  rot[2] = vPlaneNormal4;
+
+  result[0].xyz = vec3(distX.r, distY.r, distZ.r);
+  result[0].a = length(result[0].xyz);
+  result[0].xyz *= rot;
+  if (result[0].w > 0.0)
+  {
+    result[0].xyz /= result[0].w;
+  }
+
+  result[1].xyz = vec3(distX.g, distY.g, distZ.g);
+  result[1].a = length(result[1].xyz);
+  result[1].xyz *= rot;
+  if (result[1].w > 0.0)
+  {
+    result[1].xyz /= result[1].w;
+  }
+
+// optionally compute the 3rd component
+#if vtkNumComponents >= 3
+  result[2].xyz = vec3(distX.b, distY.b, distZ.b);
+  result[2].a = length(result[2].xyz);
+  result[2].xyz *= rot;
+  if (result[2].w > 0.0)
+  {
+    result[2].xyz /= result[2].w;
+  }
+#endif
+
+// optionally compute the 4th component
+#if vtkNumComponents >= 4
+  result[3].xyz = vec3(distX.a, distY.a, distZ.a);
+  result[3].a = length(result[3].xyz);
+  result[3].xyz *= rot;
+  if (result[3].w > 0.0)
+  {
+    result[3].xyz /= result[3].w;
+  }
+#endif
+
+  return result;
+}
+
+//=======================================================================
+// Given a normal compute the gradient opacity factors
+//
+float computeGradientOpacityFactor(
+  vec4 normal, float goscale, float goshift, float gomin, float gomax)
+{
+#if defined(vtkGradientOpacityOn)
+  return clamp(normal.a*goscale + goshift, gomin, gomax);
+#else
+  return 1.0;
+#endif
+}
+
+#if vtkLightComplexity > 0
+void applyLighting(inout vec3 tColor, vec4 normal)
+{
+  vec3 diffuse = vec3(0.0, 0.0, 0.0);
+  vec3 specular = vec3(0.0, 0.0, 0.0);
+  //VTK::Light::Impl
+  tColor.rgb = tColor.rgb*(diffuse*vDiffuse + vAmbient) + specular*vSpecular;
+}
+#endif
+
+//=======================================================================
+// Given a texture value compute the color and opacity
+//
+vec4 getColorForValue(vec4 tValue, vec3 posIS, vec3 tstep)
+{
+  // compute the normal and gradient magnitude if needed
+  // We compute it as a vec4 if possible otherwise a mat4
+  //
+  vec4 goFactor = vec4(1.0,1.0,1.0,1.0);
+
+  // compute the normal vectors as needed
+#if (vtkLightComplexity > 0) || defined(vtkGradientOpacityOn)
+#if defined(vtkIndependentComponentsOn) && (vtkNumComponents > 1)
+  mat4 normalMat = computeMat4Normal(posIS, tValue, tstep);
+  vec4 normal0 = normalMat[0];
+  vec4 normal1 = normalMat[1];
+#if vtkNumComponents > 2
+  vec4 normal2 = normalMat[2];
+#endif
+#if vtkNumComponents > 3
+  vec4 normal3 = normalMat[3];
+#endif
+#else
+  vec4 normal0 = computeNormal(posIS, tValue.a, tstep);
+#endif
+#endif
+
+// compute gradient opacity factors as needed
+#if defined(vtkGradientOpacityOn)
+  goFactor.x =
+    computeGradientOpacityFactor(normal0, goscale0, goshift0, gomin0, gomax0);
+#if defined(vtkIndependentComponentsOn) && (vtkNumComponents > 1)
+  goFactor.y =
+    computeGradientOpacityFactor(normal1, goscale1, goshift1, gomin1, gomax1);
+#if vtkNumComponents > 2
+  goFactor.z =
+    computeGradientOpacityFactor(normal2, goscale2, goshift2, gomin2, gomax2);
+#if vtkNumComponents > 3
+  goFactor.w =
+    computeGradientOpacityFactor(normal3, goscale3, goshift3, gomin3, gomax3);
+#endif
+#endif
+#endif
+#endif
+
+// single component is always independent
+#if vtkNumComponents == 1
+  vec4 tColor = texture2D(ctexture, vec2(tValue.r * cscale0 + cshift0, 0.5));
+  tColor.a = goFactor.x*texture2D(otexture, vec2(tValue.r * oscale0 + oshift0, 0.5)).r;
+#endif
+
+#if defined(vtkIndependentComponentsOn) && vtkNumComponents >= 2
+  vec4 tColor = mix0*texture2D(ctexture, vec2(tValue.r * cscale0 + cshift0, height0));
+  tColor.a = goFactor.x*mix0*texture2D(otexture, vec2(tValue.r * oscale0 + oshift0, height0)).r;
+  vec3 tColor1 = mix1*texture2D(ctexture, vec2(tValue.g * cscale1 + cshift1, height1)).rgb;
+  tColor.a += goFactor.y*mix1*texture2D(otexture, vec2(tValue.g * oscale1 + oshift1, height1)).r;
+#if vtkNumComponents >= 3
+  vec3 tColor2 = mix2*texture2D(ctexture, vec2(tValue.b * cscale2 + cshift2, height2)).rgb;
+  tColor.a += goFactor.z*mix2*texture2D(otexture, vec2(tValue.b * oscale2 + oshift2, height2)).r;
+#if vtkNumComponents >= 4
+  vec3 tColor3 = mix3*texture2D(ctexture, vec2(tValue.a * cscale3 + cshift3, height3)).rgb;
+  tColor.a += goFactor.w*mix3*texture2D(otexture, vec2(tValue.a * oscale3 + oshift3, height3)).r;
+#endif
+#endif
+
+#else // then not independent
+
+#if vtkNumComponents == 2
+  float lum = tValue.r * cscale0 + cshift0;
+  float alpha = goFactor.x*texture2D(otexture, vec2(tValue.a * oscale1 + oshift1, 0.5)).r;
+  vec4 tColor = vec4(lum, lum, lum, alpha);
+#endif
+#if vtkNumComponents == 3
+  vec4 tColor;
+  tColor.r = tValue.r * cscale0 + cshift0;
+  tColor.g = tValue.g * cscale1 + cshift1;
+  tColor.b = tValue.b * cscale2 + cshift2;
+  tColor.a = goFactor.x*texture2D(otexture, vec2(tValue.a * oscale0 + oshift0, 0.5)).r;
+#endif
+#if vtkNumComponents == 4
+  vec4 tColor;
+  tColor.r = tValue.r * cscale0 + cshift0;
+  tColor.g = tValue.g * cscale1 + cshift1;
+  tColor.b = tValue.b * cscale2 + cshift2;
+  tColor.a = goFactor.x*texture2D(otexture, vec2(tValue.a * oscale3 + oshift3, 0.5)).r;
+#endif
+#endif // dependent
+
+// apply lighting if requested as appropriate
+#if vtkLightComplexity > 0
+  applyLighting(tColor.rgb, normal0);
+#if defined(vtkIndependentComponentsOn) && vtkNumComponents >= 2
+  applyLighting(tColor1, normal1);
+#if vtkNumComponents >= 3
+  applyLighting(tColor2, normal2);
+#if vtkNumComponents >= 4
+  applyLighting(tColor3, normal3);
+#endif
+#endif
+#endif
+#endif
+
+// perform final independent blend as needed
+#if defined(vtkIndependentComponentsOn) && vtkNumComponents >= 2
+  tColor.rgb += tColor1;
+#if vtkNumComponents >= 3
+  tColor.rgb += tColor2;
+#if vtkNumComponents >= 4
+  tColor.rgb += tColor3;
+#endif
+#endif
+#endif
+
+  return tColor;
 }
 
 //=======================================================================
@@ -314,28 +618,16 @@ void main()
 
     // local vars for the loop
     vec4 color = vec4(0.0, 0.0, 0.0, 0.0);
-    float scalar;
-    vec4 scalarComps;
 
     vec3 tstep = 1.0/tdims;
 
     for (int i = 0; i < //VTK::MaximumSamplesValue ; ++i)
     {
       // compute the scalar
-      scalar = getTextureValue(posIS).r;
+      vec4 tValue = getTextureValue(posIS);
 
       // now map through opacity and color
-      vec4 tcolor = texture2D(ctexture, vec2(scalar * cscale + cshift, 0.5));
-      tcolor.a = texture2D(otexture, vec2(scalar * oscale + oshift, 0.5)).r;
-
-      // compute the normal if needed
-      //VTK::Normal::Impl
-
-      // handle gradient opacity
-      //VTK::GradientOpacity::Impl
-
-      // handle lighting
-      //VTK::Light::Impl
+      vec4 tColor = getColorForValue(tValue, posIS, tstep);
 
       float mix = (1.0 - color.a);
 
@@ -343,7 +635,7 @@ void main()
       // the break correctly on windows/chrome 58 angle
       mix = mix * sign(max(float(count - i + 1), 0.0));
 
-      color = color + vec4(tcolor.rgb*tcolor.a, tcolor.a)*mix;
+      color = color + vec4(tColor.rgb*tColor.a, tColor.a)*mix;
       if (i >= count) { break; }
       if (color.a > 0.99) { color.a = 1.0; break; }
       posIS += stepIS;
@@ -354,23 +646,13 @@ void main()
       posIS += (residual - 1.0)*stepIS;
 
       // compute the scalar
-      scalar = getTextureValue(posIS).r;
+      vec4 tValue = getTextureValue(posIS);
 
       // now map through opacity and color
-      vec4 tcolor = texture2D(ctexture, vec2(scalar * cscale + cshift, 0.5));
-      tcolor.a = residual*texture2D(otexture, vec2(scalar * oscale + oshift, 0.5)).r;
-
-      // compute the normal if needed
-      //VTK::Normal::Impl
-
-      // handle gradient opacity
-      //VTK::GradientOpacity::Impl
-
-      // handle lighting
-      //VTK::Light::Impl
+      vec4 tColor = getColorForValue(tValue, posIS, tstep);
 
       float mix = (1.0 - color.a);
-      color = color + vec4(tcolor.rgb*tcolor.a, tcolor.a)*mix;
+      color = color + vec4(tColor.rgb*tColor.a, tColor.a)*mix;
     }
 
     gl_FragData[0] = vec4(color.rgb/color.a, color.a);
