@@ -177,6 +177,13 @@ function vtkOpenGLVolumeMapper(publicAPI, model) {
       ]).result;
     }
 
+    // Set the BlendMode approach
+    FSSource = vtkShaderProgram.substitute(
+      FSSource,
+      '//VTK::BlendMode',
+      `${model.renderable.getBlendMode()}`
+    ).result;
+
     shaders.Fragment = FSSource;
 
     publicAPI.replaceShaderLight(shaders, ren, actor);
@@ -974,7 +981,7 @@ function vtkOpenGLVolumeMapper(publicAPI, model) {
       vtkMath.uninitializeBounds(model.Bounds);
       return;
     }
-    model.bounnds = publicAPI.getInput().getBounds();
+    model.bounds = publicAPI.getInput().getBounds();
   };
 
   publicAPI.updateBufferObjects = (ren, actor) => {
@@ -1223,7 +1230,7 @@ const DEFAULT_VALUES = {
   opacityTexture: null,
   opacityTextureString: null,
   colorTexture: null,
-  colortextureString: null,
+  colorTextureString: null,
   jitterTexture: null,
   tris: null,
   framebuffer: null,
