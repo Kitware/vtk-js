@@ -741,6 +741,10 @@ void main()
     gl_FragData[0] = tcolor;
   } else if (blendMode == 3) { //AVERAGE_INTENSITY_BLEND
     float value = 0.0;
+    float computed = 0.0;
+
+    float averageIPScalarRangeMin = //VTK::AverageIPScalarRangeMin;
+    float averageIPScalarRangeMax = //VTK::AverageIPScalarRangeMax;
 
     // Declare i outside of the loop
     int i = 0;
@@ -752,8 +756,16 @@ void main()
       // compute the scalar
       scalar = getTextureValue(posIS).r;
 
+      // One can control the scalar range by setting the AverageIPScalarRange to disregard scalar values, not in the range of interest, from the average computation
+      if (scalar < averageIPScalarRangeMin || scalar > averageIPScalarRangeMax) {
+        continue;
+      }
+
+      // Average intensity blend mode works similar to the additive blend mode where the scalar values are multiplied by opacity calculated from the opacity transfer function and then added
+      computed = texture2D(otexture, vec2(scalar * oscale + oshift, 0.5)).r;
+
       // Sum the values across each step in the path
-      value += scalar;
+      value += computed;
 
       posIS += stepIS;
       if (i >= count) { break; }
@@ -766,15 +778,24 @@ void main()
     // compute the scalar
     scalar = getTextureValue(posIS).r;
 
-    // Sum the values across each step in the path
-    value += scalar;
 
     // Divide by the total number of samples that were taken
     float i_float = float(i);
-    value /= (i_float + 1.0);
 
-    // now map through opacity and color
-    vec4 tcolor = texture2D(ctexture, vec2(value * cscale + cshift, 0.5));
+    // One can control the scalar range by setting the AverageIPScalarRange to disregard scalar values, not in the range of interest, from the average computation
+    if (scalar > averageIPScalarRangeMin && scalar < averageIPScalarRangeMax) {
+      computed = texture2D(otexture, vec2(scalar * oscale + oshift, 0.5)).r;
+
+      value += computed;
+
+      value /= (i_float + 1.0);
+    } else {
+      value /= i_float;
+    }
+
+    // Note that the resulting image is always grayscale i.e. aggregated values are not passed through the color transfer function. This is because the final value is a derived value and not a real data value along the sampling ray.
+    // TODO: Not sure this is correct
+    vec4 tcolor = vec4(value, value, value, value);
     tcolor.a = residual*texture2D(otexture, vec2(value * oscale + oshift, 0.5)).r;
 
     // compute the normal if needed

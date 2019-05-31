@@ -184,6 +184,22 @@ function vtkOpenGLVolumeMapper(publicAPI, model) {
       `${model.renderable.getBlendMode()}`
     ).result;
 
+    const averageIPScalarRange = model.renderable.getAverageIPScalarRange();
+
+    // TODO: Adding the .0 at the end feels hacky
+
+    FSSource = vtkShaderProgram.substitute(
+      FSSource,
+      '//VTK::AverageIPScalarRangeMin',
+      `${averageIPScalarRange[0]}.0`
+    ).result;
+
+    FSSource = vtkShaderProgram.substitute(
+      FSSource,
+      '//VTK::AverageIPScalarRangeMax',
+      `${averageIPScalarRange[1]}.0`
+    ).result;
+
     shaders.Fragment = FSSource;
 
     publicAPI.replaceShaderLight(shaders, ren, actor);

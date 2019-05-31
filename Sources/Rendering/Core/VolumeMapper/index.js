@@ -53,6 +53,7 @@ function vtkVolumeMapper(publicAPI, model) {
 // Object factory
 // ----------------------------------------------------------------------------
 
+// TODO: what values to use for averageIPScalarRange to get GLSL to use max / min values like [-Math.inf, Math.inf]?
 const DEFAULT_VALUES = {
   bounds: [1, -1, 1, -1, 1, -1],
   sampleDistance: 1.0,
@@ -60,6 +61,7 @@ const DEFAULT_VALUES = {
   maximumSamplesPerRay: 1000,
   autoAdjustSampleDistances: true,
   blendMode: BlendMode.COMPOSITE_BLEND,
+  averageIPScalarRange: [-1000000.0, 1000000.0],
 };
 
 // ----------------------------------------------------------------------------
@@ -78,6 +80,8 @@ export function extend(publicAPI, model, initialValues = {}) {
     'autoAdjustSampleDistances',
     'blendMode',
   ]);
+
+  macro.setGetArray(publicAPI, model, ['averageIPScalarRange'], 2);
 
   macro.event(publicAPI, model, 'lightingActivated');
 
