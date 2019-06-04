@@ -13,6 +13,7 @@ import './Filters/General/MoleculeToRepresentation/test/testMultipleBonds';
 import './Filters/General/TubeFilter/test/testTubeFilter';
 import './Filters/General/TubeFilter/test/testTubeColors';
 import './Filters/General/WarpScalar/test/testWarp';
+import './Filters/Sources/ConcentricCylinderSource/test/testConcentricCylinder';
 import './Filters/Sources/ConeSource/test/testCone';
 import './Filters/Sources/CubeSource/test/testCube';
 import './Filters/Sources/CylinderSource/test/testCylinder';
