@@ -387,6 +387,7 @@ function vtkOpenGLTexture(publicAPI, model) {
           return model.context.RGB;
       }
     } else {
+      // webgl1
       switch (numComps) {
         case 1:
           return model.context.LUMINANCE;
@@ -983,86 +984,152 @@ function vtkOpenGLTexture(publicAPI, model) {
     return true;
   };
 
+  function computeScaleOffsets(numComps, numPixelsIn, data) {
+    // compute min and max values per component
+    const min = [];
+    const max = [];
+    for (let c = 0; c < numComps; ++c) {
+      min[c] = data[c];
+      max[c] = data[c];
+    }
+    let count = 0;
+    for (let i = 0; i < numPixelsIn; ++i) {
+      for (let c = 0; c < numComps; ++c) {
+        if (data[count] < min[c]) {
+          min[c] = data[count];
+        }
+        if (data[count] > max[c]) {
+          max[c] = data[count];
+        }
+        count++;
+      }
+    }
+    const offset = [];
+    const scale = [];
+    for (let c = 0; c < numComps; ++c) {
+      if (min[c] === max[c]) {
+        max[c] = min[c] + 1.0;
+      }
+      offset[c] = min[c];
+      scale[c] = max[c] - min[c];
+    }
+    return { scale, offset };
+  }
+
   //----------------------------------------------------------------------------
   // This method simulates a 3D texture using 2D
-  publicAPI.create3DOneComponentFromRaw = (
+  publicAPI.create3DFilterableFromRaw = (
     width,
     height,
     depth,
+    numComps,
     dataType,
     data
   ) => {
     const numPixelsIn = width * height * depth;
 
-    // compute min and max values
-    const min = vtkMath.arrayMin(data);
-    let max = vtkMath.arrayMax(data);
-    if (min === max) {
-      max = min + 1.0;
+    // initialize offset/scale
+    const offset = [];
+    const scale = [];
+    for (let c = 0; c < numComps; ++c) {
+      offset[c] = 0.0;
+      scale[c] = 1.0;
     }
 
     // store the information, we will need it later
-    model.volumeInfo = { min, max, width, height, depth };
+    // offset and scale are the offset and scale required to get
+    // the texture value back to data values ala
+    // data = texture * scale + offset
+    // and texture = (data - offset)/scale
+    model.volumeInfo = { scale, offset, width, height, depth };
 
-    let volCopyData = (outArray, outIdx, inValue, smin, smax) => {
-      outArray[outIdx] = inValue;
-    };
-    let dataTypeToUse = VtkDataTypes.UNSIGNED_CHAR;
-    let numCompsToUse = 1;
-    let encodedScalars = false;
-    if (dataType === VtkDataTypes.UNSIGNED_CHAR) {
-      model.volumeInfo.min = 0.0;
-      model.volumeInfo.max = 255.0;
-    } else if (
-      model.openGLRenderWindow.getWebgl2() ||
-      (model.context.getExtension('OES_texture_float') &&
-        model.context.getExtension('OES_texture_float_linear'))
-    ) {
-      dataTypeToUse = VtkDataTypes.FLOAT;
-      volCopyData = (outArray, outIdx, inValue, smin, smax) => {
-        outArray[outIdx] = (inValue - smin) / (smax - smin);
-      };
-    } else {
-      encodedScalars = true;
-      dataTypeToUse = VtkDataTypes.UNSIGNED_CHAR;
-      numCompsToUse = 4;
-      volCopyData = (outArray, outIdx, inValue, smin, smax) => {
-        let fval = (inValue - smin) / (smax - smin);
-        const r = Math.floor(fval * 255.0);
-        fval = fval * 255.0 - r;
-        outArray[outIdx] = r;
-        const g = Math.floor(fval * 255.0);
-        fval = fval * 255.0 - g;
-        outArray[outIdx + 1] = g;
-        const b = Math.floor(fval * 255.0);
-        outArray[outIdx + 2] = b;
-      };
-    }
-
-    // WebGL2
+    // WebGL2 path, we have 3d textures etc
     if (model.openGLRenderWindow.getWebgl2()) {
-      if (dataType !== VtkDataTypes.UNSIGNED_CHAR) {
-        const newArray = new Float32Array(numPixelsIn);
-        for (let i = 0; i < numPixelsIn; ++i) {
-          newArray[i] = (data[i] - min) / (max - min);
+      if (dataType === VtkDataTypes.FLOAT) {
+        return publicAPI.create3DFromRaw(
+          width,
+          height,
+          depth,
+          numComps,
+          dataType,
+          data
+        );
+      }
+      if (dataType === VtkDataTypes.UNSIGNED_CHAR) {
+        for (let c = 0; c < numComps; ++c) {
+          model.volumeInfo.scale[c] = 255.0;
         }
         return publicAPI.create3DFromRaw(
           width,
           height,
           depth,
-          1,
-          VtkDataTypes.FLOAT,
-          newArray
+          numComps,
+          dataType,
+          data
         );
       }
-      return publicAPI.create3DFromRaw(width, height, depth, 1, dataType, data);
+      // otherwise convert to float
+      const newArray = new Float32Array(numPixelsIn * numComps);
+      // compute min and max values
+      const res = computeScaleOffsets(numComps, numPixelsIn, data);
+      model.volumeInfo.offset = res.offset;
+      model.volumeInfo.scale = res.scale;
+      let count = 0;
+      for (let i = 0; i < numPixelsIn; ++i) {
+        for (let nc = 0; nc < numComps; ++nc) {
+          newArray[count] =
+            (data[count] - model.volumeInfo.offset[nc]) /
+            model.volumeInfo.scale[nc];
+          count++;
+        }
+      }
+      return publicAPI.create3DFromRaw(
+        width,
+        height,
+        depth,
+        numComps,
+        VtkDataTypes.FLOAT,
+        newArray
+      );
     }
 
-    // WebGL1
+    // not webgl2, deal with webgl1, no 3d textures
+    // and maybe no float textures
+
+    // compute min and max values
+    const res = computeScaleOffsets(numComps, numPixelsIn, data);
+
+    let volCopyData = (outArray, outIdx, inValue, smin, smax) => {
+      outArray[outIdx] = inValue;
+    };
+    let dataTypeToUse = VtkDataTypes.UNSIGNED_CHAR;
+    // unsigned char gets used as is
+    if (dataType === VtkDataTypes.UNSIGNED_CHAR) {
+      for (let c = 0; c < numComps; ++c) {
+        res.offset[c] = 0.0;
+        res.scale[c] = 255.0;
+      }
+    } else if (
+      model.context.getExtension('OES_texture_float') &&
+      model.context.getExtension('OES_texture_float_linear')
+    ) {
+      // use float textures scaled to 0.0 to 1.0
+      dataTypeToUse = VtkDataTypes.FLOAT;
+      volCopyData = (outArray, outIdx, inValue, soffset, sscale) => {
+        outArray[outIdx] = (inValue - soffset) / sscale;
+      };
+    } else {
+      // worst case, scale data to uchar
+      dataTypeToUse = VtkDataTypes.UNSIGNED_CHAR;
+      volCopyData = (outArray, outIdx, inValue, soffset, sscale) => {
+        outArray[outIdx] = (255.0 * (inValue - soffset)) / sscale;
+      };
+    }
+
     // Now determine the texture parameters using the arguments.
     publicAPI.getOpenGLDataType(dataTypeToUse);
-    publicAPI.getInternalFormat(dataTypeToUse, numCompsToUse);
-    publicAPI.getFormat(dataTypeToUse, numCompsToUse);
+    publicAPI.getInternalFormat(dataTypeToUse, numComps);
+    publicAPI.getFormat(dataTypeToUse, numComps);
 
     if (!model.internalFormat || !model.format || !model.openGLDataType) {
       vtkErrorMacro('Failed to determine texture parameters.');
@@ -1071,7 +1138,7 @@ function vtkOpenGLTexture(publicAPI, model) {
 
     // have to pack this 3D texture into pot 2D texture
     model.target = model.context.TEXTURE_2D;
-    model.components = numCompsToUse;
+    model.components = numComps;
     model.depth = 1;
     model.numberOfDimensions = 2;
 
@@ -1087,7 +1154,7 @@ function vtkOpenGLTexture(publicAPI, model) {
     let maxTexDim = model.context.getParameter(model.context.MAX_TEXTURE_SIZE);
     if (
       maxTexDim > 4096 &&
-      (dataTypeToUse === VtkDataTypes.FLOAT || numCompsToUse === 4)
+      (dataTypeToUse === VtkDataTypes.FLOAT || numComps >= 3)
     ) {
       maxTexDim = 4096;
     }
@@ -1113,24 +1180,18 @@ function vtkOpenGLTexture(publicAPI, model) {
     publicAPI.bind();
 
     // store the information, we will need it later
-    model.volumeInfo = {
-      encodedScalars,
-      min,
-      max,
-      width,
-      height,
-      depth,
-      xreps,
-      yreps,
-      xstride,
-      ystride,
-    };
+    model.volumeInfo.xreps = xreps;
+    model.volumeInfo.yreps = yreps;
+    model.volumeInfo.xstride = xstride;
+    model.volumeInfo.ystride = ystride;
+    model.volumeInfo.offset = res.offset;
+    model.volumeInfo.scale = res.scale;
 
     // OK stuff the data into the 2d TEXTURE
 
     // first allocate the new texture
     let newArray;
-    const pixCount = targetWidth * targetHeight * numCompsToUse;
+    const pixCount = targetWidth * targetHeight * numComps;
     if (dataTypeToUse === VtkDataTypes.FLOAT) {
       newArray = new Float32Array(pixCount);
     } else {
@@ -1147,14 +1208,23 @@ function vtkOpenGLTexture(publicAPI, model) {
         model.width - xrepsThisRow * Math.floor(width / xstride);
       for (let inY = 0; inY < height; inY += ystride) {
         for (let xRep = 0; xRep < xrepsThisRow; xRep++) {
-          const inOffset = (yRep * xreps + xRep) * width * height + inY * width;
+          const inOffset =
+            numComps * ((yRep * xreps + xRep) * width * height + inY * width);
           for (let inX = 0; inX < width; inX += xstride) {
             // copy value
-            volCopyData(newArray, outIdx, data[inOffset + inX], min, max);
-            outIdx += numCompsToUse;
+            for (let nc = 0; nc < numComps; nc++) {
+              volCopyData(
+                newArray,
+                outIdx,
+                data[inOffset + inX * numComps + nc],
+                res.offset[nc],
+                res.scale[nc]
+              );
+              outIdx++;
+            }
           }
         }
-        outIdx += outXContIncr * numCompsToUse;
+        outIdx += outXContIncr * numComps;
       }
     }
 
@@ -1229,7 +1299,6 @@ const DEFAULT_VALUES = {
   baseLevel: 0,
   maxLevel: 1000,
   generateMipmap: false,
-  computedGradients: false,
 };
 
 // ----------------------------------------------------------------------------
@@ -1245,9 +1314,6 @@ export function extend(publicAPI, model, initialValues = {}) {
 
   model.textureBuildTime = {};
   macro.obj(model.textureBuildTime, { mtime: 0 });
-
-  model.gradientsBuildTime = {};
-  macro.obj(model.gradientsBuildTime, { mtime: 0 });
 
   // Build VTK API
   macro.set(publicAPI, model, ['format', 'openGLDataType']);
@@ -1269,8 +1335,6 @@ export function extend(publicAPI, model, initialValues = {}) {
     'components',
     'handle',
     'target',
-    'computedGradients',
-    'gradientsBuildTime',
   ]);
 
   // Object methods
