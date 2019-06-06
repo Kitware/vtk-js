@@ -64,12 +64,11 @@ function vtkImageStream(publicAPI, model) {
   // --------------------------------------------------------------------------
 
   publicAPI.disconnect = () => {
-    if (model.protocol && model.connected) {
-      model.protocol.unsubscribeToImageStream(
-        model.imageStreamTopicSubscription
-      );
-      model.imageStreamTopicSubscription = null;
+    if (model.protocol && model.connected && model.renderTopicSubscription) {
+      model.protocol.unsubscribeToImageStream(model.renderTopicSubscription);
+      model.renderTopicSubscription = null;
     }
+    model.connected = false;
   };
 
   // --------------------------------------------------------------------------
