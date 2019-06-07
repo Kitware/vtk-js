@@ -443,7 +443,7 @@ function vtkScalarsToColors(publicAPI, model) {
       newValues[count * 4] = convtFun(values[i]);
       newValues[count * 4 + 1] = convtFun(values[i + 1]);
       newValues[count * 4 + 2] = convtFun(values[i + 2]);
-      newColors[count * 4 + 3] = convtFun(values[i + 3]) * alpha;
+      newValues[count * 4 + 3] = convtFun(values[i + 3]) * alpha;
       count++;
     }
   };
