@@ -101,7 +101,7 @@ uniform float cshift0;
 uniform float cscale0;
 
 // jitter texture
-uniform sampler2D jtexture;
+//VTK::Jitter::Dec
 
 // some 3D texture values
 uniform float sampleDistance;
@@ -577,10 +577,9 @@ void computeIndexSpaceValues(out vec3 pos, out vec3 step, out float numSteps, ve
     dot(endPos, vPlaneNormal2),
     dot(endPos, vPlaneNormal4));
 
-  // start slightly inside and apply some jitter
-  float jitter = texture2D(jtexture, gl_FragCoord.xy/32.0).r;
-  vec3 delta = endPos - pos;
-  pos = pos + normalize(delta)*(0.01 + 0.98*jitter)*sampleDistance;
+  vec3 delta = vec3(0,0,0);
+
+  //VTK::Jitter::Impl
 
   // update vdelta post jitter
   delta = endPos - pos;

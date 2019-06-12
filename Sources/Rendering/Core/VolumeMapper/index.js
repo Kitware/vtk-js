@@ -37,6 +37,7 @@ const DEFAULT_VALUES = {
   imageSampleDistance: 1.0,
   maximumSamplesPerRay: 1000,
   autoAdjustSampleDistances: true,
+  jittering: true,
 };
 
 // ----------------------------------------------------------------------------
@@ -53,6 +54,7 @@ export function extend(publicAPI, model, initialValues = {}) {
     'imageSampleDistance',
     'maximumSamplesPerRay',
     'autoAdjustSampleDistances',
+    'jittering',
   ]);
 
   macro.event(publicAPI, model, 'lightingActivated');

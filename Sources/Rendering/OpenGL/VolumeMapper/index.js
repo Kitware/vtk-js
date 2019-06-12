@@ -177,6 +177,21 @@ function vtkOpenGLVolumeMapper(publicAPI, model) {
       ]).result;
     }
 
+    // if we need jitter
+    const jitter = model.renderable.getJittering();
+    if (jitter) {
+      FSSource = vtkShaderProgram.substitute(FSSource, '//VTK::Jitter::Dec', [
+        'uniform sampler2D jtexture;',
+      ]).result;
+
+      FSSource = vtkShaderProgram.substitute(FSSource, '//VTK::Jitter::Impl', [
+        '// start slightly inside and apply some jitter',
+        'float jitter = texture2D(jtexture, gl_FragCoord.xy/32.0).r;',
+        'delta = endPos - pos;',
+        'pos = pos + normalize(delta)*(0.01 + 0.98*jitter)*sampleDistance;',
+      ]).result;
+    }
+
     shaders.Fragment = FSSource;
 
     publicAPI.replaceShaderLight(shaders, ren, actor);

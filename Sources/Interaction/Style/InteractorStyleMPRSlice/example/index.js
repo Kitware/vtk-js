@@ -29,6 +29,11 @@ const actor = vtkVolume.newInstance();
 const mapper = vtkVolumeMapper.newInstance();
 actor.setMapper(mapper);
 
+// When we perform multiplanar reconstruction in this manner,
+// it is necessary to turn off jittering during raycasting to
+// avoid noise artifacts.
+mapper.setJittering(false);
+
 const reader = vtkHttpDataSetReader.newInstance({
   fetchGzip: true,
 });
