@@ -727,7 +727,7 @@ void main()
 
     // now map through opacity and color
     vec4 tcolor = texture2D(ctexture, vec2(value * cscale + cshift, 0.5));
-    tcolor.a = residual*texture2D(otexture, vec2(value * oscale + oshift, 0.5)).r;
+    tcolor.a = texture2D(otexture, vec2(value * oscale + oshift, 0.5)).r;
 
     // compute the normal if needed
     //VTK::Normal::Impl
@@ -794,9 +794,8 @@ void main()
     }
 
     // Note that the resulting image is always grayscale i.e. aggregated values are not passed through the color transfer function. This is because the final value is a derived value and not a real data value along the sampling ray.
-    // TODO: Not sure this is correct
     vec4 tcolor = vec4(value, value, value, value);
-    tcolor.a = residual*texture2D(otexture, vec2(value * oscale + oshift, 0.5)).r;
+    tcolor.a = texture2D(otexture, vec2(value * oscale + oshift, 0.5)).r;
 
     // compute the normal if needed
     //VTK::Normal::Impl
