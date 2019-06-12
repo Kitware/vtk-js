@@ -115,8 +115,8 @@ function vtkViewProxy(publicAPI, model) {
   // --------------------------------------------------------------------------
 
   publicAPI.setOrientationAxesType = (type) => {
-    let orientationAxis = model.listOrientationAxis.find(
-      (element) => element.name == type
+    const orientationAxis = model.listOrientationAxis.find(
+      (element) => element.name === type
     );
     if (orientationAxis !== undefined) {
       model.orientationAxesType = orientationAxis.name;
@@ -128,8 +128,8 @@ function vtkViewProxy(publicAPI, model) {
   // --------------------------------------------------------------------------
 
   publicAPI.registerOrientationAxis = (name, actor) => {
-    let orientationAxisIndex = model.listOrientationAxis.findIndex(
-      (element) => element.name == type
+    const orientationAxisIndex = model.listOrientationAxis.findIndex(
+      (element) => element.name === name
     );
     if (orientationAxisIndex === -1) {
       model.listOrientationAxis.push({ name, actor });
@@ -139,8 +139,8 @@ function vtkViewProxy(publicAPI, model) {
   // --------------------------------------------------------------------------
 
   publicAPI.unregisterOrientationAxis = (name) => {
-    let orientationAxisIndex = model.listOrientationAxis.findIndex(
-      (element) => element.name == type
+    const orientationAxisIndex = model.listOrientationAxis.findIndex(
+      (element) => element.name === name
     );
     if (orientationAxisIndex !== -1) {
       model.listOrientationAxis.splice(orientationAxisIndex, 1);
