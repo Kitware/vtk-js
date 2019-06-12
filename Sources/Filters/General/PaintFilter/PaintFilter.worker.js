@@ -1,10 +1,13 @@
 import registerWebworker from 'webworker-promise/lib/register';
 
+import { SlicingMode } from 'vtk.js/Sources/Rendering/Core/ImageMapper/Constants';
+
 const globals = {
   // single-component labelmap
   buffer: null,
   dimensions: [0, 0, 0],
   prevPoint: null,
+  slicingMode: null,
 };
 
 function handlePaint({ point, radius }) {
@@ -16,12 +19,25 @@ function handlePaint({ point, radius }) {
     globals.prevPoint = point;
   }
 
-  const xstart = Math.floor(Math.min(dims[0] - 1, Math.max(0, x - rx)));
-  const xend = Math.floor(Math.min(dims[0] - 1, Math.max(0, x + rx)));
-  const ystart = Math.floor(Math.min(dims[1] - 1, Math.max(0, y - ry)));
-  const yend = Math.floor(Math.min(dims[1] - 1, Math.max(0, y + ry)));
-  const zstart = Math.floor(Math.min(dims[2] - 1, Math.max(0, z - rz)));
-  const zend = Math.floor(Math.min(dims[2] - 1, Math.max(0, z + rz)));
+  let xstart = Math.floor(Math.min(dims[0] - 1, Math.max(0, x - rx)));
+  let xend = Math.floor(Math.min(dims[0] - 1, Math.max(0, x + rx)));
+  let ystart = Math.floor(Math.min(dims[1] - 1, Math.max(0, y - ry)));
+  let yend = Math.floor(Math.min(dims[1] - 1, Math.max(0, y + ry)));
+  let zstart = Math.floor(Math.min(dims[2] - 1, Math.max(0, z - rz)));
+  let zend = Math.floor(Math.min(dims[2] - 1, Math.max(0, z + rz)));
+
+  if (globals.slicingMode) {
+    if (globals.slicingMode === SlicingMode.X) {
+      xstart = x;
+      xend = x;
+    } else if (globals.slicingMode === SlicingMode.Y) {
+      ystart = y;
+      yend = y;
+    } else if (globals.slicingMode === SlicingMode.Z) {
+      zstart = z;
+      zend = z;
+    }
+  }
 
   const jStride = dims[0];
   const kStride = dims[0] * dims[1];
@@ -88,12 +104,13 @@ function handlePaint({ point, radius }) {
 }
 
 registerWebworker()
-  .operation('start', ({ bufferType, dimensions }) => {
+  .operation('start', ({ bufferType, dimensions, slicingMode }) => {
     const bufferSize = dimensions[0] * dimensions[1] * dimensions[2];
     /* eslint-disable-next-line */
     globals.buffer = new self[bufferType](bufferSize);
     globals.dimensions = dimensions;
     globals.prevPoint = null;
+    globals.slicingMode = slicingMode;
   })
   .operation('paint', handlePaint)
   .operation(
