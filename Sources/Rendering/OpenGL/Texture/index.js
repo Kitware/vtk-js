@@ -910,7 +910,9 @@ function vtkOpenGLTexture(publicAPI, model) {
     // canvases from working properly with webGL textures.  By getting any
     // image data from the canvas, this works around the bug.  See
     // https://bugs.chromium.org/p/chromium/issues/detail?id=896307
-    ctx.getImageData(0, 0, 1, 1);
+    if (navigator.userAgent.indexOf('Chrome/69') >= 0) {
+      ctx.getImageData(0, 0, 1, 1);
+    }
     const safeImage = canvas;
 
     model.context.texImage2D(
