@@ -61,12 +61,17 @@ function vtkViewProxy(publicAPI, model) {
   model.camera = model.renderer.getActiveCamera();
   model.camera.setParallelProjection(!!model.useParallelRendering);
 
-  // Orientation a cube setup -------------------------------------------------
+  // Orientation axis setup -------------------------------------------------
 
   model.orientationAxesArrow = vtkAxesActor.newInstance();
   model.orientationAxesCube = vtkAnnotatedCubeActor.newInstance();
   AnnotatedCubePresets.applyPreset('default', model.orientationAxesCube);
   AnnotatedCubePresets.applyPreset('lps', model.orientationAxesCube);
+
+  model.orientationAxesMap = {
+    arrow: model.orientationAxesArrow,
+    cube: model.orientationAxesCube,
+  };
   model.orientationWidget = vtkOrientationMarkerWidget.newInstance({
     actor: model.orientationAxesArrow,
     interactor: model.renderWindow.getInteractor(),
@@ -110,19 +115,29 @@ function vtkViewProxy(publicAPI, model) {
   // --------------------------------------------------------------------------
 
   publicAPI.setOrientationAxesType = (type) => {
-    switch (type) {
-      case 'arrow':
-        model.orientationAxesType = 'arrow';
-        model.orientationWidget.setActor(model.orientationAxesArrow);
-        break;
-      case 'cube':
-      default:
-        model.orientationWidget.setActor(model.orientationAxesCube);
-        model.orientationAxesType = 'cube';
-        break;
+    const actor = model.orientationAxesMap[type];
+    if (actor) {
+      model.orientationAxesType = type;
+      model.orientationWidget.setActor(actor);
+      publicAPI.renderLater();
     }
-    publicAPI.renderLater();
   };
+
+  // --------------------------------------------------------------------------
+
+  publicAPI.registerOrientationAxis = (name, actor) => {
+    model.orientationAxesMap[name] = actor;
+  };
+
+  // --------------------------------------------------------------------------
+
+  publicAPI.unregisterOrientationAxis = (name) => {
+    delete model.orientationAxesMap[name];
+  };
+
+  // --------------------------------------------------------------------------
+
+  publicAPI.listOrientationAxis = () => Object.keys(model.orientationAxesMap);
 
   // --------------------------------------------------------------------------
 
