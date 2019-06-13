@@ -68,10 +68,10 @@ function vtkViewProxy(publicAPI, model) {
   AnnotatedCubePresets.applyPreset('default', model.orientationAxesCube);
   AnnotatedCubePresets.applyPreset('lps', model.orientationAxesCube);
 
-  model.orientationAxesList = [
-    { name: 'arrow', actor: model.orientationAxesArrow },
-    { name: 'cube', actor: model.orientationAxesCube },
-  ];
+  model.orientationAxesMap = {
+    arrow: model.orientationAxesArrow,
+    cube: model.orientationAxesCube,
+  };
   model.orientationWidget = vtkOrientationMarkerWidget.newInstance({
     actor: model.orientationAxesArrow,
     interactor: model.renderWindow.getInteractor(),
@@ -115,12 +115,10 @@ function vtkViewProxy(publicAPI, model) {
   // --------------------------------------------------------------------------
 
   publicAPI.setOrientationAxesType = (type) => {
-    const orientationAxis = model.listOrientationAxis.find(
-      (element) => element.name === type
-    );
-    if (orientationAxis !== undefined) {
-      model.orientationAxesType = orientationAxis.name;
-      model.orientationWidget.setActor(orientationAxis.actor);
+    const actor = model.orientationAxesMap[type];
+    if (actor) {
+      model.orientationAxesType = type;
+      model.orientationWidget.setActor(actor);
       publicAPI.renderLater();
     }
   };
@@ -128,24 +126,18 @@ function vtkViewProxy(publicAPI, model) {
   // --------------------------------------------------------------------------
 
   publicAPI.registerOrientationAxis = (name, actor) => {
-    const orientationAxisIndex = model.listOrientationAxis.findIndex(
-      (element) => element.name === name
-    );
-    if (orientationAxisIndex === -1) {
-      model.listOrientationAxis.push({ name, actor });
-    }
+    model.orientationAxesMap[name] = actor;
   };
 
   // --------------------------------------------------------------------------
 
   publicAPI.unregisterOrientationAxis = (name) => {
-    const orientationAxisIndex = model.listOrientationAxis.findIndex(
-      (element) => element.name === name
-    );
-    if (orientationAxisIndex !== -1) {
-      model.listOrientationAxis.splice(orientationAxisIndex, 1);
-    }
+    delete model.orientationAxesMap[name];
   };
+
+  // --------------------------------------------------------------------------
+
+  publicAPI.listOrientationAxis = () => Object.keys(model.orientationAxesMap);
 
   // --------------------------------------------------------------------------
 
@@ -563,7 +555,6 @@ function extend(publicAPI, model, initialValues = {}) {
     'interactor',
     'interactorStyle2D',
     'interactorStyle3D',
-    'listOrientationAxis',
     'openglRenderWindow',
     'orientationAxesType',
     'presetToOrientationAxes',
