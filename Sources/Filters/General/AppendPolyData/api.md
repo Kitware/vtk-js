@@ -11,19 +11,19 @@ will not be appended.)
 ## Usage
 
 Provide the first input to the filter via the standard
-`SetInput(Data/Connection)` methods. Any additional inputs can be provided via
-the `AddInput(Data/Connection)` methods. When only a single input is provided,
+`setInput(Data/Connection)` methods. Any additional inputs can be provided via
+the `addInput(Data/Connection)` methods. When only a single input is provided,
 it is passed through as is to the output.
 
 ```js
 const cone = vtkConeSource.newInstance();
 const cylinder = vtkCylinderSource.newInstance();
 
-const appendFilter = vtkAppendFilter.newInstance();
-appendFilter.setInputConnection(cone.getOutputPort());
-appendFilter.addInputConnection(cylinder.getOutputPort());
+const appendPolyData = vtkAppendPolyData.newInstance();
+appendPolyData.setInputConnection(cone.getOutputPort());
+appendPolyData.addInputConnection(cylinder.getOutputPort());
 
-const appendedData = appendFilter.getOutputData();
+const appendedData = appendPolyData.getOutputData();
 ```
 
 ## Public API
