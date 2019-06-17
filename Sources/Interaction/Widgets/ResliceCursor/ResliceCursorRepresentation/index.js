@@ -386,6 +386,9 @@ function vtkResliceCursorRepresentation(publicAPI, model) {
 
   publicAPI.getNestedProps = () => publicAPI.getActors();
 
+  /**
+   * t1 and t2 should be orthogonal and axis aligned
+   */
   publicAPI.boundPoint = (inPoint, t1, t2, outPoint) => {
     if (!publicAPI.getResliceCursor()) {
       return;
@@ -395,19 +398,26 @@ function vtkResliceCursorRepresentation(publicAPI, model) {
       .getImage()
       .getBounds();
 
+    const absT1 = t1.map((val) => Math.abs(val));
+    const absT2 = t2.map((val) => Math.abs(val));
+    const epsilon = 0.00001;
+
     let o1 = 0.0;
     let o2 = 0.0;
 
     for (let i = 0; i < 3; i++) {
       let axisOffset = 0;
 
-      const useT1 = Math.abs(t1[i]) > Math.abs(t2[i]);
+      const useT1 = absT1[i] > absT2[i];
       const t = useT1 ? t1 : t2;
+      const absT = useT1 ? absT1 : absT2;
 
       if (inPoint[i] < bounds[i * 2]) {
-        axisOffset = t[i] !== 0 ? (bounds[2 * i] - inPoint[i]) / t[i] : 0;
+        axisOffset =
+          absT[i] > epsilon ? (bounds[2 * i] - inPoint[i]) / t[i] : 0;
       } else if (inPoint[i] > bounds[2 * i + 1]) {
-        axisOffset = t[i] !== 0 ? (bounds[2 * i + 1] - inPoint[i]) / t[i] : 0;
+        axisOffset =
+          absT[i] !== epsilon ? (bounds[2 * i + 1] - inPoint[i]) / t[i] : 0;
       }
 
       if (useT1) {
