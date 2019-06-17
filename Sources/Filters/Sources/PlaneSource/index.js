@@ -274,7 +274,7 @@ export function extend(publicAPI, model, initialValues = {}) {
   vtkPlaneSource(publicAPI, model);
 
   publicAPI.setPoint1(model.point1);
-  publicAPI.setPoint1(model.point2);
+  publicAPI.setPoint2(model.point2);
 }
 
 // ----------------------------------------------------------------------------
