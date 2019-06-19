@@ -516,6 +516,14 @@ function vtkViewProxy(publicAPI, model) {
   };
 
   // --------------------------------------------------------------------------
+
+  publicAPI.focusTo = macro.chain(
+    model.camera.setFocalPoint,
+    model.interactorStyle2D.setCenterOfRotation,
+    model.interactorStyle3D.setCenterOfRotation
+  );
+
+  // --------------------------------------------------------------------------
   // Initialization from state or input
   // --------------------------------------------------------------------------
 
