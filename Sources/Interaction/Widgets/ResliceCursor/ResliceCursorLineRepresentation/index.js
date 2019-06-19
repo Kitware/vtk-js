@@ -459,7 +459,6 @@ function vtkResliceCursorLineRepresentation(publicAPI, model) {
 
   /**
    * Reimplemented to look at image center instead of reslice cursor.
-   * Maybe it could be moved to ResliceCursorRepresentation
    */
   publicAPI.resetCamera = () => {
     if (model.renderer) {
@@ -509,9 +508,6 @@ function vtkResliceCursorLineRepresentation(publicAPI, model) {
 
       // Project focalPoint onto image plane and preserve distance
       publicAPI.updateCamera();
-
-      // Make sure entire image is visible.
-      publicAPI.resetCamera(publicAPI.getBounds());
 
       // Reset clipping range
       publicAPI.updateCamera();
