@@ -27,3 +27,11 @@ Float array of size 3 representing the x axes of the plane.
 
 Float array of size 3 representing the y axes of the plane.
 
+### Normal (set/get)
+
+Array of size 3 representing the normal of the plane.
+
+### Center (set/get)
+
+Array of size 3 representing the center of the plane.
+

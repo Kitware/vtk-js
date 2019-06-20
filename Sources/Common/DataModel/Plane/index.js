@@ -70,11 +70,14 @@ function intersectWithLine(p1, p2, origin, normal) {
   const outObj = { intersection: false, t: Number.MAX_VALUE, x: [] };
 
   const p21 = [];
+  const p1Origin = [];
   // Compute line vector
   vtkMath.subtract(p2, p1, p21);
+  vtkMath.subtract(origin, p1, p1Origin);
 
   // Compute denominator.  If ~0, line and plane are parallel.
-  const num = vtkMath.dot(normal, origin) - vtkMath.dot(normal, p1);
+  // const num = vtkMath.dot(normal, origin) - vtkMath.dot(normal, p1);
+  const num = vtkMath.dot(normal, p1Origin);
   const den = vtkMath.dot(normal, p21);
 
   // If denominator with respect to numerator is "zero", then the line and
