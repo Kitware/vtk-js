@@ -33,6 +33,9 @@ varying vec3 vertexVCVSOutput;
 // possibly define vtkIndependentComponents
 //VTK::IndependentComponentsOn
 
+// Define the blend mode to use
+#define vtkBlendMode //VTK::BlendMode
+
 // define vtkLightComplexity
 //VTK::LightComplexity
 #if vtkLightComplexity > 0
@@ -508,6 +511,206 @@ void getRayPointIntersectionBounds(
 }
 
 //=======================================================================
+// Apply the specified blend mode operation along the ray's path.
+//
+void applyBlend(vec3 posIS, vec3 stepIS, vec3 tdims, float numSteps)
+{
+  vec3 tstep = 1.0/tdims;
+
+  // integer number of steps to take and residual step size
+  int count = int(numSteps - 0.05); // end slightly inside
+  float residual = numSteps - float(count);
+
+  // local vars for the loop
+  vec4 color = vec4(0.0, 0.0, 0.0, 0.0);
+  float scalar;
+
+
+  int blendMode = //VTK::BlendMode;
+  #if vtkBlendMode == 0 // COMPOSITE_BLEND
+    for (int i = 0; i < //VTK::MaximumSamplesValue ; ++i)
+      {
+        // compute the scalar
+        vec4 tValue = getTextureValue(posIS);
+
+        // now map through opacity and color
+        vec4 tColor = getColorForValue(tValue, posIS, tstep);
+
+        float mix = (1.0 - color.a);
+
+        // this line should not be needed but nvidia seems to not handle
+        // the break correctly on windows/chrome 58 angle
+        mix = mix * sign(max(float(count - i + 1), 0.0));
+
+        color = color + vec4(tColor.rgb*tColor.a, tColor.a)*mix;
+        if (i >= count) { break; }
+        if (color.a > 0.99) { color.a = 1.0; break; }
+        posIS += stepIS;
+      }
+
+      if (color.a < 0.99)
+      {
+        posIS += (residual - 1.0)*stepIS;
+
+        // compute the scalar
+        vec4 tValue = getTextureValue(posIS);
+
+        // now map through opacity and color
+        vec4 tColor = getColorForValue(tValue, posIS, tstep);
+
+        float mix = (1.0 - color.a);
+        color = color + vec4(tColor.rgb*tColor.a, tColor.a)*mix;
+      }
+
+      gl_FragData[0] = vec4(color.rgb/color.a, color.a);
+      // gl_FragData[0] = vec4(tbounds.y/farDist, tbounds.x/farDist, color.b/color.a, 1.0);
+  #endif
+  #if vtkBlendMode == 1//) || (blendMode == 2)
+    // MAXIMUM_INTENSITY_BLEND || MINIMUM_INTENSITY_BLEND
+    // Find maximum/minimum intensity along the ray before
+    // mapping to a color
+    float value = getTextureValue(posIS).r;
+
+    // TODO: Might be a cleaner way to write this? Can we set
+    // operator = min or operator = max instead of duplicating
+    // the code?
+    if (blendMode == 1) { // MAXIMUM_INTENSITY_BLEND
+      // Sample along the ray until MaximumSamplesValue,
+      // ending slightly inside the total distance
+      for (int i = 0; i < //VTK::MaximumSamplesValue ; ++i)
+      {
+        // compute the scalar
+        scalar = getTextureValue(posIS).r;
+
+        // Update the maximum value if necessary
+        value = max(scalar, value);
+
+        posIS += stepIS;
+        if (i >= count) { break; }
+      }
+
+      // Perform the last step along the ray using the
+      // residual distance
+      posIS += (residual - 1.0) * stepIS;
+
+      // compute the scalar
+      scalar = getTextureValue(posIS).r;
+
+      // Update the minimum/maximum value if necessary
+      value = max(scalar, value);
+    } else {
+      // Sample along the ray until MaximumSamplesValue,
+      // ending slightly inside the total distance
+      for (int i = 0; i < //VTK::MaximumSamplesValue ; ++i)
+      {
+        // compute the scalar
+        scalar = getTextureValue(posIS).r;
+
+        // Update the minimum value if necessary
+        value = min(scalar, value);
+
+        posIS += stepIS;
+        if (i >= count) { break; }
+      }
+
+      // Perform the last step along the ray using the
+      // residual distance
+      posIS += (residual - 1.0) * stepIS;
+
+      // compute the scalar
+      scalar = getTextureValue(posIS).r;
+
+      // Update the minimum/maximum value if necessary
+      value = min(scalar, value);
+    }
+
+    // now map through opacity and color
+    vec4 tcolor = texture2D(ctexture, vec2(value * cscale0 + cshift0, 0.5));
+    tcolor.a = texture2D(otexture, vec2(value * oscale0 + oshift0, 0.5)).r;
+
+    // compute the normal if needed
+    //VTK::Normal::Impl
+
+    // handle gradient opacity
+    //VTK::GradientOpacity::Impl
+
+    // handle lighting
+    //VTK::Light::Impl
+
+    gl_FragData[0] = tcolor;
+  #endif
+  #if vtkBlendMode == 3 //AVERAGE_INTENSITY_BLEND
+    float value = 0.0;
+    float computed = 0.0;
+
+    float averageIPScalarRangeMin = //VTK::AverageIPScalarRangeMin;
+    float averageIPScalarRangeMax = //VTK::AverageIPScalarRangeMax;
+
+    // Declare i outside of the loop
+    int i = 0;
+
+    // Sample along the ray until MaximumSamplesValue,
+    // ending slightly inside the total distance
+    for (i = 0; i < //VTK::MaximumSamplesValue ; ++i)
+    {
+      // compute the scalar
+      scalar = getTextureValue(posIS).r;
+
+      // One can control the scalar range by setting the AverageIPScalarRange to disregard scalar values, not in the range of interest, from the average computation
+      if (scalar < averageIPScalarRangeMin || scalar > averageIPScalarRangeMax) {
+        continue;
+      }
+
+      // Average intensity blend mode works similar to the additive blend mode where the scalar values are multiplied by opacity calculated from the opacity transfer function and then added
+      computed = texture2D(otexture, vec2(scalar * oscale0 + oshift0, 0.5)).r;
+
+      // Sum the values across each step in the path
+      value += computed;
+
+      posIS += stepIS;
+      if (i >= count) { break; }
+    }
+
+    // Perform the last step along the ray using the
+    // residual distance
+    posIS += (residual - 1.0) * stepIS;
+
+    // compute the scalar
+    scalar = getTextureValue(posIS).r;
+
+
+    // Divide by the total number of samples that were taken
+    float i_float = float(i);
+
+    // One can control the scalar range by setting the AverageIPScalarRange to disregard scalar values, not in the range of interest, from the average computation
+    if (scalar > averageIPScalarRangeMin && scalar < averageIPScalarRangeMax) {
+      computed = texture2D(otexture, vec2(scalar * oscale + oshift, 0.5)).r;
+
+      value += computed;
+
+      value /= (i_float + 1.0);
+    } else {
+      value /= i_float;
+    }
+
+    // Note that the resulting image is always grayscale i.e. aggregated values are not passed through the color transfer function. This is because the final value is a derived value and not a real data value along the sampling ray.
+    vec4 tcolor = vec4(value, value, value, value);
+    tcolor.a = texture2D(otexture, vec2(value * oscale + oshift, 0.5)).r;
+
+    // compute the normal if needed
+    //VTK::Normal::Impl
+
+    // handle gradient opacity
+    //VTK::GradientOpacity::Impl
+
+    // handle lighting
+    //VTK::Light::Impl
+
+    gl_FragData[0] = tcolor;
+  #endif
+}
+
+//=======================================================================
 // given a
 // - ray direction (rayDir)
 // - starting point (vertexVCVSOutput)
@@ -616,199 +819,6 @@ void main()
   float numSteps;
   computeIndexSpaceValues(posIS, stepIS, numSteps, rayDirVC, rayStartEndDistancesVC);
 
-  // iteger number of steps to take and residual step size
-  int count = int(numSteps - 0.05); // end slightly inside
-  float residual = numSteps - float(count);
-
-  // local vars for the loop
-  vec4 color = vec4(0.0, 0.0, 0.0, 0.0);
-  float scalar;
-  vec4 scalarComps;
-
-  vec3 tstep = 1.0/tdims;
-
-  int blendMode = //VTK::BlendMode;
-  if (blendMode == 0) // COMPOSITE_BLEND
-  {
-    for (int i = 0; i < //VTK::MaximumSamplesValue ; ++i)
-    {
-      // compute the scalar
-      vec4 tValue = getTextureValue(posIS);
-
-      // now map through opacity and color
-      vec4 tColor = getColorForValue(tValue, posIS, tstep);
-
-      float mix = (1.0 - color.a);
-
-      // this line should not be needed but nvidia seems to not handle
-      // the break correctly on windows/chrome 58 angle
-      mix = mix * sign(max(float(count - i + 1), 0.0));
-
-      color = color + vec4(tColor.rgb*tColor.a, tColor.a)*mix;
-      if (i >= count) { break; }
-      if (color.a > 0.99) { color.a = 1.0; break; }
-      posIS += stepIS;
-    }
-
-    if (color.a < 0.99)
-    {
-      posIS += (residual - 1.0)*stepIS;
-
-      // compute the scalar
-      vec4 tValue = getTextureValue(posIS);
-
-      // now map through opacity and color
-      vec4 tColor = getColorForValue(tValue, posIS, tstep);
-
-      float mix = (1.0 - color.a);
-      color = color + vec4(tColor.rgb*tColor.a, tColor.a)*mix;
-    }
-
-    gl_FragData[0] = vec4(color.rgb/color.a, color.a);
-    // gl_FragData[0] = vec4(tbounds.y/farDist, tbounds.x/farDist, color.b/color.a, 1.0);
-  } else if (blendMode == 1 || blendMode == 2) {
-    // MAXIMUM_INTENSITY_BLEND || MINIMUM_INTENSITY_BLEND
-    // Find maximum/minimum intensity along the ray before
-    // mapping to a color
-    float value = getTextureValue(posIS).r;
-
-    // TODO: Might be a cleaner way to write this? Can we set
-    // operator = min or operator = max instead of duplicating
-    // the code?
-    if (blendMode == 1) { // MAXIMUM_INTENSITY_BLEND
-      // Sample along the ray until MaximumSamplesValue,
-      // ending slightly inside the total distance
-      for (int i = 0; i < //VTK::MaximumSamplesValue ; ++i)
-      {
-        // compute the scalar
-        scalar = getTextureValue(posIS).r;
-
-        // Update the maximum value if necessary
-        value = max(scalar, value);
-
-        posIS += stepIS;
-        if (i >= count) { break; }
-      }
-
-      // Perform the last step along the ray using the
-      // residual distance
-      posIS += (residual - 1.0) * stepIS;
-
-      // compute the scalar
-      scalar = getTextureValue(posIS).r;
-
-      // Update the minimum/maximum value if necessary
-      value = max(scalar, value);
-    } else {
-      // Sample along the ray until MaximumSamplesValue,
-      // ending slightly inside the total distance
-      for (int i = 0; i < //VTK::MaximumSamplesValue ; ++i)
-      {
-        // compute the scalar
-        scalar = getTextureValue(posIS).r;
-
-        // Update the minimum value if necessary
-        value = min(scalar, value);
-
-        posIS += stepIS;
-        if (i >= count) { break; }
-      }
-
-      // Perform the last step along the ray using the
-      // residual distance
-      posIS += (residual - 1.0) * stepIS;
-
-      // compute the scalar
-      scalar = getTextureValue(posIS).r;
-
-      // Update the minimum/maximum value if necessary
-      value = min(scalar, value);
-    }
-
-    // now map through opacity and color
-    vec4 tcolor = texture2D(ctexture, vec2(value * cscale + cshift, 0.5));
-    tcolor.a = texture2D(otexture, vec2(value * oscale + oshift, 0.5)).r;
-
-    // compute the normal if needed
-    //VTK::Normal::Impl
-
-    // handle gradient opacity
-    //VTK::GradientOpacity::Impl
-
-    // handle lighting
-    //VTK::Light::Impl
-
-    gl_FragData[0] = tcolor;
-  } else if (blendMode == 3) { //AVERAGE_INTENSITY_BLEND
-    float value = 0.0;
-    float computed = 0.0;
-
-    float averageIPScalarRangeMin = //VTK::AverageIPScalarRangeMin;
-    float averageIPScalarRangeMax = //VTK::AverageIPScalarRangeMax;
-
-    // Declare i outside of the loop
-    int i = 0;
-
-    // Sample along the ray until MaximumSamplesValue,
-    // ending slightly inside the total distance
-    for (i = 0; i < //VTK::MaximumSamplesValue ; ++i)
-    {
-      // compute the scalar
-      scalar = getTextureValue(posIS).r;
-
-      // One can control the scalar range by setting the AverageIPScalarRange to disregard scalar values, not in the range of interest, from the average computation
-      if (scalar < averageIPScalarRangeMin || scalar > averageIPScalarRangeMax) {
-        continue;
-      }
-
-      // Average intensity blend mode works similar to the additive blend mode where the scalar values are multiplied by opacity calculated from the opacity transfer function and then added
-      computed = texture2D(otexture, vec2(scalar * oscale + oshift, 0.5)).r;
-
-      // Sum the values across each step in the path
-      value += computed;
-
-      posIS += stepIS;
-      if (i >= count) { break; }
-    }
-
-    // Perform the last step along the ray using the
-    // residual distance
-    posIS += (residual - 1.0) * stepIS;
-
-    // compute the scalar
-    scalar = getTextureValue(posIS).r;
-
-
-    // Divide by the total number of samples that were taken
-    float i_float = float(i);
-
-    // One can control the scalar range by setting the AverageIPScalarRange to disregard scalar values, not in the range of interest, from the average computation
-    if (scalar > averageIPScalarRangeMin && scalar < averageIPScalarRangeMax) {
-      computed = texture2D(otexture, vec2(scalar * oscale + oshift, 0.5)).r;
-
-      value += computed;
-
-      value /= (i_float + 1.0);
-    } else {
-      value /= i_float;
-    }
-
-    // Note that the resulting image is always grayscale i.e. aggregated values are not passed through the color transfer function. This is because the final value is a derived value and not a real data value along the sampling ray.
-    vec4 tcolor = vec4(value, value, value, value);
-    tcolor.a = texture2D(otexture, vec2(value * oscale + oshift, 0.5)).r;
-
-    // compute the normal if needed
-    //VTK::Normal::Impl
-
-    // handle gradient opacity
-    //VTK::GradientOpacity::Impl
-
-    // handle lighting
-    //VTK::Light::Impl
-
-    gl_FragData[0] = tcolor;
-  } else {
-    // BlendMode is set to something we do not support
-    discard;
-  }
+  // Perform the blending operation along the ray
+  applyBlend(posIS, stepIS, tdims, numSteps);
 }
