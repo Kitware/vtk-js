@@ -684,7 +684,7 @@ void applyBlend(vec3 posIS, vec3 stepIS, vec3 tdims, float numSteps)
 
     // One can control the scalar range by setting the AverageIPScalarRange to disregard scalar values, not in the range of interest, from the average computation
     if (scalar > averageIPScalarRangeMin && scalar < averageIPScalarRangeMax) {
-      computed = texture2D(otexture, vec2(scalar * oscale + oshift, 0.5)).r;
+      computed = texture2D(otexture, vec2(scalar * oscale0 + oshift0, 0.5)).r;
 
       value += computed;
 
@@ -695,7 +695,7 @@ void applyBlend(vec3 posIS, vec3 stepIS, vec3 tdims, float numSteps)
 
     // Note that the resulting image is always grayscale i.e. aggregated values are not passed through the color transfer function. This is because the final value is a derived value and not a real data value along the sampling ray.
     vec4 tcolor = vec4(value, value, value, value);
-    tcolor.a = texture2D(otexture, vec2(value * oscale + oshift, 0.5)).r;
+    tcolor.a = texture2D(otexture, vec2(value * oscale0 + oshift0, 0.5)).r;
 
     // compute the normal if needed
     //VTK::Normal::Impl
