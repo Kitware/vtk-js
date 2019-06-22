@@ -187,7 +187,6 @@ function vtkOpenGLVolumeMapper(publicAPI, model) {
     const averageIPScalarRange = model.renderable.getAverageIPScalarRange();
 
     // TODO: Adding the .0 at the end feels hacky
-
     FSSource = vtkShaderProgram.substitute(
       FSSource,
       '//VTK::AverageIPScalarRangeMin',

@@ -3,6 +3,7 @@ import 'vtk.js/Sources/favicon';
 import vtkFullScreenRenderWindow from 'vtk.js/Sources/Rendering/Misc/FullScreenRenderWindow';
 import vtkHttpDataSetReader from 'vtk.js/Sources/IO/Core/HttpDataSetReader';
 import vtkPiecewiseFunction from 'vtk.js/Sources/Common/DataModel/PiecewiseFunction';
+import vtkColorTransferFunction from 'vtk.js/Sources/Rendering/Core/ColorTransferFunction';
 import vtkVolume from 'vtk.js/Sources/Rendering/Core/Volume';
 import vtkVolumeMapper from 'vtk.js/Sources/Rendering/Core/VolumeMapper';
 import controlPanel from './controller.html';
@@ -35,18 +36,26 @@ actor.setMapper(mapper);
 
 // create color and opacity transfer functions
 const ofun = vtkPiecewiseFunction.newInstance();
-ofun.addPoint(0.0, 0.0);
-ofun.addPoint(5000, 0.3);
-ofun.addPoint(30000, 1.0);
+ofun.addPoint(-3024, 0.1);
+ofun.addPoint(-637.62, 0.1);
+ofun.addPoint(700, 0.5);
+ofun.addPoint(3071, 0.9);
 
+const ctfun = vtkColorTransferFunction.newInstance();
+ctfun.addRGBPoint(-3024, 0, 0, 0);
+ctfun.addRGBPoint(-637.62, 0, 0, 0);
+ctfun.addRGBPoint(700, 1, 1, 1);
+ctfun.addRGBPoint(3071, 1, 1, 1);
+
+actor.getProperty().setRGBTransferFunction(0, ctfun);
 actor.getProperty().setScalarOpacity(0, ofun);
 actor.getProperty().setScalarOpacityUnitDistance(0, 3.0);
 actor.getProperty().setInterpolationTypeToLinear();
 actor.getProperty().setShade(true);
-actor.getProperty().setAmbient(0.2);
-actor.getProperty().setDiffuse(0.7);
-actor.getProperty().setSpecular(0.3);
-actor.getProperty().setSpecularPower(8.0);
+actor.getProperty().setAmbient(0.1);
+actor.getProperty().setDiffuse(0.9);
+actor.getProperty().setSpecular(0.2);
+actor.getProperty().setSpecularPower(10.0);
 
 mapper.setInputConnection(reader.getOutputPort());
 
@@ -57,21 +66,19 @@ function updateBlendMode(event) {
 
   renderWindow.render();
 }
-reader
-  .setUrl(`${__BASE_PATH__}/data/volume/QIN-HEADNECK-01-0024-PET-WB-0.vti`)
-  .then(() => {
-    reader.loadData().then(() => {
-      renderer.addVolume(actor);
-      const interactor = renderWindow.getInteractor();
-      interactor.setDesiredUpdateRate(15.0);
-      renderer.resetCamera();
-      renderer.getActiveCamera().elevation(-70);
-      renderWindow.render();
+reader.setUrl(`${__BASE_PATH__}/data/volume/headsq.vti`).then(() => {
+  reader.loadData().then(() => {
+    renderer.addVolume(actor);
+    const interactor = renderWindow.getInteractor();
+    interactor.setDesiredUpdateRate(15.0);
+    renderer.resetCamera();
+    renderer.getActiveCamera().elevation(-70);
+    renderWindow.render();
 
-      const el = document.querySelector('.blendMode');
-      el.addEventListener('change', updateBlendMode);
-    });
+    const el = document.querySelector('.blendMode');
+    el.addEventListener('change', updateBlendMode);
   });
+});
 
 // -----------------------------------------------------------
 // Make some variables global so that you can inspect and

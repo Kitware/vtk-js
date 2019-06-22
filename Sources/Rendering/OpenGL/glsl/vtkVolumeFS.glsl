@@ -565,7 +565,7 @@ void applyBlend(vec3 posIS, vec3 stepIS, vec3 tdims, float numSteps)
       gl_FragData[0] = vec4(color.rgb/color.a, color.a);
       // gl_FragData[0] = vec4(tbounds.y/farDist, tbounds.x/farDist, color.b/color.a, 1.0);
   #endif
-  #if vtkBlendMode == 1//) || (blendMode == 2)
+  #if vtkBlendMode == 1 || vtkBlendMode == 2
     // MAXIMUM_INTENSITY_BLEND || MINIMUM_INTENSITY_BLEND
     // Find maximum/minimum intensity along the ray before
     // mapping to a color
