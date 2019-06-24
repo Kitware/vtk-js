@@ -10,20 +10,6 @@ const { vtkErrorMacro } = macro;
  * Requires an itk.js image as input.
  */
 function convertItkToVtkImage(itkImage, options = {}) {
-  // Make sure we can handle input pixel type
-  // Refer to itk-js/src/PixelTypes.js for numerical values
-  switch (itkImage.imageType.pixelType) {
-    case 1: // Scalar
-    case 2: // RGB
-    case 3: // RGBA
-      break;
-    default:
-      vtkErrorMacro(
-        `Cannot handle ITK.js pixel type ${itkImage.imageType.pixelType}`
-      );
-      return null;
-  }
-
   const vtkImage = {
     origin: [0, 0, 0],
     spacing: [1, 1, 1],
@@ -49,8 +35,8 @@ function convertItkToVtkImage(itkImage, options = {}) {
   // Create VTK Image Data
   const imageData = vtkImageData.newInstance(vtkImage);
 
-  // create VTK image data
-  const scalars = vtkDataArray.newInstance({
+  // Create VTK point data -- the data associated with the pixels / voxels
+  const pointData = vtkDataArray.newInstance({
     name: options.scalarArrayName || 'Scalars',
     values: itkImage.data,
     numberOfComponents: itkImage.imageType.components,
@@ -58,7 +44,75 @@ function convertItkToVtkImage(itkImage, options = {}) {
 
   imageData.setDirection(direction);
   imageData.setDimensions(...dimensions);
-  imageData.getPointData().setScalars(scalars);
+  // Always associate multi-component pixel types with vtk.js point data
+  // scalars to facilitate multi-component volume rendering
+  imageData.getPointData().setScalars(pointData);
+
+  // Associate the point data that are 3D vectors / tensors
+  // Refer to itk-js/src/PixelTypes.js for numerical values
+  switch (itkImage.imageType.pixelType) {
+    case 1: // Scalar
+      break;
+    case 2: // RGB
+      break;
+    case 3: // RGBA
+      break;
+    case 4: // Offset
+      break;
+    case 5: // Vector
+      if (
+        itkImage.imageType.dimension === 3 &&
+        itkImage.imageType.components === 3
+      ) {
+        imageData.getPointData().setVectors(pointData);
+      }
+      break;
+    case 6: // Point
+      break;
+    case 7: // CovariantVector
+      if (
+        itkImage.imageType.dimension === 3 &&
+        itkImage.imageType.components === 3
+      ) {
+        imageData.getPointData().setVectors(pointData);
+      }
+      break;
+    case 8: // SymmetricSecondRankTensor
+      if (
+        itkImage.imageType.dimension === 3 &&
+        itkImage.imageType.components === 6
+      ) {
+        imageData.getPointData().setTensors(pointData);
+      }
+      break;
+    case 9: // DiffusionTensor3D
+      if (
+        itkImage.imageType.dimension === 3 &&
+        itkImage.imageType.components === 6
+      ) {
+        imageData.getPointData().setTensors(pointData);
+      }
+      break;
+    case 10: // Complex
+      break;
+    case 11: // FixedArray
+      break;
+    case 12: // Array
+      break;
+    case 13: // Matrix
+      break;
+    case 14: // VariableLengthVector
+      break;
+    case 15: // VariableSizeMatrix
+      break;
+    default:
+      vtkErrorMacro(
+        `Cannot handle unexpected ITK.js pixel type ${
+          itkImage.imageType.pixelType
+        }`
+      );
+      return null;
+  }
 
   return imageData;
 }
