@@ -29,7 +29,7 @@ let i = 0;
 for (let z = 0; z < dims[2]; z++) {
   for (let y = 0; y < dims[1]; y++) {
     for (let x = 0; x < dims[0]; x++) {
-      newArray[i++] = 256 * (i % (dims[0] * dims[1])) / (dims[0] * dims[1]);
+      newArray[i++] = (256 * (i % (dims[0] * dims[1]))) / (dims[0] * dims[1]);
     }
   }
 }
