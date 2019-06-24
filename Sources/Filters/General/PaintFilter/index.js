@@ -131,6 +131,27 @@ function vtkPaintFilter(publicAPI, model) {
 
   // --------------------------------------------------------------------------
 
+  publicAPI.paintRectangle = (point1, point2) => {
+    if (workerPromise) {
+      const index1 = [0, 0, 0];
+      const index2 = [0, 0, 0];
+      vec3.transformMat4(index1, point1, model.maskWorldToIndex);
+      vec3.transformMat4(index2, point2, model.maskWorldToIndex);
+      index1[0] = Math.round(index1[0]);
+      index1[1] = Math.round(index1[1]);
+      index1[2] = Math.round(index1[2]);
+      index2[0] = Math.round(index2[0]);
+      index2[1] = Math.round(index2[1]);
+      index2[2] = Math.round(index2[2]);
+      workerPromise.exec('paintRectangle', {
+        point1: index1,
+        point2: index2,
+      });
+    }
+  };
+
+  // --------------------------------------------------------------------------
+
   publicAPI.undo = () => {
     if (history.index > -1) {
       const scalars = model.labelMap.getPointData().getScalars();

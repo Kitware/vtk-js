@@ -103,6 +103,28 @@ function handlePaint({ point, radius }) {
   globals.prevPoint = point;
 }
 
+function handlePaintRectangle({ point1, point2 }) {
+  const [x1, y1, z1] = point1;
+  const [x2, y2, z2] = point2;
+
+  const xstart = Math.max(Math.min(x1, x2), 0);
+  const xend = Math.min(Math.max(x1, x2), globals.dimensions[0] - 1);
+  const ystart = Math.max(Math.min(y1, y2), 0);
+  const yend = Math.min(Math.max(y1, y2), globals.dimensions[1] - 1);
+  const zstart = Math.max(Math.min(z1, z2), 0);
+  const zend = Math.min(Math.max(z1, z2), globals.dimensions[2] - 1);
+
+  const jStride = globals.dimensions[0];
+  const kStride = globals.dimensions[0] * globals.dimensions[1];
+
+  for (let k = zstart; k <= zend; k++) {
+    for (let j = ystart; j <= yend; j++) {
+      const index = j * jStride + k * kStride;
+      globals.buffer.fill(1, index + xstart, index + xend + 1);
+    }
+  }
+}
+
 registerWebworker()
   .operation('start', ({ bufferType, dimensions, slicingMode }) => {
     const bufferSize = dimensions[0] * dimensions[1] * dimensions[2];
@@ -113,6 +135,7 @@ registerWebworker()
     globals.slicingMode = slicingMode;
   })
   .operation('paint', handlePaint)
+  .operation('paintRectangle', handlePaintRectangle)
   .operation(
     'end',
     () =>
