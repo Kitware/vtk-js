@@ -1046,8 +1046,10 @@ function vtkOpenGLPolyDataMapper(publicAPI, model) {
     const pointNormals = poly.getPointData().getNormals();
     const cellNormals = poly.getCellData().getNormals();
     const flat = actor.getProperty().getInterpolation() === Shading.FLAT;
+    const representation = actor.getProperty().getRepresentation();
+    const mode = publicAPI.getOpenGLMode(representation, primType);
     // 1) all surfaces need lighting
-    if (primType !== primTypes.Points && primType !== primType.Lines) {
+    if (mode === model.context.TRIANGLES) {
       needLighting = true;
       // 2) all cell normals without point normals need lighting
     } else if (cellNormals && !pointNormals) {
@@ -1056,7 +1058,7 @@ function vtkOpenGLPolyDataMapper(publicAPI, model) {
     } else if (!flat && pointNormals) {
       needLighting = true;
       // 4) Phong Lines need lighting
-    } else if (!flat && primType === primTypes.Lines) {
+    } else if (!flat && mode === model.context.LINES) {
       needLighting = true;
     }
     // 5) everthing else is unlit
