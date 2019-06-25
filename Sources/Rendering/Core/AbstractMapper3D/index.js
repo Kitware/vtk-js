@@ -16,13 +16,10 @@ function vtkAbstractMapper3D(publicAPI, model) {
     }
   };
 
-  publicAPI.getCenter = (...center) => {
+  publicAPI.getCenter = () => {
     publicAPI.getBounds();
     for (let i = 0; i < 3; i++) {
       model.center[i] = (model.bounds[2 * i + 1] + model.bounds[2 * i]) / 2.0;
-    }
-    if (Array.isArray(center[0])) {
-      center[0] = model.center.splice(0);
     }
     return model.center;
   };

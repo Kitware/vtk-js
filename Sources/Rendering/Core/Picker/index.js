@@ -40,8 +40,7 @@ function vtkPicker(publicAPI, model) {
       return Number.MAX_VALUE;
     }
 
-    const center = [];
-    mapper.getCenter(center);
+    const center = mapper.getCenter();
 
     const ray = [];
     for (let i = 0; i < 3; i++) {
