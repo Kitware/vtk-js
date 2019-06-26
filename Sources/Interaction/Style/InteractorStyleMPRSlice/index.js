@@ -93,13 +93,15 @@ function vtkInteractorStyleMPRSlice(publicAPI, model) {
   const superSetInteractor = publicAPI.setInteractor;
   publicAPI.setInteractor = (interactor) => {
     superSetInteractor(interactor);
+
+    if (cameraSub) {
+      cameraSub.unsubscribe();
+      cameraSub = null;
+    }
+
     if (interactor) {
       const renderer = interactor.getCurrentRenderer();
       const camera = renderer.getActiveCamera();
-
-      if (cameraSub) {
-        cameraSub.unsubscribe();
-      }
 
       cameraSub = camera.onModified(() => {
         updateScrollManipulator();
