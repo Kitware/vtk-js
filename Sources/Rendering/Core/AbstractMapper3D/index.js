@@ -21,7 +21,7 @@ function vtkAbstractMapper3D(publicAPI, model) {
     for (let i = 0; i < 3; i++) {
       model.center[i] = (model.bounds[2 * i + 1] + model.bounds[2 * i]) / 2.0;
     }
-    return model.center;
+    return model.center.slice();
   };
 
   publicAPI.getLength = () => {
