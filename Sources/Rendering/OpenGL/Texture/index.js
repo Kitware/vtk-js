@@ -171,6 +171,13 @@ function vtkOpenGLTexture(publicAPI, model) {
           model.context.TEXTURE_WRAP_T,
           publicAPI.getOpenGLWrapMode(model.wrapT)
         );
+        if (model.openGLRenderWindow.getWebgl2()) {
+          model.context.texParameteri(
+            model.target,
+            model.context.TEXTURE_WRAP_R,
+            publicAPI.getOpenGLWrapMode(model.wrapR)
+          );
+        }
 
         model.context.bindTexture(model.target, null);
       }
