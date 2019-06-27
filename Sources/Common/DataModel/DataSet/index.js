@@ -4,7 +4,7 @@ import vtkDataSetAttributes from 'vtk.js/Sources/Common/DataModel/DataSetAttribu
 import Constants from 'vtk.js/Sources/Common/DataModel/DataSet/Constants';
 
 // import vtkBoundingBox from '../BoundingBox';
-// import vtkMath from '../../Core/Math';
+// import * as vtkMath from '../../Core/Math';
 //
 // function getBounds(dataset) {
 //   if (dataset.bounds) {

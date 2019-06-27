@@ -1,7 +1,7 @@
 import macro from 'vtk.js/Sources/macro';
 import vtkAbstractPicker from 'vtk.js/Sources/Rendering/Core/AbstractPicker';
 import vtkBox from 'vtk.js/Sources/Common/DataModel/Box';
-import vtkMath from 'vtk.js/Sources/Common/Core/Math';
+import * as vtkMath from 'vtk.js/Sources/Common/Core/Math';
 import { mat4, vec4 } from 'gl-matrix';
 
 const { vtkErrorMacro } = macro;

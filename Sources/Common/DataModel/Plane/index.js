@@ -1,4 +1,4 @@
-import vtkMath from 'vtk.js/Sources/Common/Core/Math';
+import * as vtkMath from 'vtk.js/Sources/Common/Core/Math';
 import macro from 'vtk.js/Sources/macro';
 
 const PLANE_TOLERANCE = 1.0e-6;

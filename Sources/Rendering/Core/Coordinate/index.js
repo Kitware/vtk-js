@@ -1,6 +1,6 @@
 import macro from 'vtk.js/Sources/macro';
 import Constants from 'vtk.js/Sources/Rendering/Core/Coordinate/Constants';
-import vtkMath from 'vtk.js/Sources/Common/Core/Math';
+import * as vtkMath from 'vtk.js/Sources/Common/Core/Math';
 
 const { Coordinate } = Constants;
 const { vtkErrorMacro } = macro;
