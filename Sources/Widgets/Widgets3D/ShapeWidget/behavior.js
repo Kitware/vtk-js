@@ -36,19 +36,11 @@ export default function widgetBehavior(publicAPI, model) {
   // --------------------------------------------------------------------------
 
   publicAPI.setSlicingMode = (slicingMode) => {
-    if (slicingMode === SlicingMode.X) {
-      model.manipulator.setNormal([1, 0, 0]);
-    } else if (slicingMode === SlicingMode.Y) {
-      model.manipulator.setNormal([0, 1, 0]);
-    } else if (slicingMode === SlicingMode.Z) {
-      model.manipulator.setNormal([0, 0, 1]);
-    }
-    model.point1 = null;
-    model.point2 = null;
-    model.shapeHandle.setBounds([0, 0, 0, 0, 0, 0]);
+    publicAPI.reset();
     const direction = [0, 0, 0];
     direction[slicingMode % 3] = 1;
     model.shapeHandle.setDirection(direction);
+    model.manipulator.setNormal(direction);
   };
 
   publicAPI.setModifierBehavior = (behavior) => {
@@ -148,28 +140,34 @@ export default function widgetBehavior(publicAPI, model) {
     const slicingMode = model.shapeHandle.getDirection().indexOf(1);
 
     if (slicingMode === SlicingMode.I) {
-      if (absSy > EPSILON && absSz > EPSILON) {
-        if (absSy > absSz) {
-          sz = (sz / absSz) * absSy;
-        } else {
-          sy = (sy / absSy) * absSz;
-        }
+      if (absSy < EPSILON) {
+        sy = sz;
+      } else if (absSz < EPSILON) {
+        sz = sy;
+      } else if (absSy > absSz) {
+        sz = (sz / absSz) * absSy;
+      } else {
+        sy = (sy / absSy) * absSz;
       }
     } else if (slicingMode === SlicingMode.J) {
-      if (absSx > EPSILON && absSz > EPSILON) {
-        if (absSx > absSz) {
-          sz = (sz / absSz) * absSx;
-        } else {
-          sx = (sx / absSx) * absSz;
-        }
+      if (absSx < EPSILON) {
+        sx = sz;
+      } else if (absSz < EPSILON) {
+        sz = sx;
+      } else if (absSx > absSz) {
+        sz = (sz / absSz) * absSx;
+      } else {
+        sx = (sx / absSx) * absSz;
       }
     } else if (slicingMode === SlicingMode.K) {
-      if (absSx > EPSILON && absSy > EPSILON) {
-        if (absSx > absSy) {
-          sy = (sy / absSy) * absSx;
-        } else {
-          sx = (sx / absSx) * absSy;
-        }
+      if (absSx < EPSILON) {
+        sx = sy;
+      } else if (absSy < EPSILON) {
+        sy = sx;
+      } else if (absSx > absSy) {
+        sy = (sy / absSy) * absSx;
+      } else {
+        sx = (sx / absSx) * absSy;
       }
     }
 
@@ -191,10 +189,8 @@ export default function widgetBehavior(publicAPI, model) {
 
   publicAPI.updateShapeBounds = () => {
     if (model.point1 && model.point2) {
-      const point1 = [0, 0, 0];
-      let point2 = [0, 0, 0];
-      vec3.copy(point1, model.point1);
-      vec3.copy(point2, model.point2);
+      const point1 = [...model.point1];
+      let point2 = [...model.point2];
 
       if (publicAPI.isRatioFixed()) {
         point2 = publicAPI.makeSquareFromPoints(point1, point2);
@@ -206,8 +202,17 @@ export default function widgetBehavior(publicAPI, model) {
         vec3.add(point1, point1, diagonal);
       }
 
-      model.shapeHandle.setBounds(makeBoundsFromPoints(point1, point2));
+      publicAPI.setBounds(makeBoundsFromPoints(point1, point2));
+    } else {
+      publicAPI.setBounds([0, 0, 0, 0, 0, 0]);
     }
+  };
+
+  publicAPI.reset = () => {
+    model.shapeHandle.setVisible(false);
+    model.point1 = null;
+    model.point2 = null;
+    publicAPI.updateShapeBounds();
   };
 
   // --------------------------------------------------------------------------
@@ -259,18 +264,28 @@ export default function widgetBehavior(publicAPI, model) {
       publicAPI.updateShapeBounds();
       publicAPI.invokeInteractionEvent();
       publicAPI.invokeEndInteractionEvent();
-      publicAPI.loseFocus();
+      publicAPI.reset();
     }
 
     return macro.EVENT_ABORT;
   };
 
   // --------------------------------------------------------------------------
-  // Left relase: Maybe add point / end interaction
+  // Left relase: Maybe end interaction
   // --------------------------------------------------------------------------
 
   publicAPI.handleLeftButtonRelease = (e) => {
     if (!model.hasFocus || !model.pickable) {
+      return macro.VOID;
+    }
+
+    const viewSize = model.openGLRenderWindow.getSize();
+    if (
+      e.position.x < 0 ||
+      e.position.x > viewSize[0] - 1 ||
+      e.position.y < 0 ||
+      e.position.y > viewSize[1] - 1
+    ) {
       return macro.VOID;
     }
 
@@ -291,7 +306,7 @@ export default function widgetBehavior(publicAPI, model) {
         if (distance > maxDistance || publicAPI.isDraggingForced()) {
           publicAPI.invokeInteractionEvent();
           publicAPI.invokeEndInteractionEvent();
-          publicAPI.loseFocus();
+          publicAPI.reset();
         }
       }
     }
@@ -307,7 +322,7 @@ export default function widgetBehavior(publicAPI, model) {
     if (key === 'Escape') {
       if (model.hasFocus) {
         publicAPI.invokeEndInteractionEvent();
-        publicAPI.loseFocus();
+        publicAPI.reset();
       }
     } else {
       model.keysDown[key] = true;
@@ -338,9 +353,9 @@ export default function widgetBehavior(publicAPI, model) {
 
   publicAPI.grabFocus = () => {
     if (!model.hasFocus) {
-      model.point1 = null;
-      model.point2 = null;
+      publicAPI.reset();
       model.moveHandle.activate();
+      model.shapeHandle.setVisible(false);
       model.interactor.requestAnimation(publicAPI);
     }
 

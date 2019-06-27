@@ -14,13 +14,13 @@ export default function generateState() {
       },
     })
     .addStateFromMixin({
-      labels: ['rectangleHandle'],
-      mixins: ['bounds', 'color', 'visible', 'direction'],
-      name: 'rectangleHandle',
+      labels: ['ellipseHandle'],
+      mixins: ['origin', 'color', 'scale3', 'visible', 'direction'],
+      name: 'ellipseHandle',
       initialValues: {
-        bounds: [0, 0, 0, 0, 0, 0],
         visible: false,
         direction: [0, 0, 1],
+        scale3: [1, 1, 1],
       },
     })
     .build();

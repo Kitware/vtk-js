@@ -5,4 +5,8 @@ export default function widgetBehavior(publicAPI, model) {
   shapeBehavior(publicAPI, model);
 
   model.classHierarchy.push('vtkRectangleWidgetProp');
+
+  publicAPI.setBounds = (bounds) => {
+    model.shapeHandle.setBounds(bounds);
+  };
 }

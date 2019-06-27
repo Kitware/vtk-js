@@ -33,8 +33,11 @@ function vtkPaintFilter(publicAPI, model) {
 
   publicAPI.startStroke = () => {
     if (model.labelMap) {
-      worker = new PaintFilterWorker();
-      workerPromise = new WebworkerPromise(worker);
+      if (!workerPromise) {
+        worker = new PaintFilterWorker();
+        workerPromise = new WebworkerPromise(worker);
+      }
+
       workerPromise.exec('start', {
         bufferType: 'Uint8Array',
         dimensions: model.labelMap.getDimensions(),
@@ -146,6 +149,22 @@ function vtkPaintFilter(publicAPI, model) {
       workerPromise.exec('paintRectangle', {
         point1: index1,
         point2: index2,
+      });
+    }
+  };
+
+  // --------------------------------------------------------------------------
+
+  publicAPI.paintEllipse = (center, scale3) => {
+    if (workerPromise) {
+      const realCenter = [0, 0, 0];
+      let realScale3 = [0, 0, 0];
+      vec3.transformMat4(realCenter, center, model.maskWorldToIndex);
+      vec3.transformMat4(realScale3, scale3, model.maskWorldToIndex);
+      realScale3 = realScale3.map((s) => (s === 0 ? 1 : s));
+      workerPromise.exec('paintEllipse', {
+        center: realCenter,
+        scale3: realScale3,
       });
     }
   };
