@@ -443,9 +443,9 @@ function vtkOpenGLVolumeMapper(publicAPI, model) {
     const vsize = vec3.create();
     vec3.set(
       vsize,
-      (ext[1] - ext[0]) * spc[0],
-      (ext[3] - ext[2]) * spc[1],
-      (ext[5] - ext[4]) * spc[2]
+      (ext[1] - ext[0] + 1) * spc[0],
+      (ext[3] - ext[2] + 1) * spc[1],
+      (ext[5] - ext[4] + 1) * spc[2]
     );
     program.setUniform3f('vSpacing', spc[0], spc[1], spc[2]);
 
@@ -1054,6 +1054,7 @@ function vtkOpenGLVolumeMapper(publicAPI, model) {
         }
       }
 
+      model.opacityTexture.releaseGraphicsResources(model.openGLRenderWindow);
       model.opacityTexture.setMinificationFilter(Filter.LINEAR);
       model.opacityTexture.setMagnificationFilter(Filter.LINEAR);
 
@@ -1107,6 +1108,7 @@ function vtkOpenGLVolumeMapper(publicAPI, model) {
         }
       }
 
+      model.colorTexture.releaseGraphicsResources(model.openGLRenderWindow);
       model.colorTexture.setMinificationFilter(Filter.LINEAR);
       model.colorTexture.setMagnificationFilter(Filter.LINEAR);
 
@@ -1125,6 +1127,7 @@ function vtkOpenGLVolumeMapper(publicAPI, model) {
     if (model.scalarTextureString !== toString) {
       // Build the textures
       const dims = image.getDimensions();
+      model.scalarTexture.releaseGraphicsResources(model.openGLRenderWindow);
       model.scalarTexture.resetFormatAndType();
       model.scalarTexture.create3DFilterableFromRaw(
         dims[0],

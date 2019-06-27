@@ -95,7 +95,7 @@ function vtkImageCropFilter(publicAPI, model) {
     const dims = input.getDimensions();
     const jStride = numberOfComponents * dims[0];
     const kStride = numberOfComponents * dims[0] * dims[1];
-    const beginOffset = cropped[0] * numberOfComponents;
+    const beginOffset = (cropped[0] - extent[0]) * numberOfComponents;
     const stripSize = (cropped[1] - cropped[0] + 1) * numberOfComponents; // +1 because subarray end is exclusive
 
     // crop image
@@ -103,14 +103,14 @@ function vtkImageCropFilter(publicAPI, model) {
     let index = 0;
     for (let k = cropped[4]; k <= cropped[5]; ++k) {
       for (let j = cropped[2]; j <= cropped[3]; ++j) {
-        const begin = beginOffset + j * jStride + k * kStride;
+        const begin =
+          beginOffset + (j - extent[2]) * jStride + (k - extent[4]) * kStride;
         const end = begin + stripSize;
         const slice = scalarsData.subarray(begin, end);
         croppedArray.set(slice, index);
         index += slice.length;
       }
     }
-
     const outImage = vtkImageData.newInstance({
       extent: cropped,
       origin: input.getOrigin(),
