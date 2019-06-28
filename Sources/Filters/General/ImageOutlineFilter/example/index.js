@@ -28,6 +28,7 @@ opFun.addPoint(1, 1);
 const cFun = vtkColorTransferFunction.newInstance();
 cFun.addRGBPoint(1, 1, 0, 0);
 cFun.addRGBPoint(2, 0, 0, 1);
+cFun.addRGBPoint(3, 0, 1, 0);
 labelmapActor.getProperty().setScalarOpacity(opFun);
 labelmapActor.getProperty().setRGBTransferFunction(cFun);
 imageActor.getProperty().setInterpolationType(0);
@@ -57,8 +58,11 @@ reader
       .getData()
       .forEach((el, index) => {
         if (el > 50) {
-          if (el > 100) values[index] = 1;
-          else values[index] = 2;
+          if (el > 100) {
+            if (el > 150) {
+              values[index] = 3;
+            } else values[index] = 2;
+          } else values[index] = 1;
         } else values[index] = 0;
       });
     const dataArray = vtkDataArray.newInstance({
