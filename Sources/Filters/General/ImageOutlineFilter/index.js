@@ -41,24 +41,45 @@ function vtkImageOutlineFilter(publicAPI, model) {
       .getPointData()
       .getScalars()
       .getData();
+    let kernelX = 0; // default K slicing mode
+    let kernelY = 1;
+    if (model.slicingMode === 1) {
+      kernelX = 0;
+      kernelY = 2;
+    } else if (model.slicingMode === 0) {
+      kernelX = 1;
+      kernelY = 2;
+    }
     inputDataArray.forEach((el, index) => {
       if (el !== model.background) {
         const ijk = getIJK(index, dims);
         let isBorder = false;
-        for (let pI = -1; pI <= 1 && !isBorder; pI++) {
-          for (let pJ = -1; pJ <= 1 && !isBorder; pJ++) {
-            const evalI = ijk[0] + pI;
-            const evalJ = ijk[1] + pJ;
+        for (let x = -1; x <= 1 && !isBorder; x++) {
+          for (let y = -1; y <= 1 && !isBorder; y++) {
+            let dx = x;
+            let dy = y;
+            let dz = 0;
+            if (model.slicingMode === 1) {
+              dx = x;
+              dy = 0;
+              dz = y;
+            } else if (model.slicingMode === 0) {
+              dx = 0;
+              dy = y;
+              dz = x;
+            }
+            const evalX = ijk[kernelX] + dx;
+            const evalY = ijk[kernelY] + dy;
             // check boundaries
             if (
-              evalI >= 0 &&
-              evalI < dims[0] &&
-              evalJ >= 0 &&
-              evalJ < dims[1]
+              evalX >= 0 &&
+              evalX < dims[kernelX] &&
+              evalY >= 0 &&
+              evalY < dims[kernelY]
             ) {
               const hoodValue =
                 inputDataArray[
-                  getIndex([ijk[0] + pI, ijk[1] + pJ, ijk[2]], dims)
+                  getIndex([ijk[0] + dx, ijk[1] + dy, ijk[2] + dz], dims)
                 ];
               if (hoodValue === model.background) isBorder = true;
             }
