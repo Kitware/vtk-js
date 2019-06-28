@@ -64,7 +64,7 @@ function vtkImageOutlineFilter(publicAPI, model) {
             }
           }
         }
-        if (isBorder) values[index] = 1;
+        if (isBorder) values[index] = model.foreground;
         else values[index] = model.background;
       } else {
         values[index] = model.background;
@@ -85,7 +85,7 @@ function vtkImageOutlineFilter(publicAPI, model) {
 // ----------------------------------------------------------------------------
 
 const DEFAULT_VALUES = {
-  outline: 1,
+  foreground: 1,
   slicingMode: 2,
   background: 0,
 };

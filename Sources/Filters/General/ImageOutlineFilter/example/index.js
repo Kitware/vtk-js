@@ -17,21 +17,23 @@ const renderWindow = fullScreenRenderWindow.getRenderWindow();
 const renderer = fullScreenRenderWindow.getRenderer();
 fullScreenRenderWindow.addController(controlPanel);
 
-const imageActorK = vtkImageSlice.newInstance();
-const labelmapActorK = vtkImageSlice.newInstance();
+const imageActor = vtkImageSlice.newInstance();
+const imageMapper = vtkImageMapper.newInstance();
+const labelmapMapper = vtkImageMapper.newInstance();
+const labelmapActor = vtkImageSlice.newInstance();
 const opFun = vtkPiecewiseFunction.newInstance();
 opFun.addPoint(0, 0); // our background value, 0, will be invisible
 opFun.addPoint(0.5, 1);
 opFun.addPoint(1, 1);
 const cFun = vtkColorTransferFunction.newInstance();
 cFun.addRGBPoint(1, 1, 0, 0);
-labelmapActorK.getProperty().setScalarOpacity(opFun);
-labelmapActorK.getProperty().setRGBTransferFunction(cFun);
-imageActorK.getProperty().setInterpolationType(0);
-labelmapActorK.getProperty().setInterpolationType(0);
-renderer.addActor(imageActorK);
-renderer.addActor(labelmapActorK);
-
+labelmapActor.getProperty().setScalarOpacity(opFun);
+labelmapActor.getProperty().setRGBTransferFunction(cFun);
+imageActor.getProperty().setInterpolationType(0);
+labelmapActor.getProperty().setInterpolationType(0);
+renderer.addActor(imageActor);
+renderer.addActor(labelmapActor);
+const outline = vtkImageOutlineFilter.newInstance();
 const reader = vtkHttpDataSetReader.newInstance({
   fetchGzip: true,
 });
@@ -40,7 +42,6 @@ reader
   .then(() => {
     const data = reader.getOutputData();
     const extent = data.getExtent();
-    const outline = vtkImageOutlineFilter.newInstance();
     const labelMap = vtkImageData.newInstance(
       data.get('spacing', 'origin', 'direction')
     );
@@ -62,23 +63,23 @@ reader
     });
     labelMap.getPointData().setScalars(dataArray);
     outline.setInputData(labelMap);
-    const imageMapperK = vtkImageMapper.newInstance();
-    imageMapperK.setInputData(data);
-    imageMapperK.setKSlice(30);
-    imageActorK.setMapper(imageMapperK);
-    const labelmapMapperK = vtkImageMapper.newInstance();
-    labelmapMapperK.setInputData(outline.getOutputData());
-    labelmapMapperK.setKSlice(30);
-    imageMapperK.onModified(() => {
-      labelmapMapperK.setKSlice(imageMapperK.getSlice());
+    outline.setSlicingMode(2);
+    imageMapper.setInputData(data);
+    imageMapper.setSlicingMode(2);
+    imageMapper.setSlice(30);
+    imageActor.setMapper(imageMapper);
+    labelmapMapper.setInputData(outline.getOutputData());
+    labelmapMapper.setSlice(30);
+    imageMapper.onModified(() => {
+      labelmapMapper.setSlice(imageMapper.getSlice());
     });
-    labelmapActorK.setMapper(labelmapMapperK);
+    labelmapActor.setMapper(labelmapMapper);
     const el = document.querySelector('.sliceK');
     el.setAttribute('min', extent[4]);
     el.setAttribute('max', extent[5]);
     el.setAttribute('value', 30);
     document.querySelector('.isFilterOn').addEventListener('change', (e) => {
-      labelmapMapperK.setInputData(
+      labelmapMapper.setInputData(
         e.target.checked ? outline.getOutputData() : labelMap
       );
       renderWindow.render();
@@ -88,10 +89,17 @@ reader
     renderWindow.render();
   });
 document.querySelector('.sliceK').addEventListener('input', (e) => {
-  imageActorK.getMapper().setKSlice(Number(e.target.value));
+  imageActor.getMapper().setSlice(Number(e.target.value));
+  renderWindow.render();
+});
+document.querySelector('.axis').addEventListener('input', (ev) => {
+  const sliceMode = 'IJKXYZ'.indexOf(ev.target.value);
+  imageMapper.setSlicingMode(sliceMode);
+  labelmapMapper.setSlicingMode(sliceMode);
+  outline.setSlicingMode(sliceMode);
   renderWindow.render();
 });
 
 global.fullScreen = fullScreenRenderWindow;
-global.imageActorK = imageActorK;
-global.labelmapActorK = labelmapActorK;
+global.imageActor = imageActor;
+global.labelmapActor = labelmapActor;
