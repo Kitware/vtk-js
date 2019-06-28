@@ -81,11 +81,11 @@ function vtkImageOutlineFilter(publicAPI, model) {
                 inputDataArray[
                   getIndex([ijk[0] + dx, ijk[1] + dy, ijk[2] + dz], dims)
                 ];
-              if (hoodValue === model.background) isBorder = true;
+              if (hoodValue !== el) isBorder = true;
             }
           }
         }
-        if (isBorder) values[index] = model.foreground;
+        if (isBorder) values[index] = el;
         else values[index] = model.background;
       } else {
         values[index] = model.background;
