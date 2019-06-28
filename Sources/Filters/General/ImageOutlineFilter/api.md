@@ -13,3 +13,6 @@ is a vtkImageData object containing only boundary voxels.
 [optional, default=0] -  background value  
 ### foreground
 [optional, default=1] -  labelmap value  
+
+## Execution
+``npm run example -- ImageOutlineFilter``
