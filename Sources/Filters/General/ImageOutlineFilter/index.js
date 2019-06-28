@@ -106,7 +106,6 @@ function vtkImageOutlineFilter(publicAPI, model) {
 // ----------------------------------------------------------------------------
 
 const DEFAULT_VALUES = {
-  foreground: 1,
   slicingMode: 2,
   background: 0,
 };
@@ -122,7 +121,7 @@ export function extend(publicAPI, model, initialValues = {}) {
   // Also make it an algorithm with one input and one output
   macro.algo(publicAPI, model, 1, 1);
 
-  macro.setGet(publicAPI, model, ['foreground', 'slicingMode', 'background']);
+  macro.setGet(publicAPI, model, ['slicingMode', 'background']);
 
   // Object specific methods
   vtkImageOutlineFilter(publicAPI, model);
