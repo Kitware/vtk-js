@@ -563,7 +563,6 @@ void applyBlend(vec3 posIS, vec3 stepIS, vec3 tdims, float numSteps)
       }
 
       gl_FragData[0] = vec4(color.rgb/color.a, color.a);
-      // gl_FragData[0] = vec4(tbounds.y/farDist, tbounds.x/farDist, color.b/color.a, 1.0);
   #endif
   #if vtkBlendMode == 1 || vtkBlendMode == 2
     // MAXIMUM_INTENSITY_BLEND || MINIMUM_INTENSITY_BLEND
@@ -584,8 +583,8 @@ void applyBlend(vec3 posIS, vec3 stepIS, vec3 tdims, float numSteps)
         // Update the maximum value if necessary
         value = max(tValue, value);
 
-        posIS += stepIS;
         if (i >= count) { break; }
+        posIS += stepIS;
       }
 
       // Perform the last step along the ray using the
@@ -608,8 +607,8 @@ void applyBlend(vec3 posIS, vec3 stepIS, vec3 tdims, float numSteps)
         // Update the minimum value if necessary
         value = min(tValue, value);
 
-        posIS += stepIS;
         if (i >= count) { break; }
+        posIS += stepIS;
       }
 
       // Perform the last step along the ray using the
@@ -625,15 +624,6 @@ void applyBlend(vec3 posIS, vec3 stepIS, vec3 tdims, float numSteps)
 
     // now map through opacity and color
     tColor = getColorForValue(value, posIS, tstep);
-
-    // compute the normal if needed
-    //VTK::Normal::Impl
-
-    // handle gradient opacity
-    //VTK::GradientOpacity::Impl
-
-    // handle lighting
-    //VTK::Light::Impl
 
     gl_FragData[0] = tColor;
   #endif
@@ -682,8 +672,8 @@ void applyBlend(vec3 posIS, vec3 stepIS, vec3 tdims, float numSteps)
       // Sum the values across each step in the path
       value += tValue;
 
-      posIS += stepIS;
       if (i >= count) { break; }
+      posIS += stepIS;
     }
 
     // Perform the last step along the ray using the
@@ -707,15 +697,6 @@ void applyBlend(vec3 posIS, vec3 stepIS, vec3 tdims, float numSteps)
     }
 
     tColor = getColorForValue(value, posIS, tstep);
-
-    // compute the normal if needed
-    //VTK::Normal::Impl
-
-    // handle gradient opacity
-    //VTK::GradientOpacity::Impl
-
-    // handle lighting
-    //VTK::Light::Impl
 
     gl_FragData[0] = tColor;
   #endif
