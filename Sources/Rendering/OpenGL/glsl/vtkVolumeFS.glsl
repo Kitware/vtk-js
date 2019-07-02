@@ -569,63 +569,42 @@ void applyBlend(vec3 posIS, vec3 stepIS, vec3 tdims, float numSteps)
     // Find maximum/minimum intensity along the ray.
     vec4 value = getTextureValue(posIS);
 
-    // TODO: Might be a cleaner way to write this? Can we set
-    // operator = min or operator = max instead of duplicating
-    // the code?
-    if (blendMode == 1) { // MAXIMUM_INTENSITY_BLEND
-      // Sample along the ray until MaximumSamplesValue,
-      // ending slightly inside the total distance
-      for (int i = 0; i < //VTK::MaximumSamplesValue ; ++i)
-      {
-        // compute the scalar
-        tValue = getTextureValue(posIS);
+    // Define the operation we will use (min or max)
+    #if vtkBlendMode == 1
+    #define OP max
+    #else
+    #define OP min
+    #endif
 
-        // Update the maximum value if necessary
-        value = max(tValue, value);
-
-        if (i >= count) { break; }
-        posIS += stepIS;
-      }
-
-      // Perform the last step along the ray using the
-      // residual distance
-      posIS += (residual - 1.0) * stepIS;
-
-      // Obtain the value at this position (scalar or vector, depending on the number of components)
+    // Sample along the ray until MaximumSamplesValue,
+    // ending slightly inside the total distance
+    for (int i = 0; i < //VTK::MaximumSamplesValue ; ++i)
+    {
+      // compute the scalar
       tValue = getTextureValue(posIS);
 
-      // Update the minimum/maximum value if necessary
-      value = max(tValue, value);
-    } else {
-      // Sample along the ray until MaximumSamplesValue,
-      // ending slightly inside the total distance
-      for (int i = 0; i < //VTK::MaximumSamplesValue ; ++i)
-      {
-        // compute the scalar
-        tValue = getTextureValue(posIS);
+      // Update the maximum value if necessary
+      value = OP(tValue, value);
 
-        // Update the minimum value if necessary
-        value = min(tValue, value);
+      // If we have reached the last step, break
+      if (i >= count) { break; }
 
-        if (i >= count) { break; }
-        posIS += stepIS;
-      }
-
-      // Perform the last step along the ray using the
-      // residual distance
-      posIS += (residual - 1.0) * stepIS;
-
-      // Obtain the value at this position (scalar or vector, depending on the number of components)
-      tValue = getTextureValue(posIS);
-
-      // Update the minimum/maximum value if necessary
-      value = min(tValue, value);
+      // Otherwise, continue along the ray
+      posIS += stepIS;
     }
 
-    // now map through opacity and color
-    tColor = getColorForValue(value, posIS, tstep);
+    // Perform the last step along the ray using the
+    // residual distance
+    posIS += (residual - 1.0) * stepIS;
 
-    gl_FragData[0] = tColor;
+    // Obtain the value at this position (scalar or vector, depending on the number of components)
+    tValue = getTextureValue(posIS);
+
+    // Update the minimum/maximum value if necessary
+    value = OP(tValue, value);
+
+    // Now map through opacity and color
+    gl_FragData[0] = getColorForValue(value, posIS, tstep);
   #endif
   #if vtkBlendMode == 3 //AVERAGE_INTENSITY_BLEND
     vec4 averageIPScalarRangeMin = vec4 (
@@ -639,7 +618,7 @@ void applyBlend(vec3 posIS, vec3 stepIS, vec3 tdims, float numSteps)
       //VTK::AverageIPScalarRangeMax,
       1.0);
 
-    vec4 value;
+    vec4 sum = vec4(0.);
 
     // Declare i outside of the loop
     int i = 0;
@@ -670,9 +649,12 @@ void applyBlend(vec3 posIS, vec3 stepIS, vec3 tdims, float numSteps)
       }
 
       // Sum the values across each step in the path
-      value += tValue;
+      sum += tValue;
 
+      // If we have reached the last step, break
       if (i >= count) { break; }
+
+      // Otherwise, continue along the ray
       posIS += stepIS;
     }
 
@@ -683,22 +665,23 @@ void applyBlend(vec3 posIS, vec3 stepIS, vec3 tdims, float numSteps)
     // compute the scalar
     tValue = getTextureValue(posIS);
 
+    // Ensure i is never zero so we don't get divide-by-zero issues
+    i = max(1, i);
+
     // Divide by the total number of samples that were taken
     float i_float = float(i);
 
     // One can control the scalar range by setting the AverageIPScalarRange to disregard scalar values, not in the range of interest, from the average computation
     if (any(lessThan(tValue, averageIPScalarRangeMin)) ||
       any(greaterThan(tValue, averageIPScalarRangeMax))) {
-      value /= vec4(i_float, i_float, i_float, 1.0);
+      sum /= vec4(i_float, i_float, i_float, 1.0);
     } else {
-      value += tValue;
+      sum += tValue;
 
-      value /= vec4(i_float + 1.0, i_float + 1.0, i_float + 1.0, 1.0);
+      sum /= vec4(i_float + 1.0, i_float + 1.0, i_float + 1.0, 1.0);
     }
 
-    tColor = getColorForValue(value, posIS, tstep);
-
-    gl_FragData[0] = tColor;
+    gl_FragData[0] = getColorForValue(sum, posIS, tstep);
   #endif
 }
 
