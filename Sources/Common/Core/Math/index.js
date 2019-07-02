@@ -37,12 +37,19 @@ function createArray(size = 3) {
 // Global methods
 // ----------------------------------------------------------------------------
 
-const Pi = () => Math.PI;
-const radiansFromDegrees = (deg) => (deg / 180) * Math.PI;
-const degreesFromRadians = (rad) => (rad * 180) / Math.PI;
-const { round, floor, ceil, min, max } = Math;
+export const Pi = () => Math.PI;
 
-function arrayMin(arr) {
+export function radiansFromDegrees(deg) {
+  return (deg / 180) * Math.PI;
+}
+
+export function degreesFromRadians(rad) {
+  return (rad * 180) / Math.PI;
+}
+
+export const { round, floor, ceil, min, max } = Math;
+
+export function arrayMin(arr) {
   let minValue = Infinity;
   for (let i = 0, len = arr.length; i < len; ++i) {
     if (arr[i] < minValue) {
@@ -53,7 +60,7 @@ function arrayMin(arr) {
   return minValue;
 }
 
-function arrayMax(arr) {
+export function arrayMax(arr) {
   let maxValue = -Infinity;
   for (let i = 0, len = arr.length; i < len; ++i) {
     if (maxValue < arr[i]) {
@@ -64,10 +71,10 @@ function arrayMax(arr) {
   return maxValue;
 }
 
-const ceilLog2 = notImplemented('ceilLog2');
-const factorial = notImplemented('factorial');
+export const ceilLog2 = notImplemented('ceilLog2');
+export const factorial = notImplemented('factorial');
 
-function nearestPowerOfTwo(xi) {
+export function nearestPowerOfTwo(xi) {
   let v = 1;
   while (v < xi) {
     v *= 2;
@@ -75,11 +82,11 @@ function nearestPowerOfTwo(xi) {
   return v;
 }
 
-function isPowerOfTwo(x) {
+export function isPowerOfTwo(x) {
   return x === nearestPowerOfTwo(x);
 }
 
-function binomial(m, n) {
+export function binomial(m, n) {
   let r = 1;
   for (let i = 1; i <= n; ++i) {
     r *= (m - i + 1) / i;
@@ -87,7 +94,7 @@ function binomial(m, n) {
   return Math.floor(r);
 }
 
-function beginCombination(m, n) {
+export function beginCombination(m, n) {
   if (m < n) {
     return 0;
   }
@@ -99,7 +106,7 @@ function beginCombination(m, n) {
   return r;
 }
 
-function nextCombination(m, n, r) {
+export function nextCombination(m, n, r) {
   let status = 0;
   for (let i = n - 1; i >= 0; --i) {
     if (r[i] < m - n + i) {
@@ -114,49 +121,51 @@ function nextCombination(m, n, r) {
   return status;
 }
 
-const randomSeed = (seed) => {
+export function randomSeed(seed) {
   seedrandom(`${seed}`, { global: true });
   randomSeedValue = seed;
-};
+}
 
-const getSeed = () => randomSeedValue;
+export function getSeed() {
+  return randomSeedValue;
+}
 
-function random(minValue = 0, maxValue = 1) {
+export function random(minValue = 0, maxValue = 1) {
   const delta = maxValue - minValue;
   return minValue + delta * Math.random();
 }
 
-const gaussian = notImplemented('gaussian');
+export const gaussian = notImplemented('gaussian');
 
 // Vect3 operations
-function add(a, b, out) {
+export function add(a, b, out) {
   out[0] = a[0] + b[0];
   out[1] = a[1] + b[1];
   out[2] = a[2] + b[2];
 }
 
-function subtract(a, b, out) {
+export function subtract(a, b, out) {
   out[0] = a[0] - b[0];
   out[1] = a[1] - b[1];
   out[2] = a[2] - b[2];
 }
 
-function multiplyScalar(vec, scalar) {
+export function multiplyScalar(vec, scalar) {
   vec[0] *= scalar;
   vec[1] *= scalar;
   vec[2] *= scalar;
 }
 
-function multiplyScalar2D(vec, scalar) {
+export function multiplyScalar2D(vec, scalar) {
   vec[0] *= scalar;
   vec[1] *= scalar;
 }
 
-function dot(x, y) {
+export function dot(x, y) {
   return x[0] * y[0] + x[1] * y[1] + x[2] * y[2];
 }
 
-function outer(x, y, out_3x3) {
+export function outer(x, y, out_3x3) {
   for (let i = 0; i < 3; i++) {
     for (let j = 0; j < 3; j++) {
       out_3x3[i][j] = x[i] * y[j];
@@ -164,7 +173,7 @@ function outer(x, y, out_3x3) {
   }
 }
 
-function cross(x, y, out) {
+export function cross(x, y, out) {
   const Zx = x[1] * y[2] - x[2] * y[1];
   const Zy = x[2] * y[0] - x[0] * y[2];
   const Zz = x[0] * y[1] - x[1] * y[0];
@@ -173,7 +182,7 @@ function cross(x, y, out) {
   out[2] = Zz;
 }
 
-function norm(x, n = 3) {
+export function norm(x, n = 3) {
   switch (n) {
     case 1:
       return Math.abs(x);
@@ -191,7 +200,7 @@ function norm(x, n = 3) {
   }
 }
 
-function normalize(x) {
+export function normalize(x) {
   const den = norm(x);
   if (den !== 0.0) {
     x[0] /= den;
@@ -201,7 +210,7 @@ function normalize(x) {
   return den;
 }
 
-function perpendiculars(x, y, z, theta) {
+export function perpendiculars(x, y, z, theta) {
   const x2 = x[0] * x[0];
   const y2 = x[1] * x[1];
   const z2 = x[2] * x[2];
@@ -261,7 +270,7 @@ function perpendiculars(x, y, z, theta) {
   }
 }
 
-function projectVector(a, b, projection) {
+export function projectVector(a, b, projection) {
   const bSquared = dot(b, b);
 
   if (bSquared === 0) {
@@ -281,11 +290,11 @@ function projectVector(a, b, projection) {
   return true;
 }
 
-function dot2D(x, y) {
+export function dot2D(x, y) {
   return x[0] * y[0] + x[1] * y[1];
 }
 
-function projectVector2D(a, b, projection) {
+export function projectVector2D(a, b, projection) {
   const bSquared = dot2D(b, b);
 
   if (bSquared === 0) {
@@ -304,7 +313,7 @@ function projectVector2D(a, b, projection) {
   return true;
 }
 
-function distance2BetweenPoints(x, y) {
+export function distance2BetweenPoints(x, y) {
   return (
     (x[0] - y[0]) * (x[0] - y[0]) +
     (x[1] - y[1]) * (x[1] - y[1]) +
@@ -312,13 +321,13 @@ function distance2BetweenPoints(x, y) {
   );
 }
 
-function angleBetweenVectors(v1, v2) {
+export function angleBetweenVectors(v1, v2) {
   const crossVect = [0, 0, 0];
   cross(v1, v2, crossVect);
   return Math.atan2(norm(crossVect), dot(v1, v2));
 }
 
-function gaussianAmplitude(mean, variance, position) {
+export function gaussianAmplitude(mean, variance, position) {
   const distanceFromMean = Math.abs(mean - position);
   return (
     (1 / Math.sqrt(2 * Math.PI * variance)) *
@@ -326,12 +335,12 @@ function gaussianAmplitude(mean, variance, position) {
   );
 }
 
-function gaussianWeight(mean, variance, position) {
+export function gaussianWeight(mean, variance, position) {
   const distanceFromMean = Math.abs(mean - position);
   return Math.exp(-(distanceFromMean ** 2) / (2 * variance));
 }
 
-function outer2D(x, y, out_2x2) {
+export function outer2D(x, y, out_2x2) {
   for (let i = 0; i < 2; i++) {
     for (let j = 0; j < 2; j++) {
       out_2x2[i][j] = x[i] * y[j];
@@ -339,11 +348,11 @@ function outer2D(x, y, out_2x2) {
   }
 }
 
-function norm2D(x2D) {
+export function norm2D(x2D) {
   return Math.sqrt(x2D[0] * x2D[0] + x2D[1] * x2D[1]);
 }
 
-function normalize2D(x) {
+export function normalize2D(x) {
   const den = norm2D(x);
   if (den !== 0.0) {
     x[0] /= den;
@@ -352,7 +361,7 @@ function normalize2D(x) {
   return den;
 }
 
-function determinant2x2(...args) {
+export function determinant2x2(...args) {
   if (args.length === 2) {
     return args[0][0] * args[1][1] - args[1][0] * args[0][1];
   }
@@ -362,7 +371,7 @@ function determinant2x2(...args) {
   return Number.NaN;
 }
 
-function LUFactor3x3(mat_3x3, index_3) {
+export function LUFactor3x3(mat_3x3, index_3) {
   let maxI;
   let tmp;
   let largest;
@@ -421,7 +430,7 @@ function LUFactor3x3(mat_3x3, index_3) {
   index_3[2] = 2;
 }
 
-function LUSolve3x3(mat_3x3, index_3, x_3) {
+export function LUSolve3x3(mat_3x3, index_3, x_3) {
   // forward substitution
   let sum = x_3[index_3[0]];
   x_3[index_3[0]] = x_3[0];
@@ -442,7 +451,7 @@ function LUSolve3x3(mat_3x3, index_3, x_3) {
     (x_3[0] - mat_3x3[0][1] * x_3[1] - mat_3x3[0][2] * x_3[2]) / mat_3x3[0][0];
 }
 
-function linearSolve3x3(mat_3x3, x_3, y_3) {
+export function linearSolve3x3(mat_3x3, x_3, y_3) {
   const a1 = mat_3x3[0][0];
   const b1 = mat_3x3[0][1];
   const c1 = mat_3x3[0][2];
@@ -480,7 +489,7 @@ function linearSolve3x3(mat_3x3, x_3, y_3) {
   y_3[2] = v3 / det;
 }
 
-function multiply3x3_vect3(mat_3x3, in_3, out_3) {
+export function multiply3x3_vect3(mat_3x3, in_3, out_3) {
   const x =
     mat_3x3[0][0] * in_3[0] + mat_3x3[0][1] * in_3[1] + mat_3x3[0][2] * in_3[2];
   const y =
@@ -493,7 +502,7 @@ function multiply3x3_vect3(mat_3x3, in_3, out_3) {
   out_3[2] = z;
 }
 
-function multiply3x3_mat3(a_3x3, b_3x3, out_3x3) {
+export function multiply3x3_mat3(a_3x3, b_3x3, out_3x3) {
   const tmp = [[0, 0, 0], [0, 0, 0], [0, 0, 0]];
 
   for (let i = 0; i < 3; i++) {
@@ -518,7 +527,7 @@ function multiply3x3_mat3(a_3x3, b_3x3, out_3x3) {
   }
 }
 
-function multiplyMatrix(a, b, rowA, colA, rowB, colB, out_rowXcol) {
+export function multiplyMatrix(a, b, rowA, colA, rowB, colB, out_rowXcol) {
   // we need colA == rowB
   if (colA !== rowB) {
     vtkErrorMacro('Number of columns of A must match number of rows of B.');
@@ -538,7 +547,7 @@ function multiplyMatrix(a, b, rowA, colA, rowB, colB, out_rowXcol) {
   }
 }
 
-function transpose3x3(in_3x3, outT_3x3) {
+export function transpose3x3(in_3x3, outT_3x3) {
   let tmp;
   tmp = in_3x3[1][0];
   outT_3x3[1][0] = in_3x3[0][1];
@@ -555,7 +564,7 @@ function transpose3x3(in_3x3, outT_3x3) {
   outT_3x3[2][2] = in_3x3[2][2];
 }
 
-function invert3x3(in_3x3, outI_3x3) {
+export function invert3x3(in_3x3, outI_3x3) {
   const a1 = in_3x3[0][0];
   const b1 = in_3x3[0][1];
   const c1 = in_3x3[0][2];
@@ -595,14 +604,14 @@ function invert3x3(in_3x3, outI_3x3) {
   outI_3x3[2][2] = f3 / det;
 }
 
-function identity3x3(mat_3x3) {
+export function identity3x3(mat_3x3) {
   for (let i = 0; i < 3; i++) {
     mat_3x3[i][0] = mat_3x3[i][1] = mat_3x3[i][2] = 0;
     mat_3x3[i][i] = 1;
   }
 }
 
-function determinant3x3(mat_3x3) {
+export function determinant3x3(mat_3x3) {
   return (
     mat_3x3[0][0] * mat_3x3[1][1] * mat_3x3[2][2] +
     mat_3x3[1][0] * mat_3x3[2][1] * mat_3x3[0][2] +
@@ -613,7 +622,7 @@ function determinant3x3(mat_3x3) {
   );
 }
 
-function quaternionToMatrix3x3(quat_4, mat_3x3) {
+export function quaternionToMatrix3x3(quat_4, mat_3x3) {
   const ww = quat_4[0] * quat_4[0];
   const wx = quat_4[0] * quat_4[1];
   const wy = quat_4[0] * quat_4[2];
@@ -646,7 +655,7 @@ function quaternionToMatrix3x3(quat_4, mat_3x3) {
   mat_3x3[2][2] = zz * f + s;
 }
 
-function areMatricesEqual(matA, matB) {
+export function areMatricesEqual(matA, matB) {
   if (!matA.length === matB.length) {
     return false;
   }
@@ -657,7 +666,7 @@ function areMatricesEqual(matA, matB) {
   return matA.every(isEqual);
 }
 
-function jacobiN(a, n, w, v) {
+export function jacobiN(a, n, w, v) {
   let i;
   let j;
   let k;
@@ -823,7 +832,7 @@ function jacobiN(a, n, w, v) {
   return 1;
 }
 
-function matrix3x3ToQuaternion(mat_3x3, quat_4) {
+export function matrix3x3ToQuaternion(mat_3x3, quat_4) {
   const tmp = [[0, 0, 0, 0], [0, 0, 0, 0], [0, 0, 0, 0], [0, 0, 0, 0]];
 
   // on-diagonal elements
@@ -861,7 +870,7 @@ function matrix3x3ToQuaternion(mat_3x3, quat_4) {
   quat_4[3] = eigenvectors[3][0];
 }
 
-function multiplyQuaternion(quat_1, quat_2, quat_out) {
+export function multiplyQuaternion(quat_1, quat_2, quat_out) {
   const ww = quat_1[0] * quat_2[0];
   const wx = quat_1[0] * quat_2[1];
   const wy = quat_1[0] * quat_2[2];
@@ -888,7 +897,7 @@ function multiplyQuaternion(quat_1, quat_2, quat_out) {
   quat_out[3] = wz + xy - yx + zw;
 }
 
-function orthogonalize3x3(a_3x3, out_3x3) {
+export function orthogonalize3x3(a_3x3, out_3x3) {
   // copy the matrix
   for (let i = 0; i < 3; i++) {
     out_3x3[0][i] = a_3x3[0][i];
@@ -984,7 +993,7 @@ function orthogonalize3x3(a_3x3, out_3x3) {
   }
 }
 
-function diagonalize3x3(a_3x3, w_3, v_3x3) {
+export function diagonalize3x3(a_3x3, w_3, v_3x3) {
   let i;
   let j;
   let k;
@@ -1109,7 +1118,7 @@ function diagonalize3x3(a_3x3, w_3, v_3x3) {
   transpose3x3(v_3x3, v_3x3);
 }
 
-function singularValueDecomposition3x3(a_3x3, u_3x3, w_3, vT_3x3) {
+export function singularValueDecomposition3x3(a_3x3, u_3x3, w_3, vT_3x3) {
   let i;
   const B = [createArray(3), createArray(3), createArray(3)];
 
@@ -1146,7 +1155,7 @@ function singularValueDecomposition3x3(a_3x3, u_3x3, w_3, vT_3x3) {
   }
 }
 
-function luFactorLinearSystem(A, index, size) {
+export function luFactorLinearSystem(A, index, size) {
   let i;
   let j;
   let k;
@@ -1230,7 +1239,7 @@ function luFactorLinearSystem(A, index, size) {
   return 1;
 }
 
-function luSolveLinearSystem(A, index, x, size) {
+export function luSolveLinearSystem(A, index, x, size) {
   let i;
   let j;
   let ii;
@@ -1267,7 +1276,7 @@ function luSolveLinearSystem(A, index, x, size) {
   }
 }
 
-function solveLinearSystem(A, x, size) {
+export function solveLinearSystem(A, x, size) {
   // if we solving something simple, just solve it
   if (size === 2) {
     const y = createArray(2);
@@ -1312,7 +1321,7 @@ function solveLinearSystem(A, x, size) {
   return 1;
 }
 
-function invertMatrix(A, AI, size, index = null, column = null) {
+export function invertMatrix(A, AI, size, index = null, column = null) {
   const tmp1Size = index || createArray(size);
   const tmp2Size = column || createArray(size);
 
@@ -1339,7 +1348,7 @@ function invertMatrix(A, AI, size, index = null, column = null) {
   return 1;
 }
 
-function estimateMatrixCondition(A, size) {
+export function estimateMatrixCondition(A, size) {
   let minValue = +Number.MAX_VALUE;
   let maxValue = -Number.MAX_VALUE;
 
@@ -1365,11 +1374,11 @@ function estimateMatrixCondition(A, size) {
   return maxValue / minValue;
 }
 
-function jacobi(a_3x3, w, v) {
+export function jacobi(a_3x3, w, v) {
   return jacobiN(a_3x3, 3, w, v);
 }
 
-function solveHomogeneousLeastSquares(numberOfSamples, xt, xOrder, mt) {
+export function solveHomogeneousLeastSquares(numberOfSamples, xt, xOrder, mt) {
   // check dimensional consistency
   if (numberOfSamples < xOrder) {
     vtkWarningMacro('Insufficient number of samples. Underdetermined.');
@@ -1424,7 +1433,7 @@ function solveHomogeneousLeastSquares(numberOfSamples, xt, xOrder, mt) {
   return 1;
 }
 
-function solveLeastSquares(
+export function solveLeastSquares(
   numberOfSamples,
   xt,
   xOrder,
@@ -1581,7 +1590,7 @@ function solveLeastSquares(
   return successFlag;
 }
 
-function hex2float(hexStr, outFloatArray = [0, 0.5, 1]) {
+export function hex2float(hexStr, outFloatArray = [0, 0.5, 1]) {
   switch (hexStr.length) {
     case 3: // abc => #aabbcc
       outFloatArray[0] = (parseInt(hexStr[0], 16) * 17) / 255;
@@ -1614,7 +1623,7 @@ function hex2float(hexStr, outFloatArray = [0, 0.5, 1]) {
   }
 }
 
-function rgb2hsv(rgb, hsv) {
+export function rgb2hsv(rgb, hsv) {
   let h;
   let s;
   const [r, g, b] = rgb;
@@ -1663,7 +1672,7 @@ function rgb2hsv(rgb, hsv) {
   hsv[2] = v;
 }
 
-function hsv2rgb(hsv, rgb) {
+export function hsv2rgb(hsv, rgb) {
   const [h, s, v] = hsv;
   const onethird = 1.0 / 3.0;
   const onesixth = 1.0 / 6.0;
@@ -1721,7 +1730,7 @@ function hsv2rgb(hsv, rgb) {
   rgb[2] = b;
 }
 
-function lab2xyz(lab, xyz) {
+export function lab2xyz(lab, xyz) {
   // LAB to XYZ
   const [L, a, b] = lab;
   let var_Y = (L + 16) / 116;
@@ -1753,7 +1762,7 @@ function lab2xyz(lab, xyz) {
   xyz[2] = ref_Z * var_Z; // ref_Z = 1.089
 }
 
-function xyz2lab(xyz, lab) {
+export function xyz2lab(xyz, lab) {
   const [x, y, z] = xyz;
   const ref_X = 0.9505;
   const ref_Y = 1.0;
@@ -1774,7 +1783,7 @@ function xyz2lab(xyz, lab) {
   lab[2] = 200 * (var_Y - var_Z);
 }
 
-function xyz2rgb(xyz, rgb) {
+export function xyz2rgb(xyz, rgb) {
   const [x, y, z] = xyz;
   let r = x * 3.2406 + y * -1.5372 + z * -0.4986;
   let g = x * -0.9689 + y * 1.8758 + z * 0.0415;
@@ -1816,7 +1825,7 @@ function xyz2rgb(xyz, rgb) {
   rgb[2] = b;
 }
 
-function rgb2xyz(rgb, xyz) {
+export function rgb2xyz(rgb, xyz) {
   let [r, g, b] = rgb;
   // The following performs a "gamma correction" specified by the sRGB color
   // space.  sRGB is defined by a canonical definition of a display monitor and
@@ -1839,19 +1848,19 @@ function rgb2xyz(rgb, xyz) {
   xyz[2] = r * 0.0193 + g * 0.1192 + b * 0.9505;
 }
 
-function rgb2lab(rgb, lab) {
+export function rgb2lab(rgb, lab) {
   const xyz = [0, 0, 0];
   rgb2xyz(rgb, xyz);
   xyz2lab(xyz, lab);
 }
 
-function lab2rgb(lab, rgb) {
+export function lab2rgb(lab, rgb) {
   const xyz = [0, 0, 0];
   lab2xyz(lab, xyz);
   xyz2rgb(xyz, rgb);
 }
 
-function uninitializeBounds(bounds) {
+export function uninitializeBounds(bounds) {
   bounds[0] = 1.0;
   bounds[1] = -1.0;
   bounds[2] = 1.0;
@@ -1860,11 +1869,11 @@ function uninitializeBounds(bounds) {
   bounds[5] = -1.0;
 }
 
-function areBoundsInitialized(bounds) {
+export function areBoundsInitialized(bounds) {
   return !(bounds[1] - bounds[0] < 0.0);
 }
 
-function clampValue(value, minValue, maxValue) {
+export function clampValue(value, minValue, maxValue) {
   if (value < minValue) {
     return minValue;
   }
@@ -1874,7 +1883,7 @@ function clampValue(value, minValue, maxValue) {
   return value;
 }
 
-function clampAndNormalizeValue(value, range) {
+export function clampAndNormalizeValue(value, range) {
   let result = 0;
   if (range[0] !== range[1]) {
     // clamp
@@ -1892,10 +1901,12 @@ function clampAndNormalizeValue(value, range) {
   return result;
 }
 
-const getScalarTypeFittingRange = notImplemented('GetScalarTypeFittingRange');
-const getAdjustedScalarRange = notImplemented('GetAdjustedScalarRange');
+export const getScalarTypeFittingRange = notImplemented(
+  'GetScalarTypeFittingRange'
+);
+export const getAdjustedScalarRange = notImplemented('GetAdjustedScalarRange');
 
-function extentIsWithinOtherExtent(extent1, extent2) {
+export function extentIsWithinOtherExtent(extent1, extent2) {
   if (!extent1 || !extent2) {
     return 0;
   }
@@ -1914,7 +1925,7 @@ function extentIsWithinOtherExtent(extent1, extent2) {
   return 1;
 }
 
-function boundsIsWithinOtherBounds(bounds1_6, bounds2_6, delta_3) {
+export function boundsIsWithinOtherBounds(bounds1_6, bounds2_6, delta_3) {
   if (!bounds1_6 || !bounds2_6) {
     return 0;
   }
@@ -1931,7 +1942,7 @@ function boundsIsWithinOtherBounds(bounds1_6, bounds2_6, delta_3) {
   return 1;
 }
 
-function pointIsWithinBounds(point_3, bounds_6, delta_3) {
+export function pointIsWithinBounds(point_3, bounds_6, delta_3) {
   if (!point_3 || !bounds_6 || !delta_3) {
     return 0;
   }
@@ -1946,7 +1957,7 @@ function pointIsWithinBounds(point_3, bounds_6, delta_3) {
   return 1;
 }
 
-function solve3PointCircle(p1, p2, p3, center) {
+export function solve3PointCircle(p1, p2, p3, center) {
   const v21 = createArray(3);
   const v32 = createArray(3);
   const v13 = createArray(3);
@@ -1984,15 +1995,16 @@ function solve3PointCircle(p1, p2, p3, center) {
   return radius;
 }
 
-const inf = Infinity;
-const negInf = -Infinity;
+export const inf = Infinity;
+export const negInf = -Infinity;
 
-const isInf = (value) => !Number.isFinite(value);
-const { isFinite, isNaN } = Number;
+export const isInf = (value) => !Number.isFinite(value);
+export const { isFinite, isNaN } = Number;
+export const isNan = isNaN;
 
 // JavaScript - add-on ----------------------
 
-function createUninitializedBounds() {
+export function createUninitializedBounds() {
   return [].concat([
     Number.MAX_VALUE,
     -Number.MAX_VALUE, // X
@@ -2003,7 +2015,7 @@ function createUninitializedBounds() {
   ]);
 }
 
-function getMajorAxisIndex(vector) {
+export function getMajorAxisIndex(vector) {
   let maxValue = -1;
   let axisIndex = -1;
   for (let i = 0; i < vector.length; i++) {
@@ -2017,7 +2029,7 @@ function getMajorAxisIndex(vector) {
   return axisIndex;
 }
 
-function floatToHex2(value) {
+export function floatToHex2(value) {
   const integer = Math.floor(value * 255);
   if (integer > 15) {
     return integer.toString(16);
@@ -2025,7 +2037,7 @@ function floatToHex2(value) {
   return `0${integer.toString(16)}`;
 }
 
-function floatRGB2HexCode(rgbArray, prefix = '#') {
+export function floatRGB2HexCode(rgbArray, prefix = '#') {
   return `${prefix}${rgbArray.map(floatToHex2).join('')}`;
 }
 
@@ -2033,7 +2045,7 @@ function floatToChar(f) {
   return Math.round(f * 255);
 }
 
-function float2CssRGBA(rgbArray) {
+export function float2CssRGBA(rgbArray) {
   if (rgbArray.length === 3) {
     return `rgb(${rgbArray.map(floatToChar).join(', ')})`;
   }

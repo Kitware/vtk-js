@@ -1,7 +1,7 @@
 import macro from 'vtk.js/Sources/macro';
 import vtkMouseRangeManipulator from 'vtk.js/Sources/Interaction/Manipulators/MouseRangeManipulator';
 import vtkViewProxy from 'vtk.js/Sources/Proxy/Core/ViewProxy';
-import vtkMath from 'vtk.js/Sources/Common/Core/Math';
+import * as vtkMath from 'vtk.js/Sources/Common/Core/Math';
 
 const DEFAULT_STEP_WIDTH = 512;
 

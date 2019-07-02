@@ -4,7 +4,7 @@ import testUtils from 'vtk.js/Sources/Testing/testUtils';
 import vtkActor from 'vtk.js/Sources/Rendering/Core/Actor';
 import vtkDataArray from 'vtk.js/Sources/Common/Core/DataArray';
 import vtkMapper from 'vtk.js/Sources/Rendering/Core/Mapper';
-import vtkMath from 'vtk.js/Sources/Common/Core/Math';
+import * as vtkMath from 'vtk.js/Sources/Common/Core/Math';
 import vtkOpenGLRenderWindow from 'vtk.js/Sources/Rendering/OpenGL/RenderWindow';
 import vtkPoints from 'vtk.js/Sources/Common/Core/Points';
 import vtkPolyData from 'vtk.js/Sources/Common/DataModel/PolyData';

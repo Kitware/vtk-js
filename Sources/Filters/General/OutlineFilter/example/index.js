@@ -5,7 +5,7 @@ import vtkActor from 'vtk.js/Sources/Rendering/Core/Actor';
 import vtkPointSource from 'vtk.js/Sources/Filters/Sources/PointSource';
 import vtkOutlineFilter from 'vtk.js/Sources/Filters/General/OutlineFilter';
 import vtkMapper from 'vtk.js/Sources/Rendering/Core/Mapper';
-import vtkMath from 'vtk.js/Sources/Common/Core/Math';
+import * as vtkMath from 'vtk.js/Sources/Common/Core/Math';
 
 import controlPanel from './controlPanel.html';
 

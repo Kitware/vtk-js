@@ -1,6 +1,6 @@
 import macro from 'vtk.js/Sources/macro';
 import vtkInteractorStyleTrackballCamera from 'vtk.js/Sources/Interaction/Style/InteractorStyleTrackballCamera';
-import vtkMath from 'vtk.js/Sources/Common/Core/Math';
+import * as vtkMath from 'vtk.js/Sources/Common/Core/Math';
 import { States } from 'vtk.js/Sources/Rendering/Core/InteractorStyle/Constants';
 
 // ----------------------------------------------------------------------------

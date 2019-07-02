@@ -2,7 +2,7 @@ import { vec3, quat, mat4 } from 'gl-matrix';
 
 import macro from 'vtk.js/Sources/macro';
 import vtkBoundingBox from 'vtk.js/Sources/Common/DataModel/BoundingBox';
-import vtkMath from 'vtk.js/Sources/Common/Core/Math';
+import * as vtkMath from 'vtk.js/Sources/Common/Core/Math';
 import vtkProp from 'vtk.js/Sources/Rendering/Core/Prop';
 
 // ----------------------------------------------------------------------------

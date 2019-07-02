@@ -3,7 +3,7 @@ import vtkDataArray from './DataArray';
 import vtkEndian from './Endian';
 import vtkImageHelper from './ImageHelper';
 import vtkLookupTable from './LookupTable';
-import vtkMath from './Math';
+import * as vtkMath from './Math';
 import vtkMatrixBuilder from './MatrixBuilder';
 import vtkPoints from './Points';
 import vtkProgressHandler from './ProgressHandler';

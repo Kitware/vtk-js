@@ -1,6 +1,6 @@
 import macro from 'vtk.js/Sources/macro';
 import vtkCell from 'vtk.js/Sources/Common/DataModel/Cell';
-import vtkMath from 'vtk.js/Sources/Common/Core/Math';
+import * as vtkMath from 'vtk.js/Sources/Common/Core/Math';
 import vtkLine from 'vtk.js/Sources/Common/DataModel/Line';
 import vtkPlane from 'vtk.js/Sources/Common/DataModel/Plane';
 

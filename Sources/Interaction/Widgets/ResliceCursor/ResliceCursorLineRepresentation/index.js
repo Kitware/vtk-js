@@ -2,7 +2,7 @@ import macro from 'vtk.js/Sources/macro';
 
 import vtkInteractorObserver from 'vtk.js/Sources/Rendering/Core/InteractorObserver';
 import vtkLine from 'vtk.js/Sources/Common/DataModel/Line';
-import vtkMath from 'vtk.js/Sources/Common/Core/Math';
+import * as vtkMath from 'vtk.js/Sources/Common/Core/Math';
 import vtkPlane from 'vtk.js/Sources/Common/DataModel/Plane';
 import vtkResliceCursorActor from 'vtk.js/Sources/Interaction/Widgets/ResliceCursor/ResliceCursorActor';
 import vtkResliceCursorRepresentation from 'vtk.js/Sources/Interaction/Widgets/ResliceCursor/ResliceCursorRepresentation';
