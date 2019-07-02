@@ -3,7 +3,7 @@
 /*=========================================================================
 
   Program:   Visualization Toolkit
-  Module:    vtkPolyDataFS.glsl
+  Module:    vtkVolumeFS.glsl
 
   Copyright (c) Ken Martin, Will Schroeder, Bill Lorensen
   All rights reserved.
@@ -35,6 +35,17 @@ varying vec3 vertexVCVSOutput;
 
 // Define the blend mode to use
 #define vtkBlendMode //VTK::BlendMode
+
+// Possibly define vtkImageLabelOutlineOn
+//VTK::ImageLabelOutlineOn
+
+#ifdef vtkImageLabelOutlineOn
+uniform int outlineThickness;
+uniform float vpWidth;
+uniform float vpHeight;
+uniform mat4 DCWCMatrix;
+uniform mat4 vWCtoIDX;
+#endif
 
 // define vtkLightComplexity
 //VTK::LightComplexity
@@ -77,6 +88,7 @@ uniform float gomax3;
 uniform float camThick;
 uniform float camNear;
 uniform float camFar;
+uniform int cameraParallel;
 
 // values describing the volume geometry
 uniform vec3 vOriginVC;
@@ -276,6 +288,21 @@ vec4 computeNormal(vec3 pos, float scalar, vec3 tstep)
   return result;
 }
 
+#ifdef vtkImageLabelOutlineOn
+vec3 fragCoordToIndexSpace(vec4 fragCoord) {
+  vec4 ndcPos = vec4(
+    (fragCoord.x / vpWidth - 0.5) * 2.0,
+    (fragCoord.y / vpHeight - 0.5) * 2.0,
+    (fragCoord.z - 0.5) * 2.0,
+    1.0);
+
+  vec4 worldCoord = DCWCMatrix * ndcPos;
+  vec4 vertex = (worldCoord/worldCoord.w);
+
+  return (vWCtoIDX * vertex).xyz / vec3(volumeDimensions);
+}
+#endif
+
 //=======================================================================
 // compute the normals and gradient magnitudes for a position
 // for independent components
@@ -365,101 +392,148 @@ void applyLighting(inout vec3 tColor, vec4 normal)
 //
 vec4 getColorForValue(vec4 tValue, vec3 posIS, vec3 tstep)
 {
+#ifdef vtkImageLabelOutlineOn
+  vec3 centerPosIS = fragCoordToIndexSpace(gl_FragCoord); // pos in texture space
+  vec4 centerValue = getTextureValue(centerPosIS);
+  bool pixelOnBorder = false;
+  vec4 tColor = texture2D(ctexture, vec2(centerValue.r * cscale0 + cshift0, 0.5));
+
+  // Get alpha of segment from opacity function.
+  tColor.a = texture2D(otexture, vec2(centerValue.r * oscale0 + oshift0, 0.5)).r;
+
+  // Only perform outline check on fragments rendering voxels that aren't invisible.
+  // Saves a bunch of needless checks on the background.
+  // TODO define epsilon when building shader?
+  if (float(tColor.a) > 0.01) {
+    for (int i = -outlineThickness; i <= outlineThickness; i++) {
+      for (int j = -outlineThickness; j <= outlineThickness; j++) {
+        if (i == 0 || j == 0) {
+          continue;
+        }
+
+        vec4 neighborPixelCoord = vec4(gl_FragCoord.x + float(i),
+          gl_FragCoord.y + float(j),
+          gl_FragCoord.z, gl_FragCoord.w);
+
+        vec3 neighborPosIS = fragCoordToIndexSpace(neighborPixelCoord);
+        vec4 value = getTextureValue(neighborPosIS);
+
+        // If any of my neighbours are not the same value as I
+        // am, this means I am on the border of the segment.
+        // We can break the loops
+        if (any(notEqual(value, centerValue))) {
+          pixelOnBorder = true;
+          break;
+        }
+      }
+
+      if (pixelOnBorder == true) {
+        break;
+      }
+    }
+
+    // If I am on the border, I am displayed at full opacity
+    if (pixelOnBorder == true) {
+      tColor.a = 1.0;
+    }
+  }
+  
+#else
   // compute the normal and gradient magnitude if needed
   // We compute it as a vec4 if possible otherwise a mat4
   //
   vec4 goFactor = vec4(1.0,1.0,1.0,1.0);
 
   // compute the normal vectors as needed
-#if (vtkLightComplexity > 0) || defined(vtkGradientOpacityOn)
-#if defined(vtkIndependentComponentsOn) && (vtkNumComponents > 1)
-  mat4 normalMat = computeMat4Normal(posIS, tValue, tstep);
-  vec4 normal0 = normalMat[0];
-  vec4 normal1 = normalMat[1];
-#if vtkNumComponents > 2
-  vec4 normal2 = normalMat[2];
-#endif
-#if vtkNumComponents > 3
-  vec4 normal3 = normalMat[3];
-#endif
-#else
-  vec4 normal0 = computeNormal(posIS, tValue.a, tstep);
-#endif
-#endif
+  #if (vtkLightComplexity > 0) || defined(vtkGradientOpacityOn)
+  #if defined(vtkIndependentComponentsOn) && (vtkNumComponents > 1)
+    mat4 normalMat = computeMat4Normal(posIS, tValue, tstep);
+    vec4 normal0 = normalMat[0];
+    vec4 normal1 = normalMat[1];
+  #if vtkNumComponents > 2
+    vec4 normal2 = normalMat[2];
+  #endif
+  #if vtkNumComponents > 3
+    vec4 normal3 = normalMat[3];
+  #endif
+  #else
+    vec4 normal0 = computeNormal(posIS, tValue.a, tstep);
+  #endif
+  #endif
 
-// compute gradient opacity factors as needed
-#if defined(vtkGradientOpacityOn)
-  goFactor.x =
-    computeGradientOpacityFactor(normal0, goscale0, goshift0, gomin0, gomax0);
-#if defined(vtkIndependentComponentsOn) && (vtkNumComponents > 1)
-  goFactor.y =
-    computeGradientOpacityFactor(normal1, goscale1, goshift1, gomin1, gomax1);
-#if vtkNumComponents > 2
-  goFactor.z =
-    computeGradientOpacityFactor(normal2, goscale2, goshift2, gomin2, gomax2);
-#if vtkNumComponents > 3
-  goFactor.w =
-    computeGradientOpacityFactor(normal3, goscale3, goshift3, gomin3, gomax3);
-#endif
-#endif
-#endif
-#endif
+  // compute gradient opacity factors as needed
+  #if defined(vtkGradientOpacityOn)
+    goFactor.x =
+      computeGradientOpacityFactor(normal0, goscale0, goshift0, gomin0, gomax0);
+  #if defined(vtkIndependentComponentsOn) && (vtkNumComponents > 1)
+    goFactor.y =
+      computeGradientOpacityFactor(normal1, goscale1, goshift1, gomin1, gomax1);
+  #if vtkNumComponents > 2
+    goFactor.z =
+      computeGradientOpacityFactor(normal2, goscale2, goshift2, gomin2, gomax2);
+  #if vtkNumComponents > 3
+    goFactor.w =
+      computeGradientOpacityFactor(normal3, goscale3, goshift3, gomin3, gomax3);
+  #endif
+  #endif
+  #endif
+  #endif
 
-// single component is always independent
-#if vtkNumComponents == 1
-  vec4 tColor = texture2D(ctexture, vec2(tValue.r * cscale0 + cshift0, 0.5));
-  tColor.a = goFactor.x*texture2D(otexture, vec2(tValue.r * oscale0 + oshift0, 0.5)).r;
-#endif
+  // single component is always independent
+  #if vtkNumComponents == 1
+    vec4 tColor = texture2D(ctexture, vec2(tValue.r * cscale0 + cshift0, 0.5));
+    tColor.a = goFactor.x*texture2D(otexture, vec2(tValue.r * oscale0 + oshift0, 0.5)).r;
+  #endif
 
-#if defined(vtkIndependentComponentsOn) && vtkNumComponents >= 2
-  vec4 tColor = mix0*texture2D(ctexture, vec2(tValue.r * cscale0 + cshift0, height0));
-  tColor.a = goFactor.x*mix0*texture2D(otexture, vec2(tValue.r * oscale0 + oshift0, height0)).r;
-  vec3 tColor1 = mix1*texture2D(ctexture, vec2(tValue.g * cscale1 + cshift1, height1)).rgb;
-  tColor.a += goFactor.y*mix1*texture2D(otexture, vec2(tValue.g * oscale1 + oshift1, height1)).r;
-#if vtkNumComponents >= 3
-  vec3 tColor2 = mix2*texture2D(ctexture, vec2(tValue.b * cscale2 + cshift2, height2)).rgb;
-  tColor.a += goFactor.z*mix2*texture2D(otexture, vec2(tValue.b * oscale2 + oshift2, height2)).r;
-#if vtkNumComponents >= 4
-  vec3 tColor3 = mix3*texture2D(ctexture, vec2(tValue.a * cscale3 + cshift3, height3)).rgb;
-  tColor.a += goFactor.w*mix3*texture2D(otexture, vec2(tValue.a * oscale3 + oshift3, height3)).r;
-#endif
-#endif
+  #if defined(vtkIndependentComponentsOn) && vtkNumComponents >= 2
+    vec4 tColor = mix0*texture2D(ctexture, vec2(tValue.r * cscale0 + cshift0, height0));
+    tColor.a = goFactor.x*mix0*texture2D(otexture, vec2(tValue.r * oscale0 + oshift0, height0)).r;
+    vec3 tColor1 = mix1*texture2D(ctexture, vec2(tValue.g * cscale1 + cshift1, height1)).rgb;
+    tColor.a += goFactor.y*mix1*texture2D(otexture, vec2(tValue.g * oscale1 + oshift1, height1)).r;
+  #if vtkNumComponents >= 3
+    vec3 tColor2 = mix2*texture2D(ctexture, vec2(tValue.b * cscale2 + cshift2, height2)).rgb;
+    tColor.a += goFactor.z*mix2*texture2D(otexture, vec2(tValue.b * oscale2 + oshift2, height2)).r;
+  #if vtkNumComponents >= 4
+    vec3 tColor3 = mix3*texture2D(ctexture, vec2(tValue.a * cscale3 + cshift3, height3)).rgb;
+    tColor.a += goFactor.w*mix3*texture2D(otexture, vec2(tValue.a * oscale3 + oshift3, height3)).r;
+  #endif
+  #endif
 
-#else // then not independent
+  #else // then not independent
 
-#if vtkNumComponents == 2
-  float lum = tValue.r * cscale0 + cshift0;
-  float alpha = goFactor.x*texture2D(otexture, vec2(tValue.a * oscale1 + oshift1, 0.5)).r;
-  vec4 tColor = vec4(lum, lum, lum, alpha);
-#endif
-#if vtkNumComponents == 3
-  vec4 tColor;
-  tColor.r = tValue.r * cscale0 + cshift0;
-  tColor.g = tValue.g * cscale1 + cshift1;
-  tColor.b = tValue.b * cscale2 + cshift2;
-  tColor.a = goFactor.x*texture2D(otexture, vec2(tValue.a * oscale0 + oshift0, 0.5)).r;
-#endif
-#if vtkNumComponents == 4
-  vec4 tColor;
-  tColor.r = tValue.r * cscale0 + cshift0;
-  tColor.g = tValue.g * cscale1 + cshift1;
-  tColor.b = tValue.b * cscale2 + cshift2;
-  tColor.a = goFactor.x*texture2D(otexture, vec2(tValue.a * oscale3 + oshift3, 0.5)).r;
-#endif
-#endif // dependent
+  #if vtkNumComponents == 2
+    float lum = tValue.r * cscale0 + cshift0;
+    float alpha = goFactor.x*texture2D(otexture, vec2(tValue.a * oscale1 + oshift1, 0.5)).r;
+    vec4 tColor = vec4(lum, lum, lum, alpha);
+  #endif
+  #if vtkNumComponents == 3
+    vec4 tColor;
+    tColor.r = tValue.r * cscale0 + cshift0;
+    tColor.g = tValue.g * cscale1 + cshift1;
+    tColor.b = tValue.b * cscale2 + cshift2;
+    tColor.a = goFactor.x*texture2D(otexture, vec2(tValue.a * oscale0 + oshift0, 0.5)).r;
+  #endif
+  #if vtkNumComponents == 4
+    vec4 tColor;
+    tColor.r = tValue.r * cscale0 + cshift0;
+    tColor.g = tValue.g * cscale1 + cshift1;
+    tColor.b = tValue.b * cscale2 + cshift2;
+    tColor.a = goFactor.x*texture2D(otexture, vec2(tValue.a * oscale3 + oshift3, 0.5)).r;
+  #endif
+  #endif // dependent
 
-// apply lighting if requested as appropriate
-#if vtkLightComplexity > 0
-  applyLighting(tColor.rgb, normal0);
-#if defined(vtkIndependentComponentsOn) && vtkNumComponents >= 2
-  applyLighting(tColor1, normal1);
-#if vtkNumComponents >= 3
-  applyLighting(tColor2, normal2);
-#if vtkNumComponents >= 4
-  applyLighting(tColor3, normal3);
-#endif
-#endif
-#endif
+  // apply lighting if requested as appropriate
+  #if vtkLightComplexity > 0
+    applyLighting(tColor.rgb, normal0);
+  #if defined(vtkIndependentComponentsOn) && vtkNumComponents >= 2
+    applyLighting(tColor1, normal1);
+  #if vtkNumComponents >= 3
+    applyLighting(tColor2, normal2);
+  #if vtkNumComponents >= 4
+    applyLighting(tColor3, normal3);
+  #endif
+  #endif
+  #endif
 #endif
 
 // perform final independent blend as needed
@@ -473,46 +547,18 @@ vec4 getColorForValue(vec4 tValue, vec3 posIS, vec3 tstep)
 #endif
 #endif
 
-  return tColor;
+#endif
+
+
+
+
+
+
+
+return tColor;
 }
 
-//=======================================================================
-// Compute a new start and end point for a given ray based
-// on the provided bounded clipping plane (aka a rectangle)
-void getRayPointIntersectionBounds(
-  vec3 rayPos, vec3 rayDir,
-  vec3 planeDir, float planeDist,
-  inout vec2 tbounds, vec3 vPlaneX, vec3 vPlaneY,
-  float vSize1, float vSize2)
-{
-  float result = dot(rayDir, planeDir);
-  if (result == 0.0)
-  {
-    return;
-  }
-  result = -1.0 * (dot(rayPos, planeDir) + planeDist) / result;
-  vec3 xposVC = rayPos + rayDir*result;
-  vec3 vxpos = xposVC - vOriginVC;
-  vec2 vpos = vec2(
-    dot(vxpos, vPlaneX),
-    dot(vxpos, vPlaneY));
 
-  // on some apple nvidia systems this does not work
-  // if (vpos.x < 0.0 || vpos.x > vSize1 ||
-  //     vpos.y < 0.0 || vpos.y > vSize2)
-  // even just
-  // if (vpos.x < 0.0 || vpos.y < 0.0)
-  // fails
-  // so instead we compute a value that represents in and out
-  //and then compute the return using this value
-  float xcheck = max(0.0, vpos.x * (vpos.x - vSize1)); //  0 means in bounds
-  float check = sign(max(xcheck, vpos.y * (vpos.y - vSize2))); //  0 means in bounds, 1 = out
-
-  tbounds = mix(
-   vec2(min(tbounds.x, result), max(tbounds.y, result)), // in value
-   tbounds, // out value
-   check);  // 0 in 1 out
-}
 
 //=======================================================================
 // Apply the specified blend mode operation along the ray's path.
@@ -737,6 +783,44 @@ void applyBlend(vec3 posIS, vec3 endIS, float sampleDistanceIS, vec3 tdims)
 }
 
 //=======================================================================
+// Compute a new start and end point for a given ray based
+// on the provided bounded clipping plane (aka a rectangle)
+void getRayPointIntersectionBounds(
+  vec3 rayPos, vec3 rayDir,
+  vec3 planeDir, float planeDist,
+  inout vec2 tbounds, vec3 vPlaneX, vec3 vPlaneY,
+  float vSize1, float vSize2)
+{
+  float result = dot(rayDir, planeDir);
+  if (result == 0.0)
+  {
+    return;
+  }
+  result = -1.0 * (dot(rayPos, planeDir) + planeDist) / result;
+  vec3 xposVC = rayPos + rayDir*result;
+  vec3 vxpos = xposVC - vOriginVC;
+  vec2 vpos = vec2(
+    dot(vxpos, vPlaneX),
+    dot(vxpos, vPlaneY));
+
+  // on some apple nvidia systems this does not work
+  // if (vpos.x < 0.0 || vpos.x > vSize1 ||
+  //     vpos.y < 0.0 || vpos.y > vSize2)
+  // even just
+  // if (vpos.x < 0.0 || vpos.y < 0.0)
+  // fails
+  // so instead we compute a value that represents in and out
+  //and then compute the return using this value
+  float xcheck = max(0.0, vpos.x * (vpos.x - vSize1)); //  0 means in bounds
+  float check = sign(max(xcheck, vpos.y * (vpos.y - vSize2))); //  0 means in bounds, 1 = out
+
+  tbounds = mix(
+   vec2(min(tbounds.x, result), max(tbounds.y, result)), // in value
+   tbounds, // out value
+   check);  // 0 in 1 out
+}
+
+//=======================================================================
 // given a
 // - ray direction (rayDir)
 // - starting point (vertexVCVSOutput)
@@ -814,8 +898,6 @@ void computeIndexSpaceValues(out vec3 pos, out vec3 endPos, out float sampleDist
   float delta2 = length(endPos - pos);
   sampleDistanceIS = sampleDistance*delta2/delta;
 }
-
-uniform int cameraParallel;
 
 void main()
 {

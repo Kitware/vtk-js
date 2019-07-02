@@ -237,6 +237,8 @@ const DEFAULT_VALUES = {
   diffuse: 0.7,
   specular: 0.2,
   specularPower: 10.0,
+  useLabelOutline: false,
+  labelOutlineThickness: 1,
 };
 
 // ----------------------------------------------------------------------------
@@ -276,6 +278,8 @@ export function extend(publicAPI, model, initialValues = {}) {
     'diffuse',
     'specular',
     'specularPower',
+    'useLabelOutline',
+    'labelOutlineThickness',
   ]);
 
   // Object methods

@@ -207,6 +207,7 @@ function vtkOpenGLRenderWindow(publicAPI, model) {
   publicAPI.getViewportSize = (viewport) => {
     const vCoords = viewport.getViewportByReference();
     const size = publicAPI.getFramebufferSize();
+
     return [
       (vCoords[2] - vCoords[0]) * size[0],
       (vCoords[3] - vCoords[1]) * size[1],
