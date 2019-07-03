@@ -369,7 +369,11 @@ export default function widgetBehavior(publicAPI, model) {
       if (model.visibleOnFocus) {
         model.shapeHandle.setVisible(false);
       }
+      model.interactor.cancelAnimation(publicAPI);
     }
+
+    model.widgetState.deactivate();
+    model.moveHandle.deactivate();
 
     model.hasFocus = false;
   };
