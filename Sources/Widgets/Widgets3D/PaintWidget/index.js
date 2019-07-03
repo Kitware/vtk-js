@@ -156,7 +156,7 @@ function vtkPaintWidget(publicAPI, model) {
   const superSetRadius = publicAPI.setRadius;
   publicAPI.setRadius = (r) => {
     if (superSetRadius(r)) {
-      handle.setScale1(r * 2);
+      handle.setScale1(r);
     }
   };
 }

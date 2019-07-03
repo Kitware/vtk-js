@@ -33,8 +33,11 @@ function vtkPaintFilter(publicAPI, model) {
 
   publicAPI.startStroke = () => {
     if (model.labelMap) {
-      worker = new PaintFilterWorker();
-      workerPromise = new WebworkerPromise(worker);
+      if (!workerPromise) {
+        worker = new PaintFilterWorker();
+        workerPromise = new WebworkerPromise(worker);
+      }
+
       workerPromise.exec('start', {
         bufferType: 'Uint8Array',
         dimensions: model.labelMap.getDimensions(),
@@ -126,6 +129,43 @@ function vtkPaintFilter(publicAPI, model) {
       const radius = spacing.map((s) => model.radius / s);
 
       workerPromise.exec('paint', { point: indexPt, radius });
+    }
+  };
+
+  // --------------------------------------------------------------------------
+
+  publicAPI.paintRectangle = (point1, point2) => {
+    if (workerPromise) {
+      const index1 = [0, 0, 0];
+      const index2 = [0, 0, 0];
+      vec3.transformMat4(index1, point1, model.maskWorldToIndex);
+      vec3.transformMat4(index2, point2, model.maskWorldToIndex);
+      index1[0] = Math.round(index1[0]);
+      index1[1] = Math.round(index1[1]);
+      index1[2] = Math.round(index1[2]);
+      index2[0] = Math.round(index2[0]);
+      index2[1] = Math.round(index2[1]);
+      index2[2] = Math.round(index2[2]);
+      workerPromise.exec('paintRectangle', {
+        point1: index1,
+        point2: index2,
+      });
+    }
+  };
+
+  // --------------------------------------------------------------------------
+
+  publicAPI.paintEllipse = (center, scale3) => {
+    if (workerPromise) {
+      const realCenter = [0, 0, 0];
+      let realScale3 = [0, 0, 0];
+      vec3.transformMat4(realCenter, center, model.maskWorldToIndex);
+      vec3.transformMat4(realScale3, scale3, model.maskWorldToIndex);
+      realScale3 = realScale3.map((s) => (s === 0 ? 1 : s));
+      workerPromise.exec('paintEllipse', {
+        center: realCenter,
+        scale3: realScale3,
+      });
     }
   };
 
