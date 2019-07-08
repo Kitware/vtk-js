@@ -145,7 +145,6 @@ function vtkCamera(publicAPI, model) {
     computeViewPlaneNormal();
   };
 
-
   //----------------------------------------------------------------------------
   // Move the position of the camera along the view plane normal. Moving
   // towards the focal point (e.g., > 1) is a dolly-in, moving away
