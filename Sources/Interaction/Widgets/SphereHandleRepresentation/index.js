@@ -4,7 +4,7 @@ import vtkCellPicker from 'vtk.js/Sources/Rendering/Core/CellPicker';
 import vtkHandleRepresentation from 'vtk.js/Sources/Interaction/Widgets/HandleRepresentation';
 import vtkInteractorObserver from 'vtk.js/Sources/Rendering/Core/InteractorObserver';
 import vtkMapper from 'vtk.js/Sources/Rendering/Core/Mapper';
-import vtkMath from 'vtk.js/Sources/Common/Core/Math';
+import * as vtkMath from 'vtk.js/Sources/Common/Core/Math';
 import vtkProperty from 'vtk.js/Sources/Rendering/Core/Property';
 import vtkSphereSource from 'vtk.js/Sources/Filters/Sources/SphereSource';
 import { InteractionState } from '../HandleRepresentation/Constants';

@@ -3,7 +3,7 @@ import { mat4, vec3 } from 'gl-matrix';
 import macro from 'vtk.js/Sources/macro';
 import vtkCamera from 'vtk.js/Sources/Rendering/Core/Camera';
 import vtkLight from 'vtk.js/Sources/Rendering/Core/Light';
-import vtkMath from 'vtk.js/Sources/Common/Core/Math';
+import * as vtkMath from 'vtk.js/Sources/Common/Core/Math';
 import vtkViewport from 'vtk.js/Sources/Rendering/Core/Viewport';
 import vtkBoundingBox from 'vtk.js/Sources/Common/DataModel/BoundingBox';
 

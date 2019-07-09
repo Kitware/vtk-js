@@ -1,7 +1,7 @@
 import { mat3, mat4 } from 'gl-matrix';
 import Constants from 'vtk.js/Sources/Common/Transform/LandmarkTransform/Constants';
 import macro from 'vtk.js/Sources/macro';
-import vtkMath from 'vtk.js/Sources/Common/Core/Math';
+import * as vtkMath from 'vtk.js/Sources/Common/Core/Math';
 
 const { Mode } = Constants;
 
