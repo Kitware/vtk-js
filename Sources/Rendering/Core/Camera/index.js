@@ -39,6 +39,14 @@ function vtkCamera(publicAPI, model) {
   const newPosition = vec3.create();
   const newFocalPoint = vec3.create();
 
+  // Internal Functions that don't need to be public
+  function computeViewPlaneNormal() {
+    // VPN is -DOP
+    model.viewPlaneNormal[0] = -model.directionOfProjection[0];
+    model.viewPlaneNormal[1] = -model.directionOfProjection[1];
+    model.viewPlaneNormal[2] = -model.directionOfProjection[2];
+  }
+
   publicAPI.orthogonalizeViewUp = () => {
     const vt = publicAPI.getViewMatrix();
     model.viewUp[0] = vt[4];
@@ -134,15 +142,7 @@ function vtkCamera(publicAPI, model) {
     model.directionOfProjection[1] = dy / model.distance;
     model.directionOfProjection[2] = dz / model.distance;
 
-    publicAPI.computeViewPlaneNormal();
-  };
-
-  //----------------------------------------------------------------------------
-  publicAPI.computeViewPlaneNormal = () => {
-    // VPN is -DOP
-    model.viewPlaneNormal[0] = -model.directionOfProjection[0];
-    model.viewPlaneNormal[1] = -model.directionOfProjection[1];
-    model.viewPlaneNormal[2] = -model.directionOfProjection[2];
+    computeViewPlaneNormal();
   };
 
   //----------------------------------------------------------------------------
@@ -163,10 +163,6 @@ function vtkCamera(publicAPI, model) {
       model.focalPoint[2] - d * model.directionOfProjection[2]
     );
   };
-
-  publicAPI.setRoll = (roll) => {};
-
-  publicAPI.getRoll = () => {};
 
   publicAPI.roll = (angle) => {
     const eye = model.position;
@@ -266,6 +262,7 @@ function vtkCamera(publicAPI, model) {
   publicAPI.elevation = (angle) => {
     const fp = model.focalPoint;
 
+    // get the eye / camera position from the viewMatrix
     const vt = publicAPI.getViewMatrix();
     const axis = [-vt[0], -vt[1], -vt[2]];
 
@@ -320,21 +317,13 @@ function vtkCamera(publicAPI, model) {
       vec3.fromValues(-position[0], -position[1], -position[2])
     );
 
-    // apply the transform to the position
+    // apply the transform to the focal point
     vec3.transformMat4(
       newFocalPoint,
-      vec3.fromValues(
-        model.focalPoint[0],
-        model.focalPoint[1],
-        model.focalPoint[2]
-      ),
+      vec3.fromValues(...model.focalPoint),
       trans
     );
-    publicAPI.setFocalPoint(
-      newFocalPoint[0],
-      newFocalPoint[1],
-      newFocalPoint[2]
-    );
+    publicAPI.setFocalPoint(...newFocalPoint);
   };
 
   publicAPI.zoom = (factor) => {
@@ -349,9 +338,41 @@ function vtkCamera(publicAPI, model) {
     publicAPI.modified();
   };
 
-  publicAPI.setThickness = (thickness) => {};
+  publicAPI.applyTransform = (transformMat4) => {
+    const vuOld = [...model.viewUp, 1.0];
+    const posNew = [];
+    const fpNew = [];
+    const vuNew = [];
 
+    vuOld[0] += model.position[0];
+    vuOld[1] += model.position[1];
+    vuOld[2] += model.position[2];
+
+    vec4.transformMat4(posNew, [...model.position, 1.0], transformMat4);
+    vec4.transformMat4(fpNew, [...model.focalPoint, 1.0], transformMat4);
+    vec4.transformMat4(vuNew, vuOld, transformMat4);
+
+    vuNew[0] -= posNew[0];
+    vuNew[1] -= posNew[1];
+    vuNew[2] -= posNew[2];
+
+    publicAPI.setPosition(...posNew.slice(0, 3));
+    publicAPI.setFocalPoint(...fpNew.slice(0, 3));
+    publicAPI.setViewUp(...vuNew.slice(0, 3));
+  };
+
+  // Unimplemented functions
+  publicAPI.setRoll = (angle) => {}; // dependency on GetOrientation() and a model.ViewTransform object, see https://github.com/Kitware/VTK/blob/master/Common/Transforms/vtkTransform.cxx and https://vtk.org/doc/nightly/html/classvtkTransform.html
+  publicAPI.getRoll = () => {};
+  publicAPI.setThickness = (thickness) => {};
   publicAPI.setObliqueAngles = (alpha, beta) => {};
+  publicAPI.getOrientation = () => {};
+  publicAPI.getOrientationWXYZ = () => {};
+  publicAPI.getFrustumPlanes = (aspect) => {
+    // Return array of 24 params (4 params for each of 6 plane equations)
+  };
+  publicAPI.getCameraLightTransformMatrix = () => {};
+  publicAPI.deepCopy = (sourceCamera) => {};
 
   publicAPI.physicalOrientationToWorldDirection = (ori) => {
     // push the x axis through the orientation quat
@@ -463,16 +484,13 @@ function vtkCamera(publicAPI, model) {
     }
 
     const result = mat4.create();
-    const eye = model.position;
-    const at = model.focalPoint;
-    const up = model.viewUp;
 
     mat4.lookAt(
       tmpMatrix,
-      vec3.fromValues(eye[0], eye[1], eye[2]), // eye
-      vec3.fromValues(at[0], at[1], at[2]), // at
-      vec3.fromValues(up[0], up[1], up[2])
-    ); // up
+      vec3.fromValues(...model.position), // eye
+      vec3.fromValues(...model.focalPoint), // at
+      vec3.fromValues(...model.viewUp) // up
+    );
 
     mat4.transpose(tmpMatrix, tmpMatrix);
 
@@ -488,12 +506,8 @@ function vtkCamera(publicAPI, model) {
     const result = mat4.create();
 
     if (model.projectionMatrix) {
-      vec3.set(
-        tmpvec1,
-        1 / model.physicalScale,
-        1 / model.physicalScale,
-        1 / model.physicalScale
-      );
+      const scale = 1 / model.physicalScale;
+      vec3.set(tmpvec1, scale, scale, scale);
 
       mat4.copy(result, model.projectionMatrix);
       mat4.scale(result, result, tmpvec1);
@@ -569,14 +583,6 @@ function vtkCamera(publicAPI, model) {
     return result;
   };
 
-  publicAPI.getFrustumPlanes = (aspect) => {
-    // Return array of 24 params (4 params for each of 6 plane equations)
-  };
-
-  publicAPI.getOrientation = () => {};
-
-  publicAPI.getOrientationWXYZ = () => {};
-
   publicAPI.setDirectionOfProjection = (x, y, z) => {
     if (
       model.directionOfProjection[0] === x &&
@@ -596,7 +602,7 @@ function vtkCamera(publicAPI, model) {
     model.focalPoint[0] = model.position[0] + vec[0] * model.distance;
     model.focalPoint[1] = model.position[1] + vec[1] * model.distance;
     model.focalPoint[2] = model.position[2] + vec[2] * model.distance;
-    publicAPI.computeViewPlaneNormal();
+    computeViewPlaneNormal();
   };
 
   // used to handle convert js device orientation angles
@@ -678,8 +684,8 @@ function vtkCamera(publicAPI, model) {
     const newvup = vec3.create();
     vec3.transformMat4(newvup, vup, quatMat);
 
-    publicAPI.setDirectionOfProjection(newdop[0], newdop[1], newdop[2]);
-    publicAPI.setViewUp(newvup[0], newvup[1], newvup[2]);
+    publicAPI.setDirectionOfProjection(...newdop);
+    publicAPI.setViewUp(...newvup);
     publicAPI.modified();
   };
 
@@ -736,7 +742,6 @@ export const DEFAULT_VALUES = {
   screenBottomRight: [0.5, -0.5, -0.5],
   screenTopRight: [0.5, 0.5, -0.5],
   freezeFocalPoint: false,
-  useScissor: false,
   projectionMatrix: null,
   viewMatrix: null,
 
@@ -764,7 +769,6 @@ export function extend(publicAPI, model, initialValues = {}) {
     'parallelScale',
     'useOffAxisProjection',
     'freezeFocalPoint',
-    'useScissor',
     'physicalScale',
   ]);
 
