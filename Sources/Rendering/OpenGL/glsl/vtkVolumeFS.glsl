@@ -33,6 +33,9 @@ varying vec3 vertexVCVSOutput;
 // possibly define vtkIndependentComponents
 //VTK::IndependentComponentsOn
 
+// Define the blend mode to use
+#define vtkBlendMode //VTK::BlendMode
+
 // define vtkLightComplexity
 //VTK::LightComplexity
 #if vtkLightComplexity > 0
@@ -508,6 +511,181 @@ void getRayPointIntersectionBounds(
 }
 
 //=======================================================================
+// Apply the specified blend mode operation along the ray's path.
+//
+void applyBlend(vec3 posIS, vec3 stepIS, vec3 tdims, float numSteps)
+{
+  vec3 tstep = 1.0/tdims;
+
+  // integer number of steps to take and residual step size
+  int count = int(numSteps - 0.05); // end slightly inside
+  float residual = numSteps - float(count);
+
+  // local vars for the loop
+  vec4 color = vec4(0.0, 0.0, 0.0, 0.0);
+  vec4 tValue;
+  vec4 tColor;
+
+  int blendMode = //VTK::BlendMode;
+  #if vtkBlendMode == 0 // COMPOSITE_BLEND
+    for (int i = 0; i < //VTK::MaximumSamplesValue ; ++i)
+      {
+        // compute the scalar
+        tValue = getTextureValue(posIS);
+
+        // now map through opacity and color
+        tColor = getColorForValue(tValue, posIS, tstep);
+
+        float mix = (1.0 - color.a);
+
+        // this line should not be needed but nvidia seems to not handle
+        // the break correctly on windows/chrome 58 angle
+        mix = mix * sign(max(float(count - i + 1), 0.0));
+
+        color = color + vec4(tColor.rgb*tColor.a, tColor.a)*mix;
+        if (i >= count) { break; }
+        if (color.a > 0.99) { color.a = 1.0; break; }
+        posIS += stepIS;
+      }
+
+      if (color.a < 0.99)
+      {
+        posIS += (residual - 1.0)*stepIS;
+
+        // compute the scalar
+        tValue = getTextureValue(posIS);
+
+        // now map through opacity and color
+        tColor = getColorForValue(tValue, posIS, tstep);
+
+        float mix = (1.0 - color.a);
+        color = color + vec4(tColor.rgb*tColor.a, tColor.a)*mix;
+      }
+
+      gl_FragData[0] = vec4(color.rgb/color.a, color.a);
+  #endif
+  #if vtkBlendMode == 1 || vtkBlendMode == 2
+    // MAXIMUM_INTENSITY_BLEND || MINIMUM_INTENSITY_BLEND
+    // Find maximum/minimum intensity along the ray.
+    vec4 value = getTextureValue(posIS);
+
+    // Define the operation we will use (min or max)
+    #if vtkBlendMode == 1
+    #define OP max
+    #else
+    #define OP min
+    #endif
+
+    // Sample along the ray until MaximumSamplesValue,
+    // ending slightly inside the total distance
+    for (int i = 0; i < //VTK::MaximumSamplesValue ; ++i)
+    {
+      // compute the scalar
+      tValue = getTextureValue(posIS);
+
+      // Update the maximum value if necessary
+      value = OP(tValue, value);
+
+      // If we have reached the last step, break
+      if (i >= count) { break; }
+
+      // Otherwise, continue along the ray
+      posIS += stepIS;
+    }
+
+    // Perform the last step along the ray using the
+    // residual distance
+    posIS += (residual - 1.0) * stepIS;
+
+    // Obtain the value at this position (scalar or vector, depending on the number of components)
+    tValue = getTextureValue(posIS);
+
+    // Update the minimum/maximum value if necessary
+    value = OP(tValue, value);
+
+    // Now map through opacity and color
+    gl_FragData[0] = getColorForValue(value, posIS, tstep);
+  #endif
+  #if vtkBlendMode == 3 //AVERAGE_INTENSITY_BLEND
+    vec4 averageIPScalarRangeMin = vec4 (
+      //VTK::AverageIPScalarRangeMin,
+      //VTK::AverageIPScalarRangeMin,
+      //VTK::AverageIPScalarRangeMin,
+      1.0);
+    vec4 averageIPScalarRangeMax = vec4(
+      //VTK::AverageIPScalarRangeMax,
+      //VTK::AverageIPScalarRangeMax,
+      //VTK::AverageIPScalarRangeMax,
+      1.0);
+
+    vec4 sum = vec4(0.);
+
+    // Declare i outside of the loop
+    int i = 0;
+
+    // Sample along the ray until MaximumSamplesValue,
+    // ending slightly inside the total distance
+    for (i = 0; i < //VTK::MaximumSamplesValue ; ++i)
+    {
+      // compute the scalar
+      tValue = getTextureValue(posIS);
+
+      // One can control the scalar range by setting the AverageIPScalarRange to disregard scalar values, not in the range of interest, from the average computation.
+      // Notes:
+      // - We are comparing all values in the texture to see if any of them
+      //   are outside of the scalar range. In the future we might want to allow
+      //   scalar ranges for each component.
+      // - We are setting the alpha channel for averageIPScalarRangeMin and
+      //   averageIPScalarRangeMax so that we do not trigger this 'continue'
+      //   based on the alpha channel comparison.
+      // - There might be a better way to do this. I'm not sure if there is an
+      //   equivalent of 'any' which only operates on RGB, though I suppose
+      //   we could write an 'anyRGB' function and see if that is faster.
+      averageIPScalarRangeMin.a = tValue.a;
+      averageIPScalarRangeMax.a = tValue.a;
+      if (any(lessThan(tValue, averageIPScalarRangeMin)) ||
+          any(greaterThan(tValue, averageIPScalarRangeMax))) {
+        continue;
+      }
+
+      // Sum the values across each step in the path
+      sum += tValue;
+
+      // If we have reached the last step, break
+      if (i >= count) { break; }
+
+      // Otherwise, continue along the ray
+      posIS += stepIS;
+    }
+
+    // Perform the last step along the ray using the
+    // residual distance
+    posIS += (residual - 1.0) * stepIS;
+
+    // compute the scalar
+    tValue = getTextureValue(posIS);
+
+    // Ensure i is never zero so we don't get divide-by-zero issues
+    i = max(1, i);
+
+    // Divide by the total number of samples that were taken
+    float i_float = float(i);
+
+    // One can control the scalar range by setting the AverageIPScalarRange to disregard scalar values, not in the range of interest, from the average computation
+    if (any(lessThan(tValue, averageIPScalarRangeMin)) ||
+      any(greaterThan(tValue, averageIPScalarRangeMax))) {
+      sum /= vec4(i_float, i_float, i_float, 1.0);
+    } else {
+      sum += tValue;
+
+      sum /= vec4(i_float + 1.0, i_float + 1.0, i_float + 1.0, 1.0);
+    }
+
+    gl_FragData[0] = getColorForValue(sum, posIS, tstep);
+  #endif
+}
+
+//=======================================================================
 // given a
 // - ray direction (rayDir)
 // - starting point (vertexVCVSOutput)
@@ -604,62 +782,18 @@ void main()
   vec2 rayStartEndDistancesVC = computeRayDistances(rayDirVC, tdims);
 
   // do we need to composite? aka does the ray have any length
-  if (rayStartEndDistancesVC.y > rayStartEndDistancesVC.x)
-  {
-    // IS = Index Space
-    vec3 posIS;
-    vec3 stepIS;
-    float numSteps;
-    computeIndexSpaceValues(posIS, stepIS, numSteps, rayDirVC, rayStartEndDistancesVC);
-
-    // iteger number of steps to take and residual step size
-    int count = int(numSteps - 0.05); // end slightly inside
-    float residual = numSteps - float(count);
-
-    // local vars for the loop
-    vec4 color = vec4(0.0, 0.0, 0.0, 0.0);
-
-    vec3 tstep = 1.0/tdims;
-
-    for (int i = 0; i < //VTK::MaximumSamplesValue ; ++i)
-    {
-      // compute the scalar
-      vec4 tValue = getTextureValue(posIS);
-
-      // now map through opacity and color
-      vec4 tColor = getColorForValue(tValue, posIS, tstep);
-
-      float mix = (1.0 - color.a);
-
-      // this line should not be needed but nvidia seems to not handle
-      // the break correctly on windows/chrome 58 angle
-      mix = mix * sign(max(float(count - i + 1), 0.0));
-
-      color = color + vec4(tColor.rgb*tColor.a, tColor.a)*mix;
-      if (i >= count) { break; }
-      if (color.a > 0.99) { color.a = 1.0; break; }
-      posIS += stepIS;
-    }
-
-    if (color.a < 0.99)
-    {
-      posIS += (residual - 1.0)*stepIS;
-
-      // compute the scalar
-      vec4 tValue = getTextureValue(posIS);
-
-      // now map through opacity and color
-      vec4 tColor = getColorForValue(tValue, posIS, tstep);
-
-      float mix = (1.0 - color.a);
-      color = color + vec4(tColor.rgb*tColor.a, tColor.a)*mix;
-    }
-
-    gl_FragData[0] = vec4(color.rgb/color.a, color.a);
-    // gl_FragData[0] = vec4(tbounds.y/farDist, tbounds.x/farDist, color.b/color.a, 1.0);
-  }
-  else
+  // If not, bail out early
+  if (rayStartEndDistancesVC.y <= rayStartEndDistancesVC.x)
   {
     discard;
   }
+
+  // IS = Index Space
+  vec3 posIS;
+  vec3 stepIS;
+  float numSteps;
+  computeIndexSpaceValues(posIS, stepIS, numSteps, rayDirVC, rayStartEndDistancesVC);
+
+  // Perform the blending operation along the ray
+  applyBlend(posIS, stepIS, tdims, numSteps);
 }
