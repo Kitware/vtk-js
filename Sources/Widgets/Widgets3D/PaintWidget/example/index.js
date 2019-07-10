@@ -6,6 +6,7 @@ import vtkWidgetManager from 'vtk.js/Sources/Widgets/Core/WidgetManager';
 import vtkPaintWidget from 'vtk.js/Sources/Widgets/Widgets3D/PaintWidget';
 import vtkRectangleWidget from 'vtk.js/Sources/Widgets/Widgets3D/RectangleWidget';
 import vtkEllipseWidget from 'vtk.js/Sources/Widgets/Widgets3D/EllipseWidget';
+import vtkSplineWidget from 'vtk.js/Sources/Widgets/Widgets3D/SplineWidget';
 import vtkInteractorStyleImage from 'vtk.js/Sources/Interaction/Style/InteractorStyleImage';
 import vtkHttpDataSetReader from 'vtk.js/Sources/IO/Core/HttpDataSetReader';
 import vtkImageMapper from 'vtk.js/Sources/Rendering/Core/ImageMapper';
@@ -65,6 +66,10 @@ const widgets = {};
 widgets.paintWidget = vtkPaintWidget.newInstance();
 widgets.rectangleWidget = vtkRectangleWidget.newInstance();
 widgets.ellipseWidget = vtkEllipseWidget.newInstance();
+widgets.splineWidget = vtkSplineWidget.newInstance();
+widgets.polygonWidget = vtkSplineWidget.newInstance({
+  resolution: 1,
+});
 
 scene.paintHandle = scene.widgetManager.addWidget(
   widgets.paintWidget,
@@ -76,6 +81,14 @@ scene.rectangleHandle = scene.widgetManager.addWidget(
 );
 scene.ellipseHandle = scene.widgetManager.addWidget(
   widgets.ellipseWidget,
+  ViewTypes.SLICE
+);
+scene.splineHandle = scene.widgetManager.addWidget(
+  widgets.splineWidget,
+  ViewTypes.SLICE
+);
+scene.polygonHandle = scene.widgetManager.addWidget(
+  widgets.polygonWidget,
   ViewTypes.SLICE
 );
 
@@ -189,6 +202,22 @@ reader
     scene.rectangleHandle.setZAxis(axis);
     scene.ellipseHandle.setZAxis(axis);
 
+    scene.splineHandle
+      .getWidgetState()
+      .getMoveHandle()
+      .setScale1(2 * Math.max(...image.data.getSpacing()));
+    scene.splineHandle.setFreehandMinDistance(
+      8 * Math.max(...image.data.getSpacing())
+    );
+
+    scene.polygonHandle
+      .getWidgetState()
+      .getMoveHandle()
+      .setScale1(2 * Math.max(...image.data.getSpacing()));
+    scene.polygonHandle.setFreehandMinDistance(
+      8 * Math.max(...image.data.getSpacing())
+    );
+
     const update = () => {
       const slicingMode = image.imageMapper.getSlicingMode() % 3;
 
@@ -213,6 +242,10 @@ reader
         widgets.rectangleWidget.getManipulator().setNormal(normal);
         widgets.ellipseWidget.getManipulator().setOrigin(position);
         widgets.ellipseWidget.getManipulator().setNormal(normal);
+        widgets.splineWidget.getManipulator().setOrigin(position);
+        widgets.splineWidget.getManipulator().setNormal(normal);
+        widgets.polygonWidget.getManipulator().setOrigin(position);
+        widgets.polygonWidget.getManipulator().setNormal(normal);
 
         scene.rectangleHandle.setSlicingMode(slicingMode);
         scene.ellipseHandle.setSlicingMode(slicingMode);
@@ -221,6 +254,8 @@ reader
         scene.paintHandle.updateRepresentationForRender();
         scene.rectangleHandle.updateRepresentationForRender();
         scene.ellipseHandle.updateRepresentationForRender();
+        scene.splineHandle.updateRepresentationForRender();
+        scene.polygonHandle.updateRepresentationForRender();
 
         // update labelMap layer
         labelMap.imageMapper.set(image.imageMapper.get('slice', 'slicingMode'));
@@ -228,7 +263,7 @@ reader
         // update UI
         document
           .querySelector('.slice')
-          .setAttribute('max', data.getDimensions()[slicingMode]);
+          .setAttribute('max', data.getDimensions()[slicingMode] - 1);
       }
     };
     image.imageMapper.onModified(update);
@@ -278,8 +313,21 @@ document.querySelector('.axis').addEventListener('input', (ev) => {
 document.querySelector('.widget').addEventListener('input', (ev) => {
   activeWidget = ev.target.value;
   scene.widgetManager.grabFocus(widgets[activeWidget]);
+
   scene.paintHandle.setVisibility(activeWidget === 'paintWidget');
   scene.paintHandle.updateRepresentationForRender();
+
+  scene.splineHandle.reset();
+  scene.splineHandle.setVisibility(activeWidget === 'splineWidget');
+  scene.splineHandle.updateRepresentationForRender();
+
+  scene.polygonHandle.reset();
+  scene.polygonHandle.setVisibility(activeWidget === 'polygonWidget');
+  scene.polygonHandle.updateRepresentationForRender();
+});
+
+document.querySelector('.focus').addEventListener('click', () => {
+  scene.widgetManager.grabFocus(widgets[activeWidget]);
 });
 
 document.querySelector('.undo').addEventListener('click', () => {
@@ -339,4 +387,32 @@ scene.ellipseHandle.onInteractionEvent(() => {
     .getEllipseHandle()
     .getScale3();
   painter.paintEllipse(center, scale3);
+});
+
+scene.splineHandle.onStartInteractionEvent(() => {
+  painter.startStroke();
+});
+
+scene.splineHandle.onEndInteractionEvent(() => {
+  const points = scene.splineHandle.getPoints();
+  painter.paintPolygon(points);
+  painter.endStroke();
+
+  scene.splineHandle.reset();
+  scene.splineHandle.updateRepresentationForRender();
+  scene.widgetManager.grabFocus(widgets.splineWidget);
+});
+
+scene.polygonHandle.onStartInteractionEvent(() => {
+  painter.startStroke();
+});
+
+scene.polygonHandle.onEndInteractionEvent(() => {
+  const points = scene.polygonHandle.getPoints();
+  painter.paintPolygon(points);
+  painter.endStroke();
+
+  scene.polygonHandle.reset();
+  scene.polygonHandle.updateRepresentationForRender();
+  scene.widgetManager.grabFocus(widgets.polygonWidget);
 });
