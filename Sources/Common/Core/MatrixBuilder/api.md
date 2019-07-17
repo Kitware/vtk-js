@@ -2,7 +2,11 @@
 
 vtkMatrixBuilder class provides a system to create a mat4 transformation matrix. All functions return the MatrixBuilder Object instance, allowing transformations to be chained.
 
-Example: `vtkMatrixBuilder.buildfromDegree().translate(1,0,2).rotateZ(45).apply()`
+Example:
+```
+let point = [2,5,12];
+vtkMatrixBuilder.buildfromDegree().translate(1,0,2).rotateZ(45).apply(point);
+```
 
 ## Creating an instance
 The vtkMatrixBuilder class has two functions, `vtkMatrixBuilder.buildFromDegree()` and `vtkMatrixbuilder.buildFromRadian()`, predefining the angle format used for transformations and returning a MatrixBuilder instance. The matrix is initialized with the Identity Matrix.
