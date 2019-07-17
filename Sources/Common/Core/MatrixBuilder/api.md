@@ -37,17 +37,18 @@ Scales the matrix by sx, sy, sz.
 ### `identity()`
 Resets the MatrixBuilder to the Identity matrix.
 
+### `setMatrix(mat4)`
+Copies the given `mat4` into the builder. Useful if you already have a transformation matrix and want to transform it further. Returns the instance for chaining.
+
 ## Using the MatrixBuilder result
 
 ### `apply(typedArray, offset = 0, nbIterations = -1)`
-Multiplies the array by the MatrixBuilder's internal matrix. Updates the array in place.
-Assumes the `typedArray` is an array with sets of 3.
-If specified, `offset` starts at a given position in the array and `nbIterations` will determine the number of iterations (sets of 3) to loop through.
+Multiplies the array by the MatrixBuilder's internal matrix, in sets of 3. Updates the array in place.
+If specified, `offset` starts at a given position in the array, and `nbIterations` will determine the number of iterations (sets of 3) to loop through. Assumes the `typedArray` is an array of multiples of 3, unless specifically handling with offset and iterations.
 Returns the instance for chaining.
 
 ### `getMatrix()`
 Returns the internal `mat4` matrix.
 
-### `setMatrix(mat4)`
-Copies the given `mat4` into the builder. Useful if you already have a transformation matrix and want to transform it further. Returns the instance for chaining.
+
 
