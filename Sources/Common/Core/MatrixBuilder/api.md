@@ -13,41 +13,41 @@ The vtkMatrixBuilder class has two functions, `vtkMatrixBuilder.buildFromDegree(
 
 ## Transformation Functions
 
-`rotateFromDirections(originDirection, targetDirection)`
+### `rotateFromDirections(originDirection, targetDirection)`
 Multiplies the current matrix with a transformation matrix created by normalizing both direction vectors and rotating around the axis of the crossProduct by the angle from the dotProduct of the two directions.
 
-`rotate(angle, axis)`
-Normalizes the axis of rotation then rotates the current matrix `angle` degrees/radians around the provided axis
+### `rotate(angle, axis)`
+Normalizes the axis of rotation then rotates the current matrix `angle` degrees/radians around the provided axis.
 
-`rotateX(angle)`
+### `rotateX(angle)`
 Rotates `angle` degrees/radians around the X axis.
 
-`rotateY(angle)`
+### `rotateY(angle)`
 Rotates `angle` degrees/radians around the Y axis.
 
-`rotateZ(angle)`
+### `rotateZ(angle)`
 Rotates `angle` degrees/radians around the Z axis.
 
-`translate(x, y, z)`
+### `translate(x, y, z)`
 Translates the matrix by x, y, z.
 
-`scale(sx, sy, sz)`
+### `scale(sx, sy, sz)`
 Scales the matrix by sx, sy, sz.
 
-`identity()`
+### `identity()`
 Resets the MatrixBuilder to the Identity matrix.
 
 ## Using the MatrixBuilder result
 
-`apply(typedArray, offset = 0, nbIterations = -1)`
+### `apply(typedArray, offset = 0, nbIterations = -1)`
 Multiplies the array by the MatrixBuilder's internal matrix. Updates the array in place.
 Assumes the `typedArray` is an array with sets of 3.
 If specified, `offset` starts at a given position in the array and nbIterations will determine the number of iterations (sets of 3) to loop through.
 Returns the MatrixBuilder instance, allowing chaining to continue.
 
-`getMatrix()`
+### `getMatrix()`
 Returns the internal `mat4` matrix.
 
-`setMatrix(mat4)`
+### `setMatrix(mat4)`
 Copies the given `mat4` into the builder. Useful if you already have a transformation matrix and want to transform it further.
 
