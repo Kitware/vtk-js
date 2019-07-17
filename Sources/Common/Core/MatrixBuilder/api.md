@@ -1,6 +1,6 @@
 ## Introduction
 
-vtkMatrixBuilder class provides a system to create a mat4 transformation matrix. All functions return the MatrixBuilder Object instance, allowing transformations to be chained.
+The `vtkMatrixBuilder` class provides a system to create a mat4 transformation matrix. All functions return the MatrixBuilder Object instance, allowing transformations to be chained.
 
 Example:
 ```
@@ -42,12 +42,12 @@ Resets the MatrixBuilder to the Identity matrix.
 ### `apply(typedArray, offset = 0, nbIterations = -1)`
 Multiplies the array by the MatrixBuilder's internal matrix. Updates the array in place.
 Assumes the `typedArray` is an array with sets of 3.
-If specified, `offset` starts at a given position in the array and nbIterations will determine the number of iterations (sets of 3) to loop through.
-Returns the MatrixBuilder instance, allowing chaining to continue.
+If specified, `offset` starts at a given position in the array and `nbIterations` will determine the number of iterations (sets of 3) to loop through.
+Returns the instance for chaining.
 
 ### `getMatrix()`
 Returns the internal `mat4` matrix.
 
 ### `setMatrix(mat4)`
-Copies the given `mat4` into the builder. Useful if you already have a transformation matrix and want to transform it further.
+Copies the given `mat4` into the builder. Useful if you already have a transformation matrix and want to transform it further. Returns the instance for chaining.
 
