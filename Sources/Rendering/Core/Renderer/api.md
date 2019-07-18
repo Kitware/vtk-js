@@ -6,15 +6,15 @@ within a RenderWindow. A RenderWindow may have multiple Renderers
 representing different viewports of the Window and Renderers can be layered
 on top of each other as well.
 
-### addActor(actor) / removeActor(actor) / getActors() : []
+### getActors() : [] / addActor(actor) / removeActor(actor) / removeAllActors()
 
 Actors that compose the renderer.
 
-### addVolume(volume) / removeVolume(volume) / getVolumes() : []
+### getVolumes() : [] / addVolume(volume) / removeVolume(volume) / removeAllVolumes()
 
 Volumes that compose the renderer.
 
-### addLight(light) / removeLight(light) / getLights() : []
+### getLights() : [] / addLight(light) / removeLight(light) / removeAllLights()
 
 Lights that compose the renderer.
 
