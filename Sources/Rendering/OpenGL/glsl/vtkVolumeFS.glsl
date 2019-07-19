@@ -518,7 +518,9 @@ void applyBlend(vec3 posIS, vec3 stepIS, vec3 tdims, float numSteps, vec3 startR
   vec3 tstep = 1.0/tdims;
 
   // integer number of steps to take and residual step size
-  int count = int(numSteps - 0.05); // end slightly inside
+  // TODO: This seems to fix the issue for thick-slab MIP? Off-by-one error?
+  int count = int(numSteps - 1.0); // end slightly inside
+  // int count = int(numSteps - 0.05); // end slightly inside
   float residual = numSteps - float(count);
   vec3 initialPosIS = posIS - startResidualIS;
 
