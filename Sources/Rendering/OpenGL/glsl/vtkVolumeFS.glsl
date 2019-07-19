@@ -513,13 +513,14 @@ void getRayPointIntersectionBounds(
 //=======================================================================
 // Apply the specified blend mode operation along the ray's path.
 //
-void applyBlend(vec3 posIS, vec3 stepIS, vec3 tdims, float numSteps)
+void applyBlend(vec3 posIS, vec3 stepIS, vec3 tdims, float numSteps, vec3 startResidualIS)
 {
   vec3 tstep = 1.0/tdims;
 
   // integer number of steps to take and residual step size
   int count = int(numSteps - 0.05); // end slightly inside
   float residual = numSteps - float(count);
+  vec3 initialPosIS = posIS - startResidualIS;
 
   // local vars for the loop
   vec4 color = vec4(0.0, 0.0, 0.0, 0.0);
@@ -528,7 +529,26 @@ void applyBlend(vec3 posIS, vec3 stepIS, vec3 tdims, float numSteps)
 
   int blendMode = //VTK::BlendMode;
   #if vtkBlendMode == 0 // COMPOSITE_BLEND
-    for (int i = 0; i < //VTK::MaximumSamplesValue ; ++i)
+      // Perform initial step at the volume boundary
+
+      // compute the scalar
+      tValue = getTextureValue(initialPosIS);
+
+      // now map through opacity and color
+      tColor = getColorForValue(tValue, initialPosIS, tstep);
+
+      float mix = (1.0 - color.a);
+      color = color + vec4(tColor.rgb*tColor.a, tColor.a)*mix;
+
+      // If the clipping range is shorter than the sample distance
+      // we can skip the sampling loop along the ray.
+      if (numSteps == 1.0 || color.a > 0.99) {
+        gl_FragData[0] = vec4(color.rgb/color.a, color.a);
+
+        return;
+      }
+
+      for (int i = 0; i < //VTK::MaximumSamplesValue ; ++i)
       {
         // compute the scalar
         tValue = getTextureValue(posIS);
@@ -567,7 +587,15 @@ void applyBlend(vec3 posIS, vec3 stepIS, vec3 tdims, float numSteps)
   #if vtkBlendMode == 1 || vtkBlendMode == 2
     // MAXIMUM_INTENSITY_BLEND || MINIMUM_INTENSITY_BLEND
     // Find maximum/minimum intensity along the ray.
-    vec4 value = getTextureValue(posIS);
+    vec4 value = getTextureValue(initialPosIS);
+
+    // If the clipping range is shorter than the sample distance
+    // we can skip the sampling loop along the ray.
+    if (numSteps == 1.0) {
+      gl_FragData[0] = getColorForValue(value, initialPosIS, tstep);
+
+      return;
+    }
 
     // Define the operation we will use (min or max)
     #if vtkBlendMode == 1
@@ -619,13 +647,26 @@ void applyBlend(vec3 posIS, vec3 stepIS, vec3 tdims, float numSteps)
       1.0);
 
     vec4 sum = vec4(0.);
-
-    // Declare i outside of the loop
     int i = 0;
+    tValue = getTextureValue(initialPosIS);
+
+    averageIPScalarRangeMin.a = tValue.a;
+    averageIPScalarRangeMax.a = tValue.a;
+    if (all(greaterThanEqual(tValue, averageIPScalarRangeMin)) &&
+        all(lessThanEqual(tValue, averageIPScalarRangeMax))) {
+      sum += tValue;
+      i = 1;
+    }
+
+    if (numSteps == 1.0) {
+      gl_FragData[0] = getColorForValue(sum, initialPosIS, tstep);
+
+      return;
+    }
 
     // Sample along the ray until MaximumSamplesValue,
     // ending slightly inside the total distance
-    for (i = 0; i < //VTK::MaximumSamplesValue ; ++i)
+    for (i = i; i < //VTK::MaximumSamplesValue ; ++i)
     {
       // compute the scalar
       tValue = getTextureValue(posIS);
@@ -735,9 +776,9 @@ vec2 computeRayDistances(vec3 rayDir, vec3 tdims)
 
 //=======================================================================
 // Compute the index space starting position (pos) and step
-// Also return the float number fo steps to take numSteps
+// Also return the float number of steps to take numSteps
 //
-void computeIndexSpaceValues(out vec3 pos, out vec3 step, out float numSteps, vec3 rayDir, vec2 dists)
+void computeIndexSpaceValues(out vec3 pos, out vec3 step, out float numSteps, vec3 rayDir, vec2 dists, out vec3 startResidual)
 {
   // compute starting and ending values in volume space
   pos = vertexVCVSOutput + dists.x*rayDir;
@@ -758,17 +799,35 @@ void computeIndexSpaceValues(out vec3 pos, out vec3 step, out float numSteps, ve
   // start slightly inside and apply some jitter
   float jitter = texture2D(jtexture, gl_FragCoord.xy/32.0).r;
   vec3 delta = endPos - pos;
-  pos = pos + normalize(delta)*(0.01 + 0.98*jitter)*sampleDistance;
 
-  // update vdelta post jitter
-  delta = endPos - pos;
+  // If the distance along the ray across the volume that we are
+  // sampling is smaller than the sampling distance, we can avoid
+  // some computations. This happens in thin-slice volume rendering.
+  if (length(delta) < sampleDistance) {
+    numSteps = 1.0;
+    startResidual = vec3(0.);
+    step = vec3(0.);
+  } else {
+    // Compute a random distance value along the ray path. This is
+    // used to ensure sampling happens at slightly different distance steps
+    // points along the ray for each ray that has been cast.
+    startResidual = normalize(delta)*(0.01 + 0.98*jitter)*sampleDistance;
 
-  numSteps = length(delta) / sampleDistance;
-  step = delta / numSteps;
+    pos += startResidual;
+
+    // update vdelta post jitter
+    delta = endPos - pos;
+
+    numSteps = length(delta) / sampleDistance;
+    step = delta / numSteps;
+
+    // vVCToIJK handles spacing going from world distances to tcoord distances
+    startResidual *= vVCToIJK;
+    step *= vVCToIJK;
+  }
 
   // vVCToIJK handles spacing going from world distances to tcoord distances
   pos *= vVCToIJK;
-  step *= vVCToIJK;
 }
 
 void main()
@@ -791,9 +850,10 @@ void main()
   // IS = Index Space
   vec3 posIS;
   vec3 stepIS;
+  vec3 startResidualIS;
   float numSteps;
-  computeIndexSpaceValues(posIS, stepIS, numSteps, rayDirVC, rayStartEndDistancesVC);
+  computeIndexSpaceValues(posIS, stepIS, numSteps, rayDirVC, rayStartEndDistancesVC, startResidualIS);
 
   // Perform the blending operation along the ray
-  applyBlend(posIS, stepIS, tdims, numSteps);
+  applyBlend(posIS, stepIS, tdims, numSteps, startResidualIS);
 }
