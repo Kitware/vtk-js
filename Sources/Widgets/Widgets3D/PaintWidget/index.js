@@ -72,6 +72,24 @@ function widgetBehavior(publicAPI, model) {
       model.activeState = model.widgetState.getHandle();
       model.activeState.activate();
       model.interactor.requestAnimation(publicAPI);
+
+      const canvas = model.openGLRenderWindow.getCanvas();
+      canvas.onmouseenter = () => {
+        if (
+          model.hasFocus &&
+          model.activeState === model.widgetState.getHandle()
+        ) {
+          model.activeState.setVisible(true);
+        }
+      };
+      canvas.onmouseleave = () => {
+        if (
+          model.hasFocus &&
+          model.activeState === model.widgetState.getHandle()
+        ) {
+          model.activeState.setVisible(false);
+        }
+      };
     }
     model.hasFocus = true;
   };
@@ -126,12 +144,20 @@ function vtkPaintWidget(publicAPI, model) {
     })
     .addStateFromMixin({
       labels: ['handle'],
-      mixins: ['origin', 'color', 'scale1', 'direction', 'manipulator'],
+      mixins: [
+        'origin',
+        'color',
+        'scale1',
+        'direction',
+        'manipulator',
+        'visible',
+      ],
       name: 'handle',
       initialValues: {
         scale1: model.radius * 2,
         origin: [0, 0, 0],
         direction: [0, 0, 1],
+        visible: true,
       },
     })
     .addDynamicMixinState({
