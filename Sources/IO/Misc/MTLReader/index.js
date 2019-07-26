@@ -39,8 +39,8 @@ function vtkMTLReader(publicAPI, model) {
       model.materials[model.currentMaterial][tokens[0]] = tokens.slice(1);
       if (tokens[0] === 'map_Kd') {
         const image = new Image();
+        image.onload = () => setTimeout(imageReady, 0);
         image.src = [model.baseURL, tokens[1]].join('/');
-        image.onload = imageReady;
         model.materials[model.currentMaterial].image = image;
         model.requestCount++;
       }
@@ -107,17 +107,21 @@ function vtkMTLReader(publicAPI, model) {
       .filter((fileName) => !!fileName)
       .map((s) => s[0].trim());
 
-  publicAPI.setImageSrc = (imagePath, src) => {
-    const selectedName = Object.keys(model.materials).find(
-      (name) =>
-        model.materials[name].map_Kd &&
-        model.materials[name].map_Kd[0].trim() === imagePath.trim()
-    );
-    const material = model.materials[selectedName];
-    if (material && material.image) {
-      material.image.src = src;
-    }
-  };
+  publicAPI.setImageSrc = (imagePath, src) =>
+    new Promise((resolve, reject) => {
+      const selectedName = Object.keys(model.materials).find(
+        (name) =>
+          model.materials[name].map_Kd &&
+          model.materials[name].map_Kd[0].trim() === imagePath.trim()
+      );
+      const material = model.materials[selectedName];
+      if (material && material.image) {
+        material.image.src = src;
+        material.image.onload = () => setTimeout(resolve, 0);
+      } else {
+        resolve();
+      }
+    });
 
   publicAPI.applyMaterialToActor = (name, actor) => {
     const material = model.materials[name];
@@ -135,7 +139,9 @@ function vtkMTLReader(publicAPI, model) {
         actorProp[k] = idx <= illum ? 1.0 : 0.0;
       });
       if (material.image) {
-        const texture = vtkTexture.newInstance({ interpolate: true });
+        const texture = vtkTexture.newInstance({
+          interpolate: model.interpolateTextures,
+        });
         texture.setImage(material.image);
         actor.addTexture(texture);
       }
@@ -152,6 +158,7 @@ const DEFAULT_VALUES = {
   numberOfOutputs: 1,
   requestCount: 0,
   materials: {},
+  interpolateTextures: true,
   // baseURL: null,
   // dataAccessHelper: null,
   // url: null,
@@ -165,7 +172,11 @@ export function extend(publicAPI, model, initialValues = {}) {
   // Build VTK API
   macro.obj(publicAPI, model);
   macro.get(publicAPI, model, ['url', 'baseURL']);
-  macro.setGet(publicAPI, model, ['dataAccessHelper', 'splitGroup']);
+  macro.setGet(publicAPI, model, [
+    'dataAccessHelper',
+    'interpolateTextures',
+    'splitGroup',
+  ]);
   macro.event(publicAPI, model, 'busy');
 
   // Object methods

@@ -1,7 +1,8 @@
 import macro from 'vtk.js/Sources/macro';
-import vtkMath from 'vtk.js/Sources/Common/Core/Math';
+import * as vtkMath from 'vtk.js/Sources/Common/Core/Math';
 import vtkScalarsToColors from 'vtk.js/Sources/Common/Core/ScalarsToColors';
 import Constants from 'vtk.js/Sources/Rendering/Core/ColorTransferFunction/Constants';
+import vtkColorMaps from 'vtk.js/Sources/Rendering/Core/ColorTransferFunction/ColorMaps';
 
 const { ColorSpace, Scale } = Constants;
 const { ScalarMappingTarget } = vtkScalarsToColors;
@@ -1206,7 +1207,11 @@ export function extend(publicAPI, model, initialValues = {}) {
   macro.get(publicAPI, model, ['buildTime', 'mappingRange']);
 
   // Create get-set macros
-  macro.setGet(publicAPI, model, ['useAboveRangeColor', 'useBelowRangeColor']);
+  macro.setGet(publicAPI, model, [
+    'useAboveRangeColor',
+    'useBelowRangeColor',
+    'colorSpace',
+  ]);
 
   macro.setArray(
     publicAPI,
@@ -1237,4 +1242,4 @@ export const newInstance = macro.newInstance(
 
 // ----------------------------------------------------------------------------
 
-export default Object.assign({ newInstance, extend }, Constants);
+export default Object.assign({ newInstance, extend, vtkColorMaps }, Constants);

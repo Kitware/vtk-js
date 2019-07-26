@@ -1,7 +1,7 @@
 import macro from 'vtk.js/Sources/macro';
 import vtkLabelRepresentation from 'vtk.js/Sources/Interaction/Widgets/LabelRepresentation';
 import vtkLineRepresentation from 'vtk.js/Sources/Interaction/Widgets/LineRepresentation';
-import vtkMath from 'vtk.js/Sources/Common/Core/Math';
+import * as vtkMath from 'vtk.js/Sources/Common/Core/Math';
 
 // ----------------------------------------------------------------------------
 // vtkDistanceRepresentation methods

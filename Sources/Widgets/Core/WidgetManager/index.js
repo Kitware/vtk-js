@@ -76,6 +76,8 @@ function vtkWidgetManager(publicAPI, model) {
   }
 
   publicAPI.enablePicking = () => {
+    model.pickingEnabled = true;
+
     model.renderingType = RenderingTypes.PICKING_BUFFER;
     model.widgets.forEach(updateWidgetForRender);
 
@@ -93,6 +95,7 @@ function vtkWidgetManager(publicAPI, model) {
   };
 
   publicAPI.disablePicking = () => {
+    model.pickingEnabled = false;
     model.pickingAvailable = false;
   };
 
@@ -105,10 +108,16 @@ function vtkWidgetManager(publicAPI, model) {
     model.selector.attach(model.openGLRenderWindow, model.renderer);
 
     subscriptions.push(
-      model.interactor.onStartAnimation(publicAPI.disablePicking)
+      model.interactor.onStartAnimation(() => {
+        model.pickingAvailable = false;
+      })
     );
     subscriptions.push(
-      model.interactor.onEndAnimation(publicAPI.enablePicking)
+      model.interactor.onEndAnimation(() => {
+        if (model.pickingEnabled) {
+          publicAPI.enablePicking();
+        }
+      })
     );
 
     subscriptions.push(
@@ -116,7 +125,10 @@ function vtkWidgetManager(publicAPI, model) {
         if (!model.pickingAvailable) {
           return;
         }
-        publicAPI.updateSelectionFromXY(position.x, position.y);
+        publicAPI.updateSelectionFromXY(
+          Math.round(position.x),
+          Math.round(position.y)
+        );
         const {
           requestCount,
           selectedState,
@@ -155,7 +167,10 @@ function vtkWidgetManager(publicAPI, model) {
     );
 
     publicAPI.modified();
-    publicAPI.enablePicking();
+
+    if (model.pickingEnabled) {
+      publicAPI.enablePicking();
+    }
   };
 
   publicAPI.addWidget = (widget, viewType, initialValues) => {
@@ -283,6 +298,7 @@ const DEFAULT_VALUES = {
   renderer: [],
   viewType: ViewTypes.DEFAULT,
   pickingAvailable: false,
+  pickingEnabled: true,
   selections: null,
   previousSelectedData: null,
   widgetInFocus: null,
@@ -297,7 +313,12 @@ export function extend(publicAPI, model, initialValues = {}) {
   macro.setGet(publicAPI, model, [
     { type: 'enum', name: 'viewType', enum: ViewTypes },
   ]);
-  macro.get(publicAPI, model, ['selections', 'widgets', 'viewId']);
+  macro.get(publicAPI, model, [
+    'selections',
+    'widgets',
+    'viewId',
+    'pickingEnabled',
+  ]);
 
   // Object specific methods
   vtkWidgetManager(publicAPI, model);

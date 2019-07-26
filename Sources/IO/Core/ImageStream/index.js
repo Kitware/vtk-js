@@ -64,24 +64,33 @@ function vtkImageStream(publicAPI, model) {
   // --------------------------------------------------------------------------
 
   publicAPI.disconnect = () => {
-    if (model.protocol && model.connected) {
-      model.protocol.unsubscribeToImageStream(
-        model.imageStreamTopicSubscription
-      );
-      model.imageStreamTopicSubscription = null;
+    if (model.protocol && model.connected && model.renderTopicSubscription) {
+      model.protocol.unsubscribeToImageStream(model.renderTopicSubscription);
+      model.renderTopicSubscription = null;
     }
+    model.connected = false;
   };
 
   // --------------------------------------------------------------------------
 
-  function unregisterViewStream(view) {
+  publicAPI.registerViewStream = (view) => {
+    model.viewStreams.push(view);
+  };
+
+  // --------------------------------------------------------------------------
+
+  publicAPI.unregisterViewStream = (view) => {
     model.viewStreams = model.viewStreams.filter((v) => v !== view);
-  }
+  };
 
   // --------------------------------------------------------------------------
 
   publicAPI.createViewStream = (viewId = '-1', size = [400, 400]) => {
-    const { setServerAnimationFPS, getServerAnimationFPS } = publicAPI;
+    const {
+      setServerAnimationFPS,
+      getServerAnimationFPS,
+      unregisterViewStream,
+    } = publicAPI;
     const viewStream = ViewStream.newInstance({
       protocol: model.protocol,
       unregisterViewStream,
@@ -92,7 +101,7 @@ function vtkImageStream(publicAPI, model) {
     });
     viewStream.setViewId(viewId);
     viewStream.setSize(size[0], size[1]);
-    model.viewStreams.push(viewStream);
+    publicAPI.registerViewStream(viewStream);
 
     return viewStream;
   };
@@ -112,6 +121,7 @@ function vtkImageStream(publicAPI, model) {
 // ----------------------------------------------------------------------------
 
 const DEFAULT_VALUES = {
+  // protocol: null,
   viewStreams: [],
   serverAnimationFPS: -1,
 };
@@ -123,7 +133,7 @@ export function extend(publicAPI, model, initialValues = {}) {
 
   // Object methods
   macro.obj(publicAPI, model);
-  macro.get(publicAPI, model, ['serverAnimationFPS']);
+  macro.get(publicAPI, model, ['serverAnimationFPS', 'protocol']);
 
   // Object specific methods
   vtkImageStream(publicAPI, model);

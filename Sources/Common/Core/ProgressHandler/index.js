@@ -32,9 +32,9 @@ function vtkProgressHandler(publicAPI, model) {
           publicAPI.stopWork();
           resolve(...resolveArgs);
         },
-        (...rejectArgs) => {
+        (rejectError) => {
           publicAPI.stopWork();
-          reject(...rejectArgs);
+          reject(rejectError);
         }
       );
     });

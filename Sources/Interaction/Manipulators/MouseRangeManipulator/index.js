@@ -27,7 +27,7 @@ function vtkMouseRangeManipulator(publicAPI, model) {
     let value = oldValue + delta + incrementalDelta.get(listener);
 
     const difference = value - listener.min;
-    const stepsToDifference = difference / listener.step;
+    const stepsToDifference = Math.round(difference / listener.step);
     value = listener.min + listener.step * stepsToDifference;
     value = Math.max(value, listener.min);
     value = Math.min(value, listener.max);
@@ -78,6 +78,7 @@ function vtkMouseRangeManipulator(publicAPI, model) {
   //-------------------------------------------------------------------------
   publicAPI.removeHorizontalListener = () => {
     if (model.verticalListener) {
+      incrementalDelta.delete(model.verticalListener);
       delete model.verticalListener;
       publicAPI.modified();
     }
@@ -86,6 +87,7 @@ function vtkMouseRangeManipulator(publicAPI, model) {
   //-------------------------------------------------------------------------
   publicAPI.removeVerticalListener = () => {
     if (model.horizontalListener) {
+      incrementalDelta.delete(model.horizontalListener);
       delete model.horizontalListener;
       publicAPI.modified();
     }
@@ -94,6 +96,7 @@ function vtkMouseRangeManipulator(publicAPI, model) {
   //-------------------------------------------------------------------------
   publicAPI.removeScrollListener = () => {
     if (model.scrollListener) {
+      incrementalDelta.delete(model.scrollListener);
       delete model.scrollListener;
       publicAPI.modified();
     }

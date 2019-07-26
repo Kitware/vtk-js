@@ -1,7 +1,7 @@
 import Constants from 'vtk.js/Sources/Rendering/Core/ImageMapper/Constants';
 import macro from 'vtk.js/Sources/macro';
 import vtkAbstractMapper from 'vtk.js/Sources/Rendering/Core/AbstractMapper';
-import vtkMath from 'vtk.js/Sources/Common/Core/Math';
+import * as vtkMath from 'vtk.js/Sources/Common/Core/Math';
 import vtkPlane from 'vtk.js/Sources/Common/DataModel/Plane';
 
 import { vec3 } from 'gl-matrix';

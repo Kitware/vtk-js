@@ -72,6 +72,21 @@ const selectMap = {
   altMiddleButton: { button: 2, alt: true },
   altRightButton: { button: 3, alt: true },
   scrollMiddleButton: { scrollEnabled: true, dragEnabled: false },
+  shiftScrollMiddleButton: {
+    scrollEnabled: true,
+    dragEnabled: false,
+    shift: true,
+  },
+  controlScrollMiddleButton: {
+    scrollEnabled: true,
+    dragEnabled: false,
+    control: true,
+  },
+  altScrollMiddleButton: {
+    scrollEnabled: true,
+    dragEnabled: false,
+    alt: true,
+  },
 };
 
 const manipulatorFactory = {

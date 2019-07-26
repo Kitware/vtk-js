@@ -193,7 +193,7 @@ function vtkOpenGLSkybox(publicAPI, model) {
              varying vec2 TexCoords;
              uniform sampler2D sbtexture;
              void main () {
-               gl_FragData[0] = textureCube(sbtexture, TexCoords);
+               gl_FragData[0] = texture2D(sbtexture, TexCoords);
              }`,
             ''
           )

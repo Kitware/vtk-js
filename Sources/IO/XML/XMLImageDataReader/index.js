@@ -57,10 +57,6 @@ function vtkXMLImageDataReader(publicAPI, model) {
       model.output[outputIndex] = imageData;
     }
   };
-
-  publicAPI.requestData = (inData, outData) => {
-    publicAPI.parseArrayBuffer(model.rawDataBuffer);
-  };
 }
 
 // ----------------------------------------------------------------------------

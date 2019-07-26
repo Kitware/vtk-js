@@ -1,6 +1,6 @@
 import macro from 'vtk.js/Sources/macro';
 import vtkInteractorStyleTrackballCamera from 'vtk.js/Sources/Interaction/Style/InteractorStyleTrackballCamera';
-import vtkMath from 'vtk.js/Sources/Common/Core/Math';
+import * as vtkMath from 'vtk.js/Sources/Common/Core/Math';
 import { States } from 'vtk.js/Sources/Rendering/Core/InteractorStyle/Constants';
 
 // ----------------------------------------------------------------------------
@@ -212,6 +212,10 @@ function vtkInteractorStyleImage(publicAPI, model) {
   // also use negative numbers, i.e. -1 will return the last image,
   // -2 will return the second-to-last image, etc.
   publicAPI.setCurrentImageNumber = (i) => {
+    if (i === null) {
+      return;
+    }
+
     const renderer = model.interactor.getCurrentRenderer();
     if (!renderer) {
       return;
@@ -244,8 +248,13 @@ function vtkInteractorStyleImage(publicAPI, model) {
     }
 
     if (imageProp) {
-      model.currentImageProperty = imageProp.getProperty();
+      publicAPI.setCurrentImageProperty(imageProp.getProperty());
     }
+  };
+
+  //----------------------------------------------------------------------------
+  publicAPI.setCurrentImageProperty = (imageProperty) => {
+    model.currentImageProperty = imageProperty;
   };
 }
 

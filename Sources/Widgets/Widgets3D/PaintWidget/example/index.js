@@ -1,9 +1,11 @@
 import 'vtk.js/Sources/favicon';
 
-import vtkMath from 'vtk.js/Sources/Common/Core/Math';
+import * as vtkMath from 'vtk.js/Sources/Common/Core/Math';
 import vtkFullScreenRenderWindow from 'vtk.js/Sources/Rendering/Misc/FullScreenRenderWindow';
 import vtkWidgetManager from 'vtk.js/Sources/Widgets/Core/WidgetManager';
 import vtkPaintWidget from 'vtk.js/Sources/Widgets/Widgets3D/PaintWidget';
+import vtkRectangleWidget from 'vtk.js/Sources/Widgets/Widgets3D/RectangleWidget';
+import vtkEllipseWidget from 'vtk.js/Sources/Widgets/Widgets3D/EllipseWidget';
 import vtkInteractorStyleImage from 'vtk.js/Sources/Interaction/Style/InteractorStyleImage';
 import vtkHttpDataSetReader from 'vtk.js/Sources/IO/Core/HttpDataSetReader';
 import vtkImageMapper from 'vtk.js/Sources/Rendering/Core/ImageMapper';
@@ -16,89 +18,29 @@ import { ViewTypes } from 'vtk.js/Sources/Widgets/Core/WidgetManager/Constants';
 
 import controlPanel from './controlPanel.html';
 
-const bodyStyles = {
-  display: 'flex',
-  flexFlow: 'row',
-};
-
-function applyStyle(el, style) {
-  Object.keys(style).forEach((key) => {
-    el.style[key] = style[key];
-  });
-}
-
 // ----------------------------------------------------------------------------
 // Standard rendering code setup
 // ----------------------------------------------------------------------------
 
-function createFullScreenRenderer(scope, opts) {
-  scope.root = document.body;
+// scene
+const scene = {};
 
-  scope.fullScreenRenderer = vtkFullScreenRenderWindow.newInstance(
-    Object.assign({ rootContainer: scope.root }, opts)
-  );
+scene.fullScreenRenderer = vtkFullScreenRenderWindow.newInstance({
+  rootContainer: document.body,
+  background: [0.1, 0.1, 0.1],
+});
 
-  applyStyle(scope.fullScreenRenderer.getContainer(), {
-    margin: null,
-    padding: null,
-    position: null,
-    top: null,
-    left: null,
-    width: '800px',
-    height: null,
-    overflow: null,
-  });
-
-  scope.renderer = scope.fullScreenRenderer.getRenderer();
-  scope.renderWindow = scope.fullScreenRenderer.getRenderWindow();
-  scope.openGLRenderWindow = scope.fullScreenRenderer.getOpenGLRenderWindow();
-  scope.camera = scope.renderer.getActiveCamera();
-}
-
-applyStyle(document.body, bodyStyles);
-
-// scenes
-const S = { two: {}, three: {} };
-
-createFullScreenRenderer(S.two, { background: [0.1, 0.1, 0.1] });
-createFullScreenRenderer(S.three, { background: [0.2, 0.2, 0.2] });
+scene.renderer = scene.fullScreenRenderer.getRenderer();
+scene.renderWindow = scene.fullScreenRenderer.getRenderWindow();
+scene.openGLRenderWindow = scene.fullScreenRenderer.getOpenGLRenderWindow();
+scene.camera = scene.renderer.getActiveCamera();
 
 // setup 2D view
-S.two.camera.setParallelProjection(true);
-S.two.iStyle = vtkInteractorStyleImage.newInstance();
-S.two.iStyle.setInteractionMode('IMAGE_SLICING');
-S.two.renderWindow.getInteractor().setInteractorStyle(S.two.iStyle);
-S.two.fullScreenRenderer.addController(controlPanel);
-
-// Link animation events
-function linkInteractors(scope1, scope2) {
-  const i1 = scope1.renderWindow.getInteractor();
-  const i2 = scope2.renderWindow.getInteractor();
-  const sync = {};
-
-  let src = null;
-
-  function linkOneWay(from, to) {
-    from.onStartAnimation(() => {
-      if (!src) {
-        src = from;
-        to.requestAnimation(sync);
-      }
-    });
-
-    from.onEndAnimation(() => {
-      if (src === from) {
-        src = null;
-        to.cancelAnimation(sync);
-        // roughly wait for widgetManager.capture() to finish
-        setTimeout(to.render, 1000);
-      }
-    });
-  }
-
-  linkOneWay(i1, i2);
-  linkOneWay(i2, i1);
-}
+scene.camera.setParallelProjection(true);
+scene.iStyle = vtkInteractorStyleImage.newInstance();
+scene.iStyle.setInteractionMode('IMAGE_SLICING');
+scene.renderWindow.getInteractor().setInteractorStyle(scene.iStyle);
+scene.fullScreenRenderer.addController(controlPanel);
 
 function setCamera(sliceMode, renderer, data) {
   const ijk = [0, 0, 0];
@@ -111,31 +53,34 @@ function setCamera(sliceMode, renderer, data) {
   renderer.resetCamera();
 }
 
-// should occur before widgetManager.grabFocus
-linkInteractors(S.two, S.three);
-
 // ----------------------------------------------------------------------------
 // Widget manager and vtkPaintFilter
 // ----------------------------------------------------------------------------
 
-function setupWidgetManager(scope) {
-  scope.widgetManager = vtkWidgetManager.newInstance();
-  scope.widgetManager.setRenderer(scope.renderer);
-}
+scene.widgetManager = vtkWidgetManager.newInstance();
+scene.widgetManager.setRenderer(scene.renderer);
 
-setupWidgetManager(S.two);
-setupWidgetManager(S.three);
+// Widgets
+const widgets = {};
+widgets.paintWidget = vtkPaintWidget.newInstance();
+widgets.rectangleWidget = vtkRectangleWidget.newInstance();
+widgets.ellipseWidget = vtkEllipseWidget.newInstance();
 
-// Widget
-const paintWidget = vtkPaintWidget.newInstance();
-
-S.two.viewHandle = S.two.widgetManager.addWidget(paintWidget, ViewTypes.SLICE);
-S.three.viewHandle = S.three.widgetManager.addWidget(
-  paintWidget,
-  ViewTypes.VOLUME
+scene.paintHandle = scene.widgetManager.addWidget(
+  widgets.paintWidget,
+  ViewTypes.SLICE
+);
+scene.rectangleHandle = scene.widgetManager.addWidget(
+  widgets.rectangleWidget,
+  ViewTypes.SLICE
+);
+scene.ellipseHandle = scene.widgetManager.addWidget(
+  widgets.ellipseWidget,
+  ViewTypes.SLICE
 );
 
-S.two.widgetManager.grabFocus(paintWidget);
+scene.widgetManager.grabFocus(widgets.paintWidget);
+let activeWidget = 'paintWidget';
 
 // Paint filter
 const painter = vtkPaintFilter.newInstance();
@@ -155,8 +100,7 @@ function ready(scope, picking = false) {
 }
 
 function readyAll() {
-  ready(S.two, true);
-  ready(S.three, false);
+  ready(scene, true);
 }
 
 function updateControlPanel(im, ds) {
@@ -202,7 +146,7 @@ labelMap.actor.getProperty().setOpacity(0.5);
 
 const reader = vtkHttpDataSetReader.newInstance({ fetchGzip: true });
 reader
-  .setUrl(`${__BASE_PATH__}/data/volume/headsq.vti`, { loadData: true })
+  .setUrl(`${__BASE_PATH__}/data/volume/LIDC2.vti`, { loadData: true })
   .then(() => {
     const data = reader.getOutputData();
     image.data = data;
@@ -211,32 +155,39 @@ reader
     image.imageMapper.setInputData(data);
 
     // add actors to renderers
-    S.two.renderer.addViewProp(image.actor);
-    S.two.renderer.addViewProp(labelMap.actor);
-    S.three.renderer.addViewProp(image.actor);
-    S.three.renderer.addViewProp(labelMap.actor);
+    scene.renderer.addViewProp(image.actor);
+    scene.renderer.addViewProp(labelMap.actor);
 
     // update paint filter
     painter.setBackgroundImage(image.data);
     // don't set to 0, since that's our empty label color from our pwf
     painter.setLabel(1);
     // set custom threshold
-    painter.setVoxelFunc((bgValue, label, idx) => {
-      if (bgValue > 145) {
-        return label;
-      }
-      return null;
-    });
+    // painter.setVoxelFunc((bgValue, idx) => bgValue < 145);
 
     // default slice orientation/mode and camera view
     const sliceMode = vtkImageMapper.SlicingMode.K;
     image.imageMapper.setSlicingMode(sliceMode);
     image.imageMapper.setSlice(0);
+    painter.setSlicingMode(sliceMode);
 
     // set 2D camera position
-    setCamera(sliceMode, S.two.renderer, image.data);
+    setCamera(sliceMode, scene.renderer, image.data);
 
     updateControlPanel(image.imageMapper, data);
+
+    let axis = [0, 0, 0];
+    data.indexToWorldVec3([1, 0, 0], axis);
+    scene.rectangleHandle.setXAxis(axis);
+    scene.ellipseHandle.setXAxis(axis);
+    axis = [0, 0, 0];
+    data.indexToWorldVec3([0, 1, 0], axis);
+    scene.rectangleHandle.setYAxis(axis);
+    scene.ellipseHandle.setYAxis(axis);
+    axis = [0, 0, 0];
+    data.indexToWorldVec3([0, 0, 1], axis);
+    scene.rectangleHandle.setZAxis(axis);
+    scene.ellipseHandle.setZAxis(axis);
 
     const update = () => {
       const slicingMode = image.imageMapper.getSlicingMode() % 3;
@@ -256,10 +207,20 @@ reader
         vtkMath.subtract(normal, data.getOrigin(), normal);
         vtkMath.normalize(normal);
 
-        paintWidget.getManipulator().setOrigin(position);
-        paintWidget.getManipulator().setNormal(normal);
-        const handle = paintWidget.getWidgetState().getHandle();
-        handle.rotateFromDirections(handle.getDirection(), normal);
+        widgets.paintWidget.getManipulator().setOrigin(position);
+        widgets.paintWidget.getManipulator().setNormal(normal);
+        widgets.rectangleWidget.getManipulator().setOrigin(position);
+        widgets.rectangleWidget.getManipulator().setNormal(normal);
+        widgets.ellipseWidget.getManipulator().setOrigin(position);
+        widgets.ellipseWidget.getManipulator().setNormal(normal);
+
+        scene.rectangleHandle.setSlicingMode(slicingMode);
+        scene.ellipseHandle.setSlicingMode(slicingMode);
+        painter.setSlicingMode(slicingMode);
+
+        scene.paintHandle.updateRepresentationForRender();
+        scene.rectangleHandle.updateRepresentationForRender();
+        scene.ellipseHandle.updateRepresentationForRender();
 
         // update labelMap layer
         labelMap.imageMapper.set(image.imageMapper.get('slice', 'slicingMode'));
@@ -281,9 +242,6 @@ reader
 window.addEventListener('resize', readyAll);
 readyAll();
 
-// not sure why I need to trigger this.
-// window.dispatchEvent(new Event('resize'));
-
 // ----------------------------------------------------------------------------
 // UI logic
 // ----------------------------------------------------------------------------
@@ -291,7 +249,7 @@ readyAll();
 document.querySelector('.radius').addEventListener('input', (ev) => {
   const r = Number(ev.target.value);
 
-  paintWidget.setRadius(r);
+  widgets.paintWidget.setRadius(r);
   painter.setRadius(r);
 });
 
@@ -300,11 +258,28 @@ document.querySelector('.slice').addEventListener('input', (ev) => {
 });
 
 document.querySelector('.axis').addEventListener('input', (ev) => {
-  const sliceMode = 'IJKXYZ'.indexOf(ev.target.value);
+  const sliceMode = 'IJKXYZ'.indexOf(ev.target.value) % 3;
   image.imageMapper.setSlicingMode(sliceMode);
+  painter.setSlicingMode(sliceMode);
 
-  setCamera(sliceMode, S.two.renderer, image.data);
-  S.two.renderWindow.render();
+  const direction = [0, 0, 0];
+  direction[sliceMode] = 1;
+  scene.paintHandle
+    .getWidgetState()
+    .getHandle()
+    .setDirection(direction);
+  scene.rectangleHandle.setSlicingMode(sliceMode);
+  scene.ellipseHandle.setSlicingMode(sliceMode);
+
+  setCamera(sliceMode, scene.renderer, image.data);
+  scene.renderWindow.render();
+});
+
+document.querySelector('.widget').addEventListener('input', (ev) => {
+  activeWidget = ev.target.value;
+  scene.widgetManager.grabFocus(widgets[activeWidget]);
+  scene.paintHandle.setVisibility(activeWidget === 'paintWidget');
+  scene.paintHandle.updateRepresentationForRender();
 });
 
 document.querySelector('.undo').addEventListener('click', () => {
@@ -319,17 +294,49 @@ document.querySelector('.redo').addEventListener('click', () => {
 // Painting
 // ----------------------------------------------------------------------------
 
-S.two.viewHandle.onStartInteractionEvent(() => {
+function initializeHandle(handle) {
+  handle.onStartInteractionEvent(() => {
+    painter.startStroke();
+  });
+
+  handle.onEndInteractionEvent(() => {
+    painter.endStroke();
+  });
+}
+
+initializeHandle(scene.paintHandle);
+
+scene.paintHandle.onStartInteractionEvent(() => {
   painter.startStroke();
-  painter.addPoint(paintWidget.getWidgetState().getTrueOrigin());
+  painter.addPoint(widgets.paintWidget.getWidgetState().getTrueOrigin());
 });
 
-S.two.viewHandle.onInteractionEvent(() => {
-  if (S.two.viewHandle.getPainting()) {
-    painter.addPoint(paintWidget.getWidgetState().getTrueOrigin());
-  }
+scene.paintHandle.onInteractionEvent(() => {
+  painter.addPoint(widgets.paintWidget.getWidgetState().getTrueOrigin());
 });
 
-S.two.viewHandle.onEndInteractionEvent(() => {
-  painter.endStroke();
+initializeHandle(scene.rectangleHandle);
+
+scene.rectangleHandle.onInteractionEvent(() => {
+  const bounds = scene.rectangleHandle
+    .getWidgetState()
+    .getRectangleHandle()
+    .getBounds();
+  const point1 = [bounds[0], bounds[2], bounds[4]];
+  const point2 = [bounds[1], bounds[3], bounds[5]];
+  painter.paintRectangle(point1, point2);
+});
+
+initializeHandle(scene.ellipseHandle);
+
+scene.ellipseHandle.onInteractionEvent(() => {
+  const center = scene.ellipseHandle
+    .getWidgetState()
+    .getEllipseHandle()
+    .getOrigin();
+  const scale3 = scene.ellipseHandle
+    .getWidgetState()
+    .getEllipseHandle()
+    .getScale3();
+  painter.paintEllipse(center, scale3);
 });

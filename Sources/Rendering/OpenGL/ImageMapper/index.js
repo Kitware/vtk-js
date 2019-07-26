@@ -4,7 +4,7 @@ import macro from 'vtk.js/Sources/macro';
 import vtkDataArray from 'vtk.js/Sources/Common/Core/DataArray';
 import { VtkDataTypes } from 'vtk.js/Sources/Common/Core/DataArray/Constants';
 import vtkHelper from 'vtk.js/Sources/Rendering/OpenGL/Helper';
-import vtkMath from 'vtk.js/Sources/Common/Core/Math';
+import * as vtkMath from 'vtk.js/Sources/Common/Core/Math';
 import vtkOpenGLTexture from 'vtk.js/Sources/Rendering/OpenGL/Texture';
 import vtkShaderProgram from 'vtk.js/Sources/Rendering/OpenGL/ShaderProgram';
 import vtkViewNode from 'vtk.js/Sources/Rendering/SceneGraph/ViewNode';
@@ -582,12 +582,12 @@ function vtkOpenGLImageMapper(publicAPI, model) {
     if (model.VBOBuildString !== toString) {
       // Build the VBOs
       const dims = image.getDimensions();
-      const numComponents = image
+      const numComp = image
         .getPointData()
         .getScalars()
         .getNumberOfComponents();
       if (iType === InterpolationType.NEAREST) {
-        if (numComponents === 4) {
+        if (numComp === 4) {
           model.openGLTexture.setGenerateMipmap(true);
           model.openGLTexture.setMinificationFilter(Filter.NEAREST);
         } else {
@@ -595,7 +595,7 @@ function vtkOpenGLImageMapper(publicAPI, model) {
         }
         model.openGLTexture.setMagnificationFilter(Filter.NEAREST);
       } else {
-        if (numComponents === 4) {
+        if (numComp === 4) {
           model.openGLTexture.setGenerateMipmap(true);
           model.openGLTexture.setMinificationFilter(
             Filter.LINEAR_MIPMAP_LINEAR
@@ -607,10 +607,6 @@ function vtkOpenGLImageMapper(publicAPI, model) {
       }
       model.openGLTexture.setWrapS(Wrap.CLAMP_TO_EDGE);
       model.openGLTexture.setWrapT(Wrap.CLAMP_TO_EDGE);
-      const numComp = image
-        .getPointData()
-        .getScalars()
-        .getNumberOfComponents();
       const sliceSize = dims[0] * dims[1] * numComp;
 
       const ptsArray = new Float32Array(12);

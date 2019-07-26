@@ -135,6 +135,8 @@ function vtkLineWidget(publicAPI, model) {
         return;
       }
       model.widgetState = WidgetState.ACTIVE;
+
+      publicAPI.updateHandleWidgets(state);
       publicAPI.invokeStartInteractionEvent();
     }
 
@@ -175,19 +177,7 @@ function vtkLineWidget(publicAPI, model) {
       // In MANIPULATE, we are hovering above the widget
       // Check if above a sphere and enable/disable if needed
       const state = model.widgetRep.computeInteractionState(position);
-      setCursor(state);
-
-      const enablePoint1Widget = state === State.ONP1;
-      const enablePoint2Widget = state === State.ONP2;
-
-      if (enablePoint1Widget !== model.point1Widget.getEnabled()) {
-        model.point1Widget.setEnabled(enablePoint1Widget);
-        modified = true;
-      }
-      if (enablePoint2Widget !== model.point2Widget.getEnabled()) {
-        model.point2Widget.setEnabled(enablePoint2Widget);
-        modified = true;
-      }
+      modified = publicAPI.updateHandleWidgets(state);
     } else if (model.widgetState === WidgetState.START) {
       // In START, we are placing the sphere widgets.
       // Move current handle along the mouse position.
@@ -241,6 +231,26 @@ function vtkLineWidget(publicAPI, model) {
     if (!model.widgetRep) {
       model.widgetRep = vtkLineRepresentation.newInstance();
     }
+  };
+
+  publicAPI.updateHandleWidgets = (state) => {
+    let modified = false;
+    setCursor(state);
+
+    const enablePoint1Widget = state === State.ONP1;
+    const enablePoint2Widget = state === State.ONP2;
+
+    if (enablePoint1Widget !== model.point1Widget.getEnabled()) {
+      model.point1Widget.setEnabled(enablePoint1Widget);
+      modified = true;
+    }
+
+    if (enablePoint2Widget !== model.point2Widget.getEnabled()) {
+      model.point2Widget.setEnabled(enablePoint2Widget);
+      modified = true;
+    }
+
+    return modified;
   };
 }
 

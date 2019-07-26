@@ -1,4 +1,3 @@
-/* eslint-disable no-bitwise */
 import { vec3 } from 'gl-matrix';
 import WebworkerPromise from 'webworker-promise';
 
@@ -20,22 +19,29 @@ function vtkPaintFilter(publicAPI, model) {
 
   let worker = null;
   let workerPromise = null;
-  const history = {
-    buffer: null,
-    // current painted layer index
-    cindex: -1,
-    colors: [],
-  };
+  const history = {};
+
+  // --------------------------------------------------------------------------
+
+  function resetHistory() {
+    history.index = -1;
+    history.snapshots = [];
+    history.labels = [];
+  }
 
   // --------------------------------------------------------------------------
 
   publicAPI.startStroke = () => {
     if (model.labelMap) {
-      worker = new PaintFilterWorker();
-      workerPromise = new WebworkerPromise(worker);
+      if (!workerPromise) {
+        worker = new PaintFilterWorker();
+        workerPromise = new WebworkerPromise(worker);
+      }
+
       workerPromise.exec('start', {
         bufferType: 'Uint8Array',
         dimensions: model.labelMap.getDimensions(),
+        slicingMode: model.slicingMode,
       });
     }
   };
@@ -50,40 +56,51 @@ function vtkPaintFilter(publicAPI, model) {
 
         const strokeLabelMap = new Uint8Array(strokeBuffer);
 
-        if (history.cindex === 7) {
-          history.colors.shift();
-        } else {
-          history.cindex++;
+        let diffCount = 0;
+        for (let i = 0; i < strokeLabelMap.length; i++) {
+          // strokeLabelMap is binary mask of paint stroke
+          diffCount += strokeLabelMap[i];
         }
-        history.colors.push(model.label);
 
-        const bgScalars = model.backgroundImage.getPointData().getScalars();
+        // Format: [ [index, oldLabel], ...]
+        // I could use an ArrayBuffer, which would place limits
+        // on the values of index/old, but will be more efficient.
+        const snapshot = new Array(diffCount);
+        const label = model.label;
+
+        let diffIdx = 0;
         if (model.voxelFunc) {
+          const bgScalars = model.backgroundImage.getPointData().getScalars();
           for (let i = 0; i < strokeLabelMap.length; i++) {
             if (strokeLabelMap[i]) {
               const voxel = bgScalars.getTuple(i);
-              const out = model.voxelFunc(voxel, strokeLabelMap[i], i);
-              if (out !== null) {
-                data[i] = out;
+              // might not fill up snapshot
+              if (model.voxelFunc(voxel, i, label)) {
+                snapshot[diffIdx++] = [i, data[i]];
+                data[i] = label;
               }
             }
           }
         } else {
           for (let i = 0; i < strokeLabelMap.length; i++) {
-            if (history.cindex === 7) {
-              // last bit will be shifted off
-              const lastBit = history.buffer[i] & 0x1;
-              history.buffer[i] = (history.buffer[i] >> 1) | lastBit;
-            }
-
             if (strokeLabelMap[i]) {
-              data[i] = model.label;
-              history.buffer[i] |= 1 << history.cindex;
-            } else {
-              history.buffer[i] &= ~(1 << history.cindex);
+              if (data[i] !== label) {
+                snapshot[diffIdx++] = [i, data[i]];
+                data[i] = label;
+              }
             }
           }
         }
+
+        // clear any "redo" info
+        const spliceIndex = history.index + 1;
+        const spliceLength = history.snapshots.length - history.index;
+        history.snapshots.splice(spliceIndex, spliceLength);
+        history.labels.splice(spliceIndex, spliceLength);
+
+        history.snapshots.push(snapshot);
+        history.labels.push(label);
+        history.index++;
 
         worker.terminate();
         worker = null;
@@ -100,36 +117,79 @@ function vtkPaintFilter(publicAPI, model) {
   // --------------------------------------------------------------------------
 
   publicAPI.addPoint = (point) => {
-    const worldPt = [point[0], point[1], point[2]];
-    const indexPt = [0, 0, 0];
-    vec3.transformMat4(indexPt, worldPt, model.maskWorldToIndex);
-    indexPt[0] = Math.round(indexPt[0]);
-    indexPt[1] = Math.round(indexPt[1]);
-    indexPt[2] = Math.round(indexPt[2]);
+    if (workerPromise) {
+      const worldPt = [point[0], point[1], point[2]];
+      const indexPt = [0, 0, 0];
+      vec3.transformMat4(indexPt, worldPt, model.maskWorldToIndex);
+      indexPt[0] = Math.round(indexPt[0]);
+      indexPt[1] = Math.round(indexPt[1]);
+      indexPt[2] = Math.round(indexPt[2]);
 
-    const spacing = model.labelMap.getSpacing();
-    const radius = spacing.map((s) => model.radius / s);
+      const spacing = model.labelMap.getSpacing();
+      const radius = spacing.map((s) => model.radius / s);
 
-    workerPromise.exec('paint', { point: indexPt, radius });
+      workerPromise.exec('paint', { point: indexPt, radius });
+    }
+  };
+
+  // --------------------------------------------------------------------------
+
+  publicAPI.paintRectangle = (point1, point2) => {
+    if (workerPromise) {
+      const index1 = [0, 0, 0];
+      const index2 = [0, 0, 0];
+      vec3.transformMat4(index1, point1, model.maskWorldToIndex);
+      vec3.transformMat4(index2, point2, model.maskWorldToIndex);
+      index1[0] = Math.round(index1[0]);
+      index1[1] = Math.round(index1[1]);
+      index1[2] = Math.round(index1[2]);
+      index2[0] = Math.round(index2[0]);
+      index2[1] = Math.round(index2[1]);
+      index2[2] = Math.round(index2[2]);
+      workerPromise.exec('paintRectangle', {
+        point1: index1,
+        point2: index2,
+      });
+    }
+  };
+
+  // --------------------------------------------------------------------------
+
+  publicAPI.paintEllipse = (center, scale3) => {
+    if (workerPromise) {
+      const realCenter = [0, 0, 0];
+      const origin = [0, 0, 0];
+      let realScale3 = [0, 0, 0];
+      vec3.transformMat4(realCenter, center, model.maskWorldToIndex);
+      vec3.transformMat4(origin, origin, model.maskWorldToIndex);
+      vec3.transformMat4(realScale3, scale3, model.maskWorldToIndex);
+      vec3.subtract(realScale3, realScale3, origin);
+      realScale3 = realScale3.map((s) => (s === 0 ? 0.25 : Math.abs(s)));
+      workerPromise.exec('paintEllipse', {
+        center: realCenter,
+        scale3: realScale3,
+      });
+    }
   };
 
   // --------------------------------------------------------------------------
 
   publicAPI.undo = () => {
-    if (history.cindex > -1) {
+    if (history.index > -1) {
       const scalars = model.labelMap.getPointData().getScalars();
       const data = scalars.getData();
 
-      for (let i = 0; i < history.buffer.length; i++) {
-        let labeli = history.cindex - 1;
-        while (labeli > -1 && !(history.buffer[i] & (1 << labeli))) {
-          labeli--;
+      const snapshot = history.snapshots[history.index];
+      for (let i = 0; i < snapshot.length; i++) {
+        if (!snapshot[i]) {
+          break;
         }
-        const label = history.colors[labeli] || 0;
-        data[i] = label;
+
+        const [index, oldLabel] = snapshot[i];
+        data[index] = oldLabel;
       }
 
-      history.cindex--;
+      history.index--;
 
       scalars.setData(data);
       scalars.modified();
@@ -141,19 +201,23 @@ function vtkPaintFilter(publicAPI, model) {
   // --------------------------------------------------------------------------
 
   publicAPI.redo = () => {
-    if (history.cindex < history.colors.length - 1) {
+    if (history.index < history.labels.length - 1) {
       const scalars = model.labelMap.getPointData().getScalars();
       const data = scalars.getData();
-      const labeli = history.cindex + 1;
-      const label = history.colors[labeli];
 
-      for (let i = 0; i < history.buffer.length; i++) {
-        if (history.buffer[i] & (1 << labeli)) {
-          data[i] = label;
+      const redoLabel = history.labels[history.index + 1];
+      const snapshot = history.snapshots[history.index + 1];
+
+      for (let i = 0; i < snapshot.length; i++) {
+        if (!snapshot[i]) {
+          break;
         }
+
+        const [index] = snapshot[i];
+        data[index] = redoLabel;
       }
 
-      history.cindex++;
+      history.index++;
 
       scalars.setData(data);
       scalars.modified();
@@ -167,10 +231,10 @@ function vtkPaintFilter(publicAPI, model) {
   const superSetLabelMap = publicAPI.setLabelMap;
   publicAPI.setLabelMap = (lm) => {
     if (superSetLabelMap(lm)) {
-      // reset history layer
-      history.buffer = new Uint8Array(lm.getNumberOfPoints());
-      history.cindex = -1;
+      resetHistory();
+      return true;
     }
+    return false;
   };
 
   // --------------------------------------------------------------------------
@@ -220,6 +284,12 @@ function vtkPaintFilter(publicAPI, model) {
 
     outData[0] = model.labelMap;
   };
+
+  // --------------------------------------------------------------------------
+  // Initialization
+  // --------------------------------------------------------------------------
+
+  resetHistory();
 }
 
 // ----------------------------------------------------------------------------
@@ -233,6 +303,7 @@ const DEFAULT_VALUES = {
   voxelFunc: null,
   radius: 1,
   label: 0,
+  slicingMode: null,
 };
 
 // ----------------------------------------------------------------------------
@@ -253,6 +324,7 @@ export function extend(publicAPI, model, initialValues = {}) {
     'voxelFunc',
     'label',
     'radius',
+    'slicingMode',
   ]);
 
   // Object specific methods

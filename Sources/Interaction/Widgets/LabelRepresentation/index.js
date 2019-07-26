@@ -1,7 +1,7 @@
 import macro from 'vtk.js/Sources/macro';
 import vtkActor from 'vtk.js/Sources/Rendering/Core/Actor';
 import vtkInteractorObserver from 'vtk.js/Sources/Rendering/Core/InteractorObserver';
-import vtkMath from 'vtk.js/Sources/Common/Core/Math';
+import * as vtkMath from 'vtk.js/Sources/Common/Core/Math';
 import vtkPixelSpaceCallbackMapper from 'vtk.js/Sources/Rendering/Core/PixelSpaceCallbackMapper';
 import vtkPointSource from 'vtk.js/Sources/Filters/Sources/PointSource';
 import vtkHandleRepresentation from 'vtk.js/Sources/Interaction/Widgets/HandleRepresentation';
@@ -181,7 +181,11 @@ function vtkLabelRepresentation(publicAPI, model) {
         const currentLabelStyle = model.highlight
           ? model.selectLabelStyle
           : model.labelStyle;
-        const lines = model.labelText.split('\n ');
+
+        const separatorRegExp = /\r?\n/;
+        const separatorRes = separatorRegExp.exec(model.labelText);
+        const separator = separatorRes !== null ? separatorRes[0] : null;
+        const lines = model.labelText.split(separator);
 
         const lineSpace =
           currentLabelStyle.fontSize * (1 + currentLabelStyle.lineSpace);

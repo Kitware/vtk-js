@@ -9,6 +9,7 @@ import { VtkDataTypes } from 'vtk.js/Sources/Common/Core/DataArray/Constants';
 import WebVRPolyfill from 'webvr-polyfill';
 
 const { vtkDebugMacro, vtkErrorMacro } = macro;
+const IS_CHROME = navigator.userAgent.indexOf('Chrome') !== -1;
 
 function checkRenderTargetSupport(gl, format, type) {
   // create temporary frame buffer and texture
@@ -113,12 +114,17 @@ function vtkOpenGLRenderWindow(publicAPI, model) {
 
   publicAPI.setContainer = (el) => {
     if (model.el && model.el !== el) {
-      // Remove canvas from previous container
-      if (model.canvas.parentNode === model.el) {
-        model.el.removeChild(model.canvas);
-        model.el.removeChild(model.bgImage);
-      } else {
+      if (model.canvas.parentNode !== model.el) {
         vtkErrorMacro('Error: canvas parent node does not match container');
+      }
+
+      // Remove canvas from previous container
+      model.el.removeChild(model.canvas);
+
+      // If the renderer has previously added
+      // a background image, remove it from the DOM.
+      if (model.el.contains(model.bgImage)) {
+        model.el.removeChild(model.bgImage);
       }
     }
 
@@ -126,6 +132,11 @@ function vtkOpenGLRenderWindow(publicAPI, model) {
       model.el = el;
       if (model.el) {
         model.el.appendChild(model.canvas);
+      }
+
+      // If the renderer is set to use a background
+      // image, attach it to the DOM.
+      if (model.useBackgroundImage) {
         model.el.appendChild(model.bgImage);
       }
 
@@ -346,7 +357,15 @@ function vtkOpenGLRenderWindow(publicAPI, model) {
           model.vrFrameData = new VRFrameData();
           model.renderable.getInteractor().switchToVRAnimation();
 
-          publicAPI.vrRender();
+          model.vrSceneFrame = model.vrDisplay.requestAnimationFrame(
+            publicAPI.vrRender
+          );
+          // If Broswer is chrome we need to request animation again to canvas update
+          if (IS_CHROME) {
+            model.vrSceneFrame = model.vrDisplay.requestAnimationFrame(
+              publicAPI.vrRender
+            );
+          }
         })
         .catch(() => {
           console.error('failed to requestPresent');
@@ -374,6 +393,10 @@ function vtkOpenGLRenderWindow(publicAPI, model) {
   };
 
   publicAPI.vrRender = () => {
+    // If not presenting for any reason, we do not submit frame
+    if (!model.vrDisplay.isPresenting) {
+      return;
+    }
     model.renderable.getInteractor().updateGamepads(model.vrDisplay.displayId);
     model.vrSceneFrame = model.vrDisplay.requestAnimationFrame(
       publicAPI.vrRender
@@ -499,6 +522,18 @@ function vtkOpenGLRenderWindow(publicAPI, model) {
 
   publicAPI.setBackgroundImage = (img) => {
     model.bgImage.src = img.src;
+  };
+
+  publicAPI.setUseBackgroundImage = (value) => {
+    model.useBackgroundImage = value;
+
+    // Add or remove the background image from the
+    // DOM as specified.
+    if (model.useBackgroundImage && !model.el.contains(model.bgImage)) {
+      model.el.appendChild(model.bgImage);
+    } else if (!model.useBackgroundImage && model.el.contains(model.bgImage)) {
+      model.el.removeChild(model.bgImage);
+    }
   };
 
   function getCanvasDataURL(format = model.imageFormat) {
@@ -1019,6 +1054,9 @@ function vtkOpenGLRenderWindow(publicAPI, model) {
       const mainRenderer = model.renderable.getRenderers()[0];
       mainRenderer.getBackgroundByReference()[3] = 0;
 
+      // Enable display of the background image
+      publicAPI.setUseBackgroundImage(true);
+
       // Bind to remote stream
       model.subscription = model.viewStream.onImageReady((e) =>
         publicAPI.setBackgroundImage(e.image)
@@ -1061,6 +1099,8 @@ const DEFAULT_VALUES = {
   activeFramebuffer: null,
   vrDisplay: null,
   imageFormat: 'image/png',
+  useOffScreen: false,
+  useBackgroundImage: false,
 };
 
 // ----------------------------------------------------------------------------
@@ -1106,6 +1146,7 @@ export function extend(publicAPI, model, initialValues = {}) {
     'textureUnitManager',
     'webgl2',
     'vrDisplay',
+    'useBackgroundImage',
   ]);
 
   macro.setGet(publicAPI, model, [
@@ -1118,6 +1159,7 @@ export function extend(publicAPI, model, initialValues = {}) {
     'cursor',
     'queryVRSize',
     'hideCanvasInVR',
+    'useOffScreen',
     // might want to make this not call modified as
     // we change the active framebuffer a lot. Or maybe
     // only mark modified if the size or depth

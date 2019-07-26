@@ -1,56 +1,86 @@
-Contributing to vtk.js
-======================
+# Contributing to vtk.js
+---
 
-This page documents at a very high level how to contribute to vtk.js.
+We welcome you to join the development of vtk.js. This document will help you through the process.
 
-1. The vtk.js source is maintained on Github at [github.com/kitware/vtk-js](https://github.com/kitware/vtk-js)
+## Before You Start
 
-2. [Fork VTK] into your user's namespace on Github.
+Please follow the coding style:
 
-3. Create a local clone of the main VTK repository:
+- Follow [Airbnb JavaScript Style Guide](https://github.com/airbnb/javascript).
+- Use soft-tabs with a two space indent.
+- Don't put commas first.
+
+## Workflow
+
+1. The vtk.js source is maintained [on GitHub](https://github.com/kitware/vtk-js).
+2. [Fork vtk.js](https://help.github.com/articles/fork-a-repo/) into your user's namespace on GitHub.
+3. Clone the repository to your computer.
 
     ```sh
-    $ git clone https://github.com/kitware/vtk-js.git
+    $ git clone https://github.com/<username>/vtk-js.git
     $ cd vtk-js
     ```
 
-    The main repository will be configured as your `origin` remote.
-
-4. Run the setup script to prepare vtk.js:
+4. Run the install script for vtk.js dependencies:
     ```sh
     $ npm install
     ```
 
-5. Edit files and create commits (repeat as needed):
+5. Create a feature branch.
+
+    ```
+    $ git checkout -b new_feature
+    ```
+
+4. Start hacking. Additional informations on how to create classe/test/example can be found 
+   [here](https://kitware.github.io/vtk-js/docs/) in the __Development__ section.
+
     ```sh
     $ edit file1 file2 file3
     $ git add file1 file2 file3
+    ```
+
+5. Use Commitizen to create commits
+
+    ```sh
     $ npm run commit
     ```
 
-6. Push commits in your topic branch to your fork in Github:
+6. Push commits in your feature branch to your fork in GitHub:
+
     ```sh
-    $ git push
+    $ git push origin new_feature
     ```
 
-7. Visit your fork in Github, browse to the "**Pull Requests**" link on the
-    left, and use the "**New Pull Request**" button in the upper right to
-    create a Pull Request.
+7. Visit your fork in Github, browse to the "**Pull Requests**" link on the left, and use the 
+   "**New Pull Request**" button in the upper right to create a Pull Request.
 
-    For more information see: [Create a Pull Request]
+    For more information see: 
+    [Create a Pull Request](https://help.github.com/articles/creating-a-pull-request/)
 
-8. Additional informations on how to create classe/test/example can be found [here](https://kitware.github.io/vtk-js/docs/) in the __Development__ section.
+8. vtk.js uses GitHub for code review and Travis-CI to test proposed patches before they are merged.
 
+## Notice
 
-vtk.js uses Github for code review and Travis-CI to test proposed
-patches before they are merged.
+- Don't modify the version number in `package.json`.
+- Your pull request will only get merged when tests passed. Don't forget to run tests before 
+  submission.
 
-Our [DevSite] is used to document features, flesh out designs and host other
-documentation as well as the API. There are also several [Mailing Lists]
-to coordinate development and to provide support.
+    ```
+    $ npm test
+    ```
 
+## Updating Documentation
 
-[Fork VTK]: https://help.github.com/articles/fork-a-repo/
-[Create a Pull Request]: https://help.github.com/articles/creating-a-pull-request/
-[DevSite]: http://kitware.github.io/vtk-js
-[Mailing Lists]: http://www.vtk.org/VTK/help/mailing.html
+The vtk.js documentation is part of the code repository and is entirely written in 
+[markdown](https://daringfireball.net/projects/markdown/).
+
+## Reporting Issues
+
+If you encounter problems using vtk.js you may be able to find the solutions in the
+[troubleshooting docs](https://kitware.github.io/vtk-js/docs/misc_troubleshooting.html), in an 
+existing [GitHub issue](https://github.com/kitware/vtk-js/issues), or via the 
+[mailing list](http://www.vtk.org/VTK/help/mailing.html).
+If you can't find the answer, please 
+[report a new issue on GitHub](https://github.com/Kitware/vtk-js/issues/new).

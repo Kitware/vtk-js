@@ -69,5 +69,6 @@ test.onlyIfWebGL('Test vtkPlaneSource Rendering', (t) => {
       gc.releaseResources
     );
   });
+  renderer.resetCamera();
   renderWindow.render();
 });

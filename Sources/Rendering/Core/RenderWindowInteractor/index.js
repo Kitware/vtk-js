@@ -1,5 +1,5 @@
 import macro from 'vtk.js/Sources/macro';
-import vtkMath from 'vtk.js/Sources/Common/Core/Math';
+import * as vtkMath from 'vtk.js/Sources/Common/Core/Math';
 
 import Constants from 'vtk.js/Sources/Rendering/Core/RenderWindowInteractor/Constants';
 
@@ -470,6 +470,8 @@ function vtkRenderWindowInteractor(publicAPI, model) {
      *
      */
     const callData = normalizeWheel(event);
+    const keys = getModifierKeysFor(event);
+    Object.assign(callData, keys);
 
     if (model.wheelTimeoutID === 0) {
       publicAPI.startMouseWheelEvent(callData);

@@ -100,7 +100,7 @@ function updateDomains(dataset, dataArray, model, updateProp) {
 
 function vtkSliceRepresentationProxy(publicAPI, model) {
   // Set our className
-  model.classHierarchy.push('vtkSliceRepresentation');
+  model.classHierarchy.push('vtkSliceRepresentationProxy');
 
   model.mapper = vtkImageMapper.newInstance();
   model.actor = vtkImageSlice.newInstance();
@@ -265,6 +265,20 @@ function vtkSliceRepresentationProxy(publicAPI, model) {
     return values;
   };
 
+  const parentSetColorBy = publicAPI.setColorBy;
+  publicAPI.setColorBy = (arrayName, arrayLocation, componentIndex = -1) => {
+    if (arrayName === null) {
+      model.property.setRGBTransferFunction(null);
+      model.property.setScalarOpacity(null);
+    } else {
+      parentSetColorBy(arrayName, arrayLocation, componentIndex);
+      const lutProxy = publicAPI.getLookupTableProxy(arrayName);
+      const pwfProxy = publicAPI.getPiecewiseFunctionProxy(arrayName);
+      model.property.setRGBTransferFunction(lutProxy.getLookupTable());
+      model.property.setScalarOpacity(pwfProxy.getPiecewiseFunction());
+    }
+  };
+
   // Initialize slicing mode
   publicAPI.setSlicingMode(model.slicingMode || 'X');
 }
@@ -292,6 +306,7 @@ export function extend(publicAPI, model, initialValues = {}) {
     visibility: { modelKey: 'actor', property: 'visibility' },
     windowWidth: { modelKey: 'property', property: 'colorWindow' },
     windowLevel: { modelKey: 'property', property: 'colorLevel' },
+    interpolationType: { modelKey: 'property', property: 'interpolationType' },
     slice: { modelKey: 'mapper', property: 'slice' },
   });
 }

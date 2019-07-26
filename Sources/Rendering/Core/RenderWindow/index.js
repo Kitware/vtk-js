@@ -67,7 +67,7 @@ function vtkRenderWindow(publicAPI, model) {
       props.forEach((prop) => {
         if (prop.getVisibility()) {
           results.propCount += 1;
-          const mpr = prop.getMapper();
+          const mpr = prop.getMapper && prop.getMapper();
           if (mpr && mpr.getPrimitiveCount) {
             const pcount = mpr.getPrimitiveCount();
             Object.keys(pcount).forEach((keyName) => {

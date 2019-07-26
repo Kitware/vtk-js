@@ -1,5 +1,5 @@
 import macro from 'vtk.js/Sources/macro';
-import vtkMath from 'vtk.js/Sources/Common/Core/Math';
+import * as vtkMath from 'vtk.js/Sources/Common/Core/Math';
 import vtkPicker from 'vtk.js/Sources/Rendering/Core/Picker';
 import vtkPoints from 'vtk.js/Sources/Common/Core/Points';
 import vtkTriangle from 'vtk.js/Sources/Common/DataModel/Triangle';
@@ -365,7 +365,7 @@ function vtkCellPicker(publicAPI, model) {
       model.mapperPosition[1] = minXYZ[1];
       model.mapperPosition[2] = minXYZ[2];
 
-      // COmpute the normal
+      // Compute the normal
       if (
         !publicAPI.computeSurfaceNormal(
           data,

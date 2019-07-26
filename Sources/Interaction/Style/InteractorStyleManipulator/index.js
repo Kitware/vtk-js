@@ -152,6 +152,7 @@ function vtkInteractorStyleManipulator(publicAPI, model) {
   model.vrManipulators = [];
   model.gestureManipulators = [];
   model.currentManipulator = null;
+  model.currentWheelManipulator = null;
   model.centerOfRotation = [0, 0, 0];
   model.rotationFactor = 1;
 
@@ -260,6 +261,7 @@ function vtkInteractorStyleManipulator(publicAPI, model) {
   //-------------------------------------------------------------------------
   publicAPI.resetCurrentManipulator = () => {
     model.currentManipulator = null;
+    model.currentWheelManipulator = null;
   };
 
   //-------------------------------------------------------------------------
@@ -427,50 +429,66 @@ function vtkInteractorStyleManipulator(publicAPI, model) {
 
   //-------------------------------------------------------------------------
   publicAPI.handleStartMouseWheel = (callData) => {
+    // Must not be processing a wheel interaction to start another.
+    if (model.currentWheelManipulator) {
+      return;
+    }
+
+    let manipulator = null;
     let count = model.mouseManipulators.length;
     while (count--) {
-      const manipulator = model.mouseManipulators[count];
-      if (manipulator.isScrollEnabled()) {
-        manipulator.onStartScroll(
-          model.interactor,
-          callData.pokedRenderer,
-          callData.spinY
-        );
-        manipulator.startInteraction();
+      const manip = model.mouseManipulators[count];
+      if (
+        manip.isScrollEnabled() &&
+        manip.getShift() === callData.shiftKey &&
+        manip.getControl() === callData.controlKey &&
+        manip.getAlt() === callData.altKey
+      ) {
+        manipulator = manip;
       }
     }
-    model.interactor.requestAnimation(publicAPI.handleStartMouseWheel);
-    publicAPI.invokeStartInteractionEvent(START_INTERACTION_EVENT);
+    if (manipulator) {
+      model.currentWheelManipulator = manipulator;
+      model.currentWheelManipulator.onStartScroll(
+        model.interactor,
+        callData.pokedRenderer,
+        callData.spinY
+      );
+      model.currentWheelManipulator.startInteraction();
+      model.interactor.requestAnimation(publicAPI.handleStartMouseWheel);
+      publicAPI.invokeStartInteractionEvent(START_INTERACTION_EVENT);
+    } else {
+      vtkDebugMacro('No manipulator found');
+    }
   };
 
   //-------------------------------------------------------------------------
   publicAPI.handleEndMouseWheel = () => {
-    let count = model.mouseManipulators.length;
-    while (count--) {
-      const manipulator = model.mouseManipulators[count];
-      if (manipulator.isScrollEnabled()) {
-        manipulator.onEndScroll(model.interactor);
-        manipulator.endInteraction();
-      }
+    if (!model.currentWheelManipulator) {
+      return;
     }
-    model.interactor.cancelAnimation(publicAPI.handleStartMouseWheel);
-    publicAPI.invokeEndInteractionEvent(END_INTERACTION_EVENT);
+    if (model.currentWheelManipulator.onEndScroll) {
+      model.currentWheelManipulator.onEndScroll(model.interactor);
+      model.currentWheelManipulator.endInteraction();
+      model.currentWheelManipulator = null;
+      model.interactor.cancelAnimation(publicAPI.handleStartMouseWheel);
+      publicAPI.invokeEndInteractionEvent(END_INTERACTION_EVENT);
+    }
   };
 
   //-------------------------------------------------------------------------
   publicAPI.handleMouseWheel = (callData) => {
-    let count = model.mouseManipulators.length;
-    while (count--) {
-      const manipulator = model.mouseManipulators[count];
-      if (manipulator.isScrollEnabled()) {
-        manipulator.onScroll(
-          model.interactor,
-          callData.pokedRenderer,
-          callData.spinY
-        );
-      }
+    if (
+      model.currentWheelManipulator &&
+      model.currentWheelManipulator.onScroll
+    ) {
+      model.currentWheelManipulator.onScroll(
+        model.interactor,
+        callData.pokedRenderer,
+        callData.spinY
+      );
+      publicAPI.invokeInteractionEvent(INTERACTION_EVENT);
     }
-    publicAPI.invokeInteractionEvent(INTERACTION_EVENT);
   };
 
   //-------------------------------------------------------------------------
@@ -663,6 +681,7 @@ function vtkInteractorStyleManipulator(publicAPI, model) {
 
 const DEFAULT_VALUES = {
   currentManipulator: null,
+  currentWheelManipulator: null,
   // mouseManipulators: null,
   // vrManipulators: null,
   // gestureManipulators: null,

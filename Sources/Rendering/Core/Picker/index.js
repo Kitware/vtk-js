@@ -1,7 +1,7 @@
 import macro from 'vtk.js/Sources/macro';
 import vtkAbstractPicker from 'vtk.js/Sources/Rendering/Core/AbstractPicker';
 import vtkBox from 'vtk.js/Sources/Common/DataModel/Box';
-import vtkMath from 'vtk.js/Sources/Common/Core/Math';
+import * as vtkMath from 'vtk.js/Sources/Common/Core/Math';
 import { mat4, vec4 } from 'gl-matrix';
 
 const { vtkErrorMacro } = macro;
@@ -40,8 +40,7 @@ function vtkPicker(publicAPI, model) {
       return Number.MAX_VALUE;
     }
 
-    const center = [];
-    mapper.getCenter(center);
+    const center = mapper.getCenter();
 
     const ray = [];
     for (let i = 0; i < 3; i++) {

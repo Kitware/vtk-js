@@ -8,3 +8,4 @@ Data
 dist/
 coverage/
 .env
+Utilities/TestResults

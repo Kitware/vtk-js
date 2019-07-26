@@ -3,7 +3,7 @@ import { mat4, vec3 } from 'gl-matrix';
 import macro from 'vtk.js/Sources/macro';
 import vtkCamera from 'vtk.js/Sources/Rendering/Core/Camera';
 import vtkLight from 'vtk.js/Sources/Rendering/Core/Light';
-import vtkMath from 'vtk.js/Sources/Common/Core/Math';
+import * as vtkMath from 'vtk.js/Sources/Common/Core/Math';
 import vtkViewport from 'vtk.js/Sources/Rendering/Core/Viewport';
 import vtkBoundingBox from 'vtk.js/Sources/Common/DataModel/BoundingBox';
 
@@ -61,7 +61,7 @@ function vtkRenderer(publicAPI, model) {
     const camera = publicAPI.getActiveCameraAndResetIfCreated();
 
     model.lights.forEach((light) => {
-      if (light.lightTypeIsSceneLight()) {
+      if (light.lightTypeIsSceneLight() || light.lightTypeIsCameraLight()) {
         // Do nothing. Don't reset the transform matrix because applications
         // may have set a custom matrix. Only reset the transform matrix in
         // vtkLight::SetLightTypeToSceneLight()
@@ -70,8 +70,6 @@ function vtkRenderer(publicAPI, model) {
         light.setPositionFrom(camera.getPositionByReference());
         light.setFocalPointFrom(camera.getFocalPointByReference());
         light.modified(camera.getMTime());
-      } else if (light.lightTypeIsCameraLight()) {
-        vtkErrorMacro('camera lights not supported yet', light.get());
       } else {
         vtkErrorMacro('light has unknown light type', light.get());
       }
@@ -129,7 +127,6 @@ function vtkRenderer(publicAPI, model) {
     if (!model.activeCamera) {
       model.activeCamera = publicAPI.makeCamera();
     }
-
     return model.activeCamera;
   };
 
@@ -138,26 +135,7 @@ function vtkRenderer(publicAPI, model) {
       publicAPI.getActiveCamera();
       publicAPI.resetCamera();
     }
-
     return model.activeCamera;
-  };
-
-  publicAPI.addActor = publicAPI.addViewProp;
-  publicAPI.addVolume = publicAPI.addViewProp;
-
-  publicAPI.removeActor = (actor) => {
-    model.actors = model.actors.filter((a) => a !== actor);
-    publicAPI.removeViewProp(actor);
-  };
-
-  publicAPI.removeVolume = (volume) => {
-    model.volumes = model.volumes.filter((v) => v !== volume);
-    publicAPI.removeViewProp(volume);
-  };
-
-  publicAPI.addLight = (light) => {
-    model.lights = [].concat(model.lights, light);
-    publicAPI.modified();
   };
 
   publicAPI.getActors = () => {
@@ -167,6 +145,18 @@ function vtkRenderer(publicAPI, model) {
     });
     return model.actors;
   };
+  publicAPI.addActor = publicAPI.addViewProp;
+  publicAPI.removeActor = (actor) => {
+    model.actors = model.actors.filter((a) => a !== actor);
+    publicAPI.removeViewProp(actor);
+    publicAPI.modified();
+  };
+  publicAPI.removeAllActors = () => {
+    model.actors.forEach((actor) => {
+      publicAPI.removeViewProp(actor);
+    });
+    publicAPI.modified();
+  };
 
   publicAPI.getVolumes = () => {
     model.volumes = [];
@@ -175,16 +165,31 @@ function vtkRenderer(publicAPI, model) {
     });
     return model.volumes;
   };
+  publicAPI.addVolume = publicAPI.addViewProp;
+  publicAPI.removeVolume = (volume) => {
+    model.volumes = model.volumes.filter((v) => v !== volume);
+    publicAPI.removeViewProp(volume);
+    publicAPI.modified();
+  };
+  publicAPI.removeAllVolumes = () => {
+    model.volumes.forEach((volume) => {
+      publicAPI.removeViewProp(volume);
+    });
+    publicAPI.modified();
+  };
 
+  publicAPI.addLight = (light) => {
+    model.lights = [].concat(model.lights, light);
+    publicAPI.modified();
+  };
   publicAPI.removeLight = (light) => {
     model.lights = model.lights.filter((l) => l !== light);
     publicAPI.modified();
   };
-
   publicAPI.removeAllLights = () => {
     model.lights = [];
+    publicAPI.modified();
   };
-
   publicAPI.setLightCollection = (lights) => {
     model.lights = lights;
     publicAPI.modified();
@@ -552,7 +557,7 @@ const DEFAULT_VALUES = {
 
   pathArray: null,
 
-  layer: 1,
+  layer: 0,
   preserveColorBuffer: false,
   preserveDepthBuffer: false,
 

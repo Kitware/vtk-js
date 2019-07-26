@@ -3,7 +3,7 @@ import vtkAbstractMapper3D from 'vtk.js/Sources/Rendering/Core/AbstractMapper3D'
 import vtkDataArray from 'vtk.js/Sources/Common/Core/DataArray';
 import vtkImageData from 'vtk.js/Sources/Common/DataModel/ImageData';
 import vtkLookupTable from 'vtk.js/Sources/Common/Core/LookupTable';
-import vtkMath from 'vtk.js/Sources/Common/Core/Math';
+import * as vtkMath from 'vtk.js/Sources/Common/Core/Math';
 import vtkScalarsToColors from 'vtk.js/Sources/Common/Core/ScalarsToColors/Constants'; // Need to go inside Constants otherwise dependency loop
 
 import CoincidentTopologyHelper from 'vtk.js/Sources/Rendering/Core/Mapper/CoincidentTopologyHelper';
@@ -595,6 +595,8 @@ const DEFAULT_VALUES = {
   resolveCoincidentTopology: false,
 
   viewSpecificProperties: null,
+
+  customShaderAttributes: [],
 };
 
 // ----------------------------------------------------------------------------
@@ -624,6 +626,7 @@ export function extend(publicAPI, model, initialValues = {}) {
     'static',
     'useLookupTableScalarRange',
     'viewSpecificProperties',
+    'customShaderAttributes', // point data array names that will be transfered to the VBO
   ]);
   macro.setGetArray(publicAPI, model, ['scalarRange'], 2);
 

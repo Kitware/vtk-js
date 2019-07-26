@@ -3,7 +3,7 @@ import { mat3, mat4, vec3 } from 'gl-matrix';
 import macro from 'vtk.js/Sources/macro';
 import vtkHelper from 'vtk.js/Sources/Rendering/OpenGL/Helper';
 import vtkMapper from 'vtk.js/Sources/Rendering/Core/Mapper';
-import vtkMath from 'vtk.js/Sources/Common/Core/Math';
+import * as vtkMath from 'vtk.js/Sources/Common/Core/Math';
 import vtkOpenGLTexture from 'vtk.js/Sources/Rendering/OpenGL/Texture';
 import vtkProperty from 'vtk.js/Sources/Rendering/Core/Property';
 import vtkShaderProgram from 'vtk.js/Sources/Rendering/OpenGL/ShaderProgram';
@@ -1039,27 +1039,29 @@ function vtkOpenGLPolyDataMapper(publicAPI, model) {
     let numberOfLights = 0;
 
     const primType = cellBO.getPrimitiveType();
-
-    let needLighting = true;
-
     const poly = model.currentInput;
 
-    let n =
-      actor.getProperty().getInterpolation() !== Shading.FLAT
-        ? poly.getPointData().getNormals()
-        : null;
-    if (n === null && poly.getCellData().getNormals()) {
-      n = poly.getCellData().getNormals();
+    // different algo from C++ as of 5/2019
+    let needLighting = false;
+    const pointNormals = poly.getPointData().getNormals();
+    const cellNormals = poly.getCellData().getNormals();
+    const flat = actor.getProperty().getInterpolation() === Shading.FLAT;
+    const representation = actor.getProperty().getRepresentation();
+    const mode = publicAPI.getOpenGLMode(representation, primType);
+    // 1) all surfaces need lighting
+    if (mode === model.context.TRIANGLES) {
+      needLighting = true;
+      // 2) all cell normals without point normals need lighting
+    } else if (cellNormals && !pointNormals) {
+      needLighting = true;
+      // 3) Phong + pointNormals need lighting
+    } else if (!flat && pointNormals) {
+      needLighting = true;
+      // 4) Phong Lines need lighting
+    } else if (!flat && mode === model.context.LINES) {
+      needLighting = true;
     }
-
-    const haveNormals = n !== null;
-
-    if (
-      actor.getProperty().getRepresentation() === Representation.POINTS ||
-      primType === primTypes.Points
-    ) {
-      needLighting = haveNormals;
-    }
+    // 5) everthing else is unlit
 
     // do we need lighting?
     if (actor.getProperty().getLighting() && needLighting) {
@@ -1236,6 +1238,28 @@ function vtkOpenGLPolyDataMapper(publicAPI, model) {
       } else {
         cellBO.getVAO().removeAttributeArray('normalMC');
       }
+
+      model.renderable.getCustomShaderAttributes().forEach((attrName, idx) => {
+        if (cellBO.getProgram().isAttributeUsed(`${attrName}MC`)) {
+          if (
+            !cellBO
+              .getVAO()
+              .addAttributeArray(
+                cellBO.getProgram(),
+                cellBO.getCABO(),
+                `${attrName}MC`,
+                cellBO.getCABO().getCustomData()[idx].offset,
+                cellBO.getCABO().getStride(),
+                model.context.FLOAT,
+                cellBO.getCABO().getCustomData()[idx].components,
+                false
+              )
+          ) {
+            vtkErrorMacro(`Error setting ${attrName}MC in shader VAO.`);
+          }
+        }
+      });
+
       if (
         cellBO.getProgram().isAttributeUsed('tcoordMC') &&
         cellBO.getCABO().getTCoordOffset()
@@ -1385,9 +1409,22 @@ function vtkOpenGLPolyDataMapper(publicAPI, model) {
         model.lightColor[2] = dColor[2] * intensity;
         // get required info from light
         const ld = light.getDirection();
-        model.lightDirection[0] = ld[0];
-        model.lightDirection[1] = ld[1];
-        model.lightDirection[2] = ld[2];
+        const transform = ren.getActiveCamera().getViewMatrix();
+
+        const newLightDirection = [...ld];
+        if (light.lightTypeIsSceneLight()) {
+          newLightDirection[0] =
+            transform[0] * ld[0] + transform[1] * ld[1] + transform[2] * ld[2];
+          newLightDirection[1] =
+            transform[4] * ld[0] + transform[5] * ld[1] + transform[6] * ld[2];
+          newLightDirection[2] =
+            transform[8] * ld[0] + transform[9] * ld[1] + transform[10] * ld[2];
+          vtkMath.normalize(newLightDirection);
+        }
+
+        model.lightDirection[0] = newLightDirection[0];
+        model.lightDirection[1] = newLightDirection[1];
+        model.lightDirection[2] = newLightDirection[2];
         model.lightHalfAngle[0] = -model.lightDirection[0];
         model.lightHalfAngle[1] = -model.lightDirection[1];
         model.lightHalfAngle[2] = -model.lightDirection[2] + 1.0;
@@ -1812,6 +1849,9 @@ function vtkOpenGLPolyDataMapper(publicAPI, model) {
         cellOffset: 0,
         haveCellScalars: model.haveCellScalars,
         haveCellNormals: model.haveCellNormals,
+        customAttributes: model.renderable
+          .getCustomShaderAttributes()
+          .map((arrayName) => poly.getPointData().getArrayByName(arrayName)),
       };
       options.cellOffset += model.primitives[primTypes.Points]
         .getCABO()

@@ -6,7 +6,7 @@ if (head) {
     link.setAttribute('rel', 'icon');
     link.setAttribute(
       'href',
-      `http://kitware.github.io/vtk-js/icon/favicon-${resolution}x${resolution}.png`
+      `https://kitware.github.io/vtk-js/icon/favicon-${resolution}x${resolution}.png`
     );
     link.setAttribute('sizes', `${resolution}x${resolution}`);
     link.setAttribute('type', 'image/png');

@@ -42,6 +42,17 @@ export default function createMethods(session) {
         focalPoint,
         viewUp,
         position,
+        forceUpdate,
+      ]),
+    updateCameraParameters: (
+      viewId = -1,
+      parameters = {},
+      forceUpdate = true
+    ) =>
+      session.call('viewport.camera.update.params', [
+        viewId,
+        parameters,
+        forceUpdate,
       ]),
   };
 }

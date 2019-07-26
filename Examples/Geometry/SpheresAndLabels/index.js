@@ -8,6 +8,7 @@ import vtkPixelSpaceCallbackMapper from 'vtk.js/Sources/Rendering/Core/PixelSpac
 import vtkRenderWindow from 'vtk.js/Sources/Rendering/Core/RenderWindow';
 import vtkRenderWindowInteractor from 'vtk.js/Sources/Rendering/Core/RenderWindowInteractor';
 import vtkRenderer from 'vtk.js/Sources/Rendering/Core/Renderer';
+import vtkInteractorStyleTrackballCamera from 'vtk.js/Sources/Interaction/Style/InteractorStyleTrackballCamera';
 
 import style from './style.module.css';
 
@@ -89,6 +90,8 @@ const interactor = vtkRenderWindowInteractor.newInstance();
 interactor.setView(openglRenderWindow);
 interactor.initialize();
 interactor.bindEvents(container);
+
+interactor.setInteractorStyle(vtkInteractorStyleTrackballCamera.newInstance());
 
 // Handle window resize
 function resize() {

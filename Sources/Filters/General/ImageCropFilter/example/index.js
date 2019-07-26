@@ -103,13 +103,6 @@ reader.setUrl(`${__BASE_PATH__}/data/volume/headsq.vti`).then(() => {
     interactor.setDesiredUpdateRate(15.0);
     renderer.resetCamera();
     renderWindow.render();
-
-    // Ensure the volume rendering is updated with gradient opacity lighting
-    // effects after the gradients have finished computing.
-    interactor.requestAnimation('lighting');
-    mapper.onLightingActivated(() => {
-      interactor.cancelAnimation('lighting');
-    });
   });
 });
 

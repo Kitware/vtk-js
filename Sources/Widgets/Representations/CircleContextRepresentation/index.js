@@ -9,6 +9,7 @@ import vtkPolyData from 'vtk.js/Sources/Common/DataModel/PolyData';
 import vtkWidgetRepresentation from 'vtk.js/Sources/Widgets/Representations/WidgetRepresentation';
 
 import { ScalarMode } from 'vtk.js/Sources/Rendering/Core/Mapper/Constants';
+import { vec3 } from 'gl-matrix';
 
 // ----------------------------------------------------------------------------
 // vtkCircleContextRepresentation methods
@@ -27,7 +28,7 @@ function vtkCircleContextRepresentation(publicAPI, model) {
     points: model.internalPolyData.getPoints(),
     scale: vtkDataArray.newInstance({
       name: 'scale',
-      numberOfComponents: 1,
+      numberOfComponents: 3,
       empty: true,
     }),
     color: vtkDataArray.newInstance({
@@ -61,6 +62,7 @@ function vtkCircleContextRepresentation(publicAPI, model) {
       mapper: vtkGlyph3DMapper.newInstance({
         orientationArray: 'direction',
         scaleArray: 'scale',
+        scaleMode: vtkGlyph3DMapper.ScaleModes.SCALE_BY_COMPONENTS,
         colorByArrayName: 'color',
         scalarMode: ScalarMode.USE_POINT_FIELD_DATA,
       }),
@@ -70,6 +72,11 @@ function vtkCircleContextRepresentation(publicAPI, model) {
 
   model.pipelines.circle.actor.getProperty().setOpacity(0.2);
   model.pipelines.circle.mapper.setOrientationModeToDirection();
+  model.pipelines.circle.mapper.setResolveCoincidentTopology(true);
+  model.pipelines.circle.mapper.setResolveCoincidentTopologyPolygonOffsetParameters(
+    -1,
+    -1
+  );
 
   vtkWidgetRepresentation.connectPipeline(model.pipelines.circle);
 
@@ -128,7 +135,21 @@ function vtkCircleContextRepresentation(publicAPI, model) {
         sFactor = 0;
       }
 
-      typedArray.scale[i * 3] = scale1 * sFactor;
+      let scale3 = state.getScale3 ? state.getScale3() : [1, 1, 1];
+      scale3 = scale3.map((x) => (x === 0 ? 2 * model.defaultScale : 2 * x));
+
+      vec3.transformMat4(
+        scale3,
+        scale3,
+        vtkMatrixBuilder
+          .buildFromDegree()
+          .rotateFromDirections([1, 0, 0], orient)
+          .getMatrix()
+      );
+
+      typedArray.scale[i * 3 + 0] = scale1 * sFactor * scale3[0];
+      typedArray.scale[i * 3 + 1] = scale1 * sFactor * scale3[1];
+      typedArray.scale[i * 3 + 2] = scale1 * sFactor * scale3[2];
 
       typedArray.color[i] =
         model.useActiveColor && isActive ? model.activeColor : state.getColor();

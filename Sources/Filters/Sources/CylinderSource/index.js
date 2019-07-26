@@ -1,6 +1,7 @@
 import macro from 'vtk.js/Sources/macro';
 import vtkDataArray from 'vtk.js/Sources/Common/Core/DataArray';
 import vtkPolyData from 'vtk.js/Sources/Common/DataModel/PolyData';
+import vtkMatrixBuilder from 'vtk.js/Sources/Common/Core/MatrixBuilder';
 
 // ----------------------------------------------------------------------------
 // vtkCylinderSource methods
@@ -149,6 +150,14 @@ function vtkCylinderSource(publicAPI, model) {
       }
     }
 
+    // Apply tranformation to the points coordinates
+    vtkMatrixBuilder
+      .buildFromRadian()
+      .translate(...model.center)
+      .rotateFromDirections([0, 1, 0], model.direction)
+      .translate(...model.center.map((c) => c * -1))
+      .apply(points);
+
     dataset = vtkPolyData.newInstance();
     dataset.getPoints().setData(points, 3);
     dataset.getPolys().setData(polys, 1);
@@ -172,6 +181,7 @@ const DEFAULT_VALUES = {
   radius: 1.0,
   resolution: 6,
   center: [0, 0, 0],
+  direction: [0.0, 1.0, 0.0],
   capping: true,
   pointType: 'Float32Array',
 };
@@ -184,7 +194,7 @@ export function extend(publicAPI, model, initialValues = {}) {
   // Build VTK API
   macro.obj(publicAPI, model);
   macro.setGet(publicAPI, model, ['height', 'radius', 'resolution', 'capping']);
-  macro.setGetArray(publicAPI, model, ['center'], 3);
+  macro.setGetArray(publicAPI, model, ['center', 'direction'], 3);
   macro.algo(publicAPI, model, 0, 1);
   vtkCylinderSource(publicAPI, model);
 }

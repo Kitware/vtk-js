@@ -213,6 +213,7 @@ export default function addRegistrationAPI(publicAPI, model) {
       proxy.getRepresentations().forEach((repProxy) => {
         publicAPI.deleteProxy(repProxy);
       });
+      proxy.setContainer(null);
       unRegisterProxy(proxy);
       if (publicAPI.getActiveView() === proxy) {
         publicAPI.setActiveView(publicAPI.getViews()[0]);

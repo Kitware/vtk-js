@@ -6,8 +6,7 @@ import vtkCellTypes from 'vtk.js/Sources/Common/DataModel/CellTypes';
 import vtkPointSet from 'vtk.js/Sources/Common/DataModel/PointSet';
 
 import { CellType } from 'vtk.js/Sources/Common/DataModel/CellTypes/Constants';
-
-const POLYDATA_FIELDS = ['verts', 'lines', 'polys', 'strips'];
+import { POLYDATA_FIELDS } from 'vtk.js/Sources/Common/DataModel/PolyData/Constants';
 
 // ----------------------------------------------------------------------------
 // vtkPolyData methods

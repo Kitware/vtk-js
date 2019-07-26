@@ -3,7 +3,7 @@ import { mat3, mat4, vec3 } from 'gl-matrix';
 import Constants from 'vtk.js/Sources/Rendering/Core/Glyph3DMapper/Constants';
 import macro from 'vtk.js/Sources/macro';
 import vtkMapper from 'vtk.js/Sources/Rendering/Core/Mapper';
-import vtkMath from 'vtk.js/Sources/Common/Core/Math';
+import * as vtkMath from 'vtk.js/Sources/Common/Core/Math';
 import vtkBoundingBox from 'vtk.js/Sources/Common/DataModel/BoundingBox';
 
 const { OrientationModes, ScaleModes } = Constants;

@@ -61,12 +61,17 @@ function vtkViewProxy(publicAPI, model) {
   model.camera = model.renderer.getActiveCamera();
   model.camera.setParallelProjection(!!model.useParallelRendering);
 
-  // Orientation a cube setup -------------------------------------------------
+  // Orientation axis setup -------------------------------------------------
 
   model.orientationAxesArrow = vtkAxesActor.newInstance();
   model.orientationAxesCube = vtkAnnotatedCubeActor.newInstance();
   AnnotatedCubePresets.applyPreset('default', model.orientationAxesCube);
   AnnotatedCubePresets.applyPreset('lps', model.orientationAxesCube);
+
+  model.orientationAxesMap = {
+    arrow: model.orientationAxesArrow,
+    cube: model.orientationAxesCube,
+  };
   model.orientationWidget = vtkOrientationMarkerWidget.newInstance({
     actor: model.orientationAxesArrow,
     interactor: model.renderWindow.getInteractor(),
@@ -110,19 +115,29 @@ function vtkViewProxy(publicAPI, model) {
   // --------------------------------------------------------------------------
 
   publicAPI.setOrientationAxesType = (type) => {
-    switch (type) {
-      case 'arrow':
-        model.orientationAxesType = 'arrow';
-        model.orientationWidget.setActor(model.orientationAxesArrow);
-        break;
-      case 'cube':
-      default:
-        model.orientationWidget.setActor(model.orientationAxesCube);
-        model.orientationAxesType = 'cube';
-        break;
+    const actor = model.orientationAxesMap[type];
+    if (actor) {
+      model.orientationAxesType = type;
+      model.orientationWidget.setActor(actor);
+      publicAPI.renderLater();
     }
-    publicAPI.renderLater();
   };
+
+  // --------------------------------------------------------------------------
+
+  publicAPI.registerOrientationAxis = (name, actor) => {
+    model.orientationAxesMap[name] = actor;
+  };
+
+  // --------------------------------------------------------------------------
+
+  publicAPI.unregisterOrientationAxis = (name) => {
+    delete model.orientationAxesMap[name];
+  };
+
+  // --------------------------------------------------------------------------
+
+  publicAPI.listOrientationAxis = () => Object.keys(model.orientationAxesMap);
 
   // --------------------------------------------------------------------------
 
@@ -175,10 +190,11 @@ function vtkViewProxy(publicAPI, model) {
       if (dims.width === dims.height && dims.width === 0) {
         return;
       }
-      model.openglRenderWindow.setSize(
-        Math.max(10, Math.floor(dims.width)),
-        Math.max(10, Math.floor(dims.height))
-      );
+      const devicePixelRatio = window.devicePixelRatio || 1;
+      const width = Math.max(10, devicePixelRatio * Math.floor(dims.width));
+      const height = Math.max(10, devicePixelRatio * Math.floor(dims.height));
+      model.openglRenderWindow.setSize(width, height);
+      publicAPI.invokeResize({ width, height });
       publicAPI.renderLater();
     }
   };
@@ -500,6 +516,14 @@ function vtkViewProxy(publicAPI, model) {
   };
 
   // --------------------------------------------------------------------------
+
+  publicAPI.focusTo = macro.chain(
+    model.camera.setFocalPoint,
+    model.interactorStyle2D.setCenterOfRotation,
+    model.interactorStyle3D.setCenterOfRotation
+  );
+
+  // --------------------------------------------------------------------------
   // Initialization from state or input
   // --------------------------------------------------------------------------
 
@@ -547,6 +571,7 @@ function extend(publicAPI, model, initialValues = {}) {
     'representations',
     'useParallelRendering',
   ]);
+  macro.event(publicAPI, model, 'Resize');
 
   // Object specific methods
   vtkViewProxy(publicAPI, model);

@@ -1,6 +1,6 @@
 import Constants from 'vtk.js/Sources/Common/Core/DataArray/Constants';
 import macro from 'vtk.js/Sources/macro';
-import vtkMath from 'vtk.js/Sources/Common/Core/Math';
+import * as vtkMath from 'vtk.js/Sources/Common/Core/Math';
 
 const { DefaultDataType } = Constants;
 const TUPLE_HOLDER = [];

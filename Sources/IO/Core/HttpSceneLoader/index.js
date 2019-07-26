@@ -6,7 +6,7 @@ import vtkTexture from 'vtk.js/Sources/Rendering/Core/Texture';
 
 import DataAccessHelper from 'vtk.js/Sources/IO/Core/DataAccessHelper';
 
-const { vtkWarningMacro, vtkErrorMacro } = macro;
+const { vtkErrorMacro } = macro;
 
 let itemCount = 1;
 
@@ -81,16 +81,19 @@ function loadHttpDataSetReader(item, model, publicAPI) {
       });
   }
 
-  model.renderer.addActor(actor);
+  if (model.renderer) {
+    model.renderer.addActor(actor);
+  }
+
   actor.setMapper(mapper);
   mapper.setInputConnection(source.getOutputPort());
 
   source
-    .setUrl([model.baseURL, item.httpDataSetReader.url].join('/'))
+    .setUrl([model.baseURL, item.httpDataSetReader.url].join('/'), {
+      loadData: true,
+    })
     .then(() => {
-      source.loadData().then(() => {
-        publicAPI.invokeReady();
-      });
+      publicAPI.invokeReady();
     });
 
   applySettings(sceneItem, item);
@@ -123,11 +126,13 @@ function vtkHttpSceneLoader(publicAPI, model) {
   }
 
   function setCameraParameters(params) {
-    const camera = model.renderer.getActiveCamera();
-    if (camera) {
-      camera.set(params);
-    } else {
-      vtkErrorMacro('No active camera to update');
+    if (model.renderer) {
+      const camera = model.renderer.getActiveCamera();
+      if (camera) {
+        camera.set(params);
+      } else {
+        vtkErrorMacro('No active camera to update');
+      }
     }
   }
 
@@ -137,17 +142,12 @@ function vtkHttpSceneLoader(publicAPI, model) {
   }
 
   publicAPI.update = () => {
-    if (!model.renderer) {
-      vtkWarningMacro('No renderer provided, skip update process');
-      return;
-    }
-
     model.dataAccessHelper.fetchJSON(publicAPI, model.url).then(
       (data) => {
         if (data.fetchGzip !== undefined) {
           model.fetchGzip = data.fetchGzip;
         }
-        if (data.background) {
+        if (data.background && model.renderer) {
           model.renderer.setBackground(...data.background);
         }
         if (data.camera) {
@@ -163,6 +163,8 @@ function vtkHttpSceneLoader(publicAPI, model) {
           });
           global.scene = model.scene;
         }
+        // Capture index.json into meta
+        model.metadata = data;
       },
       (error) => {
         vtkErrorMacro(`Error fetching scene ${error}`);
@@ -212,7 +214,13 @@ export function extend(publicAPI, model, initialValues = {}) {
 
   // Build VTK API
   macro.obj(publicAPI, model);
-  macro.get(publicAPI, model, ['fetchGzip', 'url', 'baseURL', 'scene']);
+  macro.get(publicAPI, model, [
+    'fetchGzip',
+    'url',
+    'baseURL',
+    'scene',
+    'metadata',
+  ]);
   macro.setGet(publicAPI, model, ['renderer']);
   macro.event(publicAPI, model, 'ready');
 

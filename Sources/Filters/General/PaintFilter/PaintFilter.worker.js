@@ -1,30 +1,94 @@
 import registerWebworker from 'webworker-promise/lib/register';
 
+import { SlicingMode } from 'vtk.js/Sources/Rendering/Core/ImageMapper/Constants';
+
 const globals = {
   // single-component labelmap
   buffer: null,
   dimensions: [0, 0, 0],
   prevPoint: null,
+  slicingMode: null,
 };
 
-function handlePaint({ point, radius }) {
-  const dims = globals.dimensions;
-  const [x, y, z] = point;
-  const [rx, ry, rz] = radius;
+function handlePaintRectangle({ point1, point2 }) {
+  const [x1, y1, z1] = point1;
+  const [x2, y2, z2] = point2;
 
+  const xstart = Math.max(Math.min(x1, x2), 0);
+  const xend = Math.min(Math.max(x1, x2), globals.dimensions[0] - 1);
+  if (xstart <= xend) {
+    const ystart = Math.max(Math.min(y1, y2), 0);
+    const yend = Math.min(Math.max(y1, y2), globals.dimensions[1] - 1);
+    const zstart = Math.max(Math.min(z1, z2), 0);
+    const zend = Math.min(Math.max(z1, z2), globals.dimensions[2] - 1);
+
+    const jStride = globals.dimensions[0];
+    const kStride = globals.dimensions[0] * globals.dimensions[1];
+
+    for (let k = zstart; k <= zend; k++) {
+      for (let j = ystart; j <= yend; j++) {
+        const index = j * jStride + k * kStride;
+        globals.buffer.fill(1, index + xstart, index + xend + 1);
+      }
+    }
+  }
+}
+
+function handlePaintEllipse({ center, scale3 }) {
+  const yStride = globals.dimensions[0];
+  const zStride = globals.dimensions[0] * globals.dimensions[1];
+
+  const zmin = Math.round(Math.max(center[2] - scale3[2], 0));
+  const zmax = Math.round(
+    Math.min(center[2] + scale3[2], globals.dimensions[2] - 1)
+  );
+
+  for (let z = zmin; z <= zmax; z++) {
+    const dz = (center[2] - z) / scale3[2];
+    const ay = scale3[1] * Math.sqrt(1 - dz * dz);
+
+    const ymin = Math.round(Math.max(center[1] - ay, 0));
+    const ymax = Math.round(
+      Math.min(center[1] + ay, globals.dimensions[1] - 1)
+    );
+
+    for (let y = ymin; y <= ymax; y++) {
+      const dy = (center[1] - y) / scale3[1];
+      const ax = scale3[0] * Math.sqrt(1 - dy * dy - dz * dz);
+
+      const xmin = Math.round(Math.max(center[0] - ax, 0));
+      const xmax = Math.round(
+        Math.min(center[0] + ax, globals.dimensions[0] - 1)
+      );
+      if (xmin <= xmax) {
+        const index = y * yStride + z * zStride;
+        globals.buffer.fill(1, index + xmin, index + xmax + 1);
+      }
+    }
+  }
+}
+
+function handlePaint({ point, radius }) {
   if (!globals.prevPoint) {
     globals.prevPoint = point;
   }
 
-  const xstart = Math.floor(Math.min(dims[0] - 1, Math.max(0, x - rx)));
-  const xend = Math.floor(Math.min(dims[0] - 1, Math.max(0, x + rx)));
-  const ystart = Math.floor(Math.min(dims[1] - 1, Math.max(0, y - ry)));
-  const yend = Math.floor(Math.min(dims[1] - 1, Math.max(0, y + ry)));
-  const zstart = Math.floor(Math.min(dims[2] - 1, Math.max(0, z - rz)));
-  const zend = Math.floor(Math.min(dims[2] - 1, Math.max(0, z + rz)));
-
-  const jStride = dims[0];
-  const kStride = dims[0] * dims[1];
+  if (
+    globals.slicingMode === SlicingMode.X ||
+    globals.slicingMode === SlicingMode.I
+  ) {
+    radius[0] = 0.25;
+  } else if (
+    globals.slicingMode === SlicingMode.Y ||
+    globals.slicingMode === SlicingMode.J
+  ) {
+    radius[1] = 0.25;
+  } else if (
+    globals.slicingMode === SlicingMode.Z ||
+    globals.slicingMode === SlicingMode.K
+  ) {
+    radius[2] = 0.25;
+  }
 
   // DDA params
   const delta = [
@@ -38,49 +102,20 @@ function handlePaint({ point, radius }) {
       delta[i] = -delta[i];
       inc[i] = -1;
     }
-    delta[i]++;
   }
   const step = Math.max(...delta);
 
-  // naive algo
-  for (let i = xstart; i <= xend; i++) {
-    for (let j = ystart; j <= yend; j++) {
-      for (let k = zstart; k <= zend; k++) {
-        const rel = [i - x, j - y, k - z];
-        const ival = rel[0] / rx;
-        const jval = rel[1] / ry;
-        const kval = rel[2] / rz;
-        if (ival * ival + jval * jval + kval * kval <= 1) {
-          const pt = [
-            rel[0] + globals.prevPoint[0],
-            rel[1] + globals.prevPoint[1],
-            rel[2] + globals.prevPoint[2],
-          ];
+  // DDA
+  const thresh = [step, step, step];
+  const pt = [...globals.prevPoint];
+  for (let s = 0; s <= step; s++) {
+    handlePaintEllipse({ center: pt, scale3: radius });
 
-          // DDA
-          const thresh = [step, step, step];
-          for (let s = 0; s <= step; s++) {
-            if (
-              pt[0] >= 0 &&
-              pt[0] < dims[0] &&
-              pt[1] >= 0 &&
-              pt[1] < dims[1] &&
-              pt[2] >= 0 &&
-              pt[2] < dims[2]
-            ) {
-              const index = pt[0] + pt[1] * jStride + pt[2] * kStride;
-              globals.buffer[index] = 1;
-            }
-
-            for (let ii = 0; ii < 3; ii++) {
-              thresh[ii] -= delta[ii];
-              if (thresh[ii] < 0) {
-                thresh[ii] = step;
-                pt[ii] += inc[ii];
-              }
-            }
-          }
-        }
+    for (let ii = 0; ii < 3; ii++) {
+      thresh[ii] -= delta[ii];
+      if (thresh[ii] <= 0) {
+        thresh[ii] = step;
+        pt[ii] += inc[ii];
       }
     }
   }
@@ -89,18 +124,24 @@ function handlePaint({ point, radius }) {
 }
 
 registerWebworker()
-  .operation('start', ({ bufferType, dimensions }) => {
-    const bufferSize = dimensions[0] * dimensions[1] * dimensions[2];
-    /* eslint-disable-next-line */
-    globals.buffer = new self[bufferType](bufferSize);
-    globals.dimensions = dimensions;
-    globals.prevPoint = null;
+  .operation('start', ({ bufferType, dimensions, slicingMode }) => {
+    if (!globals.buffer) {
+      const bufferSize = dimensions[0] * dimensions[1] * dimensions[2];
+      /* eslint-disable-next-line */
+      globals.buffer = new self[bufferType](bufferSize);
+      globals.dimensions = dimensions;
+      globals.prevPoint = null;
+      globals.slicingMode = slicingMode;
+    }
   })
   .operation('paint', handlePaint)
-  .operation(
-    'end',
-    () =>
-      new registerWebworker.TransferableResponse(globals.buffer.buffer, [
-        globals.buffer.buffer,
-      ])
-  );
+  .operation('paintRectangle', handlePaintRectangle)
+  .operation('paintEllipse', handlePaintEllipse)
+  .operation('end', () => {
+    const response = new registerWebworker.TransferableResponse(
+      globals.buffer.buffer,
+      [globals.buffer.buffer]
+    );
+    globals.buffer = null;
+    return response;
+  });

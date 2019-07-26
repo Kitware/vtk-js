@@ -1,16 +1,19 @@
 import { vec3, mat4, glMatrix } from 'gl-matrix';
+import { areMatricesEqual } from 'vtk.js/Sources/Common/Core/Math';
 
 const NoOp = (v) => v;
 
 const IDENTITY = new Float64Array(16);
 mat4.identity(IDENTITY);
 
+const EPSILON = 1e-6;
+
 class Transform {
-  constructor(useDegre = false) {
+  constructor(useDegree = false) {
     this.matrix = new Float64Array(16);
     mat4.identity(this.matrix);
     this.tmp = new Float64Array(3);
-    this.angleConv = useDegre ? glMatrix.toRadian : NoOp;
+    this.angleConv = useDegree ? glMatrix.toRadian : NoOp;
   }
 
   rotateFromDirections(originDirection, targetDirection) {
@@ -28,6 +31,15 @@ class Transform {
     }
 
     vec3.cross(this.tmp, src, dst);
+    if (vec3.length(this.tmp, this.tmp) < EPSILON) {
+      // cross product is 0, so pick arbitrary axis perpendicular
+      // to originDirection.
+      if (originDirection[0] === 0 && originDirection[1] === 0) {
+        vec3.set(this.tmp, 0, 1, 0);
+      } else {
+        vec3.set(this.tmp, 0, -originDirection[2], -originDirection[1]);
+      }
+    }
     mat4.fromRotation(transf, Math.acos(cosAlpha), this.tmp);
     mat4.multiply(this.matrix, this.matrix, transf);
 
@@ -68,25 +80,15 @@ class Transform {
     return this;
   }
 
+  identity() {
+    mat4.identity(this.matrix);
+    return this;
+  }
+
+  //-----------
+
   apply(typedArray, offset = 0, nbIterations = -1) {
-    if (
-      IDENTITY[0] === this.matrix[0] &&
-      IDENTITY[1] === this.matrix[1] &&
-      IDENTITY[2] === this.matrix[2] &&
-      IDENTITY[3] === this.matrix[3] &&
-      IDENTITY[4] === this.matrix[4] &&
-      IDENTITY[5] === this.matrix[5] &&
-      IDENTITY[6] === this.matrix[6] &&
-      IDENTITY[7] === this.matrix[7] &&
-      IDENTITY[8] === this.matrix[8] &&
-      IDENTITY[9] === this.matrix[9] &&
-      IDENTITY[10] === this.matrix[10] &&
-      IDENTITY[11] === this.matrix[11] &&
-      IDENTITY[12] === this.matrix[12] &&
-      IDENTITY[13] === this.matrix[13] &&
-      IDENTITY[14] === this.matrix[14] &&
-      IDENTITY[15] === this.matrix[15]
-    ) {
+    if (areMatricesEqual(IDENTITY, this.matrix)) {
       // Make sure we can chain apply...
       return this;
     }
@@ -109,35 +111,10 @@ class Transform {
     return this.matrix;
   }
 
-  getVTKMatrix() {
-    mat4.transpose(this.matrix, this.matrix);
-    return this.matrix;
-  }
-
   setMatrix(mat4x4) {
     if (!!mat4x4 && mat4x4.length === 16) {
-      this.matrix[0] = mat4x4[0];
-      this.matrix[1] = mat4x4[1];
-      this.matrix[2] = mat4x4[2];
-      this.matrix[3] = mat4x4[3];
-      this.matrix[4] = mat4x4[4];
-      this.matrix[5] = mat4x4[5];
-      this.matrix[6] = mat4x4[6];
-      this.matrix[7] = mat4x4[7];
-      this.matrix[8] = mat4x4[8];
-      this.matrix[9] = mat4x4[9];
-      this.matrix[10] = mat4x4[10];
-      this.matrix[11] = mat4x4[11];
-      this.matrix[12] = mat4x4[12];
-      this.matrix[13] = mat4x4[13];
-      this.matrix[14] = mat4x4[14];
-      this.matrix[15] = mat4x4[15];
+      mat4.copy(this.matrix, mat4x4);
     }
-    return this;
-  }
-
-  identity() {
-    mat4.identity(this.matrix);
     return this;
   }
 }
