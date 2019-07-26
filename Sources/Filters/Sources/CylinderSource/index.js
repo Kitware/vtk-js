@@ -155,6 +155,7 @@ function vtkCylinderSource(publicAPI, model) {
       .buildFromRadian()
       .translate(...model.center)
       .rotateFromDirections([0, 1, 0], model.direction)
+      .translate(...model.center.map((c) => c * -1))
       .apply(points);
 
     dataset = vtkPolyData.newInstance();
