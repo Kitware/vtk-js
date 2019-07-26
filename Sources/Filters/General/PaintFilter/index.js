@@ -171,6 +171,10 @@ function vtkPaintFilter(publicAPI, model) {
 
   // --------------------------------------------------------------------------
 
+  publicAPI.canUndo = () => history.index > -1;
+
+  // --------------------------------------------------------------------------
+
   publicAPI.undo = () => {
     if (history.index > -1) {
       const scalars = model.labelMap.getPointData().getScalars();
@@ -194,6 +198,10 @@ function vtkPaintFilter(publicAPI, model) {
       publicAPI.modified();
     }
   };
+
+  // --------------------------------------------------------------------------
+
+  publicAPI.canRedo = () => history.index < history.labels.length - 1;
 
   // --------------------------------------------------------------------------
 
