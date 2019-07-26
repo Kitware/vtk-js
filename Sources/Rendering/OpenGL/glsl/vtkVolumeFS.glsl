@@ -659,24 +659,25 @@ void applyBlend(vec3 posIS, vec3 endIS, float sampleDistanceIS, vec3 tdims)
       1.0);
 
     vec4 sum = vec4(0.);
-    int i = 0;
-
-    averageIPScalarRangeMin.a = tValue.a;
-    averageIPScalarRangeMax.a = tValue.a;
-    if (all(greaterThanEqual(tValue, averageIPScalarRangeMin)) &&
-        all(lessThanEqual(tValue, averageIPScalarRangeMax))) {
-      sum += tValue;
-      i = 1;
-    }
 
     if (raySteps <= 1.0) {
+      averageIPScalarRangeMin.a = tValue.a;
+      averageIPScalarRangeMax.a = tValue.a;
+
+      if (all(greaterThanEqual(tValue, averageIPScalarRangeMin)) &&
+          all(lessThanEqual(tValue, averageIPScalarRangeMax))) {
+        sum += tValue;
+      }
+
       gl_FragData[0] = getColorForValue(sum, posIS, tstep);
       return;
     }
 
+    posIS += (jitter*stepIS);
+
     // Sample along the ray until MaximumSamplesValue,
     // ending slightly inside the total distance
-    for (i = i; i < //VTK::MaximumSamplesValue ; ++i)
+    for (int i = 0; i < //VTK::MaximumSamplesValue ; ++i)
     {
       // If we have reached the last step, break
       if (stepsTraveled + 1.0 >= raySteps) { break; }
@@ -717,21 +718,15 @@ void applyBlend(vec3 posIS, vec3 endIS, float sampleDistanceIS, vec3 tdims)
     // compute the scalar
     tValue = getTextureValue(posIS);
 
-    // Ensure i is never zero so we don't get divide-by-zero issues
-    i = max(1, i);
-
-    // Divide by the total number of samples that were taken
-    float i_float = float(i);
-
     // One can control the scalar range by setting the AverageIPScalarRange to disregard scalar values, not in the range of interest, from the average computation
-    if (any(lessThan(tValue, averageIPScalarRangeMin)) ||
-      any(greaterThan(tValue, averageIPScalarRangeMax))) {
-      sum /= vec4(i_float, i_float, i_float, 1.0);
-    } else {
+    if (all(greaterThanEqual(tValue, averageIPScalarRangeMin)) &&
+        all(lessThanEqual(tValue, averageIPScalarRangeMax))) {
       sum += tValue;
 
-      sum /= vec4(i_float + 1.0, i_float + 1.0, i_float + 1.0, 1.0);
+      stepsTraveled++;
     }
+
+    sum /= vec4(stepsTraveled, stepsTraveled, stepsTraveled, 1.0);
 
     gl_FragData[0] = getColorForValue(sum, posIS, tstep);
   #endif
