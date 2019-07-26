@@ -660,15 +660,15 @@ void applyBlend(vec3 posIS, vec3 endIS, float sampleDistanceIS, vec3 tdims)
 
     vec4 sum = vec4(0.);
 
+    averageIPScalarRangeMin.a = tValue.a;
+    averageIPScalarRangeMax.a = tValue.a;
+
+    if (all(greaterThanEqual(tValue, averageIPScalarRangeMin)) &&
+    all(lessThanEqual(tValue, averageIPScalarRangeMax))) {
+      sum += tValue;
+    }
+
     if (raySteps <= 1.0) {
-      averageIPScalarRangeMin.a = tValue.a;
-      averageIPScalarRangeMax.a = tValue.a;
-
-      if (all(greaterThanEqual(tValue, averageIPScalarRangeMin)) &&
-          all(lessThanEqual(tValue, averageIPScalarRangeMax))) {
-        sum += tValue;
-      }
-
       gl_FragData[0] = getColorForValue(sum, posIS, tstep);
       return;
     }
