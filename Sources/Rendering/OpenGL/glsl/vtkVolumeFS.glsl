@@ -549,7 +549,7 @@ void applyBlend(vec3 posIS, vec3 endIS, float sampleDistanceIS, vec3 tdims)
     // handle very thin volumes
     if (raySteps <= 1.0)
     {
-      tColor.a *= raySteps;
+      tColor.a = 1.0 - pow(1.0 - tColor.a, raySteps);
       gl_FragData[0] = tColor;
       return;
     }
