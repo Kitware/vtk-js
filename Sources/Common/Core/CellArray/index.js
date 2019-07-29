@@ -64,6 +64,9 @@ function vtkCellArray(publicAPI, model) {
     model.cellSizes = undefined;
   };
 
+  /**
+   * Returns the point indexes at the given location as a subarray.
+   */
   publicAPI.getCell = (loc) => {
     let cellLoc = loc;
     const numberOfPoints = model.values[cellLoc++];
