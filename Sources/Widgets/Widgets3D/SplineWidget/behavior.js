@@ -27,6 +27,7 @@ export default function widgetBehavior(publicAPI, model) {
     model.widgetState.clearHandleList();
 
     model.lastHandle = null;
+    model.firstHandle = null;
   };
 
   // --------------------------------------------------------------------------
@@ -43,6 +44,7 @@ export default function widgetBehavior(publicAPI, model) {
     // Commit handle to location
     if (
       !model.lastHandle ||
+      model.keysDown.Control ||
       !model.freeHand ||
       vec3.squaredDistance(
         model.moveHandle.getOrigin(),
@@ -54,22 +56,13 @@ export default function widgetBehavior(publicAPI, model) {
       model.lastHandle.setOrigin(...model.moveHandle.getOrigin());
       model.lastHandle.setColor(model.moveHandle.getColor());
       model.lastHandle.setScale1(model.moveHandle.getScale1());
-    }
-  };
 
-  // --------------------------------------------------------------------------
-
-  publicAPI.removePoint = (origin) => {
-    const handles = model.widgetState.getHandleList();
-    handles.forEach((handle) => {
-      if (
-        handle !== model.moveHandle &&
-        vec3.squaredDistance(origin, handle.getOrigin()) <
-          model.freehandMinDistance * model.freehandMinDistance
-      ) {
-        model.widgetState.removeHandle(handle);
+      if (!model.firstHandle) {
+        model.firstHandle = model.lastHandle;
       }
-    });
+
+      model.openGLRenderWindow.setCursor('grabbing');
+    }
   };
 
   // --------------------------------------------------------------------------
@@ -85,6 +78,38 @@ export default function widgetBehavior(publicAPI, model) {
     } else {
       model.representations[1].setResolution(model.resolution);
     }
+  };
+
+  // --------------------------------------------------------------------------
+
+  publicAPI.getHoveredHandle = () => {
+    const handles = model.widgetState.getHandleList();
+
+    return handles.reduce(
+      ({ closestHandle, closestDistance }, handle) => {
+        const distance = vec3.squaredDistance(
+          model.moveHandle.getOrigin(),
+          handle.getOrigin()
+        );
+        if (handle !== model.moveHandle) {
+          return {
+            closestHandle: distance < closestDistance ? handle : closestHandle,
+            closestDistance:
+              distance < closestDistance ? distance : closestDistance,
+          };
+        }
+
+        return {
+          closestHandle,
+          closestDistance,
+        };
+      },
+      {
+        closestHandle: null,
+        closestDistance:
+          model.moveHandle.getScale1() * model.moveHandle.getScale1(),
+      }
+    ).closestHandle;
   };
 
   // --------------------------------------------------------------------------
@@ -107,8 +132,14 @@ export default function widgetBehavior(publicAPI, model) {
       model.activeState = null;
       model.interactor.cancelAnimation(publicAPI);
     } else {
-      const origin = model.moveHandle.getOrigin();
-      publicAPI.removePoint(origin);
+      const handle = publicAPI.getHoveredHandle();
+      if (handle) {
+        model.widgetState.removeHandle(handle);
+      } else if (model.lastHandle) {
+        model.widgetState.removeHandle(model.lastHandle);
+        const handles = model.widgetState.getHandleList();
+        model.lastHandle = handles[handles.length - 1];
+      }
     }
 
     publicAPI.invokeInteractionEvent();
@@ -133,19 +164,21 @@ export default function widgetBehavior(publicAPI, model) {
       if (model.widgetState.getHandleList().length === 0) {
         publicAPI.invokeStartInteractionEvent();
         publicAPI.addPoint();
-      } else if (
-        vec3.squaredDistance(
-          model.moveHandle.getOrigin(),
-          model.lastHandle.getOrigin()
-        ) < model.moveHandle.getScale1()
-      ) {
-        publicAPI.invokeEndInteractionEvent();
-        model.interactor.render();
       } else {
-        publicAPI.addPoint();
+        const hoveredHandle = publicAPI.getHoveredHandle();
+        if (hoveredHandle && !model.keysDown.Control) {
+          model.moveHandle.deactivate();
+          model.moveHandle.setVisible(false);
+          model.activeState = hoveredHandle;
+          hoveredHandle.activate();
+          model.isDragging = true;
+          model.lastHandle.setVisible(true);
+        } else {
+          publicAPI.addPoint();
+        }
       }
 
-      model.freeHand = model.allowFreehand;
+      model.freeHand = model.allowFreehand && !model.isDragging;
     } else {
       model.isDragging = true;
       model.openGLRenderWindow.setCursor('grabbing');
@@ -161,9 +194,36 @@ export default function widgetBehavior(publicAPI, model) {
 
   publicAPI.handleLeftButtonRelease = (e) => {
     if (model.isDragging) {
-      model.openGLRenderWindow.setCursor('pointer');
-      model.widgetState.deactivate();
-      model.interactor.cancelAnimation(publicAPI);
+      if (!model.hasFocus) {
+        model.openGLRenderWindow.setCursor('pointer');
+        model.widgetState.deactivate();
+        model.interactor.cancelAnimation(publicAPI);
+      } else {
+        model.moveHandle.setOrigin(...model.activeState.getOrigin());
+        model.activeState.deactivate();
+        model.moveHandle.activate();
+        model.activeState = model.moveHandle;
+
+        if (!model.draggedPoint) {
+          if (
+            vec3.squaredDistance(
+              model.moveHandle.getOrigin(),
+              model.lastHandle.getOrigin()
+            ) <
+              model.moveHandle.getScale1() * model.moveHandle.getScale1() ||
+            vec3.squaredDistance(
+              model.moveHandle.getOrigin(),
+              model.firstHandle.getOrigin()
+            ) <
+              model.moveHandle.getScale1() * model.moveHandle.getScale1()
+          ) {
+            model.lastHandle.setVisible(true);
+            publicAPI.invokeEndInteractionEvent();
+          }
+        }
+
+        model.interactor.render();
+      }
     } else if (model.activeState !== model.moveHandle) {
       model.widgetState.deactivate();
     }
@@ -178,6 +238,7 @@ export default function widgetBehavior(publicAPI, model) {
 
     model.freeHand = false;
     model.isDragging = false;
+    model.draggedPoint = false;
 
     return model.hasFocus ? macro.EVENT_ABORT : macro.VOID;
   };
@@ -200,6 +261,15 @@ export default function widgetBehavior(publicAPI, model) {
       model.openGLRenderWindow
     );
 
+    const hoveredHandle = publicAPI.getHoveredHandle();
+    if (hoveredHandle) {
+      model.moveHandle.setVisible(false);
+      model.openGLRenderWindow.setCursor('grabbing');
+    } else if (!model.isDragging && model.hasFocus) {
+      model.moveHandle.setVisible(true);
+      model.openGLRenderWindow.setCursor('pointer');
+    }
+
     model.manipulator.setOrigin(worldCoords);
     model.manipulator.setNormal(model.camera.getDirectionOfProjection());
 
@@ -209,11 +279,12 @@ export default function widgetBehavior(publicAPI, model) {
 
     if (model.isDragging || model.activeState === model.moveHandle) {
       model.activeState.setOrigin(worldCoords);
-      if (model.freeHand) {
+      if (model.isDragging) {
+        model.draggedPoint = true;
+      }
+      if (model.freeHand && model.activeState === model.moveHandle) {
         publicAPI.addPoint();
       }
-    } else if (model.hasFocus) {
-      model.widgetManager.disablePicking();
     }
 
     return model.hasFocus ? macro.EVENT_ABORT : macro.VOID;
@@ -227,11 +298,14 @@ export default function widgetBehavior(publicAPI, model) {
     model.keysDown[key] = true;
     publicAPI.updateResolution();
 
-    if (model.hasFocus) {
+    if (key === 'Enter') {
+      if (model.widgetState.getHandleList().length > 0) {
+        publicAPI.invokeEndInteractionEvent();
+        model.interactor.render();
+      }
+    } else if (model.hasFocus) {
       if (key === 'Escape') {
-        if (model.lastHandle) {
-          model.lastHandle.setVisible(true);
-        }
+        publicAPI.reset();
         publicAPI.loseFocus();
       } else if (key === 'Delete' || key === 'Backspace') {
         if (model.lastHandle) {

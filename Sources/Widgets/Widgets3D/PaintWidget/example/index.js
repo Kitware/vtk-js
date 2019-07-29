@@ -92,6 +92,9 @@ scene.polygonHandle = scene.widgetManager.addWidget(
   ViewTypes.SLICE
 );
 
+scene.splineHandle.setOutputBorder(true);
+scene.polygonHandle.setOutputBorder(true);
+
 scene.widgetManager.grabFocus(widgets.paintWidget);
 let activeWidget = 'paintWidget';
 
@@ -207,7 +210,7 @@ reader
       .getMoveHandle()
       .setScale1(2 * Math.max(...image.data.getSpacing()));
     scene.splineHandle.setFreehandMinDistance(
-      8 * Math.max(...image.data.getSpacing())
+      4 * Math.max(...image.data.getSpacing())
     );
 
     scene.polygonHandle
@@ -215,7 +218,7 @@ reader
       .getMoveHandle()
       .setScale1(2 * Math.max(...image.data.getSpacing()));
     scene.polygonHandle.setFreehandMinDistance(
-      8 * Math.max(...image.data.getSpacing())
+      4 * Math.max(...image.data.getSpacing())
     );
 
     const update = () => {

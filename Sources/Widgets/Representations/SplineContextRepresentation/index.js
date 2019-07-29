@@ -5,7 +5,7 @@ import vtkMapper from 'vtk.js/Sources/Rendering/Core/Mapper';
 import vtkPolyData from 'vtk.js/Sources/Common/DataModel/PolyData';
 import vtkSpline3D from 'vtk.js/Sources/Common/DataModel/Spline3D';
 import vtkTriangleFilter from 'vtk.js/Sources/Filters/General/TriangleFilter';
-import vtkTubeFilter from 'vtk.js/Sources/Filters/General/TubeFilter';
+import vtkLineFilter from 'vtk.js/Sources/Filters/General/LineFilter';
 
 import { splineKind } from 'vtk.js/Sources/Common/DataModel/Spline3D/Constants';
 
@@ -30,10 +30,7 @@ function vtkSplineContextRepresentation(publicAPI, model) {
     border: {
       actor: vtkActor.newInstance(),
       mapper: vtkMapper.newInstance(),
-      source: vtkTubeFilter.newInstance({
-        radius: 0.5,
-        numberOfSides: 12,
-      }),
+      lineFilter: vtkLineFilter.newInstance(),
     },
   };
 
@@ -48,13 +45,15 @@ function vtkSplineContextRepresentation(publicAPI, model) {
   model.pipelines.area.actor.getProperty().setColor(0, 1, 0);
   model.actors.push(model.pipelines.area.actor);
 
-  model.pipelines.border.source.setInputConnection(publicAPI.getOutputPort());
+  model.pipelines.border.lineFilter.setInputConnection(
+    publicAPI.getOutputPort()
+  );
   model.pipelines.border.mapper.setInputConnection(
-    model.pipelines.border.source.getOutputPort()
+    model.pipelines.border.lineFilter.getOutputPort()
   );
   model.pipelines.border.actor.setMapper(model.pipelines.border.mapper);
   model.pipelines.border.actor.getProperty().setOpacity(1);
-  model.pipelines.border.actor.getProperty().setColor(1, 0, 0);
+  model.pipelines.border.actor.getProperty().setColor(0.1, 1, 0.1);
   model.pipelines.border.actor.setVisibility(model.outputBorder);
 
   model.actors.push(model.pipelines.border.actor);
@@ -121,6 +120,15 @@ function vtkSplineContextRepresentation(publicAPI, model) {
     }
 
     outData[0] = polydata;
+
+    model.pipelines.area.triangleFilter.update();
+    model.pipelines.border.actor
+      .getProperty()
+      .setColor(
+        ...(model.pipelines.area.triangleFilter.getErrorCount() === 0
+          ? model.borderColor
+          : model.errorBorderColor)
+      );
   };
 
   publicAPI.getSelectedState = (prop, compositeID) => model.state;
@@ -135,6 +143,8 @@ const DEFAULT_VALUES = {
   close: true,
   fill: true,
   outputBorder: false,
+  borderColor: [0.1, 1, 0.1],
+  errorBorderColor: [1, 0, 0],
 };
 
 // ----------------------------------------------------------------------------
@@ -149,6 +159,8 @@ export function extend(publicAPI, model, initialValues = {}) {
     'close',
     'fill',
     'outputBorder',
+    'borderColor',
+    'errorBorderColor',
   ]);
 
   // Object specific methods
