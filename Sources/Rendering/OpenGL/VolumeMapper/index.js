@@ -816,7 +816,6 @@ function vtkOpenGLVolumeMapper(publicAPI, model) {
           fbSize[0] !== Math.floor(size[0] * 0.7) ||
           fbSize[1] !== Math.floor(size[1] * 0.7)
         ) {
-          console.log('resizing');
           model.framebuffer.create(
             Math.floor(size[0] * 0.7),
             Math.floor(size[1] * 0.7)
