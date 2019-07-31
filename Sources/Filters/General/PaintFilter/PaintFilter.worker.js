@@ -114,7 +114,7 @@ function handlePaint({ point, radius }) {
     for (let ii = 0; ii < 3; ii++) {
       thresh[ii] -= delta[ii];
       if (thresh[ii] <= 0) {
-        thresh[ii] = step;
+        thresh[ii] += step;
         pt[ii] += inc[ii];
       }
     }

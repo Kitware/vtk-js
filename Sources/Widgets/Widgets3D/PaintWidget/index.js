@@ -19,6 +19,8 @@ function widgetBehavior(publicAPI, model) {
     }
 
     model.painting = true;
+    const trailCircle = model.widgetState.addTrail();
+    trailCircle.set(model.activeState.get('origin', 'direction', 'scale1'));
     publicAPI.invokeStartInteractionEvent();
     return macro.EVENT_ABORT;
   };
