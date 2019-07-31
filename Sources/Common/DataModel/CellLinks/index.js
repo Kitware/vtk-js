@@ -166,17 +166,10 @@ function vtkCellLinks(publicAPI, model) {
    * resize the list (recover memory with resizeCellList(), if necessary).
    */
   publicAPI.removeCellReference = (cellId, ptId) => {
-    const { ncells, cells } = model.array[ptId];
-
-    for (let i = 0; i < ncells; ++i) {
-      if (cells[i] === cellId) {
-        for (let j = i; j < ncells - 1; ++j) {
-          cells[j] = cells[j + 1];
-        }
-        --model.array[ptId].ncells;
-        break;
-      }
-    }
+    model.array[ptId].cells = model.array[ptId].cells.filter(
+      (cell) => cell !== cellId
+    );
+    model.array[ptId].ncells = model.array[ptId].cells.length;
   };
 
   /**

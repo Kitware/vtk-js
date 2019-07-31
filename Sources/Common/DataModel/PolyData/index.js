@@ -1,9 +1,11 @@
 import macro from 'vtk.js/Sources/macro';
 import vtk from 'vtk.js/Sources/vtk';
 import vtkCellArray from 'vtk.js/Sources/Common/Core/CellArray';
+import vtkPoints from 'vtk.js/Sources/Common/Core/Points';
 import vtkCellLinks from 'vtk.js/Sources/Common/DataModel/CellLinks';
 import vtkCellTypes from 'vtk.js/Sources/Common/DataModel/CellTypes';
 import vtkPointSet from 'vtk.js/Sources/Common/DataModel/PointSet';
+import vtkTriangle from 'vtk.js/Sources/Common/DataModel/Triangle';
 
 import { CellType } from 'vtk.js/Sources/Common/DataModel/CellTypes/Constants';
 import { POLYDATA_FIELDS } from 'vtk.js/Sources/Common/DataModel/PolyData/Constants';
@@ -196,26 +198,30 @@ function vtkPolyData(publicAPI, model) {
     return { cellType, cellPointIds };
   };
 
+  publicAPI.getPointCells = (ptId) => model.links.getCells(ptId);
+
   publicAPI.getCellEdgeNeighbors = (cellId, point1, point2) => {
     const link1 = model.links.getLink(point1);
     const link2 = model.links.getLink(point2);
 
-    const cells1 = link1.cells;
-    const cells2 = link2.cells;
+    return link1.cells.filter(
+      (cell) => cell !== cellId && link2.cells.indexOf(cell) !== -1
+    );
+  };
 
-    const cellIds = [];
-    for (let i = 0; i < link1.ncells; ++i) {
-      const cell1 = cells1[i];
-      if (cell1 !== cellId) {
-        for (let j = 0; j < link2.ncells; ++j) {
-          if (cell1 === cells2[j]) {
-            cellIds.push(cell1);
-            break;
-          }
-        }
-      }
+  publicAPI.getCell = (cellId) => {
+    const cellInfo = publicAPI.getCellPoints(cellId);
+    if (cellInfo.cellType === CellType.VTK_TRIANGLE) {
+      const cell = vtkTriangle.newInstance();
+      let pointsData = [];
+      cellInfo.cellPointIds.forEach((pointId, index) => {
+        pointsData = pointsData.concat(publicAPI.getPoints().getPoint(pointId));
+      });
+      const points = vtkPoints.newInstance({ values: pointsData });
+      cell.initialize(3, cellInfo.cellPointIds, points);
+      return cell;
     }
-    return cellIds;
+    return null;
   };
 }
 
@@ -229,6 +235,7 @@ const DEFAULT_VALUES = {
   // polys: null,
   // strips: null,
   // cells: null,
+  // links: null,
 };
 
 // ----------------------------------------------------------------------------
@@ -238,6 +245,7 @@ export function extend(publicAPI, model, initialValues = {}) {
 
   // Inheritance
   vtkPointSet.extend(publicAPI, model, initialValues);
+  macro.get(publicAPI, model, ['cells', 'links']);
   macro.setGet(publicAPI, model, ['verts', 'lines', 'polys', 'strips']);
 
   // Object specific methods
