@@ -200,14 +200,17 @@ uniform int xreps;
 uniform float xstride;
 uniform float ystride;
 
-// if computime triliear values from multiple z slices
+// if computing triliear values from multiple z slices
 #ifdef vtkTriliearOn
 vec4 getTextureValue(vec3 ijk)
 {
   float zoff = 1.0/float(volumeDimensions.z);
   vec4 val1 = getOneTextureValue(ijk);
   vec4 val2 = getOneTextureValue(vec3(ijk.xy, ijk.z + zoff));
-  float zmix = ijk.z - floor(ijk.z);
+
+  float indexZ = float(volumeDimensions)*ijk.z;
+  float zmix =  indexZ - floor(indexZ);
+
   return mix(val1, val2, zmix);
 }
 
@@ -250,6 +253,7 @@ vec4 getTextureValue(vec3 ijk)
 vec4 computeNormal(vec3 pos, float scalar, vec3 tstep)
 {
   vec4 result;
+
   result.x = getTextureValue(pos + vec3(tstep.x, 0.0, 0.0)).a - scalar;
   result.y = getTextureValue(pos + vec3(0.0, tstep.y, 0.0)).a - scalar;
   result.z = getTextureValue(pos + vec3(0.0, 0.0, tstep.z)).a - scalar;

@@ -16,6 +16,7 @@ import {
   Filter,
 } from 'vtk.js/Sources/Rendering/OpenGL/Texture/Constants';
 import { InterpolationType } from 'vtk.js/Sources/Rendering/Core/VolumeProperty/Constants';
+import { BlendMode } from 'vtk.js/Sources/Rendering/Core/VolumeMapper/Constants';
 
 import vtkVolumeVS from 'vtk.js/Sources/Rendering/OpenGL/glsl/vtkVolumeVS.glsl';
 import vtkVolumeFS from 'vtk.js/Sources/Rendering/OpenGL/glsl/vtkVolumeFS.glsl';
@@ -264,7 +265,10 @@ function vtkOpenGLVolumeMapper(publicAPI, model) {
   publicAPI.getNeedToRebuildShaders = (cellBO, ren, actor) => {
     // do we need lighting?
     let lightComplexity = 0;
-    if (actor.getProperty().getShade()) {
+    if (
+      actor.getProperty().getShade() &&
+      model.renderable.getBlendMode() === BlendMode.COMPOSITE_BLEND
+    ) {
       // consider the lighting complexity to determine which case applies
       // simple headlight, Light Kit, the whole feature set of VTK
       lightComplexity = 0;
