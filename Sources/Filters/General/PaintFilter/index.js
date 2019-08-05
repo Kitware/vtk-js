@@ -4,6 +4,7 @@ import WebworkerPromise from 'webworker-promise';
 import macro from 'vtk.js/Sources/macro';
 import vtkImageData from 'vtk.js/Sources/Common/DataModel/ImageData';
 import vtkDataArray from 'vtk.js/Sources/Common/Core/DataArray';
+import vtkPolygon from 'vtk.js/Sources/Common/DataModel/Polygon';
 
 import PaintFilterWorker from 'vtk.js/Sources/Filters/General/PaintFilter/PaintFilter.worker';
 
@@ -175,6 +176,40 @@ function vtkPaintFilter(publicAPI, model) {
   // --------------------------------------------------------------------------
 
   publicAPI.canUndo = () => history.index > -1;
+
+  // --------------------------------------------------------------------------
+
+  publicAPI.paintPolygon = (pointList) => {
+    if (workerPromise && pointList.length > 0) {
+      const polygon = vtkPolygon.newInstance();
+      const poly = [];
+      for (let i = 0; i < pointList.length / 3; i++) {
+        poly.push([
+          pointList[3 * i + 0],
+          pointList[3 * i + 1],
+          pointList[3 * i + 2],
+        ]);
+      }
+      polygon.setPoints(poly);
+
+      if (!polygon.triangulate()) {
+        console.log('triangulation failed!');
+      }
+
+      const points = polygon.getPointArray();
+      const triangleList = new Float32Array(points.length);
+      const numPoints = Math.floor(triangleList.length / 3);
+      for (let i = 0; i < numPoints; i++) {
+        const point = points.slice(3 * i, 3 * i + 3);
+        const voxel = triangleList.subarray(3 * i, 3 * i + 3);
+        vec3.transformMat4(voxel, point, model.maskWorldToIndex);
+      }
+
+      workerPromise.exec('paintTriangles', {
+        triangleList,
+      });
+    }
+  };
 
   // --------------------------------------------------------------------------
 

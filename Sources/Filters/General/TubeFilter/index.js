@@ -605,7 +605,6 @@ function vtkTubeFilter(publicAPI, model) {
     // implement requestData
     // pass through for now
     const output = vtkPolyData.newInstance();
-    output.shallowCopy(inData[0]);
     outData[0] = output;
 
     const input = inData[0];

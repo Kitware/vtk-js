@@ -1,6 +1,7 @@
 import registerWebworker from 'webworker-promise/lib/register';
 
 import { SlicingMode } from 'vtk.js/Sources/Rendering/Core/ImageMapper/Constants';
+import { vec3 } from 'gl-matrix';
 
 const globals = {
   // single-component labelmap
@@ -9,6 +10,8 @@ const globals = {
   prevPoint: null,
   slicingMode: null,
 };
+
+// --------------------------------------------------------------------------
 
 function handlePaintRectangle({ point1, point2 }) {
   const [x1, y1, z1] = point1;
@@ -33,6 +36,8 @@ function handlePaintRectangle({ point1, point2 }) {
     }
   }
 }
+
+// --------------------------------------------------------------------------
 
 function handlePaintEllipse({ center, scale3 }) {
   const yStride = globals.dimensions[0];
@@ -67,6 +72,8 @@ function handlePaintEllipse({ center, scale3 }) {
     }
   }
 }
+
+// --------------------------------------------------------------------------
 
 function handlePaint({ point, radius }) {
   if (!globals.prevPoint) {
@@ -123,6 +130,67 @@ function handlePaint({ point, radius }) {
   globals.prevPoint = point;
 }
 
+// --------------------------------------------------------------------------
+
+function handlePaintTriangles({ triangleList }) {
+  // debugger;
+
+  const triangleCount = Math.floor(triangleList.length / 9);
+
+  for (let i = 0; i < triangleCount; i++) {
+    const point0 = triangleList.subarray(9 * i + 0, 9 * i + 3);
+    const point1 = triangleList.subarray(9 * i + 3, 9 * i + 6);
+    const point2 = triangleList.subarray(9 * i + 6, 9 * i + 9);
+
+    const v1 = [0, 0, 0];
+    const v2 = [0, 0, 0];
+
+    vec3.subtract(v1, point1, point0);
+    vec3.subtract(v2, point2, point0);
+
+    const step1 = [0, 0, 0];
+    const numStep1 =
+      2 * Math.max(Math.abs(v1[0]), Math.abs(v1[1]), Math.abs(v1[2]));
+    vec3.scale(step1, v1, 1 / numStep1);
+
+    const step2 = [0, 0, 0];
+    const numStep2 =
+      2 * Math.max(Math.abs(v2[0]), Math.abs(v2[1]), Math.abs(v2[2]));
+    vec3.scale(step2, v2, 1 / numStep2);
+
+    const jStride = globals.dimensions[0];
+    const kStride = globals.dimensions[0] * globals.dimensions[1];
+
+    for (let u = 0; u <= numStep1 + 1; u++) {
+      const maxV = numStep2 - u * (numStep2 / numStep1);
+      for (let v = 0; v <= maxV + 1; v++) {
+        const point = [...point0];
+        vec3.scaleAndAdd(point, point, step1, u);
+        vec3.scaleAndAdd(point, point, step2, v);
+
+        point[0] = Math.floor(point[0]);
+        point[1] = Math.floor(point[1]);
+        point[2] = Math.floor(point[2]);
+
+        if (
+          point[0] >= 0 &&
+          point[0] < globals.dimensions[0] &&
+          point[1] >= 0 &&
+          point[1] < globals.dimensions[1] &&
+          point[2] >= 0 &&
+          point[2] < globals.dimensions[2]
+        ) {
+          globals.buffer[
+            point[0] + jStride * point[1] + kStride * point[2]
+          ] = 1;
+        }
+      }
+    }
+  }
+}
+
+// --------------------------------------------------------------------------
+
 registerWebworker()
   .operation('start', ({ bufferType, dimensions, slicingMode }) => {
     if (!globals.buffer) {
@@ -137,6 +205,7 @@ registerWebworker()
   .operation('paint', handlePaint)
   .operation('paintRectangle', handlePaintRectangle)
   .operation('paintEllipse', handlePaintEllipse)
+  .operation('paintTriangles', handlePaintTriangles)
   .operation('end', () => {
     const response = new registerWebworker.TransferableResponse(
       globals.buffer.buffer,

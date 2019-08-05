@@ -2,6 +2,8 @@ import macro from 'vtk.js/Sources/macro';
 import vtkPolygon from 'vtk.js/Sources/Common/DataModel/Polygon';
 import vtkPolyData from 'vtk.js/Sources/Common/DataModel/PolyData';
 
+const { vtkWarningMacro } = macro;
+
 // ----------------------------------------------------------------------------
 // vtkTriangleFilter methods
 // ----------------------------------------------------------------------------
@@ -18,6 +20,8 @@ function vtkTriangleFilter(publicAPI, model) {
     const cells = polys.getData();
     let newCells = [];
     let newPoints = [];
+
+    model.errorCount = 0;
 
     if (cells && cells.length > 0) {
       let cellOffset = 0;
@@ -52,7 +56,8 @@ function vtkTriangleFilter(publicAPI, model) {
           polygon.setPoints(cellPoints);
 
           if (!polygon.triangulate()) {
-            console.log('triangulation failed!');
+            vtkWarningMacro(`Triangulation failed at cellOffset ${cellOffset}`);
+            ++model.errorCount;
           }
 
           const newCellPoints = polygon.getPointArray();
@@ -87,7 +92,9 @@ function vtkTriangleFilter(publicAPI, model) {
 
 // ----------------------------------------------------------------------------
 
-const DEFAULT_VALUES = {};
+const DEFAULT_VALUES = {
+  errorCount: 0,
+};
 
 // ----------------------------------------------------------------------------
 
@@ -96,6 +103,7 @@ export function extend(publicAPI, model, initialValues = {}) {
 
   // Build VTK API
   macro.setGet(publicAPI, model, []);
+  macro.get(publicAPI, model, ['errorCount']);
 
   // Make this a VTK object
   macro.obj(publicAPI, model);
