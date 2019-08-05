@@ -62,6 +62,7 @@ const DEFAULT_VALUES = {
     key: 'Shift',
     status: 'down',
   },
+  defaultCursor: 'pointer',
 };
 
 // ----------------------------------------------------------------------------
@@ -70,7 +71,13 @@ export function extend(publicAPI, model, initialValues = {}) {
   Object.assign(model, DEFAULT_VALUES, initialValues);
 
   vtkAbstractWidgetFactory.extend(publicAPI, model, initialValues);
-  macro.setGet(publicAPI, model, ['manipulator']);
+  macro.setGet(publicAPI, model, [
+    'manipulator',
+    'freehandMinDistance',
+    'allowFreehand',
+    'resolution',
+    'defaultCursor',
+  ]);
 
   vtkSplineWidget(publicAPI, model);
 }

@@ -195,7 +195,7 @@ export default function widgetBehavior(publicAPI, model) {
   publicAPI.handleLeftButtonRelease = (e) => {
     if (model.isDragging) {
       if (!model.hasFocus) {
-        model.openGLRenderWindow.setCursor('pointer');
+        model.openGLRenderWindow.setCursor(model.defaultCursor);
         model.widgetState.deactivate();
         model.interactor.cancelAnimation(publicAPI);
       } else {
@@ -267,7 +267,7 @@ export default function widgetBehavior(publicAPI, model) {
       model.openGLRenderWindow.setCursor('grabbing');
     } else if (!model.isDragging && model.hasFocus) {
       model.moveHandle.setVisible(true);
-      model.openGLRenderWindow.setCursor('pointer');
+      model.openGLRenderWindow.setCursor(model.defaultCursor);
     }
 
     model.manipulator.setOrigin(worldCoords);
