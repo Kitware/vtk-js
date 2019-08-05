@@ -1,7 +1,7 @@
-import { toByteArray } from 'base64-js';
 import pako from 'pako';
 
 import macro from 'vtk.js/Sources/macro';
+import Base64 from 'vtk.js/Sources/Common/Core/Base64';
 import Endian from 'vtk.js/Sources/Common/Core/Endian';
 import { DataTypeByteSize } from 'vtk.js/Sources/Common/Core/DataArray/Constants';
 
@@ -61,7 +61,7 @@ function fetchArray(instance = {}, baseURL, array, options = {}) {
         }
         array.values = JSON.parse(bText);
       } else {
-        const uint8array = toByteArray(txt);
+        const uint8array = new Uint8Array(Base64.toArrayBuffer(txt));
 
         array.buffer = new ArrayBuffer(uint8array.length);
 

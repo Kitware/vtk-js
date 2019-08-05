@@ -29,7 +29,6 @@
   "homepage": "https://github.com/kitware/vtk-js#readme",
   "main": "./dist/vtk.js",
   "dependencies": {
-    "base64-js": "1.2.1",
     "blueimp-md5": "2.10.0",
     "commander": "2.11.0",
     "gl-matrix": "3.0.0",

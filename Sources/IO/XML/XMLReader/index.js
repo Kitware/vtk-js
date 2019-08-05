@@ -1,7 +1,7 @@
 import pako from 'pako';
-import { toByteArray } from 'base64-js';
 
 import DataAccessHelper from 'vtk.js/Sources/IO/Core/DataAccessHelper';
+import Base64 from 'vtk.js/Sources/Common/Core/Base64';
 import macro from 'vtk.js/Sources/macro';
 import vtkDataArray from 'vtk.js/Sources/Common/Core/DataArray';
 import BinaryHelper from 'vtk.js/Sources/IO/Core/BinaryHelper';
@@ -129,7 +129,9 @@ function processDataArray(
       }
     });
   } else if (format === 'binary') {
-    const uint8 = toByteArray(dataArrayElem.firstChild.nodeValue.trim());
+    const uint8 = new Uint8Array(
+      Base64.toArrayBuffer(dataArrayElem.firstChild.nodeValue.trim())
+    );
     if (compressor === 'vtkZLibDataCompressor') {
       const buffer = new ArrayBuffer(
         TYPED_ARRAY_BYTES[dataType] * size * numberOfComponents
@@ -406,7 +408,9 @@ function vtkXMLReader(publicAPI, model) {
 
         if (encoding === 'base64') {
           dataArrays.push(
-            toByteArray(appendedBuffer.substring(offset, nextOffset))
+            new Uint8Array(
+              Base64.toArrayBuffer(appendedBuffer.substring(offset, nextOffset))
+            )
           );
         } else {
           // encoding === 'raw'

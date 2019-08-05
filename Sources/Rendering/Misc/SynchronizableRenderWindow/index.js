@@ -1,5 +1,5 @@
-import { toByteArray } from 'base64-js';
 import macro from 'vtk.js/Sources/macro';
+import Base64 from 'vtk.js/Sources/Common/Core/Base64';
 import vtkRenderWindow from 'vtk.js/Sources/Rendering/Core/RenderWindow';
 import vtkObjectManager from './vtkObjectManager';
 
@@ -39,7 +39,7 @@ function createArrayHandler() {
         (data) => {
           let buffer = data;
           if (typeof data === 'string') {
-            buffer = toByteArray(data).buffer;
+            buffer = Base64.toArrayBuffer(data);
           }
           if (buffer instanceof Blob) {
             const fileReader = new FileReader();
