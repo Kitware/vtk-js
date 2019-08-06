@@ -1,29 +1,5 @@
 /* eslint-disable no-bitwise */
 
-/*
-   The MIT License (MIT)
-
-   Copyright (c) 2014 Jameson Little
-
-   Permission is hereby granted, free of charge, to any person obtaining a copy
-   of this software and associated documentation files (the "Software"), to deal
-   in the Software without restriction, including without limitation the rights
-   to use, copy, modify, merge, publish, distribute, sublicense, and/or sell
-   copies of the Software, and to permit persons to whom the Software is
-   furnished to do so, subject to the following conditions:
-
-   The above copyright notice and this permission notice shall be included in
-   all copies or substantial portions of the Software.
-
-   THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS OR
-   IMPLIED, INCLUDING BUT NOT LIMITED TO THE WARRANTIES OF MERCHANTABILITY,
-   FITNESS FOR A PARTICULAR PURPOSE AND NONINFRINGEMENT. IN NO EVENT SHALL THE
-   AUTHORS OR COPYRIGHT HOLDERS BE LIABLE FOR ANY CLAIM, DAMAGES OR OTHER
-   LIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM,
-   OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN
-   THE SOFTWARE.
-*/
-
 // ----------------------------------------------------------------------------
 // Decoding infrastructure
 // ----------------------------------------------------------------------------
@@ -59,18 +35,19 @@ function extractChunks(b64Str) {
       currentChunk.count++;
       currentChunk.end = i;
     } else if (b64Str[i] === '=' && currentChunk) {
-      // End of chunk
+      // End of chunk (found padding char)
       chunks.push(currentChunk);
       currentChunk = null;
-    } else {
-      // Skip padding / formatting
-      // => do nothing, just move along
     }
+  }
+
+  if (currentChunk) {
+    chunks.push(currentChunk);
   }
   return chunks;
 }
 
-function writeChunk(b64Str, chunk, dstOffset, unit8) {
+function writeChunk(b64Str, chunk, dstOffset, uint8) {
   const { start, count } = chunk;
   const remain = count % 4;
   const fourCharProcessCount = Math.floor(count / 4);
@@ -80,60 +57,59 @@ function writeChunk(b64Str, chunk, dstOffset, unit8) {
 
   // Handle 4=>3
   for (let i = 0; i < fourCharProcessCount; i++) {
-    while (!isValidChar(charIdx)) {
+    while (!isValidChar(b64Str[charIdx])) {
       charIdx++;
     }
     tmp = REVERSE_LOOKUP[b64Str.charCodeAt(charIdx++)] << 18;
-    while (!isValidChar(charIdx)) {
+    while (!isValidChar(b64Str[charIdx])) {
       charIdx++;
     }
     tmp |= REVERSE_LOOKUP[b64Str.charCodeAt(charIdx++)] << 12;
-    while (!isValidChar(charIdx)) {
+    while (!isValidChar(b64Str[charIdx])) {
       charIdx++;
     }
     tmp |= REVERSE_LOOKUP[b64Str.charCodeAt(charIdx++)] << 6;
-    while (!isValidChar(charIdx)) {
+    while (!isValidChar(b64Str[charIdx])) {
       charIdx++;
     }
     tmp |= REVERSE_LOOKUP[b64Str.charCodeAt(charIdx++)];
 
-    unit8[offset++] = (tmp >> 16) & 0xff;
-    unit8[offset++] = (tmp >> 8) & 0xff;
-    unit8[offset++] = tmp & 0xff;
+    uint8[offset++] = (tmp >> 16) & 0xff;
+    uint8[offset++] = (tmp >> 8) & 0xff;
+    uint8[offset++] = tmp & 0xff;
   }
 
   // Handle remain
   switch (remain) {
     case 3:
-      while (!isValidChar(charIdx)) {
+      while (!isValidChar(b64Str[charIdx])) {
         charIdx++;
       }
       tmp = REVERSE_LOOKUP[b64Str.charCodeAt(charIdx++)] << 10;
-      while (!isValidChar(charIdx)) {
+      while (!isValidChar(b64Str[charIdx])) {
         charIdx++;
       }
       tmp |= REVERSE_LOOKUP[b64Str.charCodeAt(charIdx++)] << 4;
-      while (!isValidChar(charIdx)) {
+      while (!isValidChar(b64Str[charIdx])) {
         charIdx++;
       }
       tmp |= REVERSE_LOOKUP[b64Str.charCodeAt(charIdx++)] >> 2;
-      unit8[offset++] = (tmp >> 8) & 0xff;
-      unit8[offset++] = tmp & 0xff;
+      uint8[offset++] = (tmp >> 8) & 0xff;
+      uint8[offset++] = tmp & 0xff;
       break;
     case 2:
-      while (!isValidChar(charIdx)) {
+      while (!isValidChar(b64Str[charIdx])) {
         charIdx++;
       }
-      tmp = REVERSE_LOOKUP[b64Str.charCodeAt(charIdx)] << 2;
-      while (!isValidChar(charIdx)) {
+      tmp = REVERSE_LOOKUP[b64Str.charCodeAt(charIdx++)] << 2;
+      while (!isValidChar(b64Str[charIdx])) {
         charIdx++;
       }
-      tmp |= REVERSE_LOOKUP[b64Str.charCodeAt(charIdx)] >> 4;
-      unit8[offset++] = tmp & 0xff;
+      tmp |= REVERSE_LOOKUP[b64Str.charCodeAt(charIdx++)] >> 4;
+      uint8[offset++] = tmp & 0xff;
       break;
     case 1:
-      console.error('BASE64: remain 1 should not happen');
-      break;
+      throw new Error('BASE64: remain 1 should not happen');
     case 0:
       break;
     default:
@@ -145,18 +121,18 @@ function writeChunk(b64Str, chunk, dstOffset, unit8) {
 
 function toArrayBuffer(b64Str) {
   const chunks = extractChunks(b64Str);
-  let totalSize = 0;
-  for (let i = 0; i < chunks.length; i++) {
-    const { count } = chunks[i];
-    const remain = count % 4;
-    totalSize += (count - remain) * 3 + remain;
-  }
+  const totalEncodedLength = chunks[chunks.length - 1].end + 1;
+  const padding = (4 - (totalEncodedLength % 4)) % 4; // -length mod 4
+  // Any padding chars in the middle of b64Str is to be interpreted as \x00,
+  // whereas the terminating padding chars are to be interpreted as literal padding.
+  const totalSize = ((totalEncodedLength + padding) * 3) / 4 - padding;
 
   const arrayBuffer = new ArrayBuffer(totalSize);
   const view = new Uint8Array(arrayBuffer);
   let dstOffset = 0;
   for (let i = 0; i < chunks.length; i++) {
     dstOffset += writeChunk(b64Str, chunks[i], dstOffset, view);
+    dstOffset += (4 - (chunks[i].count % 4)) % 4;
   }
 
   return arrayBuffer;
