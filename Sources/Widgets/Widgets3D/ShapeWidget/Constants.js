@@ -8,6 +8,8 @@ export const ShapeBehavior = {
   [BehaviorCategory.POINTS]: {
     CORNER_TO_CORNER: 0,
     CENTER_TO_CORNER: 1,
+    RADIUS: 2,
+    DIAMETER: 3,
   },
   [BehaviorCategory.PLACEMENT]: {
     CLICK: 0,

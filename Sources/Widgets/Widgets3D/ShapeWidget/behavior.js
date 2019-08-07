@@ -8,6 +8,8 @@ import {
 import { SlicingMode } from 'vtk.js/Sources/Rendering/Core/ImageMapper/Constants';
 import { vec3 } from 'gl-matrix';
 
+const { vtkErrorMacro } = macro;
+
 const EPSILON = 1e-6;
 
 function makeBoundsFromPoints(point1, point2) {
@@ -55,29 +57,23 @@ export default function widgetBehavior(publicAPI, model) {
         model.modifierBehavior[key][category] === flag
     );
 
-  publicAPI.isRatioFixed = () =>
-    publicAPI.isBehaviorActive(
-      BehaviorCategory.RATIO,
-      ShapeBehavior[BehaviorCategory.RATIO].FIXED
-    ) ||
-    (!publicAPI.isBehaviorActive(
-      BehaviorCategory.RATIO,
-      ShapeBehavior[BehaviorCategory.RATIO].FREE
-    ) &&
-      model.modifierBehavior.None[BehaviorCategory.RATIO] ===
-        ShapeBehavior[BehaviorCategory.RATIO].FIXED);
+  publicAPI.isOppositeBehaviorActive = (category, flag) =>
+    Object.values(ShapeBehavior[category]).some(
+      (flagToTry) =>
+        flag !== flagToTry && publicAPI.isBehaviorActive(category, flagToTry)
+    );
 
-  publicAPI.isCenterToCorner = () =>
-    publicAPI.isBehaviorActive(
-      BehaviorCategory.POINTS,
-      ShapeBehavior[BehaviorCategory.POINTS].CENTER_TO_CORNER
-    ) ||
-    (!publicAPI.isBehaviorActive(
-      BehaviorCategory.POINTS,
-      ShapeBehavior[BehaviorCategory.POINTS].CORNER_TO_CORNER
-    ) &&
-      model.modifierBehavior.None[BehaviorCategory.POINTS] ===
-        ShapeBehavior[BehaviorCategory.POINTS].CENTER_TO_CORNER);
+  publicAPI.getActiveBehaviorFromCategory = (category) =>
+    Object.values(ShapeBehavior[category]).find(
+      (flag) =>
+        publicAPI.isBehaviorActive(category, flag) ||
+        (!publicAPI.isOppositeBehaviorActive(category, flag) &&
+          model.modifierBehavior.None[category] === flag)
+    );
+
+  publicAPI.isRatioFixed = () =>
+    publicAPI.getActiveBehaviorFromCategory(BehaviorCategory.RATIO) ===
+    ShapeBehavior[BehaviorCategory.RATIO].FIXED;
 
   publicAPI.isDraggingEnabled = () =>
     publicAPI.isBehaviorActive(
@@ -187,6 +183,22 @@ export default function widgetBehavior(publicAPI, model) {
     ];
   };
 
+  publicAPI.setBoundsFromRadius = (center, pointOnCircle) => {
+    vtkErrorMacro(
+      `${
+        model.classHierarchy[model.classHierarchy.length - 1]
+      } should implement 'setBoundsFromRadius'`
+    );
+  };
+
+  publicAPI.setBoundsFromDiameter = (center, pointOnCircle) => {
+    vtkErrorMacro(
+      `${
+        model.classHierarchy[model.classHierarchy.length - 1]
+      } should implement 'setBoundsFromDiameter'`
+    );
+  };
+
   publicAPI.updateShapeBounds = () => {
     if (model.point1 && model.point2) {
       const point1 = [...model.point1];
@@ -196,13 +208,33 @@ export default function widgetBehavior(publicAPI, model) {
         point2 = publicAPI.makeSquareFromPoints(point1, point2);
       }
 
-      if (publicAPI.isCenterToCorner()) {
-        const diagonal = [0, 0, 0];
-        vec3.subtract(diagonal, point1, point2);
-        vec3.add(point1, point1, diagonal);
-      }
+      switch (
+        publicAPI.getActiveBehaviorFromCategory(BehaviorCategory.POINTS)
+      ) {
+        case ShapeBehavior[BehaviorCategory.POINTS].CORNER_TO_CORNER:
+          publicAPI.setBounds(makeBoundsFromPoints(point1, point2));
 
-      publicAPI.setBounds(makeBoundsFromPoints(point1, point2));
+          break;
+        case ShapeBehavior[BehaviorCategory.POINTS].CENTER_TO_CORNER:
+          {
+            const diagonal = [0, 0, 0];
+            vec3.subtract(diagonal, point1, point2);
+            vec3.add(point1, point1, diagonal);
+          }
+          publicAPI.setBounds(makeBoundsFromPoints(point1, point2));
+
+          break;
+        case ShapeBehavior[BehaviorCategory.POINTS].RADIUS:
+          publicAPI.setBoundsFromRadius(point1, point2);
+
+          break;
+        case ShapeBehavior[BehaviorCategory.POINTS].DIAMETER:
+          publicAPI.setBoundsFromDiameter(point1, point2);
+
+          break;
+        default:
+          console.log('FAIL');
+      }
     } else {
       publicAPI.setBounds([0, 0, 0, 0, 0, 0]);
     }

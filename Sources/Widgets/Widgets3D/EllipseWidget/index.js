@@ -19,7 +19,7 @@ import { ViewTypes } from 'vtk.js/Sources/Widgets/Core/WidgetManager/Constants';
 // Factory
 // ----------------------------------------------------------------------------
 
-function vtlEllipseWidget(publicAPI, model) {
+function vtkEllipseWidget(publicAPI, model) {
   model.classHierarchy.push('vtkEllipseWidget');
 
   // --- Widget Requirement ---------------------------------------------------
@@ -87,7 +87,7 @@ export function extend(publicAPI, model, initialValues = {}) {
   vtkAbstractWidgetFactory.extend(publicAPI, model, initialValues);
   macro.setGet(publicAPI, model, ['manipulator', 'widgetState']);
 
-  vtlEllipseWidget(publicAPI, model);
+  vtkEllipseWidget(publicAPI, model);
 }
 
 // ----------------------------------------------------------------------------

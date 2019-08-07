@@ -15,6 +15,11 @@ import vtkPaintFilter from 'vtk.js/Sources/Filters/General/PaintFilter';
 import vtkColorTransferFunction from 'vtk.js/Sources/Rendering/Core/ColorTransferFunction';
 import vtkPiecewiseFunction from 'vtk.js/Sources/Common/DataModel/PiecewiseFunction';
 
+import {
+  BehaviorCategory,
+  ShapeBehavior,
+} from 'vtk.js/Sources/Widgets/Widgets3D/ShapeWidget/Constants';
+
 import { ViewTypes } from 'vtk.js/Sources/Widgets/Core/WidgetManager/Constants';
 
 import controlPanel from './controlPanel.html';
@@ -66,6 +71,20 @@ const widgets = {};
 widgets.paintWidget = vtkPaintWidget.newInstance();
 widgets.rectangleWidget = vtkRectangleWidget.newInstance();
 widgets.ellipseWidget = vtkEllipseWidget.newInstance();
+widgets.circleWidget = vtkEllipseWidget.newInstance({
+  modifierBehavior: {
+    None: {
+      [BehaviorCategory.PLACEMENT]:
+        ShapeBehavior[BehaviorCategory.PLACEMENT].CLICK_AND_DRAG,
+      [BehaviorCategory.POINTS]: ShapeBehavior[BehaviorCategory.POINTS].RADIUS,
+      [BehaviorCategory.RATIO]: ShapeBehavior[BehaviorCategory.RATIO].FREE,
+    },
+    Control: {
+      [BehaviorCategory.POINTS]:
+        ShapeBehavior[BehaviorCategory.POINTS].DIAMETER,
+    },
+  },
+});
 widgets.splineWidget = vtkSplineWidget.newInstance();
 widgets.polygonWidget = vtkSplineWidget.newInstance({
   resolution: 1,
@@ -81,6 +100,10 @@ scene.rectangleHandle = scene.widgetManager.addWidget(
 );
 scene.ellipseHandle = scene.widgetManager.addWidget(
   widgets.ellipseWidget,
+  ViewTypes.SLICE
+);
+scene.circleHandle = scene.widgetManager.addWidget(
+  widgets.circleWidget,
   ViewTypes.SLICE
 );
 scene.splineHandle = scene.widgetManager.addWidget(
@@ -196,14 +219,18 @@ reader
     data.indexToWorldVec3([1, 0, 0], axis);
     scene.rectangleHandle.setXAxis(axis);
     scene.ellipseHandle.setXAxis(axis);
+    scene.circleHandle.setXAxis(axis);
     axis = [0, 0, 0];
     data.indexToWorldVec3([0, 1, 0], axis);
     scene.rectangleHandle.setYAxis(axis);
     scene.ellipseHandle.setYAxis(axis);
+    scene.circleHandle.setYAxis(axis);
     axis = [0, 0, 0];
     data.indexToWorldVec3([0, 0, 1], axis);
     scene.rectangleHandle.setZAxis(axis);
     scene.ellipseHandle.setZAxis(axis);
+    scene.circleHandle.setZAxis(axis);
+    scene.circleHandle.getRepresentations()[1].setDrawBorder(true);
 
     scene.splineHandle
       .getWidgetState()
@@ -245,6 +272,8 @@ reader
         widgets.rectangleWidget.getManipulator().setNormal(normal);
         widgets.ellipseWidget.getManipulator().setOrigin(position);
         widgets.ellipseWidget.getManipulator().setNormal(normal);
+        widgets.circleWidget.getManipulator().setOrigin(position);
+        widgets.circleWidget.getManipulator().setNormal(normal);
         widgets.splineWidget.getManipulator().setOrigin(position);
         widgets.splineWidget.getManipulator().setNormal(normal);
         widgets.polygonWidget.getManipulator().setOrigin(position);
@@ -252,11 +281,13 @@ reader
 
         scene.rectangleHandle.setSlicingMode(slicingMode);
         scene.ellipseHandle.setSlicingMode(slicingMode);
+        scene.circleHandle.setSlicingMode(slicingMode);
         painter.setSlicingMode(slicingMode);
 
         scene.paintHandle.updateRepresentationForRender();
         scene.rectangleHandle.updateRepresentationForRender();
         scene.ellipseHandle.updateRepresentationForRender();
+        scene.circleHandle.updateRepresentationForRender();
         scene.splineHandle.updateRepresentationForRender();
         scene.polygonHandle.updateRepresentationForRender();
 
@@ -308,6 +339,7 @@ document.querySelector('.axis').addEventListener('input', (ev) => {
     .setDirection(direction);
   scene.rectangleHandle.setSlicingMode(sliceMode);
   scene.ellipseHandle.setSlicingMode(sliceMode);
+  scene.circleHandle.setSlicingMode(sliceMode);
 
   setCamera(sliceMode, scene.renderer, image.data);
   scene.renderWindow.render();
@@ -386,6 +418,20 @@ scene.ellipseHandle.onInteractionEvent(() => {
     .getEllipseHandle()
     .getOrigin();
   const scale3 = scene.ellipseHandle
+    .getWidgetState()
+    .getEllipseHandle()
+    .getScale3();
+  painter.paintEllipse(center, scale3);
+});
+
+initializeHandle(scene.circleHandle);
+
+scene.circleHandle.onInteractionEvent(() => {
+  const center = scene.circleHandle
+    .getWidgetState()
+    .getEllipseHandle()
+    .getOrigin();
+  const scale3 = scene.circleHandle
     .getWidgetState()
     .getEllipseHandle()
     .getScale3();
