@@ -6,6 +6,10 @@ import vtkPixelSpaceCallbackMapper from 'vtk.js/Sources/Rendering/Core/PixelSpac
 import vtkPointSource from 'vtk.js/Sources/Filters/Sources/PointSource';
 import vtkHandleRepresentation from 'vtk.js/Sources/Interaction/Widgets/HandleRepresentation';
 
+import {
+  TextAlign,
+  VerticalAlign,
+} from 'vtk.js/Sources/Interaction/Widgets/LabelRepresentation/Constants';
 import { InteractionState } from 'vtk.js/Sources/Interaction/Widgets/HandleRepresentation/Constants';
 
 // ----------------------------------------------------------------------------
@@ -223,8 +227,17 @@ function vtkLabelRepresentation(publicAPI, model) {
 
         // Add text
         lines.forEach((line) => {
-          model.context.strokeText(line, x, y);
-          model.context.fillText(line, x, y);
+          let offset = 0;
+          if (model.textAlign === TextAlign.RIGHT) {
+            offset =
+              maxWidth - Math.round(model.context.measureText(line).width);
+          } else if (model.textAlign === TextAlign.CENTER) {
+            offset =
+              0.5 *
+              (maxWidth - Math.round(model.context.measureText(line).width));
+          }
+          model.context.strokeText(line, x + offset, y);
+          model.context.fillText(line, x + offset, y);
           y += lineSpace;
         });
       }
@@ -263,6 +276,8 @@ const DEFAULT_VALUES = {
     lineSpace: 0.2,
   },
   labelText: '',
+  textAlign: TextAlign.LEFT,
+  verticalAlign: VerticalAlign.TOP,
   selectLabelStyle: {
     fontColor: 'rgb(0, 255, 0)',
     fontStyle: 'normal',
@@ -300,8 +315,24 @@ export function extend(publicAPI, model, initialValues = {}) {
   model.mapper.setInputConnection(model.point.getOutputPort());
   model.mapper.setCallback((coordList) => {
     if (model.canvas) {
-      model.canvas.style.left = `${Math.round(coordList[0][0])}px`;
-      model.canvas.style.bottom = `${Math.round(coordList[0][1])}px`;
+      let xoffset = 0;
+      let yoffset = 0;
+      const { width } = publicAPI.getCanvasSize();
+
+      if (model.textAlign === TextAlign.RIGHT) {
+        xoffset = -width;
+      } else if (model.textAlign === TextAlign.CENTER) {
+        xoffset = -0.5 * width;
+      }
+
+      if (model.verticalAlign === VerticalAlign.BOTTOM) {
+        yoffset = -model.canvas.height;
+      } else if (model.verticalAlign === VerticalAlign.CENTER) {
+        yoffset = -0.5 * model.canvas.height;
+      }
+
+      model.canvas.style.left = `${Math.round(coordList[0][0] + xoffset)}px`;
+      model.canvas.style.bottom = `${Math.round(coordList[0][1] + yoffset)}px`;
 
       publicAPI.modified();
     }
@@ -325,7 +356,7 @@ export function extend(publicAPI, model, initialValues = {}) {
     publicAPI.updateLabel();
   });
 
-  macro.setGet(publicAPI, model, ['labelText']);
+  macro.setGet(publicAPI, model, ['labelText', 'textAlign', 'verticalAlign']);
   macro.get(publicAPI, model, ['container', 'labelText', 'labelStyle']);
 
   // Object methods
