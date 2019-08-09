@@ -1,4 +1,5 @@
 import macro from 'vtk.js/Sources/macro';
+import * as vtkMath from 'vtk.js/Sources/Common/Core/Math';
 import vtkDataSet from 'vtk.js/Sources/Common/DataModel/DataSet';
 import vtkStructuredData from 'vtk.js/Sources/Common/DataModel/StructuredData';
 import { StructuredType } from 'vtk.js/Sources/Common/DataModel/StructuredData/Constants';
@@ -305,6 +306,18 @@ function vtkImageData(publicAPI, model) {
     vec3.transformMat4(vout, vin, model.indexToWorld);
   };
 
+  publicAPI.indexToWorldBounds = (bin, bout) => {
+    const in1 = [bin[0], bin[2], bin[4]];
+    const in2 = [bin[1], bin[3], bin[5]];
+    const out1 = [0, 0, 0];
+    const out2 = [0, 0, 0];
+
+    vec3.transformMat4(out1, in1, model.indexToWorld);
+    vec3.transformMat4(out2, in2, model.indexToWorld);
+
+    vtkMath.computeBoundsFromPoints(out1, out2, bout);
+  };
+
   // slow version for generic arrays
   publicAPI.indexToWorld = (ain, aout) => {
     const vin = vec3.fromValues(ain[0], ain[1], ain[2]);
@@ -316,6 +329,18 @@ function vtkImageData(publicAPI, model) {
   // this is the fast version, requires vec3 arguments
   publicAPI.worldToIndexVec3 = (vin, vout) => {
     vec3.transformMat4(vout, vin, model.worldToIndex);
+  };
+
+  publicAPI.worldToIndexBounds = (bin, bout) => {
+    const in1 = [bin[0], bin[2], bin[4]];
+    const in2 = [bin[1], bin[3], bin[5]];
+    const out1 = [0, 0, 0];
+    const out2 = [0, 0, 0];
+
+    vec3.transformMat4(out1, in1, model.worldToIndex);
+    vec3.transformMat4(out2, in2, model.worldToIndex);
+
+    vtkMath.computeBoundsFromPoints(out1, out2, bout);
   };
 
   // slow version for generic arrays

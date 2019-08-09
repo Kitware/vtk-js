@@ -5,6 +5,8 @@ import {
   ShapeBehavior,
 } from 'vtk.js/Sources/Widgets/Widgets3D/ShapeWidget/Constants';
 
+import vtkLabelRepresentation from 'vtk.js/Sources/Interaction/Widgets/LabelRepresentation';
+
 import { SlicingMode } from 'vtk.js/Sources/Rendering/Core/ImageMapper/Constants';
 import { vec3 } from 'gl-matrix';
 
@@ -75,23 +77,15 @@ export default function widgetBehavior(publicAPI, model) {
     publicAPI.getActiveBehaviorFromCategory(BehaviorCategory.RATIO) ===
     ShapeBehavior[BehaviorCategory.RATIO].FIXED;
 
-  publicAPI.isDraggingEnabled = () =>
-    publicAPI.isBehaviorActive(
-      BehaviorCategory.PLACEMENT,
-      ShapeBehavior[BehaviorCategory.PLACEMENT].DRAG
-    ) ||
-    publicAPI.isBehaviorActive(
-      BehaviorCategory.PLACEMENT,
-      ShapeBehavior[BehaviorCategory.PLACEMENT].CLICK_AND_DRAG
-    ) ||
-    (!publicAPI.isBehaviorActive(
-      BehaviorCategory.PLACEMENT,
-      ShapeBehavior[BehaviorCategory.PLACEMENT].CLICK
-    ) &&
-      (model.modifierBehavior.None[BehaviorCategory.PLACEMENT] ===
-        ShapeBehavior[BehaviorCategory.PLACEMENT].DRAG ||
-        model.modifierBehavior.None[BehaviorCategory.PLACEMENT] ===
-          ShapeBehavior[BehaviorCategory.PLACEMENT].CLICK_AND_DRAG));
+  publicAPI.isDraggingEnabled = () => {
+    const behavior = publicAPI.getActiveBehaviorFromCategory(
+      BehaviorCategory.PLACEMENT
+    );
+    return (
+      behavior === ShapeBehavior[BehaviorCategory.PLACEMENT].DRAG ||
+      behavior === ShapeBehavior[BehaviorCategory.PLACEMENT].CLICK_AND_DRAG
+    );
+  };
 
   publicAPI.isDraggingForced = () =>
     publicAPI.isBehaviorActive(
@@ -100,6 +94,10 @@ export default function widgetBehavior(publicAPI, model) {
     ) ||
     model.modifierBehavior.None[BehaviorCategory.PLACEMENT] ===
       ShapeBehavior[BehaviorCategory.PLACEMENT].DRAG;
+
+  publicAPI.isPlacementMadeByHandles = () =>
+    publicAPI.getActiveBehaviorFromCategory(BehaviorCategory.PLACEMENT) ===
+    ShapeBehavior[BehaviorCategory.PLACEMENT].HANDLES;
 
   publicAPI.setVisibleOnFocus = (visibleOnFocus) => {
     model.visibleOnFocus = visibleOnFocus;
@@ -115,6 +113,14 @@ export default function widgetBehavior(publicAPI, model) {
 
   publicAPI.setZAxis = (zAxis) => {
     vec3.normalize(model.zAxis, zAxis);
+  };
+
+  publicAPI.setLabelTextCallback = (callback) => {
+    model.labelTextCallback = callback;
+  };
+
+  publicAPI.setResetAfterPointPlacement = (reset) => {
+    model.resetAfterPointPlacement = reset;
   };
 
   // --------------------------------------------------------------------------
@@ -199,6 +205,57 @@ export default function widgetBehavior(publicAPI, model) {
     );
   };
 
+  publicAPI.setBounds = (bounds) => {
+    if (model.label && model.labelTextCallback) {
+      if (model.hasFocus && model.point1 && model.point2) {
+        const point1 = model.openGLRenderWindow.worldToDisplay(
+          bounds[0],
+          bounds[2],
+          bounds[4],
+          model.renderer
+        );
+        const point2 = model.openGLRenderWindow.worldToDisplay(
+          bounds[1],
+          bounds[3],
+          bounds[5],
+          model.renderer
+        );
+        const screenBounds = [
+          point1[0],
+          point2[0],
+          point1[1],
+          point2[1],
+          point1[2],
+          point2[2],
+        ];
+
+        const {
+          text,
+          position,
+          textAllign,
+          verticalAllign,
+        } = model.labelTextCallback(bounds, screenBounds);
+
+        if (textAllign) {
+          model.label.setTextAllign(textAllign);
+        }
+
+        if (verticalAllign) {
+          model.label.setVerticalAllign(verticalAllign);
+        }
+
+        if (text && position) {
+          model.label.setDisplayPosition(position);
+          model.label.setLabelText(text);
+        } else {
+          model.label.setLabelText('');
+        }
+      } else {
+        model.label.setLabelText('');
+      }
+    }
+  };
+
   publicAPI.updateShapeBounds = () => {
     if (model.point1 && model.point2) {
       const point1 = [...model.point1];
@@ -233,7 +290,8 @@ export default function widgetBehavior(publicAPI, model) {
 
           break;
         default:
-          console.log('FAIL');
+          // This should never be executed
+          vtkErrorMacro('vtk internal error');
       }
     } else {
       publicAPI.setBounds([0, 0, 0, 0, 0, 0]);
@@ -296,7 +354,10 @@ export default function widgetBehavior(publicAPI, model) {
       publicAPI.updateShapeBounds();
       publicAPI.invokeInteractionEvent();
       publicAPI.invokeEndInteractionEvent();
-      publicAPI.reset();
+
+      if (model.resetAfterPointPlacement) {
+        publicAPI.reset();
+      }
     }
 
     return macro.EVENT_ABORT;
@@ -347,7 +408,7 @@ export default function widgetBehavior(publicAPI, model) {
   };
 
   // --------------------------------------------------------------------------
-  // Shift key - enforce square
+  // Register key presses/relases
   // --------------------------------------------------------------------------
 
   publicAPI.handleKeyDown = ({ key }) => {
@@ -389,6 +450,15 @@ export default function widgetBehavior(publicAPI, model) {
       model.moveHandle.activate();
       model.shapeHandle.setVisible(false);
       model.interactor.requestAnimation(publicAPI);
+
+      if (!model.label) {
+        model.label = vtkLabelRepresentation.newInstance();
+      }
+
+      model.label.setRenderer(model.renderer);
+      model.label.buildRepresentation();
+      model.renderer.addViewProp(model.label);
+      model.label.setContainer(model.interactor.getContainer());
     }
 
     model.hasFocus = true;
@@ -402,6 +472,11 @@ export default function widgetBehavior(publicAPI, model) {
         model.shapeHandle.setVisible(false);
       }
       model.interactor.cancelAnimation(publicAPI);
+    }
+
+    if (model.label) {
+      model.label.setContainer(null);
+      model.label.setLabelText('');
     }
 
     model.widgetState.deactivate();

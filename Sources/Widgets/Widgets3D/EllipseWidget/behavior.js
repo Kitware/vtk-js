@@ -1,28 +1,20 @@
 import shapeBehavior from 'vtk.js/Sources/Widgets/Widgets3D/ShapeWidget/behavior';
 import { vec3 } from 'gl-matrix';
+import * as vtkMath from 'vtk.js/Sources/Common/Core/Math';
 
 export default function widgetBehavior(publicAPI, model) {
   // We inherit shapeBehavior
   shapeBehavior(publicAPI, model);
-  const superAPI = Object.assign({}, publicAPI);
+  const superClass = Object.assign({}, publicAPI);
 
   model.classHierarchy.push('vtkEllipseWidgetProp');
 
   publicAPI.setBounds = (bounds) => {
-    if (superAPI.setBounds) {
-      superAPI.setBounds(bounds);
+    if (superClass.setBounds) {
+      superClass.setBounds(bounds);
 
-      const center = [
-        (bounds[0] + bounds[1]) / 2,
-        (bounds[2] + bounds[3]) / 2,
-        (bounds[4] + bounds[5]) / 2,
-      ];
-
-      const scale3 = [
-        Math.max(bounds[0], bounds[1]) - center[0],
-        Math.max(bounds[2], bounds[3]) - center[1],
-        Math.max(bounds[4], bounds[5]) - center[2],
-      ];
+      const center = vtkMath.computeBoundsCenter(bounds);
+      const scale3 = vtkMath.computeBoundsScale3(bounds);
 
       model.shapeHandle.setOrigin(center);
       model.shapeHandle.setScale3(scale3);

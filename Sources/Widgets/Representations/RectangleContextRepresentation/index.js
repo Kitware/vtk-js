@@ -30,6 +30,24 @@ function vtkRectangleContextRepresentation(publicAPI, model) {
 
   // --------------------------------------------------------------------------
 
+  publicAPI.setDrawBorder = (draw) => {
+    model.drawBorder = draw;
+  };
+
+  // --------------------------------------------------------------------------
+
+  publicAPI.setDrawFace = (draw) => {
+    model.drawFace = draw;
+  };
+
+  // --------------------------------------------------------------------------
+
+  publicAPI.setOpacity = (opacity) => {
+    model.actor.getProperty().setOpacity(opacity);
+  };
+
+  // --------------------------------------------------------------------------
+
   publicAPI.requestData = (inData, outData) => {
     if (model.deleted) {
       return;
@@ -87,10 +105,17 @@ function vtkRectangleContextRepresentation(publicAPI, model) {
       const polys = new Uint32Array([4, 0, 1, 2, 3]);
 
       dataset.getPoints().setData(points, 3);
-      dataset.getPolys().setData(polys, 1);
+      if (model.drawFace) {
+        dataset.getPolys().setData(polys, 1);
+      }
+      if (model.drawBorder) {
+        const line = new Uint32Array([5, 0, 1, 2, 3, 0]);
+        dataset.getLines().setData(line, 1);
+      }
     } else {
       dataset.getPoints().setData([], 0);
       dataset.getPolys().setData([], 0);
+      dataset.getLines().setData([], 0);
     }
 
     outData[0] = dataset;
@@ -103,7 +128,10 @@ function vtkRectangleContextRepresentation(publicAPI, model) {
 // Object factory
 // ----------------------------------------------------------------------------
 
-const DEFAULT_VALUES = {};
+const DEFAULT_VALUES = {
+  drawBorder: false,
+  drawFace: true,
+};
 
 // ----------------------------------------------------------------------------
 

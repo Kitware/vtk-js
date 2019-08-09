@@ -1873,6 +1873,43 @@ export function areBoundsInitialized(bounds) {
   return !(bounds[1] - bounds[0] < 0.0);
 }
 
+export function computeBoundsCenter(bounds) {
+  return [
+    (bounds[0] + bounds[1]) / 2,
+    (bounds[2] + bounds[3]) / 2,
+    (bounds[4] + bounds[5]) / 2,
+  ];
+}
+
+export function computeBoundsScale3(bounds) {
+  const center = computeBoundsCenter(bounds);
+
+  return [
+    Math.max(bounds[0], bounds[1]) - center[0],
+    Math.max(bounds[2], bounds[3]) - center[1],
+    Math.max(bounds[4], bounds[5]) - center[2],
+  ];
+}
+
+export function computeBoundsPoints(point1, point2, bounds) {
+  point1[0] = Math.min(bounds[0], bounds[1]);
+  point1[1] = Math.min(bounds[2], bounds[3]);
+  point1[2] = Math.min(bounds[4], bounds[5]);
+
+  point2[0] = Math.max(bounds[0], bounds[1]);
+  point2[1] = Math.max(bounds[2], bounds[3]);
+  point2[2] = Math.max(bounds[4], bounds[5]);
+}
+
+export function computeBoundsFromPoints(point1, point2, bounds) {
+  bounds[0] = Math.min(point1[0], point2[0]);
+  bounds[1] = Math.max(point1[0], point2[0]);
+  bounds[2] = Math.min(point1[1], point2[1]);
+  bounds[3] = Math.max(point1[1], point2[1]);
+  bounds[4] = Math.min(point1[2], point2[2]);
+  bounds[5] = Math.max(point1[2], point2[2]);
+}
+
 export function clampValue(value, minValue, maxValue) {
   if (value < minValue) {
     return minValue;
@@ -1881,6 +1918,18 @@ export function clampValue(value, minValue, maxValue) {
     return maxValue;
   }
   return value;
+}
+
+export function clampVector(out, vector, minVector, maxVector) {
+  out[0] = clampValue(vector[0], minVector[0], maxVector[0]);
+  out[1] = clampValue(vector[1], minVector[1], maxVector[1]);
+  out[2] = clampValue(vector[2], minVector[2], maxVector[2]);
+}
+
+export function roundVector(out, vector) {
+  out[0] = Math.round(vector[0]);
+  out[1] = Math.round(vector[1]);
+  out[2] = Math.round(vector[2]);
 }
 
 export function clampAndNormalizeValue(value, range) {
@@ -1993,6 +2042,91 @@ export function solve3PointCircle(p1, p2, p3, center) {
     center[i] = alpha * p1[i] + beta * p2[i] + gamma * p3[i];
   }
   return radius;
+}
+
+export function computeHistogram(imageData, worldBounds, voxelFunc = null) {
+  if (!imageData) {
+    return {
+      min: 0,
+      max: 0,
+      average: 0,
+    };
+  }
+
+  const bounds = [0, 0, 0, 0, 0, 0];
+  imageData.worldToIndexBounds(worldBounds, bounds);
+
+  const point1 = [0, 0, 0];
+  const point2 = [0, 0, 0];
+  computeBoundsPoints(point1, point2, bounds);
+
+  const dimensions = imageData.getDimensions();
+
+  clampVector(
+    point1,
+    point1,
+    [0, 0, 0],
+    [dimensions[0] - 1, dimensions[1] - 1, dimensions[2] - 1]
+  );
+  clampVector(
+    point2,
+    point2,
+    [0, 0, 0],
+    [dimensions[0] - 1, dimensions[1] - 1, dimensions[2] - 1]
+  );
+
+  roundVector(point1, point1);
+  roundVector(point2, point2);
+
+  const ystride = dimensions[0];
+  const zstride = dimensions[0] * dimensions[1];
+
+  const pixels = imageData
+    .getPointData()
+    .getScalars()
+    .getData();
+  let imax = -Infinity;
+  let imin = Infinity;
+  let isum = 0;
+  let inum = 0;
+
+  for (let z = point1[2]; z <= point2[2]; z++) {
+    for (let y = point1[1]; y <= point2[1]; y++) {
+      for (let x = point1[0]; x <= point2[0]; x++) {
+        if (!voxelFunc || voxelFunc([x, y, z], bounds)) {
+          const index = x + y * ystride + z * zstride;
+          const pixel = pixels[index];
+
+          if (pixel > imax) imax = pixel;
+          if (pixel < imin) imin = pixel;
+          isum += pixel;
+          inum += 1;
+        }
+      }
+    }
+  }
+
+  return {
+    imin,
+    imax,
+    average: inum > 0 ? isum / inum : 0,
+  };
+}
+
+export function isPointIn3DEllipse(point, bounds) {
+  const center = computeBoundsCenter(bounds);
+  let scale3 = computeBoundsScale3(bounds);
+  scale3 = scale3.map(
+    (x) => (Math.abs(x) < VTK_SMALL_NUMBER ? VTK_SMALL_NUMBER : x)
+  );
+
+  const radius = norm([
+    (point[0] - center[0]) / scale3[0],
+    (point[1] - center[1]) / scale3[1],
+    (point[2] - center[2]) / scale3[2],
+  ]);
+
+  return radius <= 1;
 }
 
 export const inf = Infinity;
@@ -2138,7 +2272,12 @@ export default {
   lab2rgb,
   uninitializeBounds,
   areBoundsInitialized,
+  computeBoundsCenter,
+  computeBoundsScale3,
+  computeBoundsPoints,
+  computeBoundsFromPoints,
   clampValue,
+  clampVector,
   clampAndNormalizeValue,
   getScalarTypeFittingRange,
   getAdjustedScalarRange,
@@ -2146,6 +2285,8 @@ export default {
   boundsIsWithinOtherBounds,
   pointIsWithinBounds,
   solve3PointCircle,
+  computeHistogram,
+  isPointIn3DEllipse,
   inf,
   negInf,
   isInf,
