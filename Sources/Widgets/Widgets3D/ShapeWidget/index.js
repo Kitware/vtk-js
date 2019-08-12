@@ -20,6 +20,7 @@ export const DEFAULT_VALUES = {
   },
   keysDown: {},
   resetAfterPointPlacement: true,
+  useHandles: false,
 };
 
 export default { DEFAULT_VALUES };

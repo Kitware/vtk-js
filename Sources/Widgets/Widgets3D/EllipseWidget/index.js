@@ -24,6 +24,17 @@ function vtkEllipseWidget(publicAPI, model) {
 
   // --- Widget Requirement ---------------------------------------------------
 
+  model.methodsToLink = [
+    'activeScaleFactor',
+    'activeColor',
+    'useActiveColor',
+    'glyphResolution',
+    'defaultScale',
+    'drawBorder',
+    'drawFace',
+    'opacity',
+  ];
+
   model.behavior = widgetBehavior;
   publicAPI.getRepresentationsForViewType = (viewType) => {
     switch (viewType) {
@@ -50,8 +61,10 @@ function vtkEllipseWidget(publicAPI, model) {
   model.manipulator = vtkPlanePointManipulator.newInstance();
   model.widgetState = stateGenerator();
   model.shapeHandle = model.widgetState.getEllipseHandle();
-  model.moveHandle = model.widgetState.getMoveHandle();
-  model.moveHandle.setManipulator(model.manipulator);
+  model.point1Handle = model.widgetState.getPoint1Handle();
+  model.point2Handle = model.widgetState.getPoint2Handle();
+  model.point1Handle.setManipulator(model.manipulator);
+  model.point2Handle.setManipulator(model.manipulator);
 }
 
 // ----------------------------------------------------------------------------

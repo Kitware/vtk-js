@@ -357,7 +357,7 @@ export function extend(publicAPI, model, initialValues = {}) {
   });
 
   macro.setGet(publicAPI, model, ['labelText', 'textAlign', 'verticalAlign']);
-  macro.get(publicAPI, model, ['container', 'labelText', 'labelStyle']);
+  macro.get(publicAPI, model, ['container', 'labelStyle']);
 
   // Object methods
   vtkLabelRepresentation(publicAPI, model);

@@ -69,8 +69,23 @@ scene.widgetManager.setRenderer(scene.renderer);
 
 // Widgets
 const widgets = {};
-widgets.rectangleWidget = vtkRectangleWidget.newInstance();
-widgets.ellipseWidget = vtkEllipseWidget.newInstance();
+widgets.rectangleWidget = vtkRectangleWidget.newInstance({
+  resetAfterPointPlacement: false,
+  useHandles: true,
+});
+widgets.ellipseWidget = vtkEllipseWidget.newInstance({
+  modifierBehavior: {
+    None: {
+      [BehaviorCategory.PLACEMENT]:
+        ShapeBehavior[BehaviorCategory.PLACEMENT].CLICK_AND_DRAG,
+      [BehaviorCategory.POINTS]:
+        ShapeBehavior[BehaviorCategory.POINTS].CORNER_TO_CORNER,
+      [BehaviorCategory.RATIO]: ShapeBehavior[BehaviorCategory.RATIO].FREE,
+    },
+  },
+  resetAfterPointPlacement: false,
+  useHandles: true,
+});
 widgets.circleWidget = vtkEllipseWidget.newInstance({
   modifierBehavior: {
     None: {
@@ -79,11 +94,9 @@ widgets.circleWidget = vtkEllipseWidget.newInstance({
       [BehaviorCategory.POINTS]: ShapeBehavior[BehaviorCategory.POINTS].RADIUS,
       [BehaviorCategory.RATIO]: ShapeBehavior[BehaviorCategory.RATIO].FREE,
     },
-    Control: {
-      [BehaviorCategory.POINTS]:
-        ShapeBehavior[BehaviorCategory.POINTS].DIAMETER,
-    },
   },
+  resetAfterPointPlacement: false,
+  useHandles: true,
 });
 
 scene.rectangleHandle = scene.widgetManager.addWidget(
@@ -250,7 +263,9 @@ reader
       const area = dx * dy + dy * dz + dz * dx;
 
       return {
-        text: `perimeter: ${perimeter.toFixed(1)}\narea: ${area.toFixed(1)}`,
+        text: `perimeter: ${perimeter.toFixed(1)}mm\narea: ${area.toFixed(
+          1
+        )}mm²`,
         position,
         textAllign: TextAllign.RIGHT,
         verticalAllign: VerticalAllign.BOTTOM,
@@ -330,10 +345,17 @@ document.querySelector('.axis').addEventListener('input', (ev) => {
 });
 
 document.querySelector('.widget').addEventListener('input', (ev) => {
+  scene.widgetManager.grabFocus(widgets[ev.target.value]);
   activeWidget = ev.target.value;
-  scene.widgetManager.grabFocus(widgets[activeWidget]);
 });
 
-// document.querySelector('.focus').addEventListener('click', () => {
-//   scene.widgetManager.grabFocus(widgets[activeWidget]);
-// });
+document.querySelector('.reset').addEventListener('click', () => {
+  scene.rectangleHandle.reset();
+  scene.ellipseHandle.reset();
+  scene.circleHandle.reset();
+  scene.widgetManager.grabFocus(widgets[activeWidget]);
+  scene.renderWindow.render();
+});
+
+global.scene = scene;
+global.widgets = widgets;

@@ -2120,13 +2120,15 @@ export function isPointIn3DEllipse(point, bounds) {
     (x) => (Math.abs(x) < VTK_SMALL_NUMBER ? VTK_SMALL_NUMBER : x)
   );
 
-  const radius = norm([
+  const radius = [
     (point[0] - center[0]) / scale3[0],
     (point[1] - center[1]) / scale3[1],
     (point[2] - center[2]) / scale3[2],
-  ]);
+  ];
 
-  return radius <= 1;
+  return (
+    radius[0] * radius[0] + radius[1] * radius[1] + radius[2] * radius[2] <= 1
+  );
 }
 
 export const inf = Infinity;
