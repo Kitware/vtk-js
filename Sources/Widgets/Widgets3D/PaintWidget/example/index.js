@@ -20,8 +20,8 @@ import {
   ShapeBehavior,
 } from 'vtk.js/Sources/Widgets/Widgets3D/ShapeWidget/Constants';
 import {
-  TextAllign,
-  VerticalAllign,
+  TextAlign,
+  VerticalAlign,
 } from 'vtk.js/Sources/Interaction/Widgets/LabelRepresentation/Constants';
 
 import { ViewTypes } from 'vtk.js/Sources/Widgets/Core/WidgetManager/Constants';
@@ -221,7 +221,7 @@ reader
 
     updateControlPanel(image.imageMapper, data);
 
-    // give axis informations to widgets
+    // give axis information to widgets
     let axis = [0, 0, 0];
     data.indexToWorldVec3([1, 0, 0], axis);
     scene.rectangleHandle.setXAxis(axis);
@@ -257,8 +257,8 @@ reader
           ) / 2
         ).toFixed(2)}`,
         position,
-        textAllign: TextAllign.CENTER,
-        verticalAllign: VerticalAllign.CENTER,
+        textAlign: TextAlign.CENTER,
+        verticalAlign: VerticalAlign.CENTER,
       };
     });
 

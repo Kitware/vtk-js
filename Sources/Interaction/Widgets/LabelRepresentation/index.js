@@ -175,6 +175,36 @@ function vtkLabelRepresentation(publicAPI, model) {
     publicAPI.modified();
   };
 
+  publicAPI.computeTextDimensions = (text) => {
+    const currentLabelStyle = model.highlight
+      ? model.selectLabelStyle
+      : model.labelStyle;
+
+    const separatorRegExp = /\r?\n/;
+    const separatorRes = separatorRegExp.exec(text);
+    const separator = separatorRes !== null ? separatorRes[0] : null;
+    const lines = text.split(separator);
+
+    const lineSpace =
+      currentLabelStyle.fontSize * (1 + currentLabelStyle.lineSpace);
+
+    const padding = currentLabelStyle.fontSize / 4;
+
+    const height =
+      2 * padding + currentLabelStyle.fontSize + (lines.length - 1) * lineSpace;
+
+    let maxWidth = 0;
+    lines.forEach((line) => {
+      const width = Math.round(model.context.measureText(line).width);
+
+      if (width > maxWidth) {
+        maxWidth = width;
+      }
+    });
+
+    return { width: maxWidth, height, lineSpace, padding, lines };
+  };
+
   publicAPI.updateLabel = () => {
     if (model.context && model.canvas) {
       // Clear canvas
@@ -186,32 +216,16 @@ function vtkLabelRepresentation(publicAPI, model) {
           ? model.selectLabelStyle
           : model.labelStyle;
 
-        const separatorRegExp = /\r?\n/;
-        const separatorRes = separatorRegExp.exec(model.labelText);
-        const separator = separatorRes !== null ? separatorRes[0] : null;
-        const lines = model.labelText.split(separator);
-
-        const lineSpace =
-          currentLabelStyle.fontSize * (1 + currentLabelStyle.lineSpace);
-
-        const padding = currentLabelStyle.fontSize / 4;
-
-        const height =
-          2 * padding +
-          currentLabelStyle.fontSize +
-          (lines.length - 1) * lineSpace;
-
-        let maxWidth = 0;
-        lines.forEach((line) => {
-          const width = Math.round(model.context.measureText(line).width);
-
-          if (width > maxWidth) {
-            maxWidth = width;
-          }
-        });
+        const {
+          width,
+          height,
+          lineSpace,
+          padding,
+          lines,
+        } = publicAPI.computeTextDimensions(model.labelText);
 
         model.canvas.height = Math.round(height);
-        model.canvas.width = maxWidth + 2 * padding;
+        model.canvas.width = width + 2 * padding;
 
         // Update label style
         model.context.strokeStyle = currentLabelStyle.strokeColor;
@@ -229,12 +243,10 @@ function vtkLabelRepresentation(publicAPI, model) {
         lines.forEach((line) => {
           let offset = 0;
           if (model.textAlign === TextAlign.RIGHT) {
-            offset =
-              maxWidth - Math.round(model.context.measureText(line).width);
+            offset = width - Math.round(model.context.measureText(line).width);
           } else if (model.textAlign === TextAlign.CENTER) {
             offset =
-              0.5 *
-              (maxWidth - Math.round(model.context.measureText(line).width));
+              0.5 * (width - Math.round(model.context.measureText(line).width));
           }
           model.context.strokeText(line, x + offset, y);
           model.context.fillText(line, x + offset, y);
@@ -277,7 +289,7 @@ const DEFAULT_VALUES = {
   },
   labelText: '',
   textAlign: TextAlign.LEFT,
-  verticalAlign: VerticalAlign.TOP,
+  verticalAlign: VerticalAlign.BOTTOM,
   selectLabelStyle: {
     fontColor: 'rgb(0, 255, 0)',
     fontStyle: 'normal',
@@ -315,15 +327,7 @@ export function extend(publicAPI, model, initialValues = {}) {
   model.mapper.setInputConnection(model.point.getOutputPort());
   model.mapper.setCallback((coordList) => {
     if (model.canvas) {
-      let xoffset = 0;
       let yoffset = 0;
-      const { width } = publicAPI.getCanvasSize();
-
-      if (model.textAlign === TextAlign.RIGHT) {
-        xoffset = -width;
-      } else if (model.textAlign === TextAlign.CENTER) {
-        xoffset = -0.5 * width;
-      }
 
       if (model.verticalAlign === VerticalAlign.BOTTOM) {
         yoffset = -model.canvas.height;
@@ -331,7 +335,7 @@ export function extend(publicAPI, model, initialValues = {}) {
         yoffset = -0.5 * model.canvas.height;
       }
 
-      model.canvas.style.left = `${Math.round(coordList[0][0] + xoffset)}px`;
+      model.canvas.style.left = `${Math.round(coordList[0][0])}px`;
       model.canvas.style.bottom = `${Math.round(coordList[0][1] + yoffset)}px`;
 
       publicAPI.modified();

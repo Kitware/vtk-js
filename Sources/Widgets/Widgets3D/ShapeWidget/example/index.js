@@ -13,10 +13,13 @@ import vtkImageSlice from 'vtk.js/Sources/Rendering/Core/ImageSlice';
 import {
   BehaviorCategory,
   ShapeBehavior,
+  HorizontalTextPosition,
+  VerticalTextPosition,
+  computeTextPosition,
 } from 'vtk.js/Sources/Widgets/Widgets3D/ShapeWidget/Constants';
 import {
-  TextAllign,
-  VerticalAllign,
+  TextAlign,
+  VerticalAlign,
 } from 'vtk.js/Sources/Interaction/Widgets/LabelRepresentation/Constants';
 
 import { ViewTypes } from 'vtk.js/Sources/Widgets/Core/WidgetManager/Constants';
@@ -203,74 +206,88 @@ reader
     scene.ellipseHandle.getRepresentations()[1].setOpacity(1);
 
     // set text display callback
-    scene.ellipseHandle.setLabelTextCallback((worldBounds, screenBounds) => {
-      const position = [
-        Math.max(screenBounds[0], screenBounds[1]),
-        Math.max(screenBounds[2], screenBounds[3]),
-        Math.max(screenBounds[4], screenBounds[5]),
-      ];
+    scene.ellipseHandle.setLabelTextCallback(
+      (worldBounds, screenBounds, labelRep) => {
+        const { average, imin, imax } = vtkMath.computeHistogram(
+          image.data,
+          worldBounds,
+          vtkMath.isPointIn3DEllipse
+        );
 
-      const { average, imin, imax } = vtkMath.computeHistogram(
-        image.data,
-        worldBounds,
-        vtkMath.isPointIn3DEllipse
-      );
+        const text = `average: ${average.toFixed(
+          0
+        )} \nmin: ${imin} \nmax: ${imax} `;
 
-      return {
-        text: `average: ${average.toFixed(0)}\nmin: ${imin}\nmax: ${imax}`,
-        position,
-        textAllign: TextAllign.LEFT,
-        verticalAllign: VerticalAllign.BOTTOM,
-      };
-    });
+        const { width, height } = labelRep.computeTextDimensions(text);
+        labelRep.setDisplayPosition(
+          computeTextPosition(
+            screenBounds,
+            HorizontalTextPosition.OUTSIDE_RIGHT,
+            VerticalTextPosition.INSIDE_TOP,
+            width,
+            height
+          )
+        );
 
-    scene.circleHandle.setLabelTextCallback((worldBounds, screenBounds) => {
-      const center = vtkMath.computeBoundsCenter(screenBounds);
-      const radius =
-        vec3.distance(center, [
-          screenBounds[0],
-          screenBounds[2],
-          screenBounds[4],
-        ]) / 2;
-      const position = [0, 0, 0];
-      vec3.scaleAndAdd(position, center, [1, 1, 1], radius);
+        labelRep.setLabelText(text);
+      }
+    );
 
-      return {
-        text: `radius: ${(
-          vec3.distance(
-            [worldBounds[0], worldBounds[2], worldBounds[4]],
-            [worldBounds[1], worldBounds[3], worldBounds[5]]
-          ) / 2
-        ).toFixed(2)}`,
-        position,
-        textAllign: TextAllign.CENTER,
-        verticalAllign: VerticalAllign.CENTER,
-      };
-    });
+    scene.circleHandle.setLabelTextCallback(
+      (worldBounds, screenBounds, labelRep) => {
+        const center = vtkMath.computeBoundsCenter(screenBounds);
+        const radius =
+          vec3.distance(center, [
+            screenBounds[0],
+            screenBounds[2],
+            screenBounds[4],
+          ]) / 2;
 
-    scene.rectangleHandle.setLabelTextCallback((worldBounds, screenBounds) => {
-      const position = [
-        Math.max(screenBounds[0], screenBounds[1]),
-        Math.max(screenBounds[2], screenBounds[3]),
-        Math.max(screenBounds[4], screenBounds[5]),
-      ];
+        const position = [0, 0, 0];
+        vec3.scaleAndAdd(position, center, [1, 1, 1], radius);
+        labelRep.setDisplayPosition(position);
 
-      const dx = Math.abs(worldBounds[0] - worldBounds[1]);
-      const dy = Math.abs(worldBounds[2] - worldBounds[3]);
-      const dz = Math.abs(worldBounds[4] - worldBounds[5]);
+        labelRep.setLabelText(
+          `radius: ${(
+            vec3.distance(
+              [worldBounds[0], worldBounds[2], worldBounds[4]],
+              [worldBounds[1], worldBounds[3], worldBounds[5]]
+            ) / 2
+          ).toFixed(2)}`
+        );
 
-      const perimeter = 2 * (dx + dy + dz);
-      const area = dx * dy + dy * dz + dz * dx;
+        labelRep.setTextAlign(TextAlign.CENTER);
+        labelRep.setVerticalAlign(VerticalAlign.CENTER);
+      }
+    );
 
-      return {
-        text: `perimeter: ${perimeter.toFixed(1)}mm\narea: ${area.toFixed(
+    scene.rectangleHandle.setLabelTextCallback(
+      (worldBounds, screenBounds, labelRep) => {
+        const dx = Math.abs(worldBounds[0] - worldBounds[1]);
+        const dy = Math.abs(worldBounds[2] - worldBounds[3]);
+        const dz = Math.abs(worldBounds[4] - worldBounds[5]);
+
+        const perimeter = 2 * (dx + dy + dz);
+        const area = dx * dy + dy * dz + dz * dx;
+
+        const text = `perimeter: ${perimeter.toFixed(
           1
-        )}mm²`,
-        position,
-        textAllign: TextAllign.RIGHT,
-        verticalAllign: VerticalAllign.BOTTOM,
-      };
-    });
+        )}mm\narea: ${area.toFixed(1)}mm²`;
+
+        const { width, height } = labelRep.computeTextDimensions(text);
+        labelRep.setDisplayPosition(
+          computeTextPosition(
+            screenBounds,
+            HorizontalTextPosition.OUTSIDE_RIGHT,
+            VerticalTextPosition.INSIDE_TOP,
+            width,
+            height
+          )
+        );
+
+        labelRep.setTextAlign(TextAlign.RIGHT);
+      }
+    );
 
     const update = () => {
       const slicingMode = image.imageMapper.getSlicingMode() % 3;
