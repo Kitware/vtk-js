@@ -56,7 +56,7 @@ function vtkPixelSpaceCallbackMapper(publicAPI, model) {
       coords.push(coord);
     }
 
-    model.callback(coords, camera, aspect, depthValues, windowSize);
+    model.callback(coords, camera, aspect, depthValues, [width, height]);
   };
 }
 
