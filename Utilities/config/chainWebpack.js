@@ -41,6 +41,15 @@ module.exports = function chainWebpack(config) {
     .end();
 
   config.module
+    .rule('vtk-svg')
+    .test(/\.svg$/)
+    .include.add(/vtk\.js[/\\]Sources/)
+    .end()
+    .use('raw-loader')
+    .loader('raw-loader')
+    .end();
+
+  config.module
     .rule('vtk-module-css')
     .test(/\.css$/)
     .include.add(/vtk\.js[/\\]Sources/)
