@@ -1,0 +1,91 @@
+import vtkPolyData from 'vtk.js/Sources/Common/DataModel/PolyData';
+import vtkActor from 'vtk.js/Sources/Rendering/Core/Actor';
+import vtkPixelSpaceCallbackMapper from 'vtk.js/Sources/Rendering/Core/PixelSpaceCallbackMapper';
+import vtkWidgetRepresentation from 'vtk.js/Sources/Widgets/Representations/WidgetRepresentation';
+
+// ----------------------------------------------------------------------------
+
+function defer() {
+  let resolve;
+  let reject;
+  const promise = new Promise((res, rej) => {
+    resolve = res;
+    reject = rej;
+  });
+  return {
+    promise,
+    resolve,
+    reject,
+  };
+}
+
+// ----------------------------------------------------------------------------
+// vtkSVGRepresentation
+// ----------------------------------------------------------------------------
+
+function vtkSVGRepresentation(publicAPI, model) {
+  // Set our className
+  model.classHierarchy.push('vtkSVGRepresentation');
+
+  const deferred = [];
+
+  model.psActor = vtkActor.newInstance({ pickable: false });
+  model.psMapper = vtkPixelSpaceCallbackMapper.newInstance();
+  model.points = vtkPolyData.newInstance();
+
+  model.psMapper.setInputData(model.points);
+  model.psActor.setMapper(model.psMapper);
+
+  model.psMapper.setCallback((...args) => {
+    while (deferred.length) {
+      deferred.pop().resolve({
+        coords: args[0],
+        camera: args[1],
+        aspect: args[2],
+        depthValues: args[3],
+        windowSize: args[4],
+      });
+    }
+  });
+
+  model.actors.push(model.psActor);
+
+  // --------------------------------------------------------------------------
+
+  publicAPI.worldPointsToPixelSpace = (points3d) => {
+    const pts = new Float32Array(points3d.length * 3);
+    for (let i = 0; i < points3d.length; i++) {
+      pts[i * 3 + 0] = points3d[i][0];
+      pts[i * 3 + 1] = points3d[i][1];
+      pts[i * 3 + 2] = points3d[i][2];
+    }
+    model.points.getPoints().setData(pts);
+    model.points.modified();
+
+    const d = defer();
+    deferred.push(d);
+    return d.promise;
+  };
+}
+
+// ----------------------------------------------------------------------------
+// Object factory
+// ----------------------------------------------------------------------------
+
+const DEFAULT_VALUES = {};
+
+// ----------------------------------------------------------------------------
+
+export function extend(publicAPI, model, initialValues = {}) {
+  Object.assign(model, DEFAULT_VALUES, initialValues);
+
+  // Extend methods
+  vtkWidgetRepresentation.extend(publicAPI, model, initialValues);
+
+  // Object specific methods
+  vtkSVGRepresentation(publicAPI, model);
+}
+
+// ----------------------------------------------------------------------------
+
+export default { extend };

@@ -6,6 +6,8 @@ import WMConstants from 'vtk.js/Sources/Widgets/Core/WidgetManager/Constants';
 const { ViewTypes, RenderingTypes } = WMConstants;
 const { vtkErrorMacro } = macro;
 
+const SVG_XMLNS = 'http://www.w3.org/2000/svg';
+
 let viewIdCount = 1;
 
 // ----------------------------------------------------------------------------
@@ -21,6 +23,31 @@ export function extractRenderingComponents(renderer) {
 }
 
 // ----------------------------------------------------------------------------
+
+function createSvgElement(tag) {
+  return document.createElementNS(SVG_XMLNS, tag);
+}
+
+// ----------------------------------------------------------------------------
+
+function createSvgRoot(id) {
+  const wrapper = document.createElement('div');
+  wrapper.setAttribute(
+    'style',
+    'position: absolute; top: 0; left: 0; width: 100%; height: 100%;'
+  );
+
+  const svgRoot = createSvgElement('svg');
+  svgRoot.setAttribute('style', 'width: 100%; height: 100%;');
+  svgRoot.setAttribute('version', '1.1');
+  svgRoot.setAttribute('baseProfile', 'full');
+
+  wrapper.appendChild(svgRoot);
+
+  return { svgWrapper: wrapper, svgRoot };
+}
+
+// ----------------------------------------------------------------------------
 // vtkWidgetManager methods
 // ----------------------------------------------------------------------------
 
@@ -30,6 +57,7 @@ function vtkWidgetManager(publicAPI, model) {
   }
   model.classHierarchy.push('vtkWidgetManager');
   const propsWeakMap = new WeakMap();
+  const widgetToSvgMap = new WeakMap();
   const subscriptions = [];
 
   // --------------------------------------------------------------------------
@@ -41,11 +69,15 @@ function vtkWidgetManager(publicAPI, model) {
     FieldAssociations.FIELD_ASSOCIATION_POINTS
   );
 
+  const svgContainers = createSvgRoot(model.viewId);
+  model.svgWrapper = svgContainers.svgWrapper;
+  model.svgRoot = svgContainers.svgRoot;
+
   // --------------------------------------------------------------------------
   // API internal
   // --------------------------------------------------------------------------
 
-  function updateWeakMap(widget) {
+  function updateWidgetWeakMap(widget) {
     const representations = widget.getRepresentations();
     for (let i = 0; i < representations.length; i++) {
       const representation = representations[i];
@@ -65,6 +97,71 @@ function vtkWidgetManager(publicAPI, model) {
         ? widget
         : widget.getWidgetForView({ viewId: model.viewId }))
     );
+  }
+
+  // --------------------------------------------------------------------------
+  // internal SVG API
+  // --------------------------------------------------------------------------
+
+  function enableSvgLayer() {
+    const container = model.openGLRenderWindow.getReferenceByName('el');
+    container.appendChild(model.svgWrapper);
+  }
+
+  function disableSvgLayer() {
+    const container = model.openGLRenderWindow.getReferenceByName('el');
+    container.removeChild(model.svgWrapper);
+  }
+
+  function addToSvgLayer(viewWidget) {
+    const svgReps = viewWidget
+      .getRepresentations()
+      .filter((r) => r.isA('vtkSVGRepresentation'));
+
+    if (svgReps.length) {
+      // group element to hold all elements of the widget
+      const widgetGroup = createSvgElement('g');
+
+      model.svgRoot.appendChild(widgetGroup);
+      widgetToSvgMap.set(viewWidget, widgetGroup);
+    }
+  }
+
+  function removeFromSvgLayer(viewWidget) {
+    const group = widgetToSvgMap.get(viewWidget);
+    if (group) {
+      model.svgRoot.removeChild(group);
+      widgetToSvgMap.delete(viewWidget);
+    }
+  }
+
+  function updateSvg() {
+    if (model.useSvgLayer) {
+      const [cwidth, cheight] = model.openGLRenderWindow.getSize();
+      const ratio = window.devicePixelRatio || 1;
+      const bwidth = cwidth / ratio;
+      const bheight = cheight / ratio;
+      const viewBox = `0 0 ${cwidth} ${cheight}`;
+      model.svgRoot.setAttribute('width', bwidth);
+      model.svgRoot.setAttribute('height', bheight);
+      model.svgRoot.setAttribute('viewBox', viewBox);
+
+      for (let i = 0; i < model.widgets.length; i++) {
+        const widget = model.widgets[i];
+        const svgReps = widget
+          .getRepresentations()
+          .filter((r) => r.isA('vtkSVGRepresentation'));
+
+        const pendingContent = svgReps.map((r) => r.render());
+        Promise.all(pendingContent).then((contents) => {
+          const g = widgetToSvgMap.get(widget);
+          const svg = contents.join('');
+          if (g.innerHTML !== svg) {
+            g.innerHTML = svg;
+          }
+        });
+      }
+    }
   }
 
   // --------------------------------------------------------------------------
@@ -106,6 +203,8 @@ function vtkWidgetManager(publicAPI, model) {
     }
 
     model.selector.attach(model.openGLRenderWindow, model.renderer);
+
+    subscriptions.push(model.interactor.onRenderEvent(updateSvg));
 
     subscriptions.push(
       model.interactor.onStartAnimation(() => {
@@ -171,6 +270,10 @@ function vtkWidgetManager(publicAPI, model) {
     if (model.pickingEnabled) {
       publicAPI.enablePicking();
     }
+
+    if (model.useSvgLayer) {
+      enableSvgLayer();
+    }
   };
 
   publicAPI.addWidget = (widget, viewType, initialValues) => {
@@ -191,10 +294,13 @@ function vtkWidgetManager(publicAPI, model) {
     if (model.widgets.indexOf(w) === -1) {
       model.widgets.push(w);
       w.setWidgetManager(publicAPI);
-      updateWeakMap(w);
+      updateWidgetWeakMap(w);
 
       // Register to renderer
       model.renderer.addActor(w);
+
+      // register widget to svg layer
+      addToSvgLayer(w);
 
       publicAPI.modified();
     }
@@ -213,6 +319,8 @@ function vtkWidgetManager(publicAPI, model) {
         .getInteractor()
         .render();
       publicAPI.enablePicking();
+
+      removeFromSvgLayer(viewWidget);
 
       // free internal model + unregister it from its parent
       viewWidget.delete();
@@ -286,6 +394,25 @@ function vtkWidgetManager(publicAPI, model) {
   };
 
   publicAPI.releaseFocus = () => publicAPI.grabFocus(null);
+
+  publicAPI.setUseSvgLayer = (useSvgLayer) => {
+    if (useSvgLayer !== model.useSvgLayer) {
+      model.useSvgLayer = useSvgLayer;
+
+      if (useSvgLayer) {
+        if (model.renderer) {
+          enableSvgLayer();
+          // force a render so svg widgets can be drawn
+          updateSvg();
+        } else {
+          disableSvgLayer();
+        }
+      }
+
+      return true;
+    }
+    return false;
+  };
 }
 
 // ----------------------------------------------------------------------------
@@ -302,6 +429,7 @@ const DEFAULT_VALUES = {
   selections: null,
   previousSelectedData: null,
   widgetInFocus: null,
+  useSvgLayer: true,
 };
 
 // ----------------------------------------------------------------------------
@@ -318,6 +446,7 @@ export function extend(publicAPI, model, initialValues = {}) {
     'widgets',
     'viewId',
     'pickingEnabled',
+    'useSvgLayer',
   ]);
 
   // Object specific methods
