@@ -125,7 +125,8 @@ function vtkSplineContextRepresentation(publicAPI, model) {
     model.pipelines.border.actor
       .getProperty()
       .setColor(
-        ...(model.pipelines.area.triangleFilter.getErrorCount() === 0
+        ...(inPoints.length <= 3 ||
+        model.pipelines.area.triangleFilter.getErrorCount() === 0
           ? model.borderColor
           : model.errorBorderColor)
       );
