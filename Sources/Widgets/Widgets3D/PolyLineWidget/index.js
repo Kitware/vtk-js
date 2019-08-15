@@ -3,6 +3,7 @@ import vtkAbstractWidgetFactory from 'vtk.js/Sources/Widgets/Core/AbstractWidget
 import vtkPlanePointManipulator from 'vtk.js/Sources/Widgets/Manipulators/PlaneManipulator';
 import vtkPolyLineRepresentation from 'vtk.js/Sources/Widgets/Representations/PolyLineRepresentation';
 import vtkSphereHandleRepresentation from 'vtk.js/Sources/Widgets/Representations/SphereHandleRepresentation';
+import vtkSVGLandmarkRepresentation from 'vtk.js/Sources/Widgets/SVG/SVGLandmarkRepresentation';
 
 import widgetBehavior from 'vtk.js/Sources/Widgets/Widgets3D/PolyLineWidget/behavior';
 import stateGenerator from 'vtk.js/Sources/Widgets/Widgets3D/PolyLineWidget/state';
@@ -38,6 +39,7 @@ function vtkPolyLineWidget(publicAPI, model) {
       default:
         return [
           { builder: vtkSphereHandleRepresentation, labels: ['handles'] },
+          { builder: vtkSVGLandmarkRepresentation, labels: ['handles'] },
           { builder: vtkSphereHandleRepresentation, labels: ['moveHandle'] },
           {
             builder: vtkPolyLineRepresentation,

@@ -2,11 +2,11 @@ import macro from 'vtk.js/Sources/macro';
 import vtkOpenGLHardwareSelector from 'vtk.js/Sources/Rendering/OpenGL/HardwareSelector';
 import { FieldAssociations } from 'vtk.js/Sources/Common/DataModel/DataSet/Constants';
 import WMConstants from 'vtk.js/Sources/Widgets/Core/WidgetManager/Constants';
+import vtkSVGRepresentation from 'vtk.js/Sources/Widgets/SVG/SVGRepresentation';
 
 const { ViewTypes, RenderingTypes } = WMConstants;
 const { vtkErrorMacro } = macro;
-
-const SVG_XMLNS = 'http://www.w3.org/2000/svg';
+const { createSvgElement } = vtkSVGRepresentation;
 
 let viewIdCount = 1;
 
@@ -20,12 +20,6 @@ export function extractRenderingComponents(renderer) {
   const interactor = renderWindow.getInteractor();
   const openGLRenderWindow = interactor.getView();
   return { renderer, renderWindow, interactor, openGLRenderWindow, camera };
-}
-
-// ----------------------------------------------------------------------------
-
-function createSvgElement(tag) {
-  return document.createElementNS(SVG_XMLNS, tag);
 }
 
 // ----------------------------------------------------------------------------

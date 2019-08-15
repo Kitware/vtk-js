@@ -3,6 +3,14 @@ import vtkActor from 'vtk.js/Sources/Rendering/Core/Actor';
 import vtkPixelSpaceCallbackMapper from 'vtk.js/Sources/Rendering/Core/PixelSpaceCallbackMapper';
 import vtkWidgetRepresentation from 'vtk.js/Sources/Widgets/Representations/WidgetRepresentation';
 
+const SVG_XMLNS = 'http://www.w3.org/2000/svg';
+
+// ----------------------------------------------------------------------------
+
+function createSvgElement(tag) {
+  return document.createElementNS(SVG_XMLNS, tag);
+}
+
 // ----------------------------------------------------------------------------
 
 function defer() {
@@ -66,6 +74,13 @@ function vtkSVGRepresentation(publicAPI, model) {
     deferred.push(d);
     return d.promise;
   };
+
+  // --------------------------------------------------------------------------
+
+  // Subclasses must implement this method
+  publicAPI.render = () => {
+    throw new Error('Not implemented');
+  };
 }
 
 // ----------------------------------------------------------------------------
@@ -88,4 +103,4 @@ export function extend(publicAPI, model, initialValues = {}) {
 
 // ----------------------------------------------------------------------------
 
-export default { extend };
+export default { extend, createSvgElement };
