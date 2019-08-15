@@ -71,10 +71,8 @@ function ensureRangeSize(rangeArray, size = 0) {
 }
 
 function getDataType(typedArray) {
-  return Object.prototype.toString
-    .call(typedArray)
-    .split(' ')[1]
-    .slice(0, -1);
+  // Expects toString() to return "[object ...Array]"
+  return Object.prototype.toString.call(typedArray).slice(8, -1);
 }
 
 function getMaxNorm(normArray) {
