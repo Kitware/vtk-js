@@ -213,9 +213,9 @@ function vtkPolyData(publicAPI, model) {
     const cellInfo = publicAPI.getCellPoints(cellId);
     if (cellInfo.cellType === CellType.VTK_TRIANGLE) {
       const cell = vtkTriangle.newInstance();
-      let pointsData = [];
+      const pointsData = new window[publicAPI.getPoints().getDataType()](3 * cellInfo.cellPointIds.length);
       cellInfo.cellPointIds.forEach((pointId, index) => {
-        pointsData = pointsData.concat(publicAPI.getPoints().getPoint(pointId));
+        pointsData.set(publicAPI.getPoints().getPoint(pointId), 3 * index);
       });
       const points = vtkPoints.newInstance({ values: pointsData });
       cell.initialize(3, cellInfo.cellPointIds, points);
