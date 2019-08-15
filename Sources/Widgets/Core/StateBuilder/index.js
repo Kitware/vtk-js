@@ -95,7 +95,7 @@ class Builder {
       this.publicAPI.modified();
     };
     this.publicAPI[`get${macro.capitalize(name)}List`] = () =>
-      this.model[listName];
+      this.model[listName].slice();
     this.publicAPI[`clear${macro.capitalize(name)}List`] = () => {
       while (this.model[listName].length) {
         const instance = this.model[listName].pop();
