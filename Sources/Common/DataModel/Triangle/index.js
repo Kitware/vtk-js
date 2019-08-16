@@ -49,7 +49,7 @@ function vtkTriangle(publicAPI, model) {
   // Set our className
   model.classHierarchy.push('vtkTriangle');
 
-  publicAPI.getCellDimension = () => {}; // virtual
+  publicAPI.getCellDimension = () => 2;
   publicAPI.intersectWithLine = (p1, p2, tol, x, pcoords) => {
     const outObj = { subId: 0, t: 0, intersect: -1 };
     pcoords[2] = 0.0;
