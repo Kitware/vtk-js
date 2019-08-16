@@ -59,7 +59,7 @@
     "tap-spec": "5.0.0",
     "tape": "4.9.1",
     "tape-catch": "1.0.6",
-    "wslink": "0.1.8",
+    "wslink": "0.1.12",
     "xml2js": "0.4.19"
   },
   "peerDependencies": {

@@ -95,7 +95,7 @@ function vtkWSLinkClient(publicAPI, model) {
 
   // --------------------------------------------------------------------------
 
-  publicAPI.connect = (config = {}) => {
+  publicAPI.connect = (config = {}, configDecorator = null) => {
     if (!SMART_CONNECT_CLASS) {
       return Promise.reject(new Error('Need to provide SmartConnect'));
     }
@@ -104,8 +104,12 @@ function vtkWSLinkClient(publicAPI, model) {
     }
 
     model.config = config;
+    model.configDecorator = configDecorator || model.configDecorator;
     return new Promise((resolve, reject) => {
-      model.smartConnect = SMART_CONNECT_CLASS.newInstance({ config });
+      model.smartConnect = SMART_CONNECT_CLASS.newInstance({
+        config,
+        configDecorator: model.configDecorator,
+      });
 
       // ready
       model.smartConnect.onConnectionReady((connection) => {
@@ -177,6 +181,7 @@ const DEFAULT_VALUES = {
   timeoutId: 0,
   notificationTimeout: 50,
   createImageStream: true,
+  // configDecorator: null,
 };
 
 // ----------------------------------------------------------------------------
@@ -190,6 +195,7 @@ export function extend(publicAPI, model, initialValues = {}) {
     'protocols',
     'notBusyList',
     'createImageStream',
+    'configDecorator',
   ]);
   macro.get(publicAPI, model, [
     'connection',
