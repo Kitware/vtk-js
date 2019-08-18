@@ -146,14 +146,16 @@ function vtkWidgetManager(publicAPI, model) {
           .getRepresentations()
           .filter((r) => r.isA('vtkSVGRepresentation'));
 
-        const pendingContent = svgReps.map((r) => r.render());
-        Promise.all(pendingContent).then((contents) => {
-          const g = widgetToSvgMap.get(widget);
-          const svg = contents.join('');
-          if (g.innerHTML !== svg) {
-            g.innerHTML = svg;
-          }
-        });
+        if (svgReps.length) {
+          const pendingContent = svgReps.map((r) => r.render());
+          Promise.all(pendingContent).then((contents) => {
+            const g = widgetToSvgMap.get(widget);
+            const svg = contents.join('');
+            if (g.innerHTML !== svg) {
+              g.innerHTML = svg;
+            }
+          });
+        }
       }
     }
   }
