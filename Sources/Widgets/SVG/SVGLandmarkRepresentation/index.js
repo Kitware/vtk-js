@@ -49,7 +49,7 @@ function vtkSVGLandmarkRepresentation(publicAPI, model) {
         root.appendChild(text);
       }
 
-      return root.innerHTML;
+      return root;
     });
   };
 }
