@@ -1,7 +1,11 @@
+import macro from 'vtk.js/Sources/macro';
 import vtkPolyData from 'vtk.js/Sources/Common/DataModel/PolyData';
 import vtkActor from 'vtk.js/Sources/Rendering/Core/Actor';
 import vtkPixelSpaceCallbackMapper from 'vtk.js/Sources/Rendering/Core/PixelSpaceCallbackMapper';
 import vtkWidgetRepresentation from 'vtk.js/Sources/Widgets/Representations/WidgetRepresentation';
+
+import { Behavior } from 'vtk.js/Sources/Widgets/Representations/WidgetRepresentation/Constants';
+import { RenderingTypes } from 'vtk.js/Sources/Widgets/Core/WidgetManager/Constants';
 
 const SVG_XMLNS = 'http://www.w3.org/2000/svg';
 
@@ -77,6 +81,21 @@ function vtkSVGRepresentation(publicAPI, model) {
 
   // --------------------------------------------------------------------------
 
+  publicAPI.updateActorVisibility = (
+    renderingType = RenderingTypes.FRONT_BUFFER,
+    widgetVisible = true,
+    ctxVisible = true,
+    handleVisible = true
+  ) => {
+    if (model.behavior === Behavior.CONTEXT) {
+      publicAPI.setVisibility(widgetVisible && ctxVisible);
+    } else if (model.Behavior === Behavior.HANDLE) {
+      publicAPI.setVisibility(widgetVisible && handleVisible);
+    }
+  };
+
+  // --------------------------------------------------------------------------
+
   // Subclasses must implement this method
   publicAPI.render = () => {
     throw new Error('Not implemented');
@@ -87,7 +106,9 @@ function vtkSVGRepresentation(publicAPI, model) {
 // Object factory
 // ----------------------------------------------------------------------------
 
-const DEFAULT_VALUES = {};
+const DEFAULT_VALUES = {
+  visibility: true,
+};
 
 // ----------------------------------------------------------------------------
 
@@ -96,6 +117,8 @@ export function extend(publicAPI, model, initialValues = {}) {
 
   // Extend methods
   vtkWidgetRepresentation.extend(publicAPI, model, initialValues);
+
+  macro.setGet(publicAPI, model, ['visibility']);
 
   // Object specific methods
   vtkSVGRepresentation(publicAPI, model);
