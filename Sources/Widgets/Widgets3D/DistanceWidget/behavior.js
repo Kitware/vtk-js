@@ -1,14 +1,10 @@
 import macro from 'vtk.js/Sources/macro';
-import vtkPointPicker from 'vtk.js/Sources/Rendering/Core/PointPicker';
 
 const MAX_POINTS = 2;
 
 export default function widgetBehavior(publicAPI, model) {
   model.classHierarchy.push('vtkDistanceWidgetProp');
   let isDragging = null;
-
-  const picker = vtkPointPicker.newInstance();
-  picker.setPickFromList(1);
 
   // --------------------------------------------------------------------------
   // Display 2D
@@ -39,9 +35,6 @@ export default function widgetBehavior(publicAPI, model) {
       return macro.VOID;
     }
 
-    picker.initializePickList();
-    picker.setPickList(publicAPI.getNestedProps());
-
     if (
       model.activeState === model.widgetState.getMoveHandle() &&
       model.widgetState.getHandleList().length < MAX_POINTS
@@ -68,6 +61,14 @@ export default function widgetBehavior(publicAPI, model) {
 
   publicAPI.handleMouseMove = (callData) => {
     if (
+      model.hasFocus &&
+      model.widgetState.getHandleList().length === MAX_POINTS
+    ) {
+      publicAPI.loseFocus();
+      return macro.VOID;
+    }
+
+    if (
       model.pickable &&
       model.manipulator &&
       model.activeState &&
@@ -90,9 +91,7 @@ export default function widgetBehavior(publicAPI, model) {
         return macro.EVENT_ABORT;
       }
     }
-    if (model.hasFocus) {
-      model.widgetManager.disablePicking();
-    }
+
     return macro.VOID;
   };
 
@@ -117,11 +116,6 @@ export default function widgetBehavior(publicAPI, model) {
       publicAPI.invokeEndInteractionEvent();
       model.widgetManager.enablePicking();
       model.interactor.render();
-    }
-
-    // Don't make any more points
-    if (model.widgetState.getHandleList().length === MAX_POINTS) {
-      publicAPI.loseFocus();
     }
 
     isDragging = false;

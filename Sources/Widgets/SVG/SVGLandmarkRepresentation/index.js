@@ -11,8 +11,8 @@ function vtkSVGLandmarkRepresentation(publicAPI, model) {
   // Set our className
   model.classHierarchy.push('vtkSVGLandmarkRepresentation');
 
-  publicAPI.render = (widgetState) => {
-    const list = publicAPI.getRepresentationStates(widgetState);
+  publicAPI.render = () => {
+    const list = publicAPI.getRepresentationStates();
 
     const coords = [];
     for (let i = 0; i < list.length; i++) {
