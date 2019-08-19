@@ -435,19 +435,28 @@ function vtkPiecewiseGaussianWidget(publicAPI, model) {
     publicAPI.modified();
   };
 
+  // Method used to compute and show data distribution in the background.
+  // When an array with many components is used, you can provide additional
+  // information to choose which component you want to extract the histogram
+  // from.
+
   publicAPI.setDataArray = (
     array,
-    numberOfBinToConsider = 1,
-    numberOfBinsToSkip = 1
+    {
+      numberOfBinToConsider = 1,
+      numberOfBinsToSkip = 1,
+      numberOfComponents = 1,
+      component = 0,
+    }
   ) => {
     model.histogram = null;
     model.histogramArray = array;
-    const max = vtkMath.arrayMax(array);
-    const min = vtkMath.arrayMin(array);
-    model.dataRange = [min, max];
+    model.dataRange = vtkMath.arrayRange(array, component, numberOfComponents);
+    const [min, max] = model.dataRange;
 
     const maxNumberOfWorkers = 4;
-    const arrayStride = Math.floor(array.length / maxNumberOfWorkers) || 1;
+    let arrayStride = Math.floor(array.length / maxNumberOfWorkers) || 1;
+    arrayStride += arrayStride % numberOfComponents;
     let arrayIndex = 0;
     const workers = [];
     while (arrayIndex < array.length) {
@@ -460,7 +469,14 @@ function vtkPiecewiseGaussianWidget(publicAPI, model) {
       );
       workers.push(
         workerPromise.postMessage(
-          { array: subArray, min, max, numberOfBins: model.numberOfBins },
+          {
+            array: subArray,
+            component,
+            numberOfComponents,
+            min,
+            max,
+            numberOfBins: model.numberOfBins,
+          },
           [subArray.buffer]
         )
       );
