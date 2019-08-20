@@ -82,7 +82,7 @@ to Number.MAX_VALUE.
 Given a planes defined by the normals n0 & n1 and origin points p0 & p1, compute the line representing the plane intersection.
 Return an object:
 ```js
-let obj = {intersection: ..., t: ..., l0: ..., l1: ...};
+let obj = {intersection: ..., error: ..., l0: ..., l1: ...};
 ```
 where:
 - **intersection** (*boolean*): indicates if the two planes intersect.
