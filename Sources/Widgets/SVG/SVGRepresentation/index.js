@@ -39,7 +39,7 @@ function vtkSVGRepresentation(publicAPI, model) {
   // Set our className
   model.classHierarchy.push('vtkSVGRepresentation');
 
-  const deferred = [];
+  let deferred = null;
 
   model.psActor = vtkActor.newInstance({ pickable: false });
   model.psMapper = vtkPixelSpaceCallbackMapper.newInstance();
@@ -49,8 +49,11 @@ function vtkSVGRepresentation(publicAPI, model) {
   model.psActor.setMapper(model.psMapper);
 
   model.psMapper.setCallback((...args) => {
-    while (deferred.length) {
-      deferred.pop().resolve({
+    if (deferred) {
+      const d = deferred;
+      deferred = null;
+
+      d.resolve({
         coords: args[0],
         camera: args[1],
         aspect: args[2],
@@ -74,9 +77,8 @@ function vtkSVGRepresentation(publicAPI, model) {
     model.points.getPoints().setData(pts);
     model.points.modified();
 
-    const d = defer();
-    deferred.push(d);
-    return d.promise;
+    deferred = defer();
+    return deferred.promise;
   };
 
   // --------------------------------------------------------------------------

@@ -153,12 +153,14 @@ function vtkWidgetManager(publicAPI, model) {
             .map((r) => r.render());
           Promise.all(pendingContent).then((nodes) => {
             const g = widgetToSvgMap.get(widget);
-            const newG = createSvgElement('g');
-            for (let ni = 0; ni < nodes.length; ni++) {
-              newG.appendChild(nodes[ni]);
-            }
-            if (g.innerHTML !== newG.innerHTML) {
-              g.innerHTML = newG.innerHTML;
+            if (g) {
+              const newG = createSvgElement('g');
+              for (let ni = 0; ni < nodes.length; ni++) {
+                newG.appendChild(nodes[ni]);
+              }
+              if (g.innerHTML !== newG.innerHTML) {
+                g.innerHTML = newG.innerHTML;
+              }
             }
           });
         }
