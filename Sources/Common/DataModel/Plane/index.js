@@ -111,6 +111,79 @@ function intersectWithLine(p1, p2, origin, normal) {
   return outObj;
 }
 
+function intersectWithPlane(
+  plane1Origin,
+  plane1Normal,
+  plane2Origin,
+  plane2Normal
+) {
+  const outObj = {
+    intersection: false,
+    l0: [],
+    l1: [],
+    error: null,
+  };
+
+  const cross = [];
+  vtkMath.cross(plane1Normal, plane2Normal, cross);
+  const absCross = cross.map((n) => Math.abs(n));
+
+  // test if the two planes are parallel
+  if (absCross[0] + absCross[1] + absCross[2] < PLANE_TOLERANCE) {
+    // test if disjoint or coincide
+    const v = [];
+    vtkMath.subtract(plane1Origin, plane2Origin, v);
+    if (vtkMath.dot(plane1Normal, v) === 0) {
+      outObj.error = 'coincide';
+    } else {
+      outObj.error = 'disjoint';
+    }
+    return outObj;
+  }
+
+  // Plane1 and Plane2 intersect in a line
+  // first determine max abs coordinate of the cross product
+  let maxc;
+  if (absCross[0] > absCross[1] && absCross[0] > absCross[2]) {
+    maxc = 'x';
+  } else if (absCross[1] > absCross[2]) {
+    maxc = 'y';
+  } else {
+    maxc = 'z';
+  }
+
+  // To get a point on the intersect line, zero the max coord, and solve for the other two
+  const iP = []; // intersectionPoint
+  // the constants in the 2 plane equations
+  const d1 = -vtkMath.dot(plane1Normal, plane1Origin);
+  const d2 = -vtkMath.dot(plane2Normal, plane2Origin);
+
+  // eslint-disable-next-line default-case
+  switch (maxc) {
+    case 'x': // intersect with x=0
+      iP[0] = 0;
+      iP[1] = (d2 * plane1Normal[2] - d1 * plane2Normal[2]) / cross[0];
+      iP[2] = (d1 * plane2Normal[1] - d2 * plane1Normal[1]) / cross[0];
+      break;
+    case 'y': // intersect with y=0
+      iP[0] = (d1 * plane2Normal[2] - d2 * plane1Normal[2]) / cross[1];
+      iP[1] = 0;
+      iP[2] = (d2 * plane1Normal[0] - d1 * plane2Normal[0]) / cross[1];
+      break;
+    case 'z': // intersect with z=0
+      iP[0] = (d2 * plane1Normal[1] - d1 * plane2Normal[1]) / cross[2];
+      iP[1] = (d1 * plane2Normal[0] - d2 * plane1Normal[0]) / cross[2];
+      iP[2] = 0;
+      break;
+  }
+
+  outObj.l0 = iP;
+  vtkMath.add(iP, cross, outObj.l1);
+  outObj.intersection = true;
+
+  return outObj;
+}
+
 // ----------------------------------------------------------------------------
 // Static API
 // ----------------------------------------------------------------------------
@@ -122,6 +195,7 @@ export const STATIC = {
   projectVector,
   generalizedProjectPoint,
   intersectWithLine,
+  intersectWithPlane,
 };
 
 // ----------------------------------------------------------------------------
@@ -178,6 +252,9 @@ export function vtkPlane(publicAPI, model) {
 
   publicAPI.intersectWithLine = (p1, p2) =>
     intersectWithLine(p1, p2, model.origin, model.normal);
+
+  publicAPI.intersectWithPlane = (planeOrigin, planeNormal) =>
+    intersectWithPlane(planeOrigin, planeNormal, model.origin, model.normal);
 }
 
 // ----------------------------------------------------------------------------
