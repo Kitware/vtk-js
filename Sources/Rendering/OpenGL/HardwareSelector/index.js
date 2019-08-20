@@ -226,8 +226,8 @@ function vtkOpenGLHardwareSelector(publicAPI, model) {
 
   publicAPI.setPropColorValueFromInt = (val) => {
     model.propColorValue[0] = (val % 256) / 255.0;
-    model.propColorValue[1] = ((val / 256) % 256) / 255.0;
-    model.propColorValue[2] = ((val / 65536) % 256) / 255.0;
+    model.propColorValue[1] = (Math.floor(val / 256) % 256) / 255.0;
+    model.propColorValue[2] = (Math.floor(val / 65536) % 256) / 255.0;
   };
 
   // info has
