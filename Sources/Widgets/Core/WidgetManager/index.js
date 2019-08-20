@@ -147,12 +147,17 @@ function vtkWidgetManager(publicAPI, model) {
           .filter((r) => r.isA('vtkSVGRepresentation'));
 
         if (svgReps.length) {
-          const pendingContent = svgReps.map((r) => r.render());
-          Promise.all(pendingContent).then((contents) => {
+          const pendingContent = svgReps
+            .filter((r) => r.getVisibility())
+            .map((r) => r.render());
+          Promise.all(pendingContent).then((nodes) => {
             const g = widgetToSvgMap.get(widget);
-            const svg = contents.join('');
-            if (g.innerHTML !== svg) {
-              g.innerHTML = svg;
+            const newG = createSvgElement('g');
+            for (let ni = 0; ni < nodes.length; ni++) {
+              newG.appendChild(nodes[ni]);
+            }
+            if (g.innerHTML !== newG.innerHTML) {
+              g.innerHTML = newG.innerHTML;
             }
           });
         }
