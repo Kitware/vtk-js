@@ -99,7 +99,8 @@ function vtkWidgetManager(publicAPI, model) {
 
   function enableSvgLayer() {
     const container = model.openGLRenderWindow.getReferenceByName('el');
-    container.appendChild(model.svgWrapper);
+    const canvas = model.openGLRenderWindow.getCanvas();
+    container.insertBefore(model.svgWrapper, canvas.nextSibling);
   }
 
   function disableSvgLayer() {
