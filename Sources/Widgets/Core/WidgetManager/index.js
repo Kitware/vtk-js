@@ -326,6 +326,10 @@ function vtkWidgetManager(publicAPI, model) {
 
       removeFromSvgLayer(viewWidget);
 
+      if (model.widgetInFocus === viewWidget) {
+        publicAPI.releaseFocus();
+      }
+
       // free internal model + unregister it from its parent
       viewWidget.delete();
     }
