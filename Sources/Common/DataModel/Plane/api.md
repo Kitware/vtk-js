@@ -89,4 +89,7 @@ where:
  Intersection is true if (0 <= t <= 1), and false otherwise.
 - **l0** (*Array*): coordinates of point 0 of the intersection line.
 - **l1** (*Array*): coordinates of point 1 of the intersection line.
-- **error** (*String|null*): Conditional, if the planes do not intersect, is it because they are coplanar ('coincide') or parallel ('disjoint').
+- **error** (*String|null*): Conditional, if the planes do not intersect, is it because they are coplanar (`COINCIDE`) or parallel (`DISJOINT`).
+
+### (*const*) COINCIDE, DISJOINT
+Constants for the `intersectWithPlane` function.

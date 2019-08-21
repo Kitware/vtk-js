@@ -2,6 +2,8 @@ import * as vtkMath from 'vtk.js/Sources/Common/Core/Math';
 import macro from 'vtk.js/Sources/macro';
 
 const PLANE_TOLERANCE = 1.0e-6;
+const COINCIDE = 'coincide';
+const DISJOINT = 'disjoint';
 
 // ----------------------------------------------------------------------------
 // Global methods
@@ -134,9 +136,9 @@ function intersectWithPlane(
     const v = [];
     vtkMath.subtract(plane1Origin, plane2Origin, v);
     if (vtkMath.dot(plane1Normal, v) === 0) {
-      outObj.error = 'coincide';
+      outObj.error = COINCIDE;
     } else {
-      outObj.error = 'disjoint';
+      outObj.error = DISJOINT;
     }
     return outObj;
   }
@@ -196,6 +198,8 @@ export const STATIC = {
   generalizedProjectPoint,
   intersectWithLine,
   intersectWithPlane,
+  DISJOINT,
+  COINCIDE,
 };
 
 // ----------------------------------------------------------------------------

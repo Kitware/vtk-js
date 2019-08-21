@@ -146,7 +146,7 @@ test('Test vtkPlane intersectWithPlane', (t) => {
   let normal = [0.0, 0.0, 1.0];
   let res = plane.intersectWithPlane(origin, normal);
   t.equal(res.intersection, false);
-  t.equal(res.error, 'disjoint');
+  t.equal(res.error, vtkPlane.DISJOINT);
   t.equal(res.l0.length, 0);
   t.equal(res.l1.length, 0);
 
@@ -155,7 +155,7 @@ test('Test vtkPlane intersectWithPlane', (t) => {
   normal = [0.0, 0.0, 1.0];
   res = plane.intersectWithPlane(origin, normal);
   t.equal(res.intersection, false);
-  t.equal(res.error, 'coincide');
+  t.equal(res.error, vtkPlane.COINCIDE);
 
   // test where plane does intersect plane
   origin = [2.0, 0.0, 0.0];
