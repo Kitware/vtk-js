@@ -136,6 +136,45 @@ test('Test vtkPlane intersectWithLine', (t) => {
   t.end();
 });
 
+test('Test vtkPlane intersectWithPlane', (t) => {
+  const plane = vtkPlane.newInstance();
+  plane.setOrigin(0.0, 0.0, 0.0);
+  plane.setNormal(0.0, 0.0, 1.0);
+
+  // test where a plane is parallel to plane
+  let origin = [2.0, 2.0, 2.0];
+  let normal = [0.0, 0.0, 1.0];
+  let res = plane.intersectWithPlane(origin, normal);
+  t.equal(res.intersection, false);
+  t.equal(res.error, vtkPlane.DISJOINT);
+  t.equal(res.l0.length, 0);
+  t.equal(res.l1.length, 0);
+
+  // test where a plane is coplaner with plane
+  origin = [1.0, 0.0, 0.0];
+  normal = [0.0, 0.0, 1.0];
+  res = plane.intersectWithPlane(origin, normal);
+  t.equal(res.intersection, false);
+  t.equal(res.error, vtkPlane.COINCIDE);
+
+  // test where plane does intersect plane
+  origin = [2.0, 0.0, 0.0];
+  normal = [1.0, 0.0, 0.0];
+  res = plane.intersectWithPlane(origin, normal);
+  t.equal(res.intersection, true);
+  t.equal(res.l0.length, 3);
+  t.equal(res.l1.length, 3);
+  const l0 = [2, 0, -0];
+  const l1 = [2, -1, 0];
+  for (let i = 0; i < 3; i++) {
+    t.equal(res.l0[i], l0[i]);
+  }
+  for (let i = 0; i < 3; i++) {
+    t.equal(res.l1[i], l1[i]);
+  }
+  t.end();
+});
+
 test('Test vtkPlane evaluateFunction', (t) => {
   const plane = vtkPlane.newInstance();
   plane.setOrigin(0.0, 0.0, 0.0);
