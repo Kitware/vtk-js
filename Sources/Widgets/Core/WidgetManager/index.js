@@ -99,7 +99,8 @@ function vtkWidgetManager(publicAPI, model) {
 
   function enableSvgLayer() {
     const container = model.openGLRenderWindow.getReferenceByName('el');
-    container.appendChild(model.svgWrapper);
+    const canvas = model.openGLRenderWindow.getCanvas();
+    container.insertBefore(model.svgWrapper, canvas.nextSibling);
   }
 
   function disableSvgLayer() {
@@ -152,12 +153,14 @@ function vtkWidgetManager(publicAPI, model) {
             .map((r) => r.render());
           Promise.all(pendingContent).then((nodes) => {
             const g = widgetToSvgMap.get(widget);
-            const newG = createSvgElement('g');
-            for (let ni = 0; ni < nodes.length; ni++) {
-              newG.appendChild(nodes[ni]);
-            }
-            if (g.innerHTML !== newG.innerHTML) {
-              g.innerHTML = newG.innerHTML;
+            if (g) {
+              const newG = createSvgElement('g');
+              for (let ni = 0; ni < nodes.length; ni++) {
+                newG.appendChild(nodes[ni]);
+              }
+              if (g.innerHTML !== newG.innerHTML) {
+                g.innerHTML = newG.innerHTML;
+              }
             }
           });
         }
@@ -322,6 +325,10 @@ function vtkWidgetManager(publicAPI, model) {
       publicAPI.enablePicking();
 
       removeFromSvgLayer(viewWidget);
+
+      if (model.widgetInFocus === viewWidget) {
+        publicAPI.releaseFocus();
+      }
 
       // free internal model + unregister it from its parent
       viewWidget.delete();
