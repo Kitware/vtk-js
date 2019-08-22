@@ -54,9 +54,8 @@ function vtkDistanceWidget(publicAPI, model) {
     if (handles.length !== 2) {
       return 0;
     }
-    return distance2BetweenPoints(
-      handles[0].getOrigin(),
-      handles[1].getOrigin()
+    return Math.sqrt(
+      distance2BetweenPoints(handles[0].getOrigin(), handles[1].getOrigin())
     );
   };
 
