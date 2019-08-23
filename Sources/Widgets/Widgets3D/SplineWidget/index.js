@@ -63,6 +63,7 @@ const DEFAULT_VALUES = {
     status: 'down',
   },
   defaultCursor: 'pointer',
+  handleSizeInPixels: 10,
 };
 
 // ----------------------------------------------------------------------------
@@ -77,6 +78,7 @@ export function extend(publicAPI, model, initialValues = {}) {
     'allowFreehand',
     'resolution',
     'defaultCursor',
+    'handleSizeInPixels',
   ]);
 
   vtkSplineWidget(publicAPI, model);
