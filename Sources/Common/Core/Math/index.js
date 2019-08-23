@@ -62,7 +62,7 @@ export function arrayMin(arr, offset = 0, stride = 1) {
 
 export function arrayMax(arr, offset = 0, stride = 1) {
   let maxValue = -Infinity;
-  for (let i = offset, len = arr.length; i < len; i+= stride) {
+  for (let i = offset, len = arr.length; i < len; i += stride) {
     if (maxValue < arr[i]) {
       maxValue = arr[i];
     }
