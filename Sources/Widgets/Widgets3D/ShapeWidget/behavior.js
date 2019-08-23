@@ -28,6 +28,8 @@ function makeBoundsFromPoints(point1, point2) {
 export default function widgetBehavior(publicAPI, model) {
   model.classHierarchy.push('vtkShapeWidgetProp');
 
+  const superClass = Object.assign({}, publicAPI);
+
   // --------------------------------------------------------------------------
   // Display 2D
   // --------------------------------------------------------------------------
@@ -180,6 +182,25 @@ export default function widgetBehavior(publicAPI, model) {
         publicAPI.loseFocus();
       }
     }
+  };
+
+  publicAPI.setVisibility = (visibility) => {
+    if (model.useHandles) {
+      superClass.setVisibility(visibility);
+    } else {
+      model.shapeHandle.setVisible(visibility);
+    }
+
+    if (model.label) {
+      if (visibility) {
+        model.label.setContainer(model.interactor.getContainer());
+      } else {
+        model.label.setContainer(null);
+      }
+    }
+
+    publicAPI.updateRepresentationForRender();
+    model.interactor.render();
   };
 
   publicAPI.getLabel = () => model.label;
