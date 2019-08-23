@@ -48,9 +48,9 @@ const ACTIONS = {
     gaussian.yBias = Math.max(0, Math.min(2, gaussian.yBias));
     return true;
   },
-  adjustWidth(x, y, { originalXY, gaussian, originalGaussian, side }) {
+  adjustWidth(x, y, { originalXY, gaussian, originalGaussian, gaussianSide }) {
     gaussian.width =
-      side < 0
+      gaussianSide < 0
         ? originalGaussian.width - (originalXY[0] - x)
         : originalGaussian.width + (originalXY[0] - x);
     if (gaussian.width < MIN_GAUSSIAN_WIDTH) {
