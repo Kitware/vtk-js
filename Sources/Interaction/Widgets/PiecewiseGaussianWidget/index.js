@@ -28,15 +28,17 @@ const TOUCH_CLICK = [];
 // ----------------------------------------------------------------------------
 
 const ACTIONS = {
-  adjustPosition(x, y, originalXY, gaussian, originalGaussian) {
+  adjustPosition(x, y, { originalXY, gaussian, originalGaussian }) {
     const xOffset = originalGaussian.position - originalXY[0];
     gaussian.position = x + xOffset;
+    return true;
   },
-  adjustHeight(x, y, originalXY, gaussian, originalGaussian) {
+  adjustHeight(x, y, { originalXY, gaussian, originalGaussian }) {
     gaussian.height = 1 - y;
     gaussian.height = Math.min(1, Math.max(0, gaussian.height));
+    return true;
   },
-  adjustBias(x, y, originalXY, gaussian, originalGaussian) {
+  adjustBias(x, y, { originalXY, gaussian, originalGaussian }) {
     gaussian.xBias =
       originalGaussian.xBias - (originalXY[0] - x) / gaussian.height;
     gaussian.yBias =
@@ -44,8 +46,9 @@ const ACTIONS = {
     // Clamps
     gaussian.xBias = Math.max(-1, Math.min(1, gaussian.xBias));
     gaussian.yBias = Math.max(0, Math.min(2, gaussian.yBias));
+    return true;
   },
-  adjustWidth(x, y, originalXY, gaussian, originalGaussian, side) {
+  adjustWidth(x, y, { originalXY, gaussian, originalGaussian, side }) {
     gaussian.width =
       side < 0
         ? originalGaussian.width - (originalXY[0] - x)
@@ -53,8 +56,9 @@ const ACTIONS = {
     if (gaussian.width < MIN_GAUSSIAN_WIDTH) {
       gaussian.width = MIN_GAUSSIAN_WIDTH;
     }
+    return true;
   },
-  adjustZoom(x, y, originalXY, rangeZoom) {
+  adjustZoom(x, y, { rangeZoom, publicAPI }) {
     const delta = rangeZoom[1] - rangeZoom[0];
     const absNormX = (x - rangeZoom[0]) / delta;
     const minDelta = Math.abs(absNormX - rangeZoom[0]);
@@ -75,6 +79,10 @@ const ACTIONS = {
     } else {
       rangeZoom[1] = Math.max(Math.min(absNormX, 1), rangeZoom[0] + 0.1);
     }
+    publicAPI.invokeZoomChange(rangeZoom);
+
+    // The opacity did not changed
+    return false;
   },
 };
 
@@ -590,7 +598,7 @@ function vtkPiecewiseGaussianWidget(publicAPI, model) {
           macro.setImmediate(() => {
             publicAPI.onDown(x, y);
             model.dragAction = {
-              position: [0, 0],
+              originalXY: [0, 0],
               action,
               gaussian,
               originalGaussian,
@@ -659,7 +667,7 @@ function vtkPiecewiseGaussianWidget(publicAPI, model) {
       }
 
       model.dragAction = {
-        gaussian: model.rangeZoom, // Allow the action to adjust it
+        rangeZoom: model.rangeZoom,
         action: ACTIONS.adjustZoom,
       };
     } else if (gaussian && xNormalizedAbs >= 0) {
@@ -690,7 +698,7 @@ function vtkPiecewiseGaussianWidget(publicAPI, model) {
       const action = ACTIONS[actionName];
       const originalGaussian = Object.assign({}, gaussian);
       model.dragAction = {
-        position: [xNormalized, yNormalized],
+        originalXY: [xNormalized, yNormalized],
         action,
         gaussian,
         originalGaussian,
@@ -737,17 +745,28 @@ function vtkPiecewiseGaussianWidget(publicAPI, model) {
         model.graphArea,
         model.enableRangeZoom ? model.rangeZoom : null
       );
-      const { position, gaussian, originalGaussian, action } = model.dragAction;
-      action(
-        xNormalized,
-        yNormalized,
-        position,
-        gaussian,
-        originalGaussian,
-        model.gaussianSide
-      );
-      model.opacities = computeOpacities(model.gaussians, model.piecewiseSize);
-      publicAPI.invokeOpacityChange(publicAPI, true);
+      const { action } = model.dragAction;
+      if (
+        action(
+          xNormalized,
+          yNormalized,
+          Object.assign(
+            {
+              gaussianSide: model.gaussianSide,
+              model,
+              publicAPI,
+            },
+            model.dragAction
+          )
+        )
+      ) {
+        model.opacities = computeOpacities(
+          model.gaussians,
+          model.piecewiseSize
+        );
+        publicAPI.invokeOpacityChange(publicAPI, true);
+      }
+
       publicAPI.modified();
     }
     return true;
@@ -1243,6 +1262,7 @@ export function extend(publicAPI, model, initialValues = {}) {
   macro.get(publicAPI, model, ['size', 'canvas', 'gaussians']);
   macro.event(publicAPI, model, 'opacityChange');
   macro.event(publicAPI, model, 'animation');
+  macro.event(publicAPI, model, 'zoomChange');
 
   // Object specific methods
   vtkPiecewiseGaussianWidget(publicAPI, model);
