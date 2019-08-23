@@ -184,6 +184,25 @@ export default function widgetBehavior(publicAPI, model) {
     }
   };
 
+  publicAPI.setPixelScale = (pixelScale) => {
+    model.pixelScale = pixelScale;
+    publicAPI.updateHandlesSize();
+  };
+
+  publicAPI.updateHandlesSize = () => {
+    if (model.scaleHandlesInPixelSpace) {
+      const scale =
+        model.pixelScale *
+        vec3.distance(
+          model.openGLRenderWindow.displayToWorld(0, 0, 0, model.renderer),
+          model.openGLRenderWindow.displayToWorld(1, 0, 0, model.renderer)
+        );
+
+      model.point1Handle.setScale1(scale);
+      model.point2Handle.setScale1(scale);
+    }
+  };
+
   publicAPI.setVisibility = (visibility) => {
     if (model.useHandles) {
       superClass.setVisibility(visibility);
@@ -597,6 +616,8 @@ export default function widgetBehavior(publicAPI, model) {
       model.shapeHandle.setVisible(false);
       model.interactor.requestAnimation(publicAPI);
     }
+
+    publicAPI.updateHandlesSize();
 
     model.hasFocus = true;
   };

@@ -21,6 +21,8 @@ export const DEFAULT_VALUES = {
   keysDown: {},
   resetAfterPointPlacement: true,
   useHandles: false,
+  scaleHandlesInPixelSpace: true,
+  pixelScale: 10,
 };
 
 export default { DEFAULT_VALUES };
