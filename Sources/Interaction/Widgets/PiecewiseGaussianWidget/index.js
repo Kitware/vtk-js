@@ -18,6 +18,7 @@ const ACTION_TO_CURSOR = {
   adjustHeight: 'row-resize',
   adjustBias: 'crosshair',
   adjustWidth: 'col-resize',
+  adjustZoom: 'col-resize',
 };
 
 const TOUCH_CLICK = [];
@@ -27,15 +28,17 @@ const TOUCH_CLICK = [];
 // ----------------------------------------------------------------------------
 
 const ACTIONS = {
-  adjustPosition(x, y, originalXY, gaussian, originalGaussian) {
+  adjustPosition(x, y, { originalXY, gaussian, originalGaussian }) {
     const xOffset = originalGaussian.position - originalXY[0];
     gaussian.position = x + xOffset;
+    return true;
   },
-  adjustHeight(x, y, originalXY, gaussian, originalGaussian) {
+  adjustHeight(x, y, { originalXY, gaussian, originalGaussian }) {
     gaussian.height = 1 - y;
     gaussian.height = Math.min(1, Math.max(0, gaussian.height));
+    return true;
   },
-  adjustBias(x, y, originalXY, gaussian, originalGaussian) {
+  adjustBias(x, y, { originalXY, gaussian, originalGaussian }) {
     gaussian.xBias =
       originalGaussian.xBias - (originalXY[0] - x) / gaussian.height;
     gaussian.yBias =
@@ -43,15 +46,43 @@ const ACTIONS = {
     // Clamps
     gaussian.xBias = Math.max(-1, Math.min(1, gaussian.xBias));
     gaussian.yBias = Math.max(0, Math.min(2, gaussian.yBias));
+    return true;
   },
-  adjustWidth(x, y, originalXY, gaussian, originalGaussian, side) {
+  adjustWidth(x, y, { originalXY, gaussian, originalGaussian, gaussianSide }) {
     gaussian.width =
-      side < 0
+      gaussianSide < 0
         ? originalGaussian.width - (originalXY[0] - x)
         : originalGaussian.width + (originalXY[0] - x);
     if (gaussian.width < MIN_GAUSSIAN_WIDTH) {
       gaussian.width = MIN_GAUSSIAN_WIDTH;
     }
+    return true;
+  },
+  adjustZoom(x, y, { rangeZoom, publicAPI }) {
+    const delta = rangeZoom[1] - rangeZoom[0];
+    const absNormX = (x - rangeZoom[0]) / delta;
+    const minDelta = Math.abs(absNormX - rangeZoom[0]);
+    const maxDelta = Math.abs(absNormX - rangeZoom[1]);
+    const meanDelta = Math.abs(absNormX - 0.5 * (rangeZoom[0] + rangeZoom[1]));
+    if (meanDelta < Math.min(minDelta, maxDelta)) {
+      const halfDelta = delta * 0.5;
+      rangeZoom[0] = Math.min(
+        Math.max(absNormX - halfDelta, 0),
+        rangeZoom[1] - 0.1
+      );
+      rangeZoom[1] = Math.max(
+        Math.min(absNormX + halfDelta, 1),
+        rangeZoom[0] + 0.1
+      );
+    } else if (minDelta < maxDelta) {
+      rangeZoom[0] = Math.min(Math.max(absNormX, 0), rangeZoom[1] - 0.1);
+    } else {
+      rangeZoom[1] = Math.max(Math.min(absNormX, 1), rangeZoom[0] + 0.1);
+    }
+    publicAPI.invokeZoomChange(rangeZoom);
+
+    // The opacity did not changed
+    return false;
   },
 };
 
@@ -162,19 +193,19 @@ function drawChart(
 ) {
   const verticalScale = area[3];
   const horizontalScale = area[2] / (values.length - 1);
-  const { height } = ctx.canvas;
   const fill = !!style.fillStyle;
+  const offset = verticalScale + area[1];
 
   ctx.lineWidth = style.lineWidth;
   ctx.strokeStyle = style.strokeStyle;
 
   ctx.beginPath();
-  ctx.moveTo(area[0], height - area[1]);
+  ctx.moveTo(area[0], area[1] + area[3]);
 
   for (let index = 0; index < values.length; index++) {
     ctx.lineTo(
       area[0] + index * horizontalScale,
-      Math.max(area[1], height - (area[1] + values[index] * verticalScale))
+      Math.max(area[1], offset - values[index] * verticalScale)
     );
   }
 
@@ -234,9 +265,11 @@ function updateColorCanvasFromImage(img, width, canvas) {
 
 // ----------------------------------------------------------------------------
 
-function normalizeCoordinates(x, y, subRectangeArea) {
+function normalizeCoordinates(x, y, subRectangeArea, zoomRange = [0, 1]) {
   return [
-    (x - subRectangeArea[0]) / subRectangeArea[2],
+    zoomRange[0] +
+      ((x - subRectangeArea[0]) / subRectangeArea[2]) *
+        (zoomRange[1] - zoomRange[0]),
     (y - subRectangeArea[1]) / subRectangeArea[3],
   ];
 }
@@ -355,6 +388,26 @@ function listenerSelector(condition, ok, ko) {
 }
 
 // ----------------------------------------------------------------------------
+
+function rescaleArray(array, focusArea) {
+  if (!focusArea) {
+    return array;
+  }
+  const maxIdx = array.length - 1;
+  const idxRange = focusArea.map((v) => Math.round(v * maxIdx));
+  return array.slice(idxRange[0], idxRange[1] + 1);
+}
+
+// ----------------------------------------------------------------------------
+
+function rescaleValue(value, focusArea) {
+  if (!focusArea) {
+    return value;
+  }
+  return (value - focusArea[0]) / (focusArea[1] - focusArea[0]);
+}
+
+// ----------------------------------------------------------------------------
 // Static API
 // ----------------------------------------------------------------------------
 
@@ -435,19 +488,28 @@ function vtkPiecewiseGaussianWidget(publicAPI, model) {
     publicAPI.modified();
   };
 
+  // Method used to compute and show data distribution in the background.
+  // When an array with many components is used, you can provide additional
+  // information to choose which component you want to extract the histogram
+  // from.
+
   publicAPI.setDataArray = (
     array,
-    numberOfBinToConsider = 1,
-    numberOfBinsToSkip = 1
+    {
+      numberOfBinToConsiders = 1,
+      numberOfBinsToSkip = 1,
+      numberOfComponents = 1,
+      component = 0,
+    } = {}
   ) => {
     model.histogram = null;
     model.histogramArray = array;
-    const max = vtkMath.arrayMax(array);
-    const min = vtkMath.arrayMin(array);
-    model.dataRange = [min, max];
+    model.dataRange = vtkMath.arrayRange(array, component, numberOfComponents);
+    const [min, max] = model.dataRange;
 
     const maxNumberOfWorkers = 4;
-    const arrayStride = Math.floor(array.length / maxNumberOfWorkers) || 1;
+    let arrayStride = Math.floor(array.length / maxNumberOfWorkers) || 1;
+    arrayStride += arrayStride % numberOfComponents;
     let arrayIndex = 0;
     const workers = [];
     while (arrayIndex < array.length) {
@@ -460,7 +522,14 @@ function vtkPiecewiseGaussianWidget(publicAPI, model) {
       );
       workers.push(
         workerPromise.postMessage(
-          { array: subArray, min, max, numberOfBins: model.numberOfBins },
+          {
+            array: subArray,
+            component,
+            numberOfComponents,
+            min,
+            max,
+            numberOfBins: model.numberOfBins,
+          },
           [subArray.buffer]
         )
       );
@@ -477,7 +546,7 @@ function vtkPiecewiseGaussianWidget(publicAPI, model) {
 
       // Smart Rescale Histogram
       const sampleSize = Math.min(
-        numberOfBinToConsider,
+        numberOfBinToConsiders,
         model.histogram.length - numberOfBinsToSkip
       );
       const sortedArray = Array.from(model.histogram);
@@ -504,7 +573,8 @@ function vtkPiecewiseGaussianWidget(publicAPI, model) {
     const [xNormalized, yNormalized] = normalizeCoordinates(
       x,
       y,
-      model.graphArea
+      model.graphArea,
+      model.enableRangeZoom ? model.rangeZoom : null
     );
     if (xNormalized < 0 && model.style.iconSize > 1) {
       // Control buttons
@@ -528,7 +598,7 @@ function vtkPiecewiseGaussianWidget(publicAPI, model) {
           macro.setImmediate(() => {
             publicAPI.onDown(x, y);
             model.dragAction = {
-              position: [0, 0],
+              originalXY: [0, 0],
               action,
               gaussian,
               originalGaussian,
@@ -566,20 +636,42 @@ function vtkPiecewiseGaussianWidget(publicAPI, model) {
   };
 
   publicAPI.onHover = (x, y) => {
+    const tolerance = 10 / model.canvas.height;
     const [xNormalized, yNormalized] = normalizeCoordinates(
       x,
       y,
-      model.graphArea
+      model.graphArea,
+      model.enableRangeZoom ? model.rangeZoom : null
     );
+    const [xNormalizedAbs] = normalizeCoordinates(x, y, model.graphArea);
     const newActive =
       xNormalized < 0
         ? model.selectedGaussian
         : findGaussian(xNormalized, model.gaussians);
     model.canvas.style.cursor = 'default';
     const gaussian = model.gaussians[newActive];
-    if (gaussian && xNormalized >= 0) {
+
+    if (
+      model.enableRangeZoom &&
+      xNormalizedAbs >= 0 &&
+      y < model.graphArea[1] - 6 // circle radius
+    ) {
+      const thirdDelta = (model.rangeZoom[1] - model.rangeZoom[0]) / 3;
+      if (
+        xNormalizedAbs < model.rangeZoom[0] + thirdDelta ||
+        xNormalizedAbs > model.rangeZoom[1] - thirdDelta
+      ) {
+        model.canvas.style.cursor = ACTION_TO_CURSOR.adjustZoom;
+      } else {
+        model.canvas.style.cursor = ACTION_TO_CURSOR.adjustPosition;
+      }
+
+      model.dragAction = {
+        rangeZoom: model.rangeZoom,
+        action: ACTIONS.adjustZoom,
+      };
+    } else if (gaussian && xNormalizedAbs >= 0) {
       const invY = 1 - yNormalized;
-      const tolerance = 10 / model.canvas.height;
       let actionName = null;
       if (invY > gaussian.height + tolerance) {
         actionName = 'adjustPosition';
@@ -606,7 +698,7 @@ function vtkPiecewiseGaussianWidget(publicAPI, model) {
       const action = ACTIONS[actionName];
       const originalGaussian = Object.assign({}, gaussian);
       model.dragAction = {
-        position: [xNormalized, yNormalized],
+        originalXY: [xNormalized, yNormalized],
         action,
         gaussian,
         originalGaussian,
@@ -625,7 +717,12 @@ function vtkPiecewiseGaussianWidget(publicAPI, model) {
       publicAPI.invokeAnimation(true);
     }
     model.mouseIsDown = true;
-    const xNormalized = normalizeCoordinates(x, y, model.graphArea)[0];
+    const xNormalized = normalizeCoordinates(
+      x,
+      y,
+      model.graphArea,
+      model.enableRangeZoom ? model.rangeZoom : null
+    )[0];
     const newSelected = findGaussian(xNormalized, model.gaussians);
     model.gaussianSide = 0;
     const gaussian = model.gaussians[newSelected];
@@ -645,19 +742,31 @@ function vtkPiecewiseGaussianWidget(publicAPI, model) {
       const [xNormalized, yNormalized] = normalizeCoordinates(
         x,
         y,
-        model.graphArea
+        model.graphArea,
+        model.enableRangeZoom ? model.rangeZoom : null
       );
-      const { position, gaussian, originalGaussian, action } = model.dragAction;
-      action(
-        xNormalized,
-        yNormalized,
-        position,
-        gaussian,
-        originalGaussian,
-        model.gaussianSide
-      );
-      model.opacities = computeOpacities(model.gaussians, model.piecewiseSize);
-      publicAPI.invokeOpacityChange(publicAPI, true);
+      const { action } = model.dragAction;
+      if (
+        action(
+          xNormalized,
+          yNormalized,
+          Object.assign(
+            {
+              gaussianSide: model.gaussianSide,
+              model,
+              publicAPI,
+            },
+            model.dragAction
+          )
+        )
+      ) {
+        model.opacities = computeOpacities(
+          model.gaussians,
+          model.piecewiseSize
+        );
+        publicAPI.invokeOpacityChange(publicAPI, true);
+      }
+
       publicAPI.modified();
     }
     return true;
@@ -683,7 +792,8 @@ function vtkPiecewiseGaussianWidget(publicAPI, model) {
     const [xNormalized, yNormalized] = normalizeCoordinates(
       x,
       y,
-      model.graphArea
+      model.graphArea,
+      model.enableRangeZoom ? model.rangeZoom : null
     );
     if (xNormalized >= 0) {
       publicAPI.addGaussian(xNormalized, 1 - yNormalized, 0.1, 0, 0);
@@ -692,7 +802,12 @@ function vtkPiecewiseGaussianWidget(publicAPI, model) {
   };
 
   publicAPI.onRemoveGaussian = (x, y) => {
-    const xNormalized = normalizeCoordinates(x, y, model.graphArea)[0];
+    const xNormalized = normalizeCoordinates(
+      x,
+      y,
+      model.graphArea,
+      model.enableRangeZoom ? model.rangeZoom : null
+    )[0];
     const newSelected = findGaussian(xNormalized, model.gaussians);
     if (xNormalized >= 0 && newSelected !== -1) {
       publicAPI.removeGaussian(newSelected);
@@ -776,6 +891,13 @@ function vtkPiecewiseGaussianWidget(publicAPI, model) {
       Math.ceil(width - 2 * offset - model.style.iconSize),
       Math.ceil(height - 2 * offset),
     ];
+
+    const zoomControlHeight = model.style.zoomControlHeight;
+    if (model.enableRangeZoom) {
+      graphArea[1] += Math.floor(zoomControlHeight);
+      graphArea[3] -= Math.floor(zoomControlHeight);
+    }
+
     model.graphArea = graphArea;
 
     // Clear canvas
@@ -851,18 +973,28 @@ function vtkPiecewiseGaussianWidget(publicAPI, model) {
 
     // Draw histogram
     if (model.histogram) {
-      drawChart(ctx, graphArea, model.histogram, {
-        lineWidth: 1,
-        strokeStyle: model.style.histogramColor,
-        fillStyle: model.style.histogramColor,
-      });
+      drawChart(
+        ctx,
+        graphArea,
+        rescaleArray(model.histogram, model.rangeZoom),
+        {
+          lineWidth: 1,
+          strokeStyle: model.style.histogramColor,
+          fillStyle: model.style.histogramColor,
+        }
+      );
     }
 
     // Draw gaussians
-    drawChart(ctx, graphArea, model.opacities, {
-      lineWidth: model.style.strokeWidth,
-      strokeStyle: model.style.strokeColor,
-    });
+    drawChart(
+      ctx,
+      graphArea,
+      rescaleArray(model.opacities, model.enableRangeZoom && model.rangeZoom),
+      {
+        lineWidth: model.style.strokeWidth,
+        strokeStyle: model.style.strokeColor,
+      }
+    );
 
     // Draw color function if any
     if (model.colorTransferFunction && model.colorTransferFunction.getSize()) {
@@ -881,13 +1013,35 @@ function vtkPiecewiseGaussianWidget(publicAPI, model) {
         );
       }
       ctx.save();
-      drawChart(ctx, graphArea, model.opacities, {
-        lineWidth: 1,
-        strokeStyle: 'rgba(0,0,0,0)',
-        fillStyle: 'rgba(0,0,0,1)',
-        clip: true,
-      });
-      ctx.drawImage(model.colorCanvas, graphArea[0], graphArea[1]);
+      drawChart(
+        ctx,
+        graphArea,
+        rescaleArray(model.opacities, model.enableRangeZoom && model.rangeZoom),
+        {
+          lineWidth: 1,
+          strokeStyle: 'rgba(0,0,0,0)',
+          fillStyle: 'rgba(0,0,0,1)',
+          clip: true,
+        }
+      );
+
+      // Draw the correct portion of the color BG image
+      if (model.enableRangeZoom) {
+        ctx.drawImage(
+          model.colorCanvas,
+          model.rangeZoom[0] * graphArea[2],
+          0,
+          graphArea[2],
+          graphArea[3],
+          graphArea[0],
+          graphArea[1],
+          graphArea[2] / (model.rangeZoom[1] - model.rangeZoom[0]),
+          graphArea[3]
+        );
+      } else {
+        ctx.drawImage(model.colorCanvas, graphArea[0], graphArea[1]);
+      }
+
       ctx.restore();
     } else if (model.backgroundImage) {
       model.colorCanvas = updateColorCanvasFromImage(
@@ -896,14 +1050,33 @@ function vtkPiecewiseGaussianWidget(publicAPI, model) {
         model.colorCanvas
       );
       ctx.save();
-      drawChart(ctx, graphArea, model.opacities, {
-        lineWidth: 1,
-        strokeStyle: 'rgba(0,0,0,0)',
-        fillStyle: 'rgba(0,0,0,1)',
-        clip: true,
-      });
+      drawChart(
+        ctx,
+        graphArea,
+        rescaleArray(model.opacities, model.enableRangeZoom && model.rangeZoom),
+        {
+          lineWidth: 1,
+          strokeStyle: 'rgba(0,0,0,0)',
+          fillStyle: 'rgba(0,0,0,1)',
+          clip: true,
+        }
+      );
       ctx.drawImage(model.colorCanvas, graphArea[0], graphArea[1]);
       ctx.restore();
+    }
+
+    // Draw zoomed area
+    if (model.enableRangeZoom) {
+      ctx.fillStyle = model.style.zoomControlColor;
+
+      ctx.beginPath();
+      ctx.rect(
+        graphArea[0] + model.rangeZoom[0] * graphArea[2],
+        0,
+        (model.rangeZoom[1] - model.rangeZoom[0]) * graphArea[2],
+        zoomControlHeight
+      );
+      ctx.fill();
     }
 
     // Draw active guassian
@@ -912,17 +1085,32 @@ function vtkPiecewiseGaussianWidget(publicAPI, model) {
       model.gaussians[model.selectedGaussian];
     if (activeGaussian) {
       const activeOpacities = computeOpacities([activeGaussian], graphArea[2]);
-      drawChart(ctx, graphArea, activeOpacities, {
-        lineWidth: model.style.activeStrokeWidth,
-        strokeStyle: model.style.activeColor,
-      });
+      drawChart(
+        ctx,
+        graphArea,
+        rescaleArray(activeOpacities, model.enableRangeZoom && model.rangeZoom),
+        {
+          lineWidth: model.style.activeStrokeWidth,
+          strokeStyle: model.style.activeColor,
+        }
+      );
       // Draw controls
-      const xCenter = graphArea[0] + activeGaussian.position * graphArea[2];
+      const xCenter =
+        graphArea[0] +
+        rescaleValue(
+          activeGaussian.position,
+          model.enableRangeZoom && model.rangeZoom
+        ) *
+          graphArea[2];
       const yTop = graphArea[1] + (1 - activeGaussian.height) * graphArea[3];
       const yMiddle =
         graphArea[1] + (1 - 0.5 * activeGaussian.height) * graphArea[3];
       const yBottom = graphArea[1] + graphArea[3];
-      const widthInPixel = activeGaussian.width * graphArea[2];
+      let widthInPixel = activeGaussian.width * graphArea[2];
+      if (model.enableRangeZoom) {
+        widthInPixel /= model.rangeZoom[1] - model.rangeZoom[0];
+      }
+
       ctx.lineWidth = model.style.handleWidth;
       ctx.strokeStyle = model.style.handleColor;
       ctx.fillStyle = model.style.backgroundColor;
@@ -993,6 +1181,25 @@ function vtkPiecewiseGaussianWidget(publicAPI, model) {
     return [rangeToUse[0] + minIndex * delta, rangeToUse[0] + maxIndex * delta];
   };
 
+  const enableZoom = publicAPI.setEnableRangeZoom;
+  publicAPI.setEnableRangeZoom = (v) => {
+    const change = enableZoom(v);
+    if (change) {
+      model.colorCanvasMTime = 0;
+      model.rangeZoom = [0, 1];
+    }
+    return change;
+  };
+
+  const rangeZoom = publicAPI.setRangeZoom;
+  publicAPI.setRangeZoom = (...v) => {
+    const change = rangeZoom(...v);
+    if (change) {
+      model.colorCanvasMTime = 0;
+    }
+    return change;
+  };
+
   // Trigger rendering for any modified event
   publicAPI.onModified(publicAPI.render);
   publicAPI.setSize(...model.size);
@@ -1028,9 +1235,13 @@ const DEFAULT_VALUES = {
     handleWidth: 3,
     iconSize: 20,
     padding: 10,
+    zoomControlHeight: 10,
+    zoomControlColor: '#999',
   },
   activeGaussian: -1,
   selectedGaussian: -1,
+  enableRangeZoom: true,
+  rangeZoom: [0, 1], // normalized value
 };
 
 // ----------------------------------------------------------------------------
@@ -1045,10 +1256,13 @@ export function extend(publicAPI, model, initialValues = {}) {
     'numberOfBins',
     'colorTransferFunction',
     'backgroundImage',
+    'enableRangeZoom',
   ]);
+  macro.setGetArray(publicAPI, model, ['rangeZoom'], 2);
   macro.get(publicAPI, model, ['size', 'canvas', 'gaussians']);
   macro.event(publicAPI, model, 'opacityChange');
   macro.event(publicAPI, model, 'animation');
+  macro.event(publicAPI, model, 'zoomChange');
 
   // Object specific methods
   vtkPiecewiseGaussianWidget(publicAPI, model);

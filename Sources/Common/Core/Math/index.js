@@ -49,9 +49,9 @@ export function degreesFromRadians(rad) {
 
 export const { round, floor, ceil, min, max } = Math;
 
-export function arrayMin(arr) {
+export function arrayMin(arr, offset = 0, stride = 1) {
   let minValue = Infinity;
-  for (let i = 0, len = arr.length; i < len; ++i) {
+  for (let i = offset, len = arr.length; i < len; i += stride) {
     if (arr[i] < minValue) {
       minValue = arr[i];
     }
@@ -60,15 +60,30 @@ export function arrayMin(arr) {
   return minValue;
 }
 
-export function arrayMax(arr) {
+export function arrayMax(arr, offset = 0, stride = 1) {
   let maxValue = -Infinity;
-  for (let i = 0, len = arr.length; i < len; ++i) {
+  for (let i = offset, len = arr.length; i < len; i += stride) {
     if (maxValue < arr[i]) {
       maxValue = arr[i];
     }
   }
 
   return maxValue;
+}
+
+export function arrayRange(arr, offset = 0, stride = 1) {
+  let minValue = Infinity;
+  let maxValue = -Infinity;
+  for (let i = offset, len = arr.length; i < len; i += stride) {
+    if (arr[i] < minValue) {
+      minValue = arr[i];
+    }
+    if (maxValue < arr[i]) {
+      maxValue = arr[i];
+    }
+  }
+
+  return [minValue, maxValue];
 }
 
 export const ceilLog2 = notImplemented('ceilLog2');
@@ -2070,6 +2085,7 @@ export default {
   max,
   arrayMin,
   arrayMax,
+  arrayRange,
   isPowerOfTwo,
   nearestPowerOfTwo,
   factorial,
