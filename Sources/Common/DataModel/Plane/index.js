@@ -69,7 +69,12 @@ function generalizedProjectPoint(x, origin, normal, xproj) {
 }
 
 function intersectWithLine(p1, p2, origin, normal) {
-  const outObj = { intersection: false, t: Number.MAX_VALUE, x: [] };
+  const outObj = {
+    intersection: false,
+    betweenPoints: false,
+    t: Number.MAX_VALUE,
+    x: [],
+  };
 
   const p21 = [];
   const p1Origin = [];
@@ -102,14 +107,16 @@ function intersectWithLine(p1, p2, origin, normal) {
     return outObj;
   }
 
-  // Valid intersection
+  // Where on the line between p1 and p2 is the intersection
+  // If between 0 and 1, it is between the two points. If < 0 it's before p1, if > 1 it's after p2
   outObj.t = num / den;
 
   outObj.x[0] = p1[0] + outObj.t * p21[0];
   outObj.x[1] = p1[1] + outObj.t * p21[1];
   outObj.x[2] = p1[2] + outObj.t * p21[2];
 
-  outObj.intersection = outObj.t >= 0.0 && outObj.t <= 1.0;
+  outObj.intersection = true;
+  outObj.betweenPoints = outObj.t >= 0.0 && outObj.t <= 1.0;
   return outObj;
 }
 
