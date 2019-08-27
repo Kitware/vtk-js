@@ -303,9 +303,7 @@ export function extend(publicAPI, model, initialValues = {}) {
 
   if (model.values) {
     model.size = model.values.length;
-    if (!initialValues.dataType) {
-      model.dataType = getDataType(model.values);
-    }
+    model.dataType = getDataType(model.values);
   }
 
   // Object methods

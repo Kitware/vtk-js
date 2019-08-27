@@ -8,18 +8,18 @@ vtkCell is an abstract method to define a cell
 Initialize the cell with point coordinates and cell point ids, example :
 ```js
   const points = vtkPoints.newInstance();
-  points.setData([0, 0, 0, 0, 0, 1, ..., 255, 255, 255]);
-  const cellPointsIds = [13, 10, 235];
+  points.setData(Float32Array.from([0, 0, 0, 0, 0, 1, ..., 255, 255, 255]));
+  const pointIdsList = [13, 10, 235];
   // Create cell
   const triangle = vtkTriangle.newInstance();
   // Initialize cell
-  triangle.initialize(points, cellPointsIds);
+  triangle.initialize(points, pointIdsList);
 ```
-If pointsIds is null, points are shallow copied and pointsIds is
+If pointIdsList is null, points are shallow copied and pointIdsList is
 generated as such: [0, 1, ..., N-1] where N is the number of points.
-If pointsIds is not null, only cellPointsIds point coordinates are copied
+If pointIdsList is not null, only pointIdsList point coordinates are copied
 into the cell.
-cellPointsIds is shallow copied.
+pointIdsList is shallow copied.
 
 ### getBounds()
 Return the bounds of the cell
