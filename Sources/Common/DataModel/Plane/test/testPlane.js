@@ -114,6 +114,7 @@ test('Test vtkPlane intersectWithLine', (t) => {
   p2 = [-1.0, 0.0, -1.0];
   res = plane.intersectWithLine(p1, p2);
   t.equal(res.intersection, true);
+  t.equal(res.betweenPoints, true);
   t.equal(res.t, 0.5);
   t.equal(res.x.length, 3);
   let correct = [-1.0, 0.0, 0.0];
@@ -121,11 +122,12 @@ test('Test vtkPlane intersectWithLine', (t) => {
     t.equal(res.x[i], correct[i]);
   }
 
-  // test where line does not intersect plane
+  // test where line intersects the plane outside of the provided points
   p1 = [-2.0, 0.0, -2.0];
   p2 = [2.0, 0.0, -1.0];
   res = plane.intersectWithLine(p1, p2);
-  t.equal(res.intersection, false);
+  t.equal(res.intersection, true);
+  t.equal(res.betweenPoints, false);
   t.equal(res.t, 2);
   t.equal(res.x.length, 3);
   correct = [6.0, 0.0, 0.0];
