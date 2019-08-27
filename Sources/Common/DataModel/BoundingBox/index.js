@@ -88,6 +88,26 @@ function getCorners(bounds, corners) {
   }
 }
 
+// Computes the two corners with minimal and miximal coordinates
+function computeCornerPoints(point1, point2, bounds) {
+  point1[0] = bounds[0];
+  point1[1] = bounds[2];
+  point1[2] = bounds[4];
+
+  point2[0] = bounds[1];
+  point2[1] = bounds[3];
+  point2[2] = bounds[5];
+}
+
+function computeScale3(bounds, scale3 = []) {
+  const center = getCenter(bounds);
+  scale3[0] = bounds[1] - center[0];
+  scale3[1] = bounds[3] - center[1];
+  scale3[2] = bounds[5] - center[2];
+
+  return scale3;
+}
+
 // ----------------------------------------------------------------------------
 // Static API
 // ----------------------------------------------------------------------------
@@ -103,6 +123,8 @@ export const STATIC = {
   getYRange,
   getZRange,
   getCorners,
+  computeCornerPoints,
+  computeScale3,
   INIT_BOUNDS,
 };
 

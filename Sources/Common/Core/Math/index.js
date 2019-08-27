@@ -1888,6 +1888,15 @@ export function areBoundsInitialized(bounds) {
   return !(bounds[1] - bounds[0] < 0.0);
 }
 
+export function computeBoundsFromPoints(point1, point2, bounds) {
+  bounds[0] = Math.min(point1[0], point2[0]);
+  bounds[1] = Math.max(point1[0], point2[0]);
+  bounds[2] = Math.min(point1[1], point2[1]);
+  bounds[3] = Math.max(point1[1], point2[1]);
+  bounds[4] = Math.min(point1[2], point2[2]);
+  bounds[5] = Math.max(point1[2], point2[2]);
+}
+
 export function clampValue(value, minValue, maxValue) {
   if (value < minValue) {
     return minValue;
@@ -1896,6 +1905,22 @@ export function clampValue(value, minValue, maxValue) {
     return maxValue;
   }
   return value;
+}
+
+export function clampVector(vector, minVector, maxVector, out = []) {
+  out[0] = clampValue(vector[0], minVector[0], maxVector[0]);
+  out[1] = clampValue(vector[1], minVector[1], maxVector[1]);
+  out[2] = clampValue(vector[2], minVector[2], maxVector[2]);
+
+  return out;
+}
+
+export function roundVector(vector, out = []) {
+  out[0] = Math.round(vector[0]);
+  out[1] = Math.round(vector[1]);
+  out[2] = Math.round(vector[2]);
+
+  return out;
 }
 
 export function clampAndNormalizeValue(value, range) {
@@ -2154,7 +2179,9 @@ export default {
   lab2rgb,
   uninitializeBounds,
   areBoundsInitialized,
+  computeBoundsFromPoints,
   clampValue,
+  clampVector,
   clampAndNormalizeValue,
   getScalarTypeFittingRange,
   getAdjustedScalarRange,

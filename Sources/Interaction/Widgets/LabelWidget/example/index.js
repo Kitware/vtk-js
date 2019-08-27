@@ -3,6 +3,8 @@ import 'vtk.js/Sources/favicon';
 import vtkLabelWidget from 'vtk.js/Sources/Interaction/Widgets/LabelWidget';
 import vtkFullScreenRenderWindow from 'vtk.js/Sources/Rendering/Misc/FullScreenRenderWindow';
 
+import TextAlign from 'vtk.js/Sources/Interaction/Widgets/LabelRepresentation/Constants';
+
 // ----------------------------------------------------------------------------
 // USER AVAILABLE INTERACTIONS
 // ----------------------------------------------------------------------------
@@ -24,7 +26,7 @@ renderWindow.getInteractor().setInteractorStyle(null);
 const widget = vtkLabelWidget.newInstance();
 widget.setInteractor(renderWindow.getInteractor());
 widget.setEnabled(1);
-widget.getWidgetRep().setLabelText('Hello world! \n This is an example!');
+widget.getWidgetRep().setLabelText('Hello world!\nThis is an example!');
 
 const widget2 = vtkLabelWidget.newInstance();
 widget2.setInteractor(renderWindow.getInteractor());
@@ -35,6 +37,20 @@ widget2.getWidgetRep().setLabelStyle({
   strokeColor: 'red',
 });
 widget2.getWidgetRep().setWorldPosition([3, 1, 10]);
+
+const widget3 = vtkLabelWidget.newInstance();
+widget3.setInteractor(renderWindow.getInteractor());
+widget3.setEnabled(1);
+widget3.getWidgetRep().setLabelText('This text is\nright aligned!');
+widget3.getWidgetRep().setTextAlign(TextAlign.RIGHT);
+widget3.getWidgetRep().setWorldPosition([1, -3, 10]);
+
+const widget4 = vtkLabelWidget.newInstance();
+widget4.setInteractor(renderWindow.getInteractor());
+widget4.setEnabled(1);
+widget4.getWidgetRep().setLabelText('This text is\ncentered!');
+widget4.getWidgetRep().setTextAlign(TextAlign.CENTER);
+widget4.getWidgetRep().setWorldPosition([-3, -2, 10]);
 
 renderer.resetCamera();
 renderWindow.render();

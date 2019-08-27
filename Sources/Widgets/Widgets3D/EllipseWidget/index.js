@@ -19,10 +19,21 @@ import { ViewTypes } from 'vtk.js/Sources/Widgets/Core/WidgetManager/Constants';
 // Factory
 // ----------------------------------------------------------------------------
 
-function vtlEllipseWidget(publicAPI, model) {
+function vtkEllipseWidget(publicAPI, model) {
   model.classHierarchy.push('vtkEllipseWidget');
 
   // --- Widget Requirement ---------------------------------------------------
+
+  model.methodsToLink = [
+    'activeScaleFactor',
+    'activeColor',
+    'useActiveColor',
+    'glyphResolution',
+    'defaultScale',
+    'drawBorder',
+    'drawFace',
+    'opacity',
+  ];
 
   model.behavior = widgetBehavior;
   publicAPI.getRepresentationsForViewType = (viewType) => {
@@ -50,8 +61,10 @@ function vtlEllipseWidget(publicAPI, model) {
   model.manipulator = vtkPlanePointManipulator.newInstance();
   model.widgetState = stateGenerator();
   model.shapeHandle = model.widgetState.getEllipseHandle();
-  model.moveHandle = model.widgetState.getMoveHandle();
-  model.moveHandle.setManipulator(model.manipulator);
+  model.point1Handle = model.widgetState.getPoint1Handle();
+  model.point2Handle = model.widgetState.getPoint2Handle();
+  model.point1Handle.setManipulator(model.manipulator);
+  model.point2Handle.setManipulator(model.manipulator);
 }
 
 // ----------------------------------------------------------------------------
@@ -87,7 +100,7 @@ export function extend(publicAPI, model, initialValues = {}) {
   vtkAbstractWidgetFactory.extend(publicAPI, model, initialValues);
   macro.setGet(publicAPI, model, ['manipulator', 'widgetState']);
 
-  vtlEllipseWidget(publicAPI, model);
+  vtkEllipseWidget(publicAPI, model);
 }
 
 // ----------------------------------------------------------------------------

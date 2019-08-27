@@ -58,6 +58,8 @@ function vtkCircleContextRepresentation(publicAPI, model) {
       glyph: vtkCircleSource.newInstance({
         resolution: model.glyphResolution,
         radius: 1,
+        lines: model.drawBorder,
+        face: model.drawFace,
       }),
       mapper: vtkGlyph3DMapper.newInstance({
         orientationArray: 'direction',
@@ -90,6 +92,24 @@ function vtkCircleContextRepresentation(publicAPI, model) {
     publicAPI.setGlyphResolution,
     (r) => model.glyph.setResolution(r)
   );
+
+  // --------------------------------------------------------------------------
+
+  publicAPI.setDrawBorder = (draw) => {
+    model.pipelines.circle.glyph.setLines(draw);
+  };
+
+  // --------------------------------------------------------------------------
+
+  publicAPI.setDrawFace = (draw) => {
+    model.pipelines.circle.glyph.setFace(draw);
+  };
+
+  // --------------------------------------------------------------------------
+
+  publicAPI.setOpacity = (opacity) => {
+    model.pipelines.circle.actor.getProperty().setOpacity(opacity);
+  };
 
   // --------------------------------------------------------------------------
 
@@ -174,6 +194,8 @@ const DEFAULT_VALUES = {
   glyphResolution: 32,
   defaultScale: 1,
   defaultDirection: [0, 0, 1],
+  drawBorder: false,
+  drawFace: true,
 };
 
 // ----------------------------------------------------------------------------

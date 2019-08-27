@@ -22,6 +22,15 @@ import { ViewTypes } from 'vtk.js/Sources/Widgets/Core/WidgetManager/Constants';
 function vtkRectangleWidget(publicAPI, model) {
   model.classHierarchy.push('vtkRectangleWidget');
 
+  model.methodsToLink = [
+    'activeScaleFactor',
+    'activeColor',
+    'useActiveColor',
+    'drawBorder',
+    'drawFace',
+    'opacity',
+  ];
+
   // --- Widget Requirement ---------------------------------------------------
 
   model.behavior = widgetBehavior;
@@ -50,8 +59,10 @@ function vtkRectangleWidget(publicAPI, model) {
   model.manipulator = vtkPlanePointManipulator.newInstance();
   model.widgetState = stateGenerator();
   model.shapeHandle = model.widgetState.getRectangleHandle();
-  model.moveHandle = model.widgetState.getMoveHandle();
-  model.moveHandle.setManipulator(model.manipulator);
+  model.point1Handle = model.widgetState.getPoint1Handle();
+  model.point2Handle = model.widgetState.getPoint2Handle();
+  model.point1Handle.setManipulator(model.manipulator);
+  model.point2Handle.setManipulator(model.manipulator);
 }
 
 // ----------------------------------------------------------------------------

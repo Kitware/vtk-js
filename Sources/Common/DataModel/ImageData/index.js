@@ -1,4 +1,6 @@
 import macro from 'vtk.js/Sources/macro';
+import * as vtkMath from 'vtk.js/Sources/Common/Core/Math';
+import vtkBoundingBox from 'vtk.js/Sources/Common/DataModel/BoundingBox';
 import vtkDataSet from 'vtk.js/Sources/Common/DataModel/DataSet';
 import vtkStructuredData from 'vtk.js/Sources/Common/DataModel/StructuredData';
 import { StructuredType } from 'vtk.js/Sources/Common/DataModel/StructuredData/Constants';
@@ -305,6 +307,21 @@ function vtkImageData(publicAPI, model) {
     vec3.transformMat4(vout, vin, model.indexToWorld);
   };
 
+  publicAPI.indexToWorldBounds = (bin, bout = []) => {
+    const in1 = [0, 0, 0];
+    const in2 = [0, 0, 0];
+    vtkBoundingBox.computeCornerPoints(in1, in2, bin);
+
+    const out1 = [0, 0, 0];
+    const out2 = [0, 0, 0];
+    vec3.transformMat4(out1, in1, model.indexToWorld);
+    vec3.transformMat4(out2, in2, model.indexToWorld);
+
+    vtkMath.computeBoundsFromPoints(out1, out2, bout);
+
+    return bout;
+  };
+
   // slow version for generic arrays
   publicAPI.indexToWorld = (ain, aout) => {
     const vin = vec3.fromValues(ain[0], ain[1], ain[2]);
@@ -316,6 +333,21 @@ function vtkImageData(publicAPI, model) {
   // this is the fast version, requires vec3 arguments
   publicAPI.worldToIndexVec3 = (vin, vout) => {
     vec3.transformMat4(vout, vin, model.worldToIndex);
+  };
+
+  publicAPI.worldToIndexBounds = (bin, bout = []) => {
+    const in1 = [0, 0, 0];
+    const in2 = [0, 0, 0];
+    vtkBoundingBox.computeCornerPoints(in1, in2, bin);
+
+    const out1 = [0, 0, 0];
+    const out2 = [0, 0, 0];
+    vec3.transformMat4(out1, in1, model.worldToIndex);
+    vec3.transformMat4(out2, in2, model.worldToIndex);
+
+    vtkMath.computeBoundsFromPoints(out1, out2, bout);
+
+    return bout;
   };
 
   // slow version for generic arrays
@@ -339,6 +371,78 @@ function vtkImageData(publicAPI, model) {
     }
 
     return center;
+  };
+
+  publicAPI.computeHistogram = (worldBounds, voxelFunc = null) => {
+    const bounds = [0, 0, 0, 0, 0, 0];
+    publicAPI.worldToIndexBounds(worldBounds, bounds);
+
+    const point1 = [0, 0, 0];
+    const point2 = [0, 0, 0];
+    vtkBoundingBox.computeCornerPoints(point1, point2, bounds);
+
+    vtkMath.roundVector(point1, point1);
+    vtkMath.roundVector(point2, point2);
+
+    const dimensions = publicAPI.getDimensions();
+
+    vtkMath.clampVector(
+      point1,
+      [0, 0, 0],
+      [dimensions[0] - 1, dimensions[1] - 1, dimensions[2] - 1],
+      point1
+    );
+    vtkMath.clampVector(
+      point2,
+      [0, 0, 0],
+      [dimensions[0] - 1, dimensions[1] - 1, dimensions[2] - 1],
+      point2
+    );
+
+    const yStride = dimensions[0];
+    const zStride = dimensions[0] * dimensions[1];
+
+    const pixels = publicAPI
+      .getPointData()
+      .getScalars()
+      .getData();
+
+    let maximum = -Infinity;
+    let minimum = Infinity;
+    let sumOfSquares = 0;
+    let isum = 0;
+    let inum = 0;
+
+    for (let z = point1[2]; z <= point2[2]; z++) {
+      for (let y = point1[1]; y <= point2[1]; y++) {
+        let index = point1[0] + y * yStride + z * zStride;
+        for (let x = point1[0]; x <= point2[0]; x++) {
+          if (!voxelFunc || voxelFunc([x, y, z], bounds)) {
+            const pixel = pixels[index];
+
+            if (pixel > maximum) maximum = pixel;
+            if (pixel < minimum) minimum = pixel;
+            sumOfSquares += pixel * pixel;
+            isum += pixel;
+            inum += 1;
+          }
+
+          ++index;
+        }
+      }
+    }
+
+    const average = inum > 0 ? isum / inum : 0;
+    const variance = sumOfSquares - average * average;
+    const sigma = Math.sqrt(variance);
+
+    return {
+      minimum,
+      maximum,
+      average,
+      variance,
+      sigma,
+    };
   };
 }
 

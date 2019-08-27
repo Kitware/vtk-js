@@ -5,8 +5,12 @@ import {
   ShapeBehavior,
 } from 'vtk.js/Sources/Widgets/Widgets3D/ShapeWidget/Constants';
 
+import vtkLabelRepresentation from 'vtk.js/Sources/Interaction/Widgets/LabelRepresentation';
+
 import { SlicingMode } from 'vtk.js/Sources/Rendering/Core/ImageMapper/Constants';
 import { vec3 } from 'gl-matrix';
+
+const { vtkErrorMacro } = macro;
 
 const EPSILON = 1e-6;
 
@@ -23,6 +27,8 @@ function makeBoundsFromPoints(point1, point2) {
 
 export default function widgetBehavior(publicAPI, model) {
   model.classHierarchy.push('vtkShapeWidgetProp');
+
+  const superClass = Object.assign({}, publicAPI);
 
   // --------------------------------------------------------------------------
   // Display 2D
@@ -55,47 +61,33 @@ export default function widgetBehavior(publicAPI, model) {
         model.modifierBehavior[key][category] === flag
     );
 
+  publicAPI.isOppositeBehaviorActive = (category, flag) =>
+    Object.values(ShapeBehavior[category]).some(
+      (flagToTry) =>
+        flag !== flagToTry && publicAPI.isBehaviorActive(category, flagToTry)
+    );
+
+  publicAPI.getActiveBehaviorFromCategory = (category) =>
+    Object.values(ShapeBehavior[category]).find(
+      (flag) =>
+        publicAPI.isBehaviorActive(category, flag) ||
+        (!publicAPI.isOppositeBehaviorActive(category, flag) &&
+          model.modifierBehavior.None[category] === flag)
+    );
+
   publicAPI.isRatioFixed = () =>
-    publicAPI.isBehaviorActive(
-      BehaviorCategory.RATIO,
-      ShapeBehavior[BehaviorCategory.RATIO].FIXED
-    ) ||
-    (!publicAPI.isBehaviorActive(
-      BehaviorCategory.RATIO,
-      ShapeBehavior[BehaviorCategory.RATIO].FREE
-    ) &&
-      model.modifierBehavior.None[BehaviorCategory.RATIO] ===
-        ShapeBehavior[BehaviorCategory.RATIO].FIXED);
+    publicAPI.getActiveBehaviorFromCategory(BehaviorCategory.RATIO) ===
+    ShapeBehavior[BehaviorCategory.RATIO].FIXED;
 
-  publicAPI.isCenterToCorner = () =>
-    publicAPI.isBehaviorActive(
-      BehaviorCategory.POINTS,
-      ShapeBehavior[BehaviorCategory.POINTS].CENTER_TO_CORNER
-    ) ||
-    (!publicAPI.isBehaviorActive(
-      BehaviorCategory.POINTS,
-      ShapeBehavior[BehaviorCategory.POINTS].CORNER_TO_CORNER
-    ) &&
-      model.modifierBehavior.None[BehaviorCategory.POINTS] ===
-        ShapeBehavior[BehaviorCategory.POINTS].CENTER_TO_CORNER);
-
-  publicAPI.isDraggingEnabled = () =>
-    publicAPI.isBehaviorActive(
-      BehaviorCategory.PLACEMENT,
-      ShapeBehavior[BehaviorCategory.PLACEMENT].DRAG
-    ) ||
-    publicAPI.isBehaviorActive(
-      BehaviorCategory.PLACEMENT,
-      ShapeBehavior[BehaviorCategory.PLACEMENT].CLICK_AND_DRAG
-    ) ||
-    (!publicAPI.isBehaviorActive(
-      BehaviorCategory.PLACEMENT,
-      ShapeBehavior[BehaviorCategory.PLACEMENT].CLICK
-    ) &&
-      (model.modifierBehavior.None[BehaviorCategory.PLACEMENT] ===
-        ShapeBehavior[BehaviorCategory.PLACEMENT].DRAG ||
-        model.modifierBehavior.None[BehaviorCategory.PLACEMENT] ===
-          ShapeBehavior[BehaviorCategory.PLACEMENT].CLICK_AND_DRAG));
+  publicAPI.isDraggingEnabled = () => {
+    const behavior = publicAPI.getActiveBehaviorFromCategory(
+      BehaviorCategory.PLACEMENT
+    );
+    return (
+      behavior === ShapeBehavior[BehaviorCategory.PLACEMENT].DRAG ||
+      behavior === ShapeBehavior[BehaviorCategory.PLACEMENT].CLICK_AND_DRAG
+    );
+  };
 
   publicAPI.isDraggingForced = () =>
     publicAPI.isBehaviorActive(
@@ -120,6 +112,111 @@ export default function widgetBehavior(publicAPI, model) {
   publicAPI.setZAxis = (zAxis) => {
     vec3.normalize(model.zAxis, zAxis);
   };
+
+  publicAPI.setLabelTextCallback = (callback) => {
+    model.labelTextCallback = callback;
+  };
+
+  publicAPI.setResetAfterPointPlacement = (reset) => {
+    model.resetAfterPointPlacement = reset;
+  };
+
+  publicAPI.getPoint1 = () => model.point1;
+  publicAPI.getPoint2 = () => model.point2;
+
+  publicAPI.setPoints = (point1, point2) => {
+    model.point1 = point1;
+    model.point2 = point2;
+
+    model.point1Handle.setOrigin(model.point1);
+    model.point2Handle.setOrigin(model.point2);
+
+    publicAPI.updateShapeBounds();
+  };
+
+  // This method is to be called to place the first point
+  // for the first time. It is not inlined so that
+  // the user can specify himself where the first point
+  // is right after publicAPI.grabFocus() without waiting
+  // for interactions.
+  publicAPI.placePoint1 = (point) => {
+    if (model.hasFocus) {
+      publicAPI.setPoints(point, point);
+
+      model.point1Handle.deactivate();
+      model.point2Handle.activate();
+      model.activeState = model.point2Handle;
+
+      if (model.useHandles) {
+        model.point2Handle.setVisible(true);
+      }
+
+      publicAPI.updateShapeBounds();
+      publicAPI.invokeStartInteractionEvent();
+
+      if (model.visibleOnFocus) {
+        model.shapeHandle.setVisible(true);
+      }
+    }
+  };
+
+  publicAPI.placePoint2 = (point2) => {
+    if (model.hasFocus) {
+      model.point2 = point2;
+
+      model.point2Handle.setOrigin(model.point2);
+
+      publicAPI.updateShapeBounds();
+      publicAPI.invokeInteractionEvent();
+      publicAPI.invokeEndInteractionEvent();
+
+      if (model.resetAfterPointPlacement) {
+        publicAPI.reset();
+      } else {
+        publicAPI.loseFocus();
+      }
+    }
+  };
+
+  publicAPI.setPixelScale = (pixelScale) => {
+    model.pixelScale = pixelScale;
+    publicAPI.updateHandlesSize();
+  };
+
+  publicAPI.updateHandlesSize = () => {
+    if (model.pixelScale !== null) {
+      const scale =
+        model.pixelScale *
+        vec3.distance(
+          model.openGLRenderWindow.displayToWorld(0, 0, 0, model.renderer),
+          model.openGLRenderWindow.displayToWorld(1, 0, 0, model.renderer)
+        );
+
+      model.point1Handle.setScale1(scale);
+      model.point2Handle.setScale1(scale);
+    }
+  };
+
+  publicAPI.setVisibility = (visibility) => {
+    if (model.useHandles) {
+      superClass.setVisibility(visibility);
+    } else {
+      model.shapeHandle.setVisible(visibility);
+    }
+
+    if (model.label) {
+      if (visibility) {
+        model.label.setContainer(model.interactor.getContainer());
+      } else {
+        model.label.setContainer(null);
+      }
+    }
+
+    publicAPI.updateRepresentationForRender();
+    model.interactor.render();
+  };
+
+  publicAPI.getLabel = () => model.label;
 
   // --------------------------------------------------------------------------
   // Private methods
@@ -187,6 +284,51 @@ export default function widgetBehavior(publicAPI, model) {
     ];
   };
 
+  publicAPI.setBoundsFromRadius = (center, pointOnCircle) => {
+    vtkErrorMacro(
+      `${
+        model.classHierarchy[model.classHierarchy.length - 1]
+      } should implement 'setBoundsFromRadius'`
+    );
+  };
+
+  publicAPI.setBoundsFromDiameter = (center, pointOnCircle) => {
+    vtkErrorMacro(
+      `${
+        model.classHierarchy[model.classHierarchy.length - 1]
+      } should implement 'setBoundsFromDiameter'`
+    );
+  };
+
+  publicAPI.setBounds = (bounds) => {
+    if (model.label && model.labelTextCallback) {
+      if (model.point1 && model.point2) {
+        const point1 = model.openGLRenderWindow.worldToDisplay(
+          bounds[0],
+          bounds[2],
+          bounds[4],
+          model.renderer
+        );
+        const point2 = model.openGLRenderWindow.worldToDisplay(
+          bounds[1],
+          bounds[3],
+          bounds[5],
+          model.renderer
+        );
+        const screenBounds = [
+          point1[0],
+          point2[0],
+          point1[1],
+          point2[1],
+          point1[2],
+          point2[2],
+        ];
+
+        model.labelTextCallback(bounds, screenBounds, model.label);
+      }
+    }
+  };
+
   publicAPI.updateShapeBounds = () => {
     if (model.point1 && model.point2) {
       const point1 = [...model.point1];
@@ -196,22 +338,69 @@ export default function widgetBehavior(publicAPI, model) {
         point2 = publicAPI.makeSquareFromPoints(point1, point2);
       }
 
-      if (publicAPI.isCenterToCorner()) {
-        const diagonal = [0, 0, 0];
-        vec3.subtract(diagonal, point1, point2);
-        vec3.add(point1, point1, diagonal);
-      }
+      switch (
+        publicAPI.getActiveBehaviorFromCategory(BehaviorCategory.POINTS)
+      ) {
+        case ShapeBehavior[BehaviorCategory.POINTS].CORNER_TO_CORNER:
+          publicAPI.setBounds(makeBoundsFromPoints(point1, point2));
 
-      publicAPI.setBounds(makeBoundsFromPoints(point1, point2));
+          break;
+        case ShapeBehavior[BehaviorCategory.POINTS].CENTER_TO_CORNER:
+          {
+            const diagonal = [0, 0, 0];
+            vec3.subtract(diagonal, point1, point2);
+            vec3.add(point1, point1, diagonal);
+          }
+          publicAPI.setBounds(makeBoundsFromPoints(point1, point2));
+
+          break;
+        case ShapeBehavior[BehaviorCategory.POINTS].RADIUS:
+          publicAPI.setBoundsFromRadius(point1, point2);
+
+          break;
+        case ShapeBehavior[BehaviorCategory.POINTS].DIAMETER:
+          publicAPI.setBoundsFromDiameter(point1, point2);
+
+          break;
+        default:
+          // This should never be executed
+          vtkErrorMacro('vtk internal error');
+      }
     } else {
       publicAPI.setBounds([0, 0, 0, 0, 0, 0]);
     }
   };
 
+  /*
+  * If the widget has the focus, this method reset the widget
+  * to it's state just after it grabbed the focus. Otherwise
+  * it resets the widget to its state before it grabbed the focus. 
+  */
   publicAPI.reset = () => {
+    if (!model.hasFocus) {
+      model.point1Handle.setVisible(false);
+    }
+
     model.shapeHandle.setVisible(false);
+
     model.point1 = null;
     model.point2 = null;
+
+    if (model.label) {
+      model.label.setLabelText('');
+    }
+
+    model.point1Handle.setOrigin(model.point2Handle.getOrigin());
+    model.point2Handle.setVisible(false);
+    model.point2Handle.deactivate();
+    if (model.hasFocus) {
+      model.point1Handle.activate();
+      model.activeState = model.point1Handle;
+    } else {
+      model.point1Handle.deactivate();
+      model.activeState = null;
+    }
+
     publicAPI.updateShapeBounds();
   };
 
@@ -220,22 +409,44 @@ export default function widgetBehavior(publicAPI, model) {
   // --------------------------------------------------------------------------
 
   publicAPI.handleMouseMove = (callData) => {
-    if (model.hasFocus && model.pickable && model.manipulator) {
+    if (model.manipulator) {
       const worldCoords = model.manipulator.handleEvent(
         callData,
         model.openGLRenderWindow
       );
 
-      if (worldCoords.length) {
-        model.moveHandle.setOrigin(worldCoords);
+      if (model.hasFocus && model.pickable) {
+        if (worldCoords.length) {
+          if (!model.point1) {
+            model.point1Handle.setOrigin(worldCoords);
+          } else {
+            model.point2Handle.setOrigin(worldCoords);
+          }
+        }
+
+        if (model.point1) {
+          model.point2 = worldCoords;
+          publicAPI.updateShapeBounds();
+        }
+
+        return macro.EVENT_ABORT;
       }
 
-      if (model.point1) {
-        model.point2 = worldCoords;
+      if (model.useHandles && model.isDragging) {
+        if (model.activeState === model.point1Handle) {
+          model.point1Handle.setOrigin(worldCoords);
+          model.point1 = worldCoords;
+        } else {
+          model.point2Handle.setOrigin(worldCoords);
+
+          model.point2 = worldCoords;
+        }
         publicAPI.updateShapeBounds();
-      }
 
-      return macro.EVENT_ABORT;
+        publicAPI.invokeInteractionEvent();
+
+        return macro.EVENT_ABORT;
+      }
     }
 
     return macro.VOID;
@@ -246,28 +457,38 @@ export default function widgetBehavior(publicAPI, model) {
   // --------------------------------------------------------------------------
 
   publicAPI.handleLeftButtonPress = (e) => {
-    if (!model.hasFocus || !model.pickable) {
+    if (
+      !model.activeState ||
+      !model.activeState.getActive() ||
+      !model.pickable
+    ) {
       return macro.VOID;
     }
 
-    if (!model.point1) {
-      model.point1 = model.moveHandle.getOrigin();
-      model.point2 = model.point1;
-      publicAPI.updateShapeBounds();
-      publicAPI.invokeStartInteractionEvent();
-
-      if (model.visibleOnFocus) {
-        model.shapeHandle.setVisible(true);
+    if (model.hasFocus) {
+      if (!model.point1) {
+        publicAPI.placePoint1(model.point1Handle.getOrigin());
+      } else {
+        publicAPI.placePoint2(model.point2Handle.getOrigin());
       }
-    } else {
-      model.point2 = model.moveHandle.getOrigin();
-      publicAPI.updateShapeBounds();
-      publicAPI.invokeInteractionEvent();
-      publicAPI.invokeEndInteractionEvent();
-      publicAPI.reset();
+
+      return macro.EVENT_ABORT;
     }
 
-    return macro.EVENT_ABORT;
+    if (
+      model.point1 &&
+      (model.activeState === model.point1Handle ||
+        model.activeState === model.point2Handle)
+    ) {
+      model.isDragging = true;
+      model.openGLRenderWindow.setCursor('grabbing');
+      model.interactor.requestAnimation(publicAPI);
+      publicAPI.invokeStartInteractionEvent();
+
+      return macro.EVENT_ABORT;
+    }
+
+    return macro.VOID;
   };
 
   // --------------------------------------------------------------------------
@@ -275,6 +496,16 @@ export default function widgetBehavior(publicAPI, model) {
   // --------------------------------------------------------------------------
 
   publicAPI.handleLeftButtonRelease = (e) => {
+    if (model.isDragging) {
+      model.isDragging = false;
+      model.openGLRenderWindow.setCursor('pointer');
+      model.widgetState.deactivate();
+      model.interactor.cancelAnimation(publicAPI);
+      publicAPI.invokeEndInteractionEvent();
+
+      return macro.EVENT_ABORT;
+    }
+
     if (!model.hasFocus || !model.pickable) {
       return macro.VOID;
     }
@@ -290,7 +521,7 @@ export default function widgetBehavior(publicAPI, model) {
     }
 
     if (model.point1) {
-      model.point2 = model.moveHandle.getOrigin();
+      model.point2 = model.point2Handle.getOrigin();
       publicAPI.updateShapeBounds();
 
       if (publicAPI.isDraggingEnabled()) {
@@ -306,7 +537,12 @@ export default function widgetBehavior(publicAPI, model) {
         if (distance > maxDistance || publicAPI.isDraggingForced()) {
           publicAPI.invokeInteractionEvent();
           publicAPI.invokeEndInteractionEvent();
-          publicAPI.reset();
+
+          if (model.resetAfterPointPlacement) {
+            publicAPI.reset();
+          } else {
+            publicAPI.loseFocus();
+          }
         }
       }
     }
@@ -315,7 +551,7 @@ export default function widgetBehavior(publicAPI, model) {
   };
 
   // --------------------------------------------------------------------------
-  // Shift key - enforce square
+  // Register key presses/relases
   // --------------------------------------------------------------------------
 
   publicAPI.handleKeyDown = ({ key }) => {
@@ -323,6 +559,7 @@ export default function widgetBehavior(publicAPI, model) {
       if (model.hasFocus) {
         publicAPI.invokeEndInteractionEvent();
         publicAPI.reset();
+        publicAPI.loseFocus();
       }
     } else {
       model.keysDown[key] = true;
@@ -330,7 +567,7 @@ export default function widgetBehavior(publicAPI, model) {
 
     if (model.hasFocus) {
       if (model.point1) {
-        model.point2 = model.moveHandle.getOrigin();
+        model.point2 = model.point2Handle.getOrigin();
         publicAPI.updateShapeBounds();
       }
     }
@@ -341,23 +578,40 @@ export default function widgetBehavior(publicAPI, model) {
 
     if (model.hasFocus) {
       if (model.point1) {
-        model.point2 = model.moveHandle.getOrigin();
+        model.point2 = model.point2Handle.getOrigin();
         publicAPI.updateShapeBounds();
       }
     }
   };
 
   // --------------------------------------------------------------------------
-  // Focus API - moveHandle follow mouse when widget has focus
+  // Focus API - follow mouse when widget has focus
   // --------------------------------------------------------------------------
 
   publicAPI.grabFocus = () => {
     if (!model.hasFocus) {
       publicAPI.reset();
-      model.moveHandle.activate();
+
+      if (!model.label) {
+        model.label = vtkLabelRepresentation.newInstance();
+      }
+
+      model.label.setRenderer(model.renderer);
+      model.label.buildRepresentation();
+      model.renderer.addViewProp(model.label);
+      model.label.setContainer(model.interactor.getContainer());
+
+      model.point1Handle.activate();
+      model.activeState = model.point1Handle;
+
+      if (model.useHandles) {
+        model.point1Handle.setVisible(true);
+      }
       model.shapeHandle.setVisible(false);
       model.interactor.requestAnimation(publicAPI);
     }
+
+    publicAPI.updateHandlesSize();
 
     model.hasFocus = true;
   };
@@ -366,14 +620,27 @@ export default function widgetBehavior(publicAPI, model) {
 
   publicAPI.loseFocus = () => {
     if (model.hasFocus) {
-      if (model.visibleOnFocus) {
+      if (model.visibleOnFocus && !model.useHandles) {
         model.shapeHandle.setVisible(false);
       }
       model.interactor.cancelAnimation(publicAPI);
     }
 
+    if (model.label && !model.useHandles) {
+      model.label.setContainer(null);
+    }
+
+    if (!model.useHandles || !model.point1) {
+      model.point1Handle.setVisible(false);
+      model.point2Handle.setVisible(false);
+    }
+
     model.widgetState.deactivate();
-    model.moveHandle.deactivate();
+    model.point1Handle.deactivate();
+    model.point2Handle.deactivate();
+    model.activeState = null;
+    model.interactor.render();
+    model.widgetManager.enablePicking();
 
     model.hasFocus = false;
   };

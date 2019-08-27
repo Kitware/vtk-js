@@ -6,9 +6,19 @@ export default function generateState() {
     .addStateFromMixin({
       labels: ['moveHandle'],
       mixins: ['origin', 'color', 'scale1', 'visible', 'manipulator'],
-      name: 'moveHandle',
+      name: 'point1Handle',
       initialValues: {
-        scale1: 0.3,
+        scale1: 10,
+        origin: [1, 0, 0],
+        visible: false,
+      },
+    })
+    .addStateFromMixin({
+      labels: ['moveHandle'],
+      mixins: ['origin', 'color', 'scale1', 'visible', 'manipulator'],
+      name: 'point2Handle',
+      initialValues: {
+        scale1: 10,
         origin: [1, 0, 0],
         visible: false,
       },
