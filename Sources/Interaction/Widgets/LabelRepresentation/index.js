@@ -193,16 +193,13 @@ function vtkLabelRepresentation(publicAPI, model) {
     const height =
       2 * padding + currentLabelStyle.fontSize + (lines.length - 1) * lineSpace;
 
-    let maxWidth = 0;
-    lines.forEach((line) => {
-      const width = Math.round(model.context.measureText(line).width);
+    const width = lines.reduce(
+      (maxWidth, line) =>
+        Math.max(maxWidth, Math.round(model.context.measureText(line).width)),
+      0
+    );
 
-      if (width > maxWidth) {
-        maxWidth = width;
-      }
-    });
-
-    return { width: maxWidth, height, lineSpace, padding, lines };
+    return { width, height, lineSpace, padding, lines };
   };
 
   publicAPI.updateLabel = () => {
@@ -327,16 +324,16 @@ export function extend(publicAPI, model, initialValues = {}) {
   model.mapper.setInputConnection(model.point.getOutputPort());
   model.mapper.setCallback((coordList) => {
     if (model.canvas) {
-      let yoffset = 0;
+      let yOffset = 0;
 
       if (model.verticalAlign === VerticalAlign.BOTTOM) {
-        yoffset = -model.canvas.height;
+        yOffset = -model.canvas.height;
       } else if (model.verticalAlign === VerticalAlign.CENTER) {
-        yoffset = -0.5 * model.canvas.height;
+        yOffset = -0.5 * model.canvas.height;
       }
 
       model.canvas.style.left = `${Math.round(coordList[0][0])}px`;
-      model.canvas.style.bottom = `${Math.round(coordList[0][1] + yoffset)}px`;
+      model.canvas.style.bottom = `${Math.round(coordList[0][1] + yOffset)}px`;
 
       publicAPI.modified();
     }

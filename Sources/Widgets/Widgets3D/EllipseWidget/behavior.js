@@ -1,6 +1,6 @@
 import shapeBehavior from 'vtk.js/Sources/Widgets/Widgets3D/ShapeWidget/behavior';
 import { vec3 } from 'gl-matrix';
-import * as vtkMath from 'vtk.js/Sources/Common/Core/Math';
+import vtkBoundingBox from 'vtk.js/Sources/Common/DataModel/BoundingBox';
 
 export default function widgetBehavior(publicAPI, model) {
   // We inherit shapeBehavior
@@ -12,13 +12,13 @@ export default function widgetBehavior(publicAPI, model) {
   publicAPI.setBounds = (bounds) => {
     if (superClass.setBounds) {
       superClass.setBounds(bounds);
-
-      const center = vtkMath.computeBoundsCenter(bounds);
-      const scale3 = vtkMath.computeBoundsScale3(bounds);
-
-      model.shapeHandle.setOrigin(center);
-      model.shapeHandle.setScale3(scale3);
     }
+
+    const center = vtkBoundingBox.getCenter(bounds);
+    const scale3 = vtkBoundingBox.computeScale3(bounds);
+
+    model.shapeHandle.setOrigin(center);
+    model.shapeHandle.setScale3(scale3);
   };
 
   publicAPI.setBoundsFromRadius = (center, pointOnCircle) => {

@@ -1,4 +1,7 @@
 import macro from 'vtk.js/Sources/macro';
+import vtkBoundingBox from 'vtk.js/Sources/Common/DataModel/BoundingBox';
+
+const VTK_SMALL_NUMBER = 1e-12;
 
 // ----------------------------------------------------------------------------
 // Global methods
@@ -13,12 +16,29 @@ function evaluate(radius, center, x) {
   );
 }
 
+function isPointIn3DEllipse(point, bounds) {
+  const center = vtkBoundingBox.getCenter(bounds);
+  let scale3 = vtkBoundingBox.computeScale3(bounds);
+  scale3 = scale3.map((x) => Math.max(Math.abs(x), VTK_SMALL_NUMBER));
+
+  const radius = [
+    (point[0] - center[0]) / scale3[0],
+    (point[1] - center[1]) / scale3[1],
+    (point[2] - center[2]) / scale3[2],
+  ];
+
+  return (
+    radius[0] * radius[0] + radius[1] * radius[1] + radius[2] * radius[2] <= 1
+  );
+}
+
 // ----------------------------------------------------------------------------
 // Static API
 // ----------------------------------------------------------------------------
 
 export const STATIC = {
   evaluate,
+  isPointIn3DEllipse,
 };
 
 // ----------------------------------------------------------------------------

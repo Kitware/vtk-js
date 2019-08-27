@@ -14,6 +14,7 @@ import vtkImageSlice from 'vtk.js/Sources/Rendering/Core/ImageSlice';
 import vtkPaintFilter from 'vtk.js/Sources/Filters/General/PaintFilter';
 import vtkColorTransferFunction from 'vtk.js/Sources/Rendering/Core/ColorTransferFunction';
 import vtkPiecewiseFunction from 'vtk.js/Sources/Common/DataModel/PiecewiseFunction';
+import vtkBoundingBox from 'vtk.js/Sources/Common/DataModel/BoundingBox';
 
 import {
   BehaviorCategory,
@@ -239,7 +240,7 @@ reader
     scene.circleHandle.setZAxis(axis);
 
     scene.circleHandle.setLabelTextCallback((worldBounds, screenBounds) => {
-      const center = vtkMath.computeBoundsCenter(screenBounds);
+      const center = vtkBoundingBox.getCenter(screenBounds);
       const radius =
         vec3.distance(center, [
           screenBounds[0],

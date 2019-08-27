@@ -9,6 +9,8 @@ import vtkInteractorStyleImage from 'vtk.js/Sources/Interaction/Style/Interactor
 import vtkHttpDataSetReader from 'vtk.js/Sources/IO/Core/HttpDataSetReader';
 import vtkImageMapper from 'vtk.js/Sources/Rendering/Core/ImageMapper';
 import vtkImageSlice from 'vtk.js/Sources/Rendering/Core/ImageSlice';
+import vtkSphere from 'vtk.js/Sources/Common/DataModel/Sphere';
+import vtkBoundingBox from 'vtk.js/Sources/Common/DataModel/BoundingBox';
 
 import {
   BehaviorCategory,
@@ -205,18 +207,21 @@ reader
     scene.ellipseHandle.getRepresentations()[1].setDrawFace(false);
     scene.ellipseHandle.getRepresentations()[1].setOpacity(1);
 
+    scene.rectangleHandle.updateHandlesSize();
+    scene.circleHandle.updateHandlesSize();
+    scene.ellipseHandle.updateHandlesSize();
+
     // set text display callback
     scene.ellipseHandle.setLabelTextCallback(
       (worldBounds, screenBounds, labelRep) => {
-        const { average, imin, imax } = vtkMath.computeHistogram(
-          image.data,
+        const { average, minimum, maximum } = image.data.computeHistogram(
           worldBounds,
-          vtkMath.isPointIn3DEllipse
+          vtkSphere.isPointIn3DEllipse
         );
 
         const text = `average: ${average.toFixed(
           0
-        )} \nmin: ${imin} \nmax: ${imax} `;
+        )} \nmin: ${minimum} \nmax: ${maximum} `;
 
         const { width, height } = labelRep.computeTextDimensions(text);
         labelRep.setDisplayPosition(
@@ -235,7 +240,7 @@ reader
 
     scene.circleHandle.setLabelTextCallback(
       (worldBounds, screenBounds, labelRep) => {
-        const center = vtkMath.computeBoundsCenter(screenBounds);
+        const center = vtkBoundingBox.getCenter(screenBounds);
         const radius =
           vec3.distance(center, [
             screenBounds[0],

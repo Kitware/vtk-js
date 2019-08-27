@@ -9,7 +9,7 @@ export default function generateState() {
       name: 'point1Handle',
       initialValues: {
         scale1: 10,
-        origin: [1, 0, 0],
+        origin: [0, 0, 0],
         visible: false,
       },
     })
@@ -19,7 +19,7 @@ export default function generateState() {
       name: 'point2Handle',
       initialValues: {
         scale1: 10,
-        origin: [1, 0, 0],
+        origin: [0, 0, 0],
         visible: false,
       },
     })

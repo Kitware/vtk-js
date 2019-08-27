@@ -131,12 +131,6 @@ export default function widgetBehavior(publicAPI, model) {
     model.point1Handle.setOrigin(model.point1);
     model.point2Handle.setOrigin(model.point2);
 
-    if (model.useHandles) {
-      model.point1Handle.setVisible(true);
-      model.point2Handle.setVisible(true);
-    }
-    model.shapeHandle.setVisible(true);
-
     publicAPI.updateShapeBounds();
   };
 
@@ -190,7 +184,7 @@ export default function widgetBehavior(publicAPI, model) {
   };
 
   publicAPI.updateHandlesSize = () => {
-    if (model.scaleHandlesInPixelSpace) {
+    if (model.pixelScale !== null) {
       const scale =
         model.pixelScale *
         vec3.distance(
