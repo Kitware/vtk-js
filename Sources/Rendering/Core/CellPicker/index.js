@@ -266,7 +266,6 @@ function vtkCellPicker(publicAPI, model) {
     } else if (data.getPolys) {
       const cellObject = data.getPolys();
       const points = data.getPoints();
-      const pointsData = points.getData();
       const cellData = cellObject.getData();
       let cellId = 0;
       const pointsIdList = [-1, -1, -1];
@@ -278,24 +277,13 @@ function vtkCellPicker(publicAPI, model) {
         const nbPointsInCell = cellData[i++];
 
         cellPoints.setNumberOfPoints(nbPointsInCell);
-        cellPoints.setNumberOfComponents(3);
-        const cellPointsData = new Array(nbPointsInCell * 3);
         // Extract cell points
-        let cpt = 0;
         for (let j = 0; j < nbPointsInCell; j++) {
           pointsIdList[j] = cellData[i++];
-          cellPointsData[cpt++] = pointsData[pointsIdList[j] * 3];
-          cellPointsData[cpt++] = pointsData[pointsIdList[j] * 3 + 1];
-          cellPointsData[cpt++] = pointsData[pointsIdList[j] * 3 + 2];
         }
-        cellPoints.setData(cellPointsData);
 
         // Create cell from points
-        cell.initialize(
-          cellPoints.getNumberOfPoints(),
-          pointsIdList,
-          cellPoints
-        );
+        cell.initialize(points, pointsIdList);
 
         let cellPicked;
         if (isPolyData) {

@@ -10,10 +10,33 @@ function vtkCell(publicAPI, model) {
   // Set our className
   model.classHierarchy.push('vtkCell');
 
-  publicAPI.initialize = (npts, pointIdsList, pointList) => {
-    model.pointsIds = pointIdsList;
-    model.points.setNumberOfPoints(npts);
-    model.points.setData(pointList.getData());
+  publicAPI.initialize = (points, pointIdsList = null) => {
+    if (!pointIdsList) {
+      model.points = points;
+      model.pointsIds = new Array(points.getNumberOfPoints());
+      for (let i = points.getNumberOfPoints() - 1; i >= 0; --i) {
+        model.pointsIds[i] = i;
+      }
+    } else {
+      model.pointsIds = pointIdsList;
+      let triangleData = model.points.getData();
+      if (triangleData.length !== 3 * model.pointsIds.length) {
+        triangleData = new window[(points.getDataType())](
+          3 * model.pointsIds.length
+        );
+      }
+      const pointsData = points.getData();
+      model.pointsIds.forEach((pointId, index) => {
+        // const start = 3 * pointId;
+        // pointsData.set(p.subarray(start, start + 3), 3 * index);
+        let pointOffset = 3 * pointId;
+        let trianglePointOffset = 3 * index;
+        triangleData[trianglePointOffset] = pointsData[pointOffset];
+        triangleData[++trianglePointOffset] = pointsData[++pointOffset];
+        triangleData[++trianglePointOffset] = pointsData[++pointOffset];
+      });
+      model.points.setData(triangleData);
+    }
   };
 
   publicAPI.getBounds = () => {
@@ -77,11 +100,7 @@ function vtkCell(publicAPI, model) {
   publicAPI.getNumberOfPoints = () => model.points.getNumberOfPoints();
 
   publicAPI.deepCopy = (cell) => {
-    cell.initialize(
-      model.points.getNumberOfPoints(),
-      model.pointsIds,
-      model.points
-    );
+    cell.initialize(model.points, model.pointsIds);
   };
 
   publicAPI.getCellDimension = () => {}; // virtual
@@ -112,7 +131,9 @@ export function extend(publicAPI, model, initialValues = {}) {
 
   macro.obj(publicAPI, model);
 
-  model.points = vtkPoints.newInstance();
+  if (!model.points) {
+    model.points = vtkPoints.newInstance();
+  }
 
   macro.get(publicAPI, model, ['points', 'pointsIds']);
 
