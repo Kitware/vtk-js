@@ -1,7 +1,6 @@
 import macro from 'vtk.js/Sources/macro';
 import vtk from 'vtk.js/Sources/vtk';
 import vtkCellArray from 'vtk.js/Sources/Common/Core/CellArray';
-import vtkPoints from 'vtk.js/Sources/Common/Core/Points';
 import vtkCellLinks from 'vtk.js/Sources/Common/DataModel/CellLinks';
 import vtkCellTypes from 'vtk.js/Sources/Common/DataModel/CellTypes';
 import vtkPointSet from 'vtk.js/Sources/Common/DataModel/PointSet';
@@ -209,16 +208,14 @@ function vtkPolyData(publicAPI, model) {
     );
   };
 
-  publicAPI.getCell = (cellId) => {
+  /**
+   * If you know the type of cell, you may provide it to improve performances.
+   */
+  publicAPI.getCell = (cellId, cellHint = null) => {
     const cellInfo = publicAPI.getCellPoints(cellId);
     if (cellInfo.cellType === CellType.VTK_TRIANGLE) {
-      const cell = vtkTriangle.newInstance();
-      let pointsData = [];
-      cellInfo.cellPointIds.forEach((pointId, index) => {
-        pointsData = pointsData.concat(publicAPI.getPoints().getPoint(pointId));
-      });
-      const points = vtkPoints.newInstance({ values: pointsData });
-      cell.initialize(3, cellInfo.cellPointIds, points);
+      const cell = cellHint || vtkTriangle.newInstance();
+      cell.initialize(publicAPI.getPoints(), cellInfo.cellPointIds);
       return cell;
     }
     return null;

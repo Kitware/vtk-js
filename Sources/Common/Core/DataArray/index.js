@@ -71,10 +71,8 @@ function ensureRangeSize(rangeArray, size = 0) {
 }
 
 function getDataType(typedArray) {
-  return Object.prototype.toString
-    .call(typedArray)
-    .split(' ')[1]
-    .slice(0, -1);
+  // Expects toString() to return "[object ...Array]"
+  return Object.prototype.toString.call(typedArray).slice(8, -1);
 }
 
 function getMaxNorm(normArray) {
@@ -305,7 +303,9 @@ export function extend(publicAPI, model, initialValues = {}) {
 
   if (model.values) {
     model.size = model.values.length;
-    model.dataType = getDataType(model.values);
+    if (!initialValues.dataType) {
+      model.dataType = getDataType(model.values);
+    }
   }
 
   // Object methods

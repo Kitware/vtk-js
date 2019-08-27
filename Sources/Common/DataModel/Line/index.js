@@ -132,7 +132,7 @@ function vtkLine(publicAPI, model) {
   // Set our className
   model.classHierarchy.push('vtkLine');
 
-  publicAPI.getCellDimension = () => {}; // virtual
+  publicAPI.getCellDimension = () => 1;
   publicAPI.intersectWithLine = (p1, p2, tol, x, pcoords) => {
     const outObj = { intersect: 0, t: Number.MIN_VALUE, subId: 0 };
     pcoords[1] = 0.0;

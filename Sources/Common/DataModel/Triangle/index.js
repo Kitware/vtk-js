@@ -49,7 +49,7 @@ function vtkTriangle(publicAPI, model) {
   // Set our className
   model.classHierarchy.push('vtkTriangle');
 
-  publicAPI.getCellDimension = () => {}; // virtual
+  publicAPI.getCellDimension = () => 2;
   publicAPI.intersectWithLine = (p1, p2, tol, x, pcoords) => {
     const outObj = { subId: 0, t: 0, intersect: -1 };
     pcoords[2] = 0.0;
@@ -103,6 +103,9 @@ function vtkTriangle(publicAPI, model) {
     const dist2Pt1Pt2 = vtkMath.distance2BetweenPoints(pt1, pt2);
     const dist2Pt2Pt3 = vtkMath.distance2BetweenPoints(pt2, pt3);
     const dist2Pt3Pt1 = vtkMath.distance2BetweenPoints(pt3, pt1);
+    if (!model.line) {
+      model.line = vtkLine.newInstance();
+    }
     if (dist2Pt1Pt2 > dist2Pt2Pt3 && dist2Pt1Pt2 > dist2Pt3Pt1) {
       model.line.getPoints().setPoint(0, pt1);
       model.line.getPoints().setPoint(1, pt2);
@@ -380,8 +383,6 @@ export function extend(publicAPI, model, initialValues = {}) {
   Object.assign(model, DEFAULT_VALUES, initialValues);
 
   vtkCell.extend(publicAPI, model, initialValues);
-
-  model.line = vtkLine.newInstance();
 
   vtkTriangle(publicAPI, model);
 }

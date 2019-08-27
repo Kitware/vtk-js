@@ -105,10 +105,9 @@ test('Test vtkLine intersectWithLine', (t) => {
   const points = vtkPoints.newInstance();
   points.setNumberOfPoints(3); // only first 2 points are considered
   points.setData([0, 0, 0, 1, 0, 0, 1, 1, 0]);
-  const pointIdList = [0, 1, 2];
   // Add points
   const line = vtkLine.newInstance();
-  line.initialize(points.getNumberOfPoints(), pointIdList, points);
+  line.initialize(points);
 
   // INVALID LINE
   let p1 = [0, 0, 0];
