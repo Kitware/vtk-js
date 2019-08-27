@@ -23,6 +23,30 @@ export default function widgetBehavior(publicAPI, model) {
 
   // --------------------------------------------------------------------------
 
+  publicAPI.sethandleSizeInPixels = (handleSizeInPixels) => {
+    model.handleSizeInPixels = handleSizeInPixels;
+  };
+
+  // --------------------------------------------------------------------------
+
+  publicAPI.updateHandlesSize = () => {
+    if (model.handleSizeInPixels !== null) {
+      const scale =
+        model.handleSizeInPixels *
+        vec3.distance(
+          model.openGLRenderWindow.displayToWorld(0, 0, 0, model.renderer),
+          model.openGLRenderWindow.displayToWorld(1, 0, 0, model.renderer)
+        );
+
+      model.moveHandle.setScale1(scale);
+      model.widgetState.getHandleList().forEach((handle) => {
+        handle.setScale1(scale);
+      });
+    }
+  };
+
+  // --------------------------------------------------------------------------
+
   publicAPI.reset = () => {
     model.widgetState.clearHandleList();
 
@@ -336,6 +360,7 @@ export default function widgetBehavior(publicAPI, model) {
       model.activeState = model.moveHandle;
       model.interactor.requestAnimation(publicAPI);
       publicAPI.updateResolution();
+      publicAPI.updateHandlesSize();
     }
 
     model.hasFocus = true;
