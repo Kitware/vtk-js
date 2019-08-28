@@ -61,7 +61,7 @@ test('Test vtkTriangle intersectWithLine', (t) => {
 
   const points = vtkPoints.newInstance();
   points.setNumberOfPoints(4); // only first 3 are considered
-  points.setData([0, 0, 0, 1, 0, 0, 1, 1, 0, 0, 1, 0]);
+  points.setData(Float32Array.from([0, 0, 0, 1, 0, 0, 1, 1, 0, 0, 1, 0]));
   // Add points
   const triangle = vtkTriangle.newInstance();
   triangle.initialize(points);
@@ -118,7 +118,7 @@ test('Test vtkTriangle intersectWithLine', (t) => {
 test('Test vtkTriangle evaluatePosition', (t) => {
   const points = vtkPoints.newInstance();
   points.setNumberOfPoints(3);
-  points.setData([0, 0, 0, 2, 0, 0, 2, 2, 0]);
+  points.setData(Float32Array.from([0, 0, 0, 2, 0, 0, 2, 2, 0]));
   const pointIdList = [0, 1, 2];
   // Add points
   const triangle = vtkTriangle.newInstance();
