@@ -64,6 +64,7 @@ import './Rendering/OpenGL/VolumeMapper/test/testLighting';
 import './Rendering/OpenGL/VolumeMapper/test/testMaximumIntensityProjection';
 import './Rendering/OpenGL/VolumeMapper/test/testMinimumIntensityProjection';
 import './Rendering/OpenGL/VolumeMapper/test/testAverageIntensityProjection';
+import './Rendering/Misc/GenericRenderWindow/test/testGenericRenderWindowCreateDelete';
 import './Testing/testAlgorithm';
 import './Testing/testMacro';
 import './Testing/testSerialization';
