@@ -522,6 +522,14 @@ function vtkViewProxy(publicAPI, model) {
   );
 
   // --------------------------------------------------------------------------
+
+  publicAPI.delete = macro.chain(
+    publicAPI.setContainer,
+    model.openglRenderWindow.delete,
+    publicAPI.delete
+  );
+
+  // --------------------------------------------------------------------------
   // Initialization from state or input
   // --------------------------------------------------------------------------
 
