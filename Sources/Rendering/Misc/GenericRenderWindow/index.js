@@ -57,16 +57,15 @@ function vtkGenericRenderWindow(publicAPI, model) {
   // Handle DOM container relocation
   publicAPI.setContainer = (el) => {
     if (model.container) {
-      model.openGLRenderWindow.setContainer(model.container);
       model.interactor.unbindEvents(model.container);
     }
 
     // Switch container
     model.container = el;
+    model.openGLRenderWindow.setContainer(model.container);
 
     // Bind to new container
     if (model.container) {
-      model.openGLRenderWindow.setContainer(model.container);
       model.interactor.bindEvents(model.container);
     }
   };
