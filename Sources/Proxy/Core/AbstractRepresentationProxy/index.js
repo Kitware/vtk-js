@@ -1,6 +1,8 @@
-import macro from 'vtk.js/Sources/macro';
+import * as macro from 'vtk.js/Sources/macro';
+import vtkProp from 'vtk.js/Sources/Rendering/Core/Prop';
 import vtkMapper from 'vtk.js/Sources/Rendering/Core/Mapper';
 import vtkScalarsToColors from 'vtk.js/Sources/Common/Core/ScalarsToColors';
+import vtkBoundingBox from 'vtk.js/Sources/Common/DataModel/BoundingBox';
 
 // ----------------------------------------------------------------------------
 // vtkAbstractRepresentationProxy methods
@@ -301,6 +303,30 @@ function vtkAbstractRepresentationProxy(publicAPI, model) {
       model.sourceSubscription = null;
     }
   }, publicAPI.delete);
+
+  // Fast getter for rendering
+  const nestedProps = [];
+  const bbox = vtkBoundingBox.newInstance();
+
+  function handleProp(prop) {
+    if (prop) {
+      bbox.addBounds(prop.getBounds());
+      nestedProps.push(prop);
+    }
+  }
+
+  publicAPI.getNestedProps = () => nestedProps;
+
+  publicAPI.getBounds = () => {
+    if (model.boundMTime < model.mtime) {
+      model.boundMTime = model.mtime;
+      bbox.reset();
+      nestedProps.length = 0;
+      model.actors.forEach(handleProp);
+      model.volumes.forEach(handleProp);
+    }
+    return bbox.getBounds();
+  };
 }
 
 // ----------------------------------------------------------------------------
@@ -308,6 +334,7 @@ function vtkAbstractRepresentationProxy(publicAPI, model) {
 // ----------------------------------------------------------------------------
 
 const DEFAULT_VALUES = {
+  boundMTime: 0,
   actors: [],
   volumes: [],
   sourceDependencies: [],
@@ -318,7 +345,7 @@ const DEFAULT_VALUES = {
 function extend(publicAPI, model, initialValues = {}) {
   Object.assign(model, DEFAULT_VALUES, initialValues);
 
-  macro.obj(publicAPI, model);
+  vtkProp.extend(publicAPI, model, initialValues);
   macro.get(publicAPI, model, ['input', 'mapper', 'actors', 'volumes']);
 
   // Object specific methods
