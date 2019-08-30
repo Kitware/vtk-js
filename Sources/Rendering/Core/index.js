@@ -27,7 +27,6 @@ import vtkProperty2D from './Property2D';
 import vtkRenderer from './Renderer';
 import vtkRenderWindow from './RenderWindow';
 import vtkRenderWindowInteractor from './RenderWindowInteractor';
-import vtkRepresentation from './Representation';
 import vtkSkybox from './Skybox';
 import vtkSphereMapper from './SphereMapper';
 import vtkStickMapper from './StickMapper';
@@ -67,7 +66,6 @@ export default {
   vtkRenderer,
   vtkRenderWindow,
   vtkRenderWindowInteractor,
-  vtkRepresentation,
   vtkSkybox,
   vtkSphereMapper,
   vtkStickMapper,
