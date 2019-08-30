@@ -882,7 +882,7 @@ export function newInstance(extend, className) {
 // ----------------------------------------------------------------------------
 
 export function chain(...fn) {
-  return (...args) => fn.filter((i) => !!i).forEach((i) => i(...args));
+  return (...args) => fn.filter((i) => !!i).map((i) => i(...args));
 }
 
 // ----------------------------------------------------------------------------

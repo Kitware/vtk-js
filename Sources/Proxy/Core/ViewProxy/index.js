@@ -1,4 +1,4 @@
-import macro from 'vtk.js/Sources/macro';
+import * as macro from 'vtk.js/Sources/macro';
 
 import vtkAnnotatedCubeActor from 'vtk.js/Sources/Rendering/Core/AnnotatedCubeActor';
 import vtkAxesActor from 'vtk.js/Sources/Rendering/Core/AxesActor';
@@ -219,8 +219,7 @@ function vtkViewProxy(publicAPI, model) {
     }
     if (model.representations.indexOf(representation) === -1) {
       model.representations.push(representation);
-      representation.getActors().forEach(model.renderer.addActor);
-      representation.getVolumes().forEach(model.renderer.addVolume);
+      model.renderer.addViewProp(representation);
     }
   };
 
@@ -234,8 +233,7 @@ function vtkViewProxy(publicAPI, model) {
       model.representations = model.representations.filter(
         (r) => r !== representation
       );
-      representation.getActors().forEach(model.renderer.removeActor);
-      representation.getVolumes().forEach(model.renderer.removeVolume);
+      model.renderer.removeViewProp(representation);
     }
 
     if (model.representations.length === 0) {
@@ -521,6 +519,14 @@ function vtkViewProxy(publicAPI, model) {
     model.camera.setFocalPoint,
     model.interactorStyle2D.setCenterOfRotation,
     model.interactorStyle3D.setCenterOfRotation
+  );
+
+  // --------------------------------------------------------------------------
+
+  publicAPI.delete = macro.chain(
+    publicAPI.setContainer,
+    model.openglRenderWindow.delete,
+    publicAPI.delete
   );
 
   // --------------------------------------------------------------------------

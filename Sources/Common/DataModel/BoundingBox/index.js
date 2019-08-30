@@ -197,18 +197,29 @@ function vtkBoundingBox(publicAPI, model) {
 
   publicAPI.addBounds = (xMin, xMax, yMin, yMax, zMin, zMax) => {
     const [_xMin, _xMax, _yMin, _yMax, _zMin, _zMax] = model.bounds;
-    model.bounds = [
-      Math.min(xMin, _xMin),
-      Math.max(xMax, _xMax),
-      Math.min(yMin, _yMin),
-      Math.max(yMax, _yMax),
-      Math.min(zMin, _zMin),
-      Math.max(zMax, _zMax),
-    ];
+    if (zMax === undefined) {
+      model.bounds = [
+        Math.min(xMin[0], _xMin),
+        Math.max(xMin[1], _xMax),
+        Math.min(xMin[2], _yMin),
+        Math.max(xMin[3], _yMax),
+        Math.min(xMin[4], _zMin),
+        Math.max(xMin[5], _zMax),
+      ];
+    } else {
+      model.bounds = [
+        Math.min(xMin, _xMin),
+        Math.max(xMax, _xMax),
+        Math.min(yMin, _yMin),
+        Math.max(yMax, _yMax),
+        Math.min(zMin, _zMin),
+        Math.max(zMax, _zMax),
+      ];
+    }
   };
 
   publicAPI.addBox = (other) => {
-    publicAPI.addBounds(...other.getBounds());
+    publicAPI.addBounds(other.getBounds());
   };
 
   publicAPI.isValid = () => isValid(model.bounds);

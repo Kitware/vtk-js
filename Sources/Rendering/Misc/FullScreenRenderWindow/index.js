@@ -134,6 +134,13 @@ function vtkFullScreenRenderWindow(publicAPI, model) {
       .forEach((actor) => model.renderer.removeActor(actor));
   };
 
+  // Properly release GL context
+  publicAPI.delete = macro.chain(
+    publicAPI.setContainer,
+    model.openGLRenderWindow.delete,
+    publicAPI.delete
+  );
+
   // Handle window resize
   publicAPI.resize = () => {
     const dims = model.container.getBoundingClientRect();

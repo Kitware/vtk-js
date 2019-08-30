@@ -117,7 +117,7 @@ function vtkCanvasView(publicAPI, model) {
     return true;
   };
 
-  publicAPI.delete = macro.chain(publicAPI.delete, publicAPI.setViewStream);
+  publicAPI.delete = macro.chain(publicAPI.setViewStream, publicAPI.delete);
 
   // --------------------------------------------------------------------------
   // Make us look like a View (i.e.: vtkOpenGLRenderWindow)
