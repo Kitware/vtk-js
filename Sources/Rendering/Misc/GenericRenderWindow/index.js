@@ -71,6 +71,13 @@ function vtkGenericRenderWindow(publicAPI, model) {
     }
   };
 
+  // Properly release GL context
+  publicAPI.delete = macro.chain(
+    publicAPI.setContainer,
+    model.openGLRenderWindow.delete,
+    publicAPI.delete
+  );
+
   // Handle size
   if (model.listenWindowResize) {
     window.addEventListener('resize', publicAPI.resize);
