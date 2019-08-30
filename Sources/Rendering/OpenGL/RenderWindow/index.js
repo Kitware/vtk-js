@@ -39,6 +39,31 @@ function checkRenderTargetSupport(gl, format, type) {
 }
 
 // ----------------------------------------------------------------------------
+// Monitor the usage of GL context across vtkOpenGLRenderWindow instances
+// ----------------------------------------------------------------------------
+
+let GL_CONTEXT_COUNT = 0;
+const GL_CONTEXT_LISTENERS = [];
+
+function createGLContext() {
+  GL_CONTEXT_COUNT++;
+  GL_CONTEXT_LISTENERS.forEach((cb) => cb(GL_CONTEXT_COUNT));
+}
+
+function deleteGLContext() {
+  GL_CONTEXT_COUNT--;
+  GL_CONTEXT_LISTENERS.forEach((cb) => cb(GL_CONTEXT_COUNT));
+}
+
+export function pushMonitorGLContextCount(cb) {
+  GL_CONTEXT_LISTENERS.push(cb);
+}
+
+export function popMonitorGLContextCount(cb) {
+  return GL_CONTEXT_LISTENERS.pop();
+}
+
+// ----------------------------------------------------------------------------
 // vtkOpenGLRenderWindow methods
 // ----------------------------------------------------------------------------
 
@@ -1070,7 +1095,11 @@ function vtkOpenGLRenderWindow(publicAPI, model) {
     return true;
   };
 
-  publicAPI.delete = macro.chain(publicAPI.delete, publicAPI.setViewStream);
+  publicAPI.delete = macro.chain(
+    publicAPI.delete,
+    publicAPI.setViewStream,
+    deleteGLContext
+  );
 }
 
 // ----------------------------------------------------------------------------
@@ -1111,6 +1140,7 @@ export function extend(publicAPI, model, initialValues = {}) {
   // Create internal instances
   model.canvas = document.createElement('canvas');
   model.canvas.style.width = '100%';
+  createGLContext();
 
   // Create internal bgImage
   model.bgImage = new Image();
@@ -1179,4 +1209,9 @@ export const newInstance = macro.newInstance(extend, 'vtkOpenGLRenderWindow');
 
 // ----------------------------------------------------------------------------
 
-export default { newInstance, extend };
+export default {
+  newInstance,
+  extend,
+  pushMonitorGLContextCount,
+  popMonitorGLContextCount,
+};
