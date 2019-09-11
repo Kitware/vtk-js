@@ -147,7 +147,7 @@ function vtkWidgetManager(publicAPI, model) {
           .getRepresentations()
           .filter((r) => r.isA('vtkSVGRepresentation'));
 
-        if (svgReps.length) {
+        if (widget.getVisibility() && svgReps.length) {
           const pendingContent = svgReps
             .filter((r) => r.getVisibility())
             .map((r) => r.render());
@@ -163,6 +163,11 @@ function vtkWidgetManager(publicAPI, model) {
               }
             }
           });
+        } else {
+          const g = widgetToSvgMap.get(widget);
+          if (g) {
+            g.innerHTML = '';
+          }
         }
       }
     }
