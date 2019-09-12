@@ -1,7 +1,7 @@
 language: node_js
 os: linux
 sudo: required
-dist: trusty
+dist: xenial
 group: travis_lts
 before_install:
   - sudo apt-get -qq update
