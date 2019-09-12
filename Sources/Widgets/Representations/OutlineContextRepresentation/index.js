@@ -64,7 +64,7 @@ function vtkOutlineContextRepresentation(publicAPI, model) {
       const points = list.map((p) => p.getOrigin());
       const sorted = points.sort((p1, p2) => {
         for (let i = 0; i < 3; i++) {
-          if (p1[i] !== p2[i]) {
+          if (Math.abs(p1[i] - p2[i]) > 1e-6) {
             return p1[i] - p2[i];
           }
         }
