@@ -50,8 +50,12 @@ function vtkPaintFilter(publicAPI, model) {
   // --------------------------------------------------------------------------
 
   publicAPI.endStroke = () => {
+    let endStrokePromise;
+
     if (workerPromise) {
-      workerPromise.exec('end').then((strokeBuffer) => {
+      endStrokePromise = workerPromise.exec('end');
+
+      endStrokePromise.then((strokeBuffer) => {
         const scalars = model.labelMap.getPointData().getScalars();
         const data = scalars.getData();
 
@@ -113,6 +117,8 @@ function vtkPaintFilter(publicAPI, model) {
         publicAPI.modified();
       });
     }
+
+    return endStrokePromise;
   };
 
   // --------------------------------------------------------------------------
