@@ -92,6 +92,9 @@ function vtkOpenGLRenderWindow(publicAPI, model) {
     if (model.el) {
       model.el.style.cursor = model.cursorVisibility ? model.cursor : 'none';
     }
+
+    // Invalidate cached DOM container size
+    model.containerSize = null;
   }
   publicAPI.onModified(updateWindow);
 
@@ -168,6 +171,16 @@ function vtkOpenGLRenderWindow(publicAPI, model) {
       // Trigger modified()
       publicAPI.modified();
     }
+  };
+
+  publicAPI.getContainer = () => model.el;
+
+  publicAPI.getContainerSize = () => {
+    if (!model.containerSize && model.el) {
+      const { width, height } = model.el.getBoundingClientRect();
+      model.containerSize = [width, height];
+    }
+    return model.containerSize || [300, 300];
   };
 
   publicAPI.getFramebufferSize = () => {
@@ -1118,6 +1131,7 @@ const DEFAULT_VALUES = {
   cursor: 'pointer',
   textureUnitManager: null,
   textureResourceIds: null,
+  containerSize: null,
   renderPasses: [],
   notifyStartCaptureImage: false,
   webgl2: false,
