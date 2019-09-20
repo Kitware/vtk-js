@@ -112,6 +112,14 @@ function vtkMouseRangeManipulator(publicAPI, model) {
   //-------------------------------------------------------------------------
   publicAPI.onButtonDown = (interactor, renderer, position) => {
     model.previousPosition = position;
+    const glRenderWindow = interactor.getView();
+    // Ratio is the dom size vs renderwindow size
+    const ratio =
+      glRenderWindow.getContainerSize()[0] / glRenderWindow.getSize()[0];
+    // Get proper pixel range used by viewport in rw size space
+    const size = glRenderWindow.getViewportSize(renderer);
+    // rescale size to match mouse event position
+    model.size = size.map((v) => v * ratio);
   };
 
   //-------------------------------------------------------------------------
@@ -123,16 +131,13 @@ function vtkMouseRangeManipulator(publicAPI, model) {
       return;
     }
 
-    // Normalize by viewport size
-    const size = interactor.getView().getViewportSize(renderer);
-
     if (model.horizontalListener) {
-      const dxNorm = (position.x - model.previousPosition.x) / size[0];
+      const dxNorm = (position.x - model.previousPosition.x) / model.size[0];
       const dx = scaleDeltaToRange(model.horizontalListener, dxNorm);
       processDelta(model.horizontalListener, dx);
     }
     if (model.verticalListener) {
-      const dyNorm = (position.y - model.previousPosition.y) / size[1];
+      const dyNorm = (position.y - model.previousPosition.y) / model.size[1];
       const dy = scaleDeltaToRange(model.verticalListener, dyNorm);
       processDelta(model.verticalListener, dy);
     }
