@@ -46,6 +46,9 @@ module.exports = {
       'vtk.js': '${vtkBasePath.replace(/\\/g, '\\\\')}',
     },
   },
+  node: {
+    fs: 'empty',
+  },
 
   devServer: {
     contentBase: '${root.replace(/\\/g, '\\\\')}',
