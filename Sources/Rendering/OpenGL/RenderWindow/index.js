@@ -180,7 +180,7 @@ function vtkOpenGLRenderWindow(publicAPI, model) {
       const { width, height } = model.el.getBoundingClientRect();
       model.containerSize = [width, height];
     }
-    return model.containerSize || [300, 300];
+    return model.containerSize || model.size;
   };
 
   publicAPI.getFramebufferSize = () => {
