@@ -119,7 +119,7 @@ function vtkMouseRangeManipulator(publicAPI, model) {
     // Get proper pixel range used by viewport in rw size space
     const size = glRenderWindow.getViewportSize(renderer);
     // rescale size to match mouse event position
-    model.size = size.map((v) => v * ratio);
+    model.containerSize = size.map((v) => v * ratio);
   };
 
   //-------------------------------------------------------------------------
@@ -132,12 +132,14 @@ function vtkMouseRangeManipulator(publicAPI, model) {
     }
 
     if (model.horizontalListener) {
-      const dxNorm = (position.x - model.previousPosition.x) / model.size[0];
+      const dxNorm =
+        (position.x - model.previousPosition.x) / model.containerSize[0];
       const dx = scaleDeltaToRange(model.horizontalListener, dxNorm);
       processDelta(model.horizontalListener, dx);
     }
     if (model.verticalListener) {
-      const dyNorm = (position.y - model.previousPosition.y) / model.size[1];
+      const dyNorm =
+        (position.y - model.previousPosition.y) / model.containerSize[1];
       const dy = scaleDeltaToRange(model.verticalListener, dyNorm);
       processDelta(model.verticalListener, dy);
     }
