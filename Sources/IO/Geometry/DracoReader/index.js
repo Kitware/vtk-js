@@ -4,9 +4,20 @@ import vtkCellArray from 'vtk.js/Sources/Common/Core/CellArray';
 import vtkDataArray from 'vtk.js/Sources/Common/Core/DataArray';
 import vtkPolyData from 'vtk.js/Sources/Common/DataModel/PolyData';
 
-import CreateDracoModule from 'draco3d/draco_decoder_nodejs';
-
 const { vtkErrorMacro } = macro;
+let CREATE_DRACO_MODULE = null;
+
+// ----------------------------------------------------------------------------
+// static methods
+// ----------------------------------------------------------------------------
+
+function setDracoDecoder(createDracoModule) {
+  CREATE_DRACO_MODULE = createDracoModule;
+}
+
+function getDracoDecoder() {
+  return CREATE_DRACO_MODULE;
+}
 
 // ----------------------------------------------------------------------------
 // vtkDracoReader methods
@@ -235,7 +246,7 @@ function vtkDracoReader(publicAPI, model) {
     }
 
     model.parseData = content;
-    const decoderModule = CreateDracoModule({});
+    const decoderModule = CREATE_DRACO_MODULE({});
     const dracoGeometry = decodeBuffer(content, decoderModule);
     const polyData = getPolyDataFromDracoGeometry(dracoGeometry, decoderModule);
     decoderModule.destroy(dracoGeometry);
@@ -286,4 +297,4 @@ export const newInstance = macro.newInstance(extend, 'vtkDracoReader');
 
 // ----------------------------------------------------------------------------
 
-export default { extend, newInstance };
+export default { extend, newInstance, setDracoDecoder, getDracoDecoder };

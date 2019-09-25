@@ -4,6 +4,9 @@ import vtkActor from 'vtk.js/Sources/Rendering/Core/Actor';
 import vtkFullScreenRenderWindow from 'vtk.js/Sources/Rendering/Misc/FullScreenRenderWindow';
 import vtkMapper from 'vtk.js/Sources/Rendering/Core/Mapper';
 import vtkDracoReader from 'vtk.js/Sources/IO/Geometry/DracoReader';
+import CreateDracoModule from 'draco3d/draco_decoder_nodejs';
+
+vtkDracoReader.setDracoDecoder(CreateDracoModule);
 
 // ----------------------------------------------------------------------------
 // Example code
