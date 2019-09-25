@@ -3,6 +3,7 @@ import DataAccessHelper from './DataAccessHelper';
 import vtkHttpDataSetReader from './HttpDataSetReader';
 import vtkHttpSceneLoader from './HttpSceneLoader';
 import vtkImageStream from './ImageStream';
+import vtkResourceLoader from './ResourceLoader';
 import vtkWSLinkClient from './WSLinkClient';
 
 export default {
@@ -11,5 +12,6 @@ export default {
   vtkHttpDataSetReader,
   vtkHttpSceneLoader,
   vtkImageStream,
+  vtkResourceLoader,
   vtkWSLinkClient,
 };
