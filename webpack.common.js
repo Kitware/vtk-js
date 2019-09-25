@@ -106,6 +106,9 @@ const baseConfig = {
       alwaysNotify: true,
     }),
   ],
+  node: {
+    fs: 'empty',
+  },
 };
 
 // vtk-lite.js
