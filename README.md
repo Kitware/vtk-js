@@ -15,10 +15,11 @@ VTK is an open-source software system for image processing, 3D
 graphics, volume rendering and visualization. VTK includes many
 advanced algorithms (e.g., surface reconstruction, implicit modelling,
 decimation) and rendering techniques (e.g., hardware-accelerated
-volume rendering, LOD control). The JavaScript implementation remain
+volume rendering, LOD control). The JavaScript implementation remains
 a subset of the actual C++ library but efforts will be made to easily
 port or compile native VTK code into WebAssembly to better blend
-both world.
+both worlds. vtk.js is a true rewrite of VTK in plain JavaScript (ES6).
+Therefore not everything has been rewritten.
 
 The origin of VTK is with the textbook "The Visualization Toolkit, an
 Object-Oriented Approach to 3D Graphics" originally published by
