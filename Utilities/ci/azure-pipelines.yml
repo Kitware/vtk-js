@@ -78,6 +78,7 @@ jobs:
     displayName: 'Install Node.js'
 
   - script: |
+      npm i -g npm@6.4.1
       npm ci
       npm run build:release
     displayName: 'Build'
