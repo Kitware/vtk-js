@@ -155,6 +155,7 @@ function vtkRenderer(publicAPI, model) {
     model.actors.forEach((actor) => {
       publicAPI.removeViewProp(actor);
     });
+    model.actors = [];
     publicAPI.modified();
   };
 
@@ -175,6 +176,7 @@ function vtkRenderer(publicAPI, model) {
     model.volumes.forEach((volume) => {
       publicAPI.removeViewProp(volume);
     });
+    model.volumes = [];
     publicAPI.modified();
   };
 
