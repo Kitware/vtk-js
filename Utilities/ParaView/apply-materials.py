@@ -47,8 +47,3 @@ def loadFiles(directoryPath):
   updateSourceMapping()
   for matFile in materialPaths:
     applyMaterialToRepresentation(matFile)
-
-
-# loadFiles('/Users/seb/Downloads/PoA_OBJ/RVT2019_141s-Zaha-HH-Brug-1103-PP')
-# loadFiles('/Users/seb/Downloads/PoA_OBJ/RVT2019_151s-Zaha-HH-Nieuwbouw-1014-PP')
-# loadFiles('/Users/seb/Downloads/PoA_OBJ/RVT2019_151s-Zaha-HH-Oudbouw-0417-MO')
