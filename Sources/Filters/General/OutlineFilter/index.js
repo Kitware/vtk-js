@@ -4,7 +4,7 @@ import vtkPolyData from 'vtk.js/Sources/Common/DataModel/PolyData';
 const { vtkErrorMacro } = macro;
 
 // prettier-ignore
-const BOUNDS_MAP = [
+export const BOUNDS_MAP = [
   0, 2, 4, // pt 0
   1, 2, 4, // pt 1
   0, 3, 4, // pt 2
@@ -16,7 +16,7 @@ const BOUNDS_MAP = [
 ];
 
 // prettier-ignore
-const LINE_ARRAY = [
+export const LINE_ARRAY = [
   2, 0, 1,
   2, 2, 3,
   2, 4, 5,
@@ -87,4 +87,4 @@ export const newInstance = macro.newInstance(extend, 'vtkOutlineFilter');
 
 // ----------------------------------------------------------------------------
 
-export default { newInstance, extend };
+export default { newInstance, extend, BOUNDS_MAP, LINE_ARRAY };

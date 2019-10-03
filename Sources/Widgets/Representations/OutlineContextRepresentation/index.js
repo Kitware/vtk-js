@@ -3,24 +3,12 @@ import vtkActor from 'vtk.js/Sources/Rendering/Core/Actor';
 import vtkContextRepresentation from 'vtk.js/Sources/Widgets/Representations/ContextRepresentation';
 import vtkMapper from 'vtk.js/Sources/Rendering/Core/Mapper';
 import vtkPolyData from 'vtk.js/Sources/Common/DataModel/PolyData';
+import vtkBoundingBox from 'vtk.js/Sources/Common/DataModel/BoundingBox';
 
-const { vtkErrorMacro } = macro;
-
-// prettier-ignore
-const OUTLINE_ARRAY = [
-  2, 0, 1,
-  2, 2, 3,
-  2, 4, 5,
-  2, 6, 7,
-  2, 0, 4,
-  2, 1, 5,
-  2, 2, 6,
-  2, 3, 7,
-  2, 0, 2,
-  2, 1, 3,
-  2, 4, 6,
-  2, 5, 7,
-];
+import {
+  BOUNDS_MAP,
+  LINE_ARRAY,
+} from 'vtk.js/Sources/Filters/General/OutlineFilter';
 
 // ----------------------------------------------------------------------------
 // vtkOutlineContextRepresentation methods
@@ -33,6 +21,9 @@ function vtkOutlineContextRepresentation(publicAPI, model) {
   // Set our className
   model.classHierarchy.push('vtkOutlineContextRepresentation');
 
+  // internal bounding box
+  model.bbox = vtkBoundingBox.newInstance();
+
   // --------------------------------------------------------------------------
   // Internal polydata dataset
   // --------------------------------------------------------------------------
@@ -40,7 +31,7 @@ function vtkOutlineContextRepresentation(publicAPI, model) {
   model.internalPolyData = vtkPolyData.newInstance({ mtime: 0 });
   model.points = new Float32Array(8 * 3);
   model.internalPolyData.getPoints().setData(model.points, 3);
-  model.internalPolyData.getLines().setData(Uint16Array.from(OUTLINE_ARRAY));
+  model.internalPolyData.getLines().setData(Uint16Array.from(LINE_ARRAY));
 
   // --------------------------------------------------------------------------
   // Generic rendering pipeline
@@ -60,25 +51,24 @@ function vtkOutlineContextRepresentation(publicAPI, model) {
 
   publicAPI.requestData = (inData, outData) => {
     const list = publicAPI.getRepresentationStates(inData[0]);
-    if (list.length === 8) {
-      const points = list.map((p) => p.getOrigin());
-      const sorted = points.sort((p1, p2) => {
-        for (let i = 0; i < 3; i++) {
-          if (Math.abs(p1[i] - p2[i]) > 1e-6) {
-            return p1[i] - p2[i];
-          }
-        }
-        return 0;
-      });
+    model.bbox.reset();
 
-      model.points = [].concat(...sorted);
-      model.internalPolyData.getPoints().setData(model.points, 3);
-      model.internalPolyData.modified();
-
-      outData[0] = model.internalPolyData;
-    } else {
-      vtkErrorMacro('OutlineContextRepresentation did not get 8 states');
+    for (let i = 0; i < list.length; i++) {
+      const pt = list[i].getOrigin();
+      model.bbox.addPoint(...pt);
     }
+
+    const bounds = model.bbox.getBounds();
+
+    // BOUNDS_MAP.length should equal model.points.length
+    for (let i = 0; i < BOUNDS_MAP.length; i++) {
+      model.points[i] = bounds[BOUNDS_MAP[i]];
+    }
+
+    model.internalPolyData.getPoints().modified();
+    model.internalPolyData.modified();
+
+    outData[0] = model.internalPolyData;
   };
 }
 
