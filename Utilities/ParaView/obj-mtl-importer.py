@@ -22,6 +22,8 @@ from vtk import *
 from paraview import simple
 import os
 import sys
+import hashlib
+import json
 
 # -----------------------------------------------------------------------------
 # obj Parser
@@ -177,6 +179,7 @@ class OBJParser(object):
 
               # register in output
               self.output.append(polydata)
+              print(self.pieces[idx])
       else:
           polydata = vtkPolyData()
           polydata.SetPoints(OBJParser.createPoints(self.v))
@@ -208,6 +211,18 @@ class OBJParser(object):
 # mtl Parser
 # -----------------------------------------------------------------------------
 
+def materialToSHA(mat):
+  keys = mat.keys()
+  keys.sort()
+  m = hashlib.md5()
+  for key in keys:
+    m.update(key)
+    for token in mat[key]:
+      m.update(token)
+
+  return m.hexdigest()
+
+
 class MTLParser(object):
 
   def __init__(self, mtlFilePath):
@@ -215,6 +230,9 @@ class MTLParser(object):
       self.currentMaterial = None
       self.textures = {}
       self.baseDir = os.path.dirname(mtlFilePath)
+      self.reducedMaterialMap = {}
+      self.reverseReduceMap = {}
+      self.representationsParameters = {}
 
       with open(mtlFilePath, "r") as lines:
           for line in lines:
@@ -235,8 +253,22 @@ class MTLParser(object):
         if len(tokens) > 1:
             self.materials[self.currentMaterial][tokens[0]] = tokens[1:]
 
+  def reduceMaterialDefinitions(self):
+    for name in self.materials:
+      sha = materialToSHA(self.materials[name])
+      self.reducedMaterialMap[name] = sha
+      self.reverseReduceMap[sha] = name
+
+    print('Reducing materials from %s to %s' % (len(self.reducedMaterialMap), len(self.reverseReduceMap)))
+
+
   def applyMaterialToRepresentation(self, name, representation):
-    material = self.materials[name] if name in self.materials else {}
+    self.representationsParameters[name] = {}
+    material = {}
+    if name in self.materials:
+      material = self.materials[name]
+    if name in self.reverseReduceMap:
+      material = self.materials[self.reverseReduceMap[name]]
 
     if 'map_Kd' in material:
         if name not in self.textures:
@@ -250,23 +282,31 @@ class MTLParser(object):
 
     if 'Ka' in material:
         representation.AmbientColor = [float(n) for n in material['Ka']]
+        self.representationsParameters[name]['AmbientColor'] = [float(n) for n in material['Ka']]
 
     if 'Ks' in material:
         representation.SpecularColor = [float(v) for v in material['Ks']]
+        self.representationsParameters[name]['SpecularColor'] = [float(v) for v in material['Ks']]
 
     if 'Kd' in material:
         representation.DiffuseColor = [float(v) for v in material['Kd']]
+        self.representationsParameters[name]['DiffuseColor'] = [float(v) for v in material['Kd']]
 
     if 'd' in material:
         representation.Opacity = float(material['d'][0])
+        self.representationsParameters[name]['Opacity'] = float(material['d'][0])
 
     if 'Ns' in material:
         representation.SpecularPower = float(material['Ns'][0])
+        self.representationsParameters[name]['SpecularPower'] = float(material['Ns'][0])
 
     if 'illum' in material:
         representation.Ambient = 1.0 if 0 <= float(material['illum'][0]) else 0.0
         representation.Diffuse = 1.0 if 1 <= float(material['illum'][0]) else 0.0
         representation.Specular = 1.0 if 2 <= float(material['illum'][0]) else 0.0
+        self.representationsParameters[name]['Ambient'] = 1.0 if 0 <= float(material['illum'][0]) else 0.0
+        self.representationsParameters[name]['Diffuse'] = 1.0 if 1 <= float(material['illum'][0]) else 0.0
+        self.representationsParameters[name]['Specular'] = 1.0 if 2 <= float(material['illum'][0]) else 0.0
     # else:
     #     representation.Ambient = 1.0
     #     representation.Diffuse = 1.0
@@ -278,44 +318,42 @@ class MTLParser(object):
 # Mesh writer builder
 # -----------------------------------------------------------------------------
 
-def writeMeshes(meshBaseDirectory, objReader):
+def writeMeshes(meshBaseDirectory, objReader, nameMapping = {}):
   nameToFilePath = {}
-  multiWriter = vtkXMLMultiBlockDataWriter()
-  basicWriter = vtkDataSetWriter()
-  writer = None
+  writer = vtkXMLPolyDataWriter()
+  ext = '.vtp'
 
   if not os.path.exists(meshBaseDirectory):
     os.makedirs(meshBaseDirectory)
 
   nbPieces = len(objReader.pieces)
   dsList = {}
+  nameToKey = nameMapping
+  for idx in range(nbPieces):
+    name = objReader.pieces[idx]
+    if name not in nameToKey:
+      nameToKey[name] = name
 
   # Gather polydata with same textures
   for idx in range(nbPieces):
       name = objReader.pieces[idx]
-      if name not in dsList:
-          dsList[name] = []
-      dsList[name].append(objReader.output[idx])
+      key = nameToKey[name]
+      if key not in dsList:
+          dsList[key] = []
+      dsList[key].append(objReader.output[idx])
 
   # Write each dataset
   idx = 0
   size = len(dsList)
   for name in dsList:
-      writer = basicWriter
-      ext = '.vtk'
-      dataset = dsList[name][0]
-      if len(dsList[name]) > 1:
-          writer = multiWriter
-          ext = '.vtm'
-          dataset = vtkMultiBlockDataSet()
-          count = 0
-          for block in dsList[name]:
-              dataset.SetBlock(count, block)
-              count += 1
-
       fullPath = os.path.join(meshBaseDirectory, '%s%s' % (name, ext))
-      dataset.Modified()
-      writer.SetInputData(dataset)
+      merge = vtkAppendPolyData()
+      for block in dsList[name]:
+        merge.AddInputData(block)
+
+      merge.Update()
+
+      writer.SetInputData(merge.GetOutput(0))
       writer.SetFileName(fullPath)
       writer.Modified()
       print('%d - %d/%d - %s => %s' % ((idx + 1), len(dsList[name]), size, name, fullPath))
@@ -331,15 +369,20 @@ def writeMeshes(meshBaseDirectory, objReader):
 # -----------------------------------------------------------------------------
 
 def loadScene(objFilePath, mtlFilePath):
-  objReader = OBJParser(objFilePath, 'usemtl')
   mtlReader = MTLParser(mtlFilePath)
-  meshBaseDirectory = os.path.join(os.path.dirname(objFilePath), 'pv')
+  mtlReader.reduceMaterialDefinitions()
 
-  meshMapping = writeMeshes(meshBaseDirectory, objReader)
+  objReader = OBJParser(objFilePath, 'usemtl')
+  meshBaseDirectory = os.path.join(os.path.dirname(objFilePath), os.path.basename(objFilePath)[:-4])
+
+  meshMapping = writeMeshes(meshBaseDirectory, objReader, mtlReader.reducedMaterialMap)
   for name in meshMapping:
     source = simple.OpenDataFile(meshMapping[name], guiName=name)
     rep = simple.Show(source)
     mtlReader.applyMaterialToRepresentation(name, rep)
+
+  with open('%s/representations.json' % meshBaseDirectory, "w") as text_file:
+    text_file.write(json.dumps(mtlReader.representationsParameters, indent=2, sort_keys=True))
 
   simple.Render()
 
