@@ -5,7 +5,7 @@ import vtkAbstractWidgetFactory from 'vtk.js/Sources/Widgets/Core/AbstractWidget
 import vtkPlaneManipulator from 'vtk.js/Sources/Widgets/Manipulators/PlaneManipulator';
 import vtkLineManipulator from 'vtk.js/Sources/Widgets/Manipulators/LineManipulator';
 import vtkSphereHandleRepresentation from 'vtk.js/Sources/Widgets/Representations/SphereHandleRepresentation';
-import vtkOutlineContextRepresentation from 'vtk.js/Sources/Widgets/Representations/OutlineContextRepresentation';
+import vtkCroppingOutlineRepresentation from 'vtk.js/Sources/Widgets/Representations/CroppingOutlineRepresentation';
 import vtkStateBuilder from 'vtk.js/Sources/Widgets/Core/StateBuilder';
 
 import { ViewTypes } from 'vtk.js/Sources/Widgets/Core/WidgetManager/Constants';
@@ -247,7 +247,7 @@ function vtkImageCroppingWidget(publicAPI, model) {
           // a list of all handle states (which have the label "handles").
           { builder: vtkSphereHandleRepresentation, labels: ['handles'] },
           {
-            builder: vtkOutlineContextRepresentation,
+            builder: vtkCroppingOutlineRepresentation,
             // outline is defined by corner points
             labels: ['corners'],
           },
