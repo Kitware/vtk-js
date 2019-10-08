@@ -16,7 +16,7 @@ const renderer = fullScreenRenderer.getRenderer();
 const renderWindow = fullScreenRenderer.getRenderWindow();
 
 // ----------------------------------------------------------------------------
-// Add a cube source
+// Add a cone source
 // ----------------------------------------------------------------------------
 const cone = vtkConeSource.newInstance();
 const mapper = vtkMapper.newInstance();
@@ -35,6 +35,7 @@ renderWindow.render();
 // Only try to pick cone
 const picker = vtkCellPicker.newInstance();
 picker.setPickFromList(1);
+picker.setTolerance(0);
 picker.initializePickList();
 picker.addPickList(actor);
 
