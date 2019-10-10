@@ -276,4 +276,4 @@ null source camera or this camera.
 ### render(renderer)
 
 This method causes the camera to set up whatever is required for viewing the scene. This
-is actually handled by an subclass of vtkCamera, which is created through New()
+is actually handled by a subclass of vtkCamera, which is created through New()
