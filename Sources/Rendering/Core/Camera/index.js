@@ -361,10 +361,33 @@ function vtkCamera(publicAPI, model) {
     publicAPI.setViewUp(...vuNew.slice(0, 3));
   };
 
+  publicAPI.getThickness = () =>
+    model.clippingRange[1] - model.clippingRange[0];
+
+  publicAPI.setThickness = (thickness) => {
+    let t = thickness;
+    if (t < 1e-20) {
+      t = 1e-20;
+      vtkDebugMacro('Thickness is set to minimum.');
+    }
+    publicAPI.setClippingRange(
+      model.clippingRange[0],
+      model.clippingRange[0] + t
+    );
+  };
+
+  publicAPI.setThicknessFromFocalPoint = (thickness) => {
+    let t = thickness;
+    if (t < 1e-20) {
+      t = 1e-20;
+      vtkDebugMacro('Thickness is set to minimum.');
+    }
+    publicAPI.setClippingRange(model.distance - t / 2, model.distance + t / 2);
+  };
+
   // Unimplemented functions
   publicAPI.setRoll = (angle) => {}; // dependency on GetOrientation() and a model.ViewTransform object, see https://github.com/Kitware/VTK/blob/master/Common/Transforms/vtkTransform.cxx and https://vtk.org/doc/nightly/html/classvtkTransform.html
   publicAPI.getRoll = () => {};
-  publicAPI.setThickness = (thickness) => {};
   publicAPI.setObliqueAngles = (alpha, beta) => {};
   publicAPI.getOrientation = () => {};
   publicAPI.getOrientationWXYZ = () => {};
@@ -734,7 +757,6 @@ export const DEFAULT_VALUES = {
   viewAngle: 30,
   parallelScale: 1,
   clippingRange: [0.01, 1000.01],
-  thickness: 1000,
   windowCenter: [0, 0],
   viewPlaneNormal: [0, 0, 1],
   useOffAxisProjection: false,
@@ -760,7 +782,7 @@ export function extend(publicAPI, model, initialValues = {}) {
   // Build VTK API
   macro.obj(publicAPI, model);
 
-  macro.get(publicAPI, model, ['distance', 'thickness']);
+  macro.get(publicAPI, model, ['distance']);
 
   macro.setGet(publicAPI, model, [
     'parallelProjection',
