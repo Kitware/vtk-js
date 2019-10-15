@@ -162,6 +162,19 @@ function vtkDataArray(publicAPI, model) {
     return model.rangeTuple;
   };
 
+  publicAPI.setRange = (rangeValue, componentIndex) => {
+    if (!model.ranges) {
+      model.ranges = ensureRangeSize(model.ranges, model.numberOfComponents);
+    }
+    const range = { min: rangeValue.min, max: rangeValue.max };
+
+    model.ranges[componentIndex] = range;
+    model.rangeTuple[0] = range.min;
+    model.rangeTuple[1] = range.max;
+
+    return model.rangeTuple;
+  };
+
   publicAPI.setTuple = (idx, tuple) => {
     const offset = idx * model.numberOfComponents;
     for (let i = 0; i < model.numberOfComponents; i++) {
