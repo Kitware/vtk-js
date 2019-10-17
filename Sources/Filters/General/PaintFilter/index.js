@@ -30,6 +30,19 @@ function vtkPaintFilter(publicAPI, model) {
     history.labels = [];
   }
 
+  function pushToHistory(snapshot, label) {
+    // Clear any "redo" info
+    const spliceIndex = history.index + 1;
+    const spliceLength = history.snapshots.length - history.index;
+    history.snapshots.splice(spliceIndex, spliceLength);
+    history.labels.splice(spliceIndex, spliceLength);
+
+    // Push new snapshot
+    history.snapshots.push(snapshot);
+    history.labels.push(label);
+    history.index++;
+  }
+
   // --------------------------------------------------------------------------
 
   publicAPI.startStroke = () => {
@@ -56,69 +69,61 @@ function vtkPaintFilter(publicAPI, model) {
       endStrokePromise = workerPromise.exec('end');
 
       endStrokePromise.then((strokeBuffer) => {
-        const scalars = model.labelMap.getPointData().getScalars();
-        const data = scalars.getData();
-
-        const strokeLabelMap = new Uint8Array(strokeBuffer);
-
-        let diffCount = 0;
-        for (let i = 0; i < strokeLabelMap.length; i++) {
-          // strokeLabelMap is binary mask of paint stroke
-          diffCount += strokeLabelMap[i];
-        }
-
-        // Format: [ [index, oldLabel], ...]
-        // I could use an ArrayBuffer, which would place limits
-        // on the values of index/old, but will be more efficient.
-        const snapshot = new Array(diffCount);
-        const label = model.label;
-
-        let diffIdx = 0;
-        if (model.voxelFunc) {
-          const bgScalars = model.backgroundImage.getPointData().getScalars();
-          for (let i = 0; i < strokeLabelMap.length; i++) {
-            if (strokeLabelMap[i]) {
-              const voxel = bgScalars.getTuple(i);
-              // might not fill up snapshot
-              if (model.voxelFunc(voxel, i, label)) {
-                snapshot[diffIdx++] = [i, data[i]];
-                data[i] = label;
-              }
-            }
-          }
-        } else {
-          for (let i = 0; i < strokeLabelMap.length; i++) {
-            if (strokeLabelMap[i]) {
-              if (data[i] !== label) {
-                snapshot[diffIdx++] = [i, data[i]];
-                data[i] = label;
-              }
-            }
-          }
-        }
-
-        // clear any "redo" info
-        const spliceIndex = history.index + 1;
-        const spliceLength = history.snapshots.length - history.index;
-        history.snapshots.splice(spliceIndex, spliceLength);
-        history.labels.splice(spliceIndex, spliceLength);
-
-        history.snapshots.push(snapshot);
-        history.labels.push(label);
-        history.index++;
-
+        publicAPI.applyBinaryMask(strokeBuffer);
         worker.terminate();
         worker = null;
         workerPromise = null;
-
-        scalars.setData(data);
-        scalars.modified();
-        model.labelMap.modified();
-        publicAPI.modified();
       });
     }
-
     return endStrokePromise;
+  };
+
+  publicAPI.applyBinaryMask = (maskBuffer) => {
+    const scalars = model.labelMap.getPointData().getScalars();
+    const data = scalars.getData();
+    const maskLabelMap = new Uint8Array(maskBuffer);
+
+    let diffCount = 0;
+    for (let i = 0; i < maskLabelMap.length; i++) {
+      // maskLabelMap is a binary mask
+      diffCount += maskLabelMap[i];
+    }
+
+    // Format: [ [index, oldLabel], ...]
+    // I could use an ArrayBuffer, which would place limits
+    // on the values of index/old, but will be more efficient.
+    const snapshot = new Array(diffCount);
+    const label = model.label;
+
+    let diffIdx = 0;
+    if (model.voxelFunc) {
+      const bgScalars = model.backgroundImage.getPointData().getScalars();
+      for (let i = 0; i < maskLabelMap.length; i++) {
+        if (maskLabelMap[i]) {
+          const voxel = bgScalars.getTuple(i);
+          // might not fill up snapshot
+          if (model.voxelFunc(voxel, i, label)) {
+            snapshot[diffIdx++] = [i, data[i]];
+            data[i] = label;
+          }
+        }
+      }
+    } else {
+      for (let i = 0; i < maskLabelMap.length; i++) {
+        if (maskLabelMap[i]) {
+          if (data[i] !== label) {
+            snapshot[diffIdx++] = [i, data[i]];
+            data[i] = label;
+          }
+        }
+      }
+    }
+    pushToHistory(snapshot, label);
+
+    scalars.setData(data);
+    scalars.modified();
+    model.labelMap.modified();
+    publicAPI.modified();
   };
 
   // --------------------------------------------------------------------------
@@ -215,6 +220,32 @@ function vtkPaintFilter(publicAPI, model) {
         triangleList,
       });
     }
+  };
+
+  // --------------------------------------------------------------------------
+
+  publicAPI.applyLabelMap = (labelMap) => {
+    const currentMapData = model.labelMap
+      .getPointData()
+      .getScalars()
+      .getData();
+
+    const newMapData = labelMap
+      .getPointData()
+      .getScalars()
+      .getData();
+
+    // Compute snapshot
+    const snapshot = [];
+    for (let i = 0; i < newMapData.length; ++i) {
+      if (currentMapData[i] !== newMapData[i]) {
+        snapshot.push([i, currentMapData[i]]);
+      }
+    }
+
+    pushToHistory(snapshot, model.label);
+    model.labelMap = labelMap;
+    publicAPI.modified();
   };
 
   // --------------------------------------------------------------------------
