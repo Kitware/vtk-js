@@ -433,6 +433,7 @@ function vtkOpenGLVolumeMapper(publicAPI, model) {
     let dcxmax = -1.0;
     let dcymin = 1.0;
     let dcymax = -1.0;
+
     for (let i = 0; i < 8; ++i) {
       vec3.set(
         pos,
@@ -448,7 +449,10 @@ function vtkOpenGLVolumeMapper(publicAPI, model) {
       // in VC the ray is just t*pos and
       // t is -nearZ/dir.z
       // intersection becomes pos.x/pos.z
-      const t = -crange[0] / pos[2];
+      // If parallelProjection is on then t is just -pos[2].
+
+      const t = cam.getParallelProjection() ? -pos[2] : -crange[0] / pos[2];
+
       vec3.scale(pos, dir, t);
 
       // now convert to DC
@@ -459,6 +463,7 @@ function vtkOpenGLVolumeMapper(publicAPI, model) {
       dcymin = Math.min(pos[1], dcymin);
       dcymax = Math.max(pos[1], dcymax);
     }
+
     program.setUniformf('dcxmin', dcxmin);
     program.setUniformf('dcxmax', dcxmax);
     program.setUniformf('dcymin', dcymin);
