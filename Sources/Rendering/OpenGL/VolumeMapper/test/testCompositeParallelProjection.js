@@ -16,7 +16,6 @@ import baseline1 from './testCompositeParallelProjection.png';
 test.onlyIfWebGL(
   'Test Composite Volume Rendering with parallel projection',
   (t) => {
-    debugger;
     const gc = testUtils.createGarbageCollector(t);
     t.ok('rendering', 'vtkOpenGLVolumeMapper CompositeParallelProjection');
     // testUtils.keepDOM();

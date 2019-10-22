@@ -57,7 +57,7 @@ import './Rendering/OpenGL/Skybox/test/testSkyboxBackground';
 import './Rendering/OpenGL/StickMapper/test/testStick';
 import './Rendering/OpenGL/Texture/test/testCreateCubeFromRawTexture';
 import './Rendering/OpenGL/VolumeMapper/test/testComposite';
-import './Rendering/OpenGL/VolumeMapper/test/testCompositeParallelProjection.js';
+import './Rendering/OpenGL/VolumeMapper/test/testCompositeParallelProjection';
 import './Rendering/OpenGL/VolumeMapper/test/testComposite16Bit';
 import './Rendering/OpenGL/VolumeMapper/test/testIntermixed';
 import './Rendering/OpenGL/VolumeMapper/test/testIntermixedImage';

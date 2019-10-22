@@ -442,19 +442,17 @@ function vtkOpenGLVolumeMapper(publicAPI, model) {
         bounds[4 + Math.floor(i / 4)]
       );
       vec3.transformMat4(pos, pos, model.modelToView);
-      vec3.normalize(dir, pos);
+      if (!cam.getParallelProjection()) {
+        vec3.normalize(dir, pos);
 
-      // now find the projection of this point onto a
-      // nearZ distance plane. Since the camera is at 0,0,0
-      // in VC the ray is just t*pos and
-      // t is -nearZ/dir.z
-      // intersection becomes pos.x/pos.z
-      // If parallelProjection is on then t is just -pos[2].
-
-      const t = cam.getParallelProjection() ? -pos[2] : -crange[0] / pos[2];
-
-      vec3.scale(pos, dir, t);
-
+        // now find the projection of this point onto a
+        // nearZ distance plane. Since the camera is at 0,0,0
+        // in VC the ray is just t*pos and
+        // t is -nearZ/dir.z
+        // intersection becomes pos.x/pos.z
+        const t = -crange[0] / pos[2];
+        vec3.scale(pos, dir, t);
+      }
       // now convert to DC
       vec3.transformMat4(pos, pos, keyMats.vcdc);
 
