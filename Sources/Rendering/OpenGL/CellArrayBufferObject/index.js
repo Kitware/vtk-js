@@ -1,9 +1,41 @@
+import { mat4, quat, vec3 } from 'gl-matrix';
+
 import macro from 'vtk.js/Sources/macro';
 import vtkBufferObject from 'vtk.js/Sources/Rendering/OpenGL/BufferObject';
 import { ObjectType } from 'vtk.js/Sources/Rendering/OpenGL/BufferObject/Constants';
 import { Representation } from 'vtk.js/Sources/Rendering/Core/Property/Constants';
 
 const { vtkDebugMacro, vtkErrorMacro } = macro;
+
+// ----------------------------------------------------------------------------
+// Static functions
+// ----------------------------------------------------------------------------
+
+function computeInverseShiftAndScaleMatrix(coordShift, coordScale) {
+  const inverseScale = vec3.create();
+  vec3.inverse(inverseScale, coordScale);
+
+  const matrix = mat4.create();
+  mat4.fromRotationTranslationScale(
+    matrix,
+    quat.create(),
+    coordShift,
+    inverseScale
+  );
+
+  return matrix;
+}
+
+function shouldApplyCoordShiftAndScale(coordShift, coordScale) {
+  if (coordShift === null || coordScale === null) {
+    return false;
+  }
+
+  return !(
+    vec3.exactEquals(coordShift, [0, 0, 0]) &&
+    vec3.exactEquals(coordScale, [1, 1, 1])
+  );
+}
 
 // ----------------------------------------------------------------------------
 // vtkOpenGLCellArrayBufferObject methods
@@ -200,13 +232,60 @@ function vtkOpenGLCellArrayBufferObject(publicAPI, model) {
     let vboidx = 0;
     let ucidx = 0;
 
+    // Find out if shift scale should be used
+    // Compute squares of diagonal size and distance from the origin
+    let diagSq = 0.0;
+    let distSq = 0.0;
+    for (let i = 0; i < 3; ++i) {
+      const range = options.points.getRange(i);
+
+      const delta = range[1] - range[0];
+      diagSq += delta * delta;
+
+      const distShift = 0.5 * (range[1] + range[0]);
+      distSq += distShift * distShift;
+    }
+
+    const useShiftAndScale =
+      diagSq > 0 &&
+      (Math.abs(distSq) / diagSq > 1.0e6 || // If data is far from the origin relative to its size
+      Math.abs(Math.log10(diagSq)) > 3.0 || // If the size is huge when not far from the origin
+        (diagSq === 0 && distSq > 1.0e6)); // If data is a point, but far from the origin
+
+    if (useShiftAndScale) {
+      // Compute shift and scale vectors
+      const coordShift = vec3.create();
+      const coordScale = vec3.create();
+      for (let i = 0; i < 3; ++i) {
+        const range = options.points.getRange(i);
+        const delta = range[1] - range[0];
+
+        coordShift[i] = 0.5 * (range[1] + range[0]);
+        coordScale[i] = delta > 0 ? 1.0 / delta : 1.0;
+      }
+      publicAPI.setCoordShiftAndScale(coordShift, coordScale);
+    } else if (model.coordShiftAndScaleEnabled === true) {
+      // Make sure to reset
+      model.setCoordShiftAndScale(null, null);
+    }
+
     addAPoint = function addAPointFunc(i) {
       // Vertices
       pointIdx = i * 3;
 
-      packedVBO[vboidx++] = pointData[pointIdx++];
-      packedVBO[vboidx++] = pointData[pointIdx++];
-      packedVBO[vboidx++] = pointData[pointIdx++];
+      if (!model.coordShiftAndScaleEnabled) {
+        packedVBO[vboidx++] = pointData[pointIdx++];
+        packedVBO[vboidx++] = pointData[pointIdx++];
+        packedVBO[vboidx++] = pointData[pointIdx++];
+      } else {
+        // Apply shift and scale
+        packedVBO[vboidx++] =
+          (pointData[pointIdx++] - model.coordShift[0]) * model.coordScale[0];
+        packedVBO[vboidx++] =
+          (pointData[pointIdx++] - model.coordShift[1]) * model.coordScale[1];
+        packedVBO[vboidx++] =
+          (pointData[pointIdx++] - model.coordShift[2]) * model.coordScale[2];
+      }
 
       if (normalData !== null) {
         if (options.haveCellNormals) {
@@ -261,16 +340,52 @@ function vtkOpenGLCellArrayBufferObject(publicAPI, model) {
     return cellCount;
   };
 
-  publicAPI.setCoordShiftAndScaleMethod = (shiftScaleMethod) => {
-    vtkErrorMacro('coordinate shift and scale not yet implemented');
-  };
+  publicAPI.setCoordShiftAndScale = (coordShift, coordScale) => {
+    if (
+      coordShift !== null &&
+      (coordShift.constructor !== Float32Array || coordShift.length !== 3)
+    ) {
+      vtkErrorMacro('Wrong type for coordShift, expected vec3 or null');
+      return;
+    }
 
-  publicAPI.setCoordShift = (shiftArray) => {
-    vtkErrorMacro('coordinate shift and scale not yet implemented');
-  };
+    if (
+      coordScale !== null &&
+      (coordScale.constructor !== Float32Array || coordScale.length !== 3)
+    ) {
+      vtkErrorMacro('Wrong type for coordScale, expected vec3 or null');
+      return;
+    }
 
-  publicAPI.setCoordScale = (scaleArray) => {
-    vtkErrorMacro('coordinate shift and scale not yet implemented');
+    if (
+      model.coordShift === null ||
+      coordShift === null ||
+      !vec3.equals(coordShift, model.coordShift)
+    ) {
+      model.coordShift = coordShift;
+    }
+
+    if (
+      model.coordScale === null ||
+      coordScale === null ||
+      !vec3.equals(coordScale, model.coordScale)
+    ) {
+      model.coordScale = coordScale;
+    }
+
+    model.coordShiftAndScaleEnabled = shouldApplyCoordShiftAndScale(
+      model.coordShift,
+      model.coordScale
+    );
+
+    if (model.coordShiftAndScaleEnabled) {
+      model.inverseShiftAndScaleMatrix = computeInverseShiftAndScaleMatrix(
+        model.coordShift,
+        model.coordScale
+      );
+    } else {
+      model.inverseShiftAndScaleMatrix = null;
+    }
   };
 }
 
@@ -290,6 +405,10 @@ const DEFAULT_VALUES = {
   colorComponents: 0,
   tcoordBO: null,
   customData: [],
+  coordShift: null,
+  coordScale: null,
+  coordShiftAndScaleEnabled: false,
+  inverseShiftAndScaleMatrix: null,
 };
 
 // ----------------------------------------------------------------------------
@@ -312,6 +431,13 @@ export function extend(publicAPI, model, initialValues = {}) {
     'colorOffset',
     'colorComponents',
     'customData',
+  ]);
+
+  macro.get(publicAPI, model, [
+    'coordShift',
+    'coordScale',
+    'coordShiftAndScaleEnabled',
+    'inverseShiftAndScaleMatrix',
   ]);
 
   // Object specific methods
