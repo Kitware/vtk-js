@@ -6,6 +6,7 @@ import vtkHttpDataSetReader from 'vtk.js/Sources/IO/Core/HttpDataSetReader';
 import vtkPiecewiseFunction from 'vtk.js/Sources/Common/DataModel/PiecewiseFunction';
 import vtkVolume from 'vtk.js/Sources/Rendering/Core/Volume';
 import vtkVolumeMapper from 'vtk.js/Sources/Rendering/Core/VolumeMapper';
+import controlPanel from './controller.html';
 
 // ----------------------------------------------------------------------------
 // Standard rendering code setup
@@ -16,6 +17,8 @@ const fullScreenRenderer = vtkFullScreenRenderWindow.newInstance({
 });
 const renderer = fullScreenRenderer.getRenderer();
 const renderWindow = fullScreenRenderer.getRenderWindow();
+
+fullScreenRenderer.addController(controlPanel);
 
 // ----------------------------------------------------------------------------
 // Example code
@@ -69,6 +72,20 @@ reader.setUrl(`${__BASE_PATH__}/data/volume/LIDC2.vti`).then(() => {
   });
 });
 
+// TEST PARALLEL ==============
+
+let isParallel = false;
+const button = document.querySelector('.text');
+
+function toggleParallel() {
+  isParallel = !isParallel;
+
+  renderer.getActiveCamera().setParallelProjection(isParallel);
+
+  button.innerText = `(${isParallel ? 'on' : 'off'})`;
+  renderWindow.render();
+}
+
 // -----------------------------------------------------------
 // Make some variables global so that you can inspect and
 // modify objects in your browser's developer console:
@@ -81,3 +98,4 @@ global.ctfun = ctfun;
 global.ofun = ofun;
 global.renderer = renderer;
 global.renderWindow = renderWindow;
+global.toggleParallel = toggleParallel;
