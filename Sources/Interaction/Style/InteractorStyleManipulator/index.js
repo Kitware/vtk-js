@@ -439,6 +439,7 @@ function vtkInteractorStyleManipulator(publicAPI, model) {
     while (count--) {
       const manip = model.mouseManipulators[count];
       if (
+        manip &&
         manip.isScrollEnabled() &&
         manip.getShift() === callData.shiftKey &&
         manip.getControl() === callData.controlKey &&
@@ -530,7 +531,7 @@ function vtkInteractorStyleManipulator(publicAPI, model) {
     let count = model.gestureManipulators.length;
     while (count--) {
       const manipulator = model.gestureManipulators[count];
-      if (manipulator.isPinchEnabled()) {
+      if (manipulator && manipulator.isPinchEnabled()) {
         manipulator.onStartPinch(model.interactor, callData.scale);
         manipulator.startInteraction();
       }
@@ -545,7 +546,7 @@ function vtkInteractorStyleManipulator(publicAPI, model) {
     let count = model.gestureManipulators.length;
     while (count--) {
       const manipulator = model.gestureManipulators[count];
-      if (manipulator.isPinchEnabled()) {
+      if (manipulator && manipulator.isPinchEnabled()) {
         manipulator.onEndPinch(model.interactor);
         manipulator.endInteraction();
       }
@@ -560,7 +561,7 @@ function vtkInteractorStyleManipulator(publicAPI, model) {
     let count = model.gestureManipulators.length;
     while (count--) {
       const manipulator = model.gestureManipulators[count];
-      if (manipulator.isRotateEnabled()) {
+      if (manipulator && manipulator.isRotateEnabled()) {
         manipulator.onStartRotate(model.interactor, callData.rotation);
         manipulator.startInteraction();
       }
@@ -575,7 +576,7 @@ function vtkInteractorStyleManipulator(publicAPI, model) {
     let count = model.gestureManipulators.length;
     while (count--) {
       const manipulator = model.gestureManipulators[count];
-      if (manipulator.isRotateEnabled()) {
+      if (manipulator && manipulator.isRotateEnabled()) {
         manipulator.onEndRotate(model.interactor);
         manipulator.endInteraction();
       }
@@ -590,7 +591,7 @@ function vtkInteractorStyleManipulator(publicAPI, model) {
     let count = model.gestureManipulators.length;
     while (count--) {
       const manipulator = model.gestureManipulators[count];
-      if (manipulator.isPanEnabled()) {
+      if (manipulator && manipulator.isPanEnabled()) {
         manipulator.onStartPan(model.interactor, callData.translation);
         manipulator.startInteraction();
       }
@@ -605,7 +606,7 @@ function vtkInteractorStyleManipulator(publicAPI, model) {
     let count = model.gestureManipulators.length;
     while (count--) {
       const manipulator = model.gestureManipulators[count];
-      if (manipulator.isPanEnabled()) {
+      if (manipulator && manipulator.isPanEnabled()) {
         manipulator.onEndPan(model.interactor);
         manipulator.endInteraction();
       }
@@ -620,7 +621,7 @@ function vtkInteractorStyleManipulator(publicAPI, model) {
     let actionCount = 0;
     while (count--) {
       const manipulator = model.gestureManipulators[count];
-      if (manipulator.isPinchEnabled()) {
+      if (manipulator && manipulator.isPinchEnabled()) {
         manipulator.onPinch(
           model.interactor,
           callData.pokedRenderer,
@@ -640,7 +641,7 @@ function vtkInteractorStyleManipulator(publicAPI, model) {
     let actionCount = 0;
     while (count--) {
       const manipulator = model.gestureManipulators[count];
-      if (manipulator.isPanEnabled()) {
+      if (manipulator && manipulator.isPanEnabled()) {
         manipulator.onPan(
           model.interactor,
           callData.pokedRenderer,
@@ -660,7 +661,7 @@ function vtkInteractorStyleManipulator(publicAPI, model) {
     let actionCount = 0;
     while (count--) {
       const manipulator = model.gestureManipulators[count];
-      if (manipulator.isRotateEnabled()) {
+      if (manipulator && manipulator.isRotateEnabled()) {
         manipulator.onRotate(
           model.interactor,
           callData.pokedRenderer,
