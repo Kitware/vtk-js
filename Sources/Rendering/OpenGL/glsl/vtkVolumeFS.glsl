@@ -815,10 +815,21 @@ void computeIndexSpaceValues(out vec3 pos, out vec3 endPos, out float sampleDist
   sampleDistanceIS = sampleDistance*delta2/delta;
 }
 
+uniform int cameraParallel;
+
 void main()
 {
-  // camera is at 0,0,0 so rayDir for perspective is just the vc coord
-  vec3 rayDirVC = normalize(vertexVCVSOutput);
+
+  vec3 rayDirVC;
+
+  if (cameraParallel == 1)
+  {
+    // Camera is parallel, so the rayDir is just the direction of the camera.
+    rayDirVC = vec3(0.0, 0.0, -1.0);
+  } else {
+    // camera is at 0,0,0 so rayDir for perspective is just the vc coord
+    rayDirVC = normalize(vertexVCVSOutput);
+  }
 
   vec3 tdims = vec3(volumeDimensions);
 
