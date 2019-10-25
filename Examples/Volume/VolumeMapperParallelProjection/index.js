@@ -2,11 +2,14 @@ import 'vtk.js/Sources/favicon';
 
 import vtkFullScreenRenderWindow from 'vtk.js/Sources/Rendering/Misc/FullScreenRenderWindow';
 import vtkHttpDataSetReader from 'vtk.js/Sources/IO/Core/HttpDataSetReader';
+import vtkCubeSource from 'vtk.js/Sources/Filters/Sources/CubeSource';
 import vtkVolume from 'vtk.js/Sources/Rendering/Core/Volume';
+import vtkActor from 'vtk.js/Sources/Rendering/Core/Actor';
 import vtkVolumeMapper from 'vtk.js/Sources/Rendering/Core/VolumeMapper';
-import vtkPiecewiseFunction from 'vtk.js/Sources/Common/DataModel/PiecewiseFunction';
-import vtkColorTransferFunction from 'vtk.js/Sources/Rendering/Core/ColorTransferFunction';
-import vtkColorMaps from 'vtk.js/Sources/Rendering/Core/ColorTransferFunction/ColorMaps';
+import vtkMapper from 'vtk.js/Sources/Rendering/Core/Mapper';
+// import vtkPiecewiseFunction from 'vtk.js/Sources/Common/DataModel/PiecewiseFunction';
+// import vtkColorTransferFunction from 'vtk.js/Sources/Rendering/Core/ColorTransferFunction';
+// import vtkColorMaps from 'vtk.js/Sources/Rendering/Core/ColorTransferFunction/ColorMaps';
 import controlPanel from './controller.html';
 
 // ----------------------------------------------------------------------------
@@ -29,22 +32,29 @@ fullScreenRenderer.addController(controlPanel);
 // SETUP ================
 // Load script from https://unpkg.com/vtk.js then...
 
+const cubeSource = vtkCubeSource.newInstance();
+
+cubeSource.setXLength(100);
+cubeSource.setYLength(100);
+cubeSource.setZLength(1);
+
+console.log(cubeSource);
+
+const cubeActor = vtkActor.newInstance();
+const cubeMapper = vtkMapper.newInstance();
+
+cubeActor.setMapper(cubeMapper);
+cubeMapper.setInputConnection(cubeSource.getOutputPort());
+
 const actor = vtkVolume.newInstance();
 const mapper = vtkVolumeMapper.newInstance({
   sampleDistance: 1.1,
 });
 
-const lookupTable = vtkColorTransferFunction.newInstance();
-lookupTable.applyColorMap(
-  vtkColorMaps.getPresetByName(vtkColorMaps.rgbPresetNames[4])
-);
-const piecewiseFunction = vtkPiecewiseFunction.newInstance();
-piecewiseFunction.addPoint(50.0, 0.0);
-piecewiseFunction.addPoint(120.0, 0.2);
-piecewiseFunction.addPoint(4000.0, 0.4);
-
 const renderer = fullScreenRenderer.getRenderer();
 const renderWindow = fullScreenRenderer.getRenderWindow();
+
+renderer.addActor(cubeActor);
 
 const reader = vtkHttpDataSetReader.newInstance({
   fetchGzip: true,
@@ -56,20 +66,21 @@ reader
       const imageData = reader.getOutputData();
       const dataArray = imageData.getPointData().getScalars();
 
-      lookupTable.setMappingRange(...dataArray.getRange());
-      lookupTable.updateRange();
+      const rgbTransferFunction = actor.getProperty().getRGBTransferFunction(0);
+      rgbTransferFunction.setRange(...dataArray.getRange());
 
       renderer.addVolume(actor);
       renderer.resetCamera();
-      renderer.getActiveCamera().elevation(70);
       renderWindow.render();
     });
   });
 
 actor.setMapper(mapper);
 mapper.setInputConnection(reader.getOutputPort());
-actor.getProperty().setRGBTransferFunction(0, lookupTable);
-actor.getProperty().setScalarOpacity(0, piecewiseFunction);
+
+mapper.setBlendModeToMaximumIntensity();
+
+renderer.getActiveCamera().setViewUp(0, 1, 0);
 
 // TEST PARALLEL ==============
 
@@ -80,6 +91,8 @@ function toggleParallel() {
   isParallel = !isParallel;
   const camera = renderer.getActiveCamera();
   camera.setParallelProjection(isParallel);
+
+  renderer.resetCamera();
 
   button.innerText = `(${isParallel ? 'on' : 'off'})`;
 

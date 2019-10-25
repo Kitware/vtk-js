@@ -467,6 +467,10 @@ function vtkOpenGLVolumeMapper(publicAPI, model) {
     program.setUniformf('dcymin', dcymin);
     program.setUniformf('dcymax', dcymax);
 
+    if (program.isUniformUsed('cameraParallel')) {
+      program.setUniformi('cameraParallel', cam.getParallelProjection());
+    }
+
     const ext = model.currentInput.getExtent();
     const spc = model.currentInput.getSpacing();
     const vsize = vec3.create();
