@@ -24,6 +24,8 @@ import { ViewTypes } from 'vtk.js/Sources/Widgets/Core/WidgetManager/Constants';
 function vtkImageCroppingWidget(publicAPI, model) {
   model.classHierarchy.push('vtkImageCroppingWidget');
 
+  let stateSub = null;
+
   // --------------------------------------------------------------------------
 
   function setHandlesEnabled(label, flag) {
@@ -87,6 +89,14 @@ function vtkImageCroppingWidget(publicAPI, model) {
     }
   };
 
+  // --------------------------------------------------------------------------
+
+  publicAPI.delete = macro.chain(publicAPI.delete, () => {
+    if (stateSub) {
+      stateSub.unsubscribe();
+    }
+  });
+
   // --- Widget Requirement ---------------------------------------------------
 
   model.behavior = behavior;
@@ -117,7 +127,9 @@ function vtkImageCroppingWidget(publicAPI, model) {
   };
 
   // Update handle positions when cropping planes update
-  model.widgetState.getCroppingPlanes().onModified(publicAPI.updateHandles);
+  stateSub = model.widgetState
+    .getCroppingPlanes()
+    .onModified(publicAPI.updateHandles);
 
   // Add manipulators to our widgets.
   const planeManipulator = vtkPlaneManipulator.newInstance();
