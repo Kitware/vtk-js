@@ -153,13 +153,13 @@ function vtkAbstractWidgetFactory(publicAPI, model) {
   // Event Widget API
   // --------------------------------------------------------------------------
   let unsubscribe = NoOp;
-  publicAPI.delete = macro.chain(publicAPI.delete, unsubscribe);
+  publicAPI.delete = macro.chain(publicAPI.delete, () => unsubscribe());
 
   // Defer after object instantiation so model.widgetState actually exist
   setTimeout(() => {
     unsubscribe = model.widgetState.onModified(() =>
       publicAPI.invokeWidgetChange(model.widgetState)
-    );
+    ).unsubscribe;
   }, 0);
 }
 
