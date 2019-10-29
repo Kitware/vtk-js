@@ -152,11 +152,13 @@ function vtkAbstractRepresentationProxy(publicAPI, model) {
       if (model.mapper.setLookupTable) {
         model.mapper.setLookupTable(lookupTable);
       }
-      publicAPI.rescaleTransferFunctionToDataRange(
-        arrayName,
-        arrayLocation,
-        componentIndex
-      );
+      if (model.rescaleOnColorBy) {
+        publicAPI.rescaleTransferFunctionToDataRange(
+          arrayName,
+          arrayLocation,
+          componentIndex
+        );
+      }
     }
 
     // Not all mappers have those fields
@@ -338,6 +340,7 @@ const DEFAULT_VALUES = {
   actors: [],
   volumes: [],
   sourceDependencies: [],
+  rescaleOnColorBy: true,
 };
 
 // ----------------------------------------------------------------------------
@@ -346,6 +349,7 @@ function extend(publicAPI, model, initialValues = {}) {
   Object.assign(model, DEFAULT_VALUES, initialValues);
 
   vtkProp.extend(publicAPI, model, initialValues);
+  macro.setGet(publicAPI, model, ['rescaleOnColorBy']);
   macro.get(publicAPI, model, ['input', 'mapper', 'actors', 'volumes']);
 
   // Object specific methods
