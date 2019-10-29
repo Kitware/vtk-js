@@ -396,7 +396,12 @@ function vtkOpenGLHardwareSelector(publicAPI, model) {
   publicAPI.getInfoHash = (info) => `${info.propID} ${info.compositeID}`;
 
   //----------------------------------------------------------------------------
-  publicAPI.generateSelection = (x1, y1, x2, y2) => {
+  publicAPI.generateSelection = (fx1, fy1, fx2, fy2) => {
+    const x1 = Math.floor(fx1);
+    const y1 = Math.floor(fy1);
+    const x2 = Math.floor(fx2);
+    const y2 = Math.floor(fy2);
+
     const dataMap = new Map();
 
     const outSelectedPosition = [0, 0];
@@ -427,9 +432,26 @@ function vtkOpenGLHardwareSelector(publicAPI, model) {
     return publicAPI.convertSelection(model.fieldAssociation, dataMap);
   };
 
+  //----------------------------------------------------------------------------
+
   publicAPI.attach = (w, r) => {
     model.openGLRenderWindow = w;
     model.renderer = r;
+  };
+
+  //----------------------------------------------------------------------------
+
+  // override
+  const superSetArea = publicAPI.setArea;
+  publicAPI.setArea = (...args) => {
+    if (superSetArea(...args)) {
+      model.area[0] = Math.floor(model.area[0]);
+      model.area[1] = Math.floor(model.area[1]);
+      model.area[2] = Math.floor(model.area[2]);
+      model.area[3] = Math.floor(model.area[3]);
+      return true;
+    }
+    return false;
   };
 }
 
