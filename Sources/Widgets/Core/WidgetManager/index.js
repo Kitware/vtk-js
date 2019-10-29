@@ -1,10 +1,10 @@
 import macro from 'vtk.js/Sources/macro';
 import vtkOpenGLHardwareSelector from 'vtk.js/Sources/Rendering/OpenGL/HardwareSelector';
 import { FieldAssociations } from 'vtk.js/Sources/Common/DataModel/DataSet/Constants';
-import WMConstants from 'vtk.js/Sources/Widgets/Core/WidgetManager/Constants';
+import Constants from 'vtk.js/Sources/Widgets/Core/WidgetManager/Constants';
 import vtkSVGRepresentation from 'vtk.js/Sources/Widgets/SVG/SVGRepresentation';
 
-const { ViewTypes, RenderingTypes } = WMConstants;
+const { ViewTypes, RenderingTypes, CaptureOn } = Constants;
 const { vtkErrorMacro } = macro;
 const { createSvgElement } = vtkSVGRepresentation;
 
@@ -187,17 +187,22 @@ function vtkWidgetManager(publicAPI, model) {
     model.renderingType = RenderingTypes.PICKING_BUFFER;
     model.widgets.forEach(updateWidgetForRender);
 
-    console.time('capture');
-    const [w, h] = model.openGLRenderWindow.getSize();
-    model.selector.setArea(0, 0, w, h);
-    model.selector.releasePixBuffers();
-    model.pickingAvailable = model.selector.captureBuffers();
-    model.previousSelectedData = null;
-    console.timeEnd('capture');
-    publicAPI.modified();
+    if (model.captureOn === CaptureOn.MOUSE_RELEASE) {
+      console.time('capture');
+      const [w, h] = model.openGLRenderWindow.getSize();
+      model.selector.setArea(0, 0, w, h);
+      model.selector.releasePixBuffers();
+      model.pickingAvailable = model.selector.captureBuffers();
+      model.previousSelectedData = null;
+      console.timeEnd('capture');
+    } else {
+      model.pickingAvailable = true;
+    }
 
     model.renderingType = RenderingTypes.FRONT_BUFFER;
     model.widgets.forEach(updateWidgetForRender);
+
+    publicAPI.modified();
   };
 
   publicAPI.disablePicking = () => {
@@ -217,11 +222,12 @@ function vtkWidgetManager(publicAPI, model) {
 
     subscriptions.push(
       model.interactor.onStartAnimation(() => {
-        model.pickingAvailable = false;
+        model.isAnimating = true;
       })
     );
     subscriptions.push(
       model.interactor.onEndAnimation(() => {
+        model.isAnimating = false;
         if (model.pickingEnabled) {
           publicAPI.enablePicking();
         }
@@ -230,13 +236,10 @@ function vtkWidgetManager(publicAPI, model) {
 
     subscriptions.push(
       model.interactor.onMouseMove(({ position }) => {
-        if (!model.pickingAvailable) {
+        if (model.isAnimating || !model.pickingAvailable) {
           return;
         }
-        publicAPI.updateSelectionFromXY(
-          Math.round(position.x),
-          Math.round(position.y)
-        );
+        publicAPI.updateSelectionFromXY(position.x, position.y);
         const {
           requestCount,
           selectedState,
@@ -341,7 +344,16 @@ function vtkWidgetManager(publicAPI, model) {
   };
 
   publicAPI.updateSelectionFromXY = (x, y) => {
-    if (model.pickingAvailable) {
+    let pickingAvailable = model.pickingAvailable;
+
+    if (model.captureOn === CaptureOn.MOUSE_MOVE) {
+      model.selector.setArea(x, y, x, y);
+      model.selector.releasePixBuffers();
+      pickingAvailable = model.selector.captureBuffers();
+      model.previousSelectedData = null;
+    }
+
+    if (pickingAvailable) {
       model.selections = model.selector.generateSelection(x, y, x, y);
     }
   };
@@ -438,11 +450,13 @@ const DEFAULT_VALUES = {
   renderer: [],
   viewType: ViewTypes.DEFAULT,
   pickingAvailable: false,
+  isAnimating: false,
   pickingEnabled: true,
   selections: null,
   previousSelectedData: null,
   widgetInFocus: null,
   useSvgLayer: true,
+  captureOn: CaptureOn.MOUSE_RELEASE,
 };
 
 // ----------------------------------------------------------------------------
@@ -452,6 +466,7 @@ export function extend(publicAPI, model, initialValues = {}) {
 
   macro.obj(publicAPI, model);
   macro.setGet(publicAPI, model, [
+    'captureOn',
     { type: 'enum', name: 'viewType', enum: ViewTypes },
   ]);
   macro.get(publicAPI, model, [
@@ -472,4 +487,4 @@ export const newInstance = macro.newInstance(extend, 'vtkWidgetManager');
 
 // ----------------------------------------------------------------------------
 
-export default { newInstance, extend };
+export default { newInstance, extend, Constants };

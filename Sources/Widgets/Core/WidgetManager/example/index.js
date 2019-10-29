@@ -76,6 +76,7 @@ renderWindow.render();
 // ----------------------------------------------------------------------------
 
 const widgetManager = vtkWidgetManager.newInstance();
+widgetManager.setDeferredCapture(true);
 widgetManager.setRenderer(renderer);
 
 // -----------------------------------------------------------
