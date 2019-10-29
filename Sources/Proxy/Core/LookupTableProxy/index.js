@@ -64,9 +64,12 @@ function vtkLookupTableProxy(publicAPI, model) {
   publicAPI.applyMode = () => {
     switch (model.mode) {
       case Mode.Preset:
-        model.lookupTable.applyColorMap(
-          vtkColorMaps.getPresetByName(model.presetName)
-        );
+        {
+          const preset = vtkColorMaps.getPresetByName(model.presetName);
+          if (preset) {
+            model.lookupTable.applyColorMap(preset);
+          }
+        }
         break;
 
       case Mode.RGBPoints:
