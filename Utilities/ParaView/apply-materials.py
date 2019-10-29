@@ -8,6 +8,8 @@ import json
 import os
 
 proxyMapping = {}
+materialPaths = []
+
 
 def updateSourceMapping():
   for source in simple.GetSources():
@@ -36,14 +38,15 @@ def applyMaterialToRepresentation(filepath):
 
 
 def loadFiles(directoryPath):
-  materialPaths = []
   for (dirpath, dirnames, filenames) in os.walk(directoryPath):
     for filename in filenames:
-      if filename == 'representations.json':
+      if filename[:-5] == '.json':
         materialPaths.append(os.path.join(dirpath, filename))
       else:
         simple.OpenDataFile(os.path.join(dirpath, filename), registrationName=filename)
 
+
+def applyMaterials():
   updateSourceMapping()
   for matFile in materialPaths:
     applyMaterialToRepresentation(matFile)

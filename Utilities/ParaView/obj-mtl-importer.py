@@ -26,6 +26,17 @@ import hashlib
 import json
 
 # -----------------------------------------------------------------------------
+
+def nameRemap(name):
+  if 'Paneel' in name:
+    return '3204_Paneel_4Hoek_Definition1'
+
+  if 'Zijgevel' in name:
+    return 'seb_white_steel'
+
+  return name
+
+# -----------------------------------------------------------------------------
 # obj Parser
 # -----------------------------------------------------------------------------
 
@@ -375,7 +386,12 @@ def loadScene(objFilePath, mtlFilePath):
   objReader = OBJParser(objFilePath, 'usemtl')
   meshBaseDirectory = os.path.join(os.path.dirname(objFilePath), os.path.basename(objFilePath)[:-4])
 
-  meshMapping = writeMeshes(meshBaseDirectory, objReader, mtlReader.reducedMaterialMap)
+  # custom remap
+  mapToSha = {}
+  for key in mtlReader.reducedMaterialMap:
+    mapToSha[key] = mtlReader.reducedMaterialMap[nameRemap(key)]
+
+  meshMapping = writeMeshes(meshBaseDirectory, objReader, mapToSha)
   for name in meshMapping:
     source = simple.OpenDataFile(meshMapping[name], guiName=name)
     rep = simple.Show(source)
