@@ -2,6 +2,7 @@ import 'vtk.js/Sources/favicon';
 
 import vtkFullScreenRenderWindow from 'vtk.js/Sources/Rendering/Misc/FullScreenRenderWindow';
 import vtkWidgetManager from 'vtk.js/Sources/Widgets/Core/WidgetManager';
+import WidgetManagerConstants from 'vtk.js/Sources/Widgets/Core/WidgetManager/Constants';
 
 import vtkActor from 'vtk.js/Sources/Rendering/Core/Actor';
 import vtkConeSource from 'vtk.js/Sources/Filters/Sources/ConeSource';
@@ -12,6 +13,8 @@ import vtkImplicitPlaneWidget from 'vtk.js/Sources/Widgets/Widgets3D/ImplicitPla
 import vtkPolyLineWidget from 'vtk.js/Sources/Widgets/Widgets3D/PolyLineWidget';
 
 import controlPanel from './controlPanel.html';
+
+const { CaptureOn } = WidgetManagerConstants;
 
 const WIDGET_BUILDERS = {
   Box(widgetManager) {
@@ -76,6 +79,7 @@ renderWindow.render();
 // ----------------------------------------------------------------------------
 
 const widgetManager = vtkWidgetManager.newInstance();
+widgetManager.setCaptureOn(CaptureOn.MOUSE_RELEASE); // default
 widgetManager.setRenderer(renderer);
 
 // -----------------------------------------------------------

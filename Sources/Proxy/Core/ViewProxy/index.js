@@ -191,8 +191,8 @@ function vtkViewProxy(publicAPI, model) {
         return;
       }
       const devicePixelRatio = window.devicePixelRatio || 1;
-      const width = Math.max(10, devicePixelRatio * Math.floor(dims.width));
-      const height = Math.max(10, devicePixelRatio * Math.floor(dims.height));
+      const width = Math.max(10, Math.floor(devicePixelRatio * dims.width));
+      const height = Math.max(10, Math.floor(devicePixelRatio * dims.height));
       model.openglRenderWindow.setSize(width, height);
       publicAPI.invokeResize({ width, height });
       publicAPI.renderLater();
