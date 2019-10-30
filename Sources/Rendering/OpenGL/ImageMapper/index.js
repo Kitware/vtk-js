@@ -358,6 +358,13 @@ function vtkOpenGLImageMapper(publicAPI, model) {
     const keyMats = model.openGLCamera.getKeyMatrices(ren);
     mat4.multiply(model.imagemat, keyMats.wcdc, model.imagemat);
 
+    if (cellBO.getCABO().getCoordShiftAndScaleEnabled()) {
+      const inverseShiftScaleMat = cellBO
+        .getCABO()
+        .getInverseShiftAndScaleMatrix();
+      mat4.multiply(model.imagemat, model.imagemat, inverseShiftScaleMat);
+    }
+
     program.setUniformMatrix('MCDCMatrix', model.imagemat);
   };
 

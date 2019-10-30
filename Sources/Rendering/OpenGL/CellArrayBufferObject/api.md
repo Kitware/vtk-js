@@ -40,3 +40,19 @@ The offset in bytes from the start of an element and the color data
 ### colorComponents
 
 The number of components in a color value typically 4
+
+###   getCoordShift = ()
+###   getCoordScale = ()
+###   getInverseShiftAndScaleMatrix = ()
+
+Get the shift and scale vectors computed by createVBO(), as well as the inverse transform to apply to the rendering transform.
+
+###   getCoordShiftAndScaleEnabled = ()
+
+Get a boolean indicating whether the shift and scale vectors are currently being applied to the coordinates.
+createVBO() only applies shift and scale if one of the following conditions are met:
+* If the data is far from the origin relative to its size
+* If the size is huge when not far from the origin
+* If data is a point, but far from the origin
+
+This is necessary as OpenGL ES 2.0 does not support double precision data types.

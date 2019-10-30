@@ -8,7 +8,6 @@ import vtkOpenGLTexture from 'vtk.js/Sources/Rendering/OpenGL/Texture';
 import vtkProperty from 'vtk.js/Sources/Rendering/Core/Property';
 import vtkShaderProgram from 'vtk.js/Sources/Rendering/OpenGL/ShaderProgram';
 import vtkViewNode from 'vtk.js/Sources/Rendering/SceneGraph/ViewNode';
-
 import vtkPolyDataVS from 'vtk.js/Sources/Rendering/OpenGL/glsl/vtkPolyDataVS.glsl';
 import vtkPolyDataFS from 'vtk.js/Sources/Rendering/OpenGL/glsl/vtkPolyDataFS.glsl';
 
@@ -29,7 +28,6 @@ const { Representation, Shading } = vtkProperty;
 const { ScalarMode } = vtkMapper;
 const { Filter, Wrap } = vtkOpenGLTexture;
 const { vtkErrorMacro } = macro;
-
 const StartEvent = { type: 'StartEvent' };
 const EndEvent = { type: 'EndEvent' };
 
@@ -1490,6 +1488,15 @@ function vtkOpenGLPolyDataMapper(publicAPI, model) {
     }
   };
 
+  function safeMat4Multiply(matrixArray) {
+    return matrixArray.reduce((res, matrix, index) => {
+      if (index === 0) {
+        return matrix ? mat4.copy(res, matrix) : mat4.identity(res);
+      }
+      return matrix ? mat4.multiply(res, res, matrix) : res;
+    }, model.tmpMat4);
+  }
+
   publicAPI.setCameraShaderParameters = (cellBO, ren, actor) => {
     const program = cellBO.getProgram();
 
@@ -1501,38 +1508,54 @@ function vtkOpenGLPolyDataMapper(publicAPI, model) {
     const camm = model.openGLCamera.getKeyMatrixTime().getMTime();
     const progm = program.getLastCameraMTime();
 
-    if (progm !== camm) {
-      if (actor.getIsIdentity()) {
-        program.setUniformMatrix('MCDCMatrix', keyMats.wcdc);
-        if (program.isUniformUsed('MCVCMatrix')) {
-          program.setUniformMatrix('MCVCMatrix', keyMats.wcvc);
-        }
-        if (program.isUniformUsed('normalMatrix')) {
-          program.setUniformMatrix3x3('normalMatrix', keyMats.normalMatrix);
-        }
-      }
-      if (program.isUniformUsed('cameraParallel')) {
-        program.setUniformi('cameraParallel', cam.getParallelProjection());
-      }
-      program.setLastCameraMTime(camm);
-    }
+    const shiftScaleEnabled = cellBO.getCABO().getCoordShiftAndScaleEnabled();
+    const inverseShiftScaleMatrix = shiftScaleEnabled
+      ? cellBO.getCABO().getInverseShiftAndScaleMatrix()
+      : null;
 
-    if (!actor.getIsIdentity()) {
-      const actMats = model.openGLActor.getKeyMatrices();
-      if (program.isUniformUsed('normalMatrix')) {
-        const anorms = mat3.create();
-        mat3.multiply(anorms, keyMats.normalMatrix, actMats.normalMatrix);
-        program.setUniformMatrix3x3('normalMatrix', anorms);
-      }
-      mat4.identity(model.tmpMat4);
-      mat4.multiply(model.tmpMat4, keyMats.wcdc, actMats.mcwc);
-      program.setUniformMatrix('MCDCMatrix', model.tmpMat4);
+    const actorIsIdentity = actor.getIsIdentity();
+    const actMats = actorIsIdentity ? null : model.openGLActor.getKeyMatrices();
+
+    if (progm !== camm || !actorIsIdentity) {
+      program.setUniformMatrix(
+        'MCDCMatrix',
+        safeMat4Multiply([
+          keyMats.wcdc,
+          actorIsIdentity ? null : actMats.mcwc,
+          inverseShiftScaleMatrix,
+        ])
+      );
       if (program.isUniformUsed('MCVCMatrix')) {
-        mat4.multiply(model.tmpMat4, keyMats.wcvc, actMats.mcwc);
-        program.setUniformMatrix('MCVCMatrix', model.tmpMat4);
+        program.setUniformMatrix(
+          'MCVCMatrix',
+          safeMat4Multiply([
+            keyMats.wcvc,
+            actorIsIdentity ? null : actMats.mcwc,
+            inverseShiftScaleMatrix,
+          ])
+        );
       }
-      // reset the cam mtime as actor modified the shader values
-      program.setLastCameraMTime(0);
+      if (program.isUniformUsed('normalMatrix')) {
+        if (actorIsIdentity) {
+          program.setUniformMatrix3x3('normalMatrix', keyMats.normalMatrix);
+        } else {
+          const anorms = mat3.create();
+          mat3.multiply(anorms, keyMats.normalMatrix, actMats.normalMatrix);
+          program.setUniformMatrix3x3('normalMatrix', anorms);
+        }
+      }
+
+      if (progm !== camm) {
+        if (program.isUniformUsed('cameraParallel')) {
+          program.setUniformi('cameraParallel', cam.getParallelProjection());
+        }
+        program.setLastCameraMTime(camm);
+      }
+
+      if (!actorIsIdentity) {
+        // reset the cam mtime as actor modified the shader values
+        program.setLastCameraMTime(0);
+      }
     }
   };
 
