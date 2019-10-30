@@ -347,10 +347,16 @@ function vtkWidgetManager(publicAPI, model) {
     let pickingAvailable = model.pickingAvailable;
 
     if (model.captureOn === CaptureOn.MOUSE_MOVE) {
+      model.renderingType = RenderingTypes.PICKING_BUFFER;
+      model.widgets.forEach(updateWidgetForRender);
+
       model.selector.setArea(x, y, x, y);
       model.selector.releasePixBuffers();
       pickingAvailable = model.selector.captureBuffers();
       model.previousSelectedData = null;
+
+      model.renderingType = RenderingTypes.FRONT_BUFFER;
+      model.widgets.forEach(updateWidgetForRender);
     }
 
     if (pickingAvailable) {
