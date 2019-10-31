@@ -72,6 +72,13 @@ function vtkLineWidget(publicAPI, model) {
     }
   };
 
+  publicAPI.setProcessEvents = (processEvents) => {
+    superClass.setProcessEvents(processEvents);
+
+    model.point1Widget.setProcessEvents(processEvents);
+    model.point2Widget.setProcessEvents(processEvents);
+  };
+
   publicAPI.setWidgetStateToStart = () => {
     model.widgetState = WidgetState.START;
     publicAPI.setCurrentHandle(0);
