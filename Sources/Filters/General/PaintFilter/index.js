@@ -311,6 +311,7 @@ function vtkPaintFilter(publicAPI, model) {
   const superSetLabelMap = publicAPI.setLabelMap;
   publicAPI.setLabelMap = (lm) => {
     if (superSetLabelMap(lm)) {
+      model.maskWorldToIndex = model.labelMap.getWorldToIndex();
       resetHistory();
       return true;
     }
@@ -400,7 +401,7 @@ export function extend(publicAPI, model, initialValues = {}) {
   macro.setGet(publicAPI, model, [
     'backgroundImage',
     'labelMap',
-    'labelWorldToIndex',
+    'maskWorldToIndex',
     'voxelFunc',
     'label',
     'radius',
