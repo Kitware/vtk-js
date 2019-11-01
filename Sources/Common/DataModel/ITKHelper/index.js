@@ -4,6 +4,26 @@ import vtkDataArray from 'vtk.js/Sources/Common/Core/DataArray';
 
 const { vtkErrorMacro } = macro;
 
+// see itk.js/PixelTypes.js
+const ITKPixelTypes = {
+  Unknown: 0,
+  Scalar: 1,
+  RGB: 2,
+  RGBA: 3,
+  Offset: 4,
+  Vector: 5,
+  Point: 6,
+  CovariantVector: 7,
+  SymmetricSecondRankTensor: 8,
+  DiffusionTensor3D: 9,
+  Complex: 10,
+  FixedArray: 11,
+  Array: 12,
+  Matrix: 13,
+  VariableLengthVector: 14,
+  VariableSizeMatrix: 15,
+};
+
 /**
  * Converts an itk.js image to a vtk.js image.
  *
@@ -51,15 +71,15 @@ function convertItkToVtkImage(itkImage, options = {}) {
   // Associate the point data that are 3D vectors / tensors
   // Refer to itk-js/src/PixelTypes.js for numerical values
   switch (itkImage.imageType.pixelType) {
-    case 1: // Scalar
+    case ITKPixelTypes.Scalar:
       break;
-    case 2: // RGB
+    case ITKPixelTypes.RGB:
       break;
-    case 3: // RGBA
+    case ITKPixelTypes.RGBA:
       break;
-    case 4: // Offset
+    case ITKPixelTypes.Offset:
       break;
-    case 5: // Vector
+    case ITKPixelTypes.Vector:
       if (
         itkImage.imageType.dimension === 3 &&
         itkImage.imageType.components === 3
@@ -67,9 +87,9 @@ function convertItkToVtkImage(itkImage, options = {}) {
         imageData.getPointData().setVectors(pointData);
       }
       break;
-    case 6: // Point
+    case ITKPixelTypes.Point:
       break;
-    case 7: // CovariantVector
+    case ITKPixelTypes.CovariantVector:
       if (
         itkImage.imageType.dimension === 3 &&
         itkImage.imageType.components === 3
@@ -77,7 +97,7 @@ function convertItkToVtkImage(itkImage, options = {}) {
         imageData.getPointData().setVectors(pointData);
       }
       break;
-    case 8: // SymmetricSecondRankTensor
+    case ITKPixelTypes.SymmetricSecondRankTensor:
       if (
         itkImage.imageType.dimension === 3 &&
         itkImage.imageType.components === 6
@@ -85,7 +105,7 @@ function convertItkToVtkImage(itkImage, options = {}) {
         imageData.getPointData().setTensors(pointData);
       }
       break;
-    case 9: // DiffusionTensor3D
+    case ITKPixelTypes.DiffusionTensor3D:
       if (
         itkImage.imageType.dimension === 3 &&
         itkImage.imageType.components === 6
@@ -93,17 +113,17 @@ function convertItkToVtkImage(itkImage, options = {}) {
         imageData.getPointData().setTensors(pointData);
       }
       break;
-    case 10: // Complex
+    case ITKPixelTypes.Complex:
       break;
-    case 11: // FixedArray
+    case ITKPixelTypes.FixedArray:
       break;
-    case 12: // Array
+    case ITKPixelTypes.Array:
       break;
-    case 13: // Matrix
+    case ITKPixelTypes.Matrix:
       break;
-    case 14: // VariableLengthVector
+    case ITKPixelTypes.VariableLengthVector:
       break;
-    case 15: // VariableSizeMatrix
+    case ITKPixelTypes.VariableSizeMatrix:
       break;
     default:
       vtkErrorMacro(
@@ -117,6 +137,82 @@ function convertItkToVtkImage(itkImage, options = {}) {
   return imageData;
 }
 
+const vtkArrayTypeToItkComponentType = new Map([
+  ['Uint8Array', 'uint8_t'],
+  ['Int8Array', 'int8_t'],
+  ['Uint16Array', 'uint16_t'],
+  ['Int16Array', 'int16_t'],
+  ['Uint32Array', 'uint32_t'],
+  ['Int32Array', 'int32_t'],
+  ['Float32Array', 'float'],
+  ['Float64Array', 'double'],
+]);
+
+/**
+ * Converts a vtk.js image to an itk.js image.
+ *
+ * Requires a vtk.js image as input.
+ */
+function convertVtkToItkImage(vtkImage, copyData = false) {
+  const itkImage = {
+    imageType: {
+      dimension: 3,
+      pixelType: ITKPixelTypes.Scalar,
+      componentType: '',
+      components: 1,
+    },
+    name: 'name',
+    origin: vtkImage.getOrigin(),
+    spacing: vtkImage.getSpacing(),
+    direction: {
+      data: [1, 0, 0, 0, 1, 0, 0, 0, 1],
+    },
+    size: vtkImage.getDimensions(),
+  };
+
+  const direction = vtkImage.getDirection();
+
+  const dimension = itkImage.size.length;
+  itkImage.imageType.dimension = dimension;
+  itkImage.direction.rows = dimension;
+  itkImage.direction.columns = dimension;
+
+  // Transpose the direction matrix from column-major to row-major
+  for (let idx = 0; idx < dimension; ++idx) {
+    for (let idy = 0; idy < dimension; ++idy) {
+      itkImage.direction.data[idx + idy * dimension] =
+        direction[idy + idx * dimension];
+    }
+  }
+
+  const pointData = vtkImage.getPointData();
+
+  let vtkArray;
+  if (pointData.getTensors() !== null) {
+    itkImage.imageType.pixelType = ITKPixelTypes.DiffusionTensor3D;
+    vtkArray = pointData.getTensors();
+  } else if (pointData.getVectors() != null) {
+    itkImage.imageType.pixelType = ITKPixelTypes.Vector;
+    vtkArray = pointData.getVectors();
+  } else {
+    vtkArray = pointData.getScalars();
+  }
+
+  itkImage.imageType.componentType = vtkArrayTypeToItkComponentType.get(
+    vtkArray.getDataType()
+  );
+
+  if (copyData) {
+    // Copy the data array
+    itkImage.data = vtkArray.getData().slice(0);
+  } else {
+    itkImage.data = vtkArray.getData();
+  }
+
+  return itkImage;
+}
+
 export default {
   convertItkToVtkImage,
+  convertVtkToItkImage,
 };
