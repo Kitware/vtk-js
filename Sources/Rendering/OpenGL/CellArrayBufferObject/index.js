@@ -266,7 +266,7 @@ function vtkOpenGLCellArrayBufferObject(publicAPI, model) {
       publicAPI.setCoordShiftAndScale(coordShift, coordScale);
     } else if (model.coordShiftAndScaleEnabled === true) {
       // Make sure to reset
-      model.setCoordShiftAndScale(null, null);
+      publicAPI.setCoordShiftAndScale(null, null);
     }
 
     addAPoint = function addAPointFunc(i) {
