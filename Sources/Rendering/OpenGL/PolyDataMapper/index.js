@@ -1488,13 +1488,14 @@ function vtkOpenGLPolyDataMapper(publicAPI, model) {
     }
   };
 
-  function safeMat4Multiply(matrixArray) {
+  function safeMatrixMultiply(matrixArray, matrixType, tmpMat) {
+    matrixType.identity(tmpMat);
     return matrixArray.reduce((res, matrix, index) => {
       if (index === 0) {
-        return matrix ? mat4.copy(res, matrix) : mat4.identity(res);
+        return matrix ? matrixType.copy(res, matrix) : matrixType.identity(res);
       }
-      return matrix ? mat4.multiply(res, res, matrix) : res;
-    }, model.tmpMat4);
+      return matrix ? matrixType.multiply(res, res, matrix) : res;
+    }, tmpMat);
   }
 
   publicAPI.setCameraShaderParameters = (cellBO, ren, actor) => {
@@ -1514,48 +1515,49 @@ function vtkOpenGLPolyDataMapper(publicAPI, model) {
       : null;
 
     const actorIsIdentity = actor.getIsIdentity();
-    const actMats = actorIsIdentity ? null : model.openGLActor.getKeyMatrices();
+    const actMats = actorIsIdentity
+      ? { mcwc: null, normalMatrix: null }
+      : model.openGLActor.getKeyMatrices();
 
-    if (progm !== camm || !actorIsIdentity) {
+    program.setUniformMatrix(
+      'MCDCMatrix',
+      safeMatrixMultiply(
+        [keyMats.wcdc, actMats.mcwc, inverseShiftScaleMatrix],
+        mat4,
+        model.tmpMat4
+      )
+    );
+    if (program.isUniformUsed('MCVCMatrix')) {
       program.setUniformMatrix(
-        'MCDCMatrix',
-        safeMat4Multiply([
-          keyMats.wcdc,
-          actorIsIdentity ? null : actMats.mcwc,
-          inverseShiftScaleMatrix,
-        ])
+        'MCVCMatrix',
+        safeMatrixMultiply(
+          [keyMats.wcvc, actMats.mcwc, inverseShiftScaleMatrix],
+          mat4,
+          model.tmpMat4
+        )
       );
-      if (program.isUniformUsed('MCVCMatrix')) {
-        program.setUniformMatrix(
-          'MCVCMatrix',
-          safeMat4Multiply([
-            keyMats.wcvc,
-            actorIsIdentity ? null : actMats.mcwc,
-            inverseShiftScaleMatrix,
-          ])
-        );
-      }
-      if (program.isUniformUsed('normalMatrix')) {
-        if (actorIsIdentity) {
-          program.setUniformMatrix3x3('normalMatrix', keyMats.normalMatrix);
-        } else {
-          const anorms = mat3.create();
-          mat3.multiply(anorms, keyMats.normalMatrix, actMats.normalMatrix);
-          program.setUniformMatrix3x3('normalMatrix', anorms);
-        }
-      }
+    }
+    if (program.isUniformUsed('normalMatrix')) {
+      program.setUniformMatrix3x3(
+        'normalMatrix',
+        safeMatrixMultiply(
+          [keyMats.normalMatrix, actMats.normalMatrix],
+          mat3,
+          model.tmpMat3
+        )
+      );
+    }
 
-      if (progm !== camm) {
-        if (program.isUniformUsed('cameraParallel')) {
-          program.setUniformi('cameraParallel', cam.getParallelProjection());
-        }
-        program.setLastCameraMTime(camm);
+    if (progm !== camm) {
+      if (program.isUniformUsed('cameraParallel')) {
+        program.setUniformi('cameraParallel', cam.getParallelProjection());
       }
+      program.setLastCameraMTime(camm);
+    }
 
-      if (!actorIsIdentity) {
-        // reset the cam mtime as actor modified the shader values
-        program.setLastCameraMTime(0);
-      }
+    if (!actorIsIdentity) {
+      // reset the cam mtime as actor modified the shader values
+      program.setLastCameraMTime(0);
     }
   };
 
@@ -1966,6 +1968,7 @@ export function extend(publicAPI, model, initialValues = {}) {
   model.primitives = [];
   model.primTypes = primTypes;
 
+  model.tmpMat3 = mat3.create();
   model.tmpMat4 = mat4.create();
 
   for (let i = primTypes.Start; i < primTypes.End; i++) {
