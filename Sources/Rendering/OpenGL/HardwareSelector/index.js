@@ -110,7 +110,6 @@ function vtkOpenGLHardwareSelector(publicAPI, model) {
       model.currentPass <= PassTypes.COMPOSITE_INDEX_PASS;
       model.currentPass++
     ) {
-      console.log(`in pass ${model.currentPass}`);
       if (publicAPI.passRequired(model.currentPass)) {
         publicAPI.preCapturePass(model.currentPass);
         model.openGLRenderWindow.traverseAllPasses();
