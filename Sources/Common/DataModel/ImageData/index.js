@@ -231,6 +231,7 @@ function vtkImageData(publicAPI, model) {
     return bounds;
   };
 
+  // Internal, shouldn't need to call this manually.
   publicAPI.computeTransforms = () => {
     const trans = vec3.fromValues(
       model.origin[0],
@@ -305,6 +306,31 @@ function vtkImageData(publicAPI, model) {
   // this is the fast version, requires vec3 arguments
   publicAPI.indexToWorldVec3 = (vin, vout) => {
     vec3.transformMat4(vout, vin, model.indexToWorld);
+    return vout;
+  };
+
+  // slow version for generic arrays
+  publicAPI.indexToWorld = (ain, aout = []) => {
+    const vin = vec3.fromValues(ain[0], ain[1], ain[2]);
+    const vout = vec3.create();
+    vec3.transformMat4(vout, vin, model.indexToWorld);
+    vec3.copy(aout, vout);
+    return aout;
+  };
+
+  // this is the fast version, requires vec3 arguments
+  publicAPI.worldToIndexVec3 = (vin, vout) => {
+    vec3.transformMat4(vout, vin, model.worldToIndex);
+    return vout;
+  };
+
+  // slow version for generic arrays
+  publicAPI.worldToIndex = (ain, aout = []) => {
+    const vin = vec3.fromValues(ain[0], ain[1], ain[2]);
+    const vout = vec3.create();
+    vec3.transformMat4(vout, vin, model.worldToIndex);
+    vec3.copy(aout, vout);
+    return aout;
   };
 
   publicAPI.indexToWorldBounds = (bin, bout = []) => {
@@ -322,19 +348,6 @@ function vtkImageData(publicAPI, model) {
     return bout;
   };
 
-  // slow version for generic arrays
-  publicAPI.indexToWorld = (ain, aout) => {
-    const vin = vec3.fromValues(ain[0], ain[1], ain[2]);
-    const vout = vec3.create();
-    vec3.transformMat4(vout, vin, model.indexToWorld);
-    vec3.copy(aout, vout);
-  };
-
-  // this is the fast version, requires vec3 arguments
-  publicAPI.worldToIndexVec3 = (vin, vout) => {
-    vec3.transformMat4(vout, vin, model.worldToIndex);
-  };
-
   publicAPI.worldToIndexBounds = (bin, bout = []) => {
     const in1 = [0, 0, 0];
     const in2 = [0, 0, 0];
@@ -348,14 +361,6 @@ function vtkImageData(publicAPI, model) {
     vtkMath.computeBoundsFromPoints(out1, out2, bout);
 
     return bout;
-  };
-
-  // slow version for generic arrays
-  publicAPI.worldToIndex = (ain, aout) => {
-    const vin = vec3.fromValues(ain[0], ain[1], ain[2]);
-    const vout = vec3.create();
-    vec3.transformMat4(vout, vin, model.worldToIndex);
-    vec3.copy(aout, vout);
   };
 
   // Make sure the transform is correct
