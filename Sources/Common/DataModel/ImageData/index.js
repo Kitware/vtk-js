@@ -449,6 +449,60 @@ function vtkImageData(publicAPI, model) {
       sigma,
     };
   };
+
+  // TODO: use the unimplemented `vtkDataSetAttributes` for scalar length, that is currently also a TODO (GetNumberOfComponents).
+  // Scalar data could be tuples for color information?
+  publicAPI.computeIncrements = (extent, length = 1) => {
+    const increments = [];
+    let incr = length;
+
+    // Calculate array increment offsets
+    // similar to c++ vtkImageData::ComputeIncrements
+    for (let idx = 0; idx < 3; ++idx) {
+      increments[idx] = incr;
+      incr *= extent[idx * 2 + 1] - extent[idx * 2] + 1;
+    }
+    return increments;
+  };
+
+  /**
+   * @param {Number[]} index the localized `[i,j,k]` pixel array position. Float values will be rounded.
+   * @return {Number} the corresponding flattened index in the scalar array
+   */
+  publicAPI.computeIndex = ([i, j, k]) => {
+    const extent = publicAPI.getExtent();
+    const increments = publicAPI.calculateIncrements(extent);
+    // Use the array increments to find the pixel index
+    // similar to c++ vtkImageData::GetArrayPointer
+    // Math.floor to catch "practically 0" e^-15 scenarios.
+    return Math.floor(
+      (Math.round(i) - extent[0]) * increments[0] +
+        (Math.round(j) - extent[2]) * increments[1] +
+        (Math.round(k) - extent[4]) * increments[2]
+    );
+  };
+
+  /**
+   * @param {Number[]} xyz the [x,y,z] Array in world coordinates
+   * @return {Number|NaN} the corresponding pixel's index in the scalar array
+   */
+  publicAPI.getIndexFromWorld = (xyz) => {
+    const extent = publicAPI.getExtent();
+    const index = publicAPI.worldToIndex(xyz);
+
+    // Confirm indexed i,j,k coords are within the bounds of the volume
+    for (let idx = 0; idx < 3; ++idx) {
+      if (index[idx] < extent[idx * 2] || index[idx] > extent[idx * 2 + 1]) {
+        vtkErrorMacro(
+          `GetScalarPointer: Pixel ${index} is not in memory. Current extent = ${e}`
+        );
+        return NaN;
+      }
+    }
+
+    // Assumed the index here is within 0 <-> scalarData.length, but doesn't hurt to check upstream
+    return publicAPI.computeIndex(index);
+  };
 }
 
 // ----------------------------------------------------------------------------

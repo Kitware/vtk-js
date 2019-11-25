@@ -1,6 +1,8 @@
 ## Introduction
 
-vtkImageData is a data object that is a concrete implementation of vtkDataSet. vtkImageData represents a geometric structure that is a topological and geometrical regular array of points. Examples include volumes (voxel data) and pixmaps.
+vtkImageData is a data object that is a concrete implementation of vtkDataSet.
+vtkImageData represents a geometric structure that is a topological and geometrical regular array of points. Examples include volumes (voxel data) and pixmaps.
+All vtkDataSet functions are inherited.
 
 
 ### getExtent(), setExtent(array)
@@ -10,10 +12,7 @@ The extent of a dataset is a set of 6 integers. It says what the first and last 
 extent = [ i_min, i_max, j_min, j_max, k_min, k_max ]
 ```
 
-https://vtk.org/Wiki/VTK/Tutorials/Extents
-
-
-### getDimentions(), setDimensions(array[i,j,k]), setDimensions(i,j,k)
+### getDimensions(), setDimensions(array[i,j,k]), setDimensions(i,j,k)
 Get the dimensions of the image data as an array of 3 points defining the i,j,k dimensions of the data.
 Set the values of the extent, from `0` to `(i-1)`, etc.
 
@@ -67,6 +66,9 @@ Calculate the corresponding index bounds for the given world bounds `[x_min, x_m
 ### getCenter()
 Returns an `[x,y,z]` location of the center of the imageData.
 
+### getIndexFromWorld(vec3)
+Returns the data array index for the point at the provided world position.
+
 ### computeHistogram(worldBounds[6], voxelFunc?)
 Returns an object with `{ minimum, maximum, average, variance, sigma }` of the imageData points found within the provided `worldBounds`.
 
@@ -77,3 +79,6 @@ Returns a bounds array from a given Extent, useful if you need to calculate the 
 
 ### *(internal)* computeTransforms()
 Calculates the `indexToWorld` and `worldToIndex` conversion matrices from the origin, direction, and spacing. Shouldn't need to call this as it is handled internally, and updated whenever the vtkImageData is modified.
+
+### *(internal)* computeIncrements(extent)
+Returns an `array[3]` of values to multiply an `[i,j,k]` index to convert into the actual data array index, from the provided extent.
