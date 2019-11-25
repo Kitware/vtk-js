@@ -74,14 +74,8 @@ function vtkAbstractRepresentationProxy(publicAPI, model) {
     return null;
   };
 
-  publicAPI.setLookupTableProxy = (lutProxy) => {
-    // In place edits, no need to re-assign it...
-    console.log(
-      'setLookupTable',
-      lutProxy.getPresetName(),
-      lutProxy.getDataRange()
-    );
-  };
+  // In place edits, no need to re-assign it...
+  publicAPI.setLookupTableProxy = () => {};
 
   publicAPI.getPiecewiseFunctionProxy = (arrayName) => {
     const arrayNameToUse = arrayName || publicAPI.getColorBy()[0];
@@ -91,10 +85,8 @@ function vtkAbstractRepresentationProxy(publicAPI, model) {
     return null;
   };
 
-  publicAPI.setPiecewiseFunctionProxy = (pwfProxy) => {
-    // In place edits, no need to re-assign it...
-    console.log('setPiecewiseFunction', pwfProxy.getDataRange());
-  };
+  // In place edits, no need to re-assign it...
+  publicAPI.setPiecewiseFunctionProxy = () => {};
 
   publicAPI.rescaleTransferFunctionToDataRange = (n, l, c = -1) => {
     const array = publicAPI.getDataArray(n, l);

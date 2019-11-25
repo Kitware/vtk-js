@@ -188,13 +188,11 @@ function vtkWidgetManager(publicAPI, model) {
     model.widgets.forEach(updateWidgetForRender);
 
     if (model.captureOn === CaptureOn.MOUSE_RELEASE) {
-      console.time('capture');
       const [w, h] = model.openGLRenderWindow.getSize();
       model.selector.setArea(0, 0, w, h);
       model.selector.releasePixBuffers();
       model.pickingAvailable = model.selector.captureBuffers();
       model.previousSelectedData = null;
-      console.timeEnd('capture');
     } else {
       model.pickingAvailable = true;
     }
