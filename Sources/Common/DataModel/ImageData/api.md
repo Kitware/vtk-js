@@ -66,7 +66,7 @@ Calculate the corresponding index bounds for the given world bounds `[x_min, x_m
 ### getCenter()
 Returns an `[x,y,z]` location of the center of the imageData.
 
-### getIndexFromWorld(vec3)
+### getOffsetIndexFromWorld(vec3)
 Returns the data array index for the point at the provided world position.
 
 ### computeHistogram(worldBounds[6], voxelFunc?)
@@ -80,5 +80,8 @@ Returns a bounds array from a given Extent, useful if you need to calculate the 
 ### *(internal)* computeTransforms()
 Calculates the `indexToWorld` and `worldToIndex` conversion matrices from the origin, direction, and spacing. Shouldn't need to call this as it is handled internally, and updated whenever the vtkImageData is modified.
 
-### *(internal)* computeIncrements(extent)
-Returns an `array[3]` of values to multiply an `[i,j,k]` index to convert into the actual data array index, from the provided extent.
+### *(internal)* computeIncrements(extent, numberOfComponents = 1)
+Returns an `array[3]` of values to multiply an `[i,j,k]` index to convert into the actual data array index, from the provided extent. `numberOfComponents` should match the Scalar components.
+
+### *(internal)* computeOffsetIndex([i, j, k])
+Converts an `[i,j,k]` index to the flat data array index. Returns `NaN` if any of the i,j,k bounds are outside the data Extent.

@@ -452,9 +452,9 @@ function vtkImageData(publicAPI, model) {
 
   // TODO: use the unimplemented `vtkDataSetAttributes` for scalar length, that is currently also a TODO (GetNumberOfComponents).
   // Scalar data could be tuples for color information?
-  publicAPI.computeIncrements = (extent, length = 1) => {
+  publicAPI.computeIncrements = (extent, numberOfComponents = 1) => {
     const increments = [];
-    let incr = length;
+    let incr = numberOfComponents;
 
     // Calculate array increment offsets
     // similar to c++ vtkImageData::ComputeIncrements
@@ -469,9 +469,12 @@ function vtkImageData(publicAPI, model) {
    * @param {Number[]} index the localized `[i,j,k]` pixel array position. Float values will be rounded.
    * @return {Number} the corresponding flattened index in the scalar array
    */
-  publicAPI.computeIndex = ([i, j, k]) => {
+  publicAPI.computeOffsetIndex = ([i, j, k]) => {
     const extent = publicAPI.getExtent();
-    const increments = publicAPI.calculateIncrements(extent);
+    const increments = publicAPI.computeIncrements(
+      extent,
+      publicAPI.getNumberOfComponents()
+    );
     // Use the array increments to find the pixel index
     // similar to c++ vtkImageData::GetArrayPointer
     // Math.floor to catch "practically 0" e^-15 scenarios.
@@ -486,7 +489,7 @@ function vtkImageData(publicAPI, model) {
    * @param {Number[]} xyz the [x,y,z] Array in world coordinates
    * @return {Number|NaN} the corresponding pixel's index in the scalar array
    */
-  publicAPI.getIndexFromWorld = (xyz) => {
+  publicAPI.getOffsetIndexFromWorld = (xyz) => {
     const extent = publicAPI.getExtent();
     const index = publicAPI.worldToIndex(xyz);
 
@@ -494,14 +497,14 @@ function vtkImageData(publicAPI, model) {
     for (let idx = 0; idx < 3; ++idx) {
       if (index[idx] < extent[idx * 2] || index[idx] > extent[idx * 2 + 1]) {
         vtkErrorMacro(
-          `GetScalarPointer: Pixel ${index} is not in memory. Current extent = ${e}`
+          `GetScalarPointer: Pixel ${index} is not in memory. Current extent = ${extent}`
         );
         return NaN;
       }
     }
 
     // Assumed the index here is within 0 <-> scalarData.length, but doesn't hurt to check upstream
-    return publicAPI.computeIndex(index);
+    return publicAPI.computeOffsetIndex(index);
   };
 }
 
