@@ -531,6 +531,36 @@
    },
    {
       "ColorSpace" : "RGB",
+      "Name" : "BkRd",
+      "NanColor" : [ 0, 1, 1 ],
+      "RGBPoints" : [ 0, 0, 0, 0, 1, 1, 0, 0 ]
+   },
+   {
+      "ColorSpace" : "RGB",
+      "Name" : "BkGn",
+      "NanColor" : [ 1, 0, 1 ],
+      "RGBPoints" : [ 0, 0, 0, 0, 1, 0, 1, 0 ]
+   },
+   {
+      "ColorSpace" : "RGB",
+      "Name" : "BkBu",
+      "NanColor" : [ 1, 1, 0 ],
+      "RGBPoints" : [ 0, 0, 0, 0, 1, 0, 0, 1 ]
+   },
+   {
+      "ColorSpace" : "RGB",
+      "Name" : "BkMa",
+      "NanColor" : [ 0, 1, 0 ],
+      "RGBPoints" : [ 0, 0, 0, 0, 1, 1, 0, 1 ]
+   },
+   {
+      "ColorSpace" : "RGB",
+      "Name" : "BkCy",
+      "NanColor" : [ 0, 1, 1 ],
+      "RGBPoints" : [ 0, 0, 0, 0, 1, 0, 1, 1 ]
+   },
+   {
+      "ColorSpace" : "RGB",
       "Name" : "Black, Blue and White",
       "NanColor" : [ 1, 1, 0 ],
       "RGBPoints" : [
