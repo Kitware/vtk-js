@@ -326,7 +326,8 @@ function vtkViewProxy(publicAPI, model) {
     } else {
       const skipWarning =
         requester === publicAPI ||
-        `${requester}`.indexOf('ViewProxy.updateOrientation.') === 0;
+        `${requester}`.indexOf('ViewProxy.updateOrientation.') === 0 ||
+        `${requester}`.indexOf('ViewProxy.moveCamera.') === 0;
       model.renderWindow
         .getInteractor()
         .cancelAnimation(requester, skipWarning);
@@ -461,6 +462,112 @@ function vtkViewProxy(publicAPI, model) {
             position: cameraPosition,
             viewUp: cameraViewUp,
           } = animationStack.pop();
+          model.camera.setPosition(...cameraPosition);
+          model.camera.setViewUp(...cameraViewUp);
+          model.renderer.resetCameraClippingRange();
+
+          if (model.interactor.getLightFollowCamera()) {
+            model.renderer.updateLightsGeometryToFollowCamera();
+          }
+        } else {
+          clearInterval(intervalId);
+          publicAPI.setAnimation(false, animationRequester);
+          resolve();
+        }
+      };
+      intervalId = setInterval(consumeAnimationStack, 1);
+    });
+  };
+
+  // --------------------------------------------------------------------------
+
+  publicAPI.moveCamera = (focalPoint, position, viewUp, animateSteps = 0) => {
+    const originalFocalPoint = model.camera.getFocalPoint();
+    const originalPosition = model.camera.getPosition();
+    const originalViewUp = model.camera.getViewUp();
+
+    const animationStack = [
+      {
+        focalPoint,
+        position,
+        viewUp,
+      },
+    ];
+
+    if (animateSteps) {
+      const deltaFocalPoint = [
+        (originalFocalPoint[0] - focalPoint[0]) / animateSteps,
+        (originalFocalPoint[1] - focalPoint[1]) / animateSteps,
+        (originalFocalPoint[2] - focalPoint[2]) / animateSteps,
+      ];
+      const deltaPosition = [
+        (originalPosition[0] - position[0]) / animateSteps,
+        (originalPosition[1] - position[1]) / animateSteps,
+        (originalPosition[2] - position[2]) / animateSteps,
+      ];
+      const deltaViewUp = [
+        (originalViewUp[0] - viewUp[0]) / animateSteps,
+        (originalViewUp[1] - viewUp[1]) / animateSteps,
+        (originalViewUp[2] - viewUp[2]) / animateSteps,
+      ];
+
+      const needSteps =
+        deltaFocalPoint[0] ||
+        deltaFocalPoint[1] ||
+        deltaFocalPoint[2] ||
+        deltaPosition[0] ||
+        deltaPosition[1] ||
+        deltaPosition[2] ||
+        deltaViewUp[0] ||
+        deltaViewUp[1] ||
+        deltaViewUp[2];
+
+      if (needSteps) {
+        for (let i = 0; i < animateSteps; i++) {
+          animationStack.push({
+            focalPoint: [
+              focalPoint[0] + (i + 1) * deltaFocalPoint[0],
+              focalPoint[1] + (i + 1) * deltaFocalPoint[1],
+              focalPoint[2] + (i + 1) * deltaFocalPoint[2],
+            ],
+            position: [
+              position[0] + (i + 1) * deltaPosition[0],
+              position[1] + (i + 1) * deltaPosition[1],
+              position[2] + (i + 1) * deltaPosition[2],
+            ],
+            viewUp: [
+              viewUp[0] + (i + 1) * deltaViewUp[0],
+              viewUp[1] + (i + 1) * deltaViewUp[1],
+              viewUp[2] + (i + 1) * deltaViewUp[2],
+            ],
+          });
+        }
+      }
+    }
+
+    if (animationStack.length === 1) {
+      // update camera directly
+      model.camera.set(animationStack.pop());
+      model.renderer.resetCameraClippingRange();
+      if (model.interactor.getLightFollowCamera()) {
+        model.renderer.updateLightsGeometryToFollowCamera();
+      }
+      return Promise.resolve();
+    }
+
+    return new Promise((resolve, reject) => {
+      const now = performance.now().toString();
+      const animationRequester = `ViewProxy.moveCamera.${now}`;
+      publicAPI.setAnimation(true, animationRequester);
+      let intervalId = null;
+      const consumeAnimationStack = () => {
+        if (animationStack.length) {
+          const {
+            focalPoint: cameraFocalPoint,
+            position: cameraPosition,
+            viewUp: cameraViewUp,
+          } = animationStack.pop();
+          model.camera.setFocalPoint(...cameraFocalPoint);
           model.camera.setPosition(...cameraPosition);
           model.camera.setViewUp(...cameraViewUp);
           model.renderer.resetCameraClippingRange();
