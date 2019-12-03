@@ -12,6 +12,27 @@ const SVG_XMLNS = 'http://www.w3.org/2000/svg';
 // ----------------------------------------------------------------------------
 
 function createSvgElement(tag) {
+  return {
+    name: tag,
+    attrs: {},
+    // implies no children if set
+    textContent: null,
+    children: [],
+    setAttribute(attr, val) {
+      this.attrs[attr] = val;
+    },
+    removeAttribute(attr) {
+      delete this.attrs[attr];
+    },
+    appendChild(n) {
+      this.children.push(n);
+    },
+  };
+}
+
+// ----------------------------------------------------------------------------
+
+function createSvgDomElement(tag) {
   return document.createElementNS(SVG_XMLNS, tag);
 }
 
@@ -128,4 +149,4 @@ export function extend(publicAPI, model, initialValues = {}) {
 
 // ----------------------------------------------------------------------------
 
-export default { extend, createSvgElement };
+export default { extend, createSvgElement, createSvgDomElement };

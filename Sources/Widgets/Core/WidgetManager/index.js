@@ -4,9 +4,11 @@ import { FieldAssociations } from 'vtk.js/Sources/Common/DataModel/DataSet/Const
 import Constants from 'vtk.js/Sources/Widgets/Core/WidgetManager/Constants';
 import vtkSVGRepresentation from 'vtk.js/Sources/Widgets/SVG/SVGRepresentation';
 
+import { diff } from './vdom';
+
 const { ViewTypes, RenderingTypes, CaptureOn } = Constants;
 const { vtkErrorMacro } = macro;
-const { createSvgElement } = vtkSVGRepresentation;
+const { createSvgElement, createSvgDomElement } = vtkSVGRepresentation;
 
 let viewIdCount = 1;
 
@@ -31,7 +33,7 @@ function createSvgRoot(id) {
     'position: absolute; top: 0; left: 0; width: 100%; height: 100%;'
   );
 
-  const svgRoot = createSvgElement('svg');
+  const svgRoot = createSvgDomElement('svg');
   svgRoot.setAttribute('style', 'width: 100%; height: 100%;');
   svgRoot.setAttribute('version', '1.1');
   svgRoot.setAttribute('baseProfile', 'full');
@@ -52,6 +54,7 @@ function vtkWidgetManager(publicAPI, model) {
   model.classHierarchy.push('vtkWidgetManager');
   const propsWeakMap = new WeakMap();
   const widgetToSvgMap = new WeakMap();
+  const svgVTrees = new WeakMap();
   const subscriptions = [];
 
   // --------------------------------------------------------------------------
@@ -108,25 +111,12 @@ function vtkWidgetManager(publicAPI, model) {
     container.removeChild(model.svgWrapper);
   }
 
-  function addToSvgLayer(viewWidget) {
-    const svgReps = viewWidget
-      .getRepresentations()
-      .filter((r) => r.isA('vtkSVGRepresentation'));
-
-    if (svgReps.length) {
-      // group element to hold all elements of the widget
-      const widgetGroup = createSvgElement('g');
-
-      model.svgRoot.appendChild(widgetGroup);
-      widgetToSvgMap.set(viewWidget, widgetGroup);
-    }
-  }
-
   function removeFromSvgLayer(viewWidget) {
     const group = widgetToSvgMap.get(viewWidget);
     if (group) {
-      model.svgRoot.removeChild(group);
       widgetToSvgMap.delete(viewWidget);
+      svgVTrees.delete(viewWidget);
+      model.svgRoot.removeChild(group);
     }
   }
 
@@ -151,17 +141,32 @@ function vtkWidgetManager(publicAPI, model) {
           const pendingContent = svgReps
             .filter((r) => r.getVisibility())
             .map((r) => r.render());
-          Promise.all(pendingContent).then((nodes) => {
-            const g = widgetToSvgMap.get(widget);
-            if (g) {
-              const newG = createSvgElement('g');
-              for (let ni = 0; ni < nodes.length; ni++) {
-                newG.appendChild(nodes[ni]);
-              }
-              if (g.innerHTML !== newG.innerHTML) {
-                g.innerHTML = newG.innerHTML;
-              }
+          Promise.all(pendingContent).then((vnodes) => {
+            const oldVTree = svgVTrees.get(widget);
+            const newVTree = createSvgElement('g');
+            for (let ni = 0; ni < vnodes.length; ni++) {
+              newVTree.appendChild(vnodes[ni]);
             }
+
+            const widgetGroup = widgetToSvgMap.get(widget);
+            let node = widgetGroup;
+
+            const patchFns = diff(oldVTree, newVTree);
+            for (let j = 0; j < patchFns.length; j++) {
+              node = patchFns[j](node);
+            }
+
+            if (!widgetGroup && node) {
+              // add
+              model.svgRoot.appendChild(node);
+              widgetToSvgMap.set(widget, node);
+            } else if (widgetGroup && !node) {
+              // delete
+              widgetGroup.remove();
+              widgetToSvgMap.delete(widget);
+            }
+
+            svgVTrees.set(widget, newVTree);
           });
         } else {
           const g = widgetToSvgMap.get(widget);
@@ -308,9 +313,6 @@ function vtkWidgetManager(publicAPI, model) {
 
       // Register to renderer
       model.renderer.addActor(w);
-
-      // register widget to svg layer
-      addToSvgLayer(w);
 
       publicAPI.modified();
     }
