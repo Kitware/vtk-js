@@ -471,10 +471,11 @@ function vtkImageData(publicAPI, model) {
    */
   publicAPI.computeOffsetIndex = ([i, j, k]) => {
     const extent = publicAPI.getExtent();
-    const increments = publicAPI.computeIncrements(
-      extent,
-      publicAPI.getNumberOfComponents()
-    );
+    const numberOfComponents = publicAPI
+      .getPointData()
+      .getScalars()
+      .getNumberOfComponents();
+    const increments = publicAPI.computeIncrements(extent, numberOfComponents);
     // Use the array increments to find the pixel index
     // similar to c++ vtkImageData::GetArrayPointer
     // Math.floor to catch "practically 0" e^-15 scenarios.
@@ -505,6 +506,33 @@ function vtkImageData(publicAPI, model) {
 
     // Assumed the index here is within 0 <-> scalarData.length, but doesn't hurt to check upstream
     return publicAPI.computeOffsetIndex(index);
+  };
+  /**
+   * @param {Number[]} xyz the [x,y,z] Array in world coordinates
+   * @param {Number?} comp the scalar component index for multi-component scalars
+   * @return {Number|NaN} the corresponding pixel's scalar value
+   */
+  publicAPI.getScalarValueFromWorld = (xyz, comp = 0) => {
+    const numberOfComponents = publicAPI
+      .getPointData()
+      .getScalars()
+      .getNumberOfComponents();
+    if (comp < 0 || comp >= numberOfComponents) {
+      vtkErrorMacro(
+        `GetScalarPointer: Scalar Component ${comp} is not within bounds. Current Scalar numberOfComponents: ${numberOfComponents}`
+      );
+      return NaN;
+    }
+    const offsetIndex = publicAPI.getOffsetIndexFromWorld(xyz);
+    if (Number.isNaN(offsetIndex)) {
+      // VTK Error Macro will have been tripped already, no need to do it again,
+      return offsetIndex;
+    }
+
+    return publicAPI
+      .getPointData()
+      .getScalars()
+      .getComponent(offsetIndex, comp);
   };
 }
 

@@ -69,6 +69,9 @@ Returns an `[x,y,z]` location of the center of the imageData.
 ### getOffsetIndexFromWorld(vec3)
 Returns the data array index for the point at the provided world position.
 
+### getScalarValueFromWorld(vec3, comp)
+Returns the scalar value for the point at the provided world position, or `NaN` if the world bounds are outside the volumeData bounds. `comp` is the scalar component index, for multi-component scalar data.
+
 ### computeHistogram(worldBounds[6], voxelFunc?)
 Returns an object with `{ minimum, maximum, average, variance, sigma }` of the imageData points found within the provided `worldBounds`.
 
