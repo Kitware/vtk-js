@@ -99,6 +99,15 @@ function vtkOpenGLVolumeMapper(publicAPI, model) {
       ).result;
     }
 
+    const vtkImageLabelOutline = actor.getProperty().getUseLabelOutline();
+    if (vtkImageLabelOutline === true) {
+      FSSource = vtkShaderProgram.substitute(
+        FSSource,
+        '//VTK::ImageLabelOutlineOn',
+        '#define vtkImageLabelOutlineOn'
+      ).result;
+    }
+
     const numComp = model.scalarTexture.getComponents();
     FSSource = vtkShaderProgram.substitute(
       FSSource,
@@ -130,6 +139,7 @@ function vtkOpenGLVolumeMapper(publicAPI, model) {
       (ext[3] - ext[2]) * spc[1],
       (ext[5] - ext[4]) * spc[2]
     );
+
     const maxSamples =
       vec3.length(vsize) / model.renderable.getSampleDistance();
 
@@ -513,7 +523,9 @@ function vtkOpenGLVolumeMapper(publicAPI, model) {
         Please either change the
         volumeMapper sampleDistance or its maximum number of samples.`);
     }
+
     const vctoijk = vec3.create();
+
     vec3.set(vctoijk, 1.0, 1.0, 1.0);
     vec3.divide(vctoijk, vctoijk, vsize);
     program.setUniform3f('vVCToIJK', vctoijk[0], vctoijk[1], vctoijk[2]);
@@ -568,6 +580,22 @@ function vtkOpenGLVolumeMapper(publicAPI, model) {
       // specify the planes in view coordinates
       program.setUniform3f(`vPlaneNormal${i}`, normal[0], normal[1], normal[2]);
       program.setUniformf(`vPlaneDistance${i}`, dist);
+
+      if (actor.getProperty().getUseLabelOutline()) {
+        const image = model.currentInput;
+        const worldToIndex = image.getWorldToIndex();
+
+        program.setUniformMatrix('vWCtoIDX', worldToIndex);
+
+        // Get the display coordinate to world coordinate transformation matrix.
+        mat4.invert(model.displayToWorld, keyMats.wcdc);
+        program.setUniformMatrix('DCWCMatrix', model.displayToWorld);
+
+        const size = publicAPI.getRenderTargetSize();
+
+        program.setUniformf('vpWidth', size[0]);
+        program.setUniformf('vpHeight', size[1]);
+      }
     }
 
     mat4.invert(model.displayToView, keyMats.vcdc);
@@ -715,6 +743,15 @@ function vtkOpenGLVolumeMapper(publicAPI, model) {
           (-goRange[0] * (gomax - gomin)) / (goRange[1] - goRange[0]) + gomin
         );
       }
+    }
+
+    const vtkImageLabelOutline = actor.getProperty().getUseLabelOutline();
+    if (vtkImageLabelOutline === true) {
+      const labelOutlineThickness = actor
+        .getProperty()
+        .getLabelOutlineThickness();
+
+      program.setUniformi('outlineThickness', labelOutlineThickness);
     }
 
     if (model.lastLightComplexity > 0) {
@@ -1299,6 +1336,7 @@ export function extend(publicAPI, model, initialValues = {}) {
   model.idxNormalMatrix = mat3.create();
   model.modelToView = mat4.create();
   model.displayToView = mat4.create();
+  model.displayToWorld = mat4.create();
 
   // Build VTK API
   macro.setGet(publicAPI, model, ['context']);
