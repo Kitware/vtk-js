@@ -137,43 +137,40 @@ function vtkWidgetManager(publicAPI, model) {
           .getRepresentations()
           .filter((r) => r.isA('vtkSVGRepresentation'));
 
-        if (widget.getVisibility() && svgReps.length) {
-          const pendingContent = svgReps
+        let pendingContent = [];
+        if (widget.getVisibility()) {
+          pendingContent = svgReps
             .filter((r) => r.getVisibility())
             .map((r) => r.render());
-          Promise.all(pendingContent).then((vnodes) => {
-            const oldVTree = svgVTrees.get(widget);
-            const newVTree = createSvgElement('g');
-            for (let ni = 0; ni < vnodes.length; ni++) {
-              newVTree.appendChild(vnodes[ni]);
-            }
-
-            const widgetGroup = widgetToSvgMap.get(widget);
-            let node = widgetGroup;
-
-            const patchFns = diff(oldVTree, newVTree);
-            for (let j = 0; j < patchFns.length; j++) {
-              node = patchFns[j](node);
-            }
-
-            if (!widgetGroup && node) {
-              // add
-              model.svgRoot.appendChild(node);
-              widgetToSvgMap.set(widget, node);
-            } else if (widgetGroup && !node) {
-              // delete
-              widgetGroup.remove();
-              widgetToSvgMap.delete(widget);
-            }
-
-            svgVTrees.set(widget, newVTree);
-          });
-        } else {
-          const g = widgetToSvgMap.get(widget);
-          if (g) {
-            g.innerHTML = '';
-          }
         }
+
+        Promise.all(pendingContent).then((vnodes) => {
+          const oldVTree = svgVTrees.get(widget);
+          const newVTree = createSvgElement('g');
+          for (let ni = 0; ni < vnodes.length; ni++) {
+            newVTree.appendChild(vnodes[ni]);
+          }
+
+          const widgetGroup = widgetToSvgMap.get(widget);
+          let node = widgetGroup;
+
+          const patchFns = diff(oldVTree, newVTree);
+          for (let j = 0; j < patchFns.length; j++) {
+            node = patchFns[j](node);
+          }
+
+          if (!widgetGroup && node) {
+            // add
+            model.svgRoot.appendChild(node);
+            widgetToSvgMap.set(widget, node);
+          } else if (widgetGroup && !node) {
+            // delete
+            widgetGroup.remove();
+            widgetToSvgMap.delete(widget);
+          }
+
+          svgVTrees.set(widget, newVTree);
+        });
       }
     }
   }
