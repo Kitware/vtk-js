@@ -101,36 +101,38 @@ function updateDomains(dataset, dataArray, model, updateProp) {
 // ----------------------------------------------------------------------------
 
 function updateConfiguration(dataset, dataArray, { mapper, property }) {
-  const dataRange = dataArray.getRange();
-
   // Configuration
   // actor.getProperty().setInterpolationTypeToFastLinear();
   property.setInterpolationTypeToLinear();
 
-  // For better looking volume rendering
-  // - distance in world coordinates a scalar opacity of 1.0
-  property.setScalarOpacityUnitDistance(
-    0,
+  const numberOfComponents = dataArray.getNumberOfComponents();
+  const scalarOpacityUnitDistance =
     vtkBoundingBox.getDiagonalLength(dataset.getBounds()) /
-      Math.max(...dataset.getDimensions())
-  );
-  // - control how we emphasize surface boundaries
-  //  => max should be around the average gradient magnitude for the
-  //     volume or maybe average plus one std dev of the gradient magnitude
-  //     (adjusted for spacing, this is a world coordinate gradient, not a
-  //     pixel gradient)
-  //  => max hack: (dataRange[1] - dataRange[0]) * 0.05
-  property.setGradientOpacityMinimumValue(0, 0);
-  property.setGradientOpacityMaximumValue(
-    0,
-    (dataRange[1] - dataRange[0]) * 0.05
-  );
-  // - Use shading based on gradient
-  property.setShade(true);
-  property.setUseGradientOpacity(0, true);
-  // - generic good default
-  property.setGradientOpacityMinimumOpacity(0, 0.0);
-  property.setGradientOpacityMaximumOpacity(0, 1.0);
+    Math.max(...dataset.getDimensions());
+  for (let component = 0; component < numberOfComponents; component++) {
+    // For better looking volume rendering
+    // - distance in world coordinates a scalar opacity of 1.0
+    property.setScalarOpacityUnitDistance(component, scalarOpacityUnitDistance);
+
+    const dataRange = dataArray.getRange(component);
+    // - control how we emphasize surface boundaries
+    //  => max should be around the average gradient magnitude for the
+    //     volume or maybe average plus one std dev of the gradient magnitude
+    //     (adjusted for spacing, this is a world coordinate gradient, not a
+    //     pixel gradient)
+    //  => max hack: (dataRange[1] - dataRange[0]) * 0.05
+    property.setGradientOpacityMinimumValue(component, 0);
+    property.setGradientOpacityMaximumValue(
+      component,
+      (dataRange[1] - dataRange[0]) * 0.05
+    );
+    // - Use shading based on gradient
+    property.setShade(true);
+    property.setUseGradientOpacity(component, true);
+    // - generic good default
+    property.setGradientOpacityMinimumOpacity(component, 0.0);
+    property.setGradientOpacityMaximumOpacity(component, 1.0);
+  }
   property.setAmbient(0.2);
   property.setDiffuse(0.7);
   property.setSpecular(0.3);
@@ -279,25 +281,30 @@ function vtkVolumeRepresentationProxy(publicAPI, model) {
   publicAPI.setEdgeGradient = (edgeGradient = 0.2) => {
     if (model.edgeGradient !== edgeGradient) {
       model.edgeGradient = edgeGradient;
+      const dataArray = publicAPI.getDataArray();
+      const numberOfComponents = dataArray.getNumberOfComponents();
       if (edgeGradient === 0) {
-        model.volume.getProperty().setUseGradientOpacity(0, false);
+        for (let component = 0; component < numberOfComponents; component++) {
+          model.volume.getProperty().setUseGradientOpacity(component, false);
+        }
       } else {
-        const dataArray = publicAPI.getDataArray();
-        const dataRange = dataArray.getRange();
-        model.volume.getProperty().setUseGradientOpacity(0, true);
-        const minV = Math.max(0.0, edgeGradient - 0.3) / 0.7;
-        model.volume
-          .getProperty()
-          .setGradientOpacityMinimumValue(
-            0,
-            (dataRange[1] - dataRange[0]) * 0.2 * minV * minV
-          );
-        model.volume
-          .getProperty()
-          .setGradientOpacityMaximumValue(
-            0,
-            (dataRange[1] - dataRange[0]) * 1.0 * edgeGradient * edgeGradient
-          );
+        for (let component = 0; component < numberOfComponents; component++) {
+          const dataRange = dataArray.getRange(component);
+          model.volume.getProperty().setUseGradientOpacity(component, true);
+          const minV = Math.max(0.0, edgeGradient - 0.3) / 0.7;
+          model.volume
+            .getProperty()
+            .setGradientOpacityMinimumValue(
+              component,
+              (dataRange[1] - dataRange[0]) * 0.2 * minV * minV
+            );
+          model.volume
+            .getProperty()
+            .setGradientOpacityMaximumValue(
+              component,
+              (dataRange[1] - dataRange[0]) * 1.0 * edgeGradient * edgeGradient
+            );
+        }
       }
       publicAPI.modified();
     }
