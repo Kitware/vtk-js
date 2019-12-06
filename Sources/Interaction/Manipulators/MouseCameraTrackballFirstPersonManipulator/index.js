@@ -40,6 +40,8 @@ function vtkMouseCameraTrackballFirstPersonManipulator(publicAPI, model) {
       return;
     }
 
+    // TODO: at some point, these should perhaps be done in
+    // RenderWindowInteractor instead of here.
     canvas.requestPointerLock();
     document.addEventListener('mousemove', publicAPI.onPointerLockMove);
 
@@ -47,7 +49,6 @@ function vtkMouseCameraTrackballFirstPersonManipulator(publicAPI, model) {
       'pointerlockchange',
       publicAPI.endPointerLockMode
     );
-    interactor.requestAnimation(ANIMATION_REQUESTER);
   };
 
   //--------------------------------------------------------------------------
@@ -61,8 +62,8 @@ function vtkMouseCameraTrackballFirstPersonManipulator(publicAPI, model) {
       return;
     }
 
-    interactor.cancelAnimation(ANIMATION_REQUESTER);
-
+    // TODO: at some point, these should perhaps be done in
+    // RenderWindowInteractor instead of here.
     document.removeEventListener('mousemove', publicAPI.onPointerLockMove);
     document.removeEventListener(
       'pointerlockchange',
@@ -107,17 +108,37 @@ function vtkMouseCameraTrackballFirstPersonManipulator(publicAPI, model) {
 
     const camera = renderer.getActiveCamera();
 
-    // It might be nice if we update all of these at the same time so
-    // that camera.modified() doesn't get emitted multiple times.
-    camera.yaw(yaw);
-    camera.pitch(pitch);
-    camera.orthogonalizeViewUp();
+    // We need to pick a number of steps here that is not too few
+    // (or the camera will be jittery) and not too many (or the
+    // animations will take too long).
+    // Perhaps this should be calculated?
+    const numSteps = 20;
+    const yawStep = yaw / numSteps;
+    const pitchStep = pitch / numSteps;
 
-    renderer.resetCameraClippingRange();
+    const now = performance.now().toString();
+    const animationRequester = `${ANIMATION_REQUESTER}.${now}`;
 
-    if (interactor.getLightFollowCamera()) {
-      renderer.updateLightsGeometryToFollowCamera();
-    }
+    let curStep = 0;
+    let intervalId = null;
+    const performStep = () => {
+      camera.yaw(yawStep);
+      camera.pitch(pitchStep);
+      camera.orthogonalizeViewUp();
+      curStep += 1;
+      if (curStep === numSteps) {
+        clearInterval(intervalId);
+        renderer.resetCameraClippingRange();
+
+        if (interactor.getLightFollowCamera()) {
+          renderer.updateLightsGeometryToFollowCamera();
+        }
+        interactor.cancelAnimation(animationRequester);
+      }
+    };
+
+    interactor.requestAnimation(animationRequester);
+    intervalId = setInterval(performStep, 1);
   };
 }
 
