@@ -326,7 +326,6 @@ function vtkViewProxy(publicAPI, model) {
     } else {
       const skipWarning =
         requester === publicAPI ||
-        `${requester}`.indexOf('ViewProxy.updateOrientation.') === 0 ||
         `${requester}`.indexOf('ViewProxy.moveCamera.') === 0;
       model.renderWindow
         .getInteractor()
@@ -359,124 +358,21 @@ function vtkViewProxy(publicAPI, model) {
     model.camera.setViewUp(...viewUp);
     model.renderer.resetCamera();
 
+    const destFocalPoint = model.camera.getFocalPoint();
     const destPosition = model.camera.getPosition();
     const destViewUp = model.camera.getViewUp();
 
     // Reset to original to prevent initial render flash
+    model.camera.setFocalPoint(...originalFocalPoint);
     model.camera.setPosition(...originalPosition);
     model.camera.setViewUp(...originalViewUp);
 
-    const animationStack = [{ position: destPosition, viewUp: destViewUp }];
-
-    if (animateSteps) {
-      const deltaPosition = [
-        (originalPosition[0] - destPosition[0]) / animateSteps,
-        (originalPosition[1] - destPosition[1]) / animateSteps,
-        (originalPosition[2] - destPosition[2]) / animateSteps,
-      ];
-      const deltaViewUp = [
-        (originalViewUp[0] - destViewUp[0]) / animateSteps,
-        (originalViewUp[1] - destViewUp[1]) / animateSteps,
-        (originalViewUp[2] - destViewUp[2]) / animateSteps,
-      ];
-
-      const needSteps =
-        deltaPosition[0] ||
-        deltaPosition[1] ||
-        deltaPosition[2] ||
-        deltaViewUp[0] ||
-        deltaViewUp[1] ||
-        deltaViewUp[2];
-
-      const positionDeltaAxisCount = deltaPosition
-        .map((i) => (Math.abs(i) < EPSILON ? 0 : 1))
-        .reduce((a, b) => a + b, 0);
-      const viewUpDeltaAxisCount = deltaViewUp
-        .map((i) => (Math.abs(i) < EPSILON ? 0 : 1))
-        .reduce((a, b) => a + b, 0);
-      const rotation180Only =
-        viewUpDeltaAxisCount === 1 && positionDeltaAxisCount === 0;
-
-      if (needSteps) {
-        if (rotation180Only) {
-          const availableAxes = originalFocalPoint
-            .map(
-              (fp, i) =>
-                Math.abs(originalPosition[i] - fp) < EPSILON ? i : null
-            )
-            .filter((i) => i !== null);
-          const axisCorrectionIndex = availableAxes.find(
-            (v) => Math.abs(deltaViewUp[v]) < EPSILON
-          );
-          for (let i = 0; i < animateSteps; i++) {
-            const newViewUp = [
-              viewUp[0] + (i + 1) * deltaViewUp[0],
-              viewUp[1] + (i + 1) * deltaViewUp[1],
-              viewUp[2] + (i + 1) * deltaViewUp[2],
-            ];
-            newViewUp[axisCorrectionIndex] = Math.sin(
-              (Math.PI * i) / (animateSteps - 1)
-            );
-            animationStack.push({
-              position: destPosition,
-              viewUp: newViewUp,
-            });
-          }
-        } else {
-          for (let i = 0; i < animateSteps; i++) {
-            animationStack.push({
-              position: [
-                destPosition[0] + (i + 1) * deltaPosition[0],
-                destPosition[1] + (i + 1) * deltaPosition[1],
-                destPosition[2] + (i + 1) * deltaPosition[2],
-              ],
-              viewUp: [
-                viewUp[0] + (i + 1) * deltaViewUp[0],
-                viewUp[1] + (i + 1) * deltaViewUp[1],
-                viewUp[2] + (i + 1) * deltaViewUp[2],
-              ],
-            });
-          }
-        }
-      }
-    }
-
-    if (animationStack.length === 1) {
-      // update camera directly
-      model.camera.set(animationStack.pop());
-      model.renderer.resetCameraClippingRange();
-      if (model.interactor.getLightFollowCamera()) {
-        model.renderer.updateLightsGeometryToFollowCamera();
-      }
-      return Promise.resolve();
-    }
-
-    return new Promise((resolve, reject) => {
-      const now = performance.now().toString();
-      const animationRequester = `ViewProxy.updateOrientation.${now}`;
-      publicAPI.setAnimation(true, animationRequester);
-      let intervalId = null;
-      const consumeAnimationStack = () => {
-        if (animationStack.length) {
-          const {
-            position: cameraPosition,
-            viewUp: cameraViewUp,
-          } = animationStack.pop();
-          model.camera.setPosition(...cameraPosition);
-          model.camera.setViewUp(...cameraViewUp);
-          model.renderer.resetCameraClippingRange();
-
-          if (model.interactor.getLightFollowCamera()) {
-            model.renderer.updateLightsGeometryToFollowCamera();
-          }
-        } else {
-          clearInterval(intervalId);
-          publicAPI.setAnimation(false, animationRequester);
-          resolve();
-        }
-      };
-      intervalId = setInterval(consumeAnimationStack, 1);
-    });
+    return publicAPI.moveCamera(
+      destFocalPoint,
+      destPosition,
+      destViewUp,
+      animateSteps
+    );
   };
 
   // --------------------------------------------------------------------------
@@ -522,25 +418,66 @@ function vtkViewProxy(publicAPI, model) {
         deltaViewUp[1] ||
         deltaViewUp[2];
 
+      const focalPointDeltaAxisCount = deltaFocalPoint
+        .map((i) => (Math.abs(i) < EPSILON ? 0 : 1))
+        .reduce((a, b) => a + b, 0);
+      const positionDeltaAxisCount = deltaPosition
+        .map((i) => (Math.abs(i) < EPSILON ? 0 : 1))
+        .reduce((a, b) => a + b, 0);
+      const viewUpDeltaAxisCount = deltaViewUp
+        .map((i) => (Math.abs(i) < EPSILON ? 0 : 1))
+        .reduce((a, b) => a + b, 0);
+      const rotation180Only =
+        viewUpDeltaAxisCount === 1 &&
+        positionDeltaAxisCount === 0 &&
+        focalPointDeltaAxisCount === 0;
+
       if (needSteps) {
-        for (let i = 0; i < animateSteps; i++) {
-          animationStack.push({
-            focalPoint: [
-              focalPoint[0] + (i + 1) * deltaFocalPoint[0],
-              focalPoint[1] + (i + 1) * deltaFocalPoint[1],
-              focalPoint[2] + (i + 1) * deltaFocalPoint[2],
-            ],
-            position: [
-              position[0] + (i + 1) * deltaPosition[0],
-              position[1] + (i + 1) * deltaPosition[1],
-              position[2] + (i + 1) * deltaPosition[2],
-            ],
-            viewUp: [
+        if (rotation180Only) {
+          const availableAxes = originalFocalPoint
+            .map(
+              (fp, i) =>
+                Math.abs(originalPosition[i] - fp) < EPSILON ? i : null
+            )
+            .filter((i) => i !== null);
+          const axisCorrectionIndex = availableAxes.find(
+            (v) => Math.abs(deltaViewUp[v]) < EPSILON
+          );
+          for (let i = 0; i < animateSteps; i++) {
+            const newViewUp = [
               viewUp[0] + (i + 1) * deltaViewUp[0],
               viewUp[1] + (i + 1) * deltaViewUp[1],
               viewUp[2] + (i + 1) * deltaViewUp[2],
-            ],
-          });
+            ];
+            newViewUp[axisCorrectionIndex] = Math.sin(
+              (Math.PI * i) / (animateSteps - 1)
+            );
+            animationStack.push({
+              focalPoint,
+              position,
+              viewUp: newViewUp,
+            });
+          }
+        } else {
+          for (let i = 0; i < animateSteps; i++) {
+            animationStack.push({
+              focalPoint: [
+                focalPoint[0] + (i + 1) * deltaFocalPoint[0],
+                focalPoint[1] + (i + 1) * deltaFocalPoint[1],
+                focalPoint[2] + (i + 1) * deltaFocalPoint[2],
+              ],
+              position: [
+                position[0] + (i + 1) * deltaPosition[0],
+                position[1] + (i + 1) * deltaPosition[1],
+                position[2] + (i + 1) * deltaPosition[2],
+              ],
+              viewUp: [
+                viewUp[0] + (i + 1) * deltaViewUp[0],
+                viewUp[1] + (i + 1) * deltaViewUp[1],
+                viewUp[2] + (i + 1) * deltaViewUp[2],
+              ],
+            });
+          }
         }
       }
     }
