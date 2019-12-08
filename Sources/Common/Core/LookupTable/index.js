@@ -3,6 +3,10 @@ import * as vtkMath from 'vtk.js/Sources/Common/Core/Math';
 import vtkScalarsToColors from 'vtk.js/Sources/Common/Core/ScalarsToColors';
 import { ScalarMappingTarget } from 'vtk.js/Sources/Common/Core/ScalarsToColors/Constants';
 
+import { VtkDataTypes } from 'vtk.js/Sources/Common/Core/DataArray/Constants';
+
+const { vtkErrorMacro } = macro;
+
 // ----------------------------------------------------------------------------
 // Global methods
 // ----------------------------------------------------------------------------
@@ -212,6 +216,26 @@ function vtkLookupTable(publicAPI, model) {
     model.buildTime.modified();
   };
 
+  publicAPI.setTable = (table) => {
+    if (table.getNumberOfComponents() !== 4) {
+      vtkErrorMacro('Expected 4 components for RGBA colors');
+      return;
+    }
+    if (table.getDataType() !== VtkDataTypes.UNSIGNED_CHAR) {
+      vtkErrorMacro('Expected unsigned char values for RGBA colors');
+      return;
+    }
+    model.numberOfColors = table.getNumberOfTuples();
+    const data = table.getData();
+    for (let i = 0; i < data.length; i++) {
+      model.table[i] = data[i];
+    }
+
+    publicAPI.buildSpecialColors();
+    model.insertTime.modified();
+    publicAPI.modified();
+  };
+
   publicAPI.buildSpecialColors = () => {
     // Add "special" colors (NaN, below range, above range) to table here.
     const { numberOfColors } = model;
@@ -259,7 +283,8 @@ function vtkLookupTable(publicAPI, model) {
   publicAPI.build = () => {
     if (
       model.table.length < 1 ||
-      publicAPI.getMTime() > model.buildTime.getMTime()
+      (publicAPI.getMTime() > model.buildTime.getMTime() &&
+        model.insertTime.getMTime() <= model.buildTime.getMTime())
     ) {
       publicAPI.forceBuild();
     }
@@ -288,6 +313,7 @@ const DEFAULT_VALUES = {
   alpha: 1.0,
   // buildTime: null,
   // opaqueFlagBuildTime: null,
+  // insertTime: null,
 };
 
 // ----------------------------------------------------------------------------
@@ -308,6 +334,9 @@ export function extend(publicAPI, model, initialValues = {}) {
 
   model.opaqueFlagBuildTime = {};
   macro.obj(model.opaqueFlagBuildTime, { mtime: 0 });
+
+  model.insertTime = {};
+  macro.obj(model.insertTime, { mtime: 0 });
 
   // Create get-only macros
   macro.get(publicAPI, model, ['buildTime']);
