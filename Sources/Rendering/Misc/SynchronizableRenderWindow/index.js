@@ -249,8 +249,9 @@ function createSyncFunction(renderWindow, synchronizerContext) {
     if (!getSynchronizedViewId()) {
       setSynchronizedViewId(state.id);
     }
-    if (getSynchronizedViewId() === state.id && lastMtime < state.mtime) {
-      lastMtime = state.mtime;
+    const mtime = state.mtime || 0;
+    if (getSynchronizedViewId() === state.id && lastMtime < mtime) {
+      lastMtime = mtime;
       context.setActiveViewId(state.id);
       context.incrementMTime();
       vtkObjectManager.updateRenderWindow(renderWindow, state, context);
