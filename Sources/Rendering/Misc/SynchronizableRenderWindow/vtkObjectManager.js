@@ -2,6 +2,7 @@ import vtkActor from 'vtk.js/Sources/Rendering/Core/Actor';
 import vtkCamera from 'vtk.js/Sources/Rendering/Core/Camera';
 import vtkColorTransferFunction from 'vtk.js/Sources/Rendering/Core/ColorTransferFunction';
 import vtkDataArray from 'vtk.js/Sources/Common/Core/DataArray';
+import vtkGlyph3DMapper from 'vtk.js/Sources/Rendering/Core/Glyph3DMapper';
 import vtkLight from 'vtk.js/Sources/Rendering/Core/Light';
 import vtkLookupTable from 'vtk.js/Sources/Common/Core/LookupTable';
 import vtkMapper from 'vtk.js/Sources/Rendering/Core/Mapper';
@@ -68,6 +69,7 @@ function build(type, initialProps = {}) {
   const handler = TYPE_HANDLERS[type];
 
   if (handler && handler.build) {
+    // DEBUG console.log(`new ${type} - ${initialProps.managedInstanceId}`);
     return handler.build(initialProps);
   }
 
@@ -132,7 +134,7 @@ function notSkippedInstance(call) {
     return SKIPPED_INSTANCE_IDS.indexOf(call[1][0]) === -1;
   }
   let keep = false;
-  for (let i = 0; i < call[1]; i++) {
+  for (let i = 0; i < call[1].length; i++) {
     keep = keep || SKIPPED_INSTANCE_IDS.indexOf(call[1][i]) === -1;
   }
   return keep;
@@ -171,11 +173,10 @@ function genericUpdater(instance, state, context) {
   }
 
   if (state.calls) {
-    state.calls
-      .filter(notSkippedInstance)
-      .forEach((call) =>
-        instance[call[0]].apply(null, extractCallArgs(context, call[1]))
-      );
+    state.calls.filter(notSkippedInstance).forEach((call) => {
+      // DEBUG console.log('==>', call[0], extractCallArgs(context, call[1]));
+      instance[call[0]].apply(null, extractCallArgs(context, call[1]));
+    });
   }
 
   context.end();
@@ -325,6 +326,7 @@ function polydataUpdater(instance, state, context) {
         const [fn, args] = arraysToBind.shift();
         fn(...args);
       }
+
       instance.modified();
       context.end();
     }
@@ -381,24 +383,30 @@ function polydataUpdater(instance, state, context) {
 // Construct the type mapping
 // ----------------------------------------------------------------------------
 
+const DEFAULT_ALIASES = {
+  vtkMapper: ['vtkCompositePolyDataMapper2'],
+  vtkProperty: ['vtkOpenGLProperty'],
+  vtkRenderer: ['vtkOpenGLRenderer'],
+  vtkCamera: ['vtkOpenGLCamera'],
+  vtkColorTransferFunction: ['vtkPVDiscretizableColorTransferFunction'],
+  vtkActor: ['vtkOpenGLActor', 'vtkPVLODActor'],
+  vtkLight: ['vtkOpenGLLight', 'vtkPVLight'],
+};
+
 const DEFAULT_MAPPING = {
-  vtkCompositePolyDataMapper2: {
-    build: vtkMapper.newInstance,
-    update: genericUpdater,
+  vtkRenderWindow: {
+    build: vtkRenderWindow.newInstance,
+    update: vtkRenderWindowUpdater,
+  },
+  vtkRenderer: {
+    build: vtkRenderer.newInstance,
+    update: rendererUpdater,
   },
   vtkLookupTable: {
     build: vtkLookupTable.newInstance,
     update: genericUpdater,
   },
-  vtkOpenGLProperty: {
-    build: vtkProperty.newInstance,
-    update: genericUpdater,
-  },
-  vtkOpenGLRenderer: {
-    build: vtkRenderer.newInstance,
-    update: rendererUpdater,
-  },
-  vtkOpenGLCamera: {
+  vtkCamera: {
     build: vtkCamera.newInstance,
     update: oneTimeGenericUpdater,
   },
@@ -406,29 +414,29 @@ const DEFAULT_MAPPING = {
     build: vtkPolyData.newInstance,
     update: polydataUpdater,
   },
-  vtkPVDiscretizableColorTransferFunction: {
+  vtkMapper: {
+    build: vtkMapper.newInstance,
+    update: genericUpdater,
+  },
+  vtkGlyph3DMapper: {
+    build: vtkGlyph3DMapper.newInstance,
+    update: genericUpdater,
+  },
+  vtkProperty: {
+    build: vtkProperty.newInstance,
+    update: genericUpdater,
+  },
+  vtkActor: {
+    build: vtkActor.newInstance,
+    update: genericUpdater,
+  },
+  vtkLight: {
+    build: vtkLight.newInstance,
+    update: genericUpdater,
+  },
+  vtkColorTransferFunction: {
     build: vtkColorTransferFunction.newInstance,
     update: colorTransferFunctionUpdater,
-  },
-  vtkPVLODActor: {
-    build: vtkActor.newInstance,
-    update: genericUpdater,
-  },
-  vtkOpenGLActor: {
-    build: vtkActor.newInstance,
-    update: genericUpdater,
-  },
-  vtkRenderWindow: {
-    build: vtkRenderWindow.newInstance,
-    update: vtkRenderWindowUpdater,
-  },
-  vtkOpenGLLight: {
-    build: vtkLight.newInstance,
-    update: genericUpdater,
-  },
-  vtkPVLight: {
-    build: vtkLight.newInstance,
-    update: genericUpdater,
   },
 };
 
@@ -443,7 +451,18 @@ function setDefaultMapping(reset = true) {
   });
 }
 
+function applyDefaultAliases() {
+  // Add aliases
+  Object.keys(DEFAULT_ALIASES).forEach((name) => {
+    const aliases = DEFAULT_ALIASES[name];
+    aliases.forEach((alias) => {
+      TYPE_HANDLERS[alias] = TYPE_HANDLERS[name];
+    });
+  });
+}
+
 setDefaultMapping();
+applyDefaultAliases();
 
 // Avoid handling any lights at the moment
 EXCLUDE_INSTANCE_MAP.vtkOpenGLLight = {};
@@ -462,4 +481,6 @@ export default {
   clearOneTimeUpdaters,
   updateRenderWindow,
   excludeInstance,
+  setDefaultMapping,
+  applyDefaultAliases,
 };
