@@ -144,6 +144,7 @@ function vtkProp3D(publicAPI, model) {
 const DEFAULT_VALUES = {
   origin: [0, 0, 0],
   position: [0, 0, 0],
+  orientation: [0, 0, 0],
   rotation: null,
   scale: [1, 1, 1],
   bounds: [1, -1, 1, -1, 1, -1],

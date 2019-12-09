@@ -503,7 +503,9 @@ export function setArray(
           array = [].concat(array);
           while (array.length < size) array.push(defaultVal);
         } else {
-          throw new RangeError('Invalid number of values for array setter');
+          throw new RangeError(
+            `Invalid number of values for array setter (${field})`
+          );
         }
       }
       let changeDetected = false;
