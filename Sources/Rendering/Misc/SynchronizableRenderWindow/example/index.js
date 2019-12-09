@@ -86,7 +86,8 @@ function loadZipContent(zipContent, container) {
     }
 
     zip.forEach((relativePath, zipEntry) => {
-      if (relativePath === 'index.json') {
+      const fileName = relativePath.split('/').pop();
+      if (fileName === 'index.json') {
         workLoad++;
         zipEntry.async('string').then((txt) => {
           fileContents.state = JSON.parse(txt);
@@ -95,9 +96,9 @@ function loadZipContent(zipContent, container) {
         });
       }
 
-      if (relativePath.indexOf('-') !== -1) {
+      if (fileName.length === 32) {
         workLoad++;
-        const hash = relativePath.split('-').pop();
+        const hash = fileName;
         zipEntry.async('arraybuffer').then((arraybuffer) => {
           fileContents.arrays[hash] = arraybuffer;
           workLoad--;
