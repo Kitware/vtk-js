@@ -10,6 +10,7 @@ docs:
     example: develop_example.html
     test: develop_test.html
     build: develop_build.html
+    widget: develop_widget.html
 
   concepts:
     widgets: concepts_widgets.html
