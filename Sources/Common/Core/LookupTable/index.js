@@ -91,21 +91,26 @@ function vtkLookupTable(publicAPI, model) {
     } else {
       index = publicAPI.linearIndexLookup(v, p);
     }
+    const offset = 4 * index;
     return [
-      table[4 * index],
-      table[4 * index + 1],
-      table[4 * index + 2],
-      table[4 * index + 3],
+      table[offset],
+      table[offset + 1],
+      table[offset + 2],
+      table[offset + 3],
     ];
   };
 
   publicAPI.indexedLookupFunction = (v, table, p) => {
-    const index = publicAPI.getAnnotatedValueIndexInternal(v);
+    let index = publicAPI.getAnnotatedValueIndexInternal(v);
+    if (index === -1) {
+      index = model.numberOfColors + NAN_COLOR_INDEX;
+    }
+    const offset = 4 * index;
     return [
-      table[4 * index],
-      table[4 * index + 1],
-      table[4 * index + 2],
-      table[4 * index + 3],
+      table[offset],
+      table[offset + 1],
+      table[offset + 2],
+      table[offset + 3],
     ];
   };
 

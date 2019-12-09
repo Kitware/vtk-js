@@ -160,6 +160,7 @@ function vtkScalarsToColors(publicAPI, model) {
       const na = model.annotationArray.length;
       return model.annotatedValueMap[value] % na;
     }
+    // Treat as a NaN
     return -1;
   };
 
