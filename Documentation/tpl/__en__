@@ -30,6 +30,7 @@ sidebar:
     test: Create test
     build: Build library
     concepts: Concepts
+    widget: Developing Widgets
     widgets: Widgets
     miscellaneous: Miscellaneous
     tools: Tools
