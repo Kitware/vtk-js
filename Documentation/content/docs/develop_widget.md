@@ -1,4 +1,5 @@
-# Widgets
+title: Developing Widgets
+---
 
 Widgets allow users to interact with scene objects and drive functionality through clicking, dragging, and touch.
 This documentation presents the new vtk.js widget infrastructure introduced on Aug 28, 2018.
