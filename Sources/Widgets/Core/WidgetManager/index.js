@@ -27,20 +27,15 @@ export function extractRenderingComponents(renderer) {
 // ----------------------------------------------------------------------------
 
 function createSvgRoot(id) {
-  const wrapper = document.createElement('div');
-  wrapper.setAttribute(
+  const svgRoot = createSvgDomElement('svg');
+  svgRoot.setAttribute(
     'style',
     'position: absolute; top: 0; left: 0; width: 100%; height: 100%;'
   );
-
-  const svgRoot = createSvgDomElement('svg');
-  svgRoot.setAttribute('style', 'width: 100%; height: 100%;');
   svgRoot.setAttribute('version', '1.1');
   svgRoot.setAttribute('baseProfile', 'full');
 
-  wrapper.appendChild(svgRoot);
-
-  return { svgWrapper: wrapper, svgRoot };
+  return svgRoot;
 }
 
 // ----------------------------------------------------------------------------
@@ -66,9 +61,7 @@ function vtkWidgetManager(publicAPI, model) {
     FieldAssociations.FIELD_ASSOCIATION_POINTS
   );
 
-  const svgContainers = createSvgRoot(model.viewId);
-  model.svgWrapper = svgContainers.svgWrapper;
-  model.svgRoot = svgContainers.svgRoot;
+  model.svgRoot = createSvgRoot(model.viewId);
 
   // --------------------------------------------------------------------------
   // API internal
@@ -103,12 +96,15 @@ function vtkWidgetManager(publicAPI, model) {
   function enableSvgLayer() {
     const container = model.openGLRenderWindow.getReferenceByName('el');
     const canvas = model.openGLRenderWindow.getCanvas();
-    container.insertBefore(model.svgWrapper, canvas.nextSibling);
+    container.insertBefore(model.svgRoot, canvas.nextSibling);
+    if (!container.style.position || container.style.position === 'static') {
+      container.style.position = 'relative';
+    }
   }
 
   function disableSvgLayer() {
     const container = model.openGLRenderWindow.getReferenceByName('el');
-    container.removeChild(model.svgWrapper);
+    container.removeChild(model.svgRoot);
   }
 
   function removeFromSvgLayer(viewWidget) {
@@ -120,17 +116,30 @@ function vtkWidgetManager(publicAPI, model) {
     }
   }
 
+  function setSvgSize() {
+    const [cwidth, cheight] = model.openGLRenderWindow.getSize();
+    const ratio = window.devicePixelRatio || 1;
+    const bwidth = String(cwidth / ratio);
+    const bheight = String(cheight / ratio);
+    const viewBox = `0 0 ${cwidth} ${cheight}`;
+
+    const origWidth = model.svgRoot.getAttribute('width');
+    const origHeight = model.svgRoot.getAttribute('height');
+    const origViewBox = model.svgRoot.getAttribute('viewBox');
+
+    if (origWidth !== bwidth) {
+      model.svgRoot.setAttribute('width', bwidth);
+    }
+    if (origHeight !== bheight) {
+      model.svgRoot.setAttribute('height', bheight);
+    }
+    if (origViewBox !== viewBox) {
+      model.svgRoot.setAttribute('viewBox', viewBox);
+    }
+  }
+
   function updateSvg() {
     if (model.useSvgLayer) {
-      const [cwidth, cheight] = model.openGLRenderWindow.getSize();
-      const ratio = window.devicePixelRatio || 1;
-      const bwidth = cwidth / ratio;
-      const bheight = cheight / ratio;
-      const viewBox = `0 0 ${cwidth} ${cheight}`;
-      model.svgRoot.setAttribute('width', bwidth);
-      model.svgRoot.setAttribute('height', bheight);
-      model.svgRoot.setAttribute('viewBox', viewBox);
-
       for (let i = 0; i < model.widgets.length; i++) {
         const widget = model.widgets[i];
         const svgReps = widget
@@ -219,6 +228,9 @@ function vtkWidgetManager(publicAPI, model) {
     model.selector.attach(model.openGLRenderWindow, model.renderer);
 
     subscriptions.push(model.interactor.onRenderEvent(updateSvg));
+
+    subscriptions.push(model.openGLRenderWindow.onModified(setSvgSize));
+    setSvgSize();
 
     subscriptions.push(
       model.interactor.onStartAnimation(() => {
