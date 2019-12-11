@@ -112,7 +112,7 @@ function vtkMouseCameraTrackballFirstPersonManipulator(publicAPI, model) {
     // (or the camera will be jittery) and not too many (or the
     // animations will take too long).
     // Perhaps this should be calculated?
-    const numSteps = 20;
+    const numSteps = 10;
     const yawStep = yaw / numSteps;
     const pitchStep = pitch / numSteps;
 
@@ -120,25 +120,32 @@ function vtkMouseCameraTrackballFirstPersonManipulator(publicAPI, model) {
     const animationRequester = `${ANIMATION_REQUESTER}.${now}`;
 
     let curStep = 0;
-    let intervalId = null;
+    let animationSub = null;
     const performStep = () => {
       camera.yaw(yawStep);
       camera.pitch(pitchStep);
       camera.orthogonalizeViewUp();
       curStep += 1;
       if (curStep === numSteps) {
-        clearInterval(intervalId);
+        animationSub.unsubscribe();
         renderer.resetCameraClippingRange();
 
         if (interactor.getLightFollowCamera()) {
           renderer.updateLightsGeometryToFollowCamera();
         }
-        interactor.cancelAnimation(animationRequester);
+
+        // This needs to be posted to the event loop so it isn't called
+        // in the `handleAnimation` stack, or else the animation will
+        // not be canceled.
+        const cancelRequest = () => {
+          internal.interactor.cancelAnimation(animationRequester);
+        };
+        setTimeout(cancelRequest, 0);
       }
     };
 
     interactor.requestAnimation(animationRequester);
-    intervalId = setInterval(performStep, 1);
+    animationSub = interactor.onAnimation(() => performStep());
   };
 }
 
@@ -147,7 +154,7 @@ function vtkMouseCameraTrackballFirstPersonManipulator(publicAPI, model) {
 // ----------------------------------------------------------------------------
 
 const DEFAULT_VALUES = {
-  sensitivity: 0.1,
+  sensitivity: 0.05,
   usePointerLock: true,
 };
 

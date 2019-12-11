@@ -19,14 +19,14 @@ function vtkKeyboardCameraManipulator(publicAPI, model) {
     renderer: null,
     keysDown: [],
     direction: [0, 0, 0],
-    intervalId: null,
     skipUpdateDirection: false,
-    cameraModifiedSubscription: null,
+    animationSub: null,
+    cameraModifiedSub: null,
   };
 
   //--------------------------------------------------------------------------
 
-  publicAPI.inMotion = () => internal.intervalId !== null;
+  publicAPI.inMotion = () => internal.animationSub !== null;
 
   //--------------------------------------------------------------------------
 
@@ -40,7 +40,6 @@ function vtkKeyboardCameraManipulator(publicAPI, model) {
 
     const move = () => {
       if (internal.keysDown.length === 0) {
-        publicAPI.endMovement();
         return;
       }
 
@@ -64,25 +63,27 @@ function vtkKeyboardCameraManipulator(publicAPI, model) {
 
     const camera = renderer.getActiveCamera();
     // If the camera gets modified elsewhere, let's update the direction
-    internal.cameraModifiedSubscription = camera.onModified(
+    internal.cameraModifiedSub = camera.onModified(
       publicAPI.calculateCurrentDirection
     );
 
     interactor.requestAnimation(ANIMATION_REQUESTER);
-    internal.intervalId = setInterval(move, 1);
+    internal.animationSub = interactor.onAnimation(() => move());
   };
 
   //--------------------------------------------------------------------------
 
   publicAPI.endMovement = () => {
-    clearInterval(internal.intervalId);
-    internal.intervalId = null;
+    if (internal.animationSub) {
+      internal.animationSub.unsubscribe();
+      internal.animationSub = null;
+    }
 
     internal.interactor.cancelAnimation(ANIMATION_REQUESTER);
 
-    if (internal.cameraModifiedSubscription) {
-      internal.cameraModifiedSubscription.unsubscribe();
-      internal.cameraModifiedSubscription = null;
+    if (internal.cameraModifiedSub) {
+      internal.cameraModifiedSub.unsubscribe();
+      internal.cameraModifiedSub = null;
     }
   };
 
@@ -212,6 +213,10 @@ function vtkKeyboardCameraManipulator(publicAPI, model) {
       (item) => item.toUpperCase() !== key.toUpperCase()
     );
     publicAPI.calculateCurrentDirection();
+
+    if (internal.keysDown.length === 0) {
+      publicAPI.endMovement();
+    }
   };
 }
 
@@ -220,7 +225,7 @@ function vtkKeyboardCameraManipulator(publicAPI, model) {
 // ----------------------------------------------------------------------------
 
 const DEFAULT_VALUES = {
-  movementSpeed: 0.01,
+  movementSpeed: 0.02,
   moveForwardKeys: ['w', 'W', 'ArrowUp'],
   moveLeftKeys: ['a', 'A', 'ArrowLeft'],
   moveBackwardKeys: ['s', 'S', 'ArrowDown'],
