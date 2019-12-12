@@ -53,7 +53,7 @@ function vtkResliceCursor(publicAPI, model) {
       cellsData[0] = 2;
       cellsData[1] = 0;
       cellsData[2] = 1;
-      model.centerlinesAxis[i].setPolys(cells);
+      model.centerlinesAxis[i].setLines(cells);
     }
   };
 
