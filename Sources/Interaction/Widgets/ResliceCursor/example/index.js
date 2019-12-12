@@ -130,12 +130,3 @@ for (let k = 0; k < 3; k++) {
   renderers[k].resetCamera();
   renderWindows[k].render();
 }
-
-// Handle window resize
-function resize() {
-  renderWindows[0].render();
-  renderWindows[1].render();
-  renderWindows[2].render();
-}
-
-window.addEventListener('resize', resize());
