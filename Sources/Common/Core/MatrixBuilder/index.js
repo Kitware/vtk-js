@@ -31,13 +31,12 @@ class Transform {
     }
 
     vec3.cross(this.tmp, src, dst);
-    if (vec3.length(this.tmp, this.tmp) < EPSILON) {
+    if (vec3.length(this.tmp) < EPSILON) {
       // cross product is 0, so pick arbitrary axis perpendicular
       // to originDirection.
-      if (originDirection[0] === 0 && originDirection[1] === 0) {
-        vec3.set(this.tmp, 0, 1, 0);
-      } else {
-        vec3.set(this.tmp, 0, -originDirection[2], -originDirection[1]);
+      vec3.cross(this.tmp, [1, 0, 0], originDirection);
+      if (vec3.length(this.tmp) < EPSILON) {
+        vec3.cross(this.tmp, [0, 1, 0], originDirection);
       }
     }
     mat4.fromRotation(transf, Math.acos(cosAlpha), this.tmp);
