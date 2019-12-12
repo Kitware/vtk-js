@@ -1,4 +1,5 @@
 import './Common/Core/LookupTable/test/testCategoricalColors';
+import './Common/Core/MatrixBuilder/test/testMatrixBuilder';
 import './Common/DataModel/Box/test/testBox';
 import './Common/DataModel/Cell/test/testCell';
 import './Common/DataModel/Cone/test/testConeImplicitFunction';
