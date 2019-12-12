@@ -112,7 +112,7 @@ function vtkMouseCameraTrackballFirstPersonManipulator(publicAPI, model) {
     // (or the camera will be jittery) and not too many (or the
     // animations will take too long).
     // Perhaps this should be calculated?
-    const numSteps = 10;
+    const numSteps = model.numAnimationSteps;
     const yawStep = yaw / numSteps;
     const pitchStep = pitch / numSteps;
 
@@ -154,6 +154,7 @@ function vtkMouseCameraTrackballFirstPersonManipulator(publicAPI, model) {
 // ----------------------------------------------------------------------------
 
 const DEFAULT_VALUES = {
+  numAnimationSteps: 5,
   sensitivity: 0.05,
   usePointerLock: true,
 };
@@ -169,7 +170,11 @@ export function extend(publicAPI, model, initialValues = {}) {
   vtkCompositeMouseManipulator.extend(publicAPI, model, initialValues);
 
   // Create get-set macros
-  macro.setGet(publicAPI, model, ['sensitivity', 'usePointerLock']);
+  macro.setGet(publicAPI, model, [
+    'numAnimationSteps',
+    'sensitivity',
+    'usePointerLock',
+  ]);
 
   // Object specific methods
   vtkMouseCameraTrackballFirstPersonManipulator(publicAPI, model);
