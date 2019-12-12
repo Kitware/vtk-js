@@ -218,18 +218,14 @@ export default function addRegistrationAPI(publicAPI, model) {
       if (publicAPI.getActiveView() === proxy) {
         publicAPI.setActiveView(publicAPI.getViews()[0]);
       }
-    }
-
-    if (group === 'representations') {
+    } else if (group === 'representations') {
       const { sourceId, viewId } = model.r2svMapping[proxy.getProxyId()];
       const view = publicAPI.getProxyById(viewId);
       view.removeRepresentation(proxy);
       delete model.r2svMapping[proxy.getProxyId()];
       delete model.sv2rMapping[sourceId][viewId];
       unRegisterProxy(proxy);
-    }
-
-    if (group === 'sources') {
+    } else if (group === 'sources') {
       const viewToRep = model.sv2rMapping[proxy.getProxyId()];
       Object.keys(viewToRep).forEach((viewId) => {
         publicAPI.deleteProxy(viewToRep[viewId]);
@@ -238,6 +234,8 @@ export default function addRegistrationAPI(publicAPI, model) {
       if (publicAPI.getActiveSource() === proxy) {
         publicAPI.setActiveSource(publicAPI.getSources()[0]);
       }
+    } else {
+      unRegisterProxy(proxy);
     }
 
     // Delete the object itself
