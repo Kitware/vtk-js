@@ -23,52 +23,35 @@ function vtkMouseCameraTrackballFirstPersonManipulator(publicAPI, model) {
   publicAPI.onButtonDown = (interactor, renderer, position) => {
     internal.previousPosition = position;
 
-    if (model.usePointerLock) {
+    if (model.usePointerLock && !interactor.isPointerLocked()) {
       Object.assign(internal, { interactor, renderer });
-      publicAPI.beginPointerLockMode();
+      interactor.requestPointerLock();
+      publicAPI.startPointerLockInteraction();
     }
   };
 
   //--------------------------------------------------------------------------
 
-  publicAPI.beginPointerLockMode = () => {
+  publicAPI.startPointerLockInteraction = () => {
     const { interactor } = internal;
 
-    const canvas = interactor.getView().getCanvas();
-    if (document.pointerLockElement === canvas) {
-      // Already in pointer lock mode. Just return.
-      return;
-    }
-
-    // TODO: at some point, these should perhaps be done in
+    // TODO: at some point, this should perhaps be done in
     // RenderWindowInteractor instead of here.
-    canvas.requestPointerLock();
+    // We need to hook into mousemove directly for two reasons:
+    // 1. We need to keep receiving mouse move events after the mouse button
+    //    is released. This is currently not possible with
+    //    vtkInteractorStyleManipulator.
+    // 2. Since the mouse is stationary in pointer lock mode, we need the
+    //    event.movementX and event.movementY info, which are not currently
+    //    passed via interactor.onMouseMove.
     document.addEventListener('mousemove', publicAPI.onPointerLockMove);
 
-    document.addEventListener(
-      'pointerlockchange',
-      publicAPI.endPointerLockMode
-    );
-  };
-
-  //--------------------------------------------------------------------------
-
-  publicAPI.endPointerLockMode = () => {
-    const { interactor } = internal;
-
-    const canvas = interactor.getView().getCanvas();
-    if (document.pointerLockElement === canvas) {
-      // Still in pointer lock mode. Just return.
-      return;
-    }
-
-    // TODO: at some point, these should perhaps be done in
-    // RenderWindowInteractor instead of here.
-    document.removeEventListener('mousemove', publicAPI.onPointerLockMove);
-    document.removeEventListener(
-      'pointerlockchange',
-      publicAPI.endPointerLockMode
-    );
+    let subscription = null;
+    const endInteraction = () => {
+      document.removeEventListener('mousemove', publicAPI.onPointerLockMove);
+      subscription.unsubscribe();
+    };
+    subscription = interactor.onEndPointerLock(endInteraction);
   };
 
   //--------------------------------------------------------------------------
