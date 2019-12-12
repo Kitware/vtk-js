@@ -189,7 +189,8 @@ function vtkResliceCursor(publicAPI, model) {
           newCenter[2] > bounds[5])
       ) {
         return;
-      } else if (centerProjectionType === CenterProjectionType.FIT_BOUNDS) {
+      }
+      if (centerProjectionType === CenterProjectionType.FIT_BOUNDS) {
         newCenter = projectCenterToFitBounds(newCenter, bounds);
 
         if (newCenter.length !== 3) {
@@ -215,7 +216,8 @@ function vtkResliceCursor(publicAPI, model) {
   publicAPI.getAxis = (i) => {
     if (i === 0) {
       return model.xAxis;
-    } else if (i === 1) {
+    }
+    if (i === 1) {
       return model.yAxis;
     }
 
