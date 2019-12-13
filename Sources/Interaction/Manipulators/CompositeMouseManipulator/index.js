@@ -13,8 +13,6 @@ function vtkCompositeMouseManipulator(publicAPI, model) {
   publicAPI.onButtonDown = (interactor, renderer, position) => {};
   publicAPI.onButtonUp = (interactor) => {};
   publicAPI.onMouseMove = (interactor, renderer, position) => {};
-  publicAPI.onKeyUp = (interactor, key) => {};
-  publicAPI.onKeyDown = (interactor, key) => {};
   publicAPI.onStartScroll = (interactor, renderer, delta) => {};
   publicAPI.onScroll = (interactor, renderer, delta) => {};
   publicAPI.onEndScroll = (interactor) => {};

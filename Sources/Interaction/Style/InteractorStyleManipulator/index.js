@@ -149,6 +149,7 @@ function vtkInteractorStyleManipulator(publicAPI, model) {
   model.classHierarchy.push('vtkInteractorStyleManipulator');
 
   model.mouseManipulators = [];
+  model.keyboardManipulators = [];
   model.vrManipulators = [];
   model.gestureManipulators = [];
   model.currentManipulator = null;
@@ -159,6 +160,7 @@ function vtkInteractorStyleManipulator(publicAPI, model) {
   //-------------------------------------------------------------------------
   publicAPI.removeAllManipulators = () => {
     publicAPI.removeAllMouseManipulators();
+    publicAPI.removeAllKeyboardManipulators();
     publicAPI.removeAllVRManipulators();
     publicAPI.removeAllGestureManipulators();
   };
@@ -166,6 +168,11 @@ function vtkInteractorStyleManipulator(publicAPI, model) {
   //-------------------------------------------------------------------------
   publicAPI.removeAllMouseManipulators = () => {
     model.mouseManipulators = [];
+  };
+
+  //-------------------------------------------------------------------------
+  publicAPI.removeAllKeyboardManipulators = () => {
+    model.keyboardManipulators = [];
   };
 
   //-------------------------------------------------------------------------
@@ -194,6 +201,10 @@ function vtkInteractorStyleManipulator(publicAPI, model) {
     removeManipulator(manipulator, model.mouseManipulators);
 
   //-------------------------------------------------------------------------
+  publicAPI.removeKeyboardManipulator = (manipulator) =>
+    removeManipulator(manipulator, model.keyboardManipulators);
+
+  //-------------------------------------------------------------------------
   publicAPI.removeVRManipulator = (manipulator) =>
     removeManipulator(manipulator, model.vrManipulators);
 
@@ -217,6 +228,10 @@ function vtkInteractorStyleManipulator(publicAPI, model) {
     addManipulator(manipulator, model.mouseManipulators);
 
   //-------------------------------------------------------------------------
+  publicAPI.addKeyboardManipulator = (manipulator) =>
+    addManipulator(manipulator, model.keyboardManipulators);
+
+  //-------------------------------------------------------------------------
   publicAPI.addVRManipulator = (manipulator) =>
     addManipulator(manipulator, model.vrManipulators);
 
@@ -226,6 +241,10 @@ function vtkInteractorStyleManipulator(publicAPI, model) {
 
   //-------------------------------------------------------------------------
   publicAPI.getNumberOfMouseManipulators = () => model.mouseManipulators.length;
+
+  //-------------------------------------------------------------------------
+  publicAPI.getNumberOfKeyboardManipulators = () =>
+    model.keyboardManipulators.length;
 
   //-------------------------------------------------------------------------
   publicAPI.getNumberOfVRManipulators = () => model.vrManipulators.length;
@@ -357,6 +376,7 @@ function vtkInteractorStyleManipulator(publicAPI, model) {
     }
     return manipulator;
   };
+
   //-------------------------------------------------------------------------
   publicAPI.findVRManipulator = (device, input) => {
     // Look for a matching camera manipulator
@@ -481,21 +501,47 @@ function vtkInteractorStyleManipulator(publicAPI, model) {
   };
 
   //-------------------------------------------------------------------------
+  // Keyboard
+  //-------------------------------------------------------------------------
   publicAPI.handleKeyPress = (callData) => {
-    model.mouseManipulators
+    model.keyboardManipulators
+      .filter((m) => m.onKeyPress)
+      .forEach((manipulator) => {
+        manipulator.onKeyPress(
+          model.interactor,
+          callData.pokedRenderer,
+          callData.key
+        );
+        publicAPI.invokeInteractionEvent(INTERACTION_EVENT);
+      });
+  };
+
+  //-------------------------------------------------------------------------
+  publicAPI.handleKeyDown = (callData) => {
+    model.keyboardManipulators
       .filter((m) => m.onKeyDown)
       .forEach((manipulator) => {
-        manipulator.onKeyDown(model.interactor, callData.key);
+        manipulator.onKeyDown(
+          model.interactor,
+          callData.pokedRenderer,
+          callData.key
+        );
         publicAPI.invokeInteractionEvent(INTERACTION_EVENT);
       });
   };
 
   //-------------------------------------------------------------------------
   publicAPI.handleKeyUp = (callData) => {
-    model.mouseManipulators.filter((m) => m.onKeyUp).forEach((manipulator) => {
-      manipulator.onKeyUp(model.interactor, callData.key);
-      publicAPI.invokeInteractionEvent(INTERACTION_EVENT);
-    });
+    model.keyboardManipulators
+      .filter((m) => m.onKeyUp)
+      .forEach((manipulator) => {
+        manipulator.onKeyUp(
+          model.interactor,
+          callData.pokedRenderer,
+          callData.key
+        );
+        publicAPI.invokeInteractionEvent(INTERACTION_EVENT);
+      });
   };
 
   //-------------------------------------------------------------------------
@@ -660,6 +706,7 @@ const DEFAULT_VALUES = {
   currentManipulator: null,
   currentWheelManipulator: null,
   // mouseManipulators: null,
+  // keyboardManipulators: null,
   // vrManipulators: null,
   // gestureManipulators: null,
   centerOfRotation: [0, 0, 0],

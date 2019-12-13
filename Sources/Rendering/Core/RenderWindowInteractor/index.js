@@ -54,6 +54,8 @@ const handledEvents = [
   'EndRotate',
   'Button3D',
   'Move3D',
+  'StartPointerLock',
+  'EndPointerLock',
   'StartInteractionEvent',
   'InteractionEvent',
   'EndInteractionEvent',
@@ -221,6 +223,11 @@ function vtkRenderWindowInteractor(publicAPI, model) {
       .querySelector('body')
       .addEventListener('keyup', publicAPI.handleKeyUp);
 
+    document.addEventListener(
+      'pointerlockchange',
+      publicAPI.handlePointerLockChange
+    );
+
     container.addEventListener('touchstart', publicAPI.handleTouchStart, false);
   };
 
@@ -244,6 +251,10 @@ function vtkRenderWindowInteractor(publicAPI, model) {
     document
       .querySelector('body')
       .removeEventListener('keyup', publicAPI.handleKeyUp);
+    document.removeEventListener(
+      'pointerlockchange',
+      publicAPI.handlePointerLockChange
+    );
     model.container.removeEventListener(
       'touchstart',
       publicAPI.handleTouchStart
@@ -289,6 +300,27 @@ function vtkRenderWindowInteractor(publicAPI, model) {
       default:
         vtkErrorMacro(`Unknown mouse button pressed: ${event.which}`);
         break;
+    }
+  };
+
+  //----------------------------------------------------------------------
+  publicAPI.requestPointerLock = () => {
+    const canvas = publicAPI.getView().getCanvas();
+    canvas.requestPointerLock();
+  };
+
+  //----------------------------------------------------------------------
+  publicAPI.exitPointerLock = () => document.exitPointerLock();
+
+  //----------------------------------------------------------------------
+  publicAPI.isPointerLocked = () => !!document.pointerLockElement;
+
+  //----------------------------------------------------------------------
+  publicAPI.handlePointerLockChange = () => {
+    if (publicAPI.isPointerLocked()) {
+      publicAPI.startPointerLockEvent();
+    } else {
+      publicAPI.endPointerLockEvent();
     }
   };
 
