@@ -4,6 +4,7 @@ import vtkGenericRenderWindow from './GenericRenderWindow';
 import vtkRemoteView from './RemoteView';
 import vtkRenderWindowWithControlBar from './RenderWindowWithControlBar';
 import vtkSynchronizableRenderWindow from './SynchronizableRenderWindow';
+import vtkTextureLODsDownloader from './TextureLODsDownloader';
 
 export default {
   vtkCanvasView,
@@ -12,4 +13,5 @@ export default {
   vtkRemoteView,
   vtkRenderWindowWithControlBar,
   vtkSynchronizableRenderWindow,
+  vtkTextureLODsDownloader,
 };

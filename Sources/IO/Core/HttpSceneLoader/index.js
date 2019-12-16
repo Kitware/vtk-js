@@ -3,6 +3,7 @@ import vtkActor from 'vtk.js/Sources/Rendering/Core/Actor';
 import vtkHttpDataSetReader from 'vtk.js/Sources/IO/Core/HttpDataSetReader';
 import vtkMapper from 'vtk.js/Sources/Rendering/Core/Mapper';
 import vtkTexture from 'vtk.js/Sources/Rendering/Core/Texture';
+import vtkTextureLODsDownloader from 'vtk.js/Sources/Rendering/Misc/TextureLODsDownloader';
 
 import DataAccessHelper from 'vtk.js/Sources/IO/Core/DataAccessHelper';
 
@@ -44,6 +45,10 @@ function applySettings(sceneItem, settings) {
     sceneItem.mapper.getLookupTable().set(settings.lookupTable);
     sceneItem.mapper.getLookupTable().build();
   }
+
+  if (settings.textureLODs) {
+    sceneItem.textureLODs = settings.textureLODs;
+  }
 }
 
 // ----------------------------------------------------------------------------
@@ -79,6 +84,24 @@ function loadHttpDataSetReader(item, model, publicAPI) {
         actor.addTexture(texture);
         sceneItem.texture = texture;
       });
+  }
+
+  const { textureLODs } = item;
+  if (textureLODs && textureLODs.files && textureLODs.files.length !== 0) {
+    // Set it on the scene item so it can be accessed later, for
+    // doing things like setting a callback function.
+    sceneItem.textureLODsDownloader = vtkTextureLODsDownloader.newInstance();
+    const textureDownloader = sceneItem.textureLODsDownloader;
+
+    const texture = vtkTexture.newInstance();
+    texture.setInterpolate(true);
+    actor.addTexture(texture);
+
+    textureDownloader.setTexture(texture);
+    textureDownloader.setCrossOrigin('anonymous');
+    textureDownloader.setBaseUrl(textureLODs.baseUrl);
+    textureDownloader.setFiles(textureLODs.files);
+    textureDownloader.startDownloads();
   }
 
   if (model.renderer) {
