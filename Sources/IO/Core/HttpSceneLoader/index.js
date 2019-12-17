@@ -69,7 +69,10 @@ function loadHttpDataSetReader(item, model, publicAPI) {
     actor,
     defaultSettings: item,
   };
-  if (item.texture) {
+  if (item.texture && item.texture in model.usedTextures) {
+    // If this texture has already been used, re-use it
+    actor.addTexture(model.usedTextures[item.texture]);
+  } else if (item.texture) {
     const textureSource = vtkHttpDataSetReader.newInstance({
       fetchGzip: model.fetchGzip,
       dataAccessHelper: model.dataAccessHelper,
@@ -83,25 +86,33 @@ function loadHttpDataSetReader(item, model, publicAPI) {
         texture.setInputData(textureSource.getOutputData());
         actor.addTexture(texture);
         sceneItem.texture = texture;
+        model.usedTextures[item.texture] = texture;
       });
   }
 
   const { textureLODs } = item;
   if (textureLODs && textureLODs.files && textureLODs.files.length !== 0) {
-    // Set it on the scene item so it can be accessed later, for
-    // doing things like setting a callback function.
-    sceneItem.textureLODsDownloader = vtkTextureLODsDownloader.newInstance();
-    const textureDownloader = sceneItem.textureLODsDownloader;
+    // If this texture LOD has already been used, re-use it
+    const textureLODsStr = JSON.stringify(textureLODs);
+    if (textureLODsStr in model.usedTextureLODs) {
+      actor.addTexture(model.usedTextureLODs[textureLODsStr]);
+    } else {
+      // Set it on the scene item so it can be accessed later, for
+      // doing things like setting a callback function.
+      sceneItem.textureLODsDownloader = vtkTextureLODsDownloader.newInstance();
+      const textureDownloader = sceneItem.textureLODsDownloader;
 
-    const texture = vtkTexture.newInstance();
-    texture.setInterpolate(true);
-    actor.addTexture(texture);
+      const texture = vtkTexture.newInstance();
+      texture.setInterpolate(true);
+      actor.addTexture(texture);
+      model.usedTextureLODs[textureLODsStr] = texture;
 
-    textureDownloader.setTexture(texture);
-    textureDownloader.setCrossOrigin('anonymous');
-    textureDownloader.setBaseUrl(textureLODs.baseUrl);
-    textureDownloader.setFiles(textureLODs.files);
-    textureDownloader.startDownloads();
+      textureDownloader.setTexture(texture);
+      textureDownloader.setCrossOrigin('anonymous');
+      textureDownloader.setBaseUrl(textureLODs.baseUrl);
+      textureDownloader.setFiles(textureLODs.files);
+      textureDownloader.startDownloads();
+    }
   }
 
   if (model.renderer) {
@@ -139,6 +150,10 @@ function updateDatasetTypeMapping(typeName, handler) {
 
 function vtkHttpSceneLoader(publicAPI, model) {
   const originalSceneParameters = {};
+
+  // These are here to re-use the same textures when possible
+  model.usedTextures = {};
+  model.usedTextureLODs = {};
 
   // Set our className
   model.classHierarchy.push('vtkHttpSceneLoader');
@@ -185,6 +200,10 @@ function vtkHttpSceneLoader(publicAPI, model) {
             }
           });
           global.scene = model.scene;
+
+          // Clear these
+          model.usedTextures = {};
+          model.usedTextureLODs = {};
         }
         // Capture index.json into meta
         model.metadata = data;
