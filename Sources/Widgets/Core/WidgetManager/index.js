@@ -194,18 +194,20 @@ function vtkWidgetManager(publicAPI, model) {
 
   publicAPI.enablePicking = () => {
     model.pickingEnabled = true;
+    model.pickingAvailable = true;
+    publicAPI.renderWidgets();
+  };
 
-    model.renderingType = RenderingTypes.PICKING_BUFFER;
-    model.widgets.forEach(updateWidgetForRender);
+  publicAPI.renderWidgets = () => {
+    if (model.pickingEnabled && model.captureOn === CaptureOn.MOUSE_RELEASE) {
+      model.renderingType = RenderingTypes.PICKING_BUFFER;
+      model.widgets.forEach(updateWidgetForRender);
 
-    if (model.captureOn === CaptureOn.MOUSE_RELEASE) {
       const [w, h] = model.openGLRenderWindow.getSize();
       model.selector.setArea(0, 0, w, h);
       model.selector.releasePixBuffers();
       model.pickingAvailable = model.selector.captureBuffers();
       model.previousSelectedData = null;
-    } else {
-      model.pickingAvailable = true;
     }
 
     model.renderingType = RenderingTypes.FRONT_BUFFER;
