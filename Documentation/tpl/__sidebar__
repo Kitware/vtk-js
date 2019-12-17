@@ -3,6 +3,7 @@ docs:
     overview: index.html
     external: intro_vtk_as_external_script.html
     es6_dep: intro_vtk_as_es6_dependency.html
+    tutorial: tutorial.html
 
   develop:
     requirement: develop_requirement.html
