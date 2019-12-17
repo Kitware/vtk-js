@@ -14,9 +14,16 @@ function vtkBoundsMixin(publicAPI, model) {
 
   publicAPI.placeWidget = (bounds) => {
     model.bounds = [];
+    const center = [
+      (bounds[0] + bounds[1]) / 2.0,
+      (bounds[2] + bounds[3]) / 2.0,
+      (bounds[4] + bounds[5]) / 2.0,
+    ];
     for (let i = 0; i < 6; i++) {
+      const axisCenter = center[Math.floor(i / 2)];
       sourceBounds[i] = bounds[i];
-      model.bounds[i] = bounds[i] * model.placeFactor;
+      model.bounds[i] =
+        (bounds[i] - axisCenter) * model.placeFactor + axisCenter;
     }
     bbox.setBounds(model.bounds);
     publicAPI.invokeBoundsChange(model.bounds);
@@ -27,8 +34,15 @@ function vtkBoundsMixin(publicAPI, model) {
     if (model.placeFactor !== factor) {
       model.placeFactor = factor;
       model.bounds = [];
+      const center = [
+        (sourceBounds[0] + sourceBounds[1]) / 2.0,
+        (sourceBounds[2] + sourceBounds[3]) / 2.0,
+        (sourceBounds[4] + sourceBounds[5]) / 2.0,
+      ];
       for (let i = 0; i < 6; i++) {
-        model.bounds[i] = sourceBounds[i] * model.placeFactor;
+        const axisCenter = center[Math.floor(i / 2)];
+        model.bounds[i] =
+          (sourceBounds[i] - axisCenter) * model.placeFactor + axisCenter;
       }
       bbox.setBounds(model.bounds);
       publicAPI.invokeBoundsChange(model.bounds);
