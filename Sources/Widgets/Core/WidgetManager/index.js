@@ -192,6 +192,26 @@ function vtkWidgetManager(publicAPI, model) {
     w.updateRepresentationForRender(model.renderingType);
   }
 
+  function renderPickingBuffer() {
+    model.renderingType = RenderingTypes.PICKING_BUFFER;
+    model.widgets.forEach(updateWidgetForRender);
+  }
+
+  function renderFrontBuffer() {
+    model.renderingType = RenderingTypes.FRONT_BUFFER;
+    model.widgets.forEach(updateWidgetForRender);
+  }
+
+  function captureBuffers(x1, y1, x2, y2) {
+    renderPickingBuffer();
+
+    model.selector.setArea(x1, y1, x2, y2);
+    model.selector.releasePixBuffers();
+
+    model.previousSelectedData = null;
+    return model.selector.captureBuffers();
+  }
+
   publicAPI.enablePicking = () => {
     model.pickingEnabled = true;
     model.pickingAvailable = true;
@@ -200,19 +220,11 @@ function vtkWidgetManager(publicAPI, model) {
 
   publicAPI.renderWidgets = () => {
     if (model.pickingEnabled && model.captureOn === CaptureOn.MOUSE_RELEASE) {
-      model.renderingType = RenderingTypes.PICKING_BUFFER;
-      model.widgets.forEach(updateWidgetForRender);
-
       const [w, h] = model.openGLRenderWindow.getSize();
-      model.selector.setArea(0, 0, w, h);
-      model.selector.releasePixBuffers();
-      model.pickingAvailable = model.selector.captureBuffers();
-      model.previousSelectedData = null;
+      model.pickingAvailable = captureBuffers(0, 0, w, h);
     }
 
-    model.renderingType = RenderingTypes.FRONT_BUFFER;
-    model.widgets.forEach(updateWidgetForRender);
-
+    renderFrontBuffer();
     publicAPI.modified();
   };
 
@@ -355,23 +367,17 @@ function vtkWidgetManager(publicAPI, model) {
   };
 
   publicAPI.updateSelectionFromXY = (x, y) => {
-    let pickingAvailable = model.pickingAvailable;
+    if (model.pickingEnabled) {
+      let pickingAvailable = model.pickingAvailable;
 
-    if (model.captureOn === CaptureOn.MOUSE_MOVE) {
-      model.renderingType = RenderingTypes.PICKING_BUFFER;
-      model.widgets.forEach(updateWidgetForRender);
+      if (model.captureOn === CaptureOn.MOUSE_MOVE) {
+        pickingAvailable = captureBuffers(x, y, x, y);
+        renderFrontBuffer();
+      }
 
-      model.selector.setArea(x, y, x, y);
-      model.selector.releasePixBuffers();
-      pickingAvailable = model.selector.captureBuffers();
-      model.previousSelectedData = null;
-
-      model.renderingType = RenderingTypes.FRONT_BUFFER;
-      model.widgets.forEach(updateWidgetForRender);
-    }
-
-    if (pickingAvailable) {
-      model.selections = model.selector.generateSelection(x, y, x, y);
+      if (pickingAvailable) {
+        model.selections = model.selector.generateSelection(x, y, x, y);
+      }
     }
   };
 
