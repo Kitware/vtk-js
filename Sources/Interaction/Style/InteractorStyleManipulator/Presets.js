@@ -11,6 +11,8 @@ const MANIPULTOR_TYPES = {
   range: Manipulators.vtkMouseRangeManipulator,
   vrPan: Manipulators.vtkVRButtonPanManipulator,
   gestureCamera: Manipulators.vtkGestureCameraManipulator,
+  movement: Manipulators.vtkKeyboardCameraManipulator,
+  freeLook: Manipulators.vtkMouseCameraTrackballFirstPersonManipulator,
 };
 
 const STYLES = {
@@ -38,6 +40,7 @@ const STYLES = {
     { type: 'vrPan' },
     { type: 'gestureCamera' },
   ],
+  FirstPerson: [{ type: 'movement' }, { type: 'freeLook' }],
 };
 
 function applyDefinitions(definitions, manipulatorStyle) {
@@ -51,6 +54,8 @@ function applyDefinitions(definitions, manipulatorStyle) {
       manipulatorStyle.addVRManipulator(instance);
     } else if (instance.isA('vtkCompositeGestureManipulator')) {
       manipulatorStyle.addGestureManipulator(instance);
+    } else if (instance.isA('vtkCompositeKeyboardManipulator')) {
+      manipulatorStyle.addKeyboardManipulator(instance);
     } else {
       manipulatorStyle.addMouseManipulator(instance);
     }
