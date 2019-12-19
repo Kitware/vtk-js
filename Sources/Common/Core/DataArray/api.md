@@ -23,7 +23,7 @@ Get bounds of the array and its components.
 
 ## getDataType(): String
 
-Type of data in the array, one of: 
+Type of data in the array, one of:
 
 - CHAR: 'Int8Array
 - SIGNED_CHAR: 'Int8Array
