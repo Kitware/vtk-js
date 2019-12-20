@@ -73,21 +73,40 @@ function loadHttpDataSetReader(item, model, publicAPI) {
     // If this texture has already been used, re-use it
     actor.addTexture(model.usedTextures[item.texture]);
   } else if (item.texture) {
-    const textureSource = vtkHttpDataSetReader.newInstance({
-      fetchGzip: model.fetchGzip,
-      dataAccessHelper: model.dataAccessHelper,
-    });
-    textureSource
-      .setUrl([model.baseURL, item.texture].join('/'), { loadData: true })
-      .then(() => {
-        const texture = vtkTexture.newInstance();
-        texture.setInterpolate(true);
-        texture.setRepeat(true);
-        texture.setInputData(textureSource.getOutputData());
-        actor.addTexture(texture);
-        sceneItem.texture = texture;
-        model.usedTextures[item.texture] = texture;
+    const texture = vtkTexture.newInstance();
+    texture.setInterpolate(true);
+    texture.setRepeat(true);
+    actor.addTexture(texture);
+    sceneItem.texture = texture;
+    model.usedTextures[item.texture] = texture;
+
+    const imageTypeMaps = {
+      jpg: 'image/jpeg',
+      jpeg: 'image/jpeg',
+      png: 'image/png',
+    };
+    const ext = item.texture.split('.').pop();
+    if (ext in imageTypeMaps) {
+      // It's an image file
+      const url = [model.baseURL, item.texture].join('/');
+      model.dataAccessHelper.fetchBinary({}, url).then((data) => {
+        const blob = new Blob([data], { type: imageTypeMaps[ext] });
+        const img = new Image();
+        img.src = URL.createObjectURL(blob);
+        texture.setImage(img);
       });
+    } else {
+      // Assume it's a dataset file
+      const textureSource = vtkHttpDataSetReader.newInstance({
+        fetchGzip: model.fetchGzip,
+        dataAccessHelper: model.dataAccessHelper,
+      });
+      textureSource
+        .setUrl([model.baseURL, item.texture].join('/'), { loadData: true })
+        .then(() => {
+          texture.setInputData(textureSource.getOutputData());
+        });
+    }
   }
 
   const { textureLODs } = item;
