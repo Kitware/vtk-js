@@ -340,4 +340,5 @@ export default {
   decorate,
   createInstanceMap,
   createArrayHandler,
+  vtkObjectManager,
 };
