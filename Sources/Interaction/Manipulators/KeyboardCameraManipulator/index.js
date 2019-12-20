@@ -1,4 +1,5 @@
 import macro from 'vtk.js/Sources/macro';
+import vtkBoundingBox from 'vtk.js/Sources/Common/DataModel/BoundingBox';
 import vtkCompositeKeyboardManipulator from 'vtk.js/Sources/Interaction/Manipulators/CompositeKeyboardManipulator';
 import * as vtkMath from 'vtk.js/Sources/Common/Core/Math';
 
@@ -30,10 +31,28 @@ function vtkKeyboardCameraManipulator(publicAPI, model) {
 
   //--------------------------------------------------------------------------
 
+  publicAPI.resetMovementSpeed = () => {
+    // Reset the movement speed to be proportional to the longest length
+    // of the renderer's bounds.
+    const { renderer } = internal;
+
+    const bounds = renderer.computeVisiblePropBounds();
+
+    // Just a number that seems to work okay for our examples...
+    const divisor = 500;
+    model.movementSpeed = vtkBoundingBox.getMaxLength(bounds) / divisor;
+  };
+
+  //--------------------------------------------------------------------------
+
   publicAPI.startMovement = () => {
     if (publicAPI.inMotion()) {
       vtkErrorMacro('Camera is already in motion!');
       return;
+    }
+
+    if (model.movementSpeed === null) {
+      publicAPI.resetMovementSpeed();
     }
 
     const { interactor, renderer } = internal;
@@ -225,7 +244,11 @@ function vtkKeyboardCameraManipulator(publicAPI, model) {
 // ----------------------------------------------------------------------------
 
 const DEFAULT_VALUES = {
-  movementSpeed: 0.02,
+  // The movementSpeed is the magnitude of the camera translation
+  // for each animation frame (which occur each 1/60 second)
+  // If null, publicAPI.resetMovementSpeed() will be called when
+  // movement starts.
+  movementSpeed: null,
   moveForwardKeys: ['w', 'W', 'ArrowUp'],
   moveLeftKeys: ['a', 'A', 'ArrowLeft'],
   moveBackwardKeys: ['s', 'S', 'ArrowDown'],
