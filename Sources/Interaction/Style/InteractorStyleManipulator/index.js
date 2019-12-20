@@ -723,6 +723,12 @@ export function extend(publicAPI, model, initialValues = {}) {
 
   // Create get-set macros
   macro.setGet(publicAPI, model, ['rotationFactor']);
+  macro.get(publicAPI, model, [
+    'mouseManipulators',
+    'keyboardManipulators',
+    'vrManipulators',
+    'gestureManipulators',
+  ]);
 
   macro.setGetArray(publicAPI, model, ['centerOfRotation'], 3);
 
