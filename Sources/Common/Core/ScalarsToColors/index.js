@@ -51,11 +51,7 @@ function vtkScalarsToColors(publicAPI, model) {
       return;
     }
 
-    if (
-      values &&
-      annotations &&
-      values.getNumberOfTuples() !== annotations.getNumberOfTuples()
-    ) {
+    if (values && annotations && values.length !== annotations.length) {
       vtkErrorMacro(
         'Values and annotations do not have the same number of tuples so ignoring'
       );
@@ -65,11 +61,11 @@ function vtkScalarsToColors(publicAPI, model) {
     model.annotationArray = [];
 
     if (annotations && values) {
-      const num = annotations.getNumberOfTuples();
+      const num = annotations.length;
       for (let i = 0; i < num; i++) {
         model.annotationArray.push({
           value: values[i],
-          annotation: annotations[i],
+          annotation: String(annotations[i]),
         });
       }
     }
@@ -164,6 +160,7 @@ function vtkScalarsToColors(publicAPI, model) {
       const na = model.annotationArray.length;
       return model.annotatedValueMap[value] % na;
     }
+    // Treat as a NaN
     return -1;
   };
 
@@ -180,7 +177,7 @@ function vtkScalarsToColors(publicAPI, model) {
     model.annotatedValueMap = [];
 
     const na = model.annotationArray.length;
-    for (let i = 0; i < na; ++i) {
+    for (let i = 0; i < na; i++) {
       model.annotatedValueMap[model.annotationArray[i].value] = i;
     }
   };
