@@ -246,7 +246,7 @@ function vtkLookupTable(publicAPI, model) {
     const { numberOfColors } = model;
 
     const tptr = model.table;
-    let base = (model.numberOfColors + BELOW_RANGE_COLOR_INDEX) * 4;
+    let base = (numberOfColors + BELOW_RANGE_COLOR_INDEX) * 4;
 
     // Below range color
     if (model.useBelowRangeColor || numberOfColors === 0) {
@@ -263,7 +263,7 @@ function vtkLookupTable(publicAPI, model) {
     }
 
     // Above range color
-    base = (model.numberOfColors + ABOVE_RANGE_COLOR_INDEX) * 4;
+    base = (numberOfColors + ABOVE_RANGE_COLOR_INDEX) * 4;
     if (model.useAboveRangeColor || numberOfColors === 0) {
       tptr[base] = model.aboveRangeColor[0] * 255.0 + 0.5;
       tptr[base + 1] = model.aboveRangeColor[1] * 255.0 + 0.5;
@@ -278,7 +278,7 @@ function vtkLookupTable(publicAPI, model) {
     }
 
     // Always use NanColor
-    base = (model.numberOfColors + NAN_COLOR_INDEX) * 4;
+    base = (numberOfColors + NAN_COLOR_INDEX) * 4;
     tptr[base] = model.nanColor[0] * 255.0 + 0.5;
     tptr[base + 1] = model.nanColor[1] * 255.0 + 0.5;
     tptr[base + 2] = model.nanColor[2] * 255.0 + 0.5;
@@ -294,6 +294,12 @@ function vtkLookupTable(publicAPI, model) {
       publicAPI.forceBuild();
     }
   };
+
+  if (model.table.length > 0) {
+    // ensure insertTime is more recently modified than buildTime if
+    // a table is provided via the constructor
+    model.insertTime.modified();
+  }
 }
 
 // ----------------------------------------------------------------------------
