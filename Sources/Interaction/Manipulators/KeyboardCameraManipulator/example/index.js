@@ -70,7 +70,9 @@ reader.setUrl(`${__BASE_PATH__}/data/elevation/dem.csv`).then(() => {
   renderWindow.render();
 });
 
-const keyboardManipulator = Manipulators.vtkKeyboardCameraManipulator.newInstance();
+const keyboardManipulator = Manipulators.vtkKeyboardCameraManipulator.newInstance(
+  { movementSpeed: 0.02 }
+);
 const mouseManipulator = Manipulators.vtkMouseCameraTrackballFirstPersonManipulator.newInstance();
 
 const iStyle = vtkInteractorStyleManipulator.newInstance();
