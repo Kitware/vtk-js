@@ -101,7 +101,8 @@ function vtkResliceCursorWidget(publicAPI, model) {
         publicAPI.render();
       }
       return VOID;
-    } else if (model.widgetState === WidgetState.WINDOW_LEVEL) {
+    }
+    if (model.widgetState === WidgetState.WINDOW_LEVEL) {
       model.imageInteractorStyle.handleMouseMove(callData);
     } else {
       model.widgetRep.complexWidgetInteraction(position);

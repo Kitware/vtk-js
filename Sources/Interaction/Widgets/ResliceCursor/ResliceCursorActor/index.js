@@ -47,14 +47,6 @@ function vtkResliceCursorActor(publicAPI, model) {
     model.cursorCenterlineActor[axis1].setVisibility(model.visibility);
     model.cursorCenterlineActor[axis2].setVisibility(model.visibility);
     model.cursorCenterlineActor[axisNormal].setVisibility(0);
-
-    model.cursorCenterlineActor[axis1]
-      .getProperty()
-      .setEdgeVisibility(model.visibility);
-    model.cursorCenterlineActor[axis2]
-      .getProperty()
-      .setEdgeVisibility(model.visibility);
-    model.cursorCenterlineActor[axisNormal].getProperty().setEdgeVisibility(0);
   };
 
   publicAPI.getBounds = () => {
@@ -152,14 +144,6 @@ export function extend(publicAPI, model, initialValues = {}) {
   model.centerlineProperty[0].setColor(1, 0, 0);
   model.centerlineProperty[1].setColor(0, 1, 0);
   model.centerlineProperty[2].setColor(0, 0, 1);
-
-  model.centerlineProperty[0].setEdgeColor(1, 0, 0);
-  model.centerlineProperty[1].setEdgeColor(0, 1, 0);
-  model.centerlineProperty[2].setEdgeColor(0, 0, 1);
-
-  model.centerlineProperty[0].setEdgeVisibility(1);
-  model.centerlineProperty[1].setEdgeVisibility(1);
-  model.centerlineProperty[2].setEdgeVisibility(1);
 
   macro.get(publicAPI, model, ['cursorAlgorithm']);
 
