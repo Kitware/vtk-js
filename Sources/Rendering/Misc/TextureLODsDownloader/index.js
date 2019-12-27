@@ -41,8 +41,6 @@ function vtkTextureLODsDownloader(publicAPI, model) {
     const downloadNextTexture = () => {
       const img = new Image();
       img.onload = () => {
-        console.log('Finishing downloading texture at ', img.src);
-        console.log('Setting the texture...');
         model.texture.setImage(img);
         if (model.stepFinishedCallback) {
           model.stepFinishedCallback();
@@ -56,7 +54,6 @@ function vtkTextureLODsDownloader(publicAPI, model) {
         img.crossOrigin = model.crossOrigin;
       }
       img.src = internal.downloadStack.shift();
-      console.log('Downloading texture at:', img.src);
     };
 
     downloadNextTexture();
