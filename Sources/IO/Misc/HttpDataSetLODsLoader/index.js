@@ -77,12 +77,12 @@ function vtkHttpDataSetLODsLoader(publicAPI, model) {
           model.stepFinishedCallback();
         }
         if (internal.downloadStack.length !== 0) {
-          downloadNextSource();
+          setTimeout(downloadNextSource, model.waitTimeBetweenDownloads);
         }
       });
     };
 
-    downloadNextSource();
+    setTimeout(downloadNextSource, model.waitTimeToStart);
   };
 }
 
@@ -100,6 +100,9 @@ const DEFAULT_VALUES = {
   mapper: null,
   sceneItem: null,
   stepFinishedCallback: null,
+  // These are in milliseconds
+  waitTimeToStart: 4000,
+  waitTimeBetweenDownloads: 0,
 };
 
 // ----------------------------------------------------------------------------
@@ -116,6 +119,8 @@ export function extend(publicAPI, model, initialValues = {}) {
     'mapper',
     'sceneItem',
     'stepFinishedCallback',
+    'waitTimeToStart',
+    'waitTimeBetweenDownloads',
   ]);
 
   macro.get(publicAPI, model, ['currentSource']);

@@ -47,7 +47,7 @@ function vtkTextureLODsDownloader(publicAPI, model) {
         }
 
         if (internal.downloadStack.length !== 0) {
-          downloadNextTexture();
+          setTimeout(downloadNextTexture, model.waitTimeBetweenDownloads);
         }
       };
       if (model.crossOrigin) {
@@ -56,7 +56,7 @@ function vtkTextureLODsDownloader(publicAPI, model) {
       img.src = internal.downloadStack.shift();
     };
 
-    downloadNextTexture();
+    setTimeout(downloadNextTexture, model.waitTimeToStart);
   };
 }
 
@@ -70,6 +70,9 @@ const DEFAULT_VALUES = {
   texture: null,
   crossOrigin: undefined,
   stepFinishedCallback: null,
+  // These are in milliseconds
+  waitTimeToStart: 4000,
+  waitTimeBetweenDownloads: 0,
 };
 
 // ----------------------------------------------------------------------------
@@ -86,6 +89,8 @@ export function extend(publicAPI, model, initialValues = {}) {
     'texture',
     'crossOrigin',
     'stepFinishedCallback',
+    'waitTimeToStart',
+    'waitTimeBetweenDownloads',
   ]);
 
   // Object specific methods
