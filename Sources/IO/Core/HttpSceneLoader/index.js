@@ -4,6 +4,7 @@ import vtkHttpDataSetReader from 'vtk.js/Sources/IO/Core/HttpDataSetReader';
 import vtkMapper from 'vtk.js/Sources/Rendering/Core/Mapper';
 import vtkTexture from 'vtk.js/Sources/Rendering/Core/Texture';
 import vtkTextureLODsDownloader from 'vtk.js/Sources/Rendering/Misc/TextureLODsDownloader';
+import vtkHttpDataSetLODsLoader from 'vtk.js/Sources/IO/Misc/HttpDataSetLODsLoader';
 
 import DataAccessHelper from 'vtk.js/Sources/IO/Core/DataAccessHelper';
 
@@ -48,6 +49,10 @@ function applySettings(sceneItem, settings) {
 
   if (settings.textureLODs) {
     sceneItem.textureLODs = settings.textureLODs;
+  }
+
+  if (settings.sourceLODs) {
+    sceneItem.sourceLODs = settings.sourceLODs;
   }
 }
 
@@ -151,6 +156,20 @@ function loadHttpDataSetReader(item, model, publicAPI) {
 
   applySettings(sceneItem, item);
   model.scene.push(sceneItem);
+
+  const { sourceLODs } = item;
+  if (sourceLODs && sourceLODs.files && sourceLODs.files.length !== 0) {
+    // Set it on the scene item so it can be accessed later, for
+    // doing things like setting a callback function.
+    sceneItem.dataSetLODsLoader = vtkHttpDataSetLODsLoader.newInstance();
+    const { dataSetLODsLoader } = sceneItem;
+
+    dataSetLODsLoader.setMapper(mapper);
+    dataSetLODsLoader.setSceneItem(sceneItem);
+    dataSetLODsLoader.setBaseUrl(sourceLODs.baseUrl);
+    dataSetLODsLoader.setFiles(sourceLODs.files);
+    dataSetLODsLoader.startDownloads();
+  }
 
   return sceneItem;
 }
