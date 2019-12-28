@@ -212,7 +212,7 @@ function create(createOptions) {
 
       return zipRoot
         .file(path)
-        .async('uint8array')
+        .async('arraybuffer')
         .then((data) => Promise.resolve(data));
     },
   };
