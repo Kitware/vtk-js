@@ -39,21 +39,40 @@ function vtkTextureLODsDownloader(publicAPI, model) {
     );
 
     const downloadNextTexture = () => {
-      const img = new Image();
-      img.onload = () => {
-        model.texture.setImage(img);
-        if (model.stepFinishedCallback) {
-          model.stepFinishedCallback();
-        }
+      if (internal.downloadStack.length === 0) {
+        return;
+      }
 
-        if (internal.downloadStack.length !== 0) {
-          setTimeout(downloadNextTexture, model.waitTimeBetweenDownloads);
-        }
+      // For later use
+      const asyncDownloadNextTexture = () => {
+        setTimeout(downloadNextTexture, model.waitTimeBetweenDownloads);
       };
+
+      const img = new Image();
       if (model.crossOrigin) {
         img.crossOrigin = model.crossOrigin;
       }
       img.src = internal.downloadStack.shift();
+
+      // Decode the image asynchronously in an attempt to prevent a
+      // freeze during rendering.
+      // In theory, this should help, but my profiling indicates that
+      // it does not help much... maybe it is running in the main
+      // thread anyways?
+      img
+        .decode()
+        .then(() => {
+          model.texture.setImage(img);
+          if (model.stepFinishedCallback) {
+            model.stepFinishedCallback();
+          }
+          asyncDownloadNextTexture();
+        })
+        .catch((encodingError) => {
+          console.log('Failed to decode image:', img.src);
+          console.log('Error is:', encodingError);
+          asyncDownloadNextTexture();
+        });
     };
 
     setTimeout(downloadNextTexture, model.waitTimeToStart);
