@@ -37,7 +37,7 @@ function vtkImageDataToCornerstoneImage(publicAPI, model) {
     // FIXME probably need to expand to RGBA
     let pixelData = null;
     if (dims[2] === 1) {
-      pixelData = scalars.data;
+      pixelData = (scalars.data === null || scalars.data === undefined) ? rawData : scalars.data;
     } else {
       const offset =
         model.sliceIndex * dims[0] * dims[1] * rawData.BYTES_PER_ELEMENT;
@@ -52,13 +52,13 @@ function vtkImageDataToCornerstoneImage(publicAPI, model) {
       imageId: model.imageId,
       color: scalars.getNumberOfComponents() > 1,
 
-      columnPixelSpacing: spacing[1],
-      columns: dims[1],
-      width: dims[1],
+      columnPixelSpacing: spacing[0],
+      columns: dims[0],
+      width: dims[0],
 
-      rowPixelSpacing: spacing[0],
-      rows: dims[0],
-      height: dims[0],
+      rowPixelSpacing: spacing[1],
+      rows: dims[1],
+      height: dims[1],
 
       intercept: 0,
       invert: false,
