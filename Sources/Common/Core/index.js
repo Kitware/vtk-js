@@ -1,3 +1,4 @@
+import vtkBase64 from './Base64';
 import vtkCellArray from './CellArray';
 import vtkDataArray from './DataArray';
 import vtkEndian from './Endian';
@@ -13,6 +14,7 @@ import vtkURLExtract from './URLExtract';
 import vtkVariantArray from './VariantArray';
 
 export default {
+  vtkBase64,
   vtkCellArray,
   vtkDataArray,
   vtkEndian,
