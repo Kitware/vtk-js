@@ -7,7 +7,7 @@ title: Examples
     flex-direction: row;
     flex-wrap: wrap;
   }
-  
+
   .category {
     flex: 1;
     min-width: 225px;
@@ -105,6 +105,8 @@ __User interaction__
 <li>[InteractorStyleManipulator](InteractorStyleManipulator.html)</li>
 <li>[MouseRangeManipulator](MouseRangeManipulator.html)</li>
 <li>[VR](VR.html)</li>
+<li>[KeyboardCameraManipulator](KeyboardCameraManipulator.html)</li>
+<li>[MouseCameraTrackballFirstPersonManipulator](MouseCameraTrackballFirstPersonManipulator.html)</li>
 </ul>
 
 </div>

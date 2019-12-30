@@ -1,7 +1,7 @@
 title: API
 ---
 
-This documentation provides more detailed information about the API and will be particularly helpful for people who want to use VTK.js into their application. 
+This documentation provides more detailed information about the API and will be particularly helpful for people who want to use VTK.js into their application.
 
 <style>
   .categories {
@@ -13,7 +13,7 @@ This documentation provides more detailed information about the API and will be 
   .categories br {
     display: none;
   }
-  
+
   .category {
     flex: 1;
     min-width: 45%;
@@ -172,10 +172,13 @@ __Common/Transform__
 <ul>
 <li>[CompositeCameraManipulator](Interaction_Manipulators_CompositeCameraManipulator.html)</li>
 <li>[CompositeGestureManipulator](Interaction_Manipulators_CompositeGestureManipulator.html)</li>
+<li>[CompositeKeyboardManipulator](Interaction_Manipulators_CompositeKeyboardManipulator.html)</li>
 <li>[CompositeMouseManipulator](Interaction_Manipulators_CompositeMouseManipulator.html)</li>
 <li>[CompositeVRManipulator](Interaction_Manipulators_CompositeVRManipulator.html)</li>
 <li>[GestureCameraManipulator](Interaction_Manipulators_GestureCameraManipulator.html)</li>
+<li>[KeyboardCameraManipulator](Interaction_Manipulators_KeyboardCameraManipulator.html)</li>
 <li>[MouseCameraSliceManipulator](Interaction_Manipulators_MouseCameraSliceManipulator.html)</li>
+<li>[MouseCameraTrackballFirstPersonManipulator](Interaction_Manipulators_MouseCameraTrackballFirstPersonManipulator.html)</li>
 <li>[MouseCameraTrackballMultiRotateManipulator](Interaction_Manipulators_MouseCameraTrackballMultiRotateManipulator.html)</li>
 <li>[MouseCameraTrackballPanManipulator](Interaction_Manipulators_MouseCameraTrackballPanManipulator.html)</li>
 <li>[MouseCameraTrackballRollManipulator](Interaction_Manipulators_MouseCameraTrackballRollManipulator.html)</li>
@@ -412,7 +415,7 @@ __Common/Transform__
 </div>
 
 <!--
-Some of the vtk.js classes may be missing a dedicated API guide and only its source code may be presented as a reference. A good starting point is to look at the `DEFAULT_VALUES` section which will quickly list the set of properties the class is using along with their initial value. Usually those properties will have a setter and a getter associated to them. Custom/add-on methods will looks like `publicAPI.methodName = [...]` while the generated methods will be in the `export function extend(publicAPI, model, initialValues = {})` function prefixed with `macro.[name]` like `macro.obj()`, `macro.algo()`, `macro.event()`... 
+Some of the vtk.js classes may be missing a dedicated API guide and only its source code may be presented as a reference. A good starting point is to look at the `DEFAULT_VALUES` section which will quickly list the set of properties the class is using along with their initial value. Usually those properties will have a setter and a getter associated to them. Custom/add-on methods will looks like `publicAPI.methodName = [...]` while the generated methods will be in the `export function extend(publicAPI, model, initialValues = {})` function prefixed with `macro.[name]` like `macro.obj()`, `macro.algo()`, `macro.event()`...
 -->
 
 [Book]: ./books_VTK_guide.png
