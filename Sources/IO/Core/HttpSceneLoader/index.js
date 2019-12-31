@@ -135,7 +135,10 @@ function loadHttpDataSetReader(item, model, publicAPI) {
       textureDownloader.setCrossOrigin('anonymous');
       textureDownloader.setBaseUrl(textureLODs.baseUrl);
       textureDownloader.setFiles(textureLODs.files);
-      textureDownloader.startDownloads();
+
+      if (model.startLODLoaders) {
+        textureDownloader.startDownloads();
+      }
     }
   }
 
@@ -168,7 +171,10 @@ function loadHttpDataSetReader(item, model, publicAPI) {
     dataSetLODsLoader.setSceneItem(sceneItem);
     dataSetLODsLoader.setBaseUrl(sourceLODs.baseUrl);
     dataSetLODsLoader.setFiles(sourceLODs.files);
-    dataSetLODsLoader.startDownloads();
+
+    if (model.startLODLoaders) {
+      dataSetLODsLoader.startDownloads();
+    }
   }
 
   return sceneItem;
@@ -285,6 +291,9 @@ const DEFAULT_VALUES = {
   fetchGzip: false,
   url: null,
   baseURL: null,
+  // Whether or not to automatically start texture LOD and poly LOD
+  // downloads when they are read.
+  startLODLoaders: true,
 };
 
 // ----------------------------------------------------------------------------
