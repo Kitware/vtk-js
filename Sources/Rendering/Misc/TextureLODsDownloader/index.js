@@ -3,6 +3,33 @@ import macro from 'vtk.js/Sources/macro';
 const { vtkErrorMacro } = macro;
 
 // ----------------------------------------------------------------------------
+
+const getRemoteFileSize = (url) =>
+  // This function only works if the server provides a 'Content-Length'.
+  // For some reason, the 'Content-Length' header does not appear to be
+  // given for CORS HEAD requests on firefox. So this will not work on
+  // firefox if the images do not have the same origin as the html file.
+  // TODO: figure out how to make this work for CORS requests on firefox.
+  new Promise((resolve, reject) => {
+    const xhr = new XMLHttpRequest();
+    xhr.open('HEAD', url, true);
+
+    xhr.onreadystatechange = () => {
+      if (xhr.readyState === 4) {
+        if (xhr.status === 200) {
+          const size = xhr.getResponseHeader('Content-Length');
+          resolve(size);
+        } else {
+          console.log('Failed to get remote file size of', url);
+          reject(xhr);
+        }
+      }
+    };
+
+    xhr.send();
+  });
+
+// ----------------------------------------------------------------------------
 // vtkTextureLODsDownloader methods
 // ----------------------------------------------------------------------------
 
@@ -52,25 +79,52 @@ function vtkTextureLODsDownloader(publicAPI, model) {
       if (model.crossOrigin) {
         img.crossOrigin = model.crossOrigin;
       }
-      img.src = internal.downloadStack.shift();
 
-      // Decode the image asynchronously in an attempt to prevent a
-      // freeze during rendering.
-      // In theory, this should help, but my profiling indicates that
-      // it does not help much... maybe it is running in the main
-      // thread anyways?
-      img
-        .decode()
-        .then(() => {
-          model.texture.setImage(img);
-          if (model.stepFinishedCallback) {
-            model.stepFinishedCallback();
+      const url = internal.downloadStack.shift();
+      getRemoteFileSize(url)
+        .then((size) => {
+          if (!size || size / 1024 > model.maxTextureLODSize) {
+            if (!size) {
+              console.log('Failed to get image size');
+            } else {
+              console.log(
+                'Skipping image',
+                url,
+                ', because it is larger',
+                'than the max texture size:',
+                model.maxTextureLODSize,
+                'KiB'
+              );
+            }
+            asyncDownloadNextTexture();
+            return;
           }
-          asyncDownloadNextTexture();
+
+          img.src = url;
+          // Decode the image asynchronously in an attempt to prevent a
+          // freeze during rendering.
+          // In theory, this should help, but my profiling indicates that
+          // it does not help much... maybe it is running in the main
+          // thread anyways?
+          img
+            .decode()
+            .then(() => {
+              model.texture.setImage(img);
+              if (model.stepFinishedCallback) {
+                model.stepFinishedCallback();
+              }
+              asyncDownloadNextTexture();
+            })
+            .catch((encodingError) => {
+              console.log('Failed to decode image:', img.src);
+              console.log('Error is:', encodingError);
+              asyncDownloadNextTexture();
+            });
         })
-        .catch((encodingError) => {
-          console.log('Failed to decode image:', img.src);
-          console.log('Error is:', encodingError);
+        .catch((xhr) => {
+          console.log('Failed to get size of:', url);
+          console.log('status was:', xhr.status);
+          console.log('statusText was:', xhr.statusText);
           asyncDownloadNextTexture();
         });
     };
@@ -88,6 +142,8 @@ const DEFAULT_VALUES = {
   files: [],
   texture: null,
   crossOrigin: undefined,
+  // The max texture LOD file size in KiB
+  maxTextureLODSize: 50000,
   stepFinishedCallback: null,
   // These are in milliseconds
   waitTimeToStart: 4000,
@@ -107,6 +163,7 @@ export function extend(publicAPI, model, initialValues = {}) {
     'files',
     'texture',
     'crossOrigin',
+    'maxTextureLODSize',
     'stepFinishedCallback',
     'waitTimeToStart',
     'waitTimeBetweenDownloads',
