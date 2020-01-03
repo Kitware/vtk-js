@@ -336,7 +336,7 @@ export function extend(publicAPI, model, initialValues = {}) {
   Object.assign(model, DEFAULT_VALUES, initialValues);
 
   // Object methods
-  vtkAbstractRepresentationProxy.extend(publicAPI, model);
+  vtkAbstractRepresentationProxy.extend(publicAPI, model, initialValues);
   macro.get(publicAPI, model, ['sampleDistance', 'edgeGradient', 'cropFilter']);
 
   // Object specific methods
