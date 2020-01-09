@@ -99,7 +99,7 @@ export function extend(publicAPI, model, initialValues = {}) {
   Object.assign(model, DEFAULT_VALUES, initialValues);
 
   // Object methods
-  vtkAbstractRepresentationProxy.extend(publicAPI, model);
+  vtkAbstractRepresentationProxy.extend(publicAPI, model, initialValues);
 
   // Object specific methods
   vtkGlyphRepresentationProxy(publicAPI, model);
