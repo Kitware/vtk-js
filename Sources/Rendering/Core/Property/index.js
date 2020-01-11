@@ -16,7 +16,22 @@ function vtkProperty(publicAPI, model) {
   model.classHierarchy.push('vtkProperty');
 
   publicAPI.setColor = (r, g, b) => {
-    if (model.color[0] !== r || model.color[1] !== g || model.color[2] !== b) {
+    if (Array.isArray(r)) {
+      if (
+        model.color[0] !== r[0] ||
+        model.color[1] !== r[1] ||
+        model.color[2] !== r[2]
+      ) {
+        model.color[0] = r[0];
+        model.color[1] = r[1];
+        model.color[2] = r[2];
+        publicAPI.modified();
+      }
+    } else if (
+      model.color[0] !== r ||
+      model.color[1] !== g ||
+      model.color[2] !== b
+    ) {
       model.color[0] = r;
       model.color[1] = g;
       model.color[2] = b;
