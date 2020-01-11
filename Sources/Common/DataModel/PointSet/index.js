@@ -22,6 +22,8 @@ function vtkPointSet(publicAPI, model) {
     model.points = vtk(model.points);
   }
 
+  publicAPI.getNumberOfPoints = () => model.points.getNumberOfPoints();
+
   publicAPI.getBounds = () => model.points.getBounds();
 
   publicAPI.computeBounds = () => {
