@@ -138,7 +138,7 @@ function vtkFramebuffer(publicAPI, model) {
     );
     publicAPI.setColorBuffer(texture);
 
-    // for now do not count of having a depth buffer texture
+    // for now do not count on having a depth buffer texture
     // as they are not standard webgl 1
     model.depthTexture = gl.createRenderbuffer();
     gl.bindRenderbuffer(gl.RENDERBUFFER, model.depthTexture);

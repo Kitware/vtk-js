@@ -20,6 +20,7 @@ function vtkOpenGLHardwareSelector(publicAPI, model) {
   //----------------------------------------------------------------------------
   publicAPI.releasePixBuffers = () => {
     model.pixBuffer = [];
+    model.zBuffer = null;
   };
 
   //----------------------------------------------------------------------------
@@ -107,6 +108,7 @@ function vtkOpenGLHardwareSelector(publicAPI, model) {
     // change the renderer's background to black, which will indicate a miss
     model.originalBackground = model.renderer.getBackgroundByReference();
     model.renderer.setBackground(0.0, 0.0, 0.0);
+    const rpasses = model.openGLRenderWindow.getRenderPasses();
 
     publicAPI.beginSelection();
     for (
@@ -116,7 +118,18 @@ function vtkOpenGLHardwareSelector(publicAPI, model) {
     ) {
       if (publicAPI.passRequired(model.currentPass)) {
         publicAPI.preCapturePass(model.currentPass);
-        model.openGLRenderWindow.traverseAllPasses();
+        if (
+          model.captureZValues &&
+          model.currentPass === PassTypes.ACTOR_PASS &&
+          typeof rpasses[0].setDepthRequested === 'function' &&
+          typeof rpasses[0].getFramebuffer === 'function'
+        ) {
+          rpasses[0].setDepthRequested(true);
+          model.openGLRenderWindow.traverseAllPasses();
+          rpasses[0].setDepthRequested(false);
+        } else {
+          model.openGLRenderWindow.traverseAllPasses();
+        }
         publicAPI.postCapturePass(model.currentPass);
 
         publicAPI.savePixelBuffer(model.currentPass);
@@ -145,6 +158,24 @@ function vtkOpenGLHardwareSelector(publicAPI, model) {
       model.area[3]
     );
     if (passNo === PassTypes.ACTOR_PASS) {
+      if (model.captureZValues) {
+        const rpasses = model.openGLRenderWindow.getRenderPasses();
+        if (
+          typeof rpasses[0].setDepthRequested === 'function' &&
+          typeof rpasses[0].getFramebuffer === 'function'
+        ) {
+          const fb = rpasses[0].getFramebuffer();
+          fb.saveCurrentBindingsAndBuffers();
+          fb.bind();
+          model.zBuffer = model.openGLRenderWindow.getPixelData(
+            model.area[0],
+            model.area[1],
+            model.area[2],
+            model.area[3]
+          );
+          fb.restorePreviousBindingsAndBuffers();
+        }
+      }
       publicAPI.buildPropHitList(model.pixBuffer[passNo]);
     }
   };
@@ -291,6 +322,15 @@ function vtkOpenGLHardwareSelector(publicAPI, model) {
         compositeID = 0;
       }
       info.compositeID = compositeID - model.idOffset;
+      if (model.captureZValues) {
+        const offset =
+          (displayPosition[1] * (model.area[2] - model.area[0] + 1) +
+            displayPosition[0]) *
+          4;
+        info.zValue =
+          (256 * model.zBuffer[offset] + model.zBuffer[offset + 1]) / 65535.0;
+        info.displayPosition = inDisplayPosition;
+      }
 
       // const low24 = publicAPI.convert(
       //   displayPosition[0], displayPosition[1], model.pixBuffer[PassTypes.ID_LOW24]);
@@ -387,6 +427,19 @@ function vtkOpenGLHardwareSelector(publicAPI, model) {
       child.getProperties().prop = value.info.prop;
       child.getProperties().compositeID = value.info.compositeID;
       child.getProperties().pixelCount = value.pixelCount;
+      if (model.captureZValues) {
+        child.getProperties().displayPosition = [
+          value.info.displayPosition[0],
+          value.info.displayPosition[1],
+          value.info.zValue,
+        ];
+        child.getProperties().worldPosition = model.openGLRenderWindow.displayToWorld(
+          value.info.displayPosition[0],
+          value.info.displayPosition[1],
+          value.info.zValue,
+          model.renderer
+        );
+      }
 
       child.setSelectionList(value.attributeIDs);
       sel[count] = child;
@@ -422,11 +475,15 @@ function vtkOpenGLHardwareSelector(publicAPI, model) {
               attributeIDs: [info.attributeID],
             });
           } else {
-            dataMap.get(hash).pixelCount++;
-            if (
-              dataMap.get(hash).attributeIDs.indexOf(info.attributeID) === -1
-            ) {
-              dataMap.get(hash).attributeIDs.push(info.attributeID);
+            const dmv = dataMap.get(hash);
+            dmv.pixelCount++;
+            if (model.captureZValues) {
+              if (info.zValue < dmv.info.zValue) {
+                dmv.info = info;
+              }
+            }
+            if (dmv.attributeIDs.indexOf(info.attributeID) === -1) {
+              dmv.attributeIDs.push(info.attributeID);
             }
           }
         }
@@ -472,6 +529,7 @@ const DEFAULT_VALUES = {
   propColorValue: null,
   props: null,
   idOffset: 1,
+  captureZValues: false,
 };
 
 // ----------------------------------------------------------------------------
@@ -490,6 +548,7 @@ export function extend(publicAPI, model, initialValues = {}) {
     'fieldAssociation',
     'renderer',
     'currentPass',
+    'captureZValues',
   ]);
 
   macro.setGetArray(publicAPI, model, ['area'], 4);

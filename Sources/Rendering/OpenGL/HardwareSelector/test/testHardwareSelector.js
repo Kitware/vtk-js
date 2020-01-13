@@ -28,35 +28,42 @@ test.onlyIfWebGL('Test HardwareSelector', (tapeContext) => {
   renderWindow.addRenderer(renderer);
   renderer.setBackground(0.32, 0.34, 0.43);
 
-  const actor = gc.registerResource(vtkActor.newInstance());
-  renderer.addActor(actor);
-
-  const mapper = gc.registerResource(vtkMapper.newInstance());
-  actor.setMapper(mapper);
-
+  // Plane in the middle ----------------------------------
   const PlaneSource = gc.registerResource(
     vtkPlaneSource.newInstance({ xResolution: 5, yResolution: 10 })
   );
+
+  const mapper = gc.registerResource(vtkMapper.newInstance());
   mapper.setInputConnection(PlaneSource.getOutputPort());
 
-  const actor2 = gc.registerResource(vtkActor.newInstance());
-  renderer.addActor(actor2);
+  const actor = gc.registerResource(vtkActor.newInstance());
+  actor.setMapper(mapper);
+
+  renderer.addActor(actor);
+
+  // Sphere lower left ----------------------------------
+  const SphereSource = gc.registerResource(vtkSphereSource.newInstance());
 
   const mapper2 = gc.registerResource(vtkMapper.newInstance());
-  actor2.setMapper(mapper2);
-
-  const SphereSource = gc.registerResource(vtkSphereSource.newInstance());
   mapper2.setInputConnection(SphereSource.getOutputPort());
 
+  const actor2 = gc.registerResource(vtkActor.newInstance());
+  actor2.setMapper(mapper2);
+
+  renderer.addActor(actor2);
+
+  // Sphere edges upper right ----------------------------------
+  const mapper3 = gc.registerResource(vtkMapper.newInstance());
+  mapper3.setInputConnection(SphereSource.getOutputPort());
+
   const actor3 = gc.registerResource(vtkActor.newInstance());
+  actor3.setMapper(mapper3);
   actor3.getProperty().setEdgeVisibility(true);
   actor3.getProperty().setEdgeColor(1.0, 0.5, 0.5);
   actor3.getProperty().setDiffuseColor(0.5, 1.0, 0.5);
   actor3.setPosition(1.0, 1.0, 1.0);
+
   renderer.addActor(actor3);
-  const mapper3 = gc.registerResource(vtkMapper.newInstance());
-  actor3.setMapper(mapper3);
-  mapper3.setInputConnection(SphereSource.getOutputPort());
 
   // now create something to view it, in this case webgl
   const glwindow = gc.registerResource(vtkOpenGLRenderWindow.newInstance());
@@ -68,13 +75,20 @@ test.onlyIfWebGL('Test HardwareSelector', (tapeContext) => {
   const sel = gc.registerResource(vtkOpenGLHardwareSelector.newInstance());
   sel.setFieldAssociation(FieldAssociations.FIELD_ASSOCIATION_POINTS);
   sel.attach(glwindow, renderer);
+  sel.setCaptureZValues(true);
 
   sel.setArea(200, 200, 300, 300);
   const res = sel.select();
+  // console.log(res[0].getProperties());
+  // console.log(res[1].getProperties());
+  // res[1] should be at 1.0, 1.0, 1.5 in world coords
   const allGood =
     res.length === 2 &&
     res[0].getProperties().prop === actor &&
-    res[1].getProperties().prop === actor3;
+    res[1].getProperties().prop === actor3 &&
+    Math.abs(res[1].getProperties().worldPosition[0] - 1.0) < 0.02 &&
+    Math.abs(res[1].getProperties().worldPosition[1] - 1.0) < 0.02 &&
+    Math.abs(res[1].getProperties().worldPosition[2] - 1.5) < 0.02;
 
   tapeContext.ok(res.length === 2, 'Two props selected');
   tapeContext.ok(allGood, 'Correct props were selected');
