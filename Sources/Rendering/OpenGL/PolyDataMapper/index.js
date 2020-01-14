@@ -1670,10 +1670,11 @@ function vtkOpenGLPolyDataMapper(publicAPI, model) {
         model.drawingEdges =
           drawSurfaceWithEdges &&
           (i === primTypes.TrisEdges || i === primTypes.TriStripsEdges);
-        publicAPI.updateShaders(model.primitives[i], ren, actor);
         const mode = publicAPI.getOpenGLMode(representation, i);
-        gl.drawArrays(mode, 0, cabo.getElementCount());
-
+        if (!model.drawingEdges || !model.renderDepth) {
+          publicAPI.updateShaders(model.primitives[i], ren, actor);
+          gl.drawArrays(mode, 0, cabo.getElementCount());
+        }
         const stride =
           (mode === gl.POINTS ? 1 : 0) || (mode === gl.LINES ? 2 : 3);
         model.primitiveIDOffset += cabo.getElementCount() / stride;

@@ -3,7 +3,7 @@
 
 import 'vtk.js/Sources/favicon';
 
-// import macro from 'vtk.js/Sources/macro';
+import { throttle } from 'vtk.js/Sources/macro';
 import vtkActor from 'vtk.js/Sources/Rendering/Core/Actor';
 import vtkConeSource from 'vtk.js/Sources/Filters/Sources/ConeSource';
 import vtkCylinderSource from 'vtk.js/Sources/Filters/Sources/CylinderSource';
@@ -23,6 +23,22 @@ import { Representation } from 'vtk.js/Sources/Rendering/Core/Property/Constants
 
 const WHITE = [1, 1, 1];
 const GREEN = [0.1, 0.8, 0.1];
+
+// ----------------------------------------------------------------------------
+// Create DOM tooltip
+// ----------------------------------------------------------------------------
+
+const tooltipElem = document.createElement('div');
+tooltipElem.style.position = 'absolute';
+tooltipElem.style.top = 0;
+tooltipElem.style.left = 0;
+tooltipElem.style.width = '150px';
+tooltipElem.style.padding = '10px';
+tooltipElem.style.zIndex = 1;
+tooltipElem.style.background = 'white';
+tooltipElem.style.textAlign = 'center';
+
+document.querySelector('body').appendChild(tooltipElem);
 
 // ----------------------------------------------------------------------------
 // Create 4 objects
@@ -99,6 +115,20 @@ cylinderPointSet.getPointData().addArray(
 );
 
 // ----------------------------------------------------------------------------
+// Create Picking pointer
+// ----------------------------------------------------------------------------
+
+const pointerSource = vtkSphereSource.newInstance({
+  phiResolution: 15,
+  thetaResolution: 15,
+  radius: 0.01,
+});
+const pointerMapper = vtkMapper.newInstance();
+const pointerActor = vtkActor.newInstance();
+pointerActor.setMapper(pointerMapper);
+pointerMapper.setInputConnection(pointerSource.getOutputPort());
+
+// ----------------------------------------------------------------------------
 // Create rendering infrastructure
 // ----------------------------------------------------------------------------
 
@@ -112,6 +142,7 @@ renderer.addActor(sphereActor);
 renderer.addActor(spherePointsActor);
 renderer.addActor(coneActor);
 renderer.addActor(cylinderActor);
+renderer.addActor(pointerActor);
 
 renderer.resetCamera();
 renderWindow.render();
@@ -120,7 +151,9 @@ renderWindow.render();
 // Create hardware selector
 // ----------------------------------------------------------------------------
 
-const hardwareSelector = vtkOpenGLHardwareSelector.newInstance();
+const hardwareSelector = vtkOpenGLHardwareSelector.newInstance({
+  captureZValues: true,
+});
 hardwareSelector.setFieldAssociation(
   FieldAssociations.FIELD_ASSOCIATION_POINTS
 );
@@ -145,24 +178,38 @@ function eventToWindowXY(event) {
 let needGlyphCleanup = false;
 let lastProcessedActor = null;
 
-function processSelections(selections) {
-  renderer.getActors().forEach((a) => a.getProperty().setColor(...WHITE));
+const updateWorldPosition = (worldPosition) => {
+  if (lastProcessedActor) {
+    pointerActor.setVisibility(true);
+    tooltipElem.innerHTML = worldPosition.map((v) => v.toFixed(3)).join(' , ');
+    pointerActor.setPosition(worldPosition);
+  } else {
+    pointerActor.setVisibility(false);
+    tooltipElem.innerHTML = '';
+  }
+  renderWindow.render();
+};
 
+function processSelections(selections) {
   if (!selections || selections.length === 0) {
+    renderer.getActors().forEach((a) => a.getProperty().setColor(...WHITE));
+    pointerActor.setVisibility(false);
     renderWindow.render();
     lastProcessedActor = null;
     return;
   }
 
-  const { compositeID, prop } = selections[0].getProperties();
+  const { worldPosition, compositeID, prop } = selections[0].getProperties();
 
   if (lastProcessedActor === prop) {
     // Skip render call when nothing change
+    updateWorldPosition(worldPosition);
     return;
   }
   lastProcessedActor = prop;
 
   // Make the picked actor green
+  renderer.getActors().forEach((a) => a.getProperty().setColor(...WHITE));
   prop.getProperty().setColor(...GREEN);
 
   // We hit the glyph, let's scale the picked glyph
@@ -178,7 +225,7 @@ function processSelections(selections) {
   }
 
   // Update picture for the user so we can see the green one
-  renderWindow.render();
+  updateWorldPosition(worldPosition);
 }
 
 // ----------------------------------------------------------------------------
@@ -192,11 +239,13 @@ function pickOnMouseEvent(event) {
   hardwareSelector.setArea(x, y, x, y);
   hardwareSelector.releasePixBuffers();
 
+  pointerActor.setVisibility(false);
   if (hardwareSelector.captureBuffers()) {
     processSelections(hardwareSelector.generateSelection(x, y, x, y));
   } else {
     processSelections(null);
   }
 }
+const throttleMouseHandler = throttle(pickOnMouseEvent, 100);
 
-document.addEventListener('mousemove', pickOnMouseEvent);
+document.addEventListener('mousemove', throttleMouseHandler);
