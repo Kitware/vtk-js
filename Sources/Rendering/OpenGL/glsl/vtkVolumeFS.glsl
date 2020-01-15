@@ -14,7 +14,7 @@
      PURPOSE.  See the above copyright notice for more information.
 
 =========================================================================*/
-// Template for the polydata mappers fragment shader
+// Template for the volume mappers fragment shader
 
 // the output of this shader
 //VTK::Output::Dec

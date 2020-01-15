@@ -4,7 +4,7 @@ vtk-js includes support for volume rendering using
 hardware GPU acceleration. The capabilities may change 
 over time but as of this writing it includes support for
 
-- single component data
+- multi-component data
 - at least 24 bits linear resolution
 - support for all native data types, 16 bit, float, etc
 - opacity transfer functions

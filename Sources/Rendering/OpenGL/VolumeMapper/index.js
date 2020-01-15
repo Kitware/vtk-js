@@ -662,10 +662,10 @@ function vtkOpenGLVolumeMapper(publicAPI, model) {
     const iComps = actor.getProperty().getIndependentComponents();
     if (iComps && numComp >= 2) {
       let totalComp = 0.0;
-      for (let i = 0; i < numComp; ++i) {
+      for (let i = 0; i < numComp; i++) {
         totalComp += actor.getProperty().getComponentWeight(i);
       }
-      for (let i = 0; i < numComp; ++i) {
+      for (let i = 0; i < numComp; i++) {
         program.setUniformf(
           `mix${i}`,
           actor.getProperty().getComponentWeight(i) / totalComp
@@ -675,7 +675,7 @@ function vtkOpenGLVolumeMapper(publicAPI, model) {
 
     // three levels of shift scale combined into one
     // for performance in the fragment shader
-    for (let i = 0; i < numComp; ++i) {
+    for (let i = 0; i < numComp; i++) {
       const target = iComps ? i : 0;
       const sscale = volInfo.scale[i];
       const ofun = vprop.getScalarOpacity(target);

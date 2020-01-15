@@ -11,9 +11,16 @@ import vtkRenderWindowInteractor from 'vtk.js/Sources/Rendering/Core/RenderWindo
 import vtkRenderer from 'vtk.js/Sources/Rendering/Core/Renderer';
 import vtkVolume from 'vtk.js/Sources/Rendering/Core/Volume';
 import vtkVolumeMapper from 'vtk.js/Sources/Rendering/Core/VolumeMapper';
+import vtkImageMapper from 'vtk.js/Sources/Rendering/Core/ImageMapper';
+import vtkImageSlice from 'vtk.js/Sources/Rendering/Core/ImageSlice';
+import Constants from 'vtk.js/Sources/Rendering/Core/ImageMapper/Constants';
+
+const { SlicingMode } = Constants;
 
 // Create some control UI
 const container = document.querySelector('body');
+container.style.width = '450px';
+container.style.height = '450px';
 const renderWindowContainer = document.createElement('div');
 container.appendChild(renderWindowContainer);
 
@@ -92,6 +99,31 @@ for (let nc = 0; nc < 4; ++nc) {
   actor.getProperty().setGradientOpacityMaximumOpacity(nc, 1.0);
 }
 
+// Create the image slice representation
+const sliceRenderer = vtkRenderer.newInstance();
+sliceRenderer.setViewport([0.1, 0.6, 0.4, 0.9]);
+renderWindow.addRenderer(sliceRenderer);
+renderWindow.setNumberOfLayers(2);
+// On top
+sliceRenderer.setLayer(0);
+sliceRenderer.setInteractive(false);
+sliceRenderer.setBackground(0.4, 0.4, 0.4);
+const sliceMapper = vtkImageMapper.newInstance();
+const sliceActor = vtkImageSlice.newInstance();
+sliceActor.setMapper(sliceMapper);
+sliceActor.getProperty().setRGBTransferFunction(0, ctfun);
+sliceActor.getProperty().setScalarOpacity(0, ofun);
+sliceActor.getProperty().setComponentWeight(0, 1.0);
+sliceActor.getProperty().setRGBTransferFunction(1, ctfun2);
+sliceActor.getProperty().setScalarOpacity(1, ofun);
+sliceActor.getProperty().setComponentWeight(1, 1.0);
+sliceActor.getProperty().setRGBTransferFunction(2, ctfun3);
+sliceActor.getProperty().setScalarOpacity(2, ofun);
+sliceActor.getProperty().setComponentWeight(2, 1.0);
+sliceActor.getProperty().setRGBTransferFunction(3, ctfun4);
+sliceActor.getProperty().setScalarOpacity(3, ofun);
+sliceActor.getProperty().setComponentWeight(3, 1.0);
+
 // this function will over time test the following from outermost
 // to innermost. Note that the three data types will be
 // covered in one rotation of the volume making it easier to
@@ -106,7 +138,8 @@ for (let nc = 0; nc < 4; ++nc) {
 let animcb;
 let totalCount = 0;
 let lighting = 1;
-let numComp = 4;
+// let numComp = 4;
+let numComp = 1;
 let independent = 1;
 let withGO = 1;
 let dataType = 2;
@@ -129,6 +162,7 @@ const testAVolume = () => {
     if (totalCount % (720 * 4) === 0) {
       independent = (independent + 1) % 2;
       actor.getProperty().setIndependentComponents(independent);
+      sliceActor.getProperty().setIndependentComponents(independent);
     }
     // update numComp
     if (totalCount % 720 === 0) {
@@ -195,15 +229,21 @@ const testAVolume = () => {
     cpd.setScalars(da);
 
     mapper.setInputData(id);
+    // sliceMapper.setSliceAtFocalPoint(true);
+    sliceMapper.setSlicingMode(SlicingMode.Z);
+    sliceMapper.setZSlice(100);
+    sliceMapper.setInputData(id);
 
     console.log(
-      `shade=${lighting} ind=${independent} comp=${numComp} GO=${withGO} type=${dataType}`
+      `shade=${lighting} independent=${independent} numComponents=${numComp} GO=${withGO} dataType=${dataType}`
     );
 
     if (totalCount === 0) {
       renderer.resetCamera();
       renderer.getActiveCamera().elevation(20);
       renderer.resetCameraClippingRange();
+      sliceRenderer.addActor(sliceActor);
+      sliceRenderer.resetCamera();
     }
   }
 
