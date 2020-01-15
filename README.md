@@ -7,6 +7,8 @@
 ![npm-download](https://img.shields.io/npm/dm/vtk.js.svg)
 ![npm-version-requirement](https://img.shields.io/badge/npm->=5.0.0-brightgreen.svg)
 ![node-version-requirement](https://img.shields.io/badge/node->=8.0.0-brightgreen.svg)
+[![DOI](https://zenodo.org/badge/57900965.svg)](https://zenodo.org/badge/latestdoi/57900965)
+
 
 Introduction
 ============
