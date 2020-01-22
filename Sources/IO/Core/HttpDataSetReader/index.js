@@ -241,9 +241,11 @@ function vtkHttpDataSetReader(publicAPI, model) {
             progressCallback,
           }).then(processNext, error);
         } else if (datasetObj) {
-          // Perform array registration
+          // Perform array registration on new arrays
           model.arrays
-            .filter((array) => array.registration)
+            .filter(
+              (metaArray) => metaArray.registration && !metaArray.array.ref
+            )
             .forEach((metaArray) => {
               const newArray = ARRAY_BUILDERS[
                 metaArray.array.vtkClass
