@@ -16,8 +16,6 @@ function vtkKeyboardCameraManipulator(publicAPI, model) {
   model.classHierarchy.push('vtkKeyboardCameraManipulator');
 
   const internal = {
-    interactor: null,
-    renderer: null,
     keysDown: [],
     direction: [0, 0, 0],
     skipUpdateDirection: false,
@@ -34,7 +32,7 @@ function vtkKeyboardCameraManipulator(publicAPI, model) {
   publicAPI.resetMovementSpeed = () => {
     // Reset the movement speed to be proportional to the longest length
     // of the renderer's bounds.
-    const { renderer } = internal;
+    const { renderer } = model;
 
     const bounds = renderer.computeVisiblePropBounds();
 
@@ -55,7 +53,7 @@ function vtkKeyboardCameraManipulator(publicAPI, model) {
       publicAPI.resetMovementSpeed();
     }
 
-    const { interactor, renderer } = internal;
+    const { interactor, renderer } = model;
 
     const move = () => {
       if (internal.keysDown.length === 0) {
@@ -98,7 +96,7 @@ function vtkKeyboardCameraManipulator(publicAPI, model) {
       internal.animationSub = null;
     }
 
-    internal.interactor.cancelAnimation(ANIMATION_REQUESTER);
+    model.interactor.cancelAnimation(ANIMATION_REQUESTER);
 
     if (internal.cameraModifiedSub) {
       internal.cameraModifiedSub.unsubscribe();
@@ -116,7 +114,7 @@ function vtkKeyboardCameraManipulator(publicAPI, model) {
     // Reset
     internal.direction = [0, 0, 0];
 
-    const { renderer } = internal;
+    const { renderer } = model;
 
     if (!renderer) {
       return;
@@ -218,7 +216,7 @@ function vtkKeyboardCameraManipulator(publicAPI, model) {
     }
 
     if (!publicAPI.inMotion()) {
-      Object.assign(internal, { interactor, renderer });
+      Object.assign(model, { interactor, renderer });
       publicAPI.startMovement();
     }
   };
@@ -255,6 +253,8 @@ const DEFAULT_VALUES = {
   moveRightKeys: ['d', 'D', 'ArrowRight'],
   moveUpKeys: [' '],
   moveDownKeys: ['Shift'],
+  interactor: null,
+  renderer: null,
 };
 
 // ----------------------------------------------------------------------------
@@ -275,6 +275,8 @@ export function extend(publicAPI, model, initialValues = {}) {
     'moveRightKeys',
     'moveUpKeys',
     'moveDownKeys',
+    'interactor',
+    'renderer',
   ]);
 
   // Object specific methods

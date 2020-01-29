@@ -193,6 +193,28 @@ function create(createOptions) {
         .async('string')
         .then((str) => Promise.resolve(str));
     },
+
+    fetchBinary(instance = {}, url, options = {}) {
+      const path = removeLeadingSlash(url);
+      if (!ready) {
+        vtkErrorMacro('ERROR!!! zip not ready...');
+      }
+
+      if (options.compression) {
+        if (options.compression === 'gz') {
+          return zipRoot.file(path).then((data) => {
+            const array = pako.inflate(data).buffer;
+            return Promise.resolve(array);
+          });
+        }
+        return Promise.reject(new Error('Invalid compression'));
+      }
+
+      return zipRoot
+        .file(path)
+        .async('arraybuffer')
+        .then((data) => Promise.resolve(data));
+    },
   };
 }
 
