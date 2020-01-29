@@ -14,6 +14,10 @@ function getContent(url) {
   return el ? el.innerHTML : null;
 }
 
+function getElement(url) {
+  return document.querySelector(`.webResource[data-url="${url}"]`);
+}
+
 function removeLeadingSlash(str) {
   return str[0] === '/' ? str.substr(1) : str;
 }
@@ -116,9 +120,25 @@ function fetchArray(instance = {}, baseURL, array, options = {}) {
   });
 }
 
+// ----------------------------------------------------------------------------
+
+function fetchImage(instance = {}, url, options = {}) {
+  return new Promise((resolve, reject) => {
+    const img = getElement(url);
+    if (img) {
+      resolve(img);
+    } else {
+      reject(new Error(`No such image ${url}`));
+    }
+  });
+}
+
+// ----------------------------------------------------------------------------
+
 // Export fetch methods
 export default {
   fetchJSON,
   fetchText,
   fetchArray,
+  fetchImage,
 };
