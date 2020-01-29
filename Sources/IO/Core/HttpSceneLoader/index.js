@@ -60,6 +60,16 @@ function applySettings(sceneItem, settings) {
 // Global methods
 // ----------------------------------------------------------------------------
 
+function isImage(str) {
+  const ext = str
+    .split('.')
+    .pop()
+    .toLowerCase();
+  return ['jpg', 'png', 'jpeg'].indexOf(ext) !== -1;
+}
+
+// ----------------------------------------------------------------------------
+
 function loadHttpDataSetReader(item, model, publicAPI) {
   const source = vtkHttpDataSetReader.newInstance({
     fetchGzip: model.fetchGzip,
@@ -78,6 +88,7 @@ function loadHttpDataSetReader(item, model, publicAPI) {
     // If this texture has already been used, re-use it
     actor.addTexture(model.usedTextures[item.texture]);
   } else if (item.texture) {
+    const url = [model.baseURL, item.texture].join('/');
     const texture = vtkTexture.newInstance();
     texture.setInterpolate(true);
     texture.setRepeat(true);
@@ -85,32 +96,22 @@ function loadHttpDataSetReader(item, model, publicAPI) {
     sceneItem.texture = texture;
     model.usedTextures[item.texture] = texture;
 
-    const imageTypeMaps = {
-      jpg: 'image/jpeg',
-      jpeg: 'image/jpeg',
-      png: 'image/png',
-    };
-    const ext = item.texture.split('.').pop();
-    if (ext in imageTypeMaps) {
+    if (isImage(item.texture)) {
       // It's an image file
-      const url = [model.baseURL, item.texture].join('/');
-      model.dataAccessHelper.fetchBinary({}, url).then((data) => {
-        const blob = new Blob([data], { type: imageTypeMaps[ext] });
-        const img = new Image();
-        img.src = URL.createObjectURL(blob);
-        texture.setImage(img);
-      });
+      model.dataAccessHelper
+        .fetchImage({}, url, { crossOrigin: 'anonymous' })
+        .then((img) => {
+          texture.setImage(img);
+        });
     } else {
       // Assume it's a dataset file
       const textureSource = vtkHttpDataSetReader.newInstance({
         fetchGzip: model.fetchGzip,
         dataAccessHelper: model.dataAccessHelper,
       });
-      textureSource
-        .setUrl([model.baseURL, item.texture].join('/'), { loadData: true })
-        .then(() => {
-          texture.setInputData(textureSource.getOutputData());
-        });
+      textureSource.setUrl(url, { loadData: true }).then(() => {
+        texture.setInputData(textureSource.getOutputData());
+      });
     }
   }
 
@@ -180,9 +181,13 @@ function loadHttpDataSetReader(item, model, publicAPI) {
   return sceneItem;
 }
 
+// ----------------------------------------------------------------------------
+
 const TYPE_MAPPING = {
   httpDataSetReader: loadHttpDataSetReader,
 };
+
+// ----------------------------------------------------------------------------
 
 function updateDatasetTypeMapping(typeName, handler) {
   TYPE_MAPPING[typeName] = handler;
@@ -196,8 +201,12 @@ function vtkHttpSceneLoader(publicAPI, model) {
   const originalSceneParameters = {};
 
   // These are here to re-use the same textures when possible
-  model.usedTextures = {};
-  model.usedTextureLODs = {};
+  if (!model.usedTextures) {
+    model.usedTextures = {};
+  }
+  if (!model.usedTextureLODs) {
+    model.usedTextureLODs = {};
+  }
 
   // Set our className
   model.classHierarchy.push('vtkHttpSceneLoader');
