@@ -217,11 +217,26 @@ function fetchText(instance = {}, url, options = {}) {
 
 // ----------------------------------------------------------------------------
 
+function fetchImage(instance = {}, url, options = {}) {
+  return new Promise((resolve, reject) => {
+    const img = new Image();
+    if (options.crossOrigin) {
+      img.crossOrigin = options.crossOrigin;
+    }
+    img.onload = () => resolve(img);
+    img.onerror = reject;
+    img.src = url;
+  });
+}
+
+// ----------------------------------------------------------------------------
+
 export default {
   fetchArray,
   fetchJSON,
   fetchText,
   fetchBinary, // Only for HTTP
+  fetchImage,
 };
 
 /* eslint-enable prefer-promise-reject-errors */

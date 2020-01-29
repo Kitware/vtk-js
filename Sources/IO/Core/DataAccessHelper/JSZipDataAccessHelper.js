@@ -7,6 +7,17 @@ import { DataTypeByteSize } from 'vtk.js/Sources/Common/Core/DataArray/Constants
 
 const { vtkErrorMacro, vtkDebugMacro } = macro;
 
+function toMimeType(url) {
+  const ext = url
+    .split('.')
+    .pop()
+    .toLowerCase();
+  if (ext === 'jpg') {
+    return 'jpeg';
+  }
+  return ext;
+}
+
 function handleUint8Array(array, compression, done) {
   return (uint8array) => {
     array.buffer = new ArrayBuffer(uint8array.length);
@@ -192,6 +203,26 @@ function create(createOptions) {
         .file(path)
         .async('string')
         .then((str) => Promise.resolve(str));
+    },
+
+    fetchImage(instance = {}, url, options = {}) {
+      const path = removeLeadingSlash(url);
+      if (!ready) {
+        vtkErrorMacro('ERROR!!! zip not ready...');
+      }
+
+      return new Promise((resolve, reject) => {
+        const img = new Image();
+        img.onload = () => resolve(img);
+        img.onerror = reject;
+
+        zipRoot
+          .file(path)
+          .async('base64')
+          .then((str) => {
+            img.src = `data:image/${toMimeType(path)};base64,${str}`;
+          });
+      });
     },
 
     fetchBinary(instance = {}, url, options = {}) {
