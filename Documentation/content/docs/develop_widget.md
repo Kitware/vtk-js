@@ -98,6 +98,57 @@ A widget state is the accretion of the previous sub-states. These are simply bui
         .addDynamicMixinState({ ... })
         .build();
 
+#### Mixins
+
+##### boundsMixin
+
+This mixin adds the properties `bounds` and `placeFactor`, as well as methods
+`containsPoint`, `placeWidget`, and `setPlaceFactor`.
+
+##### colorMixin
+
+This mixin adds a `color` property. This is a scalar value between 0 and 1 that
+determines color for many HandleRepresentations, such as the
+SphereHandleRepresentation and CircleContextRepresentation. When determining
+the final color, this scalar value is mapped through a lookup table (LUT) on
+the internally used mapper.
+
+In order to achieve custom RGB colors, the lookup table needs to be modified.
+For the SphereHandleRepresentation and the CircleContextRepresentation, you can
+call `.getMapper().getLookupTable()` to obtain a reference to the internal LUT.
+From there, you can modify the LUT to obtain the desired colors given the
+scalar values in the colorMixin.
+
+##### directionMixin
+
+This mixin adds a `direction` property, and methods `rotateFromDirections`,
+`rotate`, and `rotate[X/Y/Z]`.
+
+##### manipulatorMixin
+
+This mixin adds a manipulator to a state.
+
+##### nameMixin
+
+This mixin adds a `name` property.
+
+##### orientationMixin
+
+This mixin adds properties `up`, `right`, and `direction` to describe the
+orientation of a state.
+
+##### originMixin
+
+This mixin adds an `origin` property.
+
+##### scale1Mixin and scale3Mixin
+
+These mixins adds a single scale factor and a 3-component scale factor, respectively.
+
+##### visibleMixin
+
+This mixin adds a `visible` flag.
+
 ### Widget Representations
 
 Widget representations are the visual part of the widget. A widget can use multiple representations (for instance dots joined by a line). The representations the widget uses are selected when the widget is added to a widget manager through a call to `getRepresentationsForViewType(viewType)` where `viewType` is the view type given in parameter to `widgetManager.addWidget(...)`. This method should return an array like this :
