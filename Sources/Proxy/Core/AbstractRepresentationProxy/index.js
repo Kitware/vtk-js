@@ -105,13 +105,18 @@ function vtkAbstractRepresentationProxy(publicAPI, model) {
   };
 
   publicAPI.setVisibility = (visible) => {
+    let change = 0;
     let count = model.actors.length;
     while (count--) {
-      model.actors[count].setVisibility(visible);
+      change += model.actors[count].setVisibility(visible);
     }
     count = model.volumes.length;
     while (count--) {
-      model.volumes[count].setVisibility(visible);
+      change += model.volumes[count].setVisibility(visible);
+    }
+
+    if (change) {
+      publicAPI.modified();
     }
   };
 
