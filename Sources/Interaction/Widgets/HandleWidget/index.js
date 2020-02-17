@@ -16,20 +16,8 @@ function vtkHandleWidget(publicAPI, model) {
   // Set our className
   model.classHierarchy.push('vtkHandleWidget');
 
-  function setCursor(state) {
-    switch (state) {
-      case InteractionState.OUTSIDE: {
-        model.interactor.getView().setCursor('default');
-        break;
-      }
-      default: {
-        model.interactor.getView().setCursor('pointer');
-      }
-    }
-  }
-
   function genericAction() {
-    setCursor(model.widgetRep.getInteractionState());
+    publicAPI.setCursor(model.widgetRep.getInteractionState());
     model.widgetRep.highlight(1);
     // publicAPI.startInteraction();
     publicAPI.invokeStartInteractionEvent();
@@ -62,6 +50,18 @@ function vtkHandleWidget(publicAPI, model) {
 
   publicAPI.handleRightButtonRelease = (callData) =>
     publicAPI.endSelectAction(callData);
+
+  publicAPI.setCursor = (state) => {
+    switch (state) {
+      case InteractionState.OUTSIDE: {
+        model.interactor.getView().setCursor('default');
+        break;
+      }
+      default: {
+        model.interactor.getView().setCursor('pointer');
+      }
+    }
+  };
 
   publicAPI.selectAction = (callData) => {
     const position = [callData.position.x, callData.position.y];
@@ -124,7 +124,7 @@ function vtkHandleWidget(publicAPI, model) {
     if (model.widgetState === WidgetState.START) {
       model.widgetRep.computeInteractionState(position);
       state = model.widgetRep.getInteractionState();
-      setCursor(state);
+      publicAPI.setCursor(state);
       if (
         model.widgetRep.getActiveRepresentation() &&
         state !== model.widgetRep.getInteractionState()
@@ -135,7 +135,7 @@ function vtkHandleWidget(publicAPI, model) {
       return state === InteractionState.OUTSIDE ? VOID : EVENT_ABORT;
     }
 
-    setCursor(state);
+    publicAPI.setCursor(state);
     model.widgetRep.complexWidgetInteraction(position);
     publicAPI.invokeInteractionEvent();
     publicAPI.render();

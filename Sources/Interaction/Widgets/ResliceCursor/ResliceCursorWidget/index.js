@@ -19,7 +19,11 @@ function vtkResliceCursorWidget(publicAPI, model) {
 
   const superClass = Object.assign({}, publicAPI);
 
-  function setCursor(state) {
+  //----------------------------------------------------------------------------
+  // Public API methods
+  //----------------------------------------------------------------------------
+
+  publicAPI.setCursor = (state) => {
     switch (state) {
       case InteractionState.ON_AXIS1:
       case InteractionState.ON_AXIS2:
@@ -31,11 +35,8 @@ function vtkResliceCursorWidget(publicAPI, model) {
         model.interactor.getView().setCursor('default');
       }
     }
-  }
+  };
 
-  //----------------------------------------------------------------------------
-  // Public API methods
-  //----------------------------------------------------------------------------
   publicAPI.createDefaultRepresentation = () => {
     if (!model.widgetRep) {
       publicAPI.setWidgetRep(vtkResliceCursorLineRepresentation.newInstance());
@@ -61,7 +62,7 @@ function vtkResliceCursorWidget(publicAPI, model) {
     } else {
       model.widgetRep.startComplexWidgetInteraction(position);
       model.widgetState = WidgetState.ACTIVE;
-      setCursor(state);
+      publicAPI.setCursor(state);
     }
 
     publicAPI.invokeStartInteractionEvent();
@@ -95,7 +96,7 @@ function vtkResliceCursorWidget(publicAPI, model) {
 
       model.widgetRep.computeInteractionState(position);
 
-      setCursor(model.widgetRep.getInteractionState());
+      publicAPI.setCursor(model.widgetRep.getInteractionState());
 
       if (state !== model.widgetRep.getInteractionState()) {
         publicAPI.render();
