@@ -166,7 +166,7 @@ function getPolyDataFromDracoGeometry(dracoGeometry, decoderModule) {
     const colorArray = getDracoAttributeAsFloat32Array(
       dracoGeometry,
       colorAttributeId,
-      decoder
+      decoderModule
     );
 
     const scalars = vtkDataArray.newInstance({
