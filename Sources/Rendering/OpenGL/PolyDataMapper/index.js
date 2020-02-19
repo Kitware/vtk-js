@@ -1661,6 +1661,8 @@ function vtkOpenGLPolyDataMapper(publicAPI, model) {
       actor.getProperty().getEdgeVisibility() &&
       representation === Representation.SURFACE;
 
+    gl.lineWidth(actor.getProperty().getLineWidth());
+
     // for every primitive type
     for (let i = primTypes.Start; i < primTypes.End; i++) {
       // if there are entries
@@ -1680,6 +1682,8 @@ function vtkOpenGLPolyDataMapper(publicAPI, model) {
         model.primitiveIDOffset += cabo.getElementCount() / stride;
       }
     }
+    // reset the line width
+    gl.lineWidth(1);
   };
 
   publicAPI.getOpenGLMode = (rep, type) => {
