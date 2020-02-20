@@ -160,7 +160,7 @@ function vtkOpenGLRenderWindow(publicAPI, model) {
       model.el = el;
       if (model.el) {
         model.el.appendChild(model.canvas);
-        
+
         // If the renderer is set to use a background
         // image, attach it to the DOM.
         if (model.useBackgroundImage) {
