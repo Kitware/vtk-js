@@ -77,7 +77,7 @@ function vtkWSLinkClient(publicAPI, model) {
     }
 
     // Delay notification when idle
-    if (model.busyCount == 0) {
+    if (model.busyCount === 0) {
       notifyBusy();
     } else {
       model.timeoutId = setTimeout(notifyBusy, model.notificationTimeout);
