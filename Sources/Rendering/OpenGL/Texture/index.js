@@ -788,7 +788,7 @@ function vtkOpenGLTexture(publicAPI, model) {
       while (w >= 1 && h >= 1) {
         // In webgl 1, all levels need to be defined. So if the latest level size is
         // 8x8, we have to add 3 more null textures (4x4, 2x2, 1x1)
-        // In webgl 2, the attribtue maxLevel will be use.
+        // In webgl 2, the attribute maxLevel will be use.
         let tempData = null;
         if (j <= model.maxLevel) {
           tempData = invertedData[6 * j + i];

@@ -93,7 +93,7 @@ function vtkXMLWriter(publicAPI, model) {
   // Set our className
   model.classHierarchy.push('vtkXMLWriter');
 
-  // Can be overriden in subclass
+  // Can be overridden in subclass
   publicAPI.create = (dataObject) =>
     builder
       .create('VTKFile')

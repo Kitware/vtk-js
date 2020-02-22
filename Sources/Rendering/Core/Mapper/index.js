@@ -94,7 +94,7 @@ function vtkMapper(publicAPI, model) {
     publicAPI[methodName] = staticOffsetAPI[methodName];
   });
 
-  // Relative metods
+  // Relative methods
   /* eslint-disable arrow-body-style */
   model.topologyOffset = {
     Polygon: { factor: 0, offset: 0 },
@@ -214,7 +214,7 @@ function vtkMapper(publicAPI, model) {
         .setRange(model.scalarRange[0], model.scalarRange[1]);
     }
 
-    // Decide betweeen texture color or vertex color.
+    // Decide between texture color or vertex color.
     // Cell data always uses vertex color.
     // Only point data can use both texture and vertex coloring.
     if (publicAPI.canUseTextureMapForColoring(input)) {
@@ -283,7 +283,7 @@ function vtkMapper(publicAPI, model) {
     useLogScale
   ) => {
     // We have to change the range used for computing texture
-    // coordinates slightly to accomodate the special above- and
+    // coordinates slightly to accommodate the special above- and
     // below-range colors that are the first and last texels,
     // respectively.
     const scalarTexelWidth = (range[1] - range[0]) / tableNumberOfColors;
@@ -411,7 +411,7 @@ function vtkMapper(publicAPI, model) {
     }
 
     // Create new coordinates if necessary.
-    // Need to compare lookup table incase the range has changed.
+    // Need to compare lookup table in case the range has changed.
     if (
       !model.colorCoordinates ||
       publicAPI.getMTime() > model.colorCoordinates.getMTime() ||
@@ -626,7 +626,7 @@ export function extend(publicAPI, model, initialValues = {}) {
     'static',
     'useLookupTableScalarRange',
     'viewSpecificProperties',
-    'customShaderAttributes', // point data array names that will be transfered to the VBO
+    'customShaderAttributes', // point data array names that will be transferred to the VBO
   ]);
   macro.setGetArray(publicAPI, model, ['scalarRange'], 2);
 

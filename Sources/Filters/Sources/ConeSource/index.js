@@ -61,7 +61,7 @@ function vtkConeSource(publicAPI, model) {
       polys[cellLocation++] = i + 2 > model.resolution ? 1 : i + 2;
     }
 
-    // Apply tranformation to the points coordinates
+    // Apply transformation to the points coordinates
     vtkMatrixBuilder
       .buildFromRadian()
       .translate(...model.center)

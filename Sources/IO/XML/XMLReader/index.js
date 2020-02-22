@@ -66,7 +66,7 @@ function integer64to32(array) {
 // ----------------------------------------------------------------------------
 
 function readerHeader(uint8, headerType) {
-  // We do not handle endianess or if more than 32 bits are needed to encode the data
+  // We do not handle endianness or if more than 32 bits are needed to encode the data
   if (headerType === 'UInt64') {
     const offset = 8;
     let uint32 = new Uint32Array(uint8.buffer, 0, 6);

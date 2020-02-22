@@ -17,7 +17,7 @@ Get the collection of camera manipulators.
 ### centerOfRotation
 
 Set/Get the center of rotation.  Propagates the center to the manipulators.  This
-simply sets an interal ivar. It is propagated to a manipulator before the event is
+simply sets an internal ivar. It is propagated to a manipulator before the event is
 sent to it. Also, changing the CenterOfRotation during interaction i.e. after a
 button press but before a button up has no effect until the next button press.  The
 default value is [0, 0, 0].
@@ -25,7 +25,7 @@ default value is [0, 0, 0].
 ### rotationFactor
 
 Set/Get the rotation factor.  Propagates the rotation factor to the manipulators.
-This simply sets an interal ivar.  It is propagated to a manipulator before the event
+This simply sets an internal ivar.  It is propagated to a manipulator before the event
 is sent to it.  Also, changing the RotationFactor during interaction i.e. after a
 button press but before a button up has no effect until the next button press. The
 default value is 1.

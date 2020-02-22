@@ -94,7 +94,7 @@ function vtkAbstractWidgetFactory(publicAPI, model) {
         });
       }
 
-      // Custom delete to detatch from parent
+      // Custom delete to detach from parent
       widgetPublicAPI.delete = macro.chain(() => {
         delete viewToWidget[viewId];
       }, widgetPublicAPI.delete);

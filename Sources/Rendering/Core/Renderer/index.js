@@ -348,7 +348,7 @@ function vtkRenderer(publicAPI, model) {
     if (publicAPI.getActiveCamera()) {
       vn = model.activeCamera.getViewPlaneNormal();
     } else {
-      vtkErrorMacro('Trying to reset non-existant camera');
+      vtkErrorMacro('Trying to reset non-existent camera');
       return false;
     }
 
@@ -437,7 +437,7 @@ function vtkRenderer(publicAPI, model) {
     // Make sure we have an active camera
     publicAPI.getActiveCameraAndResetIfCreated();
     if (!model.activeCamera) {
-      vtkErrorMacro('Trying to reset clipping range of non-existant camera');
+      vtkErrorMacro('Trying to reset clipping range of non-existent camera');
       return false;
     }
 

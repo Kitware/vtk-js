@@ -4,7 +4,7 @@ Registers functions to create WebGL ViewNodes for  vtk
 
 ### registerOverride(apiName, createFunc)
 
-Give a functin pointer to a class that will manufacture a
+Give a function pointer to a class that will manufacture a
 vtkViewNode when given a class name string.
 
 ### createNode(apiName)

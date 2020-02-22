@@ -7,7 +7,7 @@ of each point.
 ### callback: 
 
 Set/Get the callback function the mapper will call, during the rendering
-proces, with the screen coords of the points in dataset.  The callback
+process, with the screen coords of the points in dataset.  The callback
 function will have the following parameters:
 
 ```js

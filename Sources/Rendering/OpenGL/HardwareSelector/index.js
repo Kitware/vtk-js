@@ -98,7 +98,7 @@ function vtkOpenGLHardwareSelector(publicAPI, model) {
     // int rgba[4];
     // rwin.getColorBufferSizes(rgba);
     // if (rgba[0] < 8 || rgba[1] < 8 || rgba[2] < 8) {
-    //   vtkErrorMacro("Color buffer depth must be atleast 8 bit. "
+    //   vtkErrorMacro("Color buffer depth must be at least 8 bit. "
     //     "Currently: " << rgba[0] << ", " << rgba[1] << ", " <<rgba[2]);
     //   return false;
     // }

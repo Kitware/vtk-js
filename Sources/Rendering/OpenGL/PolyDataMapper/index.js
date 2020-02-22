@@ -195,7 +195,7 @@ function vtkOpenGLPolyDataMapper(publicAPI, model) {
 
     // now handle the more complex fragment shader implementation
     // the following are always defined variables.  We start
-    // by assiging a default value from the uniform
+    // by assigning a default value from the uniform
     let colorImpl = [
       'vec3 ambientColor;',
       '  vec3 diffuseColor;',
@@ -1059,7 +1059,7 @@ function vtkOpenGLPolyDataMapper(publicAPI, model) {
     } else if (!flat && mode === model.context.LINES) {
       needLighting = true;
     }
-    // 5) everthing else is unlit
+    // 5) everything else is unlit
 
     // do we need lighting?
     if (actor.getProperty().getLighting() && needLighting) {

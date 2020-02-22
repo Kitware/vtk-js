@@ -21,4 +21,4 @@ In order to let the skybox reader apply the correct mapping of the 6 textures to
 }
 ```
 
-The transform can be omited if no transformation are required. The possible options are `flipX`, `flipY`, `rotation`.
+The transform can be omitted if no transformation are required. The possible options are `flipX`, `flipY`, `rotation`.

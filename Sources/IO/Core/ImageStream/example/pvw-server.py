@@ -4,7 +4,7 @@ r"""
 
         $ pvpython -dr .../pvw-server.py --port 1234
 
-    Any ParaViewWeb executable script comes with a set of standard arguments that can be overriden if need be::
+    Any ParaViewWeb executable script comes with a set of standard arguments that can be overridden if need be::
 
         --port 8080
              Port number on which the HTTP server will listen.

@@ -380,7 +380,7 @@ function vtkCamera(publicAPI, model) {
     let t = thickness;
     if (t < 1e-20) {
       t = 1e-20;
-      vtkDebugMacro('Thickness is set to minimum.');
+      vtkDebugMacro('Thi./Sources/Rendering/Core/Camera/index.jsckness is set to minimum.');
     }
     publicAPI.setClippingRange(model.distance - t / 2, model.distance + t / 2);
   };
@@ -634,7 +634,7 @@ function vtkCamera(publicAPI, model) {
   // in world coordinates looks up, and the physicalViewNorth
   // you set in world coorindates will (maybe) point north
   //
-  // NOTE WARNING - much of the documentaiton out there on how
+  // NOTE WARNING - much of the documentation out there on how
   // orientation works is seriously wrong. Even worse the Chrome
   // device orientation simulator is completely wrong and should
   // never be used. OMG it is so messed up.

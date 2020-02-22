@@ -61,7 +61,7 @@ function vtkImageCroppingRegionsWidget(publicAPI, model) {
     return [vout[0], vout[1], vout[2]];
   }
 
-  // Overriden method
+  // Overridden method
   publicAPI.createDefaultRepresentation = () => {
     if (!model.widgetRep) {
       model.widgetRep = vtkImageCroppingRegionsRepresentation.newInstance();

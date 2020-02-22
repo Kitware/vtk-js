@@ -495,7 +495,7 @@ function vtkShaderProgram(publicAPI, model) {
       return false;
     }
     if (model.handle === 0) {
-      model.errror = 'This shader prorgram has not been initialized yet.';
+      model.errror = 'This shader program has not been initialized yet.';
     }
 
     switch (shader.getShaderType()) {
@@ -584,7 +584,7 @@ const DEFAULT_VALUES = {
 function extend(publicAPI, model, initialValues = {}) {
   Object.assign(model, DEFAULT_VALUES, initialValues);
 
-  // Instanciate internal objects
+  // Instantiate internal objects
   model.attributesLocs = {};
   model.uniformLocs = {};
   model.vertexShader = vtkShader.newInstance();

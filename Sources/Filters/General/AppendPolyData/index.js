@@ -57,7 +57,7 @@ function vtkAppendPolyData(publicAPI, model) {
     let numStrips = 0;
     let numPolys = 0;
 
-    // Field data is propogated to output only if present in all inputs
+    // Field data is propagated to output only if present in all inputs
     let hasPtNormals = true; // assume present by default
     let hasPtTCoords = true;
     let hasPtScalars = true;

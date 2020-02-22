@@ -52,6 +52,6 @@ Remove ab attribute array from the VAO
 
 ### setForceEmulation(val);
 
-Force this VAO to emulate a vertex aray object even if
+Force this VAO to emulate a vertex array object even if
 the system supports VAOs. This can be useful in cases where
 the vertex array object does not handle all extensions.

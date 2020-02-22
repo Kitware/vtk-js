@@ -35,4 +35,4 @@ And if you want to skip tests and examples:
 $ npm run doc -- -s -f ExampleNameThatDoesNotExist
 ```
 
-`ExampleNameThatDoesNotExist` can be replaced by multilpe real example names and the doc tool will only build those examples.
+`ExampleNameThatDoesNotExist` can be replaced by multiple real example names and the doc tool will only build those examples.

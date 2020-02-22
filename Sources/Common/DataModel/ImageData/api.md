@@ -35,7 +35,7 @@ You can't directly set the bounds. First you need to decide how many pixels acro
 In general, always set the extent to start at zero, e.g. `[0, 9, 0, 9, 0, 9]` for a 10x10x10 image. Calling `setDimensions(10,10,10)` does exactly the same thing as `setExtent(0,9,0,9,0,9)` but you should always do the latter to be explicit about where your extent starts.
 
 ### getDirection(), setDirection(array[9]), setDirection(...array)
-Direction is a `mat3` matrix corresponding to the axes directions in world coordinates for the I, J, K axes of the image. Direction must form an orthonormal basis. `setDirection` can be called with an array of length 9, or each part provided as individual arugments.
+Direction is a `mat3` matrix corresponding to the axes directions in world coordinates for the I, J, K axes of the image. Direction must form an orthonormal basis. `setDirection` can be called with an array of length 9, or each part provided as individual arguments.
 
 ### getNumberOfCells()
 Standard vtkDataSet API method.

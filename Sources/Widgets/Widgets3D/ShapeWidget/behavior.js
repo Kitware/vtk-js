@@ -492,7 +492,7 @@ export default function widgetBehavior(publicAPI, model) {
   };
 
   // --------------------------------------------------------------------------
-  // Left relase: Maybe end interaction
+  // Left release: Maybe end interaction
   // --------------------------------------------------------------------------
 
   publicAPI.handleLeftButtonRelease = (e) => {
@@ -551,7 +551,7 @@ export default function widgetBehavior(publicAPI, model) {
   };
 
   // --------------------------------------------------------------------------
-  // Register key presses/relases
+  // Register key presses/releases
   // --------------------------------------------------------------------------
 
   publicAPI.handleKeyDown = ({ key }) => {

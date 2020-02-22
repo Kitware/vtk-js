@@ -22,7 +22,7 @@ The vtkHttpDataSetReader is using a custom format that only exist in vtk.js whic
 
 ## newInstance({ enableArray = true, fetchGzip = false })
 
-Create a reader instance while enabeling a default behavior regarding the
+Create a reader instance while enabling a default behavior regarding the
 data array and the way they should be fetched from the server.
 
 The __enableArray__ argument allow you to choose if you want to activate
@@ -59,7 +59,7 @@ Return the list of available array with their location and if they are enable or
 
 ### getBlocks(): { BlockName: { type: 'MultiBlock', enable: true, SubBlockName: { type: 'UnstructuredGrid', enable: true }}}
 
-List the blocks and their state for data loading. Each hierachy have its state.
+List the blocks and their state for data loading. Each hierarchy have its state.
 
 ```js
 {

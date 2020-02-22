@@ -246,17 +246,17 @@ instance.getRelativeCoincidentTopologyPointOffsetParameters() => { factor, unit 
 
 ### getCoincidentTopologyPolygonOffsetParameters() => { factor, units }
 
-Get the net paramters for handlig coincident topology obtained by summing
+Get the net parameters for handling coincident topology obtained by summing
 the global values with the relative values.
 
 ### getCoincidentTopologyLineOffsetParameters() => { factor, units }
 
-Get the net paramters for handlig coincident topology obtained by summing
+Get the net parameters for handling coincident topology obtained by summing
 the global values with the relative values.
 
 ### getCoincidentTopologyPointOffsetParameter() => { factor, units }
 
-Get the net paramters for handlig coincident topology obtained by summing
+Get the net parameters for handling coincident topology obtained by summing
 the global values with the relative values.
 
 ### resolveCoincidentTopologyPolygonOffsetFaces
