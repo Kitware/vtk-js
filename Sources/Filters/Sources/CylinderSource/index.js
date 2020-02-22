@@ -150,7 +150,7 @@ function vtkCylinderSource(publicAPI, model) {
       }
     }
 
-    // Apply tranformation to the points coordinates
+    // Apply transformation to the points coordinates
     vtkMatrixBuilder
       .buildFromRadian()
       .translate(...model.center)

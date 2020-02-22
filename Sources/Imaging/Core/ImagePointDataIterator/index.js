@@ -45,7 +45,7 @@ function vtkImagePointDataIterator(publicAPI, model) {
         (model.extent[2] - dataExtent[2]) * model.rowIncrement +
         (model.extent[4] - dataExtent[4]) * model.sliceIncrement;
 
-      // Compute the end increments (continous increments).
+      // Compute the end increments (continuous increments).
       model.rowEndIncrement = model.rowIncrement - rowSpan;
       model.sliceEndIncrement =
         model.rowEndIncrement +

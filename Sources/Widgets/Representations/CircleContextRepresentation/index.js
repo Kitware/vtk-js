@@ -84,7 +84,7 @@ function vtkCircleContextRepresentation(publicAPI, model) {
 
   model.actors.push(model.pipelines.circle.actor);
 
-  model.tranform = vtkMatrixBuilder.buildFromDegree();
+  model.transform = vtkMatrixBuilder.buildFromDegree();
 
   // --------------------------------------------------------------------------
 

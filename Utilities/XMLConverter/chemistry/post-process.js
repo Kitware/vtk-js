@@ -13,7 +13,7 @@ module.exports = function (xml) {
     var atom = {};
     outputAtoms.push(atom);
 
-    // Fill atom with informations
+    // Fill atom with information
     atom.id = atomXML.$.id;
 
     // scalars

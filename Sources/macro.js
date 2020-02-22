@@ -118,7 +118,7 @@ export function formatBytesToProperUnit(size, precision = 2, chunkSize = 1000) {
   return `${value.toFixed(precision)} ${currentUnit}`;
 }
 // ----------------------------------------------------------------------------
-// Convert thousand number with proper seperator
+// Convert thousand number with proper separator
 // ----------------------------------------------------------------------------
 
 export function formatNumbersWithThousandSeparator(n, separator = ' ') {

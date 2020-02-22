@@ -90,7 +90,7 @@ test.onlyIfWebGL('Test vtkClassName Rendering', (t) => {
 
 ## Registering a test
 
-As opposed to examples and api documentation, tests won't be picked up automatically and it is the responsability of the author to register it on the test suite.
+As opposed to examples and api documentation, tests won't be picked up automatically and it is the responsibility of the author to register it on the test suite.
 _This may change as the project evolves._
 
 To add a test to the suite, you need to import it inside `Sources/tests.js`.

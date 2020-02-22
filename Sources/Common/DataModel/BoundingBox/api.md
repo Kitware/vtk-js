@@ -34,7 +34,7 @@ were just initialized.
 
 ### addBox(otherInstance)
 
-Change the bouding box to be the union of itself and bbox
+Change the bounding box to be the union of itself and bbox
 
 ### addBounds(xMin, xMax, yMin, yMax, zMin, zMax)
 

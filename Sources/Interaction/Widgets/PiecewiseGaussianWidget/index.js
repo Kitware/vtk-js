@@ -1079,7 +1079,7 @@ function vtkPiecewiseGaussianWidget(publicAPI, model) {
       ctx.fill();
     }
 
-    // Draw active guassian
+    // Draw active gaussian
     const activeGaussian =
       model.gaussians[model.activeGaussian] ||
       model.gaussians[model.selectedGaussian];

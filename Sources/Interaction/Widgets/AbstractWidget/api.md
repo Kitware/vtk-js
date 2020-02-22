@@ -1,6 +1,6 @@
 ## Introduction
 
-AbstractWidget define the API for widget. It can't be instanciated.
+AbstractWidget define the API for widget. It can't be instantiated.
 
 ## See Also
 

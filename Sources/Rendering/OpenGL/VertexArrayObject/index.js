@@ -209,7 +209,7 @@ function vtkOpenGLVertexArrayObject(publicAPI, model) {
       return false;
     }
 
-    // Perform initalization if necessary, ensure program matches VAOs.
+    // Perform initialization if necessary, ensure program matches VAOs.
     if (model.handleProgram === 0) {
       model.handleProgram = program.getHandle();
     }

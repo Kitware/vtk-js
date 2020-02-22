@@ -59,7 +59,7 @@ function vtkTubeFilter(publicAPI, model) {
     for (let i = 0; i < lineData.length; i += npts + 1) {
       npts = lineData[i];
       if (npts === 1) {
-        // return arbitary
+        // return arbitrary
         normals.setTuple(lineData[i + 1], normal);
       } else if (npts > 1) {
         let sNextId = 0;
@@ -69,7 +69,7 @@ function vtkTubeFilter(publicAPI, model) {
         const linePts = lineData.slice(i + 1, i + 1 + npts);
         sNextId = findNextValidSegment(pts, linePts, 0);
         if (sNextId !== npts) {
-          // atleast one valid segment
+          // at least one valid segment
           let pt1Id = linePts[sNextId];
           let pt1 = pts.slice(3 * pt1Id, 3 * (pt1Id + 1));
           let pt2Id = linePts[sNextId + 1];

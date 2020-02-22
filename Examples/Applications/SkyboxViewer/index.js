@@ -298,7 +298,7 @@ function createVisualization(container, mapReader) {
 
   renderWindow.render();
 
-  // handle auto incrmenting position
+  // handle auto incrementing position
   if (autoIncrementTimer !== 0) {
     setInterval(nextPosition, autoIncrementTimer * 1000);
   }

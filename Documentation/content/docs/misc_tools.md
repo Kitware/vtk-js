@@ -11,7 +11,7 @@ We rely on Semantic-release to manage our change log, tagging and publishing
 to NPM via Travis.
 
 In order to maintain that process each commit message should follow a specific
-formatting. To ensure that formating, we use Commitizen which can be triggered
+formatting. To ensure that formatting, we use Commitizen which can be triggered
 via the following command. Additional information can be found
 [here](https://gist.github.com/stephenparish/9941e89d80e2bc58a153).
 
