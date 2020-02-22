@@ -495,7 +495,7 @@ function vtkShaderProgram(publicAPI, model) {
       return false;
     }
     if (model.handle === 0) {
-      model.errror = 'This shader program has not been initialized yet.';
+      model.error = 'This shader program has not been initialized yet.';
     }
 
     switch (shader.getShaderType()) {
