@@ -65,7 +65,7 @@ support an RGB value at each point.
 The main methods you will interact with on Volume are
 the set/getProperty and set/getMapper to work with the
 VolumeProperty and VolumeMapper classes respectively.
-As a convinience getProperty() will instantiate a 
+As a convenience getProperty() will instantiate a 
 VolumeProperty if one does not already exist.
 
 ## See Also

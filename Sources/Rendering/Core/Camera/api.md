@@ -136,7 +136,7 @@ Note: to set the viewPlaneNormal, use `setDirectionOfProjection()`
 ### SetUseOffAxisProjection(boolean), getUseOffAxisProjection()
 
 Set/Get use offaxis frustum. OffAxis frustum is used for off-axis frustum calculations in `getProjectionMatrix()`,
-specificly for stereo rendering. For reference see "High Resolution Virtual Reality", in Proc.
+specifically for stereo rendering. For reference see "High Resolution Virtual Reality", in Proc.
 SIGGRAPH '92, Computer Graphics, pages 195-202, 1992.
 
 Note: offAxis projection is **_NOT IMPLEMENTED_**.

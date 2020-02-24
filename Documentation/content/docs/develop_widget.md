@@ -16,7 +16,7 @@ A call to `widgetManager.enablePicking()` allows the user to interact with widge
 
 ### Widget creation
 
-A widget is created by `vtkWidget.newInstance(INITIAL_VALUES)` where `vtkWidget` is the base class of the widget being created and `INITIAL_VALUES` are the arguments given to the constructor of the widget. Note that some parameters cannot be changed later on. `INITIAL_VALUES` may be the only way to set those parameters. During this call the "widget state" is created. It is unique to a widget instance. This allows for synchronization of the same widget accross renderers (a change of the widget state in one view is directly rendered in all other views).
+A widget is created by `vtkWidget.newInstance(INITIAL_VALUES)` where `vtkWidget` is the base class of the widget being created and `INITIAL_VALUES` are the arguments given to the constructor of the widget. Note that some parameters cannot be changed later on. `INITIAL_VALUES` may be the only way to set those parameters. During this call the "widget state" is created. It is unique to a widget instance. This allows for synchronization of the same widget across renderers (a change of the widget state in one view is directly rendered in all other views).
 
 The widget must then be set with `widgetManager.addWidget(widget, viewType)`. The `viewType` parameter informs the widget manager about the representations it should build (see Widget representations). `addWidget()` returns a `handle` to the widget specific to the renderer the widget manager is linked to.
 
@@ -28,7 +28,7 @@ Removing a widget from a view is done by `widgetManager.removeWidget(widget)`. R
 
 ### Widget state
 
-The widget state stores widget data used accross renderers. The widget state is composed of sub-states(i.e. Object) made of properties that describe particular aspects of the widget. For example, sub-states can store positions and sizes of actors to be rendered.
+The widget state stores widget data used across renderers. The widget state is composed of sub-states(i.e. Object) made of properties that describe particular aspects of the widget. For example, sub-states can store positions and sizes of actors to be rendered.
 The widget state must be built using `vtkStateBuilder`. There are four ways to build sub-states.
 
 #### Static sub-state
@@ -177,7 +177,7 @@ The `labels` field determines which sub-states of the widget should be used by t
 A representation can have multiple sub-states as input. Different sub-states can be rendered similarly.
 Returning different representation parameters for different view types allows for an adapted view depending on the context. For example, having a widget rendered in a 2D view and a 3D view simultaneously with different 2D and 3D widget representations.
 
-Representations are automatically recomputed when sub-states are modified. They are implemented as VTK.js filters since all the rendering computations happen in the `requestData(inData, outData)` method where `inData` is the list of states comming from sub-states and `outData` is a `vtkPolyData` representing the geometry to render.
+Representations are automatically recomputed when sub-states are modified. They are implemented as VTK.js filters since all the rendering computations happen in the `requestData(inData, outData)` method where `inData` is the list of states coming from sub-states and `outData` is a `vtkPolyData` representing the geometry to render.
 
 Representations manage their own actors and mappers. Actors are usually created when the representation is created. Actors should be pushed in `model.actors` to be rendered (see vtkRectangleContextRepresentation for a simple example).
 
@@ -185,7 +185,7 @@ A representation should inherit from either `vtkHandleRepresentation` or `vtkCon
 
 ### Widget behavior
 
-The widget behavior is the place where the logic of the widget happens. The widget behavior is the handle returned when a widget is added to a widget manager. The widget behavior receives and responds to mouse and keyboard events through handler methods. These methods are named `handle{XXX}(callData)` where `XXX` is the name of the event (like `KeyPress`, `KeyUp`, `MouseMove`, `LeftButtonPress`, etc...) and `callData` is the event data (it contains informations like the mouse position, the keyboard state ...). All events don't need a handler method: if no handler is provided the widget behavior ignores the event. Each handler must return either `macro.EVENT_ABORT` or `macro.VOID`. `macro.EVENT_ABORT` means that the event should not be propagated to other widgets wherehas `macro.VOID` means that the event should be propagated. Note that the order in which widgets receive events is not guaranteed, so returning the wrong value might starve other widgets from events they expect.
+The widget behavior is the place where the logic of the widget happens. The widget behavior is the handle returned when a widget is added to a widget manager. The widget behavior receives and responds to mouse and keyboard events through handler methods. These methods are named `handle{XXX}(callData)` where `XXX` is the name of the event (like `KeyPress`, `KeyUp`, `MouseMove`, `LeftButtonPress`, etc...) and `callData` is the event data (it contains information like the mouse position, the keyboard state ...). All events don't need a handler method: if no handler is provided the widget behavior ignores the event. Each handler must return either `macro.EVENT_ABORT` or `macro.VOID`. `macro.EVENT_ABORT` means that the event should not be propagated to other widgets wherehas `macro.VOID` means that the event should be propagated. Note that the order in which widgets receive events is not guaranteed, so returning the wrong value might starve other widgets from events they expect.
 
 The widget behavior has also access to the renderer, openGLRenderWindow and interactor.
 
@@ -199,7 +199,7 @@ The `loseFocus()` method is called when the widget manager removes the focus fro
 
 ##### Active state
 
-The widget state can have an active sub-state. This is usually useful to flag the handle the user is interacting with and keep track of it or to change its visual appearance. For example, `vtkSphereHandleRepresentation` increases temporarilly the radius of the active handle to emphasize the active handle.
+The widget state can have an active sub-state. This is usually useful to flag the handle the user is interacting with and keep track of it or to change its visual appearance. For example, `vtkSphereHandleRepresentation` increases temporarily the radius of the active handle to emphasize the active handle.
 
 The active state can be set by the widget behavior with `subState.activate()`. Similarly a sub-state can be deactivated with a call to `subState.deactivate()`.
 

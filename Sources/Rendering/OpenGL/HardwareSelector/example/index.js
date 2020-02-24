@@ -232,7 +232,7 @@ function processSelections(selections) {
 
 function pickOnMouseEvent(event) {
   if (interactor.isAnimating()) {
-    // We should not do picking when interating with the scene
+    // We should not do picking when interacting with the scene
     return;
   }
   const [x, y] = eventToWindowXY(event);

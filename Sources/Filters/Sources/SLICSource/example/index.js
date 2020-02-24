@@ -20,7 +20,7 @@ const renderWindow = fullScreenRenderer.getRenderWindow();
 // ----------------------------------------------------------------------------
 // Example code
 // ----------------------------------------------------------------------------
-// Server is not sending the .gz and whith the compress header
+// Server is not sending the .gz and with the compress header
 // Need to fetch the true file name and uncompress it locally
 // ----------------------------------------------------------------------------
 

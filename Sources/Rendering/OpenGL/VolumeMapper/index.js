@@ -937,7 +937,7 @@ function vtkOpenGLVolumeMapper(publicAPI, model) {
     }
 
     if (model.lastXYF > 1.43) {
-      // now copy the frambuffer with the volume into the
+      // now copy the framebuffer with the volume into the
       // regular buffer
       model.framebuffer.restorePreviousBindingsAndBuffers();
 

@@ -24,7 +24,7 @@ function vtkHandleWidget(publicAPI, model) {
     publicAPI.render();
   }
 
-  // Overriden method
+  // Overridden method
   publicAPI.createDefaultRepresentation = () => {
     if (!model.widgetRep) {
       model.widgetRep = vtkSphereHandleRepresentation.newInstance();

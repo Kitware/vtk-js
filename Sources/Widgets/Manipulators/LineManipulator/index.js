@@ -18,14 +18,14 @@ export function projectDisplayToLine(
   vtkMath.cross(lineDirection, viewDir, normal);
   vtkMath.cross(normal, viewDir, normal);
 
-  const numer = vtkMath.dot(
+  const numerator = vtkMath.dot(
     [near[0] - lineOrigin[0], near[1] - lineOrigin[1], near[2] - lineOrigin[2]],
     normal
   );
-  const denom = vtkMath.dot(normal, lineDirection);
+  const denominator = vtkMath.dot(normal, lineDirection);
 
   const result = lineDirection.slice();
-  vtkMath.multiplyScalar(result, numer / denom);
+  vtkMath.multiplyScalar(result, numerator / denominator);
   vtkMath.add(lineOrigin, result, result);
 
   return result;

@@ -8,7 +8,7 @@ Define the pixel tolerance (default = 5)
 
 ## worldTolerance (set/get Number)
 
-Define the worls tolerance (default = 0.001)
+Define the world tolerance (default = 0.001)
 
 ## computeWorkdPositon(renderer, displayPos, worldPos)
 

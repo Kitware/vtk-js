@@ -180,7 +180,7 @@ reader
 
     updateControlPanel(image.imageMapper, data);
 
-    // give axis informations to widgets
+    // give axis information to widgets
     let axis = [0, 0, 0];
     data.indexToWorldVec3([1, 0, 0], axis);
     scene.rectangleHandle.setXAxis(axis);

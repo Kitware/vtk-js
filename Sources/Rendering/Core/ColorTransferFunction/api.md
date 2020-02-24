@@ -12,7 +12,7 @@ between nodes.
 See the description of class vtkPiecewiseFunction for an explanation of
 midpoint and sharpness.
 
-## Useage
+## Usage
 
 ```js
   // create color transfer function

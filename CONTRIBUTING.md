@@ -33,7 +33,7 @@ Please follow the coding style:
     $ git checkout -b new_feature
     ```
 
-4. Start hacking. Additional informations on how to create classe/test/example can be found 
+4. Start hacking. Additional information on how to create class/test/example can be found
    [here](https://kitware.github.io/vtk-js/docs/) in the __Development__ section.
 
     ```sh

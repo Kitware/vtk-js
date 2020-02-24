@@ -11,7 +11,7 @@ export const DataTypeByteSize = {
 };
 
 export const VtkDataTypes = {
-  VOID: '', // not sure to know what that shoud be
+  VOID: '', // not sure to know what that should be
   CHAR: 'Int8Array',
   SIGNED_CHAR: 'Int8Array',
   UNSIGNED_CHAR: 'Uint8Array',

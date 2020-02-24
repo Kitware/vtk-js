@@ -2,7 +2,7 @@
 
 This switch focuses on simplifying the interactor observers, and forwarding events data to the callbacks:
 - Remove `set/getAnimationState` and `start/stopState` in InteractorStyle. Instead, use `start/stop${stateName}`.
-- Remove `CharEvent` whcih was a duplicate of `KeyPressEvent`.
+- Remove `CharEvent` which was a duplicate of `KeyPressEvent`.
 - Rename `setEnable*(` to `setEnabled()` in AbstractWidget.
 - Remove `get2DPointerPosition()` from AbstractWidget: the position will now be properly positioned based on the canvas bounds as soon as it is caught by the Interactor.
 - Rename `Pinch` events to `MouseWheel` events when those events are triggered by the mouse wheel, and use the wheel delta instead of a scale.

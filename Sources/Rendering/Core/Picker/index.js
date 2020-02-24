@@ -61,7 +61,7 @@ function vtkPicker(publicAPI, model) {
     return t;
   };
 
-  // To be overriden in subclasses
+  // To be overridden in subclasses
   publicAPI.pick = (selection, renderer) => {
     if (selection.length !== 3) {
       vtkWarningMacro('vtkPicker::pick: selectionPt needs three components');
