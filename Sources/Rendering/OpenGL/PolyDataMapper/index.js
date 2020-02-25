@@ -639,11 +639,11 @@ function vtkOpenGLPolyDataMapper(publicAPI, model) {
         '//VTK::PositionVC::Impl',
         [
           'vertexVCVSOutput = MCVCMatrix * vertexMC;',
-          '  gl_Position = MCDCMatrix * vertexMC;',
+          '  gl_Position = MCPCMatrix * vertexMC;',
         ]
       ).result;
       VSSource = vtkShaderProgram.substitute(VSSource, '//VTK::Camera::Dec', [
-        'uniform mat4 MCDCMatrix;',
+        'uniform mat4 MCPCMatrix;',
         'uniform mat4 MCVCMatrix;',
       ]).result;
       GSSource = vtkShaderProgram.substitute(
@@ -668,12 +668,12 @@ function vtkOpenGLPolyDataMapper(publicAPI, model) {
       ).result;
     } else {
       VSSource = vtkShaderProgram.substitute(VSSource, '//VTK::Camera::Dec', [
-        'uniform mat4 MCDCMatrix;',
+        'uniform mat4 MCPCMatrix;',
       ]).result;
       VSSource = vtkShaderProgram.substitute(
         VSSource,
         '//VTK::PositionVC::Impl',
-        ['  gl_Position = MCDCMatrix * vertexMC;']
+        ['  gl_Position = MCPCMatrix * vertexMC;']
       ).result;
     }
     shaders.Vertex = VSSource;
@@ -1501,8 +1501,8 @@ function vtkOpenGLPolyDataMapper(publicAPI, model) {
   publicAPI.setCameraShaderParameters = (cellBO, ren, actor) => {
     const program = cellBO.getProgram();
 
-    // // [WMVD]C == {world, model, view, display} coordinates
-    // // E.g., WCDC == world to display coordinate transformation
+    // [WMVP]C == {world, model, view, projection} coordinates
+    // E.g., WCPC == world to projection coordinate transformation
     const keyMats = model.openGLCamera.getKeyMatrices(ren);
     const cam = ren.getActiveCamera();
 
@@ -1520,9 +1520,9 @@ function vtkOpenGLPolyDataMapper(publicAPI, model) {
       : model.openGLActor.getKeyMatrices();
 
     program.setUniformMatrix(
-      'MCDCMatrix',
+      'MCPCMatrix',
       safeMatrixMultiply(
-        [keyMats.wcdc, actMats.mcwc, inverseShiftScaleMatrix],
+        [keyMats.wcpc, actMats.mcwc, inverseShiftScaleMatrix],
         mat4,
         model.tmpMat4
       )

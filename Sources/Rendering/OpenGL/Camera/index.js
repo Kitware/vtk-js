@@ -64,14 +64,14 @@ function vtkOpenGLCamera(publicAPI, model) {
       const aspectRatio = model.openGLRenderer.getAspectRatio();
 
       mat4.copy(
-        model.keyMatrices.vcdc,
+        model.keyMatrices.vcpc,
         model.renderable.getProjectionMatrix(aspectRatio, -1, 1)
       );
-      mat4.transpose(model.keyMatrices.vcdc, model.keyMatrices.vcdc);
+      mat4.transpose(model.keyMatrices.vcpc, model.keyMatrices.vcpc);
 
       mat4.multiply(
-        model.keyMatrices.wcdc,
-        model.keyMatrices.vcdc,
+        model.keyMatrices.wcpc,
+        model.keyMatrices.vcpc,
         model.keyMatrices.wcvc
       );
 
@@ -107,9 +107,9 @@ export function extend(publicAPI, model, initialValues = {}) {
 
   model.keyMatrices = {
     normalMatrix: mat3.create(),
-    vcdc: mat4.create(),
+    vcpc: mat4.create(),
     wcvc: mat4.create(),
-    wcdc: mat4.create(),
+    wcpc: mat4.create(),
   };
 
   // Build VTK API

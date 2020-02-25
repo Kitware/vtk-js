@@ -18,7 +18,7 @@
 attribute vec4 vertexDC;
 
 varying vec3 vertexVCVSOutput;
-uniform mat4 DCVCMatrix;
+uniform mat4 PCVCMatrix;
 
 uniform float dcxmin;
 uniform float dcxmax;
@@ -34,7 +34,7 @@ void main()
     dcymin + 0.5 * (vertexDC.y + 1.0) * (dcymax - dcymin),
     vertexDC.z,
     vertexDC.w);
-  vec4 vcpos = DCVCMatrix * dcsmall;
+  vec4 vcpos = PCVCMatrix * dcsmall;
   vertexVCVSOutput = vcpos.xyz/vcpos.w;
   gl_Position = dcsmall;
 }

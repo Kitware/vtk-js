@@ -417,8 +417,8 @@ function vtkOpenGLVolumeMapper(publicAPI, model) {
   };
 
   publicAPI.setCameraShaderParameters = (cellBO, ren, actor) => {
-    // // [WMVD]C == {world, model, view, display} coordinates
-    // // E.g., WCDC == world to display coordinate transformation
+    // // [WMVP]C == {world, model, view, projection} coordinates
+    // // E.g., WCPC == world to projection coordinate transformation
     const keyMats = model.openGLCamera.getKeyMatrices(ren);
     const actMats = model.openGLVolume.getKeyMatrices();
 
@@ -464,7 +464,7 @@ function vtkOpenGLVolumeMapper(publicAPI, model) {
         vec3.scale(pos, dir, t);
       }
       // now convert to DC
-      vec3.transformMat4(pos, pos, keyMats.vcdc);
+      vec3.transformMat4(pos, pos, keyMats.vcpc);
 
       dcxmin = Math.min(pos[0], dcxmin);
       dcxmax = Math.max(pos[0], dcxmax);
@@ -587,9 +587,9 @@ function vtkOpenGLVolumeMapper(publicAPI, model) {
 
         program.setUniformMatrix('vWCtoIDX', worldToIndex);
 
-        // Get the display coordinate to world coordinate transformation matrix.
-        mat4.invert(model.displayToWorld, keyMats.wcdc);
-        program.setUniformMatrix('DCWCMatrix', model.displayToWorld);
+        // Get the projection coordinate to world coordinate transformation matrix.
+        mat4.invert(model.projectionToWorld, keyMats.wcpc);
+        program.setUniformMatrix('PCWCMatrix', model.projectionToWorld);
 
         const size = publicAPI.getRenderTargetSize();
 
@@ -598,8 +598,8 @@ function vtkOpenGLVolumeMapper(publicAPI, model) {
       }
     }
 
-    mat4.invert(model.displayToView, keyMats.vcdc);
-    program.setUniformMatrix('DCVCMatrix', model.displayToView);
+    mat4.invert(model.projectionToView, keyMats.vcpc);
+    program.setUniformMatrix('PCVCMatrix', model.projectionToView);
 
     // handle lighting values
     switch (model.lastLightComplexity) {
@@ -1307,7 +1307,7 @@ const DEFAULT_VALUES = {
   idxToView: null,
   idxNormalMatrix: null,
   modelToView: null,
-  displayToView: null,
+  projectionToView: null,
   avgWindowArea: 0.0,
   avgFrameTime: 0.0,
 };
@@ -1335,8 +1335,8 @@ export function extend(publicAPI, model, initialValues = {}) {
   model.idxToView = mat4.create();
   model.idxNormalMatrix = mat3.create();
   model.modelToView = mat4.create();
-  model.displayToView = mat4.create();
-  model.displayToWorld = mat4.create();
+  model.projectionToView = mat4.create();
+  model.projectionToWorld = mat4.create();
 
   // Build VTK API
   macro.setGet(publicAPI, model, ['context']);

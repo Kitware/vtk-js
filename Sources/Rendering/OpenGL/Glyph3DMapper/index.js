@@ -272,25 +272,25 @@ function vtkOpenGLGlyph3DMapper(publicAPI, model) {
           [
             'vec4 gVertexMC = gMatrix * vertexMC;',
             'vertexVCVSOutput = MCVCMatrix * gVertexMC;',
-            '  gl_Position = MCDCMatrix * gVertexMC;',
+            '  gl_Position = MCPCMatrix * gVertexMC;',
           ]
         ).result;
         VSSource = vtkShaderProgram.substitute(VSSource, '//VTK::Camera::Dec', [
           'attribute mat4 gMatrix;',
-          'uniform mat4 MCDCMatrix;',
+          'uniform mat4 MCPCMatrix;',
           'uniform mat4 MCVCMatrix;',
         ]).result;
       } else {
         VSSource = vtkShaderProgram.substitute(VSSource, '//VTK::Camera::Dec', [
           'attribute mat4 gMatrix;',
-          'uniform mat4 MCDCMatrix;',
+          'uniform mat4 MCPCMatrix;',
         ]).result;
         VSSource = vtkShaderProgram.substitute(
           VSSource,
           '//VTK::PositionVC::Impl',
           [
             'vec4 gVertexMC = gMatrix * vertexMC;',
-            '  gl_Position = MCDCMatrix * gVertexMC;',
+            '  gl_Position = MCPCMatrix * gVertexMC;',
           ]
         ).result;
       }
@@ -382,11 +382,11 @@ function vtkOpenGLGlyph3DMapper(publicAPI, model) {
     }
     publicAPI.multiply4x4WithOffset(
       model.tmpMat4,
-      model.mcdcMatrix,
+      model.mcpcMatrix,
       garray,
       p * 16
     );
-    program.setUniformMatrix('MCDCMatrix', model.tmpMat4);
+    program.setUniformMatrix('MCPCMatrix', model.tmpMat4);
     if (mcvcMatrixUsed) {
       publicAPI.multiply4x4WithOffset(
         model.tmpMat4,
@@ -421,8 +421,8 @@ function vtkOpenGLGlyph3DMapper(publicAPI, model) {
       actor.getProperty().getEdgeVisibility() &&
       representation === Representation.SURFACE;
 
-    // // [WMVD]C == {world, model, view, display} coordinates
-    // // E.g., WCDC == world to display coordinate transformation
+    // [WMVP]C == {world, model, view, projection} coordinates
+    // E.g., WCPC == world to projection coordinate transformation
     const keyMats = model.openGLCamera.getKeyMatrices(ren);
     const actMats = model.openGLActor.getKeyMatrices();
 
@@ -432,7 +432,7 @@ function vtkOpenGLGlyph3DMapper(publicAPI, model) {
       keyMats.normalMatrix,
       actMats.normalMatrix
     );
-    mat4.multiply(model.mcdcMatrix, keyMats.wcdc, actMats.mcwc);
+    mat4.multiply(model.mcpcMatrix, keyMats.wcpc, actMats.mcwc);
     mat4.multiply(model.mcvcMatrix, keyMats.wcvc, actMats.mcwc);
 
     const garray = model.renderable.getMatrixArray();
@@ -670,7 +670,7 @@ function vtkOpenGLGlyph3DMapper(publicAPI, model) {
 
 const DEFAULT_VALUES = {
   normalMatrix: null,
-  mcdcMatrix: null,
+  mcpcMatrix: null,
   mcwcMatrix: null,
 };
 
@@ -684,7 +684,7 @@ export function extend(publicAPI, model, initialValues = {}) {
 
   model.tmpMat3 = mat3.create();
   model.normalMatrix = mat3.create();
-  model.mcdcMatrix = mat4.create();
+  model.mcpcMatrix = mat4.create();
   model.mcvcMatrix = mat4.create();
   model.tmpColor = [];
 

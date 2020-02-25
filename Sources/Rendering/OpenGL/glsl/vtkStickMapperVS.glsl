@@ -97,5 +97,5 @@ void main()
     radiusVCVSOutput*offsets.y*ybase +
     0.5*lengthVCVSOutput*offsets.z*orientVCVSOutput;
 
-  gl_Position = VCDCMatrix * vertexVCVSOutput;
+  gl_Position = VCPCMatrix * vertexVCVSOutput;
 }

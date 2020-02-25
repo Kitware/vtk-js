@@ -99,12 +99,12 @@ function vtkOpenGLImageMapper(publicAPI, model) {
     let FSSource = shaders.Fragment;
 
     VSSource = vtkShaderProgram.substitute(VSSource, '//VTK::Camera::Dec', [
-      'uniform mat4 MCDCMatrix;',
+      'uniform mat4 MCPCMatrix;',
     ]).result;
     VSSource = vtkShaderProgram.substitute(
       VSSource,
       '//VTK::PositionVC::Impl',
-      ['  gl_Position = MCDCMatrix * vertexMC;']
+      ['  gl_Position = MCPCMatrix * vertexMC;']
     ).result;
 
     VSSource = vtkShaderProgram.substitute(
@@ -356,7 +356,7 @@ function vtkOpenGLImageMapper(publicAPI, model) {
     mat4.multiply(model.imagemat, actMats.mcwc, i2wmat4);
 
     const keyMats = model.openGLCamera.getKeyMatrices(ren);
-    mat4.multiply(model.imagemat, keyMats.wcdc, model.imagemat);
+    mat4.multiply(model.imagemat, keyMats.wcpc, model.imagemat);
 
     if (cellBO.getCABO().getCoordShiftAndScaleEnabled()) {
       const inverseShiftScaleMat = cellBO
@@ -365,7 +365,7 @@ function vtkOpenGLImageMapper(publicAPI, model) {
       mat4.multiply(model.imagemat, model.imagemat, inverseShiftScaleMat);
     }
 
-    program.setUniformMatrix('MCDCMatrix', model.imagemat);
+    program.setUniformMatrix('MCPCMatrix', model.imagemat);
   };
 
   publicAPI.setPropertyShaderParameters = (cellBO, ren, actor) => {

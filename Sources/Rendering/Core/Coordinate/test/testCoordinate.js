@@ -107,7 +107,7 @@ test('Test vtkCoordinate publicAPI', (t) => {
 
   coord.setCoordinateSystemToView();
   testVal = [0.0, 0.0, 0.0];
-  world = [0.0, 0.0, 0.98];
+  world = [0.0, 0.0, 1.0];
   display = [50.0, 50.0];
   localDisplay = [50.0, 49.0];
   viewPort = [50.0, 50.0];
@@ -158,7 +158,7 @@ test('Test vtkCoordinate publicAPI', (t) => {
 
   coord.setCoordinateSystemToView();
   testVal = [0.0, 0.0, 0.0];
-  world = [0.0, 0.0, 0.98];
+  world = [0.0, 0.0, 1.0];
   display = [50.0, 50.0];
   localDisplay = [50.0, 49.0];
   viewPort = [50.0, 50.0];

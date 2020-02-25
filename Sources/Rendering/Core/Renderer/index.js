@@ -225,20 +225,22 @@ function vtkRenderer(publicAPI, model) {
 
   // requires the aspect ratio of the viewport as X/Y
   publicAPI.normalizedDisplayToWorld = (x, y, z, aspect) => {
-    const vpd = publicAPI.normalizedDisplayToView(x, y, z);
+    let vpd = publicAPI.normalizedDisplayToProjection(x, y, z);
+    vpd = publicAPI.projectionToView(vpd[0], vpd[1], vpd[2], aspect);
 
-    return publicAPI.viewToWorld(vpd[0], vpd[1], vpd[2], aspect);
+    return publicAPI.viewToWorld(vpd[0], vpd[1], vpd[2]);
   };
 
   // requires the aspect ratio of the viewport as X/Y
   publicAPI.worldToNormalizedDisplay = (x, y, z, aspect) => {
-    const vpd = publicAPI.worldToView(x, y, z);
+    let vpd = publicAPI.worldToView(x, y, z);
+    vpd = publicAPI.viewToProjection(vpd[0], vpd[1], vpd[2], aspect);
 
-    return publicAPI.viewToNormalizedDisplay(vpd[0], vpd[1], vpd[2], aspect);
+    return publicAPI.projectionToNormalizedDisplay(vpd[0], vpd[1], vpd[2]);
   };
 
   // requires the aspect ratio of the viewport as X/Y
-  publicAPI.viewToWorld = (x, y, z, aspect) => {
+  publicAPI.viewToWorld = (x, y, z) => {
     if (model.activeCamera === null) {
       vtkErrorMacro(
         'ViewToWorld: no active camera, cannot compute view to world, returning 0,0,0'
@@ -246,12 +248,28 @@ function vtkRenderer(publicAPI, model) {
       return [0, 0, 0];
     }
 
-    // get the perspective transformation from the active camera
-    const matrix = model.activeCamera.getCompositeProjectionMatrix(
-      aspect,
-      -1.0,
-      1.0
-    );
+    // get the view matrix from the active camera
+    const matrix = model.activeCamera.getViewMatrix();
+
+    mat4.invert(matrix, matrix);
+    mat4.transpose(matrix, matrix);
+
+    // Transform point to world coordinates
+    const result = vec3.fromValues(x, y, z);
+    vec3.transformMat4(result, result, matrix);
+    return [result[0], result[1], result[2]];
+  };
+
+  publicAPI.projectionToView = (x, y, z, aspect) => {
+    if (model.activeCamera === null) {
+      vtkErrorMacro(
+        'ProjectionToView: no active camera, cannot compute projection to view, returning 0,0,0'
+      );
+      return [0, 0, 0];
+    }
+
+    // get the projection transformation from the active camera
+    const matrix = model.activeCamera.getProjectionMatrix(aspect, -1.0, 1.0);
 
     mat4.invert(matrix, matrix);
     mat4.transpose(matrix, matrix);
@@ -263,21 +281,35 @@ function vtkRenderer(publicAPI, model) {
   };
 
   // Convert world point coordinates to view coordinates.
-  // requires the aspect ratio of the viewport as X/Y
-  publicAPI.worldToView = (x, y, z, aspect) => {
+  publicAPI.worldToView = (x, y, z) => {
     if (model.activeCamera === null) {
       vtkErrorMacro(
-        'ViewToWorld: no active camera, cannot compute view to world, returning 0,0,0'
+        'WorldToView: no active camera, cannot compute view to world, returning 0,0,0'
       );
       return [0, 0, 0];
     }
 
-    // get the perspective transformation from the active camera
-    const matrix = model.activeCamera.getCompositeProjectionMatrix(
-      aspect,
-      -1.0,
-      1.0
-    );
+    // get the view transformation from the active camera
+    const matrix = model.activeCamera.getViewMatrix();
+    mat4.transpose(matrix, matrix);
+
+    const result = vec3.fromValues(x, y, z);
+    vec3.transformMat4(result, result, matrix);
+    return [result[0], result[1], result[2]];
+  };
+
+  // Convert world point coordinates to view coordinates.
+  // requires the aspect ratio of the viewport as X/Y
+  publicAPI.viewToProjection = (x, y, z, aspect) => {
+    if (model.activeCamera === null) {
+      vtkErrorMacro(
+        'ViewToProjection: no active camera, cannot compute view to projection, returning 0,0,0'
+      );
+      return [0, 0, 0];
+    }
+
+    // get the projeciton transformation from the active camera
+    const matrix = model.activeCamera.getProjectionMatrix(aspect, -1.0, 1.0);
     mat4.transpose(matrix, matrix);
 
     const result = vec3.fromValues(x, y, z);

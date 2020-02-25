@@ -75,12 +75,12 @@ function vtkViewport(publicAPI, model) {
     vtkErrorMacro('callviewtodisplay on your view instead');
   publicAPI.getSize = () => vtkErrorMacro('call getSize on your View instead');
 
-  publicAPI.normalizedDisplayToView = (x, y, z) => {
+  publicAPI.normalizedDisplayToProjection = (x, y, z) => {
     // first to normalized viewport
     const nvp = publicAPI.normalizedDisplayToNormalizedViewport(x, y, z);
 
     // then to view
-    return publicAPI.normalizedViewportToView(nvp[0], nvp[1], nvp[2]);
+    return publicAPI.normalizedViewportToProjection(nvp[0], nvp[1], nvp[2]);
   };
 
   publicAPI.normalizedDisplayToNormalizedViewport = (x, y, z) => {
@@ -95,15 +95,15 @@ function vtkViewport(publicAPI, model) {
     ];
   };
 
-  publicAPI.normalizedViewportToView = (x, y, z) => [
+  publicAPI.normalizedViewportToProjection = (x, y, z) => [
     x * 2.0 - 1.0,
     y * 2.0 - 1.0,
     z * 2.0 - 1.0,
   ];
 
-  publicAPI.viewToNormalizedDisplay = (x, y, z) => {
+  publicAPI.projectionToNormalizedDisplay = (x, y, z) => {
     // first to nvp
-    const nvp = publicAPI.viewToNormalizedViewport(x, y, z);
+    const nvp = publicAPI.projectionToNormalizedViewport(x, y, z);
 
     // then to ndp
     return publicAPI.normalizedViewportToNormalizedDisplay(
@@ -125,7 +125,7 @@ function vtkViewport(publicAPI, model) {
     ];
   };
 
-  publicAPI.viewToNormalizedViewport = (x, y, z) => [
+  publicAPI.projectionToNormalizedViewport = (x, y, z) => [
     (x + 1.0) * 0.5,
     (y + 1.0) * 0.5,
     (z + 1.0) * 0.5,

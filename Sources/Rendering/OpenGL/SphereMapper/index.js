@@ -36,7 +36,7 @@ function vtkOpenGLSphereMapper(publicAPI, model) {
     let FSSource = shaders.Fragment;
 
     VSSource = vtkShaderProgram.substitute(VSSource, '//VTK::Camera::Dec', [
-      'uniform mat4 VCDCMatrix;\n',
+      'uniform mat4 VCPCMatrix;\n',
       'uniform mat4 MCVCMatrix;',
     ]).result;
 
@@ -52,14 +52,14 @@ function vtkOpenGLSphereMapper(publicAPI, model) {
       ['vec4 vertexVC = vertexVCVSOutput;\n']
     ).result;
 
-    // for lights kit and positional the VCDC matrix is already defined
+    // for lights kit and positional the VCPC matrix is already defined
     // so don't redefine it
     const replacement = [
       'uniform float invertedDepth;\n',
       'uniform int cameraParallel;\n',
       'varying float radiusVCVSOutput;\n',
       'varying vec3 centerVCVSOutput;\n',
-      'uniform mat4 VCDCMatrix;\n',
+      'uniform mat4 VCPCMatrix;\n',
     ];
     FSSource = vtkShaderProgram.substitute(
       FSSource,
@@ -113,7 +113,7 @@ function vtkOpenGLSphereMapper(publicAPI, model) {
       '    }\n',
       // compute the pixel's depth
       // ' normalVCVSOutput = vec3(0,0,1);\n'
-      '  vec4 pos = VCDCMatrix * vertexVC;\n',
+      '  vec4 pos = VCPCMatrix * vertexVC;\n',
       fragString,
     ]).result;
 
@@ -178,8 +178,8 @@ function vtkOpenGLSphereMapper(publicAPI, model) {
     const cam = ren.getActiveCamera();
     const keyMats = model.openGLCamera.getKeyMatrices(ren);
 
-    if (program.isUniformUsed('VCDCMatrix')) {
-      program.setUniformMatrix('VCDCMatrix', keyMats.vcdc);
+    if (program.isUniformUsed('VCPCMatrix')) {
+      program.setUniformMatrix('VCPCMatrix', keyMats.vcpc);
     }
 
     if (program.isUniformUsed('MCVCMatrix')) {

@@ -13,13 +13,25 @@ another coordinate system (e.g., GetComputedWorldValue()).
 The coordinate systems in vtk are as follows:
 
 <PRE>
-  DISPLAY -             x-y pixel values in window
-  NORMALIZED DISPLAY -  x-y (0,1) normalized values
-  VIEWPORT -            x-y pixel values in viewport
-  NORMALIZED VIEWPORT - x-y (0,1) normalized value in viewport
-  VIEW -                x-y-z (-1,1) values in camera coordinates. (z is depth)
-  WORLD -               x-y-z global coordinate values
-  USERDEFINED -         x-y-z in User defined space
+DISPLAY -             x-y pixel values in a window
+NORMALIZED DISPLAY -  x-y (0,1) normalized values
+VIEWPORT -            x-y pixel values in viewport
+NORMALIZED VIEWPORT - x-y (0,1) normalized value in viewport
+PROJECTION -          View coordinates transformed by the ortho/perspective
+                      equations and normalized to -1,1 cube on X and Y. The
+                      z range is defined by the code and may be -1,1
+                      for OpenGL or other values. This is the coordinate system
+                      that is typically coming out of the vertex shader.
+VIEW -                x-y-z values in camera coordinates. The origin is
+                      at the camera position and the orientation is such
+                      that the -Z axis is the view direction, the X axis
+                      is the view right, and Y axis is view up. This is
+                      a translation and rotation from world coordinates
+                      based on the camera settings.
+WORLD -               x-y-z global coordinate values
+MODEL -               The coordinate system specific to a dataaet or
+                      actor. This is normally converted into WORLD coordinates
+                      as part of the rendering process.
 </PRE>
 
 If you cascade vtkCoordinate objects, you refer to another vtkCoordinate
@@ -28,9 +40,19 @@ create composite groups of things like vtkActor2D that are positioned
 relative to one another. Note that in cascaded sequences, each
 vtkCoordinate object may be specified in different coordinate systems!
 
+In shader code coordinate system transformations will often be referenced
+as matricies with common ones being.
+<PRE>
+MCWCMatrix - model to world
+MCPCMatrix - model to projection
+WCVCMatrix - world to view - half of the camera transform
+WCPCMatrix - world to projection
+VCPCMatrix - view to projection - the other part of the camera transform
+</PRE>
+
 ## See Also
 
-[vtkActor2D](./Rendering_Core_Actor2D.html) 
+[vtkActor2D](./Rendering_Core_Actor2D.html)
 
 ### referenceCoordinate
 

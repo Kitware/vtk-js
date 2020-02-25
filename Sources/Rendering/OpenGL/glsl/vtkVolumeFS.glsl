@@ -43,7 +43,7 @@ varying vec3 vertexVCVSOutput;
 uniform int outlineThickness;
 uniform float vpWidth;
 uniform float vpHeight;
-uniform mat4 DCWCMatrix;
+uniform mat4 PCWCMatrix;
 uniform mat4 vWCtoIDX;
 #endif
 
@@ -290,13 +290,13 @@ vec4 computeNormal(vec3 pos, float scalar, vec3 tstep)
 
 #ifdef vtkImageLabelOutlineOn
 vec3 fragCoordToIndexSpace(vec4 fragCoord) {
-  vec4 ndcPos = vec4(
+  vec4 pcPos = vec4(
     (fragCoord.x / vpWidth - 0.5) * 2.0,
     (fragCoord.y / vpHeight - 0.5) * 2.0,
     (fragCoord.z - 0.5) * 2.0,
     1.0);
 
-  vec4 worldCoord = DCWCMatrix * ndcPos;
+  vec4 worldCoord = PCWCMatrix * pcPos;
   vec4 vertex = (worldCoord/worldCoord.w);
 
   return (vWCtoIDX * vertex).xyz / vec3(volumeDimensions);
@@ -437,7 +437,7 @@ vec4 getColorForValue(vec4 tValue, vec3 posIS, vec3 tstep)
       tColor.a = 1.0;
     }
   }
-  
+
 #else
   // compute the normal and gradient magnitude if needed
   // We compute it as a vec4 if possible otherwise a mat4
