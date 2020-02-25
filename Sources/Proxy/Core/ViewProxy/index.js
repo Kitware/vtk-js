@@ -604,15 +604,18 @@ function extend(publicAPI, model, initialValues = {}) {
   Object.assign(model, DEFAULT_VALUES, initialValues);
 
   macro.obj(publicAPI, model);
-  macro.setGet(publicAPI, model, ['name', 'disableAnimation']);
+  macro.setGet(publicAPI, model, [
+    'name',
+    'disableAnimation',
+    'interactorStyle2D',
+    'interactorStyle3D',
+  ]);
   macro.get(publicAPI, model, [
     'annotationOpacity',
     'camera',
     'container',
     'cornerAnnotation',
     'interactor',
-    'interactorStyle2D',
-    'interactorStyle3D',
     'openglRenderWindow',
     'orientationAxesType',
     'presetToOrientationAxes',
