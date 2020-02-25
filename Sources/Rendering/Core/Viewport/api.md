@@ -7,12 +7,12 @@ commonly used in rendering.
 
 ## See Also
 
-[vtkActor](./Rendering_Core_Actor.html) 
-[vtkCoordinate](./Rendering_Core_Coordinate.html) 
-[vtkProp](./Rendering_Core_Prop.html) 
-[vtkRenderer](./Rendering_Core_Renderer.html) 
-[vtkRenderWindow](./Rendering_Core_RenderWindow.html) 
-[vtkVolume](./Rendering_Core_Volume.html) 
+[vtkActor](./Rendering_Core_Actor.html)
+[vtkCoordinate](./Rendering_Core_Coordinate.html)
+[vtkProp](./Rendering_Core_Prop.html)
+[vtkRenderer](./Rendering_Core_Renderer.html)
+[vtkRenderWindow](./Rendering_Core_RenderWindow.html)
+[vtkVolume](./Rendering_Core_Volume.html)
 
 ### addViewProp(prop)
 
@@ -42,12 +42,3 @@ Remove all props from the list of props.
 Add/Remove different types of props to the renderer.
 These methods are all synonyms to AddViewProp and RemoveViewProp.
 They are here for convenience and backwards compatibility.
-
-### normalizedDisplayToNormalizedViewport (x, y, z)
-### normalizedViewportToView (x, y, z)
-### viewToNormalizedDisplay (x, y, z)
-### normalizedViewportToNormalizedDisplay (x, y, z) 
-### viewToNormalizedViewport (x, y, z) 
-
-See vtkCoordinate for the definition of these coordinate systems.
-

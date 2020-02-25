@@ -65,6 +65,10 @@ function vtkCoordinate(publicAPI, model) {
     publicAPI.setCoordinateSystem(Coordinate.NORMALIZED_VIEWPORT);
   };
 
+  publicAPI.setCoordinateSystemToProjection = () => {
+    publicAPI.setCoordinateSystem(Coordinate.PROJECTION);
+  };
+
   publicAPI.setCoordinateSystemToView = () => {
     publicAPI.setCoordinateSystem(Coordinate.VIEW);
   };
@@ -119,6 +123,9 @@ function vtkCoordinate(publicAPI, model) {
       return model.computedWorldValue;
     }
 
+    const dims = view.getViewportSize(renderer);
+    const aspect = dims[0] / dims[1];
+
     if (
       model.referenceCoordinate &&
       model.coordinateSystem !== Coordinate.WORLD
@@ -168,6 +175,30 @@ function vtkCoordinate(publicAPI, model) {
             renderer
           );
           break;
+        case Coordinate.PROJECTION:
+          refValue = view.displayToNormalizedDisplay(
+            refValue[0],
+            refValue[1],
+            refValue[2]
+          );
+          refValue = view.normalizedDisplayToViewport(
+            refValue[0],
+            refValue[1],
+            refValue[2],
+            renderer
+          );
+          refValue = view.viewportToNormalizedViewport(
+            refValue[0],
+            refValue[1],
+            refValue[2],
+            renderer
+          );
+          refValue = renderer.normalizedViewportToProjection(
+            refValue[0],
+            refValue[1],
+            refValue[2]
+          );
+          break;
         case Coordinate.VIEW:
           refValue = view.displayToNormalizedDisplay(
             refValue[0],
@@ -186,10 +217,16 @@ function vtkCoordinate(publicAPI, model) {
             refValue[2],
             renderer
           );
-          refValue = renderer.normalizedViewportToView(
+          refValue = renderer.normalizedViewportToProjection(
             refValue[0],
             refValue[1],
             refValue[2]
+          );
+          refValue = renderer.projectionToView(
+            refValue[0],
+            refValue[1],
+            refValue[2],
+            aspect
           );
           break;
         default:
@@ -200,9 +237,6 @@ function vtkCoordinate(publicAPI, model) {
       val[1] += refValue[1];
       val[2] += refValue[2];
     }
-
-    const dims = view.getViewportSize(renderer);
-    const aspect = dims[0] / dims[1];
 
     switch (model.coordinateSystem) {
       case Coordinate.DISPLAY:
@@ -219,8 +253,9 @@ function vtkCoordinate(publicAPI, model) {
           val[2],
           renderer
         );
-        val = renderer.normalizedViewportToView(val[0], val[1], val[2]);
-        val = renderer.viewToWorld(val[0], val[1], val[2], aspect);
+        val = renderer.normalizedViewportToProjection(val[0], val[1], val[2]);
+        val = renderer.projectionToView(val[0], val[1], val[2], aspect);
+        val = renderer.viewToWorld(val[0], val[1], val[2]);
         break;
       case Coordinate.NORMALIZED_DISPLAY:
         val = view.normalizedDisplayToViewport(
@@ -235,8 +270,9 @@ function vtkCoordinate(publicAPI, model) {
           val[2],
           renderer
         );
-        val = renderer.normalizedViewportToView(val[0], val[1], val[2]);
-        val = renderer.viewToWorld(val[0], val[1], val[2], aspect);
+        val = renderer.normalizedViewportToProjection(val[0], val[1], val[2]);
+        val = renderer.projectionToView(val[0], val[1], val[2], aspect);
+        val = renderer.viewToWorld(val[0], val[1], val[2]);
         break;
       case Coordinate.VIEWPORT:
         val = view.viewportToNormalizedViewport(
@@ -245,15 +281,21 @@ function vtkCoordinate(publicAPI, model) {
           val[2],
           renderer
         );
-        val = renderer.normalizedViewportToView(val[0], val[1], val[2]);
-        val = renderer.viewToWorld(val[0], val[1], val[2], aspect);
+        val = renderer.normalizedViewportToProjection(val[0], val[1], val[2]);
+        val = renderer.projectionToView(val[0], val[1], val[2], aspect);
+        val = renderer.viewToWorld(val[0], val[1], val[2]);
         break;
       case Coordinate.NORMALIZED_VIEWPORT:
-        val = renderer.normalizedViewportToView(val[0], val[1], val[2]);
-        val = renderer.viewToWorld(val[0], val[1], val[2], aspect);
+        val = renderer.normalizedViewportToProjection(val[0], val[1], val[2]);
+        val = renderer.projectionToView(val[0], val[1], val[2], aspect);
+        val = renderer.viewToWorld(val[0], val[1], val[2]);
+        break;
+      case Coordinate.PROJECTION:
+        val = renderer.projectionToView(val[0], val[1], val[2], aspect);
+        val = renderer.viewToWorld(val[0], val[1], val[2]);
         break;
       case Coordinate.VIEW:
-        val = renderer.viewToWorld(val[0], val[1], val[2], aspect);
+        val = renderer.viewToWorld(val[0], val[1], val[2]);
         break;
       default:
         break;
@@ -382,9 +424,10 @@ function vtkCoordinate(publicAPI, model) {
           val[1] += refValue[1];
           val[2] += refValue[2];
         }
-        val = renderer.worldToView(val[0], val[1], val[2], aspect);
+        val = renderer.worldToView(val[0], val[1], val[2]);
+        val = renderer.viewToProjection(val[0], val[1], val[2], aspect);
 
-        val = renderer.viewToNormalizedViewport(val[0], val[1], val[2]);
+        val = renderer.projectionToNormalizedViewport(val[0], val[1], val[2]);
         val = view.normalizedViewportToViewport(val[0], val[1], val[2]);
         val = view.viewportToNormalizedDisplay(
           val[0],
@@ -396,7 +439,20 @@ function vtkCoordinate(publicAPI, model) {
         break;
       }
       case Coordinate.VIEW: {
-        val = renderer.viewToNormalizedViewport(val[0], val[1], val[2]);
+        val = renderer.viewToProjection(val[0], val[1], val[2], aspect);
+        val = renderer.projectionToNormalizedViewport(val[0], val[1], val[2]);
+        val = view.normalizedViewportToViewport(val[0], val[1], val[2]);
+        val = view.viewportToNormalizedDisplay(
+          val[0],
+          val[1],
+          val[2],
+          renderer
+        );
+        val = view.normalizedDisplayToDisplay(val[0], val[1], val[2]);
+        break;
+      }
+      case Coordinate.PROJECTION: {
+        val = renderer.projectionToNormalizedViewport(val[0], val[1], val[2]);
         val = view.normalizedViewportToViewport(val[0], val[1], val[2]);
         val = view.viewportToNormalizedDisplay(
           val[0],

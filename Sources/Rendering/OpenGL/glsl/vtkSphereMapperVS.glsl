@@ -71,5 +71,5 @@ void main()
     vertexVCVSOutput.xy = vertexVCVSOutput.xy + offsetMC;
     }
 
-  gl_Position = VCDCMatrix * vertexVCVSOutput;
+  gl_Position = VCPCMatrix * vertexVCVSOutput;
 }

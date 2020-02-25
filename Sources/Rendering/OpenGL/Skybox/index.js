@@ -63,8 +63,8 @@ function vtkOpenGLSkybox(publicAPI, model) {
 
       const keyMats = model.openGLCamera.getKeyMatrices(ren);
       const imat = mat4.create();
-      mat4.invert(imat, keyMats.wcdc);
-      model.tris.getProgram().setUniformMatrix('IMCDCMatrix', imat);
+      mat4.invert(imat, keyMats.wcpc);
+      model.tris.getProgram().setUniformMatrix('IMCPCMatrix', imat);
 
       if (model.lastFormat === 'box') {
         const camPos = ren.getActiveCamera().getPosition();
@@ -142,11 +142,11 @@ function vtkOpenGLSkybox(publicAPI, model) {
           model.openGLRenderWindow.getShaderCache().readyShaderProgramArray(
             `//VTK::System::Dec
              attribute vec3 vertexMC;
-             uniform mat4 IMCDCMatrix;
+             uniform mat4 IMCPCMatrix;
              varying vec3 TexCoords;
              void main () {
               gl_Position = vec4(vertexMC.xyz, 1.0);
-              vec4 wpos = IMCDCMatrix * gl_Position;
+              vec4 wpos = IMCPCMatrix * gl_Position;
               TexCoords = wpos.xyz/wpos.w;
              }`,
             `//VTK::System::Dec
@@ -181,11 +181,11 @@ function vtkOpenGLSkybox(publicAPI, model) {
           model.openGLRenderWindow.getShaderCache().readyShaderProgramArray(
             `//VTK::System::Dec
              attribute vec3 vertexMC;
-             uniform mat4 IMCDCMatrix;
+             uniform mat4 IMCPCMatrix;
              varying vec2 TexCoords;
              void main () {
               gl_Position = vec4(vertexMC.xyz, 1.0);
-              vec4 wpos = IMCDCMatrix * gl_Position;
+              vec4 wpos = IMCPCMatrix * gl_Position;
               TexCoords = vec2(vertexMC.x, vertexMC.y)*0.5 + 0.5;
              }`,
             `//VTK::System::Dec
