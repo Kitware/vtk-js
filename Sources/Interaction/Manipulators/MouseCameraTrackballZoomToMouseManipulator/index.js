@@ -36,6 +36,24 @@ function vtkMouseCameraTrackballZoomToMouseManipulator(publicAPI, model) {
 
     model.previousPosition = position;
   };
+
+  publicAPI.onScroll = (interactor, renderer, delta, position) => {
+    if (!delta || !position) {
+      return;
+    }
+
+    const dyf = 1 - delta * 0.1;
+    vtkInteractorStyleManipulator.dollyToPosition(
+      dyf,
+      position,
+      renderer,
+      interactor
+    );
+
+    if (interactor.getLightFollowCamera()) {
+      renderer.updateLightsGeometryToFollowCamera();
+    }
+  };
 }
 
 // ----------------------------------------------------------------------------
