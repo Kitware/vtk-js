@@ -242,7 +242,7 @@ function vtkOpenGLRenderWindow(publicAPI, model) {
       val[2],
       dims[0] / dims[1]
     );
-    const val3 = publicAPI.projectionToNormalizedDisplay(
+    const val3 = renderer.projectionToNormalizedDisplay(
       val2[0],
       val2[1],
       val2[2]
