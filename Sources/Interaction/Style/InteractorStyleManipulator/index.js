@@ -482,7 +482,8 @@ function vtkInteractorStyleManipulator(publicAPI, model) {
       model.currentWheelManipulator.onScroll(
         model.interactor,
         callData.pokedRenderer,
-        callData.spinY
+        callData.spinY,
+        model.cachedMousePosition
       );
       publicAPI.invokeInteractionEvent(INTERACTION_EVENT);
     }
@@ -490,6 +491,7 @@ function vtkInteractorStyleManipulator(publicAPI, model) {
 
   //-------------------------------------------------------------------------
   publicAPI.handleMouseMove = (callData) => {
+    model.cachedMousePosition = callData.position;
     if (model.currentManipulator && model.currentManipulator.onMouseMove) {
       model.currentManipulator.onMouseMove(
         model.interactor,
@@ -703,6 +705,7 @@ function vtkInteractorStyleManipulator(publicAPI, model) {
 // ----------------------------------------------------------------------------
 
 const DEFAULT_VALUES = {
+  cachedMousePosition: null,
   currentManipulator: null,
   currentWheelManipulator: null,
   // mouseManipulators: null,
