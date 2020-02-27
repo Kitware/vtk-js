@@ -1013,9 +1013,9 @@ export function keystore(publicAPI, model, initialKeystore = {}) {
   publicAPI.setKey = (key, value) => {
     model.keystore[key] = value;
   };
-  publicAPI.getKey = (key, value) => model.keystore[key];
-  publicAPI.getAllKeys = (key, value) => Object.keys(model.keystore);
-  publicAPI.deleteKey = (key, value) => delete model.keystore[key];
+  publicAPI.getKey = (key) => model.keystore[key];
+  publicAPI.getAllKeys = () => Object.keys(model.keystore);
+  publicAPI.deleteKey = (key) => delete model.keystore[key];
   publicAPI.clearKeystore = () =>
     publicAPI.getAllKeys().forEach((key) => delete model.keystore[key]);
 }
