@@ -9,6 +9,7 @@ import vtkHardwareSelector from './HardwareSelector';
 import vtkHelper from './Helper';
 import vtkImageMapper from './ImageMapper';
 import vtkImageSlice from './ImageSlice';
+import vtkPixelSpaceCallbackMapper from './PixelSpaceCallbackMapper';
 import vtkPolyDataMapper from './PolyDataMapper';
 import vtkRenderer from './Renderer';
 import vtkRenderWindow from './RenderWindow';
@@ -37,6 +38,7 @@ export default {
   vtkHelper,
   vtkImageMapper,
   vtkImageSlice,
+  vtkPixelSpaceCallbackMapper,
   vtkPolyDataMapper,
   vtkRenderer,
   vtkRenderWindow,
