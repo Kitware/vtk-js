@@ -140,7 +140,8 @@ const TYPE_PARSER = {
   SCALARS: {
     init(line, dataModel) {
       const [type, name, dataType, numComp] = line.split(' ');
-      const size = dataModel[dataModel.activeFieldLocation] * Number(numComp);
+      const numOfComp = Number(numComp) > 0 ? Number(numComp) : 1;
+      const size = dataModel[dataModel.activeFieldLocation] * numOfComp;
       const array = new DATATYPES[dataType](size);
       const dataArray = vtkDataArray.newInstance({ name, empty: true });
       dataModel.dataset[METHOD_MAPPING[dataModel.activeFieldLocation]]()[
@@ -149,7 +150,7 @@ const TYPE_PARSER = {
       dataModel.arrayHandler = createArrayHandler(
         array,
         dataArray.setData,
-        Number(numComp)
+        numOfComp
       );
       return true;
     },
@@ -163,7 +164,8 @@ const TYPE_PARSER = {
   COLOR_SCALARS: {
     init(line, dataModel) {
       const [type, name, numComp] = line.split(' ');
-      const size = dataModel[dataModel.activeFieldLocation] * Number(numComp);
+      const numOfComp = Number(numComp) > 0 ? Number(numComp) : 1;
+      const size = dataModel[dataModel.activeFieldLocation] * numOfComp;
       const array = new Uint8Array(size);
       const dataArray = vtkDataArray.newInstance({ name, empty: true });
       dataModel.dataset[METHOD_MAPPING[dataModel.activeFieldLocation]]()[
@@ -172,7 +174,7 @@ const TYPE_PARSER = {
       dataModel.arrayHandler = createArrayHandler(
         array,
         dataArray.setData,
-        Number(numComp)
+        numOfComp
       );
       return true;
     },
