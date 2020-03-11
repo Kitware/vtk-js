@@ -461,6 +461,14 @@ function vtkWidgetManager(publicAPI, model) {
     }
     return false;
   };
+
+  const superDelete = publicAPI.delete;
+  publicAPI.delete = () => {
+    while (subscriptions.length) {
+      subscriptions.pop().unsubscribe();
+    }
+    superDelete();
+  };
 }
 
 // ----------------------------------------------------------------------------
