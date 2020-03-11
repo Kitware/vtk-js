@@ -4,6 +4,7 @@ import vtkClosedPolyLineToSurfaceFilter from './ClosedPolyLineToSurfaceFilter';
 import vtkImageCropFilter from './ImageCropFilter';
 import vtkImageMarchingCubes from './ImageMarchingCubes';
 import vtkImageMarchingSquares from './ImageMarchingSquares';
+import vtkImageOutlineFilter from './ImageOutlineFilter';
 import vtkImageSliceFilter from './ImageSliceFilter';
 import vtkImageStreamline from './ImageStreamline';
 import vtkMoleculeToRepresentation from './MoleculeToRepresentation';
@@ -12,6 +13,7 @@ import vtkPaintFilter from './PaintFilter';
 import vtkScalarToRGBA from './ScalarToRGBA';
 import vtkTubeFilter from './TubeFilter';
 import vtkWarpScalar from './WarpScalar';
+import vtkWindowedSincPolyDataFilter from './WindowedSincPolyDataFilter';
 
 export default {
   vtkAppendPolyData,
@@ -20,6 +22,7 @@ export default {
   vtkImageCropFilter,
   vtkImageMarchingCubes,
   vtkImageMarchingSquares,
+  vtkImageOutlineFilter,
   vtkImageSliceFilter,
   vtkImageStreamline,
   vtkMoleculeToRepresentation,
@@ -28,4 +31,5 @@ export default {
   vtkScalarToRGBA,
   vtkTubeFilter,
   vtkWarpScalar,
+  vtkWindowedSincPolyDataFilter,
 };
