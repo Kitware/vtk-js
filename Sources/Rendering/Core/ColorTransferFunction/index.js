@@ -494,6 +494,28 @@ function vtkColorTransferFunction(publicAPI, model) {
         x = 0.5 * (xStart + xEnd);
       }
 
+      // Linearly map x from mappingRange to [0, numberOfValues-1],
+      // discretize (round down to the closest integer),
+      // then map back to mappingRange
+      if (model.discretize) {
+        const range = model.mappingRange;
+        if (x >= range[0] && x <= range[1]) {
+          const numberOfValues = model.numberOfValues;
+          const deltaRange = range[1] - range[0];
+          if (numberOfValues <= 1) {
+            x = range[0] + deltaRange / 2.0;
+          } else {
+            // normalize x
+            const xn = (x - range[0]) / deltaRange;
+            // discretize
+            const discretizeIndex = vtkMath.floor(numberOfValues * xn);
+            // get discretized x
+            x =
+              range[0] + (discretizeIndex / (numberOfValues - 1)) * deltaRange;
+          }
+        }
+      }
+
       // Do we need to move to the next node?
       while (idx < numNodes && x > model.nodes[idx].x) {
         idx++;
@@ -1182,6 +1204,9 @@ const DEFAULT_VALUES = {
   buildTime: null,
 
   nodes: null,
+
+  discretize: false,
+  numberOfValues: 256,
 };
 
 // ----------------------------------------------------------------------------
@@ -1211,6 +1236,8 @@ export function extend(publicAPI, model, initialValues = {}) {
     'useAboveRangeColor',
     'useBelowRangeColor',
     'colorSpace',
+    'discretize',
+    'numberOfValues',
   ]);
 
   macro.setArray(

@@ -23,7 +23,7 @@ midpoint and sharpness.
 
 ## See Also
 
-[vtkPiecewiseFunction](./Common_DataModel_PiecewiseFunction.html) 
+[vtkPiecewiseFunction](./Common_DataModel_PiecewiseFunction.html)
 
 ## newInstance()
 
@@ -50,3 +50,11 @@ Add two points to the function and remove all the points between them
 ### getColor(x, rgb);
 
 Returns an RGB color for the specified scalar value
+
+### setDiscretize(bool)
+
+If set to true, the color transfer function will only have `numberOfValues` amount of discrete colors.
+
+### setNumberOfValues(n)
+
+Set the number of values to use for discretization
