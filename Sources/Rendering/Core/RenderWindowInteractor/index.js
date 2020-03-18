@@ -389,6 +389,10 @@ function vtkRenderWindowInteractor(publicAPI, model) {
 
   publicAPI.returnFromVRAnimation = () => {
     model.vrAnimation = false;
+    if (animationRequesters.size !== 0) {
+      model.FrameTime = -1;
+      model.animationRequest = requestAnimationFrame(publicAPI.handleAnimation);
+    }
   };
 
   publicAPI.updateGamepads = (displayId) => {
@@ -926,6 +930,15 @@ function vtkRenderWindowInteractor(publicAPI, model) {
         }
       }
     }
+  };
+
+  // Stop animating if the renderWindowInteractor is deleted.
+  const superDelete = publicAPI.delete;
+  publicAPI.delete = () => {
+    while (animationRequesters.size) {
+      publicAPI.cancelAnimation(animationRequesters.values().next().value);
+    }
+    superDelete();
   };
 }
 
