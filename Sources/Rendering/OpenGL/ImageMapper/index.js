@@ -307,14 +307,17 @@ function vtkOpenGLImageMapper(publicAPI, model) {
     // light complexity changed
 
     const tNumComp = model.openGLTexture.getComponents();
+    const iComp = actor.getProperty().getIndependentComponents();
 
     if (
       model.lastHaveSeenDepthRequest !== model.haveSeenDepthRequest ||
       cellBO.getProgram() === 0 ||
-      model.lastTextureComponents !== tNumComp
+      model.lastTextureComponents !== tNumComp ||
+      model.lastIndependentComponents !== iComp
     ) {
       model.lastHaveSeenDepthRequest = model.haveSeenDepthRequest;
       model.lastTextureComponents = tNumComp;
+      model.lastIndependentComponents = iComp;
       return true;
     }
 
@@ -598,8 +601,10 @@ function vtkOpenGLImageMapper(publicAPI, model) {
       return;
     }
 
+    const actorProperty = actor.getProperty();
+
     // set interpolation on the texture based on property setting
-    const iType = actor.getProperty().getInterpolationType();
+    const iType = actorProperty.getInterpolationType();
     if (iType === InterpolationType.NEAREST) {
       model.colorTexture.setMinificationFilter(Filter.NEAREST);
       model.colorTexture.setMagnificationFilter(Filter.NEAREST);
@@ -616,21 +621,21 @@ function vtkOpenGLImageMapper(publicAPI, model) {
       .getPointData()
       .getScalars()
       .getNumberOfComponents();
-    const iComps = actor.getProperty().getIndependentComponents();
+    const iComps = actorProperty.getIndependentComponents();
     const numIComps = iComps ? numComp : 1;
     const textureHeight = iComps ? 2 * numIComps : 1;
 
     const cWidth = 1024;
-    let cfun = actor.getProperty().getRGBTransferFunction();
+    let cfun = actorProperty.getRGBTransferFunction();
     const cSize = cWidth * textureHeight * 3;
     const cTable = new Uint8Array(cSize);
     if (cfun) {
-      const cfunToString = `${cfun.getMTime()}`;
+      const cfunToString = `${cfun.getMTime()}-${actorProperty.getMTime()}-${numComp}-${iComps}`;
       if (model.colorTextureString !== cfunToString) {
         const tmpTable = new Float32Array(cWidth * 3);
 
         for (let c = 0; c < numIComps; c++) {
-          cfun = actor.getProperty().getRGBTransferFunction(c);
+          cfun = actorProperty.getRGBTransferFunction(c);
           const cRange = cfun.getRange();
           cfun.getTable(cRange[0], cRange[1], cWidth, tmpTable, 1);
           if (iComps) {
@@ -679,17 +684,17 @@ function vtkOpenGLImageMapper(publicAPI, model) {
     }
 
     const oWidth = 1024;
-    let ofun = actor.getProperty().getScalarOpacity();
+    let ofun = actorProperty.getScalarOpacity();
     const oSize = oWidth * textureHeight;
     const oTable = new Uint8Array(oSize);
     if (ofun) {
-      const ofunToString = `${ofun.getMTime()}`;
+      const ofunToString = `${ofun.getMTime()}-${actorProperty.getMTime()}-${numComp}-${iComps}`;
       if (model.opacityTextureString !== ofunToString) {
         const ofTable = new Float32Array(oSize);
         const tmpTable = new Float32Array(oWidth);
 
         for (let c = 0; c < numIComps; ++c) {
-          ofun = actor.getProperty().getScalarOpacity(c);
+          ofun = actorProperty.getScalarOpacity(c);
           const oRange = ofun.getRange();
           ofun.getTable(oRange[0], oRange[1], oWidth, tmpTable, 1);
           // adjust for sample distance etc
@@ -710,8 +715,8 @@ function vtkOpenGLImageMapper(publicAPI, model) {
           oWidth,
           textureHeight,
           1,
-          VtkDataTypes.UNSIGNED_CHAR,
-          oTable
+          VtkDataTypes.FLOAT,
+          ofTable
         );
       }
     } else {
