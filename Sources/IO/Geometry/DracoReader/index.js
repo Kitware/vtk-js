@@ -5,25 +5,54 @@ import vtkDataArray from 'vtk.js/Sources/Common/Core/DataArray';
 import vtkPolyData from 'vtk.js/Sources/Common/DataModel/PolyData';
 
 const { vtkErrorMacro } = macro;
-let CREATE_DRACO_MODULE = null;
+let decoderModule = {};
 
 // ----------------------------------------------------------------------------
 // static methods
 // ----------------------------------------------------------------------------
 
+/**
+ * Load the WASM decoder from url and set the decoderModule
+ * @param url
+ * @param binaryName
+ * @return {Promise<boolean>}
+ */
+function setWasmBinary(url, binaryName) {
+  const dracoDecoderType = {};
+
+  return new Promise((resolve, reject) => {
+    dracoDecoderType.wasmBinaryFile = binaryName;
+
+    const xhr = new XMLHttpRequest();
+    xhr.open('GET', url, true);
+    xhr.responseType = 'arraybuffer';
+
+    xhr.onload = () => {
+      if (xhr.status === 200) {
+        dracoDecoderType.wasmBinary = xhr.response;
+        decoderModule = window.DracoDecoderModule(dracoDecoderType);
+        resolve(true);
+      } else {
+        reject(Error(`WASM binary could not be loaded: ${xhr.statusText}`));
+      }
+    };
+    xhr.send(null);
+  });
+}
+
 function setDracoDecoder(createDracoModule) {
-  CREATE_DRACO_MODULE = createDracoModule;
+  decoderModule = createDracoModule({});
 }
 
 function getDracoDecoder() {
-  return CREATE_DRACO_MODULE;
+  return decoderModule;
 }
 
 // ----------------------------------------------------------------------------
 // vtkDracoReader methods
 // ----------------------------------------------------------------------------
 
-function decodeBuffer(buffer, decoderModule) {
+function decodeBuffer(buffer) {
   const byteArray = new Int8Array(buffer);
   const decoder = new decoderModule.Decoder();
   const decoderBuffer = new decoderModule.DecoderBuffer();
@@ -47,16 +76,11 @@ function decodeBuffer(buffer, decoderModule) {
   return dracoGeometry;
 }
 
-function getDracoAttributeAsFloat32Array(
-  dracoGeometry,
-  attributeId,
-  decoderModule
-) {
+function getDracoAttributeAsFloat32Array(dracoGeometry, attributeId) {
   const decoder = new decoderModule.Decoder();
   const attribute = decoder.GetAttribute(dracoGeometry, attributeId);
   const numberOfComponents = attribute.num_components();
   const numberOfPoints = dracoGeometry.num_points();
-  const numberOfValues = numberOfPoints * numberOfComponents;
 
   const attributeData = new decoderModule.DracoFloat32Array();
   decoder.GetAttributeFloatForAllPoints(
@@ -65,15 +89,16 @@ function getDracoAttributeAsFloat32Array(
     attributeData
   );
 
-  const attributeArray = new Float32Array(numberOfValues);
-  for (let i = 0; i < numberOfValues; i++) {
+  let i = numberOfPoints * numberOfComponents;
+  const attributeArray = new Float32Array(i);
+  while (i--) {
     attributeArray[i] = attributeData.GetValue(i);
   }
 
   return attributeArray;
 }
 
-function getPolyDataFromDracoGeometry(dracoGeometry, decoderModule) {
+function getPolyDataFromDracoGeometry(dracoGeometry) {
   const decoder = new decoderModule.Decoder();
 
   // Get position attribute ID
@@ -86,6 +111,7 @@ function getPolyDataFromDracoGeometry(dracoGeometry, decoderModule) {
     console.error('No position attribute found in the decoded model.');
     decoderModule.destroy(decoder);
     decoderModule.destroy(dracoGeometry);
+    return null;
   }
 
   const positionArray = getDracoAttributeAsFloat32Array(
@@ -95,10 +121,10 @@ function getPolyDataFromDracoGeometry(dracoGeometry, decoderModule) {
   );
 
   // Read indices
-  const numFaces = dracoGeometry.num_faces();
-  const indices = new Uint32Array(numFaces * 4);
+  let i = dracoGeometry.num_faces();
+  const indices = new Uint32Array(i * 4);
   const indicesArray = new decoderModule.DracoInt32Array();
-  for (let i = 0; i < numFaces; i++) {
+  while (i--) {
     decoder.GetFaceFromMesh(dracoGeometry, i, indicesArray);
     const index = i * 4;
     indices[index] = 3;
@@ -109,11 +135,12 @@ function getPolyDataFromDracoGeometry(dracoGeometry, decoderModule) {
 
   // Create polyData and add positions and indinces
   const cellArray = vtkCellArray.newInstance({ values: indices });
-  const polyData = vtkPolyData.newInstance();
+  const polyData = vtkPolyData.newInstance({ polys: cellArray });
   polyData.getPoints().setData(positionArray);
-  polyData.setPolys(cellArray);
 
   // Look for other attributes
+  const pointData = polyData.getPointData();
+
   // Normals
   const normalAttributeId = decoder.GetAttributeId(
     dracoGeometry,
@@ -132,7 +159,7 @@ function getPolyDataFromDracoGeometry(dracoGeometry, decoderModule) {
       values: normalArray,
       name: 'Normals',
     });
-    polyData.getPointData().setNormals(normals);
+    pointData.setNormals(normals);
   }
 
   // Texture coordinates
@@ -153,7 +180,7 @@ function getPolyDataFromDracoGeometry(dracoGeometry, decoderModule) {
       values: texCoordArray,
       name: 'TCoords',
     });
-    polyData.getPointData().setTCoords(texCoords);
+    pointData.setTCoords(texCoords);
   }
 
   // Scalars
@@ -175,7 +202,7 @@ function getPolyDataFromDracoGeometry(dracoGeometry, decoderModule) {
       name: 'Scalars',
     });
 
-    polyData.getPointData().setScalars(scalars);
+    pointData.setScalars(scalars);
   }
 
   decoderModule.destroy(decoder);
@@ -246,14 +273,13 @@ function vtkDracoReader(publicAPI, model) {
     }
 
     model.parseData = content;
-    const decoderModule = CREATE_DRACO_MODULE({});
-    const dracoGeometry = decodeBuffer(content, decoderModule);
-    const polyData = getPolyDataFromDracoGeometry(dracoGeometry, decoderModule);
+    const dracoGeometry = decodeBuffer(content);
+    const polyData = getPolyDataFromDracoGeometry(dracoGeometry);
     decoderModule.destroy(dracoGeometry);
     model.output[0] = polyData;
   };
 
-  publicAPI.requestData = (inData, outData) => {
+  publicAPI.requestData = () => {
     publicAPI.parse(model.parseData);
   };
 }
@@ -297,4 +323,10 @@ export const newInstance = macro.newInstance(extend, 'vtkDracoReader');
 
 // ----------------------------------------------------------------------------
 
-export default { extend, newInstance, setDracoDecoder, getDracoDecoder };
+export default {
+  extend,
+  newInstance,
+  setDracoDecoder,
+  setWasmBinary,
+  getDracoDecoder,
+};
