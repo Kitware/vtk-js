@@ -214,22 +214,25 @@ function vtkOpenGLImageMapper(publicAPI, model) {
       switch (tNumComp) {
         case 1:
           tcoordImpl = tcoordImpl.concat([
-            'gl_FragData[0] = vec4(tcolor0, scalarOpacity0 * opacity);',
+            'gl_FragData[0] = vec4(tcolor0.rgb, opacity);',
           ]);
           break;
         case 2:
           tcoordImpl = tcoordImpl.concat([
-            'gl_FragData[0] = vec4(tcolor0 + tcolor1, (scalarOpacity0 + scalarOpacity1) * opacity);',
+            'float weightSum = scalarOpacity0 + scalarOpacity1;',
+            'gl_FragData[0] = vec4(vec3((tcolor0.rgb * (scalarOpacity0 / weightSum)) + (tcolor1.rgb * (scalarOpacity1 / weightSum))), opacity);',
           ]);
           break;
         case 3:
           tcoordImpl = tcoordImpl.concat([
-            'gl_FragData[0] = vec4(tcolor0 + tcolor1 + tcolor2, (scalarOpacity0 + scalarOpacity1 + scalarOpacity2) * opacity);',
+            'float weightSum = scalarOpacity0 + scalarOpacity1 + scalarOpacity2;',
+            'gl_FragData[0] = vec4(vec3((tcolor0.rgb * (scalarOpacity0 / weightSum)) + (tcolor1.rgb * (scalarOpacity1 / weightSum)) + (tcolor2.rgb * (scalarOpacity2 / weightSum))), opacity);',
           ]);
           break;
         case 4:
           tcoordImpl = tcoordImpl.concat([
-            'gl_FragData[0] = vec4(tcolor0 + tcolor1 + tcolor2 + tcolor3, (scalarOpacity0 + scalarOpacity1 + scalarOpacity2 + scalarOpacity3) * opacity);',
+            'float weightSum = scalarOpacity0 + scalarOpacity1 + scalarOpacity2 + scalarOpacity3;',
+            'gl_FragData[0] = vec4(vec3((tcolor0.rgb * (scalarOpacity0 / weightSum)) + (tcolor1.rgb * (scalarOpacity1 / weightSum)) + (tcolor2.rgb * (scalarOpacity2 / weightSum)) + (tcolor3.rgb * (scalarOpacity3 / weightSum))), opacity);',
           ]);
           break;
         default:
@@ -419,16 +422,12 @@ function vtkOpenGLImageMapper(publicAPI, model) {
     const numComp = model.openGLTexture.getComponents();
     const iComps = actor.getProperty().getIndependentComponents();
     if (iComps) {
-      let totalComp = 0.0;
-      for (let i = 0; i < numComp; i++) {
-        totalComp += actor.getProperty().getComponentWeight(i);
-      }
       for (let i = 0; i < numComp; i++) {
         cellBO
           .getProgram()
           .setUniformf(
             `mix${i}`,
-            actor.getProperty().getComponentWeight(i) / totalComp
+            actor.getProperty().getComponentWeight(i)
           );
       }
     }
