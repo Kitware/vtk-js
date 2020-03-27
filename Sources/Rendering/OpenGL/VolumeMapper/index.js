@@ -661,14 +661,10 @@ function vtkOpenGLVolumeMapper(publicAPI, model) {
     const numComp = model.scalarTexture.getComponents();
     const iComps = actor.getProperty().getIndependentComponents();
     if (iComps && numComp >= 2) {
-      let totalComp = 0.0;
-      for (let i = 0; i < numComp; i++) {
-        totalComp += actor.getProperty().getComponentWeight(i);
-      }
       for (let i = 0; i < numComp; i++) {
         program.setUniformf(
           `mix${i}`,
-          actor.getProperty().getComponentWeight(i) / totalComp
+          actor.getProperty().getComponentWeight(i)
         );
       }
     }
