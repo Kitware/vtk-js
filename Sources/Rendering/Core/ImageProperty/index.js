@@ -127,7 +127,7 @@ function vtkImageProperty(publicAPI, model) {
 // Object factory
 // ----------------------------------------------------------------------------
 const DEFAULT_VALUES = {
-  independentComponents: 0,
+  independentComponents: false,
   interpolationType: InterpolationType.LINEAR,
   colorWindow: 255,
   colorLevel: 127.5,

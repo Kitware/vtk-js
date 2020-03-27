@@ -139,7 +139,7 @@ sliceActor.getProperty().setComponentWeight(3, 1.0);
 //
 let lighting = 1;
 let numComp = 1;
-let independent = 1;
+let independent = true;
 let withGO = 1;
 let dataType = 2;
 

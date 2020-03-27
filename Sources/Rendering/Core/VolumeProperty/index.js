@@ -230,7 +230,7 @@ function vtkVolumeProperty(publicAPI, model) {
 // ----------------------------------------------------------------------------
 
 const DEFAULT_VALUES = {
-  independentComponents: 1,
+  independentComponents: true,
   interpolationType: InterpolationType.FAST_LINEAR,
   shade: 0,
   ambient: 0.1,
