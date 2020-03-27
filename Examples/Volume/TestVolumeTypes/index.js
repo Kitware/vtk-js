@@ -29,8 +29,6 @@ const style = {
   position: 'absolute',
   top: '0',
   left: '0',
-  // width: '450px',
-  // height: '450px',
   width: '100vw',
   height: '100vw',
   overflow: 'hidden',

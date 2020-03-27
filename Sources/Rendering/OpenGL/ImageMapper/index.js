@@ -647,12 +647,7 @@ function vtkOpenGLImageMapper(publicAPI, model) {
           }
         }
         model.colorTextureString = cfunToString;
-        if (!iComps && numComp === 1) {
-          console.log('Issues?');
-        }
-        console.log(cWidth * 3);
-        console.log(textureHeight);
-        console.log(cTable.length);
+
         model.colorTexture.create2DFromRaw(
           cWidth,
           textureHeight,
@@ -680,7 +675,9 @@ function vtkOpenGLImageMapper(publicAPI, model) {
       }
     }
 
-    // Build pwf buffer, it's either for comp weighting or opacity
+    // Build piecewise function buffer.  This buffer is used either
+    // for component weighting or opacity, depending on whether we're
+    // rendering components independently or not.
     const pwfWidth = 1024;
     let pwfun = actorProperty.getPiecewiseFunction();
     const pwfSize = pwfWidth * textureHeight;
@@ -876,10 +873,6 @@ function vtkOpenGLImageMapper(publicAPI, model) {
         vtkErrorMacro('Reformat slicing not yet supported.');
       }
 
-      console.log(dims);
-      console.log(numComp);
-      console.log(scalars.length);
-      console.log(dims[0] * dims[1] * numComp);
       model.openGLTexture.create2DFromRaw(
         dims[0],
         dims[1],
