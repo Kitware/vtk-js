@@ -697,10 +697,6 @@ function vtkOpenGLTexture(publicAPI, model) {
     // model.context.pixelStorei(gl.UNPACK_FLIP_Y_WEBGL, true);
     model.context.pixelStorei(model.context.UNPACK_ALIGNMENT, 1);
 
-    console.log('formats');
-    console.log(model.internalFormat);
-    console.log(model.format);
-    console.log(model.openGLDataType);
     model.context.texImage2D(
       model.target,
       0,
