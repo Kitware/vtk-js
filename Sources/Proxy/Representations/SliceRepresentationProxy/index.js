@@ -269,13 +269,13 @@ function vtkSliceRepresentationProxy(publicAPI, model) {
   publicAPI.setColorBy = (arrayName, arrayLocation, componentIndex = -1) => {
     if (arrayName === null) {
       model.property.setRGBTransferFunction(null);
-      model.property.setScalarOpacity(null);
+      model.property.setPiecewiseFunction(null);
     } else {
       parentSetColorBy(arrayName, arrayLocation, componentIndex);
       const lutProxy = publicAPI.getLookupTableProxy(arrayName);
       const pwfProxy = publicAPI.getPiecewiseFunctionProxy(arrayName);
       model.property.setRGBTransferFunction(lutProxy.getLookupTable());
-      model.property.setScalarOpacity(pwfProxy.getPiecewiseFunction());
+      model.property.setPiecewiseFunction(pwfProxy.getPiecewiseFunction());
     }
   };
 

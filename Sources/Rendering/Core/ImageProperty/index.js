@@ -26,10 +26,10 @@ function vtkImageProperty(publicAPI, model) {
         mTime = mTime > time ? mTime : time;
       }
 
-      // Opacity MTimes
-      if (model.componentData[index].scalarOpacity) {
-        // time that Scalar opacity transfer function was last modified
-        time = model.componentData[index].scalarOpacity.getMTime();
+      // Piecewise function MTimes
+      if (model.componentData[index].piecewiseFunction) {
+        // time that weighting function was last modified
+        time = model.componentData[index].piecewiseFunction.getMTime();
         mTime = mTime > time ? mTime : time;
       }
     }
@@ -53,17 +53,22 @@ function vtkImageProperty(publicAPI, model) {
   };
 
   // Get the currently set RGB transfer function.
-  publicAPI.getRGBTransferFunction = (index) => {
-    // backwards compatible call without the component index
-    let idx = index;
-    if (!Number.isInteger(index)) {
-      idx = 0;
-    }
+  publicAPI.getRGBTransferFunction = (idx = 0) =>
+    model.componentData[idx].rGBTransferFunction;
 
-    return model.componentData[idx].rGBTransferFunction;
+  // Set the piecewise function
+  publicAPI.setPiecewiseFunction = (index, func) => {
+    if (model.componentData[index].piecewiseFunction !== func) {
+      model.componentData[index].piecewiseFunction = func;
+      publicAPI.modified();
+    }
   };
 
-  // Set the scalar opacity of a volume to a transfer function
+  // Get the component weighting function.
+  publicAPI.getPiecewiseFunction = (idx = 0) =>
+    model.componentData[idx].piecewiseFunction;
+
+  // Alias to set the piecewise function
   publicAPI.setScalarOpacity = (index, func) => {
     // backwards compatible call without the component index
     let idx = index;
@@ -72,22 +77,11 @@ function vtkImageProperty(publicAPI, model) {
       transferFunc = index;
       idx = 0;
     }
-    if (model.componentData[idx].scalarOpacity !== transferFunc) {
-      model.componentData[idx].scalarOpacity = transferFunc;
-      publicAPI.modified();
-    }
+    return publicAPI.setPiecewiseFunction(idx, transferFunc);
   };
 
-  // Get the scalar opacity transfer function.
-  publicAPI.getScalarOpacity = (index) => {
-    // backwards compatible call without the component index
-    let idx = index;
-    if (!Number.isInteger(index)) {
-      idx = 0;
-    }
-
-    return model.componentData[idx].scalarOpacity;
-  };
+  // Alias to get the piecewise function (backwards compatibility)
+  publicAPI.getScalarOpacity = (idx = 0) => publicAPI.getPiecewiseFunction(idx);
 
   publicAPI.setComponentWeight = (index, value) => {
     if (index < 0 || index >= VTK_MAX_VRCOMP) {
@@ -149,7 +143,7 @@ export function extend(publicAPI, model, initialValues = {}) {
     for (let i = 0; i < VTK_MAX_VRCOMP; i++) {
       model.componentData.push({
         rGBTransferFunction: null,
-        scalarOpacity: null,
+        piecewiseFunction: null,
         componentWeight: 1.0,
       });
     }

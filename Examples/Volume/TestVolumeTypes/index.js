@@ -114,16 +114,16 @@ const sliceMapper = vtkImageMapper.newInstance();
 const sliceActor = vtkImageSlice.newInstance();
 sliceActor.setMapper(sliceMapper);
 sliceActor.getProperty().setRGBTransferFunction(0, ctfun);
-sliceActor.getProperty().setScalarOpacity(0, ofun);
+sliceActor.getProperty().setPiecewiseFunction(0, ofun);
 sliceActor.getProperty().setComponentWeight(0, 1.0);
 sliceActor.getProperty().setRGBTransferFunction(1, ctfun2);
-sliceActor.getProperty().setScalarOpacity(1, ofun2);
+sliceActor.getProperty().setPiecewiseFunction(1, ofun2);
 sliceActor.getProperty().setComponentWeight(1, 1.0);
 sliceActor.getProperty().setRGBTransferFunction(2, ctfun3);
-sliceActor.getProperty().setScalarOpacity(2, ofun);
+sliceActor.getProperty().setPiecewiseFunction(2, ofun);
 sliceActor.getProperty().setComponentWeight(2, 1.0);
 sliceActor.getProperty().setRGBTransferFunction(3, ctfun4);
-sliceActor.getProperty().setScalarOpacity(3, ofun);
+sliceActor.getProperty().setPiecewiseFunction(3, ofun);
 sliceActor.getProperty().setComponentWeight(3, 1.0);
 
 // this function will over time test the following from outermost
@@ -243,7 +243,7 @@ function updateNumberOfComponents(e) {
 
 function updateIndependent(e) {
   const elt = e ? e.target : document.querySelector('.independent');
-  independent = elt.checked ? 1 : 0;
+  independent = elt.checked;
   console.log(`Updating independent components to be ${independent}`);
   redrawScene();
 }

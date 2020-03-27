@@ -43,7 +43,7 @@ function vtkOpenGLImageMapper(publicAPI, model) {
       model.tris.setOpenGLRenderWindow(model.openGLRenderWindow);
       model.openGLTexture.setOpenGLRenderWindow(model.openGLRenderWindow);
       model.colorTexture.setOpenGLRenderWindow(model.openGLRenderWindow);
-      model.opacityTexture.setOpenGLRenderWindow(model.openGLRenderWindow);
+      model.pwfTexture.setOpenGLRenderWindow(model.openGLRenderWindow);
       const ren = model.openGLRenderer.getRenderable();
       model.openGLCamera = model.openGLRenderer.getViewNodeFor(
         ren.getActiveCamera()
@@ -127,12 +127,12 @@ function vtkOpenGLImageMapper(publicAPI, model) {
       // color shift and scale
       'uniform float cshift0;',
       'uniform float cscale0;',
-      // opacity shift and scale
-      'uniform float oshift0;',
-      'uniform float oscale0;',
+      // pwf shift and scale
+      'uniform float pwfshift0;',
+      'uniform float pwfscale0;',
       'uniform sampler2D texture1;',
       'uniform sampler2D colorTexture1;',
-      'uniform sampler2D opacityTexture1;',
+      'uniform sampler2D pwfTexture1;',
       'uniform float opacity;',
     ];
     if (iComps) {
@@ -141,9 +141,9 @@ function vtkOpenGLImageMapper(publicAPI, model) {
           // color shift and scale
           `uniform float cshift${comp};`,
           `uniform float cscale${comp};`,
-          // opacity shift and scale
-          `uniform float oshift${comp};`,
-          `uniform float oscale${comp};`,
+          // weighting shift and scale
+          `uniform float pwfshift${comp};`,
+          `uniform float pwfscale${comp};`,
         ]);
       }
       // the heights defined below are the locations
@@ -206,9 +206,9 @@ function vtkOpenGLImageMapper(publicAPI, model) {
           `vec3 tcolor${comp} = mix${comp} * texture2D(colorTexture1, vec2(tvalue.${
             rgba[comp]
           } * cscale${comp} + cshift${comp}, height${comp})).rgb;`,
-          `float scalarOpacity${comp} = mix${comp} * texture2D(opacityTexture1, vec2(tvalue.${
+          `float compWeight${comp} = mix${comp} * texture2D(pwfTexture1, vec2(tvalue.${
             rgba[comp]
-          } * oscale${comp} + oshift${comp}, height${comp})).r;`,
+          } * pwfscale${comp} + pwfshift${comp}, height${comp})).r;`,
         ]);
       }
       switch (tNumComp) {
@@ -219,20 +219,20 @@ function vtkOpenGLImageMapper(publicAPI, model) {
           break;
         case 2:
           tcoordImpl = tcoordImpl.concat([
-            'float weightSum = scalarOpacity0 + scalarOpacity1;',
-            'gl_FragData[0] = vec4(vec3((tcolor0.rgb * (scalarOpacity0 / weightSum)) + (tcolor1.rgb * (scalarOpacity1 / weightSum))), opacity);',
+            'float weightSum = compWeight0 + compWeight1;',
+            'gl_FragData[0] = vec4(vec3((tcolor0.rgb * (compWeight0 / weightSum)) + (tcolor1.rgb * (compWeight1 / weightSum))), opacity);',
           ]);
           break;
         case 3:
           tcoordImpl = tcoordImpl.concat([
-            'float weightSum = scalarOpacity0 + scalarOpacity1 + scalarOpacity2;',
-            'gl_FragData[0] = vec4(vec3((tcolor0.rgb * (scalarOpacity0 / weightSum)) + (tcolor1.rgb * (scalarOpacity1 / weightSum)) + (tcolor2.rgb * (scalarOpacity2 / weightSum))), opacity);',
+            'float weightSum = compWeight0 + compWeight1 + compWeight2;',
+            'gl_FragData[0] = vec4(vec3((tcolor0.rgb * (compWeight0 / weightSum)) + (tcolor1.rgb * (compWeight1 / weightSum)) + (tcolor2.rgb * (compWeight2 / weightSum))), opacity);',
           ]);
           break;
         case 4:
           tcoordImpl = tcoordImpl.concat([
-            'float weightSum = scalarOpacity0 + scalarOpacity1 + scalarOpacity2 + scalarOpacity3;',
-            'gl_FragData[0] = vec4(vec3((tcolor0.rgb * (scalarOpacity0 / weightSum)) + (tcolor1.rgb * (scalarOpacity1 / weightSum)) + (tcolor2.rgb * (scalarOpacity2 / weightSum)) + (tcolor3.rgb * (scalarOpacity3 / weightSum))), opacity);',
+            'float weightSum = compWeight0 + compWeight1 + compWeight2 + compWeight3;',
+            'gl_FragData[0] = vec4(vec3((tcolor0.rgb * (compWeight0 / weightSum)) + (tcolor1.rgb * (compWeight1 / weightSum)) + (tcolor2.rgb * (compWeight2 / weightSum)) + (tcolor3.rgb * (compWeight3 / weightSum))), opacity);',
           ]);
           break;
         default:
@@ -253,7 +253,7 @@ function vtkOpenGLImageMapper(publicAPI, model) {
             [
               'float intensity = texture2D(texture1, tcoordVCVSOutput).r;',
               'vec3 tcolor = texture2D(colorTexture1, vec2(intensity * cscale0 + cshift0, 0.5)).rgb;',
-              'float scalarOpacity = texture2D(opacityTexture1, vec2(intensity * oscale0 + oshift0, 0.5)).r;',
+              'float scalarOpacity = texture2D(pwfTexture1, vec2(intensity * pwfscale0 + pwfshift0, 0.5)).r;',
               'gl_FragData[0] = vec4(tcolor, scalarOpacity * opacity);',
             ]
           ).result;
@@ -265,7 +265,7 @@ function vtkOpenGLImageMapper(publicAPI, model) {
             [
               'vec4 tcolor = texture2D(texture1, tcoordVCVSOutput);',
               'float intensity = tcolor.r*cscale0 + cshift0;',
-              'gl_FragData[0] = vec4(texture2D(colorTexture1, vec2(intensity, 0.5)).rgb, oscale0*tcolor.g + oshift0);',
+              'gl_FragData[0] = vec4(texture2D(colorTexture1, vec2(intensity, 0.5)).rgb, pwfscale0*tcolor.g + pwfshift0);',
             ]
           ).result;
           break;
@@ -425,10 +425,7 @@ function vtkOpenGLImageMapper(publicAPI, model) {
       for (let i = 0; i < numComp; i++) {
         cellBO
           .getProgram()
-          .setUniformf(
-            `mix${i}`,
-            actor.getProperty().getComponentWeight(i)
-          );
+          .setUniformf(`mix${i}`, actor.getProperty().getComponentWeight(i));
       }
     }
 
@@ -453,21 +450,21 @@ function vtkOpenGLImageMapper(publicAPI, model) {
       cellBO.getProgram().setUniformf(`cscale${i}`, scale);
     }
 
-    // opacity shift/scale
+    // pwf shift/scale
     for (let i = 0; i < numComp; i++) {
-      let oscale = 1.0;
-      let oshift = 0.0;
+      let pwfScale = 1.0;
+      let pwfShift = 0.0;
       const target = iComps ? i : 0;
-      const ofun = actor.getProperty().getScalarOpacity(target);
-      if (ofun) {
-        const oRange = ofun.getRange();
-        const length = oRange[1] - oRange[0];
-        const mid = 0.5 * (oRange[0] + oRange[1]);
-        oscale = oglShiftScale.scale / length;
-        oshift = (oglShiftScale.shift - mid) / length + 0.5;
+      const pwfun = actor.getProperty().getPiecewiseFunction(target);
+      if (pwfun) {
+        const pwfRange = pwfun.getRange();
+        const length = pwfRange[1] - pwfRange[0];
+        const mid = 0.5 * (pwfRange[0] + pwfRange[1]);
+        pwfScale = oglShiftScale.scale / length;
+        pwfShift = (oglShiftScale.shift - mid) / length + 0.5;
       }
-      cellBO.getProgram().setUniformf(`oshift${i}`, oshift);
-      cellBO.getProgram().setUniformf(`oscale${i}`, oscale);
+      cellBO.getProgram().setUniformf(`pwfshift${i}`, pwfShift);
+      cellBO.getProgram().setUniformf(`pwfscale${i}`, pwfScale);
     }
 
     if (model.haveSeenDepthRequest) {
@@ -477,9 +474,10 @@ function vtkOpenGLImageMapper(publicAPI, model) {
     }
 
     const texColorUnit = model.colorTexture.getTextureUnit();
-    const texOpacityUnit = model.opacityTexture.getTextureUnit();
     cellBO.getProgram().setUniformi('colorTexture1', texColorUnit);
-    cellBO.getProgram().setUniformi('opacityTexture1', texOpacityUnit);
+
+    const texOpacityUnit = model.pwfTexture.getTextureUnit();
+    cellBO.getProgram().setUniformi('pwfTexture1', texOpacityUnit);
   };
 
   publicAPI.setCameraShaderParameters = (cellBO, ren, actor) => {
@@ -526,7 +524,7 @@ function vtkOpenGLImageMapper(publicAPI, model) {
     // activate the texture
     model.openGLTexture.activate();
     model.colorTexture.activate();
-    model.opacityTexture.activate();
+    model.pwfTexture.activate();
 
     // draw polygons
     if (model.tris.getCABO().getElementCount()) {
@@ -538,7 +536,7 @@ function vtkOpenGLImageMapper(publicAPI, model) {
 
     model.openGLTexture.deactivate();
     model.colorTexture.deactivate();
-    model.opacityTexture.deactivate();
+    model.pwfTexture.deactivate();
   };
 
   publicAPI.renderPieceFinish = (ren, actor) => {};
@@ -607,13 +605,13 @@ function vtkOpenGLImageMapper(publicAPI, model) {
     if (iType === InterpolationType.NEAREST) {
       model.colorTexture.setMinificationFilter(Filter.NEAREST);
       model.colorTexture.setMagnificationFilter(Filter.NEAREST);
-      model.opacityTexture.setMinificationFilter(Filter.NEAREST);
-      model.opacityTexture.setMagnificationFilter(Filter.NEAREST);
+      model.pwfTexture.setMinificationFilter(Filter.NEAREST);
+      model.pwfTexture.setMagnificationFilter(Filter.NEAREST);
     } else {
       model.colorTexture.setMinificationFilter(Filter.LINEAR);
       model.colorTexture.setMagnificationFilter(Filter.LINEAR);
-      model.opacityTexture.setMinificationFilter(Filter.LINEAR);
-      model.opacityTexture.setMagnificationFilter(Filter.LINEAR);
+      model.pwfTexture.setMinificationFilter(Filter.LINEAR);
+      model.pwfTexture.setMagnificationFilter(Filter.LINEAR);
     }
 
     const numComp = image
@@ -682,54 +680,56 @@ function vtkOpenGLImageMapper(publicAPI, model) {
       }
     }
 
-    const oWidth = 1024;
-    let ofun = actorProperty.getScalarOpacity();
-    const oSize = oWidth * textureHeight;
-    const oTable = new Uint8Array(oSize);
-    if (ofun) {
-      const ofunToString = `${ofun.getMTime()}-${actorProperty.getMTime()}-${numComp}-${iComps}`;
-      if (model.opacityTextureString !== ofunToString) {
-        const ofTable = new Float32Array(oSize);
-        const tmpTable = new Float32Array(oWidth);
+    // Build pwf buffer, it's either for comp weighting or opacity
+    const pwfWidth = 1024;
+    let pwfun = actorProperty.getPiecewiseFunction();
+    const pwfSize = pwfWidth * textureHeight;
+    const pwfTable = new Uint8Array(pwfSize);
+    if (pwfun) {
+      const pwfunToString = `${pwfun.getMTime()}-${actorProperty.getMTime()}-${numComp}-${iComps}`;
+      if (model.pwfTextureString !== pwfunToString) {
+        const pwfFloatTable = new Float32Array(pwfSize);
+        const tmpTable = new Float32Array(pwfWidth);
 
         for (let c = 0; c < numIComps; ++c) {
-          ofun = actorProperty.getScalarOpacity(c);
-          const oRange = ofun.getRange();
-          ofun.getTable(oRange[0], oRange[1], oWidth, tmpTable, 1);
+          pwfun = actorProperty.getPiecewiseFunction(c);
+          const pwfRange = pwfun.getRange();
+          pwfun.getTable(pwfRange[0], pwfRange[1], pwfWidth, tmpTable, 1);
           // adjust for sample distance etc
           if (iComps) {
-            for (let i = 0; i < oWidth; i++) {
-              ofTable[c * oWidth * 2 + i] = 255.0 * tmpTable[i];
-              ofTable[c * oWidth * 2 + i + oWidth] = 255.0 * tmpTable[i];
+            for (let i = 0; i < pwfWidth; i++) {
+              pwfFloatTable[c * pwfWidth * 2 + i] = 255.0 * tmpTable[i];
+              pwfFloatTable[c * pwfWidth * 2 + i + pwfWidth] =
+                255.0 * tmpTable[i];
             }
           } else {
-            for (let i = 0; i < oWidth; i++) {
-              ofTable[c * oWidth * 2 + i] = 255.0 * tmpTable[i];
+            for (let i = 0; i < pwfWidth; i++) {
+              pwfFloatTable[c * pwfWidth * 2 + i] = 255.0 * tmpTable[i];
             }
           }
         }
 
-        model.opacityTextureString = ofunToString;
-        model.opacityTexture.create2DFromRaw(
-          oWidth,
+        model.pwfTextureString = pwfunToString;
+        model.pwfTexture.create2DFromRaw(
+          pwfWidth,
           textureHeight,
           1,
           VtkDataTypes.FLOAT,
-          ofTable
+          pwfFloatTable
         );
       }
     } else {
-      const ofunToString = '0';
-      if (model.opacityTextureString !== ofunToString) {
+      const pwfunToString = '0';
+      if (model.pwfTextureString !== pwfunToString) {
         // default is opaque
-        oTable.fill(255.0);
-        model.opacityTextureString = ofunToString;
-        model.opacityTexture.create2DFromRaw(
-          oWidth,
+        pwfTable.fill(255.0);
+        model.pwfTextureString = pwfunToString;
+        model.pwfTexture.create2DFromRaw(
+          pwfWidth,
           1,
           1,
           VtkDataTypes.UNSIGNED_CHAR,
-          oTable
+          pwfTable
         );
       }
     }
@@ -941,7 +941,7 @@ const DEFAULT_VALUES = {
   tris: null,
   imagemat: null,
   colorTexture: null,
-  opacityTexture: null,
+  pwfTexture: null,
   lastHaveSeenDepthRequest: false,
   haveSeenDepthRequest: false,
   lastTextureComponents: 0,
@@ -958,7 +958,7 @@ export function extend(publicAPI, model, initialValues = {}) {
   model.tris = vtkHelper.newInstance();
   model.openGLTexture = vtkOpenGLTexture.newInstance();
   model.colorTexture = vtkOpenGLTexture.newInstance();
-  model.opacityTexture = vtkOpenGLTexture.newInstance();
+  model.pwfTexture = vtkOpenGLTexture.newInstance();
 
   model.imagemat = mat4.create();
 
