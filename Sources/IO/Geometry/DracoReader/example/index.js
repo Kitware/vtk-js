@@ -42,7 +42,6 @@ function update() {
 //   .setUrl('https://kitware.github.io/vtk-js-datasets/data/draco/throw_14.drc')
 //   .then(update);
 
-
 // ----------------------------------------------------------------------------
 // Dynamic script loading from CDN
 // ----------------------------------------------------------------------------
