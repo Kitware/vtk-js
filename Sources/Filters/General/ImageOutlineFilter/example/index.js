@@ -29,7 +29,7 @@ const cFun = vtkColorTransferFunction.newInstance();
 cFun.addRGBPoint(1, 1, 0, 0);
 cFun.addRGBPoint(2, 0, 0, 1);
 cFun.addRGBPoint(3, 0, 1, 0);
-labelmapActor.getProperty().setScalarOpacity(opFun);
+labelmapActor.getProperty().setPiecewiseFunction(opFun);
 labelmapActor.getProperty().setRGBTransferFunction(cFun);
 imageActor.getProperty().setInterpolationType(0);
 labelmapActor.getProperty().setInterpolationType(0);

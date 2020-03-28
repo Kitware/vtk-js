@@ -51,7 +51,7 @@ actor.getProperty().setColorWindow(255);
 actor.getProperty().setColorLevel(127);
 // Uncomment this if you want to use a fixed colorwindow/level
 // actor.getProperty().setRGBTransferFunction(rgb);
-actor.getProperty().setScalarOpacity(ofun);
+actor.getProperty().setPiecewiseFunction(ofun);
 actor.setMapper(mapper);
 renderer.addActor(actor);
 

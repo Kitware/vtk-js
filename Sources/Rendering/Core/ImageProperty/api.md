@@ -50,13 +50,45 @@ Control the diffuse lighting intensity of this image.
 
 Control the opacity of this image.
 
-### rGBTransferFunction
+### independentComponents
 
-Specify vtkColorTransferFunction to map scalars to colors. If set, then
-colorWindow and colorLevel are not used.
+Specify whether image components (0 - 3) are treated independently or
+dependently.  If `independentComponents` is `true`, each image component
+will be treated as an independent "intensity" value and used to look up
+a color and piecewise function value independently.
 
-### scalarOpacity
+### set/get rGBTransferFunction
 
-Specify a vtkPiecewiseFunction to map image intensities to opacities. This
-will only work on single-component images. The overall image opacity can
-still be affected by the `opacity` property.
+Specify or retrieve, per component, a vtkColorTransferFunction to map
+scalars to colors. If set, then colorWindow and colorLevel are not used.
+
+The set method takes two arguments, a component index and an rgb transfer
+function, in that order.
+
+### set/get scalarOpacity
+
+The `scalarOpacity` property is an alias for `piecewiseFunction`.
+
+### set/get piecewiseFunction
+
+Specify or retrieve, per component, a vtkPiecewiseFunction.  If
+`independentComponents` is `true`, the piecewise function is used as a
+component weighting function, and resulting colors on the screen will
+be blended using the weights which are normalized per fragment in the
+fragment shader.  If `independentComponents` is `false`, then the
+piecewise function will be used as a traditional scalar opacity function
+to map image intensities to opacities.  This latter way of using the
+piecewise function will only work on single-component images. In either case,
+the overall image opacity can still be affected by the `opacity` property.
+
+The set method takes two arguments, a component index and a piecewise
+function, in that order.
+
+### set/get componentWeight
+
+Specify or retrieve, per component, a single scalar weight value to be
+applied to the entire image for that component.  This can be used, for
+example, to completely disgregard the contribution from a single component.
+
+The set method takes two arguments, a component index and an floating point
+component weight, in that order.

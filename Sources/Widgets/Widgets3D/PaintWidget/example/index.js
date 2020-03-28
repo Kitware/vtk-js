@@ -186,7 +186,7 @@ labelMap.ofun.addPoint(0, 0); // our background value, 0, will be invisible
 labelMap.ofun.addPoint(1, 1); // all values above 1 will be fully opaque
 
 labelMap.actor.getProperty().setRGBTransferFunction(labelMap.cfun);
-labelMap.actor.getProperty().setScalarOpacity(labelMap.ofun);
+labelMap.actor.getProperty().setPiecewiseFunction(labelMap.ofun);
 // opacity is applied to entire labelmap
 labelMap.actor.getProperty().setOpacity(0.5);
 
