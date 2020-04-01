@@ -57,6 +57,7 @@ export default function addRegistrationAPI(publicAPI, model) {
       proxyId: id,
       proxyName: proxy.getProxyName(),
       proxyGroup: proxy.getProxyGroup(),
+      proxy,
     });
     return proxy;
   }
