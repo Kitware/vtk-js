@@ -148,10 +148,6 @@ const configureScene = (
   useGradientOpacity,
   typeOfData
 ) => {
-  console.log(
-    `shade=${shade} numComponents=${numberOfComponents} independent=${independentComponents} GO=${useGradientOpacity} dataType=${typeOfData}`
-  );
-
   actor.getProperty().setShade(shade);
 
   actor.getProperty().setIndependentComponents(independentComponents);
@@ -228,35 +224,30 @@ function redrawScene() {
 function updateLighting(e) {
   const elt = e ? e.target : document.querySelector('.lighting');
   lighting = elt.checked ? 1 : 0;
-  console.log(`Updating lighting to be ${lighting}`);
   redrawScene();
 }
 
 function updateNumberOfComponents(e) {
   const elt = e ? e.target : document.querySelector('.numComp');
   numComp = Number(elt.value);
-  console.log(`Updating number of components to be ${numComp}`);
   redrawScene();
 }
 
 function updateIndependent(e) {
   const elt = e ? e.target : document.querySelector('.independent');
   independent = elt.checked;
-  console.log(`Updating independent components to be ${independent}`);
   redrawScene();
 }
 
 function updateGradientOpacity(e) {
   const elt = e ? e.target : document.querySelector('.gradientOpacity');
   withGO = elt.checked ? 1 : 0;
-  console.log(`Updating gradient opacity to be ${withGO}`);
   redrawScene();
 }
 
 function updateDataType(e) {
   const elt = e ? e.target : document.querySelector('.dataType');
   dataType = Number(elt.value);
-  console.log(`Updating data type to be ${dataType}`);
   redrawScene();
 }
 

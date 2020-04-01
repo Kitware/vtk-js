@@ -801,7 +801,6 @@ function vtkOpenGLImageMapper(publicAPI, model) {
       let scalars = null;
       // Get right scalars according to slicing mode
       if (ijkMode === SlicingMode.I) {
-        console.log('Slicing Mode I');
         scalars = new basicScalars.constructor(dims[2] * dims[1] * numComp);
         let id = 0;
         for (let k = 0; k < dims[2]; k++) {
@@ -827,7 +826,6 @@ function vtkOpenGLImageMapper(publicAPI, model) {
         ptsArray[10] = ext[3];
         ptsArray[11] = ext[5];
       } else if (ijkMode === SlicingMode.J) {
-        console.log('Slicing Mode J');
         scalars = new basicScalars.constructor(dims[2] * dims[0] * numComp);
         let id = 0;
         for (let k = 0; k < dims[2]; k++) {
@@ -852,7 +850,6 @@ function vtkOpenGLImageMapper(publicAPI, model) {
         ptsArray[10] = nSlice;
         ptsArray[11] = ext[5];
       } else if (ijkMode === SlicingMode.K || ijkMode === SlicingMode.NONE) {
-        console.log('Slicing Mode K');
         scalars = basicScalars.subarray(
           sliceOffset * sliceSize,
           (sliceOffset + 1) * sliceSize
