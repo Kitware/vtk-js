@@ -49,7 +49,9 @@ function vtkImageProperty(publicAPI, model) {
     if (model.componentData[idx].rGBTransferFunction !== transferFunc) {
       model.componentData[idx].rGBTransferFunction = transferFunc;
       publicAPI.modified();
+      return true;
     }
+    return false;
   };
 
   // Get the currently set RGB transfer function.
@@ -61,7 +63,9 @@ function vtkImageProperty(publicAPI, model) {
     if (model.componentData[index].piecewiseFunction !== func) {
       model.componentData[index].piecewiseFunction = func;
       publicAPI.modified();
+      return true;
     }
+    return false;
   };
 
   // Get the component weighting function.
@@ -93,7 +97,9 @@ function vtkImageProperty(publicAPI, model) {
     if (model.componentData[index].componentWeight !== val) {
       model.componentData[index].componentWeight = val;
       publicAPI.modified();
+      return true;
     }
+    return false;
   };
 
   publicAPI.getComponentWeight = (index) => {
@@ -105,13 +111,11 @@ function vtkImageProperty(publicAPI, model) {
     return model.componentData[index].componentWeight;
   };
 
-  publicAPI.setInterpolationTypeToNearest = () => {
+  publicAPI.setInterpolationTypeToNearest = () =>
     publicAPI.setInterpolationType(InterpolationType.NEAREST);
-  };
 
-  publicAPI.setInterpolationTypeToLinear = () => {
+  publicAPI.setInterpolationTypeToLinear = () =>
     publicAPI.setInterpolationType(InterpolationType.LINEAR);
-  };
 
   publicAPI.getInterpolationTypeAsString = () =>
     macro.enumToString(InterpolationType, model.interpolationType);
