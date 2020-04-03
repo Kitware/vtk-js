@@ -111,11 +111,13 @@ function vtkImageProperty(publicAPI, model) {
     return model.componentData[index].componentWeight;
   };
 
-  publicAPI.setInterpolationTypeToNearest = () =>
-    publicAPI.setInterpolationType(InterpolationType.NEAREST);
+  publicAPI.setInterpolationTypeToNearest = () => {
+    return publicAPI.setInterpolationType(InterpolationType.NEAREST);
+  };
 
-  publicAPI.setInterpolationTypeToLinear = () =>
-    publicAPI.setInterpolationType(InterpolationType.LINEAR);
+  publicAPI.setInterpolationTypeToLinear = () => {
+    return publicAPI.setInterpolationType(InterpolationType.LINEAR);
+  };
 
   publicAPI.getInterpolationTypeAsString = () =>
     macro.enumToString(InterpolationType, model.interpolationType);
