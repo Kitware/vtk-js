@@ -66,15 +66,21 @@ function vtkVolumeProperty(publicAPI, model) {
 
   // Set the color of a volume to a gray transfer function
   publicAPI.setGrayTransferFunction = (index, func) => {
+    let modified = false;
     if (model.componentData[index].grayTransferFunction !== func) {
       model.componentData[index].grayTransferFunction = func;
-      publicAPI.modified();
+      modified = true;
     }
 
     if (model.componentData[index].colorChannels !== 1) {
       model.componentData[index].colorChannels = 1;
+      modified = true;
+    }
+
+    if (modified) {
       publicAPI.modified();
     }
+    return modified;
   };
 
   // Get the currently set gray transfer function. Create one if none set.
@@ -96,15 +102,21 @@ function vtkVolumeProperty(publicAPI, model) {
 
   // Set the color of a volume to an RGB transfer function
   publicAPI.setRGBTransferFunction = (index, func) => {
+    let modified = false;
     if (model.componentData[index].rGBTransferFunction !== func) {
       model.componentData[index].rGBTransferFunction = func;
-      publicAPI.modified();
+      modified = true;
     }
 
     if (model.componentData[index].colorChannels !== 3) {
       model.componentData[index].colorChannels = 3;
+      modified = true;
+    }
+
+    if (modified) {
       publicAPI.modified();
     }
+    return modified;
   };
 
   // Get the currently set RGB transfer function. Create one if none set.
@@ -139,7 +151,9 @@ function vtkVolumeProperty(publicAPI, model) {
     if (model.componentData[index].scalarOpacity !== func) {
       model.componentData[index].scalarOpacity = func;
       publicAPI.modified();
+      return true;
     }
+    return false;
   };
 
   // Get the scalar opacity transfer function. Create one if none set.
@@ -159,14 +173,16 @@ function vtkVolumeProperty(publicAPI, model) {
   publicAPI.setComponentWeight = (index, value) => {
     if (index < 0 || index >= VTK_MAX_VRCOMP) {
       vtkErrorMacro('Invalid index');
-      return;
+      return false;
     }
 
     const val = Math.min(1, Math.max(0, value));
     if (model.componentData[index].componentWeight !== val) {
       model.componentData[index].componentWeight = val;
       publicAPI.modified();
+      return true;
     }
+    return false;
   };
 
   publicAPI.getComponentWeight = (index) => {
@@ -178,17 +194,14 @@ function vtkVolumeProperty(publicAPI, model) {
     return model.componentData[index].componentWeight;
   };
 
-  publicAPI.setInterpolationTypeToNearest = () => {
+  publicAPI.setInterpolationTypeToNearest = () =>
     publicAPI.setInterpolationType(InterpolationType.NEAREST);
-  };
 
-  publicAPI.setInterpolationTypeToLinear = () => {
+  publicAPI.setInterpolationTypeToLinear = () =>
     publicAPI.setInterpolationType(InterpolationType.LINEAR);
-  };
 
-  publicAPI.setInterpolationTypeToFastLinear = () => {
+  publicAPI.setInterpolationTypeToFastLinear = () =>
     publicAPI.setInterpolationType(InterpolationType.FAST_LINEAR);
-  };
 
   publicAPI.getInterpolationTypeAsString = () =>
     macro.enumToString(InterpolationType, model.interpolationType);
@@ -207,7 +220,9 @@ function vtkVolumeProperty(publicAPI, model) {
       if (model.componentData[index][`${val}`] !== value) {
         model.componentData[index][`${val}`] = value;
         publicAPI.modified();
+        return true;
       }
+      return false;
     };
   });
 
