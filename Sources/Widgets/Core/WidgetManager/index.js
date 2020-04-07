@@ -154,6 +154,9 @@ function vtkWidgetManager(publicAPI, model) {
         }
 
         Promise.all(pendingContent).then((vnodes) => {
+          if (model.deleted) {
+            return;
+          }
           const oldVTree = svgVTrees.get(widget);
           const newVTree = createSvgElement('g');
           for (let ni = 0; ni < vnodes.length; ni++) {
