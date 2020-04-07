@@ -306,6 +306,16 @@ function colorTransferFunctionUpdater(instance, state, context) {
 function createDataSetUpdate(piecesToFetch = []) {
   return (instance, state, context) => {
     context.start();
+
+    // Capture props to set on instance
+    const propsToSet = {};
+    Object.entries(state.properties).forEach(([key, value]) => {
+      if (piecesToFetch.indexOf(key) === -1 && key !== 'fields') {
+        propsToSet[key] = value;
+      }
+    });
+    instance.set(propsToSet);
+
     const props = state.properties;
     let nbArrayToDownload = props.fields.length;
     const arraysToBind = [
