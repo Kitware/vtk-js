@@ -19,16 +19,18 @@ function vtkImageData(publicAPI, model) {
   publicAPI.setExtent = (...inExtent) => {
     if (model.deleted) {
       vtkErrorMacro('instance deleted - cannot call any method');
-      return;
+      return false;
     }
 
-    if (!inExtent || inExtent.length !== 6) {
-      return;
+    const extentArray = inExtent.length === 1 ? inExtent[0] : inExtent;
+
+    if (extentArray.length !== 6) {
+      return false;
     }
 
     let changeDetected = false;
     model.extent.forEach((item, index) => {
-      if (item !== inExtent[index]) {
+      if (item !== extentArray[index]) {
         if (changeDetected) {
           return;
         }
@@ -37,12 +39,13 @@ function vtkImageData(publicAPI, model) {
     });
 
     if (changeDetected) {
-      model.extent = [].concat(inExtent);
+      model.extent = extentArray.slice();
       model.dataDescription = vtkStructuredData.getDataDescriptionFromExtent(
         model.extent
       );
       publicAPI.modified();
     }
+    return changeDetected;
   };
 
   publicAPI.setDimensions = (...dims) => {
