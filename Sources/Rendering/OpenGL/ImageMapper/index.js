@@ -23,6 +23,30 @@ const { vtkErrorMacro } = macro;
 const { SlicingMode } = Constants;
 
 // ----------------------------------------------------------------------------
+// helper methods
+// ----------------------------------------------------------------------------
+
+function computeFnToString(property, fn, numberOfComponents) {
+  let pwfun = fn.apply(property);
+  if (pwfun) {
+    const iComps = property.getIndependentComponents();
+    let pwfunToString = `${property.getMTime()}-${iComps}-0-${pwfun.getMTime()}`;
+    if (iComps) {
+      for (let c = 1; c < numberOfComponents; c++) {
+        pwfun = fn.apply(property, [c]);
+        if (pwfun) {
+          pwfunToString += `-${c}-${pwfun.getMTime()}`;
+        } else {
+          pwfunToString += `-${c}-none`;
+        }
+      }
+    }
+    return pwfunToString;
+  }
+  return '0';
+}
+
+// ----------------------------------------------------------------------------
 // vtkOpenGLImageMapper methods
 // ----------------------------------------------------------------------------
 
@@ -622,13 +646,18 @@ function vtkOpenGLImageMapper(publicAPI, model) {
     const numIComps = iComps ? numComp : 1;
     const textureHeight = iComps ? 2 * numIComps : 1;
 
-    const cWidth = 1024;
-    let cfun = actorProperty.getRGBTransferFunction();
-    const cSize = cWidth * textureHeight * 3;
-    const cTable = new Uint8Array(cSize);
-    if (cfun) {
-      const cfunToString = `${cfun.getMTime()}-${actorProperty.getMTime()}-${numComp}-${iComps}`;
-      if (model.colorTextureString !== cfunToString) {
+    const cfunToString = computeFnToString(
+      actorProperty,
+      actorProperty.getRGBTransferFunction,
+      numIComps
+    );
+
+    if (model.colorTextureString !== cfunToString) {
+      const cWidth = 1024;
+      const cSize = cWidth * textureHeight * 3;
+      const cTable = new Uint8Array(cSize);
+      let cfun = actorProperty.getRGBTransferFunction();
+      if (cfun) {
         const tmpTable = new Float32Array(cWidth * 3);
 
         for (let c = 0; c < numIComps; c++) {
@@ -646,8 +675,6 @@ function vtkOpenGLImageMapper(publicAPI, model) {
             }
           }
         }
-        model.colorTextureString = cfunToString;
-
         model.colorTexture.create2DFromRaw(
           cWidth,
           textureHeight,
@@ -655,16 +682,12 @@ function vtkOpenGLImageMapper(publicAPI, model) {
           VtkDataTypes.UNSIGNED_CHAR,
           cTable
         );
-      }
-    } else {
-      const cfunToString = '0';
-      if (model.colorTextureString !== cfunToString) {
+      } else {
         for (let i = 0; i < cWidth * 3; ++i) {
           cTable[i] = (255.0 * i) / ((cWidth - 1) * 3);
           cTable[i + 1] = (255.0 * i) / ((cWidth - 1) * 3);
           cTable[i + 2] = (255.0 * i) / ((cWidth - 1) * 3);
         }
-        model.colorTextureString = cfunToString;
         model.colorTexture.create2DFromRaw(
           cWidth,
           1,
@@ -673,18 +696,25 @@ function vtkOpenGLImageMapper(publicAPI, model) {
           cTable
         );
       }
+
+      model.colorTextureString = cfunToString;
     }
 
     // Build piecewise function buffer.  This buffer is used either
     // for component weighting or opacity, depending on whether we're
     // rendering components independently or not.
-    const pwfWidth = 1024;
-    let pwfun = actorProperty.getPiecewiseFunction();
-    const pwfSize = pwfWidth * textureHeight;
-    const pwfTable = new Uint8Array(pwfSize);
-    if (pwfun) {
-      const pwfunToString = `${pwfun.getMTime()}-${actorProperty.getMTime()}-${numComp}-${iComps}`;
-      if (model.pwfTextureString !== pwfunToString) {
+    const pwfunToString = computeFnToString(
+      actorProperty,
+      actorProperty.getPiecewiseFunction,
+      numIComps
+    );
+
+    if (model.pwfTextureString !== pwfunToString) {
+      const pwfWidth = 1024;
+      const pwfSize = pwfWidth * textureHeight;
+      const pwfTable = new Uint8Array(pwfSize);
+      let pwfun = actorProperty.getPiecewiseFunction();
+      if (pwfun) {
         const pwfFloatTable = new Float32Array(pwfSize);
         const tmpTable = new Float32Array(pwfWidth);
 
@@ -710,8 +740,6 @@ function vtkOpenGLImageMapper(publicAPI, model) {
             }
           }
         }
-
-        model.pwfTextureString = pwfunToString;
         model.pwfTexture.create2DFromRaw(
           pwfWidth,
           textureHeight,
@@ -719,13 +747,9 @@ function vtkOpenGLImageMapper(publicAPI, model) {
           VtkDataTypes.FLOAT,
           pwfFloatTable
         );
-      }
-    } else {
-      const pwfunToString = '0';
-      if (model.pwfTextureString !== pwfunToString) {
+      } else {
         // default is opaque
         pwfTable.fill(255.0);
-        model.pwfTextureString = pwfunToString;
         model.pwfTexture.create2DFromRaw(
           pwfWidth,
           1,
@@ -734,6 +758,8 @@ function vtkOpenGLImageMapper(publicAPI, model) {
           pwfTable
         );
       }
+
+      model.pwfTextureString = pwfunToString;
     }
 
     // Find what IJK axis and what direction to slice along
