@@ -7,8 +7,9 @@ import * as vtkMath from 'vtk.js/Sources/Common/Core/Math';
 import vtkScalarsToColors from 'vtk.js/Sources/Common/Core/ScalarsToColors/Constants'; // Need to go inside Constants otherwise dependency loop
 
 import CoincidentTopologyHelper from 'vtk.js/Sources/Rendering/Core/Mapper/CoincidentTopologyHelper';
-import otherStaticMethods from 'vtk.js/Sources/Rendering/Core/Mapper/Static';
 import Constants from 'vtk.js/Sources/Rendering/Core/Mapper/Constants';
+
+const { staticOffsetAPI, otherStaticMethods } = CoincidentTopologyHelper;
 
 const { ColorMode, ScalarMode, GetArray } = Constants;
 const { VectorMode } = vtkScalarsToColors;
@@ -19,25 +20,6 @@ const { VtkDataTypes } = vtkDataArray;
 function notImplemented(method) {
   return () => macro.vtkErrorMacro(`vtkMapper::${method} - NOT IMPLEMENTED`);
 }
-
-// CoincidentTopology static methods ------------------------------------------
-/* eslint-disable arrow-body-style */
-
-const staticOffsetModel = {
-  Polygon: { factor: 2, offset: 0 },
-  Line: { factor: 1, offset: -1 },
-  Point: { factor: 0, offset: -2 },
-};
-const staticOffsetAPI = {};
-
-CoincidentTopologyHelper.addCoincidentTopologyMethods(
-  staticOffsetAPI,
-  staticOffsetModel,
-  CoincidentTopologyHelper.CATEGORIES.map((key) => ({
-    key,
-    method: `ResolveCoincidentTopology${key}OffsetParameters`,
-  }))
-);
 
 // ----------------------------------------------------------------------------
 // vtkMapper methods
@@ -85,58 +67,6 @@ function vtkMapper(publicAPI, model) {
   publicAPI.setScalarModeToUsePointFieldData = () => publicAPI.setScalarMode(3);
   publicAPI.setScalarModeToUseCellFieldData = () => publicAPI.setScalarMode(4);
   publicAPI.setScalarModeToUseFieldData = () => publicAPI.setScalarMode(5);
-
-  // Add Static methods to our instance
-  Object.keys(otherStaticMethods).forEach((methodName) => {
-    publicAPI[methodName] = otherStaticMethods[methodName];
-  });
-  Object.keys(staticOffsetAPI).forEach((methodName) => {
-    publicAPI[methodName] = staticOffsetAPI[methodName];
-  });
-
-  // Relative methods
-  /* eslint-disable arrow-body-style */
-  model.topologyOffset = {
-    Polygon: { factor: 0, offset: 0 },
-    Line: { factor: 0, offset: 0 },
-    Point: { factor: 0, offset: 0 },
-  };
-  CoincidentTopologyHelper.addCoincidentTopologyMethods(
-    publicAPI,
-    model.topologyOffset,
-    CoincidentTopologyHelper.CATEGORIES.map((key) => ({
-      key,
-      method: `RelativeCoincidentTopology${key}OffsetParameters`,
-    }))
-  );
-  /* eslint-enable arrow-body-style */
-
-  publicAPI.getCoincidentTopologyPolygonOffsetParameters = () => {
-    const globalValue = staticOffsetAPI.getResolveCoincidentTopologyPolygonOffsetParameters();
-    const localValue = publicAPI.getRelativeCoincidentTopologyPolygonOffsetParameters();
-    return {
-      factor: globalValue.factor + localValue.factor,
-      offset: globalValue.offset + localValue.offset,
-    };
-  };
-
-  publicAPI.getCoincidentTopologyLineOffsetParameters = () => {
-    const globalValue = staticOffsetAPI.getResolveCoincidentTopologyLineOffsetParameters();
-    const localValue = publicAPI.getRelativeCoincidentTopologyLineOffsetParameters();
-    return {
-      factor: globalValue.factor + localValue.factor,
-      offset: globalValue.offset + localValue.offset,
-    };
-  };
-
-  publicAPI.getCoincidentTopologyPointOffsetParameter = () => {
-    const globalValue = staticOffsetAPI.getResolveCoincidentTopologyPointOffsetParameters();
-    const localValue = publicAPI.getRelativeCoincidentTopologyPointOffsetParameters();
-    return {
-      factor: globalValue.factor + localValue.factor,
-      offset: globalValue.offset + localValue.offset,
-    };
-  };
 
   publicAPI.getAbstractScalars = (
     input,
@@ -592,7 +522,6 @@ const DEFAULT_VALUES = {
 
   useInvertibleColors: false,
   invertibleScalars: null,
-  resolveCoincidentTopology: false,
 
   viewSpecificProperties: null,
 
@@ -620,7 +549,6 @@ export function extend(publicAPI, model, initialValues = {}) {
     'interpolateScalarsBeforeMapping',
     'lookupTable',
     'renderTime',
-    'resolveCoincidentTopology',
     'scalarMode',
     'scalarVisibility',
     'static',
@@ -633,6 +561,8 @@ export function extend(publicAPI, model, initialValues = {}) {
   if (!model.viewSpecificProperties) {
     model.viewSpecificProperties = {};
   }
+
+  CoincidentTopologyHelper.implementCoincidentTopologyMethods(publicAPI, model);
 
   // Object methods
   vtkMapper(publicAPI, model);

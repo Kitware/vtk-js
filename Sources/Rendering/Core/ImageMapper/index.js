@@ -3,9 +3,11 @@ import macro from 'vtk.js/Sources/macro';
 import vtkAbstractMapper from 'vtk.js/Sources/Rendering/Core/AbstractMapper';
 import * as vtkMath from 'vtk.js/Sources/Common/Core/Math';
 import vtkPlane from 'vtk.js/Sources/Common/DataModel/Plane';
+import CoincidentTopologyHelper from 'vtk.js/Sources/Rendering/Core/Mapper/CoincidentTopologyHelper';
 
 import { vec3 } from 'gl-matrix';
 
+const { staticOffsetAPI, otherStaticMethods } = CoincidentTopologyHelper;
 const { vtkWarningMacro } = macro;
 const { SlicingMode } = Constants;
 
@@ -459,6 +461,8 @@ export function extend(publicAPI, model, initialValues = {}) {
   ]);
   macro.setGetArray(publicAPI, model, ['customDisplayExtent'], 4);
 
+  CoincidentTopologyHelper.implementCoincidentTopologyMethods(publicAPI, model);
+
   // Object methods
   vtkImageMapper(publicAPI, model);
 }
@@ -469,4 +473,9 @@ export const newInstance = macro.newInstance(extend, 'vtkImageMapper');
 
 // ----------------------------------------------------------------------------
 
-export default Object.assign({ newInstance, extend }, Constants);
+export default Object.assign(
+  { newInstance, extend },
+  staticOffsetAPI,
+  otherStaticMethods,
+  Constants
+);
