@@ -97,7 +97,8 @@ function vtkWidgetManager(publicAPI, model) {
     const container = model.openGLRenderWindow.getReferenceByName('el');
     const canvas = model.openGLRenderWindow.getCanvas();
     container.insertBefore(model.svgRoot, canvas.nextSibling);
-    if (!container.style.position || container.style.position === 'static') {
+    const containerStyles = window.getComputedStyle(container);
+    if (containerStyles.position === 'static') {
       container.style.position = 'relative';
     }
   }
