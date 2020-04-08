@@ -17,6 +17,7 @@ import { InterpolationType } from 'vtk.js/Sources/Rendering/Core/ImageProperty/C
 
 import vtkPolyDataVS from 'vtk.js/Sources/Rendering/OpenGL/glsl/vtkPolyDataVS.glsl';
 import vtkPolyDataFS from 'vtk.js/Sources/Rendering/OpenGL/glsl/vtkPolyDataFS.glsl';
+import vtkReplacementShaderMapper from 'vtk.js/Sources/Rendering/OpenGL/ReplacementShaderMapper';
 
 const { vtkErrorMacro } = macro;
 
@@ -98,6 +99,13 @@ function vtkOpenGLImageMapper(publicAPI, model) {
     if (prepass) {
       publicAPI.render();
     }
+  };
+
+  publicAPI.getCoincidentParameters = (ren, actor) => {
+    if (model.renderable.getResolveCoincidentTopology()) {
+      return model.renderable.getCoincidentTopologyPolygonOffsetParameters();
+    }
+    return null;
   };
 
   // Renders myself
@@ -324,6 +332,8 @@ function vtkOpenGLImageMapper(publicAPI, model) {
 
     shaders.Vertex = VSSource;
     shaders.Fragment = FSSource;
+
+    publicAPI.replaceShaderCoincidentOffset(shaders, ren, actor);
   };
 
   publicAPI.getNeedToRebuildShaders = (cellBO, ren, actor) => {
@@ -495,6 +505,16 @@ function vtkOpenGLImageMapper(publicAPI, model) {
       cellBO
         .getProgram()
         .setUniformi('depthRequest', model.renderDepth ? 1 : 0);
+    }
+
+    // handle coincident
+    if (cellBO.getProgram().isUniformUsed('coffset')) {
+      const cp = publicAPI.getCoincidentParameters(ren, actor);
+      cellBO.getProgram().setUniformf('coffset', cp.offset);
+      // cfactor isn't always used when coffset is.
+      if (cellBO.getProgram().isUniformUsed('cfactor')) {
+        cellBO.getProgram().setUniformf('cfactor', cp.factor);
+      }
     }
 
     const texColorUnit = model.colorTexture.getTextureUnit();
@@ -975,6 +995,11 @@ export function extend(publicAPI, model, initialValues = {}) {
 
   // Inheritance
   vtkViewNode.extend(publicAPI, model, initialValues);
+  vtkReplacementShaderMapper.implementReplaceShaderCoincidentOffset(
+    publicAPI,
+    model,
+    initialValues
+  );
 
   model.tris = vtkHelper.newInstance();
   model.openGLTexture = vtkOpenGLTexture.newInstance();

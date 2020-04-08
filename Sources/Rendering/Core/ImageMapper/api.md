@@ -3,6 +3,8 @@
 vtkImageMapper provides 2D image display support for vtk.
 It can be associated with a vtkImageSlice prop and placed within a Renderer.
 
+This class resolves coincident topology with the same methods as [vtkMapper](./Rendering_Core_Mapper.html).
+
 ## See Also
 
 [vtkImageProperty](./Rendering_Core_ImageProperty.html) 
