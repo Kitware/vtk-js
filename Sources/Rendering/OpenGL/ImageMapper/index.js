@@ -28,21 +28,10 @@ const { SlicingMode } = Constants;
 // ----------------------------------------------------------------------------
 
 function computeFnToString(property, fn, numberOfComponents) {
-  let pwfun = fn.apply(property);
+  const pwfun = fn.apply(property);
   if (pwfun) {
     const iComps = property.getIndependentComponents();
-    let pwfunToString = `${property.getMTime()}-${iComps}-0-${pwfun.getMTime()}`;
-    if (iComps) {
-      for (let c = 1; c < numberOfComponents; c++) {
-        pwfun = fn.apply(property, [c]);
-        if (pwfun) {
-          pwfunToString += `-${c}-${pwfun.getMTime()}`;
-        } else {
-          pwfunToString += `-${c}-none`;
-        }
-      }
-    }
-    return pwfunToString;
+    return `${property.getMTime()}-${iComps}-${numberOfComponents}`;
   }
   return '0';
 }
