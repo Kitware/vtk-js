@@ -410,13 +410,14 @@ function setTypeMapping(type, buildFn = null, updateFn = genericUpdater) {
 // ----------------------------------------------------------------------------
 
 const DEFAULT_ALIASES = {
-  vtkMapper: ['vtkCompositePolyDataMapper2'],
+  vtkMapper: ['vtkOpenGLPolyDataMapper', 'vtkCompositePolyDataMapper2'],
   vtkProperty: ['vtkOpenGLProperty'],
   vtkRenderer: ['vtkOpenGLRenderer'],
   vtkCamera: ['vtkOpenGLCamera'],
   vtkColorTransferFunction: ['vtkPVDiscretizableColorTransferFunction'],
   vtkActor: ['vtkOpenGLActor', 'vtkPVLODActor'],
   vtkLight: ['vtkOpenGLLight', 'vtkPVLight'],
+  vtkTexture: ['vtkOpenGLTexture'],
 };
 
 // ----------------------------------------------------------------------------
