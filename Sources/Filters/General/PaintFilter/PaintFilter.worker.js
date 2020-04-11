@@ -8,7 +8,7 @@ const globals = {
   buffer: null,
   dimensions: [0, 0, 0],
   prevPoint: null,
-  slicingMode: null,
+  slicingMode: null, // 2D or 3D painting
 };
 
 // --------------------------------------------------------------------------
@@ -40,17 +40,23 @@ function handlePaintRectangle({ point1, point2 }) {
 // --------------------------------------------------------------------------
 
 function handlePaintEllipse({ center, scale3 }) {
+  const radius3 = [...scale3];
+  if (globals.slicingMode != null && globals.slicingMode !== SlicingMode.NONE) {
+    const sliceAxis = globals.slicingMode % 3;
+    radius3[sliceAxis] = 0.25;
+  }
+
   const yStride = globals.dimensions[0];
   const zStride = globals.dimensions[0] * globals.dimensions[1];
 
-  const zmin = Math.round(Math.max(center[2] - scale3[2], 0));
+  const zmin = Math.round(Math.max(center[2] - radius3[2], 0));
   const zmax = Math.round(
-    Math.min(center[2] + scale3[2], globals.dimensions[2] - 1)
+    Math.min(center[2] + radius3[2], globals.dimensions[2] - 1)
   );
 
   for (let z = zmin; z <= zmax; z++) {
-    const dz = (center[2] - z) / scale3[2];
-    const ay = scale3[1] * Math.sqrt(1 - dz * dz);
+    const dz = (center[2] - z) / radius3[2];
+    const ay = radius3[1] * Math.sqrt(1 - dz * dz);
 
     const ymin = Math.round(Math.max(center[1] - ay, 0));
     const ymax = Math.round(
@@ -58,8 +64,8 @@ function handlePaintEllipse({ center, scale3 }) {
     );
 
     for (let y = ymin; y <= ymax; y++) {
-      const dy = (center[1] - y) / scale3[1];
-      const ax = scale3[0] * Math.sqrt(1 - dy * dy - dz * dz);
+      const dy = (center[1] - y) / radius3[1];
+      const ax = radius3[0] * Math.sqrt(1 - dy * dy - dz * dz);
 
       const xmin = Math.round(Math.max(center[0] - ax, 0));
       const xmax = Math.round(
@@ -78,23 +84,6 @@ function handlePaintEllipse({ center, scale3 }) {
 function handlePaint({ point, radius }) {
   if (!globals.prevPoint) {
     globals.prevPoint = point;
-  }
-
-  if (
-    globals.slicingMode === SlicingMode.X ||
-    globals.slicingMode === SlicingMode.I
-  ) {
-    radius[0] = 0.25;
-  } else if (
-    globals.slicingMode === SlicingMode.Y ||
-    globals.slicingMode === SlicingMode.J
-  ) {
-    radius[1] = 0.25;
-  } else if (
-    globals.slicingMode === SlicingMode.Z ||
-    globals.slicingMode === SlicingMode.K
-  ) {
-    radius[2] = 0.25;
   }
 
   // DDA params
