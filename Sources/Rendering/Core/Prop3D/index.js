@@ -87,7 +87,7 @@ function vtkProp3D(publicAPI, model) {
       y === model.orientation[1] &&
       z === model.orientation[2]
     ) {
-      return;
+      return false;
     }
     model.orientation = [x, y, z];
     mat4.identity(model.rotation);
@@ -95,6 +95,7 @@ function vtkProp3D(publicAPI, model) {
     publicAPI.rotateX(x);
     publicAPI.rotateY(y);
     publicAPI.modified();
+    return true;
   };
 
   publicAPI.setUserMatrix = (matrix) => {
