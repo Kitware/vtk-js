@@ -81,6 +81,23 @@ function vtkProp3D(publicAPI, model) {
     publicAPI.modified();
   };
 
+  publicAPI.setOrientation = (x, y, z) => {
+    if (
+      x === model.orientation[0] &&
+      y === model.orientation[1] &&
+      z === model.orientation[2]
+    ) {
+      return false;
+    }
+    model.orientation = [x, y, z];
+    mat4.identity(model.rotation);
+    publicAPI.rotateZ(z);
+    publicAPI.rotateX(x);
+    publicAPI.rotateY(y);
+    publicAPI.modified();
+    return true;
+  };
+
   publicAPI.setUserMatrix = (matrix) => {
     mat4.copy(model.userMatrix, matrix);
     publicAPI.modified();
@@ -170,12 +187,8 @@ export function extend(publicAPI, model, initialValues = {}) {
 
   // Build VTK API
   macro.get(publicAPI, model, ['bounds', 'isIdentity']);
-  macro.setGetArray(
-    publicAPI,
-    model,
-    ['origin', 'position', 'orientation', 'scale'],
-    3
-  );
+  macro.getArray(publicAPI, model, ['orientation']);
+  macro.setGetArray(publicAPI, model, ['origin', 'position', 'scale'], 3);
 
   // Object internal instance
   model.matrix = mat4.create();
