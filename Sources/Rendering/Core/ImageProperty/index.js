@@ -60,8 +60,14 @@ function vtkImageProperty(publicAPI, model) {
 
   // Set the piecewise function
   publicAPI.setPiecewiseFunction = (index, func) => {
-    if (model.componentData[index].piecewiseFunction !== func) {
-      model.componentData[index].piecewiseFunction = func;
+    let idx = index;
+    let transferFunc = func;
+    if (!Number.isInteger(index)) {
+      transferFunc = index;
+      idx = 0;
+    }
+    if (model.componentData[idx].piecewiseFunction !== transferFunc) {
+      model.componentData[idx].piecewiseFunction = transferFunc;
       publicAPI.modified();
       return true;
     }

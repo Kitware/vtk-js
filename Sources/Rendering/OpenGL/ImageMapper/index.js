@@ -28,21 +28,10 @@ const { SlicingMode } = Constants;
 // ----------------------------------------------------------------------------
 
 function computeFnToString(property, fn, numberOfComponents) {
-  let pwfun = fn.apply(property);
+  const pwfun = fn.apply(property);
   if (pwfun) {
     const iComps = property.getIndependentComponents();
-    let pwfunToString = `${property.getMTime()}-${iComps}-0-${pwfun.getMTime()}`;
-    if (iComps) {
-      for (let c = 1; c < numberOfComponents; c++) {
-        pwfun = fn.apply(property, [c]);
-        if (pwfun) {
-          pwfunToString += `-${c}-${pwfun.getMTime()}`;
-        } else {
-          pwfunToString += `-${c}-none`;
-        }
-      }
-    }
-    return pwfunToString;
+    return `${property.getMTime()}-${iComps}-${numberOfComponents}`;
   }
   return '0';
 }
@@ -742,20 +731,19 @@ function vtkOpenGLImageMapper(publicAPI, model) {
           pwfun = actorProperty.getPiecewiseFunction(c);
           if (pwfun === null) {
             // Piecewise constant max if no function supplied for this component
-            pwfFloatTable.fill(255.0);
+            pwfFloatTable.fill(1.0);
           } else {
             const pwfRange = pwfun.getRange();
             pwfun.getTable(pwfRange[0], pwfRange[1], pwfWidth, tmpTable, 1);
             // adjust for sample distance etc
             if (iComps) {
               for (let i = 0; i < pwfWidth; i++) {
-                pwfFloatTable[c * pwfWidth * 2 + i] = 255.0 * tmpTable[i];
-                pwfFloatTable[c * pwfWidth * 2 + i + pwfWidth] =
-                  255.0 * tmpTable[i];
+                pwfFloatTable[c * pwfWidth * 2 + i] = tmpTable[i];
+                pwfFloatTable[c * pwfWidth * 2 + i + pwfWidth] = tmpTable[i];
               }
             } else {
               for (let i = 0; i < pwfWidth; i++) {
-                pwfFloatTable[c * pwfWidth * 2 + i] = 255.0 * tmpTable[i];
+                pwfFloatTable[c * pwfWidth * 2 + i] = tmpTable[i];
               }
             }
           }
