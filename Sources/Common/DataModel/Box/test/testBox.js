@@ -80,3 +80,47 @@ test('Test vtkBox evaluateFunction', (t) => {
 
   t.end();
 });
+
+test('Test vtkBox intersectPlane', (t) => {
+  const bounds = [-1, 1, -1, 1, -1, 1];
+  const origin = [];
+  const normal = [];
+
+  // Origin inside
+  origin[0] = 0;
+  origin[1] = 0;
+  origin[2] = 0;
+
+  normal[0] = 1;
+  normal[1] = 1;
+  normal[2] = 1;
+
+  const res1 = vtkBox.intersectPlane(bounds, origin, normal);
+  t.equal(res1, 1);
+
+  // origin outside,parallel with nearest plane
+  origin[0] = -2;
+  origin[1] = 0;
+  origin[2] = 0;
+
+  normal[0] = -1;
+  normal[1] = 0;
+  normal[2] = 0;
+
+  const res2 = vtkBox.intersectPlane(bounds, origin, normal);
+  t.equal(res2, 0);
+
+  // origin outside, not parallel with nearest plane
+  origin[0] = -2;
+  origin[1] = 0;
+  origin[2] = 0;
+
+  normal[0] = 0;
+  normal[1] = 1;
+  normal[2] = 0;
+
+  const res3 = vtkBox.intersectPlane(bounds, origin, normal);
+  t.equal(res3, 1);
+
+  t.end();
+});

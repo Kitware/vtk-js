@@ -1,5 +1,6 @@
 import macro from 'vtk.js/Sources/macro';
 import vtkBoundingBox from 'vtk.js/Sources/Common/DataModel/BoundingBox';
+import vtkPlane from 'vtk.js/Sources/Common/DataModel/Plane';
 
 // ----------------------------------------------------------------------------
 // Global methods
@@ -82,12 +83,45 @@ function intersectBox(bounds, origin, dir, coord, tolerance) {
   return 1;
 }
 
+// Plane intersection with box
+// The plane is infinite in extent and defined by an origin and normal.The function indicates
+// whether the plane intersects, not the particulars of intersection points and such
+// The function returns non-zero if the plane and box intersect; zero otherwise.
+function intersectPlane(bounds, origin, normal) {
+  const p = [];
+  let d = 0;
+  let sign = 1;
+  let firstOne = 1;
+
+  // Evaluate the eight points. If there is a sign change, there is an intersection
+  for (let z = 4; z <= 5; ++z) {
+    p[2] = bounds[z];
+    for (let y = 2; y <= 3; ++y) {
+      p[1] = bounds[y];
+      for (let x = 0; x <= 1; ++x) {
+        p[0] = bounds[x];
+        d = vtkPlane.evaluate(normal, origin, p);
+        if (firstOne) {
+          sign = d >= 0 ? 1 : -1;
+          firstOne = 0;
+        }
+        if (d === 0.0 || (sign > 0 && d < 0.0) || (sign < 0 && d > 0.0)) {
+          return 1;
+        }
+      }
+    }
+  }
+
+  return 0; // no intersection
+}
+
 // ----------------------------------------------------------------------------
 // Static API
 // ----------------------------------------------------------------------------
 
 export const STATIC = {
   intersectBox,
+  intersectPlane,
 };
 
 // ----------------------------------------------------------------------------
