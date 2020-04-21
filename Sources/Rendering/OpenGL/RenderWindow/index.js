@@ -72,11 +72,19 @@ function vtkOpenGLRenderWindow(publicAPI, model) {
   model.classHierarchy.push('vtkOpenGLRenderWindow');
 
   // Auto update style
+  const previousSize = [0, 0];
   function updateWindow() {
     // Canvas size
     if (model.renderable) {
-      model.canvas.setAttribute('width', model.size[0]);
-      model.canvas.setAttribute('height', model.size[1]);
+      if (
+        model.size[0] !== previousSize[0] ||
+        model.size[1] !== previousSize[1]
+      ) {
+        previousSize[0] = model.size[0];
+        previousSize[1] = model.size[1];
+        model.canvas.setAttribute('width', model.size[0]);
+        model.canvas.setAttribute('height', model.size[1]);
+      }
     }
 
     // ImageStream size
