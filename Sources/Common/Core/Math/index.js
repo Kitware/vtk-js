@@ -2108,6 +2108,36 @@ export function float2CssRGBA(rgbArray) {
   )}, ${floatToChar(rgbArray[2] || 0)}, ${rgbArray[3] || 0})`;
 }
 
+export function rotateVector(vectorToBeRotated, axis, angle) {
+  const v = [...vectorToBeRotated];
+  const l = [...axis];
+
+  normalize(v);
+  normalize(l);
+
+  const u = Math.sin(angle);
+  const w = 1.0 - Math.cos(angle);
+
+  const rotatedVector = [0, 0, 0];
+
+  rotatedVector[0] =
+    v[0] * (1 - w * (l[2] * l[2] + l[1] * l[1])) +
+    v[1] * (-u * l[2] + w * l[0] * l[1]) +
+    v[2] * (u * l[1] + w * l[0] * l[1]);
+
+  rotatedVector[1] =
+    v[0] * (u * l[2] + w * l[0] * l[1]) +
+    v[1] * (1 - w * (l[0] * l[0] + l[2] * l[2])) +
+    v[2] * (-u * l[0] + w * l[1] * l[2]);
+
+  rotatedVector[2] =
+    v[0] * (-u * l[1] + w * l[0] * l[2]) +
+    v[1] * (u * l[0] + w * l[1] * l[2]) +
+    v[2] * (1 - w * (l[1] * l[1] + l[0] * l[0]));
+
+  return rotatedVector;
+}
+
 // ----------------------------------------------------------------------------
 // Only Static API
 // ----------------------------------------------------------------------------
@@ -2216,4 +2246,5 @@ export default {
   floatToHex2,
   floatRGB2HexCode,
   float2CssRGBA,
+  rotateVector,
 };
