@@ -12,6 +12,9 @@ import vtkLineWidget from './LineWidget';
 import vtkOrientationMarkerWidget from './OrientationMarkerWidget';
 import vtkPiecewiseGaussianWidget from './PiecewiseGaussianWidget';
 import vtkPointPlacer from './PointPlacer';
+import vtkResliceCursor from './ResliceCursor/ResliceCursor';
+import vtkResliceCursorLineRepresentation from './ResliceCursor/ResliceCursorLineRepresentation';
+import vtkResliceCursorWidget from './ResliceCursor/ResliceCursorWidget';
 import vtkSphereHandleRepresentation from './SphereHandleRepresentation';
 import vtkWidgetRepresentation from './WidgetRepresentation';
 
@@ -30,6 +33,9 @@ export default {
   vtkOrientationMarkerWidget,
   vtkPiecewiseGaussianWidget,
   vtkPointPlacer,
+  vtkResliceCursor,
+  vtkResliceCursorLineRepresentation,
+  vtkResliceCursorWidget,
   vtkSphereHandleRepresentation,
   vtkWidgetRepresentation,
 };
