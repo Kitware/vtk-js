@@ -81,7 +81,7 @@ function vtkShaderProgram(publicAPI, model) {
   };
 
   publicAPI.bind = () => {
-    if (!model.linked && !model.link()) {
+    if (!model.linked && !publicAPI.link()) {
       return false;
     }
 

@@ -313,10 +313,12 @@ function vtkOpenGLTexture(publicAPI, model) {
 
   //----------------------------------------------------------------------------
   publicAPI.getInternalFormat = (vtktype, numComps) => {
-    model.internalFormat = publicAPI.getDefaultInternalFormat(
-      vtktype,
-      numComps
-    );
+    if (!model.internalFormat) {
+      model.internalFormat = publicAPI.getDefaultInternalFormat(
+        vtktype,
+        numComps
+      );
+    }
 
     if (!model.internalFormat) {
       vtkDebugMacro(
@@ -360,7 +362,7 @@ function vtkOpenGLTexture(publicAPI, model) {
 
   //----------------------------------------------------------------------------
   publicAPI.setInternalFormat = (iFormat) => {
-    if (iFormat !== model.context.InternalFormat) {
+    if (iFormat !== model.internalFormat) {
       model.internalFormat = iFormat;
       publicAPI.modified();
     }
@@ -813,7 +815,15 @@ function vtkOpenGLTexture(publicAPI, model) {
     // Now determine the texture parameters using the arguments.
     publicAPI.getOpenGLDataType(dataType);
     model.format = model.context.DEPTH_COMPONENT;
-    model.internalFormat = model.context.DEPTH_COMPONENT;
+    if (model.openGLRenderWindow.getWebgl2()) {
+      if (dataType === VtkDataTypes.FLOAT) {
+        model.internalFormat = model.context.DEPTH_COMPONENT32F;
+      } else {
+        model.internalFormat = model.context.DEPTH_COMPONENT16;
+      }
+    } else {
+      model.internalFormat = model.context.DEPTH_COMPONENT;
+    }
 
     if (!model.internalFormat || !model.format || !model.openGLDataType) {
       vtkErrorMacro('Failed to determine texture parameters.');
