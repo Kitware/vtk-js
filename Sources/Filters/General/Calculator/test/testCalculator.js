@@ -77,10 +77,7 @@ test('Test vtkCalculator execution', (t) => {
     'Output point-scalars array exists.'
   );
   t.equal(
-    output
-      .getPointData()
-      .getScalars()
-      .getName(),
+    output.getPointData().getScalars().getName(),
     'sine wave',
     'Output point-scalars is "sine wave".'
   );
@@ -88,10 +85,7 @@ test('Test vtkCalculator execution', (t) => {
     output.getFieldData().getArray('global'),
     'Output field-data array exists.'
   );
-  const uniform = output
-    .getFieldData()
-    .getArray('global')
-    .getData();
+  const uniform = output.getFieldData().getArray('global').getData();
   t.ok(
     Math.abs(uniform[0] - 22.55) < 1e-6,
     `The uniform result variable should be 22.55; got ${uniform[0]}.`

@@ -127,9 +127,7 @@ function convertItkToVtkImage(itkImage, options = {}) {
       break;
     default:
       vtkErrorMacro(
-        `Cannot handle unexpected ITK.js pixel type ${
-          itkImage.imageType.pixelType
-        }`
+        `Cannot handle unexpected ITK.js pixel type ${itkImage.imageType.pixelType}`
       );
       return null;
   }

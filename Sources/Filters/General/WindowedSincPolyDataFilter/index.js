@@ -334,7 +334,7 @@ function vtkWindowedSincPolyDataFilter(publicAPI, model) {
       // for (let i = 0; i < numPts; ++i) {
       //   newPts[zero].setPoint(i, inPts.subarray(i));
       // }
-      const copy = new window[(newPts[zero].getDataType())](inPtsData);
+      const copy = new window[newPts[zero].getDataType()](inPtsData);
       newPts[zero].setData(copy, 3);
     } else {
       // center the data and scale to be within unit cube [-1, 1]

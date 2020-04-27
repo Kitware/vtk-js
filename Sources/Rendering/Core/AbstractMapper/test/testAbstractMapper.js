@@ -7,7 +7,11 @@ test('Test vtkAbstractMapper publicAPI', (t) => {
   const mapper = vtkMapper.newInstance();
   t.equal(mapper.getClippingPlanes().length, 0);
 
-  const normals = [[1.0, 0.0, 0.0], [0.0, 1.0, 0.0], [0.0, 0.0, 1.0]];
+  const normals = [
+    [1.0, 0.0, 0.0],
+    [0.0, 1.0, 0.0],
+    [0.0, 0.0, 1.0],
+  ];
 
   const plane = vtkPlane.newInstance({ normal: normals[0] });
   mapper.addClippingPlane(plane);

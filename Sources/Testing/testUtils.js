@@ -21,9 +21,7 @@ function compareImages(
 
     if (minDelta >= threshold) {
       tapeContext.fail(
-        `new image <img src="${image}" /> vs baseline <img src="${
-          baselines[0]
-        }" /> === <img src="${minDiff}" />`
+        `new image <img src="${image}" /> vs baseline <img src="${baselines[0]}" /> === <img src="${minDiff}" />`
       );
     }
 

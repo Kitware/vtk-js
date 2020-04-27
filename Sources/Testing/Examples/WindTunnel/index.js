@@ -124,8 +124,8 @@ function onClick(event) {
   const mappingIndex = 'xyz'.indexOf(dataModel.wind.direction[0]);
   const delta = dataModel.wind.direction[1] === '+' ? 1 : -1;
   const focalPoint = camera.getFocalPoint();
-  const position = focalPoint.map(
-    (v, i) => (i === mappingIndex ? v + delta : v)
+  const position = focalPoint.map((v, i) =>
+    i === mappingIndex ? v + delta : v
   );
   const viewUp = [0, 0, 0];
   viewUp['xyz'.indexOf(dataModel.wind.orientation[0])] =

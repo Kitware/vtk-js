@@ -16,10 +16,7 @@ export default function widgetBehavior(publicAPI, model) {
   // --------------------------------------------------------------------------
 
   publicAPI.getPoints = () =>
-    model.representations[1]
-      .getOutputData()
-      .getPoints()
-      .getData();
+    model.representations[1].getOutputData().getPoints().getData();
 
   // --------------------------------------------------------------------------
 

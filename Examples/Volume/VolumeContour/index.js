@@ -40,10 +40,7 @@ reader
   .setUrl(`${__BASE_PATH__}/data/volume/headsq.vti`, { loadData: true })
   .then(() => {
     const data = reader.getOutputData();
-    const dataRange = data
-      .getPointData()
-      .getScalars()
-      .getRange();
+    const dataRange = data.getPointData().getScalars().getRange();
     const firstIsoValue = (dataRange[0] + dataRange[1]) / 3;
 
     const el = document.querySelector('.isoValue');

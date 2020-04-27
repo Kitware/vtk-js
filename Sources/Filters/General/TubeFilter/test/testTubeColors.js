@@ -92,17 +92,11 @@ test('Test vtkTubeFilter colorMapping', (t) => {
     'Make sure the output number of points is correct without capping.'
   );
   t.ok(
-    tubeOutput
-      .getPointData()
-      .getArrayByName('Radius')
-      .getData().length === 80,
+    tubeOutput.getPointData().getArrayByName('Radius').getData().length === 80,
     'Make sure the length of the radius array is correct.'
   );
   t.ok(
-    tubeOutput
-      .getPointData()
-      .getArrayByName('Colors')
-      .getData().length === 240,
+    tubeOutput.getPointData().getArrayByName('Colors').getData().length === 240,
     'Make sure the length of the color array is correct.'
   );
   const tubeMapper = vtkMapper.newInstance();

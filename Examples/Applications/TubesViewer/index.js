@@ -264,10 +264,7 @@ function createPipeline(fileName, fileContents) {
   });
   const actor = vtkActor.newInstance();
   const tubeActor = vtkActor.newInstance();
-  const scalars = tubeFilter
-    .getOutputData()
-    .getPointData()
-    .getScalars();
+  const scalars = tubeFilter.getOutputData().getPointData().getScalars();
   const dataRange = [].concat(scalars ? scalars.getRange() : [0, 1]);
 
   // --------------------------------------------------------------------
@@ -560,9 +557,7 @@ export function initLocalFileLoader(container) {
   }
 
   const fileContainer = document.createElement('div');
-  fileContainer.innerHTML = `<div class="${
-    style.bigFileDrop
-  }"/><input type="file" multiple accept=".vtp" style="display: none;"/>`;
+  fileContainer.innerHTML = `<div class="${style.bigFileDrop}"/><input type="file" multiple accept=".vtp" style="display: none;"/>`;
   myContainer.appendChild(fileContainer);
 
   const fileInput = fileContainer.querySelector('input');

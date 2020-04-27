@@ -518,7 +518,11 @@ export function multiply3x3_vect3(mat_3x3, in_3, out_3) {
 }
 
 export function multiply3x3_mat3(a_3x3, b_3x3, out_3x3) {
-  const tmp = [[0, 0, 0], [0, 0, 0], [0, 0, 0]];
+  const tmp = [
+    [0, 0, 0],
+    [0, 0, 0],
+    [0, 0, 0],
+  ];
 
   for (let i = 0; i < 3; i++) {
     tmp[0][i] =
@@ -848,7 +852,12 @@ export function jacobiN(a, n, w, v) {
 }
 
 export function matrix3x3ToQuaternion(mat_3x3, quat_4) {
-  const tmp = [[0, 0, 0, 0], [0, 0, 0, 0], [0, 0, 0, 0], [0, 0, 0, 0]];
+  const tmp = [
+    [0, 0, 0, 0],
+    [0, 0, 0, 0],
+    [0, 0, 0, 0],
+    [0, 0, 0, 0],
+  ];
 
   // on-diagonal elements
   tmp[0][0] = mat_3x3[0][0] + mat_3x3[1][1] + mat_3x3[2][2];
@@ -865,7 +874,12 @@ export function matrix3x3ToQuaternion(mat_3x3, quat_4) {
   tmp[1][3] = tmp[3][1] = mat_3x3[0][2] + mat_3x3[2][0];
   tmp[2][3] = tmp[3][2] = mat_3x3[2][1] + mat_3x3[1][2];
 
-  const eigenvectors = [[0, 0, 0, 0], [0, 0, 0, 0], [0, 0, 0, 0], [0, 0, 0, 0]];
+  const eigenvectors = [
+    [0, 0, 0, 0],
+    [0, 0, 0, 0],
+    [0, 0, 0, 0],
+    [0, 0, 0, 0],
+  ];
   const eigenvalues = [0, 0, 0, 0];
 
   // convert into format that JacobiN can use,

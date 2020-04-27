@@ -89,10 +89,7 @@ test('Test vtkTubeFilter execution', (t) => {
     'Make sure the output number of points is correct without capping.'
   );
   t.ok(
-    tubeOutput1
-      .getPointData()
-      .getNormals()
-      .getNumberOfTuples() === 12,
+    tubeOutput1.getPointData().getNormals().getNumberOfTuples() === 12,
     'Make sure the output number of normals is correct without capping.'
   );
 
@@ -112,10 +109,7 @@ test('Test vtkTubeFilter execution', (t) => {
     'Make sure the output number of points is correct with capping.'
   );
   t.ok(
-    tubeOutput2
-      .getPointData()
-      .getNormals()
-      .getNumberOfTuples() === 24,
+    tubeOutput2.getPointData().getNormals().getNumberOfTuples() === 24,
     'Make sure the output number of normals is correct with capping.'
   );
   t.end();

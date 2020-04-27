@@ -372,10 +372,10 @@ export default function widgetBehavior(publicAPI, model) {
   };
 
   /*
-  * If the widget has the focus, this method reset the widget
-  * to it's state just after it grabbed the focus. Otherwise
-  * it resets the widget to its state before it grabbed the focus. 
-  */
+   * If the widget has the focus, this method reset the widget
+   * to it's state just after it grabbed the focus. Otherwise
+   * it resets the widget to its state before it grabbed the focus.
+   */
   publicAPI.reset = () => {
     if (!model.hasFocus) {
       model.point1Handle.setVisible(false);

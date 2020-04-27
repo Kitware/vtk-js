@@ -57,9 +57,7 @@ cornerAnnotation.updateTemplates({
     return `<b>Resolution: </b> ${meta.resolution}`;
   },
   se(meta) {
-    return `<span style="font-size: 50%"><i style="color: red;">mtime:</i>${
-      meta.mtime
-    }</span><br/>Annotation Corner`;
+    return `<span style="font-size: 50%"><i style="color: red;">mtime:</i>${meta.mtime}</span><br/>Annotation Corner`;
   },
 });
 

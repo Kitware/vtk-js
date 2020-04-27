@@ -189,10 +189,7 @@ function vtkPicker(publicAPI, model) {
     // multiplying by the tolerance.
     viewport = renderer.getViewport();
     if (renderer.getRenderWindow()) {
-      winSize = renderer
-        .getRenderWindow()
-        .getViews()[0]
-        .getSize();
+      winSize = renderer.getRenderWindow().getViews()[0].getSize();
     }
     x = winSize[0] * viewport[0];
     y = winSize[1] * viewport[1];

@@ -10,7 +10,12 @@ const { vtkErrorMacro, VOID, EVENT_ABORT } = macro;
 const { TOTAL_NUM_HANDLES, WidgetState, CropWidgetEvents } = Constants;
 
 // Determines the ordering of edge handles for some fixed axis
-const EDGE_ORDER = [[0, 0], [0, 1], [1, 0], [1, 1]];
+const EDGE_ORDER = [
+  [0, 0],
+  [0, 1],
+  [1, 0],
+  [1, 1],
+];
 
 // ----------------------------------------------------------------------------
 // vtkImageCroppingRegionsWidget methods

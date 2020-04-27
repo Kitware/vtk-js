@@ -228,9 +228,7 @@ function vtkLabelRepresentation(publicAPI, model) {
         model.context.strokeStyle = currentLabelStyle.strokeColor;
         model.context.lineWidth = currentLabelStyle.strokeSize;
         model.context.fillStyle = currentLabelStyle.fontColor;
-        model.context.font = `${currentLabelStyle.fontStyle} ${
-          currentLabelStyle.fontSize
-        }px ${currentLabelStyle.fontFamily}`;
+        model.context.font = `${currentLabelStyle.fontStyle} ${currentLabelStyle.fontSize}px ${currentLabelStyle.fontFamily}`;
 
         // Update canvas dimensions
         const x = padding;

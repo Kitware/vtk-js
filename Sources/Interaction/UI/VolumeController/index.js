@@ -137,15 +137,11 @@ function vtkVolumeController(publicAPI, model) {
       <div class="${style.line} js-toggle">
         <div class="${style.sliderEntry}">
           <div class="${style.sliderIcon}">${svgSpacing}</div>
-          <input type="range" min="0" max="1" value="0.4" step="0.01" class="${
-            style.slider
-          } js-spacing" />
+          <input type="range" min="0" max="1" value="0.4" step="0.01" class="${style.slider} js-spacing" />
         </div>
         <div class="${style.sliderEntry}">
           <div class="${style.sliderIcon}">${svgEdge}</div>
-          <input type="range" min="0" max="1" value="0.2" step="0.01" class="${
-            style.slider
-          } js-edge" />
+          <input type="range" min="0" max="1" value="0.2" step="0.01" class="${style.slider} js-edge" />
         </div>
       </div>
       <div class="${style.piecewiseEditor} js-pwf js-toggle"></div>

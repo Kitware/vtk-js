@@ -52,7 +52,12 @@ test('Test vtkPiecewiseFunctionProxy', (t) => {
   const pwfProxy = vtkPiecewiseFunctionProxy.newInstance();
   const pwf = pwfProxy.getPiecewiseFunction();
 
-  const points = [[-30, 0], [20, 0.3], [50, 0.5], [80, 1.0]];
+  const points = [
+    [-30, 0],
+    [20, 0.3],
+    [50, 0.5],
+    [80, 1.0],
+  ];
   // adds midpoint=0.5, sharpness=0
   const expected = points.map((p) => [].concat(p, [0.5, 0]));
 

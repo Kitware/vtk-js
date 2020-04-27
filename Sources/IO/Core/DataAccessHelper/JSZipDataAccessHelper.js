@@ -8,10 +8,7 @@ import { DataTypeByteSize } from 'vtk.js/Sources/Common/Core/DataArray/Constants
 const { vtkErrorMacro, vtkDebugMacro } = macro;
 
 function toMimeType(url) {
-  const ext = url
-    .split('.')
-    .pop()
-    .toLowerCase();
+  const ext = url.split('.').pop().toLowerCase();
   if (ext === 'jpg') {
     return 'jpeg';
   }
@@ -50,11 +47,7 @@ function handleUint8Array(array, compression, done) {
 
     if (array.values.length !== array.size) {
       vtkErrorMacro(
-        `Error in FetchArray: ${
-          array.name
-        } does not have the proper array size. Got ${
-          array.values.length
-        }, instead of ${array.size}`
+        `Error in FetchArray: ${array.name} does not have the proper array size. Got ${array.values.length}, instead of ${array.size}`
       );
     }
 
@@ -148,10 +141,7 @@ function create(createOptions) {
           doneCleanUp
         );
 
-        zipRoot
-          .file(url)
-          .async(asyncType)
-          .then(asyncCallback);
+        zipRoot.file(url).async(asyncType).then(asyncCallback);
       });
     },
 

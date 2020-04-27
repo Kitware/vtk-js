@@ -125,7 +125,11 @@ function vtkImageMapper(publicAPI, model) {
   publicAPI.getSlicingModeNormal = () => {
     const out = [0, 0, 0];
     const a = publicAPI.getInputData().getDirection();
-    const mat3 = [[a[0], a[1], a[2]], [a[3], a[4], a[5]], [a[6], a[7], a[8]]];
+    const mat3 = [
+      [a[0], a[1], a[2]],
+      [a[3], a[4], a[5]],
+      [a[6], a[7], a[8]],
+    ];
 
     switch (model.slicingMode) {
       case SlicingMode.X:
@@ -184,7 +188,11 @@ function vtkImageMapper(publicAPI, model) {
     // that its inverse is equal to its transpose. We therefore need to apply two
     // transpositions resulting in a no-op.
     const a = publicAPI.getInputData().getDirection();
-    const mat3 = [[a[0], a[1], a[2]], [a[3], a[4], a[5]], [a[6], a[7], a[8]]];
+    const mat3 = [
+      [a[0], a[1], a[2]],
+      [a[3], a[4], a[5]],
+      [a[6], a[7], a[8]],
+    ];
     vtkMath.multiply3x3_vect3(mat3, inVec3, out);
 
     let maxAbs = 0.0;

@@ -71,15 +71,17 @@ function processDataSet(
 
   fieldDataLocations.forEach((location) => {
     if (dataset[location]) {
-      dataset[location].arrays.map((i) => i.data).forEach((array) => {
-        model.arrays.push({
-          name: array.name,
-          enable,
-          location,
-          array,
-          registration: array.ref.registration || 'addArray',
+      dataset[location].arrays
+        .map((i) => i.data)
+        .forEach((array) => {
+          model.arrays.push({
+            name: array.name,
+            enable,
+            location,
+            array,
+            registration: array.ref.registration || 'addArray',
+          });
         });
-      });
 
       // Reset data arrays
       dataset[location].arrays = [];

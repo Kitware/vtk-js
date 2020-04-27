@@ -179,10 +179,7 @@ function vtkResliceCursorRepresentation(publicAPI, model) {
     }
 
     // Calculate appropriate pixel spacing for the reslicing
-    const spacing = publicAPI
-      .getResliceCursor()
-      .getImage()
-      .getSpacing();
+    const spacing = publicAPI.getResliceCursor().getImage().getSpacing();
 
     const plane = publicAPI
       .getResliceCursor()
@@ -393,10 +390,7 @@ function vtkResliceCursorRepresentation(publicAPI, model) {
     if (!publicAPI.getResliceCursor()) {
       return;
     }
-    const bounds = publicAPI
-      .getResliceCursor()
-      .getImage()
-      .getBounds();
+    const bounds = publicAPI.getResliceCursor().getImage().getBounds();
 
     const absT1 = t1.map((val) => Math.abs(val));
     const absT2 = t2.map((val) => Math.abs(val));

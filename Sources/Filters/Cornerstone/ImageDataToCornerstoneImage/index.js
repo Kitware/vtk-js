@@ -41,7 +41,7 @@ function vtkImageDataToCornerstoneImage(publicAPI, model) {
     } else {
       const offset =
         model.sliceIndex * dims[0] * dims[1] * rawData.BYTES_PER_ELEMENT;
-      pixelData = new macro.TYPED_ARRAYS[(scalars.getDataType())](
+      pixelData = new macro.TYPED_ARRAYS[scalars.getDataType()](
         rawData.buffer,
         offset,
         dims[0] * dims[1]

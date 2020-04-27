@@ -86,11 +86,7 @@ function fetchArray(instance = {}, baseURL, array, options = {}) {
 
             if (array.values.length !== array.size) {
               vtkErrorMacro(
-                `Error in FetchArray: ${
-                  array.name
-                }, does not have the proper array size. Got ${
-                  array.values.length
-                }, instead of ${array.size}`
+                `Error in FetchArray: ${array.name}, does not have the proper array size. Got ${array.values.length}, instead of ${array.size}`
               );
             }
 

@@ -108,14 +108,10 @@ function vtkImageSlice(publicAPI, model) {
       model.bounds[0] = model.bounds[2] = model.bounds[4] = Number.MAX_VALUE;
       model.bounds[1] = model.bounds[3] = model.bounds[5] = -Number.MAX_VALUE;
       /* eslint-enable no-multi-assign */
-      model.bounds = model.bounds.map(
-        (d, i) =>
-          i % 2 === 0
-            ? bbox.reduce((a, b) => (a > b[i / 2] ? b[i / 2] : a), d)
-            : bbox.reduce(
-                (a, b) => (a < b[(i - 1) / 2] ? b[(i - 1) / 2] : a),
-                d
-              )
+      model.bounds = model.bounds.map((d, i) =>
+        i % 2 === 0
+          ? bbox.reduce((a, b) => (a > b[i / 2] ? b[i / 2] : a), d)
+          : bbox.reduce((a, b) => (a < b[(i - 1) / 2] ? b[(i - 1) / 2] : a), d)
       );
       model.boundsMTime.modified();
     }
@@ -158,11 +154,10 @@ function vtkImageSlice(publicAPI, model) {
       Number.MAX_VALUE,
       -Number.MAX_VALUE,
     ];
-    newBounds = newBounds.map(
-      (d, i) =>
-        i % 2 === 0
-          ? bbox.reduce((a, b) => (a > b[i / 2] ? b[i / 2] : a), d)
-          : bbox.reduce((a, b) => (a < b[(i - 1) / 2] ? b[(i - 1) / 2] : a), d)
+    newBounds = newBounds.map((d, i) =>
+      i % 2 === 0
+        ? bbox.reduce((a, b) => (a > b[i / 2] ? b[i / 2] : a), d)
+        : bbox.reduce((a, b) => (a < b[(i - 1) / 2] ? b[(i - 1) / 2] : a), d)
     );
     return newBounds;
   };

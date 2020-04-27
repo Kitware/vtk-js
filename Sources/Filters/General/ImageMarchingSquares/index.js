@@ -147,10 +147,7 @@ function vtkImageMarchingSquares(publicAPI, model) {
     const origin = input.getOrigin();
     const spacing = input.getSpacing();
     const dims = input.getDimensions();
-    const s = input
-      .getPointData()
-      .getScalars()
-      .getData();
+    const s = input.getPointData().getScalars().getData();
 
     // Points - dynamic array
     const pBuffer = [];

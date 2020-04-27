@@ -365,9 +365,7 @@ export function initLocalFileLoader(container) {
   }
 
   const fileContainer = document.createElement('div');
-  fileContainer.innerHTML = `<div class="${
-    style.bigFileDrop
-  }"/><input type="file" accept=".skybox,.zip" style="display: none;"/>`;
+  fileContainer.innerHTML = `<div class="${style.bigFileDrop}"/><input type="file" accept=".skybox,.zip" style="display: none;"/>`;
   myContainer.appendChild(fileContainer);
 
   const fileInput = fileContainer.querySelector('input');

@@ -462,9 +462,7 @@ export function initLocalFileLoader(container) {
   }
 
   const fileContainer = document.createElement('div');
-  fileContainer.innerHTML = `<div class="${
-    style.bigFileDrop
-  }"/><input type="file" multiple accept=".vtp" style="display: none;"/>`;
+  fileContainer.innerHTML = `<div class="${style.bigFileDrop}"/><input type="file" multiple accept=".vtp" style="display: none;"/>`;
   myContainer.appendChild(fileContainer);
 
   const fileInput = fileContainer.querySelector('input');

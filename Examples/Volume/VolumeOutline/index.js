@@ -86,10 +86,7 @@ function createLabelPipeline(backgroundImageData) {
 
 function fillBlobForThreshold(imageData, backgroundImageData) {
   const dims = imageData.getDimensions();
-  const values = imageData
-    .getPointData()
-    .getScalars()
-    .getData();
+  const values = imageData.getPointData().getScalars().getData();
 
   const backgroundValues = backgroundImageData
     .getPointData()
@@ -119,10 +116,7 @@ function fillBlobForThreshold(imageData, backgroundImageData) {
     }
   }
 
-  imageData
-    .getPointData()
-    .getScalars()
-    .setData(values);
+  imageData.getPointData().getScalars().setData(values);
 }
 
 const reader = vtkHttpDataSetReader.newInstance({
