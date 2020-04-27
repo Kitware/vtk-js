@@ -75,7 +75,7 @@ function vtkCellPicker(publicAPI, model) {
   // Set our className
   model.classHierarchy.push('vtkCellPicker');
 
-  const superClass = Object.assign({}, publicAPI);
+  const superClass = { ...publicAPI };
 
   function resetCellPickerInfo() {
     model.cellId = -1;
@@ -412,4 +412,4 @@ export const newInstance = macro.newInstance(extend, 'vtkCellPicker');
 
 // ----------------------------------------------------------------------------
 
-export default Object.assign({ newInstance, extend }, STATIC);
+export default { newInstance, extend, ...STATIC };

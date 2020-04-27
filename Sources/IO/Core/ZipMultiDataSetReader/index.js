@@ -2,7 +2,6 @@ import JSZip from 'jszip';
 
 import DataAccessHelper from 'vtk.js/Sources/IO/Core/DataAccessHelper';
 import macro from 'vtk.js/Sources/macro';
-import vtkSerializer from 'vtk.js/Sources/IO/Core/Serializer';
 
 // ----------------------------------------------------------------------------
 // vtkAppendPolyData methods
@@ -119,4 +118,4 @@ export const newInstance = macro.newInstance(
 
 // ----------------------------------------------------------------------------
 
-export default Object.assign({ newInstance, extend });
+export default { newInstance, extend };

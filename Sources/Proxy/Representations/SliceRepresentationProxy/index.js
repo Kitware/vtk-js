@@ -234,17 +234,15 @@ function vtkSliceRepresentationProxy(publicAPI, model) {
       dynamicAddOn.ijkOrientation = ijkOrientation.join('');
     }
 
-    return Object.assign(
-      {
-        ijkMode,
-        sliceBounds,
-        sliceIndex,
-        sliceNormal,
-        sliceOrigin,
-        slicePosition,
-      },
-      dynamicAddOn
-    );
+    return {
+      ijkMode,
+      sliceBounds,
+      sliceIndex,
+      sliceNormal,
+      sliceOrigin,
+      slicePosition,
+      ...dynamicAddOn,
+    };
   };
 
   // Used for UI

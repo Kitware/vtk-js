@@ -252,4 +252,4 @@ export function extend(publicAPI, model, initialValues = {}) {
 export const newInstance = macro.newInstance(extend, 'vtkFramebuffer');
 
 // ----------------------------------------------------------------------------
-export default Object.assign({ newInstance, extend });
+export default { newInstance, extend };

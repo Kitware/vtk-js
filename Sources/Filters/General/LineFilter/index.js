@@ -47,4 +47,4 @@ export const newInstance = macro.newInstance(extend, 'vtkLineFilter');
 
 // ----------------------------------------------------------------------------
 
-export default Object.assign({ newInstance, extend });
+export default { newInstance, extend };

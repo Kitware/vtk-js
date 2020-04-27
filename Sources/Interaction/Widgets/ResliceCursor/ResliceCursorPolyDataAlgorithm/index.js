@@ -10,7 +10,7 @@ function vtkResliceCursorPolyDataAlgorithm(publicAPI, model) {
   // Set our className
   model.classHierarchy.push('vtkResliceCursorPolyDataAlgorithm');
 
-  const superClass = Object.assign({}, publicAPI);
+  const superClass = { ...publicAPI };
 
   publicAPI.setReslicePlaneNormalToXAxis = () => {
     publicAPI.setReslicePlaneNormal(PlaneNormal.XAxis);

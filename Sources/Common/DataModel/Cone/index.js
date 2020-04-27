@@ -57,4 +57,4 @@ export const newInstance = macro.newInstance(extend, 'vtkCone');
 
 // ----------------------------------------------------------------------------
 
-export default Object.assign({ newInstance, extend });
+export default { newInstance, extend };

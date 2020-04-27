@@ -20,7 +20,7 @@ function vtkImplicitBoolean(publicAPI, model) {
   model.classHierarchy.push('vtkImplicitBoolean');
 
   // Capture "parentClass" api for internal use
-  const superClass = Object.assign({}, publicAPI);
+  const superClass = { ...publicAPI };
 
   publicAPI.getMTime = () => {
     let mTime = superClass.getMTime();
@@ -146,4 +146,4 @@ export const newInstance = macro.newInstance(extend, 'vtkImplicitBoolean');
 
 // ----------------------------------------------------------------------------
 
-export default Object.assign({ newInstance, extend }, Constants);
+export default { newInstance, extend, ...Constants };

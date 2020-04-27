@@ -11,7 +11,7 @@ function vtkDistanceRepresentation(publicAPI, model) {
   // Set our className
   model.classHierarchy.push('vtkDistanceRepresentation');
 
-  const superClass = Object.assign({}, publicAPI);
+  const superClass = { ...publicAPI };
 
   publicAPI.setRenderer = (renderer) => {
     model.labelRepresentation.setRenderer(renderer);

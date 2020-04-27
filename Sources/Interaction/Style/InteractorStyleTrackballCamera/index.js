@@ -455,4 +455,4 @@ export const newInstance = macro.newInstance(
 
 // ----------------------------------------------------------------------------
 
-export default Object.assign({ newInstance, extend });
+export default { newInstance, extend };

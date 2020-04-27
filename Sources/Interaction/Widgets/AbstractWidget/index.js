@@ -8,7 +8,7 @@ import vtkInteractorObserver from 'vtk.js/Sources/Rendering/Core/InteractorObser
 function vtkAbstractWidget(publicAPI, model) {
   // Set our className
   model.classHierarchy.push('vtkAbstractWidget');
-  const superClass = Object.assign({}, publicAPI);
+  const superClass = { ...publicAPI };
 
   //----------------------------------------------------------------------------
   // Public API methods

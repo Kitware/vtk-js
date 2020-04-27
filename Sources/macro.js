@@ -284,9 +284,7 @@ export function obj(publicAPI = {}, model = {}) {
 
   // Add serialization support
   publicAPI.getState = () => {
-    const jsonArchive = Object.assign({}, model, {
-      vtkClass: publicAPI.getClassName(),
-    });
+    const jsonArchive = { ...model, vtkClass: publicAPI.getClassName() };
 
     // Convert every vtkObject to its serializable form
     Object.keys(jsonArchive).forEach((keyName) => {
@@ -1091,7 +1089,7 @@ export function proxy(publicAPI, model) {
     if (prop) {
       Object.assign(prop, propUI);
     } else {
-      propertyMap[propertyName] = Object.assign({}, propUI);
+      propertyMap[propertyName] = { ...propUI };
     }
   };
 

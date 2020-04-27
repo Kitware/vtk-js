@@ -15,7 +15,7 @@ function vtkPicker(publicAPI, model) {
   // Set our className
   model.classHierarchy.push('vtkPicker');
 
-  const superClass = Object.assign({}, publicAPI);
+  const superClass = { ...publicAPI };
 
   function initialize() {
     superClass.initialize();

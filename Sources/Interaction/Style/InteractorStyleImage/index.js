@@ -301,4 +301,4 @@ export const newInstance = macro.newInstance(extend, 'vtkInteractorStyleImage');
 
 // ----------------------------------------------------------------------------
 
-export default Object.assign({ newInstance, extend });
+export default { newInstance, extend };

@@ -74,4 +74,4 @@ export const newInstance = macro.newInstance(extend, 'vtkArraySerializer');
 
 // ----------------------------------------------------------------------------
 
-export default Object.assign({ newInstance, extend });
+export default { newInstance, extend };

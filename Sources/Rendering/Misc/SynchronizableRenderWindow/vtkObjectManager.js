@@ -395,7 +395,7 @@ function colorTransferFunctionUpdater(instance, state, context) {
   const nodes = state.properties.nodes.map(
     ([x, r, g, b, midpoint, sharpness]) => ({ x, r, g, b, midpoint, sharpness })
   );
-  instance.set(Object.assign({}, state.properties, { nodes }), true);
+  instance.set({ ...state.properties, nodes }, true);
   instance.sortAndUpdateRange();
   instance.modified();
   context.end(); // -> end(colorTransferFunctionUpdater)
@@ -409,7 +409,7 @@ function piecewiseFunctionUpdater(instance, state, context) {
     midpoint,
     sharpness,
   }));
-  instance.set(Object.assign({}, state.properties, { nodes }), true);
+  instance.set({ ...state.properties, nodes }, true);
   instance.sortAndUpdateRange();
   instance.modified();
   context.end(); // -> end(piecewiseFunctionUpdater)

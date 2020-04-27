@@ -5,7 +5,7 @@ import vtkBoundingBox from 'vtk.js/Sources/Common/DataModel/BoundingBox';
 export default function widgetBehavior(publicAPI, model) {
   // We inherit shapeBehavior
   shapeBehavior(publicAPI, model);
-  const superClass = Object.assign({}, publicAPI);
+  const superClass = { ...publicAPI };
 
   model.classHierarchy.push('vtkEllipseWidgetProp');
 

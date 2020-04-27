@@ -897,4 +897,4 @@ export const newInstance = macro.newInstance(extend, 'vtkTubeFilter');
 
 // ----------------------------------------------------------------------------
 
-export default Object.assign({ newInstance, extend });
+export default { newInstance, extend };

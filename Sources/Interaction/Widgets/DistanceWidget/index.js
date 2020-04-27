@@ -11,7 +11,7 @@ function vtkDistanceWidget(publicAPI, model) {
   // Set our className
   model.classHierarchy.push('vtkDistanceWidget');
 
-  const superClass = Object.assign({}, publicAPI);
+  const superClass = { ...publicAPI };
 
   publicAPI.setInteractor = (i) => {
     superClass.setInteractor(i);

@@ -28,7 +28,7 @@ function makeBoundsFromPoints(point1, point2) {
 export default function widgetBehavior(publicAPI, model) {
   model.classHierarchy.push('vtkShapeWidgetProp');
 
-  const superClass = Object.assign({}, publicAPI);
+  const superClass = { ...publicAPI };
 
   // --------------------------------------------------------------------------
   // Display 2D

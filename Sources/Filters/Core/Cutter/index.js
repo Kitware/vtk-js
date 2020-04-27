@@ -12,7 +12,7 @@ function vtkCutter(publicAPI, model) {
   model.classHierarchy.push('vtkCutter');
 
   // Capture "parentClass" api for internal use
-  const superClass = Object.assign({}, publicAPI);
+  const superClass = { ...publicAPI };
 
   publicAPI.getMTime = () => {
     let mTime = superClass.getMTime();

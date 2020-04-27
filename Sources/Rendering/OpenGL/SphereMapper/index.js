@@ -23,7 +23,7 @@ function vtkOpenGLSphereMapper(publicAPI, model) {
   model.classHierarchy.push('vtkOpenGLSphereMapper');
 
   // Capture 'parentClass' api for internal use
-  const superClass = Object.assign({}, publicAPI);
+  const superClass = { ...publicAPI };
 
   publicAPI.getShaderTemplate = (shaders, ren, actor) => {
     shaders.Vertex = vtkSphereMapperVS;

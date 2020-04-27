@@ -508,4 +508,4 @@ export const newInstance = macro.newInstance(extend, 'vtkBoundingBox');
 
 // ----------------------------------------------------------------------------
 
-export default Object.assign({ newInstance, extend }, STATIC);
+export default { newInstance, extend, ...STATIC };

@@ -21,9 +21,7 @@ function applyPointsToPiecewiseFunction(points, range, pwf) {
 
 function applyNodesToPiecewiseFunction(nodes, range, pwf) {
   const width = range[1] - range[0];
-  const rescaled = nodes.map((n) =>
-    Object.assign({}, n, { x: n.x * width + range[0] })
-  );
+  const rescaled = nodes.map((n) => ({ ...n, x: n.x * width + range[0] }));
 
   pwf.setNodes(rescaled);
 }

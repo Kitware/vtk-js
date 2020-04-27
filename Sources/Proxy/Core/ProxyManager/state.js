@@ -128,7 +128,7 @@ export default function addStateAPI(publicAPI, model) {
             proxyMapping[id].setDisableAnimation(false);
           });
 
-          resolve(Object.assign({}, state.userData, { $oldToNewIdMapping }));
+          resolve({ ...state.userData, $oldToNewIdMapping });
         })
         .catch(reject);
     });

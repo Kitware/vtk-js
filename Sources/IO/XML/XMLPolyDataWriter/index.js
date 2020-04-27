@@ -18,7 +18,7 @@ function vtkXMLPolyDataWriter(publicAPI, model) {
   model.classHierarchy.push('vtkXMLPolyDataWriter');
 
   // Capture "parentClass" api for internal use
-  const superClass = Object.assign({}, publicAPI);
+  const superClass = { ...publicAPI };
 
   function camelize(str) {
     return str

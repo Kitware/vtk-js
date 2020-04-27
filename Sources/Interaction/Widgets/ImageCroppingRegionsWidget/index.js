@@ -74,7 +74,7 @@ function vtkImageCroppingRegionsWidget(publicAPI, model) {
     }
   };
 
-  publicAPI.getWidgetState = () => Object.assign({}, model.widgetState);
+  publicAPI.getWidgetState = () => ({ ...model.widgetState });
 
   publicAPI.updateWidgetState = (state) => {
     const needsUpdate = Object.keys(state).reduce(
@@ -84,7 +84,7 @@ function vtkImageCroppingRegionsWidget(publicAPI, model) {
 
     if (needsUpdate) {
       const oldState = model.widgetState;
-      model.widgetState = Object.assign({}, oldState, state);
+      model.widgetState = { ...oldState, ...state };
 
       if (!arrayEquals(oldState.planes, model.widgetState.planes)) {
         // invalidate handles cache

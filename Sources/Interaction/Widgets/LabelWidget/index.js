@@ -12,7 +12,7 @@ function vtkLabelWidget(publicAPI, model) {
   // // Set our className
   model.classHierarchy.push('vtkLabelWidget');
 
-  const superClass = Object.assign({}, publicAPI);
+  const superClass = { ...publicAPI };
 
   publicAPI.createDefaultRepresentation = () => {
     if (!model.widgetRep) {

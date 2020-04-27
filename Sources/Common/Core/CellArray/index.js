@@ -99,4 +99,4 @@ export const newInstance = macro.newInstance(extend, 'vtkCellArray');
 
 // ----------------------------------------------------------------------------
 
-export default Object.assign({ newInstance, extend }, STATIC);
+export default { newInstance, extend, ...STATIC };

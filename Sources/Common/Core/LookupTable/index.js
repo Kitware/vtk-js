@@ -397,4 +397,4 @@ export const newInstance = macro.newInstance(extend, 'vtkLookupTable');
 
 // ----------------------------------------------------------------------------
 
-export default Object.assign({ newInstance, extend });
+export default { newInstance, extend };

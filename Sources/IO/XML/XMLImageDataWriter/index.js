@@ -14,7 +14,7 @@ function vtkXMLImageDataWriter(publicAPI, model) {
   model.classHierarchy.push('vtkXMLImageDataWriter');
 
   // Capture "parentClass" api for internal use
-  const superClass = Object.assign({}, publicAPI);
+  const superClass = { ...publicAPI };
 
   publicAPI.create = (dataObject) => {
     const parent = superClass.create(dataObject);

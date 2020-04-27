@@ -13,7 +13,7 @@ function vtkSampleFunction(publicAPI, model) {
   model.classHierarchy.push('vtkSampleFunction');
 
   // Capture "parentClass" api for internal use
-  const superClass = Object.assign({}, publicAPI);
+  const superClass = { ...publicAPI };
 
   publicAPI.getMTime = () => {
     if (!(model.implicitFunction && model.implicitFunction.getMTime)) {

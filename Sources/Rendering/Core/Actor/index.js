@@ -14,7 +14,7 @@ function vtkActor(publicAPI, model) {
   model.classHierarchy.push('vtkActor');
 
   // Capture 'parentClass' api for internal use
-  const superClass = Object.assign({}, publicAPI);
+  const superClass = { ...publicAPI };
 
   publicAPI.getActors = () => publicAPI;
 

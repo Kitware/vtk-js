@@ -39,7 +39,7 @@ function vtkInteractorObserver(publicAPI, model) {
   // Set our className
   model.classHierarchy.push('vtkInteractorObserver');
 
-  const superClass = Object.assign({}, publicAPI);
+  const superClass = { ...publicAPI };
 
   //----------------------------------------------------------------------------
   function unsubscribeFromEvents() {
@@ -182,4 +182,4 @@ export const newInstance = macro.newInstance(extend, 'vtkInteractorObserver');
 
 // ----------------------------------------------------------------------------
 
-export default Object.assign({ newInstance, extend }, STATIC);
+export default { newInstance, extend, ...STATIC };

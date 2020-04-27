@@ -25,12 +25,12 @@ function vtkAnnotatedCubeActor(publicAPI, model) {
   model.classHierarchy.push('vtkAnnotatedCubeActor');
 
   // Make sure face properties are not references to the default value
-  model.xPlusFaceProperty = Object.assign({}, model.xPlusFaceProperty);
-  model.xMinusFaceProperty = Object.assign({}, model.xMinusFaceProperty);
-  model.yPlusFaceProperty = Object.assign({}, model.yPlusFaceProperty);
-  model.yMinusFaceProperty = Object.assign({}, model.yMinusFaceProperty);
-  model.zPlusFaceProperty = Object.assign({}, model.zPlusFaceProperty);
-  model.zMinusFaceProperty = Object.assign({}, model.zMinusFaceProperty);
+  model.xPlusFaceProperty = { ...model.xPlusFaceProperty };
+  model.xMinusFaceProperty = { ...model.xMinusFaceProperty };
+  model.yPlusFaceProperty = { ...model.yPlusFaceProperty };
+  model.yMinusFaceProperty = { ...model.yMinusFaceProperty };
+  model.zPlusFaceProperty = { ...model.zPlusFaceProperty };
+  model.zMinusFaceProperty = { ...model.zMinusFaceProperty };
 
   // private variables
 
@@ -48,11 +48,10 @@ function vtkAnnotatedCubeActor(publicAPI, model) {
       Object.assign(model[`${faceName}FaceProperty`], newProp);
     }
 
-    const prop = Object.assign(
-      {},
-      model.defaultStyle,
-      model[`${faceName}FaceProperty`]
-    );
+    const prop = {
+      ...model.defaultStyle,
+      ...model[`${faceName}FaceProperty`],
+    };
 
     // set canvas resolution
     canvas.width = prop.resolution;
@@ -114,7 +113,7 @@ function vtkAnnotatedCubeActor(publicAPI, model) {
   // public methods
 
   publicAPI.setDefaultStyle = (style) => {
-    model.defaultStyle = Object.assign({}, model.defaultStyle, style);
+    model.defaultStyle = { ...model.defaultStyle, ...style };
     updateAllFaceTextures();
   };
 

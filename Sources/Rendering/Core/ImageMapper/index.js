@@ -481,9 +481,10 @@ export const newInstance = macro.newInstance(extend, 'vtkImageMapper');
 
 // ----------------------------------------------------------------------------
 
-export default Object.assign(
-  { newInstance, extend },
-  staticOffsetAPI,
-  otherStaticMethods,
-  Constants
-);
+export default {
+  newInstance,
+  extend,
+  ...staticOffsetAPI,
+  ...otherStaticMethods,
+  ...Constants,
+};
