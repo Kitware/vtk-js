@@ -478,7 +478,11 @@ export function extend(publicAPI, model, initialValues = {}) {
   model.newResliceAxes = mat4.create();
   model.imageActor = vtkImageSlice.newInstance();
   model.imageMapper = vtkImageMapper.newInstance();
-
+  model.imageMapper.setResolveCoincidentTopologyToPolygonOffset();
+  model.imageMapper.setRelativeCoincidentTopologyPolygonOffsetParameters(
+    1.0,
+    1.0
+  );
   model.planeInitialized = false;
 
   macro.setGet(publicAPI, model, [

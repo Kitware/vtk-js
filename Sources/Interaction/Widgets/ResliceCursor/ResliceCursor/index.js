@@ -118,6 +118,10 @@ function vtkResliceCursor(publicAPI, model) {
     vtkMath.cross(normals[0], normals[1], model.zAxis);
     vtkMath.cross(normals[1], normals[2], model.xAxis);
     vtkMath.cross(normals[2], normals[0], model.yAxis);
+
+    vtkMath.normalize(model.xAxis);
+    vtkMath.normalize(model.yAxis);
+    vtkMath.normalize(model.zAxis);
   };
 
   // Reset cursor to its initial position
