@@ -9,7 +9,7 @@ before_install:
 addons:
   chrome: stable
 node_js:
-  - '8'
+  - '10'
 install:
   - npm ci
 notifications:

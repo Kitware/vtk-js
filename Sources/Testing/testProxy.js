@@ -98,9 +98,10 @@ test('Proxy activation via .activate()', (t) => {
 
   proxyManager.onModified(() => {
     t.pass('Proxy manager should be modified after proxy activation');
-    t.end();
   });
 
   proxy.activate();
   t.equal(proxyManager.getActiveSource(), proxy, 'Active source set');
+
+  t.end();
 });
