@@ -3,7 +3,7 @@ trigger:
 
 jobs:
 
-- job: 'BuildTest'
+- job: 'BuildTestLinux'
   displayName: 'Build and test'
 
   strategy:
@@ -47,8 +47,8 @@ jobs:
       testRunner: JUnit
       testResultsFiles: 'Utilities/TestResults/TESTS-*.xml'
 
-- job: 'Build'
-  displayName: 'Build'
+- job: 'BuildTestMacOS'
+  displayName: 'Build and test'
 
   strategy:
     matrix:
@@ -64,6 +64,29 @@ jobs:
         poolName: 'Hosted macOS'
         imageName: 'macos-10.13'
         nodeVersion: '12'
+
+  pool:
+    name: '$(poolName)'
+    imageName: '$(imageName)'
+
+  steps:
+  - task: NodeTool@0
+    inputs:
+      versionSpec: '$(nodeVersion).x'
+    displayName: 'Install Node.js'
+
+  - script: |
+      brew install pkg-config pixman cairo pango fribidi
+      npm i -g npm@6.4.1
+      npm ci
+      npm run build:release
+    displayName: 'Build'
+
+- job: 'BuildTestWindows'
+  displayName: 'Build and test'
+
+  strategy:
+    matrix:
       WindowsNode8:
         poolName: 'Hosted VS2017'
         imageName: 'vs2017-win2016'
