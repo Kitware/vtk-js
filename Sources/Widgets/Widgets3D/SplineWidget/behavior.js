@@ -272,11 +272,14 @@ export default function widgetBehavior(publicAPI, model) {
     if (
       !model.activeState ||
       !model.activeState.getActive() ||
-      !model.pickable
+      !model.pickable ||
+      !model.manipulator
     ) {
       return macro.VOID;
     }
 
+    model.manipulator.setOrigin(model.activeState.getOrigin());
+    model.manipulator.setNormal(model.camera.getDirectionOfProjection());
     const worldCoords = model.manipulator.handleEvent(
       callData,
       model.openGLRenderWindow
@@ -290,9 +293,6 @@ export default function widgetBehavior(publicAPI, model) {
       model.moveHandle.setVisible(true);
       model.openGLRenderWindow.setCursor(model.defaultCursor);
     }
-
-    model.manipulator.setOrigin(worldCoords);
-    model.manipulator.setNormal(model.camera.getDirectionOfProjection());
 
     if (model.lastHandle) {
       model.lastHandle.setVisible(true);
