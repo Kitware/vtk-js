@@ -147,7 +147,7 @@ function vtkColorTransferFunction(publicAPI, model) {
 
   //----------------------------------------------------------------------------
   // Add a point defined in RGB
-  publicAPI.addRGBPointLong = (x, r, g, b, midpoint, sharpness) => {
+  publicAPI.addRGBPointLong = (x, r, g, b, midpoint = 0.5, sharpness = 0.0) => {
     // Error check
     if (midpoint < 0.0 || midpoint > 1.0) {
       vtkErrorMacro('Midpoint outside range [0.0, 1.0]');
@@ -196,7 +196,7 @@ function vtkColorTransferFunction(publicAPI, model) {
 
   //----------------------------------------------------------------------------
   // Add a point defined in HSV
-  publicAPI.addHSVPointLong = (x, h, s, v, midpoint, sharpness) => {
+  publicAPI.addHSVPointLong = (x, h, s, v, midpoint = 0.5, sharpness = 0.0) => {
     const rgb = [];
     const hsv = [h, s, v];
 
