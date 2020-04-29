@@ -41,14 +41,6 @@ export default function widgetBehavior(publicAPI, model) {
   // Public methods
   // --------------------------------------------------------------------------
 
-  publicAPI.setSlicingMode = (slicingMode) => {
-    publicAPI.reset();
-    const direction = [0, 0, 0];
-    direction[slicingMode % 3] = 1;
-    model.shapeHandle.setDirection(direction);
-    model.manipulator.setNormal(direction);
-  };
-
   publicAPI.setModifierBehavior = (behavior) => {
     Object.assign(model.modifierBehavior, behavior);
   };
@@ -410,6 +402,14 @@ export default function widgetBehavior(publicAPI, model) {
 
   publicAPI.handleMouseMove = (callData) => {
     if (model.manipulator) {
+      const direction = model.camera.getDirectionOfProjection();
+      model.shapeHandle.setDirection(direction);
+      model.manipulator.setNormal(direction);
+
+      if (model.activeState) {
+        model.manipulator.setOrigin(model.activeState.getOrigin());
+      }
+
       const worldCoords = model.manipulator.handleEvent(
         callData,
         model.openGLRenderWindow

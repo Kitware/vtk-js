@@ -319,10 +319,6 @@ reader
         widgets.circleWidget.getManipulator().setOrigin(position);
         widgets.circleWidget.getManipulator().setNormal(normal);
 
-        scene.rectangleHandle.setSlicingMode(slicingMode);
-        scene.ellipseHandle.setSlicingMode(slicingMode);
-        scene.circleHandle.setSlicingMode(slicingMode);
-
         scene.rectangleHandle.updateRepresentationForRender();
         scene.ellipseHandle.updateRepresentationForRender();
         scene.circleHandle.updateRepresentationForRender();
@@ -348,6 +344,13 @@ readyAll();
 // UI logic
 // ----------------------------------------------------------------------------
 
+function resetWidgets() {
+  scene.rectangleHandle.reset();
+  scene.ellipseHandle.reset();
+  scene.circleHandle.reset();
+  scene.widgetManager.grabFocus(widgets[activeWidget]);
+}
+
 document.querySelector('.slice').addEventListener('input', (ev) => {
   image.imageMapper.setSlice(Number(ev.target.value));
 });
@@ -355,14 +358,8 @@ document.querySelector('.slice').addEventListener('input', (ev) => {
 document.querySelector('.axis').addEventListener('input', (ev) => {
   const sliceMode = 'IJKXYZ'.indexOf(ev.target.value) % 3;
   image.imageMapper.setSlicingMode(sliceMode);
-
-  const direction = [0, 0, 0];
-  direction[sliceMode] = 1;
-  scene.rectangleHandle.setSlicingMode(sliceMode);
-  scene.ellipseHandle.setSlicingMode(sliceMode);
-  scene.circleHandle.setSlicingMode(sliceMode);
-
   setCamera(sliceMode, scene.renderer, image.data);
+  resetWidgets();
   scene.renderWindow.render();
 });
 
@@ -372,10 +369,7 @@ document.querySelector('.widget').addEventListener('input', (ev) => {
 });
 
 document.querySelector('.reset').addEventListener('click', () => {
-  scene.rectangleHandle.reset();
-  scene.ellipseHandle.reset();
-  scene.circleHandle.reset();
-  scene.widgetManager.grabFocus(widgets[activeWidget]);
+  resetWidgets();
   scene.renderWindow.render();
 });
 
