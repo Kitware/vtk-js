@@ -2,6 +2,8 @@ import vtkActor from 'vtk.js/Sources/Rendering/Core/Actor';
 import vtkCamera from 'vtk.js/Sources/Rendering/Core/Camera';
 import vtkColorTransferFunction from 'vtk.js/Sources/Rendering/Core/ColorTransferFunction';
 import vtkDataArray from 'vtk.js/Sources/Common/Core/DataArray';
+import vtkPoints from 'vtk.js/Sources/Common/Core/Points';
+import vtkCellArray from 'vtk.js/Sources/Common/Core/CellArray';
 import vtkGlyph3DMapper from 'vtk.js/Sources/Rendering/Core/Glyph3DMapper';
 import vtkLight from 'vtk.js/Sources/Rendering/Core/Light';
 import vtkLookupTable from 'vtk.js/Sources/Common/Core/LookupTable';
@@ -12,6 +14,13 @@ import vtkProperty from 'vtk.js/Sources/Rendering/Core/Property';
 import vtkRenderer from 'vtk.js/Sources/Rendering/Core/Renderer';
 import vtkRenderWindow from 'vtk.js/Sources/Rendering/Core/RenderWindow';
 import vtkTexture from 'vtk.js/Sources/Rendering/Core/Texture';
+import vtkVolume from 'vtk.js/Sources/Rendering/Core/Volume';
+import vtkVolumeMapper from 'vtk.js/Sources/Rendering/Core/VolumeMapper';
+import vtkVolumeProperty from 'vtk.js/Sources/Rendering/Core/VolumeProperty';
+import vtkImageSlice from 'vtk.js/Sources/Rendering/Core/ImageSlice';
+import vtkImageMapper from 'vtk.js/Sources/Rendering/Core/ImageMapper';
+import vtkImageProperty from 'vtk.js/Sources/Rendering/Core/ImageProperty';
+import vtkPiecewiseFunction from 'vtk.js/Sources/Common/DataModel/PiecewiseFunction';
 
 // ----------------------------------------------------------------------------
 // Some internal, module-level variables and methods
@@ -23,6 +32,11 @@ const WRAP_ID = (id) => `instance:$\{${id}}`;
 const ONE_TIME_INSTANCE_TRACKERS = {};
 const SKIPPED_INSTANCE_IDS = [];
 const EXCLUDE_INSTANCE_MAP = {};
+const DATA_ARRAY_MAPPER = {
+  vtkPoints,
+  vtkCellArray,
+  vtkDataArray,
+};
 
 function extractCallArgs(synchronizerContext, argList) {
   return argList.map((arg) => {
@@ -133,6 +147,22 @@ function notSkippedInstance(call) {
   return keep;
 }
 
+function validateDataset(
+  instance,
+  context,
+  arraysToBind,
+  arraysToBingTargetSize
+) {
+  if (arraysToBind.length === arraysToBingTargetSize) {
+    while (arraysToBind.length) {
+      const [fn, args] = arraysToBind.shift();
+      fn(...args);
+    }
+    instance.modified();
+    context.end();
+  }
+}
+
 // ----------------------------------------------------------------------------
 // Updater functions
 // ----------------------------------------------------------------------------
@@ -172,7 +202,37 @@ function genericUpdater(instance, state, context) {
     });
   }
 
-  context.end();
+  // if some arrays need to be be fetch
+  if (state.arrays) {
+    const arraysToBind = [];
+    const nbArrayToDownload = state.arrays.length;
+
+    state.arrays.forEach((arrayMetadata) => {
+      context
+        .getArray(arrayMetadata.hash, arrayMetadata.dataType, context)
+        .then(
+          (values) => {
+            const vtkClass = arrayMetadata.vtkClass
+              ? arrayMetadata.vtkClass
+              : 'vtkDataArray';
+            const array = DATA_ARRAY_MAPPER[vtkClass].newInstance(
+              Object.assign({ values }, arrayMetadata)
+            );
+            const regMethod = arrayMetadata.registration
+              ? arrayMetadata.registration
+              : 'addArray';
+            const location = arrayMetadata.location
+              ? instance.get(arrayMetadata.location)[arrayMetadata.location]
+              : instance;
+            arraysToBind.push([location[regMethod], [array]]);
+            validateDataset(instance, context, arraysToBind, nbArrayToDownload);
+          },
+          (error) => {
+            console.log('error fetching array', error);
+          }
+        );
+    });
+  } else context.end();
 }
 
 // ----------------------------------------------------------------------------
@@ -301,6 +361,20 @@ function colorTransferFunctionUpdater(instance, state, context) {
   context.end();
 }
 
+function piecewiseFunctionUpdater(instance, state, context) {
+  context.start();
+  const nodes = state.properties.nodes.map(([x, y, midpoint, sharpness]) => ({
+    x,
+    y,
+    midpoint,
+    sharpness,
+  }));
+  instance.set(Object.assign({}, state.properties, { nodes }), true);
+  instance.sortAndUpdateRange();
+  instance.modified();
+  context.end();
+}
+
 // ----------------------------------------------------------------------------
 
 function createDataSetUpdate(piecesToFetch = []) {
@@ -323,18 +397,6 @@ function createDataSetUpdate(piecesToFetch = []) {
       [instance.getCellData().removeAllArrays, []],
     ];
 
-    function validateDataset() {
-      if (arraysToBind.length - 2 === nbArrayToDownload) {
-        while (arraysToBind.length) {
-          const [fn, args] = arraysToBind.shift();
-          fn(...args);
-        }
-
-        instance.modified();
-        context.end();
-      }
-    }
-
     // Fetch geometry
     piecesToFetch.forEach((arrayName) => {
       if (props[arrayName]) {
@@ -348,7 +410,12 @@ function createDataSetUpdate(piecesToFetch = []) {
                 instance.get(arrayName)[arrayName].setData,
                 [values, arrayMetadata.numberOfComponents],
               ]);
-              validateDataset();
+              validateDataset(
+                instance,
+                context,
+                arraysToBind,
+                nbArrayToDownload + 2
+              );
             },
             (error) => {
               console.log('error geometry fetching array', error);
@@ -375,7 +442,12 @@ function createDataSetUpdate(piecesToFetch = []) {
               ],
               [array],
             ]);
-            validateDataset();
+            validateDataset(
+              instance,
+              context,
+              arraysToBind,
+              nbArrayToDownload + 2
+            );
           },
           (error) => {
             console.log('error field fetching array', error);
@@ -410,7 +482,11 @@ function setTypeMapping(type, buildFn = null, updateFn = genericUpdater) {
 // ----------------------------------------------------------------------------
 
 const DEFAULT_ALIASES = {
-  vtkMapper: ['vtkOpenGLPolyDataMapper', 'vtkCompositePolyDataMapper2'],
+  vtkMapper: [
+    'vtkOpenGLPolyDataMapper',
+    'vtkCompositePolyDataMapper2',
+    'vtkDataSetMapper',
+  ],
   vtkProperty: ['vtkOpenGLProperty'],
   vtkRenderer: ['vtkOpenGLRenderer'],
   vtkCamera: ['vtkOpenGLCamera'],
@@ -418,6 +494,8 @@ const DEFAULT_ALIASES = {
   vtkActor: ['vtkOpenGLActor', 'vtkPVLODActor'],
   vtkLight: ['vtkOpenGLLight', 'vtkPVLight'],
   vtkTexture: ['vtkOpenGLTexture'],
+  vtkImageMapper: ['vtkOpenGLImageSliceMapper'],
+  vtkVolumeMapper: ['vtkFixedPointVolumeRayCastMapper'],
 };
 
 // ----------------------------------------------------------------------------
@@ -474,6 +552,34 @@ const DEFAULT_MAPPING = {
   vtkTexture: {
     build: vtkTexture.newInstance,
     update: genericUpdater,
+  },
+  vtkVolume: {
+    build: vtkVolume.newInstance,
+    update: genericUpdater,
+  },
+  vtkVolumeMapper: {
+    build: vtkVolumeMapper.newInstance,
+    update: genericUpdater,
+  },
+  vtkVolumeProperty: {
+    build: vtkVolumeProperty.newInstance,
+    update: genericUpdater,
+  },
+  vtkImageSlice: {
+    build: vtkImageSlice.newInstance,
+    update: genericUpdater,
+  },
+  vtkImageMapper: {
+    build: vtkImageMapper.newInstance,
+    update: genericUpdater,
+  },
+  vtkImageProperty: {
+    build: vtkImageProperty.newInstance,
+    update: genericUpdater,
+  },
+  vtkPiecewiseFunction: {
+    build: vtkPiecewiseFunction.newInstance,
+    update: piecewiseFunctionUpdater,
   },
 };
 
