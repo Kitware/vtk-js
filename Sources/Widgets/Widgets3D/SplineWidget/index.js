@@ -58,10 +58,6 @@ const DEFAULT_VALUES = {
   freehandMinDistance: 0.1,
   allowFreehand: true,
   resolution: 32,
-  renderPoly: {
-    key: 'Shift',
-    status: 'down',
-  },
   defaultCursor: 'pointer',
   handleSizeInPixels: 10,
 };
