@@ -1,3 +1,5 @@
+import * as macro from 'vtk.js/Sources/macro';
+
 import vtkActor from 'vtk.js/Sources/Rendering/Core/Actor';
 import vtkCamera from 'vtk.js/Sources/Rendering/Core/Camera';
 import vtkColorTransferFunction from 'vtk.js/Sources/Rendering/Core/ColorTransferFunction';
@@ -38,6 +40,8 @@ const DATA_ARRAY_MAPPER = {
   vtkDataArray,
 };
 
+// ----------------------------------------------------------------------------
+
 function extractCallArgs(synchronizerContext, argList) {
   return argList.map((arg) => {
     const m = WRAPPED_ID_RE.exec(arg);
@@ -48,12 +52,16 @@ function extractCallArgs(synchronizerContext, argList) {
   });
 }
 
+// ----------------------------------------------------------------------------
+
 function extractInstanceIds(argList) {
   return argList
     .map((arg) => WRAPPED_ID_RE.exec(arg))
     .filter((m) => m)
     .map((m) => m[1]);
 }
+
+// ----------------------------------------------------------------------------
 
 function extractDependencyIds(state, depList = []) {
   if (state.dependencies) {
@@ -63,6 +71,37 @@ function extractDependencyIds(state, depList = []) {
     });
   }
   return depList;
+}
+
+// ----------------------------------------------------------------------------
+
+function bindArrays(arraysToBind) {
+  while (arraysToBind.length) {
+    const [fn, args] = arraysToBind.shift();
+    fn(...args);
+  }
+}
+
+// ----------------------------------------------------------------------------
+
+function createNewArrayHandler(instance, arrayMetadata, arraysToBind) {
+  return (values) => {
+    const vtkClass = arrayMetadata.vtkClass
+      ? arrayMetadata.vtkClass
+      : 'vtkDataArray';
+    const array = DATA_ARRAY_MAPPER[vtkClass].newInstance({
+      ...arrayMetadata,
+      values,
+    });
+    const regMethod = arrayMetadata.registration
+      ? arrayMetadata.registration
+      : 'addArray';
+    const location = arrayMetadata.location
+      ? instance.getReferenceByName(arrayMetadata.location)
+      : instance;
+    arraysToBind.push([location[regMethod], [array]]);
+    return array;
+  };
 }
 
 // ----------------------------------------------------------------------------
@@ -81,6 +120,8 @@ function update(type, instance, props, context) {
   }
 }
 
+// ----------------------------------------------------------------------------
+
 function build(type, initialProps = {}) {
   const handler = TYPE_HANDLERS[type];
 
@@ -93,6 +134,8 @@ function build(type, initialProps = {}) {
   return null;
 }
 
+// ----------------------------------------------------------------------------
+
 function excludeInstance(type, propertyName, propertyValue) {
   EXCLUDE_INSTANCE_MAP[type] = {
     key: propertyName,
@@ -100,9 +143,13 @@ function excludeInstance(type, propertyName, propertyValue) {
   };
 }
 
+// ----------------------------------------------------------------------------
+
 function getSupportedTypes() {
   return Object.keys(TYPE_HANDLERS);
 }
+
+// ----------------------------------------------------------------------------
 
 function clearTypeMapping() {
   Object.keys(TYPE_HANDLERS).forEach((key) => {
@@ -110,15 +157,21 @@ function clearTypeMapping() {
   });
 }
 
+// ----------------------------------------------------------------------------
+
 function updateRenderWindow(instance, props, context) {
   return update('vtkRenderWindow', instance, props, context);
 }
+
+// ----------------------------------------------------------------------------
 
 function clearAllOneTimeUpdaters() {
   Object.keys(ONE_TIME_INSTANCE_TRACKERS).forEach((key) => {
     delete ONE_TIME_INSTANCE_TRACKERS[key];
   });
 }
+
+// ----------------------------------------------------------------------------
 
 function clearOneTimeUpdaters(...ids) {
   if (ids.length === 0) {
@@ -136,6 +189,8 @@ function clearOneTimeUpdaters(...ids) {
   return array;
 }
 
+// ----------------------------------------------------------------------------
+
 function notSkippedInstance(call) {
   if (call[1].length === 1) {
     return SKIPPED_INSTANCE_IDS.indexOf(call[1][0]) === -1;
@@ -147,28 +202,12 @@ function notSkippedInstance(call) {
   return keep;
 }
 
-function validateDataset(
-  instance,
-  context,
-  arraysToBind,
-  arraysToBingTargetSize
-) {
-  if (arraysToBind.length === arraysToBingTargetSize) {
-    while (arraysToBind.length) {
-      const [fn, args] = arraysToBind.shift();
-      fn(...args);
-    }
-    instance.modified();
-    context.end();
-  }
-}
-
 // ----------------------------------------------------------------------------
 // Updater functions
 // ----------------------------------------------------------------------------
 
 function genericUpdater(instance, state, context) {
-  context.start();
+  context.start(); // -> start(generic-updater)
 
   // First update our own properties
   instance.set(state.properties);
@@ -205,34 +244,35 @@ function genericUpdater(instance, state, context) {
   // if some arrays need to be be fetch
   if (state.arrays) {
     const arraysToBind = [];
-    const nbArrayToDownload = state.arrays.length;
-
-    state.arrays.forEach((arrayMetadata) => {
-      context
+    const promises = state.arrays.map((arrayMetadata) => {
+      context.start(); // -> start(arrays)
+      return context
         .getArray(arrayMetadata.hash, arrayMetadata.dataType, context)
-        .then(
-          (values) => {
-            const vtkClass = arrayMetadata.vtkClass
-              ? arrayMetadata.vtkClass
-              : 'vtkDataArray';
-            const array = DATA_ARRAY_MAPPER[vtkClass].newInstance(
-              Object.assign({ values }, arrayMetadata)
-            );
-            const regMethod = arrayMetadata.registration
-              ? arrayMetadata.registration
-              : 'addArray';
-            const location = arrayMetadata.location
-              ? instance.get(arrayMetadata.location)[arrayMetadata.location]
-              : instance;
-            arraysToBind.push([location[regMethod], [array]]);
-            validateDataset(instance, context, arraysToBind, nbArrayToDownload);
-          },
-          (error) => {
-            console.log('error fetching array', error);
-          }
-        );
+        .then(createNewArrayHandler(instance, arrayMetadata, arraysToBind))
+        .catch((error) => {
+          console.log(
+            'Error fetching array',
+            JSON.stringify(arrayMetadata),
+            error
+          );
+        })
+        .finally(context.end); // -> end(arrays)
     });
-  } else context.end();
+    context.start(); // -> start(arraysToBind)
+    Promise.all(promises)
+      .then(() => {
+        bindArrays(arraysToBind);
+      })
+      .catch((error) => {
+        console.error(
+          'Error in array handling for state',
+          JSON.stringify(state),
+          error
+        );
+      })
+      .finally(context.end); // -> end(arraysToBind)
+  }
+  context.end(); // -> end(generic-updater)
 }
 
 // ----------------------------------------------------------------------------
@@ -351,18 +391,18 @@ function vtkRenderWindowUpdater(instance, state, context) {
 // ----------------------------------------------------------------------------
 
 function colorTransferFunctionUpdater(instance, state, context) {
-  context.start();
+  context.start(); // -> start(colorTransferFunctionUpdater)
   const nodes = state.properties.nodes.map(
     ([x, r, g, b, midpoint, sharpness]) => ({ x, r, g, b, midpoint, sharpness })
   );
   instance.set(Object.assign({}, state.properties, { nodes }), true);
   instance.sortAndUpdateRange();
   instance.modified();
-  context.end();
+  context.end(); // -> end(colorTransferFunctionUpdater)
 }
 
 function piecewiseFunctionUpdater(instance, state, context) {
-  context.start();
+  context.start(); // -> start(piecewiseFunctionUpdater)
   const nodes = state.properties.nodes.map(([x, y, midpoint, sharpness]) => ({
     x,
     y,
@@ -372,88 +412,45 @@ function piecewiseFunctionUpdater(instance, state, context) {
   instance.set(Object.assign({}, state.properties, { nodes }), true);
   instance.sortAndUpdateRange();
   instance.modified();
-  context.end();
+  context.end(); // -> end(piecewiseFunctionUpdater)
 }
 
 // ----------------------------------------------------------------------------
 
 function createDataSetUpdate(piecesToFetch = []) {
   return (instance, state, context) => {
-    context.start();
+    context.start(); // -> start(dataset-update)
 
-    // Capture props to set on instance
-    const propsToSet = {};
-    Object.entries(state.properties).forEach(([key, value]) => {
-      if (piecesToFetch.indexOf(key) === -1 && key !== 'fields') {
-        propsToSet[key] = value;
-      }
-    });
-    instance.set(propsToSet);
+    // Make sure we provide container for std arrays
+    if (!state.arrays) {
+      state.arrays = [];
+    }
 
-    const props = state.properties;
-    let nbArrayToDownload = props.fields.length;
-    const arraysToBind = [
-      [instance.getPointData().removeAllArrays, []],
-      [instance.getCellData().removeAllArrays, []],
-    ];
-
-    // Fetch geometry
-    piecesToFetch.forEach((arrayName) => {
-      if (props[arrayName]) {
-        nbArrayToDownload += 1;
-        const arrayMetadata = props[arrayName];
-        context
-          .getArray(arrayMetadata.hash, arrayMetadata.dataType, context)
-          .then(
-            (values) => {
-              arraysToBind.push([
-                instance.get(arrayName)[arrayName].setData,
-                [values, arrayMetadata.numberOfComponents],
-              ]);
-              validateDataset(
-                instance,
-                context,
-                arraysToBind,
-                nbArrayToDownload + 2
-              );
-            },
-            (error) => {
-              console.log('error geometry fetching array', error);
-            }
-          );
+    // Array members
+    // => convert old format to generic state.arrays
+    piecesToFetch.forEach((key) => {
+      if (state.properties[key]) {
+        const arrayMeta = state.properties[key];
+        arrayMeta.registration = `set${macro.capitalize(key)}`;
+        state.arrays.push(arrayMeta);
+        delete state.properties[key];
       }
     });
 
-    // Fetch needed data arrays...
-    props.fields.forEach((arrayMetadata) => {
-      context
-        .getArray(arrayMetadata.hash, arrayMetadata.dataType, context)
-        .then(
-          (values) => {
-            const array = vtkDataArray.newInstance(
-              Object.assign({ values }, arrayMetadata)
-            );
-            const regMethod = arrayMetadata.registration
-              ? arrayMetadata.registration
-              : 'addArray';
-            arraysToBind.push([
-              instance.get(arrayMetadata.location)[arrayMetadata.location][
-                regMethod
-              ],
-              [array],
-            ]);
-            validateDataset(
-              instance,
-              context,
-              arraysToBind,
-              nbArrayToDownload + 2
-            );
-          },
-          (error) => {
-            console.log('error field fetching array', error);
-          }
-        );
-    });
+    // Extract dataset fields
+    const fieldsArrays = state.properties.fields || [];
+    state.arrays.push(...fieldsArrays);
+    delete state.properties.fields;
+
+    // Reset any pre-existing fields array
+    instance.getPointData().removeAllArrays();
+    instance.getCellData().removeAllArrays();
+
+    // Generic handling
+    genericUpdater(instance, state, context);
+
+    // Finish what we started
+    context.end(); // -> end(dataset-update)
   };
 }
 
