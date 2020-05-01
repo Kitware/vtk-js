@@ -63,6 +63,7 @@ import './Rendering/OpenGL/VolumeMapper/test/testCompositeParallelProjection';
 import './Rendering/OpenGL/VolumeMapper/test/testComposite16Bit';
 import './Rendering/OpenGL/VolumeMapper/test/testIntermixed';
 import './Rendering/OpenGL/VolumeMapper/test/testIntermixedImage';
+import './Rendering/OpenGL/VolumeMapper/test/testLargeScalars';
 import './Rendering/OpenGL/VolumeMapper/test/testLighting';
 import './Rendering/OpenGL/VolumeMapper/test/testMaximumIntensityProjection';
 import './Rendering/OpenGL/VolumeMapper/test/testMinimumIntensityProjection';
