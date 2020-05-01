@@ -32,7 +32,6 @@ const WRAP_ID = (id) => `instance:$\{${id}}`;
 const ONE_TIME_INSTANCE_TRACKERS = {};
 const SKIPPED_INSTANCE_IDS = [];
 const EXCLUDE_INSTANCE_MAP = {};
-const GEOMETRY_ARRAYS = ['points', 'verts', 'lines', 'polys', 'strips'];
 const DATA_ARRAY_MAPPER = {
   vtkPoints,
   vtkCellArray,
@@ -148,44 +147,20 @@ function notSkippedInstance(call) {
   return keep;
 }
 
-function fetchArrays(instance, arrays, context, arraysToBind = []) {
-  context.start();
-  const nbInitialArraysToBind = arraysToBind.length;
-  const nbArrayToDownload = arrays.length;
-  function validateDataset() {
-    if (arraysToBind.length - nbInitialArraysToBind === nbArrayToDownload) {
-      while (arraysToBind.length) {
-        const [fn, args] = arraysToBind.shift();
-        fn(...args);
-      }
-      instance.modified();
-      context.end();
+function validateDataset(
+  instance,
+  context,
+  arraysToBind,
+  arraysToBingTargetSize
+) {
+  if (arraysToBind.length === arraysToBingTargetSize) {
+    while (arraysToBind.length) {
+      const [fn, args] = arraysToBind.shift();
+      fn(...args);
     }
+    instance.modified();
+    context.end();
   }
-
-  arrays.forEach((arrayMetadata) => {
-    context.getArray(arrayMetadata.hash, arrayMetadata.dataType, context).then(
-      (values) => {
-        const vtkClass = arrayMetadata.vtkClass
-          ? arrayMetadata.vtkClass
-          : 'vtkDataArray';
-        const array = DATA_ARRAY_MAPPER[vtkClass].newInstance(
-          Object.assign({ values }, arrayMetadata)
-        );
-        const regMethod = arrayMetadata.registration
-          ? arrayMetadata.registration
-          : 'addArray';
-        const location = arrayMetadata.location
-          ? instance.get(arrayMetadata.location)[arrayMetadata.location]
-          : instance;
-        arraysToBind.push([location[regMethod], [array]]);
-        validateDataset();
-      },
-      (error) => {
-        console.log('error fetching array', error);
-      }
-    );
-  });
 }
 
 // ----------------------------------------------------------------------------
@@ -196,15 +171,7 @@ function genericUpdater(instance, state, context) {
   context.start();
 
   // First update our own properties
-  // Capture props to set on instance
-  const propsToSkip = ['fields', ...GEOMETRY_ARRAYS];
-  const propsToSet = {};
-  Object.entries(state.properties).forEach(([key, value]) => {
-    if (propsToSkip.indexOf(key) === -1) {
-      propsToSet[key] = value;
-    }
-  });
-  instance.set(propsToSet);
+  instance.set(state.properties);
 
   // Now handle dependencies
   if (state.dependencies) {
@@ -234,37 +201,38 @@ function genericUpdater(instance, state, context) {
       instance[call[0]].apply(null, extractCallArgs(context, call[1]));
     });
   }
-  context.end();
 
-  // Now handle arrays to fetch
-  const arraysToFetch = [];
-  const arraysToBind = [];
+  // if some arrays need to be be fetch
+  if (state.arrays) {
+    const arraysToBind = [];
+    const nbArrayToDownload = state.arrays.length;
 
-  // Geometry arrays need special treatment for backward compatibility
-  if (instance.isA('vtkPolyData')) {
-    arraysToBind.push(
-      [instance.getPointData().removeAllArrays, []],
-      [instance.getCellData().removeAllArrays, []]
-    );
-  }
-  GEOMETRY_ARRAYS.forEach((arrayName) => {
-    if (state.properties[arrayName]) {
-      const arrayMeta = state.properties[arrayName];
-      arrayMeta.registration = 'set'.concat(
-        `${arrayName[0].toLocaleUpperCase()}`,
-        `${arrayName.slice(1)}`
-      );
-      arraysToFetch.push(arrayMeta);
-    }
-  });
-
-  // arrays can be stored in fields of properties
-  if (state.properties.fields) arraysToFetch.push(...state.properties.fields);
-
-  // recommended location in state.arrays
-  if (state.arrays) arraysToFetch.push(...state.arrays);
-  if (arraysToFetch.length > 0)
-    fetchArrays(instance, arraysToFetch, context, arraysToBind);
+    state.arrays.forEach((arrayMetadata) => {
+      context
+        .getArray(arrayMetadata.hash, arrayMetadata.dataType, context)
+        .then(
+          (values) => {
+            const vtkClass = arrayMetadata.vtkClass
+              ? arrayMetadata.vtkClass
+              : 'vtkDataArray';
+            const array = DATA_ARRAY_MAPPER[vtkClass].newInstance(
+              Object.assign({ values }, arrayMetadata)
+            );
+            const regMethod = arrayMetadata.registration
+              ? arrayMetadata.registration
+              : 'addArray';
+            const location = arrayMetadata.location
+              ? instance.get(arrayMetadata.location)[arrayMetadata.location]
+              : instance;
+            arraysToBind.push([location[regMethod], [array]]);
+            validateDataset(instance, context, arraysToBind, nbArrayToDownload);
+          },
+          (error) => {
+            console.log('error fetching array', error);
+          }
+        );
+    });
+  } else context.end();
 }
 
 // ----------------------------------------------------------------------------
@@ -408,6 +376,97 @@ function piecewiseFunctionUpdater(instance, state, context) {
 }
 
 // ----------------------------------------------------------------------------
+
+function createDataSetUpdate(piecesToFetch = []) {
+  return (instance, state, context) => {
+    context.start();
+
+    // Capture props to set on instance
+    const propsToSet = {};
+    Object.entries(state.properties).forEach(([key, value]) => {
+      if (piecesToFetch.indexOf(key) === -1 && key !== 'fields') {
+        propsToSet[key] = value;
+      }
+    });
+    instance.set(propsToSet);
+
+    const props = state.properties;
+    let nbArrayToDownload = props.fields.length;
+    const arraysToBind = [
+      [instance.getPointData().removeAllArrays, []],
+      [instance.getCellData().removeAllArrays, []],
+    ];
+
+    // Fetch geometry
+    piecesToFetch.forEach((arrayName) => {
+      if (props[arrayName]) {
+        nbArrayToDownload += 1;
+        const arrayMetadata = props[arrayName];
+        context
+          .getArray(arrayMetadata.hash, arrayMetadata.dataType, context)
+          .then(
+            (values) => {
+              arraysToBind.push([
+                instance.get(arrayName)[arrayName].setData,
+                [values, arrayMetadata.numberOfComponents],
+              ]);
+              validateDataset(
+                instance,
+                context,
+                arraysToBind,
+                nbArrayToDownload + 2
+              );
+            },
+            (error) => {
+              console.log('error geometry fetching array', error);
+            }
+          );
+      }
+    });
+
+    // Fetch needed data arrays...
+    props.fields.forEach((arrayMetadata) => {
+      context
+        .getArray(arrayMetadata.hash, arrayMetadata.dataType, context)
+        .then(
+          (values) => {
+            const array = vtkDataArray.newInstance(
+              Object.assign({ values }, arrayMetadata)
+            );
+            const regMethod = arrayMetadata.registration
+              ? arrayMetadata.registration
+              : 'addArray';
+            arraysToBind.push([
+              instance.get(arrayMetadata.location)[arrayMetadata.location][
+                regMethod
+              ],
+              [array],
+            ]);
+            validateDataset(
+              instance,
+              context,
+              arraysToBind,
+              nbArrayToDownload + 2
+            );
+          },
+          (error) => {
+            console.log('error field fetching array', error);
+          }
+        );
+    });
+  };
+}
+
+const polydataUpdater = createDataSetUpdate([
+  'points',
+  'polys',
+  'verts',
+  'lines',
+  'strips',
+]);
+const imageDataUpdater = createDataSetUpdate([]);
+
+// ----------------------------------------------------------------------------
 // Construct the type mapping
 // ----------------------------------------------------------------------------
 
@@ -460,11 +519,11 @@ const DEFAULT_MAPPING = {
   },
   vtkPolyData: {
     build: vtkPolyData.newInstance,
-    update: genericUpdater,
+    update: polydataUpdater,
   },
   vtkImageData: {
     build: vtkImageData.newInstance,
-    update: genericUpdater,
+    update: imageDataUpdater,
   },
   vtkMapper: {
     build: vtkMapper.newInstance,
