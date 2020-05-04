@@ -82,7 +82,16 @@ function loadZipContent(zipContent, container) {
       interactor.bindEvents(container);
 
       // Load the scene
-      renderWindow.synchronize(fileContents.state);
+      renderWindow.getSynchronizerContext().onProgressEvent((count) => {
+        console.log('progress', count);
+      });
+      renderWindow.synchronize(fileContents.state).then((ok) => {
+        if (ok) {
+          console.log('Synchronization done');
+        } else {
+          console.log('Skip synchronization');
+        }
+      });
     }
 
     zip.forEach((relativePath, zipEntry) => {
