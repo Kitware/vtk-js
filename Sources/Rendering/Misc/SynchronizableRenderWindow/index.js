@@ -141,43 +141,29 @@ function createInstanceMap() {
 
 // ----------------------------------------------------------------------------
 
-function getSynchronizerContext(name = 'default') {
-  let ctx = SYNCHRONIZER_CONTEXTS[name];
-  if (!ctx) {
-    ctx = Object.assign({}, createArrayHandler(), createInstanceMap());
-    SYNCHRONIZER_CONTEXTS[name] = ctx;
-  }
-  return ctx;
-}
-
-// ----------------------------------------------------------------------------
-
-function setSynchronizerContext(name, ctx) {
-  SYNCHRONIZER_CONTEXTS[name] = ctx;
-}
-
-// ----------------------------------------------------------------------------
-// Global internal methods
-// ----------------------------------------------------------------------------
-
-function createProgressHandler(callbackWhenReady) {
+function createProgressHandler() {
   let readyCount = 0;
-
-  function start() {
-    readyCount += 1;
-  }
-
-  function end() {
-    readyCount -= 1;
-    if (readyCount === 0 && callbackWhenReady) {
-      callbackWhenReady();
-    }
-  }
-
-  return {
-    start,
-    end,
+  const publicAPI = {
+    start() {
+      readyCount += 1;
+      publicAPI.invokeProgressEvent(readyCount);
+    },
+    end() {
+      readyCount -= 1;
+      publicAPI.invokeProgressEvent(readyCount);
+      if (readyCount === 0) {
+        publicAPI.invokeProgressDone();
+      }
+    },
+    resetProgress() {
+      readyCount = 0;
+    },
   };
+  const model = {};
+  macro.event(publicAPI, model, 'progressEvent');
+  macro.event(publicAPI, model, 'progressDone');
+
+  return publicAPI;
 }
 
 // ----------------------------------------------------------------------------
@@ -212,15 +198,30 @@ function createSceneMtimeHandler() {
 
 // ----------------------------------------------------------------------------
 
+function getSynchronizerContext(name = 'default') {
+  let ctx = SYNCHRONIZER_CONTEXTS[name];
+  if (!ctx) {
+    ctx = Object.assign(
+      {},
+      createArrayHandler(),
+      createInstanceMap(),
+      createProgressHandler(),
+      createSceneMtimeHandler()
+    );
+    SYNCHRONIZER_CONTEXTS[name] = ctx;
+  }
+  return ctx;
+}
+
+// ----------------------------------------------------------------------------
+
+function setSynchronizerContext(name, ctx) {
+  SYNCHRONIZER_CONTEXTS[name] = ctx;
+}
+
+// ----------------------------------------------------------------------------
+
 function createSyncFunction(renderWindow, synchronizerContext) {
-  const progressHandler = createProgressHandler(renderWindow.render);
-  const mtimeHandler = createSceneMtimeHandler();
-  const context = Object.assign(
-    {},
-    synchronizerContext,
-    progressHandler,
-    mtimeHandler
-  );
   let lastMtime = -1;
   let gcThreshold = 100;
 
@@ -251,14 +252,24 @@ function createSyncFunction(renderWindow, synchronizerContext) {
     }
     const mtime = state.mtime || 0;
     if (getSynchronizedViewId() === state.id && lastMtime < mtime) {
-      lastMtime = mtime;
-      context.setActiveViewId(state.id);
-      context.incrementMTime();
-      vtkObjectManager.updateRenderWindow(renderWindow, state, context);
-      context.freeOldArrays(gcThreshold, context);
-      return true;
+      return new Promise((resolve, reject) => {
+        const subscription = synchronizerContext.onProgressDone(() => {
+          subscription.unsubscribe();
+          renderWindow.render();
+          resolve(true);
+        });
+        lastMtime = mtime;
+        synchronizerContext.setActiveViewId(state.id);
+        synchronizerContext.incrementMTime();
+        vtkObjectManager.updateRenderWindow(
+          renderWindow,
+          state,
+          synchronizerContext
+        );
+        synchronizerContext.freeOldArrays(gcThreshold, synchronizerContext);
+      });
     }
-    return false;
+    return Promise.resolve(false);
   }
 
   return {
@@ -288,7 +299,14 @@ function vtkSynchronizableRenderWindow(publicAPI, model) {
   const addOn = createSyncFunction(publicAPI, model.synchronizerContext);
 
   Object.keys(addOn).forEach((methodName) => {
-    publicAPI[methodName] = addOn[methodName];
+    if (publicAPI[methodName]) {
+      publicAPI[methodName] = macro.chain(
+        publicAPI[methodName],
+        addOn[methodName]
+      );
+    } else {
+      publicAPI[methodName] = addOn[methodName];
+    }
   });
 }
 
@@ -309,6 +327,7 @@ export function extend(publicAPI, model, initialValues = {}) {
 
   // Build VTK API
   vtkRenderWindow.extend(publicAPI, model);
+  macro.get(publicAPI, model, ['synchronizerContext']);
 
   // Object methods
   vtkSynchronizableRenderWindow(publicAPI, model);
@@ -327,7 +346,9 @@ export const newInstance = macro.newInstance(
 
 function decorate(renderWindow, name = 'default') {
   const addOn = createSyncFunction(renderWindow, getSynchronizerContext(name));
-  return Object.assign(addOn, renderWindow);
+  return Object.assign({}, addOn, renderWindow, {
+    delete: macro.chain(renderWindow.delete, addOn.delete),
+  });
 }
 
 // ----------------------------------------------------------------------------
@@ -340,5 +361,7 @@ export default {
   decorate,
   createInstanceMap,
   createArrayHandler,
+  createProgressHandler,
+  createSceneMtimeHandler,
   vtkObjectManager,
 };
