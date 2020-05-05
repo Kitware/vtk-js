@@ -18,4 +18,7 @@ Used internally to set the target labels. When requestData is invoked,
 `getRepresentationStates(inData[0])` can be used to retrieve the list of states
 that match the target labels.
 
+## addActor(actor)
+
+Should be used when creating an actor for the representation. It will apply widget-wide configuration such as coincident topology parameters to the mapper.
 

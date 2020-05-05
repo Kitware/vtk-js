@@ -43,7 +43,7 @@ function vtkSplineContextRepresentation(publicAPI, model) {
   model.pipelines.area.actor.setMapper(model.pipelines.area.mapper);
   model.pipelines.area.actor.getProperty().setOpacity(0.2);
   model.pipelines.area.actor.getProperty().setColor(0, 1, 0);
-  model.actors.push(model.pipelines.area.actor);
+  publicAPI.addActor(model.pipelines.area.actor);
 
   model.pipelines.border.lineFilter.setInputConnection(
     publicAPI.getOutputPort()
@@ -56,7 +56,7 @@ function vtkSplineContextRepresentation(publicAPI, model) {
   model.pipelines.border.actor.getProperty().setColor(0.1, 1, 0.1);
   model.pipelines.border.actor.setVisibility(model.outputBorder);
 
-  model.actors.push(model.pipelines.border.actor);
+  publicAPI.addActor(model.pipelines.border.actor);
 
   // --------------------------------------------------------------------------
 

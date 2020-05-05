@@ -26,7 +26,7 @@ function vtkRectangleContextRepresentation(publicAPI, model) {
   model.actor.getProperty().setOpacity(0.2);
   model.actor.getProperty().setColor(0, 1, 0);
 
-  model.actors.push(model.actor);
+  publicAPI.addActor(model.actor);
 
   // --------------------------------------------------------------------------
 

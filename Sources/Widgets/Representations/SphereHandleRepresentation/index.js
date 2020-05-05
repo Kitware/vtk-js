@@ -47,7 +47,7 @@ function vtkSphereHandleRepresentation(publicAPI, model) {
   // model.displayActor.getProperty().setOpacity(0); // don't show in 3D
   model.displayActor.setMapper(model.displayMapper);
   model.displayMapper.setInputConnection(publicAPI.getOutputPort());
-  model.actors.push(model.displayActor);
+  publicAPI.addActor(model.displayActor);
   model.alwaysVisibleActors = [model.displayActor];
 
   model.mapper = vtkGlyph3DMapper.newInstance({
@@ -65,7 +65,7 @@ function vtkSphereHandleRepresentation(publicAPI, model) {
   model.mapper.setInputConnection(model.glyph.getOutputPort(), 1);
   model.actor.setMapper(model.mapper);
 
-  model.actors.push(model.actor);
+  publicAPI.addActor(model.actor);
 
   // --------------------------------------------------------------------------
 
