@@ -157,9 +157,9 @@ function handlePaintTriangles({ triangleList }) {
         vec3.scaleAndAdd(point, point, step1, u);
         vec3.scaleAndAdd(point, point, step2, v);
 
-        point[0] = Math.floor(point[0]);
-        point[1] = Math.floor(point[1]);
-        point[2] = Math.floor(point[2]);
+        point[0] = Math.round(point[0]);
+        point[1] = Math.round(point[1]);
+        point[2] = Math.round(point[2]);
 
         if (
           point[0] >= 0 &&
