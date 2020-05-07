@@ -26,6 +26,7 @@ jobs:
     displayName: 'Install Node.js'
 
   - script: |
+      sudo apt install build-essential libcairo2-dev libpango1.0-dev libjpeg-dev libgif-dev librsvg2-dev
       npm ci
       npm run build:release
     displayName: 'Build'
@@ -47,8 +48,8 @@ jobs:
       testRunner: JUnit
       testResultsFiles: 'Utilities/TestResults/TESTS-*.xml'
 
-- job: 'BuildTestMacOS'
-  displayName: 'Build and test'
+- job: 'BuildMacOS'
+  displayName: 'Build'
 
   strategy:
     matrix:
@@ -82,8 +83,8 @@ jobs:
       npm run build:release
     displayName: 'Build'
 
-- job: 'BuildTestWindows'
-  displayName: 'Build and test'
+- job: 'BuildWindows'
+  displayName: 'Build'
 
   strategy:
     matrix:
