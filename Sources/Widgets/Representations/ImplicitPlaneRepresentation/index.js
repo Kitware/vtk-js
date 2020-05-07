@@ -145,11 +145,11 @@ function vtkImplicitPlaneRepresentation(publicAPI, model) {
   vtkWidgetRepresentation.connectPipeline(model.pipelines.normal);
   vtkWidgetRepresentation.connectPipeline(model.pipelines.display2D);
 
-  model.actors.push(model.pipelines.outline.actor);
-  model.actors.push(model.pipelines.plane.actor);
-  model.actors.push(model.pipelines.origin.actor);
-  model.actors.push(model.pipelines.normal.actor);
-  model.actors.push(model.pipelines.display2D.actor);
+  publicAPI.addActor(model.pipelines.outline.actor);
+  publicAPI.addActor(model.pipelines.plane.actor);
+  publicAPI.addActor(model.pipelines.origin.actor);
+  publicAPI.addActor(model.pipelines.normal.actor);
+  publicAPI.addActor(model.pipelines.display2D.actor);
 
   // --------------------------------------------------------------------------
 

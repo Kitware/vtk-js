@@ -31,6 +31,20 @@ const WIDGET_BUILDERS = {
         label: 'Polyline',
       })
     );
+    instance.setCoincidentTopologyParameters({
+      Point: {
+        factor: -1.0,
+        offset: -1.0,
+      },
+      Line: {
+        factor: -1.5,
+        offset: -1.5,
+      },
+      Polygon: {
+        factor: -2.0,
+        offset: -2.0,
+      },
+    });
     instance.setActiveScaleFactor(0.9);
     instance.setGlyphResolution(60);
     return instance;
@@ -39,7 +53,24 @@ const WIDGET_BUILDERS = {
     const instance = widgetManager.addWidget(
       vtkPolyLineWidget.newInstance({
         label: 'Closed Polyline',
-      })
+      }),
+      null,
+      {
+        coincidentTopologyParameters: {
+          Point: {
+            factor: -1.0,
+            offset: -1.0,
+          },
+          Line: {
+            factor: -1.5,
+            offset: -1.5,
+          },
+          Polygon: {
+            factor: -2.0,
+            offset: -2.0,
+          },
+        },
+      }
     );
     instance.setActiveScaleFactor(1.1);
     instance.setGlyphResolution(30);

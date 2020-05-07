@@ -53,7 +53,7 @@ function vtkCubeHandleRepresentation(publicAPI, model) {
   model.mapper.setInputConnection(model.glyph.getOutputPort(), 1);
   model.actor.setMapper(model.mapper);
 
-  model.actors.push(model.actor);
+  publicAPI.addActor(model.actor);
 
   // --------------------------------------------------------------------------
 

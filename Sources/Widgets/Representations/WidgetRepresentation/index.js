@@ -3,8 +3,9 @@ import vtkProp from 'vtk.js/Sources/Rendering/Core/Prop';
 
 import { Behavior } from 'vtk.js/Sources/Widgets/Representations/WidgetRepresentation/Constants';
 import { RenderingTypes } from 'vtk.js/Sources/Widgets/Core/WidgetManager/Constants';
+import { CATEGORIES } from 'vtk.js/Sources/Rendering/Core/Mapper/CoincidentTopologyHelper';
 
-const { vtkErrorMacro } = macro;
+const { vtkErrorMacro, vtkWarningMacro } = macro;
 
 // ----------------------------------------------------------------------------
 const STYLE_CATEGORIES = ['active', 'inactive', 'static'];
@@ -161,6 +162,47 @@ function vtkWidgetRepresentation(publicAPI, model) {
     }
   };
 
+  function applyCoincidentTopologyParametersToMapper(mapper, parameters) {
+    if (mapper && mapper.setResolveCoincidentTopologyToPolygonOffset) {
+      mapper.setResolveCoincidentTopologyToPolygonOffset();
+      CATEGORIES.forEach((category) => {
+        if (parameters[category]) {
+          const methodName = `setRelativeCoincidentTopology${category}OffsetParameters`;
+          if (mapper[methodName]) {
+            const { factor, offset } = parameters[category];
+            mapper[methodName](factor, offset);
+          }
+        }
+      });
+    }
+  }
+
+  // Add warning to model.actors.push
+  model.actors.push = (...args) => {
+    vtkWarningMacro(
+      'You should use publicAPI.addActor() to initialize the actor properly'
+    );
+    args.forEach((actor) => publicAPI.addActor(actor));
+  };
+
+  publicAPI.addActor = (actor) => {
+    applyCoincidentTopologyParametersToMapper(
+      actor.getMapper(),
+      model.coincidentTopologyParameters
+    );
+    Array.prototype.push.apply(model.actors, [actor]);
+  };
+
+  publicAPI.setCoincidentTopologyParameters = (parameters) => {
+    model.coincidentTopologyParameters = parameters;
+    publicAPI.getActors().forEach((actor) => {
+      applyCoincidentTopologyParametersToMapper(
+        actor.getMapper(),
+        model.coincidentTopologyParameters
+      );
+    });
+  };
+
   // Make sure setting the labels at build time works with string/array...
   publicAPI.setLabels(model.labels);
 }
@@ -173,6 +215,20 @@ const DEFAULT_VALUES = {
   actors: [],
   labels: [],
   behavior: Behavior.CONTEXT,
+  coincidentTopologyParameters: {
+    Point: {
+      factor: -1.0,
+      offset: -1.0,
+    },
+    Line: {
+      factor: -1.0,
+      offset: -1.0,
+    },
+    Polygon: {
+      factor: -1.0,
+      offset: -1.0,
+    },
+  },
 };
 
 // ----------------------------------------------------------------------------
@@ -183,7 +239,7 @@ export function extend(publicAPI, model, initialValues = {}) {
   // Object methods
   vtkProp.extend(publicAPI, model, initialValues);
   macro.algo(publicAPI, model, 1, 1);
-  macro.get(publicAPI, model, ['labels']);
+  macro.get(publicAPI, model, ['labels', 'coincidentTopologyParameters']);
 
   // Object specific methods
   vtkWidgetRepresentation(publicAPI, model);

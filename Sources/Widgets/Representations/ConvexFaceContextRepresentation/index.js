@@ -52,7 +52,7 @@ function vtkConvexFaceContextRepresentation(publicAPI, model) {
   model.mapper.setInputConnection(publicAPI.getOutputPort());
   model.actor.setMapper(model.mapper);
 
-  model.actors.push(model.actor);
+  publicAPI.addActor(model.actor);
 
   // --------------------------------------------------------------------------
 

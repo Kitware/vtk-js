@@ -84,7 +84,7 @@ function vtkSVGRepresentation(publicAPI, model) {
     }
   });
 
-  model.actors.push(model.psActor);
+  publicAPI.addActor(model.psActor);
 
   // --------------------------------------------------------------------------
 
