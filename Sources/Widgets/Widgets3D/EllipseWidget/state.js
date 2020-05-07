@@ -25,11 +25,10 @@ export default function generateState() {
     })
     .addStateFromMixin({
       labels: ['ellipseHandle'],
-      mixins: ['origin', 'color', 'scale3', 'visible', 'direction'],
+      mixins: ['origin', 'color', 'scale3', 'visible', 'orientation'],
       name: 'ellipseHandle',
       initialValues: {
         visible: false,
-        direction: [0, 0, 1],
         scale3: [1, 1, 1],
       },
     })

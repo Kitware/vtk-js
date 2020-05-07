@@ -25,12 +25,11 @@ export default function generateState() {
     })
     .addStateFromMixin({
       labels: ['rectangleHandle'],
-      mixins: ['bounds', 'color', 'visible', 'direction'],
+      mixins: ['bounds', 'color', 'visible', 'orientation'],
       name: 'rectangleHandle',
       initialValues: {
         bounds: [0, 0, 0, 0, 0, 0],
         visible: false,
-        direction: [0, 0, 1],
       },
     })
     .build();
