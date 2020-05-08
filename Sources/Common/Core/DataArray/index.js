@@ -1,5 +1,5 @@
 import Constants from 'vtk.js/Sources/Common/Core/DataArray/Constants';
-import macro from 'vtk.js/Sources/macro';
+import * as macro from 'vtk.js/Sources/macro';
 import * as vtkMath from 'vtk.js/Sources/Common/Core/Math';
 
 const { DefaultDataType } = Constants;
