@@ -108,5 +108,6 @@
     "exclude": [
       "Sources/**/test/*.js"
     ]
-  }
+  },
+  "types": "./Sources/index.d.ts"
 }
