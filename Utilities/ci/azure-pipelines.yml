@@ -3,7 +3,7 @@ trigger:
 
 jobs:
 
-- job: 'BuildTest'
+- job: 'BuildTestLinux'
   displayName: 'Build and test'
 
   strategy:
@@ -16,8 +16,7 @@ jobs:
         nodeVersion: '12'
 
   pool:
-    name: 'Hosted Ubuntu 1604'
-    imageName: 'ubuntu-16.04'
+    vmImage: 'ubuntu-18.04'
 
   steps:
   - task: NodeTool@0
@@ -26,6 +25,7 @@ jobs:
     displayName: 'Install Node.js'
 
   - script: |
+      sudo apt install build-essential libcairo2-dev libpango1.0-dev libjpeg-dev libgif-dev librsvg2-dev
       npm ci
       npm run build:release
     displayName: 'Build'
@@ -47,34 +47,58 @@ jobs:
       testRunner: JUnit
       testResultsFiles: 'Utilities/TestResults/TESTS-*.xml'
 
-- job: 'Build'
+- job: 'BuildMacOS'
   displayName: 'Build'
 
   strategy:
     matrix:
       macOSNode8:
         poolName: 'Hosted macOS'
-        imageName: 'macos-10.13'
+        imageName: 'macos-10.15'
         nodeVersion: '8'
       macOSNode10:
         poolName: 'Hosted macOS'
-        imageName: 'macos-10.13'
+        imageName: 'macos-10.15'
         nodeVersion: '10'
       macOSNode12:
         poolName: 'Hosted macOS'
-        imageName: 'macos-10.13'
+        imageName: 'macos-10.15'
         nodeVersion: '12'
+
+  pool:
+    name: '$(poolName)'
+    imageName: '$(imageName)'
+
+  steps:
+  - task: NodeTool@0
+    inputs:
+      versionSpec: '$(nodeVersion).x'
+    displayName: 'Install Node.js'
+
+  - script: |
+      brew install pkg-config pixman cairo pango fribidi
+      npm i -g npm@6.4.1
+      npm ci
+      npm i --ignore-scripts # if canvas fails to load, then not all binaries will install
+      npm run build:release
+    displayName: 'Build'
+
+- job: 'BuildWindows'
+  displayName: 'Build'
+
+  strategy:
+    matrix:
       WindowsNode8:
         poolName: 'Hosted VS2017'
-        imageName: 'vs2017-win2016'
+        imageName: 'windows-2019'
         nodeVersion: '8'
       WindowsNode10:
         poolName: 'Hosted VS2017'
-        imageName: 'vs2017-win2016'
+        imageName: 'windows-2019'
         nodeVersion: '10'
       WindowsNode12:
         poolName: 'Hosted VS2017'
-        imageName: 'vs2017-win2016'
+        imageName: 'windows-2019'
         nodeVersion: '12'
 
   pool:
