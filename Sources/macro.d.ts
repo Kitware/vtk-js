@@ -28,7 +28,14 @@ export const TYPED_ARRAYS = {
 // capitalize provided string
 // ----------------------------------------------------------------------------
 
+/**
+ * capitalize provided string
+ */
 export function capitalize(str: string): string;
+
+/**
+ * Lowercase the first letter of the provided string
+ */
 export function uncapitalize(str: string): string;
 
 // ----------------------------------------------------------------------------
@@ -68,7 +75,7 @@ export function setImmediateVTK(fn: () => void ): void;
 
 interface VtkObject {
   /**
-   * Allow the user to check if that object was deleted.
+   * Allow to check if that object was deleted (.delete() was called before).
    */
   isDeleted: () => boolean;
   /**
@@ -77,10 +84,58 @@ interface VtkObject {
    * This naturally happens when you call any setXXX(value) with a different value.
    */
   modified: () => void;
+  /**
+   * Method to register callback when the object is modified().
+   */
   onModified: (instance: VtkObject) => void;
+  /**
+   * Return the `Modified Time` which is a monotonic increasing integer
+   * global for all vtkObjects.
+   *
+   * This allow to solve a question such as:
+   *  - Is that object created/modified after another one?
+   *  - Do I need to re-execute this filter, or not? ...
+   */
   getMTime: () => number;
+  /**
+   * Method to check if an instance is of a given class name.
+   * For example such method for a vtkCellArray will return true
+   * for any of the following string: ['vtkObject', 'vtkDataArray', 'vtkCellArray']
+   */
   isA: (className: string) => boolean;
+  /**
+   * Return the instance class name.
+   */
   getClassName: () => string;
+  /**
+   * Generic method to set many fields at one.
+   *
+   * For example calling the following function
+   * ```
+   * changeDetected = sphereSourceInstance.set({
+   *    phiResolution: 10,
+   *    thetaResolution: 20,
+   * });
+   * ```
+   * will be equivalent of calling
+   * ```
+   * changeDetected += sphereSourceInstance.setPhiResolution(10);
+   * changeDetected += sphereSourceInstance.setThetaResolution(20);
+   * changeDetected = !!changeDetected;
+   * ```
+   *
+   * In case you provide other field names that do not belong to the instance,
+   * vtkWarningMacro will be used to warn you. To disable those warning,
+   * you can set `noWarning` to true.
+   *
+   * If `noFunction` is set to true, the field will be set directly on the model
+   * without calling the `set${FieldName}()` method.
+   *
+   * @param map Object capturing the set of fieldNames and associated values to set.
+   * @param noWarning Boolean to disable any warning.
+   * @param noFunctions Boolean to skip any function execution and rely on only setting the fields on the model.
+   * @return true if a change was actually performed. False otherwise when the value provided were equal to the ones already set inside the instance.
+   */
   set: (map: object = {}, noWarning: boolean = false, noFunction: boolean = false) => boolean;
   get: (...listOfKeys: string) => object;
   getReferenceByName: (name: string) => any;
