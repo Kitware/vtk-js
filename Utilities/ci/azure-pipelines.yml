@@ -79,6 +79,7 @@ jobs:
       brew install pkg-config pixman cairo pango fribidi
       npm i -g npm@6.4.1
       npm ci
+      npm i --ignore-scripts # if canvas fails to load, then not all binaries will install
       npm run build:release
     displayName: 'Build'
 
