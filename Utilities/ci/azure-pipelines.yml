@@ -16,8 +16,7 @@ jobs:
         nodeVersion: '12'
 
   pool:
-    name: 'Hosted Ubuntu 1604'
-    imageName: 'ubuntu-16.04'
+    vmImage: 'ubuntu-18.04'
 
   steps:
   - task: NodeTool@0
@@ -55,15 +54,15 @@ jobs:
     matrix:
       macOSNode8:
         poolName: 'Hosted macOS'
-        imageName: 'macos-10.13'
+        imageName: 'macos-10.15'
         nodeVersion: '8'
       macOSNode10:
         poolName: 'Hosted macOS'
-        imageName: 'macos-10.13'
+        imageName: 'macos-10.15'
         nodeVersion: '10'
       macOSNode12:
         poolName: 'Hosted macOS'
-        imageName: 'macos-10.13'
+        imageName: 'macos-10.15'
         nodeVersion: '12'
 
   pool:
@@ -90,15 +89,15 @@ jobs:
     matrix:
       WindowsNode8:
         poolName: 'Hosted VS2017'
-        imageName: 'vs2017-win2016'
+        imageName: 'windows-2019'
         nodeVersion: '8'
       WindowsNode10:
         poolName: 'Hosted VS2017'
-        imageName: 'vs2017-win2016'
+        imageName: 'windows-2019'
         nodeVersion: '10'
       WindowsNode12:
         poolName: 'Hosted VS2017'
-        imageName: 'vs2017-win2016'
+        imageName: 'windows-2019'
         nodeVersion: '12'
 
   pool:
