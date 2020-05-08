@@ -12,7 +12,7 @@ interface VtkRange {
 }
 
 interface VtkRangeHelper {
-  add: (value) => void;
+  add: (value: number) => void;
   get: () => VtkStatisticInformation;
   getRange(): () => VtkRange;
 }
@@ -25,7 +25,7 @@ export const STATIC = {
   computeRange: (values: Array<number>, component: number = 0, numberOfComponents: number = 1) => VtkRange,
   createRangeHelper: () => VtkRangeHelper,
   getDataType: (typedArray: any) => string,
-  getMaxNorm: (VtkDataArray) => number,
+  getMaxNorm: (dataArray: VtkDataArray) => number,
 };
 
 // ----------------------------------------------------------------------------

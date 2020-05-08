@@ -146,7 +146,7 @@ interface VtkAlgorithm {
   getNumberOfInputPorts: () => number;
   getNumberOfOutputPorts: () => number;
   getInputArrayToProcess: (inputPort: number) => VtkDataArray;
-  setInputArrayToProcess: (inputPort: number, arrayName: string, fieldAssociation: string, attributeType: string = 'Scalars'): void;
+  setInputArrayToProcess: (inputPort: number, arrayName: string, fieldAssociation: string, attributeType: string = 'Scalars') => void;
 }
 
 export function algo(publicAPI: object, model: object, numberOfInputs: number, numberOfOutputs: number): void;
@@ -179,7 +179,7 @@ interface VtkChangeEvent {
 
 type VtkExtend = (publicAPI: object, model: object, initialValues: object) => void;
 
-export function newInstance(extend: VtkExtend, className: string) => any;
+export function newInstance(extend: VtkExtend, className: string): any;
 
 // ----------------------------------------------------------------------------
 // Chain function calls
