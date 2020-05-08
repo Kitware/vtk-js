@@ -67,7 +67,15 @@ export function setImmediateVTK(fn: () => void ): void;
 // ----------------------------------------------------------------------------
 
 interface VtkObject {
+  /**
+   * Allow the user to check if that object was deleted.
+   */
   isDeleted: () => boolean;
+  /**
+   * Mark the object dirty by increasing its MTime.
+   * Such action also trigger the onModified() callbacks if any was registered.
+   * This naturally happens when you call any setXXX(value) with a different value.
+   */
   modified: () => void;
   onModified: (instance: VtkObject) => void;
   getMTime: () => number;
