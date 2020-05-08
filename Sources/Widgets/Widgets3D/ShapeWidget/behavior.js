@@ -238,48 +238,53 @@ export default function widgetBehavior(publicAPI, model) {
     ];
   };
 
-  publicAPI.setBoundsFromRadius = (center, pointOnCircle) => {
-    vtkErrorMacro(
-      `${
-        model.classHierarchy[model.classHierarchy.length - 1]
-      } should implement 'setBoundsFromRadius'`
-    );
+  const getCornersFromRadius = (center, pointOnCircle) => {
+    const radius = vec3.distance(center, pointOnCircle);
+    const up = model.shapeHandle.getUp();
+    const right = model.shapeHandle.getRight();
+    const point1 = [
+      center[0] + (up[0] - right[0]) * radius,
+      center[1] + (up[1] - right[1]) * radius,
+      center[2] + (up[2] - right[2]) * radius,
+    ];
+    const point2 = [
+      center[0] + (right[0] - up[0]) * radius,
+      center[1] + (right[1] - up[1]) * radius,
+      center[2] + (right[2] - up[2]) * radius,
+    ];
+    return { point1, point2 };
   };
 
-  publicAPI.setBoundsFromDiameter = (center, pointOnCircle) => {
-    vtkErrorMacro(
-      `${
-        model.classHierarchy[model.classHierarchy.length - 1]
-      } should implement 'setBoundsFromDiameter'`
-    );
+  const getCornersFromDiameter = (point1, point2) => {
+    const center = [
+      0.5 * (point1[0] + point2[0]),
+      0.5 * (point1[1] + point2[1]),
+      0.5 * (point1[2] + point2[2]),
+    ];
+
+    return getCornersFromRadius(center, point1);
   };
 
-  publicAPI.setBounds = (bounds) => {
+  publicAPI.setCorners = (point1, point2) => {
     if (model.label && model.labelTextCallback) {
-      if (model.point1 && model.point2) {
-        const point1 = model.openGLRenderWindow.worldToDisplay(
-          bounds[0],
-          bounds[2],
-          bounds[4],
-          model.renderer
-        );
-        const point2 = model.openGLRenderWindow.worldToDisplay(
-          bounds[1],
-          bounds[3],
-          bounds[5],
-          model.renderer
-        );
-        const screenBounds = [
-          point1[0],
-          point2[0],
-          point1[1],
-          point2[1],
-          point1[2],
-          point2[2],
-        ];
-
-        model.labelTextCallback(bounds, screenBounds, model.label);
-      }
+      const bounds = makeBoundsFromPoints(point1, point2);
+      const screenPoint1 = model.openGLRenderWindow.worldToDisplay(
+        ...point1,
+        model.renderer
+      );
+      const screenPoint2 = model.openGLRenderWindow.worldToDisplay(
+        ...point2,
+        model.renderer
+      );
+      const screenBounds = [
+        screenPoint1[0],
+        screenPoint2[0],
+        screenPoint1[1],
+        screenPoint2[1],
+        screenPoint1[2],
+        screenPoint2[2],
+      ];
+      model.labelTextCallback(bounds, screenBounds, model.label);
     }
   };
 
@@ -295,33 +300,31 @@ export default function widgetBehavior(publicAPI, model) {
       switch (
         publicAPI.getActiveBehaviorFromCategory(BehaviorCategory.POINTS)
       ) {
-        case ShapeBehavior[BehaviorCategory.POINTS].CORNER_TO_CORNER:
-          publicAPI.setBounds(makeBoundsFromPoints(point1, point2));
-
+        case ShapeBehavior[BehaviorCategory.POINTS].CORNER_TO_CORNER: {
+          publicAPI.setCorners(point1, point2);
           break;
-        case ShapeBehavior[BehaviorCategory.POINTS].CENTER_TO_CORNER:
-          {
-            const diagonal = [0, 0, 0];
-            vec3.subtract(diagonal, point1, point2);
-            vec3.add(point1, point1, diagonal);
-          }
-          publicAPI.setBounds(makeBoundsFromPoints(point1, point2));
-
+        }
+        case ShapeBehavior[BehaviorCategory.POINTS].CENTER_TO_CORNER: {
+          const diagonal = [0, 0, 0];
+          vec3.subtract(diagonal, point1, point2);
+          vec3.add(point1, point1, diagonal);
+          publicAPI.setCorners(point1, point2);
           break;
-        case ShapeBehavior[BehaviorCategory.POINTS].RADIUS:
-          publicAPI.setBoundsFromRadius(point1, point2);
-
+        }
+        case ShapeBehavior[BehaviorCategory.POINTS].RADIUS: {
+          const points = getCornersFromRadius(point1, point2);
+          publicAPI.setCorners(points.point1, points.point2);
           break;
-        case ShapeBehavior[BehaviorCategory.POINTS].DIAMETER:
-          publicAPI.setBoundsFromDiameter(point1, point2);
-
+        }
+        case ShapeBehavior[BehaviorCategory.POINTS].DIAMETER: {
+          const points = getCornersFromDiameter(point1, point2);
+          publicAPI.setCorners(points.point1, points.point2);
           break;
+        }
         default:
           // This should never be executed
           vtkErrorMacro('vtk internal error');
       }
-    } else {
-      publicAPI.setBounds([0, 0, 0, 0, 0, 0]);
     }
   };
 
