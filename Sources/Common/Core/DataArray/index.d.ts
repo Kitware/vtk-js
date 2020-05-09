@@ -1,3 +1,5 @@
+import { VtkObject } from '../../../macro';
+
 interface VtkStatisticInformation {
   min: number;
   max: number;
@@ -6,42 +8,66 @@ interface VtkStatisticInformation {
   mean: number;
 }
 
-interface VtkRange {
+export interface VtkRange {
   min: number;
   max: number;
 }
 
 interface VtkRangeHelper {
-  add: (value: number) => void;
-  get: () => VtkStatisticInformation;
-  getRange(): () => VtkRange;
+  add(value: number): void;
+  get(): VtkStatisticInformation;
+  getRange(): VtkRange;
 }
 
 // ----------------------------------------------------------------------------
 // Static API
 // ----------------------------------------------------------------------------
 
-export const STATIC = {
-  computeRange: (values: Array<number>, component: number = 0, numberOfComponents: number = 1) => VtkRange,
-  createRangeHelper: () => VtkRangeHelper,
-  getDataType: (typedArray: any) => string,
-  getMaxNorm: (dataArray: VtkDataArray) => number,
-};
+/**
+ *
+ * @param values
+ * @param component (default: 0)
+ * @param numberOfComponents (default: 1)
+ */
+export function computeRange(values: Array<number>, component?: number, numberOfComponents: number): VtkRange;
+
+export function createRangeHelper(): VtkRangeHelper
+export function getDataType(typedArray: any): string
+export function getMaxNorm(dataArray: VtkDataArray): number
 
 // ----------------------------------------------------------------------------
 // vtkDataArray methods
 // ----------------------------------------------------------------------------
 
-interface VtkDataArray {
-  getElementComponentSize: () => number;
-  getComponent: (tupleIdx: number, componentIndex: number = 0) => number;
-  setComponent: (tupleIdx: number, componentIndex: number, value: number) => void;
+export interface VtkDataArray {
+  getElementComponentSize(): number;
+  /**
+   *
+   * @param tupleIdx
+   * @param componentIndex (default: 0)
+   */
+  getComponent(tupleIdx: number, componentIndex: number): number;
+  setComponent(tupleIdx: number, componentIndex: number, value: number): void;
   getData: () => Array<number>;
-  getRange: (componentIndex: number = -1) => VtkRange;
-  setRange: (rangeValue: VtkRange, componentIndex: number) => [number, number];
-  setTuple: (idx: number, tuple: Array<number>) => void;
-  getTuple: (idx: number, tupleToFill: Array<number> = []) => Array<number>;
-  getTupleLocation: (idx: number = 1) => number;
+  /**
+   * Return the range of the given component.
+   *
+   * @param componentIndex (default: -1)
+   */
+  getRange(componentIndex?: number): VtkRange;
+  setRange(rangeValue: VtkRange, componentIndex: number): [number, number];
+  setTuple(idx: number, tuple: Array<number>): void;
+  /**
+   *
+   * @param idx
+   * @param tupleToFill (default [])
+   */
+  getTuple(idx: number, tupleToFill?: Array<number>): Array<number>;
+  /**
+   *
+   * @param idx (default: 1)
+   */
+  getTupleLocation(idx: number): number;
   getNumberOfComponents: () => number;
   getNumberOfValues: () => number;
   getNumberOfTuples: () => number;
@@ -57,7 +83,13 @@ interface VtkDataArray {
 
 // ----------------------------------------------------------------------------
 
-export function extend(publicAPI: object, model: object, initialValues: object = {}): void;
+/**
+ *
+ * @param publicAPI
+ * @param model
+ * @param initialValues (default: {})
+ */
+export function extend(publicAPI: object, model: object, initialValues?: object): void;
 
 // ----------------------------------------------------------------------------
 
@@ -65,7 +97,7 @@ export function newInstance(initialValues?: object): VtkObject | VtkDataArray;
 
 // ----------------------------------------------------------------------------
 
-enum DataTypeByteSize {
+export enum DataTypeByteSize {
   Int8Array,
   Uint8Array,
   Uint8ClampedArray,
@@ -77,7 +109,7 @@ enum DataTypeByteSize {
   Float64Array,
 }
 
-enum VtkDataTypes {
+export enum VtkDataTypes {
   VOID,
   CHAR,
   SIGNED_CHAR,
@@ -93,9 +125,13 @@ enum VtkDataTypes {
 export default {
   newInstance,
   extend,
-  ...STATIC,
+  // static
+  computeRange,
+  createRangeHelper,
+  getDataType,
+  getMaxNorm,
+  // constants
   DataTypeByteSize,
   VtkDataTypes,
   DefaultDataType: VtkDataTypes,
 };
-

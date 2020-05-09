@@ -38,56 +38,92 @@ export function capitalize(str: string): string;
  */
 export function uncapitalize(str: string): string;
 
-// ----------------------------------------------------------------------------
-// Convert byte size into a well formatted string
-// ----------------------------------------------------------------------------
-
-export function formatBytesToProperUnit(size: number, precision: number = 2, chunkSize: number = 1000): string;
+/**
+ * Convert byte size into a well formatted string.
+ *
+ * @param size number of bytes
+ * @param precision (default: 2) how many digit you want behind the unit
+ * @param chunkSize (default: 1000) base 1000 or 1024
+ */
+export function formatBytesToProperUnit(size: number, precision?: number, chunkSize?: number): string;
 
 // ----------------------------------------------------------------------------
 // Convert thousand number with proper separator
 // ----------------------------------------------------------------------------
 
-export function formatNumbersWithThousandSeparator(n: number, separator: string = ' '): string;
+/**
+ *
+ * @param n number to format
+ * @param separator (default: ' ')
+ */
+export function formatNumbersWithThousandSeparator(n: number, separator?: string): string;
 
 // ----------------------------------------------------------------------------
 // Array helper
 // ----------------------------------------------------------------------------
 
-// Replace internal arrays with new reference but same content
+/**
+ * Replace internal arrays with new reference but with same content
+ *
+ * @param model
+ */
 function safeArrays(model: object): void;
 
-// ----------------------------------------------------------------------------
-
+/**
+ * Extract the key of an object where the given value match the given one
+ *
+ * @param e enum object to search key/value from
+ * @param value to look for inside object
+ */
 function enumToString(e: object, value: any): string;
 
+/**
+ * If item is a VtkObject, return its getState() otherwise return itself.
+ *
+ * @param item object to extract its state from
+ */
 function getStateArrayMapFunc(item: any): any;
 
-// ----------------------------------------------------------------------------
-// setImmediate
-// ----------------------------------------------------------------------------
-
+/**
+ * Call provided function on the next EDT pass
+ *
+ * @param fn function to execute
+ */
 export function setImmediateVTK(fn: () => void ): void;
 
-// ----------------------------------------------------------------------------
-// vtkObject: modified(), onModified(callback), delete()
-// ----------------------------------------------------------------------------
+/**
+ * Object returned on any subscription call
+ */
+export interface VtkSubscription {
+  unsubscribe(): void;
+}
 
-interface VtkObject {
+/**
+ * Base vtkClass which provides MTime tracking and class infrastructure
+ */
+export interface VtkObject {
   /**
    * Allow to check if that object was deleted (.delete() was called before).
+   *
+   * @returns true if delete() was previously called
    */
-  isDeleted: () => boolean;
+  isDeleted(): boolean;
+
   /**
    * Mark the object dirty by increasing its MTime.
    * Such action also trigger the onModified() callbacks if any was registered.
    * This naturally happens when you call any setXXX(value) with a different value.
    */
-  modified: () => void;
+  modified(): void;
+
   /**
    * Method to register callback when the object is modified().
+   *
+   * @param callback function
+   * @returns subscription object so you can easily unsubscribe later on
    */
-  onModified: (instance: VtkObject) => void;
+  onModified(callback: (instance: VtkObject) => any): VtkSubscription;
+
   /**
    * Return the `Modified Time` which is a monotonic increasing integer
    * global for all vtkObjects.
@@ -95,18 +131,23 @@ interface VtkObject {
    * This allow to solve a question such as:
    *  - Is that object created/modified after another one?
    *  - Do I need to re-execute this filter, or not? ...
+   *
+   * @returns the global modified time
    */
-  getMTime: () => number;
+  getMTime(): number;
+
   /**
    * Method to check if an instance is of a given class name.
    * For example such method for a vtkCellArray will return true
    * for any of the following string: ['vtkObject', 'vtkDataArray', 'vtkCellArray']
    */
-  isA: (className: string) => boolean;
+  isA(className: string): boolean;
+
   /**
    * Return the instance class name.
    */
-  getClassName: () => string;
+  getClassName(): string;
+
   /**
    * Generic method to set many fields at one.
    *
@@ -131,44 +172,124 @@ interface VtkObject {
    * If `noFunction` is set to true, the field will be set directly on the model
    * without calling the `set${FieldName}()` method.
    *
-   * @param map Object capturing the set of fieldNames and associated values to set.
-   * @param noWarning Boolean to disable any warning.
-   * @param noFunctions Boolean to skip any function execution and rely on only setting the fields on the model.
+   * @param map (default: {}) Object capturing the set of fieldNames and associated values to set.
+   * @param noWarning (default: false) Boolean to disable any warning.
+   * @param noFunctions (default: false) Boolean to skip any function execution and rely on only setting the fields on the model.
    * @return true if a change was actually performed. False otherwise when the value provided were equal to the ones already set inside the instance.
    */
-  set: (map: object = {}, noWarning: boolean = false, noFunction: boolean = false) => boolean;
-  get: (...listOfKeys: string) => object;
-  getReferenceByName: (name: string) => any;
-  delete: () => void;
-  getState: () => object;
-  shallowCopy: (other: VtkObject, debug: boolean = false) => void;
+  set(map?: object, noWarning?: boolean, noFunction?: boolean): boolean;
+
+  /**
+   * Extract a set of properties at once from a vtkObject.
+   *
+   * This can be convenient to pass a partial state of
+   * one object to another.
+   *
+   * ```
+   * cameraB.set(cameraA.get('position', 'viewUp', 'focalPoint'));
+   * ```
+   *
+   * @param listOfKeys set of field names that you want to retrieve. If not provided, the full model get returned as a new object.
+   * @returns a new object containing only the values of requested fields
+   */
+  get(...listOfKeys?: string): object;
+
+  /**
+   * Allow to get a direct reference of a model element
+   *
+   * @param name of the field to extract from the instance model
+   * @returns model[name]
+   */
+  getReferenceByName(name: string): any;
+
+  /**
+   * Dereference any internal object and remove any subscription.
+   * It gives custom class to properly detach themselves from the DOM
+   * or any external dependency that could prevent their deletion
+   * when the GC runs.
+   */
+  delete(): void;
+
+  /**
+   * Try to extract a serializable (JSON) object of the given
+   * instance tree.
+   *
+   * Such state can then be reused to clone or rebuild a full
+   * vtkObject tree using the root vtk() function.
+   *
+   * The following example will grab mapper and dataset that are
+   * beneath the vtkActor instance as well.
+   *
+   * ```
+   * const actorStr = JSON.stringify(actor.getState());
+   * const newActor = vtk(JSON.parse(actorStr));
+   * ```
+   */
+  getState(): object;
+
+  /**
+   * Try to copy the state of the other to ourselves by just using references.
+   *
+   * @param other instance to copy the reference from
+   * @param debug (default: false) if true feedback will be provided when mismatch happen
+   */
+  shallowCopy(other: VtkObject, debug?: boolean): void;
 }
 
-export function obj(publicAPI: object = {}, model: object = {}): void;
+/**
+ * Turns the provided publicAPI into a VtkObject
+ *
+ * @param publicAPI (default: {}) object on which public methods get attached to
+ * @param model (default: {}) object on which protected fields are stored
+ * @returns publicAPI
+ */
+export function obj(publicAPI?: object, model?: object): object;
 
-// ----------------------------------------------------------------------------
-// getXXX: add getters
-// ----------------------------------------------------------------------------
-
+/**
+ * Add getter methods to the provided publicAPI
+ *
+ * @param publicAPI object on which public methods get attached to
+ * @param model object on which protected fields are stored
+ * @param fieldNames list of fields available in model that we want to expose as get{FieldName} methods on the publicAPI
+ */
 export function get(publicAPI: object, model: object, fieldNames: Array<string>): void;
 
-// ----------------------------------------------------------------------------
-// setXXX: add setters
-// ----------------------------------------------------------------------------
-
+/**
+ * Add setter methods to the provided publicAPI
+ *
+ * @param publicAPI object on which public methods get attached to
+ * @param model object on which protected fields are stored
+ * @param fieldNames list of fields available in model that we want to expose as set{FieldName} methods on the publicAPI
+ */
 export function set(publicAPI: object, model: object, fields: Array<string>): void;
 
-// ----------------------------------------------------------------------------
-// set/get XXX: add both setters and getters
-// ----------------------------------------------------------------------------
-
+/**
+ * Add setter+getter methods to the provided publicAPI
+ *
+ * @param publicAPI object on which public methods get attached to
+ * @param model object on which protected fields are stored
+ * @param fieldNames list of fields available in model that we want to expose as set{FieldName}+get{FieldName} methods on the publicAPI
+ */
 export function setGet(publicAPI: object, model: object, fields: Array<string>): void;
 
 // ----------------------------------------------------------------------------
 // getXXX: add getters for object of type array with copy to be safe
 // getXXXByReference: add getters for object of type array without copy
 // ----------------------------------------------------------------------------
-
+/**
+ * Add getter methods to the provided publicAPI for arrays.
+ * A new array is used as returned value with get{FieldName}() method
+ * unless get{FieldName}ByReference() is used.
+ *
+ * ```
+ * get{FieldName}()
+ * get{FieldName}ByReference()
+ * ```
+ *
+ * @param publicAPI object on which public methods get attached to
+ * @param model object on which protected fields are stored
+ * @param fieldNames list of fields available in model that we want to expose as get{FieldName}+get{FieldName}ByReference methods on the publicAPI
+ */
 export function getArray(publicAPI: object, model: object, fields: Array<string>): void;
 
 // ----------------------------------------------------------------------------
@@ -177,39 +298,92 @@ export function getArray(publicAPI: object, model: object, fields: Array<string>
 // set...From: fast path to copy the content of an array to the current one without call to modified.
 // ----------------------------------------------------------------------------
 
-export function setArray(publicAPI: object, model: object, fieldNames: Array<string>, size: Number, defaultVal: any = undefined): void;
+/**
+ * Add setter methods to the provided publicAPI for arrays.
+ * if 'defaultVal' is supplied, shorter arrays will be padded to 'size' with
+ * 'defaultVal'.
+ * set{FieldName}From(abc) will copy the content of abc into current field
+ * without calling modified.
+ *
+ * ```
+ * set{FieldName}(a, b, c) / set{FieldName}(abc)
+ * set{FieldName}From(abc)
+ * ```
+ *
+ * @param publicAPI
+ * @param model
+ * @param fieldNames
+ * @param size
+ * @param defaultVal
+ */
+export function setArray(publicAPI: object, model: object, fieldNames: Array<string>, size: Number, defaultVal?: any): void;
 
 // ----------------------------------------------------------------------------
 // set/get XXX: add setter and getter for object of type array
 // ----------------------------------------------------------------------------
 
-export function setGetArray(publicAPI: object, model: object, fieldNames: Array<string>, size: Number, defaultVal: any = undefined): void;
+export function setGetArray(publicAPI: object, model: object, fieldNames: Array<string>, size: Number, defaultVal?: any): void;
 
 // ----------------------------------------------------------------------------
 // vtkAlgorithm: setInputData(), setInputConnection(), getOutputData(), getOutputPort()
 // ----------------------------------------------------------------------------
 
-interface VtkOutputPort {
+export interface VtkOutputPort {
   filter: VtkAlgorithm;
 }
 
-type VtkPipelineConnection = () => any | VtkOutputPort;
+export type VtkPipelineConnection = () => any | VtkOutputPort;
 
-interface VtkAlgorithm {
-  setInputData: (dataset: any, port: number = 0) => void;
-  getInputData: (port: number = 0) => any;
-  setInputConnection: (outputPort: VtkPipelineConnection, port: number = 0) => void;
-  getInputConnection: (port: number = 0) => VtkPipelineConnection;
-  addInputConnection: (outputPort: VtkPipelineConnection) => void;
-  addInputData: (dataset: any) => void;
-  getOutputData: (port: number = 0) => any;
-  shouldUpdate: () => boolean;
-  getOutputPort: (port: number = 0) => VtkPipelineConnection;
-  update: () => void;
-  getNumberOfInputPorts: () => number;
-  getNumberOfOutputPorts: () => number;
-  getInputArrayToProcess: (inputPort: number) => VtkDataArray;
-  setInputArrayToProcess: (inputPort: number, arrayName: string, fieldAssociation: string, attributeType: string = 'Scalars') => void;
+export interface VtkAlgorithm {
+  /**
+   * @param dataset
+   * @param port (default 0)
+   */
+  setInputData(dataset: any, port?: number): void;
+  /**
+   * @param port (default 0)
+   */
+  getInputData(port?: number): any;
+  /**
+   * @param outputPort
+   * @param port (default 0)
+   */
+  setInputConnection(outputPort: VtkPipelineConnection, port?: number): void;
+  /**
+   * @param port (default 0)
+   */
+  getInputConnection(port?: number): VtkPipelineConnection;
+  addInputConnection(outputPort: VtkPipelineConnection): void;
+  addInputData(dataset: any): void;
+  /**
+   * @param port (default 0)
+   */
+  getOutputData(port?: number): any;
+  shouldUpdate(): boolean;
+  /**
+   * @param port (default 0)
+   */
+  getOutputPort(port?: number): VtkPipelineConnection;
+  update(): void;
+  getNumberOfInputPorts(): number;
+  getNumberOfOutputPorts(): number;
+  /**
+   * @param port (default 0)
+   */
+  getInputArrayToProcess(inputPort?: number): VtkDataArray;
+  /**
+   *
+   * @param inputPort
+   * @param arrayName
+   * @param fieldAssociation
+   * @param attributeType (default 'Scalars')
+   */
+  setInputArrayToProcess(
+    inputPort: number,
+    arrayName: string,
+    fieldAssociation: string,
+    attributeType?: string
+  ): void;
 }
 
 export function algo(publicAPI: object, model: object, numberOfInputs: number, numberOfOutputs: number): void;
@@ -222,25 +396,30 @@ export function algo(publicAPI: object, model: object, numberOfInputs: number, n
 export const EVENT_ABORT = Symbol('Event abort');
 export function event(publicAPI: object, model: object, eventName: string): void;
 
-interface VtkSubscription {
-  unsubscribe: () => void;
-}
-
-type VtkCallback = (...args: any) => void | EVENT_ABORT;
+export function VtkCallback(...args: any): (void | EVENT_ABORT);
 
 // Example of event(,, 'change')
-interface VtkChangeEvent {
-  invokeChange: (...args: any) => void;
-  // Execute higher priority callback first
-  // negative priority use setTimeout(cb, -priority) for later callback
-  onChange: (VtkCallback, priority: number = 0.0) => VtkSubscription
+export interface VtkChangeEvent {
+  /**
+   * Call any registered callbacks with the given arguments
+   * @param args
+   */
+  invokeChange(...args: any): void;
+  /**
+   * Execute higher priority callback first
+   * negative priority use setTimeout(cb, -priority) for later callback
+   *
+   * @param VtkCallback
+   * @param priority (default 0.0)
+   */
+  onChange(VtkCallback, priority?: number): VtkSubscription;
 }
 
 // ----------------------------------------------------------------------------
 // newInstance
 // ----------------------------------------------------------------------------
 
-type VtkExtend = (publicAPI: object, model: object, initialValues: object) => void;
+export type VtkExtend = (publicAPI: object, model: object, initialValues: object) => void;
 
 export function newInstance(extend: VtkExtend, className: string): any;
 
@@ -256,41 +435,54 @@ export function chain(...fn: any): any;
 
 export function isVtkObject(instance: any): boolean;
 
+/**
+ *
+ * @param instance
+ * @param extractFunction
+ * @param accumulator (default [])
+ * @param visitedInstances (default [])
+ */
 export function traverseInstanceTree(
   instance: any,
   extractFunction: any,
-  accumulator: Array<any> = [],
-  visitedInstances: Array<any> = []
+  accumulator?: Array<any>,
+  visitedInstances?: Array<any>
 ): Array<any>;
 
-// ----------------------------------------------------------------------------
-// Returns a function, that, as long as it continues to be invoked, will not
-// be triggered. The function will be called after it stops being called for
-// N milliseconds. If `immediate` is passed, trigger the function on the
-// leading edge, instead of the trailing.
+/**
+ * Returns a function, that, as long as it continues to be invoked, will not
+ * be triggered. The function will be called after it stops being called for
+ * N milliseconds. If `immediate` is passed, trigger the function on the
+ * leading edge, instead of the trailing.
+ *
+ * @param func
+ * @param wait
+ * @param immediate (default false)
+ */
+export function debounce(func: (...args: any) => any, wait: number, immediate?: boolean): (...args: any) => any;
 
-export function debounce(func: (...args: any) => any, wait: number, immediate: boolean = false): (...args: any) => any;
-
-// ----------------------------------------------------------------------------
-// Creates a throttled function that only invokes `func` at most once per
-// every `wait` milliseconds.
-
+/**
+ * Creates a throttled function that only invokes `func` at most once per
+ * every `wait` milliseconds.
+ *
+ * @param callback
+ * @param delay
+ */
 export function throttle(callback: (...args: any) => any, delay: number): (...args: any) => any;
 
-// ----------------------------------------------------------------------------
-// keystore(publicAPI, model, initialKeystore)
-//
-//    - initialKeystore: Initial keystore. This can be either a Map or an
-//      object.
-//
-// Generated API
-//  setKey(key, value) : mixed (returns value)
-//  getKey(key) : mixed
-//  getAllKeys() : [mixed]
-//  deleteKey(key) : Boolean
-// ----------------------------------------------------------------------------
-
-interface VtkKeyStore {
+/**
+ * keystore(publicAPI, model, initialKeystore)
+ *
+ *    - initialKeystore: Initial keystore. This can be either a Map or an
+ *      object.
+ *
+ * Generated API
+ *  setKey(key, value) : mixed (returns value)
+ *  getKey(key) : mixed
+ *  getAllKeys() : [mixed]
+ *  deleteKey(key) : Boolean
+ */
+export interface VtkKeyStore {
   setKey: (key: string, value: any) => void;
   getKey: (key: string) => any;
   getAllKeys: () => Array<string>;
@@ -298,7 +490,13 @@ interface VtkKeyStore {
   clearKeystore: () => void;
 }
 
-export function keystore(publicAPI: object, model: object, initialKeystore: object = {}): void;
+/**
+ *
+ * @param publicAPI
+ * @param model
+ * @param initialKeystore (default {})
+ */
+export function keystore(publicAPI: object, model: object, initialKeystore?: object): void;
 
 // ----------------------------------------------------------------------------
 // proxy(publicAPI, model, sectionName, propertyUI)
@@ -313,34 +511,40 @@ export function keystore(publicAPI: object, model: object, initialKeystore: obje
 //  getProxySection() => List of properties for UI generation
 // ----------------------------------------------------------------------------
 
-interface VtkProxyManager {
+export interface VtkProxyManager {
 }
 
-interface VtkProperty {
+export interface VtkProperty {
   name: string;
   children?: Array<VtkProperty>;
 }
 
-interface VtkPropertyDomain {
+export interface VtkPropertyDomain {
 }
 
-interface VtkProxySection {
+export interface VtkProxySection {
   id: string;
   name: string;
   ui: object;
   properties: Array<any>,
 }
 
-interface VtkLink {
-  bind: (instance: VtkProxy, propertyName: string, updateMe: boolean = false) => void;
+export interface VtkLink {
+  /**
+   *
+   * @param instance
+   * @param propertyName
+   * @param updateMe (default: false)
+   */
+  bind(instance: VtkProxy, propertyName: string, updateMe?: boolean): void;
   unbind: (instance: VtkProxy, propertyName: string) => void;
   unsubscribe: () => void;
   persistent: boolean;
 }
 
-interface VtkProxy extends VtkKeyStore {
-  getProxyId: () => string;
-  getProxyGroup: () => string;
+export interface VtkProxy extends VtkKeyStore {
+  getProxyId(): string;
+  getProxyGroup(): string;
   getProxyName: () => string;
   setProxyManager: (pxm: VtkProxyManager) => boolean;
   getProxyManager: () => VtkProxyManager;
@@ -350,10 +554,20 @@ interface VtkProxy extends VtkKeyStore {
   updateProxyProperty: (propertyName: string, propUI: object) => void;
   activate: () => void;
   registerPropertyLinkForGC: (otherLink: VtkLink, type: string) => void;
-  gcPropertyLinks: (type: string) => void;
-  getPropertyLink: (id: string, persistent: boolean = false) => VtkLink;
+  gcPropertyLinks(type: string): void;
 
-  getProperties: (groupName: string = ROOT_GROUP_NAME) => Array<any>;
+  /**
+   *
+   * @param id
+   * @param persistent (default: false)
+   */
+  getPropertyLink(id: string, persistent?: boolean): VtkLink;
+
+  /**
+   *
+   * @param groupName (default: ROOT_GROUP_NAME)
+   */
+  getProperties(groupName?: string): Array<any>;
   listPropertyNames: () => Array<string>;
   getPropertyByName: (name: string) => VtkProperty;
   getPropertyDomainByName: (name: string) => VtkPropertyDomain;
@@ -364,40 +578,51 @@ interface VtkProxy extends VtkKeyStore {
 
 export function proxy(publicAPI: object, model: object): void;
 
-// ----------------------------------------------------------------------------
-// proxyPropertyMapping(publicAPI, model, map)
-//
-//   map = {
-//      opacity: { modelKey: 'property', property: 'opacity' },
-//   }
-//
-// Generated API:
-//  Elevate set/get methods from internal object stored in the model to current one
-// ----------------------------------------------------------------------------
-
+/**
+ * proxyPropertyMapping(publicAPI, model, map)
+ *
+ * ```
+ *   map = {
+ *      opacity: { modelKey: 'property', property: 'opacity' },
+ *   }
+ * ```
+ *
+ * Generated API:
+ *  Elevate set/get methods from internal object stored in the model to current one
+ *
+ * @param publicAPI
+ * @param model
+ * @param map
+ */
 export function proxyPropertyMapping(publicAPI: object, model: object, map: object): void;
 
-// ----------------------------------------------------------------------------
-// proxyPropertyState(publicAPI, model, state, defaults)
-//
-//   state = {
-//     representation: {
-//       'Surface with edges': { property: { edgeVisibility: true, representation: 2 } },
-//       Surface: { property: { edgeVisibility: false, representation: 2 } },
-//       Wireframe: { property: { edgeVisibility: false, representation: 1 } },
-//       Points: { property: { edgeVisibility: false, representation: 0 } },
-//     },
-//   }
-//
-//   defaults = {
-//      representation: 'Surface',
-//   }
-//
-// Generated API
-//   get / set Representation ( string ) => push state to various internal objects
-// ----------------------------------------------------------------------------
-
-export function proxyPropertyState(publicAPI: object, model: object, state: object = {}, defaults: object = {}): void;
+/**
+ * proxyPropertyState(publicAPI, model, state, defaults)
+ *
+ * ```
+ *   state = {
+ *     representation: {
+ *       'Surface with edges': { property: { edgeVisibility: true, representation: 2 } },
+ *       Surface: { property: { edgeVisibility: false, representation: 2 } },
+ *       Wireframe: { property: { edgeVisibility: false, representation: 1 } },
+ *       Points: { property: { edgeVisibility: false, representation: 0 } },
+ *     },
+ *   }
+ *
+ *   defaults = {
+ *      representation: 'Surface',
+ *   }
+ * ```
+ *
+ * Generated API
+ *   get / set Representation ( string ) => push state to various internal objects
+ *
+ * @param publicAPI
+ * @param model
+ * @param state (default: {})
+ * @param defaults (default: {})
+ */
+export function proxyPropertyState(publicAPI: object, model: object, state?: object, defaults?: object): void;
 
 // ----------------------------------------------------------------------------
 // From : https://github.com/facebookarchive/fixed-data-table/blob/master/src/vendor_upstream/dom/normalizeWheel.js
@@ -511,7 +736,7 @@ export function proxyPropertyState(publicAPI: object, model: object, state: obje
 //
 // ----------------------------------------------------------------------------
 
-interface VtkNormalizedWheelEvent {
+export interface VtkNormalizedWheelEvent {
   spinX: number;
   spinY: number;
   pixelX: number;
