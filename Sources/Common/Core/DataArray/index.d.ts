@@ -1,4 +1,4 @@
-import { VtkObject } from '../../../macro';
+import { VtkObject, VtkDataArray, VtkRange } from '../../../macro';
 
 interface VtkStatisticInformation {
   min: number;
@@ -6,11 +6,6 @@ interface VtkStatisticInformation {
   count: number;
   sum: number;
   mean: number;
-}
-
-export interface VtkRange {
-  min: number;
-  max: number;
 }
 
 interface VtkRangeHelper {
@@ -29,7 +24,7 @@ interface VtkRangeHelper {
  * @param component (default: 0)
  * @param numberOfComponents (default: 1)
  */
-export function computeRange(values: Array<number>, component?: number, numberOfComponents: number): VtkRange;
+export function computeRange(values: Array<number>, component?: number, numberOfComponents?: number): VtkRange;
 
 export function createRangeHelper(): VtkRangeHelper
 export function getDataType(typedArray: any): string
@@ -38,48 +33,6 @@ export function getMaxNorm(dataArray: VtkDataArray): number
 // ----------------------------------------------------------------------------
 // vtkDataArray methods
 // ----------------------------------------------------------------------------
-
-export interface VtkDataArray {
-  getElementComponentSize(): number;
-  /**
-   *
-   * @param tupleIdx
-   * @param componentIndex (default: 0)
-   */
-  getComponent(tupleIdx: number, componentIndex: number): number;
-  setComponent(tupleIdx: number, componentIndex: number, value: number): void;
-  getData: () => Array<number>;
-  /**
-   * Return the range of the given component.
-   *
-   * @param componentIndex (default: -1)
-   */
-  getRange(componentIndex?: number): VtkRange;
-  setRange(rangeValue: VtkRange, componentIndex: number): [number, number];
-  setTuple(idx: number, tuple: Array<number>): void;
-  /**
-   *
-   * @param idx
-   * @param tupleToFill (default [])
-   */
-  getTuple(idx: number, tupleToFill?: Array<number>): Array<number>;
-  /**
-   *
-   * @param idx (default: 1)
-   */
-  getTupleLocation(idx: number): number;
-  getNumberOfComponents: () => number;
-  getNumberOfValues: () => number;
-  getNumberOfTuples: () => number;
-  getDataType: () => string;
-  newClone: () => VtkDataArray;
-  getName: () => string;
-  setData: (typedArray: Array<number>, numberOfComponents: number) => void;
-  getState: () => object;
-  // --- via macro --
-  setName: (name: string) => boolean;
-  setNumberOfComponents: (numberOfComponents: number) => boolean;
-}
 
 // ----------------------------------------------------------------------------
 

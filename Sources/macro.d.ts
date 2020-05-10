@@ -67,7 +67,7 @@ export function formatNumbersWithThousandSeparator(n: number, separator?: string
  *
  * @param model
  */
-function safeArrays(model: object): void;
+declare function safeArrays(model: object): void;
 
 /**
  * Extract the key of an object where the given value match the given one
@@ -75,14 +75,14 @@ function safeArrays(model: object): void;
  * @param e enum object to search key/value from
  * @param value to look for inside object
  */
-function enumToString(e: object, value: any): string;
+declare function enumToString(e: object, value: any): string;
 
 /**
  * If item is a VtkObject, return its getState() otherwise return itself.
  *
  * @param item object to extract its state from
  */
-function getStateArrayMapFunc(item: any): any;
+declare function getStateArrayMapFunc(item: any): any;
 
 /**
  * Call provided function on the next EDT pass
@@ -192,7 +192,7 @@ export interface VtkObject {
    * @param listOfKeys set of field names that you want to retrieve. If not provided, the full model get returned as a new object.
    * @returns a new object containing only the values of requested fields
    */
-  get(...listOfKeys?: string): object;
+  get(...listOfKeys: Array<string>): object;
 
   /**
    * Allow to get a direct reference of a model element
@@ -325,6 +325,57 @@ export function setArray(publicAPI: object, model: object, fieldNames: Array<str
 export function setGetArray(publicAPI: object, model: object, fieldNames: Array<string>, size: Number, defaultVal?: any): void;
 
 // ----------------------------------------------------------------------------
+// Some core data model definitions
+// ----------------------------------------------------------------------------
+
+export interface VtkRange {
+  min: number;
+  max: number;
+}
+
+export interface VtkDataArray {
+  getElementComponentSize(): number;
+  /**
+   *
+   * @param tupleIdx
+   * @param componentIndex (default: 0)
+   */
+  getComponent(tupleIdx: number, componentIndex: number): number;
+  setComponent(tupleIdx: number, componentIndex: number, value: number): void;
+  getData: () => Array<number>;
+  /**
+   * Return the range of the given component.
+   *
+   * @param componentIndex (default: -1)
+   */
+  getRange(componentIndex?: number): VtkRange;
+  setRange(rangeValue: VtkRange, componentIndex: number): [number, number];
+  setTuple(idx: number, tuple: Array<number>): void;
+  /**
+   *
+   * @param idx
+   * @param tupleToFill (default [])
+   */
+  getTuple(idx: number, tupleToFill?: Array<number>): Array<number>;
+  /**
+   *
+   * @param idx (default: 1)
+   */
+  getTupleLocation(idx: number): number;
+  getNumberOfComponents: () => number;
+  getNumberOfValues: () => number;
+  getNumberOfTuples: () => number;
+  getDataType: () => string;
+  newClone: () => VtkDataArray;
+  getName: () => string;
+  setData: (typedArray: Array<number>, numberOfComponents: number) => void;
+  getState: () => object;
+  // --- via macro --
+  setName: (name: string) => boolean;
+  setNumberOfComponents: (numberOfComponents: number) => boolean;
+}
+
+// ----------------------------------------------------------------------------
 // vtkAlgorithm: setInputData(), setInputConnection(), getOutputData(), getOutputPort()
 // ----------------------------------------------------------------------------
 
@@ -392,11 +443,25 @@ export function algo(publicAPI: object, model: object, numberOfInputs: number, n
 // Event handling: onXXX(callback), invokeXXX(args...)
 // ----------------------------------------------------------------------------
 
+/**
+ * Symbols used as return value for callback
+ */
+export const VOID = Symbol('void');
 
+/**
+ * Symbols used as return value for callback when you want to stop
+ * any further callback calls after yours.
+ */
 export const EVENT_ABORT = Symbol('Event abort');
+
 export function event(publicAPI: object, model: object, eventName: string): void;
 
-export function VtkCallback(...args: any): (void | EVENT_ABORT);
+/**
+ * Event callback
+ * @param args
+ * @returns symbol to either keep going or interrupt existing callback call stack
+ */
+export function VtkCallback(...args: any): void | symbol;
 
 // Example of event(,, 'change')
 export interface VtkChangeEvent {
