@@ -13,7 +13,7 @@ export function vtkOnceErrorMacro(str: string): void;
 // TypedArray
 // ----------------------------------------------------------------------------
 
-export const TYPED_ARRAYS = {
+export enum TYPED_ARRAYS {
   Float32Array,
   Float64Array,
   Uint8Array,
@@ -22,7 +22,7 @@ export const TYPED_ARRAYS = {
   Int16Array,
   Uint32Array,
   Int32Array,
-};
+}
 
 // ----------------------------------------------------------------------------
 // capitalize provided string
@@ -446,13 +446,13 @@ export function algo(publicAPI: object, model: object, numberOfInputs: number, n
 /**
  * Symbols used as return value for callback
  */
-export const VOID = Symbol('void');
+export const VOID: Symbol;
 
 /**
  * Symbols used as return value for callback when you want to stop
  * any further callback calls after yours.
  */
-export const EVENT_ABORT = Symbol('Event abort');
+export const EVENT_ABORT: Symbol;
 
 export function event(publicAPI: object, model: object, eventName: string): void;
 
@@ -814,44 +814,46 @@ export function normalizeWheel(wheelEvent: object): VtkNormalizedWheelEvent;
 // Default export
 // ----------------------------------------------------------------------------
 
-export default {
-  algo,
-  capitalize,
-  chain,
-  debounce,
-  enumToString,
-  event,
-  EVENT_ABORT,
-  formatBytesToProperUnit,
-  formatNumbersWithThousandSeparator,
-  get,
-  getArray,
+declare const Macro: {
+  algo: typeof algo,
+  capitalize: typeof capitalize,
+  chain: typeof chain,
+  debounce: typeof debounce,
+  enumToString: typeof enumToString,
+  event: typeof event,
+  EVENT_ABORT: typeof EVENT_ABORT,
+  formatBytesToProperUnit: typeof formatBytesToProperUnit,
+  formatNumbersWithThousandSeparator: typeof formatNumbersWithThousandSeparator,
+  get: typeof get,
+  getArray: typeof getArray,
   getCurrentGlobalMTime: () => Number,
-  getStateArrayMapFunc,
-  isVtkObject,
-  keystore,
-  newInstance,
-  normalizeWheel,
-  obj,
-  proxy,
-  proxyPropertyMapping,
-  proxyPropertyState,
-  safeArrays,
-  set,
-  setArray,
-  setGet,
-  setGetArray,
-  setImmediate: setImmediateVTK,
-  setLoggerFunction,
-  throttle,
-  traverseInstanceTree,
-  TYPED_ARRAYS,
-  uncapitalize,
-  VOID,
-  vtkDebugMacro,
-  vtkErrorMacro,
-  vtkInfoMacro,
-  vtkLogMacro,
-  vtkOnceErrorMacro,
-  vtkWarningMacro,
+  getStateArrayMapFunc: typeof getStateArrayMapFunc,
+  isVtkObject: typeof isVtkObject,
+  keystore: typeof keystore,
+  newInstance: typeof newInstance,
+  normalizeWheel: typeof normalizeWheel,
+  obj: typeof obj,
+  proxy: typeof proxy,
+  proxyPropertyMapping: typeof proxyPropertyMapping,
+  proxyPropertyState: typeof proxyPropertyState,
+  safeArrays: typeof safeArrays,
+  set: typeof set,
+  setArray: typeof setArray,
+  setGet: typeof setGet,
+  setGetArray: typeof setGetArray,
+  setImmediate: typeof setImmediateVTK,
+  setLoggerFunction: typeof setLoggerFunction,
+  throttle: typeof throttle,
+  traverseInstanceTree: typeof traverseInstanceTree,
+  TYPED_ARRAYS: typeof TYPED_ARRAYS,
+  uncapitalize: typeof uncapitalize,
+  VOID: typeof VOID,
+  vtkDebugMacro: typeof vtkDebugMacro,
+  vtkErrorMacro: typeof vtkErrorMacro,
+  vtkInfoMacro: typeof vtkInfoMacro,
+  vtkLogMacro: typeof vtkLogMacro,
+  vtkOnceErrorMacro: typeof vtkOnceErrorMacro,
+  vtkWarningMacro: typeof vtkWarningMacro
 };
+
+export default Macro;
