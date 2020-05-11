@@ -1,7 +1,8 @@
 title: Overview
 ---
 
-[![Build Status](https://dev.azure.com/Kitware/vtk-js/_apis/build/status/Kitware.vtk-js?branchName=master)](https://dev.azure.com/Kitware/vtk-js/_build/latest?definitionId=2&branchName=master) [![Build Status](https://travis-ci.org/Kitware/vtk-js.svg)](https://travis-ci.org/Kitware/vtk-js) [![semantic-release](https://img.shields.io/badge/%20%20%F0%9F%93%A6%F0%9F%9A%80-semantic--release-e10079.svg)](https://github.com/semantic-release/semantic-release) ![npm-download](https://img.shields.io/npm/dm/vtk.js.svg) [![DOI](https://zenodo.org/badge/57900965.svg)](https://zenodo.org/badge/latestdoi/57900965)
+
+[![Build Status](https://github.com/Kitware/vtk-js/workflows/Build%20and%20Test/badge.svg)](https://github.com/Kitware/vtk-js/workflows/Build%20and%20Test/badge.svg) [![Build Status](https://travis-ci.org/Kitware/vtk-js.svg)](https://travis-ci.org/Kitware/vtk-js) [![semantic-release](https://img.shields.io/badge/%20%20%F0%9F%93%A6%F0%9F%9A%80-semantic--release-e10079.svg)](https://github.com/semantic-release/semantic-release) ![npm-download](https://img.shields.io/npm/dm/vtk.js.svg) [![DOI](https://zenodo.org/badge/57900965.svg)](https://zenodo.org/badge/latestdoi/57900965)
 
 The Visualization Toolkit (VTK) is an open-source, freely available software system for 3D computer graphics, image processing, and visualization. Its implementation consists of an ES6 JavaScript class library which can be integrated into any web application. The toolkit leverages WebGL and supports a wide variety of visualization algorithms including scalar, vector, tensor, texture, and volumetric methods. VTK is part of Kitware’s collection of commercially supported open-source platforms for software development.
 
