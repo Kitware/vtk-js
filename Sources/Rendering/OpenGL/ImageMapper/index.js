@@ -224,12 +224,8 @@ function vtkOpenGLImageMapper(publicAPI, model) {
       let tcoordImpl = ['vec4 tvalue = texture2D(texture1, tcoordVCVSOutput);'];
       for (let comp = 0; comp < tNumComp; comp++) {
         tcoordImpl = tcoordImpl.concat([
-          `vec3 tcolor${comp} = mix${comp} * texture2D(colorTexture1, vec2(tvalue.${
-            rgba[comp]
-          } * cscale${comp} + cshift${comp}, height${comp})).rgb;`,
-          `float compWeight${comp} = mix${comp} * texture2D(pwfTexture1, vec2(tvalue.${
-            rgba[comp]
-          } * pwfscale${comp} + pwfshift${comp}, height${comp})).r;`,
+          `vec3 tcolor${comp} = mix${comp} * texture2D(colorTexture1, vec2(tvalue.${rgba[comp]} * cscale${comp} + cshift${comp}, height${comp})).rgb;`,
+          `float compWeight${comp} = mix${comp} * texture2D(pwfTexture1, vec2(tvalue.${rgba[comp]} * pwfscale${comp} + pwfshift${comp}, height${comp})).r;`,
         ]);
       }
       switch (tNumComp) {
@@ -647,10 +643,7 @@ function vtkOpenGLImageMapper(publicAPI, model) {
       model.pwfTexture.setMagnificationFilter(Filter.LINEAR);
     }
 
-    const numComp = image
-      .getPointData()
-      .getScalars()
-      .getNumberOfComponents();
+    const numComp = image.getPointData().getScalars().getNumberOfComponents();
     const iComps = actorProperty.getIndependentComponents();
     const numIComps = iComps ? numComp : 1;
     const textureHeight = iComps ? 2 * numIComps : 1;
@@ -833,10 +826,7 @@ function vtkOpenGLImageMapper(publicAPI, model) {
         tcoordArray[i * 2 + 1] = i > 1 ? 1.0 : 0.0;
       }
 
-      const basicScalars = image
-        .getPointData()
-        .getScalars()
-        .getData();
+      const basicScalars = image.getPointData().getScalars().getData();
       let scalars = null;
       // Get right scalars according to slicing mode
       if (ijkMode === SlicingMode.I) {
@@ -913,10 +903,7 @@ function vtkOpenGLImageMapper(publicAPI, model) {
         dims[0],
         dims[1],
         numComp,
-        image
-          .getPointData()
-          .getScalars()
-          .getDataType(),
+        image.getPointData().getScalars().getDataType(),
         scalars
       );
       model.openGLTexture.activate();

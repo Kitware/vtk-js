@@ -380,10 +380,7 @@ function vtkMapper(publicAPI, model) {
         scalarComponent,
         range,
         model.lookupTable.getRange(),
-        model.colorTextureMap
-          .getPointData()
-          .getScalars()
-          .getNumberOfTuples() /
+        model.colorTextureMap.getPointData().getScalars().getNumberOfTuples() /
           2 -
           2,
         useLogScale
@@ -574,9 +571,10 @@ export const newInstance = macro.newInstance(extend, 'vtkMapper');
 
 // ----------------------------------------------------------------------------
 
-export default Object.assign(
-  { newInstance, extend },
-  staticOffsetAPI,
-  otherStaticMethods,
-  Constants
-);
+export default {
+  newInstance,
+  extend,
+  ...staticOffsetAPI,
+  ...otherStaticMethods,
+  ...Constants,
+};

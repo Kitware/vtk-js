@@ -75,11 +75,10 @@ function vtkFPSMonitor(publicAPI, model) {
         );
       }
 
-      const stats = Object.assign(
-        {},
-        model.renderWindow.getStatistics(),
-        model.addOnStats
-      );
+      const stats = {
+        ...model.renderWindow.getStatistics(),
+        ...model.addOnStats,
+      };
       const keys = Object.keys(stats);
       keys.sort();
       for (let i = 0; i < keys.length; i++) {

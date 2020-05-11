@@ -50,7 +50,10 @@ fullScreenRenderer.addController(controlPanel);
   });
 });
 const mapping = 'xyz';
-const points = [[0, 0, 0], [0, 0, 0]];
+const points = [
+  [0, 0, 0],
+  [0, 0, 0],
+];
 ['x1', 'y1', 'z1', 'x2', 'y2', 'z2'].forEach((propertyName) => {
   document.querySelector(`.${propertyName}`).addEventListener('input', (e) => {
     const value = Number(e.target.value);

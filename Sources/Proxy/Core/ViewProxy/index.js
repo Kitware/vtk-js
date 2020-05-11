@@ -435,9 +435,8 @@ function vtkViewProxy(publicAPI, model) {
       if (needSteps) {
         if (rotation180Only) {
           const availableAxes = originalFocalPoint
-            .map(
-              (fp, i) =>
-                Math.abs(originalPosition[i] - fp) < EPSILON ? i : null
+            .map((fp, i) =>
+              Math.abs(originalPosition[i] - fp) < EPSILON ? i : null
             )
             .filter((i) => i !== null);
           const axisCorrectionIndex = availableAxes.find(

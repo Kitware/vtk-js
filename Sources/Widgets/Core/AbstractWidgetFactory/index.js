@@ -49,9 +49,11 @@ function vtkAbstractWidgetFactory(publicAPI, model) {
       widgetModel.representations = publicAPI
         .getRepresentationsForViewType(viewType)
         .map(({ builder, labels, initialValues }) =>
-          builder.newInstance(
-            Object.assign({ labels }, initialValues, widgetInitialValues)
-          )
+          builder.newInstance({
+            labels,
+            ...initialValues,
+            ...widgetInitialValues,
+          })
         );
       /* eslint-enable no-shadow */
 

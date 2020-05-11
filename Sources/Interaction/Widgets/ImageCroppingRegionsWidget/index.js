@@ -10,7 +10,12 @@ const { vtkErrorMacro, VOID, EVENT_ABORT } = macro;
 const { TOTAL_NUM_HANDLES, WidgetState, CropWidgetEvents } = Constants;
 
 // Determines the ordering of edge handles for some fixed axis
-const EDGE_ORDER = [[0, 0], [0, 1], [1, 0], [1, 1]];
+const EDGE_ORDER = [
+  [0, 0],
+  [0, 1],
+  [1, 0],
+  [1, 1],
+];
 
 // ----------------------------------------------------------------------------
 // vtkImageCroppingRegionsWidget methods
@@ -69,7 +74,7 @@ function vtkImageCroppingRegionsWidget(publicAPI, model) {
     }
   };
 
-  publicAPI.getWidgetState = () => Object.assign({}, model.widgetState);
+  publicAPI.getWidgetState = () => ({ ...model.widgetState });
 
   publicAPI.updateWidgetState = (state) => {
     const needsUpdate = Object.keys(state).reduce(
@@ -79,7 +84,7 @@ function vtkImageCroppingRegionsWidget(publicAPI, model) {
 
     if (needsUpdate) {
       const oldState = model.widgetState;
-      model.widgetState = Object.assign({}, oldState, state);
+      model.widgetState = { ...oldState, ...state };
 
       if (!arrayEquals(oldState.planes, model.widgetState.planes)) {
         // invalidate handles cache

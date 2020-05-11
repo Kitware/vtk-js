@@ -77,10 +77,7 @@ function vtkOpenGLTexture(publicAPI, model) {
         for (let i = 0; i < model.renderable.getNumberOfInputPorts(); ++i) {
           const indata = model.renderable.getInputData(i);
           const scalars = indata
-            ? indata
-                .getPointData()
-                .getScalars()
-                .getData()
+            ? indata.getPointData().getScalars().getData()
             : null;
           if (scalars) {
             data.push(scalars);
@@ -1357,4 +1354,4 @@ export const newInstance = macro.newInstance(extend, 'vtkOpenGLTexture');
 
 // ----------------------------------------------------------------------------
 
-export default Object.assign({ newInstance, extend }, Constants);
+export default { newInstance, extend, ...Constants };

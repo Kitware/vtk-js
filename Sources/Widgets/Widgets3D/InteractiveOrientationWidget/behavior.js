@@ -16,12 +16,11 @@ export default function widgetBehavior(publicAPI, model) {
     ) {
       return macro.VOID;
     }
-    publicAPI.invokeOrientationChange(
-      Object.assign(
-        { action: 'rightPress', event: e },
-        model.activeState.get('up', 'right', 'direction')
-      )
-    );
+    publicAPI.invokeOrientationChange({
+      action: 'rightPress',
+      event: e,
+      ...model.activeState.get('up', 'right', 'direction'),
+    });
     return macro.EVENT_ABORT;
   };
 
@@ -37,12 +36,11 @@ export default function widgetBehavior(publicAPI, model) {
     ) {
       return macro.VOID;
     }
-    publicAPI.invokeOrientationChange(
-      Object.assign(
-        { action: 'leftPress', event: e },
-        model.activeState.get('up', 'right', 'direction')
-      )
-    );
+    publicAPI.invokeOrientationChange({
+      action: 'leftPress',
+      event: e,
+      ...model.activeState.get('up', 'right', 'direction'),
+    });
     return macro.EVENT_ABORT;
   };
 }

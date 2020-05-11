@@ -353,10 +353,7 @@ function vtkWidgetManager(publicAPI, model) {
     if (index !== -1) {
       model.widgets.splice(index, 1);
       model.renderer.removeActor(viewWidget);
-      model.renderer
-        .getRenderWindow()
-        .getInteractor()
-        .render();
+      model.renderer.getRenderWindow().getInteractor().render();
       publicAPI.enablePicking();
 
       removeFromSvgLayer(viewWidget);

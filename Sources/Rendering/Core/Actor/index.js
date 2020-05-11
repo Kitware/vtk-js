@@ -14,7 +14,7 @@ function vtkActor(publicAPI, model) {
   model.classHierarchy.push('vtkActor');
 
   // Capture 'parentClass' api for internal use
-  const superClass = Object.assign({}, publicAPI);
+  const superClass = { ...publicAPI };
 
   publicAPI.getActors = () => publicAPI;
 
@@ -122,14 +122,10 @@ function vtkActor(publicAPI, model) {
       model.bounds[1] = model.bounds[3] = model.bounds[5] = -Number.MAX_VALUE;
       /* eslint-enable no-multi-assign */
 
-      model.bounds = model.bounds.map(
-        (d, i) =>
-          i % 2 === 0
-            ? bbox.reduce((a, b) => (a > b[i / 2] ? b[i / 2] : a), d)
-            : bbox.reduce(
-                (a, b) => (a < b[(i - 1) / 2] ? b[(i - 1) / 2] : a),
-                d
-              )
+      model.bounds = model.bounds.map((d, i) =>
+        i % 2 === 0
+          ? bbox.reduce((a, b) => (a > b[i / 2] ? b[i / 2] : a), d)
+          : bbox.reduce((a, b) => (a < b[(i - 1) / 2] ? b[(i - 1) / 2] : a), d)
       );
 
       model.boundsMTime.modified();

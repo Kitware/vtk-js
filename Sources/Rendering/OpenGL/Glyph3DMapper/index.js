@@ -25,7 +25,7 @@ function vtkOpenGLGlyph3DMapper(publicAPI, model) {
   model.classHierarchy.push('vtkOpenGLGlyph3DMapper');
 
   // Capture 'parentClass' api for internal use
-  const superClass = Object.assign({}, publicAPI);
+  const superClass = { ...publicAPI };
 
   publicAPI.renderPiece = (ren, actor) => {
     publicAPI.invokeEvent(StartEvent);

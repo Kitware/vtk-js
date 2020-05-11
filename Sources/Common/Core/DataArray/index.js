@@ -251,9 +251,7 @@ function vtkDataArray(publicAPI, model) {
 
   // Override serialization support
   publicAPI.getState = () => {
-    const jsonArchive = Object.assign({}, model, {
-      vtkClass: publicAPI.getClassName(),
-    });
+    const jsonArchive = { ...model, vtkClass: publicAPI.getClassName() };
 
     // Convert typed array to regular array
     jsonArchive.values = Array.from(jsonArchive.values);
@@ -333,4 +331,4 @@ export const newInstance = macro.newInstance(extend, 'vtkDataArray');
 
 // ----------------------------------------------------------------------------
 
-export default Object.assign({ newInstance, extend }, STATIC, Constants);
+export default { newInstance, extend, ...STATIC, ...Constants };

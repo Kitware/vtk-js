@@ -48,4 +48,4 @@ export const newInstance = macro.newInstance(extend, 'vtkSelectionNode');
 
 // ----------------------------------------------------------------------------
 
-export default Object.assign({ newInstance, extend }, Constants);
+export default { newInstance, extend, ...Constants };

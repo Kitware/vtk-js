@@ -20,7 +20,7 @@ function vtkLineRepresentation(publicAPI, model) {
   // Set our className
   model.classHierarchy.push('vtkLineRepresentation');
 
-  const superClass = Object.assign({}, publicAPI);
+  const superClass = { ...publicAPI };
 
   publicAPI.setResolution = (res) => {
     model.lineSource.setResolution(res);

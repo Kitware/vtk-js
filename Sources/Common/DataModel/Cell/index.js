@@ -21,7 +21,7 @@ function vtkCell(publicAPI, model) {
       model.pointsIds = pointIdsList;
       let triangleData = model.points.getData();
       if (triangleData.length !== 3 * model.pointsIds.length) {
-        triangleData = new window[(points.getDataType())](
+        triangleData = new window[points.getDataType()](
           3 * model.pointsIds.length
         );
       }
@@ -146,4 +146,4 @@ export const newInstance = macro.newInstance(extend, 'vtkCell');
 
 // ----------------------------------------------------------------------------
 
-export default Object.assign({ newInstance, extend });
+export default { newInstance, extend };

@@ -18,31 +18,19 @@ function vtkDirectionMixin(publicAPI, model) {
   };
 
   publicAPI.rotate = (angle, axis) => {
-    transform
-      .identity()
-      .rotate(angle, axis)
-      .apply(model.direction);
+    transform.identity().rotate(angle, axis).apply(model.direction);
   };
 
   publicAPI.rotateX = (angle) => {
-    transform
-      .identity()
-      .rotateX(angle)
-      .apply(model.direction);
+    transform.identity().rotateX(angle).apply(model.direction);
   };
 
   publicAPI.rotateY = (angle) => {
-    transform
-      .identity()
-      .rotateY(angle)
-      .apply(model.direction);
+    transform.identity().rotateY(angle).apply(model.direction);
   };
 
   publicAPI.rotateZ = (angle) => {
-    transform
-      .identity()
-      .rotateZ(angle)
-      .apply(model.direction);
+    transform.identity().rotateZ(angle).apply(model.direction);
   };
 }
 

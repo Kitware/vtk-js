@@ -484,7 +484,7 @@ function vtkPiecewiseGaussianWidget(publicAPI, model) {
   };
 
   publicAPI.updateStyle = (style) => {
-    model.style = Object.assign({}, model.style, style);
+    model.style = { ...model.style, ...style };
     publicAPI.modified();
   };
 
@@ -589,7 +589,7 @@ function vtkPiecewiseGaussianWidget(publicAPI, model) {
         case 0: {
           const gaussianIdx = publicAPI.addGaussian(0, 1, 0.1, 0, 0);
           const gaussian = model.gaussians[gaussianIdx];
-          const originalGaussian = Object.assign({}, gaussian);
+          const originalGaussian = { ...gaussian };
           const action = ACTIONS.adjustPosition;
           model.activeGaussian = gaussianIdx;
           model.selectedGaussian = gaussianIdx;
@@ -696,7 +696,7 @@ function vtkPiecewiseGaussianWidget(publicAPI, model) {
       }
       model.canvas.style.cursor = ACTION_TO_CURSOR[actionName];
       const action = ACTIONS[actionName];
-      const originalGaussian = Object.assign({}, gaussian);
+      const originalGaussian = { ...gaussian };
       model.dragAction = {
         originalXY: [xNormalized, yNormalized],
         action,
@@ -747,18 +747,12 @@ function vtkPiecewiseGaussianWidget(publicAPI, model) {
       );
       const { action } = model.dragAction;
       if (
-        action(
-          xNormalized,
-          yNormalized,
-          Object.assign(
-            {
-              gaussianSide: model.gaussianSide,
-              model,
-              publicAPI,
-            },
-            model.dragAction
-          )
-        )
+        action(xNormalized, yNormalized, {
+          gaussianSide: model.gaussianSide,
+          model,
+          publicAPI,
+          ...model.dragAction,
+        })
       ) {
         model.opacities = computeOpacities(
           model.gaussians,
@@ -1277,4 +1271,4 @@ export const newInstance = macro.newInstance(
 
 // ----------------------------------------------------------------------------
 
-export default Object.assign({ newInstance, extend }, STATIC);
+export default { newInstance, extend, ...STATIC };

@@ -23,7 +23,12 @@ const MARCHING_SQUARES_CASES = [
   [-1, -1, -1, -1, -1] /* 15 */,
 ];
 
-const EDGES = [[0, 1], [1, 3], [2, 3], [0, 2]];
+const EDGES = [
+  [0, 1],
+  [1, 3],
+  [2, 3],
+  [0, 2],
+];
 
 function getCase(index) {
   return MARCHING_SQUARES_CASES[index];

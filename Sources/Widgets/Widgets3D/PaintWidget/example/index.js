@@ -364,10 +364,7 @@ document.querySelector('.axis').addEventListener('input', (ev) => {
 
   const direction = [0, 0, 0];
   direction[sliceMode] = 1;
-  scene.paintHandle
-    .getWidgetState()
-    .getHandle()
-    .setDirection(direction);
+  scene.paintHandle.getWidgetState().getHandle().setDirection(direction);
   scene.rectangleHandle.setSlicingMode(sliceMode);
   scene.ellipseHandle.setSlicingMode(sliceMode);
   scene.circleHandle.setSlicingMode(sliceMode);

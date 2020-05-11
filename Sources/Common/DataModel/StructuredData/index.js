@@ -44,4 +44,4 @@ export function getDataDescriptionFromExtent(inExt) {
   return StructuredType.SINGLE_POINT;
 }
 
-export default Object.assign({ getDataDescriptionFromExtent }, Constants);
+export default { getDataDescriptionFromExtent, ...Constants };

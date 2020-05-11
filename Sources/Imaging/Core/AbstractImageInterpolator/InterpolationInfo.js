@@ -12,7 +12,8 @@ export const vtkInterpolationInfo = {
   extraInfo: null,
 };
 
-export const vtkInterpolationWeights = Object.assign({}, vtkInterpolationInfo, {
+export const vtkInterpolationWeights = {
+  ...vtkInterpolationInfo,
   positions: [0, 0, 0],
   weights: null,
   weightExtent: [0, -1, 0, -1, 0, -1],
@@ -20,7 +21,7 @@ export const vtkInterpolationWeights = Object.assign({}, vtkInterpolationInfo, {
   workspace: null,
   lastY: null,
   lastZ: null,
-});
+};
 
 export function vtkInterpolationMathFloor(x) {
   const integer = Math.floor(x);

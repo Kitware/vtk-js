@@ -53,19 +53,19 @@ function vtkAxesActor(publicAPI, model) {
 
   publicAPI.update = () => {
     const xAxis = vtkArrowSource
-      .newInstance(Object.assign({ direction: [1, 0, 0] }, model.config))
+      .newInstance({ direction: [1, 0, 0], ...model.config })
       .getOutputData();
     centerDataSet(xAxis);
     addColor(xAxis, ...model.xAxisColor);
 
     const yAxis = vtkArrowSource
-      .newInstance(Object.assign({ direction: [0, 1, 0] }, model.config))
+      .newInstance({ direction: [0, 1, 0], ...model.config })
       .getOutputData();
     centerDataSet(yAxis);
     addColor(yAxis, ...model.yAxisColor);
 
     const zAxis = vtkArrowSource
-      .newInstance(Object.assign({ direction: [0, 0, 1] }, model.config))
+      .newInstance({ direction: [0, 0, 1], ...model.config })
       .getOutputData();
     centerDataSet(zAxis);
     addColor(zAxis, ...model.zAxisColor);

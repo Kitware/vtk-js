@@ -214,7 +214,7 @@ function vtkSlider(publicAPI, model) {
   };
 
   publicAPI.updateCursorStyle = (cursorStyle) => {
-    model.cursorStyle = Object.assign({}, model.cursorStyle, cursorStyle);
+    model.cursorStyle = { ...model.cursorStyle, ...cursorStyle };
     const keys = Object.keys(model.cursorStyle);
     let count = keys.length;
     while (count--) {
@@ -264,4 +264,4 @@ export const newInstance = macro.newInstance(extend, 'vtkSlider');
 
 // ----------------------------------------------------------------------------
 
-export default Object.assign({ newInstance, extend }, Constants);
+export default { newInstance, extend, ...Constants };

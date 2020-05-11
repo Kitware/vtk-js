@@ -26,7 +26,7 @@ export default function vtk(obj) {
   }
 
   // Shallow copy object
-  const model = Object.assign({}, obj);
+  const model = { ...obj };
 
   // Convert into vtkObject any nested key
   Object.keys(model).forEach((keyName) => {

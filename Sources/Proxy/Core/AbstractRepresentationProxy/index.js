@@ -174,44 +174,20 @@ function vtkAbstractRepresentationProxy(publicAPI, model) {
     if (!model.mapper.getColorByArrayName) {
       const ds = publicAPI.getInputDataSet();
       if (ds.getPointData().getScalars()) {
-        return [
-          ds
-            .getPointData()
-            .getScalars()
-            .getName(),
-          'pointData',
-          -1,
-        ];
+        return [ds.getPointData().getScalars().getName(), 'pointData', -1];
       }
       if (ds.getCellData().getScalars()) {
-        return [
-          ds
-            .getCellData()
-            .getScalars()
-            .getName(),
-          'cellData',
-          -1,
-        ];
+        return [ds.getCellData().getScalars().getName(), 'cellData', -1];
       }
       if (ds.getPointData().getNumberOfArrays()) {
         return [
-          ds
-            .getPointData()
-            .getArrayByIndex(0)
-            .getName(),
+          ds.getPointData().getArrayByIndex(0).getName(),
           'pointData',
           -1,
         ];
       }
       if (ds.getCellData().getNumberOfArrays()) {
-        return [
-          ds
-            .getCellData()
-            .getArrayByIndex(0)
-            .getName(),
-          'cellData',
-          -1,
-        ];
+        return [ds.getCellData().getArrayByIndex(0).getName(), 'cellData', -1];
       }
       return [];
     }

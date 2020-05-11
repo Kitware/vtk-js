@@ -1269,4 +1269,4 @@ export const newInstance = macro.newInstance(
 
 // ----------------------------------------------------------------------------
 
-export default Object.assign({ newInstance, extend, vtkColorMaps }, Constants);
+export default { newInstance, extend, vtkColorMaps, ...Constants };

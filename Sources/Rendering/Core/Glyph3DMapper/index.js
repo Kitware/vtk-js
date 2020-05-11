@@ -267,11 +267,7 @@ function vtkGlyph3DMapper(publicAPI, model) {
 
   publicAPI.getPrimitiveCount = () => {
     const glyph = publicAPI.getInputData(1);
-    const mult =
-      publicAPI
-        .getInputData()
-        .getPoints()
-        .getNumberOfValues() / 3;
+    const mult = publicAPI.getInputData().getPoints().getNumberOfValues() / 3;
 
     const pcount = {
       points: (mult * glyph.getPoints().getNumberOfValues()) / 3,
@@ -351,4 +347,4 @@ export const newInstance = macro.newInstance(extend, 'vtkGlyph3DMapper');
 
 // ----------------------------------------------------------------------------
 
-export default Object.assign({ newInstance, extend }, Constants);
+export default { newInstance, extend, ...Constants };

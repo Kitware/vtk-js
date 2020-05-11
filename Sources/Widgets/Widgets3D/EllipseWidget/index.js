@@ -93,7 +93,7 @@ const DEFAULT_VALUES = {
 export function extend(publicAPI, model, initialValues = {}) {
   Object.assign(
     model,
-    Object.assign({}, SHAPE_DEFAULT_VALUES.DEFAULT_VALUES, DEFAULT_VALUES),
+    { ...SHAPE_DEFAULT_VALUES.DEFAULT_VALUES, ...DEFAULT_VALUES },
     initialValues
   );
 

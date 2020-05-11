@@ -592,4 +592,4 @@ export const newInstance = macro.newInstance(extend, 'vtkPiecewiseFunction');
 
 // ----------------------------------------------------------------------------
 
-export default Object.assign({ newInstance, extend });
+export default { newInstance, extend };

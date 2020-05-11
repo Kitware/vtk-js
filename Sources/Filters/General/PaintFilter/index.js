@@ -225,15 +225,9 @@ function vtkPaintFilter(publicAPI, model) {
   // --------------------------------------------------------------------------
 
   publicAPI.applyLabelMap = (labelMap) => {
-    const currentMapData = model.labelMap
-      .getPointData()
-      .getScalars()
-      .getData();
+    const currentMapData = model.labelMap.getPointData().getScalars().getData();
 
-    const newMapData = labelMap
-      .getPointData()
-      .getScalars()
-      .getData();
+    const newMapData = labelMap.getPointData().getScalars().getData();
 
     // Compute snapshot
     const snapshot = [];

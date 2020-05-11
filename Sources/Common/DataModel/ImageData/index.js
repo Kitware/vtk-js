@@ -415,10 +415,7 @@ function vtkImageData(publicAPI, model) {
     const yStride = dimensions[0];
     const zStride = dimensions[0] * dimensions[1];
 
-    const pixels = publicAPI
-      .getPointData()
-      .getScalars()
-      .getData();
+    const pixels = publicAPI.getPointData().getScalars().getData();
 
     let maximum = -Infinity;
     let minimum = Infinity;

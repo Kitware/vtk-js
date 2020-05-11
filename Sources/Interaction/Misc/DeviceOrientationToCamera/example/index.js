@@ -79,10 +79,7 @@ function loadTexture(url, index) {
   const reader = vtkHttpDataSetReader.newInstance({ fetchGzip: true });
   reader.setUrl(url, { loadData: true }).then(() => {
     const dataset = reader.getOutputData();
-    const scalarName = dataset
-      .getPointData()
-      .getArrayByIndex(0)
-      .getName();
+    const scalarName = dataset.getPointData().getArrayByIndex(0).getName();
     dataset.getPointData().setActiveScalars(scalarName);
     texture.setInputData(dataset, index);
     nbTextureLoaded += 1;

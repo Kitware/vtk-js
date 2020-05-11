@@ -16,7 +16,7 @@ function vtkResliceCursor(publicAPI, model) {
   // Set our className
   model.classHierarchy.push('vtkResliceCursor');
 
-  const superClass = Object.assign({}, publicAPI);
+  const superClass = { ...publicAPI };
 
   function projectCenterToFitBounds(center, bounds) {
     if (

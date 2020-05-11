@@ -16,7 +16,7 @@ function vtkResliceCursorActor(publicAPI, model) {
   // Set our className
   model.classHierarchy.push('vtkResliceCursorActor');
 
-  const superClass = Object.assign({}, publicAPI);
+  const superClass = { ...publicAPI };
 
   publicAPI.getActors = () => {
     if (model.cursorAlgorithm.getResliceCursor()) {

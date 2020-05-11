@@ -37,10 +37,7 @@ function vtkImageOutlineFilter(publicAPI, model) {
     output.setDimensions(dims);
     output.computeTransforms();
     const values = new Uint8Array(input.getNumberOfPoints());
-    const inputDataArray = input
-      .getPointData()
-      .getScalars()
-      .getData();
+    const inputDataArray = input.getPointData().getScalars().getData();
     let kernelX = 0; // default K slicing mode
     let kernelY = 1;
     if (model.slicingMode === 1) {

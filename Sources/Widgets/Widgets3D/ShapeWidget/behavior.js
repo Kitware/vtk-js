@@ -28,7 +28,7 @@ function makeBoundsFromPoints(point1, point2) {
 export default function widgetBehavior(publicAPI, model) {
   model.classHierarchy.push('vtkShapeWidgetProp');
 
-  const superClass = Object.assign({}, publicAPI);
+  const superClass = { ...publicAPI };
 
   // --------------------------------------------------------------------------
   // Display 2D
@@ -372,10 +372,10 @@ export default function widgetBehavior(publicAPI, model) {
   };
 
   /*
-  * If the widget has the focus, this method reset the widget
-  * to it's state just after it grabbed the focus. Otherwise
-  * it resets the widget to its state before it grabbed the focus. 
-  */
+   * If the widget has the focus, this method reset the widget
+   * to it's state just after it grabbed the focus. Otherwise
+   * it resets the widget to its state before it grabbed the focus.
+   */
   publicAPI.reset = () => {
     if (!model.hasFocus) {
       model.point1Handle.setVisible(false);

@@ -52,12 +52,7 @@ test('Test vtkAppendPolyData execution', (t) => {
     'Make sure the output data type is correct.'
   );
   const expNumPolys = [cone, cylinder].reduce(
-    (count, c) =>
-      count +
-      c
-        .getOutputData()
-        .getPolys()
-        .getNumberOfCells(),
+    (count, c) => count + c.getOutputData().getPolys().getNumberOfCells(),
     0
   );
   const outNumPolys = outPD.getPolys().getNumberOfCells();

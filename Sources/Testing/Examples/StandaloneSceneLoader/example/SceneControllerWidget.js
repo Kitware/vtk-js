@@ -1,7 +1,5 @@
 import vtkHttpSceneLoader from 'vtk.js/Sources/IO/Core/HttpSceneLoader';
 
-/* global document */
-
 const SETTINGS_OPTIONS = {
   defaultSettings: {},
   Surface: {
@@ -78,9 +76,7 @@ export default function addWidget(container, sceneItems, render) {
   const listStr = sceneItems
     .map(
       (item, idx) =>
-        `<li><select name="${idx}">${OPTIONS_HTML_STR}</select>&nbsp;&nbsp;${
-          item.name
-        }</li>`
+        `<li><select name="${idx}">${OPTIONS_HTML_STR}</select>&nbsp;&nbsp;${item.name}</li>`
     )
     .join('');
 

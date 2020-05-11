@@ -1,7 +1,7 @@
 #! /usr/bin/env node
 
 var fs = require('fs');
-var program = require('commander');
+var { program } = require('commander');
 var shell = require('shelljs');
 var path = require('path');
 var paraview = process.env.PARAVIEW_HOME;

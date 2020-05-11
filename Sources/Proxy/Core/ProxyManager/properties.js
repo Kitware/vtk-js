@@ -98,7 +98,7 @@ export default function addVPropertyHandlingAPI(publicAPI, model) {
       model.lookupTables[arrayName] = publicAPI.createProxy(
         'Proxy',
         'LookupTable',
-        Object.assign({ arrayName }, options)
+        { arrayName, ...options }
       );
     }
     return model.lookupTables[arrayName];
@@ -111,7 +111,7 @@ export default function addVPropertyHandlingAPI(publicAPI, model) {
       model.piecewiseFunctions[arrayName] = publicAPI.createProxy(
         'Proxy',
         'PiecewiseFunction',
-        Object.assign({ arrayName }, options)
+        { arrayName, ...options }
       );
     }
     return model.piecewiseFunctions[arrayName];

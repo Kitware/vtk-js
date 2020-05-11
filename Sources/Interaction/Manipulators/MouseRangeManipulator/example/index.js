@@ -37,10 +37,7 @@ actor.getProperty().setColorLevel(50);
 actor.setMapper(mapper);
 
 const data = rtSource.getOutputData();
-const range = data
-  .getPointData()
-  .getScalars()
-  .getRange();
+const range = data.getPointData().getScalars().getRange();
 const wMin = 1;
 const wMax = range[1] - range[0];
 const wGet = actor.getProperty().getColorWindow;

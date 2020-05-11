@@ -26,7 +26,7 @@ const DEFAULT_VALUES = {
 // ----------------------------------------------------------------------------
 
 export function extend(publicAPI, model, initialValues = {}) {
-  const newDefault = Object.assign({}, DEFAULT_VALUES, initialValues);
+  const newDefault = { ...DEFAULT_VALUES, ...initialValues };
   vtkWidgetRepresentation.extend(publicAPI, model, newDefault);
   macro.setGet(publicAPI, model, [
     'activeScaleFactor',

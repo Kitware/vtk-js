@@ -66,7 +66,7 @@ function applyControlStyle(el, position, size) {
 // ----------------------------------------------------------------------------
 
 function vtkRenderWindowWithControlBar(publicAPI, model) {
-  const superClass = Object.assign({}, publicAPI);
+  const superClass = { ...publicAPI };
 
   function resetStyleToZero(key) {
     model.renderWindowContainer.style[key] = '0px';
@@ -74,9 +74,9 @@ function vtkRenderWindowWithControlBar(publicAPI, model) {
 
   function updateControlerStyle() {
     ['left', 'right', 'top', 'bottom'].forEach(resetStyleToZero);
-    model.renderWindowContainer.style[model.controlPosition] = `${
-      model.controlSize
-    }px`;
+    model.renderWindowContainer.style[
+      model.controlPosition
+    ] = `${model.controlSize}px`;
     applyControlStyle(
       model.controlContainer,
       model.controlPosition,

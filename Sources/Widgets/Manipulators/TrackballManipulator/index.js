@@ -19,11 +19,7 @@ export function trackballRotate(
   const viewUp = camera.getViewUp();
   const dop = camera.getDirectionOfProjection();
 
-  const size = renderer
-    .getRenderWindow()
-    .getInteractor()
-    .getView()
-    .getSize();
+  const size = renderer.getRenderWindow().getInteractor().getView().getSize();
   const xdeg = (360.0 * dx) / size[0];
   const ydeg = (360.0 * dy) / size[1];
 

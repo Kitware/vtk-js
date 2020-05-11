@@ -97,4 +97,4 @@ export const newInstance = macro.newInstance(extend, 'vtkSphere');
 
 // ----------------------------------------------------------------------------
 
-export default Object.assign({ newInstance, extend }, STATIC);
+export default { newInstance, extend, ...STATIC };

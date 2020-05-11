@@ -198,4 +198,4 @@ export const newInstance = macro.newInstance(extend, 'vtkCellTypes');
 
 // ----------------------------------------------------------------------------
 
-export default Object.assign({ newInstance, extend }, STATIC);
+export default { newInstance, extend, ...STATIC };

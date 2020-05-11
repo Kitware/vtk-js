@@ -166,7 +166,7 @@ function vtkCalculator(publicAPI, model) {
       }
     });
     arraySpec.output.forEach((spec) => {
-      const fullSpec = Object.assign({}, spec);
+      const fullSpec = { ...spec };
       const ncomp =
         'numberOfComponents' in fullSpec ? fullSpec.numberOfComponents : 1;
       if (spec.location === FieldDataTypes.UNIFORM && 'tuples' in fullSpec) {

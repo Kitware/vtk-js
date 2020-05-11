@@ -779,12 +779,7 @@ function vtkOpenGLVolumeMapper(publicAPI, model) {
       model.avgWindowArea =
         0.97 * model.avgWindowArea + 0.03 / (model.lastXYF * model.lastXYF);
 
-      if (
-        ren
-          .getVTKWindow()
-          .getInteractor()
-          .isAnimating()
-      ) {
+      if (ren.getVTKWindow().getInteractor().isAnimating()) {
         // compute target xy factor
         let txyf = Math.sqrt(
           (model.avgFrameTime * rwi.getDesiredUpdateRate()) /
@@ -1088,10 +1083,7 @@ function vtkOpenGLVolumeMapper(publicAPI, model) {
       );
     }
 
-    const numComp = image
-      .getPointData()
-      .getScalars()
-      .getNumberOfComponents();
+    const numComp = image.getPointData().getScalars().getNumberOfComponents();
     const iComps = vprop.getIndependentComponents();
     const numIComps = iComps ? numComp : 1;
 
@@ -1199,14 +1191,8 @@ function vtkOpenGLVolumeMapper(publicAPI, model) {
         dims[1],
         dims[2],
         numComp,
-        image
-          .getPointData()
-          .getScalars()
-          .getDataType(),
-        image
-          .getPointData()
-          .getScalars()
-          .getData()
+        image.getPointData().getScalars().getDataType(),
+        image.getPointData().getScalars().getData()
       );
       // console.log(model.scalarTexture.get());
       model.scalarTextureString = toString;

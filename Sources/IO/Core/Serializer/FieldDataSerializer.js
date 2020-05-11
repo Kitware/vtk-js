@@ -1,4 +1,3 @@
-import macro from 'vtk.js/Sources/macro';
 import vtkDataSetAttributes from 'vtk.js/Sources/Common/DataModel/DataSetAttributes';
 
 const CLASS_NAME = 'vtkDataSetAttributes';

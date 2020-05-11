@@ -93,7 +93,7 @@ function vtkAbstractImageInterpolator(publicAPI, model) {
       (point[2] - model.origin[2]) / model.spacing[2],
     ];
     if (publicAPI.checkBoundsIJK(p)) {
-      const iinfo = Object.assign({}, model.interpolationInfo);
+      const iinfo = { ...model.interpolationInfo };
       const ncomp = iinfo.increments[0] - model.componentOffset;
       const dataTypeSize = 1; // iinfo.dataTypeSize; // vtkAbstractArray::getDataTypeSize(iinfo.scalarType)
 
@@ -198,7 +198,7 @@ const DEFAULT_VALUES = {
   slidingWindow: false,
 
   scalars: null,
-  interpolationInfo: Object.assign({}, vtkInterpolationInfo),
+  interpolationInfo: { ...vtkInterpolationInfo },
   interpolationFunc: null,
   rowInterpolationFunc: null,
   structuredBounds: [0, -1, 0, -1, 0, -1],

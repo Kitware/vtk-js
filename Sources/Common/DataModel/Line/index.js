@@ -239,4 +239,4 @@ export const newInstance = macro.newInstance(extend, 'vtkLine');
 
 // ----------------------------------------------------------------------------
 
-export default Object.assign({ newInstance, extend }, STATIC, Constants);
+export default { newInstance, extend, ...STATIC, ...Constants };

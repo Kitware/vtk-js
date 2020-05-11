@@ -155,11 +155,10 @@ function vtkImageInterpolator(publicAPI, model) {
   };
 
   publicAPI.precomputeWeightsForExtent = (matrix, outExt, clipExt) => {
-    const weights = Object.assign(
-      {},
-      vtkInterpolationWeights.newInstance(),
-      model.interpolationInfo
-    );
+    const weights = {
+      ...vtkInterpolationWeights.newInstance(),
+      ...model.interpolationInfo,
+    };
     weights.weightType = 'Float32Array';
     const interpMode = weights.interpolationMode;
     let validClip = true;

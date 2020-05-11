@@ -236,4 +236,4 @@ export const newInstance = macro.newInstance(extend, 'vtkAppendPolyData');
 
 // ----------------------------------------------------------------------------
 
-export default Object.assign({ newInstance, extend });
+export default { newInstance, extend };

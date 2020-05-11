@@ -201,13 +201,12 @@ function createSceneMtimeHandler() {
 function getSynchronizerContext(name = 'default') {
   let ctx = SYNCHRONIZER_CONTEXTS[name];
   if (!ctx) {
-    ctx = Object.assign(
-      {},
-      createArrayHandler(),
-      createInstanceMap(),
-      createProgressHandler(),
-      createSceneMtimeHandler()
-    );
+    ctx = {
+      ...createArrayHandler(),
+      ...createInstanceMap(),
+      ...createProgressHandler(),
+      ...createSceneMtimeHandler(),
+    };
     SYNCHRONIZER_CONTEXTS[name] = ctx;
   }
   return ctx;
@@ -346,9 +345,11 @@ export const newInstance = macro.newInstance(
 
 function decorate(renderWindow, name = 'default') {
   const addOn = createSyncFunction(renderWindow, getSynchronizerContext(name));
-  return Object.assign({}, addOn, renderWindow, {
+  return {
+    ...addOn,
+    ...renderWindow,
     delete: macro.chain(renderWindow.delete, addOn.delete),
-  });
+  };
 }
 
 // ----------------------------------------------------------------------------

@@ -20,7 +20,7 @@ function vtkLabelRepresentation(publicAPI, model) {
   // Set our className
   model.classHierarchy.push('vtkLabelRepresentation');
 
-  const superClass = Object.assign({}, publicAPI);
+  const superClass = { ...publicAPI };
 
   function getCanvasPosition() {
     if (model.canvas) {
@@ -160,17 +160,16 @@ function vtkLabelRepresentation(publicAPI, model) {
   };
 
   publicAPI.setLabelStyle = (labelStyle) => {
-    model.labelStyle = Object.assign({}, model.labelStyle, labelStyle);
+    model.labelStyle = { ...model.labelStyle, ...labelStyle };
 
     publicAPI.modified();
   };
 
   publicAPI.setSelectLabelStyle = (selectLabelStyle) => {
-    model.selectLabelStyle = Object.assign(
-      {},
-      model.selectLabelStyle,
-      selectLabelStyle
-    );
+    model.selectLabelStyle = {
+      ...model.selectLabelStyle,
+      ...selectLabelStyle,
+    };
 
     publicAPI.modified();
   };
@@ -228,9 +227,7 @@ function vtkLabelRepresentation(publicAPI, model) {
         model.context.strokeStyle = currentLabelStyle.strokeColor;
         model.context.lineWidth = currentLabelStyle.strokeSize;
         model.context.fillStyle = currentLabelStyle.fontColor;
-        model.context.font = `${currentLabelStyle.fontStyle} ${
-          currentLabelStyle.fontSize
-        }px ${currentLabelStyle.fontFamily}`;
+        model.context.font = `${currentLabelStyle.fontStyle} ${currentLabelStyle.fontSize}px ${currentLabelStyle.fontFamily}`;
 
         // Update canvas dimensions
         const x = padding;

@@ -17,7 +17,7 @@ function vtkResliceCursorWidget(publicAPI, model) {
   // Set our className
   model.classHierarchy.push('vtkResliceCursorWidget');
 
-  const superClass = Object.assign({}, publicAPI);
+  const superClass = { ...publicAPI };
 
   //----------------------------------------------------------------------------
   // Public API methods

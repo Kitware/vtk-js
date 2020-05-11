@@ -61,10 +61,7 @@ function applySettings(sceneItem, settings) {
 // ----------------------------------------------------------------------------
 
 function isImage(str) {
-  const ext = str
-    .split('.')
-    .pop()
-    .toLowerCase();
+  const ext = str.split('.').pop().toLowerCase();
   return ['jpg', 'png', 'jpeg'].indexOf(ext) !== -1;
 }
 

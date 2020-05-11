@@ -1,7 +1,7 @@
 #! /usr/bin/env node
 
 var fs = require('fs');
-var program = require('commander');
+var { program } = require('commander');
 var xml2js = require('xml2js');
 
 program.version('1.0.0')

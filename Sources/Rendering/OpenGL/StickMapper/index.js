@@ -21,7 +21,7 @@ function vtkOpenGLStickMapper(publicAPI, model) {
   model.classHierarchy.push('vtkOpenGLStickMapper');
 
   // Capture 'parentClass' api for internal use
-  const superClass = Object.assign({}, publicAPI);
+  const superClass = { ...publicAPI };
 
   publicAPI.getShaderTemplate = (shaders, ren, actor) => {
     shaders.Vertex = vtkStickMapperVS;

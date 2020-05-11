@@ -104,7 +104,7 @@ export function extend(publicAPI, model, initialValues = {}) {
   if (!model.values) {
     model.values = [];
   } else if (Array.isArray(model.values)) {
-    model.values = model.values;
+    model.values = [...model.values];
   }
 
   if (model.values) {

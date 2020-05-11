@@ -121,4 +121,4 @@ export const newInstance = macro.newInstance(extend, 'vtkTriangleFilter');
 
 // ----------------------------------------------------------------------------
 
-export default Object.assign({ newInstance, extend });
+export default { newInstance, extend };

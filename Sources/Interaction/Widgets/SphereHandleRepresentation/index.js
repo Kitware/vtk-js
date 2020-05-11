@@ -17,7 +17,7 @@ function vtkSphereHandleRepresentation(publicAPI, model) {
   // Set our className
   model.classHierarchy.push('vtkSphereHandleRepresentation');
 
-  const superClass = Object.assign({}, publicAPI);
+  const superClass = { ...publicAPI };
 
   publicAPI.getActors = () => [model.actor];
   publicAPI.getNestedProps = () => publicAPI.getActors();
