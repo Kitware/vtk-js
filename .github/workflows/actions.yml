@@ -6,9 +6,9 @@ jobs:
     runs-on: ${{ matrix.os }}
     strategy:
       matrix:
-        os: [ubuntu-16.04, ubuntu-18.04]
+        os: [ubuntu-18.04, macos-10.15, windows-2019]
         node: [8, 10, 12]
-    name: Build and test on ${{ matrix.os }} and node ${{ matrix.node }} 
+    name: ${{ matrix.os }} and node ${{ matrix.node }}
     steps:
       - uses: actions/checkout@v2
       - name: Setup node
@@ -18,4 +18,12 @@ jobs:
       - run: npm ci
       - name: Build
         run: npm run build:release
-
+      - name: Test
+        if: ${{ runner.os == 'Linux' }}
+        run: |
+          # Allow writing Documentation/content/coverage/tests.md
+          sudo chmod 777 Documentation/content/coverage
+          # Allow writing Utilities/TestResults/TESTS-*.xml
+          sudo chmod 777 Utilities/
+          # To debug, run `./Utilities/ci/run-tests-in-docker.sh -d`
+          ./Utilities/ci/run-tests-in-docker.sh
