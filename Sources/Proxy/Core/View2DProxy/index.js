@@ -201,13 +201,13 @@ function vtkView2DProxy(publicAPI, model) {
         update();
         nbListeners++;
       }
-      if (representation.getSlice && representation.getSliceValues) {
+      const domain = representation.getPropertyDomainByName('slice');
+      if (representation.getSlice && domain) {
         const update = () => setSlice(representation.getSlice());
-        const values = representation.getSliceValues();
         model.rangeManipulator.setScrollListener(
-          values[0],
-          values[values.length - 1],
-          values[1] - values[0] || 1,
+          domain.min,
+          domain.max,
+          domain.step,
           representation.getSlice,
           setSlice
         );
