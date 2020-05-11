@@ -1,0 +1,32 @@
+export function extend(publicAPI: any, model: any, initialValues?: {}): void;
+export namespace STATIC {
+    export { isValid };
+    export { getCenter };
+    export { getLength };
+    export { getLengths };
+    export { getMaxLength };
+    export { getDiagonalLength };
+    export { getXRange };
+    export { getYRange };
+    export { getZRange };
+    export { getCorners };
+    export { computeCornerPoints };
+    export { computeScale3 };
+    export { INIT_BOUNDS };
+}
+export const newInstance: any;
+declare var _default: any;
+export default _default;
+declare function isValid(bounds: any): boolean;
+declare function getCenter(bounds: any): number[];
+declare function getLength(bounds: any, index: any): number;
+declare function getLengths(bounds: any): number[];
+declare function getMaxLength(bounds: any): number;
+declare function getDiagonalLength(bounds: any): number;
+declare function getXRange(bounds: any): any;
+declare function getYRange(bounds: any): any;
+declare function getZRange(bounds: any): any;
+declare function getCorners(bounds: any, corners: any): void;
+declare function computeCornerPoints(point1: any, point2: any, bounds: any): void;
+declare function computeScale3(bounds: any, scale3?: any[]): any[];
+declare const INIT_BOUNDS: number[];

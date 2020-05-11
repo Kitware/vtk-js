@@ -1,0 +1,37 @@
+declare namespace _default {
+    export { vtkCompositeCameraManipulator };
+    export { vtkCompositeGestureManipulator };
+    export { vtkCompositeKeyboardManipulator };
+    export { vtkCompositeMouseManipulator };
+    export { vtkCompositeVRManipulator };
+    export { vtkGestureCameraManipulator };
+    export { vtkKeyboardCameraManipulator };
+    export { vtkMouseCameraSliceManipulator };
+    export { vtkMouseCameraTrackballFirstPersonManipulator };
+    export { vtkMouseCameraTrackballMultiRotateManipulator };
+    export { vtkMouseCameraTrackballPanManipulator };
+    export { vtkMouseCameraTrackballRollManipulator };
+    export { vtkMouseCameraTrackballRotateManipulator };
+    export { vtkMouseCameraTrackballZoomManipulator };
+    export { vtkMouseCameraTrackballZoomToMouseManipulator };
+    export { vtkMouseRangeManipulator };
+    export { vtkVRButtonPanManipulator };
+}
+export default _default;
+import vtkCompositeCameraManipulator from "./CompositeCameraManipulator";
+import vtkCompositeGestureManipulator from "./CompositeGestureManipulator";
+import vtkCompositeKeyboardManipulator from "./CompositeKeyboardManipulator";
+import vtkCompositeMouseManipulator from "./CompositeMouseManipulator";
+import vtkCompositeVRManipulator from "./CompositeVRManipulator";
+import vtkGestureCameraManipulator from "./GestureCameraManipulator";
+import vtkKeyboardCameraManipulator from "./KeyboardCameraManipulator";
+import vtkMouseCameraSliceManipulator from "./MouseCameraSliceManipulator";
+import vtkMouseCameraTrackballFirstPersonManipulator from "./MouseCameraTrackballFirstPersonManipulator";
+import vtkMouseCameraTrackballMultiRotateManipulator from "./MouseCameraTrackballMultiRotateManipulator";
+import vtkMouseCameraTrackballPanManipulator from "./MouseCameraTrackballPanManipulator";
+import vtkMouseCameraTrackballRollManipulator from "./MouseCameraTrackballRollManipulator";
+import vtkMouseCameraTrackballRotateManipulator from "./MouseCameraTrackballRotateManipulator";
+import vtkMouseCameraTrackballZoomManipulator from "./MouseCameraTrackballZoomManipulator";
+import vtkMouseCameraTrackballZoomToMouseManipulator from "./MouseCameraTrackballZoomToMouseManipulator";
+import vtkMouseRangeManipulator from "./MouseRangeManipulator";
+import vtkVRButtonPanManipulator from "./VRButtonPanManipulator";

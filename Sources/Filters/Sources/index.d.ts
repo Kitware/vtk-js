@@ -1,0 +1,31 @@
+declare namespace _default {
+    export { vtkArrowSource };
+    export { vtkCircleSource };
+    export { vtkConcentricCylinderSource };
+    export { vtkConeSource };
+    export { vtkCubeSource };
+    export { vtkCursor3D };
+    export { vtkCylinderSource };
+    export { vtkImageGridSource };
+    export { vtkLineSource };
+    export { vtkPlaneSource };
+    export { vtkPointSource };
+    export { vtkRTAnalyticSource };
+    export { vtkSLICSource };
+    export { vtkSphereSource };
+}
+export default _default;
+import vtkArrowSource from "./ArrowSource";
+import vtkCircleSource from "./CircleSource";
+import vtkConcentricCylinderSource from "./ConcentricCylinderSource";
+import vtkConeSource from "./ConeSource";
+import vtkCubeSource from "./CubeSource";
+import vtkCursor3D from "./Cursor3D";
+import vtkCylinderSource from "./CylinderSource";
+import vtkImageGridSource from "./ImageGridSource";
+import vtkLineSource from "./LineSource";
+import vtkPlaneSource from "./PlaneSource";
+import vtkPointSource from "./PointSource";
+import vtkRTAnalyticSource from "./RTAnalyticSource";
+import vtkSLICSource from "./SLICSource";
+import vtkSphereSource from "./SphereSource";

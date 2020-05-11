@@ -1,0 +1,9 @@
+export function extend(publicAPI: any, model: any, initialValues?: {}): void;
+export const LIGHT_TYPES: string[];
+export const newInstance: any;
+declare namespace _default {
+    export { newInstance };
+    export { extend };
+    export { LIGHT_TYPES };
+}
+export default _default;
