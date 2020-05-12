@@ -245,24 +245,6 @@ function vtkSliceRepresentationProxy(publicAPI, model) {
     };
   };
 
-  // Used for UI
-  publicAPI.getSliceValues = (slicingMode = model.slicingMode) => {
-    const ds = publicAPI.getInputDataSet();
-    if (!ds) {
-      return [];
-    }
-    const values = [];
-    const bds = ds.getBounds();
-    const axisIndex = 'XYZ'.indexOf(slicingMode);
-    const endValue = bds[axisIndex * 2 + 1];
-    let currentValue = bds[axisIndex * 2];
-    while (currentValue <= endValue) {
-      values.push(currentValue);
-      currentValue++;
-    }
-    return values;
-  };
-
   const parentSetColorBy = publicAPI.setColorBy;
   publicAPI.setColorBy = (arrayName, arrayLocation, componentIndex = -1) => {
     if (arrayName === null) {

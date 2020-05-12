@@ -1260,7 +1260,8 @@ export function proxy(publicAPI, model) {
   publicAPI.getPropertyByName = (name) =>
     getProperties().find((p) => p.name === name);
 
-  publicAPI.getPropertyDomainByName = (name) => propertyMap[name].domain;
+  publicAPI.getPropertyDomainByName = (name) =>
+    (propertyMap[name] || {}).domain;
 
   // ui section
   publicAPI.getProxySection = () => ({
