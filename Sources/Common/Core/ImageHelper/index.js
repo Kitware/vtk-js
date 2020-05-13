@@ -43,6 +43,9 @@ function canvasToImageData(canvas, boundingBox = [0, 0, 0, 0]) {
 
 /**
  * Converts an Image object to a vtkImageData.
+ *
+ * @param image image object to convert into vtkImageData
+ * @param transform (default: { flipX: false, flipY: false, rotate: 0 })
  */
 function imageToImageData(
   image,
