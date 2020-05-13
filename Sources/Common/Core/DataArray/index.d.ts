@@ -35,7 +35,7 @@ interface VtkRangeHelper {
  * ```
  *
  * @param values Array to go through to extract the range from
- * @param component (default: 0) indice to use inside tuple size
+ * @param component (default: 0) indices to use inside tuple size
  * @param numberOfComponents (default: 1) size of the tuple
  */
 export function computeRange(values: Array<number>, component?: number, numberOfComponents?: number): VtkRange;
