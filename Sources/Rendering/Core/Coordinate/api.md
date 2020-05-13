@@ -29,7 +29,7 @@ VIEW -                x-y-z values in camera coordinates. The origin is
                       a translation and rotation from world coordinates
                       based on the camera settings.
 WORLD -               x-y-z global coordinate values
-MODEL -               The coordinate system specific to a dataaet or
+MODEL -               The coordinate system specific to a dataset or
                       actor. This is normally converted into WORLD coordinates
                       as part of the rendering process.
 </PRE>
