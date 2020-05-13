@@ -54,6 +54,7 @@ function vtkCellArray(publicAPI, model) {
     }
 
     model.cellSizes = extractCellSizes(model.values);
+    model.numberOfCells = model.cellSizes.length; // as easy to do it now as well
     return model.cellSizes;
   };
 
