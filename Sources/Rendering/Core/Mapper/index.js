@@ -380,7 +380,10 @@ function vtkMapper(publicAPI, model) {
         scalarComponent,
         range,
         model.lookupTable.getRange(),
-        model.colorTextureMap.getPointData().getScalars().getNumberOfTuples() /
+        model.colorTextureMap
+          .getPointData()
+          .getScalars()
+          .getNumberOfTuples() /
           2 -
           2,
         useLogScale
