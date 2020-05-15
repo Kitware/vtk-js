@@ -372,14 +372,18 @@ export default function widgetBehavior(publicAPI, model) {
       return macro.VOID;
     }
 
-    const normal = model.camera.getDirectionOfProjection();
-    const up = model.camera.getViewUp();
-    const right = [0, 0, 0];
-    vec3.cross(right, up, normal);
-    model.shapeHandle.setUp(up);
-    model.shapeHandle.setRight(right);
-    model.shapeHandle.setDirection(normal);
-    model.manipulator.setNormal(normal);
+    if (!model.point2) {
+      // Update orientation to match the camera's plane
+      // if the corners are not yet placed
+      const normal = model.camera.getDirectionOfProjection();
+      const up = model.camera.getViewUp();
+      const right = [];
+      vec3.cross(right, up, normal);
+      model.shapeHandle.setUp(up);
+      model.shapeHandle.setRight(right);
+      model.shapeHandle.setDirection(normal);
+      model.manipulator.setNormal(normal);
+    }
     model.manipulator.setOrigin(model.activeState.getOrigin());
 
     const worldCoords = model.manipulator.handleEvent(
