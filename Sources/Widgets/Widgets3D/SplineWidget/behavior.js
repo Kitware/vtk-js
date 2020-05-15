@@ -250,14 +250,6 @@ export default function widgetBehavior(publicAPI, model) {
       model.widgetState.deactivate();
     }
 
-    if (
-      (model.hasFocus && !model.activeState) ||
-      (model.activeState && !model.activeState.getActive())
-    ) {
-      model.widgetManager.enablePicking();
-      model.interactor.render();
-    }
-
     model.freeHand = false;
     model.isDragging = false;
     model.draggedPoint = false;
@@ -378,7 +370,6 @@ export default function widgetBehavior(publicAPI, model) {
     model.moveHandle.setVisible(false);
     model.activeState = null;
     model.interactor.render();
-    model.widgetManager.enablePicking();
 
     model.hasFocus = false;
   };
