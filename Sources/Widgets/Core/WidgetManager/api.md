@@ -4,6 +4,9 @@ vtkWidgetManager manages view widgets for a given renderer.
 
 Enable widget picking in the renderer.
 
+Widgets should never have to call this method if you invoke `cancelAnimation`
+on the interactor, since the widget manager will call this for you.
+
 ## disablePicking()
 
 Disable widget picking in the renderer.
@@ -31,3 +34,9 @@ Grabs the focus of the view widgets associated with the widget factory.
 
 Clears focus flag for any focused widgets.
 
+## setCaptureOn(WidgetManager.CaptureOn)
+
+Sets the picking buffer capture mode. There are two possible values:
+`CaptureOn.MOUSE_RELEASE` and `CaptureOn.MOUSE_MOVE`.
+- `MOUSE_RELEASE` will capture the picking buffer whenever any mouse button is released. This will capture the entire visible rendering surface and make it available for picking. This means capture phase may take longer for larger screens, but picking will be lightning-fast for static scenes.
+- `MOUSE_MOVE` will capture the picking buffer whenever the mouse moves. The difference between `RELEASE` is that `MOVE` will restrict the effective pick buffer to a 1x1 pixel under the mouse, so the performance of the capture phase is much faster than that of `RELEASE`, at the expense of slightly slower picking performance for static scenes.
