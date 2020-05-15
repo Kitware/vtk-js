@@ -471,6 +471,9 @@ export default function widgetBehavior(publicAPI, model) {
       } else {
         publicAPI.placePoint2(model.point2Handle.getOrigin());
       }
+      if (model.shapeHandle.setNormal) {
+        model.shapeHandle.setNormal(model.manipulator.getNormal());
+      }
 
       return macro.EVENT_ABORT;
     }

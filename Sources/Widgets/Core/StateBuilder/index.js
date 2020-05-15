@@ -7,6 +7,7 @@ import color from 'vtk.js/Sources/Widgets/Core/StateBuilder/colorMixin';
 import direction from 'vtk.js/Sources/Widgets/Core/StateBuilder/directionMixin';
 import manipulator from 'vtk.js/Sources/Widgets/Core/StateBuilder/manipulatorMixin';
 import name from 'vtk.js/Sources/Widgets/Core/StateBuilder/nameMixin';
+import normal from 'vtk.js/Sources/Widgets/Core/StateBuilder/normalMixin';
 import orientation from 'vtk.js/Sources/Widgets/Core/StateBuilder/orientationMixin';
 import origin from 'vtk.js/Sources/Widgets/Core/StateBuilder/originMixin';
 import scale1 from 'vtk.js/Sources/Widgets/Core/StateBuilder/scale1Mixin';
@@ -25,6 +26,7 @@ const MIXINS = {
   direction,
   manipulator,
   name,
+  normal,
   orientation,
   origin,
   scale1,

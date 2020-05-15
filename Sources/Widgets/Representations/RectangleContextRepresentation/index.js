@@ -65,6 +65,18 @@ function vtkRectangleContextRepresentation(publicAPI, model) {
 
       const points = new Float32Array(4 * 3);
 
+      const slicingMode = state.getDirection().indexOf(1);
+
+      if (model.stayOnTop) {
+        // Use the highest (depending on the normal) component for plane height
+        // I, J, or K, so we only need the normal for direction (sign).
+        const min = Math.min(point1[slicingMode % 3], point2[slicingMode % 3]);
+        const max = Math.max(point1[slicingMode % 3], point2[slicingMode % 3]);
+        const direction = state.getNormal()[slicingMode % 3] > 0 ? 1.0 : -1.0;
+        point1[slicingMode % 3] = direction > 0 ? max : min;
+        point2[slicingMode % 3] = direction > 0 ? max : min;
+      }
+
       points[0] = point1[0];
       points[1] = point1[1];
       points[2] = point1[2];
@@ -72,8 +84,6 @@ function vtkRectangleContextRepresentation(publicAPI, model) {
       points[6] = point2[0];
       points[7] = point2[1];
       points[8] = point2[2];
-
-      const slicingMode = state.getDirection().indexOf(1);
 
       if (slicingMode === SlicingMode.I) {
         points[3] = point1[0];
@@ -131,6 +141,13 @@ function vtkRectangleContextRepresentation(publicAPI, model) {
 const DEFAULT_VALUES = {
   drawBorder: false,
   drawFace: true,
+  /** The rectangle's two points can have different heights.
+   * This can cause parts of the representation to be hidden when used with the ImageMapper,
+   * and when one of the two points is below the current slice.
+   * This option lets the representation use the highest of the two points to set the representation plane's height,
+   * to make sure that the representation stays on top.
+   */
+  stayOnTop: true,
 };
 
 // ----------------------------------------------------------------------------
@@ -140,6 +157,7 @@ export function extend(publicAPI, model, initialValues = {}) {
 
   vtkHandleRepresentation.extend(publicAPI, model, initialValues);
   macro.setGetArray(publicAPI, model, ['color'], 1);
+  macro.setGet(publicAPI, model, ['stayOnTop']);
 
   macro.get(publicAPI, model, ['mapper', 'actor']);
 
