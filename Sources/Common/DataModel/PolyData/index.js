@@ -3,11 +3,20 @@ import vtk from 'vtk.js/Sources/vtk';
 import vtkCellArray from 'vtk.js/Sources/Common/Core/CellArray';
 import vtkCellLinks from 'vtk.js/Sources/Common/DataModel/CellLinks';
 import vtkCellTypes from 'vtk.js/Sources/Common/DataModel/CellTypes';
+import vtkLine from 'vtk.js/Sources/Common/DataModel/Line';
 import vtkPointSet from 'vtk.js/Sources/Common/DataModel/PointSet';
 import vtkTriangle from 'vtk.js/Sources/Common/DataModel/Triangle';
 
 import { CellType } from 'vtk.js/Sources/Common/DataModel/CellTypes/Constants';
 import { POLYDATA_FIELDS } from 'vtk.js/Sources/Common/DataModel/PolyData/Constants';
+
+const { vtkWarningMacro } = macro;
+
+export const CELL_FACTORY = {
+  [CellType.VTK_LINE]: vtkLine,
+  [CellType.VTK_POLY_LINE]: vtkLine,
+  [CellType.VTK_TRIANGLE]: vtkTriangle,
+};
 
 // ----------------------------------------------------------------------------
 // vtkPolyData methods
@@ -66,8 +75,8 @@ function vtkPolyData(publicAPI, model) {
 
     // record locations and type of each cell.
     // verts
-    let nextCellPts = 0;
     if (nVerts) {
+      let nextCellPts = 0;
       model.verts.getCellSizes().forEach((numCellPts, index) => {
         pLocs[index] = nextCellPts;
         pTypes[index] =
@@ -81,12 +90,13 @@ function vtkPolyData(publicAPI, model) {
 
     // lines
     if (nLines) {
+      let nextCellPts = 0;
       model.lines.getCellSizes().forEach((numCellPts, index) => {
         pLocs[index] = nextCellPts;
         pTypes[index] =
           numCellPts > 2 ? CellType.VTK_POLY_LINE : CellType.VTK_LINE;
         if (numCellPts === 1) {
-          console.log(
+          vtkWarningMacro(
             'Building VTK_LINE ',
             index,
             ' with only one point, but VTK_LINE needs at least two points. Check the input.'
@@ -101,6 +111,7 @@ function vtkPolyData(publicAPI, model) {
 
     // polys
     if (nPolys) {
+      let nextCellPts = 0;
       model.polys.getCellSizes().forEach((numCellPts, index) => {
         pLocs[index] = nextCellPts;
         switch (numCellPts) {
@@ -115,7 +126,7 @@ function vtkPolyData(publicAPI, model) {
             break;
         }
         if (numCellPts < 3) {
-          console.log(
+          vtkWarningMacro(
             'Building VTK_TRIANGLE ',
             index,
             ' with less than three points, but VTK_TRIANGLE needs at least three points. Check the input.'
@@ -130,6 +141,7 @@ function vtkPolyData(publicAPI, model) {
 
     // strips
     if (nStrips) {
+      let nextCellPts = 0;
       pTypes.fill(CellType.VTK_TRIANGLE_STRIP, 0, nStrips);
 
       model.strips.getCellSizes().forEach((numCellPts, index) => {
@@ -213,12 +225,9 @@ function vtkPolyData(publicAPI, model) {
    */
   publicAPI.getCell = (cellId, cellHint = null) => {
     const cellInfo = publicAPI.getCellPoints(cellId);
-    if (cellInfo.cellType === CellType.VTK_TRIANGLE) {
-      const cell = cellHint || vtkTriangle.newInstance();
-      cell.initialize(publicAPI.getPoints(), cellInfo.cellPointIds);
-      return cell;
-    }
-    return null;
+    const cell = cellHint || CELL_FACTORY[cellInfo.cellType].newInstance();
+    cell.initialize(publicAPI.getPoints(), cellInfo.cellPointIds);
+    return cell;
   };
 }
 
