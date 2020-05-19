@@ -2,9 +2,9 @@
 // and inspired from Paul Kaplan (https://gist.github.com/paulkaplan/6d5f0ab2c7e8fdc68a61).
 
 import { vec3 } from 'gl-matrix';
-import { macro } from 'vtk.js/Sources/macro';
+import macro from 'vtk.js/Sources/macro';
 import vtkTriangle from 'vtk.js/Sources/Common/DataModel/Triangle';
-import { FormatTypes } from 'paraview-glance/src/vtk/vtkSTLWriter/Constants';
+import { FormatTypes } from 'vtk.js/Sources/IO/Geometry/STLWriter/Constants';
 
 const { vtkErrorMacro } = macro;
 
@@ -13,8 +13,8 @@ const { vtkErrorMacro } = macro;
 // ----------------------------------------------------------------------------
 
 function writeFloatBinary(dataview, offset, float) {
-  dataview.setFloat32(offset, float.toPrecision(6), true);
-  return offset + 4;
+    dataview.setFloat32(offset, float.toPrecision(6), true);
+    return offset + 4;
 }
 
 function writeVectorBinary(dataview, offset, vector) {
@@ -31,33 +31,7 @@ function vtkSTLWriter(publicAPI, model) {
   // Set our className
   model.classHierarchy.push('vtkSTLWriter');
 
-  function getPoint(j, points, polys) {
-    let i = j;
-    const v = [
-      points[polys[i] * 3],
-      points[polys[i] * 3 + 1],
-      points[polys[i++] * 3 + 2],
-    ];
-    return [i, v];
-  }
-
-  function getPoints(j, points, polys, transform) {
-    let i = j;
-    let v1 = [];
-    let v2 = [];
-    let v3 = [];
-    [i, v1] = getPoint(i, points, polys);
-    [i, v2] = getPoint(i, points, polys);
-    [i, v3] = getPoint(i, points, polys);
-    if (transform) {
-      vec3.transformMat4(v1, v1, transform);
-      vec3.transformMat4(v2, v2, transform);
-      vec3.transformMat4(v3, v3, transform);
-    }
-    return [i, v1, v2, v3];
-  }
-
-  function writeBinary(polyData, transform) {
+  function writeBinary(polyData, transform = null) {
     const polys = polyData.getPolys().getData();
     const points = polyData.getPoints().getData();
     const strips = polyData.getStrips() ? polyData.getStrips().getData() : null;
@@ -86,7 +60,27 @@ function vtkSTLWriter(publicAPI, model) {
       const pointNumber = polys[i++];
 
       if (pointNumber) {
-        [i, v1, v2, v3] = getPoints(i, points, polys, transform);
+        v1 = [
+          points[polys[i] * 3],
+          points[polys[i] * 3 + 1],
+          points[polys[i++] * 3 + 2],
+        ];
+        v2 = [
+          points[polys[i] * 3],
+          points[polys[i] * 3 + 1],
+          points[polys[i++] * 3 + 2],
+        ];
+        v3 = [
+          points[polys[i] * 3],
+          points[polys[i] * 3 + 1],
+          points[polys[i++] * 3 + 2],
+        ];
+        if (transform) {
+          vec3.transformMat4(v1, v1, transform);
+          vec3.transformMat4(v2, v2, transform);
+          vec3.transformMat4(v3, v3, transform);
+        }
+
         vtkTriangle.computeNormal(v1, v2, v3, dn);
 
         offset = writeVectorBinary(dataview, offset, dn);
@@ -99,7 +93,7 @@ function vtkSTLWriter(publicAPI, model) {
     return dataview;
   }
 
-  function writeASCII(polyData, transform) {
+  function writeASCII(polyData, transform = null) {
     const polys = polyData.getPolys().getData();
     const points = polyData.getPoints().getData();
     const strips = polyData.getStrips() ? polyData.getStrips().getData() : null;
@@ -123,7 +117,27 @@ function vtkSTLWriter(publicAPI, model) {
       const pointNumber = polys[i++];
 
       if (pointNumber) {
-        [i, v1, v2, v3] = getPoints(i, points, polys, transform);
+        v1 = [
+          points[polys[i] * 3],
+          points[polys[i] * 3 + 1],
+          points[polys[i++] * 3 + 2],
+        ];
+        v2 = [
+          points[polys[i] * 3],
+          points[polys[i] * 3 + 1],
+          points[polys[i++] * 3 + 2],
+        ];
+        v3 = [
+          points[polys[i] * 3],
+          points[polys[i] * 3 + 1],
+          points[polys[i++] * 3 + 2],
+        ];
+        if (transform) {
+          vec3.transformMat4(v1, v1, transform);
+          vec3.transformMat4(v2, v2, transform);
+          vec3.transformMat4(v3, v3, transform);
+        }
+
         vtkTriangle.computeNormal(v1, v2, v3, n);
 
         file += ` facet normal ${n[0].toPrecision(6)} ${n[1].toPrecision(

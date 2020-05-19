@@ -6,6 +6,7 @@ import vtkMapper from 'vtk.js/Sources/Rendering/Core/Mapper';
 
 import vtkHttpDataSetReader from 'vtk.js/Sources/IO/Core/HttpDataSetReader';
 import vtkSTLWriter from 'vtk.js/Sources/IO/Geometry/STLWriter';
+import vtkSTLReader from 'vtk.js/Sources/IO/Geometry/STLReader';
 
 // ----------------------------------------------------------------------------
 // Standard rendering code setup
@@ -16,12 +17,25 @@ const renderer = fullScreenRenderer.getRenderer();
 const renderWindow = fullScreenRenderer.getRenderWindow();
 
 const reader = vtkHttpDataSetReader.newInstance({ fetchGzip: true });
+const writerReader = vtkSTLReader.newInstance();
 
 const writer = vtkSTLWriter.newInstance();
-writer.setInputConnection(reader.getOutputPort());
+// writer.setInputConnection(reader.getOutputPort());
 
 reader.setUrl(`${__BASE_PATH__}/data/cow.vtp`, { loadData: true }).then(() => {
-  const fileContents = writer.write(reader.getOutputData());
+  // const fileContents = writer.write(reader.getOutputData());
+
+  global.readerOutput = reader.getOutputData();
+  writer.setInputData(reader.getOutputData());
+  const fileContents = writer.getOutputData();
+  
+  // Try to read it back.
+  /*const textEncoder = new TextEncoder();
+  
+  writerReader.parseAsArrayBuffer(textEncoder.encode(fileContents.buffer.prototype.buffer));
+  renderer.resetCamera();
+  renderWindow.render();
+  */
 
   const blob = new Blob([fileContents], { type: 'application/octet-steam' });
   const a = window.document.createElement('a');
@@ -38,11 +52,11 @@ reader.setUrl(`${__BASE_PATH__}/data/cow.vtp`, { loadData: true }).then(() => {
   a.style.padding = '5px';
 });
 
-const actor = vtkActor.newInstance();
+/*const actor = vtkActor.newInstance();
 const mapper = vtkMapper.newInstance();
 actor.setMapper(mapper);
 
-mapper.setInputConnection(writerReader.getOutputPort());
+mapper.setInputConnection(writerReader.getOutputPort()); // TODO: replace writerReader by STLReader
 
 renderer.addActor(actor);
 
@@ -51,4 +65,4 @@ global.writerReader = writerReader;
 global.mapper = mapper;
 global.actor = actor;
 global.renderer = renderer;
-global.renderWindow = renderWindow;
+global.renderWindow = renderWindow;*/
