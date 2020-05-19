@@ -519,8 +519,9 @@ export function setArray(
       if (changeDetected || model[field].length !== array.length) {
         model[field] = [].concat(array);
         publicAPI.modified();
+        return true;
       }
-      return true;
+      return false;
     };
 
     publicAPI[`set${capitalize(field)}From`] = (otherArray) => {
