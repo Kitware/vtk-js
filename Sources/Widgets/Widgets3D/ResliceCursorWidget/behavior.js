@@ -40,8 +40,12 @@ export default function widgetBehavior(publicAPI, model) {
     model.planeManipulator.setOrigin(model.widgetState.getCenter());
     model.planeManipulator.setNormal(currentPlaneNormal);
 
-    model.interactor.requestAnimation(publicAPI);
     publicAPI.invokeStartInteractionEvent();
+
+    // When interacting, plane actor and lines must be re-rendered on other views
+    publicAPI.getViewWidgets().forEach((viewWidget) => {
+      viewWidget.getInteractor().requestAnimation(publicAPI);
+    });
 
     return macro.EVENT_ABORT;
   };
@@ -56,7 +60,9 @@ export default function widgetBehavior(publicAPI, model) {
   publicAPI.handleLeftButtonRelease = () => {
     if (isDragging) {
       publicAPI.invokeEndInteractionEvent();
-      model.interactor.cancelAnimation(publicAPI);
+      publicAPI.getViewWidgets().forEach((viewWidget) => {
+        viewWidget.getInteractor().cancelAnimation(publicAPI);
+      });
     }
     isDragging = false;
     model.widgetState.deactivate();
