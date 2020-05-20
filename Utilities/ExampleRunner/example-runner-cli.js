@@ -73,6 +73,10 @@ if (configuration.examples) {
 
   if (exampleCount === 0) {
     examples = null;
+    if (buildExample) {
+      console.error(`=> Error: Did not find any examples matching ${filterExamples[0]}`);
+      process.exit(1);
+    }
   }
 
   if (buildExample) {
