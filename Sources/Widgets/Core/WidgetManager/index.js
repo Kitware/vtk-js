@@ -488,7 +488,7 @@ const DEFAULT_VALUES = {
   previousSelectedData: null,
   widgetInFocus: null,
   useSvgLayer: true,
-  captureOn: CaptureOn.MOUSE_RELEASE,
+  captureOn: CaptureOn.MOUSE_MOVE,
 };
 
 // ----------------------------------------------------------------------------
