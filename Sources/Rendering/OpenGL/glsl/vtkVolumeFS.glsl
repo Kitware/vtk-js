@@ -33,6 +33,9 @@ varying vec3 vertexVCVSOutput;
 // possibly define vtkIndependentComponents
 //VTK::IndependentComponentsOn
 
+// possibly define any "proportional" components
+//VTK::vtkProportionalComponents
+
 // Define the blend mode to use
 #define vtkBlendMode //VTK::BlendMode
 
@@ -323,6 +326,7 @@ mat4 computeMat4Normal(vec3 pos, vec4 tValue, vec3 tstep)
   rot[1] = vPlaneNormal2;
   rot[2] = vPlaneNormal4;
 
+#if !defined(vtkComponent0Proportional)
   result[0].xyz = vec3(distX.r, distY.r, distZ.r);
   result[0].a = length(result[0].xyz);
   result[0].xyz *= rot;
@@ -330,7 +334,10 @@ mat4 computeMat4Normal(vec3 pos, vec4 tValue, vec3 tstep)
   {
     result[0].xyz /= result[0].w;
   }
+#endif
 
+// optionally compute the 2nd component
+#if vtkNumComponents >= 2 && !defined(vtkComponent1Proportional)
   result[1].xyz = vec3(distX.g, distY.g, distZ.g);
   result[1].a = length(result[1].xyz);
   result[1].xyz *= rot;
@@ -338,9 +345,10 @@ mat4 computeMat4Normal(vec3 pos, vec4 tValue, vec3 tstep)
   {
     result[1].xyz /= result[1].w;
   }
+#endif
 
 // optionally compute the 3rd component
-#if vtkNumComponents >= 3
+#if vtkNumComponents >= 3 && !defined(vtkComponent2Proportional)
   result[2].xyz = vec3(distX.b, distY.b, distZ.b);
   result[2].a = length(result[2].xyz);
   result[2].xyz *= rot;
@@ -351,7 +359,7 @@ mat4 computeMat4Normal(vec3 pos, vec4 tValue, vec3 tstep)
 #endif
 
 // optionally compute the 4th component
-#if vtkNumComponents >= 4
+#if vtkNumComponents >= 4 && !defined(vtkComponent3Proportional)
   result[3].xyz = vec3(distX.a, distY.a, distZ.a);
   result[3].a = length(result[3].xyz);
   result[3].xyz *= rot;
@@ -446,37 +454,53 @@ vec4 getColorForValue(vec4 tValue, vec3 posIS, vec3 tstep)
 
   // compute the normal vectors as needed
   #if (vtkLightComplexity > 0) || defined(vtkGradientOpacityOn)
-  #if defined(vtkIndependentComponentsOn) && (vtkNumComponents > 1)
-    mat4 normalMat = computeMat4Normal(posIS, tValue, tstep);
-    vec4 normal0 = normalMat[0];
-    vec4 normal1 = normalMat[1];
-  #if vtkNumComponents > 2
-    vec4 normal2 = normalMat[2];
-  #endif
-  #if vtkNumComponents > 3
-    vec4 normal3 = normalMat[3];
-  #endif
-  #else
-    vec4 normal0 = computeNormal(posIS, tValue.a, tstep);
-  #endif
+    #if defined(vtkIndependentComponentsOn) && (vtkNumComponents > 1)
+      mat4 normalMat = computeMat4Normal(posIS, tValue, tstep);
+      #if !defined(vtkComponent0Proportional)
+        vec4 normal0 = normalMat[0];
+      #endif
+      #if !defined(vtkComponent1Proportional)
+        vec4 normal1 = normalMat[1];
+      #endif
+      #if vtkNumComponents > 2
+        #if !defined(vtkComponent2Proportional)
+          vec4 normal2 = normalMat[2];
+        #endif
+        #if vtkNumComponents > 3
+          #if !defined(vtkComponent3Proportional)
+            vec4 normal3 = normalMat[3];
+          #endif
+        #endif
+      #endif
+    #else
+      vec4 normal0 = computeNormal(posIS, tValue.a, tstep);
+    #endif
   #endif
 
   // compute gradient opacity factors as needed
   #if defined(vtkGradientOpacityOn)
-    goFactor.x =
-      computeGradientOpacityFactor(normal0, goscale0, goshift0, gomin0, gomax0);
-  #if defined(vtkIndependentComponentsOn) && (vtkNumComponents > 1)
-    goFactor.y =
-      computeGradientOpacityFactor(normal1, goscale1, goshift1, gomin1, gomax1);
-  #if vtkNumComponents > 2
-    goFactor.z =
-      computeGradientOpacityFactor(normal2, goscale2, goshift2, gomin2, gomax2);
-  #if vtkNumComponents > 3
-    goFactor.w =
-      computeGradientOpacityFactor(normal3, goscale3, goshift3, gomin3, gomax3);
-  #endif
-  #endif
-  #endif
+    #if !defined(vtkComponent0Proportional)
+      goFactor.x =
+        computeGradientOpacityFactor(normal0, goscale0, goshift0, gomin0, gomax0);
+    #endif
+    #if defined(vtkIndependentComponentsOn) && (vtkNumComponents > 1)
+      #if !defined(vtkComponent1Proportional)
+        goFactor.y =
+          computeGradientOpacityFactor(normal1, goscale1, goshift1, gomin1, gomax1);
+      #endif
+      #if vtkNumComponents > 2
+        #if !defined(vtkComponent2Proportional)
+          goFactor.z =
+            computeGradientOpacityFactor(normal2, goscale2, goshift2, gomin2, gomax2);
+        #endif
+        #if vtkNumComponents > 3
+          #if !defined(vtkComponent3Proportional)
+            goFactor.w =
+              computeGradientOpacityFactor(normal3, goscale3, goshift3, gomin3, gomax3);
+          #endif
+        #endif
+      #endif
+    #endif
   #endif
 
   // single component is always independent
@@ -487,18 +511,36 @@ vec4 getColorForValue(vec4 tValue, vec3 posIS, vec3 tstep)
 
   #if defined(vtkIndependentComponentsOn) && vtkNumComponents >= 2
     vec4 tColor = mix0*texture2D(ctexture, vec2(tValue.r * cscale0 + cshift0, height0));
-    tColor.a = goFactor.x*mix0*texture2D(otexture, vec2(tValue.r * oscale0 + oshift0, height0)).r;
-    vec3 tColor1 = mix1*texture2D(ctexture, vec2(tValue.g * cscale1 + cshift1, height1)).rgb;
-    tColor.a += goFactor.y*mix1*texture2D(otexture, vec2(tValue.g * oscale1 + oshift1, height1)).r;
-  #if vtkNumComponents >= 3
-    vec3 tColor2 = mix2*texture2D(ctexture, vec2(tValue.b * cscale2 + cshift2, height2)).rgb;
-    tColor.a += goFactor.z*mix2*texture2D(otexture, vec2(tValue.b * oscale2 + oshift2, height2)).r;
-  #if vtkNumComponents >= 4
-    vec3 tColor3 = mix3*texture2D(ctexture, vec2(tValue.a * cscale3 + cshift3, height3)).rgb;
-    tColor.a += goFactor.w*mix3*texture2D(otexture, vec2(tValue.a * oscale3 + oshift3, height3)).r;
-  #endif
-  #endif
+    #if !defined(vtkComponent0Proportional)
+      tColor.a = goFactor.x*mix0*texture2D(otexture, vec2(tValue.r * oscale0 + oshift0, height0)).r;
+    #else
+      tColor *= texture2D(otexture, vec2(tValue.r * oscale0 + oshift0, height0)).r;
+    #endif
 
+    vec3 tColor1 = mix1*texture2D(ctexture, vec2(tValue.g * cscale1 + cshift1, height1)).rgb;
+    #if !defined(vtkComponent1Proportional)
+      tColor.a += goFactor.y*mix1*texture2D(otexture, vec2(tValue.g * oscale1 + oshift1, height1)).r;
+    #else
+      tColor1 *= texture2D(otexture, vec2(tValue.g * oscale1 + oshift1, height1)).r;
+    #endif
+
+    #if vtkNumComponents >= 3
+      vec3 tColor2 = mix2*texture2D(ctexture, vec2(tValue.b * cscale2 + cshift2, height2)).rgb;
+      #if !defined(vtkComponent2Proportional)
+        tColor.a += goFactor.z*mix2*texture2D(otexture, vec2(tValue.b * oscale2 + oshift2, height2)).r;
+      #else
+        tColor2 *= texture2D(otexture, vec2(tValue.b * oscale2 + oshift2, height2)).r;
+      #endif
+
+      #if vtkNumComponents >= 4
+        vec3 tColor3 = mix3*texture2D(ctexture, vec2(tValue.a * cscale3 + cshift3, height3)).rgb;
+        #if !defined(vtkComponent3Proportional)
+          tColor.a += goFactor.w*mix3*texture2D(otexture, vec2(tValue.a * oscale3 + oshift3, height3)).r;
+        #else
+          tColor3 *= texture2D(otexture, vec2(tValue.a * oscale3 + oshift3, height3)).r;
+        #endif
+      #endif
+    #endif
   #else // then not independent
 
   #if vtkNumComponents == 2
@@ -524,13 +566,21 @@ vec4 getColorForValue(vec4 tValue, vec3 posIS, vec3 tstep)
 
   // apply lighting if requested as appropriate
   #if vtkLightComplexity > 0
-    applyLighting(tColor.rgb, normal0);
+    #if !defined(vtkComponent0Proportional)
+      applyLighting(tColor.rgb, normal0);
+    #endif
   #if defined(vtkIndependentComponentsOn) && vtkNumComponents >= 2
-    applyLighting(tColor1, normal1);
+    #if !defined(vtkComponent1Proportional)
+      applyLighting(tColor1, normal1);
+    #endif
   #if vtkNumComponents >= 3
-    applyLighting(tColor2, normal2);
+    #if !defined(vtkComponent2Proportional)
+      applyLighting(tColor2, normal2);
+    #endif
   #if vtkNumComponents >= 4
-    applyLighting(tColor3, normal3);
+    #if !defined(vtkComponent3Proportional)
+      applyLighting(tColor3, normal3);
+    #endif
   #endif
   #endif
   #endif
