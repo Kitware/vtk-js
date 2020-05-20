@@ -180,6 +180,19 @@ export function multiplyScalar2D(vec, scalar) {
   return vec;
 }
 
+export function multiplyAccumulate(a, b, scalar, out) {
+  out[0] = a[0] + b[0] * scalar;
+  out[1] = a[1] + b[1] * scalar;
+  out[2] = a[2] + b[2] * scalar;
+  return out;
+}
+
+export function multiplyAccumulate2D(a, b, scalar, out) {
+  out[0] = a[0] + b[0] * scalar;
+  out[1] = a[1] + b[1] * scalar;
+  return out;
+}
+
 export function dot(x, y) {
   return x[0] * y[0] + x[1] * y[1] + x[2] * y[2];
 }
@@ -2171,6 +2184,8 @@ export default {
   subtract,
   multiplyScalar,
   multiplyScalar2D,
+  multiplyAccumulate,
+  multiplyAccumulate2D,
   dot,
   outer,
   cross,

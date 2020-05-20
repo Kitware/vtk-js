@@ -95,6 +95,20 @@ vec[2] * scalar => vec[2]
 ```
 Returns vec.
 
+### multiplyAccumulate(a, b, scalar, out)
+
+```js
+a[3] +  b[3] * scalar => out[3]
+```
+Returns out.
+
+### multiplyAccumulate2D(a, b, scalar, out)
+
+```js
+a[2] + b[2] * scalar => out[2]
+```
+Returns out.
+
 ### dot(x, y)
 
 ### outer(x, y, out_3x3) 

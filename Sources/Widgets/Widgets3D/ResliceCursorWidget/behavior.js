@@ -112,11 +112,12 @@ export default function widgetBehavior(publicAPI, model) {
     const translationDistance = vtkMath.dot(translationVector, axisTranslation);
 
     const center = model.widgetState.getCenter();
-    const newOrigin = [
-      center[0] + translationDistance * axisTranslation[0],
-      center[1] + translationDistance * axisTranslation[1],
-      center[2] + translationDistance * axisTranslation[2],
-    ];
+    const newOrigin = vtkMath.multiplyAccumulate(
+      center,
+      axisTranslation,
+      translationDistance,
+      [0, 0, 0]
+    );
     model.widgetState.setCenter(newOrigin);
     updateState(model.widgetState);
   };

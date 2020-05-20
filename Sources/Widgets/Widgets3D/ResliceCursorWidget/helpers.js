@@ -6,8 +6,6 @@ import { ViewTypes } from 'vtk.js/Sources/Widgets/Core/WidgetManager/Constants';
 // Project point (inPoint) to the bounds of the image according to a plane
 // defined by two vectors (v1, v2)
 export function boundPoint(inPoint, v1, v2, bounds) {
-  const outPoint = [];
-
   const absT1 = v1.map((val) => Math.abs(val));
   const absT2 = v2.map((val) => Math.abs(val));
   const epsilon = 0.00001;
@@ -38,22 +36,13 @@ export function boundPoint(inPoint, v1, v2, bounds) {
     }
   }
 
-  outPoint[0] = inPoint[0];
-  outPoint[1] = inPoint[1];
-  outPoint[2] = inPoint[2];
+  const outPoint = [inPoint[0], inPoint[1], inPoint[2]];
 
   if (o1 !== 0.0) {
-    const translation = [];
-
-    translation[0] = v1[0] * o1;
-    translation[1] = v1[1] * o1;
-    translation[2] = v1[2] * o1;
-
-    vtkMath.add(outPoint, translation, outPoint);
+    vtkMath.multiplyAccumulate(outPoint, v1, o1, outPoint);
   }
   if (o2 !== 0.0) {
-    const translation = [v2[0] * o2, v2[1] * o2, v2[2] * o2];
-    vtkMath.add(outPoint, translation, outPoint);
+    vtkMath.multiplyAccumulate(outPoint, v2, o2, outPoint);
   }
 
   return outPoint;
