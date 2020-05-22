@@ -205,6 +205,7 @@ export default function widgetBehavior(publicAPI, model) {
       model.isDragging = true;
       model.openGLRenderWindow.setCursor('grabbing');
       model.interactor.requestAnimation(publicAPI);
+      publicAPI.invokeStartInteractionEvent();
     }
 
     return macro.EVENT_ABORT;
@@ -220,6 +221,7 @@ export default function widgetBehavior(publicAPI, model) {
         model.openGLRenderWindow.setCursor(model.defaultCursor);
         model.widgetState.deactivate();
         model.interactor.cancelAnimation(publicAPI);
+        publicAPI.invokeEndInteractionEvent();
       } else {
         model.moveHandle.setOrigin(...model.activeState.getOrigin());
         model.activeState.deactivate();
