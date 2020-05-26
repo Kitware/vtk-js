@@ -9,7 +9,7 @@ import vtkPolyData from 'vtk.js/Sources/Common/DataModel/PolyData';
 import vtkWidgetRepresentation from 'vtk.js/Sources/Widgets/Representations/WidgetRepresentation';
 
 import { ScalarMode } from 'vtk.js/Sources/Rendering/Core/Mapper/Constants';
-import { vec3 } from 'gl-matrix';
+import { vec3, mat3 } from 'gl-matrix';
 
 // ----------------------------------------------------------------------------
 // vtkCircleContextRepresentation methods
@@ -38,7 +38,7 @@ function vtkCircleContextRepresentation(publicAPI, model) {
     }),
     direction: vtkDataArray.newInstance({
       name: 'direction',
-      numberOfComponents: 3,
+      numberOfComponents: 9,
       empty: true,
     }),
   };
@@ -73,7 +73,7 @@ function vtkCircleContextRepresentation(publicAPI, model) {
   };
 
   model.pipelines.circle.actor.getProperty().setOpacity(0.2);
-  model.pipelines.circle.mapper.setOrientationModeToDirection();
+  model.pipelines.circle.mapper.setOrientationModeToMatrix();
   model.pipelines.circle.mapper.setResolveCoincidentTopology(true);
   model.pipelines.circle.mapper.setResolveCoincidentTopologyPolygonOffsetParameters(
     -1,
@@ -122,7 +122,7 @@ function vtkCircleContextRepresentation(publicAPI, model) {
       // Need to resize dataset
       points.setData(new Float32Array(3 * totalCount));
       scale.setData(new Float32Array(3 * totalCount));
-      direction.setData(new Float32Array(3 * totalCount));
+      direction.setData(new Float32Array(9 * totalCount));
       color.setData(new Float32Array(totalCount));
     }
     const typedArray = {
@@ -142,10 +142,27 @@ function vtkCircleContextRepresentation(publicAPI, model) {
       typedArray.points[i * 3 + 1] = coord[1];
       typedArray.points[i * 3 + 2] = coord[2];
 
-      const orient = state.getDirection() || model.defaultDirection;
-      typedArray.direction[i * 3 + 0] = orient[0];
-      typedArray.direction[i * 3 + 1] = orient[1];
-      typedArray.direction[i * 3 + 2] = orient[2];
+      const right = state.getRight ? state.getRight() : [1, 0, 0];
+      const up = state.getUp ? state.getUp() : [0, 1, 0];
+      const dir = state.getDirection ? state.getDirection() : [0, 0, 1];
+      const rotation = [...right, ...up, ...dir];
+
+      let scale3 = state.getScale3 ? state.getScale3() : [1, 1, 1];
+      scale3 = scale3.map((x) => (x === 0 ? 2 * model.defaultScale : 2 * x));
+
+      // Reorient rotation and scale3 since the circle source faces X instead of Z
+      const reorientCircleSource4 = vtkMatrixBuilder
+        .buildFromDegree()
+        .rotateFromDirections([1, 0, 0], [0, 0, 1]) // from X to Z
+        .getMatrix();
+      const reorientCircleSource3 = [];
+      mat3.fromMat4(reorientCircleSource3, reorientCircleSource4);
+      vec3.transformMat4(scale3, scale3, reorientCircleSource4);
+      mat3.multiply(rotation, rotation, reorientCircleSource3);
+
+      for (let j = 0; j < 9; j += 1) {
+        typedArray.direction[i * 9 + j] = rotation[j];
+      }
 
       const scale1 =
         (state.getScale1 ? state.getScale1() : model.defaultScale) / 2;
@@ -154,18 +171,6 @@ function vtkCircleContextRepresentation(publicAPI, model) {
       if (state.getVisible && !state.getVisible()) {
         sFactor = 0;
       }
-
-      let scale3 = state.getScale3 ? state.getScale3() : [1, 1, 1];
-      scale3 = scale3.map((x) => (x === 0 ? 2 * model.defaultScale : 2 * x));
-
-      vec3.transformMat4(
-        scale3,
-        scale3,
-        vtkMatrixBuilder
-          .buildFromDegree()
-          .rotateFromDirections([1, 0, 0], orient)
-          .getMatrix()
-      );
 
       typedArray.scale[i * 3 + 0] = scale1 * sFactor * scale3[0];
       typedArray.scale[i * 3 + 1] = scale1 * sFactor * scale3[1];
@@ -193,7 +198,6 @@ function vtkCircleContextRepresentation(publicAPI, model) {
 const DEFAULT_VALUES = {
   glyphResolution: 32,
   defaultScale: 1,
-  defaultDirection: [0, 0, 1],
   drawBorder: false,
   drawFace: true,
 };
@@ -205,7 +209,6 @@ export function extend(publicAPI, model, initialValues = {}) {
 
   vtkHandleRepresentation.extend(publicAPI, model, initialValues);
   macro.setGet(publicAPI, model, ['glyphResolution', 'defaultScale']);
-  macro.setGetArray(publicAPI, model, ['defaultDirection']);
   macro.get(publicAPI, model, ['glyph', 'mapper', 'actor']);
 
   // Object specific methods

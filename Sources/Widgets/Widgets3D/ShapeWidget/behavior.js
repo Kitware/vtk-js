@@ -7,7 +7,6 @@ import {
 
 import vtkLabelRepresentation from 'vtk.js/Sources/Interaction/Widgets/LabelRepresentation';
 
-import { SlicingMode } from 'vtk.js/Sources/Rendering/Core/ImageMapper/Constants';
 import { vec3 } from 'gl-matrix';
 
 const { vtkErrorMacro } = macro;
@@ -40,14 +39,6 @@ export default function widgetBehavior(publicAPI, model) {
   // --------------------------------------------------------------------------
   // Public methods
   // --------------------------------------------------------------------------
-
-  publicAPI.setSlicingMode = (slicingMode) => {
-    publicAPI.reset();
-    const direction = [0, 0, 0];
-    direction[slicingMode % 3] = 1;
-    model.shapeHandle.setDirection(direction);
-    model.manipulator.setNormal(direction);
-  };
 
   publicAPI.setModifierBehavior = (behavior) => {
     Object.assign(model.modifierBehavior, behavior);
@@ -101,18 +92,6 @@ export default function widgetBehavior(publicAPI, model) {
     model.visibleOnFocus = visibleOnFocus;
   };
 
-  publicAPI.setXAxis = (xAxis) => {
-    vec3.normalize(model.xAxis, xAxis);
-  };
-
-  publicAPI.setYAxis = (yAxis) => {
-    vec3.normalize(model.yAxis, yAxis);
-  };
-
-  publicAPI.setZAxis = (zAxis) => {
-    vec3.normalize(model.zAxis, zAxis);
-  };
-
   publicAPI.setLabelTextCallback = (callback) => {
     model.labelTextCallback = callback;
   };
@@ -163,7 +142,6 @@ export default function widgetBehavior(publicAPI, model) {
   publicAPI.placePoint2 = (point2) => {
     if (model.hasFocus) {
       model.point2 = point2;
-
       model.point2Handle.setOrigin(model.point2);
 
       publicAPI.updateShapeBounds();
@@ -223,109 +201,90 @@ export default function widgetBehavior(publicAPI, model) {
   // --------------------------------------------------------------------------
 
   publicAPI.makeSquareFromPoints = (point1, point2) => {
-    const d = [0, 0, 0];
-    vec3.subtract(d, point2, point1);
+    const diagonal = [0, 0, 0];
+    vec3.subtract(diagonal, point2, point1);
+    const dir = model.shapeHandle.getDirection();
+    const right = model.shapeHandle.getRight();
+    const up = model.shapeHandle.getUp();
+    const dirComponent = vec3.dot(diagonal, dir);
+    let rightComponent = vec3.dot(diagonal, right);
+    let upComponent = vec3.dot(diagonal, up);
+    const absRightComponent = Math.abs(rightComponent);
+    const absUpComponent = Math.abs(upComponent);
 
-    let sx = vec3.dot(d, model.xAxis);
-    let sy = vec3.dot(d, model.yAxis);
-    let sz = vec3.dot(d, model.zAxis);
-
-    const absSx = Math.abs(sx);
-    const absSy = Math.abs(sy);
-    const absSz = Math.abs(sz);
-
-    const slicingMode = model.shapeHandle.getDirection().indexOf(1);
-
-    if (slicingMode === SlicingMode.I) {
-      if (absSy < EPSILON) {
-        sy = sz;
-      } else if (absSz < EPSILON) {
-        sz = sy;
-      } else if (absSy > absSz) {
-        sz = (sz / absSz) * absSy;
-      } else {
-        sy = (sy / absSy) * absSz;
-      }
-    } else if (slicingMode === SlicingMode.J) {
-      if (absSx < EPSILON) {
-        sx = sz;
-      } else if (absSz < EPSILON) {
-        sz = sx;
-      } else if (absSx > absSz) {
-        sz = (sz / absSz) * absSx;
-      } else {
-        sx = (sx / absSx) * absSz;
-      }
-    } else if (slicingMode === SlicingMode.K) {
-      if (absSx < EPSILON) {
-        sx = sy;
-      } else if (absSy < EPSILON) {
-        sy = sx;
-      } else if (absSx > absSy) {
-        sy = (sy / absSy) * absSx;
-      } else {
-        sx = (sx / absSx) * absSy;
-      }
+    if (absRightComponent < EPSILON) {
+      rightComponent = upComponent;
+    } else if (absUpComponent < EPSILON) {
+      upComponent = rightComponent;
+    } else if (absRightComponent > absUpComponent) {
+      upComponent = (upComponent / absUpComponent) * absRightComponent;
+    } else {
+      rightComponent = (rightComponent / absRightComponent) * absUpComponent;
     }
 
     return [
       point1[0] +
-        sx * model.xAxis[0] +
-        sy * model.yAxis[0] +
-        sz * model.zAxis[0],
+        rightComponent * right[0] +
+        upComponent * up[0] +
+        dirComponent * dir[0],
       point1[1] +
-        sx * model.xAxis[1] +
-        sy * model.yAxis[1] +
-        sz * model.zAxis[1],
+        rightComponent * right[1] +
+        upComponent * up[1] +
+        dirComponent * dir[1],
       point1[2] +
-        sx * model.xAxis[2] +
-        sy * model.yAxis[2] +
-        sz * model.zAxis[2],
+        rightComponent * right[2] +
+        upComponent * up[2] +
+        dirComponent * dir[2],
     ];
   };
 
-  publicAPI.setBoundsFromRadius = (center, pointOnCircle) => {
-    vtkErrorMacro(
-      `${
-        model.classHierarchy[model.classHierarchy.length - 1]
-      } should implement 'setBoundsFromRadius'`
-    );
+  const getCornersFromRadius = (center, pointOnCircle) => {
+    const radius = vec3.distance(center, pointOnCircle);
+    const up = model.shapeHandle.getUp();
+    const right = model.shapeHandle.getRight();
+    const point1 = [
+      center[0] + (up[0] - right[0]) * radius,
+      center[1] + (up[1] - right[1]) * radius,
+      center[2] + (up[2] - right[2]) * radius,
+    ];
+    const point2 = [
+      center[0] + (right[0] - up[0]) * radius,
+      center[1] + (right[1] - up[1]) * radius,
+      center[2] + (right[2] - up[2]) * radius,
+    ];
+    return { point1, point2 };
   };
 
-  publicAPI.setBoundsFromDiameter = (center, pointOnCircle) => {
-    vtkErrorMacro(
-      `${
-        model.classHierarchy[model.classHierarchy.length - 1]
-      } should implement 'setBoundsFromDiameter'`
-    );
+  const getCornersFromDiameter = (point1, point2) => {
+    const center = [
+      0.5 * (point1[0] + point2[0]),
+      0.5 * (point1[1] + point2[1]),
+      0.5 * (point1[2] + point2[2]),
+    ];
+
+    return getCornersFromRadius(center, point1);
   };
 
-  publicAPI.setBounds = (bounds) => {
+  publicAPI.setCorners = (point1, point2) => {
     if (model.label && model.labelTextCallback) {
-      if (model.point1 && model.point2) {
-        const point1 = model.openGLRenderWindow.worldToDisplay(
-          bounds[0],
-          bounds[2],
-          bounds[4],
-          model.renderer
-        );
-        const point2 = model.openGLRenderWindow.worldToDisplay(
-          bounds[1],
-          bounds[3],
-          bounds[5],
-          model.renderer
-        );
-        const screenBounds = [
-          point1[0],
-          point2[0],
-          point1[1],
-          point2[1],
-          point1[2],
-          point2[2],
-        ];
-
-        model.labelTextCallback(bounds, screenBounds, model.label);
-      }
+      const bounds = makeBoundsFromPoints(point1, point2);
+      const screenPoint1 = model.openGLRenderWindow.worldToDisplay(
+        ...point1,
+        model.renderer
+      );
+      const screenPoint2 = model.openGLRenderWindow.worldToDisplay(
+        ...point2,
+        model.renderer
+      );
+      const screenBounds = [
+        screenPoint1[0],
+        screenPoint2[0],
+        screenPoint1[1],
+        screenPoint2[1],
+        screenPoint1[2],
+        screenPoint2[2],
+      ];
+      model.labelTextCallback(bounds, screenBounds, model.label);
     }
   };
 
@@ -341,33 +300,31 @@ export default function widgetBehavior(publicAPI, model) {
       switch (
         publicAPI.getActiveBehaviorFromCategory(BehaviorCategory.POINTS)
       ) {
-        case ShapeBehavior[BehaviorCategory.POINTS].CORNER_TO_CORNER:
-          publicAPI.setBounds(makeBoundsFromPoints(point1, point2));
-
+        case ShapeBehavior[BehaviorCategory.POINTS].CORNER_TO_CORNER: {
+          publicAPI.setCorners(point1, point2);
           break;
-        case ShapeBehavior[BehaviorCategory.POINTS].CENTER_TO_CORNER:
-          {
-            const diagonal = [0, 0, 0];
-            vec3.subtract(diagonal, point1, point2);
-            vec3.add(point1, point1, diagonal);
-          }
-          publicAPI.setBounds(makeBoundsFromPoints(point1, point2));
-
+        }
+        case ShapeBehavior[BehaviorCategory.POINTS].CENTER_TO_CORNER: {
+          const diagonal = [0, 0, 0];
+          vec3.subtract(diagonal, point1, point2);
+          vec3.add(point1, point1, diagonal);
+          publicAPI.setCorners(point1, point2);
           break;
-        case ShapeBehavior[BehaviorCategory.POINTS].RADIUS:
-          publicAPI.setBoundsFromRadius(point1, point2);
-
+        }
+        case ShapeBehavior[BehaviorCategory.POINTS].RADIUS: {
+          const points = getCornersFromRadius(point1, point2);
+          publicAPI.setCorners(points.point1, points.point2);
           break;
-        case ShapeBehavior[BehaviorCategory.POINTS].DIAMETER:
-          publicAPI.setBoundsFromDiameter(point1, point2);
-
+        }
+        case ShapeBehavior[BehaviorCategory.POINTS].DIAMETER: {
+          const points = getCornersFromDiameter(point1, point2);
+          publicAPI.setCorners(points.point1, points.point2);
           break;
+        }
         default:
           // This should never be executed
           vtkErrorMacro('vtk internal error');
       }
-    } else {
-      publicAPI.setBounds([0, 0, 0, 0, 0, 0]);
     }
   };
 
@@ -409,47 +366,58 @@ export default function widgetBehavior(publicAPI, model) {
   // --------------------------------------------------------------------------
 
   publicAPI.handleMouseMove = (callData) => {
-    if (model.manipulator) {
-      const worldCoords = model.manipulator.handleEvent(
-        callData,
-        model.openGLRenderWindow
-      );
-
-      if (model.hasFocus && model.pickable) {
-        if (worldCoords.length) {
-          if (!model.point1) {
-            model.point1Handle.setOrigin(worldCoords);
-          } else {
-            model.point2Handle.setOrigin(worldCoords);
-          }
-        }
-
-        if (model.point1) {
-          model.point2 = worldCoords;
-          publicAPI.updateShapeBounds();
-        }
-
-        return macro.EVENT_ABORT;
-      }
-
-      if (model.useHandles && model.isDragging) {
-        if (model.activeState === model.point1Handle) {
-          model.point1Handle.setOrigin(worldCoords);
-          model.point1 = worldCoords;
-        } else {
-          model.point2Handle.setOrigin(worldCoords);
-
-          model.point2 = worldCoords;
-        }
-        publicAPI.updateShapeBounds();
-
-        publicAPI.invokeInteractionEvent();
-
-        return macro.EVENT_ABORT;
-      }
+    if (
+      !model.activeState ||
+      !model.activeState.getActive() ||
+      !model.pickable ||
+      !model.manipulator
+    ) {
+      return macro.VOID;
     }
 
-    return macro.VOID;
+    if (!model.point2) {
+      // Update orientation to match the camera's plane
+      // if the corners are not yet placed
+      const normal = model.camera.getDirectionOfProjection();
+      const up = model.camera.getViewUp();
+      const right = [];
+      vec3.cross(right, up, normal);
+      model.shapeHandle.setUp(up);
+      model.shapeHandle.setRight(right);
+      model.shapeHandle.setDirection(normal);
+      model.manipulator.setNormal(normal);
+    }
+    model.manipulator.setOrigin(model.activeState.getOrigin());
+
+    const worldCoords = model.manipulator.handleEvent(
+      callData,
+      model.openGLRenderWindow
+    );
+    if (!worldCoords.length) {
+      return macro.VOID;
+    }
+
+    if (model.hasFocus) {
+      if (!model.point1) {
+        model.point1Handle.setOrigin(worldCoords);
+      } else {
+        model.point2Handle.setOrigin(worldCoords);
+        model.point2 = worldCoords;
+        publicAPI.updateShapeBounds();
+      }
+    } else if (model.useHandles && model.isDragging) {
+      if (model.activeState === model.point1Handle) {
+        model.point1Handle.setOrigin(worldCoords);
+        model.point1 = worldCoords;
+      } else {
+        model.point2Handle.setOrigin(worldCoords);
+        model.point2 = worldCoords;
+      }
+      publicAPI.updateShapeBounds();
+      publicAPI.invokeInteractionEvent();
+    }
+
+    return model.hasFocus ? macro.EVENT_ABORT : macro.VOID;
   };
 
   // --------------------------------------------------------------------------
@@ -526,13 +494,7 @@ export default function widgetBehavior(publicAPI, model) {
 
       if (publicAPI.isDraggingEnabled()) {
         const distance = vec3.squaredDistance(model.point1, model.point2);
-        const maxDistance =
-          100 *
-          Math.max(
-            vec3.squaredLength(model.xAxis),
-            vec3.squaredLength(model.yAxis),
-            vec3.squaredLength(model.zAxis)
-          );
+        const maxDistance = 100;
 
         if (distance > maxDistance || publicAPI.isDraggingForced()) {
           publicAPI.invokeInteractionEvent();
