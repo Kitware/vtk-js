@@ -131,10 +131,10 @@ test.onlyIfWebGL('Test Volume Rendering with Proportional Component', (t) => {
 
   const labelMapPwfPoints = [
     [0, 0.0, 0.5, 1.0],
-    [1, 0.6, 0.5, 1.0],
-    [2, 0.4, 0.5, 1.0],
-    [3, 0.6, 0.5, 1.0],
-    [4, 0.8, 0.5, 1.0],
+    [1, 0.8, 0.5, 1.0],
+    [2, 0.6, 0.5, 1.0],
+    [3, 0.0, 0.5, 1.0],
+    [4, 1.0, 0.5, 1.0],
   ];
   const labelMapPwf = vtkPiecewiseFunction.newInstance();
   labelMapPwfPoints.forEach((pwfPoint) => {
@@ -144,7 +144,7 @@ test.onlyIfWebGL('Test Volume Rendering with Proportional Component', (t) => {
   actor.getProperty().setRGBTransferFunction(1, labelMapCtFun);
   actor.getProperty().setScalarOpacity(1, labelMapPwf);
   actor.getProperty().setScalarOpacityUnitDistance(1, 3.0);
-  actor.getProperty().setComponentWeight(1, 1.0);
+  actor.getProperty().setComponentWeight(1, 0.8);
   actor.getProperty().setOpacityMode(1, OpacityMode.PROPORTIONAL);
 
   actor.getProperty().setIndependentComponents(true);

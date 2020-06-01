@@ -514,14 +514,18 @@ vec4 getColorForValue(vec4 tValue, vec3 posIS, vec3 tstep)
     #if !defined(vtkComponent0Proportional)
       tColor.a = goFactor.x*mix0*texture2D(otexture, vec2(tValue.r * oscale0 + oshift0, height0)).r;
     #else
-      tColor *= texture2D(otexture, vec2(tValue.r * oscale0 + oshift0, height0)).r;
+      float pwfValue = texture2D(otexture, vec2(tValue.r * oscale0 + oshift0, height0)).r;
+      tColor *= pwfValue;
+      tColor.a *= mix(pwfValue, 1.0, (1.0 - mix0));
     #endif
 
     vec3 tColor1 = mix1*texture2D(ctexture, vec2(tValue.g * cscale1 + cshift1, height1)).rgb;
     #if !defined(vtkComponent1Proportional)
       tColor.a += goFactor.y*mix1*texture2D(otexture, vec2(tValue.g * oscale1 + oshift1, height1)).r;
     #else
-      tColor1 *= texture2D(otexture, vec2(tValue.g * oscale1 + oshift1, height1)).r;
+      float pwfValue = texture2D(otexture, vec2(tValue.g * oscale1 + oshift1, height1)).r;
+      tColor1 *= pwfValue;
+      tColor.a *= mix(pwfValue, 1.0, (1.0 - mix1));
     #endif
 
     #if vtkNumComponents >= 3
@@ -529,7 +533,9 @@ vec4 getColorForValue(vec4 tValue, vec3 posIS, vec3 tstep)
       #if !defined(vtkComponent2Proportional)
         tColor.a += goFactor.z*mix2*texture2D(otexture, vec2(tValue.b * oscale2 + oshift2, height2)).r;
       #else
-        tColor2 *= texture2D(otexture, vec2(tValue.b * oscale2 + oshift2, height2)).r;
+        float pwfValue = texture2D(otexture, vec2(tValue.b * oscale2 + oshift2, height2)).r;
+        tColor2 *= pwfValue;
+        tColor.a *= mix(pwfValue, 1.0, (1.0 - mix2));
       #endif
 
       #if vtkNumComponents >= 4
@@ -537,7 +543,9 @@ vec4 getColorForValue(vec4 tValue, vec3 posIS, vec3 tstep)
         #if !defined(vtkComponent3Proportional)
           tColor.a += goFactor.w*mix3*texture2D(otexture, vec2(tValue.a * oscale3 + oshift3, height3)).r;
         #else
-          tColor3 *= texture2D(otexture, vec2(tValue.a * oscale3 + oshift3, height3)).r;
+          float pwfValue = texture2D(otexture, vec2(tValue.a * oscale3 + oshift3, height3)).r;
+          tColor3 *= pwfValue;
+          tColor.a *= mix(pwfValue, 1.0, (1.0 - mix3));
         #endif
       #endif
     #endif
