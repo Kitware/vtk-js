@@ -55,22 +55,24 @@ function vtkCutter(publicAPI, model) {
     // Loop over all cells; get scalar values for all cell points
     // and process each cell.
     /* eslint-disable no-continue */
+    let cellOffset = 0;
+    let prevCellSize = -1;
     for (let cellId = 0; cellId < numCells; cellId++) {
-      const nbPointsInCell = dataCell[0];
+      cellOffset += prevCellSize + 1; // account for length of cell
+
+      const nbPointsInCell = dataCell[cellOffset];
+      prevCellSize = nbPointsInCell;
+
       // Check that cells have at least 3 points
       if (nbPointsInCell <= 2) {
         continue;
       }
+      const nextCellOffset = cellOffset + 1 + nbPointsInCell;
 
       // Get associated scalar of points that constitute the current cell
       const cellPointsScalars = [];
-      const valuesInCell = nbPointsInCell + 1; // first value is size
       let pointIndex;
-      for (
-        let i = valuesInCell * cellId + 1;
-        i < valuesInCell * (cellId + 1);
-        i++
-      ) {
+      for (let i = cellOffset + 1; i < nextCellOffset; i++) {
         pointIndex = dataCell[i];
         cellPointsScalars.push(model.cutScalars[pointIndex]);
       }
@@ -94,11 +96,7 @@ function vtkCutter(publicAPI, model) {
 
       // Get id of points that constitute the current cell
       const cellPointsID = [];
-      for (
-        let i = valuesInCell * cellId + 1;
-        i < valuesInCell * (cellId + 1);
-        i++
-      ) {
+      for (let i = cellOffset + 1; i < nextCellOffset; i++) {
         cellPointsID.push(dataCell[i]);
       }
 
