@@ -1,6 +1,5 @@
 import 'vtk.js/Sources/favicon';
 
-import * as vtkMath from 'vtk.js/Sources/Common/Core/Math';
 import vtkFullScreenRenderWindow from 'vtk.js/Sources/Rendering/Misc/FullScreenRenderWindow';
 import vtkWidgetManager from 'vtk.js/Sources/Widgets/Core/WidgetManager';
 import vtkRectangleWidget from 'vtk.js/Sources/Widgets/Widgets3D/RectangleWidget';
@@ -180,23 +179,6 @@ reader
 
     updateControlPanel(image.imageMapper, data);
 
-    // give axis information to widgets
-    let axis = [0, 0, 0];
-    data.indexToWorldVec3([1, 0, 0], axis);
-    scene.rectangleHandle.setXAxis(axis);
-    scene.ellipseHandle.setXAxis(axis);
-    scene.circleHandle.setXAxis(axis);
-    axis = [0, 0, 0];
-    data.indexToWorldVec3([0, 1, 0], axis);
-    scene.rectangleHandle.setYAxis(axis);
-    scene.ellipseHandle.setYAxis(axis);
-    scene.circleHandle.setYAxis(axis);
-    axis = [0, 0, 0];
-    data.indexToWorldVec3([0, 0, 1], axis);
-    scene.rectangleHandle.setZAxis(axis);
-    scene.ellipseHandle.setZAxis(axis);
-    scene.circleHandle.setZAxis(axis);
-
     scene.rectangleHandle.getRepresentations()[1].setDrawBorder(true);
     scene.rectangleHandle.getRepresentations()[1].setDrawFace(false);
     scene.rectangleHandle.getRepresentations()[1].setOpacity(1);
@@ -298,31 +280,6 @@ reader
       const slicingMode = image.imageMapper.getSlicingMode() % 3;
 
       if (slicingMode > -1) {
-        const ijk = [0, 0, 0];
-        const position = [0, 0, 0];
-        const normal = [0, 0, 0];
-
-        // position
-        ijk[slicingMode] = image.imageMapper.getSlice();
-        data.indexToWorldVec3(ijk, position);
-
-        // circle/slice normal
-        ijk[slicingMode] = 1;
-        data.indexToWorldVec3(ijk, normal);
-        vtkMath.subtract(normal, data.getOrigin(), normal);
-        vtkMath.normalize(normal);
-
-        widgets.rectangleWidget.getManipulator().setOrigin(position);
-        widgets.rectangleWidget.getManipulator().setNormal(normal);
-        widgets.ellipseWidget.getManipulator().setOrigin(position);
-        widgets.ellipseWidget.getManipulator().setNormal(normal);
-        widgets.circleWidget.getManipulator().setOrigin(position);
-        widgets.circleWidget.getManipulator().setNormal(normal);
-
-        scene.rectangleHandle.setSlicingMode(slicingMode);
-        scene.ellipseHandle.setSlicingMode(slicingMode);
-        scene.circleHandle.setSlicingMode(slicingMode);
-
         scene.rectangleHandle.updateRepresentationForRender();
         scene.ellipseHandle.updateRepresentationForRender();
         scene.circleHandle.updateRepresentationForRender();
@@ -348,6 +305,13 @@ readyAll();
 // UI logic
 // ----------------------------------------------------------------------------
 
+function resetWidgets() {
+  scene.rectangleHandle.reset();
+  scene.ellipseHandle.reset();
+  scene.circleHandle.reset();
+  scene.widgetManager.grabFocus(widgets[activeWidget]);
+}
+
 document.querySelector('.slice').addEventListener('input', (ev) => {
   image.imageMapper.setSlice(Number(ev.target.value));
 });
@@ -355,14 +319,8 @@ document.querySelector('.slice').addEventListener('input', (ev) => {
 document.querySelector('.axis').addEventListener('input', (ev) => {
   const sliceMode = 'IJKXYZ'.indexOf(ev.target.value) % 3;
   image.imageMapper.setSlicingMode(sliceMode);
-
-  const direction = [0, 0, 0];
-  direction[sliceMode] = 1;
-  scene.rectangleHandle.setSlicingMode(sliceMode);
-  scene.ellipseHandle.setSlicingMode(sliceMode);
-  scene.circleHandle.setSlicingMode(sliceMode);
-
   setCamera(sliceMode, scene.renderer, image.data);
+  resetWidgets();
   scene.renderWindow.render();
 });
 
@@ -372,10 +330,7 @@ document.querySelector('.widget').addEventListener('input', (ev) => {
 });
 
 document.querySelector('.reset').addEventListener('click', () => {
-  scene.rectangleHandle.reset();
-  scene.ellipseHandle.reset();
-  scene.circleHandle.reset();
-  scene.widgetManager.grabFocus(widgets[activeWidget]);
+  resetWidgets();
   scene.renderWindow.render();
 });
 

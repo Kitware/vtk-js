@@ -1,5 +1,4 @@
 import macro from 'vtk.js/Sources/macro';
-import * as vtkMath from 'vtk.js/Sources/Common/Core/Math';
 import vtkAbstractWidgetFactory from 'vtk.js/Sources/Widgets/Core/AbstractWidgetFactory';
 import vtkCircleContextRepresentation from 'vtk.js/Sources/Widgets/Representations/CircleContextRepresentation';
 import vtkPlaneManipulator from 'vtk.js/Sources/Widgets/Manipulators/PlaneManipulator';
@@ -7,6 +6,8 @@ import vtkSphereHandleRepresentation from 'vtk.js/Sources/Widgets/Representation
 import vtkStateBuilder from 'vtk.js/Sources/Widgets/Core/StateBuilder';
 
 import { ViewTypes } from 'vtk.js/Sources/Widgets/Core/WidgetManager/Constants';
+
+import { vec3 } from 'gl-matrix';
 
 // ----------------------------------------------------------------------------
 // Widget linked to a view
@@ -20,7 +21,9 @@ function widgetBehavior(publicAPI, model) {
 
     model.painting = true;
     const trailCircle = model.widgetState.addTrail();
-    trailCircle.set(model.activeState.get('origin', 'direction', 'scale1'));
+    trailCircle.set(
+      model.activeState.get('origin', 'up', 'right', 'direction', 'scale1')
+    );
     publicAPI.invokeStartInteractionEvent();
     return macro.EVENT_ABORT;
   };
@@ -41,6 +44,15 @@ function widgetBehavior(publicAPI, model) {
       model.activeState &&
       model.activeState.getActive()
     ) {
+      const normal = model.camera.getDirectionOfProjection();
+      const up = model.camera.getViewUp();
+      const right = [];
+      vec3.cross(right, up, normal);
+      model.activeState.setUp(...up);
+      model.activeState.setRight(...right);
+      model.activeState.setDirection(...normal);
+      model.manipulator.setNormal(normal);
+
       const worldCoords = model.manipulator.handleEvent(
         callData,
         model.openGLRenderWindow
@@ -48,17 +60,18 @@ function widgetBehavior(publicAPI, model) {
 
       if (worldCoords.length) {
         model.widgetState.setTrueOrigin(...worldCoords);
-
-        // offset origin for handle representation
-        const dir = model.activeState.getDirection();
-        vtkMath.normalize(dir);
-        vtkMath.add(worldCoords, dir, worldCoords);
         model.activeState.setOrigin(...worldCoords);
 
         if (model.painting) {
           const trailCircle = model.widgetState.addTrail();
           trailCircle.set(
-            model.activeState.get('origin', 'direction', 'scale1')
+            model.activeState.get(
+              'origin',
+              'up',
+              'right',
+              'direction',
+              'scale1'
+            )
           );
         }
       }
@@ -150,7 +163,7 @@ function vtkPaintWidget(publicAPI, model) {
         'origin',
         'color',
         'scale1',
-        'direction',
+        'orientation',
         'manipulator',
         'visible',
       ],
@@ -158,18 +171,18 @@ function vtkPaintWidget(publicAPI, model) {
       initialValues: {
         scale1: model.radius * 2,
         origin: [0, 0, 0],
-        direction: [0, 0, 1],
+        orientation: [1, 0, 0, 0, 1, 0, 0, 0, 1],
         visible: true,
       },
     })
     .addDynamicMixinState({
       labels: ['trail'],
-      mixins: ['origin', 'color', 'scale1', 'direction'],
+      mixins: ['origin', 'color', 'scale1', 'orientation'],
       name: 'trail',
       initialValues: {
         scale1: model.radius * 2,
         origin: [0, 0, 0],
-        direction: [0, 0, 1],
+        orientation: [1, 0, 0, 0, 1, 0, 0, 0, 1],
       },
     })
     .build();

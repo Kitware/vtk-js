@@ -19,6 +19,21 @@ only the first scalar opacity and gradient opacity transfer functions
 will be used (and all color functions will be ignored). Omitting the
 index parameter on the Set/Get methods will access index = 0.
 
+When independent components is turned on, a separate feature (useful
+for volume rendering labelmaps) is available.  By default all components
+have an "opacityMode" of `FRACTIONAL`, which results in the usual
+addition of that components scalar opacity function value to the final
+opacity of the fragment.  By setting one or more components to have a
+`PROPORTIONAL` "opacityMode" instead, the scalar opacity lookup value
+for those components will not be used to adjust the fragment opacity,
+but rather used to multiply the color of that fragment.  This kind of
+rendering makes sense for labelmap components because the gradient of
+those fields is meaningless and should not be used in opacity
+computation.  At the same time, multiplying the color value by the
+piecewise scalar opacity function value provides an opportunity to
+design piecewise constant opacity functions (step functions) that can
+highlight any subset of label values.
+
 vtkColorTransferFunction is a color mapping in RGB or HSV space that
 uses piecewise hermite functions to allow interpolation that can be
 piecewise constant, piecewise linear, or somewhere in-between
