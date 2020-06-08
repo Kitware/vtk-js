@@ -40,14 +40,41 @@ renderer.resetCamera();
 
 fullScreenRenderer.addController(controlPanel);
 
+const tensionInput = document.querySelector('.tension');
+const onTensionChanged = () => {
+  widget.getWidgetState().setSplineTension(parseFloat(tensionInput.value));
+  renderWindow.render();
+};
+tensionInput.addEventListener('input', onTensionChanged);
+onTensionChanged();
+
+const biasInput = document.querySelector('.bias');
+const onBiasChanged = () => {
+  widget.getWidgetState().setSplineBias(parseFloat(biasInput.value));
+  renderWindow.render();
+};
+biasInput.addEventListener('input', onBiasChanged);
+onBiasChanged();
+
+const continuityInput = document.querySelector('.continuity');
+const onContinuityChanged = () => {
+  widget
+    .getWidgetState()
+    .setSplineContinuity(parseFloat(continuityInput.value));
+  renderWindow.render();
+};
+continuityInput.addEventListener('input', onContinuityChanged);
+onContinuityChanged();
+
 const splineKindSelector = document.querySelector('.kind');
 const onSplineKindSelected = () => {
-  const kind =
-    splineKindSelector.selectedIndex === 1
-      ? splineKind.CARDINAL_SPLINE
-      : splineKind.KOCHANEK_SPLINE;
-  console.warn(kind);
-  console.log(splineKindSelector.selectedIndex);
+  const isKochanek = splineKindSelector.selectedIndex === 0;
+  tensionInput.disabled = !isKochanek;
+  biasInput.disabled = !isKochanek;
+  continuityInput.disabled = !isKochanek;
+  const kind = isKochanek
+    ? splineKind.KOCHANEK_SPLINE
+    : splineKind.CARDINAL_SPLINE;
   widget.getWidgetState().setSplineKind(kind);
   renderWindow.render();
 };
