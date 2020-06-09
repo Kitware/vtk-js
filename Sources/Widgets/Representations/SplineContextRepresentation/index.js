@@ -7,8 +7,6 @@ import vtkSpline3D from 'vtk.js/Sources/Common/DataModel/Spline3D';
 import vtkTriangleFilter from 'vtk.js/Sources/Filters/General/TriangleFilter';
 import vtkLineFilter from 'vtk.js/Sources/Filters/General/LineFilter';
 
-import { splineKind } from 'vtk.js/Sources/Common/DataModel/Spline3D/Constants';
-
 // ----------------------------------------------------------------------------
 // vtkSplineContextRepresentation methods
 // ----------------------------------------------------------------------------
@@ -66,9 +64,10 @@ function vtkSplineContextRepresentation(publicAPI, model) {
     }
 
     const polydata = vtkPolyData.newInstance();
+    const widgetState = inData[0];
 
     const list = publicAPI
-      .getRepresentationStates(inData[0])
+      .getRepresentationStates(widgetState)
       .filter((state) => state.getVisible && state.getVisible());
 
     const inPoints = list.map((state) => state.getOrigin());
@@ -84,7 +83,10 @@ function vtkSplineContextRepresentation(publicAPI, model) {
 
     const spline = vtkSpline3D.newInstance({
       close: model.close,
-      kind: splineKind.KOCHANEK_SPLINE,
+      kind: widgetState.getSplineKind(),
+      tension: widgetState.getSplineTension(),
+      bias: widgetState.getSplineBias(),
+      continuity: widgetState.getSplineContinuity(),
     });
     spline.computeCoefficients(inPoints);
 
