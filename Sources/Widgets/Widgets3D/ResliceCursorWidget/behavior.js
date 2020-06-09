@@ -40,8 +40,12 @@ export default function widgetBehavior(publicAPI, model) {
     model.planeManipulator.setOrigin(model.widgetState.getCenter());
     model.planeManipulator.setNormal(currentPlaneNormal);
 
-    model.interactor.requestAnimation(publicAPI);
     publicAPI.invokeStartInteractionEvent();
+
+    // When interacting, plane actor and lines must be re-rendered on other views
+    publicAPI.getViewWidgets().forEach((viewWidget) => {
+      viewWidget.getInteractor().requestAnimation(publicAPI);
+    });
 
     return macro.EVENT_ABORT;
   };
@@ -56,7 +60,9 @@ export default function widgetBehavior(publicAPI, model) {
   publicAPI.handleLeftButtonRelease = () => {
     if (isDragging) {
       publicAPI.invokeEndInteractionEvent();
-      model.interactor.cancelAnimation(publicAPI);
+      publicAPI.getViewWidgets().forEach((viewWidget) => {
+        viewWidget.getInteractor().cancelAnimation(publicAPI);
+      });
     }
     isDragging = false;
     model.widgetState.deactivate();
@@ -84,15 +90,15 @@ export default function widgetBehavior(publicAPI, model) {
     // Translate the current line along the other line
     const otherLineName = getAssociatedLinesName(stateLine.getName());
     const otherLine = model.widgetState[`get${otherLineName}`]();
-    const otherLinePoint1 = otherLine.getPoint1();
-    const otherLinePoint2 = otherLine.getPoint2();
-    const otherLineVector = [];
-    vtkMath.subtract(otherLinePoint2, otherLinePoint1, otherLineVector);
+    const otherLineVector = vtkMath.subtract(
+      otherLine.getPoint2(),
+      otherLine.getPoint1(),
+      []
+    );
     vtkMath.normalize(otherLineVector);
     const axisTranslation = otherLineVector;
 
-    const currentLineVector = [];
-    vtkMath.subtract(point2, point1, currentLineVector);
+    const currentLineVector = vtkMath.subtract(point2, point1, [0, 0, 0]);
     vtkMath.normalize(currentLineVector);
 
     const dot = vtkMath.dot(currentLineVector, otherLineVector);
@@ -108,16 +114,16 @@ export default function widgetBehavior(publicAPI, model) {
     const closestPoint = [];
     vtkLine.distanceToLine(worldCoords, point1, point2, closestPoint);
 
-    const translationVector = [];
-    vtkMath.subtract(worldCoords, closestPoint, translationVector);
+    const translationVector = vtkMath.subtract(worldCoords, closestPoint, []);
     const translationDistance = vtkMath.dot(translationVector, axisTranslation);
 
     const center = model.widgetState.getCenter();
-    const newOrigin = [
-      center[0] + translationDistance * axisTranslation[0],
-      center[1] + translationDistance * axisTranslation[1],
-      center[2] + translationDistance * axisTranslation[2],
-    ];
+    const newOrigin = vtkMath.multiplyAccumulate(
+      center,
+      axisTranslation,
+      translationDistance,
+      [0, 0, 0]
+    );
     model.widgetState.setCenter(newOrigin);
     updateState(model.widgetState);
   };
@@ -145,11 +151,11 @@ export default function widgetBehavior(publicAPI, model) {
       `get${model.widgetState.getActiveRotationPointName()}`
     ]();
 
-    const previousVectorToOrigin = [];
+    const previousVectorToOrigin = [0, 0, 0];
     vtkMath.subtract(previousWorldPosition, center, previousVectorToOrigin);
     vtkMath.normalize(previousVectorToOrigin);
 
-    const currentVectorToOrigin = [];
+    const currentVectorToOrigin = [0, 0, 0];
     vtkMath.subtract(worldCoords, center, currentVectorToOrigin);
     vtkMath.normalize(currentVectorToOrigin);
 
@@ -159,7 +165,7 @@ export default function widgetBehavior(publicAPI, model) {
     );
 
     // Define the direction of the rotation
-    const cross = [];
+    const cross = [0, 0, 0];
     vtkMath.cross(currentVectorToOrigin, previousVectorToOrigin, cross);
     vtkMath.normalize(cross);
 

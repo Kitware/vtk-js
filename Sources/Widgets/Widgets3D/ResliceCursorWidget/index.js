@@ -122,11 +122,12 @@ function vtkResliceCursorWidget(publicAPI, model) {
 
     const distance = renderer.getActiveCamera().getDistance();
 
-    const estimatedCameraPosition = [
-      focalPoint[0] + distance * normal[0],
-      focalPoint[1] + distance * normal[1],
-      focalPoint[2] + distance * normal[2],
-    ];
+    const estimatedCameraPosition = vtkMath.multiplyAccumulate(
+      focalPoint,
+      normal,
+      distance,
+      [0, 0, 0]
+    );
 
     // intersect with the plane to get updated focal point
     const intersection = vtkPlane.intersectWithLine(
@@ -141,11 +142,12 @@ function vtkResliceCursorWidget(publicAPI, model) {
       .getActiveCamera()
       .setFocalPoint(newFocalPoint[0], newFocalPoint[1], newFocalPoint[2]);
 
-    const newCameraPosition = [
-      newFocalPoint[0] + distance * normal[0],
-      newFocalPoint[1] + distance * normal[1],
-      newFocalPoint[2] + distance * normal[2],
-    ];
+    const newCameraPosition = vtkMath.multiplyAccumulate(
+      newFocalPoint,
+      normal,
+      distance,
+      [0, 0, 0]
+    );
 
     renderer
       .getActiveCamera()
@@ -246,11 +248,12 @@ function vtkResliceCursorWidget(publicAPI, model) {
     const normal = model.widgetState[`get${viewName}PlaneNormal`]();
 
     const estimatedFocalPoint = center;
-    const estimatedCameraPosition = [
-      estimatedFocalPoint[0] + distance * normal[0],
-      estimatedFocalPoint[1] + distance * normal[1],
-      estimatedFocalPoint[2] + distance * normal[2],
-    ];
+    const estimatedCameraPosition = vtkMath.multiplyAccumulate(
+      estimatedFocalPoint,
+      normal,
+      distance,
+      [0, 0, 0]
+    );
 
     renderer.getActiveCamera().setFocalPoint(...estimatedFocalPoint);
     renderer.getActiveCamera().setPosition(...estimatedCameraPosition);

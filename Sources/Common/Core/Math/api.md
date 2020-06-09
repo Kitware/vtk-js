@@ -72,36 +72,57 @@ NOT IMPLEMENTED
 ```js
 a[3] + b[3] => out[3]
 ```
+Returns out.
 
 ### subtract(a, b, out) 
 
 ```js
 a[3] - b[3] => out[3]
 ```
+Returns out.
 
 ### multiplyScalar(vec, scalar) {
 
 ```js
 vec[3] * scalar => vec[3]
 ```
+Returns vec.
 
 ### multiplyScalar2D(vec, scalar)
 
 ```js
 vec[2] * scalar => vec[2]
 ```
+Returns vec.
+
+### multiplyAccumulate(a, b, scalar, out)
+
+```js
+a[3] +  b[3] * scalar => out[3]
+```
+Returns out.
+
+### multiplyAccumulate2D(a, b, scalar, out)
+
+```js
+a[2] + b[2] * scalar => out[2]
+```
+Returns out.
 
 ### dot(x, y)
 
 ### outer(x, y, out_3x3) 
 
-### cross(x, y, out) 
+### cross(x, y, out)
+
+Computes cross product of 3D vectors x and y.
+Returns out.
 
 ### norm(x, n = 3)
 
 ### normalize(x)
 
-Normalize in place
+Normalize in place. Returns norm.
 
 ### perpendiculars(x, y, z, theta) 
 

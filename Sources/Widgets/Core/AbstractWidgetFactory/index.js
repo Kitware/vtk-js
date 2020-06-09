@@ -39,6 +39,7 @@ function vtkAbstractWidgetFactory(publicAPI, model) {
         renderer,
         camera,
         openGLRenderWindow,
+        factory: publicAPI,
       });
       macro.safeArrays(widgetModel);
       vtkAbstractWidget.extend(widgetPublicAPI, widgetModel, initialValues);
@@ -110,6 +111,9 @@ function vtkAbstractWidgetFactory(publicAPI, model) {
     }
     return viewToWidget[viewId];
   };
+
+  // List of all the views the widget has been registered to.
+  publicAPI.getViewIds = () => Object.keys(viewToWidget);
 
   // --------------------------------------------------------------------------
   // Widget visibility / enable

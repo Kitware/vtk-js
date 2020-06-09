@@ -147,15 +147,13 @@ for (let i = 0; i < 3; i++) {
 // Load image
 // ----------------------------------------------------------------------------
 
-function updateReslice(viewtype, reslice, actor, renderer, renderWindow) {
+function updateReslice(viewtype, reslice, actor, renderer) {
   const modified = widget.updateReslicePlane(reslice, viewtype);
   if (modified) {
     // Get returned modified from setter to know if we have to render
     actor.setUserMatrix(reslice.getResliceAxes());
     widget.resetCamera(renderer, viewtype);
   }
-  // Maybe plane has not been modified but lines did
-  renderWindow.render();
 
   return modified;
 }
@@ -187,13 +185,7 @@ reader.setUrl(`${__BASE_PATH__}/data/volume/LIDC2.vti`).then(() => {
         .forEach((v) => {
           // Interactions in other views may change current plane
           v.widgetInstance.onInteractionEvent(() => {
-            updateReslice(
-              viewType,
-              reslice,
-              obj.resliceActor,
-              obj.renderer,
-              obj.renderWindow
-            );
+            updateReslice(viewType, reslice, obj.resliceActor, obj.renderer);
           });
         });
 
