@@ -18,7 +18,12 @@ function vtkSplineWidget(publicAPI, model) {
 
   // --- Widget Requirement ---------------------------------------------------
 
-  model.methodsToLink = ['outputBorder'];
+  model.methodsToLink = [
+    'outputBorder',
+    'fill',
+    'borderColor',
+    'errorBorderColor',
+  ];
   model.behavior = widgetBehavior;
   model.widgetState = stateGenerator();
 
