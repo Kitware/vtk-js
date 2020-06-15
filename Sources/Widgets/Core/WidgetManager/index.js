@@ -477,8 +477,8 @@ function vtkWidgetManager(publicAPI, model) {
     if (useSvgLayer !== model.useSvgLayer) {
       model.useSvgLayer = useSvgLayer;
 
-      if (useSvgLayer) {
-        if (model.renderer) {
+      if (model.renderer) {
+        if (useSvgLayer) {
           enableSvgLayer();
           // force a render so svg widgets can be drawn
           updateSvg();
