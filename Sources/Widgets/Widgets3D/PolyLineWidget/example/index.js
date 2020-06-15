@@ -52,3 +52,9 @@ fullScreenRenderer.addController(controlPanel);
 document.querySelector('button').addEventListener('click', () => {
   widgetManager.grabFocus(widget);
 });
+
+document
+  .querySelector('input[type=checkbox]')
+  .addEventListener('change', (ev) => {
+    widgetManager.setUseSvgLayer(ev.target.checked);
+  });
