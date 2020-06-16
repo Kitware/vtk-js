@@ -1,4 +1,5 @@
 import macro from 'vtk.js/Sources/macro';
+import { radiansFromDegrees } from 'vtk.js/Sources/Common/Core/Math';
 import vtkOpenGLHardwareSelector from 'vtk.js/Sources/Rendering/OpenGL/HardwareSelector';
 import { FieldAssociations } from 'vtk.js/Sources/Common/DataModel/DataSet/Constants';
 import Constants from 'vtk.js/Sources/Widgets/Core/WidgetManager/Constants';
@@ -189,6 +190,31 @@ function vtkWidgetManager(publicAPI, model) {
   }
 
   // --------------------------------------------------------------------------
+  // Widget scaling
+  // --------------------------------------------------------------------------
+
+  function updateDisplayScaleParams(camera) {
+    const cameraPosition = camera.getPosition();
+    const cameraDir = camera.getDirectionOfProjection();
+    const isParallel = camera.getParallelProjection();
+    const dispHeightFactor = isParallel
+      ? camera.getParallelScale()
+      : 2 * Math.tan(radiansFromDegrees(camera.getViewAngle()) / 2);
+    model.widgets.forEach((w) => {
+      w.getNestedProps().forEach((r) => {
+        if (r.getScaleByDisplay()) {
+          r.setDisplayScaleParams({
+            dispHeightFactor,
+            cameraPosition,
+            cameraDir,
+            isParallel,
+          });
+        }
+      });
+    });
+  }
+
+  // --------------------------------------------------------------------------
   // API public
   // --------------------------------------------------------------------------
 
@@ -249,6 +275,9 @@ function vtkWidgetManager(publicAPI, model) {
 
     subscriptions.push(model.openGLRenderWindow.onModified(setSvgSize));
     setSvgSize();
+
+    subscriptions.push(model.camera.onModified(updateDisplayScaleParams));
+    updateDisplayScaleParams(model.camera);
 
     subscriptions.push(
       model.interactor.onStartAnimation(() => {
@@ -448,8 +477,8 @@ function vtkWidgetManager(publicAPI, model) {
     if (useSvgLayer !== model.useSvgLayer) {
       model.useSvgLayer = useSvgLayer;
 
-      if (useSvgLayer) {
-        if (model.renderer) {
+      if (model.renderer) {
+        if (useSvgLayer) {
           enableSvgLayer();
           // force a render so svg widgets can be drawn
           updateSvg();

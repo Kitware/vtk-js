@@ -132,6 +132,10 @@ function vtkSphereHandleRepresentation(publicAPI, model) {
         (!state.isVisible || state.isVisible() ? 1 : 0) *
         (state.getScale1 ? state.getScale1() : model.defaultScale);
 
+      if (publicAPI.getScaleByDisplay()) {
+        typedArray.scale[i] *= publicAPI.getDisplayWorldHeightAt(coord);
+      }
+
       typedArray.color[i] =
         model.useActiveColor && isActive ? model.activeColor : state.getColor();
     }
