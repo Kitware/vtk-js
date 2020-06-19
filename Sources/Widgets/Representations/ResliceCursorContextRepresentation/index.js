@@ -72,12 +72,6 @@ function vtkResliceCursorContextRepresentation(publicAPI, model) {
   model.pipelines.axes.push(axis1);
   model.pipelines.axes.push(axis2);
 
-  model.rotationActors = [];
-  model.rotationActors.push(model.pipelines.axes[0].rotation1.actor);
-  model.rotationActors.push(model.pipelines.axes[0].rotation2.actor);
-  model.rotationActors.push(model.pipelines.axes[1].rotation1.actor);
-  model.rotationActors.push(model.pipelines.axes[1].rotation2.actor);
-
   // Improve actors rendering
   model.pipelines.center.actor.getProperty().setAmbient(1, 1, 1);
   model.pipelines.center.actor.getProperty().setDiffuse(0, 0, 0);
@@ -116,6 +110,15 @@ function vtkResliceCursorContextRepresentation(publicAPI, model) {
     axis.rotation1.source.setCenter(state.getRotationPoint1());
     axis.rotation2.source.setCenter(state.getRotationPoint2());
   }
+
+  publicAPI.getRotationActors = () => {
+    return [
+      model.pipelines.axes[0].rotation1.actor,
+      model.pipelines.axes[0].rotation2.actor,
+      model.pipelines.axes[1].rotation1.actor,
+      model.pipelines.axes[1].rotation2.actor,
+    ];
+  };
 
   publicAPI.requestData = (inData, outData) => {
     const state = inData[0];
@@ -156,7 +159,7 @@ function vtkResliceCursorContextRepresentation(publicAPI, model) {
         : wVisible && hVisible;
 
     publicAPI.getActors().forEach((actor) => {
-      if (model.rotationActors.includes(actor)) {
+      if (publicAPI.getRotationActors().includes(actor)) {
         actor.setVisibility(visiblity && model.rotationEnabled);
       } else {
         actor.setVisibility(visiblity);
