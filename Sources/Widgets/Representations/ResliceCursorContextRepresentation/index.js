@@ -72,6 +72,12 @@ function vtkResliceCursorContextRepresentation(publicAPI, model) {
   model.pipelines.axes.push(axis1);
   model.pipelines.axes.push(axis2);
 
+  model.rotationActors = [];
+  model.rotationActors.push(model.pipelines.axes[0].rotation1.actor);
+  model.rotationActors.push(model.pipelines.axes[0].rotation2.actor);
+  model.rotationActors.push(model.pipelines.axes[1].rotation1.actor);
+  model.rotationActors.push(model.pipelines.axes[1].rotation2.actor);
+
   // Improve actors rendering
   model.pipelines.center.actor.getProperty().setAmbient(1, 1, 1);
   model.pipelines.center.actor.getProperty().setDiffuse(0, 0, 0);
@@ -114,6 +120,8 @@ function vtkResliceCursorContextRepresentation(publicAPI, model) {
   publicAPI.requestData = (inData, outData) => {
     const state = inData[0];
 
+    model.rotationEnabled = state.getEnableRotation();
+
     const origin = state.getCenter();
     model.pipelines.center.source.setCenter(origin);
 
@@ -136,13 +144,18 @@ function vtkResliceCursorContextRepresentation(publicAPI, model) {
     ctxVisible,
     hVisible
   ) => {
-    if (renderingType === RenderingTypes.PICKING_BUFFER) {
-      publicAPI.getActors().forEach((actor) => actor.setVisibility(wVisible));
-    } else {
-      publicAPI
-        .getActors()
-        .forEach((actor) => actor.setVisibility(wVisible && hVisible));
-    }
+    const visiblity =
+      renderingType === RenderingTypes.PICKING_BUFFER
+        ? wVisible
+        : wVisible && hVisible;
+
+    publicAPI.getActors().forEach((actor) => {
+      if (model.rotationActors.includes(actor)) {
+        actor.setVisibility(visiblity && model.rotationEnabled);
+      } else {
+        actor.setVisibility(visiblity);
+      }
+    });
   };
 
   publicAPI.getSelectedState = (prop, compositeID) => {
@@ -208,6 +221,7 @@ const DEFAULT_VALUES = {
   axis1Name: '',
   axis2Name: '',
   viewName: '',
+  rotationEnabled: true,
 };
 
 // ----------------------------------------------------------------------------
