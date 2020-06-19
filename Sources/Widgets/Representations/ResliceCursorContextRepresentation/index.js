@@ -121,6 +121,12 @@ function vtkResliceCursorContextRepresentation(publicAPI, model) {
     const state = inData[0];
 
     model.rotationEnabled = state.getEnableRotation();
+    model.pipelines.axes[0].line.actor.setPickable(
+      state.getEnableTranslation()
+    );
+    model.pipelines.axes[1].line.actor.setPickable(
+      state.getEnableTranslation()
+    );
 
     const origin = state.getCenter();
     model.pipelines.center.source.setCenter(origin);
