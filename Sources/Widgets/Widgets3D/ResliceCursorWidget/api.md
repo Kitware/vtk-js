@@ -20,6 +20,8 @@ These sub states contain :
 
 - Center: The center of the six lines
 
+- Opacity: Update the opacity of the lines/rotation points actors
+
 - activeLineState: Used in the behavior.js file in order to get the attribute of the selected line
 
 - activeRotationPointName: Used in the behavior.js file in order to get the selected rotation point
@@ -44,13 +46,13 @@ You can manually set the center of the reslice cursor by calling this method wit
 If you want to add the previous feature, then you'll have to defined the
 ```
 renderer[axis].widgetInstance.onWidgetChange(() => {
-		renderer
-        // No need to update plane nor refresh when interaction
-        // is on current view. Plane can't be changed with interaction on current
-        // view. Refreshs happen automatically with `animation`.
-        .filter((_, index) => index !== axis)
-        .forEach((viewer) => {
-					viewer.updateReslice();
-				});
+	renderer
+		// No need to update plane nor refresh when interaction
+		// is on current view. Plane can't be changed with interaction on current
+		// view. Refreshs happen automatically with `animation`.
+		.filter((_, index) => index !== axis)
+		.forEach((viewer) => {
+			// update widget
+		});
 	});
 ```

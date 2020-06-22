@@ -103,6 +103,7 @@ export default function generateState() {
       instance: axisZinY,
     })
     .addField({ name: 'center', initialValue: [0, 0, 0] })
+    .addField({ name: 'opacity', initialValue: 1 })
     .addField({ name: 'activeLineState', initialValue: null })
     .addField({ name: 'activeRotationPointName', initialValue: null })
     .addField({ name: 'image', initialValue: null })
