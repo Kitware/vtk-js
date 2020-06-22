@@ -37,3 +37,20 @@ These sub states contain :
 - enableRotation: if false, then remove the rotation points and disable the line rotation
 
 - enableTranslation: if false, disable the translation of the axis
+
+## setCenter
+
+You can manually set the center of the reslice cursor by calling this method with an array of three value. That can be useful if you want to implement a simple click which moves the center.
+If you want to add the previous feature, then you'll have to defined the
+```
+renderer[axis].widgetInstance.onWidgetChange(() => {
+		renderer
+        // No need to update plane nor refresh when interaction
+        // is on current view. Plane can't be changed with interaction on current
+        // view. Refreshs happen automatically with `animation`.
+        .filter((_, index) => index !== axis)
+        .forEach((viewer) => {
+					viewer.updateReslice();
+				});
+	});
+```
