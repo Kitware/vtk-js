@@ -35,6 +35,7 @@ import './Rendering/Core/ColorTransferFunction/test/testColorTransferFunction';
 import './Rendering/Core/ColorTransferFunction/test/testColorTransferFunctionInterpolation';
 import './Rendering/Core/ColorTransferFunction/test/testColorTransferFunctionPresets';
 import './Rendering/Core/Coordinate/test/testCoordinate';
+import './Rendering/Core/Follower/test/testFollower';
 import './Rendering/Core/Glyph3DMapper/test/testGlyph3DMapper';
 import './Rendering/Core/Mapper/test/testEdgeVisibility';
 import './Rendering/Core/Mapper/test/testVectorComponent';
