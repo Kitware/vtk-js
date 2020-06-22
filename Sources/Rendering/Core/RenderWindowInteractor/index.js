@@ -932,14 +932,35 @@ function vtkRenderWindowInteractor(publicAPI, model) {
     }
   };
 
+  publicAPI.handleVisibilityChange = () => {
+    model.lastFrameStart = Date.now();
+  };
+
   // Stop animating if the renderWindowInteractor is deleted.
   const superDelete = publicAPI.delete;
   publicAPI.delete = () => {
     while (animationRequesters.size) {
       publicAPI.cancelAnimation(animationRequesters.values().next().value);
     }
+    if (typeof document.hidden !== 'undefined') {
+      document.removeEventListener(
+        'visibilitychange',
+        publicAPI.handleVisibilityChange
+      );
+    }
     superDelete();
   };
+
+  // Use the Page Visibility API to detect when we switch away from or back to
+  // this tab, and reset the lastFrameStart. When tabs are not active, browsers
+  // will stop calling requestAnimationFrame callbacks.
+  if (typeof document.hidden !== 'undefined') {
+    document.addEventListener(
+      'visibilitychange',
+      publicAPI.handleVisibilityChange,
+      false
+    );
+  }
 }
 
 // ----------------------------------------------------------------------------
