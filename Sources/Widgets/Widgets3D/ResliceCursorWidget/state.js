@@ -114,5 +114,7 @@ export default function generateState() {
     .addField({ name: 'XPlaneNormal', initialValue: [1, 0, 0] })
     .addField({ name: 'YPlaneNormal', initialValue: [0, -1, 0] })
     .addField({ name: 'ZPlaneNormal', initialValue: [0, 0, 1] })
+    .addField({ name: 'enableRotation', initialValue: true })
+    .addField({ name: 'enableTranslation', initialValue: true })
     .build();
 }

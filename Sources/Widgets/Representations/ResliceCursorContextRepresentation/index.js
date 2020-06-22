@@ -111,8 +111,25 @@ function vtkResliceCursorContextRepresentation(publicAPI, model) {
     axis.rotation2.source.setCenter(state.getRotationPoint2());
   }
 
+  publicAPI.getRotationActors = () => {
+    return [
+      model.pipelines.axes[0].rotation1.actor,
+      model.pipelines.axes[0].rotation2.actor,
+      model.pipelines.axes[1].rotation1.actor,
+      model.pipelines.axes[1].rotation2.actor,
+    ];
+  };
+
   publicAPI.requestData = (inData, outData) => {
     const state = inData[0];
+
+    model.rotationEnabled = state.getEnableRotation();
+    model.pipelines.axes[0].line.actor.setPickable(
+      state.getEnableTranslation()
+    );
+    model.pipelines.axes[1].line.actor.setPickable(
+      state.getEnableTranslation()
+    );
 
     const origin = state.getCenter();
     model.pipelines.center.source.setCenter(origin);
@@ -136,13 +153,18 @@ function vtkResliceCursorContextRepresentation(publicAPI, model) {
     ctxVisible,
     hVisible
   ) => {
-    if (renderingType === RenderingTypes.PICKING_BUFFER) {
-      publicAPI.getActors().forEach((actor) => actor.setVisibility(wVisible));
-    } else {
-      publicAPI
-        .getActors()
-        .forEach((actor) => actor.setVisibility(wVisible && hVisible));
-    }
+    const visiblity =
+      renderingType === RenderingTypes.PICKING_BUFFER
+        ? wVisible
+        : wVisible && hVisible;
+
+    publicAPI.getActors().forEach((actor) => {
+      if (publicAPI.getRotationActors().includes(actor)) {
+        actor.setVisibility(visiblity && model.rotationEnabled);
+      } else {
+        actor.setVisibility(visiblity);
+      }
+    });
   };
 
   publicAPI.getSelectedState = (prop, compositeID) => {
@@ -208,6 +230,7 @@ const DEFAULT_VALUES = {
   axis1Name: '',
   axis2Name: '',
   viewName: '',
+  rotationEnabled: true,
 };
 
 // ----------------------------------------------------------------------------

@@ -186,6 +186,7 @@ function vtkResliceCursorWidget(publicAPI, model) {
               axis1Name: 'AxisXinZ',
               axis2Name: 'AxisYinZ',
               viewName: 'Z',
+              rotationEnabled: model.widgetState.getEnableRotation(),
             },
           },
         ];
@@ -198,6 +199,7 @@ function vtkResliceCursorWidget(publicAPI, model) {
               axis1Name: 'AxisXinY',
               axis2Name: 'AxisZinY',
               viewName: 'Y',
+              rotationEnabled: model.widgetState.getEnableRotation(),
             },
           },
         ];
@@ -210,6 +212,7 @@ function vtkResliceCursorWidget(publicAPI, model) {
               axis1Name: 'AxisYinX',
               axis2Name: 'AxisZinX',
               viewName: 'X',
+              rotationEnabled: model.widgetState.getEnableRotation(),
             },
           },
         ];
