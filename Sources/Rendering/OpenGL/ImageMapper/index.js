@@ -231,7 +231,7 @@ function vtkOpenGLImageMapper(publicAPI, model) {
       switch (tNumComp) {
         case 1:
           tcoordImpl = tcoordImpl.concat([
-            'gl_FragData[0] = vec4(tcolor0.rgb * compWeight0, opacity);',
+            'gl_FragData[0] = vec4(tcolor0.rgb, opacity);',
           ]);
           break;
         case 2:
