@@ -678,6 +678,7 @@ function vtkRenderWindowInteractor(publicAPI, model) {
       const aren = rc[count];
       if (model.view.isInViewport(x, y, aren) && aren.getInteractive()) {
         currentRenderer = aren;
+        break;
       }
 
       if (interactiveren === null && aren.getInteractive()) {
