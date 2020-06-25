@@ -669,6 +669,7 @@ function vtkRenderWindowInteractor(publicAPI, model) {
       return null;
     }
     const rc = model.view.getRenderable().getRenderersByReference();
+    rc.sort((a, b) => a.getLayer() - b.getLayer());
     let interactiveren = null;
     let viewportren = null;
     let currentRenderer = null;
@@ -678,6 +679,7 @@ function vtkRenderWindowInteractor(publicAPI, model) {
       const aren = rc[count];
       if (model.view.isInViewport(x, y, aren) && aren.getInteractive()) {
         currentRenderer = aren;
+        break;
       }
 
       if (interactiveren === null && aren.getInteractive()) {
