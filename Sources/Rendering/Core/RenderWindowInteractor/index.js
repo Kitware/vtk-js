@@ -668,14 +668,8 @@ function vtkRenderWindowInteractor(publicAPI, model) {
     if (!model.view) {
       return null;
     }
-    const rc = model.view
-      .getRenderable()
-      .getRenderersByReference()
-      .sort((a, b) => {
-        if (a.getLayer() < b.getLayer()) return -1;
-        if (a.getLayer() > b.getLayer()) return 1;
-        return 0;
-      });
+    const rc = model.view.getRenderable().getRenderersByReference();
+    rc.sort((a, b) => a.getLayer() - b.getLayer());
     let interactiveren = null;
     let viewportren = null;
     let currentRenderer = null;
