@@ -42,6 +42,7 @@ table.appendChild(trLine2);
 
 const viewAttributes = [];
 const widget = vtkResliceCursorWidget.newInstance();
+widget.getWidgetState().setOpacity(0.6);
 const sliceTypes = [ViewTypes.CORONAL, ViewTypes.SAGITTAL, ViewTypes.AXIAL];
 
 for (let i = 0; i < 3; i++) {

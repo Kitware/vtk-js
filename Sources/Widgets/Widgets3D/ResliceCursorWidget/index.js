@@ -232,6 +232,12 @@ function vtkResliceCursorWidget(publicAPI, model) {
     updateState(model.widgetState);
   };
 
+  publicAPI.setCenter = (center) => {
+    model.widgetState.setCenter(center);
+    updateState(model.widgetState);
+    publicAPI.modified();
+  };
+
   // --------------------------------------------------------------------------
   // Methods
   // --------------------------------------------------------------------------

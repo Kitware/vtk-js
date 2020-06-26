@@ -124,6 +124,7 @@ function vtkResliceCursorContextRepresentation(publicAPI, model) {
     const state = inData[0];
 
     model.rotationEnabled = state.getEnableRotation();
+    model.opacity = state.getOpacity();
     model.pipelines.axes[0].line.actor.setPickable(
       state.getEnableTranslation()
     );
@@ -159,6 +160,7 @@ function vtkResliceCursorContextRepresentation(publicAPI, model) {
         : wVisible && hVisible;
 
     publicAPI.getActors().forEach((actor) => {
+      actor.getProperty().setOpacity(model.opacity);
       if (publicAPI.getRotationActors().includes(actor)) {
         actor.setVisibility(visiblity && model.rotationEnabled);
       } else {
