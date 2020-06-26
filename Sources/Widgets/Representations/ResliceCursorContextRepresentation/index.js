@@ -125,6 +125,7 @@ function vtkResliceCursorContextRepresentation(publicAPI, model) {
 
     model.rotationEnabled = state.getEnableRotation();
     model.opacity = state.getOpacity();
+    model.showCenter = state.getShowCenter();
     model.pipelines.axes[0].line.actor.setPickable(
       state.getEnableTranslation()
     );
@@ -154,18 +155,27 @@ function vtkResliceCursorContextRepresentation(publicAPI, model) {
     ctxVisible,
     hVisible
   ) => {
-    const visiblity =
+    const visibility =
       renderingType === RenderingTypes.PICKING_BUFFER
         ? wVisible
         : wVisible && hVisible;
 
     publicAPI.getActors().forEach((actor) => {
       actor.getProperty().setOpacity(model.opacity);
+      let actorVisibility = visibility;
+
+      // Conditionally display rotation handles
       if (publicAPI.getRotationActors().includes(actor)) {
-        actor.setVisibility(visiblity && model.rotationEnabled);
-      } else {
-        actor.setVisibility(visiblity);
+        actorVisibility = actorVisibility && model.rotationEnabled;
       }
+
+      // Conditionally display center handle but always show it for picking
+      if (!model.showCenter && actor === model.pipelines.center.actor) {
+        actorVisibility =
+          actorVisibility && renderingType === RenderingTypes.PICKING_BUFFER;
+      }
+
+      actor.setVisibility(actorVisibility);
     });
   };
 
@@ -233,6 +243,7 @@ const DEFAULT_VALUES = {
   axis2Name: '',
   viewName: '',
   rotationEnabled: true,
+  showCenter: true,
 };
 
 // ----------------------------------------------------------------------------
