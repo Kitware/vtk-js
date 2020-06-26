@@ -30,7 +30,9 @@ These sub states contain :
 
 - activeViewName: Used in the behavior.js file in order to get the correct view attributes (X, Y, Z)
 
-- sphereRadius: Manage the radius of the rotation points
+- sphereRadius: Manages the radius of the rotation points
+
+- showCenter: Defines if the reslice cursor center is displayed or not. If not, it's still possible to move the center. The cursor mouse will be turned into 'move' cursor when you can translate the center.
 
 - updateMethodName: Used in the behavior.js in order to know which actions is going to be applied (translation, axisTransltaion, rotation)
 

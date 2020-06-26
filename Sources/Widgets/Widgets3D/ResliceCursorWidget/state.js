@@ -109,6 +109,7 @@ export default function generateState() {
     .addField({ name: 'image', initialValue: null })
     .addField({ name: 'activeViewName', initialValue: '' })
     .addField({ name: 'sphereRadius', initialValue: 5 })
+    .addField({ name: 'showCenter', initialValue: true })
     .addField({
       name: 'updateMethodName',
     })
