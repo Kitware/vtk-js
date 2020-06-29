@@ -109,22 +109,28 @@ function vtkInteractorStyleRemoteMouse(publicAPI, model) {
 
   //-------------------------------------------------------------------------
   publicAPI.handleStartMouseWheel = (callData) => {
-    const { spinY } = callData;
+    const { spinY, altKey, controlKey, shiftKey } = callData;
     model.interactor.requestAnimation(publicAPI.handleStartMouseWheel);
     publicAPI.invokeStartInteractionEvent(START_INTERACTION_EVENT);
     publicAPI.invokeRemoteWheelEvent({
       type: 'StartMouseWheel',
       spinY,
+      altKey,
+      controlKey,
+      shiftKey,
       ...model.remoteEventAddOn,
     });
   };
 
   //-------------------------------------------------------------------------
   publicAPI.handleMouseWheel = (callData) => {
-    const { spinY } = callData;
+    const { spinY, altKey, controlKey, shiftKey } = callData;
     publicAPI.invokeRemoteWheelEvent({
       type: 'MouseWheel',
       spinY,
+      altKey,
+      controlKey,
+      shiftKey,
       ...model.remoteEventAddOn,
     });
     publicAPI.invokeInteractionEvent(INTERACTION_EVENT);
