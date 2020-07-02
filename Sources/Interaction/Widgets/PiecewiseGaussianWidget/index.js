@@ -636,7 +636,7 @@ function vtkPiecewiseGaussianWidget(publicAPI, model) {
   };
 
   publicAPI.onHover = (x, y) => {
-    const tolerance = 10 / model.canvas.height;
+    const tolerance = 20 / model.canvas.height;
     const [xNormalized, yNormalized] = normalizeCoordinates(
       x,
       y,
