@@ -33,9 +33,12 @@ const ACTIONS = {
     gaussian.position = x + xOffset;
     return true;
   },
-  adjustHeight(x, y, { originalXY, gaussian, originalGaussian }) {
+  adjustHeight(x, y, { model, gaussian }) {
     gaussian.height = 1 - y;
-    gaussian.height = Math.min(1, Math.max(0, gaussian.height));
+    gaussian.height = Math.min(
+      1,
+      Math.max(model.gaussianMinimumHeight, gaussian.height)
+    );
     return true;
   },
   adjustBias(x, y, { originalXY, gaussian, originalGaussian }) {
@@ -636,7 +639,9 @@ function vtkPiecewiseGaussianWidget(publicAPI, model) {
   };
 
   publicAPI.onHover = (x, y) => {
-    const tolerance = 10 / model.canvas.height;
+    // Determines the interaction region size for adjusting the Gaussian's
+    // height.
+    const tolerance = 20 / model.canvas.height;
     const [xNormalized, yNormalized] = normalizeCoordinates(
       x,
       y,
@@ -1213,6 +1218,7 @@ const DEFAULT_VALUES = {
   size: [600, 300],
   piecewiseSize: 256,
   colorCanvasMTime: 0,
+  gaussianMinimumHeight: 0.05,
   style: {
     backgroundColor: 'rgba(255, 255, 255, 1)',
     histogramColor: 'rgba(200, 200, 200, 0.5)',
@@ -1251,6 +1257,7 @@ export function extend(publicAPI, model, initialValues = {}) {
     'colorTransferFunction',
     'backgroundImage',
     'enableRangeZoom',
+    'gaussianMinimumHeight',
   ]);
   macro.setGetArray(publicAPI, model, ['rangeZoom'], 2);
   macro.get(publicAPI, model, ['size', 'canvas', 'gaussians']);
