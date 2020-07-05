@@ -639,6 +639,8 @@ function vtkPiecewiseGaussianWidget(publicAPI, model) {
   };
 
   publicAPI.onHover = (x, y) => {
+    // Determines the interaction region size for adjusting the Gaussian's
+    // height.
     const tolerance = 20 / model.canvas.height;
     const [xNormalized, yNormalized] = normalizeCoordinates(
       x,
