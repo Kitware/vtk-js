@@ -259,7 +259,7 @@ function vtkViewProxy(publicAPI, model) {
 
   publicAPI.openCaptureImage = (target = '_blank') => {
     const image = new Image();
-    publicAPI.captureImage().then((imageURL) => {
+    return publicAPI.captureImage().then((imageURL) => {
       image.src = imageURL;
       const w = window.open('', target);
       w.document.write(image.outerHTML);
