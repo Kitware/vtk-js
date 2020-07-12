@@ -42,14 +42,14 @@ function vtkPolyLineWidget(publicAPI, model) {
             builder: vtkSphereHandleRepresentation,
             labels: ['handles'],
             initialValues: {
-              scaleByDisplay: true,
+              scaleInPixels: true,
             },
           },
           {
             builder: vtkSphereHandleRepresentation,
             labels: ['moveHandle'],
             initialValues: {
-              scaleByDisplay: true,
+              scaleInPixels: true,
             },
           },
           { builder: vtkSVGLandmarkRepresentation, labels: ['handles'] },
