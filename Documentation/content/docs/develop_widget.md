@@ -145,6 +145,12 @@ This mixin adds an `origin` property.
 
 These mixins adds a single scale factor and a 3-component scale factor, respectively.
 
+If `scaleInPixels` is set to true for a representation, then scale1 will be
+interpreted as the pixel height of a representation. (Only for representations
+that support this; grep for `scaleInPixels` to see which representations do.)
+This means that, regardless of where a representation is in world space, it
+will always have approximately `scale1` pixels of height.
+
 ##### visibleMixin
 
 This mixin adds a `visible` flag.
