@@ -204,19 +204,25 @@ function vtkWidgetRepresentation(publicAPI, model) {
     });
   };
 
-  publicAPI.getDisplayWorldHeightAt = (worldCoord) => {
+  publicAPI.getPixelWorldHeightAtCoord = (worldCoord) => {
     const {
       dispHeightFactor,
       cameraPosition,
       cameraDir,
       isParallel,
+      rendererPixelDims,
     } = model.displayScaleParams;
+    let scale = 1;
     if (isParallel) {
-      return dispHeightFactor;
+      scale = dispHeightFactor;
+    } else {
+      const worldCoordToCamera = [...worldCoord];
+      subtract(worldCoordToCamera, cameraPosition, worldCoordToCamera);
+      scale = dot(worldCoordToCamera, cameraDir) * dispHeightFactor;
     }
-    const worldCoordToCamera = [...worldCoord];
-    subtract(worldCoordToCamera, cameraPosition, worldCoordToCamera);
-    return dot(worldCoordToCamera, cameraDir) * dispHeightFactor;
+
+    const rHeight = rendererPixelDims[1];
+    return scale / rHeight;
   };
 
   // Make sure setting the labels at build time works with string/array...
@@ -245,7 +251,7 @@ const DEFAULT_VALUES = {
       offset: -1.0,
     },
   },
-  scaleByDisplay: false,
+  scaleInPixels: false,
   displayScaleParams: {
     dispHeightFactor: 1,
     cameraPosition: [0, 0, 0],
@@ -264,7 +270,7 @@ export function extend(publicAPI, model, initialValues = {}) {
   macro.algo(publicAPI, model, 1, 1);
   macro.get(publicAPI, model, ['labels', 'coincidentTopologyParameters']);
   macro.set(publicAPI, model, ['displayScaleParams']);
-  macro.setGet(publicAPI, model, ['scaleByDisplay']);
+  macro.setGet(publicAPI, model, ['scaleInPixels']);
 
   // Object specific methods
   vtkWidgetRepresentation(publicAPI, model);

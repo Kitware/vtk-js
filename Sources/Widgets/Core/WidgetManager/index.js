@@ -193,25 +193,34 @@ function vtkWidgetManager(publicAPI, model) {
   // Widget scaling
   // --------------------------------------------------------------------------
 
-  function updateDisplayScaleParams(camera) {
-    const cameraPosition = camera.getPosition();
-    const cameraDir = camera.getDirectionOfProjection();
-    const isParallel = camera.getParallelProjection();
-    const dispHeightFactor = isParallel
-      ? camera.getParallelScale()
-      : 2 * Math.tan(radiansFromDegrees(camera.getViewAngle()) / 2);
-    model.widgets.forEach((w) => {
-      w.getNestedProps().forEach((r) => {
-        if (r.getScaleByDisplay()) {
-          r.setDisplayScaleParams({
-            dispHeightFactor,
-            cameraPosition,
-            cameraDir,
-            isParallel,
-          });
-        }
+  function updateDisplayScaleParams() {
+    const { openGLRenderWindow, camera, renderer } = model;
+    if (renderer && openGLRenderWindow && camera) {
+      const [rwW, rwH] = openGLRenderWindow.getSize();
+      const [vxmin, vymin, vxmax, vymax] = renderer.getViewport();
+      const rendererPixelDims = [rwW * (vxmax - vxmin), rwH * (vymax - vymin)];
+
+      const cameraPosition = camera.getPosition();
+      const cameraDir = camera.getDirectionOfProjection();
+      const isParallel = camera.getParallelProjection();
+      const dispHeightFactor = isParallel
+        ? camera.getParallelScale()
+        : 2 * Math.tan(radiansFromDegrees(camera.getViewAngle()) / 2);
+
+      model.widgets.forEach((w) => {
+        w.getNestedProps().forEach((r) => {
+          if (r.getScaleInPixels()) {
+            r.setDisplayScaleParams({
+              dispHeightFactor,
+              cameraPosition,
+              cameraDir,
+              isParallel,
+              rendererPixelDims,
+            });
+          }
+        });
       });
-    });
+    }
   }
 
   // --------------------------------------------------------------------------
@@ -276,8 +285,11 @@ function vtkWidgetManager(publicAPI, model) {
     subscriptions.push(model.openGLRenderWindow.onModified(setSvgSize));
     setSvgSize();
 
+    subscriptions.push(
+      model.openGLRenderWindow.onModified(updateDisplayScaleParams)
+    );
     subscriptions.push(model.camera.onModified(updateDisplayScaleParams));
-    updateDisplayScaleParams(model.camera);
+    updateDisplayScaleParams();
 
     subscriptions.push(
       model.interactor.onStartAnimation(() => {
