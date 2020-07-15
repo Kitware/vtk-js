@@ -8,8 +8,8 @@ export default function generateState() {
       mixins: ['origin', 'color', 'scale1', 'visible'],
       name: 'moveHandle',
       initialValues: {
-        // when scaleByDisplay() is set, the handles will be 1/20th of the screen height
-        scale1: 0.05,
+        // when scaleInPixels=true, the handles have 30px height
+        scale1: 30,
         origin: [-1, -1, -1],
         visible: false,
       },
@@ -19,7 +19,7 @@ export default function generateState() {
       mixins: ['origin', 'color', 'scale1'],
       name: 'handle',
       initialValues: {
-        scale1: 0.05,
+        scale1: 30,
         origin: [-1, -1, -1],
       },
     })

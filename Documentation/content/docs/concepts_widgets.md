@@ -107,21 +107,19 @@ Widget representations must generate actors to be added to a scene. Internally,
 all actors should be appended to the `model.actors` array in order to be
 rendered.
 
-### Scaling representations to be fixed in display space
+### Scaling representations to have fixed pixel size
 
-In order to scale a representation such that it retains the same size in display space,
-it must use the `scaleByDisplay` flag and the `getDisplayWorldHeightAt(coord)` method.
-The flag is used to allow users of the representation to choose between display-scaled
-vs world-scaled sizing.
+In order to scale a representation such that it retains the same size in
+display space, a widget representation should use the `scaleInPixels` property
+and the `getPixelWorldHeightAtCoord(coord)` method. When `scaleInPixels` is set
+to true, a widget representation should multiply whatever scaling they perform
+by the output of `getDisplayScaleAtCoord(coord)`.
 
-`getDisplayWorldHeightAt(coord)` will return the world height at a particular point that
-corresponds to the viewport height. In other words, it is the height of the rectangle formed
-by the intersection of the plane (defined by the camera normal and coord) and the view
-frustrum. A typical usage of this method is to compute some fraction of this height and
-set that as the representation scale.
+Look at the `SphereHandleRepresentation` as an example for how
+`getPixelWorldHeightAtCoord` is used.
 
-Look at the `SphereHandleRepresentation` as an example for how `getDisplayWorldHeightAt`
-is used.
+If `scaleInPixels` is false, then all scale values should be interpreted as
+world scales.
 
 ## Widget Manager
 
