@@ -1200,7 +1200,7 @@ function vtkPiecewiseGaussianWidget(publicAPI, model) {
   };
 
   // Trigger rendering for any modified event
-  publicAPI.onModified(publicAPI.render);
+  publicAPI.onModified(() => publicAPI.render());
   publicAPI.setSize(...model.size);
 }
 
