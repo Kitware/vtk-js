@@ -12,6 +12,7 @@ import orientation from 'vtk.js/Sources/Widgets/Core/StateBuilder/orientationMix
 import origin from 'vtk.js/Sources/Widgets/Core/StateBuilder/originMixin';
 import scale1 from 'vtk.js/Sources/Widgets/Core/StateBuilder/scale1Mixin';
 import scale3 from 'vtk.js/Sources/Widgets/Core/StateBuilder/scale3Mixin';
+import text from 'vtk.js/Sources/Widgets/Core/StateBuilder/textMixin';
 import visible from 'vtk.js/Sources/Widgets/Core/StateBuilder/visibleMixin';
 
 const { vtkErrorMacro } = macro;
@@ -31,6 +32,7 @@ const MIXINS = {
   origin,
   scale1,
   scale3,
+  text,
   visible,
 };
 
