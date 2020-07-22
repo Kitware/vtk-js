@@ -1209,21 +1209,26 @@ function vtkOpenGLTexture(publicAPI, model) {
     // for stride
     let outIdx = 0;
 
+    const tileWidth = Math.floor(width / xstride);
+    const tileHeight = Math.floor(height / ystride);
+
     for (let yRep = 0; yRep < yreps; yRep++) {
       const xrepsThisRow = Math.min(xreps, depth - yRep * xreps);
       const outXContIncr =
-        model.width - xrepsThisRow * Math.floor(width / xstride);
-      for (let inY = 0; inY < height; inY += ystride) {
+        numComps * (model.width - xrepsThisRow * Math.floor(width / xstride));
+      for (let tileY = 0; tileY < tileHeight; tileY++) {
         for (let xRep = 0; xRep < xrepsThisRow; xRep++) {
           const inOffset =
-            numComps * ((yRep * xreps + xRep) * width * height + inY * width);
-          for (let inX = 0; inX < width; inX += xstride) {
+            numComps *
+            ((yRep * xreps + xRep) * width * height + ystride * tileY * width);
+
+          for (let tileX = 0; tileX < tileWidth; tileX++) {
             // copy value
             for (let nc = 0; nc < numComps; nc++) {
               volCopyData(
                 newArray,
                 outIdx,
-                data[inOffset + inX * numComps + nc],
+                data[inOffset + xstride * tileX * numComps + nc],
                 res.offset[nc],
                 res.scale[nc]
               );
@@ -1231,7 +1236,7 @@ function vtkOpenGLTexture(publicAPI, model) {
             }
           }
         }
-        outIdx += outXContIncr * numComps;
+        outIdx += outXContIncr;
       }
     }
 
