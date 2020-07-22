@@ -557,8 +557,8 @@ function vtkOpenGLVolumeMapper(publicAPI, model) {
       program.setUniformf('texWidth', model.scalarTexture.getWidth());
       program.setUniformf('texHeight', model.scalarTexture.getHeight());
       program.setUniformi('xreps', volInfo.xreps);
-      program.setUniformf('xstride', volInfo.xstride);
-      program.setUniformf('ystride', volInfo.ystride);
+      program.setUniformi('xstride', volInfo.xstride);
+      program.setUniformi('ystride', volInfo.ystride);
     }
 
     // map normals through normal matrix

@@ -87,6 +87,10 @@ uniform float gomax3;
 #endif
 #endif
 
+// if you want to see the raw tiled
+// data in webgl1 uncomment the following line
+// #define debugtile
+
 // camera values
 uniform float camThick;
 uniform float camNear;
@@ -212,8 +216,8 @@ uniform sampler2D texture1;
 uniform float texWidth;
 uniform float texHeight;
 uniform int xreps;
-uniform float xstride;
-uniform float ystride;
+uniform int xstride;
+uniform int ystride;
 
 // if computing triliear values from multiple z slices
 #ifdef vtkTriliearOn
@@ -236,12 +240,24 @@ vec4 getTextureValue(vec3 ijk)
 {
   vec3 tdims = vec3(volumeDimensions);
 
+#ifdef debugtile
+  vec2 tpos = vec2(ijk.x, ijk.y);
+  vec4 tmp = texture2D(texture1, tpos);
+  tmp.a = 1.0;
+
+#else
   int z = int(ijk.z * tdims.z);
   int yz = z / xreps;
   int xz = z - yz*xreps;
 
-  float ni = (ijk.x + float(xz)) * tdims.x/xstride;
-  float nj = (ijk.y + float(yz)) * tdims.y/ystride;
+  int tileWidth = volumeDimensions.x/xstride;
+  int tileHeight = volumeDimensions.y/ystride;
+
+  xz *= tileWidth;
+  yz *= tileHeight;
+
+  float ni = float(xz) + (ijk.x*float(tileWidth));
+  float nj = float(yz) + (ijk.y*float(tileHeight));
 
   vec2 tpos = vec2(ni/texWidth, nj/texHeight);
 
@@ -256,6 +272,8 @@ vec4 getTextureValue(vec3 ijk)
 #if vtkNumComponents == 3
   tmp.a = length(tmp.rgb);
 #endif
+#endif
+
   return tmp;
 }
 
