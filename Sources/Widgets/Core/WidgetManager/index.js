@@ -94,6 +94,8 @@ function vtkWidgetManager(publicAPI, model) {
   // internal SVG API
   // --------------------------------------------------------------------------
 
+  const pendingSvgRenders = new WeakMap();
+
   function enableSvgLayer() {
     const container = model.openGLRenderWindow.getReferenceByName('el');
     const canvas = model.openGLRenderWindow.getCanvas();
@@ -155,10 +157,23 @@ function vtkWidgetManager(publicAPI, model) {
             .map((r) => r.render());
         }
 
-        Promise.all(pendingContent).then((vnodes) => {
-          if (model.deleted) {
+        const promise = Promise.all(pendingContent);
+
+        const renders = pendingSvgRenders.get(widget) || [];
+        renders.push(promise);
+        pendingSvgRenders.set(widget, renders);
+
+        promise.then((vnodes) => {
+          let pendingRenders = pendingSvgRenders.get(widget) || [];
+          const idx = pendingRenders.indexOf(promise);
+          if (model.deleted || idx === -1) {
             return;
           }
+
+          // throw away previous renders
+          pendingRenders = pendingRenders.slice(idx + 1);
+          pendingSvgRenders.set(widget, pendingRenders);
+
           const oldVTree = svgVTrees.get(widget);
           const newVTree = createSvgElement('g');
           for (let ni = 0; ni < vnodes.length; ni++) {
