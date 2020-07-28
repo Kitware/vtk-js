@@ -1,4 +1,4 @@
-// Author: Thomas Beznik, with the help of Julien Finet (https://github.com/Kitware/vtk-js/issues/1442)
+// @author: Thomas Beznik <thomas.beznik@relu.eu>, with the help of Julien Finet <julien.finet@kitware.com> (https://github.com/Kitware/vtk-js/issues/1442)
 // and inspired from Paul Kaplan (https://gist.github.com/paulkaplan/6d5f0ab2c7e8fdc68a61).
 
 import { vec3 } from 'gl-matrix';
@@ -12,15 +12,15 @@ const { vtkErrorMacro } = macro;
 // Global methods
 // ----------------------------------------------------------------------------
 
-function writeFloatBinary(dataview, offset, float) {
-    dataview.setFloat32(offset, float.toPrecision(6), true);
-    return offset + 4;
+function writeFloatBinary(dataView, offset, float) {
+  dataView.setFloat32(offset, float.toPrecision(6), true);
+  return offset + 4;
 }
 
-function writeVectorBinary(dataview, offset, vector) {
-  let off = writeFloatBinary(dataview, offset, vector[0]);
-  off = writeFloatBinary(dataview, off, vector[1]);
-  return writeFloatBinary(dataview, off, vector[2]);
+function writeVectorBinary(dataView, offset, vector) {
+  let off = writeFloatBinary(dataView, offset, vector[0]);
+  off = writeFloatBinary(dataView, off, vector[1]);
+  return writeFloatBinary(dataView, off, vector[2]);
 }
 
 // ----------------------------------------------------------------------------
@@ -36,7 +36,7 @@ function vtkSTLWriter(publicAPI, model) {
     const points = polyData.getPoints().getData();
     const strips = polyData.getStrips() ? polyData.getStrips().getData() : null;
     const buffer = new ArrayBuffer(80 + 4 + (50 * polys.length) / 4); // buffer for the full file; size = header (80) + num cells (4) +  50 bytes per poly
-    const dataview = new DataView(buffer);
+    const dataView = new DataView(buffer);
     let offset = 0;
 
     offset += 80; // Header is empty // TODO: could add date, version, package
@@ -47,7 +47,7 @@ function vtkSTLWriter(publicAPI, model) {
     const dn = [];
 
     // First need to write the number of cells
-    dataview.setUint32(offset, polyData.getNumberOfCells(), true);
+    dataView.setUint32(offset, polyData.getNumberOfCells(), true);
     offset += 4;
 
     // Strips
@@ -83,14 +83,14 @@ function vtkSTLWriter(publicAPI, model) {
 
         vtkTriangle.computeNormal(v1, v2, v3, dn);
 
-        offset = writeVectorBinary(dataview, offset, dn);
-        offset = writeVectorBinary(dataview, offset, v1);
-        offset = writeVectorBinary(dataview, offset, v2);
-        offset = writeVectorBinary(dataview, offset, v3);
+        offset = writeVectorBinary(dataView, offset, dn);
+        offset = writeVectorBinary(dataView, offset, v1);
+        offset = writeVectorBinary(dataView, offset, v2);
+        offset = writeVectorBinary(dataView, offset, v3);
         offset += 2; // unused 'attribute byte count' is a Uint16
       }
     }
-    return dataview;
+    return dataView;
   }
 
   function writeASCII(polyData, transform = null) {
