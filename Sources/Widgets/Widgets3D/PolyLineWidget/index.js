@@ -38,9 +38,21 @@ function vtkPolyLineWidget(publicAPI, model) {
       case ViewTypes.VOLUME:
       default:
         return [
-          { builder: vtkSphereHandleRepresentation, labels: ['handles'] },
+          {
+            builder: vtkSphereHandleRepresentation,
+            labels: ['handles'],
+            initialValues: {
+              scaleInPixels: true,
+            },
+          },
+          {
+            builder: vtkSphereHandleRepresentation,
+            labels: ['moveHandle'],
+            initialValues: {
+              scaleInPixels: true,
+            },
+          },
           { builder: vtkSVGLandmarkRepresentation, labels: ['handles'] },
-          { builder: vtkSphereHandleRepresentation, labels: ['moveHandle'] },
           {
             builder: vtkPolyLineRepresentation,
             labels: ['handles', 'moveHandle'],

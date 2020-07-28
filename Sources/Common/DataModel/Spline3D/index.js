@@ -37,7 +37,7 @@ function vtkSpline3D(publicAPI, model) {
       if (model.intervals.length === 0) {
         intervals = new Float32Array(size);
         for (let i = 0; i < intervals.length; i++) {
-          intervals[i] = i / (size - 1);
+          intervals[i] = i;
         }
       } else {
         intervals = model.intervals;

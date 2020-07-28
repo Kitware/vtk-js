@@ -4,6 +4,7 @@ import vtkWidgetState from 'vtk.js/Sources/Widgets/Core/WidgetState';
 
 import bounds from 'vtk.js/Sources/Widgets/Core/StateBuilder/boundsMixin';
 import color from 'vtk.js/Sources/Widgets/Core/StateBuilder/colorMixin';
+import corner from 'vtk.js/Sources/Widgets/Core/StateBuilder/cornerMixin';
 import direction from 'vtk.js/Sources/Widgets/Core/StateBuilder/directionMixin';
 import manipulator from 'vtk.js/Sources/Widgets/Core/StateBuilder/manipulatorMixin';
 import name from 'vtk.js/Sources/Widgets/Core/StateBuilder/nameMixin';
@@ -11,6 +12,7 @@ import orientation from 'vtk.js/Sources/Widgets/Core/StateBuilder/orientationMix
 import origin from 'vtk.js/Sources/Widgets/Core/StateBuilder/originMixin';
 import scale1 from 'vtk.js/Sources/Widgets/Core/StateBuilder/scale1Mixin';
 import scale3 from 'vtk.js/Sources/Widgets/Core/StateBuilder/scale3Mixin';
+import text from 'vtk.js/Sources/Widgets/Core/StateBuilder/textMixin';
 import visible from 'vtk.js/Sources/Widgets/Core/StateBuilder/visibleMixin';
 
 const { vtkErrorMacro } = macro;
@@ -22,6 +24,7 @@ const { vtkErrorMacro } = macro;
 const MIXINS = {
   bounds,
   color,
+  corner,
   direction,
   manipulator,
   name,
@@ -29,6 +32,7 @@ const MIXINS = {
   origin,
   scale1,
   scale3,
+  text,
   visible,
 };
 

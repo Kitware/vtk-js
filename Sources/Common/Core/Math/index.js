@@ -157,23 +157,40 @@ export function add(a, b, out) {
   out[0] = a[0] + b[0];
   out[1] = a[1] + b[1];
   out[2] = a[2] + b[2];
+  return out;
 }
 
 export function subtract(a, b, out) {
   out[0] = a[0] - b[0];
   out[1] = a[1] - b[1];
   out[2] = a[2] - b[2];
+  return out;
 }
 
 export function multiplyScalar(vec, scalar) {
   vec[0] *= scalar;
   vec[1] *= scalar;
   vec[2] *= scalar;
+  return vec;
 }
 
 export function multiplyScalar2D(vec, scalar) {
   vec[0] *= scalar;
   vec[1] *= scalar;
+  return vec;
+}
+
+export function multiplyAccumulate(a, b, scalar, out) {
+  out[0] = a[0] + b[0] * scalar;
+  out[1] = a[1] + b[1] * scalar;
+  out[2] = a[2] + b[2] * scalar;
+  return out;
+}
+
+export function multiplyAccumulate2D(a, b, scalar, out) {
+  out[0] = a[0] + b[0] * scalar;
+  out[1] = a[1] + b[1] * scalar;
+  return out;
 }
 
 export function dot(x, y) {
@@ -189,12 +206,10 @@ export function outer(x, y, out_3x3) {
 }
 
 export function cross(x, y, out) {
-  const Zx = x[1] * y[2] - x[2] * y[1];
-  const Zy = x[2] * y[0] - x[0] * y[2];
-  const Zz = x[0] * y[1] - x[1] * y[0];
-  out[0] = Zx;
-  out[1] = Zy;
-  out[2] = Zz;
+  out[0] = x[1] * y[2] - x[2] * y[1];
+  out[1] = x[2] * y[0] - x[0] * y[2];
+  out[2] = x[0] * y[1] - x[1] * y[0];
+  return out;
 }
 
 export function norm(x, n = 3) {
@@ -2108,6 +2123,36 @@ export function float2CssRGBA(rgbArray) {
   )}, ${floatToChar(rgbArray[2] || 0)}, ${rgbArray[3] || 0})`;
 }
 
+export function rotateVector(vectorToBeRotated, axis, angle) {
+  const v = [...vectorToBeRotated];
+  const l = [...axis];
+
+  normalize(v);
+  normalize(l);
+
+  const u = Math.sin(angle);
+  const w = 1.0 - Math.cos(angle);
+
+  const rotatedVector = [0, 0, 0];
+
+  rotatedVector[0] =
+    v[0] * (1 - w * (l[2] * l[2] + l[1] * l[1])) +
+    v[1] * (-u * l[2] + w * l[0] * l[1]) +
+    v[2] * (u * l[1] + w * l[0] * l[1]);
+
+  rotatedVector[1] =
+    v[0] * (u * l[2] + w * l[0] * l[1]) +
+    v[1] * (1 - w * (l[0] * l[0] + l[2] * l[2])) +
+    v[2] * (-u * l[0] + w * l[1] * l[2]);
+
+  rotatedVector[2] =
+    v[0] * (-u * l[1] + w * l[0] * l[2]) +
+    v[1] * (u * l[0] + w * l[1] * l[2]) +
+    v[2] * (1 - w * (l[1] * l[1] + l[0] * l[0]));
+
+  return rotatedVector;
+}
+
 // ----------------------------------------------------------------------------
 // Only Static API
 // ----------------------------------------------------------------------------
@@ -2139,6 +2184,8 @@ export default {
   subtract,
   multiplyScalar,
   multiplyScalar2D,
+  multiplyAccumulate,
+  multiplyAccumulate2D,
   dot,
   outer,
   cross,
@@ -2216,4 +2263,5 @@ export default {
   floatToHex2,
   floatRGB2HexCode,
   float2CssRGBA,
+  rotateVector,
 };

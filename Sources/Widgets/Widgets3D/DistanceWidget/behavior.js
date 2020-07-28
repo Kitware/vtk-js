@@ -75,8 +75,6 @@ export default function widgetBehavior(publicAPI, model) {
       model.activeState.getActive() &&
       !ignoreKey(callData)
     ) {
-      model.manipulator.setOrigin(model.activeState.getOrigin());
-      model.manipulator.setNormal(model.camera.getDirectionOfProjection());
       const worldCoords = model.manipulator.handleEvent(
         callData,
         model.openGLRenderWindow

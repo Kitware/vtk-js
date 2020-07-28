@@ -34,6 +34,8 @@ function vtkGlyph3DMapper(publicAPI, model) {
     publicAPI.setOrientationMode(OrientationModes.DIRECTION);
   publicAPI.setOrientationModeToRotation = () =>
     publicAPI.setOrientationMode(OrientationModes.ROTATION);
+  publicAPI.setOrientationModeToMatrix = () =>
+    publicAPI.setOrientationMode(OrientationModes.MATRIX);
   publicAPI.getOrientationArrayData = () => {
     const idata = publicAPI.getInputData(0);
     if (!idata || !idata.getPointData()) {
@@ -143,6 +145,17 @@ function vtkGlyph3DMapper(publicAPI, model) {
           const orientation = [];
           oArray.getTuple(i, orientation);
           switch (model.orientationMode) {
+            case OrientationModes.MATRIX: {
+              // prettier-ignore
+              const rotMat4 = [
+                ...orientation.slice(0, 3), 0,
+                ...orientation.slice(3, 6), 0,
+                ...orientation.slice(6, 9), 0,
+                0, 0, 0, 1,
+              ];
+              mat4.multiply(z, z, rotMat4);
+              break;
+            }
             case OrientationModes.ROTATION:
               mat4.rotateZ(z, z, orientation[2]);
               mat4.rotateX(z, z, orientation[0]);

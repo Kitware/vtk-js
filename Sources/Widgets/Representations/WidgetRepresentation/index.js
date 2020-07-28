@@ -1,5 +1,6 @@
 import macro from 'vtk.js/Sources/macro';
 import vtkProp from 'vtk.js/Sources/Rendering/Core/Prop';
+import { subtract, dot } from 'vtk.js/Sources/Common/Core/Math';
 
 import { Behavior } from 'vtk.js/Sources/Widgets/Representations/WidgetRepresentation/Constants';
 import { RenderingTypes } from 'vtk.js/Sources/Widgets/Core/WidgetManager/Constants';
@@ -203,6 +204,27 @@ function vtkWidgetRepresentation(publicAPI, model) {
     });
   };
 
+  publicAPI.getPixelWorldHeightAtCoord = (worldCoord) => {
+    const {
+      dispHeightFactor,
+      cameraPosition,
+      cameraDir,
+      isParallel,
+      rendererPixelDims,
+    } = model.displayScaleParams;
+    let scale = 1;
+    if (isParallel) {
+      scale = dispHeightFactor;
+    } else {
+      const worldCoordToCamera = [...worldCoord];
+      subtract(worldCoordToCamera, cameraPosition, worldCoordToCamera);
+      scale = dot(worldCoordToCamera, cameraDir) * dispHeightFactor;
+    }
+
+    const rHeight = rendererPixelDims[1];
+    return scale / rHeight;
+  };
+
   // Make sure setting the labels at build time works with string/array...
   publicAPI.setLabels(model.labels);
 }
@@ -229,6 +251,13 @@ const DEFAULT_VALUES = {
       offset: -1.0,
     },
   },
+  scaleInPixels: false,
+  displayScaleParams: {
+    dispHeightFactor: 1,
+    cameraPosition: [0, 0, 0],
+    cameraDir: [1, 0, 0],
+    isParallel: false,
+  },
 };
 
 // ----------------------------------------------------------------------------
@@ -240,6 +269,8 @@ export function extend(publicAPI, model, initialValues = {}) {
   vtkProp.extend(publicAPI, model, initialValues);
   macro.algo(publicAPI, model, 1, 1);
   macro.get(publicAPI, model, ['labels', 'coincidentTopologyParameters']);
+  macro.set(publicAPI, model, ['displayScaleParams']);
+  macro.setGet(publicAPI, model, ['scaleInPixels']);
 
   // Object specific methods
   vtkWidgetRepresentation(publicAPI, model);

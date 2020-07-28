@@ -17,7 +17,7 @@ import {
 } from 'vtk.js/Sources/Imaging/Core/AbstractImageInterpolator/InterpolationInfo';
 import SlabMode from './Constants';
 
-const { vtkErrorMacro, vtkDebugMacro } = macro;
+const { capitalize, vtkErrorMacro, vtkDebugMacro } = macro;
 
 // ----------------------------------------------------------------------------
 // vtkImageReslice methods
@@ -39,7 +39,9 @@ function vtkImageReslice(publicAPI, model) {
       mat4.copy(model.resliceAxes, resliceAxes);
 
       publicAPI.modified();
+      return true;
     }
+    return null;
   };
 
   publicAPI.requestData = (inData, outData) => {
@@ -918,6 +920,24 @@ function vtkImageReslice(publicAPI, model) {
   };
 }
 
+function setNullArray(publicAPI, model, fieldNames) {
+  fieldNames.forEach((field) => {
+    const setterName = `set${capitalize(field)}`;
+    const superSet = publicAPI[setterName];
+    publicAPI[setterName] = (...args) => {
+      if ((args.length === 1 && args[0] == null) || model[field] == null) {
+        if (args[0] !== model[field]) {
+          model[field] = args[0];
+          publicAPI.modified();
+          return true;
+        }
+        return null;
+      }
+      return superSet(...args);
+    };
+  });
+}
+
 // ----------------------------------------------------------------------------
 // Object factory
 // ----------------------------------------------------------------------------
@@ -961,9 +981,6 @@ export function extend(publicAPI, model, initialValues = {}) {
 
   macro.setGet(publicAPI, model, [
     'outputDimensionality',
-    'outputOrigin',
-    'outputSpacing',
-    'outputExtent',
     'outputScalarType',
     'scalarShift',
     'scalarScale',
@@ -973,6 +990,15 @@ export function extend(publicAPI, model, initialValues = {}) {
     'mirror',
     'border',
     'backgroundColor',
+  ]);
+
+  macro.setGetArray(publicAPI, model, ['outputOrigin', 'outputSpacing'], 3);
+  macro.setGetArray(publicAPI, model, ['outputExtent'], 6);
+
+  setNullArray(publicAPI, model, [
+    'outputOrigin',
+    'outputSpacing',
+    'outputExtent',
   ]);
 
   macro.get(publicAPI, model, ['resliceAxes']);

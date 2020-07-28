@@ -22,3 +22,9 @@ that match the target labels.
 
 Should be used when creating an actor for the representation. It will apply widget-wide configuration such as coincident topology parameters to the mapper.
 
+## getPixelWorldHeightAtCoord(coord)
+
+This method returns the world distance that corresponds to the height of a
+single display pixel at a given coordinate. For example, to determine the
+(vertical) distance that matches a display distance of 30px for a coordinate
+`coord`, you would compute `30 * getPixelWorldHeightAtCoord(coord)`.

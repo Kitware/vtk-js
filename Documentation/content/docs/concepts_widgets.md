@@ -107,6 +107,20 @@ Widget representations must generate actors to be added to a scene. Internally,
 all actors should be appended to the `model.actors` array in order to be
 rendered.
 
+### Scaling representations to have fixed pixel size
+
+In order to scale a representation such that it retains the same size in
+display space, a widget representation should use the `scaleInPixels` property
+and the `getPixelWorldHeightAtCoord(coord)` method. When `scaleInPixels` is set
+to true, a widget representation should multiply whatever scaling they perform
+by the output of `getDisplayScaleAtCoord(coord)`.
+
+Look at the `SphereHandleRepresentation` as an example for how
+`getPixelWorldHeightAtCoord` is used.
+
+If `scaleInPixels` is false, then all scale values should be interpreted as
+world scales.
+
 ## Widget Manager
 
 The widget manager manages the lifecycle of a widget associated with a

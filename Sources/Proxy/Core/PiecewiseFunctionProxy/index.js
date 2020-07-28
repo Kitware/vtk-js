@@ -27,6 +27,13 @@ function applyNodesToPiecewiseFunction(nodes, range, pwf) {
 }
 
 // ----------------------------------------------------------------------------
+
+function copyGaussians(gaussians) {
+  // gaussians is assumed to be an array of gaussian objects
+  return gaussians.map((g) => ({ ...g }));
+}
+
+// ----------------------------------------------------------------------------
 // vtkPiecewiseFunctionProxy methods
 // ----------------------------------------------------------------------------
 
@@ -39,9 +46,9 @@ function vtkPiecewiseFunctionProxy(publicAPI, model) {
 
   // Takes an array of gaussians
   publicAPI.setGaussians = (gaussians) => {
-    model.gaussians = (gaussians || []).slice();
+    model.gaussians = copyGaussians(gaussians || []);
     if (model.gaussians.length === 0) {
-      model.gaussians = Defaults.Gaussians.slice();
+      model.gaussians = copyGaussians(Defaults.Gaussians);
     }
     publicAPI.applyMode();
   };

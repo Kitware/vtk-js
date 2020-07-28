@@ -15,7 +15,10 @@ import {
   Wrap,
   Filter,
 } from 'vtk.js/Sources/Rendering/OpenGL/Texture/Constants';
-import { InterpolationType } from 'vtk.js/Sources/Rendering/Core/VolumeProperty/Constants';
+import {
+  InterpolationType,
+  OpacityMode,
+} from 'vtk.js/Sources/Rendering/Core/VolumeProperty/Constants';
 import { BlendMode } from 'vtk.js/Sources/Rendering/Core/VolumeMapper/Constants';
 
 import vtkVolumeVS from 'vtk.js/Sources/Rendering/OpenGL/glsl/vtkVolumeVS.glsl';
@@ -122,6 +125,24 @@ function vtkOpenGLVolumeMapper(publicAPI, model) {
         '//VTK::IndependentComponentsOn',
         '#define vtkIndependentComponentsOn'
       ).result;
+
+      // Define any proportional components
+      const proportionalComponents = [];
+      for (let nc = 0; nc < numComp; nc++) {
+        if (
+          actor.getProperty().getOpacityMode(nc) === OpacityMode.PROPORTIONAL
+        ) {
+          proportionalComponents.push(`#define vtkComponent${nc}Proportional`);
+        }
+      }
+
+      if (proportionalComponents.length > 0) {
+        FSSource = vtkShaderProgram.substitute(
+          FSSource,
+          '//VTK::vtkProportionalComponents',
+          proportionalComponents.join('\n')
+        ).result;
+      }
     }
 
     // WebGL only supports loops over constants
@@ -536,8 +557,8 @@ function vtkOpenGLVolumeMapper(publicAPI, model) {
       program.setUniformf('texWidth', model.scalarTexture.getWidth());
       program.setUniformf('texHeight', model.scalarTexture.getHeight());
       program.setUniformi('xreps', volInfo.xreps);
-      program.setUniformf('xstride', volInfo.xstride);
-      program.setUniformf('ystride', volInfo.ystride);
+      program.setUniformi('xstride', volInfo.xstride);
+      program.setUniformi('ystride', volInfo.ystride);
     }
 
     // map normals through normal matrix

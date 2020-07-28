@@ -1,6 +1,7 @@
 export const OrientationModes = {
   DIRECTION: 0,
   ROTATION: 1,
+  MATRIX: 2,
 };
 
 export const ScaleModes = {

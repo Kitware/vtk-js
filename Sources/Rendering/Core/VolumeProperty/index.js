@@ -3,7 +3,7 @@ import vtkColorTransferFunction from 'vtk.js/Sources/Rendering/Core/ColorTransfe
 import vtkPiecewiseFunction from 'vtk.js/Sources/Common/DataModel/PiecewiseFunction';
 import Constants from 'vtk.js/Sources/Rendering/Core/VolumeProperty/Constants';
 
-const { InterpolationType } = Constants;
+const { InterpolationType, OpacityMode } = Constants;
 const { vtkErrorMacro } = macro;
 
 const VTK_MAX_VRCOMP = 4;
@@ -213,6 +213,7 @@ function vtkVolumeProperty(publicAPI, model) {
     'gradientOpacityMinimumOpacity',
     'gradientOpacityMaximumValue',
     'gradientOpacityMaximumOpacity',
+    'opacityMode',
   ];
   sets.forEach((val) => {
     const cap = macro.capitalize(val);
@@ -233,6 +234,7 @@ function vtkVolumeProperty(publicAPI, model) {
     'gradientOpacityMinimumOpacity',
     'gradientOpacityMaximumValue',
     'gradientOpacityMaximumOpacity',
+    'opacityMode',
   ];
   gets.forEach((val) => {
     const cap = macro.capitalize(val);
@@ -273,6 +275,7 @@ export function extend(publicAPI, model, initialValues = {}) {
         rGBTransferFunction: null,
         scalarOpacity: null,
         scalarOpacityUnitDistance: 1.0,
+        opacityMode: OpacityMode.FRACTIONAL,
 
         gradientOpacityMinimumValue: 0,
         gradientOpacityMinimumOpacity: 0.0,
