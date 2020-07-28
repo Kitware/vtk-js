@@ -62,7 +62,6 @@ const asciiWriter = () => {
   return {
     init: (polyData) => {
       const polys = polyData.getPolys().getData();
-      const buffer = new ArrayBuffer(80 + 4 + (50 * polys.length) / 4); // buffer for the full file; size = header (80) + num cells (4) +  50 bytes per poly
     },
     writeHeader: (polyData) => {
       file += 'solid ascii\n';
