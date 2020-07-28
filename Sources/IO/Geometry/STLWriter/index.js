@@ -210,4 +210,4 @@ export const newInstance = macro.newInstance(extend, 'vtkSTLWriter');
 
 // ----------------------------------------------------------------------------
 
-export default { newInstance, extend };
+export default { newInstance, extend, ...STATIC };
