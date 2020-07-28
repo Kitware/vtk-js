@@ -23,9 +23,10 @@ const writer = vtkSTLWriter.newInstance();
 reader
   .setUrl(`${__BASE_PATH__}/data/legacy/sphere.vtk`, { loadData: true })
   .then(() => {
-    global.readerOutput = reader.getOutputData();
     writer.setInputData(reader.getOutputData());
     const fileContents = writer.getOutputData();
+    // Can also use a static function to write to STL:
+    // const fileContents = vtkSTLWriter.writeSTL(reader.getOutputData());
 
     // Display the resulting STL
     writerReader.parseAsArrayBuffer(fileContents.buffer);

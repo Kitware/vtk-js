@@ -27,143 +27,149 @@ function writeVectorBinary(dataView, offset, vector) {
 // vtkSTLWriter methods
 // ----------------------------------------------------------------------------
 
+const binaryWriter = () => {
+  let offset = 0;
+  let dataView = null;
+  return {
+    init: (polyData) => {
+      const polys = polyData.getPolys().getData();
+      const buffer = new ArrayBuffer(80 + 4 + (50 * polys.length) / 4); // buffer for the full file; size = header (80) + num cells (4) +  50 bytes per poly
+      dataView = new DataView(buffer);
+    },
+    writeHeader: (polyData) => {
+      offset += 80; // Header is empty // TODO: could add date, version, package
+
+      // First need to write the number of cells
+      dataView.setUint32(offset, polyData.getNumberOfCells(), true);
+      offset += 4;
+    },
+    writeTriangle: (v1, v2, v3, dn) => {
+      offset = writeVectorBinary(dataView, offset, dn);
+      offset = writeVectorBinary(dataView, offset, v1);
+      offset = writeVectorBinary(dataView, offset, v2);
+      offset = writeVectorBinary(dataView, offset, v3);
+      offset += 2; // unused 'attribute byte count' is a Uint16
+    },
+    writeFooter: (polyData) => {},
+    getOutputData: () => {
+      return dataView;
+    },
+  };
+};
+
+const asciiWriter = () => {
+  let file = '';
+  return {
+    init: (polyData) => {
+      const polys = polyData.getPolys().getData();
+      const buffer = new ArrayBuffer(80 + 4 + (50 * polys.length) / 4); // buffer for the full file; size = header (80) + num cells (4) +  50 bytes per poly
+    },
+    writeHeader: (polyData) => {
+      file += 'solid ascii\n';
+    },
+    writeTriangle: (v1, v2, v3, dn) => {
+      file += ` facet normal ${dn[0].toPrecision(6)} ${dn[1].toPrecision(
+        6
+      )} ${dn[2].toPrecision(6)}\n`;
+      file += '  outer loop\n';
+      file += `   vertex ${v1[0].toPrecision(6)} ${v1[1].toPrecision(
+        6
+      )} ${v1[2].toPrecision(6)}\n`;
+      file += `   vertex ${v2[0].toPrecision(6)} ${v2[1].toPrecision(
+        6
+      )} ${v2[2].toPrecision(6)}\n`;
+      file += `   vertex ${v3[0].toPrecision(6)} ${v3[1].toPrecision(
+        6
+      )} ${v3[2].toPrecision(6)}\n`;
+      file += '  endloop\n';
+      file += ' endfacet\n';
+    },
+    writeFooter: (polyData) => {
+      file += 'endsolid\n';
+    },
+    getOutputData: () => {
+      return file;
+    },
+  };
+};
+
+function writeSTL(polyData, format = FormatTypes.BINARY, transform = null) {
+  let writer = null;
+  if (format === FormatTypes.BINARY) {
+    writer = binaryWriter();
+  } else if (format === FormatTypes.ASCII) {
+    writer = asciiWriter();
+  } else {
+    vtkErrorMacro('Invalid format type');
+  }
+
+  writer.init(polyData);
+  writer.writeHeader(polyData);
+
+  const polys = polyData.getPolys().getData();
+  const points = polyData.getPoints().getData();
+  const strips = polyData.getStrips() ? polyData.getStrips().getData() : null;
+
+  const n = [];
+  let v1 = [];
+  let v2 = [];
+  let v3 = [];
+
+  // Strips
+  if (strips && strips.length > 0) {
+    throw new Error('Unsupported strips');
+  }
+
+  // Polys
+  for (let i = 0; i < polys.length; ) {
+    const pointNumber = polys[i++];
+
+    if (pointNumber) {
+      v1 = [
+        points[polys[i] * 3],
+        points[polys[i] * 3 + 1],
+        points[polys[i++] * 3 + 2],
+      ];
+      v2 = [
+        points[polys[i] * 3],
+        points[polys[i] * 3 + 1],
+        points[polys[i++] * 3 + 2],
+      ];
+      v3 = [
+        points[polys[i] * 3],
+        points[polys[i] * 3 + 1],
+        points[polys[i++] * 3 + 2],
+      ];
+      if (transform) {
+        vec3.transformMat4(v1, v1, transform);
+        vec3.transformMat4(v2, v2, transform);
+        vec3.transformMat4(v3, v3, transform);
+      }
+
+      vtkTriangle.computeNormal(v1, v2, v3, n);
+
+      writer.writeTriangle(v1, v2, v3, n);
+    }
+  }
+  writer.writeFooter(polyData);
+  return writer.getOutputData();
+}
+
+// ----------------------------------------------------------------------------
+// Static API
+// ----------------------------------------------------------------------------
+
+export const STATIC = {
+  writeSTL,
+};
+
+// ----------------------------------------------------------------------------
+// vtkSTLWriter methods
+// ----------------------------------------------------------------------------
+
 function vtkSTLWriter(publicAPI, model) {
   // Set our className
   model.classHierarchy.push('vtkSTLWriter');
-
-  function writeBinary(polyData, transform = null) {
-    const polys = polyData.getPolys().getData();
-    const points = polyData.getPoints().getData();
-    const strips = polyData.getStrips() ? polyData.getStrips().getData() : null;
-    const buffer = new ArrayBuffer(80 + 4 + (50 * polys.length) / 4); // buffer for the full file; size = header (80) + num cells (4) +  50 bytes per poly
-    const dataView = new DataView(buffer);
-    let offset = 0;
-
-    offset += 80; // Header is empty // TODO: could add date, version, package
-
-    let v1 = [];
-    let v2 = [];
-    let v3 = [];
-    const dn = [];
-
-    // First need to write the number of cells
-    dataView.setUint32(offset, polyData.getNumberOfCells(), true);
-    offset += 4;
-
-    // Strips
-    if (strips && strips.length > 0) {
-      throw new Error('Unsupported strips');
-    }
-
-    // Polys
-    for (let i = 0; i < polys.length; ) {
-      const pointNumber = polys[i++];
-
-      if (pointNumber) {
-        v1 = [
-          points[polys[i] * 3],
-          points[polys[i] * 3 + 1],
-          points[polys[i++] * 3 + 2],
-        ];
-        v2 = [
-          points[polys[i] * 3],
-          points[polys[i] * 3 + 1],
-          points[polys[i++] * 3 + 2],
-        ];
-        v3 = [
-          points[polys[i] * 3],
-          points[polys[i] * 3 + 1],
-          points[polys[i++] * 3 + 2],
-        ];
-        if (transform) {
-          vec3.transformMat4(v1, v1, transform);
-          vec3.transformMat4(v2, v2, transform);
-          vec3.transformMat4(v3, v3, transform);
-        }
-
-        vtkTriangle.computeNormal(v1, v2, v3, dn);
-
-        offset = writeVectorBinary(dataView, offset, dn);
-        offset = writeVectorBinary(dataView, offset, v1);
-        offset = writeVectorBinary(dataView, offset, v2);
-        offset = writeVectorBinary(dataView, offset, v3);
-        offset += 2; // unused 'attribute byte count' is a Uint16
-      }
-    }
-    return dataView;
-  }
-
-  function writeASCII(polyData, transform = null) {
-    const polys = polyData.getPolys().getData();
-    const points = polyData.getPoints().getData();
-    const strips = polyData.getStrips() ? polyData.getStrips().getData() : null;
-    let file = '';
-
-    file += 'solid ascii\n';
-
-    const n = [];
-    let v1 = [];
-    let v2 = [];
-    let v3 = [];
-
-    // Strips
-
-    if (strips && strips.length > 0) {
-      throw new Error('Unsupported strips');
-    }
-
-    // Polys
-    for (let i = 0; i < polys.length; ) {
-      const pointNumber = polys[i++];
-
-      if (pointNumber) {
-        v1 = [
-          points[polys[i] * 3],
-          points[polys[i] * 3 + 1],
-          points[polys[i++] * 3 + 2],
-        ];
-        v2 = [
-          points[polys[i] * 3],
-          points[polys[i] * 3 + 1],
-          points[polys[i++] * 3 + 2],
-        ];
-        v3 = [
-          points[polys[i] * 3],
-          points[polys[i] * 3 + 1],
-          points[polys[i++] * 3 + 2],
-        ];
-        if (transform) {
-          vec3.transformMat4(v1, v1, transform);
-          vec3.transformMat4(v2, v2, transform);
-          vec3.transformMat4(v3, v3, transform);
-        }
-
-        vtkTriangle.computeNormal(v1, v2, v3, n);
-
-        file += ` facet normal ${n[0].toPrecision(6)} ${n[1].toPrecision(
-          6
-        )} ${n[2].toPrecision(6)}\n`;
-        file += '  outer loop\n';
-        file += `   vertex ${v1[0].toPrecision(6)} ${v1[1].toPrecision(
-          6
-        )} ${v1[2].toPrecision(6)}\n`;
-        file += `   vertex ${v2[0].toPrecision(6)} ${v2[1].toPrecision(
-          6
-        )} ${v2[2].toPrecision(6)}\n`;
-        file += `   vertex ${v3[0].toPrecision(6)} ${v3[1].toPrecision(
-          6
-        )} ${v3[2].toPrecision(6)}\n`;
-        file += '  endloop\n';
-        file += ' endfacet\n';
-      } else {
-        throw new Error('Unsupported polygon');
-      }
-    }
-
-    file += 'endsolid\n';
-
-    return file;
-  }
 
   publicAPI.requestData = (inData, outData) => {
     const input = inData[0];
@@ -171,13 +177,7 @@ function vtkSTLWriter(publicAPI, model) {
       vtkErrorMacro('Invalid or missing input');
       return;
     }
-    if (model.format === FormatTypes.ASCII) {
-      outData[0] = writeASCII(input, model.transform);
-    } else if (model.format === FormatTypes.BINARY) {
-      outData[0] = writeBinary(input, model.transform);
-    } else {
-      vtkErrorMacro('Invalid format type');
-    }
+    outData[0] = writeSTL(input, model.format, model.transform);
   };
 }
 
