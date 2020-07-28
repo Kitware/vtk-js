@@ -60,9 +60,7 @@ const binaryWriter = () => {
 const asciiWriter = () => {
   let file = '';
   return {
-    init: (polyData) => {
-      const polys = polyData.getPolys().getData();
-    },
+    init: (polyData) => {},
     writeHeader: (polyData) => {
       file += 'solid ascii\n';
     },
