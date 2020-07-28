@@ -148,6 +148,30 @@ function safeArrays(model) {
 }
 
 // ----------------------------------------------------------------------------
+// shallow equals
+// ----------------------------------------------------------------------------
+
+function shallowEquals(a, b) {
+  if (a === b) {
+    return true;
+  }
+
+  if (Array.isArray(a) && Array.isArray(b)) {
+    if (a.length !== b.length) {
+      return false;
+    }
+    for (let i = 0; i < a.length; i++) {
+      if (a[i] !== b[i]) {
+        return false;
+      }
+    }
+    return true;
+  }
+
+  return false;
+}
+
+// ----------------------------------------------------------------------------
 
 function enumToString(e, value) {
   return Object.keys(e).find((key) => e[key] === value);
@@ -519,8 +543,9 @@ export function setArray(
       if (changeDetected || model[field].length !== array.length) {
         model[field] = [].concat(array);
         publicAPI.modified();
+        return true;
       }
-      return true;
+      return false;
     };
 
     publicAPI[`set${capitalize(field)}From`] = (otherArray) => {
@@ -1154,7 +1179,7 @@ export function proxy(publicAPI, model) {
       const newValue = sourceLink.instance[
         `get${capitalize(sourceLink.propertyName)}`
       ]();
-      if (newValue !== value || force) {
+      if (!shallowEquals(newValue, value) || force) {
         value = newValue;
         updateInProgress = true;
         while (needUpdate.length) {

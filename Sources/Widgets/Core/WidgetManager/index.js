@@ -1,4 +1,5 @@
 import macro from 'vtk.js/Sources/macro';
+import { radiansFromDegrees } from 'vtk.js/Sources/Common/Core/Math';
 import vtkOpenGLHardwareSelector from 'vtk.js/Sources/Rendering/OpenGL/HardwareSelector';
 import { FieldAssociations } from 'vtk.js/Sources/Common/DataModel/DataSet/Constants';
 import Constants from 'vtk.js/Sources/Widgets/Core/WidgetManager/Constants';
@@ -93,6 +94,8 @@ function vtkWidgetManager(publicAPI, model) {
   // internal SVG API
   // --------------------------------------------------------------------------
 
+  const pendingSvgRenders = new WeakMap();
+
   function enableSvgLayer() {
     const container = model.openGLRenderWindow.getReferenceByName('el');
     const canvas = model.openGLRenderWindow.getCanvas();
@@ -154,10 +157,23 @@ function vtkWidgetManager(publicAPI, model) {
             .map((r) => r.render());
         }
 
-        Promise.all(pendingContent).then((vnodes) => {
-          if (model.deleted) {
+        const promise = Promise.all(pendingContent);
+
+        const renders = pendingSvgRenders.get(widget) || [];
+        renders.push(promise);
+        pendingSvgRenders.set(widget, renders);
+
+        promise.then((vnodes) => {
+          let pendingRenders = pendingSvgRenders.get(widget) || [];
+          const idx = pendingRenders.indexOf(promise);
+          if (model.deleted || idx === -1) {
             return;
           }
+
+          // throw away previous renders
+          pendingRenders = pendingRenders.slice(idx + 1);
+          pendingSvgRenders.set(widget, pendingRenders);
+
           const oldVTree = svgVTrees.get(widget);
           const newVTree = createSvgElement('g');
           for (let ni = 0; ni < vnodes.length; ni++) {
@@ -185,6 +201,40 @@ function vtkWidgetManager(publicAPI, model) {
           svgVTrees.set(widget, newVTree);
         });
       }
+    }
+  }
+
+  // --------------------------------------------------------------------------
+  // Widget scaling
+  // --------------------------------------------------------------------------
+
+  function updateDisplayScaleParams() {
+    const { openGLRenderWindow, camera, renderer } = model;
+    if (renderer && openGLRenderWindow && camera) {
+      const [rwW, rwH] = openGLRenderWindow.getSize();
+      const [vxmin, vymin, vxmax, vymax] = renderer.getViewport();
+      const rendererPixelDims = [rwW * (vxmax - vxmin), rwH * (vymax - vymin)];
+
+      const cameraPosition = camera.getPosition();
+      const cameraDir = camera.getDirectionOfProjection();
+      const isParallel = camera.getParallelProjection();
+      const dispHeightFactor = isParallel
+        ? camera.getParallelScale()
+        : 2 * Math.tan(radiansFromDegrees(camera.getViewAngle()) / 2);
+
+      model.widgets.forEach((w) => {
+        w.getNestedProps().forEach((r) => {
+          if (r.getScaleInPixels()) {
+            r.setDisplayScaleParams({
+              dispHeightFactor,
+              cameraPosition,
+              cameraDir,
+              isParallel,
+              rendererPixelDims,
+            });
+          }
+        });
+      });
     }
   }
 
@@ -249,6 +299,12 @@ function vtkWidgetManager(publicAPI, model) {
 
     subscriptions.push(model.openGLRenderWindow.onModified(setSvgSize));
     setSvgSize();
+
+    subscriptions.push(
+      model.openGLRenderWindow.onModified(updateDisplayScaleParams)
+    );
+    subscriptions.push(model.camera.onModified(updateDisplayScaleParams));
+    updateDisplayScaleParams();
 
     subscriptions.push(
       model.interactor.onStartAnimation(() => {
@@ -448,8 +504,8 @@ function vtkWidgetManager(publicAPI, model) {
     if (useSvgLayer !== model.useSvgLayer) {
       model.useSvgLayer = useSvgLayer;
 
-      if (useSvgLayer) {
-        if (model.renderer) {
+      if (model.renderer) {
+        if (useSvgLayer) {
           enableSvgLayer();
           // force a render so svg widgets can be drawn
           updateSvg();
@@ -488,7 +544,7 @@ const DEFAULT_VALUES = {
   previousSelectedData: null,
   widgetInFocus: null,
   useSvgLayer: true,
-  captureOn: CaptureOn.MOUSE_RELEASE,
+  captureOn: CaptureOn.MOUSE_MOVE,
 };
 
 // ----------------------------------------------------------------------------

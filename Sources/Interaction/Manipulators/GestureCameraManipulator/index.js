@@ -45,11 +45,12 @@ function vtkGestureCameraManipulator(publicAPI, model) {
 
   publicAPI.onPan = (interactor, renderer, translation) => {
     const camera = renderer.getActiveCamera();
+    const style = interactor.getInteractorStyle();
 
     // Calculate the focal depth since we'll be using it a lot
     let viewFocus = camera.getFocalPoint();
 
-    viewFocus = model.interactorStyle.computeWorldToDisplay(
+    viewFocus = style.computeWorldToDisplay(
       renderer,
       viewFocus[0],
       viewFocus[1],
@@ -59,7 +60,7 @@ function vtkGestureCameraManipulator(publicAPI, model) {
 
     const trans = translation;
     const lastTrans = model.previousTranslation;
-    const newPickPoint = model.interactorStyle.computeDisplayToWorld(
+    const newPickPoint = style.computeDisplayToWorld(
       renderer,
       viewFocus[0] + trans[0] - lastTrans[0],
       viewFocus[1] + trans[1] - lastTrans[1],
@@ -68,7 +69,7 @@ function vtkGestureCameraManipulator(publicAPI, model) {
 
     // Has to recalc old mouse point since the viewport has moved,
     // so can't move it outside the loop
-    const oldPickPoint = model.interactorStyle.computeDisplayToWorld(
+    const oldPickPoint = style.computeDisplayToWorld(
       renderer,
       viewFocus[0],
       viewFocus[1],

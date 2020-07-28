@@ -76,6 +76,12 @@ function vtkAbstractWidget(publicAPI, model) {
     }
   };
 
+  publicAPI.getViewWidgets = () => {
+    return model.factory
+      .getViewIds()
+      .map((viewId) => model.factory.getWidgetForView({ viewId }));
+  };
+
   // --------------------------------------------------------------------------
   // Initialization calls
   // --------------------------------------------------------------------------
@@ -91,8 +97,12 @@ const DEFAULT_VALUES = {
   hasFocus: false,
 };
 
-// ----------------------------------------------------------------------------
-
+/**
+ * @param {*} publicAPI public methods to populate
+ * @param {*} model internal values to populate
+ * @param {object} initialValues Contains at least
+ *   {viewType, renderer, camera, openGLRenderWindow, factory}
+ */
 export function extend(publicAPI, model, initialValues = {}) {
   Object.assign(model, DEFAULT_VALUES, initialValues);
 

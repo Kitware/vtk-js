@@ -222,23 +222,6 @@ reader
 
     updateControlPanel(image.imageMapper, data);
 
-    // give axis information to widgets
-    let axis = [0, 0, 0];
-    data.indexToWorldVec3([1, 0, 0], axis);
-    scene.rectangleHandle.setXAxis(axis);
-    scene.ellipseHandle.setXAxis(axis);
-    scene.circleHandle.setXAxis(axis);
-    axis = [0, 0, 0];
-    data.indexToWorldVec3([0, 1, 0], axis);
-    scene.rectangleHandle.setYAxis(axis);
-    scene.ellipseHandle.setYAxis(axis);
-    scene.circleHandle.setYAxis(axis);
-    axis = [0, 0, 0];
-    data.indexToWorldVec3([0, 0, 1], axis);
-    scene.rectangleHandle.setZAxis(axis);
-    scene.ellipseHandle.setZAxis(axis);
-    scene.circleHandle.setZAxis(axis);
-
     scene.circleHandle.setLabelTextCallback((worldBounds, screenBounds) => {
       const center = vtkBoundingBox.getCenter(screenBounds);
       const radius =
@@ -310,9 +293,6 @@ reader
         widgets.polygonWidget.getManipulator().setOrigin(position);
         widgets.polygonWidget.getManipulator().setNormal(normal);
 
-        scene.rectangleHandle.setSlicingMode(slicingMode);
-        scene.ellipseHandle.setSlicingMode(slicingMode);
-        scene.circleHandle.setSlicingMode(slicingMode);
         painter.setSlicingMode(slicingMode);
 
         scene.paintHandle.updateRepresentationForRender();
@@ -365,9 +345,6 @@ document.querySelector('.axis').addEventListener('input', (ev) => {
   const direction = [0, 0, 0];
   direction[sliceMode] = 1;
   scene.paintHandle.getWidgetState().getHandle().setDirection(direction);
-  scene.rectangleHandle.setSlicingMode(sliceMode);
-  scene.ellipseHandle.setSlicingMode(sliceMode);
-  scene.circleHandle.setSlicingMode(sliceMode);
 
   setCamera(sliceMode, scene.renderer, image.data);
   scene.renderWindow.render();
@@ -429,13 +406,13 @@ scene.paintHandle.onInteractionEvent(() => {
 initializeHandle(scene.rectangleHandle);
 
 scene.rectangleHandle.onInteractionEvent(() => {
-  const bounds = scene.rectangleHandle
+  const rectangleHandle = scene.rectangleHandle
     .getWidgetState()
-    .getRectangleHandle()
-    .getBounds();
-  const point1 = [bounds[0], bounds[2], bounds[4]];
-  const point2 = [bounds[1], bounds[3], bounds[5]];
-  painter.paintRectangle(point1, point2);
+    .getRectangleHandle();
+  painter.paintRectangle(
+    rectangleHandle.getOrigin(),
+    rectangleHandle.getCorner()
+  );
 });
 
 initializeHandle(scene.ellipseHandle);

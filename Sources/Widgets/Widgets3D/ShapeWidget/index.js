@@ -5,9 +5,6 @@ import {
 
 export const DEFAULT_VALUES = {
   manipulator: null,
-  xAxis: [0, 0, 0],
-  yAxis: [0, 0, 0],
-  zAxis: [0, 0, 0],
   visibleOnFocus: true,
   modifierBehavior: {
     None: {

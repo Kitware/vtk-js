@@ -92,7 +92,7 @@ function updateDomains(dataset, dataArray, model, updateProp) {
     windowLevel: Math.floor(
       mean(
         propToUpdate.windowLevel.domain.min,
-        propToUpdate.windowWidth.domain.max
+        propToUpdate.windowLevel.domain.max
       )
     ),
   };
@@ -292,17 +292,29 @@ function vtkVolumeRepresentationProxy(publicAPI, model) {
           const dataRange = dataArray.getRange(component);
           model.volume.getProperty().setUseGradientOpacity(component, true);
           const minV = Math.max(0.0, edgeGradient - 0.3) / 0.7;
-          model.volume
-            .getProperty()
-            .setGradientOpacityMinimumValue(
-              component,
-              (dataRange[1] - dataRange[0]) * 0.2 * minV * minV
-            );
+          if (minV > 0.0) {
+            model.volume
+              .getProperty()
+              .setGradientOpacityMinimumValue(
+                component,
+                Math.exp(
+                  Math.log((dataRange[1] - dataRange[0]) * 0.2) * minV * minV
+                )
+              );
+          } else {
+            model.volume
+              .getProperty()
+              .setGradientOpacityMinimumValue(component, 0.0);
+          }
           model.volume
             .getProperty()
             .setGradientOpacityMaximumValue(
               component,
-              (dataRange[1] - dataRange[0]) * 1.0 * edgeGradient * edgeGradient
+              Math.exp(
+                Math.log((dataRange[1] - dataRange[0]) * 1.0) *
+                  edgeGradient *
+                  edgeGradient
+              )
             );
         }
       }

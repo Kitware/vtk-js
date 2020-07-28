@@ -7,11 +7,11 @@ export default function widgetBehavior(publicAPI, model) {
 
   model.classHierarchy.push('vtkRectangleWidgetProp');
 
-  publicAPI.setBounds = (bounds) => {
-    if (superClass.setBounds) {
-      superClass.setBounds(bounds);
+  publicAPI.setCorners = (point1, point2) => {
+    if (superClass.setCorners) {
+      superClass.setCorners(point1, point2);
     }
-
-    model.shapeHandle.setBounds(bounds);
+    model.shapeHandle.setOrigin(point1);
+    model.shapeHandle.setCorner(point2);
   };
 }

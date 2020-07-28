@@ -88,7 +88,7 @@ function updateDomains(dataset, dataArray, model, updateProp) {
     windowLevel: Math.floor(
       mean(
         propToUpdate.windowLevel.domain.min,
-        propToUpdate.windowWidth.domain.max
+        propToUpdate.windowLevel.domain.max
       )
     ),
   };

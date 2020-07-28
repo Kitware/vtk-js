@@ -14,7 +14,7 @@ function listEquals(a, b, equality = 'array') {
     return false;
   }
   for (let i = 0; i < a.length; ++i) {
-    if (!equals(a, b)) {
+    if (!equals(a[i], b[i])) {
       return false;
     }
   }

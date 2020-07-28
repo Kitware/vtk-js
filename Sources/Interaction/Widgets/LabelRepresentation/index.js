@@ -24,9 +24,11 @@ function vtkLabelRepresentation(publicAPI, model) {
 
   function getCanvasPosition() {
     if (model.canvas) {
+      // canvas left/bottom in CSS coords
+      const dpr = window.devicePixelRatio;
       return {
-        left: Number(model.canvas.style.left.split('px')[0]),
-        bottom: Number(model.canvas.style.bottom.split('px')[0]),
+        left: Number(model.canvas.style.left.split('px')[0]) * dpr,
+        bottom: Number(model.canvas.style.bottom.split('px')[0]) * dpr,
       };
     }
     return null;
@@ -51,6 +53,7 @@ function vtkLabelRepresentation(publicAPI, model) {
 
       const canvasPosition = getCanvasPosition();
 
+      // pos is in display coords
       if (
         pos[0] >= canvasPosition.left &&
         pos[0] <= canvasPosition.left + width &&
@@ -329,8 +332,12 @@ export function extend(publicAPI, model, initialValues = {}) {
         yOffset = -0.5 * model.canvas.height;
       }
 
-      model.canvas.style.left = `${Math.round(coordList[0][0])}px`;
-      model.canvas.style.bottom = `${Math.round(coordList[0][1] + yOffset)}px`;
+      // coordList[0] is in display coords
+      const dpr = window.devicePixelRatio;
+      model.canvas.style.left = `${Math.round(coordList[0][0]) / dpr}px`;
+      model.canvas.style.bottom = `${
+        Math.round(coordList[0][1] + yOffset) / dpr
+      }px`;
 
       publicAPI.modified();
     }

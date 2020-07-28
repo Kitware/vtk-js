@@ -3,6 +3,9 @@ export const ViewTypes = {
   GEOMETRY: 1,
   SLICE: 2,
   VOLUME: 3,
+  AXIAL: 4,
+  CORONAL: 5,
+  SAGITTAL: 6,
 };
 
 export const RenderingTypes = {
