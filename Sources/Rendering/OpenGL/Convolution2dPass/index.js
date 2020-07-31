@@ -10,9 +10,9 @@ import { Representation } from 'vtk.js/Sources/Rendering/Core/Property/Constants
 const { vtkErrorMacro } = macro;
 // ----------------------------------------------------------------------------
 
-function vtkCustomPostProcessingPass(publicAPI, model) {
+function vtkConvolution2dPass(publicAPI, model) {
   // Set our className
-  model.classHierarchy.push('vtkCustomPostProcessingPass');
+  model.classHierarchy.push('vtkConvolution2dPass');
 
   publicAPI.computeKernelWeight = function computeKernelWeight(kernel) {
     const weight = kernel.reduce((prev, curr) => prev + curr);
@@ -92,7 +92,7 @@ function vtkCustomPostProcessingPass(publicAPI, model) {
       val.traverse(viewNode, publicAPI);
     });
 
-    // now draw the distorted values
+    // now draw the convolved values
     model.framebuffer.restorePreviousBindingsAndBuffers();
 
     // check if kernel dimension has changed and convolution shader needs to be re-compiled
@@ -100,7 +100,6 @@ function vtkCustomPostProcessingPass(publicAPI, model) {
       model.convolutionShader !== null &&
       model.oldKernelDimension !== model.kernelDimension
     ) {
-      // model.convolutionShader.cleanup(); // todo: what does this do?
       model.convolutionShader = null;
       model.oldKernelDimension = model.kernelDimension;
     }
@@ -216,7 +215,7 @@ function vtkCustomPostProcessingPass(publicAPI, model) {
     // finish code
     shaderCode += [
       ';',
-      '    gl_FragData[0] = vec4((colorSum / u_kernelWeight).rgb, 1);',
+      '    gl_FragData[0] = vec4((colorSum / u_kernelWeight).argb, 1);',
       '}',
     ].join('\n');
 
@@ -302,14 +301,14 @@ export function extend(publicAPI, model, initialValues = {}) {
   macro.get(publicAPI, model, ['framebuffer']);
 
   // Object methods
-  vtkCustomPostProcessingPass(publicAPI, model);
+  vtkConvolution2dPass(publicAPI, model);
 }
 
 // ----------------------------------------------------------------------------
 
 export const newInstance = macro.newInstance(
   extend,
-  'vtkCustomPostProcessingPass'
+  'vtkConvolution2dPass'
 );
 
 // ----------------------------------------------------------------------------
