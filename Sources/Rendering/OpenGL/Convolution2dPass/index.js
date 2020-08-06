@@ -12,7 +12,7 @@ const { vtkErrorMacro } = macro;
 
 function vtkConvolution2dPass(publicAPI, model) {
   // Set our className
-  model.classHierarchy.push('vtkConvolution2dPass');
+  model.classHierarchy.push('vtkConvolution2DPass');
 
   publicAPI.computeKernelWeight = function computeKernelWeight(kernel) {
     const weight = kernel.reduce((prev, curr) => prev + curr);
@@ -42,9 +42,7 @@ function vtkConvolution2dPass(publicAPI, model) {
     const kernelLength = model.kernelDimension * model.kernelDimension;
     if (model.kernel.length !== kernelLength) {
       vtkErrorMacro(
-        `The given kernel is invalid. 2D convolution kernels have to be 1D arrays with ${kernelLength} components representing the ${
-          model.kernelDimension
-        }x${model.kernelDimension} kernel in row-major form.`
+        `The given kernel is invalid. 2D convolution kernels have to be 1D arrays with ${kernelLength} components representing the ${model.kernelDimension}x${model.kernelDimension} kernel in row-major form.`
       );
       return;
     }
@@ -215,7 +213,7 @@ function vtkConvolution2dPass(publicAPI, model) {
     // finish code
     shaderCode += [
       ';',
-      '    gl_FragData[0] = vec4((colorSum / u_kernelWeight).argb, 1);',
+      '    gl_FragData[0] = vec4((colorSum / u_kernelWeight).rgb, texture2D(u_image, tcoord).a);',
       '}',
     ].join('\n');
 
@@ -306,10 +304,7 @@ export function extend(publicAPI, model, initialValues = {}) {
 
 // ----------------------------------------------------------------------------
 
-export const newInstance = macro.newInstance(
-  extend,
-  'vtkConvolution2dPass'
-);
+export const newInstance = macro.newInstance(extend, 'vtkConvolution2DPass');
 
 // ----------------------------------------------------------------------------
 
