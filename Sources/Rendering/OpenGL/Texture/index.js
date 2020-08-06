@@ -310,19 +310,8 @@ function vtkOpenGLTexture(publicAPI, model) {
 
   //----------------------------------------------------------------------------
   publicAPI.getInternalFormat = (vtktype, numComps) => {
-    if (!model.internalFormat) {
-      model.internalFormat = publicAPI.getDefaultInternalFormat(
-        vtktype,
-        numComps
-      );
-    }
-
-    if (!model.internalFormat) {
-      vtkDebugMacro(
-        `Unable to find suitable internal format for T=${vtktype} NC= ${numComps}`
-      );
-    }
-
+    const format = publicAPI.getDefaultInternalFormat(vtktype, numComps);
+    publicAPI.setInternalFormat(format);
     return model.internalFormat;
   };
 
@@ -362,7 +351,9 @@ function vtkOpenGLTexture(publicAPI, model) {
     if (iFormat !== model.internalFormat) {
       model.internalFormat = iFormat;
       publicAPI.modified();
+      return true;
     }
+    return false;
   };
 
   //----------------------------------------------------------------------------
