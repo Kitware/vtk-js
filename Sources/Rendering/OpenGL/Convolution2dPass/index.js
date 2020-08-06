@@ -10,7 +10,7 @@ import { Representation } from 'vtk.js/Sources/Rendering/Core/Property/Constants
 const { vtkErrorMacro } = macro;
 // ----------------------------------------------------------------------------
 
-function vtkConvolution2dPass(publicAPI, model) {
+function vtkConvolution2DPass(publicAPI, model) {
   // Set our className
   model.classHierarchy.push('vtkConvolution2DPass');
 
@@ -299,7 +299,7 @@ export function extend(publicAPI, model, initialValues = {}) {
   macro.get(publicAPI, model, ['framebuffer']);
 
   // Object methods
-  vtkConvolution2dPass(publicAPI, model);
+  vtkConvolution2DPass(publicAPI, model);
 }
 
 // ----------------------------------------------------------------------------
