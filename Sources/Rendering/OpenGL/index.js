@@ -3,6 +3,7 @@ import vtkActor2D from './Actor2D';
 import vtkBufferObject from './BufferObject';
 import vtkCamera from './Camera';
 import vtkCellArrayBufferObject from './CellArrayBufferObject';
+import vtkConvolution2DPass from './Convolution2DPass';
 import vtkFramebuffer from './Framebuffer';
 import vtkGlyph3DMapper from './Glyph3DMapper';
 import vtkHardwareSelector from './HardwareSelector';
@@ -32,6 +33,7 @@ export default {
   vtkBufferObject,
   vtkCamera,
   vtkCellArrayBufferObject,
+  vtkConvolution2DPass,
   vtkFramebuffer,
   vtkGlyph3DMapper,
   vtkHardwareSelector,
