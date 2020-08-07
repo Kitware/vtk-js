@@ -15,11 +15,12 @@ function vtkMouseCameraTrackballZoomManipulator(publicAPI, model) {
     const size = interactor.getView().getSize();
 
     const camera = renderer.getActiveCamera();
+    const direction = model.flipDirection ? -1 : 1;
     if (camera.getParallelProjection()) {
-      model.zoomScale = 1.5 / size[1];
+      model.zoomScale = (1.5 / size[1]) * direction;
     } else {
       const range = camera.getClippingRange();
-      model.zoomScale = 1.5 * (range[1] / size[1]);
+      model.zoomScale = 1.5 * (range[1] / size[1]) * direction;
     }
   };
 
@@ -95,6 +96,7 @@ function vtkMouseCameraTrackballZoomManipulator(publicAPI, model) {
 
 const DEFAULT_VALUES = {
   zoomScale: 0.0,
+  flipDirection: false,
 };
 
 // ----------------------------------------------------------------------------
@@ -106,6 +108,8 @@ export function extend(publicAPI, model, initialValues = {}) {
   macro.obj(publicAPI, model);
   vtkCompositeMouseManipulator.extend(publicAPI, model, initialValues);
   vtkCompositeCameraManipulator.extend(publicAPI, model, initialValues);
+
+  macro.setGet(publicAPI, model, ['flipDirection']);
 
   // Object specific methods
   vtkMouseCameraTrackballZoomManipulator(publicAPI, model);
