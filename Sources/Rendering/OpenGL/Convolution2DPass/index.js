@@ -222,20 +222,12 @@ function vtkConvolution2DPass(publicAPI, model) {
 
   // build vertices etc
   publicAPI.buildVertexBuffer = () => {
-    // 4 coner points in clipping space in order (x, y, z) where z is always set to -1
+    // 4 corner points in clipping space in order (x, y, z) where z is always set to -1
+    // prettier-ignore
     const ptsArray = new Float32Array([
-      -1,
-      -1,
-      -1,
-      1,
-      -1,
-      -1,
-      -1,
-      1,
-      -1,
-      1,
-      1,
-      -1,
+      -1, -1, -1, 1,
+      -1, -1, -1, 1,
+      -1, 1, 1, -1,
     ]);
 
     // 4 corresponding corner points in texture space in order (x, y)

@@ -74,6 +74,21 @@ function getEdgeDetectPass(delegates = null) {
   return getConvolutionPass([-1, -1, -1, -1, 8, -1, -1, -1, -1], 3, delegates);
 }
 
+function getUnsharpMaskPass(delegates = null) {
+  // prettier-ignore
+  return getConvolutionPass(
+    [
+      -1, -4, -6, -4, -1,
+      -4, -16, -24, -16, -4,
+      -6, -24, 512 - 36, -24, -6,
+      -4, -16, -24, -16, -4,
+      -1, -4, -6, -4, -1
+    ],
+    5,
+    delegates
+  );
+}
+
 const reader = vtkHttpDataSetReader.newInstance({ fetchGzip: true });
 
 const actor = vtkVolume.newInstance();
@@ -129,6 +144,9 @@ function updatePostProcessing(event) {
   if (document.querySelector('.edgeDetect').checked) {
     renderPass = getEdgeDetectPass([renderPass]);
   }
+  if (document.querySelector('.unsharpMask').checked) {
+    renderPass = getUnsharpMaskPass([renderPass]);
+  }
 
   view.setRenderPasses([renderPass]);
   renderWindow.render();
@@ -166,6 +184,9 @@ reader.setUrl(`${__BASE_PATH__}/data/volume/headsq.vti`).then(() => {
       .addEventListener('input', updatePostProcessing);
     document
       .querySelector('.edge3Pass')
+      .addEventListener('change', updatePostProcessing);
+    document
+      .querySelector('.unsharpMask')
       .addEventListener('change', updatePostProcessing);
   });
 });
