@@ -10,9 +10,26 @@ const { vtkErrorMacro, vtkDebugMacro } = macro;
 
 let requestCount = 0;
 
+function openAsyncXHR(method, url, options = {}) {
+  const xhr = new XMLHttpRequest();
+  xhr.open(method, url, true);
+
+  if (options.headers) {
+    Object.entries(options.headers).forEach(([key, value]) =>
+      xhr.setRequestHeader(key, value)
+    );
+  }
+
+  if (options.progressCallback) {
+    xhr.addEventListener('progress', options.progressCallback);
+  }
+
+  return xhr;
+}
+
 function fetchBinary(url, options = {}) {
   return new Promise((resolve, reject) => {
-    const xhr = new XMLHttpRequest();
+    const xhr = openAsyncXHR('GET', url, options);
 
     xhr.onreadystatechange = (e) => {
       if (xhr.readyState === 4) {
@@ -24,12 +41,7 @@ function fetchBinary(url, options = {}) {
       }
     };
 
-    if (options && options.progressCallback) {
-      xhr.addEventListener('progress', options.progressCallback);
-    }
-
     // Make request
-    xhr.open('GET', url, true);
     xhr.responseType = 'arraybuffer';
     xhr.send();
   });
@@ -38,12 +50,12 @@ function fetchBinary(url, options = {}) {
 function fetchArray(instance = {}, baseURL, array, options = {}) {
   if (array.ref && !array.ref.pending) {
     return new Promise((resolve, reject) => {
-      const xhr = new XMLHttpRequest();
       const url = [
         baseURL,
         array.ref.basepath,
         options.compression ? `${array.ref.id}.gz` : array.ref.id,
       ].join('/');
+      const xhr = openAsyncXHR('GET', url, options);
 
       xhr.onreadystatechange = (e) => {
         if (xhr.readyState === 1) {
@@ -105,12 +117,7 @@ function fetchArray(instance = {}, baseURL, array, options = {}) {
         }
       };
 
-      if (options && options.progressCallback) {
-        xhr.addEventListener('progress', options.progressCallback);
-      }
-
       // Make request
-      xhr.open('GET', url, true);
       xhr.responseType =
         options.compression || array.dataType !== 'string'
           ? 'arraybuffer'
@@ -126,7 +133,7 @@ function fetchArray(instance = {}, baseURL, array, options = {}) {
 
 function fetchJSON(instance = {}, url, options = {}) {
   return new Promise((resolve, reject) => {
-    const xhr = new XMLHttpRequest();
+    const xhr = openAsyncXHR('GET', url, options);
 
     xhr.onreadystatechange = (e) => {
       if (xhr.readyState === 1) {
@@ -154,12 +161,7 @@ function fetchJSON(instance = {}, url, options = {}) {
       }
     };
 
-    if (options && options.progressCallback) {
-      xhr.addEventListener('progress', options.progressCallback);
-    }
-
     // Make request
-    xhr.open('GET', url, true);
     xhr.responseType = options.compression ? 'arraybuffer' : 'text';
     xhr.send();
   });
@@ -174,7 +176,7 @@ function fetchText(instance = {}, url, options = {}) {
   }
 
   return new Promise((resolve, reject) => {
-    const xhr = new XMLHttpRequest();
+    const xhr = openAsyncXHR('GET', url, options);
 
     xhr.onreadystatechange = (e) => {
       if (xhr.readyState === 1) {
@@ -200,12 +202,7 @@ function fetchText(instance = {}, url, options = {}) {
       }
     };
 
-    if (options.progressCallback) {
-      xhr.addEventListener('progress', options.progressCallback);
-    }
-
     // Make request
-    xhr.open('GET', url, true);
     xhr.responseType = options.compression ? 'arraybuffer' : 'text';
     xhr.send();
   });
