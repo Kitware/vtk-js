@@ -716,6 +716,8 @@ function vtkOpenGLImageMapper(publicAPI, model) {
       const pwfSize = pwfWidth * textureHeight;
       const pwfTable = new Uint8Array(pwfSize);
       let pwfun = actorProperty.getPiecewiseFunction();
+      // support case where pwfun is added/removed
+      model.pwfTexture.resetFormatAndType();
       if (pwfun) {
         const pwfFloatTable = new Float32Array(pwfSize);
         const tmpTable = new Float32Array(pwfWidth);
