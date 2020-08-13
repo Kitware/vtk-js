@@ -3,6 +3,45 @@ import vtkPolyData from 'vtk.js/Sources/Common/DataModel/PolyData';
 
 const { vtkErrorMacro, TYPED_ARRAYS } = macro;
 
+function initPolyIterator(pd) {
+  const polys = pd.getPolys().getData();
+  const strips = pd.getStrips().getData();
+  const it = {
+    done: false,
+    polyIdx: 0,
+    stripIdx: 0,
+    remainingStripLength: 0,
+    // returns a single poly cell
+    next() {
+      let ret = null;
+      if (it.polyIdx < polys.length) {
+        const cellSize = polys[it.polyIdx];
+        const start = it.polyIdx + 1;
+        const end = start + cellSize;
+        it.polyIdx = end;
+        ret = polys.subarray(start, end);
+      } else if (it.stripIdx < strips.length) {
+        if (it.remainingStripLength === 0) {
+          it.remainingStripLength = strips[it.stripIdx] - 2; // sliding window of 3 points
+          // stripIdx points to the last point in a triangle 3-tuple
+          it.stripIdx += 3;
+        }
+        const start = it.stripIdx - 2;
+        const end = it.stripIdx + 1;
+        it.stripIdx++;
+        it.remainingStripLength--;
+        ret = strips.subarray(start, end);
+      } else if (it.done) {
+        throw new Error('Iterator is done');
+      }
+
+      it.done = it.polyIdx >= polys.length && it.stripIdx >= strips.length;
+      return ret;
+    },
+  };
+  return it;
+}
+
 // ----------------------------------------------------------------------------
 // vtkCutter methods
 // ----------------------------------------------------------------------------
@@ -25,7 +64,6 @@ function vtkCutter(publicAPI, model) {
   };
 
   function dataSetCutter(input, output) {
-    const numCells = input.getNumberOfCells();
     const points = input.getPoints();
     const pointsData = points.getData();
     const numPts = points.getNumberOfPoints();
@@ -48,32 +86,27 @@ function vtkCutter(publicAPI, model) {
       );
     }
 
-    const dataCell = input.getPolys().getData();
     const crossedEdges = [];
     const x1 = new Array(3);
     const x2 = new Array(3);
     // Loop over all cells; get scalar values for all cell points
     // and process each cell.
     /* eslint-disable no-continue */
-    let cellOffset = 0;
-    let prevCellSize = -1;
-    for (let cellId = 0; cellId < numCells; cellId++) {
-      cellOffset += prevCellSize + 1; // account for length of cell
-
-      const nbPointsInCell = dataCell[cellOffset];
-      prevCellSize = nbPointsInCell;
+    const it = initPolyIterator(input);
+    while (!it.done) {
+      // cell contains the point IDs/indices
+      const cell = it.next();
 
       // Check that cells have at least 3 points
-      if (nbPointsInCell <= 2) {
+      if (cell.length <= 2) {
         continue;
       }
-      const nextCellOffset = cellOffset + 1 + nbPointsInCell;
 
       // Get associated scalar of points that constitute the current cell
       const cellPointsScalars = [];
       let pointIndex;
-      for (let i = cellOffset + 1; i < nextCellOffset; i++) {
-        pointIndex = dataCell[i];
+      for (let i = 0; i < cell.length; i++) {
+        pointIndex = cell[i];
         cellPointsScalars.push(model.cutScalars[pointIndex]);
       }
 
@@ -94,16 +127,10 @@ function vtkCutter(publicAPI, model) {
         continue;
       }
 
-      // Get id of points that constitute the current cell
-      const cellPointsID = [];
-      for (let i = cellOffset + 1; i < nextCellOffset; i++) {
-        cellPointsID.push(dataCell[i]);
-      }
-
       // Find and compute edges which intersect cells
       const intersectedEdgesList = [];
-      for (let i = 0; i < cellPointsID.length; i++) {
-        const idNext = i + 1 === cellPointsID.length ? 0 : i + 1;
+      for (let i = 0; i < cell.length; i++) {
+        const idNext = i + 1 === cell.length ? 0 : i + 1;
 
         // Go to next edge if edge is not crossed
         // TODO: in most come cases, (numberOfPointsInCell - 1) or 0 edges of the cell
@@ -132,8 +159,8 @@ function vtkCutter(publicAPI, model) {
         }
 
         // points position
-        const pointID1 = cellPointsID[e1];
-        const pointID2 = cellPointsID[e2];
+        const pointID1 = cell[e1];
+        const pointID2 = cell[e2];
         x1[0] = pointsData[pointID1 * 3];
         x1[1] = pointsData[pointID1 * 3 + 1];
         x1[2] = pointsData[pointID1 * 3 + 2];
