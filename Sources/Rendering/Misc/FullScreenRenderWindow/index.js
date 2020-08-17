@@ -18,8 +18,8 @@ const STYLE_CONTAINER = {
   position: 'absolute',
   top: '0',
   left: '0',
-  width: '100vw',
-  height: '100vh',
+  width: '100%',
+  height: '100%',
   overflow: 'hidden',
 };
 
@@ -34,8 +34,8 @@ const STYLE_CONTROL_PANEL = {
   margin: '0',
   display: 'block',
   border: 'solid 1px black',
-  maxWidth: 'calc(100vw - 70px)',
-  maxHeight: 'calc(100vh - 60px)',
+  maxWidth: 'calc(100% - 70px)',
+  maxHeight: 'calc(100% - 60px)',
   overflow: 'auto',
 };
 
@@ -46,15 +46,25 @@ function applyStyle(el, style) {
 }
 
 function vtkFullScreenRenderWindow(publicAPI, model) {
+  const body = document.querySelector('body');
+
   // Full screen DOM handler
   if (!model.rootContainer) {
-    model.rootContainer = document.querySelector('body');
+    model.rootContainer = body;
   }
 
   if (!model.container) {
     model.container = document.createElement('div');
     applyStyle(model.container, model.containerStyle || STYLE_CONTAINER);
     model.rootContainer.appendChild(model.container);
+  }
+
+  // apply 100% to html and body for fullscreen
+  if (model.rootContainer === body) {
+    document.documentElement.style.height = '100%';
+    body.style.height = '100%';
+    body.style.padding = '0';
+    body.style.margin = '0';
   }
 
   // VTK renderWindow/renderer
