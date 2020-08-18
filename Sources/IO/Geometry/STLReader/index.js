@@ -155,18 +155,25 @@ function vtkSTLReader(publicAPI, model) {
 
     model.parseData = content;
 
+    // ascii/binary detection
+    let isBinary = false;
+    // 80=STL header, 4=uint32 of num of triangles (le)
+    const dview = new DataView(content, 0, 80 + 4);
+    const numTriangles = dview.getUint32(80, true);
+    // 50 bytes per triangle
+    isBinary = 84 + numTriangles * 50 === content.byteLength;
+
+    // Check if ascii format
+    if (!isBinary) {
+      publicAPI.parseAsText(BinaryHelper.arrayBufferToString(content));
+      return;
+    }
+
     // Binary parsing
     // Header
     const headerData = content.slice(0, 80);
     const headerStr = BinaryHelper.arrayBufferToString(headerData);
     const header = parseHeader(headerStr);
-
-    // Check if ascii format
-    const solidIndex = headerStr.indexOf('solid ');
-    if (solidIndex !== -1 && solidIndex < 10) {
-      publicAPI.parseAsText(BinaryHelper.arrayBufferToString(content));
-      return;
-    }
 
     // Data
     const dataView = new DataView(content, 84);
