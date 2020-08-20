@@ -17,7 +17,7 @@ import {
 } from 'vtk.js/Sources/Imaging/Core/AbstractImageInterpolator/InterpolationInfo';
 import SlabMode from './Constants';
 
-const { capitalize, vtkErrorMacro, vtkDebugMacro } = macro;
+const { TYPED_ARRAYS, capitalize, vtkErrorMacro, vtkDebugMacro } = macro;
 
 // ----------------------------------------------------------------------------
 // vtkImageReslice methods
@@ -164,7 +164,7 @@ function vtkImageReslice(publicAPI, model) {
       .getScalars()
       .getNumberOfComponents(); // or s.numberOfComponents;
 
-    const outScalarsData = new window[dataType](
+    const outScalarsData = new TYPED_ARRAYS[dataType](
       outDims[0] * outDims[1] * outDims[2] * numComponents
     );
     const outScalars = vtkDataArray.newInstance({
@@ -319,7 +319,7 @@ function vtkImageReslice(publicAPI, model) {
       );
     }
 
-    const background = window[inputScalarType].from(model.backgroundColor);
+    const background = new TYPED_ARRAYS[inputScalarType](model.backgroundColor);
 
     // set color for area outside of input volume extent
     // void *background;
