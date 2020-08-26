@@ -224,6 +224,11 @@ function vtkOpenGLCellArrayBufferObject(publicAPI, model) {
       index += array[index] + 1;
     }
 
+    if (caboCount <= 0) {
+      model.elementCount = 0;
+      return 0;
+    }
+    
     let packedUCVBO = null;
     const packedVBO = new Float32Array(caboCount * model.blockSize);
     if (colorData) {
