@@ -70,7 +70,10 @@ function vtkInteractorStyle(publicAPI, model) {
       case 'W':
         ac = callData.pokedRenderer.getActors();
         ac.forEach((anActor) => {
-          anActor.getProperty().setRepresentationToWireframe();
+          const prop = anActor.getProperty();
+          if (prop.setRepresentationToWireframe) {
+            prop.setRepresentationToWireframe();
+          }
         });
         rwi.render();
         break;
@@ -79,7 +82,10 @@ function vtkInteractorStyle(publicAPI, model) {
       case 'S':
         ac = callData.pokedRenderer.getActors();
         ac.forEach((anActor) => {
-          anActor.getProperty().setRepresentationToSurface();
+          const prop = anActor.getProperty();
+          if (prop.setRepresentationToSurface) {
+            prop.setRepresentationToSurface();
+          }
         });
         rwi.render();
         break;
@@ -88,7 +94,10 @@ function vtkInteractorStyle(publicAPI, model) {
       case 'V':
         ac = callData.pokedRenderer.getActors();
         ac.forEach((anActor) => {
-          anActor.getProperty().setRepresentationToPoints();
+          const prop = anActor.getProperty();
+          if (prop.setRepresentationToPoints) {
+            prop.setRepresentationToPoints();
+          }
         });
         rwi.render();
         break;
