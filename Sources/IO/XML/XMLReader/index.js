@@ -183,7 +183,14 @@ function processDataArray(
     // read header
     // NOTE: this will incorrectly read the size if headerType is (U)Int64 and
     // the value requires (U)Int64.
-    const header = new TYPED_ARRAY[headerType](binaryBuffer, offset, 1);
+    let header;
+    if (offset % TYPED_ARRAY_BYTES[headerType] === 0) {
+      header = new TYPED_ARRAY[headerType](binaryBuffer, offset, 1);
+    } else {
+      header = new TYPED_ARRAY[headerType](
+        binaryBuffer.slice(offset, offset + TYPED_ARRAY_BYTES[headerType])
+      );
+    }
     let arraySize = header[0] / TYPED_ARRAY_BYTES[dataType];
 
     // if we are dealing with Uint64, we need to get double the values since
