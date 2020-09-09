@@ -1,4 +1,4 @@
-#!/Applications/ParaView-5.4.0.app/Contents/bin/pvpython
+#!/Applications/ParaView-5.8.1.app/Contents/bin/pvpython
 
 # -----------------------------------------------------------------------------
 # User configuration
@@ -52,7 +52,7 @@ class OBJParser(object):
     self.size = 0;
     self.output = []
 
-    with open(objFilePath, "r") as objLines:
+    with open(objFilePath, "r", encoding="utf-8") as objLines:
         for line in objLines:
             self.parseLine(line.rstrip('\n'))
     self.end();
@@ -61,7 +61,7 @@ class OBJParser(object):
   @staticmethod
   def createPoints(pythonArray):
       pts = vtkPoints()
-      nbPoints = len(pythonArray) / 3
+      nbPoints = int(len(pythonArray) / 3)
       pts.SetNumberOfPoints(nbPoints);
       for i in range(nbPoints):
           pts.SetPoint(i, pythonArray[(i * 3) + 0], pythonArray[(i * 3) + 1], pythonArray[(i * 3) + 2])
@@ -71,12 +71,16 @@ class OBJParser(object):
   @staticmethod
   def createCellArray(pythonArray, nbCells):
       cellArray = vtkCellArray()
-      cellArray.SetNumberOfCells(nbCells)
-      idArray = cellArray.GetData()
-      idArray.SetNumberOfTuples(len(pythonArray))
 
-      for i in range(len(pythonArray)):
-          idArray.SetValue(i, pythonArray[i])
+      idx = 0
+      size = len(pythonArray)
+      while idx < size:
+        cellSize = pythonArray[idx]
+        cellArray.InsertNextCell(cellSize)
+        idx += 1
+        for i in range(cellSize):
+          cellArray.InsertCellPoint(int(pythonArray[idx]))
+          idx += 1
 
       return cellArray
 
@@ -86,7 +90,7 @@ class OBJParser(object):
       array = vtkFloatArray()
       array.SetName(name)
       array.SetNumberOfComponents(nbComponents)
-      array.SetNumberOfTuples(len(pythonArray) / nbComponents)
+      array.SetNumberOfTuples(int(len(pythonArray) / nbComponents))
 
       for i in range(len(pythonArray)):
           array.SetValue(i, pythonArray[i])
@@ -223,13 +227,13 @@ class OBJParser(object):
 # -----------------------------------------------------------------------------
 
 def materialToSHA(mat):
-  keys = mat.keys()
+  keys = list(mat.keys())
   keys.sort()
   m = hashlib.md5()
   for key in keys:
-    m.update(key)
+    m.update(key.encode('utf-8'))
     for token in mat[key]:
-      m.update(token)
+      m.update(token.encode('utf-8'))
 
   return m.hexdigest()
 
@@ -245,7 +249,7 @@ class MTLParser(object):
       self.reverseReduceMap = {}
       self.representationsParameters = {}
 
-      with open(mtlFilePath, "r") as lines:
+      with open(mtlFilePath, "r", encoding="utf-8") as lines:
           for line in lines:
               self.parseLine(line.rstrip('\n'))
 
@@ -397,7 +401,7 @@ def loadScene(objFilePath, mtlFilePath):
     rep = simple.Show(source)
     mtlReader.applyMaterialToRepresentation(name, rep)
 
-  with open('%s/representations.json' % meshBaseDirectory, "w") as text_file:
+  with open('%s/representations.json' % meshBaseDirectory, "w", encoding="utf-8") as text_file:
     text_file.write(json.dumps(mtlReader.representationsParameters, indent=2, sort_keys=True))
 
   simple.Render()
