@@ -78,6 +78,9 @@ function vtkRenderWindowInteractor(publicAPI, model) {
   // Initialize list of requesters
   const animationRequesters = new Set();
 
+  // track active event listeners to handle simultaneous button tracking
+  let activeListenerCount = 0;
+
   // Public API methods
 
   //----------------------------------------------------------------------
@@ -188,21 +191,34 @@ function vtkRenderWindowInteractor(publicAPI, model) {
     return keys;
   }
 
-  function interactionRegistration(addListeners) {
+  function interactionRegistration(addListeners, force = false) {
     const rootElm = document.querySelector('body');
     const method = addListeners ? 'addEventListener' : 'removeEventListener';
     const invMethod = addListeners ? 'removeEventListener' : 'addEventListener';
 
-    if (model.container) {
-      model.container[invMethod]('mousemove', publicAPI.handleMouseMove);
+    if (!force && !addListeners && activeListenerCount > 0) {
+      --activeListenerCount;
     }
 
-    rootElm[method]('mouseup', publicAPI.handleMouseUp);
-    rootElm[method]('mouseleave', publicAPI.handleMouseUp);
-    rootElm[method]('mousemove', publicAPI.handleMouseMove);
-    rootElm[method]('touchend', publicAPI.handleTouchEnd, false);
-    rootElm[method]('touchcancel', publicAPI.handleTouchEnd, false);
-    rootElm[method]('touchmove', publicAPI.handleTouchMove, false);
+    // only add/remove listeners when there are no registered listeners
+    if (!activeListenerCount || force) {
+      activeListenerCount = 0;
+
+      if (model.container) {
+        model.container[invMethod]('mousemove', publicAPI.handleMouseMove);
+      }
+
+      rootElm[method]('mouseup', publicAPI.handleMouseUp);
+      rootElm[method]('mouseleave', publicAPI.handleMouseUp);
+      rootElm[method]('mousemove', publicAPI.handleMouseMove);
+      rootElm[method]('touchend', publicAPI.handleTouchEnd, false);
+      rootElm[method]('touchcancel', publicAPI.handleTouchEnd, false);
+      rootElm[method]('touchmove', publicAPI.handleTouchMove, false);
+    }
+
+    if (!force && addListeners) {
+      ++activeListenerCount;
+    }
   }
 
   publicAPI.bindEvents = (container) => {
@@ -232,7 +248,8 @@ function vtkRenderWindowInteractor(publicAPI, model) {
   };
 
   publicAPI.unbindEvents = () => {
-    interactionRegistration(false);
+    // force unbinding listeners
+    interactionRegistration(false, true);
     model.container.removeEventListener('contextmenu', preventDefault);
     // model.container.removeEventListener('click', preventDefault); // Avoid stopping event propagation
     model.container.removeEventListener('wheel', publicAPI.handleWheel);
