@@ -13,9 +13,8 @@ function vtkStar(publicAPI, model) {
     const dataset = vtkPolyData.newInstance();
 
     const points = new Float32Array(10 * 3);
-    const edges = new Uint32Array(12);
-    edges[0] = 11;
-    edges[11] = 0;
+    const edges = new Uint32Array(11);
+    edges[0] = 10;
     for (let i = 0; i < 10; i++) {
       const radius = i % 2 === 1 ? 2 : 0.8;
       points[3 * i + 0] = radius * Math.cos(((2 * i - 1) * Math.PI) / 10);
