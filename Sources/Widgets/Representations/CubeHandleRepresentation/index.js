@@ -84,13 +84,14 @@ function vtkCubeHandleRepresentation(publicAPI, model) {
       typedArray.points[i * 3 + 1] = coord[1];
       typedArray.points[i * 3 + 2] = coord[2];
 
-      const scale3 = state.getScale3
-        ? state.getScale3()
-        : Array(3).fill(model.defaultScale);
+      typedArray.scale[i] =
+        scaleFactor *
+        (!state.isVisible || state.isVisible() ? 1 : 0) *
+        (state.getScale1 ? state.getScale1() : model.defaultScale);
 
-      typedArray.scale[i * 3 + 0] = scale3[0] * scaleFactor;
-      typedArray.scale[i * 3 + 1] = scale3[1] * scaleFactor;
-      typedArray.scale[i * 3 + 2] = scale3[2] * scaleFactor;
+      if (publicAPI.getScaleInPixels()) {
+        typedArray.scale[i] *= publicAPI.getPixelWorldHeightAtCoord(coord);
+      }
 
       typedArray.color[i] =
         model.useActiveColor && isActive ? model.activeColor : state.getColor();
@@ -106,7 +107,7 @@ function vtkCubeHandleRepresentation(publicAPI, model) {
 // ----------------------------------------------------------------------------
 
 const DEFAULT_VALUES = {
-  defaultScale: 1,
+  // defaultScale: 0.1,
 };
 
 // ----------------------------------------------------------------------------

@@ -1,24 +1,18 @@
 import macro from 'vtk.js/Sources/macro';
-import vtkActor from 'vtk.js/Sources/Rendering/Core/Actor';
-import vtkDataArray from 'vtk.js/Sources/Common/Core/DataArray';
-import vtkGlyph3DMapper from 'vtk.js/Sources/Rendering/Core/Glyph3DMapper';
 import vtkHandleRepresentation from 'vtk.js/Sources/Widgets/Representations/HandleRepresentation';
-import vtkPixelSpaceCallbackMapper from 'vtk.js/Sources/Rendering/Core/PixelSpaceCallbackMapper';
 import vtkPolyData from 'vtk.js/Sources/Common/DataModel/PolyData';
-import vtkSphereSource from 'vtk.js/Sources/Filters/Sources/SphereSource';
-
+import vtkDataArray from 'vtk.js/Sources/Common/Core/DataArray';
+import vtkPixelSpaceCallbackMapper from 'vtk.js/Sources/Rendering/Core/PixelSpaceCallbackMapper';
+import vtkActor from 'vtk.js/Sources/Rendering/Core/Actor';
+import vtkGlyph3DMapper from 'vtk.js/Sources/Rendering/Core/Glyph3DMapper';
+import vtkConeSource from 'vtk.js/Sources/Filters/Sources/ConeSource';
 import { ScalarMode } from 'vtk.js/Sources/Rendering/Core/Mapper/Constants';
 
-// ----------------------------------------------------------------------------
-// vtkSphereHandleRepresentation methods
-// ----------------------------------------------------------------------------
-
-function vtkSphereHandleRepresentation(publicAPI, model) {
-  // Set our className
-  model.classHierarchy.push('vtkSphereHandleRepresentation');
+function vtkConeHandleRepresentation(publicAPI, model) {
+  model.classHierarchy.push('vtkConeHandleRepresentation');
 
   // --------------------------------------------------------------------------
-  // Internal polydata dataset
+  // internal polydata dataset
   // --------------------------------------------------------------------------
 
   model.internalPolyData = vtkPolyData.newInstance({ mtime: 0 });
@@ -44,7 +38,7 @@ function vtkSphereHandleRepresentation(publicAPI, model) {
 
   model.displayMapper = vtkPixelSpaceCallbackMapper.newInstance();
   model.displayActor = vtkActor.newInstance();
-  // model.displayActor.getProperty().setOpacity(0); // don't show in 3D
+  //	model.displayActor.getProperty().setOpacity(0); // don't show in 3D
   model.displayActor.setMapper(model.displayMapper);
   model.displayMapper.setInputConnection(publicAPI.getOutputPort());
   publicAPI.addActor(model.displayActor);
@@ -56,7 +50,7 @@ function vtkSphereHandleRepresentation(publicAPI, model) {
     scalarMode: ScalarMode.USE_POINT_FIELD_DATA,
   });
   model.actor = vtkActor.newInstance();
-  model.glyph = vtkSphereSource.newInstance({
+  model.glyph = vtkConeSource.newInstance({
     phiResolution: model.glyphResolution,
     thetaResolution: model.glyphResolution,
   });
@@ -145,34 +139,22 @@ function vtkSphereHandleRepresentation(publicAPI, model) {
   };
 }
 
-// ----------------------------------------------------------------------------
-// Object factory
-// ----------------------------------------------------------------------------
-
 const DEFAULT_VALUES = {
   glyphResolution: 8,
   defaultScale: 1,
 };
 
-// ----------------------------------------------------------------------------
-
 export function extend(publicAPI, model, initialValues = {}) {
   Object.assign(model, DEFAULT_VALUES, initialValues);
 
   vtkHandleRepresentation.extend(publicAPI, model, initialValues);
-  macro.get(publicAPI, model, ['glyph', 'mapper', 'actor']);
-
-  // Object specific methods
-  vtkSphereHandleRepresentation(publicAPI, model);
+  macro.setGet(publicAPI, model, ['glyph', 'glyphResolution', 'defaultScale']);
+  vtkConeHandleRepresentation(publicAPI, model);
 }
-
-// ----------------------------------------------------------------------------
 
 export const newInstance = macro.newInstance(
   extend,
-  'vtkSphereHandleRepresentation'
+  'vtkConeHandleRepresentation'
 );
-
-// ----------------------------------------------------------------------------
 
 export default { newInstance, extend };
