@@ -5,6 +5,7 @@ import vtkMapper from 'vtk.js/Sources/Rendering/Core/Mapper';
 import vtkTexture from 'vtk.js/Sources/Rendering/Core/Texture';
 import vtkTextureLODsDownloader from 'vtk.js/Sources/Rendering/Misc/TextureLODsDownloader';
 import vtkHttpDataSetLODsLoader from 'vtk.js/Sources/IO/Misc/HttpDataSetLODsLoader';
+import vtkColorTransferFunction from 'vtk.js/Sources/Rendering/Core/ColorTransferFunction';
 
 import DataAccessHelper from 'vtk.js/Sources/IO/Core/DataAccessHelper';
 
@@ -40,6 +41,15 @@ function applySettings(sceneItem, settings) {
     }
 
     sceneItem.mapper.set(settings.mapper);
+    if (
+      settings.mapper.colorByArrayName &&
+      settings.luts[settings.mapper.colorByArrayName]
+    ) {
+      sceneItem.mapper.setLookupTable(
+        settings.luts[settings.mapper.colorByArrayName]
+      );
+      sceneItem.mapper.setUseLookupTableScalarRange(true);
+    }
   }
 
   if (settings.lookupTable) {
@@ -242,11 +252,26 @@ function vtkHttpSceneLoader(publicAPI, model) {
           originalSceneParameters.camera = data.camera;
           setCameraParameters(data.camera);
         }
+        const luts = {};
+        if (data.lookupTables) {
+          Object.keys(data.lookupTables).forEach((fieldName) => {
+            const config = data.lookupTables[fieldName];
+            const lookupTable = vtkColorTransferFunction.newInstance(config);
+            if (config.nodes) {
+              lookupTable.removeAllPoints();
+              config.nodes.forEach(([x, r, g, b, midpoint, sharpness]) => {
+                lookupTable.addRGBPointLong(x, r, g, b, midpoint, sharpness);
+              });
+            }
+
+            luts[fieldName] = lookupTable;
+          });
+        }
         if (data.scene) {
           data.scene.forEach((item) => {
             const builder = TYPE_MAPPING[item.type];
             if (builder) {
-              builder(item, model, publicAPI);
+              builder({ luts, ...item }, model, publicAPI);
             }
           });
           global.scene = model.scene;
