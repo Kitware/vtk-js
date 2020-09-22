@@ -6,6 +6,7 @@ const MANIPULTOR_TYPES = {
   pan: Manipulators.vtkMouseCameraTrackballPanManipulator,
   roll: Manipulators.vtkMouseCameraTrackballRollManipulator,
   rotate: Manipulators.vtkMouseCameraTrackballRotateManipulator,
+  axisRotate: Manipulators.vtkMouseCameraAxisRotateManipulator,
   zoom: Manipulators.vtkMouseCameraTrackballZoomManipulator,
   zoomToMouse: Manipulators.vtkMouseCameraTrackballZoomToMouseManipulator,
   range: Manipulators.vtkMouseRangeManipulator,
@@ -41,6 +42,28 @@ const STYLES = {
     { type: 'gestureCamera' },
   ],
   FirstPerson: [{ type: 'movement' }, { type: 'freeLook' }],
+  zRotateTop: [
+    { type: 'pan', options: { shift: true } },
+    {
+      type: 'axisRotate',
+      options: { rotationAxis: [0, 0, 1], useHalfAxis: true },
+    },
+    { type: 'zoom', options: { control: true } },
+    { type: 'zoom', options: { alt: true } },
+    { type: 'zoom', options: { dragEnabled: false, scrollEnabled: true } },
+    { type: 'zoom', options: { button: 3 } },
+  ],
+  zRotateAll: [
+    { type: 'pan', options: { shift: true } },
+    {
+      type: 'axisRotate',
+      options: { rotationAxis: [0, 0, 1], useHalfAxis: false },
+    },
+    { type: 'zoom', options: { control: true } },
+    { type: 'zoom', options: { alt: true } },
+    { type: 'zoom', options: { dragEnabled: false, scrollEnabled: true } },
+    { type: 'zoom', options: { button: 3 } },
+  ],
 };
 
 function applyDefinitions(definitions, manipulatorStyle) {
