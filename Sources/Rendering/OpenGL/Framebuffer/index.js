@@ -60,7 +60,12 @@ function vtkFramebuffer(publicAPI, model) {
     if (model.colorTexture) {
       model.colorTexture.bind();
     }
-    model.openGLRenderWindow.setActiveFramebuffer(publicAPI);
+    if (
+      model.context.checkFramebufferStatus(model.context.FRAMEBUFFER) ===
+      model.context.FRAMEBUFFER_COMPLETE
+    ) {
+      model.openGLRenderWindow.setActiveFramebuffer(publicAPI);
+    }
   };
 
   publicAPI.create = (width, height) => {
