@@ -206,9 +206,12 @@ export function outer(x, y, out_3x3) {
 }
 
 export function cross(x, y, out) {
-  out[0] = x[1] * y[2] - x[2] * y[1];
-  out[1] = x[2] * y[0] - x[0] * y[2];
-  out[2] = x[0] * y[1] - x[1] * y[0];
+  const Zx = x[1] * y[2] - x[2] * y[1];
+  const Zy = x[2] * y[0] - x[0] * y[2];
+  const Zz = x[0] * y[1] - x[1] * y[0];
+  out[0] = Zx;
+  out[1] = Zy;
+  out[2] = Zz;
   return out;
 }
 
