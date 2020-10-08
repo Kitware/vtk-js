@@ -167,7 +167,6 @@ function vtkDataSetAttributes(publicAPI, model) {
         value
       );
     publicAPI[`copy${value}Off`] = () => {
-      publicAPI.initialize();
       const attType = value.toUpperCase();
       model.copyAttributeFlags[AttributeCopyOperations.PASSDATA][
         AttributeTypes[attType]
@@ -175,7 +174,7 @@ function vtkDataSetAttributes(publicAPI, model) {
     };
   });
 
-  publicAPI.initialize = macro.chain(publicAPI.initialize, () => {
+  publicAPI.initializeAttributeCopyFlags = () => {
     // Default to copying all attributes in every circumstance:
     model.copyAttributeFlags = [];
     Object.keys(AttributeCopyOperations)
@@ -200,7 +199,12 @@ function vtkDataSetAttributes(publicAPI, model) {
     model.copyAttributeFlags[AttributeCopyOperations.COPYTUPLE][
       AttributeTypes.PEDIGREEIDS
     ] = false;
-  });
+  };
+
+  publicAPI.initialize = macro.chain(
+    publicAPI.initialize,
+    publicAPI.initializeAttributeCopyFlags
+  );
 
   // Process dataArrays if any
   if (model.dataArrays && Object.keys(model.dataArrays).length) {
@@ -223,6 +227,8 @@ function vtkDataSetAttributes(publicAPI, model) {
       return { data: arrNew };
     });
   };
+
+  publicAPI.initializeAttributeCopyFlags();
 }
 
 // ----------------------------------------------------------------------------
