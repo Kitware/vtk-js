@@ -1,20 +1,25 @@
 import macro from 'vtk.js/Sources/macro';
 import vtkActor from 'vtk.js/Sources/Rendering/Core/Actor';
-import vtkCubeSource from 'vtk.js/Sources/Filters/Sources/CubeSource';
 import vtkDataArray from 'vtk.js/Sources/Common/Core/DataArray';
 import vtkGlyph3DMapper from 'vtk.js/Sources/Rendering/Core/Glyph3DMapper';
 import vtkHandleRepresentation from 'vtk.js/Sources/Widgets/Representations/HandleRepresentation';
+import vtkPixelSpaceCallbackMapper from 'vtk.js/Sources/Rendering/Core/PixelSpaceCallbackMapper';
 import vtkPolyData from 'vtk.js/Sources/Common/DataModel/PolyData';
+import vtkArrow2DSource from 'vtk.js/Sources/Filters/Sources/Arrow2DSource/';
+import vtkTriangleFilter from 'vtk.js/Sources/Filters/General/TriangleFilter/';
 
+import Constants from 'vtk.js/Sources/Widgets/Widgets3D/LineWidget/Constants';
 import { ScalarMode } from 'vtk.js/Sources/Rendering/Core/Mapper/Constants';
 
+const { handleRepresentationType } = Constants;
+
 // ----------------------------------------------------------------------------
-// vtkCubeHandleRepresentation methods
+// vtkArrowHandleRepresentation methods
 // ----------------------------------------------------------------------------
 
-function vtkCubeHandleRepresentation(publicAPI, model) {
+function vtkArrowHandleRepresentation(publicAPI, model) {
   // Set our className
-  model.classHierarchy.push('vtkCubeHandleRepresentation');
+  model.classHierarchy.push('vtkArrowHandleRepresentation');
 
   // --------------------------------------------------------------------------
   // Internal polydata dataset
@@ -25,7 +30,7 @@ function vtkCubeHandleRepresentation(publicAPI, model) {
     points: model.internalPolyData.getPoints(),
     scale: vtkDataArray.newInstance({
       name: 'scale',
-      numberOfComponents: 3,
+      numberOfComponents: 1,
       empty: true,
     }),
     color: vtkDataArray.newInstance({
@@ -37,9 +42,42 @@ function vtkCubeHandleRepresentation(publicAPI, model) {
   model.internalPolyData.getPointData().addArray(model.internalArrays.scale);
   model.internalPolyData.getPointData().addArray(model.internalArrays.color);
 
+  function detectArrowShape() {
+    switch (model.handleType) {
+      case handleRepresentationType.STAR: {
+        const initialValues = { shapeName: 'star' };
+        return vtkArrow2DSource.newInstance(initialValues);
+      }
+      case handleRepresentationType.ARROWHEAD3: {
+        const initialValues = { shapeName: 'triangle' };
+        return vtkArrow2DSource.newInstance(initialValues);
+      }
+      case handleRepresentationType.ARROWHEAD4: {
+        const initialValues = { shapeName: 'arrow4points' };
+        return vtkArrow2DSource.newInstance(initialValues);
+      }
+      case handleRepresentationType.ARROWHEAD6: {
+        const initialValues = { shapeName: 'arrow6points' };
+        return vtkArrow2DSource.newInstance(initialValues);
+      }
+      default: {
+        const initialValues = { shapeName: 'triangle' };
+        return vtkArrow2DSource.newInstance(initialValues);
+      }
+    }
+  }
+
   // --------------------------------------------------------------------------
   // Generic rendering pipeline
   // --------------------------------------------------------------------------
+
+  model.displayMapper = vtkPixelSpaceCallbackMapper.newInstance();
+  model.displayActor = vtkActor.newInstance();
+  // model.displayActor.getProperty().setOpacity(0); // don't show in 3D
+  model.displayActor.setMapper(model.displayMapper);
+  model.displayMapper.setInputConnection(publicAPI.getOutputPort());
+  publicAPI.addActor(model.displayActor);
+  model.alwaysVisibleActors = [model.displayActor];
 
   model.mapper = vtkGlyph3DMapper.newInstance({
     scaleArray: 'scale',
@@ -47,13 +85,46 @@ function vtkCubeHandleRepresentation(publicAPI, model) {
     scalarMode: ScalarMode.USE_POINT_FIELD_DATA,
   });
   model.actor = vtkActor.newInstance();
-  model.glyph = vtkCubeSource.newInstance();
+  model.glyph = detectArrowShape();
 
+  const triangleFilter = vtkTriangleFilter.newInstance();
+  triangleFilter.setInputConnection(model.glyph.getOutputPort());
   model.mapper.setInputConnection(publicAPI.getOutputPort(), 0);
-  model.mapper.setInputConnection(model.glyph.getOutputPort(), 1);
+  model.mapper.setInputConnection(triangleFilter.getOutputPort(), 1);
   model.actor.setMapper(model.mapper);
 
   publicAPI.addActor(model.actor);
+
+  // --------------------------------------------------------------------------
+
+  publicAPI.setGlyphResolution = macro.chain(
+    publicAPI.setGlyphResolution,
+    (r) => model.glyph.setPhiResolution(r) && model.glyph.setThetaResolution(r)
+  );
+
+  // --------------------------------------------------------------------------
+
+  function callbackProxy(coords) {
+    if (model.displayCallback) {
+      const filteredList = [];
+      const states = publicAPI.getRepresentationStates();
+      for (let i = 0; i < states.length; i++) {
+        if (states[i].getActive()) {
+          filteredList.push(coords[i]);
+        }
+      }
+      if (filteredList.length) {
+        model.displayCallback(filteredList);
+        return;
+      }
+    }
+    model.displayCallback();
+  }
+
+  publicAPI.setDisplayCallback = (callback) => {
+    model.displayCallback = callback;
+    model.displayMapper.setCallback(callback ? callbackProxy : null);
+  };
 
   // --------------------------------------------------------------------------
 
@@ -64,8 +135,8 @@ function vtkCubeHandleRepresentation(publicAPI, model) {
 
     if (color.getNumberOfValues() !== totalCount) {
       // Need to resize dataset
-      points.setData(new Float32Array(3 * totalCount));
-      scale.setData(new Float32Array(3 * totalCount));
+      points.setData(new Float32Array(3 * totalCount), 3);
+      scale.setData(new Float32Array(totalCount));
       color.setData(new Float32Array(totalCount));
     }
     const typedArray = {
@@ -106,7 +177,9 @@ function vtkCubeHandleRepresentation(publicAPI, model) {
 // Object factory
 // ----------------------------------------------------------------------------
 
-const DEFAULT_VALUES = {};
+const DEFAULT_VALUES = {
+  defaultScale: 1,
+};
 
 // ----------------------------------------------------------------------------
 
@@ -114,17 +187,17 @@ export function extend(publicAPI, model, initialValues = {}) {
   Object.assign(model, DEFAULT_VALUES, initialValues);
 
   vtkHandleRepresentation.extend(publicAPI, model, initialValues);
-  macro.get(publicAPI, model, ['glyph', 'mapper', 'actor', 'defaultScale']);
+  macro.get(publicAPI, model, ['glyph', 'mapper', 'actor']);
 
   // Object specific methods
-  vtkCubeHandleRepresentation(publicAPI, model);
+  vtkArrowHandleRepresentation(publicAPI, model);
 }
 
 // ----------------------------------------------------------------------------
 
 export const newInstance = macro.newInstance(
   extend,
-  'vtkCubeHandleRepresentation'
+  'vtkArrowHandleRepresentation'
 );
 
 // ----------------------------------------------------------------------------

@@ -15,8 +15,13 @@ function vtkSVGLandmarkRepresentation(publicAPI, model) {
     const list = publicAPI.getRepresentationStates();
 
     const coords = [];
+    const texts = [];
     for (let i = 0; i < list.length; i++) {
       coords.push(list[i].getOrigin());
+      if (typeof list[i].getText !== 'undefined') texts.push(list[i].getText());
+      else {
+        texts.push(false);
+      }
     }
 
     return publicAPI.worldPointsToPixelSpace(coords).then((pixelSpace) => {
@@ -30,12 +35,15 @@ function vtkSVGLandmarkRepresentation(publicAPI, model) {
         const x = xy[0];
         const y = winHeight - xy[1];
 
-        const circle = createSvgElement('circle');
-        Object.keys(model.circleProps || {}).forEach((prop) =>
-          circle.setAttribute(prop, model.circleProps[prop])
-        );
-        circle.setAttribute('cx', x);
-        circle.setAttribute('cy', y);
+        let circle = {};
+        if (model.visibleCircle === true) {
+          circle = createSvgElement('circle');
+          Object.keys(model.circleProps || {}).forEach((prop) =>
+            circle.setAttribute(prop, model.circleProps[prop])
+          );
+          circle.setAttribute('cx', x);
+          circle.setAttribute('cy', y);
+        }
 
         const text = createSvgElement('text');
         Object.keys(model.textProps || {}).forEach((prop) =>
@@ -43,9 +51,9 @@ function vtkSVGLandmarkRepresentation(publicAPI, model) {
         );
         text.setAttribute('x', x);
         text.setAttribute('y', y);
-        text.textContent = `L${i}`;
+        text.textContent = texts[i] !== false ? texts[i] : `L${i}`;
 
-        root.appendChild(circle);
+        if (model.visibleCircle) root.appendChild(circle);
         root.appendChild(text);
       }
 
@@ -78,7 +86,7 @@ export function extend(publicAPI, model, initialValues = {}) {
 
   vtkSVGRepresentation.extend(publicAPI, model, initialValues);
 
-  macro.setGet(publicAPI, model, ['circleProps', 'textProps']);
+  macro.setGet(publicAPI, model, ['circleProps', 'textProps', 'name']);
 
   // Object specific methods
   vtkSVGLandmarkRepresentation(publicAPI, model);

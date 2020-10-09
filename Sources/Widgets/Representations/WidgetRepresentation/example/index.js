@@ -61,6 +61,10 @@ const compositeState = vtkStateBuilder
   })
   .build();
 
+console.log('composite States');
+console.log(compositeState);
+console.log(compositeState.getClassName());
+
 // -----------------------------------------------------------
 // Representation
 // -----------------------------------------------------------
@@ -87,7 +91,15 @@ renderWindow.render();
 fullScreenRenderer.addController(controlPanel);
 
 function updateState(e) {
+  //	console.log("dans update state l ev e ");
+  //	console.log(e);
   const { name, field, index } = e.currentTarget.dataset;
+  console.log('update state still');
+  console.log(compositeState);
+  console.log(name);
+  console.log(field);
+  console.log(index);
+  console.log(e.currentTarget.dataset);
   const value = Number(e.currentTarget.value);
   const stateObj = compositeState.get(field)[field];
   if (name) {
@@ -105,6 +117,8 @@ function updateState(e) {
 
 const fieldsElems = document.querySelectorAll('.stateField');
 for (let i = 0; i < fieldsElems.length; i++) {
+  //	console.log("boucle fields elem");
+  //	console.log(fieldsElems[i]);
   fieldsElems[i].addEventListener('input', updateState);
 }
 
@@ -112,6 +126,8 @@ for (let i = 0; i < fieldsElems.length; i++) {
 
 const toggleElems = document.querySelectorAll('.active');
 for (let i = 0; i < toggleElems.length; i++) {
+  //	console.log("boucle activestate");
+  //	console.log(toggleElems[i]);
   toggleElems[i].addEventListener('change', (e) => {
     const { field } = e.currentTarget.dataset;
     const active = !!e.target.checked;

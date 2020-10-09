@@ -71,8 +71,12 @@ function vtkTriangleFilter(publicAPI, model) {
     }
 
     const dataset = vtkPolyData.newInstance();
-    dataset.getPoints().setData(macro.TYPED_ARRAYS[pointsDataType].from(newPoints));
-    dataset.getPolys().setData(macro.TYPED_ARRAYS[cellsDataType].from(newCells));
+    dataset
+      .getPoints()
+      .setData(macro.TYPED_ARRAYS[pointsDataType].from(newPoints));
+    dataset
+      .getPolys()
+      .setData(macro.TYPED_ARRAYS[cellsDataType].from(newCells));
 
     outData[0] = dataset;
   };
