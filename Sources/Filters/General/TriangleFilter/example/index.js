@@ -19,15 +19,14 @@ const renderWindow = fullScreenRenderer.getRenderWindow();
 // Example code
 // ----------------------------------------------------------------------------
 
-const initialValues = { shapeName: 'triangle' }; // choices include triangle, star, arrow4points, arrow6points
-const triangleSource = vtk2DShape.newInstance(initialValues);
+const initialValues = { shape: 'star' }; // choices include triangle, star, arrow4points, arrow6points
+const shapeSource = vtk2DShape.newInstance(initialValues);
 const triangleFilter = vtkTriangleFilter.newInstance();
 const mapper = vtkMapper.newInstance();
 const actor = vtkActor.newInstance();
 
-triangleFilter.setInputConnection(triangleSource.getOutputPort());
+triangleFilter.setInputConnection(shapeSource.getOutputPort());
 mapper.setInputConnection(triangleFilter.getOutputPort());
-// mapper.setInputConnection(triangleSource.getOutputPort());
 actor.setMapper(mapper);
 
 renderer.addActor(actor);

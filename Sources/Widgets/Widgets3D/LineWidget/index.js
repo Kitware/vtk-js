@@ -20,7 +20,7 @@ import { updateTextPosition } from 'vtk.js/Sources/Widgets/Widgets3D/LineWidget/
 // Factory
 // ----------------------------------------------------------------------------
 
-const { handleRepresentationType, handleRepresentation } = Constants;
+const { HandleRepresentationType, HandleRepresentation } = Constants;
 
 const shapeToRepresentation = {};
 
@@ -32,42 +32,42 @@ function vtkLineWidget(publicAPI, model) {
   // custom handles set in default values
   // 3D source handles
   shapeToRepresentation[
-    handleRepresentationType.SPHERE
+    HandleRepresentationType.SPHERE
   ] = vtkSphereHandleRepresentation;
   shapeToRepresentation[
-    handleRepresentationType.CUBE
+    HandleRepresentationType.CUBE
   ] = vtkCubeHandleRepresentation;
   shapeToRepresentation[
-    handleRepresentationType.CONE
+    HandleRepresentationType.CONE
   ] = vtkConeHandleRepresentation;
   shapeToRepresentation[
-    handleRepresentationType.NONE
+    HandleRepresentationType.NONE
   ] = vtkSphereHandleRepresentation;
   // 2D source handles
   shapeToRepresentation[
-    handleRepresentationType.ARROWHEAD3
+    HandleRepresentationType.ARROWHEAD3
   ] = vtkArrowHandleRepresentation;
   shapeToRepresentation[
-    handleRepresentationType.ARROWHEAD4
+    HandleRepresentationType.ARROWHEAD4
   ] = vtkArrowHandleRepresentation;
   shapeToRepresentation[
-    handleRepresentationType.ARROWHEAD6
+    HandleRepresentationType.ARROWHEAD6
   ] = vtkArrowHandleRepresentation;
   shapeToRepresentation[
-    handleRepresentationType.STAR
+    HandleRepresentationType.STAR
   ] = vtkArrowHandleRepresentation;
   shapeToRepresentation[
-    handleRepresentationType.CIRCLE
+    HandleRepresentationType.CIRCLE
   ] = vtkCircleHandleRepresentation;
 
   function initializeHandleRepresentations() {
-    handleRepresentation[0] = shapeToRepresentation[model.handle1Shape];
-    if (!handleRepresentation[0]) {
-      handleRepresentation[0] = vtkSphereHandleRepresentation;
+    HandleRepresentation[0] = shapeToRepresentation[model.handle1Shape];
+    if (!HandleRepresentation[0]) {
+      HandleRepresentation[0] = vtkSphereHandleRepresentation;
     }
-    handleRepresentation[1] = shapeToRepresentation[model.handle2Shape];
-    if (!handleRepresentation[1]) {
-      handleRepresentation[1] = vtkSphereHandleRepresentation;
+    HandleRepresentation[1] = shapeToRepresentation[model.handle2Shape];
+    if (!HandleRepresentation[1]) {
+      HandleRepresentation[1] = vtkSphereHandleRepresentation;
     }
   }
 
@@ -80,6 +80,7 @@ function vtkLineWidget(publicAPI, model) {
   ];
   model.behavior = widgetBehavior;
   model.widgetState = stateGenerator();
+  model.widgetState.setPositionOnLine(model.positionOnLine);
   initializeHandleRepresentations();
 
   publicAPI.getRepresentationsForViewType = (viewType) => {
@@ -91,7 +92,7 @@ function vtkLineWidget(publicAPI, model) {
       default:
         return [
           {
-            builder: handleRepresentation[0],
+            builder: HandleRepresentation[0],
             labels: ['handle1'],
             initialValues: {
               scaleInPixels: true, // for scaling handles, optionnal
@@ -99,7 +100,7 @@ function vtkLineWidget(publicAPI, model) {
             },
           },
           {
-            builder: handleRepresentation[1],
+            builder: HandleRepresentation[1],
             labels: ['handle2'],
             initialValues: {
               scaleInPixels: true, // for scaling handles, optionnal
@@ -110,7 +111,7 @@ function vtkLineWidget(publicAPI, model) {
           {
             builder: vtkSVGLandmarkRepresentation,
             initialValues: {
-              visibleCircle: true,
+              showCircle: false,
             },
             labels: ['SVGtext'],
           },
@@ -146,15 +147,9 @@ function vtkLineWidget(publicAPI, model) {
   };
 
   publicAPI.updateTextProps = (input, prop) => {
-    if (prop === 'linePos') publicAPI.setLinePos(input / 100);
-		console.log("essayons de faire passer la data dans le state");
-//		model.setResetBvForPos(true);
-		updateTextPosition(model, publicAPI.getLinePos());
-
-	//	model.setResetBvForPos(false);
-		//publicAPI.updateHandleFromUI();
-		model.behavior = widgetBehavior;
-		console.log("allo ca marche plus? " + model.linePos);
+    if (prop === 'positionOnLine') publicAPI.setPositionOnLine(input / 100);
+    updateTextPosition(model, publicAPI.getPositionOnLine());
+    model.widgetState.setPositionOnLine(publicAPI.getPositionOnLine());
   };
 
   publicAPI.updateHandleFromUI = (input, handleId) => {
@@ -187,10 +182,9 @@ function vtkLineWidget(publicAPI, model) {
 // ----------------------------------------------------------------------------
 
 const DEFAULT_VALUES = {
-  handle1Shape: handleRepresentationType.ARROWHEAD4,
-  handle2Shape: handleRepresentationType.ARROWHEAD4,
-  linePos: 0.5,
-	resetBvForPos: false,
+  handle1Shape: HandleRepresentationType.ARROWHEAD6,
+  handle2Shape: HandleRepresentationType.ARROWHEAD6,
+  positionOnLine: 0.5, // Position of the text on the line where 0 is handle1 and 1 is handle2
 };
 
 // ----------------------------------------------------------------------------
@@ -203,8 +197,7 @@ export function extend(publicAPI, model, initialValues = {}) {
     'manipulator',
     'handle1Shape',
     'handle2Shape',
-    'linePos',
-	//	'resetBvForPos',
+    'positionOnLine',
   ]);
   vtkLineWidget(publicAPI, model);
 }

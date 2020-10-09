@@ -14,15 +14,14 @@ function vtkSVGLandmarkRepresentation(publicAPI, model) {
   publicAPI.render = () => {
     const list = publicAPI.getRepresentationStates();
 
-    const coords = [];
-    const texts = [];
-    for (let i = 0; i < list.length; i++) {
-      coords.push(list[i].getOrigin());
-      if (typeof list[i].getText !== 'undefined') texts.push(list[i].getText());
-      else {
-        texts.push(false);
-      }
-    }
+    let index = 0;
+    const coords = list.map((state) => state.getOrigin());
+    const texts = list.map((state) => {
+      const ret =
+        typeof state.getText !== 'undefined' ? state.getText() : `L${index}`;
+      index++;
+      return ret;
+    });
 
     return publicAPI.worldPointsToPixelSpace(coords).then((pixelSpace) => {
       const points2d = pixelSpace.coords;
@@ -36,13 +35,14 @@ function vtkSVGLandmarkRepresentation(publicAPI, model) {
         const y = winHeight - xy[1];
 
         let circle = {};
-        if (model.visibleCircle === true) {
+        if (model.showCircle === true) {
           circle = createSvgElement('circle');
           Object.keys(model.circleProps || {}).forEach((prop) =>
             circle.setAttribute(prop, model.circleProps[prop])
           );
           circle.setAttribute('cx', x);
           circle.setAttribute('cy', y);
+          root.appendChild(circle);
         }
 
         const text = createSvgElement('text');
@@ -51,9 +51,8 @@ function vtkSVGLandmarkRepresentation(publicAPI, model) {
         );
         text.setAttribute('x', x);
         text.setAttribute('y', y);
-        text.textContent = texts[i] !== false ? texts[i] : `L${i}`;
+        text.textContent = texts[i];
 
-        if (model.visibleCircle) root.appendChild(circle);
         root.appendChild(text);
       }
 

@@ -1,14 +1,14 @@
-export const direction = [0, 0, 0];
+export const Direction = [0, 0, 0];
 
-export const handleRepresentation = [0, 0, 0];
+export const HandleRepresentation = [0, 0, 0];
 
-export const handleBehavior = {
+export const HandleBehavior = {
   HANDLE1_ALONE: 3,
   HANDLE2: 2,
   HANDLE1: 1,
 };
 
-export const handleRepresentationType = {
+export const HandleRepresentationType = {
   // 3D handles
   SPHERE: 'sphere',
   CUBE: 'cube',
@@ -23,8 +23,8 @@ export const handleRepresentationType = {
 };
 
 export default {
-  handleBehavior,
-  direction,
-  handleRepresentation,
-  handleRepresentationType,
+  HandleBehavior,
+  Direction,
+  HandleRepresentation,
+  HandleRepresentationType,
 };

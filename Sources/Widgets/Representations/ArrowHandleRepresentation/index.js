@@ -1,17 +1,18 @@
 import macro from 'vtk.js/Sources/macro';
 import vtkActor from 'vtk.js/Sources/Rendering/Core/Actor';
+import vtkArrow2DSource from 'vtk.js/Sources/Filters/Sources/Arrow2DSource/';
 import vtkDataArray from 'vtk.js/Sources/Common/Core/DataArray';
+import vtkFollower from 'vtk.js/Sources/Rendering/Core/Follower';
 import vtkGlyph3DMapper from 'vtk.js/Sources/Rendering/Core/Glyph3DMapper';
 import vtkHandleRepresentation from 'vtk.js/Sources/Widgets/Representations/HandleRepresentation';
 import vtkPixelSpaceCallbackMapper from 'vtk.js/Sources/Rendering/Core/PixelSpaceCallbackMapper';
 import vtkPolyData from 'vtk.js/Sources/Common/DataModel/PolyData';
-import vtkArrow2DSource from 'vtk.js/Sources/Filters/Sources/Arrow2DSource/';
 import vtkTriangleFilter from 'vtk.js/Sources/Filters/General/TriangleFilter/';
 
 import Constants from 'vtk.js/Sources/Widgets/Widgets3D/LineWidget/Constants';
 import { ScalarMode } from 'vtk.js/Sources/Rendering/Core/Mapper/Constants';
 
-const { handleRepresentationType } = Constants;
+const { HandleRepresentationType } = Constants;
 
 // ----------------------------------------------------------------------------
 // vtkArrowHandleRepresentation methods
@@ -43,28 +44,23 @@ function vtkArrowHandleRepresentation(publicAPI, model) {
   model.internalPolyData.getPointData().addArray(model.internalArrays.color);
 
   function detectArrowShape() {
-    switch (model.handleType) {
-      case handleRepresentationType.STAR: {
-        const initialValues = { shapeName: 'star' };
-        return vtkArrow2DSource.newInstance(initialValues);
-      }
-      case handleRepresentationType.ARROWHEAD3: {
-        const initialValues = { shapeName: 'triangle' };
-        return vtkArrow2DSource.newInstance(initialValues);
-      }
-      case handleRepresentationType.ARROWHEAD4: {
-        const initialValues = { shapeName: 'arrow4points' };
-        return vtkArrow2DSource.newInstance(initialValues);
-      }
-      case handleRepresentationType.ARROWHEAD6: {
-        const initialValues = { shapeName: 'arrow6points' };
-        return vtkArrow2DSource.newInstance(initialValues);
-      }
-      default: {
-        const initialValues = { shapeName: 'triangle' };
-        return vtkArrow2DSource.newInstance(initialValues);
-      }
-    }
+    const representationToSource = {
+      [HandleRepresentationType.STAR]: {
+        initialValues: { shape: 'star' },
+      },
+      [HandleRepresentationType.ARROWHEAD3]: {
+        initialValues: { shape: 'triangle' },
+      },
+      [HandleRepresentationType.ARROWHEAD4]: {
+        initialValues: { shape: 'arrow4points' },
+      },
+      [HandleRepresentationType.ARROWHEAD6]: {
+        initialValues: { shape: 'arrow6points' },
+      },
+    };
+    return vtkArrow2DSource.newInstance(
+      representationToSource[model.handleType].initialValues
+    );
   }
 
   // --------------------------------------------------------------------------
@@ -84,7 +80,8 @@ function vtkArrowHandleRepresentation(publicAPI, model) {
     colorByArrayName: 'color',
     scalarMode: ScalarMode.USE_POINT_FIELD_DATA,
   });
-  model.actor = vtkActor.newInstance();
+  // model.actor = vtkActor.newInstance();
+  model.actor = vtkFollower.newInstance();
   model.glyph = detectArrowShape();
 
   const triangleFilter = vtkTriangleFilter.newInstance();

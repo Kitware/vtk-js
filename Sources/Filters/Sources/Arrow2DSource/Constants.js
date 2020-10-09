@@ -1,8 +1,8 @@
-export const shapeType = {
+export const ShapeType = {
   TRIANGLE: 'triangle',
   STAR: 'star',
-  ARROW4: 'arrow4points',
-  ARROW6: 'arrow6points',
+  ARROW_4: 'arrow4points',
+  ARROW_6: 'arrow6points',
 };
 
-export default { shapeType };
+export default { ShapeType };

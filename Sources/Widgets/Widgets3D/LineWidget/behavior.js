@@ -9,7 +9,7 @@ import {
 
 const MAX_POINTS = 2;
 
-const { direction, handleBehavior, handleRepresentationType } = Constants;
+const { Direction, HandleBehavior, HandleRepresentationType } = Constants;
 
 export default function widgetBehavior(publicAPI, model) {
   model.classHierarchy.push('vtkLineWidgetProp');
@@ -17,8 +17,6 @@ export default function widgetBehavior(publicAPI, model) {
   // --------------------------------------------------------------------------
   // Display 2D
   // --------------------------------------------------------------------------
-
-	console.log("reset du behavior");
 
   publicAPI.setDisplayCallback = (callback) =>
     model.representations[0].setDisplayCallback(callback);
@@ -31,9 +29,28 @@ export default function widgetBehavior(publicAPI, model) {
     return e.altKey || e.controlKey || e.shiftKey;
   }
 
+  function calcTextPosWithLineAngle() {
+    const pos1 = model.widgetState.getHandle1List()[0].getOrigin();
+    const pos2 = model.widgetState.getHandle2List()[0].getOrigin();
+    const SVGTextProps = model.representations[2].getTextProps();
+
+    if (pos1[0] <= pos2[0]) {
+      if (pos1[1] <= pos2[1]) {
+        SVGTextProps.dy = Math.abs(SVGTextProps.dy);
+      } else {
+        SVGTextProps.dy = Math.abs(SVGTextProps.dy) * -1;
+      }
+    } else {
+      SVGTextProps.dy =
+        pos1[1] <= pos2[1]
+          ? Math.abs(SVGTextProps.dy) * -1
+          : Math.abs(SVGTextProps.dy);
+    }
+  }
+
   function updateHandleDirection(behavior, callData) {
     let bv = behavior;
-    if (bv === handleBehavior.HANDLE1_ALONE) {
+    if (bv === HandleBehavior.HANDLE1_ALONE) {
       const handle1Pos = model.widgetState.getHandle1List()[0].getOrigin();
       const WorldMousePos = publicAPI.computeWorldToDisplay(
         model.renderer,
@@ -50,7 +67,7 @@ export default function widgetBehavior(publicAPI, model) {
       vtkMath.subtract(
         model.widgetState.getHandle1List()[0].getOrigin(),
         mousePos,
-        direction
+        Direction
       );
       bv = 0;
     } else {
@@ -58,18 +75,18 @@ export default function widgetBehavior(publicAPI, model) {
       bv -= 1;
       const handle1Pos = model.widgetState.getHandle1List()[0].getOrigin();
       const handle2Pos = model.widgetState.getHandle2List()[0].getOrigin();
-      vtkMath.subtract(handle1Pos, handle2Pos, direction);
-      vtkMath.multiplyScalar(direction, modifier);
+      vtkMath.subtract(handle1Pos, handle2Pos, Direction);
+      vtkMath.multiplyScalar(Direction, modifier);
     }
-    model.representations[bv].getGlyph().setDirection(direction);
+    model.representations[bv].getGlyph().setDirection(Direction);
   }
 
   function isHandleOrientable(handleType) {
     if (
-      handleType === handleRepresentationType.CONE ||
-      handleType === handleRepresentationType.ARROWHEAD3 ||
-      handleType === handleRepresentationType.ARROWHEAD4 ||
-      handleType === handleRepresentationType.ARROWHEAD6
+      handleType === HandleRepresentationType.CONE ||
+      handleType === HandleRepresentationType.ARROWHEAD3 ||
+      handleType === HandleRepresentationType.ARROWHEAD4 ||
+      handleType === HandleRepresentationType.ARROWHEAD6
     )
       return 1;
     return 0;
@@ -82,33 +99,19 @@ export default function widgetBehavior(publicAPI, model) {
     );
   }
 
-  // set in public to update handle  direction when handle change in UI
+  // set in public to update handle  Direction when handle change in UI
   publicAPI.setHandleDirection = () => {
     if (isHandleOrientable(model.handle1Shape)) {
-      updateHandleDirection(handleBehavior.HANDLE1);
+      updateHandleDirection(HandleBehavior.HANDLE1);
     }
     if (isHandleOrientable(model.handle2Shape)) {
-      updateHandleDirection(handleBehavior.HANDLE2);
+      updateHandleDirection(HandleBehavior.HANDLE2);
     }
   };
 
   // --------------------------------------------------------------------------
   // Left press: Select handle to drag
   // --------------------------------------------------------------------------
-
-  function calcTextPosWithLineAngle() {
-    const y1 = Number(model.widgetState.getHandle1List()[0].getOrigin()[1]);
-    const y2 = Number(model.widgetState.getHandle2List()[0].getOrigin()[1]);
-
-    let SVGTextProps = model.representations[2].getTextProps();
-    if (
-      (y1 <= y2 && Number(SVGTextProps.dy) < 0) ||
-      (y1 >= y2 && Number(SVGTextProps.dy) > 0)
-    ) {
-      SVGTextProps.dy *= -1;
-      //	console.log("yes");
-    }
-  }
 
   publicAPI.handleLeftButtonPress = (e) => {
     const nbHandle1 = model.widgetState.getHandle1List().length;
@@ -121,7 +124,6 @@ export default function widgetBehavior(publicAPI, model) {
     ) {
       return macro.VOID;
     }
-
     const moveHandle = model.widgetState.getMoveHandle();
     if (
       model.activeState === model.widgetState.getMoveHandle() &&
@@ -143,7 +145,9 @@ export default function widgetBehavior(publicAPI, model) {
       publicAPI.setHandleDirection();
       const SVGLayerText = model.widgetState.addText();
       SVGLayerText.setText(SVGLayerText.getState().text);
-      SVGLayerText.setOrigin(calculateTextPosition(model));
+      SVGLayerText.setOrigin(
+        calculateTextPosition(model, model.widgetState.getPositionOnLine())
+      );
       calcTextPosWithLineAngle();
     } else {
       isDragging = true;
@@ -163,7 +167,6 @@ export default function widgetBehavior(publicAPI, model) {
       model.widgetState.getHandle1List().length +
       model.widgetState.getHandle2List().length;
     if (model.hasFocus && nbHandles === MAX_POINTS) {
-      console.log('test1');
       publicAPI.loseFocus();
       return macro.VOID;
     }
@@ -188,15 +191,13 @@ export default function widgetBehavior(publicAPI, model) {
         publicAPI.invokeInteractionEvent();
         if (isDragging === true) {
           if (isOrientable()) {
-            console.log('on veut bouger le texte' + model.linePos);
-            updateTextPosition(model, model.linePos);
-            //calculateTextPosition(model);
+            updateTextPosition(model, model.widgetState.getPositionOnLine());
+            calcTextPosWithLineAngle();
             publicAPI.setHandleDirection();
           }
         } else if (nbHandles === 1 && isHandleOrientable(model.handle1Shape)) {
-          updateHandleDirection(handleBehavior.HANDLE1_ALONE, callData);
+          updateHandleDirection(HandleBehavior.HANDLE1_ALONE, callData);
         }
-
         return macro.EVENT_ABORT;
       }
     }

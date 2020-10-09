@@ -39,8 +39,9 @@ export default function generateState() {
         text: 'initialValues text',
         visible: false,
         origin: [0, 0, 0],
-				linePos: 0,
+        positionOnLine: 0,
       },
     })
+    .addField({ name: 'positionOnLine', initialValues: 0 })
     .build();
 }

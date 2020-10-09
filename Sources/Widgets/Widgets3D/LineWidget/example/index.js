@@ -62,16 +62,14 @@ document.querySelector('#txtIpt').addEventListener('keyup', () => {
   renderWindow.render();
 });
 
-
 document.querySelector('#linePos').addEventListener('input', (ev) => {
   const input = document.getElementById('linePos').value;
-  widget.updateTextProps(input, 'linePos');
+  widget.updateTextProps(input, 'positionOnLine');
   widgetManager.addWidget(widget);
   renderWindow.render();
 });
 
 // Handle Sources ------------------------------------------
-// to improve, change your approach, check blocknote
 
 document.querySelector('#idh1').addEventListener('input', (ev) => {
   const e = document.getElementById('idh1');
