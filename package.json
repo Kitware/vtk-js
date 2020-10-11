@@ -32,10 +32,12 @@
     "blueimp-md5": "2.13.0",
     "commander": "5.1.0",
     "gl-matrix": "3.3.0",
+    "js2dts": "^0.3.3",
     "jszip": "3.4.0",
     "pako": "1.0.11",
     "seedrandom": "3.0.5",
     "shelljs": "0.8.4",
+    "walkdir": "^0.4.1",
     "webvr-polyfill": "0.10.11",
     "webworker-promise": "0.4.2",
     "xmlbuilder": "15.1.1"
@@ -85,7 +87,8 @@
     "test:firefox": "karma start ./karma.conf.js --browsers Firefox",
     "test:firefox-debug": "karma start ./karma.conf.js --browsers Firefox --no-single-run",
     "commit": "git cz",
-    "semantic-release": "semantic-release"
+    "semantic-release": "semantic-release",
+    "generate-d-ts-files": "node generateDTSFiles.js"
   },
   "config": {
     "commitizen": {
