@@ -707,6 +707,24 @@ function vtkTubeFilter(publicAPI, model) {
       output.getPointData().addArray(newArray); // concat newArray to end
     }
 
+    // loop over cellData arrays and resize based on numNewCells
+    let numNewCells = inLines.getNumberOfCells() * model.numberOfSides;
+    if (model.capping) {
+      numNewCells += 2;
+    }
+    const numCellArrays = input.getCellData().getNumberOfArrays();
+    for (let i = 0; i < numCellArrays; i++) {
+      oldArray = input.getCellData().getArrayByIndex(i);
+      newArray = vtkDataArray.newInstance({
+        name: oldArray.getName(),
+        dataType: oldArray.getDataType(),
+        numberOfComponents: oldArray.getNumberOfComponents(),
+        size: numNewCells * oldArray.getNumberOfComponents(),
+      });
+      output.getCellData().removeArrayByIndex(0); // remove oldArray from beginning
+      output.getCellData().addArray(newArray); // concat newArray to end
+    }
+
     const inScalars = publicAPI.getInputArrayToProcess(0);
     let outScalars = null;
     let range = [];
