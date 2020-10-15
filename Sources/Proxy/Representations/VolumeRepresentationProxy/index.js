@@ -222,41 +222,70 @@ function vtkVolumeRepresentationProxy(publicAPI, model) {
       publicAPI.updateProxyProperty
     );
     publicAPI.set(state);
+
+    // Check for 2D volumes
+    const numberOfDimensions = inputDataset
+      .getDimensions()
+      .reduce((number, dimension) => number + (dimension > 1 ? 1 : 0), 0);
+    if (numberOfDimensions === 2) {
+      publicAPI.setIs2DVolume(true);
+    }
   }
 
   model.sourceDependencies.push({ setInputData });
 
   // API ----------------------------------------------------------------------
 
+  /**
+   *  Choose whether the input volume should be treated as a 2D volume
+   *  (no volume rendering).
+   */
+  publicAPI.setIs2DVolume = (is2D) => {
+    model.is2DVolume = is2D;
+    if (is2D) {
+      if (publicAPI.getVisibility()) {
+        publicAPI.setSliceVisibility(true);
+      }
+      model.volume.setVisibility(false);
+    }
+  };
+
   publicAPI.isVisible = () => model.volume.getVisibility();
 
   publicAPI.setVisibility = (isVisible) => {
     if (isVisible) {
-      // Turn on only the volume
-      model.volume.setVisibility(true);
+      if (model.is2DVolume) {
+        publicAPI.setSliceVisibility(true);
+      } else {
+        model.volume.setVisibility(true);
+      }
     } else {
       // Turn off everything
       model.volume.setVisibility(false);
-      model.actorX.setVisibility(false);
-      model.actorY.setVisibility(false);
-      model.actorZ.setVisibility(false);
+      publicAPI.setSliceVisibility(false);
     }
   };
 
   publicAPI.getVisibility = () =>
-    model.volume.getVisibility() ||
-    model.actorX.getVisibility() ||
-    model.actorY.getVisibility() ||
-    model.actorZ.getVisibility();
+    model.volume.getVisibility() || publicAPI.getSliceVisibility();
 
   publicAPI.isVisible = publicAPI.getVisibility;
 
-  publicAPI.setSliceVisibility = macro.chain(
-    model.actorX.setVisibility,
-    model.actorY.setVisibility,
-    model.actorZ.setVisibility
-  );
-  publicAPI.getSliceVisibility = model.actorX.getVisibility;
+  publicAPI.setSliceVisibility = (isVisible) => {
+    if (isVisible && model.is2DVolume) {
+      const normalAxis = publicAPI.getInputDataSet().getDimensions().indexOf(1);
+      if (model.actors[normalAxis]) {
+        model.actors[normalAxis].setVisibility(true);
+      }
+    } else {
+      model.actors.forEach((actor) => actor.setVisibility(isVisible));
+    }
+  };
+
+  publicAPI.getSliceVisibility = () =>
+    model.actorX.getVisibility() ||
+    model.actorY.getVisibility() ||
+    model.actorZ.getVisibility();
 
   publicAPI.setSampleDistance = (distance = 0.4) => {
     if (model.sampleDistance !== distance) {
@@ -340,6 +369,7 @@ const DEFAULT_VALUES = {
   sampleDistance: -1,
   edgeGradient: -1,
   disableSolidColor: true,
+  is2DVolume: false,
 };
 
 // ----------------------------------------------------------------------------
@@ -349,7 +379,12 @@ export function extend(publicAPI, model, initialValues = {}) {
 
   // Object methods
   vtkAbstractRepresentationProxy.extend(publicAPI, model, initialValues);
-  macro.get(publicAPI, model, ['sampleDistance', 'edgeGradient', 'cropFilter']);
+  macro.get(publicAPI, model, [
+    'sampleDistance',
+    'edgeGradient',
+    'cropFilter',
+    'is2DVolume',
+  ]);
 
   // Object specific methods
   vtkVolumeRepresentationProxy(publicAPI, model);
