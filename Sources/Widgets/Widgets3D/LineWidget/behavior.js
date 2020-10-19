@@ -13,7 +13,6 @@ const { Direction, HandleBehavior, HandleRepresentationType } = Constants;
 
 export default function widgetBehavior(publicAPI, model) {
   model.classHierarchy.push('vtkLineWidgetProp');
-  let isDragging = null;
 
   // --------------------------------------------------------------------------
   // Display 2D
@@ -34,10 +33,10 @@ export default function widgetBehavior(publicAPI, model) {
    * check for handle 2 position in comparison to handle 1 position
    * and sets text offset to not overlap on the line representation
    */
-  function calcTextPosWithLineAngle() {
+
+  function detectOffsetDirectionForTextPosition() {
     const pos1 = model.widgetState.getHandle1().getOrigin();
     const pos2 = model.widgetState.getHandle2().getOrigin();
-    const SVGTextProps = model.representations[2].getTextProps();
 
     let dySign = 1;
     if (pos1[0] <= pos2[0]) {
@@ -45,7 +44,14 @@ export default function widgetBehavior(publicAPI, model) {
     } else {
       dySign = pos1[1] <= pos2[1] ? -1 : 1;
     }
-    SVGTextProps.dy = dySign * Math.abs(SVGTextProps.dy);
+    return dySign;
+  }
+
+  function calcTextPosWithLineAngle() {
+    const dySign = detectOffsetDirectionForTextPosition();
+    model.representations[2].setDy(
+      dySign * Math.abs(model.representations[2].getDy())
+    );
   }
 
   function updateHandleDirection(behavior, callData) {
@@ -99,6 +105,34 @@ export default function widgetBehavior(publicAPI, model) {
     );
   }
 
+  publicAPI.hideGhostSpheres = () => {
+    if (model.handle1Shape === HandleRepresentationType.GHOST_SPHERE) {
+      model.representations[0].getActors()[1].getProperty().setOpacity(0.01);
+    }
+
+    if (model.handle2Shape === HandleRepresentationType.GHOST_SPHERE) {
+      model.representations[1].getActors()[1].getProperty().setOpacity(0.01);
+    }
+  };
+
+  publicAPI.revealGhostSpheres = () => {
+    if (
+      model.handle1Shape === HandleRepresentationType.GHOST_SPHERE &&
+      model.activeState &&
+      model.widgetState.getHandle1().getActive()
+    ) {
+      model.representations[0].getActors()[1].getProperty().setOpacity(1);
+    }
+
+    if (
+      model.handle2Shape === HandleRepresentationType.GHOST_SPHERE &&
+      model.activeState &&
+      model.widgetState.getHandle2().getActive()
+    ) {
+      model.representations[1].getActors()[1].getProperty().setOpacity(1);
+    }
+  };
+
   // set in public to update handle  Direction when handle change in UI
   publicAPI.setHandleDirection = () => {
     if (isHandleOrientable(model.handle1Shape)) {
@@ -114,6 +148,7 @@ export default function widgetBehavior(publicAPI, model) {
   // --------------------------------------------------------------------------
 
   publicAPI.handleLeftButtonPress = (e) => {
+    publicAPI.hideGhostSpheres();
     if (
       !model.activeState ||
       !model.activeState.getActive() ||
@@ -159,7 +194,8 @@ export default function widgetBehavior(publicAPI, model) {
       calcTextPosWithLineAngle();
       moveHandle.setVisible(true);
     } else {
-      isDragging = true;
+      publicAPI.revealGhostSpheres();
+      model.widgetState.setIsDragging(true);
       model.openGLRenderWindow.setCursor('grabbing');
       model.interactor.requestAnimation(publicAPI);
     }
@@ -172,6 +208,10 @@ export default function widgetBehavior(publicAPI, model) {
   // --------------------------------------------------------------------------
 
   publicAPI.handleMouseMove = (callData) => {
+    if (!model.activeState || !model.activeState.getActive()) {
+      publicAPI.hideGhostSpheres();
+    }
+
     if (model.hasFocus && model.widgetState.getNbHandles() === MAX_POINTS) {
       publicAPI.loseFocus();
       return macro.VOID;
@@ -183,6 +223,7 @@ export default function widgetBehavior(publicAPI, model) {
       model.activeState.getActive() &&
       !ignoreKey(callData)
     ) {
+      publicAPI.revealGhostSpheres();
       const worldCoords = model.manipulator.handleEvent(
         callData,
         model.openGLRenderWindow
@@ -192,11 +233,11 @@ export default function widgetBehavior(publicAPI, model) {
       }
       if (
         model.activeState === model.widgetState.getMoveHandle() ||
-        isDragging
+        model.widgetState.getIsDragging()
       ) {
         model.activeState.setOrigin(worldCoords);
         publicAPI.invokeInteractionEvent();
-        if (isDragging === true) {
+        if (model.widgetState.getIsDragging()) {
           if (isOrientable()) {
             updateTextPosition(model, model.widgetState.getPositionOnLine());
             calcTextPosWithLineAngle();
@@ -219,12 +260,13 @@ export default function widgetBehavior(publicAPI, model) {
   // --------------------------------------------------------------------------
 
   publicAPI.handleLeftButtonRelease = () => {
-    if (isDragging && model.pickable) {
+    if (model.widgetState.getIsDragging() && model.pickable) {
       calcTextPosWithLineAngle();
       model.openGLRenderWindow.setCursor('pointer');
       model.widgetState.deactivate();
       model.interactor.cancelAnimation(publicAPI);
       publicAPI.invokeEndInteractionEvent();
+      publicAPI.hideGhostSpheres();
     } else if (model.activeState !== model.widgetState.getMoveHandle()) {
       model.widgetState.deactivate();
     }
@@ -236,7 +278,7 @@ export default function widgetBehavior(publicAPI, model) {
       model.widgetManager.enablePicking();
       model.interactor.render();
     }
-    isDragging = false;
+    model.widgetState.setIsDragging(false);
   };
 
   // --------------------------------------------------------------------------

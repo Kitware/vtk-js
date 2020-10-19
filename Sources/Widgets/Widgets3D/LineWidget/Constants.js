@@ -11,6 +11,7 @@ export const HandleBehavior = {
 export const HandleRepresentationType = {
   // 3D handles
   SPHERE: 'sphere',
+  GHOST_SPHERE: 'ghost_sphere',
   CUBE: 'cube',
   CONE: 'cone',
   NONE: 'sphere',

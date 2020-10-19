@@ -15,7 +15,7 @@ export default function generateState() {
     })
     .addStateFromMixin({
       labels: ['handle1'],
-      mixins: ['origin', 'color', 'scale1', 'visible'],
+      mixins: ['origin', 'color', 'scale1', 'visible', 'manipulator'],
       name: 'handle1',
       initialValues: {
         scale1: 50,
@@ -25,7 +25,7 @@ export default function generateState() {
     })
     .addStateFromMixin({
       labels: ['handle2'],
-      mixins: ['origin', 'color', 'scale1', 'visible'],
+      mixins: ['origin', 'color', 'scale1', 'visible', 'manipulator'],
       name: 'handle2',
       initialValues: {
         scale1: 50,
@@ -47,5 +47,6 @@ export default function generateState() {
     })
     .addField({ name: 'positionOnLine', initialValues: 0 })
     .addField({ name: 'nbHandles', initialValues: 0 })
+    .addField({ name: 'isDragging', initialValues: false })
     .build();
 }

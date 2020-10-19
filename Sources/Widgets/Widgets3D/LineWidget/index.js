@@ -35,6 +35,9 @@ function vtkLineWidget(publicAPI, model) {
     HandleRepresentationType.SPHERE
   ] = vtkSphereHandleRepresentation;
   shapeToRepresentation[
+    HandleRepresentationType.GHOST_SPHERE
+  ] = vtkSphereHandleRepresentation;
+  shapeToRepresentation[
     HandleRepresentationType.CUBE
   ] = vtkCubeHandleRepresentation;
   shapeToRepresentation[
@@ -117,6 +120,7 @@ function vtkLineWidget(publicAPI, model) {
             initialValues: {
               showCircle: false,
               isVisible: false,
+              fromLineWidget: true,
             },
             labels: ['SVGtext'],
           },
@@ -212,6 +216,7 @@ export function extend(publicAPI, model, initialValues = {}) {
     'handle2Shape',
     'positionOnLine',
   ]);
+
   vtkLineWidget(publicAPI, model);
 }
 
