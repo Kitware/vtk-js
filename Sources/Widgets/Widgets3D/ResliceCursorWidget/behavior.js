@@ -1,6 +1,7 @@
 import { mat4 } from 'gl-matrix';
 
 import macro from 'vtk.js/Sources/macro';
+import vtkBoundingBox from 'vtk.js/Sources/Common/DataModel/BoundingBox';
 import vtkLine from 'vtk.js/Sources/Common/DataModel/Line';
 import vtkPlaneManipulator from 'vtk.js/Sources/Widgets/Manipulators/PlaneManipulator';
 import * as vtkMath from 'vtk.js/Sources/Common/Core/Math';
@@ -66,6 +67,67 @@ export default function widgetBehavior(publicAPI, model) {
     }
     isDragging = false;
     model.widgetState.deactivate();
+  };
+
+  publicAPI.handleStartMouseWheel = (callData) => {
+    publicAPI.invokeStartInteractionEvent();
+    // When interacting, plane actor and lines must be re-rendered on other views
+    publicAPI.getViewWidgets().forEach((viewWidget) => {
+      viewWidget.getInteractor().requestAnimation(publicAPI);
+    });
+  };
+
+  publicAPI.handleMouseWheel = (calldata) => {
+    const direction = calldata.spinY;
+    const currentCenter = model.widgetState.getCenter();
+    const image = model.widgetState.getImage();
+    const imageSpacing = image.getSpacing();
+    const imageBounds = image.getBounds();
+    const boundingBox = vtkBoundingBox.newInstance({ bounds: imageBounds });
+
+    // Get the normal use to translate the center along
+    const normal = calldata.pokedRenderer
+      .getRenderWindow()
+      .getRenderers()[0]
+      .getActiveCamera()
+      .getDirectionOfProjection();
+
+    // Direction of the projection if the inverse of what we want
+    const translationVector = vtkMath.multiplyScalar(normal, -1);
+
+    let newCenter = [
+      currentCenter[0] + direction * translationVector[0] * imageSpacing[0],
+      currentCenter[1] + direction * translationVector[1] * imageSpacing[1],
+      currentCenter[2] + direction * translationVector[2] * imageSpacing[2],
+    ];
+
+    if (!boundingBox.containsPoint(...newCenter)) {
+      // Clamp the center to the bounds of the image
+      const imageOrigin = image.getOrigin();
+      const localRoundedCenter = currentCenter.map(
+        (value, index) =>
+          Math.round(value - imageOrigin[index]) / imageSpacing[index]
+      );
+
+      // Get it back in world coordinates
+      newCenter = localRoundedCenter.map(
+        (value, index) => value * imageSpacing[index] + imageOrigin[index]
+      );
+    }
+
+    model.widgetState.setCenter(newCenter);
+    updateState(model.widgetState);
+
+    publicAPI.invokeInteractionEvent();
+
+    return macro.EVENT_ABORT;
+  };
+
+  publicAPI.handleEndMouseWheel = (calldata) => {
+    publicAPI.invokeEndInteractionEvent();
+    publicAPI.getViewWidgets().forEach((viewWidget) => {
+      viewWidget.getInteractor().cancelAnimation(publicAPI);
+    });
   };
 
   publicAPI.handleEvent = (callData) => {
