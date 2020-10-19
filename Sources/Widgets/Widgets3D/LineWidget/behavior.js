@@ -14,6 +14,7 @@ const { Direction, HandleBehavior, HandleRepresentationType } = Constants;
 export default function widgetBehavior(publicAPI, model) {
   model.classHierarchy.push('vtkLineWidgetProp');
   let isDragging = null;
+
   // --------------------------------------------------------------------------
   // Display 2D
   // --------------------------------------------------------------------------
@@ -29,29 +30,28 @@ export default function widgetBehavior(publicAPI, model) {
     return e.altKey || e.controlKey || e.shiftKey;
   }
 
+  /*
+   * check for handle 2 position in comparison to handle 1 position
+   * and sets text offset to not overlap on the line representation
+   */
   function calcTextPosWithLineAngle() {
-    const pos1 = model.widgetState.getHandle1List()[0].getOrigin();
-    const pos2 = model.widgetState.getHandle2List()[0].getOrigin();
+    const pos1 = model.widgetState.getHandle1().getOrigin();
+    const pos2 = model.widgetState.getHandle2().getOrigin();
     const SVGTextProps = model.representations[2].getTextProps();
 
+    let dySign = 1;
     if (pos1[0] <= pos2[0]) {
-      if (pos1[1] <= pos2[1]) {
-        SVGTextProps.dy = Math.abs(SVGTextProps.dy);
-      } else {
-        SVGTextProps.dy = Math.abs(SVGTextProps.dy) * -1;
-      }
+      dySign = pos1[1] <= pos2[1] ? 1 : -1;
     } else {
-      SVGTextProps.dy =
-        pos1[1] <= pos2[1]
-          ? Math.abs(SVGTextProps.dy) * -1
-          : Math.abs(SVGTextProps.dy);
+      dySign = pos1[1] <= pos2[1] ? -1 : 1;
     }
+    SVGTextProps.dy = dySign * Math.abs(SVGTextProps.dy);
   }
 
   function updateHandleDirection(behavior, callData) {
     let bv = behavior;
     if (bv === HandleBehavior.HANDLE1_ALONE) {
-      const handle1Pos = model.widgetState.getHandle1List()[0].getOrigin();
+      const handle1Pos = model.widgetState.getHandle1().getOrigin();
       const WorldMousePos = publicAPI.computeWorldToDisplay(
         model.renderer,
         handle1Pos[0],
@@ -65,7 +65,7 @@ export default function widgetBehavior(publicAPI, model) {
         WorldMousePos[2]
       );
       vtkMath.subtract(
-        model.widgetState.getHandle1List()[0].getOrigin(),
+        model.widgetState.getHandle1().getOrigin(),
         mousePos,
         Direction
       );
@@ -73,8 +73,8 @@ export default function widgetBehavior(publicAPI, model) {
     } else {
       const modifier = bv === 1 ? 1 : -1;
       bv -= 1;
-      const handle1Pos = model.widgetState.getHandle1List()[0].getOrigin();
-      const handle2Pos = model.widgetState.getHandle2List()[0].getOrigin();
+      const handle1Pos = model.widgetState.getHandle1().getOrigin();
+      const handle2Pos = model.widgetState.getHandle2().getOrigin();
       vtkMath.subtract(handle1Pos, handle2Pos, Direction);
       vtkMath.multiplyScalar(Direction, modifier);
     }
@@ -114,8 +114,6 @@ export default function widgetBehavior(publicAPI, model) {
   // --------------------------------------------------------------------------
 
   publicAPI.handleLeftButtonPress = (e) => {
-    const nbHandle1 = model.widgetState.getHandle1List().length;
-    const nbHandle2 = model.widgetState.getHandle2List().length;
     if (
       !model.activeState ||
       !model.activeState.getActive() ||
@@ -125,30 +123,41 @@ export default function widgetBehavior(publicAPI, model) {
       return macro.VOID;
     }
     const moveHandle = model.widgetState.getMoveHandle();
+    moveHandle.setVisible(false);
     if (
       model.activeState === model.widgetState.getMoveHandle() &&
-      nbHandle1 === 0
+      model.widgetState.getNbHandles() === 0
     ) {
-      const newHandle = model.widgetState.addHandle1();
-      newHandle.setOrigin(...moveHandle.getOrigin());
-      newHandle.setColor(moveHandle.getColor());
-      newHandle.setScale1(moveHandle.getScale1());
+      const handle1 = model.widgetState.getHandle1();
+      model.widgetState.setNbHandles(1);
+      handle1.setOrigin(...moveHandle.getOrigin());
+      handle1.setColor(moveHandle.getColor());
+      handle1.setScale1(moveHandle.getScale1());
+      handle1.setVisible(true);
+      model.widgetState.getHandle2().setOrigin(...moveHandle.getOrigin());
+      const SVGLayerText = model.widgetState.getText();
+      SVGLayerText.setText(model.text);
+      SVGLayerText.setOrigin(
+        calculateTextPosition(model, model.widgetState.getPositionOnLine())
+      );
     } else if (
       model.activeState === model.widgetState.getMoveHandle() &&
-      nbHandle1 === 1 &&
-      nbHandle2 === 0
+      model.widgetState.getNbHandles() === 1
     ) {
-      const newHandle = model.widgetState.addHandle2();
-      newHandle.setOrigin(...moveHandle.getOrigin());
-      newHandle.setColor(moveHandle.getColor());
-      newHandle.setScale1(moveHandle.getScale1());
+      model.widgetState.setNbHandles(2);
+      const handle2 = model.widgetState.getHandle2();
+      handle2.setOrigin(...moveHandle.getOrigin());
+      handle2.setColor(moveHandle.getColor());
+      handle2.setScale1(moveHandle.getScale1());
+      handle2.setVisible(true);
       publicAPI.setHandleDirection();
-      const SVGLayerText = model.widgetState.addText();
-      SVGLayerText.setText(SVGLayerText.getState().text);
+      const SVGLayerText = model.widgetState.getText();
+      SVGLayerText.setText(model.text);
       SVGLayerText.setOrigin(
         calculateTextPosition(model, model.widgetState.getPositionOnLine())
       );
       calcTextPosWithLineAngle();
+      moveHandle.setVisible(true);
     } else {
       isDragging = true;
       model.openGLRenderWindow.setCursor('grabbing');
@@ -163,14 +172,10 @@ export default function widgetBehavior(publicAPI, model) {
   // --------------------------------------------------------------------------
 
   publicAPI.handleMouseMove = (callData) => {
-    const nbHandles =
-      model.widgetState.getHandle1List().length +
-      model.widgetState.getHandle2List().length;
-    if (model.hasFocus && nbHandles === MAX_POINTS) {
+    if (model.hasFocus && model.widgetState.getNbHandles() === MAX_POINTS) {
       publicAPI.loseFocus();
       return macro.VOID;
     }
-
     if (
       model.pickable &&
       model.manipulator &&
@@ -182,7 +187,9 @@ export default function widgetBehavior(publicAPI, model) {
         callData,
         model.openGLRenderWindow
       );
-
+      if (model.widgetState.getNbHandles() === 1) {
+        model.widgetState.getMoveHandle().setVisible(true);
+      }
       if (
         model.activeState === model.widgetState.getMoveHandle() ||
         isDragging
@@ -195,7 +202,10 @@ export default function widgetBehavior(publicAPI, model) {
             calcTextPosWithLineAngle();
             publicAPI.setHandleDirection();
           }
-        } else if (nbHandles === 1 && isHandleOrientable(model.handle1Shape)) {
+        } else if (
+          model.widgetState.getNbHandles() === 1 &&
+          isHandleOrientable(model.handle1Shape)
+        ) {
           updateHandleDirection(HandleBehavior.HANDLE1_ALONE, callData);
         }
         return macro.EVENT_ABORT;
@@ -234,13 +244,9 @@ export default function widgetBehavior(publicAPI, model) {
   // --------------------------------------------------------------------------
 
   publicAPI.grabFocus = () => {
-    const nbHandles =
-      model.widgetState.getHandle1List().length +
-      model.widgetState.getHandle2List().length;
-    if (!model.hasFocus && nbHandles < MAX_POINTS) {
+    if (!model.hasFocus && model.widgetState.getNbHandles() < MAX_POINTS) {
       model.activeState = model.widgetState.getMoveHandle();
       model.activeState.activate();
-      model.activeState.setVisible(true);
       model.interactor.requestAnimation(publicAPI);
       publicAPI.invokeStartInteractionEvent();
     }

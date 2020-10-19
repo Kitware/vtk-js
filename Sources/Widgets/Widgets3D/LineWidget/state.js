@@ -10,38 +10,42 @@ export default function generateState() {
       initialValues: {
         scale1: 50,
         visible: false,
-        origin: [0, 0, 0],
+        origin: [],
       },
     })
-    .addDynamicMixinState({
+    .addStateFromMixin({
       labels: ['handle1'],
-      mixins: ['origin', 'color', 'scale1'],
+      mixins: ['origin', 'color', 'scale1', 'visible'],
       name: 'handle1',
       initialValues: {
         scale1: 50,
-        origin: [0, 0, 0],
+        origin: [],
+        visible: false,
       },
     })
-    .addDynamicMixinState({
+    .addStateFromMixin({
       labels: ['handle2'],
-      mixins: ['origin', 'color', 'scale1'],
+      mixins: ['origin', 'color', 'scale1', 'visible'],
       name: 'handle2',
       initialValues: {
         scale1: 50,
-        origin: [0, 0, 0],
+        origin: [],
+        visible: false,
       },
     })
-    .addDynamicMixinState({
+    .addStateFromMixin({
       labels: ['SVGtext'],
-      mixins: ['origin', 'color', 'text'],
+      mixins: ['origin', 'color', 'text', 'visible'],
       name: 'text',
       initialValues: {
-        text: 'initialValues text',
+        /* text is empty to set a text filed in the SVGLayer and to avoid
+         * displaying text before positionning the handles */
+        text: '',
         visible: false,
         origin: [0, 0, 0],
-        positionOnLine: 0,
       },
     })
     .addField({ name: 'positionOnLine', initialValues: 0 })
+    .addField({ name: 'nbHandles', initialValues: 0 })
     .build();
 }

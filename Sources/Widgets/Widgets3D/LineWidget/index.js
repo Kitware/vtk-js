@@ -81,6 +81,7 @@ function vtkLineWidget(publicAPI, model) {
   model.behavior = widgetBehavior;
   model.widgetState = stateGenerator();
   model.widgetState.setPositionOnLine(model.positionOnLine);
+  model.widgetState.setNbHandles(0);
   initializeHandleRepresentations();
 
   publicAPI.getRepresentationsForViewType = (viewType) => {
@@ -95,23 +96,27 @@ function vtkLineWidget(publicAPI, model) {
             builder: HandleRepresentation[0],
             labels: ['handle1'],
             initialValues: {
-              scaleInPixels: true, // for scaling handles, optionnal
-              handleType: model.handle1Shape, // to detect arrow type in ArrowHandleRepresentation, mandatory
+              /* to scale handle size when zooming/dezooming, optionnal */
+              scaleInPixels: true,
+              /* to detect arrow type in ArrowHandleRepresentation, mandatory */
+              handleType: model.handle1Shape,
             },
           },
           {
             builder: HandleRepresentation[1],
             labels: ['handle2'],
             initialValues: {
-              scaleInPixels: true, // for scaling handles, optionnal
-              handleType: model.handle2Shape, // to detect arrow type in ArrowHandleRepresentation, mandatory
-              visible: false,
+              /* to scale handle size when zooming/dezooming, optionnal */
+              scaleInPixels: true,
+              /* to detect arrow type in ArrowHandleRepresentation, mandatory */
+              handleType: model.handle2Shape,
             },
           },
           {
             builder: vtkSVGLandmarkRepresentation,
             initialValues: {
               showCircle: false,
+              isVisible: false,
             },
             labels: ['SVGtext'],
           },
@@ -142,12 +147,14 @@ function vtkLineWidget(publicAPI, model) {
   };
 
   publicAPI.updateTextValue = (text) => {
-    if (typeof model.widgetState.getTextList()[0] !== 'undefined')
-      model.widgetState.getTextList()[0].setText(text);
+    if (typeof model.widgetState.getText() !== 'undefined')
+      model.widgetState.getText().setText(text);
   };
 
   publicAPI.updateTextProps = (input, prop) => {
-    if (prop === 'positionOnLine') publicAPI.setPositionOnLine(input / 100);
+    if (prop === 'positionOnLine') {
+      publicAPI.setPositionOnLine(input / 100);
+    }
     updateTextPosition(model, publicAPI.getPositionOnLine());
     model.widgetState.setPositionOnLine(publicAPI.getPositionOnLine());
   };
@@ -184,7 +191,13 @@ function vtkLineWidget(publicAPI, model) {
 const DEFAULT_VALUES = {
   handle1Shape: HandleRepresentationType.ARROWHEAD6,
   handle2Shape: HandleRepresentationType.ARROWHEAD6,
-  positionOnLine: 0.5, // Position of the text on the line where 0 is handle1 and 1 is handle2
+  /* Position of the text on the line where 0 is handle1 and 1 is handle2 */
+  positionOnLine: 0.5,
+  /* You can change the initial value of the text here, the initialValue variable
+   * of the state is meant to create an empty text to insert the desired text
+   * when both handles are set, and avoids having a default text before
+   */
+  text: 'Text orginal',
 };
 
 // ----------------------------------------------------------------------------
