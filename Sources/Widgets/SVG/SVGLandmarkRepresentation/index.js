@@ -11,6 +11,14 @@ function vtkSVGLandmarkRepresentation(publicAPI, model) {
   // Set our className
   model.classHierarchy.push('vtkSVGLandmarkRepresentation');
 
+  publicAPI.setDy = (val) => {
+    model.dy = val;
+  };
+
+  publicAPI.getDy = () => {
+    return model.dy;
+  };
+
   publicAPI.render = () => {
     const list = publicAPI.getRepresentationStates();
 
@@ -28,7 +36,6 @@ function vtkSVGLandmarkRepresentation(publicAPI, model) {
       const winHeight = pixelSpace.windowSize[1];
 
       const root = createSvgElement('g');
-
       for (let i = 0; i < points2d.length; i++) {
         const xy = points2d[i];
         const x = xy[0];
@@ -45,15 +52,22 @@ function vtkSVGLandmarkRepresentation(publicAPI, model) {
           root.appendChild(circle);
         }
 
-        const text = createSvgElement('text');
-        Object.keys(model.textProps || {}).forEach((prop) =>
-          text.setAttribute(prop, model.textProps[prop])
-        );
-        text.setAttribute('x', x);
-        text.setAttribute('y', y);
-        text.textContent = texts[i];
-
-        root.appendChild(text);
+        const splitText = texts[i].split('\n');
+        let j = 0;
+        splitText.forEach((subText) => {
+          const text = createSvgElement('text');
+          Object.keys(model.textProps || {}).forEach((prop) => {
+            if (model.fromLineWidget === true && prop === 'dy') {
+              return text.setAttribute(prop, model.dy + 15 * j);
+            }
+            return text.setAttribute(prop, model.textProps[prop]);
+          });
+          text.setAttribute('x', x);
+          text.setAttribute('y', y);
+          text.textContent = subText;
+          j++;
+          root.appendChild(text);
+        });
       }
 
       return root;
@@ -86,6 +100,15 @@ export function extend(publicAPI, model, initialValues = {}) {
   vtkSVGRepresentation.extend(publicAPI, model, initialValues);
 
   macro.setGet(publicAPI, model, ['circleProps', 'textProps', 'name']);
+
+  if (initialValues.fromLineWidget === true) {
+    // this allows for different offset values when there are multiple instances of this class
+    model.dx = model.textProps.dx;
+    model.dy = model.textProps.dy;
+    model.fromLineWidget = true;
+  } else {
+    model.fromLineWidget = false;
+  }
 
   // Object specific methods
   vtkSVGLandmarkRepresentation(publicAPI, model);

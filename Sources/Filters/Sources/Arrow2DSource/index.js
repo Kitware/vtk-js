@@ -30,7 +30,7 @@ function vtkStarSource(publicAPI, model) {
   return dataset;
 }
 
-function vtk6pointsArrow(publicAPI, model) {
+function vtk6PointsArrow(publicAPI, model) {
   const dataset = vtkPolyData.newInstance();
 
   const points = new macro.TYPED_ARRAYS[model.pointType](6 * 3);
@@ -84,7 +84,7 @@ function vtk6pointsArrow(publicAPI, model) {
   return dataset;
 }
 
-function vtk4pointsArrow(publicAPI, model) {
+function vtk4PointsArrow(publicAPI, model) {
   const dataset = vtkPolyData.newInstance();
 
   const points = new macro.TYPED_ARRAYS[model.pointType](4 * 3);
@@ -164,8 +164,8 @@ function vtkArrow2DSource(publicAPI, model) {
   const shapeToSource = {
     [ShapeType.TRIANGLE]: vtkTriangleSource,
     [ShapeType.STAR]: vtkStarSource,
-    [ShapeType.ARROW_4]: vtk4pointsArrow,
-    [ShapeType.ARROW_6]: vtk6pointsArrow,
+    [ShapeType.ARROW_4]: vtk4PointsArrow,
+    [ShapeType.ARROW_6]: vtk6PointsArrow,
   };
 
   publicAPI.requestData = (inData, outData) => {
@@ -177,11 +177,24 @@ function vtkArrow2DSource(publicAPI, model) {
 // Object factory
 // ----------------------------------------------------------------------------
 
+/* DEFAULT VALUES
+ * height modifies the height of the source , implemented in triangle 4PA 6PA
+ 
+ * width modifies the width of the source, implemented in triangle 4PA 6PA
+ 
+ * thickness modifies the shape of the source, 0 normal thickness 1 max
+ *		thickness, implemented in 4PA 6PA, scalar 
+ 
+ * center modifies the postion of the end of the Polyline in comparison to the
+ *		source, 1 the top of the arrow is on the limit of the line, 0 the bottom
+ *		of the arrow touches the line
+
+*/
 const DEFAULT_VALUES = {
-  height: 1.0, // modifies the height of the source
-  width: 1.0, // modifies the widtoh of the source
-  thickness: 0, // scalar, modifies the thickness of 4 point arrow and 6 points arrow source
-  center: 0.5, // scalar, places the source on the polyline, 1 the top of the arrow is on the limit of the line, 0 the bottom of the arrow touches the line
+  height: 1.0,
+  width: 1.0,
+  thickness: 0,
+  center: 0.5,
   origin: [0, 0, 0],
   direction: [0.0, 1.0, 0.0],
   pointType: 'Float32Array',
