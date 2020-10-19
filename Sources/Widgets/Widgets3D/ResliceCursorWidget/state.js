@@ -118,5 +118,6 @@ export default function generateState() {
     .addField({ name: 'ZPlaneNormal', initialValue: [0, 0, 1] })
     .addField({ name: 'enableRotation', initialValue: true })
     .addField({ name: 'enableTranslation', initialValue: true })
+    .addField({ name: 'keepOrthogonality', initialValue: false })
     .build();
 }

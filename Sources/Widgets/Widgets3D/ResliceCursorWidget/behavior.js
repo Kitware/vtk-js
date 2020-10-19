@@ -185,6 +185,19 @@ export default function widgetBehavior(publicAPI, model) {
       rotationAngle * sign
     );
     model.widgetState[`set${planeName}PlaneNormal`](newNormal);
+
+    if (model.widgetState.getKeepOrthogonality()) {
+      const associatedLineName = getAssociatedLinesName(activeLine.getName());
+      const associatedLine = model.widgetState[`get${associatedLineName}`]();
+      const planeName2 = associatedLine.getPlaneName();
+      const normal2 = model.widgetState[`get${planeName2}PlaneNormal`]();
+      const newNormal2 = vtkMath.rotateVector(
+        normal2,
+        planeNormal,
+        rotationAngle * sign
+      );
+      model.widgetState[`set${planeName2}PlaneNormal`](newNormal2);
+    }
     updateState(model.widgetState);
   };
 

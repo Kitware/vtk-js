@@ -42,6 +42,8 @@ These sub states contain :
 
 - enableTranslation: if false, disable the translation of the axis
 
+- keepOrthogonality: if false, then rotation are totally free. Else, if one axis is rotated, then the associated one if rotating the same axis in order to keep orthogonality
+
 ## setCenter
 
 You can manually set the center of the reslice cursor by calling this method with an array of three value. That can be useful if you want to implement a simple click which moves the center.
