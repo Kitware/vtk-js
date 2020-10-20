@@ -295,6 +295,11 @@ function vtkRenderWindowInteractor(publicAPI, model) {
   };
 
   publicAPI.handleMouseDown = (event) => {
+    if (event.which > 3) {
+      // ignore events from extra mouse buttons such as `back` and `forward`
+      return;
+    }
+
     interactionRegistration(true);
     event.stopPropagation();
     event.preventDefault();
