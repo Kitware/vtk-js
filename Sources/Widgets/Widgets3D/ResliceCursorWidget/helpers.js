@@ -81,6 +81,35 @@ export function getViewPlaneNameFromViewType(viewType) {
   }
 }
 
+// Get the names and normals of other views
+// currentNormal = normal of the current view
+// It will return an object that contains
+export function getOtherViews(viewType, widgetState) {
+  const XPlaneNormal = widgetState.getXPlaneNormal();
+  const YPlaneNormal = widgetState.getYPlaneNormal();
+  const ZPlaneNormal = widgetState.getZPlaneNormal();
+
+  const viewX = {
+    name: 'X',
+    normal: XPlaneNormal,
+  };
+  const viewY = {
+    name: 'Y',
+    normal: YPlaneNormal,
+  };
+  const viewZ = {
+    name: 'Z',
+    normal: ZPlaneNormal,
+  };
+  let otherViews = [viewX, viewY];
+  if (viewType === ViewTypes.SAGITTAL) {
+    otherViews = [viewY, viewZ];
+  } else if (viewType === ViewTypes.CORONAL) {
+    otherViews = [viewX, viewZ];
+  }
+  return otherViews;
+}
+
 // Update the extremities and the rotation point coordinate of the line
 function updateLine(lineState, center, axis, lineLength, rotationLength) {
   const p1 = [

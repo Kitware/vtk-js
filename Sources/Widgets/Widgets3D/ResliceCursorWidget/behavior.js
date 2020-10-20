@@ -2,12 +2,15 @@ import { mat4 } from 'gl-matrix';
 
 import macro from 'vtk.js/Sources/macro';
 import vtkBoundingBox from 'vtk.js/Sources/Common/DataModel/BoundingBox';
+import vtkBox from 'vtk.js/Sources/Common/DataModel/Box';
 import vtkLine from 'vtk.js/Sources/Common/DataModel/Line';
+import vtkPlane from 'vtk.js/Sources/Common/DataModel/Plane';
 import vtkPlaneManipulator from 'vtk.js/Sources/Widgets/Manipulators/PlaneManipulator';
 import * as vtkMath from 'vtk.js/Sources/Common/Core/Math';
 
 import {
   getAssociatedLinesName,
+  getOtherViews,
   updateState,
 } from 'vtk.js/Sources/Widgets/Widgets3D/ResliceCursorWidget/helpers';
 
@@ -79,40 +82,83 @@ export default function widgetBehavior(publicAPI, model) {
 
   publicAPI.handleMouseWheel = (calldata) => {
     const direction = calldata.spinY;
-    const currentCenter = model.widgetState.getCenter();
+    const oldCenter = model.widgetState.getCenter();
     const image = model.widgetState.getImage();
     const imageSpacing = image.getSpacing();
     const imageBounds = image.getBounds();
-    const boundingBox = vtkBoundingBox.newInstance({ bounds: imageBounds });
+    const bounds = vtkBoundingBox.newInstance({ bounds: imageBounds });
 
     // Get the normal use to translate the center along
-    const normal = calldata.pokedRenderer
+    const dirProj = calldata.pokedRenderer
       .getRenderWindow()
       .getRenderers()[0]
       .getActiveCamera()
       .getDirectionOfProjection();
 
-    // Direction of the projection if the inverse of what we want
-    const translationVector = vtkMath.multiplyScalar(normal, -1);
+    // Direction of the projection is the inverse of what we want
+    const normal = vtkMath.multiplyScalar(dirProj, -1);
 
+    const otherViews = getOtherViews(model.viewType, model.widgetState);
+
+    // Define the potentially new center
     let newCenter = [
-      currentCenter[0] + direction * translationVector[0] * imageSpacing[0],
-      currentCenter[1] + direction * translationVector[1] * imageSpacing[1],
-      currentCenter[2] + direction * translationVector[2] * imageSpacing[2],
+      oldCenter[0] + direction * normal[0] * imageSpacing[0],
+      oldCenter[1] + direction * normal[1] * imageSpacing[1],
+      oldCenter[2] + direction * normal[2] * imageSpacing[2],
     ];
+    const newCenterInsideBounds = bounds.containsPoint(...newCenter);
 
-    if (!boundingBox.containsPoint(...newCenter)) {
-      // Clamp the center to the bounds of the image
-      const imageOrigin = image.getOrigin();
-      const localRoundedCenter = currentCenter.map(
-        (value, index) =>
-          Math.round(value - imageOrigin[index]) / imageSpacing[index]
+    // The center is out of the image
+    if (!newCenterInsideBounds) {
+      // Find which plane is out of the bounds
+      const isCurrentPlaneOutOfBounds =
+        !vtkBox.intersectPlane(imageBounds, newCenter, normal) &&
+        vtkBox.intersectPlane(imageBounds, oldCenter, normal);
+
+      const otherViewsPlaneOutOfBounds = otherViews.map(
+        (view) =>
+          !vtkBox.intersectPlane(imageBounds, newCenter, view.normal) &&
+          vtkBox.intersectPlane(imageBounds, oldCenter, view.normal)
+      );
+      const otherPlanesAreOutsideBounds = otherViewsPlaneOutOfBounds.every(
+        (value) => value
       );
 
-      // Get it back in world coordinates
-      newCenter = localRoundedCenter.map(
-        (value, index) => value * imageSpacing[index] + imageOrigin[index]
-      );
+      // Basic clamping of the newCenter to the image bounds
+      if (!otherPlanesAreOutsideBounds && isCurrentPlaneOutOfBounds) {
+        // Find new reslice cursor center in local coordinates and round it to be on a valid slice
+        const imageOrigin = image.getOrigin();
+        const localRoundedCenter = oldCenter.map(
+          (value, index) =>
+            Math.round(value - imageOrigin[index]) / imageSpacing[index]
+        );
+
+        // Get it back in world coordinates
+        newCenter = localRoundedCenter.map(
+          (value, index) => value * imageSpacing[index] + imageOrigin[index]
+        );
+      } else {
+        // Need to find which axis will be out of the bounds
+        for (let i = 0; i < otherViews.length; i++) {
+          const isOut = otherViewsPlaneOutOfBounds[i];
+          if (isOut) {
+            const outViewName = otherViews[i].name;
+            const displayViewOutOfBounds =
+              i === 0 ? otherViews[1].name : otherViews[0].name;
+            // Get the correct line that will be used to find the new center
+            // by computing the intersection between current plane and the line
+            const axisName = `Axis${outViewName}in${displayViewOutOfBounds}`;
+            const axis = model.widgetState[`get${axisName}`]();
+            newCenter = vtkPlane.intersectWithLine(
+              axis.getPoint1(),
+              axis.getPoint2(),
+              newCenter,
+              normal
+            ).x;
+            break;
+          }
+        }
+      }
     }
 
     model.widgetState.setCenter(newCenter);
