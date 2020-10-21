@@ -1,4 +1,5 @@
 import vtkStateBuilder from 'vtk.js/Sources/Widgets/Core/StateBuilder';
+import { ScrollingMethods } from 'vtk.js/Sources/Widgets/Widgets3D/ResliceCursorWidget/Constants';
 
 const factor = 1;
 const rotationFactor = 1;
@@ -119,5 +120,9 @@ export default function generateState() {
     .addField({ name: 'enableRotation', initialValue: true })
     .addField({ name: 'enableTranslation', initialValue: true })
     .addField({ name: 'keepOrthogonality', initialValue: false })
+    .addField({
+      name: 'scrollingMethod',
+      initialValue: ScrollingMethods.MIDDLE_MOUSE_BUTTON,
+    })
     .build();
 }

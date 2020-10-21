@@ -1,17 +1,22 @@
 import { mat4 } from 'gl-matrix';
 
 import macro from 'vtk.js/Sources/macro';
+import vtkBoundingBox from 'vtk.js/Sources/Common/DataModel/BoundingBox';
 import vtkLine from 'vtk.js/Sources/Common/DataModel/Line';
 import vtkPlaneManipulator from 'vtk.js/Sources/Widgets/Manipulators/PlaneManipulator';
 import * as vtkMath from 'vtk.js/Sources/Common/Core/Math';
 
 import {
+  boundPointOnPlane,
   getAssociatedLinesName,
   updateState,
 } from 'vtk.js/Sources/Widgets/Widgets3D/ResliceCursorWidget/helpers';
 
+import { ScrollingMethods } from 'vtk.js/Sources/Widgets/Widgets3D/ResliceCursorWidget/Constants';
+
 export default function widgetBehavior(publicAPI, model) {
   let isDragging = null;
+  let isScrolling = false;
 
   publicAPI.updateCursor = () => {
     switch (model.activeState.getUpdateMethodName()) {
@@ -31,21 +36,26 @@ export default function widgetBehavior(publicAPI, model) {
   };
 
   publicAPI.handleLeftButtonPress = (callData) => {
-    if (!model.activeState || !model.activeState.getActive()) {
+    if (model.activeState && model.activeState.getActive()) {
+      isDragging = true;
+      const viewName = model.widgetState.getActiveViewName();
+      const currentPlaneNormal = model.widgetState[
+        `get${viewName}PlaneNormal`
+      ]();
+      model.planeManipulator.setOrigin(model.widgetState.getCenter());
+      model.planeManipulator.setNormal(currentPlaneNormal);
+
+      publicAPI.startInteraction();
+    } else if (
+      model.widgetState.getScrollingMethod() ===
+      ScrollingMethods.LEFT_MOUSE_BUTTON
+    ) {
+      isScrolling = true;
+      model.previousPosition = callData.position;
+      publicAPI.startInteraction();
+    } else {
       return macro.VOID;
     }
-    isDragging = true;
-    const viewName = model.widgetState.getActiveViewName();
-    const currentPlaneNormal = model.widgetState[`get${viewName}PlaneNormal`]();
-    model.planeManipulator.setOrigin(model.widgetState.getCenter());
-    model.planeManipulator.setNormal(currentPlaneNormal);
-
-    publicAPI.invokeStartInteractionEvent();
-
-    // When interacting, plane actor and lines must be re-rendered on other views
-    publicAPI.getViewWidgets().forEach((viewWidget) => {
-      viewWidget.getInteractor().requestAnimation(publicAPI);
-    });
 
     return macro.EVENT_ABORT;
   };
@@ -54,18 +64,87 @@ export default function widgetBehavior(publicAPI, model) {
     if (isDragging && model.pickable) {
       return publicAPI.handleEvent(callData);
     }
+    if (isScrolling) {
+      if (model.previousPosition.y !== callData.position.y) {
+        const step = model.previousPosition.y - callData.position.y;
+        publicAPI.translateCenterOnCurrentDirection(
+          step,
+          callData.pokedRenderer
+        );
+        model.previousPosition = callData.position;
+
+        publicAPI.invokeInteractionEvent();
+      }
+    }
     return macro.VOID;
   };
 
   publicAPI.handleLeftButtonRelease = () => {
-    if (isDragging) {
-      publicAPI.invokeEndInteractionEvent();
-      publicAPI.getViewWidgets().forEach((viewWidget) => {
-        viewWidget.getInteractor().cancelAnimation(publicAPI);
-      });
+    if (isDragging || isScrolling) {
+      publicAPI.endInteraction();
     }
     isDragging = false;
+    isScrolling = false;
     model.widgetState.deactivate();
+  };
+
+  publicAPI.handleRightButtonPress = (calldata) => {
+    if (
+      model.widgetState.getScrollingMethod() ===
+      ScrollingMethods.RIGHT_MOUSE_BUTTON
+    ) {
+      model.previousPosition = calldata.position;
+      isScrolling = true;
+      publicAPI.startInteraction();
+    }
+  };
+
+  publicAPI.handleRightButtonRelease = (calldata) => {
+    if (
+      model.widgetState.getScrollingMethod() ===
+      ScrollingMethods.RIGHT_MOUSE_BUTTON
+    ) {
+      isScrolling = false;
+      publicAPI.endInteraction();
+    }
+  };
+
+  publicAPI.handleStartMouseWheel = (callData) => {
+    publicAPI.startInteraction();
+  };
+
+  publicAPI.handleMouseWheel = (calldata) => {
+    const step = calldata.spinY;
+    publicAPI.translateCenterOnCurrentDirection(step, calldata.pokedRenderer);
+
+    publicAPI.invokeInteractionEvent();
+
+    return macro.EVENT_ABORT;
+  };
+
+  publicAPI.handleEndMouseWheel = (calldata) => {
+    publicAPI.endInteraction();
+  };
+
+  publicAPI.handleMiddleButtonPress = (calldata) => {
+    if (
+      model.widgetState.getScrollingMethod() ===
+      ScrollingMethods.MIDDLE_MOUSE_BUTTON
+    ) {
+      isScrolling = true;
+      model.previousPosition = calldata.position;
+      publicAPI.startInteraction();
+    }
+  };
+
+  publicAPI.handleMiddleButtonRelease = (calldata) => {
+    if (
+      model.widgetState.getScrollingMethod() ===
+      ScrollingMethods.MIDDLE_MOUSE_BUTTON
+    ) {
+      isScrolling = false;
+      publicAPI.endInteraction();
+    }
   };
 
   publicAPI.handleEvent = (callData) => {
@@ -75,6 +154,47 @@ export default function widgetBehavior(publicAPI, model) {
       return macro.EVENT_ABORT;
     }
     return macro.VOID;
+  };
+
+  publicAPI.startInteraction = () => {
+    publicAPI.invokeStartInteractionEvent();
+    // When interacting, plane actor and lines must be re-rendered on other views
+    publicAPI.getViewWidgets().forEach((viewWidget) => {
+      viewWidget.getInteractor().requestAnimation(publicAPI);
+    });
+  };
+
+  publicAPI.endInteraction = () => {
+    publicAPI.invokeEndInteractionEvent();
+    publicAPI.getViewWidgets().forEach((viewWidget) => {
+      viewWidget.getInteractor().cancelAnimation(publicAPI);
+    });
+  };
+
+  publicAPI.translateCenterOnCurrentDirection = (nbSteps, renderer) => {
+    const dirProj = renderer
+      .getRenderWindow()
+      .getRenderers()[0]
+      .getActiveCamera()
+      .getDirectionOfProjection();
+
+    // Direction of the projection is the inverse of what we want
+    const direction = vtkMath.multiplyScalar(dirProj, -1);
+
+    const oldCenter = model.widgetState.getCenter();
+    const image = model.widgetState.getImage();
+    const imageSpacing = image.getSpacing();
+
+    // Define the potentially new center
+    let newCenter = [
+      oldCenter[0] + nbSteps * direction[0] * imageSpacing[0],
+      oldCenter[1] + nbSteps * direction[1] * imageSpacing[1],
+      oldCenter[2] + nbSteps * direction[2] * imageSpacing[2],
+    ];
+    newCenter = publicAPI.getBoundedCenter(newCenter);
+
+    model.widgetState.setCenter(newCenter);
+    updateState(model.widgetState);
   };
 
   publicAPI.translateAxis = (calldata) => {
@@ -118,22 +238,35 @@ export default function widgetBehavior(publicAPI, model) {
     const translationDistance = vtkMath.dot(translationVector, axisTranslation);
 
     const center = model.widgetState.getCenter();
-    const newOrigin = vtkMath.multiplyAccumulate(
+    let newOrigin = vtkMath.multiplyAccumulate(
       center,
       axisTranslation,
       translationDistance,
       [0, 0, 0]
     );
+    newOrigin = publicAPI.getBoundedCenter(newOrigin);
     model.widgetState.setCenter(newOrigin);
     updateState(model.widgetState);
   };
 
+  publicAPI.getBoundedCenter = (newCenter) => {
+    const oldCenter = model.widgetState.getCenter();
+    const imageBounds = model.widgetState.getImage().getBounds();
+    const bounds = vtkBoundingBox.newInstance({ bounds: imageBounds });
+
+    if (bounds.containsPoint(...newCenter)) {
+      return newCenter;
+    }
+
+    return boundPointOnPlane(newCenter, oldCenter, imageBounds);
+  };
+
   publicAPI.translateCenter = (calldata) => {
-    const worldCoords = model.planeManipulator.handleEvent(
+    let worldCoords = model.planeManipulator.handleEvent(
       calldata,
       model.openGLRenderWindow
     );
-
+    worldCoords = publicAPI.getBoundedCenter(worldCoords);
     model.activeState.setCenter(worldCoords);
     updateState(model.widgetState);
   };

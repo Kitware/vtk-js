@@ -1,4 +1,5 @@
 import vtkBoundingBox from 'vtk.js/Sources/Common/DataModel/BoundingBox';
+import vtkBox from 'vtk.js/Sources/Common/DataModel/Box';
 import * as vtkMath from 'vtk.js/Sources/Common/Core/Math';
 
 import { ViewTypes } from 'vtk.js/Sources/Widgets/Core/WidgetManager/Constants';
@@ -46,6 +47,18 @@ export function boundPoint(inPoint, v1, v2, bounds) {
   }
 
   return outPoint;
+}
+
+// Compute the intersection between p1 and p2 on bounds
+export function boundPointOnPlane(p1, p2, bounds) {
+  const dir12 = [0, 0, 0];
+  vtkMath.subtract(p2, p1, dir12);
+
+  const out = [0, 0, 0];
+  const tolerance = [0, 0, 0];
+  vtkBox.intersectBox(bounds, p1, dir12, out, tolerance);
+
+  return out;
 }
 
 // Get name of the line in the same plane as the input
