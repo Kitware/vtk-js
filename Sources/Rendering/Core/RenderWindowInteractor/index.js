@@ -295,7 +295,7 @@ function vtkRenderWindowInteractor(publicAPI, model) {
   };
 
   publicAPI.handleMouseDown = (event) => {
-    if (event.which > 3) {
+    if (event.button > 2) {
       // ignore events from extra mouse buttons such as `back` and `forward`
       return;
     }
@@ -309,18 +309,18 @@ function vtkRenderWindowInteractor(publicAPI, model) {
     };
     const keys = getModifierKeysFor(event);
     Object.assign(callData, keys);
-    switch (event.which) {
-      case 1:
+    switch (event.button) {
+      case 0:
         publicAPI.leftButtonPressEvent(callData);
         break;
-      case 2:
+      case 1:
         publicAPI.middleButtonPressEvent(callData);
         break;
-      case 3:
+      case 2:
         publicAPI.rightButtonPressEvent(callData);
         break;
       default:
-        vtkErrorMacro(`Unknown mouse button pressed: ${event.which}`);
+        vtkErrorMacro(`Unknown mouse button pressed: ${event.button}`);
         break;
     }
   };
@@ -555,18 +555,18 @@ function vtkRenderWindowInteractor(publicAPI, model) {
     };
     const keys = getModifierKeysFor(event);
     Object.assign(callData, keys);
-    switch (event.which) {
-      case 1:
+    switch (event.button) {
+      case 0:
         publicAPI.leftButtonReleaseEvent(callData);
         break;
-      case 2:
+      case 1:
         publicAPI.middleButtonReleaseEvent(callData);
         break;
-      case 3:
+      case 2:
         publicAPI.rightButtonReleaseEvent(callData);
         break;
       default:
-        vtkErrorMacro(`Unknown mouse button released: ${event.which}`);
+        vtkErrorMacro(`Unknown mouse button released: ${event.button}`);
         break;
     }
   };
