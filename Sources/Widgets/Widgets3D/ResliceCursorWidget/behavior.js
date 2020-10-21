@@ -14,6 +14,7 @@ import {
 
 export default function widgetBehavior(publicAPI, model) {
   let isDragging = null;
+  let middlePressed = false;
 
   publicAPI.updateCursor = () => {
     switch (model.activeState.getUpdateMethodName()) {
@@ -42,12 +43,7 @@ export default function widgetBehavior(publicAPI, model) {
     model.planeManipulator.setOrigin(model.widgetState.getCenter());
     model.planeManipulator.setNormal(currentPlaneNormal);
 
-    publicAPI.invokeStartInteractionEvent();
-
-    // When interacting, plane actor and lines must be re-rendered on other views
-    publicAPI.getViewWidgets().forEach((viewWidget) => {
-      viewWidget.getInteractor().requestAnimation(publicAPI);
-    });
+    publicAPI.startInteraction();
 
     return macro.EVENT_ABORT;
   };
@@ -56,54 +52,36 @@ export default function widgetBehavior(publicAPI, model) {
     if (isDragging && model.pickable) {
       return publicAPI.handleEvent(callData);
     }
+    if (middlePressed) {
+      if (model.previousPosition !== callData.position) {
+        const step = model.previousPosition.y - callData.position.y;
+        publicAPI.translateCenterOnCurrentDirection(
+          step,
+          callData.pokedRenderer
+        );
+        model.previousPosition = callData.position;
+
+        publicAPI.invokeInteractionEvent();
+      }
+    }
     return macro.VOID;
   };
 
   publicAPI.handleLeftButtonRelease = () => {
     if (isDragging) {
-      publicAPI.invokeEndInteractionEvent();
-      publicAPI.getViewWidgets().forEach((viewWidget) => {
-        viewWidget.getInteractor().cancelAnimation(publicAPI);
-      });
+      publicAPI.endInteraction();
     }
     isDragging = false;
     model.widgetState.deactivate();
   };
 
   publicAPI.handleStartMouseWheel = (callData) => {
-    publicAPI.invokeStartInteractionEvent();
-    // When interacting, plane actor and lines must be re-rendered on other views
-    publicAPI.getViewWidgets().forEach((viewWidget) => {
-      viewWidget.getInteractor().requestAnimation(publicAPI);
-    });
+    publicAPI.startInteraction();
   };
 
   publicAPI.handleMouseWheel = (calldata) => {
-    const direction = calldata.spinY;
-    const oldCenter = model.widgetState.getCenter();
-    const image = model.widgetState.getImage();
-    const imageSpacing = image.getSpacing();
-
-    // Get the normal use to translate the center along
-    const dirProj = calldata.pokedRenderer
-      .getRenderWindow()
-      .getRenderers()[0]
-      .getActiveCamera()
-      .getDirectionOfProjection();
-
-    // Direction of the projection is the inverse of what we want
-    const normal = vtkMath.multiplyScalar(dirProj, -1);
-
-    // Define the potentially new center
-    let newCenter = [
-      oldCenter[0] + direction * normal[0] * imageSpacing[0],
-      oldCenter[1] + direction * normal[1] * imageSpacing[1],
-      oldCenter[2] + direction * normal[2] * imageSpacing[2],
-    ];
-    newCenter = publicAPI.getBoundedCenter(newCenter);
-
-    model.widgetState.setCenter(newCenter);
-    updateState(model.widgetState);
+    const step = calldata.spinY;
+    publicAPI.translateCenterOnCurrentDirection(step, calldata.pokedRenderer);
 
     publicAPI.invokeInteractionEvent();
 
@@ -111,10 +89,18 @@ export default function widgetBehavior(publicAPI, model) {
   };
 
   publicAPI.handleEndMouseWheel = (calldata) => {
-    publicAPI.invokeEndInteractionEvent();
-    publicAPI.getViewWidgets().forEach((viewWidget) => {
-      viewWidget.getInteractor().cancelAnimation(publicAPI);
-    });
+    publicAPI.endInteraction();
+  };
+
+  publicAPI.handleMiddleButtonPress = (calldata) => {
+    middlePressed = true;
+    model.previousPosition = calldata.position;
+    publicAPI.startInteraction();
+  };
+
+  publicAPI.handleMiddleButtonRelease = (calldata) => {
+    middlePressed = false;
+    publicAPI.endInteraction();
   };
 
   publicAPI.handleEvent = (callData) => {
@@ -124,6 +110,47 @@ export default function widgetBehavior(publicAPI, model) {
       return macro.EVENT_ABORT;
     }
     return macro.VOID;
+  };
+
+  publicAPI.startInteraction = () => {
+    publicAPI.invokeStartInteractionEvent();
+    // When interacting, plane actor and lines must be re-rendered on other views
+    publicAPI.getViewWidgets().forEach((viewWidget) => {
+      viewWidget.getInteractor().requestAnimation(publicAPI);
+    });
+  };
+
+  publicAPI.endInteraction = () => {
+    publicAPI.invokeEndInteractionEvent();
+    publicAPI.getViewWidgets().forEach((viewWidget) => {
+      viewWidget.getInteractor().cancelAnimation(publicAPI);
+    });
+  };
+
+  publicAPI.translateCenterOnCurrentDirection = (nbSteps, renderer) => {
+    const dirProj = renderer
+      .getRenderWindow()
+      .getRenderers()[0]
+      .getActiveCamera()
+      .getDirectionOfProjection();
+
+    // Direction of the projection is the inverse of what we want
+    const direction = vtkMath.multiplyScalar(dirProj, -1);
+
+    const oldCenter = model.widgetState.getCenter();
+    const image = model.widgetState.getImage();
+    const imageSpacing = image.getSpacing();
+
+    // Define the potentially new center
+    let newCenter = [
+      oldCenter[0] + nbSteps * direction[0] * imageSpacing[0],
+      oldCenter[1] + nbSteps * direction[1] * imageSpacing[1],
+      oldCenter[2] + nbSteps * direction[2] * imageSpacing[2],
+    ];
+    newCenter = publicAPI.getBoundedCenter(newCenter);
+
+    model.widgetState.setCenter(newCenter);
+    updateState(model.widgetState);
   };
 
   publicAPI.translateAxis = (calldata) => {
