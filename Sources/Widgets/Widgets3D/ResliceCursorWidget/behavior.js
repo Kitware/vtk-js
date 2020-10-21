@@ -12,9 +12,11 @@ import {
   updateState,
 } from 'vtk.js/Sources/Widgets/Widgets3D/ResliceCursorWidget/helpers';
 
+import { ScrollingMethods } from 'vtk.js/Sources/Widgets/Widgets3D/ResliceCursorWidget/Constants';
+
 export default function widgetBehavior(publicAPI, model) {
   let isDragging = null;
-  let middlePressed = false;
+  let isScrolling = false;
 
   publicAPI.updateCursor = () => {
     switch (model.activeState.getUpdateMethodName()) {
@@ -34,16 +36,26 @@ export default function widgetBehavior(publicAPI, model) {
   };
 
   publicAPI.handleLeftButtonPress = (callData) => {
-    if (!model.activeState || !model.activeState.getActive()) {
+    if (model.activeState && model.activeState.getActive()) {
+      isDragging = true;
+      const viewName = model.widgetState.getActiveViewName();
+      const currentPlaneNormal = model.widgetState[
+        `get${viewName}PlaneNormal`
+      ]();
+      model.planeManipulator.setOrigin(model.widgetState.getCenter());
+      model.planeManipulator.setNormal(currentPlaneNormal);
+
+      publicAPI.startInteraction();
+    } else if (
+      model.widgetState.getScrollingMethod() ===
+      ScrollingMethods.LEFT_MOUSE_BUTTON
+    ) {
+      isScrolling = true;
+      model.previousPosition = callData.position;
+      publicAPI.startInteraction();
+    } else {
       return macro.VOID;
     }
-    isDragging = true;
-    const viewName = model.widgetState.getActiveViewName();
-    const currentPlaneNormal = model.widgetState[`get${viewName}PlaneNormal`]();
-    model.planeManipulator.setOrigin(model.widgetState.getCenter());
-    model.planeManipulator.setNormal(currentPlaneNormal);
-
-    publicAPI.startInteraction();
 
     return macro.EVENT_ABORT;
   };
@@ -52,8 +64,8 @@ export default function widgetBehavior(publicAPI, model) {
     if (isDragging && model.pickable) {
       return publicAPI.handleEvent(callData);
     }
-    if (middlePressed) {
-      if (model.previousPosition !== callData.position) {
+    if (isScrolling) {
+      if (model.previousPosition.y !== callData.position.y) {
         const step = model.previousPosition.y - callData.position.y;
         publicAPI.translateCenterOnCurrentDirection(
           step,
@@ -68,11 +80,33 @@ export default function widgetBehavior(publicAPI, model) {
   };
 
   publicAPI.handleLeftButtonRelease = () => {
-    if (isDragging) {
+    if (isDragging || isScrolling) {
       publicAPI.endInteraction();
     }
     isDragging = false;
+    isScrolling = false;
     model.widgetState.deactivate();
+  };
+
+  publicAPI.handleRightButtonPress = (calldata) => {
+    if (
+      model.widgetState.getScrollingMethod() ===
+      ScrollingMethods.RIGHT_MOUSE_BUTTON
+    ) {
+      model.previousPosition = calldata.position;
+      isScrolling = true;
+      publicAPI.startInteraction();
+    }
+  };
+
+  publicAPI.handleRightButtonRelease = (calldata) => {
+    if (
+      model.widgetState.getScrollingMethod() ===
+      ScrollingMethods.RIGHT_MOUSE_BUTTON
+    ) {
+      isScrolling = false;
+      publicAPI.endInteraction();
+    }
   };
 
   publicAPI.handleStartMouseWheel = (callData) => {
@@ -93,14 +127,24 @@ export default function widgetBehavior(publicAPI, model) {
   };
 
   publicAPI.handleMiddleButtonPress = (calldata) => {
-    middlePressed = true;
-    model.previousPosition = calldata.position;
-    publicAPI.startInteraction();
+    if (
+      model.widgetState.getScrollingMethod() ===
+      ScrollingMethods.MIDDLE_MOUSE_BUTTON
+    ) {
+      isScrolling = true;
+      model.previousPosition = calldata.position;
+      publicAPI.startInteraction();
+    }
   };
 
   publicAPI.handleMiddleButtonRelease = (calldata) => {
-    middlePressed = false;
-    publicAPI.endInteraction();
+    if (
+      model.widgetState.getScrollingMethod() ===
+      ScrollingMethods.MIDDLE_MOUSE_BUTTON
+    ) {
+      isScrolling = false;
+      publicAPI.endInteraction();
+    }
   };
 
   publicAPI.handleEvent = (callData) => {
