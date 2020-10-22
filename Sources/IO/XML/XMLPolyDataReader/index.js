@@ -1,6 +1,7 @@
-import vtkXMLReader from 'vtk.js/Sources/IO/XML/XMLReader';
 import macro from 'vtk.js/Sources/macro';
+import vtkDataArray from 'vtk.js/Sources/Common/Core/DataArray';
 import vtkPolyData from 'vtk.js/Sources/Common/DataModel/PolyData';
+import vtkXMLReader from 'vtk.js/Sources/IO/XML/XMLReader';
 
 // ----------------------------------------------------------------------------
 // Global method
@@ -60,6 +61,28 @@ function handleCells(
 }
 
 // ----------------------------------------------------------------------------
+
+function handleFieldDataArray(
+  dataArrayElem,
+  compressor,
+  byteOrder,
+  headerType,
+  binaryBuffer
+) {
+  const size = Number(dataArrayElem.getAttribute('NumberOfTuples'));
+  return vtkDataArray.newInstance(
+    vtkXMLReader.processDataArray(
+      size,
+      dataArrayElem,
+      compressor,
+      byteOrder,
+      headerType,
+      binaryBuffer
+    )
+  );
+}
+
+// ----------------------------------------------------------------------------
 // vtkXMLPolyDataReader methods
 // ----------------------------------------------------------------------------
 
@@ -69,8 +92,25 @@ function vtkXMLPolyDataReader(publicAPI, model) {
 
   publicAPI.parseXML = (rootElem, type, compressor, byteOrder, headerType) => {
     const datasetElem = rootElem.getElementsByTagName(model.dataType)[0];
+    const fieldDataElem = datasetElem.getElementsByTagName('FieldData')[0];
     const pieces = datasetElem.getElementsByTagName('Piece');
     const nbPieces = pieces.length;
+
+    // field data
+    let fieldDataArrays = [];
+    if (fieldDataElem) {
+      fieldDataArrays = [
+        ...fieldDataElem.getElementsByTagName('DataArray'),
+      ].map((daElem) =>
+        handleFieldDataArray(
+          daElem,
+          compressor,
+          byteOrder,
+          headerType,
+          model.binaryBuffer
+        )
+      );
+    }
 
     for (let outputIndex = 0; outputIndex < nbPieces; outputIndex++) {
       // Create dataset
@@ -121,6 +161,11 @@ function vtkXMLPolyDataReader(publicAPI, model) {
         headerType,
         model.binaryBuffer
       );
+
+      const fieldData = polydata.getFieldData();
+      for (let i = 0; i < fieldDataArrays.length; i++) {
+        fieldData.addArray(fieldDataArrays[i]);
+      }
 
       // Add new output
       model.output[outputIndex] = polydata;
