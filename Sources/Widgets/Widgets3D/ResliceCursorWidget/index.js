@@ -20,6 +20,7 @@ import { vec4, mat4 } from 'gl-matrix';
 
 const VTK_INT_MAX = 2147483647;
 const { vtkErrorMacro } = macro;
+const viewUpFromViewType = {};
 
 // ----------------------------------------------------------------------------
 // Factory
@@ -257,6 +258,7 @@ function vtkResliceCursorWidget(publicAPI, model) {
 
     renderer.getActiveCamera().setFocalPoint(...estimatedFocalPoint);
     renderer.getActiveCamera().setPosition(...estimatedCameraPosition);
+    renderer.getActiveCamera().setViewUp(viewUpFromViewType[viewType]);
 
     // Project focalPoint onto image plane and preserve distance
     updateCamera(renderer, normal);
@@ -272,6 +274,11 @@ function vtkResliceCursorWidget(publicAPI, model) {
     planeSource.setNormal(...plane.getNormal());
     planeSource.setCenter(...plane.getOrigin());
 
+    const bottomLeftPoint = planeSource.getOrigin();
+    const topLeftPoint = planeSource.getPoint2();
+    const viewUp = vtkMath.subtract(topLeftPoint, bottomLeftPoint, [0, 0, 0]);
+    vtkMath.normalize(viewUp);
+    viewUpFromViewType[viewType] = viewUp;
     let o = planeSource.getOrigin();
 
     let p1 = planeSource.getPoint1();
