@@ -1,6 +1,5 @@
 import macro from 'vtk.js/Sources/macro';
 import vtkAbstractWidgetFactory from 'vtk.js/Sources/Widgets/Core/AbstractWidgetFactory';
-import vtkBoundingBox from 'vtk.js/Sources/Common/DataModel/BoundingBox';
 import vtkPlane from 'vtk.js/Sources/Common/DataModel/Plane';
 import vtkPlaneSource from 'vtk.js/Sources/Filters/Sources/PlaneSource';
 import vtkResliceCursorContextRepresentation from 'vtk.js/Sources/Widgets/Representations/ResliceCursorContextRepresentation';
@@ -153,14 +152,11 @@ function vtkResliceCursorWidget(publicAPI, model) {
       );
 
     // Renderer may not have yet actor bounds
-    let rendererBounds = renderer.computeVisiblePropBounds();
     const bounds = model.widgetState.getImage().getBounds();
-    const bboxObj = vtkBoundingBox.newInstance({ bounds });
-    bboxObj.addBounds(rendererBounds);
-    rendererBounds = bboxObj.getBounds();
 
     // Don't clip away any part of the data.
-    renderer.resetCameraClippingRange(rendererBounds);
+    renderer.resetCamera(bounds);
+    renderer.resetCameraClippingRange(bounds);
   }
 
   // --------------------------------------------------------------------------

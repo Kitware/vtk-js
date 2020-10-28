@@ -192,8 +192,6 @@ reader.setUrl(`${__BASE_PATH__}/data/volume/LIDC2.vti`).then(() => {
         });
 
       updateReslice(viewType, reslice, obj.resliceActor, obj.renderer);
-      obj.renderer.resetCamera();
-      obj.renderer.resetCameraClippingRange();
       obj.renderWindow.render();
     }
   });
