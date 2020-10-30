@@ -1,5 +1,5 @@
 // node modules
-const merge = require('webpack-merge');
+const { merge } = require('webpack-merge');
 const moment = require('moment');
 const webpack = require('webpack');
 
@@ -54,7 +54,7 @@ function configureOptimization() {
   return {
     // namedModules: true,
     // namedChunks: true,
-    occurrenceOrder: true,
+    // occurrenceOrder: true,
     // concatenateModules: false,
     minimizer: [new TerserPlugin(configureTerser())],
   };

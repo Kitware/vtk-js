@@ -1,5 +1,5 @@
 // node modules
-const merge = require('webpack-merge');
+const { merge } = require('webpack-merge');
 const path = require('path');
 const webpack = require('webpack');
 
@@ -14,12 +14,12 @@ const common = require('./webpack.common.js');
 const settings = require('./webpack.settings.js');
 
 // Configure the webpack-dev-server
-function configureDevServer() {
+function configureDevServer(port) {
   return {
     contentBase: path.resolve(__dirname, settings.paths.dist.base),
     public: settings.devServerConfig.public(),
     host: settings.devServerConfig.host(),
-    port: settings.devServerConfig.port(),
+    port: port,
     quiet: true,
     hot: true,
     hotOnly: true,
@@ -31,12 +31,14 @@ function configureDevServer() {
   };
 }
 
+const port = settings.devServerConfig.port();
+
 // Development module exports
 module.exports = [
   merge(common.baseConfig, {
     mode: 'development',
     devtool: 'inline-source-map',
-    devServer: configureDevServer(),
+    devServer: configureDevServer(port),
     plugins: [
       new webpack.HotModuleReplacementPlugin(),
       new DashboardPlugin(dashboard.setData),
@@ -45,7 +47,7 @@ module.exports = [
   merge(common.liteConfig, {
     mode: 'development',
     devtool: 'inline-source-map',
-    devServer: configureDevServer(),
+    devServer: configureDevServer(port + 1),
     plugins: [
       new webpack.HotModuleReplacementPlugin(),
       new DashboardPlugin(dashboard.setData),
