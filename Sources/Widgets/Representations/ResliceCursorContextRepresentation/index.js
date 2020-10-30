@@ -111,6 +111,16 @@ function vtkResliceCursorContextRepresentation(publicAPI, model) {
     axis.rotation2.source.setCenter(state.getRotationPoint2());
   }
 
+  /**
+   * Returns the line actors in charge of translating the views.
+   */
+  publicAPI.getTranslationActors = () => {
+    return [
+      model.pipelines.axes[0].line.actor,
+      model.pipelines.axes[1].line.actor,
+    ];
+  };
+
   publicAPI.getRotationActors = () => {
     return [
       model.pipelines.axes[0].rotation1.actor,
@@ -122,16 +132,6 @@ function vtkResliceCursorContextRepresentation(publicAPI, model) {
 
   publicAPI.requestData = (inData, outData) => {
     const state = inData[0];
-
-    model.rotationEnabled = state.getEnableRotation();
-    model.opacity = state.getOpacity();
-    model.showCenter = state.getShowCenter();
-    model.pipelines.axes[0].line.actor.setPickable(
-      state.getEnableTranslation()
-    );
-    model.pipelines.axes[1].line.actor.setPickable(
-      state.getEnableTranslation()
-    );
 
     const origin = state.getCenter();
     model.pipelines.center.source.setCenter(origin);
@@ -146,6 +146,7 @@ function vtkResliceCursorContextRepresentation(publicAPI, model) {
 
     publicAPI.setSphereRadius(state.getSphereRadius());
 
+    // TODO: return meaningful polydata (e.g. appended lines)
     outData[0] = vtkPolyData.newInstance();
   };
 
@@ -155,27 +156,33 @@ function vtkResliceCursorContextRepresentation(publicAPI, model) {
     ctxVisible,
     hVisible
   ) => {
+    const state = model.inputData[0];
     const visibility =
       renderingType === RenderingTypes.PICKING_BUFFER
         ? wVisible
         : wVisible && hVisible;
 
     publicAPI.getActors().forEach((actor) => {
-      actor.getProperty().setOpacity(model.opacity);
+      actor.getProperty().setOpacity(state.getOpacity());
       let actorVisibility = visibility;
 
       // Conditionally display rotation handles
       if (publicAPI.getRotationActors().includes(actor)) {
-        actorVisibility = actorVisibility && model.rotationEnabled;
+        actorVisibility = actorVisibility && state.getEnableRotation();
       }
 
       // Conditionally display center handle but always show it for picking
-      if (!model.showCenter && actor === model.pipelines.center.actor) {
+      if (!state.getShowCenter() && actor === model.pipelines.center.actor) {
         actorVisibility =
           actorVisibility && renderingType === RenderingTypes.PICKING_BUFFER;
       }
 
       actor.setVisibility(actorVisibility);
+
+      // Conditionally pick lines
+      if (publicAPI.getTranslationActors().includes(actor)) {
+        actor.setPickable(state.getEnableTranslation());
+      }
     });
   };
 
@@ -241,9 +248,8 @@ function vtkResliceCursorContextRepresentation(publicAPI, model) {
 const DEFAULT_VALUES = {
   axis1Name: '',
   axis2Name: '',
-  viewName: '',
   rotationEnabled: true,
-  showCenter: true,
+  viewName: '',
 };
 
 // ----------------------------------------------------------------------------
