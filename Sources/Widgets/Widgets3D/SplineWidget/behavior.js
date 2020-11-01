@@ -295,7 +295,10 @@ export default function widgetBehavior(publicAPI, model) {
       model.lastHandle.setVisible(true);
     }
 
-    if (model.isDragging || model.activeState === model.moveHandle) {
+    if (
+      worldCoords.length &&
+      (model.isDragging || model.activeState === model.moveHandle)
+    ) {
       model.activeState.setOrigin(worldCoords);
       if (model.isDragging) {
         model.draggedPoint = true;
