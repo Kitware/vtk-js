@@ -7,7 +7,7 @@ jobs:
     strategy:
       matrix:
         os: [ubuntu-18.04, macos-10.15, windows-2019]
-        node: [8, 10, 12]
+        node: [10, 12]
     name: ${{ matrix.os }} and node ${{ matrix.node }}
     steps:
       - uses: actions/checkout@v2
