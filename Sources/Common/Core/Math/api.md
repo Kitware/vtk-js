@@ -117,6 +117,7 @@ Returns out.
 
 Computes cross product of 3D vectors x and y.
 Returns out.
+It is safe to x or y as out.
 
 ### norm(x, n = 3)
 

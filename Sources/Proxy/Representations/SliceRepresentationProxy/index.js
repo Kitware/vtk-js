@@ -150,36 +150,42 @@ function vtkSliceRepresentationProxy(publicAPI, model) {
   model.sourceDependencies.push(model.mapper);
   model.sourceDependencies.push({ setInputData });
 
+  // keeps the slicing mode and domain info updated
+  function updateSlicingMode(mode) {
+    model.mapper.setSlicingMode(vtkImageMapper.SlicingMode[mode]);
+
+    // Update to previously set position
+    const modelKey = `${mode.toLowerCase()}Slice`;
+    if (modelKey in model && model[modelKey] !== undefined) {
+      model.mapper.setSlice(model[modelKey]);
+    }
+
+    if (model.input) {
+      // Update domains for UI...
+      const state = updateDomains(
+        publicAPI.getInputDataSet(),
+        publicAPI.getDataArray(),
+        model,
+        publicAPI.updateProxyProperty
+      );
+      publicAPI.set(state);
+    }
+    publicAPI.modified();
+  }
+
   // API ----------------------------------------------------------------------
 
   publicAPI.setSlicingMode = (mode) => {
     if (!mode) {
-      console.log('skip setSlicingMode', mode);
-      return;
+      return false;
     }
     if (model.slicingMode !== mode) {
       // Update Mode
       model.slicingMode = mode;
-      model.mapper.setSlicingMode(vtkImageMapper.SlicingMode[mode]);
-
-      // Update to previously set position
-      const modelKey = `${mode.toLowerCase()}Slice`;
-      if (modelKey in model && model[modelKey] !== undefined) {
-        model.mapper.setSlice(model[modelKey]);
-      }
-
-      if (model.input) {
-        // Update domains for UI...
-        const state = updateDomains(
-          publicAPI.getInputDataSet(),
-          publicAPI.getDataArray(),
-          model,
-          publicAPI.updateProxyProperty
-        );
-        publicAPI.set(state);
-      }
-      publicAPI.modified();
+      updateSlicingMode(mode);
+      return true;
     }
+    return false;
   };
 
   publicAPI.getSliceIndex = () => {
@@ -260,7 +266,7 @@ function vtkSliceRepresentationProxy(publicAPI, model) {
   };
 
   // Initialize slicing mode
-  publicAPI.setSlicingMode(model.slicingMode || 'X');
+  updateSlicingMode(model.slicingMode || 'X');
 }
 
 // ----------------------------------------------------------------------------

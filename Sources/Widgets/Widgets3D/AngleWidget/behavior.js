@@ -82,8 +82,8 @@ export default function widgetBehavior(publicAPI, model) {
       );
 
       if (
-        model.activeState === model.widgetState.getMoveHandle() ||
-        isDragging
+        worldCoords.length &&
+        (model.activeState === model.widgetState.getMoveHandle() || isDragging)
       ) {
         model.activeState.setOrigin(worldCoords);
         publicAPI.invokeInteractionEvent();

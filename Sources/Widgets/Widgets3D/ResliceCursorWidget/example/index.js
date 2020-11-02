@@ -155,7 +155,6 @@ function updateReslice(viewtype, reslice, actor, renderer) {
     actor.setUserMatrix(reslice.getResliceAxes());
     widget.resetCamera(renderer, viewtype);
   }
-
   return modified;
 }
 
@@ -182,7 +181,9 @@ reader.setUrl(`${__BASE_PATH__}/data/volume/LIDC2.vti`).then(() => {
         // No need to update plane nor refresh when interaction
         // is on current view. Plane can't be changed with interaction on current
         // view. Refreshs happen automatically with `animation`.
-        .filter((_, index) => index !== i)
+        // Note: Need to refresh also the current view because of adding the mouse wheel
+        // to change slicer
+        // .filter((_, index) => index !== i)
         .forEach((v) => {
           // Interactions in other views may change current plane
           v.widgetInstance.onInteractionEvent(() => {
@@ -190,13 +191,7 @@ reader.setUrl(`${__BASE_PATH__}/data/volume/LIDC2.vti`).then(() => {
           });
         });
 
-      updateReslice(
-        viewType,
-        reslice,
-        obj.resliceActor,
-        obj.renderer,
-        obj.renderWindow
-      );
+      updateReslice(viewType, reslice, obj.resliceActor, obj.renderer);
       obj.renderer.resetCamera();
       obj.renderer.resetCameraClippingRange();
       obj.renderWindow.render();

@@ -391,9 +391,7 @@ function vtkXMLReader(publicAPI, model) {
     if (rootElem.querySelector('AppendedData')) {
       const appendedDataElem = rootElem.querySelector('AppendedData');
       const encoding = appendedDataElem.getAttribute('encoding');
-      // Only get data arrays that are descendants of <Piece />
-      // We don't parse DataArrays from FieldData right now.
-      const arrayElems = rootElem.querySelectorAll('Piece DataArray');
+      const arrayElems = rootElem.querySelectorAll('DataArray');
 
       let appendedBuffer = model.binaryBuffer;
 

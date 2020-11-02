@@ -42,6 +42,13 @@ These sub states contain :
 
 - enableTranslation: if false, disable the translation of the axis
 
+- keepOrthogonality: if false, then rotation are totally free. Else, if one axis is rotated, then the associated one if rotating the same axis in order to keep orthogonality
+
+- scrollingMethod: Define which mouse button is used to scroll (use [Contants.js](https://github.com/Kitware/vtk-js/blob/master/Sources/Widgets/Widgets3D/ResliceCursorWidget/Constants.js)):
+  * MIDDLE_MOUSE_BUTTON : Default
+  * LEFT_MOUSE_BUTTON
+  * RIGHT_MOUSE_BUTTON
+
 ## setCenter
 
 You can manually set the center of the reslice cursor by calling this method with an array of three value. That can be useful if you want to implement a simple click which moves the center.
