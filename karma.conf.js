@@ -24,7 +24,7 @@ module.exports = function init(config) {
     ],
 
     basePath: '',
-    frameworks: ['tap'],
+    frameworks: ['tap', 'webpack'],
     files: [
       'Sources/tests.js',
       { pattern: 'Data/**', watched: false, served: true, included: false },
@@ -36,9 +36,6 @@ module.exports = function init(config) {
 
     webpack: {
       mode: 'development',
-      node: {
-        fs: 'empty',
-      },
       module: {
         rules: [].concat(testsRules, linterRules),
       },
@@ -46,17 +43,20 @@ module.exports = function init(config) {
         modules: [path.resolve(__dirname, 'node_modules'), sourcePath],
         alias: {
           'vtk.js': __dirname,
+          stream: 'stream-browserify',
+          buffer: 'buffer',
+        },
+        fallback: {
+          path: false,
+          fs: false,
         },
       },
       plugins: [
         new webpack.DefinePlugin({
           __BASE_PATH__: "'/base'",
         }),
+        new webpack.ProvidePlugin({ process: ['process/browser'] }),
       ],
-    },
-
-    webpackMiddleware: {
-      noInfo: true,
     },
 
     reporters: ['coverage', 'tap-pretty', 'junit'],
