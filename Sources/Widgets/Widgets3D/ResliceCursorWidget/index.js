@@ -47,14 +47,6 @@ function vtkResliceCursorWidget(publicAPI, model) {
       offset[i] = -Math.abs(center[i] - imageCenter[i]);
       offset[i] *= 2; // give us room
     }
-    // Add a small offset to force the recomputation of the 3 plane points (origin
-    // point1 and point2) after setting the normal in function updateReslicePlane
-    // Else, the three points won't be in adequation with the set normal
-    if (offset[0] === 0 && offset[1] === 0 && offset[2] === 0) {
-      offset[0] += 0.0000001;
-      offset[1] += 0.0000001;
-      offset[2] += 0.0000001;
-    }
 
     // Now set the size of the plane based on the location of the cursor so as to
     // at least completely cover the viewed region
