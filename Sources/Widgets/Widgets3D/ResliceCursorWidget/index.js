@@ -33,6 +33,11 @@ function vtkResliceCursorWidget(publicAPI, model) {
   // Private methods
   // --------------------------------------------------------------------------
 
+  /**
+   * Compute the origin of the reslice plane prior to transformations
+   * It does not take into account the current view normal. (always axis aligned)
+   * @param {*} viewType axial, coronal or sagittal
+   */
   function computeReslicePlaneOrigin(viewType) {
     const bounds = model.widgetState.getImage().getBounds();
 
@@ -420,6 +425,11 @@ function vtkResliceCursorWidget(publicAPI, model) {
     return modified;
   };
 
+  /**
+   * Returns a plane source with origin at cursor center and
+   * normal from the view.
+   * @param {ViewType} type: Axial, Coronal or Sagittal
+   */
   publicAPI.getPlaneSourceFromViewType = (type) => {
     const planeSource = vtkPlaneSource.newInstance();
     const widgetState = publicAPI.getWidgetState();
