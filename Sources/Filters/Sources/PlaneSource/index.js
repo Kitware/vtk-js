@@ -129,7 +129,7 @@ function vtkPlaneSource(publicAPI, model) {
           theta = 180.0;
           vtkMath.subtract(model.point1, model.origin, rotationVector);
         } else {
-          vtkMath.cross(model.normal, normal, rotationVector);
+          vtkMath.cross(model.normal, n, rotationVector);
           theta = vtkMath.degreesFromRadians(Math.acos(dp));
         }
         // Create rotation matrix
