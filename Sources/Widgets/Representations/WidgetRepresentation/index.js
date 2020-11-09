@@ -257,6 +257,7 @@ const DEFAULT_VALUES = {
     cameraPosition: [0, 0, 0],
     cameraDir: [1, 0, 0],
     isParallel: false,
+    rendererPixelDims: [1, 1],
   },
 };
 
