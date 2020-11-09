@@ -129,23 +129,22 @@ function vtkPlaneSource(publicAPI, model) {
           theta = 180.0;
           vtkMath.subtract(model.point1, model.origin, rotationVector);
         } else {
-          vtkMath.cross(model.normal, normal, rotationVector);
+          vtkMath.cross(model.normal, n, rotationVector);
           theta = vtkMath.degreesFromRadians(Math.acos(dp));
         }
         // Create rotation matrix
         const transform = mat4.create();
         const negCenter = [];
-
         vec3.negate(negCenter, model.center);
 
-        mat4.translate(transform, transform, negCenter);
+        mat4.translate(transform, transform, model.center);
         mat4.rotate(
           transform,
           transform,
           vtkMath.radiansFromDegrees(theta),
           rotationVector
         );
-        mat4.translate(transform, transform, model.center);
+        mat4.translate(transform, transform, negCenter);
 
         vec3.transformMat4(model.origin, model.origin, transform);
         vec3.transformMat4(model.point1, model.point1, transform);
