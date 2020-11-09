@@ -1,6 +1,5 @@
 import macro from 'vtk.js/Sources/macro';
 import vtkAbstractWidgetFactory from 'vtk.js/Sources/Widgets/Core/AbstractWidgetFactory';
-import vtkBoundingBox from 'vtk.js/Sources/Common/DataModel/BoundingBox';
 import vtkPlane from 'vtk.js/Sources/Common/DataModel/Plane';
 import vtkPlaneSource from 'vtk.js/Sources/Filters/Sources/PlaneSource';
 import vtkResliceCursorContextRepresentation from 'vtk.js/Sources/Widgets/Representations/ResliceCursorContextRepresentation';
@@ -21,6 +20,7 @@ import { vec4, mat4 } from 'gl-matrix';
 
 const VTK_INT_MAX = 2147483647;
 const { vtkErrorMacro } = macro;
+const viewUpFromViewType = {};
 
 // ----------------------------------------------------------------------------
 // Factory
@@ -153,14 +153,11 @@ function vtkResliceCursorWidget(publicAPI, model) {
       );
 
     // Renderer may not have yet actor bounds
-    let rendererBounds = renderer.computeVisiblePropBounds();
     const bounds = model.widgetState.getImage().getBounds();
-    const bboxObj = vtkBoundingBox.newInstance({ bounds });
-    bboxObj.addBounds(rendererBounds);
-    rendererBounds = bboxObj.getBounds();
 
     // Don't clip away any part of the data.
-    renderer.resetCameraClippingRange(rendererBounds);
+    renderer.resetCamera(bounds);
+    renderer.resetCameraClippingRange(bounds);
   }
 
   // --------------------------------------------------------------------------
@@ -261,6 +258,7 @@ function vtkResliceCursorWidget(publicAPI, model) {
 
     renderer.getActiveCamera().setFocalPoint(...estimatedFocalPoint);
     renderer.getActiveCamera().setPosition(...estimatedCameraPosition);
+    renderer.getActiveCamera().setViewUp(viewUpFromViewType[viewType]);
 
     // Project focalPoint onto image plane and preserve distance
     updateCamera(renderer, normal);
@@ -276,6 +274,11 @@ function vtkResliceCursorWidget(publicAPI, model) {
     planeSource.setNormal(...plane.getNormal());
     planeSource.setCenter(...plane.getOrigin());
 
+    const bottomLeftPoint = planeSource.getOrigin();
+    const topLeftPoint = planeSource.getPoint2();
+    const viewUp = vtkMath.subtract(topLeftPoint, bottomLeftPoint, [0, 0, 0]);
+    vtkMath.normalize(viewUp);
+    viewUpFromViewType[viewType] = viewUp;
     let o = planeSource.getOrigin();
 
     let p1 = planeSource.getPoint1();
