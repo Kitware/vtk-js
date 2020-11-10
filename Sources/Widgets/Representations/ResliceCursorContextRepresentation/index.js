@@ -1,7 +1,8 @@
 import macro from 'vtk.js/Sources/macro';
 
+import * as vtkMath from 'vtk.js/Sources/Common/Core/Math';
 import vtkActor from 'vtk.js/Sources/Rendering/Core/Actor';
-import vtkLineSource from 'vtk.js/Sources/Filters/Sources/LineSource';
+import vtkCylinderSource from 'vtk.js/Sources/Filters/Sources/CylinderSource';
 import vtkMapper from 'vtk.js/Sources/Rendering/Core/Mapper';
 import vtkPolyData from 'vtk.js/Sources/Common/DataModel/PolyData';
 import vtkSphereSource from 'vtk.js/Sources/Filters/Sources/SphereSource';
@@ -37,7 +38,7 @@ function vtkResliceCursorContextRepresentation(publicAPI, model) {
   // Create axis 1
   const axis1 = {};
   axis1.line = {
-    source: vtkLineSource.newInstance(),
+    source: vtkCylinderSource.newInstance(),
     mapper: vtkMapper.newInstance(),
     actor: vtkActor.newInstance({ pickable: true }),
   };
@@ -54,7 +55,7 @@ function vtkResliceCursorContextRepresentation(publicAPI, model) {
   // Create axis 2
   const axis2 = {};
   axis2.line = {
-    source: vtkLineSource.newInstance(),
+    source: vtkCylinderSource.newInstance(),
     mapper: vtkMapper.newInstance(),
     actor: vtkActor.newInstance({ pickable: true }),
   };
@@ -76,8 +77,9 @@ function vtkResliceCursorContextRepresentation(publicAPI, model) {
   model.pipelines.center.actor.getProperty().setAmbient(1, 1, 1);
   model.pipelines.center.actor.getProperty().setDiffuse(0, 0, 0);
 
-  vtkWidgetRepresentation.connectPipeline(model.pipelines.center);
-  publicAPI.addActor(model.pipelines.center.actor);
+  // Render it squarish
+  model.pipelines.axes[0].line.source.setResolution(4);
+  model.pipelines.axes[1].line.source.setResolution(4);
 
   model.pipelines.axes.forEach((axis) => {
     Object.values(axis).forEach((lineOrRotationHandle) => {
@@ -89,15 +91,49 @@ function vtkResliceCursorContextRepresentation(publicAPI, model) {
     });
   });
 
-  publicAPI.setSphereRadius = (radius) => {
-    model.pipelines.center.source.setRadius(radius);
-    model.pipelines.axes[0].rotation1.source.setRadius(radius);
-    model.pipelines.axes[0].rotation2.source.setRadius(radius);
-    model.pipelines.axes[1].rotation1.source.setRadius(radius);
-    model.pipelines.axes[1].rotation2.source.setRadius(radius);
+  vtkWidgetRepresentation.connectPipeline(model.pipelines.center);
+  publicAPI.addActor(model.pipelines.center.actor);
+
+  publicAPI.setLineThickness = (lineThickness) => {
+    let scaledLineThickness = lineThickness;
+    if (publicAPI.getScaleInPixels()) {
+      const centerCoords = model.pipelines.center.source.getCenter();
+      scaledLineThickness *= publicAPI.getPixelWorldHeightAtCoord(centerCoords);
+    }
+    model.pipelines.axes[0].line.source.setRadius(scaledLineThickness);
+    model.pipelines.axes[1].line.source.setRadius(scaledLineThickness);
   };
 
-  publicAPI.setSphereRadius(0.05);
+  publicAPI.setSphereRadius = (radius) => {
+    publicAPI.setSphereRadiusOnSphere(radius, model.pipelines.center.source);
+    publicAPI.setSphereRadiusOnSphere(
+      radius,
+      model.pipelines.axes[0].rotation1.source
+    );
+    publicAPI.setSphereRadiusOnSphere(
+      radius,
+      model.pipelines.axes[0].rotation2.source
+    );
+    publicAPI.setSphereRadiusOnSphere(
+      radius,
+      model.pipelines.axes[1].rotation1.source
+    );
+    publicAPI.setSphereRadiusOnSphere(
+      radius,
+      model.pipelines.axes[1].rotation2.source
+    );
+  };
+
+  publicAPI.setSphereRadiusOnSphere = (radius, source) => {
+    let scaledRadius = radius;
+    if (publicAPI.getScaleInPixels()) {
+      const centerCoords = source.getCenter();
+      scaledRadius *= publicAPI.getPixelWorldHeightAtCoord(centerCoords);
+    }
+    source.setRadius(scaledRadius);
+  };
+
+  publicAPI.setSphereRadius(7);
 
   function updateRender(state, axis) {
     const color = state.getColor();
@@ -105,8 +141,14 @@ function vtkResliceCursorContextRepresentation(publicAPI, model) {
     axis.rotation1.actor.getProperty().setColor(color);
     axis.rotation2.actor.getProperty().setColor(color);
 
-    axis.line.source.setPoint1(state.getPoint1());
-    axis.line.source.setPoint2(state.getPoint2());
+    const vector = [0, 0, 0];
+    vtkMath.subtract(state.getPoint2(), state.getPoint1(), vector);
+    const center = [0, 0, 0];
+    vtkMath.multiplyAccumulate(state.getPoint1(), vector, 0.5, center);
+    axis.line.source.setCenter(center);
+    const length = vtkMath.normalize(vector);
+    axis.line.source.setDirection(vector);
+    axis.line.source.setHeight(length);
     axis.rotation1.source.setCenter(state.getRotationPoint1());
     axis.rotation2.source.setCenter(state.getRotationPoint2());
   }
@@ -144,6 +186,7 @@ function vtkResliceCursorContextRepresentation(publicAPI, model) {
     updateRender(axis1State, model.pipelines.axes[0]);
     updateRender(axis2State, model.pipelines.axes[1]);
 
+    publicAPI.setLineThickness(state.getLineThickness());
     publicAPI.setSphereRadius(state.getSphereRadius());
 
     // TODO: return meaningful polydata (e.g. appended lines)
@@ -184,6 +227,17 @@ function vtkResliceCursorContextRepresentation(publicAPI, model) {
         actor.setPickable(state.getEnableTranslation());
       }
     });
+    let lineThickness = state.getLineThickness();
+    if (renderingType === RenderingTypes.PICKING_BUFFER) {
+      lineThickness = Math.max(3, lineThickness);
+    }
+    publicAPI.setLineThickness(lineThickness);
+
+    let radius = state.getSphereRadius();
+    if (renderingType === RenderingTypes.PICKING_BUFFER) {
+      radius += 1;
+    }
+    publicAPI.setSphereRadius(radius);
   };
 
   publicAPI.getSelectedState = (prop, compositeID) => {
@@ -248,16 +302,30 @@ function vtkResliceCursorContextRepresentation(publicAPI, model) {
 const DEFAULT_VALUES = {
   axis1Name: '',
   axis2Name: '',
+  coincidentTopologyParameters: {
+    Point: {
+      factor: -1.0,
+      offset: -1.0,
+    },
+    Line: {
+      factor: -1.5,
+      offset: -1.5,
+    },
+    Polygon: {
+      factor: -2.0,
+      offset: -2.0,
+    },
+  },
   rotationEnabled: true,
+  scaleInPixels: true,
   viewName: '',
 };
 
 // ----------------------------------------------------------------------------
 
 export function extend(publicAPI, model, initialValues = {}) {
-  Object.assign(model, DEFAULT_VALUES, initialValues);
-
   vtkWidgetRepresentation.extend(publicAPI, model, initialValues);
+  Object.assign(model, DEFAULT_VALUES, initialValues);
 
   // Object specific methods
   vtkResliceCursorContextRepresentation(publicAPI, model);

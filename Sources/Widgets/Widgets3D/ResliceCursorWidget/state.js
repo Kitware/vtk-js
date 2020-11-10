@@ -109,6 +109,7 @@ export default function generateState() {
     .addField({ name: 'activeRotationPointName', initialValue: null })
     .addField({ name: 'image', initialValue: null })
     .addField({ name: 'activeViewName', initialValue: '' })
+    .addField({ name: 'lineThickness', initialValue: 2 })
     .addField({ name: 'sphereRadius', initialValue: 5 })
     .addField({ name: 'showCenter', initialValue: true })
     .addField({
