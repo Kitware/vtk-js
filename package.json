@@ -112,5 +112,13 @@
     "exclude": [
       "Sources/**/test/*.js"
     ]
+  },
+  "release": {
+    "branches": [
+      "+([0-9])?(.{+([0-9]),x}).x",
+      "master",
+      "next",
+      "next-major"
+    ]
   }
 }
