@@ -218,7 +218,7 @@ reader
     painter.setSlicingMode(sliceMode);
 
     // set 2D camera position
-    setCamera(sliceMode, scene.renderer, image.data);
+   setCamera(sliceMode, scene.renderer, image.data);
 
     updateControlPanel(image.imageMapper, data);
 
@@ -315,7 +315,7 @@ reader
     // trigger initial update
     update();
 
-    readyAll();
+//    readyAll();
   });
 
 // register readyAll to resize event

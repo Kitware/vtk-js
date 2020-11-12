@@ -15,76 +15,68 @@ function vtkTriangleFilter(publicAPI, model) {
   // requestData only supports polys for now.
   publicAPI.requestData = (inData, outData) => {
     const input = inData[0];
-    const polys = input.getPolys();
     const points = input.getPoints().getData();
-    const cells = polys.getData();
-    let newCells = [];
-    let newPoints = [];
+    const polys = input.getPolys().getData();
+    const cellsDataType = input.getPolys().getDataType();
+    const pointsDataType = input.getPoints().getDataType();
+    // Todo: instantiate TypedArray of the final size
+    const newCells = [];
+    const newPoints = [];
 
     model.errorCount = 0;
 
-    if (cells && cells.length > 0) {
-      let cellOffset = 0;
-      while (cellOffset < cells.length - 1) {
-        const npts = cells[cellOffset] - 1;
-        const cell = cells.slice(1 + cellOffset, 2 + cellOffset + npts);
+    if (polys) {
+      let npts = 0;
+      for (let c = 0; c < polys.length; c += npts + 1) {
+        npts = polys[c];
         // We can't use cell.map here, it doesn't seems to work properly with Uint32Arrays ...
         const cellPoints = [];
+        cellPoints.length = npts;
         for (let i = 0; i < npts; i++) {
-          cellPoints.push([
-            points[3 * cell[i] + 0],
-            points[3 * cell[i] + 1],
-            points[3 * cell[i] + 2],
-          ]);
+          const pointId = polys[c + i + 1];
+          cellPoints[i] = [
+            points[3 * pointId],
+            points[3 * pointId + 1],
+            points[3 * pointId + 2],
+          ];
         }
 
         if (npts === 3) {
-          const newIdStart = newPoints.length;
-          newCells = newCells.concat([
-            3,
-            newIdStart,
-            newIdStart + 1,
-            newIdStart + 2,
-          ]);
-          newPoints = newPoints.concat([
-            ...cellPoints[0],
-            ...cellPoints[1],
-            ...cellPoints[2],
-          ]);
+          const newIdStart = newPoints.length / 3;
+          newCells.push(3, newIdStart, newIdStart + 1, newIdStart + 2);
+          newPoints.push(...cellPoints[0], ...cellPoints[1], ...cellPoints[2]);
         } else if (npts > 3) {
           const polygon = vtkPolygon.newInstance();
           polygon.setPoints(cellPoints);
 
           if (!polygon.triangulate()) {
-            vtkWarningMacro(`Triangulation failed at cellOffset ${cellOffset}`);
+            vtkWarningMacro(`Triangulation failed at cellOffset ${c}`);
             ++model.errorCount;
           }
 
           const newCellPoints = polygon.getPointArray();
           const numSimplices = Math.floor(newCellPoints.length / 9);
+          const triPts = [];
+          triPts.length = 9;
           for (let i = 0; i < numSimplices; i++) {
-            const triPts = [];
             for (let j = 0; j < 9; j++) {
-              triPts.push(newCellPoints[9 * i + j]);
+              triPts[j] = newCellPoints[9 * i + j];
             }
             const newIdStart = newPoints.length / 3;
-            newCells = newCells.concat([
-              3,
-              newIdStart,
-              newIdStart + 1,
-              newIdStart + 2,
-            ]);
-            newPoints = newPoints.concat(triPts);
+            newCells.push(3, newIdStart, newIdStart + 1, newIdStart + 2);
+            newPoints.push(...triPts);
           }
         }
-
-        cellOffset += 1 + npts;
       }
     }
 
     const dataset = vtkPolyData.newInstance();
-    dataset.getPoints().setData(newPoints);
-    dataset.getPolys().setData(newCells);
+    dataset
+      .getPoints()
+      .setData(macro.TYPED_ARRAYS[pointsDataType].from(newPoints));
+    dataset
+      .getPolys()
+      .setData(macro.TYPED_ARRAYS[cellsDataType].from(newCells));
 
     outData[0] = dataset;
   };

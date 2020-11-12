@@ -35,6 +35,7 @@ function vtkSphereHandleRepresentation(publicAPI, model) {
       empty: true,
     }),
   };
+
   model.internalPolyData.getPointData().addArray(model.internalArrays.scale);
   model.internalPolyData.getPointData().addArray(model.internalArrays.color);
 
@@ -160,7 +161,6 @@ export function extend(publicAPI, model, initialValues = {}) {
   Object.assign(model, DEFAULT_VALUES, initialValues);
 
   vtkHandleRepresentation.extend(publicAPI, model, initialValues);
-  macro.setGet(publicAPI, model, ['glyphResolution', 'defaultScale']);
   macro.get(publicAPI, model, ['glyph', 'mapper', 'actor']);
 
   // Object specific methods
