@@ -10,7 +10,7 @@ import widgetBehavior from 'vtk.js/Sources/Widgets/Widgets3D/ResliceCursorWidget
 import stateGenerator from 'vtk.js/Sources/Widgets/Widgets3D/ResliceCursorWidget/state';
 
 import {
-  boundPoint,
+  boundPlane,
   updateState,
   getViewPlaneNameFromViewType,
 } from 'vtk.js/Sources/Widgets/Widgets3D/ResliceCursorWidget/helpers';
@@ -270,57 +270,47 @@ function vtkResliceCursorWidget(publicAPI, model) {
     // Calculate appropriate pixel spacing for the reslicing
     const spacing = model.widgetState.getImage().getSpacing();
 
+    // Compute original (i.e. before rotation) plane (i.e. origin, p1, p2)
+    // centered on cursor center.
     const planeSource = computeReslicePlaneOrigin(viewType);
+
+    // Apply rotation onto plane (i.e. origin, p1, p2)
     planeSource.setNormal(...plane.getNormal());
+    // TBD: isn't it a no-op ?
     planeSource.setCenter(...plane.getOrigin());
 
+    // TODO: orient plane on volume.
+
+    // Compute view up to configure camera later on
     const bottomLeftPoint = planeSource.getOrigin();
     const topLeftPoint = planeSource.getPoint2();
     const viewUp = vtkMath.subtract(topLeftPoint, bottomLeftPoint, [0, 0, 0]);
     vtkMath.normalize(viewUp);
     viewUpFromViewType[viewType] = viewUp;
-    let o = planeSource.getOrigin();
-
-    let p1 = planeSource.getPoint1();
-    const planeAxis1 = [];
-    vtkMath.subtract(p1, o, planeAxis1);
-
-    let p2 = planeSource.getPoint2();
-    const planeAxis2 = [];
-    vtkMath.subtract(p2, o, planeAxis2);
 
     // Clip to bounds
-    const boundedOrigin = boundPoint(
-      planeSource.getOrigin(),
-      planeAxis1,
-      planeAxis2,
-      model.widgetState.getImage().getBounds()
-    );
-
-    const boundedP1 = boundPoint(
-      planeSource.getPoint1(),
-      planeAxis1,
-      planeAxis2,
-      model.widgetState.getImage().getBounds()
-    );
-
-    const boundedP2 = boundPoint(
-      planeSource.getPoint2(),
-      planeAxis1,
-      planeAxis2,
-      model.widgetState.getImage().getBounds()
+    const boundedOrigin = [...planeSource.getOrigin()];
+    const boundedP1 = [...planeSource.getPoint1()];
+    const boundedP2 = [...planeSource.getPoint2()];
+    boundPlane(
+      model.widgetState.getImage().getBounds(),
+      boundedOrigin,
+      boundedP1,
+      boundedP2
     );
 
     planeSource.setOrigin(boundedOrigin);
     planeSource.setPoint1(boundedP1[0], boundedP1[1], boundedP1[2]);
     planeSource.setPoint2(boundedP2[0], boundedP2[1], boundedP2[2]);
 
-    o = planeSource.getOrigin();
+    const o = planeSource.getOrigin();
 
-    p1 = planeSource.getPoint1();
+    const p1 = planeSource.getPoint1();
+    const planeAxis1 = [];
     vtkMath.subtract(p1, o, planeAxis1);
 
-    p2 = planeSource.getPoint2();
+    const p2 = planeSource.getPoint2();
+    const planeAxis2 = [];
     vtkMath.subtract(p2, o, planeAxis2);
 
     // The x,y dimensions of the plane

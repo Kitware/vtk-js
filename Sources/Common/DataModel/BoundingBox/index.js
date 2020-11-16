@@ -1,3 +1,4 @@
+import * as vtkMath from 'vtk.js/Sources/Common/Core/Math';
 import macro from 'vtk.js/Sources/macro';
 import vtkPlane from 'vtk.js/Sources/Common/DataModel/Plane';
 
@@ -108,6 +109,32 @@ function computeScale3(bounds, scale3 = []) {
   return scale3;
 }
 
+/**
+ * Compute local bounds.
+ * Not as fast as vtkPoints.getBounds() if u, v, w form a natural basis.
+ * @param {vtkPoints} points
+ * @param {array} u first vector
+ * @param {array} v second vector
+ * @param {array} w third vector
+ */
+function computeLocalBounds(points, u, v, w) {
+  const bounds = [].concat(INIT_BOUNDS);
+  const pointsData = points.getData();
+  for (let i = 0; i < pointsData.length; i += 3) {
+    const point = [pointsData[i], pointsData[i + 1], pointsData[i + 2]];
+    const du = vtkMath.dot(point, u);
+    bounds[0] = Math.min(du, bounds[0]);
+    bounds[1] = Math.max(du, bounds[1]);
+    const dv = vtkMath.dot(point, v);
+    bounds[2] = Math.min(dv, bounds[2]);
+    bounds[3] = Math.max(dv, bounds[3]);
+    const dw = vtkMath.dot(point, w);
+    bounds[4] = Math.min(dw, bounds[4]);
+    bounds[5] = Math.max(dw, bounds[5]);
+  }
+  return bounds;
+}
+
 // ----------------------------------------------------------------------------
 // Static API
 // ----------------------------------------------------------------------------
@@ -124,6 +151,7 @@ export const STATIC = {
   getZRange,
   getCorners,
   computeCornerPoints,
+  computeLocalBounds,
   computeScale3,
   INIT_BOUNDS,
 };
@@ -309,6 +337,12 @@ function vtkBoundingBox(publicAPI, model) {
     return true;
   };
 
+  /**
+   * Returns true if plane intersects bounding box.
+   * If so, the box is cut by the plane
+   * @param {array} origin
+   * @param {array} normal
+   */
   publicAPI.intersectPlane = (origin, normal) => {
     // Index[0..2] represents the order of traversing the corners of a cube
     // in (x,y,z), (y,x,z) and (z,x,y) ordering, respectively

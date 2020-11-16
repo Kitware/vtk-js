@@ -71,6 +71,14 @@ Please follow the coding style:
     $ npm test
     ```
 
+## Tests
+
+To create and debug a test:
+- Create a testFuncNameToTest.js in a "test" folder of the class to test.
+- Add the test path into Sources/tests.js and temporarily comment the other tests
+- Run `npm test:debug`
+- In the opened window, click the Debug button and place breakpoints in browser debugger.
+
 ## Updating Documentation
 
 The vtk.js documentation is part of the code repository and is entirely written in 

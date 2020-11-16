@@ -692,16 +692,24 @@ export function quaternionToMatrix3x3(quat_4, mat_3x3) {
   mat_3x3[2][2] = zz * f + s;
 }
 
-export function areMatricesEqual(matA, matB) {
-  if (!matA.length === matB.length) {
+/**
+ * Returns true if elements of both arrays are equals.
+ * @param {Array} a an array of numbers (vector, point, matrix...)
+ * @param {Array} b an array of numbers (vector, point, matrix...)
+ * @param {Number} eps tolerance
+ */
+export function areEquals(a, b, eps = 1e-6) {
+  if (!a.length === b.length) {
     return false;
   }
 
   function isEqual(element, index) {
-    return element === matB[index];
+    return Math.abs(element - b[index]) < eps;
   }
-  return matA.every(isEqual);
+  return a.every(isEqual);
 }
+
+export const areMatricesEqual = areEquals;
 
 export function jacobiN(a, n, w, v) {
   let i;
@@ -2217,6 +2225,7 @@ export default {
   identity3x3,
   determinant3x3,
   quaternionToMatrix3x3,
+  areEquals,
   areMatricesEqual,
   matrix3x3ToQuaternion,
   multiplyQuaternion,

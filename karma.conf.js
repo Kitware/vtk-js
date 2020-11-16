@@ -1,13 +1,12 @@
 /* eslint-disable global-require */
 /* eslint-disable react/require-extension */
-var path = require('path');
+const path = require('path');
 
+const webpack = require('webpack');
 const testsRules = require('./Utilities/config/rules-tests.js');
 const linterRules = require('./Utilities/config/rules-linter.js');
 
-var webpack = require('webpack');
-
-var sourcePath = path.join(__dirname, './Sources');
+const sourcePath = path.join(__dirname, './Sources');
 
 if (!process.env.NODE_ENV) process.env.NODE_ENV = 'test';
 
