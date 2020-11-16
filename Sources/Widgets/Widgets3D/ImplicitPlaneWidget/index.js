@@ -148,6 +148,10 @@ function vtkImplicitPlaneWidget(publicAPI, model) {
     'sphereResolution',
     'handleSizeRatio',
     'axisScale',
+    'normalVisible',
+    'originVisible',
+    'planeVisible',
+    'outlineVisible',
   ];
 
   publicAPI.getRepresentationsForViewType = (viewType) => {
