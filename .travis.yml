@@ -25,6 +25,4 @@ cache:
     - "$HOME/.npm"
     - Documentation/build-tmp
 
-script:
-  - if [ "$TRAVIS_EVENT_TYPE" == "pull_request" ]; then ./Utilities/ci/travis-test.sh; fi
-  - if [ "$TRAVIS_EVENT_TYPE" == "push" ] && [ "$TRAVIS_BRANCH" == "master" ]; then ./Utilities/ci/travis-release.sh; fi
+script: ./Utilities/ci/run-travis.sh "$TRAVIS_EVENT_TYPE" "$TRAVIS_BRANCH"

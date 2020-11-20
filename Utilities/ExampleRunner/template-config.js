@@ -45,9 +45,9 @@ module.exports = {
     alias: {
       'vtk.js': '${vtkBasePath.replace(/\\/g, '\\\\')}',
     },
-  },
-  node: {
-    fs: 'empty',
+    fallback: {
+      fs: false,
+    },
   },
 
   devServer: {

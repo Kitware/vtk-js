@@ -1,9 +1,9 @@
 import vtkFullScreenRenderWindow from 'vtk.js/Sources/Rendering/Misc/FullScreenRenderWindow';
 import vtkActor from 'vtk.js/Sources/Rendering/Core/Actor';
-import vtkTrianleFilter from 'vtk.js/Sources/Filters/General/TriangleFilter';
+import vtkTriangleFilter from 'vtk.js/Sources/Filters/General/TriangleFilter';
 import vtkMapper from 'vtk.js/Sources/Rendering/Core/Mapper';
 
-import vtkStar from './star';
+import vtk2DShape from 'vtk.js/Sources/Filters/Sources/Arrow2DSource/';
 
 // ----------------------------------------------------------------------------
 // Standard rendering code setup
@@ -19,12 +19,13 @@ const renderWindow = fullScreenRenderer.getRenderWindow();
 // Example code
 // ----------------------------------------------------------------------------
 
-const starSource = vtkStar.newInstance();
-const triangleFilter = vtkTrianleFilter.newInstance();
+const initialValues = { shape: 'star' }; // choices include triangle, star, arrow4points, arrow6points
+const shapeSource = vtk2DShape.newInstance(initialValues);
+const triangleFilter = vtkTriangleFilter.newInstance();
 const mapper = vtkMapper.newInstance();
 const actor = vtkActor.newInstance();
 
-triangleFilter.setInputConnection(starSource.getOutputPort());
+triangleFilter.setInputConnection(shapeSource.getOutputPort());
 mapper.setInputConnection(triangleFilter.getOutputPort());
 actor.setMapper(mapper);
 

@@ -315,7 +315,7 @@ reader
     // trigger initial update
     update();
 
-    readyAll();
+    //    readyAll();
   });
 
 // register readyAll to resize event

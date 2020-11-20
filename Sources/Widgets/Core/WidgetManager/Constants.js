@@ -3,9 +3,9 @@ export const ViewTypes = {
   GEOMETRY: 1,
   SLICE: 2,
   VOLUME: 3,
-  AXIAL: 4,
-  CORONAL: 5,
-  SAGITTAL: 6,
+  YZ_PLANE: 4, // Coronal
+  XZ_PLANE: 5, // Sagittal
+  XY_PLANE: 6, // Axial
 };
 
 export const RenderingTypes = {

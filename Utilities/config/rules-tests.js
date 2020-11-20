@@ -6,7 +6,7 @@ module.exports = [
   {
     test: /\.worker\.js$/,
     use: [
-      { loader: 'worker-loader', options: { inline: true, fallback: false } },
+      { loader: 'worker-loader', options: { inline: 'no-fallback' } },
     ],
   },
   {
