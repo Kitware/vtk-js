@@ -321,7 +321,11 @@ function vtkWidgetManager(publicAPI, model) {
     );
 
     subscriptions.push(
-      model.interactor.onMouseMove(({ position }) => {
+      model.interactor.onMouseMove((callData) => {
+        const { position, pokedRenderer } = callData;
+        if (model.renderer !== pokedRenderer) {
+          return;
+        }
         if (model.isAnimating || !model.pickingAvailable) {
           return;
         }
@@ -535,7 +539,7 @@ function vtkWidgetManager(publicAPI, model) {
 const DEFAULT_VALUES = {
   viewId: null,
   widgets: [],
-  renderer: [],
+  renderer: null,
   viewType: ViewTypes.DEFAULT,
   pickingAvailable: false,
   isAnimating: false,
@@ -560,6 +564,7 @@ export function extend(publicAPI, model, initialValues = {}) {
   macro.get(publicAPI, model, [
     'selections',
     'widgets',
+    'renderer',
     'viewId',
     'pickingEnabled',
     'useSvgLayer',
