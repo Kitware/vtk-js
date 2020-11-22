@@ -564,7 +564,6 @@ export function extend(publicAPI, model, initialValues = {}) {
   macro.get(publicAPI, model, [
     'selections',
     'widgets',
-    'renderer',
     'viewId',
     'pickingEnabled',
     'useSvgLayer',
