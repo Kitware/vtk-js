@@ -1,5 +1,6 @@
 import macro from 'vtk.js/Sources/macro';
 import vtkActor from 'vtk.js/Sources/Rendering/Core/Actor';
+import vtkVolume from 'vtk.js/Sources/Rendering/Core/Volume';
 import vtkHttpDataSetReader from 'vtk.js/Sources/IO/Core/HttpDataSetReader';
 import vtkMapper from 'vtk.js/Sources/Rendering/Core/Mapper';
 import vtkTexture from 'vtk.js/Sources/Rendering/Core/Texture';
@@ -27,8 +28,21 @@ function applySettings(sceneItem, settings) {
     );
   }
 
+  if (settings.volumeRotation) {
+    sceneItem.volume.rotateWXYZ(
+      settings.volumeRotation[0],
+      settings.volumeRotation[1],
+      settings.volumeRotation[2],
+      settings.volumeRotation[3]
+    );
+  }
+
   if (settings.property) {
-    sceneItem.actor.getProperty().set(settings.property);
+    if (settings.actor) {
+      sceneItem.actor.getProperty().set(settings.property);
+    } else {
+      sceneItem.volume.getProperty().set(settings.property);
+    }
   }
 
   if (settings.mapper) {
@@ -82,79 +96,88 @@ function loadHttpDataSetReader(item, model, publicAPI) {
     fetchGzip: model.fetchGzip,
     dataAccessHelper: model.dataAccessHelper,
   });
-  const actor = vtkActor.newInstance();
   const mapper = vtkMapper.newInstance();
   const sceneItem = {
     name: item.name || `Item ${itemCount++}`,
     source,
     mapper,
-    actor,
     defaultSettings: item,
   };
-  if (item.texture && item.texture in model.usedTextures) {
-    // If this texture has already been used, re-use it
-    actor.addTexture(model.usedTextures[item.texture]);
-  } else if (item.texture) {
-    const url = [model.baseURL, item.texture].join('/');
-    const texture = vtkTexture.newInstance();
-    texture.setInterpolate(true);
-    texture.setRepeat(true);
-    actor.addTexture(texture);
-    sceneItem.texture = texture;
-    model.usedTextures[item.texture] = texture;
 
-    if (isImage(item.texture)) {
-      // It's an image file
-      model.dataAccessHelper
-        .fetchImage({}, url, { crossOrigin: 'anonymous' })
-        .then((img) => {
-          texture.setImage(img);
-        });
-    } else {
-      // Assume it's a dataset file
-      const textureSource = vtkHttpDataSetReader.newInstance({
-        fetchGzip: model.fetchGzip,
-        dataAccessHelper: model.dataAccessHelper,
-      });
-      textureSource.setUrl(url, { loadData: true }).then(() => {
-        texture.setInputData(textureSource.getOutputData());
-      });
-    }
-  }
-
-  const { textureLODs } = item;
-  if (textureLODs && textureLODs.files && textureLODs.files.length !== 0) {
-    // If this texture LOD has already been used, re-use it
-    const textureLODsStr = JSON.stringify(textureLODs);
-    if (textureLODsStr in model.usedTextureLODs) {
-      actor.addTexture(model.usedTextureLODs[textureLODsStr]);
-    } else {
-      // Set it on the scene item so it can be accessed later, for
-      // doing things like setting a callback function.
-      sceneItem.textureLODsDownloader = vtkTextureLODsDownloader.newInstance();
-      const textureDownloader = sceneItem.textureLODsDownloader;
-
+  if (item.actor) {
+    const actor = vtkActor.newInstance();
+    sceneItem.actor = actor;
+    if (item.texture && item.texture in model.usedTextures) {
+      // If this texture has already been used, re-use it
+      actor.addTexture(model.usedTextures[item.texture]);
+    } else if (item.texture) {
+      const url = [model.baseURL, item.texture].join('/');
       const texture = vtkTexture.newInstance();
       texture.setInterpolate(true);
+      texture.setRepeat(true);
       actor.addTexture(texture);
-      model.usedTextureLODs[textureLODsStr] = texture;
+      sceneItem.texture = texture;
+      model.usedTextures[item.texture] = texture;
 
-      textureDownloader.setTexture(texture);
-      textureDownloader.setCrossOrigin('anonymous');
-      textureDownloader.setBaseUrl(textureLODs.baseUrl);
-      textureDownloader.setFiles(textureLODs.files);
-
-      if (model.startLODLoaders) {
-        textureDownloader.startDownloads();
+      if (isImage(item.texture)) {
+        // It's an image file
+        model.dataAccessHelper
+          .fetchImage({}, url, { crossOrigin: 'anonymous' })
+          .then((img) => {
+            texture.setImage(img);
+          });
+      } else {
+        // Assume it's a dataset file
+        const textureSource = vtkHttpDataSetReader.newInstance({
+          fetchGzip: model.fetchGzip,
+          dataAccessHelper: model.dataAccessHelper,
+        });
+        textureSource.setUrl(url, { loadData: true }).then(() => {
+          texture.setInputData(textureSource.getOutputData());
+        });
       }
     }
+
+    const { textureLODs } = item;
+    if (textureLODs && textureLODs.files && textureLODs.files.length !== 0) {
+      // If this texture LOD has already been used, re-use it
+      const textureLODsStr = JSON.stringify(textureLODs);
+      if (textureLODsStr in model.usedTextureLODs) {
+        actor.addTexture(model.usedTextureLODs[textureLODsStr]);
+      } else {
+        // Set it on the scene item so it can be accessed later, for
+        // doing things like setting a callback function.
+        sceneItem.textureLODsDownloader = vtkTextureLODsDownloader.newInstance();
+        const textureDownloader = sceneItem.textureLODsDownloader;
+
+        const texture = vtkTexture.newInstance();
+        texture.setInterpolate(true);
+        actor.addTexture(texture);
+        model.usedTextureLODs[textureLODsStr] = texture;
+
+        textureDownloader.setTexture(texture);
+        textureDownloader.setCrossOrigin('anonymous');
+        textureDownloader.setBaseUrl(textureLODs.baseUrl);
+        textureDownloader.setFiles(textureLODs.files);
+
+        if (model.startLODLoaders) {
+          textureDownloader.startDownloads();
+        }
+      }
+    }
+    if (model.renderer) {
+      model.renderer.addActor(actor);
+    }
+    actor.setMapper(mapper);
+  } else {
+    const volume = vtkVolume.newInstance();
+    sceneItem.volume = volume;
+    if (model.renderer) {
+      model.renderer.addVolume(volume);
+    }
+    volume.setMapper(mapper);
   }
 
-  if (model.renderer) {
-    model.renderer.addActor(actor);
-  }
-
-  actor.setMapper(mapper);
   mapper.setInputConnection(source.getOutputPort());
 
   source
