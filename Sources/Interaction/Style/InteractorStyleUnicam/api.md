@@ -2,6 +2,8 @@
 
 vtkInteractorStyleUnicam is an interactor style used to interact with the camera using only the left mouse button. 
 
+It inherits [vtkInteractorStyleManipulator](Interaction_Style_InteractorStyleManipulator.html).
+
 ## Interactions
 
 Three different types of interactions are available.

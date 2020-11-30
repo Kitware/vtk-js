@@ -14,6 +14,7 @@ const MANIPULTOR_TYPES = {
   gestureCamera: Manipulators.vtkGestureCameraManipulator,
   movement: Manipulators.vtkKeyboardCameraManipulator,
   freeLook: Manipulators.vtkMouseCameraTrackballFirstPersonManipulator,
+  unicam: Manipulators.vtkMouseCameraUnicamManipulator,
 };
 
 const STYLES = {
@@ -42,6 +43,7 @@ const STYLES = {
     { type: 'gestureCamera' },
   ],
   FirstPerson: [{ type: 'movement' }, { type: 'freeLook' }],
+  Unicam: [{ type: 'unicam' }],
   zRotateTop: [
     { type: 'pan', options: { shift: true } },
     {

@@ -6,6 +6,7 @@ import vtkConeSource from 'vtk.js/Sources/Filters/Sources/ConeSource';
 import vtkFullScreenRenderWindow from 'vtk.js/Sources/Rendering/Misc/FullScreenRenderWindow';
 import vtkInteractorStyleUnicam from 'vtk.js/Sources/Interaction/Style/InteractorStyleUnicam';
 import vtkMapper from 'vtk.js/Sources/Rendering/Core/Mapper';
+import vtkMouseCameraTrackballZoomToMouseManipulator from 'vtk.js/Sources/Interaction/Manipulators/MouseCameraTrackballZoomToMouseManipulator';
 import vtkOrientationMarkerWidget from 'vtk.js/Sources/Interaction/Widgets/OrientationMarkerWidget';
 
 import controlPanel from './controlPanel.html';
@@ -27,6 +28,12 @@ fullScreenRenderWindow.addController(controlPanel);
 
 const interactorStyle = vtkInteractorStyleUnicam.newInstance();
 interactorStyle.setWorldUpVec([0, 1, 0]);
+interactorStyle.addMouseManipulator(
+  vtkMouseCameraTrackballZoomToMouseManipulator.newInstance({
+    scrollEnabled: true,
+  })
+);
+interactorStyle.setRotationFactor(2);
 renderWindow.getInteractor().setInteractorStyle(interactorStyle);
 
 // ----------------------------------------------------------------------------
@@ -104,6 +111,8 @@ document.querySelector('.useParallelCamera').oninput = (ev) => {
   renderWindow.render();
 };
 
-interactorStyle.onModified(orientationWidget.updateMarkerOrientation);
+renderer
+  .getActiveCamera()
+  .onModified(orientationWidget.updateMarkerOrientation);
 
 updateWorldUpVec();

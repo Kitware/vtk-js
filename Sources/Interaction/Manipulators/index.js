@@ -7,6 +7,7 @@ import vtkGestureCameraManipulator from './GestureCameraManipulator';
 import vtkKeyboardCameraManipulator from './KeyboardCameraManipulator';
 import vtkMouseCameraAxisRotateManipulator from './MouseCameraAxisRotateManipulator';
 import vtkMouseCameraSliceManipulator from './MouseCameraSliceManipulator';
+import vtkMouseCameraUnicamManipulator from './MouseCameraUnicamManipulator';
 import vtkMouseCameraTrackballFirstPersonManipulator from './MouseCameraTrackballFirstPersonManipulator';
 import vtkMouseCameraTrackballMultiRotateManipulator from './MouseCameraTrackballMultiRotateManipulator';
 import vtkMouseCameraTrackballPanManipulator from './MouseCameraTrackballPanManipulator';
@@ -27,6 +28,7 @@ export default {
   vtkKeyboardCameraManipulator,
   vtkMouseCameraAxisRotateManipulator,
   vtkMouseCameraSliceManipulator,
+  vtkMouseCameraUnicamManipulator,
   vtkMouseCameraTrackballFirstPersonManipulator,
   vtkMouseCameraTrackballMultiRotateManipulator,
   vtkMouseCameraTrackballPanManipulator,
