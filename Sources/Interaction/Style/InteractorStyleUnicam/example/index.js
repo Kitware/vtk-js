@@ -34,6 +34,8 @@ interactorStyle.addMouseManipulator(
   })
 );
 interactorStyle.setRotationFactor(2);
+interactorStyle.setFocusSphereColor(1, 0, 0);
+interactorStyle.setFocusSphereRadiusFactor(1.2);
 renderWindow.getInteractor().setInteractorStyle(interactorStyle);
 
 // ----------------------------------------------------------------------------

@@ -26,7 +26,7 @@ The second method is to start holding the left mouse button from within 10% of t
 
 ## Parameters
 
-### worldUpVec (get/set): Number[3]
+### worldUpVec (get/set): [x, y, z]
 
 All the following explanations are true only if *useWorldVec* is set to *true*.  
 
@@ -37,3 +37,17 @@ By default, the vector <0,1,0> is used as the "up" direction.
 ### useWorldUpVec (get/set): Boolean
 
 Indicates if the worldUpVec is used by the InteractorStyleUnicam. Setting this value to *true* will enable the behavior described previously. Setting this value to *false* will allow to rotate the camera freely.
+
+### useHardwareSelector (get/set): Boolean
+
+Indicates if the point picking is done using a vtkOpenGLHardwareSelector. This picking method is preferred over the use of a vtkPicker which is the alternative method, because vtkPicker does not follow the actors surfaces making the picking less precise.  
+Set this property to *false* if the use of the hardware selector is causing issues.
+
+### focusSphereColor (get/set): [r, g, b]
+
+Defines the color of the focus sphere.  
+The default value is (0.89, 0.66, 0.41).
+
+### focusSphereRadiusFactor (get/set): Number
+
+Applies a factor to the radius of the focus sphere.

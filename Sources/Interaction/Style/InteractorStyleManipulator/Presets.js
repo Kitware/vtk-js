@@ -15,6 +15,7 @@ const MANIPULTOR_TYPES = {
   movement: Manipulators.vtkKeyboardCameraManipulator,
   freeLook: Manipulators.vtkMouseCameraTrackballFirstPersonManipulator,
   unicam: Manipulators.vtkMouseCameraUnicamManipulator,
+  unicamRotate: Manipulators.vtkMouseCameraUnicamRotateManipulator,
 };
 
 const STYLES = {
