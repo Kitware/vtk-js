@@ -19,6 +19,8 @@ import {
   CaptureOn,
 } from 'vtk.js/Sources/Widgets/Core/WidgetManager/Constants';
 
+import { getViewPlaneNameFromViewType } from 'vtk.js/Sources/Widgets/Widgets3D/ResliceCursorWidget/helpers';
+
 // ----------------------------------------------------------------------------
 // Define html structure
 // ----------------------------------------------------------------------------
@@ -43,6 +45,7 @@ table.appendChild(trLine2);
 const viewAttributes = [];
 const widget = vtkResliceCursorWidget.newInstance();
 widget.getWidgetState().setOpacity(0.6);
+widget.getWidgetState().setKeepOrthogonality(true);
 const sliceTypes = [ViewTypes.YZ_PLANE, ViewTypes.XZ_PLANE, ViewTypes.XY_PLANE];
 
 for (let i = 0; i < 3; i++) {
@@ -148,12 +151,23 @@ for (let i = 0; i < 3; i++) {
 // Load image
 // ----------------------------------------------------------------------------
 
-function updateReslice(viewtype, reslice, actor, renderer) {
+function updateReslice(
+  viewtype,
+  reslice,
+  actor,
+  renderer,
+  resetFocalPoint,
+  updateFocalPoint,
+  computeFocalPointShift
+) {
   const modified = widget.updateReslicePlane(reslice, viewtype);
   if (modified) {
     // Get returned modified from setter to know if we have to render
     actor.setUserMatrix(reslice.getResliceAxes());
-    widget.resetCamera(renderer, viewtype);
+  }
+  widget.resetCamera(renderer, viewtype, resetFocalPoint, updateFocalPoint);
+  if (computeFocalPointShift) {
+    widget.computeFocalPointShiftFromResliceCursorCenter(viewtype, renderer);
   }
   return modified;
 }
@@ -183,15 +197,43 @@ reader.setUrl(`${__BASE_PATH__}/data/volume/LIDC2.vti`).then(() => {
         // view. Refreshs happen automatically with `animation`.
         // Note: Need to refresh also the current view because of adding the mouse wheel
         // to change slicer
-        // .filter((_, index) => index !== i)
         .forEach((v) => {
           // Interactions in other views may change current plane
           v.widgetInstance.onInteractionEvent(() => {
-            updateReslice(viewType, reslice, obj.resliceActor, obj.renderer);
+            const activeViewName = widget.getWidgetState().getActiveViewName();
+            const activeMethodName = widget
+              .getWidgetState()
+              .getUpdateMethodName();
+            const currentViewName = getViewPlaneNameFromViewType(viewType);
+            const updateFocalPoint =
+              activeViewName !== currentViewName &&
+              activeMethodName !== 'translateCenter';
+            const computeFocalPointShift = activeMethodName !== 'rotateLine';
+            const resetFocalPoint = false;
+            updateReslice(
+              viewType,
+              reslice,
+              obj.resliceActor,
+              obj.renderer,
+              resetFocalPoint,
+              updateFocalPoint,
+              computeFocalPointShift
+            );
           });
         });
 
-      updateReslice(viewType, reslice, obj.resliceActor, obj.renderer);
+      const resetFocalPoint = true;
+      const computeFocalPointShift = true;
+      const updateFocalPoint = false;
+      updateReslice(
+        viewType,
+        reslice,
+        obj.resliceActor,
+        obj.renderer,
+        resetFocalPoint,
+        updateFocalPoint,
+        computeFocalPointShift
+      );
       obj.renderWindow.render();
     }
   });

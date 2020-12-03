@@ -125,5 +125,6 @@ export default function generateState() {
       name: 'scrollingMethod',
       initialValue: ScrollingMethods.MIDDLE_MOUSE_BUTTON,
     })
+    .addField({ name: 'resliceCenterShift', initialValue: {} })
     .build();
 }
