@@ -20,6 +20,7 @@ import {
 } from 'vtk.js/Sources/Widgets/Core/WidgetManager/Constants';
 
 import { getViewPlaneNameFromViewType } from 'vtk.js/Sources/Widgets/Widgets3D/ResliceCursorWidget/helpers';
+import { InteractionMethodsName } from 'vtk.js/Sources/Widgets/Widgets3D/ResliceCursorWidget/Constants';
 
 // ----------------------------------------------------------------------------
 // Define html structure
@@ -207,8 +208,9 @@ reader.setUrl(`${__BASE_PATH__}/data/volume/LIDC2.vti`).then(() => {
             const currentViewName = getViewPlaneNameFromViewType(viewType);
             const updateFocalPoint =
               activeViewName !== currentViewName &&
-              activeMethodName !== 'translateCenter';
-            const computeFocalPointShift = activeMethodName !== 'rotateLine';
+              activeMethodName !== InteractionMethodsName.TranslateCenter;
+            const computeFocalPointShift =
+              activeMethodName !== InteractionMethodsName.RotateLine;
             const resetFocalPoint = false;
             updateReslice(
               viewType,

@@ -12,7 +12,10 @@ import {
   updateState,
 } from 'vtk.js/Sources/Widgets/Widgets3D/ResliceCursorWidget/helpers';
 
-import { ScrollingMethods } from 'vtk.js/Sources/Widgets/Widgets3D/ResliceCursorWidget/Constants';
+import {
+  ScrollingMethods,
+  InteractionMethodsName,
+} from 'vtk.js/Sources/Widgets/Widgets3D/ResliceCursorWidget/Constants';
 
 export default function widgetBehavior(publicAPI, model) {
   let isDragging = null;
@@ -20,13 +23,13 @@ export default function widgetBehavior(publicAPI, model) {
 
   publicAPI.updateCursor = () => {
     switch (model.activeState.getUpdateMethodName()) {
-      case 'translateCenter':
+      case InteractionMethodsName.TranslateCenter:
         model.openGLRenderWindow.setCursor('move');
         break;
-      case 'rotateLine':
+      case InteractionMethodsName.RotateLine:
         model.openGLRenderWindow.setCursor('alias');
         break;
-      case 'translateAxis':
+      case InteractionMethodsName.TranslateAxis:
         model.openGLRenderWindow.setCursor('pointer');
         break;
       default:

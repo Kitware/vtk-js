@@ -9,6 +9,7 @@ import vtkSphereSource from 'vtk.js/Sources/Filters/Sources/SphereSource';
 import vtkWidgetRepresentation from 'vtk.js/Sources/Widgets/Representations/WidgetRepresentation';
 
 import { RenderingTypes } from 'vtk.js/Sources/Widgets/Core/WidgetManager/Constants';
+import { InteractionMethodsName } from 'vtk.js/Sources/Widgets/Widgets3D/ResliceCursorWidget/Constants';
 
 // ----------------------------------------------------------------------------
 // vtkResliceCursorContextRepresentation methods
@@ -256,34 +257,34 @@ function vtkResliceCursorContextRepresentation(publicAPI, model) {
     switch (prop) {
       case model.pipelines.axes[0].line.actor:
         activeLineState = axis1State;
-        methodName = 'translateAxis';
+        methodName = InteractionMethodsName.TranslateAxis;
         break;
       case model.pipelines.axes[1].line.actor:
         activeLineState = axis2State;
-        methodName = 'translateAxis';
+        methodName = InteractionMethodsName.TranslateAxis;
         break;
       case model.pipelines.axes[0].rotation1.actor:
         activeLineState = axis1State;
         activeRotationPointName = 'RotationPoint1';
-        methodName = 'rotateLine';
+        methodName = InteractionMethodsName.RotateLine;
         break;
       case model.pipelines.axes[0].rotation2.actor:
         activeLineState = axis1State;
         activeRotationPointName = 'RotationPoint2';
-        methodName = 'rotateLine';
+        methodName = InteractionMethodsName.RotateLine;
         break;
       case model.pipelines.axes[1].rotation1.actor:
         activeLineState = axis2State;
         activeRotationPointName = 'RotationPoint1';
-        methodName = 'rotateLine';
+        methodName = InteractionMethodsName.RotateLine;
         break;
       case model.pipelines.axes[1].rotation2.actor:
         activeLineState = axis2State;
         activeRotationPointName = 'RotationPoint2';
-        methodName = 'rotateLine';
+        methodName = InteractionMethodsName.RotateLine;
         break;
       default:
-        methodName = 'translateCenter';
+        methodName = InteractionMethodsName.TranslateCenter;
         break;
     }
 
