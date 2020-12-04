@@ -19,6 +19,14 @@ function vtkSVGLandmarkRepresentation(publicAPI, model) {
     return model.dy;
   };
 
+  publicAPI.setFontProperties = (fontProperties) => {
+    model.fontProperties = fontProperties;
+  };
+
+  publicAPI.getFontProperties = () => {
+    return model.fontProperties;
+  };
+
   publicAPI.render = () => {
     const list = publicAPI.getRepresentationStates();
 
@@ -54,16 +62,26 @@ function vtkSVGLandmarkRepresentation(publicAPI, model) {
 
         const splitText = texts[i].split('\n');
         let j = 0;
+        const newlineOffset =
+          model.fontProperties != null && model.fontProperties.fontSize
+            ? model.fontProperties.fontSize
+            : 15;
         splitText.forEach((subText) => {
           const text = createSvgElement('text');
           Object.keys(model.textProps || {}).forEach((prop) => {
             if (model.fromLineWidget === true && prop === 'dy') {
-              return text.setAttribute(prop, model.dy + 15 * j);
+              return text.setAttribute(prop, model.dy + newlineOffset * j);
             }
             return text.setAttribute(prop, model.textProps[prop]);
           });
           text.setAttribute('x', x);
           text.setAttribute('y', y);
+          if (model.fontProperties != null) {
+            text.setAttribute('font-size', model.fontProperties.fontSize);
+            text.setAttribute('font-family', model.fontProperties.fontFamily);
+            text.setAttribute('font-weight', model.fontProperties.fontStyle);
+            text.setAttribute('fill', model.fontProperties.fontColor);
+          }
           text.textContent = subText;
           j++;
           root.appendChild(text);
@@ -101,6 +119,7 @@ export function extend(publicAPI, model, initialValues = {}) {
 
   macro.setGet(publicAPI, model, ['circleProps', 'textProps', 'name']);
 
+  model.fontProperties = null;
   if (initialValues.fromLineWidget === true) {
     // this allows for different offset values when there are multiple instances of this class
     model.dx = model.textProps.dx;
