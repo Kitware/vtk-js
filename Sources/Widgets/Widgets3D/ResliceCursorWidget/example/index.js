@@ -46,7 +46,6 @@ table.appendChild(trLine2);
 const viewAttributes = [];
 const widget = vtkResliceCursorWidget.newInstance();
 widget.getWidgetState().setOpacity(0.6);
-widget.getWidgetState().setKeepOrthogonality(true);
 const sliceTypes = [ViewTypes.YZ_PLANE, ViewTypes.XZ_PLANE, ViewTypes.XY_PLANE];
 
 for (let i = 0; i < 3; i++) {
@@ -153,23 +152,33 @@ for (let i = 0; i < 3; i++) {
 // ----------------------------------------------------------------------------
 
 function updateReslice(
-  viewtype,
-  reslice,
-  actor,
-  renderer,
-  resetFocalPoint,
-  updateFocalPoint,
-  computeFocalPointShift
+  interactionContext = {
+    viewType: '',
+    reslice: null,
+    actor: null,
+    renderer: null,
+    resetFocalPoint: false,
+    updateFocalPoint: false,
+    computeFocalPointOffset: false,
+  }
 ) {
-  const modified = widget.updateReslicePlane(reslice, viewtype);
+  const modified = widget.updateReslicePlane(
+    interactionContext.reslice,
+    interactionContext.viewType
+  );
   if (modified) {
     // Get returned modified from setter to know if we have to render
-    actor.setUserMatrix(reslice.getResliceAxes());
+    interactionContext.actor.setUserMatrix(
+      interactionContext.reslice.getResliceAxes()
+    );
   }
-  widget.resetCamera(renderer, viewtype, resetFocalPoint, updateFocalPoint);
-  if (computeFocalPointShift) {
-    widget.computeFocalPointShiftFromResliceCursorCenter(viewtype, renderer);
-  }
+  widget.updateCameraPoints(
+    interactionContext.renderer,
+    interactionContext.viewType,
+    interactionContext.resetFocalPoint,
+    interactionContext.updateFocalPoint,
+    interactionContext.computeFocalPointOffset
+  );
   return modified;
 }
 
@@ -206,36 +215,30 @@ reader.setUrl(`${__BASE_PATH__}/data/volume/LIDC2.vti`).then(() => {
               .getWidgetState()
               .getUpdateMethodName();
             const currentViewName = getViewPlaneNameFromViewType(viewType);
-            const updateFocalPoint =
-              activeViewName !== currentViewName &&
-              activeMethodName !== InteractionMethodsName.TranslateCenter;
-            const computeFocalPointShift =
-              activeMethodName !== InteractionMethodsName.RotateLine;
-            const resetFocalPoint = false;
-            updateReslice(
+            updateReslice({
               viewType,
               reslice,
-              obj.resliceActor,
-              obj.renderer,
-              resetFocalPoint,
-              updateFocalPoint,
-              computeFocalPointShift
-            );
+              actor: obj.resliceActor,
+              renderer: obj.renderer,
+              resetFocalPoint: false,
+              updateFocalPoint:
+                activeViewName !== currentViewName &&
+                activeMethodName !== InteractionMethodsName.TranslateCenter,
+              computeFocalPointOffset:
+                activeMethodName !== InteractionMethodsName.RotateLine,
+            });
           });
         });
 
-      const resetFocalPoint = true;
-      const computeFocalPointShift = true;
-      const updateFocalPoint = false;
-      updateReslice(
+      updateReslice({
         viewType,
         reslice,
-        obj.resliceActor,
-        obj.renderer,
-        resetFocalPoint,
-        updateFocalPoint,
-        computeFocalPointShift
-      );
+        actor: obj.resliceActor,
+        renderer: obj.renderer,
+        resetFocalPoint: true,
+        updateFocalPoint: false,
+        computeFocalPointOffset: true,
+      });
       obj.renderWindow.render();
     }
   });

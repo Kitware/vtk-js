@@ -200,7 +200,7 @@ export default function widgetBehavior(publicAPI, model) {
     updateState(model.widgetState);
   };
 
-  publicAPI.translateAxis = (calldata) => {
+  publicAPI[InteractionMethodsName.TranslateAxis] = (calldata) => {
     const stateLine = model.widgetState.getActiveLineState();
     const worldCoords = model.planeManipulator.handleEvent(
       calldata,
@@ -264,7 +264,7 @@ export default function widgetBehavior(publicAPI, model) {
     return boundPointOnPlane(newCenter, oldCenter, imageBounds);
   };
 
-  publicAPI.translateCenter = (calldata) => {
+  publicAPI[InteractionMethodsName.TranslateCenter] = (calldata) => {
     let worldCoords = model.planeManipulator.handleEvent(
       calldata,
       model.openGLRenderWindow
@@ -274,7 +274,7 @@ export default function widgetBehavior(publicAPI, model) {
     updateState(model.widgetState);
   };
 
-  publicAPI.rotateLine = (calldata) => {
+  publicAPI[InteractionMethodsName.RotateLine] = (calldata) => {
     const activeLine = model.widgetState.getActiveLineState();
     const planeNormal = model.planeManipulator.getNormal();
     const worldCoords = model.planeManipulator.handleEvent(

@@ -109,6 +109,40 @@ function vtkResliceCursorWidget(publicAPI, model) {
     return planeSource;
   }
 
+  /**
+   * Compute the offset between display reslice cursor position and
+   * display focal point position
+   * This will be used to keep the same offset between reslice cursor
+   * center and focal point when needed.
+   */
+  function computeFocalPointOffsetFromResliceCursorCenter(viewType, renderer) {
+    const worldFocalPoint = renderer.getActiveCamera().getFocalPoint();
+    const worldResliceCenter = model.widgetState.getCenter();
+
+    const view = renderer.getRenderWindow().getViews()[0];
+    const dims = view.getViewportSize(renderer);
+    const aspect = dims[0] / dims[1];
+    const displayFocalPoint = renderer.worldToNormalizedDisplay(
+      ...worldFocalPoint,
+      aspect
+    );
+    const displayResliceCenter = renderer.worldToNormalizedDisplay(
+      ...worldResliceCenter,
+      aspect
+    );
+
+    const newOffset = vtkMath.subtract(
+      displayFocalPoint,
+      displayResliceCenter,
+      [0, 0, 0]
+    );
+
+    const cameraOffsets = model.widgetState.getCameraOffsets();
+    cameraOffsets[viewType] = newOffset;
+
+    model.widgetState.setCameraOffsets(cameraOffsets);
+  }
+
   function updateCamera(
     renderer,
     normal,
@@ -130,14 +164,17 @@ function vtkResliceCursorWidget(publicAPI, model) {
       [0, 0, 0]
     );
 
-    // intersect with the plane to get updated focal point
-    const intersection = vtkPlane.intersectWithLine(
-      focalPoint,
-      estimatedCameraPosition,
-      model.widgetState.getCenter(), // reslice cursor center
-      normal
-    );
-    const newFocalPoint = resetFocalPoint ? intersection.x : focalPoint;
+    let newFocalPoint = focalPoint;
+    if (resetFocalPoint) {
+      // intersect with the plane to get updated focal point
+      const intersection = vtkPlane.intersectWithLine(
+        focalPoint,
+        estimatedCameraPosition,
+        model.widgetState.getCenter(), // reslice cursor center
+        normal
+      );
+      newFocalPoint = intersection.x;
+    }
 
     // Update the estimated focal point so that it will be at the same
     // distance from the reslice center
@@ -152,12 +189,12 @@ function vtkResliceCursorWidget(publicAPI, model) {
         aspect
       );
 
-      const realShift = model.widgetState.getResliceCenterShift()[viewType];
-      const displayFocal = [
-        displayResliceCenter[0] + realShift[0],
-        displayResliceCenter[1] + realShift[1],
-        displayResliceCenter[2] + realShift[2],
-      ];
+      const realOffset = model.widgetState.getCameraOffsets()[viewType];
+      const displayFocal = vtkMath.add(displayResliceCenter, realOffset, [
+        0,
+        0,
+        0,
+      ]);
 
       const worldFocal = renderer.normalizedDisplayToWorld(
         ...displayFocal,
@@ -165,6 +202,8 @@ function vtkResliceCursorWidget(publicAPI, model) {
         aspect
       );
 
+      // Reproject focal point on slice in order to keep it on the
+      // same plane as the reslice cursor center
       const intersection2 = vtkPlane.intersectWithLine(
         worldFocal,
         estimatedCameraPosition,
@@ -278,6 +317,25 @@ function vtkResliceCursorWidget(publicAPI, model) {
   // --------------------------------------------------------------------------
   // Methods
   // --------------------------------------------------------------------------
+
+  publicAPI.updateCameraPoints = (
+    renderer,
+    viewType,
+    resetFocalPoint,
+    keepCenterFocalDistance,
+    computeFocalPointOffset
+  ) => {
+    publicAPI.resetCamera(
+      renderer,
+      viewType,
+      resetFocalPoint,
+      keepCenterFocalDistance
+    );
+
+    if (computeFocalPointOffset) {
+      computeFocalPointOffsetFromResliceCursorCenter(viewType, renderer);
+    }
+  };
 
   /**
    *
@@ -483,37 +541,6 @@ function vtkResliceCursorWidget(publicAPI, model) {
       modified;
 
     return modified;
-  };
-
-  publicAPI.computeFocalPointShiftFromResliceCursorCenter = (
-    viewType,
-    renderer
-  ) => {
-    const worldFocalPoint = renderer.getActiveCamera().getFocalPoint();
-    const worldResliceCenter = model.widgetState.getCenter();
-
-    const view = renderer.getRenderWindow().getViews()[0];
-    const dims = view.getViewportSize(renderer);
-    const aspect = dims[0] / dims[1];
-    const displayFocalPoint = renderer.worldToNormalizedDisplay(
-      ...worldFocalPoint,
-      aspect
-    );
-    const displayResliceCenter = renderer.worldToNormalizedDisplay(
-      ...worldResliceCenter,
-      aspect
-    );
-
-    const newShift = [
-      displayFocalPoint[0] - displayResliceCenter[0],
-      displayFocalPoint[1] - displayResliceCenter[1],
-      displayFocalPoint[2] - displayResliceCenter[2],
-    ];
-
-    const temp = model.widgetState.getResliceCenterShift();
-    temp[viewType] = newShift;
-
-    model.widgetState.setResliceCenterShift(temp);
   };
 
   /**

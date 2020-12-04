@@ -4,7 +4,8 @@ export const ScrollingMethods = {
   RIGHT_MOUSE_BUTTON: 2,
 };
 
-// Note: These strings are exactly method's name in ResliceCursorWidget/behavior.js
+// Note: These strings are used in ResliceCursorWidget/behavior.js
+// as method's names
 export const InteractionMethodsName = {
   TranslateAxis: 'translateAxis',
   RotateLine: 'rotateLine',
