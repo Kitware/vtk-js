@@ -209,25 +209,24 @@ reader.setUrl(`${__BASE_PATH__}/data/volume/LIDC2.vti`).then(() => {
         // to change slicer
         .forEach((v) => {
           // Interactions in other views may change current plane
-          v.widgetInstance.onInteractionEvent(() => {
-            const activeViewName = widget.getWidgetState().getActiveViewName();
-            const activeMethodName = widget
-              .getWidgetState()
-              .getUpdateMethodName();
-            const currentViewName = getViewPlaneNameFromViewType(viewType);
-            updateReslice({
-              viewType,
-              reslice,
-              actor: obj.resliceActor,
-              renderer: obj.renderer,
-              resetFocalPoint: false,
-              updateFocalPoint:
-                activeViewName !== currentViewName &&
-                activeMethodName !== InteractionMethodsName.TranslateCenter,
-              computeFocalPointOffset:
-                activeMethodName !== InteractionMethodsName.RotateLine,
-            });
-          });
+          v.widgetInstance.onInteractionEvent(
+            ({ computeFocalPointOffset, canUpdateFocalPoint }) => {
+              const activeViewName = widget
+                .getWidgetState()
+                .getActiveViewName();
+              const currentViewName = getViewPlaneNameFromViewType(viewType);
+              updateReslice({
+                viewType,
+                reslice,
+                actor: obj.resliceActor,
+                renderer: obj.renderer,
+                resetFocalPoint: false,
+                updateFocalPoint:
+                  activeViewName !== currentViewName && canUpdateFocalPoint,
+                computeFocalPointOffset,
+              });
+            }
+          );
         });
 
       updateReslice({

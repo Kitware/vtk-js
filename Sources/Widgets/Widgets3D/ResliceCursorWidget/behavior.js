@@ -76,7 +76,7 @@ export default function widgetBehavior(publicAPI, model) {
         );
         model.previousPosition = callData.position;
 
-        publicAPI.invokeInteractionEvent();
+        publicAPI.invokeInternalInteractionEvent();
       }
     }
     return macro.VOID;
@@ -120,7 +120,7 @@ export default function widgetBehavior(publicAPI, model) {
     const step = calldata.spinY;
     publicAPI.translateCenterOnCurrentDirection(step, calldata.pokedRenderer);
 
-    publicAPI.invokeInteractionEvent();
+    publicAPI.invokeInternalInteractionEvent();
 
     return macro.EVENT_ABORT;
   };
@@ -153,10 +153,22 @@ export default function widgetBehavior(publicAPI, model) {
   publicAPI.handleEvent = (callData) => {
     if (model.activeState.getActive()) {
       publicAPI[model.activeState.getUpdateMethodName()](callData);
-      publicAPI.invokeInteractionEvent();
+      publicAPI.invokeInternalInteractionEvent();
       return macro.EVENT_ABORT;
     }
     return macro.VOID;
+  };
+
+  publicAPI.invokeInternalInteractionEvent = () => {
+    const methodName = model.activeState.getUpdateMethodName();
+    const computeFocalPointOffset =
+      methodName !== InteractionMethodsName.RotateLine;
+    const canUpdateFocalPoint =
+      methodName !== InteractionMethodsName.TranslateCenter;
+    publicAPI.invokeInteractionEvent({
+      computeFocalPointOffset,
+      canUpdateFocalPoint,
+    });
   };
 
   publicAPI.startInteraction = () => {
