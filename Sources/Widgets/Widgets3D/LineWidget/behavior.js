@@ -88,14 +88,12 @@ export default function widgetBehavior(publicAPI, model) {
   }
 
   function isHandleOrientable(handleType) {
-    if (
+    return (
       handleType === HandleRepresentationType.CONE ||
       handleType === HandleRepresentationType.ARROWHEAD3 ||
       handleType === HandleRepresentationType.ARROWHEAD4 ||
       handleType === HandleRepresentationType.ARROWHEAD6
-    )
-      return 1;
-    return 0;
+    );
   }
 
   function isOrientable() {

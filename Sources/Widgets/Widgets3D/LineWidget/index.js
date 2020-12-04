@@ -136,39 +136,34 @@ function vtkLineWidget(publicAPI, model) {
   // --- Public methods -------------------------------------------------------
 
   publicAPI.getDistance = () => {
-    const nbHandles =
-      model.widgetState.getHandle1List().length +
-      model.widgetState.getHandle2List().length;
-    if (nbHandles !== 2) {
+    const nbHandles = model.widgetState.getNbHandles();
+    if (nbHandles < 2) {
       return 0;
     }
     return Math.sqrt(
       distance2BetweenPoints(
-        model.widgetState.getHandle1List()[0].getOrigin(),
-        model.widgetState.getHandle2List()[0].getOrigin()
+        model.widgetState.getHandle1().getOrigin(),
+        model.widgetState.getHandle2().getOrigin()
       )
     );
   };
 
-  publicAPI.updateTextValue = (text) => {
-    if (typeof model.widgetState.getText() !== 'undefined')
-      model.widgetState.getText().setText(text);
+  publicAPI.setText = (text) => {
+    if (model.widgetState.getText()) model.widgetState.getText().setText(text);
   };
 
-  publicAPI.updateTextProps = (input, prop) => {
-    if (prop === 'positionOnLine') {
-      publicAPI.setPositionOnLine(input / 100);
-    }
-    updateTextPosition(model, publicAPI.getPositionOnLine());
-    model.widgetState.setPositionOnLine(publicAPI.getPositionOnLine());
+  publicAPI.updateTextPosition = (positionOnLine) => {
+    updateTextPosition(model, positionOnLine);
+    model.widgetState.setPositionOnLine(positionOnLine);
   };
 
-  publicAPI.updateHandleFromUI = (input, handleId) => {
-    if (handleId === 1) {
-      model.handle1Shape = input;
-    } else if (handleId === 2) {
-      model.handle2Shape = input;
-    }
+  publicAPI.setPositionOnLine = macro.chain(
+    publicAPI.updateTextPosition,
+    publicAPI.setPositionOnLine
+  );
+
+  publicAPI.setHandleShape = (handleId, shape) => {
+    model[`handle${handleId}Shape`] = shape;
     initializeHandleRepresentations();
     publicAPI.getRepresentationsForViewType(0);
   };
@@ -197,11 +192,12 @@ const DEFAULT_VALUES = {
   handle2Shape: HandleRepresentationType.ARROWHEAD6,
   /* Position of the text on the line where 0 is handle1 and 1 is handle2 */
   positionOnLine: 0.5,
-  /* You can change the initial value of the text here, the initialValue variable
-   * of the state is meant to create an empty text to insert the desired text
-   * when both handles are set, and avoids having a default text before
+  /**
+   * The initialValue variable of the state is meant to create an empty text
+   * to insert the desired text when both handles are set, and avoids having
+   * a default text before.
    */
-  text: 'Text orginal',
+  text: '',
 };
 
 // ----------------------------------------------------------------------------

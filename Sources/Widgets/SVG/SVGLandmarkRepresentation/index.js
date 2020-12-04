@@ -15,29 +15,21 @@ function vtkSVGLandmarkRepresentation(publicAPI, model) {
     model.dy = val;
   };
 
-  publicAPI.getDy = () => {
-    return model.dy;
-  };
+  publicAPI.getDy = () => model.dy;
 
   publicAPI.setFontProperties = (fontProperties) => {
     model.fontProperties = fontProperties;
   };
 
-  publicAPI.getFontProperties = () => {
-    return model.fontProperties;
-  };
+  publicAPI.getFontProperties = () => model.fontProperties;
 
   publicAPI.render = () => {
     const list = publicAPI.getRepresentationStates();
 
-    let index = 0;
     const coords = list.map((state) => state.getOrigin());
-    const texts = list.map((state) => {
-      const ret =
-        typeof state.getText !== 'undefined' ? state.getText() : `L${index}`;
-      index++;
-      return ret;
-    });
+    const texts = list.map((state, index) =>
+      state.getText ? state.getText() : `L${index}`
+    );
 
     return publicAPI.worldPointsToPixelSpace(coords).then((pixelSpace) => {
       const points2d = pixelSpace.coords;
@@ -46,46 +38,46 @@ function vtkSVGLandmarkRepresentation(publicAPI, model) {
       const root = createSvgElement('g');
       for (let i = 0; i < points2d.length; i++) {
         const xy = points2d[i];
-        const x = xy[0];
-        const y = winHeight - xy[1];
+        if (!Number.isNaN(xy[0]) && !Number.isNaN(xy[1])) {
+          const x = xy[0];
+          const y = winHeight - xy[1];
 
-        let circle = {};
-        if (model.showCircle === true) {
-          circle = createSvgElement('circle');
-          Object.keys(model.circleProps || {}).forEach((prop) =>
-            circle.setAttribute(prop, model.circleProps[prop])
-          );
-          circle.setAttribute('cx', x);
-          circle.setAttribute('cy', y);
-          root.appendChild(circle);
-        }
-
-        const splitText = texts[i].split('\n');
-        let j = 0;
-        const newlineOffset =
-          model.fontProperties != null && model.fontProperties.fontSize
-            ? model.fontProperties.fontSize
-            : 15;
-        splitText.forEach((subText) => {
-          const text = createSvgElement('text');
-          Object.keys(model.textProps || {}).forEach((prop) => {
-            if (model.fromLineWidget === true && prop === 'dy') {
-              return text.setAttribute(prop, model.dy + newlineOffset * j);
-            }
-            return text.setAttribute(prop, model.textProps[prop]);
-          });
-          text.setAttribute('x', x);
-          text.setAttribute('y', y);
-          if (model.fontProperties != null) {
-            text.setAttribute('font-size', model.fontProperties.fontSize);
-            text.setAttribute('font-family', model.fontProperties.fontFamily);
-            text.setAttribute('font-weight', model.fontProperties.fontStyle);
-            text.setAttribute('fill', model.fontProperties.fontColor);
+          let circle = {};
+          if (model.showCircle === true) {
+            circle = createSvgElement('circle');
+            Object.keys(model.circleProps || {}).forEach((prop) =>
+              circle.setAttribute(prop, model.circleProps[prop])
+            );
+            circle.setAttribute('cx', x);
+            circle.setAttribute('cy', y);
+            root.appendChild(circle);
           }
-          text.textContent = subText;
-          j++;
-          root.appendChild(text);
-        });
+
+          const splitText = texts[i].split('\n');
+          const newlineOffset =
+            model.fontProperties != null && model.fontProperties.fontSize
+              ? model.fontProperties.fontSize
+              : 15;
+          splitText.forEach((subText, j) => {
+            const text = createSvgElement('text');
+            Object.keys(model.textProps || {}).forEach((prop) => {
+              if (model.fromLineWidget === true && prop === 'dy') {
+                return text.setAttribute(prop, model.dy + newlineOffset * j);
+              }
+              return text.setAttribute(prop, model.textProps[prop]);
+            });
+            text.setAttribute('x', x);
+            text.setAttribute('y', y);
+            if (model.fontProperties != null) {
+              text.setAttribute('font-size', model.fontProperties.fontSize);
+              text.setAttribute('font-family', model.fontProperties.fontFamily);
+              text.setAttribute('font-weight', model.fontProperties.fontStyle);
+              text.setAttribute('fill', model.fontProperties.fontColor);
+            }
+            text.textContent = subText;
+            root.appendChild(text);
+          });
+        }
       }
 
       return root;
