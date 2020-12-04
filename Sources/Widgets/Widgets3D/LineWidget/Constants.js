@@ -11,6 +11,7 @@ export const HandleBehavior = {
 export const HandleRepresentationType = {
   // 3D handles
   SPHERE: 'sphere',
+  // a ghost_sphere is a sphereHandle visible only on mouseover / grab
   GHOST_SPHERE: 'ghost_sphere',
   CUBE: 'cube',
   CONE: 'cone',

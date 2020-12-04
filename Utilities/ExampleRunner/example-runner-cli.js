@@ -92,7 +92,7 @@ if (configuration.examples) {
     const conf = buildConfig(exampleName, validPath(examples[exBasePath][exampleName]), distDir, validPath(rootPath), validPath(exBasePath));
     shell.ShellString(conf).to(webpackConfigPath);
     shell.cd(exBasePath);
-    shell.exec(`webpack-dev-server --progress ${ program.browser ? '--open' : ''} --config ${webpackConfigPath}`)
+    shell.exec(`webpack serve --progress --config ${webpackConfigPath}`)
   } else {
     console.log('=> To run an example:')
     console.log('  $ npm run example -- PUT_YOUR_EXAMPLE_NAME_HERE\n');

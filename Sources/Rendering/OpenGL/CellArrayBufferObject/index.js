@@ -249,7 +249,7 @@ function vtkOpenGLCellArrayBufferObject(publicAPI, model) {
     const useShiftAndScale =
       diagSq > 0 &&
       (Math.abs(distSq) / diagSq > 1.0e6 || // If data is far from the origin relative to its size
-      Math.abs(Math.log10(diagSq)) > 3.0 || // If the size is huge when not far from the origin
+        Math.abs(Math.log10(diagSq)) > 3.0 || // If the size is huge when not far from the origin
         (diagSq === 0 && distSq > 1.0e6)); // If data is a point, but far from the origin
 
     if (useShiftAndScale) {

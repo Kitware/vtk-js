@@ -43,7 +43,7 @@ table.appendChild(trLine2);
 const viewAttributes = [];
 const widget = vtkResliceCursorWidget.newInstance();
 widget.getWidgetState().setOpacity(0.6);
-const sliceTypes = [ViewTypes.CORONAL, ViewTypes.SAGITTAL, ViewTypes.AXIAL];
+const sliceTypes = [ViewTypes.YZ_PLANE, ViewTypes.XZ_PLANE, ViewTypes.XY_PLANE];
 
 for (let i = 0; i < 3; i++) {
   const element = document.createElement('td');
@@ -155,7 +155,6 @@ function updateReslice(viewtype, reslice, actor, renderer) {
     actor.setUserMatrix(reslice.getResliceAxes());
     widget.resetCamera(renderer, viewtype);
   }
-
   return modified;
 }
 
@@ -171,18 +170,20 @@ reader.setUrl(`${__BASE_PATH__}/data/volume/LIDC2.vti`).then(() => {
       obj.renderer.addActor(obj.resliceActor);
       // const widgetState = widget.getWidgetState();
       const reslice = obj.reslice;
-      let viewType = ViewTypes.AXIAL;
+      let viewType = ViewTypes.XY_PLANE;
       if (i === 0) {
-        viewType = ViewTypes.CORONAL;
+        viewType = ViewTypes.YZ_PLANE;
       } else if (i === 1) {
-        viewType = ViewTypes.SAGITTAL;
+        viewType = ViewTypes.XZ_PLANE;
       }
 
       viewAttributes
         // No need to update plane nor refresh when interaction
         // is on current view. Plane can't be changed with interaction on current
         // view. Refreshs happen automatically with `animation`.
-        .filter((_, index) => index !== i)
+        // Note: Need to refresh also the current view because of adding the mouse wheel
+        // to change slicer
+        // .filter((_, index) => index !== i)
         .forEach((v) => {
           // Interactions in other views may change current plane
           v.widgetInstance.onInteractionEvent(() => {
@@ -190,15 +191,7 @@ reader.setUrl(`${__BASE_PATH__}/data/volume/LIDC2.vti`).then(() => {
           });
         });
 
-      updateReslice(
-        viewType,
-        reslice,
-        obj.resliceActor,
-        obj.renderer,
-        obj.renderWindow
-      );
-      obj.renderer.resetCamera();
-      obj.renderer.resetCameraClippingRange();
+      updateReslice(viewType, reslice, obj.resliceActor, obj.renderer);
       obj.renderWindow.render();
     }
   });

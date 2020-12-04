@@ -105,6 +105,9 @@ export default function widgetBehavior(publicAPI, model) {
     );
   }
 
+  /* set a nearly transparent opacity to allow mouseMove events to react to
+   * handle position. An opacity value set to 0 prevents such behavior
+   */
   publicAPI.hideGhostSpheres = () => {
     if (model.handle1Shape === HandleRepresentationType.GHOST_SPHERE) {
       model.representations[0].getActors()[1].getProperty().setOpacity(0.01);
@@ -148,7 +151,6 @@ export default function widgetBehavior(publicAPI, model) {
   // --------------------------------------------------------------------------
 
   publicAPI.handleLeftButtonPress = (e) => {
-    publicAPI.hideGhostSpheres();
     if (
       !model.activeState ||
       !model.activeState.getActive() ||
@@ -157,6 +159,7 @@ export default function widgetBehavior(publicAPI, model) {
     ) {
       return macro.VOID;
     }
+    publicAPI.hideGhostSpheres();
     const moveHandle = model.widgetState.getMoveHandle();
     moveHandle.setVisible(false);
     if (
@@ -208,13 +211,12 @@ export default function widgetBehavior(publicAPI, model) {
   // --------------------------------------------------------------------------
 
   publicAPI.handleMouseMove = (callData) => {
-    if (!model.activeState || !model.activeState.getActive()) {
-      publicAPI.hideGhostSpheres();
-    }
-
     if (model.hasFocus && model.widgetState.getNbHandles() === MAX_POINTS) {
       publicAPI.loseFocus();
       return macro.VOID;
+    }
+    if (!model.activeState || !model.activeState.getActive()) {
+      publicAPI.hideGhostSpheres();
     }
     if (
       model.pickable &&

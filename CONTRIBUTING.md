@@ -59,7 +59,42 @@ Please follow the coding style:
     For more information see: 
     [Create a Pull Request](https://help.github.com/articles/creating-a-pull-request/)
 
+If committing changes to `vtk.js@next` or `vtk.js@next-major`, then set your base branch to be `next`
+or `next-major`, respectively. For more info see the section on release channels below.
+
 8. vtk.js uses GitHub for code review and Travis-CI to test proposed patches before they are merged.
+
+## Release Channels
+
+vtk.js currently has semantic-release configured with three release channels:
+- `master` publishes to `vtk.js` on npm
+- `next` publishes to `vtk.js@next` on npm
+- `next-major` publishes to `vtk.js@next-major` on npm
+
+When creating a Pull Request, it is recommended to understand which base branch you choose to merge into.
+That way, code that needs more testing in downstream projects can pull from one of the `next` or `next-major`
+channels without impacting the primary `master` release channel.
+
+If you are unsure as to which branch you want to merge into, below outlines some general tips.
+- If you are committing bug fixes or other minor fixes, then you can merge into `master`.
+- If you are committing features that you want to test before merging into the primary release, then
+  use `next`.
+- If you are committing breaking changes, then it is best to merge into `next-major`. That way you
+  can test any relevant downstream applications by targeting `vtk.js@next-major` before merging those
+  changes into master.
+
+For folks with merge permissions: when you are satisfied with `next` or `next-major`, you can merge the
+branch into `master`. This will simply make the version at `vtk.js@next` or `vtk.js@next-major` available
+via `npm install vtk.js`.
+
+### Merging and handling multiple PRs
+
+If you are merging multiple PRs, but you only want to increment the major/minor/patch number by one,
+then you should *not* merge into any of `master`, `next`, or `next-major`. Instead, create a staging
+branch off of master, and then merge the PRs into that staging branch. (Note semantic-release will not
+run for the staging branch, since it is only configured to run for the three aforementioned branches.) Once
+you are satisfied with the staging branch changes, you can then merge into either `master`, `next`, or
+`next-major` as you see fit.
 
 ## Notice
 
@@ -70,6 +105,14 @@ Please follow the coding style:
     ```
     $ npm test
     ```
+
+## Tests
+
+To create and debug a test:
+- Create a testFuncNameToTest.js in a "test" folder of the class to test.
+- Add the test path into Sources/tests.js and temporarily comment the other tests
+- Run `npm test:debug`
+- In the opened window, click the Debug button and place breakpoints in browser debugger.
 
 ## Updating Documentation
 

@@ -74,3 +74,4 @@ import './Testing/testAlgorithm';
 import './Testing/testMacro';
 import './Testing/testSerialization';
 import './Testing/testProxy';
+import './Widgets/Widgets3D/ResliceCursorWidget/test/testBoundPlane';

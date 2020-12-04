@@ -696,7 +696,7 @@ function vtkCamera(publicAPI, model) {
       const angle = vtkMath.radiansFromDegrees(degrees);
       const q = quat.create();
       quat.setAxisAngle(q, [x, y, z], angle);
-      quat.toMat4(q, quatMat);
+      mat4.fromQuat(quatMat, q);
     }
 
     const dop = vec3.fromValues(0.0, 0.0, -1.0);

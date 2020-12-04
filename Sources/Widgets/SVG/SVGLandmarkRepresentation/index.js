@@ -19,14 +19,6 @@ function vtkSVGLandmarkRepresentation(publicAPI, model) {
     return model.dy;
   };
 
-  publicAPI.setFontProperties = (fontProperties) => {
-    model.fontProperties = fontProperties;
-  };
-
-  publicAPI.getFontProperties = () => {
-    return model.fontProperties;
-  };
-
   publicAPI.render = () => {
     const list = publicAPI.getRepresentationStates();
 
@@ -61,12 +53,12 @@ function vtkSVGLandmarkRepresentation(publicAPI, model) {
         }
 
         const splitText = texts[i].split('\n');
-        let j = 0;
+        // const j = 0;
         const newlineOffset =
           model.fontProperties != null && model.fontProperties.fontSize
             ? model.fontProperties.fontSize
             : 15;
-        splitText.forEach((subText) => {
+        splitText.forEach((subText, j) => {
           const text = createSvgElement('text');
           Object.keys(model.textProps || {}).forEach((prop) => {
             if (model.fromLineWidget === true && prop === 'dy') {
@@ -83,11 +75,9 @@ function vtkSVGLandmarkRepresentation(publicAPI, model) {
             text.setAttribute('fill', model.fontProperties.fontColor);
           }
           text.textContent = subText;
-          j++;
           root.appendChild(text);
         });
       }
-
       return root;
     });
   };
@@ -108,6 +98,7 @@ const DEFAULT_VALUES = {
     dx: 12,
     dy: -12,
   },
+  fontProperties: null,
 };
 
 // ----------------------------------------------------------------------------
@@ -117,14 +108,17 @@ export function extend(publicAPI, model, initialValues = {}) {
 
   vtkSVGRepresentation.extend(publicAPI, model, initialValues);
 
-  macro.setGet(publicAPI, model, ['circleProps', 'textProps', 'name']);
+  macro.setGet(publicAPI, model, [
+    'circleProps',
+    'textProps',
+    'name',
+    'fontProperties',
+  ]);
 
-  model.fontProperties = null;
   if (initialValues.fromLineWidget === true) {
     // this allows for different offset values when there are multiple instances of this class
     model.dx = model.textProps.dx;
     model.dy = model.textProps.dy;
-    model.fromLineWidget = true;
   } else {
     model.fromLineWidget = false;
   }

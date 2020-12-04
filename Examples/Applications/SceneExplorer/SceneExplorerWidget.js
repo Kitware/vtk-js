@@ -1,7 +1,5 @@
 import vtkHttpSceneLoader from 'vtk.js/Sources/IO/Core/HttpSceneLoader';
 
-/* global document */
-
 const SETTINGS_OPTIONS = {
   defaultSettings: {},
   Surface: {

@@ -1,6 +1,5 @@
 import macro from 'vtk.js/Sources/macro';
 import vtkAbstractWidgetFactory from 'vtk.js/Sources/Widgets/Core/AbstractWidgetFactory';
-import vtkBoundingBox from 'vtk.js/Sources/Common/DataModel/BoundingBox';
 import vtkPlane from 'vtk.js/Sources/Common/DataModel/Plane';
 import vtkPlaneSource from 'vtk.js/Sources/Filters/Sources/PlaneSource';
 import vtkResliceCursorContextRepresentation from 'vtk.js/Sources/Widgets/Representations/ResliceCursorContextRepresentation';
@@ -11,7 +10,7 @@ import widgetBehavior from 'vtk.js/Sources/Widgets/Widgets3D/ResliceCursorWidget
 import stateGenerator from 'vtk.js/Sources/Widgets/Widgets3D/ResliceCursorWidget/state';
 
 import {
-  boundPoint,
+  boundPlane,
   updateState,
   getViewPlaneNameFromViewType,
 } from 'vtk.js/Sources/Widgets/Widgets3D/ResliceCursorWidget/helpers';
@@ -21,6 +20,7 @@ import { vec4, mat4 } from 'gl-matrix';
 
 const VTK_INT_MAX = 2147483647;
 const { vtkErrorMacro } = macro;
+const viewUpFromViewType = {};
 
 // ----------------------------------------------------------------------------
 // Factory
@@ -29,12 +29,15 @@ const { vtkErrorMacro } = macro;
 function vtkResliceCursorWidget(publicAPI, model) {
   model.classHierarchy.push('vtkResliceCursorWidget');
 
-  model.methodsToLink = ['activeColor', 'useActiveColor', 'opacity'];
-
   // --------------------------------------------------------------------------
   // Private methods
   // --------------------------------------------------------------------------
 
+  /**
+   * Compute the origin of the reslice plane prior to transformations
+   * It does not take into account the current view normal. (always axis aligned)
+   * @param {*} viewType axial, coronal or sagittal
+   */
   function computeReslicePlaneOrigin(viewType) {
     const bounds = model.widgetState.getImage().getBounds();
 
@@ -49,20 +52,12 @@ function vtkResliceCursorWidget(publicAPI, model) {
       offset[i] = -Math.abs(center[i] - imageCenter[i]);
       offset[i] *= 2; // give us room
     }
-    // Add a small offset to force the recomputation of the 3 plane points (origin
-    // point1 and point2) after setting the normal in function updateReslicePlane
-    // Else, the three points won't be in adequation with the set normal
-    if (offset[0] === 0 && offset[1] === 0 && offset[2] === 0) {
-      offset[0] += 0.0000001;
-      offset[1] += 0.0000001;
-      offset[2] += 0.0000001;
-    }
 
     // Now set the size of the plane based on the location of the cursor so as to
     // at least completely cover the viewed region
     const planeSource = vtkPlaneSource.newInstance();
 
-    if (viewType === ViewTypes.CORONAL) {
+    if (viewType === ViewTypes.XZ_PLANE) {
       planeSource.setOrigin(
         bounds[0] + offset[0],
         center[1],
@@ -78,7 +73,7 @@ function vtkResliceCursorWidget(publicAPI, model) {
         center[1],
         bounds[5] - offset[2]
       );
-    } else if (viewType === ViewTypes.AXIAL) {
+    } else if (viewType === ViewTypes.XY_PLANE) {
       planeSource.setOrigin(
         bounds[0] + offset[0],
         bounds[2] + offset[1],
@@ -94,7 +89,7 @@ function vtkResliceCursorWidget(publicAPI, model) {
         bounds[3] - offset[1],
         center[2]
       );
-    } else if (viewType === ViewTypes.SAGITTAL) {
+    } else if (viewType === ViewTypes.YZ_PLANE) {
       planeSource.setOrigin(
         center[0],
         bounds[2] + offset[1],
@@ -158,14 +153,11 @@ function vtkResliceCursorWidget(publicAPI, model) {
       );
 
     // Renderer may not have yet actor bounds
-    let rendererBounds = renderer.computeVisiblePropBounds();
     const bounds = model.widgetState.getImage().getBounds();
-    const bboxObj = vtkBoundingBox.newInstance({ bounds });
-    bboxObj.addBounds(rendererBounds);
-    rendererBounds = bboxObj.getBounds();
 
     // Don't clip away any part of the data.
-    renderer.resetCameraClippingRange(rendererBounds);
+    renderer.resetCamera(bounds);
+    renderer.resetCameraClippingRange(bounds);
   }
 
   // --------------------------------------------------------------------------
@@ -177,7 +169,7 @@ function vtkResliceCursorWidget(publicAPI, model) {
 
   publicAPI.getRepresentationsForViewType = (viewType) => {
     switch (viewType) {
-      case ViewTypes.AXIAL:
+      case ViewTypes.XY_PLANE:
         return [
           {
             builder: vtkResliceCursorContextRepresentation,
@@ -190,7 +182,7 @@ function vtkResliceCursorWidget(publicAPI, model) {
             },
           },
         ];
-      case ViewTypes.CORONAL:
+      case ViewTypes.XZ_PLANE:
         return [
           {
             builder: vtkResliceCursorContextRepresentation,
@@ -203,7 +195,7 @@ function vtkResliceCursorWidget(publicAPI, model) {
             },
           },
         ];
-      case ViewTypes.SAGITTAL:
+      case ViewTypes.YZ_PLANE:
         return [
           {
             builder: vtkResliceCursorContextRepresentation,
@@ -266,6 +258,7 @@ function vtkResliceCursorWidget(publicAPI, model) {
 
     renderer.getActiveCamera().setFocalPoint(...estimatedFocalPoint);
     renderer.getActiveCamera().setPosition(...estimatedCameraPosition);
+    renderer.getActiveCamera().setViewUp(viewUpFromViewType[viewType]);
 
     // Project focalPoint onto image plane and preserve distance
     updateCamera(renderer, normal);
@@ -277,52 +270,47 @@ function vtkResliceCursorWidget(publicAPI, model) {
     // Calculate appropriate pixel spacing for the reslicing
     const spacing = model.widgetState.getImage().getSpacing();
 
+    // Compute original (i.e. before rotation) plane (i.e. origin, p1, p2)
+    // centered on cursor center.
     const planeSource = computeReslicePlaneOrigin(viewType);
+
+    // Apply rotation onto plane (i.e. origin, p1, p2)
     planeSource.setNormal(...plane.getNormal());
+    // TBD: isn't it a no-op ?
     planeSource.setCenter(...plane.getOrigin());
 
-    let o = planeSource.getOrigin();
+    // TODO: orient plane on volume.
 
-    let p1 = planeSource.getPoint1();
-    const planeAxis1 = [];
-    vtkMath.subtract(p1, o, planeAxis1);
-
-    let p2 = planeSource.getPoint2();
-    const planeAxis2 = [];
-    vtkMath.subtract(p2, o, planeAxis2);
+    // Compute view up to configure camera later on
+    const bottomLeftPoint = planeSource.getOrigin();
+    const topLeftPoint = planeSource.getPoint2();
+    const viewUp = vtkMath.subtract(topLeftPoint, bottomLeftPoint, [0, 0, 0]);
+    vtkMath.normalize(viewUp);
+    viewUpFromViewType[viewType] = viewUp;
 
     // Clip to bounds
-    const boundedOrigin = boundPoint(
-      planeSource.getOrigin(),
-      planeAxis1,
-      planeAxis2,
-      model.widgetState.getImage().getBounds()
-    );
-
-    const boundedP1 = boundPoint(
-      planeSource.getPoint1(),
-      planeAxis1,
-      planeAxis2,
-      model.widgetState.getImage().getBounds()
-    );
-
-    const boundedP2 = boundPoint(
-      planeSource.getPoint2(),
-      planeAxis1,
-      planeAxis2,
-      model.widgetState.getImage().getBounds()
+    const boundedOrigin = [...planeSource.getOrigin()];
+    const boundedP1 = [...planeSource.getPoint1()];
+    const boundedP2 = [...planeSource.getPoint2()];
+    boundPlane(
+      model.widgetState.getImage().getBounds(),
+      boundedOrigin,
+      boundedP1,
+      boundedP2
     );
 
     planeSource.setOrigin(boundedOrigin);
     planeSource.setPoint1(boundedP1[0], boundedP1[1], boundedP1[2]);
     planeSource.setPoint2(boundedP2[0], boundedP2[1], boundedP2[2]);
 
-    o = planeSource.getOrigin();
+    const o = planeSource.getOrigin();
 
-    p1 = planeSource.getPoint1();
+    const p1 = planeSource.getPoint1();
+    const planeAxis1 = [];
     vtkMath.subtract(p1, o, planeAxis1);
 
-    p2 = planeSource.getPoint2();
+    const p2 = planeSource.getPoint2();
+    const planeAxis2 = [];
     vtkMath.subtract(p2, o, planeAxis2);
 
     // The x,y dimensions of the plane
@@ -430,6 +418,11 @@ function vtkResliceCursorWidget(publicAPI, model) {
     return modified;
   };
 
+  /**
+   * Returns a plane source with origin at cursor center and
+   * normal from the view.
+   * @param {ViewType} type: Axial, Coronal or Sagittal
+   */
   publicAPI.getPlaneSourceFromViewType = (type) => {
     const planeSource = vtkPlaneSource.newInstance();
     const widgetState = publicAPI.getWidgetState();
@@ -437,15 +430,15 @@ function vtkResliceCursorWidget(publicAPI, model) {
     planeSource.setOrigin(origin);
     let normal = [];
     switch (type) {
-      case ViewTypes.AXIAL: {
+      case ViewTypes.XY_PLANE: {
         normal = widgetState.getZPlaneNormal();
         break;
       }
-      case ViewTypes.CORONAL: {
+      case ViewTypes.XZ_PLANE: {
         normal = widgetState.getYPlaneNormal();
         break;
       }
-      case ViewTypes.SAGITTAL: {
+      case ViewTypes.YZ_PLANE: {
         normal = widgetState.getXPlaneNormal();
         break;
       }

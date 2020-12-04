@@ -164,6 +164,7 @@ __Sample applications__
 <li>[SkyboxViewer](SkyboxViewer.html)</li>
 <li>[TubesViewer](TubesViewer.html)</li>
 <li>[VolumeViewer](VolumeViewer.html)</li>
+<li>[TimeSeries](TimeSeries.html)</li>
 </ul>
 
 </div>

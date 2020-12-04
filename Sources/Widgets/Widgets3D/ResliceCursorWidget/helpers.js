@@ -1,8 +1,64 @@
-import vtkBoundingBox from 'vtk.js/Sources/Common/DataModel/BoundingBox';
+import vtkBoundingBox, {
+  STATIC,
+} from 'vtk.js/Sources/Common/DataModel/BoundingBox';
+import vtkBox from 'vtk.js/Sources/Common/DataModel/Box';
+import vtkCubeSource from 'vtk.js/Sources/Filters/Sources/CubeSource';
+import vtkCutter from 'vtk.js/Sources/Filters/Core/Cutter';
+import vtkPlane from 'vtk.js/Sources/Common/DataModel/Plane';
 import * as vtkMath from 'vtk.js/Sources/Common/Core/Math';
 
 import { ViewTypes } from 'vtk.js/Sources/Widgets/Core/WidgetManager/Constants';
 
+/**
+ * Fit the plane defined by origin, p1, p2 onto the bounds.
+ * Plane is untouched if does not intersect bounds.
+ * @param {Array} bounds
+ * @param {Array} origin
+ * @param {Array} p1
+ * @param {Array} p2
+ */
+export function boundPlane(bounds, origin, p1, p2) {
+  const v1 = [];
+  vtkMath.subtract(p1, origin, v1);
+
+  const v2 = [];
+  vtkMath.subtract(p2, origin, v2);
+
+  const n = [0, 0, 1];
+  vtkMath.cross(v1, v2, n);
+  const plane = vtkPlane.newInstance();
+  plane.setOrigin(origin);
+  plane.setNormal(n);
+  vtkMath.normalize(v1);
+  vtkMath.normalize(v2);
+  vtkMath.normalize(n);
+
+  const cubeSource = vtkCubeSource.newInstance();
+  cubeSource.setBounds(bounds);
+
+  const cutter = vtkCutter.newInstance();
+  cutter.setCutFunction(plane);
+  cutter.setInputConnection(cubeSource.getOutputPort());
+
+  const cutBounds = cutter.getOutputData();
+  if (cutBounds.getNumberOfPoints() === 0) {
+    return;
+  }
+  const localBounds = STATIC.computeLocalBounds(
+    cutBounds.getPoints(),
+    v1,
+    v2,
+    n
+  );
+  for (let i = 0; i < 3; i += 1) {
+    origin[i] =
+      localBounds[0] * v1[i] + localBounds[2] * v2[i] + localBounds[4] * n[i];
+    p1[i] =
+      localBounds[1] * v1[i] + localBounds[2] * v2[i] + localBounds[4] * n[i];
+    p2[i] =
+      localBounds[0] * v1[i] + localBounds[3] * v2[i] + localBounds[4] * n[i];
+  }
+}
 // Project point (inPoint) to the bounds of the image according to a plane
 // defined by two vectors (v1, v2)
 export function boundPoint(inPoint, v1, v2, bounds) {
@@ -24,7 +80,7 @@ export function boundPoint(inPoint, v1, v2, bounds) {
       axisOffset = absT[i] > epsilon ? (bounds[2 * i] - inPoint[i]) / t[i] : 0;
     } else if (inPoint[i] > bounds[2 * i + 1]) {
       axisOffset =
-        absT[i] !== epsilon ? (bounds[2 * i + 1] - inPoint[i]) / t[i] : 0;
+        absT[i] > epsilon ? (bounds[2 * i + 1] - inPoint[i]) / t[i] : 0;
     }
 
     if (useT1) {
@@ -46,6 +102,18 @@ export function boundPoint(inPoint, v1, v2, bounds) {
   }
 
   return outPoint;
+}
+
+// Compute the intersection between p1 and p2 on bounds
+export function boundPointOnPlane(p1, p2, bounds) {
+  const dir12 = [0, 0, 0];
+  vtkMath.subtract(p2, p1, dir12);
+
+  const out = [0, 0, 0];
+  const tolerance = [0, 0, 0];
+  vtkBox.intersectBox(bounds, p1, dir12, out, tolerance);
+
+  return out;
 }
 
 // Get name of the line in the same plane as the input
@@ -70,11 +138,11 @@ export function getAssociatedLinesName(lineName) {
 
 export function getViewPlaneNameFromViewType(viewType) {
   switch (viewType) {
-    case ViewTypes.SAGITTAL:
+    case ViewTypes.YZ_PLANE:
       return 'X';
-    case ViewTypes.CORONAL:
+    case ViewTypes.XZ_PLANE:
       return 'Y';
-    case ViewTypes.AXIAL:
+    case ViewTypes.XY_PLANE:
       return 'Z';
     default:
       return '';

@@ -202,13 +202,23 @@ function vtkViewProxy(publicAPI, model) {
   // --------------------------------------------------------------------------
 
   publicAPI.renderLater = () => {
+    publicAPI.render(false);
+  };
+
+  // --------------------------------------------------------------------------
+
+  publicAPI.render = (blocking = true) => {
     if (model.representations.length > 0 && model.resetCameraOnFirstRender) {
       model.resetCameraOnFirstRender = false;
       publicAPI.resetCamera();
     }
     model.orientationWidget.updateMarkerOrientation();
     model.renderer.resetCameraClippingRange();
-    setTimeout(model.renderWindow.render, 0);
+    if (blocking) {
+      model.renderWindow.render();
+    } else {
+      setTimeout(model.renderWindow.render, 0);
+    }
   };
 
   // --------------------------------------------------------------------------

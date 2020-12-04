@@ -20,10 +20,10 @@ export default function addViewHandlingAPI(publicAPI, model) {
 
   // --------------------------------------------------------------------------
 
-  publicAPI.renderAllViews = () => {
+  publicAPI.renderAllViews = (blocking = false) => {
     const allViews = publicAPI.getViews();
     for (let i = 0; i < allViews.length; i++) {
-      allViews[i].renderLater();
+      allViews[i].render(blocking);
     }
   };
 
