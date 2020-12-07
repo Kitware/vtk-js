@@ -24,7 +24,7 @@ module.exports = function chainWebpack(config) {
     .end()
     .use('worker-loader')
     .loader('worker-loader')
-    .options({ inline: true, fallback: false })
+    .options({ inline: 'no-fallback' })
     .end();
 
   config.module

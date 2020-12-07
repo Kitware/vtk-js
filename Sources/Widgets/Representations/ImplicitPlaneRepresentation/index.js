@@ -270,17 +270,31 @@ function vtkImplicitPlaneRepresentation(publicAPI, model) {
     ctxVisible,
     hVisible
   ) => {
+    const {
+      planeVisible,
+      originVisible,
+      normalVisible,
+      outlineVisible,
+    } = model;
     if (renderingType === RenderingTypes.PICKING_BUFFER) {
-      model.pipelines.plane.actor.setVisibility(wVisible);
-      model.pipelines.origin.actor.setVisibility(wVisible);
-      model.pipelines.normal.actor.setVisibility(wVisible);
+      model.pipelines.plane.actor.setVisibility(planeVisible && wVisible);
+      model.pipelines.origin.actor.setVisibility(originVisible && wVisible);
+      model.pipelines.normal.actor.setVisibility(normalVisible && wVisible);
       //
       model.pipelines.plane.actor.getProperty().setOpacity(1);
     } else {
-      model.pipelines.outline.actor.setVisibility(wVisible && ctxVisible);
-      model.pipelines.plane.actor.setVisibility(wVisible && hVisible);
-      model.pipelines.origin.actor.setVisibility(wVisible && hVisible);
-      model.pipelines.normal.actor.setVisibility(wVisible && hVisible);
+      model.pipelines.outline.actor.setVisibility(
+        outlineVisible && wVisible && ctxVisible
+      );
+      model.pipelines.plane.actor.setVisibility(
+        planeVisible && wVisible && hVisible
+      );
+      model.pipelines.origin.actor.setVisibility(
+        originVisible && wVisible && hVisible
+      );
+      model.pipelines.normal.actor.setVisibility(
+        normalVisible && wVisible && hVisible
+      );
       //
       const state = model.inputData[0];
       if (state) {
@@ -336,6 +350,10 @@ const DEFAULT_VALUES = {
   sphereResolution: 24,
   handleSizeRatio: 0.05,
   axisScale: 0.1,
+  normalVisible: true,
+  originVisible: true,
+  planeVisible: true,
+  outlineVisible: true,
 };
 
 // ----------------------------------------------------------------------------
@@ -345,7 +363,14 @@ export function extend(publicAPI, model, initialValues = {}) {
 
   vtkWidgetRepresentation.extend(publicAPI, model, initialValues);
   macro.get(publicAPI, model, ['sphereResolution', 'representationStyle']);
-  macro.setGet(publicAPI, model, ['handleSizeRatio', 'axisScale']);
+  macro.setGet(publicAPI, model, [
+    'handleSizeRatio',
+    'axisScale',
+    'normalVisible',
+    'originVisible',
+    'planeVisible',
+    'outlineVisible',
+  ]);
 
   // Object specific methods
   vtkImplicitPlaneRepresentation(publicAPI, model);

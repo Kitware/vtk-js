@@ -14,10 +14,14 @@ function vtkSVGLandmarkRepresentation(publicAPI, model) {
   publicAPI.render = () => {
     const list = publicAPI.getRepresentationStates();
 
-    const coords = [];
-    for (let i = 0; i < list.length; i++) {
-      coords.push(list[i].getOrigin());
-    }
+    let index = 0;
+    const coords = list.map((state) => state.getOrigin());
+    const texts = list.map((state) => {
+      const ret =
+        typeof state.getText !== 'undefined' ? state.getText() : `L${index}`;
+      index++;
+      return ret;
+    });
 
     return publicAPI.worldPointsToPixelSpace(coords).then((pixelSpace) => {
       const points2d = pixelSpace.coords;
@@ -30,12 +34,16 @@ function vtkSVGLandmarkRepresentation(publicAPI, model) {
         const x = xy[0];
         const y = winHeight - xy[1];
 
-        const circle = createSvgElement('circle');
-        Object.keys(model.circleProps || {}).forEach((prop) =>
-          circle.setAttribute(prop, model.circleProps[prop])
-        );
-        circle.setAttribute('cx', x);
-        circle.setAttribute('cy', y);
+        let circle = {};
+        if (model.showCircle === true) {
+          circle = createSvgElement('circle');
+          Object.keys(model.circleProps || {}).forEach((prop) =>
+            circle.setAttribute(prop, model.circleProps[prop])
+          );
+          circle.setAttribute('cx', x);
+          circle.setAttribute('cy', y);
+          root.appendChild(circle);
+        }
 
         const text = createSvgElement('text');
         Object.keys(model.textProps || {}).forEach((prop) =>
@@ -43,9 +51,8 @@ function vtkSVGLandmarkRepresentation(publicAPI, model) {
         );
         text.setAttribute('x', x);
         text.setAttribute('y', y);
-        text.textContent = `L${i}`;
+        text.textContent = texts[i];
 
-        root.appendChild(circle);
         root.appendChild(text);
       }
 
@@ -78,7 +85,7 @@ export function extend(publicAPI, model, initialValues = {}) {
 
   vtkSVGRepresentation.extend(publicAPI, model, initialValues);
 
-  macro.setGet(publicAPI, model, ['circleProps', 'textProps']);
+  macro.setGet(publicAPI, model, ['circleProps', 'textProps', 'name']);
 
   // Object specific methods
   vtkSVGLandmarkRepresentation(publicAPI, model);

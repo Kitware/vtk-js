@@ -351,7 +351,7 @@ export function extend(publicAPI, model, initialValues = {}) {
 
   // Inheritance
   vtkHandleRepresentation.extend(publicAPI, model, initialValues);
-
+  macro.setGet(publicAPI, model, ['glyphResolution', 'defaultScale']);
   macro.setGet(publicAPI, model, [
     'translationMode',
     'property',

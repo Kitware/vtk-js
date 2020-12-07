@@ -138,11 +138,11 @@ export function getAssociatedLinesName(lineName) {
 
 export function getViewPlaneNameFromViewType(viewType) {
   switch (viewType) {
-    case ViewTypes.SAGITTAL:
+    case ViewTypes.YZ_PLANE:
       return 'X';
-    case ViewTypes.CORONAL:
+    case ViewTypes.XZ_PLANE:
       return 'Y';
-    case ViewTypes.AXIAL:
+    case ViewTypes.XY_PLANE:
       return 'Z';
     default:
       return '';

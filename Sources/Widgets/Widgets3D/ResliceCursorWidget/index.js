@@ -57,7 +57,7 @@ function vtkResliceCursorWidget(publicAPI, model) {
     // at least completely cover the viewed region
     const planeSource = vtkPlaneSource.newInstance();
 
-    if (viewType === ViewTypes.CORONAL) {
+    if (viewType === ViewTypes.XZ_PLANE) {
       planeSource.setOrigin(
         bounds[0] + offset[0],
         center[1],
@@ -73,7 +73,7 @@ function vtkResliceCursorWidget(publicAPI, model) {
         center[1],
         bounds[5] - offset[2]
       );
-    } else if (viewType === ViewTypes.AXIAL) {
+    } else if (viewType === ViewTypes.XY_PLANE) {
       planeSource.setOrigin(
         bounds[0] + offset[0],
         bounds[2] + offset[1],
@@ -89,7 +89,7 @@ function vtkResliceCursorWidget(publicAPI, model) {
         bounds[3] - offset[1],
         center[2]
       );
-    } else if (viewType === ViewTypes.SAGITTAL) {
+    } else if (viewType === ViewTypes.YZ_PLANE) {
       planeSource.setOrigin(
         center[0],
         bounds[2] + offset[1],
@@ -169,7 +169,7 @@ function vtkResliceCursorWidget(publicAPI, model) {
 
   publicAPI.getRepresentationsForViewType = (viewType) => {
     switch (viewType) {
-      case ViewTypes.AXIAL:
+      case ViewTypes.XY_PLANE:
         return [
           {
             builder: vtkResliceCursorContextRepresentation,
@@ -182,7 +182,7 @@ function vtkResliceCursorWidget(publicAPI, model) {
             },
           },
         ];
-      case ViewTypes.CORONAL:
+      case ViewTypes.XZ_PLANE:
         return [
           {
             builder: vtkResliceCursorContextRepresentation,
@@ -195,7 +195,7 @@ function vtkResliceCursorWidget(publicAPI, model) {
             },
           },
         ];
-      case ViewTypes.SAGITTAL:
+      case ViewTypes.YZ_PLANE:
         return [
           {
             builder: vtkResliceCursorContextRepresentation,
@@ -430,15 +430,15 @@ function vtkResliceCursorWidget(publicAPI, model) {
     planeSource.setOrigin(origin);
     let normal = [];
     switch (type) {
-      case ViewTypes.AXIAL: {
+      case ViewTypes.XY_PLANE: {
         normal = widgetState.getZPlaneNormal();
         break;
       }
-      case ViewTypes.CORONAL: {
+      case ViewTypes.XZ_PLANE: {
         normal = widgetState.getYPlaneNormal();
         break;
       }
-      case ViewTypes.SAGITTAL: {
+      case ViewTypes.YZ_PLANE: {
         normal = widgetState.getXPlaneNormal();
         break;
       }

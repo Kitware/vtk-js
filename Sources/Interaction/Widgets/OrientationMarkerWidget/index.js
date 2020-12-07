@@ -19,8 +19,12 @@ function vtkOrientationMarkerWidget(publicAPI, model) {
 
   const previousCameraInput = [];
   const selfRenderer = vtkRenderer.newInstance();
+  const resizeObserver = new ResizeObserver((entries) => {
+    if (entries.length === 1) {
+      publicAPI.updateViewport();
+    }
+  });
   let interactorUnsubscribe = null;
-  let viewUnsubscribe = null;
   let selfSubscription = null;
 
   publicAPI.computeViewport = () => {
@@ -136,9 +140,7 @@ function vtkOrientationMarkerWidget(publicAPI, model) {
         publicAPI.updateMarkerOrientation
       ));
 
-      ({ unsubscribe: viewUnsubscribe } = model.interactor
-        .getView()
-        .onModified(publicAPI.updateViewport));
+      resizeObserver.observe(model.interactor.getView().getCanvas());
 
       publicAPI.updateViewport();
       publicAPI.updateMarkerOrientation();
@@ -150,8 +152,7 @@ function vtkOrientationMarkerWidget(publicAPI, model) {
       }
       model.enabled = false;
 
-      viewUnsubscribe();
-      viewUnsubscribe = null;
+      resizeObserver.disconnect();
       interactorUnsubscribe();
       interactorUnsubscribe = null;
 
@@ -216,10 +217,7 @@ function vtkOrientationMarkerWidget(publicAPI, model) {
       interactorUnsubscribe();
       interactorUnsubscribe = null;
     }
-    if (viewUnsubscribe) {
-      viewUnsubscribe();
-      viewUnsubscribe = null;
-    }
+    resizeObserver.disconnect();
   };
 
   // --------------------------------------------------------------------------
