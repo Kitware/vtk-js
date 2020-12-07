@@ -31,6 +31,7 @@ function vtkMouseCameraUnicamRotateManipulator(publicAPI, model) {
   );
   model.picker = vtkPointPicker.newInstance();
 
+  model.downPoint = [0, 0, 0];
   model.isDot = false;
   model.state = States.IS_NONE;
 
@@ -233,8 +234,20 @@ function vtkMouseCameraUnicamRotateManipulator(publicAPI, model) {
     model.focusSphere.setScale(scale, scale, scale);
   };
 
+  const placeAndDisplayFocusSphere = (interactor) => {
+    placeFocusSphere(interactor);
+    interactor.findPokedRenderer().addActor(model.focusSphere);
+    model.isDot = true;
+  };
+
+  const hideFocusSphere = (interactor) => {
+    interactor.findPokedRenderer().removeActor(model.focusSphere);
+    model.isDot = false;
+  };
+
   //----------------------------------------------------------------------------
-  const pickWithPointPicker = (position, renderer) => {
+  const pickWithPointPicker = (interactor, position) => {
+    const renderer = interactor.findPokedRenderer();
     model.picker.pick([position.x, position.y, position.z], renderer);
     const pickedPositions = model.picker.getPickedPositions();
 
@@ -254,13 +267,8 @@ function vtkMouseCameraUnicamRotateManipulator(publicAPI, model) {
   };
 
   //----------------------------------------------------------------------------
-  // Public API methods
-  //----------------------------------------------------------------------------
-  publicAPI.onButtonDown = (interactor, renderer, position) => {
-    model.buttonPressed = true;
-    model.startPosition = position;
-    model.previousPosition = position;
-
+  const pickPoint = (interactor, position) => {
+    const renderer = interactor.findPokedRenderer();
     // Finds the point under the cursor.
     // Note: If no object has been rendered to the pixel (X, Y), then
     // vtkPicker will return a z-value with depth equal
@@ -275,26 +283,43 @@ function vtkMouseCameraUnicamRotateManipulator(publicAPI, model) {
     }
 
     if (selections && selections.length !== 0) {
-      model.downPoint = selections[0].getProperties().worldPosition;
-    } else {
-      model.downPoint = pickWithPointPicker(position, renderer);
+      return selections[0].getProperties().worldPosition;
     }
+    return pickWithPointPicker(interactor, position);
+  };
+
+  //----------------------------------------------------------------------------
+  // Public API methods
+  //----------------------------------------------------------------------------
+  publicAPI.onButtonDown = (interactor, renderer, position) => {
+    model.buttonPressed = true;
+    model.startPosition = position;
+    model.previousPosition = position;
 
     const normalizedPosition = normalize(position, interactor);
     // borderRatio defines the percentage of the screen size that is considered to be
     // the border of the screen on each side
     const borderRatio = 0.1;
-    // If someone has already clicked to make a dot and they're not clicking
-    // on it now, OR if the user is clicking on the perimeter of the screen,
-    // then we want to go into rotation mode.
+    // If the user is clicking on the perimeter of the screen,
+    // then we want to go into rotation mode, and there is no need to determine the downPoint
     if (
       Math.abs(normalizedPosition.x) > 1 - borderRatio ||
-      Math.abs(normalizedPosition.y) > 1 - borderRatio ||
-      model.isDot
+      Math.abs(normalizedPosition.y) > 1 - borderRatio
     ) {
+      model.state = States.IS_ROTATE;
+      placeAndDisplayFocusSphere(interactor);
+      return;
+    }
+
+    model.downPoint = pickPoint(interactor, position);
+
+    if (model.isDot) {
       model.state = States.IS_ROTATE;
     } else {
       model.state = States.IS_NONE;
+      if (model.displayFocusSphereOnButtonDown) {
+        placeAndDisplayFocusSphere(interactor);
+      }
     }
   };
 
@@ -302,12 +327,6 @@ function vtkMouseCameraUnicamRotateManipulator(publicAPI, model) {
   publicAPI.onMouseMove = (interactor, renderer, position) => {
     if (!model.buttonPressed) {
       return;
-    }
-
-    // If not already in a rotation, place the focus sphere to the last
-    // down point to define the right center of rotation
-    if (model.state === States.IS_NONE) {
-      placeFocusSphere(interactor);
     }
 
     model.state = States.IS_ROTATE;
@@ -326,18 +345,10 @@ function vtkMouseCameraUnicamRotateManipulator(publicAPI, model) {
       return;
     }
 
-    if (model.state === States.IS_ROTATE && model.isDot) {
-      renderer.removeActor(model.focusSphere);
-      model.isDot = false;
+    if (model.state === States.IS_ROTATE) {
+      hideFocusSphere(interactor);
     } else if (model.state === States.IS_NONE) {
-      if (model.isDot) {
-        renderer.removeActor(model.focusSphere);
-        model.isDot = false;
-      } else {
-        placeFocusSphere(interactor);
-        renderer.addActor(model.focusSphere);
-        model.isDot = true;
-      }
+      placeAndDisplayFocusSphere(interactor);
     }
 
     renderer.resetCameraClippingRange();
@@ -358,6 +369,7 @@ function vtkMouseCameraUnicamRotateManipulator(publicAPI, model) {
 
 const DEFAULT_VALUES = {
   focusSphereRadiusFactor: 1,
+  displayFocusSphereOnButtonDown: true,
   useHardwareSelector: true,
   useWorldUpVec: true,
   // set WorldUpVector to be z-axis by default
@@ -377,6 +389,7 @@ export function extend(publicAPI, model, initialValues = {}) {
   // Create get-set macros
   macro.setGet(publicAPI, model, [
     'focusSphereRadiusFactor',
+    'displayFocusSphereOnButtonDown',
     'useHardwareSelector',
     'useWorldUpVec',
   ]);

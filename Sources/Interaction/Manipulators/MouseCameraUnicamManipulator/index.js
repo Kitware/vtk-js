@@ -25,6 +25,7 @@ function vtkMouseCameraUnicamManipulator(publicAPI, model) {
     alt: model.alt,
     dragEnabled: model.dragEnabled,
     scrollEnabled: model.scrollEnabled,
+    displayFocusSphereOnButtonDown: false,
   });
 
   //----------------------------------------------------------------------------
