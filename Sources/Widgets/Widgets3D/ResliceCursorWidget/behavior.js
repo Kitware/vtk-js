@@ -12,7 +12,10 @@ import {
   updateState,
 } from 'vtk.js/Sources/Widgets/Widgets3D/ResliceCursorWidget/helpers';
 
-import { ScrollingMethods } from 'vtk.js/Sources/Widgets/Widgets3D/ResliceCursorWidget/Constants';
+import {
+  ScrollingMethods,
+  InteractionMethodsName,
+} from 'vtk.js/Sources/Widgets/Widgets3D/ResliceCursorWidget/Constants';
 
 export default function widgetBehavior(publicAPI, model) {
   let isDragging = null;
@@ -20,13 +23,13 @@ export default function widgetBehavior(publicAPI, model) {
 
   publicAPI.updateCursor = () => {
     switch (model.activeState.getUpdateMethodName()) {
-      case 'translateCenter':
+      case InteractionMethodsName.TranslateCenter:
         model.openGLRenderWindow.setCursor('move');
         break;
-      case 'rotateLine':
+      case InteractionMethodsName.RotateLine:
         model.openGLRenderWindow.setCursor('alias');
         break;
-      case 'translateAxis':
+      case InteractionMethodsName.TranslateAxis:
         model.openGLRenderWindow.setCursor('pointer');
         break;
       default:
@@ -73,7 +76,7 @@ export default function widgetBehavior(publicAPI, model) {
         );
         model.previousPosition = callData.position;
 
-        publicAPI.invokeInteractionEvent();
+        publicAPI.invokeInternalInteractionEvent();
       }
     }
     return macro.VOID;
@@ -117,7 +120,7 @@ export default function widgetBehavior(publicAPI, model) {
     const step = calldata.spinY;
     publicAPI.translateCenterOnCurrentDirection(step, calldata.pokedRenderer);
 
-    publicAPI.invokeInteractionEvent();
+    publicAPI.invokeInternalInteractionEvent();
 
     return macro.EVENT_ABORT;
   };
@@ -150,10 +153,22 @@ export default function widgetBehavior(publicAPI, model) {
   publicAPI.handleEvent = (callData) => {
     if (model.activeState.getActive()) {
       publicAPI[model.activeState.getUpdateMethodName()](callData);
-      publicAPI.invokeInteractionEvent();
+      publicAPI.invokeInternalInteractionEvent();
       return macro.EVENT_ABORT;
     }
     return macro.VOID;
+  };
+
+  publicAPI.invokeInternalInteractionEvent = () => {
+    const methodName = model.activeState.getUpdateMethodName();
+    const computeFocalPointOffset =
+      methodName !== InteractionMethodsName.RotateLine;
+    const canUpdateFocalPoint =
+      methodName !== InteractionMethodsName.TranslateCenter;
+    publicAPI.invokeInteractionEvent({
+      computeFocalPointOffset,
+      canUpdateFocalPoint,
+    });
   };
 
   publicAPI.startInteraction = () => {
@@ -197,7 +212,7 @@ export default function widgetBehavior(publicAPI, model) {
     updateState(model.widgetState);
   };
 
-  publicAPI.translateAxis = (calldata) => {
+  publicAPI[InteractionMethodsName.TranslateAxis] = (calldata) => {
     const stateLine = model.widgetState.getActiveLineState();
     const worldCoords = model.planeManipulator.handleEvent(
       calldata,
@@ -261,7 +276,7 @@ export default function widgetBehavior(publicAPI, model) {
     return boundPointOnPlane(newCenter, oldCenter, imageBounds);
   };
 
-  publicAPI.translateCenter = (calldata) => {
+  publicAPI[InteractionMethodsName.TranslateCenter] = (calldata) => {
     let worldCoords = model.planeManipulator.handleEvent(
       calldata,
       model.openGLRenderWindow
@@ -271,7 +286,7 @@ export default function widgetBehavior(publicAPI, model) {
     updateState(model.widgetState);
   };
 
-  publicAPI.rotateLine = (calldata) => {
+  publicAPI[InteractionMethodsName.RotateLine] = (calldata) => {
     const activeLine = model.widgetState.getActiveLineState();
     const planeNormal = model.planeManipulator.getNormal();
     const worldCoords = model.planeManipulator.handleEvent(

@@ -109,7 +109,47 @@ function vtkResliceCursorWidget(publicAPI, model) {
     return planeSource;
   }
 
-  function updateCamera(renderer, normal) {
+  /**
+   * Compute the offset between display reslice cursor position and
+   * display focal point position
+   * This will be used to keep the same offset between reslice cursor
+   * center and focal point when needed.
+   */
+  function computeFocalPointOffsetFromResliceCursorCenter(viewType, renderer) {
+    const worldFocalPoint = renderer.getActiveCamera().getFocalPoint();
+    const worldResliceCenter = model.widgetState.getCenter();
+
+    const view = renderer.getRenderWindow().getViews()[0];
+    const dims = view.getViewportSize(renderer);
+    const aspect = dims[0] / dims[1];
+    const displayFocalPoint = renderer.worldToNormalizedDisplay(
+      ...worldFocalPoint,
+      aspect
+    );
+    const displayResliceCenter = renderer.worldToNormalizedDisplay(
+      ...worldResliceCenter,
+      aspect
+    );
+
+    const newOffset = vtkMath.subtract(
+      displayFocalPoint,
+      displayResliceCenter,
+      [0, 0, 0]
+    );
+
+    const cameraOffsets = model.widgetState.getCameraOffsets();
+    cameraOffsets[viewType] = newOffset;
+
+    model.widgetState.setCameraOffsets(cameraOffsets);
+  }
+
+  function updateCamera(
+    renderer,
+    normal,
+    viewType,
+    resetFocalPoint,
+    keepCenterFocalDistance
+  ) {
     // When the reslice plane is changed, update the camera to look at the
     // normal to the reslice plane.
 
@@ -124,14 +164,57 @@ function vtkResliceCursorWidget(publicAPI, model) {
       [0, 0, 0]
     );
 
-    // intersect with the plane to get updated focal point
-    const intersection = vtkPlane.intersectWithLine(
-      focalPoint,
-      estimatedCameraPosition,
-      model.widgetState.getCenter(),
-      normal
-    );
-    const newFocalPoint = intersection.x;
+    let newFocalPoint = focalPoint;
+    if (resetFocalPoint) {
+      // intersect with the plane to get updated focal point
+      const intersection = vtkPlane.intersectWithLine(
+        focalPoint,
+        estimatedCameraPosition,
+        model.widgetState.getCenter(), // reslice cursor center
+        normal
+      );
+      newFocalPoint = intersection.x;
+    }
+
+    // Update the estimated focal point so that it will be at the same
+    // distance from the reslice center
+    if (keepCenterFocalDistance) {
+      const worldResliceCenter = model.widgetState.getCenter();
+
+      const view = renderer.getRenderWindow().getViews()[0];
+      const dims = view.getViewportSize(renderer);
+      const aspect = dims[0] / dims[1];
+      const displayResliceCenter = renderer.worldToNormalizedDisplay(
+        ...worldResliceCenter,
+        aspect
+      );
+
+      const realOffset = model.widgetState.getCameraOffsets()[viewType];
+      const displayFocal = vtkMath.add(displayResliceCenter, realOffset, [
+        0,
+        0,
+        0,
+      ]);
+
+      const worldFocal = renderer.normalizedDisplayToWorld(
+        ...displayFocal,
+        1,
+        aspect
+      );
+
+      // Reproject focal point on slice in order to keep it on the
+      // same plane as the reslice cursor center
+      const intersection2 = vtkPlane.intersectWithLine(
+        worldFocal,
+        estimatedCameraPosition,
+        worldResliceCenter,
+        normal
+      );
+
+      newFocalPoint[0] = intersection2.x[0];
+      newFocalPoint[1] = intersection2.x[1];
+      newFocalPoint[2] = intersection2.x[2];
+    }
 
     renderer
       .getActiveCamera()
@@ -152,11 +235,12 @@ function vtkResliceCursorWidget(publicAPI, model) {
         newCameraPosition[2]
       );
 
+    // Don't clip away any part of the data.
     // Renderer may not have yet actor bounds
     const bounds = model.widgetState.getImage().getBounds();
-
-    // Don't clip away any part of the data.
-    renderer.resetCamera(bounds);
+    if (resetFocalPoint) {
+      renderer.resetCamera(bounds);
+    }
     renderer.resetCameraClippingRange(bounds);
   }
 
@@ -234,7 +318,40 @@ function vtkResliceCursorWidget(publicAPI, model) {
   // Methods
   // --------------------------------------------------------------------------
 
-  publicAPI.resetCamera = (renderer, viewType) => {
+  publicAPI.updateCameraPoints = (
+    renderer,
+    viewType,
+    resetFocalPoint,
+    keepCenterFocalDistance,
+    computeFocalPointOffset
+  ) => {
+    publicAPI.resetCamera(
+      renderer,
+      viewType,
+      resetFocalPoint,
+      keepCenterFocalDistance
+    );
+
+    if (computeFocalPointOffset) {
+      computeFocalPointOffsetFromResliceCursorCenter(viewType, renderer);
+    }
+  };
+
+  /**
+   *
+   * @param {*} renderer
+   * @param {*} viewType
+   * @param {*} resetFocalPoint Defines if the focal point is reset to the image center
+   * @param {*} keepCenterFocalDistance Defines if the estimated focal point has to be updated
+   * in order to keep the same distance to the center (according to the computed focal point
+   * shift)
+   */
+  publicAPI.resetCamera = (
+    renderer,
+    viewType,
+    resetFocalPoint,
+    keepCenterFocalDistance
+  ) => {
     const viewName = getViewPlaneNameFromViewType(viewType);
 
     const center = model.widgetState.getImage().getCenter();
@@ -248,7 +365,9 @@ function vtkResliceCursorWidget(publicAPI, model) {
 
     const normal = model.widgetState[`get${viewName}PlaneNormal`]();
 
-    const estimatedFocalPoint = center;
+    // ResetFocalPoint will reset focal point to the center of the image
+    const estimatedFocalPoint = resetFocalPoint ? center : focalPoint;
+
     const estimatedCameraPosition = vtkMath.multiplyAccumulate(
       estimatedFocalPoint,
       normal,
@@ -261,7 +380,13 @@ function vtkResliceCursorWidget(publicAPI, model) {
     renderer.getActiveCamera().setViewUp(viewUpFromViewType[viewType]);
 
     // Project focalPoint onto image plane and preserve distance
-    updateCamera(renderer, normal);
+    updateCamera(
+      renderer,
+      normal,
+      viewType,
+      resetFocalPoint,
+      keepCenterFocalDistance
+    );
   };
 
   publicAPI.updateReslicePlane = (imageReslice, viewType) => {
