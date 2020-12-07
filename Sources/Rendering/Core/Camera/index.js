@@ -338,6 +338,16 @@ function vtkCamera(publicAPI, model) {
     publicAPI.modified();
   };
 
+  publicAPI.translate = (x, y, z) => {
+    const offset = [x, y, z];
+
+    vtkMath.add(model.position, offset, model.position);
+    vtkMath.add(model.focalPoint, offset, model.focalPoint);
+
+    publicAPI.computeDistance();
+    publicAPI.modified();
+  };
+
   publicAPI.applyTransform = (transformMat4) => {
     const vuOld = [...model.viewUp, 1.0];
     const posNew = [];
