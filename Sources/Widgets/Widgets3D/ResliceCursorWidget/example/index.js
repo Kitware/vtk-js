@@ -20,7 +20,6 @@ import {
 } from 'vtk.js/Sources/Widgets/Core/WidgetManager/Constants';
 
 import { getViewPlaneNameFromViewType } from 'vtk.js/Sources/Widgets/Widgets3D/ResliceCursorWidget/helpers';
-import { InteractionMethodsName } from 'vtk.js/Sources/Widgets/Widgets3D/ResliceCursorWidget/Constants';
 
 // ----------------------------------------------------------------------------
 // Define html structure
@@ -157,9 +156,10 @@ function updateReslice(
     reslice: null,
     actor: null,
     renderer: null,
-    resetFocalPoint: false,
-    updateFocalPoint: false,
-    computeFocalPointOffset: false,
+    resetFocalPoint: false, // Reset the focal point to the center of the display image
+    keepFocalPointPosition: false, // Defines if the focal point position is kepts (same display distance from reslice cursor center)
+    computeFocalPointOffset: false, // Defines if the display offset between reslice center and focal point has to be
+    // computed. If so, then this offset will be used to keep the focal point position during rotation.
   }
 ) {
   const modified = widget.updateReslicePlane(
@@ -176,7 +176,7 @@ function updateReslice(
     interactionContext.renderer,
     interactionContext.viewType,
     interactionContext.resetFocalPoint,
-    interactionContext.updateFocalPoint,
+    interactionContext.keepFocalPointPosition,
     interactionContext.computeFocalPointOffset
   );
   return modified;
@@ -210,6 +210,10 @@ reader.setUrl(`${__BASE_PATH__}/data/volume/LIDC2.vti`).then(() => {
         .forEach((v) => {
           // Interactions in other views may change current plane
           v.widgetInstance.onInteractionEvent(
+            // computeFocalPointOffset: Boolean which defines if the offset between focal point and
+            // reslice cursor display center has to be recomputed (while translation is applied)
+            // canUpdateFocalPoint: Boolean which defines if the focal point can be updated because
+            // the current interaction is a rotation
             ({ computeFocalPointOffset, canUpdateFocalPoint }) => {
               const activeViewName = widget
                 .getWidgetState()
@@ -221,7 +225,7 @@ reader.setUrl(`${__BASE_PATH__}/data/volume/LIDC2.vti`).then(() => {
                 actor: obj.resliceActor,
                 renderer: obj.renderer,
                 resetFocalPoint: false,
-                updateFocalPoint:
+                keepFocalPointPosition:
                   activeViewName !== currentViewName && canUpdateFocalPoint,
                 computeFocalPointOffset,
               });
@@ -234,9 +238,9 @@ reader.setUrl(`${__BASE_PATH__}/data/volume/LIDC2.vti`).then(() => {
         reslice,
         actor: obj.resliceActor,
         renderer: obj.renderer,
-        resetFocalPoint: true,
-        updateFocalPoint: false,
-        computeFocalPointOffset: true,
+        resetFocalPoint: true, // At first initilization, center the focal point to the image center
+        keepFocalPointPosition: false, // Don't update the focal point as we already set it to the center of the image
+        computeFocalPointOffset: true, // Allow to compute the current offset between display reslice center and display focal point
       });
       obj.renderWindow.render();
     }
