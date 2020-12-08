@@ -124,9 +124,11 @@ function postProcess(buffer, elements) {
   const pointValues = new Float32Array(nbVerts * 3);
   const colorArray = new Uint8Array(nbVerts * 3);
   const tcoordsArray = new Float32Array(nbVerts * 2);
+  const normalsArray = new Float32Array(nbVerts * 3);
 
   const hasColor = buffer.colors.length > 0;
   const hasVertTCoods = buffer.uvs.length > 0;
+  const hasNorms = buffer.normals.length > 0;
 
   for (let vertIdx = 0; vertIdx < nbVerts; vertIdx++) {
     let a = vertIdx * 3 + 0;
@@ -148,6 +150,12 @@ function postProcess(buffer, elements) {
       b = vertIdx * 2 + 1;
       tcoordsArray[a] = buffer.uvs[a];
       tcoordsArray[b] = buffer.uvs[b];
+    }
+
+    if (hasNorms) {
+      normalsArray[a] = buffer.normals[a];
+      normalsArray[b] = buffer.normals[b];
+      normalsArray[c] = buffer.normals[c];
     }
   }
 
@@ -173,6 +181,16 @@ function postProcess(buffer, elements) {
     const cpd = polydata.getPointData();
     cpd.addArray(da);
     cpd.setActiveTCoords(da.getName());
+  }
+
+  if (hasNorms) {
+    polydata.getPointData().setNormals(
+      vtkDataArray.newInstance({
+        numberOfComponents: 3,
+        name: 'Normals',
+        values: normalsArray,
+      })
+    );
   }
 
   polydata.getPolys().setData(Uint32Array.from(buffer.indices));
