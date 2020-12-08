@@ -11,18 +11,6 @@ function vtkSVGLandmarkRepresentation(publicAPI, model) {
   // Set our className
   model.classHierarchy.push('vtkSVGLandmarkRepresentation');
 
-  publicAPI.setDy = (val) => {
-    model.dy = val;
-  };
-
-  publicAPI.getDy = () => model.dy;
-
-  publicAPI.setFontProperties = (fontProperties) => {
-    model.fontProperties = fontProperties;
-  };
-
-  publicAPI.getFontProperties = () => model.fontProperties;
-
   publicAPI.render = () => {
     const list = publicAPI.getRepresentationStates();
 
@@ -52,7 +40,6 @@ function vtkSVGLandmarkRepresentation(publicAPI, model) {
             circle.setAttribute('cy', y);
             root.appendChild(circle);
           }
-
           const splitText = texts[i].split('\n');
           const newlineOffset =
             model.fontProperties != null && model.fontProperties.fontSize
@@ -62,7 +49,10 @@ function vtkSVGLandmarkRepresentation(publicAPI, model) {
             const text = createSvgElement('text');
             Object.keys(model.textProps || {}).forEach((prop) => {
               if (model.fromLineWidget === true && prop === 'dy') {
-                return text.setAttribute(prop, model.dy + newlineOffset * j);
+                return text.setAttribute(
+                  prop,
+                  model.textProps.dy + newlineOffset * j
+                );
               }
               return text.setAttribute(prop, model.textProps[prop]);
             });
@@ -110,16 +100,6 @@ export function extend(publicAPI, model, initialValues = {}) {
   vtkSVGRepresentation.extend(publicAPI, model, initialValues);
 
   macro.setGet(publicAPI, model, ['circleProps', 'textProps', 'name']);
-
-  model.fontProperties = null;
-  if (initialValues.fromLineWidget === true) {
-    // this allows for different offset values when there are multiple instances of this class
-    model.dx = model.textProps.dx;
-    model.dy = model.textProps.dy;
-    model.fromLineWidget = true;
-  } else {
-    model.fromLineWidget = false;
-  }
 
   // Object specific methods
   vtkSVGLandmarkRepresentation(publicAPI, model);

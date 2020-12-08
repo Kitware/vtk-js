@@ -35,9 +35,6 @@ function vtkLineWidget(publicAPI, model) {
     HandleRepresentationType.SPHERE
   ] = vtkSphereHandleRepresentation;
   shapeToRepresentation[
-    HandleRepresentationType.GHOST_SPHERE
-  ] = vtkSphereHandleRepresentation;
-  shapeToRepresentation[
     HandleRepresentationType.CUBE
   ] = vtkCubeHandleRepresentation;
   shapeToRepresentation[
@@ -103,6 +100,9 @@ function vtkLineWidget(publicAPI, model) {
               scaleInPixels: true,
               /* to detect arrow type in ArrowHandleRepresentation, mandatory */
               handleType: model.handle1Shape,
+              /* To detect in handleRepresentation the origin of LineWidget, mandatory */
+              fromLineWidget: true,
+              handleVisibility: model.handle1Visibility,
             },
           },
           {
@@ -113,6 +113,9 @@ function vtkLineWidget(publicAPI, model) {
               scaleInPixels: true,
               /* to detect arrow type in ArrowHandleRepresentation, mandatory */
               handleType: model.handle2Shape,
+              /* To detect in handleRepresentation the origin of LineWidget, mandatory */
+              fromLineWidget: true,
+              handleVisibility: model.handle2Visibility,
             },
           },
           {
@@ -214,6 +217,7 @@ export function extend(publicAPI, model, initialValues = {}) {
   ]);
 
   vtkLineWidget(publicAPI, model);
+  // console.log(model.handleVisibility);
 }
 
 // ----------------------------------------------------------------------------

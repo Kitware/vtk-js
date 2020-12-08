@@ -8,9 +8,12 @@ import vtkGlyph3DMapper from 'vtk.js/Sources/Rendering/Core/Glyph3DMapper';
 import vtkConeSource from 'vtk.js/Sources/Filters/Sources/ConeSource';
 import { ScalarMode } from 'vtk.js/Sources/Rendering/Core/Mapper/Constants';
 
+import { RenderingTypes } from 'vtk.js/Sources/Widgets/Core/WidgetManager/Constants';
+
 function vtkConeHandleRepresentation(publicAPI, model) {
   model.classHierarchy.push('vtkConeHandleRepresentation');
 
+  const superClass = { ...publicAPI };
   // --------------------------------------------------------------------------
   // internal polydata dataset
   // --------------------------------------------------------------------------
@@ -136,6 +139,29 @@ function vtkConeHandleRepresentation(publicAPI, model) {
 
     model.internalPolyData.modified();
     outData[0] = model.internalPolyData;
+  };
+
+  publicAPI.updateActorVisibility = (
+    renderingType = RenderingTypes.FRONT_BUFFER,
+    widgetVisible = true,
+    ctxVisible = true,
+    handleVisible = false
+  ) => {
+    superClass.updateActorVisibility(
+      renderingType,
+      widgetVisible,
+      ctxVisible,
+      handleVisible
+    );
+    if (model.fromLineWidget) {
+      const visibility = model.handleVisibility;
+      if (visibility === true) {
+        model.displayActor.setVisibility(true);
+        model.actor.setVisibility(true);
+      } else {
+        model.displayActor.setVisibility(false);
+      }
+    }
   };
 }
 
