@@ -9,6 +9,8 @@ import vtkSphereSource from 'vtk.js/Sources/Filters/Sources/SphereSource';
 
 import { ScalarMode } from 'vtk.js/Sources/Rendering/Core/Mapper/Constants';
 
+import { RenderingTypes } from 'vtk.js/Sources/Widgets/Core/WidgetManager/Constants';
+
 // ----------------------------------------------------------------------------
 // vtkSphereHandleRepresentation methods
 // ----------------------------------------------------------------------------
@@ -17,6 +19,7 @@ function vtkSphereHandleRepresentation(publicAPI, model) {
   // Set our className
   model.classHierarchy.push('vtkSphereHandleRepresentation');
 
+  const superClass = { ...publicAPI };
   // --------------------------------------------------------------------------
   // Internal polydata dataset
   // --------------------------------------------------------------------------
@@ -143,6 +146,29 @@ function vtkSphereHandleRepresentation(publicAPI, model) {
 
     model.internalPolyData.modified();
     outData[0] = model.internalPolyData;
+  };
+
+  publicAPI.updateActorVisibility = (
+    renderingType = RenderingTypes.FRONT_BUFFER,
+    widgetVisible = true,
+    ctxVisible = true,
+    handleVisible = false
+  ) => {
+    superClass.updateActorVisibility(
+      renderingType,
+      widgetVisible,
+      ctxVisible,
+      handleVisible
+    );
+    if (model.fromLineWidget) {
+      const visibility = model.handleVisibility;
+      if (visibility === true) {
+        model.displayActor.setVisibility(true);
+        model.actor.setVisibility(true);
+      } else {
+        model.displayActor.setVisibility(false);
+      }
+    }
   };
 }
 

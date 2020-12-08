@@ -7,9 +7,8 @@ import {
   updateTextPosition,
 } from 'vtk.js/Sources/Widgets/Widgets3D/LineWidget/helper';
 
-const MAX_POINTS = 2;
-
 const { Direction, HandleBehavior, HandleRepresentationType } = Constants;
+const MAX_POINTS = 2;
 
 export default function widgetBehavior(publicAPI, model) {
   model.classHierarchy.push('vtkLineWidgetProp');
@@ -24,6 +23,10 @@ export default function widgetBehavior(publicAPI, model) {
   // --------------------------------------------------------------------------
   // Interactor event
   // --------------------------------------------------------------------------
+
+  model.handleVisibility = !(
+    !model.handle1Visibility || !model.handle2Visibility
+  );
 
   function ignoreKey(e) {
     return e.altKey || e.controlKey || e.shiftKey;
@@ -49,9 +52,9 @@ export default function widgetBehavior(publicAPI, model) {
 
   function calcTextPosWithLineAngle() {
     const dySign = detectOffsetDirectionForTextPosition();
-    model.representations[2].setDy(
-      dySign * Math.abs(model.representations[2].getDy())
-    );
+    const textPropsCp = { ...model.representations[2].getTextProps() };
+    textPropsCp.dy = dySign * Math.abs(textPropsCp.dy);
+    model.representations[2].setTextProps(textPropsCp);
   }
 
   function updateHandleDirection(behavior, callData) {
@@ -103,36 +106,24 @@ export default function widgetBehavior(publicAPI, model) {
     );
   }
 
-  /* set a nearly transparent opacity to allow mouseMove events to react to
-   * handle position. An opacity value set to 0 prevents such behavior
-   */
-  publicAPI.hideGhostSpheres = () => {
-    if (model.handle1Shape === HandleRepresentationType.GHOST_SPHERE) {
-      model.representations[0].getActors()[1].getProperty().setOpacity(0.01);
-    }
-
-    if (model.handle2Shape === HandleRepresentationType.GHOST_SPHERE) {
-      model.representations[1].getActors()[1].getProperty().setOpacity(0.01);
-    }
-  };
-
-  publicAPI.revealGhostSpheres = () => {
+  function toggleHandleVisibility() {
     if (
-      model.handle1Shape === HandleRepresentationType.GHOST_SPHERE &&
       model.activeState &&
-      model.widgetState.getHandle1().getActive()
+      !model.activeState.getActive() &&
+      (model.handle1Visibility === false || model.handle2Visibility === false)
     ) {
-      model.representations[0].getActors()[1].getProperty().setOpacity(1);
-    }
-
-    if (
-      model.handle2Shape === HandleRepresentationType.GHOST_SPHERE &&
+      model.handleVisibility = false;
+    } else if (
       model.activeState &&
-      model.widgetState.getHandle2().getActive()
+      model.activeState.getActive() &&
+      ((model.handle1Visibility === false &&
+        model.widgetState.getHandle1().getActive()) ||
+        (model.handle2Visibility === false &&
+          model.widgetState.getHandle2().getActive()))
     ) {
-      model.representations[1].getActors()[1].getProperty().setOpacity(1);
+      model.handleVisibility = true;
     }
-  };
+  }
 
   // set in public to update handle  Direction when handle change in UI
   publicAPI.setHandleDirection = () => {
@@ -157,7 +148,6 @@ export default function widgetBehavior(publicAPI, model) {
     ) {
       return macro.VOID;
     }
-    publicAPI.hideGhostSpheres();
     const moveHandle = model.widgetState.getMoveHandle();
     moveHandle.setVisible(false);
     if (
@@ -195,7 +185,6 @@ export default function widgetBehavior(publicAPI, model) {
       calcTextPosWithLineAngle();
       moveHandle.setVisible(true);
     } else {
-      publicAPI.revealGhostSpheres();
       model.widgetState.setIsDragging(true);
       model.openGLRenderWindow.setCursor('grabbing');
       model.interactor.requestAnimation(publicAPI);
@@ -213,9 +202,7 @@ export default function widgetBehavior(publicAPI, model) {
       publicAPI.loseFocus();
       return macro.VOID;
     }
-    if (!model.activeState || !model.activeState.getActive()) {
-      publicAPI.hideGhostSpheres();
-    }
+    toggleHandleVisibility();
     if (
       model.pickable &&
       model.manipulator &&
@@ -223,7 +210,6 @@ export default function widgetBehavior(publicAPI, model) {
       model.activeState.getActive() &&
       !ignoreKey(callData)
     ) {
-      publicAPI.revealGhostSpheres();
       const worldCoords = model.manipulator.handleEvent(
         callData,
         model.openGLRenderWindow
@@ -238,9 +224,9 @@ export default function widgetBehavior(publicAPI, model) {
         model.activeState.setOrigin(worldCoords);
         publicAPI.invokeInteractionEvent();
         if (model.widgetState.getIsDragging()) {
+          updateTextPosition(model, model.widgetState.getPositionOnLine());
+          calcTextPosWithLineAngle();
           if (isOrientable()) {
-            updateTextPosition(model, model.widgetState.getPositionOnLine());
-            calcTextPosWithLineAngle();
             publicAPI.setHandleDirection();
           }
         } else if (
@@ -266,7 +252,6 @@ export default function widgetBehavior(publicAPI, model) {
       model.widgetState.deactivate();
       model.interactor.cancelAnimation(publicAPI);
       publicAPI.invokeEndInteractionEvent();
-      publicAPI.hideGhostSpheres();
     } else if (model.activeState !== model.widgetState.getMoveHandle()) {
       model.widgetState.deactivate();
     }

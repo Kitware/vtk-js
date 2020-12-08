@@ -12,6 +12,8 @@ import vtkTriangleFilter from 'vtk.js/Sources/Filters/General/TriangleFilter/';
 import Constants from 'vtk.js/Sources/Widgets/Widgets3D/LineWidget/Constants';
 import { ScalarMode } from 'vtk.js/Sources/Rendering/Core/Mapper/Constants';
 
+import { RenderingTypes } from 'vtk.js/Sources/Widgets/Core/WidgetManager/Constants';
+
 const { HandleRepresentationType } = Constants;
 
 // ----------------------------------------------------------------------------
@@ -22,6 +24,7 @@ function vtkArrowHandleRepresentation(publicAPI, model) {
   // Set our className
   model.classHierarchy.push('vtkArrowHandleRepresentation');
 
+  const superClass = { ...publicAPI };
   // --------------------------------------------------------------------------
   // Internal polydata dataset
   // --------------------------------------------------------------------------
@@ -167,6 +170,29 @@ function vtkArrowHandleRepresentation(publicAPI, model) {
 
     model.internalPolyData.modified();
     outData[0] = model.internalPolyData;
+  };
+
+  publicAPI.updateActorVisibility = (
+    renderingType = RenderingTypes.FRONT_BUFFER,
+    widgetVisible = true,
+    ctxVisible = true,
+    handleVisible = false
+  ) => {
+    superClass.updateActorVisibility(
+      renderingType,
+      widgetVisible,
+      ctxVisible,
+      handleVisible
+    );
+    if (model.fromLineWidget) {
+      const visibility = model.handleVisibility;
+      if (visibility === true) {
+        model.displayActor.setVisibility(true);
+        model.actor.setVisibility(true);
+      } else {
+        model.displayActor.setVisibility(false);
+      }
+    }
   };
 }
 
