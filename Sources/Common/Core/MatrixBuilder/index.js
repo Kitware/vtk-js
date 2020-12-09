@@ -1,4 +1,6 @@
 import { vec3, mat4, glMatrix } from 'gl-matrix';
+
+// eslint-disable-next-line import/no-cycle
 import { areMatricesEqual } from 'vtk.js/Sources/Common/Core/Math';
 
 const NoOp = (v) => v;

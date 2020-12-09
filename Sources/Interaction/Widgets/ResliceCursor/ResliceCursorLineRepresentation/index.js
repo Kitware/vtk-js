@@ -325,46 +325,13 @@ function vtkResliceCursorLineRepresentation(publicAPI, model) {
     const normalPlane = resliceCursor.getPlane(resliceCursorPlaneId);
     const aboutAxis = normalPlane.getNormal();
 
-    const rotatedVector = [];
-    publicAPI.rotateVectorAboutVector(
+    const rotatedVector = vtkMath.rotateVector(
       vectorToBeRotated,
       aboutAxis,
-      angle,
-      rotatedVector
+      angle
     );
 
     planeToBeRotated.setNormal(rotatedVector);
-  };
-
-  publicAPI.rotateVectorAboutVector = (
-    vectorToBeRotated,
-    axis,
-    angle,
-    output
-  ) => {
-    const v = [...vectorToBeRotated];
-    const l = [...axis];
-
-    vtkMath.normalize(v);
-    vtkMath.normalize(l);
-
-    const u = Math.sin(angle);
-    const w = 1.0 - Math.cos(angle);
-
-    output[0] =
-      v[0] * (1 - w * (l[2] * l[2] + l[1] * l[1])) +
-      v[1] * (-u * l[2] + w * l[0] * l[1]) +
-      v[2] * (u * l[1] + w * l[0] * l[1]);
-
-    output[1] =
-      v[0] * (u * l[2] + w * l[0] * l[1]) +
-      v[1] * (1 - w * (l[0] * l[0] + l[2] * l[2])) +
-      v[2] * (-u * l[0] + w * l[1] * l[2]);
-
-    output[2] =
-      v[0] * (-u * l[1] + w * l[0] * l[2]) +
-      v[1] * (u * l[0] + w * l[1] * l[2]) +
-      v[2] * (1 - w * (l[1] * l[1] + l[0] * l[0]));
   };
 
   publicAPI.getBounds = () => {

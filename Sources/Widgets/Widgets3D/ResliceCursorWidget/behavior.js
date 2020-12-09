@@ -1,5 +1,3 @@
-import { mat4 } from 'gl-matrix';
-
 import macro from 'vtk.js/Sources/macro';
 import vtkBoundingBox from 'vtk.js/Sources/Common/DataModel/BoundingBox';
 import vtkLine from 'vtk.js/Sources/Common/DataModel/Line';
@@ -318,33 +316,36 @@ export default function widgetBehavior(publicAPI, model) {
     vtkMath.normalize(cross);
 
     const sign = vtkMath.dot(cross, planeNormal) > 0 ? -1 : 1;
-
-    const matrix = mat4.create();
-    mat4.translate(matrix, matrix, center);
-    mat4.rotate(matrix, matrix, rotationAngle * sign, planeNormal);
-    mat4.translate(matrix, matrix, [-center[0], -center[1], -center[2]]);
+    const radianAngle = rotationAngle * sign;
 
     // Rotate associated line's plane normal
     const planeName = activeLine.getPlaneName();
     const normal = model.widgetState[`get${planeName}PlaneNormal`]();
-    const newNormal = vtkMath.rotateVector(
-      normal,
-      planeNormal,
-      rotationAngle * sign
-    );
+    const newNormal = vtkMath.rotateVector(normal, planeNormal, radianAngle);
     model.widgetState[`set${planeName}PlaneNormal`](newNormal);
 
     if (model.widgetState.getKeepOrthogonality()) {
       const associatedLineName = getAssociatedLinesName(activeLine.getName());
       const associatedLine = model.widgetState[`get${associatedLineName}`]();
-      const planeName2 = associatedLine.getPlaneName();
-      const normal2 = model.widgetState[`get${planeName2}PlaneNormal`]();
-      const newNormal2 = vtkMath.rotateVector(
-        normal2,
-        planeNormal,
-        rotationAngle * sign
+      const associatedPlaneName = associatedLine.getPlaneName();
+      const associatedNormal = model.widgetState[
+        `get${associatedPlaneName}PlaneNormal`
+      ]();
+
+      // Compute previous angle between lines
+      const angleBetweenAssociatedPlanes = vtkMath.angleBetweenVectors(
+        normal,
+        associatedNormal
       );
-      model.widgetState[`set${planeName2}PlaneNormal`](newNormal2);
+
+      const newAssociatedNormal = vtkMath.rotateVector(
+        newNormal,
+        planeNormal,
+        angleBetweenAssociatedPlanes
+      );
+      model.widgetState[`set${associatedPlaneName}PlaneNormal`](
+        newAssociatedNormal
+      );
     }
     updateState(model.widgetState);
   };
