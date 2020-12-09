@@ -1,4 +1,5 @@
 import './Common/Core/LookupTable/test/testCategoricalColors';
+import './Common/Core/Math/test/testMath';
 import './Common/Core/MatrixBuilder/test/testMatrixBuilder';
 import './Common/Core/LookupTable/test/testSetTable';
 import './Common/DataModel/Box/test/testBox';
