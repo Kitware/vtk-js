@@ -2,15 +2,17 @@ import macro from 'vtk.js/Sources/macro';
 import vtkActor from 'vtk.js/Sources/Rendering/Core/Actor';
 import vtkArrow2DSource from 'vtk.js/Sources/Filters/Sources/Arrow2DSource/';
 import vtkDataArray from 'vtk.js/Sources/Common/Core/DataArray';
-import vtkFollower from 'vtk.js/Sources/Rendering/Core/Follower';
+
+import vtkWidgetRepresentation from 'vtk.js/Sources/Widgets/Representations/WidgetRepresentation';
 import vtkGlyph3DMapper from 'vtk.js/Sources/Rendering/Core/Glyph3DMapper';
 import vtkHandleRepresentation from 'vtk.js/Sources/Widgets/Representations/HandleRepresentation';
+import vtkMatrixBuilder from 'vtk.js/Sources/Common/Core/MatrixBuilder';
 import vtkPixelSpaceCallbackMapper from 'vtk.js/Sources/Rendering/Core/PixelSpaceCallbackMapper';
 import vtkPolyData from 'vtk.js/Sources/Common/DataModel/PolyData';
-import vtkTriangleFilter from 'vtk.js/Sources/Filters/General/TriangleFilter/';
 
 import Constants from 'vtk.js/Sources/Widgets/Widgets3D/LineWidget/Constants';
 import { ScalarMode } from 'vtk.js/Sources/Rendering/Core/Mapper/Constants';
+import { vec3, mat3 } from 'gl-matrix';
 
 import { RenderingTypes } from 'vtk.js/Sources/Widgets/Core/WidgetManager/Constants';
 
@@ -42,9 +44,17 @@ function vtkArrowHandleRepresentation(publicAPI, model) {
       numberOfComponents: 1,
       empty: true,
     }),
+    direction: vtkDataArray.newInstance({
+      name: 'direction',
+      numberOfComponents: 9,
+      empty: true,
+    }),
   };
   model.internalPolyData.getPointData().addArray(model.internalArrays.scale);
   model.internalPolyData.getPointData().addArray(model.internalArrays.color);
+  model.internalPolyData
+    .getPointData()
+    .addArray(model.internalArrays.direction);
 
   function detectArrowShape() {
     const representationToSource = {
@@ -77,24 +87,30 @@ function vtkArrowHandleRepresentation(publicAPI, model) {
   model.displayMapper.setInputConnection(publicAPI.getOutputPort());
   publicAPI.addActor(model.displayActor);
   model.alwaysVisibleActors = [model.displayActor];
+  model.pipelines = {
+    arrow: {
+      source: publicAPI,
+      glyph: detectArrowShape(),
+      mapper: vtkGlyph3DMapper.newInstance({
+        orientationArray: 'direction',
+        scaleArray: 'scale',
+        colorByArrayName: 'color',
+        scalarMode: ScalarMode.USE_POINT_FIELD_DATA,
+      }),
+      actor: vtkActor.newInstance(),
+    },
+  };
 
-  model.mapper = vtkGlyph3DMapper.newInstance({
-    scaleArray: 'scale',
-    colorByArrayName: 'color',
-    scalarMode: ScalarMode.USE_POINT_FIELD_DATA,
-  });
-  // model.actor = vtkActor.newInstance();
-  model.actor = vtkFollower.newInstance();
-  model.glyph = detectArrowShape();
+  model.pipelines.arrow.mapper.setOrientationModeToMatrix();
+  model.pipelines.arrow.mapper.setResolveCoincidentTopology(true);
 
-  const triangleFilter = vtkTriangleFilter.newInstance();
-  triangleFilter.setInputConnection(model.glyph.getOutputPort());
-  model.mapper.setInputConnection(publicAPI.getOutputPort(), 0);
-  model.mapper.setInputConnection(triangleFilter.getOutputPort(), 1);
-  model.actor.setMapper(model.mapper);
+  vtkWidgetRepresentation.connectPipeline(model.pipelines.arrow);
 
-  publicAPI.addActor(model.actor);
+  publicAPI.addActor(model.pipelines.arrow.actor);
 
+  model.transform = vtkMatrixBuilder.buildFromDegree();
+  model.actor = model.pipelines.arrow.actor;
+  model.glyph = model.pipelines.arrow.glyph;
   // --------------------------------------------------------------------------
 
   publicAPI.setGlyphResolution = macro.chain(
@@ -129,7 +145,7 @@ function vtkArrowHandleRepresentation(publicAPI, model) {
   // --------------------------------------------------------------------------
 
   publicAPI.requestData = (inData, outData) => {
-    const { points, scale, color } = model.internalArrays;
+    const { points, scale, color, direction } = model.internalArrays;
     const list = publicAPI.getRepresentationStates(inData[0]);
     const totalCount = list.length;
 
@@ -138,11 +154,13 @@ function vtkArrowHandleRepresentation(publicAPI, model) {
       points.setData(new Float32Array(3 * totalCount), 3);
       scale.setData(new Float32Array(totalCount));
       color.setData(new Float32Array(totalCount));
+      direction.setData(new Float32Array(9 * totalCount));
     }
     const typedArray = {
       points: points.getData(),
       scale: scale.getData(),
       color: color.getData(),
+      direction: direction.getData(),
     };
 
     for (let i = 0; i < list.length; i++) {
@@ -155,6 +173,44 @@ function vtkArrowHandleRepresentation(publicAPI, model) {
       typedArray.points[i * 3 + 1] = coord[1];
       typedArray.points[i * 3 + 2] = coord[2];
 
+      let reorientArrowSource4 = vtkMatrixBuilder
+        .buildFromDegree()
+        .rotateFromDirections([1, 0, 0], [1, 0, 0]) // from X to Z
+        .getMatrix();
+
+      const right = state.getRight ? state.getRight() : [1, 0, 0];
+      const up = state.getUp ? state.getUp() : [0, 1, 0];
+      const dir = state.getDirection ? state.getDirection() : [0, 0, 1];
+      const rotation = [...right, ...up, ...dir];
+
+      let scale3 = state.getScale3 ? state.getScale3() : [1, 1, 1];
+      scale3 = scale3.map((x) => (x === 0 ? 2 * model.defaultScale : 2 * x));
+
+      if (model.toReorient === true)
+        reorientArrowSource4 = vtkMatrixBuilder
+          .buildFromDegree()
+          .rotateFromDirections([0, 0, 1], model.orientation)
+          .getMatrix();
+
+      const reorientArrowSource3 = [];
+      mat3.fromMat4(reorientArrowSource3, reorientArrowSource4);
+      vec3.transformMat4(scale3, scale3, reorientArrowSource4);
+      mat3.multiply(rotation, rotation, reorientArrowSource3);
+
+      for (let j = 0; j < 9; j += 1) {
+        typedArray.direction[i * 9 + j] = rotation[j];
+      }
+      const scale1 =
+        (state.getScale1 ? state.getScale1() : model.defaultScale) / 2;
+
+      let sFactor = scaleFactor;
+      if (state.getVisible && !state.getVisible()) {
+        sFactor = 0;
+      }
+
+      typedArray.scale[i * 3 + 0] = scale1 * sFactor * (0.002 * scale3[0]);
+      typedArray.scale[i * 3 + 1] = scale1 * sFactor * (0.002 * scale3[1]);
+      typedArray.scale[i * 3 + 2] = scale1 * sFactor * (0.002 * scale3[2]);
       typedArray.scale[i] =
         scaleFactor *
         (!state.isVisible || state.isVisible() ? 1 : 0) *
@@ -202,6 +258,8 @@ function vtkArrowHandleRepresentation(publicAPI, model) {
 
 const DEFAULT_VALUES = {
   defaultScale: 1,
+  orientation: [0, 0, 0],
+  toReorient: false,
 };
 
 // ----------------------------------------------------------------------------
@@ -211,7 +269,8 @@ export function extend(publicAPI, model, initialValues = {}) {
 
   vtkHandleRepresentation.extend(publicAPI, model, initialValues);
   macro.get(publicAPI, model, ['glyph', 'mapper', 'actor']);
-
+  macro.setGet(publicAPI, model, ['toReorient']);
+  macro.setGetArray(publicAPI, model, ['orientation'], 3);
   // Object specific methods
   vtkArrowHandleRepresentation(publicAPI, model);
 }
