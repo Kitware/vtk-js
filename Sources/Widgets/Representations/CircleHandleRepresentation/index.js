@@ -144,11 +144,18 @@ function vtkCircleHandleRepresentation(publicAPI, model) {
       let scale3 = state.getScale3 ? state.getScale3() : [1, 1, 1];
       scale3 = scale3.map((x) => (x === 0 ? 2 * model.defaultScale : 2 * x));
 
-      // Reorient rotation and scale3 since the circle source faces X instead of Z
-      const reorientCircleSource4 = vtkMatrixBuilder
+      let reorientCircleSource4 = vtkMatrixBuilder
         .buildFromDegree()
         .rotateFromDirections([1, 0, 0], [0, 0, 1]) // from X to Z
         .getMatrix();
+
+      if (model.toReorient === true) {
+        reorientCircleSource4 = vtkMatrixBuilder
+          .buildFromDegree()
+          .rotateFromDirections([1, 0, 0], model.orientation)
+          .getMatrix();
+      }
+
       const reorientCircleSource3 = [];
       mat3.fromMat4(reorientCircleSource3, reorientCircleSource4);
       vec3.transformMat4(scale3, scale3, reorientCircleSource4);
@@ -203,6 +210,8 @@ const DEFAULT_VALUES = {
   defaultScale: 1,
   drawBorder: false,
   drawFace: true,
+  orientation: [0, 1, 0],
+  toReorient: false,
 };
 
 // ----------------------------------------------------------------------------
@@ -211,8 +220,14 @@ export function extend(publicAPI, model, initialValues = {}) {
   Object.assign(model, DEFAULT_VALUES, initialValues);
 
   vtkHandleRepresentation.extend(publicAPI, model, initialValues);
-  macro.setGet(publicAPI, model, ['glyphResolution', 'defaultScale']);
+  macro.setGet(publicAPI, model, [
+    'glyphResolution',
+    'defaultScale',
+    'toReorient',
+  ]);
   macro.get(publicAPI, model, ['glyph', 'mapper', 'actor']);
+
+  macro.setGetArray(publicAPI, model, ['orientation'], 3);
 
   // Object specific methods
   vtkCircleHandleRepresentation(publicAPI, model);

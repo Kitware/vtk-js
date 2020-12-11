@@ -70,7 +70,24 @@ function vtk6PointsArrow(publicAPI, model) {
   points[16] = model.height * 0.1 - thickOp - offsetOp - centerOffsetOp;
   points[17] = 0.0;
 
-  const cells = Uint8Array.from([6, 0, 1, 2, 3, 4, 5]);
+  const cells = Uint8Array.from([
+    3,
+    0,
+    1,
+    5,
+    3,
+    1,
+    4,
+    5,
+    3,
+    1,
+    4,
+    3,
+    3,
+    1,
+    2,
+    3,
+  ]);
 
   vtkMatrixBuilder
     .buildFromRadian()
@@ -194,7 +211,7 @@ const DEFAULT_VALUES = {
   height: 1.0,
   width: 1.0,
   thickness: 0,
-  center: 0.5,
+  center: 0,
   origin: [0, 0, 0],
   direction: [0.0, 1.0, 0.0],
   pointType: 'Float32Array',

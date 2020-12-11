@@ -125,7 +125,37 @@ export default function widgetBehavior(publicAPI, model) {
     }
   }
 
-  // set in public to update handle  Direction when handle change in UI
+  function isHandleGlyph2D(handleShape) {
+    return (
+      handleShape === HandleRepresentationType.ARROWHEAD3 ||
+      handleShape === HandleRepresentationType.ARROWHEAD4 ||
+      handleShape === HandleRepresentationType.ARROWHEAD6 ||
+      handleShape === HandleRepresentationType.STAR ||
+      handleShape === HandleRepresentationType.CIRCLE
+    );
+  }
+
+  publicAPI.setRotationHandleToFaceCamera = () => {
+    if (
+      model.handle1CameraOrientation === true &&
+      isHandleGlyph2D(model.handle1Shape)
+    ) {
+      model.representations[0].setToReorient(true);
+      model.representations[0].setOrientation(
+        model.camera.getDirectionOfProjection()
+      );
+    }
+    if (
+      model.handle2CameraOrientation === true &&
+      isHandleGlyph2D(model.handle2Shape)
+    ) {
+      model.representations[1].setToReorient(true);
+      model.representations[1].setOrientation(
+        model.camera.getDirectionOfProjection()
+      );
+    }
+  };
+
   publicAPI.setHandleDirection = () => {
     if (isHandleOrientable(model.handle1Shape)) {
       updateHandleDirection(HandleBehavior.HANDLE1);
@@ -262,6 +292,9 @@ export default function widgetBehavior(publicAPI, model) {
       publicAPI.invokeEndInteractionEvent();
       model.widgetManager.enablePicking();
       model.interactor.render();
+    }
+    if (!model.activeState || !model.activeState.getActive()) {
+      publicAPI.setRotationHandleToFaceCamera();
     }
     model.widgetState.setIsDragging(false);
   };

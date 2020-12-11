@@ -103,6 +103,7 @@ function vtkLineWidget(publicAPI, model) {
               /* To detect in handleRepresentation the origin of LineWidget, mandatory */
               fromLineWidget: true,
               handleVisibility: model.handle1Visibility,
+              handleCameraOrientation: model.handle1CameraOrientation,
             },
           },
           {
@@ -116,6 +117,7 @@ function vtkLineWidget(publicAPI, model) {
               /* To detect in handleRepresentation the origin of LineWidget, mandatory */
               fromLineWidget: true,
               handleVisibility: model.handle2Visibility,
+              handleCameraOrientation: model.handle2CameraOrientation,
             },
           },
           {
@@ -191,12 +193,14 @@ function vtkLineWidget(publicAPI, model) {
 // ----------------------------------------------------------------------------
 
 const DEFAULT_VALUES = {
-  handle1Shape: HandleRepresentationType.NONE,
-  handle2Shape: HandleRepresentationType.NONE,
+  handle1Shape: HandleRepresentationType.ARROWHEAD6,
+  handle2Shape: HandleRepresentationType.SPHERE,
   handle1Visibility: true,
   handle2Visibility: false,
+  handle1CameraOrientation: true,
+  handle2CameraOrientation: true,
   /* Position of the text on the line where 0 is handle1 and 1 is handle2 */
-  positionOnLine: 0.5,
+  positionOnLine: 1,
   /**
    * The initialValue variable of the state is meant to create an empty text
    * to insert the desired text when both handles are set, and avoids having
@@ -219,7 +223,6 @@ export function extend(publicAPI, model, initialValues = {}) {
   ]);
 
   vtkLineWidget(publicAPI, model);
-  // console.log(model.handleVisibility);
 }
 
 // ----------------------------------------------------------------------------
