@@ -6,8 +6,8 @@ import vtkPixelSpaceCallbackMapper from 'vtk.js/Sources/Rendering/Core/PixelSpac
 import vtkActor from 'vtk.js/Sources/Rendering/Core/Actor';
 import vtkGlyph3DMapper from 'vtk.js/Sources/Rendering/Core/Glyph3DMapper';
 import vtkConeSource from 'vtk.js/Sources/Filters/Sources/ConeSource';
-import { ScalarMode } from 'vtk.js/Sources/Rendering/Core/Mapper/Constants';
 
+import { ScalarMode } from 'vtk.js/Sources/Rendering/Core/Mapper/Constants';
 import { RenderingTypes } from 'vtk.js/Sources/Widgets/Core/WidgetManager/Constants';
 
 function vtkConeHandleRepresentation(publicAPI, model) {
@@ -168,13 +168,19 @@ function vtkConeHandleRepresentation(publicAPI, model) {
 const DEFAULT_VALUES = {
   glyphResolution: 8,
   defaultScale: 1,
+  handleVisibility: true,
 };
 
 export function extend(publicAPI, model, initialValues = {}) {
   Object.assign(model, DEFAULT_VALUES, initialValues);
 
   vtkHandleRepresentation.extend(publicAPI, model, initialValues);
-  macro.setGet(publicAPI, model, ['glyph', 'glyphResolution', 'defaultScale']);
+  macro.setGet(publicAPI, model, [
+    'glyph',
+    'glyphResolution',
+    'defaultScale',
+    'handleVisibility',
+  ]);
   vtkConeHandleRepresentation(publicAPI, model);
 }
 

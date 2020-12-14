@@ -179,6 +179,7 @@ function vtkSphereHandleRepresentation(publicAPI, model) {
 const DEFAULT_VALUES = {
   glyphResolution: 8,
   defaultScale: 1,
+  handleVisibility: true,
 };
 
 // ----------------------------------------------------------------------------
@@ -188,6 +189,7 @@ export function extend(publicAPI, model, initialValues = {}) {
 
   vtkHandleRepresentation.extend(publicAPI, model, initialValues);
   macro.get(publicAPI, model, ['glyph', 'mapper', 'actor']);
+  macro.setGet(publicAPI, model, ['handleVisibility']);
 
   // Object specific methods
   vtkSphereHandleRepresentation(publicAPI, model);

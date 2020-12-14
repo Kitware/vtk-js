@@ -293,7 +293,10 @@ export default function widgetBehavior(publicAPI, model) {
       model.widgetManager.enablePicking();
       model.interactor.render();
     }
-    if (!model.activeState || !model.activeState.getActive()) {
+    if (
+      model.widgetState.getIsDragging() === false &&
+      (!model.activeState || !model.activeState.getActive())
+    ) {
       publicAPI.setRotationHandleToFaceCamera();
     }
     model.widgetState.setIsDragging(false);

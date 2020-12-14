@@ -260,6 +260,7 @@ const DEFAULT_VALUES = {
   defaultScale: 1,
   orientation: [0, 0, 0],
   toReorient: false,
+  handleVisibility: true,
 };
 
 // ----------------------------------------------------------------------------
@@ -269,7 +270,7 @@ export function extend(publicAPI, model, initialValues = {}) {
 
   vtkHandleRepresentation.extend(publicAPI, model, initialValues);
   macro.get(publicAPI, model, ['glyph', 'mapper', 'actor']);
-  macro.setGet(publicAPI, model, ['toReorient']);
+  macro.setGet(publicAPI, model, ['toReorient', 'handleVisibility']);
   macro.setGetArray(publicAPI, model, ['orientation'], 3);
   // Object specific methods
   vtkArrowHandleRepresentation(publicAPI, model);
