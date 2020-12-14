@@ -77,9 +77,7 @@ function configureVtkRules() {
     },
     {
       test: /\.worker\.js$/,
-      use: [
-        { loader: 'worker-loader', options: { inline: 'no-fallback' } },
-      ],
+      use: [{ loader: 'worker-loader', options: { inline: 'no-fallback' } }],
     },
   ];
 }
@@ -97,6 +95,7 @@ const baseConfig = {
     alias: {
       'vtk.js': __dirname,
     },
+    fallback: { stream: require.resolve('stream-browserify') },
   },
   module: {
     rules: configureVtkRules(),
@@ -148,6 +147,7 @@ const liteConfig = merge(
           'Sources/Rendering/Core/ColorTransferFunction/LiteColorMaps.json'
         ),
       },
+      fallback: { stream: require.resolve('stream-browserify') },
     },
   },
   baseConfig,

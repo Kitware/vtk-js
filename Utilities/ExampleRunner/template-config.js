@@ -1,5 +1,6 @@
-var path = require('path');
-var vtkBasePath = path.resolve('.');
+const path = require('path');
+
+const vtkBasePath = path.resolve('.');
 
 const settings = require('../../webpack.settings.js');
 
@@ -47,6 +48,7 @@ module.exports = {
     },
     fallback: {
       fs: false,
+      stream: require.resolve('stream-browserify')
     },
   },
 
