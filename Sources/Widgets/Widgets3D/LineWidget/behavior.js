@@ -1,7 +1,7 @@
 import Constants from 'vtk.js/Sources/Widgets/Widgets3D/LineWidget/Constants';
 import macro from 'vtk.js/Sources/macro';
 import * as vtkMath from 'vtk.js/Sources/Common/Core/Math/';
-
+// import * as vtkPlane from 'vtk.js/Sources/Common/DataModel/Plane/';
 import {
   calculateTextPosition,
   updateTextPosition,
@@ -87,7 +87,7 @@ export default function widgetBehavior(publicAPI, model) {
       vtkMath.subtract(handle1Pos, handle2Pos, Direction);
       vtkMath.multiplyScalar(Direction, modifier);
     }
-    model.representations[bv].getGlyph().setDirection(Direction);
+    model.representations[bv].setOrientation(Direction);
   }
 
   function isHandleOrientable(handleType) {
@@ -140,18 +140,16 @@ export default function widgetBehavior(publicAPI, model) {
       model.handle1CameraOrientation === true &&
       isHandleGlyph2D(model.handle1Shape)
     ) {
-      model.representations[0].setToReorient(true);
-      model.representations[0].setOrientation(
-        model.camera.getDirectionOfProjection()
+      model.representations[0].setViewMatrix(
+        Array.from(model.camera.getViewMatrix())
       );
     }
     if (
       model.handle2CameraOrientation === true &&
       isHandleGlyph2D(model.handle2Shape)
     ) {
-      model.representations[1].setToReorient(true);
-      model.representations[1].setOrientation(
-        model.camera.getDirectionOfProjection()
+      model.representations[1].setViewMatrix(
+        Array.from(model.camera.getViewMatrix())
       );
     }
   };
@@ -298,7 +296,10 @@ export default function widgetBehavior(publicAPI, model) {
       model.widgetManager.enablePicking();
       model.interactor.render();
     }
-    if (!model.activeState || !model.activeState.getActive()) {
+    if (
+      model.widgetState.getIsDragging() === false &&
+      (!model.activeState || !model.activeState.getActive())
+    ) {
       publicAPI.setRotationHandleToFaceCamera();
     }
     model.widgetState.setIsDragging(false);

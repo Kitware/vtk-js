@@ -6,10 +6,12 @@ import vtkGlyph3DMapper from 'vtk.js/Sources/Rendering/Core/Glyph3DMapper';
 import vtkHandleRepresentation from 'vtk.js/Sources/Widgets/Representations/HandleRepresentation';
 import vtkMatrixBuilder from 'vtk.js/Sources/Common/Core/MatrixBuilder';
 import vtkPolyData from 'vtk.js/Sources/Common/DataModel/PolyData';
+import vtkPixelSpaceCallbackMapper from 'vtk.js/Sources/Rendering/Core/PixelSpaceCallbackMapper';
 import vtkWidgetRepresentation from 'vtk.js/Sources/Widgets/Representations/WidgetRepresentation';
 
 import { ScalarMode } from 'vtk.js/Sources/Rendering/Core/Mapper/Constants';
 import { vec3, mat3 } from 'gl-matrix';
+import { RenderingTypes } from 'vtk.js/Sources/Widgets/Core/WidgetManager/Constants';
 
 // ----------------------------------------------------------------------------
 // vtkCircleHandleRepresentation methods
@@ -19,6 +21,7 @@ function vtkCircleHandleRepresentation(publicAPI, model) {
   // Set our className
   model.classHierarchy.push('vtkCircleHandleRepresentation');
 
+  const superClass = { ...publicAPI };
   // --------------------------------------------------------------------------
   // Internal polydata dataset
   // --------------------------------------------------------------------------
@@ -52,6 +55,12 @@ function vtkCircleHandleRepresentation(publicAPI, model) {
   // Generic rendering pipeline
   // --------------------------------------------------------------------------
 
+  model.displayMapper = vtkPixelSpaceCallbackMapper.newInstance();
+  model.displayActor = vtkActor.newInstance();
+  model.displayActor.setMapper(model.displayMapper);
+  model.displayMapper.setInputConnection(publicAPI.getOutputPort());
+  publicAPI.addActor(model.displayActor);
+  model.alwaysVisibleActors = [model.displayActor];
   model.pipelines = {
     circle: {
       source: publicAPI,
@@ -78,6 +87,7 @@ function vtkCircleHandleRepresentation(publicAPI, model) {
 
   publicAPI.addActor(model.pipelines.circle.actor);
 
+  model.actor = model.pipelines.circle.actor;
   model.transform = vtkMatrixBuilder.buildFromDegree();
 
   // --------------------------------------------------------------------------
@@ -194,6 +204,29 @@ function vtkCircleHandleRepresentation(publicAPI, model) {
     outData[0] = model.internalPolyData;
   };
 
+  publicAPI.updateActorVisibility = (
+    renderingType = RenderingTypes.FRONT_BUFFER,
+    widgetVisible = true,
+    ctxVisible = true,
+    handleVisible = false
+  ) => {
+    superClass.updateActorVisibility(
+      renderingType,
+      widgetVisible,
+      ctxVisible,
+      handleVisible
+    );
+    if (model.fromLineWidget) {
+      const visibility = model.handleVisibility;
+      if (visibility === true) {
+        model.displayActor.setVisibility(true);
+        model.actor.setVisibility(true);
+      } else {
+        model.displayActor.setVisibility(false);
+      }
+    }
+  };
+
   // --------------------------------------------------------------------------
   // Initialization
   // --------------------------------------------------------------------------
@@ -212,6 +245,7 @@ const DEFAULT_VALUES = {
   drawFace: true,
   orientation: [0, 1, 0],
   toReorient: false,
+  handleVisibility: true,
 };
 
 // ----------------------------------------------------------------------------
@@ -224,6 +258,7 @@ export function extend(publicAPI, model, initialValues = {}) {
     'glyphResolution',
     'defaultScale',
     'toReorient',
+    'handleVisibility',
   ]);
   macro.get(publicAPI, model, ['glyph', 'mapper', 'actor']);
 
