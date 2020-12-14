@@ -44,7 +44,9 @@ module.exports = {
             {
               loader: 'postcss-loader',
               options: {
-                plugins: () => [autoprefixer('last 2 version', 'ie >= 10')],
+                postcssOptions: {
+                  plugins: [autoprefixer('last 2 version', 'ie >= 10')],
+                },
               },
             },
           ],
@@ -65,7 +67,9 @@ module.exports = {
             {
               loader: 'postcss-loader',
               options: {
-                plugins: () => [autoprefixer('last 2 version', 'ie >= 10')],
+                postcssOptions: {
+                  plugins: [autoprefixer('last 2 version', 'ie >= 10')],
+                },
               },
             },
           ],
