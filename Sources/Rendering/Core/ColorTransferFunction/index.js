@@ -590,7 +590,10 @@ function vtkColorTransferFunction(publicAPI, model) {
             table[tidx + 2] = model.nodes[0].b;
           }
         }
-      } else if (idx === 0 && Math.abs(x - xStart) < 1e-6) {
+      } else if (
+        idx === 0 &&
+        (Math.abs(x - xStart) < 1e-6 || model.discretize)
+      ) {
         if (numNodes > 0) {
           table[tidx] = model.nodes[0].r;
           table[tidx + 1] = model.nodes[0].g;
