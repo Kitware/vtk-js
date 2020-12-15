@@ -7,6 +7,8 @@ import vtkTexture from 'vtk.js/Sources/Rendering/Core/Texture';
 import vtkTextureLODsDownloader from 'vtk.js/Sources/Rendering/Misc/TextureLODsDownloader';
 import vtkHttpDataSetLODsLoader from 'vtk.js/Sources/IO/Misc/HttpDataSetLODsLoader';
 import vtkColorTransferFunction from 'vtk.js/Sources/Rendering/Core/ColorTransferFunction';
+import vtkPiecewiseFunction from 'vtk.js/Sources/Common/DataModel/PiecewiseFunction';
+import vtkVolumeMapper from 'vtk.js/Sources/Rendering/Core/VolumeMapper';
 
 import DataAccessHelper from 'vtk.js/Sources/IO/Core/DataAccessHelper';
 
@@ -41,7 +43,40 @@ function applySettings(sceneItem, settings) {
     if (settings.actor) {
       sceneItem.actor.getProperty().set(settings.property);
     } else {
-      sceneItem.volume.getProperty().set(settings.property);
+      const volumePropertySettings = { ...settings.property };
+      delete volumePropertySettings.components;
+      sceneItem.volume.getProperty().set(volumePropertySettings);
+      if (settings.property.components) {
+        const volumeProperty = sceneItem.volume.getProperty();
+        sceneItem.volumeComponents.forEach((component, componentIndex) => {
+          volumeProperty.setScalarOpacityUnitDistance(
+            componentIndex,
+            settings.property.components[componentIndex]
+              .scalarOpacityUnitDistance
+          );
+
+          if (component.rgbTransferFunction) {
+            volumeProperty.setRGBTransferFunction(
+              componentIndex,
+              component.rgbTransferFunction
+            );
+          }
+
+          if (component.grayTransferFunction) {
+            volumeProperty.setGrayTransferFunction(
+              componentIndex,
+              component.grayTransferFunction
+            );
+          }
+
+          if (component.scalarOpacity) {
+            volumeProperty.setScalarOpacity(
+              componentIndex,
+              component.scalarOpacity
+            );
+          }
+        });
+      }
     }
   }
 
@@ -89,6 +124,48 @@ function isImage(str) {
   return ['jpg', 'png', 'jpeg'].indexOf(ext) !== -1;
 }
 
+function loadColorTransferFunction(item) {
+  const tf = vtkColorTransferFunction.newInstance(item);
+  if (item.nodes) {
+    tf.removeAllPoints();
+    item.nodes.forEach(([x, r, g, b, midpoint, sharpness]) => {
+      tf.addRGBPointLong(x, r, g, b, midpoint, sharpness);
+    });
+  }
+  return tf;
+}
+
+function loadPiecewiseFunction(item) {
+  const pwf = vtkPiecewiseFunction.newInstance(item);
+  if (item.points) {
+    pwf.removeAllPoints();
+
+    item.points.forEach(([x, y, midpoint, sharpness]) =>
+      pwf.addPointLong(x, y, midpoint, sharpness)
+    );
+  }
+  return pwf;
+}
+
+function initializeVolumeComponents(components) {
+  return components.map((component) => {
+    const ret = {};
+    if (component.rgbTransferFunction) {
+      ret.rgbTransferFunction = loadColorTransferFunction(
+        component.rgbTransferFunction
+      );
+    } else if (component.grayTransferFunction) {
+      ret.grayTransferFunction = loadPiecewiseFunction(
+        component.grayTransferFunction
+      );
+    }
+    if (component.scalarOpacity) {
+      ret.scalarOpacity = loadPiecewiseFunction(component.scalarOpacity);
+    }
+    return ret;
+  });
+}
+
 // ----------------------------------------------------------------------------
 
 function loadHttpDataSetReader(item, model, publicAPI) {
@@ -96,7 +173,12 @@ function loadHttpDataSetReader(item, model, publicAPI) {
     fetchGzip: model.fetchGzip,
     dataAccessHelper: model.dataAccessHelper,
   });
-  const mapper = vtkMapper.newInstance();
+  let mapper;
+  if (item.volume) {
+    mapper = vtkVolumeMapper.newInstance();
+  } else {
+    mapper = vtkMapper.newInstance();
+  }
   const sceneItem = {
     name: item.name || `Item ${itemCount++}`,
     source,
@@ -174,6 +256,12 @@ function loadHttpDataSetReader(item, model, publicAPI) {
     sceneItem.volume = volume;
     if (model.renderer) {
       model.renderer.addVolume(volume);
+    }
+    if (item.property && item.property.components) {
+      // initialize transfer functions
+      sceneItem.volumeComponents = initializeVolumeComponents(
+        item.property.components
+      );
     }
     volume.setMapper(mapper);
   }
@@ -279,14 +367,7 @@ function vtkHttpSceneLoader(publicAPI, model) {
         if (data.lookupTables) {
           Object.keys(data.lookupTables).forEach((fieldName) => {
             const config = data.lookupTables[fieldName];
-            const lookupTable = vtkColorTransferFunction.newInstance(config);
-            if (config.nodes) {
-              lookupTable.removeAllPoints();
-              config.nodes.forEach(([x, r, g, b, midpoint, sharpness]) => {
-                lookupTable.addRGBPointLong(x, r, g, b, midpoint, sharpness);
-              });
-            }
-
+            const lookupTable = loadColorTransferFunction(config);
             luts[fieldName] = lookupTable;
           });
         }
