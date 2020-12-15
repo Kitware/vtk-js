@@ -24,6 +24,7 @@ const { HandleRepresentationType, HandleRepresentation } = Constants;
 
 const shapeToRepresentation = {};
 
+
 function vtkLineWidget(publicAPI, model) {
   model.classHierarchy.push('vtkLineWidget');
 
@@ -196,7 +197,7 @@ const DEFAULT_VALUES = {
   handle1Shape: HandleRepresentationType.ARROWHEAD6,
   handle2Shape: HandleRepresentationType.SPHERE,
   handle1Visibility: true,
-  handle2Visibility: false,
+  handle2Visibility: true,
   handle1CameraOrientation: true,
   handle2CameraOrientation: true,
   /* Position of the text on the line where 0 is handle1 and 1 is handle2 */
