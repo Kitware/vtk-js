@@ -3,6 +3,7 @@ import macro from 'vtk.js/Sources/macro';
 import vtkCompositeCameraManipulator from 'vtk.js/Sources/Interaction/Manipulators/CompositeCameraManipulator';
 import vtkCompositeMouseManipulator from 'vtk.js/Sources/Interaction/Manipulators/CompositeMouseManipulator';
 import * as vtkMath from 'vtk.js/Sources/Common/Core/Math';
+import vtkMatrixBuilder from 'vtk.js/Sources/Common/Core/MatrixBuilder';
 
 // ----------------------------------------------------------------------------
 // vtkMouseCameraAxisRotateManipulator methods
@@ -128,7 +129,8 @@ function vtkMouseCameraAxisRotateManipulator(publicAPI, model) {
         const fpDist = vec3.length(newFp);
 
         // Note it normalizes the vector to be rotated
-        const result = vtkMath.rotateVector(newFp, v2, rAngle);
+        const result = [...newFp];
+        vtkMatrixBuilder.buildFromRadian().rotate(rAngle, v2).apply(result);
         vec3.scaleAndAdd(newFp, center, result, fpDist);
       }
     }

@@ -3,6 +3,7 @@ import macro from 'vtk.js/Sources/macro';
 import vtkInteractorObserver from 'vtk.js/Sources/Rendering/Core/InteractorObserver';
 import vtkLine from 'vtk.js/Sources/Common/DataModel/Line';
 import * as vtkMath from 'vtk.js/Sources/Common/Core/Math';
+import vtkMatrixBuilder from 'vtk.js/Sources/Common/Core/MatrixBuilder';
 import vtkPlane from 'vtk.js/Sources/Common/DataModel/Plane';
 import vtkResliceCursorActor from 'vtk.js/Sources/Interaction/Widgets/ResliceCursor/ResliceCursorActor';
 import vtkResliceCursorRepresentation from 'vtk.js/Sources/Interaction/Widgets/ResliceCursor/ResliceCursorRepresentation';
@@ -325,11 +326,11 @@ function vtkResliceCursorLineRepresentation(publicAPI, model) {
     const normalPlane = resliceCursor.getPlane(resliceCursorPlaneId);
     const aboutAxis = normalPlane.getNormal();
 
-    const rotatedVector = vtkMath.rotateVector(
-      vectorToBeRotated,
-      aboutAxis,
-      angle
-    );
+    const rotatedVector = [...vectorToBeRotated];
+    vtkMatrixBuilder
+      .buildFromRadian()
+      .rotate(angle, aboutAxis)
+      .apply(rotatedVector);
 
     planeToBeRotated.setNormal(rotatedVector);
   };

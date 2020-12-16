@@ -1,9 +1,6 @@
 import seedrandom from 'seedrandom';
 import macro from 'vtk.js/Sources/macro';
 
-// eslint-disable-next-line import/no-cycle
-import vtkMatrixBuilder from 'vtk.js/Sources/Common/Core/MatrixBuilder';
-
 const { vtkErrorMacro, vtkWarningMacro } = macro;
 
 // ----------------------------------------------------------------------------
@@ -2137,16 +2134,6 @@ export function float2CssRGBA(rgbArray) {
   )}, ${floatToChar(rgbArray[2] || 0)}, ${rgbArray[3] || 0})`;
 }
 
-export function rotateVector(vectorToBeRotated, axis, angle) {
-  const rotatedVector = [...vectorToBeRotated];
-  vtkMatrixBuilder
-    .buildFromRadian()
-    .identity()
-    .rotate(angle, axis)
-    .apply(rotatedVector);
-  return rotatedVector;
-}
-
 // ----------------------------------------------------------------------------
 // Only Static API
 // ----------------------------------------------------------------------------
@@ -2258,5 +2245,4 @@ export default {
   floatToHex2,
   floatRGB2HexCode,
   float2CssRGBA,
-  rotateVector,
 };

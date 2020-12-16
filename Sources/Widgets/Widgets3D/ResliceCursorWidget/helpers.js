@@ -9,6 +9,8 @@ import * as vtkMath from 'vtk.js/Sources/Common/Core/Math';
 
 import { ViewTypes } from 'vtk.js/Sources/Widgets/Core/WidgetManager/Constants';
 
+import vtkMatrixBuilder from 'vtk.js/Sources/Common/Core/MatrixBuilder';
+
 /**
  * Fit the plane defined by origin, p1, p2 onto the bounds.
  * Plane is untouched if does not intersect bounds.
@@ -147,6 +149,12 @@ export function getViewPlaneNameFromViewType(viewType) {
     default:
       return '';
   }
+}
+
+export function rotateVector(vectorToBeRotated, axis, angle) {
+  const rotatedVector = [...vectorToBeRotated];
+  vtkMatrixBuilder.buildFromRadian().rotate(angle, axis).apply(rotatedVector);
+  return rotatedVector;
 }
 
 // Update the extremities and the rotation point coordinate of the line

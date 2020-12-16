@@ -8,6 +8,7 @@ import {
   boundPointOnPlane,
   getAssociatedLinesName,
   updateState,
+  rotateVector,
 } from 'vtk.js/Sources/Widgets/Widgets3D/ResliceCursorWidget/helpers';
 
 import {
@@ -321,7 +322,8 @@ export default function widgetBehavior(publicAPI, model) {
     // Rotate associated line's plane normal
     const planeName = activeLine.getPlaneName();
     const normal = model.widgetState[`get${planeName}PlaneNormal`]();
-    const newNormal = vtkMath.rotateVector(normal, planeNormal, radianAngle);
+    const newNormal = rotateVector(normal, planeNormal, radianAngle);
+
     model.widgetState[`set${planeName}PlaneNormal`](newNormal);
 
     if (model.widgetState.getKeepOrthogonality()) {
@@ -338,7 +340,7 @@ export default function widgetBehavior(publicAPI, model) {
         associatedNormal
       );
 
-      const newAssociatedNormal = vtkMath.rotateVector(
+      const newAssociatedNormal = rotateVector(
         newNormal,
         planeNormal,
         angleBetweenAssociatedPlanes
