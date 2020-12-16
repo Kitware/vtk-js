@@ -10,6 +10,8 @@ import vtkMapper from 'vtk.js/Sources/Rendering/Core/Mapper';
 import vtkDataArray from 'vtk.js/Sources/Common/Core/DataArray';
 import vtkPolyData from 'vtk.js/Sources/Common/DataModel/PolyData';
 
+import { areEquals } from 'vtk.js/Sources/Common/Core/Math';
+
 import baseline from './testColorTransferFunction.png';
 
 test.onlyIfWebGL('Test Interpolate Scalars Before Colors', (t) => {
@@ -117,4 +119,42 @@ test.onlyIfWebGL('Test Interpolate Scalars Before Colors', (t) => {
     );
   });
   renderWindow.render();
+});
+
+test('Test discretized color transfer function', (t) => {
+  const ctf = vtkColorTransferFunction.newInstance({
+    discretize: true,
+    numberOfValues: 5,
+  });
+
+  ctf.addRGBPoint(0.0, 1.0, 0.0, 0.0);
+  ctf.addRGBPoint(1.0, 0.0, 1.0, 0.0);
+  ctf.addRGBPoint(2.0, 0.0, 0.0, 1.0);
+  ctf.setMappingRange(0.0, 1.0);
+
+  const testValues = [-0.1, 0.0, 0.1, 0.19, 0.2, 0.59, 0.6, 0.9, 1.0, 1.1];
+  const expectedRGB = [
+    [1, 0, 0],
+    [1, 0, 0],
+    [1, 0, 0],
+    [1, 0, 0],
+    [0.5, 0.5, 0],
+    [0, 1, 0],
+    [0, 0.5, 0.5],
+    [0, 0, 1],
+    [0, 0, 1],
+    [0, 0, 1],
+  ];
+
+  const rgb = [];
+
+  testValues.forEach((value, idx) => {
+    ctf.getColor(value, rgb);
+    t.ok(
+      areEquals(rgb, expectedRGB[idx]),
+      `Test discretized ctf value for ${value}, expect ${expectedRGB[idx]}`
+    );
+  });
+
+  t.end();
 });
