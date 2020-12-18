@@ -131,7 +131,6 @@ export default function widgetBehavior(publicAPI, model) {
       }
 
       publicAPI.updateShapeBounds();
-      publicAPI.invokeStartInteractionEvent();
 
       if (model.visibleOnFocus) {
         model.shapeHandle.setVisible(true);
@@ -146,7 +145,6 @@ export default function widgetBehavior(publicAPI, model) {
 
       publicAPI.updateShapeBounds();
       publicAPI.invokeInteractionEvent();
-      publicAPI.invokeEndInteractionEvent();
 
       if (model.resetAfterPointPlacement) {
         publicAPI.reset();
