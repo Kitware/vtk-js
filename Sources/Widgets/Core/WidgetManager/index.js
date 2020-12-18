@@ -1,10 +1,9 @@
-import macro from 'vtk.js/Sources/macro';
 import { radiansFromDegrees } from 'vtk.js/Sources/Common/Core/Math';
-import vtkOpenGLHardwareSelector from 'vtk.js/Sources/Rendering/OpenGL/HardwareSelector';
 import { FieldAssociations } from 'vtk.js/Sources/Common/DataModel/DataSet/Constants';
+import macro from 'vtk.js/Sources/macro';
+import vtkOpenGLHardwareSelector from 'vtk.js/Sources/Rendering/OpenGL/HardwareSelector';
 import Constants from 'vtk.js/Sources/Widgets/Core/WidgetManager/Constants';
 import vtkSVGRepresentation from 'vtk.js/Sources/Widgets/SVG/SVGRepresentation';
-
 import { diff } from './vdom';
 
 const { ViewTypes, RenderingTypes, CaptureOn } = Constants;
@@ -414,9 +413,9 @@ function vtkWidgetManager(publicAPI, model) {
       viewWidget.delete();
     });
     model.widgets = [];
+    model.widgetInFocus = null;
     model.renderer.getRenderWindow().getInteractor().render();
     publicAPI.enablePicking();
-    publicAPI.releaseFocus();
   };
 
   publicAPI.removeWidget = (widget) => {
