@@ -175,7 +175,7 @@ function vtkArrowHandleRepresentation(publicAPI, model) {
 
       let reorientArrowSource4 = vtkMatrixBuilder
         .buildFromDegree()
-        .rotateFromDirections([1, 0, 0], [1, 0, 0]) // from X to Z
+        .rotateFromDirections([1, 0, 0], [1, 0, 0])
         .getMatrix();
 
       const right = state.getRight ? state.getRight() : [1, 0, 0];
@@ -186,12 +186,18 @@ function vtkArrowHandleRepresentation(publicAPI, model) {
       let scale3 = state.getScale3 ? state.getScale3() : [1, 1, 1];
       scale3 = scale3.map((x) => (x === 0 ? 2 * model.defaultScale : 2 * x));
 
-      if (model.toReorient === true)
+      if (model.toRedirect === true) {
+        reorientArrowSource4 = vtkMatrixBuilder
+          .buildFromDegree()
+          .rotateFromDirections([0, 1, 0], model.orientation)
+          .getMatrix();
+      }
+      if (model.toReorient === true) {
         reorientArrowSource4 = vtkMatrixBuilder
           .buildFromDegree()
           .rotateFromDirections([0, 0, 1], model.orientation)
           .getMatrix();
-
+      }
       const reorientArrowSource3 = [];
       mat3.fromMat4(reorientArrowSource3, reorientArrowSource4);
       vec3.transformMat4(scale3, scale3, reorientArrowSource4);
@@ -260,6 +266,7 @@ const DEFAULT_VALUES = {
   defaultScale: 1,
   orientation: [0, 0, 0],
   toReorient: false,
+  toRedirect: false,
   handleVisibility: true,
 };
 
@@ -270,7 +277,11 @@ export function extend(publicAPI, model, initialValues = {}) {
 
   vtkHandleRepresentation.extend(publicAPI, model, initialValues);
   macro.get(publicAPI, model, ['glyph', 'mapper', 'actor']);
-  macro.setGet(publicAPI, model, ['toReorient', 'handleVisibility']);
+  macro.setGet(publicAPI, model, [
+    'toReorient',
+    'toRedirect',
+    'handleVisibility',
+  ]);
   macro.setGetArray(publicAPI, model, ['orientation'], 3);
   // Object specific methods
   vtkArrowHandleRepresentation(publicAPI, model);
