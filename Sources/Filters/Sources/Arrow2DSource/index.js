@@ -70,23 +70,12 @@ function vtk6PointsArrow(publicAPI, model) {
   points[16] = model.height * 0.1 - thickOp - offsetOp - centerOffsetOp;
   points[17] = 0.0;
 
+  // prettier-ignore
   const cells = Uint8Array.from([
-    3,
-    0,
-    1,
-    5,
-    3,
-    1,
-    4,
-    5,
-    3,
-    1,
-    4,
-    3,
-    3,
-    1,
-    2,
-    3,
+    3, 0, 1, 5,
+    3, 1, 4, 5,
+    3, 1, 4, 3,
+    3, 1, 2, 3,
   ]);
 
   vtkMatrixBuilder
@@ -168,7 +157,7 @@ function vtkTriangleSource(publicAPI, model) {
   vtkMatrixBuilder
     .buildFromRadian()
     .translate(...model.origin)
-    .rotateFromDirections([0, 1, 0], model.direction)
+    .rotateFromDirections([0, 0, 1], model.direction)
     .apply(points);
 
   dataset.getPoints().setData(points, 3);
@@ -202,7 +191,7 @@ function vtkArrow2DSource(publicAPI, model) {
  * thickness modifies the shape of the source, 0 normal thickness 1 max
  *		thickness, implemented in 4PA 6PA, scalar 
  
- * center modifies the postion of the end of the Polyline in comparison to the
+ * center modifies the position of the end of the Polyline in comparison to the
  *		source, 1 the top of the arrow is on the limit of the line, 0 the bottom
  *		of the arrow touches the line
 
@@ -213,7 +202,7 @@ const DEFAULT_VALUES = {
   thickness: 0,
   center: 0,
   origin: [0, 0, 0],
-  direction: [0.0, 1.0, 0.0],
+  direction: [0.0, 0.0, 1.0],
   pointType: 'Float32Array',
 };
 

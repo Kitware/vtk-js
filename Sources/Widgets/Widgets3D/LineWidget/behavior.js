@@ -1,7 +1,7 @@
 import Constants from 'vtk.js/Sources/Widgets/Widgets3D/LineWidget/Constants';
 import macro from 'vtk.js/Sources/macro';
 import * as vtkMath from 'vtk.js/Sources/Common/Core/Math/';
-
+import * as vtkPlane from 'vtk.js/Sources/Common/DataModel/Plane/';
 import {
   calculateTextPosition,
   updateTextPosition,
@@ -87,7 +87,8 @@ export default function widgetBehavior(publicAPI, model) {
       vtkMath.subtract(handle1Pos, handle2Pos, Direction);
       vtkMath.multiplyScalar(Direction, modifier);
     }
-    model.representations[bv].getGlyph().setDirection(Direction);
+    model.representations[bv].setOrientation(Direction);
+    model.representations[bv].setToRedirect(true);
   }
 
   function isHandleOrientable(handleType) {
@@ -163,6 +164,37 @@ export default function widgetBehavior(publicAPI, model) {
     if (isHandleOrientable(model.handle2Shape)) {
       updateHandleDirection(HandleBehavior.HANDLE2);
     }
+  };
+
+  /* WIP, test so far */
+
+  publicAPI.WIPgetPoint2ToH1Plan = () => {
+    const p1 = model.camera.getPosition();
+    const p2 = model.widgetState.getHandle2().getOrigin();
+    const origin = model.widgetState.getHandle1().getOrigin();
+    const normal = model.camera.getDirectionOfProjection();
+
+    const plane = vtkPlane.newInstance();
+    plane.setNormal(normal);
+    plane.setOrigin(origin);
+    const newPos = plane.intersectWithLine(p1, p2);
+    console.log(newPos);
+    model.widgetState.getHandle2().setOrigin(newPos.x);
+
+    /*
+    const vec = [newPos.x[0] - p1[0], newPos.x[1] - p1[1], newPos.x[2] - p1[2]];
+    const angle = vtkMath.degreesFromRadians(
+      vtkMath.angleBetweenVectors(vec, normal)
+    );
+    
+    console.log('in the end');
+    console.log('normal');
+    console.log(normal);
+    console.log('vector h1 h2');
+    console.log(vec);
+    console.log('angle between h1 and h2');
+    console.log(`angle ?${angle}`);
+    */
   };
 
   // --------------------------------------------------------------------------

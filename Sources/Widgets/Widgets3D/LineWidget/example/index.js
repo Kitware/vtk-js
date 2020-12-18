@@ -100,6 +100,12 @@ lineWidget.onInteractionEvent(() => {
     .toFixed(2);
 });
 
+function moveLine() {
+  lineWidget.WIPgetPoint2ToH1Plan();
+}
+
+document.querySelector('#moveLine').addEventListener('click', moveLine.bind());
+
 // -----------------------------------------------------------
 // globals
 // -----------------------------------------------------------
