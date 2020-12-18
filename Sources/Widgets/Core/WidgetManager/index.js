@@ -406,16 +406,22 @@ function vtkWidgetManager(publicAPI, model) {
     return w;
   };
 
-  publicAPI.removeWidgets = () => {
-    model.widgets.forEach((viewWidget) => {
-      model.renderer.removeActor(viewWidget);
-      removeFromSvgLayer(viewWidget);
-      viewWidget.delete();
-    });
-    model.widgets = [];
-    model.widgetInFocus = null;
+  function removeWidgetInternal(viewWidget) {
+    model.renderer.removeActor(viewWidget);
+    removeFromSvgLayer(viewWidget);
+    viewWidget.delete();
+  }
+
+  function onWidgetRemoved() {
     model.renderer.getRenderWindow().getInteractor().render();
     publicAPI.enablePicking();
+  }
+
+  publicAPI.removeWidgets = () => {
+    model.widgets.forEach(removeWidgetInternal);
+    model.widgets = [];
+    model.widgetInFocus = null;
+    onWidgetRemoved();
   };
 
   publicAPI.removeWidget = (widget) => {
@@ -423,18 +429,14 @@ function vtkWidgetManager(publicAPI, model) {
     const index = model.widgets.indexOf(viewWidget);
     if (index !== -1) {
       model.widgets.splice(index, 1);
-      model.renderer.removeActor(viewWidget);
-      model.renderer.getRenderWindow().getInteractor().render();
-      publicAPI.enablePicking();
 
-      removeFromSvgLayer(viewWidget);
+      const isWidgetInFocus = model.widgetInFocus === viewWidget;
+      removeWidgetInternal(viewWidget);
+      onWidgetRemoved();
 
-      if (model.widgetInFocus === viewWidget) {
+      if (isWidgetInFocus) {
         publicAPI.releaseFocus();
       }
-
-      // free internal model + unregister it from its parent
-      viewWidget.delete();
     }
   };
 
