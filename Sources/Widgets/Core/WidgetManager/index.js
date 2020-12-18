@@ -407,6 +407,18 @@ function vtkWidgetManager(publicAPI, model) {
     return w;
   };
 
+  publicAPI.removeWidgets = () => {
+    model.widgets.forEach((viewWidget) => {
+      model.renderer.removeActor(viewWidget);
+      removeFromSvgLayer(viewWidget);
+      viewWidget.delete();
+    });
+    model.widgets = [];
+    model.renderer.getRenderWindow().getInteractor().render();
+    publicAPI.enablePicking();
+    publicAPI.releaseFocus();
+  };
+
   publicAPI.removeWidget = (widget) => {
     const viewWidget = getViewWidget(widget);
     const index = model.widgets.indexOf(viewWidget);
