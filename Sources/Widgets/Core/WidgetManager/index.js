@@ -1,10 +1,9 @@
-import macro from 'vtk.js/Sources/macro';
 import { radiansFromDegrees } from 'vtk.js/Sources/Common/Core/Math';
-import vtkOpenGLHardwareSelector from 'vtk.js/Sources/Rendering/OpenGL/HardwareSelector';
 import { FieldAssociations } from 'vtk.js/Sources/Common/DataModel/DataSet/Constants';
+import macro from 'vtk.js/Sources/macro';
+import vtkOpenGLHardwareSelector from 'vtk.js/Sources/Rendering/OpenGL/HardwareSelector';
 import Constants from 'vtk.js/Sources/Widgets/Core/WidgetManager/Constants';
 import vtkSVGRepresentation from 'vtk.js/Sources/Widgets/SVG/SVGRepresentation';
-
 import { diff } from './vdom';
 
 const { ViewTypes, RenderingTypes, CaptureOn } = Constants;
@@ -407,23 +406,37 @@ function vtkWidgetManager(publicAPI, model) {
     return w;
   };
 
+  function removeWidgetInternal(viewWidget) {
+    model.renderer.removeActor(viewWidget);
+    removeFromSvgLayer(viewWidget);
+    viewWidget.delete();
+  }
+
+  function onWidgetRemoved() {
+    model.renderer.getRenderWindow().getInteractor().render();
+    publicAPI.enablePicking();
+  }
+
+  publicAPI.removeWidgets = () => {
+    model.widgets.forEach(removeWidgetInternal);
+    model.widgets = [];
+    model.widgetInFocus = null;
+    onWidgetRemoved();
+  };
+
   publicAPI.removeWidget = (widget) => {
     const viewWidget = getViewWidget(widget);
     const index = model.widgets.indexOf(viewWidget);
     if (index !== -1) {
       model.widgets.splice(index, 1);
-      model.renderer.removeActor(viewWidget);
-      model.renderer.getRenderWindow().getInteractor().render();
-      publicAPI.enablePicking();
 
-      removeFromSvgLayer(viewWidget);
+      const isWidgetInFocus = model.widgetInFocus === viewWidget;
+      removeWidgetInternal(viewWidget);
+      onWidgetRemoved();
 
-      if (model.widgetInFocus === viewWidget) {
+      if (isWidgetInFocus) {
         publicAPI.releaseFocus();
       }
-
-      // free internal model + unregister it from its parent
-      viewWidget.delete();
     }
   };
 
