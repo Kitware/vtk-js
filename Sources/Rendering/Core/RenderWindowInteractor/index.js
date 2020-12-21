@@ -192,7 +192,7 @@ function vtkRenderWindowInteractor(publicAPI, model) {
   }
 
   function interactionRegistration(addListeners, force = false) {
-    const rootElm = document.querySelector('body');
+    const rootElm = document;
     const method = addListeners ? 'addEventListener' : 'removeEventListener';
     const invMethod = addListeners ? 'removeEventListener' : 'addEventListener';
 
@@ -209,7 +209,7 @@ function vtkRenderWindowInteractor(publicAPI, model) {
       }
 
       rootElm[method]('mouseup', publicAPI.handleMouseUp);
-      rootElm[method]('mouseleave', publicAPI.handleMouseUp);
+      // rootElm[method]('mouseleave', publicAPI.handleMouseUp);
       rootElm[method]('mousemove', publicAPI.handleMouseMove);
       rootElm[method]('touchend', publicAPI.handleTouchEnd, false);
       rootElm[method]('touchcancel', publicAPI.handleTouchEnd, false);
