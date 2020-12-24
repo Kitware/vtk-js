@@ -7,68 +7,83 @@ const axisXColor = [1, 0, 0];
 const axisYColor = [0, 1, 0];
 const axisZColor = [0, 0, 1];
 
-const axisXinY = vtkStateBuilder
-  .createBuilder()
-  .addField({ name: 'point1', initialValue: [0, 0, -factor] })
-  .addField({ name: 'point2', initialValue: [0, 0, factor] })
-  .addField({ name: 'rotationPoint1', initialValue: [0, 0, -rotationFactor] })
-  .addField({ name: 'rotationPoint2', initialValue: [0, 0, rotationFactor] })
-  .addField({ name: 'color', initialValue: axisXColor })
-  .addField({ name: 'name', initialValue: 'AxisXinY' })
-  .addField({ name: 'planeName', initialValue: 'X' })
-  .build();
-const axisXinZ = vtkStateBuilder
-  .createBuilder()
-  .addField({ name: 'point1', initialValue: [0, -factor, 0] })
-  .addField({ name: 'point2', initialValue: [0, factor, 0] })
-  .addField({ name: 'rotationPoint1', initialValue: [0, -rotationFactor, 0] })
-  .addField({ name: 'rotationPoint2', initialValue: [0, rotationFactor, 0] })
-  .addField({ name: 'color', initialValue: axisXColor })
-  .addField({ name: 'name', initialValue: 'AxisXinZ' })
-  .addField({ name: 'planeName', initialValue: 'X' })
-  .build();
+const generateAxisXinY = () => {
+  return vtkStateBuilder
+    .createBuilder()
+    .addField({ name: 'point1', initialValue: [0, 0, -factor] })
+    .addField({ name: 'point2', initialValue: [0, 0, factor] })
+    .addField({ name: 'rotationPoint1', initialValue: [0, 0, -rotationFactor] })
+    .addField({ name: 'rotationPoint2', initialValue: [0, 0, rotationFactor] })
+    .addField({ name: 'color', initialValue: axisXColor })
+    .addField({ name: 'name', initialValue: 'AxisXinY' })
+    .addField({ name: 'planeName', initialValue: 'X' })
+    .build();
+};
 
-const axisYinX = vtkStateBuilder
-  .createBuilder()
-  .addField({ name: 'point1', initialValue: [0, 0, -factor] })
-  .addField({ name: 'point2', initialValue: [0, 0, factor] })
-  .addField({ name: 'rotationPoint1', initialValue: [0, 0, -rotationFactor] })
-  .addField({ name: 'rotationPoint2', initialValue: [0, 0, rotationFactor] })
-  .addField({ name: 'color', initialValue: axisYColor })
-  .addField({ name: 'name', initialValue: 'AxisYinX' })
-  .addField({ name: 'planeName', initialValue: 'Y' })
-  .build();
-const axisYinZ = vtkStateBuilder
-  .createBuilder()
-  .addField({ name: 'point1', initialValue: [-factor, 0, 0] })
-  .addField({ name: 'point2', initialValue: [factor, 0, 0] })
-  .addField({ name: 'rotationPoint1', initialValue: [-rotationFactor, 0, 0] })
-  .addField({ name: 'rotationPoint2', initialValue: [rotationFactor, 0, 0] })
-  .addField({ name: 'color', initialValue: axisYColor })
-  .addField({ name: 'name', initialValue: 'AxisYinZ' })
-  .addField({ name: 'planeName', initialValue: 'Y' })
-  .build();
+const generateAxisXinZ = () => {
+  return vtkStateBuilder
+    .createBuilder()
+    .addField({ name: 'point1', initialValue: [0, -factor, 0] })
+    .addField({ name: 'point2', initialValue: [0, factor, 0] })
+    .addField({ name: 'rotationPoint1', initialValue: [0, -rotationFactor, 0] })
+    .addField({ name: 'rotationPoint2', initialValue: [0, rotationFactor, 0] })
+    .addField({ name: 'color', initialValue: axisXColor })
+    .addField({ name: 'name', initialValue: 'AxisXinZ' })
+    .addField({ name: 'planeName', initialValue: 'X' })
+    .build();
+};
 
-const axisZinX = vtkStateBuilder
-  .createBuilder()
-  .addField({ name: 'point1', initialValue: [0, -factor, 0] })
-  .addField({ name: 'point2', initialValue: [0, factor, 0] })
-  .addField({ name: 'rotationPoint1', initialValue: [0, -rotationFactor, 0] })
-  .addField({ name: 'rotationPoint2', initialValue: [0, rotationFactor, 0] })
-  .addField({ name: 'color', initialValue: axisZColor })
-  .addField({ name: 'name', initialValue: 'AxisZinX' })
-  .addField({ name: 'planeName', initialValue: 'Z' })
-  .build();
-const axisZinY = vtkStateBuilder
-  .createBuilder()
-  .addField({ name: 'point1', initialValue: [-factor, 0, 0] })
-  .addField({ name: 'point2', initialValue: [factor, 0, 0] })
-  .addField({ name: 'rotationPoint1', initialValue: [-rotationFactor, 0, 0] })
-  .addField({ name: 'rotationPoint2', initialValue: [rotationFactor, 0, 0] })
-  .addField({ name: 'color', initialValue: axisZColor })
-  .addField({ name: 'name', initialValue: 'AxisZinY' })
-  .addField({ name: 'planeName', initialValue: 'Z' })
-  .build();
+const generateAxisYinX = () => {
+  return vtkStateBuilder
+    .createBuilder()
+    .addField({ name: 'point1', initialValue: [0, 0, -factor] })
+    .addField({ name: 'point2', initialValue: [0, 0, factor] })
+    .addField({ name: 'rotationPoint1', initialValue: [0, 0, -rotationFactor] })
+    .addField({ name: 'rotationPoint2', initialValue: [0, 0, rotationFactor] })
+    .addField({ name: 'color', initialValue: axisYColor })
+    .addField({ name: 'name', initialValue: 'AxisYinX' })
+    .addField({ name: 'planeName', initialValue: 'Y' })
+    .build();
+};
+
+const generateAxisYinZ = () => {
+  return vtkStateBuilder
+    .createBuilder()
+    .addField({ name: 'point1', initialValue: [-factor, 0, 0] })
+    .addField({ name: 'point2', initialValue: [factor, 0, 0] })
+    .addField({ name: 'rotationPoint1', initialValue: [-rotationFactor, 0, 0] })
+    .addField({ name: 'rotationPoint2', initialValue: [rotationFactor, 0, 0] })
+    .addField({ name: 'color', initialValue: axisYColor })
+    .addField({ name: 'name', initialValue: 'AxisYinZ' })
+    .addField({ name: 'planeName', initialValue: 'Y' })
+    .build();
+};
+
+const generateAxisZinX = () => {
+  return vtkStateBuilder
+    .createBuilder()
+    .addField({ name: 'point1', initialValue: [0, -factor, 0] })
+    .addField({ name: 'point2', initialValue: [0, factor, 0] })
+    .addField({ name: 'rotationPoint1', initialValue: [0, -rotationFactor, 0] })
+    .addField({ name: 'rotationPoint2', initialValue: [0, rotationFactor, 0] })
+    .addField({ name: 'color', initialValue: axisZColor })
+    .addField({ name: 'name', initialValue: 'AxisZinX' })
+    .addField({ name: 'planeName', initialValue: 'Z' })
+    .build();
+};
+
+const generateAxisZinY = () => {
+  return vtkStateBuilder
+    .createBuilder()
+    .addField({ name: 'point1', initialValue: [-factor, 0, 0] })
+    .addField({ name: 'point2', initialValue: [factor, 0, 0] })
+    .addField({ name: 'rotationPoint1', initialValue: [-rotationFactor, 0, 0] })
+    .addField({ name: 'rotationPoint2', initialValue: [rotationFactor, 0, 0] })
+    .addField({ name: 'color', initialValue: axisZColor })
+    .addField({ name: 'name', initialValue: 'AxisZinY' })
+    .addField({ name: 'planeName', initialValue: 'Z' })
+    .build();
+};
 
 export default function generateState() {
   return vtkStateBuilder
@@ -76,32 +91,32 @@ export default function generateState() {
     .addStateFromInstance({
       labels: ['AxisXinY'],
       name: 'AxisXinY',
-      instance: axisXinY,
+      instance: generateAxisXinY(),
     })
     .addStateFromInstance({
       labels: ['AxisXinZ'],
       name: 'AxisXinZ',
-      instance: axisXinZ,
+      instance: generateAxisXinZ(),
     })
     .addStateFromInstance({
       labels: ['AxisYinX'],
       name: 'AxisYinX',
-      instance: axisYinX,
+      instance: generateAxisYinX(),
     })
     .addStateFromInstance({
       labels: ['AxisYinZ'],
       name: 'AxisYinZ',
-      instance: axisYinZ,
+      instance: generateAxisYinZ(),
     })
     .addStateFromInstance({
       labels: ['AxisZinX'],
       name: 'AxisZinX',
-      instance: axisZinX,
+      instance: generateAxisZinX(),
     })
     .addStateFromInstance({
       labels: ['AxisZinY'],
       name: 'AxisZinY',
-      instance: axisZinY,
+      instance: generateAxisZinY(),
     })
     .addField({ name: 'center', initialValue: [0, 0, 0] })
     .addField({ name: 'opacity', initialValue: 1 })
