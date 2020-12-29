@@ -17,12 +17,14 @@ notifications:
     recipients:
       - sebastien.jourdain@kitware.com
       - ken.martin@kitware.com
+      - forrest.li@kitware.com
+      - julien.finet@kitware.com
     on_success: change
     on_failure: always
 
 cache:
   directories:
-    - "$HOME/.npm"
+    - '$HOME/.npm'
     - Documentation/build-tmp
 
 script: ./Utilities/ci/run-travis.sh "$TRAVIS_EVENT_TYPE" "$TRAVIS_BRANCH"
