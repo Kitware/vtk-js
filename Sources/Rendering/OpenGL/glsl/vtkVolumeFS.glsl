@@ -114,6 +114,8 @@ uniform float vPlaneDistance4;
 uniform vec3 vPlaneNormal5;
 uniform float vPlaneDistance5;
 
+//VTK::ClipPlane::Dec
+
 // opacity and color textures
 uniform sampler2D otexture;
 uniform float oshift0;
@@ -929,6 +931,8 @@ vec2 computeRayDistances(vec3 rayDir, vec3 tdims)
   getRayPointIntersectionBounds(vertexVCVSOutput, rayDir,
     vPlaneNormal5, vPlaneDistance5, dists, vPlaneNormal0, vPlaneNormal2,
     vSize.x, vSize.y);
+
+  //VTK::ClipPlane::Impl
 
   // do not go behind front clipping plane
   dists.x = max(0.0,dists.x);

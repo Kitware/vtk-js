@@ -1,6 +1,7 @@
 import macro from 'vtk.js/Sources/macro';
 import * as vtkMath from 'vtk.js/Sources/Common/Core/Math';
 import Constants from 'vtk.js/Sources/Rendering/Core/VolumeMapper/Constants';
+import vtkAbstractMapper from 'vtk.js/Sources/Rendering/Core/AbstractMapper';
 
 const { BlendMode } = Constants;
 
@@ -68,6 +69,8 @@ const DEFAULT_VALUES = {
 
 export function extend(publicAPI, model, initialValues = {}) {
   Object.assign(model, DEFAULT_VALUES, initialValues);
+
+  vtkAbstractMapper.extend(publicAPI, model, initialValues);
 
   // Build VTK API
   macro.obj(publicAPI, model);
