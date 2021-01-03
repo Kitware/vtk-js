@@ -81,7 +81,6 @@ function vtk6PointsArrow(publicAPI, model) {
   vtkMatrixBuilder
     .buildFromRadian()
     .translate(...model.origin)
-    .rotateFromDirections([0, 1, 0], model.direction)
     .apply(points);
 
   dataset.getPoints().setData(points, 3);
@@ -124,7 +123,6 @@ function vtk4PointsArrow(publicAPI, model) {
   vtkMatrixBuilder
     .buildFromRadian()
     .translate(...model.origin)
-    .rotateFromDirections([0, 1, 0], model.direction)
     .apply(points);
 
   dataset.getPoints().setData(points, 3);
@@ -157,7 +155,6 @@ function vtkTriangleSource(publicAPI, model) {
   vtkMatrixBuilder
     .buildFromRadian()
     .translate(...model.origin)
-    .rotateFromDirections([0, 0, 1], model.direction)
     .apply(points);
 
   dataset.getPoints().setData(points, 3);

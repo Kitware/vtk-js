@@ -24,7 +24,6 @@ const { HandleRepresentationType, HandleRepresentation } = Constants;
 
 const shapeToRepresentation = {};
 
-
 function vtkLineWidget(publicAPI, model) {
   model.classHierarchy.push('vtkLineWidget');
 

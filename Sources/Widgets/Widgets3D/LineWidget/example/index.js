@@ -100,16 +100,6 @@ lineWidget.onInteractionEvent(() => {
     .toFixed(2);
 });
 
-function getAngle() {
-  lineWidget.getAngleBetweenRotatedHandleAndLineVector();
-}
-function moveLine() {
-  lineWidget.WIPgetPoint2ToH1Plan();
-}
-
-document.querySelector('#moveLine').addEventListener('click', moveLine.bind());
-document.querySelector('#dA').addEventListener('click', getAngle.bind());
-
 // -----------------------------------------------------------
 // globals
 // -----------------------------------------------------------

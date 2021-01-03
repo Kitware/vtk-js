@@ -12,7 +12,7 @@ import vtkPolyData from 'vtk.js/Sources/Common/DataModel/PolyData';
 
 import Constants from 'vtk.js/Sources/Widgets/Widgets3D/LineWidget/Constants';
 import { ScalarMode } from 'vtk.js/Sources/Rendering/Core/Mapper/Constants';
-import { vec3, mat3 } from 'gl-matrix';
+import { vec3, mat3, mat4 } from 'gl-matrix';
 
 import { RenderingTypes } from 'vtk.js/Sources/Widgets/Core/WidgetManager/Constants';
 
@@ -173,50 +173,28 @@ function vtkArrowHandleRepresentation(publicAPI, model) {
       typedArray.points[i * 3 + 1] = coord[1];
       typedArray.points[i * 3 + 2] = coord[2];
 
-      let reorientArrowSource4 = vtkMatrixBuilder
-        .buildFromDegree()
-        .rotateFromDirections([1, 0, 0], [1, 0, 0])
-        .getMatrix();
-
-      const right = state.getRight ? state.getRight() : [1, 0, 0];
-      const up = state.getUp ? state.getUp() : [0, 1, 0];
-      const dir = state.getDirection ? state.getDirection() : [0, 0, 1];
-      const rotation = [...right, ...up, ...dir];
-
       let scale3 = state.getScale3 ? state.getScale3() : [1, 1, 1];
       scale3 = scale3.map((x) => (x === 0 ? 2 * model.defaultScale : 2 * x));
 
-      if (model.toRedirect === true) {
-        reorientArrowSource4 = vtkMatrixBuilder
-          .buildFromDegree()
-          .rotateFromDirections([0, 1, 0], model.orientation)
-          .getMatrix();
-      }
-      if (model.toReorient === true) {
-        reorientArrowSource4 = vtkMatrixBuilder
-          .buildFromDegree()
-          .rotateFromDirections([0, 0, 1], model.orientation)
-          .getMatrix();
-      }
-      const reorientArrowSource3 = [];
-      mat3.fromMat4(reorientArrowSource3, reorientArrowSource4);
-      vec3.transformMat4(scale3, scale3, reorientArrowSource4);
-      mat3.multiply(rotation, rotation, reorientArrowSource3);
+      const viewMatrix = mat3.create();
+      mat3.fromMat4(viewMatrix, model.viewMatrix);
+      const viewMatrixInv = mat3.create();
+      mat3.invert(viewMatrixInv, viewMatrix);
 
-      for (let j = 0; j < 9; j += 1) {
-        typedArray.direction[i * 9 + j] = rotation[j];
-      }
-      const scale1 =
-        (state.getScale1 ? state.getScale1() : model.defaultScale) / 2;
+      const displayOrientation = vec3.create();
+      vec3.transformMat3(displayOrientation, model.orientation, viewMatrixInv);
+      displayOrientation[2] = 0;
+      const displayMatrix = vtkMatrixBuilder
+        .buildFromDegree()
+        .rotateFromDirections([0, 1, 0], displayOrientation)
+        .getMatrix();
+      const displayRotation = mat3.create();
+      mat3.fromMat4(displayRotation, displayMatrix);
+      const rotation = mat3.create();
+      mat3.multiply(rotation, viewMatrix, displayRotation);
+      vec3.transformMat3(scale3, scale3, rotation);
 
-      let sFactor = scaleFactor;
-      if (state.getVisible && !state.getVisible()) {
-        sFactor = 0;
-      }
-
-      typedArray.scale[i * 3 + 0] = scale1 * sFactor * (0.002 * scale3[0]);
-      typedArray.scale[i * 3 + 1] = scale1 * sFactor * (0.002 * scale3[1]);
-      typedArray.scale[i * 3 + 2] = scale1 * sFactor * (0.002 * scale3[2]);
+      typedArray.direction.set(rotation, 9 * i);
       typedArray.scale[i] =
         scaleFactor *
         (!state.isVisible || state.isVisible() ? 1 : 0) *
@@ -265,8 +243,7 @@ function vtkArrowHandleRepresentation(publicAPI, model) {
 const DEFAULT_VALUES = {
   defaultScale: 1,
   orientation: [0, 0, 0],
-  toReorient: false,
-  toRedirect: false,
+  viewMatrix: mat4.create(),
   handleVisibility: true,
 };
 
@@ -277,12 +254,9 @@ export function extend(publicAPI, model, initialValues = {}) {
 
   vtkHandleRepresentation.extend(publicAPI, model, initialValues);
   macro.get(publicAPI, model, ['glyph', 'mapper', 'actor']);
-  macro.setGet(publicAPI, model, [
-    'toReorient',
-    'toRedirect',
-    'handleVisibility',
-  ]);
+  macro.setGet(publicAPI, model, ['handleVisibility']);
   macro.setGetArray(publicAPI, model, ['orientation'], 3);
+  macro.setGetArray(publicAPI, model, ['viewMatrix'], 16);
   // Object specific methods
   vtkArrowHandleRepresentation(publicAPI, model);
 }
