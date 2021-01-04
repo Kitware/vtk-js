@@ -86,7 +86,7 @@ function updateWorldUpVec() {
     const coordinates = coordinateElements.map((item) =>
       Number.parseFloat(item.value)
     );
-    const validCoordinates = !coordinates.some((value) => Number.isNaN(value));
+    const validCoordinates = !coordinates.some(Number.isNaN);
 
     if (validCoordinates) {
       interactorStyle.setWorldUpVec(...coordinates);
