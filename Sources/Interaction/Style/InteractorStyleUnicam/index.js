@@ -15,21 +15,16 @@ function vtkInteractorStyleUnicam(publicAPI, model) {
 
   publicAPI.addMouseManipulator(model.unicamManipulator);
 
-  publicAPI.getUseWorldUpVec = () => {
-    return model.unicamManipulator.getUseWorldUpVec();
-  };
+  publicAPI.getUseWorldUpVec = () => model.unicamManipulator.getUseWorldUpVec();
   publicAPI.setUseWorldUpVec = (useWorldUpVec) => {
     model.unicamManipulator.setUseWorldUpVec(useWorldUpVec);
   };
-  publicAPI.getWorldUpVec = () => {
-    return model.unicamManipulator.getWorldUpVec();
-  };
+  publicAPI.getWorldUpVec = () => model.unicamManipulator.getWorldUpVec();
   publicAPI.setWorldUpVec = (x, y, z) => {
     model.unicamManipulator.setWorldUpVec(x, y, z);
   };
-  publicAPI.getUseHardwareSelector = () => {
-    return model.unicamManipulator.getUseHardwareSelector();
-  };
+  publicAPI.getUseHardwareSelector = () =>
+    model.unicamManipulator.getUseHardwareSelector();
   publicAPI.setUseHardwareSelector = (useHardwareSelector) => {
     model.unicamManipulator.setUseHardwareSelector(useHardwareSelector);
   };
@@ -39,9 +34,8 @@ function vtkInteractorStyleUnicam(publicAPI, model) {
   publicAPI.setFocusSphereColor = (r, g, b) => {
     model.unicamManipulator.setFocusSphereColor(r, g, b);
   };
-  publicAPI.getFocusSphereRadiusFactor = () => {
-    return model.unicamManipulator.getFocusSphereRadiusFactor();
-  };
+  publicAPI.getFocusSphereRadiusFactor = () =>
+    model.unicamManipulator.getFocusSphereRadiusFactor();
   publicAPI.setFocusSphereRadiusFactor = (focusSphereRadiusFactor) => {
     model.unicamManipulator.setFocusSphereRadiusFactor(focusSphereRadiusFactor);
   };
