@@ -43,9 +43,7 @@ function configureBundleAnalyzer(name) {
 // Configure terser
 function configureTerser() {
   return {
-    cache: true,
     parallel: true,
-    sourceMap: true,
   };
 }
 
