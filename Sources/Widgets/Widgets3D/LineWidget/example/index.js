@@ -58,7 +58,7 @@ document.querySelector('#focus').addEventListener('click', () => {
 
 function updateText() {
   const input = document.getElementById('txtIpt').value;
-  widget.setText(input);
+  lineWidget.setText(input);
   renderWindow.render();
 }
 document.querySelector('#txtIpt').addEventListener('keyup', updateText);
@@ -66,7 +66,7 @@ updateText();
 
 function updateLinePos() {
   const input = document.getElementById('linePos').value;
-  widget.setPositionOnLine(input / 100);
+  lineWidget.setPositionOnLine(input / 100);
   renderWindow.render();
 }
 document.querySelector('#linePos').addEventListener('input', updateLinePos);
@@ -80,7 +80,20 @@ function updateHandleShape(handleId) {
   widgetManager.removeWidget(widget);
   lineWidget = widgetManager.addWidget(widget);
   widgetManager.getWidgets()[0].setHandleDirection();
+  lineWidget.getInteractor().render();
   renderWindow.render();
+
+  lineWidget.onInteractionEvent(() => {
+    document.getElementById(
+      'distance'
+    ).innerHTML = widget.getDistance().toFixed(2);
+  });
+
+  lineWidget.onEndInteractionEvent(() => {
+    document.getElementById(
+      'distance'
+    ).innerHTML = widget.getDistance().toFixed(2);
+  });
 }
 
 document
@@ -93,18 +106,6 @@ document
 
 updateHandleShape(1);
 updateHandleShape(2);
-
-lineWidget.onInteractionEvent(() => {
-  document.getElementById('distance').innerHTML = widget
-    .getDistance()
-    .toFixed(2);
-});
-
-function moveLine() {
-  lineWidget.WIPgetPoint2ToH1Plan();
-}
-
-document.querySelector('#moveLine').addEventListener('click', moveLine.bind());
 
 // -----------------------------------------------------------
 // globals

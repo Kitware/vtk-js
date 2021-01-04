@@ -14,19 +14,18 @@ import vtkPolyLineRepresentation from 'vtk.js/Sources/Widgets/Representations/Po
 import widgetBehavior from 'vtk.js/Sources/Widgets/Widgets3D/LineWidget/behavior';
 import { ViewTypes } from 'vtk.js/Sources/Widgets/Core/WidgetManager/Constants';
 
-import { updateTextPosition } from 'vtk.js/Sources/Widgets/Widgets3D/LineWidget/helper';
-
 // ----------------------------------------------------------------------------
 // Factory
 // ----------------------------------------------------------------------------
 
-const { HandleRepresentationType, HandleRepresentation } = Constants;
+const { HandleRepresentationType /* , HandleRepresentation */ } = Constants;
 
 const shapeToRepresentation = {};
 
-
 function vtkLineWidget(publicAPI, model) {
   model.classHierarchy.push('vtkLineWidget');
+
+  model.handleRepresentations = [0, 0];
 
   // --- Widget Requirement ---------------------------------------------------
 
@@ -62,13 +61,17 @@ function vtkLineWidget(publicAPI, model) {
   ] = vtkCircleHandleRepresentation;
 
   function initializeHandleRepresentations() {
-    HandleRepresentation[0] = shapeToRepresentation[model.handle1Shape];
-    if (!HandleRepresentation[0]) {
-      HandleRepresentation[0] = vtkSphereHandleRepresentation;
+    model.handleRepresentations[0] =
+      shapeToRepresentation[model.handle1Shape] ||
+      vtkSphereHandleRepresentation;
+    model.handleRepresentations[1] =
+      shapeToRepresentation[model.handle2Shape] ||
+      vtkSphereHandleRepresentation;
+    if (model.handle1Shape === HandleRepresentationType.NONE) {
+      model.handle1Visibility = false;
     }
-    HandleRepresentation[1] = shapeToRepresentation[model.handle2Shape];
-    if (!HandleRepresentation[1]) {
-      HandleRepresentation[1] = vtkSphereHandleRepresentation;
+    if (model.handle2Shape === HandleRepresentationType.NONE) {
+      model.handle2Visibility = false;
     }
   }
 
@@ -94,31 +97,41 @@ function vtkLineWidget(publicAPI, model) {
       default:
         return [
           {
-            builder: HandleRepresentation[0],
+            builder: model.handleRepresentations[0],
             labels: ['handle1'],
             initialValues: {
-              /* to scale handle size when zooming/dezooming, optionnal */
+              /* to scale handle size when zooming/dezooming, optional */
               scaleInPixels: true,
               /* to detect arrow type in ArrowHandleRepresentation, mandatory */
               handleType: model.handle1Shape,
-              /* To detect in handleRepresentation the origin of LineWidget, mandatory */
-              fromLineWidget: true,
-              handleVisibility: model.handle1Visibility,
-              handleCameraOrientation: model.handle1CameraOrientation,
+              /*
+               * This table sets the visibility of the handles' actors
+               * 1st actor is a displayActor, which hides a rendered object on the HTML layer.
+               * operating on its value allows to hide a handle to the user while still being
+               * able to detect its presence, so the user can move it. 2nd actor is a normal VTK
+               * actor which renders the object on the VTK scene
+               */
+              visibilityFlagArray: [model.handle1Visibility, true],
+              faceCamera: model.handle1CameraOrientation,
             },
           },
           {
-            builder: HandleRepresentation[1],
+            builder: model.handleRepresentations[1],
             labels: ['handle2'],
             initialValues: {
-              /* to scale handle size when zooming/dezooming, optionnal */
+              /* to scale handle size when zooming/dezooming, optional */
               scaleInPixels: true,
               /* to detect arrow type in ArrowHandleRepresentation, mandatory */
               handleType: model.handle2Shape,
-              /* To detect in handleRepresentation the origin of LineWidget, mandatory */
-              fromLineWidget: true,
-              handleVisibility: model.handle2Visibility,
-              handleCameraOrientation: model.handle2CameraOrientation,
+              /*
+               * This table sets the visibility of the handles' actors
+               * 1st actor is a displayActor, which hides a rendered object on the HTML layer.
+               * operating on its value allows to hide a handle to the user while still being
+               * able to detect its presence, so the user can move it. 2nd actor is a normal VTK
+               * actor which renders the object on the VTK scene
+               */
+              visibilityFlagArray: [model.handle2Visibility, true],
+              faceCamera: model.handle2CameraOrientation,
             },
           },
           {
@@ -135,6 +148,13 @@ function vtkLineWidget(publicAPI, model) {
             labels: ['handle1', 'handle2', 'moveHandle'],
             initialValues: { scaleInPixels: true },
           },
+          {
+            builder: vtkSphereHandleRepresentation,
+            labels: ['moveHandle'],
+            initialValues: {
+              scaleInPixels: true,
+            },
+          },
         ];
     }
   };
@@ -143,8 +163,16 @@ function vtkLineWidget(publicAPI, model) {
 
   publicAPI.getDistance = () => {
     const nbHandles = model.widgetState.getNbHandles();
-    if (nbHandles < 2) {
+    if (nbHandles < 1) {
       return 0;
+    }
+    if (nbHandles === 1) {
+      return Math.sqrt(
+        distance2BetweenPoints(
+          model.widgetState.getMoveHandle().getOrigin(),
+          model.widgetState.getHandle2().getOrigin()
+        )
+      );
     }
     return Math.sqrt(
       distance2BetweenPoints(
@@ -153,20 +181,6 @@ function vtkLineWidget(publicAPI, model) {
       )
     );
   };
-
-  publicAPI.setText = (text) => {
-    if (model.widgetState.getText()) model.widgetState.getText().setText(text);
-  };
-
-  publicAPI.updateTextPosition = (positionOnLine) => {
-    updateTextPosition(model, positionOnLine);
-    model.widgetState.setPositionOnLine(positionOnLine);
-  };
-
-  publicAPI.setPositionOnLine = macro.chain(
-    publicAPI.updateTextPosition,
-    publicAPI.setPositionOnLine
-  );
 
   publicAPI.setHandleShape = (handleId, shape) => {
     model[`handle${handleId}Shape`] = shape;
@@ -196,13 +210,13 @@ function vtkLineWidget(publicAPI, model) {
 const DEFAULT_VALUES = {
   handle1Shape: HandleRepresentationType.ARROWHEAD6,
   handle2Shape: HandleRepresentationType.SPHERE,
-  handle1Visibility: true,
+  handle1Visibility: false,
   handle2Visibility: true,
   handle1CameraOrientation: true,
   handle2CameraOrientation: true,
   /* Position of the text on the line where 0 is handle1 and 1 is handle2 */
   positionOnLine: 1,
-  /**
+  /*
    * The initialValue variable of the state is meant to create an empty text
    * to insert the desired text when both handles are set, and avoids having
    * a default text before.
@@ -220,6 +234,10 @@ export function extend(publicAPI, model, initialValues = {}) {
     'manipulator',
     'handle1Shape',
     'handle2Shape',
+    'handle1Visibility',
+    'handle2Visibility',
+    'handle1CameraOrientation',
+    'handle2CameraOrientation',
     'positionOnLine',
   ]);
 

@@ -80,6 +80,11 @@ function vtkCircleHandleRepresentation(publicAPI, model) {
     },
   };
 
+  /*
+   * displayActors and displayMappers are used to render objects in HTML, allowing objects
+   * to be 'rendered' internally in a VTK scene without being visible on the final output
+   */
+
   model.pipelines.circle.mapper.setOrientationModeToMatrix();
   model.pipelines.circle.mapper.setResolveCoincidentTopology(true);
 
@@ -154,17 +159,10 @@ function vtkCircleHandleRepresentation(publicAPI, model) {
       let scale3 = state.getScale3 ? state.getScale3() : [1, 1, 1];
       scale3 = scale3.map((x) => (x === 0 ? 2 * model.defaultScale : 2 * x));
 
-      let reorientCircleSource4 = vtkMatrixBuilder
+      const reorientCircleSource4 = vtkMatrixBuilder
         .buildFromDegree()
         .rotateFromDirections([1, 0, 0], [0, 0, 1]) // from X to Z
         .getMatrix();
-
-      if (model.toReorient === true) {
-        reorientCircleSource4 = vtkMatrixBuilder
-          .buildFromDegree()
-          .rotateFromDirections([1, 0, 0], model.orientation)
-          .getMatrix();
-      }
 
       const reorientCircleSource3 = [];
       mat3.fromMat4(reorientCircleSource3, reorientCircleSource4);
@@ -207,24 +205,14 @@ function vtkCircleHandleRepresentation(publicAPI, model) {
   publicAPI.updateActorVisibility = (
     renderingType = RenderingTypes.FRONT_BUFFER,
     widgetVisible = true,
-    ctxVisible = true,
-    handleVisible = false
+    ctxVisible = true
   ) => {
     superClass.updateActorVisibility(
       renderingType,
       widgetVisible,
       ctxVisible,
-      handleVisible
+      model.handleVisibility
     );
-    if (model.fromLineWidget) {
-      const visibility = model.handleVisibility;
-      if (visibility === true) {
-        model.displayActor.setVisibility(true);
-        model.actor.setVisibility(true);
-      } else {
-        model.displayActor.setVisibility(false);
-      }
-    }
   };
 
   // --------------------------------------------------------------------------
@@ -244,7 +232,6 @@ const DEFAULT_VALUES = {
   drawBorder: false,
   drawFace: true,
   orientation: [0, 1, 0],
-  toReorient: false,
   handleVisibility: true,
 };
 
@@ -257,13 +244,11 @@ export function extend(publicAPI, model, initialValues = {}) {
   macro.setGet(publicAPI, model, [
     'glyphResolution',
     'defaultScale',
-    'toReorient',
     'handleVisibility',
   ]);
   macro.get(publicAPI, model, ['glyph', 'mapper', 'actor']);
 
   macro.setGetArray(publicAPI, model, ['orientation'], 3);
-
   // Object specific methods
   vtkCircleHandleRepresentation(publicAPI, model);
 }

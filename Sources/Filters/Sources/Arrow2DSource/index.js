@@ -13,19 +13,22 @@ function vtkStarSource(publicAPI, model) {
   const dataset = vtkPolyData.newInstance();
 
   const points = new macro.TYPED_ARRAYS[model.pointType](10 * 3);
-  const edges = new Uint32Array(11);
-  edges[0] = 10;
   for (let i = 0; i < 10; i++) {
     const radius = i % 2 === 1 ? model.height : model.height * 0.4;
     points[3 * i + 0] = radius * Math.cos(((2 * i - 1) * Math.PI) / 10);
     points[3 * i + 1] = radius * Math.sin(((2 * i - 1) * Math.PI) / 10);
     points[3 * i + 2] = 0;
-
-    edges[1 + i] = i;
   }
 
+  // prettier-ignore
+  const cells = Uint8Array.from([
+    3, 3, 8, 7,
+    3, 3, 8, 9,
+    3, 1, 5, 8,
+  ]);
+
   dataset.getPoints().setData(points, 3);
-  dataset.getPolys().setData(edges, 1);
+  dataset.getPolys().setData(cells, 1);
 
   return dataset;
 }
@@ -81,7 +84,6 @@ function vtk6PointsArrow(publicAPI, model) {
   vtkMatrixBuilder
     .buildFromRadian()
     .translate(...model.origin)
-    .rotateFromDirections([0, 1, 0], model.direction)
     .apply(points);
 
   dataset.getPoints().setData(points, 3);
@@ -124,7 +126,6 @@ function vtk4PointsArrow(publicAPI, model) {
   vtkMatrixBuilder
     .buildFromRadian()
     .translate(...model.origin)
-    .rotateFromDirections([0, 1, 0], model.direction)
     .apply(points);
 
   dataset.getPoints().setData(points, 3);
@@ -157,7 +158,6 @@ function vtkTriangleSource(publicAPI, model) {
   vtkMatrixBuilder
     .buildFromRadian()
     .translate(...model.origin)
-    .rotateFromDirections([0, 0, 1], model.direction)
     .apply(points);
 
   dataset.getPoints().setData(points, 3);

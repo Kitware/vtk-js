@@ -50,7 +50,6 @@ export default function widgetBehavior(publicAPI, model) {
       model.openGLRenderWindow.setCursor('grabbing');
       model.interactor.requestAnimation(publicAPI);
     }
-
     publicAPI.invokeStartInteractionEvent();
     return macro.EVENT_ABORT;
   };

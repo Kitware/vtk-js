@@ -58,6 +58,11 @@ function vtkConeHandleRepresentation(publicAPI, model) {
     thetaResolution: model.glyphResolution,
   });
 
+  /*
+   * displayActors and displayMappers are used to render objects in HTML, allowing objects
+   * to be 'rendered' internally in a VTK scene without being visible on the final output
+   */
+
   model.mapper.setInputConnection(publicAPI.getOutputPort(), 0);
   model.mapper.setInputConnection(model.glyph.getOutputPort(), 1);
   model.actor.setMapper(model.mapper);
@@ -144,24 +149,14 @@ function vtkConeHandleRepresentation(publicAPI, model) {
   publicAPI.updateActorVisibility = (
     renderingType = RenderingTypes.FRONT_BUFFER,
     widgetVisible = true,
-    ctxVisible = true,
-    handleVisible = false
+    ctxVisible = true
   ) => {
     superClass.updateActorVisibility(
       renderingType,
       widgetVisible,
       ctxVisible,
-      handleVisible
+      model.handleVisibility
     );
-    if (model.fromLineWidget) {
-      const visibility = model.handleVisibility;
-      if (visibility === true) {
-        model.displayActor.setVisibility(true);
-        model.actor.setVisibility(true);
-      } else {
-        model.displayActor.setVisibility(false);
-      }
-    }
   };
 }
 
