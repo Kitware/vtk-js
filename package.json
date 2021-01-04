@@ -85,7 +85,6 @@
     "resemblejs": "3.2.5",
     "semantic-release": "17.3.1",
     "shader-loader": "1.3.1",
-    "size-limit": "4.9.1",
     "stream-browserify": "3.0.0",
     "string-replace-loader": "3.0.1",
     "style-loader": "2.0.0",
@@ -132,12 +131,6 @@
       "path": "cz-conventional-changelog"
     }
   },
-  "size-limit": [
-    {
-      "path": "./Sources/index.js",
-      "limit": "200 KB"
-    }
-  ],
   "bin": {
     "vtkDataConverter": "./Utilities/DataGenerator/convert-cli.js",
     "xml2json": "./Utilities/XMLConverter/xml2json-cli.js"
