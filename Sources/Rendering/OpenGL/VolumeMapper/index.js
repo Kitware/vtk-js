@@ -824,6 +824,8 @@ function vtkOpenGLVolumeMapper(publicAPI, model) {
 
   publicAPI.getClippingPlaneShaderParameters = (cellBO, ren, actor) => {
     if (model.renderable.getClippingPlanes().length > 0) {
+      const keyMats = model.openGLCamera.getKeyMatrices(ren);
+
       const clipPlaneNormals = [];
       const clipPlaneDistances = [];
 
@@ -836,7 +838,7 @@ function vtkOpenGLVolumeMapper(publicAPI, model) {
         vec3.transformMat3(
           clipPlaneNormal,
           clipPlaneNormal,
-          model.idxNormalMatrix
+          keyMats.normalMatrix
         );
 
         vec3.transformMat4(clipPlanePos, clipPlanePos, model.modelToView);
