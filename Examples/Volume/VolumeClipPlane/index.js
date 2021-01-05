@@ -42,9 +42,9 @@ let clipPlane1Position = 0;
 let clipPlane2Position = 0;
 let clipPlane1RotationAngle = 0;
 let clipPlane2RotationAngle = 0;
-const clipPlane1Normal = [-1, 1, -1];
-const clipPlane2Normal = [1, 0, 0];
-const rotationNormal = [0, 0, 1];
+const clipPlane1Normal = [-1, 1, 0];
+const clipPlane2Normal = [0, 0, 1];
+const rotationNormal = [0, 1, 0];
 
 // create color and opacity transfer functions
 const ctfun = vtkColorTransferFunction.newInstance();
@@ -77,19 +77,20 @@ reader.setUrl(`${__BASE_PATH__}/data/volume/headsq.vti`).then(() => {
     const data = reader.getOutputData();
     const extent = data.getExtent();
     const spacing = data.getSpacing();
-    const size = extent[1] * spacing[0];
+    const sizeX = extent[1] * spacing[0];
+    const sizeY = extent[3] * spacing[1];
 
-    clipPlane1Position = 0;
-    clipPlane2Position = size / 2;
+    clipPlane1Position = sizeX / 4;
+    clipPlane2Position = sizeY / 2;
     const clipPlane1Origin = [
-      clipPlane1Position,
-      clipPlane1Position,
-      clipPlane1Position,
+      clipPlane1Position * clipPlane1Normal[0],
+      clipPlane1Position * clipPlane1Normal[1],
+      clipPlane1Position * clipPlane1Normal[2],
     ];
     const clipPlane2Origin = [
-      clipPlane2Position,
-      clipPlane2Position,
-      clipPlane2Position,
+      clipPlane2Position * clipPlane2Normal[0],
+      clipPlane2Position * clipPlane2Normal[1],
+      clipPlane2Position * clipPlane2Normal[2],
     ];
 
     clipPlane1.setNormal(clipPlane1Normal);
@@ -107,13 +108,13 @@ reader.setUrl(`${__BASE_PATH__}/data/volume/headsq.vti`).then(() => {
     renderWindow.render();
 
     let el = document.querySelector('.plane1Position');
-    el.setAttribute('min', -size);
-    el.setAttribute('max', size);
+    el.setAttribute('min', -sizeX);
+    el.setAttribute('max', sizeX);
     el.setAttribute('value', clipPlane1Position);
 
     el = document.querySelector('.plane2Position');
-    el.setAttribute('min', -size);
-    el.setAttribute('max', size);
+    el.setAttribute('min', -sizeY);
+    el.setAttribute('max', sizeY);
     el.setAttribute('value', clipPlane2Position);
 
     el = document.querySelector('.plane1Rotation');
@@ -130,11 +131,12 @@ reader.setUrl(`${__BASE_PATH__}/data/volume/headsq.vti`).then(() => {
 
 document.querySelector('.plane1Position').addEventListener('input', (e) => {
   clipPlane1Position = Number(e.target.value);
-  clipPlane1.setOrigin([
-    clipPlane1Position,
-    clipPlane1Position,
-    clipPlane1Position,
-  ]);
+  const clipPlane1Origin = [
+    clipPlane1Position * clipPlane1Normal[0],
+    clipPlane1Position * clipPlane1Normal[1],
+    clipPlane1Position * clipPlane1Normal[2],
+  ];
+  clipPlane1.setOrigin(clipPlane1Origin);
   renderWindow.render();
 });
 
@@ -151,11 +153,12 @@ document.querySelector('.plane1Rotation').addEventListener('input', (e) => {
 
 document.querySelector('.plane2Position').addEventListener('input', (e) => {
   clipPlane2Position = Number(e.target.value);
-  clipPlane2.setOrigin([
-    clipPlane2Position,
-    clipPlane2Position,
-    clipPlane2Position,
-  ]);
+  const clipPlane2Origin = [
+    clipPlane2Position * clipPlane2Normal[0],
+    clipPlane2Position * clipPlane2Normal[1],
+    clipPlane2Position * clipPlane2Normal[2],
+  ];
+  clipPlane2.setOrigin(clipPlane2Origin);
   renderWindow.render();
 });
 
