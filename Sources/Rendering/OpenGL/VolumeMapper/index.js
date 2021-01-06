@@ -841,7 +841,7 @@ function vtkOpenGLVolumeMapper(publicAPI, model) {
           keyMats.normalMatrix
         );
 
-        vec3.transformMat4(clipPlanePos, clipPlanePos, model.modelToView);
+        vec3.transformMat4(clipPlanePos, clipPlanePos, keyMats.wcvc);
 
         const clipPlaneDist = -1.0 * vec3.dot(clipPlanePos, clipPlaneNormal);
 
