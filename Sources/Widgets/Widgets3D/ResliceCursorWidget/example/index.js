@@ -45,7 +45,7 @@ table.appendChild(trLine2);
 const viewAttributes = [];
 const widget = vtkResliceCursorWidget.newInstance();
 widget.getWidgetState().setOpacity(0.6);
-const sliceTypes = [ViewTypes.YZ_PLANE, ViewTypes.XZ_PLANE, ViewTypes.XY_PLANE];
+const sliceTypes = [ViewTypes.XZ_PLANE, ViewTypes.YZ_PLANE, ViewTypes.XY_PLANE];
 
 for (let i = 0; i < 3; i++) {
   const element = document.createElement('td');
@@ -194,12 +194,7 @@ reader.setUrl(`${__BASE_PATH__}/data/volume/LIDC2.vti`).then(() => {
       obj.renderer.addActor(obj.resliceActor);
       // const widgetState = widget.getWidgetState();
       const reslice = obj.reslice;
-      let viewType = ViewTypes.XY_PLANE;
-      if (i === 0) {
-        viewType = ViewTypes.YZ_PLANE;
-      } else if (i === 1) {
-        viewType = ViewTypes.XZ_PLANE;
-      }
+      const viewType = sliceTypes[i];
 
       viewAttributes
         // No need to update plane nor refresh when interaction

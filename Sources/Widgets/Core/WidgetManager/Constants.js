@@ -3,8 +3,8 @@ export const ViewTypes = {
   GEOMETRY: 1,
   SLICE: 2,
   VOLUME: 3,
-  YZ_PLANE: 4, // Coronal
-  XZ_PLANE: 5, // Sagittal
+  YZ_PLANE: 4, // Sagittal
+  XZ_PLANE: 5, // Coronal
   XY_PLANE: 6, // Axial
 };
 
