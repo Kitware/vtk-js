@@ -1,7 +1,8 @@
 import vtkWSLinkClient from 'vtk.js/Sources/IO/Core/WSLinkClient';
 import SmartConnect from 'wslink/src/SmartConnect';
-import vtkRemoteView from 'vtk.js/Sources/Rendering/Misc/RemoteView';
-import { connectImageStream } from 'vtk.js/Sources/Rendering/Misc/RemoteView';
+import vtkRemoteView, {
+  connectImageStream,
+} from 'vtk.js/Sources/Rendering/Misc/RemoteView';
 
 vtkWSLinkClient.setSmartConnectClass(SmartConnect);
 

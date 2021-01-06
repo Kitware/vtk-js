@@ -58,11 +58,15 @@ class _WebCone(vtk_wslink.ServerProtocol):
         # Bring used components
         self.registerVtkWebProtocol(protocols.vtkWebMouseHandler())
         self.registerVtkWebProtocol(protocols.vtkWebViewPort())
-        self.registerVtkWebProtocol(protocols.vtkWebViewPortImageDelivery())
+        self.registerVtkWebProtocol(protocols.vtkWebPublishImageDelivery(decode=False))
         self.registerVtkWebProtocol(protocols.vtkWebViewPortGeometryDelivery())
 
         # Update authentication key to use
         self.updateSecret(_WebCone.authKey)
+
+        # tell the C++ web app to use no encoding.
+        # ParaViewWebPublishImageDelivery must be set to decode=False to match.
+        self.getApplication().SetImageEncoding(0)
 
         # Create default pipeline (Only once for all the session)
         if not _WebCone.view:

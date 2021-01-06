@@ -28,8 +28,12 @@ class _DemoServer(pv_wslink.PVServerProtocol):
         self.registerVtkWebProtocol(pv_protocols.ParaViewWebMouseHandler())
         self.registerVtkWebProtocol(pv_protocols.ParaViewWebViewPort())
         self.registerVtkWebProtocol(
-            pv_protocols.ParaViewWebViewPortImageDelivery())
+            pv_protocols.ParaViewWebPublishImageDelivery(decode=False))
         self.updateSecret(_DemoServer.authKey)
+
+        # tell the C++ web app to use no encoding.
+        # ParaViewWebPublishImageDelivery must be set to decode=False to match.
+        self.getApplication().SetImageEncoding(0)
 
         # Disable interactor-based render calls
         simple.GetRenderView().EnableRenderOnInteraction = 0
