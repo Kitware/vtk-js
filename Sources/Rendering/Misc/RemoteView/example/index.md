@@ -43,21 +43,17 @@ from vtk.web import protocols
 from vtk.web import wslink as vtk_wslink
 from wslink import server
 
-try:
-    import argparse
-except ImportError:
-    # since  Python 2.6 and earlier don't have argparse, we simply provide
-    # the source for the same as _argparse and we use it instead.
-    from vtk.util import _argparse as argparse
+import argparse
 
 # =============================================================================
 # Create custom ServerProtocol class to handle clients requests
 # =============================================================================
 
+
 class _WebCone(vtk_wslink.ServerProtocol):
 
     # Application configuration
-    view    = None
+    view = None
     authKey = "wslink-secret"
 
     def initialize(self):
@@ -66,11 +62,15 @@ class _WebCone(vtk_wslink.ServerProtocol):
         # Bring used components
         self.registerVtkWebProtocol(protocols.vtkWebMouseHandler())
         self.registerVtkWebProtocol(protocols.vtkWebViewPort())
-        self.registerVtkWebProtocol(protocols.vtkWebViewPortImageDelivery())
+        self.registerVtkWebProtocol(protocols.vtkWebPublishImageDelivery(decode=False))
         self.registerVtkWebProtocol(protocols.vtkWebViewPortGeometryDelivery())
 
         # Update authentication key to use
         self.updateSecret(_WebCone.authKey)
+
+        # tell the C++ web app to use no encoding.
+        # ParaViewWebPublishImageDelivery must be set to decode=False to match.
+        self.getApplication().SetImageEncoding(0)
 
         # Create default pipeline (Only once for all the session)
         if not _WebCone.view:
@@ -102,9 +102,11 @@ class _WebCone(vtk_wslink.ServerProtocol):
 # Main: Parse args and start server
 # =============================================================================
 
+
 if __name__ == "__main__":
     # Create argument parser
-    parser = argparse.ArgumentParser(description="VTK/Web Cone web-application")
+    parser = argparse.ArgumentParser(
+        description="VTK/Web Cone web-application")
 
     # Add default arguments
     server.add_arguments(parser)
@@ -117,6 +119,7 @@ if __name__ == "__main__":
 
     # Start server
     server.start_webserver(options=args, protocol=_WebCone)
+
 ```
 
 And run it via the following command line:
@@ -139,41 +142,46 @@ from paraview.web import protocols as pv_protocols
 from paraview import simple
 from wslink import server
 
-try:
-    import argparse
-except ImportError:
-    # since  Python 2.6 and earlier don't have argparse, we simply provide
-    # the source for the same as _argparse and we use it instead.
-    from vtk.util import _argparse as argparse
+import argparse
 
 # =============================================================================
 # Create custom PVServerProtocol class to handle clients requests
 # =============================================================================
 
+
 class _DemoServer(pv_wslink.PVServerProtocol):
     authKey = "wslink-secret"
+
     def initialize(self):
         # Bring used components
         self.registerVtkWebProtocol(pv_protocols.ParaViewWebMouseHandler())
         self.registerVtkWebProtocol(pv_protocols.ParaViewWebViewPort())
-        self.registerVtkWebProtocol(pv_protocols.ParaViewWebViewPortImageDelivery())
+        self.registerVtkWebProtocol(
+            pv_protocols.ParaViewWebPublishImageDelivery(decode=False))
         self.updateSecret(_DemoServer.authKey)
+
+        # tell the C++ web app to use no encoding.
+        # ParaViewWebPublishImageDelivery must be set to decode=False to match.
+        self.getApplication().SetImageEncoding(0)
 
         # Disable interactor-based render calls
         simple.GetRenderView().EnableRenderOnInteraction = 0
-        simple.GetRenderView().Background = [0,0,0]
+        simple.GetRenderView().Background = [0, 0, 0]
         cone = simple.Cone()
         simple.Show(cone)
         simple.Render()
 
         # Update interaction mode
         pxm = simple.servermanager.ProxyManager()
-        interactionProxy = pxm.GetProxy('settings', 'RenderViewInteractionSettings')
-        interactionProxy.Camera3DManipulators = ['Rotate', 'Pan', 'Zoom', 'Pan', 'Roll', 'Pan', 'Zoom', 'Rotate', 'Zoom']
+        interactionProxy = pxm.GetProxy(
+            'settings', 'RenderViewInteractionSettings')
+        interactionProxy.Camera3DManipulators = [
+            'Rotate', 'Pan', 'Zoom', 'Pan', 'Roll', 'Pan', 'Zoom', 'Rotate', 'Zoom']
 
 # =============================================================================
 # Main: Parse args and start server
 # =============================================================================
+
 
 if __name__ == "__main__":
     # Create argument parser

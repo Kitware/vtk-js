@@ -8,12 +8,7 @@ from paraview.web import protocols as pv_protocols
 from paraview import simple
 from wslink import server
 
-try:
-    import argparse
-except ImportError:
-    # since  Python 2.6 and earlier don't have argparse, we simply provide
-    # the source for the same as _argparse and we use it instead.
-    from vtk.util import _argparse as argparse
+import argparse
 
 # =============================================================================
 # Create custom PVServerProtocol class to handle clients requests
