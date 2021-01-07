@@ -20,6 +20,29 @@ export default function widgetBehavior(publicAPI, model) {
   let isDragging = null;
   let isScrolling = false;
 
+  // Reset "updateMethodName" attribute when no actors are selected
+  // Useful to update 'updateMethodeName' to the correct name which
+  // will be TranslateCenter by default
+  publicAPI.resetUpdateMethod = () => {
+    if (model.representations.length !== 0) {
+      model.representations[0].getSelectedState();
+    }
+  };
+
+  publicAPI.startScrolling = (newPosition) => {
+    if (newPosition) {
+      model.previousPosition = newPosition;
+    }
+    isScrolling = true;
+    publicAPI.resetUpdateMethod();
+    publicAPI.startInteraction();
+  };
+
+  publicAPI.endScrolling = () => {
+    isScrolling = false;
+    publicAPI.endInteraction();
+  };
+
   publicAPI.updateCursor = () => {
     switch (model.activeState.getUpdateMethodName()) {
       case InteractionMethodsName.TranslateCenter:
@@ -52,9 +75,7 @@ export default function widgetBehavior(publicAPI, model) {
       model.widgetState.getScrollingMethod() ===
       ScrollingMethods.LEFT_MOUSE_BUTTON
     ) {
-      isScrolling = true;
-      model.previousPosition = callData.position;
-      publicAPI.startInteraction();
+      publicAPI.startScrolling(callData.position);
     } else {
       return macro.VOID;
     }
@@ -83,10 +104,9 @@ export default function widgetBehavior(publicAPI, model) {
 
   publicAPI.handleLeftButtonRelease = () => {
     if (isDragging || isScrolling) {
-      publicAPI.endInteraction();
+      publicAPI.endScrolling();
     }
     isDragging = false;
-    isScrolling = false;
     model.widgetState.deactivate();
   };
 
@@ -95,9 +115,7 @@ export default function widgetBehavior(publicAPI, model) {
       model.widgetState.getScrollingMethod() ===
       ScrollingMethods.RIGHT_MOUSE_BUTTON
     ) {
-      model.previousPosition = calldata.position;
-      isScrolling = true;
-      publicAPI.startInteraction();
+      publicAPI.startScrolling(calldata.position);
     }
   };
 
@@ -106,26 +124,28 @@ export default function widgetBehavior(publicAPI, model) {
       model.widgetState.getScrollingMethod() ===
       ScrollingMethods.RIGHT_MOUSE_BUTTON
     ) {
-      isScrolling = false;
-      publicAPI.endInteraction();
+      publicAPI.endScrolling();
     }
   };
 
   publicAPI.handleStartMouseWheel = (callData) => {
+    publicAPI.resetUpdateMethod();
     publicAPI.startInteraction();
   };
 
   publicAPI.handleMouseWheel = (calldata) => {
     const step = calldata.spinY;
+    isScrolling = true;
     publicAPI.translateCenterOnCurrentDirection(step, calldata.pokedRenderer);
 
     publicAPI.invokeInternalInteractionEvent();
+    isScrolling = false;
 
     return macro.EVENT_ABORT;
   };
 
   publicAPI.handleEndMouseWheel = (calldata) => {
-    publicAPI.endInteraction();
+    publicAPI.endScrolling();
   };
 
   publicAPI.handleMiddleButtonPress = (calldata) => {
@@ -133,9 +153,7 @@ export default function widgetBehavior(publicAPI, model) {
       model.widgetState.getScrollingMethod() ===
       ScrollingMethods.MIDDLE_MOUSE_BUTTON
     ) {
-      isScrolling = true;
-      model.previousPosition = calldata.position;
-      publicAPI.startInteraction();
+      publicAPI.startScrolling(calldata.position);
     }
   };
 
@@ -144,8 +162,7 @@ export default function widgetBehavior(publicAPI, model) {
       model.widgetState.getScrollingMethod() ===
       ScrollingMethods.MIDDLE_MOUSE_BUTTON
     ) {
-      isScrolling = false;
-      publicAPI.endInteraction();
+      publicAPI.endScrolling();
     }
   };
 
