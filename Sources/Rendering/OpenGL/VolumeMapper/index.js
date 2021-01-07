@@ -234,6 +234,7 @@ function vtkOpenGLVolumeMapper(publicAPI, model) {
     shaders.Fragment = FSSource;
 
     publicAPI.replaceShaderLight(shaders, ren, actor);
+    publicAPI.replaceShaderClippingPlane(shaders, ren, actor);
   };
 
   publicAPI.replaceShaderLight = (shaders, ren, actor) => {
@@ -288,6 +289,47 @@ function vtkOpenGLVolumeMapper(publicAPI, model) {
           }
         });
       }
+    }
+
+    shaders.Fragment = FSSource;
+  };
+
+  publicAPI.replaceShaderClippingPlane = (shaders, ren, actor) => {
+    let FSSource = shaders.Fragment;
+
+    if (model.renderable.getClippingPlanes().length > 0) {
+      const clipPlaneSize = model.renderable.getClippingPlanes().length;
+      FSSource = vtkShaderProgram.substitute(
+        FSSource,
+        '//VTK::ClipPlane::Dec',
+        [
+          `uniform vec3 vClipPlaneNormals[6];`,
+          `uniform float vClipPlaneDistances[6];`,
+          '//VTK::ClipPlane::Dec',
+        ],
+        false
+      ).result;
+
+      FSSource = vtkShaderProgram.substitute(
+        FSSource,
+        '//VTK::ClipPlane::Impl',
+        [
+          `for(int i = 0; i < ${clipPlaneSize}; i++) {`,
+          '  float rayDirRatio = dot(rayDir, vClipPlaneNormals[i]);',
+          '  float equationResult = dot(vertexVCVSOutput, vClipPlaneNormals[i]) + vClipPlaneDistances[i];',
+          '  if (rayDirRatio == 0.0)',
+          '  {',
+          '    if (equationResult > 0.0) dists.x = dists.y;',
+          '    continue;',
+          '  }',
+          '  float result = -1.0 * equationResult / rayDirRatio;',
+          '  if (rayDirRatio > 0.0) dists.y = min(dists.y, result);',
+          '  else dists.x = max(dists.x, result);',
+          '}',
+          '//VTK::ClipPlane::Impl',
+        ],
+        false
+      ).result;
     }
 
     shaders.Fragment = FSSource;
@@ -388,6 +430,7 @@ function vtkOpenGLVolumeMapper(publicAPI, model) {
     publicAPI.setMapperShaderParameters(cellBO, ren, actor);
     publicAPI.setCameraShaderParameters(cellBO, ren, actor);
     publicAPI.setPropertyShaderParameters(cellBO, ren, actor);
+    publicAPI.getClippingPlaneShaderParameters(cellBO, ren, actor);
   };
 
   publicAPI.setMapperShaderParameters = (cellBO, ren, actor) => {
@@ -776,6 +819,40 @@ function vtkOpenGLVolumeMapper(publicAPI, model) {
       program.setUniformf('vDiffuse', vprop.getDiffuse());
       program.setUniformf('vSpecular', vprop.getSpecular());
       program.setUniformf('vSpecularPower', vprop.getSpecularPower());
+    }
+  };
+
+  publicAPI.getClippingPlaneShaderParameters = (cellBO, ren, actor) => {
+    if (model.renderable.getClippingPlanes().length > 0) {
+      const keyMats = model.openGLCamera.getKeyMatrices(ren);
+
+      const clipPlaneNormals = [];
+      const clipPlaneDistances = [];
+
+      const clipPlanes = model.renderable.getClippingPlanes();
+      const clipPlaneSize = clipPlanes.length;
+      for (let i = 0; i < clipPlaneSize; ++i) {
+        const clipPlaneNormal = clipPlanes[i].getNormal();
+        const clipPlanePos = clipPlanes[i].getOrigin();
+
+        vec3.transformMat3(
+          clipPlaneNormal,
+          clipPlaneNormal,
+          keyMats.normalMatrix
+        );
+
+        vec3.transformMat4(clipPlanePos, clipPlanePos, keyMats.wcvc);
+
+        const clipPlaneDist = -1.0 * vec3.dot(clipPlanePos, clipPlaneNormal);
+
+        clipPlaneNormals.push(clipPlaneNormal[0]);
+        clipPlaneNormals.push(clipPlaneNormal[1]);
+        clipPlaneNormals.push(clipPlaneNormal[2]);
+        clipPlaneDistances.push(clipPlaneDist);
+      }
+      const program = cellBO.getProgram();
+      program.setUniform3fv(`vClipPlaneNormals`, clipPlaneNormals);
+      program.setUniformfv(`vClipPlaneDistances`, clipPlaneDistances);
     }
   };
 
