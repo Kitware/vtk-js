@@ -3,6 +3,7 @@
 .npmrc
 .sass-cache
 .travis.yml
+.github
 Documentation
 npm-debug.log
 Data
