@@ -236,7 +236,7 @@ export function initLocalFileLoader(container) {
     if (files.length === 1) {
       myContainer.removeChild(fileContainer);
       const ext = files[0].name.split('.').slice(-1)[0];
-      const options = Object.assign({ file: files[0], ext }, userParams);
+      const options = { file: files[0], ext, ...userParams };
       load(myContainer, options);
     }
   }
@@ -261,11 +261,11 @@ let nbViewers = viewerContainers.length;
 while (nbViewers--) {
   const viewerContainer = viewerContainers[nbViewers];
   const fileURL = viewerContainer.dataset.url;
-  const options = Object.assign(
-    { containerStyle: { height: '100%' } },
-    userParams,
-    { fileURL }
-  );
+  const options = {
+    containerStyle: { height: '100%' },
+    ...userParams,
+    fileURL,
+  };
   load(viewerContainer, options);
 }
 

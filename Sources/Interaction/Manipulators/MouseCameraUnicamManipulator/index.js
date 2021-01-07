@@ -237,21 +237,16 @@ function vtkMouseCameraUnicamManipulator(publicAPI, model) {
     model.state = States.IS_NONE;
   };
 
-  publicAPI.getUseWorldUpVec = () => {
-    return model.rotateManipulator.getUseWorldUpVec();
-  };
+  publicAPI.getUseWorldUpVec = () => model.rotateManipulator.getUseWorldUpVec();
   publicAPI.setUseWorldUpVec = (useWorldUpVec) => {
     model.rotateManipulator.setUseWorldUpVec(useWorldUpVec);
   };
-  publicAPI.getWorldUpVec = () => {
-    return model.rotateManipulator.getWorldUpVec();
-  };
+  publicAPI.getWorldUpVec = () => model.rotateManipulator.getWorldUpVec();
   publicAPI.setWorldUpVec = (x, y, z) => {
     model.rotateManipulator.setWorldUpVec(x, y, z);
   };
-  publicAPI.getUseHardwareSelector = () => {
-    return model.rotateManipulator.getUseHardwareSelector();
-  };
+  publicAPI.getUseHardwareSelector = () =>
+    model.rotateManipulator.getUseHardwareSelector();
   publicAPI.setUseHardwareSelector = (useHardwareSelector) => {
     model.rotateManipulator.setUseHardwareSelector(useHardwareSelector);
   };
@@ -261,9 +256,8 @@ function vtkMouseCameraUnicamManipulator(publicAPI, model) {
   publicAPI.setFocusSphereColor = (r, g, b) => {
     model.rotateManipulator.setFocusSphereColor(r, g, b);
   };
-  publicAPI.getFocusSphereRadiusFactor = () => {
-    return model.rotateManipulator.getFocusSphereRadiusFactor();
-  };
+  publicAPI.getFocusSphereRadiusFactor = () =>
+    model.rotateManipulator.getFocusSphereRadiusFactor();
   publicAPI.setFocusSphereRadiusFactor = (focusSphereRadiusFactor) => {
     model.rotateManipulator.setFocusSphereRadiusFactor(focusSphereRadiusFactor);
   };

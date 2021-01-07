@@ -55,4 +55,8 @@ module.exports = {
     es6: true,
     browser: true,
   },
+  ignorePatterns: [
+    // ignore old Actor example
+    '**/example_/*.js',
+  ],
 };

@@ -7,8 +7,8 @@ const axisXColor = [1, 0, 0];
 const axisYColor = [0, 1, 0];
 const axisZColor = [0, 0, 1];
 
-const generateAxisXinY = () => {
-  return vtkStateBuilder
+const generateAxisXinY = () =>
+  vtkStateBuilder
     .createBuilder()
     .addField({ name: 'point1', initialValue: [0, 0, -factor] })
     .addField({ name: 'point2', initialValue: [0, 0, factor] })
@@ -18,10 +18,9 @@ const generateAxisXinY = () => {
     .addField({ name: 'name', initialValue: 'AxisXinY' })
     .addField({ name: 'planeName', initialValue: 'X' })
     .build();
-};
 
-const generateAxisXinZ = () => {
-  return vtkStateBuilder
+const generateAxisXinZ = () =>
+  vtkStateBuilder
     .createBuilder()
     .addField({ name: 'point1', initialValue: [0, -factor, 0] })
     .addField({ name: 'point2', initialValue: [0, factor, 0] })
@@ -31,10 +30,9 @@ const generateAxisXinZ = () => {
     .addField({ name: 'name', initialValue: 'AxisXinZ' })
     .addField({ name: 'planeName', initialValue: 'X' })
     .build();
-};
 
-const generateAxisYinX = () => {
-  return vtkStateBuilder
+const generateAxisYinX = () =>
+  vtkStateBuilder
     .createBuilder()
     .addField({ name: 'point1', initialValue: [0, 0, -factor] })
     .addField({ name: 'point2', initialValue: [0, 0, factor] })
@@ -44,10 +42,9 @@ const generateAxisYinX = () => {
     .addField({ name: 'name', initialValue: 'AxisYinX' })
     .addField({ name: 'planeName', initialValue: 'Y' })
     .build();
-};
 
-const generateAxisYinZ = () => {
-  return vtkStateBuilder
+const generateAxisYinZ = () =>
+  vtkStateBuilder
     .createBuilder()
     .addField({ name: 'point1', initialValue: [-factor, 0, 0] })
     .addField({ name: 'point2', initialValue: [factor, 0, 0] })
@@ -57,10 +54,9 @@ const generateAxisYinZ = () => {
     .addField({ name: 'name', initialValue: 'AxisYinZ' })
     .addField({ name: 'planeName', initialValue: 'Y' })
     .build();
-};
 
-const generateAxisZinX = () => {
-  return vtkStateBuilder
+const generateAxisZinX = () =>
+  vtkStateBuilder
     .createBuilder()
     .addField({ name: 'point1', initialValue: [0, -factor, 0] })
     .addField({ name: 'point2', initialValue: [0, factor, 0] })
@@ -70,10 +66,9 @@ const generateAxisZinX = () => {
     .addField({ name: 'name', initialValue: 'AxisZinX' })
     .addField({ name: 'planeName', initialValue: 'Z' })
     .build();
-};
 
-const generateAxisZinY = () => {
-  return vtkStateBuilder
+const generateAxisZinY = () =>
+  vtkStateBuilder
     .createBuilder()
     .addField({ name: 'point1', initialValue: [-factor, 0, 0] })
     .addField({ name: 'point2', initialValue: [factor, 0, 0] })
@@ -83,7 +78,6 @@ const generateAxisZinY = () => {
     .addField({ name: 'name', initialValue: 'AxisZinY' })
     .addField({ name: 'planeName', initialValue: 'Z' })
     .build();
-};
 
 export default function generateState() {
   return vtkStateBuilder

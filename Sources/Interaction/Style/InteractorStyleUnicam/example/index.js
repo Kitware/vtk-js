@@ -83,12 +83,10 @@ function updateWorldUpVec() {
   });
 
   if (useWorldUpVec) {
-    const coordinates = coordinateElements.map((item) => {
-      return Number.parseFloat(item.value);
-    });
-    const validCoordinates = !coordinates.some((value) => {
-      return Number.isNaN(value);
-    });
+    const coordinates = coordinateElements.map((item) =>
+      Number.parseFloat(item.value)
+    );
+    const validCoordinates = !coordinates.some(Number.isNaN);
 
     if (validCoordinates) {
       interactorStyle.setWorldUpVec(...coordinates);

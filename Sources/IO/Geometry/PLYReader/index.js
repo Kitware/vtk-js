@@ -111,9 +111,7 @@ function parseHeader(data) {
 }
 
 function postProcess(buffer, elements) {
-  const vertElement = elements.find((element) => {
-    return element.name === 'vertex';
-  });
+  const vertElement = elements.find((element) => element.name === 'vertex');
 
   let nbVerts = 0;
 

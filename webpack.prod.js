@@ -6,7 +6,6 @@ const webpack = require('webpack');
 // webpack plugins
 const BundleAnalyzerPlugin = require('webpack-bundle-analyzer')
   .BundleAnalyzerPlugin;
-const TerserPlugin = require('terser-webpack-plugin');
 
 // config files
 const common = require('./webpack.common.js');
@@ -40,23 +39,10 @@ function configureBundleAnalyzer(name) {
   };
 }
 
-// Configure terser
-function configureTerser() {
-  return {
-    cache: true,
-    parallel: true,
-    sourceMap: true,
-  };
-}
-
 // Configure optimization
 function configureOptimization() {
   return {
-    // namedModules: true,
-    // namedChunks: true,
-    // occurrenceOrder: true,
-    // concatenateModules: false,
-    minimizer: [new TerserPlugin(configureTerser())],
+    minimize: true,
   };
 }
 

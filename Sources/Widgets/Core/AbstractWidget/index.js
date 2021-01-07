@@ -76,11 +76,10 @@ function vtkAbstractWidget(publicAPI, model) {
     }
   };
 
-  publicAPI.getViewWidgets = () => {
-    return model.factory
+  publicAPI.getViewWidgets = () =>
+    model.factory
       .getViewIds()
       .map((viewId) => model.factory.getWidgetForView({ viewId }));
-  };
 
   // --------------------------------------------------------------------------
   // Initialization calls

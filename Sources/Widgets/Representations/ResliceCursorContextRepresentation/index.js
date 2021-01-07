@@ -157,21 +157,17 @@ function vtkResliceCursorContextRepresentation(publicAPI, model) {
   /**
    * Returns the line actors in charge of translating the views.
    */
-  publicAPI.getTranslationActors = () => {
-    return [
-      model.pipelines.axes[0].line.actor,
-      model.pipelines.axes[1].line.actor,
-    ];
-  };
+  publicAPI.getTranslationActors = () => [
+    model.pipelines.axes[0].line.actor,
+    model.pipelines.axes[1].line.actor,
+  ];
 
-  publicAPI.getRotationActors = () => {
-    return [
-      model.pipelines.axes[0].rotation1.actor,
-      model.pipelines.axes[0].rotation2.actor,
-      model.pipelines.axes[1].rotation1.actor,
-      model.pipelines.axes[1].rotation2.actor,
-    ];
-  };
+  publicAPI.getRotationActors = () => [
+    model.pipelines.axes[0].rotation1.actor,
+    model.pipelines.axes[0].rotation2.actor,
+    model.pipelines.axes[1].rotation1.actor,
+    model.pipelines.axes[1].rotation2.actor,
+  ];
 
   publicAPI.requestData = (inData, outData) => {
     const state = inData[0];

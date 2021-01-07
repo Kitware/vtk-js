@@ -51,9 +51,7 @@ const binaryWriter = () => {
       offset += 2; // unused 'attribute byte count' is a Uint16
     },
     writeFooter: (polyData) => {},
-    getOutputData: () => {
-      return dataView;
-    },
+    getOutputData: () => dataView,
   };
 };
 
@@ -84,9 +82,7 @@ const asciiWriter = () => {
     writeFooter: (polyData) => {
       file += 'endsolid\n';
     },
-    getOutputData: () => {
-      return file;
-    },
+    getOutputData: () => file,
   };
 };
 
