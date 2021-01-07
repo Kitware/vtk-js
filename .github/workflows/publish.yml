@@ -37,4 +37,6 @@ jobs:
           npm run semantic-release
       - name: Publish docs
         if: github.ref == 'refs/heads/master'
+        env:
+          GIT_PUBLISH_URL: https://${{ secrets.GITHUB_TOKEN }}@github.com/Kitware/vtk-js.git
         run: npm run doc:publish
