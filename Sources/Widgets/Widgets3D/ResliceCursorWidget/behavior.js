@@ -159,7 +159,9 @@ export default function widgetBehavior(publicAPI, model) {
   };
 
   publicAPI.invokeInternalInteractionEvent = () => {
-    const methodName = model.activeState.getUpdateMethodName();
+    const methodName = model.activeState
+      ? model.activeState.getUpdateMethodName()
+      : '';
     const computeFocalPointOffset =
       methodName !== InteractionMethodsName.RotateLine;
     const canUpdateFocalPoint =
