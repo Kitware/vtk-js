@@ -118,7 +118,7 @@
     "build": "webpack serve --config webpack.dev.js --progress",
     "build:release": "webpack --config webpack.prod.js --progress",
     "test": "karma start ./karma.conf.js",
-    "test:travis": "karma start ./karma.conf.js --browsers ChromeHeadlessNoSandbox --single-run",
+    "test:headless": "karma start ./karma.conf.js --browsers ChromeHeadlessNoSandbox --single-run",
     "test:debug": "karma start ./karma.conf.js --no-single-run",
     "test:firefox": "karma start ./karma.conf.js --browsers Firefox",
     "test:firefox-debug": "karma start ./karma.conf.js --browsers Firefox --no-single-run",
