@@ -1,0 +1,40 @@
+name: Release
+on:
+  push:
+    branches:
+      - master
+      - next
+      - next-major
+
+jobs:
+  publish:
+    name: Publish
+    runs-on: ubuntu-18.04
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v2
+        with:
+          fetch-depth: 0
+      - name: Setup node
+        uses: actions/setup-node@v1
+        with:
+          node-version: 12
+      - name: Install dependencies
+        run: npm ci
+      - name: Build
+        run: npm run build:release
+      - name: Validate
+        run: npm run validate
+      - name: Test
+        run: npm run test:headless
+      - name: Release
+        env:
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+          NPM_TOKEN: ${{ secrets.NPM_TOKEN }}
+        run: |
+          git config --global user.name "Github Actions"
+          git config --global user.email "sebastien.jourdain@kitware.com"
+          npm run semantic-release
+      - name: Publish docs
+        if: github.ref == 'refs/heads/master'
+        run: npm run doc:publish
