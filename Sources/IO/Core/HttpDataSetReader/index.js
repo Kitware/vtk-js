@@ -19,6 +19,8 @@ const ARRAY_BUILDERS = {
 // Global methods
 // ----------------------------------------------------------------------------
 
+const cachedArrays = {};
+
 const GEOMETRY_ARRAYS = {
   vtkPolyData(dataset) {
     const arrayToDownload = [];
@@ -137,12 +139,27 @@ function vtkHttpDataSetReader(publicAPI, model) {
 
   // Internal method to fetch Array
   function fetchArray(array, options = {}) {
-    return model.dataAccessHelper.fetchArray(
-      publicAPI,
-      model.baseURL,
-      array,
-      options
-    );
+    const arrayId = array.ref.id;
+    if (!cachedArrays[arrayId]) {
+      // Cache the promise while fetching
+      cachedArrays[arrayId] = model.dataAccessHelper
+        .fetchArray(publicAPI, model.baseURL, array, options)
+        .then((newArray) => {
+          // Replace the promise with the array in cache once downloaded
+          cachedArrays[arrayId] = newArray;
+          return newArray;
+        });
+    } else {
+      // cacheArrays[arrayId] can be a promise or value
+      Promise.resolve(cachedArrays[arrayId]).then((cachedArray) => {
+        if (array !== cachedArray) {
+          Object.assign(array, cachedArray);
+          delete array.ref;
+        }
+      });
+    }
+
+    return Promise.resolve(cachedArrays[arrayId]);
   }
 
   // Fetch dataset (metadata)
