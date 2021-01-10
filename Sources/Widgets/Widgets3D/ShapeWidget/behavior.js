@@ -131,7 +131,6 @@ export default function widgetBehavior(publicAPI, model) {
       }
 
       publicAPI.updateShapeBounds();
-      publicAPI.invokeStartInteractionEvent();
 
       if (model.visibleOnFocus) {
         model.shapeHandle.setVisible(true);
@@ -145,8 +144,6 @@ export default function widgetBehavior(publicAPI, model) {
       model.point2Handle.setOrigin(model.point2);
 
       publicAPI.updateShapeBounds();
-      publicAPI.invokeInteractionEvent();
-      publicAPI.invokeEndInteractionEvent();
 
       if (model.resetAfterPointPlacement) {
         publicAPI.reset();
@@ -436,8 +433,11 @@ export default function widgetBehavior(publicAPI, model) {
     if (model.hasFocus) {
       if (!model.point1) {
         publicAPI.placePoint1(model.point1Handle.getOrigin());
+        publicAPI.invokeStartInteractionEvent();
       } else {
         publicAPI.placePoint2(model.point2Handle.getOrigin());
+        publicAPI.invokeInteractionEvent();
+        publicAPI.invokeEndInteractionEvent();
       }
 
       return macro.EVENT_ABORT;
