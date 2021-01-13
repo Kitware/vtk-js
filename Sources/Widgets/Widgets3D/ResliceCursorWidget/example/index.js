@@ -214,14 +214,15 @@ reader.setUrl(`${__BASE_PATH__}/data/volume/LIDC2.vti`).then(() => {
                 .getWidgetState()
                 .getActiveViewName();
               const currentViewName = getViewPlaneNameFromViewType(viewType);
+              const keepFocalPointPosition =
+                activeViewName !== currentViewName && canUpdateFocalPoint;
               updateReslice({
                 viewType,
                 reslice,
                 actor: obj.resliceActor,
                 renderer: obj.renderer,
                 resetFocalPoint: false,
-                keepFocalPointPosition:
-                  activeViewName !== currentViewName && canUpdateFocalPoint,
+                keepFocalPointPosition,
                 computeFocalPointOffset,
               });
             }
