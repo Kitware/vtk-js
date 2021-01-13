@@ -182,7 +182,7 @@ export default function widgetBehavior(publicAPI, model) {
     const computeFocalPointOffset =
       methodName !== InteractionMethodsName.RotateLine;
     const canUpdateFocalPoint =
-      methodName !== InteractionMethodsName.TranslateCenter;
+      methodName === InteractionMethodsName.RotateLine;
     publicAPI.invokeInteractionEvent({
       computeFocalPointOffset,
       canUpdateFocalPoint,
