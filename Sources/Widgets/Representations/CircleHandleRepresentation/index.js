@@ -55,6 +55,11 @@ function vtkCircleHandleRepresentation(publicAPI, model) {
   // Generic rendering pipeline
   // --------------------------------------------------------------------------
 
+  /*
+   * displayActors and displayMappers are used to render objects in HTML, allowing objects
+   * to be 'rendered' internally in a VTK scene without being visible on the final output
+   */
+
   model.displayMapper = vtkPixelSpaceCallbackMapper.newInstance();
   model.displayActor = vtkActor.newInstance();
   model.displayActor.setMapper(model.displayMapper);
@@ -79,11 +84,6 @@ function vtkCircleHandleRepresentation(publicAPI, model) {
       actor: vtkActor.newInstance(),
     },
   };
-
-  /*
-   * displayActors and displayMappers are used to render objects in HTML, allowing objects
-   * to be 'rendered' internally in a VTK scene without being visible on the final output
-   */
 
   model.pipelines.circle.mapper.setOrientationModeToMatrix();
   model.pipelines.circle.mapper.setResolveCoincidentTopology(true);

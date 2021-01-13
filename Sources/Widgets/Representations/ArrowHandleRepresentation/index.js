@@ -9,6 +9,7 @@ import vtkHandleRepresentation from 'vtk.js/Sources/Widgets/Representations/Hand
 import vtkMatrixBuilder from 'vtk.js/Sources/Common/Core/MatrixBuilder';
 import vtkPixelSpaceCallbackMapper from 'vtk.js/Sources/Rendering/Core/PixelSpaceCallbackMapper';
 import vtkPolyData from 'vtk.js/Sources/Common/DataModel/PolyData';
+import vtkConeSource from 'vtk.js/Sources/Filters/Sources/ConeSource';
 
 import Constants from 'vtk.js/Sources/Widgets/Widgets3D/LineWidget/Constants';
 import { ScalarMode } from 'vtk.js/Sources/Rendering/Core/Mapper/Constants';
@@ -70,7 +71,13 @@ function vtkArrowHandleRepresentation(publicAPI, model) {
       [HandleRepresentationType.ARROWHEAD6]: {
         initialValues: { shape: 'arrow6points' },
       },
+      [HandleRepresentationType.CONE]: {
+        initialValues: { shape: 'cone' },
+      },
     };
+    if (model.handleType === HandleRepresentationType.CONE) {
+      return vtkConeSource.newInstance();
+    }
     return vtkArrow2DSource.newInstance(
       representationToSource[model.handleType].initialValues
     );
@@ -105,10 +112,8 @@ function vtkArrowHandleRepresentation(publicAPI, model) {
    * displayActors and displayMappers are used to render objects in HTML, allowing objects
    * to be 'rendered' internally in a VTK scene without being visible on the final output
    */
-
   model.pipelines.arrow.mapper.setOrientationModeToMatrix();
   model.pipelines.arrow.mapper.setResolveCoincidentTopology(true);
-
   vtkWidgetRepresentation.connectPipeline(model.pipelines.arrow);
 
   publicAPI.addActor(model.pipelines.arrow.actor);
@@ -186,9 +191,12 @@ function vtkArrowHandleRepresentation(publicAPI, model) {
       const viewMatrixInv = mat3.create();
       mat3.invert(viewMatrixInv, viewMatrix);
 
-      const displayOrientation = vec3.create();
+      let displayOrientation = vec3.create();
       vec3.transformMat3(displayOrientation, model.orientation, viewMatrixInv);
       displayOrientation[2] = 0;
+      if (model.handleType === HandleRepresentationType.CONE) {
+        displayOrientation = [0, 1, 0];
+      }
       const displayMatrix = vtkMatrixBuilder
         .buildFromDegree()
         .rotateFromDirections([0, 1, 0], displayOrientation)
@@ -202,7 +210,7 @@ function vtkArrowHandleRepresentation(publicAPI, model) {
       typedArray.direction.set(rotation, 9 * i);
       typedArray.scale[i] =
         scaleFactor *
-        /* (!state.isVisible || state.isVisible() ? 1 : 0) * */
+        (!state.isVisible || state.isVisible() ? 1 : 0) *
         (state.getScale1 ? state.getScale1() : model.defaultScale);
 
       if (publicAPI.getScaleInPixels()) {

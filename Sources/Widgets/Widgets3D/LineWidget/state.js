@@ -19,8 +19,8 @@ export default function generateState() {
       name: 'handle1',
       initialValues: {
         scale1: 50,
-        origin: [],
         visible: false,
+        origin: [],
       },
     })
     .addStateFromMixin({
@@ -29,8 +29,8 @@ export default function generateState() {
       name: 'handle2',
       initialValues: {
         scale1: 50,
-        origin: [],
         visible: false,
+        origin: [],
       },
     })
     .addStateFromMixin({
@@ -39,14 +39,19 @@ export default function generateState() {
       name: 'text',
       initialValues: {
         /* text is empty to set a text filed in the SVGLayer and to avoid
-         * displaying text before positionning the handles */
+         * displaying text before positioning the handles */
         text: '',
         visible: false,
         origin: [0, 0, 0],
       },
     })
-    .addField({ name: 'positionOnLine', initialValues: 0 })
-    .addField({ name: 'nbHandles', initialValues: 0 })
-    .addField({ name: 'isDragging', initialValues: false })
+    .addField({ name: 'positionOnLine', initialValue: 0 })
+    .addField({ name: 'nbHandles', initialValue: 0 })
+    .addField({ name: 'handle1Shape', initialValue: 'sphere' })
+    .addField({ name: 'handle2Shape', initialValue: 'sphere' })
+    .addField({ name: 'handle1Visibility', initialValue: true })
+    .addField({ name: 'handle2Visibility', initialValue: false })
+    .addField({ name: 'handle1FaceCamera', initialValue: true })
+    .addField({ name: 'handle2FaceCamera', initialValue: true })
     .build();
 }

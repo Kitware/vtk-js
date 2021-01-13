@@ -44,6 +44,11 @@ function vtkCubeHandleRepresentation(publicAPI, model) {
   // Generic rendering pipeline
   // --------------------------------------------------------------------------
 
+  /*
+   * displayActors and displayMappers are used to render objects in HTML, allowing objects
+   * to be 'rendered' internally in a VTK scene without being visible on the final output
+   */
+
   model.displayMapper = vtkPixelSpaceCallbackMapper.newInstance();
   model.displayActor = vtkActor.newInstance();
   model.displayActor.setMapper(model.displayMapper);
@@ -58,11 +63,6 @@ function vtkCubeHandleRepresentation(publicAPI, model) {
   });
   model.actor = vtkActor.newInstance();
   model.glyph = vtkCubeSource.newInstance();
-
-  /*
-   * displayActors and displayMappers are used to render objects in HTML, allowing objects
-   * to be 'rendered' internally in a VTK scene without being visible on the final output
-   */
 
   model.mapper.setInputConnection(publicAPI.getOutputPort(), 0);
   model.mapper.setInputConnection(model.glyph.getOutputPort(), 1);

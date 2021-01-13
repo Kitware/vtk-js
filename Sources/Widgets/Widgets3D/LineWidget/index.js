@@ -8,7 +8,6 @@ import vtkPlanePointManipulator from 'vtk.js/Sources/Widgets/Manipulators/PlaneM
 import vtkSphereHandleRepresentation from 'vtk.js/Sources/Widgets/Representations/SphereHandleRepresentation';
 import vtkCircleHandleRepresentation from 'vtk.js/Sources/Widgets/Representations/CircleHandleRepresentation';
 import vtkCubeHandleRepresentation from 'vtk.js/Sources/Widgets/Representations/CubeHandleRepresentation';
-import vtkConeHandleRepresentation from 'vtk.js/Sources/Widgets/Representations/ConeHandleRepresentation';
 import vtkSVGLandmarkRepresentation from 'vtk.js/Sources/Widgets/SVG/SVGLandmarkRepresentation';
 import vtkPolyLineRepresentation from 'vtk.js/Sources/Widgets/Representations/PolyLineRepresentation';
 import widgetBehavior from 'vtk.js/Sources/Widgets/Widgets3D/LineWidget/behavior';
@@ -18,14 +17,20 @@ import { ViewTypes } from 'vtk.js/Sources/Widgets/Core/WidgetManager/Constants';
 // Factory
 // ----------------------------------------------------------------------------
 
-const { HandleRepresentationType /* , HandleRepresentation */ } = Constants;
+const { HandleRepresentationType } = Constants;
 
 const shapeToRepresentation = {};
 
 function vtkLineWidget(publicAPI, model) {
   model.classHierarchy.push('vtkLineWidget');
-
+  model.widgetState = stateGenerator();
+  model.behavior = widgetBehavior;
   model.handleRepresentations = [0, 0];
+
+  model.handle1Shape = model.widgetState.getHandle1Shape();
+  model.handle2Shape = model.widgetState.getHandle2Shape();
+  model.handle1FaceCamera = model.widgetState.getHandle1FaceCamera();
+  model.handle2FaceCamera = model.widgetState.getHandle2FaceCamera();
 
   // --- Widget Requirement ---------------------------------------------------
 
@@ -39,7 +44,7 @@ function vtkLineWidget(publicAPI, model) {
   ] = vtkCubeHandleRepresentation;
   shapeToRepresentation[
     HandleRepresentationType.CONE
-  ] = vtkConeHandleRepresentation;
+  ] = vtkArrowHandleRepresentation;
   shapeToRepresentation[
     HandleRepresentationType.NONE
   ] = vtkSphereHandleRepresentation;
@@ -60,7 +65,17 @@ function vtkLineWidget(publicAPI, model) {
     HandleRepresentationType.CIRCLE
   ] = vtkCircleHandleRepresentation;
 
-  function initializeHandleRepresentations() {
+  model.methodsToLink = [
+    'activeScaleFactor',
+    'activeColor',
+    'useActiveColor',
+    'glyphResolution',
+    'defaultScale',
+  ];
+
+  publicAPI.initializeHandleRepresentations = () => {
+    model.handle1Shape = model.widgetState.getHandle1Shape();
+    model.handle2Shape = model.widgetState.getHandle2Shape();
     model.handleRepresentations[0] =
       shapeToRepresentation[model.handle1Shape] ||
       vtkSphereHandleRepresentation;
@@ -73,20 +88,8 @@ function vtkLineWidget(publicAPI, model) {
     if (model.handle2Shape === HandleRepresentationType.NONE) {
       model.handle2Visibility = false;
     }
-  }
-
-  model.methodsToLink = [
-    'activeScaleFactor',
-    'activeColor',
-    'useActiveColor',
-    'glyphResolution',
-    'defaultScale',
-  ];
-  model.behavior = widgetBehavior;
-  model.widgetState = stateGenerator();
-  model.widgetState.setPositionOnLine(model.positionOnLine);
-  model.widgetState.setNbHandles(0);
-  initializeHandleRepresentations();
+  };
+  publicAPI.initializeHandleRepresentations();
 
   publicAPI.getRepresentationsForViewType = (viewType) => {
     switch (viewType) {
@@ -112,7 +115,7 @@ function vtkLineWidget(publicAPI, model) {
                * actor which renders the object on the VTK scene
                */
               visibilityFlagArray: [model.handle1Visibility, true],
-              faceCamera: model.handle1CameraOrientation,
+              faceCamera: model.handle1FaceCamera,
             },
           },
           {
@@ -131,7 +134,7 @@ function vtkLineWidget(publicAPI, model) {
                * actor which renders the object on the VTK scene
                */
               visibilityFlagArray: [model.handle2Visibility, true],
-              faceCamera: model.handle2CameraOrientation,
+              faceCamera: model.handle2FaceCamera,
             },
           },
           {
@@ -140,6 +143,7 @@ function vtkLineWidget(publicAPI, model) {
               showCircle: false,
               isVisible: false,
               fromLineWidget: true,
+              text: '',
             },
             labels: ['SVGtext'],
           },
@@ -182,12 +186,6 @@ function vtkLineWidget(publicAPI, model) {
     );
   };
 
-  publicAPI.setHandleShape = (handleId, shape) => {
-    model[`handle${handleId}Shape`] = shape;
-    initializeHandleRepresentations();
-    publicAPI.getRepresentationsForViewType(0);
-  };
-
   // --------------------------------------------------------------------------
   // initialization
   // --------------------------------------------------------------------------
@@ -208,20 +206,7 @@ function vtkLineWidget(publicAPI, model) {
 // ----------------------------------------------------------------------------
 
 const DEFAULT_VALUES = {
-  handle1Shape: HandleRepresentationType.ARROWHEAD6,
-  handle2Shape: HandleRepresentationType.SPHERE,
-  handle1Visibility: false,
-  handle2Visibility: true,
-  handle1CameraOrientation: true,
-  handle2CameraOrientation: true,
-  /* Position of the text on the line where 0 is handle1 and 1 is handle2 */
-  positionOnLine: 1,
-  /*
-   * The initialValue variable of the state is meant to create an empty text
-   * to insert the desired text when both handles are set, and avoids having
-   * a default text before.
-   */
-  text: '',
+  isDragging: false,
 };
 
 // ----------------------------------------------------------------------------
@@ -230,16 +215,7 @@ export function extend(publicAPI, model, initialValues = {}) {
   Object.assign(model, DEFAULT_VALUES, initialValues);
 
   vtkAbstractWidgetFactory.extend(publicAPI, model, initialValues);
-  macro.setGet(publicAPI, model, [
-    'manipulator',
-    'handle1Shape',
-    'handle2Shape',
-    'handle1Visibility',
-    'handle2Visibility',
-    'handle1CameraOrientation',
-    'handle2CameraOrientation',
-    'positionOnLine',
-  ]);
+  macro.setGet(publicAPI, model, ['manipulator', 'isDragging']);
 
   vtkLineWidget(publicAPI, model);
 }

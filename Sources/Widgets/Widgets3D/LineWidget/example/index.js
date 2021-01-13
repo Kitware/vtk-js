@@ -76,10 +76,23 @@ updateLinePos();
 function updateHandleShape(handleId) {
   const e = document.getElementById(`idh${handleId}`);
   const shape = e.options[e.selectedIndex].value;
-  widget.setHandleShape(handleId, shape);
+  if (handleId === 1) {
+    lineWidget.getWidgetState().setHandle1Shape(shape);
+  } else {
+    lineWidget.getWidgetState().setHandle2Shape(shape);
+  }
+  widget.initializeHandleRepresentations();
+  widget.getRepresentationsForViewType(0);
   widgetManager.removeWidget(widget);
   lineWidget = widgetManager.addWidget(widget);
-  widgetManager.getWidgets()[0].setHandleDirection();
+  widgetManager.getWidgets()[0].updateHandleDirections();
+  lineWidget
+    .getRepresentations()[0]
+    .setHandleVisibility(lineWidget.getWidgetState().getHandle1Visibility());
+  lineWidget
+    .getRepresentations()[1]
+    .setHandleVisibility(lineWidget.getWidgetState().getHandle2Visibility());
+  lineWidget.setRotationHandleToFaceCamera();
   lineWidget.getInteractor().render();
   renderWindow.render();
 

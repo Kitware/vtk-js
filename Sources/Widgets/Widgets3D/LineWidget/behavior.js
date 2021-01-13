@@ -6,12 +6,7 @@ import {
   updateTextPosition,
 } from 'vtk.js/Sources/Widgets/Widgets3D/LineWidget/helper';
 
-const {
-  Direction,
-  HandleBehavior,
-  HandleRepresentationType,
-  HandleVisibilityBehavior,
-} = Constants;
+const { HandleBehavior, HandleRepresentationType } = Constants;
 const MAX_POINTS = 2;
 
 export default function widgetBehavior(publicAPI, model) {
@@ -20,7 +15,12 @@ export default function widgetBehavior(publicAPI, model) {
   const moveHandle = model.widgetState.getMoveHandle();
   const handle1 = model.widgetState.getHandle1();
   const handle2 = model.widgetState.getHandle2();
-  const SVGLayerText = model.widgetState.getText();
+  const handle1Visibility = model.widgetState.getHandle1Visibility();
+  const handle2Visibility = model.widgetState.getHandle2Visibility();
+  const handle1FaceCamera = publicAPI.getWidgetState().getHandle1FaceCamera();
+  const handle2FaceCamera = publicAPI.getWidgetState().getHandle2FaceCamera();
+
+  const direction = [0, 0, 0];
 
   // --------------------------------------------------------------------------
   // Display 2D
@@ -42,7 +42,7 @@ export default function widgetBehavior(publicAPI, model) {
   }
 
   function updateCursor() {
-    model.widgetState.setIsDragging(true);
+    model.isDragging = true;
     model.openGLRenderWindow.setCursor('grabbing');
     model.interactor.requestAnimation(publicAPI);
   }
@@ -52,12 +52,12 @@ export default function widgetBehavior(publicAPI, model) {
   // --------------------------------------------------------------------------
 
   /*
-   * DetectOffsetDirectionForTextPosition
+   * getOffsetDirectionForTextPosition
    * check for handle 2 position in comparison to handle 1 position
    * and sets text offset to not overlap on the line representation
    */
 
-  function detectOffsetDirectionForTextPosition() {
+  function getOffsetDirectionForTextPosition() {
     const pos1 = model.widgetState.getHandle1().getOrigin();
     const pos2 = model.widgetState.getHandle2().getOrigin();
 
@@ -70,15 +70,20 @@ export default function widgetBehavior(publicAPI, model) {
     return dySign;
   }
 
+  /*
+   * This function modifies the position of the SVG Element
+   * to avoid having text overlap on PolyLine representation
+   */
+
   function calcTextPosWithLineAngle() {
-    const dySign = detectOffsetDirectionForTextPosition();
+    const dySign = getOffsetDirectionForTextPosition();
     const textPropsCp = { ...model.representations[2].getTextProps() };
     textPropsCp.dy = dySign * Math.abs(textPropsCp.dy);
     model.representations[2].setTextProps(textPropsCp);
   }
 
   publicAPI.setText = (text) => {
-    if (model.widgetState.getText()) model.widgetState.getText().setText(text);
+    model.widgetState.getText().setText(text);
     model.interactor.render();
   };
 
@@ -97,6 +102,16 @@ export default function widgetBehavior(publicAPI, model) {
   // Handles positioning methods
   // --------------------------------------------------------------------------
 
+  publicAPI.isHandleGlyph2D = (handleShape) => {
+    return (
+      handleShape === HandleRepresentationType.ARROWHEAD3 ||
+      handleShape === HandleRepresentationType.ARROWHEAD4 ||
+      handleShape === HandleRepresentationType.ARROWHEAD6 ||
+      handleShape === HandleRepresentationType.STAR
+      // TODO: implement rotation for circleHandle
+    );
+  };
+
   function isHandleOrientable(handleType) {
     return (
       handleType === HandleRepresentationType.CONE ||
@@ -114,31 +129,31 @@ export default function widgetBehavior(publicAPI, model) {
   }
 
   function orientFirstHandleBeforeSecondHandlePlacement(callData) {
-    const handle1Pos = model.widgetState.getHandle1().getOrigin();
-    const WorldMousePos = publicAPI.computeWorldToDisplay(
+    const handle1Origin = model.widgetState.getHandle1().getOrigin();
+    const worldMousePos = publicAPI.computeWorldToDisplay(
       model.renderer,
-      handle1Pos[0],
-      handle1Pos[1],
-      handle1Pos[2]
+      handle1Origin[0],
+      handle1Origin[1],
+      handle1Origin[2]
     );
     const mousePos = publicAPI.computeDisplayToWorld(
       model.renderer,
       callData.position.x,
       callData.position.y,
-      WorldMousePos[2]
+      worldMousePos[2]
     );
     vtkMath.subtract(
       model.widgetState.getHandle1().getOrigin(),
       mousePos,
-      Direction
+      direction
     );
   }
 
   function orientHandlesWithCompleteWidget(modifier) {
-    const handle1Pos = model.widgetState.getHandle1().getOrigin();
-    const handle2Pos = model.widgetState.getHandle2().getOrigin();
-    vtkMath.subtract(handle1Pos, handle2Pos, Direction);
-    vtkMath.multiplyScalar(Direction, modifier);
+    const handle1Origin = model.widgetState.getHandle1().getOrigin();
+    const handle2Origin = model.widgetState.getHandle2().getOrigin();
+    vtkMath.subtract(handle1Origin, handle2Origin, direction);
+    vtkMath.multiplyScalar(direction, modifier);
   }
 
   function updateHandleDirection(behavior, callData) {
@@ -155,13 +170,13 @@ export default function widgetBehavior(publicAPI, model) {
       (bv === 0 && publicAPI.isHandleGlyph2D(model.handle1Shape)) ||
       (bv === 1 && publicAPI.isHandleGlyph2D(model.handle2Shape))
     ) {
-      model.representations[bv].setOrientation(Direction);
+      model.representations[bv].setOrientation(direction);
     } else {
-      model.representations[bv].getGlyph().setDirection(Direction);
+      model.representations[bv].getGlyph().setDirection(direction);
     }
   }
 
-  publicAPI.setHandleDirection = () => {
+  publicAPI.updateHandleDirections = () => {
     if (isHandleOrientable(model.handle1Shape)) {
       updateHandleDirection(HandleBehavior.HANDLE1);
     }
@@ -171,12 +186,18 @@ export default function widgetBehavior(publicAPI, model) {
   };
 
   publicAPI.toggleHandleVisibility = (bv) => {
-    if (bv === HandleVisibilityBehavior.TOGGLE_ON) {
-      if (model.handle1Visibility === false && handle1.getActive()) {
+    if (bv === 1) {
+      if (
+        model.widgetState.getHandle1Visibility() === false &&
+        handle1.getActive()
+      ) {
         model.representations[0].setHandleVisibility(true);
         model.handle1ToHide = true;
       }
-      if (model.handle2Visibility === false && handle2.getActive()) {
+      if (
+        model.widgetState.getHandle2Visibility() === false &&
+        handle2.getActive()
+      ) {
         model.representations[1].setHandleVisibility(true);
         model.handle2ToHide = true;
       }
@@ -184,27 +205,21 @@ export default function widgetBehavior(publicAPI, model) {
     }
     if (model.handle1ToHide === true) {
       model.handle1ToHide = false;
-      model.representations[0].setHandleVisibility(model.handle1Visibility);
+      model.representations[0].setHandleVisibility(
+        model.widgetState.getHandle1Visibility()
+      );
     }
     if (model.handle2ToHide === true) {
       model.handle2ToHide = false;
-      model.representations[1].setHandleVisibility(model.handle2Visibility);
+      model.representations[1].setHandleVisibility(
+        model.widgetState.getHandle2Visibility()
+      );
     }
-  };
-
-  publicAPI.isHandleGlyph2D = (handleShape) => {
-    return (
-      handleShape === HandleRepresentationType.ARROWHEAD3 ||
-      handleShape === HandleRepresentationType.ARROWHEAD4 ||
-      handleShape === HandleRepresentationType.ARROWHEAD6 ||
-      handleShape === HandleRepresentationType.STAR
-      // TODO: implement rotation for circleHandle
-    );
   };
 
   publicAPI.setRotationHandleToFaceCamera = () => {
     if (
-      model.handle1CameraOrientation === true &&
+      handle1FaceCamera === true &&
       publicAPI.isHandleGlyph2D(model.handle1Shape)
     ) {
       model.representations[0].setViewMatrix(
@@ -212,7 +227,7 @@ export default function widgetBehavior(publicAPI, model) {
       );
     }
     if (
-      model.handle2CameraOrientation === true &&
+      handle2FaceCamera === true &&
       publicAPI.isHandleGlyph2D(model.handle2Shape)
     ) {
       model.representations[1].setViewMatrix(
@@ -227,10 +242,12 @@ export default function widgetBehavior(publicAPI, model) {
     handle.setColor(moveHandle.getColor());
     handle.setScale1(moveHandle.getScale1());
     handle.setVisible(true);
-    SVGLayerText.setText(model.text);
-    SVGLayerText.setOrigin(
-      calculateTextPosition(model, model.widgetState.getPositionOnLine())
-    );
+    model.widgetState.getText().setText(model.text);
+    model.widgetState
+      .getText()
+      .setOrigin(
+        calculateTextPosition(model, model.widgetState.getPositionOnLine())
+      );
   };
 
   // --------------------------------------------------------------------------
@@ -252,15 +269,15 @@ export default function widgetBehavior(publicAPI, model) {
     ) {
       publicAPI.placeHandle(handle1, 1);
       handle2.setOrigin(...moveHandle.getOrigin());
-      model.representations[0].setHandleVisibility(model.handle1Visibility);
+      model.representations[0].setHandleVisibility(handle1Visibility);
     } else if (
       model.activeState === model.widgetState.getMoveHandle() &&
       model.widgetState.getNbHandles() === 1
     ) {
       publicAPI.placeHandle(handle2, 2);
-      model.representations[1].setHandleVisibility(model.handle2Visibility);
-      publicAPI.setHandleDirection();
+      publicAPI.updateHandleDirections();
       calcTextPosWithLineAngle();
+      model.representations[1].setHandleVisibility(handle2Visibility);
     } else {
       updateCursor();
     }
@@ -288,21 +305,21 @@ export default function widgetBehavior(publicAPI, model) {
         callData,
         model.openGLRenderWindow
       );
-      publicAPI.toggleHandleVisibility(HandleVisibilityBehavior.TOGGLE_ON);
+      publicAPI.toggleHandleVisibility(1);
       if (model.widgetState.getNbHandles() === 1) {
         moveHandle.setVisible(true);
       }
       if (
         model.activeState === model.widgetState.getMoveHandle() ||
-        model.widgetState.getIsDragging()
+        model.isDragging
       ) {
         model.activeState.setOrigin(worldCoords);
         publicAPI.invokeInteractionEvent();
-        if (model.widgetState.getIsDragging()) {
+        if (model.isDragging) {
           updateTextPosition(model, model.widgetState.getPositionOnLine());
           calcTextPosWithLineAngle();
           if (isOrientable()) {
-            publicAPI.setHandleDirection();
+            publicAPI.updateHandleDirections();
           }
         } else if (
           model.widgetState.getNbHandles() === 1 &&
@@ -313,8 +330,7 @@ export default function widgetBehavior(publicAPI, model) {
         return macro.EVENT_ABORT;
       }
     }
-    if (model.activeState && !model.activeState.getActive())
-      publicAPI.toggleHandleVisibility(HandleVisibilityBehavior.TOGGLE_OFF);
+    publicAPI.toggleHandleVisibility(0);
     return macro.VOID;
   };
 
@@ -323,7 +339,7 @@ export default function widgetBehavior(publicAPI, model) {
   // --------------------------------------------------------------------------
 
   publicAPI.handleLeftButtonRelease = () => {
-    if (model.widgetState.getIsDragging() && model.pickable) {
+    if (model.isDragging && model.pickable) {
       calcTextPosWithLineAngle();
       model.openGLRenderWindow.setCursor('pointer');
       model.widgetState.deactivate();
@@ -341,12 +357,12 @@ export default function widgetBehavior(publicAPI, model) {
       model.interactor.render();
     }
     if (
-      model.widgetState.getIsDragging() === false &&
+      model.isDragging === false &&
       (!model.activeState || !model.activeState.getActive())
     ) {
       publicAPI.setRotationHandleToFaceCamera();
     }
-    model.widgetState.setIsDragging(false);
+    model.isDragging = false;
   };
 
   // --------------------------------------------------------------------------
