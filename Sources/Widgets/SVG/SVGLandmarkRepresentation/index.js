@@ -26,48 +26,50 @@ function vtkSVGLandmarkRepresentation(publicAPI, model) {
       const root = createSvgElement('g');
       for (let i = 0; i < points2d.length; i++) {
         const xy = points2d[i];
-        if (!Number.isNaN(xy[0]) && !Number.isNaN(xy[1])) {
-          const x = xy[0];
-          const y = winHeight - xy[1];
-
-          let circle = {};
-          if (model.showCircle === true) {
-            circle = createSvgElement('circle');
-            Object.keys(model.circleProps || {}).forEach((prop) =>
-              circle.setAttribute(prop, model.circleProps[prop])
-            );
-            circle.setAttribute('cx', x);
-            circle.setAttribute('cy', y);
-            root.appendChild(circle);
-          }
-          const splitText = texts[i].split('\n');
-          const newlineOffset =
-            model.fontProperties != null && model.fontProperties.fontSize
-              ? model.fontProperties.fontSize
-              : 15;
-          splitText.forEach((subText, j) => {
-            const text = createSvgElement('text');
-            Object.keys(model.textProps || {}).forEach((prop) => {
-              if (model.fromLineWidget === true && prop === 'dy') {
-                return text.setAttribute(
-                  prop,
-                  model.textProps.dy + newlineOffset * j
-                );
-              }
-              return text.setAttribute(prop, model.textProps[prop]);
-            });
-            text.setAttribute('x', x);
-            text.setAttribute('y', y);
-            if (model.fontProperties != null) {
-              text.setAttribute('font-size', model.fontProperties.fontSize);
-              text.setAttribute('font-family', model.fontProperties.fontFamily);
-              text.setAttribute('font-weight', model.fontProperties.fontStyle);
-              text.setAttribute('fill', model.fontProperties.fontColor);
-            }
-            text.textContent = subText;
-            root.appendChild(text);
-          });
+        if (Number.isNaN(xy[0]) || Number.isNaN(xy[1])) {
+          continue; // eslint-disable-line
         }
+        const x = xy[0];
+        const y = winHeight - xy[1];
+
+        let circle = {};
+        if (model.showCircle === true) {
+          circle = createSvgElement('circle');
+          Object.keys(model.circleProps || {}).forEach((prop) =>
+            circle.setAttribute(prop, model.circleProps[prop])
+          );
+          circle.setAttribute('cx', x);
+          circle.setAttribute('cy', y);
+          root.appendChild(circle);
+        }
+        if (!texts[i]) {
+          texts[i] = '';
+        }
+        const splitText = texts[i].split('\n');
+        const newlineOffset =
+          model.fontProperties != null && model.fontProperties.fontSize
+            ? model.fontProperties.fontSize
+            : 15;
+        splitText.forEach((subText, j) => {
+          const text = createSvgElement('text');
+          Object.keys(model.textProps || {}).forEach((prop) => {
+            let propValue = model.textProps[prop];
+            if (model.offsetText === true && prop === 'dy') {
+              propValue = model.textProps.dy + newlineOffset * j;
+            }
+            text.setAttribute(prop, propValue);
+          });
+          text.setAttribute('x', x);
+          text.setAttribute('y', y);
+          if (model.fontProperties != null) {
+            text.setAttribute('font-size', model.fontProperties.fontSize);
+            text.setAttribute('font-family', model.fontProperties.fontFamily);
+            text.setAttribute('font-weight', model.fontProperties.fontStyle);
+            text.setAttribute('fill', model.fontProperties.fontColor);
+          }
+          text.textContent = subText;
+          root.appendChild(text);
+        });
       }
 
       return root;

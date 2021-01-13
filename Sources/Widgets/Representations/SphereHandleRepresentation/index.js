@@ -9,8 +9,6 @@ import vtkSphereSource from 'vtk.js/Sources/Filters/Sources/SphereSource';
 
 import { ScalarMode } from 'vtk.js/Sources/Rendering/Core/Mapper/Constants';
 
-import { RenderingTypes } from 'vtk.js/Sources/Widgets/Core/WidgetManager/Constants';
-
 // ----------------------------------------------------------------------------
 // vtkSphereHandleRepresentation methods
 // ----------------------------------------------------------------------------
@@ -19,7 +17,6 @@ function vtkSphereHandleRepresentation(publicAPI, model) {
   // Set our className
   model.classHierarchy.push('vtkSphereHandleRepresentation');
 
-  const superClass = { ...publicAPI };
   // --------------------------------------------------------------------------
   // Internal polydata dataset
   // --------------------------------------------------------------------------
@@ -45,6 +42,11 @@ function vtkSphereHandleRepresentation(publicAPI, model) {
   // --------------------------------------------------------------------------
   // Generic rendering pipeline
   // --------------------------------------------------------------------------
+
+  /*
+   * displayActors and displayMappers are used to render objects in HTML, allowing objects
+   * to be 'rendered' internally in a VTK scene without being visible on the final output
+   */
 
   model.displayMapper = vtkPixelSpaceCallbackMapper.newInstance();
   model.displayActor = vtkActor.newInstance();
@@ -147,29 +149,6 @@ function vtkSphereHandleRepresentation(publicAPI, model) {
     model.internalPolyData.modified();
     outData[0] = model.internalPolyData;
   };
-
-  publicAPI.updateActorVisibility = (
-    renderingType = RenderingTypes.FRONT_BUFFER,
-    widgetVisible = true,
-    ctxVisible = true,
-    handleVisible = false
-  ) => {
-    superClass.updateActorVisibility(
-      renderingType,
-      widgetVisible,
-      ctxVisible,
-      handleVisible
-    );
-    if (model.fromLineWidget) {
-      const visibility = model.handleVisibility;
-      if (visibility === true) {
-        model.displayActor.setVisibility(true);
-        model.actor.setVisibility(true);
-      } else {
-        model.displayActor.setVisibility(false);
-      }
-    }
-  };
 }
 
 // ----------------------------------------------------------------------------
@@ -179,7 +158,6 @@ function vtkSphereHandleRepresentation(publicAPI, model) {
 const DEFAULT_VALUES = {
   glyphResolution: 8,
   defaultScale: 1,
-  handleVisibility: true,
 };
 
 // ----------------------------------------------------------------------------
@@ -189,7 +167,6 @@ export function extend(publicAPI, model, initialValues = {}) {
 
   vtkHandleRepresentation.extend(publicAPI, model, initialValues);
   macro.get(publicAPI, model, ['glyph', 'mapper', 'actor']);
-  macro.setGet(publicAPI, model, ['handleVisibility']);
 
   // Object specific methods
   vtkSphereHandleRepresentation(publicAPI, model);
