@@ -9,5 +9,6 @@
     test: {
       plugins: ['istanbul'],
     }
-  }
+  },
+  plugins: ['@babel/plugin-transform-runtime'],
 }
