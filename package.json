@@ -28,6 +28,13 @@
   },
   "homepage": "https://github.com/kitware/vtk-js#readme",
   "main": "./dist/vtk.js",
+  "module": "./dist/esm/index.js",
+  "exports": {
+    ".": "./dist/esm/index.js",
+    "./*": "./dist/esm/*",
+    "./Sources/*": "./Sources/*",
+    "./Utilities/*": "./Utilities/*"
+  },
   "dependencies": {
     "@babel/runtime": "7.12.5",
     "blueimp-md5": "2.18.0",
