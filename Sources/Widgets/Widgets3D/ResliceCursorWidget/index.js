@@ -13,6 +13,7 @@ import {
   boundPlane,
   updateState,
   getViewPlaneNameFromViewType,
+  transformPlane,
 } from 'vtk.js/Sources/Widgets/Widgets3D/ResliceCursorWidget/helpers';
 import { ViewTypes } from 'vtk.js/Sources/Widgets/Core/WidgetManager/Constants';
 
@@ -399,10 +400,9 @@ function vtkResliceCursorWidget(publicAPI, model) {
     // centered on cursor center.
     const planeSource = computeReslicePlaneOrigin(viewType);
 
-    // Apply rotation onto plane (i.e. origin, p1, p2)
-    planeSource.setNormal(...plane.getNormal());
-    // TBD: isn't it a no-op ?
-    planeSource.setCenter(...plane.getOrigin());
+    // Adapt plane orientation in order to fit the correct viewUp
+    // so that the rotations will be more understandable than now.
+    transformPlane(planeSource, plane, viewType);
 
     // TODO: orient plane on volume.
 
