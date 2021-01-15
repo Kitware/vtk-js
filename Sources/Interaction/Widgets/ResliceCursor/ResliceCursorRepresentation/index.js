@@ -9,6 +9,8 @@ import * as vtkMath from 'vtk.js/Sources/Common/Core/Math';
 import vtkPlaneSource from 'vtk.js/Sources/Filters/Sources/PlaneSource';
 import vtkWidgetRepresentation from 'vtk.js/Sources/Interaction/Widgets/WidgetRepresentation';
 
+import { boundPlane } from 'vtk.js/Sources/Widgets/Widgets3D/ResliceCursorWidget/helpers';
+
 const { vtkErrorMacro } = macro;
 
 const VTK_INT_MAX = 2147483647;
@@ -196,38 +198,13 @@ function vtkResliceCursorRepresentation(publicAPI, model) {
       plane.getOrigin()[2]
     );
 
-    let o = model.planeSource.getOrigin();
-
-    let p1 = model.planeSource.getPoint1();
-    const planeAxis1 = [];
-    vtkMath.subtract(p1, o, planeAxis1);
-
-    let p2 = model.planeSource.getPoint2();
-    const planeAxis2 = [];
-    vtkMath.subtract(p2, o, planeAxis2);
-
-    // Clip to bounds
-    const boundedOrigin = [];
-    publicAPI.boundPoint(
-      model.planeSource.getOrigin(),
-      planeAxis1,
-      planeAxis2,
-      boundedOrigin
-    );
-
-    const boundedP1 = [];
-    publicAPI.boundPoint(
-      model.planeSource.getPoint1(),
-      planeAxis1,
-      planeAxis2,
-      boundedP1
-    );
-
-    const boundedP2 = [];
-    publicAPI.boundPoint(
-      model.planeSource.getPoint2(),
-      planeAxis1,
-      planeAxis2,
+    const boundedOrigin = [...model.planeSource.getOrigin()];
+    const boundedP1 = [...model.planeSource.getPoint1()];
+    const boundedP2 = [...model.planeSource.getPoint2()];
+    boundPlane(
+      publicAPI.getResliceCursor().getImage().getBounds(),
+      boundedOrigin,
+      boundedP1,
       boundedP2
     );
 
@@ -235,12 +212,14 @@ function vtkResliceCursorRepresentation(publicAPI, model) {
     model.planeSource.setPoint1(boundedP1[0], boundedP1[1], boundedP1[2]);
     model.planeSource.setPoint2(boundedP2[0], boundedP2[1], boundedP2[2]);
 
-    o = model.planeSource.getOrigin();
+    const o = model.planeSource.getOrigin();
 
-    p1 = model.planeSource.getPoint1();
+    const p1 = model.planeSource.getPoint1();
+    const planeAxis1 = [];
     vtkMath.subtract(p1, o, planeAxis1);
 
-    p2 = model.planeSource.getPoint2();
+    const p2 = model.planeSource.getPoint2();
+    const planeAxis2 = [];
     vtkMath.subtract(p2, o, planeAxis2);
 
     // The x,y dimensions of the plane
