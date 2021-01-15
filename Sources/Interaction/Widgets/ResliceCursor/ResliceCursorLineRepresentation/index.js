@@ -474,6 +474,16 @@ function vtkResliceCursorLineRepresentation(publicAPI, model) {
           estimatedCameraPosition[2]
         );
 
+      const planeNormalType = publicAPI
+        .getCursorAlgorithm()
+        .getReslicePlaneNormal();
+      if (model.viewUpFromViewType[planeNormalType]) {
+        console.log('OLD:', model.viewUpFromViewType[planeNormalType]);
+        model.renderer
+          .getActiveCamera()
+          .setViewUp(...model.viewUpFromViewType[planeNormalType]);
+      }
+
       // Project focalPoint onto image plane and preserve distance
       publicAPI.updateCamera();
 
