@@ -4,9 +4,10 @@ import * as vtkMath from 'vtk.js/Sources/Common/Core/Math/';
 import {
   calculateTextPosition,
   updateTextPosition,
+  computeDirectionWithTwoPoints,
 } from 'vtk.js/Sources/Widgets/Widgets3D/LineWidget/helper';
 
-const { HandleBehavior, HandleRepresentationType } = Constants;
+const { HandleRepresentationType } = Constants;
 const MAX_POINTS = 2;
 
 export default function widgetBehavior(publicAPI, model) {
@@ -19,8 +20,7 @@ export default function widgetBehavior(publicAPI, model) {
   const handle2Visibility = model.widgetState.getHandle2Visibility();
   const handle1FaceCamera = publicAPI.getWidgetState().getHandle1FaceCamera();
   const handle2FaceCamera = publicAPI.getWidgetState().getHandle2FaceCamera();
-
-  const direction = [0, 0, 0];
+  const handleToHide = [false, false];
 
   // --------------------------------------------------------------------------
   // Display 2D
@@ -128,13 +128,12 @@ export default function widgetBehavior(publicAPI, model) {
     );
   }
 
-  function orientFirstHandleBeforeSecondHandlePlacement(callData) {
-    const handle1Origin = model.widgetState.getHandle1().getOrigin();
+  function computeMousePosition(p1, callData) {
     const worldMousePos = publicAPI.computeWorldToDisplay(
       model.renderer,
-      handle1Origin[0],
-      handle1Origin[1],
-      handle1Origin[2]
+      p1[0],
+      p1[1],
+      p1[2]
     );
     const mousePos = publicAPI.computeDisplayToWorld(
       model.renderer,
@@ -142,46 +141,48 @@ export default function widgetBehavior(publicAPI, model) {
       callData.position.y,
       worldMousePos[2]
     );
-    vtkMath.subtract(
-      model.widgetState.getHandle1().getOrigin(),
-      mousePos,
-      direction
-    );
+    return mousePos;
   }
 
-  function orientHandlesWithCompleteWidget(modifier) {
+  function orientFirstHandleBeforeSecondHandlePlacement(callData) {
+    const handle1Origin = model.widgetState.getHandle1().getOrigin();
+    const mousePos = computeMousePosition(handle1Origin, callData);
+    return computeDirectionWithTwoPoints(handle1Origin, mousePos);
+  }
+
+  function orientHandlesWithCompleteWidget(nb) {
+    let dir = [0, 0, 0];
     const handle1Origin = model.widgetState.getHandle1().getOrigin();
     const handle2Origin = model.widgetState.getHandle2().getOrigin();
-    vtkMath.subtract(handle1Origin, handle2Origin, direction);
-    vtkMath.multiplyScalar(direction, modifier);
+    dir = computeDirectionWithTwoPoints(handle1Origin, handle2Origin);
+    if (nb === 2) {
+      vtkMath.multiplyScalar(dir, -1);
+    }
+    return dir;
   }
 
-  function updateHandleDirection(behavior, callData) {
-    let bv = behavior;
-    if (bv === HandleBehavior.HANDLE1_ALONE) {
-      orientFirstHandleBeforeSecondHandlePlacement(callData);
-      bv = 0;
-    } else {
-      const modifier = bv === 1 ? 1 : -1;
-      bv -= 1;
-      orientHandlesWithCompleteWidget(modifier);
-    }
+  function orientHandle(nb, direction) {
     if (
-      (bv === 0 && publicAPI.isHandleGlyph2D(model.handle1Shape)) ||
-      (bv === 1 && publicAPI.isHandleGlyph2D(model.handle2Shape))
+      (nb === 1 && model.widgetState.getHandle1Shape() === 'cone') ||
+      (nb === 2 && model.widgetState.getHandle2Shape() === 'cone')
     ) {
-      model.representations[bv].setOrientation(direction);
+      model.representations[nb - 1].getGlyph().setDirection(direction);
     } else {
-      model.representations[bv].getGlyph().setDirection(direction);
+      model.representations[nb - 1].setOrientation(direction);
     }
+  }
+
+  function updateHandleDirection(nb) {
+    const direction = orientHandlesWithCompleteWidget(nb);
+    orientHandle(nb, direction);
   }
 
   publicAPI.updateHandleDirections = () => {
     if (isHandleOrientable(model.handle1Shape)) {
-      updateHandleDirection(HandleBehavior.HANDLE1);
+      updateHandleDirection(1);
     }
     if (isHandleOrientable(model.handle2Shape)) {
-      updateHandleDirection(HandleBehavior.HANDLE2);
+      updateHandleDirection(2);
     }
   };
 
@@ -192,32 +193,32 @@ export default function widgetBehavior(publicAPI, model) {
         handle1.getActive()
       ) {
         model.representations[0].setHandleVisibility(true);
-        model.handle1ToHide = true;
+        handleToHide[0] = true;
       }
       if (
         model.widgetState.getHandle2Visibility() === false &&
         handle2.getActive()
       ) {
         model.representations[1].setHandleVisibility(true);
-        model.handle2ToHide = true;
+        handleToHide[1] = true;
       }
       return;
     }
-    if (model.handle1ToHide === true) {
-      model.handle1ToHide = false;
+    if (handleToHide[0] === true) {
+      handleToHide[0] = false;
       model.representations[0].setHandleVisibility(
         model.widgetState.getHandle1Visibility()
       );
     }
-    if (model.handle2ToHide === true) {
-      model.handle2ToHide = false;
+    if (handleToHide[1] === true) {
+      handleToHide[1] = false;
       model.representations[1].setHandleVisibility(
         model.widgetState.getHandle2Visibility()
       );
     }
   };
 
-  publicAPI.setRotationHandleToFaceCamera = () => {
+  publicAPI.rotateHandlesToFaceCamera = () => {
     if (
       handle1FaceCamera === true &&
       publicAPI.isHandleGlyph2D(model.handle1Shape)
@@ -236,8 +237,9 @@ export default function widgetBehavior(publicAPI, model) {
     }
   };
 
-  publicAPI.placeHandle = (handle, nb) => {
-    model.widgetState.setNbHandles(nb);
+  publicAPI.placeHandle = (handle) => {
+    const nb = model.nbHandles === 0 ? 1 : 2;
+    model.nbHandles = nb;
     handle.setOrigin(...moveHandle.getOrigin());
     handle.setColor(moveHandle.getColor());
     handle.setScale1(moveHandle.getScale1());
@@ -265,16 +267,16 @@ export default function widgetBehavior(publicAPI, model) {
     }
     if (
       model.activeState === model.widgetState.getMoveHandle() &&
-      model.widgetState.getNbHandles() === 0
+      model.nbHandles === 0
     ) {
-      publicAPI.placeHandle(handle1, 1);
+      publicAPI.placeHandle(handle1);
       handle2.setOrigin(...moveHandle.getOrigin());
       model.representations[0].setHandleVisibility(handle1Visibility);
     } else if (
       model.activeState === model.widgetState.getMoveHandle() &&
-      model.widgetState.getNbHandles() === 1
+      model.nbHandles === 1
     ) {
-      publicAPI.placeHandle(handle2, 2);
+      publicAPI.placeHandle(handle2);
       publicAPI.updateHandleDirections();
       calcTextPosWithLineAngle();
       model.representations[1].setHandleVisibility(handle2Visibility);
@@ -290,7 +292,7 @@ export default function widgetBehavior(publicAPI, model) {
   // --------------------------------------------------------------------------
 
   publicAPI.handleMouseMove = (callData) => {
-    if (model.hasFocus && model.widgetState.getNbHandles() === MAX_POINTS) {
+    if (model.hasFocus && model.nbHandles === MAX_POINTS) {
       publicAPI.loseFocus();
       return macro.VOID;
     }
@@ -306,7 +308,7 @@ export default function widgetBehavior(publicAPI, model) {
         model.openGLRenderWindow
       );
       publicAPI.toggleHandleVisibility(1);
-      if (model.widgetState.getNbHandles() === 1) {
+      if (model.nbHandles === 1) {
         moveHandle.setVisible(true);
       }
       if (
@@ -322,15 +324,19 @@ export default function widgetBehavior(publicAPI, model) {
             publicAPI.updateHandleDirections();
           }
         } else if (
-          model.widgetState.getNbHandles() === 1 &&
+          model.nbHandles === 1 &&
           isHandleOrientable(model.handle1Shape)
         ) {
-          updateHandleDirection(HandleBehavior.HANDLE1_ALONE, callData);
+          const direction = orientFirstHandleBeforeSecondHandlePlacement(
+            callData
+          );
+          orientHandle(1, direction);
         }
         return macro.EVENT_ABORT;
       }
     }
-    publicAPI.toggleHandleVisibility(0);
+    if (model.activeState && !model.activeState.getActive())
+      publicAPI.toggleHandleVisibility(0);
     return macro.VOID;
   };
 
@@ -360,7 +366,7 @@ export default function widgetBehavior(publicAPI, model) {
       model.isDragging === false &&
       (!model.activeState || !model.activeState.getActive())
     ) {
-      publicAPI.setRotationHandleToFaceCamera();
+      publicAPI.rotateHandlesToFaceCamera();
     }
     model.isDragging = false;
   };
@@ -370,7 +376,7 @@ export default function widgetBehavior(publicAPI, model) {
   // --------------------------------------------------------------------------
 
   publicAPI.grabFocus = () => {
-    if (!model.hasFocus && model.widgetState.getNbHandles() < MAX_POINTS) {
+    if (!model.hasFocus && model.nbHandles < MAX_POINTS) {
       model.activeState = moveHandle;
       model.activeState.activate();
       model.activeState.setVisible(true);

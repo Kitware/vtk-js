@@ -46,7 +46,6 @@ export default function generateState() {
       },
     })
     .addField({ name: 'positionOnLine', initialValue: 0 })
-    .addField({ name: 'nbHandles', initialValue: 0 })
     .addField({ name: 'handle1Shape', initialValue: 'sphere' })
     .addField({ name: 'handle2Shape', initialValue: 'sphere' })
     .addField({ name: 'handle1Visibility', initialValue: true })

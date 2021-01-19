@@ -92,7 +92,7 @@ function updateHandleShape(handleId) {
   lineWidget
     .getRepresentations()[1]
     .setHandleVisibility(lineWidget.getWidgetState().getHandle2Visibility());
-  lineWidget.setRotationHandleToFaceCamera();
+  lineWidget.rotateHandlesToFaceCamera();
   lineWidget.getInteractor().render();
   renderWindow.render();
 

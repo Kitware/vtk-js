@@ -142,7 +142,7 @@ function vtkLineWidget(publicAPI, model) {
             initialValues: {
               showCircle: false,
               isVisible: false,
-              fromLineWidget: true,
+              offsetText: true,
               text: '',
             },
             labels: ['SVGtext'],
@@ -166,11 +166,10 @@ function vtkLineWidget(publicAPI, model) {
   // --- Public methods -------------------------------------------------------
 
   publicAPI.getDistance = () => {
-    const nbHandles = model.widgetState.getNbHandles();
-    if (nbHandles < 1) {
+    if (model.nbHandles < 1) {
       return 0;
     }
-    if (nbHandles === 1) {
+    if (model.nbHandles === 1) {
       return Math.sqrt(
         distance2BetweenPoints(
           model.widgetState.getMoveHandle().getOrigin(),
@@ -207,6 +206,7 @@ function vtkLineWidget(publicAPI, model) {
 
 const DEFAULT_VALUES = {
   isDragging: false,
+  nbHandles: 0,
 };
 
 // ----------------------------------------------------------------------------
@@ -215,7 +215,7 @@ export function extend(publicAPI, model, initialValues = {}) {
   Object.assign(model, DEFAULT_VALUES, initialValues);
 
   vtkAbstractWidgetFactory.extend(publicAPI, model, initialValues);
-  macro.setGet(publicAPI, model, ['manipulator', 'isDragging']);
+  macro.setGet(publicAPI, model, ['manipulator', 'isDragging', 'nbHandles']);
 
   vtkLineWidget(publicAPI, model);
 }

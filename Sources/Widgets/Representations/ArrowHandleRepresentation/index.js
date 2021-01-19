@@ -13,7 +13,7 @@ import vtkConeSource from 'vtk.js/Sources/Filters/Sources/ConeSource';
 
 import Constants from 'vtk.js/Sources/Widgets/Widgets3D/LineWidget/Constants';
 import { ScalarMode } from 'vtk.js/Sources/Rendering/Core/Mapper/Constants';
-import { vec3, mat3, mat4 } from 'gl-matrix';
+import { vec3, mat3 } from 'gl-matrix';
 
 import { RenderingTypes } from 'vtk.js/Sources/Widgets/Core/WidgetManager/Constants';
 
@@ -246,7 +246,7 @@ function vtkArrowHandleRepresentation(publicAPI, model) {
 const DEFAULT_VALUES = {
   defaultScale: 1,
   orientation: [0, 0, 0],
-  viewMatrix: mat4.create(),
+  // viewMatrix: mat4.create(),
   handleVisibility: true,
 };
 
@@ -254,6 +254,8 @@ const DEFAULT_VALUES = {
 
 export function extend(publicAPI, model, initialValues = {}) {
   Object.assign(model, DEFAULT_VALUES, initialValues);
+
+  model.viewMatrix = new Float64Array(16);
 
   vtkHandleRepresentation.extend(publicAPI, model, initialValues);
   macro.get(publicAPI, model, ['glyph', 'mapper', 'actor']);

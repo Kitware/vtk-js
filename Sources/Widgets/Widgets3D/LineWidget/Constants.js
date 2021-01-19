@@ -1,11 +1,5 @@
 export const HandleRepresentation = [0, 0, 0];
 
-export const HandleBehavior = {
-  HANDLE1_ALONE: 3,
-  HANDLE2: 2,
-  HANDLE1: 1,
-};
-
 export const HandleRepresentationType = {
   // none is a sphere handle always invisible even on mouseover
   NONE: 'voidSphere',
@@ -22,7 +16,6 @@ export const HandleRepresentationType = {
 };
 
 export default {
-  HandleBehavior,
   HandleRepresentation,
   HandleRepresentationType,
 };

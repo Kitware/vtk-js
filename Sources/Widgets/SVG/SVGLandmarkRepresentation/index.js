@@ -54,7 +54,7 @@ function vtkSVGLandmarkRepresentation(publicAPI, model) {
           const text = createSvgElement('text');
           Object.keys(model.textProps || {}).forEach((prop) => {
             let propValue = model.textProps[prop];
-            if (model.fromLineWidget === true && prop === 'dy') {
+            if (model.offsetText === true && prop === 'dy') {
               propValue = model.textProps.dy + newlineOffset * j;
             }
             text.setAttribute(prop, propValue);

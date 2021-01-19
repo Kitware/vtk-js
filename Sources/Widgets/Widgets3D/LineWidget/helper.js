@@ -16,3 +16,9 @@ export function updateTextPosition(model) {
   const SVGTextState = model.widgetState.getText();
   SVGTextState.setOrigin(calculateTextPosition(model));
 }
+
+export function computeDirectionWithTwoPoints(p1, p2) {
+  const dir = [0, 0, 0];
+  vtkMath.subtract(p1, p2, dir);
+  return dir;
+}
