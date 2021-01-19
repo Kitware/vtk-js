@@ -1,4 +1,4 @@
-var prettierConf = require('./prettier.config.js');
+const prettierConf = require('./prettier.config.js');
 
 module.exports = {
   extends: ['airbnb', 'prettier'],
@@ -9,14 +9,7 @@ module.exports = {
     'no-multi-spaces': ['error', { exceptions: { ImportDeclaration: true } }],
     'no-param-reassign': ['error', { props: false }],
     'no-unused-vars': ['error', { args: 'none' }],
-    'prefer-destructuring': [
-      'error',
-      {
-        VariableDeclarator: { array: false, object: true },
-        AssignmentExpression: { array: false, object: false },
-      },
-      { enforceForRenamedProperties: false },
-    ],
+    'prefer-destructuring': 0,
     'import/no-extraneous-dependencies': 0, // Needed for tests
     // 'no-mixed-operators': 'error', // Wish we can put it back with prettier
 
@@ -26,7 +19,6 @@ module.exports = {
     'no-plusplus': 0,
     'import/no-named-as-default': 0,
     'import/no-named-as-default-member': 0,
-    'prefer-destructuring': 0, // Can have unwanted side effect
 
     // Introduced with new eslint
     // and no time to fix them...
