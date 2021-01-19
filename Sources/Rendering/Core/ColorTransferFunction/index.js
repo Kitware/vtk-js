@@ -771,7 +771,7 @@ function vtkColorTransferFunction(publicAPI, model) {
             }
           }
           // Now convert this back to RGB
-          vtkMath.hsv2rgb = (hsvTmp, tmpVec);
+          vtkMath.hsv2rgb(hsvTmp, tmpVec);
           table[tidx] = tmpVec[0];
           table[tidx + 1] = tmpVec[1];
           table[tidx + 2] = tmpVec[2];
