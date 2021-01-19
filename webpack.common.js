@@ -4,6 +4,7 @@ const { merge } = require('webpack-merge');
 
 // webpack plugins
 const WebpackNotifierPlugin = require('webpack-notifier');
+const ESLintWebpackPlugin = require('eslint-webpack-plugin');
 
 // config files
 const pkg = require('./package.json');
@@ -21,25 +22,9 @@ const configureEntries = () => {
   return entries;
 };
 
-const configureESLintLoader = ({ lint = true }) => {
-  if (lint) {
-    return [
-      {
-        test: /\.js$/,
-        loader: 'eslint-loader',
-        exclude: /node_modules/,
-        enforce: 'pre',
-        options: { configFile: path.join(__dirname, '.eslintrc.js') },
-      },
-    ];
-  }
-  return [];
-};
-
 // Configure vtk rules
 function configureVtkRules() {
   return [
-    ...configureESLintLoader({ lint: !process.env.NOLINT }),
     {
       test: /\.glsl$/i,
       loader: 'shader-loader',
@@ -110,6 +95,7 @@ const baseConfig = {
     rules: configureVtkRules(),
   },
   plugins: [
+    ...((!process.env.NOLINT && new ESLintWebpackPlugin()) || []),
     new WebpackNotifierPlugin({
       title: 'Webpack - vtk.js',
       excludeWarnings: true,
