@@ -17,7 +17,7 @@ export const InteractionMethodsName = {
 export const defaultViewUpFromViewType = {
   [ViewTypes.YZ_PLANE]: [0, 0, 1], // Sagittal
   [ViewTypes.XZ_PLANE]: [0, 0, 1], // Coronal
-  [ViewTypes.XY_PLANE]: [0, 1, 0], // Axial
+  [ViewTypes.XY_PLANE]: [0, -1, 0], // Axial
 };
 
 export default {
