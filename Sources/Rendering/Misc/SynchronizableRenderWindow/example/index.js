@@ -1,10 +1,10 @@
-import 'vtk.js/Sources/favicon';
+import 'vtk.js/favicon';
 import JSZip from 'jszip';
 
-import vtkInteractorStyleTrackballCamera from 'vtk.js/Sources/Interaction/Style/InteractorStyleTrackballCamera';
-import vtkOpenGLRenderWindow from 'vtk.js/Sources/Rendering/OpenGL/RenderWindow';
-import vtkRenderWindowInteractor from 'vtk.js/Sources/Rendering/Core/RenderWindowInteractor';
-import vtkSynchronizableRenderWindow from 'vtk.js/Sources/Rendering/Misc/SynchronizableRenderWindow';
+import vtkInteractorStyleTrackballCamera from 'vtk.js/Interaction/Style/InteractorStyleTrackballCamera';
+import vtkOpenGLRenderWindow from 'vtk.js/Rendering/OpenGL/RenderWindow';
+import vtkRenderWindowInteractor from 'vtk.js/Rendering/Core/RenderWindowInteractor';
+import vtkSynchronizableRenderWindow from 'vtk.js/Rendering/Misc/SynchronizableRenderWindow';
 
 import style from './SynchronizableRenderWindow.module.css';
 

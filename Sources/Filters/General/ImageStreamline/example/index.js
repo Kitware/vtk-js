@@ -1,15 +1,15 @@
-import 'vtk.js/Sources/favicon';
+import 'vtk.js/favicon';
 
-import vtkFullScreenRenderWindow from 'vtk.js/Sources/Rendering/Misc/FullScreenRenderWindow';
-import vtkOutlineFilter from 'vtk.js/Sources/Filters/General/OutlineFilter';
-import vtkPlaneSource from 'vtk.js/Sources/Filters/Sources/PlaneSource';
-import vtkImageStreamline from 'vtk.js/Sources/Filters/General/ImageStreamline';
-import vtkActor from 'vtk.js/Sources/Rendering/Core/Actor';
-import vtkMapper from 'vtk.js/Sources/Rendering/Core/Mapper';
-import { Representation } from 'vtk.js/Sources/Rendering/Core/Property/Constants';
-import vtkDataArray from 'vtk.js/Sources/Common/Core/DataArray';
-import vtkImageData from 'vtk.js/Sources/Common/DataModel/ImageData';
-import macro from 'vtk.js/Sources/macro';
+import vtkFullScreenRenderWindow from 'vtk.js/Rendering/Misc/FullScreenRenderWindow';
+import vtkOutlineFilter from 'vtk.js/Filters/General/OutlineFilter';
+import vtkPlaneSource from 'vtk.js/Filters/Sources/PlaneSource';
+import vtkImageStreamline from 'vtk.js/Filters/General/ImageStreamline';
+import vtkActor from 'vtk.js/Rendering/Core/Actor';
+import vtkMapper from 'vtk.js/Rendering/Core/Mapper';
+import { Representation } from 'vtk.js/Rendering/Core/Property/Constants';
+import vtkDataArray from 'vtk.js/Common/Core/DataArray';
+import vtkImageData from 'vtk.js/Common/DataModel/ImageData';
+import macro from 'vtk.js/macro';
 
 import controlPanel from './controller.html';
 

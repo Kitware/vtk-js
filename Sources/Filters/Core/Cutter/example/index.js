@@ -1,12 +1,12 @@
-import 'vtk.js/Sources/favicon';
+import 'vtk.js/favicon';
 
-import vtkActor from 'vtk.js/Sources/Rendering/Core/Actor';
-import vtkCubeSource from 'vtk.js/Sources/Filters/Sources/CubeSource';
-import vtkCutter from 'vtk.js/Sources/Filters/Core/Cutter';
-import vtkFullScreenRenderWindow from 'vtk.js/Sources/Rendering/Misc/FullScreenRenderWindow';
-import vtkMapper from 'vtk.js/Sources/Rendering/Core/Mapper';
-import vtkPlane from 'vtk.js/Sources/Common/DataModel/Plane';
-import vtkProperty from 'vtk.js/Sources/Rendering/Core/Property';
+import vtkActor from 'vtk.js/Rendering/Core/Actor';
+import vtkCubeSource from 'vtk.js/Filters/Sources/CubeSource';
+import vtkCutter from 'vtk.js/Filters/Core/Cutter';
+import vtkFullScreenRenderWindow from 'vtk.js/Rendering/Misc/FullScreenRenderWindow';
+import vtkMapper from 'vtk.js/Rendering/Core/Mapper';
+import vtkPlane from 'vtk.js/Common/DataModel/Plane';
+import vtkProperty from 'vtk.js/Rendering/Core/Property';
 
 import controlPanel from './controlPanel.html';
 

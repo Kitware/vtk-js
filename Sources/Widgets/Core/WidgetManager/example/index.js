@@ -1,16 +1,16 @@
-import 'vtk.js/Sources/favicon';
+import 'vtk.js/favicon';
 
-import vtkFullScreenRenderWindow from 'vtk.js/Sources/Rendering/Misc/FullScreenRenderWindow';
-import vtkWidgetManager from 'vtk.js/Sources/Widgets/Core/WidgetManager';
-import WidgetManagerConstants from 'vtk.js/Sources/Widgets/Core/WidgetManager/Constants';
+import vtkFullScreenRenderWindow from 'vtk.js/Rendering/Misc/FullScreenRenderWindow';
+import vtkWidgetManager from 'vtk.js/Widgets/Core/WidgetManager';
+import WidgetManagerConstants from 'vtk.js/Widgets/Core/WidgetManager/Constants';
 
-import vtkActor from 'vtk.js/Sources/Rendering/Core/Actor';
-import vtkConeSource from 'vtk.js/Sources/Filters/Sources/ConeSource';
-import vtkMapper from 'vtk.js/Sources/Rendering/Core/Mapper';
+import vtkActor from 'vtk.js/Rendering/Core/Actor';
+import vtkConeSource from 'vtk.js/Filters/Sources/ConeSource';
+import vtkMapper from 'vtk.js/Rendering/Core/Mapper';
 
 import vtkBoxWidget from 'vtk.js/Examples/Widgets/Box/BoxWidget';
-import vtkImplicitPlaneWidget from 'vtk.js/Sources/Widgets/Widgets3D/ImplicitPlaneWidget';
-import vtkPolyLineWidget from 'vtk.js/Sources/Widgets/Widgets3D/PolyLineWidget';
+import vtkImplicitPlaneWidget from 'vtk.js/Widgets/Widgets3D/ImplicitPlaneWidget';
+import vtkPolyLineWidget from 'vtk.js/Widgets/Widgets3D/PolyLineWidget';
 
 import controlPanel from './controlPanel.html';
 

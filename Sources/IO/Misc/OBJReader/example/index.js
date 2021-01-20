@@ -1,10 +1,10 @@
-import 'vtk.js/Sources/favicon';
+import 'vtk.js/favicon';
 
-import vtkActor from 'vtk.js/Sources/Rendering/Core/Actor';
-import vtkFullScreenRenderWindow from 'vtk.js/Sources/Rendering/Misc/FullScreenRenderWindow';
-import vtkMapper from 'vtk.js/Sources/Rendering/Core/Mapper';
-import vtkMTLReader from 'vtk.js/Sources/IO/Misc/MTLReader';
-import vtkOBJReader from 'vtk.js/Sources/IO/Misc/OBJReader';
+import vtkActor from 'vtk.js/Rendering/Core/Actor';
+import vtkFullScreenRenderWindow from 'vtk.js/Rendering/Misc/FullScreenRenderWindow';
+import vtkMapper from 'vtk.js/Rendering/Core/Mapper';
+import vtkMTLReader from 'vtk.js/IO/Misc/MTLReader';
+import vtkOBJReader from 'vtk.js/IO/Misc/OBJReader';
 
 // const objs = ['ferrari-f1-race-car', 'mini-cooper', 'space-shuttle-orbiter', 'blskes-plane'];
 const fileName = 'space-shuttle-orbiter';

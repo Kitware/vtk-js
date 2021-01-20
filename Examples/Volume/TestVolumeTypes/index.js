@@ -1,16 +1,16 @@
-import 'vtk.js/Sources/favicon';
+import 'vtk.js/favicon';
 
-import vtkColorTransferFunction from 'vtk.js/Sources/Rendering/Core/ColorTransferFunction';
-import vtkDataArray from 'vtk.js/Sources/Common/Core/DataArray';
-import vtkFullScreenRenderWindow from 'vtk.js/Sources/Rendering/Misc/FullScreenRenderWindow';
-import vtkImageData from 'vtk.js/Sources/Common/DataModel/ImageData';
-import vtkPiecewiseFunction from 'vtk.js/Sources/Common/DataModel/PiecewiseFunction';
-import vtkRenderer from 'vtk.js/Sources/Rendering/Core/Renderer';
-import vtkVolume from 'vtk.js/Sources/Rendering/Core/Volume';
-import vtkVolumeMapper from 'vtk.js/Sources/Rendering/Core/VolumeMapper';
-import vtkImageMapper from 'vtk.js/Sources/Rendering/Core/ImageMapper';
-import vtkImageSlice from 'vtk.js/Sources/Rendering/Core/ImageSlice';
-import Constants from 'vtk.js/Sources/Rendering/Core/ImageMapper/Constants';
+import vtkColorTransferFunction from 'vtk.js/Rendering/Core/ColorTransferFunction';
+import vtkDataArray from 'vtk.js/Common/Core/DataArray';
+import vtkFullScreenRenderWindow from 'vtk.js/Rendering/Misc/FullScreenRenderWindow';
+import vtkImageData from 'vtk.js/Common/DataModel/ImageData';
+import vtkPiecewiseFunction from 'vtk.js/Common/DataModel/PiecewiseFunction';
+import vtkRenderer from 'vtk.js/Rendering/Core/Renderer';
+import vtkVolume from 'vtk.js/Rendering/Core/Volume';
+import vtkVolumeMapper from 'vtk.js/Rendering/Core/VolumeMapper';
+import vtkImageMapper from 'vtk.js/Rendering/Core/ImageMapper';
+import vtkImageSlice from 'vtk.js/Rendering/Core/ImageSlice';
+import Constants from 'vtk.js/Rendering/Core/ImageMapper/Constants';
 
 import controlPanel from './controlPanel.html';
 

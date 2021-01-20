@@ -1,7 +1,7 @@
-import 'vtk.js/Sources/favicon';
+import 'vtk.js/favicon';
 
-import vtkFullScreenRenderWindow from 'vtk.js/Sources/Rendering/Misc/FullScreenRenderWindow';
-import vtkHttpSceneLoader from 'vtk.js/Sources/IO/Core/HttpSceneLoader';
+import vtkFullScreenRenderWindow from 'vtk.js/Rendering/Misc/FullScreenRenderWindow';
+import vtkHttpSceneLoader from 'vtk.js/IO/Core/HttpSceneLoader';
 
 // ----------------------------------------------------------------------------
 // Standard rendering code setup

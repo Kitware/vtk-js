@@ -1,16 +1,16 @@
-import 'vtk.js/Sources/favicon';
+import 'vtk.js/favicon';
 
-import HttpDataAccessHelper from 'vtk.js/Sources/IO/Core/DataAccessHelper/HttpDataAccessHelper';
-import macro from 'vtk.js/Sources/macro';
-import vtkDeviceOrientationToCamera from 'vtk.js/Sources/Interaction/Misc/DeviceOrientationToCamera';
-import vtkForwardPass from 'vtk.js/Sources/Rendering/OpenGL/ForwardPass';
-import vtkFullScreenRenderWindow from 'vtk.js/Sources/Rendering/Misc/FullScreenRenderWindow';
-import vtkRadialDistortionPass from 'vtk.js/Sources/Rendering/OpenGL/RadialDistortionPass';
-import vtkRenderer from 'vtk.js/Sources/Rendering/Core/Renderer';
-import vtkSkybox from 'vtk.js/Sources/Rendering/Core/Skybox';
-import vtkSkyboxReader from 'vtk.js/Sources/IO/Misc/SkyboxReader';
-import vtkURLExtract from 'vtk.js/Sources/Common/Core/URLExtract';
-// import vtkMobileVR from 'vtk.js/Sources/Common/System/MobileVR';
+import HttpDataAccessHelper from 'vtk.js/IO/Core/DataAccessHelper/HttpDataAccessHelper';
+import macro from 'vtk.js/macro';
+import vtkDeviceOrientationToCamera from 'vtk.js/Interaction/Misc/DeviceOrientationToCamera';
+import vtkForwardPass from 'vtk.js/Rendering/OpenGL/ForwardPass';
+import vtkFullScreenRenderWindow from 'vtk.js/Rendering/Misc/FullScreenRenderWindow';
+import vtkRadialDistortionPass from 'vtk.js/Rendering/OpenGL/RadialDistortionPass';
+import vtkRenderer from 'vtk.js/Rendering/Core/Renderer';
+import vtkSkybox from 'vtk.js/Rendering/Core/Skybox';
+import vtkSkyboxReader from 'vtk.js/IO/Misc/SkyboxReader';
+import vtkURLExtract from 'vtk.js/Common/Core/URLExtract';
+// import vtkMobileVR from 'vtk.js/Common/System/MobileVR';
 
 import style from './SkyboxViewer.module.css';
 

@@ -1,13 +1,13 @@
-import 'vtk.js/Sources/favicon';
-import vtkFullScreenRenderWindow from 'vtk.js/Sources/Rendering/Misc/FullScreenRenderWindow';
-import vtkHttpDataSetReader from 'vtk.js/Sources/IO/Core/HttpDataSetReader';
-import vtkImageMapper from 'vtk.js/Sources/Rendering/Core/ImageMapper';
-import vtkImageSlice from 'vtk.js/Sources/Rendering/Core/ImageSlice';
-import vtkPiecewiseFunction from 'vtk.js/Sources/Common/DataModel/PiecewiseFunction';
-import vtkDataArray from 'vtk.js/Sources/Common/Core/DataArray';
-import vtkImageData from 'vtk.js/Sources/Common/DataModel/ImageData';
-import vtkImageOutlineFilter from 'vtk.js/Sources/Filters/General/ImageOutlineFilter';
-import vtkColorTransferFunction from 'vtk.js/Sources/Rendering/Core/ColorTransferFunction';
+import 'vtk.js/favicon';
+import vtkFullScreenRenderWindow from 'vtk.js/Rendering/Misc/FullScreenRenderWindow';
+import vtkHttpDataSetReader from 'vtk.js/IO/Core/HttpDataSetReader';
+import vtkImageMapper from 'vtk.js/Rendering/Core/ImageMapper';
+import vtkImageSlice from 'vtk.js/Rendering/Core/ImageSlice';
+import vtkPiecewiseFunction from 'vtk.js/Common/DataModel/PiecewiseFunction';
+import vtkDataArray from 'vtk.js/Common/Core/DataArray';
+import vtkImageData from 'vtk.js/Common/DataModel/ImageData';
+import vtkImageOutlineFilter from 'vtk.js/Filters/General/ImageOutlineFilter';
+import vtkColorTransferFunction from 'vtk.js/Rendering/Core/ColorTransferFunction';
 import controlPanel from './controlPanel.html';
 
 const fullScreenRenderWindow = vtkFullScreenRenderWindow.newInstance({

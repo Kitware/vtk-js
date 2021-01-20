@@ -1,10 +1,10 @@
-import 'vtk.js/Sources/favicon';
+import 'vtk.js/favicon';
 
-import vtkFullScreenRenderWindow from 'vtk.js/Sources/Rendering/Misc/FullScreenRenderWindow';
-import vtkActor from 'vtk.js/Sources/Rendering/Core/Actor';
-import vtkPlaneSource from 'vtk.js/Sources/Filters/Sources/PlaneSource';
-import vtkMapper from 'vtk.js/Sources/Rendering/Core/Mapper';
-import { Representation } from 'vtk.js/Sources/Rendering/Core/Property/Constants';
+import vtkFullScreenRenderWindow from 'vtk.js/Rendering/Misc/FullScreenRenderWindow';
+import vtkActor from 'vtk.js/Rendering/Core/Actor';
+import vtkPlaneSource from 'vtk.js/Filters/Sources/PlaneSource';
+import vtkMapper from 'vtk.js/Rendering/Core/Mapper';
+import { Representation } from 'vtk.js/Rendering/Core/Property/Constants';
 
 import controlPanel from './controlPanel.html';
 

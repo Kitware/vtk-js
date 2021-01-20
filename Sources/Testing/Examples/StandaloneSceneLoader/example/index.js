@@ -1,16 +1,16 @@
 /* eslint-disable import/prefer-default-export */
 /* eslint-disable import/no-extraneous-dependencies */
 
-import 'vtk.js/Sources/favicon';
+import 'vtk.js/favicon';
 
-import vtkFullScreenRenderWindow from 'vtk.js/Sources/Rendering/Misc/FullScreenRenderWindow';
+import vtkFullScreenRenderWindow from 'vtk.js/Rendering/Misc/FullScreenRenderWindow';
 
-import vtkHttpSceneLoader from 'vtk.js/Sources/IO/Core/HttpSceneLoader';
-import DataAccessHelper from 'vtk.js/Sources/IO/Core/DataAccessHelper';
-import vtkURLExtract from 'vtk.js/Sources/Common/Core/URLExtract';
-import vtkOBJReader from 'vtk.js/Sources/IO/Misc/OBJReader';
-import vtkMapper from 'vtk.js/Sources/Rendering/Core/Mapper';
-import vtkActor from 'vtk.js/Sources/Rendering/Core/Actor';
+import vtkHttpSceneLoader from 'vtk.js/IO/Core/HttpSceneLoader';
+import DataAccessHelper from 'vtk.js/IO/Core/DataAccessHelper';
+import vtkURLExtract from 'vtk.js/Common/Core/URLExtract';
+import vtkOBJReader from 'vtk.js/IO/Misc/OBJReader';
+import vtkMapper from 'vtk.js/Rendering/Core/Mapper';
+import vtkActor from 'vtk.js/Rendering/Core/Actor';
 
 import controlWidget from './SceneControllerWidget';
 import style from './SceneLoader.module.css';

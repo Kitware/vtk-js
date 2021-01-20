@@ -1,31 +1,31 @@
-import 'vtk.js/Sources/favicon';
+import 'vtk.js/favicon';
 
-import * as vtkMath from 'vtk.js/Sources/Common/Core/Math';
-import vtkFullScreenRenderWindow from 'vtk.js/Sources/Rendering/Misc/FullScreenRenderWindow';
-import vtkWidgetManager from 'vtk.js/Sources/Widgets/Core/WidgetManager';
-import vtkPaintWidget from 'vtk.js/Sources/Widgets/Widgets3D/PaintWidget';
-import vtkRectangleWidget from 'vtk.js/Sources/Widgets/Widgets3D/RectangleWidget';
-import vtkEllipseWidget from 'vtk.js/Sources/Widgets/Widgets3D/EllipseWidget';
-import vtkSplineWidget from 'vtk.js/Sources/Widgets/Widgets3D/SplineWidget';
-import vtkInteractorStyleImage from 'vtk.js/Sources/Interaction/Style/InteractorStyleImage';
-import vtkHttpDataSetReader from 'vtk.js/Sources/IO/Core/HttpDataSetReader';
-import vtkImageMapper from 'vtk.js/Sources/Rendering/Core/ImageMapper';
-import vtkImageSlice from 'vtk.js/Sources/Rendering/Core/ImageSlice';
-import vtkPaintFilter from 'vtk.js/Sources/Filters/General/PaintFilter';
-import vtkColorTransferFunction from 'vtk.js/Sources/Rendering/Core/ColorTransferFunction';
-import vtkPiecewiseFunction from 'vtk.js/Sources/Common/DataModel/PiecewiseFunction';
-import vtkBoundingBox from 'vtk.js/Sources/Common/DataModel/BoundingBox';
+import * as vtkMath from 'vtk.js/Common/Core/Math';
+import vtkFullScreenRenderWindow from 'vtk.js/Rendering/Misc/FullScreenRenderWindow';
+import vtkWidgetManager from 'vtk.js/Widgets/Core/WidgetManager';
+import vtkPaintWidget from 'vtk.js/Widgets/Widgets3D/PaintWidget';
+import vtkRectangleWidget from 'vtk.js/Widgets/Widgets3D/RectangleWidget';
+import vtkEllipseWidget from 'vtk.js/Widgets/Widgets3D/EllipseWidget';
+import vtkSplineWidget from 'vtk.js/Widgets/Widgets3D/SplineWidget';
+import vtkInteractorStyleImage from 'vtk.js/Interaction/Style/InteractorStyleImage';
+import vtkHttpDataSetReader from 'vtk.js/IO/Core/HttpDataSetReader';
+import vtkImageMapper from 'vtk.js/Rendering/Core/ImageMapper';
+import vtkImageSlice from 'vtk.js/Rendering/Core/ImageSlice';
+import vtkPaintFilter from 'vtk.js/Filters/General/PaintFilter';
+import vtkColorTransferFunction from 'vtk.js/Rendering/Core/ColorTransferFunction';
+import vtkPiecewiseFunction from 'vtk.js/Common/DataModel/PiecewiseFunction';
+import vtkBoundingBox from 'vtk.js/Common/DataModel/BoundingBox';
 
 import {
   BehaviorCategory,
   ShapeBehavior,
-} from 'vtk.js/Sources/Widgets/Widgets3D/ShapeWidget/Constants';
+} from 'vtk.js/Widgets/Widgets3D/ShapeWidget/Constants';
 import {
   TextAlign,
   VerticalAlign,
-} from 'vtk.js/Sources/Interaction/Widgets/LabelRepresentation/Constants';
+} from 'vtk.js/Interaction/Widgets/LabelRepresentation/Constants';
 
-import { ViewTypes } from 'vtk.js/Sources/Widgets/Core/WidgetManager/Constants';
+import { ViewTypes } from 'vtk.js/Widgets/Core/WidgetManager/Constants';
 
 import { vec3 } from 'gl-matrix';
 

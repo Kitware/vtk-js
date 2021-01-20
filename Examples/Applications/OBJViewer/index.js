@@ -1,19 +1,19 @@
 /* eslint-disable import/prefer-default-export */
 /* eslint-disable import/no-extraneous-dependencies */
 
-import 'vtk.js/Sources/favicon';
+import 'vtk.js/favicon';
 import JSZip from 'jszip';
 
-import macro from 'vtk.js/Sources/macro';
+import macro from 'vtk.js/macro';
 
-import HttpDataAccessHelper from 'vtk.js/Sources/IO/Core/DataAccessHelper/HttpDataAccessHelper';
-import vtkFullScreenRenderWindow from 'vtk.js/Sources/Rendering/Misc/FullScreenRenderWindow';
-import vtkURLExtract from 'vtk.js/Sources/Common/Core/URLExtract';
+import HttpDataAccessHelper from 'vtk.js/IO/Core/DataAccessHelper/HttpDataAccessHelper';
+import vtkFullScreenRenderWindow from 'vtk.js/Rendering/Misc/FullScreenRenderWindow';
+import vtkURLExtract from 'vtk.js/Common/Core/URLExtract';
 
-import vtkOBJReader from 'vtk.js/Sources/IO/Misc/OBJReader';
-import vtkMTLReader from 'vtk.js/Sources/IO/Misc/MTLReader';
-import vtkMapper from 'vtk.js/Sources/Rendering/Core/Mapper';
-import vtkActor from 'vtk.js/Sources/Rendering/Core/Actor';
+import vtkOBJReader from 'vtk.js/IO/Misc/OBJReader';
+import vtkMTLReader from 'vtk.js/IO/Misc/MTLReader';
+import vtkMapper from 'vtk.js/Rendering/Core/Mapper';
+import vtkActor from 'vtk.js/Rendering/Core/Actor';
 
 import style from './OBJViewer.module.css';
 
