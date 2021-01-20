@@ -1,10 +1,10 @@
-import vtkRenderWindowWithControlBar from 'vtk.js/Sources/Rendering/Misc/RenderWindowWithControlBar';
-import vtkSlider from 'vtk.js/Sources/Interaction/UI/Slider';
-import vtkCornerAnnotation from 'vtk.js/Sources/Interaction/UI/CornerAnnotation';
+import vtkRenderWindowWithControlBar from 'vtk.js/Rendering/Misc/RenderWindowWithControlBar';
+import vtkSlider from 'vtk.js/Interaction/UI/Slider';
+import vtkCornerAnnotation from 'vtk.js/Interaction/UI/CornerAnnotation';
 
-import vtkActor from 'vtk.js/Sources/Rendering/Core/Actor';
-import vtkConeSource from 'vtk.js/Sources/Filters/Sources/ConeSource';
-import vtkMapper from 'vtk.js/Sources/Rendering/Core/Mapper';
+import vtkActor from 'vtk.js/Rendering/Core/Actor';
+import vtkConeSource from 'vtk.js/Filters/Sources/ConeSource';
+import vtkMapper from 'vtk.js/Rendering/Core/Mapper';
 
 // Define container size/position
 const body = document.querySelector('body');

@@ -1,13 +1,13 @@
-import 'vtk.js/Sources/favicon';
+import 'vtk.js/favicon';
 
-import vtkFullScreenRenderWindow from 'vtk.js/Sources/Rendering/Misc/FullScreenRenderWindow';
-import vtkHttpDataSetReader from 'vtk.js/Sources/IO/Core/HttpDataSetReader';
-import vtkVolumeMapper from 'vtk.js/Sources/Rendering/Core/VolumeMapper';
-import vtkImageMapper from 'vtk.js/Sources/Rendering/Core/ImageMapper';
-import vtkImageSlice from 'vtk.js/Sources/Rendering/Core/ImageSlice';
-import vtkInteractorStyleImage from 'vtk.js/Sources/Interaction/Style/InteractorStyleImage';
-import vtkInteractorStyleTrackballCamera from 'vtk.js/Sources/Interaction/Style/InteractorStyleTrackballCamera';
-import vtkImageCroppingRegionsWidget from 'vtk.js/Sources/Interaction/Widgets/ImageCroppingRegionsWidget';
+import vtkFullScreenRenderWindow from 'vtk.js/Rendering/Misc/FullScreenRenderWindow';
+import vtkHttpDataSetReader from 'vtk.js/IO/Core/HttpDataSetReader';
+import vtkVolumeMapper from 'vtk.js/Rendering/Core/VolumeMapper';
+import vtkImageMapper from 'vtk.js/Rendering/Core/ImageMapper';
+import vtkImageSlice from 'vtk.js/Rendering/Core/ImageSlice';
+import vtkInteractorStyleImage from 'vtk.js/Interaction/Style/InteractorStyleImage';
+import vtkInteractorStyleTrackballCamera from 'vtk.js/Interaction/Style/InteractorStyleTrackballCamera';
+import vtkImageCroppingRegionsWidget from 'vtk.js/Interaction/Widgets/ImageCroppingRegionsWidget';
 
 import controlPanel from './controlPanel.html';
 

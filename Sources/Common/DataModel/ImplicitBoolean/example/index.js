@@ -1,13 +1,13 @@
-import 'vtk.js/Sources/favicon';
+import 'vtk.js/favicon';
 
-import vtkActor from 'vtk.js/Sources/Rendering/Core/Actor';
-import vtkFullScreenRenderWindow from 'vtk.js/Sources/Rendering/Misc/FullScreenRenderWindow';
-import vtkImageMarchingCubes from 'vtk.js/Sources/Filters/General/ImageMarchingCubes';
-import vtkMapper from 'vtk.js/Sources/Rendering/Core/Mapper';
-import vtkSampleFunction from 'vtk.js/Sources/Imaging/Hybrid/SampleFunction';
-import vtkPlane from 'vtk.js/Sources/Common/DataModel/Plane';
-import vtkCylinder from 'vtk.js/Sources/Common/DataModel/Cylinder';
-import vtkImplicitBoolean from 'vtk.js/Sources/Common/DataModel/ImplicitBoolean';
+import vtkActor from 'vtk.js/Rendering/Core/Actor';
+import vtkFullScreenRenderWindow from 'vtk.js/Rendering/Misc/FullScreenRenderWindow';
+import vtkImageMarchingCubes from 'vtk.js/Filters/General/ImageMarchingCubes';
+import vtkMapper from 'vtk.js/Rendering/Core/Mapper';
+import vtkSampleFunction from 'vtk.js/Imaging/Hybrid/SampleFunction';
+import vtkPlane from 'vtk.js/Common/DataModel/Plane';
+import vtkCylinder from 'vtk.js/Common/DataModel/Cylinder';
+import vtkImplicitBoolean from 'vtk.js/Common/DataModel/ImplicitBoolean';
 
 import controlPanel from './controller.html';
 

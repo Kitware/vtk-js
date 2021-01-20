@@ -1,25 +1,25 @@
-import 'vtk.js/Sources/favicon';
+import 'vtk.js/favicon';
 
-import vtkHttpDataSetReader from 'vtk.js/Sources/IO/Core/HttpDataSetReader';
-import vtkOpenGLRenderWindow from 'vtk.js/Sources/Rendering/OpenGL/RenderWindow';
-import vtkRenderer from 'vtk.js/Sources/Rendering/Core/Renderer';
-import vtkRenderWindow from 'vtk.js/Sources/Rendering/Core/RenderWindow';
-import vtkRenderWindowInteractor from 'vtk.js/Sources/Rendering/Core/RenderWindowInteractor';
-import vtkResliceCursorWidget from 'vtk.js/Sources/Widgets/Widgets3D/ResliceCursorWidget';
-import vtkWidgetManager from 'vtk.js/Sources/Widgets/Core/WidgetManager';
-import vtkOrientationMarkerWidget from 'vtk.js/Sources/Interaction/Widgets/OrientationMarkerWidget';
-import vtkAnnotatedCubeActor from 'vtk.js/Sources/Rendering/Core/AnnotatedCubeActor';
-import vtkImageMapper from 'vtk.js/Sources/Rendering/Core/ImageMapper';
-import vtkImageReslice from 'vtk.js/Sources/Imaging/Core/ImageReslice';
-import vtkImageSlice from 'vtk.js/Sources/Rendering/Core/ImageSlice';
-import vtkInteractorStyleImage from 'vtk.js/Sources/Interaction/Style/InteractorStyleImage';
+import vtkHttpDataSetReader from 'vtk.js/IO/Core/HttpDataSetReader';
+import vtkOpenGLRenderWindow from 'vtk.js/Rendering/OpenGL/RenderWindow';
+import vtkRenderer from 'vtk.js/Rendering/Core/Renderer';
+import vtkRenderWindow from 'vtk.js/Rendering/Core/RenderWindow';
+import vtkRenderWindowInteractor from 'vtk.js/Rendering/Core/RenderWindowInteractor';
+import vtkResliceCursorWidget from 'vtk.js/Widgets/Widgets3D/ResliceCursorWidget';
+import vtkWidgetManager from 'vtk.js/Widgets/Core/WidgetManager';
+import vtkOrientationMarkerWidget from 'vtk.js/Interaction/Widgets/OrientationMarkerWidget';
+import vtkAnnotatedCubeActor from 'vtk.js/Rendering/Core/AnnotatedCubeActor';
+import vtkImageMapper from 'vtk.js/Rendering/Core/ImageMapper';
+import vtkImageReslice from 'vtk.js/Imaging/Core/ImageReslice';
+import vtkImageSlice from 'vtk.js/Rendering/Core/ImageSlice';
+import vtkInteractorStyleImage from 'vtk.js/Interaction/Style/InteractorStyleImage';
 
 import {
   ViewTypes,
   CaptureOn,
-} from 'vtk.js/Sources/Widgets/Core/WidgetManager/Constants';
+} from 'vtk.js/Widgets/Core/WidgetManager/Constants';
 
-import { getViewPlaneNameFromViewType } from 'vtk.js/Sources/Widgets/Widgets3D/ResliceCursorWidget/helpers';
+import { getViewPlaneNameFromViewType } from 'vtk.js/Widgets/Widgets3D/ResliceCursorWidget/helpers';
 
 // ----------------------------------------------------------------------------
 // Define html structure

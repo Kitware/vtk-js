@@ -1,7 +1,7 @@
-import 'vtk.js/Sources/favicon';
+import 'vtk.js/favicon';
 
-import vtkFullScreenRenderWindow from 'vtk.js/Sources/Rendering/Misc/FullScreenRenderWindow';
-import vtk from 'vtk.js/Sources/vtk';
+import vtkFullScreenRenderWindow from 'vtk.js/Rendering/Misc/FullScreenRenderWindow';
+import vtk from 'vtk.js/vtk';
 
 import actorJSON from './actor.json';
 

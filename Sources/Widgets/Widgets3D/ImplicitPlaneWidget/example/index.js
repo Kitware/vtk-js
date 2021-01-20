@@ -1,12 +1,12 @@
-import 'vtk.js/Sources/favicon';
+import 'vtk.js/favicon';
 
-import vtkFullScreenRenderWindow from 'vtk.js/Sources/Rendering/Misc/FullScreenRenderWindow';
-import vtkImplicitPlaneWidget from 'vtk.js/Sources/Widgets/Widgets3D/ImplicitPlaneWidget';
-import vtkWidgetManager from 'vtk.js/Sources/Widgets/Core/WidgetManager';
+import vtkFullScreenRenderWindow from 'vtk.js/Rendering/Misc/FullScreenRenderWindow';
+import vtkImplicitPlaneWidget from 'vtk.js/Widgets/Widgets3D/ImplicitPlaneWidget';
+import vtkWidgetManager from 'vtk.js/Widgets/Core/WidgetManager';
 
-import vtkActor from 'vtk.js/Sources/Rendering/Core/Actor';
-import vtkConeSource from 'vtk.js/Sources/Filters/Sources/ConeSource';
-import vtkMapper from 'vtk.js/Sources/Rendering/Core/Mapper';
+import vtkActor from 'vtk.js/Rendering/Core/Actor';
+import vtkConeSource from 'vtk.js/Filters/Sources/ConeSource';
+import vtkMapper from 'vtk.js/Rendering/Core/Mapper';
 
 // ----------------------------------------------------------------------------
 // Standard rendering code setup

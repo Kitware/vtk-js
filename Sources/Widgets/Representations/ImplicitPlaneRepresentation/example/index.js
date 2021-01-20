@@ -1,7 +1,7 @@
-import 'vtk.js/Sources/favicon';
+import 'vtk.js/favicon';
 
-import vtkFullScreenRenderWindow from 'vtk.js/Sources/Rendering/Misc/FullScreenRenderWindow';
-import vtkImplicitPlaneRepresentation from 'vtk.js/Sources/Widgets/Representations/ImplicitPlaneRepresentation';
+import vtkFullScreenRenderWindow from 'vtk.js/Rendering/Misc/FullScreenRenderWindow';
+import vtkImplicitPlaneRepresentation from 'vtk.js/Widgets/Representations/ImplicitPlaneRepresentation';
 
 import controlPanel from './controlPanel.html';
 

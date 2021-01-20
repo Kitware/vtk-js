@@ -83,7 +83,16 @@ module.exports = {
       { test: /\\.hson$/, loader: 'hson-loader' },
       `,
     ],
-    alias: ["'vtk.js': `${rootPath}`,"],
+    // Since vtk.js examples are written as if the vtk.js package is a dependency,
+    // we need to resolve example imports as if they were referencing vtk.js/Sources.
+    // the Examples/Utilities hack allows for imports from those folders, since our
+    // last alias overrides vtk.js/* paths to point to vtk.js/Sources/*.
+    alias: [
+      "'vtk.js/Examples': `${rootPath}/Examples`,",
+      "'vtk.js/Utilities': `${rootPath}/Utilities`,",
+      "'vtk.js/Sources': `${rootPath}/Sources`,",
+      "'vtk.js': `${rootPath}/Sources`,",
+    ],
   },
   copy: [{ src: '../Data/*', dest: './build-tmp/public/data' }],
 };

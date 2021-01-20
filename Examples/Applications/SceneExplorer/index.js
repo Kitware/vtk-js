@@ -1,14 +1,14 @@
 /* eslint-disable import/prefer-default-export */
 /* eslint-disable import/no-extraneous-dependencies */
 
-import 'vtk.js/Sources/favicon';
+import 'vtk.js/favicon';
 
-import macro from 'vtk.js/Sources/macro';
-import DataAccessHelper from 'vtk.js/Sources/IO/Core/DataAccessHelper';
-import HttpDataAccessHelper from 'vtk.js/Sources/IO/Core/DataAccessHelper/HttpDataAccessHelper';
-import vtkFullScreenRenderWindow from 'vtk.js/Sources/Rendering/Misc/FullScreenRenderWindow';
-import vtkHttpSceneLoader from 'vtk.js/Sources/IO/Core/HttpSceneLoader';
-import vtkURLExtract from 'vtk.js/Sources/Common/Core/URLExtract';
+import macro from 'vtk.js/macro';
+import DataAccessHelper from 'vtk.js/IO/Core/DataAccessHelper';
+import HttpDataAccessHelper from 'vtk.js/IO/Core/DataAccessHelper/HttpDataAccessHelper';
+import vtkFullScreenRenderWindow from 'vtk.js/Rendering/Misc/FullScreenRenderWindow';
+import vtkHttpSceneLoader from 'vtk.js/IO/Core/HttpSceneLoader';
+import vtkURLExtract from 'vtk.js/Common/Core/URLExtract';
 
 import controlWidget from './SceneExplorerWidget';
 import style from './SceneExplorer.module.css';

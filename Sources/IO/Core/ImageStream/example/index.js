@@ -1,14 +1,14 @@
-import 'vtk.js/Sources/favicon';
+import 'vtk.js/favicon';
 
-import vtkFullScreenRenderWindow from 'vtk.js/Sources/Rendering/Misc/FullScreenRenderWindow';
-import vtkOrientationMarkerWidget from 'vtk.js/Sources/Interaction/Widgets/OrientationMarkerWidget';
-import vtkAnnotatedCubeActor from 'vtk.js/Sources/Rendering/Core/AnnotatedCubeActor';
+import vtkFullScreenRenderWindow from 'vtk.js/Rendering/Misc/FullScreenRenderWindow';
+import vtkOrientationMarkerWidget from 'vtk.js/Interaction/Widgets/OrientationMarkerWidget';
+import vtkAnnotatedCubeActor from 'vtk.js/Rendering/Core/AnnotatedCubeActor';
 
-import vtkActor from 'vtk.js/Sources/Rendering/Core/Actor';
-import vtkConeSource from 'vtk.js/Sources/Filters/Sources/ConeSource';
-import vtkMapper from 'vtk.js/Sources/Rendering/Core/Mapper';
+import vtkActor from 'vtk.js/Rendering/Core/Actor';
+import vtkConeSource from 'vtk.js/Filters/Sources/ConeSource';
+import vtkMapper from 'vtk.js/Rendering/Core/Mapper';
 
-import vtkImageStream from 'vtk.js/Sources/IO/Core/ImageStream';
+import vtkImageStream from 'vtk.js/IO/Core/ImageStream';
 import SmartConnect from 'wslink/src/SmartConnect';
 
 // ----------------------------------------------------------------------------

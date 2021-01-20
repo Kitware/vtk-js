@@ -1,14 +1,14 @@
-import 'vtk.js/Sources/favicon';
+import 'vtk.js/favicon';
 
-import vtkFullScreenRenderWindow from 'vtk.js/Sources/Rendering/Misc/FullScreenRenderWindow';
-import vtkWidgetManager from 'vtk.js/Sources/Widgets/Core/WidgetManager';
-import vtkHttpDataSetReader from 'vtk.js/Sources/IO/Core/HttpDataSetReader';
-import vtkImageCroppingWidget from 'vtk.js/Sources/Widgets/Widgets3D/ImageCroppingWidget';
-import vtkColorTransferFunction from 'vtk.js/Sources/Rendering/Core/ColorTransferFunction';
-import vtkPiecewiseFunction from 'vtk.js/Sources/Common/DataModel/PiecewiseFunction';
-import vtkVolume from 'vtk.js/Sources/Rendering/Core/Volume';
-import vtkVolumeMapper from 'vtk.js/Sources/Rendering/Core/VolumeMapper';
-import vtkImageCropFilter from 'vtk.js/Sources/Filters/General/ImageCropFilter';
+import vtkFullScreenRenderWindow from 'vtk.js/Rendering/Misc/FullScreenRenderWindow';
+import vtkWidgetManager from 'vtk.js/Widgets/Core/WidgetManager';
+import vtkHttpDataSetReader from 'vtk.js/IO/Core/HttpDataSetReader';
+import vtkImageCroppingWidget from 'vtk.js/Widgets/Widgets3D/ImageCroppingWidget';
+import vtkColorTransferFunction from 'vtk.js/Rendering/Core/ColorTransferFunction';
+import vtkPiecewiseFunction from 'vtk.js/Common/DataModel/PiecewiseFunction';
+import vtkVolume from 'vtk.js/Rendering/Core/Volume';
+import vtkVolumeMapper from 'vtk.js/Rendering/Core/VolumeMapper';
+import vtkImageCropFilter from 'vtk.js/Filters/General/ImageCropFilter';
 
 import controlPanel from './controlPanel.html';
 

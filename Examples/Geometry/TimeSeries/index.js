@@ -1,11 +1,11 @@
-import 'vtk.js/Sources/favicon';
+import 'vtk.js/favicon';
 
-import vtkActor from 'vtk.js/Sources/Rendering/Core/Actor';
-import vtkPolyData from 'vtk.js/Sources/Common/DataModel/PolyData';
-import vtkFullScreenRenderWindow from 'vtk.js/Sources/Rendering/Misc/FullScreenRenderWindow';
-import vtkXMLPolyDataReader from 'vtk.js/Sources/IO/XML/XMLPolyDataReader';
-import vtkMapper from 'vtk.js/Sources/Rendering/Core/Mapper';
-import vtkHttpDataAccessHelper from 'vtk.js/Sources/IO/Core/DataAccessHelper/HttpDataAccessHelper';
+import vtkActor from 'vtk.js/Rendering/Core/Actor';
+import vtkPolyData from 'vtk.js/Common/DataModel/PolyData';
+import vtkFullScreenRenderWindow from 'vtk.js/Rendering/Misc/FullScreenRenderWindow';
+import vtkXMLPolyDataReader from 'vtk.js/IO/XML/XMLPolyDataReader';
+import vtkMapper from 'vtk.js/Rendering/Core/Mapper';
+import vtkHttpDataAccessHelper from 'vtk.js/IO/Core/DataAccessHelper/HttpDataAccessHelper';
 
 import controlPanel from './controller.html';
 
