@@ -111,10 +111,11 @@ export default {
       preferBuiltins: false,
       browser: true,
     }),
-    eslint({
-      include: '**/*.js',
-      exclude: 'node_modules/**',
-    }),
+    !process.env.NOLINT &&
+      eslint({
+        include: '**/*.js',
+        exclude: 'node_modules/**',
+      }),
     // commonjs should be before babel
     commonjs({
       dynamicRequireTargets: [
