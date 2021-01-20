@@ -5,6 +5,7 @@ on:
       - master
       - next
       - next-major
+      - beta
 
 jobs:
   publish:
