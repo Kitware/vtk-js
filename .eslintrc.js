@@ -1,3 +1,4 @@
+const path = require('path');
 const prettierConf = require('./prettier.config.js');
 
 module.exports = {
@@ -36,7 +37,15 @@ module.exports = {
         config: {
           resolve: {
             alias: {
-              'vtk.js': __dirname,
+              // Since vtk.js examples are written as if the vtk.js package is a dependency,
+              // we need to resolve example imports as if they were referencing vtk.js/Sources.
+              // the Examples/Utilities hack allows for imports from those folders, since our
+              // last alias overrides vtk.js/* paths to point to vtk.js/Sources/*.
+              'vtk.js/Data': path.resolve(__dirname, 'Data'),
+              'vtk.js/Examples': path.resolve(__dirname, 'Examples'),
+              'vtk.js/Utilities': path.resolve(__dirname, 'Utilities'),
+              'vtk.js/Sources': path.resolve(__dirname, 'Sources'),
+              'vtk.js': path.resolve(__dirname, 'Sources'),
             },
           },
         },
