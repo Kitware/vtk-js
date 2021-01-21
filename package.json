@@ -178,7 +178,10 @@
       "master",
       "next",
       "next-major",
-      { "name": "beta", "prerelease": true }
+      {
+        "name": "beta",
+        "prerelease": true
+      }
     ]
   }
 }
