@@ -93,6 +93,7 @@
     "karma-tap-pretty-reporter": "4.2.0",
     "karma-webpack": "git://github.com/ryanclark/karma-webpack#eec6dfc",
     "kw-doc": "3.0.1",
+    "magic-string": "0.25.7",
     "moment": "2.29.1",
     "node-pre-gyp": "0.17.0",
     "postcss-loader": "4.1.0",
