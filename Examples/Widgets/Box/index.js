@@ -1,7 +1,7 @@
-import 'vtk.js/Sources/favicon';
+import 'vtk.js/favicon';
 
-import vtkFullScreenRenderWindow from 'vtk.js/Sources/Rendering/Misc/FullScreenRenderWindow';
-import vtkWidgetManager from 'vtk.js/Sources/Widgets/Core/WidgetManager';
+import vtkFullScreenRenderWindow from 'vtk.js/Rendering/Misc/FullScreenRenderWindow';
+import vtkWidgetManager from 'vtk.js/Widgets/Core/WidgetManager';
 
 import vtkBoxWidget from './BoxWidget';
 import controlPanel from './controlPanel.html';

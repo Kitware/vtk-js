@@ -1,12 +1,12 @@
-import 'vtk.js/Sources/favicon';
+import 'vtk.js/favicon';
 
-import vtkActor from 'vtk.js/Sources/Rendering/Core/Actor';
-import vtkHttpDataSetReader from 'vtk.js/Sources/IO/Core/HttpDataSetReader';
-import vtkFullScreenRenderWindow from 'vtk.js/Sources/Rendering/Misc/FullScreenRenderWindow';
-import vtkMapper from 'vtk.js/Sources/Rendering/Core/Mapper';
-import vtkCubeSource from 'vtk.js/Sources/Filters/Sources/CubeSource';
-import vtkTexture from 'vtk.js/Sources/Rendering/Core/Texture';
-import vtkDeviceOrientationToCamera from 'vtk.js/Sources/Interaction/Misc/DeviceOrientationToCamera';
+import vtkActor from 'vtk.js/Rendering/Core/Actor';
+import vtkHttpDataSetReader from 'vtk.js/IO/Core/HttpDataSetReader';
+import vtkFullScreenRenderWindow from 'vtk.js/Rendering/Misc/FullScreenRenderWindow';
+import vtkMapper from 'vtk.js/Rendering/Core/Mapper';
+import vtkCubeSource from 'vtk.js/Filters/Sources/CubeSource';
+import vtkTexture from 'vtk.js/Rendering/Core/Texture';
+import vtkDeviceOrientationToCamera from 'vtk.js/Interaction/Misc/DeviceOrientationToCamera';
 
 // ----------------------------------------------------------------------------
 // Standard rendering code setup

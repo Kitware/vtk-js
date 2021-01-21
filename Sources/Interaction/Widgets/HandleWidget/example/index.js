@@ -1,7 +1,7 @@
-import 'vtk.js/Sources/favicon';
+import 'vtk.js/favicon';
 
-import vtkFullScreenRenderWindow from 'vtk.js/Sources/Rendering/Misc/FullScreenRenderWindow';
-import vtkHandleWidget from 'vtk.js/Sources/Interaction/Widgets/HandleWidget';
+import vtkFullScreenRenderWindow from 'vtk.js/Rendering/Misc/FullScreenRenderWindow';
+import vtkHandleWidget from 'vtk.js/Interaction/Widgets/HandleWidget';
 
 // ----------------------------------------------------------------------------
 // USER AVAILABLE INTERACTIONS

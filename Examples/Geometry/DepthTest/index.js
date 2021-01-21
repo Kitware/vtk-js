@@ -1,23 +1,23 @@
-import 'vtk.js/Sources/favicon';
+import 'vtk.js/favicon';
 
 import { mat4, vec3 } from 'gl-matrix';
 
-import vtkActor from 'vtk.js/Sources/Rendering/Core/Actor';
-import vtkSphereMapper from 'vtk.js/Sources/Rendering/Core/SphereMapper';
-import vtkMapper from 'vtk.js/Sources/Rendering/Core/Mapper';
-import vtkOpenGLRenderWindow from 'vtk.js/Sources/Rendering/OpenGL/RenderWindow';
-import vtkPixelSpaceCallbackMapper from 'vtk.js/Sources/Rendering/Core/PixelSpaceCallbackMapper';
-import vtkRenderWindow from 'vtk.js/Sources/Rendering/Core/RenderWindow';
-import vtkRenderWindowInteractor from 'vtk.js/Sources/Rendering/Core/RenderWindowInteractor';
-import vtkRenderer from 'vtk.js/Sources/Rendering/Core/Renderer';
-import vtkInteractorStyleTrackballCamera from 'vtk.js/Sources/Interaction/Style/InteractorStyleTrackballCamera';
-import vtk from 'vtk.js/Sources/vtk';
+import vtkActor from 'vtk.js/Rendering/Core/Actor';
+import vtkSphereMapper from 'vtk.js/Rendering/Core/SphereMapper';
+import vtkMapper from 'vtk.js/Rendering/Core/Mapper';
+import vtkOpenGLRenderWindow from 'vtk.js/Rendering/OpenGL/RenderWindow';
+import vtkPixelSpaceCallbackMapper from 'vtk.js/Rendering/Core/PixelSpaceCallbackMapper';
+import vtkRenderWindow from 'vtk.js/Rendering/Core/RenderWindow';
+import vtkRenderWindowInteractor from 'vtk.js/Rendering/Core/RenderWindowInteractor';
+import vtkRenderer from 'vtk.js/Rendering/Core/Renderer';
+import vtkInteractorStyleTrackballCamera from 'vtk.js/Interaction/Style/InteractorStyleTrackballCamera';
+import vtk from 'vtk.js/vtk';
 
 // Need polydata registered in the vtk factory
-import 'vtk.js/Sources/Common/Core/Points';
-import 'vtk.js/Sources/Common/Core/DataArray';
-import 'vtk.js/Sources/Common/Core/StringArray';
-import 'vtk.js/Sources/Common/DataModel/PolyData';
+import 'vtk.js/Common/Core/Points';
+import 'vtk.js/Common/Core/DataArray';
+import 'vtk.js/Common/Core/StringArray';
+import 'vtk.js/Common/DataModel/PolyData';
 
 import style from './style.module.css';
 

@@ -1,20 +1,20 @@
 /* eslint-disable import/prefer-default-export */
 /* eslint-disable import/no-extraneous-dependencies */
 
-import 'vtk.js/Sources/favicon';
+import 'vtk.js/favicon';
 
-import macro from 'vtk.js/Sources/macro';
-import HttpDataAccessHelper from 'vtk.js/Sources/IO/Core/DataAccessHelper/HttpDataAccessHelper';
-import vtkBoundingBox from 'vtk.js/Sources/Common/DataModel/BoundingBox';
-import vtkColorTransferFunction from 'vtk.js/Sources/Rendering/Core/ColorTransferFunction';
-import vtkFullScreenRenderWindow from 'vtk.js/Sources/Rendering/Misc/FullScreenRenderWindow';
-import vtkPiecewiseFunction from 'vtk.js/Sources/Common/DataModel/PiecewiseFunction';
-import vtkVolumeController from 'vtk.js/Sources/Interaction/UI/VolumeController';
-import vtkURLExtract from 'vtk.js/Sources/Common/Core/URLExtract';
-import vtkVolume from 'vtk.js/Sources/Rendering/Core/Volume';
-import vtkVolumeMapper from 'vtk.js/Sources/Rendering/Core/VolumeMapper';
-import vtkXMLImageDataReader from 'vtk.js/Sources/IO/XML/XMLImageDataReader';
-import vtkFPSMonitor from 'vtk.js/Sources/Interaction/UI/FPSMonitor';
+import macro from 'vtk.js/macro';
+import HttpDataAccessHelper from 'vtk.js/IO/Core/DataAccessHelper/HttpDataAccessHelper';
+import vtkBoundingBox from 'vtk.js/Common/DataModel/BoundingBox';
+import vtkColorTransferFunction from 'vtk.js/Rendering/Core/ColorTransferFunction';
+import vtkFullScreenRenderWindow from 'vtk.js/Rendering/Misc/FullScreenRenderWindow';
+import vtkPiecewiseFunction from 'vtk.js/Common/DataModel/PiecewiseFunction';
+import vtkVolumeController from 'vtk.js/Interaction/UI/VolumeController';
+import vtkURLExtract from 'vtk.js/Common/Core/URLExtract';
+import vtkVolume from 'vtk.js/Rendering/Core/Volume';
+import vtkVolumeMapper from 'vtk.js/Rendering/Core/VolumeMapper';
+import vtkXMLImageDataReader from 'vtk.js/IO/XML/XMLImageDataReader';
+import vtkFPSMonitor from 'vtk.js/Interaction/UI/FPSMonitor';
 
 import style from './VolumeViewer.module.css';
 

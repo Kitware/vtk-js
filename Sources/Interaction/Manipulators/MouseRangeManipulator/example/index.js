@@ -1,12 +1,12 @@
-import 'vtk.js/Sources/favicon';
+import 'vtk.js/favicon';
 
-import vtkFullScreenRenderWindow from 'vtk.js/Sources/Rendering/Misc/FullScreenRenderWindow';
-import vtkRTAnalyticSource from 'vtk.js/Sources/Filters/Sources/RTAnalyticSource';
-import vtkImageMapper from 'vtk.js/Sources/Rendering/Core/ImageMapper';
-import vtkImageSlice from 'vtk.js/Sources/Rendering/Core/ImageSlice';
-import vtkInteractorStyleManipulator from 'vtk.js/Sources/Interaction/Style/InteractorStyleManipulator';
+import vtkFullScreenRenderWindow from 'vtk.js/Rendering/Misc/FullScreenRenderWindow';
+import vtkRTAnalyticSource from 'vtk.js/Filters/Sources/RTAnalyticSource';
+import vtkImageMapper from 'vtk.js/Rendering/Core/ImageMapper';
+import vtkImageSlice from 'vtk.js/Rendering/Core/ImageSlice';
+import vtkInteractorStyleManipulator from 'vtk.js/Interaction/Style/InteractorStyleManipulator';
 
-import Manipulators from 'vtk.js/Sources/Interaction/Manipulators';
+import Manipulators from 'vtk.js/Interaction/Manipulators';
 
 const { SlicingMode } = vtkImageMapper;
 

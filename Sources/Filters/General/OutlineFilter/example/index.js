@@ -1,11 +1,11 @@
-import 'vtk.js/Sources/favicon';
+import 'vtk.js/favicon';
 
-import vtkFullScreenRenderWindow from 'vtk.js/Sources/Rendering/Misc/FullScreenRenderWindow';
-import vtkActor from 'vtk.js/Sources/Rendering/Core/Actor';
-import vtkPointSource from 'vtk.js/Sources/Filters/Sources/PointSource';
-import vtkOutlineFilter from 'vtk.js/Sources/Filters/General/OutlineFilter';
-import vtkMapper from 'vtk.js/Sources/Rendering/Core/Mapper';
-import * as vtkMath from 'vtk.js/Sources/Common/Core/Math';
+import vtkFullScreenRenderWindow from 'vtk.js/Rendering/Misc/FullScreenRenderWindow';
+import vtkActor from 'vtk.js/Rendering/Core/Actor';
+import vtkPointSource from 'vtk.js/Filters/Sources/PointSource';
+import vtkOutlineFilter from 'vtk.js/Filters/General/OutlineFilter';
+import vtkMapper from 'vtk.js/Rendering/Core/Mapper';
+import * as vtkMath from 'vtk.js/Common/Core/Math';
 
 import controlPanel from './controlPanel.html';
 

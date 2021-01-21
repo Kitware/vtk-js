@@ -1,14 +1,14 @@
-import 'vtk.js/Sources/favicon';
+import 'vtk.js/favicon';
 
-import vtkActor from 'vtk.js/Sources/Rendering/Core/Actor';
-import vtkCalculator from 'vtk.js/Sources/Filters/General/Calculator';
-import vtkFullScreenRenderWindow from 'vtk.js/Sources/Rendering/Misc/FullScreenRenderWindow';
-import vtkPlaneSource from 'vtk.js/Sources/Filters/Sources/PlaneSource';
-import vtkConeSource from 'vtk.js/Sources/Filters/Sources/ConeSource';
-import vtkGlyph3DMapper from 'vtk.js/Sources/Rendering/Core/Glyph3DMapper';
+import vtkActor from 'vtk.js/Rendering/Core/Actor';
+import vtkCalculator from 'vtk.js/Filters/General/Calculator';
+import vtkFullScreenRenderWindow from 'vtk.js/Rendering/Misc/FullScreenRenderWindow';
+import vtkPlaneSource from 'vtk.js/Filters/Sources/PlaneSource';
+import vtkConeSource from 'vtk.js/Filters/Sources/ConeSource';
+import vtkGlyph3DMapper from 'vtk.js/Rendering/Core/Glyph3DMapper';
 
-import { AttributeTypes } from 'vtk.js/Sources/Common/DataModel/DataSetAttributes/Constants';
-import { FieldDataTypes } from 'vtk.js/Sources/Common/DataModel/DataSet/Constants';
+import { AttributeTypes } from 'vtk.js/Common/DataModel/DataSetAttributes/Constants';
+import { FieldDataTypes } from 'vtk.js/Common/DataModel/DataSet/Constants';
 
 import controlPanel from './controlPanel.html';
 

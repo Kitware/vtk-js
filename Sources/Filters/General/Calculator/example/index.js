@@ -1,17 +1,17 @@
-import 'vtk.js/Sources/favicon';
+import 'vtk.js/favicon';
 
-import macro from 'vtk.js/Sources/macro';
-import vtkFullScreenRenderWindow from 'vtk.js/Sources/Rendering/Misc/FullScreenRenderWindow';
+import macro from 'vtk.js/macro';
+import vtkFullScreenRenderWindow from 'vtk.js/Rendering/Misc/FullScreenRenderWindow';
 
-import vtkActor from 'vtk.js/Sources/Rendering/Core/Actor';
-import vtkCalculator from 'vtk.js/Sources/Filters/General/Calculator';
-import vtkDataSet from 'vtk.js/Sources/Common/DataModel/DataSet';
-import vtkLookupTable from 'vtk.js/Sources/Common/Core/LookupTable';
-import vtkMapper from 'vtk.js/Sources/Rendering/Core/Mapper';
-import vtkPlaneSource from 'vtk.js/Sources/Filters/Sources/PlaneSource';
-import vtkPoints from 'vtk.js/Sources/Common/Core/Points';
-import vtkPolyData from 'vtk.js/Sources/Common/DataModel/PolyData';
-import vtkWarpScalar from 'vtk.js/Sources/Filters/General/WarpScalar';
+import vtkActor from 'vtk.js/Rendering/Core/Actor';
+import vtkCalculator from 'vtk.js/Filters/General/Calculator';
+import vtkDataSet from 'vtk.js/Common/DataModel/DataSet';
+import vtkLookupTable from 'vtk.js/Common/Core/LookupTable';
+import vtkMapper from 'vtk.js/Rendering/Core/Mapper';
+import vtkPlaneSource from 'vtk.js/Filters/Sources/PlaneSource';
+import vtkPoints from 'vtk.js/Common/Core/Points';
+import vtkPolyData from 'vtk.js/Common/DataModel/PolyData';
+import vtkWarpScalar from 'vtk.js/Filters/General/WarpScalar';
 
 import controlPanel from './controlPanel.html';
 

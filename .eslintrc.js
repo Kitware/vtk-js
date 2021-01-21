@@ -1,4 +1,5 @@
-var prettierConf = require('./prettier.config.js');
+const path = require('path');
+const prettierConf = require('./prettier.config.js');
 
 module.exports = {
   extends: ['airbnb', 'prettier'],
@@ -9,14 +10,7 @@ module.exports = {
     'no-multi-spaces': ['error', { exceptions: { ImportDeclaration: true } }],
     'no-param-reassign': ['error', { props: false }],
     'no-unused-vars': ['error', { args: 'none' }],
-    'prefer-destructuring': [
-      'error',
-      {
-        VariableDeclarator: { array: false, object: true },
-        AssignmentExpression: { array: false, object: false },
-      },
-      { enforceForRenamedProperties: false },
-    ],
+    'prefer-destructuring': 0,
     'import/no-extraneous-dependencies': 0, // Needed for tests
     // 'no-mixed-operators': 'error', // Wish we can put it back with prettier
 
@@ -26,7 +20,6 @@ module.exports = {
     'no-plusplus': 0,
     'import/no-named-as-default': 0,
     'import/no-named-as-default-member': 0,
-    'prefer-destructuring': 0, // Can have unwanted side effect
 
     // Introduced with new eslint
     // and no time to fix them...
@@ -44,7 +37,15 @@ module.exports = {
         config: {
           resolve: {
             alias: {
-              'vtk.js': __dirname,
+              // Since vtk.js examples are written as if the vtk.js package is a dependency,
+              // we need to resolve example imports as if they were referencing vtk.js/Sources.
+              // the Examples/Utilities hack allows for imports from those folders, since our
+              // last alias overrides vtk.js/* paths to point to vtk.js/Sources/*.
+              'vtk.js/Data': path.resolve(__dirname, 'Data'),
+              'vtk.js/Examples': path.resolve(__dirname, 'Examples'),
+              'vtk.js/Utilities': path.resolve(__dirname, 'Utilities'),
+              'vtk.js/Sources': path.resolve(__dirname, 'Sources'),
+              'vtk.js': path.resolve(__dirname, 'Sources'),
             },
           },
         },

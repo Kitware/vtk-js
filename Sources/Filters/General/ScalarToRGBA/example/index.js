@@ -1,16 +1,16 @@
-import 'vtk.js/Sources/favicon';
+import 'vtk.js/favicon';
 
-import vtkFullScreenRenderWindow from 'vtk.js/Sources/Rendering/Misc/FullScreenRenderWindow';
-import vtkActor from 'vtk.js/Sources/Rendering/Core/Actor';
-import vtkColorMaps from 'vtk.js/Sources/Rendering/Core/ColorTransferFunction/ColorMaps';
-import vtkColorTransferFunction from 'vtk.js/Sources/Rendering/Core/ColorTransferFunction';
-import vtkMapper from 'vtk.js/Sources/Rendering/Core/Mapper';
-import vtkTexture from 'vtk.js/Sources/Rendering/Core/Texture';
-import vtkRTAnalyticSource from 'vtk.js/Sources/Filters/Sources/RTAnalyticSource';
-import vtkImageSliceFilter from 'vtk.js/Sources/Filters/General/ImageSliceFilter';
-import vtkScalarToRGBA from 'vtk.js/Sources/Filters/General/ScalarToRGBA';
-import vtkPlaneSource from 'vtk.js/Sources/Filters/Sources/PlaneSource';
-import vtkPiecewiseFunction from 'vtk.js/Sources/Common/DataModel/PiecewiseFunction';
+import vtkFullScreenRenderWindow from 'vtk.js/Rendering/Misc/FullScreenRenderWindow';
+import vtkActor from 'vtk.js/Rendering/Core/Actor';
+import vtkColorMaps from 'vtk.js/Rendering/Core/ColorTransferFunction/ColorMaps';
+import vtkColorTransferFunction from 'vtk.js/Rendering/Core/ColorTransferFunction';
+import vtkMapper from 'vtk.js/Rendering/Core/Mapper';
+import vtkTexture from 'vtk.js/Rendering/Core/Texture';
+import vtkRTAnalyticSource from 'vtk.js/Filters/Sources/RTAnalyticSource';
+import vtkImageSliceFilter from 'vtk.js/Filters/General/ImageSliceFilter';
+import vtkScalarToRGBA from 'vtk.js/Filters/General/ScalarToRGBA';
+import vtkPlaneSource from 'vtk.js/Filters/Sources/PlaneSource';
+import vtkPiecewiseFunction from 'vtk.js/Common/DataModel/PiecewiseFunction';
 
 import controller from './controller.html';
 
