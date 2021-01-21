@@ -21,16 +21,25 @@ const configureEntries = () => {
   return entries;
 };
 
+const configureESLintLoader = ({ lint = true }) => {
+  if (lint) {
+    return [
+      {
+        test: /\.js$/,
+        loader: 'eslint-loader',
+        exclude: /node_modules/,
+        enforce: 'pre',
+        options: { configFile: path.join(__dirname, '.eslintrc.js') },
+      },
+    ];
+  }
+  return [];
+};
+
 // Configure vtk rules
 function configureVtkRules() {
   return [
-    {
-      test: /\.js$/,
-      loader: 'eslint-loader',
-      exclude: /node_modules/,
-      enforce: 'pre',
-      options: { configFile: path.join(__dirname, '.eslintrc.js') },
-    },
+    ...configureESLintLoader({ lint: !process.env.NOLINT }),
     {
       test: /\.glsl$/i,
       loader: 'shader-loader',
