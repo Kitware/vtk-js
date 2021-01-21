@@ -1,15 +1,15 @@
-import 'vtk.js/Sources/favicon';
+import 'vtk.js/favicon';
 
-import vtkFullScreenRenderWindow from 'vtk.js/Sources/Rendering/Misc/FullScreenRenderWindow';
+import vtkFullScreenRenderWindow from 'vtk.js/Rendering/Misc/FullScreenRenderWindow';
 
-import macro from 'vtk.js/Sources/macro';
-import vtkActor from 'vtk.js/Sources/Rendering/Core/Actor';
-import vtkDataArray from 'vtk.js/Sources/Common/Core/DataArray';
-import vtkImageGridSource from 'vtk.js/Sources/Filters/Sources/ImageGridSource';
-import vtkMapper from 'vtk.js/Sources/Rendering/Core/Mapper';
-import vtkPolyData from 'vtk.js/Sources/Common/DataModel/PolyData';
-import vtkSphereSource from 'vtk.js/Sources/Filters/Sources/SphereSource';
-import vtkTexture from 'vtk.js/Sources/Rendering/Core/Texture';
+import macro from 'vtk.js/macro';
+import vtkActor from 'vtk.js/Rendering/Core/Actor';
+import vtkDataArray from 'vtk.js/Common/Core/DataArray';
+import vtkImageGridSource from 'vtk.js/Filters/Sources/ImageGridSource';
+import vtkMapper from 'vtk.js/Rendering/Core/Mapper';
+import vtkPolyData from 'vtk.js/Common/DataModel/PolyData';
+import vtkSphereSource from 'vtk.js/Filters/Sources/SphereSource';
+import vtkTexture from 'vtk.js/Rendering/Core/Texture';
 
 // ----------------------------------------------------------------------------
 // Standard rendering code setup

@@ -1,21 +1,21 @@
 /* eslint-disable import/prefer-default-export */
 /* eslint-disable import/no-extraneous-dependencies */
 
-import 'vtk.js/Sources/favicon';
+import 'vtk.js/favicon';
 
-import { throttle } from 'vtk.js/Sources/macro';
-import vtkActor from 'vtk.js/Sources/Rendering/Core/Actor';
-import vtkConeSource from 'vtk.js/Sources/Filters/Sources/ConeSource';
-import vtkCylinderSource from 'vtk.js/Sources/Filters/Sources/CylinderSource';
-import vtkDataArray from 'vtk.js/Sources/Common/Core/DataArray';
-import vtkFullScreenRenderWindow from 'vtk.js/Sources/Rendering/Misc/FullScreenRenderWindow';
-import vtkGlyph3DMapper from 'vtk.js/Sources/Rendering/Core/Glyph3DMapper';
-import vtkMapper from 'vtk.js/Sources/Rendering/Core/Mapper';
-import vtkOpenGLHardwareSelector from 'vtk.js/Sources/Rendering/OpenGL/HardwareSelector';
-import vtkSphereSource from 'vtk.js/Sources/Filters/Sources/SphereSource';
+import { throttle } from 'vtk.js/macro';
+import vtkActor from 'vtk.js/Rendering/Core/Actor';
+import vtkConeSource from 'vtk.js/Filters/Sources/ConeSource';
+import vtkCylinderSource from 'vtk.js/Filters/Sources/CylinderSource';
+import vtkDataArray from 'vtk.js/Common/Core/DataArray';
+import vtkFullScreenRenderWindow from 'vtk.js/Rendering/Misc/FullScreenRenderWindow';
+import vtkGlyph3DMapper from 'vtk.js/Rendering/Core/Glyph3DMapper';
+import vtkMapper from 'vtk.js/Rendering/Core/Mapper';
+import vtkOpenGLHardwareSelector from 'vtk.js/Rendering/OpenGL/HardwareSelector';
+import vtkSphereSource from 'vtk.js/Filters/Sources/SphereSource';
 
-import { FieldAssociations } from 'vtk.js/Sources/Common/DataModel/DataSet/Constants';
-import { Representation } from 'vtk.js/Sources/Rendering/Core/Property/Constants';
+import { FieldAssociations } from 'vtk.js/Common/DataModel/DataSet/Constants';
+import { Representation } from 'vtk.js/Rendering/Core/Property/Constants';
 
 // ----------------------------------------------------------------------------
 // Constants

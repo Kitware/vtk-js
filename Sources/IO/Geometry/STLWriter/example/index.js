@@ -1,12 +1,12 @@
-import 'vtk.js/Sources/favicon';
+import 'vtk.js/favicon';
 
-import vtkFullScreenRenderWindow from 'vtk.js/Sources/Rendering/Misc/FullScreenRenderWindow';
-import vtkActor from 'vtk.js/Sources/Rendering/Core/Actor';
-import vtkMapper from 'vtk.js/Sources/Rendering/Core/Mapper';
+import vtkFullScreenRenderWindow from 'vtk.js/Rendering/Misc/FullScreenRenderWindow';
+import vtkActor from 'vtk.js/Rendering/Core/Actor';
+import vtkMapper from 'vtk.js/Rendering/Core/Mapper';
 
-import vtkSTLWriter from 'vtk.js/Sources/IO/Geometry/STLWriter';
-import vtkSTLReader from 'vtk.js/Sources/IO/Geometry/STLReader';
-import vtkPolyDataReader from 'vtk.js/Sources/IO/Legacy/PolyDataReader';
+import vtkSTLWriter from 'vtk.js/IO/Geometry/STLWriter';
+import vtkSTLReader from 'vtk.js/IO/Geometry/STLReader';
+import vtkPolyDataReader from 'vtk.js/IO/Legacy/PolyDataReader';
 // ----------------------------------------------------------------------------
 // Standard rendering code setup
 // ----------------------------------------------------------------------------

@@ -1,11 +1,11 @@
-import 'vtk.js/Sources/favicon';
+import 'vtk.js/favicon';
 
-import vtkFullScreenRenderWindow from 'vtk.js/Sources/Rendering/Misc/FullScreenRenderWindow';
-import vtkActor from 'vtk.js/Sources/Rendering/Core/Actor';
-import vtkPDBReader from 'vtk.js/Sources/IO/Misc/PDBReader';
-import vtkSphereMapper from 'vtk.js/Sources/Rendering/Core/SphereMapper';
-import vtkStickMapper from 'vtk.js/Sources/Rendering/Core/StickMapper';
-import vtkMoleculeToRepresentation from 'vtk.js/Sources/Filters/General/MoleculeToRepresentation';
+import vtkFullScreenRenderWindow from 'vtk.js/Rendering/Misc/FullScreenRenderWindow';
+import vtkActor from 'vtk.js/Rendering/Core/Actor';
+import vtkPDBReader from 'vtk.js/IO/Misc/PDBReader';
+import vtkSphereMapper from 'vtk.js/Rendering/Core/SphereMapper';
+import vtkStickMapper from 'vtk.js/Rendering/Core/StickMapper';
+import vtkMoleculeToRepresentation from 'vtk.js/Filters/General/MoleculeToRepresentation';
 
 // ----------------------------------------------------------------------------
 // Standard rendering code setup

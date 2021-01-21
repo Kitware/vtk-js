@@ -1,9 +1,9 @@
-import 'vtk.js/Sources/favicon';
+import 'vtk.js/favicon';
 
-import vtkActor from 'vtk.js/Sources/Rendering/Core/Actor';
-import vtkFullScreenRenderWindow from 'vtk.js/Sources/Rendering/Misc/FullScreenRenderWindow';
-import vtkMapper from 'vtk.js/Sources/Rendering/Core/Mapper';
-import vtkPolyDataReader from 'vtk.js/Sources/IO/Legacy/PolyDataReader';
+import vtkActor from 'vtk.js/Rendering/Core/Actor';
+import vtkFullScreenRenderWindow from 'vtk.js/Rendering/Misc/FullScreenRenderWindow';
+import vtkMapper from 'vtk.js/Rendering/Core/Mapper';
+import vtkPolyDataReader from 'vtk.js/IO/Legacy/PolyDataReader';
 
 const fileName = 'sphere.vtk'; // 'uh60.vtk'; // 'luggaBody.vtk';
 

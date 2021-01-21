@@ -1,13 +1,13 @@
-import 'vtk.js/Sources/favicon';
+import 'vtk.js/favicon';
 
-import vtkActor from 'vtk.js/Sources/Rendering/Core/Actor';
-import vtkAxesActor from 'vtk.js/Sources/Rendering/Core/AxesActor';
-import vtkConeSource from 'vtk.js/Sources/Filters/Sources/ConeSource';
-import vtkFullScreenRenderWindow from 'vtk.js/Sources/Rendering/Misc/FullScreenRenderWindow';
-import vtkInteractorStyleUnicam from 'vtk.js/Sources/Interaction/Style/InteractorStyleUnicam';
-import vtkMapper from 'vtk.js/Sources/Rendering/Core/Mapper';
-import vtkMouseCameraTrackballZoomToMouseManipulator from 'vtk.js/Sources/Interaction/Manipulators/MouseCameraTrackballZoomToMouseManipulator';
-import vtkOrientationMarkerWidget from 'vtk.js/Sources/Interaction/Widgets/OrientationMarkerWidget';
+import vtkActor from 'vtk.js/Rendering/Core/Actor';
+import vtkAxesActor from 'vtk.js/Rendering/Core/AxesActor';
+import vtkConeSource from 'vtk.js/Filters/Sources/ConeSource';
+import vtkFullScreenRenderWindow from 'vtk.js/Rendering/Misc/FullScreenRenderWindow';
+import vtkInteractorStyleUnicam from 'vtk.js/Interaction/Style/InteractorStyleUnicam';
+import vtkMapper from 'vtk.js/Rendering/Core/Mapper';
+import vtkMouseCameraTrackballZoomToMouseManipulator from 'vtk.js/Interaction/Manipulators/MouseCameraTrackballZoomToMouseManipulator';
+import vtkOrientationMarkerWidget from 'vtk.js/Interaction/Widgets/OrientationMarkerWidget';
 
 import controlPanel from './controlPanel.html';
 

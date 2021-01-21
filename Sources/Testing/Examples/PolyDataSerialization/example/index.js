@@ -1,9 +1,9 @@
-import 'vtk.js/Sources/favicon';
+import 'vtk.js/favicon';
 
-import vtkFullScreenRenderWindow from 'vtk.js/Sources/Rendering/Misc/FullScreenRenderWindow';
-import vtk from 'vtk.js/Sources/vtk';
-import vtkActor from 'vtk.js/Sources/Rendering/Core/Actor';
-import vtkMapper from 'vtk.js/Sources/Rendering/Core/Mapper';
+import vtkFullScreenRenderWindow from 'vtk.js/Rendering/Misc/FullScreenRenderWindow';
+import vtk from 'vtk.js/vtk';
+import vtkActor from 'vtk.js/Rendering/Core/Actor';
+import vtkMapper from 'vtk.js/Rendering/Core/Mapper';
 
 // ----------------------------------------------------------------------------
 // Standard rendering code setup

@@ -1,17 +1,17 @@
-import 'vtk.js/Sources/favicon';
+import 'vtk.js/favicon';
 
-import Constants from 'vtk.js/Sources/Filters/General/TubeFilter/Constants';
-import vtkActor from 'vtk.js/Sources/Rendering/Core/Actor';
-import vtkDataArray from 'vtk.js/Sources/Common/Core/DataArray';
-import vtkFullScreenRenderWindow from 'vtk.js/Sources/Rendering/Misc/FullScreenRenderWindow';
-import vtkMapper from 'vtk.js/Sources/Rendering/Core/Mapper';
-import * as vtkMath from 'vtk.js/Sources/Common/Core/Math';
-import vtkPoints from 'vtk.js/Sources/Common/Core/Points';
-import vtkPolyData from 'vtk.js/Sources/Common/DataModel/PolyData';
-import vtkTubeFilter from 'vtk.js/Sources/Filters/General/TubeFilter';
+import Constants from 'vtk.js/Filters/General/TubeFilter/Constants';
+import vtkActor from 'vtk.js/Rendering/Core/Actor';
+import vtkDataArray from 'vtk.js/Common/Core/DataArray';
+import vtkFullScreenRenderWindow from 'vtk.js/Rendering/Misc/FullScreenRenderWindow';
+import vtkMapper from 'vtk.js/Rendering/Core/Mapper';
+import * as vtkMath from 'vtk.js/Common/Core/Math';
+import vtkPoints from 'vtk.js/Common/Core/Points';
+import vtkPolyData from 'vtk.js/Common/DataModel/PolyData';
+import vtkTubeFilter from 'vtk.js/Filters/General/TubeFilter';
 
-import { DesiredOutputPrecision } from 'vtk.js/Sources/Common/DataModel/DataSetAttributes/Constants';
-import { VtkDataTypes } from 'vtk.js/Sources/Common/Core/DataArray/Constants';
+import { DesiredOutputPrecision } from 'vtk.js/Common/DataModel/DataSetAttributes/Constants';
+import { VtkDataTypes } from 'vtk.js/Common/Core/DataArray/Constants';
 
 import controlPanel from './controlPanel.html';
 

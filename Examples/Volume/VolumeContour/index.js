@@ -1,10 +1,10 @@
-import 'vtk.js/Sources/favicon';
+import 'vtk.js/favicon';
 
-import vtkActor from 'vtk.js/Sources/Rendering/Core/Actor';
-import vtkFullScreenRenderWindow from 'vtk.js/Sources/Rendering/Misc/FullScreenRenderWindow';
-import vtkHttpDataSetReader from 'vtk.js/Sources/IO/Core/HttpDataSetReader';
-import vtkImageMarchingCubes from 'vtk.js/Sources/Filters/General/ImageMarchingCubes';
-import vtkMapper from 'vtk.js/Sources/Rendering/Core/Mapper';
+import vtkActor from 'vtk.js/Rendering/Core/Actor';
+import vtkFullScreenRenderWindow from 'vtk.js/Rendering/Misc/FullScreenRenderWindow';
+import vtkHttpDataSetReader from 'vtk.js/IO/Core/HttpDataSetReader';
+import vtkImageMarchingCubes from 'vtk.js/Filters/General/ImageMarchingCubes';
+import vtkMapper from 'vtk.js/Rendering/Core/Mapper';
 
 import controlPanel from './controller.html';
 

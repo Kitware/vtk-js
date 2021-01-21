@@ -1,15 +1,15 @@
-import 'vtk.js/Sources/favicon';
+import 'vtk.js/favicon';
 
-import vtkFullScreenRenderWindow from 'vtk.js/Sources/Rendering/Misc/FullScreenRenderWindow';
-import vtkHttpDataSetReader from 'vtk.js/Sources/IO/Core/HttpDataSetReader';
-import vtkCubeSource from 'vtk.js/Sources/Filters/Sources/CubeSource';
-import vtkVolume from 'vtk.js/Sources/Rendering/Core/Volume';
-import vtkActor from 'vtk.js/Sources/Rendering/Core/Actor';
-import vtkVolumeMapper from 'vtk.js/Sources/Rendering/Core/VolumeMapper';
-import vtkMapper from 'vtk.js/Sources/Rendering/Core/Mapper';
-// import vtkPiecewiseFunction from 'vtk.js/Sources/Common/DataModel/PiecewiseFunction';
-// import vtkColorTransferFunction from 'vtk.js/Sources/Rendering/Core/ColorTransferFunction';
-// import vtkColorMaps from 'vtk.js/Sources/Rendering/Core/ColorTransferFunction/ColorMaps';
+import vtkFullScreenRenderWindow from 'vtk.js/Rendering/Misc/FullScreenRenderWindow';
+import vtkHttpDataSetReader from 'vtk.js/IO/Core/HttpDataSetReader';
+import vtkCubeSource from 'vtk.js/Filters/Sources/CubeSource';
+import vtkVolume from 'vtk.js/Rendering/Core/Volume';
+import vtkActor from 'vtk.js/Rendering/Core/Actor';
+import vtkVolumeMapper from 'vtk.js/Rendering/Core/VolumeMapper';
+import vtkMapper from 'vtk.js/Rendering/Core/Mapper';
+// import vtkPiecewiseFunction from 'vtk.js/Common/DataModel/PiecewiseFunction';
+// import vtkColorTransferFunction from 'vtk.js/Rendering/Core/ColorTransferFunction';
+// import vtkColorMaps from 'vtk.js/Rendering/Core/ColorTransferFunction/ColorMaps';
 import controlPanel from './controller.html';
 
 // ----------------------------------------------------------------------------

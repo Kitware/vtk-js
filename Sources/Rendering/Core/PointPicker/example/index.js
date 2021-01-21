@@ -1,11 +1,11 @@
-import 'vtk.js/Sources/favicon';
+import 'vtk.js/favicon';
 
-import vtkActor from 'vtk.js/Sources/Rendering/Core/Actor';
-import vtkConeSource from 'vtk.js/Sources/Filters/Sources/ConeSource';
-import vtkFullScreenRenderWindow from 'vtk.js/Sources/Rendering/Misc/FullScreenRenderWindow';
-import vtkMapper from 'vtk.js/Sources/Rendering/Core/Mapper';
-import vtkPointPicker from 'vtk.js/Sources/Rendering/Core/PointPicker';
-import vtkSphereSource from 'vtk.js/Sources/Filters/Sources/SphereSource';
+import vtkActor from 'vtk.js/Rendering/Core/Actor';
+import vtkConeSource from 'vtk.js/Filters/Sources/ConeSource';
+import vtkFullScreenRenderWindow from 'vtk.js/Rendering/Misc/FullScreenRenderWindow';
+import vtkMapper from 'vtk.js/Rendering/Core/Mapper';
+import vtkPointPicker from 'vtk.js/Rendering/Core/PointPicker';
+import vtkSphereSource from 'vtk.js/Filters/Sources/SphereSource';
 
 // ----------------------------------------------------------------------------
 // Standard rendering code setup

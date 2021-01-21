@@ -1,14 +1,14 @@
-import 'vtk.js/Sources/favicon';
+import 'vtk.js/favicon';
 
-import vtkFullScreenRenderWindow from 'vtk.js/Sources/Rendering/Misc/FullScreenRenderWindow';
-import macro from 'vtk.js/Sources/macro';
-import vtk from 'vtk.js/Sources/vtk';
-import vtkActor from 'vtk.js/Sources/Rendering/Core/Actor';
-import vtkCamera from 'vtk.js/Sources/Rendering/Core/Camera';
-import vtkDataArray from 'vtk.js/Sources/Common/Core/DataArray';
-import vtkMapper from 'vtk.js/Sources/Rendering/Core/Mapper';
-import vtkSphereSource from 'vtk.js/Sources/Filters/Sources/SphereSource';
-import vtkWarpScalar from 'vtk.js/Sources/Filters/General/WarpScalar';
+import vtkFullScreenRenderWindow from 'vtk.js/Rendering/Misc/FullScreenRenderWindow';
+import macro from 'vtk.js/macro';
+import vtk from 'vtk.js/vtk';
+import vtkActor from 'vtk.js/Rendering/Core/Actor';
+import vtkCamera from 'vtk.js/Rendering/Core/Camera';
+import vtkDataArray from 'vtk.js/Common/Core/DataArray';
+import vtkMapper from 'vtk.js/Rendering/Core/Mapper';
+import vtkSphereSource from 'vtk.js/Filters/Sources/SphereSource';
+import vtkWarpScalar from 'vtk.js/Filters/General/WarpScalar';
 
 import controlPanel from './controller.html';
 

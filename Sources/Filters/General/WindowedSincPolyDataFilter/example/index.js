@@ -1,11 +1,11 @@
-import 'vtk.js/Sources/favicon';
+import 'vtk.js/favicon';
 
-import vtkFullScreenRenderWindow from 'vtk.js/Sources/Rendering/Misc/FullScreenRenderWindow';
-import vtkActor from 'vtk.js/Sources/Rendering/Core/Actor';
-import vtkCamera from 'vtk.js/Sources/Rendering/Core/Camera';
-import vtkMapper from 'vtk.js/Sources/Rendering/Core/Mapper';
-import vtkHttpDataSetReader from 'vtk.js/Sources/IO/Core/HttpDataSetReader';
-import vtkWindowedSincPolyDataFilter from 'vtk.js/Sources/Filters/General/WindowedSincPolyDataFilter';
+import vtkFullScreenRenderWindow from 'vtk.js/Rendering/Misc/FullScreenRenderWindow';
+import vtkActor from 'vtk.js/Rendering/Core/Actor';
+import vtkCamera from 'vtk.js/Rendering/Core/Camera';
+import vtkMapper from 'vtk.js/Rendering/Core/Mapper';
+import vtkHttpDataSetReader from 'vtk.js/IO/Core/HttpDataSetReader';
+import vtkWindowedSincPolyDataFilter from 'vtk.js/Filters/General/WindowedSincPolyDataFilter';
 
 import controlPanel from './controller.html';
 

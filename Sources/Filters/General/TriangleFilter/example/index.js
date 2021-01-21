@@ -1,9 +1,9 @@
-import vtkFullScreenRenderWindow from 'vtk.js/Sources/Rendering/Misc/FullScreenRenderWindow';
-import vtkActor from 'vtk.js/Sources/Rendering/Core/Actor';
-import vtkTriangleFilter from 'vtk.js/Sources/Filters/General/TriangleFilter';
-import vtkMapper from 'vtk.js/Sources/Rendering/Core/Mapper';
+import vtkFullScreenRenderWindow from 'vtk.js/Rendering/Misc/FullScreenRenderWindow';
+import vtkActor from 'vtk.js/Rendering/Core/Actor';
+import vtkTriangleFilter from 'vtk.js/Filters/General/TriangleFilter';
+import vtkMapper from 'vtk.js/Rendering/Core/Mapper';
 
-import vtk2DShape from 'vtk.js/Sources/Filters/Sources/Arrow2DSource/';
+import vtk2DShape from 'vtk.js/Filters/Sources/Arrow2DSource/';
 
 // ----------------------------------------------------------------------------
 // Standard rendering code setup

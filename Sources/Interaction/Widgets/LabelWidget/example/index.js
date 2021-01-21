@@ -1,9 +1,9 @@
-import 'vtk.js/Sources/favicon';
+import 'vtk.js/favicon';
 
-import vtkLabelWidget from 'vtk.js/Sources/Interaction/Widgets/LabelWidget';
-import vtkFullScreenRenderWindow from 'vtk.js/Sources/Rendering/Misc/FullScreenRenderWindow';
+import vtkLabelWidget from 'vtk.js/Interaction/Widgets/LabelWidget';
+import vtkFullScreenRenderWindow from 'vtk.js/Rendering/Misc/FullScreenRenderWindow';
 
-import TextAlign from 'vtk.js/Sources/Interaction/Widgets/LabelRepresentation/Constants';
+import TextAlign from 'vtk.js/Interaction/Widgets/LabelRepresentation/Constants';
 
 // ----------------------------------------------------------------------------
 // USER AVAILABLE INTERACTIONS

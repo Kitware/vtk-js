@@ -1,22 +1,19 @@
 /* eslint-disable import/prefer-default-export */
 /* eslint-disable import/no-extraneous-dependencies */
 
-import 'vtk.js/Sources/favicon';
+import 'vtk.js/favicon';
 
-import HttpDataAccessHelper from 'vtk.js/Sources/IO/Core/DataAccessHelper/HttpDataAccessHelper';
-import vtkActor from 'vtk.js/Sources/Rendering/Core/Actor';
-import vtkColorMaps from 'vtk.js/Sources/Rendering/Core/ColorTransferFunction/ColorMaps';
-import vtkColorTransferFunction from 'vtk.js/Sources/Rendering/Core/ColorTransferFunction';
-import vtkFullScreenRenderWindow from 'vtk.js/Sources/Rendering/Misc/FullScreenRenderWindow';
-import vtkMapper from 'vtk.js/Sources/Rendering/Core/Mapper';
-import vtkURLExtract from 'vtk.js/Sources/Common/Core/URLExtract';
-import vtkXMLPolyDataReader from 'vtk.js/Sources/IO/XML/XMLPolyDataReader';
-import vtkTubeFilter from 'vtk.js/Sources/Filters/General/TubeFilter';
-import {
-  ColorMode,
-  ScalarMode,
-} from 'vtk.js/Sources/Rendering/Core/Mapper/Constants';
-import { VaryRadius } from 'vtk.js/Sources/Filters/General/TubeFilter/Constants';
+import HttpDataAccessHelper from 'vtk.js/IO/Core/DataAccessHelper/HttpDataAccessHelper';
+import vtkActor from 'vtk.js/Rendering/Core/Actor';
+import vtkColorMaps from 'vtk.js/Rendering/Core/ColorTransferFunction/ColorMaps';
+import vtkColorTransferFunction from 'vtk.js/Rendering/Core/ColorTransferFunction';
+import vtkFullScreenRenderWindow from 'vtk.js/Rendering/Misc/FullScreenRenderWindow';
+import vtkMapper from 'vtk.js/Rendering/Core/Mapper';
+import vtkURLExtract from 'vtk.js/Common/Core/URLExtract';
+import vtkXMLPolyDataReader from 'vtk.js/IO/XML/XMLPolyDataReader';
+import vtkTubeFilter from 'vtk.js/Filters/General/TubeFilter';
+import { ColorMode, ScalarMode } from 'vtk.js/Rendering/Core/Mapper/Constants';
+import { VaryRadius } from 'vtk.js/Filters/General/TubeFilter/Constants';
 
 import style from './TubesViewer.module.css';
 import icon from '../../../Documentation/content/icon/favicon-96x96.png';

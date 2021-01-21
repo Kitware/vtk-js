@@ -1,14 +1,14 @@
-import 'vtk.js/Sources/favicon';
+import 'vtk.js/favicon';
 
-import vtkImageData from 'vtk.js/Sources/Common/DataModel/ImageData';
-import vtkDataArray from 'vtk.js/Sources/Common/Core/DataArray';
-import vtkOpenGLRenderWindow from 'vtk.js/Sources/Rendering/OpenGL/RenderWindow';
-import vtkResliceCursor from 'vtk.js/Sources/Interaction/Widgets/ResliceCursor/ResliceCursor';
-import vtkResliceCursorLineRepresentation from 'vtk.js/Sources/Interaction/Widgets/ResliceCursor/ResliceCursorLineRepresentation';
-import vtkResliceCursorWidget from 'vtk.js/Sources/Interaction/Widgets/ResliceCursor/ResliceCursorWidget';
-import vtkRenderer from 'vtk.js/Sources/Rendering/Core/Renderer';
-import vtkRenderWindow from 'vtk.js/Sources/Rendering/Core/RenderWindow';
-import vtkRenderWindowInteractor from 'vtk.js/Sources/Rendering/Core/RenderWindowInteractor';
+import vtkImageData from 'vtk.js/Common/DataModel/ImageData';
+import vtkDataArray from 'vtk.js/Common/Core/DataArray';
+import vtkOpenGLRenderWindow from 'vtk.js/Rendering/OpenGL/RenderWindow';
+import vtkResliceCursor from 'vtk.js/Interaction/Widgets/ResliceCursor/ResliceCursor';
+import vtkResliceCursorLineRepresentation from 'vtk.js/Interaction/Widgets/ResliceCursor/ResliceCursorLineRepresentation';
+import vtkResliceCursorWidget from 'vtk.js/Interaction/Widgets/ResliceCursor/ResliceCursorWidget';
+import vtkRenderer from 'vtk.js/Rendering/Core/Renderer';
+import vtkRenderWindow from 'vtk.js/Rendering/Core/RenderWindow';
+import vtkRenderWindowInteractor from 'vtk.js/Rendering/Core/RenderWindowInteractor';
 
 // ----------------------------------------------------------------------------
 // Standard rendering code setup

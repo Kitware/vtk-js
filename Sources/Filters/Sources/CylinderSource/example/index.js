@@ -1,9 +1,9 @@
-import 'vtk.js/Sources/favicon';
+import 'vtk.js/favicon';
 
-import vtkFullScreenRenderWindow from 'vtk.js/Sources/Rendering/Misc/FullScreenRenderWindow';
-import vtkActor from 'vtk.js/Sources/Rendering/Core/Actor';
-import vtkCylinderSource from 'vtk.js/Sources/Filters/Sources/CylinderSource';
-import vtkMapper from 'vtk.js/Sources/Rendering/Core/Mapper';
+import vtkFullScreenRenderWindow from 'vtk.js/Rendering/Misc/FullScreenRenderWindow';
+import vtkActor from 'vtk.js/Rendering/Core/Actor';
+import vtkCylinderSource from 'vtk.js/Filters/Sources/CylinderSource';
+import vtkMapper from 'vtk.js/Rendering/Core/Mapper';
 
 import controlPanel from './controlPanel.html';
 

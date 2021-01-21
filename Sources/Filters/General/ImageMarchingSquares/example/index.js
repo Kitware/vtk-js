@@ -1,14 +1,14 @@
-import 'vtk.js/Sources/favicon';
+import 'vtk.js/favicon';
 
-import vtkActor from 'vtk.js/Sources/Rendering/Core/Actor';
-import vtkFullScreenRenderWindow from 'vtk.js/Sources/Rendering/Misc/FullScreenRenderWindow';
-import vtkImageMarchingSquares from 'vtk.js/Sources/Filters/General/ImageMarchingSquares';
-import vtkOutlineFilter from 'vtk.js/Sources/Filters/General/OutlineFilter';
-import vtkMapper from 'vtk.js/Sources/Rendering/Core/Mapper';
-import vtkSampleFunction from 'vtk.js/Sources/Imaging/Hybrid/SampleFunction';
-import vtkSphere from 'vtk.js/Sources/Common/DataModel/Sphere';
-// import vtkPlane                   from 'vtk.js/Sources/Common/DataModel/Plane';
-import vtkImplicitBoolean from 'vtk.js/Sources/Common/DataModel/ImplicitBoolean';
+import vtkActor from 'vtk.js/Rendering/Core/Actor';
+import vtkFullScreenRenderWindow from 'vtk.js/Rendering/Misc/FullScreenRenderWindow';
+import vtkImageMarchingSquares from 'vtk.js/Filters/General/ImageMarchingSquares';
+import vtkOutlineFilter from 'vtk.js/Filters/General/OutlineFilter';
+import vtkMapper from 'vtk.js/Rendering/Core/Mapper';
+import vtkSampleFunction from 'vtk.js/Imaging/Hybrid/SampleFunction';
+import vtkSphere from 'vtk.js/Common/DataModel/Sphere';
+// import vtkPlane                   from 'vtk.js/Common/DataModel/Plane';
+import vtkImplicitBoolean from 'vtk.js/Common/DataModel/ImplicitBoolean';
 
 import controlPanel from './controller.html';
 

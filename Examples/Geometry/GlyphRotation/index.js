@@ -1,18 +1,15 @@
-import 'vtk.js/Sources/favicon';
+import 'vtk.js/favicon';
 
-import vtkActor from 'vtk.js/Sources/Rendering/Core/Actor';
-import vtkSphereSource from 'vtk.js/Sources/Filters/Sources/SphereSource';
-import vtkFullScreenRenderWindow from 'vtk.js/Sources/Rendering/Misc/FullScreenRenderWindow';
-import vtkDataArray from 'vtk.js/Sources/Common/Core/DataArray';
-import vtkPolyData from 'vtk.js/Sources/Common/DataModel/PolyData';
-import vtkGlyph3DMapper from 'vtk.js/Sources/Rendering/Core/Glyph3DMapper';
+import vtkActor from 'vtk.js/Rendering/Core/Actor';
+import vtkSphereSource from 'vtk.js/Filters/Sources/SphereSource';
+import vtkFullScreenRenderWindow from 'vtk.js/Rendering/Misc/FullScreenRenderWindow';
+import vtkDataArray from 'vtk.js/Common/Core/DataArray';
+import vtkPolyData from 'vtk.js/Common/DataModel/PolyData';
+import vtkGlyph3DMapper from 'vtk.js/Rendering/Core/Glyph3DMapper';
 
-import {
-  ColorMode,
-  ScalarMode,
-} from 'vtk.js/Sources/Rendering/Core/Mapper/Constants';
+import { ColorMode, ScalarMode } from 'vtk.js/Rendering/Core/Mapper/Constants';
 
-import { OrientationModes } from 'vtk.js/Sources/Rendering/Core/Glyph3DMapper/Constants';
+import { OrientationModes } from 'vtk.js/Rendering/Core/Glyph3DMapper/Constants';
 
 import controlPanel from './controller.html';
 

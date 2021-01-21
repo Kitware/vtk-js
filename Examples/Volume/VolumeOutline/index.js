@@ -1,14 +1,14 @@
-import 'vtk.js/Sources/favicon';
+import 'vtk.js/favicon';
 
-import vtkFullScreenRenderWindow from 'vtk.js/Sources/Rendering/Misc/FullScreenRenderWindow';
-import vtkHttpDataSetReader from 'vtk.js/Sources/IO/Core/HttpDataSetReader';
-import vtkVolume from 'vtk.js/Sources/Rendering/Core/Volume';
-import vtkVolumeMapper from 'vtk.js/Sources/Rendering/Core/VolumeMapper';
-import vtkInteractorStyleMPRSlice from 'vtk.js/Sources/Interaction/Style/InteractorStyleMPRSlice';
-import vtkImageData from 'vtk.js/Sources/Common/DataModel/ImageData';
-import vtkDataArray from 'vtk.js/Sources/Common/Core/DataArray';
-import vtkColorTransferFunction from 'vtk.js/Sources/Rendering/Core/ColorTransferFunction';
-import vtkPiecewiseFunction from 'vtk.js/Sources/Common/DataModel/PiecewiseFunction';
+import vtkFullScreenRenderWindow from 'vtk.js/Rendering/Misc/FullScreenRenderWindow';
+import vtkHttpDataSetReader from 'vtk.js/IO/Core/HttpDataSetReader';
+import vtkVolume from 'vtk.js/Rendering/Core/Volume';
+import vtkVolumeMapper from 'vtk.js/Rendering/Core/VolumeMapper';
+import vtkInteractorStyleMPRSlice from 'vtk.js/Interaction/Style/InteractorStyleMPRSlice';
+import vtkImageData from 'vtk.js/Common/DataModel/ImageData';
+import vtkDataArray from 'vtk.js/Common/Core/DataArray';
+import vtkColorTransferFunction from 'vtk.js/Rendering/Core/ColorTransferFunction';
+import vtkPiecewiseFunction from 'vtk.js/Common/DataModel/PiecewiseFunction';
 
 const fullScreenRenderWindow = vtkFullScreenRenderWindow.newInstance({
   background: [0.3, 0.3, 0.3],

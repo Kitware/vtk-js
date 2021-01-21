@@ -1,15 +1,15 @@
-import 'vtk.js/Sources/favicon';
+import 'vtk.js/favicon';
 
-import vtkFullScreenRenderWindow from 'vtk.js/Sources/Rendering/Misc/FullScreenRenderWindow';
-import vtkVolume from 'vtk.js/Sources/Rendering/Core/Volume';
-import vtkVolumeMapper from 'vtk.js/Sources/Rendering/Core/VolumeMapper';
-import vtkPiecewiseFunction from 'vtk.js/Sources/Common/DataModel/PiecewiseFunction';
-import vtkColorTransferFunction from 'vtk.js/Sources/Rendering/Core/ColorTransferFunction';
+import vtkFullScreenRenderWindow from 'vtk.js/Rendering/Misc/FullScreenRenderWindow';
+import vtkVolume from 'vtk.js/Rendering/Core/Volume';
+import vtkVolumeMapper from 'vtk.js/Rendering/Core/VolumeMapper';
+import vtkPiecewiseFunction from 'vtk.js/Common/DataModel/PiecewiseFunction';
+import vtkColorTransferFunction from 'vtk.js/Rendering/Core/ColorTransferFunction';
 
-import vtkHttpDataSetReader from 'vtk.js/Sources/IO/Core/HttpDataSetReader';
-import vtkXMLImageDataReader from 'vtk.js/Sources/IO/XML/XMLImageDataReader';
-import vtkXMLImageDataWriter from 'vtk.js/Sources/IO/XML/XMLImageDataWriter';
-import vtkXMLWriter from 'vtk.js/Sources/IO/XML/XMLWriter';
+import vtkHttpDataSetReader from 'vtk.js/IO/Core/HttpDataSetReader';
+import vtkXMLImageDataReader from 'vtk.js/IO/XML/XMLImageDataReader';
+import vtkXMLImageDataWriter from 'vtk.js/IO/XML/XMLImageDataWriter';
+import vtkXMLWriter from 'vtk.js/IO/XML/XMLWriter';
 
 // ----------------------------------------------------------------------------
 // Standard rendering code setup

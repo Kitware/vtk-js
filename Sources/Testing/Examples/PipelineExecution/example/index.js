@@ -1,15 +1,15 @@
-import 'vtk.js/Sources/favicon';
+import 'vtk.js/favicon';
 
-import macro from 'vtk.js/Sources/macro';
-import vtk from 'vtk.js/Sources/vtk';
-import vtkActor from 'vtk.js/Sources/Rendering/Core/Actor';
-import vtkCalculator from 'vtk.js/Sources/Filters/General/Calculator';
-import vtkConeSource from 'vtk.js/Sources/Filters/Sources/ConeSource';
-import vtkDataArray from 'vtk.js/Sources/Common/Core/DataArray';
-import vtkFullScreenRenderWindow from 'vtk.js/Sources/Rendering/Misc/FullScreenRenderWindow';
-import vtkMapper from 'vtk.js/Sources/Rendering/Core/Mapper';
-import { AttributeTypes } from 'vtk.js/Sources/Common/DataModel/DataSetAttributes/Constants';
-import { FieldDataTypes } from 'vtk.js/Sources/Common/DataModel/DataSet/Constants';
+import macro from 'vtk.js/macro';
+import vtk from 'vtk.js/vtk';
+import vtkActor from 'vtk.js/Rendering/Core/Actor';
+import vtkCalculator from 'vtk.js/Filters/General/Calculator';
+import vtkConeSource from 'vtk.js/Filters/Sources/ConeSource';
+import vtkDataArray from 'vtk.js/Common/Core/DataArray';
+import vtkFullScreenRenderWindow from 'vtk.js/Rendering/Misc/FullScreenRenderWindow';
+import vtkMapper from 'vtk.js/Rendering/Core/Mapper';
+import { AttributeTypes } from 'vtk.js/Common/DataModel/DataSetAttributes/Constants';
+import { FieldDataTypes } from 'vtk.js/Common/DataModel/DataSet/Constants';
 
 import controlPanel from './controller.html';
 
