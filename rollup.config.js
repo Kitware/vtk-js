@@ -2,6 +2,7 @@ import * as path from 'path';
 import * as glob from 'glob';
 
 import autoprefixer from 'autoprefixer';
+import MagicString from 'magic-string';
 
 import alias from '@rollup/plugin-alias';
 import { babel } from '@rollup/plugin-babel';
@@ -21,6 +22,56 @@ const IGNORE_LIST = [
   /(\/|\\)test/,
   /^Sources(\/|\\)(Testing|ThirdParty)/,
 ];
+
+/**
+ * find: RegExp | String
+ * replace: String
+ */
+function rewriteFilenames(pluginOptions) {
+  const opts = {
+    ...pluginOptions,
+    find: new RegExp(pluginOptions.find),
+  };
+  return {
+    name: 'rewrite-filenames',
+    generateBundle(outputOptions, bundle, isWrite) {
+      const files = Object.keys(bundle);
+      for (let i = 0; i < files.length; i++) {
+        const file = files[i];
+        const info = bundle[file];
+
+        if (opts.find.test(file)) {
+          const newFileName = file.replace(opts.find, opts.replace);
+          info.fileName = newFileName;
+          bundle[newFileName] = info;
+          delete bundle[file];
+        }
+
+        // search contents for offending import filenames
+        const importRe = new RegExp(
+          '(import .+? from\\s*["\'])(.+?)(["\']\\s*;?)',
+          'g'
+        );
+
+        let match;
+        do {
+          match = importRe.exec(info.code);
+          if (match) {
+            const target = match[2];
+            const start = match.index + match[1].length;
+            const end = start + target.length;
+            if (opts.find.test(target)) {
+              const magicCode = new MagicString(info.code);
+              const newTarget = target.replace(opts.find, opts.replace);
+              magicCode.overwrite(start, end, newTarget);
+              info.code = magicCode.toString();
+            }
+          }
+        } while (match);
+      }
+    },
+  };
+}
 
 function ignoreFile(name, ignoreList = IGNORE_LIST) {
   return ignoreList.some((toMatch) => {
@@ -140,6 +191,14 @@ export default {
     postcss({
       modules: true,
       plugins: [autoprefixer],
+    }),
+    // windows ntfs hates colons in filenames,
+    // and node-resolve and web-worker-loader are notorious for
+    // inserting them into virtual modules that are written out
+    // to the filesystem via preserveModules: true.
+    rewriteFilenames({
+      find: /:/g,
+      replace: '_',
     }),
   ],
 };
