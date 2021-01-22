@@ -353,17 +353,12 @@ export default function widgetBehavior(publicAPI, model) {
         `get${associatedPlaneName}PlaneNormal`
       ]();
 
-      // Compute previous angle between lines
-      const angleBetweenAssociatedPlanes = vtkMath.angleBetweenVectors(
-        normal,
-        associatedNormal
+      const newAssociatedNormal = rotateVector(
+        associatedNormal,
+        planeNormal,
+        radianAngle
       );
 
-      const newAssociatedNormal = rotateVector(
-        newNormal,
-        planeNormal,
-        angleBetweenAssociatedPlanes
-      );
       model.widgetState[`set${associatedPlaneName}PlaneNormal`](
         newAssociatedNormal
       );
