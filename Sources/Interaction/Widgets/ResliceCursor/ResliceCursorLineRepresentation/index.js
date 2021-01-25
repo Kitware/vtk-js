@@ -478,7 +478,6 @@ function vtkResliceCursorLineRepresentation(publicAPI, model) {
         .getCursorAlgorithm()
         .getReslicePlaneNormal();
       if (model.viewUpFromViewType[planeNormalType]) {
-        console.log('OLD:', model.viewUpFromViewType[planeNormalType]);
         model.renderer
           .getActiveCamera()
           .setViewUp(...model.viewUpFromViewType[planeNormalType]);
