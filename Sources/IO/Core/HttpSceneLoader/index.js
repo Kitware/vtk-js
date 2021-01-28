@@ -41,9 +41,7 @@ function applySettings(sceneItem, settings) {
   }
 
   if (settings.property) {
-    if (settings.actor) {
-      sceneItem.actor.getProperty().set(settings.property);
-    } else {
+    if (settings.volume) {
       const volumePropertySettings = { ...settings.property };
       delete volumePropertySettings.components;
       sceneItem.volume.getProperty().set(volumePropertySettings);
@@ -78,6 +76,8 @@ function applySettings(sceneItem, settings) {
           }
         });
       }
+    } else {
+      sceneItem.actor.getProperty().set(settings.property);
     }
   }
 
@@ -188,7 +188,20 @@ function defineLoadFuctionForReader(type) {
       defaultSettings: item,
     };
 
-    if (item.actor) {
+    if (item.volume) {
+      const volume = vtkVolume.newInstance();
+      sceneItem.volume = volume;
+      if (model.renderer) {
+        model.renderer.addVolume(volume);
+      }
+      if (item.property && item.property.components) {
+        // initialize transfer functions
+        sceneItem.volumeComponents = initializeVolumeComponents(
+          item.property.components
+        );
+      }
+      volume.setMapper(mapper);
+    } else {
       const actor = vtkActor.newInstance();
       sceneItem.actor = actor;
       if (item.texture && item.texture in model.usedTextures) {
@@ -253,19 +266,6 @@ function defineLoadFuctionForReader(type) {
         model.renderer.addActor(actor);
       }
       actor.setMapper(mapper);
-    } else {
-      const volume = vtkVolume.newInstance();
-      sceneItem.volume = volume;
-      if (model.renderer) {
-        model.renderer.addVolume(volume);
-      }
-      if (item.property && item.property.components) {
-        // initialize transfer functions
-        sceneItem.volumeComponents = initializeVolumeComponents(
-          item.property.components
-        );
-      }
-      volume.setMapper(mapper);
     }
 
     mapper.setInputConnection(source.getOutputPort());
