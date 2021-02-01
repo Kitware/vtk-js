@@ -1,19 +1,26 @@
 import 'vtk.js/Sources/favicon';
 
+import vtkActor from 'vtk.js/Sources/Rendering/Core/Actor';
+import vtkAnnotatedCubeActor from 'vtk.js/Sources/Rendering/Core/AnnotatedCubeActor';
+import vtkDataArray from 'vtk.js/Sources/Common/Core/DataArray';
 import vtkHttpDataSetReader from 'vtk.js/Sources/IO/Core/HttpDataSetReader';
+import vtkImageData from 'vtk.js/Sources/Common/DataModel/ImageData';
+import vtkImageMapper from 'vtk.js/Sources/Rendering/Core/ImageMapper';
+import vtkImageReslice from 'vtk.js/Sources/Imaging/Core/ImageReslice';
+import vtkImageSlice from 'vtk.js/Sources/Rendering/Core/ImageSlice';
+import vtkInteractorStyleImage from 'vtk.js/Sources/Interaction/Style/InteractorStyleImage';
+import vtkInteractorStyleTrackballCamera from 'vtk.js/Sources/Interaction/Style/InteractorStyleTrackballCamera';
+import vtkMapper from 'vtk.js/Sources/Rendering/Core/Mapper';
+import vtkOutlineFilter from 'vtk.js/Sources/Filters/General/OutlineFilter';
 import vtkOpenGLRenderWindow from 'vtk.js/Sources/Rendering/OpenGL/RenderWindow';
+import vtkOrientationMarkerWidget from 'vtk.js/Sources/Interaction/Widgets/OrientationMarkerWidget';
 import vtkRenderer from 'vtk.js/Sources/Rendering/Core/Renderer';
 import vtkRenderWindow from 'vtk.js/Sources/Rendering/Core/RenderWindow';
 import vtkRenderWindowInteractor from 'vtk.js/Sources/Rendering/Core/RenderWindowInteractor';
 import vtkResliceCursorWidget from 'vtk.js/Sources/Widgets/Widgets3D/ResliceCursorWidget';
 import vtkWidgetManager from 'vtk.js/Sources/Widgets/Core/WidgetManager';
-import vtkOrientationMarkerWidget from 'vtk.js/Sources/Interaction/Widgets/OrientationMarkerWidget';
-import vtkAnnotatedCubeActor from 'vtk.js/Sources/Rendering/Core/AnnotatedCubeActor';
-import vtkImageMapper from 'vtk.js/Sources/Rendering/Core/ImageMapper';
-import vtkImageReslice from 'vtk.js/Sources/Imaging/Core/ImageReslice';
-import vtkImageSlice from 'vtk.js/Sources/Rendering/Core/ImageSlice';
-import vtkInteractorStyleImage from 'vtk.js/Sources/Interaction/Style/InteractorStyleImage';
 
+import vtkSphereSource from 'vtk.js/Sources/Filters/Sources/SphereSource';
 import {
   ViewTypes,
   CaptureOn,
@@ -42,15 +49,24 @@ table.appendChild(trLine2);
 // Setup rendering code
 // ----------------------------------------------------------------------------
 
+
+const viewColors = [
+  [0, 1, 0], // coronal
+  [1, 0, 0], // sagittal
+  [0, 0, 1], // axial
+  [0.5, 0.5, 0.5], // 3D
+];
+
 const viewAttributes = [];
 const widget = vtkResliceCursorWidget.newInstance();
 widget.getWidgetState().setOpacity(0.6);
 const sliceTypes = [ViewTypes.XZ_PLANE, ViewTypes.YZ_PLANE, ViewTypes.XY_PLANE];
+let view3D = null;
 
-for (let i = 0; i < 3; i++) {
+for (let i = 0; i < 4; i++) {
   const element = document.createElement('td');
 
-  if (i === 2) {
+  if (i % 2 === 0) {
     trLine2.appendChild(element);
   } else {
     trLine1.appendChild(element);
@@ -65,7 +81,7 @@ for (let i = 0; i < 3; i++) {
   };
 
   obj.renderer.getActiveCamera().setParallelProjection(true);
-  obj.renderer.setBackground(1, 1, 0);
+  obj.renderer.setBackground(...viewColors[i]);
   obj.renderWindow.addRenderer(obj.renderer);
   obj.renderWindow.addView(obj.GLWindow);
   obj.renderWindow.setInteractor(obj.interactor);
@@ -73,12 +89,18 @@ for (let i = 0; i < 3; i++) {
   obj.interactor.setView(obj.GLWindow);
   obj.interactor.initialize();
   obj.interactor.bindEvents(element);
-  obj.interactor.setInteractorStyle(vtkInteractorStyleImage.newInstance());
   obj.widgetManager.setRenderer(obj.renderer);
-  obj.widgetInstance = obj.widgetManager.addWidget(widget, sliceTypes[i]);
-  obj.widgetManager.enablePicking();
-  // Use to update all renderers buffer when actors are moved
-  obj.widgetManager.setCaptureOn(CaptureOn.MOUSE_MOVE);
+  if (i < 3) {
+    obj.interactor.setInteractorStyle(vtkInteractorStyleImage.newInstance());
+    obj.widgetInstance = obj.widgetManager.addWidget(widget, sliceTypes[i]);
+    obj.widgetManager.enablePicking();
+    // Use to update all renderers buffer when actors are moved
+    obj.widgetManager.setCaptureOn(CaptureOn.MOUSE_MOVE);
+  } else {
+    obj.interactor.setInteractorStyle(
+      vtkInteractorStyleTrackballCamera.newInstance()
+    );
+  }
 
   obj.reslice = vtkImageReslice.newInstance();
   obj.reslice.setTransformInputSampling(false);
@@ -88,8 +110,28 @@ for (let i = 0; i < 3; i++) {
   obj.resliceMapper.setInputConnection(obj.reslice.getOutputPort());
   obj.resliceActor = vtkImageSlice.newInstance();
   obj.resliceActor.setMapper(obj.resliceMapper);
+  obj.sphereActors = [];
+  obj.sphereSources = [];
 
-  viewAttributes.push(obj);
+  // Create sphere for each 2D views which will be displayed in 3D
+  // Define origin, point1 and point2 of the plane used to reslice the volume
+  for (let j = 0; j < 3; j++) {
+    const sphere = vtkSphereSource.newInstance();
+    sphere.setRadius(10);
+    const mapper = vtkMapper.newInstance();
+    mapper.setInputConnection(sphere.getOutputPort());
+    const actor = vtkActor.newInstance();
+    actor.setMapper(mapper);
+    actor.getProperty().setColor(...viewColors[i]);
+    obj.sphereActors.push(actor);
+    obj.sphereSources.push(sphere);
+  }
+
+  if (i < 3) {
+    viewAttributes.push(obj);
+  } else {
+    view3D = obj;
+  }
 
   // create axes
   const axes = vtkAnnotatedCubeActor.newInstance();
@@ -99,7 +141,7 @@ for (let i = 0; i < 3; i++) {
     fontFamily: 'Arial',
     fontColor: 'black',
     fontSizeScale: (res) => res / 2,
-    faceColor: '#0000ff',
+    faceColor: '#ff0000',
     faceRotation: 0,
     edgeThickness: 0.1,
     edgeColor: 'black',
@@ -108,7 +150,7 @@ for (let i = 0; i < 3; i++) {
   // axes.setXPlusFaceProperty({ text: '+X' });
   axes.setXMinusFaceProperty({
     text: '-X',
-    faceColor: '#ffff00',
+    faceColor: '#ff0000',
     faceRotation: 90,
     fontStyle: 'italic',
   });
@@ -119,15 +161,16 @@ for (let i = 0; i < 3; i++) {
   });
   axes.setYMinusFaceProperty({
     text: '-Y',
-    faceColor: '#00ffff',
+    faceColor: '#00ff00',
     fontColor: 'white',
   });
   axes.setZPlusFaceProperty({
     text: '+Z',
-    edgeColor: 'yellow',
+    faceColor: '#0000ff',
   });
   axes.setZMinusFaceProperty({
     text: '-Z',
+    faceColor: '#0000ff',
     faceRotation: 45,
     edgeThickness: 0,
   });
@@ -160,17 +203,21 @@ function updateReslice(
     keepFocalPointPosition: false, // Defines if the focal point position is kepts (same display distance from reslice cursor center)
     computeFocalPointOffset: false, // Defines if the display offset between reslice center and focal point has to be
     // computed. If so, then this offset will be used to keep the focal point position during rotation.
+    spheres: null,
   }
 ) {
-  const modified = widget.updateReslicePlane(
+  const obj = widget.updateReslicePlane(
     interactionContext.reslice,
     interactionContext.viewType
   );
-  if (modified) {
+  if (obj.modified) {
     // Get returned modified from setter to know if we have to render
     interactionContext.actor.setUserMatrix(
       interactionContext.reslice.getResliceAxes()
     );
+    interactionContext.sphereSources[0].setCenter(...obj.origin);
+    interactionContext.sphereSources[1].setCenter(...obj.point1);
+    interactionContext.sphereSources[2].setCenter(...obj.point2);
   }
   widget.updateCameraPoints(
     interactionContext.renderer,
@@ -179,7 +226,8 @@ function updateReslice(
     interactionContext.keepFocalPointPosition,
     interactionContext.computeFocalPointOffset
   );
-  return modified;
+  view3D.renderWindow.render();
+  return obj.modified;
 }
 
 const reader = vtkHttpDataSetReader.newInstance({ fetchGzip: true });
@@ -188,10 +236,24 @@ reader.setUrl(`${__BASE_PATH__}/data/volume/LIDC2.vti`).then(() => {
     const image = reader.getOutputData();
     widget.setImage(image);
 
+    // Create image outline in 3D view
+    const outline = vtkOutlineFilter.newInstance();
+    outline.setInputData(image);
+    const outlineMapper = vtkMapper.newInstance();
+    outlineMapper.setInputData(outline.getOutputData());
+    const outlineActor = vtkActor.newInstance();
+    outlineActor.setMapper(outlineMapper);
+    view3D.renderer.addActor(outlineActor);
+
     for (let i = 0; i < viewAttributes.length; i++) {
       const obj = viewAttributes[i];
       obj.reslice.setInputData(image);
       obj.renderer.addActor(obj.resliceActor);
+      view3D.renderer.addActor(obj.resliceActor);
+      obj.sphereActors.forEach((actor) => {
+        obj.renderer.addActor(actor);
+        view3D.renderer.addActor(actor);
+      });
       // const widgetState = widget.getWidgetState();
       const reslice = obj.reslice;
       const viewType = sliceTypes[i];
@@ -224,6 +286,7 @@ reader.setUrl(`${__BASE_PATH__}/data/volume/LIDC2.vti`).then(() => {
                 resetFocalPoint: false,
                 keepFocalPointPosition,
                 computeFocalPointOffset,
+                sphereSources: obj.sphereSources,
               });
             }
           );
@@ -237,8 +300,12 @@ reader.setUrl(`${__BASE_PATH__}/data/volume/LIDC2.vti`).then(() => {
         resetFocalPoint: true, // At first initilization, center the focal point to the image center
         keepFocalPointPosition: false, // Don't update the focal point as we already set it to the center of the image
         computeFocalPointOffset: true, // Allow to compute the current offset between display reslice center and display focal point
+        sphereSources: obj.sphereSources,
       });
       obj.renderWindow.render();
     }
+
+    view3D.renderer.resetCamera();
+    view3D.renderer.resetCameraClippingRange();
   });
 });
