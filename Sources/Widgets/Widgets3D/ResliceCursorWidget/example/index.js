@@ -1,18 +1,20 @@
 import 'vtk.js/Sources/favicon';
 
+import vtkAnnotatedCubeActor from 'vtk.js/Sources/Rendering/Core/AnnotatedCubeActor';
+import vtkDataArray from 'vtk.js/Sources/Common/Core/DataArray';
 import vtkHttpDataSetReader from 'vtk.js/Sources/IO/Core/HttpDataSetReader';
+import vtkImageData from 'vtk.js/Sources/Common/DataModel/ImageData';
+import vtkImageMapper from 'vtk.js/Sources/Rendering/Core/ImageMapper';
+import vtkImageReslice from 'vtk.js/Sources/Imaging/Core/ImageReslice';
+import vtkImageSlice from 'vtk.js/Sources/Rendering/Core/ImageSlice';
+import vtkInteractorStyleImage from 'vtk.js/Sources/Interaction/Style/InteractorStyleImage';
 import vtkOpenGLRenderWindow from 'vtk.js/Sources/Rendering/OpenGL/RenderWindow';
+import vtkOrientationMarkerWidget from 'vtk.js/Sources/Interaction/Widgets/OrientationMarkerWidget';
 import vtkRenderer from 'vtk.js/Sources/Rendering/Core/Renderer';
 import vtkRenderWindow from 'vtk.js/Sources/Rendering/Core/RenderWindow';
 import vtkRenderWindowInteractor from 'vtk.js/Sources/Rendering/Core/RenderWindowInteractor';
 import vtkResliceCursorWidget from 'vtk.js/Sources/Widgets/Widgets3D/ResliceCursorWidget';
 import vtkWidgetManager from 'vtk.js/Sources/Widgets/Core/WidgetManager';
-import vtkOrientationMarkerWidget from 'vtk.js/Sources/Interaction/Widgets/OrientationMarkerWidget';
-import vtkAnnotatedCubeActor from 'vtk.js/Sources/Rendering/Core/AnnotatedCubeActor';
-import vtkImageMapper from 'vtk.js/Sources/Rendering/Core/ImageMapper';
-import vtkImageReslice from 'vtk.js/Sources/Imaging/Core/ImageReslice';
-import vtkImageSlice from 'vtk.js/Sources/Rendering/Core/ImageSlice';
-import vtkInteractorStyleImage from 'vtk.js/Sources/Interaction/Style/InteractorStyleImage';
 
 import {
   ViewTypes,
@@ -41,6 +43,38 @@ table.appendChild(trLine2);
 // ----------------------------------------------------------------------------
 // Setup rendering code
 // ----------------------------------------------------------------------------
+
+/**
+ * Function to create synthetic image data with correct dimensions
+ * Can be use for debug
+ * @param {Array[Int]} dims
+ */
+// eslint-disable-next-line no-unused-vars
+function createSyntheticImageData(dims) {
+  const imageData = vtkImageData.newInstance();
+  const newArray = new Uint8Array(dims[0] * dims[1] * dims[2]);
+  const s = 0.1;
+  imageData.setSpacing(s, s, s);
+  imageData.setExtent(0, 127, 0, 127, 0, 127);
+  let i = 0;
+  for (let z = 0; z < dims[2]; z++) {
+    for (let y = 0; y < dims[1]; y++) {
+      for (let x = 0; x < dims[0]; x++) {
+        newArray[i++] = (256 * (i % (dims[0] * dims[1]))) / (dims[0] * dims[1]);
+      }
+    }
+  }
+
+  const da = vtkDataArray.newInstance({
+    numberOfComponents: 1,
+    values: newArray,
+  });
+  da.setName('scalars');
+
+  imageData.getPointData().setScalars(da);
+
+  return imageData;
+}
 
 const viewAttributes = [];
 const widget = vtkResliceCursorWidget.newInstance();
