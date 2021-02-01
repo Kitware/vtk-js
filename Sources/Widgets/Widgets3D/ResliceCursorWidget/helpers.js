@@ -277,15 +277,16 @@ export function transformPlane(planeToTransform, targetPlane, viewType) {
   planeToTransform.setCenter(...rotatedOrigin);
 
   const rotatedOrig = planeToTransform.getOrigin();
-  const rotatedPoint1 = planeToTransform.getPoint1();
   const rotatedPoint2 = planeToTransform.getPoint2();
 
   // Compute local view up of transformed plane
   const rotatedViewUp = vtkMath.subtract(rotatedPoint2, rotatedOrig, [0, 0, 0]);
+
   const rotatedPlane = vtkPlane.newInstance({
     normal: rotatedNormal,
     origin: rotatedOrigin,
   });
+
   // Project the default viewup we want to fit on
   const projectedDefaultViewUp = [0, 0, 1];
   rotatedPlane.projectVector(defaultViewUp, projectedDefaultViewUp);
@@ -298,14 +299,5 @@ export function transformPlane(planeToTransform, targetPlane, viewType) {
     rotatedViewUp
   );
 
-  // Compute the new plane points
-  const transform = vtkMatrixBuilder
-    .buildFromRadian()
-    .rotate(rotationAngle, rotatedNormal);
-  transform.apply(rotatedOrig);
-  transform.apply(rotatedPoint1);
-  transform.apply(rotatedPoint2);
-  planeToTransform.setOrigin(rotatedOrig);
-  planeToTransform.setPoint1(rotatedPoint1);
-  planeToTransform.setPoint2(rotatedPoint2);
+  return { angle: rotationAngle, normal: rotatedNormal, center: rotatedOrig };
 }

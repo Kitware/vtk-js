@@ -8,7 +8,7 @@ import * as vtkMath from 'vtk.js/Sources/Common/Core/Math';
 
 import widgetBehavior from 'vtk.js/Sources/Widgets/Widgets3D/ResliceCursorWidget/behavior';
 import stateGenerator from 'vtk.js/Sources/Widgets/Widgets3D/ResliceCursorWidget/state';
-
+import vtkMatrixBuilder from 'vtk.js/Sources/Common/Core/MatrixBuilder';
 import {
   boundPlane,
   updateState,
@@ -392,6 +392,7 @@ function vtkResliceCursorWidget(publicAPI, model) {
 
   publicAPI.updateReslicePlane = (imageReslice, viewType) => {
     const plane = publicAPI.getPlaneSourceFromViewType(viewType);
+    const resliceCenter = model.widgetState.getCenter();
 
     // Calculate appropriate pixel spacing for the reslicing
     const spacing = model.widgetState.getImage().getSpacing();
@@ -402,7 +403,7 @@ function vtkResliceCursorWidget(publicAPI, model) {
 
     // Adapt plane orientation in order to fit the correct viewUp
     // so that the rotations will be more understandable than now.
-    transformPlane(planeSource, plane, viewType);
+    const out = transformPlane(planeSource, plane, viewType);
 
     // TODO: orient plane on volume.
 
@@ -417,6 +418,7 @@ function vtkResliceCursorWidget(publicAPI, model) {
     const boundedOrigin = [...planeSource.getOrigin()];
     const boundedP1 = [...planeSource.getPoint1()];
     const boundedP2 = [...planeSource.getPoint2()];
+
     boundPlane(
       model.widgetState.getImage().getBounds(),
       boundedOrigin,
@@ -424,9 +426,26 @@ function vtkResliceCursorWidget(publicAPI, model) {
       boundedP2
     );
 
-    planeSource.setOrigin(boundedOrigin);
-    planeSource.setPoint1(boundedP1[0], boundedP1[1], boundedP1[2]);
-    planeSource.setPoint2(boundedP2[0], boundedP2[1], boundedP2[2]);
+    // Compute the new plane points
+    const transform = vtkMatrixBuilder
+      .buildFromRadian()
+      .translate(resliceCenter[0], resliceCenter[1], resliceCenter[2])
+      .rotate(out.angle, out.normal)
+      .translate(-resliceCenter[0], -resliceCenter[1], -resliceCenter[2]);
+    transform.apply(boundedOrigin);
+    transform.apply(boundedP1);
+    transform.apply(boundedP2);
+
+    boundPlane(
+      model.widgetState.getImage().getBounds(),
+      boundedOrigin,
+      boundedP1,
+      boundedP2
+    );
+
+    planeSource.setOrigin(...boundedOrigin);
+    planeSource.setPoint1(...boundedP1);
+    planeSource.setPoint2(...boundedP2);
 
     const o = planeSource.getOrigin();
 
@@ -540,7 +559,7 @@ function vtkResliceCursorWidget(publicAPI, model) {
       imageReslice.setOutputExtent([0, extentX - 1, 0, extentY - 1, 0, 0]) ||
       modified;
 
-    return modified;
+    return { modified, origin: o, point1: p1, point2: p2 };
   };
 
   /**
