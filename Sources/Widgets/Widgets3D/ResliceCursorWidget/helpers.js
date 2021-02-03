@@ -8,6 +8,7 @@ import vtkPlane from 'vtk.js/Sources/Common/DataModel/Plane';
 import * as vtkMath from 'vtk.js/Sources/Common/Core/Math';
 
 import { ViewTypes } from 'vtk.js/Sources/Widgets/Core/WidgetManager/Constants';
+import { defaultViewUpFromViewType } from 'vtk.js/Sources/Widgets/Widgets3D/ResliceCursorWidget/Constants';
 
 import vtkMatrixBuilder from 'vtk.js/Sources/Common/Core/MatrixBuilder';
 
@@ -255,4 +256,56 @@ export function updateState(widgetState) {
     pdLength,
     yRotationLength
   );
+}
+
+/**
+ * First rotate planeToTransform to match targetPlane normal.
+ * Then rotate around targetPlane normal to preserve world plane "up" vector (i.e. Origin->p2 ).
+ * There is an infinite number of options to rotate a plane normal to another. Here we attempt to
+ * do it by preserving Origin, P1 and P2 to be constrained within the volume bounds.
+ * @param {vtkPlaneSource} planeToTransform
+ * @param {vtkPlane} targetPlane
+ * @param {ViewTypes} viewType
+ */
+export function transformPlane(planeToTransform, targetPlane, viewType) {
+  const defaultViewUp = defaultViewUpFromViewType[viewType];
+  const rotatedNormal = targetPlane.getNormal();
+  const rotatedOrigin = targetPlane.getOrigin();
+  // Apply rotation onto plane (i.e. origin, p1, p2)
+  planeToTransform.setNormal(...rotatedNormal);
+  // TBD: isn't it a no-op ?
+  planeToTransform.setCenter(...rotatedOrigin);
+
+  const rotatedOrig = planeToTransform.getOrigin();
+  const rotatedPoint1 = planeToTransform.getPoint1();
+  const rotatedPoint2 = planeToTransform.getPoint2();
+
+  // Compute local view up of transformed plane
+  const rotatedViewUp = vtkMath.subtract(rotatedPoint2, rotatedOrig, [0, 0, 0]);
+  const rotatedPlane = vtkPlane.newInstance({
+    normal: rotatedNormal,
+    origin: rotatedOrigin,
+  });
+  // Project the default viewup we want to fit on
+  const projectedDefaultViewUp = [0, 0, 1];
+  rotatedPlane.projectVector(defaultViewUp, projectedDefaultViewUp);
+
+  vtkMath.normalize(projectedDefaultViewUp);
+  vtkMath.normalize(rotatedViewUp);
+
+  const rotationAngle = vtkMath.angleBetweenVectors(
+    projectedDefaultViewUp,
+    rotatedViewUp
+  );
+
+  // Compute the new plane points
+  const transform = vtkMatrixBuilder
+    .buildFromRadian()
+    .rotate(rotationAngle, rotatedNormal);
+  transform.apply(rotatedOrig);
+  transform.apply(rotatedPoint1);
+  transform.apply(rotatedPoint2);
+  planeToTransform.setOrigin(rotatedOrig);
+  planeToTransform.setPoint1(rotatedPoint1);
+  planeToTransform.setPoint2(rotatedPoint2);
 }
