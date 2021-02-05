@@ -234,6 +234,7 @@ function updateReslice(
     computeFocalPointOffset: false, // Defines if the display offset between reslice center and focal point has to be
     // computed. If so, then this offset will be used to keep the focal point position during rotation.
     spheres: null,
+    resetViewUp: false, // Defines if the camera view up is projected on plane (resetViewUp = false) or if we use the image bounds (resetViewUp = true)
   }
 ) {
   const obj = widget.updateReslicePlane(
@@ -254,7 +255,8 @@ function updateReslice(
     interactionContext.viewType,
     interactionContext.resetFocalPoint,
     interactionContext.keepFocalPointPosition,
-    interactionContext.computeFocalPointOffset
+    interactionContext.computeFocalPointOffset,
+    interactionContext.resetViewUp
   );
   view3D.renderWindow.render();
   return obj.modified;
@@ -316,6 +318,7 @@ reader.setUrl(`${__BASE_PATH__}/data/volume/LIDC2.vti`).then(() => {
                 keepFocalPointPosition,
                 computeFocalPointOffset,
                 sphereSources: obj.sphereSources,
+                resetViewUp: false,
               });
             }
           );
@@ -330,6 +333,7 @@ reader.setUrl(`${__BASE_PATH__}/data/volume/LIDC2.vti`).then(() => {
         keepFocalPointPosition: false, // Don't update the focal point as we already set it to the center of the image
         computeFocalPointOffset: true, // Allow to compute the current offset between display reslice center and display focal point
         sphereSources: obj.sphereSources,
+        resetViewUp: true, // Need to be reset the first time the widget is initialized. Then, can be set to false, so that the camera view up will follow the camera
       });
       obj.renderWindow.render();
     }
