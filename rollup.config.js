@@ -2,7 +2,6 @@ import * as path from 'path';
 import * as glob from 'glob';
 
 import autoprefixer from 'autoprefixer';
-import MagicString from 'magic-string';
 
 import alias from '@rollup/plugin-alias';
 import { babel } from '@rollup/plugin-babel';
@@ -17,61 +16,13 @@ import { string } from 'rollup-plugin-string';
 import svgo from 'rollup-plugin-svgo';
 import webworkerLoader from 'rollup-plugin-web-worker-loader';
 
+import { rewriteFilenames } from './Utilities/rollup/plugin-rewrite-filenames';
+
 const IGNORE_LIST = [
   /(\/|\\)example_?(\/|\\)/,
   /(\/|\\)test/,
   /^Sources(\/|\\)(Testing|ThirdParty)/,
 ];
-
-/**
- * find: RegExp | String
- * replace: String
- */
-function rewriteFilenames(pluginOptions) {
-  const opts = {
-    ...pluginOptions,
-    find: new RegExp(pluginOptions.find),
-  };
-  return {
-    name: 'rewrite-filenames',
-    generateBundle(outputOptions, bundle, isWrite) {
-      const files = Object.keys(bundle);
-      for (let i = 0; i < files.length; i++) {
-        const file = files[i];
-        const info = bundle[file];
-
-        if (opts.find.test(file)) {
-          const newFileName = file.replace(opts.find, opts.replace);
-          info.fileName = newFileName;
-          bundle[newFileName] = info;
-          delete bundle[file];
-        }
-
-        // search contents for offending import filenames
-        const importRe = new RegExp(
-          '(import .+? from\\s*["\'])(.+?)(["\']\\s*;?)',
-          'g'
-        );
-
-        let match;
-        do {
-          match = importRe.exec(info.code);
-          if (match) {
-            const target = match[2];
-            const start = match.index + match[1].length;
-            const end = start + target.length;
-            if (opts.find.test(target)) {
-              const magicCode = new MagicString(info.code);
-              const newTarget = target.replace(opts.find, opts.replace);
-              magicCode.overwrite(start, end, newTarget);
-              info.code = magicCode.toString();
-            }
-          }
-        } while (match);
-      }
-    },
-  };
-}
 
 function ignoreFile(name, ignoreList = IGNORE_LIST) {
   return ignoreList.some((toMatch) => {
@@ -85,27 +36,57 @@ function ignoreFile(name, ignoreList = IGNORE_LIST) {
   });
 }
 
-const entries = glob.sync('Sources/**/index.js').reduce((acc, file) => {
-  if (!ignoreFile(file)) {
-    acc[file] = path.resolve(__dirname, file);
-  }
-  return acc;
-}, {});
+const entryPoints = [
+  path.join('Sources', 'macro.js'),
+  path.join('Sources', 'vtk.js'),
+  path.join('Sources', 'favicon.js'),
+  ...glob.sync('Sources/**/index.js').filter((file) => !ignoreFile(file)),
+];
 
-['Sources/macro.js', 'Sources/vtk.js', 'Sources/favicon.js'].forEach((file) =>
-  Object.assign(entries, {
-    [file]: path.resolve(__dirname, file),
-  })
-);
+const entries = {};
+entryPoints.forEach((entry) => {
+  entries[entry.replace(/^Sources(\/|\\)/, '')] = entry;
+});
 
 export default {
   input: entries,
   output: {
     dir: 'dist/esm/',
     format: 'es',
-    entryFileNames: (chunkInfo) => path.basename(chunkInfo.name),
-    preserveModules: true,
-    preserveModulesRoot: 'Sources',
+    entryFileNames(chunkInfo) {
+      const name = chunkInfo.name;
+
+      // rewrite vtk.js files from Sources/.../<NAME>/index.js to .../<NAME>.js
+      const sourcesMatch = /^(.*?)(\/|\\)([A-Z]\w+)(\/|\\)index\.js$/.exec(
+        name
+      );
+      if (sourcesMatch) {
+        return path.join(sourcesMatch[1], `${sourcesMatch[2]}.js`);
+      }
+
+      return name;
+    },
+    manualChunks(id) {
+      if (id.includes('node_modules')) {
+        return 'vendor';
+      }
+      // strip out full path to project root
+      return id.replace(`${path.resolve(__dirname)}${path.sep}`, '');
+    },
+    chunkFileNames(chunkInfo) {
+      const name = chunkInfo.name;
+
+      if (name === 'vendor') {
+        return path.join('_vendor', 'vendor.js');
+      }
+
+      // throw all subscript prefixed chunks into a virtual folder
+      if (name.startsWith('_')) {
+        return name.replace(/^_/, `_virtual${path.sep}`);
+      }
+
+      return name;
+    },
   },
   external: [/@babel\/runtime/],
   plugins: [
@@ -170,8 +151,10 @@ export default {
     // commonjs should be before babel
     commonjs({
       dynamicRequireTargets: [
-        // handle a dynamic require circular dependency in readable-stream
+        // handle a dynamic require circular dependencies
         'node_modules/readable-stream/lib/_stream_duplex.js',
+        'node_modules/jszip/lib/base64.js',
+        'node_modules/xmlbuilder/lib/*.js',
       ],
       // dynamicRequireTargets implies transformMixedEsModules because
       // dynamicRequireTargets generates mixed modules
