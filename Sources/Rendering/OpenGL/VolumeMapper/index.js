@@ -26,6 +26,19 @@ import vtkVolumeFS from 'vtk.js/Sources/Rendering/OpenGL/glsl/vtkVolumeFS.glsl';
 
 const { vtkWarningMacro, vtkErrorMacro } = macro;
 
+// TODO: Do we want this in some shared utility? Shouldwe just use lodash.isEqual
+function arrayEquals(a, b) {
+  if (a.length !== b.length) {
+    return false;
+  }
+  for (let i = 0; i < a.length; ++i) {
+    if (a[i] !== b[i]) {
+      return false;
+    }
+  }
+  return true;
+}
+
 // ----------------------------------------------------------------------------
 // vtkOpenGLVolumeMapper methods
 // ----------------------------------------------------------------------------
@@ -376,6 +389,74 @@ function vtkOpenGLVolumeMapper(publicAPI, model) {
       needRebuild = true;
     }
 
+    const numComp = model.scalarTexture.getComponents();
+    const iComps = actor.getProperty().getIndependentComponents();
+    let usesProportionalComponents = false;
+    const proportionalComponents = [];
+    if (iComps) {
+      // Define any proportional components
+      for (let nc = 0; nc < numComp; nc++) {
+        proportionalComponents.push(actor.getProperty().getOpacityMode(nc));
+      }
+
+      if (proportionalComponents.length > 0) {
+        usesProportionalComponents = true;
+      }
+    }
+
+    const ext = model.currentInput.getExtent();
+    const spc = model.currentInput.getSpacing();
+    const vsize = vec3.create();
+    vec3.set(
+      vsize,
+      (ext[1] - ext[0]) * spc[0],
+      (ext[3] - ext[2]) * spc[1],
+      (ext[5] - ext[4]) * spc[2]
+    );
+
+    const maxSamples =
+      vec3.length(vsize) / model.renderable.getSampleDistance();
+
+    const state = {
+      interpolationType: actor.getProperty().getInterpolationType(),
+      useLabelOutline: actor.getProperty().getUseLabelOutline(),
+      numComp,
+      usesProportionalComponents,
+      iComps,
+      maxSamples,
+      useGradientOpacity: actor.getProperty().getUseGradientOpacity(0),
+      blendMode: model.renderable.getBlendMode(),
+      averageIPScalarMode: model.renderable.getAverageIPScalarRange(),
+      proportionalComponents,
+    };
+
+    // We only need to rebuild the shader if one of these variables has changed,
+    // since they are used in the shader template replacement step.
+    if (
+      !model.previousState ||
+      model.previousState.interpolationType !== state.interpolationType ||
+      model.previousState.useLabelOutline !== state.useLabelOutline ||
+      model.previousState.numComp !== state.numComp ||
+      model.previousState.usesProportionalComponents !==
+        state.usesProportionalComponents ||
+      model.previousState.iComps !== state.iComps ||
+      model.previousState.maxSamples !== state.maxSamples ||
+      model.previousState.useGradientOpacity !== state.useGradientOpacity ||
+      model.previousState.blendMode !== state.blendMode ||
+      !arrayEquals(
+        model.previousState.averageIPScalarMode,
+        state.averageIPScalarMode
+      ) ||
+      !arrayEquals(
+        model.previousState.proportionalComponents,
+        state.proportionalComponents
+      )
+    ) {
+      model.previousState = { ...state };
+
+      return true;
+    }
+
     // has something changed that would require us to recreate the shader?
     if (
       cellBO.getProgram() === 0 ||
@@ -383,9 +464,7 @@ function vtkOpenGLVolumeMapper(publicAPI, model) {
       model.lastHaveSeenDepthRequest !== model.haveSeenDepthRequest ||
       !!model.lastZBufferTexture !== !!model.zBufferTexture ||
       cellBO.getShaderSourceTime().getMTime() < publicAPI.getMTime() ||
-      cellBO.getShaderSourceTime().getMTime() < actor.getMTime() ||
-      cellBO.getShaderSourceTime().getMTime() < model.renderable.getMTime() ||
-      cellBO.getShaderSourceTime().getMTime() < model.currentInput.getMTime()
+      cellBO.getShaderSourceTime().getMTime() < model.renderable.getMTime()
     ) {
       model.lastZBufferTexture = model.zBufferTexture;
       return true;
