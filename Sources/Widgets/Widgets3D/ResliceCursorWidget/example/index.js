@@ -28,6 +28,23 @@ import {
 
 import { getViewPlaneNameFromViewType } from 'vtk.js/Sources/Widgets/Widgets3D/ResliceCursorWidget/helpers';
 
+import controlPanel from './controlPanel.html';
+
+// ----------------------------------------------------------------------------
+// Define main attributes
+// ----------------------------------------------------------------------------
+
+const viewColors = [
+  [0, 1, 0], // coronal
+  [1, 0, 0], // sagittal
+  [0, 0, 1], // axial
+  [0.5, 0.5, 0.5], // 3D
+];
+
+const widget = vtkResliceCursorWidget.newInstance();
+const widgetState = widget.getWidgetState();
+widgetState.setKeepOrthogonality(true);
+
 // ----------------------------------------------------------------------------
 // Define html structure
 // ----------------------------------------------------------------------------
@@ -36,6 +53,14 @@ const container = document.querySelector('body');
 const table = document.createElement('table');
 table.setAttribute('id', 'table');
 container.appendChild(table);
+
+// Define first line that will contains control panel
+const trLine0 = document.createElement('tr');
+trLine0.setAttribute('id', 'line0');
+table.appendChild(trLine0);
+const controlContainer = document.createElement('div');
+trLine0.appendChild(controlContainer);
+controlContainer.innerHTML = controlPanel;
 
 const trLine1 = document.createElement('tr');
 trLine1.setAttribute('id', 'line1');
@@ -80,16 +105,16 @@ function createSyntheticImageData(dims) {
 
   return imageData;
 }
-const viewColors = [
-  [0, 1, 0], // coronal
-  [1, 0, 0], // sagittal
-  [0, 0, 1], // axial
-  [0.5, 0.5, 0.5], // 3D
-];
 
 const viewAttributes = [];
-const widget = vtkResliceCursorWidget.newInstance();
-widget.getWidgetState().setOpacity(0.6);
+widgetState.setOpacity(0.6);
+
+const initialState = {
+  XPlaneNormal: widgetState.getXPlaneNormal(),
+  YPlaneNormal: widgetState.getYPlaneNormal(),
+  ZPlaneNormal: widgetState.getZPlaneNormal(),
+};
+
 const sliceTypes = [ViewTypes.XZ_PLANE, ViewTypes.YZ_PLANE, ViewTypes.XY_PLANE];
 let view3D = null;
 
@@ -341,4 +366,51 @@ reader.setUrl(`${__BASE_PATH__}/data/volume/LIDC2.vti`).then(() => {
     view3D.renderer.resetCamera();
     view3D.renderer.resetCameraClippingRange();
   });
+});
+
+// ----------------------------------------------------------------------------
+// Define panel interactions
+// ----------------------------------------------------------------------------
+function updateViews() {
+  for (let i = 0; i < viewAttributes.length; i++) {
+    const obj = viewAttributes[i];
+    updateReslice({
+      viewType: sliceTypes[i],
+      reslice: obj.reslice,
+      actor: obj.resliceActor,
+      renderer: obj.renderer,
+      resetFocalPoint: true,
+      keepFocalPointPosition: false,
+      computeFocalPointOffset: true,
+      sphereSources: obj.sphereSources,
+      resetViewUp: true,
+    });
+    obj.renderWindow.render();
+  }
+  view3D.renderer.resetCamera();
+  view3D.renderer.resetCameraClippingRange();
+}
+
+const checkboxOrthogonality = document.getElementById('checkboxOrthogality');
+checkboxOrthogonality.addEventListener('change', (ev) => {
+  widgetState.setKeepOrthogonality(checkboxOrthogonality.checked);
+});
+
+const checkboxRotation = document.getElementById('checkboxRotation');
+checkboxRotation.addEventListener('change', (ev) => {
+  widgetState.setEnableRotation(checkboxRotation.checked);
+});
+
+const checkboxTranslation = document.getElementById('checkboxTranslation');
+checkboxTranslation.addEventListener('change', (ev) => {
+  widgetState.setEnableTranslation(checkboxTranslation.checked);
+});
+
+const buttonReset = document.getElementById('buttonReset');
+buttonReset.addEventListener('click', () => {
+  widgetState.setXPlaneNormal(initialState.XPlaneNormal);
+  widgetState.setYPlaneNormal(initialState.YPlaneNormal);
+  widgetState.setZPlaneNormal(initialState.ZPlaneNormal);
+  widget.setCenter(widget.getWidgetState().getImage().getCenter());
+  updateViews();
 });
