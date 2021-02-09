@@ -35,8 +35,8 @@ import controlPanel from './controlPanel.html';
 // ----------------------------------------------------------------------------
 
 const viewColors = [
-  [0, 1, 0], // coronal
   [1, 0, 0], // sagittal
+  [0, 1, 0], // coronal
   [0, 0, 1], // axial
   [0.5, 0.5, 0.5], // 3D
 ];
@@ -108,6 +108,15 @@ function createSyntheticImageData(dims) {
   return imageData;
 }
 
+function createRGBStringFromRGBValues(rgb) {
+  if (rgb.length !== 3) {
+    return 'rgb(0, 0, 0)';
+  }
+  return `rgb(${(rgb[0] * 255).toString()}, ${(rgb[1] * 255).toString()}, ${(
+    rgb[2] * 255
+  ).toString()})`;
+}
+
 const viewAttributes = [];
 widgetState.setOpacity(0.6);
 
@@ -117,7 +126,7 @@ const initialState = {
   ZPlaneNormal: widgetState.getZPlaneNormal(),
 };
 
-const sliceTypes = [ViewTypes.XZ_PLANE, ViewTypes.YZ_PLANE, ViewTypes.XY_PLANE];
+const sliceTypes = [ViewTypes.YZ_PLANE, ViewTypes.XZ_PLANE, ViewTypes.XY_PLANE];
 let view3D = null;
 
 for (let i = 0; i < 4; i++) {
@@ -199,7 +208,7 @@ for (let i = 0; i < 4; i++) {
     fontFamily: 'Arial',
     fontColor: 'black',
     fontSizeScale: (res) => res / 2,
-    faceColor: '#ff0000',
+    faceColor: createRGBStringFromRGBValues(viewColors[0]),
     faceRotation: 0,
     edgeThickness: 0.1,
     edgeColor: 'black',
@@ -208,27 +217,27 @@ for (let i = 0; i < 4; i++) {
   // axes.setXPlusFaceProperty({ text: '+X' });
   axes.setXMinusFaceProperty({
     text: '-X',
-    faceColor: '#ff0000',
+    faceColor: createRGBStringFromRGBValues(viewColors[0]),
     faceRotation: 90,
     fontStyle: 'italic',
   });
   axes.setYPlusFaceProperty({
     text: '+Y',
-    faceColor: '#00ff00',
+    faceColor: createRGBStringFromRGBValues(viewColors[1]),
     fontSizeScale: (res) => res / 4,
   });
   axes.setYMinusFaceProperty({
     text: '-Y',
-    faceColor: '#00ff00',
+    faceColor: createRGBStringFromRGBValues(viewColors[1]),
     fontColor: 'white',
   });
   axes.setZPlusFaceProperty({
     text: '+Z',
-    faceColor: '#0000ff',
+    faceColor: createRGBStringFromRGBValues(viewColors[2]),
   });
   axes.setZMinusFaceProperty({
     text: '-Z',
-    faceColor: '#0000ff',
+    faceColor: createRGBStringFromRGBValues(viewColors[2]),
     faceRotation: 45,
     edgeThickness: 0,
   });
