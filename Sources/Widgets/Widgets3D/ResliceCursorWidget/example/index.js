@@ -313,8 +313,7 @@ reader.setUrl(`${__BASE_PATH__}/data/volume/LIDC2.vti`).then(() => {
     outlineActor.setMapper(outlineMapper);
     view3D.renderer.addActor(outlineActor);
 
-    for (let i = 0; i < viewAttributes.length; i++) {
-      const obj = viewAttributes[i];
+    viewAttributes.forEach((obj, i) => {
       obj.reslice.setInputData(image);
       obj.renderer.addActor(obj.resliceActor);
       view3D.renderer.addActor(obj.resliceActor);
@@ -372,7 +371,7 @@ reader.setUrl(`${__BASE_PATH__}/data/volume/LIDC2.vti`).then(() => {
         resetViewUp: true, // Need to be reset the first time the widget is initialized. Then, can be set to false, so that the camera view up will follow the camera
       });
       obj.renderWindow.render();
-    }
+    });
 
     view3D.renderer.resetCamera();
     view3D.renderer.resetCameraClippingRange();
@@ -383,8 +382,7 @@ reader.setUrl(`${__BASE_PATH__}/data/volume/LIDC2.vti`).then(() => {
 // Define panel interactions
 // ----------------------------------------------------------------------------
 function updateViews() {
-  for (let i = 0; i < viewAttributes.length; i++) {
-    const obj = viewAttributes[i];
+  viewAttributes.forEach((obj, i) => {
     updateReslice({
       viewType: sliceTypes[i],
       reslice: obj.reslice,
@@ -397,7 +395,7 @@ function updateViews() {
       resetViewUp: true,
     });
     obj.renderWindow.render();
-  }
+  });
   view3D.renderer.resetCamera();
   view3D.renderer.resetCameraClippingRange();
 }
