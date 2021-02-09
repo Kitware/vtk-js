@@ -20,7 +20,6 @@ import { vec4, mat4 } from 'gl-matrix';
 
 const VTK_INT_MAX = 2147483647;
 const { vtkErrorMacro } = macro;
-const viewUpFromViewType = {};
 
 // ----------------------------------------------------------------------------
 // Factory
@@ -395,9 +394,11 @@ function vtkResliceCursorWidget(publicAPI, model) {
       const newViewUp = vtkMath.subtract(worldP1, worldP0, [0, 0, 0]);
       vtkMath.normalize(newViewUp);
 
-      viewUpFromViewType[viewType] = newViewUp;
+      model.widgetState.getViewUpFromViewType()[viewType] = newViewUp;
     }
-    renderer.getActiveCamera().setViewUp(viewUpFromViewType[viewType]);
+    renderer
+      .getActiveCamera()
+      .setViewUp(model.widgetState.getViewUpFromViewType()[viewType]);
 
     // Project focalPoint onto image plane and preserve distance
     updateCamera(
@@ -430,7 +431,7 @@ function vtkResliceCursorWidget(publicAPI, model) {
     const topLeftPoint = planeSource.getPoint2();
     const viewUp = vtkMath.subtract(topLeftPoint, bottomLeftPoint, [0, 0, 0]);
     vtkMath.normalize(viewUp);
-    viewUpFromViewType[viewType] = viewUp;
+    model.widgetState.getViewUpFromViewType()[viewType] = viewUp;
 
     // Clip to bounds
     const boundedOrigin = [...planeSource.getOrigin()];

@@ -239,7 +239,6 @@ for (let i = 0; i < 4; i++) {
     text: '-Z',
     faceColor: createRGBStringFromRGBValues(viewColors[2]),
     faceRotation: 45,
-    edgeThickness: 0,
   });
 
   // create orientation widget
