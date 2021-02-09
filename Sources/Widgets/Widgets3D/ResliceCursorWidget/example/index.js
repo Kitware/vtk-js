@@ -45,6 +45,8 @@ const widget = vtkResliceCursorWidget.newInstance();
 const widgetState = widget.getWidgetState();
 widgetState.setKeepOrthogonality(true);
 
+const showDebugActors = true;
+
 // ----------------------------------------------------------------------------
 // Define html structure
 // ----------------------------------------------------------------------------
@@ -178,6 +180,7 @@ for (let i = 0; i < 4; i++) {
     const actor = vtkActor.newInstance();
     actor.setMapper(mapper);
     actor.getProperty().setColor(...viewColors[i]);
+    actor.setVisibility(showDebugActors);
     obj.sphereActors.push(actor);
     obj.sphereSources.push(sphere);
   }
