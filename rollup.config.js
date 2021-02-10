@@ -73,7 +73,7 @@ export default {
       let name = chunkInfo.name;
 
       if (name.includes('node_modules')) {
-        return name.replace('node_modules', 'vendor')
+        return name.replace('node_modules', 'vendor');
       }
 
       // throw all subscript prefixed chunks into a virtual folder
