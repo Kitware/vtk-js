@@ -72,7 +72,7 @@ export default {
       return id.replace(`${path.resolve(__dirname)}${path.sep}`, '');
     },
     chunkFileNames(chunkInfo) {
-      const name = chunkInfo.name;
+      let name = chunkInfo.name;
 
       if (name === 'vendor') {
         return path.join('_vendor', 'vendor.js');
@@ -81,6 +81,10 @@ export default {
       // throw all subscript prefixed chunks into a virtual folder
       if (name.startsWith('_')) {
         return name.replace(/^_/, `_virtual${path.sep}`);
+      }
+
+      if (!name.endsWith('.js')) {
+        name += '.js';
       }
 
       // rewrite Sources/ chunks
