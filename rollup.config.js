@@ -83,7 +83,8 @@ export default {
         return name.replace(/^_/, `_virtual${path.sep}`);
       }
 
-      return name;
+      // rewrite Sources/ chunks
+      return name.replace(/^Sources[/\\]/, '');
     },
   },
   external: [/@babel\/runtime/],
