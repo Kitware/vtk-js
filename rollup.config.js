@@ -154,8 +154,9 @@ export default {
       dynamicRequireTargets: [
         // handle a dynamic require circular dependencies
         'node_modules/readable-stream/lib/_stream_duplex.js',
-        'node_modules/jszip/lib/base64.js',
-        'node_modules/xmlbuilder/lib/*.js',
+        // Do not handle these circular dependencies, as downstream will get
+        // runtime errors related to commonjs require.
+        // 'node_modules/jszip/lib/base64.js',
       ],
       // dynamicRequireTargets implies transformMixedEsModules because
       // dynamicRequireTargets generates mixed modules
