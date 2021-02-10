@@ -53,6 +53,7 @@ export default {
   output: {
     dir: 'dist/esm/',
     format: 'es',
+    hoistTransitiveImports: false,
     entryFileNames(chunkInfo) {
       const name = chunkInfo.name;
 
