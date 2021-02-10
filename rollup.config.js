@@ -19,9 +19,9 @@ import webworkerLoader from 'rollup-plugin-web-worker-loader';
 import { rewriteFilenames } from './Utilities/rollup/plugin-rewrite-filenames';
 
 const IGNORE_LIST = [
-  /(\/|\\)example_?(\/|\\)/,
-  /(\/|\\)test/,
-  /^Sources(\/|\\)(Testing|ThirdParty)/,
+  /[/\\]example_?[/\\]/,
+  /[/\\]test/,
+  /^Sources[/\\](Testing|ThirdParty)/,
 ];
 
 function ignoreFile(name, ignoreList = IGNORE_LIST) {
@@ -45,7 +45,7 @@ const entryPoints = [
 
 const entries = {};
 entryPoints.forEach((entry) => {
-  entries[entry.replace(/^Sources(\/|\\)/, '')] = entry;
+  entries[entry.replace(/^Sources[/\\]/, '')] = entry;
 });
 
 export default {
@@ -57,9 +57,7 @@ export default {
       const name = chunkInfo.name;
 
       // rewrite vtk.js files from Sources/.../<NAME>/index.js to .../<NAME>.js
-      const sourcesMatch = /^(.*?)(\/|\\)([A-Z]\w+)(\/|\\)index\.js$/.exec(
-        name
-      );
+      const sourcesMatch = /^(.*?)[/\\]([A-Z]\w+)[/\\]index\.js$/.exec(name);
       if (sourcesMatch) {
         return path.join(sourcesMatch[1], `${sourcesMatch[2]}.js`);
       }
