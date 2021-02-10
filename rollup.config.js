@@ -40,7 +40,7 @@ const entryPoints = [
   path.join('Sources', 'macro.js'),
   path.join('Sources', 'vtk.js'),
   path.join('Sources', 'favicon.js'),
-  ...glob.sync('Sources/**/index.js').filter((file) => !ignoreFile(file)),
+  ...glob.sync('Sources/**/*.js').filter((file) => !ignoreFile(file)),
 ];
 
 const entries = {};
@@ -66,17 +66,14 @@ export default {
       return name;
     },
     manualChunks(id) {
-      if (id.includes('node_modules')) {
-        return 'vendor';
-      }
       // strip out full path to project root
       return id.replace(`${path.resolve(__dirname)}${path.sep}`, '');
     },
     chunkFileNames(chunkInfo) {
       let name = chunkInfo.name;
 
-      if (name === 'vendor') {
-        return path.join('_vendor', 'vendor.js');
+      if (name.includes('node_modules')) {
+        return name.replace('node_modules', 'vendor')
       }
 
       // throw all subscript prefixed chunks into a virtual folder
