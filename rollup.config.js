@@ -53,6 +53,7 @@ export default {
   output: {
     dir: 'dist/esm/',
     format: 'es',
+    hoistTransitiveImports: false,
     entryFileNames(chunkInfo) {
       const name = chunkInfo.name;
 
@@ -72,7 +73,7 @@ export default {
       return id.replace(`${path.resolve(__dirname)}${path.sep}`, '');
     },
     chunkFileNames(chunkInfo) {
-      const name = chunkInfo.name;
+      let name = chunkInfo.name;
 
       if (name === 'vendor') {
         return path.join('_vendor', 'vendor.js');
@@ -83,7 +84,12 @@ export default {
         return name.replace(/^_/, `_virtual${path.sep}`);
       }
 
-      return name;
+      if (!name.endsWith('.js')) {
+        name += '.js';
+      }
+
+      // rewrite Sources/ chunks
+      return name.replace(/^Sources[/\\]/, '');
     },
   },
   external: [/@babel\/runtime/],
