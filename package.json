@@ -47,7 +47,7 @@
     "shelljs": "0.8.4",
     "webvr-polyfill": "0.10.12",
     "webworker-promise": "0.4.2",
-    "xmlbuilder": "15.1.1"
+    "xmlbuilder2": "2.4.0"
   },
   "devDependencies": {
     "@babel/core": "7.12.10",
