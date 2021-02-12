@@ -32,67 +32,67 @@ function vtkImageReslice(publicAPI, model) {
   let optimizedTransform = null;
 
   function getImageResliceSlabTrap(tmpPtr, inComponents, sampleCount, f) {
+    let subTmpPtr = tmpPtr;
     let m = inComponents;
-    --sampleCount;
+    const n = sampleCount - 1;
     do {
-      let result = tmpPtr * 0.5;
-      for (let k = sampleCount - 1; k !== 0; --k) {
-        tmpPtr += inComponents;
-        result += tmpPtr;
+      let result = subTmpPtr[0] * 0.5;
+      for (let k = n - 1; k !== 0; --k) {
+        subTmpPtr = tmpPtr.subarray(inComponents);
+        result += subTmpPtr[0];
       }
-      tmpPtr += inComponents;
-      result += tmpPtr * 0.5;
-      tmpPtr -= sampleCount * inComponents;
-      tmpPtr++;
-      tmpPtr = result * f;
+      subTmpPtr = tmpPtr.subarray(inComponents);
+      result += subTmpPtr[0] * 0.5;
+      tmpPtr.fill(result * f, 0, 1);
+      tmpPtr = tmpPtr.subarray(1);
     } while (--m);
   }
 
   function getImageResliceSlabSum(tmpPtr, inComponents, sampleCount, f) {
+    let subTmpPtr = tmpPtr;
     let m = inComponents;
-    --sampleCount;
+    const n = sampleCount - 1;
     do {
-      let result = tmpPtr;
-      let k = sampleCount;
+      let result = subTmpPtr[0];
+      let k = n;
       do {
-        tmpPtr += inComponents;
-        result += tmpPtr;
+        subTmpPtr = tmpPtr.subarray(inComponents);
+        result += subTmpPtr[0];
       } while (--k);
-      tmpPtr -= sampleCount * inComponents;
-      tmpPtr++;
-      tmpPtr = result * f;
+      tmpPtr.fill(result * f, 0, 1);
+      tmpPtr = tmpPtr.subarray(1);
     } while (--m);
   }
 
   function getImageResliceCompositeMinValue(tmpPtr, inComponents, sampleCount) {
+    let subTmpPtr = tmpPtr;
     let m = inComponents;
-    --sampleCount;
+    const n = sampleCount - 1;
     do {
-      let result = tmpPtr;
-      let k = sampleCount;
+      let result = subTmpPtr[0];
+      let k = n;
       do {
-        tmpPtr += inComponents;
-        result = result < tmpPtr ? result : tmpPtr;
+        subTmpPtr = tmpPtr.subarray(inComponents);
+        result = result < subTmpPtr[0] ? result : subTmpPtr[0];
       } while (--k);
-      tmpPtr -= sampleCount * inComponents;
-      tmpPtr++;
-      tmpPtr = result;
+      tmpPtr.fill(result, 0, 1);
+      tmpPtr = tmpPtr.subarray(1);
     } while (--m);
   }
 
   function getImageResliceCompositeMaxValue(tmpPtr, inComponents, sampleCount) {
+    let subTmpPtr = tmpPtr;
     let m = inComponents;
-    --sampleCount;
+    const n = sampleCount - 1;
     do {
-      let result = tmpPtr;
-      let k = sampleCount;
+      let result = subTmpPtr[0];
+      let k = n;
       do {
-        tmpPtr += inComponents;
-        result = result > tmpPtr ? result : tmpPtr;
+        subTmpPtr = tmpPtr.subarray(inComponents);
+        result = result > subTmpPtr[0] ? result : subTmpPtr[0];
       } while (--k);
-      tmpPtr -= sampleCount * inComponents;
-      tmpPtr++;
-      tmpPtr = result;
+      tmpPtr.fill(result, 0, 1);
+      tmpPtr = tmpPtr.subarray(1);
     } while (--m);
   }
 
