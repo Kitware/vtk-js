@@ -35,7 +35,7 @@ function vtkImageReslice(publicAPI, model) {
     for (let i = 0; i < inComponents; i += 1) {
       let result = tmpPtr[i] * 0.5;
       for (let j = 1; j < n; j += 1) {
-        result += tmpPtr[i + j];
+        result += tmpPtr[i + j * inComponents];
       }
       result += tmpPtr[i + n] * 0.5;
       tmpPtr[i] = result * f;
@@ -46,7 +46,7 @@ function vtkImageReslice(publicAPI, model) {
     for (let i = 0; i < inComponents; i += 1) {
       let result = tmpPtr[i];
       for (let j = 1; j < sampleCount; j += 1) {
-        result += tmpPtr[i + j];
+        result += tmpPtr[i + j * inComponents];
       }
       tmpPtr[i] = result * f;
     }
@@ -56,7 +56,7 @@ function vtkImageReslice(publicAPI, model) {
     for (let i = 0; i < inComponents; i += 1) {
       let result = tmpPtr[i];
       for (let j = 1; j < sampleCount; j += 1) {
-        result = result < tmpPtr[i + j] ? result : tmpPtr[i + j];
+        result = Math.min(result, tmpPtr[i + j * inComponents]);
       }
       tmpPtr[i] = result;
     }
@@ -66,7 +66,7 @@ function vtkImageReslice(publicAPI, model) {
     for (let i = 0; i < inComponents; i += 1) {
       let result = tmpPtr[i];
       for (let j = 1; j < sampleCount; j += 1) {
-        result = result > tmpPtr[i + j] ? result : tmpPtr[i + j];
+        result = Math.max(result, tmpPtr[i + j * inComponents]);
       }
       tmpPtr[i] = result;
     }
