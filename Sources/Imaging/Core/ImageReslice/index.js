@@ -37,7 +37,7 @@ function vtkImageReslice(publicAPI, model) {
       for (let j = 1; j < n; j += 1) {
         result += tmpPtr[i + j * inComponents];
       }
-      result += tmpPtr[i + n] * 0.5;
+      result += tmpPtr[i + n * inComponents] * 0.5;
       tmpPtr[i] = result * f;
     }
   }
