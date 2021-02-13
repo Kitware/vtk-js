@@ -25,6 +25,7 @@ import {
   ViewTypes,
   CaptureOn,
 } from 'vtk.js/Sources/Widgets/Core/WidgetManager/Constants';
+import { SlabMode } from 'vtk.js/Sources/Imaging/Core/ImageReslice/Constants';
 
 import { getViewPlaneNameFromViewType } from 'vtk.js/Sources/Widgets/Widgets3D/ResliceCursorWidget/helpers';
 
@@ -169,6 +170,8 @@ for (let i = 0; i < 4; i++) {
   }
 
   obj.reslice = vtkImageReslice.newInstance();
+  obj.reslice.setSlabMode(SlabMode.MEAN);
+  obj.reslice.setSlabNumberOfSlices(1);
   obj.reslice.setTransformInputSampling(false);
   obj.reslice.setAutoCropOutput(true);
   obj.reslice.setOutputDimensionality(2);
@@ -415,6 +418,14 @@ checkboxTranslation.addEventListener('change', (ev) => {
   widgetState.setEnableTranslation(checkboxTranslation.checked);
 });
 
+const optionSlabModeMin = document.getElementById('slabModeMin');
+optionSlabModeMin.value = SlabMode.MIN;
+const optionSlabModeMax = document.getElementById('slabModeMax');
+optionSlabModeMax.value = SlabMode.MAX;
+const optionSlabModeMean = document.getElementById('slabModeMean');
+optionSlabModeMean.value = SlabMode.MEAN;
+const optionSlabModeSum = document.getElementById('slabModeSum');
+optionSlabModeSum.value = SlabMode.SUM;
 const selectSlabMode = document.getElementById('slabMode');
 selectSlabMode.addEventListener('change', (ev) => {
   viewAttributes.forEach((obj) => {
