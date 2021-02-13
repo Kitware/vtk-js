@@ -29,6 +29,7 @@ import { SlabMode } from 'vtk.js/Sources/Imaging/Core/ImageReslice/Constants';
 
 import { getViewPlaneNameFromViewType } from 'vtk.js/Sources/Widgets/Widgets3D/ResliceCursorWidget/helpers';
 
+import { vec3 } from 'gl-matrix';
 import controlPanel from './controlPanel.html';
 
 // ----------------------------------------------------------------------------
@@ -378,6 +379,10 @@ reader.setUrl(`${__BASE_PATH__}/data/volume/LIDC2.vti`).then(() => {
 
     view3D.renderer.resetCamera();
     view3D.renderer.resetCameraClippingRange();
+
+    // set max number of slices to slider.
+    const maxNumberOfSlices = vec3.length(image.getDimensions());
+    document.getElementById('slabNumber').max = maxNumberOfSlices;
   });
 });
 
