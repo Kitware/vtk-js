@@ -415,6 +415,24 @@ checkboxTranslation.addEventListener('change', (ev) => {
   widgetState.setEnableTranslation(checkboxTranslation.checked);
 });
 
+const selectSlabMode = document.getElementById('slabMode');
+selectSlabMode.addEventListener('change', (ev) => {
+  viewAttributes.forEach((obj) => {
+    obj.reslice.setSlabMode(Number(ev.target.value));
+  });
+  updateViews();
+});
+
+const sliderSlabNumberofSlices = document.getElementById('slabNumber');
+sliderSlabNumberofSlices.addEventListener('change', (ev) => {
+  const trSlabNumberValue = document.getElementById('slabNumberValue');
+  trSlabNumberValue.innerHTML = ev.target.value;
+  viewAttributes.forEach((obj) => {
+    obj.reslice.setSlabNumberOfSlices(ev.target.value);
+  });
+  updateViews();
+});
+
 const buttonReset = document.getElementById('buttonReset');
 buttonReset.addEventListener('click', () => {
   widgetState.setXPlaneNormal(initialState.XPlaneNormal);
