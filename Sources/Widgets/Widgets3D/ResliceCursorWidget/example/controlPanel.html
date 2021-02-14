@@ -18,9 +18,24 @@
     </td>
   </tr>
   <tr>
+    <td>Slab Mode :</td>
+    <td>
+      <select id="slabMode">
+        <option id="slabModeMin">MIN</option>
+        <option id="slabModeMax">MAX</option>
+        <option id="slabModeMean" selected="selected">MEAN</option>
+        <option id="slabModeSum">SUM</option>
+      </select>
+    </td>
+  </tr>
+  <tr>
+    <td>Slab Number of Slices :</td>
+    <td><input id='slabNumber' type="range" min="1" max="100" step="1" value="1" style="width: 100px;"/></td>
+    <td id='slabNumberValue'>1</td>
+  </tr>
+  <tr>
     <td>
       <button id="buttonReset">Reset views:</button>
     </td>
-  </tr>
-
+  </tr>  
 </table>

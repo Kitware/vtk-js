@@ -25,9 +25,11 @@ import {
   ViewTypes,
   CaptureOn,
 } from 'vtk.js/Sources/Widgets/Core/WidgetManager/Constants';
+import { SlabMode } from 'vtk.js/Sources/Imaging/Core/ImageReslice/Constants';
 
 import { getViewPlaneNameFromViewType } from 'vtk.js/Sources/Widgets/Widgets3D/ResliceCursorWidget/helpers';
 
+import { vec3 } from 'gl-matrix';
 import controlPanel from './controlPanel.html';
 
 // ----------------------------------------------------------------------------
@@ -169,6 +171,8 @@ for (let i = 0; i < 4; i++) {
   }
 
   obj.reslice = vtkImageReslice.newInstance();
+  obj.reslice.setSlabMode(SlabMode.MEAN);
+  obj.reslice.setSlabNumberOfSlices(1);
   obj.reslice.setTransformInputSampling(false);
   obj.reslice.setAutoCropOutput(true);
   obj.reslice.setOutputDimensionality(2);
@@ -375,6 +379,10 @@ reader.setUrl(`${__BASE_PATH__}/data/volume/LIDC2.vti`).then(() => {
 
     view3D.renderer.resetCamera();
     view3D.renderer.resetCameraClippingRange();
+
+    // set max number of slices to slider.
+    const maxNumberOfSlices = vec3.length(image.getDimensions());
+    document.getElementById('slabNumber').max = maxNumberOfSlices;
   });
 });
 
@@ -413,6 +421,32 @@ checkboxRotation.addEventListener('change', (ev) => {
 const checkboxTranslation = document.getElementById('checkboxTranslation');
 checkboxTranslation.addEventListener('change', (ev) => {
   widgetState.setEnableTranslation(checkboxTranslation.checked);
+});
+
+const optionSlabModeMin = document.getElementById('slabModeMin');
+optionSlabModeMin.value = SlabMode.MIN;
+const optionSlabModeMax = document.getElementById('slabModeMax');
+optionSlabModeMax.value = SlabMode.MAX;
+const optionSlabModeMean = document.getElementById('slabModeMean');
+optionSlabModeMean.value = SlabMode.MEAN;
+const optionSlabModeSum = document.getElementById('slabModeSum');
+optionSlabModeSum.value = SlabMode.SUM;
+const selectSlabMode = document.getElementById('slabMode');
+selectSlabMode.addEventListener('change', (ev) => {
+  viewAttributes.forEach((obj) => {
+    obj.reslice.setSlabMode(Number(ev.target.value));
+  });
+  updateViews();
+});
+
+const sliderSlabNumberofSlices = document.getElementById('slabNumber');
+sliderSlabNumberofSlices.addEventListener('change', (ev) => {
+  const trSlabNumberValue = document.getElementById('slabNumberValue');
+  trSlabNumberValue.innerHTML = ev.target.value;
+  viewAttributes.forEach((obj) => {
+    obj.reslice.setSlabNumberOfSlices(ev.target.value);
+  });
+  updateViews();
 });
 
 const buttonReset = document.getElementById('buttonReset');
