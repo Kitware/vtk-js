@@ -28,6 +28,8 @@ const handledEvents = [
   'StartAnimation',
   'Animation',
   'EndAnimation',
+  'MouseEnter',
+  'MouseLeave',
   'StartMouseMove',
   'MouseMove',
   'EndMouseMove',
@@ -208,8 +210,9 @@ function vtkRenderWindowInteractor(publicAPI, model) {
         model.container[invMethod]('mousemove', publicAPI.handleMouseMove);
       }
 
+      rootElm[method]('mouseenter', publicAPI.handleMouseEnter);
+      rootElm[method]('mouseleave', publicAPI.handleMouseLeave);
       rootElm[method]('mouseup', publicAPI.handleMouseUp);
-      // rootElm[method]('mouseleave', publicAPI.handleMouseUp);
       rootElm[method]('mousemove', publicAPI.handleMouseMove);
       rootElm[method]('touchend', publicAPI.handleTouchEnd, false);
       rootElm[method]('touchcancel', publicAPI.handleTouchEnd, false);
@@ -227,6 +230,8 @@ function vtkRenderWindowInteractor(publicAPI, model) {
     // container.addEventListener('click', preventDefault); // Avoid stopping event propagation
     container.addEventListener('wheel', publicAPI.handleWheel);
     container.addEventListener('DOMMouseScroll', publicAPI.handleWheel);
+    container.addEventListener('mouseenter', publicAPI.handleMouseEnter);
+    container.addEventListener('mouseleave', publicAPI.handleMouseLeave);
     container.addEventListener('mousemove', publicAPI.handleMouseMove);
     container.addEventListener('mousedown', publicAPI.handleMouseDown);
     document
@@ -256,6 +261,14 @@ function vtkRenderWindowInteractor(publicAPI, model) {
     model.container.removeEventListener(
       'DOMMouseScroll',
       publicAPI.handleWheel
+    );
+    model.container.removeEventListener(
+      'mouseenter',
+      publicAPI.handleMouseEnter
+    );
+    model.container.removeEventListener(
+      'mouseleave',
+      publicAPI.handleMouseLeave
     );
     model.container.removeEventListener('mousemove', publicAPI.handleMouseMove);
     model.container.removeEventListener('mousedown', publicAPI.handleMouseDown);
@@ -543,6 +556,26 @@ function vtkRenderWindowInteractor(publicAPI, model) {
       publicAPI.endMouseWheelEvent();
       model.wheelTimeoutID = 0;
     }, 200);
+  };
+
+  publicAPI.handleMouseEnter = (event) => {
+    const callData = {
+      position: getScreenEventPositionFor(event),
+    };
+    const keys = getModifierKeysFor(event);
+    Object.assign(callData, keys);
+
+    publicAPI.mouseEnterEvent(callData);
+  };
+
+  publicAPI.handleMouseLeave = (event) => {
+    const callData = {
+      position: getScreenEventPositionFor(event),
+    };
+    const keys = getModifierKeysFor(event);
+    Object.assign(callData, keys);
+
+    publicAPI.mouseLeaveEvent(callData);
   };
 
   publicAPI.handleMouseUp = (event) => {
