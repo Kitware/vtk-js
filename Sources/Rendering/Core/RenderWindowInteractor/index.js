@@ -210,8 +210,6 @@ function vtkRenderWindowInteractor(publicAPI, model) {
         model.container[invMethod]('mousemove', publicAPI.handleMouseMove);
       }
 
-      rootElm[method]('mouseenter', publicAPI.handleMouseEnter);
-      rootElm[method]('mouseleave', publicAPI.handleMouseLeave);
       rootElm[method]('mouseup', publicAPI.handleMouseUp);
       rootElm[method]('mousemove', publicAPI.handleMouseMove);
       rootElm[method]('touchend', publicAPI.handleTouchEnd, false);
