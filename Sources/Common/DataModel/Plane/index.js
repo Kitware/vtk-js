@@ -48,6 +48,7 @@ function projectVector(v, normal, vproj) {
   vproj[0] = v[0] - (t * normal[0]) / n2;
   vproj[1] = v[1] - (t * normal[1]) / n2;
   vproj[2] = v[2] - (t * normal[2]) / n2;
+  return vproj;
 }
 
 function generalizedProjectPoint(x, origin, normal, xproj) {
@@ -224,9 +225,7 @@ export function vtkPlane(publicAPI, model) {
     projectPoint(x, model.origin, model.normal, xproj);
   };
 
-  publicAPI.projectVector = (v, vproj) => {
-    projectVector(v, model.normal, vproj);
-  };
+  publicAPI.projectVector = (v, vproj) => projectVector(v, model.normal, vproj);
 
   publicAPI.push = (distance) => {
     if (distance === 0.0) {

@@ -6,11 +6,11 @@ import vtkCubeSource from 'vtk.js/Sources/Filters/Sources/CubeSource';
 import vtkCutter from 'vtk.js/Sources/Filters/Core/Cutter';
 import vtkPlane from 'vtk.js/Sources/Common/DataModel/Plane';
 import * as vtkMath from 'vtk.js/Sources/Common/Core/Math';
+import vtkMatrixBuilder from 'vtk.js/Sources/Common/Core/MatrixBuilder';
 
 import { ViewTypes } from 'vtk.js/Sources/Widgets/Core/WidgetManager/Constants';
-import { defaultViewUpFromViewType } from 'vtk.js/Sources/Widgets/Widgets3D/ResliceCursorWidget/Constants';
 
-import vtkMatrixBuilder from 'vtk.js/Sources/Common/Core/MatrixBuilder';
+const EPSILON = 0.00001;
 
 /**
  * Fit the plane defined by origin, p1, p2 onto the bounds.
@@ -67,7 +67,6 @@ export function boundPlane(bounds, origin, p1, p2) {
 export function boundPoint(inPoint, v1, v2, bounds) {
   const absT1 = v1.map((val) => Math.abs(val));
   const absT2 = v2.map((val) => Math.abs(val));
-  const epsilon = 0.00001;
 
   let o1 = 0.0;
   let o2 = 0.0;
@@ -80,10 +79,10 @@ export function boundPoint(inPoint, v1, v2, bounds) {
     const absT = useT1 ? absT1 : absT2;
 
     if (inPoint[i] < bounds[i * 2]) {
-      axisOffset = absT[i] > epsilon ? (bounds[2 * i] - inPoint[i]) / t[i] : 0;
+      axisOffset = absT[i] > EPSILON ? (bounds[2 * i] - inPoint[i]) / t[i] : 0;
     } else if (inPoint[i] > bounds[2 * i + 1]) {
       axisOffset =
-        absT[i] > epsilon ? (bounds[2 * i + 1] - inPoint[i]) / t[i] : 0;
+        absT[i] > EPSILON ? (bounds[2 * i + 1] - inPoint[i]) / t[i] : 0;
     }
 
     if (useT1) {
@@ -139,19 +138,13 @@ export function getAssociatedLinesName(lineName) {
   }
 }
 
-export function getViewPlaneNameFromViewType(viewType) {
-  switch (viewType) {
-    case ViewTypes.YZ_PLANE:
-      return 'X';
-    case ViewTypes.XZ_PLANE:
-      return 'Y';
-    case ViewTypes.XY_PLANE:
-      return 'Z';
-    default:
-      return '';
-  }
-}
-
+/**
+ * Rotates a vector around another.
+ * @param {vec3} vectorToBeRotated Vector to rate
+ * @param {vec3} axis Axis to rotate around
+ * @param {Number} angle Angle in radian
+ * @returns The rotated vector
+ */
 export function rotateVector(vectorToBeRotated, axis, angle) {
   const rotatedVector = [...vectorToBeRotated];
   vtkMatrixBuilder.buildFromRadian().rotate(angle, axis).apply(rotatedVector);
@@ -190,15 +183,9 @@ function updateLine(lineState, center, axis, lineLength, rotationLength) {
 // Update the reslice cursor state according to the three planes normals and the origin
 export function updateState(widgetState) {
   // Compute axis
-  const xNormal = widgetState.getXPlaneNormal();
-  const yNormal = widgetState.getYPlaneNormal();
-  const zNormal = widgetState.getZPlaneNormal();
-  const newXAxis = [];
-  const newYAxis = [];
-  const newZAxis = [];
-  vtkMath.cross(xNormal, yNormal, newZAxis);
-  vtkMath.cross(yNormal, zNormal, newXAxis);
-  vtkMath.cross(zNormal, xNormal, newYAxis);
+  const newXAxis = widgetState.getPlanes()[ViewTypes.YZ_PLANE].normal;
+  const newYAxis = widgetState.getPlanes()[ViewTypes.XZ_PLANE].normal;
+  const newZAxis = widgetState.getPlanes()[ViewTypes.XY_PLANE].normal;
 
   const bounds = widgetState.getImage().getBounds();
   const center = widgetState.getCenter();
@@ -260,52 +247,31 @@ export function updateState(widgetState) {
 
 /**
  * First rotate planeToTransform to match targetPlane normal.
- * Then rotate around targetPlane normal to preserve world plane "up" vector (i.e. Origin->p2 ).
+ * Then rotate around targetNormal to enforce targetViewUp "up" vector (i.e. Origin->p2 ).
  * There is an infinite number of options to rotate a plane normal to another. Here we attempt to
- * do it by preserving Origin, P1 and P2 to be constrained within the volume bounds.
+ * preserve Origin, P1 and P2 when rotating around targetPlane.
  * @param {vtkPlaneSource} planeToTransform
- * @param {vtkPlane} targetPlane
- * @param {ViewTypes} viewType
+ * @param {vec3} targetOrigin Center of the plane
+ * @param {vec3} targetNormal Normal to state to the plane
+ * @param {vec3} viewType Vector that enforces view up
  */
-export function transformPlane(planeToTransform, targetPlane, viewType) {
-  const defaultViewUp = defaultViewUpFromViewType[viewType];
-  const rotatedNormal = targetPlane.getNormal();
-  const rotatedOrigin = targetPlane.getOrigin();
-  // Apply rotation onto plane (i.e. origin, p1, p2)
-  planeToTransform.setNormal(...rotatedNormal);
-  // TBD: isn't it a no-op ?
-  planeToTransform.setCenter(...rotatedOrigin);
-
-  const rotatedOrig = planeToTransform.getOrigin();
-  const rotatedPoint1 = planeToTransform.getPoint1();
-  const rotatedPoint2 = planeToTransform.getPoint2();
-
-  // Compute local view up of transformed plane
-  const rotatedViewUp = vtkMath.subtract(rotatedPoint2, rotatedOrig, [0, 0, 0]);
-  const rotatedPlane = vtkPlane.newInstance({
-    normal: rotatedNormal,
-    origin: rotatedOrigin,
-  });
-  // Project the default viewup we want to fit on
-  const projectedDefaultViewUp = [0, 0, 1];
-  rotatedPlane.projectVector(defaultViewUp, projectedDefaultViewUp);
-
-  vtkMath.normalize(projectedDefaultViewUp);
-  vtkMath.normalize(rotatedViewUp);
-
-  const rotationAngle = vtkMath.angleBetweenVectors(
-    projectedDefaultViewUp,
-    rotatedViewUp
+export function transformPlane(
+  planeToTransform,
+  targetCenter,
+  targetNormal,
+  targetViewUp
+) {
+  planeToTransform.setNormal(targetNormal);
+  const viewUp = vtkMath.subtract(
+    planeToTransform.getPoint2(),
+    planeToTransform.getOrigin(),
+    []
   );
-
-  // Compute the new plane points
-  const transform = vtkMatrixBuilder
-    .buildFromRadian()
-    .rotate(rotationAngle, rotatedNormal);
-  transform.apply(rotatedOrig);
-  transform.apply(rotatedPoint1);
-  transform.apply(rotatedPoint2);
-  planeToTransform.setOrigin(rotatedOrig);
-  planeToTransform.setPoint1(rotatedPoint1);
-  planeToTransform.setPoint2(rotatedPoint2);
+  const angle = vtkMath.signedAngleBetweenVectors(
+    viewUp,
+    targetViewUp,
+    targetNormal
+  );
+  planeToTransform.rotate(angle, targetNormal);
+  planeToTransform.setCenter(targetCenter);
 }

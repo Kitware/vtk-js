@@ -7,8 +7,8 @@ import * as vtkMath from 'vtk.js/Sources/Common/Core/Math';
 import {
   boundPointOnPlane,
   getAssociatedLinesName,
-  updateState,
   rotateVector,
+  updateState,
 } from 'vtk.js/Sources/Widgets/Widgets3D/ResliceCursorWidget/helpers';
 
 import {
@@ -63,10 +63,8 @@ export default function widgetBehavior(publicAPI, model) {
   publicAPI.handleLeftButtonPress = (callData) => {
     if (model.activeState && model.activeState.getActive()) {
       isDragging = true;
-      const viewName = model.widgetState.getActiveViewName();
-      const currentPlaneNormal = model.widgetState[
-        `get${viewName}PlaneNormal`
-      ]();
+      const viewType = model.widgetState.getActiveViewType();
+      const currentPlaneNormal = model.widgetState.getPlanes()[viewType].normal;
       model.planeManipulator.setOrigin(model.widgetState.getCenter());
       model.planeManipulator.setNormal(currentPlaneNormal);
 
@@ -331,47 +329,35 @@ export default function widgetBehavior(publicAPI, model) {
     vtkMath.subtract(worldCoords, center, currentVectorToOrigin);
     vtkMath.normalize(currentVectorToOrigin);
 
-    const rotationAngle = vtkMath.angleBetweenVectors(
+    const radianAngle = vtkMath.signedAngleBetweenVectors(
       previousVectorToOrigin,
-      currentVectorToOrigin
+      currentVectorToOrigin,
+      planeNormal
     );
 
-    // Define the direction of the rotation
-    const cross = [0, 0, 0];
-    vtkMath.cross(currentVectorToOrigin, previousVectorToOrigin, cross);
-    vtkMath.normalize(cross);
-
-    const sign = vtkMath.dot(cross, planeNormal) > 0 ? -1 : 1;
-    const radianAngle = rotationAngle * sign;
-
     // Rotate associated line's plane normal
-    const planeName = activeLine.getPlaneName();
-    const normal = model.widgetState[`get${planeName}PlaneNormal`]();
-    const newNormal = rotateVector(normal, planeNormal, radianAngle);
-
-    model.widgetState[`set${planeName}PlaneNormal`](newNormal);
+    const viewType = activeLine.getViewType();
+    publicAPI.rotatePlane(viewType, radianAngle, planeNormal);
 
     if (model.widgetState.getKeepOrthogonality()) {
       const associatedLineName = getAssociatedLinesName(activeLine.getName());
       const associatedLine = model.widgetState[`get${associatedLineName}`]();
-      const associatedPlaneName = associatedLine.getPlaneName();
-      const associatedNormal = model.widgetState[
-        `get${associatedPlaneName}PlaneNormal`
-      ]();
-
-      const newAssociatedNormal = rotateVector(
-        associatedNormal,
-        planeNormal,
-        radianAngle
-      );
-
-      model.widgetState[`set${associatedPlaneName}PlaneNormal`](
-        newAssociatedNormal
-      );
+      const associatedViewType = associatedLine.getViewType();
+      publicAPI.rotatePlane(associatedViewType, radianAngle, planeNormal);
     }
     updateState(model.widgetState);
   };
 
+  publicAPI.rotatePlane = (viewType, radianAngle, planeNormal) => {
+    const { normal, viewUp } = model.widgetState.getPlanes()[viewType];
+    const newNormal = rotateVector(normal, planeNormal, radianAngle);
+    const newViewUp = rotateVector(viewUp, planeNormal, radianAngle);
+
+    model.widgetState.getPlanes()[viewType] = {
+      normal: newNormal,
+      viewUp: newViewUp,
+    };
+  };
   // --------------------------------------------------------------------------
   // initialization
   // --------------------------------------------------------------------------

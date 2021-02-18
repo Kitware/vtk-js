@@ -81,6 +81,11 @@ class Transform {
     return this;
   }
 
+  multiply(mat4x4) {
+    mat4.multiply(this.matrix, this.matrix, mat4x4);
+    return this;
+  }
+
   identity() {
     mat4.identity(this.matrix);
     return this;

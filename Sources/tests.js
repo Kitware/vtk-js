@@ -76,3 +76,4 @@ import './Testing/testSerialization';
 import './Testing/testProxy';
 import './Widgets/Widgets3D/ResliceCursorWidget/test/testBoundPlane';
 import './Widgets/Widgets3D/ResliceCursorWidget/test/testRotateVector';
+import './Common/Core/Math/test/testMath';

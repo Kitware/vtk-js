@@ -137,6 +137,12 @@ Normalize in place. Returns norm.
 
 ### angleBetweenVectors(v1, v2)
 
+angle between 3D vectors
+
+### signedAngleBetweenVectors(v1, v2, vN)
+
+Signed angle between v1 and v2 with regards to plane defined by normal vN.
+
 ### gaussianAmplitude(mean, variance, position)
 
 ### gaussianWeight(mean, variance, position)
