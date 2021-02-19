@@ -15,7 +15,7 @@ import {
   vtkInterpolationMathRound,
   vtkInterpolationMathClamp,
 } from 'vtk.js/Sources/Imaging/Core/AbstractImageInterpolator/InterpolationInfo';
-import SlabMode from './Constants';
+import { SlabMode } from './Constants';
 
 const { TYPED_ARRAYS, capitalize, vtkErrorMacro, vtkDebugMacro } = macro;
 
@@ -29,6 +29,72 @@ function vtkImageReslice(publicAPI, model) {
 
   let indexMatrix = null;
   let optimizedTransform = null;
+
+  function getImageResliceSlabTrap(tmpPtr, inComponents, sampleCount, f) {
+    const n = sampleCount - 1;
+    for (let i = 0; i < inComponents; i += 1) {
+      let result = tmpPtr[i] * 0.5;
+      for (let j = 1; j < n; j += 1) {
+        result += tmpPtr[i + j * inComponents];
+      }
+      result += tmpPtr[i + n * inComponents] * 0.5;
+      tmpPtr[i] = result * f;
+    }
+  }
+
+  function getImageResliceSlabSum(tmpPtr, inComponents, sampleCount, f) {
+    for (let i = 0; i < inComponents; i += 1) {
+      let result = tmpPtr[i];
+      for (let j = 1; j < sampleCount; j += 1) {
+        result += tmpPtr[i + j * inComponents];
+      }
+      tmpPtr[i] = result * f;
+    }
+  }
+
+  function getImageResliceCompositeMinValue(tmpPtr, inComponents, sampleCount) {
+    for (let i = 0; i < inComponents; i += 1) {
+      let result = tmpPtr[i];
+      for (let j = 1; j < sampleCount; j += 1) {
+        result = Math.min(result, tmpPtr[i + j * inComponents]);
+      }
+      tmpPtr[i] = result;
+    }
+  }
+
+  function getImageResliceCompositeMaxValue(tmpPtr, inComponents, sampleCount) {
+    for (let i = 0; i < inComponents; i += 1) {
+      let result = tmpPtr[i];
+      for (let j = 1; j < sampleCount; j += 1) {
+        result = Math.max(result, tmpPtr[i + j * inComponents]);
+      }
+      tmpPtr[i] = result;
+    }
+  }
+
+  function getImageResliceCompositeMeanValue(
+    tmpPtr,
+    inComponents,
+    sampleCount
+  ) {
+    const f = 1.0 / sampleCount;
+    getImageResliceSlabSum(tmpPtr, inComponents, sampleCount, f);
+  }
+
+  function getImageResliceCompositeMeanTrap(tmpPtr, inComponents, sampleCount) {
+    const f = 1.0 / (sampleCount - 1);
+    getImageResliceSlabTrap(tmpPtr, inComponents, sampleCount, f);
+  }
+
+  function getImageResliceCompositeSumValue(tmpPtr, inComponents, sampleCount) {
+    const f = 1.0;
+    getImageResliceSlabSum(tmpPtr, inComponents, sampleCount, f);
+  }
+
+  function getImageResliceCompositeSumTrap(tmpPtr, inComponents, sampleCount) {
+    const f = 1.0;
+    getImageResliceSlabTrap(tmpPtr, inComponents, sampleCount, f);
+  }
 
   publicAPI.setResliceAxes = (resliceAxes) => {
     if (!model.resliceAxes) {
@@ -233,7 +299,7 @@ function vtkImageReslice(publicAPI, model) {
     const outputStencil = null;
 
     // multiple samples for thick slabs
-    const nsamples = Math.min(model.slabNumberOfSlices, 1);
+    const nsamples = Math.max(model.slabNumberOfSlices, 1);
 
     // spacing between slab samples (as a fraction of slice spacing).
     const slabSampleSpacing = model.slabSliceSpacingFraction;
@@ -826,7 +892,34 @@ function vtkImageReslice(publicAPI, model) {
   publicAPI.getSetPixelsFunc = (dataType, dataSize, numscalars, dataPtr) =>
     numscalars === 1 ? publicAPI.set1 : publicAPI.set;
 
-  publicAPI.getCompositeFunc = (slabMode, slabTrapezoidIntegration) => null;
+  publicAPI.getCompositeFunc = (slabMode, slabTrapezoidIntegration) => {
+    let composite = null;
+    // eslint-disable-next-line default-case
+    switch (slabMode) {
+      case SlabMode.MIN:
+        composite = getImageResliceCompositeMinValue;
+        break;
+      case SlabMode.MAX:
+        composite = getImageResliceCompositeMaxValue;
+        break;
+      case SlabMode.MEAN:
+        if (slabTrapezoidIntegration) {
+          composite = getImageResliceCompositeMeanTrap;
+        } else {
+          composite = getImageResliceCompositeMeanValue;
+        }
+        break;
+      case SlabMode.SUM:
+        if (slabTrapezoidIntegration) {
+          composite = getImageResliceCompositeSumTrap;
+        } else {
+          composite = getImageResliceCompositeSumValue;
+        }
+        break;
+    }
+
+    return composite;
+  };
 
   publicAPI.applyTransform = (newTrans, inPoint, inOrigin, inInvSpacing) => {
     inPoint[3] = 1;
@@ -990,6 +1083,10 @@ export function extend(publicAPI, model, initialValues = {}) {
     'mirror',
     'border',
     'backgroundColor',
+    'slabMode',
+    'slabTrapezoidIntegration',
+    'slabNumberOfSlices',
+    'slabSliceSpacingFraction',
   ]);
 
   macro.setGetArray(publicAPI, model, ['outputOrigin', 'outputSpacing'], 3);

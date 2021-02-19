@@ -9,6 +9,13 @@ import * as vtkMath from 'vtk.js/Sources/Common/Core/Math';
 import vtkPlaneSource from 'vtk.js/Sources/Filters/Sources/PlaneSource';
 import vtkWidgetRepresentation from 'vtk.js/Sources/Interaction/Widgets/WidgetRepresentation';
 
+import {
+  boundPlane,
+  transformPlane,
+} from 'vtk.js/Sources/Widgets/Widgets3D/ResliceCursorWidget/helpers';
+import { ViewTypes } from 'vtk.js/Sources/Widgets/Core/WidgetManager/Constants';
+import { PlaneNormal } from '../ResliceCursorActor/Constants';
+
 const { vtkErrorMacro } = macro;
 
 const VTK_INT_MAX = 2147483647;
@@ -16,6 +23,19 @@ const VTK_INT_MAX = 2147483647;
 // ----------------------------------------------------------------------------
 // vtkResliceCursorRepresentation methods
 // ----------------------------------------------------------------------------
+
+function getViewTypeFromPlaneNormal(planeNormal) {
+  switch (planeNormal) {
+    case PlaneNormal.XAxis:
+      return ViewTypes.YZ_PLANE;
+    case PlaneNormal.YAxis:
+      return ViewTypes.XZ_PLANE;
+    case PlaneNormal.ZAxis:
+      return ViewTypes.XY_PLANE;
+    default:
+      return -1;
+  }
+}
 
 function vtkResliceCursorRepresentation(publicAPI, model) {
   // Set our className
@@ -181,53 +201,35 @@ function vtkResliceCursorRepresentation(publicAPI, model) {
     // Calculate appropriate pixel spacing for the reslicing
     const spacing = publicAPI.getResliceCursor().getImage().getSpacing();
 
-    const plane = publicAPI
-      .getResliceCursor()
-      .getPlane(publicAPI.getCursorAlgorithm().getReslicePlaneNormal());
+    const planeNormalType = publicAPI
+      .getCursorAlgorithm()
+      .getReslicePlaneNormal();
 
-    const planeNormal = plane.getNormal();
+    const plane = publicAPI.getResliceCursor().getPlane(planeNormalType);
 
     // Compute the origin of the reslice plane prior to transformations.
     publicAPI.computeReslicePlaneOrigin();
-    model.planeSource.setNormal(planeNormal[0], planeNormal[1], planeNormal[2]);
-    model.planeSource.setCenter(
-      plane.getOrigin()[0],
-      plane.getOrigin()[1],
-      plane.getOrigin()[2]
+
+    transformPlane(
+      model.planeSource,
+      plane,
+      getViewTypeFromPlaneNormal(planeNormalType)
     );
 
-    let o = model.planeSource.getOrigin();
+    // Compute view up to configure camera later on
+    const bottomLeftPoint = model.planeSource.getOrigin();
+    const topLeftPoint = model.planeSource.getPoint2();
+    const viewUp = vtkMath.subtract(topLeftPoint, bottomLeftPoint, [0, 0, 0]);
+    vtkMath.normalize(viewUp);
+    model.viewUpFromViewType[planeNormalType] = viewUp;
 
-    let p1 = model.planeSource.getPoint1();
-    const planeAxis1 = [];
-    vtkMath.subtract(p1, o, planeAxis1);
-
-    let p2 = model.planeSource.getPoint2();
-    const planeAxis2 = [];
-    vtkMath.subtract(p2, o, planeAxis2);
-
-    // Clip to bounds
-    const boundedOrigin = [];
-    publicAPI.boundPoint(
-      model.planeSource.getOrigin(),
-      planeAxis1,
-      planeAxis2,
-      boundedOrigin
-    );
-
-    const boundedP1 = [];
-    publicAPI.boundPoint(
-      model.planeSource.getPoint1(),
-      planeAxis1,
-      planeAxis2,
-      boundedP1
-    );
-
-    const boundedP2 = [];
-    publicAPI.boundPoint(
-      model.planeSource.getPoint2(),
-      planeAxis1,
-      planeAxis2,
+    const boundedOrigin = [...model.planeSource.getOrigin()];
+    const boundedP1 = [...model.planeSource.getPoint1()];
+    const boundedP2 = [...model.planeSource.getPoint2()];
+    boundPlane(
+      publicAPI.getResliceCursor().getImage().getBounds(),
+      boundedOrigin,
+      boundedP1,
       boundedP2
     );
 
@@ -235,12 +237,14 @@ function vtkResliceCursorRepresentation(publicAPI, model) {
     model.planeSource.setPoint1(boundedP1[0], boundedP1[1], boundedP1[2]);
     model.planeSource.setPoint2(boundedP2[0], boundedP2[1], boundedP2[2]);
 
-    o = model.planeSource.getOrigin();
+    const o = model.planeSource.getOrigin();
 
-    p1 = model.planeSource.getPoint1();
+    const p1 = model.planeSource.getPoint1();
+    const planeAxis1 = [];
     vtkMath.subtract(p1, o, planeAxis1);
 
-    p2 = model.planeSource.getPoint2();
+    const p2 = model.planeSource.getPoint2();
+    const planeAxis2 = [];
     vtkMath.subtract(p2, o, planeAxis2);
 
     // The x,y dimensions of the plane
@@ -477,6 +481,7 @@ export function extend(publicAPI, model, initialValues = {}) {
     1.0,
     1.0
   );
+  model.viewUpFromViewType = {};
   model.planeInitialized = false;
 
   macro.setGet(publicAPI, model, [

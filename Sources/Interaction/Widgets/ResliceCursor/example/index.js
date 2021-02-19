@@ -1,7 +1,6 @@
-import 'vtk.js/favicon';
+import 'vtk.js/Sources/favicon';
 
-import vtkImageData from 'vtk.js/Common/DataModel/ImageData';
-import vtkDataArray from 'vtk.js/Common/Core/DataArray';
+import vtkHttpDataSetReader from 'vtk.js/IO/Core/HttpDataSetReader';
 import vtkOpenGLRenderWindow from 'vtk.js/Rendering/OpenGL/RenderWindow';
 import vtkResliceCursor from 'vtk.js/Interaction/Widgets/ResliceCursor/ResliceCursor';
 import vtkResliceCursorLineRepresentation from 'vtk.js/Interaction/Widgets/ResliceCursor/ResliceCursorLineRepresentation';
@@ -15,118 +14,98 @@ import vtkRenderWindowInteractor from 'vtk.js/Rendering/Core/RenderWindowInterac
 // ----------------------------------------------------------------------------
 const container = document.querySelector('body');
 
-// Define Image Data
-
-const imageData = vtkImageData.newInstance();
-const s = 0.1;
-imageData.setSpacing(s, s, s);
-imageData.setExtent(0, 127, 0, 127, 0, 127);
-const dims = [128, 128, 128];
-
-const newArray = new Uint8Array(dims[0] * dims[1] * dims[2]);
-
-let i = 0;
-for (let z = 0; z < dims[2]; z++) {
-  for (let y = 0; y < dims[1]; y++) {
-    for (let x = 0; x < dims[0]; x++) {
-      newArray[i++] = (256 * (i % (dims[0] * dims[1]))) / (dims[0] * dims[1]);
-    }
-  }
-}
-
-const da = vtkDataArray.newInstance({
-  numberOfComponents: 1,
-  values: newArray,
-});
-da.setName('scalars');
-
-imageData.getPointData().setScalars(da);
-
 // Define ResliceCursor
 
 const resliceCursor = vtkResliceCursor.newInstance();
-resliceCursor.setImage(imageData);
 
-const renderWindows = [];
-const renderers = [];
-const GLWindows = [];
-const interactors = [];
-const resliceCursorWidgets = [];
-const resliceCursorRepresentations = [];
+const reader = vtkHttpDataSetReader.newInstance({ fetchGzip: true });
+reader.setUrl(`${__BASE_PATH__}/data/volume/LIDC2.vti`).then(() => {
+  reader.loadData().then(() => {
+    const image = reader.getOutputData();
+    resliceCursor.setImage(image);
 
-const table = document.createElement('table');
-table.setAttribute('id', 'table');
-container.appendChild(table);
+    const renderWindows = [];
+    const renderers = [];
+    const GLWindows = [];
+    const interactors = [];
+    const resliceCursorWidgets = [];
+    const resliceCursorRepresentations = [];
 
-const tr1 = document.createElement('tr');
-tr1.setAttribute('id', 'line1');
-table.appendChild(tr1);
+    const table = document.createElement('table');
+    table.setAttribute('id', 'table');
+    container.appendChild(table);
 
-const tr2 = document.createElement('tr');
-tr2.setAttribute('id', 'line2');
-table.appendChild(tr2);
+    const tr1 = document.createElement('tr');
+    tr1.setAttribute('id', 'line1');
+    table.appendChild(tr1);
 
-for (let j = 0; j < 3; ++j) {
-  const element = document.createElement('td');
+    const tr2 = document.createElement('tr');
+    tr2.setAttribute('id', 'line2');
+    table.appendChild(tr2);
 
-  if (j === 2) {
-    tr2.appendChild(element);
-  } else {
-    tr1.appendChild(element);
-  }
+    for (let j = 0; j < 3; ++j) {
+      const element = document.createElement('td');
 
-  renderWindows[j] = vtkRenderWindow.newInstance();
-  renderers[j] = vtkRenderer.newInstance();
-  renderers[j].getActiveCamera().setParallelProjection(true);
-  renderWindows[j].addRenderer(renderers[j]);
+      if (j === 2) {
+        tr2.appendChild(element);
+      } else {
+        tr1.appendChild(element);
+      }
 
-  GLWindows[j] = vtkOpenGLRenderWindow.newInstance();
-  GLWindows[j].setContainer(element);
-  renderWindows[j].addView(GLWindows[j]);
+      renderWindows[j] = vtkRenderWindow.newInstance();
+      renderers[j] = vtkRenderer.newInstance();
+      renderers[j].getActiveCamera().setParallelProjection(true);
+      renderWindows[j].addRenderer(renderers[j]);
 
-  interactors[j] = vtkRenderWindowInteractor.newInstance();
-  interactors[j].setView(GLWindows[j]);
-  interactors[j].initialize();
-  interactors[j].bindEvents(element);
+      GLWindows[j] = vtkOpenGLRenderWindow.newInstance();
+      GLWindows[j].setContainer(element);
+      renderWindows[j].addView(GLWindows[j]);
 
-  renderWindows[j].setInteractor(interactors[j]);
+      interactors[j] = vtkRenderWindowInteractor.newInstance();
+      interactors[j].setView(GLWindows[j]);
+      interactors[j].initialize();
+      interactors[j].bindEvents(element);
 
-  resliceCursorWidgets[j] = vtkResliceCursorWidget.newInstance();
-  resliceCursorRepresentations[
-    j
-  ] = vtkResliceCursorLineRepresentation.newInstance();
-  resliceCursorWidgets[j].setWidgetRep(resliceCursorRepresentations[j]);
-  resliceCursorRepresentations[j].getReslice().setInputData(imageData);
-  resliceCursorRepresentations[j]
-    .getCursorAlgorithm()
-    .setResliceCursor(resliceCursor);
+      renderWindows[j].setInteractor(interactors[j]);
 
-  resliceCursorWidgets[j].setInteractor(interactors[j]);
-}
+      resliceCursorWidgets[j] = vtkResliceCursorWidget.newInstance();
+      resliceCursorRepresentations[
+        j
+      ] = vtkResliceCursorLineRepresentation.newInstance();
+      resliceCursorWidgets[j].setWidgetRep(resliceCursorRepresentations[j]);
+      resliceCursorRepresentations[j].getReslice().setInputData(image);
+      resliceCursorRepresentations[j]
+        .getCursorAlgorithm()
+        .setResliceCursor(resliceCursor);
 
-// X
-resliceCursorRepresentations[0]
-  .getCursorAlgorithm()
-  .setReslicePlaneNormalToXAxis();
+      resliceCursorWidgets[j].setInteractor(interactors[j]);
+    }
 
-// Y
-resliceCursorRepresentations[1]
-  .getCursorAlgorithm()
-  .setReslicePlaneNormalToYAxis();
+    // X
+    resliceCursorRepresentations[0]
+      .getCursorAlgorithm()
+      .setReslicePlaneNormalToXAxis();
 
-// Z
-resliceCursorRepresentations[2]
-  .getCursorAlgorithm()
-  .setReslicePlaneNormalToZAxis();
+    // Y
+    resliceCursorRepresentations[1]
+      .getCursorAlgorithm()
+      .setReslicePlaneNormalToYAxis();
 
-for (let k = 0; k < 3; k++) {
-  resliceCursorWidgets[k].onInteractionEvent(() => {
-    resliceCursorWidgets[0].render();
-    resliceCursorWidgets[1].render();
-    resliceCursorWidgets[2].render();
+    // Z
+    resliceCursorRepresentations[2]
+      .getCursorAlgorithm()
+      .setReslicePlaneNormalToZAxis();
+
+    for (let k = 0; k < 3; k++) {
+      resliceCursorWidgets[k].onInteractionEvent(() => {
+        resliceCursorWidgets[0].render();
+        resliceCursorWidgets[1].render();
+        resliceCursorWidgets[2].render();
+      });
+      resliceCursorWidgets[k].setEnabled(true);
+
+      renderers[k].resetCamera();
+      renderWindows[k].render();
+    }
   });
-  resliceCursorWidgets[k].setEnabled(true);
-
-  renderers[k].resetCamera();
-  renderWindows[k].render();
-}
+});
