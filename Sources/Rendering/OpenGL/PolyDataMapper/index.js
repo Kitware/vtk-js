@@ -273,6 +273,43 @@ function vtkOpenGLPolyDataMapper(publicAPI, model) {
           ])
         ).result;
       } else {
+        if (actor.getBackfaceProperty() && !model.drawingEdges) {
+          colorDec = colorDec.concat([
+            'uniform float opacityUniformBF; // the fragment opacity',
+            'uniform float ambientIntensityBF; // the material ambient',
+            'uniform float diffuseIntensityBF; // the material diffuse',
+            'uniform vec3 ambientColorUniformBF; // ambient material color',
+            'uniform vec3 diffuseColorUniformBF; // diffuse material color',
+          ]);
+
+          if (lastLightComplexity) {
+            colorDec = colorDec.concat([
+              'uniform float specularIntensityBF; // the material specular intensity',
+              'uniform vec3 specularColorUniformBF; // intensity weighted color',
+              'uniform float specularPowerUniformBF;',
+            ]);
+            colorImpl = colorImpl.concat([
+              'if (gl_FrontFacing == false) {',
+              '  ambientColor = ambientIntensityBF * ambientColorUniformBF;',
+              '  diffuseColor = diffuseIntensityBF * diffuseColorUniformBF;',
+              '  specularColor = specularIntensityBF * specularColorUniformBF;',
+              '  specularPower = specularPowerUniformBF;',
+              '  opacity = opacityUniformBF; }',
+            ]);
+          } else {
+            colorImpl = colorImpl.concat([
+              'if (gl_FrontFacing == false) {',
+              '  ambientColor = ambientIntensityBF * ambientColorUniformBF;',
+              '  diffuseColor = diffuseIntensityBF * diffuseColorUniformBF;',
+              '  opacity = opacityUniformBF; }',
+            ]);
+          }
+        }
+
+        if (model.haveCellScalars && !model.drawingEdges) {
+          colorDec = colorDec.concat(['uniform samplerBuffer texture1;']);
+        }
+
         FSSource = vtkShaderProgram.substitute(
           FSSource,
           '//VTK::Color::Impl',
@@ -1497,69 +1534,74 @@ function vtkOpenGLPolyDataMapper(publicAPI, model) {
   publicAPI.setPropertyShaderParameters = (cellBO, ren, actor) => {
     const program = cellBO.getProgram();
 
-    const ppty = actor.getProperty();
+    let ppty = actor.getProperty();
 
-    const opacity = ppty.getOpacity();
-    program.setUniformf('opacityUniform', opacity);
+    let opacity = ppty.getOpacity();
 
-    const aColor = model.drawingEdges
+    let aColor = model.drawingEdges
       ? ppty.getEdgeColorByReference()
       : ppty.getAmbientColorByReference();
-    program.setUniform3fArray('ambientColorUniform', aColor);
-    program.setUniformf('ambient', ppty.getAmbient());
-
-    const dColor = model.drawingEdges
+    let dColor = model.drawingEdges
       ? ppty.getEdgeColorByReference()
       : ppty.getDiffuseColorByReference();
+
+    let aIntensity = model.drawingEdges ? 1.0 : ppty.getAmbient();
+    let dIntensity = model.drawingEdges ? 0.0 : ppty.getDiffuse();
+    let sIntensity = model.drawingEdges ? 0.0 : ppty.getSpecular();
+
+    const specularPower = ppty.getSpecularPower();
+
+    program.setUniformf('opacityUniform', opacity);
+
+    program.setUniform3fArray('ambientColorUniform', aColor);
     program.setUniform3fArray('diffuseColorUniform', dColor);
-    program.setUniformf('diffuse', ppty.getDiffuse());
+
+    program.setUniformf('ambient', aIntensity);
+    program.setUniformf('diffuse', dIntensity);
 
     // we are done unless we have lighting
     const lastLightComplexity = model.lastBoundBO.getReferenceByName(
       'lastLightComplexity'
     );
+
     if (lastLightComplexity < 1) {
       return;
     }
-    const sColor = ppty.getSpecularColorByReference();
+
+    let sColor = ppty.getSpecularColorByReference();
     program.setUniform3fArray('specularColorUniform', sColor);
-    program.setUniformf('specular', ppty.getSpecular());
-    program.setUniformf('specularPowerUniform', ppty.getSpecularPower());
+    program.setUniformf('specularPowerUniform', specularPower);
 
-    // // now set the backface properties if we have them
-    // if (actor.getBackfaceProperty() && !model.DrawingEdges)
-    //   {
-    //   ppty = actor.getBackfaceProperty();
+    // now set the backface properties if we have them
+    if (program.isUniformUsed('ambientIntensityBF')) {
+      ppty = actor.getBackfaceProperty();
 
-    //   let opacity = static_cast<float>(ppty.getOpacity());
-    //   double *aColor = ppty.getAmbientColor();
-    //   double aIntensity = ppty.getAmbient();  // ignoring renderer ambient
-    //   let ambientColor[3] = {static_cast<float>(aColor[0] * aIntensity),
-    //     static_cast<float>(aColor[1] * aIntensity),
-    //     static_cast<float>(aColor[2] * aIntensity)};
-    //   double *dColor = ppty.getDiffuseColor();
-    //   double dIntensity = ppty.getDiffuse();
-    //   let diffuseColor[3] = {static_cast<float>(dColor[0] * dIntensity),
-    //     static_cast<float>(dColor[1] * dIntensity),
-    //     static_cast<float>(dColor[2] * dIntensity)};
-    //   double *sColor = ppty.getSpecularColor();
-    //   double sIntensity = ppty.getSpecular();
-    //   let specularColor[3] = {static_cast<float>(sColor[0] * sIntensity),
-    //     static_cast<float>(sColor[1] * sIntensity),
-    //     static_cast<float>(sColor[2] * sIntensity)};
-    //   double specularPower = ppty.getSpecularPower();
+      opacity = ppty.getOpacity();
 
-    //   program.SetUniformf('opacityUniformBF', opacity);
-    //   program.SetUniform3f('ambientColorUniformBF', ambientColor);
-    //   program.SetUniform3f('diffuseColorUniformBF', diffuseColor);
-    //   // we are done unless we have lighting
-    //   if (model.LastLightComplexity[&cellBO] < 1)
-    //     {
-    //     return;
-    //     }
-    //   program.SetUniform3f('specularColorUniformBF', specularColor);
-    //   program.SetUniformf('specularPowerUniformBF', specularPower);
-    //   }
+      aColor = ppty.getAmbientColor();
+      aIntensity = ppty.getAmbient();
+
+      dColor = ppty.getDiffuseColor();
+      dIntensity = ppty.getDiffuse();
+
+      sColor = ppty.getSpecularColor();
+      sIntensity = ppty.getSpecular();
+
+      program.setUniformf('ambientIntensityBF', aIntensity);
+      program.setUniformf('diffuseIntensityBF', dIntensity);
+      program.setUniformf('opacityUniformBF', opacity);
+      program.setUniform3fArray('ambientColorUniformBF', aColor);
+      program.setUniform3fArray('diffuseColorUniformBF', dColor);
+
+      // we are done unless we have lighting
+      if (lastLightComplexity < 1) {
+        return;
+      }
+
+      program.setUniformf('specularIntensityBF', sIntensity);
+      program.setUniform3fArray('specularColorUniformBF', sColor);
+      program.setUniformf('specularPowerUniformBF', specularPower);
+    }
   };
 
   publicAPI.renderPieceStart = (ren, actor) => {
