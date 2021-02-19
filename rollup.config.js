@@ -135,9 +135,9 @@ export default {
       targetPlatform: 'browser',
       // needs to match the full import statement path
       pattern: /^.+\.worker(?:\.js)?$/,
-      inline: true,
-      preserveSource: true,
-      outputFolder: 'WebWorkers',
+      // inline: true,
+      // preserveSource: true,
+      // outputFolder: 'WebWorkers',
     }),
     nodeResolve({
       // don't rely on node builtins for web
