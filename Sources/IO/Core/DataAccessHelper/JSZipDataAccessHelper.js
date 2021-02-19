@@ -75,6 +75,14 @@ function removeLeadingSlash(str) {
   return str[0] === '/' ? str.substr(1) : str;
 }
 
+function normalizePath(str) {
+  return new URL(str, 'http://any').pathname;
+}
+
+function cleanUpPath(str) {
+  return removeLeadingSlash(normalizePath(str));
+}
+
 function create(createOptions) {
   let ready = false;
   let requestCount = 0;
@@ -107,7 +115,7 @@ function create(createOptions) {
         if (!ready) {
           vtkErrorMacro('ERROR!!! zip not ready...');
         }
-        const url = removeLeadingSlash(
+        const url = cleanUpPath(
           [
             baseURL,
             array.ref.basepath,
@@ -140,13 +148,12 @@ function create(createOptions) {
           options.compression,
           doneCleanUp
         );
-
         zipRoot.file(url).async(asyncType).then(asyncCallback);
       });
     },
 
     fetchJSON(instance = {}, url, options = {}) {
-      const path = removeLeadingSlash(url);
+      const path = cleanUpPath(url);
       if (!ready) {
         vtkErrorMacro('ERROR!!! zip not ready...');
       }
@@ -163,7 +170,6 @@ function create(createOptions) {
         }
         return Promise.reject(new Error('Invalid compression'));
       }
-
       return zipRoot
         .file(path)
         .async('string')
@@ -171,7 +177,7 @@ function create(createOptions) {
     },
 
     fetchText(instance = {}, url, options = {}) {
-      const path = removeLeadingSlash(url);
+      const path = cleanUpPath(url);
       if (!ready) {
         vtkErrorMacro('ERROR!!! zip not ready...');
       }
@@ -196,7 +202,7 @@ function create(createOptions) {
     },
 
     fetchImage(instance = {}, url, options = {}) {
-      const path = removeLeadingSlash(url);
+      const path = cleanUpPath(url);
       if (!ready) {
         vtkErrorMacro('ERROR!!! zip not ready...');
       }
@@ -216,7 +222,7 @@ function create(createOptions) {
     },
 
     fetchBinary(instance = {}, url, options = {}) {
-      const path = removeLeadingSlash(url);
+      const path = cleanUpPath(url);
       if (!ready) {
         vtkErrorMacro('ERROR!!! zip not ready...');
       }

@@ -218,11 +218,17 @@ export default function widgetBehavior(publicAPI, model) {
     const image = model.widgetState.getImage();
     const imageSpacing = image.getSpacing();
 
+    // Use Chebyshev norm
+    // https://math.stackexchange.com/questions/71423/what-is-the-term-for-the-projection-of-a-vector-onto-the-unit-cube
+    const absDirProj = dirProj.map((value) => Math.abs(value));
+    const index = absDirProj.indexOf(Math.max(...absDirProj));
+    const movingFactor = nbSteps * (imageSpacing[index] / dirProj[index]);
+
     // Define the potentially new center
     let newCenter = [
-      oldCenter[0] + nbSteps * direction[0] * imageSpacing[0],
-      oldCenter[1] + nbSteps * direction[1] * imageSpacing[1],
-      oldCenter[2] + nbSteps * direction[2] * imageSpacing[2],
+      oldCenter[0] + movingFactor * direction[0],
+      oldCenter[1] + movingFactor * direction[1],
+      oldCenter[2] + movingFactor * direction[2],
     ];
     newCenter = publicAPI.getBoundedCenter(newCenter);
 
@@ -353,17 +359,12 @@ export default function widgetBehavior(publicAPI, model) {
         `get${associatedPlaneName}PlaneNormal`
       ]();
 
-      // Compute previous angle between lines
-      const angleBetweenAssociatedPlanes = vtkMath.angleBetweenVectors(
-        normal,
-        associatedNormal
+      const newAssociatedNormal = rotateVector(
+        associatedNormal,
+        planeNormal,
+        radianAngle
       );
 
-      const newAssociatedNormal = rotateVector(
-        newNormal,
-        planeNormal,
-        angleBetweenAssociatedPlanes
-      );
       model.widgetState[`set${associatedPlaneName}PlaneNormal`](
         newAssociatedNormal
       );
