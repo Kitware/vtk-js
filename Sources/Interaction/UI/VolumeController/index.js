@@ -40,6 +40,10 @@ function vtkVolumeController(publicAPI, model) {
 
   function updateColorMapPreset() {
     const sourceDS = model.actor.getMapper().getInputData();
+    if (!sourceDS) {
+      return;
+    }
+
     const dataArray =
       sourceDS.getPointData().getScalars() ||
       sourceDS.getPointData().getArrays()[0];

@@ -623,7 +623,13 @@ function vtkOpenGLImageMapper(publicAPI, model) {
   publicAPI.buildBufferObjects = (ren, actor) => {
     const image = model.currentInput;
 
-    if (image === null) {
+    if (!image) {
+      return;
+    }
+
+    const imgScalars =
+      image.getPointData() && image.getPointData().getScalars();
+    if (!imgScalars) {
       return;
     }
 
@@ -643,7 +649,7 @@ function vtkOpenGLImageMapper(publicAPI, model) {
       model.pwfTexture.setMagnificationFilter(Filter.LINEAR);
     }
 
-    const numComp = image.getPointData().getScalars().getNumberOfComponents();
+    const numComp = imgScalars.getNumberOfComponents();
     const iComps = actorProperty.getIndependentComponents();
     const numIComps = iComps ? numComp : 1;
     const textureHeight = iComps ? 2 * numIComps : 1;
@@ -789,10 +795,7 @@ function vtkOpenGLImageMapper(publicAPI, model) {
     }
 
     // rebuild the VBO if the data has changed
-    const toString = `${nSlice}A${image.getMTime()}A${image
-      .getPointData()
-      .getScalars()
-      .getMTime()}B${publicAPI.getMTime()}C${model.renderable.getSlicingMode()}D${actor
+    const toString = `${nSlice}A${image.getMTime()}A${imgScalars.getMTime()}B${publicAPI.getMTime()}C${model.renderable.getSlicingMode()}D${actor
       .getProperty()
       .getMTime()}`;
     if (model.VBOBuildString !== toString) {
@@ -828,7 +831,7 @@ function vtkOpenGLImageMapper(publicAPI, model) {
         tcoordArray[i * 2 + 1] = i > 1 ? 1.0 : 0.0;
       }
 
-      const basicScalars = image.getPointData().getScalars().getData();
+      const basicScalars = imgScalars.getData();
       let scalars = null;
       // Get right scalars according to slicing mode
       if (ijkMode === SlicingMode.I) {
@@ -905,7 +908,7 @@ function vtkOpenGLImageMapper(publicAPI, model) {
         dims[0],
         dims[1],
         numComp,
-        image.getPointData().getScalars().getDataType(),
+        imgScalars.getDataType(),
         scalars
       );
       model.openGLTexture.activate();
