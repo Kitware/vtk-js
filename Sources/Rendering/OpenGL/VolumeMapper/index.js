@@ -1237,8 +1237,12 @@ function vtkOpenGLVolumeMapper(publicAPI, model) {
 
   publicAPI.buildBufferObjects = (ren, actor) => {
     const image = model.currentInput;
+    if (!image) {
+      return;
+    }
 
-    if (image === null) {
+    const scalars = image.getPointData().getScalars();
+    if (!scalars) {
       return;
     }
 
@@ -1260,7 +1264,7 @@ function vtkOpenGLVolumeMapper(publicAPI, model) {
       );
     }
 
-    const numComp = image.getPointData().getScalars().getNumberOfComponents();
+    const numComp = scalars.getNumberOfComponents();
     const iComps = vprop.getIndependentComponents();
     const numIComps = iComps ? numComp : 1;
 
@@ -1368,8 +1372,8 @@ function vtkOpenGLVolumeMapper(publicAPI, model) {
         dims[1],
         dims[2],
         numComp,
-        image.getPointData().getScalars().getDataType(),
-        image.getPointData().getScalars().getData()
+        scalars.getDataType(),
+        scalars.getData()
       );
       // console.log(model.scalarTexture.get());
       model.scalarTextureString = toString;
