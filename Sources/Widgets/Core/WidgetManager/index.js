@@ -430,12 +430,12 @@ function vtkWidgetManager(publicAPI, model) {
       model.widgets.splice(index, 1);
 
       const isWidgetInFocus = model.widgetInFocus === viewWidget;
-      removeWidgetInternal(viewWidget);
-      onWidgetRemoved();
-
       if (isWidgetInFocus) {
         publicAPI.releaseFocus();
       }
+
+      removeWidgetInternal(viewWidget);
+      onWidgetRemoved();
     }
   };
 
