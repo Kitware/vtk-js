@@ -313,9 +313,7 @@ function vtkWidgetManager(publicAPI, model) {
     subscriptions.push(
       model.interactor.onEndAnimation(() => {
         model.isAnimating = false;
-        if (model.pickingEnabled) {
-          publicAPI.enablePicking();
-        }
+        publicAPI.renderWidgets();
       })
     );
 
@@ -369,6 +367,7 @@ function vtkWidgetManager(publicAPI, model) {
     publicAPI.modified();
 
     if (model.pickingEnabled) {
+      // also sets pickingAvailable
       publicAPI.enablePicking();
     }
 
@@ -414,7 +413,7 @@ function vtkWidgetManager(publicAPI, model) {
 
   function onWidgetRemoved() {
     model.renderer.getRenderWindow().getInteractor().render();
-    publicAPI.enablePicking();
+    publicAPI.renderWidgets();
   }
 
   publicAPI.removeWidgets = () => {
