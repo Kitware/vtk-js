@@ -140,6 +140,7 @@ function readyAll() {
 function updateControlPanel(im, ds) {
   const slicingMode = im.getSlicingMode();
   const extent = ds.getExtent();
+  document.querySelector('.slice').setAttribute('min', extent[slicingMode * 2]);
   document
     .querySelector('.slice')
     .setAttribute('max', extent[slicingMode * 2 + 1]);
@@ -276,10 +277,38 @@ reader
       }
     );
 
+    const updateWidgetVisibility = (widget, slicePos, i, widgetIndex) => {
+      /* testing if the widget is on the slice and has been placed to modify visibility */
+      const widgetVisibility =
+        widget.getWidgetState().getPoint1Handle().getOrigin()[i] ===
+          slicePos[i] ||
+        !scene.widgetManager.getWidgets()[widgetIndex].getPoint1();
+      widget.setVisibility(widgetVisibility);
+    };
+
+    const updateWidgetsVisibility = (position, slicingMode) => {
+      updateWidgetVisibility(widgets.rectangleWidget, position, slicingMode, 0);
+      updateWidgetVisibility(widgets.ellipseWidget, position, slicingMode, 1);
+      updateWidgetVisibility(widgets.circleWidget, position, slicingMode, 2);
+    };
+
     const update = () => {
       const slicingMode = image.imageMapper.getSlicingMode() % 3;
 
       if (slicingMode > -1) {
+        const ijk = [0, 0, 0];
+        const position = [0, 0, 0];
+
+        // position
+        ijk[slicingMode] = image.imageMapper.getSlice();
+        data.indexToWorldVec3(ijk, position);
+
+        widgets.rectangleWidget.getManipulator().setOrigin(position);
+        widgets.ellipseWidget.getManipulator().setOrigin(position);
+        widgets.circleWidget.getManipulator().setOrigin(position);
+
+        updateWidgetsVisibility(position, slicingMode);
+
         scene.rectangleHandle.updateRepresentationForRender();
         scene.ellipseHandle.updateRepresentationForRender();
         scene.circleHandle.updateRepresentationForRender();
@@ -309,6 +338,7 @@ function resetWidgets() {
   scene.rectangleHandle.reset();
   scene.ellipseHandle.reset();
   scene.circleHandle.reset();
+  widgets[activeWidget].setVisibility(true);
   scene.widgetManager.grabFocus(widgets[activeWidget]);
 }
 
@@ -319,6 +349,7 @@ document.querySelector('.slice').addEventListener('input', (ev) => {
 document.querySelector('.axis').addEventListener('input', (ev) => {
   const sliceMode = 'IJKXYZ'.indexOf(ev.target.value) % 3;
   image.imageMapper.setSlicingMode(sliceMode);
+
   setCamera(sliceMode, scene.renderer, image.data);
   resetWidgets();
   scene.renderWindow.render();

@@ -272,9 +272,8 @@ export default function widgetBehavior(publicAPI, model) {
     ) {
       return macro.VOID;
     }
-
-    model.manipulator.setOrigin(model.activeState.getOrigin());
     model.manipulator.setNormal(model.camera.getDirectionOfProjection());
+
     const worldCoords = model.manipulator.handleEvent(
       callData,
       model.openGLRenderWindow
