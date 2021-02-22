@@ -135,5 +135,6 @@ export default function generateState() {
       initialValue: ScrollingMethods.MIDDLE_MOUSE_BUTTON,
     })
     .addField({ name: 'cameraOffsets', initialValue: {} })
+    .addField({ name: 'viewUpFromViewType', initialValue: {} })
     .build();
 }

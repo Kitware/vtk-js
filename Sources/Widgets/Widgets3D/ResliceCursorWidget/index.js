@@ -8,7 +8,6 @@ import * as vtkMath from 'vtk.js/Sources/Common/Core/Math';
 
 import widgetBehavior from 'vtk.js/Sources/Widgets/Widgets3D/ResliceCursorWidget/behavior';
 import stateGenerator from 'vtk.js/Sources/Widgets/Widgets3D/ResliceCursorWidget/state';
-
 import {
   boundPlane,
   updateState,
@@ -21,7 +20,6 @@ import { vec4, mat4 } from 'gl-matrix';
 
 const VTK_INT_MAX = 2147483647;
 const { vtkErrorMacro } = macro;
-const viewUpFromViewType = {};
 
 // ----------------------------------------------------------------------------
 // Factory
@@ -324,13 +322,15 @@ function vtkResliceCursorWidget(publicAPI, model) {
     viewType,
     resetFocalPoint,
     keepCenterFocalDistance,
-    computeFocalPointOffset
+    computeFocalPointOffset,
+    resetViewUp
   ) => {
     publicAPI.resetCamera(
       renderer,
       viewType,
       resetFocalPoint,
-      keepCenterFocalDistance
+      keepCenterFocalDistance,
+      resetViewUp
     );
 
     if (computeFocalPointOffset) {
@@ -351,7 +351,8 @@ function vtkResliceCursorWidget(publicAPI, model) {
     renderer,
     viewType,
     resetFocalPoint,
-    keepCenterFocalDistance
+    keepCenterFocalDistance,
+    resetViewUp
   ) => {
     const viewName = getViewPlaneNameFromViewType(viewType);
 
@@ -378,7 +379,26 @@ function vtkResliceCursorWidget(publicAPI, model) {
 
     renderer.getActiveCamera().setFocalPoint(...estimatedFocalPoint);
     renderer.getActiveCamera().setPosition(...estimatedCameraPosition);
-    renderer.getActiveCamera().setViewUp(viewUpFromViewType[viewType]);
+
+    if (!resetViewUp) {
+      // Compute the new view up by projecting vector [0, 1] in 3D
+      const view = renderer.getRenderWindow().getViews()[0];
+      const dims = view.getViewportSize(renderer);
+      const aspect = dims[0] / dims[1];
+
+      const p0 = [0, 0, 0];
+      const p1 = [0, 1, 0];
+
+      const worldP0 = renderer.normalizedDisplayToWorld(...p0, aspect);
+      const worldP1 = renderer.normalizedDisplayToWorld(...p1, aspect);
+      const newViewUp = vtkMath.subtract(worldP1, worldP0, [0, 0, 0]);
+      vtkMath.normalize(newViewUp);
+
+      model.widgetState.getViewUpFromViewType()[viewType] = newViewUp;
+    }
+    renderer
+      .getActiveCamera()
+      .setViewUp(model.widgetState.getViewUpFromViewType()[viewType]);
 
     // Project focalPoint onto image plane and preserve distance
     updateCamera(
@@ -411,12 +431,13 @@ function vtkResliceCursorWidget(publicAPI, model) {
     const topLeftPoint = planeSource.getPoint2();
     const viewUp = vtkMath.subtract(topLeftPoint, bottomLeftPoint, [0, 0, 0]);
     vtkMath.normalize(viewUp);
-    viewUpFromViewType[viewType] = viewUp;
+    model.widgetState.getViewUpFromViewType()[viewType] = viewUp;
 
     // Clip to bounds
     const boundedOrigin = [...planeSource.getOrigin()];
     const boundedP1 = [...planeSource.getPoint1()];
     const boundedP2 = [...planeSource.getPoint2()];
+
     boundPlane(
       model.widgetState.getImage().getBounds(),
       boundedOrigin,
@@ -424,9 +445,9 @@ function vtkResliceCursorWidget(publicAPI, model) {
       boundedP2
     );
 
-    planeSource.setOrigin(boundedOrigin);
-    planeSource.setPoint1(boundedP1[0], boundedP1[1], boundedP1[2]);
-    planeSource.setPoint2(boundedP2[0], boundedP2[1], boundedP2[2]);
+    planeSource.setOrigin(...boundedOrigin);
+    planeSource.setPoint1(...boundedP1);
+    planeSource.setPoint2(...boundedP2);
 
     const o = planeSource.getOrigin();
 
@@ -540,7 +561,7 @@ function vtkResliceCursorWidget(publicAPI, model) {
       imageReslice.setOutputExtent([0, extentX - 1, 0, extentY - 1, 0, 0]) ||
       modified;
 
-    return modified;
+    return { modified, origin: o, point1: p1, point2: p2 };
   };
 
   /**

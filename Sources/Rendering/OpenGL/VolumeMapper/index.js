@@ -26,6 +26,19 @@ import vtkVolumeFS from 'vtk.js/Sources/Rendering/OpenGL/glsl/vtkVolumeFS.glsl';
 
 const { vtkWarningMacro, vtkErrorMacro } = macro;
 
+// TODO: Do we want this in some shared utility? Shouldwe just use lodash.isEqual
+function arrayEquals(a, b) {
+  if (a.length !== b.length) {
+    return false;
+  }
+  for (let i = 0; i < a.length; ++i) {
+    if (a[i] !== b[i]) {
+      return false;
+    }
+  }
+  return true;
+}
+
 // ----------------------------------------------------------------------------
 // vtkOpenGLVolumeMapper methods
 // ----------------------------------------------------------------------------
@@ -319,11 +332,11 @@ function vtkOpenGLVolumeMapper(publicAPI, model) {
           '  float equationResult = dot(vertexVCVSOutput, vClipPlaneNormals[i]) + vClipPlaneDistances[i];',
           '  if (rayDirRatio == 0.0)',
           '  {',
-          '    if (equationResult > 0.0) dists.x = dists.y;',
+          '    if (equationResult < 0.0) dists.x = dists.y;',
           '    continue;',
           '  }',
           '  float result = -1.0 * equationResult / rayDirRatio;',
-          '  if (rayDirRatio > 0.0) dists.y = min(dists.y, result);',
+          '  if (rayDirRatio < 0.0) dists.y = min(dists.y, result);',
           '  else dists.x = max(dists.x, result);',
           '}',
           '//VTK::ClipPlane::Impl',
@@ -376,6 +389,74 @@ function vtkOpenGLVolumeMapper(publicAPI, model) {
       needRebuild = true;
     }
 
+    const numComp = model.scalarTexture.getComponents();
+    const iComps = actor.getProperty().getIndependentComponents();
+    let usesProportionalComponents = false;
+    const proportionalComponents = [];
+    if (iComps) {
+      // Define any proportional components
+      for (let nc = 0; nc < numComp; nc++) {
+        proportionalComponents.push(actor.getProperty().getOpacityMode(nc));
+      }
+
+      if (proportionalComponents.length > 0) {
+        usesProportionalComponents = true;
+      }
+    }
+
+    const ext = model.currentInput.getExtent();
+    const spc = model.currentInput.getSpacing();
+    const vsize = vec3.create();
+    vec3.set(
+      vsize,
+      (ext[1] - ext[0]) * spc[0],
+      (ext[3] - ext[2]) * spc[1],
+      (ext[5] - ext[4]) * spc[2]
+    );
+
+    const maxSamples =
+      vec3.length(vsize) / model.renderable.getSampleDistance();
+
+    const state = {
+      interpolationType: actor.getProperty().getInterpolationType(),
+      useLabelOutline: actor.getProperty().getUseLabelOutline(),
+      numComp,
+      usesProportionalComponents,
+      iComps,
+      maxSamples,
+      useGradientOpacity: actor.getProperty().getUseGradientOpacity(0),
+      blendMode: model.renderable.getBlendMode(),
+      averageIPScalarMode: model.renderable.getAverageIPScalarRange(),
+      proportionalComponents,
+    };
+
+    // We only need to rebuild the shader if one of these variables has changed,
+    // since they are used in the shader template replacement step.
+    if (
+      !model.previousState ||
+      model.previousState.interpolationType !== state.interpolationType ||
+      model.previousState.useLabelOutline !== state.useLabelOutline ||
+      model.previousState.numComp !== state.numComp ||
+      model.previousState.usesProportionalComponents !==
+        state.usesProportionalComponents ||
+      model.previousState.iComps !== state.iComps ||
+      model.previousState.maxSamples !== state.maxSamples ||
+      model.previousState.useGradientOpacity !== state.useGradientOpacity ||
+      model.previousState.blendMode !== state.blendMode ||
+      !arrayEquals(
+        model.previousState.averageIPScalarMode,
+        state.averageIPScalarMode
+      ) ||
+      !arrayEquals(
+        model.previousState.proportionalComponents,
+        state.proportionalComponents
+      )
+    ) {
+      model.previousState = { ...state };
+
+      return true;
+    }
+
     // has something changed that would require us to recreate the shader?
     if (
       cellBO.getProgram() === 0 ||
@@ -383,9 +464,7 @@ function vtkOpenGLVolumeMapper(publicAPI, model) {
       model.lastHaveSeenDepthRequest !== model.haveSeenDepthRequest ||
       !!model.lastZBufferTexture !== !!model.zBufferTexture ||
       cellBO.getShaderSourceTime().getMTime() < publicAPI.getMTime() ||
-      cellBO.getShaderSourceTime().getMTime() < actor.getMTime() ||
-      cellBO.getShaderSourceTime().getMTime() < model.renderable.getMTime() ||
-      cellBO.getShaderSourceTime().getMTime() < model.currentInput.getMTime()
+      cellBO.getShaderSourceTime().getMTime() < model.renderable.getMTime()
     ) {
       model.lastZBufferTexture = model.zBufferTexture;
       return true;
@@ -1158,8 +1237,12 @@ function vtkOpenGLVolumeMapper(publicAPI, model) {
 
   publicAPI.buildBufferObjects = (ren, actor) => {
     const image = model.currentInput;
+    if (!image) {
+      return;
+    }
 
-    if (image === null) {
+    const scalars = image.getPointData().getScalars();
+    if (!scalars) {
       return;
     }
 
@@ -1181,7 +1264,7 @@ function vtkOpenGLVolumeMapper(publicAPI, model) {
       );
     }
 
-    const numComp = image.getPointData().getScalars().getNumberOfComponents();
+    const numComp = scalars.getNumberOfComponents();
     const iComps = vprop.getIndependentComponents();
     const numIComps = iComps ? numComp : 1;
 
@@ -1289,8 +1372,8 @@ function vtkOpenGLVolumeMapper(publicAPI, model) {
         dims[1],
         dims[2],
         numComp,
-        image.getPointData().getScalars().getDataType(),
-        image.getPointData().getScalars().getData()
+        scalars.getDataType(),
+        scalars.getData()
       );
       // console.log(model.scalarTexture.get());
       model.scalarTextureString = toString;

@@ -10,7 +10,7 @@ import vtkHttpDataSetLODsLoader from 'vtk.js/Sources/IO/Misc/HttpDataSetLODsLoad
 import vtkColorTransferFunction from 'vtk.js/Sources/Rendering/Core/ColorTransferFunction';
 import vtkPiecewiseFunction from 'vtk.js/Sources/Common/DataModel/PiecewiseFunction';
 import vtkVolumeMapper from 'vtk.js/Sources/Rendering/Core/VolumeMapper';
-
+import vtkTimeStepBasedAnimationHandler from 'vtk.js/Sources/Interaction/Animations/TimeStepBasedAnimationHandler';
 import DataAccessHelper from 'vtk.js/Sources/IO/Core/DataAccessHelper';
 
 const { vtkErrorMacro } = macro;
@@ -302,13 +302,34 @@ function defineLoadFuctionForReader(type) {
   };
 }
 
+function loadTimeStepBasedAnimationHandler(data, model) {
+  model.animationHandler = vtkTimeStepBasedAnimationHandler.newInstance({
+    scene: model.scene,
+    originalMetadata: model.metadata,
+    applySettings,
+    renderer: model.renderer,
+  });
+  model.animationHandler.setData(data);
+}
+
 // ----------------------------------------------------------------------------
+// Note: keeping both types (with and without 'vtk' prefix) for backwards compatibility
+// see https://gitlab.kitware.com/paraview/paraview/-/merge_requests/4628#note_876772
 
 const TYPE_MAPPING = {
   httpDataSetReader: defineLoadFuctionForReader(vtkHttpDataSetReader),
+  vtkHttpDataSetReader: defineLoadFuctionForReader(vtkHttpDataSetReader),
   httpDataSetSeriesReader: defineLoadFuctionForReader(
     vtkHttpDataSetSeriesReader
   ),
+  vtkHttpDataSetSeriesReader: defineLoadFuctionForReader(
+    vtkHttpDataSetSeriesReader
+  ),
+};
+
+const ANIMATION_TYPE_MAPPING = {
+  timeStepBasedAnimationHandler: loadTimeStepBasedAnimationHandler,
+  vtkTimeStepBasedAnimationHandler: loadTimeStepBasedAnimationHandler,
 };
 
 // ----------------------------------------------------------------------------
@@ -351,6 +372,12 @@ function vtkHttpSceneLoader(publicAPI, model) {
     }
   }
 
+  function setBackground(color) {
+    if (model.renderer) {
+      model.renderer.setBackground(color);
+    }
+  }
+
   // Create default dataAccessHelper if not available
   if (!model.dataAccessHelper) {
     model.dataAccessHelper = DataAccessHelper.get('http');
@@ -363,7 +390,7 @@ function vtkHttpSceneLoader(publicAPI, model) {
           model.fetchGzip = data.fetchGzip;
         }
         if (data.background && model.renderer) {
-          model.renderer.setBackground(...data.background);
+          setBackground(data.background);
         }
         if (data.camera) {
           originalSceneParameters.camera = data.camera;
@@ -390,8 +417,20 @@ function vtkHttpSceneLoader(publicAPI, model) {
           model.usedTextures = {};
           model.usedTextureLODs = {};
         }
+
         // Capture index.json into meta
         model.metadata = data;
+
+        if (data.animation) {
+          const animationLoader = ANIMATION_TYPE_MAPPING[data.animation.type];
+          animationLoader(
+            { ...data.animation },
+            model,
+            publicAPI,
+            setCameraParameters,
+            setBackground
+          );
+        }
       },
       (error) => {
         vtkErrorMacro(`Error fetching scene ${error}`);
@@ -432,6 +471,7 @@ const DEFAULT_VALUES = {
   fetchGzip: false,
   url: null,
   baseURL: null,
+  animationHandler: null,
   // Whether or not to automatically start texture LOD and poly LOD
   // downloads when they are read.
   startLODLoaders: true,
@@ -450,6 +490,7 @@ export function extend(publicAPI, model, initialValues = {}) {
     'baseURL',
     'scene',
     'metadata',
+    'animationHandler',
   ]);
   macro.setGet(publicAPI, model, ['renderer']);
   macro.event(publicAPI, model, 'ready');
