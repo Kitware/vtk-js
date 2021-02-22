@@ -371,7 +371,6 @@ export default function widgetBehavior(publicAPI, model) {
     ) {
       return macro.VOID;
     }
-
     if (!model.point2) {
       // Update orientation to match the camera's plane
       // if the corners are not yet placed
@@ -384,8 +383,6 @@ export default function widgetBehavior(publicAPI, model) {
       model.shapeHandle.setDirection(normal);
       model.manipulator.setNormal(normal);
     }
-    model.manipulator.setOrigin(model.activeState.getOrigin());
-
     const worldCoords = model.manipulator.handleEvent(
       callData,
       model.openGLRenderWindow
