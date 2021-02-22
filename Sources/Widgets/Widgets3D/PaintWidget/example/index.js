@@ -409,6 +409,7 @@ scene.rectangleHandle.onInteractionEvent(() => {
   const rectangleHandle = scene.rectangleHandle
     .getWidgetState()
     .getRectangleHandle();
+
   painter.paintRectangle(
     rectangleHandle.getOrigin(),
     rectangleHandle.getCorner()
@@ -422,11 +423,17 @@ scene.ellipseHandle.onInteractionEvent(() => {
     .getWidgetState()
     .getEllipseHandle()
     .getOrigin();
-  const scale3 = scene.ellipseHandle
+  const point2 = scene.ellipseHandle
     .getWidgetState()
-    .getEllipseHandle()
-    .getScale3();
-  painter.paintEllipse(center, scale3);
+    .getPoint2Handle()
+    .getOrigin();
+
+  const corner = [
+    center[0] - point2[0],
+    center[1] - point2[1],
+    center[2] - point2[2],
+  ];
+  painter.paintEllipse(center, corner);
 });
 
 initializeHandle(scene.circleHandle);
@@ -436,11 +443,15 @@ scene.circleHandle.onInteractionEvent(() => {
     .getWidgetState()
     .getEllipseHandle()
     .getOrigin();
-  const scale3 = scene.circleHandle
+  const point2 = scene.circleHandle
     .getWidgetState()
-    .getEllipseHandle()
-    .getScale3();
-  painter.paintEllipse(center, scale3);
+    .getPoint1Handle()
+    .getOrigin();
+
+  const radius = vec3.distance(center, point2);
+
+  const corner = [radius, radius, radius];
+  painter.paintEllipse(center, corner);
 });
 
 scene.splineHandle.onStartInteractionEvent(() => {
