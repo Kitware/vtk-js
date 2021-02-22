@@ -21,13 +21,12 @@ import vtkResliceCursorWidget from 'vtk.js/Sources/Widgets/Widgets3D/ResliceCurs
 import vtkWidgetManager from 'vtk.js/Sources/Widgets/Core/WidgetManager';
 
 import vtkSphereSource from 'vtk.js/Sources/Filters/Sources/SphereSource';
-import {
-  ViewTypes,
-  CaptureOn,
-} from 'vtk.js/Sources/Widgets/Core/WidgetManager/Constants';
-import { SlabMode } from 'vtk.js/Sources/Imaging/Core/ImageReslice/Constants';
+import { CaptureOn } from 'vtk.js/Sources/Widgets/Core/WidgetManager/Constants';
 
 import { vec3 } from 'gl-matrix';
+import { SlabMode } from 'vtk.js/Sources/Imaging/Core/ImageReslice/Constants';
+
+import { xyzToViewType } from 'vtk.js/Sources/Widgets/Widgets3D/ResliceCursorWidget/Constants';
 import controlPanel from './controlPanel.html';
 
 // ----------------------------------------------------------------------------
@@ -41,9 +40,11 @@ const viewColors = [
   [0.5, 0.5, 0.5], // 3D
 ];
 
+const viewAttributes = [];
 const widget = vtkResliceCursorWidget.newInstance();
 const widgetState = widget.getWidgetState();
 widgetState.setKeepOrthogonality(true);
+widgetState.setOpacity(0.6);
 
 const showDebugActors = true;
 
@@ -117,12 +118,10 @@ function createRGBStringFromRGBValues(rgb) {
   ).toString()})`;
 }
 
-const viewAttributes = [];
 widgetState.setOpacity(0.6);
 
 const initialPlanesState = { ...widgetState.getPlanes() };
 
-const sliceTypes = [ViewTypes.YZ_PLANE, ViewTypes.XZ_PLANE, ViewTypes.XY_PLANE];
 let view3D = null;
 
 for (let i = 0; i < 4; i++) {
@@ -154,7 +153,7 @@ for (let i = 0; i < 4; i++) {
   obj.widgetManager.setRenderer(obj.renderer);
   if (i < 3) {
     obj.interactor.setInteractorStyle(vtkInteractorStyleImage.newInstance());
-    obj.widgetInstance = obj.widgetManager.addWidget(widget, sliceTypes[i]);
+    obj.widgetInstance = obj.widgetManager.addWidget(widget, xyzToViewType[i]);
     obj.widgetManager.enablePicking();
     // Use to update all renderers buffer when actors are moved
     obj.widgetManager.setCaptureOn(CaptureOn.MOUSE_MOVE);
@@ -318,7 +317,7 @@ reader.setUrl(`${__BASE_PATH__}/data/volume/LIDC2.vti`).then(() => {
         view3D.renderer.addActor(actor);
       });
       const reslice = obj.reslice;
-      const viewType = sliceTypes[i];
+      const viewType = xyzToViewType[i];
 
       viewAttributes
         // No need to update plane nor refresh when interaction
@@ -381,7 +380,7 @@ reader.setUrl(`${__BASE_PATH__}/data/volume/LIDC2.vti`).then(() => {
 function updateViews() {
   viewAttributes.forEach((obj, i) => {
     updateReslice({
-      viewType: sliceTypes[i],
+      viewType: xyzToViewType[i],
       reslice: obj.reslice,
       actor: obj.resliceActor,
       renderer: obj.renderer,

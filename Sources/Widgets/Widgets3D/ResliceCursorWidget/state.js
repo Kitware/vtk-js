@@ -18,6 +18,7 @@ const generateAxisXinY = () =>
     .addField({ name: 'color', initialValue: axisXColor })
     .addField({ name: 'name', initialValue: 'AxisXinY' })
     .addField({ name: 'viewType', initialValue: ViewTypes.YZ_PLANE })
+    .addField({ name: 'inViewType', initialValue: ViewTypes.XZ_PLANE })
     .build();
 
 const generateAxisXinZ = () =>
@@ -30,6 +31,7 @@ const generateAxisXinZ = () =>
     .addField({ name: 'color', initialValue: axisXColor })
     .addField({ name: 'name', initialValue: 'AxisXinZ' })
     .addField({ name: 'viewType', initialValue: ViewTypes.YZ_PLANE })
+    .addField({ name: 'inViewType', initialValue: ViewTypes.XY_PLANE })
     .build();
 
 const generateAxisYinX = () =>
@@ -42,6 +44,7 @@ const generateAxisYinX = () =>
     .addField({ name: 'color', initialValue: axisYColor })
     .addField({ name: 'name', initialValue: 'AxisYinX' })
     .addField({ name: 'viewType', initialValue: ViewTypes.XZ_PLANE })
+    .addField({ name: 'inViewType', initialValue: ViewTypes.YZ_PLANE })
     .build();
 
 const generateAxisYinZ = () =>
@@ -54,6 +57,7 @@ const generateAxisYinZ = () =>
     .addField({ name: 'color', initialValue: axisYColor })
     .addField({ name: 'name', initialValue: 'AxisYinZ' })
     .addField({ name: 'viewType', initialValue: ViewTypes.XZ_PLANE })
+    .addField({ name: 'inViewType', initialValue: ViewTypes.XY_PLANE })
     .build();
 
 const generateAxisZinX = () =>
@@ -66,6 +70,7 @@ const generateAxisZinX = () =>
     .addField({ name: 'color', initialValue: axisZColor })
     .addField({ name: 'name', initialValue: 'AxisZinX' })
     .addField({ name: 'viewType', initialValue: ViewTypes.XY_PLANE })
+    .addField({ name: 'inViewType', initialValue: ViewTypes.YZ_PLANE })
     .build();
 
 const generateAxisZinY = () =>
@@ -78,6 +83,7 @@ const generateAxisZinY = () =>
     .addField({ name: 'color', initialValue: axisZColor })
     .addField({ name: 'name', initialValue: 'AxisZinY' })
     .addField({ name: 'viewType', initialValue: ViewTypes.XY_PLANE })
+    .addField({ name: 'inViewType', initialValue: ViewTypes.XZ_PLANE })
     .build();
 
 export default function generateState() {
@@ -129,8 +135,8 @@ export default function generateState() {
       name: 'planes',
       initialValue: {
         [ViewTypes.YZ_PLANE]: { normal: [1, 0, 0], viewUp: [0, 0, 1] },
-        [ViewTypes.XZ_PLANE]: { normal: [0, 1, 0], viewUp: [0, 0, 1] },
-        [ViewTypes.XY_PLANE]: { normal: [0, 0, 1], viewUp: [0, -1, 0] },
+        [ViewTypes.XZ_PLANE]: { normal: [0, -1, 0], viewUp: [0, 0, 1] },
+        [ViewTypes.XY_PLANE]: { normal: [0, 0, -1], viewUp: [0, -1, 0] },
       },
     })
     .addField({ name: 'enableRotation', initialValue: true })

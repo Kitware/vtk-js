@@ -1,4 +1,5 @@
 import './Common/Core/LookupTable/test/testCategoricalColors';
+import './Common/Core/Math/test/testMath';
 import './Common/Core/MatrixBuilder/test/testMatrixBuilder';
 import './Common/Core/LookupTable/test/testSetTable';
 import './Common/DataModel/Box/test/testBox';
@@ -76,4 +77,5 @@ import './Testing/testSerialization';
 import './Testing/testProxy';
 import './Widgets/Widgets3D/ResliceCursorWidget/test/testBoundPlane';
 import './Widgets/Widgets3D/ResliceCursorWidget/test/testRotateVector';
-import './Common/Core/Math/test/testMath';
+import './Widgets/Widgets3D/ResliceCursorWidget/test/testHelper';
+import './Widgets/Widgets3D/ResliceCursorWidget/test/testMultipleRotationPlanes';

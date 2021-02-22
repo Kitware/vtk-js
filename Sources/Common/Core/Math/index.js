@@ -718,6 +718,26 @@ export function areEquals(a, b, eps = 1e-6) {
 
 export const areMatricesEqual = areEquals;
 
+export function roundNumber(num, digits = 0) {
+  if (!`${num}`.includes('e')) {
+    return +`${Math.round(`${num}e+${digits}`)}e-${digits}`;
+  }
+  const arr = `${num}`.split('e');
+  let sig = '';
+  if (+arr[1] + digits > 0) {
+    sig = '+';
+  }
+  return +`${Math.round(`${+arr[0]}e${sig}${+arr[1] + digits}`)}e-${digits}`;
+}
+
+export function roundVector(vector, out = [], digits = 0) {
+  out[0] = roundNumber(vector[0], digits);
+  out[1] = roundNumber(vector[1], digits);
+  out[2] = roundNumber(vector[2], digits);
+
+  return out;
+}
+
 export function jacobiN(a, n, w, v) {
   let i;
   let j;
@@ -1962,26 +1982,6 @@ export function clampVector(vector, minVector, maxVector, out = []) {
   return out;
 }
 
-export function roundNumber(num, digits = 0) {
-  if (!`${num}`.includes('e')) {
-    return +`${Math.round(`${num}e+${digits}`)}e-${digits}`;
-  }
-  const arr = `${num}`.split('e');
-  let sig = '';
-  if (+arr[1] + digits > 0) {
-    sig = '+';
-  }
-  return +`${Math.round(`${+arr[0]}e${sig}${+arr[1] + digits}`)}e-${digits}`;
-}
-
-export function roundVector(vector, out = [], digits = 0) {
-  out[0] = roundNumber(vector[0], digits);
-  out[1] = roundNumber(vector[1], digits);
-  out[2] = roundNumber(vector[2], digits);
-
-  return out;
-}
-
 export function clampAndNormalizeValue(value, range) {
   let result = 0;
   if (range[0] !== range[1]) {
@@ -2216,6 +2216,8 @@ export default {
   quaternionToMatrix3x3,
   areEquals,
   areMatricesEqual,
+  roundNumber,
+  roundVector,
   matrix3x3ToQuaternion,
   multiplyQuaternion,
   orthogonalize3x3,

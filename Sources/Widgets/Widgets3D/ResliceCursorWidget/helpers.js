@@ -118,26 +118,6 @@ export function boundPointOnPlane(p1, p2, bounds) {
   return out;
 }
 
-// Get name of the line in the same plane as the input
-export function getAssociatedLinesName(lineName) {
-  switch (lineName) {
-    case 'AxisXinY':
-      return 'AxisZinY';
-    case 'AxisXinZ':
-      return 'AxisYinZ';
-    case 'AxisYinX':
-      return 'AxisZinX';
-    case 'AxisYinZ':
-      return 'AxisXinZ';
-    case 'AxisZinX':
-      return 'AxisYinX';
-    case 'AxisZinY':
-      return 'AxisXinY';
-    default:
-      return '';
-  }
-}
-
 /**
  * Rotates a vector around another.
  * @param {vec3} vectorToBeRotated Vector to rate
@@ -274,4 +254,68 @@ export function transformPlane(
   );
   planeToTransform.rotate(angle, targetNormal);
   planeToTransform.setCenter(targetCenter);
+}
+
+// Get name of the line in the same plane as the input
+export function getAssociatedLinesName(lineName) {
+  switch (lineName) {
+    case 'AxisXinY':
+      return 'AxisZinY';
+    case 'AxisXinZ':
+      return 'AxisYinZ';
+    case 'AxisYinX':
+      return 'AxisZinX';
+    case 'AxisYinZ':
+      return 'AxisXinZ';
+    case 'AxisZinX':
+      return 'AxisYinX';
+    case 'AxisZinY':
+      return 'AxisXinY';
+    default:
+      return '';
+  }
+}
+
+/**
+ * Get the line name, constructs from the plane name and where the plane is displayed
+ * Example: planeName='X' rotatedPlaneName='Y', then the return values will be 'AxisXinY'
+ * @param {String} planeName Value between 'X', 'Y' and 'Z'
+ * @param {String} rotatedPlaneName Value between 'X', 'Y' and 'Z'
+ * @returns {String}
+ */
+export function getLineNameFromPlaneAndRotatedPlaneName(
+  planeName,
+  rotatedPlaneName
+) {
+  return `Axis${planeName}in${rotatedPlaneName}`;
+}
+
+/**
+ * Extract the plane name from the line name
+ * Example: 'AxisXinY' will return 'X'
+ * @param {String} lineName Should be following this template : 'Axis_in_' with _ a character
+ * @returns {String} Value between 'X', 'Y' and 'Z' or null if an error occured
+ */
+export function getPlaneNameFromLineName(lineName) {
+  const match = lineName.match('([XYZ])in[XYZ]');
+  if (match) {
+    return match[1];
+  }
+  return null;
+}
+
+/**
+ * Get the orthogonal plane name of 'planeName' in a specific 'rotatedPlaneName'
+ * Example: planeName='X' on rotatedPlaneName='Z', then the associated plane name
+ * of 'X' plane is 'Y'
+ * @param {String} planeName
+ * @param {String} rotatedPlaneName
+ */
+export function getAssociatedPlaneName(planeName, rotatedPlaneName) {
+  const lineName = getLineNameFromPlaneAndRotatedPlaneName(
+    planeName,
+    rotatedPlaneName
+  );
+  const associatedLine = getAssociatedLinesName(lineName);
+  return getPlaneNameFromLineName(associatedLine);
 }

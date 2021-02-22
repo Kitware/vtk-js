@@ -335,12 +335,22 @@ export default function widgetBehavior(publicAPI, model) {
       planeNormal
     );
 
-    // Rotate associated line's plane normal
-    const viewType = activeLine.getViewType();
+    publicAPI.rotateLineInView(activeLine, radianAngle);
+  };
+
+  /**
+   * Rotate a line by a specified angle
+   * @param {Line} line The line to rotate (e.g. getActiveLineState())
+   * @param {Number} radianAngle Applied angle in radian
+   */
+  publicAPI.rotateLineInView = (line, radianAngle) => {
+    const viewType = line.getViewType();
+    const inViewType = line.getInViewType();
+    const planeNormal = model.widgetState.getPlanes()[inViewType].normal;
     publicAPI.rotatePlane(viewType, radianAngle, planeNormal);
 
     if (model.widgetState.getKeepOrthogonality()) {
-      const associatedLineName = getAssociatedLinesName(activeLine.getName());
+      const associatedLineName = getAssociatedLinesName(line.getName());
       const associatedLine = model.widgetState[`get${associatedLineName}`]();
       const associatedViewType = associatedLine.getViewType();
       publicAPI.rotatePlane(associatedViewType, radianAngle, planeNormal);
@@ -348,6 +358,12 @@ export default function widgetBehavior(publicAPI, model) {
     updateState(model.widgetState);
   };
 
+  /**
+   * Rotate a specified plane around an other specified plane.
+   * @param {ViewTypes} viewType Define which plane will be rotated
+   * @param {Number} radianAngle Applied angle in radian
+   * @param {vec3} planeNormal Define the axis to rotate around
+   */
   publicAPI.rotatePlane = (viewType, radianAngle, planeNormal) => {
     const { normal, viewUp } = model.widgetState.getPlanes()[viewType];
     const newNormal = rotateVector(normal, planeNormal, radianAngle);
@@ -358,6 +374,7 @@ export default function widgetBehavior(publicAPI, model) {
       viewUp: newViewUp,
     };
   };
+
   // --------------------------------------------------------------------------
   // initialization
   // --------------------------------------------------------------------------

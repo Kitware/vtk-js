@@ -371,10 +371,8 @@ function vtkResliceCursorWidget(publicAPI, model) {
       distance,
       [0, 0, 0]
     );
-
     renderer.getActiveCamera().setFocalPoint(...estimatedFocalPoint);
     renderer.getActiveCamera().setPosition(...estimatedCameraPosition);
-
     renderer
       .getActiveCamera()
       .setViewUp(model.widgetState.getPlanes()[viewType].viewUp);
