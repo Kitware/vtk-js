@@ -538,9 +538,11 @@ function vtkRenderWindowInteractor(publicAPI, model) {
      *   pixelY  -- " - y plane
      *
      */
-    const callData = normalizeWheel(event);
-    const keys = getModifierKeysFor(event);
-    Object.assign(callData, keys);
+    const callData = {
+      ...normalizeWheel(event),
+      ...getModifierKeysFor(event),
+      position: getScreenEventPositionFor(event),
+    };
 
     if (model.wheelTimeoutID === 0) {
       publicAPI.startMouseWheelEvent(callData);
