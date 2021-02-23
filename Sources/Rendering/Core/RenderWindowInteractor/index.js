@@ -188,8 +188,8 @@ function vtkRenderWindowInteractor(publicAPI, model) {
     const keys = {
       key: event.key,
       keyCode: event.charCode,
+      ...modifierKeys,
     };
-    Object.assign(keys, modifierKeys);
     return keys;
   }
 
@@ -316,10 +316,9 @@ function vtkRenderWindowInteractor(publicAPI, model) {
     event.preventDefault();
 
     const callData = {
+      ...getModifierKeysFor(event),
       position: getScreenEventPositionFor(event),
     };
-    const keys = getModifierKeysFor(event);
-    Object.assign(callData, keys);
     switch (event.button) {
       case 0:
         publicAPI.leftButtonPressEvent(callData);
@@ -485,10 +484,9 @@ function vtkRenderWindowInteractor(publicAPI, model) {
     // event.preventDefault();
 
     const callData = {
+      ...getModifierKeysFor(event),
       position: getScreenEventPositionFor(event),
     };
-    const keys = getModifierKeysFor(event);
-    Object.assign(callData, keys);
 
     if (model.moveTimeoutID === 0) {
       publicAPI.startMouseMoveEvent(callData);
@@ -560,20 +558,17 @@ function vtkRenderWindowInteractor(publicAPI, model) {
 
   publicAPI.handleMouseEnter = (event) => {
     const callData = {
+      ...getModifierKeysFor(event),
       position: getScreenEventPositionFor(event),
     };
-    const keys = getModifierKeysFor(event);
-    Object.assign(callData, keys);
-
     publicAPI.mouseEnterEvent(callData);
   };
 
   publicAPI.handleMouseLeave = (event) => {
     const callData = {
+      ...getModifierKeysFor(event),
       position: getScreenEventPositionFor(event),
     };
-    const keys = getModifierKeysFor(event);
-    Object.assign(callData, keys);
 
     publicAPI.mouseLeaveEvent(callData);
   };
@@ -584,10 +579,9 @@ function vtkRenderWindowInteractor(publicAPI, model) {
     event.preventDefault();
 
     const callData = {
+      ...getModifierKeysFor(event),
       position: getScreenEventPositionFor(event),
     };
-    const keys = getModifierKeysFor(event);
-    Object.assign(callData, keys);
     switch (event.button) {
       case 0:
         publicAPI.leftButtonReleaseEvent(callData);
@@ -802,10 +796,9 @@ function vtkRenderWindowInteractor(publicAPI, model) {
       const callData = {
         type: eventName,
         pokedRenderer: model.currentRenderer,
+        // Add the arguments to the call data
+        ...arg,
       };
-
-      // Add the arguments to the call data
-      Object.assign(callData, arg);
 
       // Call invoke
       publicAPI[`invoke${eventName}`](callData);
