@@ -218,6 +218,7 @@ function createPipeline(fileName, fileContents) {
     lookupTable.applyColorMap(preset);
     lookupTable.setMappingRange(dataRange[0], dataRange[1]);
     lookupTable.updateRange();
+    renderWindow.render();
   }
   applyPreset();
   presetSelector.addEventListener('change', applyPreset);
@@ -282,6 +283,7 @@ function createPipeline(fileName, fileContents) {
   function updateColorBy(event) {
     const [location, colorByArrayName] = event.target.value.split(':');
     const interpolateScalarsBeforeMapping = location === 'PointData';
+    const interpolateScalarsBeforeMapping = false;
     let colorMode = ColorMode.DEFAULT;
     let scalarMode = ScalarMode.DEFAULT;
     const scalarVisibility = location.length > 0;
@@ -360,9 +362,11 @@ function createPipeline(fileName, fileContents) {
   renderer.addActor(actor);
 
   // Manage update when lookupTable change
-  lookupTable.onModified(() => {
-    renderWindow.render();
-  });
+  // too heavy handed, causes multiple buffer pushes as opposed
+  // to defering them to when all changes are done
+  // lookupTable.onModified(() => {
+  //   renderWindow.render();
+  // });
 
   // First render
   renderer.resetCamera();

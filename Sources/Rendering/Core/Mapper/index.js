@@ -138,6 +138,10 @@ function vtkMapper(publicAPI, model) {
       return;
     }
 
+    // we want to only recompute when something has changed
+    const toString = `${publicAPI.getMTime()}${scalars.getMTime()}${alpha}`;
+    if (model.colorBuildString == toString) return;
+
     if (!model.useLookupTableScalarRange) {
       publicAPI
         .getLookupTable()
@@ -149,18 +153,18 @@ function vtkMapper(publicAPI, model) {
     // Only point data can use both texture and vertex coloring.
     if (publicAPI.canUseTextureMapForColoring(input)) {
       publicAPI.mapScalarsToTexture(scalars, alpha);
-      return;
-    }
+    } else {
+      model.colorCoordinates = null;
+      model.colorTextureMap = null;
 
-    model.colorCoordinates = null;
-    model.colorTextureMap = null;
-
-    const lut = publicAPI.getLookupTable();
-    if (lut) {
-      // Ensure that the lookup table is built
-      lut.build();
-      model.colorMapColors = lut.mapScalars(scalars, model.colorMode, -1);
+      const lut = publicAPI.getLookupTable();
+      if (lut) {
+        // Ensure that the lookup table is built
+        lut.build();
+        model.colorMapColors = lut.mapScalars(scalars, model.colorMode, -1);
+      }
     }
+    model.colorBuildString = `${publicAPI.getMTime()}${scalars.getMTime()}${alpha}`;
   };
 
   //-----------------------------------------------------------------------------

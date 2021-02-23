@@ -41,7 +41,7 @@ module.exports = [
     devServer: configureDevServer(port),
     plugins: [
       new webpack.HotModuleReplacementPlugin(),
-      new DashboardPlugin(dashboard.setData),
+      // new DashboardPlugin(dashboard.setData),
     ],
   }),
   merge(common.liteConfig, {
@@ -50,7 +50,7 @@ module.exports = [
     devServer: configureDevServer(port + 1),
     plugins: [
       new webpack.HotModuleReplacementPlugin(),
-      new DashboardPlugin(dashboard.setData),
+      // new DashboardPlugin(dashboard.setData),
     ],
   }),
 ];

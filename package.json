@@ -121,6 +121,7 @@
     "test:headless": "karma start ./karma.conf.js --browsers ChromeHeadlessNoSandbox --single-run",
     "test:debug": "karma start ./karma.conf.js --no-single-run",
     "test:firefox": "karma start ./karma.conf.js --browsers Firefox",
+    "test:webgpu": "karma start ./karma.conf.js --browsers ChromeWebGPU --no-single-run",
     "test:firefox-debug": "karma start ./karma.conf.js --browsers Firefox --no-single-run",
     "commit": "git cz",
     "semantic-release": "semantic-release"
@@ -148,7 +149,10 @@
       "master",
       "next",
       "next-major",
-      { "name": "beta", "prerelease": true }
+      {
+        "name": "beta",
+        "prerelease": true
+      }
     ]
   }
 }
