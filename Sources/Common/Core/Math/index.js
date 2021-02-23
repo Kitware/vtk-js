@@ -360,6 +360,13 @@ export function angleBetweenVectors(v1, v2) {
   return Math.atan2(norm(crossVect), dot(v1, v2));
 }
 
+export function signedAngleBetweenVectors(v1, v2, vN) {
+  const crossVect = [0, 0, 0];
+  cross(v1, v2, crossVect);
+  const angle = Math.atan2(norm(crossVect), dot(v1, v2));
+  return dot(crossVect, vN) >= 0 ? angle : -angle;
+}
+
 export function gaussianAmplitude(mean, variance, position) {
   const distanceFromMean = Math.abs(mean - position);
   return (
@@ -710,6 +717,26 @@ export function areEquals(a, b, eps = 1e-6) {
 }
 
 export const areMatricesEqual = areEquals;
+
+export function roundNumber(num, digits = 0) {
+  if (!`${num}`.includes('e')) {
+    return +`${Math.round(`${num}e+${digits}`)}e-${digits}`;
+  }
+  const arr = `${num}`.split('e');
+  let sig = '';
+  if (+arr[1] + digits > 0) {
+    sig = '+';
+  }
+  return +`${Math.round(`${+arr[0]}e${sig}${+arr[1] + digits}`)}e-${digits}`;
+}
+
+export function roundVector(vector, out = [], digits = 0) {
+  out[0] = roundNumber(vector[0], digits);
+  out[1] = roundNumber(vector[1], digits);
+  out[2] = roundNumber(vector[2], digits);
+
+  return out;
+}
 
 export function jacobiN(a, n, w, v) {
   let i;
@@ -1955,14 +1982,6 @@ export function clampVector(vector, minVector, maxVector, out = []) {
   return out;
 }
 
-export function roundVector(vector, out = []) {
-  out[0] = Math.round(vector[0]);
-  out[1] = Math.round(vector[1]);
-  out[2] = Math.round(vector[2]);
-
-  return out;
-}
-
 export function clampAndNormalizeValue(value, range) {
   let result = 0;
   if (range[0] !== range[1]) {
@@ -2197,6 +2216,8 @@ export default {
   quaternionToMatrix3x3,
   areEquals,
   areMatricesEqual,
+  roundNumber,
+  roundVector,
   matrix3x3ToQuaternion,
   multiplyQuaternion,
   orthogonalize3x3,
