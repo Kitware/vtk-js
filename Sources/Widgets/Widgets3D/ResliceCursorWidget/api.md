@@ -28,7 +28,7 @@ These sub states contain :
 
 - image: vtkImage used to place the reslice cursor
 
-- activeViewName: Used in the behavior.js file in order to get the correct view attributes (X, Y, Z)
+- activeViewType: Used in the behavior.js file in order to get the current view
 
 - sphereRadius: Manages the radius of the rotation points
 
@@ -36,7 +36,7 @@ These sub states contain :
 
 - updateMethodName: Used in the behavior.js in order to know which actions is going to be applied (translation, axisTransltaion, rotation)
 
-- {X, Y, Z}PlaneNormal: Contains the normal of the {X, Y, Z} plane (which is updated when a rotation is applied). It's used to compute the resliced image
+- Planes: Contains the normal and viewUp of the YZ_, XZ_ and XY_PLANE views (which is updated when a rotation is applied). It's used to compute the resliced image
 
 - enableRotation: if false, then remove the rotation points and disable the line rotation
 

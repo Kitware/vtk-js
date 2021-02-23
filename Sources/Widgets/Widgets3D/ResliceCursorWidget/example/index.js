@@ -21,15 +21,12 @@ import vtkResliceCursorWidget from 'vtk.js/Sources/Widgets/Widgets3D/ResliceCurs
 import vtkWidgetManager from 'vtk.js/Sources/Widgets/Core/WidgetManager';
 
 import vtkSphereSource from 'vtk.js/Sources/Filters/Sources/SphereSource';
-import {
-  ViewTypes,
-  CaptureOn,
-} from 'vtk.js/Sources/Widgets/Core/WidgetManager/Constants';
-import { SlabMode } from 'vtk.js/Sources/Imaging/Core/ImageReslice/Constants';
-
-import { getViewPlaneNameFromViewType } from 'vtk.js/Sources/Widgets/Widgets3D/ResliceCursorWidget/helpers';
+import { CaptureOn } from 'vtk.js/Sources/Widgets/Core/WidgetManager/Constants';
 
 import { vec3 } from 'gl-matrix';
+import { SlabMode } from 'vtk.js/Sources/Imaging/Core/ImageReslice/Constants';
+
+import { xyzToViewType } from 'vtk.js/Sources/Widgets/Widgets3D/ResliceCursorWidget/Constants';
 import controlPanel from './controlPanel.html';
 
 // ----------------------------------------------------------------------------
@@ -43,9 +40,11 @@ const viewColors = [
   [0.5, 0.5, 0.5], // 3D
 ];
 
+const viewAttributes = [];
 const widget = vtkResliceCursorWidget.newInstance();
 const widgetState = widget.getWidgetState();
 widgetState.setKeepOrthogonality(true);
+widgetState.setOpacity(0.6);
 
 const showDebugActors = true;
 
@@ -119,16 +118,10 @@ function createRGBStringFromRGBValues(rgb) {
   ).toString()})`;
 }
 
-const viewAttributes = [];
 widgetState.setOpacity(0.6);
 
-const initialState = {
-  XPlaneNormal: widgetState.getXPlaneNormal(),
-  YPlaneNormal: widgetState.getYPlaneNormal(),
-  ZPlaneNormal: widgetState.getZPlaneNormal(),
-};
+const initialPlanesState = { ...widgetState.getPlanes() };
 
-const sliceTypes = [ViewTypes.YZ_PLANE, ViewTypes.XZ_PLANE, ViewTypes.XY_PLANE];
 let view3D = null;
 
 for (let i = 0; i < 4; i++) {
@@ -160,7 +153,7 @@ for (let i = 0; i < 4; i++) {
   obj.widgetManager.setRenderer(obj.renderer);
   if (i < 3) {
     obj.interactor.setInteractorStyle(vtkInteractorStyleImage.newInstance());
-    obj.widgetInstance = obj.widgetManager.addWidget(widget, sliceTypes[i]);
+    obj.widgetInstance = obj.widgetManager.addWidget(widget, xyzToViewType[i]);
     obj.widgetManager.enablePicking();
     // Use to update all renderers buffer when actors are moved
     obj.widgetManager.setCaptureOn(CaptureOn.MOUSE_MOVE);
@@ -274,7 +267,6 @@ function updateReslice(
     computeFocalPointOffset: false, // Defines if the display offset between reslice center and focal point has to be
     // computed. If so, then this offset will be used to keep the focal point position during rotation.
     spheres: null,
-    resetViewUp: false, // Defines if the camera view up is projected on plane (resetViewUp = false) or if we use the image bounds (resetViewUp = true)
   }
 ) {
   const obj = widget.updateReslicePlane(
@@ -295,8 +287,7 @@ function updateReslice(
     interactionContext.viewType,
     interactionContext.resetFocalPoint,
     interactionContext.keepFocalPointPosition,
-    interactionContext.computeFocalPointOffset,
-    interactionContext.resetViewUp
+    interactionContext.computeFocalPointOffset
   );
   view3D.renderWindow.render();
   return obj.modified;
@@ -326,7 +317,7 @@ reader.setUrl(`${__BASE_PATH__}/data/volume/LIDC2.vti`).then(() => {
         view3D.renderer.addActor(actor);
       });
       const reslice = obj.reslice;
-      const viewType = sliceTypes[i];
+      const viewType = xyzToViewType[i];
 
       viewAttributes
         // No need to update plane nor refresh when interaction
@@ -342,12 +333,11 @@ reader.setUrl(`${__BASE_PATH__}/data/volume/LIDC2.vti`).then(() => {
             // canUpdateFocalPoint: Boolean which defines if the focal point can be updated because
             // the current interaction is a rotation
             ({ computeFocalPointOffset, canUpdateFocalPoint }) => {
-              const activeViewName = widget
+              const activeViewType = widget
                 .getWidgetState()
-                .getActiveViewName();
-              const currentViewName = getViewPlaneNameFromViewType(viewType);
+                .getActiveViewType();
               const keepFocalPointPosition =
-                activeViewName !== currentViewName && canUpdateFocalPoint;
+                activeViewType !== viewType && canUpdateFocalPoint;
               updateReslice({
                 viewType,
                 reslice,
@@ -357,7 +347,6 @@ reader.setUrl(`${__BASE_PATH__}/data/volume/LIDC2.vti`).then(() => {
                 keepFocalPointPosition,
                 computeFocalPointOffset,
                 sphereSources: obj.sphereSources,
-                resetViewUp: false,
               });
             }
           );
@@ -372,7 +361,6 @@ reader.setUrl(`${__BASE_PATH__}/data/volume/LIDC2.vti`).then(() => {
         keepFocalPointPosition: false, // Don't update the focal point as we already set it to the center of the image
         computeFocalPointOffset: true, // Allow to compute the current offset between display reslice center and display focal point
         sphereSources: obj.sphereSources,
-        resetViewUp: true, // Need to be reset the first time the widget is initialized. Then, can be set to false, so that the camera view up will follow the camera
       });
       obj.renderWindow.render();
     });
@@ -392,7 +380,7 @@ reader.setUrl(`${__BASE_PATH__}/data/volume/LIDC2.vti`).then(() => {
 function updateViews() {
   viewAttributes.forEach((obj, i) => {
     updateReslice({
-      viewType: sliceTypes[i],
+      viewType: xyzToViewType[i],
       reslice: obj.reslice,
       actor: obj.resliceActor,
       renderer: obj.renderer,
@@ -451,9 +439,7 @@ sliderSlabNumberofSlices.addEventListener('change', (ev) => {
 
 const buttonReset = document.getElementById('buttonReset');
 buttonReset.addEventListener('click', () => {
-  widgetState.setXPlaneNormal(initialState.XPlaneNormal);
-  widgetState.setYPlaneNormal(initialState.YPlaneNormal);
-  widgetState.setZPlaneNormal(initialState.ZPlaneNormal);
+  widgetState.setPlanes(initialPlanesState);
   widget.setCenter(widget.getWidgetState().getImage().getCenter());
   updateViews();
 });

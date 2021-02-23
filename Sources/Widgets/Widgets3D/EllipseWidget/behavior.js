@@ -25,6 +25,7 @@ export default function widgetBehavior(publicAPI, model) {
     const right = model.shapeHandle.getRight();
     const up = model.shapeHandle.getUp();
     const dir = model.shapeHandle.getDirection();
+
     const rightComponent = vec3.dot(diagonal, right);
     const upComponent = vec3.dot(diagonal, up);
     const dirComponent = vec3.dot(diagonal, dir);

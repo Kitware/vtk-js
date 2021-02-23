@@ -239,7 +239,7 @@ function vtkResliceCursorContextRepresentation(publicAPI, model) {
 
   publicAPI.getSelectedState = (prop, compositeID) => {
     const state = model.inputData[0];
-    state.setActiveViewName(model.viewName);
+    state.setActiveViewType(model.viewType);
 
     const getAxis1 = `get${model.axis1Name}`;
     const getAxis2 = `get${model.axis2Name}`;
@@ -315,7 +315,7 @@ const DEFAULT_VALUES = {
   },
   rotationEnabled: true,
   scaleInPixels: true,
-  viewName: '',
+  viewType: null,
 };
 
 // ----------------------------------------------------------------------------

@@ -1,6 +1,4 @@
 import 'vtk.js/Sources/favicon';
-
-import * as vtkMath from 'vtk.js/Sources/Common/Core/Math';
 import vtkFullScreenRenderWindow from 'vtk.js/Sources/Rendering/Misc/FullScreenRenderWindow';
 import vtkWidgetManager from 'vtk.js/Sources/Widgets/Core/WidgetManager';
 import vtkPaintWidget from 'vtk.js/Sources/Widgets/Widgets3D/PaintWidget';
@@ -152,6 +150,7 @@ function readyAll() {
 function updateControlPanel(im, ds) {
   const slicingMode = im.getSlicingMode();
   const extent = ds.getExtent();
+  document.querySelector('.slice').setAttribute('min', extent[slicingMode * 2]);
   document
     .querySelector('.slice')
     .setAttribute('max', extent[slicingMode * 2 + 1]);
@@ -268,30 +267,17 @@ reader
       if (slicingMode > -1) {
         const ijk = [0, 0, 0];
         const position = [0, 0, 0];
-        const normal = [0, 0, 0];
 
         // position
         ijk[slicingMode] = image.imageMapper.getSlice();
         data.indexToWorldVec3(ijk, position);
 
-        // circle/slice normal
-        ijk[slicingMode] = 1;
-        data.indexToWorldVec3(ijk, normal);
-        vtkMath.subtract(normal, data.getOrigin(), normal);
-        vtkMath.normalize(normal);
-
         widgets.paintWidget.getManipulator().setOrigin(position);
-        widgets.paintWidget.getManipulator().setNormal(normal);
         widgets.rectangleWidget.getManipulator().setOrigin(position);
-        widgets.rectangleWidget.getManipulator().setNormal(normal);
         widgets.ellipseWidget.getManipulator().setOrigin(position);
-        widgets.ellipseWidget.getManipulator().setNormal(normal);
         widgets.circleWidget.getManipulator().setOrigin(position);
-        widgets.circleWidget.getManipulator().setNormal(normal);
         widgets.splineWidget.getManipulator().setOrigin(position);
-        widgets.splineWidget.getManipulator().setNormal(normal);
         widgets.polygonWidget.getManipulator().setOrigin(position);
-        widgets.polygonWidget.getManipulator().setNormal(normal);
 
         painter.setSlicingMode(slicingMode);
 
@@ -409,6 +395,7 @@ scene.rectangleHandle.onInteractionEvent(() => {
   const rectangleHandle = scene.rectangleHandle
     .getWidgetState()
     .getRectangleHandle();
+
   painter.paintRectangle(
     rectangleHandle.getOrigin(),
     rectangleHandle.getCorner()
@@ -422,11 +409,17 @@ scene.ellipseHandle.onInteractionEvent(() => {
     .getWidgetState()
     .getEllipseHandle()
     .getOrigin();
-  const scale3 = scene.ellipseHandle
+  const point2 = scene.ellipseHandle
     .getWidgetState()
-    .getEllipseHandle()
-    .getScale3();
-  painter.paintEllipse(center, scale3);
+    .getPoint2Handle()
+    .getOrigin();
+
+  const corner = [
+    center[0] - point2[0],
+    center[1] - point2[1],
+    center[2] - point2[2],
+  ];
+  painter.paintEllipse(center, corner);
 });
 
 initializeHandle(scene.circleHandle);
@@ -436,11 +429,15 @@ scene.circleHandle.onInteractionEvent(() => {
     .getWidgetState()
     .getEllipseHandle()
     .getOrigin();
-  const scale3 = scene.circleHandle
+  const point2 = scene.circleHandle
     .getWidgetState()
-    .getEllipseHandle()
-    .getScale3();
-  painter.paintEllipse(center, scale3);
+    .getPoint1Handle()
+    .getOrigin();
+
+  const radius = vec3.distance(center, point2);
+
+  const corner = [radius, radius, radius];
+  painter.paintEllipse(center, corner);
 });
 
 scene.splineHandle.onStartInteractionEvent(() => {
