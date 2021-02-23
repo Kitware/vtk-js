@@ -226,11 +226,10 @@ test('Test rendering when several rotations plane', (t) => {
       }
 
       /**
-       * Update the reslice view and compare it to ground truthes values
-       * @param {ViewType} viewType Defines the viewType
-       * @param {Object} expectedValues Contains ground truthes values that will be compared (focalPoint, viewUp, origin, point1, point2)
+       * Update the reslice view and get correct compared values (camera focal points and view up, origin, point1 and point2)
+       * @param {ViewType} viewType Defines view type
        */
-      function updateAndCompareView(viewType, expectedValues) {
+      function updateView(viewType) {
         const viewObj = viewAttributes.find((obj) => obj.viewType === viewType);
         const out = updateReslice({
           viewType,
@@ -243,31 +242,50 @@ test('Test rendering when several rotations plane', (t) => {
         });
 
         const camera = viewObj.renderer.getActiveCamera();
+        return {
+          focalPoint: camera.getFocalPoint(),
+          viewUp: camera.getViewUp(),
+          origin: out.origin,
+          point1: out.point1,
+          point2: out.point2,
+        };
+      }
+
+      /**
+       * Update the reslice view and compare it to ground truthes values
+       * @param {ViewType} viewType Defines the viewType
+       * @param {Object} expectedValues Contains ground truthes values that will be compared (focalPoint, viewUp, origin, point1, point2)
+       * @returns {Object} Contains compared values extacted from views (focal point, viewup, origin, point1, point2)
+       */
+      function updateAndCompareView(viewType, expectedValues) {
+        const comparedValues = updateView(viewType);
+
         t.deepEqual(
-          vtkMath.roundVector(camera.getFocalPoint(), [], PRECISION),
+          vtkMath.roundVector(comparedValues.focalPoint, [], PRECISION),
           vtkMath.roundVector(expectedValues.focalPoint, [], PRECISION),
           `Camera focal point on ${viewType}`
         );
         t.deepEqual(
-          vtkMath.roundVector(camera.getViewUp(), [], PRECISION),
+          vtkMath.roundVector(comparedValues.viewUp, [], PRECISION),
           vtkMath.roundVector(expectedValues.viewUp, [], PRECISION),
           `Camera view up on ${viewType}`
         );
         t.deepEqual(
-          vtkMath.roundVector(out.origin, [], PRECISION),
+          vtkMath.roundVector(comparedValues.origin, [], PRECISION),
           vtkMath.roundVector(expectedValues.origin, [], PRECISION),
           `Plane origin on ${viewType}`
         );
         t.deepEqual(
-          vtkMath.roundVector(out.point1, [], PRECISION),
+          vtkMath.roundVector(comparedValues.point1, [], PRECISION),
           vtkMath.roundVector(expectedValues.point1, [], PRECISION),
           `Plane point 1 on ${viewType}`
         );
         t.deepEqual(
-          vtkMath.roundVector(out.point2, [], PRECISION),
+          vtkMath.roundVector(comparedValues.point2, [], PRECISION),
           vtkMath.roundVector(expectedValues.point2, [], PRECISION),
           `Plane point 2 on ${viewType}`
         );
+        return comparedValues;
       }
 
       // ----------------------------------------------------------------------
@@ -306,7 +324,7 @@ test('Test rendering when several rotations plane', (t) => {
         vtkMath.radiansFromDegrees(45)
       );
       // Check X view
-      updateAndCompareView(ViewTypes.YZ_PLANE, {
+      const XView45 = updateAndCompareView(ViewTypes.YZ_PLANE, {
         focalPoint: [179.296875, 179.296875, 165],
         viewUp: [-0.707106, 0, 0.707106],
         origin: [344.29687, 0, 0],
@@ -314,7 +332,7 @@ test('Test rendering when several rotations plane', (t) => {
         point2: [14.29687, 0, 330],
       });
       // Check Y view
-      updateAndCompareView(ViewTypes.XZ_PLANE, {
+      const YView45 = updateAndCompareView(ViewTypes.XZ_PLANE, {
         focalPoint: [179.296875, 179.296875, 165],
         viewUp: [0, 0, 1],
         origin: [0, 179.296875, 0],
@@ -322,7 +340,7 @@ test('Test rendering when several rotations plane', (t) => {
         point2: [0, 179.296875, 330],
       });
       // Check Z view
-      updateAndCompareView(ViewTypes.XY_PLANE, {
+      const ZView45 = updateAndCompareView(ViewTypes.XY_PLANE, {
         focalPoint: [179.296875, 179.296875, 165],
         viewUp: [0, -1, 0],
         origin: [14.29687, 358.59375, 0],
@@ -331,7 +349,7 @@ test('Test rendering when several rotations plane', (t) => {
       });
 
       // ----------------------------------------------------------------------
-      t.comment('Rotate 7 times Y by 5 degrees around Z');
+      t.comment('Rotate 7 times Y by 5 degrees around Z (35°)');
       // Simulate increment of 5, seven times to have 35°
       for (let i = 0; i < 7; i++) {
         xzWidget.widgetInstance.rotateLineInView(
@@ -341,29 +359,25 @@ test('Test rendering when several rotations plane', (t) => {
         updateViews(true);
       }
       // Check X view
-      updateAndCompareView(ViewTypes.YZ_PLANE, {
-        focalPoint: [179.296875, 179.296875, 165],
-        viewUp: [-0.707106, 0, 0.707106],
-        origin: [262.96046, 0.144761, -96.067704],
-        point1: [440.21869, 358.9674551321602, 81.99571],
-        point2: [-81.62493, -0.3737, 248.0042],
-      });
+      updateView(ViewTypes.YZ_PLANE);
       // Check Y view
-      updateAndCompareView(ViewTypes.XZ_PLANE, {
-        focalPoint: [179.29688, 179.2968, 165],
-        viewUp: [-0.10255, -0.400132, 0.910701],
-        origin: [0, 349.7656, 0],
-        point1: [423.564438, 140.049802, 0],
-        point2: [-64.9706, 218.54394, 330],
-      });
+      updateView(ViewTypes.XZ_PLANE);
       // Check Z view
-      updateAndCompareView(ViewTypes.XY_PLANE, {
-        focalPoint: [179.296875, 179.296875, 165],
-        viewUp: [0, -1, 0],
-        origin: [14.2968, 358.59375, 0],
-        point1: [344.2968, 358.59375, 330],
-        point2: [14.29683, 0, 0],
-      });
+      updateView(ViewTypes.XY_PLANE);
+
+      // ----------------------------------------------------------------------
+      t.comment('Rotate Z by -35 degrees around Y');
+      xzWidget.widgetInstance.rotateLineInView(
+        widget.getWidgetState().getAxisYinZ(),
+        vtkMath.radiansFromDegrees(-35)
+      );
+
+      // Check X view
+      updateAndCompareView(ViewTypes.YZ_PLANE, XView45);
+      // Check Y view
+      updateAndCompareView(ViewTypes.XZ_PLANE, YView45);
+      // Check Z view
+      updateAndCompareView(ViewTypes.XY_PLANE, ZView45);
 
       t.end();
     });
