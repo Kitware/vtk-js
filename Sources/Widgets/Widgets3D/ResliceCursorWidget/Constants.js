@@ -20,7 +20,21 @@ export const defaultViewUpFromViewType = {
   [ViewTypes.XY_PLANE]: [0, -1, 0], // Axial
 };
 
+export const xyzToViewType = [
+  ViewTypes.YZ_PLANE,
+  ViewTypes.XZ_PLANE,
+  ViewTypes.XY_PLANE,
+];
+
+export const viewTypeToXYZ = {
+  [ViewTypes.YZ_PLANE]: 0,
+  [ViewTypes.XZ_PLANE]: 1,
+  [ViewTypes.XY_PLANE]: 2,
+};
+
 export default {
   ScrollingMethods,
   InteractionMethodsName,
+  xyzToViewType,
+  viewTypeToXYZ,
 };

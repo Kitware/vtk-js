@@ -2,9 +2,13 @@ import { vec3, mat4 } from 'gl-matrix';
 import macro from 'vtk.js/Sources/macro';
 import vtkDataArray from 'vtk.js/Sources/Common/Core/DataArray';
 import * as vtkMath from 'vtk.js/Sources/Common/Core/Math';
+import vtkMatrixBuilder from 'vtk.js/Sources/Common/Core/MatrixBuilder';
+
 import vtkPolyData from 'vtk.js/Sources/Common/DataModel/PolyData';
 
 const { vtkWarningMacro } = macro;
+
+const EPSILON = 1e-6;
 
 // ----------------------------------------------------------------------------
 // vtkPlaneSource methods
@@ -126,35 +130,45 @@ function vtkPlaneSource(publicAPI, model) {
 
       if (dp < 1.0) {
         if (dp <= -1.0) {
-          theta = 180.0;
+          theta = vtkMath.radiansFromDegrees(180.0);
           vtkMath.subtract(model.point1, model.origin, rotationVector);
         } else {
           vtkMath.cross(model.normal, n, rotationVector);
-          theta = vtkMath.degreesFromRadians(Math.acos(dp));
+          theta = Math.acos(dp);
         }
-        // Create rotation matrix
-        const transform = mat4.create();
-        const negCenter = [];
-        vec3.negate(negCenter, model.center);
-
-        mat4.translate(transform, transform, model.center);
-        mat4.rotate(
-          transform,
-          transform,
-          vtkMath.radiansFromDegrees(theta),
-          rotationVector
-        );
-        mat4.translate(transform, transform, negCenter);
-
-        vec3.transformMat4(model.origin, model.origin, transform);
-        vec3.transformMat4(model.point1, model.point1, transform);
-        vec3.transformMat4(model.point2, model.point2, transform);
-
-        model.normal = [...n];
-
-        publicAPI.modified();
+        publicAPI.rotate(theta, rotationVector);
       }
     }
+  };
+
+  /**
+   * Rotate plane around a given axis
+   * @param {float} theta Angle (radian) to rotate about
+   * @param {vec3} rotationAxis Axis to rotate around
+   */
+  publicAPI.rotate = (angle, rotationAxis) => {
+    if (Math.abs(angle) < EPSILON) {
+      return;
+    }
+    // Create rotation matrix
+    const transform = mat4.create();
+    const negCenter = [];
+    vec3.negate(negCenter, model.center);
+
+    mat4.translate(transform, transform, model.center);
+    mat4.rotate(transform, transform, angle, rotationAxis);
+    mat4.translate(transform, transform, negCenter);
+
+    vec3.transformMat4(model.origin, model.origin, transform);
+    vec3.transformMat4(model.point1, model.point1, transform);
+    vec3.transformMat4(model.point2, model.point2, transform);
+
+    vtkMatrixBuilder
+      .buildFromRadian()
+      .rotate(angle, rotationAxis)
+      .apply(model.normal);
+
+    publicAPI.modified();
   };
 
   publicAPI.setCenter = (...center) => {
@@ -174,7 +188,7 @@ function vtkPlaneSource(publicAPI, model) {
       vtkMath.subtract(model.point2, model.origin, v2);
 
       for (let i = 0; i < 3; i++) {
-        model.center[i] = center[i];
+        model.center[i] = c[i];
         model.origin[i] = model.center[i] - 0.5 * (v1[i] + v2[i]);
         model.point1[i] = model.origin[i] + v1[i];
         model.point2[i] = model.origin[i] + v2[i];
