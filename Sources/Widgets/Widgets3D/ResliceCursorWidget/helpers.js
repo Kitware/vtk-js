@@ -23,18 +23,19 @@ const EPSILON = 0.00001;
 export function boundPlane(bounds, origin, p1, p2) {
   const v1 = [];
   vtkMath.subtract(p1, origin, v1);
+  vtkMath.normalize(v1);
 
   const v2 = [];
   vtkMath.subtract(p2, origin, v2);
+  vtkMath.normalize(v2);
 
   const n = [0, 0, 1];
   vtkMath.cross(v1, v2, n);
-  const plane = vtkPlane.newInstance();
-  plane.setOrigin(origin);
-  plane.setNormal(n);
-  vtkMath.normalize(v1);
-  vtkMath.normalize(v2);
   vtkMath.normalize(n);
+
+  const plane = vtkPlane.newInstance();
+  plane.setOrigin(...origin);
+  plane.setNormal(...n);
 
   const cubeSource = vtkCubeSource.newInstance();
   cubeSource.setBounds(bounds);
