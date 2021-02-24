@@ -457,9 +457,9 @@ function vtkResliceCursorWidget(publicAPI, model) {
     mat4.transpose(newResliceAxes, newResliceAxes);
     vec4.transformMat4(newOriginXYZW, originXYZW, newResliceAxes);
 
-    newResliceAxes[4 * 3 + 0] = newOriginXYZW[0];
-    newResliceAxes[4 * 3 + 1] = newOriginXYZW[1];
-    newResliceAxes[4 * 3 + 2] = newOriginXYZW[2];
+    newResliceAxes[4 * 3 + 0] = vtkMath.round(newOriginXYZW[0], 5);
+    newResliceAxes[4 * 3 + 1] = vtkMath.round(newOriginXYZW[1], 5);
+    newResliceAxes[4 * 3 + 2] = vtkMath.round(newOriginXYZW[2], 5);
 
     // Compute a new set of resliced extents
     let extentX = 0;
@@ -513,19 +513,34 @@ function vtkResliceCursorWidget(publicAPI, model) {
     const outputSpacingX = extentX === 0 ? 1.0 : planeSizeX / extentX;
     const outputSpacingY = extentY === 0 ? 1.0 : planeSizeY / extentY;
 
-    let modified = imageReslice.setResliceAxes(newResliceAxes);
-    modified =
-      imageReslice.setOutputSpacing([outputSpacingX, outputSpacingY, 1]) ||
-      modified;
-    modified =
-      imageReslice.setOutputOrigin([
-        0.5 * outputSpacingX,
-        0.5 * outputSpacingY,
-        0,
-      ]) || modified;
-    modified =
-      imageReslice.setOutputExtent([0, extentX - 1, 0, extentY - 1, 0, 0]) ||
-      modified;
+    // Check if the reslice has been modified since the last time to avoid
+    // CPU computation and improve speed
+    const previousResliceAxes = imageReslice.getResliceAxes();
+    let modified = false;
+    // At first launch, previous reslice axes is null
+    if (!previousResliceAxes) {
+      modified = true;
+    } else {
+      for (let i = 0; i < previousResliceAxes.length; i++) {
+        modified = previousResliceAxes[i] === newResliceAxes[i] || modified;
+      }
+    }
+
+    if (modified) {
+      modified = imageReslice.setResliceAxes(newResliceAxes);
+      modified =
+        imageReslice.setOutputSpacing([outputSpacingX, outputSpacingY, 1]) ||
+        modified;
+      modified =
+        imageReslice.setOutputOrigin([
+          0.5 * outputSpacingX,
+          0.5 * outputSpacingY,
+          0,
+        ]) || modified;
+      modified =
+        imageReslice.setOutputExtent([0, extentX - 1, 0, extentY - 1, 0, 0]) ||
+        modified;
+    }
 
     return { modified, origin: o, point1: p1, point2: p2 };
   };
