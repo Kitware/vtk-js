@@ -28,7 +28,7 @@ function parseHeader(data) {
 
   if (result !== null) {
     headerText = result[1];
-    headerLength = new Blob([result[0]]).size;
+    headerLength = result[0].length;
   }
 
   const header = {
