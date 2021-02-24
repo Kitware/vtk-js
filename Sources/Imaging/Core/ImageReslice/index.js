@@ -98,7 +98,8 @@ function vtkImageReslice(publicAPI, model) {
 
   publicAPI.setResliceAxes = (resliceAxes) => {
     if (!model.resliceAxes) {
-      model.resliceAxes = mat4.create();
+      model.resliceAxes = new Float64Array(16);
+      mat4.identity(model.resliceAxes);
     }
 
     if (!mat4.exactEquals(model.resliceAxes, resliceAxes)) {
@@ -133,11 +134,12 @@ function vtkImageReslice(publicAPI, model) {
     const outWholeExt = [0, 0, 0, 0, 0, 0];
     const outDims = [0, 0, 0];
 
-    let matrix = mat4.create();
+    let matrix = new Float64Array(16);
+    mat4.identity(matrix);
     if (model.resliceAxes) {
       matrix = model.resliceAxes;
     }
-    const imatrix = mat4.create();
+    const imatrix = new Float64Array(16);
     mat4.invert(imatrix, matrix);
 
     const inCenter = [
@@ -683,7 +685,8 @@ function vtkImageReslice(publicAPI, model) {
   publicAPI.getIndexMatrix = (input, output) => {
     // first verify that we have to update the matrix
     if (indexMatrix === null) {
-      indexMatrix = mat4.create();
+      indexMatrix = new Float64Array(16);
+      mat4.identity(indexMatrix);
     }
 
     const inOrigin = input.getOrigin();
@@ -691,9 +694,12 @@ function vtkImageReslice(publicAPI, model) {
     const outOrigin = output.getOrigin();
     const outSpacing = output.getSpacing();
 
-    const transform = mat4.create();
-    const inMatrix = mat4.create();
-    const outMatrix = mat4.create();
+    const transform = new Float64Array(16);
+    mat4.identity(transform);
+    const inMatrix = new Float64Array(16);
+    mat4.identity(inMatrix);
+    const outMatrix = new Float64Array(16);
+    mat4.identity(outMatrix);
 
     if (optimizedTransform) {
       optimizedTransform = null;
@@ -751,9 +757,11 @@ function vtkImageReslice(publicAPI, model) {
     const dims = input.getDimensions();
     const inWholeExt = [0, dims[0] - 1, 0, dims[1] - 1, 0, dims[2] - 1];
 
-    const matrix = mat4.create();
+    const matrix = new Float64Array(16);
     if (model.resliceAxes) {
       mat4.invert(matrix, model.resliceAxes);
+    } else {
+      mat4.identity(matrix);
     }
 
     const bounds = [
