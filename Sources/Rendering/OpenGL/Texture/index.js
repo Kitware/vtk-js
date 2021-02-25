@@ -1078,15 +1078,18 @@ function vtkOpenGLTexture(publicAPI, model) {
       // otherwise convert to float
       const newArray = new Float32Array(numPixelsIn * numComps);
       // compute min and max values
-      const res = computeScaleOffsets(numComps, numPixelsIn, data);
-      model.volumeInfo.offset = res.offset;
-      model.volumeInfo.scale = res.scale;
+      const {
+        offset: computedOffset,
+        scale: computedScale,
+      } = computeScaleOffsets(numComps, numPixelsIn, data);
+      model.volumeInfo.offset = computedOffset;
+      model.volumeInfo.scale = computedScale;
       let count = 0;
-      for (let i = 0; i < numPixelsIn; ++i) {
-        for (let nc = 0; nc < numComps; ++nc) {
+      const scaleInverse = computedScale.map((s) => 1 / s);
+      for (let i = 0; i < numPixelsIn; i++) {
+        for (let nc = 0; nc < numComps; nc++) {
           newArray[count] =
-            (data[count] - model.volumeInfo.offset[nc]) /
-            model.volumeInfo.scale[nc];
+            (data[count] - computedOffset[nc]) * scaleInverse[nc];
           count++;
         }
       }
