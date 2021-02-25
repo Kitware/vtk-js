@@ -21,8 +21,6 @@ function vtkLineWidget(publicAPI, model) {
   model.widgetState = stateGenerator();
   model.behavior = widgetBehavior;
 
-  console.log('after this part?');
-
   // --- Widget Requirement ---------------------------------------------------
 
   model.methodsToLink = [
@@ -34,7 +32,6 @@ function vtkLineWidget(publicAPI, model) {
   ];
 
   publicAPI.getRepresentationsForViewType = (viewType) => {
-    console.log('when are you built?');
     switch (viewType) {
       case ViewTypes.DEFAULT:
       case ViewTypes.GEOMETRY:
@@ -56,6 +53,20 @@ function vtkLineWidget(publicAPI, model) {
                * actor which renders the object on the VTK scene
                */
               visibilityFlagArray: [false, false],
+              coincidentTopologyParameters: {
+                Point: {
+                  factor: -1.0,
+                  offset: -1.0,
+                },
+                Line: {
+                  factor: -1.0,
+                  offset: -1.0,
+                },
+                Polygon: {
+                  factor: -3.0,
+                  offset: -3.0,
+                },
+              },
             },
           },
           {
@@ -72,6 +83,20 @@ function vtkLineWidget(publicAPI, model) {
                * actor which renders the object on the VTK scene
                */
               visibilityFlagArray: [false, false],
+              coincidentTopologyParameters: {
+                Point: {
+                  factor: -1.0,
+                  offset: -1.0,
+                },
+                Line: {
+                  factor: -1.0,
+                  offset: -1.0,
+                },
+                Polygon: {
+                  factor: -3.0,
+                  offset: -3.0,
+                },
+              },
             },
           },
           {
@@ -80,6 +105,20 @@ function vtkLineWidget(publicAPI, model) {
             initialValues: {
               scaleInPixels: true,
               visibilityFlagArray: [false, false],
+              coincidentTopologyParameters: {
+                Point: {
+                  factor: -1.0,
+                  offset: -1.0,
+                },
+                Line: {
+                  factor: -1.0,
+                  offset: -1.0,
+                },
+                Polygon: {
+                  factor: -3.0,
+                  offset: -3.0,
+                },
+              },
             },
           },
           {

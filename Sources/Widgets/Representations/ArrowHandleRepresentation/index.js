@@ -2,7 +2,6 @@ import macro from 'vtk.js/Sources/macro';
 import vtkActor from 'vtk.js/Sources/Rendering/Core/Actor';
 import vtkArrow2DSource from 'vtk.js/Sources/Filters/Sources/Arrow2DSource/';
 import vtkDataArray from 'vtk.js/Sources/Common/Core/DataArray';
-
 import vtkWidgetRepresentation from 'vtk.js/Sources/Widgets/Representations/WidgetRepresentation';
 import vtkGlyph3DMapper from 'vtk.js/Sources/Rendering/Core/Glyph3DMapper';
 import vtkHandleRepresentation from 'vtk.js/Sources/Widgets/Representations/HandleRepresentation';
@@ -17,7 +16,7 @@ import vtkViewFinderSource from 'vtk.js/Sources/Filters/Sources/ViewFinderSource
 
 import Constants from 'vtk.js/Sources/Widgets/Widgets3D/LineWidget/Constants';
 import { ScalarMode } from 'vtk.js/Sources/Rendering/Core/Mapper/Constants';
-import { vec3, mat3 } from 'gl-matrix';
+import { vec3, mat3, mat4 } from 'gl-matrix';
 
 import { RenderingTypes } from 'vtk.js/Sources/Widgets/Core/WidgetManager/Constants';
 
@@ -154,11 +153,7 @@ function vtkArrowHandleRepresentation(publicAPI, model) {
    * to be 'rendered' internally in a VTK scene without being visible on the final output
    */
   model.pipelines.arrow.mapper.setOrientationModeToMatrix();
-  model.pipelines.arrow.mapper.setResolveCoincidentTopology(true);
-  model.pipelines.arrow.mapper.setRelativeCoincidentTopologyPolygonOffsetParameters(
-    -1,
-    -1
-  );
+
   vtkWidgetRepresentation.connectPipeline(model.pipelines.arrow);
 
   publicAPI.addActor(model.pipelines.arrow.actor);
@@ -206,10 +201,9 @@ function vtkArrowHandleRepresentation(publicAPI, model) {
     model.currentShape !== HandleRepresentationType.CUBE &&
     model.currentShape !== HandleRepresentationType.SPHERE;
 
-  /* *
+  /**
    * rotate the glyph to make sure it is properly oriented on the plane
-   * facing camera position on scene start (before user moves camera)
-   * */
+   * facing camera position on scene start (before user moves camera) */
   function getGlyphRotation(viewMatrixInv) {
     let displayOrientation = vec3.create();
     const baseDir = [0, 1, 0];
@@ -310,17 +304,11 @@ function vtkArrowHandleRepresentation(publicAPI, model) {
     const currentShape = publicAPI
       .getRepresentationStates(inData[0])[0]
       .getShape();
-    // console.log('test if i can get the label of my handle');
     if (model.currentShape !== currentShape && currentShape !== '') {
       model.currentShape = currentShape;
       model.pipelines.arrow.glyph = setCurrentShapeInput(model.currentShape);
       model.glyph = model.pipelines.arrow.glyph;
       vtkWidgetRepresentation.connectPipeline(model.pipelines.arrow);
-    }
-    // will force actor visibility to match VisibilityFlagArray on 1st RequestData
-    if (model.initialized) {
-      publicAPI.updateActorVisibility();
-      model.initialized = false;
     }
     publicAPI.requestDataInternal(inData, outData);
   };
@@ -361,6 +349,7 @@ const DEFAULT_VALUES = {
 
 export function extend(publicAPI, model, initialValues = {}) {
   model.viewMatrix = new Float64Array(16);
+  mat4.identity(model.viewMatrix);
   model.orientation = [1, 0, 0];
 
   Object.assign(model, DEFAULT_VALUES, initialValues);

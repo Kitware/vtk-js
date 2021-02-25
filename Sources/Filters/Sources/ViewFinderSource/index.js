@@ -35,7 +35,6 @@ function vtkViewFinderSource(publicAPI, model) {
     points[21] = (model.radius + model.spacing) * -1;
     points[22] = (model.radius / model.width) * -1;
     points[23] = 0;
-    // droit gauche
 
     points[24] = model.radius / model.width;
     points[25] = model.radius;
@@ -64,7 +63,6 @@ function vtkViewFinderSource(publicAPI, model) {
     points[45] = (model.radius / model.width) * -1;
     points[46] = (model.radius + model.spacing) * -1;
     points[47] = 0;
-    // haut bas
 
     // prettier-ignore
     const cells = Uint8Array.from([
@@ -104,7 +102,7 @@ const DEFAULT_VALUES = {
 // ----------------------------------------------------------------------------
 
 export function extend(publicAPI, model, initialValues = {}) {
-  model.center = [0, 1, 0];
+  model.center = [0, 0, 0];
   model.orientation = [1, 0, 0];
 
   Object.assign(model, DEFAULT_VALUES, initialValues);

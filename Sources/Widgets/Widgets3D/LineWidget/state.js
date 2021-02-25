@@ -30,7 +30,6 @@ export default function generateState() {
       initialValues: {
         scale1: 50,
         origin: [],
-        shape: 'triangle',
       },
     })
     .addStateFromMixin({
@@ -40,7 +39,6 @@ export default function generateState() {
       initialValues: {
         scale1: 50,
         origin: [],
-        shape: 'triangle',
       },
     })
     .addStateFromMixin({

@@ -18,6 +18,8 @@ export default function widgetBehavior(publicAPI, model) {
   const handleToHide = [false, false];
 
   model.nbHandles = 0;
+  // will force moveHandle visibility yo match its visibilityFlagArray on scene initialization
+  model.representations[2].updateActorVisibility();
 
   // --------------------------------------------------------------------------
   // Interactor event
@@ -262,12 +264,12 @@ export default function widgetBehavior(publicAPI, model) {
 
   publicAPI.placeHandle = (handle) => {
     const nb = getNbHandles(model);
-    publicAPI.updateHandleVisibility(handle, nb);
     model.nbHandles = nb;
     handle.setOrigin(...model.widgetState.getMoveHandle().getOrigin());
     handle.setColor(model.widgetState.getMoveHandle().getColor());
     handle.setScale1(model.widgetState.getMoveHandle().getScale1());
     model.widgetState.getText().setOrigin(calculateTextPosition(model));
+    publicAPI.updateHandleVisibility(handle, nb);
   };
 
   // --------------------------------------------------------------------------

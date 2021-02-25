@@ -48,7 +48,6 @@ function vtkPolyLineRepresentation(publicAPI, model) {
 
   model.mapper = vtkMapper.newInstance();
   model.actor = vtkActor.newInstance();
-  // model.mapper.setResolveCoincidentTopology(true);
   // model.tubes = vtkTubeFilter.newInstance({
   //   radius: 0.01,
   //   numberOfSides: 12,
@@ -103,21 +102,6 @@ function vtkPolyLineRepresentation(publicAPI, model) {
 const DEFAULT_VALUES = {
   threshold: Number.EPSILON,
   closePolyLine: false,
-  /*
-  coincidentTopologyParameters: {
-    Point: {
-      factor: -1.0,
-      offset: -1.0,
-    },
-    Line: {
-      factor: -1.5,
-      offset: -1.5,
-    },
-    Polygon: {
-      factor: -2.0,
-      offset: -2.0,
-    },
-  }, */
 };
 
 // ----------------------------------------------------------------------------

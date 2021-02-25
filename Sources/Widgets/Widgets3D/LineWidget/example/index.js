@@ -212,9 +212,21 @@ document.querySelector('#addWidget').addEventListener('click', () => {
     setWidgetColor(widgetManager.getWidgets()[index], 0.2);
     selectedWidgetIndex = index;
     lineWidget = currentHandle;
+    document.getElementById('idh1').value =
+      getHandles[1].getShape() === '' ? 'sphere' : getHandles[1].getShape();
+    document.getElementById('idh2').value =
+      getHandles[1].getShape() === '' ? 'sphere' : getHandles[2].getShape();
+    document.getElementById(
+      'visiH1'
+    ).checked = lineWidget.getWidgetState().getHandle1().getVisible();
+    document.getElementById(
+      'visiH2'
+    ).checked = lineWidget.getWidgetState().getHandle2().getVisible();
+    console.log('reset text', document.getElementById('txtIpt'));
+    document.getElementById(
+      'txtIpt'
+    ).value = lineWidget.getWidgetState().getText().getText();
   });
-  updateCheckBoxes(1, getHandles[1].getShape());
-  updateCheckBoxes(2, getHandles[2].getShape());
 });
 
 document.querySelector('#removeWidget').addEventListener('click', () => {
