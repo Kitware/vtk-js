@@ -27,6 +27,8 @@ import './Filters/General/Calculator/test/testCalculator';
 import './Filters/General/ClosedPolyLineToSurfaceFilter/test/testClosedPolyLineToSurfaceFilter';
 import './Filters/General/ImageStreamline/test/testStreamline';
 import './Filters/General/MoleculeToRepresentation/test/testMultipleBonds';
+import './Filters/General/OBBTree/test/testHelpers';
+import './Filters/General/OBBTree/test/testOBBTree';
 import './Filters/General/PaintFilter/test/testPaintEllipse';
 import './Filters/General/TubeFilter/test/testTubeFilter';
 import './Filters/General/TubeFilter/test/testTubeColors';
