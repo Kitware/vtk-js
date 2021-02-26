@@ -21,6 +21,7 @@ export default function generateState() {
       initialValues: {
         scale1: 50,
         origin: [],
+        visible: true,
       },
     })
     .addStateFromMixin({

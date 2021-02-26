@@ -9,9 +9,9 @@ import vtkPolyLineRepresentation from 'vtk.js/Sources/Widgets/Representations/Po
 import widgetBehavior from 'vtk.js/Sources/Widgets/Widgets3D/LineWidget/behavior';
 import { ViewTypes } from 'vtk.js/Sources/Widgets/Core/WidgetManager/Constants';
 import {
+  getPoint,
   updateTextPosition,
-  getNbHandles,
-} from 'vtk.js/Sources/Widgets/Widgets3D/LineWidget/helper';
+} from 'vtk.js/Sources/Widgets/Widgets3D/LineWidget/helpers';
 // ----------------------------------------------------------------------------
 // Factory
 // ----------------------------------------------------------------------------
@@ -143,30 +143,18 @@ function vtkLineWidget(publicAPI, model) {
   // --- Public methods -------------------------------------------------------
 
   publicAPI.getDistance = () => {
-    const nbHandles = getNbHandles(model);
-    if (
-      nbHandles < 1 ||
-      (nbHandles === 1 &&
-        model.widgetState.getHandle2().getOrigin().length === 0)
-    ) {
-      return 0;
-    }
-    const secondPoint =
-      nbHandles === 2 && model.widgetState.getMoveHandle().getActive()
-        ? model.widgetState.getMoveHandle().getOrigin()
-        : model.widgetState.getHandle2().getOrigin();
-    return Math.sqrt(
-      distance2BetweenPoints(
-        model.widgetState.getHandle1().getOrigin(),
-        secondPoint
-      )
-    );
+    const p1 = getPoint(0, model.widgetState);
+    const p2 = getPoint(1, model.widgetState);
+    return p1 && p2 ? Math.sqrt(distance2BetweenPoints(p1, p2)) : 0;
   };
 
   // --------------------------------------------------------------------------
   // initialization
   // --------------------------------------------------------------------------
 
+  /**
+   * TBD: Why setting the move handle ?
+   */
   model.widgetState.onBoundsChange((bounds) => {
     const center = [
       (bounds[0] + bounds[1]) * 0.5,

@@ -36,17 +36,12 @@ renderer.addActor(actor);
 const widgetManager = vtkWidgetManager.newInstance();
 widgetManager.setRenderer(renderer);
 
-let widget = vtkLineWidget.newInstance();
-widget.placeWidget(cube.getOutputData().getBounds());
+let widget = null;
 
-let lineWidget = widgetManager.addWidget(widget);
-let cpt = 0;
+let lineWidget = null;
 let selectedWidgetIndex = 0;
 
-let getHandles = {
-  1: lineWidget.getWidgetState().getHandle1(),
-  2: lineWidget.getWidgetState().getHandle2(),
-};
+let getHandle = {};
 
 renderer.resetCamera();
 
@@ -72,9 +67,9 @@ function updateText() {
   renderWindow.render();
 }
 document.querySelector('#txtIpt').addEventListener('keyup', updateText);
-updateText();
+// updateText();
 
-function setDistance() {
+function observeDistance() {
   lineWidget.onInteractionEvent(() => {
     document.getElementById(
       'distance'
@@ -88,9 +83,9 @@ function setDistance() {
   });
 }
 
-setDistance();
+// setDistance();
 document.querySelector('#linePos').addEventListener('input', updateLinePos);
-updateLinePos();
+// updateLinePos();
 
 // Handle Sources ------------------------------------------
 
@@ -111,15 +106,14 @@ function updateCheckBoxes(handleId, shape) {
 function updateHandleShape(handleId) {
   const e = document.getElementById(`idh${handleId}`);
   const shape = e.options[e.selectedIndex].value;
-  getHandles[handleId].setShape(shape);
-  if (getHandles[handleId].getOrigin().length !== 0)
-    lineWidget.updateHandleVisibility(getHandles[handleId], handleId);
-  updateCheckBoxes(handleId, shape);
-  lineWidget.updateHandleDirections();
-  lineWidget.rotateHandlesToFaceCamera();
-  lineWidget.getInteractor().render();
-  renderWindow.render();
-  setDistance();
+  const handle = getHandle[handleId];
+  if (handle) {
+    handle.setShape(shape);
+    lineWidget.updateHandleVisibility(handleId - 1);
+    lineWidget.getInteractor().render();
+    updateCheckBoxes(handleId, shape);
+    observeDistance();
+  }
 }
 
 function setWidgetColor(currentWidget, color) {
@@ -133,37 +127,34 @@ const inputHandle2 = document.getElementById('idh2');
 
 inputHandle1.addEventListener('input', updateHandleShape.bind(null, 1));
 inputHandle2.addEventListener('input', updateHandleShape.bind(null, 2));
-inputHandle1.value =
-  getHandles[1].getShape() === '' ? 'sphere' : getHandles[1].getShape();
-inputHandle2.value =
-  getHandles[2].getShape() === '' ? 'sphere' : getHandles[2].getShape();
-updateCheckBoxes(1, getHandles[1].getShape());
-updateCheckBoxes(2, getHandles[2].getShape());
+// inputHandle1.value =
+//   getHandle[1].getShape() === '' ? 'sphere' : getHandle[1].getShape();
+// inputHandle2.value =
+//   getHandle[2].getShape() === '' ? 'sphere' : getHandle[2].getShape();
+// updateCheckBoxes(1, getHandles[1].getShape());
+// updateCheckBoxes(2, getHandles[2].getShape());
 
-document.getElementById(
-  'visiH1'
-).checked = lineWidget.getWidgetState().getHandle1().getVisible();
-document.getElementById(
-  'visiH2'
-).checked = lineWidget.getWidgetState().getHandle2().getVisible();
+// document.getElementById(
+//   'visiH1'
+// ).checked = lineWidget.getWidgetState().getHandle1().getVisible();
+// document.getElementById(
+//   'visiH2'
+// ).checked = lineWidget.getWidgetState().getHandle2().getVisible();
 
 const checkBoxes = ['visiH1', 'visiH2'].map((id) =>
   document.getElementById(id)
 );
 
 const handleCheckBoxInput = (e) => {
+  if (lineWidget == null) {
+    return;
+  }
   if (e.target.id === 'visiH1') {
     lineWidget.getWidgetState().getHandle1().setVisible(e.target.checked);
-    lineWidget.updateHandleVisibility(
-      lineWidget.getWidgetState().getHandle1(),
-      1
-    );
+    lineWidget.updateHandleVisibility(0);
   } else {
     lineWidget.getWidgetState().getHandle2().setVisible(e.target.checked);
-    lineWidget.updateHandleVisibility(
-      lineWidget.getWidgetState().getHandle2(),
-      2
-    );
+    lineWidget.updateHandleVisibility(1);
   }
   lineWidget.getInteractor().render();
   renderWindow.render();
@@ -173,38 +164,32 @@ checkBoxes.forEach((checkBox) =>
 );
 
 document.querySelector('#addWidget').addEventListener('click', () => {
-  let currentHandle = 0;
-  if (cpt === 0) {
-    currentHandle = lineWidget;
-    widgetManager.grabFocus(widget);
-    cpt++;
-  } else {
-    cpt++;
-    widgetManager.releaseFocus(widget);
-    widget = vtkLineWidget.newInstance();
-    widget.placeWidget(cube.getOutputData().getBounds());
-    currentHandle = widgetManager.addWidget(widget);
-    lineWidget = currentHandle;
+  let currentHandle = null;
+  widgetManager.releaseFocus(widget);
+  widget = vtkLineWidget.newInstance();
+  // widget.placeWidget(cube.getOutputData().getBounds());
+  currentHandle = widgetManager.addWidget(widget);
+  lineWidget = currentHandle;
 
-    getHandles = {
-      1: lineWidget.getWidgetState().getHandle1(),
-      2: lineWidget.getWidgetState().getHandle2(),
-    };
+  getHandle = {
+    1: lineWidget.getWidgetState().getHandle1(),
+    2: lineWidget.getWidgetState().getHandle2(),
+  };
 
-    updateHandleShape(1);
-    updateHandleShape(2);
+  updateHandleShape(1);
+  updateHandleShape(2);
 
-    setDistance();
+  observeDistance();
 
-    widgetManager.grabFocus(widget);
-  }
+  widgetManager.grabFocus(widget);
+
   currentHandle.onStartInteractionEvent(() => {
     const index = widgetManager.getWidgets().findIndex((cwidget) => {
       if (DeepEqual(currentHandle.getWidgetState(), cwidget.getWidgetState()))
         return 1;
       return 0;
     });
-    getHandles = {
+    getHandle = {
       1: currentHandle.getWidgetState().getHandle1(),
       2: currentHandle.getWidgetState().getHandle2(),
     };
@@ -213,9 +198,9 @@ document.querySelector('#addWidget').addEventListener('click', () => {
     selectedWidgetIndex = index;
     lineWidget = currentHandle;
     document.getElementById('idh1').value =
-      getHandles[1].getShape() === '' ? 'sphere' : getHandles[1].getShape();
+      getHandle[1].getShape() === '' ? 'sphere' : getHandle[1].getShape();
     document.getElementById('idh2').value =
-      getHandles[1].getShape() === '' ? 'sphere' : getHandles[2].getShape();
+      getHandle[1].getShape() === '' ? 'sphere' : getHandle[2].getShape();
     document.getElementById(
       'visiH1'
     ).checked = lineWidget.getWidgetState().getHandle1().getVisible();

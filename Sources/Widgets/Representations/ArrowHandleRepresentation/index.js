@@ -2,7 +2,6 @@ import macro from 'vtk.js/Sources/macro';
 import vtkActor from 'vtk.js/Sources/Rendering/Core/Actor';
 import vtkArrow2DSource from 'vtk.js/Sources/Filters/Sources/Arrow2DSource/';
 import vtkDataArray from 'vtk.js/Sources/Common/Core/DataArray';
-import vtkWidgetRepresentation from 'vtk.js/Sources/Widgets/Representations/WidgetRepresentation';
 import vtkGlyph3DMapper from 'vtk.js/Sources/Rendering/Core/Glyph3DMapper';
 import vtkHandleRepresentation from 'vtk.js/Sources/Widgets/Representations/HandleRepresentation';
 import vtkMatrixBuilder from 'vtk.js/Sources/Common/Core/MatrixBuilder';
@@ -20,7 +19,7 @@ import { vec3, mat3, mat4 } from 'gl-matrix';
 
 import { RenderingTypes } from 'vtk.js/Sources/Widgets/Core/WidgetManager/Constants';
 
-const { HandleRepresentationType } = Constants;
+const { ShapeType, Shapes2D, ShapesOrientable } = Constants;
 
 // ----------------------------------------------------------------------------
 // vtkArrowHandleRepresentation methods
@@ -54,72 +53,76 @@ function vtkArrowHandleRepresentation(publicAPI, model) {
       empty: true,
     }),
   };
-  model.initialized = true;
+
   model.internalPolyData.getPointData().addArray(model.internalArrays.scale);
   model.internalPolyData.getPointData().addArray(model.internalArrays.color);
   model.internalPolyData
     .getPointData()
     .addArray(model.internalArrays.direction);
 
-  // set the shape for the glyph according to lineWidget state inputs
-  function setCurrentShapeInput(shape) {
+  /**
+   * Set the shape for the glyph according to lineWidget state inputs
+   */
+  function createGlyph(shape) {
     const representationToSource = {
-      [HandleRepresentationType.STAR]: {
+      [ShapeType.STAR]: {
         builder: vtkArrow2DSource,
         initialValues: { shape: 'star', height: 0.6 },
       },
-      [HandleRepresentationType.ARROWHEAD3]: {
+      [ShapeType.ARROWHEAD3]: {
         builder: vtkArrow2DSource,
         initialValues: { shape: 'triangle' },
       },
-      [HandleRepresentationType.ARROWHEAD4]: {
+      [ShapeType.ARROWHEAD4]: {
         builder: vtkArrow2DSource,
         initialValues: { shape: 'arrow4points' },
       },
-      [HandleRepresentationType.ARROWHEAD6]: {
+      [ShapeType.ARROWHEAD6]: {
         builder: vtkArrow2DSource,
         initialValues: { shape: 'arrow6points' },
       },
-      [HandleRepresentationType.CONE]: {
+      [ShapeType.CONE]: {
         builder: vtkConeSource,
+        initialValues: {
+          direction: [0, 1, 0],
+        },
       },
-      [HandleRepresentationType.SPHERE]: {
+      [ShapeType.SPHERE]: {
         builder: vtkSphereSource,
       },
-      [HandleRepresentationType.CUBE]: {
+      [ShapeType.CUBE]: {
         builder: vtkCubeSource,
         initialValues: { xLength: 0.8, yLength: 0.8, zLength: 0.8 },
       },
-      [HandleRepresentationType.DISK]: {
+      [ShapeType.DISK]: {
         builder: vtkCircleSource,
         initialValues: {
           resolution: 30,
           radius: 0.5,
-          orientation: [0, 0, 1],
+          direction: [0, 0, 1],
           lines: false,
           face: true,
         },
       },
-      [HandleRepresentationType.CIRCLE]: {
+      [ShapeType.CIRCLE]: {
         builder: vtkCircleSource,
         initialValues: {
           resolution: 30,
           radius: 0.5,
-          orientation: [0, 0, 1],
+          direction: [0, 0, 1],
           lines: true,
           face: false,
         },
       },
-      [HandleRepresentationType.VIEWFINDER]: {
+      [ShapeType.VIEWFINDER]: {
         builder: vtkViewFinderSource,
         initialValues: { radius: 0.1, spacing: 0.3, width: 1.4 },
       },
-      [HandleRepresentationType.NONE]: {
+      [ShapeType.NONE]: {
         builder: vtkSphereSource,
       },
     };
-    const currentShape = shape === '' ? 'sphere' : model.currentShape;
-    const rep = representationToSource[currentShape];
+    const rep = representationToSource[shape];
     return rep.builder.newInstance(rep.initialValues);
   }
 
@@ -127,47 +130,36 @@ function vtkArrowHandleRepresentation(publicAPI, model) {
   // Generic rendering pipeline
   // --------------------------------------------------------------------------
 
+  // displayActors and displayMappers are used to render objects in HTML,
+  // allowing objects to be 'rendered' internally in a VTK scene without
+  // being visible on the final output.
   model.displayMapper = vtkPixelSpaceCallbackMapper.newInstance();
   model.displayActor = vtkActor.newInstance();
   // model.displayActor.getProperty().setOpacity(0); // don't show in 3D
   model.displayActor.setMapper(model.displayMapper);
   model.displayMapper.setInputConnection(publicAPI.getOutputPort());
   publicAPI.addActor(model.displayActor);
+
   model.alwaysVisibleActors = [model.displayActor];
-  model.pipelines = {
-    arrow: {
-      source: publicAPI,
-      glyph: vtkSphereSource.newInstance(),
-      mapper: vtkGlyph3DMapper.newInstance({
-        orientationArray: 'direction',
-        scaleArray: 'scale',
-        colorByArrayName: 'color',
-        scalarMode: ScalarMode.USE_POINT_FIELD_DATA,
-      }),
-      actor: vtkActor.newInstance(),
-    },
-  };
 
-  /*
-   * displayActors and displayMappers are used to render objects in HTML, allowing objects
-   * to be 'rendered' internally in a VTK scene without being visible on the final output
-   */
-  model.pipelines.arrow.mapper.setOrientationModeToMatrix();
+  model.mapper = vtkGlyph3DMapper.newInstance({
+    orientationArray: 'direction',
+    scaleArray: 'scale',
+    colorByArrayName: 'color',
+    scalarMode: ScalarMode.USE_POINT_FIELD_DATA,
+  });
+  model.mapper.setOrientationModeToMatrix();
+  model.mapper.setInputConnection(publicAPI.getOutputPort());
 
-  vtkWidgetRepresentation.connectPipeline(model.pipelines.arrow);
+  model.actor = vtkActor.newInstance();
+  model.actor.setMapper(model.mapper);
+  publicAPI.addActor(model.actor);
 
-  publicAPI.addActor(model.pipelines.arrow.actor);
-
-  model.transform = vtkMatrixBuilder.buildFromDegree();
-  model.actor = model.pipelines.arrow.actor;
-  model.glyph = model.pipelines.arrow.glyph;
   // --------------------------------------------------------------------------
 
   publicAPI.setGlyphResolution = macro.chain(
     publicAPI.setGlyphResolution,
-    (r) =>
-      model.pipelines.arrow.glyph.setPhiResolution(r) &&
-      model.pipelines.arrow.glyph.setThetaResolution(r)
+    (r) => model.glyph.setPhiResolution(r) && model.glyph.setThetaResolution(r)
   );
 
   // --------------------------------------------------------------------------
@@ -196,56 +188,65 @@ function vtkArrowHandleRepresentation(publicAPI, model) {
 
   // --------------------------------------------------------------------------
 
-  const isGlyph2D = () =>
-    model.currentShape !== HandleRepresentationType.CONE &&
-    model.currentShape !== HandleRepresentationType.CUBE &&
-    model.currentShape !== HandleRepresentationType.SPHERE;
+  publicAPI.is2DShape = () => Shapes2D.includes(model.shape);
+  publicAPI.isOrientableShape = () => ShapesOrientable.includes(model.shape);
 
   /**
-   * rotate the glyph to make sure it is properly oriented on the plane
-   * facing camera position on scene start (before user moves camera) */
-  function getGlyphRotation(viewMatrixInv) {
-    let displayOrientation = vec3.create();
+   * Returns the orientation matrix to align glyph on model.orientation.
+   * */
+  function getOrientationRotation(viewMatrixInv) {
+    const displayOrientation = vec3.create();
     const baseDir = [0, 1, 0];
 
-    if (model.currentShape === HandleRepresentationType.CONE) {
-      displayOrientation = [0, 1, 0];
-    } else {
-      vec3.transformMat3(displayOrientation, model.orientation, viewMatrixInv);
-      displayOrientation[2] = 0;
-    }
+    vec3.transformMat3(displayOrientation, model.orientation, viewMatrixInv);
+    displayOrientation[2] = 0;
+
     const displayMatrix = vtkMatrixBuilder
       .buildFromDegree()
       .rotateFromDirections(baseDir, displayOrientation)
       .getMatrix();
-    return displayMatrix;
+    const displayRotation = mat3.create();
+    mat3.fromMat4(displayRotation, displayMatrix);
+    return displayRotation;
   }
 
-  function handleGlyphRotationToFaceCamera(scale3, displayMatrix, viewMatrix) {
-    const displayRotation = mat3.create();
+  function getCameraFacingRotation(scale3, displayRotation, viewMatrix) {
     const rotation = mat3.create();
-    mat3.fromMat4(displayRotation, displayMatrix);
     mat3.multiply(rotation, viewMatrix, displayRotation);
     vec3.transformMat3(scale3, scale3, rotation);
     return rotation;
   }
 
-  function handleGlyphRotation(scale3) {
+  /**
+   * Computes the rotation matrix of the glyph. There are 2 rotations:
+   *  - a first rotation to be oriented along model.rotation
+   *  - an optional second rotation to face the camera
+   * @param {vec3} scale3 Scale of the glyph, rotated when glyph is rotated.
+   */
+  function getGlyphRotation(scale3) {
+    const shouldFaceCamera =
+      model.faceCamera === true ||
+      (model.faceCamera == null && publicAPI.is2DShape());
+
     const viewMatrix = mat3.create();
     mat3.fromMat4(viewMatrix, model.viewMatrix);
     const viewMatrixInv = mat3.create();
-    mat3.invert(viewMatrixInv, viewMatrix);
+    if (shouldFaceCamera) {
+      mat3.invert(viewMatrixInv, viewMatrix);
+    }
 
-    const displayMatrix = getGlyphRotation(viewMatrixInv);
-    let rotation = mat3.create();
-    if (isGlyph2D() || model.faceCamera === true) {
-      rotation = handleGlyphRotationToFaceCamera(
+    let orientationRotation = mat3.create();
+    if (publicAPI.isOrientableShape()) {
+      orientationRotation = getOrientationRotation(viewMatrixInv);
+    }
+    if (shouldFaceCamera) {
+      orientationRotation = getCameraFacingRotation(
         scale3,
-        displayMatrix,
+        orientationRotation,
         viewMatrix
       );
     }
-    return rotation;
+    return orientationRotation;
   }
 
   publicAPI.requestDataInternal = (inData, outData) => {
@@ -281,7 +282,7 @@ function vtkArrowHandleRepresentation(publicAPI, model) {
       let scale3 = state.getScale3 ? state.getScale3() : [1, 1, 1];
       scale3 = scale3.map((x) => (x === 0 ? 2 * model.defaultScale : 2 * x));
 
-      const rotation = handleGlyphRotation(scale3);
+      const rotation = getGlyphRotation(scale3);
 
       typedArray.direction.set(rotation, 9 * i);
       typedArray.scale[i] =
@@ -301,14 +302,15 @@ function vtkArrowHandleRepresentation(publicAPI, model) {
   };
 
   publicAPI.requestData = (inData, outData) => {
-    const currentShape = publicAPI
-      .getRepresentationStates(inData[0])[0]
-      .getShape();
-    if (model.currentShape !== currentShape && currentShape !== '') {
-      model.currentShape = currentShape;
-      model.pipelines.arrow.glyph = setCurrentShapeInput(model.currentShape);
-      model.glyph = model.pipelines.arrow.glyph;
-      vtkWidgetRepresentation.connectPipeline(model.pipelines.arrow);
+    const shape = publicAPI.getRepresentationStates(inData[0])[0].getShape();
+    let shouldCreateGlyph = model.glyph == null;
+    if (model.shape !== shape && Object.values(ShapeType).includes(shape)) {
+      model.shape = shape;
+      shouldCreateGlyph = true;
+    }
+    if (shouldCreateGlyph) {
+      model.glyph = createGlyph(model.shape);
+      model.mapper.setInputConnection(model.glyph.getOutputPort(), 1);
     }
     publicAPI.requestDataInternal(inData, outData);
   };
@@ -333,26 +335,31 @@ function vtkArrowHandleRepresentation(publicAPI, model) {
 // Object factory
 // ----------------------------------------------------------------------------
 
-/** shapes can be set 2 ways:
- * 1: modify currentShape input on arrowHandle initialization by setting an initial value
- * 2: access shape mixin in handle state and set a value
-
- * currentShape values must respect HandleRepresentationType pattern */
-
-const DEFAULT_VALUES = {
-  defaultScale: 1,
-  currentShape: 'sphere',
-  faceCamera: null,
-};
+/**
+ *  'shape' default value is used first time 'shape' mixin is invalid.
+ *  'faceCamera' controls wether the glyph should face camera or not:
+ *    - null or undefined to leave it to shape type (i.e. 2D are facing camera,
+ *    3D are not)
+ *    - true to face camera
+ *    - false to not face camera
+ */
+function defaultValues(initialValues) {
+  const viewMatrix = new Float64Array(16);
+  mat4.identity(viewMatrix);
+  return {
+    defaultScale: 1,
+    faceCamera: null,
+    orientation: [1, 0, 0],
+    shape: ShapeType.SPHERE,
+    viewMatrix,
+    ...initialValues,
+  };
+}
 
 // ----------------------------------------------------------------------------
 
 export function extend(publicAPI, model, initialValues = {}) {
-  model.viewMatrix = new Float64Array(16);
-  mat4.identity(model.viewMatrix);
-  model.orientation = [1, 0, 0];
-
-  Object.assign(model, DEFAULT_VALUES, initialValues);
+  Object.assign(model, defaultValues(initialValues));
 
   vtkHandleRepresentation.extend(publicAPI, model, initialValues);
   macro.get(publicAPI, model, ['glyph', 'mapper', 'actor']);

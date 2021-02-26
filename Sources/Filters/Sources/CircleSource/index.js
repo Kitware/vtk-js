@@ -52,8 +52,8 @@ function vtkCircleSource(publicAPI, model) {
     vtkMatrixBuilder
       .buildFromRadian()
       .translate(...model.center)
-      .rotateFromDirections([1, 0, 0], model.orientation)
-      .translate(vtkMath.multiplyScalar(...model.center, -1))
+      .rotateFromDirections([1, 0, 0], model.direction)
+      .translate(...vtkMath.multiplyScalar([...model.center], -1))
       .apply(points);
 
     // Update output
@@ -68,26 +68,28 @@ function vtkCircleSource(publicAPI, model) {
 // Object factory
 // ----------------------------------------------------------------------------
 
-const DEFAULT_VALUES = {
-  radius: 1.0,
-  resolution: 6,
-  pointType: 'Float32Array',
-  lines: false,
-  face: true,
-};
+function defaultValues(initialValues) {
+  return {
+    face: true,
+    center: [0, 0, 0],
+    lines: false,
+    direction: [1, 0, 0],
+    pointType: 'Float32Array',
+    radius: 1.0,
+    resolution: 6,
+    ...initialValues,
+  };
+}
 
 // ----------------------------------------------------------------------------
 
 export function extend(publicAPI, model, initialValues = {}) {
-  model.center = [0, 0, 0];
-  model.orientation = [1, 0, 0];
-
-  Object.assign(model, DEFAULT_VALUES, initialValues);
+  Object.assign(model, defaultValues(initialValues));
 
   // Build VTK API
   macro.obj(publicAPI, model);
   macro.setGet(publicAPI, model, ['radius', 'resolution', 'lines', 'face']);
-  macro.setGetArray(publicAPI, model, ['center', 'orientation'], 3);
+  macro.setGetArray(publicAPI, model, ['center', 'direction'], 3);
   macro.algo(publicAPI, model, 0, 1);
   vtkCircleSource(publicAPI, model);
 }

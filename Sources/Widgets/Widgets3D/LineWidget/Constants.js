@@ -1,6 +1,4 @@
-export const HandleRepresentation = [0, 0, 0];
-
-export const HandleRepresentationType = {
+export const ShapeType = {
   // NONE is a sphere handle always invisible even on mouseover, which
   // prevents user from moving handle once it is placed
   NONE: 'voidSphere',
@@ -18,7 +16,27 @@ export const HandleRepresentationType = {
   VIEWFINDER: 'viewFinder',
 };
 
+export const Shapes2D = [
+  ShapeType.ARROWHEAD3,
+  ShapeType.ARROWHEAD4,
+  ShapeType.ARROWHEAD6,
+  ShapeType.STAR,
+  ShapeType.DISK,
+  ShapeType.CIRCLE,
+  ShapeType.VIEWFINDER,
+];
+export const Shapes3D = [ShapeType.SPHERE, ShapeType.CUBE, ShapeType.CONE];
+
+export const ShapesOrientable = [
+  ShapeType.CONE,
+  ShapeType.ARROWHEAD3,
+  ShapeType.ARROWHEAD4,
+  ShapeType.ARROWHEAD6,
+];
+
 export default {
-  HandleRepresentation,
-  HandleRepresentationType,
+  ShapeType,
+  Shapes2D,
+  Shapes3D,
+  ShapesOrientable,
 };
