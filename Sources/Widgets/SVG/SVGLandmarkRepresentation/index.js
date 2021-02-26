@@ -101,7 +101,7 @@ export function extend(publicAPI, model, initialValues = {}) {
 
   vtkSVGRepresentation.extend(publicAPI, model, initialValues);
 
-  macro.setGet(publicAPI, model, ['circleProps', 'textProps', 'name']);
+  macro.setGet(publicAPI, model, ['circleProps', 'textProps', 'name', 'fontProperties']);
 
   // Object specific methods
   vtkSVGLandmarkRepresentation(publicAPI, model);

@@ -1,25 +1,20 @@
 import macro from 'vtk.js/Sources/macro';
 import vtkActor from 'vtk.js/Sources/Rendering/Core/Actor';
-import vtkArrow2DSource from 'vtk.js/Sources/Filters/Sources/Arrow2DSource/';
 import vtkDataArray from 'vtk.js/Sources/Common/Core/DataArray';
 import vtkGlyph3DMapper from 'vtk.js/Sources/Rendering/Core/Glyph3DMapper';
 import vtkHandleRepresentation from 'vtk.js/Sources/Widgets/Representations/HandleRepresentation';
 import vtkMatrixBuilder from 'vtk.js/Sources/Common/Core/MatrixBuilder';
 import vtkPixelSpaceCallbackMapper from 'vtk.js/Sources/Rendering/Core/PixelSpaceCallbackMapper';
 import vtkPolyData from 'vtk.js/Sources/Common/DataModel/PolyData';
-import vtkConeSource from 'vtk.js/Sources/Filters/Sources/ConeSource';
-import vtkSphereSource from 'vtk.js/Sources/Filters/Sources/SphereSource';
-import vtkCircleSource from 'vtk.js/Sources/Filters/Sources/CircleSource';
-import vtkCubeSource from 'vtk.js/Sources/Filters/Sources/CubeSource';
-import vtkViewFinderSource from 'vtk.js/Sources/Filters/Sources/ViewFinderSource';
-
 import Constants from 'vtk.js/Sources/Widgets/Widgets3D/LineWidget/Constants';
 import { ScalarMode } from 'vtk.js/Sources/Rendering/Core/Mapper/Constants';
 import { vec3, mat3, mat4 } from 'gl-matrix';
 
 import { RenderingTypes } from 'vtk.js/Sources/Widgets/Core/WidgetManager/Constants';
+import SourceConstants from './Constants';
 
 const { ShapeType, Shapes2D, ShapesOrientable } = Constants;
+const { ShapeSource } = SourceConstants;
 
 // ----------------------------------------------------------------------------
 // vtkArrowHandleRepresentation methods
@@ -66,36 +61,36 @@ function vtkArrowHandleRepresentation(publicAPI, model) {
   function createGlyph(shape) {
     const representationToSource = {
       [ShapeType.STAR]: {
-        builder: vtkArrow2DSource,
+        builder: ShapeSource.ARROWHEAD,
         initialValues: { shape: 'star', height: 0.6 },
       },
       [ShapeType.ARROWHEAD3]: {
-        builder: vtkArrow2DSource,
+        builder: ShapeSource.ARROWHEAD,
         initialValues: { shape: 'triangle' },
       },
       [ShapeType.ARROWHEAD4]: {
-        builder: vtkArrow2DSource,
+        // builder: vtkArrow2DSource,
         initialValues: { shape: 'arrow4points' },
       },
       [ShapeType.ARROWHEAD6]: {
-        builder: vtkArrow2DSource,
+        builder: ShapeSource.ARROWHEAD,
         initialValues: { shape: 'arrow6points' },
       },
       [ShapeType.CONE]: {
-        builder: vtkConeSource,
+        builder: ShapeSource.CONE,
         initialValues: {
           direction: [0, 1, 0],
         },
       },
       [ShapeType.SPHERE]: {
-        builder: vtkSphereSource,
+        builder: ShapeSource.SPHERE,
       },
       [ShapeType.CUBE]: {
-        builder: vtkCubeSource,
+        builder: ShapeSource.CUBE,
         initialValues: { xLength: 0.8, yLength: 0.8, zLength: 0.8 },
       },
       [ShapeType.DISK]: {
-        builder: vtkCircleSource,
+        builder: ShapeSource.CIRCLE,
         initialValues: {
           resolution: 30,
           radius: 0.5,
@@ -105,7 +100,7 @@ function vtkArrowHandleRepresentation(publicAPI, model) {
         },
       },
       [ShapeType.CIRCLE]: {
-        builder: vtkCircleSource,
+        builder: ShapeSource.CIRCLE,
         initialValues: {
           resolution: 30,
           radius: 0.5,
@@ -115,11 +110,11 @@ function vtkArrowHandleRepresentation(publicAPI, model) {
         },
       },
       [ShapeType.VIEWFINDER]: {
-        builder: vtkViewFinderSource,
+        builder: ShapeSource.VIEWFINDER,
         initialValues: { radius: 0.1, spacing: 0.3, width: 1.4 },
       },
       [ShapeType.NONE]: {
-        builder: vtkSphereSource,
+        builder: ShapeSource.SPHERE,
       },
     };
     const rep = representationToSource[shape];
@@ -222,6 +217,7 @@ function vtkArrowHandleRepresentation(publicAPI, model) {
    *  - a first rotation to be oriented along model.rotation
    *  - an optional second rotation to face the camera
    * @param {vec3} scale3 Scale of the glyph, rotated when glyph is rotated.
+   * @returns {vec3} scale3 the vector
    */
   function getGlyphRotation(scale3) {
     const shouldFaceCamera =
