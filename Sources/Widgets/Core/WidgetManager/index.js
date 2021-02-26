@@ -547,7 +547,7 @@ function vtkWidgetManager(publicAPI, model) {
 const DEFAULT_VALUES = {
   viewId: null,
   widgets: [],
-  renderer: [],
+  renderer: null,
   viewType: ViewTypes.DEFAULT,
   pickingAvailable: false,
   isAnimating: false,
