@@ -163,10 +163,14 @@ function updateLine(lineState, center, axis, lineLength, rotationLength) {
 
 // Update the reslice cursor state according to the three planes normals and the origin
 export function updateState(widgetState) {
-  // Compute axis
-  const newXAxis = widgetState.getPlanes()[ViewTypes.YZ_PLANE].normal;
-  const newYAxis = widgetState.getPlanes()[ViewTypes.XZ_PLANE].normal;
-  const newZAxis = widgetState.getPlanes()[ViewTypes.XY_PLANE].normal;
+  // Compute line axis
+  const xNormal = widgetState.getPlanes()[ViewTypes.YZ_PLANE].normal;
+  const yNormal = widgetState.getPlanes()[ViewTypes.XZ_PLANE].normal;
+  const zNormal = widgetState.getPlanes()[ViewTypes.XY_PLANE].normal;
+
+  const yzIntersectionLineAxis = vtkMath.cross(yNormal, zNormal, []);
+  const xzIntersectionLineAxis = vtkMath.cross(zNormal, xNormal, []);
+  const xyIntersectionLineAxis = vtkMath.cross(xNormal, yNormal, []);
 
   const bounds = widgetState.getImage().getBounds();
   const center = widgetState.getCenter();
@@ -183,14 +187,14 @@ export function updateState(widgetState) {
   updateLine(
     widgetState.getAxisXinY(),
     center,
-    newZAxis,
+    xyIntersectionLineAxis,
     pdLength,
     zRotationLength
   );
   updateLine(
     widgetState.getAxisYinX(),
     center,
-    newZAxis,
+    xyIntersectionLineAxis,
     pdLength,
     zRotationLength
   );
@@ -198,14 +202,14 @@ export function updateState(widgetState) {
   updateLine(
     widgetState.getAxisYinZ(),
     center,
-    newXAxis,
+    yzIntersectionLineAxis,
     pdLength,
     xRotationLength
   );
   updateLine(
     widgetState.getAxisZinY(),
     center,
-    newXAxis,
+    yzIntersectionLineAxis,
     pdLength,
     xRotationLength
   );
@@ -213,14 +217,14 @@ export function updateState(widgetState) {
   updateLine(
     widgetState.getAxisXinZ(),
     center,
-    newYAxis,
+    xzIntersectionLineAxis,
     pdLength,
     yRotationLength
   );
   updateLine(
     widgetState.getAxisZinX(),
     center,
-    newYAxis,
+    xzIntersectionLineAxis,
     pdLength,
     yRotationLength
   );
