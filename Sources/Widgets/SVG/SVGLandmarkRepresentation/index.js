@@ -81,23 +81,26 @@ function vtkSVGLandmarkRepresentation(publicAPI, model) {
 // Object factory
 // ----------------------------------------------------------------------------
 
-const DEFAULT_VALUES = {
-  circleProps: {
-    r: 5,
-    stroke: 'red',
-    fill: 'red',
-  },
-  textProps: {
-    fill: 'white',
-    dx: 12,
-    dy: -12,
-  },
-};
+function defaultValues(initialValues) {
+  return {
+    circleProps: {
+      r: 5,
+      stroke: 'red',
+      fill: 'red',
+    },
+    textProps: {
+      fill: 'white',
+      dx: 12,
+      dy: -12,
+    },
+    ...initialValues,
+  };
+}
 
 // ----------------------------------------------------------------------------
 
 export function extend(publicAPI, model, initialValues = {}) {
-  Object.assign(model, DEFAULT_VALUES, initialValues);
+  Object.assign(model, defaultValues(initialValues));
 
   vtkSVGRepresentation.extend(publicAPI, model, initialValues);
 
