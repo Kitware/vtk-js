@@ -175,15 +175,36 @@ export default function widgetBehavior(publicAPI, model) {
     model.interactor.render();
   };
 
-  // --------------------------------------------------------------------------
-
+  /**
+   * Called when placing a point from the first time.
+   * @param {number} handleIndex
+   */
   publicAPI.placeHandle = (handleIndex) => {
     const handle = publicAPI.getHandle(handleIndex);
     handle.setOrigin(...model.widgetState.getMoveHandle().getOrigin());
-    handle.setColor(model.widgetState.getMoveHandle().getColor());
-    handle.setScale1(model.widgetState.getMoveHandle().getScale1());
+
+    publicAPI.updateHandleOrientations();
+    publicAPI.rotateHandlesToFaceCamera();
     model.widgetState.getText().setOrigin(calculateTextPosition(model));
     publicAPI.updateHandleVisibility(handleIndex);
+
+    if (handleIndex === 0) {
+      // For the line (handle1, handle2, moveHandle) to be displayed
+      // correctly, handle2 origin must be valid.
+      publicAPI
+        .getHandle(1)
+        .setOrigin(...model.widgetState.getMoveHandle().getOrigin());
+      // Now that handle2 has a valid origin, hide it
+      publicAPI.updateHandleVisibility(1);
+
+      model.widgetState
+        .getMoveHandle()
+        .setShape(publicAPI.getHandle(1).getShape());
+    }
+    if (handleIndex === 1) {
+      publicAPI.placeText();
+      publicAPI.setMoveHandleVisibility(false);
+    }
   };
 
   // --------------------------------------------------------------------------
@@ -204,24 +225,11 @@ export default function widgetBehavior(publicAPI, model) {
       getNumberOfPlacedHandles(model.widgetState) === 0
     ) {
       publicAPI.placeHandle(0);
-      model.activeState.setShape(publicAPI.getHandle(1).getShape());
-      // For the line (handle1, handle2, moveHandle) to be displayed
-      // correctly, handle2 origin must be valid.
-      publicAPI
-        .getHandle(1)
-        .setOrigin(...model.widgetState.getMoveHandle().getOrigin());
-      publicAPI.updateHandleOrientations();
-      // Hide handle2
-      publicAPI.updateHandleVisibility(1);
     } else if (
       model.widgetState.getMoveHandle().getActive() &&
       getNumberOfPlacedHandles(model.widgetState) === 1
     ) {
       publicAPI.placeHandle(1);
-      publicAPI.updateHandleOrientations();
-      publicAPI.placeText();
-      publicAPI.setMoveHandleVisibility(false);
-      model.widgetState.getMoveHandle().deactivate();
     } else {
       updateCursor();
     }
@@ -270,23 +278,28 @@ export default function widgetBehavior(publicAPI, model) {
   // --------------------------------------------------------------------------
 
   publicAPI.handleLeftButtonRelease = () => {
-    if (model.isDragging && model.pickable) {
-      publicAPI.placeText();
-      model.openGLRenderWindow.setCursor('pointer');
-      model.widgetState.deactivate();
-      model.interactor.cancelAnimation(publicAPI);
-      publicAPI.invokeEndInteractionEvent();
-    } else if (model.activeState !== model.widgetState.getMoveHandle()) {
-      model.widgetState.deactivate();
-    }
+    // After dragging a point or placing all points
     if (
-      (model.hasFocus && !model.activeState) ||
-      (model.activeState && !model.activeState.getActive())
+      model.activeState &&
+      model.activeState.getActive() &&
+      (model.isDragging || publicAPI.isPlaced())
     ) {
+      // Recompute offsets
+      publicAPI.placeText();
+      model.widgetState.deactivate();
+      model.widgetState.getMoveHandle().deactivate();
+      model.activeState = null;
+
+      model.interactor.cancelAnimation(publicAPI);
+      model.openGLRenderWindow.setCursor('pointer');
+
+      model.hasFocus = false;
+
       publicAPI.invokeEndInteractionEvent();
       model.widgetManager.enablePicking();
       model.interactor.render();
     }
+
     if (
       model.isDragging === false &&
       (!model.activeState || !model.activeState.getActive())
