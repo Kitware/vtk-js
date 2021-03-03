@@ -112,7 +112,7 @@ function vtkSVGRepresentation(publicAPI, model) {
   ) => {
     if (model.behavior === Behavior.CONTEXT) {
       publicAPI.setVisibility(widgetVisible && ctxVisible);
-    } else if (model.Behavior === Behavior.HANDLE) {
+    } else if (model.behavior === Behavior.HANDLE) {
       publicAPI.setVisibility(widgetVisible && handleVisible);
     }
   };
