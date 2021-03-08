@@ -140,7 +140,7 @@ function vtkMapper(publicAPI, model) {
 
     // we want to only recompute when something has changed
     const toString = `${publicAPI.getMTime()}${scalars.getMTime()}${alpha}`;
-    if (model.colorBuildString == toString) return;
+    if (model.colorBuildString === toString) return;
 
     if (!model.useLookupTableScalarRange) {
       publicAPI

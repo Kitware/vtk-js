@@ -50,6 +50,7 @@ function vtkWebGPUVertexInput(publicAPI, model) {
         return model.inputs[i].buffer;
       }
     }
+    return null;
   };
 
   publicAPI.hasAttribute = (name) => {
@@ -88,18 +89,21 @@ function vtkWebGPUVertexInput(publicAPI, model) {
       const vertexBuffers = [];
       let nameCount = 0;
       for (let i = 0; i < model.inputs.length; i++) {
-
         const buf = model.inputs[i].buffer;
 
-        const buffer = {arrayStride: buf.getStrideInBytes(), attributes: []};
+        const buffer = { arrayStride: buf.getStrideInBytes(), attributes: [] };
         const arrayInfo = buf.getArrayInformation();
         for (let nm = 0; nm < model.inputs[i].names.length; nm++) {
-          buffer.attributes.push({shaderLocation: nameCount, offset: arrayInfo[nm].offset, format: arrayInfo[nm].format});
+          buffer.attributes.push({
+            shaderLocation: nameCount,
+            offset: arrayInfo[nm].offset,
+            format: arrayInfo[nm].format,
+          });
           nameCount++;
         }
         vertexBuffers.push(buffer);
       }
-      info['vertexBuffers'] = vertexBuffers;
+      info.vertexBuffers = vertexBuffers;
     }
     return info;
   };

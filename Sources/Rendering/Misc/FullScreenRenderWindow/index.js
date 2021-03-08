@@ -78,7 +78,9 @@ function vtkFullScreenRenderWindow(publicAPI, model) {
   model.renderWindow.addRenderer(model.renderer);
 
   // apiSpecificRenderWindow
-  model.apiSpecificRenderWindow = model.renderWindow.newAPISpecificView(userParams.viewAPI);
+  model.apiSpecificRenderWindow = model.renderWindow.newAPISpecificView(
+    userParams.viewAPI
+  );
   model.apiSpecificRenderWindow.setContainer(model.container);
   model.renderWindow.addView(model.apiSpecificRenderWindow);
 

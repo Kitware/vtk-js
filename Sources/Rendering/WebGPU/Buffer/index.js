@@ -17,7 +17,9 @@ function bufferSubData(device, destBuffer, destOffset, srcArrayBuffer) {
   const byteCount = srcArrayBuffer.byteLength;
   const srcBuffer = device.createBuffer({
     size: byteCount,
+    /* eslint-disable no-undef */
     usage: GPUBufferUsage.COPY_SRC,
+    /* eslint-enable no-undef */
     mappedAtCreation: true,
   });
   const arrayBuffer = srcBuffer.getMappedRange(0, byteCount);
@@ -91,7 +93,12 @@ export function extend(publicAPI, model, initialValues = {}) {
   macro.obj(publicAPI, model);
 
   macro.get(publicAPI, model, ['handle', 'sizeInBytes', 'usage']);
-  macro.setGet(publicAPI, model, ['strideInBytes', 'device', 'arrayInformation', 'sourceTime']);
+  macro.setGet(publicAPI, model, [
+    'strideInBytes',
+    'device',
+    'arrayInformation',
+    'sourceTime',
+  ]);
 
   vtkWebGPUBuffer(publicAPI, model);
 }

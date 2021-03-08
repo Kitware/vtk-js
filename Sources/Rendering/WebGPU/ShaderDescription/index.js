@@ -1,5 +1,4 @@
 import macro from 'vtk.js/Sources/macro';
-import vtkWebGPUShaderModule from 'vtk.js/Sources/Rendering/WebGPU/ShaderModule';
 
 // ----------------------------------------------------------------------------
 // vtkWebGPUShaderDescription methods
@@ -21,11 +20,12 @@ function vtkWebGPUShaderDescription(publicAPI, model) {
   publicAPI.getInputDeclaration = (sDesc, name) => {
     const outputNames = sDesc.getOutputNamesByReference();
     for (let i = 0; i < outputNames.length; i++) {
-      if (outputNames[i] == name) {
+      if (outputNames[i] === name) {
         const outputTypes = sDesc.getOutputTypesByReference();
         return `[[location(${i})]] var<in> ${name} : ${outputTypes[i]};`;
       }
     }
+    return null;
   };
 }
 
@@ -62,7 +62,10 @@ export function extend(publicAPI, model, initialValues = {}) {
 
 // ----------------------------------------------------------------------------
 
-export const newInstance = macro.newInstance(extend, 'vtkWebGPUShaderDescription');
+export const newInstance = macro.newInstance(
+  extend,
+  'vtkWebGPUShaderDescription'
+);
 
 // ----------------------------------------------------------------------------
 

@@ -200,7 +200,6 @@ function vtkWebGPURenderer(publicAPI, model) {
       publicAPI.updateUBO();
     } else {
       // loop over registered pipelines
-      const device = model.parent.getDevice();
       for (let i = 0; i < model.pipelineCallbacks.length; i++) {
         const pStruct = model.pipelineCallbacks[i];
         const pl = pStruct.pipeline;
@@ -209,7 +208,6 @@ function vtkWebGPURenderer(publicAPI, model) {
         model.renderPass.setBindGroup(0, model.UBOBindGroup);
         // bind our BindGroup
         // set viewport
-        const vp = model.renderable.getViewportByReference();
         const tsize = publicAPI.getTiledSizeAndOrigin();
         model.renderPass.setViewport(
           tsize.lowerLeftU,

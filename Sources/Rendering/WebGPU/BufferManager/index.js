@@ -1,11 +1,15 @@
 import macro from 'vtk.js/Sources/macro';
-import Constants from 'vtk.js/Sources/Rendering/WebGPU/BufferManager/Constants';
 import * as vtkMath from 'vtk.js/Sources/Common/Core/Math';
 import vtkWebGPUBuffer from 'vtk.js/Sources/Rendering/WebGPU/Buffer';
-import { BufferUsage, PrimitiveTypes } from './Constants';
 import vtkProperty from 'vtk.js/Sources/Rendering/Core/Property';
+import { BufferUsage, PrimitiveTypes } from './Constants';
 
 const { Representation } = vtkProperty;
+
+const { vtkDebugMacro } = macro;
+
+// the webgpu constants all show up as undefined
+/* eslint-disable no-undef */
 
 // const { ObjectType } = Constants;
 
@@ -20,10 +24,10 @@ const { Representation } = vtkProperty;
 export const STATIC = {};
 
 function requestMatches(req1, req2) {
-  if (req1.time != req2.time) return false;
+  if (req1.time !== req2.time) return false;
   if (req1.address !== req2.address) return false;
-  if (req1.format != req2.format) return false;
-  if (req1.usage != req2.usage) return false;
+  if (req1.format !== req2.format) return false;
+  if (req1.usage !== req2.usage) return false;
   return true;
 }
 
@@ -62,6 +66,8 @@ function getPrimitiveName(primType) {
       return 'polys';
     case PrimitiveTypes.TriangleStrips:
       return 'strips';
+    default:
+      return '';
   }
 }
 
@@ -103,7 +109,7 @@ function packArray(
 
   const shift = options.shift ? options.shift : 0;
   const scale = options.scale ? options.scale : 1;
-  const packExtra = options.hasOwnProperty('packExtra')
+  const packExtra = Object.prototype.hasOwnProperty.call(options, 'packExtra')
     ? options.packExtra
     : false;
   const pointData = inArray.getData();
@@ -177,17 +183,17 @@ function packArray(
   //     colorComponents === 4 ? colorData[colorIdx++] : 255;
   // }
 
-  let inRepName = getPrimitiveName(primType);
+  const inRepName = getPrimitiveName(primType);
 
   let func = null;
   if (
     representation === Representation.POINTS ||
-    primType == PrimitiveTypes.Points
+    primType === PrimitiveTypes.Points
   ) {
     func = cellBuilders.anythingToPoints;
   } else if (
     representation === Representation.WIREFRAME ||
-    primType == PrimitiveTypes.Lines
+    primType === PrimitiveTypes.Lines
   ) {
     func = cellBuilders[`${inRepName}ToWireframe`];
   } else {
@@ -204,23 +210,23 @@ function packArray(
     caboCount * (numComp + (packExtra ? 1 : 0))
   );
 
-  if (numComp == 1) {
+  if (numComp === 1) {
     addAPoint = function addAPointFunc(i) {
       packedVBO[vboidx++] = scale * pointData[i] + shift;
     };
-  } else if (numComp == 2) {
+  } else if (numComp === 2) {
     addAPoint = function addAPointFunc(i) {
       packedVBO[vboidx++] = scale * pointData[i * 2] + shift;
       packedVBO[vboidx++] = scale * pointData[i * 2 + 1] + shift;
     };
-  } else if (numComp == 3 && !packExtra) {
+  } else if (numComp === 3 && !packExtra) {
     addAPoint = function addAPointFunc(i) {
       pos = i * 3;
       packedVBO[vboidx++] = scale * pointData[pos++] + shift;
       packedVBO[vboidx++] = scale * pointData[pos++] + shift;
       packedVBO[vboidx++] = scale * pointData[pos] + shift;
     };
-  } else if (numComp == 3 && packExtra) {
+  } else if (numComp === 3 && packExtra) {
     addAPoint = function addAPointFunc(i) {
       pos = i * 3;
       packedVBO[vboidx++] = scale * pointData[pos++] + shift;
@@ -228,7 +234,7 @@ function packArray(
       packedVBO[vboidx++] = scale * pointData[pos] + shift;
       packedVBO[vboidx++] = scale * 1.0 + shift;
     };
-  } else if (numComp == 4) {
+  } else if (numComp === 4) {
     addAPoint = function addAPointFunc(i) {
       pos = i * 4;
       packedVBO[vboidx++] = scale * pointData[pos++] + shift;
@@ -258,7 +264,7 @@ function getNormal(pointData, i0, i1, i2) {
     pointData[i0 * 3 + 1] - pointData[i1 * 3 + 1],
     pointData[i0 * 3 + 2] - pointData[i1 * 3 + 2],
   ];
-  let result = [];
+  const result = [];
   vtkMath.cross(v1, v2, result);
   vtkMath.normalize(result);
   return result;
@@ -271,7 +277,6 @@ function generateNormals(cellArray, primType, representation, inArray) {
 
   const pointData = inArray.getData();
 
-  let pos = 0;
   let addAPoint;
 
   const cellBuilders = {
@@ -321,17 +326,17 @@ function generateNormals(cellArray, primType, representation, inArray) {
     },
   };
 
-  let primName = getPrimitiveName(primType);
+  const primName = getPrimitiveName(primType);
 
   let func = null;
   if (
     representation === Representation.POINTS ||
-    primType == PrimitiveTypes.Points
+    primType === PrimitiveTypes.Points
   ) {
     func = cellBuilders.anythingToPoints;
   } else if (
     representation === Representation.WIREFRAME ||
-    primType == PrimitiveTypes.Lines
+    primType === PrimitiveTypes.Lines
   ) {
     func = cellBuilders[`${primName}ToWireframe`];
   } else {
@@ -361,15 +366,17 @@ function generateNormals(cellArray, primType, representation, inArray) {
 
 function getStrideFromFormat(format) {
   if (!format) return 0;
-  if (format.substring(format.length - 4) == '32x4') return 16;
-  if (format.substring(format.length - 3) == '8x4') return 4;
+  if (format.substring(format.length - 4) === '32x4') return 16;
+  if (format.substring(format.length - 3) === '8x4') return 4;
+  return 0;
 }
 
 function getArrayTypeFromFormat(format) {
   if (!format) return null;
-  if (format.substring(0, 7) == 'float32') return 'Float32Array';
-  if (format.substring(0, 6) == 'snorm8') return 'Int8Array';
-  if (format.substring(0, 6) == 'unorm8') return 'Uint8Array';
+  if (format.substring(0, 7) === 'float32') return 'Float32Array';
+  if (format.substring(0, 6) === 'snorm8') return 'Int8Array';
+  if (format.substring(0, 6) === 'unorm8') return 'Uint8Array';
+  return '';
 }
 
 // ----------------------------------------------------------------------------
@@ -382,8 +389,8 @@ function vtkWebGPUBufferManager(publicAPI, model) {
 
   publicAPI.getBuffer = (req) => {
     // if a dataArray ius provided set the address
-    if (req.hasOwnProperty('dataArray')) {
-      req['address'] = req.dataArray.getData();
+    if (Object.prototype.hasOwnProperty.call(req, 'dataArray')) {
+      req.address = req.dataArray.getData();
     }
 
     // if already exists then return it
@@ -402,13 +409,15 @@ function vtkWebGPUBufferManager(publicAPI, model) {
     let gpuUsage = null;
 
     // handle uniform buffers
-    if (req.usage == BufferUsage.UniformArray) {
+    if (req.usage === BufferUsage.UniformArray) {
+      /* eslint-disable no-bitwise */
       gpuUsage = GPUBufferUsage.UNIFORM | GPUBufferUsage.COPY_DST;
+      /* eslint-enable no-bitwise */
       buffer.createAndWrite(req.address, gpuUsage);
     }
 
     // handle points
-    if (req.usage == BufferUsage.Points) {
+    if (req.usage === BufferUsage.Points) {
       gpuUsage = GPUBufferUsage.VERTEX;
       const result = packArray(
         req.cells,
@@ -424,7 +433,7 @@ function vtkWebGPUBufferManager(publicAPI, model) {
     }
 
     // handle point data
-    if (req.usage == BufferUsage.PointArray) {
+    if (req.usage === BufferUsage.PointArray) {
       gpuUsage = GPUBufferUsage.VERTEX;
       const result = packArray(
         req.cells,
@@ -441,7 +450,7 @@ function vtkWebGPUBufferManager(publicAPI, model) {
     }
 
     // handle normals from points, snorm8x4
-    if (req.usage == BufferUsage.NormalsFromPoints) {
+    if (req.usage === BufferUsage.NormalsFromPoints) {
       gpuUsage = GPUBufferUsage.VERTEX;
       const normals = generateNormals(
         req.cells,

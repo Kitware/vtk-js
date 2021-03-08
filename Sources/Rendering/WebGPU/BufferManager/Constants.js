@@ -24,5 +24,5 @@ export const PrimitiveTypes = {
 
 export default {
   BufferUsage,
-  PrimitiveTypes
+  PrimitiveTypes,
 };

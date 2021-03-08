@@ -15,7 +15,7 @@ export function listViewAPIs() {
   return Object.keys(VIEW_CONSTRUCTORS);
 }
 
-export function newAPISpecificView(name, initialValues={}) {
+export function newAPISpecificView(name, initialValues = {}) {
   return VIEW_CONSTRUCTORS[name] && VIEW_CONSTRUCTORS[name](initialValues);
 }
 
@@ -54,9 +54,8 @@ function vtkRenderWindow(publicAPI, model) {
   publicAPI.hasRenderer = (ren) => model.renderers.indexOf(ren) !== -1;
 
   // get an API specific view of this data
-  publicAPI.newAPISpecificView = (name, initialValues={}) => {
-    return newAPISpecificView(name || model.defaultViewAPI, initialValues);
-  }
+  publicAPI.newAPISpecificView = (name, initialValues = {}) =>
+    newAPISpecificView(name || model.defaultViewAPI, initialValues);
 
   // Add renderer
   publicAPI.addView = (view) => {
@@ -144,7 +143,12 @@ export function extend(publicAPI, model, initialValues = {}) {
   // Build VTK API
   macro.obj(publicAPI, model);
 
-  macro.setGet(publicAPI, model, ['interactor', 'numberOfLayers', 'views', 'defaultViewAPI']);
+  macro.setGet(publicAPI, model, [
+    'interactor',
+    'numberOfLayers',
+    'views',
+    'defaultViewAPI',
+  ]);
   macro.get(publicAPI, model, ['neverRendered']);
   macro.getArray(publicAPI, model, ['renderers']);
   macro.event(publicAPI, model, 'completion');
@@ -159,4 +163,10 @@ export const newInstance = macro.newInstance(extend, 'vtkRenderWindow');
 
 // ----------------------------------------------------------------------------
 
-export default { newInstance, extend, registerViewConstructor, listViewAPIs, newAPISpecificView };
+export default {
+  newInstance,
+  extend,
+  registerViewConstructor,
+  listViewAPIs,
+  newAPISpecificView,
+};

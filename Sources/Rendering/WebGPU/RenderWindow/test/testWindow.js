@@ -11,7 +11,7 @@ import vtkRenderWindow from 'vtk.js/Sources/Rendering/Core/RenderWindow';
 import vtkRenderWindowInteractor from 'vtk.js/Sources/Rendering/Core/RenderWindowInteractor';
 import vtkInteractorStyleTrackballCamera from 'vtk.js/Sources/Interaction/Style/InteractorStyleTrackballCamera';
 
-import baseline from './testWindow.png';
+// import baseline from './testWindow.png';
 
 test.onlyIfWebGL('Test Window', (t) => {
   const gc = testUtils.createGarbageCollector(t);

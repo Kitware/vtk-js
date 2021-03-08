@@ -1,8 +1,8 @@
-import { mat3, mat4, vec3 } from 'gl-matrix';
+import { mat3, mat4 } from 'gl-matrix';
 
 import macro from 'vtk.js/Sources/macro';
 // import vtkMapper from 'vtk.js/Sources/Rendering/Core/Mapper';
-import * as vtkMath from 'vtk.js/Sources/Common/Core/Math';
+// import * as vtkMath from 'vtk.js/Sources/Common/Core/Math';
 // import vtkWebGPUTexture from 'vtk.js/Sources/Rendering/WebGPU/Texture';
 import vtkProperty from 'vtk.js/Sources/Rendering/Core/Property';
 import vtkWebGPUBufferManager from 'vtk.js/Sources/Rendering/WebGPU/BufferManager';
@@ -16,7 +16,6 @@ const { BufferUsage, PrimitiveTypes } = vtkWebGPUBufferManager;
 const { Representation } = vtkProperty;
 // const { ScalarMode } = vtkMapper;
 // const { Filter, Wrap } = vtkWebGPUTexture;
-const { vtkErrorMacro } = macro;
 const StartEvent = { type: 'StartEvent' };
 const EndEvent = { type: 'EndEvent' };
 
@@ -234,8 +233,6 @@ function vtkWebGPUPolyDataMapper(publicAPI, model) {
 
     publicAPI.buildPrimitives();
 
-    const device = model.WebGPURenderWindow.getDevice();
-
     // update descriptor sets
     publicAPI.updateUBO();
   };
@@ -394,27 +391,29 @@ function vtkWebGPUPolyDataMapper(publicAPI, model) {
     }
 
     // normals
-    const normals = pd.getPointData().getNormals();
-    const buffRequest = {
-      cells,
-      representation,
-      primitiveType: primType,
-      format: 'snorm8x4',
-      packExtra: true,
-      shift: 0,
-      scale: 127,
-    };
-    if (normals) {
-      buffRequest['dataArray'] = normals;
-      buffRequest['time'] = Math.max(normals.getMTime(), cells.getMTime());
-      buffRequest['usage'] = BufferUsage.PointArray;
-    } else {
-      buffRequest['dataArray'] = points;
-      buffRequest['time'] = Math.max(points.getMTime(), cells.getMTime());
-      buffRequest['usage'] = BufferUsage.NormalsFromPoints;
+    {
+      const normals = pd.getPointData().getNormals();
+      const buffRequest = {
+        cells,
+        representation,
+        primitiveType: primType,
+        format: 'snorm8x4',
+        packExtra: true,
+        shift: 0,
+        scale: 127,
+      };
+      if (normals) {
+        buffRequest.dataArray = normals;
+        buffRequest.time = Math.max(normals.getMTime(), cells.getMTime());
+        buffRequest.usage = BufferUsage.PointArray;
+      } else {
+        buffRequest.dataArray = points;
+        buffRequest.time = Math.max(points.getMTime(), cells.getMTime());
+        buffRequest.usage = BufferUsage.NormalsFromPoints;
+      }
+      const buff = device.getBufferManager().getBuffer(buffRequest);
+      vertexInput.addBuffer(buff, ['normalMC']);
     }
-    const buff = device.getBufferManager().getBuffer(buffRequest);
-    vertexInput.addBuffer(buff, ['normalMC']);
 
     // deal with colors but only if modified
     let haveColors = false;
@@ -443,6 +442,7 @@ function vtkWebGPUPolyDataMapper(publicAPI, model) {
           time: Math.max(c.getMTime(), cells.getMTime()),
           usage: BufferUsage.PointArray,
           format: 'unorm8x4',
+          cellData: haveCellScalars,
         };
         const buff = device.getBufferManager().getBuffer(buffRequest);
         vertexInput.addBuffer(buff, ['colorVI']);
@@ -517,16 +517,6 @@ function vtkWebGPUPolyDataMapper(publicAPI, model) {
       }
     }
   };
-
-  function safeMatrixMultiply(matrixArray, matrixType, tmpMat) {
-    matrixType.identity(tmpMat);
-    return matrixArray.reduce((res, matrix, index) => {
-      if (index === 0) {
-        return matrix ? matrixType.copy(res, matrix) : matrixType.identity(res);
-      }
-      return matrix ? matrixType.multiply(res, res, matrix) : res;
-    }, tmpMat);
-  }
 }
 
 // ----------------------------------------------------------------------------
@@ -569,7 +559,7 @@ export function extend(publicAPI, model, initialValues = {}) {
       vertexInput: vtkWebGPUVertexInput.newInstance(),
     };
     const primHelper = model.primitives[i];
-    model.primitives[i]['renderForPipeline'] = (pipeline) => {
+    model.primitives[i].renderForPipeline = (pipeline) => {
       const renderPass = model.WebGPURenderer.getRenderPass();
       renderPass.setBindGroup(1, model.UBOBindGroup);
       pipeline.bindVertexInput(renderPass, primHelper.vertexInput);

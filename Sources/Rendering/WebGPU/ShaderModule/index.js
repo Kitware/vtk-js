@@ -11,7 +11,7 @@ function vtkWebGPUShaderModule(publicAPI, model) {
   publicAPI.initialize = (device, shaderDesc) => {
     model.device = device;
     model.handle = model.device.getHandle().createShaderModule({
-      code: shaderDesc.getCode()
+      code: shaderDesc.getCode(),
     });
   };
 

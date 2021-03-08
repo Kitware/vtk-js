@@ -31,23 +31,31 @@ function vtkWebGPUPipeline(publicAPI, model) {
       ],
     };
 
-    pipelineDesc['vertexState'] = model.vertexState;
+    pipelineDesc.vertexState = model.vertexState;
 
     // add in bind group layouts
     const bindGroupLayouts = [];
     bindGroupLayouts.push(device.getRendererBindGroupLayout());
     bindGroupLayouts.push(device.getMapperBindGroupLayout());
-    model.pipelineLayout = device.getHandle().createPipelineLayout({ bindGroupLayouts});
-    pipelineDesc['layout'] = model.pipelineLayout;
+    model.pipelineLayout = device
+      .getHandle()
+      .createPipelineLayout({ bindGroupLayouts });
+    pipelineDesc.layout = model.pipelineLayout;
 
     for (let i = 0; i < model.shaderDescriptions.length; i++) {
       const sd = model.shaderDescriptions[i];
       const sm = device.getShaderModule(sd);
-      if (sd.getType() == 'vertex') {
-        pipelineDesc['vertexStage'] = { module: sm.getHandle(), entryPoint: 'main' };
+      if (sd.getType() === 'vertex') {
+        pipelineDesc.vertexStage = {
+          module: sm.getHandle(),
+          entryPoint: 'main',
+        };
       }
-      if (sd.getType() == 'fragment') {
-        pipelineDesc['fragmentStage'] = { module: sm.getHandle(), entryPoint: 'main' };
+      if (sd.getType() === 'fragment') {
+        pipelineDesc.fragmentStage = {
+          module: sm.getHandle(),
+          entryPoint: 'main',
+        };
       }
     }
 
@@ -57,8 +65,10 @@ function vtkWebGPUPipeline(publicAPI, model) {
 
   publicAPI.getShaderDescription = (stype) => {
     for (let i = 0; i < model.shaderDescriptions.length; i++) {
-      if (model.shaderDescriptions[i].getType() == stype) return model.shaderDescriptions[i];
+      if (model.shaderDescriptions[i].getType() === stype)
+        return model.shaderDescriptions[i];
     }
+    return null;
   };
 
   publicAPI.addBindGroupLayout = (layout, lname) => {
