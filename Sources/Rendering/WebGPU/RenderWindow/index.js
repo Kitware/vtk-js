@@ -1,4 +1,5 @@
 import macro from 'vtk.js/Sources/macro';
+import { registerViewConstructor } from 'vtk.js/Sources/Rendering/Core/RenderWindow';
 import vtkForwardPass from 'vtk.js/Sources/Rendering/WebGPU/ForwardPass';
 import vtkWebGPUDevice from 'vtk.js/Sources/Rendering/WebGPU/Device';
 import vtkWebGPUSwapChain from 'vtk.js/Sources/Rendering/WebGPU/SwapChain';
@@ -528,6 +529,12 @@ export function extend(publicAPI, model, initialValues = {}) {
 // ----------------------------------------------------------------------------
 
 export const newInstance = macro.newInstance(extend, 'vtkWebGPURenderWindow');
+
+// ----------------------------------------------------------------------------
+// Register API specific RenderWindow implementation
+// ----------------------------------------------------------------------------
+
+registerViewConstructor('WebGPU', newInstance);
 
 // ----------------------------------------------------------------------------
 

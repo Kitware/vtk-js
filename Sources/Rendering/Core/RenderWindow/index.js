@@ -1,7 +1,23 @@
 import macro from 'vtk.js/Sources/macro';
 
-import vtkOpenGLRenderWindow from 'vtk.js/Sources/Rendering/OpenGL/RenderWindow';
-import vtkWebGPURenderWindow from 'vtk.js/Sources/Rendering/WebGPU/RenderWindow';
+const DEFAULT_VIEW_API = navigator.gpu ? 'WebGPU' : 'WebGL';
+const VIEW_CONSTRUCTORS = Object.create(null);
+
+// ----------------------------------------------------------------------------
+// static methods
+// ----------------------------------------------------------------------------
+
+export function registerViewConstructor(name, constructor) {
+  VIEW_CONSTRUCTORS[name] = constructor;
+}
+
+export function listViewAPIs() {
+  return Object.keys(VIEW_CONSTRUCTORS);
+}
+
+export function newAPISpecificView(name, initialValues={}) {
+  return VIEW_CONSTRUCTORS[name] && VIEW_CONSTRUCTORS[name](initialValues);
+}
 
 // ----------------------------------------------------------------------------
 // vtkRenderWindow methods
@@ -38,15 +54,8 @@ function vtkRenderWindow(publicAPI, model) {
   publicAPI.hasRenderer = (ren) => model.renderers.indexOf(ren) !== -1;
 
   // get an API specific view of this data
-  publicAPI.newAPISpecificView = (options) => {
-    if (options && options.api) {
-      return model.apiSpecificViews[options.api]();
-    }
-
-    if (typeof navigator !== 'undefined' && !!navigator.gpu) {
-      return model.apiSpecificViews['WebGPU']();
-    }
-    return model.apiSpecificViews['OpenGL']();
+  publicAPI.newAPISpecificView = (name, initialValues={}) => {
+    return newAPISpecificView(name || model.defaultViewAPI, initialValues);
   }
 
   // Add renderer
@@ -118,8 +127,8 @@ function vtkRenderWindow(publicAPI, model) {
 // Object factory
 // ----------------------------------------------------------------------------
 
-export const DEFAULT_VALUES = {
-  apiSpecificView: null,
+const DEFAULT_VALUES = {
+  defaultViewAPI: DEFAULT_VIEW_API,
   renderers: [],
   views: [],
   interactor: null,
@@ -135,13 +144,9 @@ export function extend(publicAPI, model, initialValues = {}) {
   // Build VTK API
   macro.obj(publicAPI, model);
 
-  model.apiSpecificViews = [];
-  model.apiSpecificViews['OpenGL'] = vtkOpenGLRenderWindow.newInstance;
-  model.apiSpecificViews['WebGPU'] = vtkWebGPURenderWindow.newInstance;
-
-  macro.setGet(publicAPI, model, ['interactor', 'numberOfLayers', 'views']);
+  macro.setGet(publicAPI, model, ['interactor', 'numberOfLayers', 'views', 'defaultViewAPI']);
   macro.get(publicAPI, model, ['neverRendered']);
-  macro.getArray(publicAPI, model, ['apiSpecificViews', 'renderers']);
+  macro.getArray(publicAPI, model, ['renderers']);
   macro.event(publicAPI, model, 'completion');
 
   // Object methods
@@ -154,4 +159,4 @@ export const newInstance = macro.newInstance(extend, 'vtkRenderWindow');
 
 // ----------------------------------------------------------------------------
 
-export default { newInstance, extend };
+export default { newInstance, extend, registerViewConstructor, listViewAPIs, newAPISpecificView };

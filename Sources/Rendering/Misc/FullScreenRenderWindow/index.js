@@ -3,6 +3,7 @@ import vtkRenderer from 'vtk.js/Sources/Rendering/Core/Renderer';
 import vtkRenderWindow from 'vtk.js/Sources/Rendering/Core/RenderWindow';
 import vtkRenderWindowInteractor from 'vtk.js/Sources/Rendering/Core/RenderWindowInteractor';
 import vtkInteractorStyleTrackballCamera from 'vtk.js/Sources/Interaction/Style/InteractorStyleTrackballCamera';
+import vtkURLExtract from 'vtk.js/Sources/Common/Core/URLExtract';
 
 // Load basic classes for vtk() factory
 import 'vtk.js/Sources/Common/Core/Points';
@@ -10,6 +11,11 @@ import 'vtk.js/Sources/Common/Core/DataArray';
 import 'vtk.js/Sources/Common/DataModel/PolyData';
 import 'vtk.js/Sources/Rendering/Core/Actor';
 import 'vtk.js/Sources/Rendering/Core/Mapper';
+import 'vtk.js/Sources/Rendering/OpenGL/RenderWindow';
+import 'vtk.js/Sources/Rendering/WebGPU/RenderWindow';
+
+// Process arguments from URL
+const userParams = vtkURLExtract.extractURLParameters();
 
 const STYLE_CONTAINER = {
   margin: '0',
@@ -72,7 +78,7 @@ function vtkFullScreenRenderWindow(publicAPI, model) {
   model.renderWindow.addRenderer(model.renderer);
 
   // apiSpecificRenderWindow
-  model.apiSpecificRenderWindow = model.renderWindow.newAPISpecificView();
+  model.apiSpecificRenderWindow = model.renderWindow.newAPISpecificView(userParams.viewAPI);
   model.apiSpecificRenderWindow.setContainer(model.container);
   model.renderWindow.addView(model.apiSpecificRenderWindow);
 
