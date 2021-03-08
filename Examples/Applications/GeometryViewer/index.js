@@ -283,7 +283,6 @@ function createPipeline(fileName, fileContents) {
   function updateColorBy(event) {
     const [location, colorByArrayName] = event.target.value.split(':');
     const interpolateScalarsBeforeMapping = location === 'PointData';
-    const interpolateScalarsBeforeMapping = false;
     let colorMode = ColorMode.DEFAULT;
     let scalarMode = ScalarMode.DEFAULT;
     const scalarVisibility = location.length > 0;

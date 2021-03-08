@@ -2,7 +2,6 @@ var prettierConf = require('./prettier.config.js');
 
 module.exports = {
   extends: ['airbnb', 'prettier'],
-  parser: 'babel-eslint',
   rules: {
     'prettier/prettier': ['error', prettierConf],
 
