@@ -3,7 +3,7 @@
 
 import 'vtk.js/Sources/favicon';
 
-import macro from 'vtk.js/Sources/macro';
+import { formatBytesToProperUnit, debounce } from 'vtk.js/Sources/macro';
 import HttpDataAccessHelper from 'vtk.js/Sources/IO/Core/DataAccessHelper/HttpDataAccessHelper';
 import vtkActor from 'vtk.js/Sources/Rendering/Core/Actor';
 import vtkDataArray from 'vtk.js/Sources/Common/Core/DataArray';
@@ -361,11 +361,8 @@ function createPipeline(fileName, fileContents) {
   renderer.addActor(actor);
 
   // Manage update when lookupTable change
-  // too heavy handed, causes multiple buffer pushes as opposed
-  // to defering them to when all changes are done
-  // lookupTable.onModified(() => {
-  //   renderWindow.render();
-  // });
+  const debouncedRender = debounce(renderWindow.render, 10);
+  lookupTable.onModified(debouncedRender, -1);
 
   // First render
   renderer.resetCamera();
@@ -420,7 +417,7 @@ export function load(container, options) {
         );
         progressContainer.innerHTML = `Loading ${percent}%`;
       } else {
-        progressContainer.innerHTML = macro.formatBytesToProperUnit(
+        progressContainer.innerHTML = formatBytesToProperUnit(
           progressEvent.loaded
         );
       }
