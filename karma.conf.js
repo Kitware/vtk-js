@@ -85,6 +85,10 @@ module.exports = function init(config) {
         base: 'ChromeHeadless',
         flags: ['--no-sandbox', '--ignore-gpu-blacklist'],
       },
+      ChromeWebGPU: {
+        base: 'ChromeCanary',
+        flags: ['--enable-unsafe-webgpu'],
+      },
     },
     // browserNoActivityTimeout: 600000,
     // browserDisconnectTimeout: 600000,
