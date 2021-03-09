@@ -29,12 +29,6 @@
   "homepage": "https://github.com/kitware/vtk-js#readme",
   "main": "./dist/umd/vtk.js",
   "module": "./dist/esm/index.js",
-  "exports": {
-    ".": "./dist/esm/index.js",
-    "./*": "./dist/esm/*",
-    "./Sources/*": "./Sources/*",
-    "./Utilities/*": "./Utilities/*"
-  },
   "dependencies": {
     "@babel/runtime": "7.12.5",
     "blueimp-md5": "2.18.0",
@@ -147,6 +141,7 @@
     "build:esm": "rollup -c rollup.config.js",
     "build:umd": "webpack --config webpack.prod.js --progress",
     "build:release": "npm run lint && cross-env NOLINT=1 npm run build:esm && cross-env NOLINT=1 npm run build:umd",
+    "release:create-packages": "node ./Utilities/ci/build-npm-package.js",
     "test": "karma start ./karma.conf.js",
     "test:headless": "karma start ./karma.conf.js --browsers ChromeHeadlessNoSandbox --single-run",
     "test:debug": "karma start ./karma.conf.js --no-single-run",
@@ -182,6 +177,26 @@
         "name": "beta",
         "prerelease": true
       }
+    ],
+    "plugins": [
+      "@semantic-release/commit-analyzer",
+      "@semantic-release/release-notes-generator",
+      [
+        "@semantic-release/npm",
+        {
+          "pkgRoot": "./pkg/umd"
+        }
+      ],
+      [
+        "@semantic-release/npm",
+        {
+          "pkgRoot": "./pkg/esm"
+        }
+      ],
+      "@semantic-release/github"
     ]
+  },
+  "publishConfig": {
+    "access": "public"
   }
 }
