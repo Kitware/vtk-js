@@ -59,5 +59,7 @@ module.exports = {
   ignorePatterns: [
     // ignore old Actor example
     '**/example_/*.js',
+    // ignore js files in utilities
+    'Utilities/**/*.js',
   ],
 };
