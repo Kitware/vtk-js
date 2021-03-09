@@ -86,11 +86,9 @@ function vtkImageInterpolator(publicAPI, model) {
     }
 
     const startId = inIdX0 * inInc[0] + inIdY0 * inInc[1] + inIdZ0 * inInc[2];
-    const inPtr = interpolationInfo.pointer.subarray(
-      startId,
-      startId + numscalars
-    );
-    value.set(inPtr, 0);
+    for (let i = 0; i < numscalars; ++i) {
+      value[i] = interpolationInfo.pointer[startId + i];
+    }
   };
 
   publicAPI.interpolatePoint = (interpolationInfo, point, value) => {

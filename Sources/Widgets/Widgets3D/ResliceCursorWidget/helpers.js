@@ -23,18 +23,19 @@ const EPSILON = 0.00001;
 export function boundPlane(bounds, origin, p1, p2) {
   const v1 = [];
   vtkMath.subtract(p1, origin, v1);
+  vtkMath.normalize(v1);
 
   const v2 = [];
   vtkMath.subtract(p2, origin, v2);
+  vtkMath.normalize(v2);
 
   const n = [0, 0, 1];
   vtkMath.cross(v1, v2, n);
-  const plane = vtkPlane.newInstance();
-  plane.setOrigin(origin);
-  plane.setNormal(n);
-  vtkMath.normalize(v1);
-  vtkMath.normalize(v2);
   vtkMath.normalize(n);
+
+  const plane = vtkPlane.newInstance();
+  plane.setOrigin(...origin);
+  plane.setNormal(...n);
 
   const cubeSource = vtkCubeSource.newInstance();
   cubeSource.setBounds(bounds);
@@ -162,10 +163,14 @@ function updateLine(lineState, center, axis, lineLength, rotationLength) {
 
 // Update the reslice cursor state according to the three planes normals and the origin
 export function updateState(widgetState) {
-  // Compute axis
-  const newXAxis = widgetState.getPlanes()[ViewTypes.YZ_PLANE].normal;
-  const newYAxis = widgetState.getPlanes()[ViewTypes.XZ_PLANE].normal;
-  const newZAxis = widgetState.getPlanes()[ViewTypes.XY_PLANE].normal;
+  // Compute line axis
+  const xNormal = widgetState.getPlanes()[ViewTypes.YZ_PLANE].normal;
+  const yNormal = widgetState.getPlanes()[ViewTypes.XZ_PLANE].normal;
+  const zNormal = widgetState.getPlanes()[ViewTypes.XY_PLANE].normal;
+
+  const yzIntersectionLineAxis = vtkMath.cross(yNormal, zNormal, []);
+  const xzIntersectionLineAxis = vtkMath.cross(zNormal, xNormal, []);
+  const xyIntersectionLineAxis = vtkMath.cross(xNormal, yNormal, []);
 
   const bounds = widgetState.getImage().getBounds();
   const center = widgetState.getCenter();
@@ -182,14 +187,14 @@ export function updateState(widgetState) {
   updateLine(
     widgetState.getAxisXinY(),
     center,
-    newZAxis,
+    xyIntersectionLineAxis,
     pdLength,
     zRotationLength
   );
   updateLine(
     widgetState.getAxisYinX(),
     center,
-    newZAxis,
+    xyIntersectionLineAxis,
     pdLength,
     zRotationLength
   );
@@ -197,14 +202,14 @@ export function updateState(widgetState) {
   updateLine(
     widgetState.getAxisYinZ(),
     center,
-    newXAxis,
+    yzIntersectionLineAxis,
     pdLength,
     xRotationLength
   );
   updateLine(
     widgetState.getAxisZinY(),
     center,
-    newXAxis,
+    yzIntersectionLineAxis,
     pdLength,
     xRotationLength
   );
@@ -212,14 +217,14 @@ export function updateState(widgetState) {
   updateLine(
     widgetState.getAxisXinZ(),
     center,
-    newYAxis,
+    xzIntersectionLineAxis,
     pdLength,
     yRotationLength
   );
   updateLine(
     widgetState.getAxisZinX(),
     center,
-    newYAxis,
+    xzIntersectionLineAxis,
     pdLength,
     yRotationLength
   );

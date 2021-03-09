@@ -7,6 +7,7 @@ returning plane normal.
 ### normal (set/get)
 
 Plane normal. Plane is defined by point and normal. Default is [0.0, 0.0, 1.0].
+Must be normalized (magnitude = 1)
 
 ### origin (set/get)
 
