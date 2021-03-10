@@ -1,0 +1,20 @@
+<VTKFile type="PolyData">
+	<PolyData>
+		<Piece NumberOfPoints="6" NumberOfLines="3" NumberOfPolys="0">
+			<Points>
+				<DataArray type="Float32" Name="Points" NumberOfComponents="3" format="ascii">0 0 0 1 1 1 1 1 1 2 2 2 2 2 2 3 3 3</DataArray>
+			</Points>
+			<PointData>
+				<DataArray type="Int32" Name="node_ids" NumberOfComponents="1" format="ascii">1 3 3 4 4 2</DataArray>
+			</PointData>
+			<CellData Scalars="element_type_cell_colors">
+				<DataArray type="Int32" Name="element_ids" NumberOfComponents="1" format="ascii">1 2 3</DataArray>
+				<DataArray type="UInt8" Name="element_type_cell_colors" NumberOfComponents="3" format="ascii">255 0 0 255 0 0 255 0 0</DataArray>
+			</CellData>
+			<Lines>
+				<DataArray type="Int64" Name="connectivity" format="ascii">0 1 2 3 4 5</DataArray>
+				<DataArray type="Int64" Name="offsets" format="ascii">2 4 6</DataArray>
+			</Lines>
+		</Piece>
+	</PolyData>
+</VTKFile>
