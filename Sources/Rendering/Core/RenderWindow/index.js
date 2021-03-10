@@ -1,5 +1,24 @@
 import macro from 'vtk.js/Sources/macro';
 
+const DEFAULT_VIEW_API = navigator.gpu ? 'WebGPU' : 'WebGL';
+const VIEW_CONSTRUCTORS = Object.create(null);
+
+// ----------------------------------------------------------------------------
+// static methods
+// ----------------------------------------------------------------------------
+
+export function registerViewConstructor(name, constructor) {
+  VIEW_CONSTRUCTORS[name] = constructor;
+}
+
+export function listViewAPIs() {
+  return Object.keys(VIEW_CONSTRUCTORS);
+}
+
+export function newAPISpecificView(name, initialValues = {}) {
+  return VIEW_CONSTRUCTORS[name] && VIEW_CONSTRUCTORS[name](initialValues);
+}
+
 // ----------------------------------------------------------------------------
 // vtkRenderWindow methods
 // ----------------------------------------------------------------------------
@@ -33,6 +52,10 @@ function vtkRenderWindow(publicAPI, model) {
   };
 
   publicAPI.hasRenderer = (ren) => model.renderers.indexOf(ren) !== -1;
+
+  // get an API specific view of this data
+  publicAPI.newAPISpecificView = (name, initialValues = {}) =>
+    newAPISpecificView(name || model.defaultViewAPI, initialValues);
 
   // Add renderer
   publicAPI.addView = (view) => {
@@ -103,7 +126,8 @@ function vtkRenderWindow(publicAPI, model) {
 // Object factory
 // ----------------------------------------------------------------------------
 
-export const DEFAULT_VALUES = {
+const DEFAULT_VALUES = {
+  defaultViewAPI: DEFAULT_VIEW_API,
   renderers: [],
   views: [],
   interactor: null,
@@ -118,7 +142,13 @@ export function extend(publicAPI, model, initialValues = {}) {
 
   // Build VTK API
   macro.obj(publicAPI, model);
-  macro.setGet(publicAPI, model, ['interactor', 'numberOfLayers', 'views']);
+
+  macro.setGet(publicAPI, model, [
+    'interactor',
+    'numberOfLayers',
+    'views',
+    'defaultViewAPI',
+  ]);
   macro.get(publicAPI, model, ['neverRendered']);
   macro.getArray(publicAPI, model, ['renderers']);
   macro.event(publicAPI, model, 'completion');
@@ -133,4 +163,10 @@ export const newInstance = macro.newInstance(extend, 'vtkRenderWindow');
 
 // ----------------------------------------------------------------------------
 
-export default { newInstance, extend };
+export default {
+  newInstance,
+  extend,
+  registerViewConstructor,
+  listViewAPIs,
+  newAPISpecificView,
+};

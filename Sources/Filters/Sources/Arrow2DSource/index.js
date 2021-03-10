@@ -39,44 +39,44 @@ function vtk6PointsArrow(publicAPI, model) {
 
   const offsetOp = model.height * 0.5 - thickOp;
 
-  const centerOffsetOp =
+  const baseOffsetOp =
     (model.height * 0.9 +
       thickOp -
       offsetOp -
       (model.height * 0.5 - thickOp - offsetOp)) *
-    (1 - model.center);
+    (1 - model.base);
 
   points[0] = (model.width / 2) * -1 - thickOp;
-  points[1] = model.height / 4 - offsetOp - centerOffsetOp;
+  points[1] = model.height / 4 - offsetOp - baseOffsetOp;
   points[2] = 0.0;
 
   points[3] = 0.0;
-  points[4] = model.height * 0.9 + thickOp - offsetOp - centerOffsetOp;
+  points[4] = model.height * 0.9 + thickOp - offsetOp - baseOffsetOp;
   points[5] = 0.0;
 
   points[6] = model.width / 2 + thickOp;
-  points[7] = model.height / 4 - offsetOp - centerOffsetOp;
+  points[7] = model.height / 4 - offsetOp - baseOffsetOp;
   points[8] = 0.0;
 
   points[9] = model.width / 3;
-  points[10] = model.height * 0.1 - thickOp - offsetOp - centerOffsetOp;
+  points[10] = model.height * 0.1 - thickOp - offsetOp - baseOffsetOp;
   points[11] = 0.0;
 
   points[12] = 0.0;
-  points[13] = model.height * 0.5 - thickOp - offsetOp - centerOffsetOp;
+  points[13] = model.height * 0.5 - thickOp - offsetOp - baseOffsetOp;
   points[14] = 0.0;
 
   points[15] = (model.width / 3) * -1;
-  points[16] = model.height * 0.1 - thickOp - offsetOp - centerOffsetOp;
+  points[16] = model.height * 0.1 - thickOp - offsetOp - baseOffsetOp;
   points[17] = 0.0;
 
-  const cells = Uint8Array.from([6, 0, 1, 2, 3, 4, 5]);
-
-  vtkMatrixBuilder
-    .buildFromRadian()
-    .translate(...model.origin)
-    .rotateFromDirections([0, 1, 0], model.direction)
-    .apply(points);
+  // prettier-ignore
+  const cells = Uint8Array.from([
+    3, 0, 1, 5,
+    3, 1, 4, 5,
+    3, 1, 4, 3,
+    3, 1, 2, 3,
+  ]);
 
   dataset.getPoints().setData(points, 3);
   dataset.getPolys().setData(cells, 1);
@@ -93,33 +93,27 @@ function vtk4PointsArrow(publicAPI, model) {
 
   const offsetOp = model.height / 3 - thickOp;
 
-  const centerOffsetOp =
+  const baseOffsetOp =
     (model.height - offsetOp - (model.height / 3 - thickOp - offsetOp)) *
-    (1 - model.center);
+    (1 - model.base);
 
   points[0] = (model.width / 2) * -1;
-  points[1] = 0.0 - offsetOp - centerOffsetOp;
+  points[1] = 0.0 - offsetOp - baseOffsetOp;
   points[2] = 0.0;
 
   points[3] = 0.0;
-  points[4] = model.height - offsetOp - centerOffsetOp;
+  points[4] = model.height - offsetOp - baseOffsetOp;
   points[5] = 0.0;
 
   points[6] = model.width / 2;
-  points[7] = 0.0 - offsetOp - centerOffsetOp;
+  points[7] = 0.0 - offsetOp - baseOffsetOp;
   points[8] = 0.0;
 
   points[9] = 0.0;
-  points[10] = model.height / 3 - thickOp - offsetOp - centerOffsetOp;
+  points[10] = model.height / 3 - thickOp - offsetOp - baseOffsetOp;
   points[11] = 0.0;
 
   const cells = Uint8Array.from([3, 0, 1, 3, 3, 1, 2, 3]);
-
-  vtkMatrixBuilder
-    .buildFromRadian()
-    .translate(...model.origin)
-    .rotateFromDirections([0, 1, 0], model.direction)
-    .apply(points);
 
   dataset.getPoints().setData(points, 3);
   dataset.getPolys().setData(cells, 1);
@@ -132,27 +126,21 @@ function vtkTriangleSource(publicAPI, model) {
 
   const points = new macro.TYPED_ARRAYS[model.pointType](3 * 3);
 
-  const centerOffsetOp = model.height * (1 - model.center);
+  const baseOffsetOp = model.height * (1 - model.base);
 
   points[0] = (model.width / 2) * -1;
-  points[1] = 0.0 - centerOffsetOp;
+  points[1] = 0.0 - baseOffsetOp;
   points[2] = 0.0;
 
   points[3] = 0.0;
-  points[4] = model.height - centerOffsetOp;
+  points[4] = model.height - baseOffsetOp;
   points[5] = 0.0;
 
   points[6] = model.width / 2;
-  points[7] = 0.0 - centerOffsetOp;
+  points[7] = 0.0 - baseOffsetOp;
   points[8] = 0.0;
 
   const cells = Uint8Array.from([3, 0, 1, 2]);
-
-  vtkMatrixBuilder
-    .buildFromRadian()
-    .translate(...model.origin)
-    .rotateFromDirections([0, 1, 0], model.direction)
-    .apply(points);
 
   dataset.getPoints().setData(points, 3);
   dataset.getPolys().setData(cells, 1);
@@ -170,6 +158,12 @@ function vtkArrow2DSource(publicAPI, model) {
 
   publicAPI.requestData = (inData, outData) => {
     outData[0] = shapeToSource[model.shape](publicAPI, model);
+
+    vtkMatrixBuilder
+      .buildFromRadian()
+      .translate(...model.center)
+      .rotateFromDirections([1, 0, 0], model.direction)
+      .apply(outData[0].getPoints().getData());
   };
 }
 
@@ -177,38 +171,38 @@ function vtkArrow2DSource(publicAPI, model) {
 // Object factory
 // ----------------------------------------------------------------------------
 
-/* DEFAULT VALUES
- * height modifies the height of the source , implemented in triangle 4PA 6PA
+/**
+ * height modifies the size of the source along x axis
+ * width modifies the size of the source along y axis
  
- * width modifies the width of the source, implemented in triangle 4PA 6PA
+ * thickness modifies the shape of the source, which becomes wider on
+ * y axis 
  
- * thickness modifies the shape of the source, 0 normal thickness 1 max
- *		thickness, implemented in 4PA 6PA, scalar 
- 
- * center modifies the postion of the end of the Polyline in comparison to the
- *		source, 1 the top of the arrow is on the limit of the line, 0 the bottom
- *		of the arrow touches the line
-
-*/
-const DEFAULT_VALUES = {
-  height: 1.0,
-  width: 1.0,
-  thickness: 0,
-  center: 0.5,
-  origin: [0, 0, 0],
-  direction: [0.0, 1.0, 0.0],
-  pointType: 'Float32Array',
-};
+ * base modifies the position which lowers the source on x axis for 0 and moves
+ * the source up on x axis for 1
+ */
+function defaultValues(initialValues) {
+  return {
+    base: 0,
+    center: [0, 0, 0],
+    height: 1.0,
+    direction: [1, 0, 0],
+    pointType: 'Float32Array',
+    thickness: 0,
+    width: 1.0,
+    ...initialValues,
+  };
+}
 
 // ----------------------------------------------------------------------------
 
 export function extend(publicAPI, model, initialValues = {}) {
-  Object.assign(model, DEFAULT_VALUES, initialValues);
+  Object.assign(model, defaultValues(initialValues));
 
   // Build VTK API
   macro.obj(publicAPI, model);
-  macro.setGet(publicAPI, model, ['height', 'width', 'thickness', 'center']);
-  macro.setGetArray(publicAPI, model, ['origin', 'direction'], 3);
+  macro.setGet(publicAPI, model, ['height', 'width', 'thickness', 'base']);
+  macro.setGetArray(publicAPI, model, ['center', 'direction'], 3);
   macro.algo(publicAPI, model, 0, 1);
   vtkArrow2DSource(publicAPI, model);
 }

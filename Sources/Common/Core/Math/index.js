@@ -706,12 +706,12 @@ export function quaternionToMatrix3x3(quat_4, mat_3x3) {
  * @param {Number} eps tolerance
  */
 export function areEquals(a, b, eps = 1e-6) {
-  if (!a.length === b.length) {
+  if (a.length !== b.length) {
     return false;
   }
 
   function isEqual(element, index) {
-    return Math.abs(element - b[index]) < eps;
+    return Math.abs(element - b[index]) <= eps;
   }
   return a.every(isEqual);
 }

@@ -514,16 +514,18 @@ function vtkPiecewiseGaussianWidget(publicAPI, model) {
     let arrayStride = Math.floor(array.length / maxNumberOfWorkers) || 1;
     arrayStride += arrayStride % numberOfComponents;
     let arrayIndex = 0;
+    const workerChunks = [];
     const workers = [];
     while (arrayIndex < array.length) {
       const worker = new ComputeHistogramWorker();
+      workers.push(worker);
       const workerPromise = new WebworkerPromise(worker);
       const arrayStart = arrayIndex;
       const arrayEnd = Math.min(arrayIndex + arrayStride, array.length - 1);
       const subArray = new array.constructor(
         array.slice(arrayStart, arrayEnd + 1)
       );
-      workers.push(
+      workerChunks.push(
         workerPromise.postMessage(
           {
             array: subArray,
@@ -538,10 +540,11 @@ function vtkPiecewiseGaussianWidget(publicAPI, model) {
       );
       arrayIndex += arrayStride;
     }
-    Promise.all(workers).then((workerResults) => {
+    Promise.all(workerChunks).then((subHistograms) => {
+      workers.forEach((worker) => worker.terminate());
       model.histogram = new Float32Array(model.numberOfBins);
       model.histogram.fill(0);
-      workerResults.forEach((subHistogram) => {
+      subHistograms.forEach((subHistogram) => {
         for (let i = 0, len = subHistogram.length; i < len; ++i) {
           model.histogram[i] += subHistogram[i];
         }

@@ -14,6 +14,7 @@ import scale1 from 'vtk.js/Sources/Widgets/Core/StateBuilder/scale1Mixin';
 import scale3 from 'vtk.js/Sources/Widgets/Core/StateBuilder/scale3Mixin';
 import text from 'vtk.js/Sources/Widgets/Core/StateBuilder/textMixin';
 import visible from 'vtk.js/Sources/Widgets/Core/StateBuilder/visibleMixin';
+import shape from 'vtk.js/Sources/Widgets/Core/StateBuilder/shapeMixin';
 
 const { vtkErrorMacro } = macro;
 
@@ -34,6 +35,7 @@ const MIXINS = {
   scale3,
   text,
   visible,
+  shape,
 };
 
 // ----------------------------------------------------------------------------
