@@ -124,9 +124,9 @@ test.onlyIfWebGL('Test vtkPointPicker line source', (t) => {
   picker.setPickFromList(1);
   picker.initializePickList();
   picker.addPickList(actor);
-  picker.setTolerance(10.0);
+  picker.setTolerance(1.0);
 
-  const pFirst = [380, 200, 0];
+  const pFirst = [380 + 0.5, 200, 0];
   picker.pick(pFirst, renderer);
 
   const actorsFirstPoint = picker.getActors();
@@ -136,7 +136,7 @@ test.onlyIfWebGL('Test vtkPointPicker line source', (t) => {
   const idFirstPoint = picker.getPointId();
   t.equal(idFirstPoint, 0);
 
-  const pLast = [20, 200, 0];
+  const pLast = [20, 200 + 0.5, 0];
   picker.pick(pLast, renderer);
 
   const actorsLastPoint = picker.getActors();
