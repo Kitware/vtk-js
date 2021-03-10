@@ -1,9 +1,10 @@
-import macro from 'vtk.js/Sources/macro';
+import * as macro from 'vtk.js/Sources/macro';
 import * as vtkMath from 'vtk.js/Sources/Common/Core/Math';
 import vtkWebGPUBuffer from 'vtk.js/Sources/Rendering/WebGPU/Buffer';
 import vtkProperty from 'vtk.js/Sources/Rendering/Core/Property';
-import { BufferUsage, PrimitiveTypes } from './Constants';
+import Constants from './Constants';
 
+const { BufferUsage, PrimitiveTypes } = Constants;
 const { Representation } = vtkProperty;
 
 const { vtkDebugMacro } = macro;
