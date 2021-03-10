@@ -1,3 +1,4 @@
+import './Common/Core/CellArray/test/testCellArray';
 import './Common/Core/LookupTable/test/testCategoricalColors';
 import './Common/Core/Math/test/testMath';
 import './Common/Core/MatrixBuilder/test/testMatrixBuilder';
