@@ -1,6 +1,7 @@
 import * as macro from 'vtk.js/Sources/macro';
 import vtkWebGPUBufferManager from 'vtk.js/Sources/Rendering/WebGPU/BufferManager';
 import vtkWebGPUShaderCache from 'vtk.js/Sources/Rendering/WebGPU/ShaderCache';
+import vtkWebGPUTextureManager from 'vtk.js/Sources/Rendering/WebGPU/TextureManager';
 
 // ----------------------------------------------------------------------------
 // vtkWebGPUDevice methods
@@ -68,6 +69,61 @@ function vtkWebGPUDevice(publicAPI, model) {
     }
     return model.mapperBindGroupLayout;
   };
+
+  publicAPI.getSamplerBindGroupLayout = () => {
+    if (!model.samplerBindGroupLayout) {
+      const descriptor = {
+        entries: [
+          {
+            binding: 0,
+            /* eslint-disable no-undef */
+            visibility: GPUShaderStage.VERTEX | GPUShaderStage.FRAGMENT,
+            /* eslint-enable no-undef */
+            sampler: {
+              // type: 'filtering',
+            },
+          },
+        ],
+      };
+      model.samplerBindGroupLayout = model.handle.createBindGroupLayout(
+        descriptor
+      );
+    }
+    return model.samplerBindGroupLayout;
+  };
+
+  publicAPI.getTextureBindGroupLayout = () => {
+    if (!model.textureBindGroupLayout) {
+      const descriptor = {
+        entries: [
+          {
+            binding: 0,
+            /* eslint-disable no-undef */
+            visibility: GPUShaderStage.VERTEX | GPUShaderStage.FRAGMENT,
+            /* eslint-enable no-undef */
+            texture: {
+              // sampleType: 'float',
+              // viewDimension: '2d',
+              // multisampled: false,
+            },
+          },
+          {
+            binding: 1,
+            /* eslint-disable no-undef */
+            visibility: GPUShaderStage.VERTEX | GPUShaderStage.FRAGMENT,
+            /* eslint-enable no-undef */
+            sampler: {
+              // type: 'filtering',
+            },
+          },
+        ],
+      };
+      model.textureBindGroupLayout = model.handle.createBindGroupLayout(
+        descriptor
+      );
+    }
+    return model.textureBindGroupLayout;
+  };
 }
 
 // ----------------------------------------------------------------------------
@@ -78,7 +134,10 @@ const DEFAULT_VALUES = {
   shaderCache: null,
   rendererBindGroupLayout: null,
   mapperBindGroupLayout: null,
+  samplerBindGroupLayout: null,
+  textureBindGroupLayout: null,
   bufferManager: null,
+  textureManager: null,
 };
 
 // ----------------------------------------------------------------------------
@@ -89,13 +148,20 @@ export function extend(publicAPI, model, initialValues = {}) {
   macro.obj(publicAPI, model);
 
   macro.setGet(publicAPI, model, ['handle']);
-  macro.get(publicAPI, model, ['bufferManager', 'shaderCache']);
+  macro.get(publicAPI, model, [
+    'bufferManager',
+    'shaderCache',
+    'textureManager',
+  ]);
 
   model.shaderCache = vtkWebGPUShaderCache.newInstance();
   model.shaderCache.setDevice(publicAPI);
 
   model.bufferManager = vtkWebGPUBufferManager.newInstance();
   model.bufferManager.setDevice(publicAPI);
+
+  model.textureManager = vtkWebGPUTextureManager.newInstance();
+  model.textureManager.setDevice(publicAPI);
 
   // For more macro methods, see "Sources/macro.js"
   // Object specific methods

@@ -367,9 +367,24 @@ function generateNormals(cellArray, primType, representation, inArray) {
 
 function getStrideFromFormat(format) {
   if (!format) return 0;
-  if (format.substring(format.length - 4) === '32x4') return 16;
-  if (format.substring(format.length - 3) === '8x4') return 4;
-  return 0;
+  let numComp = 1;
+  if (format.substring(format.length - 2) === 'x4') numComp = 4;
+  if (format.substring(format.length - 2) === 'x3') numComp = 3;
+  if (format.substring(format.length - 2) === 'x2') numComp = 2;
+
+  let typeSize = 4;
+  if (numComp > 1) {
+    if (format.substring(format.length - 3, format.length - 1) === '8x') {
+      typeSize = 1;
+    }
+    if (format.substring(format.length - 4, format.length - 1) === '16x') {
+      typeSize = 2;
+    }
+  } else {
+    if (format.substring(format.length - 1) === '8') typeSize = 1;
+    if (format.substring(format.length - 2) === '16') typeSize = 2;
+  }
+  return numComp * typeSize;
 }
 
 function getArrayTypeFromFormat(format) {
@@ -388,16 +403,22 @@ function vtkWebGPUBufferManager(publicAPI, model) {
   // Set our className
   model.classHierarchy.push('vtkWebGPUBufferManager');
 
+  // we cache based on the passed in dataArray, when the dataArray is
+  // garbage collected then the cache entry is removed. If a dataArray
+  // is not provided then the buffer is NOT cached and you are on your own
+  // if you want to share it etc
   publicAPI.getBuffer = (req) => {
-    // if a dataArray ius provided set the address
+    // if a dataArray is provided set the address
     if (Object.prototype.hasOwnProperty.call(req, 'dataArray')) {
       req.address = req.dataArray.getData();
-    }
-
-    // if already exists then return it
-    for (let i = 0; i < model.buffers.length; i++) {
-      if (requestMatches(model.buffers[i].request, req)) {
-        return model.buffers[i].buffer;
+      // if a matching buffer already exists then return it
+      if (model.buffers.has(req.dataArray)) {
+        const dabuffers = model.buffers.get(req.dataArray);
+        for (let i = 0; i < dabuffers.length; i++) {
+          if (requestMatches(dabuffers[i].request, req)) {
+            return dabuffers[i].buffer;
+          }
+        }
       }
     }
 
@@ -415,6 +436,15 @@ function vtkWebGPUBufferManager(publicAPI, model) {
       gpuUsage = GPUBufferUsage.UNIFORM | GPUBufferUsage.COPY_DST;
       /* eslint-enable no-bitwise */
       buffer.createAndWrite(req.address, gpuUsage);
+    }
+
+    // handle textures
+    if (req.usage === BufferUsage.Texture) {
+      /* eslint-disable no-bitwise */
+      gpuUsage = GPUBufferUsage.COPY_SRC;
+      /* eslint-enable no-bitwise */
+      buffer.createAndWrite(req.address, gpuUsage);
+      buffer.setArrayInformation([{ offset: 0, format: req.format }]);
     }
 
     // handle points
@@ -465,7 +495,26 @@ function vtkWebGPUBufferManager(publicAPI, model) {
     }
 
     buffer.setSourceTime(req.time);
-    model.buffers.push({ request: req, buffer });
+
+    // cache the buffer if we have a dataArray.
+    // We create a new req that only has the 4 fields required for
+    // a comparison to avoid GC cycles
+    if (Object.prototype.hasOwnProperty.call(req, 'dataArray')) {
+      if (!model.buffers.has(req.dataArray)) {
+        model.buffers.set(req.dataArray, []);
+      }
+
+      const dabuffers = model.buffers.get(req.dataArray);
+      dabuffers.push({
+        request: {
+          time: req.time,
+          address: req.address,
+          format: req.format,
+          usage: req.usage,
+        },
+        buffer,
+      });
+    }
     return buffer;
   };
 }
@@ -486,7 +535,8 @@ export function extend(publicAPI, model, initialValues = {}) {
   // Object methods
   macro.obj(publicAPI, model);
 
-  model.buffers = [];
+  // this is a cache, and a cache with GC pretty much means WeakMap
+  model.buffers = new WeakMap();
 
   macro.setGet(publicAPI, model, ['device']);
 

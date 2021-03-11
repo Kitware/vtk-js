@@ -9,6 +9,7 @@ export const BufferUsage = {
   UniformArray: 7,
   PointArray: 8,
   NormalsFromPoints: 9,
+  Texture: 10,
 };
 
 export const PrimitiveTypes = {
