@@ -78,18 +78,19 @@ function vtkCellArray(publicAPI, model) {
 // Object factory
 // ----------------------------------------------------------------------------
 
-const DEFAULT_VALUES = {
-  empty: true,
-  numberOfComponents: 1,
-  dataType: VtkDataTypes.UNSIGNED_INT,
-};
+function defaultValues(initialValues) {
+  return {
+    empty: true,
+    numberOfComponents: 1,
+    dataType: VtkDataTypes.UNSIGNED_INT,
+    ...initialValues,
+  };
+}
 
 // ----------------------------------------------------------------------------
 
 export function extend(publicAPI, model, initialValues = {}) {
-  Object.assign(model, DEFAULT_VALUES, initialValues);
-
-  vtkDataArray.extend(publicAPI, model, initialValues);
+  vtkDataArray.extend(publicAPI, model, defaultValues(initialValues));
   vtkCellArray(publicAPI, model);
 }
 
