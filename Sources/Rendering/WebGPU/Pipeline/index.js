@@ -35,8 +35,9 @@ function vtkWebGPUPipeline(publicAPI, model) {
 
     // add in bind group layouts
     const bindGroupLayouts = [];
-    bindGroupLayouts.push(device.getRendererBindGroupLayout());
-    bindGroupLayouts.push(device.getMapperBindGroupLayout());
+    for (let i = 0; i < model.layouts.length; i++) {
+      bindGroupLayouts.push(model.layouts[i].layout);
+    }
     model.pipelineLayout = device
       .getHandle()
       .createPipelineLayout({ bindGroupLayouts });
@@ -73,6 +74,15 @@ function vtkWebGPUPipeline(publicAPI, model) {
 
   publicAPI.addBindGroupLayout = (layout, lname) => {
     model.layouts.push({ layout, name: lname });
+  };
+
+  publicAPI.getBindGroupLayoutCount = (lname) => {
+    for (let i = 0; i < model.layouts.length; i++) {
+      if (model.layouts[i].name === lname) {
+        return i;
+      }
+    }
+    return 0;
   };
 
   publicAPI.bind = (renderPass) => {

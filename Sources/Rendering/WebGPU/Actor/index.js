@@ -43,10 +43,6 @@ function vtkWebGPUActor(publicAPI, model) {
     }
   };
 
-  publicAPI.traverseOpaqueZBufferPass = (renderPass) => {
-    publicAPI.traverseOpaquePass(renderPass);
-  };
-
   // we draw textures, then mapper, then post pass textures
   publicAPI.traverseOpaquePass = (renderPass) => {
     if (
