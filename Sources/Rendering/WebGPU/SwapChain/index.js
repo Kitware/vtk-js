@@ -13,6 +13,7 @@ function vtkWebGPUSwapChain(publicAPI, model) {
     model.device = device;
     if (window.getContext()) {
       const swapChainFormat = 'bgra8unorm';
+
       model.handle = window.getContext().configureSwapChain({
         device: device.getHandle(),
         format: swapChainFormat,

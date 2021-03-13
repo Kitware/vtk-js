@@ -13,6 +13,16 @@ function arraysEqual(a, b) {
   return true;
 }
 
+function getTypeFromFormat(buffer, index) {
+  const arrayInfo = buffer.getArrayInformation()[index];
+  const format = arrayInfo.format;
+  const dataType = 'f32';
+  if (format.substring(format.length - 2) === 'x4') return `vec4<${dataType}>`;
+  if (format.substring(format.length - 2) === 'x3') return `vec3<${dataType}>`;
+  if (format.substring(format.length - 2) === 'x2') return `vec2<${dataType}>`;
+  return dataType;
+}
+
 // ----------------------------------------------------------------------------
 // vtkWebGPUVertexInput methods
 // ----------------------------------------------------------------------------
@@ -76,7 +86,8 @@ function vtkWebGPUVertexInput(publicAPI, model) {
     let nameCount = 0;
     for (let i = 0; i < model.inputs.length; i++) {
       for (let nm = 0; nm < model.inputs[i].names.length; nm++) {
-        result = `${result}[[location(${nameCount})]] var<in> ${model.inputs[i].names[nm]} : vec4<f32>;\n`;
+        const type = getTypeFromFormat(model.inputs[i].buffer, nm);
+        result = `${result}[[location(${nameCount})]] var<in> ${model.inputs[i].names[nm]} : ${type};\n`;
         nameCount++;
       }
     }
