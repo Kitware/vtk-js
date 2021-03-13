@@ -1,6 +1,6 @@
-import VtkObject from '../../../macro';
+import { VtkObject } from "vtk.js/Sources/macro";
 
-interface IValues {
+interface ILightInitialValues {
 
     /**
      * 
@@ -303,7 +303,7 @@ export interface vtkLight extends VtkObject {
  * @param model object on which data structure will be bounds (protected)
  * @param initialValues (default: {})
  */
-export function extend(publicAPI: object, model: object, initialValues?: IValues): void;
+export function extend(publicAPI: object, model: object, initialValues?: ILightInitialValues): void;
 
 /**
  * Method use to create a new instance of vtkLight with the focal point at the origin and its position
@@ -311,7 +311,7 @@ export function extend(publicAPI: object, model: object, initialValues?: IValues
  * positional lighting is off, coneAngle=30, AttenuationValues=[1, 0, 0], exponent=1 and the transformMatrix is null.
  * @param initialValues for pre-setting some of its content
  */
-export function newInstance(initialValues?: IValues): vtkLight;
+export function newInstance(initialValues?: ILightInitialValues): vtkLight;
 
 /**
  * vtkLight is a virtual light for 3D rendering. It provides methods to locate

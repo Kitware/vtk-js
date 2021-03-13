@@ -1,185 +1,138 @@
-import VtkObject from '../../../macro';
+import { mat4 } from 'gl-matrix';
+import { VtkObject } from 'vtk.js/Sources/macro';
+
+/**
+ * 
+ */
+interface ICameraInitialValues {
+    /**
+	 * 
+	 */
+	position?: number[];
+		
+	/**
+	 * 
+	 */
+	focalPoint?: number[];
+		
+	/**
+	 * 
+	 */
+	viewUp?: number[];
+		
+	/**
+	 * 
+	 */
+	directionOfProjection?: number[];
+		
+	/**
+	 * 
+	 */
+	parallelProjection?: boolean;
+		
+	/**
+	 * 
+	 */
+	useHorizontalViewAngle?: boolean;
+		
+	/**
+	 * 
+	 */
+	viewAngle?: number;
+		
+	/**
+	 * 
+	 */
+	parallelScale?: number;
+		
+	/**
+	 * 
+	 */
+	clippingRange?: number[];
+		
+	/**
+	 * 
+	 */
+	windowCenter?: number[];
+		
+	/**
+	 * 
+	 */
+	viewPlaneNormal?: number[];
+		
+	/**
+	 * 
+	 */
+	useOffAxisProjection?: boolean;
+		
+	/**
+	 * 
+	 */
+	screenBottomLeft?: number[];
+		
+	/**
+	 * 
+	 */
+	screenBottomRight?: number[];
+		
+	/**
+	 * 
+	 */
+	screenTopRight?: number[];
+		
+	/**
+	 * 
+	 */
+	freezeFocalPoint?: boolean;
+		
+	/**
+	 * used for world to physical transformations
+	 */
+	physicalTranslation?: number[];
+		
+	/**
+	 * 
+	 */
+	physicalScale?: number;
+		
+	/**
+	 * 
+	 */
+	physicalViewUp?: number[];
+		
+	/**
+	 * 
+	 */
+	physicalViewNorth?: number[];
+}
 
 export interface vtkCamera extends VtkObject {
+
     /**
-     * 
+     * Apply a transform to the camera.
+     * The camera position, focal-point, and view-up are re-calculated 
+     * using the transform's matrix to multiply the old points by the new transform.
+     * @param transformMat4 
      */
-    orthogonalizeViewUp(): void;
+    applyTransform(transformMat4: mat4): void;
+
+    /**
+     * Rotate the camera about the view up vector centered at the focal point.
+     * @param angle 
+     */
+    azimuth(angle: number): void;
 
     /**
      * 
-     * @param x 
-     * @param y 
-     * @param z 
+     * @param bounds 
+     * @returns  
      */
-    setPosition(x: number, y: number, z: number): void;
+    computeClippingRange(bounds: number[]): number[];
 
     /**
-     * 
-     * @param x 
-     * @param y 
-     * @param z 
-     */
-    setFocalPoint(x: any, y: any, z: any): void;
-
-    /**
-     * 
-     * @param d 
-     */
-    setDistance(d: number): void;
-
-    /**
-     * ----------------------------------------------------------------------------
      * This method must be called when the focal point or camera position changes
      */
     computeDistance(): void;
-
-    /**
-     * ----------------------------------------------------------------------------
-     * Move the position of the camera along the view plane normal. Moving
-     * towards the focal point (e.g., > 1) is a dolly-in, moving away
-     * from the focal point (e.g., < 1) is a dolly-out.
-     * @param amount 
-     */
-    dolly(amount: any): void;
-
-    /**
-     * 
-     * @param angle 
-     */
-    roll(angle: any): void;
-
-    /**
-     * 
-     * @param angle 
-     */
-    azimuth(angle: any): void;
-
-    /**
-     * 
-     * @param angle 
-     */
-    yaw(angle: any): void;
-
-    /**
-     * 
-     * @param angle 
-     */
-    elevation(angle: any): void;
-
-    /**
-     * 
-     * @param angle 
-     */
-    pitch(angle: any): void;
-
-    /**
-     * 
-     * @param factor 
-     */
-    zoom(factor: any): void;
-
-    /**
-     * 
-     * @param x 
-     * @param y 
-     * @param z 
-     */
-    translate(x: any, y: any, z: any): void;
-
-    /**
-     * 
-     * @param transformMat4 
-     */
-    applyTransform(transformMat4: any): void;
-
-    /**
-     * 
-     * @return  
-     */
-    getThickness(): number;
-
-    /**
-     * 
-     * @param thickness 
-     */
-    setThickness(thickness: any): void;
-
-    /**
-     * 
-     * @param thickness 
-     */
-    setThicknessFromFocalPoint(thickness: any): void;
-
-    /**
-     * Unimplemented functions
-     * @param angle 
-     */
-    setRoll(angle: any): void;
-
-    /**
-     * 
-     */
-    getRoll(): void;
-
-    /**
-     * 
-     * @param alpha 
-     * @param beta 
-     */
-    setObliqueAngles(alpha: any, beta: any): void;
-
-    /**
-     * 
-     */
-    getOrientation(): void;
-
-    /**
-     * 
-     */
-    getOrientationWXYZ(): void;
-
-    /**
-     * 
-     * @param aspect 
-     */
-    getFrustumPlanes(aspect: any): void;
-
-    /**
-     * 
-     */
-    getCameraLightTransformMatrix(): void;
-
-    /**
-     * 
-     * @param sourceCamera 
-     */
-    deepCopy(sourceCamera: any): void;
-
-    /**
-     * 
-     * @param ori 
-     * @return  
-     */
-    physicalOrientationToWorldDirection(ori: any): any;
-
-    /**
-     * 
-     * @param result 
-     */
-    getPhysicalToWorldMatrix(result: any): void;
-
-    /**
-     * 
-     * @param result 
-     */
-    getWorldToPhysicalMatrix(result: any): void;
-
-    /**
-     * 
-     * @param vmat 
-     */
-    computeViewParametersFromViewMatrix(vmat: any): void;
 
     /**
      * the provided matrix should include
@@ -187,24 +140,50 @@ export interface vtkCamera extends VtkObject {
      * mat is physical to view
      * @param mat 
      */
-    computeViewParametersFromPhysicalMatrix(mat: any): void;
+    computeViewParametersFromPhysicalMatrix(mat: mat4): void;
 
     /**
      * 
-     * @param mat 
+     * @param vmat 
      */
-    setViewMatrix(mat: any): void;
+    computeViewParametersFromViewMatrix(vmat: mat4): void;
+
+    /**
+     * Not implemented yet
+     * @param sourceCamera 
+     */
+    deepCopy(sourceCamera: vtkCamera): void;
+
+    /**
+     * Move the position of the camera along the view plane normal. Moving
+     * towards the focal point (e.g., > 1) is a dolly-in, moving away
+     * from the focal point (e.g., < 1) is a dolly-out.
+     * @param amount 
+     */
+    dolly(amount: number): void;
+
+    /**
+     * Rotate the camera about the cross product of the negative of the direction of projection and the view up vector, using the focal point as the center of rotation.
+     * @param angle 
+     */
+    elevation(angle: number): void;
+
+    /**
+     * Not implemented yet
+     */
+    getCameraLightTransformMatrix(): void;
 
     /**
      * 
+     * @default [0.01, 1000.01],
      */
-    getViewMatrix(): void;
+    getClippingRange(): number[];
 
     /**
      * 
-     * @param mat 
+     * @default [0.01, 1000.01],
      */
-    setProjectionMatrix(mat: any): void;
+    getClippingRangeByReference(): number[];
 
     /**
      * 
@@ -212,23 +191,292 @@ export interface vtkCamera extends VtkObject {
      * @param nearz 
      * @param farz 
      */
-    getProjectionMatrix(aspect: any, nearz: any, farz: any): void;
+    getCompositeProjectionMatrix(aspect: number, nearz: number, farz: number): mat4;
+
+    /**
+     * Get the vector in the direction from the camera position to the focal point.
+     * @default [0, 0, -1],
+     */
+    getDirectionOfProjection(): number[];
+
+    /**
+     * 
+     * @default [0, 0, -1],
+     */
+    getDirectionOfProjectionByReference(): number[];
+
+    /**
+     * Get the distance from the camera position to the focal point.
+     */
+    getDistance(): number;
+
+    /**
+     * 
+     * @default [0, 0, 0]
+     */
+    getFocalPoint(): number[];
+
+    /**
+     * 
+     */
+    getFocalPointByReference(): number[];
+
+    /**
+     * 
+     * @default false
+     */
+    getFreezeFocalPoint(): boolean;
+
+    /**
+     * Not implemented yet
+     * @param aspect 
+     */
+    getFrustumPlanes(aspect: number): void;
+
+    /**
+     * Not implemented yet
+     */
+    getOrientation(): void;
+
+    /**
+     * Not implemented yet
+     */
+    getOrientationWXYZ(): void;
+
+
+    /**
+     *
+     * @default false
+     */
+    getParallelProjection(): boolean;
+
+    /**
+     * 
+     * @default 1
+     */
+    getParallelScale(): number;
+
+    /**
+     * 
+     * @default 1.0
+     */
+    getPhysicalScale(): number;
+
+    /**
+     * 
+     * @param result 
+     */
+    getPhysicalToWorldMatrix(result: mat4): void;
+
+    /**
+     * 
+     */
+    getPhysicalTranslation(): number[];
+
+    /**
+     * 
+     */
+    getPhysicalTranslationByReference(): number[];
+
+    /**
+     * 
+     * @default [0, 0, -1],
+     */
+    getPhysicalViewNorth(): number[];
+
+    /**
+     * 
+     */
+    getPhysicalViewNorthByReference(): number[];
+
+    /**
+     * 
+     * @default [0, 1, 0]
+     */
+    getPhysicalViewUp(): number[];
+
+    /**
+     * 
+     */
+    getPhysicalViewUpByReference(): number[];
+
+
+    /**
+     * 
+     * @default [0, 0, 1]
+     */
+    getPosition(): number[];
+
+    /**
+     * 
+     */
+    getPositionByReference(): number[];
 
     /**
      * 
      * @param aspect 
      * @param nearz 
      * @param farz 
+     * @default null
      */
-    getCompositeProjectionMatrix(aspect: any, nearz: any, farz: any): void;
+    getProjectionMatrix(aspect: number, nearz: number, farz: number): null | mat4;
+
+    /**
+     * Not implemented yet
+     * Get the roll angle of the camera about the direction of projection.
+     */
+    getRoll(): void;
 
     /**
      * 
-     * @param x 
-     * @param y 
-     * @param z 
+     * @default [-0.5, -0.5, -0.5]
      */
-    setDirectionOfProjection(x: any, y: any, z: any): void;
+    getScreenBottomLeft(): number[];
+
+    /**
+     * 
+     * @default [-0.5, -0.5, -0.5]
+     */
+    getScreenBottomLeftByReference(): number[];
+
+    /**
+     * 
+     * @default [0.5, -0.5, -0.5]
+     */
+    getScreenBottomRight(): number[];
+
+    /**
+     * 
+     * @default [0.5, -0.5, -0.5]
+     */
+    getScreenBottomRightByReference(): number[];
+
+    /**
+     * 
+     * @default [0.5, 0.5, -0.5]
+     */
+    getScreenTopRight(): number[];
+
+    /**
+     * 
+     * @default [0.5, 0.5, -0.5]
+     */
+    getScreenTopRightByReference(): number[];
+
+    /**
+     * 
+     * @returns  
+     */
+    getThickness(): number;
+
+    /**
+     * Get the value of the UseHorizontalViewAngle instance variable.
+     * @default false
+     */
+    getUseHorizontalViewAngle(): boolean;
+
+    /**
+     * Get use offaxis frustum.
+     * OffAxis frustum is used for off-axis frustum calculations specifically for 
+     * stereo rendering. For reference see "High Resolution Virtual Reality", in Proc. 
+     * SIGGRAPH '92, Computer Graphics, pages 195-202, 1992.
+     * @default false
+     */
+    getUseOffAxisProjection(): boolean;
+
+    /**
+     *
+     * @default 30
+     */
+    getViewAngle(): number;
+
+    /**
+     *
+     * @default null
+     */
+    getViewMatrix(): null | mat4;
+
+    /**
+     * Get the ViewPlaneNormal.
+     * This vector will point opposite to the direction of projection, 
+     * unless you have created a sheared output view using SetViewShear/SetObliqueAngles.
+     * @default [0, 0, 1]
+     */
+    getViewPlaneNormal(): number[];
+
+    /**
+     * Get the ViewPlaneNormal by reference.
+     */
+    getViewPlaneNormalByReference(): number[];
+
+    /**
+     * Get ViewUp vector.
+     * @default [0, 1, 0]
+     */
+    getViewUp(): number[];
+
+    /**
+     * Get ViewUp vector by reference.
+     * @default [0, 1, 0]
+     */
+    getViewUpByReference(): number[];
+
+    /**
+     * Get the center of the window in viewport coordinates.
+     * The viewport coordinate range is ([-1,+1],[-1,+1]). 
+     * @default [0, 0]
+     */
+    getWindowCenter(): number[];
+
+    /**
+     *
+     * @default [0, 0]
+     */
+    getWindowCenterByReference(): number[];
+
+    /**
+     * 
+     * @param result 
+     */
+    getWorldToPhysicalMatrix(result: mat4): void;
+
+    /**
+     * Recompute the ViewUp vector to force it to be perpendicular to camera->focalpoint vector.
+     */
+    orthogonalizeViewUp(): void;
+
+    /**
+     * 
+     * @param ori 
+     */
+    physicalOrientationToWorldDirection(ori: number[]): any;
+
+    /**
+     * Rotate the focal point about the cross product of the view up vector and the direction of projection, using the camera's position as the center of rotation.
+     * @param angle 
+     */
+    pitch(angle: number): void;
+
+
+    /**
+     * Rotate the camera about the direction of projection.
+     * @param angle 
+     */
+    roll(angle: number): void;
+
+
+    /**
+     * Set the location of the near and far clipping planes along the direction of projection.
+     * @param near 
+     * @param far 
+     */
+    setClippingRange(near: number, far: number): boolean;
+
+    /**
+     * 
+     * @param clippingRange 
+     */
+    setClippingRangeFrom(clippingRange: number[]): boolean ;
 
     /**
      * used to handle convert js device orientation angles
@@ -252,7 +500,49 @@ export interface vtkCamera extends VtkObject {
      * @param gamma 
      * @param screen 
      */
-    setDeviceAngles(alpha: any, beta: any, gamma: any, screen: any): void;
+    setDeviceAngles(alpha: number, beta: number, gamma: number, screen: number): boolean;
+    
+    /**
+     * 
+     * @param x 
+     * @param y 
+     * @param z 
+     */
+    setDirectionOfProjection(x: number, y: number, z: number): boolean;
+
+    /**
+     * 
+     * @param distance 
+     */
+    setDistance(distance: number): boolean;
+
+    /**
+     * 
+     * @param x 
+     * @param y 
+     * @param z 
+     */
+    setFocalPoint(x: number, y: number, z: number): boolean;
+
+    /**
+     * 
+     * @param focalPoint 
+     */
+    setFocalPointFrom(focalPoint: number[]): boolean;
+
+    /**
+     * Not implement yet
+     * Set the oblique viewing angles.
+     * The first angle, alpha, is the angle (measured from the horizontal) that rays along 
+     * the direction of projection will follow once projected onto the 2D screen. 
+     * The second angle, beta, is the angle between the view plane and the direction of projection. 
+     * This creates a shear transform x' = x + dz*cos(alpha)/tan(beta), y' = dz*sin(alpha)/tan(beta) where dz is the distance of the point from the focal plane. 
+     * The angles are (45,90) by default. Oblique projections commonly use (30,63.435).
+     * 
+     * @param alpha 
+     * @param beta 
+     */
+    setObliqueAngles(alpha: number, beta: number): boolean;
 
     /**
      * 
@@ -261,14 +551,219 @@ export interface vtkCamera extends VtkObject {
      * @param y 
      * @param z 
      */
-    setOrientationWXYZ(degrees: any, x: any, y: any, z: any): void;
+    setOrientationWXYZ(degrees: number, x: number, y: number, z: number): boolean;
 
     /**
      * 
-     * @param bounds 
-     * @return  
+     * @param parallelProjection 
      */
-    computeClippingRange(bounds: any): any;
+    setParallelProjection(parallelProjection: boolean): boolean;
+
+
+
+    /**
+     * 
+     * @param parallelScale 
+     */
+    setParallelScale(parallelScale: number): boolean;
+
+    /**
+     * 
+     * @param physicalScale 
+     */
+    setPhysicalScale(physicalScale: number): boolean;
+
+    /**
+     * 
+     * @param x 
+     * @param y 
+     * @param z 
+     */
+    setPhysicalTranslation(x: number, y: number, z: number): boolean;
+
+    /**
+     * 
+     * @param physicalTranslation 
+     */
+    setPhysicalTranslationFrom(physicalTranslation: number[]): boolean;
+
+    /**
+     * 
+     * @param x 
+     * @param y 
+     * @param z 
+     */
+    setPhysicalViewNorth(x: number, y: number, z: number): boolean;
+
+    /**
+     * 
+     * @param physicalViewNorth 
+     */
+    setPhysicalViewNorthFrom(physicalViewNorth: number[]): boolean;
+
+    /**
+     * 
+     * @param x 
+     * @param y 
+     * @param z 
+     */
+    setPhysicalViewUp(x: number, y: number, z: number): boolean;
+
+    /**
+     * 
+     * @param physicalViewUp 
+     */
+    setPhysicalViewUpFrom(physicalViewUp: number[]): boolean;
+
+    /**
+     * 
+     * @param x 
+     * @param y 
+     * @param z 
+     */
+    setPosition(x: number, y: number, z: number): boolean;
+
+    /**
+     * 
+     * @param mat 
+     */
+    setProjectionMatrix(mat: mat4): boolean;
+
+    /**
+     * Not implemented yet
+     * @param angle 
+     */
+    setRoll(angle: number): boolean;
+
+
+    /**
+     * 
+     * @param x 
+     * @param y 
+     * @param z 
+     */
+    setScreenBottomLeft(x: number, y: number, z: number): boolean;
+
+    /**
+     * 
+     * @param screenBottomLeft 
+     */
+    setScreenBottomLeftFrom(screenBottomLeft: number[]): boolean;
+
+    /**
+     * 
+     * @param x 
+     * @param y 
+     * @param z 
+     */
+    setScreenBottomRight(x: number, y: number, z: number): boolean;
+
+    /**
+     * 
+     * @param screenBottomRight 
+     */
+    setScreenBottomRightFrom(screenBottomRight: number[]): boolean;
+
+    /**
+     * 
+     * @param x 
+     * @param y 
+     * @param z 
+     */
+    setScreenTopRight(x: number, y: number, z: number): boolean;
+
+    /**
+     * 
+     * @param screenTopRight 
+     */
+    setScreenTopRightFrom(screenTopRight: number[]): boolean;
+
+
+    /**
+     * 
+     * @param thickness 
+     */
+    setThickness(thickness: number): boolean;
+
+    /**
+     * 
+     * @param thickness 
+     */
+    setThicknessFromFocalPoint(thickness: number): boolean;
+
+    /**
+     * 
+     * @param useHorizontalViewAngle 
+     */
+    setUseHorizontalViewAngle(useHorizontalViewAngle: boolean): boolean;
+    
+    /**
+     * 
+     * @param useOffAxisProjection 
+     */
+    setUseOffAxisProjection(useOffAxisProjection: boolean): boolean;
+
+    /**
+     * 
+     * @param viewAngle 
+     */
+    setViewAngle(viewAngle: number): boolean;
+
+    
+    /**
+     * 
+     * @param mat 
+     */
+    setViewMatrix(mat: mat4): boolean;
+
+    /**
+     * 
+     * @param x 
+     * @param y 
+     * @param z 
+     */
+    setViewUp(x: number, y: number, z: number): boolean;
+
+    /**
+     * 
+     * @param viewUp 
+     */
+    setViewUpFrom(viewUp: number[]): boolean;
+
+    /**
+     * Set the center of the window in viewport coordinates.
+     * The viewport coordinate range is ([-1,+1],[-1,+1]). 
+     * This method is for if you have one window which consists of several viewports, or if you have several screens which you want to act together as one large screen
+     * @param x 
+     * @param y 
+     */
+    setWindowCenter(x: number, y: number): boolean;
+
+    /**
+     * Set the center of the window in viewport coordinates from an array.
+     * @param windowCenter 
+     */
+    setWindowCenterFrom(windowCenter: number[]): boolean;
+
+    /**
+     * 
+     * @param x 
+     * @param y 
+     * @param z 
+     */
+    translate(x: number, y: number, z: number): void;
+
+    /**
+     * Rotate the focal point about the view up vector, using the camera's position as the center of rotation.
+     * @param angle 
+     */
+    yaw(angle: number): void;
+
+    /**
+     * In perspective mode, decrease the view angle by the specified factor.
+     * @param factor 
+     */
+    zoom(factor: number): void;
 }
 
 /**
@@ -276,9 +771,10 @@ export interface vtkCamera extends VtkObject {
  *
  * @param publicAPI object on which methods will be bounds (public)
  * @param model object on which data structure will be bounds (protected)
- * @param initialValues (default: {})
+ * @param initialValues 
+ * @default
  */
-export function extend(publicAPI: object, model: object, initialValues ? : {}): void;
+export function extend(publicAPI: object, model: object, initialValues?: ICameraInitialValues): void;
 
 /**
  * Method use to create a new instance of vtkCamera with its focal point at the origin, 
@@ -286,7 +782,7 @@ export function extend(publicAPI: object, model: object, initialValues ? : {}): 
  * and the clipping range is (.1,1000).
  * @param initialValues for pre-setting some of its content
  */
-export function newInstance(initialValues ? : IValues): vtkCamera;
+export function newInstance(initialValues?: ICameraInitialValues): vtkCamera;
 
 /** 
  * vtkCamera is a virtual camera for 3D rendering. It provides methods
