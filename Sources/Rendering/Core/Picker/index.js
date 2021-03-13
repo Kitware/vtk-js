@@ -1,6 +1,6 @@
 import macro from 'vtk.js/Sources/macro';
 import vtkAbstractPicker from 'vtk.js/Sources/Rendering/Core/AbstractPicker';
-import vtkBox from 'vtk.js/Sources/Common/DataModel/Box';
+import vtkBoundingBox from 'vtk.js/Sources/Common/DataModel/BoundingBox';
 import * as vtkMath from 'vtk.js/Sources/Common/Core/Math';
 import { mat4, vec4 } from 'gl-matrix';
 
@@ -91,7 +91,7 @@ function vtkPicker(publicAPI, model) {
     let pickable = false;
     const p1Mapper = vec4.create();
     const p2Mapper = vec4.create();
-    let bounds = [0.0, 0.0, 0.0, 0.0, 0.0, 0.0];
+    const bbox = [...vtkBoundingBox.INIT_BOUNDS];
     const t = [];
     const hitPosition = [];
     const view = renderer.getRenderWindow().getViews()[0];
@@ -281,10 +281,12 @@ function vtkPicker(publicAPI, model) {
         }
 
         if (mapper) {
-          bounds = mapper.getBounds();
+          vtkBoundingBox.setBounds(bbox, mapper.getBounds());
+        } else {
+          vtkBoundingBox.reset(bbox);
         }
 
-        if (vtkBox.intersectBox(bounds, p1Mapper, ray, hitPosition, t)) {
+        if (vtkBoundingBox.intersectBox(bbox, p1Mapper, ray, hitPosition, t)) {
           t[0] = publicAPI.intersectWithLine(
             p1Mapper,
             p2Mapper,

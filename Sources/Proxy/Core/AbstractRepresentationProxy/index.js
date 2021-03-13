@@ -281,11 +281,11 @@ function vtkAbstractRepresentationProxy(publicAPI, model) {
 
   // Fast getter for rendering
   const nestedProps = [];
-  const bbox = vtkBoundingBox.newInstance();
+  const bbox = [...vtkBoundingBox.INIT_BOUNDS];
 
   function handleProp(prop) {
     if (prop) {
-      bbox.addBounds(prop.getBounds());
+      vtkBoundingBox.addBounds(bbox, prop.getBounds());
       nestedProps.push(prop);
     }
   }
@@ -295,12 +295,12 @@ function vtkAbstractRepresentationProxy(publicAPI, model) {
   publicAPI.getBounds = () => {
     if (model.boundMTime < model.mtime) {
       model.boundMTime = model.mtime;
-      bbox.reset();
+      vtkBoundingBox.reset(bbox);
       nestedProps.length = 0;
       model.actors.forEach(handleProp);
       model.volumes.forEach(handleProp);
     }
-    return bbox.getBounds();
+    return bbox;
   };
 }
 

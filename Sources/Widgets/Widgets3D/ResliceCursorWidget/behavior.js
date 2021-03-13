@@ -289,9 +289,8 @@ export default function widgetBehavior(publicAPI, model) {
   publicAPI.getBoundedCenter = (newCenter) => {
     const oldCenter = model.widgetState.getCenter();
     const imageBounds = model.widgetState.getImage().getBounds();
-    const bounds = vtkBoundingBox.newInstance({ bounds: imageBounds });
 
-    if (bounds.containsPoint(...newCenter)) {
+    if (vtkBoundingBox.containsPoint(imageBounds, ...newCenter)) {
       return newCenter;
     }
 

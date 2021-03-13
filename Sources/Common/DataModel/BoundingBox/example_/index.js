@@ -1,11 +1,11 @@
-import BoundingBox from '..';
+import vtBoundingBox from '..';
 
-const bbox = BoundingBox.newInstance();
+const bbox = [...vtkBoundingBox.INIT_BOUNDS];
 
-console.log('init', bbox.getBounds());
-bbox.addPoint(0, 0, 0);
-console.log('0, 0, 0', bbox.getBounds());
-bbox.addPoint(1, 2, 3);
-console.log('1, 2, 3', bbox.getBounds());
-bbox.addPoint(-3, -2, -5);
-console.log('-3, -2, -5', bbox.getBounds());
+console.log('init', bbox);
+vtkBoundingBox.addPoint(bbox, 0, 0, 0);
+console.log('0, 0, 0', bbox);
+vtkBoundingBox.addPoint(bbox, 1, 2, 3);
+console.log('1, 2, 3', bbox);
+vtkBoundingBox.addPoint(bbox, -3, -2, -5);
+console.log('-3, -2, -5', bbox);
