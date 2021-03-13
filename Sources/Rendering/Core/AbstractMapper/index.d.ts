@@ -45,7 +45,7 @@ export interface vtkAbstractMapper extends VtkAlgorithm {
      * Set clipping planes.
      * @param planes
      */
-    setClippingPlanes(planes: vtkPlane[]): void;
+    setClippingPlanes(planes: any[]): void;
 
     /**
      * 

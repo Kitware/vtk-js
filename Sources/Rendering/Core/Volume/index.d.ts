@@ -32,7 +32,7 @@ export interface vtkVolume extends vtkProp3D {
      /**
       * 
       */
-     getProperty(): void;
+     getProperty(): vtkProperty;
          
      /**
       * 

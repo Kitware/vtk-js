@@ -1,6 +1,7 @@
 import vtkActor from 'vtk.js/Sources/Rendering/Core/Actor';
 import vtkCamera from 'vtk.js/Sources/Rendering/Core/Camera';
-import vtkRendererWindow from 'vtk.js/Sources/Rendering/Core/RendererWindow';
+import vtkLight from 'vtk.js/Sources/Rendering/Core/Light';
+import vtkRenderWindow from 'vtk.js/Sources/Rendering/Core/RenderWindow';
 import vtkProp from 'vtk.js/Sources/Rendering/Core/Prop';
 import vtkViewport from 'vtk.js/Sources/Rendering/Core/Viewport';
 import vtkVolume from 'vtk.js/Sources/Rendering/Core/Volume';
@@ -16,7 +17,7 @@ interface IRendererInitialValues {
     /**
      * 
      */
-    ambient: Array<number>;
+    ambient: number[];
 
     /**
      * 
@@ -46,17 +47,17 @@ interface IRendererInitialValues {
     /**
      * 
      */
-    lights: Array<any>;
+    lights: vtkLight[];
 
     /**
      * 
      */
-    actors: Array<any>;
+    actors: vtkActor[];
 
     /**
      * 
      */
-    volumes: Array<any>;
+    volumes: vtkVolume[];
 
     /**
      * 
@@ -689,13 +690,13 @@ export interface vtkRenderer extends vtkViewport {
  * @param model object on which data structure will be bounds (protected)
  * @param initialValues (default: {})
  */
-export function extend(publicAPI: object, model: object, initialValues?: IRendererValues): void;
+export function extend(publicAPI: object, model: object, initialValues?: IRendererInitialValues): void;
 
 /**
  * Method use to create a new instance of vtkRenderer.
  * @param initialValues for pre-setting some of its content
  */
-export function newInstance(initialValues?: IRendererValues): vtkRenderer;
+export function newInstance(initialValues?: IRendererInitialValues): vtkRenderer;
 
 /** 
  * vtkRenderer is a Viewport designed to hold 3D properties. It contains
