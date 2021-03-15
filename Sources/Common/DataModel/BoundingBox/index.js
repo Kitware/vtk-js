@@ -14,7 +14,7 @@ const INIT_BOUNDS = [
 // Global methods
 // ----------------------------------------------------------------------------
 
-function equals(a, b) {
+export function equals(a, b) {
   return (
     a[0] === b[0] &&
     a[1] === b[1] &&
@@ -25,13 +25,13 @@ function equals(a, b) {
   );
 }
 
-function isValid(bounds) {
+export function isValid(bounds) {
   return (
     bounds[0] <= bounds[1] && bounds[2] <= bounds[3] && bounds[4] <= bounds[5]
   );
 }
 
-function setBounds(bounds, otherBounds) {
+export function setBounds(bounds, otherBounds) {
   bounds[0] = otherBounds[0];
   bounds[1] = otherBounds[1];
   bounds[2] = otherBounds[2];
@@ -41,11 +41,11 @@ function setBounds(bounds, otherBounds) {
   return bounds;
 }
 
-function reset(bounds) {
+export function reset(bounds) {
   return setBounds(bounds, INIT_BOUNDS);
 }
 
-function addPoint(bounds, ...xyz) {
+export function addPoint(bounds, ...xyz) {
   const [xMin, xMax, yMin, yMax, zMin, zMax] = bounds;
   bounds[0] = xMin < xyz[0] ? xMin : xyz[0];
   bounds[1] = xMax > xyz[0] ? xMax : xyz[0];
@@ -55,7 +55,7 @@ function addPoint(bounds, ...xyz) {
   bounds[5] = zMax > xyz[2] ? zMax : xyz[2];
 }
 
-function addBounds(bounds, xMin, xMax, yMin, yMax, zMin, zMax) {
+export function addBounds(bounds, xMin, xMax, yMin, yMax, zMin, zMax) {
   const [_xMin, _xMax, _yMin, _yMax, _zMin, _zMax] = bounds;
   if (zMax === undefined) {
     bounds[0] = Math.min(xMin[0], _xMin);
@@ -74,7 +74,7 @@ function addBounds(bounds, xMin, xMax, yMin, yMax, zMin, zMax) {
   }
 }
 
-function setMinPoint(bounds, x, y, z) {
+export function setMinPoint(bounds, x, y, z) {
   const [xMin, xMax, yMin, yMax, zMin, zMax] = bounds;
   bounds[0] = x;
   bounds[1] = x > xMax ? x : xMax;
@@ -85,7 +85,7 @@ function setMinPoint(bounds, x, y, z) {
   return xMin !== x || yMin !== y || zMin !== z;
 }
 
-function setMaxPoint(bounds, x, y, z) {
+export function setMaxPoint(bounds, x, y, z) {
   const [xMin, xMax, yMin, yMax, zMin, zMax] = bounds;
   bounds[0] = x < xMin ? x : xMin;
   bounds[1] = x;
@@ -97,7 +97,7 @@ function setMaxPoint(bounds, x, y, z) {
   return xMax !== x || yMax !== y || zMax !== z;
 }
 
-function inflate(bounds, delta) {
+export function inflate(bounds, delta) {
   bounds[0] -= delta;
   bounds[1] += delta;
   bounds[2] -= delta;
@@ -106,7 +106,7 @@ function inflate(bounds, delta) {
   bounds[5] += delta;
 }
 
-function scale(bounds, sx, sy, sz) {
+export function scale(bounds, sx, sy, sz) {
   if (!isValid(bounds)) {
     return false;
   }
@@ -137,7 +137,7 @@ function scale(bounds, sx, sy, sz) {
   return true;
 }
 
-function getCenter(bounds) {
+export function getCenter(bounds) {
   return [
     0.5 * (bounds[0] + bounds[1]),
     0.5 * (bounds[2] + bounds[3]),
@@ -145,27 +145,27 @@ function getCenter(bounds) {
   ];
 }
 
-function getLength(bounds, index) {
+export function getLength(bounds, index) {
   return bounds[index * 2 + 1] - bounds[index * 2];
 }
 
-function getLengths(bounds) {
+export function getLengths(bounds) {
   return [getLength(bounds, 0), getLength(bounds, 1), getLength(bounds, 2)];
 }
 
-function getXRange(bounds) {
+export function getXRange(bounds) {
   return bounds.slice(0, 2);
 }
 
-function getYRange(bounds) {
+export function getYRange(bounds) {
   return bounds.slice(2, 4);
 }
 
-function getZRange(bounds) {
+export function getZRange(bounds) {
   return bounds.slice(4, 6);
 }
 
-function getMaxLength(bounds) {
+export function getMaxLength(bounds) {
   const l = getLengths(bounds);
   if (l[0] > l[1]) {
     if (l[0] > l[2]) {
@@ -181,7 +181,7 @@ function getMaxLength(bounds) {
   return l[2];
 }
 
-function getDiagonalLength(bounds) {
+export function getDiagonalLength(bounds) {
   if (isValid(bounds)) {
     const l = getLengths(bounds);
     return Math.sqrt(l[0] * l[0] + l[1] * l[1] + l[2] * l[2]);
@@ -189,10 +189,11 @@ function getDiagonalLength(bounds) {
   return null;
 }
 
-function getMinPoint(bounds) {
+export function getMinPoint(bounds) {
   return [bounds[0], bounds[2], bounds[4]];
 }
-function getMaxPoint(bounds) {
+
+export function getMaxPoint(bounds) {
   return [bounds[1], bounds[3], bounds[5]];
 }
 
@@ -200,7 +201,7 @@ function oppositeSign(a, b) {
   return (a <= 0 && b >= 0) || (a >= 0 && b <= 0);
 }
 
-function getCorners(bounds, corners) {
+export function getCorners(bounds, corners) {
   let count = 0;
   for (let ix = 0; ix < 2; ix++) {
     for (let iy = 2; iy < 4; iy++) {
@@ -213,7 +214,7 @@ function getCorners(bounds, corners) {
 }
 
 // Computes the two corners with minimal and miximal coordinates
-function computeCornerPoints(bounds, point1, point2) {
+export function computeCornerPoints(bounds, point1, point2) {
   point1[0] = bounds[0];
   point1[1] = bounds[2];
   point1[2] = bounds[4];
@@ -223,7 +224,7 @@ function computeCornerPoints(bounds, point1, point2) {
   point2[2] = bounds[5];
 }
 
-function computeScale3(bounds, scale3 = []) {
+export function computeScale3(bounds, scale3 = []) {
   const center = getCenter(bounds);
   scale3[0] = bounds[1] - center[0];
   scale3[1] = bounds[3] - center[1];
@@ -240,7 +241,7 @@ function computeScale3(bounds, scale3 = []) {
  * @param {array} v second vector
  * @param {array} w third vector
  */
-function computeLocalBounds(points, u, v, w) {
+export function computeLocalBounds(points, u, v, w) {
   const bounds = [].concat(INIT_BOUNDS);
   const pointsData = points.getData();
   for (let i = 0; i < pointsData.length; i += 3) {
@@ -263,7 +264,7 @@ function computeLocalBounds(points, u, v, w) {
 // directions, coord[3] is the location of hit, and t is the parametric
 // coordinate along line. (Notes: the intersection ray dir[3] is NOT
 // normalized.  Valid intersections will only occur between 0<=t<=1.)
-function intersectBox(bounds, origin, dir, coord, tolerance) {
+export function intersectBox(bounds, origin, dir, coord, tolerance) {
   let inside = true;
   const quadrant = [];
   let whichPlane = 0;
@@ -339,7 +340,7 @@ function intersectBox(bounds, origin, dir, coord, tolerance) {
 // The plane is infinite in extent and defined by an origin and normal.The function indicates
 // whether the plane intersects, not the particulars of intersection points and such
 // The function returns non-zero if the plane and box intersect; zero otherwise.
-function intersectPlane(bounds, origin, normal) {
+export function intersectPlane(bounds, origin, normal) {
   const p = [];
   let d = 0;
   let sign = 1;
@@ -367,7 +368,7 @@ function intersectPlane(bounds, origin, normal) {
   return 0; // no intersection
 }
 
-function intersect(bounds, bBounds) {
+export function intersect(bounds, bBounds) {
   if (!(isValid(bounds) && isValid(bBounds))) {
     return false;
   }
@@ -419,7 +420,7 @@ function intersect(bounds, bBounds) {
   return true;
 }
 
-function intersects(bounds, bBounds) {
+export function intersects(bounds, bBounds) {
   if (!(isValid(bounds) && isValid(bBounds))) {
     return false;
   }
@@ -455,7 +456,7 @@ function intersects(bounds, bBounds) {
   return true;
 }
 
-function containsPoint(bounds, x, y, z) {
+export function containsPoint(bounds, x, y, z) {
   if (x < bounds[0] || x > bounds[1]) {
     return false;
   }
@@ -471,7 +472,7 @@ function containsPoint(bounds, x, y, z) {
   return true;
 }
 
-function contains(bounds, otherBounds) {
+export function contains(bounds, otherBounds) {
   // if either box is not valid or they don't intersect
   if (!intersects(bounds, otherBounds)) {
     return false;
@@ -494,7 +495,7 @@ function contains(bounds, otherBounds) {
  * @param {array} origin
  * @param {array} normal
  */
-function cutWithPlane(bounds, origin, normal) {
+export function cutWithPlane(bounds, origin, normal) {
   // Index[0..2] represents the order of traversing the corners of a cube
   // in (x,y,z), (y,x,z) and (z,x,y) ordering, respectively
   const index = [
@@ -563,6 +564,153 @@ function cutWithPlane(bounds, origin, normal) {
 }
 
 // ----------------------------------------------------------------------------
+// Light Weight class
+// ----------------------------------------------------------------------------
+
+class BoundingBox {
+  constructor(refBounds) {
+    this.bounds = refBounds;
+    if (!this.bounds) {
+      this.bounds = new Float64Array(6);
+      setBounds(this.bounds, INIT_BOUNDS);
+    }
+  }
+
+  getBounds() {
+    return this.bounds;
+  }
+
+  equals(otherBounds) {
+    return equals(this.bounds, otherBounds);
+  }
+
+  isValid() {
+    return isValid(this.bounds);
+  }
+
+  setBounds(otherBounds) {
+    return setBounds(this.bounds, otherBounds);
+  }
+
+  reset() {
+    return reset(this.bounds);
+  }
+
+  addPoint(...xyz) {
+    return addPoint(this.bounds, xyz);
+  }
+
+  addBounds(xMin, xMax, yMin, yMax, zMin, zMax) {
+    return addBounds(this.bounds, xMin, xMax, yMin, yMax, zMin, zMax);
+  }
+
+  setMinPoint(x, y, z) {
+    return setMinPoint(this.bounds, x, y, z);
+  }
+
+  setMaxPoint(x, y, z) {
+    return setMaxPoint(this.bounds, x, y, z);
+  }
+
+  inflate(delta) {
+    return inflate(this.bounds, delta);
+  }
+
+  scale(sx, sy, sz) {
+    return scale(this.bounds, sx, sy, sz);
+  }
+
+  getCenter() {
+    return getCenter(this.bounds);
+  }
+
+  getLength(index) {
+    return getLength(this.bounds, index);
+  }
+
+  getLengths() {
+    return getLengths(this.bounds);
+  }
+
+  getMaxLength() {
+    return getMaxLength(this.bounds);
+  }
+
+  getDiagonalLength() {
+    return getDiagonalLength(this.bounds);
+  }
+
+  getMinPoint() {
+    return getMinPoint(this.bounds);
+  }
+
+  getMaxPoint() {
+    return getMaxPoint(this.bounds);
+  }
+
+  getXRange() {
+    return getXRange(this.bounds);
+  }
+
+  getYRange() {
+    return getYRange(this.bounds);
+  }
+
+  getZRange() {
+    return getZRange(this.bounds);
+  }
+
+  getCorners(corners) {
+    return getCorners(this.bounds, corners);
+  }
+
+  computeCornerPoints(point1, point2) {
+    return computeCornerPoints(this.bounds, point1, point2);
+  }
+
+  computeLocalBounds(u, v, w) {
+    return computeLocalBounds(this.bounds, u, v, w);
+  }
+
+  computeScale3(scale3) {
+    return computeScale3(this.bounds, scale3);
+  }
+
+  cutWithPlane(origin, normal) {
+    return cutWithPlane(this.bounds, origin, normal);
+  }
+
+  intersectBox(origin, dir, coord, tolerance) {
+    return intersectBox(this.bounds, dir, coord, tolerance);
+  }
+
+  intersectPlane(origin, normal) {
+    return intersectPlane(this.bounds, origin, normal);
+  }
+
+  intersect(otherBounds) {
+    return intersect(this.bounds, otherBounds);
+  }
+
+  intersects(otherBounds) {
+    return intersects(this.bounds, otherBounds);
+  }
+
+  containsPoint(x, y, z) {
+    return containsPoint(this.bounds, x, y, z);
+  }
+
+  contains(otherBounds) {
+    return intersects(this.bounds, otherBounds);
+  }
+}
+
+function newInstance(initialValues) {
+  const bounds = initialValues && initialValues.bounds;
+  return new BoundingBox(bounds);
+}
+
+// ----------------------------------------------------------------------------
 // Static API
 // ----------------------------------------------------------------------------
 
@@ -601,4 +749,4 @@ export const STATIC = {
   INIT_BOUNDS,
 };
 
-export default { ...STATIC };
+export default { newInstance, ...STATIC };
