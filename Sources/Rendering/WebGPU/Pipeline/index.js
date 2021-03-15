@@ -14,7 +14,7 @@ function vtkWebGPUPipeline(publicAPI, model) {
     const device = window.getDevice();
 
     const pipelineDesc = {
-      primitiveTopology: 'triangle-list',
+      primitiveTopology: model.topology,
       depthStencilState: {
         depthWriteEnabled: true,
         depthCompare: 'less',
@@ -102,6 +102,7 @@ const DEFAULT_VALUES = {
   layouts: null,
   shaderDescriptions: null,
   vertexState: null,
+  topology: null,
 };
 
 // ----------------------------------------------------------------------------
@@ -114,7 +115,7 @@ export function extend(publicAPI, model, initialValues = {}) {
   model.layouts = [];
   model.shaderDescriptions = [];
 
-  macro.setGet(publicAPI, model, ['device', 'vertexState']);
+  macro.setGet(publicAPI, model, ['device', 'topology', 'vertexState']);
 
   // For more macro methods, see "Sources/macro.js"
   // Object specific methods

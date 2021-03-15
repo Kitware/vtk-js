@@ -24,7 +24,7 @@ function vtkWebGPUTextureManager(publicAPI, model) {
   model.classHierarchy.push('vtkWebGPUTextureManager');
 
   publicAPI.getTexture = (req) => {
-    if (Object.prototype.hasOwnProperty.call(req, 'source')) {
+    if (req.source) {
       // if a matching texture already exists then return it
       if (model.textures.has(req.source)) {
         const dabuffers = model.textures.get(req.source);
@@ -82,7 +82,7 @@ function vtkWebGPUTextureManager(publicAPI, model) {
     // cache the texture if we have a source
     // We create a new req that only has the fields required for
     // a comparison to avoid GC cycles
-    if (Object.prototype.hasOwnProperty.call(req, 'source')) {
+    if (req.source) {
       if (!model.textures.has(req.source)) {
         model.textures.set(req.source, []);
       }
