@@ -1,6 +1,5 @@
 import { VtkObject } from "vtk.js/Sources/macro";
 import vtkRenderer from "vtk.js/Sources/Rendering/Core/Renderer";
-import vtkRenderWindow from "vtk.js/Sources/Rendering/Core/Viewport";
 
 interface IRenderWindowInitialValues {
     /**

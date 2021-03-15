@@ -285,12 +285,12 @@ export interface vtkRenderer extends vtkViewport {
     /**
      * 
      */
-    getLights(): vtkLigth[];
+    getLights(): vtkLight[];
 
     /**
      * 
      */
-    getLightsByReference(): vtkLigth[];
+    getLightsByReference(): vtkLight[];
 
     /**
      * 

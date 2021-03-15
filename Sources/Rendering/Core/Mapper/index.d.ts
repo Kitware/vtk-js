@@ -595,6 +595,17 @@ export interface vtkMapper extends vtkAbstractMapper3D {
      * values are used to map scalars into lookup table. Has no effect when
      * UseLookupTableScalarRange is true.
      * 
+     * @param min
+     * @param max
+     * @default [0, 1]
+     */
+    setScalarRange(min: number, max: number): boolean;
+
+    /**
+     * Specify range in terms of scalar minimum and maximum (smin,smax). These
+     * values are used to map scalars into lookup table. Has no effect when
+     * UseLookupTableScalarRange is true.
+     * 
      * @param scalarRange
      * @default [0, 1]
      */

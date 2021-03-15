@@ -1,8 +1,8 @@
 import { VtkObject } from "vtk.js/Sources/macro";
 import vtkActor from "vtk.js/Sources/Rendering/Core/Actor";
 import vtkActor2D from "vtk.js/Sources/Rendering/Core/Actor2D";
-import vtkTexture from "vtk.js/Sources/Rendering/Texture";
-import vtkVolume from "vtk.js/Sources/Rendering/Volume";
+import vtkTexture from "vtk.js/Sources/Rendering/Core/Texture";
+import vtkVolume from "vtk.js/Sources/Rendering/Core/Volume";
 
 
 interface IPropInitialValues {

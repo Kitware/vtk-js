@@ -20,42 +20,42 @@ export interface vtkAnnotatedCubeActor extends vtkActor {
 	 * @param {vtkProperty} prop face property
 	 * @returns 
 	 */
-	setXPlusFaceProperty(prop: vtkProperty): boolean;
+	setXPlusFaceProperty(prop: object): boolean;
 
 	/**
 	 * The -X face property.
 	 * @param {vtkProperty} prop face property
 	 * @returns 
 	 */
-	setXMinusFaceProperty(prop: vtkProperty): boolean;
+	setXMinusFaceProperty(prop: object): boolean;
 
 	/**
 	 * The +Y face property.
 	 * @param {vtkProperty} prop face property
 	 * @returns 
 	 */
-	setYPlusFaceProperty(prop: vtkProperty): boolean;
+	setYPlusFaceProperty(prop: object): boolean;
 
 	/**
 	 * The -Y face property.
 	 * @param {vtkProperty} prop face property
 	 * @returns 
 	 */
-	setYMinusFaceProperty(prop: vtkProperty): boolean;
+	setYMinusFaceProperty(prop: object): boolean;
 
 	/**
 	 * The +Z face property.
 	 * @param {vtkProperty} prop face property
 	 * @returns 
 	 */
-	setZPlusFaceProperty(prop: vtkProperty): boolean;
+	setZPlusFaceProperty(prop: object): boolean;
 
 	/**
 	 * The -Z face property.
 	 * @param {vtkProperty} prop face property
 	 * @returns 
 	 */
-	setZMinusFaceProperty(prop: vtkProperty): boolean;
+	setZMinusFaceProperty(prop: object): boolean;
 }
 
 /**

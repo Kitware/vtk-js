@@ -57,7 +57,7 @@ export interface vtkActor extends vtkProp3D {
     /**
      * 
      */
-    getBackfaceproperty(): vtkProperty;
+    getBackfaceProperty(): vtkProperty;
 
     /**
      * Get the bounds for this Actor as (Xmin,Xmax,Ymin,Ymax,Zmin,Zmax).
@@ -68,12 +68,12 @@ export interface vtkActor extends vtkProp3D {
     /**
      * 
      */
-    getForceopaque(): boolean;
+    getForceOpaque(): boolean;
 
     /**
      * 
      */
-    getForcetranslucent(): boolean;
+    getForceTranslucent(): boolean;
 
     /**
      * Return if the actor is opaque or not
@@ -111,19 +111,19 @@ export interface vtkActor extends vtkProp3D {
      * 
      * @param backfaceProperty 
      */
-    setBackfaceproperty(backfaceProperty: vtkProperty): boolean;
+    setBackfaceProperty(backfaceProperty: vtkProperty): boolean;
 
     /**
      * 
      * @param forceOpaque 
      */
-    setForceopaque(forceOpaque: vtkProperty): boolean;
+    setForceOpaque(forceOpaque: vtkProperty): boolean;
 
     /**
      * 
      * @param forceTranslucent 
      */
-    setForcetranslucent(forceTranslucent: boolean): boolean;
+    setForceTranslucent(forceTranslucent: boolean): boolean;
 
     /**
      * 

@@ -296,6 +296,14 @@ export interface vtkProperty extends VtkObject {
     setColor(r: number, g: number, b: number): boolean;
 
     /**
+     * Set the color of the object. Has the side effect of setting the
+     * ambient diffuse and specular colors as well. This is basically
+     * a quick overall color setting method.
+     * @param color 
+     */
+    setColor(color: number[]): boolean;
+
+    /**
      * Set the diffuse lighting coefficient.
      * @param diffuse 
      */
