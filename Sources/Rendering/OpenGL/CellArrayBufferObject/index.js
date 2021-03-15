@@ -5,7 +5,7 @@ import vtkBufferObject from 'vtk.js/Sources/Rendering/OpenGL/BufferObject';
 import { ObjectType } from 'vtk.js/Sources/Rendering/OpenGL/BufferObject/Constants';
 import { Representation } from 'vtk.js/Sources/Rendering/Core/Property/Constants';
 
-const { vtkDebugMacro, vtkErrorMacro } = macro;
+const { vtkErrorMacro } = macro;
 
 // ----------------------------------------------------------------------------
 // Static functions
@@ -141,32 +141,31 @@ function vtkOpenGLCellArrayBufferObject(publicAPI, model) {
       },
       polysToWireframe(numPoints, cellPts, offset) {
         // for polys we add a bunch of segments and close it
-        for (let i = 0; i < numPoints; ++i) {
-          addAPoint(cellPts[offset + i]);
-          addAPoint(cellPts[offset + ((i + 1) % numPoints)]);
+        if (numPoints > 2) {
+          for (let i = 0; i < numPoints; ++i) {
+            addAPoint(cellPts[offset + i]);
+            addAPoint(cellPts[offset + ((i + 1) % numPoints)]);
+          }
         }
       },
       stripsToWireframe(numPoints, cellPts, offset) {
-        // for strips we add a bunch of segments and close it
-        for (let i = 0; i < numPoints - 1; ++i) {
-          addAPoint(cellPts[offset + i]);
-          addAPoint(cellPts[offset + i + 1]);
-        }
-        for (let i = 0; i < numPoints - 2; i++) {
-          addAPoint(cellPts[offset + i]);
-          addAPoint(cellPts[offset + i + 2]);
+        if (numPoints > 2) {
+          // for strips we add a bunch of segments and close it
+          for (let i = 0; i < numPoints - 1; ++i) {
+            addAPoint(cellPts[offset + i]);
+            addAPoint(cellPts[offset + i + 1]);
+          }
+          for (let i = 0; i < numPoints - 2; i++) {
+            addAPoint(cellPts[offset + i]);
+            addAPoint(cellPts[offset + i + 2]);
+          }
         }
       },
       polysToSurface(npts, cellPts, offset) {
-        if (npts < 3) {
-          // ignore degenerate triangles
-          vtkDebugMacro('skipping degenerate triangle');
-        } else {
-          for (let i = 0; i < npts - 2; i++) {
-            addAPoint(cellPts[offset + 0]);
-            addAPoint(cellPts[offset + i + 1]);
-            addAPoint(cellPts[offset + i + 2]);
-          }
+        for (let i = 0; i < npts - 2; i++) {
+          addAPoint(cellPts[offset + 0]);
+          addAPoint(cellPts[offset + i + 1]);
+          addAPoint(cellPts[offset + i + 2]);
         }
       },
       stripsToSurface(npts, cellPts, offset) {
@@ -184,22 +183,34 @@ function vtkOpenGLCellArrayBufferObject(publicAPI, model) {
         return numPoints;
       },
       linesToWireframe(numPoints, cellPts) {
-        return (numPoints - 1) * 2;
+        if (numPoints > 1) {
+          return (numPoints - 1) * 2;
+        }
+        return 0;
       },
       polysToWireframe(numPoints, cellPts) {
-        return numPoints * 2;
+        if (numPoints > 2) {
+          return numPoints * 2;
+        }
+        return 0;
       },
       stripsToWireframe(numPoints, cellPts) {
-        return numPoints * 4 - 6;
+        if (numPoints > 2) {
+          return numPoints * 4 - 6;
+        }
+        return 0;
       },
       polysToSurface(npts, cellPts) {
-        if (npts < 3) {
-          return 0;
+        if (npts > 2) {
+          return (npts - 2) * 3;
         }
-        return (npts - 2) * 3;
+        return 0;
       },
       stripsToSurface(npts, cellPts, offset) {
-        return (npts - 2) * 3;
+        if (npts > 2) {
+          return (npts - 2) * 3;
+        }
+        return 0;
       },
     };
 
