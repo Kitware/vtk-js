@@ -55,5 +55,6 @@ export default function generateState() {
       },
     })
     .addStateFromInstance({ name: 'positionOnLine', instance: linePosState })
+    .addField({ name: 'lineThickness' })
     .build();
 }
