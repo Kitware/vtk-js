@@ -283,7 +283,7 @@ reader
         widget.getWidgetState().getPoint1Handle().getOrigin()[i] ===
           slicePos[i] ||
         !scene.widgetManager.getWidgets()[widgetIndex].getPoint1();
-      widget.setVisibility(widgetVisibility);
+      return widget.setVisibility(widgetVisibility);
     };
 
     const updateWidgetsVisibility = (position, slicingMode) => {
