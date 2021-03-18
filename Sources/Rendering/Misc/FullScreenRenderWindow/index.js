@@ -51,6 +51,8 @@ function applyStyle(el, style) {
 }
 
 function vtkFullScreenRenderWindow(publicAPI, model) {
+  model.classHierarchy.push('vtkFullScreenRenderWindow');
+
   const body = document.querySelector('body');
 
   // Full screen DOM handler
