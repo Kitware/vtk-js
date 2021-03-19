@@ -1,4 +1,5 @@
 import macro from 'vtk.js/Sources/macro';
+import { registerViewConstructor } from 'vtk.js/Sources/Rendering/Core/RenderWindow';
 import vtkForwardPass from 'vtk.js/Sources/Rendering/OpenGL/ForwardPass';
 import vtkOpenGLViewNodeFactory from 'vtk.js/Sources/Rendering/OpenGL/ViewNodeFactory';
 import vtkRenderPass from 'vtk.js/Sources/Rendering/SceneGraph/RenderPass';
@@ -1241,6 +1242,12 @@ export function extend(publicAPI, model, initialValues = {}) {
 // ----------------------------------------------------------------------------
 
 export const newInstance = macro.newInstance(extend, 'vtkOpenGLRenderWindow');
+
+// ----------------------------------------------------------------------------
+// Register API specific RenderWindow implementation
+// ----------------------------------------------------------------------------
+
+registerViewConstructor('WebGL', newInstance);
 
 // ----------------------------------------------------------------------------
 
