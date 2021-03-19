@@ -3,12 +3,18 @@ import 'vtk.js/Sources/favicon';
 import vtkActor from 'vtk.js/Sources/Rendering/Core/Actor';
 import vtkCubeAxesActor from 'vtk.js/Sources/Rendering/Core/CubeAxesActor';
 import vtkConeSource from 'vtk.js/Sources/Filters/Sources/ConeSource';
+import vtkInteractorStyleTrackballCamera from 'vtk.js/Sources/Interaction/Style/InteractorStyleTrackballCamera';
 import vtkMapper from 'vtk.js/Sources/Rendering/Core/Mapper';
-import vtkOpenGLRenderWindow from 'vtk.js/Sources/Rendering/OpenGL/RenderWindow';
 import vtkRenderWindow from 'vtk.js/Sources/Rendering/Core/RenderWindow';
 import vtkRenderWindowInteractor from 'vtk.js/Sources/Rendering/Core/RenderWindowInteractor';
 import vtkRenderer from 'vtk.js/Sources/Rendering/Core/Renderer';
-import vtkInteractorStyleTrackballCamera from 'vtk.js/Sources/Interaction/Style/InteractorStyleTrackballCamera';
+import vtkURLExtract from 'vtk.js/Sources/Common/Core/URLExtract';
+
+import 'vtk.js/Sources/Rendering/OpenGL/RenderWindow';
+import 'vtk.js/Sources/Rendering/WebGPU/RenderWindow';
+
+// Process arguments from URL
+const userParams = vtkURLExtract.extractURLParameters();
 
 // ----------------------------------------------------------------------------
 // Standard rendering code setup
@@ -46,8 +52,10 @@ renderer.addActor(cubeAxes);
 // Use OpenGL as the backend to view the all this
 // ----------------------------------------------------------------------------
 
-const openglRenderWindow = vtkOpenGLRenderWindow.newInstance();
-renderWindow.addView(openglRenderWindow);
+const apiSpecificRenderWindow = renderWindow.newAPISpecificView(
+  userParams.viewAPI
+);
+renderWindow.addView(apiSpecificRenderWindow);
 
 // ----------------------------------------------------------------------------
 // Create a div section to put this into
@@ -55,22 +63,21 @@ renderWindow.addView(openglRenderWindow);
 
 const container = document.createElement('div');
 document.querySelector('body').appendChild(container);
-openglRenderWindow.setContainer(container);
-cubeAxes.setContainer(container);
+apiSpecificRenderWindow.setContainer(container);
 
 // ----------------------------------------------------------------------------
 // Capture size of the container and set it to the renderWindow
 // ----------------------------------------------------------------------------
 
 const { width, height } = container.getBoundingClientRect();
-openglRenderWindow.setSize(width, height);
+apiSpecificRenderWindow.setSize(width, height);
 
 // ----------------------------------------------------------------------------
 // Setup an interactor to handle mouse events
 // ----------------------------------------------------------------------------
 
 const interactor = vtkRenderWindowInteractor.newInstance();
-interactor.setView(openglRenderWindow);
+interactor.setView(apiSpecificRenderWindow);
 interactor.initialize();
 interactor.bindEvents(container);
 
@@ -79,3 +86,7 @@ interactor.bindEvents(container);
 // ----------------------------------------------------------------------------
 
 interactor.setInteractorStyle(vtkInteractorStyleTrackballCamera.newInstance());
+
+// make the cubeAxes global visibility in case you want to try changing
+// some values
+global.cubeAxes = cubeAxes;
