@@ -273,35 +273,38 @@ function vtkLabelRepresentation(publicAPI, model) {
 // Object factory
 // ----------------------------------------------------------------------------
 
-const DEFAULT_VALUES = {
-  container: null,
-  labelStyle: {
-    fontColor: 'white',
-    fontStyle: 'normal',
-    fontSize: 15,
-    fontFamily: 'Arial',
-    strokeColor: 'black',
-    strokeSize: 1,
-    lineSpace: 0.2,
-  },
-  labelText: '',
-  textAlign: TextAlign.LEFT,
-  verticalAlign: VerticalAlign.BOTTOM,
-  selectLabelStyle: {
-    fontColor: 'rgb(0, 255, 0)',
-    fontStyle: 'normal',
-    fontSize: 15,
-    fontFamily: 'Arial',
-    strokeColor: 'black',
-    strokeSize: 1,
-    lineSpace: 0.2,
-  },
-};
+function defaultValues(initialValues) {
+  return {
+    container: null,
+    labelStyle: {
+      fontColor: 'white',
+      fontStyle: 'normal',
+      fontSize: 15,
+      fontFamily: 'Arial',
+      strokeColor: 'black',
+      strokeSize: 1,
+      lineSpace: 0.2,
+    },
+    labelText: '',
+    textAlign: TextAlign.LEFT,
+    verticalAlign: VerticalAlign.BOTTOM,
+    selectLabelStyle: {
+      fontColor: 'rgb(0, 255, 0)',
+      fontStyle: 'normal',
+      fontSize: 15,
+      fontFamily: 'Arial',
+      strokeColor: 'black',
+      strokeSize: 1,
+      lineSpace: 0.2,
+    },
+    ...initialValues,
+  };
+}
 
 // ----------------------------------------------------------------------------
 
 export function extend(publicAPI, model, initialValues = {}) {
-  Object.assign(model, DEFAULT_VALUES, initialValues);
+  Object.assign(model, defaultValues(initialValues));
 
   // Inheritance
   vtkHandleRepresentation.extend(publicAPI, model, initialValues);
