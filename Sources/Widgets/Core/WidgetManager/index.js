@@ -318,11 +318,7 @@ function vtkWidgetManager(publicAPI, model) {
     );
 
     subscriptions.push(
-      model.interactor.onMouseMove((callData) => {
-        const { position, pokedRenderer } = callData;
-        if (model.renderer !== pokedRenderer) {
-          return;
-        }
+      model.interactor.onMouseMove(({ position }) => {
         if (model.isAnimating || !model.pickingAvailable) {
           return;
         }
