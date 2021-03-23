@@ -13,8 +13,6 @@ import {
   boundPlane,
   transformPlane,
 } from 'vtk.js/Sources/Widgets/Widgets3D/ResliceCursorWidget/helpers';
-import { ViewTypes } from 'vtk.js/Sources/Widgets/Core/WidgetManager/Constants';
-import { PlaneNormal } from '../ResliceCursorActor/Constants';
 
 const { vtkErrorMacro } = macro;
 
@@ -23,19 +21,6 @@ const VTK_INT_MAX = 2147483647;
 // ----------------------------------------------------------------------------
 // vtkResliceCursorRepresentation methods
 // ----------------------------------------------------------------------------
-
-function getViewTypeFromPlaneNormal(planeNormal) {
-  switch (planeNormal) {
-    case PlaneNormal.XAxis:
-      return ViewTypes.YZ_PLANE;
-    case PlaneNormal.YAxis:
-      return ViewTypes.XZ_PLANE;
-    case PlaneNormal.ZAxis:
-      return ViewTypes.XY_PLANE;
-    default:
-      return -1;
-  }
-}
 
 function vtkResliceCursorRepresentation(publicAPI, model) {
   // Set our className
@@ -210,18 +195,19 @@ function vtkResliceCursorRepresentation(publicAPI, model) {
     // Compute the origin of the reslice plane prior to transformations.
     publicAPI.computeReslicePlaneOrigin();
 
-    transformPlane(
-      model.planeSource,
-      plane,
-      getViewTypeFromPlaneNormal(planeNormalType)
-    );
-
     // Compute view up to configure camera later on
     const bottomLeftPoint = model.planeSource.getOrigin();
     const topLeftPoint = model.planeSource.getPoint2();
     const viewUp = vtkMath.subtract(topLeftPoint, bottomLeftPoint, [0, 0, 0]);
     vtkMath.normalize(viewUp);
     model.viewUpFromViewType[planeNormalType] = viewUp;
+
+    transformPlane(
+      model.planeSource,
+      publicAPI.getResliceCursor().getCenter(),
+      plane.getNormal(),
+      viewUp
+    );
 
     const boundedOrigin = [...model.planeSource.getOrigin()];
     const boundedP1 = [...model.planeSource.getPoint1()];

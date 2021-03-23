@@ -103,7 +103,7 @@ you are satisfied with the staging branch changes, you can then merge into eithe
   submission.
 
     ```
-    $ npm test
+    $ npm run test
     ```
 
 ## Tests
@@ -111,7 +111,7 @@ you are satisfied with the staging branch changes, you can then merge into eithe
 To create and debug a test:
 - Create a testFuncNameToTest.js in a "test" folder of the class to test.
 - Add the test path into Sources/tests.js and temporarily comment the other tests
-- Run `npm test:debug`
+- Run `npm run test:debug`
 - In the opened window, click the Debug button and place breakpoints in browser debugger.
 
 ## Updating Documentation

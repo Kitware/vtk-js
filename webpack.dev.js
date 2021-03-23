@@ -3,12 +3,6 @@ const { merge } = require('webpack-merge');
 const path = require('path');
 const webpack = require('webpack');
 
-// webpack plugins
-const Dashboard = require('webpack-dashboard');
-const DashboardPlugin = require('webpack-dashboard/plugin');
-
-const dashboard = new Dashboard();
-
 // config files
 const common = require('./webpack.common.js');
 const settings = require('./webpack.settings.js');
@@ -41,7 +35,6 @@ module.exports = [
     devServer: configureDevServer(port),
     plugins: [
       new webpack.HotModuleReplacementPlugin(),
-      new DashboardPlugin(dashboard.setData),
     ],
   }),
   merge(common.liteConfig, {
@@ -50,7 +43,6 @@ module.exports = [
     devServer: configureDevServer(port + 1),
     plugins: [
       new webpack.HotModuleReplacementPlugin(),
-      new DashboardPlugin(dashboard.setData),
     ],
   }),
 ];

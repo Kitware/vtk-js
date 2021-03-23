@@ -12,6 +12,7 @@ import vtkOpenGLRenderer from 'vtk.js/Sources/Rendering/OpenGL/Renderer';
 import vtkOpenGLSkybox from 'vtk.js/Sources/Rendering/OpenGL/Skybox';
 import vtkOpenGLSphereMapper from 'vtk.js/Sources/Rendering/OpenGL/SphereMapper';
 import vtkOpenGLStickMapper from 'vtk.js/Sources/Rendering/OpenGL/StickMapper';
+import vtkOpenGLSurfaceLICMapper from 'vtk.js/Sources/Rendering/OpenGL/SurfaceLIC/SurfaceLICMapper';
 import vtkOpenGLTexture from 'vtk.js/Sources/Rendering/OpenGL/Texture';
 import vtkOpenGLVolume from 'vtk.js/Sources/Rendering/OpenGL/Volume';
 import vtkOpenGLVolumeMapper from 'vtk.js/Sources/Rendering/OpenGL/VolumeMapper';
@@ -72,6 +73,10 @@ export function extend(publicAPI, model, initialValues = {}) {
     vtkOpenGLStickMapper.newInstance
   );
   publicAPI.registerOverride('vtkTexture', vtkOpenGLTexture.newInstance);
+  publicAPI.registerOverride(
+    'vtkSurfaceLICMapper',
+    vtkOpenGLSurfaceLICMapper.newInstance
+  );
   publicAPI.registerOverride('vtkVolume', vtkOpenGLVolume.newInstance);
   publicAPI.registerOverride(
     'vtkVolumeMapper',

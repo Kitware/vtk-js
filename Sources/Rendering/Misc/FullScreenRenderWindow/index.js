@@ -1,9 +1,9 @@
 import macro from 'vtk.js/Sources/macro';
-import vtkOpenGLRenderWindow from 'vtk.js/Sources/Rendering/OpenGL/RenderWindow';
 import vtkRenderer from 'vtk.js/Sources/Rendering/Core/Renderer';
 import vtkRenderWindow from 'vtk.js/Sources/Rendering/Core/RenderWindow';
 import vtkRenderWindowInteractor from 'vtk.js/Sources/Rendering/Core/RenderWindowInteractor';
 import vtkInteractorStyleTrackballCamera from 'vtk.js/Sources/Interaction/Style/InteractorStyleTrackballCamera';
+import vtkURLExtract from 'vtk.js/Sources/Common/Core/URLExtract';
 
 // Load basic classes for vtk() factory
 import 'vtk.js/Sources/Common/Core/Points';
@@ -11,6 +11,11 @@ import 'vtk.js/Sources/Common/Core/DataArray';
 import 'vtk.js/Sources/Common/DataModel/PolyData';
 import 'vtk.js/Sources/Rendering/Core/Actor';
 import 'vtk.js/Sources/Rendering/Core/Mapper';
+import 'vtk.js/Sources/Rendering/OpenGL/RenderWindow';
+import 'vtk.js/Sources/Rendering/WebGPU/RenderWindow';
+
+// Process arguments from URL
+const userParams = vtkURLExtract.extractURLParameters();
 
 const STYLE_CONTAINER = {
   margin: '0',
@@ -72,17 +77,19 @@ function vtkFullScreenRenderWindow(publicAPI, model) {
   model.renderer = vtkRenderer.newInstance();
   model.renderWindow.addRenderer(model.renderer);
 
-  // OpenGlRenderWindow
-  model.openGLRenderWindow = vtkOpenGLRenderWindow.newInstance();
-  model.openGLRenderWindow.setContainer(model.container);
-  model.renderWindow.addView(model.openGLRenderWindow);
+  // apiSpecificRenderWindow
+  model.apiSpecificRenderWindow = model.renderWindow.newAPISpecificView(
+    userParams.viewAPI
+  );
+  model.apiSpecificRenderWindow.setContainer(model.container);
+  model.renderWindow.addView(model.apiSpecificRenderWindow);
 
   // Interactor
   model.interactor = vtkRenderWindowInteractor.newInstance();
   model.interactor.setInteractorStyle(
     vtkInteractorStyleTrackballCamera.newInstance()
   );
-  model.interactor.setView(model.openGLRenderWindow);
+  model.interactor.setView(model.apiSpecificRenderWindow);
   model.interactor.initialize();
   model.interactor.bindEvents(model.container);
 
@@ -147,7 +154,7 @@ function vtkFullScreenRenderWindow(publicAPI, model) {
   // Properly release GL context
   publicAPI.delete = macro.chain(
     publicAPI.setContainer,
-    model.openGLRenderWindow.delete,
+    model.apiSpecificRenderWindow.delete,
     publicAPI.delete
   );
 
@@ -155,7 +162,7 @@ function vtkFullScreenRenderWindow(publicAPI, model) {
   publicAPI.resize = () => {
     const dims = model.container.getBoundingClientRect();
     const devicePixelRatio = window.devicePixelRatio || 1;
-    model.openGLRenderWindow.setSize(
+    model.apiSpecificRenderWindow.setSize(
       Math.floor(dims.width * devicePixelRatio),
       Math.floor(dims.height * devicePixelRatio)
     );
@@ -199,7 +206,7 @@ export function extend(publicAPI, model, initialValues = {}) {
   macro.get(publicAPI, model, [
     'renderWindow',
     'renderer',
-    'openGLRenderWindow',
+    'apiSpecificRenderWindow',
     'interactor',
     'rootContainer',
     'container',

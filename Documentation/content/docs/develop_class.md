@@ -141,7 +141,7 @@ export function extend(publicAPI, model, initialValues = {}) {
   macro.getArray(publicAPI, model, ['myProp1', 'myProp5']);
 
   // Create get-set macros for enum type
-  macro.getSet(publicAPI, model, [
+  macro.setGet(publicAPI, model, [
     { name: 'myProp6', enum: Representation, type: 'enum' },
   ]);
 
