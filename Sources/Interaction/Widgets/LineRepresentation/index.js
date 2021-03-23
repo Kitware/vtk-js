@@ -1,6 +1,7 @@
 import Constants from 'vtk.js/Sources/Interaction/Widgets/LineRepresentation/Constants';
 import macro from 'vtk.js/Sources/macro';
 import vtkActor from 'vtk.js/Sources/Rendering/Core/Actor';
+import vtkBoundingBox from 'vtk.js/Sources/Common/DataModel/BoundingBox';
 import vtkBox from 'vtk.js/Sources/Common/DataModel/Box';
 import vtkLine from 'vtk.js/Sources/Common/DataModel/Line';
 import vtkLineSource from 'vtk.js/Sources/Filters/Sources/LineSource';
@@ -194,7 +195,7 @@ function vtkLineRepresentation(publicAPI, model) {
 
     const placedP1 = [];
     const t = [];
-    vtkBox.intersectBox(boundsArray, o, r, placedP1, t);
+    vtkBoundingBox.intersectBox(boundsArray, o, r, placedP1, t);
     publicAPI.setPoint1WorldPosition(placedP1);
 
     r[0] = model.initialLength * (p2[0] - p1[0]);
@@ -204,7 +205,7 @@ function vtkLineRepresentation(publicAPI, model) {
     o[1] = center[1] - r[1];
     o[2] = center[2] - r[2];
     const placedP2 = [];
-    vtkBox.intersectBox(boundsArray, o, r, placedP2, t);
+    vtkBoundingBox.intersectBox(boundsArray, o, r, placedP2, t);
     publicAPI.setPoint2WorldPosition(placedP2);
 
     model.placed = 1;

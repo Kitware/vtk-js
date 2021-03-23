@@ -53,7 +53,7 @@ function vtkResliceCursorActor(publicAPI, model) {
     vtkMath.uninitializeBounds(model.bounds);
     publicAPI.updateViewProps();
 
-    const boundingBox = vtkBoundingBox.newInstance();
+    const boundingBox = [...vtkBoundingBox.INIT_BOUNDS];
 
     let bounds = [];
     for (let i = 0; i < 3; i++) {
@@ -62,7 +62,8 @@ function vtkResliceCursorActor(publicAPI, model) {
         model.cursorCenterlineActor[i].getUseBounds()
       ) {
         bounds = model.cursorCenterlineActor[i].getBounds();
-        boundingBox.addBounds(
+        vtkBoundingBox.addBounds(
+          boundingBox,
           bounds[0],
           bounds[1],
           bounds[2],
@@ -73,7 +74,7 @@ function vtkResliceCursorActor(publicAPI, model) {
       }
     }
 
-    model.bounds = boundingBox.getBounds();
+    model.bounds = boundingBox;
 
     return model.bounds;
   };
