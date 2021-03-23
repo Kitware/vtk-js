@@ -197,7 +197,6 @@ function vtkResliceCursorWidget(publicAPI, model) {
 
       const worldFocal = renderer.normalizedDisplayToWorld(
         ...displayFocal,
-        1,
         aspect
       );
 
