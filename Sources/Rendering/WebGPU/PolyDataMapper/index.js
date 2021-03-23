@@ -1,7 +1,7 @@
 import { mat3, mat4 } from 'gl-matrix';
 
 import macro from 'vtk.js/Sources/macro';
-// import vtkMapper from 'vtk.js/Sources/Rendering/Core/Mapper';
+import vtkMapper from 'vtk.js/Sources/Rendering/Core/Mapper';
 // import * as vtkMath from 'vtk.js/Sources/Common/Core/Math';
 // import vtkWebGPUTexture from 'vtk.js/Sources/Rendering/WebGPU/Texture';
 import vtkProperty from 'vtk.js/Sources/Rendering/Core/Property';
@@ -16,7 +16,7 @@ import vtkViewNode from 'vtk.js/Sources/Rendering/SceneGraph/ViewNode';
 
 const { BufferUsage, PrimitiveTypes } = vtkWebGPUBufferManager;
 const { Representation } = vtkProperty;
-// const { ScalarMode } = vtkMapper;
+const { ScalarMode } = vtkMapper;
 // const { Filter, Wrap } = vtkWebGPUTexture;
 const StartEvent = { type: 'StartEvent' };
 const EndEvent = { type: 'EndEvent' };
@@ -284,33 +284,41 @@ function vtkWebGPUPolyDataMapper(publicAPI, model) {
   };
 
   publicAPI.replaceShaderNormal = (hash, pipeline, vertexInput) => {
-    if (!vertexInput.hasAttribute('normalMC')) return;
+    if (vertexInput.hasAttribute('normalMC')) {
+      const vDesc = pipeline.getShaderDescription('vertex');
+      let code = vDesc.getCode();
+      code = vtkWebGPUShaderCache.substitute(code, '//VTK::Normal::Dec', [
+        vDesc.getOutputDeclaration('vec3<f32>', 'normalVC'),
+      ]).result;
 
-    const vDesc = pipeline.getShaderDescription('vertex');
+      code = vtkWebGPUShaderCache.substitute(code, '//VTK::Normal::Impl', [
+        '  normalVC = (rendererUBO.WCVCNormals * normalMC).xyz;',
+      ]).result;
+      vDesc.setCode(code);
 
-    let code = vDesc.getCode();
-    code = vtkWebGPUShaderCache.substitute(code, '//VTK::Normal::Dec', [
-      vDesc.getOutputDeclaration('vec3<f32>', 'normalVC'),
-    ]).result;
+      const fDesc = pipeline.getShaderDescription('fragment');
+      code = fDesc.getCode();
 
-    code = vtkWebGPUShaderCache.substitute(code, '//VTK::Normal::Impl', [
-      '  normalVC = (rendererUBO.WCVCNormals * normalMC).xyz;',
-    ]).result;
-    vDesc.setCode(code);
+      code = vtkWebGPUShaderCache.substitute(code, '//VTK::Normal::Dec', [
+        fDesc.getInputDeclaration(vDesc, 'normalVC'),
+      ]).result;
 
-    const fDesc = pipeline.getShaderDescription('fragment');
-    code = fDesc.getCode();
-    code = vtkWebGPUShaderCache.substitute(code, '//VTK::Normal::Dec', [
-      fDesc.getInputDeclaration(vDesc, 'normalVC'),
-    ]).result;
-
-    code = vtkWebGPUShaderCache.substitute(code, '//VTK::Normal::Impl', [
-      '  var df: f32  = max(0.0, normalVC.z);',
-      '  var sf: f32 = pow(df, mapperUBO.SpecularPower);',
-      '  var diffuse: vec3<f32> = df * diffuseColor.rgb;',
-      '  var specular: vec3<f32> = sf * mapperUBO.SpecularColor.rgb * mapperUBO.SpecularColor.a;',
-    ]).result;
-    fDesc.setCode(code);
+      code = vtkWebGPUShaderCache.substitute(code, '//VTK::Normal::Impl', [
+        '  var df: f32  = max(0.0, normalVC.z);',
+        '  var sf: f32 = pow(df, mapperUBO.SpecularPower);',
+        '  var diffuse: vec3<f32> = df * diffuseColor.rgb;',
+        '  var specular: vec3<f32> = sf * mapperUBO.SpecularColor.rgb * mapperUBO.SpecularColor.a;',
+      ]).result;
+      fDesc.setCode(code);
+    } else {
+      const fDesc = pipeline.getShaderDescription('fragment');
+      let code = fDesc.getCode();
+      code = vtkWebGPUShaderCache.substitute(code, '//VTK::Normal::Impl', [
+        '  var diffuse: vec3<f32> = diffuseColor.rgb;',
+        '  var specular: vec3<f32> = mapperUBO.SpecularColor.rgb * mapperUBO.SpecularColor.a;',
+      ]).result;
+      fDesc.setCode(code);
+    }
   };
 
   publicAPI.replaceShaderColor = (hash, pipeline, vertexInput) => {
@@ -408,6 +416,18 @@ function vtkWebGPUPolyDataMapper(publicAPI, model) {
 
   publicAPI.getHashFromUsage = (usage) => `pt${usage}`;
 
+  publicAPI.getTopologyFromUsage = (usage) => {
+    switch (usage) {
+      case BufferUsage.Triangles:
+        return 'triangle-list';
+      case BufferUsage.Verts:
+        return 'point-list';
+      default:
+      case BufferUsage.Lines:
+        return 'line-list';
+    }
+  };
+
   publicAPI.buildVertexInput = (pd, cells, primType) => {
     const actor = model.WebGPUActor.getRenderable();
     const representation = actor.getProperty().getRepresentation();
@@ -415,17 +435,33 @@ function vtkWebGPUPolyDataMapper(publicAPI, model) {
 
     const vertexInput = model.primitives[primType].vertexInput;
 
+    // hash = all things that can change the values on the buffer
+    // since mtimes are unique we can use
+    // - cells mtime - because cells drive how we pack
+    // - rep (point/wireframe/surface) - again because of packing
+    // - relevant dataArray mtime - the source data
+    // - shift - not currently captured
+    // - scale - not currently captured
+    // - format
+    // - usage
+    // - packExtra - covered by format
+    // - prim type (vert/lines/polys/strips) - covered by cells mtime
+
+    const hash = cells.getMTime() + representation;
     // points
     const points = pd.getPoints();
     if (points) {
       const buffRequest = {
+        hash: hash + points.getMTime(),
         dataArray: points,
+        source: points,
         cells,
         primitiveType: primType,
         representation,
         time: Math.max(points.getMTime(), cells.getMTime()),
-        usage: BufferUsage.Points,
+        usage: BufferUsage.PointArray,
         format: 'float32x4',
+        packExtra: true,
       };
       const buff = device.getBufferManager().getBuffer(buffRequest);
       vertexInput.addBuffer(buff, ['vertexMC']);
@@ -446,16 +482,24 @@ function vtkWebGPUPolyDataMapper(publicAPI, model) {
         scale: 127,
       };
       if (normals) {
+        buffRequest.hash = hash + normals.getMTime();
         buffRequest.dataArray = normals;
+        buffRequest.source = normals;
         buffRequest.time = Math.max(normals.getMTime(), cells.getMTime());
         buffRequest.usage = BufferUsage.PointArray;
-      } else {
+        const buff = device.getBufferManager().getBuffer(buffRequest);
+        vertexInput.addBuffer(buff, ['normalMC']);
+      } else if (primType === PrimitiveTypes.Triangles) {
+        buffRequest.hash = hash + points.getMTime();
         buffRequest.dataArray = points;
+        buffRequest.source = points;
         buffRequest.time = Math.max(points.getMTime(), cells.getMTime());
         buffRequest.usage = BufferUsage.NormalsFromPoints;
+        const buff = device.getBufferManager().getBuffer(buffRequest);
+        vertexInput.addBuffer(buff, ['normalMC']);
+      } else {
+        vertexInput.removeBufferIfPresent('normalMC');
       }
-      const buff = device.getBufferManager().getBuffer(buffRequest);
-      vertexInput.addBuffer(buff, ['normalMC']);
     }
 
     // deal with colors but only if modified
@@ -465,19 +509,23 @@ function vtkWebGPUPolyDataMapper(publicAPI, model) {
       if (c) {
         const scalarMode = model.renderable.getScalarMode();
         let haveCellScalars = false;
+        console.log(`have colors ${scalarMode}`);
         // We must figure out how the scalars should be mapped to the polydata.
         if (
-          (scalarMode === scalarMode.USE_CELL_DATA ||
-            scalarMode === scalarMode.USE_CELL_FIELD_DATA ||
-            scalarMode === scalarMode.USE_FIELD_DATA ||
+          (scalarMode === ScalarMode.USE_CELL_DATA ||
+            scalarMode === ScalarMode.USE_CELL_FIELD_DATA ||
+            scalarMode === ScalarMode.USE_FIELD_DATA ||
             !pd.getPointData().getScalars()) &&
-          scalarMode !== scalarMode.USE_POINT_FIELD_DATA &&
+          scalarMode !== ScalarMode.USE_POINT_FIELD_DATA &&
           c
         ) {
           haveCellScalars = true;
+          console.log('here');
         }
         const buffRequest = {
+          hash: hash + points.getMTime(),
           dataArray: c,
+          source: c,
           cells,
           primitiveType: primType,
           representation,
@@ -485,6 +533,7 @@ function vtkWebGPUPolyDataMapper(publicAPI, model) {
           usage: BufferUsage.PointArray,
           format: 'unorm8x4',
           cellData: haveCellScalars,
+          cellOffset: 0,
         };
         const buff = device.getBufferManager().getBuffer(buffRequest);
         vertexInput.addBuffer(buff, ['colorVI']);
@@ -506,7 +555,9 @@ function vtkWebGPUPolyDataMapper(publicAPI, model) {
     }
     if (tcoords) {
       const buffRequest = {
+        hash: hash + tcoords.getMTime(),
         dataArray: tcoords,
+        source: tcoords,
         cells,
         primitiveType: primType,
         representation,
@@ -522,8 +573,9 @@ function vtkWebGPUPolyDataMapper(publicAPI, model) {
   };
 
   publicAPI.updateTextures = () => {
+    // we keep track of new and used textures so
+    // that we can clean up any unused textures so we don't hold onto them
     const usedTextures = [];
-
     const newTextures = [];
 
     // do we have a scalar color texture
@@ -610,6 +662,29 @@ function vtkWebGPUPolyDataMapper(publicAPI, model) {
     }
   };
 
+  // compute a unique hash for a pipeline, this needs to be unique enough to
+  // capture any pipeline code changes (which includes shader changes)
+  // or vertex input changes/ bind groups/ etc
+  publicAPI.computePipelineHash = (vertexInput, usage) => {
+    let pipelineHash = 'pd';
+    if (vertexInput.hasAttribute(`normalMC`)) {
+      pipelineHash += `n`;
+    }
+    if (vertexInput.hasAttribute(`colorVI`)) {
+      pipelineHash += `c`;
+    }
+    if (vertexInput.hasAttribute(`tcoord`)) {
+      pipelineHash += `t`;
+    }
+    if (model.textures.length) {
+      pipelineHash += `tx${model.textures.length}`;
+    }
+    const uhash = publicAPI.getHashFromUsage(usage);
+    pipelineHash += uhash;
+
+    return pipelineHash;
+  };
+
   // was originally buildIBOs() but not using IBOs right now
   publicAPI.buildPrimitives = () => {
     const poly = model.currentInput;
@@ -620,8 +695,6 @@ function vtkWebGPUPolyDataMapper(publicAPI, model) {
       poly.getStrips(),
     ];
 
-    const actor = model.WebGPUActor.getRenderable();
-    const rep = actor.getProperty().getRepresentation();
     const device = model.WebGPURenderWindow.getDevice();
 
     model.renderable.mapScalars(poly, 1.0);
@@ -632,25 +705,16 @@ function vtkWebGPUPolyDataMapper(publicAPI, model) {
     // handle per primitive type
     for (let i = PrimitiveTypes.Points; i <= PrimitiveTypes.Triangles; i++) {
       if (prims[i].getNumberOfValues() > 0) {
+        const actor = model.WebGPUActor.getRenderable();
+        const rep = actor.getProperty().getRepresentation();
+        const usage = publicAPI.getUsage(rep, i);
+
         const primHelper = model.primitives[i];
         publicAPI.buildVertexInput(model.currentInput, prims[i], i);
-
-        let pipelineHash = 'pd';
-        if (primHelper.vertexInput.hasAttribute(`normalMC`)) {
-          pipelineHash += `n`;
-        }
-        if (primHelper.vertexInput.hasAttribute(`colorVI`)) {
-          pipelineHash += `c`;
-        }
-        if (primHelper.vertexInput.hasAttribute(`tcoord`)) {
-          pipelineHash += `t`;
-        }
-        if (model.textures.length) {
-          pipelineHash += `tx${model.textures.length}`;
-        }
-        const usage = publicAPI.getUsage(rep, i);
-        const uhash = publicAPI.getHashFromUsage(usage);
-        pipelineHash += uhash;
+        const pipelineHash = publicAPI.computePipelineHash(
+          primHelper.vertexInput,
+          usage
+        );
         let pipeline = model.WebGPURenderWindow.getPipeline(pipelineHash);
 
         // build VBO for this primitive
@@ -677,6 +741,7 @@ function vtkWebGPUPolyDataMapper(publicAPI, model) {
             pipeline,
             primHelper.vertexInput
           );
+          pipeline.setTopology(publicAPI.getTopologyFromUsage(usage));
           pipeline.setVertexState(
             primHelper.vertexInput.getVertexInputInformation()
           );
@@ -703,15 +768,10 @@ const DEFAULT_VALUES = {
   textures: null,
   samplers: null,
   textureBindGroups: null,
-  context: null,
   VBOBuildTime: 0,
   VBOBuildString: null,
   primitives: null,
-  shaderRebuildString: null,
   tmpMat4: null,
-  ambientColor: [], // used internally
-  diffuseColor: [], // used internally
-  specularColor: [], // used internally
   lightColor: [], // used internally
   lightHalfAngle: [], // used internally
   lightDirection: [], // used internally
