@@ -26,18 +26,18 @@ function vtkCamera(publicAPI, model) {
   model.classHierarchy.push('vtkCamera');
 
   // Set up private variables and methods
-  const origin = vec3.create();
-  const dopbasis = vec3.fromValues(0.0, 0.0, -1.0);
-  const upbasis = vec3.fromValues(0.0, 1.0, 0.0);
-  const tmpMatrix = mat4.create();
-  const tmpvec1 = vec3.create();
-  const tmpvec2 = vec3.create();
-  const tmpvec3 = vec3.create();
+  const origin = new Float64Array(3);
+  const dopbasis = new Float64Array([0.0, 0.0, -1.0]);
+  const upbasis = new Float64Array([0.0, 1.0, 0.0]);
+  const tmpMatrix = mat4.identity(new Float64Array(16));
+  const tmpvec1 = new Float64Array(3);
+  const tmpvec2 = new Float64Array(3);
+  const tmpvec3 = new Float64Array(3);
 
-  const rotateMatrix = mat4.create();
-  const trans = mat4.create();
-  const newPosition = vec3.create();
-  const newFocalPoint = vec3.create();
+  const rotateMatrix = mat4.identity(new Float64Array(16));
+  const trans = mat4.identity(new Float64Array(16));
+  const newPosition = new Float64Array(3);
+  const newFocalPoint = new Float64Array(3);
 
   // Internal Functions that don't need to be public
   function computeViewPlaneNormal() {
@@ -168,14 +168,14 @@ function vtkCamera(publicAPI, model) {
     const eye = model.position;
     const at = model.focalPoint;
     const up = model.viewUp;
-    const viewUpVec4 = vec4.fromValues(up[0], up[1], up[2], 0.0);
+    const viewUpVec4 = new Float64Array([up[0], up[1], up[2], 0.0]);
 
     mat4.identity(rotateMatrix);
-    const viewDir = vec3.fromValues(
+    const viewDir = new Float64Array([
       at[0] - eye[0],
       at[1] - eye[1],
-      at[2] - eye[2]
-    );
+      at[2] - eye[2],
+    ]);
     mat4.rotate(
       rotateMatrix,
       rotateMatrix,
@@ -199,21 +199,12 @@ function vtkCamera(publicAPI, model) {
     // translate the focal point to the origin,
     // rotate about view up,
     // translate back again
-    mat4.translate(trans, trans, vec3.fromValues(fp[0], fp[1], fp[2]));
-    mat4.rotate(
-      trans,
-      trans,
-      vtkMath.radiansFromDegrees(angle),
-      vec3.fromValues(model.viewUp[0], model.viewUp[1], model.viewUp[2])
-    );
-    mat4.translate(trans, trans, vec3.fromValues(-fp[0], -fp[1], -fp[2]));
+    mat4.translate(trans, trans, fp);
+    mat4.rotate(trans, trans, vtkMath.radiansFromDegrees(angle), model.viewUp);
+    mat4.translate(trans, trans, [-fp[0], -fp[1], -fp[2]]);
 
     // apply the transform to the position
-    vec3.transformMat4(
-      newPosition,
-      vec3.fromValues(model.position[0], model.position[1], model.position[2]),
-      trans
-    );
+    vec3.transformMat4(newPosition, model.position, trans);
     publicAPI.setPosition(newPosition[0], newPosition[1], newPosition[2]);
   };
 
@@ -225,33 +216,12 @@ function vtkCamera(publicAPI, model) {
     // translate the camera to the origin,
     // rotate about axis,
     // translate back again
-    mat4.translate(
-      trans,
-      trans,
-      vec3.fromValues(position[0], position[1], position[2])
-    );
-    mat4.rotate(
-      trans,
-      trans,
-      vtkMath.radiansFromDegrees(angle),
-      vec3.fromValues(model.viewUp[0], model.viewUp[1], model.viewUp[2])
-    );
-    mat4.translate(
-      trans,
-      trans,
-      vec3.fromValues(-position[0], -position[1], -position[2])
-    );
+    mat4.translate(trans, trans, position);
+    mat4.rotate(trans, trans, vtkMath.radiansFromDegrees(angle), model.viewUp);
+    mat4.translate(trans, trans, [-position[0], -position[1], -position[2]]);
 
     // apply the transform to the position
-    vec3.transformMat4(
-      newFocalPoint,
-      vec3.fromValues(
-        model.focalPoint[0],
-        model.focalPoint[1],
-        model.focalPoint[2]
-      ),
-      trans
-    );
+    vec3.transformMat4(newFocalPoint, model.focalPoint, trans);
     publicAPI.setFocalPoint(
       newFocalPoint[0],
       newFocalPoint[1],
@@ -271,21 +241,12 @@ function vtkCamera(publicAPI, model) {
     // translate the focal point to the origin,
     // rotate about view up,
     // translate back again
-    mat4.translate(trans, trans, vec3.fromValues(fp[0], fp[1], fp[2]));
-    mat4.rotate(
-      trans,
-      trans,
-      vtkMath.radiansFromDegrees(angle),
-      vec3.fromValues(axis[0], axis[1], axis[2])
-    );
-    mat4.translate(trans, trans, vec3.fromValues(-fp[0], -fp[1], -fp[2]));
+    mat4.translate(trans, trans, fp);
+    mat4.rotate(trans, trans, vtkMath.radiansFromDegrees(angle), axis);
+    mat4.translate(trans, trans, [-fp[0], -fp[1], -fp[2]]);
 
     // apply the transform to the position
-    vec3.transformMat4(
-      newPosition,
-      vec3.fromValues(model.position[0], model.position[1], model.position[2]),
-      trans
-    );
+    vec3.transformMat4(newPosition, model.position, trans);
     publicAPI.setPosition(newPosition[0], newPosition[1], newPosition[2]);
   };
 
@@ -300,29 +261,12 @@ function vtkCamera(publicAPI, model) {
     // translate the camera to the origin,
     // rotate about axis,
     // translate back again
-    mat4.translate(
-      trans,
-      trans,
-      vec3.fromValues(position[0], position[1], position[2])
-    );
-    mat4.rotate(
-      trans,
-      trans,
-      vtkMath.radiansFromDegrees(angle),
-      vec3.fromValues(axis[0], axis[1], axis[2])
-    );
-    mat4.translate(
-      trans,
-      trans,
-      vec3.fromValues(-position[0], -position[1], -position[2])
-    );
+    mat4.translate(trans, trans, position);
+    mat4.rotate(trans, trans, vtkMath.radiansFromDegrees(angle), axis);
+    mat4.translate(trans, trans, [-position[0], -position[1], -position[2]]);
 
     // apply the transform to the focal point
-    vec3.transformMat4(
-      newFocalPoint,
-      vec3.fromValues(...model.focalPoint),
-      trans
-    );
+    vec3.transformMat4(newFocalPoint, model.focalPoint, trans);
     publicAPI.setFocalPoint(...newFocalPoint);
   };
 
@@ -516,17 +460,16 @@ function vtkCamera(publicAPI, model) {
       return model.viewMatrix;
     }
 
-    const result = mat4.create();
-
     mat4.lookAt(
       tmpMatrix,
-      vec3.fromValues(...model.position), // eye
-      vec3.fromValues(...model.focalPoint), // at
-      vec3.fromValues(...model.viewUp) // up
+      model.position, // eye
+      model.focalPoint, // at
+      model.viewUp // up
     );
 
     mat4.transpose(tmpMatrix, tmpMatrix);
 
+    const result = new Float64Array(16);
     mat4.copy(result, tmpMatrix);
     return result;
   };
@@ -536,7 +479,8 @@ function vtkCamera(publicAPI, model) {
   };
 
   publicAPI.getProjectionMatrix = (aspect, nearz, farz) => {
-    const result = mat4.create();
+    const result = new Float64Array(16);
+    mat4.identity(result);
 
     if (model.projectionMatrix) {
       const scale = 1 / model.physicalScale;
@@ -610,10 +554,10 @@ function vtkCamera(publicAPI, model) {
   publicAPI.getCompositeProjectionMatrix = (aspect, nearz, farz) => {
     const vMat = publicAPI.getViewMatrix();
     const pMat = publicAPI.getProjectionMatrix(aspect, nearz, farz);
-    const result = mat4.create();
     // mats are transposed so the order is A then B
-    mat4.multiply(result, vMat, pMat);
-    return result;
+    // we reuse pMat as it is a copy so we can do what we want with it
+    mat4.multiply(pMat, vMat, pMat);
+    return pMat;
   };
 
   publicAPI.setDirectionOfProjection = (x, y, z) => {
@@ -658,7 +602,8 @@ function vtkCamera(publicAPI, model) {
     const physVRight = [3];
     vtkMath.cross(model.physicalViewNorth, model.physicalViewUp, physVRight);
 
-    const rotmat = mat4.create(); // phone to physical coordinates
+    // phone to physical coordinates
+    const rotmat = mat4.identity(new Float64Array(16));
     mat4.rotate(
       rotmat,
       rotmat,
@@ -680,16 +625,12 @@ function vtkCamera(publicAPI, model) {
       model.physicalViewUp
     );
 
-    const dop = vec3.fromValues(
+    const dop = new Float64Array([
       -model.physicalViewUp[0],
       -model.physicalViewUp[1],
-      -model.physicalViewUp[2]
-    );
-    const vup = vec3.fromValues(
-      model.physicalViewNorth[0],
-      model.physicalViewNorth[1],
-      model.physicalViewNorth[2]
-    );
+      -model.physicalViewUp[2],
+    ]);
+    const vup = new Float64Array(model.physicalViewNorth);
     vec3.transformMat4(dop, dop, rotmat);
     vec3.transformMat4(vup, vup, rotmat);
 
@@ -699,7 +640,7 @@ function vtkCamera(publicAPI, model) {
   };
 
   publicAPI.setOrientationWXYZ = (degrees, x, y, z) => {
-    const quatMat = mat4.create();
+    const quatMat = mat4.identity(new Float64Array(16));
 
     if (degrees !== 0.0 && (x !== 0.0 || y !== 0.0 || z !== 0.0)) {
       // convert to radians
@@ -709,13 +650,11 @@ function vtkCamera(publicAPI, model) {
       mat4.fromQuat(quatMat, q);
     }
 
-    const dop = vec3.fromValues(0.0, 0.0, -1.0);
-    const newdop = vec3.create();
-    vec3.transformMat4(newdop, dop, quatMat);
+    const newdop = new Float64Array(3);
+    vec3.transformMat4(newdop, [0.0, 0.0, -1.0], quatMat);
 
-    const vup = vec3.fromValues(0.0, 1.0, 0.0);
-    const newvup = vec3.create();
-    vec3.transformMat4(newvup, vup, quatMat);
+    const newvup = new Float64Array(3);
+    vec3.transformMat4(newvup, [0.0, 1.0, 0.0], quatMat);
 
     publicAPI.setDirectionOfProjection(...newdop);
     publicAPI.setViewUp(...newvup);

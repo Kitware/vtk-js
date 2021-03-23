@@ -429,8 +429,7 @@ function vtkResliceCursorWidget(publicAPI, model) {
     const planeSizeX = vtkMath.normalize(planeAxis1);
     const planeSizeY = vtkMath.normalize(planeAxis2);
 
-    const newResliceAxes = mat4.create();
-    mat4.identity(newResliceAxes);
+    const newResliceAxes = mat4.identity(new Float64Array(16));
 
     for (let i = 0; i < 3; i++) {
       newResliceAxes[4 * i + 0] = planeAxis1[i];
@@ -561,7 +560,7 @@ function vtkResliceCursorWidget(publicAPI, model) {
    * Return the reslice cursor matrix built as such: [YZ, XZ, XY, center]
    */
   publicAPI.getResliceMatrix = () => {
-    const resliceMatrix = mat4.create();
+    const resliceMatrix = mat4.identity(new Float64Array(16));
 
     for (let i = 0; i < 3; i++) {
       resliceMatrix[4 * i + 0] = publicAPI.getPlaneNormalFromViewType(

@@ -785,8 +785,8 @@ export function extend(publicAPI, model, initialValues = {}) {
   // Inheritance
   vtkViewNode.extend(publicAPI, model, initialValues);
 
-  model.tmpMat3 = mat3.create();
-  model.tmpMat4 = mat4.create();
+  model.tmpMat3 = mat3.identity(new Float64Array(9));
+  model.tmpMat4 = mat4.identity(new Float64Array(16));
   model.UBOData = new Float32Array(vtkWebGPUPolyDataMapperUBOSize);
   model.UBOUpdateTime = {};
   macro.obj(model.UBOUpdateTime);

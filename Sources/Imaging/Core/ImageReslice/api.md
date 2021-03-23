@@ -27,7 +27,7 @@ Provide the input to the filter via the standard
 const imageReslice = vtkImageReslice.newInstance();
 imageReslice.setInputData(imageData);
 imageReslice.setOutputDimensionality(2);
-const axes = mat4.create();
+const axes = mat4.identity(new Float64Array(16));
 mat4.rotateX(axes, axes, 45 * Math.PI / 180);
 imageReslice.setResliceAxes(axes);
 imageReslice.setOutputScalarType('Uint16Array');

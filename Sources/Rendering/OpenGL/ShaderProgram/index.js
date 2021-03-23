@@ -140,7 +140,8 @@ function vtkShaderProgram(publicAPI, model) {
       model.error = `Could not set uniform ${name} . No such uniform.`;
       return false;
     }
-    model.context.uniformMatrix4fv(location, false, v);
+    const f32 = new Float32Array(v);
+    model.context.uniformMatrix4fv(location, false, f32);
     return true;
   };
 
@@ -150,7 +151,8 @@ function vtkShaderProgram(publicAPI, model) {
       model.error = `Could not set uniform ${name} . No such uniform.`;
       return false;
     }
-    model.context.uniformMatrix3fv(location, false, v);
+    const f32 = new Float32Array(v);
+    model.context.uniformMatrix3fv(location, false, f32);
     return true;
   };
 

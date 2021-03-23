@@ -682,10 +682,10 @@ export function extend(publicAPI, model, initialValues = {}) {
   // Inheritance
   vtkOpenGLPolyDataMapper.extend(publicAPI, model, initialValues);
 
-  model.tmpMat3 = mat3.create();
-  model.normalMatrix = mat3.create();
-  model.mcpcMatrix = mat4.create();
-  model.mcvcMatrix = mat4.create();
+  model.tmpMat3 = mat3.identity(new Float64Array(9));
+  model.normalMatrix = mat3.identity(new Float64Array(9));
+  model.mcpcMatrix = mat4.identity(new Float64Array(16));
+  model.mcvcMatrix = mat4.identity(new Float64Array(16));
   model.tmpColor = [];
 
   model.glyphBOBuildTime = {};

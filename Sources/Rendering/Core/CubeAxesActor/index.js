@@ -1,4 +1,4 @@
-import { glMatrix, vec3, mat4 } from 'gl-matrix';
+import { vec3, mat4 } from 'gl-matrix';
 import * as d3 from 'd3-scale';
 import * as vtkMath from 'vtk.js/Sources/Common/Core/Math';
 import macro from 'vtk.js/Sources/macro';
@@ -56,16 +56,13 @@ const faceAxes = [
 ];
 
 // some shared temp variables to reduce heap allocs
-const previousMatrixType = glMatrix.ARRAY_TYPE;
-glMatrix.setMatrixArrayType(Float64Array);
-const ptv3 = vec3.create();
-const pt2v3 = vec3.create();
-const tmpv3 = vec3.create();
-const tmp2v3 = vec3.create();
-const xDir = vec3.create();
-const yDir = vec3.create();
-const invmat = mat4.create();
-glMatrix.setMatrixArrayType(previousMatrixType);
+const ptv3 = new Float64Array(3);
+const pt2v3 = new Float64Array(3);
+const tmpv3 = new Float64Array(3);
+const tmp2v3 = new Float64Array(3);
+const xDir = new Float64Array(3);
+const yDir = new Float64Array(3);
+const invmat = new Float64Array(16);
 
 function applyTextStyle(ctx, style) {
   ctx.strokeStyle = style.strokeColor;

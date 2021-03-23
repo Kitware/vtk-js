@@ -86,18 +86,17 @@ function vtkMouseCameraUnicamRotateManipulator(publicAPI, model) {
     cameraFocalPoint[3] = 1.0;
     cameraViewUp[3] = 0.0;
 
-    const transform = mat4.create();
-    mat4.identity(transform);
-    mat4.translate(transform, transform, vec3.fromValues(cx, cy, cz));
-    mat4.rotate(transform, transform, angle, vec3.fromValues(ax, ay, az));
-    mat4.translate(transform, transform, vec3.fromValues(-cx, -cy, -cz));
+    const transform = mat4.identity(new Float64Array(16));
+    mat4.translate(transform, transform, [cx, cy, cz]);
+    mat4.rotate(transform, transform, angle, [ax, ay, az]);
+    mat4.translate(transform, transform, [-cx, -cy, -cz]);
     const newCameraPosition = [];
     const newCameraFocalPoint = [];
     vec3.transformMat4(newCameraPosition, cameraPosition, transform);
     vec3.transformMat4(newCameraFocalPoint, cameraFocalPoint, transform);
 
     mat4.identity(transform);
-    mat4.rotate(transform, transform, angle, vec3.fromValues(ax, ay, az));
+    mat4.rotate(transform, transform, angle, [ax, ay, az]);
     const newCameraViewUp = [];
     vec3.transformMat4(newCameraViewUp, cameraViewUp, transform);
 

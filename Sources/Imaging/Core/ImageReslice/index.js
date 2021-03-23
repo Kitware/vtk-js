@@ -99,8 +99,7 @@ function vtkImageReslice(publicAPI, model) {
 
   publicAPI.setResliceAxes = (resliceAxes) => {
     if (!model.resliceAxes) {
-      model.resliceAxes = new Float64Array(16);
-      mat4.identity(model.resliceAxes);
+      model.resliceAxes = mat4.identity(new Float64Array(16));
     }
 
     if (!mat4.exactEquals(model.resliceAxes, resliceAxes)) {
@@ -135,10 +134,11 @@ function vtkImageReslice(publicAPI, model) {
     const outWholeExt = [0, 0, 0, 0, 0, 0];
     const outDims = [0, 0, 0];
 
-    let matrix = new Float64Array(16);
-    mat4.identity(matrix);
+    let matrix = null;
     if (model.resliceAxes) {
       matrix = model.resliceAxes;
+    } else {
+      matrix = mat4.identity(new Float64Array(16));
     }
     const imatrix = new Float64Array(16);
     mat4.invert(imatrix, matrix);
@@ -708,8 +708,7 @@ function vtkImageReslice(publicAPI, model) {
   publicAPI.getIndexMatrix = (input, output) => {
     // first verify that we have to update the matrix
     if (indexMatrix === null) {
-      indexMatrix = new Float64Array(16);
-      mat4.identity(indexMatrix);
+      indexMatrix = mat4.identity(new Float64Array(16));
     }
 
     const inOrigin = input.getOrigin();
@@ -717,12 +716,9 @@ function vtkImageReslice(publicAPI, model) {
     const outOrigin = output.getOrigin();
     const outSpacing = output.getSpacing();
 
-    const transform = new Float64Array(16);
-    mat4.identity(transform);
-    const inMatrix = new Float64Array(16);
-    mat4.identity(inMatrix);
-    const outMatrix = new Float64Array(16);
-    mat4.identity(outMatrix);
+    const transform = mat4.identity(new Float64Array(16));
+    const inMatrix = mat4.identity(new Float64Array(16));
+    const outMatrix = mat4.identity(new Float64Array(16));
 
     if (optimizedTransform) {
       optimizedTransform = null;

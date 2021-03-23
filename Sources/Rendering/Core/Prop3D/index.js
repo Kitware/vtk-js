@@ -1,4 +1,4 @@
-import { vec3, quat, mat4 } from 'gl-matrix';
+import { quat, mat4 } from 'gl-matrix';
 
 import macro from 'vtk.js/Sources/macro';
 import vtkBoundingBox from 'vtk.js/Sources/Common/DataModel/BoundingBox';
@@ -23,7 +23,7 @@ function vtkProp3D(publicAPI, model) {
   publicAPI.getOrientationWXYZ = () => {
     const q = quat.create();
     mat4.getRotation(q, model.rotation);
-    const oaxis = vec3.create();
+    const oaxis = new Float64Array(3);
     const w = quat.getAxisAngle(oaxis, q);
     return [vtkMath.degreesFromRadians(w), oaxis[0], oaxis[1], oaxis[2]];
   };
@@ -75,7 +75,7 @@ function vtkProp3D(publicAPI, model) {
     const q = quat.create();
     quat.setAxisAngle(q, [x, y, z], angle);
 
-    const quatMat = mat4.create();
+    const quatMat = new Float64Array(16);
     mat4.fromQuat(quatMat, q);
     mat4.multiply(model.rotation, model.rotation, quatMat);
     publicAPI.modified();
@@ -191,9 +191,9 @@ export function extend(publicAPI, model, initialValues = {}) {
   macro.setGetArray(publicAPI, model, ['origin', 'position', 'scale'], 3);
 
   // Object internal instance
-  model.matrix = mat4.create();
-  model.rotation = mat4.create();
-  model.userMatrix = mat4.create();
+  model.matrix = mat4.identity(new Float64Array(16));
+  model.rotation = mat4.identity(new Float64Array(16));
+  model.userMatrix = mat4.identity(new Float64Array(16));
   model.transform = null; // FIXME
 
   // Object methods

@@ -57,9 +57,9 @@ function setCamera(sliceMode, renderer, data) {
   const ijk = [0, 0, 0];
   const position = [0, 0, 0];
   const focalPoint = [0, 0, 0];
-  data.indexToWorldVec3(ijk, focalPoint);
+  data.indexToWorld(ijk, focalPoint);
   ijk[sliceMode] = 1;
-  data.indexToWorldVec3(ijk, position);
+  data.indexToWorld(ijk, position);
   renderer.getActiveCamera().set({ focalPoint, position });
   renderer.resetCamera();
 }
@@ -301,7 +301,7 @@ reader
 
         // position
         ijk[slicingMode] = image.imageMapper.getSlice();
-        data.indexToWorldVec3(ijk, position);
+        data.indexToWorld(ijk, position);
 
         widgets.rectangleWidget.getManipulator().setOrigin(position);
         widgets.ellipseWidget.getManipulator().setOrigin(position);
