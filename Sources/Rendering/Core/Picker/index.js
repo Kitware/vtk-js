@@ -89,8 +89,8 @@ function vtkPicker(publicAPI, model) {
     let tol = 0.0;
     let props = [];
     let pickable = false;
-    const p1Mapper = vec4.create();
-    const p2Mapper = vec4.create();
+    const p1Mapper = new Float64Array(4);
+    const p2Mapper = new Float64Array(4);
     const bbox = [...vtkBoundingBox.INIT_BOUNDS];
     const t = [];
     const hitPosition = [];

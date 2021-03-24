@@ -105,11 +105,12 @@ export function extend(publicAPI, model, initialValues = {}) {
   model.keyMatrixTime = {};
   macro.obj(model.keyMatrixTime);
 
+  // values always get set by the get method
   model.keyMatrices = {
-    normalMatrix: mat3.create(),
-    vcpc: mat4.create(),
-    wcvc: mat4.create(),
-    wcpc: mat4.create(),
+    normalMatrix: new Float64Array(9),
+    vcpc: new Float64Array(16),
+    wcvc: new Float64Array(16),
+    wcpc: new Float64Array(16),
   };
 
   // Build VTK API

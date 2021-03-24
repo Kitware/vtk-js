@@ -6,10 +6,9 @@ export const AXES = ['-', '=', '+'];
 // ----------------------------------------------------------------------------
 
 export function transformVec3(ain, transform) {
-  const vin = vec3.fromValues(ain[0], ain[1], ain[2]);
-  const vout = vec3.create();
-  vec3.transformMat4(vout, vin, transform);
-  return [vout[0], vout[1], vout[2]];
+  const vout = new Float64Array(3);
+  vec3.transformMat4(vout, ain, transform);
+  return vout;
 }
 
 // ----------------------------------------------------------------------------

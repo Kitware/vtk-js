@@ -29,7 +29,7 @@ function vtkPixelSpaceCallbackMapper(publicAPI, model) {
     mat4.transpose(matrix, matrix);
 
     const dataPoints = dataset.getPoints();
-    const result = vec3.fromValues(0, 0, 0);
+    const result = new Float64Array(3);
     const width = windowSize.usize;
     const height = windowSize.vsize;
     const hw = width / 2;
@@ -38,10 +38,7 @@ function vtkPixelSpaceCallbackMapper(publicAPI, model) {
 
     for (let pidx = 0; pidx < dataPoints.getNumberOfPoints(); pidx += 1) {
       const point = dataPoints.getPoint(pidx);
-      result[0] = point[0];
-      result[1] = point[1];
-      result[2] = point[2];
-      vec3.transformMat4(result, result, matrix);
+      vec3.transformMat4(result, point, matrix);
       const coord = [result[0] * hw + hw, result[1] * hh + hh, result[2], 0];
 
       if (depthValues) {

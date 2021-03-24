@@ -986,7 +986,7 @@ export function extend(publicAPI, model, initialValues = {}) {
   model.colorTexture = vtkOpenGLTexture.newInstance();
   model.pwfTexture = vtkOpenGLTexture.newInstance();
 
-  model.imagemat = mat4.create();
+  model.imagemat = mat4.identity(new Float64Array(16));
 
   // Build VTK API
   macro.setGet(publicAPI, model, []);

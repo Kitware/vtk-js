@@ -104,13 +104,13 @@ function vtkImageData(publicAPI, model) {
 
   publicAPI.getPoint = (index) => {
     const dims = publicAPI.getDimensions();
-    const ijk = vec3.fromValues(0, 0, 0);
-    const coords = [0, 0, 0];
 
     if (dims[0] === 0 || dims[1] === 0 || dims[2] === 0) {
       vtkErrorMacro('Requesting a point from an empty image.');
       return null;
     }
+
+    const ijk = new Float64Array(3);
 
     switch (model.dataDescription) {
       case StructuredType.EMPTY:
@@ -157,9 +157,8 @@ function vtkImageData(publicAPI, model) {
         break;
     }
 
-    const vout = vec3.create();
-    publicAPI.indexToWorldVec3(ijk, vout);
-    vec3.copy(coords, vout);
+    const coords = [0, 0, 0];
+    publicAPI.indexToWorld(ijk, coords);
     return coords;
   };
 
@@ -204,13 +203,13 @@ function vtkImageData(publicAPI, model) {
       ex[0], ex[3], ex[5],
       ex[1], ex[3], ex[5]];
 
-    const idx = vec3.fromValues(corners[0], corners[1], corners[2]);
-    const vout = vec3.create();
-    publicAPI.indexToWorldVec3(idx, vout);
+    const idx = new Float64Array([corners[0], corners[1], corners[2]]);
+    const vout = new Float64Array(3);
+    publicAPI.indexToWorld(idx, vout);
     const bounds = [vout[0], vout[0], vout[1], vout[1], vout[2], vout[2]];
     for (let i = 3; i < 24; i += 3) {
       vec3.set(idx, corners[i], corners[i + 1], corners[i + 2]);
-      publicAPI.indexToWorldVec3(idx, vout);
+      publicAPI.indexToWorld(idx, vout);
       if (vout[0] < bounds[0]) {
         bounds[0] = vout[0];
       }
@@ -236,12 +235,7 @@ function vtkImageData(publicAPI, model) {
 
   // Internal, shouldn't need to call this manually.
   publicAPI.computeTransforms = () => {
-    const trans = vec3.fromValues(
-      model.origin[0],
-      model.origin[1],
-      model.origin[2]
-    );
-    mat4.fromTranslation(model.indexToWorld, trans);
+    mat4.fromTranslation(model.indexToWorld, model.origin);
 
     model.indexToWorld[0] = model.direction[0];
     model.indexToWorld[1] = model.direction[1];
@@ -255,12 +249,7 @@ function vtkImageData(publicAPI, model) {
     model.indexToWorld[9] = model.direction[7];
     model.indexToWorld[10] = model.direction[8];
 
-    const scale = vec3.fromValues(
-      model.spacing[0],
-      model.spacing[1],
-      model.spacing[2]
-    );
-    mat4.scale(model.indexToWorld, model.indexToWorld, scale);
+    mat4.scale(model.indexToWorld, model.indexToWorld, model.spacing);
 
     mat4.invert(model.worldToIndex, model.indexToWorld);
   };
@@ -311,35 +300,17 @@ function vtkImageData(publicAPI, model) {
     return true;
   };
 
-  // this is the fast version, requires vec3 arguments
-  publicAPI.indexToWorldVec3 = (vin, vout) => {
-    vec3.transformMat4(vout, vin, model.indexToWorld);
-    return vout;
-  };
-
-  // slow version for generic arrays
   publicAPI.indexToWorld = (ain, aout = []) => {
-    const vin = vec3.fromValues(ain[0], ain[1], ain[2]);
-    const vout = vec3.create();
-    vec3.transformMat4(vout, vin, model.indexToWorld);
-    vec3.copy(aout, vout);
+    vec3.transformMat4(aout, ain, model.indexToWorld);
     return aout;
   };
+  publicAPI.indexToWorldVec3 = publicAPI.indexToWorld;
 
-  // this is the fast version, requires vec3 arguments
-  publicAPI.worldToIndexVec3 = (vin, vout) => {
-    vec3.transformMat4(vout, vin, model.worldToIndex);
-    return vout;
-  };
-
-  // slow version for generic arrays
   publicAPI.worldToIndex = (ain, aout = []) => {
-    const vin = vec3.fromValues(ain[0], ain[1], ain[2]);
-    const vout = vec3.create();
-    vec3.transformMat4(vout, vin, model.worldToIndex);
-    vec3.copy(aout, vout);
+    vec3.transformMat4(aout, ain, model.worldToIndex);
     return aout;
   };
+  publicAPI.worldToIndexVec3 = publicAPI.worldToIndex;
 
   publicAPI.indexToWorldBounds = (bin, bout = []) => {
     const in1 = [0, 0, 0];
@@ -564,13 +535,9 @@ export function extend(publicAPI, model, initialValues = {}) {
   vtkDataSet.extend(publicAPI, model, initialValues);
 
   if (!model.direction) {
-    model.direction = mat3.create();
+    model.direction = mat3.identity(new Float64Array(9));
   } else if (Array.isArray(model.direction)) {
-    const dvals = model.direction.slice(0);
-    model.direction = mat3.create();
-    for (let i = 0; i < 9; ++i) {
-      model.direction[i] = dvals[i];
-    }
+    model.direction = new Float64Array(model.direction.slice(0, 9));
   }
 
   model.indexToWorld = new Float64Array(16);

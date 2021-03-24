@@ -65,7 +65,7 @@ test.onlyIfWebGL('Test vtkImageReslice Rendering', (t) => {
   const imageReslice = gc.registerResource(vtkImageReslice.newInstance());
   imageReslice.setInputData(imageData);
   imageReslice.setOutputDimensionality(2);
-  const axes = mat4.create();
+  const axes = mat4.identity(new Float64Array(16));
   mat4.rotateZ(axes, axes, (45 * Math.PI) / 180);
   imageReslice.setResliceAxes(axes);
   imageReslice.setBorder(true);

@@ -187,8 +187,8 @@ export function extend(publicAPI, model, initialValues = {}) {
   model.keyMatrixTime = {};
   macro.obj(model.keyMatrixTime, { mtime: 0 });
   model.keyMatrices = {
-    normalMatrix: mat3.create(),
-    mcwc: mat4.create(),
+    normalMatrix: mat3.identity(new Float64Array(9)),
+    mcwc: mat4.identity(new Float64Array(16)),
   };
 
   // Build VTK API
