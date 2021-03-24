@@ -3,13 +3,13 @@ import vtkBoundingBox from 'vtk.js/Sources/Common/DataModel/BoundingBox';
 
 function vtkBoundsMixin(publicAPI, model) {
   const sourceBounds = [];
-  const bbox = vtkBoundingBox.newInstance();
+  const bbox = [...vtkBoundingBox.INIT_BOUNDS];
 
   publicAPI.containsPoint = (x, y, z) => {
     if (Array.isArray(x)) {
-      return bbox.containsPoint(x[0], x[1], x[2]);
+      return vtkBoundingBox.containsPoint(bbox, x[0], x[1], x[2]);
     }
-    return bbox.containsPoint(x, y, z);
+    return vtkBoundingBox.containsPoint(bbox, x, y, z);
   };
 
   publicAPI.placeWidget = (bounds) => {
@@ -25,7 +25,7 @@ function vtkBoundsMixin(publicAPI, model) {
       model.bounds[i] =
         (bounds[i] - axisCenter) * model.placeFactor + axisCenter;
     }
-    bbox.setBounds(model.bounds);
+    vtkBoundingBox.setBounds(bbox, model.bounds);
     publicAPI.invokeBoundsChange(model.bounds);
     publicAPI.modified();
   };
@@ -44,7 +44,7 @@ function vtkBoundsMixin(publicAPI, model) {
         model.bounds[i] =
           (sourceBounds[i] - axisCenter) * model.placeFactor + axisCenter;
       }
-      bbox.setBounds(model.bounds);
+      vtkBoundingBox.setBounds(bbox, model.bounds);
       publicAPI.invokeBoundsChange(model.bounds);
       publicAPI.modified();
     }

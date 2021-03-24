@@ -21,13 +21,13 @@ import Constants from 'vtk.js/Sources/Common/DataModel/DataSet/Constants';
 
 //     if (ds.Points && ds.Points.values) {
 //       const array = ds.Points.values;
-//       const bbox = vtkBoundingBox.newInstance();
+//       const bbox = [...vtkBoundingBox.INIT_BOUNDS];
 //       const size = array.length;
 //       const delta = ds.Points.numberOfComponents ? ds.Points.numberOfComponents : 3;
 //       for (let idx = 0; idx < size; idx += delta) {
-//         bbox.addPoint(array[idx * delta], array[(idx * delta) + 1], array[(idx * delta) + 2]);
+//         vtkBoundingBox.addPoint(bbox, array[idx * delta], array[(idx * delta) + 1], array[(idx * delta) + 2]);
 //       }
-//       ds.Points.bounds = bbox.getBounds();
+//       ds.Points.bounds = bbox;
 //       return ds.Points.bounds;
 //     }
 //   }

@@ -344,7 +344,7 @@ function vtkImageData(publicAPI, model) {
   publicAPI.indexToWorldBounds = (bin, bout = []) => {
     const in1 = [0, 0, 0];
     const in2 = [0, 0, 0];
-    vtkBoundingBox.computeCornerPoints(in1, in2, bin);
+    vtkBoundingBox.computeCornerPoints(bin, in1, in2);
 
     const out1 = [0, 0, 0];
     const out2 = [0, 0, 0];
@@ -359,7 +359,7 @@ function vtkImageData(publicAPI, model) {
   publicAPI.worldToIndexBounds = (bin, bout = []) => {
     const in1 = [0, 0, 0];
     const in2 = [0, 0, 0];
-    vtkBoundingBox.computeCornerPoints(in1, in2, bin);
+    vtkBoundingBox.computeCornerPoints(bin, in1, in2);
 
     const out1 = [0, 0, 0];
     const out2 = [0, 0, 0];
@@ -392,7 +392,7 @@ function vtkImageData(publicAPI, model) {
 
     const point1 = [0, 0, 0];
     const point2 = [0, 0, 0];
-    vtkBoundingBox.computeCornerPoints(point1, point2, bounds);
+    vtkBoundingBox.computeCornerPoints(bounds, point1, point2);
 
     vtkMath.roundVector(point1, point1);
     vtkMath.roundVector(point2, point2);
