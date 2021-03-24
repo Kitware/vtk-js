@@ -9,12 +9,23 @@ import { RenderingTypes } from 'vtk.js/Sources/Widgets/Core/WidgetManager/Consta
 
 const SVG_XMLNS = 'http://www.w3.org/2000/svg';
 
+const events = {
+  click: 'onClick',
+  dblclick: 'onDblClick',
+  mousedown: 'onMouseDown',
+  mouseup: 'onMouseUp',
+  contextMenu: 'onContextMenu',
+  mouseenter: 'onMouseEnter',
+  mouseleave: 'onMouseLeave',
+};
+
 // ----------------------------------------------------------------------------
 
 function createSvgElement(tag) {
   return {
     name: tag,
     attrs: {},
+    eventListeners: {},
     // implies no children if set
     textContent: null,
     children: [],
@@ -26,6 +37,9 @@ function createSvgElement(tag) {
     },
     appendChild(n) {
       this.children.push(n);
+    },
+    addEventListeners(event, callback) {
+      this.eventListeners[event] = callback;
     },
   };
 }
@@ -102,6 +116,18 @@ function vtkSVGRepresentation(publicAPI, model) {
     return deferred.promise;
   };
 
+  publicAPI.createListenableSvgElement = (tag, id) => {
+    const element = createSvgElement(tag);
+    Object.keys(events)
+      .filter((eventType) => Object.keys(model).includes(events[eventType]))
+      .forEach((eventType) =>
+        element.addEventListeners(eventType, (event) =>
+          model[events[eventType]](event, id)
+        )
+      );
+    return element;
+  };
+
   // --------------------------------------------------------------------------
 
   publicAPI.updateActorVisibility = (
@@ -129,6 +155,9 @@ function vtkSVGRepresentation(publicAPI, model) {
 // Object factory
 // ----------------------------------------------------------------------------
 
+/**
+ * You can define mouse event handlers.
+ */
 const DEFAULT_VALUES = {
   visibility: true,
 };
@@ -141,7 +170,7 @@ export function extend(publicAPI, model, initialValues = {}) {
   // Extend methods
   vtkWidgetRepresentation.extend(publicAPI, model, initialValues);
 
-  macro.setGet(publicAPI, model, ['visibility']);
+  macro.setGet(publicAPI, model, ['visibility', ...Object.values(events)]);
 
   // Object specific methods
   vtkSVGRepresentation(publicAPI, model);
