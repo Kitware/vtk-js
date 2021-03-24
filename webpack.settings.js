@@ -10,11 +10,11 @@ module.exports = {
       base: './Sources/',
     },
     dist: {
-      base: './dist/',
+      base: './dist/umd/',
     },
   },
   urls: {
-    publicPath: '/dist/',
+    publicPath: '/dist/umd/',
   },
   entries: {
     vtk: 'index.js',
