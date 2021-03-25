@@ -34,12 +34,12 @@ function vtkWebGPUTexture(publicAPI, model) {
   };
 
   // set the data
-  publicAPI.writeImageData = (idata) => {
-    if (idata.isA && idata.isA('vtkImageData')) {
+  publicAPI.writeImageData = (req) => {
+    if (req.dataArray) {
       // create and write the buffer
       const buffRequest = {
-        dataArray: idata.getPointData().getScalars(),
-        time: idata.getPointData().getScalars().getMTime(),
+        dataArray: req.dataArray.getPointData().getScalars(),
+        time: req.dataArray.getPointData().getScalars().getMTime(),
         /* eslint-disable no-undef */
         usage: BufferUsage.Texture,
         /* eslint-enable no-undef */
@@ -66,17 +66,17 @@ function vtkWebGPUTexture(publicAPI, model) {
       model.ready = true;
     } else {
       const canvas = document.createElement('canvas');
-      canvas.width = idata.width;
-      canvas.height = idata.height;
+      canvas.width = req.image.width;
+      canvas.height = req.image.height;
       const ctx = canvas.getContext('2d');
       ctx.translate(0, canvas.height);
       ctx.scale(1, -1);
       ctx.drawImage(
-        idata,
+        req.image,
         0,
         0,
-        idata.width,
-        idata.height,
+        req.image.width,
+        req.image.height,
         0,
         0,
         canvas.width,

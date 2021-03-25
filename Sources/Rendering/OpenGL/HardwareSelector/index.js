@@ -121,12 +121,11 @@ function vtkOpenGLHardwareSelector(publicAPI, model) {
         if (
           model.captureZValues &&
           model.currentPass === PassTypes.ACTOR_PASS &&
-          typeof rpasses[0].setDepthRequested === 'function' &&
+          typeof rpasses[0].requestDepth === 'function' &&
           typeof rpasses[0].getFramebuffer === 'function'
         ) {
-          rpasses[0].setDepthRequested(true);
+          rpasses[0].requestDepth();
           model.openGLRenderWindow.traverseAllPasses();
-          rpasses[0].setDepthRequested(false);
         } else {
           model.openGLRenderWindow.traverseAllPasses();
         }
@@ -161,7 +160,7 @@ function vtkOpenGLHardwareSelector(publicAPI, model) {
       if (model.captureZValues) {
         const rpasses = model.openGLRenderWindow.getRenderPasses();
         if (
-          typeof rpasses[0].setDepthRequested === 'function' &&
+          typeof rpasses[0].requestDepth === 'function' &&
           typeof rpasses[0].getFramebuffer === 'function'
         ) {
           const fb = rpasses[0].getFramebuffer();
