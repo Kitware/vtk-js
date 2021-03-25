@@ -36,8 +36,11 @@ export default function widgetBehavior(publicAPI, model) {
     return e.altKey || e.controlKey || e.shiftKey;
   }
 
-  function updateCursor() {
+  function updateCursor(callData) {
     model.isDragging = true;
+    model.previousPosition = [
+      ...model.manipulator.handleEvent(callData, model.openGLRenderWindow),
+    ];
     model.openGLRenderWindow.setCursor('grabbing');
     model.interactor.requestAnimation(publicAPI);
   }
@@ -231,7 +234,7 @@ export default function widgetBehavior(publicAPI, model) {
     ) {
       publicAPI.placeHandle(1);
     } else {
-      updateCursor();
+      updateCursor(e);
     }
     publicAPI.invokeStartInteractionEvent();
     return macro.EVENT_ABORT;
@@ -257,13 +260,31 @@ export default function widgetBehavior(publicAPI, model) {
         callData,
         model.openGLRenderWindow
       );
+      const translation = model.previousPosition
+        ? vtkMath.subtract(worldCoords, model.previousPosition, [])
+        : [0, 0, 0];
+      model.previousPosition = worldCoords;
       if (
         // is placing first or second handle
         model.activeState === model.widgetState.getMoveHandle() ||
         // is dragging already placed first or second handle
         model.isDragging
       ) {
-        model.activeState.setOrigin(worldCoords);
+        if (model.activeState.setOrigin) {
+          model.activeState.setOrigin(worldCoords);
+        } else {
+          // Dragging line
+          publicAPI
+            .getHandle(0)
+            .setOrigin(
+              vtkMath.add(publicAPI.getHandle(0).getOrigin(), translation, [])
+            );
+          publicAPI
+            .getHandle(1)
+            .setOrigin(
+              vtkMath.add(publicAPI.getHandle(1).getOrigin(), translation, [])
+            );
+        }
         publicAPI.updateHandleOrientations();
         updateTextPosition(model);
         publicAPI.invokeInteractionEvent();

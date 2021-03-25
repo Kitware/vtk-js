@@ -35,6 +35,10 @@ export function render(vnode) {
     const key = keys[i];
     node.setAttribute(key, vnode.attrs[key]);
   }
+  // TODO: support removing event listener (e.g. use snabbdom)
+  Object.keys(vnode.eventListeners).forEach((key) => {
+    node.addEventListener(key, vnode.eventListeners[key]);
+  });
 
   if (vnode.textContent) {
     node.textContent = vnode.textContent;

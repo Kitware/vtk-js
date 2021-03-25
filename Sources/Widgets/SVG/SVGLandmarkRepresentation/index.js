@@ -32,9 +32,8 @@ function vtkSVGLandmarkRepresentation(publicAPI, model) {
         const x = xy[0];
         const y = winHeight - xy[1];
 
-        let circle = {};
         if (model.showCircle === true) {
-          circle = createSvgElement('circle');
+          const circle = publicAPI.createListenableSvgElement('circle', i);
           Object.keys(model.circleProps || {}).forEach((prop) =>
             circle.setAttribute(prop, model.circleProps[prop])
           );
@@ -51,7 +50,7 @@ function vtkSVGLandmarkRepresentation(publicAPI, model) {
             ? model.fontProperties.fontSize
             : 15;
         splitText.forEach((subText, j) => {
-          const text = createSvgElement('text');
+          const text = publicAPI.createListenableSvgElement('text', i);
           Object.keys(model.textProps || {}).forEach((prop) => {
             let propValue = model.textProps[prop];
             if (model.offsetText === true && prop === 'dy') {
