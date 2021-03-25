@@ -126,6 +126,14 @@ function vtkRemoteView(publicAPI, model) {
   };
 
   // --------------------------------------------------------------------------
+
+  publicAPI.resetCamera = () => {
+    if (model.viewStream) {
+      model.viewStream.resetCamera();
+    }
+  };
+
+  // --------------------------------------------------------------------------
   // viewStream setters
   // --------------------------------------------------------------------------
   const internal = { modified: publicAPI.modified };
