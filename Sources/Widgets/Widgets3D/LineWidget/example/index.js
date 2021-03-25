@@ -207,7 +207,6 @@ document.querySelector('#addWidget').addEventListener('click', () => {
     document.getElementById(
       'visiH2'
     ).checked = lineWidget.getWidgetState().getHandle2().getVisible();
-    console.log('reset text', document.getElementById('txtIpt'));
     document.getElementById(
       'txtIpt'
     ).value = lineWidget.getWidgetState().getText().getText();
