@@ -40,8 +40,8 @@ function vtkImageCroppingRegionsWidget(publicAPI, model) {
   // camera subscription
   let cameraSub = null;
 
-  model.indexToWorld = mat4.create();
-  model.worldToIndex = mat4.create();
+  model.indexToWorld = mat4.identity(new Float64Array(16));
+  model.worldToIndex = mat4.identity(new Float64Array(16));
 
   let handlesCache = null;
 
@@ -53,17 +53,15 @@ function vtkImageCroppingRegionsWidget(publicAPI, model) {
   };
 
   function worldToIndex(ain) {
-    const vin = vec3.fromValues(ain[0], ain[1], ain[2]);
-    const vout = vec3.create();
-    vec3.transformMat4(vout, vin, model.worldToIndex);
-    return [vout[0], vout[1], vout[2]];
+    const vout = [];
+    vec3.transformMat4(vout, ain, model.worldToIndex);
+    return vout;
   }
 
   function indexToWorld(ain) {
-    const vin = vec3.fromValues(ain[0], ain[1], ain[2]);
-    const vout = vec3.create();
-    vec3.transformMat4(vout, vin, model.indexToWorld);
-    return [vout[0], vout[1], vout[2]];
+    const vout = [];
+    vec3.transformMat4(vout, ain, model.indexToWorld);
+    return vout;
   }
 
   // Overridden method

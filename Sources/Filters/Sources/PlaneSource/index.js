@@ -151,7 +151,7 @@ function vtkPlaneSource(publicAPI, model) {
       return;
     }
     // Create rotation matrix
-    const transform = mat4.create();
+    const transform = mat4.identity(new Float64Array(16));
     const negCenter = [];
     vec3.negate(negCenter, model.center);
 

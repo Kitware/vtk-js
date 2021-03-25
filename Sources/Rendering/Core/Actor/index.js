@@ -1,5 +1,6 @@
 import { vec3, mat4 } from 'gl-matrix';
 import macro from 'vtk.js/Sources/macro';
+import vtkBoundingBox from 'vtk.js/Sources/Common/DataModel/BoundingBox';
 import vtkProp3D from 'vtk.js/Sources/Rendering/Core/Prop3D';
 import vtkProperty from 'vtk.js/Sources/Rendering/Core/Property';
 
@@ -101,19 +102,11 @@ function vtkActor(publicAPI, model) {
     ) {
       vtkDebugMacro('Recomputing bounds...');
       model.mapperBounds = bds.concat(); // copy the mapper's bounds
-      const bbox = [
-        vec3.fromValues(bds[1], bds[3], bds[5]),
-        vec3.fromValues(bds[1], bds[2], bds[5]),
-        vec3.fromValues(bds[0], bds[2], bds[5]),
-        vec3.fromValues(bds[0], bds[3], bds[5]),
-        vec3.fromValues(bds[1], bds[3], bds[4]),
-        vec3.fromValues(bds[1], bds[2], bds[4]),
-        vec3.fromValues(bds[0], bds[2], bds[4]),
-        vec3.fromValues(bds[0], bds[3], bds[4]),
-      ];
+      const bbox = [];
+      vtkBoundingBox.getCorners(bds, bbox);
 
       publicAPI.computeMatrix();
-      const tmp4 = mat4.create();
+      const tmp4 = new Float64Array(16);
       mat4.transpose(tmp4, model.matrix);
       bbox.forEach((pt) => vec3.transformMat4(pt, pt, tmp4));
 

@@ -1430,8 +1430,8 @@ function vtkOpenGLPolyDataMapper(publicAPI, model) {
       const status = light.getSwitch();
       if (status > 0.0) {
         const lp = light.getTransformedPosition();
-        const np = vec3.fromValues(lp[0], lp[1], lp[2]);
-        vec3.transformMat4(np, np, viewTF);
+        const np = new Float64Array(3);
+        vec3.transformMat4(np, lp, viewTF);
         program.setUniform3fArray(
           `lightAttenuation${numberOfLights}`,
           light.getAttenuationValuesByReference()
@@ -1953,8 +1953,8 @@ export function extend(publicAPI, model, initialValues = {}) {
   model.primitives = [];
   model.primTypes = primTypes;
 
-  model.tmpMat3 = mat3.create();
-  model.tmpMat4 = mat4.create();
+  model.tmpMat3 = mat3.identity(new Float64Array(9));
+  model.tmpMat4 = mat4.identity(new Float64Array(16));
 
   for (let i = primTypes.Start; i < primTypes.End; i++) {
     model.primitives[i] = vtkHelper.newInstance();

@@ -195,7 +195,7 @@ function vtkArrowHandleRepresentation(publicAPI, model) {
    * Returns the orientation matrix to align glyph on model.orientation.
    * */
   function getOrientationRotation(viewMatrixInv) {
-    const displayOrientation = vec3.create();
+    const displayOrientation = new Float64Array(3);
     const baseDir = [0, 1, 0];
 
     vec3.transformMat3(displayOrientation, model.orientation, viewMatrixInv);
@@ -205,13 +205,13 @@ function vtkArrowHandleRepresentation(publicAPI, model) {
       .buildFromDegree()
       .rotateFromDirections(baseDir, displayOrientation)
       .getMatrix();
-    const displayRotation = mat3.create();
+    const displayRotation = new Float64Array(9);
     mat3.fromMat4(displayRotation, displayMatrix);
     return displayRotation;
   }
 
   function getCameraFacingRotation(scale3, displayRotation, viewMatrix) {
-    const rotation = mat3.create();
+    const rotation = new Float64Array(9);
     mat3.multiply(rotation, viewMatrix, displayRotation);
     vec3.transformMat3(scale3, scale3, rotation);
     return rotation;
@@ -228,16 +228,18 @@ function vtkArrowHandleRepresentation(publicAPI, model) {
       model.faceCamera === true ||
       (model.faceCamera == null && publicAPI.is2DShape());
 
-    const viewMatrix = mat3.create();
+    const viewMatrix = new Float64Array(9);
     mat3.fromMat4(viewMatrix, model.viewMatrix);
-    const viewMatrixInv = mat3.create();
+    const viewMatrixInv = mat3.identity(new Float64Array(9));
     if (shouldFaceCamera) {
       mat3.invert(viewMatrixInv, viewMatrix);
     }
 
-    let orientationRotation = mat3.create();
+    let orientationRotation = null;
     if (publicAPI.isOrientableShape()) {
       orientationRotation = getOrientationRotation(viewMatrixInv);
+    } else {
+      orientationRotation = mat3.identity(new Float64Array(9));
     }
     if (shouldFaceCamera) {
       orientationRotation = getCameraFacingRotation(
@@ -344,14 +346,12 @@ function vtkArrowHandleRepresentation(publicAPI, model) {
  *    - false to not face camera
  */
 function defaultValues(initialValues) {
-  const viewMatrix = new Float64Array(16);
-  mat4.identity(viewMatrix);
   return {
     defaultScale: 1,
     faceCamera: null,
     orientation: [1, 0, 0],
     shape: ShapeType.SPHERE,
-    viewMatrix,
+    viewMatrix: mat4.identity(new Float64Array(16)),
     ...initialValues,
   };
 }

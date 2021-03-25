@@ -46,13 +46,11 @@ Determine the number of points composing the dataset.
 ### getPoint(index)
 Returns the world position of a data point. Index is the point's index in the 1D data array.
 
-### indexToWorld(in, out), indexToWorldVec3(vin, vout)
+### indexToWorld(in, out)
 Converts the input index vector `[i,j,k]` to world values `[x,y,z]`. Modifies the out vector array in place, but also returns it.
-Can be sped up by providing `gl-matrix vec3` objects directly to `indexToWorldVec3`
 
-### worldToIndex(in, out), worldToIndexVec3(vin, vout)
+### worldToIndex(in, out)
 Converts the input world vector `[x,y,z]` to approximate index values `[i,j,k]`. Should be rounded to integers before attempting to access the index. Modifies the out vector array in place, but also returns it.
-Can be sped up by providing `gl-matrix vec3` objects directly to `worldToIndexVec3`
 
 ### getIndexToWorld(), getWorldToIndex()
 Returns the `mat4` matrices used to convert between world and index. `worldToIndex` is the inverse matrix of `indexToWorld`. Both are made with `Float64Array`.

@@ -185,7 +185,7 @@ function vtkOpenGLSphereMapper(publicAPI, model) {
     if (program.isUniformUsed('MCVCMatrix')) {
       if (!actor.getIsIdentity()) {
         const actMats = model.openGLActor.getKeyMatrices();
-        const tmp4 = mat4.create();
+        const tmp4 = new Float64Array(16);
         mat4.multiply(tmp4, keyMats.wcvc, actMats.mcwc);
         program.setUniformMatrix('MCVCMatrix', tmp4);
       } else {

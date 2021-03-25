@@ -64,9 +64,9 @@ test.onlyIfWebGL('Test vtkCellPicker image mapper', (t) => {
   const positions = picker.getPickedPositions();
   t.equal(positions.length, 1);
   const xyz = positions[0];
-  t.equal(xyz[0], 64.49344014125458);
-  t.equal(xyz[1], 75.65265009452136);
-  t.equal(xyz[2], 12.000000145434939);
+  t.equal(xyz[0], 64.49344091067883);
+  t.equal(xyz[1], 75.65264519589407);
+  t.equal(xyz[2], 12);
 
   const ijk = picker.getCellIJK();
   t.equal(ijk[0], 64);

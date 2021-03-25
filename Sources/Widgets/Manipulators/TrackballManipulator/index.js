@@ -23,22 +23,22 @@ export function trackballRotate(
   const xdeg = (360.0 * dx) / size[0];
   const ydeg = (360.0 * dy) / size[1];
 
-  const newDirection = vec3.fromValues(
+  const newDirection = new Float64Array([
     direction[0],
     direction[1],
-    direction[2]
-  );
+    direction[2],
+  ]);
 
   const xDisplayAxis = viewUp;
   const yDisplayAxis = [0, 0, 0];
   vtkMath.cross(dop, viewUp, yDisplayAxis);
 
-  const rot = mat4.create();
+  const rot = mat4.identity(new Float64Array(16));
   mat4.rotate(rot, rot, vtkMath.radiansFromDegrees(xdeg), xDisplayAxis);
   mat4.rotate(rot, rot, vtkMath.radiansFromDegrees(-ydeg), yDisplayAxis);
 
   vec3.transformMat4(newDirection, newDirection, rot);
-  return [newDirection[0], newDirection[1], newDirection[2]];
+  return newDirection;
 }
 
 // ----------------------------------------------------------------------------
