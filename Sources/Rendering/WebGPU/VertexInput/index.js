@@ -114,7 +114,7 @@ function vtkWebGPUVertexInput(publicAPI, model) {
         }
         vertexBuffers.push(buffer);
       }
-      info.vertexBuffers = vertexBuffers;
+      info.buffers = vertexBuffers;
     }
     return info;
   };

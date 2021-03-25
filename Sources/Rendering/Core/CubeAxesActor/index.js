@@ -103,6 +103,7 @@ function vtkCubeAxesActor(publicAPI, model) {
 
     let changed = false;
     const length = vtkBoundingBox.getDiagonalLength(model.dataBounds);
+    const faceDot = Math.sin((model.faceVisibilityAngle * Math.PI) / 180.0);
     for (let f = 0; f < 6; f++) {
       let drawit = false;
       const faceAxis = Math.floor(f / 2);
@@ -132,10 +133,11 @@ function vtkCubeAxesActor(publicAPI, model) {
         vec3.subtract(tmpv3, tmp2v3, tmpv3);
         vec3.normalize(tmpv3, tmpv3);
         // tmpv3 now holds the face normal vector
-        drawit = tmpv3[2] > 0.05;
+        drawit = tmpv3[2] > faceDot;
         // for perspctive we need the view direction to the plane
         if (!model.camera.getParallelProjection()) {
-          drawit = vec3.dot(tmp2v3, tmpv3) > 0.05;
+          vec3.normalize(tmp2v3, tmp2v3);
+          drawit = vec3.dot(tmp2v3, tmpv3) > faceDot;
         }
       }
       if (drawit !== model.lastFacesToDraw[f]) {
@@ -334,7 +336,7 @@ function vtkCubeAxesActor(publicAPI, model) {
 
   // main method to rebuild the cube axes, gets called on camera modify
   // and changes to key members
-  publicAPI.update = (force = false) => {
+  publicAPI.update = () => {
     // compute what faces to draw
     const facesChanged = publicAPI.computeFacesToDraw();
     const facesToDraw = model.lastFacesToDraw;
@@ -349,7 +351,7 @@ function vtkCubeAxesActor(publicAPI, model) {
     }
 
     // did something significant change? If so rebuild a lot of things
-    if (facesChanged || boundsChanged || force) {
+    if (facesChanged || boundsChanged || model.forceUpdate) {
       // compute the edges to draw
       // for each drawn face, mark edges, all single mark edges we draw
       const edgesToDraw = new Array(12).fill(0);
@@ -381,13 +383,14 @@ function vtkCubeAxesActor(publicAPI, model) {
 
       // rebuild the texture only when force or changed bounds, face
       // visibility changes do to change the atlas
-      if (boundsChanged || force) {
+      if (boundsChanged || model.forceUpdate) {
         publicAPI.updateTextureAtlas(tickStrings);
       }
     }
 
     // compute bounds for label quads whenever the camera changes
     publicAPI.updateTexturePolyData();
+    model.forceUpdate = false;
   };
 
   // create the texture map atlas that contains the rendering of
@@ -522,7 +525,7 @@ function vtkCubeAxesActor(publicAPI, model) {
     ptv3[0] = coords[pos * 3];
     ptv3[1] = coords[pos * 3 + 1];
     ptv3[2] = coords[pos * 3 + 2];
-    // left, right, or middle alignment based on dir[0]
+    // horizontal left, right, or middle alignment based on dir[0]
     if (dir[0] < -0.5) {
       vec3.scale(tmpv3, xDir, dir[0] * offset - value.width);
     } else if (dir[0] > 0.5) {
@@ -668,57 +671,23 @@ function vtkCubeAxesActor(publicAPI, model) {
     model.tmPolyData.modified();
   };
 
-  publicAPI.getActors = () => [model.actor, model.pixelActor, model.tmActor];
+  publicAPI.getActors = () => [model.pixelActor, model.tmActor];
 
   publicAPI.getNestedProps = () => publicAPI.getActors();
 
-  publicAPI.setGridLines = (val) => {
-    if (model.gridLines === val) {
-      return;
-    }
-    model.gridLines = val;
-    publicAPI.update(true);
-    publicAPI.modified();
-  };
-
-  publicAPI.setAxisLabels = (...args) => {
-    let array = args;
-    // allow an array passed as a single arg.
-    if (array.length === 1 && Array.isArray(array[0])) {
-      /* eslint-disable prefer-destructuring */
-      array = array[0];
-      /* eslint-enable prefer-destructuring */
-    }
-
-    if (array.length !== 3) {
-      throw new RangeError(
-        `Invalid number of values for array setter (AxisLabels)`
-      );
-    }
-
-    const changeDetected = model.axisLabels.some(
-      (item, index) => item !== array[index]
-    );
-
-    if (changeDetected || model.axisLabels.length !== array.length) {
-      model.axisLabels = [].concat(array);
-      publicAPI.update(true);
-      console.log('forcing update');
-      publicAPI.modified();
-      return true;
-    }
-    return false;
-  };
+  // Make sure the data is correct
+  publicAPI.onModified(() => {
+    model.forceUpdate = true;
+    publicAPI.update();
+  });
 
   publicAPI.setTickTextStyle = (tickStyle) => {
     model.tickTextStyle = { ...model.tickTextStyle, ...tickStyle };
-    publicAPI.update(true);
     publicAPI.modified();
   };
 
   publicAPI.setAxisTextStyle = (axisStyle) => {
     model.axisTextStyle = { ...model.axisTextStyle, ...axisStyle };
-    publicAPI.update(true);
     publicAPI.modified();
   };
 }
@@ -731,6 +700,7 @@ function defaultValues(initialValues) {
   return {
     camera: null,
     dataBounds: [...vtkBoundingBox.INIT_BOUNDS],
+    faceVisibilityAngle: 8,
     gridLines: true,
     axisLabels: null,
     axisTitlePixelOffset: 35.0,
@@ -761,6 +731,7 @@ export function extend(publicAPI, model, initialValues = {}) {
 
   // internal variables
   model.lastSize = [800, 800];
+  model.lastAspectRatio = 1.0;
   model.lastFacesToDraw = [false, false, false, false, false, false];
   model.axisLabels = ['X-Axis', 'Y-Axis', 'Z-Axis'];
   model.tickCounts = [];
@@ -770,10 +741,7 @@ export function extend(publicAPI, model, initialValues = {}) {
   model.mapper = vtkMapper.newInstance();
   model.polyData = vtkPolyData.newInstance();
   model.mapper.setInputData(model.polyData);
-  model.actor = vtkActor.newInstance();
-  model.actor.setMapper(model.mapper);
 
-  model.actor.setProperty(publicAPI.getProperty());
   publicAPI.getProperty().setDiffuse(0.0);
   publicAPI.getProperty().setAmbient(1.0);
 
@@ -806,17 +774,14 @@ export function extend(publicAPI, model, initialValues = {}) {
 
   macro.setGet(publicAPI, model, [
     'axesTitlePixelOffset',
+    'faceVisibilityAngle',
+    'gridLines',
     'tickLabelPixelOffset',
   ]);
 
   macro.setGetArray(publicAPI, model, ['dataBounds'], 6);
-  macro.getArray(publicAPI, model, ['axisLabels'], 3);
-  macro.get(publicAPI, model, [
-    'axisTextStyle',
-    'tickTextStyle',
-    'camera',
-    'gridLines',
-  ]);
+  macro.setGetArray(publicAPI, model, ['axisLabels'], 3);
+  macro.get(publicAPI, model, ['axisTextStyle', 'tickTextStyle', 'camera']);
 
   // Object methods
   vtkCubeAxesActor(publicAPI, model);

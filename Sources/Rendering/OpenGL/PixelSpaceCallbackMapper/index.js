@@ -79,9 +79,7 @@ function vtkOpenGLPixelSpaceCallbackMapper(publicAPI, model) {
   publicAPI.queryPass = (prepass, renderPass) => {
     if (prepass) {
       if (model.renderable.getUseZValues()) {
-        renderPass.setDepthRequested(true);
-      } else {
-        renderPass.setDepthRequested(true);
+        renderPass.requestDepth();
       }
     }
   };

@@ -25,6 +25,18 @@ function vtkWebGPUTextureManager(publicAPI, model) {
 
   publicAPI.getTexture = (req) => {
     if (req.source) {
+      // fill in req fields based on source and usage
+      if (req.usage === 'vtk') {
+        if (req.source.getImage()) {
+          req.image = req.source.getImage();
+          req.address = req.image;
+          req.time = 0;
+        } else {
+          req.dataArray = req.source.getInputData();
+          req.address = req.dataArray;
+          req.time = req.address.getMTime();
+        }
+      }
       // if a matching texture already exists then return it
       if (model.textures.has(req.source)) {
         const dabuffers = model.textures.get(req.source);
@@ -42,10 +54,7 @@ function vtkWebGPUTextureManager(publicAPI, model) {
       // handle image data versus image
       let dims = [];
       let numComp = 4;
-      if (
-        Object.prototype.hasOwnProperty.call(req.address, 'isA') &&
-        req.address.isA('vtkImageData')
-      ) {
+      if (req.dataArray) {
         dims = req.address.getDimensions();
         numComp = req.address
           .getPointData()
@@ -88,7 +97,7 @@ function vtkWebGPUTextureManager(publicAPI, model) {
       }
 
       // fill the texture
-      newTex.writeImageData(req.address);
+      newTex.writeImageData(req);
 
       const dabuffers = model.textures.get(req.source);
       dabuffers.push({

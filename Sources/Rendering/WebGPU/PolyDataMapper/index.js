@@ -602,13 +602,8 @@ function vtkWebGPUPolyDataMapper(publicAPI, model) {
 
     for (let i = 0; i < newTextures.length; i++) {
       const srcTexture = newTextures[i];
-      const tdata = srcTexture.getInputData()
-        ? srcTexture.getInputData()
-        : srcTexture.getImage();
       const treq = {
-        address: tdata,
         source: srcTexture,
-        time: srcTexture.getMTime(),
         usage: 'vtk',
       };
       const newTex = model.device.getTextureManager().getTexture(treq);
