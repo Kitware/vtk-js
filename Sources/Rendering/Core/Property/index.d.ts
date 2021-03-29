@@ -232,6 +232,11 @@ export interface vtkProperty extends VtkObject {
     getRepresentationAsString(): string;
 
     /**
+     * 
+     */
+    getShading(): boolean;
+
+    /**
      * Get the specular lighting coefficient.
      * @default 0
      */
@@ -270,6 +275,16 @@ export interface vtkProperty extends VtkObject {
      * @param b 
      */
     setAmbientColor(r: number, g: number, b: number): boolean;
+
+    /**
+     * Set the ambient surface color. Not all renderers support separate
+     * ambient and diffuse colors. From a physical standpoint it really
+     * doesn't make too much sense to have both. For the rendering
+     * libraries that don’t support both, the diffuse color is used.
+     * 
+     * @param ambientColor 
+     */
+    setAmbientColor(ambientColor: number[]): boolean;
 
     /**
      * Set the ambient surface color from an RGB array
@@ -318,6 +333,12 @@ export interface vtkProperty extends VtkObject {
     setDiffuseColor(r: number, g: number, b: number): boolean;
 
     /**
+     * Set the diffuse surface color.
+     * @param diffuseColor 
+     */
+    setDiffuseColor(diffuseColor: number[]): boolean;
+
+    /**
      * Set the diffuse surface color from an RGB array
      * @param diffuseColor 
      */
@@ -330,6 +351,12 @@ export interface vtkProperty extends VtkObject {
      * @param b 
      */
     setEdgeColor(r: number, g: number, b: number): boolean;
+
+    /**
+     * Set the color of primitive edges (if edge visibility is enabled).
+     * @param edgeColor 
+     */
+    setEdgeColor(edgeColor: number[]): boolean;
 
     /**
      * Set the color of primitive edges from an RGB array.
@@ -352,6 +379,11 @@ export interface vtkProperty extends VtkObject {
      * @param frontfaceCulling 
      */
     setFrontfaceCulling(frontfaceCulling: boolean): boolean;
+
+    /**
+     * Set the shading interpolation method for an object.
+     */
+    setInterpolation(interpolation: Interpolation): boolean;
 
     /**
      * Set interpolation to 0 => 'FLAT'.
@@ -420,6 +452,12 @@ export interface vtkProperty extends VtkObject {
     setRepresentationToWireframe(): boolean;
 
     /**
+     * Enable/Disable shading.
+     * @param shading 
+     */
+    setShading(shading: boolean): boolean;
+
+    /**
      * Set the specular lighting coefficient.
      * @param specular 
      */
@@ -432,6 +470,12 @@ export interface vtkProperty extends VtkObject {
      * @param b 
      */
     setSpecularColor(r: number, g: number, b: number): boolean;
+
+    /**
+     * Set the specular surface color from an RGB array
+     * @param specularColor 
+     */
+    setSpecularColor(specularColor: number[]): boolean;
 
     /**
      * Set the specular surface color from an RGB array

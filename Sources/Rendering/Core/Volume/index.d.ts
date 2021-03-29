@@ -1,73 +1,78 @@
-import vtkMapper from "vtk.js/Sources/Rendering/Core/Mapper";
+import vtkVolumeMapper from "vtk.js/Sources/Rendering/Core/VolumeMapper";
 import vtkProp3D from "vtk.js/Sources/Rendering/Core/Prop3D";
 import vtkProperty from "vtk.js/Sources/Rendering/Core/Property";
 
 interface IVolumeInitialValues {
-    /**
-     * 
-     */
-    mapper: any;
+	/**
+	 * 
+	 */
+	mapper?: any;
 
-    /**
-     * 
-     */
-    property: any;
+	/**
+	 * 
+	 */
+	property?: any;
 
-    /**
-     * 
-     */
-    bounds: number[];
+	/**
+	 * 
+	 */
+	bounds?: number[];
 }
 
 /**
  * 
  */
 export interface vtkVolume extends vtkProp3D {
-	
-    /**
+
+	/**
 	 * 
 	 */
-     getVolumes(): any;
-		
-     /**
-      * 
-      */
-     getProperty(): vtkProperty;
-         
-     /**
-      * 
-      */
-     getBounds(): number[];
+	getMapper(): vtkVolumeMapper;
 
-     /**
-      * 
-      */
-     getBoundsByReference(): number[];
-         
-     /**
-      * 
-      */
-     getMTime(): number;
-         
-     /**
-      * 
-      */
-     getRedrawMTime(): number;
+	/**
+	 * 
+	 */
+	getVolumes(): vtkVolume;
 
-     /**
-      * 
-      */
-     makeProperty(): void;
+	/**
+	 * 
+	 */
+	getProperty(): vtkProperty;
 
-    /**
-      * 
-      */
-    setMapper(mapper: vtkMapper): boolean;
+	/**
+	 * Get the bounds as [xmin, xmax, ymin, ymax, zmin, zmax].
+	 */
+	getBounds():  number[];
 
-    /**
-      * 
-      */
-    setProperty(property: vtkProperty): boolean;
+	/**
+	 * Get the bounds as [xmin, xmax, ymin, ymax, zmin, zmax].
+	 */
+	getBoundsByReference(): number[];
+
+	/**
+	 * 
+	 */
+	getMTime(): number;
+
+	/**
+	 * 
+	 */
+	getRedrawMTime(): number;
+
+	/**
+	 * 
+	 */
+	makeProperty(): void;
+
+	/**
+	  * 
+	  */
+	setMapper(mapper: vtkVolumeMapper | null): boolean;
+
+	/**
+	  * 
+	  */
+	setProperty(property: vtkProperty): boolean;
 }
 
 /**
@@ -77,19 +82,18 @@ export interface vtkVolume extends vtkProp3D {
  * @param model object on which data structure will be bounds (protected)
  * @param initialValues (default: {})
  */
- export function extend(publicAPI: object, model: object, initialValues?: IVolumeInitialValues): void;
+export function extend(publicAPI: object, model: object, initialValues?: IVolumeInitialValues): void;
 
- /**
-  * Method use to create a new instance of vtkVolume 
-  */
- export function newInstance(initialValues?: IVolumeInitialValues): vtkVolume;
- 
- /** 
-  * vtkVolume inherits from vtkMapper.
-  */
- export declare const vtkVolume: {
-     newInstance: typeof newInstance,
-     extend: typeof extend,
- };
- export default vtkVolume;
- 
+/**
+ * Method use to create a new instance of vtkVolume 
+ */
+export function newInstance(initialValues?: IVolumeInitialValues): vtkVolume;
+
+/** 
+ * vtkVolume inherits from vtkMapper.
+ */
+export declare const vtkVolume: {
+	newInstance: typeof newInstance,
+	extend: typeof extend,
+};
+export default vtkVolume;

@@ -205,6 +205,13 @@ export interface vtkProp3D extends vtkProp {
     setOrigin(x: number, y: number, z: number): boolean;
 
     /**
+     * Set the origin of the Prop3D. This is the point about which all rotations take place.
+     * @param origin
+     */
+    setOrigin(origin: number[]): boolean;
+
+
+    /**
      * 
      * @param origin 
      */

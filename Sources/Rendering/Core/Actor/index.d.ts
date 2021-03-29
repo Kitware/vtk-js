@@ -10,10 +10,10 @@ interface IActorInitialValues {
      * 
      */
     mapper?: vtkMapper;
+
     /**
      * 
      */
-
     property?: vtkProperty;
 
     /**
@@ -84,7 +84,7 @@ export interface vtkActor extends vtkProp3D {
     /**
      * 
      */
-    getMapper(): vtkMapper;
+    getMapper(): null | vtkMapper;
 
     /**
      * Get the property object that controls this actors surface
@@ -129,7 +129,7 @@ export interface vtkActor extends vtkProp3D {
      * 
      * @param mapper 
      */
-    setMapper(mapper: vtkMapper): boolean;
+    setMapper(mapper: null | vtkMapper): boolean;
 
     /**
      * 

@@ -132,19 +132,39 @@ export interface vtkConeSource extends vtkAlgorithm {
 	 * @param center 
 	 * @default [0, 0, 0]
 	 */
+	setCenter(center: number[]): boolean;
+
+	/**
+	 * Set the center of the cone.
+	 * It is located at the middle of the axis of the cone.
+	 * Warning: this is not the center of the base of the cone!
+	 * @param center 
+	 * @default [0, 0, 0]
+	 */
 	setCenterFrom(center: number[]): boolean;
 
 	/**
-	 * 
+	 * Set the direction for the cone.
 	 * @param x 
 	 * @param y 
 	 * @param z 
+	 * @default [1, 0, 0]
 	 */
 	setDirection(x: number, y: number, z: number): boolean;
 
 	/**
-	 * 
+	 * Set the direction for the cone.
+	 * @param x 
+	 * @param y 
+	 * @param z 
+	 * @default [1, 0, 0]
+	 */
+	setDirection(direction: number[]): boolean;
+
+	/**
+	 * Set the direction for the cone.
 	 * @param direction 
+	 * @default [1, 0, 0]
 	 */
 	setDirectionFrom(direction: number[]): boolean;
 

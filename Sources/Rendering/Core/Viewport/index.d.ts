@@ -172,11 +172,23 @@ export interface vtkViewport extends VtkObject {
 
     /**
      * 
+     * @param background 
+     */
+    setBackground(background: number[]): boolean;
+
+    /**
+     * 
      * @param r 
      * @param g 
      * @param b 
      */
     setBackground2(r: number, g: number, b: number): boolean;
+
+    /**
+     * 
+     * @param background 
+     */
+    setBackground2(background: number[]): boolean;
 
     /**
      * 

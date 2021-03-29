@@ -59,6 +59,11 @@ export interface vtkVolumeProperty extends VtkObject {
     /**
      * 
      */
+    getAmbient(): number;
+
+    /**
+     * 
+     */
     getMTime(): number;
 
     /**
@@ -313,7 +318,7 @@ export interface vtkVolumeProperty extends VtkObject {
     /**
      * 
      */
-    getInterpolationTypeAsString(): boolean;
+    getInterpolationTypeAsString(): string;
 }
 
 /**

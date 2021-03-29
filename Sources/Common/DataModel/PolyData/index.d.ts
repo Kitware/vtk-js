@@ -1,4 +1,5 @@
 import { vec3 } from 'gl-matrix';
+import vtkCellArray from 'vtk.js/Sources/Common/Core/CellArray';
 import vtkPointSet from 'vtk.js/Sources/Common/DataModel/PointSet';
 
 /**
@@ -47,12 +48,12 @@ export interface vtkPolyData extends vtkPointSet {
 	/**
 	 * 
 	 */
-	getCells(): any;
+	getCells(): vtkCellArray;
 
 	/**
 	 * 
 	 */
-	getLines(): any;
+	getLines(): vtkCellArray;
 
 	/**
 	 * 
@@ -98,42 +99,42 @@ export interface vtkPolyData extends vtkPointSet {
 	/**
 	 * 
 	 */
-	getPolys(): any;
+	getPolys(): vtkCellArray;
 
 	/**
 	 * 
 	 */
-	getStrips(): any;
+	getStrips(): vtkCellArray;
 
 	/**
 	 * Get the cell array defining vertices. If there are no vertices, an empty
 	 * array will be returned (convenience to simplify traversal).
 	 */
-	getVerts(): any;
+	getVerts(): vtkCellArray;
 
 	/**
 	 * 
 	 * @param lines 
 	 */
-	setLines(lines: any): boolean;
+	setLines(lines: vtkCellArray): boolean;
 
 	/**
 	 * 
 	 * @param polys 
 	 */
-	setPolys(polys: any): boolean;
+	setPolys(polys: vtkCellArray): boolean;
 
 	/**
 	 * 
 	 * @param strips 
 	 */
-	setStrips(strips: any): boolean;
+	setStrips(strips: vtkCellArray): boolean;
 
 	/**
 	 * Set the cell array defining vertices.
 	 * @param verts 
 	 */
-	setVerts(verts: any): boolean;
+	setVerts(verts: vtkCellArray): boolean;
 }
 
 /**
