@@ -83,7 +83,6 @@ const DEFAULT_VALUES = {
   translucentActorCount: 0,
   volumeCount: 0,
   framebuffer: null,
-  depthRequested: false,
 };
 
 // ----------------------------------------------------------------------------
@@ -95,7 +94,6 @@ export function extend(publicAPI, model, initialValues = {}) {
   vtkRenderPass.extend(publicAPI, model, initialValues);
 
   macro.get(publicAPI, model, ['framebuffer']);
-  macro.setGet(publicAPI, model, ['depthRequested']);
 
   // Object methods
   vtkForwardPass(publicAPI, model);

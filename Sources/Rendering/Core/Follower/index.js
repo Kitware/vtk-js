@@ -37,24 +37,23 @@ function vtkFollower(publicAPI, model) {
 
       if (model.camera) {
         // first compute our target viewUp
-        const vup = vec3.fromValues(model.viewUp);
+        const vup = new Float64Array(model.viewUp);
         if (!model.useViewUp) {
           vec3.set(vup, ...model.camera.getViewUp());
         }
 
         // compute a vpn
-        const vpn = vec3.create();
+        const vpn = new Float64Array(3);
         if (model.camera.getParallelProjection()) {
           vec3.set(vpn, model.camera.getViewPlaneNormal());
         } else {
           vec3.set(vpn, ...model.position);
-          const tmpv3 = vec3.fromValues(...model.camera.getPosition());
-          vec3.subtract(vpn, tmpv3, vpn);
+          vec3.subtract(vpn, model.camera.getPosition(), vpn);
           vec3.normalize(vpn, vpn);
         }
 
         // compute vright
-        const vright = vec3.create();
+        const vright = new Float64Array(3);
         vec3.cross(vright, vup, vpn);
         vec3.normalize(vright, vright);
 
@@ -109,8 +108,7 @@ export function extend(publicAPI, model, initialValues = {}) {
   // Inheritance
   vtkActor.extend(publicAPI, model, initialValues);
 
-  model.followerMatrix = mat4.create();
-  mat4.identity(model.followerMatrix);
+  model.followerMatrix = mat4.identity(new Float64Array(16));
 
   // Build VTK API
   macro.setGet(publicAPI, model, ['useViewUp', 'camera']);

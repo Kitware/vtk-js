@@ -5,7 +5,7 @@ import vtkWebGPUActor from 'vtk.js/Sources/Rendering/WebGPU/Actor';
 // import vtkWebGPUGlyph3DMapper from 'vtk.js/Sources/Rendering/WebGPU/Glyph3DMapper';
 // import vtkWebGPUImageMapper from 'vtk.js/Sources/Rendering/WebGPU/ImageMapper';
 // import vtkWebGPUImageSlice from 'vtk.js/Sources/Rendering/WebGPU/ImageSlice';
-// import vtkWebGPUPixelSpaceCallbackMapper from 'vtk.js/Sources/Rendering/WebGPU/PixelSpaceCallbackMapper';
+import vtkWebGPUPixelSpaceCallbackMapper from 'vtk.js/Sources/Rendering/WebGPU/PixelSpaceCallbackMapper';
 import vtkWebGPUPolyDataMapper from 'vtk.js/Sources/Rendering/WebGPU/PolyDataMapper';
 import vtkWebGPURenderer from 'vtk.js/Sources/Rendering/WebGPU/Renderer';
 // import vtkWebGPUSkybox from 'vtk.js/Sources/Rendering/WebGPU/Skybox';
@@ -55,10 +55,10 @@ export function extend(publicAPI, model, initialValues = {}) {
   // );
   // publicAPI.registerOverride('vtkImageSlice', vtkWebGPUImageSlice.newInstance);
   publicAPI.registerOverride('vtkMapper', vtkWebGPUPolyDataMapper.newInstance);
-  // publicAPI.registerOverride(
-  //   'vtkPixelSpaceCallbackMapper',
-  //   vtkWebGPUPixelSpaceCallbackMapper.newInstance
-  // );
+  publicAPI.registerOverride(
+    'vtkPixelSpaceCallbackMapper',
+    vtkWebGPUPixelSpaceCallbackMapper.newInstance
+  );
   publicAPI.registerOverride('vtkRenderer', vtkWebGPURenderer.newInstance);
   // publicAPI.registerOverride('vtkSkybox', vtkWebGPUSkybox.newInstance);
   // publicAPI.registerOverride(

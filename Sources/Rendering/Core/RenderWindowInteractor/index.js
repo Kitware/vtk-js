@@ -1057,8 +1057,6 @@ export function extend(publicAPI, model, initialValues = {}) {
   macro.get(publicAPI, model, [
     'initialized',
     'container',
-    'enabled',
-    'enableRender',
     'interactorStyle',
     'lastFrameTime',
     'view',
@@ -1068,6 +1066,7 @@ export function extend(publicAPI, model, initialValues = {}) {
   macro.setGet(publicAPI, model, [
     'lightFollowCamera',
     'enabled',
+    'enableRender',
     'recognizeGestures',
     'desiredUpdateRate',
     'stillUpdateRate',

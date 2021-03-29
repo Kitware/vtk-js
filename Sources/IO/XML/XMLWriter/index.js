@@ -1,4 +1,4 @@
-import builder from 'xmlbuilder';
+import { create } from 'xmlbuilder2';
 import { fromByteArray } from 'base64-js';
 import pako from 'pako';
 
@@ -95,8 +95,8 @@ function vtkXMLWriter(publicAPI, model) {
 
   // Can be overridden in subclass
   publicAPI.create = (dataObject) =>
-    builder
-      .create('VTKFile')
+    create()
+      .ele('VTKFile')
       .att('type', model.dataType)
       .att('version', '0.1')
       .att('byte_order', 'LittleEndian')
@@ -142,18 +142,22 @@ function vtkXMLWriter(publicAPI, model) {
   };
 
   publicAPI.processDataArray = (parentEle, scalars) =>
-    parentEle.ele(
-      'DataArray',
-      {
+    parentEle
+      .ele('DataArray', {
         type: TYPED_ARRAY[scalars.getDataType()],
         Name: scalars.getName(),
         format: publicAPI.getFormat(),
         RangeMin: scalars.getRange()[0],
         RangeMax: scalars.getRange()[1],
         NumberOfComponents: scalars.getNumberOfComponents(),
-      },
-      processDataArray(scalars, publicAPI.getFormat(), publicAPI.getBlockSize())
-    );
+      })
+      .txt(
+        processDataArray(
+          scalars,
+          publicAPI.getFormat(),
+          publicAPI.getBlockSize()
+        )
+      );
 
   publicAPI.requestData = (inData, outData) => {
     model.file = publicAPI.write(inData);

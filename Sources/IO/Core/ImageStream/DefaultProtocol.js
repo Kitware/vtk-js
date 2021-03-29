@@ -12,6 +12,7 @@ export default function createMethods(session) {
       session.call('viewport.image.push.enabled', [viewId, enabled]),
     render: (options = { size: [400, 400], view: -1 }) =>
       session.call('viewport.image.push', [options]),
+    resetCamera: (view = -1) => session.call('viewport.camera.reset', [view]),
     invalidateCache: (viewId) =>
       session.call('viewport.image.push.invalidate.cache', [viewId]),
     setQuality: (viewId, quality, ratio = 1) =>
