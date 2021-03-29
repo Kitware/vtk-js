@@ -1,107 +1,192 @@
-import { VtkObject } from "vtk.js/Sources/macro";
+import { VtkObject, VtkSubscription } from "vtk.js/Sources/macro";
 import vtkRenderer from "vtk.js/Sources/Rendering/Core/Renderer";
+import vtkRenderWindowInteractor from "vtk.js/Sources/Rendering/Core/RenderWindowInteractor";
+// import vtkOpenGLRenderWindow from 'vtk.js/Sources/Rendering/OpenGL/RenderWindow';
 
 interface IRenderWindowInitialValues {
-    /**
-     * 
-     */
-    renderers?: vtkRenderer[],
+	/**
+	 * 
+	 */
+	renderers?: vtkRenderer[],
 
-    /**
-     * 
-     */
-    views?: vtkRenderWindow[],
+	/**
+	 * 
+	 */
+	views?: vtkRenderWindow[],
 
-    /**
-     * 
-     */
-    interactor?: any,
+	/**
+	 * 
+	 */
+	interactor?: any,
 
-    /**
-     * 
-     */
-    neverRendered?: boolean,
+	/**
+	 * 
+	 */
+	neverRendered?: boolean,
 
-    /**
-     * 
-     */
-    numberOfLayers?: number
+	/**
+	 * 
+	 */
+	numberOfLayers?: number
 }
 
 interface IStatistics {
 
-    /**
-     * 
-     */
-    propCount: number;
+	/**
+	 * 
+	 */
+	propCount: number;
 
-    /**
-     * 
-     */
-    invisiblePropCount: number;
+	/**
+	 * 
+	 */
+	invisiblePropCount: number;
 
-    /**
-     * 
-     */
-    str: string;
+	/**
+	 * 
+	 */
+	str: string;
 }
+
+export const enum DEFAULT_VIEW_API {
+	'WebGL',
+	'WebGPU'
+} 
 
 export interface vtkRenderWindow extends VtkObject {
 
-    /**
-     * Add renderer
-     * @param renderer 
-     */
-    addRenderer(renderer: vtkRenderer): void;
+	/**
+	 * Add renderer
+	 * @param renderer 
+	 */
+	addRenderer(renderer: vtkRenderer): void;
 
-    /**
-     * Remove renderer
-     * @param renderer 
-     */
-    removeRenderer(renderer: vtkRenderer): void;
+	/**
+	 * Add renderer
+	 * @param view 
+	 */
+	addView(view: any): void;
 
-    /**
-     * 
-     * @param ren 
-     * @return  
-     */
-    hasRenderer(ren: vtkRenderer): boolean;
+	/**
+	 * 
+	 * @param format 
+	 */
+	captureImages(format: string): void;
 
-    /**
-     * Add renderer
-     * @param view 
-     */
-    addView(view: any): void;
+	/**
+	 * 
+	 */
+	getDefaultViewAPI(): string;
 
-    /**
-     * Remove renderer
-     * @param view 
-     */
-    removeView(view: any): void;
+	/**
+	 * 
+	 */
+	getInteractor(): vtkRenderWindowInteractor;
 
-    /**
-     * 
-     * @param view 
-     * @return  
-     */
-    hasView(view: any): boolean;
+	/**
+	 * 
+	 */
+	getNumberOfLayers(): number;
 
-    /**
-     * 
-     */
-    render(): void;
+	/**
+	 * 
+	 */
+	getNeverRendered(): boolean;
 
-    /**
-     * 
-     * @return  
-     */
-    getStatistics(): IStatistics;
+	/**
+	 * 
+	 */
+	getRenderers(): vtkRenderer[];
 
-    /**
-     * 
-     * @param format 
-     */
-    captureImages(format: string): void;
+	/**
+	 * 
+	 */
+	getRenderersByReference(): vtkRenderer[];
+
+	/**
+	 * 
+	 * @return  
+	 */
+	getStatistics(): IStatistics;
+
+	/**
+	 * 
+	 */
+	getViews(): any[];
+
+	// getViews(): vtkOpenGLRenderWindow[];
+
+	/**
+	 * 
+	 * @param ren 
+	 * @return  
+	 */
+	hasRenderer(ren: vtkRenderer): boolean;
+
+	/**
+	 * 
+	 * @param view 
+	 * @return  
+	 */
+	hasView(view: any): boolean;
+
+	//hasView(view: vtkOpenGLRenderWindow): boolean;
+
+	/**
+	 * 
+	 * @param callback 
+	 */
+	onCompletion(callback: (instance: VtkObject) => any): VtkSubscription;
+
+	/**
+	 * 
+	 * @param name 
+	 * @param initialValues 
+	 */
+	newAPISpecificView(name: string, initialValues = {}): any;
+
+	/**
+	 * Remove renderer
+	 * @param renderer 
+	 */
+	removeRenderer(renderer: vtkRenderer): void;
+
+	/**
+	 * Remove renderer
+	 * @param view 
+	 */
+	removeView(view: any): void;
+
+	/**
+	 * 
+	 */
+	render(): void;
+
+	/**
+	 * 
+	 * @param defaultViewAPI 
+	 */
+	setDefaultViewAPI(defaultViewAPI: DEFAULT_VIEW_API): boolean;
+
+	/**
+	 * 
+	 * @param interactor 
+	 */
+	setInteractor(interactor: vtkRenderWindowInteractor): boolean;
+
+	/**
+	 * 
+	 * @param numberOfLayers 
+	 */
+	setNumberOfLayers(numberOfLayers: number): boolean;
+
+	/**
+	 * 
+	 * @param views 
+	 */
+	setViews(views: any[]): boolean;
+
+	// setViews(views: vtkOpenGLRenderWindow[]): boolean;
 }
 
 
@@ -119,6 +204,23 @@ export function extend(publicAPI: object, model: object, initialValues?: IRender
  */
 export function newInstance(initialValues?: IRenderWindowInitialValues): vtkRenderWindow;
 
+/**
+ * 
+ */
+export function registerViewConstructor(name: string, constructor: any): void;
+
+/**
+ * 
+ */
+export function listViewAPIs(): string[];
+
+/**
+ * 
+ */
+export function newAPISpecificView(name: string, initialValues = {}): any;
+
+
+
 /** 
  * vtkRenderWindow represents part or all of a RenderWindow. It holds a
  * colleciton of props that will be rendered into the area it represents.
@@ -133,7 +235,10 @@ export function newInstance(initialValues?: IRenderWindowInitialValues): vtkRend
  * @see vtkVolume
  */
 export declare const vtkRenderWindow: {
-    newInstance: typeof newInstance,
-    extend: typeof extend,
+	newInstance: typeof newInstance,
+	extend: typeof extend,
+	registerViewConstructor: typeof registerViewConstructor,
+	listViewAPIs: typeof listViewAPIs,
+	newAPISpecificView: typeof newAPISpecificView,
 };
 export default vtkRenderWindow;

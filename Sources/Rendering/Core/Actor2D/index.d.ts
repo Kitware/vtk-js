@@ -94,13 +94,11 @@ export interface vtkActor2D extends vtkProp {
 	getHeight(): number;
 
 	/**
-	 * Get the bounds for this Actor as [Xmin,Xmax,Ymin,Ymax,Zmin,Zmax].
-	 * @returns 
+	 * Get the bounds as [xmin, xmax, ymin, ymax, zmin, zmax].
 	 */
 	getBounds(): number[];
 
 	/**
-	 * Description:
 	 * Return the actual vtkCoordinate reference that the mapper should use
 	 * to position the actor. This is used internally by the mappers and should
 	 * be overridden in specialized subclasses and otherwise ignored.

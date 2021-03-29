@@ -1,4 +1,5 @@
 import { vec3 } from 'gl-matrix';
+import vtkPoints from 'vtk.js/Sources/Common/Core/Points';
 import vtkDataSet from 'vtk.js/Sources/Common/DataModel/DataSet';
 
 /**
@@ -27,12 +28,12 @@ export interface vtkPointSet extends vtkDataSet {
 	/**
 	 * 
 	 */
-	getPoints(): any;
+	getPoints(): vtkPoints;
 
 	/**
 	 * 
 	 */
-	setPoints(points: any): boolean;
+	setPoints(points: vtkPoints): boolean;
 }
 
 /**
