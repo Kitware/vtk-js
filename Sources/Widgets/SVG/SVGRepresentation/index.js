@@ -9,16 +9,6 @@ import { RenderingTypes } from 'vtk.js/Sources/Widgets/Core/WidgetManager/Consta
 
 const SVG_XMLNS = 'http://www.w3.org/2000/svg';
 
-const events = {
-  click: 'onClick',
-  dblclick: 'onDblClick',
-  mousedown: 'onMouseDown',
-  mouseup: 'onMouseUp',
-  contextMenu: 'onContextMenu',
-  mouseenter: 'onMouseEnter',
-  mouseleave: 'onMouseLeave',
-};
-
 // ----------------------------------------------------------------------------
 
 function createSvgElement(tag) {
@@ -118,13 +108,16 @@ function vtkSVGRepresentation(publicAPI, model) {
 
   publicAPI.createListenableSvgElement = (tag, id) => {
     const element = createSvgElement(tag);
-    Object.keys(events)
-      .filter((eventType) => Object.keys(model).includes(events[eventType]))
-      .forEach((eventType) =>
-        element.addEventListeners(eventType, (event) =>
-          model[events[eventType]](event, id)
-        )
-      );
+    if (model.pickable) {
+      element.addEventListeners('mouseenter', () => {
+        publicAPI.setHover(id);
+      });
+      element.addEventListeners('mouseleave', () => {
+        if (publicAPI.getHover() === id) {
+          publicAPI.setHover(null);
+        }
+      });
+    }
     return element;
   };
 
@@ -156,7 +149,7 @@ function vtkSVGRepresentation(publicAPI, model) {
 // ----------------------------------------------------------------------------
 
 /**
- * You can define mouse event handlers.
+ * 'hover' is not null when a pickable SVG element is mouse hovered.
  */
 const DEFAULT_VALUES = {
   visibility: true,
@@ -170,7 +163,7 @@ export function extend(publicAPI, model, initialValues = {}) {
   // Extend methods
   vtkWidgetRepresentation.extend(publicAPI, model, initialValues);
 
-  macro.setGet(publicAPI, model, ['visibility', ...Object.values(events)]);
+  macro.setGet(publicAPI, model, ['visibility', 'hover']);
 
   // Object specific methods
   vtkSVGRepresentation(publicAPI, model);
