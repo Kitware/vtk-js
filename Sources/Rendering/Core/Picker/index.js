@@ -91,7 +91,7 @@ function vtkPicker(publicAPI, model) {
     let pickable = false;
     const p1Mapper = new Float64Array(4);
     const p2Mapper = new Float64Array(4);
-    const bbox = [...vtkBoundingBox.INIT_BOUNDS];
+    const bbox = vtkBoundingBox.newInstance();
     const t = [];
     const hitPosition = [];
     const view = renderer.getRenderWindow().getViews()[0];
@@ -281,12 +281,13 @@ function vtkPicker(publicAPI, model) {
         }
 
         if (mapper) {
-          vtkBoundingBox.setBounds(bbox, mapper.getBounds());
+          bbox.setBounds(mapper.getBounds());
+          bbox.inflate(tol);
         } else {
-          vtkBoundingBox.reset(bbox);
+          bbox.reset();
         }
 
-        if (vtkBoundingBox.intersectBox(bbox, p1Mapper, ray, hitPosition, t)) {
+        if (bbox.intersectBox(p1Mapper, ray, hitPosition, t)) {
           t[0] = publicAPI.intersectWithLine(
             p1Mapper,
             p2Mapper,
