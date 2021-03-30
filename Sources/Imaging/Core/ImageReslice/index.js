@@ -16,7 +16,9 @@ import {
   vtkInterpolationMathRound,
   vtkInterpolationMathClamp,
 } from 'vtk.js/Sources/Imaging/Core/AbstractImageInterpolator/InterpolationInfo';
-import { SlabMode } from './Constants';
+import Constants from 'vtk.js/Sources/Imaging/Core/ImageReslice/Constants';
+
+const { SlabMode } = Constants;
 
 const { TYPED_ARRAYS, capitalize, vtkErrorMacro } = macro;
 
@@ -1139,4 +1141,4 @@ export const newInstance = macro.newInstance(extend, 'vtkImageReslice');
 
 // ----------------------------------------------------------------------------
 
-export default { newInstance, extend };
+export default { newInstance, extend, ...Constants };

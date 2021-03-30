@@ -1,6 +1,8 @@
 import macro from 'vtk.js/Sources/macro';
-import { ImageBorderMode, InterpolationMode } from './Constants';
+import Constants from 'vtk.js/Sources/Imaging/Core/AbstractImageInterpolator/Constants';
 import { vtkInterpolationInfo } from './InterpolationInfo';
+
+const { ImageBorderMode } = Constants;
 
 // ----------------------------------------------------------------------------
 // Global methods
@@ -237,4 +239,4 @@ export const newInstance = macro.newInstance(
 
 // ----------------------------------------------------------------------------
 
-export default { newInstance, extend, ImageBorderMode, InterpolationMode };
+export default { newInstance, extend, ...Constants };
