@@ -5,6 +5,7 @@ import vtkInteractiveOrientationWidget from './InteractiveOrientationWidget';
 import vtkPaintWidget from './PaintWidget';
 import vtkPolyLineWidget from './PolyLineWidget';
 import vtkRectangleWidget from './RectangleWidget';
+import vtkResliceCursorWidget from './ResliceCursorWidget';
 
 export default {
   vtkEllipseWidget,
@@ -14,4 +15,5 @@ export default {
   vtkPaintWidget,
   vtkPolyLineWidget,
   vtkRectangleWidget,
+  vtkResliceCursorWidget,
 };
