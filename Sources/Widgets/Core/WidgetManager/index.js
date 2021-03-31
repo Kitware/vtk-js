@@ -166,7 +166,7 @@ function vtkWidgetManager(publicAPI, model) {
         promise.then((vnodes) => {
           let pendingRenders = pendingSvgRenders.get(widget) || [];
           const idx = pendingRenders.indexOf(promise);
-          if (model.deleted || idx === -1) {
+          if (model.deleted || widget.isDeleted() || idx === -1) {
             return;
           }
 
