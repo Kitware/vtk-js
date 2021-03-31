@@ -48,8 +48,9 @@ function vtkLabelRepresentation(publicAPI, model) {
 
   publicAPI.computeInteractionState = (pos) => {
     if (model.canvas) {
-      const height = model.canvas.height;
-      const width = model.canvas.width;
+      const dpr = window.devicePixelRatio || 1;
+      const height = model.canvas.height * dpr;
+      const width = model.canvas.width * dpr;
 
       const canvasPosition = getCanvasPosition();
 
