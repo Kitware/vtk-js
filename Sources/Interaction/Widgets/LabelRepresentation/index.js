@@ -209,6 +209,7 @@ function vtkLabelRepresentation(publicAPI, model) {
     if (model.context && model.canvas) {
       // Clear canvas
       model.context.clearRect(0, 0, model.canvas.width, model.canvas.height);
+      model.canvas.hidden = !model.actor.getVisibility();
 
       // Render text
       if (model.actor.getVisibility()) {
