@@ -373,6 +373,15 @@ function vtkWidgetManager(publicAPI, model) {
     }
   };
 
+  function addWidgetInternal(viewWidget) {
+    viewWidget.setWidgetManager(publicAPI);
+    updateWidgetWeakMap(viewWidget);
+    updateDisplayScaleParams();
+
+    // Register to renderer
+    model.renderer.addActor(viewWidget);
+  }
+
   publicAPI.addWidget = (widget, viewType, initialValues) => {
     if (!model.renderer) {
       vtkErrorMacro(
@@ -390,12 +399,7 @@ function vtkWidgetManager(publicAPI, model) {
 
     if (model.widgets.indexOf(w) === -1) {
       model.widgets.push(w);
-      w.setWidgetManager(publicAPI);
-      updateWidgetWeakMap(w);
-
-      // Register to renderer
-      model.renderer.addActor(w);
-
+      addWidgetInternal(w);
       publicAPI.modified();
     }
 
