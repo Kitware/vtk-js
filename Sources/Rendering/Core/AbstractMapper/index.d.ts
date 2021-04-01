@@ -1,4 +1,4 @@
-import { VtkAlgorithm } from 'vtk.js/Sources/macro';
+import { VtkAlgorithm, VtkObject } from 'vtk.js/Sources/macro';
 
 /**
  * 
@@ -7,10 +7,14 @@ interface IAbstractMapperInitialValues {
 	/**
 	 * 
 	 */
-	clippingPlanes : any[];
+	clippingPlanes?: any[];
 }
 
-export interface vtkAbstractMapper extends VtkAlgorithm {
+type vtkAlgorithm = VtkObject & Omit<VtkAlgorithm,
+    'getOutputData' |
+    'getOutputPort'> ;
+
+export interface vtkAbstractMapper extends vtkAlgorithm {
 
     /**
      * Added plane needs to be a vtkPlane object.
