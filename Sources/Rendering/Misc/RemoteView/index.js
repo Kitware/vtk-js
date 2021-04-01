@@ -44,6 +44,10 @@ function vtkRemoteView(publicAPI, model) {
     }
   });
 
+  if (model.viewStream) {
+    publicAPI.setViewStream(model.viewStream);
+  }
+
   // --------------------------------------------------------------------------
   // API
   // --------------------------------------------------------------------------
@@ -66,20 +70,26 @@ function vtkRemoteView(publicAPI, model) {
   // remote handing
   // --------------------------------------------------------------------------
 
+  publicAPI.setViewStream = (viewStream) => {
+    model.viewStream = viewStream;
+    model.canvasView.setViewStream(model.viewStream);
+
+    // Configure image quality
+    model.viewStream.setStillQuality(model.stillQuality);
+    model.viewStream.setStillRatio(model.stillRatio);
+    model.viewStream.setInteractiveQuality(model.interactiveQuality);
+    model.viewStream.setInteractiveRatio(model.interactiveRatio);
+
+    // Link user interactions
+    model.interactor.onStartAnimation(model.viewStream.startInteraction);
+    model.interactor.onEndAnimation(model.viewStream.endInteraction);
+
+    publicAPI.setViewId(viewStream.getViewId());
+  };
+
   publicAPI.setViewId = (id) => {
     if (!model.viewStream) {
-      model.viewStream = SHARED_IMAGE_STREAM.createViewStream(id);
-      model.canvasView.setViewStream(model.viewStream);
-
-      // Configure image quality
-      model.viewStream.setStillQuality(model.stillQuality);
-      model.viewStream.setStillRatio(model.stillRatio);
-      model.viewStream.setInteractiveQuality(model.interactiveQuality);
-      model.viewStream.setInteractiveRatio(model.interactiveRatio);
-
-      // Link user interactions
-      model.interactor.onStartAnimation(model.viewStream.startInteraction);
-      model.interactor.onEndAnimation(model.viewStream.endInteraction);
+      publicAPI.setViewStream(SHARED_IMAGE_STREAM.createViewStream(id));
     }
 
     model.viewStream.setViewId(id);
