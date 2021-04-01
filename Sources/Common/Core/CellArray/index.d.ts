@@ -1,4 +1,4 @@
-import { VtkDataArray } from "vtk.js/Sources/macro";
+import { TypedArray, VtkDataArray } from "vtk.js/Sources/macro";
 
 
 /**
@@ -35,7 +35,7 @@ export interface vtkCellArray extends VtkDataArray {
 	 * 
 	 * @param typedArray 
 	 */
-	setData(typedArray: number[]): void;
+	setData(typedArray: TypedArray): void;
 	
 	/**
 	 * Returns the point indexes at the given location as a subarray.
