@@ -21,7 +21,7 @@ const fullScreenRenderer = vtkFullScreenRenderWindow.newInstance({
 });
 const renderer = fullScreenRenderer.getRenderer();
 const renderWindow = fullScreenRenderer.getRenderWindow();
-const openGLRenderWindow = fullScreenRenderer.getOpenGLRenderWindow();
+const apiRenderWindow = fullScreenRenderer.getApiSpecificRenderWindow();
 
 global.renderer = renderer;
 global.renderWindow = renderWindow;
@@ -58,7 +58,7 @@ function widgetRegistration(e) {
     viewWidget.setDisplayCallback((coords) => {
       overlay.style.left = '-100px';
       if (coords) {
-        const [w, h] = openGLRenderWindow.getSize();
+        const [w, h] = apiRenderWindow.getSize();
         overlay.style.left = `${Math.round(
           (coords[0][0] / w) * window.innerWidth -
             overlaySize * 0.5 -
