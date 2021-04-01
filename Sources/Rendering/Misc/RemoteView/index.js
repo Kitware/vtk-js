@@ -44,10 +44,6 @@ function vtkRemoteView(publicAPI, model) {
     }
   });
 
-  if (model.viewStream) {
-    publicAPI.setViewStream(model.viewStream);
-  }
-
   // --------------------------------------------------------------------------
   // API
   // --------------------------------------------------------------------------
@@ -185,6 +181,11 @@ function vtkRemoteView(publicAPI, model) {
     }
     return changeDetected;
   };
+
+  // Initialize viewStream if available
+  if (model.viewStream) {
+    publicAPI.setViewStream(model.viewStream);
+  }
 }
 
 // ----------------------------------------------------------------------------
