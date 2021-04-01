@@ -44,15 +44,13 @@ interface ICircleSourceInitialValues {
 	generate3DTextureCoordinates?: boolean;
 }
 
-type vtkAlgorithm = VtkObject & Pick<VtkAlgorithm,
-	'getNumberOfInputPorts' |
-	'getNumberOfOutputPorts' |
-	'getInputArrayToProcess' |
-	'getOutputData' |
-	'getOutputPort' |
-	'setInputArrayToProcess' |
-	'shouldUpdate' |
-	'update'> ;
+type vtkAlgorithm = VtkObject & Omit<VtkAlgorithm,
+	'getInputData' |
+	'setInputData' |
+	'setInputConnection' |
+	'getInputConnection' | 
+	'addInputConnection' | 
+	'addInputData' > ;
 
 export interface vtkCubeSource extends vtkAlgorithm {
 

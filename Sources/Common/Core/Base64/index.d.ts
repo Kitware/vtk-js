@@ -26,14 +26,14 @@ interface IChunk {
  * @param c 
  * @return  
  */
-export declare function isValidChar(c: any): boolean;
+export declare function isValidChar(c: string): boolean;
 
 /**
  * 
  * @param b64Str 
  * @return  
  */
-export declare function extractChunks(b64Str: any): IChunk[];
+export declare function extractChunks(b64Str: string): IChunk[];
 
 /**
  * 
@@ -43,11 +43,11 @@ export declare function extractChunks(b64Str: any): IChunk[];
  * @param uint8 
  * @return  
  */
-export declare function writeChunk(b64Str: any, chunk: 1, dstOffset: number, uint8: Float32Array): number;
+export declare function writeChunk(b64Str: string, chunk: IChunk, dstOffset: number, uint8: Float32Array): number;
 
 /**
  * 
  * @param b64Str 
  * @return  
  */
-export declare function toArrayBuffer(b64Str: any): ArrayBuffer;
+export declare function toArrayBuffer(b64Str: string): ArrayBuffer;

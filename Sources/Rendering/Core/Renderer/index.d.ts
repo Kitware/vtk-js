@@ -639,13 +639,13 @@ export interface vtkRenderer extends vtkViewport {
      * 
      * @param bounds 
      */
-    resetCamera(bounds: number[] | null): boolean;
+    resetCamera(bounds?: number[]): boolean;
 
     /**
      * 
      * @param bounds 
      */
-    resetCameraClippingRange(bounds: number[] | null): boolean;
+    resetCameraClippingRange(bounds?: number[]): boolean;
 
     /**
      * 
