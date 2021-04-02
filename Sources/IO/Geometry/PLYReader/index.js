@@ -169,15 +169,17 @@ function postProcess(buffer, elements) {
     let idxCoord = 0;
     for (let faceIdx = 0; faceIdx < nbFaces; ++faceIdx) {
       const nbFaceVerts = buffer.indices[idxVerts++];
-      const texcoods = buffer.faceVertexUvs[idxCoord++];
-      if (nbFaceVerts * 2 === texcoods.length) {
+      const texcoords = buffer.faceVertexUvs[idxCoord++];
+      if (nbFaceVerts * 2 === texcoords.length) {
         // grab the vertex index
         for (let vertIdx = 0; vertIdx < nbFaceVerts; ++vertIdx) {
           const vert = buffer.indices[idxVerts++];
           // new texture stored at the current face
-          tcoordsArray[vert * 2 + 0] = texcoods[vertIdx * 2 + 0];
-          tcoordsArray[vert * 2 + 1] = texcoods[vertIdx * 2 + 1];
+          tcoordsArray[vert * 2 + 0] = texcoords[vertIdx * 2 + 0];
+          tcoordsArray[vert * 2 + 1] = texcoords[vertIdx * 2 + 1];
         }
+      } else {
+        idxVerts += nbFaceVerts;
       }
     }
   }
