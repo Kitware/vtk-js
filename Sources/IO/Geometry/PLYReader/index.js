@@ -112,11 +112,16 @@ function parseHeader(data) {
 
 function postProcess(buffer, elements) {
   const vertElement = elements.find((element) => element.name === 'vertex');
+  const faceElement = elements.find((element) => element.name === 'face');
 
   let nbVerts = 0;
+  let nbFaces = 0;
 
   if (vertElement) {
     nbVerts = vertElement.count;
+  }
+  if (faceElement) {
+    nbFaces = faceElement.count;
   }
 
   const pointValues = new Float32Array(nbVerts * 3);
@@ -127,6 +132,7 @@ function postProcess(buffer, elements) {
   const hasColor = buffer.colors.length > 0;
   const hasVertTCoods = buffer.uvs.length > 0;
   const hasNorms = buffer.normals.length > 0;
+  const hasFaceTCoods = buffer.faceVertexUvs.length > 0;
 
   for (let vertIdx = 0; vertIdx < nbVerts; vertIdx++) {
     let a = vertIdx * 3 + 0;
@@ -157,6 +163,27 @@ function postProcess(buffer, elements) {
     }
   }
 
+  if (hasFaceTCoods) {
+    // don't use array.shift, because buffer.indices will be used later
+    let idxVerts = 0;
+    let idxCoord = 0;
+    for (let faceIdx = 0; faceIdx < nbFaces; ++faceIdx) {
+      const nbFaceVerts = buffer.indices[idxVerts++];
+      // to skip coords length
+      idxCoord++;
+
+      // grab the vertex index
+      for (let vertIdx = 0; vertIdx < nbFaceVerts; ++vertIdx) {
+        const vert = buffer.indices[idxVerts++];
+        // new texture stored at the current face
+        const idx0 = vert * 2 + 0;
+        const idx1 = vert * 2 + 1;
+        tcoordsArray[idx0] = buffer.faceVertexUvs[idxCoord++];
+        tcoordsArray[idx1] = buffer.faceVertexUvs[idxCoord++];
+      }
+    }
+  }
+
   const polydata = vtkPolyData.newInstance();
 
   polydata.getPoints().setData(pointValues, 3);
@@ -170,7 +197,7 @@ function postProcess(buffer, elements) {
     );
   }
 
-  if (hasVertTCoods) {
+  if (hasVertTCoods || hasFaceTCoods) {
     const da = vtkDataArray.newInstance({
       numberOfComponents: 2,
       values: tcoordsArray,
@@ -277,12 +304,18 @@ function handleElement(buffer, name, element) {
   } else if (name === 'face') {
     const vertexIndices = element.vertex_indices || element.vertex_index;
     const texcoord = element.texcoord;
-    buffer.faceVertexUvs = texcoord;
 
-    if (vertexIndices.length > 0) {
+    if (vertexIndices && vertexIndices.length > 0) {
       buffer.indices.push(vertexIndices.length);
       vertexIndices.forEach((val, idx) => {
         buffer.indices.push(val);
+      });
+    }
+
+    if (texcoord && texcoord.length > 0) {
+      buffer.faceVertexUvs.push(texcoord.length);
+      texcoord.forEach((val, idx) => {
+        buffer.faceVertexUvs.push(val);
       });
     }
   }
