@@ -7,6 +7,7 @@ import { formatBytesToProperUnit, debounce } from 'vtk.js/Sources/macro';
 import HttpDataAccessHelper from 'vtk.js/Sources/IO/Core/DataAccessHelper/HttpDataAccessHelper';
 import vtkActor from 'vtk.js/Sources/Rendering/Core/Actor';
 import vtkDataArray from 'vtk.js/Sources/Common/Core/DataArray';
+import vtkScalarBarActor from 'vtk.js/Sources/Rendering/Core/ScalarBarActor';
 import vtkColorMaps from 'vtk.js/Sources/Rendering/Core/ColorTransferFunction/ColorMaps';
 import vtkColorTransferFunction from 'vtk.js/Sources/Rendering/Core/ColorTransferFunction';
 import vtkFullScreenRenderWindow from 'vtk.js/Sources/Rendering/Misc/FullScreenRenderWindow';
@@ -27,6 +28,7 @@ let autoInit = true;
 let background = [0, 0, 0];
 let renderWindow;
 let renderer;
+let scalarBarActor;
 
 global.pipeline = {};
 
@@ -117,6 +119,9 @@ function createViewer(container) {
 
   container.appendChild(rootControllerContainer);
   container.appendChild(addDataSetButton);
+
+  scalarBarActor = vtkScalarBarActor.newInstance();
+  renderer.addActor(scalarBarActor);
 
   if (userParams.fps) {
     if (Array.isArray(userParams.fps)) {
@@ -318,8 +323,11 @@ function createPipeline(fileName, fileContents) {
       } else {
         componentSelector.style.display = 'none';
       }
+      scalarBarActor.setAxisLabel(colorByArrayName);
+      scalarBarActor.setVisibility(true);
     } else {
       componentSelector.style.display = 'none';
+      scalarBarActor.setVisibility(false);
     }
     mapper.set({
       colorByArrayName,
@@ -359,6 +367,8 @@ function createPipeline(fileName, fileContents) {
   actor.setMapper(mapper);
   mapper.setInputData(source);
   renderer.addActor(actor);
+
+  scalarBarActor.setScalarsToColors(mapper.getLookupTable());
 
   // Manage update when lookupTable change
   const debouncedRender = debounce(renderWindow.render, 10);
