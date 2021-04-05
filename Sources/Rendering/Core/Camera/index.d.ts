@@ -9,97 +9,97 @@ interface ICameraInitialValues {
 	 * 
 	 */
 	position?: number[];
-		
+
 	/**
 	 * 
 	 */
 	focalPoint?: number[];
-		
+
 	/**
 	 * 
 	 */
 	viewUp?: number[];
-		
+
 	/**
 	 * 
 	 */
 	directionOfProjection?: number[];
-		
+
 	/**
 	 * 
 	 */
 	parallelProjection?: boolean;
-		
+
 	/**
 	 * 
 	 */
 	useHorizontalViewAngle?: boolean;
-		
+
 	/**
 	 * 
 	 */
 	viewAngle?: number;
-		
+
 	/**
 	 * 
 	 */
 	parallelScale?: number;
-		
+
 	/**
 	 * 
 	 */
 	clippingRange?: number[];
-		
+
 	/**
 	 * 
 	 */
 	windowCenter?: number[];
-		
+
 	/**
 	 * 
 	 */
 	viewPlaneNormal?: number[];
-		
+
 	/**
 	 * 
 	 */
 	useOffAxisProjection?: boolean;
-		
+
 	/**
 	 * 
 	 */
 	screenBottomLeft?: number[];
-		
+
 	/**
 	 * 
 	 */
 	screenBottomRight?: number[];
-		
+
 	/**
 	 * 
 	 */
 	screenTopRight?: number[];
-		
+
 	/**
 	 * 
 	 */
 	freezeFocalPoint?: boolean;
-		
+
 	/**
 	 * used for world to physical transformations
 	 */
 	physicalTranslation?: number[];
-		
+
 	/**
 	 * 
 	 */
 	physicalScale?: number;
-		
+
 	/**
 	 * 
 	 */
 	physicalViewUp?: number[];
-		
+
 	/**
 	 * 
 	 */
@@ -243,7 +243,6 @@ export interface vtkCamera extends VtkObject {
      */
     getOrientationWXYZ(): void;
 
-
     /**
      *
      * @default false
@@ -299,7 +298,6 @@ export interface vtkCamera extends VtkObject {
      * 
      */
     getPhysicalViewUpByReference(): number[];
-
 
     /**
      * 
@@ -457,20 +455,26 @@ export interface vtkCamera extends VtkObject {
      */
     pitch(angle: number): void;
 
-
     /**
      * Rotate the camera about the direction of projection.
      * @param angle 
      */
     roll(angle: number): void;
 
-
     /**
-     * Set the location of the near and far clipping planes along the direction of projection.
+     * Set the location of the near and far clipping planes along the direction
+     * of projection.
      * @param near 
      * @param far 
      */
     setClippingRange(near: number, far: number): boolean;
+
+    /**
+     * Set the location of the near and far clipping planes along the direction
+     * of projection.
+     * @param clippingRange 
+     */
+    setClippingRange(clippingRange: number[]): boolean;
 
     /**
      * 
@@ -559,8 +563,6 @@ export interface vtkCamera extends VtkObject {
      */
     setParallelProjection(parallelProjection: boolean): boolean;
 
-
-
     /**
      * 
      * @param parallelScale 
@@ -635,7 +637,6 @@ export interface vtkCamera extends VtkObject {
      */
     setRoll(angle: number): boolean;
 
-
     /**
      * 
      * @param x 
@@ -678,7 +679,6 @@ export interface vtkCamera extends VtkObject {
      */
     setScreenTopRightFrom(screenTopRight: number[]): boolean;
 
-
     /**
      * 
      * @param thickness 
@@ -709,7 +709,6 @@ export interface vtkCamera extends VtkObject {
      */
     setViewAngle(viewAngle: number): boolean;
 
-    
     /**
      * 
      * @param mat 
@@ -723,6 +722,12 @@ export interface vtkCamera extends VtkObject {
      * @param z 
      */
     setViewUp(x: number, y: number, z: number): boolean;
+
+    /**
+     * 
+     * @param viewUp
+     */
+    setViewUp(viewUp: number[]): boolean;
 
     /**
      * 

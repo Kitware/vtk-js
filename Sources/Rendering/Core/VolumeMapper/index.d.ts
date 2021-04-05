@@ -15,43 +15,43 @@ interface IVolumeMapperInitialValues {
     /**
      * 
      */
-    bounds: number[];
+    bounds?: number[];
 
     /**
      * 
      */
-    blendMode: BlendMode;
+    blendMode?: BlendMode;
 
     /**
      * 
      */
-    sampleDistance: number;
+    sampleDistance?: number;
 
     /**
      * 
      */
-    imageSampleDistance: number;
+    imageSampleDistance?: number;
 
     /**
      * 
      */
-    maximumSamplesPerRay: number;
+    maximumSamplesPerRay?: number;
 
     /**
      * 
      */
-    autoAdjustSampleDistances: boolean;
+    autoAdjustSampleDistances?: boolean;
 
     /**
      * 
      */
-    averageIPScalarRange: number[];
+    averageIPScalarRange?: number[];
 }
 
 export interface vtkVolumeMapper extends vtkAbstractMapper {
 
     /**
-     * 
+     * Get the bounds as [xmin, xmax, ymin, ymax, zmin, zmax].
      */
     getBounds(): number[];
 

@@ -73,6 +73,8 @@ const vtkWebGPUPolyDataFS = `
 
 [[location(0)]] var<out> outColor : vec4<f32>;
 
+[[builtin(front_facing)]] var<in> frontFacing : bool;
+
 [[stage(fragment)]]
 fn main() -> void
 {
@@ -304,7 +306,9 @@ function vtkWebGPUPolyDataMapper(publicAPI, model) {
       ]).result;
 
       code = vtkWebGPUShaderCache.substitute(code, '//VTK::Normal::Impl', [
-        '  var df: f32  = max(0.0, normalVC.z);',
+        '  var normal: vec3<f32> = normalVC;',
+        '  if (!frontFacing) { normal = -normal; }',
+        '  var df: f32  = max(0.0, normal.z);',
         '  var sf: f32 = pow(df, mapperUBO.SpecularPower);',
         '  var diffuse: vec3<f32> = df * diffuseColor.rgb;',
         '  var specular: vec3<f32> = sf * mapperUBO.SpecularColor.rgb * mapperUBO.SpecularColor.a;',
@@ -469,8 +473,9 @@ function vtkWebGPUPolyDataMapper(publicAPI, model) {
       vertexInput.removeBufferIfPresent('vertexMC');
     }
 
-    // normals
-    {
+    // normals, only used for surface rendering
+    const usage = publicAPI.getUsage(representation, primType);
+    if (usage === BufferUsage.Triangles || usage === BufferUsage.Strips) {
       const normals = pd.getPointData().getNormals();
       const buffRequest = {
         cells,

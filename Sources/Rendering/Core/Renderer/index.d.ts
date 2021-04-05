@@ -1,8 +1,7 @@
-import vtkActor from 'vtk.js/Sources/Rendering/Core/Actor';
 import vtkCamera from 'vtk.js/Sources/Rendering/Core/Camera';
 import vtkLight from 'vtk.js/Sources/Rendering/Core/Light';
 import vtkRenderWindow from 'vtk.js/Sources/Rendering/Core/RenderWindow';
-import vtkProp from 'vtk.js/Sources/Rendering/Core/Prop';
+import vtkProp3D from 'vtk.js/Sources/Rendering/Core/Prop3D';
 import vtkViewport from 'vtk.js/Sources/Rendering/Core/Viewport';
 import vtkVolume from 'vtk.js/Sources/Rendering/Core/Volume';
 import vtkTexture from 'vtk.js/Sources/Rendering/Core/Texture';
@@ -52,7 +51,7 @@ interface IRendererInitialValues {
     /**
      * 
      */
-    actors: vtkActor[];
+    actors: vtkProp3D[];
 
     /**
      * 
@@ -150,7 +149,7 @@ export interface vtkRenderer extends vtkViewport {
      * 
      * @param actor 
      */
-    addActor(actor: vtkActor): boolean;
+    addActor(actor: vtkProp3D | null): boolean;
 
     /**
      * Add a light to the list of lights.
@@ -193,13 +192,13 @@ export interface vtkRenderer extends vtkViewport {
      * Return any actors in this renderer.
      *   
      */
-    getActors(): vtkActor[];
+    getActors(): vtkProp3D[];
 
     /**
      * Return any actors in this renderer.
      *   
      */
-    getActorsByReference(): vtkActor[];
+    getActorsByReference(): vtkProp3D[];
 
     /**
      * 
@@ -431,7 +430,7 @@ export interface vtkRenderer extends vtkViewport {
      * Specify the camera to use for this renderer.
      * @param camera 
      */
-    setActiveCamera(camera: vtkCamera): boolean;
+    setActiveCamera(camera: vtkCamera | null): boolean;
 
     /**
      * 
@@ -443,7 +442,7 @@ export interface vtkRenderer extends vtkViewport {
      * 
      * @param backgroundTexture 
      */
-    setBackgroundTexture(backgroundTexture = vtkTexture): boolean;
+    setBackgroundTexture(backgroundTexture: vtkTexture): boolean;
 
     /**
      * 
@@ -571,7 +570,7 @@ export interface vtkRenderer extends vtkViewport {
      * 
      * @param actor 
      */
-    removeActor(actor: vtkProp): void;
+    removeActor(actor: vtkProp3D | null): void;
 
     /**
      * 
@@ -608,9 +607,7 @@ export interface vtkRenderer extends vtkViewport {
      * @param z 
      * @param aspect 
      */
-    worldToNormalizedDisplay(x: any, y: any, z: any, aspect: any): void;
-
-
+    worldToNormalizedDisplay(x: number, y: number, z: number, aspect: number): number[];
 
     /**
      * requires the aspect ratio of the viewport as X/Y
@@ -618,7 +615,7 @@ export interface vtkRenderer extends vtkViewport {
      * @param y 
      * @param z 
      */
-    viewToWorld(x: number, y: number, z: number): Array<number>;
+    viewToWorld(x: number, y: number, z: number): number[];
 
     /**
      * Convert world point coordinates to view coordinates.
@@ -642,13 +639,13 @@ export interface vtkRenderer extends vtkViewport {
      * 
      * @param bounds 
      */
-    resetCamera(bounds: any): boolean;
+    resetCamera(bounds?: number[]): boolean;
 
     /**
      * 
      * @param bounds 
      */
-    resetCameraClippingRange(bounds: any): boolean;
+    resetCameraClippingRange(bounds?: number[]): boolean;
 
     /**
      * 

@@ -98,6 +98,10 @@ function vtkViewStream(publicAPI, model) {
 
   // --------------------------------------------------------------------------
 
+  publicAPI.resetCamera = () => model.protocol.resetCamera(model.viewId);
+
+  // --------------------------------------------------------------------------
+
   publicAPI.startAnimation = () => model.protocol.startAnimation(model.viewId);
 
   // --------------------------------------------------------------------------
@@ -115,7 +119,9 @@ function vtkViewStream(publicAPI, model) {
 
     if (changeDetected) {
       publicAPI.modified();
-      return model.protocol.setSize(model.viewId, width, height);
+      if (model.protocol) {
+        return model.protocol.setSize(model.viewId, width, height);
+      }
     }
 
     return Promise.resolve(false);

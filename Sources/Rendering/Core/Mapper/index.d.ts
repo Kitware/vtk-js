@@ -271,7 +271,7 @@ export interface vtkMapper extends vtkAbstractMapper3D {
     /**
      * Return the method of coloring scalar data.
      */
-    getColorModeAsString(): void;
+    getColorModeAsString(): string;
 
     /**
      * Provide read access to the color texture array 
@@ -343,7 +343,7 @@ export interface vtkMapper extends vtkAbstractMapper3D {
     /**
      * 
      */
-    getResolveCoincidentTopologyAsString(): ICoincidentTopology
+    getResolveCoincidentTopologyAsString(): string
 
     /**
      * 

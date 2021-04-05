@@ -28,8 +28,7 @@ export interface vtkImageSlice extends vtkProp3D {
 	getActors(): any;
 
 	/**
-	 * 
-	 * @return  
+	 * Get the bounds as [xmin, xmax, ymin, ymax, zmin, zmax].
 	 */
 	getBounds(): number[];
 

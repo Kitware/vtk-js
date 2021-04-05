@@ -233,7 +233,8 @@ export default function widgetBehavior(publicAPI, model) {
       getNumberOfPlacedHandles(model.widgetState) === 1
     ) {
       publicAPI.placeHandle(1);
-    } else {
+    } else if (!model.widgetState.getText().getActive()) {
+      // Grab handle1, handle2 or whole widget
       updateCursor(e);
     }
     publicAPI.invokeStartInteractionEvent();
@@ -305,13 +306,16 @@ export default function widgetBehavior(publicAPI, model) {
       model.activeState.getActive() &&
       (model.isDragging || publicAPI.isPlaced())
     ) {
+      const wasTextActive = model.widgetState.getText().getActive();
       // Recompute offsets
       publicAPI.placeText();
       model.widgetState.deactivate();
       model.widgetState.getMoveHandle().deactivate();
       model.activeState = null;
 
-      model.interactor.cancelAnimation(publicAPI);
+      if (!wasTextActive) {
+        model.interactor.cancelAnimation(publicAPI);
+      }
       model.openGLRenderWindow.setCursor('pointer');
 
       model.hasFocus = false;
