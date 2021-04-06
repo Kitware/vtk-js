@@ -1,10 +1,10 @@
 ## Introduction
 
-vtkImageOutlineFilter - generates outline of labelmap from an vtkImageData
-input in a given direction (slicing mode).   
-
-vtkImageOutlineFilter creates a region (labelmap) outline based on input data
-given . The output is a vtkImageData object containing only boundary voxels.
+vtkSTLWriter writes stereo lithography (.stl) files in either ASCII or binary
+form. Stereo lithography files contain only triangles. Since VTK 8.1, this
+writer converts non-triangle polygons into triangles, so there is no longer a
+need to use vtkTriangleFilter prior to using this writer if the input
+contains polygons with more than three vertices.
 
 
 
@@ -16,7 +16,7 @@ given . The output is a vtkImageData object containing only boundary voxels.
 
 ### extend
 
-Method used to decorate a given object (publicAPI+model) with vtkImageOutlineFilter characteristics.
+Method used to decorate a given object (publicAPI+model) with vtkSTLWriter characteristics.
 
 
 | Argument | Type | Description |
@@ -26,13 +26,13 @@ Method used to decorate a given object (publicAPI+model) with vtkImageOutlineFil
 | **initialValues** | <span class="arg-type"></span></br></span><span class="arg-required">required</span> | (default: {}) |
 
 
-### getBackground
+### getFormat
 
 
 
 
 
-### getSlicingMode
+### getTransform
 
 
 
@@ -40,7 +40,7 @@ Method used to decorate a given object (publicAPI+model) with vtkImageOutlineFil
 
 ### newInstance
 
-Method used to create a new instance of vtkImageOutlineFilter
+Method used to create a new instance of vtkSTLWriter
 
 
 | Argument | Type | Description |
@@ -59,23 +59,29 @@ Method used to create a new instance of vtkImageOutlineFilter
 | **outData** | <span class="arg-type"></span></br></span><span class="arg-required">required</span> |  |
 
 
-### setBackground
+### setFormat
 
 
 
 
 | Argument | Type | Description |
 | ------------- | ------------- | ----- |
-| **background** | <span class="arg-type"></span></br></span><span class="arg-required">required</span> |  |
+| **format** | <span class="arg-type"></span></br></span><span class="arg-required">required</span> |  |
 
 
-### setSlicingMode
+### setTransform
 
 
 
 
 | Argument | Type | Description |
 | ------------- | ------------- | ----- |
-| **slicingMode** | <span class="arg-type"></span></br></span><span class="arg-required">required</span> |  |
+| **format** | <span class="arg-type"></span></br></span><span class="arg-required">required</span> |  |
+
+
+### writeSTL
+
+
+
 
 

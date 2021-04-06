@@ -1,25 +1,91 @@
-vtkFollower is a subclass of Actor that always faces the camera.
 
-You must set the camera before use. This class will update the matrix such
-that the follower always faces the camera. Sepcifically the y axis will up
-up, the Z axes will point to the camera and the x axis will point to the
-right. You may need to rotate, scale, position the follower to get your data
-oriented propoerly for this convention.
 
-If useViewUp is set then instea dof using the camera's view up the follow's
-vieUp will be used. This is usefull in cases where you want up to be locked
-independent of the camera. This is typically the case for VR or AR
-annotations where the headset may tilt but text should continue to be
-relative to a constant view up vector.
 
-## See Also
 
-[vtkActor](./Rendering_Core_Actor.html)
 
-## setCamera()
+## Methods
 
-Set the camera that this follower should face
 
-## getMTime()
+### computeMatrix
 
-Get the newest "modification time" of the actor, its properties, and texture (if set).
+
+
+
+
+### extend
+
+Method use to decorate a given object (publicAPI+model) with vtkFollower characteristics.
+
+
+| Argument | Type | Description |
+| ------------- | ------------- | ----- |
+| **publicAPI** | <span class="arg-type"></span></br></span><span class="arg-required">required</span> | object on which methods will be bounds (public) |
+| **model** | <span class="arg-type"></span></br></span><span class="arg-required">required</span> | object on which data structure will be bounds (protected) |
+| **initialValues** | <span class="arg-type"></span></br></span><span class="arg-required">required</span> | (default: {}) |
+
+
+### getCamera
+
+Get the camera to follow.
+
+
+
+### getUseViewUp
+
+
+
+
+
+### getViewUp
+
+
+
+
+
+### getViewUpByReference
+
+
+
+
+
+### newInstance
+
+Method use to create a new instance of vtkFollower
+
+
+| Argument | Type | Description |
+| ------------- | ------------- | ----- |
+| **initialValues** | <span class="arg-type"></span></br></span><span class="arg-required">required</span> | for pre-setting some of its content |
+
+
+### setCamera
+
+Set the camera to follow.
+If this is not set, then the follower won't know who to follow.
+
+
+| Argument | Type | Description |
+| ------------- | ------------- | ----- |
+| **camera** | <span class="arg-type"></span></br></span><span class="arg-required">required</span> |  |
+
+
+### setUseViewUp
+
+
+
+
+| Argument | Type | Description |
+| ------------- | ------------- | ----- |
+| **useViewUp** | <span class="arg-type"></span></br></span><span class="arg-required">required</span> |  |
+
+
+### setViewUp
+
+
+
+
+| Argument | Type | Description |
+| ------------- | ------------- | ----- |
+| **viewUp** | <span class="arg-type"></span></br></span><span class="arg-required">required</span> |  |
+
+

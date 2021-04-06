@@ -1,48 +1,181 @@
-## Usage
+## Introduction
 
-```js
-import ArrowSource from 'vtk.js/Sources/Filters/Sources/ArrowSource';
+vtkArrowSource was intended to be used as the source for a glyph.
+The shaft base is always at (0,0,0). The arrow tip is always at (1,0,0).
+If "Invert" is true, then the ends are flipped i.e. tip is at (0,0,0) while base is at (1, 0, 0).
+The resolution of the cone and shaft can be set and default to 6.
+The radius of the cone and shaft can be set and default to 0.03 and 0.1.
+The length of the tip can also be set, and defaults to 0.35.
 
-const ArrowSource = ArrowSource.New({
-  tipResolution: 6,
-  tipRadius: 0.1,
-  tipLength: 0.35,
-  shaftResolution: 6,
-  shaftRadius: 0.03,
-  invert: false,
-  direction: [1.0, 0.0, 0.0]});
-const polydata = ArrowSource.getOutputData();
-```
 
-### TipResolution (set/get)
 
-Integer representing the resolution of the tip.
-The tip behaves the same as a cone. TipResolution of 1 gives a single triangle,
-2 gives two crossed triangles. Defaults to 6. 
 
-### TipRadius (set/get)
+## See Also
 
-Floating point number representing the radius of the tip. Defaults to 0.1.
+## Methods
 
-### TipLength (set/get)
 
-Floating point number representing the length of the tip. Defaults to 0.35.
+### extend
 
-### ShaftResolution (set/get)
+Method used to decorate a given object (publicAPI+model) with vtkArrowSource characteristics.
 
-Integer representing the resolution of the shaft. ShaftResolution of 2 gives a
-rectangle. Defaults to 6.
 
-### ShaftRadius (set/get)
+| Argument | Type | Description |
+| ------------- | ------------- | ----- |
+| **publicAPI** | <span class="arg-type"></span></br></span><span class="arg-required">required</span> | object on which methods will be bounds (public) |
+| **model** | <span class="arg-type"></span></br></span><span class="arg-required">required</span> | object on which data structure will be bounds (protected) |
+| **initialValues** | <span class="arg-type"></span></br></span><span class="arg-required">required</span> | (default: {}) |
 
-Floating point number representing the radius of the shaft. Defaults to 0.03.
 
-### Invert (set/get)
+### getDirection
 
-Boolean that inverts the arrow direction. When set to true, base is at (1, 0, 0)
-while tip is at (0, 0, 0). Defaults to false, i.e. base at (0, 0, 0) and the tip
-at (1, 0, 0).
+Get the orientation vector of the cone.
 
-### direction (set/get)
 
-Float array of size 3 representing the direction for the arrow. Defaults to [1, 0, 0].
+
+### getDirectionByReference
+
+Get the orientation vector of the cone.
+
+
+
+### getInvert
+
+
+
+
+
+### getShaftRadius
+
+Get the resolution of the shaft.
+
+
+
+### getShaftResolution
+
+Get the resolution of the shaft.
+
+
+
+### getTipLength
+
+Get the length of the tip.
+
+
+
+### getTipRadius
+
+Get the radius of the tip.
+
+
+
+### getTipResolution
+
+Get the resolution of the tip.
+
+
+
+### newInstance
+
+Method used to create a new instance of vtkArrowSource.
+
+
+| Argument | Type | Description |
+| ------------- | ------------- | ----- |
+| **initialValues** | <span class="arg-type"></span></br></span><span class="arg-required">required</span> | for pre-setting some of its content |
+
+
+### requestData
+
+Expose methods
+
+
+| Argument | Type | Description |
+| ------------- | ------------- | ----- |
+| **inData** | <span class="arg-type"></span></br></span><span class="arg-required">required</span> |  |
+| **outData** | <span class="arg-type"></span></br></span><span class="arg-required">required</span> |  |
+
+
+### setDirection
+
+
+
+
+| Argument | Type | Description |
+| ------------- | ------------- | ----- |
+| **x** | <span class="arg-type"></span></br></span><span class="arg-required">required</span> |  |
+| **y** | <span class="arg-type"></span></br></span><span class="arg-required">required</span> |  |
+| **z** | <span class="arg-type"></span></br></span><span class="arg-required">required</span> |  |
+
+
+### setDirectionFrom
+
+
+
+
+| Argument | Type | Description |
+| ------------- | ------------- | ----- |
+| **direction** | <span class="arg-type"></span></br></span><span class="arg-required">required</span> |  |
+
+
+### setInvert
+
+Inverts the arrow direction.
+When set to true, base is at [1, 0, 0] while the tip is at [0, 0, 0].
+
+
+| Argument | Type | Description |
+| ------------- | ------------- | ----- |
+| **invert** | <span class="arg-type"></span></br></span><span class="arg-required">required</span> |  |
+
+
+### setShaftRadius
+
+Set the radius of the shaft.
+
+
+| Argument | Type | Description |
+| ------------- | ------------- | ----- |
+| **shaftRadius** | <span class="arg-type"></span></br></span><span class="arg-required">required</span> |  |
+
+
+### setShaftResolution
+
+Set the resolution of the shaft.
+
+
+| Argument | Type | Description |
+| ------------- | ------------- | ----- |
+| **shaftResolution** | <span class="arg-type"></span></br></span><span class="arg-required">required</span> |  |
+
+
+### setTipLength
+
+Set the length of the tip.
+
+
+| Argument | Type | Description |
+| ------------- | ------------- | ----- |
+| **tipLength** | <span class="arg-type"></span></br></span><span class="arg-required">required</span> |  |
+
+
+### setTipRadius
+
+Set the radius of the tip.
+
+
+| Argument | Type | Description |
+| ------------- | ------------- | ----- |
+| **tipRadius** | <span class="arg-type"></span></br></span><span class="arg-required">required</span> |  |
+
+
+### setTipResolution
+
+Set the resolution of the tip.
+
+
+| Argument | Type | Description |
+| ------------- | ------------- | ----- |
+| **tipResolution** | <span class="arg-type"></span></br></span><span class="arg-required">required</span> |  |
+
+

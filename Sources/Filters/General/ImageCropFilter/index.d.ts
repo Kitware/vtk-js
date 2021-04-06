@@ -70,7 +70,9 @@ export function newInstance(initialValues?: IImageCropFilterInitialValues): vtkI
 
 /**
  * The vtkImageCropFilter will crop a vtkImageData. This will only crop against
- * IJK-aligned planes. Note this is slow on large datasets due to CPU-bound
+ * IJK-aligned planes. 
+ * 
+ * Note this is slow on large datasets due to CPU-bound
  * cropping.
  */
 export declare const vtkImageCropFilter: {
