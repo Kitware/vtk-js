@@ -121,11 +121,8 @@ export function newInstance(initialValues?: IAxesActorInitialValues): vtkAxesAct
  * Since this class inherits from vtkProp3D, one can apply a user transform to the underlying 
  * geometry and the positioning of the labels. For example, a rotation transform could be used to 
  * generate a left-handed axes representation.
- * @see vtkAnnotatedCubeActor
- * @see vtkOrientationMarkerWidget
- * @see vtkCaptionActor2D
- * @see vtkTextProperty
- * 
+ * @see [vtkAnnotatedCubeActor](./Rendering_Core_AnnotatedCubeActor.html)
+ * @see [vtkOrientationMarkerWidget](./Interaction_Widgets_OrientationMarkerWidget.html)
  */
 export declare const vtkAxesActor: {
     newInstance: typeof newInstance,

@@ -1,6 +1,5 @@
 /**
  * 
- * 
  */
 export function getEndianness(): string | null;
 

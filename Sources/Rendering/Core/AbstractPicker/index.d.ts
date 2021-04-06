@@ -104,7 +104,7 @@ export function extend(publicAPI: object, model: object, initialValues?: object)
  * 
  * The API to this class is to invoke the Pick() method with a selection point (in display coordinates - pixels)
  * and a renderer. Then get the resulting pick position in global coordinates with the GetPickPosition() method.
- * @see vtkPointPicker
+ * @see [vtkPointPicker](./Rendering_Core_PointPicker.html)
  */
 export declare const vtkAbstractPicker: {
     extend: typeof extend,
