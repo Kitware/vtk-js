@@ -19,8 +19,6 @@ transformations and returning a MatrixBuilder instance. The matrix is
 initialized with the Identity Matrix.
 
 
-## See Also
-
 ## Methods
 
 

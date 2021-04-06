@@ -9,8 +9,6 @@ variables that control visibility, picking, and dragging.
 
 
 
-## See Also
-
 ## Methods
 
 

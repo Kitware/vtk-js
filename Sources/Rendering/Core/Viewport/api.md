@@ -1,7 +1,7 @@
 ## Introduction
 
 vtkViewport represents part or all of a RenderWindow. It holds a
-colleciton of props that will be rendered into the area it represents.
+collection of props that will be rendered into the area it represents.
 This class also contains methods to convert between coordinate systems
 commonly used in rendering.
 

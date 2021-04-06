@@ -35,8 +35,6 @@ ResolveCoincidentTopology-related methods.)
 
 
 
-## See Also
-
 ## Methods
 
 
@@ -59,12 +57,6 @@ can be handled if required.
 | Argument | Type | Description |
 | ------------- | ------------- | ----- |
 | **input** | <span class="arg-type"></span></br></span><span class="arg-required">required</span> |  |
-
-
-### cellFlag
-
-
-
 
 
 ### clearColorArrays
@@ -121,12 +113,6 @@ Method used to decorate a given object (publicAPI+model) with vtkMapper characte
 | **publicAPI** | <span class="arg-type"></span></br></span><span class="arg-required">required</span> | object on which methods will be bounds (public) |
 | **model** | <span class="arg-type"></span></br></span><span class="arg-required">required</span> | object on which data structure will be bounds (protected) |
 | **initialValues** | <span class="arg-type"></span></br></span><span class="arg-required">required</span> | (default: {}) |
-
-
-### factor
-
-
-
 
 
 ### getAbstractScalars
@@ -355,12 +341,6 @@ Check whether the mapper’s data is static.
 
 
 
-### lines
-
-
-
-
-
 ### mapScalars
 
 Map the scalars (if there are any scalars and ScalarVisibility is on)
@@ -399,18 +379,6 @@ Method used to create a new instance of vtkMapper
 | Argument | Type | Description |
 | ------------- | ------------- | ----- |
 | **initialValues** | <span class="arg-type"></span></br></span><span class="arg-required">required</span> | for pre-setting some of its content |
-
-
-### offset
-
-
-
-
-
-### points
-
-
-
 
 
 ### scalarToTextureCoordinate
@@ -696,24 +664,6 @@ If there is no details, viewSpecificProperties is not supported.
 | **viewSpecificProperties** | <span class="arg-type"></span></br></span><span class="arg-required">required</span> |  |
 
 
-### texCoordS
-
-
-
-
-
-### texCoordT
-
-
-
-
-
-### triangles
-
-
-
-
-
 ### useInvertibleColorFor
 
 
@@ -721,12 +671,6 @@ If there is no details, viewSpecificProperties is not supported.
 
 
 ### valueToColor
-
-
-
-
-
-### verts
 
 
 

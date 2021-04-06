@@ -8,8 +8,6 @@ triangles.
 
 
 
-## See Also
-
 ## Methods
 
 

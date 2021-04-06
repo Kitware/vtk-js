@@ -24,25 +24,9 @@ export enum GetArray {
  *
  */
 interface IPrimitiveCount {
-
-	/**
-	 *
-	 */
 	points: number;
-
-	/**
-	 *
-	 */
 	verts: number;
-
-	/**
-	 *
-	 */
 	lines: number;
-
-	/**
-	 *
-	 */
 	triangles: number;
 }
 
@@ -50,10 +34,6 @@ interface IPrimitiveCount {
  *
  */
 interface IAbstractScalars {
-
-	/**
-	 *
-	 */
 	cellFlag: boolean;
 }
 
@@ -61,14 +41,7 @@ interface IAbstractScalars {
  *
  */
 interface ICoincidentTopology {
-	/**
-	 *
-	 */
 	factor: number;
-
-	/**
-	 *
-	 */
 	offset: number;
 }
 
@@ -76,15 +49,7 @@ interface ICoincidentTopology {
 *
 */
 interface IScalarToTextureCoordinate {
-
-	/**
-	 *
-	 */
 	texCoordS: number;
-
-	/**
-	 *
-	 */
 	texCoordT: number;
 }
 
@@ -670,7 +635,6 @@ export function newInstance(initialValues?: IMapperInitialValues): vtkMapper;
  * mesh, this feature can be useful to get nice looking lines. (See the
  * ResolveCoincidentTopology-related methods.)
  */
-
 export declare const vtkMapper: {
 	newInstance: typeof newInstance;
 	extend: typeof extend;

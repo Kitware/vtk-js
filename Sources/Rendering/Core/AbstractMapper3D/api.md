@@ -12,8 +12,6 @@ data it maps, such as the bounding box and center.
 
 
 
-## See Also
-
 ## Methods
 
 

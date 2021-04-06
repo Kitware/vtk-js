@@ -9,8 +9,6 @@ contains polygons with more than three vertices.
 
 
 
-## See Also
-
 ## Methods
 
 

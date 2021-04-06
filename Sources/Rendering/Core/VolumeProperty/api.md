@@ -67,8 +67,6 @@ volume.getProperty().setInterpolationTypeToLinear();
 ```
 
 
-## See Also
-
 ## Methods
 
 

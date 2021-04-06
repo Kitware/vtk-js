@@ -10,8 +10,6 @@ and to specify the height and radius of the cone.
 
 
 
-## See Also
-
 ## Methods
 
 

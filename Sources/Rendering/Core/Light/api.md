@@ -24,8 +24,6 @@ their transformation matrix (if it exists).
 
 
 
-## See Also
-
 ## Methods
 
 

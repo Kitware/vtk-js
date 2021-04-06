@@ -29,8 +29,6 @@ const appendedData = appendPolyData.getOutputData();
 ```
 
 
-## See Also
-
 ## Methods
 
 

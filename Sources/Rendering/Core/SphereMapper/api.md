@@ -5,8 +5,6 @@ vtkSphereMapper inherits from vtkMapper.
 
 
 
-## See Also
-
 ## Methods
 
 

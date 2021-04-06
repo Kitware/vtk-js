@@ -7,7 +7,7 @@
 
 <%= usage %><% } %>
 
-<% if (seeAlso)  { %>
+<% if (seeAlso && seeAlso.length)  { %>
 ## See Also
 <% for (const see of seeAlso) { %>
 <%= see.string %>

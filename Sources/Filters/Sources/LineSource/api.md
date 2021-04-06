@@ -9,8 +9,6 @@ If you have the end points of the cylinder, you should use a vtkLineSource follo
 
 
 
-## See Also
-
 ## Methods
 
 

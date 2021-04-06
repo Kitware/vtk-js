@@ -23,8 +23,6 @@ that event are expected to respond appropriately.
 
 
 
-## See Also
-
 ## Methods
 
 

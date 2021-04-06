@@ -8,8 +8,6 @@ This class resolves coincident topology with the same methods as vtkMapper.
 
 
 
-## See Also
-
 ## Methods
 
 
