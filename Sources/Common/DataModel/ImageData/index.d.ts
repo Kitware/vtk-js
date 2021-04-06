@@ -11,30 +11,10 @@ interface IImageDataInitialValues {
 }
 
 interface IComputeHistogram {
-
-	/**
-	 *
-	 */
 	minimum: number;
-
-	/**
-	 *
-	 */
 	maximum: number;
-
-	/**
-	 *
-	 */
 	average: number;
-
-	/**
-	 *
-	 */
 	variance: number;
-
-	/**
-	 *
-	 */
 	sigma: number;
 }
 

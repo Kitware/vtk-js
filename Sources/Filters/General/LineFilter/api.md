@@ -7,8 +7,6 @@ vtkLineFilter is a filter that only let's through lines of a vtkPolydata.
 
 
 
-## See Also
-
 ## Methods
 
 

@@ -8,8 +8,6 @@ Note that textures will only work if texture coordinates are also defined, and i
 
 
 
-## See Also
-
 ## Methods
 
 

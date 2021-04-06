@@ -6,8 +6,6 @@ of vx-vy-vz triplets accessible by (point or cell) id.
 
 
 
-## See Also
-
 ## Methods
 
 

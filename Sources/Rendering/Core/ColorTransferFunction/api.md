@@ -22,8 +22,6 @@ ctfun.addRGBPoint(2000.0, 0.0, 0.0, 0.0);
 ```
 
 
-## See Also
-
 ## Methods
 
 

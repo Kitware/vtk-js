@@ -10,8 +10,6 @@ The length of the tip can also be set, and defaults to 0.35.
 
 
 
-## See Also
-
 ## Methods
 
 

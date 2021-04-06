@@ -8,15 +8,7 @@ topological and geometrical regular array of points. Examples include volumes
 
 
 
-## See Also
-
 ## Methods
-
-
-### average
-
-
-
 
 
 ### computeHistogram
@@ -279,18 +271,6 @@ this is the fast version, requires vec3 arguments
 | **vout** | <span class="arg-type"></span></br></span><span class="arg-required">required</span> |  |
 
 
-### maximum
-
-
-
-
-
-### minimum
-
-
-
-
-
 ### newInstance
 
 Method used to create a new instance of vtkImageData.
@@ -334,7 +314,15 @@ it is not.
 
 | Argument | Type | Description |
 | ------------- | ------------- | ----- |
-| **direction** | <span class="arg-type"></span></br></span><span class="arg-required">required</span> |  |
+| **e00** | <span class="arg-type"></span></br></span><span class="arg-required">required</span> |  |
+| **e01** | <span class="arg-type"></span></br></span><span class="arg-required">required</span> |  |
+| **e02** | <span class="arg-type"></span></br></span><span class="arg-required">required</span> |  |
+| **e10** | <span class="arg-type"></span></br></span><span class="arg-required">required</span> |  |
+| **e11** | <span class="arg-type"></span></br></span><span class="arg-required">required</span> |  |
+| **e12** | <span class="arg-type"></span></br></span><span class="arg-required">required</span> |  |
+| **e20** | <span class="arg-type"></span></br></span><span class="arg-required">required</span> |  |
+| **e21** | <span class="arg-type"></span></br></span><span class="arg-required">required</span> |  |
+| **e22** | <span class="arg-type"></span></br></span><span class="arg-required">required</span> |  |
 
 
 ### setDirection
@@ -348,25 +336,7 @@ it is not.
 
 | Argument | Type | Description |
 | ------------- | ------------- | ----- |
-| **e00** | <span class="arg-type"></span></br></span><span class="arg-required">required</span> |  |
-| **e01** | <span class="arg-type"></span></br></span><span class="arg-required">required</span> |  |
-| **e02** | <span class="arg-type"></span></br></span><span class="arg-required">required</span> |  |
-| **e10** | <span class="arg-type"></span></br></span><span class="arg-required">required</span> |  |
-| **e11** | <span class="arg-type"></span></br></span><span class="arg-required">required</span> |  |
-| **e12** | <span class="arg-type"></span></br></span><span class="arg-required">required</span> |  |
-| **e20** | <span class="arg-type"></span></br></span><span class="arg-required">required</span> |  |
-| **e21** | <span class="arg-type"></span></br></span><span class="arg-required">required</span> |  |
-| **e22** | <span class="arg-type"></span></br></span><span class="arg-required">required</span> |  |
-
-
-### setExtent
-
-Set the extent.
-
-
-| Argument | Type | Description |
-| ------------- | ------------- | ----- |
-| **extent** | <span class="arg-type"></span></br></span><span class="arg-required">required</span> |  |
+| **direction** | <span class="arg-type"></span></br></span><span class="arg-required">required</span> |  |
 
 
 ### setExtent
@@ -382,6 +352,16 @@ Set the extent.
 | **y2** | <span class="arg-type"></span></br></span><span class="arg-required">required</span> |  |
 | **z1** | <span class="arg-type"></span></br></span><span class="arg-required">required</span> |  |
 | **z2** | <span class="arg-type"></span></br></span><span class="arg-required">required</span> |  |
+
+
+### setExtent
+
+Set the extent.
+
+
+| Argument | Type | Description |
+| ------------- | ------------- | ----- |
+| **extent** | <span class="arg-type"></span></br></span><span class="arg-required">required</span> |  |
 
 
 ### setOrigin
@@ -422,18 +402,6 @@ Set the extent.
 | Argument | Type | Description |
 | ------------- | ------------- | ----- |
 | **spacing** | <span class="arg-type"></span></br></span><span class="arg-required">required</span> |  |
-
-
-### sigma
-
-
-
-
-
-### variance
-
-
-
 
 
 ### worldToIndex

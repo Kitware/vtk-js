@@ -15,8 +15,6 @@ to the camera. Subclasses of vtkPicker use other methods for computing the pick 
 
 
 
-## See Also
-
 ## Methods
 
 

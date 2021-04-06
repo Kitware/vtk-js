@@ -9,8 +9,6 @@ given . The output is a vtkImageData object containing only boundary voxels.
 
 
 
-## See Also
-
 ## Methods
 
 

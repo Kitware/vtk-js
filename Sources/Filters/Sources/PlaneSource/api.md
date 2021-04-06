@@ -13,8 +13,6 @@ with width and height of length 1 and resolutions set to 1.
 
 
 
-## See Also
-
 ## Methods
 
 

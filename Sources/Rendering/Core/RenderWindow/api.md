@@ -11,8 +11,6 @@ The user has to make the render window aligned with the VRex projector, or the e
 
 
 
-## See Also
-
 ## Methods
 
 

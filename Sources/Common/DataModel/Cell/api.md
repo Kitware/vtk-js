@@ -5,8 +5,6 @@ vtkCell is an abstract method to define a cell
 
 
 
-## See Also
-
 ## Methods
 
 

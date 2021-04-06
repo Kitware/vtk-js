@@ -5,8 +5,6 @@ vtkStickMapper inherits from vtkMapper.
 
 
 
-## See Also
-
 ## Methods
 
 

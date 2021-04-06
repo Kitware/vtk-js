@@ -6,8 +6,6 @@ A volume mapper that performs ray casting on the GPU using fragment programs.
 
 
 
-## See Also
-
 ## Methods
 
 

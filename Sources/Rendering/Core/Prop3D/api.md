@@ -15,8 +15,6 @@ matrix or transform, and no texture map.
 
 
 
-## See Also
-
 ## Methods
 
 

@@ -6,8 +6,6 @@ It is possible to specify the length, width, and height of the cube independentl
 
 
 
-## See Also
-
 ## Methods
 
 
