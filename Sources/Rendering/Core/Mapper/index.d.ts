@@ -165,12 +165,12 @@ export interface vtkMapper extends vtkAbstractMapper3D {
 	/**
 	 *
 	 * @param input
-	 * @param scalarMode
+	 * @param {ScalarMode} scalarMode
 	 * @param arrayAccessMode
 	 * @param arrayId
 	 * @param arrayName
 	 */
-	getAbstractScalars(input: any, scalarMode: number, arrayAccessMode: number, arrayId: any, arrayName: any): IAbstractScalars;
+	getAbstractScalars(input: any, scalarMode: ScalarMode, arrayAccessMode: number, arrayId: any, arrayName: any): IAbstractScalars;
 
 	/**
 	 *
@@ -260,7 +260,7 @@ export interface vtkMapper extends vtkAbstractMapper3D {
 	getIsOpaque(): boolean;
 
 	/**
-	 *
+	 * Get a lookup table for the mapper to use.
 	 */
 	getLookupTable(): any;
 
@@ -337,13 +337,13 @@ export interface vtkMapper extends vtkAbstractMapper3D {
 	getScalarRangeByReference(): number[];
 
 	/**
-	 *
+	 * Check whether scalar data is used to color objects.
 	 * @default true
 	 */
 	getScalarVisibility(): boolean;
 
 	/**
-	 *
+	 * Check whether the mapper’s data is static.
 	 * @default false
 	 */
 	getStatic(): boolean;
@@ -397,7 +397,7 @@ export interface vtkMapper extends vtkAbstractMapper3D {
 	setArrayAccessMode(arrayAccessMode: number): boolean;
 
 	/**
-	 * Get the array name to color by.
+	 * Set the array name to color by.
 	 */
 	setColorByArrayName(colorByArrayName: string): boolean;
 
@@ -446,7 +446,7 @@ export interface vtkMapper extends vtkAbstractMapper3D {
 	setForceCompileOnly(forceCompileOnly: number): boolean;
 
 	/**
-	 *
+	 * Set a lookup table for the mapper to use.
 	 */
 	setLookupTable(vtkLookupTable): boolean;
 
@@ -568,7 +568,7 @@ export interface vtkMapper extends vtkAbstractMapper3D {
 	setScalarRangeFrom(scalarRange: number[]): boolean;
 
 	/**
-	 *
+	 * Turn on/off flag to control whether scalar data is used to color objects.
 	 * @param {boolean} scalarVisibility
 	 * @default true
 	 */

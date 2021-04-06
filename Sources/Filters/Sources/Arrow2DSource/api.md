@@ -1,10 +1,11 @@
 ## Introduction
 
-vtkCylinderSource creates a polygonal cylinder centered at Center;
-The axis of the cylinder is aligned along the global y-axis.
-The height and radius of the cylinder can be specified, as well as the number of sides.
-It is also possible to control whether the cylinder is open-ended or capped.
-If you have the end points of the cylinder, you should use a vtkLineSource followed by a vtkTubeFilter instead of the vtkCylinderSource.
+vtkArrow2DSource creates a cone centered at a specified point and pointing in a specified direction.
+(By default, the center is the origin and the direction is the x-axis.) Depending upon the resolution of this object,
+different representations are created. If resolution=0 a line is created; if resolution=1, a single triangle is created;
+if resolution=2, two crossed triangles are created. For resolution > 2, a 3D cone (with resolution number of sides)
+is created. It also is possible to control whether the bottom of the cone is capped with a (resolution-sided) polygon,
+and to specify the height and thickness of the cone.
 
 
 
@@ -16,7 +17,7 @@ If you have the end points of the cylinder, you should use a vtkLineSource follo
 
 ### extend
 
-Method used to decorate a given object (publicAPI+model) with vtkCylinderSource characteristics.
+Method used to decorate a given object (publicAPI+model) with vtkArrow2DSource characteristics.
 
 
 | Argument | Type | Description |
@@ -26,57 +27,57 @@ Method used to decorate a given object (publicAPI+model) with vtkCylinderSource 
 | **initialValues** | <span class="arg-type"></span></br></span><span class="arg-required">required</span> | (default: {}) |
 
 
-### getCapping
+### getBase
 
-Get the cap the base of the cylinder with a polygon.
+Get the cap the base of the cone with a polygon.
 
 
 
 ### getCenter
 
-Get the center of the cylinder.
+Get the center of the cone.
 
 
 
 ### getCenterByReference
 
-Get the center of the cylinder.
+Get the center of the cone.
 
 
 
 ### getDirection
 
-Get the orientation vector of the cylinder.
+Get the orientation vector of the cone.
 
 
 
 ### getDirectionByReference
 
-Get the orientation vector of the cylinder.
+Get the orientation vector of the cone.
 
 
 
 ### getHeight
 
-Get the height of the cylinder.
+Get the height of the cone.
 
 
 
-### getRadius
+### getThickness
 
-Get the base radius of the cylinder.
+Get the base thickness of the cone.
 
 
 
-### getResolution
+### getWidth
 
-Get the number of facets used to represent the cylinder.
+Get the number of facets used to represent the cone.
 
 
 
 ### newInstance
 
-Method used to create a new instance of vtkCylinderSource.
+Method used to create a new instance of vtkArrow2DSource.
 
 
 | Argument | Type | Description |
@@ -86,7 +87,7 @@ Method used to create a new instance of vtkCylinderSource.
 
 ### requestData
 
-
+Expose methods
 
 
 | Argument | Type | Description |
@@ -95,14 +96,14 @@ Method used to create a new instance of vtkCylinderSource.
 | **outData** | <span class="arg-type"></span></br></span><span class="arg-required">required</span> |  |
 
 
-### setCapping
+### setBase
 
 Turn on/off whether to cap the base of the cone with a polygon.
 
 
 | Argument | Type | Description |
 | ------------- | ------------- | ----- |
-| **capping** | <span class="arg-type"></span></br></span><span class="arg-required">required</span> |  |
+| **base** | <span class="arg-type"></span></br></span><span class="arg-required">required</span> |  |
 
 
 ### setCenter
@@ -164,23 +165,23 @@ This is the height along the cone in its specified direction.
 | **height** | <span class="arg-type"></span></br></span><span class="arg-required">required</span> |  |
 
 
-### setRadius
+### setThickness
 
-Set the base radius of the cone.
+Set the base thickness of the cone.
 
 
 | Argument | Type | Description |
 | ------------- | ------------- | ----- |
-| **radius** | <span class="arg-type">number</span></br></span><span class="arg-required">required</span> |  |
+| **thickness** | <span class="arg-type"></span></br></span><span class="arg-required">required</span> |  |
 
 
-### setResolution
+### setWidth
 
 Set the number of facets used to represent the cone.
 
 
 | Argument | Type | Description |
 | ------------- | ------------- | ----- |
-| **resolution** | <span class="arg-type"></span></br></span><span class="arg-required">required</span> |  |
+| **width** | <span class="arg-type"></span></br></span><span class="arg-required">required</span> |  |
 
 

@@ -1,18 +1,14 @@
-## Introduction
-
-vtkSphereMapper inherits from vtkMapper.
 
 
 
 
-## See Also
 
 ## Methods
 
 
 ### extend
 
-Method use to decorate a given object (publicAPI+model) with vtkSphereMapper characteristics.
+Method use to decorate a given object (publicAPI+model) with vtkSkybox characteristics.
 
 
 | Argument | Type | Description |
@@ -22,13 +18,31 @@ Method use to decorate a given object (publicAPI+model) with vtkSphereMapper cha
 | **initialValues** | <span class="arg-type"></span></br></span><span class="arg-required">required</span> | (default: {}) |
 
 
-### getRadius
+### format
 
 
 
 
 
-### getScaleArray
+### getFromat
+
+
+
+
+
+### getIsOpaque
+
+
+
+
+
+### getSupportsSelection
+
+
+
+
+
+### hasTranslucentPolygonalGeometry
 
 
 
@@ -36,33 +50,17 @@ Method use to decorate a given object (publicAPI+model) with vtkSphereMapper cha
 
 ### newInstance
 
-Method use to create a new instance of vtkSphereMapper
+Method use to create a new instance of vtkSkybox
 
 
 
-### radius
-
-
-
-
-
-### setRaduis
+### setFromat
 
 
 
 
 | Argument | Type | Description |
 | ------------- | ------------- | ----- |
-| **radius** | <span class="arg-type">number</span></br></span><span class="arg-required">required</span> |  |
-
-
-### setScaleArray
-
-
-
-
-| Argument | Type | Description |
-| ------------- | ------------- | ----- |
-| **scaleArray** | <span class="arg-type"></span></br></span><span class="arg-required">required</span> |  |
+| **format** | <span class="arg-type"></span></br></span><span class="arg-required">required</span> |  |
 
 

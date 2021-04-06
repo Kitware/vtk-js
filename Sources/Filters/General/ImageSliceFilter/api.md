@@ -1,22 +1,14 @@
-## Introduction
-
-vtkImageOutlineFilter - generates outline of labelmap from an vtkImageData
-input in a given direction (slicing mode).   
-
-vtkImageOutlineFilter creates a region (labelmap) outline based on input data
-given . The output is a vtkImageData object containing only boundary voxels.
 
 
 
 
-## See Also
 
 ## Methods
 
 
 ### extend
 
-Method used to decorate a given object (publicAPI+model) with vtkImageOutlineFilter characteristics.
+Method used to decorate a given object (publicAPI+model) with vtkImageSliceFilter characteristics.
 
 
 | Argument | Type | Description |
@@ -26,13 +18,13 @@ Method used to decorate a given object (publicAPI+model) with vtkImageOutlineFil
 | **initialValues** | <span class="arg-type"></span></br></span><span class="arg-required">required</span> | (default: {}) |
 
 
-### getBackground
+### getOrientation
 
 
 
 
 
-### getSlicingMode
+### getSliceIndex
 
 
 
@@ -40,7 +32,7 @@ Method used to decorate a given object (publicAPI+model) with vtkImageOutlineFil
 
 ### newInstance
 
-Method used to create a new instance of vtkImageOutlineFilter
+Method used to create a new instance of vtkImageSliceFilter
 
 
 | Argument | Type | Description |
@@ -59,23 +51,23 @@ Method used to create a new instance of vtkImageOutlineFilter
 | **outData** | <span class="arg-type"></span></br></span><span class="arg-required">required</span> |  |
 
 
-### setBackground
+### setOrientation
 
 
 
 
 | Argument | Type | Description |
 | ------------- | ------------- | ----- |
-| **background** | <span class="arg-type"></span></br></span><span class="arg-required">required</span> |  |
+| **orientation** | <span class="arg-type"></span></br></span><span class="arg-required">required</span> |  |
 
 
-### setSlicingMode
+### setSliceIndex
 
 
 
 
 | Argument | Type | Description |
 | ------------- | ------------- | ----- |
-| **slicingMode** | <span class="arg-type"></span></br></span><span class="arg-required">required</span> |  |
+| **sliceIndex** | <span class="arg-type"></span></br></span><span class="arg-required">required</span> |  |
 
 
