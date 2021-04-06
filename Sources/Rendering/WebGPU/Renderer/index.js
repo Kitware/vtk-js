@@ -328,7 +328,7 @@ export function extend(publicAPI, model, initialValues = {}) {
   model.UBOUpdateTime = {};
   macro.obj(model.UBOUpdateTime);
 
-  model.tmpMat4 = mat4.create();
+  model.tmpMat4 = mat4.identity(new Float64Array(16));
 
   // Build VTK API
   macro.get(publicAPI, model, ['renderPass']);

@@ -112,11 +112,16 @@ function parseHeader(data) {
 
 function postProcess(buffer, elements) {
   const vertElement = elements.find((element) => element.name === 'vertex');
+  const faceElement = elements.find((element) => element.name === 'face');
 
   let nbVerts = 0;
+  let nbFaces = 0;
 
   if (vertElement) {
     nbVerts = vertElement.count;
+  }
+  if (faceElement) {
+    nbFaces = faceElement.count;
   }
 
   const pointValues = new Float32Array(nbVerts * 3);
@@ -125,8 +130,9 @@ function postProcess(buffer, elements) {
   const normalsArray = new Float32Array(nbVerts * 3);
 
   const hasColor = buffer.colors.length > 0;
-  const hasVertTCoods = buffer.uvs.length > 0;
+  const hasVertTCoords = buffer.uvs.length > 0;
   const hasNorms = buffer.normals.length > 0;
+  const hasFaceTCoords = buffer.faceVertexUvs.length > 0;
 
   for (let vertIdx = 0; vertIdx < nbVerts; vertIdx++) {
     let a = vertIdx * 3 + 0;
@@ -143,7 +149,7 @@ function postProcess(buffer, elements) {
       colorArray[c] = buffer.colors[c];
     }
 
-    if (hasVertTCoods) {
+    if (hasVertTCoords) {
       a = vertIdx * 2 + 0;
       b = vertIdx * 2 + 1;
       tcoordsArray[a] = buffer.uvs[a];
@@ -154,6 +160,27 @@ function postProcess(buffer, elements) {
       normalsArray[a] = buffer.normals[a];
       normalsArray[b] = buffer.normals[b];
       normalsArray[c] = buffer.normals[c];
+    }
+  }
+
+  if (!hasVertTCoords && hasFaceTCoords) {
+    // don't use array.shift, because buffer.indices will be used later
+    let idxVerts = 0;
+    let idxCoord = 0;
+    for (let faceIdx = 0; faceIdx < nbFaces; ++faceIdx) {
+      const nbFaceVerts = buffer.indices[idxVerts++];
+      const texcoords = buffer.faceVertexUvs[idxCoord++];
+      if (nbFaceVerts * 2 === texcoords.length) {
+        // grab the vertex index
+        for (let vertIdx = 0; vertIdx < nbFaceVerts; ++vertIdx) {
+          const vert = buffer.indices[idxVerts++];
+          // new texture stored at the current face
+          tcoordsArray[vert * 2 + 0] = texcoords[vertIdx * 2 + 0];
+          tcoordsArray[vert * 2 + 1] = texcoords[vertIdx * 2 + 1];
+        }
+      } else {
+        idxVerts += nbFaceVerts;
+      }
     }
   }
 
@@ -170,7 +197,7 @@ function postProcess(buffer, elements) {
     );
   }
 
-  if (hasVertTCoods) {
+  if (hasVertTCoords || hasFaceTCoords) {
     const da = vtkDataArray.newInstance({
       numberOfComponents: 2,
       values: tcoordsArray,
@@ -277,14 +304,15 @@ function handleElement(buffer, name, element) {
   } else if (name === 'face') {
     const vertexIndices = element.vertex_indices || element.vertex_index;
     const texcoord = element.texcoord;
-    buffer.faceVertexUvs = texcoord;
 
-    if (vertexIndices.length > 0) {
+    if (vertexIndices && vertexIndices.length > 0) {
       buffer.indices.push(vertexIndices.length);
       vertexIndices.forEach((val, idx) => {
         buffer.indices.push(val);
       });
     }
+
+    buffer.faceVertexUvs.push(texcoord);
   }
 }
 

@@ -1,7 +1,6 @@
 import vtkBoundingBox, {
   STATIC,
 } from 'vtk.js/Sources/Common/DataModel/BoundingBox';
-import vtkBox from 'vtk.js/Sources/Common/DataModel/Box';
 import vtkCubeSource from 'vtk.js/Sources/Filters/Sources/CubeSource';
 import vtkCutter from 'vtk.js/Sources/Filters/Core/Cutter';
 import vtkPlane from 'vtk.js/Sources/Common/DataModel/Plane';
@@ -114,7 +113,7 @@ export function boundPointOnPlane(p1, p2, bounds) {
 
   const out = [0, 0, 0];
   const tolerance = [0, 0, 0];
-  vtkBox.intersectBox(bounds, p1, dir12, out, tolerance);
+  vtkBoundingBox.intersectBox(bounds, p1, dir12, out, tolerance);
 
   return out;
 }

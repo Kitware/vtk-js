@@ -14,24 +14,29 @@ function vtkWebGPUPipeline(publicAPI, model) {
     const device = window.getDevice();
 
     const pipelineDesc = {
-      primitiveTopology: model.topology,
-      depthStencilState: {
+      primitive: { topology: model.topology, cullMode: 'none' },
+      depthStencil: {
         depthWriteEnabled: true,
         depthCompare: 'less',
         format: 'depth24plus-stencil8',
       },
-      rasterizationState: {
-        cullMode: 'none',
+      fragment: {
+        targets: [
+          {
+            format: 'bgra8unorm',
+            blend: {
+              color: {
+                srcFactor: 'src-alpha',
+                dstFactor: 'one-minus-src-alpha',
+              },
+              alpha: { srcfactor: 'one', dstFactor: 'one-minus-src-alpha' },
+            },
+          },
+        ],
       },
-
-      colorStates: [
-        {
-          format: 'bgra8unorm',
-        },
-      ],
     };
 
-    pipelineDesc.vertexState = model.vertexState;
+    pipelineDesc.vertex = model.vertexState;
 
     // add in bind group layouts
     const bindGroupLayouts = [];
@@ -47,16 +52,12 @@ function vtkWebGPUPipeline(publicAPI, model) {
       const sd = model.shaderDescriptions[i];
       const sm = device.getShaderModule(sd);
       if (sd.getType() === 'vertex') {
-        pipelineDesc.vertexStage = {
-          module: sm.getHandle(),
-          entryPoint: 'main',
-        };
+        pipelineDesc.vertex.module = sm.getHandle();
+        pipelineDesc.vertex.entryPoint = 'main';
       }
       if (sd.getType() === 'fragment') {
-        pipelineDesc.fragmentStage = {
-          module: sm.getHandle(),
-          entryPoint: 'main',
-        };
+        pipelineDesc.fragment.module = sm.getHandle();
+        pipelineDesc.fragment.entryPoint = 'main';
       }
     }
 

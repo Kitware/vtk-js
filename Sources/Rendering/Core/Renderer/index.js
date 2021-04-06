@@ -152,7 +152,8 @@ function vtkRenderer(publicAPI, model) {
     publicAPI.modified();
   };
   publicAPI.removeAllActors = () => {
-    model.actors.forEach((actor) => {
+    const actors = publicAPI.getActors();
+    actors.forEach((actor) => {
       publicAPI.removeViewProp(actor);
     });
     model.actors = [];
@@ -173,7 +174,8 @@ function vtkRenderer(publicAPI, model) {
     publicAPI.modified();
   };
   publicAPI.removeAllVolumes = () => {
-    model.volumes.forEach((volume) => {
+    const volumes = publicAPI.getVolumes();
+    volumes.forEach((volume) => {
       publicAPI.removeViewProp(volume);
     });
     model.volumes = [];
@@ -255,9 +257,9 @@ function vtkRenderer(publicAPI, model) {
     mat4.transpose(matrix, matrix);
 
     // Transform point to world coordinates
-    const result = vec3.fromValues(x, y, z);
+    const result = new Float64Array([x, y, z]);
     vec3.transformMat4(result, result, matrix);
-    return [result[0], result[1], result[2]];
+    return result;
   };
 
   publicAPI.projectionToView = (x, y, z, aspect) => {
@@ -275,9 +277,9 @@ function vtkRenderer(publicAPI, model) {
     mat4.transpose(matrix, matrix);
 
     // Transform point to world coordinates
-    const result = vec3.fromValues(x, y, z);
+    const result = new Float64Array([x, y, z]);
     vec3.transformMat4(result, result, matrix);
-    return [result[0], result[1], result[2]];
+    return result;
   };
 
   // Convert world point coordinates to view coordinates.
@@ -293,9 +295,9 @@ function vtkRenderer(publicAPI, model) {
     const matrix = model.activeCamera.getViewMatrix();
     mat4.transpose(matrix, matrix);
 
-    const result = vec3.fromValues(x, y, z);
+    const result = new Float64Array([x, y, z]);
     vec3.transformMat4(result, result, matrix);
-    return [result[0], result[1], result[2]];
+    return result;
   };
 
   // Convert world point coordinates to view coordinates.
@@ -312,9 +314,9 @@ function vtkRenderer(publicAPI, model) {
     const matrix = model.activeCamera.getProjectionMatrix(aspect, -1.0, 1.0);
     mat4.transpose(matrix, matrix);
 
-    const result = vec3.fromValues(x, y, z);
+    const result = new Float64Array([x, y, z]);
     vec3.transformMat4(result, result, matrix);
-    return [result[0], result[1], result[2]];
+    return result;
   };
 
   publicAPI.computeVisiblePropBounds = () => {

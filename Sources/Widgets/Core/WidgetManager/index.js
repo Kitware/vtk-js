@@ -2,6 +2,7 @@ import { radiansFromDegrees } from 'vtk.js/Sources/Common/Core/Math';
 import { FieldAssociations } from 'vtk.js/Sources/Common/DataModel/DataSet/Constants';
 import macro from 'vtk.js/Sources/macro';
 import vtkOpenGLHardwareSelector from 'vtk.js/Sources/Rendering/OpenGL/HardwareSelector';
+import vtkSelectionNode from 'vtk.js/Sources/Common/DataModel/SelectionNode';
 import Constants from 'vtk.js/Sources/Widgets/Core/WidgetManager/Constants';
 import vtkSVGRepresentation from 'vtk.js/Sources/Widgets/SVG/SVGRepresentation';
 import { diff } from './vdom';
@@ -165,7 +166,7 @@ function vtkWidgetManager(publicAPI, model) {
         promise.then((vnodes) => {
           let pendingRenders = pendingSvgRenders.get(widget) || [];
           const idx = pendingRenders.indexOf(promise);
-          if (model.deleted || idx === -1) {
+          if (model.deleted || widget.isDeleted() || idx === -1) {
             return;
           }
 
@@ -372,6 +373,15 @@ function vtkWidgetManager(publicAPI, model) {
     }
   };
 
+  function addWidgetInternal(viewWidget) {
+    viewWidget.setWidgetManager(publicAPI);
+    updateWidgetWeakMap(viewWidget);
+    updateDisplayScaleParams();
+
+    // Register to renderer
+    model.renderer.addActor(viewWidget);
+  }
+
   publicAPI.addWidget = (widget, viewType, initialValues) => {
     if (!model.renderer) {
       vtkErrorMacro(
@@ -389,12 +399,7 @@ function vtkWidgetManager(publicAPI, model) {
 
     if (model.widgets.indexOf(w) === -1) {
       model.widgets.push(w);
-      w.setWidgetManager(publicAPI);
-      updateWidgetWeakMap(w);
-
-      // Register to renderer
-      model.renderer.addActor(w);
-
+      addWidgetInternal(w);
       publicAPI.modified();
     }
 
@@ -437,6 +442,23 @@ function vtkWidgetManager(publicAPI, model) {
 
   publicAPI.updateSelectionFromXY = (x, y) => {
     if (model.pickingEnabled) {
+      // First pick SVG representation
+      for (let i = 0; i < model.widgets.length; ++i) {
+        const widget = model.widgets[i];
+        const hoveredSVGReps = widget
+          .getRepresentations()
+          .filter((r) => r.isA('vtkSVGRepresentation') && r.getHover() != null);
+        if (hoveredSVGReps.length) {
+          const selection = vtkSelectionNode.newInstance();
+          selection.getProperties().compositeID = hoveredSVGReps[0].getHover();
+          selection.getProperties().widget = widget;
+          selection.getProperties().representation = hoveredSVGReps[0];
+          model.selections = [selection];
+          return;
+        }
+      }
+
+      // Then pick regular representations.
       let pickingAvailable = model.pickingAvailable;
 
       if (model.captureOn === CaptureOn.MOUSE_MOVE) {
@@ -477,11 +499,19 @@ function vtkWidgetManager(publicAPI, model) {
       return model.previousSelectedData;
     }
 
-    if (!propsWeakMap.has(prop)) {
-      return {};
+    let widget = null;
+    let representation = null;
+
+    if (propsWeakMap.has(prop)) {
+      const props = propsWeakMap.get(prop);
+      widget = props.widget;
+      representation = props.representation;
+    } else {
+      const selectionProps = model.selections[0].getProperties();
+      widget = selectionProps.widget;
+      representation = selectionProps.representation;
     }
 
-    const { widget, representation } = propsWeakMap.get(prop);
     if (widget && representation) {
       const selectedState = representation.getSelectedState(prop, compositeID);
       model.previousSelectedData = {

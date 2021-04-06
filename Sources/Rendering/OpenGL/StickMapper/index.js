@@ -244,14 +244,13 @@ function vtkOpenGLStickMapper(publicAPI, model) {
 
     if (!actor.getIsIdentity()) {
       const actMats = model.openGLActor.getKeyMatrices();
-      const tmp4 = mat4.create();
-
       if (program.isUniformUsed('MCVCMatrix')) {
+        const tmp4 = new Float64Array(16);
         mat4.multiply(tmp4, keyMats.wcvc, actMats.mcwc);
         program.setUniformMatrix('MCVCMatrix', tmp4);
       }
       if (program.isUniformUsed('normalMatrix')) {
-        const anorms = mat3.create();
+        const anorms = new Float64Array(9);
         mat3.multiply(anorms, keyMats.normalMatrix, actMats.normalMatrix);
         program.setUniformMatrix3x3('normalMatrix', anorms);
       }

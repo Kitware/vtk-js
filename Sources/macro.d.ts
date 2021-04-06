@@ -56,6 +56,18 @@ export enum TYPED_ARRAYS {
   Int32Array,
 }
 
+export type TypedArray =
+    | number[]
+    | Uint32Array
+    | Uint16Array
+    | Uint8Array
+    | Uint8ClampedArray
+    | Int32Array
+    | Int16Array
+    | Int8Array
+    | Float64Array
+    | Float32Array;
+
 /**
  * Capitalize provided string.
  * This is typically used to convert the name of a field into its method name.
@@ -368,7 +380,7 @@ export interface VtkDataArray extends VtkObject {
    */
   getComponent(tupleIdx: number, componentIndex: number): number;
   setComponent(tupleIdx: number, componentIndex: number, value: number): void;
-  getData: () => Array<number>;
+  getData: () => TypedArray;
   /**
    * Return the range of the given component.
    *
@@ -394,7 +406,7 @@ export interface VtkDataArray extends VtkObject {
   getDataType: () => string;
   newClone: () => VtkDataArray;
   getName: () => string;
-  setData: (typedArray: Array<number>, numberOfComponents: number) => void;
+  setData: (typedArray: TypedArray, numberOfComponents?: number) => void;
   getState: () => object;
   // --- via macro --
   setName: (name: string) => boolean;

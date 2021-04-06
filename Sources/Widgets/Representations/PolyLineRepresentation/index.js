@@ -2,9 +2,11 @@ import macro from 'vtk.js/Sources/macro';
 import vtkActor from 'vtk.js/Sources/Rendering/Core/Actor';
 import vtkMapper from 'vtk.js/Sources/Rendering/Core/Mapper';
 import * as vtkMath from 'vtk.js/Sources/Common/Core/Math';
+import vtkBoundingBox from 'vtk.js/Sources/Common/DataModel/BoundingBox';
 import vtkPolyData from 'vtk.js/Sources/Common/DataModel/PolyData';
-// import vtkTubeFilter from 'vtk.js/Sources/Filters/General/TubeFilter';
+import vtkTubeFilter from 'vtk.js/Sources/Filters/General/TubeFilter';
 import vtkWidgetRepresentation from 'vtk.js/Sources/Widgets/Representations/WidgetRepresentation';
+import { RenderingTypes } from 'vtk.js/Sources/Widgets/Core/WidgetManager/Constants';
 
 // ----------------------------------------------------------------------------
 // vtkPolyLineRepresentation methods
@@ -13,6 +15,7 @@ import vtkWidgetRepresentation from 'vtk.js/Sources/Widgets/Representations/Widg
 function vtkPolyLineRepresentation(publicAPI, model) {
   // Set our className
   model.classHierarchy.push('vtkPolyLineRepresentation');
+  const superClass = { ...publicAPI };
 
   // --------------------------------------------------------------------------
   // Internal polydata dataset
@@ -22,7 +25,7 @@ function vtkPolyLineRepresentation(publicAPI, model) {
   model.cells = [];
 
   function allocateSize(size, closePolyLine = false) {
-    if (size === 0) {
+    if (size < 2) {
       model.internalPolyData.getPoints().setData(new Float32Array([0, 0, 0]));
       model.internalPolyData.getLines().setData(new Uint8Array(0));
     } else if (!model.points || model.points.length !== size * 3) {
@@ -48,15 +51,16 @@ function vtkPolyLineRepresentation(publicAPI, model) {
 
   model.mapper = vtkMapper.newInstance();
   model.actor = vtkActor.newInstance();
-  // model.tubes = vtkTubeFilter.newInstance({
-  //   radius: 0.01,
-  //   numberOfSides: 12,
-  //   capping: false,
-  // });
+  model.tubes = vtkTubeFilter.newInstance({
+    radius: model.lineThickness,
+    numberOfSides: 12,
+    capping: false,
+  });
 
-  // model.tubes.setInputConnection(publicAPI.getOutputPort());
-  // model.mapper.setInputConnection(model.tubes.getOutputPort());
-  model.mapper.setInputConnection(publicAPI.getOutputPort());
+  model.tubes.setInputConnection(publicAPI.getOutputPort());
+  model.mapper.setInputConnection(model.tubes.getOutputPort());
+
+  // model.mapper.setInputConnection(publicAPI.getOutputPort());
   model.actor.setMapper(model.mapper);
 
   publicAPI.addActor(model.actor);
@@ -64,9 +68,30 @@ function vtkPolyLineRepresentation(publicAPI, model) {
   // --------------------------------------------------------------------------
 
   publicAPI.requestData = (inData, outData) => {
-    const list = publicAPI.getRepresentationStates(inData[0]);
+    const state = inData[0];
+    // Remove invalid and coincident points for tube filter.
+    const list = publicAPI
+      .getRepresentationStates(state)
+      .reduce((subStates, subState) => {
+        const subStateOrigin =
+          subState.getOrigin && subState.getOrigin().length
+            ? subState.getOrigin()
+            : null;
+        const previousSubStateOrigin =
+          subStates.length && subStates[subStates.length - 1].getOrigin();
+        if (
+          !subStateOrigin ||
+          (previousSubStateOrigin &&
+            vtkMath.areEquals(subStateOrigin, previousSubStateOrigin))
+        ) {
+          return subStates;
+        }
+        subStates.push(subState);
+        return subStates;
+      }, []);
     let size = list.length;
 
+    // Do not render last point if not visible or too close from previous point.
     if (size > 1) {
       const lastState = list[list.length - 1];
       const last = lastState.getOrigin();
@@ -83,15 +108,74 @@ function vtkPolyLineRepresentation(publicAPI, model) {
 
     const points = allocateSize(size, model.closePolyLine && size > 2);
 
-    for (let i = 0; i < size; i++) {
-      const coords = list[i].getOrigin();
-      points[i * 3] = coords[0];
-      points[i * 3 + 1] = coords[1];
-      points[i * 3 + 2] = coords[2];
+    if (points) {
+      for (let i = 0; i < size; i++) {
+        const coords = list[i].getOrigin();
+        points[i * 3] = coords[0];
+        points[i * 3 + 1] = coords[1];
+        points[i * 3 + 2] = coords[2];
+      }
     }
 
     model.internalPolyData.modified();
+
+    const lineThickness = state.getLineThickness
+      ? state.getLineThickness()
+      : null;
+    publicAPI.setLineThickness(lineThickness || model.lineThickness);
+
     outData[0] = model.internalPolyData;
+  };
+
+  /**
+   * Change the line/tube thickness.
+   * @param {number} lineThickness
+   */
+  publicAPI.setLineThickness = (lineThickness) => {
+    let scaledLineThickness = lineThickness;
+    if (publicAPI.getScaleInPixels()) {
+      const center = vtkBoundingBox.getCenter(
+        model.internalPolyData.getBounds()
+      );
+      scaledLineThickness *= publicAPI.getPixelWorldHeightAtCoord(center);
+    }
+    model.tubes.setRadius(scaledLineThickness);
+  };
+
+  /**
+   * When mousing over the line, if behavior != CONTEXT,
+   * returns the parent state.
+   * @param {object} prop
+   * @param {number} compositeID
+   * @returns {object}
+   */
+  publicAPI.getSelectedState = (prop, compositeID) => model.inputData[0];
+
+  publicAPI.updateActorVisibility = (
+    renderingType,
+    wVisible,
+    ctxVisible,
+    hVisible
+  ) => {
+    const state = model.inputData[0];
+
+    // Make lines/tubes thicker for picking
+    let lineThickness = state.getLineThickness
+      ? state.getLineThickness()
+      : null;
+    lineThickness = lineThickness || model.lineThickness;
+    if (renderingType === RenderingTypes.PICKING_BUFFER) {
+      lineThickness = Math.max(4, lineThickness);
+    }
+    publicAPI.setLineThickness(lineThickness);
+    const isValid = model.points && model.points.length > 3;
+
+    return superClass.updateActorVisibility(
+      renderingType,
+      wVisible && isValid,
+      ctxVisible && isValid,
+      hVisible && isValid
+    );
   };
 }
 
@@ -102,6 +186,7 @@ function vtkPolyLineRepresentation(publicAPI, model) {
 const DEFAULT_VALUES = {
   threshold: Number.EPSILON,
   closePolyLine: false,
+  lineThickness: 2,
 };
 
 // ----------------------------------------------------------------------------

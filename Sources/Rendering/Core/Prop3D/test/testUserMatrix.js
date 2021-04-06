@@ -43,7 +43,7 @@ test.onlyIfWebGL('Test Set Actor User Matrix', (t) => {
   actor.setMapper(mapper);
   renderer.addActor(actor);
 
-  const userMatrix = mat4.create();
+  const userMatrix = mat4.identity(new Float64Array(16));
   mat4.rotateZ(userMatrix, userMatrix, Math.PI / 4);
   actor.setUserMatrix(userMatrix);
 

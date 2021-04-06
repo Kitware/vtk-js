@@ -7,6 +7,7 @@ import vtkPlanePointManipulator from 'vtk.js/Sources/Widgets/Manipulators/PlaneM
 import vtkSVGLandmarkRepresentation from 'vtk.js/Sources/Widgets/SVG/SVGLandmarkRepresentation';
 import vtkPolyLineRepresentation from 'vtk.js/Sources/Widgets/Representations/PolyLineRepresentation';
 import widgetBehavior from 'vtk.js/Sources/Widgets/Widgets3D/LineWidget/behavior';
+import { Behavior } from 'vtk.js/Sources/Widgets/Representations/WidgetRepresentation/Constants';
 import { ViewTypes } from 'vtk.js/Sources/Widgets/Core/WidgetManager/Constants';
 import {
   getPoint,
@@ -134,7 +135,11 @@ function vtkLineWidget(publicAPI, model) {
           {
             builder: vtkPolyLineRepresentation,
             labels: ['handle1', 'handle2', 'moveHandle'],
-            initialValues: { scaleInPixels: true },
+            initialValues: {
+              scaleInPixels: true,
+              behavior: Behavior.HANDLE,
+              pickable: true,
+            },
           },
         ];
     }

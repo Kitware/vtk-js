@@ -5,15 +5,13 @@ import { areMatricesEqual } from 'vtk.js/Sources/Common/Core/Math';
 
 const NoOp = (v) => v;
 
-const IDENTITY = new Float64Array(16);
-mat4.identity(IDENTITY);
+const IDENTITY = mat4.identity(new Float64Array(16));
 
 const EPSILON = 1e-6;
 
 class Transform {
   constructor(useDegree = false) {
-    this.matrix = new Float64Array(16);
-    mat4.identity(this.matrix);
+    this.matrix = mat4.identity(new Float64Array(16));
     this.tmp = new Float64Array(3);
     this.angleConv = useDegree ? glMatrix.toRadian : NoOp;
   }

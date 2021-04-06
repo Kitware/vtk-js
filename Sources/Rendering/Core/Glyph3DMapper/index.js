@@ -121,11 +121,11 @@ function vtkGlyph3DMapper(publicAPI, model) {
       model.bounds[4] = vtkBoundingBox.INIT_BOUNDS[4];
       model.bounds[5] = vtkBoundingBox.INIT_BOUNDS[5];
 
-      const tcorner = vec3.create();
+      const tcorner = new Float64Array(3);
 
       const oArray = publicAPI.getOrientationArrayData();
 
-      const identity = mat4.create();
+      const identity = mat4.identity(new Float64Array(16));
       const trans = [];
       const scale = [];
       const numPts = pts.length / 3;

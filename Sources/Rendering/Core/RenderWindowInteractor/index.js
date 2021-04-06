@@ -713,11 +713,16 @@ function vtkRenderWindowInteractor(publicAPI, model) {
     publicAPI.modified();
   };
 
+  publicAPI.getFirstRenderer = () =>
+    model.view.getRenderable().getRenderersByReference()[0];
+
   publicAPI.findPokedRenderer = (x = 0, y = 0) => {
     if (!model.view) {
       return null;
     }
-    const rc = model.view.getRenderable().getRenderersByReference();
+    // The original order of renderers needs to remain as
+    // the first one is the one we want to manipulate the camera on.
+    const rc = model.view.getRenderable().getRenderers();
     rc.sort((a, b) => a.getLayer() - b.getLayer());
     let interactiveren = null;
     let viewportren = null;
@@ -796,6 +801,7 @@ function vtkRenderWindowInteractor(publicAPI, model) {
       const callData = {
         type: eventName,
         pokedRenderer: model.currentRenderer,
+        firstRenderer: publicAPI.getFirstRenderer(),
         // Add the arguments to the call data
         ...arg,
       };
@@ -1057,8 +1063,6 @@ export function extend(publicAPI, model, initialValues = {}) {
   macro.get(publicAPI, model, [
     'initialized',
     'container',
-    'enabled',
-    'enableRender',
     'interactorStyle',
     'lastFrameTime',
     'view',
@@ -1068,6 +1072,7 @@ export function extend(publicAPI, model, initialValues = {}) {
   macro.setGet(publicAPI, model, [
     'lightFollowCamera',
     'enabled',
+    'enableRender',
     'recognizeGestures',
     'desiredUpdateRate',
     'stillUpdateRate',

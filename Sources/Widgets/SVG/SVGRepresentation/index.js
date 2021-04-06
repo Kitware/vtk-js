@@ -15,6 +15,7 @@ function createSvgElement(tag) {
   return {
     name: tag,
     attrs: {},
+    eventListeners: {},
     // implies no children if set
     textContent: null,
     children: [],
@@ -26,6 +27,9 @@ function createSvgElement(tag) {
     },
     appendChild(n) {
       this.children.push(n);
+    },
+    addEventListeners(event, callback) {
+      this.eventListeners[event] = callback;
     },
   };
 }
@@ -102,6 +106,21 @@ function vtkSVGRepresentation(publicAPI, model) {
     return deferred.promise;
   };
 
+  publicAPI.createListenableSvgElement = (tag, id) => {
+    const element = createSvgElement(tag);
+    if (model.pickable) {
+      element.addEventListeners('mouseenter', () => {
+        publicAPI.setHover(id);
+      });
+      element.addEventListeners('mouseleave', () => {
+        if (publicAPI.getHover() === id) {
+          publicAPI.setHover(null);
+        }
+      });
+    }
+    return element;
+  };
+
   // --------------------------------------------------------------------------
 
   publicAPI.updateActorVisibility = (
@@ -129,6 +148,9 @@ function vtkSVGRepresentation(publicAPI, model) {
 // Object factory
 // ----------------------------------------------------------------------------
 
+/**
+ * 'hover' is not null when a pickable SVG element is mouse hovered.
+ */
 const DEFAULT_VALUES = {
   visibility: true,
 };
@@ -141,7 +163,7 @@ export function extend(publicAPI, model, initialValues = {}) {
   // Extend methods
   vtkWidgetRepresentation.extend(publicAPI, model, initialValues);
 
-  macro.setGet(publicAPI, model, ['visibility']);
+  macro.setGet(publicAPI, model, ['visibility', 'hover']);
 
   // Object specific methods
   vtkSVGRepresentation(publicAPI, model);

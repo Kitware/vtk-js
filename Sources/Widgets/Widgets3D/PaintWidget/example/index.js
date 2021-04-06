@@ -43,7 +43,7 @@ scene.fullScreenRenderer = vtkFullScreenRenderWindow.newInstance({
 
 scene.renderer = scene.fullScreenRenderer.getRenderer();
 scene.renderWindow = scene.fullScreenRenderer.getRenderWindow();
-scene.openGLRenderWindow = scene.fullScreenRenderer.getOpenGLRenderWindow();
+scene.openGLRenderWindow = scene.fullScreenRenderer.getInteractor().getView();
 scene.camera = scene.renderer.getActiveCamera();
 
 // setup 2D view
@@ -57,9 +57,9 @@ function setCamera(sliceMode, renderer, data) {
   const ijk = [0, 0, 0];
   const position = [0, 0, 0];
   const focalPoint = [0, 0, 0];
-  data.indexToWorldVec3(ijk, focalPoint);
+  data.indexToWorld(ijk, focalPoint);
   ijk[sliceMode] = 1;
-  data.indexToWorldVec3(ijk, position);
+  data.indexToWorld(ijk, position);
   renderer.getActiveCamera().set({ focalPoint, position });
   renderer.resetCamera();
 }
@@ -270,7 +270,7 @@ reader
 
         // position
         ijk[slicingMode] = image.imageMapper.getSlice();
-        data.indexToWorldVec3(ijk, position);
+        data.indexToWorld(ijk, position);
 
         widgets.paintWidget.getManipulator().setOrigin(position);
         widgets.rectangleWidget.getManipulator().setOrigin(position);

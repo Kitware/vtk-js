@@ -22,7 +22,7 @@ function vtkOutlineContextRepresentation(publicAPI, model) {
   model.classHierarchy.push('vtkOutlineContextRepresentation');
 
   // internal bounding box
-  model.bbox = vtkBoundingBox.newInstance();
+  model.bbox = [...vtkBoundingBox.INIT_BOUNDS];
 
   // --------------------------------------------------------------------------
   // Internal polydata dataset
@@ -51,18 +51,16 @@ function vtkOutlineContextRepresentation(publicAPI, model) {
 
   publicAPI.requestData = (inData, outData) => {
     const list = publicAPI.getRepresentationStates(inData[0]);
-    model.bbox.reset();
+    vtkBoundingBox.reset(model.bbox);
 
     for (let i = 0; i < list.length; i++) {
       const pt = list[i].getOrigin();
-      model.bbox.addPoint(...pt);
+      vtkBoundingBox.addPoint(model.bbox, ...pt);
     }
-
-    const bounds = model.bbox.getBounds();
 
     // BOUNDS_MAP.length should equal model.points.length
     for (let i = 0; i < BOUNDS_MAP.length; i++) {
-      model.points[i] = bounds[BOUNDS_MAP[i]];
+      model.points[i] = model.bbox[BOUNDS_MAP[i]];
     }
 
     model.internalPolyData.getPoints().modified();

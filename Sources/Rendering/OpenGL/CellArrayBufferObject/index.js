@@ -12,10 +12,10 @@ const { vtkErrorMacro } = macro;
 // ----------------------------------------------------------------------------
 
 function computeInverseShiftAndScaleMatrix(coordShift, coordScale) {
-  const inverseScale = vec3.create();
+  const inverseScale = new Float64Array(3);
   vec3.inverse(inverseScale, coordScale);
 
-  const matrix = mat4.create();
+  const matrix = new Float64Array(16);
   mat4.fromRotationTranslationScale(
     matrix,
     quat.create(),
@@ -265,8 +265,8 @@ function vtkOpenGLCellArrayBufferObject(publicAPI, model) {
 
     if (useShiftAndScale) {
       // Compute shift and scale vectors
-      const coordShift = vec3.create();
-      const coordScale = vec3.create();
+      const coordShift = new Float64Array(3);
+      const coordScale = new Float64Array(3);
       for (let i = 0; i < 3; ++i) {
         const range = options.points.getRange(i);
         const delta = range[1] - range[0];
@@ -354,7 +354,7 @@ function vtkOpenGLCellArrayBufferObject(publicAPI, model) {
   publicAPI.setCoordShiftAndScale = (coordShift, coordScale) => {
     if (
       coordShift !== null &&
-      (coordShift.constructor !== Float32Array || coordShift.length !== 3)
+      (coordShift.constructor !== Float64Array || coordShift.length !== 3)
     ) {
       vtkErrorMacro('Wrong type for coordShift, expected vec3 or null');
       return;
@@ -362,7 +362,7 @@ function vtkOpenGLCellArrayBufferObject(publicAPI, model) {
 
     if (
       coordScale !== null &&
-      (coordScale.constructor !== Float32Array || coordScale.length !== 3)
+      (coordScale.constructor !== Float64Array || coordScale.length !== 3)
     ) {
       vtkErrorMacro('Wrong type for coordScale, expected vec3 or null');
       return;

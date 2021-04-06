@@ -67,6 +67,9 @@ function vtkForwardPass(publicAPI, model) {
             publicAPI.setCurrentOperation('opaqueZBufferPass');
             renNode.traverse(publicAPI);
             model.framebuffer.restorePreviousBindingsAndBuffers();
+
+            // reset now that we have done it
+            model.depthRequested = false;
           }
 
           publicAPI.setCurrentOperation('cameraPass');
@@ -93,6 +96,10 @@ function vtkForwardPass(publicAPI, model) {
       return model.framebuffer.getColorTexture();
     }
     return null;
+  };
+
+  publicAPI.requestDepth = () => {
+    model.depthRequested = true;
   };
 
   publicAPI.incrementOpaqueActorCount = () => model.opaqueActorCount++;
@@ -122,7 +129,6 @@ export function extend(publicAPI, model, initialValues = {}) {
   vtkRenderPass.extend(publicAPI, model, initialValues);
 
   macro.get(publicAPI, model, ['framebuffer']);
-  macro.setGet(publicAPI, model, ['depthRequested']);
 
   // Object methods
   vtkForwardPass(publicAPI, model);

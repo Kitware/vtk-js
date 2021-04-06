@@ -77,14 +77,8 @@ function vtkLandmarkTransform(publicAPI, model) {
 
     // -- build the 3x3 matrix M --
 
-    const M = mat3.create();
-    M[0] = 0;
-    M[4] = 0;
-    M[8] = 0;
-    const AAT = mat3.create();
-    AAT[0] = 0;
-    AAT[4] = 0;
-    AAT[8] = 0;
+    const M = new Float64Array(9);
+    const AAT = new Float64Array(9);
 
     const a = [0, 0, 0];
     const b = [0, 0, 0];
@@ -140,12 +134,7 @@ function vtkLandmarkTransform(publicAPI, model) {
 
       // -- build the 4x4 matrix N --
 
-      const N = mat4.create();
-      N[0] = 0;
-      N[5] = 0;
-      N[10] = 0;
-      N[15] = 0;
-
+      const N = new Float64Array(16);
       // on-diagonal elements
       N[0] = M[0] + M[4] + M[8];
       N[5] = M[0] - M[4] - M[8];
@@ -332,7 +321,7 @@ export function extend(publicAPI, model, initialValues = {}) {
   macro.obj(publicAPI, model);
 
   // Internal objects initialization
-  model.matrix = mat4.create(); // identity
+  model.matrix = mat4.identity(new Float64Array(16));
 
   macro.setGet(publicAPI, model, ['sourceLandmark', 'targetLandmark', 'mode']);
   macro.get(publicAPI, model, ['matrix']);
