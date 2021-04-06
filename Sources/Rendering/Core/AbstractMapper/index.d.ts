@@ -4,9 +4,6 @@ import { VtkAlgorithm, VtkObject } from 'vtk.js/Sources/macro';
  * 
  */
 interface IAbstractMapperInitialValues {
-	/**
-	 * 
-	 */
 	clippingPlanes?: any[];
 }
 

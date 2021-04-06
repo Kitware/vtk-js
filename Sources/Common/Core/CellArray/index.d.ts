@@ -2,44 +2,36 @@ import { TypedArray, VtkDataArray } from "vtk.js/Sources/macro";
 
 
 /**
- * 
+ *
  */
 interface ICellArrayInitialValues {
-
-	/**
-	 * 
-	 */
 	empty?: boolean;
-
-	 /**
-	  * 
-	  */
 	numberOfComponents?: number;
 }
 
 export interface vtkCellArray extends VtkDataArray {
 
 	/**
-	 * 
-	 * @param recompute 
+	 * Get the number of cells in the array.
+	 * @param {boolean} recompute
 	 */
 	getNumberOfCells(recompute?: boolean): number;
 
 	/**
-	 * 
-	 * @param recompute 
+	 *
+	 * @param {boolean} recompute
 	 */
 	getCellSizes(recompute?: boolean): any;
 
 	/**
-	 * 
-	 * @param typedArray 
+	 *
+	 * @param {TypedArray} typedArray
 	 */
 	setData(typedArray: TypedArray): void;
-	
+
 	/**
 	 * Returns the point indexes at the given location as a subarray.
-	 * @param loc 
+	 * @param loc
 	 */
 	getCell(loc: any): void;
 }
@@ -61,16 +53,16 @@ export function newInstance(initialValues?: ICellArrayInitialValues): vtkCellArr
 
 
 /**
- * 
- * @param cellArray 
+ * @static
+ * @param cellArray
  */
-export function extractCellSizes(cellArray : any): any;
+export function extractCellSizes(cellArray: any): any;
 
  /**
-  * 
-  * @param cellArray 
+  * @static
+  * @param cellArray
   */
-export function getNumberOfCells(cellArray : any): any;
+export function getNumberOfCells(cellArray: any): any;
 
 /**
  * vtkCellArray stores dataset topologies as an explicit connectivity table

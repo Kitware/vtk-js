@@ -1,174 +1,146 @@
 import vtkAbstractMapper from "vtk.js/Sources/Rendering/Core/AbstractMapper";
 
 export enum BlendMode {
-    COMPOSITE_BLEND,
-    MAXIMUM_INTENSITY_BLEND,
-    MINIMUM_INTENSITY_BLEND,
-    AVERAGE_INTENSITY_BLEND,
+	COMPOSITE_BLEND,
+	MAXIMUM_INTENSITY_BLEND,
+	MINIMUM_INTENSITY_BLEND,
+	AVERAGE_INTENSITY_BLEND,
 }
 
 /**
  * 
  */
 interface IVolumeMapperInitialValues {
-
-    /**
-     * 
-     */
-    bounds?: number[];
-
-    /**
-     * 
-     */
-    blendMode?: BlendMode;
-
-    /**
-     * 
-     */
-    sampleDistance?: number;
-
-    /**
-     * 
-     */
-    imageSampleDistance?: number;
-
-    /**
-     * 
-     */
-    maximumSamplesPerRay?: number;
-
-    /**
-     * 
-     */
-    autoAdjustSampleDistances?: boolean;
-
-    /**
-     * 
-     */
-    averageIPScalarRange?: number[];
+	bounds?: number[];
+	blendMode?: BlendMode;
+	sampleDistance?: number;
+	imageSampleDistance?: number;
+	maximumSamplesPerRay?: number;
+	autoAdjustSampleDistances?: boolean;
+	averageIPScalarRange?: number[];
 }
 
 export interface vtkVolumeMapper extends vtkAbstractMapper {
 
-    /**
-     * Get the bounds as [xmin, xmax, ymin, ymax, zmin, zmax].
-     */
-    getBounds(): number[];
+	/**
+	 * Get the bounds as [xmin, xmax, ymin, ymax, zmin, zmax].
+	 */
+	getBounds(): number[];
 
-    /**
-     * 
-     */
-    getBlendMode(): BlendMode;
+	/**
+	 * 
+	 */
+	getBlendMode(): BlendMode;
 
-    /**
-     * 
-     */
-    getBlendModeAsString(): string;
+	/**
+	 * 
+	 */
+	getBlendModeAsString(): string;
 
 
-    /**
-     * Get the distance between samples used for rendering
-     * @default 1.0
-     */
-    getSampleDistance(): number;
+	/**
+	 * Get the distance between samples used for rendering
+	 * @default 1.0
+	 */
+	getSampleDistance(): number;
 
-    /**
-     * Sampling distance in the XY image dimensions. 
-     * Default value of 1 meaning 1 ray cast per pixel. If set to 0.5, 4 rays will be cast per pixel. 
-     * If set to 2.0, 1 ray will be cast for every 4 (2 by 2) pixels. T
-     * @default 1.0
-     */
-    getImageSampleDistance(): number;
+	/**
+	 * Sampling distance in the XY image dimensions. 
+	 * Default value of 1 meaning 1 ray cast per pixel. If set to 0.5, 4 rays will be cast per pixel. 
+	 * If set to 2.0, 1 ray will be cast for every 4 (2 by 2) pixels. T
+	 * @default 1.0
+	 */
+	getImageSampleDistance(): number;
 
-    /**
-     * 
-     * @default 1000
-     */
-    getMaximumSamplesPerRay(): number;
+	/**
+	 * 
+	 * @default 1000
+	 */
+	getMaximumSamplesPerRay(): number;
 
-    /**
-     * 
-     * @default true
-     */
-    getAutoAdjustSampleDistances(): boolean;
+	/**
+	 * 
+	 * @default true
+	 */
+	getAutoAdjustSampleDistances(): boolean;
 
-    /**
-     * 
-     */
-    getAverageIPScalarRange(): number[];
+	/**
+	 * 
+	 */
+	getAverageIPScalarRange(): number[];
 
-    /**
-     * 
-     */
-    getAverageIPScalarRangeByReference(): number[];
+	/**
+	 * 
+	 */
+	getAverageIPScalarRangeByReference(): number[];
 
-    /**
-     * 
-     * @param x 
-     * @param y 
-     */
-    setAverageIPScalarRange(x: number, y: number): boolean;
+	/**
+	 * 
+	 * @param x 
+	 * @param y 
+	 */
+	setAverageIPScalarRange(x: number, y: number): boolean;
 
-    /**
-     * 
-     * @param averageIPScalarRange 
-     */
-    setAverageIPScalarRangeFrom(averageIPScalarRange: number[]): boolean;
+	/**
+	 * 
+	 * @param averageIPScalarRange 
+	 */
+	setAverageIPScalarRangeFrom(averageIPScalarRange: number[]): boolean;
 
-    /**
-     * Set blend mode to COMPOSITE_BLEND
-     * @param blendMode 
-     */
-    setBlendMode(blendMode: BlendMode): void;
+	/**
+	 * Set blend mode to COMPOSITE_BLEND
+	 * @param blendMode 
+	 */
+	setBlendMode(blendMode: BlendMode): void;
 
-    /**
-     * Set blend mode to COMPOSITE_BLEND
-     */
-    setBlendModeToComposite(): void;
+	/**
+	 * Set blend mode to COMPOSITE_BLEND
+	 */
+	setBlendModeToComposite(): void;
 
-    /**
-     * Set blend mode to MAXIMUM_INTENSITY_BLEND
-     */
-    setBlendModeToMaximumIntensity(): void;
+	/**
+	 * Set blend mode to MAXIMUM_INTENSITY_BLEND
+	 */
+	setBlendModeToMaximumIntensity(): void;
 
-    /**
-     * Set blend mode to MINIMUM_INTENSITY_BLEND
-     */
-    setBlendModeToMinimumIntensity(): void;
+	/**
+	 * Set blend mode to MINIMUM_INTENSITY_BLEND
+	 */
+	setBlendModeToMinimumIntensity(): void;
 
-    /**
-     * Set blend mode to AVERAGE_INTENSITY_BLEND
-     */
-    setBlendModeToAverageIntensity(): void;
+	/**
+	 * Set blend mode to AVERAGE_INTENSITY_BLEND
+	 */
+	setBlendModeToAverageIntensity(): void;
 
-    /**
-     * Get the distance between samples used for rendering
-     * @param sampleDistance 
-     */
-    setSampleDistance(sampleDistance: number): boolean;
+	/**
+	 * Get the distance between samples used for rendering
+	 * @param sampleDistance 
+	 */
+	setSampleDistance(sampleDistance: number): boolean;
 
-    /**
-     * 
-     * @param imageSampleDistance 
-     */
-    setImageSampleDistance(imageSampleDistance: number): boolean;
+	/**
+	 * 
+	 * @param imageSampleDistance 
+	 */
+	setImageSampleDistance(imageSampleDistance: number): boolean;
 
-    /**
-     * 
-     * @param maximumSamplesPerRay 
-     */
-    setMaximumSamplesPerRay(maximumSamplesPerRay: number): boolean;
+	/**
+	 * 
+	 * @param maximumSamplesPerRay 
+	 */
+	setMaximumSamplesPerRay(maximumSamplesPerRay: number): boolean;
 
-    /**
-     * 
-     * @param autoAdjustSampleDistances 
-     */
-    setAutoAdjustSampleDistances(autoAdjustSampleDistances: boolean): boolean;
+	/**
+	 * 
+	 * @param autoAdjustSampleDistances 
+	 */
+	setAutoAdjustSampleDistances(autoAdjustSampleDistances: boolean): boolean;
 
-    /**
-     * 
-     */
-    update(): void;
+	/**
+	 * 
+	 */
+	update(): void;
 }
 
 
@@ -191,7 +163,7 @@ export function newInstance(initialValues?: IVolumeMapperInitialValues): vtkVolu
  * A volume mapper that performs ray casting on the GPU using fragment programs.
  */
 export declare const vtkVolumeMapper: {
-    newInstance: typeof newInstance,
-    extend: typeof extend,
+	newInstance: typeof newInstance,
+	extend: typeof extend,
 };
 export default vtkVolumeMapper;

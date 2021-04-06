@@ -1,59 +1,55 @@
 import { VtkAlgorithm, VtkObject } from "vtk.js/Sources/macro";
 
 /**
- * 
+ *
  */
 interface IImageCropFilterInitialValues {
-
-    /**
-     * 
-     */
-    croppingPlanes?: any;
+	croppingPlanes?: any;
 }
 
 type vtkImageCropFilterBase = VtkObject & VtkAlgorithm;
 
 export interface vtkImageCropFilter extends vtkImageCropFilterBase {
 
-    /**
-     * Get The cropping planes, in IJK space. 
-     * @default [0, 0, 0, 0, 0, 0].
-     */
-    getCroppingPlanes(): number[];
+	/**
+	 * Get The cropping planes, in IJK space.
+	 * @default [0, 0, 0, 0, 0, 0].
+	 */
+	getCroppingPlanes(): number[];
 
-    /**
-     * Get The cropping planes, in IJK space. 
-     * @default [0, 0, 0, 0, 0, 0].
-     */
-    getCroppingPlanesByReference(): number[];
+	/**
+	 * Get The cropping planes, in IJK space.
+	 * @default [0, 0, 0, 0, 0, 0].
+	 */
+	getCroppingPlanesByReference(): number[];
 
-    /**
-     * 
-     */
-    isResetAvailable(): boolean;
-    /**
-     * 
-     */
-    reset(): void;
+	/**
+	 *
+	 */
+	isResetAvailable(): boolean;
+	/**
+	 *
+	 */
+	reset(): void;
 
-    /**
-     *
-     * @param inData 
-     * @param outData 
-     */
-    requestData(inData: any, outData: any): void;
+	/**
+	 *
+	 * @param inData
+	 * @param outData
+	 */
+	requestData(inData: any, outData: any): void;
 
-    /**
-     * 
-     * @param croppingPlanes 
-     */
-    setCroppingPlanes(croppingPlanes: number[]): boolean;
+	/**
+	 *
+	 * @param croppingPlanes
+	 */
+	setCroppingPlanes(croppingPlanes: number[]): boolean;
 
-    /**
-     * 
-     * @param croppingPlanes 
-     */
-    setCroppingPlanesFrom(croppingPlanes: number[]): boolean;
+	/**
+	 *
+	 * @param croppingPlanes
+	 */
+	setCroppingPlanesFrom(croppingPlanes: number[]): boolean;
 }
 
 /**
@@ -78,7 +74,7 @@ export function newInstance(initialValues?: IImageCropFilterInitialValues): vtkI
  * cropping.
  */
 export declare const vtkImageCropFilter: {
-    newInstance: typeof newInstance;
-    extend: typeof extend;
+	newInstance: typeof newInstance;
+	extend: typeof extend;
 }
 export default vtkImageCropFilter;

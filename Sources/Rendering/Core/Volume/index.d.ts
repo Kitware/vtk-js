@@ -50,7 +50,14 @@ export interface vtkVolume extends vtkProp3D {
 	getBoundsByReference(): number[];
 
 	/**
-	 * 
+	 * Return the `Modified Time` which is a monotonic increasing integer
+	 * global for all vtkObjects.
+	 *
+	 * This allow to solve a question such as:
+	 *  - Is that object created/modified after another one?
+	 *  - Do I need to re-execute this filter, or not? ...
+	 *
+	 * @returns the global modified time
 	 */
 	getMTime(): number;
 

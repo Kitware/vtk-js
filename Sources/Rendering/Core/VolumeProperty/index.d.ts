@@ -12,295 +12,297 @@ export enum OpacityMode {
 }
 
 interface IVolumePropertyInitialValues  {
-
-	/**
-	 * 
-	 */
 	independentComponents?: boolean;
-
-	/**
-	 * 
-	 */
 	shade?: number;
-
-	/**
-	 * 
-	 */
 	ambient?: number;
-
-	/**
-	 * 
-	 */
 	diffuse?: number;
-
-	/**
-	 * 
-	 */
 	specular?: number;
-
-	/**
-	 * 
-	 */
 	specularPower?: number;
-
-	/**
-	 * 
-	 */
 	useLabelOutline?: boolean;
-
-	/**
-	 * 
-	 */
 	labelOutlineThickness?: number;
 }
 
 export interface vtkVolumeProperty extends VtkObject {
 
 	/**
-	 * 
+	 * Get the ambient lighting coefficient.
 	 */
 	getAmbient(): number;
 
 	/**
-	 * 
+	 * Return the `Modified Time` which is a monotonic increasing integer
+	 * global for all vtkObjects.
+	 *
+	 * This allow to solve a question such as:
+	 *  - Is that object created/modified after another one?
+	 *  - Do I need to re-execute this filter, or not? ...
+	 *
+	 * @returns the global modified time
 	 */
 	getMTime(): number;
 
 	/**
-	 * 
-	 * @param index 
+	 *
+	 * @param {number} index
 	 */
 	getColorChannels(index: number): number;
 
 	/**
-	 * 
+	 * Get the diffuse lighting coefficient.
 	 */
 	getDiffuse(): number;
 
 	/**
-	 * 
-	 * @param index 
+	 *
+	 * @param {number} index
 	 */
 	getGradientOpacityMaximumOpacity(index: number): number;
 
 	/**
-	 * 
-	 * @param index 
+	 *
+	 * @param {number} index
 	 */
 	getGradientOpacityMaximumValue(index: number): number;
 
 	/**
-	 * 
-	 * @param index 
+	 *
+	 * @param {number} index
 	 */
 	getGradientOpacityMinimumOpacity(index: number): number;
 
 	/**
-	 * 
-	 * @param index 
+	 *
+	 * @param {number} index
 	 */
 	getGradientOpacityMinimumValue(index: number): number;
 
 	/**
-	 * 
+	 *
 	 */
 	getIndependentComponents(): boolean;
 
 	/**
-	 * 
-	 * @param index 
+	 * Get the unit distance on which the scalar opacity transfer function is defined.
+	 * @param {number} index
 	 */
 	getScalarOpacityUnitDistance(index: number): number;
 
 	/**
 	 * Get the currently set gray transfer function. Create one if none set.
-	 * @param index 
+	 * @param {number} index
 	 */
 	getGrayTransferFunction(index: number): any;
-	
+
 	/**
-	 * 
+	 *
 	 * @default FRACTIONAL
 	 */
 	getOpacityMode(index: number): OpacityMode;
 
 	/**
-	 * 
+	 *
 	 */
 	getLabelOutlineThickness(): number;
 
 	/**
 	 * Get the currently set RGB transfer function. Create one if none set.
-	 * @param index 
+	 * @param {number} index
 	 */
 	getRGBTransferFunction(index: number): any;
 
 	/**
 	 * Get the scalar opacity transfer function. Create one if none set.
-	 * @param index 
+	 * @param {number} index
 	 */
 	getScalarOpacity(index: number): any;
 
 	/**
-	 * 
+	 * Get the shading of a volume.
 	 */
 	getShade(): number;
 
 	/**
-	 * 
+	 *
 	 */
 	getSpecular(): number;
 
 	/**
-	 * 
+	 * Get the specular power.
 	 */
 	getSpecularPower(): number;
 
 	/**
-	 * 
-	 * @param index 
+	 *
+	 * @param {number} index
 	 */
 	getUseGradientOpacity(index: number): boolean;
 
 	/**
-	 * 
+	 *
 	 */
 	getUseLabelOutline(): boolean;
 
 	/**
-	 * 
-	 * @param shade 
+	 * Set the ambient lighting coefficient.
+	 * @param {number} ambient
 	 */
 	setAmbient(ambient: number): boolean;
 
 	/**
-	 * 
-	 * @param diffuse 
+	 * Set the diffuse lighting coefficient.
+	 * @param {number} diffuse
 	 */
 	setDiffuse(diffuse: number): boolean;
 
 	/**
-	 * 
-	 * @param index 
-	 * @param value 
+	 *
+	 * @param {number} index
+	 * @param {number} value
 	 */
 	setGradientOpacityMaximumOpacity(index: number, value: number): boolean;
 
 	/**
-	 * 
-	 * @param index 
-	 * @param value 
+	 *
+	 * @param {number} index
+	 * @param {number} value
 	 */
 	setGradientOpacityMaximumValue(index: number, value: number): boolean;
 
 	/**
-	 * 
-	 * @param index 
-	 * @param value 
+	 *
+	 * @param {number} index
+	 * @param {number} value
 	 */
 	setGradientOpacityMinimumOpacity(index: number, value: number): boolean;
 
 	/**
-	 * 
-	 * @param index 
-	 * @param value 
+	 *
+	 * @param {number} index
+	 * @param {number} value
 	 */
 	setGradientOpacityMinimumValue(index: number, value: number): boolean;
 
 	/**
 	 * Set the color of a volume to a gray transfer function
-	 * @param index 
-	 * @param func 
+	 * @param {number} index
+	 * @param func
 	 */
 	setGrayTransferFunction(index: number, func: any): boolean;
 
 	/**
-	 * 
-	 * @param independentComponents 
+	 * Does the data have independent components, or do some define color only?
+	 * If IndependentComponents is On (the default) then each component will be
+	 * independently passed through a lookup table to determine RGBA, shaded.
+	 *
+	 * Some volume Mappers can handle 1 to 4 component unsigned char or unsigned
+	 * short data (see each mapper header file to determine functionality). If
+	 * IndependentComponents is Off, then you must have either 2 or 4 component
+	 * data. For 2 component data, the first is passed through the first color
+	 * transfer function and the second component is passed through the first
+	 * scalar opacity (and gradient opacity) transfer function. Normals will be
+	 * generated off of the second component. When using gradient based opacity
+	 * modulation, the gradients are computed off of the second component. For 4
+	 * component data, the first three will directly represent RGB (no lookup
+	 * table). The fourth component will be passed through the first scalar
+	 * opacity transfer function for opacity and first gradient opacity transfer
+	 * function for gradient based opacity modulation. Normals will be generated
+	 * from the fourth component. When using gradient based opacity modulation,
+	 * the gradients are computed off of the fourth component.
+	 * @param {boolean} independentComponents
 	 */
 	setIndependentComponents(independentComponents: boolean): boolean;
 
 	/**
-	 * 
-	 * @param labelOutlineThickness 
+	 *
+	 * @param {number} labelOutlineThickness
 	 */
 	setLabelOutlineThickness(labelOutlineThickness: number): boolean;
 
 	/**
-	 * 
-	 * @param index 
-	 * @param value 
+	 *
+	 * @param {number} index
+	 * @param {number} value
 	 */
 	setOpacityMode(index: number, value: number): boolean;
 
 	/**
-	 * 
-	 * @param index 
-	 * @param value 
+	 * Set the unit distance on which the scalar opacity transfer function is
+	 * defined.
+	 * @param {number} index
+	 * @param {number} value
 	 */
 	setScalarOpacityUnitDistance(index: number, value: number): boolean;
 
 	/**
+	 * Set the shading of a volume.
 	 * 
-	 * @param shade 
+	 * If shading is turned off, then the mapper for the volume will not perform
+	 * shading calculations. If shading is turned on, the mapper may perform
+	 * shading calculations - in some cases shading does not apply (for example,
+	 * in a maximum intensity projection) and therefore shading will not be
+	 * performed even if this flag is on. For a compositing type of mapper,
+	 * turning shading off is generally the same as setting ambient=1,
+	 * diffuse=0, specular=0. Shading can be independently turned on/off per
+	 * component.
+	 * @param {number} shade
 	 */
 	setShade(shade: number): boolean;
 
 	/**
-	 * 
-	 * @param specular 
+	 *
+	 * @param {number} specular
 	 */
 	setSpecular(specular: number): boolean;
 
 	/**
-	 * 
-	 * @param specularPower 
+	 * Set the specular power.
+	 * @param {number} specularPower
 	 */
 	setSpecularPower(specularPower: number): boolean;
 
 	/**
-	 * 
-	 * @param index 
-	 * @param value 
+	 *
+	 * @param {number} index
+	 * @param {number} value
 	 */
 	setUseGradientOpacity(index: number, value: number): boolean;
 
 	/**
-	 * 
-	 * @param useLabelOutline 
+	 *
+	 * @param {boolean} useLabelOutline
 	 */
 	setUseLabelOutline(useLabelOutline: boolean): boolean;
 
 	/**
 	 * Set the color of a volume to an RGB transfer function
-	 * @param index 
-	 * @param func 
+	 * @param {number} index
+	 * @param func
 	 */
 	setRGBTransferFunction(index: number, func: any): boolean;
 
 	/**
 	 * Set the scalar opacity of a volume to a transfer function
-	 * @param index 
-	 * @param func 
+	 * @param {number} index
+	 * @param func
 	 */
 	setScalarOpacity(index: number, func: any): boolean;
 
 	/**
-	 * 
-	 * @param index 
-	 * @param value 
+	 * Set the scalar component weights.
+	 * @param {number} index
+	 * @param {number} value
 	 */
-	setComponentWeight(index: number, value: any): boolean;
+	setComponentWeight(index: number, value: number): boolean;
 
 	/**
-	 * 
-	 * @param index 
+	 * Get the scalar component weights.
+	 * @param {number} index
 	 */
 	getComponentWeight(index: number): number;
 
 	/**
-	 * 
-	 * @param interpolationType 
+	 * Set the interpolation type for sampling a volume.
+	 * @param {InterpolationType} interpolationType
 	 */
 	setInterpolationType(interpolationType: InterpolationType): boolean;
 
@@ -320,12 +322,12 @@ export interface vtkVolumeProperty extends VtkObject {
 	setInterpolationTypeToFastLinear(): boolean;
 
 	/**
-	 * 
+	 * Get the interpolation type for sampling a volume.
 	 */
 	getInterpolationType(): InterpolationType;
 
 	/**
-	 * 
+	 * Get the interpolation type for sampling a volume as a string.
 	 */
 	getInterpolationTypeAsString(): string;
 }
@@ -340,11 +342,11 @@ export interface vtkVolumeProperty extends VtkObject {
 export function extend(publicAPI: object, model: object, initialValues?: IVolumePropertyInitialValues): void;
 
 /**
- * Method use to create a new instance of vtkVolumeProperty 
+ * Method use to create a new instance of vtkVolumeProperty
  */
 export function newInstance(initialValues?: IVolumePropertyInitialValues): vtkVolumeProperty;
 
-/** 
+/**
  * vtkVolumeProperty is used to represent common properties associated
  * with volume rendering. This includes properties for determining the type
  * of interpolation to use when sampling a volume, the color of a volume,
@@ -391,8 +393,7 @@ export function newInstance(initialValues?: IVolumePropertyInitialValues): vtkVo
  * See the description of class vtkPiecewiseFunction for an explanation of
  * midpoint and sharpness.
  *
- * ## Usage
- *
+ * @example
  * ```js
  * // create color and opacity transfer functions
  * const ctfun = vtkColorTransferFunction.newInstance();

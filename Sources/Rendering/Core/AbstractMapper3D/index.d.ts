@@ -4,15 +4,8 @@ import vtkAbstractMapper from 'vtk.js/Sources/Rendering/Core/AbstractMapper';
  * 
  */
 interface IAbstractMapper3DInitialValues {
-	/**
-	 * 
-	 */
-	bounds : number[];
-
-	/**
-	 * 
-	 */
-	center : number[];
+	bounds?: number[];
+	center?: number[];
 }
 
 export interface vtkAbstractMapper3D extends vtkAbstractMapper {

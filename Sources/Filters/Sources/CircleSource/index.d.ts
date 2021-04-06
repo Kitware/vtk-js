@@ -4,38 +4,14 @@ import {
 } from 'vtk.js/Sources/macro';
 
 /**
- * 
+ *
  */
 interface ICircleSourceInitialValues {
-
-	/**
-	 * 
-	 */
 	radius?: number;
-		
-	/**
-	 * 
-	 */
 	resolution?: number;
-		
-	/**
-	 * 
-	 */
 	center?: number[];
-		
-	/**
-	 * 
-	 */
 	pointType?: string;
-		
-	/**
-	 * 
-	 */
 	lines?: boolean;
-		
-	/**
-	 * 
-	 */
 	face?: boolean;
 }
 
@@ -43,8 +19,8 @@ type vtkAlgorithm = VtkObject & Omit<VtkAlgorithm,
 	'getInputData' |
 	'setInputData' |
 	'setInputConnection' |
-	'getInputConnection' | 
-	'addInputConnection' | 
+	'getInputConnection' |
+	'addInputConnection' |
 	'addInputData' > ;
 
 export interface vtkCircleSource extends vtkAlgorithm {
@@ -72,19 +48,19 @@ export interface vtkCircleSource extends vtkAlgorithm {
 	getDirectionByReference(): number[];
 
 	/**
-	 * 
+	 *
 	 * @default true
 	 */
 	getFace(): boolean;
 
 	/**
-	 * 
+	 *
 	 * @default false
 	 */
 	getLines(): boolean;
 
 	/**
-	 * Get the radius of the cylinder base. 
+	 * Get the radius of the cylinder base.
 	 * @default 1.0
 	 */
 	getRadius(): number;
@@ -97,62 +73,62 @@ export interface vtkCircleSource extends vtkAlgorithm {
 
 	/**
 	 * Expose methods
-	 * @param inData 
-	 * @param outData 
+	 * @param inData
+	 * @param outData
 	 */
 	requestData(inData: any, outData: any): void;
 
 	/**
-	 * 
-	 * @param x 
-	 * @param y 
-	 * @param z 
+	 *
+	 * @param x
+	 * @param y
+	 * @param z
 	 */
 	setDirection(x: number, y: number, z: number): boolean;
 
 	/**
-	 * 
-	 * @param direction 
+	 *
+	 * @param direction
 	 */
 	setDirectionFrom(direction: number[]): boolean;
 
 	/**
 	 * Set the center of the circle.
-	 * @param x 
-	 * @param y 
-	 * @param z 
+	 * @param x
+	 * @param y
+	 * @param z
 	 * @default [0, 0, 0]
 	 */
 	setCenter(x: number, y: number, z: number): boolean;
 
 	/**
 	 * Set the center of the circle.
-	 * @param center 
+	 * @param center
 	 * @default [0, 0, 0]
 	 */
 	setCenterFrom(center: number[]): boolean;
 
 	/**
-	 * 
+	 *
 	 * @param face
 	 */
 	setFace(face: boolean): boolean;
 
 	/**
-	 * 
+	 *
 	 * @param lines
 	 */
 	 setLines(lines: boolean): boolean;
 
-	/** 
+	/**
 	 * Set the radius of the circle.
-	 * @param radius 
+	 * @param {number} radius
 	 */
 	setRadius(radius: number): boolean;
 
-	/** 
+	/**
 	 * Set the resolution of the circle.
-	 * @param resolution 
+	 * @param resolution
 	 */
 	setResolution(resolution: number): boolean;
 }
@@ -173,7 +149,7 @@ export function extend(publicAPI: object, model: object, initialValues?: ICircle
 export function newInstance(initialValues?: ICircleSourceInitialValues): vtkCircleSource;
 
 /**
- * 
+ *
  */
 export declare const vtkCircleSource: {
 	newInstance: typeof newInstance,

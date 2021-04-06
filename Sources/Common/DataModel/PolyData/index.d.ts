@@ -3,7 +3,7 @@ import vtkCellArray from 'vtk.js/Sources/Common/Core/CellArray';
 import vtkPointSet from 'vtk.js/Sources/Common/DataModel/PointSet';
 
 /**
- * 
+ *
  */
 interface IPolyDataInitialValues {
 }
@@ -12,97 +12,97 @@ interface IPolyDataInitialValues {
 export interface vtkPolyData extends vtkPointSet {
 
 	/**
-	 * 
+	 * Create data structure that allows random access of cells.
 	 */
 	buildCells(): void;
 
 	/**
 	 * Create upward links from points to cells that use each point. Enables
 	 * topologically complex queries.
-	 * @param initialSize 
+	 * @param initialSize {number}
 	 */
-	buildLinks(initialSize : any): void;
+	buildLinks(initialSize?: number): void;
 
 	/**
 	 * If you know the type of cell, you may provide it to improve performances.
-	 * @param cellId 
-	 * @param cellHint 
+	 * @param cellId
+	 * @param cellHint
 	 */
-	getCell(cellId : any, cellHint : any): void;
-	
-	/**
-	 * 
-	 * @param cellId 
-	 * @param point1 
-	 * @param point2 
-	 */
-	getCellEdgeNeighbors(cellId : any, point1 : any, point2 : any): void;
+	getCell(cellId: any, cellHint: any): void;
 
 	/**
-	 * Returns an object made of the cellType and a subarray `cellPointIds` of
-	 * the cell points.
-	 * @param cellId 
+	 * Get the neighbors at an edge.
+	 * @param cellId
+	 * @param point1
+	 * @param point2
 	 */
-	getCellPoints(cellId : number): object;
+	getCellEdgeNeighbors(cellId: any, point1: any, point2: any): void;
 
 	/**
-	 * 
+	 * Get a list of point ids that define a cell.
+	 * @param cellId {number}
+	 * @returns an object made of the cellType and a subarray `cellPointIds` of the cell points.
+	 */
+	getCellPoints(cellId: number): object;
+
+	/**
+	 * Get the cell array defining cells.
 	 */
 	getCells(): vtkCellArray;
 
 	/**
-	 * 
+	 * Get the cell array defining lines.
 	 */
 	getLines(): vtkCellArray;
 
 	/**
-	 * 
+	 *
 	 */
 	getLinks(): any;
 
 	/**
-	 * 
+	 * Determine the number of cells composing the polydata.
 	 */
 	getNumberOfCells(): number;
-	
+
 	/**
-	 * 
+	 * Determine the number of lines composing the polydata.
 	 */
 	getNumberOfLines(): number;
 
 	/**
-	 * 
+	 * Determine the number of points composing the polydata.
 	 */
 	getNumberOfPoints(): number;
 
 	/**
-	 * 
+	 * Determine the number of polys composing the polydata.
 	 */
 	getNumberOfPolys(): number;
 
 	/**
-	 * 
+	 * Determine the number of strips composing the polydata.
 	 */
 	getNumberOfStrips(): number;
 
 	/**
-	 * 
+	 * Determine the number of vertices composing the polydata.
 	 */
 	getNumberOfVerts(): number;
 
 	/**
-	 * 
-	 * @param ptId 
+	 * Topological inquiry to get cells using point.
+	 * @param ptId
 	 */
-	getPointCells(ptId : any): void;
+	getPointCells(ptId: any): void;
 
 	/**
-	 * 
+	 * Get the cell array defining polys. 
 	 */
 	getPolys(): vtkCellArray;
 
 	/**
-	 * 
+	 * Get the cell array defining strips.
 	 */
 	getStrips(): vtkCellArray;
 
@@ -113,26 +113,26 @@ export interface vtkPolyData extends vtkPointSet {
 	getVerts(): vtkCellArray;
 
 	/**
-	 * 
-	 * @param lines 
+	 * Set the cell array defining lines. 
+	 * @param lines {vtkCellArray}
 	 */
 	setLines(lines: vtkCellArray): boolean;
 
 	/**
-	 * 
-	 * @param polys 
+	 * Set the cell array defining polys. 
+	 * @param polys {vtkCellArray}
 	 */
 	setPolys(polys: vtkCellArray): boolean;
 
 	/**
-	 * 
-	 * @param strips 
+	 * Set the cell array defining strips. 
+	 * @param strips {vtkCellArray}
 	 */
 	setStrips(strips: vtkCellArray): boolean;
 
 	/**
 	 * Set the cell array defining vertices.
-	 * @param verts 
+	 * @param verts {vtkCellArray}
 	 */
 	setVerts(verts: vtkCellArray): boolean;
 }
@@ -159,7 +159,7 @@ export function newInstance(initialValues?: IPolyDataInitialValues): vtkPolyData
  * These axes do not have to be orthogonal - so you can create a parallelogram.
  * (The axes must not be parallel.) The resolution of the plane (i.e., number of
  * subdivisions) is controlled by the ivars XResolution and YResolution.
- * 
+ *
  * By default, the plane is centered at the origin and perpendicular to the z-axis,
  * with width and height of length 1 and resolutions set to 1.
  */

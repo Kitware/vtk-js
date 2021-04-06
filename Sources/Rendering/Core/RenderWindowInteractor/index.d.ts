@@ -1,11 +1,11 @@
 import { VtkObject } from "vtk.js/Sources/macro";
-import type vtkRenderer from "vtk.js/Sources/Rendering/Core/Renderer";
+import vtkRenderer from "vtk.js/Sources/Rendering/Core/Renderer";
 
 export enum Device {
     Unknown,
     LeftController,
     RightController,
-};
+}
 
 export enum Input {
     Unknown,
@@ -13,63 +13,23 @@ export enum Input {
     TrackPad,
     Grip,
     ApplicationMenu,
-};
+}
 
-export type IRenderWindowInteractorInitialValues = {
-    /**
-     *
-     */
-    initialized: boolean;
-
-    /**
-     *
-     */
-    enabled: boolean;
-
-    /**
-     *
-     */
-    enableRender: boolean;
-
-    /**
-     *
-     */
-    lightFollowCamera: boolean;
-
-    /**
-     *
-     */
-    desiredUpdateRate: number;
-
-    /**
-     *
-     */
-    stillUpdateRate: number;
-
-    /**
-     *
-     */
-    recognizeGestures: boolean;
-
-    /**
-     *
-     */
-    currentGesture: string;
-
-    /**
-     *
-     */
-    lastFrameTime: number;
-
-    /**
-     *
-     */
-    wheelTimeoutID: number;
-
-    /**
-     *
-     */
-    moveTimeoutID: number;
+/**
+ *
+ */
+interface IRenderWindowInteractorInitialValues {
+    initialized?: boolean;
+    enabled?: boolean;
+    enableRender?: boolean;
+    lightFollowCamera?: boolean;
+    desiredUpdateRate?: number;
+    stillUpdateRate?: number;
+    recognizeGestures?: boolean;
+    currentGesture?: string;
+    lastFrameTime?: number;
+    wheelTimeoutID?: number;
+    moveTimeoutID?: number;
 }
 
 interface IPosition {
@@ -1062,7 +1022,7 @@ export function newInstance(initialValues?: IRenderWindowInteractorInitialValues
  * All of the odd horizontal lines are from the left eye, and the even lines are from the right eye.
  * The user has to make the render window aligned with the VRex projector, or the eye will be swapped.
  *
- * @see vtkActor
+ * @see [vtkActor](./Rendering_Core_Actor.html)
  * @see vtkCoordinate
  * @see vtkProp
  * @see vtkRenderer

@@ -7,25 +7,9 @@ import {
  * 
  */
 interface IPointSourceInitialValues {
-
-	/**
-	 * 
-	 */
 	numberOfPoints?: number;
-		
-	 /**
-	  * 
-	  */
-	center?: Array<number>;
-		 
-	 /**
-	  * 
-	  */
+	center?: number[];
 	radius?: number;
-		 
-	 /**
-	  * 
-	  */
 	pointType?: string;
 }
 
@@ -98,7 +82,7 @@ export interface vtkPointSource extends vtkAlgorithm {
 	/**
 	 * Set the radius of the point cloud. If you are generating a Gaussian
 	 * distribution, then this is the standard deviation for each of x, y, and z.
-	 * @param radius 
+	 * @param {number} radius 
 	 */
 	setRadius(radius: number): boolean;
 }

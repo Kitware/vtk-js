@@ -7,28 +7,9 @@ import {
  * 
  */
 interface IFieldDataInitialValues {
-	/**
-	 * 
-	 * @default []
-	 */
 	arrays: Array<any>;
-
-	/**
-	 * 
-	 * @default []
-	 */
 	copyFieldFlags: Array<any>;
-
-	/**
-	 * 
-	 * @default true
-	 */
 	doCopyAllOn: boolean;
-
-	/**
-	 * 
-	 * @default false
-	 */
 	doCopyAllOff: boolean;
 }
 
@@ -36,13 +17,7 @@ interface IFieldDataInitialValues {
  * 
  */
 interface IArrayWithIndex {
-	/**
-	 * 
-	 */
 	array: any[],
-	/**
-	 * 
-	 */
 	index: number;
 }
 
@@ -211,7 +186,14 @@ export interface vtkFieldData extends VtkObject {
 	reset(): void;
 
 	/**
-	 * TODO: getActualMemorySize
+	 * Return the `Modified Time` which is a monotonic increasing integer
+	 * global for all vtkObjects.
+	 *
+	 * This allow to solve a question such as:
+	 *  - Is that object created/modified after another one?
+	 *  - Do I need to re-execute this filter, or not? ...
+	 *
+	 * @returns the global modified time
 	 */
 	getMTime(): number;
 
