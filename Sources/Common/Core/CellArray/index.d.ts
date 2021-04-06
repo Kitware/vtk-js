@@ -67,8 +67,9 @@ export function getNumberOfCells(cellArray: any): any;
 /**
  * vtkCellArray stores dataset topologies as an explicit connectivity table
  * listing the point ids that make up each cell.
+ * 
+ * @see [vtkDataArray](./Common_Core_DataArray.html)
  */
-
 export declare const vtkCellArray: {
     newInstance: typeof newInstance;
     extend: typeof extend;

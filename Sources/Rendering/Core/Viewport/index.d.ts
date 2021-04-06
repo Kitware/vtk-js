@@ -278,11 +278,11 @@ export function newInstance(initialValues?: IViewportInitialValues): vtkViewport
  * commonly used in rendering.
  * 
  * @see [vtkActor](./Rendering_Core_Actor.html)
- * @see vtkCoordinate
- * @see vtkProp
- * @see vtkRenderer
- * @see vtkRenderWindow
- * @see vtkVolume
+ * @see [vtkCoordinate](./Rendering_Core_Coordinate.html)
+ * @see [vtkProp](./Rendering_Core_Prop.html)
+ * @see [vtkRender](./Rendering_Core_Renderer.html)
+ * @see [vtkRenderWindow](./Rendering_Core_RenderWindow.html)
+ * @see [vtkVolume](./Rendering_Core_Volume.html)
  */
 export declare const vtkViewport: {
     newInstance: typeof newInstance,

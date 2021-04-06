@@ -1,20 +1,8 @@
 import vtkPicker from "vtk.js/Sources/Rendering/Core/Picker";
 
 interface IPointPickerInitialValues {
-
-	/**
-	 * 
-	 */
 	pointId: number;
-
-	/**
-	 * 
-	 */
 	pointIJK: number[];
-
-	/**
-	 * 
-	 */
 	useCells: boolean;
 }
 
@@ -91,12 +79,11 @@ export function newInstance(initialValues?: IPointPickerInitialValues): vtkPoint
  * Ties are broken (i.e., multiple points all projecting within the tolerance along 
  * the pick ray) by choosing the point closest to the ray origin (i.e., closest to the eye).
  * 
- * @see vtkPicker 
- * @see vtkCellPicker
+ * @see [vtkPicker](./Rendering_Core_Picker.html)
+ * @see [vtkCellPicker](./Rendering_Core_CellPicker.html)
  */
  export declare const vtkPointPicker: {
 	newInstance: typeof newInstance,
 	extend: typeof extend,
 };
 export default vtkPointPicker;
-

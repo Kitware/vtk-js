@@ -1015,19 +1015,25 @@ export function extend(publicAPI: object, model: object, initialValues?: IRender
 export function newInstance(initialValues?: IRenderWindowInteractorInitialValues): vtkRenderWindowInteractor;
 
 /**
- * vtkRenderWindow is an abstract object to specify the behavior of a rendering window.
- * A rendering window is a window in a graphical user interface where renderers draw their images.
- * Methods are provided to synchronize the rendering process, set window size, and control double buffering.
- * The window also allows rendering in stereo. The interlaced render stereo type is for output to a VRex stereo projector.
- * All of the odd horizontal lines are from the left eye, and the even lines are from the right eye.
- * The user has to make the render window aligned with the VRex projector, or the eye will be swapped.
+ * vtkRenderWindowInteractor provides an interaction mechanism for
+ * mouse/key/time events. It handles routing of mouse/key/timer messages to
+ * vtkInteractorObserver and its subclasses. vtkRenderWindowInteractor also
+ * provides controls for picking, rendering frame rate.
  *
- * @see [vtkActor](./Rendering_Core_Actor.html)
- * @see vtkCoordinate
- * @see vtkProp
- * @see vtkRenderer
- * @see vtkRenderWindow
- * @see vtkVolume
+ * vtkRenderWindowInteractor serves to hold user preferences and route messages
+ * to vtkInteractorStyle. Callbacks are available for many events. Platform
+ * specific subclasses should provide methods for manipulating timers,
+ * TerminateApp, and an event loop if required via
+ *
+ * Initialize/Start/Enable/Disable.
+ *
+ * ## Caveats
+ * 
+ * vtkRenderWindowInteractor routes events through VTK’s command/observer design
+ * pattern. That is, when vtkRenderWindowInteractor (actually, one of its
+ * subclasses) sees an event, it translates it into a VTK event using the
+ * InvokeEvent() method. Afterward, any vtkInteractorObservers registered for
+ * that event are expected to respond appropriately.
  */
 export declare const vtkRenderWindowInteractor: {
     newInstance: typeof newInstance,
