@@ -5,104 +5,25 @@ import { VtkObject } from 'vtk.js/Sources/macro';
  * 
  */
 interface ICameraInitialValues {
-    /**
-	 * 
-	 */
 	position?: number[];
-
-	/**
-	 * 
-	 */
 	focalPoint?: number[];
-
-	/**
-	 * 
-	 */
 	viewUp?: number[];
-
-	/**
-	 * 
-	 */
 	directionOfProjection?: number[];
-
-	/**
-	 * 
-	 */
 	parallelProjection?: boolean;
-
-	/**
-	 * 
-	 */
 	useHorizontalViewAngle?: boolean;
-
-	/**
-	 * 
-	 */
 	viewAngle?: number;
-
-	/**
-	 * 
-	 */
 	parallelScale?: number;
-
-	/**
-	 * 
-	 */
 	clippingRange?: number[];
-
-	/**
-	 * 
-	 */
 	windowCenter?: number[];
-
-	/**
-	 * 
-	 */
 	viewPlaneNormal?: number[];
-
-	/**
-	 * 
-	 */
 	useOffAxisProjection?: boolean;
-
-	/**
-	 * 
-	 */
 	screenBottomLeft?: number[];
-
-	/**
-	 * 
-	 */
 	screenBottomRight?: number[];
-
-	/**
-	 * 
-	 */
 	screenTopRight?: number[];
-
-	/**
-	 * 
-	 */
-	freezeFocalPoint?: boolean;
-
-	/**
-	 * used for world to physical transformations
-	 */
+    freezeFocalPoint?: boolean;
 	physicalTranslation?: number[];
-
-	/**
-	 * 
-	 */
 	physicalScale?: number;
-
-	/**
-	 * 
-	 */
 	physicalViewUp?: number[];
-
-	/**
-	 * 
-	 */
 	physicalViewNorth?: number[];
 }
 
@@ -300,7 +221,7 @@ export interface vtkCamera extends VtkObject {
     getPhysicalViewUpByReference(): number[];
 
     /**
-     * 
+     * Get the position of the camera in world coordinates. 
      * @default [0, 0, 1]
      */
     getPosition(): number[];
@@ -326,7 +247,7 @@ export interface vtkCamera extends VtkObject {
     getRoll(): void;
 
     /**
-     * 
+     * Get top left corner point of the screen.
      * @default [-0.5, -0.5, -0.5]
      */
     getScreenBottomLeft(): number[];
@@ -338,7 +259,7 @@ export interface vtkCamera extends VtkObject {
     getScreenBottomLeftByReference(): number[];
 
     /**
-     * 
+     * Get bottom left corner point of the screen
      * @default [0.5, -0.5, -0.5]
      */
     getScreenBottomRight(): number[];
@@ -362,7 +283,7 @@ export interface vtkCamera extends VtkObject {
     getScreenTopRightByReference(): number[];
 
     /**
-     * 
+     * Get the center of the window in viewport coordinates.
      * @returns  
      */
     getThickness(): number;
@@ -375,15 +296,12 @@ export interface vtkCamera extends VtkObject {
 
     /**
      * Get use offaxis frustum.
-     * OffAxis frustum is used for off-axis frustum calculations specifically for 
-     * stereo rendering. For reference see "High Resolution Virtual Reality", in Proc. 
-     * SIGGRAPH '92, Computer Graphics, pages 195-202, 1992.
      * @default false
      */
     getUseOffAxisProjection(): boolean;
 
     /**
-     *
+     * Get the camera view angle.
      * @default 30
      */
     getViewAngle(): number;
@@ -550,7 +468,7 @@ export interface vtkCamera extends VtkObject {
 
     /**
      * 
-     * @param degrees 
+     * @param {number} degrees 
      * @param x 
      * @param y 
      * @param z 
@@ -618,7 +536,7 @@ export interface vtkCamera extends VtkObject {
     setPhysicalViewUpFrom(physicalViewUp: number[]): boolean;
 
     /**
-     * 
+     * Set the position of the camera in world coordinates.
      * @param x 
      * @param y 
      * @param z 
@@ -638,12 +556,22 @@ export interface vtkCamera extends VtkObject {
     setRoll(angle: number): boolean;
 
     /**
+     * Set top left corner point of the screen.
      * 
+     * This will be used only for offaxis frustum calculation.
      * @param x 
      * @param y 
      * @param z 
      */
     setScreenBottomLeft(x: number, y: number, z: number): boolean;
+
+    /**
+     * Set top left corner point of the screen.
+     * 
+     * This will be used only for offaxis frustum calculation.
+     * @param screenBottomLeft 
+     */
+    setScreenBottomLeft(screenBottomLeft: number[]): boolean;
 
     /**
      * 
@@ -666,12 +594,22 @@ export interface vtkCamera extends VtkObject {
     setScreenBottomRightFrom(screenBottomRight: number[]): boolean;
 
     /**
+     * Set top right corner point of the screen.
      * 
+     * This will be used only for offaxis frustum calculation.
      * @param x 
      * @param y 
      * @param z 
      */
     setScreenTopRight(x: number, y: number, z: number): boolean;
+
+    /**
+     * Set top right corner point of the screen.
+     * 
+     * This will be used only for offaxis frustum calculation.
+     * @param screenTopRight 
+     */
+    setScreenTopRight(screenTopRight: number[]): boolean;
 
     /**
      * 
@@ -680,7 +618,9 @@ export interface vtkCamera extends VtkObject {
     setScreenTopRightFrom(screenTopRight: number[]): boolean;
 
     /**
+     * Set the distance between clipping planes.
      * 
+     * This method adjusts the far clipping plane to be set a distance 'thickness' beyond the near clipping plane.
      * @param thickness 
      */
     setThickness(thickness: number): boolean;
@@ -698,13 +638,17 @@ export interface vtkCamera extends VtkObject {
     setUseHorizontalViewAngle(useHorizontalViewAngle: boolean): boolean;
     
     /**
+     * Set use offaxis frustum.
      * 
+     * OffAxis frustum is used for off-axis frustum calculations specifically for
+     * stereo rendering. For reference see "High Resolution Virtual Reality", in
+     * Proc. SIGGRAPH '92, Computer Graphics, pages 195-202, 1992.
      * @param useOffAxisProjection 
      */
     setUseOffAxisProjection(useOffAxisProjection: boolean): boolean;
 
     /**
-     * 
+     * Set the camera view angle, which is the angular height of the camera view measured in degrees.
      * @param viewAngle 
      */
     setViewAngle(viewAngle: number): boolean;

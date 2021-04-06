@@ -1,7 +1,7 @@
 import { VtkAlgorithm, VtkObject } from "vtk.js/Sources/macro";
 
 /**
- * 
+ *
  */
 interface ILineFilterInitialValues {
 }
@@ -10,12 +10,12 @@ type vtkLineFilterBase = VtkObject & VtkAlgorithm;
 
 export interface vtkLineFilter extends vtkLineFilterBase {
 
-    /**
-     *
-     * @param inData 
-     * @param outData 
-     */
-    requestData(inData: any, outData: any): void;
+	/**
+	 *
+	 * @param inData
+	 * @param outData
+	 */
+	requestData(inData: any, outData: any): void;
 }
 
 /**
@@ -36,11 +36,11 @@ export function newInstance(initialValues?: ILineFilterInitialValues): vtkLineFi
 
 /**
  * vtkLineFilter - filters lines in polydata
- * 
+ *
  * vtkLineFilter is a filter that only let's through lines of a vtkPolydata.
  */
 export declare const vtkLineFilter: {
-    newInstance: typeof newInstance;
-    extend: typeof extend;
+	newInstance: typeof newInstance;
+	extend: typeof extend;
 }
 export default vtkLineFilter;

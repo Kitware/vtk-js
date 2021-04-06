@@ -6,29 +6,10 @@ import vtkRenderer from 'vtk.js/Sources/Rendering/Core/Renderer';
  * 
  */
 interface ICellPickerInitialValues {
-	/**
-	 * 
-	 */
 	cellId?: number;
-
-	/**
-	 * 
-	 */
 	pCoords?: number[];
-
-	/**
-	 * 
-	 */
 	cellIJK?: number[];
-
-	/**
-	 * 
-	 */
 	pickNormal?: number[];
-
-	/**
-	 * 
-	 */
 	mapperNormal?: number[];
 }
 

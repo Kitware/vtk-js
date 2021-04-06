@@ -227,7 +227,7 @@ export function newAPISpecificView(name: string, initialValues = {}): any;
  * This class also contains methods to convert between coordinate systems
  * commonly used in rendering.
  * 
- * @see vtkActor
+ * @see [vtkActor](./Rendering_Core_Actor.html)
  * @see vtkCoordinate
  * @see vtkProp
  * @see vtkRenderer

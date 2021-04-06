@@ -8,35 +8,11 @@ import {
  * 
  */
 interface IPlaneSourceInitialValues {
-
-	/**
-	 * 
-	 */
 	xResolution?: number;
-		
-	/**
-	 * 
-	 */
 	yResolution?: number;
-		
-	/**
-	 * 
-	 */
-	origin?: Array<number>;
-		
-	/**
-	 * 
-	 */
-	point1?: Array<number>;
-		
-	/**
-	 * 
-	 */
-	point2?: Array<number>;
-		
-	/**
-	 * 
-	 */
+	origin?: number[];
+	point1?: number[];
+	point2?: number[];
 	pointType?: string;
 }
 

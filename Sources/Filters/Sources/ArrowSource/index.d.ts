@@ -11,48 +11,16 @@ export enum ShapeType {
 }
 
 /**
- * 
+ *
  */
 interface IArrowSourceInitialValues {
-
-	/**
-	 * 
-	 */
 	tipResolution?: number;
-
-	/**
-	 * 
-	 */
 	tipRadius?: number;
-
-	/**
-	 * 
-	 */
 	tipLength?: number;
-
-	/**
-	 * 
-	 */
 	shaftResolution?: number;
-
-	/**
-	 * 
-	 */
 	shaftRadius?: number;
-
-	/**
-	 * 
-	 */
 	invert?: boolean;
-
-	/**
-	 * 
-	 */
 	direction?: number[];
-
-	/**
-	 * 
-	 */
 	pointType?: string;
 }
 
@@ -60,8 +28,8 @@ type vtkAlgorithm = VtkObject & Omit<VtkAlgorithm,
 	'getInputData' |
 	'setInputData' |
 	'setInputConnection' |
-	'getInputConnection' | 
-	'addInputConnection' | 
+	'getInputConnection' |
+	'addInputConnection' |
 	'addInputData' > ;
 
 export interface vtkArrowSource extends vtkAlgorithm {
@@ -78,13 +46,13 @@ export interface vtkArrowSource extends vtkAlgorithm {
 	getDirectionByReference(): number[];
 
 	/**
-	 * 
+	 *
 	 * @default false
 	 */
 	getInvert(): boolean;
 
 	/**
-	 * Get the resolution of the shaft. 
+	 * Get the resolution of the shaft.
 	 * @default 0.03
 	 */
 	getShaftRadius(): number;
@@ -115,59 +83,59 @@ export interface vtkArrowSource extends vtkAlgorithm {
 
 	/**
 	 * Expose methods
-	 * @param inData 
-	 * @param outData 
+	 * @param inData
+	 * @param outData
 	 */
 	requestData(inData: any, outData: any): void;
 
 	/**
-	 * 
-	 * @param x 
-	 * @param y 
-	 * @param z 
+	 *
+	 * @param x
+	 * @param y
+	 * @param z
 	 */
 	setDirection(x: number, y: number, z: number): boolean;
 
 	/**
-	 * 
-	 * @param direction 
+	 *
+	 * @param direction
 	 */
 	setDirectionFrom(direction: number[]): boolean;
 
 	/**
 	 * Inverts the arrow direction.
-	 * When set to true, base is at [1, 0, 0] while the tip is at [0, 0, 0]. 
+	 * When set to true, base is at [1, 0, 0] while the tip is at [0, 0, 0].
 	 * @param invert
 	 */
 	setInvert(invert: boolean): boolean;
 
-	/** 
+	/**
 	 * Set the radius of the shaft.
-	 * @param shaftRadius 
+	 * @param shaftRadius
 	 */
 	setShaftRadius(shaftRadius: number): boolean;
 
-	/** 
+	/**
 	 * Set the resolution of the shaft.
-	 * @param shaftResolution 
+	 * @param shaftResolution
 	 */
 	setShaftResolution(shaftResolution: number): boolean;
 
 	/**
 	 * Set the length of the tip.
-	 * @param tipLength 
+	 * @param tipLength
 	 */
 	setTipLength(tipLength: number): boolean;
 
 	/**
 	 * Set the radius of the tip.
-	 * @param tipRadius 
+	 * @param tipRadius
 	 */
 	setTipRadius(tipRadius: number): boolean;
 
 	/**
 	 * Set the resolution of the tip.
-	 * @param tipResolution 
+	 * @param tipResolution
 	 */
 	setTipResolution(tipResolution: number): boolean;
 }
@@ -187,12 +155,12 @@ export function extend(publicAPI: object, model: object, initialValues?: IArrowS
  */
 export function newInstance(initialValues?: IArrowSourceInitialValues): vtkArrowSource;
 
-/** 
+/**
  * vtkArrowSource was intended to be used as the source for a glyph.
- * The shaft base is always at (0,0,0). The arrow tip is always at (1,0,0). 
- * If "Invert" is true, then the ends are flipped i.e. tip is at (0,0,0) while base is at (1, 0, 0). 
- * The resolution of the cone and shaft can be set and default to 6. 
- * The radius of the cone and shaft can be set and default to 0.03 and 0.1. 
+ * The shaft base is always at (0,0,0). The arrow tip is always at (1,0,0).
+ * If "Invert" is true, then the ends are flipped i.e. tip is at (0,0,0) while base is at (1, 0, 0).
+ * The resolution of the cone and shaft can be set and default to 6.
+ * The radius of the cone and shaft can be set and default to 0.03 and 0.1.
  * The length of the tip can also be set, and defaults to 0.35.
  */
 export declare const vtkArrowSource: {

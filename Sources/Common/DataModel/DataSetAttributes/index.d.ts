@@ -25,23 +25,23 @@ export enum CellGhostTypes {
 	 * The cell is present on multiple processors
 	 */
 	DUPLICATECELL,
-	/**	
+	/**
 	 * The cell has more neighbors than in a regular mesh
 	 */
 	HIGHCONNECTIVITYCELL,
-	/**	
+	/**
 	 * The cell has less neighbors than in a regular mesh
 	 */
 	LOWCONNECTIVITYCELL,
-	/**	
+	/**
 	 * Tther cells are present that refines it.
 	 */
 	REFINEDCELL,
-	/**	
+	/**
 	 * The cell is on the exterior of the data set
 	 */
 	EXTERIORCELL,
-	/**	
+	/**
 	 * The cell is needed to maintain connectivity, but the data values should be ignored.
 	 */
 	HIDDENCELL,
@@ -84,119 +84,92 @@ export enum DesiredOutputPrecision {
 	 */
 	DOUBLE,
 };
+
 /**
- * 
+ *
  */
 interface IDataSetAttributesInitialValues {
-
-	/**
-	 * 
-	 */
 	activeScalars?: number;
-
-	/**
-	 * 
-	 */
 	activeVectors?: number;
-
-	/**
-	 * 
-	 */
 	activeTensors?: number;
-
-	/**
-	 * 
-	 */
 	activeNormals?: number;
-
-	/**
-	 * 
-	 */
 	activeTCoords?: number;
-
-	/**
-	 * 
-	 */
 	activeGlobalIds?: number;
-
-	/**
-	 * 
-	 */
 	activePedigreeIds?: number;
 }
 
 export interface vtkDataSetAttributes extends vtkFieldData {
 
 	/**
-	 * 
-	 * @param x 
-	 * @return  
+	 *
+	 * @param x
+	 * @return
 	 */
 	checkNumberOfComponents(x: any): boolean;
 
 	/**
-	 * 
-	 * @param attType 
-	 * @return  
+	 *
+	 * @param attType
+	 * @return
 	 */
 	getActiveAttribute(attType: any): number;
 
 	/**
-	 * 
+	 *
 	 */
 	getActiveScalars(): number;
 
 	/**
-	 * 
+	 *
 	 */
 	getActiveVectors(): number;
 
 	/**
-	 * 
+	 *
 	 */
 	getActiveTensors(): number;
 
 	/**
-	 * 
+	 *
 	 */
 	getActiveNormals(): number;
 
 	/**
-	 * 
+	 *
 	 */
 	getActiveTCoords(): number;
 
 	/**
-	 * 
+	 *
 	 */
 	getActiveGlobalIds(): number;
 
 	/**
-	 * 
+	 *
 	 */
 	getActivePedigreeIds(): number;
 
 	/**
-	 * 
-	 * @param arr 
-	 * @param uncleanAttType 
-	 * @return  
+	 *
+	 * @param arr
+	 * @param uncleanAttType
+	 * @return
 	 */
 	setAttribute(arr: any, uncleanAttType: string): number;
 
 	/**
-	 * 
-	 * @param arrayName 
-	 * @param attType 
-	 * @return  
+	 *
+	 * @param arrayName
+	 * @param attType
+	 * @return
 	 */
 	setActiveAttributeByName(arrayName: string, attType: any): number;
 
 	/**
-	 * 
-	 * @param arrayIdx 
-	 * @param uncleanAttType 
-	 * @return  
+	 *
+	 * @param arrayIdx
+	 * @param uncleanAttType
+	 * @return
 	 */
 	setActiveAttributeByIndex(arrayIdx: any, uncleanAttType: string): number;
 
@@ -207,223 +180,223 @@ export interface vtkDataSetAttributes extends vtkFieldData {
 
 	/**
 	 * Override to allow proper handling of active attributes
-	 * @param arrayName 
+	 * @param arrayName
 	 */
 	removeArray(arrayName: string): void;
 
 	/**
 	 * Override to allow proper handling of active attributes
-	 * @param arrayIdx 
+	 * @param arrayIdx
 	 */
 	removeArrayByIndex(arrayIdx: number): void;
 
 	/**
-	 * 
+	 *
 	 */
 	initializeAttributeCopyFlags(): void;
 
 	/**
-	 * 
-	 * @param activeScalars 
+	 *
+	 * @param activeScalars
 	 */
 	setActiveScalars(activeScalars: number): boolean;
 
 	/**
-	 * 
-	 * @param activeVectors 
+	 *
+	 * @param activeVectors
 	 */
 	setActiveVectors(activeVectors: number): boolean;
 
 	/**
-	 * 
-	 * @param activeTensors 
+	 *
+	 * @param activeTensors
 	 */
 	setActiveTensors(activeTensors: number): boolean;
 
 	/**
-	 * 
-	 * @param activeNormals 
+	 *
+	 * @param activeNormals
 	 */
 	setActiveNormals(activeNormals: number): boolean;
 
 	/**
-	 * 
-	 * @param activeTCoords 
+	 *
+	 * @param activeTCoords
 	 */
 	setActiveTCoords(activeTCoords: number): boolean;
 
 	/**
-	 * 
-	 * @param activeGlobalIds 
+	 *
+	 * @param activeGlobalIds
 	 */
 	setActiveGlobalIds(activeGlobalIds: number): boolean;
 
 	/**
-	 * 
-	 * @param activePedigreeIds 
+	 *
+	 * @param activePedigreeIds
 	 */
 	setActivePedigreeIds(activePedigreeIds: number): boolean;
 
 	/**
-	 * 
-	 * @param other 
-	 * @param debug 
+	 *
+	 * @param other
+	 * @param debug
 	 */
 	shallowCopy(other: any, debug: any): void;
 
 
 	/**
-	 * 
-	 * @param arrayName 
+	 *
+	 * @param arrayName
 	 */
 	setActiveScalars(arrayName: string): boolean;
 
 	/**
-	 * 
-	 * @param arrayName 
+	 *
+	 * @param arrayName
 	 */
 	setActiveVectors(arrayName: string): boolean;
 
 	/**
-	 * 
-	 * @param arrayName 
+	 *
+	 * @param arrayName
 	 */
 	setActiveNormals(arrayName: string): boolean;
 
 	/**
-	 * 
-	 * @param arrayName 
+	 *
+	 * @param arrayName
 	 */
 	setActiveTCoords(arrayName: string): boolean;
 
 	/**
-	 * 
-	 * @param arrayName 
+	 *
+	 * @param arrayName
 	 */
 	setActiveTensors(arrayName: string): boolean;
 
 	/**
-	 * 
-	 * @param arrayName 
+	 *
+	 * @param arrayName
 	 */
 	setActiveGlobalIds(arrayName: string): boolean;
 
 	/**
-	 * 
-	 * @param arrayName 
+	 *
+	 * @param arrayName
 	 */
 	setActivePedigreeIds(arrayName: string): boolean;
 
 	/**
-	 * 
+	 *
 	 */
 	getScalars(): any[];
 
 	/**
-	 * 
+	 *
 	 */
 	getVectors(): any[];
 
 	/**
-	 * 
+	 *
 	 */
 	getNormals(): any[];
 
 	/**
-	 * 
+	 *
 	 */
 	getTCoords(): any[];
 
 	/**
-	 * 
+	 *
 	 */
 	getTensors(): any[];
 
 	/**
-	 * 
+	 *
 	 */
 	getGlobalIds(): any[];
 
 	/**
-	 * 
+	 *
 	 */
 	getPedigreeIds(): any[];
 
 
 	/**
-	 * 
-	 * @param scalars 
+	 *
+	 * @param scalars
 	 */
 	setScalars(scalars: any[]): boolean;
 
 	/**
-	 * 
-	 * @param vectors 
+	 *
+	 * @param vectors
 	 */
 	setVectors(vectors: any[]): boolean;
 
 	/**
-	 * 
-	 * @param normals 
+	 *
+	 * @param normals
 	 */
 	setNormals(normals: any[]): boolean;
 
 	/**
-	 * 
-	 * @param tcoords 
+	 *
+	 * @param tcoords
 	 */
 	setTCoords(tcoords: any[]): boolean;
 
 	/**
-	 * 
-	 * @param tensors 
+	 *
+	 * @param tensors
 	 */
 	setTensors(tensors: any[]): boolean;
 
 	/**
-	 * 
-	 * @param globalids 
+	 *
+	 * @param globalids
 	 */
 	setGlobalIds(globalids: any[]): boolean;
 
 	/**
-	 * 
-	 * @param pedigreeids 
+	 *
+	 * @param pedigreeids
 	 */
 	setPedigreeIds(pedigreeids: any[]): boolean;
 
 	/**
-	 * 
+	 *
 	 */
 	copyScalarsOff(): void;
 
 	/**
-	 * 
+	 *
 	 */
 	copyVectorsOff(): void;
 
 	/**
-	 * 
+	 *
 	 */
 	copyNormalsOff(): void;
 
 	/**
-	 * 
+	 *
 	 */
 	copyTCoordsOff(): void;
 
 	/**
-	 * 
+	 *
 	 */
 	copyTensorsOff(): void;
 
 	/**
-	 * 
+	 *
 	 */
 	copyGlobalIdsOff(): void;
 
 	/**
-	 * 
+	 *
 	 */
 	copyPedigreeIdsOff(): void;
 }

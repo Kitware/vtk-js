@@ -3,57 +3,21 @@ import {
 	VtkObject
 } from 'vtk.js/Sources/macro';
 
-//import vtkPolyData from 'vtk.js/Sources/Common/DataModel/PolyData';
+import vtkPolyData from 'vtk.js/Sources/Common/DataModel/PolyData';
 
 
 /**
- * 
+ *
  */
 interface ICursor3DInitialValues {
-
-	/**
-	 * 
-	 */
 	modelBounds?: number[];
-
-	/**
-	 * 
-	 */
 	focalPoint?: number[];
-
-	/**
-	 * 
-	 */
 	outline?: boolean;
-
-	/**
-	 * 
-	 */
 	axes?: boolean;
-
-	/**
-	 * 
-	 */
 	xShadows?: boolean;
-
-	/**
-	 * 
-	 */
 	yShadows?: boolean;
-
-	/**
-	 * 
-	 */
 	zShadows?: boolean;
-
-	/**
-	 * 
-	 */
 	wrap?: boolean;
-
-	/**
-	 * 
-	 */
 	translationMode?: boolean;
 }
 
@@ -61,8 +25,8 @@ type vtkAlgorithm = VtkObject & Omit<VtkAlgorithm,
 	'getInputData' |
 	'setInputData' |
 	'setInputConnection' |
-	'getInputConnection' | 
-	'addInputConnection' | 
+	'getInputConnection' |
+	'addInputConnection' |
 	'addInputData' > ;
 
 export interface vtkCursor3D extends vtkAlgorithm {
@@ -78,29 +42,28 @@ export interface vtkCursor3D extends vtkAlgorithm {
 	allOn(): void;
 
 	/**
-	 * 
+	 *
 	 */
 	getAxes(): boolean;
 
 	/**
 	 * Get the position of cursor focus.
-	 * 
+	 *
 	 */
 	getFocalPoint(): number[];
 
 	/**
-	 * 
-	 * 
+	 *
+	 *
 	 */
 	getFocalPointByReference(): number[];
 
 	/**
-	 * 
-	 * 
+	 *
+	 *
 	 * @default null
 	 */
-	//getFocus(): null | vtkPolyData;
-	getFocus(): any;
+	getFocus(): null | vtkPolyDat;
 
 	/**
 	 * Set the boundary of the 3D cursor.
@@ -109,14 +72,14 @@ export interface vtkCursor3D extends vtkAlgorithm {
 	getModelBounds(): number[];
 
 	/**
-	 * 
+	 *
 	 *  @default [-1.0, 1.0, -1.0, 1.0, -1.0, 1.0]
 	 */
 	getModelBoundsByReference(): number[];
 
 	/**
-	 * 
-	 * 
+	 *
+	 *
 	 * @default true
 	 */
 	getOutline(): boolean;
@@ -153,41 +116,41 @@ export interface vtkCursor3D extends vtkAlgorithm {
 
 	/**
 	 * Expose methods
-	 * @param inData 
-	 * @param outData 
+	 * @param inData
+	 * @param outData
 	 */
 	requestData(inData: any, outData: any): void;
 	/**
-	 * 
-	 * @param flag 
+	 *
+	 * @param flag
 	 */
 	setAll(flag: boolean): void;
 
 	/**
 	 * Turn on/off the wireframe axes.
-	 * @param axes 
+	 * @param axes
 	 */
 	setAxes(axes: boolean): boolean;
 
 	/**
 	 * Set/Get the position of cursor focus.
-	 * If translation mode is on, then the entire cursor (including bounding box, cursor, and shadows) is 
+	 * If translation mode is on, then the entire cursor (including bounding box, cursor, and shadows) is
 	 * translated. Otherwise, the focal point will either be clamped to the bounding box, or wrapped, if Wrap is on.
 	 * (Note: this behavior requires that the bounding box is set prior to the focal point.)
-	 * @param points 
+	 * @param points
 	 */
 	setFocalPoint(points: number[]): boolean;
 
 	/**
 	 * Set the boundary of the 3D cursor.
-	 * @param bounds 
+	 * @param bounds
 	 */
 	setModelBounds(bounds: number[]): boolean;
 
 	/**
 	 * Enable/disable the translation mode.
 	 * If on, changes in cursor position cause the entire widget to translate along with the cursor.
-	 * @param translationMode 
+	 * @param translationMode
 	 */
 	setTranslationMode(translationMode: boolean): boolean;
 
@@ -196,27 +159,27 @@ export interface vtkCursor3D extends vtkAlgorithm {
 	 * If the cursor focus moves outside the specified bounds,
 	 * the cursor will either be restrained against the nearest "wall" (Wrap=off),
 	 * or it will wrap around (Wrap=on).
-	 * @param wrap 
+	 * @param wrap
 	 */
 	setWrap(wrap: number): boolean;
 
 	/**
 	 * Turn on/off the wireframe x-shadows.
 
-	 * @param xLength 
+	 * @param xLength
 	 */
 	setXShadows(xLength: number): boolean;
 
 	/**
 	 * Turn on/off the wireframe y-shadows.
 
-	 * @param yLength 
+	 * @param yLength
 	 */
 	setYShadows(yLength: number): boolean;
 
 	/**
 	 * Turn on/off the wireframe z-shadows.
-	 * @param zLength 
+	 * @param zLength
 	 */
 	setZShadows(zLength: number): boolean;
 }
@@ -237,7 +200,7 @@ export function extend(publicAPI: object, model: object, initialValues?: ICursor
 export function newInstance(initialValues?: ICursor3DInitialValues): vtkCursor3D;
 
 /**
- * vtkCursor3D creates a cube centered at origin. The cube is represented with four-sided polygons. 
+ * vtkCursor3D creates a cube centered at origin. The cube is represented with four-sided polygons.
  * It is possible to specify the length, width, and height of the cube independently.
  */
 export declare const vtkCursor3D: {

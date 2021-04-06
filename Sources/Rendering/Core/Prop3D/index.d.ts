@@ -179,7 +179,7 @@ export interface vtkProp3D extends vtkProp {
      * the last three arguments. The axis is specified in world
      * coordinates. To rotate an about its model axes, use RotateX,
      * RotateY, RotateZ.
-     * @param degrees 
+     * @param {number} degrees 
      * @param x 
      * @param y 
      * @param z 

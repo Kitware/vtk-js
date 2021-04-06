@@ -6,36 +6,12 @@ import vtkProperty from 'vtk.js/Sources/Rendering/Core/Property';
  * 
  */
 interface IActorInitialValues {
-    /**
-     * 
-     */
     mapper?: vtkMapper;
-
-    /**
-     * 
-     */
     property?: vtkProperty;
-
-    /**
-     * 
-     */
     backfaceProperty?: vtkProperty;
-
-    /**
-     * 
-     */
     forceOpaque?: boolean;
-
-    /**
-     * 
-     */
     forceTranslucent?: boolean;
-
-    /**
-     * 
-     */
     bounds?: number[];
-
 }
 
 export interface vtkActor extends vtkProp3D {
@@ -50,34 +26,34 @@ export interface vtkActor extends vtkProp3D {
      * For some exporters and other other operations we must be
      * able to collect all the actors or volumes. These methods
      * are used in that process.
-     * @returns  
+     * @returns {vtkActor[]} list of actors
      */
     getActors(): vtkActor[];
 
     /**
      * 
+     * @returns {vtkProperty} the backface property.
      */
     getBackfaceProperty(): vtkProperty;
 
     /**
      * Get the bounds for this Actor as (Xmin,Xmax,Ymin,Ymax,Zmin,Zmax).
-     * @returns 
      */
     getBounds(): number[];
 
     /**
-     * 
+     * Check whether the opaque is forced or not.
      */
     getForceOpaque(): boolean;
 
     /**
-     * 
+     * Check whether the translucency is forced or not.
      */
     getForceTranslucent(): boolean;
 
     /**
-     * Return if the actor is opaque or not
-     * @returns 
+     * Check if the actor is opaque or not
+     * @returns true if the actor is opaque
      */
     getIsOpaque(): boolean;
 
@@ -171,8 +147,8 @@ export function newInstance(initialValues?: IActorInitialValues): vtkActor;
  * texture map. vtkActor combines these instance variables into one 4x4
  * transformation matrix as follows: [x y z 1] = [x y z 1] Translate(-origin)
  * Scale(scale) Rot(y) Rot(x) Rot (z) Trans(origin) Trans(position)
- * @see vtkMapper
- * @see vtkProperty 
+ * @see [vtkMapper](./Rendering_Core_Mapper.html)
+ * @see [vtkProperty](./Rendering_Core_Property.html) 
  */
 export declare const vtkActor: {
     newInstance: typeof newInstance,

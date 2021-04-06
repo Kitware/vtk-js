@@ -3,35 +3,15 @@ import vtkCoordinate from 'vtk.js/Sources/Rendering/Core/Coordinate';
 import vtkMapper from 'vtk.js/Sources/Rendering/Core/Mapper';
 import vtkProperty from 'vtk.js/Sources/Rendering/Core/Property';
 
-
 /**
  * 
  */
 interface IActor2DInitialValues {
-	/**
-	 * 
-	 */
-	mapper: vtkMapper;
-
-	/**
-	 * 
-	 */
-	property: vtkProperty;
-
-	/**
-	 * 
-	 */
-	layerNumber: number;
-
-	/**
-	 * 
-	 */
-	positionCoordinate: any;
-
-	/**
-	 * 
-	 */
-	positionCoordinate2: any;
+	mapper?: vtkMapper;
+	property?: vtkProperty;
+	layerNumber?: number;
+	positionCoordinate?: any;
+	positionCoordinate2?: any;
 }
 
 export interface vtkActor2D extends vtkProp {
@@ -132,8 +112,8 @@ export function newInstance(initialValues?: IActor2DInitialValues): vtkActor2D;
  * vtkProp. The actor also has scaling and maintains a reference to the
  * defining geometry (i.e., the mapper), rendering properties, and possibly a
  * texture map.
- * @see vtkMapper2D
- * @see vtkProperty2D 
+ * @see [vtkMapper](./Rendering_Core_Mapper.html)2D
+ * @see [vtkProperty](./Rendering_Core_Property.html)2D 
  */
 export declare const vtkActor2D: {
 	newInstance: typeof newInstance,

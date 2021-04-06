@@ -15,39 +15,12 @@ export enum Coordinate {
  * 
  */
 interface ICoordinateInitialValues {
-	/**
-	 * 
-	 */
 	coordinateSystem?: number,
-
-	/**
-	 * 
-	 */
 	value?: number[],
-
-	/**
-	 * 
-	 */
 	renderer?: vtkRenderer,
-
-	/**
-	 * 
-	 */
 	referenceCoordinate?: any,
-
-	/**
-	 * 
-	 */
 	computing?: number,
-
-	/**
-	 * 
-	 */
 	computedWorldValue?: number[],
-
-	/**
-	 * 
-	 */
 	computedDoubleDisplayValue?: number[],
 }
 
@@ -233,7 +206,7 @@ export function newInstance(initialValues?: ICoordinateInitialValues): vtkCoordi
  * This allows you to create composite groups of things like vtkActor2D that are positioned relative to one another. 
  * Note that in cascaded sequences, each vtkCoordinate object may be specified in different coordinate systems!
  * 
- * @see vtkActor2D
+ * @see [vtkActor](./Rendering_Core_Actor.html)2D
  */
 export declare const vtkCoordinate: {
 	newInstance: typeof newInstance,

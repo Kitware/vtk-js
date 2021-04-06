@@ -39,55 +39,16 @@ interface IPrimitiveCount {
  * 
  */
 interface IGlyph3DMapperInitialValues {
-	/**
-	 * 
-	 */
-	orient: boolean,
-
-	/**
-	 * 
-	 */
-	orientationMode: OrientationModes,
-
-	/**
-	 * 
-	 */
-	orientationArray: number[],
-
-	/**
-	 * 
-	 */
-	scaling: boolean,
-
-	/**
-	 * 
-	 */
-	scaleFactor: number,
-
-	/**
-	 * 
-	 */
-	scaleMode: ScaleModes,
-
-	/**
-	 * 
-	 */
-	scaleArray: number[],
-
-	/**
-	 * 
-	 */
-	matrixArray: number[],
-
-	/**
-	 * 
-	 */
-	normalArray: number[],
-
-	/**
-	 * 
-	 */
-	colorArray: number[],
+	orient?: boolean,
+	orientationMode?: OrientationModes,
+	orientationArray?: number[],
+	scaling?: boolean,
+	scaleFactor?: number,
+	scaleMode?: ScaleModes,
+	scaleArray?: number[],
+	matrixArray?: number[],
+	normalArray?: number[],
+	colorArray?: number[],
 }
 
 export interface vtkGlyph3DMapper extends vtkMapper {

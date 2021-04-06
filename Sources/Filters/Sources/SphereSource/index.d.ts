@@ -7,55 +7,15 @@ import {
  * 
  */
 interface ISphereSourceInitialValues {
-
-	/**
-	 * 
-	 */
 	radius?: number;
-
-	/**
-	 * 
-	 */
 	latLongTessellation?: boolean;
-
-	/**
-	 * 
-	 */
 	thetaResolution?: number;
-
-	/**
-	 * 
-	 */
 	startTheta?: number;
-
-	/**
-	 * 
-	 */
 	endTheta?: number;
-
-	/**
-	 * 
-	 */
 	phiResolution?: number;
-
-	/**
-	 * 
-	 */
 	startPhi?: number;
-
-	/**
-	 * 
-	 */
 	endPhi?: number;
-
-	/**
-	 * 
-	 */
 	center?: number[];
-
-	/**
-	 * 
-	 */
 	pointType?: string;
 }
 
@@ -187,7 +147,7 @@ export interface vtkSphereSource extends vtkAlgorithm {
 
 	/**
 	 * Set the radius of sphere.
-	 * @param radius 
+	 * @param {number} radius 
 	 */
 	setRadius(radius: number): boolean;
 
