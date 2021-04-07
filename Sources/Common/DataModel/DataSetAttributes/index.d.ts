@@ -101,18 +101,16 @@ interface IDataSetAttributesInitialValues {
 export interface vtkDataSetAttributes extends vtkFieldData {
 
 	/**
-	 *
+	 * @todo No yet Implemented
 	 * @param x
-	 * @return
 	 */
 	checkNumberOfComponents(x: any): boolean;
 
 	/**
 	 *
-	 * @param attType
-	 * @return
+	 * @param {string} attType
 	 */
-	getActiveAttribute(attType: any): number;
+	getActiveAttribute(attType: string): any;
 
 	/**
 	 *
@@ -151,27 +149,59 @@ export interface vtkDataSetAttributes extends vtkFieldData {
 
 	/**
 	 *
+	 */
+	getScalars(): any;
+
+	/**
+	 *
+	 */
+	getVectors(): any;
+
+	/**
+	 *
+	 */
+	getNormals(): any;
+
+	/**
+	 *
+	 */
+	getTCoords(): any;
+
+	/**
+	 *
+	 */
+	getTensors(): any;
+
+	/**
+	 *
+	 */
+	getGlobalIds(): any;
+
+	/**
+	 *
+	 */
+	getPedigreeIds(): any;
+
+	/**
+	 *
 	 * @param arr
 	 * @param uncleanAttType
-	 * @return
 	 */
 	setAttribute(arr: any, uncleanAttType: string): number;
 
 	/**
 	 *
-	 * @param arrayName
+	 * @param {string} arrayName
 	 * @param attType
-	 * @return
 	 */
 	setActiveAttributeByName(arrayName: string, attType: any): number;
 
 	/**
 	 *
-	 * @param arrayIdx
+	 * @param {number} arrayIdx
 	 * @param uncleanAttType
-	 * @return
 	 */
-	setActiveAttributeByIndex(arrayIdx: any, uncleanAttType: string): number;
+	setActiveAttributeByIndex(arrayIdx: number, uncleanAttType: string): number;
 
 	/**
 	 * Override to allow proper handling of active attributes
@@ -180,7 +210,7 @@ export interface vtkDataSetAttributes extends vtkFieldData {
 
 	/**
 	 * Override to allow proper handling of active attributes
-	 * @param arrayName
+	 * @param {string} arrayName
 	 */
 	removeArray(arrayName: string): void;
 
@@ -197,43 +227,43 @@ export interface vtkDataSetAttributes extends vtkFieldData {
 
 	/**
 	 *
-	 * @param activeScalars
+	 * @param {number} activeScalars
 	 */
 	setActiveScalars(activeScalars: number): boolean;
 
 	/**
 	 *
-	 * @param activeVectors
+	 * @param {number} activeVectors
 	 */
 	setActiveVectors(activeVectors: number): boolean;
 
 	/**
 	 *
-	 * @param activeTensors
+	 * @param {number} activeTensors
 	 */
 	setActiveTensors(activeTensors: number): boolean;
 
 	/**
 	 *
-	 * @param activeNormals
+	 * @param {number} activeNormals
 	 */
 	setActiveNormals(activeNormals: number): boolean;
 
 	/**
 	 *
-	 * @param activeTCoords
+	 * @param {number} activeTCoords
 	 */
 	setActiveTCoords(activeTCoords: number): boolean;
 
 	/**
 	 *
-	 * @param activeGlobalIds
+	 * @param {number} activeGlobalIds
 	 */
 	setActiveGlobalIds(activeGlobalIds: number): boolean;
 
 	/**
 	 *
-	 * @param activePedigreeIds
+	 * @param {number} activePedigreeIds
 	 */
 	setActivePedigreeIds(activePedigreeIds: number): boolean;
 
@@ -244,126 +274,89 @@ export interface vtkDataSetAttributes extends vtkFieldData {
 	 */
 	shallowCopy(other: any, debug: any): void;
 
-
 	/**
 	 *
-	 * @param arrayName
+	 * @param {string} arrayName
 	 */
 	setActiveScalars(arrayName: string): boolean;
 
 	/**
 	 *
-	 * @param arrayName
+	 * @param {string} arrayName
 	 */
 	setActiveVectors(arrayName: string): boolean;
 
 	/**
 	 *
-	 * @param arrayName
+	 * @param {string} arrayName
 	 */
 	setActiveNormals(arrayName: string): boolean;
 
 	/**
 	 *
-	 * @param arrayName
+	 * @param {string} arrayName
 	 */
 	setActiveTCoords(arrayName: string): boolean;
 
 	/**
 	 *
-	 * @param arrayName
+	 * @param {string} arrayName
 	 */
 	setActiveTensors(arrayName: string): boolean;
 
 	/**
 	 *
-	 * @param arrayName
+	 * @param {string} arrayName
 	 */
 	setActiveGlobalIds(arrayName: string): boolean;
 
 	/**
 	 *
-	 * @param arrayName
+	 * @param {string} arrayName
 	 */
 	setActivePedigreeIds(arrayName: string): boolean;
 
 	/**
 	 *
-	 */
-	getScalars(): any[];
-
-	/**
-	 *
-	 */
-	getVectors(): any[];
-
-	/**
-	 *
-	 */
-	getNormals(): any[];
-
-	/**
-	 *
-	 */
-	getTCoords(): any[];
-
-	/**
-	 *
-	 */
-	getTensors(): any[];
-
-	/**
-	 *
-	 */
-	getGlobalIds(): any[];
-
-	/**
-	 *
-	 */
-	getPedigreeIds(): any[];
-
-
-	/**
-	 *
 	 * @param scalars
 	 */
-	setScalars(scalars: any[]): boolean;
+	setScalars(scalars: any): boolean;
 
 	/**
-	 *
+	 * Set the vector data.
 	 * @param vectors
 	 */
-	setVectors(vectors: any[]): boolean;
+	setVectors(vectors: any): boolean;
 
 	/**
-	 *
+	 * Set the normal data.
 	 * @param normals
 	 */
-	setNormals(normals: any[]): boolean;
+	setNormals(normals: any): boolean;
 
 	/**
-	 *
+	 * Set the texture coordinate data.
 	 * @param tcoords
 	 */
-	setTCoords(tcoords: any[]): boolean;
+	setTCoords(tcoords: any): boolean;
 
 	/**
-	 *
+	 * Set the tensor data.
 	 * @param tensors
 	 */
-	setTensors(tensors: any[]): boolean;
+	setTensors(tensors: any): boolean;
 
 	/**
-	 *
+	 * Set the global id data.
 	 * @param globalids
 	 */
-	setGlobalIds(globalids: any[]): boolean;
+	setGlobalIds(globalids: any): boolean;
 
 	/**
-	 *
+	 * Set the pedigree id data.
 	 * @param pedigreeids
 	 */
-	setPedigreeIds(pedigreeids: any[]): boolean;
+	setPedigreeIds(pedigreeids: any): boolean;
 
 	/**
 	 *
@@ -406,7 +399,7 @@ export interface vtkDataSetAttributes extends vtkFieldData {
  *
  * @param publicAPI object on which methods will be bounds (public)
  * @param model object on which data structure will be bounds (protected)
- * @param initialValues (default: {})
+ * @param {IDataSetAttributesInitialValues} [initialValues] (default: {})
  */
 export function extend(publicAPI: object, model: object, initialValues?: IDataSetAttributesInitialValues): void;
 

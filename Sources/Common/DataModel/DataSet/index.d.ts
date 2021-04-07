@@ -76,7 +76,7 @@ export interface vtkDataSet extends VtkObject {
  *
  * @param publicAPI object on which methods will be bounds (public)
  * @param model object on which data structure will be bounds (protected)
- * @param initialValues (default: {})
+ * @param {IDataSetInitialValues} [initialValues] (default: {})
  */
 export function extend(publicAPI: object, model: object, initialValues ? : IDataSetInitialValues): void;
 

@@ -13,13 +13,13 @@ export interface vtkCellArray extends VtkDataArray {
 
 	/**
 	 * Get the number of cells in the array.
-	 * @param {boolean} recompute
+	 * @param {boolean} [recompute]
 	 */
 	getNumberOfCells(recompute?: boolean): number;
 
 	/**
 	 *
-	 * @param {boolean} recompute
+	 * @param {boolean} [recompute]
 	 */
 	getCellSizes(recompute?: boolean): any;
 
@@ -41,7 +41,7 @@ export interface vtkCellArray extends VtkDataArray {
  *
  * @param publicAPI object on which methods will be bounds (public)
  * @param model object on which data structure will be bounds (protected)
- * @param initialValues (default: {})
+ * @param {ICellArrayInitialValues} [initialValues] (default: {})
  */
 export function extend(publicAPI: object, model: object, initialValues?: ICellArrayInitialValues): void;
 

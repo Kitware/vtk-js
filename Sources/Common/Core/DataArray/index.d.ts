@@ -1,4 +1,4 @@
-import { VtkDataArray, VtkRange } from '../../../macro';
+import { TypedArray, VtkDataArray, VtkRange } from "vtk.js/Sources/macro";
 
 /**
  * Output of the rangeHelper instance
@@ -34,11 +34,11 @@ interface VtkRangeHelper {
  * const { min: minMagnitude, max: maxMagnitude } = computeRange(array, -1, 3);
  * ```
  *
- * @param values Array to go through to extract the range from
- * @param component (default: 0) indice to use inside tuple size
- * @param numberOfComponents (default: 1) size of the tuple
+ * @param {number[]} values Array to go through to extract the range from
+ * @param {number} [component] (default: 0) indice to use inside tuple size
+ * @param {number} [numberOfComponents] (default: 1) size of the tuple
  */
-export function computeRange(values: Array<number>, component?: number, numberOfComponents?: number): VtkRange;
+export function computeRange(values: number[], component?: number, numberOfComponents?: number): VtkRange;
 
 /**
  * Create helper object that can be used to gather min, max, count, sum of
@@ -56,7 +56,7 @@ export function createRangeHelper(): VtkRangeHelper
  *
  * @param typedArray to extract its type from
  */
-export function getDataType(typedArray: any): string
+export function getDataType(typedArray: TypedArray): string
 
 /**
  * Return the max norm of a given vtkDataArray
@@ -70,7 +70,7 @@ export function getMaxNorm(dataArray: VtkDataArray): number
  *
  * @param publicAPI object on which methods will be bounds (public)
  * @param model object on which data structure will be bounds (protected)
- * @param initialValues (default: {})
+ * @param {object} [initialValues] (default: {})
  */
 export function extend(publicAPI: object, model: object, initialValues?: object): void;
 

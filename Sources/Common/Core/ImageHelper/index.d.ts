@@ -2,20 +2,8 @@
  *
  */
 interface ITransform {
-
-	/**
-	 *
-	 */
 	flipX : boolean;
-
-	/**
-	 *
-	 */
 	flipY : boolean;
-
-	/**
-	 *
-	 */
 	rotate : number;
 }
 
