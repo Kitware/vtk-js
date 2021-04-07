@@ -189,7 +189,7 @@ export interface vtkCursor3D extends vtkAlgorithm {
  *
  * @param publicAPI object on which methods will be bounds (public)
  * @param model object on which data structure will be bounds (protected)
- * @param initialValues (default: {})
+ * @param {ICursor3DInitialValues} [initialValues] (default: {})
  */
 export function extend(publicAPI: object, model: object, initialValues?: ICursor3DInitialValues): void;
 

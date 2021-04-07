@@ -120,8 +120,8 @@ export function binomial(m: number, n: number): number;
 
 /**
  * Start iterating over "m choose n" objects.
- * @param {number} m
- * @param {number} n
+ * @param {number} [m]
+ * @param {number} [n]
  */
 export function beginCombination(m?: number, n?: number): number;
 
@@ -464,15 +464,15 @@ export function areEquals(a: number[], b: number[], eps: number): boolean;
 /**
  *
  * @param {number} num
- * @param {number} digits
+ * @param {number} [digits]
  */
 export function roundNumber(num: number, digits?: number): number;
 
 /**
  *
  * @param {vec3} vector
- * @param {number[]} out
- * @param {number} digits
+ * @param {number[]} [out]
+ * @param {number} [digits]
  */
 export function roundVector(vector: vec3, out?: number[], digits?: number): number[];
 
@@ -554,10 +554,10 @@ export function solveLinearSystem(A: number[], x: number[], size: number): numbe
  * @param {number[]} A
  * @param {number[]} AI
  * @param {number} size
- * @param {number} index
- * @param column
+ * @param {?} [index]
+ * @param {?} [column]
  */
-export function invertMatrix(A: number[], AI: number[], size: number, index?: number, column?: any): number;
+export function invertMatrix(A: number[], AI: number[], size: number, index?: any, column?: any): number;
 
 /**
  *
@@ -768,7 +768,7 @@ export function floatToHex2(value: number): string;
 /**
  *
  * @param {number[]} rgbArray
- * @param {string} prefix
+ * @param {string} [prefix]
  */
 export function floatRGB2HexCode(rgbArray: number[], prefix?: string): string;
 

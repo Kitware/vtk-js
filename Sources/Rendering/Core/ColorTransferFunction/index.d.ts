@@ -30,8 +30,8 @@ export interface vtkColorTransferFunction extends VtkObject {
 	 * @param {number} r
 	 * @param {number} g
 	 * @param {number} b
-	 * @param midpoint
-	 * @param sharpness
+	 * @param {number} midpoint
+	 * @param {number} sharpness
 	 */
 	addRGBPointLong(x: number, r: number, g: number, b: number, midpoint: number, sharpness: number): number;
 
@@ -196,16 +196,16 @@ export interface vtkColorTransferFunction extends VtkObject {
 	getNumberOfAvailableColors(): number;
 
 	/**
-	 * @param idx
+	 * @param {number} idx
 	 * @param {number[]} rgba 
 	 */
-	getIndexedColor(idx: any, rgba: number[]): void;
+	getIndexedColor(idx: number, rgba: number[]): void;
 		
 	/**
-	 * @param nb
+	 * @param {number} nb
 	 * @param ptr
 	 */
-	fillFromDataPointer(nb: any, ptr: any): void;
+	fillFromDataPointer(nb: number, ptr: any): void;
 
 	/**
 	 * @param {number} min
@@ -257,7 +257,7 @@ export interface vtkColorTransferFunction extends VtkObject {
  *
  * @param publicAPI object on which methods will be bounds (public)
  * @param model object on which data structure will be bounds (protected)
- * @param initialValues (default: {})
+ * @param {object} [initialValues] (default: {})
  */
 export function extend(publicAPI: object, model: object, initialValues?: object): void;
 

@@ -5,7 +5,7 @@ declare interface Transform {
 
 	/**
 	 * 
-	 * @param useDegree 
+	 * @param {boolean} [useDegree] 
 	 */
 	new (useDegree?: boolean);
 
@@ -13,70 +13,61 @@ declare interface Transform {
 	 * Multiplies the current matrix with a transformation matrix created by
 	 * normalizing both direction vectors and rotating around the axis of the
 	 * crossProduct by the angle from the dotProduct of the two directions.
-	 * @param originDirection 
-	 * @param targetDirection 
-	 * @return  
+	 * @param {number[]} originDirection 
+	 * @param {number[]} targetDirection 
 	 */
 	rotateFromDirections(originDirection: number[], targetDirection: number[]): Transform
 
 	/**
 	 * Normalizes the axis of rotation then rotates the current matrix `angle`
 	 * degrees/radians around the provided axis.
-	 * @param angle 
-	 * @param axis 
-	 * @return  
+	 * @param {number} angle 
+	 * @param {number} axis 
 	 */
 	rotate(angle: number, axis: number): Transform
 
 	/**
 	 * Rotates `angle` degrees/radians around the X axis.
-	 * @param angle 
-	 * @return  
+	 * @param {number} angle 
 	 */
 	rotateX(angle: number): Transform
 
 	/**
 	 * Rotates `angle` degrees/radians around the Y axis.
-	 * @param angle 
-	 * @return  
+	 * @param {number} angle 
 	 */
 	rotateY(angle: number): Transform
 
 	/**
 	 * Rotates `angle` degrees/radians around the Z axis.
-	 * @param angle 
-	 * @return  
+	 * @param {number} angle 
 	 */
 	rotateZ(angle: number): Transform
 
 	/**
 	 * Translates the matrix by x, y, z.
-	 * @param x 
-	 * @param y 
-	 * @param z 
-	 * @return  
+	 * @param {number} x 
+	 * @param {number} y 
+	 * @param {number} z 
 	 */
 	translate(x: number, y: number, z: number): Transform
 
 	/**
 	 * Scales the matrix by sx, sy, sz.
-	 * @param sx 
-	 * @param sy 
-	 * @param sz 
-	 * @return  
+	 * @param {number} sx 
+	 * @param {number} sy 
+	 * @param {number} sz 
 	 */
 	scale(sx: number, sy: number, sz: number): Transform
 
 	/**
-	 * Resets the MatrixBuilder to the Identity matrix.
-	 * @param mat4x4 
-	 * @return  
+	 *
+	 * @param {mat4} mat4x4 
 	 */
 	multiply(mat4x4: mat4): Transform
 
 	/**
 	 * Resets the MatrixBuilder to the Identity matrix.
-	 * @return
 	 */	
 	identity(): Transform
 
@@ -87,16 +78,14 @@ declare interface Transform {
 	 * iterations (sets of 3) to loop through. Assumes the `typedArray` is an
 	 * array of multiples of 3, unless specifically handling with offset and
 	 * iterations. Returns the instance for chaining.
-	 * @param typedArray 
-	 * @param offset 
-	 * @param nbIterations 
-	 * @return  
+	 * @param {TypedArray} typedArray 
+	 * @param {number} [offset] 
+	 * @param {number} [nbIterations] 
 	 */
 	apply(typedArray: TypedArray, offset?: number, nbIterations?: number): Transform
 
 	/**
 	 * Returns the internal `mat4` matrix.
-	 * @return  
 	 */
 	getMatrix(): mat4;
 
@@ -104,8 +93,7 @@ declare interface Transform {
 	 * Copies the given `mat4` into the builder. Useful if you already have a
 	 * transformation matrix and want to transform it further. Returns the
 	 * instance for chaining.
-	 * @param mat4x4 
-	 * @return  
+	 * @param {mat4} mat4x4 
 	 */
 	setMatrix(mat4x4: mat4): Transform
 }
@@ -134,8 +122,7 @@ declare function buildFromRadian(): Transform;
  * vtkMatrixBuilder.buildfromDegree().translate(1,0,2).rotateZ(45).apply(point);
  * ```
  * 
- * The vtkMatrixBuilder class has two functions,
- * `vtkMatrixBuilder.buildFromDegree()` and
+ * The vtkMatrixBuilder class has two functions, `vtkMatrixBuilder.buildFromDegree()` and
  * `vtkMatrixbuilder.buildFromRadian()`, predefining the angle format used for
  * transformations and returning a MatrixBuilder instance. The matrix is
  * initialized with the Identity Matrix.

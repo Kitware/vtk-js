@@ -22,8 +22,9 @@ export interface vtkPoints extends VtkDataArray {
 	getBounds(): number[];
 
 	/**
-	* @param idx
-	* @param tupleToFill (default [])
+	* @param {number} idx
+	* @param {number[]} [tupleToFill]
+	* @default []
 	*/
 	getPoint(idx: number, tupleToFill?: number[]): number[];
 
@@ -34,24 +35,24 @@ export interface vtkPoints extends VtkDataArray {
 
 	/**
 	 * Set the number of points for this object to hold.
-	 * @param nbPoints
-	 * @param dimension
+	 * @param {number} nbPoints
+	 * @param {number} [dimension]
 	 */
 	setNumberOfPoints(nbPoints: number, dimension?: number): void;
 
 	/**
 	 * Insert point into object.
-	 * @param idx
-	 * @param x
-	 * @param y
-	 * @param z
+	 * @param {number} idx
+	 * @param {number} x
+	 * @param {number} y
+	 * @param {number} z
 	 */
 	setPoint(idx: number, x: number, y: number, z: number): void;
 
 	/**
 	 * Insert point into object.
-	 * @param idx
-	 * @param coord
+	 * @param {number} idx
+	 * @param {number[]} coord
 	 */
 	setPoint(idx: number, coord: number[]): void;
 }
@@ -61,7 +62,7 @@ export interface vtkPoints extends VtkDataArray {
  *
  * @param publicAPI object on which methods will be bounds (public)
  * @param model object on which data structure will be bounds (protected)
- * @param initialValues (default: {})
+ * @param {IPointsInitialValues} [initialValues] (default: {})
  */
 export function extend(publicAPI: object, model: object, initialValues?: IPointsInitialValues): void;
 

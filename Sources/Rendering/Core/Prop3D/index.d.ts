@@ -264,7 +264,7 @@ export interface vtkProp3D extends vtkProp {
  *
  * @param publicAPI object on which methods will be bounds (public)
  * @param model object on which data structure will be bounds (protected)
- * @param initialValues (default: {})
+ * @param {IProp3DInitialValues} [initialValues] (default: {})
  */
 export function extend(publicAPI: object, model: object, initialValues?: IProp3DInitialValues): void;
 

@@ -4,6 +4,15 @@ import vtkCamera  from 'vtk.js/Sources/Rendering/Core/Camera';
 /**
  * 
  */
+interface IFollowerInitialValues {
+	viewUp?: number[],
+	useViewUp?: boolean,
+	camera?: vtkCamera,
+}
+
+/**
+ * 
+ */
 export interface vtkFollower extends vtkActor {
 	/**
 	 * 
@@ -56,9 +65,9 @@ export interface vtkFollower extends vtkActor {
  *
  * @param publicAPI object on which methods will be bounds (public)
  * @param model object on which data structure will be bounds (protected)
- * @param initialValues (default: {})
+ * @param {IFollowerInitialValues} [initialValues] (default: {})
  */
-export function extend(publicAPI: object, model: object, initialValues?: object): void;
+export function extend(publicAPI: object, model: object, initialValues?: IFollowerInitialValues): void;
 
 /**
  * Method use to create a new instance of vtkFollower
