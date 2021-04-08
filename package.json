@@ -41,7 +41,6 @@
     "shader-loader": "1.3.1",
     "shelljs": "0.8.4",
     "stream-browserify": "3.0.0",
-    "webvr-polyfill": "0.10.12",
     "webworker-promise": "0.4.2",
     "worker-loader": "3.0.7",
     "xmlbuilder2": "2.4.0"

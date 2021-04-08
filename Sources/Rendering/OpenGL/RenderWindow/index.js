@@ -7,7 +7,6 @@ import vtkShaderCache from 'vtk.js/Sources/Rendering/OpenGL/ShaderCache';
 import vtkViewNode from 'vtk.js/Sources/Rendering/SceneGraph/ViewNode';
 import vtkOpenGLTextureUnitManager from 'vtk.js/Sources/Rendering/OpenGL/TextureUnitManager';
 import { VtkDataTypes } from 'vtk.js/Sources/Common/Core/DataArray/Constants';
-import WebVRPolyfill from 'webvr-polyfill';
 
 const { vtkDebugMacro, vtkErrorMacro } = macro;
 const IS_CHROME = navigator.userAgent.indexOf('Chrome') !== -1;
@@ -339,19 +338,6 @@ function vtkOpenGLRenderWindow(publicAPI, model) {
         model.canvas.getContext('webgl', options) ||
         model.canvas.getContext('experimental-webgl', options);
     }
-
-    /* eslint-disable */
-    const polyfill = new WebVRPolyfill({
-      // Ensures the polyfill is always active on mobile, due to providing
-      // a polyfilled CardboardVRDisplay when no native API is available,
-      // and also polyfilling even when the native API is available, due to
-      // providing a CardboardVRDisplay when no native VRDisplays exist.
-      PROVIDE_MOBILE_VRDISPLAY: true,
-      // Polyfill optimizations
-      DIRTY_SUBMIT_FRAME_BINDINGS: false,
-      BUFFER_SCALE: 0.75,
-    });
-    /* eslint-enable */
 
     // Do we have webvr support
     if (navigator.getVRDisplays) {
