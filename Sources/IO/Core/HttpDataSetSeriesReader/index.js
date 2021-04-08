@@ -148,6 +148,7 @@ function vtkHttpDataSetSeriesReader(publicAPI, model) {
     model.currentReader = reader.reader;
     model.output[0] = model.currentReader.getOutputData();
     model.output[0].modified();
+    publicAPI.modified();
   };
 
   publicAPI.requestData = (inData, outData) => {
