@@ -124,6 +124,18 @@ function vtkWebGPUDevice(publicAPI, model) {
     }
     return model.textureBindGroupLayout;
   };
+
+  publicAPI.getPipeline = (hash) => {
+    if (hash in model.pipelines) {
+      return model.pipelines[hash];
+    }
+    return null;
+  };
+
+  publicAPI.createPipeline = (hash, pipeline) => {
+    pipeline.initialize(publicAPI);
+    model.pipelines[hash] = pipeline;
+  };
 }
 
 // ----------------------------------------------------------------------------
@@ -131,6 +143,7 @@ function vtkWebGPUDevice(publicAPI, model) {
 // ----------------------------------------------------------------------------
 const DEFAULT_VALUES = {
   handle: null,
+  pipelines: null,
   shaderCache: null,
   rendererBindGroupLayout: null,
   mapperBindGroupLayout: null,
@@ -162,6 +175,8 @@ export function extend(publicAPI, model, initialValues = {}) {
 
   model.textureManager = vtkWebGPUTextureManager.newInstance();
   model.textureManager.setDevice(publicAPI);
+
+  model.pipelines = {};
 
   // For more macro methods, see "Sources/macro.js"
   // Object specific methods
