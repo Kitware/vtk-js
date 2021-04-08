@@ -1,5 +1,6 @@
 import * as macro from 'vtk.js/Sources/macro';
-import vtkWebGPURenderPass from 'vtk.js/Sources/Rendering/WebGPU/RenderPass';
+import vtkWebGPURenderEncoder from 'vtk.js/Sources/Rendering/WebGPU/RenderEncoder';
+import vtkWebGPUTexture from 'vtk.js/Sources/Rendering/WebGPU/Texture';
 // import { VtkDataTypes } from 'vtk.js/Sources/Common/Core/DataArray/Constants';
 
 // ----------------------------------------------------------------------------
@@ -11,23 +12,22 @@ function vtkWebGPUSwapChain(publicAPI, model) {
 
   publicAPI.create = (device, window) => {
     model.device = device;
+    model.window = window;
     if (window.getContext()) {
-      const swapChainFormat = 'bgra8unorm';
+      model.colorFormat = 'bgra8unorm';
 
       model.handle = window.getContext().configureSwapChain({
         device: device.getHandle(),
-        format: swapChainFormat,
+        format: model.colorFormat,
         //      usage: GPUTextureUsage.OUTPUT_ATTACHMENT,
       });
 
-      // todo: convert to a vtkWebGPUImage
-      const depthFormat = 'depth24plus-stencil8';
-      model.depthTexture = device.getHandle().createTexture({
-        size: {
-          width: window.getCanvas().width,
-          height: window.getCanvas().height,
-        },
-        format: depthFormat,
+      model.depthFormat = 'depth24plus-stencil8';
+      model.depthTexture = vtkWebGPUTexture.newInstance();
+      model.depthTexture.create(device, {
+        width: window.getCanvas().width,
+        height: window.getCanvas().height,
+        format: model.depthFormat,
         /* eslint-disable no-undef */
         usage: GPUTextureUsage.RENDER_ATTACHMENT,
       });
@@ -36,27 +36,15 @@ function vtkWebGPUSwapChain(publicAPI, model) {
     }
   };
 
-  publicAPI.getRenderPassDescription = () => {
-    const renDesc = {
-      colorAttachments: [
-        {
-          attachment: undefined,
-          loadValue: [0.3, 0.3, 0.3, 1],
-        },
-      ],
-      depthStencilAttachment: {
-        attachment: undefined,
-        depthLoadValue: 1.0,
-        depthStoreOp: 'store',
-        stencilLoadValue: 0,
-        stencilStoreOp: 'store',
-      },
-    };
-    renDesc.colorAttachments[0].attachment = model.handle
-      .getCurrentTexture()
-      .createView();
-    renDesc.depthStencilAttachment.attachment = model.depthTexture.createView();
-    return renDesc;
+  publicAPI.getCurrentTexture = () => {
+    const res = vtkWebGPUTexture.newInstance();
+    res.assignFromHandle(model.device, model.handle.getCurrentTexture(), {
+      width: model.window.getCanvas().width,
+      height: model.window.getCanvas().height,
+      format: model.swapChainFormat,
+      usage: GPUTextureUsage.RENDER_ATTACHMENT,
+    });
+    return res;
   };
 
   publicAPI.releaseGraphicsResources = () => {
@@ -76,7 +64,9 @@ const DEFAULT_VALUES = {
   created: false,
   handle: null,
   depthTexture: null,
-  renderPass: null,
+  renderEncoder: null,
+  depthFormat: null,
+  colorFormat: null,
 };
 
 // ----------------------------------------------------------------------------
@@ -86,9 +76,15 @@ export function extend(publicAPI, model, initialValues = {}) {
   // Build VTK API
   macro.obj(publicAPI, model);
 
-  model.renderPass = vtkWebGPURenderPass.newInstance();
+  model.renderEncoder = vtkWebGPURenderEncoder.newInstance();
 
-  macro.setGet(publicAPI, model, ['created', 'device', 'handle', 'renderPass']);
+  macro.get(publicAPI, model, ['colorFormat', 'depthFormat', 'depthTexture']);
+  macro.setGet(publicAPI, model, [
+    'created',
+    'device',
+    'handle',
+    'renderEncoder',
+  ]);
 
   // For more macro methods, see "Sources/macro.js"
   // Object specific methods

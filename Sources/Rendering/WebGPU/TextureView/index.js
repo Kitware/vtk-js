@@ -1,17 +1,5 @@
 import macro from 'vtk.js/Sources/macro';
 
-// const { ObjectType } = Constants;
-
-// ----------------------------------------------------------------------------
-// Global methods
-// ----------------------------------------------------------------------------
-
-// ----------------------------------------------------------------------------
-// Static API
-// ----------------------------------------------------------------------------
-
-export const STATIC = {};
-
 // ----------------------------------------------------------------------------
 // vtkWebGPUTextureView methods
 // ----------------------------------------------------------------------------
@@ -22,15 +10,18 @@ function vtkWebGPUTextureView(publicAPI, model) {
 
   publicAPI.create = (texture, options) => {
     model.texture = texture;
-    // model.handle = model.texture.getHandle().createView({
-    //   format,
-    //   dimension, // 1d, 2d, 2d-array, cube, sube-array, 3d
-    //   aspect, // all, stencil-only, depth-only
-    //   baseMIPLevel,
-    //   mipLevelCount,
-    //   baseArrayLayer,
-    //   arrayLayerCOunt,
-    // });
+    model.options = options;
+    model.textureHandle = texture.getHandle();
+    model.handle = model.textureHandle.createView(model.options);
+  };
+
+  // if the texture has changed then get a new view
+  publicAPI.getHandle = () => {
+    if (model.texture.getHandle() !== model.textureHandle) {
+      model.textureHandle = model.texture.getHandle();
+      model.handle = model.textureHandle.createView(model.options);
+    }
+    return model.handle;
   };
 }
 
@@ -51,8 +42,7 @@ export function extend(publicAPI, model, initialValues = {}) {
   // Object methods
   macro.obj(publicAPI, model);
 
-  macro.get(publicAPI, model, ['handle']);
-  macro.setGet(publicAPI, model, ['texture']);
+  macro.get(publicAPI, model, ['texture']);
 
   vtkWebGPUTextureView(publicAPI, model);
 }
@@ -63,4 +53,4 @@ export const newInstance = macro.newInstance(extend);
 
 // ----------------------------------------------------------------------------
 
-export default { newInstance, extend, ...STATIC };
+export default { newInstance, extend };

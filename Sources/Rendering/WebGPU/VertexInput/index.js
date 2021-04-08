@@ -1,6 +1,4 @@
 import * as macro from 'vtk.js/Sources/macro';
-// import vtkWebGPURenderPass from 'vtk.js/Sources/Rendering/WebGPU/RenderPass';
-// import { VtkDataTypes } from 'vtk.js/Sources/Common/Core/DataArray/Constants';
 
 function arraysEqual(a, b) {
   if (a === b) return true;
@@ -119,9 +117,9 @@ function vtkWebGPUVertexInput(publicAPI, model) {
     return info;
   };
 
-  publicAPI.bindBuffers = (renderPass) => {
+  publicAPI.bindBuffers = (renderEncoder) => {
     for (let i = 0; i < model.inputs.length; i++) {
-      renderPass.setVertexBuffer(i, model.inputs[i].buffer.getHandle());
+      renderEncoder.setVertexBuffer(i, model.inputs[i].buffer.getHandle());
     }
   };
 
@@ -156,7 +154,7 @@ export function extend(publicAPI, model, initialValues = {}) {
   model.attributeDescriptions = [];
   model.inputs = [];
 
-  macro.setGet(publicAPI, model, ['created', 'device', 'handle', 'renderPass']);
+  macro.setGet(publicAPI, model, ['created', 'device', 'handle']);
 
   // For more macro methods, see "Sources/macro.js"
   // Object specific methods
