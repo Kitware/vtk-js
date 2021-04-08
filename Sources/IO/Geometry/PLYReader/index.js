@@ -170,7 +170,7 @@ function postProcess(buffer, elements) {
     for (let faceIdx = 0; faceIdx < nbFaces; ++faceIdx) {
       const nbFaceVerts = buffer.indices[idxVerts++];
       const texcoords = buffer.faceVertexUvs[idxCoord++];
-      if (nbFaceVerts * 2 === texcoords.length) {
+      if (texcoords && nbFaceVerts * 2 === texcoords.length) {
         // grab the vertex index
         for (let vertIdx = 0; vertIdx < nbFaceVerts; ++vertIdx) {
           const vert = buffer.indices[idxVerts++];
