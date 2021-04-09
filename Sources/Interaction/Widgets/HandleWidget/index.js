@@ -134,6 +134,9 @@ function vtkHandleWidget(publicAPI, model) {
 
       return state === InteractionState.OUTSIDE ? VOID : EVENT_ABORT;
     }
+    if (!publicAPI.isDragable()) {
+      return VOID;
+    }
 
     publicAPI.setCursor(state);
     model.widgetRep.complexWidgetInteraction(position);
