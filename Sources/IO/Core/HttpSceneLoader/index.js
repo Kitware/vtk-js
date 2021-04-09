@@ -274,9 +274,7 @@ function defineLoadFuctionForReader(type) {
       .setUrl([model.baseURL, item[item.type].url].join('/'), {
         loadData: true,
       })
-      .then(() => {
-        publicAPI.invokeReady();
-      });
+      .then(() => publicAPI.invokeReady());
 
     applySettings(sceneItem, item);
     model.scene.push(sceneItem);
@@ -307,8 +305,10 @@ function loadTimeStepBasedAnimationHandler(data, model) {
     scene: model.scene,
     originalMetadata: model.metadata,
     applySettings,
-    renderer: model.renderer,
   });
+  if (model.animationHandler && model.renderer) {
+    model.animationHandler.addRenderer(model.renderer);
+  }
   model.animationHandler.setData(data);
 }
 

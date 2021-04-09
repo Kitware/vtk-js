@@ -46,17 +46,21 @@ function vtkTimeStepBasedAnimationHandler(publicAPI, model) {
   };
 
   publicAPI.setCameraParameters = (params) => {
-    if (model.renderer) {
-      const camera = model.renderer.getActiveCamera();
-      if (camera) {
-        camera.set(params);
-      }
+    if (model.renderers) {
+      model.renderers.forEach((renderer) => {
+        const camera = renderer.getActiveCamera();
+        if (camera) {
+          camera.set(params);
+        }
+      });
     }
   };
 
   publicAPI.setBackground = (color) => {
-    if (model.renderer) {
-      model.renderer.setBackground(color);
+    if (model.renderers) {
+      model.renderers.forEach((renderer) => {
+        renderer.setBackground(color);
+      });
     }
   };
 
@@ -92,6 +96,12 @@ function vtkTimeStepBasedAnimationHandler(publicAPI, model) {
       });
     }
   };
+
+  publicAPI.addRenderer = (renderer) => {
+    if (renderer && !model.renderers.includes(renderer)) {
+      model.renderers.push(renderer);
+    }
+  };
 }
 
 // ----------------------------------------------------------------------------
@@ -104,7 +114,7 @@ const DEFAULT_VALUES = {
   currentTimeStep: 0.0,
   scene: null,
   data: null,
-  renderer: null,
+  renderers: [],
   applySettings: null,
   originalMetadata: null,
 };
@@ -124,6 +134,8 @@ export function extend(publicAPI, model, initialValues = {}) {
     'timeRange',
     'timeSteps',
   ]);
+
+  macro.setGet(publicAPI, model, ['renderers']);
 
   // Object methods
   vtkTimeStepBasedAnimationHandler(publicAPI, model);
