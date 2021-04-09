@@ -107,7 +107,7 @@
     "rollup-plugin-string": "3.0.0",
     "rollup-plugin-svgo": "1.1.0",
     "rollup-plugin-web-worker-loader": "1.6.0",
-    "semantic-release": "^17.4.2",
+    "semantic-release": "17.3.1",
     "string-replace-loader": "3.0.1",
     "style-loader": "2.0.0",
     "tap-markdown": "1.2.1",
