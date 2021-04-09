@@ -1,103 +1,136 @@
+import { mat4 } from 'gl-matrix';
+import { TypedArray } from 'vtk.js/Sources/macro';
+
 declare interface Transform {
 
 	/**
 	 * 
-	 * @param useDegree 
+	 * @param {boolean} [useDegree] 
 	 */
-	new (useDegree: boolean);
+	new (useDegree?: boolean);
 
 	/**
-	 * 
-	 * @param originDirection 
-	 * @param targetDirection 
-	 * @return  
+	 * Multiplies the current matrix with a transformation matrix created by
+	 * normalizing both direction vectors and rotating around the axis of the
+	 * crossProduct by the angle from the dotProduct of the two directions.
+	 * @param {number[]} originDirection 
+	 * @param {number[]} targetDirection 
 	 */
 	rotateFromDirections(originDirection: number[], targetDirection: number[]): Transform
 
 	/**
-	 * 
-	 * @param angle 
-	 * @param axis 
-	 * @return  
+	 * Normalizes the axis of rotation then rotates the current matrix `angle`
+	 * degrees/radians around the provided axis.
+	 * @param {number} angle 
+	 * @param {number} axis 
 	 */
 	rotate(angle: number, axis: number): Transform
 
 	/**
-	 * 
-	 * @param angle 
-	 * @return  
+	 * Rotates `angle` degrees/radians around the X axis.
+	 * @param {number} angle 
 	 */
 	rotateX(angle: number): Transform
 
 	/**
-	 * 
-	 * @param angle 
-	 * @return  
+	 * Rotates `angle` degrees/radians around the Y axis.
+	 * @param {number} angle 
 	 */
 	rotateY(angle: number): Transform
 
 	/**
-	 * 
-	 * @param angle 
-	 * @return  
+	 * Rotates `angle` degrees/radians around the Z axis.
+	 * @param {number} angle 
 	 */
 	rotateZ(angle: number): Transform
 
 	/**
-	 * 
-	 * @param x 
-	 * @param y 
-	 * @param z 
-	 * @return  
+	 * Translates the matrix by x, y, z.
+	 * @param {number} x 
+	 * @param {number} y 
+	 * @param {number} z 
 	 */
 	translate(x: number, y: number, z: number): Transform
 
 	/**
-	 * 
-	 * @param sx 
-	 * @param sy 
-	 * @param sz 
-	 * @return  
+	 * Scales the matrix by sx, sy, sz.
+	 * @param {number} sx 
+	 * @param {number} sy 
+	 * @param {number} sz 
 	 */
 	scale(sx: number, sy: number, sz: number): Transform
 
 	/**
-	 * 
-	 * @return  
+	 *
+	 * @param {mat4} mat4x4 
 	 */
+	multiply(mat4x4: mat4): Transform
+
+	/**
+	 * Resets the MatrixBuilder to the Identity matrix.
+	 */	
 	identity(): Transform
 
 	/**
-	 * -----------
-	 * @param typedArray 
-	 * @param offset 
-	 * @param nbIterations 
-	 * @return  
+	 * Multiplies the array by the MatrixBuilder's internal matrix, in sets of
+	 * 3. Updates the array in place. If specified, `offset` starts at a given
+	 * position in the array, and `nbIterations` will determine the number of
+	 * iterations (sets of 3) to loop through. Assumes the `typedArray` is an
+	 * array of multiples of 3, unless specifically handling with offset and
+	 * iterations. Returns the instance for chaining.
+	 * @param {TypedArray} typedArray 
+	 * @param {number} [offset] 
+	 * @param {number} [nbIterations] 
 	 */
-	apply(typedArray: number[], offset: number, nbIterations: number): Transform
+	apply(typedArray: TypedArray, offset?: number, nbIterations?: number): Transform
 
 	/**
-	 * 
-	 * @return  
+	 * Returns the internal `mat4` matrix.
 	 */
-	getMatrix(): Float64Array;
+	getMatrix(): mat4;
 
 	/**
-	 * 
-	 * @param mat4x4 
-	 * @return  
+	 * Copies the given `mat4` into the builder. Useful if you already have a
+	 * transformation matrix and want to transform it further. Returns the
+	 * instance for chaining.
+	 * @param {mat4} mat4x4 
 	 */
-	setMatrix(mat4x4: Float64Array): Transform
+	setMatrix(mat4x4: mat4): Transform
 }
 
 /**
  * 
  * @return {Transform}
  */
-export declare function buildFromDegree(): Transform;
+declare function buildFromDegree(): Transform;
 
 /**
  * 
  * @return {Transform}
  */
-export declare function buildFromRadian(): Transform;
+declare function buildFromRadian(): Transform;
+
+
+/**
+ * The `vtkMatrixBuilder` class provides a system to create a mat4
+ * transformation matrix. All functions return the MatrixBuilder Object
+ * instance, allowing transformations to be chained.
+ * 
+ * @example
+ * ```js
+ * let point = [2,5,12];
+ * vtkMatrixBuilder.buildfromDegree().translate(1,0,2).rotateZ(45).apply(point);
+ * ```
+ * 
+ * The vtkMatrixBuilder class has two functions, `vtkMatrixBuilder.buildFromDegree()` and
+ * `vtkMatrixbuilder.buildFromRadian()`, predefining the angle format used for
+ * transformations and returning a MatrixBuilder instance. The matrix is
+ * initialized with the Identity Matrix.
+ *
+ */
+export declare const vtkMatrixBuilder: {
+  buildFromDegree: typeof buildFromDegree,
+  buildFromRadian: typeof buildFromRadian,
+};
+
+export default vtkMatrixBuilder;

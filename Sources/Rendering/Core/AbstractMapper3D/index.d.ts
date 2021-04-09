@@ -4,15 +4,8 @@ import vtkAbstractMapper from 'vtk.js/Sources/Rendering/Core/AbstractMapper';
  * 
  */
 interface IAbstractMapper3DInitialValues {
-	/**
-	 * 
-	 */
-	bounds : number[];
-
-	/**
-	 * 
-	 */
-	center : number[];
+	bounds?: number[];
+	center?: number[];
 }
 
 export interface vtkAbstractMapper3D extends vtkAbstractMapper {
@@ -51,7 +44,7 @@ export interface vtkAbstractMapper3D extends vtkAbstractMapper {
  *
  * @param publicAPI object on which methods will be bounds (public)
  * @param model object on which data structure will be bounds (protected)
- * @param initialValues (default: {})
+ * @param {IAbstractMapper3DInitialValues} [initialValues] (default: {})
  */
 export function extend(publicAPI: object, model: object, initialValues?: IAbstractMapper3DInitialValues): void;
 

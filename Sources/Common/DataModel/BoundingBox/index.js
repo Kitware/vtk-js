@@ -681,7 +681,7 @@ class BoundingBox {
   }
 
   intersectBox(origin, dir, coord, tolerance) {
-    return intersectBox(this.bounds, dir, coord, tolerance);
+    return intersectBox(this.bounds, origin, dir, coord, tolerance);
   }
 
   intersectPlane(origin, normal) {

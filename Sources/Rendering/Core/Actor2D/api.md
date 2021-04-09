@@ -1,58 +1,149 @@
+## Introduction
+
 vtkActor2D is used to represent a 2D entity in a rendering scene. It inherits
 functions related to the actors position, and orientation from
 vtkProp. The actor also has scaling and maintains a reference to the
 defining geometry (i.e., the mapper), rendering properties, and possibly a
 texture map.
 
+
+
+
 ## See Also
 
-[vtkMapper2D](./Rendering_Core_Mapper2D.html) 
-[vtkProperty2D](./Rendering_Core_Property2D.html) 
+[vtkMapper](./Rendering_Core_Mapper.html)2D
 
-## newInstance()
+[vtkProperty](./Rendering_Core_Property.html)2D
 
-Create an instance of vtkActor2D
+## Methods
 
-## getActors2D()
 
-For some exporters and other other operations we must be
-able to collect all the actors or volumes. These methods
-are used in that process.
+### extend
 
-## hasTranslucentPolygonalGeometry()
+Method use to decorate a given object (publicAPI+model) with vtkActor2D characteristics.
 
-Does this prop have some translucent polygonal geometry?
 
-## property
+| Argument | Type | Description |
+| ------------- | ------------- | ----- |
+| **publicAPI** | <span class="arg-type"></span></br></span><span class="arg-required">required</span> | object on which methods will be bounds (public) |
+| **model** | <span class="arg-type"></span></br></span><span class="arg-required">required</span> | object on which data structure will be bounds (protected) |
+| **initialValues** | <span class="arg-type"></span></br></span><span class="arg-required">required</span> | (default: {}) |
 
-Set/Get the property object that controls this actors surface
+
+### getActors2D
+
+
+
+#### Returns
+
+| Type | Description |
+| ----- | ------------- |
+| <span class="arg-type"></span> |  |
+
+
+### getActualPositionCoordinate
+
+Return the actual vtkCoordinate reference that the mapper should use
+to position the actor. This is used internally by the mappers and should
+be overridden in specialized subclasses and otherwise ignored.
+
+
+
+### getActualPositionCoordinate2
+
+
+
+
+
+### getBounds
+
+Get the bounds as [xmin, xmax, ymin, ymax, zmin, zmax].
+
+
+
+### getHeight
+
+----------------------------------------------------------------------------
+
+
+
+### getIsOpaque
+
+
+
+#### Returns
+
+| Type | Description |
+| ----- | ------------- |
+| <span class="arg-type"></span> |  |
+
+
+### getProperty
+
+Return the property object that controls this actors surface
 properties. This should be an instance of a vtkProperty object. Every
-actor must have a property associated with it. If one isn't specified,
+actor must have a property associated with it. If one isn’t specified,
 then one will be generated automatically. Multiple actors can share one
 property object.
 
-## makeProperty()
 
-Create a new property suitable for use with this type of Actor.
-The default is to create a vtkProperty2D.
 
-## mapper
+### getWidth
 
-This is the method that is used to connect an actor to the end of a
-visualization pipeline, i.e. the mapper. This should be a subclass
-of vtkMapper2D. Typically vtkPolyDataMapper2D will be used.
+----------------------------------------------------------------------------
 
-## bounds()
 
-Get the bounds for this Actor as (Xmin,Xmax,Ymin,Ymax,Zmin,Zmax).
 
-## getMTime()
+### hasTranslucentPolygonalGeometry
 
-Get the newest "modification time" of the actor, its properties, and texture (if set).
 
-## getRedrawMTime()
 
-Return the mtime of anything that would cause the rendered image to
-appear differently. Usually this involves checking the mtime of the
-prop plus anything else it depends on such as properties, textures,
-etc.
+#### Returns
+
+| Type | Description |
+| ----- | ------------- |
+| <span class="arg-type"></span> |  |
+
+
+### newInstance
+
+Method use to create a new instance of vtkActor2D
+
+
+| Argument | Type | Description |
+| ------------- | ------------- | ----- |
+| **initialValues** | <span class="arg-type"></span></br></span><span class="arg-required">required</span> | for pre-setting some of its content |
+
+
+### setDisplayPosition
+
+----------------------------------------------------------------------------
+Set the Prop2D's position in display coordinates.
+
+
+| Argument | Type | Description |
+| ------------- | ------------- | ----- |
+| **XPos** | <span class="arg-type"></span></br></span><span class="arg-required">required</span> |  |
+| **YPos** | <span class="arg-type"></span></br></span><span class="arg-required">required</span> |  |
+
+
+### setHeight
+
+----------------------------------------------------------------------------
+
+
+| Argument | Type | Description |
+| ------------- | ------------- | ----- |
+| **w** | <span class="arg-type"></span></br></span><span class="arg-required">required</span> |  |
+
+
+### setWidth
+
+----------------------------------------------------------------------------
+
+
+| Argument | Type | Description |
+| ------------- | ------------- | ----- |
+| **w** | <span class="arg-type"></span></br></span><span class="arg-required">required</span> |  |
+
+

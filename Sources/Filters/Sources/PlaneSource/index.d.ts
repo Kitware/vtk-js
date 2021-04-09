@@ -8,47 +8,21 @@ import {
  * 
  */
 interface IPlaneSourceInitialValues {
-
-	/**
-	 * 
-	 */
 	xResolution?: number;
-		
-	/**
-	 * 
-	 */
 	yResolution?: number;
-		
-	/**
-	 * 
-	 */
-	origin?: Array<number>;
-		
-	/**
-	 * 
-	 */
-	point1?: Array<number>;
-		
-	/**
-	 * 
-	 */
-	point2?: Array<number>;
-		
-	/**
-	 * 
-	 */
+	origin?: number[];
+	point1?: number[];
+	point2?: number[];
 	pointType?: string;
 }
 
-type vtkAlgorithm = VtkObject & Pick<VtkAlgorithm,
-	'getNumberOfInputPorts' |
-	'getNumberOfOutputPorts' |
-	'getInputArrayToProcess' |
-	'getOutputData' |
-	'getOutputPort' |
-	'setInputArrayToProcess' |
-	'shouldUpdate' |
-	'update'> ;
+type vtkAlgorithm = VtkObject & Omit<VtkAlgorithm,
+	'getInputData' |
+	'setInputData' |
+	'setInputConnection' |
+	'getInputConnection' | 
+	'addInputConnection' | 
+	'addInputData' > ;
 
 export interface vtkPlaneSource extends vtkAlgorithm {
 
@@ -220,7 +194,7 @@ export interface vtkPlaneSource extends vtkAlgorithm {
  *
  * @param publicAPI object on which methods will be bounds (public)
  * @param model object on which data structure will be bounds (protected)
- * @param initialValues (default: {})
+ * @param {IPlaneSourceInitialValues} [initialValues] (default: {})
  */
 export function extend(publicAPI: object, model: object, initialValues?: IPlaneSourceInitialValues): void;
 

@@ -35,7 +35,7 @@ export interface vtkStickMapper extends vtkMapper {
 
     /**
      * 
-     * @param radius 
+     * @param {number} radius 
      */
     setRaduis(radius: number): boolean;
 
@@ -51,7 +51,7 @@ export interface vtkStickMapper extends vtkMapper {
  *
  * @param publicAPI object on which methods will be bounds (public)
  * @param model object on which data structure will be bounds (protected)
- * @param initialValues (default: {})
+ * @param {IStickMappereInitialValues} [initialValues] (default: {})
  */
  export function extend(publicAPI: object, model: object, initialValues?: IStickMappereInitialValues): void;
 

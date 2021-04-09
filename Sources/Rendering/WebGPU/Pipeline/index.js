@@ -1,5 +1,4 @@
 import * as macro from 'vtk.js/Sources/macro';
-// import { VtkDataTypes } from 'vtk.js/Sources/Common/Core/DataArray/Constants';
 
 // ----------------------------------------------------------------------------
 // vtkWebGPUPipeline methods
@@ -10,31 +9,11 @@ function vtkWebGPUPipeline(publicAPI, model) {
 
   publicAPI.getShaderDescriptions = () => model.shaderDescriptions;
 
-  publicAPI.initialize = (window) => {
-    const device = window.getDevice();
+  publicAPI.initialize = (device) => {
+    // start with the renderencoder settings
+    const pipelineDesc = model.renderEncoder.getPipelineSettings();
 
-    const pipelineDesc = {
-      primitive: { topology: model.topology, cullMode: 'none' },
-      depthStencil: {
-        depthWriteEnabled: true,
-        depthCompare: 'less',
-        format: 'depth24plus-stencil8',
-      },
-      fragment: {
-        targets: [
-          {
-            format: 'bgra8unorm',
-            blend: {
-              color: {
-                srcFactor: 'src-alpha',
-                dstFactor: 'one-minus-src-alpha',
-              },
-              alpha: { srcfactor: 'one', dstFactor: 'one-minus-src-alpha' },
-            },
-          },
-        ],
-      },
-    };
+    pipelineDesc.primitive.topology = model.topology;
 
     pipelineDesc.vertex = model.vertexState;
 
@@ -86,12 +65,12 @@ function vtkWebGPUPipeline(publicAPI, model) {
     return 0;
   };
 
-  publicAPI.bind = (renderPass) => {
-    renderPass.setPipeline(model.handle);
+  publicAPI.bind = (renderEncoder) => {
+    renderEncoder.getHandle().setPipeline(model.handle);
   };
 
-  publicAPI.bindVertexInput = (renderPass, vInput) => {
-    vInput.bindBuffers(renderPass);
+  publicAPI.bindVertexInput = (renderEncoder, vInput) => {
+    vInput.bindBuffers(renderEncoder);
   };
 }
 
@@ -101,6 +80,7 @@ function vtkWebGPUPipeline(publicAPI, model) {
 const DEFAULT_VALUES = {
   handle: null,
   layouts: null,
+  renderEncoder: null,
   shaderDescriptions: null,
   vertexState: null,
   topology: null,
@@ -116,7 +96,12 @@ export function extend(publicAPI, model, initialValues = {}) {
   model.layouts = [];
   model.shaderDescriptions = [];
 
-  macro.setGet(publicAPI, model, ['device', 'topology', 'vertexState']);
+  macro.setGet(publicAPI, model, [
+    'device',
+    'renderEncoder',
+    'topology',
+    'vertexState',
+  ]);
 
   // For more macro methods, see "Sources/macro.js"
   // Object specific methods

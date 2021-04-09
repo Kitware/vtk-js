@@ -7,37 +7,19 @@ import {
  * 
  */
 interface IPointSourceInitialValues {
-
-	/**
-	 * 
-	 */
 	numberOfPoints?: number;
-		
-	 /**
-	  * 
-	  */
-	center?: Array<number>;
-		 
-	 /**
-	  * 
-	  */
+	center?: number[];
 	radius?: number;
-		 
-	 /**
-	  * 
-	  */
 	pointType?: string;
 }
 
-type vtkAlgorithm = VtkObject & Pick<VtkAlgorithm,
-	'getNumberOfInputPorts' |
-	'getNumberOfOutputPorts' |
-	'getInputArrayToProcess' |
-	'getOutputData' |
-	'getOutputPort' |
-	'setInputArrayToProcess' |
-	'shouldUpdate' |
-	'update'> ;
+type vtkAlgorithm = VtkObject & Omit<VtkAlgorithm,
+	'getInputData' |
+	'setInputData' |
+	'setInputConnection' |
+	'getInputConnection' | 
+	'addInputConnection' | 
+	'addInputData' > ;
 
 export interface vtkPointSource extends vtkAlgorithm {
 
@@ -100,7 +82,7 @@ export interface vtkPointSource extends vtkAlgorithm {
 	/**
 	 * Set the radius of the point cloud. If you are generating a Gaussian
 	 * distribution, then this is the standard deviation for each of x, y, and z.
-	 * @param radius 
+	 * @param {number} radius 
 	 */
 	setRadius(radius: number): boolean;
 }
@@ -110,7 +92,7 @@ export interface vtkPointSource extends vtkAlgorithm {
  *
  * @param publicAPI object on which methods will be bounds (public)
  * @param model object on which data structure will be bounds (protected)
- * @param initialValues (default: {})
+ * @param {IPointSourceInitialValues} [initialValues] (default: {})
  */
 export function extend(publicAPI: object, model: object, initialValues?: IPointSourceInitialValues): void;
 

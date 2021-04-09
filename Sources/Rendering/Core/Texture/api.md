@@ -1,41 +1,129 @@
-## vtkTexture - handles properties associated with a texture map
+## Introduction
 
-## Description
-vtkTexture is an object that handles loading and binding of texture
-maps. It obtains its data from an input image data dataset type.
-Thus you can create visualization pipelines to read, process, and
-construct textures. Note that textures will only work if texture
-coordinates are also defined, and if the rendering system supports
-texture.
+vtkTexture is an image algorithm that handles loading and binding of texture maps.
+It obtains its data from an input image data dataset type. 
+Thus you can create visualization pipelines to read, process, and construct textures. 
+Note that textures will only work if texture coordinates are also defined, and if the rendering system supports texture.
 
-Instances of vtkTexture are associated with actors via the actor's
-SetTexture() method. Actors can share texture maps (this is encouraged
-to save memory resources.)
 
-.SECTION Caveats
 
-If six inputs are provided this texture will be treated as 
-a cube texture.
-
-## See Also
-
-[vtkProp](./Rendering_Core_Prop.html) 
-[vtkRenderer](./Rendering_Core_Renderer.html) 
 
 ## Methods
 
-### Repeat
 
-Turn on/off the repetition of the texture map when the texture
-coords extend beyond the [0,1] range.
+### edgeClamp
 
-### EdgeCLamp
 
-Turn on/off the clamping of the texture map when the texture
-coords extend beyond the [0,1] range.
-Only used when Repeat is off, and edge clamping is supported by
-the graphics card.
 
-### Interpolate
 
-Turn on/off linear interpolation of the texture map when rendering.
+
+### extend
+
+Method use to decorate a given object (publicAPI+model) with vtkTexture characteristics.
+
+
+| Argument | Type | Description |
+| ------------- | ------------- | ----- |
+| **publicAPI** | <span class="arg-type"></span></br></span><span class="arg-required">required</span> | object on which methods will be bounds (public) |
+| **model** | <span class="arg-type"></span></br></span><span class="arg-required">required</span> | object on which data structure will be bounds (protected) |
+| **initialValues** | <span class="arg-type"></span></br></span><span class="arg-required">required</span> | (default: {}) |
+
+
+### getEdgeClamp
+
+
+
+
+
+### getImage
+
+
+
+
+
+### getImageLoaded
+
+
+
+
+
+### getInterpolate
+
+
+
+
+
+### getRepeat
+
+
+
+
+
+### imageLoaded
+
+
+
+
+
+### interpolate
+
+
+
+
+
+### newInstance
+
+Method use to create a new instance of vtkTexture.
+
+
+| Argument | Type | Description |
+| ------------- | ------------- | ----- |
+| **initialValues** | <span class="arg-type"></span></br></span><span class="arg-required">required</span> | for pre-setting some of its content |
+
+
+### repeat
+
+
+
+
+
+### setEdgeClamp
+
+
+
+
+| Argument | Type | Description |
+| ------------- | ------------- | ----- |
+| **edgeClamp** | <span class="arg-type"></span></br></span><span class="arg-required">required</span> |  |
+
+
+### setImage
+
+
+
+
+| Argument | Type | Description |
+| ------------- | ------------- | ----- |
+| **image** | <span class="arg-type"></span></br></span><span class="arg-required">required</span> |  |
+
+
+### setInterpolate
+
+
+
+
+| Argument | Type | Description |
+| ------------- | ------------- | ----- |
+| **interpolate** | <span class="arg-type"></span></br></span><span class="arg-required">required</span> |  |
+
+
+### setRepeat
+
+
+
+
+| Argument | Type | Description |
+| ------------- | ------------- | ----- |
+| **repeat** | <span class="arg-type"></span></br></span><span class="arg-required">required</span> |  |
+
+

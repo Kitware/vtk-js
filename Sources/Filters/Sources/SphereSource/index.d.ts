@@ -7,67 +7,25 @@ import {
  * 
  */
 interface ISphereSourceInitialValues {
-
-	/**
-	 * 
-	 */
 	radius?: number;
-
-	/**
-	 * 
-	 */
 	latLongTessellation?: boolean;
-
-	/**
-	 * 
-	 */
 	thetaResolution?: number;
-
-	/**
-	 * 
-	 */
 	startTheta?: number;
-
-	/**
-	 * 
-	 */
 	endTheta?: number;
-
-	/**
-	 * 
-	 */
 	phiResolution?: number;
-
-	/**
-	 * 
-	 */
 	startPhi?: number;
-
-	/**
-	 * 
-	 */
 	endPhi?: number;
-
-	/**
-	 * 
-	 */
 	center?: number[];
-
-	/**
-	 * 
-	 */
 	pointType?: string;
 }
 
-type vtkAlgorithm = VtkObject & Pick <VtkAlgorithm,
-	'getNumberOfInputPorts' |
-	'getNumberOfOutputPorts' |
-	'getInputArrayToProcess' |
-	'getOutputData' |
-	'getOutputPort' |
-	'setInputArrayToProcess' |
-	'shouldUpdate' |
-	'update'> ;
+type vtkAlgorithm = VtkObject & Omit<VtkAlgorithm,
+	'getInputData' |
+	'setInputData' |
+	'setInputConnection' |
+	'getInputConnection' | 
+	'addInputConnection' | 
+	'addInputData' > ;
 
 export interface vtkSphereSource extends vtkAlgorithm {
 
@@ -189,7 +147,7 @@ export interface vtkSphereSource extends vtkAlgorithm {
 
 	/**
 	 * Set the radius of sphere.
-	 * @param radius 
+	 * @param {number} radius 
 	 */
 	setRadius(radius: number): boolean;
 
@@ -217,7 +175,7 @@ export interface vtkSphereSource extends vtkAlgorithm {
  *
  * @param publicAPI object on which methods will be bounds (public)
  * @param model object on which data structure will be bounds (protected)
- * @param initialValues (default: {})
+ * @param {ISphereSourceInitialValues} [initialValues] (default: {})
  */
 export function extend(publicAPI: object, model: object, initialValues?: ISphereSourceInitialValues): void;
 

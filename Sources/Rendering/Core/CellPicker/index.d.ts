@@ -6,29 +6,10 @@ import vtkRenderer from 'vtk.js/Sources/Rendering/Core/Renderer';
  * 
  */
 interface ICellPickerInitialValues {
-	/**
-	 * 
-	 */
 	cellId?: number;
-
-	/**
-	 * 
-	 */
 	pCoords?: number[];
-
-	/**
-	 * 
-	 */
 	cellIJK?: number[];
-
-	/**
-	 * 
-	 */
 	pickNormal?: number[];
-
-	/**
-	 * 
-	 */
 	mapperNormal?: number[];
 }
 
@@ -119,7 +100,7 @@ export interface vtkCellPicker extends vtkPicker {
  *
  * @param publicAPI object on which methods will be bounds (public)
  * @param model object on which data structure will be bounds (protected)
- * @param initialValues (default: {})
+ * @param {ICellPickerInitialValues} [initialValues] (default: {})
  */
 export function extend(publicAPI: object, model: object, initialValues?: ICellPickerInitialValues): void;
 

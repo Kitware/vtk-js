@@ -773,7 +773,7 @@ export function extend(publicAPI, model, initialValues = {}) {
   model.pixelActor.setMapper(model.pixelMapper);
 
   macro.setGet(publicAPI, model, [
-    'axesTitlePixelOffset',
+    'axisTitlePixelOffset',
     'faceVisibilityAngle',
     'gridLines',
     'tickLabelPixelOffset',

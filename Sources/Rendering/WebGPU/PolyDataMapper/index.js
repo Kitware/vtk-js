@@ -71,7 +71,9 @@ const vtkWebGPUPolyDataFS = `
 
 //VTK::PositionVC::Dec
 
-[[location(0)]] var<out> outColor : vec4<f32>;
+//VTK::RenderEncoder::Dec
+
+[[builtin(front_facing)]] var<in> frontFacing : bool;
 
 [[stage(fragment)]]
 fn main() -> void
@@ -88,12 +90,16 @@ fn main() -> void
 
   //VTK::Light::Impl
 
-  outColor = vec4<f32>(ambientColor.rgb * mapperUBO.AmbientIntensity
+  var computedColor: vec4<f32> = vec4<f32>(ambientColor.rgb * mapperUBO.AmbientIntensity
      + diffuse * mapperUBO.DiffuseIntensity
      + specular * mapperUBO.SpecularIntensity,
      opacity);
 
   //VTK::TCoord::Impl
+
+  if (computedColor.a == 0.0) { discard; };
+
+  //VTK::RenderEncoder::Impl
 }
 `;
 
@@ -233,6 +239,8 @@ function vtkWebGPUPolyDataMapper(publicAPI, model) {
     model.currentInput = model.renderable.getInputData();
     publicAPI.invokeEvent(EndEvent);
 
+    model.renderEncoder = model.WebGPURenderer.getRenderEncoder();
+
     publicAPI.buildPrimitives();
 
     // update descriptor sets
@@ -281,6 +289,7 @@ function vtkWebGPUPolyDataMapper(publicAPI, model) {
     // publicAPI.replaceShaderLight(hash, pipeline);
     publicAPI.replaceShaderTCoord(hash, pipeline, vertexInput);
     // publicAPI.replaceShaderPositionVC(hash, pipeline);
+    model.renderEncoder.replaceShaderCode(pipeline);
   };
 
   publicAPI.replaceShaderNormal = (hash, pipeline, vertexInput) => {
@@ -304,7 +313,9 @@ function vtkWebGPUPolyDataMapper(publicAPI, model) {
       ]).result;
 
       code = vtkWebGPUShaderCache.substitute(code, '//VTK::Normal::Impl', [
-        '  var df: f32  = max(0.0, normalVC.z);',
+        '  var normal: vec3<f32> = normalVC;',
+        '  if (!frontFacing) { normal = -normal; }',
+        '  var df: f32  = max(0.0, normal.z);',
         '  var sf: f32 = pow(df, mapperUBO.SpecularPower);',
         '  var diffuse: vec3<f32> = df * diffuseColor.rgb;',
         '  var specular: vec3<f32> = sf * mapperUBO.SpecularColor.rgb * mapperUBO.SpecularColor.a;',
@@ -385,7 +396,7 @@ function vtkWebGPUPolyDataMapper(publicAPI, model) {
     if (model.textures.length) {
       code = vtkWebGPUShaderCache.substitute(code, '//VTK::TCoord::Impl', [
         'var tcolor: vec4<f32> = textureSample(Texture0, Sampler0, tcoordVS);',
-        'outColor = outColor*tcolor;',
+        'computedColor = computedColor*tcolor;',
       ]).result;
     }
     fDesc.setCode(code);
@@ -469,8 +480,9 @@ function vtkWebGPUPolyDataMapper(publicAPI, model) {
       vertexInput.removeBufferIfPresent('vertexMC');
     }
 
-    // normals
-    {
+    // normals, only used for surface rendering
+    const usage = publicAPI.getUsage(representation, primType);
+    if (usage === BufferUsage.Triangles || usage === BufferUsage.Strips) {
       const normals = pd.getPointData().getNormals();
       const buffRequest = {
         cells,
@@ -509,7 +521,6 @@ function vtkWebGPUPolyDataMapper(publicAPI, model) {
       if (c) {
         const scalarMode = model.renderable.getScalarMode();
         let haveCellScalars = false;
-        console.log(`have colors ${scalarMode}`);
         // We must figure out how the scalars should be mapped to the polydata.
         if (
           (scalarMode === ScalarMode.USE_CELL_DATA ||
@@ -520,7 +531,6 @@ function vtkWebGPUPolyDataMapper(publicAPI, model) {
           c
         ) {
           haveCellScalars = true;
-          console.log('here');
         }
         const buffRequest = {
           hash: hash + points.getMTime(),
@@ -676,6 +686,7 @@ function vtkWebGPUPolyDataMapper(publicAPI, model) {
     }
     const uhash = publicAPI.getHashFromUsage(usage);
     pipelineHash += uhash;
+    pipelineHash += model.renderEncoder.getPipelineHash();
 
     return pipelineHash;
   };
@@ -710,7 +721,7 @@ function vtkWebGPUPolyDataMapper(publicAPI, model) {
           primHelper.vertexInput,
           usage
         );
-        let pipeline = model.WebGPURenderWindow.getPipeline(pipelineHash);
+        let pipeline = device.getPipeline(pipelineHash);
 
         // build VBO for this primitive
         // build the pipeline if needed
@@ -737,10 +748,11 @@ function vtkWebGPUPolyDataMapper(publicAPI, model) {
             primHelper.vertexInput
           );
           pipeline.setTopology(publicAPI.getTopologyFromUsage(usage));
+          pipeline.setRenderEncoder(model.renderEncoder);
           pipeline.setVertexState(
             primHelper.vertexInput.getVertexInputInformation()
           );
-          model.WebGPURenderWindow.createPipeline(pipelineHash, pipeline);
+          device.createPipeline(pipelineHash, pipeline);
         }
 
         if (pipeline) {
@@ -760,6 +772,7 @@ function vtkWebGPUPolyDataMapper(publicAPI, model) {
 
 const DEFAULT_VALUES = {
   colorTexture: null,
+  renderEncoder: null,
   textures: null,
   samplers: null,
   textureBindGroups: null,
@@ -797,26 +810,31 @@ export function extend(publicAPI, model, initialValues = {}) {
     };
     const primHelper = model.primitives[i];
     model.primitives[i].renderForPipeline = (pipeline) => {
-      const renderPass = model.WebGPURenderer.getRenderPass();
+      const renderEncoder = model.WebGPURenderer.getRenderEncoder();
 
       // bind the mapper UBO
-      renderPass.setBindGroup(1, model.UBOBindGroup);
+      renderEncoder.setBindGroup(1, model.UBOBindGroup);
 
       // bind any textures and samplers
       for (let t = 0; t < model.textures.length; t++) {
         const tcount = pipeline.getBindGroupLayoutCount(`Texture${t}`);
-        renderPass.setBindGroup(tcount, model.textureBindGroups[t]);
+        renderEncoder.setBindGroup(tcount, model.textureBindGroups[t]);
       }
 
       // bind the vertex input
-      pipeline.bindVertexInput(renderPass, primHelper.vertexInput);
+      pipeline.bindVertexInput(renderEncoder, primHelper.vertexInput);
       const vbo = primHelper.vertexInput.getBuffer('vertexMC');
-      renderPass.draw(vbo.getSizeInBytes() / 16, 1, 0, 0);
+      renderEncoder.draw(
+        vbo.getSizeInBytes() / vbo.getStrideInBytes(),
+        1,
+        0,
+        0
+      );
     };
   }
 
   // Build VTK API
-  macro.setGet(publicAPI, model, ['context']);
+  macro.setGet(publicAPI, model, ['context', 'renderEncoder']);
 
   model.VBOBuildTime = {};
   macro.obj(model.VBOBuildTime, { mtime: 0 });

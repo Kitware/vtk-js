@@ -1,27 +1,18 @@
 import { VtkObject } from 'vtk.js/Sources/macro';
 
 /**
- * 
+ *
  */
 interface ICellInitialValues {
-	
-	/**
-	 * 
-	 */
 	bounds?: number[];
-		
-	 /**
-	  * 
-	  */
 	pointsIds?: number[];
-	
 }
 
 export interface vtkCell extends VtkObject {
 
 	/**
 	 * Copy this cell by completely copying internal data structures.
-	 * @param cell 
+	 * @param cell
 	 */
 	deepCopy(cell : any): void;
 
@@ -40,8 +31,8 @@ export interface vtkCell extends VtkObject {
 	 * generated as such: [0, 1, ..., N-1] where N is the number of points. If
 	 * pointIdsList is not null, only pointIdsList point coordinates are copied into
 	 * the cell. pointIdsList is shallow copied.
-	 * @param points 
-	 * @param pointIdsList 
+	 * @param points
+	 * @param pointIdsList
 	 */
 	initialize(points : any, pointIdsList : any): void;
 
@@ -49,7 +40,7 @@ export interface vtkCell extends VtkObject {
 	 * Get the bounds as [xmin, xmax, ymin, ymax, zmin, zmax].
 	 */
 	getBounds():  number[];
-		
+
 	/**
 	 * Compute Length squared of cell (i.e., bounding box diagonal squared).
 	 */
@@ -61,7 +52,7 @@ export interface vtkCell extends VtkObject {
 	 * picking to get the correct cell picked. (The tolerance will occasionally
 	 * allow cells to be picked who are not really intersected "inside" the
 	 * cell.)
-	 * @param pcoords 
+	 * @param pcoords
 	 *
 	 */
 	getParametricDistance(pcoords : any): number;
@@ -78,7 +69,7 @@ export interface vtkCell extends VtkObject {
 
 	/**
 	 * Intersect with a ray.
-	 * 
+	 *
 	 * Return parametric coordinates (both line and cell) and global
 	 * intersection coordinates, given ray definition p1[3], p2[3] and tolerance
 	 * tol. The method returns non-zero value if intersection occurs. A
@@ -86,13 +77,13 @@ export interface vtkCell extends VtkObject {
 	 * intersection point, the point coordinates x[3] in data coordinates and
 	 * also pcoords[3] in parametric coordinates. subId is the index within the
 	 * cell if a composed cell like a triangle strip.
-	 * @param p1 
-	 * @param p2 
-	 * @param tol 
-	 * @param t 
-	 * @param x 
-	 * @param pcoords 
-	 * @param subId 
+	 * @param p1
+	 * @param p2
+	 * @param tol
+	 * @param t
+	 * @param x
+	 * @param pcoords
+	 * @param subId
 	 */
 	intersectWithLine(p1 : any, p2 : any, tol : any, t : any, x : any, pcoords : any, subId : any): void;
 
@@ -111,13 +102,13 @@ export interface vtkCell extends VtkObject {
 	 * problems for cells of topological dimension 2 or less, since a point in
 	 * 3D can project onto the cell within parametric limits but be "far" from
 	 * the cell. Thus the value dist2 may be checked to determine true in/out.
-	 * 
-	 * @param x 
-	 * @param closestPoint 
-	 * @param subId 
-	 * @param pcoords 
-	 * @param dist2 
-	 * @param weights 
+	 *
+	 * @param x
+	 * @param closestPoint
+	 * @param subId
+	 * @param pcoords
+	 * @param dist2
+	 * @param weights
 	 */
 	evaluatePosition(x : any, closestPoint : any, subId : any, pcoords : any, dist2 : any, weights : any): void;
 }
@@ -127,7 +118,7 @@ export interface vtkCell extends VtkObject {
  *
  * @param publicAPI object on which methods will be bounds (public)
  * @param model object on which data structure will be bounds (protected)
- * @param initialValues (default: {})
+ * @param {ICellInitialValues} [initialValues] (default: {})
  */
 export function extend(publicAPI: object, model: object, initialValues?: ICellInitialValues): void;
 

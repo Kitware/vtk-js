@@ -176,7 +176,7 @@ export interface vtkRenderer extends vtkViewport {
     /**
      * 
      */
-    computeVisiblePropBounds(): void;
+    computeVisiblePropBounds(): number[];
 
     /**
   * Get the active camera
@@ -297,9 +297,16 @@ export interface vtkRenderer extends vtkViewport {
      */
     getMaximumNumberOfPeels(): number;
 
-    /**
-     * 
-     */
+	/**
+	 * Return the `Modified Time` which is a monotonic increasing integer
+	 * global for all vtkObjects.
+	 *
+	 * This allow to solve a question such as:
+	 *  - Is that object created/modified after another one?
+	 *  - Do I need to re-execute this filter, or not? ...
+	 *
+	 * @returns the global modified time
+	 */
     getMTime(): number;
 
     /**
@@ -383,7 +390,7 @@ export interface vtkRenderer extends vtkViewport {
     /**
     * 
     */
-    getVTKWindow(): vtkRendererWindow;
+    getVTKWindow(): vtkRenderWindow;
 
     /**
      * Return the collection of volumes.
@@ -410,21 +417,21 @@ export interface vtkRenderer extends vtkViewport {
 
     /**
      * requires the aspect ratio of the viewport as X/Y
-     * @param x 
-     * @param y 
-     * @param z 
-     * @param aspect 
+     * @param {number} x 
+     * @param {number} y 
+     * @param {number} z 
+     * @param {number} aspect 
      */
-    normalizedDisplayToWorld(x: any, y: any, z: any, aspect: any): number[];
+    normalizedDisplayToWorld(x: number, y: number, z: number, aspect: number): number[];
 
     /**
      * 
-     * @param x 
-     * @param y 
-     * @param z 
-     * @param aspect 
+     * @param {number} x 
+     * @param {number} y 
+     * @param {number} z 
+     * @param {number} aspect 
      */
-    projectionToView(x: number, y: number, z: number, aspect: any): number[];
+    projectionToView(x: number, y: number, z: number, aspect: number): number[];
 
     /**
      * Specify the camera to use for this renderer.
@@ -464,31 +471,31 @@ export interface vtkRenderer extends vtkViewport {
 
     /**
      * 
-     * @param draw 
+     * @param {boolean} draw 
      */
     setDraw(draw: boolean): boolean;
 
     /**
      * 
-     * @param erase 
+     * @param {boolean} erase 
      */
     setErase(erase: boolean): boolean;
 
     /**
      * 
-     * @param interactive 
+     * @param {boolean} interactive 
      */
     setInteractive(interactive: boolean): boolean;
 
     /**
      * 
-     * @param layer 
+     * @param {number} layer 
      */
     setLayer(layer: number): void;
 
     /**
      * Set the collection of lights.
-     * @param lights 
+     * @param {vtkLight[]} lights 
      */
     setLightCollection(lights: vtkLight[]): void;
 
@@ -498,77 +505,75 @@ export interface vtkRenderer extends vtkViewport {
      */
     setLightFollowCamera(lightFollowCamera: boolean): boolean;
 
-
     /**
      * 
-     * @param maximumNumberOfPeels 
+     * @param {number} maximumNumberOfPeels 
      */
     setMaximumNumberOfPeels(maximumNumberOfPeels: number): boolean;
 
     /**
      * 
-     * @param nearClippingPlaneTolerance 
+     * @param {number} nearClippingPlaneTolerance 
      */
     setNearClippingPlaneTolerance(nearClippingPlaneTolerance: number): boolean;
 
     /**
      * 
-     * @param occlusionRatio 
+     * @param {number} occlusionRatio 
      */
     setOcclusionRatio(occlusionRatio: number): boolean;
 
     /**
      * 
-     * @param pass 
+     * @param {number} pass 
      */
     setPass(pass: number): boolean;
 
     /**
      * 
-     * @param preserveColorBuffer 
+     * @param {boolean} preserveColorBuffer 
      */
     setPreserveColorbuffer(preserveColorBuffer: boolean): boolean;
 
     /**
      * 
-     * @param preserveDepthBuffer 
+     * @param {boolean} preserveDepthBuffer 
      */
     setPreserveDepthbuffer(preserveDepthBuffer: boolean): boolean;
 
     /**
      * 
-     * @param texturedBackground 
+     * @param {boolean} texturedBackground 
      */
     setTexturedBackground(texturedBackground: boolean): boolean;
 
     /**
      * 
-     * @param twoSidedLighting 
+     * @param {boolean} twoSidedLighting 
      */
     setTwoSidedLighting(twoSidedLighting: boolean): boolean;
 
     /**
      * 
-     * @param useDepthPeeling 
+     * @param {boolean} useDepthPeeling 
      */
     setUseDepthPeeling(useDepthPeeling: boolean): boolean;
 
     /**
      * 
-     * @param useShadows 
+     * @param {boolean} useShadows 
      */
     setUseShadows(useShadows: boolean): boolean;
 
     /**
      * 
-     * @param renderWindow 
+     * @param {vtkRenderWindow} renderWindow 
      */
-    setRenderWindow(renderWindow: any): void;
-
+    setRenderWindow(renderWindow: vtkRenderWindow): void;
 
     /**
      * 
-     * @param actor 
+     * @param {vtkProp3D | null} actor 
      */
     removeActor(actor: vtkProp3D | null): void;
 
@@ -579,7 +584,7 @@ export interface vtkRenderer extends vtkViewport {
 
     /**
      * 
-     * @param volume 
+     * @param {vtkVolume} volume 
      */
     removeVolume(volume: vtkVolume): void;
 
@@ -588,10 +593,9 @@ export interface vtkRenderer extends vtkViewport {
      */
     removeAllVolumes(): void;
 
-
     /**
      * Remove a light from the list of lights.
-     * @param light 
+     * @param {vtkLight} light 
      */
     removeLight(light: vtkLight): void;
 
@@ -602,50 +606,50 @@ export interface vtkRenderer extends vtkViewport {
 
     /**
      * requires the aspect ratio of the viewport as X/Y
-     * @param x 
-     * @param y 
-     * @param z 
-     * @param aspect 
+     * @param {number} x 
+     * @param {number} y 
+     * @param {number} z 
+     * @param {number} aspect 
      */
     worldToNormalizedDisplay(x: number, y: number, z: number, aspect: number): number[];
 
     /**
      * requires the aspect ratio of the viewport as X/Y
-     * @param x 
-     * @param y 
-     * @param z 
+     * @param {number} x 
+     * @param {number} y 
+     * @param {number} z 
      */
     viewToWorld(x: number, y: number, z: number): number[];
 
     /**
      * Convert world point coordinates to view coordinates.
-     * @param x 
-     * @param y 
-     * @param z 
+     * @param {number} x 
+     * @param {number} y 
+     * @param {number} z 
      */
     worldToView(x: number, y: number, z: number): number[];
 
     /**
      * Convert world point coordinates to view coordinates.
      * requires the aspect ratio of the viewport as X/Y
-     * @param x 
-     * @param y 
-     * @param z 
-     * @param aspect 
+     * @param {number} x 
+     * @param {number} y 
+     * @param {number} z 
+     * @param {number} aspect 
      */
     viewToProjection(x: number, y: number, z: number, aspect: number): number[];
 
     /**
      * 
-     * @param bounds 
+     * @param {number[]} [bounds] 
      */
-    resetCamera(bounds: number[] | null): boolean;
+    resetCamera(bounds?: number[]): boolean;
 
     /**
      * 
-     * @param bounds 
+     * @param {number[]} [bounds] 
      */
-    resetCameraClippingRange(bounds: number[] | null): boolean;
+    resetCameraClippingRange(bounds?: number[]): boolean;
 
     /**
      * 
@@ -685,7 +689,7 @@ export interface vtkRenderer extends vtkViewport {
  *
  * @param publicAPI object on which methods will be bounds (public)
  * @param model object on which data structure will be bounds (protected)
- * @param initialValues (default: {})
+ * @param {IRendererInitialValues} [initialValues] (default: {})
  */
 export function extend(publicAPI: object, model: object, initialValues?: IRendererInitialValues): void;
 

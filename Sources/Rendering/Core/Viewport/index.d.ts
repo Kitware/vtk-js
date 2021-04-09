@@ -262,7 +262,7 @@ export interface vtkViewport extends VtkObject {
  *
  * @param publicAPI object on which methods will be bounds (public)
  * @param model object on which data structure will be bounds (protected)
- * @param initialValues (default: {})
+ * @param {IViewportInitialValues} [initialValues] (default: {})
  */
 export function extend(publicAPI: object, model: object, initialValues?: IViewportInitialValues): void;
 
@@ -273,16 +273,16 @@ export function newInstance(initialValues?: IViewportInitialValues): vtkViewport
 
 /** 
  * vtkViewport represents part or all of a RenderWindow. It holds a
- * colleciton of props that will be rendered into the area it represents.
+ * collection of props that will be rendered into the area it represents.
  * This class also contains methods to convert between coordinate systems
  * commonly used in rendering.
  * 
- * @see vtkActor
- * @see vtkCoordinate
- * @see vtkProp
- * @see vtkRenderer
- * @see vtkRenderWindow
- * @see vtkVolume
+ * @see [vtkActor](./Rendering_Core_Actor.html)
+ * @see [vtkCoordinate](./Rendering_Core_Coordinate.html)
+ * @see [vtkProp](./Rendering_Core_Prop.html)
+ * @see [vtkRender](./Rendering_Core_Renderer.html)
+ * @see [vtkRenderWindow](./Rendering_Core_RenderWindow.html)
+ * @see [vtkVolume](./Rendering_Core_Volume.html)
  */
 export declare const vtkViewport: {
     newInstance: typeof newInstance,

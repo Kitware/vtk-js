@@ -174,28 +174,24 @@ function vtkWebGPURenderer(publicAPI, model) {
   // Renders myself
   publicAPI.opaquePass = (prepass) => {
     if (prepass) {
-      const renDesc = model.parent.getSwapChain().getRenderPassDescription();
+      const renDesc = model.renderEncoder.getDescription();
       if (!model.renderable.getTransparent()) {
         const background = model.renderable.getBackgroundByReference();
         renDesc.colorAttachments[0].loadValue = background;
       } else {
-        renDesc.colorAttachments[0].loadValue = [0.0, 0.0, 0.0, 0.0];
+        renDesc.colorAttachments[0].loadValue = 'load';
       }
 
       if (!model.renderable.getPreserveDepthBuffer()) {
         renDesc.depthStencilAttachment.depthLoadValue = 1.0;
-        renDesc.depthStencilAttachment.depthStoreOp = 'store';
       } else {
-        // todo need to handle this case
-        // renDesc.depthStencilAttachment.depthStoreOp = 'store';
+        renDesc.depthStencilAttachment.depthLoadValue = 'load';
       }
 
       // clear last pipelines
       model.pipelineCallbacks = [];
 
-      model.renderPass = model.parent
-        .getCommandEncoder()
-        .beginRenderPass(renDesc);
+      model.renderEncoder.begin(model.parent.getCommandEncoder());
 
       publicAPI.updateUBO();
     } else {
@@ -204,35 +200,85 @@ function vtkWebGPURenderer(publicAPI, model) {
         const pStruct = model.pipelineCallbacks[i];
         const pl = pStruct.pipeline;
 
-        pl.bind(model.renderPass);
-        model.renderPass.setBindGroup(0, model.UBOBindGroup);
+        pl.bind(model.renderEncoder);
+        model.renderEncoder.setBindGroup(0, model.UBOBindGroup);
         // bind our BindGroup
         // set viewport
         const tsize = publicAPI.getTiledSizeAndOrigin();
-        model.renderPass.setViewport(
-          tsize.lowerLeftU,
-          tsize.lowerLeftV,
-          tsize.usize,
-          tsize.vsize,
-          0.0,
-          1.0
-        );
+        model.renderEncoder
+          .getHandle()
+          .setViewport(
+            tsize.lowerLeftU,
+            tsize.lowerLeftV,
+            tsize.usize,
+            tsize.vsize,
+            0.0,
+            1.0
+          );
         // set scissor
-        model.renderPass.setScissorRect(
-          tsize.lowerLeftU,
-          tsize.lowerLeftV,
-          tsize.usize,
-          tsize.vsize
-        );
-
-        // renderPass.setPipeline(renderPipeline);
+        model.renderEncoder
+          .getHandle()
+          .setScissorRect(
+            tsize.lowerLeftU,
+            tsize.lowerLeftV,
+            tsize.usize,
+            tsize.vsize
+          );
 
         for (let cb = 0; cb < pStruct.callbacks.length; cb++) {
           pStruct.callbacks[cb](pl);
         }
       }
 
-      model.renderPass.endPass();
+      model.renderEncoder.end();
+    }
+  };
+
+  publicAPI.translucentPass = (prepass) => {
+    if (prepass) {
+      // clear last pipelines
+      model.pipelineCallbacks = [];
+
+      model.renderEncoder.begin(model.parent.getCommandEncoder());
+
+      publicAPI.updateUBO();
+    } else {
+      // loop over registered pipelines
+      for (let i = 0; i < model.pipelineCallbacks.length; i++) {
+        const pStruct = model.pipelineCallbacks[i];
+        const pl = pStruct.pipeline;
+
+        pl.bind(model.renderEncoder);
+        model.renderEncoder.setBindGroup(0, model.UBOBindGroup);
+        // bind our BindGroup
+        // set viewport
+        const tsize = publicAPI.getTiledSizeAndOrigin();
+        model.renderEncoder
+          .getHandle()
+          .setViewport(
+            tsize.lowerLeftU,
+            tsize.lowerLeftV,
+            tsize.usize,
+            tsize.vsize,
+            0.0,
+            1.0
+          );
+        // set scissor
+        model.renderEncoder
+          .getHandle()
+          .setScissorRect(
+            tsize.lowerLeftU,
+            tsize.lowerLeftV,
+            tsize.usize,
+            tsize.vsize
+          );
+
+        for (let cb = 0; cb < pStruct.callbacks.length; cb++) {
+          pStruct.callbacks[cb](pl);
+        }
+      }
+
+      model.renderEncoder.end();
     }
   };
 
@@ -314,6 +360,7 @@ const DEFAULT_VALUES = {
   context: null,
   selector: null,
   UBOData: null,
+  renderEncoder: null,
 };
 
 // ----------------------------------------------------------------------------
@@ -331,9 +378,7 @@ export function extend(publicAPI, model, initialValues = {}) {
   model.tmpMat4 = mat4.identity(new Float64Array(16));
 
   // Build VTK API
-  macro.get(publicAPI, model, ['renderPass']);
-
-  macro.setGet(publicAPI, model, ['selector']);
+  macro.setGet(publicAPI, model, ['renderEncoder', 'selector']);
 
   // Object methods
   vtkWebGPURenderer(publicAPI, model);

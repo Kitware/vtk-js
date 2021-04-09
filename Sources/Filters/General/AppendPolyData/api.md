@@ -1,4 +1,5 @@
 ## Introduction
+
 vtkAppendPolyData - append one or more polygonal datasets together
 
 vtkAppendPolyData is a filter that appends one of more polygonal datasets into a
@@ -7,6 +8,7 @@ cell attributes (i.e., scalars, vectors, normals) are extracted and appended
 only if all datasets have the point and/or cell attributes available.  (For
 example, if one dataset has point scalars but another does not, point scalars
 will not be appended.)
+
 
 ## Usage
 
@@ -26,15 +28,56 @@ appendPolyData.addInputConnection(cylinder.getOutputPort());
 const appendedData = appendPolyData.getOutputData();
 ```
 
-## Public API
 
-### OutputPointsPrecision (set/get)
+## Methods
 
-Set / get the desired precision for the output types.
-Available options for desired output precision are:
 
-- `DEFAULT`: Output precision should match the input precision
-- `SINGLE`: Output single-precision floating-point (i.e. float32)
-- `DOUBLE`: Output double-precision floating point (i.e. float64)
+### extend
 
-See the documentation for [vtkDataArray::getDataType()](../api/Common_Core_DataArray.html#getDataType-String) for additional data type settings.
+Method used to decorate a given object (publicAPI+model) with vtkAppendPolyData characteristics.
+
+
+| Argument | Type | Description |
+| ------------- | ------------- | ----- |
+| **publicAPI** | <span class="arg-type"></span></br></span><span class="arg-required">required</span> | object on which methods will be bounds (public) |
+| **model** | <span class="arg-type"></span></br></span><span class="arg-required">required</span> | object on which data structure will be bounds (protected) |
+| **initialValues** | <span class="arg-type"></span></br></span><span class="arg-required">required</span> | (default: {}) |
+
+
+### getOutputPointsPrecision
+
+Get the desired precision for the output types.
+
+
+
+### newInstance
+
+Method used to create a new instance of vtkAppendPolyData
+
+
+| Argument | Type | Description |
+| ------------- | ------------- | ----- |
+| **initialValues** | <span class="arg-type"></span></br></span><span class="arg-required">required</span> | for pre-setting some of its content |
+
+
+### requestData
+
+
+
+
+| Argument | Type | Description |
+| ------------- | ------------- | ----- |
+| **inData** | <span class="arg-type"></span></br></span><span class="arg-required">required</span> |  |
+| **outData** | <span class="arg-type"></span></br></span><span class="arg-required">required</span> |  |
+
+
+### setOutputPointsPrecision
+
+Set the desired precision for the output types.
+
+
+| Argument | Type | Description |
+| ------------- | ------------- | ----- |
+| **outputPointsPrecision** | <span class="arg-type"></span></br></span><span class="arg-required">required</span> |  |
+
+

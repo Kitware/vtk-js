@@ -99,7 +99,14 @@ export interface vtkImageSlice extends vtkProp3D {
 	getMaxZBound(): number;
 
 	/**
-	 * 
+	 * Return the `Modified Time` which is a monotonic increasing integer
+	 * global for all vtkObjects.
+	 *
+	 * This allow to solve a question such as:
+	 *  - Is that object created/modified after another one?
+	 *  - Do I need to re-execute this filter, or not? ...
+	 *
+	 * @returns the global modified time
 	 */
 	getMTime(): number;
 
@@ -130,7 +137,7 @@ export interface vtkImageSlice extends vtkProp3D {
  *
  * @param publicAPI object on which methods will be bounds (public)
  * @param model object on which data structure will be bounds (protected)
- * @param initialValues (default: {})
+ * @param {IImageSliceInitialValues} [initialValues] (default: {})
  */
 export function extend(publicAPI: object, model: object, initialValues?: IImageSliceInitialValues): void;
 

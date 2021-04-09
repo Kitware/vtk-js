@@ -4,40 +4,22 @@ import {
 } from 'vtk.js/Sources/macro';
 
 /**
- * 
+ *
  */
 interface ILineSourceInitialValues {
-
-	/**
-	 * 
-	 */
 	resolution?: number;
-		
-	 /**
-	  * 
-	  */
 	point1?: number[];
-		 
-	 /**
-	  * 
-	  */
 	point2?: number[];
-		 
-	 /**
-	  * 
-	  */
 	pointType?: string;
 }
 
-type vtkAlgorithm = VtkObject & Pick<VtkAlgorithm,
-	'getNumberOfInputPorts' |
-	'getNumberOfOutputPorts' |
-	'getInputArrayToProcess' |
-	'getOutputData' |
-	'getOutputPort' |
-	'setInputArrayToProcess' |
-	'shouldUpdate' |
-	'update'> ;
+type vtkAlgorithm = VtkObject & Omit<VtkAlgorithm,
+	'getInputData' |
+	'setInputData' |
+	'setInputConnection' |
+	'getInputConnection' |
+	'addInputConnection' |
+	'addInputData' > ;
 
 export interface vtkLineSource extends vtkAlgorithm {
 
@@ -71,42 +53,42 @@ export interface vtkLineSource extends vtkAlgorithm {
 
 	/**
 	 * Expose methods
-	 * @param inData 
-	 * @param outData 
+	 * @param inData
+	 * @param outData
 	 */
 	requestData(inData: any, outData: any): void;
 
 	/**
-	 * 
-	 * @param x 
-	 * @param y 
-	 * @param z 
+	 *
+	 * @param x
+	 * @param y
+	 * @param z
 	 */
 	setPoint1(x: number, y: number, z: number): boolean;
 
 	/**
-	 * 
-	 * @param direction 
+	 *
+	 * @param direction
 	 */
 	setPoint1From(direction: number[]): boolean;
 
 	/**
-	 * 
-	 * @param x 
-	 * @param y 
-	 * @param z 
+	 *
+	 * @param x
+	 * @param y
+	 * @param z
 	 */
 	setPoint2(x: number, y: number, z: number): boolean;
 
 	/**
-	 * 
-	 * @param direction 
+	 *
+	 * @param direction
 	 */
 	setPoint2From(direction: number[]): boolean;
 
 	/**
 	 * Set the number of facets used to represent the cone.
-	 * @param resolution 
+	 * @param resolution
 	 */
 	setResolution(resolution: number): boolean;
 }
@@ -116,7 +98,7 @@ export interface vtkLineSource extends vtkAlgorithm {
  *
  * @param publicAPI object on which methods will be bounds (public)
  * @param model object on which data structure will be bounds (protected)
- * @param initialValues (default: {})
+ * @param {ILineSourceInitialValues} [initialValues] (default: {})
  */
 export function extend(publicAPI: object, model: object, initialValues?: ILineSourceInitialValues): void;
 
@@ -127,9 +109,9 @@ export function extend(publicAPI: object, model: object, initialValues?: ILineSo
 export function newInstance(initialValues?: ILineSourceInitialValues): vtkLineSource;
 
 /**
- * vtkLineSource creates a polygonal cylinder centered at Center; 
- * The axis of the cylinder is aligned along the global y-axis. 
- * The height and radius of the cylinder can be specified, as well as the number of sides. 
+ * vtkLineSource creates a polygonal cylinder centered at Center;
+ * The axis of the cylinder is aligned along the global y-axis.
+ * The height and radius of the cylinder can be specified, as well as the number of sides.
  * It is also possible to control whether the cylinder is open-ended or capped.
  * If you have the end points of the cylinder, you should use a vtkLineSource followed by a vtkTubeFilter instead of the vtkLineSource.
  */

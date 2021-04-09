@@ -1,10 +1,11 @@
 import { VtkObject } from "vtk.js/Sources/macro";
+import vtkRenderer from "vtk.js/Sources/Rendering/Core/Renderer";
 
 export enum Device {
     Unknown,
     LeftController,
     RightController,
-};
+}
 
 export enum Input {
     Unknown,
@@ -12,69 +13,29 @@ export enum Input {
     TrackPad,
     Grip,
     ApplicationMenu,
-};
+}
 
-export type IRenderWindowInteractorInitialValues = {
-    /**
-     * 
-     */
-    initialized: boolean;
-
-    /**
-     * 
-     */
-    enabled: boolean;
-
-    /**
-     * 
-     */
-    enableRender: boolean;
-
-    /**
-     * 
-     */
-    lightFollowCamera: boolean;
-
-    /**
-     * 
-     */
-    desiredUpdateRate: number;
-
-    /**
-     * 
-     */
-    stillUpdateRate: number;
-
-    /**
-     * 
-     */
-    recognizeGestures: boolean;
-
-    /**
-     * 
-     */
-    currentGesture: string;
-
-    /**
-     * 
-     */
-    lastFrameTime: number;
-
-    /**
-     * 
-     */
-    wheelTimeoutID: number;
-
-    /**
-     * 
-     */
-    moveTimeoutID: number;
+/**
+ *
+ */
+interface IRenderWindowInteractorInitialValues {
+    initialized?: boolean;
+    enabled?: boolean;
+    enableRender?: boolean;
+    lightFollowCamera?: boolean;
+    desiredUpdateRate?: number;
+    stillUpdateRate?: number;
+    recognizeGestures?: boolean;
+    currentGesture?: string;
+    lastFrameTime?: number;
+    wheelTimeoutID?: number;
+    moveTimeoutID?: number;
 }
 
 interface IPosition {
 
     /**
-     * 
+     *
      */
     type: string;
 }
@@ -125,29 +86,29 @@ export interface vtkRenderWindowInteractor extends VtkObject {
     getView(): any;
 
     /**
-     * 
-     * @default true 
+     *
+     * @default true
      */
     getLightFollowCamera(): boolean;
 
     /**
-     * 
+     *
      */
     getPicker(): any;
 
     /**
-     * 
+     *
      * @default true
      */
     getRecognizeGestures(): boolean;
     /**
-     * 
+     *
      * @default 30.0
      */
     getDesiredUpdateRate(): number;
 
     /**
-     * 
+     *
      * @default 2.0
      */
     getStillUpdateRate(): number;
@@ -334,490 +295,490 @@ export interface vtkRenderWindowInteractor extends VtkObject {
 
     /**
      *
-     * @param args 
+     * @param args
      */
     onStartAnimation(args: any): any;
 
     /**
      *
-     * @param args 
+     * @param args
      */
     onAnimation(args: any): any;
 
     /**
      *
-     * @param args 
+     * @param args
      */
     onEndAnimation(args: any): any;
 
     /**
      *
-     * @param args 
+     * @param args
      */
     onMouseEnter(args: any): any;
 
     /**
      *
-     * @param args 
+     * @param args
      */
     onMouseLeave(args: any): any;
 
     /**
      *
-     * @param args 
+     * @param args
      */
     onStartMouseMove(args: any): any;
 
     /**
      *
-     * @param args 
+     * @param args
      */
     onMouseMove(args: any): any;
 
     /**
      *
-     * @param args 
+     * @param args
      */
     onEndMouseMove(args: any): any;
 
     /**
      *
-     * @param args 
+     * @param args
      */
     onLeftButtonPress(args: any): any;
 
     /**
      *
-     * @param args 
+     * @param args
      */
     onLeftButtonRelease(args: any): any;
 
     /**
      *
-     * @param args 
+     * @param args
      */
     onMiddleButtonPress(args: any): any;
 
     /**
      *
-     * @param args 
+     * @param args
      */
     onMiddleButtonRelease(args: any): any;
 
     /**
      *
-     * @param args 
+     * @param args
      */
     onRightButtonPress(args: any): any;
 
     /**
      *
-     * @param args 
+     * @param args
      */
     onRightButtonRelease(args: any): any;
 
     /**
      *
-     * @param args 
+     * @param args
      */
     onKeyPress(args: any): any;
 
     /**
      *
-     * @param args 
+     * @param args
      */
     onKeyDown(args: any): any;
 
     /**
      *
-     * @param args 
+     * @param args
      */
     onKeyUp(args: any): any;
 
     /**
      *
-     * @param args 
+     * @param args
      */
     onStartMouseWheel(args: any): any;
 
     /**
      *
-     * @param args 
+     * @param args
      */
     onMouseWheel(args: any): any;
 
     /**
      *
-     * @param args 
+     * @param args
      */
     onEndMouseWheel(args: any): any;
 
     /**
      *
-     * @param args 
+     * @param args
      */
     onStartPinch(args: any): any;
 
     /**
      *
-     * @param args 
+     * @param args
      */
     onPinch(args: any): any;
 
     /**
      *
-     * @param args 
+     * @param args
      */
     onEndPinch(args: any): any;
 
     /**
      *
-     * @param args 
+     * @param args
      */
     onStartPan(args: any): any;
 
     /**
      *
-     * @param args 
+     * @param args
      */
     onPan(args: any): any;
 
     /**
      *
-     * @param args 
+     * @param args
      */
     onEndPan(args: any): any;
 
     /**
      *
-     * @param args 
+     * @param args
      */
     onStartRotate(args: any): any;
 
     /**
      *
-     * @param args 
+     * @param args
      */
     onRotate(args: any): any;
 
     /**
      *
-     * @param args 
+     * @param args
      */
     onEndRotate(args: any): any;
 
     /**
      *
-     * @param args 
+     * @param args
      */
     onButton3D(args: any): any;
 
     /**
      *
-     * @param args 
+     * @param args
      */
     onMove3D(args: any): any;
 
     /**
      *
-     * @param args 
+     * @param args
      */
     onStartPointerLock(args: any): any;
 
     /**
      *
-     * @param args 
+     * @param args
      */
     onEndPointerLock(args: any): any;
 
     /**
      *
-     * @param args 
+     * @param args
      */
     onStartInteractionEvent(args: any): any;
 
     /**
      *
-     * @param args 
+     * @param args
      */
     onInteractionEvent(args: any): any;
 
     /**
      *
-     * @param args 
+     * @param args
      */
     onEndInteractionEvent(args: any): any;
 
     /**
      *
-     * @param args 
+     * @param args
      */
     animationEvent(args: any): any;
 
     /**
      *
-     * @param args 
+     * @param args
      */
     button3DEvent(args: any): any;
 
     /**
      *
-     * @param args 
+     * @param args
      */
     endAnimationEvent(args: any): any;
 
     /**
      *
-     * @param args 
+     * @param args
      */
     endInteractionEventEvent(args: any): any;
 
     /**
      *
-     * @param args 
+     * @param args
      */
     endMouseMoveEvent(args: any): any;
 
     /**
      *
-     * @param args 
+     * @param args
      */
     endMouseWheelEvent(args: any): any;
 
     /**
      *
-     * @param args 
+     * @param args
      */
     endPanEvent(args: any): any;
 
     /**
      *
-     * @param args 
+     * @param args
      */
     endPinchEvent(args: any): any;
 
     /**
      *
-     * @param args 
+     * @param args
      */
     endPointerLockEvent(args: any): any;
 
     /**
      *
-     * @param args 
+     * @param args
      */
     endRotateEvent(args: any): any;
 
     /**
      *
-     * @param args 
+     * @param args
      */
     interactionEventEvent(args: any): any;
 
     /**
      *
-     * @param args 
+     * @param args
      */
     keyDownEvent(args: any): any;
 
     /**
      *
-     * @param args 
+     * @param args
      */
     keyPressEvent(args: any): any;
 
     /**
      *
-     * @param args 
+     * @param args
      */
     keyUpEvent(args: any): any;
 
     /**
      *
-     * @param args 
+     * @param args
      */
     leftButtonPressEvent(args: any): any;
 
     /**
      *
-     * @param args 
+     * @param args
      */
     leftButtonReleaseEvent(args: any): any;
 
     /**
      *
-     * @param args 
+     * @param args
      */
     middleButtonPressEvent(args: any): any;
 
     /**
      *
-     * @param args 
+     * @param args
      */
     middleButtonReleaseEvent(args: any): any;
 
     /**
      *
-     * @param args 
+     * @param args
      */
     mouseEnterEvent(args: any): any;
 
     /**
      *
-     * @param args 
+     * @param args
      */
     mouseLeaveEvent(args: any): any;
 
     /**
      *
-     * @param args 
+     * @param args
      */
     mouseMoveEvent(args: any): any;
 
     /**
      *
-     * @param args 
+     * @param args
      */
     mouseWheelEvent(args: any): any;
 
     /**
      *
-     * @param args 
+     * @param args
      */
     move3DEvent(args: any): any;
 
     /**
      *
-     * @param args 
+     * @param args
      */
     panEvent(args: any): any;
 
     /**
      *
-     * @param args 
+     * @param args
      */
     pinchEvent(args: any): any;
 
     /**
      *
-     * @param args 
+     * @param args
      */
     rightButtonPressEvent(args: any): any;
 
     /**
      *
-     * @param args 
+     * @param args
      */
     rightButtonReleaseEvent(args: any): any;
 
     /**
      *
-     * @param args 
+     * @param args
      */
     rotateEvent(args: any): any;
 
     /**
      * Turn on/off the automatic repositioning of lights as the camera moves.
-     * @param lightFollowCamera 
+     * @param lightFollowCamera
      */
     setLightFollowCamera(lightFollowCamera: boolean): boolean;
 
     /**
      * Set the object used to perform pick operations.
-     * @param picker 
+     * @param picker
      */
     setPicker(picker: any): boolean;
 
     /**
-     * 
-     * @param recognizeGestures 
+     *
+     * @param recognizeGestures
      */
     setRecognizeGestures(recognizeGestures: boolean): boolean;
 
     /**
      * Set the desired update rate.
-     * @param desiredUpdateRate 
+     * @param desiredUpdateRate
      */
     setDesiredUpdateRate(desiredUpdateRate: number): boolean;
 
     /**
      * Set the desired update rate when movement has stopped.
-     * @param stillUpdateRate 
+     * @param stillUpdateRate
      */
     setStillUpdateRate(stillUpdateRate: number): boolean;
 
     /**
      * Start the event loop.
-     * This is provided so that you do not have to implement your own event loop. 
+     * This is provided so that you do not have to implement your own event loop.
      * You still can use your own event loop if you want.
      */
     start(): void;
 
     /**
      *
-     * @param args 
+     * @param args
      */
     startAnimationEvent(args: any): any;
 
 
     /**
      *
-     * @param args 
+     * @param args
      */
     startInteractionEventEvent(args: any): any;
 
 
     /**
      *
-     * @param args 
+     * @param args
      */
     startMouseMoveEvent(args: any): any;
 
 
     /**
      *
-     * @param args 
+     * @param args
      */
     startMouseWheelEvent(args: any): any;
 
 
     /**
      *
-     * @param args 
+     * @param args
      */
     startPanEvent(args: any): any;
 
 
     /**
      *
-     * @param args 
+     * @param args
      */
     startPinchEvent(args: any): any;
 
 
     /**
      *
-     * @param args 
+     * @param args
      */
     startPointerLockEvent(args: any): any;
 
 
     /**
      *
-     * @param args 
+     * @param args
      */
     startRotateEvent(args: any): any;
 
 
     /**
      * Set/Get the rendering window being controlled by this object.
-     * @param aren 
+     * @param aren
      */
     setRenderWindow(aren: any): void;
 
     /**
      * External switching between joystick/trackball/new? modes.
-     * @param style 
+     * @param style
      */
     setInteractorStyle(style: any): void;
 
@@ -828,184 +789,189 @@ export interface vtkRenderWindowInteractor extends VtkObject {
 
     /**
      * Enable/Disable interactions.
-     * By default interactors are enabled when initialized. 
+     * By default interactors are enabled when initialized.
      * Initialize() must be called prior to enabling/disabling interaction.
-     * These methods are used when a window/widget is being shared by multiple renderers and interactors. 
+     * These methods are used when a window/widget is being shared by multiple renderers and interactors.
      * This allows a "modal" display where one interactor is active when its data is to be displayed and all other interactors associated with the widget are disabled when their data is not displayed.
      */
     enable(): void;
 
     /**
-     * 
+     *
      */
     disable(): void;
 
     /**
-     * 
+     *
      */
     startEventLoop(): void;
 
     /**
-     * 
+     *
      */
     getCurrentRenderer(): void;
 
     /**
-     * 
-     * @param container 
+     *
+     * @param container
      */
     bindEvents(container: any): void;
 
     /**
-     * 
+     *
      */
     unbindEvents(): void;
 
     /**
-     * 
-     * @param event 
+     *
+     * @param event
      */
     handleKeyPress(event: any): void;
 
     /**
-     * 
-     * @param event 
+     *
+     * @param event
      */
     handleKeyDown(event: any): void;
 
     /**
-     * 
-     * @param event 
+     *
+     * @param event
      */
     handleKeyUp(event: any): void;
 
     /**
-     * 
-     * @param event 
+     *
+     * @param event
      */
     handleMouseDown(event: any): void;
 
     /**
-     * 
+     *
      */
     requestPointerLock(): void;
 
     /**
-     * 
+     *
      */
     exitPointerLock(): void;
 
     /**
-     * 
-     * @return  
+     *
+     * @return
      */
     isPointerLocked(): boolean;
 
     /**
-     * 
+     *
      */
     handlePointerLockChange(): void;
 
     /**
-     * 
-     * @param requestor 
+     *
+     * @param requestor
      */
     requestAnimation(requestor: any): void;
 
     /**
-     * 
-     * @return  
+     *
+     * @return
      */
     isAnimating(): boolean;
 
     /**
-     * 
-     * @param requestor 
-     * @param skipWarning 
+     *
+     * @param requestor
+     * @param skipWarning
      */
     cancelAnimation(requestor: any, skipWarning: any): void;
 
     /**
-     * 
+     *
      */
     switchToVRAnimation(): void;
 
     /**
-     * 
+     *
      */
     returnFromVRAnimation(): void;
 
     /**
-     * 
-     * @param displayId 
+     *
+     * @param displayId
      */
     updateGamepads(displayId: any): void;
 
     /**
-     * 
-     * @param event 
+     *
+     * @param event
      */
     handleMouseMove(event: any): void;
 
     /**
-     * 
+     *
      */
     handleAnimation(): void;
 
     /**
-     * 
-     * @param event 
+     *
+     * @param event
      */
     handleWheel(event: any): void;
 
     /**
-     * 
-     * @param event 
+     *
+     * @param event
      */
     handleMouseEnter(event: any): void;
 
     /**
-     * 
-     * @param event 
+     *
+     * @param event
      */
     handleMouseLeave(event: any): void;
 
     /**
-     * 
-     * @param event 
+     *
+     * @param event
      */
     handleMouseUp(event: any): void;
 
     /**
-     * 
-     * @param event 
+     *
+     * @param event
      */
     handleTouchStart(event: any): void;
 
     /**
-     * 
-     * @param event 
+     *
+     * @param event
      */
     handleTouchMove(event: any): void;
 
     /**
-     * 
-     * @param event 
+     *
+     * @param event
      */
     handleTouchEnd(event: any): void;
 
     /**
-     * 
-     * @param val 
+     *
+     * @param val
      */
     setView(val: any): void;
 
     /**
-     * 
-     * @param x 
-     * @param y 
+     * @returns first renderer to be used for camera manipulation
      */
-    findPokedRenderer(x: number, y: number): void;
+    getFirstRenderer(): vtkRenderer; // return vtkRenderer
+
+    /**
+     *
+     * @param x
+     * @param y
+     */
+    findPokedRenderer(x: number, y: number): vtkRenderer;
 
     /**
      * only render if we are not animating. If we are animating
@@ -1017,13 +983,13 @@ export interface vtkRenderWindowInteractor extends VtkObject {
 
     /**
      * we know we are in multitouch now, so start recognizing
-     * @param event 
-     * @param positions 
+     * @param event
+     * @param positions
      */
     recognizeGesture(event: string, positions: IPosition): void;
 
     /**
-     * 
+     *
      */
     handleVisibilityChange(): void;
 
@@ -1039,29 +1005,35 @@ export interface vtkRenderWindowInteractor extends VtkObject {
  *
  * @param publicAPI object on which methods will be bounds (public)
  * @param model object on which data structure will be bounds (protected)
- * @param initialValues (default: {})
+ * @param {IRenderWindowInteractorInitialValues} [initialValues] (default: {})
  */
 export function extend(publicAPI: object, model: object, initialValues?: IRenderWindowInteractorInitialValues): void;
 
 /**
- * Method use to create a new instance of vtkRenderWindowInteractor 
+ * Method use to create a new instance of vtkRenderWindowInteractor
  */
 export function newInstance(initialValues?: IRenderWindowInteractorInitialValues): vtkRenderWindowInteractor;
 
-/** 
- * vtkRenderWindow is an abstract object to specify the behavior of a rendering window. 
- * A rendering window is a window in a graphical user interface where renderers draw their images. 
- * Methods are provided to synchronize the rendering process, set window size, and control double buffering. 
- * The window also allows rendering in stereo. The interlaced render stereo type is for output to a VRex stereo projector.
- * All of the odd horizontal lines are from the left eye, and the even lines are from the right eye. 
- * The user has to make the render window aligned with the VRex projector, or the eye will be swapped.
+/**
+ * vtkRenderWindowInteractor provides an interaction mechanism for
+ * mouse/key/time events. It handles routing of mouse/key/timer messages to
+ * vtkInteractorObserver and its subclasses. vtkRenderWindowInteractor also
+ * provides controls for picking, rendering frame rate.
+ *
+ * vtkRenderWindowInteractor serves to hold user preferences and route messages
+ * to vtkInteractorStyle. Callbacks are available for many events. Platform
+ * specific subclasses should provide methods for manipulating timers,
+ * TerminateApp, and an event loop if required via
+ *
+ * Initialize/Start/Enable/Disable.
+ *
+ * ## Caveats
  * 
- * @see vtkActor
- * @see vtkCoordinate
- * @see vtkProp
- * @see vtkRenderer
- * @see vtkRenderWindow
- * @see vtkVolume
+ * vtkRenderWindowInteractor routes events through VTK’s command/observer design
+ * pattern. That is, when vtkRenderWindowInteractor (actually, one of its
+ * subclasses) sees an event, it translates it into a VTK event using the
+ * InvokeEvent() method. Afterward, any vtkInteractorObservers registered for
+ * that event are expected to respond appropriately.
  */
 export declare const vtkRenderWindowInteractor: {
     newInstance: typeof newInstance,
