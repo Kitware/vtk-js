@@ -70,6 +70,7 @@ export default function widgetBehavior(publicAPI, model) {
 
     if (
       model.pickable &&
+      model.dragable &&
       model.manipulator &&
       model.activeState &&
       model.activeState.getActive() &&
