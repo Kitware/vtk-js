@@ -4,6 +4,7 @@ import macro from 'vtk.js/Sources/macro';
 import Base64 from 'vtk.js/Sources/Common/Core/Base64';
 import Endian from 'vtk.js/Sources/Common/Core/Endian';
 import { DataTypeByteSize } from 'vtk.js/Sources/Common/Core/DataArray/Constants';
+import { registerType } from 'vtk.js/Sources/IO/Core/DataAccessHelper';
 
 const { vtkErrorMacro, vtkDebugMacro } = macro;
 
@@ -131,10 +132,14 @@ function fetchImage(instance = {}, url, options = {}) {
 
 // ----------------------------------------------------------------------------
 
-// Export fetch methods
-export default {
+const HtmlDataAccessHelper = {
   fetchJSON,
   fetchText,
   fetchArray,
   fetchImage,
 };
+
+registerType('html', (options) => HtmlDataAccessHelper);
+
+// Export fetch methods
+export default HtmlDataAccessHelper;

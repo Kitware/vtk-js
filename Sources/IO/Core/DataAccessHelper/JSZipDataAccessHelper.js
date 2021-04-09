@@ -4,6 +4,7 @@ import pako from 'pako';
 import macro from 'vtk.js/Sources/macro';
 import Endian from 'vtk.js/Sources/Common/Core/Endian';
 import { DataTypeByteSize } from 'vtk.js/Sources/Common/Core/DataArray/Constants';
+import { registerType } from 'vtk.js/Sources/IO/Core/DataAccessHelper';
 
 const { vtkErrorMacro, vtkDebugMacro } = macro;
 
@@ -245,6 +246,10 @@ function create(createOptions) {
   };
 }
 
-export default {
+const JSZipDataAccessHelper = {
   create,
 };
+
+registerType('zip', (options) => JSZipDataAccessHelper.create(options));
+
+export default JSZipDataAccessHelper;
