@@ -2,7 +2,7 @@ const path = require('path');
 const prettierConf = require('./prettier.config.js');
 
 module.exports = {
-  extends: ['airbnb', 'prettier'],
+  extends: ['airbnb/base', 'prettier'],
   rules: {
     'prettier/prettier': ['error', prettierConf],
 
