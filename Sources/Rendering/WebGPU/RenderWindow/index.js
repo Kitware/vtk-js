@@ -65,18 +65,6 @@ function vtkWebGPURenderWindow(publicAPI, model) {
     }
   };
 
-  publicAPI.getPipeline = (hash) => {
-    if (hash in model.pipelines) {
-      return model.pipelines[hash];
-    }
-    return null;
-  };
-
-  publicAPI.createPipeline = (hash, pipeline) => {
-    pipeline.initialize(publicAPI);
-    model.pipelines[hash] = pipeline;
-  };
-
   // Builds myself.
   publicAPI.buildPass = (prepass) => {
     if (prepass) {
@@ -99,6 +87,21 @@ function vtkWebGPURenderWindow(publicAPI, model) {
       model.commandEncoder = model.device.createCommandEncoder();
     }
   };
+
+  // publicAPI.traverseRenderers = (renPass) => {
+  //   // iterate over renderers
+  //   const numlayers = publicAPI.getRenderable().getNumberOfLayers();
+  //   const renderers = publicAPI.getChildren();
+  //   for (let i = 0; i < numlayers; i++) {
+  //     for (let index = 0; index < renderers.length; index++) {
+  //       const renNode = renderers[index];
+  //       const ren = publicAPI.getRenderable().getRenderers()[index];
+  //       if (ren.getDraw() && ren.getLayer() === i) {
+  //         renNode.traverse(renPass);
+  //       }
+  //     }
+  //   }
+  // };
 
   publicAPI.initialize = () => {
     if (!model.initializing) {
@@ -444,7 +447,6 @@ const DEFAULT_VALUES = {
   device: null,
   canvas: null,
   swapChain: null,
-  pipelines: null,
   cullFaceEnabled: false,
   depthMaskEnabled: true,
   size: [300, 300],
@@ -480,7 +482,6 @@ export function extend(publicAPI, model, initialValues = {}) {
   model.bgImage.style.zIndex = '-1';
 
   model.swapChain = vtkWebGPUSwapChain.newInstance();
-  model.pipelines = {};
 
   // Inheritance
   vtkViewNode.extend(publicAPI, model, initialValues);

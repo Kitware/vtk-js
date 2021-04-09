@@ -110,9 +110,6 @@ function vtkWebGPUActor(publicAPI, model) {
     }
   };
 
-  publicAPI.opaqueZBufferPass = (prepass, renderPass) =>
-    publicAPI.opaquePass(prepass, renderPass);
-
   publicAPI.opaquePass = (prepass, renderPass) => {
     if (prepass) {
       publicAPI.activateTextures();

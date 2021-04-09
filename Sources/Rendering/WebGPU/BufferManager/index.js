@@ -212,7 +212,6 @@ function packArray(
   let getData = (ptId, cellId) => pointData[ptId];
   if (options.cellData) {
     getData = (ptId, cellId) => pointData[cellId];
-    console.log('has celldata');
   }
 
   // add data based on number of components
@@ -508,6 +507,31 @@ function vtkWebGPUBufferManager(publicAPI, model) {
     }
     return buffer;
   };
+
+  publicAPI.getFullScreenQuadBuffer = () => {
+    if (model.fullScreenQuadBuffer) {
+      return model.fullScreenQuadBuffer;
+    }
+
+    model.fullScreenQuadBuffer = vtkWebGPUBuffer.newInstance();
+    model.fullScreenQuadBuffer.setDevice(model.device);
+
+    // prettier-ignore
+    const array = new Float32Array([
+      -1.0, -1.0, 1.0,
+       1.0, -1.0, 1.0,
+       1.0, 1.0, 1.0,
+      -1.0, -1.0, 1.0,
+       1.0, 1.0, 1.0,
+      -1.0, 1.0, 1.0,
+    ]);
+    model.fullScreenQuadBuffer.createAndWrite(array, GPUBufferUsage.VERTEX);
+    model.fullScreenQuadBuffer.setStrideInBytes(12);
+    model.fullScreenQuadBuffer.setArrayInformation([
+      { offset: 0, format: 'float32x3' },
+    ]);
+    return model.fullScreenQuadBuffer;
+  };
 }
 
 // ----------------------------------------------------------------------------
@@ -516,6 +540,7 @@ function vtkWebGPUBufferManager(publicAPI, model) {
 
 const DEFAULT_VALUES = {
   device: null,
+  fullScreenQuadBuffer: null,
 };
 
 // ----------------------------------------------------------------------------
