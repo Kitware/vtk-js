@@ -1,3 +1,9 @@
+// Bundle size management - start
+import './DataAccessHelper/HtmlDataAccessHelper';
+import './DataAccessHelper/HttpDataAccessHelper';
+import './DataAccessHelper/JSZipDataAccessHelper';
+// Bundle size management - end
+
 import BinaryHelper from './BinaryHelper';
 import DataAccessHelper from './DataAccessHelper';
 import vtkHttpDataSetReader from './HttpDataSetReader';

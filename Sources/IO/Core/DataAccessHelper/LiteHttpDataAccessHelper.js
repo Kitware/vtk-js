@@ -1,5 +1,3 @@
-import pako from 'pako';
-
 import macro from 'vtk.js/Sources/macro';
 import Endian from 'vtk.js/Sources/Common/Core/Endian';
 import { DataTypeByteSize } from 'vtk.js/Sources/Common/Core/DataArray/Constants';
@@ -7,8 +5,18 @@ import { registerType } from 'vtk.js/Sources/IO/Core/DataAccessHelper';
 
 const { vtkErrorMacro, vtkDebugMacro } = macro;
 
-/* eslint-disable prefer-promise-reject-errors */
+const REJECT_COMPRESSION = () => {
+  vtkErrorMacro(
+    'LiteHttpDataAccessHelper does not support compression. Need to register HttpDataAccessHelper instead.'
+  );
+  return Promise.reject(
+    new Error(
+      'LiteHttpDataAccessHelper does not support compression. Need to register HttpDataAccessHelper instead.'
+    )
+  );
+};
 
+/* eslint-disable prefer-promise-reject-errors */
 let requestCount = 0;
 
 function openAsyncXHR(method, url, options = {}) {
@@ -49,13 +57,13 @@ function fetchBinary(url, options = {}) {
 }
 
 function fetchArray(instance = {}, baseURL, array, options = {}) {
+  if (options && options.compression) {
+    return REJECT_COMPRESSION();
+  }
+
   if (array.ref && !array.ref.pending) {
     return new Promise((resolve, reject) => {
-      const url = [
-        baseURL,
-        array.ref.basepath,
-        options.compression ? `${array.ref.id}.gz` : array.ref.id,
-      ].join('/');
+      const url = [baseURL, array.ref.basepath, array.ref.id].join('/');
       const xhr = openAsyncXHR('GET', url, options);
 
       xhr.onreadystatechange = (e) => {
@@ -69,18 +77,6 @@ function fetchArray(instance = {}, baseURL, array, options = {}) {
           array.ref.pending = false;
           if (xhr.status === 200 || xhr.status === 0) {
             array.buffer = xhr.response;
-
-            if (options.compression) {
-              if (array.dataType === 'string' || array.dataType === 'JSON') {
-                array.buffer = pako.inflate(new Uint8Array(array.buffer), {
-                  to: 'string',
-                });
-              } else {
-                array.buffer = pako.inflate(
-                  new Uint8Array(array.buffer)
-                ).buffer;
-              }
-            }
 
             if (array.ref.encode === 'JSON') {
               array.values = JSON.parse(array.buffer);
@@ -119,10 +115,7 @@ function fetchArray(instance = {}, baseURL, array, options = {}) {
       };
 
       // Make request
-      xhr.responseType =
-        options.compression || array.dataType !== 'string'
-          ? 'arraybuffer'
-          : 'text';
+      xhr.responseType = array.dataType !== 'string' ? 'arraybuffer' : 'text';
       xhr.send();
     });
   }
@@ -133,47 +126,8 @@ function fetchArray(instance = {}, baseURL, array, options = {}) {
 // ----------------------------------------------------------------------------
 
 function fetchJSON(instance = {}, url, options = {}) {
-  return new Promise((resolve, reject) => {
-    const xhr = openAsyncXHR('GET', url, options);
-
-    xhr.onreadystatechange = (e) => {
-      if (xhr.readyState === 1) {
-        if (++requestCount === 1 && instance.invokeBusy) {
-          instance.invokeBusy(true);
-        }
-      }
-      if (xhr.readyState === 4) {
-        if (--requestCount === 0 && instance.invokeBusy) {
-          instance.invokeBusy(false);
-        }
-        if (xhr.status === 200 || xhr.status === 0) {
-          if (options.compression) {
-            resolve(
-              JSON.parse(
-                pako.inflate(new Uint8Array(xhr.response), { to: 'string' })
-              )
-            );
-          } else {
-            resolve(JSON.parse(xhr.responseText));
-          }
-        } else {
-          reject({ xhr, e });
-        }
-      }
-    };
-
-    // Make request
-    xhr.responseType = options.compression ? 'arraybuffer' : 'text';
-    xhr.send();
-  });
-}
-
-// ----------------------------------------------------------------------------
-
-function fetchText(instance = {}, url, options = {}) {
-  if (options && options.compression && options.compression !== 'gz') {
-    vtkErrorMacro('Supported algorithms are: [gz]');
-    vtkErrorMacro(`Unkown compression algorithm: ${options.compression}`);
+  if (options && options.compression) {
+    return REJECT_COMPRESSION();
   }
 
   return new Promise((resolve, reject) => {
@@ -190,13 +144,7 @@ function fetchText(instance = {}, url, options = {}) {
           instance.invokeBusy(false);
         }
         if (xhr.status === 200 || xhr.status === 0) {
-          if (options.compression) {
-            resolve(
-              pako.inflate(new Uint8Array(xhr.response), { to: 'string' })
-            );
-          } else {
-            resolve(xhr.responseText);
-          }
+          resolve(JSON.parse(xhr.responseText));
         } else {
           reject({ xhr, e });
         }
@@ -204,7 +152,41 @@ function fetchText(instance = {}, url, options = {}) {
     };
 
     // Make request
-    xhr.responseType = options.compression ? 'arraybuffer' : 'text';
+    xhr.responseType = 'text';
+    xhr.send();
+  });
+}
+
+// ----------------------------------------------------------------------------
+
+function fetchText(instance = {}, url, options = {}) {
+  if (options && options.compression) {
+    return REJECT_COMPRESSION();
+  }
+
+  return new Promise((resolve, reject) => {
+    const xhr = openAsyncXHR('GET', url, options);
+
+    xhr.onreadystatechange = (e) => {
+      if (xhr.readyState === 1) {
+        if (++requestCount === 1 && instance.invokeBusy) {
+          instance.invokeBusy(true);
+        }
+      }
+      if (xhr.readyState === 4) {
+        if (--requestCount === 0 && instance.invokeBusy) {
+          instance.invokeBusy(false);
+        }
+        if (xhr.status === 200 || xhr.status === 0) {
+          resolve(xhr.responseText);
+        } else {
+          reject({ xhr, e });
+        }
+      }
+    };
+
+    // Make request
+    xhr.responseType = 'text';
     xhr.send();
   });
 }
@@ -226,7 +208,7 @@ function fetchImage(instance = {}, url, options = {}) {
 
 // ----------------------------------------------------------------------------
 
-const HttpDataAccessHelper = {
+const LiteHttpDataAccessHelper = {
   fetchArray,
   fetchJSON,
   fetchText,
@@ -234,6 +216,6 @@ const HttpDataAccessHelper = {
   fetchImage,
 };
 
-registerType('http', (options) => HttpDataAccessHelper);
+registerType('http', (options) => LiteHttpDataAccessHelper);
 
-export default HttpDataAccessHelper;
+export default LiteHttpDataAccessHelper;
