@@ -1,3 +1,9 @@
+// Load default classes for tests
+import './IO/Core/DataAccessHelper/HtmlDataAccessHelper';
+import './IO/Core/DataAccessHelper/HttpDataAccessHelper';
+import './IO/Core/DataAccessHelper/JSZipDataAccessHelper';
+
+// Test list
 import './Common/Core/CellArray/test/testCellArray';
 import './Common/Core/LookupTable/test/testCategoricalColors';
 import './Common/Core/Math/test/testMath';
