@@ -38,6 +38,9 @@ jobs:
           git config --global user.name "Github Actions"
           git config --global user.email "sebastien.jourdain@kitware.com"
           npm run semantic-release
+      - name: Build API docs
+        if: github.ref == 'refs/heads/master'
+        run: npm run doc:generate-api
       - name: Publish docs
         if: github.ref == 'refs/heads/master'
         env:
