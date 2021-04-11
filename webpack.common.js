@@ -95,13 +95,13 @@ const baseConfig = {
     rules: configureVtkRules(),
   },
   plugins: [
-    ...((!process.env.NOLINT && new ESLintWebpackPlugin()) || []),
+    !process.env.NOLINT && new ESLintWebpackPlugin(),
     new WebpackNotifierPlugin({
       title: 'Webpack - vtk.js',
       excludeWarnings: true,
       alwaysNotify: true,
     }),
-  ],
+  ].filter(Boolean),
 };
 
 // vtk-lite.js
