@@ -248,7 +248,7 @@ export function extend(publicAPI: object, model: object, initialValues?: IPropIn
 
 /**
  * Method use to create a new instance of vtkProp
- * @param initialValues for pre-setting some of its content
+ * @param {IPropInitialValues} [initialValues] for pre-setting some of its content
  */
 export function newInstance(initialValues?: IPropInitialValues): vtkProp;
 

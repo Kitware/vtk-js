@@ -73,62 +73,68 @@ export interface vtkCircleSource extends vtkAlgorithm {
 
 	/**
 	 * Expose methods
-	 * @param inData
-	 * @param outData
+	 * @param inData 
+	 * @param outData 
 	 */
 	requestData(inData: any, outData: any): void;
 
 	/**
-	 *
-	 * @param x
-	 * @param y
-	 * @param z
+	 * Set the direction for the circle.
+	 * @param {Number} x The x coordinate.
+	 * @param {Number} y The y coordinate.
+	 * @param {Number} z The z coordinate.
 	 */
 	setDirection(x: number, y: number, z: number): boolean;
 
 	/**
-	 *
-	 * @param direction
+	 * Set the direction for the circle.
+	 * @param {Number[]} direction The direction coordinates.
+	 */
+	setDirection(direction: number[]): boolean;
+
+	/**
+	 * Set the direction for the circle.
+	 * @param {Number[]} direction The direction coordinates.
 	 */
 	setDirectionFrom(direction: number[]): boolean;
 
 	/**
 	 * Set the center of the circle.
-	 * @param x
-	 * @param y
-	 * @param z
+	 * @param {Number} x The x coordinate.
+	 * @param {Number} y The y coordinate.
+	 * @param {Number} z The z coordinate.
 	 * @default [0, 0, 0]
 	 */
 	setCenter(x: number, y: number, z: number): boolean;
 
 	/**
 	 * Set the center of the circle.
-	 * @param center
+	 * @param {Number[]} center 
 	 * @default [0, 0, 0]
 	 */
 	setCenterFrom(center: number[]): boolean;
 
 	/**
 	 *
-	 * @param face
+	 * @param {Boolean} face 
 	 */
 	setFace(face: boolean): boolean;
 
 	/**
 	 *
-	 * @param lines
+	 * @param {Boolean} lines 
 	 */
-	 setLines(lines: boolean): boolean;
+	setLines(lines: boolean): boolean;
 
 	/**
 	 * Set the radius of the circle.
-	 * @param {number} radius
+	 * @param {Number} radius 
 	 */
 	setRadius(radius: number): boolean;
 
 	/**
 	 * Set the resolution of the circle.
-	 * @param resolution
+	 * @param resolution 
 	 */
 	setResolution(resolution: number): boolean;
 }
@@ -144,12 +150,21 @@ export function extend(publicAPI: object, model: object, initialValues?: ICircle
 
 /**
  * Method used to create a new instance of vtkCircleSource.
- * @param initialValues for pre-setting some of its content
+ * @param {ICircleSourceInitialValues} [initialValues] for pre-setting some of its content
  */
 export function newInstance(initialValues?: ICircleSourceInitialValues): vtkCircleSource;
 
 /**
- *
+/**
+ * vtkCircleSource creates a circle.
+ * 
+ * @example
+ * ```js
+ * import vtkCircleSource from 'vtk.js/Sources/Filters/Sources/CircleSource';
+ * 
+ * const circle = vtkCircleSource.newInstance({ radius: 1, resolution: 80 });
+ * const polydata = circle.getOutputData();
+ * ```
  */
 export declare const vtkCircleSource: {
 	newInstance: typeof newInstance,

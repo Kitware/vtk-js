@@ -15,7 +15,7 @@ interface IFollowerInitialValues {
  */
 export interface vtkFollower extends vtkActor {
 	/**
-	 * 
+	 * Generate the matrix based on ivars.
 	 */
 	computeMatrix(): void;
 
@@ -25,36 +25,36 @@ export interface vtkFollower extends vtkActor {
 	getCamera(): vtkCamera;
 
 	/**
-	 * 
+	 * Check whether the view up vector is used.
 	 */
 	getUseViewUp(): boolean;
 
 	/**
-	 * 
+	 * Get the view up vector.
 	 */
 	getViewUp(): number[];
 
 	/**
-	 * 
+	 * Get a reference to the view up vector.
 	 */
 	getViewUpByReference(): number[];
 
 	/**
 	 * Set the camera to follow.
-	 * If this is not set, then the follower won't know who to follow.
-	 * @param camera 
+	 * If this is not set, then the follower won't know what to follow.
+	 * @param {vtkCamera} camera 
 	 */
 	setCamera(camera: vtkCamera): boolean;
 
 	/**
-	 * 
-	 * @param useViewUp 
+	 * Set whether to use the view up vector.
+	 * @param {Boolean} useViewUp 
 	 */
 	setUseViewUp(useViewUp: boolean): boolean;
 
 	/**
-	 * 
-	 * @param viewUp 
+	 * Set the viewUp vector.
+	 * @param {Number[]} viewUp The view up vector.
 	 */
 	setViewUp(viewUp: number[]): boolean;
 
@@ -71,10 +71,25 @@ export function extend(publicAPI: object, model: object, initialValues?: IFollow
 
 /**
  * Method use to create a new instance of vtkFollower
- * @param initialValues for pre-setting some of its content
+ * @param {IFollowerInitialValues} [initialValues] for pre-setting some of its content
  */
-export function newInstance(initialValues?: object): vtkFollower;
+export function newInstance(initialValues?: IFollowerInitialValues): vtkFollower;
 
+/**
+ * vtkFollower is a subclass of Actor that always faces the camera.
+ *
+ * You must set the camera before use. This class will update the matrix such
+ * that the follower always faces the camera. Sepcifically the y axis will up
+ * up, the Z axes will point to the camera and the x axis will point to the
+ * right. You may need to rotate, scale, position the follower to get your data
+ * oriented propoerly for this convention.
+ *
+ * If useViewUp is set then instea dof using the camera's view up the follow's
+ * viewUp will be used. This is usefull in cases where you want up to be locked
+ * independent of the camera. This is typically the case for VR or AR
+ * annotations where the headset may tilt but text should continue to be
+ * relative to a constant view up vector.
+ */
 export declare const vtkFollower: {
     newInstance: typeof newInstance,
     extend: typeof extend,

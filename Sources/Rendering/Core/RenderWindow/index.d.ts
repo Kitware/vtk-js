@@ -86,7 +86,6 @@ export interface vtkRenderWindow extends VtkObject {
 
 	/**
 	 * 
-	 * @return  
 	 */
 	getStatistics(): IStatistics;
 
@@ -100,14 +99,13 @@ export interface vtkRenderWindow extends VtkObject {
 	/**
 	 * 
 	 * @param {vtkRenderer} ren 
-	 * @return  true if the windows has a renderer
+	 * @return {Boolean} true if the windows has a renderer
 	 */
 	hasRenderer(ren: vtkRenderer): boolean;
 
 	/**
 	 * 
 	 * @param view 
-	 * @return  
 	 */
 	hasView(view: any): boolean;
 

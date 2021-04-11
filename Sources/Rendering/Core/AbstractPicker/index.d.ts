@@ -32,7 +32,7 @@ export interface vtkAbstractPicker extends VtkObject {
 
 	/**
 	 * Get the picked position
-	 * @returns 
+	 * @return 
 	 * @default [0.0, 0.0, 0.0]
 	 */
 	getPickPosition(): number[];
@@ -40,7 +40,7 @@ export interface vtkAbstractPicker extends VtkObject {
 	/**
 	 * 
 	 * Get the picked position
-	 * @returns 
+	 * @return 
 	 * @default [0.0, 0.0, 0.0]
 	 */
 	getPickPositionByReference(): number[];
@@ -52,14 +52,14 @@ export interface vtkAbstractPicker extends VtkObject {
 
 	/**
 	 * 
-	 * @returns 
+	 * @return 
 	 * @default [0.0, 0.0, 0.0]
 	 */
 	getSelectionPoint(): number[];
 
 	/**
 	 * 
-	 * @returns 
+	 * @return 
 	 * @default [0.0, 0.0, 0.0]
 	 */
 	getSelectionPointByReference(): number[];

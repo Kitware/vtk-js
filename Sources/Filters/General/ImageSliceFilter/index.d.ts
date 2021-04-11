@@ -54,7 +54,7 @@ export function extend(publicAPI: object, model: object, initialValues?: IImageS
 
 /**
  * Method used to create a new instance of vtkImageSliceFilter
- * @param initialValues for pre-setting some of its content
+ * @param {IImageSliceFilterInitialValues} [initialValues] for pre-setting some of its content
  */
 export function newInstance(initialValues?: IImageSliceFilterInitialValues): vtkImageSliceFilter;
 

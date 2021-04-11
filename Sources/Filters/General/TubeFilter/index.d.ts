@@ -183,7 +183,7 @@ export interface vtkTubeFilter extends vtkTubeFilterBase {
 
 	/**
 	 * Set the minimum tube radius (minimum because the tube radius may vary).
-	 * @param {number} radius
+	 * @param {Number} radius
 	 */
 	setRadius(radius: number): boolean;
 
@@ -201,7 +201,7 @@ export interface vtkTubeFilter extends vtkTubeFilterBase {
 
 	/**
 	 * Set the maximum tube radius in terms of a multiple of the minimum radius.
-	 * @param {number} radiusFactor
+	 * @param {Number} radiusFactor
 	 */
 	setRadiusFactor(radiusFactor: number): boolean;
 
@@ -276,7 +276,7 @@ export function extend(publicAPI: object, model: object, initialValues?: ITubeFi
 
 /**
  * Method used to create a new instance of vtkTubeFilter
- * @param initialValues for pre-setting some of its content
+ * @param {ITubeFilterInitialValues} [initialValues] for pre-setting some of its content
  */
 export function newInstance(initialValues?: ITubeFilterInitialValues): vtkTubeFilter;
 
@@ -301,15 +301,13 @@ export function newInstance(initialValues?: ITubeFilterInitialValues): vtkTubeFi
  * common use is to combine this filter with vtkStreamTracer to generate
  * streamtubes.
  *
- * **Warning**
+ * !!! warning
+ *     The number of tube sides must be greater than 3.
  *
- * The number of tube sides must be greater than 3.
- *
- * **Warning**
- *
- * The input line must not have duplicate points, or normals at points that are
- * parallel to the incoming/outgoing line segments. If a line does not meet this
- * criteria, then that line is not tubed.
+ * !!! warning
+ *     The input line must not have duplicate points, or normals at points that are
+ *     parallel to the incoming/outgoing line segments. If a line does not meet this
+ *     criteria, then that line is not tubed.
  */
 export declare const vtkTubeFilter: {
 	newInstance: typeof newInstance;

@@ -63,7 +63,7 @@ export function extend(publicAPI: object, model: object, initialValues?: IImageC
 
 /**
  * Method used to create a new instance of vtkImageCropFilter
- * @param initialValues for pre-setting some of its content
+ * @param {IImageCropFilterInitialValues} [initialValues] for pre-setting some of its content
  */
 export function newInstance(initialValues?: IImageCropFilterInitialValues): vtkImageCropFilter;
 

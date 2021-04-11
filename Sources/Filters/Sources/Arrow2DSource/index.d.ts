@@ -81,24 +81,25 @@ export interface vtkArrow2DSource extends vtkAlgorithm {
 
 	/**
 	 * Expose methods
-	 * @param inData
-	 * @param outData
+	 * @param inData 
+	 * @param outData 
 	 */
 	requestData(inData: any, outData: any): void;
 
 	/**
 	 * Turn on/off whether to cap the base of the cone with a polygon.
-	 * @param base
+	 * @param {Number} base The value of the 
 	 */
 	setBase(base: number): boolean;
 
 	/**
 	 * Set the center of the cone.
 	 * It is located at the middle of the axis of the cone.
-	 * Warning: this is not the center of the base of the cone!
-	 * @param x
-	 * @param y
-	 * @param z
+	 * !!! warning
+	 *     This is not the center of the base of the cone!
+	 * @param {Number} x The x coordinate.
+	 * @param {Number} y The y coordinate.
+	 * @param {Number} z The z coordinate.
 	 * @default [0, 0, 0]
 	 */
 	setCenter(x: number, y: number, z: number): boolean;
@@ -106,42 +107,49 @@ export interface vtkArrow2DSource extends vtkAlgorithm {
 	/**
 	 * Set the center of the cone.
 	 * It is located at the middle of the axis of the cone.
-	 * Warning: this is not the center of the base of the cone!
-	 * @param center
+	 * !!! warning
+	 *     This is not the center of the base of the cone!
+	 * @param {Number[]}  center 
 	 * @default [0, 0, 0]
 	 */
 	setCenterFrom(center: number[]): boolean;
 
 	/**
-	 *
-	 * @param x
-	 * @param y
-	 * @param z
+	 * Set the direction for the arrow.
+	 * @param {Number} x The x coordinate.
+	 * @param {Number} y The y coordinate.
+	 * @param {Number} z The z coordinate.
 	 */
 	setDirection(x: number, y: number, z: number): boolean;
 
 	/**
-	 *
-	 * @param direction
+	 * Set the direction for the arrow 2D.
+	 * @param {Number[]} direction The direction coordinates.
+	 */
+	setDirection(direction: number[]): boolean;
+
+	/**
+	 * Set the direction for the arrow 2D.
+	 * @param {Number[]} direction The direction coordinates.
 	 */
 	setDirectionFrom(direction: number[]): boolean;
 
 	/**
 	 * Set the height of the cone.
 	 * This is the height along the cone in its specified direction.
-	 * @param height
+	 * @param {Number} height The height value.
 	 */
 	setHeight(height: number): boolean;
 
 	/**
 	 * Set the base thickness of the cone.
-	 * @param thickness
+	 * @param {Number} thickness 
 	 */
 	setThickness(thickness: number): boolean;
 
 	/**
 	 * Set the number of facets used to represent the cone.
-	 * @param width
+	 * @param {Number} width 
 	 */
 	setWidth(width: number): boolean;
 }
@@ -157,7 +165,7 @@ export function extend(publicAPI: object, model: object, initialValues?: IArrow2
 
 /**
  * Method used to create a new instance of vtkArrow2DSource.
- * @param initialValues for pre-setting some of its content
+ * @param {IArrow2DSourceInitialValues} [initialValues] for pre-setting some of its content
  */
 export function newInstance(initialValues?: IArrow2DSourceInitialValues): vtkArrow2DSource;
 

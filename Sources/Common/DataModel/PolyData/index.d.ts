@@ -19,7 +19,7 @@ export interface vtkPolyData extends vtkPointSet {
 	/**
 	 * Create upward links from points to cells that use each point. Enables
 	 * topologically complex queries.
-	 * @param initialSize {number}
+	 * @param initialSize {Number}
 	 */
 	buildLinks(initialSize?: number): void;
 
@@ -40,8 +40,8 @@ export interface vtkPolyData extends vtkPointSet {
 
 	/**
 	 * Get a list of point ids that define a cell.
-	 * @param cellId {number}
-	 * @returns an object made of the cellType and a subarray `cellPointIds` of the cell points.
+	 * @param cellId {Number}
+	 * @return an object made of the cellType and a subarray `cellPointIds` of the cell points.
 	 */
 	getCellPoints(cellId: number): object;
 
@@ -148,7 +148,7 @@ export function extend(publicAPI: object, model: object, initialValues?: IPolyDa
 
 /**
  * Method used to create a new instance of vtkPolyData.
- * @param initialValues for pre-setting some of its content
+ * @param {IPolyDataInitialValues} [initialValues] for pre-setting some of its content
  */
 export function newInstance(initialValues?: IPolyDataInitialValues): vtkPolyData;
 

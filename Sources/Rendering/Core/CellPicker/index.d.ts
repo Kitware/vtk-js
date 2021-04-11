@@ -61,7 +61,6 @@ export interface vtkCellPicker extends vtkPicker {
 	 * @param cell 
 	 * @param weights 
 	 * @param normal 
-	 * @return  
 	 */
 	computeSurfaceNormal(data: any, cell: any, weights: number[], normal: number[]): boolean;
 
@@ -78,7 +77,6 @@ export interface vtkCellPicker extends vtkPicker {
 	 * @param p2 
 	 * @param tol 
 	 * @param mapper 
-	 * @return  
 	 */
 	intersectWithLine(p1: number[], p2: number[], tol: number, mapper: vtkMapper): number;
 
@@ -90,7 +88,6 @@ export interface vtkCellPicker extends vtkPicker {
 	 * @param t2 
 	 * @param tol 
 	 * @param mapper 
-	 * @return  
 	 */
 	intersectActorWithLine(p1:  number[], p2:  number[], t1: number, t2: number, tol: number, mapper: vtkMapper): number;
 }
@@ -106,7 +103,7 @@ export function extend(publicAPI: object, model: object, initialValues?: ICellPi
 
 /**
  * Method use to create a new instance of vtkCellPicker
- * @param initialValues for pre-setting some of its content
+ * @param {ICellPickerInitialValues} [initialValues] for pre-setting some of its content
  */
 export function newInstance(initialValues?: ICellPickerInitialValues): vtkCellPicker;
 

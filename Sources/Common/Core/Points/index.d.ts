@@ -17,13 +17,14 @@ export interface vtkPoints extends VtkDataArray {
 	computeBounds(): number[];
 
 	/**
-	 * Get the bounds as [xmin, xmax, ymin, ymax, zmin, zmax].
+     * Get the bounds for this mapper as [xmin, xmax, ymin, ymax,zmin, zmax].
+	 * @return {Number[]} The bounds for the mapper.
 	 */
 	getBounds(): number[];
 
 	/**
-	* @param {number} idx
-	* @param {number[]} [tupleToFill]
+	* @param {Number} idx The index of point.
+	* @param {Number[]} [tupleToFill]
 	* @default []
 	*/
 	getPoint(idx: number, tupleToFill?: number[]): number[];
@@ -35,24 +36,24 @@ export interface vtkPoints extends VtkDataArray {
 
 	/**
 	 * Set the number of points for this object to hold.
-	 * @param {number} nbPoints
-	 * @param {number} [dimension]
+	 * @param {Number} nbPoints
+	 * @param {Number} [dimension]
 	 */
 	setNumberOfPoints(nbPoints: number, dimension?: number): void;
 
 	/**
 	 * Insert point into object.
-	 * @param {number} idx
-	 * @param {number} x
-	 * @param {number} y
-	 * @param {number} z
+	 * @param {Number} idx The index of point.
+	 * @param {Number} x The x coordinate.
+	 * @param {Number} y The y coordinate.
+	 * @param {Number} z The z coordinate.
 	 */
 	setPoint(idx: number, x: number, y: number, z: number): void;
 
 	/**
 	 * Insert point into object.
-	 * @param {number} idx
-	 * @param {number[]} coord
+	 * @param {Number} idx The index of point.
+	 * @param {Number[]} coord The point's coordinates.
 	 */
 	setPoint(idx: number, coord: number[]): void;
 }
@@ -68,7 +69,7 @@ export function extend(publicAPI: object, model: object, initialValues?: IPoints
 
 /**
  * Method used to create a new instance of vtkPoints
- * @param initialValues for pre-setting some of its content
+ * @param {IPointsInitialValues} [initialValues] for pre-setting some of its content
  */
 export function newInstance(initialValues?: IPointsInitialValues): vtkPoints;
 

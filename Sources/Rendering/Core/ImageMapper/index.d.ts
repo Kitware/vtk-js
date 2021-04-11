@@ -12,32 +12,15 @@ export enum SlicingMode {
 }
 
 interface IClosestIJKAxis {
-	/**
-	 *
-	 */
 	ijkMode: SlicingMode,
-
-	/**
-	 *
-	 */
 	flip: boolean
 }
 
 interface ICoincidentTopology {
-	/**
-	 *
-	 */
 	factor: number;
-
-	/**
-	 *
-	 */
 	offset: number;
 }
 
-/**
- *
- */
 interface IImageMapperInitialValues {
 	displayExtent?: number[];
 	customDisplayExtent?: number[];
@@ -52,63 +35,41 @@ export interface vtkImageMapper extends vtkAbstractMapper {
 
 	/**
 	 *
-	 * @param pos
+	 * @param {Number} pos
 	 */
 	getSliceAtPosition(pos: number): number;
 
 	/**
 	 *
+	 * @param {Number[]} pos
+	 */
+	getSliceAtPosition(pos: number[]): number;
+
+	/**
+	 * Get the closest IJK axis
+	 * @return {IClosestIJKAxis} The axis object.
 	 */
 	getClosestIJKAxis(): IClosestIJKAxis;
 
 	/**
-	 * Get the bounds for this mapper as [Xmin,Xmax,Ymin,Ymax,Zmin,Zmax].
-	 * @returns
+     * Get the bounds for this mapper as [xmin, xmax, ymin, ymax,zmin, zmax].
+	 * @return {Number[]} The bounds for the mapper.
 	 */
 	getBounds(): number[];
 
 	/**
-	 *
-	 * @param slice
-	 * @param thickness
+	 * Get the bounds for a given slice as [xmin, xmax, ymin, ymax,zmin, zmax].
+	 * @param {Number} [slice] The slice index.
+	 * @param {Number} [thickness] The slice thickness.
+	 * @return {Number[]} The bounds for a given slice.
 	 */
-	getBoundsForSlice(slice: number, thickness: number): number[];
-
-
-	/**
-	 *
-	 */
-	getCoincidentTopologyPolygonOffsetParameters(): ICoincidentTopology;
-
-	/**
-	 *
-	 */
-	getCoincidentTopologyLineOffsetParameters(): ICoincidentTopology;
-
-	/**
-	 *
-	 */
-	getCoincidentTopologyPointOffsetParameter(): ICoincidentTopology;
+	getBoundsForSlice(slice?: number, thickness?: number): number[];
 
 	/**
 	 *
 	 */
 	getIsOpaque(): boolean;
 
-	/**
-	 *
-	 */
-	getRelativeCoincidentTopologyLineOffsetParameters(): ICoincidentTopology;
-
-	/**
-	 *
-	 */
-	getRelativeCoincidentTopologyPointOffsetParameters(): ICoincidentTopology;
-
-	/**
-	 *
-	 */
-	getRelativeCoincidentTopologyPolygonOffsetParameters(): ICoincidentTopology;
 
 	/**
 	 *
@@ -146,12 +107,12 @@ export interface vtkImageMapper extends vtkAbstractMapper {
 	getResolveCoincidentTopologyPolygonOffsetParameters(): ICoincidentTopology;
 
 	/**
-	 *
+	 * Get the slice index.
 	 */
 	getSlice(): number;
 
 	/**
-	 *
+	 * Get the slice number at a focal point.
 	 */
 	getSliceAtFocalPoint(): boolean;
 
@@ -162,31 +123,31 @@ export interface vtkImageMapper extends vtkAbstractMapper {
 
 	/**
 	 *
-	 * @param p1
-	 * @param p2
+	 * @param {Number[]} p1 The coordinates of the first point.
+	 * @param {Number[]} p2 The coordinates of the second point.
 	 */
 	intersectWithLineForPointPicking(p1: number[], p2: number[]): any;
 
 	/**
 	 *
-	 * @param p1
-	 * @param p2
+	 * @param {Number[]} p1 The coordinates of the first point.
+	 * @param {Number[]} p2 The coordinates of the second point.
 	 */
 	intersectWithLineForCellPicking(p1: number[], p2: number[]): any;
 
 	/**
-	 *
-	 * @param closestIJKAxis
+	 * Set the closest IJK axis
+	 * @param {IClosestIJKAxis} closestIJKAxis The axis object.
 	 */
 	setClosestIJKAxis(closestIJKAxis: IClosestIJKAxis): boolean;
 	/**
 	 *
-	 * @param x1
-	 * @param x2
-	 * @param y1
-	 * @param y2
-	 * @param z1
-	 * @param z2
+	 * @param x1 The x coordinate of the first point.
+	 * @param x2 The x coordinate of the second point.
+	 * @param y1 The y coordinate of the first point.
+	 * @param y2 The y coordinate of the second point.
+	 * @param z1 The z coordinate of the first point.
+	 * @param z2 The z coordinate of the second point.
 	 */
 	setCustomDisplayExtent(x1: number, x2: number, y1: number, y2: number, z1: number, z2: number): boolean;
 
@@ -198,22 +159,22 @@ export interface vtkImageMapper extends vtkAbstractMapper {
 
 	/**
 	 *
-	 * @param factor
-	 * @param offset
+	 * @param {Number} factor 
+	 * @param {Number} offset 
 	 */
 	setRelativeCoincidentTopologyLineOffsetParameters(factor: number, offset: number): boolean;
 
 	/**
 	 *
-	 * @param factor
-	 * @param offset
+	 * @param {Number} factor 
+	 * @param {Number} offset 
 	 */
 	setRelativeCoincidentTopologyPointOffsetParameters(factor: number, offset: number): boolean;
 
 	/**
 	 *
-	 * @param factor
-	 * @param offset
+	 * @param {Number} factor 
+	 * @param {Number} offset 
 	 */
 	setRelativeCoincidentTopologyPolygonOffsetParameters(factor: number, offset: number): boolean;
 
@@ -226,15 +187,15 @@ export interface vtkImageMapper extends vtkAbstractMapper {
 
 	/**
 	 *
-	 * @param factor
-	 * @param offset
+	 * @param {Number} factor 
+	 * @param {Number} offset 
 	 */
 	setResolveCoincidentTopologyLineOffsetParameters(factor: number, offset: number): boolean;
 
 	/**
 	 *
-	 * @param factor
-	 * @param offset
+	 * @param {Number} factor 
+	 * @param {Number} offset 
 	 */
 	setResolveCoincidentTopologyPointOffsetParameters(factor: number, offset: number): boolean;
 
@@ -246,8 +207,8 @@ export interface vtkImageMapper extends vtkAbstractMapper {
 
 	/**
 	 *
-	 * @param factor
-	 * @param offset
+	 * @param {Number} factor 
+	 * @param {Number} offset 
 	 */
 	setResolveCoincidentTopologyPolygonOffsetParameters(factor: number, offset: number)
 
@@ -268,78 +229,78 @@ export interface vtkImageMapper extends vtkAbstractMapper {
 
 	/**
 	 *
-	 * @param renderToRectangle
+	 * @param {Boolean} renderToRectangle 
 	 */
 	setRenderToRectangle(renderToRectangle: boolean): boolean;
 
 	/**
 	 *
-	 * @param slice
+	 * @param {Number} slice The slice index.
 	 */
 	setSlice(slice: number): boolean;
 
 	/**
-	 *
-	 * @param cam
+	 * Set the slice from a given camera. 
+	 * @param {vtkCamera} cam The camera object.
 	 */
 	setSliceFromCamera(cam: vtkCamera): boolean;
 
 	/**
-	 *
-	 * @param sliceAtFocalPoint
+	 * Set the slice from a given focal point. 
+	 * @param {Boolean} sliceAtFocalPoint
 	 */
 	sliceAtFocalPoint(sliceAtFocalPoint: boolean): boolean;
 
 	/**
-	 *
+	 * 
+	 * @param {Boolean} useCustomExtents 
 	 */
 	setUseCustomExtents(useCustomExtents: boolean): boolean;
 
 	/**
-	 *
-	 * @param id
+	 * Set the slice for the X axis. 
+	 * @param {Number} id The slice index.
 	 */
 	setXSlice(id: number): boolean;
 
 	/**
-	 *
-	 * @param id
+	 * Set the slice for the Y axis. 
+	 * @param {Number} id The slice index.
 	 */
 	setYSlice(id: number): boolean;
 
 	/**
-	 *
-	 * @param id
+	 * Set the slice for the Z axis. 
+	 * @param {Number} id The slice index.
 	 */
 	setZSlice(id: number): boolean;
 
 	/**
-	 *
-	 * @param id
+	 * Set the slice for the I axis. 
+	 * @param {Number} id The slice index.
 	 */
 	setISlice(id: number): boolean;
 
 	/**
-	 *
-	 * @param id
+	 * Set the slice for the J axis. 
+	 * @param {Number} id The slice index.
 	 */
 	setJSlice(id: number): boolean;
 
 	/**
-	 *
-	 * @param id
+	 * Set the slice for the K axis. 
+	 * @param {Number} id The slice index.
 	 */
 	setKSlice(id: number): boolean;
 
 	/**
 	 *
-	 * @return
 	 */
 	getSlicingModeNormal(): number[];
 
 	/**
-	 *
-	 * @param mode
+	 * Set the slicing mode. 
+	 * @param {Number} mode The slicing mode.
 	 */
 	setSlicingMode(mode: number): boolean;
 }
@@ -355,7 +316,7 @@ export function extend(publicAPI: object, model: object, initialValues?: IImageM
 
 /**
  * Method use to create a new instance of vtkImageMapper
- * @param initialValues for pre-setting some of its content
+ * @param {IImageMapperInitialValues} [initialValues] for pre-setting some of its content
  */
 export function newInstance(initialValues?: IImageMapperInitialValues): vtkImageMapper;
 

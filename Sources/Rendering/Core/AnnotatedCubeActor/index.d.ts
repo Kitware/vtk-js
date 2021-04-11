@@ -11,49 +11,49 @@ export interface vtkAnnotatedCubeActor extends vtkActor {
 	/**
 	 * Set the default style.
 	 * @param style
-	 * @returns 
+	 * @return 
 	 */
 	setDefaultStyle(style: any): boolean;
 
 	/**
 	 * The +X face property.
 	 * @param {vtkProperty} prop face property
-	 * @returns 
+	 * @return 
 	 */
 	setXPlusFaceProperty(prop: object): boolean;
 
 	/**
 	 * The -X face property.
 	 * @param {vtkProperty} prop face property
-	 * @returns 
+	 * @return 
 	 */
 	setXMinusFaceProperty(prop: object): boolean;
 
 	/**
 	 * The +Y face property.
 	 * @param {vtkProperty} prop face property
-	 * @returns 
+	 * @return 
 	 */
 	setYPlusFaceProperty(prop: object): boolean;
 
 	/**
 	 * The -Y face property.
 	 * @param {vtkProperty} prop face property
-	 * @returns 
+	 * @return 
 	 */
 	setYMinusFaceProperty(prop: object): boolean;
 
 	/**
 	 * The +Z face property.
 	 * @param {vtkProperty} prop face property
-	 * @returns 
+	 * @return 
 	 */
 	setZPlusFaceProperty(prop: object): boolean;
 
 	/**
 	 * The -Z face property.
 	 * @param {vtkProperty} prop face property
-	 * @returns 
+	 * @return 
 	 */
 	setZMinusFaceProperty(prop: object): boolean;
 }
@@ -69,7 +69,7 @@ export function extend(publicAPI: object, model: object, initialValues?: IAnnota
 
 /**
  * Method use to create a new instance of vtkAnnotatedCubeActor
- * @param initialValues for pre-setting some of its content
+ * @param {IAnnotatedCubeActorInitialValues} [initialValues] for pre-setting some of its content
  */
 export function newInstance(initialValues?: IAnnotatedCubeActorInitialValues): vtkAnnotatedCubeActor;
 

@@ -1,85 +1,83 @@
-import { types } from '@babel/core';
-import { mat3, mat4, quat2, ReadonlyVec3, vec2, vec3 } from 'gl-matrix';
+import { mat3, vec2, vec3 } from 'gl-matrix';
 
 /**
  *
- * @param {number} size
+ * @param {Number} size 
  */
 export function createArray(size?: number): number[];
 
 /**
  * Get the number π.
- * @returns PI.
  */
 export function Pi(): number;
 
 /**
  * Convert degrees to radians.
- * @param {number} deg
+ * @param {Number} deg 
  */
 export function radiansFromDegrees(deg: number): number;
 
 /**
  * Convert radians to degrees.
- * @param {number} rad
+ * @param {Number} rad 
  */
 export function degreesFromRadians(rad: number): number;
 
 /**
  * Same as Math.round().
- * @param {number} param1
+ * @param {Number} param1 
  */
 export function round(param1: number): number;
 
 /**
  * Same as Math.floor().
- * @param {number} param1
+ * @param {Number} param1 
  */
 export function floor(param1: number): number;
 
 /**
  * Same as Math.ceil().
- * @param {number} param1
+ * @param {Number} param1 
  */
 export function ceil(param1: number): number;
 
 /**
- * Returns the minimum of the two arguments provided. If either argument is NaN,
+ * Get the minimum of the two arguments provided. If either argument is NaN,
  * the first argument will always be returned.
- * @param {number} param1
- * @param {number} param2
+ * @param {Number} param1 
+ * @param {Number} param2 
  */
 export function min(param1: number, param2: number): number;
 
 /**
- * Returns the maximum of the two arguments provided. If either argument is NaN,
+ * Get the maximum of the two arguments provided. If either argument is NaN,
  * the first argument will always be returned.
- * @param {number} param1
- * @param {number} param2
+ * @param {Number} param1 
+ * @param {Number} param2 
  */
 export function max(param1: number, param2: number): number;
 
 /**
- * Minimum of the array.
- * @param {number[]} arr
- * @param {number} offset
- * @param {number} stride
+ * Get the minimum of the array.
+ * @param {Number[]} arr 
+ * @param {Number} offset 
+ * @param {Number} stride 
  */
 export function arrayMin(arr: number[], offset: number, stride: number): number;
 
 /**
- * Maximum of the array.
- * @param {number[]} arr
- * @param {number} offset
- * @param {number} stride
+ * Get the maximum of the array.
+ * @param {Number[]} arr 
+ * @param {Number} offset 
+ * @param {Number} stride 
  */
 export function arrayMax(arr: number[], offset: number, stride: number): number;
 
 /**
  *
- * @param {number[]} arr
- * @param {number} offset
- * @param {number} stride
+ * @param {Number[]} arr 
+ * @param {Number} offset 
+ * @param {Number} stride 
  */
 export function arrayRange(arr: number[], offset: number, stride: number): number[];
 
@@ -101,27 +99,27 @@ export function gaussian(): void;
 
 /**
  * Compute the nearest power of two that is not less than x.
- * @param {number} xi
+ * @param {Number} xi 
  */
 export function nearestPowerOfTwo(xi: number): number;
 
 /**
  * Returns true if integer is a power of two.
- * @param {number} x
+ * @param {Number} x 
  */
 export function isPowerOfTwo(x: number): boolean;
 
 /**
  * The number of combinations of n objects from a pool of m objects (m>n).
- * @param {number} m
- * @param {number} n
+ * @param {Number} m 
+ * @param {Number} n 
  */
 export function binomial(m: number, n: number): number;
 
 /**
  * Start iterating over "m choose n" objects.
- * @param {number} [m]
- * @param {number} [n]
+ * @param {Number} [m] 
+ * @param {Number} [n] 
  */
 export function beginCombination(m?: number, n?: number): number;
 
@@ -129,15 +127,15 @@ export function beginCombination(m?: number, n?: number): number;
  * Given m, n, and a valid combination of n integers in the range [0,m[, this
  * function alters the integers into the next combination in a sequence of all
  * combinations of n items from a pool of m.
- * @param {number} m
- * @param {number} n
- * @param {number[]} r
+ * @param {Number} m 
+ * @param {Number} n 
+ * @param {Number[]} r 
  */
 export function nextCombination(m: number, n: number, r: number[]): number;
 
 /**
  * Initialize seed value.
- * @param {number} seed
+ * @param {Number} seed 
  */
 export function randomSeed(seed: number): void;
 
@@ -149,16 +147,16 @@ export function getSeed(): number;
 /**
  * Generate pseudo-random numbers distributed according to the uniform
  * distribution between min and max.
- * @param {number} minValue
- * @param {number} maxValue
+ * @param {Number} minValue 
+ * @param {Number} maxValue 
  */
 export function random(minValue: number, maxValue: number): number;
 
 /**
  * Addition of two 3-vectors (float version).
- * @param {number[]} a
- * @param {number[]} b
- * @param {number[]} out
+ * @param {Number[]} a 
+ * @param {Number[]} b 
+ * @param {Number[]} out 
  * @example
  * ```js
  * a[3] + b[3] => out[3]
@@ -168,9 +166,9 @@ export function add(a: number[], b: number[], out: number[]): number[];
 
 /**
  *
- * @param {number[]} a
- * @param {number[]} b
- * @param {number[]} out
+ * @param {Number[]} a 
+ * @param {Number[]} b 
+ * @param {Number[]} out 
  * @example
  * ```js
  * a[3] - b[3] => out[3]
@@ -180,8 +178,8 @@ export function subtract(a: number[], b: number[], out: number[]): number[];
 
 /**
  *
- * @param {vec3} vec
- * @param {number} scalar
+ * @param {vec3} vec 
+ * @param {Number} scalar 
  * @example
  * ```js
  * vec[3] * scalar => vec[3]
@@ -191,8 +189,8 @@ export function multiplyScalar(vec: vec3, scalar: number): number[];
 
 /**
  *
- * @param {vec2} vec
- * @param {number} scalar
+ * @param {vec2} vec 
+ * @param {Number} scalar 
  * @example
  * ```js
  * vec[3] * scalar => vec[3]
@@ -202,10 +200,10 @@ export function multiplyScalar2D(vec: vec2, scalar: number): number[];
 
 /**
  *
- * @param {number[]} a
- * @param {number[]} b
- * @param {number} scalar
- * @param {number[]} out
+ * @param {Number[]} a 
+ * @param {Number[]} b 
+ * @param {Number} scalar 
+ * @param {Number[]} out 
  * @example
  * ```js
  * a[3] +  b[3] * scalar => out[3]
@@ -215,10 +213,10 @@ export function multiplyAccumulate(a: number[], b: number[], scalar: number, out
 
 /**
  *
- * @param {number[]} a
- * @param {number[]} b
- * @param {number} scalar
- * @param {number[]} out
+ * @param {Number[]} a 
+ * @param {Number[]} b 
+ * @param {Number} scalar 
+ * @param {Number[]} out 
  * @example
  * ```js
  * a[2] + b[2] * scalar => out[2]
@@ -228,8 +226,8 @@ export function multiplyAccumulate2D(a: number[], b: number[], scalar: number, o
 
 /**
  *
- * @param {number[]} x
- * @param {number[]} y
+ * @param {Number[]} x 
+ * @param {Number[]} y 
  * @example
  * ```js
  * a[2] + b[2] * scalar => out[2]
@@ -239,9 +237,9 @@ export function dot(x: number[], y: number[]): number;
 
 /**
  *
- * @param {number[]} x
- * @param {number[]} y
- * @param {mat3} out_3x3
+ * @param {Number[]} x 
+ * @param {Number[]} y 
+ * @param {mat3} out_3x3 
  */
 export function outer(x: number[], y: number[], out_3x3: mat3): void;
 
@@ -249,68 +247,68 @@ export function outer(x: number[], y: number[], out_3x3: mat3): void;
  * Computes cross product of 3D vectors x and y.
  * Returns out.
  * It is safe to x or y as out.
- * @param {number[]} x
- * @param {number[]} y
- * @param {number[]} out
+ * @param {Number[]} x 
+ * @param {Number[]} y 
+ * @param {Number[]} out 
  */
 export function cross(x: number[], y: number[], out: number[]): number[];
 
 /**
  *
- * @param {number[]} x
- * @param {number} n
+ * @param {Number[]} x 
+ * @param {Number} n 
  */
 export function norm(x: number[], n: number): number;
 
 /**
  * Normalize in place. Returns norm.
- * @param {number[]} x
+ * @param {Number[]} x 
  */
 export function normalize(x: number[]): number;
 
 /**
  *
- * @param {number[]} x
- * @param {number[]} y
- * @param {number[]} z
- * @param {number} theta
+ * @param {Number[]} x 
+ * @param {Number[]} y 
+ * @param {Number[]} z 
+ * @param {Number} theta 
  */
 export function perpendiculars(x: number[], y: number[], z: number[], theta: number): void;
 
 /**
  *
- * @param {number[]} a
- * @param {number[]} b
- * @param {number[]} projection
+ * @param {Number[]} a 
+ * @param {Number[]} b 
+ * @param {Number[]} projection 
  */
 export function projectVector(a: number[], b: number[], projection: number[]): boolean;
 
 /**
  *
- * @param {number[]} x
- * @param {number[]} y
+ * @param {Number[]} x 
+ * @param {Number[]} y 
  */
 export function dot2D(x: number[], y: number[]): number;
 
 /**
  *
- * @param {number[]} a
- * @param {number[]} b
- * @param projection
+ * @param {Number[]} a 
+ * @param {Number[]} b 
+ * @param projection 
  */
 export function projectVector2D(a: number[], b: number[], projection: number[]): boolean;
 
 /**
  *
- * @param {number[]} x
- * @param {number[]} y
+ * @param {Number[]} x 
+ * @param {Number[]} y 
  */
 export function distance2BetweenPoints(x: number[], y: number[]): number;
 
 /**
  * Angle between 3D vectors
- * @param {vec3} v1
- * @param {vec3} v2
+ * @param {vec3} v1 
+ * @param {vec3} v2 
  */
 export function angleBetweenVectors(v1: vec3, v2: vec3): number;
 
@@ -320,392 +318,392 @@ export function angleBetweenVectors(v1: vec3, v2: vec3): number;
  * angle between v1 and v2 with regards to plane defined by normal vN.Signed
  * angle between v1 and v2 with regards to plane defined by normal
  * vN.t3(mat_3x3, in_3, out_3)
- * @param {vec3} v1
- * @param {vec3} v2
- * @param {vec3} vN
+ * @param {vec3} v1 
+ * @param {vec3} v2 
+ * @param {vec3} vN 
  */
 export function signedAngleBetweenVectors(v1: vec3, v2: vec3, vN: vec3): number;
 
 
 /**
  *
- * @param {number} mean
- * @param {number} variance
- * @param {number} position
+ * @param {Number} mean 
+ * @param {Number} variance 
+ * @param {Number} position 
  */
 export function gaussianAmplitude(mean: number, variance: number, position: number): number;
 
 /**
  *
- * @param {number} mean
- * @param {number} variance
- * @param {number} position
+ * @param {Number} mean 
+ * @param {Number} variance 
+ * @param {Number} position 
  */
 export function gaussianWeight(mean: number, variance: number, position: number): number;
 
 /**
  *
- * @param {number[]} x
- * @param {number[]} y
- * @param {number[]} out_2x2
+ * @param {Number[]} x 
+ * @param {Number[]} y 
+ * @param {Number[]} out_2x2 
  */
 export function outer2D(x: number[], y: number[], out_2x2: number[]): void;
 
 /**
  *
- * @param {number[]} x2D
+ * @param {Number[]} x2D 
  */
 export function norm2D(x2D: number[]): number;
 
 /**
  *
- * @param {number[]} x
+ * @param {Number[]} x 
  */
 export function normalize2D(x: number[]): number;
 
 /**
  *
- * @param {number[]} args
+ * @param {Number[]} args 
  */
 export function determinant2x2(args: number[]): number;
 
 /**
  *
- * @param {mat3} mat_3x3
- * @param {number[]} index_3
+ * @param {mat3} mat_3x3 
+ * @param {Number[]} index_3 
  */
 export function LUFactor3x3(mat_3x3: mat3, index_3: number[]): void;
 
 /**
  *
- * @param {mat3} mat_3x3
- * @param {number[]} index_3
- * @param {number[]} x_3
+ * @param {mat3} mat_3x3 
+ * @param {Number[]} index_3 
+ * @param {Number[]} x_3 
  */
 export function LUSolve3x3(mat_3x3: mat3, index_3: number[], x_3: number[]): void;
 
 /**
  *
- * @param {mat3} mat_3x3
- * @param {number[]} x_3
- * @param {number[]} y_3
+ * @param {mat3} mat_3x3 
+ * @param {Number[]} x_3 
+ * @param {Number[]} y_3 
  */
 export function linearSolve3x3(mat_3x3: mat3, x_3: number[], y_3: number[]): void;
 
 /**
  *
- * @param {mat3} mat_3x3
- * @param {vec3} in_3
- * @param {vec3} out_3
+ * @param {mat3} mat_3x3 
+ * @param {vec3} in_3 
+ * @param {vec3} out_3 
  */
 export function multiply3x3_vect3(mat_3x3: mat3, in_3: vec3, out_3: vec3): void;
 
 /**
  *
- * @param {mat3} a_3x3
- * @param {mat3} b_3x3
- * @param {mat3} out_3x3
+ * @param {mat3} a_3x3 
+ * @param {mat3} b_3x3 
+ * @param {mat3} out_3x3 
  */
 export function multiply3x3_mat3(a_3x3: mat3, b_3x3: mat3, out_3x3: mat3): void;
 
 /**
  *
- * @param {number[]} a
- * @param {number[]} b
- * @param {number} rowA
- * @param {number} colA
- * @param {number} rowB
- * @param {number} colB
- * @param {number[]} out_rowXcol
+ * @param {Number[]} a 
+ * @param {Number[]} b 
+ * @param {Number} rowA 
+ * @param {Number} colA 
+ * @param {Number} rowB 
+ * @param {Number} colB 
+ * @param {Number[]} out_rowXcol 
  */
 export function multiplyMatrix(a: number[], b: number[], rowA: number, colA: number, rowB: number, colB: number, out_rowXcol: number[]): void;
 
 /**
  *
- * @param {mat3} in_3x3
- * @param {number[]} outT_3x3
+ * @param {mat3} in_3x3 
+ * @param {Number[]} outT_3x3 
  */
 export function transpose3x3(in_3x3: mat3, outT_3x3: number[]): void;
 
 /**
  *
- * @param {mat3} in_3x3
- * @param {number[]} outI_3x3
+ * @param {mat3} in_3x3 
+ * @param {Number[]} outI_3x3 
  */
 export function invert3x3(in_3x3: mat3, outI_3x3: number[]): void;
 
 /**
  *
- * @param {mat3} mat_3x3
+ * @param {mat3} mat_3x3 
  */
 export function identity3x3(mat_3x3: mat3): void;
 
 /**
  *
- * @param {mat3} mat_3x3
+ * @param {mat3} mat_3x3 
  */
 export function determinant3x3(mat_3x3: mat3): number;
 
 /**
  *
- * @param {number[]} quat_4
- * @param {mat3} mat_3x3
+ * @param {Number[]} quat_4 
+ * @param {mat3} mat_3x3 
  */
 export function quaternionToMatrix3x3(quat_4: number[], mat_3x3: mat3): void;
 
 /**
  *
- * @param {number[]} a
- * @param {number[]} b
- * @param {number} eps
+ * @param {Number[]} a 
+ * @param {Number[]} b 
+ * @param {Number} eps 
  */
 export function areEquals(a: number[], b: number[], eps: number): boolean;
 
 /**
  *
- * @param {number} num
- * @param {number} [digits]
+ * @param {Number} num 
+ * @param {Number} [digits] 
  */
 export function roundNumber(num: number, digits?: number): number;
 
 /**
  *
- * @param {vec3} vector
- * @param {number[]} [out]
- * @param {number} [digits]
+ * @param {vec3} vector 
+ * @param {Number[]} [out] 
+ * @param {Number} [digits] 
  */
 export function roundVector(vector: vec3, out?: number[], digits?: number): number[];
 
 /**
  *
- * @param {number[]} a
- * @param {number} n
- * @param {number[]} w
- * @param {number[]} v
+ * @param {Number[]} a 
+ * @param {Number} n 
+ * @param {Number[]} w 
+ * @param {Number[]} v 
  */
 export function jacobiN(a: number[], n: number, w: number[], v: number[]): number;
 
 /**
  *
- * @param {mat3} mat_3x3
- * @param {number[]} quat_4
+ * @param {mat3} mat_3x3 
+ * @param {Number[]} quat_4 
  */
 export function matrix3x3ToQuaternion(mat_3x3: mat3, quat_4: number[]): void;
 
 /**
  *
- * @param {number[]} quat_1
- * @param {number[]} quat_2
- * @param {number[]} quat_out
+ * @param {Number[]} quat_1 
+ * @param {Number[]} quat_2 
+ * @param {Number[]} quat_out 
  */
 export function multiplyQuaternion(quat_1: number[], quat_2: number[], quat_out: number[]): void;
 
 /**
  *
- * @param {mat3} a_3x3
- * @param {mat3} out_3x3
+ * @param {mat3} a_3x3 
+ * @param {mat3} out_3x3 
  */
 export function orthogonalize3x3(a_3x3: mat3, out_3x3: mat3): void;
 
 /**
  *
- * @param {mat3} a_3x3
- * @param {vec3} w_3
- * @param {mat3} v_3x3
+ * @param {mat3} a_3x3 
+ * @param {vec3} w_3 
+ * @param {mat3} v_3x3 
  */
 export function diagonalize3x3(a_3x3: mat3, w_3: vec3, v_3x3: mat3): void;
 
 /**
  *
- * @param {mat3} a_3x3
- * @param {mat3} u_3x3
- * @param {vec3} w_3
- * @param {mat3} vT_3x3
+ * @param {mat3} a_3x3 
+ * @param {mat3} u_3x3 
+ * @param {vec3} w_3 
+ * @param {mat3} vT_3x3 
  */
 export function singularValueDecomposition3x3(a_3x3: mat3, u_3x3: mat3, w_3: vec3, vT_3x3: mat3): void;
 
 /**
  *
- * @param {number[]} A
- * @param {number[]} index
- * @param {number} size
+ * @param {Number[]} A 
+ * @param {Number[]} index 
+ * @param {Number} size 
  */
 export function luFactorLinearSystem(A: number[], index: number[], size: number): number;
 
 /**
  *
- * @param {number[]} A
- * @param {number[]} index
- * @param x
- * @param {number} size
+ * @param {Number[]} A 
+ * @param {Number[]} index 
+ * @param {Number[]} x 
+ * @param {Number} size 
  */
 export function luSolveLinearSystem(A: number[], index: number[], x: number[], size: number): void;
 
 /**
  *
- * @param {number[]} A
- * @param {number[]} x
- * @param {number} size
+ * @param {Number[]} A 
+ * @param {Number[]} x 
+ * @param {Number} size 
  */
 export function solveLinearSystem(A: number[], x: number[], size: number): number;
 
 /**
  *
- * @param {number[]} A
- * @param {number[]} AI
- * @param {number} size
- * @param {?} [index]
- * @param {?} [column]
+ * @param {Number[]} A 
+ * @param {Number[]} AI 
+ * @param {Number} size 
+ * @param {?} [index] 
+ * @param {?} [column] 
  */
 export function invertMatrix(A: number[], AI: number[], size: number, index?: any, column?: any): number;
 
 /**
  *
- * @param {number[]} A
- * @param {number} size
+ * @param {Number[]} A 
+ * @param {Number} size 
  */
 export function estimateMatrixCondition(A: number[], size: number): number;
 
 /**
  *
- * @param {mat3} a_3x3
- * @param {number[]} w
- * @param {number[]} v
+ * @param {mat3} a_3x3 
+ * @param {Number[]} w 
+ * @param {Number[]} v 
  */
 export function jacobi(a_3x3: mat3, w: number[], v: number[]): number;
 
 /**
  *
- * @param {number} numberOfSamples
- * @param {number[]} xt
- * @param {number} xOrder
- * @param {number[]} mt
+ * @param {Number} numberOfSamples 
+ * @param {Number[]} xt 
+ * @param {Number} xOrder 
+ * @param {Number[]} mt 
  */
 export function solveHomogeneousLeastSquares(numberOfSamples: number, xt: number[], xOrder: number, mt: number[]): number;
 
 /**
  *
- * @param {number} numberOfSamples
- * @param {number[]} xt
- * @param {number} xOrder
- * @param {number[]} yt
- * @param {number} yOrder
- * @param {number[]} mt
- * @param {boolean} checkHomogeneous
+ * @param {Number} numberOfSamples 
+ * @param {Number[]} xt 
+ * @param {Number} xOrder 
+ * @param {Number[]} yt 
+ * @param {Number} yOrder 
+ * @param {Number[]} mt 
+ * @param {Boolean} checkHomogeneous 
  */
 export function solveLeastSquares(numberOfSamples: number, xt: number[], xOrder: number, yt: number[], yOrder: number, mt: number[], checkHomogeneous: boolean): number;
 
 /**
  *
- * @param {string} hexStr
- * @param {number[]} outFloatArray
+ * @param {String} hexStr 
+ * @param {Number[]} outFloatArray 
  */
 export function hex2float(hexStr: string, outFloatArray: number[]): number[];
 
 /**
  *
- * @param {number[]} rgb
- * @param {number[]} hsv
+ * @param {Number[]} rgb An Array of the RGB color.
+ * @param {Number[]} hsv An Array of the HSV color.
  */
 export function rgb2hsv(rgb: number[], hsv: number[]): void;
 
 /**
  *
- * @param {number[]} hsv
- * @param {number[]} rgb
+ * @param {Number[]} hsv An Array of the HSV color.
+ * @param {Number[]} rgb An Array of the RGB color.
  */
 export function hsv2rgb(hsv: number[], rgb: number[]): void;
 
 /**
  *
- * @param {number[]} lab
- * @param {number[]} xyz
+ * @param {Number[]} lab 
+ * @param {Number[]} xyz 
  */
 export function lab2xyz(lab: number[], xyz: number[]): void;
 
 /**
  *
- * @param {number[]} xyz
- * @param {number[]} lab
+ * @param {Number[]} xyz 
+ * @param {Number[]} lab 
  */
 export function xyz2lab(xyz: number[], lab: number[]): void;
 
 /**
  *
- * @param {number[]} xyz
- * @param {number[]} rgb
+ * @param {Number[]} xyz 
+ * @param {Number[]} rgb An Array of the RGB color.
  */
 export function xyz2rgb(xyz: number[], rgb: number[]): void;
 
 /**
  *
- * @param {number[]} rgb
- * @param {number[]} xyz
+ * @param {Number[]} rgb An Array of the RGB color.
+ * @param {Number[]} xyz 
  */
 export function rgb2xyz(rgb: number[], xyz: number[]): void;
 
 /**
  *
- * @param {number[]} rgb
- * @param {number[]} lab
+ * @param {Number[]} rgb 
+ * @param {Number[]} lab 
  */
 export function rgb2lab(rgb: number[], lab: number[]): void;
 
 /**
  *
- * @param {number[]} lab
- * @param {number[]} rgb
+ * @param {Number[]} lab 
+ * @param {Number[]} rgb An Array of the RGB color.
  */
 export function lab2rgb(lab: number[], rgb: number[]): void;
 
 /**
  *
- * @param {number[]} bounds
+ * @param {Number[]} bounds 
  */
 export function uninitializeBounds(bounds: number[]): void;
 
 /**
  *
- * @param {number[]} bounds
+ * @param {Number[]} bounds 
  */
 export function areBoundsInitialized(bounds: number[]): boolean;
 
 /**
  *
- * @param {number[]} point1
- * @param {number[]} point2
- * @param {number[]} bounds
+ * @param {Number[]} point1 
+ * @param {Number[]} point2 
+ * @param {Number[]} bounds 
  */
 export function computeBoundsFromPoints(point1: number[], point2: number[], bounds: number[]): void;
 
 /**
  *
- * @param {number} value
- * @param {number} minValue
- * @param {number} maxValue
+ * @param {Number} value 
+ * @param {Number} minValue 
+ * @param {Number} maxValue 
  */
 export function clampValue(value: number, minValue: number, maxValue: number): number[];
 
 /**
  *
- * @param {number[]} vector
- * @param {number[]} minVector
- * @param {number[]} maxVector
- * @param {number[]} out
+ * @param {Number[]} vector 
+ * @param {Number[]} minVector 
+ * @param {Number[]} maxVector 
+ * @param {Number[]} out 
  */
 export function clampVector(vector: number[], minVector: number[], maxVector: number[], out: number[]): number[];
 
 /**
  *
- * @param {number[]} vector
- * @param {number[]} out
+ * @param {Number[]} vector 
+ * @param {Number[]} out 
  */
 export function roundVector(vector: number[], out: number[]): number[];
 
 /**
  *
- * @param {number} value
- * @param {number[]} range
+ * @param {Number} value 
+ * @param {Number[]} range 
  */
 export function clampAndNormalizeValue(value: number, range: number[]): number;
 
@@ -721,30 +719,39 @@ export function getAdjustedScalarRange(): void;
 
 /**
  *
- * @param {number[]} extent1
- * @param {number[]} extent2
+ * @param {Number[]} extent1 
+ * @param {Number[]} extent2 
  */
 export function extentIsWithinOtherExtent(extent1: number[], extent2: number[]): number;
 
 /**
  *
- * @param {number[]} bounds1_6
- * @param {number[]} bounds2_6
- * @param {number[]} delta_3
+ * @param {Number[]} bounds1_6 
+ * @param {Number[]} bounds2_6 
+ * @param {Number[]} delta_3 
  */
 export function boundsIsWithinOtherBounds(bounds1_6: number[], bounds2_6: number[], delta_3: number[]): number;
 
 /**
  *
- * @param {number[]} point_3
- * @param {number[]} bounds_6
- * @param {number[]} delta_3
+ * @param {Number[]} point_3 
+ * @param {Number[]} bounds_6 
+ * @param {Number[]} delta_3 
  */
 export function pointIsWithinBounds(point_3: number[], bounds_6: number[], delta_3: number[]): number;
 
 /**
+ *
+ * @param {Number[]} p1 
+ * @param {Number[]} p2 
+ * @param {Number[]} p3 
+ * @param {Number[]} center 
+ */
+export function solve3PointCircle(p1: number[], p2: number[], p3: number[], center: number[]): number;
+ 
+/**
  * Determines whether the passed value is a infinite number.
- * @param {number} value
+ * @param {Number} value 
  */
 export function isInf(value: number): boolean;
 
@@ -755,44 +762,44 @@ export function createUninitializedBounds(): number[];
 
 /**
  *
- * @param {number[]} vector
+ * @param {Number[]} vector 
  */
 export function getMajorAxisIndex(vector: number[]): number;
 
 /**
  *
- * @param {number} value
+ * @param {Number} value 
  */
 export function floatToHex2(value: number): string;
 
 /**
  *
- * @param {number[]} rgbArray
- * @param {string} [prefix]
+ * @param {Number[]} rgbArray 
+ * @param {string} [prefix] 
  */
 export function floatRGB2HexCode(rgbArray: number[], prefix?: string): string;
 
 /**
  *
- * @param {number[]} rgbArray
+ * @param {Number[]} rgbArray 
  */
 export function float2CssRGBA(rgbArray: number[]): string;
 
 /**
  * Determines whether the passed value is a NaN.
- * @param {number} value
+ * @param {Number} value 
  */
 export function isNan(value: number): boolean;
 
 /**
  * Determines whether the passed value is a NaN.
- * @param {number} value
+ * @param {Number} value 
  */
 export function isNaN(value: number): boolean;
 
 /**
  * Determines whether the passed value is a finite number.
- * @param value
+ * @param value 
  */
 export function isFinite(value: any): boolean;
 
