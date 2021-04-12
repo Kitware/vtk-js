@@ -530,15 +530,9 @@ export function setArray(
           );
         }
       }
-      let changeDetected = false;
-      model[field].forEach((item, index) => {
-        if (item !== array[index]) {
-          if (changeDetected) {
-            return;
-          }
-          changeDetected = true;
-        }
-      });
+      const changeDetected = model[field].some(
+        (item, index) => item !== array[index]
+      );
 
       if (changeDetected || model[field].length !== array.length) {
         model[field] = Array.from(array);
