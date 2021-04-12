@@ -75,7 +75,7 @@ function vtkZipMultiDataSetReader(publicAPI, model) {
               zipEntry.async('arraybuffer').then((arraybuffer) => {
                 processing--;
                 const [type, id] = relativePath.split('_').slice(-2);
-                model.arrays[id] = new macro.TYPED_ARRAYS[type](arraybuffer);
+                model.arrays[id] = macro.newTypedArray(type, arraybuffer);
                 if (!processing) {
                   resolve();
                 }

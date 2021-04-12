@@ -20,7 +20,7 @@ import Constants from 'vtk.js/Sources/Imaging/Core/ImageReslice/Constants';
 
 const { SlabMode } = Constants;
 
-const { TYPED_ARRAYS, capitalize, vtkErrorMacro } = macro;
+const { capitalize, vtkErrorMacro } = macro;
 
 // ----------------------------------------------------------------------------
 // vtkImageReslice methods
@@ -235,7 +235,8 @@ function vtkImageReslice(publicAPI, model) {
       .getScalars()
       .getNumberOfComponents(); // or s.numberOfComponents;
 
-    const outScalarsData = new TYPED_ARRAYS[dataType](
+    const outScalarsData = macro.newTypedArray(
+      dataType,
       outDims[0] * outDims[1] * outDims[2] * numComponents
     );
     const outScalars = vtkDataArray.newInstance({
@@ -387,7 +388,10 @@ function vtkImageReslice(publicAPI, model) {
       floatPtr = new Float64Array(inComponents * (outExt[1] - outExt[0]));
     }
 
-    const background = new TYPED_ARRAYS[inputScalarType](model.backgroundColor);
+    const background = macro.newTypedArray(
+      inputScalarType,
+      model.backgroundColor
+    );
 
     // set color for area outside of input volume extent
     // void *background;
@@ -427,7 +431,8 @@ function vtkImageReslice(publicAPI, model) {
     iter.initialize(output, outExt, model.stencil, null);
     const outPtr0 = iter.getScalars(output, 0);
     let outPtrIndex = 0;
-    const outTmp = new TYPED_ARRAYS[scalarType](
+    const outTmp = macro.newTypedArray(
+      scalarType,
       vtkBoundingBox.getDiagonalLength(outExt) * outComponents * 2
     );
 

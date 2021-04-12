@@ -31,11 +31,11 @@ function vtkWebGPUShaderCache(publicAPI, model) {
     // has it already been created?
     const sType = shaderDesc.getType();
     const sHash = shaderDesc.getHash();
-    const keys = model.shaderModules.keys();
+    const keys = model._shaderModules.keys();
     for (let i = 0; i < keys.length; i++) {
       const key = keys[i];
       if (key.getHash() === sHash && key.getType() === sType) {
-        return model.shaderModules.get(key);
+        return model._shaderModules.get(key);
       }
     }
 
@@ -43,7 +43,7 @@ function vtkWebGPUShaderCache(publicAPI, model) {
 
     const sm = vtkWebGPUShaderModule.newInstance();
     sm.initialize(model.device, shaderDesc);
-    model.shaderModules.set(shaderDesc, sm);
+    model._shaderModules.set(shaderDesc, sm);
     return sm;
   };
 }
@@ -64,7 +64,7 @@ export function extend(publicAPI, model, initialValues = {}) {
   Object.assign(model, DEFAULT_VALUES, initialValues);
 
   // Internal objects
-  model.shaderModules = new Map();
+  model._shaderModules = new Map();
 
   // Build VTK API
   macro.obj(publicAPI, model);

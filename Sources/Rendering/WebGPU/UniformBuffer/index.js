@@ -15,12 +15,12 @@ function vtkWebGPUUniformBuffer(publicAPI, model) {
   model.classHierarchy.push('vtkWebGPUUniformBuffer');
 
   publicAPI.addEntry = (name, type) => {
-    if (model.bufferEntryNames.has(name)) {
+    if (model._bufferEntryNames.has(name)) {
       vtkErrorMacro(`entry named ${name} already exists`);
       return;
     }
     model.sortDirty = true;
-    model.bufferEntryNames.set(name, model.bufferEntries.length);
+    model._bufferEntryNames.set(name, model.bufferEntries.length);
     model.bufferEntries.push({
       name,
       type,
@@ -162,9 +162,9 @@ function vtkWebGPUUniformBuffer(publicAPI, model) {
 
     // update entries and entryNames
     model.bufferEntries = newEntries;
-    model.bufferEntryNames.clear();
+    model._bufferEntryNames.clear();
     for (let i = 0; i < model.bufferEntries.length; i++) {
-      model.bufferEntryNames.set(model.bufferEntries[i].name, i);
+      model._bufferEntryNames.set(model.bufferEntries[i].name, i);
     }
     model.sizeInBytes = currOffset;
     model.sortDirty = false;
@@ -214,13 +214,13 @@ function vtkWebGPUUniformBuffer(publicAPI, model) {
       if (!model.arrayBuffer) {
         model.arrayBuffer = new ArrayBuffer(model.sizeInBytes);
       }
-      model[type] = new window[type](model.arrayBuffer);
+      model[type] = macro.newTypedArray(type, model.arrayBuffer);
     }
   };
 
   publicAPI.setValue = (name, val) => {
     publicAPI.sortBufferEntries();
-    const idx = model.bufferEntryNames.get(name);
+    const idx = model._bufferEntryNames.get(name);
     if (idx === undefined) {
       vtkErrorMacro(`entry named ${name} not found in UBO`);
       return;
@@ -236,7 +236,7 @@ function vtkWebGPUUniformBuffer(publicAPI, model) {
 
   publicAPI.setArray = (name, arr) => {
     publicAPI.sortBufferEntries();
-    const idx = model.bufferEntryNames.get(name);
+    const idx = model._bufferEntryNames.get(name);
     if (idx === undefined) {
       vtkErrorMacro(`entry named ${name} not found in UBO`);
       return;
@@ -254,7 +254,7 @@ function vtkWebGPUUniformBuffer(publicAPI, model) {
 
   publicAPI.getNativeView = (name) => {
     publicAPI.sortBufferEntries();
-    const idx = model.bufferEntryNames.get(name);
+    const idx = model._bufferEntryNames.get(name);
     if (idx === undefined) {
       vtkErrorMacro(`entry named ${name} not found in UBO`);
       return undefined;
@@ -263,7 +263,8 @@ function vtkWebGPUUniformBuffer(publicAPI, model) {
     publicAPI.createView(entry.nativeType);
     const bpe = model[entry.nativeType].BYTES_PER_ELEMENT;
     model.sendDirty = true;
-    return new window[entry.nativeType](
+    return macro.newTypedArray(
+      entry.nativeType,
       model.arrayBuffer,
       entry.offset,
       entry.sizeInBytes / bpe
@@ -275,13 +276,15 @@ function vtkWebGPUUniformBuffer(publicAPI, model) {
     // sort the entries
     publicAPI.sortBufferEntries();
 
-    let result = `[[block]] struct ${model.name}Struct\n{\n`;
+    const lines = [`[[block]] struct ${model.name}Struct\n{`];
     for (let i = 0; i < model.bufferEntries.length; i++) {
       const entry = model.bufferEntries[i];
-      result += `[[offset(${entry.offset})]] ${entry.name}: ${entry.type};\n`;
+      lines.push(`[[offset(${entry.offset})]] ${entry.name}: ${entry.type};`);
     }
-    result += `};\n[[binding(${model.binding}), group(${model.group})]] var<uniform> ${model.name}: ${model.name}Struct;`;
-    return result;
+    lines.push(
+      `};\n[[binding(${model.binding}), group(${model.group})]] var<uniform> ${model.name}: ${model.name}Struct;`
+    );
+    return lines.join('\n');
   };
 }
 
@@ -307,7 +310,7 @@ export function extend(publicAPI, model, initialValues = {}) {
   macro.obj(publicAPI, model);
 
   // Internal objects
-  model.bufferEntryNames = new Map();
+  model._bufferEntryNames = new Map();
   model.bufferEntries = [];
 
   model.sendTime = {};

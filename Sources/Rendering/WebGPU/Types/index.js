@@ -1,3 +1,5 @@
+import { vtkErrorMacro } from 'vtk.js/Sources/macro';
+
 // ----------------------------------------------------------------------------
 // vtkWebGPUDevice static functions
 //
@@ -10,34 +12,59 @@
 //  - texture types such as rgba32float
 // ----------------------------------------------------------------------------
 
+// see https://gpuweb.github.io/gpuweb/#enumdef-gpuvertexformat
+// for possible formats
 function getByteStrideFromBufferFormat(format) {
-  if (!format) return 0;
-  let numComp = 1;
-  if (format.substring(format.length - 2) === 'x4') numComp = 4;
-  if (format.substring(format.length - 2) === 'x3') numComp = 3;
-  if (format.substring(format.length - 2) === 'x2') numComp = 2;
+  if (!format || format.length < 5) return 0;
 
-  let typeSize = 4;
-  if (numComp > 1) {
-    if (format.substring(format.length - 3, format.length - 1) === '8x') {
-      typeSize = 1;
-    }
-    if (format.substring(format.length - 4, format.length - 1) === '16x') {
-      typeSize = 2;
-    }
-  } else {
-    if (format.substring(format.length - 1) === '8') typeSize = 1;
-    if (format.substring(format.length - 2) === '16') typeSize = 2;
+  // options are x2, x3, x4 or nothing
+  let numComp = 1;
+  if (format[format.length - 2] === 'x') {
+    numComp = format[format.length - 1];
   }
+
+  const sizeStart = numComp === 1 ? format.length - 1 : format.length - 3;
+  // options are 8, 16, 32 resulting in 8, 6, 2 as the last char
+  // plugged into the formula below gives 1, 2, 4 respectively
+  const num = Number(format[sizeStart]);
+  if (Number.isNaN(num)) {
+    vtkErrorMacro(`unknown format ${format}`);
+    return 0;
+  }
+  const typeSize = 5 - num / 2;
   return numComp * typeSize;
 }
 
+// see https://gpuweb.github.io/gpuweb/#enumdef-gpuvertexformat
+// for possible formats
 function getNativeTypeFromBufferFormat(format) {
-  if (!format) return null;
-  if (format.substring(0, 7) === 'float32') return 'Float32Array';
-  if (format.substring(0, 6) === 'snorm8') return 'Int8Array';
-  if (format.substring(0, 6) === 'unorm8') return 'Uint8Array';
-  return '';
+  if (!format || format.length < 5) return 0;
+
+  // raw types are Uint Int or Float as follows
+  let result;
+  if (format[0] === 'f') {
+    result = 'Float';
+  } else if (format[0] === 's') {
+    result = 'Int';
+  } else if (format[0] === 'u') {
+    result = 'Uint';
+  } else {
+    vtkErrorMacro(`unknown format ${format}`);
+    return undefined;
+  }
+
+  // options are 8, 16, 32 resulting in 8, 6, 2 as the last char
+  // plugged into the formula below gives 1, 2, 4 respectively
+  const base = format.split('x')[0];
+  const num = Number(base[base.length - 1]);
+  if (Number.isNaN(num)) {
+    vtkErrorMacro(`unknown format ${format}`);
+    return undefined;
+  }
+  result += 8 * (5 - num / 2);
+  result += 'Array';
+
+  return result;
 }
 
 function getByteStrideFromShaderFormat(format) {
@@ -55,15 +82,12 @@ function getByteStrideFromShaderFormat(format) {
 }
 
 function getNativeTypeFromShaderFormat(format) {
-  if (!format) return null;
-  let type = format.substring(format.length - 3, format.length);
-  if (format[format.length - 1] === '>') {
-    type = format.substring(format.length - 4, format.length - 1);
-  }
-  if (type === 'f32') return 'Float32Array';
-  if (type === 'i32') return 'Int32Array';
-  if (type === 'u32') return 'Uint32Array';
-  return '';
+  if (!format) return undefined;
+  if (format.includes('f32')) return 'Float32Array';
+  if (format.includes('i32')) return 'Int32Array';
+  if (format.includes('u32')) return 'Uint32Array';
+  vtkErrorMacro(`unknown format ${format}`);
+  return undefined;
 }
 
 export default {

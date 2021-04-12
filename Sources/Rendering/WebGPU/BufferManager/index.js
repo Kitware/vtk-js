@@ -13,12 +13,6 @@ const { vtkDebugMacro } = macro;
 // the webgpu constants all show up as undefined
 /* eslint-disable no-undef */
 
-// const { ObjectType } = Constants;
-
-// ----------------------------------------------------------------------------
-// Global methods
-// ----------------------------------------------------------------------------
-
 // ----------------------------------------------------------------------------
 // Static API
 // ----------------------------------------------------------------------------
@@ -205,7 +199,8 @@ function packArray(
   let vboidx = 0;
 
   const numComp = inArray.getNumberOfComponents();
-  const packedVBO = new window[outputType](
+  const packedVBO = macro.newTypedArray(
+    outputType,
     caboCount * (numComp + (packExtra ? 1 : 0))
   );
 

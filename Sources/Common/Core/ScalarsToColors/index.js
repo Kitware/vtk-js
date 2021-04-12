@@ -222,7 +222,8 @@ function vtkScalarsToColors(publicAPI, model) {
         dataType: VtkDataTypes.UNSIGNED_CHAR,
       };
 
-      const s = new window[newscalars.dataType](
+      const s = macro.newTypedArray(
+        newscalars.dataType,
         4 * scalars.getNumberOfTuples()
       );
       newscalars.values = s;

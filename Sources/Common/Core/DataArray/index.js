@@ -307,9 +307,9 @@ export function extend(publicAPI, model, initialValues = {}) {
   }
 
   if (!model.values) {
-    model.values = new window[model.dataType](model.size);
+    model.values = macro.newTypedArray(model.dataType, model.size);
   } else if (Array.isArray(model.values)) {
-    model.values = window[model.dataType].from(model.values);
+    model.values = macro.newTypedArrayFrom(model.dataType, model.values);
   }
 
   if (model.values) {

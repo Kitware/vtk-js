@@ -188,7 +188,7 @@ function vtkConcentricCylinderSource(publicAPI, model) {
 
     // Points
     let pointIdx = 0;
-    const points = new window[model.pointType](numberOfPoints * 3);
+    const points = macro.newTypedArray(model.pointType, numberOfPoints * 3);
 
     // Cells
     let cellLocation = 0;

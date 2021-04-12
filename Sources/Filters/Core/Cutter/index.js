@@ -1,7 +1,7 @@
 import * as macro from 'vtk.js/Sources/macro';
 import vtkPolyData from 'vtk.js/Sources/Common/DataModel/PolyData';
 
-const { vtkErrorMacro, TYPED_ARRAYS } = macro;
+const { vtkErrorMacro } = macro;
 
 function initPolyIterator(pd) {
   const polys = pd.getPolys().getData();
@@ -235,7 +235,7 @@ function vtkCutter(publicAPI, model) {
     // Set points
     const outputPoints = output.getPoints();
     outputPoints.setData(
-      TYPED_ARRAYS[points.getDataType()].from(newPointsData),
+      macro.newTypedArrayFrom(points.getDataType(), newPointsData),
       3
     );
 

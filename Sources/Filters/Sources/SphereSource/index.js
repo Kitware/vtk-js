@@ -52,7 +52,7 @@ function vtkSphereSource(publicAPI, model) {
 
     // Points
     let pointIdx = 0;
-    let points = new window[pointDataType](numPts * 3);
+    let points = macro.newTypedArray(pointDataType, numPts * 3);
 
     // Normals
     let normals = new Float32Array(numPts * 3);
