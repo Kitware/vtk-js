@@ -72,8 +72,6 @@ export function extend(publicAPI, model, initialValues = {}) {
 
   // Object methods
   vtkWebGPUShaderCache(publicAPI, model);
-
-  return Object.freeze(publicAPI);
 }
 
 // ----------------------------------------------------------------------------

@@ -1,23 +1,10 @@
 import macro from 'vtk.js/Sources/macro';
 import { mat4 } from 'gl-matrix';
-import vtkWebGPUBufferManager from 'vtk.js/Sources/Rendering/WebGPU/BufferManager';
+import vtkWebGPUUniformBuffer from 'vtk.js/Sources/Rendering/WebGPU/UniformBuffer';
 import vtkViewNode from 'vtk.js/Sources/Rendering/SceneGraph/ViewNode';
 import * as vtkMath from 'vtk.js/Sources/Common/Core/Math';
 
 const { vtkDebugMacro } = macro;
-const { BufferUsage } = vtkWebGPUBufferManager;
-
-const vtkWebGPURendererUBOCode = `
-[[block]] struct renderVals
-{
-  [[offset(0)]] WCDCMatrix : mat4x4<f32>;
-  [[offset(64)]] WCVCMatrix : mat4x4<f32>;
-  [[offset(128)]] VCDCMatrix : mat4x4<f32>;
-  [[offset(192)]] WCVCNormals : mat4x4<f32>;
-};
-[[binding(0), group(0)]] var<uniform> rendererUBO : renderVals;
-`;
-const vtkWebGPURenderUBOSize = 256 / 4;
 
 // ----------------------------------------------------------------------------
 // vtkWebGPURenderer methods
@@ -47,7 +34,7 @@ function vtkWebGPURenderer(publicAPI, model) {
     }
   };
 
-  publicAPI.getUBOCode = () => vtkWebGPURendererUBOCode;
+  publicAPI.getUBOCode = () => model.UBO.getShaderCode();
 
   publicAPI.updateLights = () => {
     let count = 0;
@@ -81,13 +68,10 @@ function vtkWebGPURenderer(publicAPI, model) {
   };
 
   publicAPI.updateUBO = () => {
-    const device = model.parent.getDevice();
-    let needSend = false;
-
     // make sure the data is up to date
     // has the camera changed?
     const cam = model.renderable.getActiveCamera();
-    const utime = model.UBOUpdateTime.getMTime();
+    const utime = model.UBO.getSendTime();
     if (
       model.parent.getMTime() > utime ||
       publicAPI.getMTime() > utime ||
@@ -96,30 +80,26 @@ function vtkWebGPURenderer(publicAPI, model) {
     ) {
       const aspectRatio = publicAPI.getAspectRatio();
       const mat = cam.getCompositeProjectionMatrix(aspectRatio, -1, 1);
-      for (let i = 0; i < 4; i++) {
-        for (let j = 0; j < 4; j++) {
-          model.UBOData[i * 4 + j] = mat[j * 4 + i];
-        }
-      }
-      model.UBOData[0] = mat[0];
-      model.UBOData[4] = mat[1];
-      model.UBOData[8] = mat[2];
-      model.UBOData[12] = mat[3];
+      const uboData = model.UBO.getNativeView('WCDCMatrix');
+      uboData[0] = mat[0];
+      uboData[4] = mat[1];
+      uboData[8] = mat[2];
+      uboData[12] = mat[3];
 
-      model.UBOData[1] = mat[4];
-      model.UBOData[5] = mat[5];
-      model.UBOData[9] = mat[6];
-      model.UBOData[13] = mat[7];
+      uboData[1] = mat[4];
+      uboData[5] = mat[5];
+      uboData[9] = mat[6];
+      uboData[13] = mat[7];
 
-      model.UBOData[2] = 0.5 * mat[8] + 0.5 * mat[12];
-      model.UBOData[6] = 0.5 * mat[9] + 0.5 * mat[13];
-      model.UBOData[10] = 0.5 * mat[10] + 0.5 * mat[14];
-      model.UBOData[14] = 0.5 * mat[11] + 0.5 * mat[15];
+      uboData[2] = 0.5 * mat[8] + 0.5 * mat[12];
+      uboData[6] = 0.5 * mat[9] + 0.5 * mat[13];
+      uboData[10] = 0.5 * mat[10] + 0.5 * mat[14];
+      uboData[14] = 0.5 * mat[11] + 0.5 * mat[15];
 
-      model.UBOData[3] = mat[12];
-      model.UBOData[7] = mat[13];
-      model.UBOData[11] = mat[14];
-      model.UBOData[15] = mat[15];
+      uboData[3] = mat[12];
+      uboData[7] = mat[13];
+      uboData[11] = mat[14];
+      uboData[15] = mat[15];
 
       mat4.copy(model.tmpMat4, cam.getViewMatrix());
       // zero out translation
@@ -128,46 +108,10 @@ function vtkWebGPURenderer(publicAPI, model) {
       model.tmpMat4[11] = 0.0;
 
       mat4.invert(model.tmpMat4, model.tmpMat4);
-      model.UBOData.set(model.tmpMat4, 48);
-      // console.log(JSON.stringify(model.UBOData));
+      model.UBO.setArray('WCVCNormals', model.tmpMat4);
 
-      model.UBOUpdateTime.modified();
-      needSend = true;
-    }
-
-    // make sure the buffer is created
-    if (!model.UBO) {
-      const req = {
-        address: model.UBOData,
-        time: 0,
-        usage: BufferUsage.UniformArray,
-      };
-      model.UBO = device.getBufferManager().getBuffer(req);
-      model.UBOBindGroup = device.getHandle().createBindGroup({
-        layout: device.getRendererBindGroupLayout(),
-        entries: [
-          {
-            binding: 0,
-            resource: {
-              buffer: model.UBO.getHandle(),
-            },
-          },
-        ],
-      });
-      needSend = false;
-    }
-
-    // send data down if needed
-    if (needSend) {
-      device
-        .getHandle()
-        .queue.writeBuffer(
-          model.UBO.getHandle(),
-          0,
-          model.UBOData.buffer,
-          model.UBOData.byteOffset,
-          model.UBOData.byteLength
-        );
+      const device = model.parent.getDevice();
+      model.UBO.sendIfNeeded(device, device.getRendererBindGroupLayout());
     }
   };
 
@@ -201,7 +145,7 @@ function vtkWebGPURenderer(publicAPI, model) {
         const pl = pStruct.pipeline;
 
         pl.bind(model.renderEncoder);
-        model.renderEncoder.setBindGroup(0, model.UBOBindGroup);
+        model.renderEncoder.setBindGroup(0, model.UBO.getBindGroup());
         // bind our BindGroup
         // set viewport
         const tsize = publicAPI.getTiledSizeAndOrigin();
@@ -249,7 +193,7 @@ function vtkWebGPURenderer(publicAPI, model) {
         const pl = pStruct.pipeline;
 
         pl.bind(model.renderEncoder);
-        model.renderEncoder.setBindGroup(0, model.UBOBindGroup);
+        model.renderEncoder.setBindGroup(0, model.UBO.getBindGroup());
         // bind our BindGroup
         // set viewport
         const tsize = publicAPI.getTiledSizeAndOrigin();
@@ -359,7 +303,6 @@ function vtkWebGPURenderer(publicAPI, model) {
 const DEFAULT_VALUES = {
   context: null,
   selector: null,
-  UBOData: null,
   renderEncoder: null,
 };
 
@@ -371,14 +314,19 @@ export function extend(publicAPI, model, initialValues = {}) {
   // Inheritance
   vtkViewNode.extend(publicAPI, model, initialValues);
 
-  model.UBOData = new Float32Array(vtkWebGPURenderUBOSize);
-  model.UBOUpdateTime = {};
-  macro.obj(model.UBOUpdateTime);
+  model.UBO = vtkWebGPUUniformBuffer.newInstance();
+  model.UBO.setBinding(0);
+  model.UBO.setGroup(0);
+  model.UBO.setName('rendererUBO');
+  model.UBO.addEntry('WCDCMatrix', 'mat4x4<f32>');
+  model.UBO.addEntry('WCVCMatrix', 'mat4x4<f32>');
+  model.UBO.addEntry('VCDCMatrix', 'mat4x4<f32>');
+  model.UBO.addEntry('WCVCNormals', 'mat4x4<f32>');
 
   model.tmpMat4 = mat4.identity(new Float64Array(16));
 
   // Build VTK API
-  macro.setGet(publicAPI, model, ['renderEncoder', 'selector']);
+  macro.setGet(publicAPI, model, ['renderEncoder', 'selector', 'UBO']);
 
   // Object methods
   vtkWebGPURenderer(publicAPI, model);

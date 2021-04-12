@@ -29,11 +29,11 @@ ToDo
 - PBR lighting to replace the simple model currently coded
 - image display
 - volume rendering
-- transparency
-- actor matrix support
+- actor matrix support with auto shift
 - sphere/stick mappers
-- post render operations/framebuffers
 - hardware selector
+- eventually switch to using IBOs and flat interpolation
+- cropping planes for polydata mapper
 
 Developer Notes
 ============

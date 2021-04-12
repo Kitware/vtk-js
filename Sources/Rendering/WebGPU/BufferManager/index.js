@@ -1,6 +1,7 @@
 import * as macro from 'vtk.js/Sources/macro';
 import * as vtkMath from 'vtk.js/Sources/Common/Core/Math';
 import vtkWebGPUBuffer from 'vtk.js/Sources/Rendering/WebGPU/Buffer';
+import vtkWebGPUTypes from 'vtk.js/Sources/Rendering/WebGPU/Types';
 import vtkProperty from 'vtk.js/Sources/Rendering/Core/Property';
 import Constants from './Constants';
 
@@ -362,36 +363,6 @@ function generateNormals(cellArray, primType, representation, inArray) {
   return packedVBO;
 }
 
-function getStrideFromFormat(format) {
-  if (!format) return 0;
-  let numComp = 1;
-  if (format.substring(format.length - 2) === 'x4') numComp = 4;
-  if (format.substring(format.length - 2) === 'x3') numComp = 3;
-  if (format.substring(format.length - 2) === 'x2') numComp = 2;
-
-  let typeSize = 4;
-  if (numComp > 1) {
-    if (format.substring(format.length - 3, format.length - 1) === '8x') {
-      typeSize = 1;
-    }
-    if (format.substring(format.length - 4, format.length - 1) === '16x') {
-      typeSize = 2;
-    }
-  } else {
-    if (format.substring(format.length - 1) === '8') typeSize = 1;
-    if (format.substring(format.length - 2) === '16') typeSize = 2;
-  }
-  return numComp * typeSize;
-}
-
-function getArrayTypeFromFormat(format) {
-  if (!format) return null;
-  if (format.substring(0, 7) === 'float32') return 'Float32Array';
-  if (format.substring(0, 6) === 'snorm8') return 'Int8Array';
-  if (format.substring(0, 6) === 'unorm8') return 'Uint8Array';
-  return '';
-}
-
 // ----------------------------------------------------------------------------
 // vtkWebGPUBufferManager methods
 // ----------------------------------------------------------------------------
@@ -426,8 +397,8 @@ function vtkWebGPUBufferManager(publicAPI, model) {
     const buffer = vtkWebGPUBuffer.newInstance();
     buffer.setDevice(model.device);
 
-    const stride = getStrideFromFormat(req.format);
-    const arrayType = getArrayTypeFromFormat(req.format);
+    const stride = vtkWebGPUTypes.getByteStrideFromBufferFormat(req.format);
+    const arrayType = vtkWebGPUTypes.getNativeTypeFromBufferFormat(req.format);
     let gpuUsage = null;
 
     // handle uniform buffers
