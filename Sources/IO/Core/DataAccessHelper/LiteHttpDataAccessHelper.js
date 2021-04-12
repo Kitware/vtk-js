@@ -1,7 +1,7 @@
 import macro from 'vtk.js/Sources/macro';
 import Endian from 'vtk.js/Sources/Common/Core/Endian';
 import { DataTypeByteSize } from 'vtk.js/Sources/Common/Core/DataArray/Constants';
-import { registerType } from 'vtk.js/Sources/IO/Core/DataAccessHelper';
+import { has, registerType } from 'vtk.js/Sources/IO/Core/DataAccessHelper';
 
 const { vtkErrorMacro, vtkDebugMacro } = macro;
 
@@ -216,6 +216,9 @@ const LiteHttpDataAccessHelper = {
   fetchImage,
 };
 
-registerType('http', (options) => LiteHttpDataAccessHelper);
+// The lite version should never override a full feature one...
+if (!has('http')) {
+  registerType('http', (options) => LiteHttpDataAccessHelper);
+}
 
 export default LiteHttpDataAccessHelper;
