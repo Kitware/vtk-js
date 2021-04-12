@@ -23,7 +23,8 @@ interface IVolumeMapperInitialValues {
 export interface vtkVolumeMapper extends vtkAbstractMapper {
 
 	/**
-	 * Get the bounds as [xmin, xmax, ymin, ymax, zmin, zmax].
+     * Get the bounds for this mapper as [xmin, xmax, ymin, ymax,zmin, zmax].
+	 * @return {Number[]} The bounds for the mapper.
 	 */
 	getBounds(): number[];
 

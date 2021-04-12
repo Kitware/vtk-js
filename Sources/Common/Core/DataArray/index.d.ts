@@ -34,9 +34,9 @@ interface VtkRangeHelper {
  * const { min: minMagnitude, max: maxMagnitude } = computeRange(array, -1, 3);
  * ```
  *
- * @param {number[]} values Array to go through to extract the range from
- * @param {number} [component] (default: 0) indice to use inside tuple size
- * @param {number} [numberOfComponents] (default: 1) size of the tuple
+ * @param {Number[]} values Array to go through to extract the range from
+ * @param {Number} [component] (default: 0) indice to use inside tuple size
+ * @param {Number} [numberOfComponents] (default: 1) size of the tuple
  */
 export function computeRange(values: number[], component?: number, numberOfComponents?: number): VtkRange;
 
@@ -78,7 +78,7 @@ export function extend(publicAPI: object, model: object, initialValues?: object)
 
 /**
  * Method use to create a new instance of vtkDataArray
- * @param initialValues for pre-setting some of its content
+ * @param {object} [initialValues] for pre-setting some of its content
  */
 export function newInstance(initialValues?: object): VtkDataArray;
 

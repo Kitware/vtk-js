@@ -1,70 +1,18 @@
 import { VtkObject } from "vtk.js/Sources/macro";
 
 interface ILightInitialValues {
-
-    /**
-     * 
-     */
     switch?: boolean;
-
-    /**
-     * 
-     */
     intensity?: number;
-
-    /**
-     * 
-     */
     color?: number[];
-
-    /**
-     * 
-     */
     position?: number[];
-
-    /**
-     * 
-     */
     focalPoint?: number[];
-
-    /**
-     * 
-     */
     positional?: boolean;
-
-    /**
-     * 
-     */
     exponent?: number;
-
-    /**
-     * 
-     */
     coneAngle?: number;
-
-    /**
-     * 
-     */
     attenuationValues?: number[];
-
-    /**
-     * 
-     */
     lightType?: string;
-
-    /**
-     * 
-     */
     shadowAttenuation?: number;
-
-    /**
-     * 
-     */
     direction?: number[];
-
-    /**
-     * 
-     */
     directionMTime?: number;
 }
 
@@ -165,16 +113,16 @@ export interface vtkLight extends VtkObject {
     setAttenuationValuesFrom(attenuationValues: number[]): boolean;
 
     /**
-     * 
-     * @param r 
-     * @param g 
-     * @param b 
+     * Set the color of the object
+     * @param {Number} r Defines the red component (between 0 and 1).
+     * @param {Number} g Defines the green component (between 0 and 1).
+     * @param {Number} b Defines the blue component (between 0 and 1).
      */
     setColor(r: number, g: number, b: number): boolean;
 
     /**
      * 
-     * @param color 
+     * @param {Number[]} color 
      */
     setColorFrom(color: number[]): boolean;
 
@@ -203,9 +151,9 @@ export interface vtkLight extends VtkObject {
 
     /**
      * Set the focal point.
-     * @param x 
-     * @param y 
-     * @param z 
+	 * @param {Number} x The x coordinate.
+	 * @param {Number} y The y coordinate.
+	 * @param {Number} z The z coordinate.
      */
     setFocalPoint(x: number, y: number, z: number): boolean;
 
@@ -259,9 +207,9 @@ export interface vtkLight extends VtkObject {
 
     /**
      * 
-     * @param x 
-     * @param y 
-     * @param z 
+	 * @param {Number} x The x coordinate.
+	 * @param {Number} y The y coordinate.
+	 * @param {Number} z The z coordinate.
      */
     setPosition(x: number, y: number, z: number): boolean;
 
@@ -309,7 +257,7 @@ export function extend(publicAPI: object, model: object, initialValues?: ILightI
  * Method use to create a new instance of vtkLight with the focal point at the origin and its position
  * set to [0, 0, 1]. The light is a SceneLight, its color is white, intensity=1, the light is turned on, 
  * positional lighting is off, coneAngle=30, AttenuationValues=[1, 0, 0], exponent=1 and the transformMatrix is null.
- * @param initialValues for pre-setting some of its content
+ * @param {ILightInitialValues} [initialValues] for pre-setting some of its content
  */
 export function newInstance(initialValues?: ILightInitialValues): vtkLight;
 

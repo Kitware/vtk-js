@@ -41,20 +41,17 @@ export interface vtkFieldData extends VtkObject {
 
 	/**
 	 * 
-	 * @return  
 	 */
 	getNumberOfArrays(): number;
 
 	/**
 	 * 
-	 * @return  
 	 */
 	getNumberOfActiveArrays(): number;
 
 	/**
 	 * 
 	 * @param arr 
-	 * @return  
 	 */
 	addArray(arr: any): number;
 
@@ -77,7 +74,6 @@ export interface vtkFieldData extends VtkObject {
 
 	/**
 	 * 
-	 * @return  
 	 */
 	getArrays(): any[];
 
@@ -96,7 +92,6 @@ export interface vtkFieldData extends VtkObject {
 	/**
 	 * 
 	 * @param arrayName 
-	 * @return  
 	 */
 	getArrayWithIndex(arrayName: string): IArrayWithIndex;
 
@@ -109,27 +104,23 @@ export interface vtkFieldData extends VtkObject {
 	/**
 	 * 
 	 * @param arrayName 
-	 * @return  
 	 */
 	hasArray(arrayName: string): boolean;
 
 	/**
 	 * 
 	 * @param idx 
-	 * @return  
 	 */
 	getArrayName(idx: any): string;
 
 	/**
 	 * 
-	 * @return  
 	 */
 	getCopyFieldFlags(): object;
 
 	/**
 	 * 
 	 * @param arrayName 
-	 * @return  
 	 */
 	getFlag(arrayName: string): boolean;
 
@@ -193,7 +184,7 @@ export interface vtkFieldData extends VtkObject {
 	 *  - Is that object created/modified after another one?
 	 *  - Do I need to re-execute this filter, or not? ...
 	 *
-	 * @returns the global modified time
+	 * @return {Number} the global modified time.
 	 */
 	getMTime(): number;
 
@@ -225,7 +216,7 @@ export function extend(publicAPI: object, model: object, initialValues?: IFieldD
 
 /**
  * Method used to create a new instance of vtkFieldData.
- * @param initialValues for pre-setting some of its content
+ * @param {IFieldDataInitialValues} [initialValues] for pre-setting some of its content
  */
 export function newInstance(initialValues?: IFieldDataInitialValues): vtkFieldData;
 

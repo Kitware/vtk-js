@@ -18,7 +18,7 @@ export interface vtkActor extends vtkProp3D {
 
     /**
      * Return if the prop have some translucent polygonal geometry
-     * @returns 
+     * @return 
      */
     hasTranslucentPolygonalGeometry(): boolean;
 
@@ -26,20 +26,21 @@ export interface vtkActor extends vtkProp3D {
      * For some exporters and other other operations we must be
      * able to collect all the actors or volumes. These methods
      * are used in that process.
-     * @returns {vtkActor[]} list of actors
+     * @return {vtkActor[]} list of actors
      */
     getActors(): vtkActor[];
 
     /**
      * 
-     * @returns {vtkProperty} the backface property.
+     * @return {vtkProperty} the backface property.
      */
     getBackfaceProperty(): vtkProperty;
 
-    /**
-     * Get the bounds for this Actor as (Xmin,Xmax,Ymin,Ymax,Zmin,Zmax).
-     */
-    getBounds(): number[];
+	/**
+     * Get the bounds for this mapper as [xmin, xmax, ymin, ymax,zmin, zmax].
+	 * @return {Number[]} The bounds for the mapper.
+	 */
+	getBounds(): number[];
 
     /**
      * Check whether the opaque is forced or not.
@@ -53,7 +54,7 @@ export interface vtkActor extends vtkProp3D {
 
     /**
      * Check if the actor is opaque or not
-     * @returns true if the actor is opaque
+     * @return true if the actor is opaque
      */
     getIsOpaque(): boolean;
 
@@ -68,13 +69,13 @@ export interface vtkActor extends vtkProp3D {
      * actor must have a property associated with it. If one isn’t specified,
      * then one will be generated automatically. Multiple actors can share one
      * property object.
-     * @returns vtkProperty
+     * @return {vtkProperty} The property object
      */
     getProperty(): vtkProperty;
 
     /**
-     * Return if the actor supports selection
-     * @returns 
+     * Check whether if the actor supports selection
+     * @return {Boolean} true if the actor support selection.
      */
     getSupportsSelection(): boolean;
 
@@ -135,7 +136,7 @@ export function extend(publicAPI: object, model: object, initialValues?: IActorI
  * * orientation = [0, 0, 0]
  * 
  * No user defined matrix and no texture map.
- * @param initialValues for pre-setting some of its content
+ * @param {IActorInitialValues} [initialValues] for pre-setting some of its content
  */
 export function newInstance(initialValues?: IActorInitialValues): vtkActor;
 

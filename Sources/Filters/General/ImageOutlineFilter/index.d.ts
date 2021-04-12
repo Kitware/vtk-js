@@ -63,7 +63,7 @@ export function extend(publicAPI: object, model: object, initialValues?: IImageO
 
 /**
  * Method used to create a new instance of vtkImageOutlineFilter
- * @param initialValues for pre-setting some of its content
+ * @param {IImageOutlineFilterInitialValues} [initialValues] for pre-setting some of its content
  */
 export function newInstance(initialValues?: IImageOutlineFilterInitialValues): vtkImageOutlineFilter;
 

@@ -74,24 +74,25 @@ export interface vtkConeSource extends vtkAlgorithm {
 
 	/**
 	 * Expose methods
-	 * @param inData
-	 * @param outData
+	 * @param inData 
+	 * @param outData 
 	 */
 	requestData(inData: any, outData: any): void;
 
 	/**
 	 * Turn on/off whether to cap the base of the cone with a polygon.
-	 * @param capping
+	 * @param {Boolean}  capping 
 	 */
 	setCapping(capping: boolean): boolean;
 
 	/**
 	 * Set the center of the cone.
 	 * It is located at the middle of the axis of the cone.
-	 * Warning: this is not the center of the base of the cone!
-	 * @param x
-	 * @param y
-	 * @param z
+	 * !!! warning
+	 *     This is not the center of the base of the cone!
+	 * @param {Number}  x 
+	 * @param {Number} y The y coordinate.
+	 * @param {Number} z The z coordinate.
 	 * @default [0, 0, 0]
 	 */
 	setCenter(x: number, y: number, z: number): boolean;
@@ -99,8 +100,9 @@ export interface vtkConeSource extends vtkAlgorithm {
 	/**
 	 * Set the center of the cone.
 	 * It is located at the middle of the axis of the cone.
-	 * Warning: this is not the center of the base of the cone!
-	 * @param center
+	 * !!! warning
+	 *     This is not the center of the base of the cone!
+	 * @param {Number[]} center 
 	 * @default [0, 0, 0]
 	 */
 	setCenter(center: number[]): boolean;
@@ -108,33 +110,38 @@ export interface vtkConeSource extends vtkAlgorithm {
 	/**
 	 * Set the center of the cone.
 	 * It is located at the middle of the axis of the cone.
-	 * Warning: this is not the center of the base of the cone!
-	 * @param center
+	 * !!! warning
+	 *     This is not the center of the base of the cone!
+	 * @param {Number[]} center 
 	 * @default [0, 0, 0]
 	 */
 	setCenterFrom(center: number[]): boolean;
 
 	/**
 	 * Set the direction for the cone.
-	 * @param x
-	 * @param y
-	 * @param z
+	 * @param {Number} x The x coordinate.
+	 * @param {Number} y The y coordinate.
+	 * @param {Number} z The z coordinate.
 	 * @default [1, 0, 0]
 	 */
 	setDirection(x: number, y: number, z: number): boolean;
 
 	/**
 	 * Set the direction for the cone.
-	 * @param x
-	 * @param y
-	 * @param z
+	 * @param {Number[]} direction The direction coordinates.
+	 */
+	setDirection(direction: number[]): boolean;
+
+	/**
+	 * Set the direction for the cone.
+	 * @param {Number[]} direction 
 	 * @default [1, 0, 0]
 	 */
 	setDirection(direction: number[]): boolean;
 
 	/**
 	 * Set the direction for the cone.
-	 * @param direction
+	 * @param {Number[]} direction 
 	 * @default [1, 0, 0]
 	 */
 	setDirectionFrom(direction: number[]): boolean;
@@ -142,19 +149,19 @@ export interface vtkConeSource extends vtkAlgorithm {
 	/**
 	 * Set the height of the cone.
 	 * This is the height along the cone in its specified direction.
-	 * @param height
+	 * @param {Number} height 
 	 */
 	setHeight(height: number): boolean;
 
 	/**
 	 * Set the base radius of the cone.
-	 * @param {number} radius
+	 * @param {Number} radius 
 	 */
 	setRadius(radius: number): boolean;
 
 	/**
 	 * Set the number of facets used to represent the cone.
-	 * @param resolution
+	 * @param resolution 
 	 */
 	setResolution(resolution: number): boolean;
 }
@@ -170,7 +177,7 @@ export function extend(publicAPI: object, model: object, initialValues ? : ICone
 
 /**
  * Method used to create a new instance of vtkConeSource.
- * @param initialValues for pre-setting some of its content
+ * @param {IConeSourceInitialValues} [initialValues] for pre-setting some of its content
  */
 export function newInstance(initialValues ? : IConeSourceInitialValues): vtkConeSource;
 
@@ -181,6 +188,14 @@ export function newInstance(initialValues ? : IConeSourceInitialValues): vtkCone
  * if resolution=2, two crossed triangles are created. For resolution > 2, a 3D cone (with resolution number of sides)
  * is created. It also is possible to control whether the bottom of the cone is capped with a (resolution-sided) polygon,
  * and to specify the height and radius of the cone.
+ * 
+ * @example
+ * ```js
+ * import vtkConeSource from 'vtk.js/Sources/Filters/Sources/ConeSource';
+ * 
+ * const cone = vtkConeSource.newInstance({ height: 2, radius: 1, resolution: 80 });
+ * const polydata = cone.getOutputData();
+ * ```
  */
 export declare const vtkConeSource: {
 	newInstance: typeof newInstance,

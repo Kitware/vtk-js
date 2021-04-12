@@ -195,13 +195,24 @@ export function extend(publicAPI: object, model: object, initialValues?: ICursor
 
 /**
  * Method used to create a new instance of vtkCursor3D.
- * @param initialValues for pre-setting some of its content
+ * @param {ICursor3DInitialValues} [initialValues] for pre-setting some of its content
  */
 export function newInstance(initialValues?: ICursor3DInitialValues): vtkCursor3D;
 
 /**
- * vtkCursor3D creates a cube centered at origin. The cube is represented with four-sided polygons.
- * It is possible to specify the length, width, and height of the cube independently.
+ * vtkCursor3D is an object that generates a 3D representation of a cursor. The
+ * cursor consists of a wireframe bounding box, three intersecting axes lines
+ * that meet at the cursor focus, and "shadows" or projections of the axes
+ * against the sides of the bounding box. Each of these components can be turned
+ * on/off.
+ * 
+ * @example
+ * ```js
+ * import vtkCursor3D from 'vtk.js/Sources/Filters/Sources/vtkCursor3D';
+ * 
+ * const cursor = vtkCursor3D.newInstance({focalPoint: [0, 0, 0], modelBounds: [-100, 100, -100, 100, -100, 100]});
+ * const polyData = cursor.getOutputData();
+ * ```
  */
 export declare const vtkCursor3D: {
 	newInstance: typeof newInstance,

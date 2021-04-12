@@ -16,9 +16,10 @@ export interface vtkPointSet extends vtkDataSet {
 	computeBounds(): void;
 
 	/**
-	 * Get the bounds as [xmin, xmax, ymin, ymax, zmin, zmax].
+     * Get the bounds for this mapper as [xmin, xmax, ymin, ymax,zmin, zmax].
+	 * @return {Number[]} The bounds for the mapper.
 	 */
-	getBounds():  number[];
+	getBounds(): number[];
 
 	/**
 	 *
@@ -47,7 +48,7 @@ export function extend(publicAPI: object, model: object, initialValues?: IPointS
 
 /**
  * Method used to create a new instance of vtkPointSet.
- * @param initialValues for pre-setting some of its content
+ * @param {IPointSetInitialValues} [initialValues] for pre-setting some of its content
  */
 export function newInstance(initialValues?: IPointSetInitialValues): vtkPointSet;
 
