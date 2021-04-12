@@ -16,6 +16,11 @@ import vtkVolumeMapper from 'vtk.js/Sources/Rendering/Core/VolumeMapper';
 import vtkXMLImageDataReader from 'vtk.js/Sources/IO/XML/XMLImageDataReader';
 import vtkFPSMonitor from 'vtk.js/Sources/Interaction/UI/FPSMonitor';
 
+// Force DataAccessHelper to have access to various data source
+import 'vtk.js/Sources/IO/Core/DataAccessHelper/HtmlDataAccessHelper';
+import 'vtk.js/Sources/IO/Core/DataAccessHelper/HttpDataAccessHelper';
+import 'vtk.js/Sources/IO/Core/DataAccessHelper/JSZipDataAccessHelper';
+
 import style from './VolumeViewer.module.css';
 
 let autoInit = true;

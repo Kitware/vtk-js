@@ -4,6 +4,12 @@ import vtkPolyData from 'vtk.js/Sources/Common/DataModel/PolyData';
 import vtkCellArray from 'vtk.js/Sources/Common/Core/CellArray';
 import DataAccessHelper from 'vtk.js/Sources/IO/Core/DataAccessHelper';
 
+// Enable several sources for DataAccessHelper
+import 'vtk.js/Sources/IO/Core/DataAccessHelper/LiteHttpDataAccessHelper'; // Just need HTTP
+// import 'vtk.js/Sources/IO/Core/DataAccessHelper/HttpDataAccessHelper'; // HTTP + gz
+// import 'vtk.js/Sources/IO/Core/DataAccessHelper/HtmlDataAccessHelper'; // html + base64 + zip
+// import 'vtk.js/Sources/IO/Core/DataAccessHelper/JSZipDataAccessHelper'; // zip
+
 // ----------------------------------------------------------------------------
 // vtkElevationReader methods
 // ----------------------------------------------------------------------------

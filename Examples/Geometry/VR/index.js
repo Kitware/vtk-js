@@ -8,6 +8,11 @@ import vtkMapper from 'vtk.js/Sources/Rendering/Core/Mapper';
 import { AttributeTypes } from 'vtk.js/Sources/Common/DataModel/DataSetAttributes/Constants';
 import { FieldDataTypes } from 'vtk.js/Sources/Common/DataModel/DataSet/Constants';
 
+// Force DataAccessHelper to have access to various data source
+import 'vtk.js/Sources/IO/Core/DataAccessHelper/HtmlDataAccessHelper';
+import 'vtk.js/Sources/IO/Core/DataAccessHelper/HttpDataAccessHelper';
+import 'vtk.js/Sources/IO/Core/DataAccessHelper/JSZipDataAccessHelper';
+
 import controlPanel from './controller.html';
 
 // ----------------------------------------------------------------------------

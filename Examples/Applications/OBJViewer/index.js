@@ -15,6 +15,11 @@ import vtkMTLReader from 'vtk.js/Sources/IO/Misc/MTLReader';
 import vtkMapper from 'vtk.js/Sources/Rendering/Core/Mapper';
 import vtkActor from 'vtk.js/Sources/Rendering/Core/Actor';
 
+// Force DataAccessHelper to have access to various data source
+import 'vtk.js/Sources/IO/Core/DataAccessHelper/HtmlDataAccessHelper';
+import 'vtk.js/Sources/IO/Core/DataAccessHelper/HttpDataAccessHelper';
+import 'vtk.js/Sources/IO/Core/DataAccessHelper/JSZipDataAccessHelper';
+
 import style from './OBJViewer.module.css';
 
 const iOS = /iPad|iPhone|iPod/.test(window.navigator.platform);
