@@ -514,7 +514,7 @@ export function setArray(
 
       let array = args;
       // allow an array passed as a single arg.
-      if (array.length === 1 && Array.isArray(array[0])) {
+      if (array.length === 1 && array[0].length) {
         /* eslint-disable prefer-destructuring */
         array = array[0];
         /* eslint-enable prefer-destructuring */
@@ -522,7 +522,7 @@ export function setArray(
 
       if (array.length !== size) {
         if (array.length < size && defaultVal !== undefined) {
-          array = [].concat(array);
+          array = Array.from(array);
           while (array.length < size) array.push(defaultVal);
         } else {
           throw new RangeError(
@@ -530,18 +530,12 @@ export function setArray(
           );
         }
       }
-      let changeDetected = false;
-      model[field].forEach((item, index) => {
-        if (item !== array[index]) {
-          if (changeDetected) {
-            return;
-          }
-          changeDetected = true;
-        }
-      });
+      const changeDetected = model[field].some(
+        (item, index) => item !== array[index]
+      );
 
       if (changeDetected || model[field].length !== array.length) {
-        model[field] = [].concat(array);
+        model[field] = Array.from(array);
         publicAPI.modified();
         return true;
       }

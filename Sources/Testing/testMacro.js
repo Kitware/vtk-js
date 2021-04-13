@@ -29,6 +29,7 @@ const DEFAULT_VALUES = {
   myProp5: [1, 2, 3, 4],
   myProp6: [0.1, 0.2, 0.3, 0.4, 0.5],
   myProp7: MY_ENUM.FIRST,
+  myProp8: [1, 2, 3],
 };
 
 // ----------------------------------------------------------------------------
@@ -53,6 +54,10 @@ function extend(publicAPI, model, initialValues = {}) {
   macro.setGet(publicAPI, model, [
     { name: 'myProp7', enum: MY_ENUM, type: 'enum' },
   ]);
+
+  // setArray macros with default value
+  macro.setGetArray(publicAPI, model, ['myProp8'], 3, 0);
+
   // Object specific methods
   myClass(publicAPI, model);
 
@@ -162,6 +167,39 @@ test('Macro methods array tests', (t) => {
     myTestClass.getMyProp5(),
     myArray,
     'Keep value after illegal set'
+  );
+
+  const typedArray = new Float64Array(5);
+  t.ok(myTestClass.setMyProp6(typedArray), 'OK to set a typed array argument');
+  typedArray[0] = 1;
+  t.equal(
+    myTestClass.getMyProp6()[0],
+    0,
+    'setArray should copy input argument'
+  );
+
+  // Test default values
+  t.ok(myTestClass.setMyProp8(), 'OK to set no argument');
+  t.ok(myTestClass.setMyProp8(1), 'OK to set not enough argument');
+  t.ok(myTestClass.setMyProp8([2, 3]), 'OK to set too-short array argument');
+  t.ok(
+    myTestClass.setMyProp8(new Float64Array(2)),
+    'OK to set too short typed array argument'
+  );
+  t.throws(
+    () => myTestClass.setMyProp8(1, 2, 3, 4),
+    /RangeError/,
+    'Invalid number of values should throw'
+  );
+  t.throws(
+    () => myTestClass.setMyProp8([1, 2, 3, 4]),
+    /RangeError/,
+    'Too large array should throw'
+  );
+  t.throws(
+    () => myTestClass.setMyProp8(new Float32Array(4)),
+    /RangeError/,
+    'Too large array should throw'
   );
 
   t.end();
