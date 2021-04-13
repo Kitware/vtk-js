@@ -90,7 +90,7 @@ function fetchArray(instance = {}, baseURL, array, options = {}) {
                 );
               }
 
-              array.values = new window[array.dataType](array.buffer);
+              array.values = macro.newTypedArray(array.dataType, array.buffer);
             }
 
             if (array.values.length !== array.size) {

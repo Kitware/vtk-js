@@ -27,7 +27,7 @@ function vtkPointSource(publicAPI, model) {
     const numPts = model.numberOfPoints;
 
     // Points
-    const points = new window[pointDataType](numPts * 3);
+    const points = macro.newTypedArray(pointDataType, numPts * 3);
     pd.getPoints().setData(points, 3);
 
     // Cells

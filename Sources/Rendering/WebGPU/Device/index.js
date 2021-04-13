@@ -187,4 +187,7 @@ export function extend(publicAPI, model, initialValues = {}) {
 export const newInstance = macro.newInstance(extend, 'vtkWebGPUDevice');
 
 // ----------------------------------------------------------------------------
-export default { newInstance, extend };
+export default {
+  newInstance,
+  extend,
+};
