@@ -1,6 +1,5 @@
-import {
-	VtkObject
-} from 'vtk.js/Sources/macro';
+import { VtkObject } from 'vtk.js/Sources/macro';
+import vtkDataSetAttributes from 'vtk.js/Sources/Common/DataModel/DataSetAttributes';
 
 export enum FieldDataTypes {
 	UNIFORM,
@@ -40,35 +39,35 @@ export interface vtkDataSet extends VtkObject {
 	/**
 	 * Get dataset's cell data
 	 */
-	getCellData(): any;
+	getCellData(): vtkDataSetAttributes;
 
 	/**
-	 *
+	 * Get dataset's field data
 	 */
-	getFieldData(): any;
+	getFieldData(): vtkDataSetAttributes;
 
 	/**
 	 * Get dataset's point data.
 	 */
-	getPointData(): any;
+	getPointData(): vtkDataSetAttributes;
 
 	/**
-	 *
-	 * @param cellData
+	 * Set dataset's cell data
+	 * @param {vtkDataSetAttributes} cellData 
 	 */
-	setCellData(cellData: any): boolean;
+	setCellData(cellData: vtkDataSetAttributes): boolean;
 
 	/**
-	 *
-	 * @param fieldData
+	 * Set dataset's field data
+	 * @param {vtkDataSetAttributes} fieldData 
 	 */
-	setFieldData(fieldData: any): boolean;
+	setFieldData(fieldData: vtkDataSetAttributes): boolean;
 
 	/**
-	 *
-	 * @param pointData
+	 * Set dataset's point data.
+	 * @param {vtkDataSetAttributes} pointData 
 	 */
-	setPointData(pointData: any): boolean;
+	setPointData(pointData: vtkDataSetAttributes): boolean;
 }
 
 /**
@@ -78,13 +77,13 @@ export interface vtkDataSet extends VtkObject {
  * @param model object on which data structure will be bounds (protected)
  * @param {IDataSetInitialValues} [initialValues] (default: {})
  */
-export function extend(publicAPI: object, model: object, initialValues ? : IDataSetInitialValues): void;
+export function extend(publicAPI: object, model: object, initialValues? : IDataSetInitialValues): void;
 
 /**
  * Method used to create a new instance of vtkDataSet.
  * @param {IDataSetInitialValues} [initialValues] for pre-setting some of its content
  */
-export function newInstance(initialValues ? : IDataSetInitialValues): vtkDataSet;
+export function newInstance(initialValues? : IDataSetInitialValues): vtkDataSet;
 
 /**
  * vtkDataSet is an abstract class that specifies an interface for dataset
