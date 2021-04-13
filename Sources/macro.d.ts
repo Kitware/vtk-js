@@ -1,3 +1,5 @@
+import vtkDataArray from "vtk.js/Sources/Common/Core/DataArray";
+
 /**
  * Allow user to redefine vtkXXXMacro method call.
  * @param name of the macro type [Log, Info, Debug, Error, Warning]
@@ -177,7 +179,7 @@ export interface VtkObject {
    *  - Is that object created/modified after another one?
    *  - Do I need to re-execute this filter, or not? ...
    *
-   * @returns the global modified time
+   * @return {Number} the global modified time.
    */
   getMTime(): number;
 
@@ -366,52 +368,12 @@ export function setGetArray(publicAPI: object, model: object, fieldNames: Array<
 /**
  * Basic object representing a data range
  */
-export interface VtkRange {
+export interface vtkRange {
   min: number;
   max: number;
 }
 
-export interface VtkDataArray extends VtkObject {
-  getElementComponentSize(): number;
-  /**
-   *
-   * @param tupleIdx
-   * @param componentIndex (default: 0)
-   */
-  getComponent(tupleIdx: number, componentIndex: number): number;
-  setComponent(tupleIdx: number, componentIndex: number, value: number): void;
-  getData: () => TypedArray;
-  /**
-   * Return the range of the given component.
-   *
-   * @param componentIndex (default: -1)
-   */
-  getRange(componentIndex?: number): VtkRange;
-  setRange(rangeValue: VtkRange, componentIndex: number): [number, number];
-  setTuple(idx: number, tuple: Array<number>): void;
-  /**
-   *
-   * @param idx
-   * @param tupleToFill (default [])
-   */
-  getTuple(idx: number, tupleToFill?: Array<number>): Array<number>;
-  /**
-   *
-   * @param idx (default: 1)
-   */
-  getTupleLocation(idx: number): number;
-  getNumberOfComponents: () => number;
-  getNumberOfValues: () => number;
-  getNumberOfTuples: () => number;
-  getDataType: () => string;
-  newClone: () => VtkDataArray;
-  getName: () => string;
-  setData: (typedArray: TypedArray, numberOfComponents?: number) => void;
-  getState: () => object;
-  // --- via macro --
-  setName: (name: string) => boolean;
-  setNumberOfComponents: (numberOfComponents: number) => boolean;
-}
+
 
 export interface VtkOutputPort {
   filter: VtkAlgorithm;
@@ -458,7 +420,7 @@ export interface VtkAlgorithm {
   /**
    * @param port (default 0)
    */
-  getInputArrayToProcess(inputPort?: number): VtkDataArray;
+  getInputArrayToProcess(inputPort?: number): vtkDataArray;
   /**
    *
    * @param inputPort

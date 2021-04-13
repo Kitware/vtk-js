@@ -1,6 +1,4 @@
-import {
-	VtkObject
-} from 'vtk.js/Sources/macro';
+import { VtkObject } from 'vtk.js/Sources/macro';
 
 
 /**
@@ -17,7 +15,7 @@ interface IFieldDataInitialValues {
  * 
  */
 interface IArrayWithIndex {
-	array: any[],
+	array: any,
 	index: number;
 }
 
@@ -40,42 +38,42 @@ export interface vtkFieldData extends VtkObject {
 	copyStructure(other: any): void;
 
 	/**
-	 * 
+	 * Get the number of arrays.
 	 */
 	getNumberOfArrays(): number;
 
 	/**
-	 * 
+	 * Get the number of active arrays.
 	 */
 	getNumberOfActiveArrays(): number;
 
 	/**
-	 * 
+	 * Add a new array.
 	 * @param arr 
 	 */
 	addArray(arr: any): number;
 
 	/**
-	 * 
+	 * Remove all the arrays.
 	 */
 	removeAllArrays(): void;
 
 	/**
 	 * 
-	 * @param arrayName 
+	 * @param {String} arrayName The name of the array.
 	 */
 	removeArray(arrayName: string): void;
 
 	/**
 	 * 
-	 * @param arrayIdx 
+	 * @param {Number} arrayIdx The index of the array to remove. 
 	 */
-	removeArrayByIndex(arrayIdx: any): void;
+	removeArrayByIndex(arrayIdx: number): void;
 
 	/**
 	 * 
 	 */
-	getArrays(): any[];
+	getArrays(): any;
 
 	/**
 	 * 
@@ -85,33 +83,33 @@ export interface vtkFieldData extends VtkObject {
 
 	/**
 	 * 
-	 * @param arrayName 
+	 * @param {String} arrayName The name of the array.
 	 */
-	getArrayByName(arrayName: string): any[] | null;
+	getArrayByName(arrayName: string): any | null;
 
 	/**
 	 * 
-	 * @param arrayName 
+	 * @param {String} arrayName The name of the array.
 	 */
 	getArrayWithIndex(arrayName: string): IArrayWithIndex;
 
 	/**
 	 * 
-	 * @param idx 
+	 * @param {Number} idx The index of the array.
 	 */
-	getArrayByIndex(idx: any): any[] | null;
+	getArrayByIndex(idx: number): any | null;
 
 	/**
 	 * 
-	 * @param arrayName 
+	 * @param {String} arrayName The name of the array.
 	 */
 	hasArray(arrayName: string): boolean;
 
 	/**
 	 * 
-	 * @param idx 
+	 * @param {Number} idx The index of the array.
 	 */
-	getArrayName(idx: any): string;
+	getArrayName(idx: number): string;
 
 	/**
 	 * 
@@ -120,7 +118,7 @@ export interface vtkFieldData extends VtkObject {
 
 	/**
 	 * 
-	 * @param arrayName 
+	 * @param {String} arrayName The name of the array.
 	 */
 	getFlag(arrayName: string): boolean;
 
@@ -134,13 +132,13 @@ export interface vtkFieldData extends VtkObject {
 
 	/**
 	 * 
-	 * @param arrayName 
+	 * @param {String} arrayName The name of the array.
 	 */
 	copyFieldOn(arrayName: string): void;
 
 	/**
 	 * 
-	 * @param arrayName 
+	 * @param {String} arrayName The name of the array.
 	 */
 	copyFieldOff(arrayName: string): void;
 

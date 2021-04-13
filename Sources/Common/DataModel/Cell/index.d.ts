@@ -35,7 +35,7 @@ export interface vtkCell extends VtkObject {
 	initialize(points: vtkPoints, pointIdsList?: number[] | null): void;
 
 	/**
-     * Get the bounds for this mapper as [xmin, xmax, ymin, ymax,zmin, zmax].
+	 * Get the bounds for this mapper as [xmin, xmax, ymin, ymax,zmin, zmax].
 	 * @return {Number[]} The bounds for the mapper.
 	 */
 	getBounds(): number[];

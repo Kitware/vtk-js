@@ -157,7 +157,7 @@ export interface vtkPlane extends VtkObject {
 
 	/**
 	 * 
-	 * @param {Number[]} normal 
+	 * @param {Number[]} normal The normal coordinate.
 	 */
 	setNormal(normal: number[]): boolean;
 
@@ -171,13 +171,13 @@ export interface vtkPlane extends VtkObject {
 
 	/**
 	 * 
-	 * @param {Number[]} normal 
+	 * @param {Number[]} normal The normal coordinate.
 	 */
 	setNormalFrom(normal: number[]): boolean;
 
 	/**
 	 * 
-	 * @param {Number[]} origin 
+	 * @param {Number[]} origin The origin coordinate.
 	 */
 	setOrigin(origin: number[]): boolean;
 
@@ -191,7 +191,7 @@ export interface vtkPlane extends VtkObject {
 
 	/**
 	 * 
-	 * @param {Number[]} origin 
+	 * @param {Number[]} origin The origin coordinate.
 	 */
 	setOriginFrom(origin: number[]): boolean;
 }
