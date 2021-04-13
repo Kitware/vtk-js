@@ -367,6 +367,7 @@ export default function widgetBehavior(publicAPI, model) {
       !model.activeState ||
       !model.activeState.getActive() ||
       !model.pickable ||
+      !model.dragable ||
       !model.manipulator
     ) {
       return macro.VOID;

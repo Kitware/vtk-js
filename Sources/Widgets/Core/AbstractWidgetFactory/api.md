@@ -41,6 +41,10 @@ Sets visibility for all associated view widgets.
 
 Sets pickable flag for all associated view widgets.
 
+## setDragable(bool)
+
+Sets dragable flag for all associated view widgets.
+
 ## setContextVisibility(bool)
 
 Sets context visibility for all associated view widgets.

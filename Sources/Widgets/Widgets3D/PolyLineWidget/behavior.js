@@ -85,6 +85,7 @@ export default function widgetBehavior(publicAPI, model) {
   publicAPI.handleMouseMove = (callData) => {
     if (
       model.pickable &&
+      model.dragable &&
       model.manipulator &&
       model.activeState &&
       model.activeState.getActive() &&

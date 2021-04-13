@@ -136,7 +136,6 @@ function vtkLineWidget(publicAPI, model) {
             builder: vtkPolyLineRepresentation,
             labels: ['handle1', 'handle2', 'moveHandle'],
             initialValues: {
-              scaleInPixels: true,
               behavior: Behavior.HANDLE,
               pickable: true,
             },

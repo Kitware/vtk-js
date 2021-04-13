@@ -82,7 +82,7 @@ export default function widgetBehavior(publicAPI, model) {
   };
 
   publicAPI.handleMouseMove = (callData) => {
-    if (isDragging && model.pickable) {
+    if (isDragging && model.pickable && model.dragable) {
       return publicAPI.handleEvent(callData);
     }
     if (isScrolling) {
