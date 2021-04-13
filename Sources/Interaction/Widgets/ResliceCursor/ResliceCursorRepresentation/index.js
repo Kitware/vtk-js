@@ -26,6 +26,9 @@ function vtkResliceCursorRepresentation(publicAPI, model) {
   // Set our className
   model.classHierarchy.push('vtkResliceCursorRepresentation');
 
+  const buildTime = {};
+  macro.obj(buildTime);
+
   //----------------------------------------------------------------------------
   // Public API methods
   //----------------------------------------------------------------------------
@@ -49,7 +52,13 @@ function vtkResliceCursorRepresentation(publicAPI, model) {
         model.reslice.setInputData(image);
         model.imageActor.setVisibility(model.showReslicedImage);
 
-        publicAPI.updateReslicePlane();
+        const modifiedTime = Math.max(
+          publicAPI.getMTime(),
+          publicAPI.getResliceCursor().getMTime()
+        );
+        if (buildTime.getMTime() < modifiedTime) {
+          publicAPI.updateReslicePlane();
+        }
       } else {
         model.imageActor.setVisibility(false);
       }
@@ -326,15 +335,15 @@ function vtkResliceCursorRepresentation(publicAPI, model) {
     }
 
     if (modify) {
-      publicAPI.modified();
-
       publicAPI.setResliceParameters(
         outputSpacingX,
         outputSpacingY,
         extentX,
         extentY
       );
+      publicAPI.modified();
     }
+    buildTime.modified();
   };
 
   publicAPI.setResliceParameters = (

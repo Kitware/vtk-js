@@ -267,7 +267,6 @@ function vtkLineWidget(publicAPI, model) {
 
 const DEFAULT_VALUES = {
   widgetState: WidgetState.START,
-  managesCursor: 1,
   currentHandle: 0,
   point1Widget: null,
   point2Widget: null,

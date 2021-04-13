@@ -134,6 +134,13 @@ function vtkAbstractWidgetFactory(publicAPI, model) {
     }
   };
 
+  publicAPI.setDragable = (value) => {
+    const viewIds = Object.keys(viewToWidget);
+    for (let i = 0; i < viewIds.length; i++) {
+      viewToWidget[viewIds[i]].setDragable(value);
+    }
+  };
+
   publicAPI.setContextVisibility = (value) => {
     const viewIds = Object.keys(viewToWidget);
     for (let i = 0; i < viewIds.length; i++) {

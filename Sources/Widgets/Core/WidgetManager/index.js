@@ -490,26 +490,23 @@ function vtkWidgetManager(publicAPI, model) {
       return {};
     }
     const { propID, compositeID, prop } = model.selections[0].getProperties();
+    let { widget, representation } = model.selections[0].getProperties();
+    // prop is undefined for SVG representation, widget is undefined for handle
+    // representation.
     if (
       model.previousSelectedData &&
       model.previousSelectedData.prop === prop &&
+      model.previousSelectedData.widget === widget &&
       model.previousSelectedData.compositeID === compositeID
     ) {
       model.previousSelectedData.requestCount++;
       return model.previousSelectedData;
     }
 
-    let widget = null;
-    let representation = null;
-
     if (propsWeakMap.has(prop)) {
       const props = propsWeakMap.get(prop);
       widget = props.widget;
       representation = props.representation;
-    } else {
-      const selectionProps = model.selections[0].getProperties();
-      widget = selectionProps.widget;
-      representation = selectionProps.representation;
     }
 
     if (widget && representation) {
