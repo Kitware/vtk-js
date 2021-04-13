@@ -962,7 +962,7 @@ export interface vtkRenderWindowInteractor extends VtkObject {
     setView(val: any): void;
 
     /**
-     * @returns first renderer to be used for camera manipulation
+     * @return first renderer to be used for camera manipulation
      */
     getFirstRenderer(): vtkRenderer; // return vtkRenderer
 

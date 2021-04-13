@@ -33,7 +33,7 @@ export function extend(publicAPI: object, model: object, initialValues?: IOutlin
 
 /**
  * Method used to create a new instance of vtkOutlineFilter
- * @param initialValues for pre-setting some of its content
+ * @param {IOutlineFilterInitialValues} [initialValues] for pre-setting some of its content
  */
 export function newInstance(initialValues?: IOutlineFilterInitialValues): vtkOutlineFilter;
 

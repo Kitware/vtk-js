@@ -305,7 +305,7 @@ export interface vtkRenderer extends vtkViewport {
 	 *  - Is that object created/modified after another one?
 	 *  - Do I need to re-execute this filter, or not? ...
 	 *
-	 * @returns the global modified time
+	 * @return {Number} the global modified time.
 	 */
     getMTime(): number;
 
@@ -417,19 +417,19 @@ export interface vtkRenderer extends vtkViewport {
 
     /**
      * requires the aspect ratio of the viewport as X/Y
-     * @param {number} x 
-     * @param {number} y 
-     * @param {number} z 
-     * @param {number} aspect 
+     * @param {Number} x The x coordinate.
+     * @param {Number} y The y coordinate.
+     * @param {Number} z The z coordinate.
+     * @param {Number} aspect 
      */
     normalizedDisplayToWorld(x: number, y: number, z: number, aspect: number): number[];
 
     /**
      * 
-     * @param {number} x 
-     * @param {number} y 
-     * @param {number} z 
-     * @param {number} aspect 
+     * @param {Number} x The x coordinate.
+     * @param {Number} y The y coordinate.
+     * @param {Number} z The z coordinate.
+     * @param {Number} aspect 
      */
     projectionToView(x: number, y: number, z: number, aspect: number): number[];
 
@@ -471,25 +471,25 @@ export interface vtkRenderer extends vtkViewport {
 
     /**
      * 
-     * @param {boolean} draw 
+     * @param {Boolean} draw 
      */
     setDraw(draw: boolean): boolean;
 
     /**
      * 
-     * @param {boolean} erase 
+     * @param {Boolean} erase 
      */
     setErase(erase: boolean): boolean;
 
     /**
      * 
-     * @param {boolean} interactive 
+     * @param {Boolean} interactive 
      */
     setInteractive(interactive: boolean): boolean;
 
     /**
      * 
-     * @param {number} layer 
+     * @param {Number} layer 
      */
     setLayer(layer: number): void;
 
@@ -507,61 +507,61 @@ export interface vtkRenderer extends vtkViewport {
 
     /**
      * 
-     * @param {number} maximumNumberOfPeels 
+     * @param {Number} maximumNumberOfPeels 
      */
     setMaximumNumberOfPeels(maximumNumberOfPeels: number): boolean;
 
     /**
      * 
-     * @param {number} nearClippingPlaneTolerance 
+     * @param {Number} nearClippingPlaneTolerance 
      */
     setNearClippingPlaneTolerance(nearClippingPlaneTolerance: number): boolean;
 
     /**
      * 
-     * @param {number} occlusionRatio 
+     * @param {Number} occlusionRatio 
      */
     setOcclusionRatio(occlusionRatio: number): boolean;
 
     /**
      * 
-     * @param {number} pass 
+     * @param {Number} pass 
      */
     setPass(pass: number): boolean;
 
     /**
      * 
-     * @param {boolean} preserveColorBuffer 
+     * @param {Boolean} preserveColorBuffer 
      */
     setPreserveColorbuffer(preserveColorBuffer: boolean): boolean;
 
     /**
      * 
-     * @param {boolean} preserveDepthBuffer 
+     * @param {Boolean} preserveDepthBuffer 
      */
     setPreserveDepthbuffer(preserveDepthBuffer: boolean): boolean;
 
     /**
      * 
-     * @param {boolean} texturedBackground 
+     * @param {Boolean} texturedBackground 
      */
     setTexturedBackground(texturedBackground: boolean): boolean;
 
     /**
      * 
-     * @param {boolean} twoSidedLighting 
+     * @param {Boolean} twoSidedLighting 
      */
     setTwoSidedLighting(twoSidedLighting: boolean): boolean;
 
     /**
      * 
-     * @param {boolean} useDepthPeeling 
+     * @param {Boolean} useDepthPeeling 
      */
     setUseDepthPeeling(useDepthPeeling: boolean): boolean;
 
     /**
      * 
-     * @param {boolean} useShadows 
+     * @param {Boolean} useShadows 
      */
     setUseShadows(useShadows: boolean): boolean;
 
@@ -606,48 +606,48 @@ export interface vtkRenderer extends vtkViewport {
 
     /**
      * requires the aspect ratio of the viewport as X/Y
-     * @param {number} x 
-     * @param {number} y 
-     * @param {number} z 
-     * @param {number} aspect 
+     * @param {Number} x The x coordinate.
+     * @param {Number} y The y coordinate.
+     * @param {Number} z The z coordinate.
+     * @param {Number} aspect 
      */
     worldToNormalizedDisplay(x: number, y: number, z: number, aspect: number): number[];
 
     /**
      * requires the aspect ratio of the viewport as X/Y
-     * @param {number} x 
-     * @param {number} y 
-     * @param {number} z 
+     * @param {Number} x The x coordinate.
+     * @param {Number} y The y coordinate.
+     * @param {Number} z The z coordinate.
      */
     viewToWorld(x: number, y: number, z: number): number[];
 
     /**
      * Convert world point coordinates to view coordinates.
-     * @param {number} x 
-     * @param {number} y 
-     * @param {number} z 
+     * @param {Number} x The x coordinate.
+     * @param {Number} y The y coordinate.
+     * @param {Number} z The z coordinate.
      */
     worldToView(x: number, y: number, z: number): number[];
 
     /**
      * Convert world point coordinates to view coordinates.
      * requires the aspect ratio of the viewport as X/Y
-     * @param {number} x 
-     * @param {number} y 
-     * @param {number} z 
-     * @param {number} aspect 
+     * @param {Number} x The x coordinate.
+     * @param {Number} y The y coordinate.
+     * @param {Number} z The z coordinate.
+     * @param {Number} aspect 
      */
     viewToProjection(x: number, y: number, z: number, aspect: number): number[];
 
     /**
      * 
-     * @param {number[]} [bounds] 
+     * @param {Number[]} [bounds] 
      */
     resetCamera(bounds?: number[]): boolean;
 
     /**
      * 
-     * @param {number[]} [bounds] 
+     * @param {Number[]} [bounds] 
      */
     resetCameraClippingRange(bounds?: number[]): boolean;
 
@@ -695,7 +695,7 @@ export function extend(publicAPI: object, model: object, initialValues?: IRender
 
 /**
  * Method use to create a new instance of vtkRenderer.
- * @param initialValues for pre-setting some of its content
+ * @param {IRendererInitialValues} [initialValues] for pre-setting some of its content
  */
 export function newInstance(initialValues?: IRendererInitialValues): vtkRenderer;
 

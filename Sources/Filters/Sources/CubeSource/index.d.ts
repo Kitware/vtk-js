@@ -163,13 +163,21 @@ export function extend(publicAPI: object, model: object, initialValues?: ICircle
 
 /**
  * Method used to create a new instance of vtkCubeSource.
- * @param initialValues for pre-setting some of its content
+ * @param {ICircleSourceInitialValues} [initialValues] for pre-setting some of its content
  */
 export function newInstance(initialValues?: ICircleSourceInitialValues): vtkCubeSource;
 
 /**
  * vtkCubeSource creates a cube centered at origin. The cube is represented with four-sided polygons.
  * It is possible to specify the length, width, and height of the cube independently.
+ * 
+ * @example
+ * ```js
+ * import vtkCubeSource from 'vtk.js/Sources/Filters/Sources/CubeSource';
+ * 
+ * const cubeSource = vtkCubeSource.newInstance({ xLength: 5, yLength: 5, zLength: 5 });
+ * const cubePolydata = cubeSource.getOutputData();
+ * ```
  */
 export declare const vtkCubeSource: {
 	newInstance: typeof newInstance,

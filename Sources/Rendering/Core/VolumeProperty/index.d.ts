@@ -37,13 +37,13 @@ export interface vtkVolumeProperty extends VtkObject {
 	 *  - Is that object created/modified after another one?
 	 *  - Do I need to re-execute this filter, or not? ...
 	 *
-	 * @returns the global modified time
+	 * @return {Number} the global modified time.
 	 */
 	getMTime(): number;
 
 	/**
 	 *
-	 * @param {number} index
+	 * @param {Number} index 
 	 */
 	getColorChannels(index: number): number;
 
@@ -54,25 +54,25 @@ export interface vtkVolumeProperty extends VtkObject {
 
 	/**
 	 *
-	 * @param {number} index
+	 * @param {Number} index 
 	 */
 	getGradientOpacityMaximumOpacity(index: number): number;
 
 	/**
 	 *
-	 * @param {number} index
+	 * @param {Number} index 
 	 */
 	getGradientOpacityMaximumValue(index: number): number;
 
 	/**
 	 *
-	 * @param {number} index
+	 * @param {Number} index 
 	 */
 	getGradientOpacityMinimumOpacity(index: number): number;
 
 	/**
 	 *
-	 * @param {number} index
+	 * @param {Number} index 
 	 */
 	getGradientOpacityMinimumValue(index: number): number;
 
@@ -83,13 +83,13 @@ export interface vtkVolumeProperty extends VtkObject {
 
 	/**
 	 * Get the unit distance on which the scalar opacity transfer function is defined.
-	 * @param {number} index
+	 * @param {Number} index 
 	 */
 	getScalarOpacityUnitDistance(index: number): number;
 
 	/**
 	 * Get the currently set gray transfer function. Create one if none set.
-	 * @param {number} index
+	 * @param {Number} index 
 	 */
 	getGrayTransferFunction(index: number): any;
 
@@ -106,13 +106,13 @@ export interface vtkVolumeProperty extends VtkObject {
 
 	/**
 	 * Get the currently set RGB transfer function. Create one if none set.
-	 * @param {number} index
+	 * @param {Number} index 
 	 */
 	getRGBTransferFunction(index: number): any;
 
 	/**
 	 * Get the scalar opacity transfer function. Create one if none set.
-	 * @param {number} index
+	 * @param {Number} index 
 	 */
 	getScalarOpacity(index: number): any;
 
@@ -133,7 +133,7 @@ export interface vtkVolumeProperty extends VtkObject {
 
 	/**
 	 *
-	 * @param {number} index
+	 * @param {Number} index 
 	 */
 	getUseGradientOpacity(index: number): boolean;
 
@@ -144,47 +144,47 @@ export interface vtkVolumeProperty extends VtkObject {
 
 	/**
 	 * Set the ambient lighting coefficient.
-	 * @param {number} ambient
+	 * @param {Number} ambient
 	 */
 	setAmbient(ambient: number): boolean;
 
 	/**
 	 * Set the diffuse lighting coefficient.
-	 * @param {number} diffuse
+	 * @param {Number} diffuse
 	 */
 	setDiffuse(diffuse: number): boolean;
 
 	/**
 	 *
-	 * @param {number} index
-	 * @param {number} value
+	 * @param {Number} index 
+	 * @param {Number} value
 	 */
 	setGradientOpacityMaximumOpacity(index: number, value: number): boolean;
 
 	/**
 	 *
-	 * @param {number} index
-	 * @param {number} value
+	 * @param {Number} index 
+	 * @param {Number} value
 	 */
 	setGradientOpacityMaximumValue(index: number, value: number): boolean;
 
 	/**
 	 *
-	 * @param {number} index
-	 * @param {number} value
+	 * @param {Number} index 
+	 * @param {Number} value
 	 */
 	setGradientOpacityMinimumOpacity(index: number, value: number): boolean;
 
 	/**
 	 *
-	 * @param {number} index
-	 * @param {number} value
+	 * @param {Number} index 
+	 * @param {Number} value
 	 */
 	setGradientOpacityMinimumValue(index: number, value: number): boolean;
 
 	/**
 	 * Set the color of a volume to a gray transfer function
-	 * @param {number} index
+	 * @param {Number} index 
 	 * @param func
 	 */
 	setGrayTransferFunction(index: number, func: any): boolean;
@@ -208,28 +208,28 @@ export interface vtkVolumeProperty extends VtkObject {
 	 * function for gradient based opacity modulation. Normals will be generated
 	 * from the fourth component. When using gradient based opacity modulation,
 	 * the gradients are computed off of the fourth component.
-	 * @param {boolean} independentComponents
+	 * @param {Boolean} independentComponents
 	 */
 	setIndependentComponents(independentComponents: boolean): boolean;
 
 	/**
 	 *
-	 * @param {number} labelOutlineThickness
+	 * @param {Number} labelOutlineThickness
 	 */
 	setLabelOutlineThickness(labelOutlineThickness: number): boolean;
 
 	/**
 	 *
-	 * @param {number} index
-	 * @param {number} value
+	 * @param {Number} index 
+	 * @param {Number} value
 	 */
 	setOpacityMode(index: number, value: number): boolean;
 
 	/**
 	 * Set the unit distance on which the scalar opacity transfer function is
 	 * defined.
-	 * @param {number} index
-	 * @param {number} value
+	 * @param {Number} index 
+	 * @param {Number} value
 	 */
 	setScalarOpacityUnitDistance(index: number, value: number): boolean;
 
@@ -244,59 +244,59 @@ export interface vtkVolumeProperty extends VtkObject {
 	 * turning shading off is generally the same as setting ambient=1,
 	 * diffuse=0, specular=0. Shading can be independently turned on/off per
 	 * component.
-	 * @param {number} shade
+	 * @param {Number} shade
 	 */
 	setShade(shade: number): boolean;
 
 	/**
 	 *
-	 * @param {number} specular
+	 * @param {Number} specular
 	 */
 	setSpecular(specular: number): boolean;
 
 	/**
 	 * Set the specular power.
-	 * @param {number} specularPower
+	 * @param {Number} specularPower
 	 */
 	setSpecularPower(specularPower: number): boolean;
 
 	/**
 	 *
-	 * @param {number} index
-	 * @param {number} value
+	 * @param {Number} index 
+	 * @param {Number} value
 	 */
 	setUseGradientOpacity(index: number, value: number): boolean;
 
 	/**
 	 *
-	 * @param {boolean} useLabelOutline
+	 * @param {Boolean} useLabelOutline
 	 */
 	setUseLabelOutline(useLabelOutline: boolean): boolean;
 
 	/**
 	 * Set the color of a volume to an RGB transfer function
-	 * @param {number} index
+	 * @param {Number} index 
 	 * @param func
 	 */
 	setRGBTransferFunction(index: number, func: any): boolean;
 
 	/**
 	 * Set the scalar opacity of a volume to a transfer function
-	 * @param {number} index
+	 * @param {Number} index 
 	 * @param func
 	 */
 	setScalarOpacity(index: number, func: any): boolean;
 
 	/**
 	 * Set the scalar component weights.
-	 * @param {number} index
-	 * @param {number} value
+	 * @param {Number} index 
+	 * @param {Number} value
 	 */
 	setComponentWeight(index: number, value: number): boolean;
 
 	/**
 	 * Get the scalar component weights.
-	 * @param {number} index
+	 * @param {Number} index 
 	 */
 	getComponentWeight(index: number): number;
 

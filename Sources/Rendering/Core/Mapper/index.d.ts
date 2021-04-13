@@ -20,9 +20,6 @@ export enum GetArray {
 	BY_NAME,
 }
 
-/**
- *
- */
 interface IPrimitiveCount {
 	points: number;
 	verts: number;
@@ -30,33 +27,21 @@ interface IPrimitiveCount {
 	triangles: number;
 }
 
-/**
- *
- */
 interface IAbstractScalars {
 	cellFlag: boolean;
 }
 
-/**
- *
- */
+
 interface ICoincidentTopology {
 	factor: number;
 	offset: number;
 }
 
-/**
-*
-*/
 interface IScalarToTextureCoordinate {
 	texCoordS: number;
 	texCoordT: number;
 }
 
-
-/**
- *
- */
 interface IMapperInitialValues {
 	static?: boolean;
 	scalarVisibility?: boolean;
@@ -143,7 +128,8 @@ export interface vtkMapper extends vtkAbstractMapper3D {
 	getArrayAccessMode(): number;
 
 	/**
-	 * Get the bounds for this mapper as [Xmin,Xmax,Ymin,Ymax,Zmin,Zmax].
+	 * Get the bounds for this mapper as [xmin, xmax, ymin, ymax,zmin, zmax].
+	 * @return {Number[]} The bounds for the mapper.
 	 */
 	getBounds(): number[];
 
@@ -215,7 +201,7 @@ export interface vtkMapper extends vtkAbstractMapper3D {
 	getInterpolateScalarsBeforeMapping(): boolean;
 
 	/**
-	 * Returns if the mapper does not expect to have translucent geometry. This
+	 * Check if the mapper does not expect to have translucent geometry. This
 	 * may happen when using ColorMode is set to not map scalars i.e. render the
 	 * scalar array directly as colors and the scalar array has opacity i.e. alpha
 	 * component. Default implementation simply returns true. Note that even if
@@ -234,50 +220,7 @@ export interface vtkMapper extends vtkAbstractMapper3D {
 	 */
 	getPrimitiveCount(): IPrimitiveCount;
 
-	/**
-	 *
-	 */
-	getRelativeCoincidentTopologyLineOffsetParameters(): ICoincidentTopology;
-
-	/**
-	 *
-	 */
-	getRelativeCoincidentTopologyPointOffsetParameters(): ICoincidentTopology;
-
-	/**
-	 *
-	 */
-	getRelativeCoincidentTopologyPolygonOffsetParameters(): ICoincidentTopology;
-
-	/**
-	 *
-	 */
-	getResolveCoincidentTopology(): ICoincidentTopology
-
-	/**
-	 *
-	 */
-	getResolveCoincidentTopologyAsString(): string
-
-	/**
-	 *
-	 */
-	getResolveCoincidentTopologyLineOffsetParameters(): ICoincidentTopology
-
-	/**
-	 *
-	 */
-	getResolveCoincidentTopologyPointOffsetParameters(): ICoincidentTopology
-
-	/**
-	 *
-	 */
-	getResolveCoincidentTopologyPolygonOffsetFaces(): ICoincidentTopology
-
-	/**
-	 *
-	 */
-	getResolveCoincidentTopologyPolygonOffsetParameters(): ICoincidentTopology;
+	
 
 	/**
 	 * Return the method for obtaining scalar data.
@@ -336,59 +279,61 @@ export interface vtkMapper extends vtkAbstractMapper3D {
 	 *     location: 0/1/2, // Points/Cells/Fields
 	 * }
 	 * @param input
-	 * @param alpha
+	 * @param {Number} alpha 
 	 */
 	mapScalars(input: any, alpha: number): void;
 
 	/**
 	 *
 	 * @param scalars
-	 * @param alpha
+	 * @param {Number} alpha 
 	 */
 	mapScalarsToTexture(scalars: any, alpha: number): void;
 
 	/**
-	 * -----------------------------------------------------------------------------
-	 * @param scalarValue
-	 * @param rangeMin
-	 * @param invRangeWidth
+	 * 
+	 * @param {Number} scalarValue 
+	 * @param {Number} rangeMin 
+	 * @param {Number} invRangeWidth 
 	 */
 	scalarToTextureCoordinate(scalarValue: number, rangeMin: number, invRangeWidth: number): IScalarToTextureCoordinate;
 
 	/**
 	 *
-	 * @param arrayAccessMode
+	 * @param {Number} arrayAccessMode 
 	 */
 	setArrayAccessMode(arrayAccessMode: number): boolean;
 
 	/**
 	 * Set the array name to color by.
+	 * @param {String} colorByArrayName 
 	 */
 	setColorByArrayName(colorByArrayName: string): boolean;
 
 	/**
 	 *
-	 * @param {number} colorMode
+	 * @param {Number} colorMode 
 	 */
 	setColorMode(colorMode: number): boolean;
 
 	/**
-	 * Sets colorMode to DEFAULT
+	 * Sets colorMode to `DEFAULT`
 	 */
 	setColorModeToDefault(): boolean;
 
 	/**
-	 * Sets colorMode to MAP_SCALARS
+	 * Sets colorMode to `MAP_SCALARS`
 	 */
 	setColorModeToMapScalars(): boolean;
 
 	/**
-	 * Sets colorMode to DIRECT_SCALARS
+	 * Sets colorMode to `DIRECT_SCALARS`
 	 */
 	setColorModeToDirectScalars(): boolean;
 
 	/**
 	 * Sets point data array names that will be transferred to the VBO
+	 * @param {String[]} customShaderAttributes 
 	 */
 	setCustomShaderAttributes(customShaderAttributes: string[]): boolean
 
@@ -399,13 +344,14 @@ export interface vtkMapper extends vtkAbstractMapper3D {
 	 * with SelectColorArray as having a scalar value for each cell.
 	 * Indices of 0 or higher mean to use the tuple at the given index
 	 * for coloring the entire data set.
+	 * @param {Number} fieldDataTupleI 
 	 * @default -1
 	 */
 	setFieldDataTupleId(fieldDataTupleI: number): boolean
 
 	/**
 	 *
-	 * @param forceCompileOnly
+	 * @param {Number} forceCompileOnly
 	 * @default 0
 	 */
 	setForceCompileOnly(forceCompileOnly: number): boolean;
@@ -413,38 +359,7 @@ export interface vtkMapper extends vtkAbstractMapper3D {
 	/**
 	 * Set a lookup table for the mapper to use.
 	 */
-	setLookupTable(vtkLookupTable): boolean;
-
-	/**
-	 *
-	 * @param {number} mode
-	 * @return
-	 */
-	setResolveCoincidentTopology(mode?: number): boolean;
-
-	/**
-	 *
-	 * @param value
-	 */
-	setResolveCoincidentTopologyPolygonOffsetFaces(value: any): boolean;
-
-	/**
-	 *
-	 * @return
-	 */
-	setResolveCoincidentTopologyToDefault(): boolean;
-
-	/**
-	 *
-	 * @return
-	 */
-	setResolveCoincidentTopologyToOff(): boolean;
-
-	/**
-	 *
-	 * @return
-	 */
-	setResolveCoincidentTopologyToPolygonOffset(): boolean;
+	setLookupTable(lookupTable: any): boolean;
 
 	/**
 	 * Control how the filter works with scalar point data and cell attribute
@@ -534,7 +449,7 @@ export interface vtkMapper extends vtkAbstractMapper3D {
 
 	/**
 	 * Turn on/off flag to control whether scalar data is used to color objects.
-	 * @param {boolean} scalarVisibility
+	 * @param {Boolean} scalarVisibility
 	 * @default true
 	 */
 	setScalarVisibility(scalarVisibility: boolean): boolean;
@@ -545,7 +460,7 @@ export interface vtkMapper extends vtkAbstractMapper3D {
 	 * decreasing the time it takes to update many mappers. This should only be
 	 * used if the data never changes.
 	 *
-	 * @param {boolean} static
+	 * @param {Boolean} static
 	 * @default false
 	 */
 	setStatic(static: boolean): boolean;
@@ -558,7 +473,7 @@ export interface vtkMapper extends vtkAbstractMapper3D {
 	 * mappers/actors will probably wish to force the mapper to use the
 	 * LookupTable unchanged.
 	 *
-	 * @param {boolean} useLookupTableScalarRange
+	 * @param {Boolean} useLookupTableScalarRange
 	 * @default false
 	 */
 	setUseLookupTableScalarRange(useLookupTableScalarRange: boolean): boolean;
@@ -597,10 +512,81 @@ export function extend(publicAPI: object, model: object, initialValues?: IMapper
 
 /**
  * Method used to create a new instance of vtkMapper
- * @param initialValues for pre-setting some of its content
+ * @param {IMapperInitialValues} [initialValues] for pre-setting some of its content
  */
 export function newInstance(initialValues?: IMapperInitialValues): vtkMapper;
 
+/**
+ * 
+ */
+export function getResolveCoincidentTopologyAsString(): string;
+
+/**
+ * 
+ */
+export function getResolveCoincidentTopologyPolygonOffsetFaces(): ICoincidentTopology;
+
+/**
+ * 
+ */
+export function getResolveCoincidentTopology(): ICoincidentTopology
+
+/**
+ * 
+ * @param {Number} [mode] 
+ */
+export function setResolveCoincidentTopology(mode?: number): boolean;
+
+/**
+ * 
+ * @param value 
+ */
+export function setResolveCoincidentTopologyPolygonOffsetFaces(value: any): boolean;
+
+/**
+ * 
+ */
+export function setResolveCoincidentTopologyToDefault(): boolean;
+
+/**
+ * 
+ */
+export function setResolveCoincidentTopologyToOff(): boolean;
+
+/**
+ * 
+ */
+export function setResolveCoincidentTopologyToPolygonOffset(): boolean;
+
+/**
+ * 
+ */
+export function getRelativeCoincidentTopologyLineOffsetParameters(): ICoincidentTopology;
+
+/**
+ * 
+ */
+export function getRelativeCoincidentTopologyPointOffsetParameters(): ICoincidentTopology;
+
+/**
+ * 
+ */
+export function getRelativeCoincidentTopologyPolygonOffsetParameters(): ICoincidentTopology;
+
+/**
+ * 
+ */
+export function getResolveCoincidentTopologyLineOffsetParameters(): ICoincidentTopology
+
+/**
+ * 
+ */
+export function getResolveCoincidentTopologyPointOffsetParameters(): ICoincidentTopology
+
+/**
+ * 
+ */
+export function getResolveCoincidentTopologyPolygonOffsetParameters(): ICoincidentTopology;
 
 /**
  * vtkMapper is an abstract class to specify interface between data and
@@ -638,5 +624,19 @@ export function newInstance(initialValues?: IMapperInitialValues): vtkMapper;
 export declare const vtkMapper: {
 	newInstance: typeof newInstance;
 	extend: typeof extend;
+	getResolveCoincidentTopologyAsString: typeof getResolveCoincidentTopologyAsString;
+	getResolveCoincidentTopologyPolygonOffsetFaces: typeof getResolveCoincidentTopologyPolygonOffsetFaces;
+	getResolveCoincidentTopology: typeof getResolveCoincidentTopology;
+	setResolveCoincidentTopology: typeof setResolveCoincidentTopology;
+	setResolveCoincidentTopologyPolygonOffsetFaces: typeof setResolveCoincidentTopologyPolygonOffsetFaces;
+	setResolveCoincidentTopologyToDefault: typeof setResolveCoincidentTopologyToDefault;
+	setResolveCoincidentTopologyToOff: typeof setResolveCoincidentTopologyToOff;
+	setResolveCoincidentTopologyToPolygonOffset: typeof setResolveCoincidentTopologyToPolygonOffset;
+	getRelativeCoincidentTopologyLineOffsetParameters: typeof getRelativeCoincidentTopologyLineOffsetParameters;
+	getRelativeCoincidentTopologyPointOffsetParameters: typeof getRelativeCoincidentTopologyPointOffsetParameters;
+	getRelativeCoincidentTopologyPolygonOffsetParameters: typeof getRelativeCoincidentTopologyPolygonOffsetParameters;
+	getResolveCoincidentTopologyLineOffsetParameter: typeof getResolveCoincidentTopologyLineOffsetParameter;
+	getResolveCoincidentTopologyPointOffsetParameter: typeof getResolveCoincidentTopologyPointOffsetParameter;
+	getResolveCoincidentTopologyPolygonOffsetParameters: typeof getResolveCoincidentTopologyPolygonOffsetParameters;
 }
 export default vtkMapper;

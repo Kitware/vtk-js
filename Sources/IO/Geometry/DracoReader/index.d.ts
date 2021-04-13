@@ -2,20 +2,8 @@ import { VtkAlgorithm, VtkObject } from "vtk.js/Sources/macro";
 
 
 interface IDracoReaderOptions {
-
-	/**
-	 * 
-	 */
 	binary?: boolean;
-
-	/**
-	 * 
-	 */
 	compression?: string;
-
-	/**
-	 * 
-	 */
 	progressCallback?: any;
 }
 
@@ -45,31 +33,31 @@ export interface vtkDracoReader extends vtkDracoReaderBase {
 	getDataAccessHelper(): any;
 
 	/**
-	 * 
+	 * Get the url of the object to load.
 	 */
 	getUrl(): string;
 
 	/**
-	 * 
-	 * @param options 
+	 * Load the object data.
+	 * @param {IDracoReaderOptions} [options] 
 	 */
 	loadData(options?: IDracoReaderOptions): Promise<any>;
 
 	/**
-	 * 
-	 * @param content 
+	 * Parse data.
+	 * @param {String | ArrayBuffer} content The content to parse.
 	 */
 	parse(content: string | ArrayBuffer): void;
 
 	/**
-	 * 
-	 * @param content 
+	 * Parse data as ArrayBuffer.
+	 * @param {ArrayBuffer} content The content to parse. 
 	 */
 	parseAsArrayBuffer(content: ArrayBuffer): void;
 
 	/**
-	 * 
-	 * @param content 
+	 * Parse data as text.
+	 * @param {String} content The content to parse. 
 	 */
 	parseAsText(content: string): void;
 	/**
@@ -80,9 +68,9 @@ export interface vtkDracoReader extends vtkDracoReaderBase {
 	requestData(inData: any, outData: any): void;
 
 	/**
-	 * 
-	 * @param url 
-	 * @param option 
+	 * Set the url of the object to load.
+	 * @param {String} [url] the url of the object to load.
+	 * @param {IDracoReaderOptions} option The Draco reader options.
 	 */
 	setUrl(url: string, option?: IDracoReaderOptions): boolean;
 
@@ -91,7 +79,6 @@ export interface vtkDracoReader extends vtkDracoReaderBase {
 	 * @param dataAccessHelper 
 	 */
 	setDataAccessHelper(dataAccessHelper: any): boolean;
-
 }
 
 /**
@@ -105,7 +92,7 @@ export function extend(publicAPI: object, model: object, initialValues?: IDracoR
 
 /**
  * Method used to create a new instance of vtkDracoReader
- * @param initialValues for pre-setting some of its content
+ * @param {IDracoReaderInitialValues} [initialValues] for pre-setting some of its content
  */
 export function newInstance(initialValues?: IDracoReaderInitialValues): vtkDracoReader;
 

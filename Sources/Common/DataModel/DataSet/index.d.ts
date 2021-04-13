@@ -82,7 +82,7 @@ export function extend(publicAPI: object, model: object, initialValues ? : IData
 
 /**
  * Method used to create a new instance of vtkDataSet.
- * @param initialValues for pre-setting some of its content
+ * @param {IDataSetInitialValues} [initialValues] for pre-setting some of its content
  */
 export function newInstance(initialValues ? : IDataSetInitialValues): vtkDataSet;
 

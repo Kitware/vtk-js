@@ -35,7 +35,7 @@ export function extend(publicAPI: object, model: object, initialValues?: ITriang
 
 /**
  * Method used to create a new instance of vtkTriangleFilter
- * @param initialValues for pre-setting some of its content
+ * @param {ITriangleFilterInitialValues} [initialValues] for pre-setting some of its content
  */
 export function newInstance(initialValues?: ITriangleFilterInitialValues): vtkTriangleFilter;
 

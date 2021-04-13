@@ -55,34 +55,35 @@ export interface vtkPointSource extends vtkAlgorithm {
 
 	/**
 	 * Set the center of the point cloud.
-	 * @param x 
-	 * @param y 
-	 * @param z 
+	 * @param {Number} x The x coordinate.
+	 * @param {Number} y The y coordinate.
+	 * @param {Number} z The z coordinate.
 	 */
 	setCenter(x: number, y: number, z: number): boolean;
 
 	/**
 	 * Set the center of the point cloud.
-	 * @param center 
+	 * @param {Number[]} center The center point's coordinates.
 	 */
 	setCenter(center: number[]): boolean;
 
 	/**
 	 * Set the center of the point cloud.
-	 * @param center 
+	 * @param {Number[]} center The center point's coordinates.
 	 */
 	setCenterFrom(center: number[]): boolean;
 
 	/**
 	 * Set the number of points to generate.
-	 * @param numberOfPoints 
+	 * @param {Number} numberOfPoints The number of points to generate.
 	 */
-	setNumberOfPoints(nornumberOfPointsmal: number): boolean;
+	setNumberOfPoints(numberOfPoints: number): boolean;
 
 	/**
 	 * Set the radius of the point cloud. If you are generating a Gaussian
-	 * distribution, then this is the standard deviation for each of x, y, and z.
-	 * @param {number} radius 
+	 * distribution, then this is the standard deviation for each of x, y, and
+	 * z.
+	 * @param {Number} radius The radius value.
 	 */
 	setRadius(radius: number): boolean;
 }
@@ -98,7 +99,7 @@ export function extend(publicAPI: object, model: object, initialValues?: IPointS
 
 /**
  * Method used to create a new instance of vtkPointSource.
- * @param initialValues for pre-setting some of its content
+ * @param {IPointSourceInitialValues} [initialValues] for pre-setting some of its content
  */
 export function newInstance(initialValues?: IPointSourceInitialValues): vtkPointSource;
 
@@ -109,6 +110,14 @@ export function newInstance(initialValues?: IPointSourceInitialValues): vtkPoint
  * generate random points only on the surface of the sphere. The output PolyData
  * has the specified number of points and 1 cell - a vtkPolyVertex containing
  * all of the points.
+ * 
+ * @example
+ * ```js
+ * import vtkPointSource from 'vtk.js/Sources/Filters/Sources/PointSource';
+ * 
+ * const point = vtkPointSource.newInstance({ numberOfPoints: 10 });
+ * const polydata = point.getOutputData();
+ * ```
  */
 export declare const vtkPointSource: {
 	newInstance: typeof newInstance,

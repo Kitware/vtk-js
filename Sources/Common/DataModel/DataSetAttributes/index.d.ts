@@ -198,7 +198,7 @@ export interface vtkDataSetAttributes extends vtkFieldData {
 
 	/**
 	 *
-	 * @param {number} arrayIdx
+	 * @param {Number} arrayIdx
 	 * @param uncleanAttType
 	 */
 	setActiveAttributeByIndex(arrayIdx: number, uncleanAttType: string): number;
@@ -227,43 +227,43 @@ export interface vtkDataSetAttributes extends vtkFieldData {
 
 	/**
 	 *
-	 * @param {number} activeScalars
+	 * @param {Number} activeScalars
 	 */
 	setActiveScalars(activeScalars: number): boolean;
 
 	/**
 	 *
-	 * @param {number} activeVectors
+	 * @param {Number} activeVectors
 	 */
 	setActiveVectors(activeVectors: number): boolean;
 
 	/**
 	 *
-	 * @param {number} activeTensors
+	 * @param {Number} activeTensors
 	 */
 	setActiveTensors(activeTensors: number): boolean;
 
 	/**
 	 *
-	 * @param {number} activeNormals
+	 * @param {Number} activeNormals
 	 */
 	setActiveNormals(activeNormals: number): boolean;
 
 	/**
 	 *
-	 * @param {number} activeTCoords
+	 * @param {Number} activeTCoords
 	 */
 	setActiveTCoords(activeTCoords: number): boolean;
 
 	/**
 	 *
-	 * @param {number} activeGlobalIds
+	 * @param {Number} activeGlobalIds
 	 */
 	setActiveGlobalIds(activeGlobalIds: number): boolean;
 
 	/**
 	 *
-	 * @param {number} activePedigreeIds
+	 * @param {Number} activePedigreeIds
 	 */
 	setActivePedigreeIds(activePedigreeIds: number): boolean;
 
@@ -405,7 +405,7 @@ export function extend(publicAPI: object, model: object, initialValues?: IDataSe
 
 /**
  * Method used to create a new instance of vtkDataSetAttributes.
- * @param initialValues for pre-setting some of its content
+ * @param {IDataSetAttributesInitialValues} [initialValues] for pre-setting some of its content
  */
 export function newInstance(initialValues?: IDataSetAttributesInitialValues): vtkDataSetAttributes;
 

@@ -57,7 +57,7 @@ export function extend(publicAPI: object, model: object, initialValues?: ISTLWri
 
 /**
  * Method used to create a new instance of vtkSTLWriter
- * @param initialValues for pre-setting some of its content
+ * @param {ISTLWriterInitialValues} [initialValues] for pre-setting some of its content
  */
 export function newInstance(initialValues?: ISTLWriterInitialValues): vtkSTLWriter;
 

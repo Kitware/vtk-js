@@ -6,57 +6,18 @@ export enum InterpolationType {
 }
 
 interface IComponentData {
-
-	/**
-	 * 
-	 */
 	piecewiseFunction: number;
-
-	/**
-	 * 
-	 */
 	componentWeight: number;
 }
 
 interface IImageMapperInitialValues {
-	/**
-	 * 
-	 */
 	independentComponents: boolean;
-
-	/**
-	 * 
-	 */
 	interpolationType: InterpolationType;
-
-	/**
-	 * 
-	 */
 	colorWindow: number;
-
-	/**
-	 * 
-	 */
 	colorLevel: number;
-
-	/**
-	 * 
-	 */
 	ambient: number;
-
-	/**
-	 * 
-	 */
 	diffuse: number;
-
-	/**
-	 * 
-	 */
 	opacity: number;
-
-	/**
-	 * 
-	 */
 	componentData: IComponentData[];
 }
 
@@ -82,8 +43,7 @@ export interface vtkImageProperty extends VtkObject {
 
 	/**
 	 * 
-	 * @param index 
-	 * @return  
+	 * @param {Number} index 
 	 */
 	getComponentWeight(index: number): number;
 
@@ -118,7 +78,6 @@ export interface vtkImageProperty extends VtkObject {
 	/**
 	 * Get the component weighting function.
 	 * @param idx 
-	 * @return  
 	 */
 	getPiecewiseFunction(idx: number): number;
 
@@ -131,13 +90,13 @@ export interface vtkImageProperty extends VtkObject {
 	/**
 	 * Alias to get the piecewise function (backwards compatibility)
 	 * @param idx 
-	 * @return  
 	 */
 	getScalarOpacity(idx: any): number;
 
-	/**
-	 * 
-	 */
+    /**
+     * Set the lighting coefficient.
+     * @param {Number} ambient 
+     */
 	setAmbient(ambient: number): boolean;
 
 	/**
@@ -152,7 +111,7 @@ export interface vtkImageProperty extends VtkObject {
 
 	/**
 	 * 
-	 * @param index 
+	 * @param {Number} index 
 	 * @param value 
 	 */
 	setComponentWeight(index: number, value: number): boolean;
@@ -184,32 +143,29 @@ export interface vtkImageProperty extends VtkObject {
 
 	/**
 	 * 
-	 * @param opacity 
+	 * @param {Number} opacity The opacity value.
 	 */
 	setOpacity(opacity: number): boolean;
 
 	/**
 	 * Set the piecewise function
-	 * @param index 
+	 * @param {Number} index 
 	 * @param func 
-	 * @return  
 	 */
 	setPiecewiseFunction(index: number, func: any): boolean;
 
 	/**
 	 * Set the color of a volume to an RGB transfer function
-	 * @param index 
+	 * @param {Number} index 
 	 * @param func 
-	 * @return  
 	 */
 	setRGBTransferFunction(index: number, func: any): boolean;
 
 
 	/**
 	 * Alias to set the piecewise function
-	 * @param index 
+	 * @param {Number} index 
 	 * @param func 
-	 * @return  
 	 */
 	setScalarOpacity(index: any, func: any): boolean;
 }
@@ -225,7 +181,7 @@ export function extend(publicAPI: object, model: object, initialValues?: IImageM
 
 /**
  * Method use to create a new instance of vtkImageProperty
- * @param initialValues for pre-setting some of its content
+ * @param {IImageMapperInitialValues} [initialValues] for pre-setting some of its content
  */
 export function newInstance(initialValues?: IImageMapperInitialValues): vtkImageProperty;
 

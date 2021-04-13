@@ -173,7 +173,7 @@ export function extend(publicAPI: object, model: object, initialValues?: ICoordi
 
 /**
  * Method use to create a new instance of vtkCoordinate
- * @param initialValues for pre-setting some of its content
+ * @param {ICoordinateInitialValues} [initialValues] for pre-setting some of its content
  */
 export function newInstance(initialValues?: ICoordinateInitialValues): vtkCoordinate;
 

@@ -83,59 +83,65 @@ export interface vtkArrowSource extends vtkAlgorithm {
 
 	/**
 	 * Expose methods
-	 * @param inData
-	 * @param outData
+	 * @param inData 
+	 * @param outData 
 	 */
 	requestData(inData: any, outData: any): void;
 
 	/**
-	 *
-	 * @param x
-	 * @param y
-	 * @param z
+	 * Set the direction for the arrow.
+	 * @param {Number} x The x coordinate.
+	 * @param {Number} y The y coordinate.
+	 * @param {Number} z The z coordinate.
 	 */
 	setDirection(x: number, y: number, z: number): boolean;
 
 	/**
-	 *
-	 * @param direction
+	 * Set the direction for the arrow.
+	 * @param {Number[]} direction The direction coordinates.
+	 */
+	setDirection(direction: number[]): boolean;
+
+	/**
+	 * Set the direction for the arrow.
+	 * @param {Number[]} direction The direction coordinates.
 	 */
 	setDirectionFrom(direction: number[]): boolean;
 
 	/**
 	 * Inverts the arrow direction.
 	 * When set to true, base is at [1, 0, 0] while the tip is at [0, 0, 0].
-	 * @param invert
+	 * @param {Booolean} invert  
 	 */
 	setInvert(invert: boolean): boolean;
 
 	/**
 	 * Set the radius of the shaft.
-	 * @param shaftRadius
+	 * @param {Number} shaftRadius  
 	 */
 	setShaftRadius(shaftRadius: number): boolean;
 
 	/**
 	 * Set the resolution of the shaft.
-	 * @param shaftResolution
+	 * @param {Number} shaftResolution 
 	 */
 	setShaftResolution(shaftResolution: number): boolean;
 
 	/**
 	 * Set the length of the tip.
-	 * @param tipLength
+	 * @param {Number} tipLength 
 	 */
 	setTipLength(tipLength: number): boolean;
 
 	/**
 	 * Set the radius of the tip.
-	 * @param tipRadius
+	 * @param {Number} tipRadius 
 	 */
 	setTipRadius(tipRadius: number): boolean;
 
 	/**
 	 * Set the resolution of the tip.
-	 * @param tipResolution
+	 * @param {Number} tipResolution 
 	 */
 	setTipResolution(tipResolution: number): boolean;
 }
@@ -143,15 +149,15 @@ export interface vtkArrowSource extends vtkAlgorithm {
 /**
  * Method used to decorate a given object (publicAPI+model) with vtkArrowSource characteristics.
  *
- * @param publicAPI object on which methods will be bounds (public)
- * @param model object on which data structure will be bounds (protected)
- * @param {IArrowSourceInitialValues} [initialValues] (default: {})
+ * @param publicAPI object on which methods will be bounds (public) 
+ * @param model object on which data structure will be bounds (protected) 
+ * @param {IArrowSourceInitialValues} [initialValues] (default: {}) 
  */
 export function extend(publicAPI: object, model: object, initialValues?: IArrowSourceInitialValues): void;
 
 /**
  * Method used to create a new instance of vtkArrowSource.
- * @param initialValues for pre-setting some of its content
+ * @param {IArrowSourceInitialValues} [initialValues] for pre-setting some of its content 
  */
 export function newInstance(initialValues?: IArrowSourceInitialValues): vtkArrowSource;
 
@@ -162,6 +168,21 @@ export function newInstance(initialValues?: IArrowSourceInitialValues): vtkArrow
  * The resolution of the cone and shaft can be set and default to 6.
  * The radius of the cone and shaft can be set and default to 0.03 and 0.1.
  * The length of the tip can also be set, and defaults to 0.35.
+ * 
+ * @example
+ * ```js
+ * import vtkArrowSource from 'vtk.js/Sources/Filters/Sources/ArrowSource';
+ * 
+ * const arrow = vtkArrowSource.newInstance({
+ *   tipResolution: 6,
+ *   tipRadius: 0.1,
+ *   tipLength: 0.35,
+ *   shaftResolution: 6,
+ *   shaftRadius: 0.03,
+ *   invert: false,
+ *   direction: [1.0, 0.0, 0.0]});
+ * const polydata = arrow.getOutputData();
+ * ```
  */
 export declare const vtkArrowSource: {
 	newInstance: typeof newInstance,

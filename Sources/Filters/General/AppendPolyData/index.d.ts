@@ -58,7 +58,7 @@ export function extend(publicAPI: object, model: object, initialValues?: IAppend
 
 /**
  * Method used to create a new instance of vtkAppendPolyData
- * @param initialValues for pre-setting some of its content
+ * @param {IAppendPolyDataInitialValues} [initialValues] for pre-setting some of its content
  */
 export function newInstance(initialValues?: IAppendPolyDataInitialValues): vtkAppendPolyData;
 

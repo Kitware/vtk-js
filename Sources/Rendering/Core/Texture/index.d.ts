@@ -87,7 +87,7 @@ export function extend(publicAPI: object, model: object, initialValues?: ITextur
 
 /**
  * Method use to create a new instance of vtkTexture.
- * @param initialValues for pre-setting some of its content
+ * @param {ITextureInitialValues} [initialValues] for pre-setting some of its content
  */
 export function newInstance(initialValues?: ITextureInitialValues): vtkTexture;
 

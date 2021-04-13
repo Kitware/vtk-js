@@ -3,6 +3,7 @@ import pako from 'pako';
 import macro from 'vtk.js/Sources/macro';
 import Endian from 'vtk.js/Sources/Common/Core/Endian';
 import { DataTypeByteSize } from 'vtk.js/Sources/Common/Core/DataArray/Constants';
+import { registerType } from 'vtk.js/Sources/IO/Core/DataAccessHelper';
 
 const { vtkErrorMacro, vtkDebugMacro } = macro;
 
@@ -221,10 +222,11 @@ function fetchImage(instance = {}, url, options = {}) {
     img.src = url;
   });
 }
+/* eslint-enable prefer-promise-reject-errors */
 
 // ----------------------------------------------------------------------------
 
-export default {
+const HttpDataAccessHelper = {
   fetchArray,
   fetchJSON,
   fetchText,
@@ -232,4 +234,6 @@ export default {
   fetchImage,
 };
 
-/* eslint-enable prefer-promise-reject-errors */
+registerType('http', (options) => HttpDataAccessHelper);
+
+export default HttpDataAccessHelper;

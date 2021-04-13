@@ -2,36 +2,12 @@ import { mat4 } from "gl-matrix";
 import vtkProp from "vtk.js/Sources/Rendering/Core/Prop";
 
 interface IProp3DInitialValues {
-
-    /**
-     * 
-     */
-    origin: number[];
-
-    /**
-     * 
-     */
-    position: number[];
-
-    /**
-     * 
-     */
-    orientation: number[];
-
-    /**
-     * 
-     */
-    scale: number[];
-
-    /**
-     * 
-     */
-    bounds: number[];
-
-    /**
-     * check for identity
-     */
-    isIdentity: boolean;
+    origin?: number[];
+    position?: number[];
+    orientation?: number[];
+    scale?: number[];
+    bounds?: number[];
+    isIdentity?: boolean;
 }
 
 export interface vtkProp3D extends vtkProp {
@@ -43,26 +19,29 @@ export interface vtkProp3D extends vtkProp {
     addPosition(deltaXYZ: number[]): void;
 
     /**
-     * Get the bounds for this Actor as (Xmin,Xmax,Ymin,Ymax,Zmin,Zmax).
-     * @returns 
+	 * Get the bounds as [xmin, xmax, ymin, ymax, zmin, zmax].
+	 * @return {Number[]} The bounds for the mapper.
      */
     getBounds(): number[];
 
     /**
-     * 
+     * Check if there was a modification or transformation.
      * @default null
-     * @returns true if no modification/transformation have been set.
+     * @return {Boolean} true if no modification/transformation have been set.
      */
     getIsIdentity(): boolean;
 
     /**
-     * The ordering in which these rotations must be done to generate the same matrix is RotateZ, RotateX, and finally RotateY. See also SetOrientation.
-     * @returns the orientation of the Prop3D as s vector of X,Y and Z rotation.
+     * The ordering in which these rotations must be done to generate the same
+     * matrix is RotateZ, RotateX, and finally RotateY. See also `SetOrientation`.
+     * @return {Number[]} the orientation of the Prop3D as s vector of X, Y and Z rotation.
      */
     getOrientation(): number[];
 
     /**
-     * 
+     * Get a reference of the orientation of the Prop3D as s vector of X, Y and Z
+     * rotation.
+     * @return {Number[]} the orientation of the Prop3D as s vector of X, Y and Z rotation.
      */
     getOrientationByReference(): number[];
 
@@ -77,17 +56,18 @@ export interface vtkProp3D extends vtkProp {
     getOrigin(): number[];
 
     /**
-     * 
+     * Get a reference of the origin of the Prop3D. This is the point about
+     * which all rotations take place.
      */
     getOriginByReference(): number[];
 
     /**
-     * 
+     * Get the position of the Prop3D in world coordinates.
      */
     getPosition(): number[];
 
     /**
-     * 
+     * Get a refrence of the position of the Prop3D in world coordinates.
      */
     getPositionByReference(): number[];
 
@@ -97,18 +77,17 @@ export interface vtkProp3D extends vtkProp {
     getScale(): number[];
 
     /**
-     * 
+     * Get a refrence of the scale of the actor.
      */
     getScaleByReference(): number[];
 
     /**
-     * Returns the WXYZ orientation of the Prop3D.
-     * @return  
+     * Get the WXYZ orientation of the Prop3D.
      */
-    getOrientationWXYZ(): any;
+    getOrientationWXYZ(): number[];
 
     /**
-     * Return a reference to the Prop3D’s 4x4 composite matrix.
+     * Get a reference to the Prop3D’s 4x4 composite matrix.
      * Get the matrix from the position, origin, scale and orientation This
      * matrix is cached, so multiple GetMatrix() calls will be efficient.
      */
@@ -140,7 +119,7 @@ export interface vtkProp3D extends vtkProp {
     getZRange(): number[];
 
     /**
-     * 
+     * Get the transformation matrix set for your own use.
      */
     getUserMatrix(): mat4;
 
@@ -150,7 +129,7 @@ export interface vtkProp3D extends vtkProp {
      * rotations are performed. To rotate about the world X axis use
      * RotateWXYZ (angle, 1, 0, 0). This rotation is applied before all
      * others in the current transformation matrix.
-     * @param angle 
+     * @param {Number} angle 
      */
     rotateX(angle: number): void;
 
@@ -160,7 +139,7 @@ export interface vtkProp3D extends vtkProp {
      * rotations are performed. To rotate about the world Y axis use
      * RotateWXYZ (angle, 0, 1, 0). This rotation is applied before all
      * others in the current transformation matrix.
-     * @param angle 
+     * @param {Number} angle 
      */
     rotateY(angle: number): void;
 
@@ -170,7 +149,7 @@ export interface vtkProp3D extends vtkProp {
      * rotations are performed. To rotate about the world Z axis use
      * RotateWXYZ (angle, 0, 0, 1). This rotation is applied before all
      * others in the current transformation matrix.
-     * @param angle 
+     * @param {Number} angle 
      */
     rotateZ(angle: number): void;
 
@@ -179,79 +158,84 @@ export interface vtkProp3D extends vtkProp {
      * the last three arguments. The axis is specified in world
      * coordinates. To rotate an about its model axes, use RotateX,
      * RotateY, RotateZ.
-     * @param {number} degrees 
-     * @param x 
-     * @param y 
-     * @param z 
+     * @param {Number} degrees 
+     * @param {Number} x The x coordinate.
+     * @param {Number} y The y coordinate.
+     * @param {Number} z The z coordinate.
      */
     rotateWXYZ(degrees: number, x: number, y: number, z: number): void;
 
     /**
      * Orientation is specified as X, Y and Z rotations in that order,
      * but they are performed as RotateZ, RotateX, and finally RotateY.
-     * @param x 
-     * @param y 
-     * @param z 
-     * @return  
+     * @param {Number} x The x coordinate.
+     * @param {Number} y The y coordinate.
+     * @param {Number} z The z coordinate.
      */
     setOrientation(x: number, y: number, z: number): boolean;
 
     /**
      * Set the origin of the Prop3D. This is the point about which all rotations take place.
-     * @param x 
-     * @param y 
-     * @param z 
+     * @param {Number} x The x coordinate.
+     * @param {Number} y The y coordinate.
+     * @param {Number} z The z coordinate.
      */
     setOrigin(x: number, y: number, z: number): boolean;
 
     /**
-     * Set the origin of the Prop3D. This is the point about which all rotations take place.
-     * @param origin
+     * Set the origin of the Prop3D. This is the point about which all rotations
+     * take place.
+     * @param {Number[]} origin
      */
     setOrigin(origin: number[]): boolean;
 
 
     /**
-     * 
-     * @param origin 
+     * Set the origin of the Prop3D. This is the point about which all rotations
+     * take place.
+     * @param {Number[]} origin 
      */
     setOriginFrom(origin: number[]): boolean;
 
     /**
      * Set the origin of the Prop3D.
      * This is the point about which all rotations take place.
-     * @param x 
-     * @param y 
-     * @param z 
+     * @param {Number} x The x coordinate.
+     * @param {Number} y The y coordinate.
+     * @param {Number} z The z coordinate.
      */
     setPosition(x: number, y: number, z: number): boolean;
 
     /**
-     * 
-     * @param position 
+     * Set the origin of the Prop3D.
+     * @param {Number[]} position 
      */
     setPositionFrom(position: number[]): boolean;
 
     /**
      * Set the scale of the actor.
      * Scaling in performed independently on the X, Y and Z axis. A scale of zero is illegal and will be replaced with one.
-     * @param x 
-     * @param y 
-     * @param z 
+     * @param {Number} x The x coordinate.
+     * @param {Number} y The y coordinate.
+     * @param {Number} z The z coordinate.
      */
     setScale(x: number, y: number, z: number): boolean;
 
     /**
      * 
-     * @param scale 
+     * @param {Number[]} scale 
      */
     setScaleFrom(scale: number[]): boolean;
 
     /**
-     * The UserMatrix can be used in place of UserTransform.
-     * @param matrix 
+     * In addition to the instance variables such as position and orientation,
+     * you can add an additional transformation matrix for your own use. This
+     * matrix is concatenated with the actor's internal matrix, which you
+     * implicitly create through the use of setPosition(), setOrigin() and
+     * setOrientation().
+     * @param {mat4} matrix 
      */
-    setUserMatrix(matrix: mat4): any;
+    setUserMatrix(matrix: mat4): void;
 
     /**
      * Generate the matrix based on internal model.
@@ -270,13 +254,11 @@ export function extend(publicAPI: object, model: object, initialValues?: IProp3D
 
 /**
  * Method use to create a new instance of vtkProp3D
- * @param initialValues for pre-setting some of its content
+ * @param {IProp3DInitialValues} [initialValues] for pre-setting some of its content
  */
 export function newInstance(initialValues?: IProp3DInitialValues): vtkProp3D;
 
 /** 
- * Introduction
- * ---------------------------------------------------------------------------
  * vtkProp3D is an abstract class used to represent an entity in a rendering
  * scene (i.e., vtkProp3D is a vtkProp with an associated transformation
  * matrix). It handles functions related to the position, orientation and

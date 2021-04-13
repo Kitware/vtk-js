@@ -104,7 +104,7 @@ export function extend(publicAPI: object, model: object, initialValues?: IPixelS
 
 /**
  * Method use to create a new instance of vtkPixelSpaceCallbackMapper
- * @param initialValues for pre-setting some of its content
+ * @param {IPixelSpaceCallbackMapperInitialValues} [initialValues] for pre-setting some of its content
  */
 export function newInstance(initialValues?: IPixelSpaceCallbackMapperInitialValues): vtkPixelSpaceCallbackMapper;
 

@@ -3,19 +3,8 @@ import vtkMapper from "vtk.js/Sources/Rendering/Core/Mapper";
 import vtkProp3D from "vtk.js/Sources/Rendering/Core/Prop3D";
 
 interface IImageSliceInitialValues{
-	/**
-	 * 
-	 */
 	mapper: null | vtkMapper;
-
-	/**
-	 * 
-	 */
 	property: null| VtkProperty;
-
-	/**
-	 * 
-	 */
 	bounds: number[];
 }
 
@@ -23,32 +12,30 @@ interface IImageSliceInitialValues{
 export interface vtkImageSlice extends vtkProp3D {
 	/**
 	 * 
-	 * @return  
 	 */
 	getActors(): any;
 
 	/**
-	 * Get the bounds as [xmin, xmax, ymin, ymax, zmin, zmax].
+     * Get the bounds for this mapper as [xmin, xmax, ymin, ymax,zmin, zmax].
+	 * @return {Number[]} The bounds for the mapper.
 	 */
 	getBounds(): number[];
 
 	/**
-	 * 
-	 * @param slice 
-	 * @param thickness 
-	 * @return  
+	 * Get the bounds for a given slice as [xmin, xmax, ymin, ymax,zmin, zmax].
+	 * @param {Number} slice The slice index.
+	 * @param {Number} [thickness] The slice thickness.
+	 * @return {Number[]} The bounds for a given slice.
 	 */
-	getBoundsForSlice(slice: number, thickness: number): number[];
+	getBoundsForSlice(slice: number, thickness?: number): number[];
 
 	/**
 	 * 
-	 * @return  
 	 */
 	getImages(): any;
 
 	/**
 	 * 
-	 * @return  
 	 */
 	getIsOpaque(): boolean;
 
@@ -64,37 +51,31 @@ export interface vtkImageSlice extends vtkProp3D {
 	
 	/**
 	 * Get the minimum X bound
-	 * @return  
 	 */
 	getMinXBound(): number;
 
 	/**
 	 * Get the maximum X bound
-	 * @return  
 	 */
 	getMaxXBound(): number;
 
 	/**
 	 * Get the minimum Y bound
-	 * @return  
 	 */
 	getMinYBound(): number;
 
 	/**
 	 * Get the maximum Y bound
-	 * @return  
 	 */
 	getMaxYBound(): number;
 
 	/**
 	 * Get the minimum Z bound
-	 * @return  
 	 */
 	getMinZBound(): number;
 
 	/**
 	 * Get the maximum Z bound
-	 * @return  
 	 */
 	getMaxZBound(): number;
 
@@ -106,7 +87,7 @@ export interface vtkImageSlice extends vtkProp3D {
 	 *  - Is that object created/modified after another one?
 	 *  - Do I need to re-execute this filter, or not? ...
 	 *
-	 * @returns the global modified time
+	 * @return {Number} the global modified time.
 	 */
 	getMTime(): number;
 
@@ -117,7 +98,6 @@ export interface vtkImageSlice extends vtkProp3D {
 
 	/**
 	 * 
-	 * @return  
 	 */
 	getSupportsSelection(): boolean;
 
@@ -127,7 +107,6 @@ export interface vtkImageSlice extends vtkProp3D {
 	 * In the future, the Renderer should render images in layers,
 	 * i.e. where each image will have a layer number assigned to it,
 	 * and the Renderer will do the images in their own pass.
-	 * @return  
 	 */
 	hasTranslucentPolygonalGeometry(): boolean;
 }
@@ -143,7 +122,7 @@ export function extend(publicAPI: object, model: object, initialValues?: IImageS
 
 /**
  * Method use to create a new instance of vtkImageSlice
- * @param initialValues for pre-setting some of its content
+ * @param {IImageSliceInitialValues} [initialValues] for pre-setting some of its content
  */
 export function newInstance(initialValues?: IImageSliceInitialValues): vtkImageSlice;
 

@@ -4,6 +4,12 @@ import DataAccessHelper from 'vtk.js/Sources/IO/Core/DataAccessHelper';
 
 import ATOMS from 'vtk.js/Utilities/XMLConverter/chemistry-mapper/elements.json';
 
+// Enable several sources for DataAccessHelper
+import 'vtk.js/Sources/IO/Core/DataAccessHelper/LiteHttpDataAccessHelper'; // Just need HTTP
+// import 'vtk.js/Sources/IO/Core/DataAccessHelper/HttpDataAccessHelper'; // HTTP + gz
+// import 'vtk.js/Sources/IO/Core/DataAccessHelper/HtmlDataAccessHelper'; // html + base64 + zip
+// import 'vtk.js/Sources/IO/Core/DataAccessHelper/JSZipDataAccessHelper'; // zip
+
 // ----------------------------------------------------------------------------
 // vtkPDBReader methods
 // ----------------------------------------------------------------------------
