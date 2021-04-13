@@ -14,6 +14,11 @@ interface IIntersectWithLine {
 	subId: number;
 }
 
+interface IDistanceToLine {
+	t: number;
+	distance: number;
+}
+
 export interface vtkLine extends vtkCell {
 
 	/**
@@ -34,36 +39,6 @@ export interface vtkLine extends vtkCell {
 	 *   t: tolerance of the intersection
 	 * }
 	 * ```
-	 *
-	 *
-	 * (static) distanceToLine(x, p1, p2, closestPoint = null) : Compute the
-	 * distance from x to the line composed by p1 and p2. If an object is set as
-	 * a fourth argument, then the closest point on the line from x will be set
-	 * into it.
-	 * ```js
-	 * {
-	 *   t: tolerance of the distance
-	 *   distance: quared distance between closest point and x
-	 * }
-	 * ```
-	 *
-	 * (static) intersection(a1, a2, b1, b2, u, v) : Performs intersection of
-	 * two finite 3D lines. An intersection is found if the projection of the
-	 * two lines onto the plane perpendicular to the cross product of the two
-	 * lines intersect, and if the distance between the closest * points of
-	 * approach are within a relative tolerance. The parameters (u,v) are the
-	 * parametric coordinates of the lines at the position of closest approach.
-	 * Careful, u and v are filled inside the function. Outside the function,
-	 * they have to be access with : u[0] and v[0] return IntersectionState enum
-	 * :
-	 * ```js
-	 * enum IntersectionState {
-	 *    NO_INTERSECTION,
-	 *    YES_INTERSECTION,
-	 *    ON_LINE
-	 * }
-	 * ```
-	 *
 	 * @param p1 
 	 * @param p2 
 	 * @param tol 
@@ -101,24 +76,44 @@ export function extend(publicAPI: object, model: object, initialValues?: ILineIn
 export function newInstance(initialValues?: ILineInitialValues): vtkLine;
 
 /**
- * 
- * @param x 
- * @param p1 
- * @param p2 
- * @param closestPoint 
+ * Compute the distance from x to the line composed by p1 and p2. If an object
+ * is set as a fourth argument, then the closest point on the line from x will
+ * be set into it.
+ * ```js
+ * {
+ *   t: tolerance of the distance
+ *   distance: quared distance between closest point and x
+ * }
+ * @param {Number[]} x 
+ * @param {Number[]} p1 
+ * @param {Number[]} p2 
+ * @param {Number[]} [closestPoint] 
  */
-export function distanceToLine(x: 0, p1: 1, p2: Array<any>, closestPoint: 3): Ret;
+export function distanceToLine(x: number[], p1: number[], p2: number[], closestPoint?: number[]): IDistanceToLine;
 
 /**
- * 
- * @param a1 
- * @param a2 
- * @param b1 
- * @param b2 
- * @param u 
- * @param v 
+ * Performs intersection of two finite 3D lines. An intersection is found if the
+ * projection of the two lines onto the plane perpendicular to the cross product
+ * of the two lines intersect, and if the distance between the closest * points
+ * of approach are within a relative tolerance. The parameters (u,v) are the
+ * parametric coordinates of the lines at the position of closest approach.
+ * Careful, u and v are filled inside the function. Outside the function, they
+ * have to be access with : u[0] and v[0] return IntersectionState enum
+ * :
+ * ```js
+ * enum IntersectionState {
+ *    NO_INTERSECTION,
+ *    YES_INTERSECTION,
+ *    ON_LINE
+ * }
+ * @param  {Number[]} a1 
+ * @param {Number[]} a2 
+ * @param {Number[]} b1 
+ * @param {Number[]} b2 
+ * @param {Number[]} u 
+ * @param {Number[]} v 
  */
-export function intersection(a1: 0, a2: any, b1: Array<any>, b2: Array<any>, u: 4, v: 5): void;
+export function intersection(a1: number[], a2: number[], b1: number[], b2: number[], u: number[], v: number[]): IntersectionState;
 
 /** 
  * vtkLine is a cell which representant a line.
