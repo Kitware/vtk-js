@@ -93,7 +93,7 @@ function fetchArray(instance = {}, baseURL, array, options = {}) {
             Endian.swapBytes(array.buffer, DataTypeByteSize[array.dataType]);
           }
 
-          array.values = new window[array.dataType](array.buffer);
+          array.values = macro.newTypedArray(array.dataType, array.buffer);
         }
 
         if (array.values.length !== array.size) {

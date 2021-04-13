@@ -486,7 +486,7 @@ function vtkOpenGLRenderWindow(publicAPI, model) {
 
   publicAPI.activateTexture = (texture) => {
     // Only add if it isn't already there
-    const result = model.textureResourceIds.get(texture);
+    const result = model._textureResourceIds.get(texture);
     if (result !== undefined) {
       model.context.activeTexture(model.context.TEXTURE0 + result);
       return;
@@ -500,21 +500,21 @@ function vtkOpenGLRenderWindow(publicAPI, model) {
       return;
     }
 
-    model.textureResourceIds.set(texture, activeUnit);
+    model._textureResourceIds.set(texture, activeUnit);
     model.context.activeTexture(model.context.TEXTURE0 + activeUnit);
   };
 
   publicAPI.deactivateTexture = (texture) => {
     // Only deactivate if it isn't already there
-    const result = model.textureResourceIds.get(texture);
+    const result = model._textureResourceIds.get(texture);
     if (result !== undefined) {
       publicAPI.getTextureUnitManager().free(result);
-      delete model.textureResourceIds.delete(texture);
+      delete model._textureResourceIds.delete(texture);
     }
   };
 
   publicAPI.getTextureUnitForTexture = (texture) => {
-    const result = model.textureResourceIds.get(texture);
+    const result = model._textureResourceIds.get(texture);
     if (result !== undefined) {
       return result;
     }
@@ -1173,7 +1173,7 @@ export function extend(publicAPI, model, initialValues = {}) {
   model.bgImage.style.height = '100%';
   model.bgImage.style.zIndex = '-1';
 
-  model.textureResourceIds = new Map();
+  model._textureResourceIds = new Map();
 
   // Inheritance
   vtkViewNode.extend(publicAPI, model, initialValues);

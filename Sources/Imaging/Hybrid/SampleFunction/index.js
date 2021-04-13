@@ -58,7 +58,7 @@ function vtkSampleFunction(publicAPI, model) {
     volume.setSpacing(spacing);
 
     // Create scalars array
-    const s = new window[model.pointType](numScalars);
+    const s = macro.newTypedArray(model.pointType, numScalars);
     const scalars = vtkDataArray.newInstance({
       name: 'Scalars',
       values: s,

@@ -6,7 +6,7 @@ function vtkViewFinderSource(publicAPI, model) {
   publicAPI.requestData = (inData, outData) => {
     const dataset = vtkPolyData.newInstance();
 
-    const points = new macro.TYPED_ARRAYS[model.pointType](3 * 16);
+    const points = macro.newTypedArray(model.pointType, 3 * 16);
 
     points[0] = model.radius;
     points[1] = model.radius / model.width;
@@ -71,7 +71,7 @@ function vtkViewFinderSource(publicAPI, model) {
     3, 4, 6, 5,
     3, 6, 5, 7,
     3, 8, 11, 9,
-    3, 8, 10, 11,    
+    3, 8, 10, 11,
     3, 12, 13, 15,
     3, 12, 15, 14,
   ]);

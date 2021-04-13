@@ -38,10 +38,6 @@ function vtkScalarBarActor(publicAPI, model) {
   // Set our className
   model.classHierarchy.push('vtkScalarBarActor');
 
-  // map used to store the string to texture values
-  // done as a const to not prevent serialization
-  let tmAtlas = new Map();
-
   // compute good values to use based on window size etc
   // a bunch of heuristics here with hand tuned constants
   // These values worked for me but really this method
@@ -187,8 +183,8 @@ function vtkScalarBarActor(publicAPI, model) {
     if (model.nextImage && model.nextImage.complete) {
       model.tmTexture.setImage(model.nextImage);
       model.nextImage = null;
-      tmAtlas = model.nextAtlas;
-      model.nextAtlas = null;
+      model._tmAtlas = model._nextAtlas;
+      model._nextAtlas = null;
       if (doUpdate) {
         model.forceViewUpdate = true;
         publicAPI.update();
@@ -288,7 +284,7 @@ function vtkScalarBarActor(publicAPI, model) {
     const image = new Image();
     image.src = model.tmCanvas.toDataURL('image/png');
     model.nextImage = image;
-    model.nextAtlas = newTmAtlas;
+    model._nextAtlas = newTmAtlas;
     if (image.complete) {
       publicAPI.completedImage(false);
     } else {
@@ -427,7 +423,7 @@ function vtkScalarBarActor(publicAPI, model) {
     offset,
     results
   ) => {
-    const value = tmAtlas.get(text);
+    const value = model._tmAtlas.get(text);
     if (!value) {
       return;
     }
@@ -756,15 +752,11 @@ function vtkScalarBarActor(publicAPI, model) {
     publicAPI.modified();
   };
 
-  publicAPI.setVisibility = (val) => {
-    if (model.visibility === val) {
-      return;
-    }
-    model.visibility = val;
-    model.barActor.setVisibility(val);
-    model.tmActor.setVisibility(val);
-    publicAPI.modified();
-  };
+  publicAPI.setVisibility = macro.chain(
+    publicAPI.setVisibility,
+    model.barActor.setVisibility,
+    model.tmActor.setVisibility
+  );
 }
 
 // ----------------------------------------------------------------------------
@@ -808,6 +800,8 @@ export function extend(publicAPI, model, initialValues = {}) {
 
   publicAPI.getProperty().setDiffuse(0.0);
   publicAPI.getProperty().setAmbient(1.0);
+
+  model._tmAtlas = new Map();
 
   // internal variables
   model.lastSize = [800, 800];

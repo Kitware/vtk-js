@@ -43,7 +43,7 @@ function handleUint8Array(array, compression, done) {
         Endian.swapBytes(array.buffer, DataTypeByteSize[array.dataType]);
       }
 
-      array.values = new window[array.dataType](array.buffer);
+      array.values = macro.newTypedArray(array.dataType, array.buffer);
     }
 
     if (array.values.length !== array.size) {

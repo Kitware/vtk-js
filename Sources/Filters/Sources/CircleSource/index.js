@@ -19,7 +19,7 @@ function vtkCircleSource(publicAPI, model) {
     let dataset = outData[0];
 
     // Points
-    const points = new window[model.pointType](model.resolution * 3);
+    const points = macro.newTypedArray(model.pointType, model.resolution * 3);
 
     // Lines/cells
     // [# of points in line, vert_index_0, vert_index_1, ..., vert_index_0]

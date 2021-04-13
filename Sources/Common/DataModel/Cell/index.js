@@ -21,7 +21,8 @@ function vtkCell(publicAPI, model) {
       model.pointsIds = pointIdsList;
       let triangleData = model.points.getData();
       if (triangleData.length !== 3 * model.pointsIds.length) {
-        triangleData = new window[points.getDataType()](
+        triangleData = macro.newTypedArray(
+          points.getDataType(),
           3 * model.pointsIds.length
         );
       }

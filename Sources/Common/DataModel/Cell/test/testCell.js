@@ -27,7 +27,7 @@ test('Test vtkCell initialize without pointsIds', (t) => {
 
 test('Test vtkCell initialize with pointsIds', (t) => {
   const points = vtkPoints.newInstance();
-  points.setData([0, 0, 0, 2, 0, 0, 2, 2, 0]);
+  points.setData(Float64Array.from([0, 0, 0, 2, 0, 0, 2, 2, 0]));
 
   const cell = vtkCell.newInstance();
 
