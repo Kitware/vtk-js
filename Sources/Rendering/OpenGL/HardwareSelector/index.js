@@ -1,5 +1,6 @@
 import macro from 'vtk.js/Sources/macro';
 import Constants from 'vtk.js/Sources/Rendering/OpenGL/HardwareSelector/Constants';
+import vtkHardwareSelector from 'vtk.js/Sources/Rendering/Core/HardwareSelector';
 import vtkOpenGLFramebuffer from 'vtk.js/Sources/Rendering/OpenGL/Framebuffer';
 import vtkSelectionNode from 'vtk.js/Sources/Common/DataModel/SelectionNode';
 import vtkDataSet from 'vtk.js/Sources/Common/DataModel/DataSet';
@@ -497,21 +498,6 @@ function vtkOpenGLHardwareSelector(publicAPI, model) {
     model.openGLRenderWindow = w;
     model.renderer = r;
   };
-
-  //----------------------------------------------------------------------------
-
-  // override
-  const superSetArea = publicAPI.setArea;
-  publicAPI.setArea = (...args) => {
-    if (superSetArea(...args)) {
-      model.area[0] = Math.floor(model.area[0]);
-      model.area[1] = Math.floor(model.area[1]);
-      model.area[2] = Math.floor(model.area[2]);
-      model.area[3] = Math.floor(model.area[3]);
-      return true;
-    }
-    return false;
-  };
 }
 
 // ----------------------------------------------------------------------------
@@ -519,16 +505,13 @@ function vtkOpenGLHardwareSelector(publicAPI, model) {
 // ----------------------------------------------------------------------------
 
 const DEFAULT_VALUES = {
-  fieldAssociation: FieldAssociations.FIELD_ASSOCIATION_CELLS,
   renderer: null,
-  area: null,
   openGLRenderWindow: null,
   openGLRenderer: null,
   currentPass: -1,
   propColorValue: null,
   props: null,
   idOffset: 1,
-  captureZValues: false,
 };
 
 // ----------------------------------------------------------------------------
@@ -537,20 +520,13 @@ export function extend(publicAPI, model, initialValues = {}) {
   Object.assign(model, DEFAULT_VALUES, initialValues);
 
   // Build VTK API
-  macro.obj(publicAPI, model);
+  vtkHardwareSelector.extend(publicAPI, model, initialValues);
 
-  model.area = [0, 0, 0, 0];
   model.propColorValue = [0, 0, 0];
   model.props = [];
 
-  macro.setGet(publicAPI, model, [
-    'fieldAssociation',
-    'renderer',
-    'currentPass',
-    'captureZValues',
-  ]);
+  macro.setGet(publicAPI, model, ['renderer', 'currentPass', 'captureZValues']);
 
-  macro.setGetArray(publicAPI, model, ['area'], 4);
   macro.setGetArray(publicAPI, model, ['propColorValue'], 3);
   macro.event(publicAPI, model, 'event');
 

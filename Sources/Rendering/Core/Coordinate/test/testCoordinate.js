@@ -219,5 +219,5 @@ test('Test vtkCoordinate publicAPI', (t) => {
   viewPort = [50.0, 50.0];
   testGetters(coord, renderer, testVal, world, display, localDisplay, viewPort);
 
-  t.end();
+  gc.releaseResources();
 });

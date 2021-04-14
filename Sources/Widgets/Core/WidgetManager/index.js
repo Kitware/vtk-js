@@ -1,7 +1,6 @@
 import { radiansFromDegrees } from 'vtk.js/Sources/Common/Core/Math';
 import { FieldAssociations } from 'vtk.js/Sources/Common/DataModel/DataSet/Constants';
 import macro from 'vtk.js/Sources/macro';
-import vtkOpenGLHardwareSelector from 'vtk.js/Sources/Rendering/OpenGL/HardwareSelector';
 import vtkSelectionNode from 'vtk.js/Sources/Common/DataModel/SelectionNode';
 import Constants from 'vtk.js/Sources/Widgets/Core/WidgetManager/Constants';
 import vtkSVGRepresentation from 'vtk.js/Sources/Widgets/SVG/SVGRepresentation';
@@ -21,8 +20,14 @@ export function extractRenderingComponents(renderer) {
   const camera = renderer.getActiveCamera();
   const renderWindow = renderer.getRenderWindow();
   const interactor = renderWindow.getInteractor();
-  const openGLRenderWindow = interactor.getView();
-  return { renderer, renderWindow, interactor, openGLRenderWindow, camera };
+  const apiSpecificRenderWindow = interactor.getView();
+  return {
+    renderer,
+    renderWindow,
+    interactor,
+    apiSpecificRenderWindow,
+    camera,
+  };
 }
 
 // ----------------------------------------------------------------------------
@@ -56,11 +61,6 @@ function vtkWidgetManager(publicAPI, model) {
   // --------------------------------------------------------------------------
   // Internal variable
   // --------------------------------------------------------------------------
-
-  model.selector = vtkOpenGLHardwareSelector.newInstance();
-  model.selector.setFieldAssociation(
-    FieldAssociations.FIELD_ASSOCIATION_POINTS
-  );
 
   model.svgRoot = createSvgRoot(model.viewId);
 
@@ -97,8 +97,8 @@ function vtkWidgetManager(publicAPI, model) {
   const pendingSvgRenders = new WeakMap();
 
   function enableSvgLayer() {
-    const container = model.openGLRenderWindow.getReferenceByName('el');
-    const canvas = model.openGLRenderWindow.getCanvas();
+    const container = model.apiSpecificRenderWindow.getReferenceByName('el');
+    const canvas = model.apiSpecificRenderWindow.getCanvas();
     container.insertBefore(model.svgRoot, canvas.nextSibling);
     const containerStyles = window.getComputedStyle(container);
     if (containerStyles.position === 'static') {
@@ -107,7 +107,7 @@ function vtkWidgetManager(publicAPI, model) {
   }
 
   function disableSvgLayer() {
-    const container = model.openGLRenderWindow.getReferenceByName('el');
+    const container = model.apiSpecificRenderWindow.getReferenceByName('el');
     container.removeChild(model.svgRoot);
   }
 
@@ -121,7 +121,7 @@ function vtkWidgetManager(publicAPI, model) {
   }
 
   function setSvgSize() {
-    const [cwidth, cheight] = model.openGLRenderWindow.getSize();
+    const [cwidth, cheight] = model.apiSpecificRenderWindow.getSize();
     const ratio = window.devicePixelRatio || 1;
     const bwidth = String(cwidth / ratio);
     const bheight = String(cheight / ratio);
@@ -209,9 +209,9 @@ function vtkWidgetManager(publicAPI, model) {
   // --------------------------------------------------------------------------
 
   function updateDisplayScaleParams() {
-    const { openGLRenderWindow, camera, renderer } = model;
-    if (renderer && openGLRenderWindow && camera) {
-      const [rwW, rwH] = openGLRenderWindow.getSize();
+    const { apiSpecificRenderWindow, camera, renderer } = model;
+    if (renderer && apiSpecificRenderWindow && camera) {
+      const [rwW, rwH] = apiSpecificRenderWindow.getSize();
       const [vxmin, vymin, vxmax, vymax] = renderer.getViewport();
       const rendererPixelDims = [rwW * (vxmax - vxmin), rwH * (vymax - vymin)];
 
@@ -274,7 +274,7 @@ function vtkWidgetManager(publicAPI, model) {
 
   publicAPI.renderWidgets = () => {
     if (model.pickingEnabled && model.captureOn === CaptureOn.MOUSE_RELEASE) {
-      const [w, h] = model.openGLRenderWindow.getSize();
+      const [w, h] = model.apiSpecificRenderWindow.getSize();
       model.pickingAvailable = captureBuffers(0, 0, w, h);
     }
 
@@ -293,15 +293,21 @@ function vtkWidgetManager(publicAPI, model) {
       subscriptions.pop().unsubscribe();
     }
 
-    model.selector.attach(model.openGLRenderWindow, model.renderer);
+    console.log(model);
+    console.log(model.apiSpecificRenderWindow);
+    model.selector = model.apiSpecificRenderWindow.getSelector();
+    model.selector.setFieldAssociation(
+      FieldAssociations.FIELD_ASSOCIATION_POINTS
+    );
+    model.selector.attach(model.apiSpecificRenderWindow, model.renderer);
 
     subscriptions.push(model.interactor.onRenderEvent(updateSvg));
 
-    subscriptions.push(model.openGLRenderWindow.onModified(setSvgSize));
+    subscriptions.push(model.apiSpecificRenderWindow.onModified(setSvgSize));
     setSvgSize();
 
     subscriptions.push(
-      model.openGLRenderWindow.onModified(updateDisplayScaleParams)
+      model.apiSpecificRenderWindow.onModified(updateDisplayScaleParams)
     );
     subscriptions.push(model.camera.onModified(updateDisplayScaleParams));
     updateDisplayScaleParams();
@@ -337,7 +343,7 @@ function vtkWidgetManager(publicAPI, model) {
         }
 
         // Default cursor behavior
-        model.openGLRenderWindow.setCursor(widget ? 'pointer' : 'default');
+        model.apiSpecificRenderWindow.setCursor(widget ? 'pointer' : 'default');
 
         if (model.widgetInFocus === widget && widget.hasFocus()) {
           widget.activateHandle({ selectedState, representation });
@@ -478,7 +484,7 @@ function vtkWidgetManager(publicAPI, model) {
       top,
       left,
       height,
-    } = model.openGLRenderWindow.getCanvas().getBoundingClientRect();
+    } = model.apiSpecificRenderWindow.getCanvas().getBoundingClientRect();
     const x = pageX - left;
     const y = height - (pageY - top);
     publicAPI.updateSelectionFromXY(x, y);

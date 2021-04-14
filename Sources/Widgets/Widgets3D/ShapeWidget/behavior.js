@@ -163,8 +163,8 @@ export default function widgetBehavior(publicAPI, model) {
       const scale =
         model.pixelScale *
         vec3.distance(
-          model.openGLRenderWindow.displayToWorld(0, 0, 0, model.renderer),
-          model.openGLRenderWindow.displayToWorld(1, 0, 0, model.renderer)
+          model.apiSpecificRenderWindow.displayToWorld(0, 0, 0, model.renderer),
+          model.apiSpecificRenderWindow.displayToWorld(1, 0, 0, model.renderer)
         );
 
       model.point1Handle.setScale1(scale);
@@ -265,11 +265,11 @@ export default function widgetBehavior(publicAPI, model) {
   publicAPI.setCorners = (point1, point2) => {
     if (model.label && model.labelTextCallback) {
       const bounds = makeBoundsFromPoints(point1, point2);
-      const screenPoint1 = model.openGLRenderWindow.worldToDisplay(
+      const screenPoint1 = model.apiSpecificRenderWindow.worldToDisplay(
         ...point1,
         model.renderer
       );
-      const screenPoint2 = model.openGLRenderWindow.worldToDisplay(
+      const screenPoint2 = model.apiSpecificRenderWindow.worldToDisplay(
         ...point2,
         model.renderer
       );
@@ -386,7 +386,7 @@ export default function widgetBehavior(publicAPI, model) {
     }
     const worldCoords = model.manipulator.handleEvent(
       callData,
-      model.openGLRenderWindow
+      model.apiSpecificRenderWindow
     );
     if (!worldCoords.length) {
       return macro.VOID;
@@ -447,7 +447,7 @@ export default function widgetBehavior(publicAPI, model) {
         model.activeState === model.point2Handle)
     ) {
       model.isDragging = true;
-      model.openGLRenderWindow.setCursor('grabbing');
+      model.apiSpecificRenderWindow.setCursor('grabbing');
       model.interactor.requestAnimation(publicAPI);
       publicAPI.invokeStartInteractionEvent();
 
@@ -464,7 +464,7 @@ export default function widgetBehavior(publicAPI, model) {
   publicAPI.handleLeftButtonRelease = (e) => {
     if (model.isDragging) {
       model.isDragging = false;
-      model.openGLRenderWindow.setCursor('pointer');
+      model.apiSpecificRenderWindow.setCursor('pointer');
       model.widgetState.deactivate();
       model.interactor.cancelAnimation(publicAPI);
       publicAPI.invokeEndInteractionEvent();
@@ -476,7 +476,7 @@ export default function widgetBehavior(publicAPI, model) {
       return macro.VOID;
     }
 
-    const viewSize = model.openGLRenderWindow.getSize();
+    const viewSize = model.apiSpecificRenderWindow.getSize();
     if (
       e.position.x < 0 ||
       e.position.x > viewSize[0] - 1 ||

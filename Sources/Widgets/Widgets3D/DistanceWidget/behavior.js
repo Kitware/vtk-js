@@ -47,7 +47,7 @@ export default function widgetBehavior(publicAPI, model) {
       newHandle.setScale1(moveHandle.getScale1());
     } else {
       isDragging = true;
-      model.openGLRenderWindow.setCursor('grabbing');
+      model.apiSpecificRenderWindow.setCursor('grabbing');
       model.interactor.requestAnimation(publicAPI);
     }
 
@@ -78,7 +78,7 @@ export default function widgetBehavior(publicAPI, model) {
     ) {
       const worldCoords = model.manipulator.handleEvent(
         callData,
-        model.openGLRenderWindow
+        model.apiSpecificRenderWindow
       );
 
       if (
@@ -100,7 +100,7 @@ export default function widgetBehavior(publicAPI, model) {
 
   publicAPI.handleLeftButtonRelease = () => {
     if (isDragging && model.pickable) {
-      model.openGLRenderWindow.setCursor('pointer');
+      model.apiSpecificRenderWindow.setCursor('pointer');
       model.widgetState.deactivate();
       model.interactor.cancelAnimation(publicAPI);
       publicAPI.invokeEndInteractionEvent();

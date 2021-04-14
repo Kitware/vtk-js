@@ -6,6 +6,7 @@ import vtkRenderPass from 'vtk.js/Sources/Rendering/SceneGraph/RenderPass';
 import vtkShaderCache from 'vtk.js/Sources/Rendering/OpenGL/ShaderCache';
 import vtkRenderWindowViewNode from 'vtk.js/Sources/Rendering/SceneGraph/RenderWindowViewNode';
 import vtkOpenGLTextureUnitManager from 'vtk.js/Sources/Rendering/OpenGL/TextureUnitManager';
+import vtkOpenGLHardwareSelector from 'vtk.js/Sources/Rendering/OpenGL/HardwareSelector';
 import { VtkDataTypes } from 'vtk.js/Sources/Common/Core/DataArray/Constants';
 
 const { vtkDebugMacro, vtkErrorMacro } = macro;
@@ -1052,10 +1053,18 @@ const DEFAULT_VALUES = {
 export function extend(publicAPI, model, initialValues = {}) {
   Object.assign(model, DEFAULT_VALUES, initialValues);
 
+  // Inheritance
+  vtkRenderWindowViewNode.extend(publicAPI, model, initialValues);
+
   // Create internal instances
   model.canvas = document.createElement('canvas');
   model.canvas.style.width = '100%';
   createGLContext();
+
+  if (!model.selector) {
+    model.selector = vtkOpenGLHardwareSelector.newInstance();
+    model.selector.attach(publicAPI, undefined);
+  }
 
   // Create internal bgImage
   model.bgImage = new Image();
@@ -1067,9 +1076,6 @@ export function extend(publicAPI, model, initialValues = {}) {
   model.bgImage.style.zIndex = '-1';
 
   model._textureResourceIds = new Map();
-
-  // Inheritance
-  vtkRenderWindowViewNode.extend(publicAPI, model, initialValues);
 
   model.myFactory = vtkOpenGLViewNodeFactory.newInstance();
   /* eslint-disable no-use-before-define */
