@@ -1063,7 +1063,7 @@ export function extend(publicAPI, model, initialValues = {}) {
 
   if (!model.selector) {
     model.selector = vtkOpenGLHardwareSelector.newInstance();
-    model.selector.attach(publicAPI, undefined);
+    model.selector.setOpenGLRenderWindow(publicAPI);
   }
 
   // Create internal bgImage

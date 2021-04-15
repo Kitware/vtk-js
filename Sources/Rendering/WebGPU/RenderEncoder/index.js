@@ -44,16 +44,16 @@ function vtkWebGPURenderEncoder(publicAPI, model) {
     for (let i = 0; i < model.colorTextureViews.length; i++) {
       if (!model.description.colorAttachments[i]) {
         model.description.colorAttachments[i] = {
-          attachment: model.colorTextureViews[i].getHandle(),
+          view: model.colorTextureViews[i].getHandle(),
         };
       } else {
-        model.description.colorAttachments[
+        model.description.colorAttachments[i].view = model.colorTextureViews[
           i
-        ].attachment = model.colorTextureViews[i].getHandle();
+        ].getHandle();
       }
     }
     if (model.depthTextureView) {
-      model.description.depthStencilAttachment.attachment = model.depthTextureView.getHandle();
+      model.description.depthStencilAttachment.view = model.depthTextureView.getHandle();
     }
   };
 
@@ -102,12 +102,12 @@ export function extend(publicAPI, model, initialValues = {}) {
   model.description = {
     colorAttachments: [
       {
-        attachment: undefined,
+        view: undefined,
         loadValue: [0.3, 0.3, 0.3, 1],
       },
     ],
     depthStencilAttachment: {
-      attachment: undefined,
+      view: undefined,
       depthLoadValue: 1.0,
       depthStoreOp: 'store',
       stencilLoadValue: 0,
