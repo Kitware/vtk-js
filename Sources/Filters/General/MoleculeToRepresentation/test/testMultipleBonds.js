@@ -8,7 +8,7 @@ import vtkSphereMapper from 'vtk.js/Sources/Rendering/Core/SphereMapper';
 import vtkStickMapper from 'vtk.js/Sources/Rendering/Core/StickMapper';
 import vtkRenderer from 'vtk.js/Sources/Rendering/Core/Renderer';
 import vtkRenderWindow from 'vtk.js/Sources/Rendering/Core/RenderWindow';
-import vtkOpenGLRenderWindow from 'vtk.js/Sources/Rendering/OpenGL/RenderWindow';
+import 'vtk.js/Sources/Rendering/Misc/RenderingAPIs';
 
 import testMolecule from 'vtk.js/Data/molecule/test-multiple-bonds.cjson';
 import baseline from './testMolecule_multiple_bonds.png';
@@ -65,7 +65,7 @@ test.onlyIfWebGL('Test MultipleBonds', (t) => {
   // -----------------------------------------------------------
 
   // create something to view it, in this case webgl
-  const glwindow = gc.registerResource(vtkOpenGLRenderWindow.newInstance());
+  const glwindow = gc.registerResource(renderWindow.newAPISpecificView());
   glwindow.setContainer(renderWindowContainer);
   renderWindow.addView(glwindow);
   glwindow.setSize(400, 400);

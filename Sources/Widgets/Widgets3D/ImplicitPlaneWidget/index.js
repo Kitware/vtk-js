@@ -21,16 +21,16 @@ function widgetBehavior(publicAPI, model) {
   publicAPI.updateCursor = () => {
     switch (model.activeState.getUpdateMethodName()) {
       case 'updateFromOrigin':
-        model.openGLRenderWindow.setCursor('crosshair');
+        model.apiSpecificRenderWindow.setCursor('crosshair');
         break;
       case 'updateFromPlane':
-        model.openGLRenderWindow.setCursor('move');
+        model.apiSpecificRenderWindow.setCursor('move');
         break;
       case 'updateFromNormal':
-        model.openGLRenderWindow.setCursor('alias');
+        model.apiSpecificRenderWindow.setCursor('alias');
         break;
       default:
-        model.openGLRenderWindow.setCursor('grabbing');
+        model.apiSpecificRenderWindow.setCursor('grabbing');
         break;
     }
   };
@@ -86,7 +86,7 @@ function widgetBehavior(publicAPI, model) {
     model.planeManipulator.setNormal(model.widgetState.getNormal());
     const worldCoords = model.planeManipulator.handleEvent(
       callData,
-      model.openGLRenderWindow
+      model.apiSpecificRenderWindow
     );
 
     if (model.widgetState.containsPoint(worldCoords)) {
@@ -101,7 +101,7 @@ function widgetBehavior(publicAPI, model) {
     model.lineManipulator.setNormal(model.activeState.getNormal());
     const worldCoords = model.lineManipulator.handleEvent(
       callData,
-      model.openGLRenderWindow
+      model.apiSpecificRenderWindow
     );
 
     if (model.widgetState.containsPoint(...worldCoords)) {
@@ -116,7 +116,7 @@ function widgetBehavior(publicAPI, model) {
 
     const newNormal = model.trackballManipulator.handleEvent(
       callData,
-      model.openGLRenderWindow
+      model.apiSpecificRenderWindow
     );
     model.activeState.setNormal(newNormal);
   };

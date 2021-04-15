@@ -13,8 +13,8 @@ export default function widgetBehavior(publicAPI, model) {
       const scale =
         model.handleSizeInPixels *
         vec3.distance(
-          model.openGLRenderWindow.displayToWorld(0, 0, 0, model.renderer),
-          model.openGLRenderWindow.displayToWorld(1, 0, 0, model.renderer)
+          model.apiSpecificRenderWindow.displayToWorld(0, 0, 0, model.renderer),
+          model.apiSpecificRenderWindow.displayToWorld(1, 0, 0, model.renderer)
         );
 
       model.moveHandle.setScale1(scale);
@@ -47,7 +47,7 @@ export default function widgetBehavior(publicAPI, model) {
         model.firstHandle = model.lastHandle;
       }
 
-      model.openGLRenderWindow.setCursor('grabbing');
+      model.apiSpecificRenderWindow.setCursor('grabbing');
     }
   };
 
@@ -203,7 +203,7 @@ export default function widgetBehavior(publicAPI, model) {
       model.freeHand = model.allowFreehand && !model.isDragging;
     } else {
       model.isDragging = true;
-      model.openGLRenderWindow.setCursor('grabbing');
+      model.apiSpecificRenderWindow.setCursor('grabbing');
       model.interactor.requestAnimation(publicAPI);
       publicAPI.invokeStartInteractionEvent();
     }
@@ -218,7 +218,7 @@ export default function widgetBehavior(publicAPI, model) {
   publicAPI.handleLeftButtonRelease = (e) => {
     if (model.isDragging) {
       if (!model.hasFocus) {
-        model.openGLRenderWindow.setCursor(model.defaultCursor);
+        model.apiSpecificRenderWindow.setCursor(model.defaultCursor);
         model.widgetState.deactivate();
         model.interactor.cancelAnimation(publicAPI);
         publicAPI.invokeEndInteractionEvent();
@@ -276,18 +276,18 @@ export default function widgetBehavior(publicAPI, model) {
 
     const worldCoords = model.manipulator.handleEvent(
       callData,
-      model.openGLRenderWindow
+      model.apiSpecificRenderWindow
     );
 
     const hoveredHandle = getHoveredHandle();
     if (hoveredHandle) {
       model.moveHandle.setVisible(false);
       if (hoveredHandle !== model.firstHandle) {
-        model.openGLRenderWindow.setCursor('grabbing');
+        model.apiSpecificRenderWindow.setCursor('grabbing');
       }
     } else if (!model.isDragging && model.hasFocus) {
       model.moveHandle.setVisible(true);
-      model.openGLRenderWindow.setCursor(model.defaultCursor);
+      model.apiSpecificRenderWindow.setCursor(model.defaultCursor);
     }
 
     if (model.lastHandle) {

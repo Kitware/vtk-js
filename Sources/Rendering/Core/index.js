@@ -16,6 +16,7 @@ import vtkCoordinate from './Coordinate';
 import vtkCubeAxesActor from './CubeAxesActor';
 import vtkFollower from './Follower';
 import vtkGlyph3DMapper from './Glyph3DMapper';
+import vtkHardwareSelector from './HardwareSelector';
 import vtkImageMapper from './ImageMapper';
 import vtkImageProperty from './ImageProperty';
 import vtkImageSlice from './ImageSlice';
@@ -57,6 +58,7 @@ export default {
   vtkCubeAxesActor,
   vtkFollower,
   vtkGlyph3DMapper,
+  vtkHardwareSelector,
   vtkImageMapper,
   vtkImageProperty,
   vtkImageSlice,

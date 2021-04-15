@@ -55,7 +55,7 @@ function widgetBehavior(publicAPI, model) {
       model.manipulator.setNormal(model.camera.getDirectionOfProjection());
       const worldCoords = model.manipulator.handleEvent(
         callData,
-        model.openGLRenderWindow
+        model.apiSpecificRenderWindow
       );
 
       if (worldCoords.length) {

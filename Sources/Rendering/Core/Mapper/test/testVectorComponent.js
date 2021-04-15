@@ -2,7 +2,7 @@ import test from 'tape-catch';
 import testUtils from 'vtk.js/Sources/Testing/testUtils';
 
 import vtkLookupTable from 'vtk.js/Sources/Common/Core/LookupTable';
-import vtkOpenGLRenderWindow from 'vtk.js/Sources/Rendering/OpenGL/RenderWindow';
+import 'vtk.js/Sources/Rendering/Misc/RenderingAPIs';
 import vtkRenderWindow from 'vtk.js/Sources/Rendering/Core/RenderWindow';
 import vtkRenderer from 'vtk.js/Sources/Rendering/Core/Renderer';
 import vtkSphereSource from 'vtk.js/Sources/Filters/Sources/SphereSource';
@@ -52,7 +52,7 @@ test.onlyIfWebGL('Test VectorComponent', (t) => {
   mapper.setScalarRange(-1.0, 1.0);
 
   // now create something to view it, in this case webgl
-  const glwindow = gc.registerResource(vtkOpenGLRenderWindow.newInstance());
+  const glwindow = gc.registerResource(renderWindow.newAPISpecificView());
   glwindow.setContainer(renderWindowContainer);
   renderWindow.addView(glwindow);
   glwindow.setSize(400, 400);
