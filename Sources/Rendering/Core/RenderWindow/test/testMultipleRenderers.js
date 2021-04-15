@@ -3,7 +3,7 @@ import testUtils from 'vtk.js/Sources/Testing/testUtils';
 
 import vtkActor from 'vtk.js/Sources/Rendering/Core/Actor';
 import vtkMapper from 'vtk.js/Sources/Rendering/Core/Mapper';
-import vtkOpenGLRenderWindow from 'vtk.js/Sources/Rendering/OpenGL/RenderWindow';
+import 'vtk.js/Sources/Rendering/Misc/RenderingAPIs';
 import vtkRenderer from 'vtk.js/Sources/Rendering/Core/Renderer';
 import vtkRenderWindow from 'vtk.js/Sources/Rendering/Core/RenderWindow';
 import vtkConeSource from 'vtk.js/Sources/Filters/Sources/ConeSource';
@@ -72,7 +72,7 @@ test.onlyIfWebGL('Test multiple renderers', (t) => {
   const cubeSource = gc.registerResource(vtkCubeSource.newInstance());
   cubeMapper.setInputConnection(cubeSource.getOutputPort());
 
-  const glwindow = gc.registerResource(vtkOpenGLRenderWindow.newInstance());
+  const glwindow = gc.registerResource(renderWindow.newAPISpecificView());
   glwindow.setContainer(renderWindowContainer);
   renderWindow.addView(glwindow);
   glwindow.setSize(400, 400);

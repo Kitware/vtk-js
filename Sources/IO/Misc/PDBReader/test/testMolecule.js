@@ -3,7 +3,7 @@ import testUtils from 'vtk.js/Sources/Testing/testUtils';
 
 import vtkActor from 'vtk.js/Sources/Rendering/Core/Actor';
 import vtkMoleculeToRepresentation from 'vtk.js/Sources/Filters/General/MoleculeToRepresentation';
-import vtkOpenGLRenderWindow from 'vtk.js/Sources/Rendering/OpenGL/RenderWindow';
+import 'vtk.js/Sources/Rendering/Misc/RenderingAPIs';
 import vtkPDBReader from 'vtk.js/Sources/IO/Misc/PDBReader';
 import vtkSphereMapper from 'vtk.js/Sources/Rendering/Core/SphereMapper';
 import vtkStickMapper from 'vtk.js/Sources/Rendering/Core/StickMapper';
@@ -65,7 +65,7 @@ test.onlyIfWebGL('Test MoleculeMapper', (t) => {
   // -----------------------------------------------------------
 
   // create something to view it, in this case webgl
-  const glwindow = gc.registerResource(vtkOpenGLRenderWindow.newInstance());
+  const glwindow = gc.registerResource(renderWindow.newAPISpecificView());
   glwindow.setContainer(renderWindowContainer);
   renderWindow.addView(glwindow);
   glwindow.setSize(400, 400);

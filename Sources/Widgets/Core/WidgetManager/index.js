@@ -293,8 +293,6 @@ function vtkWidgetManager(publicAPI, model) {
       subscriptions.pop().unsubscribe();
     }
 
-    console.log(model);
-    console.log(model.apiSpecificRenderWindow);
     model.selector = model.apiSpecificRenderWindow.getSelector();
     model.selector.setFieldAssociation(
       FieldAssociations.FIELD_ASSOCIATION_POINTS

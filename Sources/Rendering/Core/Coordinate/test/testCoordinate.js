@@ -3,7 +3,7 @@ import testUtils from 'vtk.js/Sources/Testing/testUtils';
 
 import vtkCamera from 'vtk.js/Sources/Rendering/Core/Camera';
 import vtkCoordinate from 'vtk.js/Sources/Rendering/Core/Coordinate';
-import vtkOpenGLRenderWindow from 'vtk.js/Sources/Rendering/OpenGL/RenderWindow';
+import 'vtk.js/Sources/Rendering/Misc/RenderingAPIs';
 import vtkRenderer from 'vtk.js/Sources/Rendering/Core/Renderer';
 import vtkRenderWindow from 'vtk.js/Sources/Rendering/Core/RenderWindow';
 
@@ -57,7 +57,7 @@ test('Test vtkCoordinate publicAPI', (t) => {
   const cam = vtkCamera.newInstance();
   renderer.setActiveCamera(cam);
 
-  const glwindow = gc.registerResource(vtkOpenGLRenderWindow.newInstance());
+  const glwindow = gc.registerResource(renderWindow.newAPISpecificView());
   glwindow.setContainer(renderWindowContainer);
   renderWindow.addView(glwindow);
   glwindow.setSize(100, 100);
