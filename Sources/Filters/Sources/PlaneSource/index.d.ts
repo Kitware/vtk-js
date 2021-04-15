@@ -123,9 +123,29 @@ export interface vtkPlaneSource extends vtkAlgorithm {
 
 	/**
 	 * Set the normal of the plane.
-	 * @param {Number[]} normal The coordinate of the normal object.
+	 * @param {Number[]} normal The normal coordinate.
 	 */
-	setNormal(normal: number[]): void;
+	setNormal(normal: number[]): boolean;
+
+	/**
+	 * Set the normal of the plane.
+	 * @param {Number} x The x coordinate.
+	 * @param {Number} y The y coordinate.
+	 * @param {Number} z The z coordinate.
+	 */
+	setNormal(x: number, y: number, z: number): boolean;
+
+	/**
+	 * Set the normal of the plane.
+	 * @param {Number[]} normal The normal coordinate.
+	 */
+	setNormalFrom(normal: number[]): boolean;
+
+	/**
+	 * Set the origin of the plane.
+	 * @param {Number[]} origin The coordinate of the origin point.
+	 */
+	setOrigin(origin: number[]): boolean;
 
 	/**
 	 * Set the origin of the plane.
