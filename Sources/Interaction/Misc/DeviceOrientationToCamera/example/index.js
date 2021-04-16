@@ -89,6 +89,8 @@ function loadTexture(url, index) {
   });
 }
 
+/* eslint-disable no-alert */
+
 function validateMotionDetectionAgain() {
   if (!vtkDeviceOrientationToCamera.isDeviceOrientationSupported()) {
     vtkDeviceOrientationToCamera.removeCameraToSynchronize(cameraListenerId);
@@ -113,5 +115,7 @@ if (vtkDeviceOrientationToCamera.isDeviceOrientationSupported()) {
     'Your device does not support motion detection so regular interaction will be available'
   );
 }
+
+/* eslint-enable no-alert */
 
 setTimeout(validateMotionDetectionAgain, 100);
