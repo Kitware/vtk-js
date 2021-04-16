@@ -43,24 +43,25 @@ export function computeTextPosition(
   horizontalPosition,
   verticalPosition,
   textWidth,
-  textHeight
+  textHeight,
+  margin = 0
 ) {
   let x = 0;
   switch (horizontalPosition) {
     case HorizontalTextPosition.OUTSIDE_LEFT:
-      x = bounds[0] - textWidth;
+      x = bounds[0] - textWidth - margin;
       break;
     case HorizontalTextPosition.INSIDE_LEFT:
-      x = bounds[0];
+      x = bounds[0] + margin;
       break;
     case HorizontalTextPosition.MIDDLE:
       x = 0.5 * (bounds[0] + bounds[1] - textWidth);
       break;
     case HorizontalTextPosition.INSIDE_RIGHT:
-      x = bounds[1] - textWidth;
+      x = bounds[1] - textWidth - margin;
       break;
     case HorizontalTextPosition.OUTSIDE_RIGHT:
-      x = bounds[1];
+      x = bounds[1] + margin;
       break;
     default:
       break;
@@ -69,19 +70,19 @@ export function computeTextPosition(
   let y = 0;
   switch (verticalPosition) {
     case VerticalTextPosition.OUTSIDE_TOP:
-      y = bounds[3] + textHeight;
+      y = bounds[3] + textHeight + margin;
       break;
     case VerticalTextPosition.INSIDE_TOP:
-      y = bounds[3];
+      y = bounds[3] - margin;
       break;
     case VerticalTextPosition.MIDDLE:
       y = 0.5 * (bounds[2] + bounds[3] + textWidth);
       break;
     case VerticalTextPosition.INSIDE_BOTTOM:
-      y = bounds[2] + textHeight;
+      y = bounds[2] + textHeight + margin;
       break;
     case VerticalTextPosition.OUTSIDE_BOTTOM:
-      y = bounds[2];
+      y = bounds[2] - margin;
       break;
     default:
       break;

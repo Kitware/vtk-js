@@ -33,7 +33,7 @@ smartConnect.onConnectionReady((connection) => {
   // Image
   imageStream.connect(session);
   const viewStream = imageStream.createViewStream('-1');
-  fullScreenRenderer.getOpenGLRenderWindow().setViewStream(viewStream);
+  fullScreenRenderer.getApiSpecificRenderWindow().setViewStream(viewStream);
 
   // Configure image quality
   viewStream.setInteractiveQuality(75);

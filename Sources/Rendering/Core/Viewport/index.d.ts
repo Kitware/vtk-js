@@ -4,45 +4,14 @@ import vtkActor2D from 'vtk.js/Sources/Rendering/Core/Actor2D';
 import vtkProp from 'vtk.js/Sources/Rendering/Core/Prop';
 
 interface IViewportInitialValues {
-    /**
-     * 
-     */
-    background: number[];
-
-    /**
-     * 
-     */
-    background2: number[];
-
-    /**
-     * 
-     */
-    gradientBackground: boolean;
-
-    /**
-     * 
-     */
-    viewport: number[];
-
-    /**
-     * 
-     */
-    aspect: number[];
-
-    /**
-     * 
-     */
-    pixelAspect: number[];
-
-    /**
-     * 
-     */
-    props: vtkProp[];
-
-    /**
-     * 
-     */
-    actors2D: vtkActor2D[];
+    background?: number[];
+    background2?: number[];
+    gradientBackground?: boolean;
+    viewport?: number[];
+    aspect?: number[];
+    pixelAspect?: number[];
+    props?: vtkProp[];
+    actors2D?: vtkActor2D[];
 }
 
 export interface vtkViewport extends VtkObject {
@@ -124,98 +93,98 @@ export interface vtkViewport extends VtkObject {
 
     /**
      * 
-     * @param x 
-     * @param y 
-     * @param z 
+	 * @param {Number} x The x coordinate.
+	 * @param {Number} y The y coordinate.
+	 * @param {Number} z The z coordinate.
      */
     normalizedDisplayToProjection(x: number, y: number, z: number): number[];
 
     /**
      * 
-     * @param x 
-     * @param y 
-     * @param z 
+	 * @param {Number} x The x coordinate.
+	 * @param {Number} y The y coordinate.
+	 * @param {Number} z The z coordinate.
      */
     normalizedDisplayToNormalizedViewport(x: number, y: number, z: number): any;
 
     /**
      * 
-     * @param x 
-     * @param y 
-     * @param z 
+	 * @param {Number} x The x coordinate.
+	 * @param {Number} y The y coordinate.
+	 * @param {Number} z The z coordinate.
      */
     normalizedViewportToProjection(x: number, y: number, z: any): number[];
 
     /**
      * 
-     * @param x 
-     * @param y 
-     * @param z 
+	 * @param {Number} x The x coordinate.
+	 * @param {Number} y The y coordinate.
+	 * @param {Number} z The z coordinate.
      */
     projectionToNormalizedDisplay(x: number, y: number, z: number): number[];
 
     /**
      * 
-     * @param x 
-     * @param y 
-     * @param z 
+	 * @param {Number} x The x coordinate.
+	 * @param {Number} y The y coordinate.
+	 * @param {Number} z The z coordinate.
      */
     normalizedViewportToNormalizedDisplay(x: number, y: number, z: number): number[];
 
     /**
-     * 
-     * @param r 
-     * @param g 
-     * @param b 
+     * Set the viewport background.
+     * @param {Number} r Defines the red component (between 0 and 1).
+     * @param {Number} g Defines the green component (between 0 and 1).
+     * @param {Number} b Defines the blue component (between 0 and 1).
      */
     setBackground(r: number, g: number, b: number): boolean;
 
     /**
-     * 
-     * @param background 
+     * Set the viewport background.
+     * @param {Number[]} background The RGB color array. 
      */
     setBackground(background: number[]): boolean;
 
     /**
      * 
-     * @param r 
-     * @param g 
-     * @param b 
+     * @param {Number} r Defines the red component (between 0 and 1).
+     * @param {Number} g Defines the green component (between 0 and 1).
+     * @param {Number} b Defines the blue component (between 0 and 1).
      */
     setBackground2(r: number, g: number, b: number): boolean;
 
     /**
      * 
-     * @param background 
+     * @param {Number[]} background 
      */
     setBackground2(background: number[]): boolean;
 
     /**
      * 
-     * @param background2 
+     * @param {Number[]} background 
      */
-    setBackground2From(background2: number[]): boolean;
+    setBackground2From(background: number[]): boolean;
 
     /**
      * 
-     * @param background 
+     * @param {Number[]} background 
      */
     setBackgroundFrom(background: number[]): boolean;
 
     /**
      * Specify the viewport for the Viewport to draw in the rendering window.
      * Each coordinate is 0 <= coordinate <= 1.0.
-     * @param xmin 
-     * @param ymin 
-     * @param xmax 
-     * @param ymax 
+     * @param {Number} xmin The xmin coordinate.
+     * @param {Number} ymin The ymin coordinate.
+     * @param {Number} xmax The xmax coordinate.
+     * @param {Number} ymax The ymax coordinate.
      */
     setViewport(xmin: number, ymin: number, xmax: number, ymax: number): boolean;
 
     /**
      * Specify the viewport for the Viewport to draw in the rendering window.
      * Coordinates are expressed as [xmin, ymin, xmax, ymax], where each coordinate is 0 <= coordinate <= 1.0.
-     * @param viewport 
+     * @param {Number[]} viewport 
      */
     setViewportFrom(viewport: number[]): boolean;
 
@@ -241,12 +210,11 @@ export interface vtkViewport extends VtkObject {
      */
     viewToDisplay(): any;
 
-
     /**
      * 
-     * @param x 
-     * @param y 
-     * @param z 
+	 * @param {Number} x The x coordinate.
+	 * @param {Number} y The y coordinate.
+	 * @param {Number} z The z coordinate.
      */
     projectionToNormalizedViewport(x: number, y: number, z: number): number[];
 

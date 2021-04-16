@@ -1,3 +1,7 @@
+// Bundle size management - start
+import vtkColorMaps from './ColorTransferFunction/ColorMaps';
+// Bundle size management - end
+
 import vtkAbstractMapper from './AbstractMapper';
 import vtkAbstractMapper3D from './AbstractMapper3D';
 import vtkAbstractPicker from './AbstractPicker';
@@ -12,6 +16,7 @@ import vtkCoordinate from './Coordinate';
 import vtkCubeAxesActor from './CubeAxesActor';
 import vtkFollower from './Follower';
 import vtkGlyph3DMapper from './Glyph3DMapper';
+import vtkHardwareSelector from './HardwareSelector';
 import vtkImageMapper from './ImageMapper';
 import vtkImageProperty from './ImageProperty';
 import vtkImageSlice from './ImageSlice';
@@ -48,11 +53,12 @@ export default {
   vtkAxesActor,
   vtkCamera,
   vtkCellPicker,
-  vtkColorTransferFunction,
+  vtkColorTransferFunction: { vtkColorMaps, ...vtkColorTransferFunction },
   vtkCoordinate,
   vtkCubeAxesActor,
   vtkFollower,
   vtkGlyph3DMapper,
+  vtkHardwareSelector,
   vtkImageMapper,
   vtkImageProperty,
   vtkImageSlice,

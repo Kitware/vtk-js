@@ -16,6 +16,7 @@ function vtkContextRepresentation(publicAPI, model) {
 const DEFAULT_VALUES = {
   behavior: Behavior.CONTEXT,
   pickable: false,
+  dragable: true,
 };
 
 // ----------------------------------------------------------------------------

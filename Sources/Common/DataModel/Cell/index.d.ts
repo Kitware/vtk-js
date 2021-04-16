@@ -1,8 +1,6 @@
 import { VtkObject } from 'vtk.js/Sources/macro';
+import vtkPoints from 'vtk.js/Sources/Core/Points';
 
-/**
- *
- */
 interface ICellInitialValues {
 	bounds?: number[];
 	pointsIds?: number[];
@@ -12,9 +10,9 @@ export interface vtkCell extends VtkObject {
 
 	/**
 	 * Copy this cell by completely copying internal data structures.
-	 * @param cell
+	 * @param {vtkCell} cell The cell you want to use.
 	 */
-	deepCopy(cell : any): void;
+	deepCopy(cell: vtkCell): void;
 
 	/**
 	 * Initialize the cell with point coordinates and cell point ids, example :
@@ -31,15 +29,16 @@ export interface vtkCell extends VtkObject {
 	 * generated as such: [0, 1, ..., N-1] where N is the number of points. If
 	 * pointIdsList is not null, only pointIdsList point coordinates are copied into
 	 * the cell. pointIdsList is shallow copied.
-	 * @param points
-	 * @param pointIdsList
+	 * @param {vtkPoints} points
+	 * @param {Number[] | null} [pointIdsList]
 	 */
-	initialize(points : any, pointIdsList : any): void;
+	initialize(points: vtkPoints, pointIdsList?: number[] | null): void;
 
 	/**
-	 * Get the bounds as [xmin, xmax, ymin, ymax, zmin, zmax].
+	 * Get the bounds for this mapper as [xmin, xmax, ymin, ymax,zmin, zmax].
+	 * @return {Number[]} The bounds for the mapper.
 	 */
-	getBounds():  number[];
+	getBounds(): number[];
 
 	/**
 	 * Compute Length squared of cell (i.e., bounding box diagonal squared).
@@ -47,23 +46,23 @@ export interface vtkCell extends VtkObject {
 	getLength2(): number;
 
 	/**
-	 * Return the distance of the parametric coordinate provided to the cell. If
+	 * Get the distance of the parametric coordinate provided to the cell. If
 	 * inside the cell, a distance of zero is returned. This is used during
 	 * picking to get the correct cell picked. (The tolerance will occasionally
 	 * allow cells to be picked who are not really intersected "inside" the
 	 * cell.)
-	 * @param pcoords
+	 * @param {Number[]} pcoords The coordinates of the point.
 	 *
 	 */
-	getParametricDistance(pcoords : any): number;
+	getParametricDistance(pcoords: number[]): number;
 
 	/**
-	 * Return the number of points in the cell.
+	 * Get the number of points in the cell.
 	 */
 	getNumberOfPoints(): number;
 
 	/**
-	 * Return the topological dimensional of the cell (0,1,2, or 3).
+	 * Get the topological dimensional of the cell (0, 1, 2 or 3).
 	 */
 	getCellDimension(): void;
 
@@ -85,7 +84,7 @@ export interface vtkCell extends VtkObject {
 	 * @param pcoords
 	 * @param subId
 	 */
-	intersectWithLine(p1 : any, p2 : any, tol : any, t : any, x : any, pcoords : any, subId : any): void;
+	intersectWithLine(p1: any, p2: any, tol: any, t: any, x: any, pcoords: any, subId: any): void;
 
 	/**
 	 * Given a point x[3] return inside(=1), outside(=0) cell, or (-1)
@@ -110,7 +109,7 @@ export interface vtkCell extends VtkObject {
 	 * @param dist2
 	 * @param weights
 	 */
-	evaluatePosition(x : any, closestPoint : any, subId : any, pcoords : any, dist2 : any, weights : any): void;
+	evaluatePosition(x: any, closestPoint: any, subId: any, pcoords: any, dist2: any, weights: any): void;
 }
 
 /**
@@ -124,7 +123,7 @@ export function extend(publicAPI: object, model: object, initialValues?: ICellIn
 
 /**
  * Method used to create a new instance of vtkCell.
- * @param initialValues for pre-setting some of its content
+ * @param {ICellInitialValues} [initialValues] for pre-setting some of its content
  */
 export function newInstance(initialValues?: ICellInitialValues): vtkCell;
 

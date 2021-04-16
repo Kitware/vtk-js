@@ -1,6 +1,12 @@
-import * as macro from '../../../macro';
-import DataAccessHelper from '../../Core/DataAccessHelper';
-import vtkTexture from '../../../Rendering/Core/Texture';
+import * as macro from 'vtk.js/Sources/macro';
+import DataAccessHelper from 'vtk.js/Sources/IO/Core/DataAccessHelper';
+import vtkTexture from 'vtk.js/Sources/Rendering/Core/Texture';
+
+// Enable data soure for DataAccessHelper
+import 'vtk.js/Sources/IO/Core/DataAccessHelper/LiteHttpDataAccessHelper'; // Just need HTTP
+// import 'vtk.js/Sources/IO/Core/DataAccessHelper/HttpDataAccessHelper'; // HTTP + gz
+// import 'vtk.js/Sources/IO/Core/DataAccessHelper/HtmlDataAccessHelper'; // html + base64 + zip
+// import 'vtk.js/Sources/IO/Core/DataAccessHelper/JSZipDataAccessHelper'; // zip
 
 // ----------------------------------------------------------------------------
 // vtkMTLReader methods

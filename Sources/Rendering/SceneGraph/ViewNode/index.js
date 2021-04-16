@@ -74,7 +74,7 @@ function vtkViewNode(publicAPI, model) {
     if (!dobj) {
       return;
     }
-    const result = model.renderableChildMap.get(dobj);
+    const result = model._renderableChildMap.get(dobj);
     // if found just mark as visited
     if (result !== undefined) {
       result.setVisited(true);
@@ -84,7 +84,7 @@ function vtkViewNode(publicAPI, model) {
       if (newNode) {
         newNode.setParent(publicAPI);
         newNode.setVisited(true);
-        model.renderableChildMap.set(dobj, newNode);
+        model._renderableChildMap.set(dobj, newNode);
         model.children.push(newNode);
       }
     }
@@ -97,7 +97,7 @@ function vtkViewNode(publicAPI, model) {
 
     for (let index = 0; index < dataObjs.length; ++index) {
       const dobj = dataObjs[index];
-      const result = model.renderableChildMap.get(dobj);
+      const result = model._renderableChildMap.get(dobj);
       // if found just mark as visited
       if (result !== undefined) {
         result.setVisited(true);
@@ -107,7 +107,7 @@ function vtkViewNode(publicAPI, model) {
         if (newNode) {
           newNode.setParent(publicAPI);
           newNode.setVisited(true);
-          model.renderableChildMap.set(dobj, newNode);
+          model._renderableChildMap.set(dobj, newNode);
           model.children.push(newNode);
         }
       }
@@ -132,7 +132,7 @@ function vtkViewNode(publicAPI, model) {
       if (!visited) {
         const renderable = child.getRenderable();
         if (renderable) {
-          model.renderableChildMap.delete(renderable);
+          model._renderableChildMap.delete(renderable);
         }
         if (!deleted) {
           deleted = [];
@@ -183,7 +183,7 @@ function extend(publicAPI, model, initialValues = {}) {
   macro.obj(publicAPI, model);
   macro.event(publicAPI, model, 'event');
 
-  model.renderableChildMap = new Map();
+  model._renderableChildMap = new Map();
 
   macro.get(publicAPI, model, ['visited']);
   macro.setGet(publicAPI, model, ['parent', 'renderable', 'myFactory']);

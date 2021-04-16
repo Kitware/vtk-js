@@ -1,7 +1,7 @@
 import 'vtk.js/Sources/favicon';
 
 import vtkHttpDataSetReader from 'vtk.js/Sources/IO/Core/HttpDataSetReader';
-import vtkOpenGLRenderWindow from 'vtk.js/Sources/Rendering/OpenGL/RenderWindow';
+import 'vtk.js/Sources/Rendering/Misc/RenderingAPIs';
 import vtkResliceCursor from 'vtk.js/Sources/Interaction/Widgets/ResliceCursor/ResliceCursor';
 import vtkResliceCursorLineRepresentation from 'vtk.js/Sources/Interaction/Widgets/ResliceCursor/ResliceCursorLineRepresentation';
 import vtkResliceCursorWidget from 'vtk.js/Sources/Interaction/Widgets/ResliceCursor/ResliceCursorWidget';
@@ -57,7 +57,7 @@ reader.setUrl(`${__BASE_PATH__}/data/volume/LIDC2.vti`).then(() => {
       renderers[j].getActiveCamera().setParallelProjection(true);
       renderWindows[j].addRenderer(renderers[j]);
 
-      GLWindows[j] = vtkOpenGLRenderWindow.newInstance();
+      GLWindows[j] = renderWindows[j].newAPISpecificView();
       GLWindows[j].setContainer(element);
       renderWindows[j].addView(GLWindows[j]);
 

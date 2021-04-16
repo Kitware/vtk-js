@@ -32,7 +32,7 @@ function vtkSpline1D(publicAPI, model) {
 
   // --------------------------------------------------------------------------
 
-  publicAPI.getValue = (size, work, x, y) => {
+  publicAPI.getValue = (intervalIndex, t) => {
     vtkErrorMacro(
       `${model.classHierarchy.slice(-1)[0]} should implement getValue`
     );

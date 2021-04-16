@@ -3,6 +3,12 @@ import JSZip from 'jszip';
 import DataAccessHelper from 'vtk.js/Sources/IO/Core/DataAccessHelper';
 import macro from 'vtk.js/Sources/macro';
 
+// Enable data soure for DataAccessHelper
+// import 'vtk.js/Sources/IO/Core/DataAccessHelper/LiteHttpDataAccessHelper';// Just need HTTP
+import 'vtk.js/Sources/IO/Core/DataAccessHelper/HttpDataAccessHelper'; // HTTP + zip
+// import 'vtk.js/Sources/IO/Core/DataAccessHelper/HtmlDataAccessHelper'; // html + base64 + zip
+// import 'vtk.js/Sources/IO/Core/DataAccessHelper/JSZipDataAccessHelper'; // zip
+
 // ----------------------------------------------------------------------------
 // vtkAppendPolyData methods
 // ----------------------------------------------------------------------------
@@ -69,7 +75,7 @@ function vtkZipMultiDataSetReader(publicAPI, model) {
               zipEntry.async('arraybuffer').then((arraybuffer) => {
                 processing--;
                 const [type, id] = relativePath.split('_').slice(-2);
-                model.arrays[id] = new macro.TYPED_ARRAYS[type](arraybuffer);
+                model.arrays[id] = macro.newTypedArray(type, arraybuffer);
                 if (!processing) {
                   resolve();
                 }

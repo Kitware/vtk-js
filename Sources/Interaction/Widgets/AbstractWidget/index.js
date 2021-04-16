@@ -54,6 +54,9 @@ function vtkAbstractWidget(publicAPI, model) {
       model.interactor.render();
     }
   };
+
+  publicAPI.isDragable = () =>
+    model.dragable && (model.parent ? model.parent.isDragable() : true);
 }
 
 // ----------------------------------------------------------------------------
@@ -61,25 +64,22 @@ function vtkAbstractWidget(publicAPI, model) {
 // ----------------------------------------------------------------------------
 
 const DEFAULT_VALUES = {
+  enabled: false, // Make widgets disabled by default
+  priority: 0.5, // Use a priority of 0.5, since default priority from vtkInteractorObserver is 0.0.
   widgetRep: null,
   parent: null,
+  dragable: true,
 };
 
 // ----------------------------------------------------------------------------
 
 export function extend(publicAPI, model, initialValues = {}) {
-  Object.assign(model, DEFAULT_VALUES, initialValues);
+  const newDefault = { ...DEFAULT_VALUES, ...initialValues };
 
   // Inheritance
-  vtkInteractorObserver.extend(publicAPI, model, initialValues);
+  vtkInteractorObserver.extend(publicAPI, model, newDefault);
 
-  // Make widgets disabled by default
-  publicAPI.setEnabled(false);
-
-  // Use a priority of 0.5, since default priority from
-  // vtkInteractorObserver is 0.0.
-  publicAPI.setPriority(0.5);
-  macro.setGet(publicAPI, model, ['widgetRep', 'parent']);
+  macro.setGet(publicAPI, model, ['widgetRep', 'parent', 'dragable']);
 
   // Object methods
   vtkAbstractWidget(publicAPI, model);

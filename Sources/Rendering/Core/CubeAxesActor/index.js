@@ -75,10 +75,6 @@ function vtkCubeAxesActor(publicAPI, model) {
   // Set our className
   model.classHierarchy.push('vtkCubeAxesActor');
 
-  // map used to store the string to texture values
-  // done as a const to not prevent serialization
-  const tmAtlas = new Map();
-
   publicAPI.setCamera = (cam) => {
     if (model.camera === cam) {
       return;
@@ -404,11 +400,11 @@ function vtkCubeAxesActor(publicAPI, model) {
     model.tmContext.textAlign = 'left';
 
     // first the three labels
-    tmAtlas.clear();
+    model._tmAtlas.clear();
     let maxWidth = 0;
     let totalHeight = 1; // start one pixel in so we have a border
     for (let i = 0; i < 3; i++) {
-      if (!tmAtlas.has(model.axisLabels[i])) {
+      if (!model._tmAtlas.has(model.axisLabels[i])) {
         applyTextStyle(model.tmContext, model.axisTextStyle);
         const metrics = model.tmContext.measureText(model.axisLabels[i]);
         const entry = {
@@ -417,7 +413,7 @@ function vtkCubeAxesActor(publicAPI, model) {
           width: metrics.width + 2,
           textStyle: model.axisTextStyle,
         };
-        tmAtlas.set(model.axisLabels[i], entry);
+        model._tmAtlas.set(model.axisLabels[i], entry);
         totalHeight += entry.height;
         if (maxWidth < entry.width) {
           maxWidth = entry.width;
@@ -426,7 +422,7 @@ function vtkCubeAxesActor(publicAPI, model) {
       // and the ticks
       applyTextStyle(model.tmContext, model.tickTextStyle);
       for (let t = 0; t < tickStrings[i].length; t++) {
-        if (!tmAtlas.has(tickStrings[i][t])) {
+        if (!model._tmAtlas.has(tickStrings[i][t])) {
           const metrics = model.tmContext.measureText(tickStrings[i][t]);
           const entry = {
             height: metrics.actualBoundingBoxAscent + 2,
@@ -434,7 +430,7 @@ function vtkCubeAxesActor(publicAPI, model) {
             width: metrics.width + 2,
             textStyle: model.tickTextStyle,
           };
-          tmAtlas.set(tickStrings[i][t], entry);
+          model._tmAtlas.set(tickStrings[i][t], entry);
           totalHeight += entry.height;
           if (maxWidth < entry.width) {
             maxWidth = entry.width;
@@ -449,7 +445,7 @@ function vtkCubeAxesActor(publicAPI, model) {
     totalHeight = vtkMath.nearestPowerOfTwo(totalHeight);
 
     // set the tcoord values
-    tmAtlas.forEach((value) => {
+    model._tmAtlas.forEach((value) => {
       value.tcoords = [
         0.0,
         (totalHeight - value.startingHeight - value.height) / totalHeight,
@@ -470,7 +466,7 @@ function vtkCubeAxesActor(publicAPI, model) {
     model.tmContext.clearRect(0, 0, maxWidth, totalHeight);
 
     // draw the text onto the texture
-    tmAtlas.forEach((value, key) => {
+    model._tmAtlas.forEach((value, key) => {
       applyTextStyle(model.tmContext, value.textStyle);
       model.tmContext.fillText(key, 1, value.startingHeight + value.height - 1);
     });
@@ -491,7 +487,7 @@ function vtkCubeAxesActor(publicAPI, model) {
     offset,
     results
   ) => {
-    const value = tmAtlas.get(text);
+    const value = model._tmAtlas.get(text);
     if (!value) {
       return;
     }
@@ -681,6 +677,12 @@ function vtkCubeAxesActor(publicAPI, model) {
     publicAPI.update();
   });
 
+  publicAPI.setVisibility = macro.chain(
+    publicAPI.setVisibility,
+    model.pixelActor.setVisibility,
+    model.tmActor.setVisibility
+  );
+
   publicAPI.setTickTextStyle = (tickStyle) => {
     model.tickTextStyle = { ...model.tickTextStyle, ...tickStyle };
     publicAPI.modified();
@@ -737,6 +739,8 @@ export function extend(publicAPI, model, initialValues = {}) {
   model.tickCounts = [];
   model.textValues = [];
   model.lastTickBounds = [];
+
+  model._tmAtlas = new Map();
 
   model.mapper = vtkMapper.newInstance();
   model.polyData = vtkPolyData.newInstance();

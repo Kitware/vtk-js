@@ -40,9 +40,10 @@ export interface vtkVolume extends vtkProp3D {
 	getProperty(): vtkProperty;
 
 	/**
-	 * Get the bounds as [xmin, xmax, ymin, ymax, zmin, zmax].
+     * Get the bounds for this mapper as [xmin, xmax, ymin, ymax,zmin, zmax].
+	 * @return {Number[]} The bounds for the mapper.
 	 */
-	getBounds():  number[];
+	getBounds(): number[];
 
 	/**
 	 * Get the bounds as [xmin, xmax, ymin, ymax, zmin, zmax].
@@ -57,7 +58,7 @@ export interface vtkVolume extends vtkProp3D {
 	 *  - Is that object created/modified after another one?
 	 *  - Do I need to re-execute this filter, or not? ...
 	 *
-	 * @returns the global modified time
+	 * @return {Number} the global modified time.
 	 */
 	getMTime(): number;
 

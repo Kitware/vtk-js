@@ -1,6 +1,8 @@
+import { VtkObject } from 'vtk.js/Sources/macro';
 import {
 	vtkFieldData
 } from 'vtk.js/Sources/Common/DataModel/DataSetAttributes/FieldData';
+import vtkDataArray from 'vtk.js/Sources/Common/Core/DataArray';
 
 export enum AttributeTypes {
 	SCALARS,
@@ -56,7 +58,7 @@ export enum PointGhostTypes {
 	 * The point is needed to maintain connectivity, but the data values should be ignored.
 	 */
 	HIDDENPOINT
-};
+}
 
 export enum AttributeCopyOperations {
 	COPYTUPLE,
@@ -66,7 +68,7 @@ export enum AttributeCopyOperations {
 	 * All of the above
 	 */
 	ALLCOPY,
-};
+}
 
 export const ghostArrayName: string;
 
@@ -83,7 +85,7 @@ export enum DesiredOutputPrecision {
 	 * Use Float64Array
 	 */
 	DOUBLE,
-};
+}
 
 /**
  *
@@ -148,39 +150,39 @@ export interface vtkDataSetAttributes extends vtkFieldData {
 	getActivePedigreeIds(): number;
 
 	/**
-	 *
+	 * Get the scalar data.
 	 */
-	getScalars(): any;
+	getScalars(): vtkDataArray;
 
 	/**
-	 *
+	 * Get the vectors data.
 	 */
-	getVectors(): any;
+	getVectors(): vtkDataArray;
 
 	/**
-	 *
+	 * Get the normal data.
 	 */
-	getNormals(): any;
+	getNormals(): vtkDataArray;
 
 	/**
-	 *
+	 * Get the texture coordinate data.
 	 */
-	getTCoords(): any;
+	getTCoords(): vtkDataArray;
 
 	/**
-	 *
+	 * Get the tensors data.
 	 */
-	getTensors(): any;
+	getTensors(): vtkDataArray;
 
 	/**
-	 *
+	 * Get the global id data.
 	 */
-	getGlobalIds(): any;
+	getGlobalIds(): vtkDataArray;
 
 	/**
-	 *
+	 * Get the pedigree id data.
 	 */
-	getPedigreeIds(): any;
+	getPedigreeIds(): vtkDataArray;
 
 	/**
 	 *
@@ -198,7 +200,7 @@ export interface vtkDataSetAttributes extends vtkFieldData {
 
 	/**
 	 *
-	 * @param {number} arrayIdx
+	 * @param {Number} arrayIdx
 	 * @param uncleanAttType
 	 */
 	setActiveAttributeByIndex(arrayIdx: number, uncleanAttType: string): number;
@@ -210,13 +212,13 @@ export interface vtkDataSetAttributes extends vtkFieldData {
 
 	/**
 	 * Override to allow proper handling of active attributes
-	 * @param {string} arrayName
+	 * @param {string} arrayName The name of the array.
 	 */
 	removeArray(arrayName: string): void;
 
 	/**
 	 * Override to allow proper handling of active attributes
-	 * @param arrayIdx
+	 * @param {Number} arrayIdx The index of the array.
 	 */
 	removeArrayByIndex(arrayIdx: number): void;
 
@@ -227,136 +229,138 @@ export interface vtkDataSetAttributes extends vtkFieldData {
 
 	/**
 	 *
-	 * @param {number} activeScalars
+	 * @param {Number} activeScalars 
 	 */
 	setActiveScalars(activeScalars: number): boolean;
 
 	/**
 	 *
-	 * @param {number} activeVectors
+	 * @param {Number} activeVectors 
 	 */
 	setActiveVectors(activeVectors: number): boolean;
 
 	/**
 	 *
-	 * @param {number} activeTensors
+	 * @param {Number} activeTensors 
 	 */
 	setActiveTensors(activeTensors: number): boolean;
 
 	/**
 	 *
-	 * @param {number} activeNormals
+	 * @param {Number} activeNormals 
 	 */
 	setActiveNormals(activeNormals: number): boolean;
 
 	/**
 	 *
-	 * @param {number} activeTCoords
+	 * @param {Number} activeTCoords 
 	 */
 	setActiveTCoords(activeTCoords: number): boolean;
 
 	/**
 	 *
-	 * @param {number} activeGlobalIds
+	 * @param {Number} activeGlobalIds 
 	 */
 	setActiveGlobalIds(activeGlobalIds: number): boolean;
 
 	/**
 	 *
-	 * @param {number} activePedigreeIds
+	 * @param {Number} activePedigreeIds 
 	 */
 	setActivePedigreeIds(activePedigreeIds: number): boolean;
 
 	/**
+	 * Try to copy the state of the other to ourselves by just using references.
 	 *
-	 * @param other
-	 * @param debug
+	 * @param other instance to copy the reference from
+	 * @param debug (default: false) if true feedback will be provided when mismatch happen
+	 * @override
 	 */
-	shallowCopy(other: any, debug: any): void;
+	shallowCopy(other: VtkObject, debug?: boolean): void;
 
 	/**
 	 *
-	 * @param {string} arrayName
+	 * @param {string} arrayName The name of the array to activate.
 	 */
 	setActiveScalars(arrayName: string): boolean;
 
 	/**
 	 *
-	 * @param {string} arrayName
+	 * @param {string} arrayName The name of the array to activate.
 	 */
 	setActiveVectors(arrayName: string): boolean;
 
 	/**
 	 *
-	 * @param {string} arrayName
+	 * @param {string} arrayName The name of the array to activate.
 	 */
 	setActiveNormals(arrayName: string): boolean;
 
 	/**
 	 *
-	 * @param {string} arrayName
+	 * @param {string} arrayName The name of the array to activate.
 	 */
 	setActiveTCoords(arrayName: string): boolean;
 
 	/**
 	 *
-	 * @param {string} arrayName
+	 * @param {string} arrayName The name of the array to activate.
 	 */
 	setActiveTensors(arrayName: string): boolean;
 
 	/**
 	 *
-	 * @param {string} arrayName
+	 * @param {string} arrayName The name of the array to activate.
 	 */
 	setActiveGlobalIds(arrayName: string): boolean;
 
 	/**
 	 *
-	 * @param {string} arrayName
+	 * @param {string} arrayName The name of the array to activate.
 	 */
 	setActivePedigreeIds(arrayName: string): boolean;
 
 	/**
-	 *
-	 * @param scalars
+	 * Set the scalar data.
+	 * @param {vtkDataArray} scalars The scalar data.
 	 */
-	setScalars(scalars: any): boolean;
+	setScalars(scalars: vtkDataArray): boolean;
 
 	/**
 	 * Set the vector data.
-	 * @param vectors
+	 * @param {vtkDataArray} vectors The vector data.
 	 */
-	setVectors(vectors: any): boolean;
+	setVectors(vectors: vtkDataArray): boolean;
 
 	/**
 	 * Set the normal data.
-	 * @param normals
+	 * @param {vtkDataArray} normals The normal data.
 	 */
-	setNormals(normals: any): boolean;
+	setNormals(normals: vtkDataArray): boolean;
 
 	/**
 	 * Set the texture coordinate data.
-	 * @param tcoords
+	 * @param {vtkDataArray} tcoords The texture coordinate data.
 	 */
-	setTCoords(tcoords: any): boolean;
+	setTCoords(tcoords: vtkDataArray): boolean;
 
 	/**
 	 * Set the tensor data.
-	 * @param tensors
+	 * @param {vtkDataArray} tensors The tensor data.
 	 */
-	setTensors(tensors: any): boolean;
+	setTensors(tensors: vtkDataArray): boolean;
 
 	/**
 	 * Set the global id data.
-	 * @param globalids
+	 * @param {vtkDataArray} globalIds The global id data.
 	 */
-	setGlobalIds(globalids: any): boolean;
+	setGlobalIds(globalIds: vtkDataArray): boolean;
 
 	/**
 	 * Set the pedigree id data.
-	 * @param pedigreeids
+	 * @param {vtkDataArray} pedigreeids The pedigree id data.
 	 */
-	setPedigreeIds(pedigreeids: any): boolean;
+	setPedigreeIds(pedigreeIds: vtkDataArray): boolean;
 
 	/**
 	 *
@@ -405,7 +409,7 @@ export function extend(publicAPI: object, model: object, initialValues?: IDataSe
 
 /**
  * Method used to create a new instance of vtkDataSetAttributes.
- * @param initialValues for pre-setting some of its content
+ * @param {IDataSetAttributesInitialValues} [initialValues] for pre-setting some of its content
  */
 export function newInstance(initialValues?: IDataSetAttributesInitialValues): vtkDataSetAttributes;
 

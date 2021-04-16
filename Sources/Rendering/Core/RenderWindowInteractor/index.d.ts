@@ -531,7 +531,7 @@ export interface vtkRenderWindowInteractor extends VtkObject {
      *
      * @param args
      */
-    endInteractionEventEvent(args: any): any;
+    endInteractionEvent(args: any): any;
 
     /**
      *
@@ -573,7 +573,7 @@ export interface vtkRenderWindowInteractor extends VtkObject {
      *
      * @param args
      */
-    interactionEventEvent(args: any): any;
+    interactionEvent(args: any): any;
 
     /**
      *
@@ -725,7 +725,7 @@ export interface vtkRenderWindowInteractor extends VtkObject {
      *
      * @param args
      */
-    startInteractionEventEvent(args: any): any;
+    startInteractionEvent(args: any): any;
 
 
     /**
@@ -962,7 +962,7 @@ export interface vtkRenderWindowInteractor extends VtkObject {
     setView(val: any): void;
 
     /**
-     * @returns first renderer to be used for camera manipulation
+     * @return first renderer to be used for camera manipulation
      */
     getFirstRenderer(): vtkRenderer; // return vtkRenderer
 

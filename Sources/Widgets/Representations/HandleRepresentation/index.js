@@ -21,6 +21,7 @@ const DEFAULT_VALUES = {
   useActiveColor: true,
   behavior: Behavior.HANDLE,
   pickable: true,
+  dragable: true,
 };
 
 // ----------------------------------------------------------------------------

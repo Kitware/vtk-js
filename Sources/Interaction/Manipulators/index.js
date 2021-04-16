@@ -5,6 +5,7 @@ import vtkCompositeMouseManipulator from './CompositeMouseManipulator';
 import vtkCompositeVRManipulator from './CompositeVRManipulator';
 import vtkGestureCameraManipulator from './GestureCameraManipulator';
 import vtkKeyboardCameraManipulator from './KeyboardCameraManipulator';
+import vtkMouseBoxSelectorManipulator from './MouseBoxSelectorManipulator';
 import vtkMouseCameraAxisRotateManipulator from './MouseCameraAxisRotateManipulator';
 import vtkMouseCameraSliceManipulator from './MouseCameraSliceManipulator';
 import vtkMouseCameraUnicamManipulator from './MouseCameraUnicamManipulator';
@@ -27,6 +28,7 @@ export default {
   vtkCompositeVRManipulator,
   vtkGestureCameraManipulator,
   vtkKeyboardCameraManipulator,
+  vtkMouseBoxSelectorManipulator,
   vtkMouseCameraAxisRotateManipulator,
   vtkMouseCameraSliceManipulator,
   vtkMouseCameraUnicamManipulator,

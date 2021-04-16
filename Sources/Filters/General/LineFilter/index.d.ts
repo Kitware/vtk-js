@@ -29,7 +29,7 @@ export function extend(publicAPI: object, model: object, initialValues?: ILineFi
 
 /**
  * Method used to create a new instance of vtkLineFilter
- * @param initialValues for pre-setting some of its content
+ * @param {ILineFilterInitialValues} [initialValues] for pre-setting some of its content
  */
 export function newInstance(initialValues?: ILineFilterInitialValues): vtkLineFilter;
 

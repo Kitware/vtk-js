@@ -26,7 +26,7 @@ type vtkAlgorithm = VtkObject & Omit<VtkAlgorithm,
 
 export interface vtkCylinderSource extends vtkAlgorithm {
 
-		/**
+	/**
 	 * Get the cap the base of the cylinder with a polygon.
 	 * @default true
 	 */
@@ -81,60 +81,61 @@ export interface vtkCylinderSource extends vtkAlgorithm {
 
 	/**
 	 * Turn on/off whether to cap the base of the cone with a polygon.
-	 * @param capping
+	 * @param {Boolean} capping The capping value. 
 	 */
 	setCapping(capping: boolean): boolean;
 
 	/**
-	 * Set the center of the cone.
-	 * It is located at the middle of the axis of the cone.
-	 * Warning: this is not the center of the base of the cone!
-	 * @param x
-	 * @param y
-	 * @param z
+	 * Set the center of the cylinder.
+	 * @param {Number} x The x coordinate.
+	 * @param {Number} y The y coordinate.
+	 * @param {Number} z The z coordinate.
 	 * @default [0, 0, 0]
 	 */
 	setCenter(x: number, y: number, z: number): boolean;
 
 	/**
-	 * Set the center of the cone.
-	 * It is located at the middle of the axis of the cone.
-	 * Warning: this is not the center of the base of the cone!
-	 * @param center
+	 * Set the center of the cylinder.
+	 * @param {Number[]} center The center point's coordinates.
 	 * @default [0, 0, 0]
 	 */
 	setCenterFrom(center: number[]): boolean;
 
 	/**
-	 *
-	 * @param x
-	 * @param y
-	 * @param z
+	 * Set the direction for the cylinder.
+	 * @param {Number} x The x coordinate.
+	 * @param {Number} y The y coordinate.
+	 * @param {Number} z The z coordinate.
 	 */
 	setDirection(x: number, y: number, z: number): boolean;
 
 	/**
-	 *
-	 * @param direction
+	 * Set the direction for the cylinder.
+	 * @param {Number[]} direction The direction coordinates.
+	 */
+	setDirection(direction: number[]): boolean;
+
+	/**
+	 * Set the direction for the cylinder.
+	 * @param {Number[]} direction The direction coordinates.
 	 */
 	setDirectionFrom(direction: number[]): boolean;
 
 	/**
-	 * Set the height of the cone.
-	 * This is the height along the cone in its specified direction.
-	 * @param height
+	 * Set the height of the cylinder.
+	 * @param {Number} height The height along the cylinder in its specified direction.
 	 */
 	setHeight(height: number): boolean;
 
 	/**
-	 * Set the base radius of the cone.
-	 * @param {number} radius
+	 * Set the base radius of the cylinder.
+	 * @param {Number} radius The radius of the cylinder.
 	 */
 	setRadius(radius: number): boolean;
 
 	/**
-	 * Set the number of facets used to represent the cone.
-	 * @param resolution
+	 * Set the number of facets used to represent the cylinder.
+	 * @param {Number} resolution The number of facets used to represent the cylinder.
 	 */
 	setResolution(resolution: number): boolean;
 }
@@ -150,7 +151,7 @@ export function extend(publicAPI: object, model: object, initialValues?: ICylind
 
 /**
  * Method used to create a new instance of vtkCylinderSource.
- * @param initialValues for pre-setting some of its content
+ * @param {ICylinderSourceInitialValues} [initialValues] for pre-setting some of its content
  */
 export function newInstance(initialValues?: ICylinderSourceInitialValues): vtkCylinderSource;
 
@@ -160,6 +161,14 @@ export function newInstance(initialValues?: ICylinderSourceInitialValues): vtkCy
  * The height and radius of the cylinder can be specified, as well as the number of sides.
  * It is also possible to control whether the cylinder is open-ended or capped.
  * If you have the end points of the cylinder, you should use a vtkLineSource followed by a vtkTubeFilter instead of the vtkCylinderSource.
+ * 
+ * @example
+ * ```js
+ * import vtkCylinderSource from 'vtk.js/Sources/Filters/Sources/CylinderSource';
+ * 
+ * const cylinder = vtkCylinderSource.newInstance({ height: 2, radius: 1, resolution: 80 });
+ * const polydata = cylinder.getOutputData();
+ * ```
  */
 export declare const vtkCylinderSource: {
 	newInstance: typeof newInstance,

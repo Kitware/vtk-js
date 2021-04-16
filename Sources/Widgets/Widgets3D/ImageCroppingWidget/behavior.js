@@ -26,7 +26,7 @@ export default function widgetBehavior(publicAPI, model) {
   };
 
   publicAPI.handleMouseMove = (callData) => {
-    if (isDragging && model.pickable) {
+    if (isDragging && model.pickable && model.dragable) {
       return publicAPI.handleEvent(callData);
     }
     return macro.VOID;
@@ -57,7 +57,7 @@ export default function widgetBehavior(publicAPI, model) {
           manipulator.setNormal(model.camera.getDirectionOfProjection());
           worldCoords = manipulator.handleEvent(
             callData,
-            model.openGLRenderWindow
+            model.apiSpecificRenderWindow
           );
         }
 
@@ -79,7 +79,7 @@ export default function widgetBehavior(publicAPI, model) {
           manipulator.setNormal(transformVec3(constraintAxis, indexToWorldT));
           worldCoords = manipulator.handleEvent(
             callData,
-            model.openGLRenderWindow
+            model.apiSpecificRenderWindow
           );
         }
 
@@ -90,7 +90,7 @@ export default function widgetBehavior(publicAPI, model) {
           manipulator.setNormal(transformVec3(edgeAxis, indexToWorldT));
           worldCoords = manipulator.handleEvent(
             callData,
-            model.openGLRenderWindow
+            model.apiSPecificRenderWindow
           );
         }
 

@@ -17,13 +17,13 @@ interface IActor2DInitialValues {
 export interface vtkActor2D extends vtkProp {
 	/**
 	 * 
-	 * @returns  
+	 * @return  
 	 */
 	getActors2D(): any;
 
 	/**
 	 * 
-	 * @returns  
+	 * @return  
 	 */
 	getIsOpaque(): boolean;
 
@@ -39,7 +39,7 @@ export interface vtkActor2D extends vtkProp {
 
 	/**
 	 * 
-	 * @returns  
+	 * @return  
 	 */
 	hasTranslucentPolygonalGeometry(): boolean;
 
@@ -75,6 +75,7 @@ export interface vtkActor2D extends vtkProp {
 
 	/**
 	 * Get the bounds as [xmin, xmax, ymin, ymax, zmin, zmax].
+	 * @return {Number[]} The bounds for the mapper.
 	 */
 	getBounds(): number[];
 
@@ -102,7 +103,7 @@ export function extend(publicAPI: object, model: object, initialValues?: IActor2
 
 /**
  * Method use to create a new instance of vtkActor2D
- * @param initialValues for pre-setting some of its content
+ * @param {IActor2DInitialValues} [initialValues] for pre-setting some of its content
  */
 export function newInstance(initialValues?: IActor2DInitialValues): vtkActor2D;
 

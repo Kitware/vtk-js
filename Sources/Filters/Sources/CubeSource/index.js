@@ -23,10 +23,10 @@ function vtkCubeSource(publicAPI, model) {
     const numberOfPoints = 24;
 
     // Define points
-    const points = new window[model.pointType](numberOfPoints * 3);
+    const points = macro.newTypedArray(model.pointType, numberOfPoints * 3);
     polyData.getPoints().setData(points, 3);
 
-    const normals = new window[model.pointType](numberOfPoints * 3);
+    const normals = macro.newTypedArray(model.pointType, numberOfPoints * 3);
     const normalArray = vtkDataArray.newInstance({
       name: 'Normals',
       values: normals,
@@ -39,7 +39,10 @@ function vtkCubeSource(publicAPI, model) {
       tcdim = 3;
     }
 
-    const textureCoords = new window[model.pointType](numberOfPoints * tcdim);
+    const textureCoords = macro.newTypedArray(
+      model.pointType,
+      numberOfPoints * tcdim
+    );
     const tcoords = vtkDataArray.newInstance({
       name: 'TextureCoordinates',
       values: textureCoords,
@@ -189,7 +192,7 @@ function vtkCubeSource(publicAPI, model) {
       .apply(points);
 
     // Define quads
-    const polys = new window[model.pointType](numberOfPolys * 5);
+    const polys = macro.newTypedArray(model.pointType, numberOfPolys * 5);
     polyData.getPolys().setData(polys, 1);
 
     let polyIndex = 0;

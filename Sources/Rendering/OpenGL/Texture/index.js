@@ -753,7 +753,8 @@ function vtkOpenGLTexture(publicAPI, model) {
         widthLevel /= 2;
         heightLevel /= 2;
       }
-      invertedData[i] = new window[dataType](
+      invertedData[i] = macro.newTypedArray(
+        dataType,
         heightLevel * widthLevel * model.components
       );
       for (let y = 0; y < heightLevel; ++y) {

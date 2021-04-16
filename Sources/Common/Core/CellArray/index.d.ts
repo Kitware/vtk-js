@@ -13,13 +13,13 @@ export interface vtkCellArray extends VtkDataArray {
 
 	/**
 	 * Get the number of cells in the array.
-	 * @param {boolean} [recompute]
+	 * @param {Boolean} [recompute]
 	 */
 	getNumberOfCells(recompute?: boolean): number;
 
 	/**
 	 *
-	 * @param {boolean} [recompute]
+	 * @param {Boolean} [recompute]
 	 */
 	getCellSizes(recompute?: boolean): any;
 
@@ -47,7 +47,7 @@ export function extend(publicAPI: object, model: object, initialValues?: ICellAr
 
 /**
  * Method used to create a new instance of vtkCellArray
- * @param initialValues for pre-setting some of its content
+ * @param {ICellArrayInitialValues} [initialValues] for pre-setting some of its content
  */
 export function newInstance(initialValues?: ICellArrayInitialValues): vtkCellArray;
 

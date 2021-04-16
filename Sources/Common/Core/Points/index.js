@@ -20,7 +20,7 @@ function vtkPoints(publicAPI, model) {
   publicAPI.setNumberOfPoints = (nbPoints, dimension = 3) => {
     if (publicAPI.getNumberOfPoints() !== nbPoints) {
       model.size = nbPoints * dimension;
-      model.values = new window[model.dataType](model.size);
+      model.values = macro.newTypedArray(model.dataType, model.size);
       publicAPI.setNumberOfComponents(dimension);
       publicAPI.modified();
     }

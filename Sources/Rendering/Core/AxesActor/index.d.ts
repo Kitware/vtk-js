@@ -49,43 +49,43 @@ export interface vtkAxesActor extends vtkActor {
     setConfig(config: object): boolean;
 
     /**
-     * 
-     * @param r 
-     * @param g 
-     * @param b 
+     * Set X axis color.
+     * @param {Number} r Defines the red component (between 0 and 1).
+     * @param {Number} g Defines the green component (between 0 and 1).
+     * @param {Number} b Defines the blue component (between 0 and 1).
      */
     setXAxisColor(r: number, g: number, b: number): boolean;
 
     /**
-     * 
+     * Set X axis color.
      * @param XAxisColor 
      */
     setXAxisColorFrom(XAxisColor: number[]): boolean;
 
     /**
-     * 
-     * @param r 
-     * @param g 
-     * @param b 
+     * Set Y axis color.
+     * @param {Number} r Defines the red component (between 0 and 1).
+     * @param {Number} g Defines the green component (between 0 and 1).
+     * @param {Number} b Defines the blue component (between 0 and 1).
      */
     setYAxisColor(r: number, g: number, b: number): boolean;
 
     /**
-     * 
+     * Set Y axis color.
      * @param YAxisColor 
      */
     setYAxisColorFrom(YAxisColor: number[]): boolean;
 
     /**
-     * 
-     * @param r 
-     * @param g 
-     * @param b 
+     * Set Z axis color.
+     * @param {Number} r Defines the red component (between 0 and 1).
+     * @param {Number} g Defines the green component (between 0 and 1).
+     * @param {Number} b Defines the blue component (between 0 and 1).
      */
     setZAxisColor(r: number, g: number, b: number): boolean;
 
     /**
-     * 
+     * Set E axis color.
      * @param ZAxisColor 
      */
     setZAxisColorFrom(ZAxisColor: number[]): boolean;
@@ -107,7 +107,7 @@ export function extend(publicAPI: object, model: object, initialValues?: IAxesAc
 
 /**
  * Method use to create a new instance of vtkAxesActor.
- * @param initialValues for pre-setting some of its content
+ * @param {IAxesActorInitialValues} [initialValues] for pre-setting some of its content
  */
 export function newInstance(initialValues?: IAxesActorInitialValues): vtkAxesActor;
 

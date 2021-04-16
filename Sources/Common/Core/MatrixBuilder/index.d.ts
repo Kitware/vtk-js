@@ -5,7 +5,7 @@ declare interface Transform {
 
 	/**
 	 * 
-	 * @param {boolean} [useDegree] 
+	 * @param {Boolean} [useDegree] 
 	 */
 	new (useDegree?: boolean);
 
@@ -13,50 +13,50 @@ declare interface Transform {
 	 * Multiplies the current matrix with a transformation matrix created by
 	 * normalizing both direction vectors and rotating around the axis of the
 	 * crossProduct by the angle from the dotProduct of the two directions.
-	 * @param {number[]} originDirection 
-	 * @param {number[]} targetDirection 
+	 * @param {Number[]} originDirection 
+	 * @param {Number[]} targetDirection 
 	 */
 	rotateFromDirections(originDirection: number[], targetDirection: number[]): Transform
 
 	/**
 	 * Normalizes the axis of rotation then rotates the current matrix `angle`
 	 * degrees/radians around the provided axis.
-	 * @param {number} angle 
-	 * @param {number} axis 
+	 * @param {Number} angle 
+	 * @param {Number} axis 
 	 */
 	rotate(angle: number, axis: number): Transform
 
 	/**
 	 * Rotates `angle` degrees/radians around the X axis.
-	 * @param {number} angle 
+	 * @param {Number} angle 
 	 */
 	rotateX(angle: number): Transform
 
 	/**
 	 * Rotates `angle` degrees/radians around the Y axis.
-	 * @param {number} angle 
+	 * @param {Number} angle 
 	 */
 	rotateY(angle: number): Transform
 
 	/**
 	 * Rotates `angle` degrees/radians around the Z axis.
-	 * @param {number} angle 
+	 * @param {Number} angle 
 	 */
 	rotateZ(angle: number): Transform
 
 	/**
 	 * Translates the matrix by x, y, z.
-	 * @param {number} x 
-	 * @param {number} y 
-	 * @param {number} z 
+	 * @param {Number} x The x coordinate.
+	 * @param {Number} y The y coordinate.
+	 * @param {Number} z The z coordinate.
 	 */
 	translate(x: number, y: number, z: number): Transform
 
 	/**
 	 * Scales the matrix by sx, sy, sz.
-	 * @param {number} sx 
-	 * @param {number} sy 
-	 * @param {number} sz 
+	 * @param {Number} sx 
+	 * @param {Number} sy 
+	 * @param {Number} sz 
 	 */
 	scale(sx: number, sy: number, sz: number): Transform
 
@@ -79,8 +79,8 @@ declare interface Transform {
 	 * array of multiples of 3, unless specifically handling with offset and
 	 * iterations. Returns the instance for chaining.
 	 * @param {TypedArray} typedArray 
-	 * @param {number} [offset] 
-	 * @param {number} [nbIterations] 
+	 * @param {Number} [offset] 
+	 * @param {Number} [nbIterations] 
 	 */
 	apply(typedArray: TypedArray, offset?: number, nbIterations?: number): Transform
 

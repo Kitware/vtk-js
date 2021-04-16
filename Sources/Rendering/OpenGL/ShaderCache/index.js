@@ -239,8 +239,6 @@ export function extend(publicAPI, model, initialValues = {}) {
 
   // Object methods
   vtkShaderCache(publicAPI, model);
-
-  return Object.freeze(publicAPI);
 }
 
 // ----------------------------------------------------------------------------

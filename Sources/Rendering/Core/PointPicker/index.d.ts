@@ -1,4 +1,5 @@
 import vtkPicker from "vtk.js/Sources/Rendering/Core/Picker";
+import vtkMapper from "vtk.js/Sources/Rendering/Core/Mapper";
 
 interface IPointPickerInitialValues {
 	pointId: number;
@@ -31,23 +32,21 @@ export interface vtkPointPicker extends vtkPicker {
 
 	/**
 	 * 
-	 * @param p1 
-	 * @param p2 
-	 * @param tol 
-	 * @param mapper 
-	 * @return  
+	 * @param {Number[]} p1 
+	 * @param {Number[]} p2 
+	 * @param {Number} tol 
+	 * @param {vtkMapper} mapper 
 	 */
-	intersectWithLine(p1: any, p2: any, tol: any, mapper: any): number;
+	intersectWithLine(p1: number[], p2: number[], tol: number, mapper: vtkMapper): number;
 
 	/**
 	 * 
-	 * @param p1 
-	 * @param p2 
-	 * @param tol 
-	 * @param mapper 
-	 * @return  
+	 * @param {Number[]} p1 
+	 * @param {Number[]} p2 
+	 * @param {Number} tol 
+	 * @param {vtkMapper} mapper 
 	 */
-	intersectActorWithLine(p1: any, p2: any, tol: any, mapper: any): number;
+	intersectActorWithLine(p1: number[], p2: number[], tol: number, mapper: vtkMapper): number;
 
 	/**
 	 * Specify whether the point search should be based on cell points or directly on the point list.
@@ -67,7 +66,7 @@ export function extend(publicAPI: object, model: object, initialValues?: IPointP
 
 /**
  * Method use to create a new instance of vtkPointPicker
- * @param initialValues for pre-setting some of its content
+ * @param {IPointPickerInitialValues} [initialValues] for pre-setting some of its content
  */
 export function newInstance(initialValues?: IPointPickerInitialValues): vtkPointPicker;
 

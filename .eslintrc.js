@@ -2,7 +2,7 @@ const path = require('path');
 const prettierConf = require('./prettier.config.js');
 
 module.exports = {
-  extends: ['airbnb', 'prettier'],
+  extends: ['airbnb/base', 'prettier'],
   rules: {
     'prettier/prettier': ['error', prettierConf],
 
@@ -18,6 +18,7 @@ module.exports = {
     'jsx-a11y/label-has-for': 0,
     'no-console': 0,
     'no-plusplus': 0,
+    'no-underscore-dangle': 0,
     'import/no-named-as-default': 0,
     'import/no-named-as-default-member': 0,
 

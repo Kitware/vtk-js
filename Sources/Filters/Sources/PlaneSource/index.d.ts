@@ -20,9 +20,9 @@ type vtkAlgorithm = VtkObject & Omit<VtkAlgorithm,
 	'getInputData' |
 	'setInputData' |
 	'setInputConnection' |
-	'getInputConnection' | 
-	'addInputConnection' | 
-	'addInputData' > ;
+	'getInputConnection' |
+	'addInputConnection' |
+	'addInputData'>;
 
 export interface vtkPlaneSource extends vtkAlgorithm {
 
@@ -43,9 +43,9 @@ export interface vtkPlaneSource extends vtkAlgorithm {
 	 */
 	getNormal(): number[];
 
-	 /**
-	  * Get the normal of the plane.
-	  */
+	/**
+	 * Get the normal of the plane.
+	 */
 	getNormalByReference(): number[];
 
 	/**
@@ -54,9 +54,9 @@ export interface vtkPlaneSource extends vtkAlgorithm {
 	 */
 	getOrigin(): number[];
 
-	 /**
-	  * Get the origin of the plane, lower-left corner.
-	  */
+	/**
+	 * Get the origin of the plane, lower-left corner.
+	 */
 	getOriginByReference(): number[];
 
 	/**
@@ -109,82 +109,82 @@ export interface vtkPlaneSource extends vtkAlgorithm {
 
 	/**
 	 * Set the center of the plane.
-	 * @param x 
-	 * @param y 
-	 * @param z 
+	 * @param {Number} x The x coordinate.
+	 * @param {Number} y The y coordinate.
+	 * @param {Number} z The z coordinate.
 	 */
 	setCenter(x: number, y: number, z: number): void;
 
 	/**
 	 * Set the center of the plane.
-	 * @param center 
+	 * @param {Number[]} center The coordinate of the center point.
 	 */
 	setCenter(center: number[]): void;
 
 	/**
 	 * Set the normal of the plane.
-	 * @param normal 
+	 * @param {Number[]} normal The coordinate of the normal object.
 	 */
 	setNormal(normal: number[]): void;
 
 	/**
 	 * Set the origin of the plane.
-	 * @param x 
-	 * @param y 
-	 * @param z 
+	 * @param {Number} x The x coordinate of the origin point.
+	 * @param {Number} y The y coordinate of the origin point.
+	 * @param {Number} z The z coordinate of the origin point.
 	 */
 	setOrigin(x: number, y: number, z: number): boolean;
 
 	/**
 	 * Set the origin of the plane.
-	 * @param point2 
+	 * @param {Number[]} origin The coordinate of the origin point.
 	 */
 	setOriginFrom(origin: number[]): boolean;
 
 	/**
 	 * Specify a point defining the first axis of the plane.
-	 * @param x 
-	 * @param y 
-	 * @param z 
+	 * @param {Number} x The x coordinate.
+	 * @param {Number} y The y coordinate.
+	 * @param {Number} z The z coordinate.
 	 */
 	setPoint1(x: number, y: number, z: number): boolean;
 
 	/**
 	 * Specify a point defining the first axis of the plane.
-	 * @param point1 
+	 * @param {Number[]} point1 
 	 */
 	setPoint1(point1: number[]): boolean;
 
 	/**
 	 * Specify a point defining the second axis of the plane.
-	 * @param x 
-	 * @param y 
-	 * @param z 
+	 * @param {Number} x The x coordinate.
+	 * @param {Number} y The y coordinate.
+	 * @param {Number} z The z coordinate.
 	 */
 	setPoint2(x: number, y: number, z: number): boolean;
 
 	/**
 	 * Specify a point defining the second axis of the plane.
-	 * @param point2 
+	 * @param {Number[]} point2 
 	 */
 	setPoint2(point2: number[]): boolean;
 
 	/**
 	 * Set the number of facets used to represent the cone.
-	 * @param resolution 
+	 * @param {Number} xResolution 
 	 */
 	setXResolution(xResolution: number): boolean;
 
 	/**
 	 * Set the number of facets used to represent the cone.
-	 * @param resolution 
+	 * @param {Number} yResolution 
 	 */
-	setYResolution(xResolution: number): boolean;
+	setYResolution(yResolution: number): boolean;
 
 	/**
 	 * 
-	 * @param v1 
-	 * @param v2 
+	 * @param {vec3} v1 
+	 * @param {vec3} v2 
 	 */
 	updatePlane(v1: vec3, v2: vec3): boolean;
 }
@@ -200,7 +200,7 @@ export function extend(publicAPI: object, model: object, initialValues?: IPlaneS
 
 /**
  * Method used to create a new instance of vtkPlaneSource.
- * @param initialValues for pre-setting some of its content
+ * @param {IPlaneSourceInitialValues} [initialValues] for pre-setting some of its content
  */
 export function newInstance(initialValues?: IPlaneSourceInitialValues): vtkPlaneSource;
 
@@ -214,6 +214,14 @@ export function newInstance(initialValues?: IPlaneSourceInitialValues): vtkPlane
  * 
  * By default, the plane is centered at the origin and perpendicular to the z-axis,
  * with width and height of length 1 and resolutions set to 1.
+ * 
+ * @example
+ * ```js
+ * import vtkPlaneSource from 'vtk.js/Sources/Filters/Sources/PlaneSource';
+ * 
+ * const plane = vtkPlaneSource.newInstance({ xResolution: 10, yResolution: 10 });
+ * const polydata = plane.getOutputData();
+ * ```
  */
 export declare const vtkPlaneSource: {
 	newInstance: typeof newInstance,
