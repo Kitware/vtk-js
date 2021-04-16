@@ -274,12 +274,12 @@ export default function widgetBehavior(publicAPI, model) {
         model.renderer
       );
       const screenBounds = [
-        screenPoint1[0],
-        screenPoint2[0],
-        screenPoint1[1],
-        screenPoint2[1],
-        screenPoint1[2],
-        screenPoint2[2],
+        Math.min(screenPoint1[0], screenPoint2[0]),
+        Math.max(screenPoint1[0], screenPoint2[0]),
+        Math.min(screenPoint1[1], screenPoint2[1]),
+        Math.max(screenPoint1[1], screenPoint2[1]),
+        Math.min(screenPoint1[2], screenPoint2[2]),
+        Math.max(screenPoint1[2], screenPoint2[2]),
       ];
       model.labelTextCallback(bounds, screenBounds, model.label);
     }
