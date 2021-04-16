@@ -8,6 +8,9 @@ import vtkVolume from 'vtk.js/Sources/Rendering/Core/Volume';
 import vtkVolumeMapper from 'vtk.js/Sources/Rendering/Core/VolumeMapper';
 import vtkImageCropFilter from 'vtk.js/Sources/Filters/General/ImageCropFilter';
 
+// Force the loading of HttpDataAccessHelper to support gzip decompression
+import 'vtk.js/Sources/IO/Core/DataAccessHelper/HttpDataAccessHelper';
+
 import controlPanel from './controlPanel.html';
 
 // ----------------------------------------------------------------------------
