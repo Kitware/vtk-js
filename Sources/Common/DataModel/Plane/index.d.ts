@@ -156,13 +156,13 @@ export interface vtkPlane extends VtkObject {
 	intersectWithPlane(planeOrigin: number[], planeNormal: number[]): IRet;
 
 	/**
-	 * 
+	 * Set the normal of the plane.
 	 * @param {Number[]} normal The normal coordinate.
 	 */
 	setNormal(normal: number[]): boolean;
 
 	/**
-	 * 
+	 * Set the normal of the plane.
 	 * @param {Number} x The x coordinate.
 	 * @param {Number} y The y coordinate.
 	 * @param {Number} z The z coordinate.
@@ -170,28 +170,28 @@ export interface vtkPlane extends VtkObject {
 	setNormal(x: number, y: number, z: number): boolean;
 
 	/**
-	 * 
+	 * Set the normal object.
 	 * @param {Number[]} normal The normal coordinate.
 	 */
 	setNormalFrom(normal: number[]): boolean;
 
 	/**
-	 * 
-	 * @param {Number[]} origin The origin coordinate.
+	 * Set the origin of the plane.
+	 * @param {Number[]} origin The coordinate of the origin point.
 	 */
 	setOrigin(origin: number[]): boolean;
 
 	/**
-	 * 
-	 * @param {Number} x The x coordinate.
-	 * @param {Number} y The y coordinate.
-	 * @param {Number} z The z coordinate.
+	 * Set the origin of the plane.
+	 * @param {Number} x The x coordinate of the origin point.
+	 * @param {Number} y The y coordinate of the origin point.
+	 * @param {Number} z The z coordinate of the origin point.
 	 */
 	setOrigin(x: number, y: number, z: number): boolean;
 
 	/**
-	 * 
-	 * @param {Number[]} origin The origin coordinate.
+	 * Set the origin of the plane.
+	 * @param {Number[]} origin The coordinate of the origin point.
 	 */
 	setOriginFrom(origin: number[]): boolean;
 }
