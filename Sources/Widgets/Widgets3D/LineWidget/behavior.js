@@ -39,9 +39,9 @@ export default function widgetBehavior(publicAPI, model) {
   function updateCursor(callData) {
     model.isDragging = true;
     model.previousPosition = [
-      ...model.manipulator.handleEvent(callData, model.openGLRenderWindow),
+      ...model.manipulator.handleEvent(callData, model.apiSpecificRenderWindow),
     ];
-    model.openGLRenderWindow.setCursor('grabbing');
+    model.apiSpecificRenderWindow.setCursor('grabbing');
     model.interactor.requestAnimation(publicAPI);
   }
 
@@ -260,7 +260,7 @@ export default function widgetBehavior(publicAPI, model) {
     ) {
       const worldCoords = model.manipulator.handleEvent(
         callData,
-        model.openGLRenderWindow
+        model.apiSpecificRenderWindow
       );
       const translation = model.previousPosition
         ? vtkMath.subtract(worldCoords, model.previousPosition, [])
@@ -317,7 +317,7 @@ export default function widgetBehavior(publicAPI, model) {
       if (!wasTextActive) {
         model.interactor.cancelAnimation(publicAPI);
       }
-      model.openGLRenderWindow.setCursor('pointer');
+      model.apiSpecificRenderWindow.setCursor('pointer');
 
       model.hasFocus = false;
 

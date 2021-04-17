@@ -46,16 +46,16 @@ export default function widgetBehavior(publicAPI, model) {
   publicAPI.updateCursor = () => {
     switch (model.activeState.getUpdateMethodName()) {
       case InteractionMethodsName.TranslateCenter:
-        model.openGLRenderWindow.setCursor('move');
+        model.apiSpecificRenderWindow.setCursor('move');
         break;
       case InteractionMethodsName.RotateLine:
-        model.openGLRenderWindow.setCursor('alias');
+        model.apiSpecificRenderWindow.setCursor('alias');
         break;
       case InteractionMethodsName.TranslateAxis:
-        model.openGLRenderWindow.setCursor('pointer');
+        model.apiSpecificRenderWindow.setCursor('pointer');
         break;
       default:
-        model.openGLRenderWindow.setCursor('default');
+        model.apiSpecificRenderWindow.setCursor('default');
         break;
     }
   };
@@ -238,7 +238,7 @@ export default function widgetBehavior(publicAPI, model) {
     const stateLine = model.widgetState.getActiveLineState();
     const worldCoords = model.planeManipulator.handleEvent(
       calldata,
-      model.openGLRenderWindow
+      model.apiSpecificRenderWindow
     );
 
     const point1 = stateLine.getPoint1();
@@ -300,7 +300,7 @@ export default function widgetBehavior(publicAPI, model) {
   publicAPI[InteractionMethodsName.TranslateCenter] = (calldata) => {
     let worldCoords = model.planeManipulator.handleEvent(
       calldata,
-      model.openGLRenderWindow
+      model.apiSpecificRenderWindow
     );
     worldCoords = publicAPI.getBoundedCenter(worldCoords);
     model.activeState.setCenter(worldCoords);
@@ -312,7 +312,7 @@ export default function widgetBehavior(publicAPI, model) {
     const planeNormal = model.planeManipulator.getNormal();
     const worldCoords = model.planeManipulator.handleEvent(
       calldata,
-      model.openGLRenderWindow
+      model.apiSpecificRenderWindow
     );
 
     const center = model.widgetState.getCenter();

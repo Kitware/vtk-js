@@ -145,6 +145,7 @@ function vtkRenderWindowViewNode(publicAPI, model) {
 
 const DEFAULT_VALUES = {
   size: undefined,
+  selector: undefined,
 };
 
 // ----------------------------------------------------------------------------
@@ -157,6 +158,7 @@ export function extend(publicAPI, model, initialValues = {}) {
   }
 
   macro.getArray(publicAPI, model, ['size'], 2);
+  macro.get(publicAPI, model, ['selector']);
 
   // Inheritance
   vtkViewNode.extend(publicAPI, model, initialValues);

@@ -58,9 +58,9 @@ const handledEvents = [
   'Move3D',
   'StartPointerLock',
   'EndPointerLock',
-  'StartInteractionEvent',
-  'InteractionEvent',
-  'EndInteractionEvent',
+  'StartInteraction',
+  'Interaction',
+  'EndInteraction',
 ];
 
 function preventDefault(event) {

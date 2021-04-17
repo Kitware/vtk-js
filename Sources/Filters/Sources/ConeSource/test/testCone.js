@@ -1,7 +1,7 @@
 import test from 'tape-catch';
 import testUtils from 'vtk.js/Sources/Testing/testUtils';
 
-import vtkOpenGLRenderWindow from 'vtk.js/Sources/Rendering/OpenGL/RenderWindow';
+import 'vtk.js/Sources/Rendering/Misc/RenderingAPIs';
 import vtkRenderWindow from 'vtk.js/Sources/Rendering/Core/RenderWindow';
 import vtkRenderer from 'vtk.js/Sources/Rendering/Core/Renderer';
 import vtkConeSource from 'vtk.js/Sources/Filters/Sources/ConeSource';
@@ -50,7 +50,7 @@ test.onlyIfWebGL('Test vtkConeSource Rendering', (t) => {
   mapper.setInputConnection(coneSource.getOutputPort());
 
   // now create something to view it, in this case webgl
-  const glwindow = gc.registerResource(vtkOpenGLRenderWindow.newInstance());
+  const glwindow = gc.registerResource(renderWindow.newAPISpecificView());
   glwindow.setContainer(renderWindowContainer);
   renderWindow.addView(glwindow);
   glwindow.setSize(400, 400);

@@ -7,7 +7,7 @@ import vtkImageData from 'vtk.js/Sources/Common/DataModel/ImageData';
 import vtkImageMapper from 'vtk.js/Sources/Rendering/Core/ImageMapper';
 import vtkImageSlice from 'vtk.js/Sources/Rendering/Core/ImageSlice';
 import vtkImageReslice from 'vtk.js/Sources/Imaging/Core/ImageReslice';
-import vtkOpenGLRenderWindow from 'vtk.js/Sources/Rendering/OpenGL/RenderWindow';
+import 'vtk.js/Sources/Rendering/Misc/RenderingAPIs';
 import vtkRenderer from 'vtk.js/Sources/Rendering/Core/Renderer';
 import vtkRenderWindow from 'vtk.js/Sources/Rendering/Core/RenderWindow';
 
@@ -89,7 +89,7 @@ test.onlyIfWebGL('Test vtkImageReslice Rendering', (t) => {
   renderer.addActor(resliceActor);
 
   // now create something to view it, in this case webgl
-  const glwindow = gc.registerResource(vtkOpenGLRenderWindow.newInstance());
+  const glwindow = gc.registerResource(renderWindow.newAPISpecificView());
   glwindow.setContainer(renderWindowContainer);
   renderWindow.addView(glwindow);
   glwindow.setSize(400, 400);

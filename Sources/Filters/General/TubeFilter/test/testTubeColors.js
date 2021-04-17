@@ -6,7 +6,7 @@ import vtkDataArray from 'vtk.js/Sources/Common/Core/DataArray';
 import vtkTubeFilter from 'vtk.js/Sources/Filters/General/TubeFilter';
 import vtkMapper from 'vtk.js/Sources/Rendering/Core/Mapper';
 import vtkActor from 'vtk.js/Sources/Rendering/Core/Actor';
-import vtkOpenGLRenderWindow from 'vtk.js/Sources/Rendering/OpenGL/RenderWindow';
+import 'vtk.js/Sources/Rendering/Misc/RenderingAPIs';
 import vtkRenderWindow from 'vtk.js/Sources/Rendering/Core/RenderWindow';
 import vtkRenderer from 'vtk.js/Sources/Rendering/Core/Renderer';
 import baseline from './testTubeColors.png';
@@ -145,7 +145,7 @@ test.onlyIfWebGL('Test vtkTubeFilter color map rendering', (t) => {
 
   // Create the renderer and display the colored tube
   // now create something to view it, in this case webgl
-  const glwindow = gc.registerResource(vtkOpenGLRenderWindow.newInstance());
+  const glwindow = gc.registerResource(renderWindow.newAPISpecificView());
   glwindow.setContainer(renderWindowContainer);
   renderWindow.addView(glwindow);
   glwindow.setSize(400, 400);

@@ -27,7 +27,7 @@ function vtkAbstractWidgetFactory(publicAPI, model) {
 
       const {
         interactor,
-        openGLRenderWindow,
+        apiSpecificRenderWindow,
         camera,
       } = extractRenderingComponents(renderer);
       const widgetModel = {};
@@ -38,7 +38,7 @@ function vtkAbstractWidgetFactory(publicAPI, model) {
         viewType,
         renderer,
         camera,
-        openGLRenderWindow,
+        apiSpecificRenderWindow,
         factory: publicAPI,
       });
       macro.safeArrays(widgetModel);

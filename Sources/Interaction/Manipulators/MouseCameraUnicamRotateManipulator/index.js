@@ -3,7 +3,6 @@ import vtkCompositeCameraManipulator from 'vtk.js/Sources/Interaction/Manipulato
 import vtkCompositeMouseManipulator from 'vtk.js/Sources/Interaction/Manipulators/CompositeMouseManipulator';
 import vtkInteractorStyleConstants from 'vtk.js/Sources/Rendering/Core/InteractorStyle/Constants';
 import vtkMapper from 'vtk.js/Sources/Rendering/Core/Mapper';
-import vtkOpenGLHardwareSelector from 'vtk.js/Sources/Rendering/OpenGL/HardwareSelector';
 import vtkPointPicker from 'vtk.js/Sources/Rendering/Core/PointPicker';
 import vtkSphereSource from 'vtk.js/Sources/Filters/Sources/SphereSource';
 
@@ -22,13 +21,7 @@ function vtkMouseCameraUnicamRotateManipulator(publicAPI, model) {
   // Set our className
   model.classHierarchy.push('vtkMouseCameraUnicamRotateManipulator');
 
-  // Setup HardwareSelector and Picker to pick points
-  model.selector = vtkOpenGLHardwareSelector.newInstance({
-    captureZValues: true,
-  });
-  model.selector.setFieldAssociation(
-    FieldAssociations.FIELD_ASSOCIATION_POINTS
-  );
+  // Setup Picker to pick points
   model.picker = vtkPointPicker.newInstance();
 
   model.downPoint = [0, 0, 0];
@@ -275,10 +268,13 @@ function vtkMouseCameraUnicamRotateManipulator(publicAPI, model) {
     // This seems like an arbitrary, but perhaps reasonable, default value.
     let selections = null;
     if (model.useHardwareSelector) {
-      model.selector.attach(interactor.getView(), renderer);
+      const selector = interactor.getView().getSelector();
+      selector.setCaptureZValues(true);
+      selector.setFieldAssociation(FieldAssociations.FIELD_ASSOCIATION_POINTS);
+      selector.attach(interactor.getView(), renderer);
 
-      model.selector.setArea(position.x, position.y, position.x, position.y);
-      selections = model.selector.select();
+      selector.setArea(position.x, position.y, position.x, position.y);
+      selections = selector.select();
     }
 
     if (selections && selections.length !== 0) {

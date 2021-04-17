@@ -11,8 +11,7 @@ import 'vtk.js/Sources/Common/Core/DataArray';
 import 'vtk.js/Sources/Common/DataModel/PolyData';
 import 'vtk.js/Sources/Rendering/Core/Actor';
 import 'vtk.js/Sources/Rendering/Core/Mapper';
-import 'vtk.js/Sources/Rendering/OpenGL/RenderWindow';
-import 'vtk.js/Sources/Rendering/WebGPU/RenderWindow';
+import 'vtk.js/Sources/Rendering/Misc/RenderingAPIs';
 
 // Process arguments from URL
 const userParams = vtkURLExtract.extractURLParameters();
