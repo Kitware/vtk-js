@@ -289,6 +289,16 @@ function vtkWebGPURenderer(publicAPI, model) {
     /* eslint-enable no-bitwise */
   };
 
+  publicAPI.getPropFromID = (id) => {
+    for (let i = 0; i < model.children.length; i++) {
+      const res = model.children[i].getPropID();
+      if (res === id) {
+        return model.children[i];
+      }
+    }
+    return null;
+  };
+
   publicAPI.releaseGraphicsResources = () => {
     if (model.selector !== null) {
       model.selector.releaseGraphicsResources();

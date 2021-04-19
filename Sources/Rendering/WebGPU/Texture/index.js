@@ -138,6 +138,23 @@ function vtkWebGPUTexture(publicAPI, model) {
     }
   };
 
+  publicAPI.resize = (width, height, depth = 1) => {
+    if (
+      width !== model.width ||
+      height !== model.height ||
+      depth !== model.depth
+    ) {
+      model.width = width;
+      model.height = height;
+      model.depth = depth;
+      model.handle = model.device.getHandle().createTexture({
+        size: [model.width, model.height, model.depth],
+        format: model.format,
+        usage: model.usage,
+      });
+    }
+  };
+
   publicAPI.createView = (options) => {
     const view = vtkWebGPUTextureView.newInstance();
     view.create(publicAPI, options);

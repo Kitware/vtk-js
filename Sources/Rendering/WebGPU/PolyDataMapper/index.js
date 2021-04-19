@@ -172,6 +172,7 @@ function vtkWebGPUPolyDataMapper(publicAPI, model) {
         1.0,
       ]);
       model.UBO.setValue('Opacity', ppty.getOpacity());
+      model.UBO.setValue('PropID', model.WebGPUActor.getPropID());
 
       const device = model.WebGPURenderWindow.getDevice();
       model.UBO.sendIfNeeded(device, device.getMapperBindGroupLayout());
@@ -756,6 +757,7 @@ export function extend(publicAPI, model, initialValues = {}) {
   model.UBO.addEntry('SpecularIntensity', 'f32');
   model.UBO.addEntry('Opacity', 'f32');
   model.UBO.addEntry('SpecularPower', 'f32');
+  model.UBO.addEntry('PropID', 'u32');
 
   //   [[offset(0)]] MCVCMatrix: mat4x4<f32>;
   //   [[offset(64)]] normalMatrix: mat4x4<f32>;

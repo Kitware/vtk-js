@@ -10,30 +10,24 @@ const { FieldAssociations } = vtkDataSet;
 function vtkHardwareSelector(publicAPI, model) {
   model.classHierarchy.push('vtkHardwareSelector');
 
-  // update and source data that is used for generating a selection. This
+  // get the source data that is used for generating a selection. This
   // must be called at least once before calling generateSelection. In
   // raster based backends this method will capture the buffers. You can
-  // call this once and then make multiple selections.
-  publicAPI.updateSelectionSourceData = (fx1, fy1, fx2, fy2) => {};
+  // call this once and then make multiple calls to generateSelection.
+  publicAPI.getSourceDataAsync = async (renderer, fx1, fy1, fx2, fy2) => {};
 
-  // generate a selection for the specified region
-  // Return am array of vtkSelectionNode
-  publicAPI.generateSelection = (fx1, fy1, fx2, fy2) => {
-    macro.vtkErrorMacro('not implemented');
-    return [];
-  };
-
-  // override
-  const superSetArea = publicAPI.setArea;
-  publicAPI.setArea = (...args) => {
-    if (superSetArea(...args)) {
-      model.area[0] = Math.floor(model.area[0]);
-      model.area[1] = Math.floor(model.area[1]);
-      model.area[2] = Math.floor(model.area[2]);
-      model.area[3] = Math.floor(model.area[3]);
-      return true;
+  publicAPI.selectAsync = async (renderer, fx1, fy1, fx2, fy2) => {
+    const srcData = await publicAPI.getSourceDataAsync(
+      renderer,
+      fx1,
+      fy1,
+      fx2,
+      fy2
+    );
+    if (srcData) {
+      return srcData.generateSelection(fx1, fy1, fx2, fy2);
     }
-    return false;
+    return [];
   };
 }
 
@@ -42,7 +36,6 @@ function vtkHardwareSelector(publicAPI, model) {
 // ----------------------------------------------------------------------------
 
 const DEFAULT_VALUES = {
-  area: undefined,
   fieldAssociation: FieldAssociations.FIELD_ASSOCIATION_CELLS,
   captureZValues: false,
 };
@@ -55,11 +48,6 @@ export function extend(publicAPI, model, initialValues = {}) {
   // Inheritance
   macro.obj(publicAPI, model);
 
-  if (!model.area) {
-    model.area = [0, 0, 0, 0];
-  }
-
-  macro.setGetArray(publicAPI, model, ['area'], 4);
   macro.setGet(publicAPI, model, ['fieldAssociation', 'captureZValues']);
 
   // Object methods
