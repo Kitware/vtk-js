@@ -1,7 +1,4 @@
-import {
-	VtkAlgorithm,
-	VtkObject
-} from 'vtk.js/Sources/macro';
+import { VtkAlgorithm, VtkObject } from 'vtk.js/Sources/macro';
 
 /**
  * 
@@ -19,15 +16,15 @@ interface ISphereSourceInitialValues {
 	pointType?: string;
 }
 
-type vtkAlgorithm = VtkObject & Omit<VtkAlgorithm,
-	'getInputData' |
-	'setInputData' |
-	'setInputConnection' |
-	'getInputConnection' | 
-	'addInputConnection' | 
-	'addInputData' > ;
+type vtkSphereSourceBase = VtkObject & Omit<VtkAlgorithm,
+	| 'getInputData'
+	| 'setInputData'
+	| 'setInputConnection'
+	| 'getInputConnection'
+	| 'addInputConnection'
+	| 'addInputData'>;
 
-export interface vtkSphereSource extends vtkAlgorithm {
+export interface vtkSphereSource extends vtkSphereSourceBase {
 
 	/**
 	 * Get the center of the sphere.

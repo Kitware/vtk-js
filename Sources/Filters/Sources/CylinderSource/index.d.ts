@@ -1,7 +1,4 @@
-import {
-	VtkAlgorithm,
-	VtkObject
-} from 'vtk.js/Sources/macro';
+import { VtkAlgorithm, VtkObject } from 'vtk.js/Sources/macro';
 
 /**
  *
@@ -16,15 +13,15 @@ interface ICylinderSourceInitialValues {
 	pointType?: string;
 }
 
-type vtkAlgorithm = VtkObject & Omit<VtkAlgorithm,
-	'getInputData' |
-	'setInputData' |
-	'setInputConnection' |
-	'getInputConnection' |
-	'addInputConnection' |
-	'addInputData' > ;
+type vtkCylinderSourceBase = VtkObject & Omit<VtkAlgorithm,
+	| 'getInputData'
+	| 'setInputData'
+	| 'setInputConnection'
+	| 'getInputConnection'
+	| 'addInputConnection'
+	| 'addInputData'>;
 
-export interface vtkCylinderSource extends vtkAlgorithm {
+export interface vtkCylinderSource extends vtkCylinderSourceBase {
 
 	/**
 	 * Get the cap the base of the cylinder with a polygon.

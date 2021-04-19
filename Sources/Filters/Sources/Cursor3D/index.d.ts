@@ -1,7 +1,4 @@
-import {
-	VtkAlgorithm,
-	VtkObject
-} from 'vtk.js/Sources/macro';
+import { VtkAlgorithm, VtkObject } from 'vtk.js/Sources/macro';
 
 import vtkPolyData from 'vtk.js/Sources/Common/DataModel/PolyData';
 
@@ -21,15 +18,15 @@ interface ICursor3DInitialValues {
 	translationMode?: boolean;
 }
 
-type vtkAlgorithm = VtkObject & Omit<VtkAlgorithm,
-	'getInputData' |
-	'setInputData' |
-	'setInputConnection' |
-	'getInputConnection' |
-	'addInputConnection' |
-	'addInputData' > ;
+type vtkCursor3DBase = VtkObject & Omit<VtkAlgorithm,
+	| 'getInputData'
+	| 'setInputData'
+	| 'setInputConnection'
+	| 'getInputConnection'
+	| 'addInputConnection'
+	| 'addInputData'>;
 
-export interface vtkCursor3D extends vtkAlgorithm {
+export interface vtkCursor3D extends vtkCursor3DBase {
 
 	/**
 	 * Turn every part of the 3D cursor off.
@@ -48,22 +45,19 @@ export interface vtkCursor3D extends vtkAlgorithm {
 
 	/**
 	 * Get the position of cursor focus.
-	 *
 	 */
 	getFocalPoint(): number[];
 
 	/**
-	 *
 	 *
 	 */
 	getFocalPointByReference(): number[];
 
 	/**
 	 *
-	 *
 	 * @default null
 	 */
-	getFocus(): null | vtkPolyDat;
+	getFocus(): null | vtkPolyData;
 
 	/**
 	 * Set the boundary of the 3D cursor.
@@ -78,7 +72,6 @@ export interface vtkCursor3D extends vtkAlgorithm {
 	getModelBoundsByReference(): number[];
 
 	/**
-	 *
 	 *
 	 * @default true
 	 */
@@ -122,35 +115,35 @@ export interface vtkCursor3D extends vtkAlgorithm {
 	requestData(inData: any, outData: any): void;
 	/**
 	 *
-	 * @param flag
+	 * @param {Boolean} flag 
 	 */
 	setAll(flag: boolean): void;
 
 	/**
 	 * Turn on/off the wireframe axes.
-	 * @param axes
+	 * @param {Boolean} axes 
 	 */
 	setAxes(axes: boolean): boolean;
 
 	/**
-	 * Set/Get the position of cursor focus.
+	 * Set the position of cursor focus.
 	 * If translation mode is on, then the entire cursor (including bounding box, cursor, and shadows) is
 	 * translated. Otherwise, the focal point will either be clamped to the bounding box, or wrapped, if Wrap is on.
 	 * (Note: this behavior requires that the bounding box is set prior to the focal point.)
-	 * @param points
+	 * @param {Number[]} points 
 	 */
 	setFocalPoint(points: number[]): boolean;
 
 	/**
 	 * Set the boundary of the 3D cursor.
-	 * @param bounds
+	 * @param {Number[]} bounds The bounds of the 3D cursor.
 	 */
 	setModelBounds(bounds: number[]): boolean;
 
 	/**
 	 * Enable/disable the translation mode.
 	 * If on, changes in cursor position cause the entire widget to translate along with the cursor.
-	 * @param translationMode
+	 * @param {Boolean} translationMode 
 	 */
 	setTranslationMode(translationMode: boolean): boolean;
 
@@ -159,27 +152,27 @@ export interface vtkCursor3D extends vtkAlgorithm {
 	 * If the cursor focus moves outside the specified bounds,
 	 * the cursor will either be restrained against the nearest "wall" (Wrap=off),
 	 * or it will wrap around (Wrap=on).
-	 * @param wrap
+	 * @param {Number} wrap 
 	 */
 	setWrap(wrap: number): boolean;
 
 	/**
 	 * Turn on/off the wireframe x-shadows.
 
-	 * @param xLength
+	 * @param {Number} xLength 
 	 */
 	setXShadows(xLength: number): boolean;
 
 	/**
 	 * Turn on/off the wireframe y-shadows.
 
-	 * @param yLength
+	 * @param {Number} yLength 
 	 */
 	setYShadows(yLength: number): boolean;
 
 	/**
 	 * Turn on/off the wireframe z-shadows.
-	 * @param zLength
+	 * @param {Number} zLength 
 	 */
 	setZShadows(zLength: number): boolean;
 }

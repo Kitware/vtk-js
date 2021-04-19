@@ -1,8 +1,5 @@
 import { vec3 } from 'gl-matrix';
-import {
-	VtkAlgorithm,
-	VtkObject
-} from 'vtk.js/Sources/macro';
+import { VtkAlgorithm, VtkObject } from 'vtk.js/Sources/macro';
 
 /**
  * 
@@ -16,15 +13,15 @@ interface IPlaneSourceInitialValues {
 	pointType?: string;
 }
 
-type vtkAlgorithm = VtkObject & Omit<VtkAlgorithm,
-	'getInputData' |
-	'setInputData' |
-	'setInputConnection' |
-	'getInputConnection' |
-	'addInputConnection' |
-	'addInputData'>;
+type vtkPlaneSourceBase = VtkObject & Omit<VtkAlgorithm,
+	| 'getInputData'
+	| 'setInputData'
+	| 'setInputConnection'
+	| 'getInputConnection'
+	| 'addInputConnection'
+	| 'addInputData'>;
 
-export interface vtkPlaneSource extends vtkAlgorithm {
+export interface vtkPlaneSource extends vtkPlaneSourceBase {
 
 	/**
 	 * Get the center of the plane.

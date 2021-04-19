@@ -21,12 +21,12 @@ interface IElevationReaderInitialValues {
 }
 
 type vtkElevationReaderBase = VtkObject & Omit<VtkAlgorithm,
-	'getInputData' |
-	'setInputData' |
-	'setInputConnection' |
-	'getInputConnection' |
-	'addInputConnection' |
-	'addInputData'>;
+	| 'getInputData'
+	| 'setInputData'
+	| 'setInputConnection'
+	| 'getInputConnection'
+	| 'addInputConnection'
+	| 'addInputData'>;
 
 export interface vtkElevationReader extends vtkElevationReaderBase {
 
@@ -108,8 +108,8 @@ export interface vtkElevationReader extends vtkElevationReaderBase {
 
 	/**
 	 * Set the url of the object to load.
-	 * @param {String} [url] the url of the object to load.
-	 * @param {IElevationReaderOptions} option The PLY reader options.
+	 * @param {String} url the url of the object to load.
+	 * @param {IElevationReaderOptions} [option] The Elevation reader options.
 	 */
 	setUrl(url: string, option?: IElevationReaderOptions): boolean;
 

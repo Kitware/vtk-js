@@ -1,7 +1,4 @@
-import {
-	VtkAlgorithm,
-	VtkObject
-} from 'vtk.js/Sources/macro';
+import { VtkAlgorithm, VtkObject } from 'vtk.js/Sources/macro';
 
 /**
  *
@@ -16,15 +13,15 @@ interface ICircleSourceInitialValues {
 	generate3DTextureCoordinates?: boolean;
 }
 
-type vtkAlgorithm = VtkObject & Omit<VtkAlgorithm,
-	'getInputData' |
-	'setInputData' |
-	'setInputConnection' |
-	'getInputConnection' |
-	'addInputConnection' |
-	'addInputData' > ;
+type vtkCubeSourceBase = VtkObject & Omit<VtkAlgorithm,
+	| 'getInputData'
+	| 'setInputData'
+	| 'setInputConnection'
+	| 'getInputConnection'
+	| 'addInputConnection'
+	| 'addInputData'>;
 
-export interface vtkCubeSource extends vtkAlgorithm {
+export interface vtkCubeSource extends vtkCubeSourceBase {
 
 	/**
 	 * Get the center of the cube.

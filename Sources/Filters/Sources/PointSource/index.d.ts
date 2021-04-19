@@ -1,7 +1,4 @@
-import {
-	VtkAlgorithm,
-	VtkObject
-} from 'vtk.js/Sources/macro';
+import { VtkAlgorithm, VtkObject } from 'vtk.js/Sources/macro';
 
 /**
  * 
@@ -13,15 +10,15 @@ interface IPointSourceInitialValues {
 	pointType?: string;
 }
 
-type vtkAlgorithm = VtkObject & Omit<VtkAlgorithm,
-	'getInputData' |
-	'setInputData' |
-	'setInputConnection' |
-	'getInputConnection' | 
-	'addInputConnection' | 
-	'addInputData' > ;
+type vtkPointSourceBase = VtkObject & Omit<VtkAlgorithm,
+	| 'getInputData'
+	| 'setInputData'
+	| 'setInputConnection'
+	| 'getInputConnection'
+	| 'addInputConnection'
+	| 'addInputData'>;
 
-export interface vtkPointSource extends vtkAlgorithm {
+export interface vtkPointSource extends vtkPointSourceBase {
 
 	/**
 	 * Get the center of the plane.

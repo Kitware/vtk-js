@@ -1,7 +1,4 @@
-import {
-	VtkAlgorithm,
-	VtkObject
-} from 'vtk.js/Sources/macro';
+import { VtkAlgorithm, VtkObject } from 'vtk.js/Sources/macro';
 
 export enum ShapeType {
 	TRIANGLE,
@@ -24,15 +21,15 @@ interface IArrowSourceInitialValues {
 	pointType?: string;
 }
 
-type vtkAlgorithm = VtkObject & Omit<VtkAlgorithm,
-	'getInputData' |
-	'setInputData' |
-	'setInputConnection' |
-	'getInputConnection' |
-	'addInputConnection' |
-	'addInputData' > ;
+type vtkArrowSourceBase = VtkObject & Omit<VtkAlgorithm,
+	| 'getInputData'
+	| 'setInputData'
+	| 'setInputConnection'
+	| 'getInputConnection'
+	| 'addInputConnection'
+	| 'addInputData'>;
 
-export interface vtkArrowSource extends vtkAlgorithm {
+export interface vtkArrowSource extends vtkArrowSourceBase {
 
 	/**
 	 * Get the orientation vector of the cone.

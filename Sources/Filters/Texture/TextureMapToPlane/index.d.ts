@@ -91,7 +91,7 @@ export interface vtkTextureMapToPlane extends vtkTextureMapToPlaneBase {
 
 	/**
 	 * Turn on/off the automatic plane generation.
-	 * @param automaticPlaneGeneration 
+	 * @param {Number} automaticPlaneGeneration 
 	 */
 	setAutomaticPlaneGeneration(automaticPlaneGeneration: number): boolean;
 
@@ -103,113 +103,113 @@ export interface vtkTextureMapToPlane extends vtkTextureMapToPlaneBase {
 
 	/**
 	 * Set the normal object.
-	 * @param x 
-	 * @param y 
-	 * @param z 
+	 * @param {Number} x The x coordinate.
+	 * @param {Number} y The y coordinate.
+	 * @param {Number} z The z coordinate.
 	 */
 	setNormal(x: number, y: number, z: number): boolean;
 
 	/**
-	 * 
+	 * Set the normal object.
 	 * @param {Number[]} normal The normal object coordinates.
 	 */
 	setNormalFrom(normal: number[]): boolean;
 
 	/**
 	 * Set the origin of the plane.
-	 * @param origin 
+	 * @param {Number[]} origin The origin of the plane.
 	 */
 	setOrigin(origin: number[]): boolean;
 
 	/**
 	 * Set the origin of the plane.
-	 * @param x 
-	 * @param y 
-	 * @param z 
+	 * @param {Number} x The x coordinate.
+	 * @param {Number} y The y coordinate.
+	 * @param {Number} z The z coordinate.
 	 */
 	setOrigin(x: number, y: number, z: number): boolean;
 
 	/**
 	 * Set the origin of the plane.
-	 * @param origin 
+	 * @param {Number[]} origin The origin of the plane.
 	 */
 	setOriginFrom(origin: number[]): boolean;
 
 	/**
 	 * Set the point which defines the first axis of the plane.
-	 * @param point1 
+	 * @param {Number[]} point1 The coordinate of the point.
 	 */
 	setPoint1(point1: number[]): boolean;
 
 	/**
 	 * Set the point which defines the first axis of the plane.
-	 * @param x 
-	 * @param y 
-	 * @param z 
+	 * @param {Number} x The x coordinate of the point.
+	 * @param {Number} y The y coordinate of the point.
+	 * @param {Number} z The z coordinate of the point.
 	 */
 	setPoint1(x: number, y: number, z: number): boolean;
 
 	/**
 	 * Set the point which defines the first axis of the plane.
-	 * @param point1 
+	 * @param {Number[]} point1 The coordinate of the point.
 	 */
 	setPoint1From(point1: number[]): boolean;
 
 	/**
 	 * Set the point which defines the second axis of the plane
-	 * @param point2 
+	 * @param {Number[]} point2 The coordinate of the point.
 	 */
 	setPoint2(point2: number[]): boolean;
 
 	/**
 	 * Set the point which defines the second axis of the plane
-	 * @param x 
-	 * @param y 
-	 * @param z 
+	 * @param {Number} x The x coordinate of the point.
+	 * @param {Number} y The y coordinate of the point.
+	 * @param {Number} z The z coordinate of the point.
 	 */
 	setPoint2(x: number, y: number, z: number): boolean;
 
 	/**
 	 * Set the point which defines the second axis of the plane
-	 * @param point2 
+	 * @param {Number[]} point2 The coordinate of the point.
 	 */
 	setPoint2From(point2: number[]): boolean;
 
 	/**
 	 * Set the s-coordinate range for texture s-t coordinate pair.
-	 * @param sRange 
+	 * @param {Number[]} sRange The s-coordinate range.
 	 */
 	setSRange(sRange: number[]): boolean;
 
 	/**
 	 * Set the s-coordinate range for texture s-t coordinate pair.
-	 * @param min 
-	 * @param max 
+	 * @param {Number} min The min of the s-coordinate range
+	 * @param {Number} max The min of the s-coordinate range.
 	 */
 	setSRange(min: number, max: number): boolean;
 
 	/**
 	 * Set the s-coordinate range for texture s-t coordinate pair.
-	 * @param sRange 
+	 * @param {Number[]} sRange The s-coordinate range.
 	 */
 	setSRangeFrom(sRange: number[]): boolean;
 
 	/**
 	 * Set the t-coordinate range for texture s-t coordinate pair.
-	 * @param tRange 
+	 * @param {Number[]} tRange The t-coordinate range.
 	 */
 	setTRange(tRange: number[]): boolean;
 
 	/**
 	 * Set the t-coordinate range for texture s-t coordinate pair.
-	 * @param min 
-	 * @param max 
+	 * @param {Number} min The min of the t-coordinate range
+	 * @param {Number} max The min of the t-coordinate range.
 	 */
 	setTRange(min: number, max: number): boolean;
 
 	/**
 	 * Set the t-coordinate range for texture s-t coordinate pair.
-	 * @param tRange 
+	 * @param {Number[]} tRange The t-coordinate range.
 	 */
 	setTRangeFrom(tRange: number[]): boolean;
 }
