@@ -29,14 +29,14 @@ export interface vtkDataArray extends VtkObject {
 
 	/**
 	 * Get the component for a given tupleIdx.
-	 * @param {Number[]} tupleIdx 
+	 * @param {Number} tupleIdx 
 	 * @param {Number} [componentIndex] (default: 0)
 	 */
 	getComponent(tupleIdx: number, componentIndex?: number): number;
 
 	/**
 	 * Set the component value for a given tupleIdx and componentIndex.
-	 * @param {Number[]} tupleIdx 
+	 * @param {Number} tupleIdx 
 	 * @param {Number} componentIndex 
 	 * @param {Number} value 
 	 */
@@ -56,7 +56,7 @@ export interface vtkDataArray extends VtkObject {
 
 	/**
 	 * 
-	 * @param {vtkRange}  rangeValue 
+	 * @param {vtkRange} rangeValue 
 	 * @param {Number} componentIndex 
 	 */
 	setRange(rangeValue: vtkRange, componentIndex: number): [number, number];
