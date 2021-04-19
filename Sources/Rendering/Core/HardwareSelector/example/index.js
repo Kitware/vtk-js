@@ -11,7 +11,6 @@ import vtkDataArray from 'vtk.js/Sources/Common/Core/DataArray';
 import vtkFullScreenRenderWindow from 'vtk.js/Sources/Rendering/Misc/FullScreenRenderWindow';
 import vtkGlyph3DMapper from 'vtk.js/Sources/Rendering/Core/Glyph3DMapper';
 import vtkMapper from 'vtk.js/Sources/Rendering/Core/Mapper';
-import vtkOpenGLHardwareSelector from 'vtk.js/Sources/Rendering/OpenGL/HardwareSelector';
 import vtkSphereSource from 'vtk.js/Sources/Filters/Sources/SphereSource';
 
 import { FieldAssociations } from 'vtk.js/Sources/Common/DataModel/DataSet/Constants';
@@ -136,7 +135,7 @@ const fullScreenRenderer = vtkFullScreenRenderWindow.newInstance();
 const renderer = fullScreenRenderer.getRenderer();
 const renderWindow = renderer.getRenderWindow();
 const interactor = renderWindow.getInteractor();
-const openGLRenderWindow = interactor.getView();
+const apiSpecificRenderWindow = interactor.getView();
 
 renderer.addActor(sphereActor);
 renderer.addActor(spherePointsActor);
@@ -151,13 +150,11 @@ renderWindow.render();
 // Create hardware selector
 // ----------------------------------------------------------------------------
 
-const hardwareSelector = vtkOpenGLHardwareSelector.newInstance({
-  captureZValues: true,
-});
+const hardwareSelector = apiSpecificRenderWindow.getSelector();
+hardwareSelector.setCaptureZValues(true);
 hardwareSelector.setFieldAssociation(
   FieldAssociations.FIELD_ASSOCIATION_POINTS
 );
-hardwareSelector.attach(openGLRenderWindow, renderer);
 
 // ----------------------------------------------------------------------------
 // Create Mouse listener for picking on mouse move
@@ -167,7 +164,7 @@ function eventToWindowXY(event) {
   // We know we are full screen => window.innerXXX
   // Otherwise we can use pixel device ratio or else...
   const { clientX, clientY } = event;
-  const [width, height] = openGLRenderWindow.getSize();
+  const [width, height] = apiSpecificRenderWindow.getSize();
   const x = Math.round((width * clientX) / window.innerWidth);
   const y = Math.round(height * (1 - clientY / window.innerHeight)); // Need to flip Y
   return [x, y];
@@ -236,15 +233,15 @@ function pickOnMouseEvent(event) {
     return;
   }
   const [x, y] = eventToWindowXY(event);
-  hardwareSelector.setArea(x, y, x, y);
-  hardwareSelector.releasePixBuffers();
 
   pointerActor.setVisibility(false);
-  if (hardwareSelector.captureBuffers()) {
-    processSelections(hardwareSelector.generateSelection(x, y, x, y));
-  } else {
-    processSelections(null);
-  }
+  hardwareSelector.getSourceDataAsync(renderer, x, y, x, y).then((result) => {
+    if (result) {
+      processSelections(result.generateSelection(x, y, x, y));
+    } else {
+      processSelections(null);
+    }
+  });
 }
 const throttleMouseHandler = throttle(pickOnMouseEvent, 100);
 

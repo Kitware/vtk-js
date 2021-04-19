@@ -31,9 +31,9 @@ ToDo
 - volume rendering
 - actor matrix support with auto shift
 - sphere/stick mappers
-- hardware selector
 - eventually switch to using IBOs and flat interpolation
 - cropping planes for polydata mapper
+- update widgets to use the new async hardware selector API
 
 Developer Notes
 ============
