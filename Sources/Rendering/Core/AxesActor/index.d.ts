@@ -49,43 +49,43 @@ export interface vtkAxesActor extends vtkActor {
     setConfig(config: object): boolean;
 
     /**
-     * 
-     * @param r 
-     * @param g 
-     * @param b 
+     * Set X axis color.
+     * @param {Number} r Defines the red component (between 0 and 1).
+     * @param {Number} g Defines the green component (between 0 and 1).
+     * @param {Number} b Defines the blue component (between 0 and 1).
      */
     setXAxisColor(r: number, g: number, b: number): boolean;
 
     /**
-     * 
+     * Set X axis color.
      * @param XAxisColor 
      */
     setXAxisColorFrom(XAxisColor: number[]): boolean;
 
     /**
-     * 
-     * @param r 
-     * @param g 
-     * @param b 
+     * Set Y axis color.
+     * @param {Number} r Defines the red component (between 0 and 1).
+     * @param {Number} g Defines the green component (between 0 and 1).
+     * @param {Number} b Defines the blue component (between 0 and 1).
      */
     setYAxisColor(r: number, g: number, b: number): boolean;
 
     /**
-     * 
+     * Set Y axis color.
      * @param YAxisColor 
      */
     setYAxisColorFrom(YAxisColor: number[]): boolean;
 
     /**
-     * 
-     * @param r 
-     * @param g 
-     * @param b 
+     * Set Z axis color.
+     * @param {Number} r Defines the red component (between 0 and 1).
+     * @param {Number} g Defines the green component (between 0 and 1).
+     * @param {Number} b Defines the blue component (between 0 and 1).
      */
     setZAxisColor(r: number, g: number, b: number): boolean;
 
     /**
-     * 
+     * Set E axis color.
      * @param ZAxisColor 
      */
     setZAxisColorFrom(ZAxisColor: number[]): boolean;
@@ -101,13 +101,13 @@ export interface vtkAxesActor extends vtkActor {
  *
  * @param publicAPI object on which methods will be bounds (public)
  * @param model object on which data structure will be bounds (protected)
- * @param initialValues (default: {})
+ * @param {IAxesActorInitialValues} [initialValues] (default: {})
  */
 export function extend(publicAPI: object, model: object, initialValues?: IAxesActorInitialValues): void;
 
 /**
  * Method use to create a new instance of vtkAxesActor.
- * @param initialValues for pre-setting some of its content
+ * @param {IAxesActorInitialValues} [initialValues] for pre-setting some of its content
  */
 export function newInstance(initialValues?: IAxesActorInitialValues): vtkAxesActor;
 
@@ -121,11 +121,8 @@ export function newInstance(initialValues?: IAxesActorInitialValues): vtkAxesAct
  * Since this class inherits from vtkProp3D, one can apply a user transform to the underlying 
  * geometry and the positioning of the labels. For example, a rotation transform could be used to 
  * generate a left-handed axes representation.
- * @see vtkAnnotatedCubeActor
- * @see vtkOrientationMarkerWidget
- * @see vtkCaptionActor2D
- * @see vtkTextProperty
- * 
+ * @see [vtkAnnotatedCubeActor](./Rendering_Core_AnnotatedCubeActor.html)
+ * @see [vtkOrientationMarkerWidget](./Interaction_Widgets_OrientationMarkerWidget.html)
  */
 export declare const vtkAxesActor: {
     newInstance: typeof newInstance,

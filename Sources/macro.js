@@ -80,16 +80,26 @@ export function vtkOnceErrorMacro(str) {
 // TypedArray
 // ----------------------------------------------------------------------------
 
-export const TYPED_ARRAYS = {
-  Float32Array,
-  Float64Array,
-  Uint8Array,
-  Int8Array,
-  Uint16Array,
-  Int16Array,
-  Uint32Array,
-  Int32Array,
-};
+export const TYPED_ARRAYS = Object.create(null);
+TYPED_ARRAYS.Float32Array = Float32Array;
+TYPED_ARRAYS.Float64Array = Float64Array;
+TYPED_ARRAYS.Uint8Array = Uint8Array;
+TYPED_ARRAYS.Int8Array = Int8Array;
+TYPED_ARRAYS.Uint16Array = Uint16Array;
+TYPED_ARRAYS.Int16Array = Int16Array;
+TYPED_ARRAYS.Uint32Array = Uint32Array;
+TYPED_ARRAYS.Int32Array = Int32Array;
+TYPED_ARRAYS.Uint8ClampedArray = Uint8ClampedArray;
+// TYPED_ARRAYS.BigInt64Array = BigInt64Array;
+// TYPED_ARRAYS.BigUint64Array = BigUint64Array;
+
+export function newTypedArray(type, ...args) {
+  return new (TYPED_ARRAYS[type] || Float64Array)(...args);
+}
+
+export function newTypedArrayFrom(type, ...args) {
+  return (TYPED_ARRAYS[type] || Float64Array).from(...args);
+}
 
 // ----------------------------------------------------------------------------
 // capitilze provided string
@@ -312,7 +322,11 @@ export function obj(publicAPI = {}, model = {}) {
 
     // Convert every vtkObject to its serializable form
     Object.keys(jsonArchive).forEach((keyName) => {
-      if (jsonArchive[keyName] === null || jsonArchive[keyName] === undefined) {
+      if (
+        jsonArchive[keyName] === null ||
+        jsonArchive[keyName] === undefined ||
+        keyName[0] === '_' // protected members start with _
+      ) {
         delete jsonArchive[keyName];
       } else if (jsonArchive[keyName].isA) {
         jsonArchive[keyName] = jsonArchive[keyName].getState();
@@ -514,7 +528,7 @@ export function setArray(
 
       let array = args;
       // allow an array passed as a single arg.
-      if (array.length === 1 && Array.isArray(array[0])) {
+      if (array.length === 1 && array[0].length) {
         /* eslint-disable prefer-destructuring */
         array = array[0];
         /* eslint-enable prefer-destructuring */
@@ -522,7 +536,7 @@ export function setArray(
 
       if (array.length !== size) {
         if (array.length < size && defaultVal !== undefined) {
-          array = [].concat(array);
+          array = Array.from(array);
           while (array.length < size) array.push(defaultVal);
         } else {
           throw new RangeError(
@@ -530,18 +544,12 @@ export function setArray(
           );
         }
       }
-      let changeDetected = false;
-      model[field].forEach((item, index) => {
-        if (item !== array[index]) {
-          if (changeDetected) {
-            return;
-          }
-          changeDetected = true;
-        }
-      });
+      const changeDetected = model[field].some(
+        (item, index) => item !== array[index]
+      );
 
       if (changeDetected || model[field].length !== array.length) {
-        model[field] = [].concat(array);
+        model[field] = Array.from(array);
         publicAPI.modified();
         return true;
       }
@@ -1628,6 +1636,8 @@ export default {
   isVtkObject,
   keystore,
   newInstance,
+  newTypedArray,
+  newTypedArrayFrom,
   normalizeWheel,
   obj,
   proxy,
@@ -1642,7 +1652,7 @@ export default {
   setLoggerFunction,
   throttle,
   traverseInstanceTree,
-  TYPED_ARRAYS,
+  TYPED_ARRAYS, // deprecated todo remove on breaking API revision
   uncapitalize,
   VOID,
   vtkDebugMacro,

@@ -2,11 +2,11 @@ import macro from 'vtk.js/Sources/macro';
 import { registerViewConstructor } from 'vtk.js/Sources/Rendering/Core/RenderWindow';
 import vtkForwardPass from 'vtk.js/Sources/Rendering/WebGPU/ForwardPass';
 import vtkWebGPUDevice from 'vtk.js/Sources/Rendering/WebGPU/Device';
+import vtkWebGPUHardwareSelector from 'vtk.js/Sources/Rendering/WebGPU/HardwareSelector';
 import vtkWebGPUSwapChain from 'vtk.js/Sources/Rendering/WebGPU/SwapChain';
 import vtkWebGPUViewNodeFactory from 'vtk.js/Sources/Rendering/WebGPU/ViewNodeFactory';
 import vtkRenderPass from 'vtk.js/Sources/Rendering/SceneGraph/RenderPass';
-import vtkViewNode from 'vtk.js/Sources/Rendering/SceneGraph/ViewNode';
-// import vtkOpenGLTextureUnitManager from 'vtk.js/Sources/Rendering/OpenGL/TextureUnitManager';
+import vtkRenderWindowViewNode from 'vtk.js/Sources/Rendering/SceneGraph/RenderWindowViewNode';
 // import { VtkDataTypes } from 'vtk.js/Sources/Common/Core/DataArray/Constants';
 
 const { vtkErrorMacro } = macro;
@@ -65,18 +65,6 @@ function vtkWebGPURenderWindow(publicAPI, model) {
     }
   };
 
-  publicAPI.getPipeline = (hash) => {
-    if (hash in model.pipelines) {
-      return model.pipelines[hash];
-    }
-    return null;
-  };
-
-  publicAPI.createPipeline = (hash, pipeline) => {
-    pipeline.initialize(publicAPI);
-    model.pipelines[hash] = pipeline;
-  };
-
   // Builds myself.
   publicAPI.buildPass = (prepass) => {
     if (prepass) {
@@ -99,6 +87,21 @@ function vtkWebGPURenderWindow(publicAPI, model) {
       model.commandEncoder = model.device.createCommandEncoder();
     }
   };
+
+  // publicAPI.traverseRenderers = (renPass) => {
+  //   // iterate over renderers
+  //   const numlayers = publicAPI.getRenderable().getNumberOfLayers();
+  //   const renderers = publicAPI.getChildren();
+  //   for (let i = 0; i < numlayers; i++) {
+  //     for (let index = 0; index < renderers.length; index++) {
+  //       const renNode = renderers[index];
+  //       const ren = publicAPI.getRenderable().getRenderers()[index];
+  //       if (ren.getDraw() && ren.getLayer() === i) {
+  //         renNode.traverse(renPass);
+  //       }
+  //     }
+  //   }
+  // };
 
   publicAPI.initialize = () => {
     if (!model.initializing) {
@@ -153,132 +156,7 @@ function vtkWebGPURenderWindow(publicAPI, model) {
     return model.containerSize || model.size;
   };
 
-  publicAPI.getFramebufferSize = () => {
-    if (model.activeFramebuffer) {
-      return model.activeFramebuffer.getSize();
-    }
-    return model.size;
-  };
-
-  publicAPI.isInViewport = (x, y, viewport) => {
-    const vCoords = viewport.getViewportByReference();
-    const size = publicAPI.getFramebufferSize();
-    if (
-      vCoords[0] * size[0] <= x &&
-      vCoords[2] * size[0] >= x &&
-      vCoords[1] * size[1] <= y &&
-      vCoords[3] * size[1] >= y
-    ) {
-      return true;
-    }
-    return false;
-  };
-
-  publicAPI.getViewportSize = (viewport) => {
-    const vCoords = viewport.getViewportByReference();
-    const size = publicAPI.getFramebufferSize();
-
-    return [
-      (vCoords[2] - vCoords[0]) * size[0],
-      (vCoords[3] - vCoords[1]) * size[1],
-    ];
-  };
-
-  publicAPI.getViewportCenter = (viewport) => {
-    const size = publicAPI.getViewportSize(viewport);
-    return [size[0] * 0.5, size[1] * 0.5];
-  };
-
-  publicAPI.displayToNormalizedDisplay = (x, y, z) => {
-    const size = publicAPI.getFramebufferSize();
-    return [x / size[0], y / size[1], z];
-  };
-
-  publicAPI.normalizedDisplayToDisplay = (x, y, z) => {
-    const size = publicAPI.getFramebufferSize();
-    return [x * size[0], y * size[1], z];
-  };
-
-  publicAPI.worldToView = (x, y, z, renderer) => renderer.worldToView(x, y, z);
-
-  publicAPI.viewToWorld = (x, y, z, renderer) => renderer.viewToWorld(x, y, z);
-
-  publicAPI.worldToDisplay = (x, y, z, renderer) => {
-    const val = renderer.worldToView(x, y, z);
-    const dims = publicAPI.getViewportSize(renderer);
-    const val2 = renderer.viewToProjection(
-      val[0],
-      val[1],
-      val[2],
-      dims[0] / dims[1]
-    );
-    const val3 = renderer.projectionToNormalizedDisplay(
-      val2[0],
-      val2[1],
-      val2[2]
-    );
-    return publicAPI.normalizedDisplayToDisplay(val3[0], val3[1], val3[2]);
-  };
-
-  publicAPI.displayToWorld = (x, y, z, renderer) => {
-    const val = publicAPI.displayToNormalizedDisplay(x, y, z);
-    const val2 = renderer.normalizedDisplayToProjection(val[0], val[1], val[2]);
-    const dims = publicAPI.getViewportSize(renderer);
-    const val3 = renderer.projectionToView(
-      val2[0],
-      val2[1],
-      val2[2],
-      dims[0] / dims[1]
-    );
-    return renderer.viewToWorld(val3[0], val3[1], val3[2]);
-  };
-
-  publicAPI.normalizedDisplayToViewport = (x, y, z, renderer) => {
-    let vCoords = renderer.getViewportByReference();
-    vCoords = publicAPI.normalizedDisplayToDisplay(vCoords[0], vCoords[1], 0.0);
-    const coords = publicAPI.normalizedDisplayToDisplay(x, y, z);
-    return [coords[0] - vCoords[0] - 0.5, coords[1] - vCoords[1] - 0.5, z];
-  };
-
-  publicAPI.viewportToNormalizedViewport = (x, y, z, renderer) => {
-    const size = publicAPI.getViewportSize(renderer);
-    if (size && size[0] !== 0 && size[1] !== 0) {
-      return [x / (size[0] - 1.0), y / (size[1] - 1.0), z];
-    }
-    return [x, y, z];
-  };
-
-  publicAPI.normalizedViewportToViewport = (x, y, z) => {
-    const size = publicAPI.getFramebufferSize();
-    return [x * (size[0] - 1.0), y * (size[1] - 1.0), z];
-  };
-
-  publicAPI.displayToLocalDisplay = (x, y, z) => {
-    const size = publicAPI.getFramebufferSize();
-    return [x, size[1] - y - 1, z];
-  };
-
-  publicAPI.viewportToNormalizedDisplay = (x, y, z, renderer) => {
-    let vCoords = renderer.getViewportByReference();
-    vCoords = publicAPI.normalizedDisplayToDisplay(vCoords[0], vCoords[1], 0.0);
-    const x2 = x + vCoords[0] + 0.5;
-    const y2 = y + vCoords[1] + 0.5;
-    return publicAPI.displayToNormalizedDisplay(x2, y2, z);
-  };
-
-  publicAPI.getPixelData = (x1, y1, x2, y2) => {
-    const pixels = new Uint8Array((x2 - x1 + 1) * (y2 - y1 + 1) * 4);
-    model.context.readPixels(
-      x1,
-      y1,
-      x2 - x1 + 1,
-      y2 - y1 + 1,
-      model.context.RGBA,
-      model.context.UNSIGNED_BYTE,
-      pixels
-    );
-    return pixels;
-  };
+  publicAPI.getFramebufferSize = () => model.size;
 
   publicAPI.create3DContext = () => {
     model.initializing = true;
@@ -430,6 +308,18 @@ function vtkWebGPURenderWindow(publicAPI, model) {
     return true;
   };
 
+  publicAPI.getUniquePropID = () => model.nextPropID++;
+
+  publicAPI.getPropFromID = (id) => {
+    for (let i = 0; i < model.children.length; i++) {
+      const res = model.children[i].getPropFromID(id);
+      if (res !== null) {
+        return res;
+      }
+    }
+    return null;
+  };
+
   publicAPI.delete = macro.chain(publicAPI.delete, publicAPI.setViewStream);
 }
 
@@ -444,10 +334,8 @@ const DEFAULT_VALUES = {
   device: null,
   canvas: null,
   swapChain: null,
-  pipelines: null,
   cullFaceEnabled: false,
   depthMaskEnabled: true,
-  size: [300, 300],
   cursorVisibility: true,
   cursor: 'pointer',
   textureUnitManager: null,
@@ -455,10 +343,10 @@ const DEFAULT_VALUES = {
   containerSize: null,
   renderPasses: [],
   notifyStartCaptureImage: false,
-  activeFramebuffer: null,
   imageFormat: 'image/png',
   useOffScreen: false,
   useBackgroundImage: false,
+  nextPropID: 1,
 };
 
 // ----------------------------------------------------------------------------
@@ -480,10 +368,9 @@ export function extend(publicAPI, model, initialValues = {}) {
   model.bgImage.style.zIndex = '-1';
 
   model.swapChain = vtkWebGPUSwapChain.newInstance();
-  model.pipelines = {};
 
   // Inheritance
-  vtkViewNode.extend(publicAPI, model, initialValues);
+  vtkRenderWindowViewNode.extend(publicAPI, model, initialValues);
 
   model.myFactory = vtkWebGPUViewNodeFactory.newInstance();
   /* eslint-disable no-use-before-define */
@@ -492,6 +379,11 @@ export function extend(publicAPI, model, initialValues = {}) {
 
   // setup default forward pass rendering
   model.renderPasses[0] = vtkForwardPass.newInstance();
+
+  if (!model.selector) {
+    model.selector = vtkWebGPUHardwareSelector.newInstance();
+    model.selector.setWebGPURenderWindow(publicAPI);
+  }
 
   macro.event(publicAPI, model, 'imageReady');
 
@@ -513,11 +405,6 @@ export function extend(publicAPI, model, initialValues = {}) {
     'notifyStartCaptureImage',
     'cursor',
     'useOffScreen',
-    // might want to make this not call modified as
-    // we change the active framebuffer a lot. Or maybe
-    // only mark modified if the size or depth
-    // of the buffer has changed
-    'activeFramebuffer',
   ]);
 
   macro.setGetArray(publicAPI, model, ['size'], 2);

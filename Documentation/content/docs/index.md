@@ -28,21 +28,25 @@ You can learn more about what vtk.js can do for you via the [examples](../exampl
 </style>
 
 <div class="gallery">
+
 [![Calculator Example][Calculator]](../examples/Calculator.html)
 [![WarpScalar Example][WarpScalar]](../examples/WarpScalar.html)
 [![PlaneSource Example][PlaneSource]](../examples/PlaneSource.html)
 [![HttpSceneLoader Example][HttpSceneLoader]](../examples/HttpSceneLoader.html)
+
 </div>
 
 ## Standalone dataset viewer
 
 <div class="gallery">
+
 ![BloodCell][BloodCell]
 ![Lidar][lidar]
 ![Earth][earth]
 ![Reactor][Reactor]
 ![Molecule][molecule]
 ![OpenFoam bike][bike]
+
 </div>
 
 [Calculator]: ./gallery/Calculator.jpg

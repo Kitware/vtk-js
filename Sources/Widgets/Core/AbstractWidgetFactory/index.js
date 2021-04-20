@@ -27,7 +27,7 @@ function vtkAbstractWidgetFactory(publicAPI, model) {
 
       const {
         interactor,
-        openGLRenderWindow,
+        apiSpecificRenderWindow,
         camera,
       } = extractRenderingComponents(renderer);
       const widgetModel = {};
@@ -38,7 +38,7 @@ function vtkAbstractWidgetFactory(publicAPI, model) {
         viewType,
         renderer,
         camera,
-        openGLRenderWindow,
+        apiSpecificRenderWindow,
         factory: publicAPI,
       });
       macro.safeArrays(widgetModel);
@@ -131,6 +131,13 @@ function vtkAbstractWidgetFactory(publicAPI, model) {
     const viewIds = Object.keys(viewToWidget);
     for (let i = 0; i < viewIds.length; i++) {
       viewToWidget[viewIds[i]].setPickable(value);
+    }
+  };
+
+  publicAPI.setDragable = (value) => {
+    const viewIds = Object.keys(viewToWidget);
+    for (let i = 0; i < viewIds.length; i++) {
+      viewToWidget[viewIds[i]].setDragable(value);
     }
   };
 

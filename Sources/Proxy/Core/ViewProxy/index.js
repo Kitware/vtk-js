@@ -5,7 +5,7 @@ import vtkAxesActor from 'vtk.js/Sources/Rendering/Core/AxesActor';
 import vtkCornerAnnotation from 'vtk.js/Sources/Interaction/UI/CornerAnnotation';
 import vtkInteractorStyleManipulator from 'vtk.js/Sources/Interaction/Style/InteractorStyleManipulator';
 import vtkMatrixBuilder from 'vtk.js/Sources/Common/Core/MatrixBuilder';
-import vtkOpenGLRenderWindow from 'vtk.js/Sources/Rendering/OpenGL/RenderWindow';
+import 'vtk.js/Sources/Rendering/Misc/RenderingAPIs';
 import vtkOrientationMarkerWidget from 'vtk.js/Sources/Interaction/Widgets/OrientationMarkerWidget';
 import vtkRenderer from 'vtk.js/Sources/Rendering/Core/Renderer';
 import vtkRenderWindow from 'vtk.js/Sources/Rendering/Core/RenderWindow';
@@ -37,7 +37,7 @@ function vtkViewProxy(publicAPI, model) {
   model.renderer = vtkRenderer.newInstance({ background: [0, 0, 0] });
   model.renderWindow.addRenderer(model.renderer);
 
-  model.openglRenderWindow = vtkOpenGLRenderWindow.newInstance();
+  model.openglRenderWindow = model.renderWindow.newAPISpecificView();
   model.renderWindow.addView(model.openglRenderWindow);
 
   model.interactor = vtkRenderWindowInteractor.newInstance();
@@ -622,7 +622,7 @@ function extend(publicAPI, model, initialValues = {}) {
     'interactor',
     'interactorStyle2D',
     'interactorStyle3D',
-    'openglRenderWindow',
+    'openglRenderWindow', // todo breaking? convert to apiSpecificWindow
     'orientationAxesType',
     'presetToOrientationAxes',
     'renderer',

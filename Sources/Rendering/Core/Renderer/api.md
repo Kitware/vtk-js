@@ -1,181 +1,909 @@
 ## Introduction
 
-Renderer is a Viewport designed to hold 3D properties. It contains
+vtkRenderer is a Viewport designed to hold 3D properties. It contains
 an instance of vtkCamera, a collection of vtkLights, and vtkActors. It exists
 within a RenderWindow. A RenderWindow may have multiple Renderers
 representing different viewports of the Window and Renderers can be layered
 on top of each other as well.
 
-### getActors() : [] / addActor(actor) / removeActor(actor) / removeAllActors()
 
-Actors that compose the renderer.
 
-### getVolumes() : [] / addVolume(volume) / removeVolume(volume) / removeAllVolumes()
 
-Volumes that compose the renderer.
+## Methods
 
-### getLights() : [] / addLight(light) / removeLight(light) / removeAllLights()
 
-Lights that compose the renderer.
+### actors
 
-### twoSidedLighting (set/get Boolean)
 
-Turn on/off two-sided lighting of surfaces. If two-sided lighting is
-off, then only the side of the surface facing the light(s) will be lit,
-and the other side dark. If two-sided lighting on, both sides of the
-surface will be lit.
 
-### lightFollowCamera (set/get Boolean)
 
-Turn on/off the automatic repositioning of lights as the camera moves.
-If LightFollowCamera is on, lights that are designated as Headlights
-or CameraLights will be adjusted to move with this renderer's camera.
-If LightFollowCamera is off, the lights will not be adjusted.
 
-(Note: In previous versions of vtk, this light-tracking
-functionality was part of the interactors, not the renderer. For
-backwards compatibility, the older, more limited interactor
-behavior is enabled by default. To disable this mode, turn the
-interactor's LightFollowCamera flag OFF, and leave the renderer's
-LightFollowCamera flag ON.)
+### addActor
 
-### updateLightsGeometryToFollowCamera()
+
+
+
+| Argument | Type | Description |
+| ------------- | ------------- | ----- |
+| **actor** | <span class="arg-type"></span></br></span><span class="arg-required">required</span> |  |
+
+
+### addLight
+
+Add a light to the list of lights.
+
+
+| Argument | Type | Description |
+| ------------- | ------------- | ----- |
+| **light** | <span class="arg-type"></span></br></span><span class="arg-required">required</span> |  |
+
+
+### addVolume
+
+
+
+
+| Argument | Type | Description |
+| ------------- | ------------- | ----- |
+| **volume** | <span class="arg-type"></span></br></span><span class="arg-required">required</span> |  |
+
+
+### allBounds
+
+
+
+
+
+### allocateTime
+
+Not Implemented yet
+
+
+
+### allocatedRenderTime
+
+
+
+
+
+### ambient
+
+
+
+
+
+### automaticLightCreation
+
+
+
+
+
+### clippingRangeExpansion
+
+
+
+
+
+### computeVisiblePropBounds
+
+
+
+
+
+### createLight
+
+Create and add a light to renderer.
+
+
+
+### draw
+
+
+
+
+
+### erase
+
+
+
+
+
+### extend
+
+Method use to decorate a given object (publicAPI+model) with vtkRenderer characteristics.
+
+
+| Argument | Type | Description |
+| ------------- | ------------- | ----- |
+| **publicAPI** | <span class="arg-type"></span></br></span><span class="arg-required">required</span> | object on which methods will be bounds (public) |
+| **model** | <span class="arg-type"></span></br></span><span class="arg-required">required</span> | object on which data structure will be bounds (protected) |
+| **initialValues** | <span class="arg-type"></span></br></span><span class="arg-required">required</span> | (default: {}) |
+
+
+### getActiveCamera
+
+Get the active camera
+
+
+
+### getActiveCameraAndResetIfCreated
+
+
+
+
+
+### getActors
+
+Return any actors in this renderer.
+
+
+
+### getActorsByReference
+
+Return any actors in this renderer.
+
+
+
+### getAllocatedRenderTime
+
+
+
+
+
+### getAutomaticLightCreation
+
+
+
+
+
+### getBackgroundTexture
+
+
+
+
+
+### getBackingStore
+
+
+
+
+
+### getClippingRangeExpansion
+
+
+
+
+
+### getDelegate
+
+
+
+
+
+### getDraw
+
+
+
+
+
+### getErase
+
+
+
+
+
+### getInteractive
+
+
+
+
+
+### getLastRenderTimeInSeconds
+
+
+
+
+
+### getLastRenderingUsedDepthPeeling
+
+
+
+
+
+### getLayer
+
+
+
+
+
+### getLightFollowCamera
+
+
+
+
+
+### getLights
+
+
+
+
+
+### getLightsByReference
+
+
+
+
+
+### getMTime
+
+Return the `Modified Time` which is a monotonic increasing integer
+global for all vtkObjects.
+
+This allow to solve a question such as:
+ - Is that object created/modified after another one?
+ - Do I need to re-execute this filter, or not? ...
+
+#### Returns
+
+| Type | Description |
+| ----- | ------------- |
+| <span class="arg-type"></span> | the global modified time |
+
+
+### getMaximumNumberOfPeels
+
+
+
+
+
+### getNearClippingPlaneTolerance
+
+
+
+
+
+### getNumberOfPropsRendered
+
+
+
+
+
+### getOcclusionRatio
+
+
+
+
+
+### getPass
+
+
+
+
+
+### getPreserveColorBuffer
+
+
+
+
+
+### getPreserveDepthBuffer
+
+
+
+
+
+### getRenderWindow
+
+
+
+
+
+### getSelector
+
+
+
+
+
+### getTexturedbackground
+
+
+
+
+
+### getTimeFactor
+
+
+
+
+
+### getTransparent
+
+
+
+
+
+### getTwosidedlighting
+
+
+
+
+
+### getUsedepthpeeling
+
+
+
+
+
+### getUseshadows
+
+
+
+
+
+### getVTKWindow
+
+
+
+
+
+### getVolumes
+
+Return the collection of volumes.
+
+
+
+### getVolumesByReference
+
+Return the collection of volumes.
+
+
+
+### interactive
+
+
+
+
+
+### isActiveCameraCreated
+
+
+
+
+
+### lastRenderTimeInSeconds
+
+
+
+
+
+### layer
+
+
+
+
+
+### lightFollowCamera
+
+
+
+
+
+### lights
+
+
+
+
+
+### makeCamera
+
+Create a new Camera sutible for use with this type of Renderer.
+
+
+
+### makeLight
+
+Create a new Light sutible for use with this type of Renderer.
+
+
+
+### maximumNumberOfPeels
+
+
+
+
+
+### nearClippingPlaneTolerance
+
+
+
+
+
+### newInstance
+
+Method use to create a new instance of vtkRenderer.
+
+
+| Argument | Type | Description |
+| ------------- | ------------- | ----- |
+| **initialValues** | <span class="arg-type"></span></br></span><span class="arg-required">required</span> | for pre-setting some of its content |
+
+
+### normalizedDisplayToWorld
+
+requires the aspect ratio of the viewport as X/Y
+
+
+| Argument | Type | Description |
+| ------------- | ------------- | ----- |
+| **x** | <span class="arg-type"></span></br></span><span class="arg-required">required</span> |  |
+| **y** | <span class="arg-type"></span></br></span><span class="arg-required">required</span> |  |
+| **z** | <span class="arg-type"></span></br></span><span class="arg-required">required</span> |  |
+| **aspect** | <span class="arg-type"></span></br></span><span class="arg-required">required</span> |  |
+
+
+### numberOfPropsRendered
+
+
+
+
+
+### occlusionRatio
+
+
+
+
+
+### pass
+
+
+
+
+
+### preserveColorBuffer
+
+
+
+
+
+### preserveDepthBuffer
+
+
+
+
+
+### projectionToView
+
+
+
+
+| Argument | Type | Description |
+| ------------- | ------------- | ----- |
+| **x** | <span class="arg-type"></span></br></span><span class="arg-required">required</span> |  |
+| **y** | <span class="arg-type"></span></br></span><span class="arg-required">required</span> |  |
+| **z** | <span class="arg-type"></span></br></span><span class="arg-required">required</span> |  |
+| **aspect** | <span class="arg-type"></span></br></span><span class="arg-required">required</span> |  |
+
+
+### removeActor
+
+
+
+
+| Argument | Type | Description |
+| ------------- | ------------- | ----- |
+| **actor** | <span class="arg-type"></span></br></span><span class="arg-required">required</span> |  |
+
+
+### removeAllActors
+
+
+
+
+
+### removeAllLights
+
+Remove all lights from the list of lights.
+
+
+
+### removeAllVolumes
+
+
+
+
+
+### removeLight
+
+Remove a light from the list of lights.
+
+
+| Argument | Type | Description |
+| ------------- | ------------- | ----- |
+| **light** | <span class="arg-type"></span></br></span><span class="arg-required">required</span> |  |
+
+
+### removeVolume
+
+
+
+
+| Argument | Type | Description |
+| ------------- | ------------- | ----- |
+| **volume** | <span class="arg-type"></span></br></span><span class="arg-required">required</span> |  |
+
+
+### resetCamera
+
+
+
+
+| Argument | Type | Description |
+| ------------- | ------------- | ----- |
+| **bounds** | <span class="arg-type"></span></br></span><span class="arg-required">required</span> |  |
+
+
+### resetCameraClippingRange
+
+
+
+
+| Argument | Type | Description |
+| ------------- | ------------- | ----- |
+| **bounds** | <span class="arg-type"></span></br></span><span class="arg-required">required</span> |  |
+
+
+### setActiveCamera
+
+Specify the camera to use for this renderer.
+
+
+| Argument | Type | Description |
+| ------------- | ------------- | ----- |
+| **camera** | <span class="arg-type"></span></br></span><span class="arg-required">required</span> |  |
+
+
+### setAutomaticLightCreation
+
+
+
+
+| Argument | Type | Description |
+| ------------- | ------------- | ----- |
+| **automaticLightCreation** | <span class="arg-type"></span></br></span><span class="arg-required">required</span> |  |
+
+
+### setBackgroundTexture
+
+
+
+
+| Argument | Type | Description |
+| ------------- | ------------- | ----- |
+| **backgroundTexture** | <span class="arg-type"></span></br></span><span class="arg-required">required</span> |  |
+
+
+### setBackingStore
+
+
+
+
+| Argument | Type | Description |
+| ------------- | ------------- | ----- |
+| **backingStore** | <span class="arg-type"></span></br></span><span class="arg-required">required</span> |  |
+
+
+### setClippingRangeExpansion
+
+
+
+
+| Argument | Type | Description |
+| ------------- | ------------- | ----- |
+| **clippingRangeExpansion** | <span class="arg-type"></span></br></span><span class="arg-required">required</span> |  |
+
+
+### setDelegate
+
+
+
+
+| Argument | Type | Description |
+| ------------- | ------------- | ----- |
+| **delegate** | <span class="arg-type"></span></br></span><span class="arg-required">required</span> |  |
+
+
+### setDraw
+
+
+
+
+| Argument | Type | Description |
+| ------------- | ------------- | ----- |
+| **draw** | <span class="arg-type"></span></br></span><span class="arg-required">required</span> |  |
+
+
+### setErase
+
+
+
+
+| Argument | Type | Description |
+| ------------- | ------------- | ----- |
+| **erase** | <span class="arg-type"></span></br></span><span class="arg-required">required</span> |  |
+
+
+### setInteractive
+
+
+
+
+| Argument | Type | Description |
+| ------------- | ------------- | ----- |
+| **interactive** | <span class="arg-type"></span></br></span><span class="arg-required">required</span> |  |
+
+
+### setLayer
+
+
+
+
+| Argument | Type | Description |
+| ------------- | ------------- | ----- |
+| **layer** | <span class="arg-type"></span></br></span><span class="arg-required">required</span> |  |
+
+
+### setLightCollection
+
+Set the collection of lights.
+
+
+| Argument | Type | Description |
+| ------------- | ------------- | ----- |
+| **lights** | <span class="arg-type"></span></br></span><span class="arg-required">required</span> |  |
+
+
+### setLightFollowCamera
+
+
+
+
+| Argument | Type | Description |
+| ------------- | ------------- | ----- |
+| **lightFollowCamera** | <span class="arg-type"></span></br></span><span class="arg-required">required</span> |  |
+
+
+### setMaximumNumberOfPeels
+
+
+
+
+| Argument | Type | Description |
+| ------------- | ------------- | ----- |
+| **maximumNumberOfPeels** | <span class="arg-type"></span></br></span><span class="arg-required">required</span> |  |
+
+
+### setNearClippingPlaneTolerance
+
+
+
+
+| Argument | Type | Description |
+| ------------- | ------------- | ----- |
+| **nearClippingPlaneTolerance** | <span class="arg-type"></span></br></span><span class="arg-required">required</span> |  |
+
+
+### setOcclusionRatio
+
+
+
+
+| Argument | Type | Description |
+| ------------- | ------------- | ----- |
+| **occlusionRatio** | <span class="arg-type"></span></br></span><span class="arg-required">required</span> |  |
+
+
+### setPass
+
+
+
+
+| Argument | Type | Description |
+| ------------- | ------------- | ----- |
+| **pass** | <span class="arg-type"></span></br></span><span class="arg-required">required</span> |  |
+
+
+### setPreserveColorbuffer
+
+
+
+
+| Argument | Type | Description |
+| ------------- | ------------- | ----- |
+| **preserveColorBuffer** | <span class="arg-type"></span></br></span><span class="arg-required">required</span> |  |
+
+
+### setPreserveDepthbuffer
+
+
+
+
+| Argument | Type | Description |
+| ------------- | ------------- | ----- |
+| **preserveDepthBuffer** | <span class="arg-type"></span></br></span><span class="arg-required">required</span> |  |
+
+
+### setRenderWindow
+
+
+
+
+| Argument | Type | Description |
+| ------------- | ------------- | ----- |
+| **renderWindow** | <span class="arg-type"></span></br></span><span class="arg-required">required</span> |  |
+
+
+### setTexturedBackground
+
+
+
+
+| Argument | Type | Description |
+| ------------- | ------------- | ----- |
+| **texturedBackground** | <span class="arg-type"></span></br></span><span class="arg-required">required</span> |  |
+
+
+### setTwoSidedLighting
+
+
+
+
+| Argument | Type | Description |
+| ------------- | ------------- | ----- |
+| **twoSidedLighting** | <span class="arg-type"></span></br></span><span class="arg-required">required</span> |  |
+
+
+### setUseDepthPeeling
+
+
+
+
+| Argument | Type | Description |
+| ------------- | ------------- | ----- |
+| **useDepthPeeling** | <span class="arg-type"></span></br></span><span class="arg-required">required</span> |  |
+
+
+### setUseShadows
+
+
+
+
+| Argument | Type | Description |
+| ------------- | ------------- | ----- |
+| **useShadows** | <span class="arg-type"></span></br></span><span class="arg-required">required</span> |  |
+
+
+### texturedBackground
+
+
+
+
+
+### timeFactor
+
+
+
+
+
+### twoSidedLighting
+
+
+
+
+
+### updateCamera
+
+
+
+
+
+### updateGeometry
+
+Not Implemented yet
+
+
+
+### updateLightGeometry
+
+
+
+
+
+### updateLightsGeometryToFollowCamera
 
 Ask the lights in the scene that are not in world space
 (for instance, Headlights or CameraLights that are attached to the
 camera) to update their geometry to match the active camera.
 
-### activeCamera (set/get Camera)
 
-Get the current camera. If there is not camera assigned to the
-renderer already, a new one is created automatically.
-This does *not* reset the camera.
 
-### makeCamera()
+### useDepthPeeling
 
-Create a new Camera sutible for use with this type of Renderer.
-For example, a vtkMesaRenderer should create a vtkMesaCamera
-in this function. The default is to just call vtkCamera::New.
 
-### allocatedRenderTime
 
-Set/Get the amount of time this renderer is allowed to spend
-rendering its scene. This is used by vtkLODActor's.
 
-### getTimeFactor()
 
-Get the ratio between allocated time and actual render time.
-TimeFactor has been taken out of the render process.
-It is still computed in case someone finds it useful.
-It may be taken away in the future.
+### useShadows
 
-### visibleActorCount() / visibleVolumeCount()
 
-Returns the number of visible actors or volumes respectively.
 
-### computeVisiblePropBounds() : bounds[6]
 
-Compute the bounding box of all the visible props
-Used in ResetCamera() and ResetCameraClippingRange()
 
-### resetCameraClippingRange( bounds = null )
+### viewToProjection
 
-Reset the camera clipping range based on the bounds of the
-visible actors. This ensures that no props are cut off
+Convert world point coordinates to view coordinates.
+requires the aspect ratio of the viewport as X/Y
 
-If `bounds` is provided, then reset the camera clipping range
-based on the bounding box.
-This method is called from `resetCameraClippingRange()`
-If Deering frustum field of view is used then the bounds get expanded
-by the camera's modelview matrix.
 
-### erase  (set/get Boolean)
+| Argument | Type | Description |
+| ------------- | ------------- | ----- |
+| **x** | <span class="arg-type"></span></br></span><span class="arg-required">required</span> |  |
+| **y** | <span class="arg-type"></span></br></span><span class="arg-required">required</span> |  |
+| **z** | <span class="arg-type"></span></br></span><span class="arg-required">required</span> |  |
+| **aspect** | <span class="arg-type"></span></br></span><span class="arg-required">required</span> |  |
 
-When this flag is off, the renderer will not erase the background
-or the Z-buffer. It is used to have overlapping renderers.
-Both the RenderWindow Erase and Render Erase must be on
-for the camera to clear the renderer. By default, Erase is on.
 
-### draw (set/get Boolean)
+### viewToWorld
 
-When this flag is off, render commands are ignored. It is used to either
-multiplex a vtkRenderWindow or render only part of a vtkRenderWindow.
-By default, Draw is on.
+requires the aspect ratio of the viewport as X/Y
 
-### interactive (set/get Boolean)
 
-Turn on/off interactive status. An interactive renderer is one that
-can receive events from an interactor. Should only be set if
-there are multiple renderers in the same section of the viewport.
+| Argument | Type | Description |
+| ------------- | ------------- | ----- |
+| **x** | <span class="arg-type"></span></br></span><span class="arg-required">required</span> |  |
+| **y** | <span class="arg-type"></span></br></span><span class="arg-required">required</span> |  |
+| **z** | <span class="arg-type"></span></br></span><span class="arg-required">required</span> |  |
 
-### layer (set/get Integer)
 
-Set/Get the layer that this renderer belongs to. This is only used if
-there are layered renderers.
+### visibleActorCount
 
-Note: Changing the layer will update the PreserveColorBuffer setting. If
-the layer is 0, PreserveColorBuffer will be set to false, making the
-bottom renderer opaque. If the layer is non-zero, PreserveColorBuffer will
-be set to true, giving the renderer a transparent background. If other
-PreserveColorBuffer configurations are desired, they must be adjusted after
-the layer is set.
 
-### renderWindow (set/get RenderWindow)
 
-Specify the rendering window in which to draw. This is automatically set
-when the renderer is created by MakeRenderer. The user should never need to call this method.
 
-### preserveColorBuffer (set/get Boolean)
 
-By default, the renderer at layer 0 is opaque, and all non-zero layer
-renderers are transparent. This flag allows this behavior to be overridden.
-If true, this setting will force the renderer to preserve the existing
-color buffer regardless of layer. If false, it will always be cleared at
-the start of rendering.
+### visibleVolumeCount
 
-This flag influences the Transparent() method, and is updated by calls to
-SetLayer(). For this reason it should only be set after changing the layer.
+Not Implemented yet
 
-### preserveDepthBuffer (set/get Boolean)
 
-By default, the depth buffer is reset for each renderer. If this flag is
-true, this renderer will use the existing depth buffer for its rendering.
 
-### useDepthPeeling (set/get Boolean)
+### volumes
 
-Turn on/off rendering of translucent material with depth peeling
-technique. The render window must have alpha bits (i.e., call
-`SetAlphaBitPlanes(1)`) and no multisample buffer (i.e. call
-`SetMultiSamples(0)`) to support depth peeling.
-If UseDepthPeeling is on and the GPU supports it, depth peeling is used
-for rendering translucent materials.
-If UseDepthPeeling is off, alpha blending is used.
-Initial value is off.
 
-### delegate
 
-Set/Get a custom Render call. Allows to hook a Render call from an
-external project.It will be used in place of vtkRenderer::Render() if it
-is not NULL and its Used ivar is set to true.
-Initial value is NULL.
 
-### occlusionRatio (set/get Number)
 
-In case of use of depth peeling technique for rendering translucent
-material, define the threshold under which the algorithm stops to
-iterate over peel layers. This is the ratio of the number of pixels
-that have been touched by the last layer over the total number of pixels
-of the viewport area.
-Initial value is 0.0, meaning rendering have to be exact. Greater values
-may speed-up the rendering with small impact on the quality.
+### worldToNormalizedDisplay
 
-### maximumNumberOfPeels (set/get Integer)
+requires the aspect ratio of the viewport as X/Y
 
-In case of depth peeling, define the maximum number of peeling layers.
-Initial value is 4. A special value of 0 means no maximum limit.
-It has to be a positive value.
 
-### useShadows (set/get Boolean)
+| Argument | Type | Description |
+| ------------- | ------------- | ----- |
+| **x** | <span class="arg-type"></span></br></span><span class="arg-required">required</span> |  |
+| **y** | <span class="arg-type"></span></br></span><span class="arg-required">required</span> |  |
+| **z** | <span class="arg-type"></span></br></span><span class="arg-required">required</span> |  |
+| **aspect** | <span class="arg-type"></span></br></span><span class="arg-required">required</span> |  |
 
-Turn on/off rendering of shadows if supported
-Initial value is off.
+
+### worldToView
+
+Convert world point coordinates to view coordinates.
+
+
+| Argument | Type | Description |
+| ------------- | ------------- | ----- |
+| **x** | <span class="arg-type"></span></br></span><span class="arg-required">required</span> |  |
+| **y** | <span class="arg-type"></span></br></span><span class="arg-required">required</span> |  |
+| **z** | <span class="arg-type"></span></br></span><span class="arg-required">required</span> |  |
+
+

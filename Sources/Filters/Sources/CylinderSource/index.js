@@ -28,7 +28,7 @@ function vtkCylinderSource(publicAPI, model) {
     }
 
     // Points
-    const points = new window[model.pointType](numberOfPoints * 3);
+    const points = macro.newTypedArray(model.pointType, numberOfPoints * 3);
 
     // Cells
     let cellLocation = 0;

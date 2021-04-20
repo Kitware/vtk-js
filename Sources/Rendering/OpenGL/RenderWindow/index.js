@@ -4,10 +4,10 @@ import vtkForwardPass from 'vtk.js/Sources/Rendering/OpenGL/ForwardPass';
 import vtkOpenGLViewNodeFactory from 'vtk.js/Sources/Rendering/OpenGL/ViewNodeFactory';
 import vtkRenderPass from 'vtk.js/Sources/Rendering/SceneGraph/RenderPass';
 import vtkShaderCache from 'vtk.js/Sources/Rendering/OpenGL/ShaderCache';
-import vtkViewNode from 'vtk.js/Sources/Rendering/SceneGraph/ViewNode';
+import vtkRenderWindowViewNode from 'vtk.js/Sources/Rendering/SceneGraph/RenderWindowViewNode';
 import vtkOpenGLTextureUnitManager from 'vtk.js/Sources/Rendering/OpenGL/TextureUnitManager';
+import vtkOpenGLHardwareSelector from 'vtk.js/Sources/Rendering/OpenGL/HardwareSelector';
 import { VtkDataTypes } from 'vtk.js/Sources/Common/Core/DataArray/Constants';
-import WebVRPolyfill from 'webvr-polyfill';
 
 const { vtkDebugMacro, vtkErrorMacro } = macro;
 const IS_CHROME = navigator.userAgent.indexOf('Chrome') !== -1;
@@ -199,112 +199,6 @@ function vtkOpenGLRenderWindow(publicAPI, model) {
     return model.size;
   };
 
-  publicAPI.isInViewport = (x, y, viewport) => {
-    const vCoords = viewport.getViewportByReference();
-    const size = publicAPI.getFramebufferSize();
-    if (
-      vCoords[0] * size[0] <= x &&
-      vCoords[2] * size[0] >= x &&
-      vCoords[1] * size[1] <= y &&
-      vCoords[3] * size[1] >= y
-    ) {
-      return true;
-    }
-    return false;
-  };
-
-  publicAPI.getViewportSize = (viewport) => {
-    const vCoords = viewport.getViewportByReference();
-    const size = publicAPI.getFramebufferSize();
-
-    return [
-      (vCoords[2] - vCoords[0]) * size[0],
-      (vCoords[3] - vCoords[1]) * size[1],
-    ];
-  };
-
-  publicAPI.getViewportCenter = (viewport) => {
-    const size = publicAPI.getViewportSize(viewport);
-    return [size[0] * 0.5, size[1] * 0.5];
-  };
-
-  publicAPI.displayToNormalizedDisplay = (x, y, z) => {
-    const size = publicAPI.getFramebufferSize();
-    return [x / size[0], y / size[1], z];
-  };
-
-  publicAPI.normalizedDisplayToDisplay = (x, y, z) => {
-    const size = publicAPI.getFramebufferSize();
-    return [x * size[0], y * size[1], z];
-  };
-
-  publicAPI.worldToView = (x, y, z, renderer) => renderer.worldToView(x, y, z);
-
-  publicAPI.viewToWorld = (x, y, z, renderer) => renderer.viewToWorld(x, y, z);
-
-  publicAPI.worldToDisplay = (x, y, z, renderer) => {
-    const val = renderer.worldToView(x, y, z);
-    const dims = publicAPI.getViewportSize(renderer);
-    const val2 = renderer.viewToProjection(
-      val[0],
-      val[1],
-      val[2],
-      dims[0] / dims[1]
-    );
-    const val3 = renderer.projectionToNormalizedDisplay(
-      val2[0],
-      val2[1],
-      val2[2]
-    );
-    return publicAPI.normalizedDisplayToDisplay(val3[0], val3[1], val3[2]);
-  };
-
-  publicAPI.displayToWorld = (x, y, z, renderer) => {
-    const val = publicAPI.displayToNormalizedDisplay(x, y, z);
-    const val2 = renderer.normalizedDisplayToProjection(val[0], val[1], val[2]);
-    const dims = publicAPI.getViewportSize(renderer);
-    const val3 = renderer.projectionToView(
-      val2[0],
-      val2[1],
-      val2[2],
-      dims[0] / dims[1]
-    );
-    return renderer.viewToWorld(val3[0], val3[1], val3[2]);
-  };
-
-  publicAPI.normalizedDisplayToViewport = (x, y, z, renderer) => {
-    let vCoords = renderer.getViewportByReference();
-    vCoords = publicAPI.normalizedDisplayToDisplay(vCoords[0], vCoords[1], 0.0);
-    const coords = publicAPI.normalizedDisplayToDisplay(x, y, z);
-    return [coords[0] - vCoords[0] - 0.5, coords[1] - vCoords[1] - 0.5, z];
-  };
-
-  publicAPI.viewportToNormalizedViewport = (x, y, z, renderer) => {
-    const size = publicAPI.getViewportSize(renderer);
-    if (size && size[0] !== 0 && size[1] !== 0) {
-      return [x / (size[0] - 1.0), y / (size[1] - 1.0), z];
-    }
-    return [x, y, z];
-  };
-
-  publicAPI.normalizedViewportToViewport = (x, y, z) => {
-    const size = publicAPI.getFramebufferSize();
-    return [x * (size[0] - 1.0), y * (size[1] - 1.0), z];
-  };
-
-  publicAPI.displayToLocalDisplay = (x, y, z) => {
-    const size = publicAPI.getFramebufferSize();
-    return [x, size[1] - y - 1, z];
-  };
-
-  publicAPI.viewportToNormalizedDisplay = (x, y, z, renderer) => {
-    let vCoords = renderer.getViewportByReference();
-    vCoords = publicAPI.normalizedDisplayToDisplay(vCoords[0], vCoords[1], 0.0);
-    const x2 = x + vCoords[0] + 0.5;
-    const y2 = y + vCoords[1] + 0.5;
-    return publicAPI.displayToNormalizedDisplay(x2, y2, z);
-  };
-
   publicAPI.getPixelData = (x1, y1, x2, y2) => {
     const pixels = new Uint8Array((x2 - x1 + 1) * (y2 - y1 + 1) * 4);
     model.context.readPixels(
@@ -339,19 +233,6 @@ function vtkOpenGLRenderWindow(publicAPI, model) {
         model.canvas.getContext('webgl', options) ||
         model.canvas.getContext('experimental-webgl', options);
     }
-
-    /* eslint-disable */
-    const polyfill = new WebVRPolyfill({
-      // Ensures the polyfill is always active on mobile, due to providing
-      // a polyfilled CardboardVRDisplay when no native API is available,
-      // and also polyfilling even when the native API is available, due to
-      // providing a CardboardVRDisplay when no native VRDisplays exist.
-      PROVIDE_MOBILE_VRDISPLAY: true,
-      // Polyfill optimizations
-      DIRTY_SUBMIT_FRAME_BINDINGS: false,
-      BUFFER_SCALE: 0.75,
-    });
-    /* eslint-enable */
 
     // Do we have webvr support
     if (navigator.getVRDisplays) {
@@ -500,7 +381,7 @@ function vtkOpenGLRenderWindow(publicAPI, model) {
 
   publicAPI.activateTexture = (texture) => {
     // Only add if it isn't already there
-    const result = model.textureResourceIds.get(texture);
+    const result = model._textureResourceIds.get(texture);
     if (result !== undefined) {
       model.context.activeTexture(model.context.TEXTURE0 + result);
       return;
@@ -514,21 +395,21 @@ function vtkOpenGLRenderWindow(publicAPI, model) {
       return;
     }
 
-    model.textureResourceIds.set(texture, activeUnit);
+    model._textureResourceIds.set(texture, activeUnit);
     model.context.activeTexture(model.context.TEXTURE0 + activeUnit);
   };
 
   publicAPI.deactivateTexture = (texture) => {
     // Only deactivate if it isn't already there
-    const result = model.textureResourceIds.get(texture);
+    const result = model._textureResourceIds.get(texture);
     if (result !== undefined) {
       publicAPI.getTextureUnitManager().free(result);
-      delete model.textureResourceIds.delete(texture);
+      delete model._textureResourceIds.delete(texture);
     }
   };
 
   publicAPI.getTextureUnitForTexture = (texture) => {
-    const result = model.textureResourceIds.get(texture);
+    const result = model._textureResourceIds.get(texture);
     if (result !== undefined) {
       return result;
     }
@@ -1148,7 +1029,6 @@ const DEFAULT_VALUES = {
   initialized: false,
   context: null,
   canvas: null,
-  size: [300, 300],
   cursorVisibility: true,
   cursor: 'pointer',
   textureUnitManager: null,
@@ -1173,10 +1053,18 @@ const DEFAULT_VALUES = {
 export function extend(publicAPI, model, initialValues = {}) {
   Object.assign(model, DEFAULT_VALUES, initialValues);
 
+  // Inheritance
+  vtkRenderWindowViewNode.extend(publicAPI, model, initialValues);
+
   // Create internal instances
   model.canvas = document.createElement('canvas');
   model.canvas.style.width = '100%';
   createGLContext();
+
+  if (!model.selector) {
+    model.selector = vtkOpenGLHardwareSelector.newInstance();
+    model.selector.setOpenGLRenderWindow(publicAPI);
+  }
 
   // Create internal bgImage
   model.bgImage = new Image();
@@ -1187,10 +1075,7 @@ export function extend(publicAPI, model, initialValues = {}) {
   model.bgImage.style.height = '100%';
   model.bgImage.style.zIndex = '-1';
 
-  model.textureResourceIds = new Map();
-
-  // Inheritance
-  vtkViewNode.extend(publicAPI, model, initialValues);
+  model._textureResourceIds = new Map();
 
   model.myFactory = vtkOpenGLViewNodeFactory.newInstance();
   /* eslint-disable no-use-before-define */

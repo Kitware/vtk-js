@@ -1,6 +1,5 @@
-import {
-	VtkObject
-} from 'vtk.js/Sources/macro';
+import { VtkObject } from 'vtk.js/Sources/macro';
+import vtkDataSetAttributes from 'vtk.js/Sources/Common/DataModel/DataSetAttributes';
 
 export enum FieldDataTypes {
 	UNIFORM,
@@ -31,7 +30,7 @@ export enum FieldAssociations {
 }
 
 /**
- * 
+ *
  */
 interface IDataSetInitialValues {}
 
@@ -40,35 +39,35 @@ export interface vtkDataSet extends VtkObject {
 	/**
 	 * Get dataset's cell data
 	 */
-	getCellData(): any;
+	getCellData(): vtkDataSetAttributes;
 
 	/**
-	 * 
+	 * Get dataset's field data
 	 */
-	getFieldData(): any;
+	getFieldData(): vtkDataSetAttributes;
 
 	/**
 	 * Get dataset's point data.
 	 */
-	getPointData(): any;
+	getPointData(): vtkDataSetAttributes;
 
 	/**
-	 * 
-	 * @param cellData 
+	 * Set dataset's cell data
+	 * @param {vtkDataSetAttributes} cellData 
 	 */
-	setCellData(cellData: any): boolean;
+	setCellData(cellData: vtkDataSetAttributes): boolean;
 
 	/**
-	 * 
-	 * @param fieldData 
+	 * Set dataset's field data
+	 * @param {vtkDataSetAttributes} fieldData 
 	 */
-	setFieldData(fieldData: any): boolean;
+	setFieldData(fieldData: vtkDataSetAttributes): boolean;
 
 	/**
-	 * 
-	 * @param pointData 
+	 * Set dataset's point data.
+	 * @param {vtkDataSetAttributes} pointData 
 	 */
-	setPointData(pointData: any): boolean;
+	setPointData(pointData: vtkDataSetAttributes): boolean;
 }
 
 /**
@@ -76,28 +75,28 @@ export interface vtkDataSet extends VtkObject {
  *
  * @param publicAPI object on which methods will be bounds (public)
  * @param model object on which data structure will be bounds (protected)
- * @param initialValues (default: {})
+ * @param {IDataSetInitialValues} [initialValues] (default: {})
  */
-export function extend(publicAPI: object, model: object, initialValues ? : IDataSetInitialValues): void;
+export function extend(publicAPI: object, model: object, initialValues? : IDataSetInitialValues): void;
 
 /**
  * Method used to create a new instance of vtkDataSet.
- * @param initialValues for pre-setting some of its content
+ * @param {IDataSetInitialValues} [initialValues] for pre-setting some of its content
  */
-export function newInstance(initialValues ? : IDataSetInitialValues): vtkDataSet;
+export function newInstance(initialValues? : IDataSetInitialValues): vtkDataSet;
 
 /**
  * vtkDataSet is an abstract class that specifies an interface for dataset
  * objects. vtkDataSet also provides methods to provide information about
  * the data, such as center, bounding box, and representative length.
- * 
+ *
  * In vtk a dataset consists of a structure (geometry and topology) and
  * attribute data. The structure is defined implicitly or explicitly as
  * a collection of cells. The geometry of the structure is contained in
  * point coordinates plus the cell interpolation functions. The topology
  * of the dataset structure is defined by cell types and how the cells
  * share their defining points.
- * 
+ *
  * Attribute data in vtk is either point data (data at points) or cell data
  * (data at cells). Typically filters operate on point data, but some may
  * operate on cell data, both cell and point data, either one, or none.

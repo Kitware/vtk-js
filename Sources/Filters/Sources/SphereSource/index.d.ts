@@ -7,55 +7,15 @@ import {
  * 
  */
 interface ISphereSourceInitialValues {
-
-	/**
-	 * 
-	 */
 	radius?: number;
-
-	/**
-	 * 
-	 */
 	latLongTessellation?: boolean;
-
-	/**
-	 * 
-	 */
 	thetaResolution?: number;
-
-	/**
-	 * 
-	 */
 	startTheta?: number;
-
-	/**
-	 * 
-	 */
 	endTheta?: number;
-
-	/**
-	 * 
-	 */
 	phiResolution?: number;
-
-	/**
-	 * 
-	 */
 	startPhi?: number;
-
-	/**
-	 * 
-	 */
 	endPhi?: number;
-
-	/**
-	 * 
-	 */
 	center?: number[];
-
-	/**
-	 * 
-	 */
 	pointType?: string;
 }
 
@@ -138,33 +98,33 @@ export interface vtkSphereSource extends vtkAlgorithm {
 
 	/**
 	 * Set the center of the sphere.
-	 * @param x 
-	 * @param y 
-	 * @param z 
+	 * @param {Number} x The x coordinate.
+	 * @param {Number} y The y coordinate.
+	 * @param {Number} z The z coordinate.
 	 */
 	setCenter(x: number, y: number, z: number): boolean;
 
 	/**
 	 * Set the center of the sphere.
-	 * @param center 
+	 * @param {Number[]} center The center point's coordinates.
 	 */
 	setCenter(center: number[]): boolean;
 
 	/**
 	 * Set the center of the sphere.
-	 * @param center 
+	 * @param {Number[]} center The center point's coordinates.
 	 */
 	setCenterFrom(center: number[]): boolean;
 
 	/**
 	 * Set the ending latitude angle.
-	 * @param endPhi 
+	 * @param {Number} endPhi The ending latitude angle in degrees.
 	 */
 	setEndPhi(endPhi: number): boolean;
 
 	/**
 	 * Set the ending longitude angle.
-	 * @param endTheta 
+	 * @param {Number} endTheta The ending latitude longitude in degrees.
 	 */
 	setEndTheta(endTheta: number): boolean;
 
@@ -175,37 +135,37 @@ export interface vtkSphereSource extends vtkAlgorithm {
 	 * lines. If on, quadrilaterals are generated everywhere except at the
 	 * poles. This can be useful for generating a wireframe sphere with natural
 	 * latitude and longitude lines.
-	 * @param latLongTessellation 
+	 * @param {Boolean} latLongTessellation 
 	 */
 	setLatLongTessellation(latLongTessellation: boolean): boolean;
 
 	/**
 	 * Set the number of points in the latitude direction (ranging from StartPhi to EndPhi).
-	 * @param phiResolution 
+	 * @param {Number} phiResolution The number of points.
 	 */
 	setPhiResolution(phiResolution: number): boolean;
 
 	/**
 	 * Set the radius of sphere.
-	 * @param radius 
+	 * @param {Number} radius The radius of sphere.
 	 */
 	setRadius(radius: number): boolean;
 
 	/**
 	 * Set the starting longitude angle.
-	 * @param startTheta 
+	 * @param {Number} startTheta The starting longitude angle in degrees.
 	 */
 	setStartTheta(startTheta: number): boolean;
 
 	/**
-	 * Set the starting latitude angle in degrees (0 is at north pole).
-	 * @param startPhi 
+	 * Set the starting latitude angle (0 is at north pole).
+	 * @param {Number} startPhi The starting latitude angle in degrees.
 	 */
 	setStartPhi(startPhi: number): boolean;
 
 	/**
 	 * Set the number of points in the longitude direction (ranging from StartTheta to EndTheta).
-	 * @param thetaResolution 
+	 * @param {Number} thetaResolution The number of points.
 	 */
 	setThetaResolution(thetaResolution: number): boolean;
 }
@@ -215,13 +175,13 @@ export interface vtkSphereSource extends vtkAlgorithm {
  *
  * @param publicAPI object on which methods will be bounds (public)
  * @param model object on which data structure will be bounds (protected)
- * @param initialValues (default: {})
+ * @param {ISphereSourceInitialValues} [initialValues] (default: {})
  */
 export function extend(publicAPI: object, model: object, initialValues?: ISphereSourceInitialValues): void;
 
 /**
  * Method used to create a new instance of vtkSphereSource.
- * @param initialValues for pre-setting some of its content
+ * @param {ISphereSourceInitialValues} [initialValues] for pre-setting some of its content
  */
 export function newInstance(initialValues?: ISphereSourceInitialValues): vtkSphereSource;
 
@@ -232,6 +192,14 @@ export function newInstance(initialValues?: ISphereSourceInitialValues): vtkSphe
  * generate random points only on the surface of the sphere. The output PolyData
  * has the specified number of points and 1 cell - a vtkPolyVertex containing
  * all of the points.
+ * 
+ * @example
+ * ```js
+ * import vtkSphereSource from 'vtk.js/Sources/Filters/Sources/SphereSource';
+ * 
+ * const sphere = vtkSphereSource.newInstance();
+ * const polydata = sphere.getOutputData();
+ * ```
  */
 export declare const vtkSphereSource: {
 	newInstance: typeof newInstance,

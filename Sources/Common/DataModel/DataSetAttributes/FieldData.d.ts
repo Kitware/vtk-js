@@ -1,34 +1,13 @@
-import {
-	VtkObject
-} from 'vtk.js/Sources/macro';
+import { VtkObject } from 'vtk.js/Sources/macro';
 
 
 /**
  * 
  */
 interface IFieldDataInitialValues {
-	/**
-	 * 
-	 * @default []
-	 */
 	arrays: Array<any>;
-
-	/**
-	 * 
-	 * @default []
-	 */
 	copyFieldFlags: Array<any>;
-
-	/**
-	 * 
-	 * @default true
-	 */
 	doCopyAllOn: boolean;
-
-	/**
-	 * 
-	 * @default false
-	 */
 	doCopyAllOff: boolean;
 }
 
@@ -36,13 +15,7 @@ interface IFieldDataInitialValues {
  * 
  */
 interface IArrayWithIndex {
-	/**
-	 * 
-	 */
-	array: any[],
-	/**
-	 * 
-	 */
+	array: any,
 	index: number;
 }
 
@@ -65,46 +38,42 @@ export interface vtkFieldData extends VtkObject {
 	copyStructure(other: any): void;
 
 	/**
-	 * 
-	 * @return  
+	 * Get the number of arrays.
 	 */
 	getNumberOfArrays(): number;
 
 	/**
-	 * 
-	 * @return  
+	 * Get the number of active arrays.
 	 */
 	getNumberOfActiveArrays(): number;
 
 	/**
-	 * 
+	 * Add a new array.
 	 * @param arr 
-	 * @return  
 	 */
 	addArray(arr: any): number;
 
 	/**
-	 * 
+	 * Remove all the arrays.
 	 */
 	removeAllArrays(): void;
 
 	/**
 	 * 
-	 * @param arrayName 
+	 * @param {String} arrayName The name of the array.
 	 */
 	removeArray(arrayName: string): void;
 
 	/**
 	 * 
-	 * @param arrayIdx 
+	 * @param {Number} arrayIdx The index of the array to remove. 
 	 */
-	removeArrayByIndex(arrayIdx: any): void;
+	removeArrayByIndex(arrayIdx: number): void;
 
 	/**
 	 * 
-	 * @return  
 	 */
-	getArrays(): any[];
+	getArrays(): any;
 
 	/**
 	 * 
@@ -114,47 +83,42 @@ export interface vtkFieldData extends VtkObject {
 
 	/**
 	 * 
-	 * @param arrayName 
+	 * @param {String} arrayName The name of the array.
 	 */
-	getArrayByName(arrayName: string): any[] | null;
+	getArrayByName(arrayName: string): any | null;
 
 	/**
 	 * 
-	 * @param arrayName 
-	 * @return  
+	 * @param {String} arrayName The name of the array.
 	 */
 	getArrayWithIndex(arrayName: string): IArrayWithIndex;
 
 	/**
 	 * 
-	 * @param idx 
+	 * @param {Number} idx The index of the array.
 	 */
-	getArrayByIndex(idx: any): any[] | null;
+	getArrayByIndex(idx: number): any | null;
 
 	/**
 	 * 
-	 * @param arrayName 
-	 * @return  
+	 * @param {String} arrayName The name of the array.
 	 */
 	hasArray(arrayName: string): boolean;
 
 	/**
 	 * 
-	 * @param idx 
-	 * @return  
+	 * @param {Number} idx The index of the array.
 	 */
-	getArrayName(idx: any): string;
+	getArrayName(idx: number): string;
 
 	/**
 	 * 
-	 * @return  
 	 */
 	getCopyFieldFlags(): object;
 
 	/**
 	 * 
-	 * @param arrayName 
-	 * @return  
+	 * @param {String} arrayName The name of the array.
 	 */
 	getFlag(arrayName: string): boolean;
 
@@ -168,13 +132,13 @@ export interface vtkFieldData extends VtkObject {
 
 	/**
 	 * 
-	 * @param arrayName 
+	 * @param {String} arrayName The name of the array.
 	 */
 	copyFieldOn(arrayName: string): void;
 
 	/**
 	 * 
-	 * @param arrayName 
+	 * @param {String} arrayName The name of the array.
 	 */
 	copyFieldOff(arrayName: string): void;
 
@@ -211,7 +175,14 @@ export interface vtkFieldData extends VtkObject {
 	reset(): void;
 
 	/**
-	 * TODO: getActualMemorySize
+	 * Return the `Modified Time` which is a monotonic increasing integer
+	 * global for all vtkObjects.
+	 *
+	 * This allow to solve a question such as:
+	 *  - Is that object created/modified after another one?
+	 *  - Do I need to re-execute this filter, or not? ...
+	 *
+	 * @return {Number} the global modified time.
 	 */
 	getMTime(): number;
 
@@ -237,13 +208,13 @@ export interface vtkFieldData extends VtkObject {
  *
  * @param publicAPI object on which methods will be bounds (public)
  * @param model object on which data structure will be bounds (protected)
- * @param initialValues (default: {})
+ * @param {IFieldDataInitialValues} [initialValues] (default: {})
  */
 export function extend(publicAPI: object, model: object, initialValues?: IFieldDataInitialValues): void;
 
 /**
  * Method used to create a new instance of vtkFieldData.
- * @param initialValues for pre-setting some of its content
+ * @param {IFieldDataInitialValues} [initialValues] for pre-setting some of its content
  */
 export function newInstance(initialValues?: IFieldDataInitialValues): vtkFieldData;
 

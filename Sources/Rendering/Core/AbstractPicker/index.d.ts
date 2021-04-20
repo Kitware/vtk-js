@@ -32,7 +32,7 @@ export interface vtkAbstractPicker extends VtkObject {
 
 	/**
 	 * Get the picked position
-	 * @returns 
+	 * @return 
 	 * @default [0.0, 0.0, 0.0]
 	 */
 	getPickPosition(): number[];
@@ -40,7 +40,7 @@ export interface vtkAbstractPicker extends VtkObject {
 	/**
 	 * 
 	 * Get the picked position
-	 * @returns 
+	 * @return 
 	 * @default [0.0, 0.0, 0.0]
 	 */
 	getPickPositionByReference(): number[];
@@ -52,14 +52,14 @@ export interface vtkAbstractPicker extends VtkObject {
 
 	/**
 	 * 
-	 * @returns 
+	 * @return 
 	 * @default [0.0, 0.0, 0.0]
 	 */
 	getSelectionPoint(): number[];
 
 	/**
 	 * 
-	 * @returns 
+	 * @return 
 	 * @default [0.0, 0.0, 0.0]
 	 */
 	getSelectionPointByReference(): number[];
@@ -94,7 +94,7 @@ export interface vtkAbstractPicker extends VtkObject {
  *
  * @param publicAPI object on which methods will be bounds (public)
  * @param model object on which data structure will be bounds (protected)
- * @param initialValues (default: {})
+ * @param {object} [initialValues] (default: {})
  */
 export function extend(publicAPI: object, model: object, initialValues?: object): void;
 
@@ -104,7 +104,7 @@ export function extend(publicAPI: object, model: object, initialValues?: object)
  * 
  * The API to this class is to invoke the Pick() method with a selection point (in display coordinates - pixels)
  * and a renderer. Then get the resulting pick position in global coordinates with the GetPickPosition() method.
- * @see vtkPointPicker
+ * @see [vtkPointPicker](./Rendering_Core_PointPicker.html)
  */
 export declare const vtkAbstractPicker: {
     extend: typeof extend,

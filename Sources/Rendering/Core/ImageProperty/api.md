@@ -1,94 +1,285 @@
 ## Introduction
 
-vtkImageProperty -- image display properties
+vtkImageProperty provides 2D image display support for vtk.
+It can be associated with a vtkImageSlice prop and placed within a Renderer.
 
-vtkImageProperty is an object that allows control of the display
-of an image slice.
+This class resolves coincident topology with the same methods as vtkMapper.
 
-## See Also
 
-[vtkImageMapper](./Rendering_Core_ImageMapper.html)
-[vtkImageProperty](./Rendering_Core_ImageProperty.html)
+
 
 ## Methods
 
-### getInterpolationType
-### getInterpolationTypeAsString
-### setInterpolationTypeToNearest
-### setInterpolationTypeToLinear
-
-Set/Get the interpolation type for sampling a volume. The initial
-value is LINEAR. NEAREST interpolation will snap to the closest
-voxel, LINEAR will perform bilinear interpolation to compute a
-scalar value from surrounding voxels.
-
-### colorWindow
-
-Controls the window in a window level mapping of the input image. Window
-level mapping is a technique to map the raw data values of an image
-into screen intensities in a manner akin to
-
-pixelIntensity = (inputValue - level)/window;
-
-### colorLevel
-
-Controls the level in a window level mapping of the input image. Window
-level mapping is a technique to map the raw data values of an image
-into screen intensities in a manner akin to
-
-pixelIntensity = (inputValue - level)/window;
 
 ### ambient
 
-Control the ambient lighting intensity for this image.
+
+
+
+
+### colorLevel
+
+
+
+
+
+### colorWindow
+
+
+
+
+
+### componentData
+
+
+
+
+
+### componentWeight
+
+
+
+
 
 ### diffuse
 
-Control the diffuse lighting intensity of this image.
 
-### opacity
 
-Control the opacity of this image.
+
+
+### extend
+
+Method use to decorate a given object (publicAPI+model) with vtkImageProperty characteristics.
+
+
+| Argument | Type | Description |
+| ------------- | ------------- | ----- |
+| **publicAPI** | <span class="arg-type"></span></br></span><span class="arg-required">required</span> | object on which methods will be bounds (public) |
+| **model** | <span class="arg-type"></span></br></span><span class="arg-required">required</span> | object on which data structure will be bounds (protected) |
+| **initialValues** | <span class="arg-type"></span></br></span><span class="arg-required">required</span> | (default: {}) |
+
+
+### getAmbient
+
+
+
+
+
+### getColorLevel
+
+
+
+
+
+### getColorWindow
+
+
+
+
+
+### getComponentWeight
+
+
+
+
+| Argument | Type | Description |
+| ------------- | ------------- | ----- |
+| **index** | <span class="arg-type"></span></br></span><span class="arg-required">required</span> |  |
+
+
+### getDiffuse
+
+
+
+
+
+### getIndependentComponents
+
+
+
+
+
+### getInterpolationTypeAsString
+
+
+
+
+
+### getInterpolationTypeAsString
+
+
+
+
+
+### getOpacity
+
+
+
+
+
+### getPiecewiseFunction
+
+Get the component weighting function.
+
+
+| Argument | Type | Description |
+| ------------- | ------------- | ----- |
+| **idx** | <span class="arg-type"></span></br></span><span class="arg-required">required</span> |  |
+
+
+### getRGBTransferFunction
+
+Get the currently set RGB transfer function.
+
+
+| Argument | Type | Description |
+| ------------- | ------------- | ----- |
+| **idx** | <span class="arg-type"></span></br></span><span class="arg-required">required</span> |  |
+
+
+### getScalarOpacity
+
+Alias to get the piecewise function (backwards compatibility)
+
+
+| Argument | Type | Description |
+| ------------- | ------------- | ----- |
+| **idx** | <span class="arg-type"></span></br></span><span class="arg-required">required</span> |  |
+
 
 ### independentComponents
 
-Specify whether image components (0 - 3) are treated independently or
-dependently.  If `independentComponents` is `true`, each image component
-will be treated as an independent "intensity" value and used to look up
-a color and piecewise function value independently.
 
-### set/get rGBTransferFunction
 
-Specify or retrieve, per component, a vtkColorTransferFunction to map
-scalars to colors. If set, then colorWindow and colorLevel are not used.
 
-The set method takes two arguments, a component index and an rgb transfer
-function, in that order.
 
-### set/get scalarOpacity
+### interpolationType
 
-The `scalarOpacity` property is an alias for `piecewiseFunction`.
 
-### set/get piecewiseFunction
 
-Specify or retrieve, per component, a vtkPiecewiseFunction.  If
-`independentComponents` is `true`, the piecewise function is used as a
-component weighting function, and resulting colors on the screen will
-be blended using the weights which are normalized per fragment in the
-fragment shader.  If `independentComponents` is `false`, then the
-piecewise function will be used as a traditional scalar opacity function
-to map image intensities to opacities.  This latter way of using the
-piecewise function will only work on single-component images. In either case,
-the overall image opacity can still be affected by the `opacity` property.
 
-The set method takes two arguments, a component index and a piecewise
-function, in that order.
 
-### set/get componentWeight
+### newInstance
 
-Specify or retrieve, per component, a single scalar weight value to be
-applied to the entire image for that component.  This can be used, for
-example, to completely disgregard the contribution from a single component.
+Method use to create a new instance of vtkImageProperty
 
-The set method takes two arguments, a component index and an floating point
-component weight, in that order.
+
+| Argument | Type | Description |
+| ------------- | ------------- | ----- |
+| **initialValues** | <span class="arg-type"></span></br></span><span class="arg-required">required</span> | for pre-setting some of its content |
+
+
+### opacity
+
+
+
+
+
+### piecewiseFunction
+
+
+
+
+
+### setAmbient
+
+
+
+
+
+### setColorLevel
+
+
+
+
+
+### setColorWindow
+
+
+
+
+
+### setComponentWeight
+
+
+
+
+| Argument | Type | Description |
+| ------------- | ------------- | ----- |
+| **index** | <span class="arg-type"></span></br></span><span class="arg-required">required</span> |  |
+| **value** | <span class="arg-type"></span></br></span><span class="arg-required">required</span> |  |
+
+
+### setDiffuse
+
+
+
+
+
+### setIndependentComponents
+
+
+
+
+
+### setInterpolationType
+
+
+
+
+
+### setInterpolationTypeToLinear
+
+
+
+
+
+### setInterpolationTypeToNearest
+
+
+
+
+
+### setOpacity
+
+
+
+
+| Argument | Type | Description |
+| ------------- | ------------- | ----- |
+| **opacity** | <span class="arg-type"></span></br></span><span class="arg-required">required</span> |  |
+
+
+### setPiecewiseFunction
+
+Set the piecewise function
+
+
+| Argument | Type | Description |
+| ------------- | ------------- | ----- |
+| **index** | <span class="arg-type"></span></br></span><span class="arg-required">required</span> |  |
+| **func** | <span class="arg-type"></span></br></span><span class="arg-required">required</span> |  |
+
+
+### setRGBTransferFunction
+
+Set the color of a volume to an RGB transfer function
+
+
+| Argument | Type | Description |
+| ------------- | ------------- | ----- |
+| **index** | <span class="arg-type"></span></br></span><span class="arg-required">required</span> |  |
+| **func** | <span class="arg-type"></span></br></span><span class="arg-required">required</span> |  |
+
+
+### setScalarOpacity
+
+Alias to set the piecewise function
+
+
+| Argument | Type | Description |
+| ------------- | ------------- | ----- |
+| **index** | <span class="arg-type"></span></br></span><span class="arg-required">required</span> |  |
+| **func** | <span class="arg-type"></span></br></span><span class="arg-required">required</span> |  |
+
+

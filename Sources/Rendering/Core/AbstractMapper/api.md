@@ -5,19 +5,85 @@ graphics primitives or software rendering techniques. Subclasses of
 vtkAbstractMapper can be used for rendering 2D data, geometry, or volumetric
 data.
 
-### clippingPlanes (set/get)
-Get/Set the vtkPlaneCollection which specifies the clipping planes.
+
+
+
+## Methods
+
+
+### addClippingPlane
+
 Added plane needs to be a vtkPlane object.
 
-### publicAPI
 
-addClippingPlane(plane)  
-removeAllClippingPlanes()
-: Specify clipping planes to be applied when the data is mapped
-(at most 6 clipping planes can be specified).
+| Argument | Type | Description |
+| ------------- | ------------- | ----- |
+| **plane** | <span class="arg-type"></span></br></span><span class="arg-required">required</span> |  |
 
-removeClippingPlane(i)
-: Remove clipping plane at index i.
 
-getNumberOfClippingPlanes()
-: Return number of clipping planes.
+### extend
+
+Method use to decorate a given object (publicAPI+model) with vtkAbstractMapper characteristics.
+
+
+| Argument | Type | Description |
+| ------------- | ------------- | ----- |
+| **publicAPI** | <span class="arg-type"></span></br></span><span class="arg-required">required</span> | object on which methods will be bounds (public) |
+| **model** | <span class="arg-type"></span></br></span><span class="arg-required">required</span> | object on which data structure will be bounds (protected) |
+| **initialValues** | <span class="arg-type"></span></br></span><span class="arg-required">required</span> | (default: {}) |
+
+
+### getClippingPlanes
+
+Get all clipping planes.
+
+#### Returns
+
+| Type | Description |
+| ----- | ------------- |
+| <span class="arg-type"></span> |  |
+
+
+### getNumberOfClippingPlanes
+
+Return number of clipping planes.
+
+#### Returns
+
+| Type | Description |
+| ----- | ------------- |
+| <span class="arg-type"></span> |  |
+
+
+### removeAllClippingPlanes
+
+Remove all clipping planes.
+
+
+
+### removeClippingPlane
+
+Remove clipping plane at index i.
+
+
+| Argument | Type | Description |
+| ------------- | ------------- | ----- |
+| **i** | <span class="arg-type"></span></br></span><span class="arg-required">required</span> |  |
+
+
+### setClippingPlanes
+
+Set clipping planes.
+
+
+| Argument | Type | Description |
+| ------------- | ------------- | ----- |
+| **planes** | <span class="arg-type"></span></br></span><span class="arg-required">required</span> |  |
+
+
+### update
+
+
+
+
+

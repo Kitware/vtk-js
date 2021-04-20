@@ -4,7 +4,7 @@ import testUtils from 'vtk.js/Sources/Testing/testUtils';
 import vtkFollower from 'vtk.js/Sources/Rendering/Core/Follower';
 import vtkMapper from 'vtk.js/Sources/Rendering/Core/Mapper';
 import vtkOBJReader from 'vtk.js/Sources/IO/Misc/OBJReader';
-import vtkOpenGLRenderWindow from 'vtk.js/Sources/Rendering/OpenGL/RenderWindow';
+import 'vtk.js/Sources/Rendering/Misc/RenderingAPIs';
 import vtkRenderWindow from 'vtk.js/Sources/Rendering/Core/RenderWindow';
 import vtkRenderer from 'vtk.js/Sources/Rendering/Core/Renderer';
 
@@ -50,7 +50,7 @@ test.onlyIfWebGL('Test Follower class', (t) => {
       renderer.resetCamera();
       renderWindow.render();
 
-      const glwindow = gc.registerResource(vtkOpenGLRenderWindow.newInstance());
+      const glwindow = gc.registerResource(renderWindow.newAPISpecificView());
       glwindow.setContainer(renderWindowContainer);
       renderWindow.addView(glwindow);
       glwindow.setSize(400, 400);

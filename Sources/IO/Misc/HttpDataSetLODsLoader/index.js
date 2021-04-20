@@ -3,6 +3,12 @@ import macro from 'vtk.js/Sources/macro';
 import DataAccessHelper from 'vtk.js/Sources/IO/Core/DataAccessHelper';
 import vtkHttpDataSetReader from 'vtk.js/Sources/IO/Core/HttpDataSetReader';
 
+// Enable several sources for DataAccessHelper
+import 'vtk.js/Sources/IO/Core/DataAccessHelper/LiteHttpDataAccessHelper'; // Just need HTTP
+// import 'vtk.js/Sources/IO/Core/DataAccessHelper/HttpDataAccessHelper'; // HTTP + gz
+// import 'vtk.js/Sources/IO/Core/DataAccessHelper/HtmlDataAccessHelper'; // html + base64 + zip
+// import 'vtk.js/Sources/IO/Core/DataAccessHelper/JSZipDataAccessHelper'; // zip
+
 const { vtkErrorMacro } = macro;
 
 // ----------------------------------------------------------------------------

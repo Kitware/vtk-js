@@ -20,12 +20,13 @@ function vtkPolyLineWidget(publicAPI, model) {
   // --- Widget Requirement ---------------------------------------------------
 
   model.methodsToLink = [
-    'closePolyLine',
-    'activeScaleFactor',
     'activeColor',
-    'useActiveColor',
-    'glyphResolution',
+    'activeScaleFactor',
+    'closePolyLine',
     'defaultScale',
+    'glyphResolution',
+    'lineThickness',
+    'useActiveColor',
   ];
   model.behavior = widgetBehavior;
   model.widgetState = stateGenerator();

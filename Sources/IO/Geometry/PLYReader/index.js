@@ -4,6 +4,12 @@ import macro from 'vtk.js/Sources/macro';
 import vtkDataArray from 'vtk.js/Sources/Common/Core/DataArray';
 import vtkPolyData from 'vtk.js/Sources/Common/DataModel/PolyData';
 
+// Enable data soure for DataAccessHelper
+import 'vtk.js/Sources/IO/Core/DataAccessHelper/LiteHttpDataAccessHelper'; // Just need HTTP
+// import 'vtk.js/Sources/IO/Core/DataAccessHelper/HttpDataAccessHelper'; // HTTP + zip
+// import 'vtk.js/Sources/IO/Core/DataAccessHelper/HtmlDataAccessHelper'; // html + base64 + zip
+// import 'vtk.js/Sources/IO/Core/DataAccessHelper/JSZipDataAccessHelper'; // zip
+
 const PLYFormats = {
   ASCII: 'ascii',
   BINARY_BIG_ENDIAN: 'binary_big_endian',
@@ -170,7 +176,7 @@ function postProcess(buffer, elements) {
     for (let faceIdx = 0; faceIdx < nbFaces; ++faceIdx) {
       const nbFaceVerts = buffer.indices[idxVerts++];
       const texcoords = buffer.faceVertexUvs[idxCoord++];
-      if (nbFaceVerts * 2 === texcoords.length) {
+      if (texcoords && nbFaceVerts * 2 === texcoords.length) {
         // grab the vertex index
         for (let vertIdx = 0; vertIdx < nbFaceVerts; ++vertIdx) {
           const vert = buffer.indices[idxVerts++];

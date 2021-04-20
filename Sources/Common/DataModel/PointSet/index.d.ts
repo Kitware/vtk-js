@@ -3,7 +3,7 @@ import vtkPoints from 'vtk.js/Sources/Common/Core/Points';
 import vtkDataSet from 'vtk.js/Sources/Common/DataModel/DataSet';
 
 /**
- * 
+ *
  */
 interface IPointSetInitialValues {
 }
@@ -16,22 +16,23 @@ export interface vtkPointSet extends vtkDataSet {
 	computeBounds(): void;
 
 	/**
-	 * Get the bounds as [xmin, xmax, ymin, ymax, zmin, zmax].
+     * Get the bounds for this mapper as [xmin, xmax, ymin, ymax,zmin, zmax].
+	 * @return {Number[]} The bounds for the mapper.
 	 */
-	getBounds():  number[];
+	getBounds(): number[];
 
 	/**
-	 * 
+	 *
 	 */
 	getNumberOfPoints(): number;
 
 	/**
-	 * 
+	 *
 	 */
 	getPoints(): vtkPoints;
 
 	/**
-	 * 
+	 *
 	 */
 	setPoints(points: vtkPoints): boolean;
 }
@@ -41,20 +42,20 @@ export interface vtkPointSet extends vtkDataSet {
  *
  * @param publicAPI object on which methods will be bounds (public)
  * @param model object on which data structure will be bounds (protected)
- * @param initialValues (default: {})
+ * @param {IPointSetInitialValues} [initialValues] (default: {})
  */
 export function extend(publicAPI: object, model: object, initialValues?: IPointSetInitialValues): void;
 
 /**
  * Method used to create a new instance of vtkPointSet.
- * @param initialValues for pre-setting some of its content
+ * @param {IPointSetInitialValues} [initialValues] for pre-setting some of its content
  */
 export function newInstance(initialValues?: IPointSetInitialValues): vtkPointSet;
 
 /**
  * vtkPointSet is an abstract class that specifies the interface for
  * datasets that explicitly use "point" arrays to represent geometry.
- * 
+ *
  * For example, vtkPolyData and vtkUnstructuredGrid require point arrays
  * to specify point position, while vtkStructuredPoints generates point
  * positions implicitly.

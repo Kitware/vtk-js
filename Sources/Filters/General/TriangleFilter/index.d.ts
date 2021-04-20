@@ -1,31 +1,27 @@
 import { VtkAlgorithm, VtkObject } from "vtk.js/Sources/macro";
 
 /**
- * 
+ *
  */
 interface ITriangleFilterInitialValues {
-
-    /**
-     * 
-     */
-    errorCount?: number;
+	errorCount?: number;
 }
 
 type vtkTriangleFilterBase = VtkObject & VtkAlgorithm;
 
 export interface vtkTriangleFilter extends vtkTriangleFilterBase {
 
-    /**
-     * Get the desired precision for the output types.
-     */
-    getErrorCount(): number;
+	/**
+	 * Get the desired precision for the output types.
+	 */
+	getErrorCount(): number;
 
-    /**
-     *
-     * @param inData 
-     * @param outData 
-     */
-    requestData(inData: any, outData: any): void;
+	/**
+	 *
+	 * @param inData
+	 * @param outData
+	 */
+	requestData(inData: any, outData: any): void;
 }
 
 /**
@@ -33,13 +29,13 @@ export interface vtkTriangleFilter extends vtkTriangleFilterBase {
  *
  * @param publicAPI object on which methods will be bounds (public)
  * @param model object on which data structure will be bounds (protected)
- * @param initialValues (default: {})
+ * @param {ITriangleFilterInitialValues} [initialValues] (default: {})
  */
 export function extend(publicAPI: object, model: object, initialValues?: ITriangleFilterInitialValues): void;
 
 /**
  * Method used to create a new instance of vtkTriangleFilter
- * @param initialValues for pre-setting some of its content
+ * @param {ITriangleFilterInitialValues} [initialValues] for pre-setting some of its content
  */
 export function newInstance(initialValues?: ITriangleFilterInitialValues): vtkTriangleFilter;
 
@@ -51,7 +47,7 @@ export function newInstance(initialValues?: ITriangleFilterInitialValues): vtkTr
  * triangles.
  */
 export declare const vtkTriangleFilter: {
-    newInstance: typeof newInstance;
-    extend: typeof extend;
+	newInstance: typeof newInstance;
+	extend: typeof extend;
 }
 export default vtkTriangleFilter;

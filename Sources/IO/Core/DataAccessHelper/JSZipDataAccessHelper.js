@@ -4,6 +4,7 @@ import pako from 'pako';
 import macro from 'vtk.js/Sources/macro';
 import Endian from 'vtk.js/Sources/Common/Core/Endian';
 import { DataTypeByteSize } from 'vtk.js/Sources/Common/Core/DataArray/Constants';
+import { registerType } from 'vtk.js/Sources/IO/Core/DataAccessHelper';
 
 const { vtkErrorMacro, vtkDebugMacro } = macro;
 
@@ -42,7 +43,7 @@ function handleUint8Array(array, compression, done) {
         Endian.swapBytes(array.buffer, DataTypeByteSize[array.dataType]);
       }
 
-      array.values = new window[array.dataType](array.buffer);
+      array.values = macro.newTypedArray(array.dataType, array.buffer);
     }
 
     if (array.values.length !== array.size) {
@@ -245,6 +246,10 @@ function create(createOptions) {
   };
 }
 
-export default {
+const JSZipDataAccessHelper = {
   create,
 };
+
+registerType('zip', (options) => JSZipDataAccessHelper.create(options));
+
+export default JSZipDataAccessHelper;

@@ -11,6 +11,7 @@ import vtkWebGPUPipeline from 'vtk.js/Sources/Rendering/WebGPU/Pipeline';
 import vtkWebGPUSampler from 'vtk.js/Sources/Rendering/WebGPU/Sampler';
 import vtkWebGPUShaderCache from 'vtk.js/Sources/Rendering/WebGPU/ShaderCache';
 import vtkWebGPUShaderDescription from 'vtk.js/Sources/Rendering/WebGPU/ShaderDescription';
+import vtkWebGPUUniformBuffer from 'vtk.js/Sources/Rendering/WebGPU/UniformBuffer';
 import vtkWebGPUVertexInput from 'vtk.js/Sources/Rendering/WebGPU/VertexInput';
 import vtkViewNode from 'vtk.js/Sources/Rendering/SceneGraph/ViewNode';
 
@@ -71,7 +72,7 @@ const vtkWebGPUPolyDataFS = `
 
 //VTK::PositionVC::Dec
 
-[[location(0)]] var<out> outColor : vec4<f32>;
+//VTK::RenderEncoder::Dec
 
 [[builtin(front_facing)]] var<in> frontFacing : bool;
 
@@ -90,36 +91,18 @@ fn main() -> void
 
   //VTK::Light::Impl
 
-  outColor = vec4<f32>(ambientColor.rgb * mapperUBO.AmbientIntensity
+  var computedColor: vec4<f32> = vec4<f32>(ambientColor.rgb * mapperUBO.AmbientIntensity
      + diffuse * mapperUBO.DiffuseIntensity
      + specular * mapperUBO.SpecularIntensity,
      opacity);
 
   //VTK::TCoord::Impl
+
+  if (computedColor.a == 0.0) { discard; };
+
+  //VTK::RenderEncoder::Impl
 }
 `;
-
-const vtkWebGPUPolyDataUBOCode = `
-[[block]] struct mapperVals
-{
-  [[offset(0)]] MCVCMatrix: mat4x4<f32>;
-  [[offset(64)]] normalMatrix: mat4x4<f32>;
-  [[offset(128)]] AmbientColor: vec4<f32>;
-  [[offset(144)]] DiffuseColor: vec4<f32>;
-  [[offset(160)]] SpecularColor: vec4<f32>;
-  [[offset(176)]] AmbientIntensity: f32;
-  [[offset(180)]] DiffuseIntensity: f32;
-  [[offset(184)]] SpecularIntensity: f32;
-  [[offset(188)]] Opacity: f32;
-  [[offset(192)]] Metallic: f32;
-  [[offset(196)]] Roughness: f32;
-  [[offset(200)]] EmissiveFactor: f32;
-  [[offset(204)]] SpecularPower: f32;
-};
-[[binding(0), group(1)]] var<uniform> mapperUBO : mapperVals;
-`;
-
-const vtkWebGPUPolyDataMapperUBOSize = 208 / 4;
 
 // ----------------------------------------------------------------------------
 // vtkWebGPUPolyDataMapper methods
@@ -154,76 +137,45 @@ function vtkWebGPUPolyDataMapper(publicAPI, model) {
   };
 
   publicAPI.updateUBO = () => {
-    let needSend = false;
-
     // make sure the data is up to date
     const actor = model.WebGPUActor.getRenderable();
     const ppty = actor.getProperty();
-    const utime = model.UBOUpdateTime.getMTime();
+    const utime = model.UBO.getSendTime();
     if (
       publicAPI.getMTime() > utime ||
       ppty.getMTime() > utime ||
       model.renderable.getMTime() > utime
     ) {
       let aColor = ppty.getAmbientColorByReference();
-      model.UBOData[32] = aColor[0];
-      model.UBOData[33] = aColor[1];
-      model.UBOData[34] = aColor[2];
-      model.UBOData[35] = 1.0;
+      model.UBO.setValue('AmbientIntensity', ppty.getAmbient());
+      model.UBO.setArray('AmbientColor', [
+        aColor[0],
+        aColor[1],
+        aColor[2],
+        1.0,
+      ]);
+      model.UBO.setValue('DiffuseIntensity', ppty.getDiffuse());
       aColor = ppty.getDiffuseColorByReference();
-      model.UBOData[36] = aColor[0];
-      model.UBOData[37] = aColor[1];
-      model.UBOData[38] = aColor[2];
-      model.UBOData[39] = 1.0;
+      model.UBO.setArray('DiffuseColor', [
+        aColor[0],
+        aColor[1],
+        aColor[2],
+        1.0,
+      ]);
+      model.UBO.setValue('SpecularIntensity', ppty.getSpecular());
+      model.UBO.setValue('SpecularPower', ppty.getSpecularPower());
       aColor = ppty.getSpecularColorByReference();
-      model.UBOData[40] = aColor[0];
-      model.UBOData[41] = aColor[1];
-      model.UBOData[42] = aColor[2];
-      model.UBOData[43] = 1.0;
-      model.UBOData[44] = ppty.getAmbient();
-      model.UBOData[45] = ppty.getDiffuse();
-      model.UBOData[46] = ppty.getSpecular();
-      model.UBOData[47] = ppty.getOpacity();
-      model.UBOData[51] = ppty.getSpecularPower();
+      model.UBO.setArray('SpecularColor', [
+        aColor[0],
+        aColor[1],
+        aColor[2],
+        1.0,
+      ]);
+      model.UBO.setValue('Opacity', ppty.getOpacity());
+      model.UBO.setValue('PropID', model.WebGPUActor.getPropID());
 
-      model.UBOUpdateTime.modified();
-      needSend = true;
-    }
-
-    // make sure the buffer is created
-    if (!model.UBO) {
-      const req = {
-        address: model.UBOData,
-        time: 0,
-        usage: BufferUsage.UniformArray,
-      };
       const device = model.WebGPURenderWindow.getDevice();
-      model.UBO = device.getBufferManager().getBuffer(req);
-      model.UBOBindGroup = device.getHandle().createBindGroup({
-        layout: device.getMapperBindGroupLayout(),
-        entries: [
-          {
-            binding: 0,
-            resource: {
-              buffer: model.UBO.getHandle(),
-            },
-          },
-        ],
-      });
-      needSend = false;
-    }
-
-    // send data down if needed
-    if (needSend) {
-      model.WebGPURenderWindow.getDevice()
-        .getHandle()
-        .queue.writeBuffer(
-          model.UBO.getHandle(),
-          0,
-          model.UBOData.buffer,
-          model.UBOData.byteOffset,
-          model.UBOData.byteLength
-        );
+      model.UBO.sendIfNeeded(device, device.getMapperBindGroupLayout());
     }
   };
 
@@ -234,6 +186,8 @@ function vtkWebGPUPolyDataMapper(publicAPI, model) {
     }
     model.currentInput = model.renderable.getInputData();
     publicAPI.invokeEvent(EndEvent);
+
+    model.renderEncoder = model.WebGPURenderer.getRenderEncoder();
 
     publicAPI.buildPrimitives();
 
@@ -248,7 +202,7 @@ function vtkWebGPUPolyDataMapper(publicAPI, model) {
       model.WebGPURenderer.getUBOCode(),
     ]).result;
     code = vtkWebGPUShaderCache.substitute(code, '//VTK::Mapper::UBO', [
-      vtkWebGPUPolyDataUBOCode,
+      model.UBO.getShaderCode(),
     ]).result;
     code = vtkWebGPUShaderCache.substitute(code, '//VTK::VertexInput', [
       vertexInput.getShaderCode(),
@@ -264,7 +218,7 @@ function vtkWebGPUPolyDataMapper(publicAPI, model) {
       model.WebGPURenderer.getUBOCode(),
     ]).result;
     code = vtkWebGPUShaderCache.substitute(code, '//VTK::Mapper::UBO', [
-      vtkWebGPUPolyDataUBOCode,
+      model.UBO.getShaderCode(),
     ]).result;
 
     const fDesc = vtkWebGPUShaderDescription.newInstance({
@@ -283,6 +237,7 @@ function vtkWebGPUPolyDataMapper(publicAPI, model) {
     // publicAPI.replaceShaderLight(hash, pipeline);
     publicAPI.replaceShaderTCoord(hash, pipeline, vertexInput);
     // publicAPI.replaceShaderPositionVC(hash, pipeline);
+    model.renderEncoder.replaceShaderCode(pipeline);
   };
 
   publicAPI.replaceShaderNormal = (hash, pipeline, vertexInput) => {
@@ -389,7 +344,7 @@ function vtkWebGPUPolyDataMapper(publicAPI, model) {
     if (model.textures.length) {
       code = vtkWebGPUShaderCache.substitute(code, '//VTK::TCoord::Impl', [
         'var tcolor: vec4<f32> = textureSample(Texture0, Sampler0, tcoordVS);',
-        'outColor = outColor*tcolor;',
+        'computedColor = computedColor*tcolor;',
       ]).result;
     }
     fDesc.setCode(code);
@@ -514,7 +469,6 @@ function vtkWebGPUPolyDataMapper(publicAPI, model) {
       if (c) {
         const scalarMode = model.renderable.getScalarMode();
         let haveCellScalars = false;
-        console.log(`have colors ${scalarMode}`);
         // We must figure out how the scalars should be mapped to the polydata.
         if (
           (scalarMode === ScalarMode.USE_CELL_DATA ||
@@ -525,7 +479,6 @@ function vtkWebGPUPolyDataMapper(publicAPI, model) {
           c
         ) {
           haveCellScalars = true;
-          console.log('here');
         }
         const buffRequest = {
           hash: hash + points.getMTime(),
@@ -681,6 +634,7 @@ function vtkWebGPUPolyDataMapper(publicAPI, model) {
     }
     const uhash = publicAPI.getHashFromUsage(usage);
     pipelineHash += uhash;
+    pipelineHash += model.renderEncoder.getPipelineHash();
 
     return pipelineHash;
   };
@@ -715,7 +669,7 @@ function vtkWebGPUPolyDataMapper(publicAPI, model) {
           primHelper.vertexInput,
           usage
         );
-        let pipeline = model.WebGPURenderWindow.getPipeline(pipelineHash);
+        let pipeline = device.getPipeline(pipelineHash);
 
         // build VBO for this primitive
         // build the pipeline if needed
@@ -742,10 +696,11 @@ function vtkWebGPUPolyDataMapper(publicAPI, model) {
             primHelper.vertexInput
           );
           pipeline.setTopology(publicAPI.getTopologyFromUsage(usage));
+          pipeline.setRenderEncoder(model.renderEncoder);
           pipeline.setVertexState(
             primHelper.vertexInput.getVertexInputInformation()
           );
-          model.WebGPURenderWindow.createPipeline(pipelineHash, pipeline);
+          device.createPipeline(pipelineHash, pipeline);
         }
 
         if (pipeline) {
@@ -765,6 +720,7 @@ function vtkWebGPUPolyDataMapper(publicAPI, model) {
 
 const DEFAULT_VALUES = {
   colorTexture: null,
+  renderEncoder: null,
   textures: null,
   samplers: null,
   textureBindGroups: null,
@@ -787,9 +743,27 @@ export function extend(publicAPI, model, initialValues = {}) {
 
   model.tmpMat3 = mat3.identity(new Float64Array(9));
   model.tmpMat4 = mat4.identity(new Float64Array(16));
-  model.UBOData = new Float32Array(vtkWebGPUPolyDataMapperUBOSize);
-  model.UBOUpdateTime = {};
-  macro.obj(model.UBOUpdateTime);
+
+  model.UBO = vtkWebGPUUniformBuffer.newInstance();
+  model.UBO.setBinding(0);
+  model.UBO.setGroup(1);
+  model.UBO.setName('mapperUBO');
+  model.UBO.addEntry('MCVCMatrix', 'mat4x4<f32>');
+  model.UBO.addEntry('AmbientColor', 'vec4<f32>');
+  model.UBO.addEntry('DiffuseColor', 'vec4<f32>');
+  model.UBO.addEntry('AmbientIntensity', 'f32');
+  model.UBO.addEntry('DiffuseIntensity', 'f32');
+  model.UBO.addEntry('SpecularColor', 'vec4<f32>');
+  model.UBO.addEntry('SpecularIntensity', 'f32');
+  model.UBO.addEntry('Opacity', 'f32');
+  model.UBO.addEntry('SpecularPower', 'f32');
+  model.UBO.addEntry('PropID', 'u32');
+
+  //   [[offset(0)]] MCVCMatrix: mat4x4<f32>;
+  //   [[offset(64)]] normalMatrix: mat4x4<f32>;
+  //   [[offset(192)]] Metallic: f32;
+  //   [[offset(196)]] Roughness: f32;
+  //   [[offset(200)]] EmissiveFactor: f32;
 
   model.samplers = [];
   model.textures = [];
@@ -802,26 +776,31 @@ export function extend(publicAPI, model, initialValues = {}) {
     };
     const primHelper = model.primitives[i];
     model.primitives[i].renderForPipeline = (pipeline) => {
-      const renderPass = model.WebGPURenderer.getRenderPass();
+      const renderEncoder = model.WebGPURenderer.getRenderEncoder();
 
       // bind the mapper UBO
-      renderPass.setBindGroup(1, model.UBOBindGroup);
+      renderEncoder.setBindGroup(1, model.UBO.getBindGroup());
 
       // bind any textures and samplers
       for (let t = 0; t < model.textures.length; t++) {
         const tcount = pipeline.getBindGroupLayoutCount(`Texture${t}`);
-        renderPass.setBindGroup(tcount, model.textureBindGroups[t]);
+        renderEncoder.setBindGroup(tcount, model.textureBindGroups[t]);
       }
 
       // bind the vertex input
-      pipeline.bindVertexInput(renderPass, primHelper.vertexInput);
+      pipeline.bindVertexInput(renderEncoder, primHelper.vertexInput);
       const vbo = primHelper.vertexInput.getBuffer('vertexMC');
-      renderPass.draw(vbo.getSizeInBytes() / 16, 1, 0, 0);
+      renderEncoder.draw(
+        vbo.getSizeInBytes() / vbo.getStrideInBytes(),
+        1,
+        0,
+        0
+      );
     };
   }
 
   // Build VTK API
-  macro.setGet(publicAPI, model, ['context']);
+  macro.setGet(publicAPI, model, ['context', 'renderEncoder', 'UBO']);
 
   model.VBOBuildTime = {};
   macro.obj(model.VBOBuildTime, { mtime: 0 });

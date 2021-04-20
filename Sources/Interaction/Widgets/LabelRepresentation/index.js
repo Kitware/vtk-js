@@ -340,9 +340,9 @@ export function extend(publicAPI, model, initialValues = {}) {
       // coordList[0] is in display coords
       const dpr = window.devicePixelRatio;
       model.canvas.style.left = `${Math.round(coordList[0][0]) / dpr}px`;
-      model.canvas.style.bottom = `${
-        Math.round(coordList[0][1] + yOffset) / dpr
-      }px`;
+      model.canvas.style.bottom = `${Math.round(
+        coordList[0][1] / dpr + yOffset
+      )}px`;
 
       publicAPI.modified();
     }

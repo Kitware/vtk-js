@@ -1,59 +1,55 @@
 import { VtkAlgorithm, VtkObject } from "vtk.js/Sources/macro";
 
 /**
- * 
+ *
  */
 interface IImageCropFilterInitialValues {
-
-    /**
-     * 
-     */
-    croppingPlanes?: any;
+	croppingPlanes?: any;
 }
 
 type vtkImageCropFilterBase = VtkObject & VtkAlgorithm;
 
 export interface vtkImageCropFilter extends vtkImageCropFilterBase {
 
-    /**
-     * Get The cropping planes, in IJK space. 
-     * @default [0, 0, 0, 0, 0, 0].
-     */
-    getCroppingPlanes(): number[];
+	/**
+	 * Get The cropping planes, in IJK space.
+	 * @default [0, 0, 0, 0, 0, 0].
+	 */
+	getCroppingPlanes(): number[];
 
-    /**
-     * Get The cropping planes, in IJK space. 
-     * @default [0, 0, 0, 0, 0, 0].
-     */
-    getCroppingPlanesByReference(): number[];
+	/**
+	 * Get The cropping planes, in IJK space.
+	 * @default [0, 0, 0, 0, 0, 0].
+	 */
+	getCroppingPlanesByReference(): number[];
 
-    /**
-     * 
-     */
-    isResetAvailable(): boolean;
-    /**
-     * 
-     */
-    reset(): void;
+	/**
+	 *
+	 */
+	isResetAvailable(): boolean;
+	/**
+	 *
+	 */
+	reset(): void;
 
-    /**
-     *
-     * @param inData 
-     * @param outData 
-     */
-    requestData(inData: any, outData: any): void;
+	/**
+	 *
+	 * @param inData
+	 * @param outData
+	 */
+	requestData(inData: any, outData: any): void;
 
-    /**
-     * 
-     * @param croppingPlanes 
-     */
-    setCroppingPlanes(croppingPlanes: number[]): boolean;
+	/**
+	 *
+	 * @param croppingPlanes
+	 */
+	setCroppingPlanes(croppingPlanes: number[]): boolean;
 
-    /**
-     * 
-     * @param croppingPlanes 
-     */
-    setCroppingPlanesFrom(croppingPlanes: number[]): boolean;
+	/**
+	 *
+	 * @param croppingPlanes
+	 */
+	setCroppingPlanesFrom(croppingPlanes: number[]): boolean;
 }
 
 /**
@@ -61,24 +57,26 @@ export interface vtkImageCropFilter extends vtkImageCropFilterBase {
  *
  * @param publicAPI object on which methods will be bounds (public)
  * @param model object on which data structure will be bounds (protected)
- * @param initialValues (default: {})
+ * @param {IImageCropFilterInitialValues} [initialValues] (default: {})
  */
 export function extend(publicAPI: object, model: object, initialValues?: IImageCropFilterInitialValues): void;
 
 /**
  * Method used to create a new instance of vtkImageCropFilter
- * @param initialValues for pre-setting some of its content
+ * @param {IImageCropFilterInitialValues} [initialValues] for pre-setting some of its content
  */
 export function newInstance(initialValues?: IImageCropFilterInitialValues): vtkImageCropFilter;
 
 
 /**
  * The vtkImageCropFilter will crop a vtkImageData. This will only crop against
- * IJK-aligned planes. Note this is slow on large datasets due to CPU-bound
+ * IJK-aligned planes. 
+ * 
+ * Note this is slow on large datasets due to CPU-bound
  * cropping.
  */
 export declare const vtkImageCropFilter: {
-    newInstance: typeof newInstance;
-    extend: typeof extend;
+	newInstance: typeof newInstance;
+	extend: typeof extend;
 }
 export default vtkImageCropFilter;

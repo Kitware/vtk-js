@@ -1,17 +1,19 @@
-import HtmlDataAccessHelper from './HtmlDataAccessHelper';
-import HttpDataAccessHelper from './HttpDataAccessHelper';
-import JSZipDataAccessHelper from './JSZipDataAccessHelper';
+const TYPE_MAPPING = {};
 
-const TYPE_MAPPING = {
-  http: (options) => HttpDataAccessHelper,
-  zip: (options) => JSZipDataAccessHelper.create(options),
-  html: (options) => HtmlDataAccessHelper,
-};
+export function has(type) {
+  return !!TYPE_MAPPING[type];
+}
 
-function get(type = 'http', options = {}) {
+export function get(type = 'http', options = {}) {
   return TYPE_MAPPING[type](options);
+}
+
+export function registerType(type, fn) {
+  TYPE_MAPPING[type] = fn;
 }
 
 export default {
   get,
+  has,
+  registerType,
 };

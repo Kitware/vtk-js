@@ -6,43 +6,19 @@ import vtkProperty from 'vtk.js/Sources/Rendering/Core/Property';
  * 
  */
 interface IActorInitialValues {
-    /**
-     * 
-     */
     mapper?: vtkMapper;
-
-    /**
-     * 
-     */
     property?: vtkProperty;
-
-    /**
-     * 
-     */
     backfaceProperty?: vtkProperty;
-
-    /**
-     * 
-     */
     forceOpaque?: boolean;
-
-    /**
-     * 
-     */
     forceTranslucent?: boolean;
-
-    /**
-     * 
-     */
     bounds?: number[];
-
 }
 
 export interface vtkActor extends vtkProp3D {
 
     /**
      * Return if the prop have some translucent polygonal geometry
-     * @returns 
+     * @return 
      */
     hasTranslucentPolygonalGeometry(): boolean;
 
@@ -50,34 +26,35 @@ export interface vtkActor extends vtkProp3D {
      * For some exporters and other other operations we must be
      * able to collect all the actors or volumes. These methods
      * are used in that process.
-     * @returns  
+     * @return {vtkActor[]} list of actors
      */
     getActors(): vtkActor[];
 
     /**
      * 
+     * @return {vtkProperty} the backface property.
      */
     getBackfaceProperty(): vtkProperty;
 
-    /**
-     * Get the bounds for this Actor as (Xmin,Xmax,Ymin,Ymax,Zmin,Zmax).
-     * @returns 
-     */
-    getBounds(): number[];
+	/**
+     * Get the bounds for this mapper as [xmin, xmax, ymin, ymax,zmin, zmax].
+	 * @return {Number[]} The bounds for the mapper.
+	 */
+	getBounds(): number[];
 
     /**
-     * 
+     * Check whether the opaque is forced or not.
      */
     getForceOpaque(): boolean;
 
     /**
-     * 
+     * Check whether the translucency is forced or not.
      */
     getForceTranslucent(): boolean;
 
     /**
-     * Return if the actor is opaque or not
-     * @returns 
+     * Check if the actor is opaque or not
+     * @return true if the actor is opaque
      */
     getIsOpaque(): boolean;
 
@@ -92,13 +69,13 @@ export interface vtkActor extends vtkProp3D {
      * actor must have a property associated with it. If one isn’t specified,
      * then one will be generated automatically. Multiple actors can share one
      * property object.
-     * @returns vtkProperty
+     * @return {vtkProperty} The property object
      */
     getProperty(): vtkProperty;
 
     /**
-     * Return if the actor supports selection
-     * @returns 
+     * Check whether if the actor supports selection
+     * @return {Boolean} true if the actor support selection.
      */
     getSupportsSelection(): boolean;
 
@@ -143,7 +120,7 @@ export interface vtkActor extends vtkProp3D {
  *
  * @param publicAPI object on which methods will be bounds (public)
  * @param model object on which data structure will be bounds (protected)
- * @param initialValues (default: {})
+ * @param {IActorInitialValues} [initialValues] (default: {})
  */
 export function extend(publicAPI: object, model: object, initialValues?: IActorInitialValues): void;
 
@@ -159,7 +136,7 @@ export function extend(publicAPI: object, model: object, initialValues?: IActorI
  * * orientation = [0, 0, 0]
  * 
  * No user defined matrix and no texture map.
- * @param initialValues for pre-setting some of its content
+ * @param {IActorInitialValues} [initialValues] for pre-setting some of its content
  */
 export function newInstance(initialValues?: IActorInitialValues): vtkActor;
 
@@ -171,8 +148,8 @@ export function newInstance(initialValues?: IActorInitialValues): vtkActor;
  * texture map. vtkActor combines these instance variables into one 4x4
  * transformation matrix as follows: [x y z 1] = [x y z 1] Translate(-origin)
  * Scale(scale) Rot(y) Rot(x) Rot (z) Trans(origin) Trans(position)
- * @see vtkMapper
- * @see vtkProperty 
+ * @see [vtkMapper](./Rendering_Core_Mapper.html)
+ * @see [vtkProperty](./Rendering_Core_Property.html) 
  */
 export declare const vtkActor: {
     newInstance: typeof newInstance,

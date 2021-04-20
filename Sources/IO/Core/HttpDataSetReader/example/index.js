@@ -5,6 +5,9 @@ import vtkActor from 'vtk.js/Sources/Rendering/Core/Actor';
 import vtkHttpDataSetReader from 'vtk.js/Sources/IO/Core/HttpDataSetReader';
 import vtkMapper from 'vtk.js/Sources/Rendering/Core/Mapper';
 
+// Force the loading of HttpDataAccessHelper to support gzip decompression
+import 'vtk.js/Sources/IO/Core/DataAccessHelper/HttpDataAccessHelper';
+
 // ----------------------------------------------------------------------------
 // Standard rendering code setup
 // ----------------------------------------------------------------------------

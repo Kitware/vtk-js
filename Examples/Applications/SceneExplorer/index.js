@@ -10,6 +10,10 @@ import vtkFullScreenRenderWindow from 'vtk.js/Sources/Rendering/Misc/FullScreenR
 import vtkHttpSceneLoader from 'vtk.js/Sources/IO/Core/HttpSceneLoader';
 import vtkURLExtract from 'vtk.js/Sources/Common/Core/URLExtract';
 
+// Force DataAccessHelper to have access to various data source
+import 'vtk.js/Sources/IO/Core/DataAccessHelper/HtmlDataAccessHelper';
+import 'vtk.js/Sources/IO/Core/DataAccessHelper/JSZipDataAccessHelper';
+
 import controlWidget from './SceneExplorerWidget';
 import style from './SceneExplorer.module.css';
 

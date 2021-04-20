@@ -7,6 +7,12 @@ import macro from 'vtk.js/Sources/macro';
 import DataAccessHelper from 'vtk.js/Sources/IO/Core/DataAccessHelper';
 import HttpDataSetReader from '../HttpDataSetReader';
 
+// Enable data soure for DataAccessHelper
+import 'vtk.js/Sources/IO/Core/DataAccessHelper/LiteHttpDataAccessHelper'; // Just need HTTP
+// import 'vtk.js/Sources/IO/Core/DataAccessHelper/HttpDataAccessHelper'; // HTTP + zip
+// import 'vtk.js/Sources/IO/Core/DataAccessHelper/HtmlDataAccessHelper'; // html + base64 + zip
+// import 'vtk.js/Sources/IO/Core/DataAccessHelper/JSZipDataAccessHelper'; // zip
+
 const HTTP_DATA_ACCESS = DataAccessHelper.get('http');
 
 // ----------------------------------------------------------------------------
@@ -148,6 +154,7 @@ function vtkHttpDataSetSeriesReader(publicAPI, model) {
     model.currentReader = reader.reader;
     model.output[0] = model.currentReader.getOutputData();
     model.output[0].modified();
+    publicAPI.modified();
   };
 
   publicAPI.requestData = (inData, outData) => {

@@ -45,6 +45,21 @@ function vtkPolyLineRepresentation(publicAPI, model) {
     return model.points;
   }
 
+  /**
+   * Change the line/tube thickness.
+   * @param {number} lineThickness
+   */
+  function applyLineThickness(lineThickness) {
+    let scaledLineThickness = lineThickness;
+    if (publicAPI.getScaleInPixels()) {
+      const center = vtkBoundingBox.getCenter(
+        model.internalPolyData.getBounds()
+      );
+      scaledLineThickness *= publicAPI.getPixelWorldHeightAtCoord(center);
+    }
+    model.tubes.setRadius(scaledLineThickness);
+  }
+
   // --------------------------------------------------------------------------
   // Generic rendering pipeline
   // --------------------------------------------------------------------------
@@ -122,24 +137,9 @@ function vtkPolyLineRepresentation(publicAPI, model) {
     const lineThickness = state.getLineThickness
       ? state.getLineThickness()
       : null;
-    publicAPI.setLineThickness(lineThickness || model.lineThickness);
+    applyLineThickness(lineThickness || model.lineThickness);
 
     outData[0] = model.internalPolyData;
-  };
-
-  /**
-   * Change the line/tube thickness.
-   * @param {number} lineThickness
-   */
-  publicAPI.setLineThickness = (lineThickness) => {
-    let scaledLineThickness = lineThickness;
-    if (publicAPI.getScaleInPixels()) {
-      const center = vtkBoundingBox.getCenter(
-        model.internalPolyData.getBounds()
-      );
-      scaledLineThickness *= publicAPI.getPixelWorldHeightAtCoord(center);
-    }
-    model.tubes.setRadius(scaledLineThickness);
   };
 
   /**
@@ -167,7 +167,7 @@ function vtkPolyLineRepresentation(publicAPI, model) {
     if (renderingType === RenderingTypes.PICKING_BUFFER) {
       lineThickness = Math.max(4, lineThickness);
     }
-    publicAPI.setLineThickness(lineThickness);
+    applyLineThickness(lineThickness);
     const isValid = model.points && model.points.length > 3;
 
     return superClass.updateActorVisibility(
@@ -187,14 +187,19 @@ const DEFAULT_VALUES = {
   threshold: Number.EPSILON,
   closePolyLine: false,
   lineThickness: 2,
+  scaleInPixels: true,
 };
 
 // ----------------------------------------------------------------------------
 
 export function extend(publicAPI, model, initialValues = {}) {
-  Object.assign(model, DEFAULT_VALUES, initialValues);
-  vtkWidgetRepresentation.extend(publicAPI, model, initialValues);
-  macro.setGet(publicAPI, model, ['threshold', 'closePolyLine']);
+  const newDefault = { ...DEFAULT_VALUES, ...initialValues };
+  vtkWidgetRepresentation.extend(publicAPI, model, newDefault);
+  macro.setGet(publicAPI, model, [
+    'threshold',
+    'closePolyLine',
+    'lineThickness',
+  ]);
 
   vtkPolyLineRepresentation(publicAPI, model);
 }

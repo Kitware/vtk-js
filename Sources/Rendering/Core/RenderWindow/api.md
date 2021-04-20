@@ -1,43 +1,255 @@
-## newInstance()
+## Introduction
 
-Create a window for renderers to be placed into
+vtkRenderWindow is an abstract object to specify the behavior of a rendering window.
 
-RenderWindow is an object that specify the behavior of a
-rendering window. A rendering window is a window in a graphical user
-interface where renderers draw their images.
+A rendering window is a window in a graphical user interface where renderers draw their images.
+Methods are provided to synchronize the rendering process, set window size, and control double buffering.
+The window also allows rendering in stereo. The interlaced render stereo type is for output to a VRex stereo projector.
+All of the odd horizontal lines are from the left eye, and the even lines are from the right eye.
+The user has to make the render window aligned with the VRex projector, or the eye will be swapped.
 
-### addRenderer(renderer)/ removeRenderer(renderer) / hasRenderer() : Boolean
 
-Manage associated renderers.
 
-### getRenderers() : Array
 
-Return the array of Renderers.
+## Methods
 
-### setCursor(str) / getCursor() : String
 
-Change cursor representation of the RenderWindow.
-Default value is 'pointer', but any [CSS cursor style](https://developer.mozilla.org/en-US/docs/Web/CSS/cursor#Values) can be used here.
+### addRenderer
 
-### setCursorVisibility(show) / getCursorVisibility()
+Add renderer
 
-Show or hide the mouse pointer. If visible the cursor used will be the one that was set with the setCursor method.
 
-### setSwapBuffers(Boolean) / getSwapBuffers() : Boolean
+| Argument | Type | Description |
+| ------------- | ------------- | ----- |
+| **renderer** | <span class="arg-type"></span></br></span><span class="arg-required">required</span> |  |
 
-Turn on or off buffer swapping between images.
 
-### setMultiSamples(int) / getMultiSamples() : Integer
+### addView
 
-The number of multisamples to use for hardware antialiasing.
+Add renderer
 
-### setInteractor(interactor) / getInteractor() : Interactor
 
-The interactor associated with this render window.
+| Argument | Type | Description |
+| ------------- | ------------- | ----- |
+| **view** | <span class="arg-type"></span></br></span><span class="arg-required">required</span> |  |
 
-### setNumberOfLayers(int) / getNumberOfLayers() : Integer
 
-Get the number of layers for renderers. Each renderer should have
-its layer set individually. Some algorithms iterate through all layers,
-so it is not wise to set the number of layers to be exorbitantly large
-(say bigger than 100).
+### captureImages
+
+
+
+
+| Argument | Type | Description |
+| ------------- | ------------- | ----- |
+| **format** | <span class="arg-type"></span></br></span><span class="arg-required">required</span> |  |
+
+
+### extend
+
+Method use to decorate a given object (publicAPI+model) with vtkRenderWindow characteristics.
+
+
+| Argument | Type | Description |
+| ------------- | ------------- | ----- |
+| **publicAPI** | <span class="arg-type"></span></br></span><span class="arg-required">required</span> | object on which methods will be bounds (public) |
+| **model** | <span class="arg-type"></span></br></span><span class="arg-required">required</span> | object on which data structure will be bounds (protected) |
+| **initialValues** | <span class="arg-type"></span></br></span><span class="arg-required">required</span> | (default: {}) |
+
+
+### getDefaultViewAPI
+
+
+
+
+
+### getInteractor
+
+
+
+
+
+### getNeverRendered
+
+
+
+
+
+### getNumberOfLayers
+
+
+
+
+
+### getRenderers
+
+
+
+
+
+### getRenderersByReference
+
+
+
+
+
+### getStatistics
+
+
+
+
+
+### getViews
+
+
+
+
+
+### hasRenderer
+
+
+
+
+| Argument | Type | Description |
+| ------------- | ------------- | ----- |
+| **ren** | <span class="arg-type">vtkRenderer</span></br></span><span class="arg-required">required</span> |  |
+
+
+### hasView
+
+
+
+
+| Argument | Type | Description |
+| ------------- | ------------- | ----- |
+| **view** | <span class="arg-type"></span></br></span><span class="arg-required">required</span> |  |
+
+
+### invisiblePropCount
+
+
+
+
+
+### listViewAPIs
+
+
+
+
+
+### newAPISpecificView
+
+
+
+
+| Argument | Type | Description |
+| ------------- | ------------- | ----- |
+| **name** | <span class="arg-type"></span></br></span><span class="arg-required">required</span> |  |
+| **initialValues** | <span class="arg-type"></span></br></span><span class="arg-required">required</span> |  |
+
+
+### newAPISpecificView
+
+
+
+
+
+### newInstance
+
+Method use to create a new instance of vtkRenderWindow
+
+
+
+### onCompletion
+
+
+
+
+| Argument | Type | Description |
+| ------------- | ------------- | ----- |
+| **callback** | <span class="arg-type"></span></br></span><span class="arg-required">required</span> |  |
+
+
+### propCount
+
+
+
+
+
+### registerViewConstructor
+
+
+
+
+
+### removeRenderer
+
+Remove renderer
+
+
+| Argument | Type | Description |
+| ------------- | ------------- | ----- |
+| **renderer** | <span class="arg-type"></span></br></span><span class="arg-required">required</span> |  |
+
+
+### removeView
+
+Remove renderer
+
+
+| Argument | Type | Description |
+| ------------- | ------------- | ----- |
+| **view** | <span class="arg-type"></span></br></span><span class="arg-required">required</span> |  |
+
+
+### render
+
+
+
+
+
+### setDefaultViewAPI
+
+
+
+
+| Argument | Type | Description |
+| ------------- | ------------- | ----- |
+| **defaultViewAPI** | <span class="arg-type"></span></br></span><span class="arg-required">required</span> |  |
+
+
+### setInteractor
+
+
+
+
+| Argument | Type | Description |
+| ------------- | ------------- | ----- |
+| **interactor** | <span class="arg-type"></span></br></span><span class="arg-required">required</span> |  |
+
+
+### setNumberOfLayers
+
+
+
+
+| Argument | Type | Description |
+| ------------- | ------------- | ----- |
+| **numberOfLayers** | <span class="arg-type"></span></br></span><span class="arg-required">required</span> |  |
+
+
+### setViews
+
+
+
+
+| Argument | Type | Description |
+| ------------- | ------------- | ----- |
+| **views** | <span class="arg-type"></span></br></span><span class="arg-required">required</span> |  |
+
+
+### str
+
+
+
+
+

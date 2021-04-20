@@ -57,13 +57,13 @@ export interface vtkImageOutlineFilter extends vtkImageOutlineFilterBase {
  *
  * @param publicAPI object on which methods will be bounds (public)
  * @param model object on which data structure will be bounds (protected)
- * @param initialValues (default: {})
+ * @param {IImageOutlineFilterInitialValues} [initialValues] (default: {})
  */
 export function extend(publicAPI: object, model: object, initialValues?: IImageOutlineFilterInitialValues): void;
 
 /**
  * Method used to create a new instance of vtkImageOutlineFilter
- * @param initialValues for pre-setting some of its content
+ * @param {IImageOutlineFilterInitialValues} [initialValues] for pre-setting some of its content
  */
 export function newInstance(initialValues?: IImageOutlineFilterInitialValues): vtkImageOutlineFilter;
 

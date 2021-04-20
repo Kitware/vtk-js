@@ -55,7 +55,7 @@ function widgetBehavior(publicAPI, model) {
 
       const worldCoords = model.manipulator.handleEvent(
         callData,
-        model.openGLRenderWindow
+        model.apiSpecificRenderWindow
       );
 
       if (worldCoords.length) {
@@ -88,7 +88,7 @@ function widgetBehavior(publicAPI, model) {
       model.activeState.activate();
       model.interactor.requestAnimation(publicAPI);
 
-      const canvas = model.openGLRenderWindow.getCanvas();
+      const canvas = model.apiSpecificRenderWindow.getCanvas();
       canvas.onmouseenter = () => {
         if (
           model.hasFocus &&

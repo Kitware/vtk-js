@@ -1,49 +1,43 @@
+import { mat4 } from 'gl-matrix';
 import vtkAbstractMapper from 'vtk.js/Sources/Rendering/Core/AbstractMapper';
 
 /**
  * 
  */
 interface IAbstractMapper3DInitialValues {
-	/**
-	 * 
-	 */
-	bounds : number[];
-
-	/**
-	 * 
-	 */
-	center : number[];
+	bounds?: number[];
+	center?: number[];
 }
 
 export interface vtkAbstractMapper3D extends vtkAbstractMapper {
 	/**
      * Get the bounds for this mapper as [xmin, xmax, ymin, ymax,zmin, zmax].
 	 * @default 0
-	 * @returns number
+	 * @return {Number[]} The bounds for the mapper.
 	 */
-	getBounds():  number[];
+	getBounds(): number[];
 
 		
 	/**
-	 * Return the Center of this mapper’s data.
-	 * @return number[]
+	 * Get the center of this mapper’s data.
+	 * @return {Number[]} The center of the mapper's data.
 	 */
 	getCenter(): number[];
 		
 	/**
-	 * Return the diagonal length of this mappers bounding box.
-	 * @return number
+	 * Get the diagonal length of this mappers bounding box.
+	 * @return {Number} The diagonal length of mapper bounding box.
 	 */
 	getLength(): number;
 		
 	/**
 	 * Get the ith clipping plane as a homogeneous plane equation.
 	 * Use getNumberOfClippingPlanes() to get the number of planes.
-	 * @param propMatrix 
-	 * @param i 
-	 * @param hnormal 
+	 * @param {mat4} propMatrix 
+	 * @param {Number} i
+	 * @param {Number[]} hnormal 
 	 */
-	getClippingPlaneInDataCoords(propMatrix : any, i : any, hnormal : any): void;
+	getClippingPlaneInDataCoords(propMatrix : mat4, i : number, hnormal : number[]): void;
 }
 
 /**
@@ -51,7 +45,7 @@ export interface vtkAbstractMapper3D extends vtkAbstractMapper {
  *
  * @param publicAPI object on which methods will be bounds (public)
  * @param model object on which data structure will be bounds (protected)
- * @param initialValues (default: {})
+ * @param {IAbstractMapper3DInitialValues} [initialValues] (default: {})
  */
 export function extend(publicAPI: object, model: object, initialValues?: IAbstractMapper3DInitialValues): void;
 

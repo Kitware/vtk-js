@@ -9,6 +9,9 @@ import vtkInteractorStyleImage from 'vtk.js/Sources/Interaction/Style/Interactor
 import vtkInteractorStyleTrackballCamera from 'vtk.js/Sources/Interaction/Style/InteractorStyleTrackballCamera';
 import vtkImageCroppingRegionsWidget from 'vtk.js/Sources/Interaction/Widgets/ImageCroppingRegionsWidget';
 
+// Force the loading of HttpDataAccessHelper to support gzip decompression
+import 'vtk.js/Sources/IO/Core/DataAccessHelper/HttpDataAccessHelper';
+
 import controlPanel from './controlPanel.html';
 
 // ----------------------------------------------------------------------------

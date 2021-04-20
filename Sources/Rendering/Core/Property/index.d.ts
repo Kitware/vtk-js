@@ -19,93 +19,23 @@ export enum Interpolation {
 }
 
 interface IPropertyValues {
-
-    /**
-     * 
-     */
-    color: number[];
-
-    /**
-     * The ambient surface color.
-     */
-    ambientColor: number[];
-
-    /**
-     * The diffuse surface color.
-     */
-    diffuseColor: number[];
-
-    /**
-     * The specular surface color.
-     */
-    specularColor: number[];
-
-    /**
-     * The color of primitive edges
-     */
-    edgeColor: number[];
-
-    /**
-     * The lighting coefficient.
-     */
-    ambient: number;
-
-    /**
-     * The diffuse lighting coefficient.
-     */
-    diffuse: number;
-
-    /**
-     * The specular lighting coefficient.
-     */
-    specular: number;
-
-    /**
-     * The specular power.
-     */
-    specularPower: number;
-
-    /**
-     * The object’s opacity. 1.0 is totally opaque 
-     * and 0.0 is completely transparent.
-     */
-    opacity: number;
-
-    /**
-     * The visibility of edges.
-     */
-    edgeVisibility: boolean;
-
-    /**
-     * 
-     */
-    backfaceCulling: boolean;
-
-    /**
-     * 
-     */
-    frontfaceCulling: boolean;
-
-    /**
-     * 
-     */
-    pointSize: number;
-
-    /**
-     * 
-     */
-    lineWidth: number;
-
-    /**
-     * Lighting flag for an object. 
-     * @default true
-     */
-    lighting: boolean;
-
-    /**
-     * 
-     */
-    shading: boolean;
+    color?: number[];
+    ambientColor?: number[];
+    diffuseColor?: number[];
+    specularColor?: number[];
+    edgeColor?: number[];
+    ambient?: number;
+    diffuse?: number;
+    specular?: number;
+    specularPower?: number;
+    opacity?: number;
+    edgeVisibility?: boolean;
+    backfaceCulling?: boolean;
+    frontfaceCulling?: boolean;
+    pointSize?: number;
+    lineWidth?: number;
+    lighting?: boolean;
+    shading?: boolean;
 }
 
 export interface vtkProperty extends VtkObject {
@@ -128,7 +58,11 @@ export interface vtkProperty extends VtkObject {
     getAmbient(): number;
 
     /**
-     * 
+     * Get the ambient surface color. Not all renderers support separate ambient
+     * and diffuse colors. From a physical standpoint it really doesn't make too
+     * much sense to have both. For the rendering libraries that don't support
+     * both, the diffuse color is used.
+     * @return {Number[]} Array of RGB color.
      */
     getAmbientColor(): number[];
 
@@ -154,7 +88,8 @@ export interface vtkProperty extends VtkObject {
     getDiffuse(): number;
 
     /**
-     * 
+     * Get the diffuse surface color.
+     * @return {Number[]} Array of RGB color.
      */
     getDiffuseColor(): number[];
     /**
@@ -227,12 +162,12 @@ export interface vtkProperty extends VtkObject {
 
     /**
      * Get the surface geometry representation for the object as string.
-     * @returns
+     * @return {String} Surface geometry representation for the object as string
      */
     getRepresentationAsString(): string;
 
     /**
-     * 
+     * Check if the shading is set.
      */
     getShading(): boolean;
 
@@ -243,7 +178,8 @@ export interface vtkProperty extends VtkObject {
     getSpecular(): number;
 
     /**
-     * 
+     * Get the specular surface color.
+     * @return {Number[]} Array of RGB color.
      */
     getSpecularColor(): number[];
 
@@ -259,8 +195,8 @@ export interface vtkProperty extends VtkObject {
     getSpecularPower(): number;
 
     /**
-     *
-     * @param ambient
+     * Set the lighting coefficient.
+     * @param {Number} ambient 
      */
     setAmbient(ambient: number): boolean;
 
@@ -270,9 +206,9 @@ export interface vtkProperty extends VtkObject {
      * doesn't make too much sense to have both. For the rendering
      * libraries that don’t support both, the diffuse color is used.
      * 
-     * @param r 
-     * @param g 
-     * @param b 
+     * @param {Number} r Defines the red component (between 0 and 1)
+     * @param {Number} g Defines the green component (between 0 and 1)
+     * @param {Number} b Defines the blue component (between 0 and 1)
      */
     setAmbientColor(r: number, g: number, b: number): boolean;
 
@@ -281,14 +217,13 @@ export interface vtkProperty extends VtkObject {
      * ambient and diffuse colors. From a physical standpoint it really
      * doesn't make too much sense to have both. For the rendering
      * libraries that don’t support both, the diffuse color is used.
-     * 
-     * @param ambientColor 
+     * @param {Number[]} ambientColor An Array of the RGB color.
      */
     setAmbientColor(ambientColor: number[]): boolean;
 
     /**
      * Set the ambient surface color from an RGB array
-     * @param ambientColor 
+     * @param {Number[]} ambientColor An Array of the RGB color.
      */
     setAmbientColorFrom(ambientColor: number[]): boolean;
 
@@ -296,17 +231,17 @@ export interface vtkProperty extends VtkObject {
      * Turn on/off fast culling of polygons based on orientation of normal
      * with respect to camera. If backface culling is on, polygons facing
      * away from camera are not drawn.
-     * @param backfaceCulling 
+     * @param {Boolean} backfaceCulling 
      */
-    setBackfaceCulling(backfaceCulling: any): boolean;
+    setBackfaceCulling(backfaceCulling: boolean): boolean;
 
     /**
      * Set the color of the object. Has the side effect of setting the
      * ambient diffuse and specular colors as well. This is basically
      * a quick overall color setting method.
-     * @param r 
-     * @param g 
-     * @param b 
+     * @param {Number} r Defines the red component (between 0 and 1)
+     * @param {Number} g Defines the green component (between 0 and 1)
+     * @param {Number} b Defines the blue component (between 0 and 1)
      */
     setColor(r: number, g: number, b: number): boolean;
 
@@ -314,53 +249,53 @@ export interface vtkProperty extends VtkObject {
      * Set the color of the object. Has the side effect of setting the
      * ambient diffuse and specular colors as well. This is basically
      * a quick overall color setting method.
-     * @param color 
+     * @param {Number[]} color An Array of the RGB color.
      */
     setColor(color: number[]): boolean;
 
     /**
      * Set the diffuse lighting coefficient.
-     * @param diffuse 
+     * @param {Number} diffuse 
      */
     setDiffuse(diffuse: number): boolean;
 
     /**
      * Set the diffuse surface color.
-     * @param r 
-     * @param g 
-     * @param b 
+     * @param {Number} r Defines the red component (between 0 and 1)
+     * @param {Number} g Defines the green component (between 0 and 1)
+     * @param {Number} b Defines the blue component (between 0 and 1)
      */
     setDiffuseColor(r: number, g: number, b: number): boolean;
 
     /**
      * Set the diffuse surface color.
-     * @param diffuseColor 
+     * @param {Number[]} diffuseColor An Array of the RGB color.
      */
     setDiffuseColor(diffuseColor: number[]): boolean;
 
     /**
      * Set the diffuse surface color from an RGB array
-     * @param diffuseColor 
+     * @param {Number[]} diffuseColor An Array of the RGB color.
      */
     setDiffuseColorFrom(diffuseColor: number[]): boolean;
 
     /**
      * Set the color of primitive edges (if edge visibility is enabled).
-     * @param r 
-     * @param g 
-     * @param b 
+     * @param {Number} r Defines the red component (between 0 and 1)
+     * @param {Number} g Defines the green component (between 0 and 1)
+     * @param {Number} b Defines the blue component (between 0 and 1)
      */
     setEdgeColor(r: number, g: number, b: number): boolean;
 
     /**
      * Set the color of primitive edges (if edge visibility is enabled).
-     * @param edgeColor 
+     * @param {Number[]} edgeColor An Array of the RGB color.
      */
     setEdgeColor(edgeColor: number[]): boolean;
 
     /**
      * Set the color of primitive edges from an RGB array.
-     * @param edgeColor 
+     * @param {Number[]} edgeColor An Array of the RGB color.
      */
     setEdgeColorFrom(edgeColor: number[]): boolean;
 
@@ -368,7 +303,7 @@ export interface vtkProperty extends VtkObject {
      * Turn on/off the visibility of edges. On some renderers it is
      * possible to render the edges of geometric primitives separately
      * from the interior.
-     * @param edgeVisibility 
+     * @param {Boolean} edgeVisibility 
      */
     setEdgeVisibility(edgeVisibility: boolean): boolean;
 
@@ -376,41 +311,43 @@ export interface vtkProperty extends VtkObject {
      * Turn on/off fast culling of polygons based on orientation of normal
      * with respect to camera. If frontface culling is on, polygons facing
      * towards camera are not drawn.
-     * @param frontfaceCulling 
+     * @param {Boolean} frontfaceCulling 
      */
     setFrontfaceCulling(frontfaceCulling: boolean): boolean;
 
     /**
      * Set the shading interpolation method for an object.
+     * @param {Interpolation} interpolation 
      */
     setInterpolation(interpolation: Interpolation): boolean;
 
     /**
-     * Set interpolation to 0 => 'FLAT'.
+     * Set interpolation to 0 means `FLAT`.
      */
     setInterpolationToFlat(): boolean;
 
     /**
-     * Set interpolation to 1 => 'GOURAUD'.
+     * Set interpolation to 1 means `GOURAUD`.
      */
     setInterpolationToGouraud(): boolean;
 
     /**
-     * Set interpolation to 2 => 'PHONG'.
+     * Set interpolation to 2 means `PHONG`.
      */
     setInterpolationToPhong(): boolean;
 
     /**
      * Set lighting flag for an object.
-     * @param lighting 
+     * @param {Boolean} lighting 
      * @default true
      */
     setLighting(lighting: boolean): boolean;
 
     /**
      * Set the width of a Line. The width is expressed in screen units.
-     * This is only implemented for OpenGL.
-     * @param lineWidth 
+     * !!! note
+     *     This is only implemented for OpenGL.
+     * @param {Number} lineWidth 
      * @default 1.0
      */
     setLineWidth(lineWidth: number): boolean;
@@ -418,74 +355,75 @@ export interface vtkProperty extends VtkObject {
     /**
      * Set the object's opacity. 1.0 is totally opaque and 0.0 is 
      * completely transparent.
-     * @param opacity 
+     * @param {Number} opacity The opacity of the object.
      */
     setOpacity(opacity: number): boolean;
 
     /**
      * Set the diameter of a point. The size is expressed in screen units.
-     * This is only implemented for OpenGL.
-     * @param pointSize 
+     * !!! note
+     *     This is only implemented for OpenGL.
+     * @param {Number} pointSize 
      * @default 1.0
      */
     setPointSize(pointSize: number): boolean;
 
     /**
      * Control the surface geometry representation for the object.
-     * @param representation 
+     * @param {Representation} representation 
      */
     setRepresentation(representation: Representation): boolean;
 
     /**
-     * Set representation to 0 => 'POINTS'
+     * Set representation to 0 means `POINT`'
      */
     setRepresentationToPoints(): boolean;
 
     /**
-     * Set representation to 2 => 'SURFACE'
+     * Set representation to 2 means `SURFAC`'
      */
     setRepresentationToSurface(): boolean;
 
     /**
-     * Set representation to 1 => 'WIREFRAME'
+     * Set representation to 1 means `WIREFRAM`'
      */
     setRepresentationToWireframe(): boolean;
 
     /**
      * Enable/Disable shading.
-     * @param shading 
+     * @param {Boolean} shading 
      */
     setShading(shading: boolean): boolean;
 
     /**
      * Set the specular lighting coefficient.
-     * @param specular 
+     * @param {Boolean} specular 
      */
     setSpecular(specular: number): boolean;
 
     /**
      * Set the specular surface color.
-     * @param r 
-     * @param g 
-     * @param b 
+     * @param {Number} r Defines the red component (between 0 and 1)
+     * @param {Number} g Defines the green component (between 0 and 1)
+     * @param {Number} b Defines the blue component (between 0 and 1)
      */
     setSpecularColor(r: number, g: number, b: number): boolean;
 
     /**
      * Set the specular surface color from an RGB array
-     * @param specularColor 
+     * @param {Number[]} specularColor An Array of the RGB color.
      */
     setSpecularColor(specularColor: number[]): boolean;
 
     /**
      * Set the specular surface color from an RGB array
-     * @param specularColor 
+     * @param {Number[]} specularColor An Array of the RGB color.
      */
     setSpecularColorFrom(specularColor: number[]): boolean;
 
     /**
      * Set the specular power.
-     * @param specularPower 
+     * @param {Number} specularPower 
      */
     setSpecularPower(specularPower: number): boolean;
 }
@@ -495,7 +433,7 @@ export interface vtkProperty extends VtkObject {
  *
  * @param publicAPI object on which methods will be bounds (public)
  * @param model object on which data structure will be bounds (protected)
- * @param initialValues (default: {})
+ * @param {IPropertyValues} [initialValues] (default: {})
  */
 export function extend(publicAPI: object, model: object, initialValues?: IPropertyValues): void;
 
@@ -504,18 +442,18 @@ export function extend(publicAPI: object, model: object, initialValues?: IProper
  * specular color, and edge color white; ambient coefficient=0; diffuse
  * coefficient=0; specular coefficient=0; specular power=1; Gouraud shading;
  * and surface representation. Backface and frontface culling are off.
- * @param initialValues for pre-setting some of its content
+ * @param {IPropertyValues} [initialValues] for pre-setting some of its content
  */
 export function newInstance(initialValues?: IPropertyValues): vtkProperty;
 
 /** 
  * vtkProperty is an object that represents lighting and other surface
- * properties of a geometric object. The primary properties that can be
- * set are colors (overall, ambient, diffuse, specular, and edge color);
- * specular power; opacity of the object; the representation of the
- * object (points, wireframe, or surface); and the shading method to be
- * used (flat, Gouraud, and Phong). Also, some special graphics features
- * like backface properties can be set and manipulated with this object.
+ * properties of a geometric object. The primary properties that can be set are
+ * colors (overall, ambient, diffuse, specular, and edge color); specular power;
+ * opacity of the object; the representation of the object (points, wireframe,
+ * or surface); and the shading method to be used (flat, Gouraud, and Phong).
+ * Also, some special graphics features like backface properties can be set and
+ * manipulated with this object.
  */
 export declare const vtkProperty: {
     newInstance: typeof newInstance,

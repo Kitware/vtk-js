@@ -51,13 +51,13 @@ export interface vtkSTLWriter extends vtkSTLWriterBase {
  *
  * @param publicAPI object on which methods will be bounds (public)
  * @param model object on which data structure will be bounds (protected)
- * @param initialValues (default: {})
+ * @param {ISTLWriterInitialValues} [initialValues] (default: {})
  */
 export function extend(publicAPI: object, model: object, initialValues?: ISTLWriterInitialValues): void;
 
 /**
  * Method used to create a new instance of vtkSTLWriter
- * @param initialValues for pre-setting some of its content
+ * @param {ISTLWriterInitialValues} [initialValues] for pre-setting some of its content
  */
 export function newInstance(initialValues?: ISTLWriterInitialValues): vtkSTLWriter;
 

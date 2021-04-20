@@ -98,13 +98,13 @@ export interface vtkPixelSpaceCallbackMapper extends vtkMapper {
  *
  * @param publicAPI object on which methods will be bounds (public)
  * @param model object on which data structure will be bounds (protected)
- * @param initialValues (default: {})
+ * @param {IPixelSpaceCallbackMapperInitialValues} [initialValues] (default: {})
  */
 export function extend(publicAPI: object, model: object, initialValues?: IPixelSpaceCallbackMapperInitialValues): void;
 
 /**
  * Method use to create a new instance of vtkPixelSpaceCallbackMapper
- * @param initialValues for pre-setting some of its content
+ * @param {IPixelSpaceCallbackMapperInitialValues} [initialValues] for pre-setting some of its content
  */
 export function newInstance(initialValues?: IPixelSpaceCallbackMapperInitialValues): vtkPixelSpaceCallbackMapper;
 

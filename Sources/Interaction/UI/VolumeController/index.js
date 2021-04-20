@@ -1,5 +1,5 @@
 import macro from 'vtk.js/Sources/macro';
-import vtkColorMaps from 'vtk.js/Sources/Rendering/Core/ColorTransferFunction/ColorMaps';
+import vtkColorMaps from 'vtk.js/Sources/Rendering/Core/ColorTransferFunction/ColorMapsLite';
 import vtkPiecewiseGaussianWidget from 'vtk.js/Sources/Interaction/Widgets/PiecewiseGaussianWidget';
 
 import svgLogo from 'vtk.js/Sources/Interaction/UI/Icons/Logo.svg';

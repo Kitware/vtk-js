@@ -44,7 +44,7 @@ function createArrayHandler() {
           if (buffer instanceof Blob) {
             const fileReader = new FileReader();
             fileReader.onload = () => {
-              const array = new window[dataType](fileReader.result);
+              const array = macro.newTypedArray(dataType, fileReader.result);
               const mtimes = {
                 [context.getActiveViewId()]: context.getMTime(),
               };
@@ -53,7 +53,7 @@ function createArrayHandler() {
             };
             fileReader.readAsArrayBuffer(buffer);
           } else {
-            const array = new window[dataType](buffer);
+            const array = macro.newTypedArray(dataType, buffer);
             const mtimes = { [context.getActiveViewId()]: context.getMTime() };
             dataArrayCache[sha] = { mtimes, array };
             resolve(array);

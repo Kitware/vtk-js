@@ -12,7 +12,7 @@ const { ShapeType } = Constants;
 function vtkStarSource(publicAPI, model) {
   const dataset = vtkPolyData.newInstance();
 
-  const points = new macro.TYPED_ARRAYS[model.pointType](10 * 3);
+  const points = macro.newTypedArray(model.pointType, 10 * 3);
   const edges = new Uint32Array(11);
   edges[0] = 10;
   for (let i = 0; i < 10; i++) {
@@ -33,7 +33,7 @@ function vtkStarSource(publicAPI, model) {
 function vtk6PointsArrow(publicAPI, model) {
   const dataset = vtkPolyData.newInstance();
 
-  const points = new macro.TYPED_ARRAYS[model.pointType](6 * 3);
+  const points = macro.newTypedArray(model.pointType, 6 * 3);
 
   const thickOp = model.height * 0.5 * model.thickness;
 
@@ -87,7 +87,7 @@ function vtk6PointsArrow(publicAPI, model) {
 function vtk4PointsArrow(publicAPI, model) {
   const dataset = vtkPolyData.newInstance();
 
-  const points = new macro.TYPED_ARRAYS[model.pointType](4 * 3);
+  const points = macro.newTypedArray(model.pointType, 4 * 3);
 
   const thickOp = (model.height / 3) * model.thickness;
 
@@ -124,7 +124,7 @@ function vtk4PointsArrow(publicAPI, model) {
 function vtkTriangleSource(publicAPI, model) {
   const dataset = vtkPolyData.newInstance();
 
-  const points = new macro.TYPED_ARRAYS[model.pointType](3 * 3);
+  const points = macro.newTypedArray(model.pointType, 3 * 3);
 
   const baseOffsetOp = model.height * (1 - model.base);
 
@@ -174,10 +174,10 @@ function vtkArrow2DSource(publicAPI, model) {
 /**
  * height modifies the size of the source along x axis
  * width modifies the size of the source along y axis
- 
+
  * thickness modifies the shape of the source, which becomes wider on
- * y axis 
- 
+ * y axis
+
  * base modifies the position which lowers the source on x axis for 0 and moves
  * the source up on x axis for 1
  */

@@ -8,8 +8,13 @@ import DataAccessHelper from 'vtk.js/Sources/IO/Core/DataAccessHelper';
 import vtkDataArray from 'vtk.js/Sources/Common/Core/DataArray';
 import vtkStringArray from 'vtk.js/Sources/Common/Core/StringArray';
 
+// Enable data soure for DataAccessHelper
+import 'vtk.js/Sources/IO/Core/DataAccessHelper/LiteHttpDataAccessHelper'; // Just need HTTP
+// import 'vtk.js/Sources/IO/Core/DataAccessHelper/HttpDataAccessHelper'; // HTTP + zip
+// import 'vtk.js/Sources/IO/Core/DataAccessHelper/HtmlDataAccessHelper'; // html + base64 + zip
+// import 'vtk.js/Sources/IO/Core/DataAccessHelper/JSZipDataAccessHelper'; // zip
+
 const fieldDataLocations = ['pointData', 'cellData', 'fieldData'];
-const HTTP_DATA_ACCESS = DataAccessHelper.get('http');
 const ARRAY_BUILDERS = {
   vtkDataArray,
   vtkStringArray,
@@ -134,7 +139,7 @@ function vtkHttpDataSetReader(publicAPI, model) {
 
   // Create default dataAccessHelper if not available
   if (!model.dataAccessHelper) {
-    model.dataAccessHelper = HTTP_DATA_ACCESS;
+    model.dataAccessHelper = DataAccessHelper.get('http');
   }
 
   // Internal method to fetch Array
@@ -166,35 +171,39 @@ function vtkHttpDataSetReader(publicAPI, model) {
   publicAPI.updateMetadata = (loadData = false) => {
     if (model.compression === 'zip') {
       return new Promise((resolve, reject) => {
-        HTTP_DATA_ACCESS.fetchBinary(model.url).then(
-          (zipContent) => {
-            model.dataAccessHelper = DataAccessHelper.get('zip', {
-              zipContent,
-              callback: (zip) => {
-                model.baseURL = '';
-                model.dataAccessHelper.fetchJSON(publicAPI, 'index.json').then(
-                  (dataset) => {
-                    processDataSet(
-                      publicAPI,
-                      model,
-                      dataset,
-                      fetchArray,
-                      resolve,
-                      reject,
-                      loadData
+        DataAccessHelper.get('http')
+          .fetchBinary(model.url)
+          .then(
+            (zipContent) => {
+              model.dataAccessHelper = DataAccessHelper.get('zip', {
+                zipContent,
+                callback: (zip) => {
+                  model.baseURL = '';
+                  model.dataAccessHelper
+                    .fetchJSON(publicAPI, 'index.json')
+                    .then(
+                      (dataset) => {
+                        processDataSet(
+                          publicAPI,
+                          model,
+                          dataset,
+                          fetchArray,
+                          resolve,
+                          reject,
+                          loadData
+                        );
+                      },
+                      (error) => {
+                        reject(error);
+                      }
                     );
-                  },
-                  (error) => {
-                    reject(error);
-                  }
-                );
-              },
-            });
-          },
-          (error) => {
-            reject(error);
-          }
-        );
+                },
+              });
+            },
+            (error) => {
+              reject(error);
+            }
+          );
       });
     }
 

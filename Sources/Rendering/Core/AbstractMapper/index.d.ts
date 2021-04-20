@@ -1,13 +1,11 @@
 import { VtkAlgorithm, VtkObject } from 'vtk.js/Sources/macro';
+import vtkPlane from 'vtk.js/Sources/Common/DataModel/Plane';
 
 /**
  * 
  */
 interface IAbstractMapperInitialValues {
-	/**
-	 * 
-	 */
-	clippingPlanes?: any[];
+	clippingPlanes?: vtkPlane[];
 }
 
 type vtkAlgorithm = VtkObject & Omit<VtkAlgorithm,
@@ -18,21 +16,21 @@ export interface vtkAbstractMapper extends vtkAlgorithm {
 
     /**
      * Added plane needs to be a vtkPlane object.
-     * @param plane
+     * @param {vtkPlane} plane
      */
-    addClippingPlane(plane: any): void;
+    addClippingPlane(plane: vtkPlane): void;
 
     /**
-     * Return number of clipping planes.
-     * @returns  
+     * Get number of clipping planes.
+     * @return {Number} The number of clipping planes.
      */
     getNumberOfClippingPlanes(): number;
 
     /**
      * Get all clipping planes.
-     * @returns
+     * @return {vtkPlane[]} An array of the clipping planes objects
      */
-    getClippingPlanes(): Array<any>;
+    getClippingPlanes(): vtkPlane[];
 
     /**
      * Remove all clipping planes.
@@ -41,15 +39,15 @@ export interface vtkAbstractMapper extends vtkAlgorithm {
 
     /**
      * Remove clipping plane at index i.
-     * @param i 
+     * @param {Number} i 
      */
     removeClippingPlane(i: number): void;
 
     /**
      * Set clipping planes.
-     * @param planes
+     * @param {vtkPlane[]} planes
      */
-    setClippingPlanes(planes: any[]): void;
+    setClippingPlanes(planes: vtkPlane[]): void;
 
     /**
      * 
@@ -62,7 +60,7 @@ export interface vtkAbstractMapper extends vtkAlgorithm {
  *
  * @param publicAPI object on which methods will be bounds (public)
  * @param model object on which data structure will be bounds (protected)
- * @param initialValues (default: {})
+ * @param {IAbstractMapperInitialValues} [initialValues] (default: {})
  */
 export function extend(publicAPI: object, model: object, initialValues?: IAbstractMapperInitialValues): void;
 

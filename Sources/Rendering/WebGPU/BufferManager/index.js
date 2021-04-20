@@ -1,6 +1,7 @@
 import * as macro from 'vtk.js/Sources/macro';
 import * as vtkMath from 'vtk.js/Sources/Common/Core/Math';
 import vtkWebGPUBuffer from 'vtk.js/Sources/Rendering/WebGPU/Buffer';
+import vtkWebGPUTypes from 'vtk.js/Sources/Rendering/WebGPU/Types';
 import vtkProperty from 'vtk.js/Sources/Rendering/Core/Property';
 import Constants from './Constants';
 
@@ -11,12 +12,6 @@ const { vtkDebugMacro } = macro;
 
 // the webgpu constants all show up as undefined
 /* eslint-disable no-undef */
-
-// const { ObjectType } = Constants;
-
-// ----------------------------------------------------------------------------
-// Global methods
-// ----------------------------------------------------------------------------
 
 // ----------------------------------------------------------------------------
 // Static API
@@ -204,7 +199,8 @@ function packArray(
   let vboidx = 0;
 
   const numComp = inArray.getNumberOfComponents();
-  const packedVBO = new window[outputType](
+  const packedVBO = macro.newTypedArray(
+    outputType,
     caboCount * (numComp + (packExtra ? 1 : 0))
   );
 
@@ -212,7 +208,6 @@ function packArray(
   let getData = (ptId, cellId) => pointData[ptId];
   if (options.cellData) {
     getData = (ptId, cellId) => pointData[cellId];
-    console.log('has celldata');
   }
 
   // add data based on number of components
@@ -363,36 +358,6 @@ function generateNormals(cellArray, primType, representation, inArray) {
   return packedVBO;
 }
 
-function getStrideFromFormat(format) {
-  if (!format) return 0;
-  let numComp = 1;
-  if (format.substring(format.length - 2) === 'x4') numComp = 4;
-  if (format.substring(format.length - 2) === 'x3') numComp = 3;
-  if (format.substring(format.length - 2) === 'x2') numComp = 2;
-
-  let typeSize = 4;
-  if (numComp > 1) {
-    if (format.substring(format.length - 3, format.length - 1) === '8x') {
-      typeSize = 1;
-    }
-    if (format.substring(format.length - 4, format.length - 1) === '16x') {
-      typeSize = 2;
-    }
-  } else {
-    if (format.substring(format.length - 1) === '8') typeSize = 1;
-    if (format.substring(format.length - 2) === '16') typeSize = 2;
-  }
-  return numComp * typeSize;
-}
-
-function getArrayTypeFromFormat(format) {
-  if (!format) return null;
-  if (format.substring(0, 7) === 'float32') return 'Float32Array';
-  if (format.substring(0, 6) === 'snorm8') return 'Int8Array';
-  if (format.substring(0, 6) === 'unorm8') return 'Uint8Array';
-  return '';
-}
-
 // ----------------------------------------------------------------------------
 // vtkWebGPUBufferManager methods
 // ----------------------------------------------------------------------------
@@ -427,8 +392,8 @@ function vtkWebGPUBufferManager(publicAPI, model) {
     const buffer = vtkWebGPUBuffer.newInstance();
     buffer.setDevice(model.device);
 
-    const stride = getStrideFromFormat(req.format);
-    const arrayType = getArrayTypeFromFormat(req.format);
+    const stride = vtkWebGPUTypes.getByteStrideFromBufferFormat(req.format);
+    const arrayType = vtkWebGPUTypes.getNativeTypeFromBufferFormat(req.format);
     let gpuUsage = null;
 
     // handle uniform buffers
@@ -508,6 +473,31 @@ function vtkWebGPUBufferManager(publicAPI, model) {
     }
     return buffer;
   };
+
+  publicAPI.getFullScreenQuadBuffer = () => {
+    if (model.fullScreenQuadBuffer) {
+      return model.fullScreenQuadBuffer;
+    }
+
+    model.fullScreenQuadBuffer = vtkWebGPUBuffer.newInstance();
+    model.fullScreenQuadBuffer.setDevice(model.device);
+
+    // prettier-ignore
+    const array = new Float32Array([
+      -1.0, -1.0, 1.0,
+       1.0, -1.0, 1.0,
+       1.0, 1.0, 1.0,
+      -1.0, -1.0, 1.0,
+       1.0, 1.0, 1.0,
+      -1.0, 1.0, 1.0,
+    ]);
+    model.fullScreenQuadBuffer.createAndWrite(array, GPUBufferUsage.VERTEX);
+    model.fullScreenQuadBuffer.setStrideInBytes(12);
+    model.fullScreenQuadBuffer.setArrayInformation([
+      { offset: 0, format: 'float32x3' },
+    ]);
+    return model.fullScreenQuadBuffer;
+  };
 }
 
 // ----------------------------------------------------------------------------
@@ -516,6 +506,7 @@ function vtkWebGPUBufferManager(publicAPI, model) {
 
 const DEFAULT_VALUES = {
   device: null,
+  fullScreenQuadBuffer: null,
 };
 
 // ----------------------------------------------------------------------------
