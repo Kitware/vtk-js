@@ -132,9 +132,18 @@ function vtkLine(publicAPI, model) {
   // Set our className
   model.classHierarchy.push('vtkLine');
 
+  function isBetweenPoints(t) {
+    return t >= 0.0 && t <= 1.0;
+  }
+
   publicAPI.getCellDimension = () => 1;
   publicAPI.intersectWithLine = (p1, p2, tol, x, pcoords) => {
-    const outObj = { intersect: 0, t: Number.MIN_VALUE, subId: 0 };
+    const outObj = {
+      intersect: 0,
+      t: Number.MAX_VALUE,
+      subId: 0,
+      betweenPoints: null,
+    };
     pcoords[1] = 0.0;
     pcoords[2] = 0.0;
     const projXYZ = [];
@@ -148,6 +157,7 @@ function vtkLine(publicAPI, model) {
     const v = [];
     const intersect = intersection(p1, p2, a1, a2, u, v);
     outObj.t = u[0];
+    outObj.betweenPoints = isBetweenPoints(outObj.t);
     pcoords[0] = v[0];
 
     if (intersect === IntersectionState.YES_INTERSECTION) {
@@ -165,21 +175,21 @@ function vtkLine(publicAPI, model) {
       // check to see if it lies within tolerance
       // one of the parametric coords must be outside 0-1
       if (outObj.t < 0.0) {
-        outObj.t = 0.0;
         outDistance = distanceToLine(p1, a1, a2, x);
-        pcoords[0] = outDistance.t;
         if (outDistance.distance <= tol * tol) {
+          outObj.t = 0.0;
           outObj.intersect = 1;
+          outObj.betweenPoints = true; // Intersection is near p1
           return outObj;
         }
         return outObj;
       }
       if (outObj.t > 1.0) {
-        outObj.t = 1.0;
         outDistance = distanceToLine(p2, a1, a2, x);
-        pcoords[0] = outDistance.t;
         if (outDistance.distance <= tol * tol) {
+          outObj.t = 1.0;
           outObj.intersect = 1;
+          outObj.betweenPoints = true; // Intersection is near p2
           return outObj;
         }
         return outObj;
@@ -194,8 +204,8 @@ function vtkLine(publicAPI, model) {
         }
         return outObj;
       }
-      if (pcoords[1] > 1.0) {
-        pcoords[1] = 1.0;
+      if (pcoords[0] > 1.0) {
+        pcoords[0] = 1.0;
         outDistance = distanceToLine(a2, p1, p2, x);
         outObj.t = outDistance.t;
         if (outDistance.distance <= tol * tol) {

@@ -16,7 +16,8 @@ A javascript object is returned :
 {
   evaluation: define if the triangle has been intersected or not
   subId: always set to 0
-  t: tolerance of the intersection
+  t: parametric coordinate along the line.
+  betweenPoints: Define if the intersection is between input points
 }
 ```
 
