@@ -1,16 +1,13 @@
 /**
- * 
+ * Get the endianness
  */
 export function getEndianness(): string | null;
 
-/**
- * 
- */
 export const ENDIANNESS : string;
 
 /**
  * 
- * @param buffer 
- * @param wordSize 
+ * @param {ArrayBuffer} buffer 
+ * @param {Number} wordSize 
  */
-export function swapBytes(buffer : any, wordSize : any): void;
+export function swapBytes(buffer : ArrayBuffer, wordSize : number): void;

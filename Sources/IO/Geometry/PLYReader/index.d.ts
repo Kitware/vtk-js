@@ -1,6 +1,5 @@
 import { VtkAlgorithm, VtkObject } from "vtk.js/Sources/macro";
 
-
 interface IPLYReaderOptions {
 	binary?: boolean;
 	compression?: string;
@@ -13,12 +12,12 @@ interface IPLYReaderOptions {
 interface IPLYReaderInitialValues {}
 
 type vtkPLYReaderBase = VtkObject & Omit<VtkAlgorithm,
-	'getInputData' |
-	'setInputData' |
-	'setInputConnection' |
-	'getInputConnection' | 
-	'addInputConnection' | 
-	'addInputData' > ;
+	| 'getInputData'
+	| 'setInputData'
+	| 'setInputConnection'
+	| 'getInputConnection'
+	| 'addInputConnection'
+	| 'addInputData'>;
 
 export interface vtkPLYReader extends vtkPLYReaderBase {
 
@@ -69,8 +68,8 @@ export interface vtkPLYReader extends vtkPLYReaderBase {
 
 	/**
 	 * Set the url of the object to load.
-	 * @param {String} [url] the url of the object to load.
-	 * @param {IPLYReaderOptions} option The PLY reader options.
+	 * @param {String} url the url of the object to load.
+	 * @param {IPLYReaderOptions} [option] The PLY reader options.
 	 */
 	setUrl(url: string, option?: IPLYReaderOptions): boolean;
 

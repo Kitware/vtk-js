@@ -21,45 +21,120 @@ interface vtkRangeHelper {
 }
 
 export interface vtkDataArray extends VtkObject {
-	getElementComponentSize(): number;
+
 	/**
-	 *
-	 * @param tupleIdx
-	 * @param componentIndex (default: 0)
+	 * Get the size, in bytes, of the lowest-level element of an array.
 	 */
-	getComponent(tupleIdx: number, componentIndex: number): number;
-	setComponent(tupleIdx: number, componentIndex: number, value: number): void;
-	getData(): TypedArray;
+	getElementComponentSize(): number;
+
 	/**
-	 * Return the range of the given component.
+	 * Get the component for a given tupleIdx.
+	 * @param {Number} tupleIdx 
+	 * @param {Number} [componentIndex] (default: 0)
+	 */
+	getComponent(tupleIdx: number, componentIndex?: number): number;
+
+	/**
+	 * Set the component value for a given tupleIdx and componentIndex.
+	 * @param {Number} tupleIdx 
+	 * @param {Number} componentIndex 
+	 * @param {Number} value 
+	 */
+	setComponent(tupleIdx: number, componentIndex: number, value: number): void;
+
+	/**
+	 * 
+	 */
+	getData(): TypedArray;
+
+	/**
+	 * Get the range of the given component.
 	 *
-	 * @param componentIndex (default: -1)
+	 * @param {Number} componentIndex (default: -1)
 	 */
 	getRange(componentIndex?: number): vtkRange;
+
+	/**
+	 * 
+	 * @param {vtkRange} rangeValue 
+	 * @param {Number} componentIndex 
+	 */
 	setRange(rangeValue: vtkRange, componentIndex: number): [number, number];
-	setTuple(idx: number, tuple: Array<number>): void;
+
+	/**
+	 * 
+	 * @param {Number} idx 
+	 * @param {Number[]} tuple 
+	 */
+	setTuple(idx: number, tuple: number[]): void;
+
 	/**
 	 *
-	 * @param idx
-	 * @param tupleToFill (default [])
+	 * @param {Number} idx 
+	 * @param {Number[]} [tupleToFill] (default [])
 	 */
-	getTuple(idx: number, tupleToFill?: Array<number>): Array<number>;
+	getTuple(idx: number, tupleToFill?: number[]): number[];
+
 	/**
 	 *
-	 * @param idx (default: 1)
+	 * @param {Number} [idx] (default: 1)
 	 */
-	getTupleLocation(idx: number): number;
+	getTupleLocation(idx?: number): number;
+
+	/**
+	 * Get the dimension (n) of the components.
+	 */
 	getNumberOfComponents(): number;
+
+	/**
+	 * Get the total number of values in the array.
+	 */
 	getNumberOfValues(): number;
+
+	/**
+	 * Get the number of complete tuples (a component group) in the array.
+	 */
 	getNumberOfTuples(): number;
+
+	/**
+	 * 
+	 */
 	getDataType(): string;
+
+	/**
+	 * 
+	 */
 	newClone(): vtkDataArray;
+
+	/**
+	 * 
+	 */
 	getName(): string;
-	setData: (typedArray: TypedArray, numberOfComponents?: number) => void;
+
+	/**
+	 * 
+	 * @param {TypedArray} typedArray 
+	 * @param {Number} [numberOfComponents] 
+	 */
+	setData(typedArray: TypedArray, numberOfComponents?: number): void;
+
+	/**
+	 * 
+	 */
 	getState(): object;
+
 	// --- via macro --
-	setName: (name: string) => boolean;
-	setNumberOfComponents: (numberOfComponents: number) => boolean;
+
+	/**
+	 * 
+	 */
+	setName(name: string): boolean;
+
+	/**
+	 * Set the dimension (n) of the components.
+	 * @param {Number} numberOfComponents 
+	 */
+	setNumberOfComponents(numberOfComponents: number): boolean;
 }
 
 // ----------------------------------------------------------------------------
@@ -70,7 +145,7 @@ export interface vtkDataArray extends VtkObject {
  * Compute range of a given array. The array could be composed of tuples and
  * individual component range could be computed as well as magnitude.
  *
- * ```
+ * ```js
  * const array = [x0, y0, z0, x1, y1, z1, ..., xn, yn, zn];
  * const { min: yMin, max: yMax } = computeRange(array, 1, 3);
  * const { min: minMagnitude, max: maxMagnitude } = computeRange(array, -1, 3);
@@ -91,7 +166,7 @@ export function createRangeHelper(): vtkRangeHelper
 /**
  * Return the name of a typed array
  *
- * ```
+ * ```js
  * const isFloat32 = ('Float32Array' === getDataType(array));
  * const clone = new macro.TYPED_ARRAYS[getDataType(array)](array.length);
  * ```
@@ -105,7 +180,7 @@ export function getDataType(typedArray: TypedArray): string
  *
  * @param dataArray to process
  */
-export function getMaxNorm(dataArray: VtkDataArray): number
+export function getMaxNorm(dataArray: vtkDataArray): number
 
 /**
  * Method use to decorate a given object (publicAPI+model) with vtkDataArray characteristics.
@@ -156,7 +231,8 @@ export enum VtkDataTypes {
 }
 
 /**
- * Default vtkDataArray export
+ * vtkDataArray is an abstract superclass for data array objects containing
+ * numeric data.
  */
 export declare const vtkDataArray: {
 	newInstance: typeof newInstance,

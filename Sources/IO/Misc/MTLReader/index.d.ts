@@ -123,8 +123,8 @@ export interface vtkMTLReader extends VtkObject {
 
 	/**
 	 * Set the url of the object to load.
-	 * @param {String} [url] the url of the object to load.
-	 * @param {IMTLReaderOptions} option The MTL reader options.
+	 * @param {String} url the url of the object to load.
+	 * @param {IMTLReaderOptions} [option] The MTL reader options.
 	 */
 	setUrl(url: string, option?: IMTLReaderOptions): boolean;
 }

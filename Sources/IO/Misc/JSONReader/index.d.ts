@@ -13,12 +13,12 @@ interface IJSONReaderOptions {
 interface IJSONReaderInitialValues { }
 
 type vtkJSONReaderBase = VtkObject & Omit<VtkAlgorithm,
-	'getInputData' |
-	'setInputData' |
-	'setInputConnection' |
-	'getInputConnection' |
-	'addInputConnection' |
-	'addInputData'>;
+	| 'getInputData'
+	| 'setInputData'
+	| 'setInputConnection'
+	| 'getInputConnection'
+	| 'addInputConnection'
+	| 'addInputData'>;
 
 export interface vtkJSONReader extends vtkJSONReaderBase {
 
@@ -69,8 +69,8 @@ export interface vtkJSONReader extends vtkJSONReaderBase {
 
 	/**
 	 * Set the url of the object to load.
-	 * @param {String} [url] the url of the object to load.
-	 * @param {IJSONReaderOptions} option The JSON reader options.
+	 * @param {String} url the url of the object to load.
+	 * @param {IJSONReaderOptions} [option] The JSON reader options.
 	 */
 	setUrl(url: string, option?: IJSONReaderOptions): boolean;
 }

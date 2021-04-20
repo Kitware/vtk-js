@@ -12,6 +12,8 @@ interface IIntersectWithLine {
 	intersect: number;
 	t: number;
 	subId: number;
+	evaluation?: number;
+	betweenPoints?: boolean;
 }
 
 interface IDistanceToLine {
@@ -22,7 +24,7 @@ interface IDistanceToLine {
 export interface vtkLine extends vtkCell {
 
 	/**
-	 * 
+	 * Get the topological dimensional of the cell (0, 1, 2 or 3).
 	 */
 	getCellDimension(): number;
 
@@ -32,9 +34,10 @@ export interface vtkLine extends vtkCell {
 	 * the point which intersect triangle (computed in function) pcoords
 	 * parametric coordinates (computed in function) A javascript object is
 	 * returned :
+	 * 
 	 * ```js
 	 * {
-	 *   evaluation: define if the triangle has been intersected or not
+	 *   evaluation: define if the line has been intersected or not
 	 *   subId: always set to 0
 	 *   t: tolerance of the intersection
 	 * }
@@ -79,11 +82,14 @@ export function newInstance(initialValues?: ILineInitialValues): vtkLine;
  * Compute the distance from x to the line composed by p1 and p2. If an object
  * is set as a fourth argument, then the closest point on the line from x will
  * be set into it.
+ * 
  * ```js
  * {
  *   t: tolerance of the distance
  *   distance: quared distance between closest point and x
  * }
+ * 
+ * @static
  * @param {Number[]} x 
  * @param {Number[]} p1 
  * @param {Number[]} p2 
@@ -98,14 +104,15 @@ export function distanceToLine(x: number[], p1: number[], p2: number[], closestP
  * of approach are within a relative tolerance. The parameters (u,v) are the
  * parametric coordinates of the lines at the position of closest approach.
  * Careful, u and v are filled inside the function. Outside the function, they
- * have to be access with : u[0] and v[0] return IntersectionState enum
- * :
+ * have to be access with : u[0] and v[0] return IntersectionState enum :
+ * 
  * ```js
  * enum IntersectionState {
  *    NO_INTERSECTION,
  *    YES_INTERSECTION,
  *    ON_LINE
  * }
+ * @static
  * @param  {Number[]} a1 
  * @param {Number[]} a2 
  * @param {Number[]} b1 
@@ -118,6 +125,7 @@ export function intersection(a1: number[], a2: number[], b1: number[], b2: numbe
 /** 
  * vtkLine is a cell which representant a line.
  * It contains static method to make some computations directly link to line.
+ * 
  * @see vtkCell
  */
 export declare const vtkLine: {

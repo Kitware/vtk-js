@@ -1,4 +1,4 @@
-import { VtkDataArray } from "vtk.js/Sources/macro";
+import vtkDataArray from 'vtk.js/Sources/Common/Core/DataArray';
 
 /**
  *
@@ -9,7 +9,7 @@ interface IPointsInitialValues {
 	bounds?: number[];
 }
 
-export interface vtkPoints extends VtkDataArray {
+export interface vtkPoints extends vtkDataArray {
 
 	/**
 	 * Trigger the computation of bounds
@@ -17,16 +17,17 @@ export interface vtkPoints extends VtkDataArray {
 	computeBounds(): number[];
 
 	/**
-     * Get the bounds for this mapper as [xmin, xmax, ymin, ymax,zmin, zmax].
+	 * Get the bounds for this mapper as [xmin, xmax, ymin, ymax,zmin, zmax].
 	 * @return {Number[]} The bounds for the mapper.
 	 */
 	getBounds(): number[];
 
 	/**
-	* @param {Number} idx The index of point.
-	* @param {Number[]} [tupleToFill]
-	* @default []
-	*/
+	 * Get the coordinate of a point.
+	 * @param {Number} idx The index of point.
+	 * @param {Number[]} [tupleToFill]
+	 * @default []
+	 */
 	getPoint(idx: number, tupleToFill?: number[]): number[];
 
 	/**
@@ -36,13 +37,20 @@ export interface vtkPoints extends VtkDataArray {
 
 	/**
 	 * Set the number of points for this object to hold.
+	 * 
+	 * ```js
+	 * points.getData()[0] = x;
+	 * points.getData()[1] = y;
+	 * points.getData()[2] = z;
+	 * ```
+	 * 
 	 * @param {Number} nbPoints
 	 * @param {Number} [dimension]
 	 */
 	setNumberOfPoints(nbPoints: number, dimension?: number): void;
 
 	/**
-	 * Insert point into object.
+	 * Set the (x,y,z) coordinate of a point based on its index.
 	 * @param {Number} idx The index of point.
 	 * @param {Number} x The x coordinate.
 	 * @param {Number} y The y coordinate.

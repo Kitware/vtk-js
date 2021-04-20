@@ -17,12 +17,12 @@ interface IElevationReaderInitialValues {
 }
 
 type vtkOBJReaderBase = VtkObject & Omit<VtkAlgorithm,
-	'getInputData' |
-	'setInputData' |
-	'setInputConnection' |
-	'getInputConnection' |
-	'addInputConnection' |
-	'addInputData'>;
+	| 'getInputData'
+	| 'setInputData'
+	| 'setInputConnection'
+	| 'getInputConnection'
+	| 'addInputConnection'
+	| 'addInputData'>;
 
 export interface vtkOBJReader extends vtkOBJReaderBase {
 
@@ -95,8 +95,8 @@ export interface vtkOBJReader extends vtkOBJReaderBase {
 
 	/**
 	 * Set the url of the object to load.
-	 * @param {String} [url] the url of the object to load.
-	 * @param {IOBJReaderOptions} option The OBJ reader options.
+	 * @param {String} url the url of the object to load.
+	 * @param {IOBJReaderOptions} [option] The OBJ reader options.
 	 */
 	setUrl(url: string, option?: IOBJReaderOptions): boolean;
 }

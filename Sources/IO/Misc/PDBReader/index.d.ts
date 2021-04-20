@@ -16,12 +16,12 @@ interface IPDBReaderInitialValues {
 }
 
 type vtkPDBReaderBase = VtkObject & Omit<VtkAlgorithm,
-	'getInputData' |
-	'setInputData' |
-	'setInputConnection' |
-	'getInputConnection' |
-	'addInputConnection' |
-	'addInputData'>;
+	| 'getInputData'
+	| 'setInputData'
+	| 'setInputConnection'
+	| 'getInputConnection'
+	| 'addInputConnection'
+	| 'addInputData'>;
 
 export interface vtkPDBReader extends vtkPDBReaderBase {
 
@@ -93,8 +93,8 @@ export interface vtkPDBReader extends vtkPDBReaderBase {
 
 	/**
 	 * Set the url of the object to load.
-	 * @param {String} [url] the url of the object to load.
-	 * @param {IPDBReaderOptions} option The PDB reader options.
+	 * @param {String} url the url of the object to load.
+	 * @param {IPDBReaderOptions} [option] The PDB reader options.
 	 */
 	setUrl(url: string, option?: IPDBReaderOptions): boolean;
 }

@@ -1,7 +1,4 @@
-import {
-	VtkAlgorithm,
-	VtkObject
-} from 'vtk.js/Sources/macro';
+import { VtkAlgorithm, VtkObject } from 'vtk.js/Sources/macro';
 
 export enum ShapeType {
 	TRIANGLE,
@@ -24,15 +21,15 @@ interface IArrow2DSourceInitialValues {
 	direction?: number[];
 }
 
-type vtkAlgorithm = VtkObject & Omit<VtkAlgorithm,
-	'getInputData' |
-	'setInputData' |
-	'setInputConnection' |
-	'getInputConnection' |
-	'addInputConnection' |
-	'addInputData' > ;
+type vtkArrow2DSourceBase = VtkObject & Omit<VtkAlgorithm,
+	| 'getInputData'
+	| 'setInputData'
+	| 'setInputConnection'
+	| 'getInputConnection'
+	| 'addInputConnection'
+	| 'addInputData'>;
 
-export interface vtkArrow2DSource extends vtkAlgorithm {
+export interface vtkArrow2DSource extends vtkArrow2DSourceBase {
 	/**
 	 * Get the cap the base of the cone with a polygon.
 	 * @default 0

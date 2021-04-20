@@ -8,135 +8,32 @@ import vtkTexture from 'vtk.js/Sources/Rendering/Core/Texture';
 
 
 interface IRendererInitialValues {
-    /**
-     * 
-     */
-    allBounds: Array<any>;
-
-    /**
-     * 
-     */
-    ambient: number[];
-
-    /**
-     * 
-     */
-    allocatedRenderTime: number;
-
-    /**
-     * 
-     */
-    timeFactor: number;
-
-    /**
-     * 
-     */
-    automaticLightCreation: boolean;
-
-    /**
-     * 
-     */
-    twoSidedLighting: boolean;
-
-    /**
-     * 
-     */
-    lastRenderTimeInSeconds: number;
-
-    /**
-     * 
-     */
-    lights: vtkLight[];
-
-    /**
-     * 
-     */
-    actors: vtkProp3D[];
-
-    /**
-     * 
-     */
-    volumes: vtkVolume[];
-
-    /**
-     * 
-     */
-    lightFollowCamera: boolean;
-
-    /**
-     * 
-     */
-    numberOfPropsRendered: number;
-
-    /**
-     * 
-     */
-    layer: number;
-
-    /**
-     * 
-     */
-    preserveColorBuffer: boolean;
-
-    /**
-     * 
-     */
-    preserveDepthBuffer: boolean;
-
-    /**
-     * 
-     */
-    interactive: boolean;
-
-    /**
-     * 
-     */
-    nearClippingPlaneTolerance: number;
-
-    /**
-     * 
-     */
-    clippingRangeExpansion: number;
-
-    /**
-     * 
-     */
-    erase: boolean;
-
-    /**
-     * 
-     */
-    draw: boolean;
-
-    /**
-     * 
-     */
-    useShadows: boolean;
-
-    /**
-     * 
-     */
-    useDepthPeeling: boolean;
-
-    /**
-     * 
-     */
-    occlusionRatio: number;
-
-    /**
-     * 
-     */
-    maximumNumberOfPeels: number;
-
-    /**
-     * 
-     */
-    texturedBackground: boolean;
-
-    /**
-     * 
-     */
-    pass: number;
+    allBounds?: Array<any>;
+    ambient?: number[];
+    allocatedRenderTime?: number;
+    timeFactor?: number;
+    automaticLightCreation?: boolean;
+    twoSidedLighting?: boolean;
+    lastRenderTimeInSeconds?: number;
+    lights?: vtkLight[];
+    actors?: vtkProp3D[];
+    volumes?: vtkVolume[];
+    lightFollowCamera?: boolean;
+    numberOfPropsRendered?: number;
+    layer?: number;
+    preserveColorBuffer?: boolean;
+    preserveDepthBuffer?: boolean;
+    interactive?: boolean;
+    nearClippingPlaneTolerance?: number;
+    clippingRangeExpansion?: number;
+    erase?: boolean;
+    draw?: boolean;
+    useShadows?: boolean;
+    useDepthPeeling?: boolean;
+    occlusionRatio?: number;
+    maximumNumberOfPeels?: number;
+    texturedBackground?: boolean;
+    pass?: number;
 }
 
 export interface vtkRenderer extends vtkViewport {
@@ -179,8 +76,8 @@ export interface vtkRenderer extends vtkViewport {
     computeVisiblePropBounds(): number[];
 
     /**
-  * Get the active camera
-  */
+     * Get the active camera
+     */
     getActiveCamera(): vtkCamera;
 
     /**
@@ -398,7 +295,6 @@ export interface vtkRenderer extends vtkViewport {
      */
     getVolumes(): vtkVolume[];
 
-
     /**
      * Return the collection of volumes.
      *  
@@ -435,31 +331,31 @@ export interface vtkRenderer extends vtkViewport {
 
     /**
      * Specify the camera to use for this renderer.
-     * @param camera 
+     * @param {vtkCamera} camera The camera object to use.
      */
     setActiveCamera(camera: vtkCamera | null): boolean;
 
     /**
      * 
-     * @param automaticLightCreation 
+     * @param {Boolean} automaticLightCreation 
      */
     setAutomaticLightCreation(automaticLightCreation: boolean): boolean;
 
     /**
      * 
-     * @param backgroundTexture 
+     * @param {vtkTexture} backgroundTexture 
      */
     setBackgroundTexture(backgroundTexture: vtkTexture): boolean;
 
     /**
      * 
-     * @param backingStore 
+     * @param {*} backingStore 
      */
     setBackingStore(backingStore: any): boolean;
 
     /**
      * 
-     * @param clippingRangeExpansion 
+     * @param {Number} clippingRangeExpansion 
      */
     setClippingRangeExpansion(clippingRangeExpansion: number): boolean;
 
@@ -501,7 +397,7 @@ export interface vtkRenderer extends vtkViewport {
 
     /**
      * 
-     * @param lightFollowCamera 
+     * @param {Boolean} lightFollowCamera 
      */
     setLightFollowCamera(lightFollowCamera: boolean): boolean;
 
@@ -595,7 +491,7 @@ export interface vtkRenderer extends vtkViewport {
 
     /**
      * Remove a light from the list of lights.
-     * @param {vtkLight} light 
+     * @param {vtkLight} light The light object to remove.
      */
     removeLight(light: vtkLight): void;
 
