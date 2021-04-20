@@ -51,7 +51,12 @@ function vtkTriangle(publicAPI, model) {
 
   publicAPI.getCellDimension = () => 2;
   publicAPI.intersectWithLine = (p1, p2, tol, x, pcoords) => {
-    const outObj = { subId: 0, t: 0, intersect: -1 };
+    const outObj = {
+      subId: 0,
+      t: Number.MAX_VALUE,
+      intersect: 0,
+      betweenPoints: false,
+    };
     pcoords[2] = 0.0;
     const closestPoint = [];
     const tol2 = tol * tol;
@@ -69,6 +74,7 @@ function vtkTriangle(publicAPI, model) {
     if (n[0] !== 0 || n[1] !== 0 || n[2] !== 0) {
       // Intersect plane of triangle with line
       const plane = vtkPlane.intersectWithLine(p1, p2, pt1, n);
+      outObj.betweenPoints = plane.betweenPoints;
       outObj.t = plane.t;
       x[0] = plane.x[0];
       x[1] = plane.x[1];
@@ -118,6 +124,8 @@ function vtkTriangle(publicAPI, model) {
     }
 
     const intersectLine = model.line.intersectWithLine(p1, p2, tol, x, pcoords);
+    outObj.betweenPoints = intersectLine.betweenPoints;
+    outObj.t = intersectLine.t;
     if (intersectLine.intersect) {
       const pt3Pt1 = [];
       const pt3Pt2 = [];
@@ -130,13 +138,13 @@ function vtkTriangle(publicAPI, model) {
       }
       pcoords[0] = vtkMath.dot(pt3X, pt3Pt1) / dist2Pt3Pt1;
       pcoords[1] = vtkMath.dot(pt3X, pt3Pt2) / dist2Pt2Pt3;
-      outObj.evaluation = 1;
+      outObj.intersect = 1;
       return outObj;
     }
 
     pcoords[0] = 0.0;
     pcoords[1] = 0.0;
-    outObj.evaluation = 0;
+    outObj.intersect = 0;
     return outObj;
   };
 
