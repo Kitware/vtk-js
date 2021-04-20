@@ -14,9 +14,10 @@ pcoords parametric coordinates (computed in function)
 A javascript object is returned :
 ```js
 {
-  evaluation: define if the triangle has been intersected or not
+  intersect: define if the line has been intersected or not
   subId: always set to 0
   t: tolerance of the intersection
+  betweenPoints: Define if the intersected point is between input points
 }
 ```
 
