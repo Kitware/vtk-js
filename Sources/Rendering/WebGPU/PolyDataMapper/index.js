@@ -27,8 +27,6 @@ const vtkWebGPUPolyDataVS = `
 
 //VTK::Mapper::UBO
 
-//VTK::VertexInput
-
 //VTK::PositionVC::Dec
 
 //VTK::Color::Dec
@@ -37,12 +35,18 @@ const vtkWebGPUPolyDataVS = `
 
 //VTK::TCoord::Dec
 
-[[builtin(position)]] var<out> Position : vec4<f32>;
-[[builtin(vertex_index)]] var<in> my_index: u32;
+//VTK::InputStruct::Dec
+
+//VTK::OutputStruct::Dec
 
 [[stage(vertex)]]
-fn main() -> void
+fn main(
+//VTK::InputStruct::Impl
+)
+//VTK::OutputStruct::Impl
 {
+  var output : vertexOutput;
+
   var vertex: vec4<f32> = vertexMC;
 
   //VTK::PositionVC::Impl
@@ -53,8 +57,8 @@ fn main() -> void
 
   //VTK::TCoord::Impl
 
-  Position = rendererUBO.WCDCMatrix*vertexMC;
-  return;
+  output.Position = rendererUBO.WCDCMatrix*vertexMC;
+  return output;
 }
 `;
 
@@ -74,11 +78,18 @@ const vtkWebGPUPolyDataFS = `
 
 //VTK::RenderEncoder::Dec
 
-[[builtin(front_facing)]] var<in> frontFacing : bool;
+//VTK::InputStruct::Dec
+
+//VTK::OutputStruct::Dec
 
 [[stage(fragment)]]
-fn main() -> void
+fn main(
+//VTK::InputStruct::Impl
+)
+//VTK::OutputStruct::Impl
 {
+  var output : fragmentOutput;
+
   var ambientColor: vec4<f32> = mapperUBO.AmbientColor;
   var diffuseColor: vec4<f32> = mapperUBO.DiffuseColor;
   var opacity: f32 = mapperUBO.Opacity;
@@ -101,6 +112,7 @@ fn main() -> void
   if (computedColor.a == 0.0) { discard; };
 
   //VTK::RenderEncoder::Impl
+  return output;
 }
 `;
 
@@ -204,14 +216,12 @@ function vtkWebGPUPolyDataMapper(publicAPI, model) {
     code = vtkWebGPUShaderCache.substitute(code, '//VTK::Mapper::UBO', [
       model.UBO.getShaderCode(),
     ]).result;
-    code = vtkWebGPUShaderCache.substitute(code, '//VTK::VertexInput', [
-      vertexInput.getShaderCode(),
-    ]).result;
     const vDesc = vtkWebGPUShaderDescription.newInstance({
       type: 'vertex',
       hash,
       code,
     });
+    vDesc.addBuiltinOutput('vec4<f32>', '[[builtin(position)]] Position');
 
     code = vtkWebGPUPolyDataFS;
     code = vtkWebGPUShaderCache.substitute(code, '//VTK::Renderer::UBO', [
@@ -226,6 +236,7 @@ function vtkWebGPUPolyDataMapper(publicAPI, model) {
       hash,
       code,
     });
+    fDesc.addBuiltinInput('bool', '[[builtin(front_facing)]] frontFacing');
 
     const sdrs = pipeline.getShaderDescriptions();
     sdrs.push(vDesc);
@@ -238,31 +249,27 @@ function vtkWebGPUPolyDataMapper(publicAPI, model) {
     publicAPI.replaceShaderTCoord(hash, pipeline, vertexInput);
     // publicAPI.replaceShaderPositionVC(hash, pipeline);
     model.renderEncoder.replaceShaderCode(pipeline);
+
+    // finally fill in the input and out blocks
+    vDesc.replaceShaderCode(null, vertexInput);
+    fDesc.replaceShaderCode(vDesc);
   };
 
   publicAPI.replaceShaderNormal = (hash, pipeline, vertexInput) => {
     if (vertexInput.hasAttribute('normalMC')) {
       const vDesc = pipeline.getShaderDescription('vertex');
+      vDesc.addOutput('vec3<f32>', 'normalVC');
       let code = vDesc.getCode();
-      code = vtkWebGPUShaderCache.substitute(code, '//VTK::Normal::Dec', [
-        vDesc.getOutputDeclaration('vec3<f32>', 'normalVC'),
-      ]).result;
-
       code = vtkWebGPUShaderCache.substitute(code, '//VTK::Normal::Impl', [
-        '  normalVC = (rendererUBO.WCVCNormals * normalMC).xyz;',
+        '  output.normalVC = (rendererUBO.WCVCNormals * normalMC).xyz;',
       ]).result;
       vDesc.setCode(code);
 
       const fDesc = pipeline.getShaderDescription('fragment');
       code = fDesc.getCode();
-
-      code = vtkWebGPUShaderCache.substitute(code, '//VTK::Normal::Dec', [
-        fDesc.getInputDeclaration(vDesc, 'normalVC'),
-      ]).result;
-
       code = vtkWebGPUShaderCache.substitute(code, '//VTK::Normal::Impl', [
-        '  var normal: vec3<f32> = normalVC;',
-        '  if (!frontFacing) { normal = -normal; }',
+        '  var normal: vec3<f32> = input.normalVC;',
+        '  if (!input.frontFacing) { normal = -normal; }',
         '  var df: f32  = max(0.0, normal.z);',
         '  var sf: f32 = pow(df, mapperUBO.SpecularPower);',
         '  var diffuse: vec3<f32> = df * diffuseColor.rgb;',
@@ -284,27 +291,19 @@ function vtkWebGPUPolyDataMapper(publicAPI, model) {
     if (!vertexInput.hasAttribute('colorVI')) return;
 
     const vDesc = pipeline.getShaderDescription('vertex');
-
+    vDesc.addOutput('vec4<f32>', 'color');
     let code = vDesc.getCode();
-    code = vtkWebGPUShaderCache.substitute(code, '//VTK::Color::Dec', [
-      vDesc.getOutputDeclaration('vec4<f32>', 'color'),
-    ]).result;
-
     code = vtkWebGPUShaderCache.substitute(code, '//VTK::Color::Impl', [
-      '  color = colorVI;',
+      '  output.color = colorVI;',
     ]).result;
     vDesc.setCode(code);
 
     const fDesc = pipeline.getShaderDescription('fragment');
     code = fDesc.getCode();
-    code = vtkWebGPUShaderCache.substitute(code, '//VTK::Color::Dec', [
-      fDesc.getInputDeclaration(vDesc, 'color'),
-    ]).result;
-
     code = vtkWebGPUShaderCache.substitute(code, '//VTK::Color::Impl', [
-      'ambientColor = color;',
-      'diffuseColor = color;',
-      'opacity = mapperUBO.Opacity*color.a;',
+      'ambientColor = input.color;',
+      'diffuseColor = input.color;',
+      'opacity = mapperUBO.Opacity * input.color.a;',
     ]).result;
     fDesc.setCode(code);
   };
@@ -313,20 +312,16 @@ function vtkWebGPUPolyDataMapper(publicAPI, model) {
     if (!vertexInput.hasAttribute('tcoord')) return;
 
     const vDesc = pipeline.getShaderDescription('vertex');
-
+    vDesc.addOutput('vec2<f32>', 'tcoordVS');
     let code = vDesc.getCode();
-    code = vtkWebGPUShaderCache.substitute(code, '//VTK::TCoord::Dec', [
-      vDesc.getOutputDeclaration('vec2<f32>', 'tcoordVS'),
-    ]).result;
-
     code = vtkWebGPUShaderCache.substitute(code, '//VTK::TCoord::Impl', [
-      '  tcoordVS = tcoord;',
+      '  output.tcoordVS = tcoord;',
     ]).result;
     vDesc.setCode(code);
 
     const fDesc = pipeline.getShaderDescription('fragment');
     code = fDesc.getCode();
-    const tcinput = [fDesc.getInputDeclaration(vDesc, 'tcoordVS')];
+    const tcinput = [];
 
     for (let t = 0; t < model.textures.length; t++) {
       const tcount = pipeline.getBindGroupLayoutCount(`Texture${t}`);
@@ -343,7 +338,7 @@ function vtkWebGPUPolyDataMapper(publicAPI, model) {
 
     if (model.textures.length) {
       code = vtkWebGPUShaderCache.substitute(code, '//VTK::TCoord::Impl', [
-        'var tcolor: vec4<f32> = textureSample(Texture0, Sampler0, tcoordVS);',
+        'var tcolor: vec4<f32> = textureSample(Texture0, Sampler0, input.tcoordVS);',
         'computedColor = computedColor*tcolor;',
       ]).result;
     }
@@ -560,10 +555,14 @@ function vtkWebGPUPolyDataMapper(publicAPI, model) {
 
     for (let i = 0; i < newTextures.length; i++) {
       const srcTexture = newTextures[i];
-      const treq = {
-        source: srcTexture,
-        usage: 'vtk',
-      };
+      const treq = {};
+      if (srcTexture.getInputData()) {
+        treq.imageData = srcTexture.getInputData();
+        treq.source = treq.imageData;
+      } else if (srcTexture.getImage()) {
+        treq.image = srcTexture.getImage();
+        treq.source = treq.image;
+      }
       const newTex = model.device.getTextureManager().getTexture(treq);
       if (newTex.getReady()) {
         // is this a new texture

@@ -85,7 +85,10 @@ function vtkWebGPUVertexInput(publicAPI, model) {
     for (let i = 0; i < model.inputs.length; i++) {
       for (let nm = 0; nm < model.inputs[i].names.length; nm++) {
         const type = getTypeFromFormat(model.inputs[i].buffer, nm);
-        result = `${result}[[location(${nameCount})]] var<in> ${model.inputs[i].names[nm]} : ${type};\n`;
+        if (nameCount > 0) {
+          result += ',\n';
+        }
+        result = `${result}  [[location(${nameCount})]] ${model.inputs[i].names[nm]} : ${type}`;
         nameCount++;
       }
     }

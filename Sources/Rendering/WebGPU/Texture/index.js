@@ -21,6 +21,7 @@ function vtkWebGPUTexture(publicAPI, model) {
     model.width = options.width;
     model.height = options.height;
     model.depth = options.depth ? options.depth : 1;
+    const dimension = model.depth === 1 ? '2d' : '3d';
     model.format = options.format ? options.format : 'rgbaunorm';
     /* eslint-disable no-undef */
     /* eslint-disable no-bitwise */
@@ -33,6 +34,7 @@ function vtkWebGPUTexture(publicAPI, model) {
       size: [model.width, model.height, model.depth],
       format: model.format, // 'rgba8unorm',
       usage: model.usage,
+      dimension,
     });
   };
 
@@ -58,8 +60,8 @@ function vtkWebGPUTexture(publicAPI, model) {
       // create and write the buffer
       // todo specify a source
       const buffRequest = {
-        dataArray: req.dataArray.getPointData().getScalars(),
-        time: req.dataArray.getPointData().getScalars().getMTime(),
+        dataArray: req.dataArray,
+        time: req.dataArray.getMTime(),
         /* eslint-disable no-undef */
         usage: BufferUsage.Texture,
         /* eslint-enable no-undef */
@@ -67,7 +69,9 @@ function vtkWebGPUTexture(publicAPI, model) {
       };
       const buff = model.device.getBufferManager().getBuffer(buffRequest);
       model.buffer = buff;
-    } else {
+    }
+
+    if (req.image) {
       const canvas = document.createElement('canvas');
       canvas.width = req.image.width;
       canvas.height = req.image.height;

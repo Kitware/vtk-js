@@ -4,15 +4,18 @@ import macro from 'vtk.js/Sources/macro';
 import vtkViewNode from 'vtk.js/Sources/Rendering/SceneGraph/ViewNode';
 
 // ----------------------------------------------------------------------------
-// vtkWebGPUActor methods
+// vtkWebGPUVolume methods
 // ----------------------------------------------------------------------------
 
-function vtkWebGPUActor(publicAPI, model) {
+function vtkWebGPUVolume(publicAPI, model) {
   // Set our className
-  model.classHierarchy.push('vtkWebGPUActor');
+  model.classHierarchy.push('vtkWebGPUVolume');
 
   // Builds myself.
   publicAPI.buildPass = (prepass) => {
+    if (!model.renderable || !model.renderable.getVisibility()) {
+      return;
+    }
     if (prepass) {
       model.WebGPURenderer = publicAPI.getFirstAncestorOfType(
         'vtkWebGPURenderer'
@@ -20,54 +23,14 @@ function vtkWebGPUActor(publicAPI, model) {
       model.WebGPURenderWindow = model.WebGPURenderer.getFirstAncestorOfType(
         'vtkWebGPURenderWindow'
       );
+      // for the future if we support hardware selection of volumes
       if (model.propID === undefined) {
         model.propID = model.WebGPURenderWindow.getUniquePropID();
       }
-      model.context = model.WebGPURenderWindow.getContext();
       publicAPI.prepareNodes();
       publicAPI.addMissingNode(model.renderable.getMapper());
       publicAPI.removeUnusedNodes();
     }
-  };
-
-  // we draw textures, then mapper, then post pass textures
-  publicAPI.traverseOpaquePass = (renderPass) => {
-    if (
-      !model.renderable ||
-      !model.renderable.getVisibility() ||
-      !model.renderable.getIsOpaque() ||
-      (model.WebGPURenderer.getSelector() && !model.renderable.getPickable())
-    ) {
-      return;
-    }
-
-    publicAPI.apply(renderPass, true);
-
-    if (model.children[0]) {
-      model.children[0].traverse(renderPass);
-    }
-
-    publicAPI.apply(renderPass, false);
-  };
-
-  // we draw textures, then mapper, then post pass textures
-  publicAPI.traverseTranslucentPass = (renderPass) => {
-    if (
-      !model.renderable ||
-      !model.renderable.getVisibility() ||
-      model.renderable.getIsOpaque() ||
-      (model.WebGPURenderer.getSelector() && !model.renderable.getPickable())
-    ) {
-      return;
-    }
-
-    publicAPI.apply(renderPass, true);
-
-    if (model.children[0]) {
-      model.children[0].traverse(renderPass);
-    }
-
-    publicAPI.apply(renderPass, false);
   };
 
   publicAPI.queryPass = (prepass, renderPass) => {
@@ -75,38 +38,43 @@ function vtkWebGPUActor(publicAPI, model) {
       if (!model.renderable || !model.renderable.getVisibility()) {
         return;
       }
-      if (model.renderable.getIsOpaque()) {
-        renderPass.incrementOpaqueActorCount();
-      } else {
-        renderPass.incrementTranslucentActorCount();
-      }
+      renderPass.incrementVolumeCount();
     }
+  };
+
+  publicAPI.traverseVolumePass = (renderPass) => {
+    if (
+      !model.renderable ||
+      !model.renderable.getVisibility() ||
+      (model.WebGPURenderer.getSelector() && !model.renderable.getPickable())
+    ) {
+      return;
+    }
+
+    publicAPI.apply(renderPass, true);
+
+    model.children[0].traverse(renderPass);
+
+    publicAPI.apply(renderPass, false);
   };
 
   publicAPI.getKeyMatrices = () => {
     // has the actor changed?
     if (model.renderable.getMTime() > model.keyMatrixTime.getMTime()) {
       model.renderable.computeMatrix();
-      mat4.copy(model.keyMatrices.mcwc, model.renderable.getMatrix());
-      mat4.transpose(model.keyMatrices.mcwc, model.keyMatrices.mcwc);
+      mat4.copy(model.MCWCMatrix, model.renderable.getMatrix());
+      mat4.transpose(model.MCWCMatrix, model.MCWCMatrix);
 
       if (model.renderable.getIsIdentity()) {
-        mat3.identity(model.keyMatrices.normalMatrix);
+        mat3.identity(model.normalMatrix);
       } else {
-        mat3.fromMat4(model.keyMatrices.normalMatrix, model.keyMatrices.mcwc);
-        mat3.invert(
-          model.keyMatrices.normalMatrix,
-          model.keyMatrices.normalMatrix
-        );
-        mat3.transpose(
-          model.keyMatrices.normalMatrix,
-          model.keyMatrices.normalMatrix
-        );
+        mat3.fromMat4(model.normalMatrix, model.MCWCMatrix);
+        mat3.invert(model.normalMatrix, model.normalMatrix);
       }
       model.keyMatrixTime.modified();
     }
 
-    return model.keyMatrices;
+    return { mcwc: model.MCWCMatrix, normalMatrix: model.normalMatrix };
   };
 }
 
@@ -115,10 +83,10 @@ function vtkWebGPUActor(publicAPI, model) {
 // ----------------------------------------------------------------------------
 
 const DEFAULT_VALUES = {
-  context: null,
-  keyMatrixTime: null,
-  keyMatrices: null,
   propID: undefined,
+  // keyMatrixTime: null,
+  // normalMatrix: null,
+  // MCWCMatrix: null,
 };
 
 // ----------------------------------------------------------------------------
@@ -131,23 +99,19 @@ export function extend(publicAPI, model, initialValues = {}) {
 
   model.keyMatrixTime = {};
   macro.obj(model.keyMatrixTime, { mtime: 0 });
-  model.keyMatrices = {
-    normalMatrix: new Float64Array(9),
-    mcwc: new Float64Array(16),
-  };
-
-  // Build VTK API
-  macro.setGet(publicAPI, model, ['context']);
+  // always set by getter
+  model.normalMatrix = new Float64Array(9);
+  model.MCWCMatrix = new Float64Array(16);
 
   macro.get(publicAPI, model, ['propID']);
 
   // Object methods
-  vtkWebGPUActor(publicAPI, model);
+  vtkWebGPUVolume(publicAPI, model);
 }
 
 // ----------------------------------------------------------------------------
 
-export const newInstance = macro.newInstance(extend);
+export const newInstance = macro.newInstance(extend, 'vtkWebGPUVolume');
 
 // ----------------------------------------------------------------------------
 

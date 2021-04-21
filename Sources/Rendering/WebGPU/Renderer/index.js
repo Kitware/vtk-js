@@ -226,6 +226,54 @@ function vtkWebGPURenderer(publicAPI, model) {
     }
   };
 
+  publicAPI.volumePass = (prepass) => {
+    if (prepass) {
+      // clear last pipelines
+      model.pipelineCallbacks = [];
+
+      model.renderEncoder.begin(model.parent.getCommandEncoder());
+
+      publicAPI.updateUBO();
+    } else {
+      // loop over registered pipelines
+      for (let i = 0; i < model.pipelineCallbacks.length; i++) {
+        const pStruct = model.pipelineCallbacks[i];
+        const pl = pStruct.pipeline;
+
+        pl.bind(model.renderEncoder);
+        model.renderEncoder.setBindGroup(0, model.UBO.getBindGroup());
+        // bind our BindGroup
+        // set viewport
+        const tsize = publicAPI.getTiledSizeAndOrigin();
+        model.renderEncoder
+          .getHandle()
+          .setViewport(
+            tsize.lowerLeftU,
+            tsize.lowerLeftV,
+            tsize.usize,
+            tsize.vsize,
+            0.0,
+            1.0
+          );
+        // set scissor
+        model.renderEncoder
+          .getHandle()
+          .setScissorRect(
+            tsize.lowerLeftU,
+            tsize.lowerLeftV,
+            tsize.usize,
+            tsize.vsize
+          );
+
+        for (let cb = 0; cb < pStruct.callbacks.length; cb++) {
+          pStruct.callbacks[cb](pl);
+        }
+      }
+
+      model.renderEncoder.end();
+    }
+  };
+
   publicAPI.getAspectRatio = () => {
     const size = model.parent.getSizeByReference();
     const viewport = model.renderable.getViewportByReference();
