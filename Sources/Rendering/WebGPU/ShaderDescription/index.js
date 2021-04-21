@@ -11,6 +11,8 @@ function vtkWebGPUShaderDescription(publicAPI, model) {
   // Set our className
   model.classHierarchy.push('vtkWebGPUShaderDescription');
 
+  publicAPI.hasOutput = (name) => model.outputNames.includes(name);
+
   publicAPI.addOutput = (type, name) => {
     model.outputTypes.push(type);
     model.outputNames.push(name);

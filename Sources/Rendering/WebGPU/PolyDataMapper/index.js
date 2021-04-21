@@ -49,15 +49,13 @@ fn main(
 
   var vertex: vec4<f32> = vertexMC;
 
-  //VTK::PositionVC::Impl
-
   //VTK::Color::Impl
 
   //VTK::Normal::Impl
 
   //VTK::TCoord::Impl
 
-  output.Position = rendererUBO.WCDCMatrix*vertexMC;
+  output.Position = rendererUBO.WCPCMatrix*vertexMC;
   return output;
 }
 `;
@@ -73,8 +71,6 @@ const vtkWebGPUPolyDataFS = `
 //VTK::Normal::Dec
 
 //VTK::TCoord::Dec
-
-//VTK::PositionVC::Dec
 
 //VTK::RenderEncoder::Dec
 
@@ -209,7 +205,7 @@ function vtkWebGPUPolyDataMapper(publicAPI, model) {
 
   publicAPI.generateShaderDescriptions = (hash, pipeline, vertexInput) => {
     // standard shader stuff most paths use
-    let code = vtkWebGPUPolyDataVS;
+    let code = model.vertexShaderTemplate;
     code = vtkWebGPUShaderCache.substitute(code, '//VTK::Renderer::UBO', [
       model.WebGPURenderer.getUBOCode(),
     ]).result;
@@ -223,7 +219,7 @@ function vtkWebGPUPolyDataMapper(publicAPI, model) {
     });
     vDesc.addBuiltinOutput('vec4<f32>', '[[builtin(position)]] Position');
 
-    code = vtkWebGPUPolyDataFS;
+    code = model.fragmentShaderTemplate;
     code = vtkWebGPUShaderCache.substitute(code, '//VTK::Renderer::UBO', [
       model.WebGPURenderer.getUBOCode(),
     ]).result;
@@ -245,9 +241,8 @@ function vtkWebGPUPolyDataMapper(publicAPI, model) {
     // different things we deal with in building the shader code
     publicAPI.replaceShaderColor(hash, pipeline, vertexInput);
     publicAPI.replaceShaderNormal(hash, pipeline, vertexInput);
-    // publicAPI.replaceShaderLight(hash, pipeline);
+    publicAPI.replaceShaderLight(hash, pipeline, vertexInput);
     publicAPI.replaceShaderTCoord(hash, pipeline, vertexInput);
-    // publicAPI.replaceShaderPositionVC(hash, pipeline);
     model.renderEncoder.replaceShaderCode(pipeline);
 
     // finally fill in the input and out blocks
@@ -270,6 +265,18 @@ function vtkWebGPUPolyDataMapper(publicAPI, model) {
       code = vtkWebGPUShaderCache.substitute(code, '//VTK::Normal::Impl', [
         '  var normal: vec3<f32> = input.normalVC;',
         '  if (!input.frontFacing) { normal = -normal; }',
+      ]).result;
+      fDesc.setCode(code);
+    }
+  };
+
+  // we only apply lighting when there is a "var normal" declaration in the
+  // fragment shader code. That is the lighting trigger.
+  publicAPI.replaceShaderLight = (hash, pipeline, vertexInput) => {
+    const fDesc = pipeline.getShaderDescription('fragment');
+    let code = fDesc.getCode();
+    if (code.includes('var normal')) {
+      code = vtkWebGPUShaderCache.substitute(code, '//VTK::Light::Impl', [
         '  var df: f32  = max(0.0, normal.z);',
         '  var sf: f32 = pow(df, mapperUBO.SpecularPower);',
         '  var diffuse: vec3<f32> = df * diffuseColor.rgb;',
@@ -277,9 +284,7 @@ function vtkWebGPUPolyDataMapper(publicAPI, model) {
       ]).result;
       fDesc.setCode(code);
     } else {
-      const fDesc = pipeline.getShaderDescription('fragment');
-      let code = fDesc.getCode();
-      code = vtkWebGPUShaderCache.substitute(code, '//VTK::Normal::Impl', [
+      code = vtkWebGPUShaderCache.substitute(code, '//VTK::Light::Impl', [
         '  var diffuse: vec3<f32> = diffuseColor.rgb;',
         '  var specular: vec3<f32> = mapperUBO.SpecularColor.rgb * mapperUBO.SpecularColor.a;',
       ]).result;
@@ -723,13 +728,10 @@ const DEFAULT_VALUES = {
   textures: null,
   samplers: null,
   textureBindGroups: null,
-  VBOBuildTime: 0,
-  VBOBuildString: null,
   primitives: null,
   tmpMat4: null,
-  lightColor: [], // used internally
-  lightHalfAngle: [], // used internally
-  lightDirection: [], // used internally
+  fragmentShaderTemplate: null,
+  vertexShaderTemplate: null,
 };
 
 // ----------------------------------------------------------------------------
@@ -742,6 +744,11 @@ export function extend(publicAPI, model, initialValues = {}) {
 
   model.tmpMat3 = mat3.identity(new Float64Array(9));
   model.tmpMat4 = mat4.identity(new Float64Array(16));
+
+  model.fragmentShaderTemplate =
+    model.fragmentShaderTemplate || vtkWebGPUPolyDataFS;
+  model.vertexShaderTemplate =
+    model.vertexShaderTemplate || vtkWebGPUPolyDataVS;
 
   model.UBO = vtkWebGPUUniformBuffer.newInstance();
   model.UBO.setBinding(0);
@@ -799,10 +806,13 @@ export function extend(publicAPI, model, initialValues = {}) {
   }
 
   // Build VTK API
-  macro.setGet(publicAPI, model, ['context', 'renderEncoder', 'UBO']);
-
-  model.VBOBuildTime = {};
-  macro.obj(model.VBOBuildTime, { mtime: 0 });
+  macro.setGet(publicAPI, model, [
+    'context',
+    'fragmentShaderTemplate',
+    'vertexShaderTemplate',
+    'renderEncoder',
+    'UBO',
+  ]);
 
   // Object methods
   vtkWebGPUPolyDataMapper(publicAPI, model);

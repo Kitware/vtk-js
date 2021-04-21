@@ -21,7 +21,6 @@ export const STATIC = {};
 
 function requestMatches(req1, req2) {
   if (req1.time !== req2.time) return false;
-  if (req1.address !== req2.address) return false;
   if (req1.format !== req2.format) return false;
   if (req1.usage !== req2.usage) return false;
   if (req1.hash !== req2.hash) return false;
@@ -248,7 +247,7 @@ function packArray(
     index += array[index] + 1;
     cellId++;
   }
-  result.address = packedVBO;
+  result.nativeArray = packedVBO;
   result.elementCount = caboCount;
   return result;
 }
@@ -366,16 +365,27 @@ function vtkWebGPUBufferManager(publicAPI, model) {
   // Set our className
   model.classHierarchy.push('vtkWebGPUBufferManager');
 
+  // is the buffer already present?
+  publicAPI.hasBuffer = (req) => {
+    if (req.source) {
+      // if a matching buffer already exists then return true
+      if (model.buffers.has(req.source)) {
+        const dabuffers = model.buffers.get(req.source);
+        for (let i = 0; i < dabuffers.length; i++) {
+          if (requestMatches(dabuffers[i].request, req)) {
+            return true;
+          }
+        }
+      }
+    }
+    return false;
+  };
+
   // we cache based on the passed in source, when the source is
   // garbage collected then the cache entry is removed. If a source
   // is not provided then the buffer is NOT cached and you are on your own
   // if you want to share it etc
   publicAPI.getBuffer = (req) => {
-    // if a dataArray is provided set the address
-    if (req.dataArray) {
-      req.address = req.dataArray.getData();
-    }
-
     if (req.source) {
       // if a matching buffer already exists then return it
       if (model.buffers.has(req.source)) {
@@ -386,6 +396,11 @@ function vtkWebGPUBufferManager(publicAPI, model) {
           }
         }
       }
+    }
+
+    // if a dataArray is provided set the nativeArray
+    if (req.dataArray) {
+      req.nativeArray = req.dataArray.getData();
     }
 
     // create one
@@ -401,7 +416,7 @@ function vtkWebGPUBufferManager(publicAPI, model) {
       /* eslint-disable no-bitwise */
       gpuUsage = GPUBufferUsage.UNIFORM | GPUBufferUsage.COPY_DST;
       /* eslint-enable no-bitwise */
-      buffer.createAndWrite(req.address, gpuUsage);
+      buffer.createAndWrite(req.nativeArray, gpuUsage);
     }
 
     // handle textures
@@ -409,7 +424,7 @@ function vtkWebGPUBufferManager(publicAPI, model) {
       /* eslint-disable no-bitwise */
       gpuUsage = GPUBufferUsage.COPY_SRC;
       /* eslint-enable no-bitwise */
-      buffer.createAndWrite(req.address, gpuUsage);
+      buffer.createAndWrite(req.nativeArray, gpuUsage);
       buffer.setArrayInformation([{ offset: 0, format: req.format }]);
     }
 
@@ -431,7 +446,7 @@ function vtkWebGPUBufferManager(publicAPI, model) {
         }
       );
       // console.log(result);
-      buffer.createAndWrite(result.address, gpuUsage);
+      buffer.createAndWrite(result.nativeArray, gpuUsage);
       buffer.setStrideInBytes(stride);
       buffer.setArrayInformation([{ offset: 0, format: req.format }]);
     }
@@ -450,6 +465,13 @@ function vtkWebGPUBufferManager(publicAPI, model) {
       buffer.setArrayInformation([{ offset: 0, format: req.format }]);
     }
 
+    if (req.usage === BufferUsage.RawVertex) {
+      gpuUsage = GPUBufferUsage.VERTEX;
+      buffer.createAndWrite(req.nativeArray, gpuUsage);
+      buffer.setStrideInBytes(stride);
+      buffer.setArrayInformation([{ offset: 0, format: req.format }]);
+    }
+
     buffer.setSourceTime(req.time);
 
     // cache the buffer if we have a dataArray.
@@ -460,13 +482,13 @@ function vtkWebGPUBufferManager(publicAPI, model) {
         model.buffers.set(req.source, []);
       }
 
-      const dabuffers = model.buffers.get(req.dataArray);
+      const dabuffers = model.buffers.get(req.source);
       dabuffers.push({
         request: {
           time: req.time,
-          address: req.address,
           format: req.format,
           usage: req.usage,
+          hash: req.hash,
         },
         buffer,
       });

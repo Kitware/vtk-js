@@ -175,7 +175,7 @@ function vtkWebGPUUniformBuffer(publicAPI, model) {
   publicAPI.sendIfNeeded = (device, layout) => {
     if (!model.UBO) {
       const req = {
-        address: model.Float32Array,
+        nativeArray: model.Float32Array,
         time: 0,
         usage: BufferUsage.UniformArray,
       };
