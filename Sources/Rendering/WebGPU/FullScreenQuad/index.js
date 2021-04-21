@@ -257,8 +257,8 @@ export function extend(publicAPI, model, initialValues = {}) {
     vertexInput: vtkWebGPUVertexInput.newInstance(),
   };
 
-  model.fragmentShaderTemplate = vtkWebGPUFSQFS;
-  model.vertexShaderTemplate = vtkWebGPUFSQVS;
+  model.fragmentShaderTemplate = model.fragmentShaderTemplate || vtkWebGPUFSQFS;
+  model.vertexShaderTemplate = model.vertexShaderTemplate || vtkWebGPUFSQVS;
 
   // Build VTK API
   macro.setGet(publicAPI, model, [

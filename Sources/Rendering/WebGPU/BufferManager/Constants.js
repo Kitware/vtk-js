@@ -10,6 +10,7 @@ export const BufferUsage = {
   PointArray: 8,
   NormalsFromPoints: 9,
   Texture: 10,
+  RawVertex: 11,
 };
 
 export const PrimitiveTypes = {

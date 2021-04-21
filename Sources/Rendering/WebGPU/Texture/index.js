@@ -98,7 +98,7 @@ function vtkWebGPUTexture(publicAPI, model) {
 
       // create and write the buffer
       const buffRequest = {
-        address: imageData.data,
+        nativeArray: imageData.data,
         time: 0,
         /* eslint-disable no-undef */
         usage: BufferUsage.Texture,

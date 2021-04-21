@@ -1,4 +1,4 @@
-import { mat3, mat4 } from 'gl-matrix';
+import { mat4 } from 'gl-matrix';
 
 import * as macro from '../../../macro';
 import vtkViewNode from '../../SceneGraph/ViewNode';
@@ -21,22 +21,29 @@ function vtkWebGPUCamera(publicAPI, model) {
       ren.getMTime() > model.keyMatrixTime.getMTime() ||
       model.renderable.getMTime() > model.keyMatrixTime.getMTime()
     ) {
-      mat4.copy(model.keyMatrices.wcvc, model.renderable.getViewMatrix());
+      const wcvc = model.renderable.getViewMatrix();
 
-      mat3.fromMat4(model.keyMatrices.normalMatrix, model.keyMatrices.wcvc);
-      mat3.invert(
+      mat4.copy(model.keyMatrices.normalMatrix, wcvc);
+      // zero out translation
+      model.keyMatrices.normalMatrix[3] = 0.0;
+      model.keyMatrices.normalMatrix[7] = 0.0;
+      model.keyMatrices.normalMatrix[11] = 0.0;
+      mat4.invert(
         model.keyMatrices.normalMatrix,
         model.keyMatrices.normalMatrix
       );
-      mat4.transpose(model.keyMatrices.wcvc, model.keyMatrices.wcvc);
+      mat4.transpose(model.keyMatrices.wcvc, wcvc);
 
       const aspectRatio = webGPURenderer.getAspectRatio();
 
-      mat4.copy(
-        model.keyMatrices.vcpc,
-        model.renderable.getProjectionMatrix(aspectRatio, -1, 1)
-      );
-      mat4.transpose(model.keyMatrices.vcpc, model.keyMatrices.vcpc);
+      const vcpc = model.renderable.getProjectionMatrix(aspectRatio, -1, 1);
+      mat4.transpose(model.keyMatrices.vcpc, vcpc);
+
+      // adjust due to WebGPU using a different coordinate system in Z
+      model.keyMatrices.vcpc[2] = 0.5 * vcpc[8] + 0.5 * vcpc[12];
+      model.keyMatrices.vcpc[6] = 0.5 * vcpc[9] + 0.5 * vcpc[13];
+      model.keyMatrices.vcpc[10] = 0.5 * vcpc[10] + 0.5 * vcpc[14];
+      model.keyMatrices.vcpc[14] = 0.5 * vcpc[11] + 0.5 * vcpc[15];
 
       mat4.multiply(
         model.keyMatrices.wcpc,
@@ -74,7 +81,7 @@ export function extend(publicAPI, model, initialValues = {}) {
 
   // values always get set by the get method
   model.keyMatrices = {
-    normalMatrix: new Float64Array(9),
+    normalMatrix: new Float64Array(16),
     vcpc: new Float64Array(16),
     wcvc: new Float64Array(16),
     wcpc: new Float64Array(16),
