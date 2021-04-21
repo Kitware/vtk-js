@@ -35,7 +35,9 @@ function vtkWebGPUUniformBuffer(publicAPI, model) {
   // have to be careful how we order the entries. For example a vec4<f32>
   // must be aligned on a 16 byte offset, etc. See
   // https://gpuweb.github.io/gpuweb/wgsl/#memory-layouts
-  // for more details.
+  // for more details. Right now you can create a situation that would fail
+  // in the future we could add dummy spacer entries where needed to
+  // handle alignment issues
   publicAPI.sortBufferEntries = () => {
     if (!model.sortDirty) {
       return;
@@ -279,7 +281,7 @@ function vtkWebGPUUniformBuffer(publicAPI, model) {
     const lines = [`[[block]] struct ${model.name}Struct\n{`];
     for (let i = 0; i < model.bufferEntries.length; i++) {
       const entry = model.bufferEntries[i];
-      lines.push(`[[offset(${entry.offset})]] ${entry.name}: ${entry.type};`);
+      lines.push(`  ${entry.name}: ${entry.type};`);
     }
     lines.push(
       `};\n[[binding(${model.binding}), group(${model.group})]] var<uniform> ${model.name}: ${model.name}Struct;`

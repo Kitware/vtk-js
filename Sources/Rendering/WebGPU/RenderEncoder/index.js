@@ -118,12 +118,10 @@ export function extend(publicAPI, model, initialValues = {}) {
   // default shader code just writes out the computedColor
   model.replaceShaderCodeFunction = (pipeline) => {
     const fDesc = pipeline.getShaderDescription('fragment');
+    fDesc.addOutput('vec4<f32>', 'outColor');
     let code = fDesc.getCode();
-    code = vtkWebGPUShaderCache.substitute(code, '//VTK::RenderEncoder::Dec', [
-      '[[location(0)]] var<out> outColor : vec4<f32>;',
-    ]).result;
     code = vtkWebGPUShaderCache.substitute(code, '//VTK::RenderEncoder::Impl', [
-      'outColor = computedColor;',
+      'output.outColor = computedColor;',
     ]).result;
     fDesc.setCode(code);
   };
