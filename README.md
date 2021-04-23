@@ -30,8 +30,18 @@ Prentice Hall and now published by Kitware, Inc. (Third Edition ISBN
 world-wide user base in the commercial, academic, and research
 communities.
 
-vtk.js aims to be a subset of VTK and provide 3D rendering using WebGL
-for both geometry and volume rendering.
+vtk.js aims to be a subset of VTK and provide 3D rendering using WebGL (+WebGPU) for both geometry and volume rendering.
+
+## What is the difference with VTK/C++?
+
+VTK.js is a complete rewrite of VTK/C++ using plain JavaScript (ES6).
+The focus of the rewrite, so far, has been the rendering pipeline for ImageData and PolyData, the pipeline infrastructure, and frequently used readers (obj, stl, vtp, vti). Some filters are also provided as demonstrations. We are not aiming for vtk.js to provide the same set of filters that is available in VTK/C++, but vtk.js does provide the infrastructure needed to define pipelines and filters.
+
+We have also started to explore a path where you can compile some bits of VTK/C++ into WebAssembly and to enable them to interact with vtk.js. With such interaction, you can pick and choose what you need to extract from VTK and enable it inside your web application. VTK/C++ WebAssembly can even be used for rendering, and examples can be found in [VTK repository](https://github.com/Kitware/VTK/tree/master/Examples/Emscripten/Cxx). Additionally [itk.js](https://insightsoftwareconsortium.github.io/itk-js/index.html) (which is ITK via WebAssembly) also provides proven implementations for several image filters and data readers.  There are, however, some additional costs in terms of the size of the WebAssembly file that will have to be downloaded when visiting a VTK or ITK WebAssembly webpage; and we still have some work to do to streamline the vtk.js + VTK WebAssembly integrations.
+
+In general if you want to stay in the pure JavaScript land, then vtk.js is perhaps the ideal solution for you. We welcome your feedback, including your contributions for new visualization filters, bug fixes, and examples.
+
+On top of the rendering capabilities of vtk.js, the library provides helper classes to connect to a remote VTK/ParaView server to enable remote-rendering and/or synchronized C++/RenderWindow content with a local vtk.js RenderWindow by pushing the geometry from the server to the client and only involve rendering on the client side.
 
 Reporting Bugs
 ==============
