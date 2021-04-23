@@ -315,7 +315,9 @@ function vtkWebGPURenderer(publicAPI, model) {
 
   publicAPI.getPropFromID = (id) => {
     for (let i = 0; i < model.children.length; i++) {
-      const res = model.children[i].getPropID();
+      const res = model.children[i].getPropID
+        ? model.children[i].getPropID()
+        : -1;
       if (res === id) {
         return model.children[i];
       }

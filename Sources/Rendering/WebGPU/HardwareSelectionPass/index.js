@@ -82,16 +82,14 @@ function vtkWebGPUHardwareSelectionPass(publicAPI, model) {
     model.selectionRenderEncoder.setPipelineHash('sel');
     model.selectionRenderEncoder.setReplaceShaderCodeFunction((pipeline) => {
       const fDesc = pipeline.getShaderDescription('fragment');
+      fDesc.addOutput('vec4<u32>', 'outColor');
       let code = fDesc.getCode();
       code = vtkWebGPUShaderCache.substitute(
         code,
-        '//VTK::RenderEncoder::Dec',
-        ['[[location(0)]] var<out> outColor : vec4<u32>;']
-      ).result;
-      code = vtkWebGPUShaderCache.substitute(
-        code,
         '//VTK::RenderEncoder::Impl',
-        ['outColor = vec4<u32>(mapperUBO.PropID,0u,0u,mapperUBO.PropID);']
+        [
+          'output.outColor = vec4<u32>(mapperUBO.PropID,0u,0u,mapperUBO.PropID);',
+        ]
       ).result;
       fDesc.setCode(code);
     });
