@@ -2,7 +2,7 @@
 name: Feature request
 about: Suggest an idea for the project.
 title: ''
-labels: ''
+labels: "Type: Feature Request \U0001F4A1"
 assignees: ''
 
 ---
