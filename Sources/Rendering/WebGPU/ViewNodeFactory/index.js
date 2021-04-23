@@ -11,7 +11,7 @@ import vtkWebGPUPolyDataMapper from 'vtk.js/Sources/Rendering/WebGPU/PolyDataMap
 import vtkWebGPURenderer from 'vtk.js/Sources/Rendering/WebGPU/Renderer';
 // import vtkWebGPUSkybox from 'vtk.js/Sources/Rendering/WebGPU/Skybox';
 import vtkWebGPUSphereMapper from 'vtk.js/Sources/Rendering/WebGPU/SphereMapper';
-// import vtkWebGPUStickMapper from 'vtk.js/Sources/Rendering/WebGPU/StickMapper';
+import vtkWebGPUStickMapper from 'vtk.js/Sources/Rendering/WebGPU/StickMapper';
 import vtkWebGPUVolume from 'vtk.js/Sources/Rendering/WebGPU/Volume';
 import vtkWebGPUVolumeMapper from 'vtk.js/Sources/Rendering/WebGPU/VolumeMapper';
 import vtkViewNodeFactory from 'vtk.js/Sources/Rendering/SceneGraph/ViewNodeFactory';
@@ -66,10 +66,10 @@ export function extend(publicAPI, model, initialValues = {}) {
     'vtkSphereMapper',
     vtkWebGPUSphereMapper.newInstance
   );
-  // publicAPI.registerOverride(
-  //   'vtkStickMapper',
-  //   vtkWebGPUStickMapper.newInstance
-  // );
+  publicAPI.registerOverride(
+    'vtkStickMapper',
+    vtkWebGPUStickMapper.newInstance
+  );
   publicAPI.registerOverride('vtkVolume', vtkWebGPUVolume.newInstance);
   publicAPI.registerOverride(
     'vtkVolumeMapper',

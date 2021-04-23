@@ -1,5 +1,4 @@
 import * as macro from 'vtk.js/Sources/macro';
-import * as vtkMath from 'vtk.js/Sources/Common/Core/Math';
 import vtkWebGPUPolyDataMapper from 'vtk.js/Sources/Rendering/WebGPU/PolyDataMapper';
 import vtkWebGPUBufferManager from 'vtk.js/Sources/Rendering/WebGPU/BufferManager';
 import vtkWebGPUPipeline from 'vtk.js/Sources/Rendering/WebGPU/Pipeline';
@@ -8,7 +7,28 @@ import vtkWebGPUShaderCache from 'vtk.js/Sources/Rendering/WebGPU/ShaderCache';
 const { BufferUsage, PrimitiveTypes } = vtkWebGPUBufferManager;
 const { vtkErrorMacro } = macro;
 
-const vtkWebGPUSphereMapperVS = `
+// Vertices
+// 013 - 032 - 324 - 453
+//
+//       _.4---_.5
+//    .-*   .-*
+//   2-----3
+//   |    /|
+//   |   / |
+//   |  /  |
+//   | /   |
+//   |/    |
+//   0-----1
+//
+// coord for each points
+// 0: 000
+// 1: 100
+// 2: 001
+// 3: 101
+// 4: 011
+// 5: 111
+
+const vtkWebGPUStickMapperVS = `
 //VTK::Renderer::UBO
 
 //VTK::Mapper::UBO
@@ -25,6 +45,24 @@ fn main(
 )
 //VTK::OutputStruct::Impl
 {
+  let offsetsArray: array<vec3<f32>, 12> = array<vec3<f32>, 12>(
+    vec3<f32>(-1.0, -1.0, -1.0),
+    vec3<f32>(1.0, -1.0, -1.0),
+    vec3<f32>(1.0, -1.0, 1.0),
+
+    vec3<f32>(-1.0, -1.0, -1.0),
+    vec3<f32>(1.0, -1.0, 1.0),
+    vec3<f32>(-1.0, -1.0, 1.0),
+
+    vec3<f32>(-1.0, -1.0, 1.0),
+    vec3<f32>(1.0, -1.0, 1.0),
+    vec3<f32>(1.0, 1.0, 1.0),
+
+    vec3<f32>(-1.0, -1.0, 1.0),
+    vec3<f32>(1.0, 1.0, 1.0),
+    vec3<f32>(-1.0, 1.0, 1.0)
+  );
+
   var output : vertexOutput;
 
   var vertexVC: vec4<f32> = rendererUBO.WCVCMatrix * vec4<f32>(vertexMC.x, vertexMC.y, vertexMC.z, 1.0);
@@ -33,95 +71,156 @@ fn main(
 
   // compute the projected vertex position
   output.centerVC = vertexVC.xyz;
-  output.radiusVC = length(offsetMC)*0.5;
+  output.radiusVC = radiusMC;
+  output.lengthVC = length(orientMC);
+  output.orientVC = (rendererUBO.WCVCNormals * vec4<f32>(normalize(orientMC), 0.0)).xyz;
 
-  // make the triangle face the camera
+  // make sure it is pointing out of the screen
+  if (output.orientVC.z < 0.0)
+    {
+    output.orientVC = -output.orientVC;
+    }
+
+  // make the basis
+  var xbase: vec3<f32>;
+  var ybase: vec3<f32>;
+  var dir: vec3<f32> = vec3<f32>(0.0,0.0,1.0);
   if (rendererUBO.cameraParallel == 0u)
     {
-    var dir: vec3<f32> = normalize(-vertexVC.xyz);
-    var base2: vec3<f32> = normalize(cross(dir,vec3<f32>(1.0,0.0,0.0)));
-    var base1: vec3<f32> = cross(base2,dir);
-    dir = vertexVC.xyz + offsetMC.x*base1 + offsetMC.y*base2;
-    vertexVC = vec4<f32>(dir, 1.0);
+    dir = normalize(-vertexVC.xyz);
+    }
+  if (abs(dot(dir,output.orientVC)) == 1.0)
+    {
+    xbase = normalize(cross(vec3<f32>(0.0,1.0,0.0),output.orientVC));
+    ybase = cross(xbase,output.orientVC);
     }
   else
     {
-    // add in the offset
-    var tmp2: vec2<f32> = vertexVC.xy + offsetMC;
-    vertexVC = vec4<f32>(tmp2, vertexVC.zw);
+    xbase = normalize(cross(output.orientVC,dir));
+    ybase = cross(output.orientVC,xbase);
     }
 
-  output.vertexVC = vertexVC.xyz;
+
+  var vertIdx: u32 = input.vertexIndex % 12u;
+  var offsets: vec3<f32> = offsetsArray[vertIdx];
+
+  vertexVC = vec4<f32>(vertexVC.xyz +
+    output.radiusVC * offsets.x * xbase +
+    output.radiusVC * offsets.y * ybase +
+    0.5 * output.lengthVC * offsets.z * output.orientVC, 1.0);
+
+  output.vertexVC = vertexVC;
   output.Position = rendererUBO.VCPCMatrix*vertexVC;
   return output;
 }
 `;
 
 // ----------------------------------------------------------------------------
-// vtkWebGPUSphereMapper methods
+// vtkWebGPUStickMapper methods
 // ----------------------------------------------------------------------------
 
-function vtkWebGPUSphereMapper(publicAPI, model) {
+function vtkWebGPUStickMapper(publicAPI, model) {
   // Set our className
-  model.classHierarchy.push('vtkWebGPUSphereMapper');
+  model.classHierarchy.push('vtkWebGPUStickMapper');
 
   publicAPI.replaceShaderNormal = (hash, pipeline, vertexInput) => {
     const vDesc = pipeline.getShaderDescription('vertex');
-    vDesc.addOutput('vec3<f32>', 'vertexVC');
+    vDesc.addOutput('vec4<f32>', 'vertexVC');
     vDesc.addOutput('vec3<f32>', 'centerVC');
+    vDesc.addOutput('vec3<f32>', 'orientVC');
     vDesc.addOutput('f32', 'radiusVC');
+    vDesc.addOutput('f32', 'lengthVC');
+    vDesc.addBuiltinInput('u32', '[[builtin(vertex_index)]] vertexIndex');
 
     const fDesc = pipeline.getShaderDescription('fragment');
     fDesc.addBuiltinOutput('f32', '[[builtin(frag_depth)]] fragDepth');
-    const sphereFrag = `
+    const stickFrag = `
     // compute the eye position and unit direction
     var vertexVC: vec4<f32>;
     var EyePos: vec3<f32>;
     var EyeDir: vec3<f32>;
-    var invertedDepth: f32 = 1.0;
-    if (rendererUBO.cameraParallel != 0u) {
+
+    if (rendererUBO.cameraParallel != 0u)
+    {
       EyePos = vec3<f32>(input.vertexVC.x, input.vertexVC.y, input.vertexVC.z + 3.0*input.radiusVC);
       EyeDir = vec3<f32>(0.0, 0.0, -1.0);
     }
-    else {
+    else
+    {
       EyeDir = input.vertexVC.xyz;
       EyePos = vec3<f32>(0.0,0.0,0.0);
       var lengthED: f32 = length(EyeDir);
       EyeDir = normalize(EyeDir);
       // we adjust the EyePos to be closer if it is too far away
       // to prevent floating point precision noise
-      if (lengthED > input.radiusVC*3.0) {
+      if (lengthED > input.radiusVC*3.0)
+      {
         EyePos = input.vertexVC.xyz - EyeDir*3.0*input.radiusVC;
       }
     }
-
     // translate to Sphere center
     EyePos = EyePos - input.centerVC;
+
+    // rotate to new basis
+    // base1, base2, orientVC
+    var base1: vec3<f32>;
+    if (abs(input.orientVC.z) < 0.99)
+    {
+      base1 = normalize(cross(input.orientVC,vec3<f32>(0.0,0.0,1.0)));
+    }
+    else
+    {
+      base1 = normalize(cross(input.orientVC,vec3<f32>(0.0,1.0,0.0)));
+    }
+    var base2: vec3<f32> = cross(input.orientVC,base1);
+    EyePos = vec3<f32>(dot(EyePos,base1),dot(EyePos,base2),dot(EyePos,input.orientVC));
+    EyeDir = vec3<f32>(dot(EyeDir,base1),dot(EyeDir,base2),dot(EyeDir,input.orientVC));
+
     // scale to radius 1.0
     EyePos = EyePos * (1.0 / input.radiusVC);
+
     // find the intersection
-    var b: f32 = 2.0*dot(EyePos,EyeDir);
-    var c: f32 = dot(EyePos,EyePos) - 1.0;
-    var d: f32 = b*b - 4.0*c;
+    var a: f32 = EyeDir.x*EyeDir.x + EyeDir.y*EyeDir.y;
+    var b: f32 = 2.0*(EyePos.x*EyeDir.x + EyePos.y*EyeDir.y);
+    var c: f32 = EyePos.x*EyePos.x + EyePos.y*EyePos.y - 1.0;
+    var d: f32 = b*b - 4.0*a*c;
     var normal: vec3<f32> = vec3<f32>(0.0,0.0,1.0);
     if (d < 0.0) { discard; }
-    else {
-      var t: f32 = (-b - invertedDepth*sqrt(d))*0.5;
-
-      // compute the normal, for unit sphere this is just
-      // the intersection point
-      normal = invertedDepth*normalize(EyePos + t*EyeDir);
-      // compute the intersection point in VC
-      vertexVC = vec4<f32>(normal * input.radiusVC + input.centerVC, 1.0);
+    else
+    {
+      var t: f32 = (-b - sqrt(d))*(0.5 / a);
+      var tz: f32 = EyePos.z + t*EyeDir.z;
+      var iPoint: vec3<f32> = EyePos + t*EyeDir;
+      if (abs(iPoint.z)*input.radiusVC > input.lengthVC*0.5)
+      {
+        // test for end cap
+        var t2: f32 = (-b + sqrt(d))*(0.5 / a);
+        var tz2: f32 = EyePos.z + t2*EyeDir.z;
+        if (tz2*input.radiusVC > input.lengthVC*0.5 || tz*input.radiusVC < -0.5*input.lengthVC) { discard; }
+        else
+        {
+          normal = input.orientVC;
+          var t3: f32 = (input.lengthVC*0.5/input.radiusVC - EyePos.z)/EyeDir.z;
+          iPoint = EyePos + t3*EyeDir;
+          vertexVC = vec4<f32>(input.radiusVC*(iPoint.x*base1 + iPoint.y*base2 + iPoint.z*input.orientVC) + input.centerVC, 1.0);
+        }
+      }
+      else
+      {
+        // The normal is the iPoint.xy rotated back into VC
+        normal = iPoint.x*base1 + iPoint.y*base2;
+        // rescale rerotate and translate
+        vertexVC = vec4<f32>(input.radiusVC*(normal + iPoint.z*input.orientVC) + input.centerVC, 1.0);
+      }
+      // compute the pixel's depth
+      var pos: vec4<f32> = rendererUBO.VCPCMatrix * vertexVC;
+      output.fragDepth = pos.z / pos.w;
     }
-    // compute the pixel's depth
-    var pos: vec4<f32> = rendererUBO.VCPCMatrix * vertexVC;
-    output.fragDepth = pos.z / pos.w;
     `;
 
     let code = fDesc.getCode();
     code = vtkWebGPUShaderCache.substitute(code, '//VTK::Normal::Impl', [
-      sphereFrag,
+      stickFrag,
     ]).result;
     fDesc.setCode(code);
   };
@@ -130,7 +229,7 @@ function vtkWebGPUSphereMapper(publicAPI, model) {
   // capture any pipeline code changes (which includes shader changes)
   // or vertex input changes/ bind groups/ etc
   publicAPI.computePipelineHash = (vertexInput, usage) => {
-    let pipelineHash = 'spm';
+    let pipelineHash = 'stm';
     if (vertexInput.hasAttribute(`colorVI`)) {
       pipelineHash += `c`;
     }
@@ -151,13 +250,13 @@ function vtkWebGPUSphereMapper(publicAPI, model) {
     const i = PrimitiveTypes.Triangles;
 
     const points = poly.getPoints();
+    const pointData = poly.getPointData();
     const numPoints = points.getNumberOfPoints();
     const pointArray = points.getData();
     const primHelper = model.primitives[i];
 
-    // default to one instance and computed number of verts
-    primHelper.numberOfInstances = 1;
-    primHelper.numberOfVertices = 3 * numPoints;
+    primHelper.numberOfInstances = numPoints;
+    primHelper.numberOfVertices = 12;
 
     const vertexInput = model.primitives[i].vertexInput;
 
@@ -170,7 +269,7 @@ function vtkWebGPUSphereMapper(publicAPI, model) {
     };
     if (!device.getBufferManager().hasBuffer(buffRequest)) {
       // xyz v1 v2 v3
-      const tmpVBO = new Float32Array(3 * numPoints * 3);
+      const tmpVBO = new Float32Array(numPoints * 3);
 
       let pointIdx = 0;
       let vboIdx = 0;
@@ -179,20 +278,13 @@ function vtkWebGPUSphereMapper(publicAPI, model) {
         tmpVBO[vboIdx++] = pointArray[pointIdx];
         tmpVBO[vboIdx++] = pointArray[pointIdx + 1];
         tmpVBO[vboIdx++] = pointArray[pointIdx + 2];
-        tmpVBO[vboIdx++] = pointArray[pointIdx];
-        tmpVBO[vboIdx++] = pointArray[pointIdx + 1];
-        tmpVBO[vboIdx++] = pointArray[pointIdx + 2];
-        tmpVBO[vboIdx++] = pointArray[pointIdx];
-        tmpVBO[vboIdx++] = pointArray[pointIdx + 1];
-        tmpVBO[vboIdx++] = pointArray[pointIdx + 2];
       }
       buffRequest.nativeArray = tmpVBO;
       const buff = device.getBufferManager().getBuffer(buffRequest);
-      vertexInput.addBuffer(buff, ['vertexMC']);
+      vertexInput.addBuffer(buff, ['vertexMC'], 'instance');
     }
 
     // compute offset VBO
-    const pointData = poly.getPointData();
     let scales = null;
     if (
       model.renderable.getScaleArray() != null &&
@@ -210,30 +302,69 @@ function vtkWebGPUSphereMapper(publicAPI, model) {
           ? pointData.getArray(model.renderable.getScaleArray()).getMTime()
           : 0,
         usage: BufferUsage.RawVertex,
-        format: 'float32x2',
+        format: 'float32',
       };
       if (!device.getBufferManager().hasBuffer(buffRequest)) {
-        const tmpVBO = new Float32Array(3 * numPoints * 2);
+        const tmpVBO = new Float32Array(numPoints);
 
-        const cos30 = Math.cos(vtkMath.radiansFromDegrees(30.0));
         let vboIdx = 0;
         for (let id = 0; id < numPoints; ++id) {
           let radius = model.renderable.getRadius();
           if (scales) {
-            radius = scales[id];
+            radius = scales[id * 2 + 1];
           }
-          tmpVBO[vboIdx++] = -2.0 * radius * cos30;
-          tmpVBO[vboIdx++] = -radius;
-          tmpVBO[vboIdx++] = 2.0 * radius * cos30;
-          tmpVBO[vboIdx++] = -radius;
-          tmpVBO[vboIdx++] = 0.0;
-          tmpVBO[vboIdx++] = 2.0 * radius;
+          tmpVBO[vboIdx++] = radius;
         }
         buffRequest.nativeArray = tmpVBO;
         const buff = device.getBufferManager().getBuffer(buffRequest);
-        vertexInput.addBuffer(buff, ['offsetMC']);
+        vertexInput.addBuffer(buff, ['radiusMC'], 'instance');
       }
       model._lastRadius = defaultRadius;
+    }
+
+    let orientationArray = null;
+    if (
+      model.renderable.getOrientationArray() != null &&
+      pointData.hasArray(model.renderable.getOrientationArray())
+    ) {
+      orientationArray = pointData
+        .getArray(model.renderable.getOrientationArray())
+        .getData();
+    } else {
+      vtkErrorMacro([
+        'Error setting orientationArray.\n',
+        'You have to specify the stick orientation',
+      ]);
+    }
+
+    buffRequest = {
+      hash: scales,
+      source: orientationArray,
+      time: pointData
+        .getArray(model.renderable.getOrientationArray())
+        .getMTime(),
+      usage: BufferUsage.RawVertex,
+      format: 'float32x3',
+    };
+    if (!device.getBufferManager().hasBuffer(buffRequest)) {
+      // xyz v1 v2 v3
+      const tmpVBO = new Float32Array(numPoints * 3);
+
+      let pointIdx = 0;
+      let vboIdx = 0;
+      for (let id = 0; id < numPoints; ++id) {
+        pointIdx = id * 3;
+        let length = model.renderable.getLength();
+        if (scales) {
+          length = scales[id * 2];
+        }
+        tmpVBO[vboIdx++] = orientationArray[pointIdx] * length;
+        tmpVBO[vboIdx++] = orientationArray[pointIdx + 1] * length;
+        tmpVBO[vboIdx++] = orientationArray[pointIdx + 2] * length;
+      }
+      buffRequest.nativeArray = tmpVBO;
+      const buff = device.getBufferManager().getBuffer(buffRequest);
+      vertexInput.addBuffer(buff, ['orientMC'], 'instance');
     }
 
     model.renderable.mapScalars(poly, 1.0);
@@ -255,21 +386,19 @@ function vtkWebGPUSphereMapper(publicAPI, model) {
           if (colorComponents !== 4) {
             vtkErrorMacro('this should be 4');
           }
-          const tmpVBO = new Uint8Array(3 * numPoints * 4);
+          const tmpVBO = new Uint8Array(numPoints * 4);
           let vboIdx = 0;
           const colorData = c.getData();
           for (let id = 0; id < numPoints; ++id) {
             const colorIdx = id * colorComponents;
-            for (let v = 0; v < 3; v++) {
-              tmpVBO[vboIdx++] = colorData[colorIdx];
-              tmpVBO[vboIdx++] = colorData[colorIdx + 1];
-              tmpVBO[vboIdx++] = colorData[colorIdx + 2];
-              tmpVBO[vboIdx++] = colorData[colorIdx + 3];
-            }
+            tmpVBO[vboIdx++] = colorData[colorIdx];
+            tmpVBO[vboIdx++] = colorData[colorIdx + 1];
+            tmpVBO[vboIdx++] = colorData[colorIdx + 2];
+            tmpVBO[vboIdx++] = colorData[colorIdx + 3];
           }
           buffRequest.nativeArray = tmpVBO;
           const buff = device.getBufferManager().getBuffer(buffRequest);
-          vertexInput.addBuffer(buff, ['colorVI']);
+          vertexInput.addBuffer(buff, ['colorVI'], 'instance');
         }
         haveColors = true;
       }
@@ -329,15 +458,15 @@ export function extend(publicAPI, model, initialValues = {}) {
   // Inheritance
   vtkWebGPUPolyDataMapper.extend(publicAPI, model, initialValues);
 
-  model.vertexShaderTemplate = vtkWebGPUSphereMapperVS;
+  model.vertexShaderTemplate = vtkWebGPUStickMapperVS;
 
   // Object methods
-  vtkWebGPUSphereMapper(publicAPI, model);
+  vtkWebGPUStickMapper(publicAPI, model);
 }
 
 // ----------------------------------------------------------------------------
 
-export const newInstance = macro.newInstance(extend, 'vtkWebGPUSphereMapper');
+export const newInstance = macro.newInstance(extend, 'vtkWebGPUStickMapper');
 
 // ----------------------------------------------------------------------------
 

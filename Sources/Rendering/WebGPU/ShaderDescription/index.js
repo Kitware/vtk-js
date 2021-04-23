@@ -35,30 +35,33 @@ function vtkWebGPUShaderDescription(publicAPI, model) {
     if (vertexInput) {
       inputImpl.push(vertexInput.getShaderCode());
     }
-    const inputStruct = [];
-    if (priorStage) {
-      const inputNames = priorStage.getOutputNamesByReference();
-      const inputTypes = priorStage.getOutputTypesByReference();
+    if (priorStage || model.builtinInputNames.length) {
+      const inputStruct = [];
       inputStruct.push(`struct ${model.type}Input\n{`);
-      for (let i = 0; i < inputNames.length; i++) {
-        inputStruct.push(
-          `  [[location(${i})]] ${inputNames[i]} : ${inputTypes[i]};`
-        );
+      if (priorStage) {
+        const inputNames = priorStage.getOutputNamesByReference();
+        const inputTypes = priorStage.getOutputTypesByReference();
+        for (let i = 0; i < inputNames.length; i++) {
+          inputStruct.push(
+            `  [[location(${i})]] ${inputNames[i]} : ${inputTypes[i]};`
+          );
+        }
       }
       for (let i = 0; i < model.builtinInputNames.length; i++) {
         inputStruct.push(
           `  ${model.builtinInputNames[i]} : ${model.builtinInputTypes[i]};`
         );
       }
-      inputStruct.push('};');
-      model.code = vtkWebGPUShaderCache.substitute(
-        model.code,
-        '//VTK::InputStruct::Dec',
-        inputStruct
-      ).result;
-    }
-    if (inputStruct.length) {
-      inputImpl.push(`input: ${model.type}Input`);
+      if (inputStruct.length > 1) {
+        inputStruct.push('};');
+        model.code = vtkWebGPUShaderCache.substitute(
+          model.code,
+          '//VTK::InputStruct::Dec',
+          inputStruct
+        ).result;
+        inputImpl[inputImpl.length - 1] += ',';
+        inputImpl.push(`input: ${model.type}Input`);
+      }
     }
     if (inputImpl.length) {
       model.code = vtkWebGPUShaderCache.substitute(

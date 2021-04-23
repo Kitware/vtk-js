@@ -28,7 +28,7 @@ function vtkWebGPUVertexInput(publicAPI, model) {
   // Set our className
   model.classHierarchy.push('vtkWebGPUVertexInput');
 
-  publicAPI.addBuffer = (buffer, inames) => {
+  publicAPI.addBuffer = (buffer, inames, stepMode = 'vertex') => {
     let names = inames;
     if (!Array.isArray(names)) {
       names = [names];
@@ -41,7 +41,7 @@ function vtkWebGPUVertexInput(publicAPI, model) {
       }
     }
 
-    model.inputs.push({ buffer, names });
+    model.inputs.push({ buffer, stepMode, names });
   };
 
   publicAPI.removeBufferIfPresent = (name) => {
@@ -103,7 +103,11 @@ function vtkWebGPUVertexInput(publicAPI, model) {
       for (let i = 0; i < model.inputs.length; i++) {
         const buf = model.inputs[i].buffer;
 
-        const buffer = { arrayStride: buf.getStrideInBytes(), attributes: [] };
+        const buffer = {
+          arrayStride: buf.getStrideInBytes(),
+          stepMode: model.inputs[i].stepMode,
+          attributes: [],
+        };
         const arrayInfo = buf.getArrayInformation();
         for (let nm = 0; nm < model.inputs[i].names.length; nm++) {
           buffer.attributes.push({

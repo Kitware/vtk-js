@@ -160,12 +160,12 @@ function vtkWebGPURenderWindow(publicAPI, model) {
 
   publicAPI.create3DContext = () => {
     model.initializing = true;
-    (async () => {
-      if (!navigator.gpu) {
-        vtkErrorMacro('WebGPU is not enabled.');
-        return;
-      }
+    if (!navigator.gpu) {
+      vtkErrorMacro('WebGPU is not enabled.');
+      return;
+    }
 
+    (async () => {
       // Get a GPU device to render with
       model.adapter = await navigator.gpu.requestAdapter();
       model.device = vtkWebGPUDevice.newInstance();
@@ -257,9 +257,18 @@ function vtkWebGPURenderWindow(publicAPI, model) {
     });
   };
 
+  publicAPI.tryInitialize = () => {
+    if (!model.initialized) {
+      setTimeout(publicAPI.tryInitialize, 10);
+    } else {
+      publicAPI.traverseAllPasses();
+    }
+  };
+
   publicAPI.traverseAllPasses = () => {
     if (!model.initialized) {
       publicAPI.initialize();
+      setTimeout(publicAPI.tryInitialize, 10);
     } else {
       if (model.renderPasses) {
         for (let index = 0; index < model.renderPasses.length; ++index) {
@@ -272,7 +281,6 @@ function vtkWebGPURenderWindow(publicAPI, model) {
       }
 
       if (model.notifyStartCaptureImage) {
-        vtkErrorMacro('Getting image');
         getCanvasDataURL();
       }
     }
