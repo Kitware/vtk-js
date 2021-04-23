@@ -460,6 +460,8 @@ function vtkWebGPUPolyDataMapper(publicAPI, model) {
       } else {
         vertexInput.removeBufferIfPresent('normalMC');
       }
+    } else {
+      vertexInput.removeBufferIfPresent('normalMC');
     }
 
     // deal with colors but only if modified
@@ -668,11 +670,19 @@ function vtkWebGPUPolyDataMapper(publicAPI, model) {
         const usage = publicAPI.getUsage(rep, i);
 
         const primHelper = model.primitives[i];
+
         publicAPI.buildVertexInput(model.currentInput, prims[i], i);
         const pipelineHash = publicAPI.computePipelineHash(
           primHelper.vertexInput,
           usage
         );
+
+        // default to one instance and computed number of verts
+        primHelper.numberOfInstances = 1;
+        const vbo = primHelper.vertexInput.getBuffer('vertexMC');
+        primHelper.numberOfVertices =
+          vbo.getSizeInBytes() / vbo.getStrideInBytes();
+
         let pipeline = device.getPipeline(pipelineHash);
 
         // build VBO for this primitive
@@ -781,6 +791,7 @@ export function extend(publicAPI, model, initialValues = {}) {
       vertexInput: vtkWebGPUVertexInput.newInstance(),
     };
     const primHelper = model.primitives[i];
+
     model.primitives[i].renderForPipeline = (pipeline) => {
       const renderEncoder = model.WebGPURenderer.getRenderEncoder();
 
@@ -795,10 +806,9 @@ export function extend(publicAPI, model, initialValues = {}) {
 
       // bind the vertex input
       pipeline.bindVertexInput(renderEncoder, primHelper.vertexInput);
-      const vbo = primHelper.vertexInput.getBuffer('vertexMC');
       renderEncoder.draw(
-        vbo.getSizeInBytes() / vbo.getStrideInBytes(),
-        1,
+        primHelper.numberOfVertices,
+        primHelper.numberOfInstances,
         0,
         0
       );
