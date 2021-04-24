@@ -104,6 +104,7 @@ export function extend(publicAPI, model, initialValues = {}) {
       {
         view: undefined,
         loadValue: [0.3, 0.3, 0.3, 1],
+        storeOp: 'store',
       },
     ],
     depthStencilAttachment: {

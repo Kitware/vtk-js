@@ -59,6 +59,10 @@ function vtkWebGPUTexture(publicAPI, model) {
     if (req.dataArray) {
       // create and write the buffer
       // todo specify a source
+      // todo bytesPerRow must be a multiple of 256 so
+      // we might need to rebuild the data here before passing to the
+      // buffer. If it is unorm8x4 then we need to have width be
+      // a multiple of 64
       const buffRequest = {
         dataArray: req.dataArray,
         time: req.dataArray.getMTime(),

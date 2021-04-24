@@ -100,9 +100,6 @@ function vtkWebGPUOrderIndependentTranslucentPass(publicAPI, model) {
 
     model.translucentRenderEncoder.setDepthTextureView(model.depthTextureView);
     model.translucentRenderEncoder.attachTextureViews();
-    const renDesc = model.translucentRenderEncoder.getDescription();
-    renDesc.colorAttachments[0].loadValue = [0.0, 0.0, 0.0, 0.0];
-    renDesc.colorAttachments[1].loadValue = [1.0, 0.0, 0.0, 0.0];
     publicAPI.setCurrentOperation('translucentPass');
     renNode.setRenderEncoder(model.translucentRenderEncoder);
     renNode.traverse(publicAPI);
@@ -153,6 +150,18 @@ function vtkWebGPUOrderIndependentTranslucentPass(publicAPI, model) {
   publicAPI.createRenderEncoder = () => {
     model.translucentRenderEncoder = vtkWebGPURenderEncoder.newInstance();
     const rDesc = model.translucentRenderEncoder.getDescription();
+    rDesc.colorAttachments = [
+      {
+        view: undefined,
+        loadValue: [0.0, 0.0, 0.0, 0.0],
+        storeOp: 'store',
+      },
+      {
+        view: undefined,
+        loadValue: [1.0, 0.0, 0.0, 0.0],
+        storeOp: 'store',
+      },
+    ];
     rDesc.depthStencilAttachment = {
       view: undefined,
       depthLoadValue: 'load',
@@ -222,6 +231,7 @@ function vtkWebGPUOrderIndependentTranslucentPass(publicAPI, model) {
         {
           view: null,
           loadValue: 'load',
+          storeOp: 'store',
         },
       ],
     });
