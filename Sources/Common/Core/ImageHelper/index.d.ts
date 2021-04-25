@@ -1,3 +1,5 @@
+import vtkImageData from "vtk.js/Sources/Common/DataModel/ImageData";
+
 interface ITransform {
 	flipX: boolean;
 	flipY: boolean;
@@ -12,11 +14,11 @@ interface ITransform {
  * @param {HTMLCanvasElement} canvas The HTML canvas to convert.
  * @param {Number[]} [boundingBox] A bounding box of type [top, left, width, height]
  */
-export function canvasToImageData(canvas : HTMLCanvasElement, boundingBox?: number[]): void;
+export function canvasToImageData(canvas : HTMLCanvasElement, boundingBox?: number[]): vtkImageData;
 
 /**
  * Converts an Image object to a vtkImageData.
  * @param {HTMLImageElement} image The HTML image to convert.
  * @param {ITransform} [transform] default={flipX: false, flipY: false, rotate: 0}
  */
-export function imageToImageData(image : HTMLImageElement, transform?: ITransform): void;
+export function imageToImageData(image : HTMLImageElement, transform?: ITransform): vtkImageData;
