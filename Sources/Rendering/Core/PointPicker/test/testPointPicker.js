@@ -111,7 +111,7 @@ test.onlyIfWebGL('Test vtkPointPicker line source', (t) => {
   renderer.addActor(actor);
 
   // now create something to view it, in this case webgl
-  const glwindow = gc.registerResource(vtkOpenGLRenderWindow.newInstance());
+  const glwindow = gc.registerResource(renderWindow.newAPISpecificView());
   glwindow.setContainer(renderWindowContainer);
   renderWindow.addView(glwindow);
   glwindow.setSize(400, 400);
@@ -133,7 +133,7 @@ test.onlyIfWebGL('Test vtkPointPicker line source', (t) => {
   t.equal(actorsFirstPoint[0], actor);
 
   const idFirstPoint = picker.getPointId();
-  t.equal(idFirstPoint, 0, 'point id');
+  t.equal(idFirstPoint, 10, 'point id');
 
   const pLast = [20, 200 + 0.5, 0];
   picker.pick(pLast, renderer);
@@ -143,7 +143,7 @@ test.onlyIfWebGL('Test vtkPointPicker line source', (t) => {
   t.equal(actorsLastPoint[0], actor);
 
   const idLastPoint = picker.getPointId();
-  t.equal(idLastPoint, 10, 'point id');
+  t.equal(idLastPoint, 0, 'point id');
 
   gc.releaseResources();
 });
