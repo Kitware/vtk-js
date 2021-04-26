@@ -1,3 +1,5 @@
+///<reference path='../../../types.ts' />
+
 import vtkAbstractMapper3D from "vtk.js/Sources/Rendering/Core/AbstractMapper3D";
 
 export enum ColorMode {
@@ -129,9 +131,9 @@ export interface vtkMapper extends vtkAbstractMapper3D {
 
 	/**
 	 * Get the bounds for this mapper as [xmin, xmax, ymin, ymax,zmin, zmax].
-	 * @return {Number[]} The bounds for the mapper.
+	 * @return {Bounds} The bounds for the mapper.
 	 */
-	getBounds(): number[];
+	getBounds(): Bounds;
 
 	/**
 	 *
@@ -576,12 +578,12 @@ export function getRelativeCoincidentTopologyPolygonOffsetParameters(): ICoincid
 /**
  * 
  */
-export function getResolveCoincidentTopologyLineOffsetParameters(): ICoincidentTopology
+export function getResolveCoincidentTopologyLineOffsetParameters(): ICoincidentTopology;
 
 /**
  * 
  */
-export function getResolveCoincidentTopologyPointOffsetParameters(): ICoincidentTopology
+export function getResolveCoincidentTopologyPointOffsetParameters(): ICoincidentTopology;
 
 /**
  * 
@@ -635,8 +637,8 @@ export declare const vtkMapper: {
 	getRelativeCoincidentTopologyLineOffsetParameters: typeof getRelativeCoincidentTopologyLineOffsetParameters;
 	getRelativeCoincidentTopologyPointOffsetParameters: typeof getRelativeCoincidentTopologyPointOffsetParameters;
 	getRelativeCoincidentTopologyPolygonOffsetParameters: typeof getRelativeCoincidentTopologyPolygonOffsetParameters;
-	getResolveCoincidentTopologyLineOffsetParameter: typeof getResolveCoincidentTopologyLineOffsetParameter;
-	getResolveCoincidentTopologyPointOffsetParameter: typeof getResolveCoincidentTopologyPointOffsetParameter;
+	getResolveCoincidentTopologyLineOffsetParameters: typeof getResolveCoincidentTopologyLineOffsetParameters;
+	getResolveCoincidentTopologyPointOffsetParameters: typeof getResolveCoincidentTopologyPointOffsetParameters;
 	getResolveCoincidentTopologyPolygonOffsetParameters: typeof getResolveCoincidentTopologyPolygonOffsetParameters;
 }
 export default vtkMapper;
