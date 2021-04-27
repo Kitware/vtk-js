@@ -115,7 +115,7 @@ function vtkWebGPUOrderIndependentTranslucentPass(publicAPI, model) {
     renNode.setRenderEncoder(model.translucentFinalEncoder);
     model.translucentFinalEncoder.begin(viewNode.getCommandEncoder());
     // set viewport
-    const tsize = renNode.getTiledSizeAndOrigin();
+    const tsize = renNode.getYInvertedTiledSizeAndOrigin();
     model.translucentFinalEncoder
       .getHandle()
       .setViewport(

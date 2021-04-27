@@ -10,7 +10,7 @@ import colorMaps from '../ColorMaps.json';
 import createScalarMap from './createScalarMap';
 import baseline from './testColorTransferFunctionInterpolation.png';
 
-test.onlyIfWebGL('Test Interpolate Scalars Before Colors', (t) => {
+test('Test Interpolate Scalars Before Colors', (t) => {
   const gc = testUtils.createGarbageCollector(t);
   t.ok('rendering', 'vtkOpenGLPolyDataMapper ColorTransferFunction Presets');
 

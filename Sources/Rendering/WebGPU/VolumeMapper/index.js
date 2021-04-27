@@ -307,11 +307,11 @@ function vtkWebGPUVolumeMapper(publicAPI, model) {
       pipeline = vtkWebGPUPipeline.newInstance();
       pipeline.addBindGroupLayout(
         device.getRendererBindGroupLayout(),
-        `RendererUBO`
+        `rendererUBO`
       );
       pipeline.addBindGroupLayout(
         device.getMapperBindGroupLayout(),
-        `MapperUBO`
+        `mapperUBO`
       );
       // add texture BindGroupLayouts
       for (let t = 0; t < model.views.length; t++) {
@@ -346,7 +346,8 @@ function vtkWebGPUVolumeMapper(publicAPI, model) {
     const primHelper = model._triangles;
 
     // bind the mapper UBO
-    renderEncoder.setBindGroup(1, model.UBO.getBindGroup());
+    const uboidx = pipeline.getBindGroupLayoutCount(model.UBO.getName());
+    renderEncoder.setBindGroup(uboidx, model.UBO.getBindGroup());
 
     // bind any textures and samplers
     for (let t = 0; t < model.textures.length; t++) {
@@ -364,10 +365,10 @@ function vtkWebGPUVolumeMapper(publicAPI, model) {
     // standard shader stuff most paths use
     let code = model.vertexShaderTemplate;
     code = vtkWebGPUShaderCache.substitute(code, '//VTK::Renderer::UBO', [
-      model.WebGPURenderer.getUBOCode(),
+      model.WebGPURenderer.getUBO().getShaderCode(pipeline),
     ]).result;
     code = vtkWebGPUShaderCache.substitute(code, '//VTK::Mapper::UBO', [
-      model.UBO.getShaderCode(),
+      model.UBO.getShaderCode(pipeline),
     ]).result;
     const vDesc = vtkWebGPUShaderDescription.newInstance({
       type: 'vertex',
@@ -379,10 +380,10 @@ function vtkWebGPUVolumeMapper(publicAPI, model) {
 
     code = model.fragmentShaderTemplate;
     code = vtkWebGPUShaderCache.substitute(code, '//VTK::Renderer::UBO', [
-      model.WebGPURenderer.getUBOCode(),
+      model.WebGPURenderer.getUBO().getShaderCode(pipeline),
     ]).result;
     code = vtkWebGPUShaderCache.substitute(code, '//VTK::Mapper::UBO', [
-      model.UBO.getShaderCode(),
+      model.UBO.getShaderCode(pipeline),
     ]).result;
     const fDesc = vtkWebGPUShaderDescription.newInstance({
       type: 'fragment',
@@ -1658,8 +1659,6 @@ export function extend(publicAPI, model, initialValues = {}) {
   model.vertexShaderTemplate = vtkWebGPUVolumeVS;
 
   model.UBO = vtkWebGPUUniformBuffer.newInstance();
-  model.UBO.setBinding(0);
-  model.UBO.setGroup(1);
   model.UBO.setName('mapperUBO');
   model.UBO.addEntry('camFar', 'f32');
   model.UBO.addEntry('camThick', 'f32');

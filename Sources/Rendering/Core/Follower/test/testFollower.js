@@ -10,7 +10,7 @@ import vtkRenderer from 'vtk.js/Sources/Rendering/Core/Renderer';
 
 import baseline from './testFollower.png';
 
-test.onlyIfWebGL('Test Follower class', (t) => {
+test('Test Follower class', (t) => {
   const gc = testUtils.createGarbageCollector(t);
   t.ok('rendering', 'vtkFollower');
 
