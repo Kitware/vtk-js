@@ -1,10 +1,39 @@
-import macro from 'vtk.js/Sources/macro';
+import * as macro from 'vtk.js/Sources/macro';
 import { mat4 } from 'gl-matrix';
 import vtkWebGPUUniformBuffer from 'vtk.js/Sources/Rendering/WebGPU/UniformBuffer';
 import vtkViewNode from 'vtk.js/Sources/Rendering/SceneGraph/ViewNode';
 import * as vtkMath from 'vtk.js/Sources/Common/Core/Math';
+import vtkWebGPUFullScreenQuad from 'vtk.js/Sources/Rendering/WebGPU/FullScreenQuad';
 
 const { vtkDebugMacro } = macro;
+
+const clearFragTemplate = `
+//VTK::Renderer::UBO
+
+//VTK::Mapper::UBO
+
+//VTK::TCoord::Dec
+
+//VTK::RenderEncoder::Dec
+
+//VTK::InputStruct::Dec
+
+//VTK::OutputStruct::Dec
+
+[[stage(fragment)]]
+fn main(
+//VTK::InputStruct::Impl
+)
+//VTK::OutputStruct::Impl
+{
+  var output: fragmentOutput;
+
+  var computedColor: vec4<f32> = mapperUBO.BackgroundColor;
+
+  //VTK::RenderEncoder::Impl
+  return output;
+}
+`;
 
 // ----------------------------------------------------------------------------
 // vtkWebGPURenderer methods
@@ -33,8 +62,6 @@ function vtkWebGPURenderer(publicAPI, model) {
       publicAPI.removeUnusedNodes();
     }
   };
-
-  publicAPI.getUBOCode = () => model.UBO.getShaderCode();
 
   publicAPI.updateLights = () => {
     let count = 0;
@@ -94,20 +121,6 @@ function vtkWebGPURenderer(publicAPI, model) {
   // Renders myself
   publicAPI.opaquePass = (prepass) => {
     if (prepass) {
-      const renDesc = model.renderEncoder.getDescription();
-      if (!model.renderable.getTransparent()) {
-        const background = model.renderable.getBackgroundByReference();
-        renDesc.colorAttachments[0].loadValue = background;
-      } else {
-        renDesc.colorAttachments[0].loadValue = 'load';
-      }
-
-      if (!model.renderable.getPreserveDepthBuffer()) {
-        renDesc.depthStencilAttachment.depthLoadValue = 1.0;
-      } else {
-        renDesc.depthStencilAttachment.depthLoadValue = 'load';
-      }
-
       // clear last pipelines
       model.pipelineCallbacks = [];
 
@@ -115,35 +128,39 @@ function vtkWebGPURenderer(publicAPI, model) {
 
       publicAPI.updateUBO();
     } else {
+      // bind our BindGroup
+      // set viewport
+      const tsize = publicAPI.getYInvertedTiledSizeAndOrigin();
+      model.renderEncoder
+        .getHandle()
+        .setViewport(
+          tsize.lowerLeftU,
+          tsize.lowerLeftV,
+          tsize.usize,
+          tsize.vsize,
+          0.0,
+          1.0
+        );
+      // set scissor
+      model.renderEncoder
+        .getHandle()
+        .setScissorRect(
+          tsize.lowerLeftU,
+          tsize.lowerLeftV,
+          tsize.usize,
+          tsize.vsize
+        );
+
+      publicAPI.clear();
+
       // loop over registered pipelines
       for (let i = 0; i < model.pipelineCallbacks.length; i++) {
         const pStruct = model.pipelineCallbacks[i];
         const pl = pStruct.pipeline;
 
         pl.bind(model.renderEncoder);
-        model.renderEncoder.setBindGroup(0, model.UBO.getBindGroup());
-        // bind our BindGroup
-        // set viewport
-        const tsize = publicAPI.getTiledSizeAndOrigin();
-        model.renderEncoder
-          .getHandle()
-          .setViewport(
-            tsize.lowerLeftU,
-            tsize.lowerLeftV,
-            tsize.usize,
-            tsize.vsize,
-            0.0,
-            1.0
-          );
-        // set scissor
-        model.renderEncoder
-          .getHandle()
-          .setScissorRect(
-            tsize.lowerLeftU,
-            tsize.lowerLeftV,
-            tsize.usize,
-            tsize.vsize
-          );
+        const uboidx = pl.getBindGroupLayoutCount(model.UBO.getName());
+        model.renderEncoder.setBindGroup(uboidx, model.UBO.getBindGroup());
 
         for (let cb = 0; cb < pStruct.callbacks.length; cb++) {
           pStruct.callbacks[cb](pl);
@@ -152,6 +169,31 @@ function vtkWebGPURenderer(publicAPI, model) {
 
       model.renderEncoder.end();
     }
+  };
+
+  publicAPI.clear = () => {
+    if (model.renderable.getTransparent()) {
+      return;
+    }
+
+    const device = model.parent.getDevice();
+    if (!model.clearFSQ) {
+      model.clearFSQ = vtkWebGPUFullScreenQuad.newInstance();
+      model.clearFSQ.setDevice(device);
+      model.clearFSQ.setPipelineHash('clearfsq');
+      model.clearFSQ.setFragmentShaderTemplate(clearFragTemplate);
+      const ubo = vtkWebGPUUniformBuffer.newInstance();
+      ubo.setName('mapperUBO');
+      ubo.addEntry('BackgroundColor', 'vec4<f32>');
+      model.clearFSQ.setUBO(ubo);
+    }
+
+    const background = model.renderable.getBackgroundByReference();
+    model.clearFSQ.getUBO().setArray('BackgroundColor', background);
+    model.clearFSQ
+      .getUBO()
+      .sendIfNeeded(device, device.getMapperBindGroupLayout());
+    model.clearFSQ.render(model.renderEncoder, device);
   };
 
   publicAPI.translucentPass = (prepass) => {
@@ -163,35 +205,37 @@ function vtkWebGPURenderer(publicAPI, model) {
 
       publicAPI.updateUBO();
     } else {
+      // set viewport
+      const tsize = publicAPI.getYInvertedTiledSizeAndOrigin();
+      model.renderEncoder
+        .getHandle()
+        .setViewport(
+          tsize.lowerLeftU,
+          tsize.lowerLeftV,
+          tsize.usize,
+          tsize.vsize,
+          0.0,
+          1.0
+        );
+      // set scissor
+      model.renderEncoder
+        .getHandle()
+        .setScissorRect(
+          tsize.lowerLeftU,
+          tsize.lowerLeftV,
+          tsize.usize,
+          tsize.vsize
+        );
+
       // loop over registered pipelines
       for (let i = 0; i < model.pipelineCallbacks.length; i++) {
         const pStruct = model.pipelineCallbacks[i];
         const pl = pStruct.pipeline;
 
         pl.bind(model.renderEncoder);
-        model.renderEncoder.setBindGroup(0, model.UBO.getBindGroup());
+        const uboidx = pl.getBindGroupLayoutCount(model.UBO.getName());
+        model.renderEncoder.setBindGroup(uboidx, model.UBO.getBindGroup());
         // bind our BindGroup
-        // set viewport
-        const tsize = publicAPI.getTiledSizeAndOrigin();
-        model.renderEncoder
-          .getHandle()
-          .setViewport(
-            tsize.lowerLeftU,
-            tsize.lowerLeftV,
-            tsize.usize,
-            tsize.vsize,
-            0.0,
-            1.0
-          );
-        // set scissor
-        model.renderEncoder
-          .getHandle()
-          .setScissorRect(
-            tsize.lowerLeftU,
-            tsize.lowerLeftV,
-            tsize.usize,
-            tsize.vsize
-          );
 
         for (let cb = 0; cb < pStruct.callbacks.length; cb++) {
           pStruct.callbacks[cb](pl);
@@ -211,35 +255,37 @@ function vtkWebGPURenderer(publicAPI, model) {
 
       publicAPI.updateUBO();
     } else {
+      // set viewport
+      const tsize = publicAPI.getYInvertedTiledSizeAndOrigin();
+      model.renderEncoder
+        .getHandle()
+        .setViewport(
+          tsize.lowerLeftU,
+          tsize.lowerLeftV,
+          tsize.usize,
+          tsize.vsize,
+          0.0,
+          1.0
+        );
+      // set scissor
+      model.renderEncoder
+        .getHandle()
+        .setScissorRect(
+          tsize.lowerLeftU,
+          tsize.lowerLeftV,
+          tsize.usize,
+          tsize.vsize
+        );
+
       // loop over registered pipelines
       for (let i = 0; i < model.pipelineCallbacks.length; i++) {
         const pStruct = model.pipelineCallbacks[i];
         const pl = pStruct.pipeline;
 
         pl.bind(model.renderEncoder);
-        model.renderEncoder.setBindGroup(0, model.UBO.getBindGroup());
+        const uboidx = pl.getBindGroupLayoutCount(model.UBO.getName());
+        model.renderEncoder.setBindGroup(uboidx, model.UBO.getBindGroup());
         // bind our BindGroup
-        // set viewport
-        const tsize = publicAPI.getTiledSizeAndOrigin();
-        model.renderEncoder
-          .getHandle()
-          .setViewport(
-            tsize.lowerLeftU,
-            tsize.lowerLeftV,
-            tsize.usize,
-            tsize.vsize,
-            0.0,
-            1.0
-          );
-        // set scissor
-        model.renderEncoder
-          .getHandle()
-          .setScissorRect(
-            tsize.lowerLeftU,
-            tsize.lowerLeftV,
-            tsize.usize,
-            tsize.vsize
-          );
 
         for (let cb = 0; cb < pStruct.callbacks.length; cb++) {
           pStruct.callbacks[cb](pl);
@@ -257,6 +303,13 @@ function vtkWebGPURenderer(publicAPI, model) {
       (size[0] * (viewport[2] - viewport[0])) /
       ((viewport[3] - viewport[1]) * size[1])
     );
+  };
+
+  publicAPI.getYInvertedTiledSizeAndOrigin = () => {
+    const res = publicAPI.getTiledSizeAndOrigin();
+    const size = model.parent.getSizeByReference();
+    res.lowerLeftV = size[1] - res.vsize - res.lowerLeftV;
+    return res;
   };
 
   publicAPI.getTiledSizeAndOrigin = () => {
@@ -303,16 +356,6 @@ function vtkWebGPURenderer(publicAPI, model) {
     return { usize, vsize, lowerLeftU, lowerLeftV };
   };
 
-  publicAPI.clear = () => {
-    // const ts = publicAPI.getTiledSizeAndOrigin();
-    // gl.enable(gl.SCISSOR_TEST);
-    // gl.scissor(ts.lowerLeftU, ts.lowerLeftV, ts.usize, ts.vsize);
-    // gl.viewport(ts.lowerLeftU, ts.lowerLeftV, ts.usize, ts.vsize);
-    // gl.clear(clearMask);
-    // gl.enable(gl.DEPTH_TEST);
-    /* eslint-enable no-bitwise */
-  };
-
   publicAPI.getPropFromID = (id) => {
     for (let i = 0; i < model.children.length; i++) {
       const res = model.children[i].getPropID
@@ -351,8 +394,6 @@ export function extend(publicAPI, model, initialValues = {}) {
   vtkViewNode.extend(publicAPI, model, initialValues);
 
   model.UBO = vtkWebGPUUniformBuffer.newInstance();
-  model.UBO.setBinding(0);
-  model.UBO.setGroup(0);
   model.UBO.setName('rendererUBO');
   model.UBO.addEntry('WCPCMatrix', 'mat4x4<f32>');
   model.UBO.addEntry('WCVCMatrix', 'mat4x4<f32>');

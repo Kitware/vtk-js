@@ -1,5 +1,5 @@
 import macro from 'vtk.js/Sources/macro';
-import vtkWebGPURenderEncoder from 'vtk.js/Sources/Rendering/WebGPU/RenderEncoder';
+import vtkWebGPUOpaquePass from 'vtk.js/Sources/Rendering/WebGPU/OpaquePass';
 import vtkWebGPUOrderIndepenentTranslucentPass from 'vtk.js/Sources/Rendering/WebGPU/OrderIndependentTranslucentPass';
 import vtkWebGPUVolumePass from 'vtk.js/Sources/Rendering/WebGPU/VolumePass';
 import vtkRenderPass from 'vtk.js/Sources/Rendering/SceneGraph/RenderPass';
@@ -26,16 +26,11 @@ function vtkForwardPass(publicAPI, model) {
     publicAPI.setCurrentOperation('buildPass');
     viewNode.traverse(publicAPI);
 
-    const numlayers = viewNode.getRenderable().getNumberOfLayers();
-
-    if (!model.opaqueRenderEncoder) {
-      publicAPI.createOpaqueRenderEncoder();
+    if (!model.opaquePass) {
+      model.opaquePass = vtkWebGPUOpaquePass.newInstance();
     }
 
-    const swapChain = viewNode.getSwapChain();
-    model.opaqueRenderEncoder.setColorTexture(0, swapChain.getCurrentTexture());
-    model.opaqueRenderEncoder.setDepthTexture(swapChain.getDepthTexture());
-    model.opaqueRenderEncoder.attachTextureViews();
+    const numlayers = viewNode.getRenderable().getNumberOfLayers();
 
     // iterate over renderers
     const renderers = viewNode.getChildren();
@@ -57,9 +52,7 @@ function vtkForwardPass(publicAPI, model) {
           renNode.traverse(publicAPI);
 
           // always do opaque pass to get a valid color and zbuffer, even if empty
-          publicAPI.setCurrentOperation('opaquePass');
-          renNode.setRenderEncoder(model.opaqueRenderEncoder);
-          renNode.traverse(publicAPI);
+          model.opaquePass.traverse(renNode, viewNode);
 
           // optional translucent pass
           if (model.translucentActorCount > 0) {
@@ -67,10 +60,10 @@ function vtkForwardPass(publicAPI, model) {
               model.translucentPass = vtkWebGPUOrderIndepenentTranslucentPass.newInstance();
             }
             model.translucentPass.setColorTextureView(
-              model.opaqueRenderEncoder.getColorTextureViews()[0]
+              model.opaquePass.getColorTextureView()
             );
             model.translucentPass.setDepthTextureView(
-              model.opaqueRenderEncoder.getDepthTextureView()
+              model.opaquePass.getDepthTextureView()
             );
             model.translucentPass.traverse(renNode, viewNode);
           }
@@ -91,18 +84,31 @@ function vtkForwardPass(publicAPI, model) {
         }
       }
     }
+
+    // blit the result into the swap chain
+    const swapChain = viewNode.getSwapChain();
+    const sctex = swapChain.getCurrentTexture();
+    const optex = model.opaquePass.getColorTexture();
+    const cmdEnc = viewNode.getCommandEncoder();
+    cmdEnc.copyTextureToTexture(
+      {
+        texture: optex.getHandle(),
+      },
+      {
+        texture: sctex,
+      },
+      {
+        width: optex.getWidth(),
+        height: optex.getHeight(),
+        depthOrArrayLayers: 1,
+      }
+    );
   };
 
   publicAPI.incrementOpaqueActorCount = () => model.opaqueActorCount++;
   publicAPI.incrementTranslucentActorCount = () =>
     model.translucentActorCount++;
   publicAPI.incrementVolumeCount = () => model.volumeCount++;
-
-  publicAPI.createOpaqueRenderEncoder = () => {
-    model.opaqueRenderEncoder = vtkWebGPURenderEncoder.newInstance();
-    // default settings are fine for this
-    model.opaqueRenderEncoder.setPipelineHash('op');
-  };
 }
 
 // ----------------------------------------------------------------------------
@@ -126,7 +132,11 @@ export function extend(publicAPI, model, initialValues = {}) {
   // Build VTK API
   vtkRenderPass.extend(publicAPI, model, initialValues);
 
-  macro.setGet(publicAPI, model, ['translucentPass', 'volumePass']);
+  macro.setGet(publicAPI, model, [
+    'opaquePass',
+    'translucentPass',
+    'volumePass',
+  ]);
 
   // Object methods
   vtkForwardPass(publicAPI, model);

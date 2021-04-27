@@ -207,10 +207,10 @@ function vtkWebGPUPolyDataMapper(publicAPI, model) {
     // standard shader stuff most paths use
     let code = model.vertexShaderTemplate;
     code = vtkWebGPUShaderCache.substitute(code, '//VTK::Renderer::UBO', [
-      model.WebGPURenderer.getUBOCode(),
+      model.WebGPURenderer.getUBO().getShaderCode(pipeline),
     ]).result;
     code = vtkWebGPUShaderCache.substitute(code, '//VTK::Mapper::UBO', [
-      model.UBO.getShaderCode(),
+      model.UBO.getShaderCode(pipeline),
     ]).result;
     const vDesc = vtkWebGPUShaderDescription.newInstance({
       type: 'vertex',
@@ -221,10 +221,10 @@ function vtkWebGPUPolyDataMapper(publicAPI, model) {
 
     code = model.fragmentShaderTemplate;
     code = vtkWebGPUShaderCache.substitute(code, '//VTK::Renderer::UBO', [
-      model.WebGPURenderer.getUBOCode(),
+      model.WebGPURenderer.getUBO().getShaderCode(pipeline),
     ]).result;
     code = vtkWebGPUShaderCache.substitute(code, '//VTK::Mapper::UBO', [
-      model.UBO.getShaderCode(),
+      model.UBO.getShaderCode(pipeline),
     ]).result;
 
     const fDesc = vtkWebGPUShaderDescription.newInstance({
@@ -691,11 +691,11 @@ function vtkWebGPUPolyDataMapper(publicAPI, model) {
           pipeline = vtkWebGPUPipeline.newInstance();
           pipeline.addBindGroupLayout(
             device.getRendererBindGroupLayout(),
-            `RendererUBO`
+            `rendererUBO`
           );
           pipeline.addBindGroupLayout(
             device.getMapperBindGroupLayout(),
-            `MapperUBO`
+            `mapperUBO`
           );
           // add texture BindGroupLayouts
           for (let t = 0; t < model.textures.length; t++) {
@@ -761,8 +761,6 @@ export function extend(publicAPI, model, initialValues = {}) {
     model.vertexShaderTemplate || vtkWebGPUPolyDataVS;
 
   model.UBO = vtkWebGPUUniformBuffer.newInstance();
-  model.UBO.setBinding(0);
-  model.UBO.setGroup(1);
   model.UBO.setName('mapperUBO');
   model.UBO.addEntry('MCVCMatrix', 'mat4x4<f32>');
   model.UBO.addEntry('AmbientColor', 'vec4<f32>');
@@ -796,7 +794,8 @@ export function extend(publicAPI, model, initialValues = {}) {
       const renderEncoder = model.WebGPURenderer.getRenderEncoder();
 
       // bind the mapper UBO
-      renderEncoder.setBindGroup(1, model.UBO.getBindGroup());
+      const midx = pipeline.getBindGroupLayoutCount(model.UBO.getName());
+      renderEncoder.setBindGroup(midx, model.UBO.getBindGroup());
 
       // bind any textures and samplers
       for (let t = 0; t < model.textures.length; t++) {

@@ -11,7 +11,7 @@ import {
   popMonitorGLContextCount,
 } from 'vtk.js/Sources/Rendering/OpenGL/RenderWindow';
 
-test.onlyIfWebGL('Test vtkGenericRenderWindow create/delete', (t) => {
+test('Test vtkGenericRenderWindow create/delete', (t) => {
   const gc = testUtils.createGarbageCollector(t);
   // testUtils.keepDOM();
 

@@ -11,7 +11,7 @@ import vtkCellPicker from 'vtk.js/Sources/Rendering/Core/CellPicker';
 
 const { SlicingMode } = vtkImageMapper;
 
-test.onlyIfWebGL('Test vtkCellPicker image mapper', (t) => {
+test('Test vtkCellPicker image mapper', (t) => {
   // Create some control UI
   const gc = testUtils.createGarbageCollector(t);
   const container = document.querySelector('body');

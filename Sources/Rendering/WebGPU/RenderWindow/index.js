@@ -1,6 +1,7 @@
 import macro from 'vtk.js/Sources/macro';
 import { registerViewConstructor } from 'vtk.js/Sources/Rendering/Core/RenderWindow';
 import vtkForwardPass from 'vtk.js/Sources/Rendering/WebGPU/ForwardPass';
+import vtkWebGPUBuffer from 'vtk.js/Sources/Rendering/WebGPU/Buffer';
 import vtkWebGPUDevice from 'vtk.js/Sources/Rendering/WebGPU/Device';
 import vtkWebGPUHardwareSelector from 'vtk.js/Sources/Rendering/WebGPU/HardwareSelector';
 import vtkWebGPUSwapChain from 'vtk.js/Sources/Rendering/WebGPU/SwapChain';
@@ -77,9 +78,6 @@ function vtkWebGPURenderWindow(publicAPI, model) {
       publicAPI.removeUnusedNodes();
 
       publicAPI.initialize();
-      // model.children.forEach((child) => {
-      //   child.setOpenGLRenderWindow(publicAPI);
-      // });
     } else if (model.initialized) {
       if (!model.swapChain.getCreated()) {
         model.swapChain.create(model.device, publicAPI);
@@ -105,12 +103,17 @@ function vtkWebGPURenderWindow(publicAPI, model) {
 
   publicAPI.initialize = () => {
     if (!model.initializing) {
-      publicAPI.create3DContext(); // async
-    }
-  };
+      model.initializing = true;
+      if (!navigator.gpu) {
+        vtkErrorMacro('WebGPU is not enabled.');
+        return;
+      }
 
-  publicAPI.makeCurrent = () => {
-    model.context.makeCurrent();
+      publicAPI.create3DContextAsync().then(() => {
+        model.initialized = true;
+        publicAPI.traverseAllPasses();
+      });
+    }
   };
 
   publicAPI.setContainer = (el) => {
@@ -158,21 +161,12 @@ function vtkWebGPURenderWindow(publicAPI, model) {
 
   publicAPI.getFramebufferSize = () => model.size;
 
-  publicAPI.create3DContext = () => {
-    model.initializing = true;
-    if (!navigator.gpu) {
-      vtkErrorMacro('WebGPU is not enabled.');
-      return;
-    }
-
-    (async () => {
-      // Get a GPU device to render with
-      model.adapter = await navigator.gpu.requestAdapter();
-      model.device = vtkWebGPUDevice.newInstance();
-      model.device.initialize(await model.adapter.requestDevice());
-      model.context = model.canvas.getContext('gpupresent');
-      model.initialized = true;
-    })();
+  publicAPI.create3DContextAsync = async () => {
+    // Get a GPU device to render with
+    model.adapter = await navigator.gpu.requestAdapter();
+    model.device = vtkWebGPUDevice.newInstance();
+    model.device.initialize(await model.adapter.requestDevice());
+    model.context = model.canvas.getContext('gpupresent');
   };
 
   publicAPI.restoreContext = () => {
@@ -197,13 +191,21 @@ function vtkWebGPURenderWindow(publicAPI, model) {
     }
   };
 
-  function getCanvasDataURL(format = model.imageFormat) {
+  async function getCanvasDataURL(format = model.imageFormat) {
     // Copy current canvas to not modify the original
     const temporaryCanvas = document.createElement('canvas');
     const temporaryContext = temporaryCanvas.getContext('2d');
     temporaryCanvas.width = model.canvas.width;
     temporaryCanvas.height = model.canvas.height;
-    temporaryContext.drawImage(model.canvas, 0, 0);
+
+    const result = await publicAPI.getPixelsAsync();
+    const imageData = new ImageData(
+      result.colorValues,
+      result.width,
+      result.height
+    );
+    // temporaryCanvas.putImageData(imageData, 0, 0);
+    temporaryContext.putImageData(imageData, 0, 0);
 
     // Get current client rect to place canvas
     const mainBoundingClientRect = model.canvas.getBoundingClientRect();
@@ -257,18 +259,9 @@ function vtkWebGPURenderWindow(publicAPI, model) {
     });
   };
 
-  publicAPI.tryInitialize = () => {
-    if (!model.initialized) {
-      setTimeout(publicAPI.tryInitialize, 10);
-    } else {
-      publicAPI.traverseAllPasses();
-    }
-  };
-
   publicAPI.traverseAllPasses = () => {
     if (!model.initialized) {
       publicAPI.initialize();
-      setTimeout(publicAPI.tryInitialize, 10);
     } else {
       if (model.renderPasses) {
         for (let index = 0; index < model.renderPasses.length; ++index) {
@@ -278,10 +271,11 @@ function vtkWebGPURenderWindow(publicAPI, model) {
       if (model.commandEncoder) {
         model.device.submitCommandEncoder(model.commandEncoder);
         model.commandEncoder = null;
-      }
-
-      if (model.notifyStartCaptureImage) {
-        getCanvasDataURL();
+        if (model.notifyStartCaptureImage) {
+          model.device.onSubmittedWorkDone().then(() => {
+            getCanvasDataURL();
+          });
+        }
       }
     }
   };
@@ -328,6 +322,76 @@ function vtkWebGPURenderWindow(publicAPI, model) {
     return null;
   };
 
+  publicAPI.getPixelsAsync = async () => {
+    const device = model.device;
+    const texture = model.renderPasses[0].getOpaquePass().getColorTexture();
+
+    // as this is async we really don't want to store things in
+    // the class as multiple calls may start before resolving
+    // so anything specific to this request gets put into the
+    // result object (by value in most cases)
+    const result = {
+      width: texture.getWidth(),
+      height: texture.getHeight(),
+    };
+
+    // must be a multiple of 256 bytes, so 64 texels with rgba8
+    result.colorBufferWidth = 64 * Math.floor((result.width + 63) / 64);
+    result.colorBufferSizeInBytes = result.colorBufferWidth * result.height * 4;
+    const colorBuffer = vtkWebGPUBuffer.newInstance();
+    colorBuffer.setDevice(device);
+    /* eslint-disable no-bitwise */
+    /* eslint-disable no-undef */
+    colorBuffer.create(
+      result.colorBufferSizeInBytes,
+      GPUBufferUsage.MAP_READ | GPUBufferUsage.COPY_DST
+    );
+    /* eslint-enable no-bitwise */
+    /* eslint-enable no-undef */
+
+    const cmdEnc = model.device.createCommandEncoder();
+    cmdEnc.copyTextureToBuffer(
+      {
+        texture: texture.getHandle(),
+      },
+      {
+        buffer: colorBuffer.getHandle(),
+        bytesPerRow: 4 * result.colorBufferWidth,
+        rowsPerImage: result.height,
+      },
+      {
+        width: result.width,
+        height: result.height,
+        depthOrArrayLayers: 1,
+      }
+    );
+    device.submitCommandEncoder(cmdEnc);
+
+    /* eslint-disable no-undef */
+    const cLoad = colorBuffer.mapAsync(GPUMapMode.READ);
+    await cLoad;
+    /* eslint-enable no-undef */
+
+    result.colorValues = new Uint8ClampedArray(
+      colorBuffer.getMappedRange().slice()
+    );
+    colorBuffer.unmap();
+    // repack the array
+    const tmparray = new Uint8ClampedArray(result.height * result.width * 4);
+    for (let y = 0; y < result.height; y++) {
+      for (let x = 0; x < result.width; x++) {
+        const doffset = (y * result.width + x) * 4;
+        const soffset = (y * result.colorBufferWidth + x) * 4;
+        tmparray[doffset] = result.colorValues[soffset + 2];
+        tmparray[doffset + 1] = result.colorValues[soffset + 1];
+        tmparray[doffset + 2] = result.colorValues[soffset];
+        tmparray[doffset + 3] = result.colorValues[soffset + 3];
+      }
+    }
+    result.colorValues = tmparray;
+    return result;
+  };
+
   publicAPI.delete = macro.chain(publicAPI.delete, publicAPI.setViewStream);
 }
 
@@ -342,12 +406,8 @@ const DEFAULT_VALUES = {
   device: null,
   canvas: null,
   swapChain: null,
-  cullFaceEnabled: false,
-  depthMaskEnabled: true,
   cursorVisibility: true,
   cursor: 'pointer',
-  textureUnitManager: null,
-  textureResourceIds: null,
   containerSize: null,
   renderPasses: [],
   notifyStartCaptureImage: false,
@@ -400,7 +460,6 @@ export function extend(publicAPI, model, initialValues = {}) {
     'swapChain',
     'commandEncoder',
     'device',
-    'textureUnitManager',
     'useBackgroundImage',
   ]);
 

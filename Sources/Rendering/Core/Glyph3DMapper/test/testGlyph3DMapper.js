@@ -15,7 +15,7 @@ import { FieldDataTypes } from 'vtk.js/Sources/Common/DataModel/DataSet/Constant
 
 import baseline from './testGlyph3DMapper.png';
 
-test.onlyIfWebGL('Test vtkGlyph3DMapper Rendering', (t) => {
+test('Test vtkGlyph3DMapper Rendering', (t) => {
   const gc = testUtils.createGarbageCollector(t);
   t.ok('rendering', 'vtkGlyph3DMapper Rendering');
 

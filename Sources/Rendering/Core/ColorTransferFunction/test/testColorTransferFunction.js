@@ -14,7 +14,7 @@ import { areEquals } from 'vtk.js/Sources/Common/Core/Math';
 
 import baseline from './testColorTransferFunction.png';
 
-test.onlyIfWebGL('Test Interpolate Scalars Before Colors', (t) => {
+test('Test Interpolate Scalars Before Colors', (t) => {
   const gc = testUtils.createGarbageCollector(t);
   t.ok('rendering', 'vtkOpenGLPolyDataMapper ColorTransferFunction');
 

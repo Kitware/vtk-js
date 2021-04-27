@@ -136,6 +136,9 @@ function vtkWebGPUDevice(publicAPI, model) {
     pipeline.initialize(publicAPI);
     model.pipelines[hash] = pipeline;
   };
+
+  publicAPI.onSubmittedWorkDone = () =>
+    model.handle.queue.onSubmittedWorkDone();
 }
 
 // ----------------------------------------------------------------------------

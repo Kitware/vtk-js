@@ -15,7 +15,7 @@ import { Representation } from 'vtk.js/Sources/Rendering/Core/Property/Constants
 
 const { SlicingMode } = vtkImageMapper;
 
-test.onlyIfWebGL('Test vtkPointPicker image mapper', (t) => {
+test('Test vtkPointPicker image mapper', (t) => {
   // Create some control UI
   const gc = testUtils.createGarbageCollector(t);
   const container = document.querySelector('body');

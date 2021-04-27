@@ -12,7 +12,7 @@ import vtkCubeSource from 'vtk.js/Sources/Filters/Sources/CubeSource';
 
 import baseline from './testMultipleRenderers.png';
 
-test.onlyIfWebGL('Test multiple renderers', (t) => {
+test('Test multiple renderers', (t) => {
   const gc = testUtils.createGarbageCollector(t);
 
   // Create some control UI

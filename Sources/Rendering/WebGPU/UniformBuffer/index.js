@@ -274,9 +274,11 @@ function vtkWebGPUUniformBuffer(publicAPI, model) {
   };
 
   publicAPI.getSendTime = () => model.sendTime.getMTime();
-  publicAPI.getShaderCode = () => {
+  publicAPI.getShaderCode = (pipeline) => {
     // sort the entries
     publicAPI.sortBufferEntries();
+
+    const bgroup = pipeline.getBindGroupLayoutCount(model.name);
 
     const lines = [`[[block]] struct ${model.name}Struct\n{`];
     for (let i = 0; i < model.bufferEntries.length; i++) {
@@ -284,7 +286,7 @@ function vtkWebGPUUniformBuffer(publicAPI, model) {
       lines.push(`  ${entry.name}: ${entry.type};`);
     }
     lines.push(
-      `};\n[[binding(${model.binding}), group(${model.group})]] var<uniform> ${model.name}: ${model.name}Struct;`
+      `};\n[[binding(${model.binding}), group(${bgroup})]] var<uniform> ${model.name}: ${model.name}Struct;`
     );
     return lines.join('\n');
   };
@@ -300,7 +302,6 @@ const DEFAULT_VALUES = {
   sizeInBytes: 0,
   name: null,
   binding: 0,
-  group: 0,
 };
 
 // ----------------------------------------------------------------------------
@@ -322,13 +323,7 @@ export function extend(publicAPI, model, initialValues = {}) {
   model.sortDirty = true;
 
   macro.get(publicAPI, model, ['bindGroup']);
-  macro.setGet(publicAPI, model, [
-    'binding',
-    'device',
-    'group',
-    'name',
-    'sizeInBytes',
-  ]);
+  macro.setGet(publicAPI, model, ['binding', 'device', 'name', 'sizeInBytes']);
 
   // Object methods
   vtkWebGPUUniformBuffer(publicAPI, model);
