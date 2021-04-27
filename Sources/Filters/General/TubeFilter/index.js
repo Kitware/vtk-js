@@ -631,10 +631,25 @@ function vtkTubeFilter(publicAPI, model) {
       return;
     }
 
-    let numNewPts = numPts * model.numberOfSides;
-    if (model.capping) {
-      numNewPts = (numPts + 2 * numLines) * model.numberOfSides;
+    let numNewPts = 0;
+    let numStrips = 0;
+    const inLinesData = inLines.getData();
+    let npts = inLinesData[0];
+    const sidesShareVerticesMultiplier = model.sidesShareVertices ? 1 : 2;
+    for (let i = 0; i < inLinesData.length; i += npts + 1) {
+      numNewPts += sidesShareVerticesMultiplier * npts * model.numberOfSides;
+      if (model.capping) {
+        numNewPts += 2 * model.numberOfSides;
+      }
+
+      npts = inLinesData[i];
+      numStrips +=
+        (2 * npts + 1) * Math.ceil(model.numberOfSides / model.onRatio);
+      if (model.capping) {
+        numStrips += 2 * (model.numberOfSides + 1);
+      }
     }
+
     let pointType = inPts.getDataType();
     if (model.outputPointsPrecision === DesiredOutputPrecision.SINGLE) {
       pointType = VtkDataTypes.FLOAT;
@@ -656,17 +671,6 @@ function vtkTubeFilter(publicAPI, model) {
       values: newNormalsData,
       name: 'TubeNormals',
     });
-    let numStrips = 0;
-    const inLinesData = inLines.getData();
-    let npts = inLinesData[0];
-    for (let i = 0; i < inLinesData.length; i += npts + 1) {
-      npts = inLinesData[i];
-      numStrips +=
-        (2 * npts + 1) * Math.ceil(model.numberOfSides / model.onRatio);
-      if (model.capping) {
-        numStrips += 2 * (model.numberOfSides + 1);
-      }
-    }
     const newStripsData = new Uint32Array(numStrips);
     const newStrips = vtkCellArray.newInstance({ values: newStripsData });
     let newStripId = 0;
