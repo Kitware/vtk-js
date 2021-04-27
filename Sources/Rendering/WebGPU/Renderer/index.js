@@ -71,6 +71,7 @@ function vtkWebGPURenderer(publicAPI, model) {
     // make sure the data is up to date
     // has the camera changed?
     const cam = model.renderable.getActiveCamera();
+    const webgpuCamera = publicAPI.getViewNodeFor(cam);
     const utime = model.UBO.getSendTime();
     if (
       model.parent.getMTime() > utime ||
@@ -78,37 +79,12 @@ function vtkWebGPURenderer(publicAPI, model) {
       cam.getMTime() > utime ||
       model.renderable.getMTime() > utime
     ) {
-      const aspectRatio = publicAPI.getAspectRatio();
-      const mat = cam.getCompositeProjectionMatrix(aspectRatio, -1, 1);
-      const uboData = model.UBO.getNativeView('WCDCMatrix');
-      uboData[0] = mat[0];
-      uboData[4] = mat[1];
-      uboData[8] = mat[2];
-      uboData[12] = mat[3];
-
-      uboData[1] = mat[4];
-      uboData[5] = mat[5];
-      uboData[9] = mat[6];
-      uboData[13] = mat[7];
-
-      uboData[2] = 0.5 * mat[8] + 0.5 * mat[12];
-      uboData[6] = 0.5 * mat[9] + 0.5 * mat[13];
-      uboData[10] = 0.5 * mat[10] + 0.5 * mat[14];
-      uboData[14] = 0.5 * mat[11] + 0.5 * mat[15];
-
-      uboData[3] = mat[12];
-      uboData[7] = mat[13];
-      uboData[11] = mat[14];
-      uboData[15] = mat[15];
-
-      mat4.copy(model.tmpMat4, cam.getViewMatrix());
-      // zero out translation
-      model.tmpMat4[3] = 0.0;
-      model.tmpMat4[7] = 0.0;
-      model.tmpMat4[11] = 0.0;
-
-      mat4.invert(model.tmpMat4, model.tmpMat4);
-      model.UBO.setArray('WCVCNormals', model.tmpMat4);
+      const keyMats = webgpuCamera.getKeyMatrices(publicAPI);
+      model.UBO.setArray('WCPCMatrix', keyMats.wcpc);
+      model.UBO.setArray('WCVCMatrix', keyMats.wcvc);
+      model.UBO.setArray('VCPCMatrix', keyMats.vcpc);
+      model.UBO.setArray('WCVCNormals', keyMats.normalMatrix);
+      model.UBO.setValue('cameraParallel', cam.getParallelProjection());
 
       const device = model.parent.getDevice();
       model.UBO.sendIfNeeded(device, device.getRendererBindGroupLayout());
@@ -226,6 +202,54 @@ function vtkWebGPURenderer(publicAPI, model) {
     }
   };
 
+  publicAPI.volumePass = (prepass) => {
+    if (prepass) {
+      // clear last pipelines
+      model.pipelineCallbacks = [];
+
+      model.renderEncoder.begin(model.parent.getCommandEncoder());
+
+      publicAPI.updateUBO();
+    } else {
+      // loop over registered pipelines
+      for (let i = 0; i < model.pipelineCallbacks.length; i++) {
+        const pStruct = model.pipelineCallbacks[i];
+        const pl = pStruct.pipeline;
+
+        pl.bind(model.renderEncoder);
+        model.renderEncoder.setBindGroup(0, model.UBO.getBindGroup());
+        // bind our BindGroup
+        // set viewport
+        const tsize = publicAPI.getTiledSizeAndOrigin();
+        model.renderEncoder
+          .getHandle()
+          .setViewport(
+            tsize.lowerLeftU,
+            tsize.lowerLeftV,
+            tsize.usize,
+            tsize.vsize,
+            0.0,
+            1.0
+          );
+        // set scissor
+        model.renderEncoder
+          .getHandle()
+          .setScissorRect(
+            tsize.lowerLeftU,
+            tsize.lowerLeftV,
+            tsize.usize,
+            tsize.vsize
+          );
+
+        for (let cb = 0; cb < pStruct.callbacks.length; cb++) {
+          pStruct.callbacks[cb](pl);
+        }
+      }
+
+      model.renderEncoder.end();
+    }
+  };
+
   publicAPI.getAspectRatio = () => {
     const size = model.parent.getSizeByReference();
     const viewport = model.renderable.getViewportByReference();
@@ -289,6 +313,18 @@ function vtkWebGPURenderer(publicAPI, model) {
     /* eslint-enable no-bitwise */
   };
 
+  publicAPI.getPropFromID = (id) => {
+    for (let i = 0; i < model.children.length; i++) {
+      const res = model.children[i].getPropID
+        ? model.children[i].getPropID()
+        : -1;
+      if (res === id) {
+        return model.children[i];
+      }
+    }
+    return null;
+  };
+
   publicAPI.releaseGraphicsResources = () => {
     if (model.selector !== null) {
       model.selector.releaseGraphicsResources();
@@ -318,10 +354,11 @@ export function extend(publicAPI, model, initialValues = {}) {
   model.UBO.setBinding(0);
   model.UBO.setGroup(0);
   model.UBO.setName('rendererUBO');
-  model.UBO.addEntry('WCDCMatrix', 'mat4x4<f32>');
+  model.UBO.addEntry('WCPCMatrix', 'mat4x4<f32>');
   model.UBO.addEntry('WCVCMatrix', 'mat4x4<f32>');
-  model.UBO.addEntry('VCDCMatrix', 'mat4x4<f32>');
+  model.UBO.addEntry('VCPCMatrix', 'mat4x4<f32>');
   model.UBO.addEntry('WCVCNormals', 'mat4x4<f32>');
+  model.UBO.addEntry('cameraParallel', 'u32');
 
   model.tmpMat4 = mat4.identity(new Float64Array(16));
 

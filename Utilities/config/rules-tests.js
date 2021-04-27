@@ -19,7 +19,12 @@ module.exports = [
           multiple: [
             {
               search: 'test.onlyIfWebGL',
-              replace: process.env.TRAVIS ? 'test.skip' : 'test',
+              replace: process.env.NO_WEBGL ? 'test.skip' : 'test',
+              flags: 'g',
+            },
+            {
+              search: 'test.onlyIfWebGPU',
+              replace: process.env.WEBGPU ? 'test' : 'test.skip',
               flags: 'g',
             },
           ],

@@ -12,22 +12,32 @@ const oitpFragTemplate = `
 
 //VTK::RenderEncoder::Dec
 
+//VTK::InputStruct::Dec
+
+//VTK::OutputStruct::Dec
+
 [[stage(fragment)]]
-fn main() -> void
+fn main(
+//VTK::InputStruct::Impl
+)
+//VTK::OutputStruct::Impl
 {
-  var reveal: f32 = textureSample(Texture1, Sampler1, tcoordVS).r;
+  var output: fragmentOutput;
+
+  var reveal: f32 = textureSample(Texture1, Sampler1, input.tcoordVS).r;
   if (reveal == 1.0) { discard; }
-  var tcolor: vec4<f32> = textureSample(Texture0, Sampler0, tcoordVS);
+  var tcolor: vec4<f32> = textureSample(Texture0, Sampler0, input.tcoordVS);
   var total: f32 = max(tcolor.a, 0.01);
   var computedColor: vec4<f32> = vec4<f32>(tcolor.r/total, tcolor.g/total, tcolor.b/total, 1.0 - reveal);
 
   //VTK::RenderEncoder::Impl
+  return output;
 }
 `;
 
-function vtkOrderIndependentTranslucentPass(publicAPI, model) {
+function vtkWebGPUOrderIndependentTranslucentPass(publicAPI, model) {
   // Set our className
-  model.classHierarchy.push('vtkOrderIndependentTranslucentPass');
+  model.classHierarchy.push('vtkWebGPUOrderIndependentTranslucentPass');
 
   // this pass implements a forward rendering pipeline
   // if both volumes and opaque geometry are present
@@ -90,9 +100,6 @@ function vtkOrderIndependentTranslucentPass(publicAPI, model) {
 
     model.translucentRenderEncoder.setDepthTextureView(model.depthTextureView);
     model.translucentRenderEncoder.attachTextureViews();
-    const renDesc = model.translucentRenderEncoder.getDescription();
-    renDesc.colorAttachments[0].loadValue = [0.0, 0.0, 0.0, 0.0];
-    renDesc.colorAttachments[1].loadValue = [1.0, 0.0, 0.0, 0.0];
     publicAPI.setCurrentOperation('translucentPass');
     renNode.setRenderEncoder(model.translucentRenderEncoder);
     renNode.traverse(publicAPI);
@@ -143,8 +150,20 @@ function vtkOrderIndependentTranslucentPass(publicAPI, model) {
   publicAPI.createRenderEncoder = () => {
     model.translucentRenderEncoder = vtkWebGPURenderEncoder.newInstance();
     const rDesc = model.translucentRenderEncoder.getDescription();
+    rDesc.colorAttachments = [
+      {
+        view: undefined,
+        loadValue: [0.0, 0.0, 0.0, 0.0],
+        storeOp: 'store',
+      },
+      {
+        view: undefined,
+        loadValue: [1.0, 0.0, 0.0, 0.0],
+        storeOp: 'store',
+      },
+    ];
     rDesc.depthStencilAttachment = {
-      attachment: undefined,
+      view: undefined,
       depthLoadValue: 'load',
       depthStoreOp: 'store',
       stencilLoadValue: 'load',
@@ -153,24 +172,19 @@ function vtkOrderIndependentTranslucentPass(publicAPI, model) {
 
     model.translucentRenderEncoder.setReplaceShaderCodeFunction((pipeline) => {
       const fDesc = pipeline.getShaderDescription('fragment');
+      fDesc.addOutput('vec4<f32>', 'outColor');
+      fDesc.addOutput('f32', 'outAccum');
+      fDesc.addBuiltinInput('vec4<f32>', '[[builtin(position)]] fragPos');
       let code = fDesc.getCode();
-      code = vtkWebGPUShaderCache.substitute(
-        code,
-        '//VTK::RenderEncoder::Dec',
-        [
-          '[[location(0)]] var<out> outColor : vec4<f32>;',
-          '[[location(1)]] var<out> outAccum : f32;',
-          '[[builtin(frag_coord)]] var<in> fragPos : vec4<f32>;',
-        ]
-      ).result;
       code = vtkWebGPUShaderCache.substitute(
         code,
         '//VTK::RenderEncoder::Impl',
         [
           // very simple depth weighting in w
-          'var w: f32 = 1.0 - fragPos.z * 0.9;',
-          'outColor = vec4<f32>(computedColor.rgb*computedColor.a, computedColor.a) * w;',
-          'outAccum = computedColor.a;',
+          'var w: f32 = 1.0 - input.fragPos.z * 0.9;',
+          'output.outColor = vec4<f32>(computedColor.rgb*computedColor.a, computedColor.a) * w;',
+          'output.outAccum = computedColor.a;',
+          'output.outAccum = computedColor.a;',
         ]
       ).result;
       fDesc.setCode(code);
@@ -200,7 +214,7 @@ function vtkOrderIndependentTranslucentPass(publicAPI, model) {
             blend: {
               color: {
                 srcFactor: 'zero',
-                dstFactor: 'one-minus-src-color',
+                dstFactor: 'one-minus-src',
               },
               alpha: { srcfactor: 'one', dstFactor: 'one-minus-src-alpha' },
             },
@@ -215,24 +229,21 @@ function vtkOrderIndependentTranslucentPass(publicAPI, model) {
     model.translucentFinalEncoder.setDescription({
       colorAttachments: [
         {
-          attachment: null,
+          view: null,
           loadValue: 'load',
+          storeOp: 'store',
         },
       ],
     });
     model.translucentFinalEncoder.setReplaceShaderCodeFunction((pipeline) => {
       const fDesc = pipeline.getShaderDescription('fragment');
+      fDesc.addOutput('vec4<f32>', 'outColor');
       let code = fDesc.getCode();
-      code = vtkWebGPUShaderCache.substitute(
-        code,
-        '//VTK::RenderEncoder::Dec',
-        ['[[location(0)]] var<out> outColor : vec4<f32>;']
-      ).result;
       code = vtkWebGPUShaderCache.substitute(
         code,
         '//VTK::RenderEncoder::Impl',
         [
-          'outColor = vec4<f32>(computedColor.rgb*computedColor.a, computedColor.a);',
+          'output.outColor = vec4<f32>(computedColor.rgb*computedColor.a, computedColor.a);',
         ]
       ).result;
       fDesc.setCode(code);
@@ -278,14 +289,14 @@ export function extend(publicAPI, model, initialValues = {}) {
   macro.setGet(publicAPI, model, ['colorTextureView', 'depthTextureView']);
 
   // Object methods
-  vtkOrderIndependentTranslucentPass(publicAPI, model);
+  vtkWebGPUOrderIndependentTranslucentPass(publicAPI, model);
 }
 
 // ----------------------------------------------------------------------------
 
 export const newInstance = macro.newInstance(
   extend,
-  'vtkOrderIndependentTranslucentPass'
+  'vtkWebGPUOrderIndependentTranslucentPass'
 );
 
 // ----------------------------------------------------------------------------

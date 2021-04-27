@@ -8,11 +8,11 @@ interface IAbstractMapperInitialValues {
 	clippingPlanes?: vtkPlane[];
 }
 
-type vtkAlgorithm = VtkObject & Omit<VtkAlgorithm,
-    'getOutputData' |
-    'getOutputPort'> ;
+type vtkAbstractMapperBase = VtkObject & Omit<VtkAlgorithm,
+    | 'getOutputData'
+    | 'getOutputPort'> ;
 
-export interface vtkAbstractMapper extends vtkAlgorithm {
+export interface vtkAbstractMapper extends vtkAbstractMapperBase {
 
     /**
      * Added plane needs to be a vtkPlane object.

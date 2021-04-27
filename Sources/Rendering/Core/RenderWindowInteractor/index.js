@@ -232,15 +232,9 @@ function vtkRenderWindowInteractor(publicAPI, model) {
     container.addEventListener('mouseleave', publicAPI.handleMouseLeave);
     container.addEventListener('mousemove', publicAPI.handleMouseMove);
     container.addEventListener('mousedown', publicAPI.handleMouseDown);
-    document
-      .querySelector('body')
-      .addEventListener('keypress', publicAPI.handleKeyPress);
-    document
-      .querySelector('body')
-      .addEventListener('keydown', publicAPI.handleKeyDown);
-    document
-      .querySelector('body')
-      .addEventListener('keyup', publicAPI.handleKeyUp);
+    document.addEventListener('keypress', publicAPI.handleKeyPress);
+    document.addEventListener('keydown', publicAPI.handleKeyDown);
+    document.addEventListener('keyup', publicAPI.handleKeyUp);
 
     document.addEventListener(
       'pointerlockchange',

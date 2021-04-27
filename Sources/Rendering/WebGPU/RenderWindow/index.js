@@ -2,11 +2,11 @@ import macro from 'vtk.js/Sources/macro';
 import { registerViewConstructor } from 'vtk.js/Sources/Rendering/Core/RenderWindow';
 import vtkForwardPass from 'vtk.js/Sources/Rendering/WebGPU/ForwardPass';
 import vtkWebGPUDevice from 'vtk.js/Sources/Rendering/WebGPU/Device';
+import vtkWebGPUHardwareSelector from 'vtk.js/Sources/Rendering/WebGPU/HardwareSelector';
 import vtkWebGPUSwapChain from 'vtk.js/Sources/Rendering/WebGPU/SwapChain';
 import vtkWebGPUViewNodeFactory from 'vtk.js/Sources/Rendering/WebGPU/ViewNodeFactory';
 import vtkRenderPass from 'vtk.js/Sources/Rendering/SceneGraph/RenderPass';
 import vtkRenderWindowViewNode from 'vtk.js/Sources/Rendering/SceneGraph/RenderWindowViewNode';
-// import vtkOpenGLTextureUnitManager from 'vtk.js/Sources/Rendering/OpenGL/TextureUnitManager';
 // import { VtkDataTypes } from 'vtk.js/Sources/Common/Core/DataArray/Constants';
 
 const { vtkErrorMacro } = macro;
@@ -160,12 +160,12 @@ function vtkWebGPURenderWindow(publicAPI, model) {
 
   publicAPI.create3DContext = () => {
     model.initializing = true;
-    (async () => {
-      if (!navigator.gpu) {
-        vtkErrorMacro('WebGPU is not enabled.');
-        return;
-      }
+    if (!navigator.gpu) {
+      vtkErrorMacro('WebGPU is not enabled.');
+      return;
+    }
 
+    (async () => {
       // Get a GPU device to render with
       model.adapter = await navigator.gpu.requestAdapter();
       model.device = vtkWebGPUDevice.newInstance();
@@ -257,9 +257,18 @@ function vtkWebGPURenderWindow(publicAPI, model) {
     });
   };
 
+  publicAPI.tryInitialize = () => {
+    if (!model.initialized) {
+      setTimeout(publicAPI.tryInitialize, 10);
+    } else {
+      publicAPI.traverseAllPasses();
+    }
+  };
+
   publicAPI.traverseAllPasses = () => {
     if (!model.initialized) {
       publicAPI.initialize();
+      setTimeout(publicAPI.tryInitialize, 10);
     } else {
       if (model.renderPasses) {
         for (let index = 0; index < model.renderPasses.length; ++index) {
@@ -272,7 +281,6 @@ function vtkWebGPURenderWindow(publicAPI, model) {
       }
 
       if (model.notifyStartCaptureImage) {
-        vtkErrorMacro('Getting image');
         getCanvasDataURL();
       }
     }
@@ -308,6 +316,18 @@ function vtkWebGPURenderWindow(publicAPI, model) {
     return true;
   };
 
+  publicAPI.getUniquePropID = () => model.nextPropID++;
+
+  publicAPI.getPropFromID = (id) => {
+    for (let i = 0; i < model.children.length; i++) {
+      const res = model.children[i].getPropFromID(id);
+      if (res !== null) {
+        return res;
+      }
+    }
+    return null;
+  };
+
   publicAPI.delete = macro.chain(publicAPI.delete, publicAPI.setViewStream);
 }
 
@@ -334,6 +354,7 @@ const DEFAULT_VALUES = {
   imageFormat: 'image/png',
   useOffScreen: false,
   useBackgroundImage: false,
+  nextPropID: 1,
 };
 
 // ----------------------------------------------------------------------------
@@ -366,6 +387,11 @@ export function extend(publicAPI, model, initialValues = {}) {
 
   // setup default forward pass rendering
   model.renderPasses[0] = vtkForwardPass.newInstance();
+
+  if (!model.selector) {
+    model.selector = vtkWebGPUHardwareSelector.newInstance();
+    model.selector.setWebGPURenderWindow(publicAPI);
+  }
 
   macro.event(publicAPI, model, 'imageReady');
 

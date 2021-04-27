@@ -17,6 +17,9 @@ Chrome Canary when WebGPU is enabled. You have to set --enable-unsafe-webgpu
 there is a test target named test:webgpu that will specificly try to run
 tests using chrome canary.
 
+Note that as of APril 2021 WebGPU is changing daily, so this code may
+break daily as they change and interate on the API.
+
 Lots of capabilities are currently not implemented.
 
 From an application point of view replacing your OpenGLRenderWindow with
@@ -25,15 +28,19 @@ is needed.
 
 ToDo
 ============
-- 3d textures
+- add glyphmapper
+- hook up testing
 - PBR lighting to replace the simple model currently coded
-- image display
-- volume rendering
 - actor matrix support with auto shift
-- sphere/stick mappers
-- hardware selector
 - eventually switch to using IBOs and flat interpolation
 - cropping planes for polydata mapper
+- update widgets to use the new async hardware selector API
+
+Waiting on fixes/dev in WebGPU spec
+- 3d textures (as of April 21 2021 Dawn lacks support for 1d and 3d)
+- image display
+- volume rendering
+- create new volume renderer built for multivolume rendering
 
 Developer Notes
 ============

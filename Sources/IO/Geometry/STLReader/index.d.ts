@@ -13,12 +13,12 @@ interface ISTLReaderOptions {
 interface ISTLReaderInitialValues {}
 
 type vtkSTLReaderBase = VtkObject & Omit<VtkAlgorithm,
-	'getInputData' |
-	'setInputData' |
-	'setInputConnection' |
-	'getInputConnection' | 
-	'addInputConnection' | 
-	'addInputData' > ;
+	| 'getInputData'
+	| 'setInputData'
+	| 'setInputConnection'
+	| 'getInputConnection'
+	| 'addInputConnection'
+	| 'addInputData'>;
 
 export interface vtkSTLReader extends vtkSTLReaderBase {
 
@@ -69,8 +69,8 @@ export interface vtkSTLReader extends vtkSTLReaderBase {
 
 	/**
 	 * Set the url of the object to load.
-	 * @param {String} [url] the url of the object to load.
-	 * @param {ISTLReaderOptions} option The STL reader options.
+	 * @param {String} url the url of the object to load.
+	 * @param {ISTLReaderOptions} [option] The STL reader options.
 	 */
 	setUrl(url: string, option?: ISTLReaderOptions): boolean;
 

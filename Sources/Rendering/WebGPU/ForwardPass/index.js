@@ -1,6 +1,7 @@
 import macro from 'vtk.js/Sources/macro';
 import vtkWebGPURenderEncoder from 'vtk.js/Sources/Rendering/WebGPU/RenderEncoder';
 import vtkWebGPUOrderIndepenentTranslucentPass from 'vtk.js/Sources/Rendering/WebGPU/OrderIndependentTranslucentPass';
+import vtkWebGPUVolumePass from 'vtk.js/Sources/Rendering/WebGPU/VolumePass';
 import vtkRenderPass from 'vtk.js/Sources/Rendering/SceneGraph/RenderPass';
 
 // ----------------------------------------------------------------------------
@@ -54,6 +55,7 @@ function vtkForwardPass(publicAPI, model) {
 
           publicAPI.setCurrentOperation('cameraPass');
           renNode.traverse(publicAPI);
+
           // always do opaque pass to get a valid color and zbuffer, even if empty
           publicAPI.setCurrentOperation('opaquePass');
           renNode.setRenderEncoder(model.opaqueRenderEncoder);
@@ -75,8 +77,16 @@ function vtkForwardPass(publicAPI, model) {
 
           // optional volume pass
           if (model.volumeCount > 0) {
-            publicAPI.setCurrentOperation('volumePass');
-            renNode.traverse(publicAPI);
+            if (!model.volumePass) {
+              model.volumePass = vtkWebGPUVolumePass.newInstance();
+            }
+            model.volumePass.setColorTextureView(
+              model.opaqueRenderEncoder.getColorTextureViews()[0]
+            );
+            model.volumePass.setDepthTextureView(
+              model.opaqueRenderEncoder.getDepthTextureView()
+            );
+            model.volumePass.traverse(renNode, viewNode);
           }
         }
       }
@@ -104,6 +114,8 @@ const DEFAULT_VALUES = {
   translucentActorCount: 0,
   volumeCount: 0,
   opaqueRenderEncoder: null,
+  translucentPass: null,
+  volumePass: null,
 };
 
 // ----------------------------------------------------------------------------
@@ -114,7 +126,7 @@ export function extend(publicAPI, model, initialValues = {}) {
   // Build VTK API
   vtkRenderPass.extend(publicAPI, model, initialValues);
 
-  macro.get(publicAPI, model, ['framebuffer']);
+  macro.setGet(publicAPI, model, ['translucentPass', 'volumePass']);
 
   // Object methods
   vtkForwardPass(publicAPI, model);

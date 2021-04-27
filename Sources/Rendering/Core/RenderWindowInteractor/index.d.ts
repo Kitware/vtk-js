@@ -43,46 +43,46 @@ interface IPosition {
 export interface vtkRenderWindowInteractor extends VtkObject {
 
     /**
- *
- * @default false
- */
-
+     * 
+     * @default false
+     */
     getInitialized(): boolean;
+
     /**
      *
      * @default null
      */
+    getContainer(): HTMLElement;
 
-    getContainer(): any
     /**
      *
      * @default false
      */
 
     getEnabled(): boolean;
+
     /**
      *
      * @default true
      */
-
     getEnableRender(): boolean;
+
     /**
      *
      * @default null
      */
+    getInteractorStyle(): any;
 
-    getInteractorStyle(): any
     /**
      *
      * @default 0.1
      */
+    getLastFrameTime(): number;
 
-    getLastFrameTime(): number
     /**
      *
      * @default null
      */
-
     getView(): any;
 
     /**
@@ -101,6 +101,7 @@ export interface vtkRenderWindowInteractor extends VtkObject {
      * @default true
      */
     getRecognizeGestures(): boolean;
+
     /**
      *
      * @default 30.0
@@ -116,182 +117,182 @@ export interface vtkRenderWindowInteractor extends VtkObject {
     /**
      *
      */
-    invokeStartAnimation(callData: any): any;
+    invokeStartAnimation(callData: object): any;
 
     /**
      *
      */
-    invokeAnimation(callData: any): any;
+    invokeAnimation(callData: object): any;
 
     /**
      *
      */
-    invokeEndAnimation(callData: any): any;
+    invokeEndAnimation(callData: object): any;
 
     /**
      *
      */
-    invokeMouseEnter(callData: any): any;
+    invokeMouseEnter(callData: object): any;
 
     /**
      *
      */
-    invokeMouseLeave(callData: any): any;
+    invokeMouseLeave(callData: object): any;
 
     /**
      *
      */
-    invokeStartMouseMove(callData: any): any;
+    invokeStartMouseMove(callData: object): any;
 
     /**
      *
      */
-    invokeMouseMove(callData: any): any;
+    invokeMouseMove(callData: object): any;
 
     /**
      *
      */
-    invokeEndMouseMove(callData: any): any;
+    invokeEndMouseMove(callData: object): any;
 
     /**
      *
      */
-    invokeLeftButtonPress(callData: any): any;
+    invokeLeftButtonPress(callData: object): any;
 
     /**
      *
      */
-    invokeLeftButtonRelease(callData: any): any;
+    invokeLeftButtonRelease(callData: object): any;
 
     /**
      *
      */
-    invokeMiddleButtonPress(callData: any): any;
+    invokeMiddleButtonPress(callData: object): any;
 
     /**
      *
      */
-    invokeMiddleButtonRelease(callData: any): any;
+    invokeMiddleButtonRelease(callData: object): any;
 
     /**
      *
      */
-    invokeRightButtonPress(callData: any): any;
+    invokeRightButtonPress(callData: object): any;
 
     /**
      *
      */
-    invokeRightButtonRelease(callData: any): any;
+    invokeRightButtonRelease(callData: object): any;
 
     /**
      *
      */
-    invokeKeyPress(callData: any): any;
+    invokeKeyPress(callData: object): any;
 
     /**
      *
      */
-    invokeKeyDown(callData: any): any;
+    invokeKeyDown(callData: object): any;
 
     /**
      *
      */
-    invokeKeyUp(callData: any): any;
+    invokeKeyUp(callData: object): any;
 
     /**
      *
      */
-    invokeStartMouseWheel(callData: any): any;
+    invokeStartMouseWheel(callData: object): any;
 
     /**
      *
      */
-    invokeMouseWheel(callData: any): any;
+    invokeMouseWheel(callData: object): any;
 
     /**
      *
      */
-    invokeEndMouseWheel(callData: any): any;
+    invokeEndMouseWheel(callData: object): any;
 
     /**
      *
      */
-    invokeStartPinch(callData: any): any;
+    invokeStartPinch(callData: object): any;
 
     /**
      *
      */
-    invokePinch(callData: any): any;
+    invokePinch(callData: object): any;
 
     /**
      *
      */
-    invokeEndPinch(callData: any): any;
+    invokeEndPinch(callData: object): any;
 
     /**
      *
      */
-    invokeStartPan(callData: any): any;
+    invokeStartPan(callData: object): any;
 
     /**
      *
      */
-    invokePan(callData: any): any;
+    invokePan(callData: object): any;
 
     /**
      *
      */
-    invokeEndPan(callData: any): any;
+    invokeEndPan(callData: object): any;
 
     /**
      *
      */
-    invokeStartRotate(callData: any): any;
+    invokeStartRotate(callData: object): any;
 
     /**
      *
      */
-    invokeRotate(callData: any): any;
+    invokeRotate(callData: object): any;
 
     /**
      *
      */
-    invokeEndRotate(callData: any): any;
+    invokeEndRotate(callData: object): any;
 
     /**
      *
      */
-    invokeButton3D(callData: any): any;
+    invokeButton3D(callData: object): any;
 
     /**
      *
      */
-    invokeMove3D(callData: any): any;
+    invokeMove3D(callData: object): any;
 
     /**
      *
      */
-    invokeStartPointerLock(callData: any): any;
+    invokeStartPointerLock(callData: object): any;
 
     /**
      *
      */
-    invokeEndPointerLock(callData: any): any;
+    invokeEndPointerLock(callData: object): any;
 
     /**
      *
      */
-    invokeStartInteractionEvent(callData: any): any;
+    invokeStartInteractionEvent(callData: object): any;
 
     /**
      *
      */
-    invokeInteractionEvent(callData: any): any;
+    invokeInteractionEvent(callData: object): any;
 
     /**
      *
      */
-    invokeEndInteractionEvent(callData: any): any;
+    invokeEndInteractionEvent(callData: object): any;
 
     /**
      *
@@ -824,27 +825,27 @@ export interface vtkRenderWindowInteractor extends VtkObject {
 
     /**
      *
-     * @param event
+     * @param {KeyboardEvent} event 
      */
-    handleKeyPress(event: any): void;
+    handleKeyPress(event: KeyboardEvent): void;
 
     /**
      *
-     * @param event
+     * @param {KeyboardEvent} event 
      */
-    handleKeyDown(event: any): void;
+    handleKeyDown(event: KeyboardEvent): void;
 
     /**
      *
-     * @param event
+     * @param {KeyboardEvent} event 
      */
-    handleKeyUp(event: any): void;
+    handleKeyUp(event: KeyboardEvent): void;
 
     /**
      *
-     * @param event
+     * @param {MouseEvent} event 
      */
-    handleMouseDown(event: any): void;
+    handleMouseDown(event: MouseEvent): void;
 
     /**
      *
@@ -858,7 +859,6 @@ export interface vtkRenderWindowInteractor extends VtkObject {
 
     /**
      *
-     * @return
      */
     isPointerLocked(): boolean;
 
@@ -875,16 +875,15 @@ export interface vtkRenderWindowInteractor extends VtkObject {
 
     /**
      *
-     * @return
      */
     isAnimating(): boolean;
 
     /**
      *
-     * @param requestor
-     * @param skipWarning
+     * @param requestor 
+     * @param {Boolean} [skipWarning] 
      */
-    cancelAnimation(requestor: any, skipWarning: any): void;
+    cancelAnimation(requestor: any, skipWarning?: boolean): void;
 
     /**
      *
@@ -898,15 +897,15 @@ export interface vtkRenderWindowInteractor extends VtkObject {
 
     /**
      *
-     * @param displayId
+     * @param {Number} displayId The ID of the display.
      */
-    updateGamepads(displayId: any): void;
+    updateGamepads(displayId: number): void;
 
     /**
      *
-     * @param event
+     * @param {MouseEvent} event 
      */
-    handleMouseMove(event: any): void;
+    handleMouseMove(event: MouseEvent): void;
 
     /**
      *
@@ -915,45 +914,45 @@ export interface vtkRenderWindowInteractor extends VtkObject {
 
     /**
      *
-     * @param event
+     * @param {MouseEvent} event 
      */
-    handleWheel(event: any): void;
+    handleWheel(event: MouseEvent): void;
 
     /**
      *
-     * @param event
+     * @param {MouseEvent} event 
      */
-    handleMouseEnter(event: any): void;
+    handleMouseEnter(event: MouseEvent): void;
 
     /**
      *
-     * @param event
+     * @param {MouseEvent} event 
      */
-    handleMouseLeave(event: any): void;
+    handleMouseLeave(event: MouseEvent): void;
 
     /**
      *
-     * @param event
+     * @param {MouseEvent} event 
      */
-    handleMouseUp(event: any): void;
+    handleMouseUp(event: MouseEvent): void;
 
     /**
      *
-     * @param event
+     * @param {TouchEvent} event 
      */
-    handleTouchStart(event: any): void;
+    handleTouchStart(event: TouchEvent): void;
 
     /**
      *
-     * @param event
+     * @param {TouchEvent} event 
      */
-    handleTouchMove(event: any): void;
+    handleTouchMove(event: TouchEvent): void;
 
     /**
      *
-     * @param event
+     * @param {TouchEvent} event 
      */
-    handleTouchEnd(event: any): void;
+    handleTouchEnd(event: TouchEvent): void;
 
     /**
      *
@@ -964,12 +963,12 @@ export interface vtkRenderWindowInteractor extends VtkObject {
     /**
      * @return first renderer to be used for camera manipulation
      */
-    getFirstRenderer(): vtkRenderer; // return vtkRenderer
+    getFirstRenderer(): vtkRenderer;
 
     /**
      *
-     * @param x
-     * @param y
+     * @param {Number} x 
+     * @param {Number} y 
      */
     findPokedRenderer(x: number, y: number): vtkRenderer;
 
@@ -986,7 +985,7 @@ export interface vtkRenderWindowInteractor extends VtkObject {
      * @param event
      * @param positions
      */
-    recognizeGesture(event: string, positions: IPosition): void;
+    recognizeGesture(event: 'TouchStart' | 'TouchMouve' | 'TouchEnd', positions: IPosition): void;
 
     /**
      *

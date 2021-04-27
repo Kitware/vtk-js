@@ -14,32 +14,19 @@ function vtkWebGPUActor(publicAPI, model) {
   // Builds myself.
   publicAPI.buildPass = (prepass) => {
     if (prepass) {
-      model.WebGPURenderWindow = publicAPI.getFirstAncestorOfType(
-        'vtkWebGPURenderWindow'
-      );
       model.WebGPURenderer = publicAPI.getFirstAncestorOfType(
         'vtkWebGPURenderer'
       );
+      model.WebGPURenderWindow = model.WebGPURenderer.getFirstAncestorOfType(
+        'vtkWebGPURenderWindow'
+      );
+      if (model.propID === undefined) {
+        model.propID = model.WebGPURenderWindow.getUniquePropID();
+      }
       model.context = model.WebGPURenderWindow.getContext();
       publicAPI.prepareNodes();
-      publicAPI.addMissingNodes(model.renderable.getTextures());
       publicAPI.addMissingNode(model.renderable.getMapper());
       publicAPI.removeUnusedNodes();
-
-      // we store textures and mapper
-      model.gputextures = null;
-      model.activeTextures = null;
-      for (let index = 0; index < model.children.length; index++) {
-        const child = model.children[index];
-        if (child.isA('vtkWebGPUTexture')) {
-          if (!model.gputextures) {
-            model.gputextures = [];
-          }
-          model.gputextures.push(child);
-        } else {
-          model.gpumapper = child;
-        }
-      }
     }
   };
 
@@ -56,8 +43,8 @@ function vtkWebGPUActor(publicAPI, model) {
 
     publicAPI.apply(renderPass, true);
 
-    if (model.gpumapper) {
-      model.gpumapper.traverse(renderPass);
+    if (model.children[0]) {
+      model.children[0].traverse(renderPass);
     }
 
     publicAPI.apply(renderPass, false);
@@ -76,25 +63,11 @@ function vtkWebGPUActor(publicAPI, model) {
 
     publicAPI.apply(renderPass, true);
 
-    model.gpumapper.traverse(renderPass);
+    if (model.children[0]) {
+      model.children[0].traverse(renderPass);
+    }
 
     publicAPI.apply(renderPass, false);
-  };
-
-  publicAPI.activateTextures = () => {
-    // always traverse textures first, then mapper
-    if (!model.gputextures) {
-      return;
-    }
-
-    model.activeTextures = [];
-    for (let index = 0; index < model.gputextures.length; index++) {
-      const child = model.gputextures[index];
-      child.render();
-      if (child.getHandle()) {
-        model.activeTextures.push(child);
-      }
-    }
   };
 
   publicAPI.queryPass = (prepass, renderPass) => {
@@ -106,27 +79,6 @@ function vtkWebGPUActor(publicAPI, model) {
         renderPass.incrementOpaqueActorCount();
       } else {
         renderPass.incrementTranslucentActorCount();
-      }
-    }
-  };
-
-  publicAPI.opaquePass = (prepass, renderPass) => {
-    if (prepass) {
-      publicAPI.activateTextures();
-    } else if (model.activeTextures) {
-      for (let index = 0; index < model.activeTextures.length; index++) {
-        model.activeTextures[index].deactivate();
-      }
-    }
-  };
-
-  // Renders myself
-  publicAPI.translucentPass = (prepass, renderPass) => {
-    if (prepass) {
-      publicAPI.activateTextures();
-    } else if (model.activeTextures) {
-      for (let index = 0; index < model.activeTextures.length; index++) {
-        model.activeTextures[index].deactivate();
       }
     }
   };
@@ -166,7 +118,7 @@ const DEFAULT_VALUES = {
   context: null,
   keyMatrixTime: null,
   keyMatrices: null,
-  activeTextures: null,
+  propID: undefined,
 };
 
 // ----------------------------------------------------------------------------
@@ -187,7 +139,7 @@ export function extend(publicAPI, model, initialValues = {}) {
   // Build VTK API
   macro.setGet(publicAPI, model, ['context']);
 
-  macro.get(publicAPI, model, ['activeTextures']);
+  macro.get(publicAPI, model, ['propID']);
 
   // Object methods
   vtkWebGPUActor(publicAPI, model);

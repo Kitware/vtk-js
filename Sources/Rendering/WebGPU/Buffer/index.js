@@ -1,17 +1,8 @@
 import macro from 'vtk.js/Sources/macro';
 import Constants from 'vtk.js/Sources/Rendering/WebGPU/BufferManager/Constants';
 
-// const { ObjectType } = Constants;
-
-// ----------------------------------------------------------------------------
-// Global methods
-// ----------------------------------------------------------------------------
-
-// ----------------------------------------------------------------------------
-// Static API
-// ----------------------------------------------------------------------------
-
-export const STATIC = {};
+// methods we forward to the handle
+const forwarded = ['getMappedRange', 'mapAsync', 'unmap'];
 
 function bufferSubData(device, destBuffer, destOffset, srcArrayBuffer) {
   const byteCount = srcArrayBuffer.byteLength;
@@ -68,6 +59,11 @@ function vtkWebGPUBuffer(publicAPI, model) {
     ); // memcpy
     model.handle.unmap();
   };
+
+  // simple forwarders
+  for (let i = 0; i < forwarded.length; i++) {
+    publicAPI[forwarded[i]] = (...args) => model.handle[forwarded[i]](...args);
+  }
 }
 
 // ----------------------------------------------------------------------------
@@ -109,4 +105,4 @@ export const newInstance = macro.newInstance(extend);
 
 // ----------------------------------------------------------------------------
 
-export default { newInstance, extend, ...STATIC, ...Constants };
+export default { newInstance, extend, ...Constants };

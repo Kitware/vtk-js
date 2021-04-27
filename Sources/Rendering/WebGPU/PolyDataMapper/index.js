@@ -27,8 +27,6 @@ const vtkWebGPUPolyDataVS = `
 
 //VTK::Mapper::UBO
 
-//VTK::VertexInput
-
 //VTK::PositionVC::Dec
 
 //VTK::Color::Dec
@@ -37,15 +35,19 @@ const vtkWebGPUPolyDataVS = `
 
 //VTK::TCoord::Dec
 
-[[builtin(position)]] var<out> Position : vec4<f32>;
-[[builtin(vertex_index)]] var<in> my_index: u32;
+//VTK::InputStruct::Dec
+
+//VTK::OutputStruct::Dec
 
 [[stage(vertex)]]
-fn main() -> void
+fn main(
+//VTK::InputStruct::Impl
+)
+//VTK::OutputStruct::Impl
 {
-  var vertex: vec4<f32> = vertexMC;
+  var output : vertexOutput;
 
-  //VTK::PositionVC::Impl
+  var vertex: vec4<f32> = vertexMC;
 
   //VTK::Color::Impl
 
@@ -53,8 +55,8 @@ fn main() -> void
 
   //VTK::TCoord::Impl
 
-  Position = rendererUBO.WCDCMatrix*vertexMC;
-  return;
+  output.Position = rendererUBO.WCPCMatrix*vertexMC;
+  return output;
 }
 `;
 
@@ -70,15 +72,20 @@ const vtkWebGPUPolyDataFS = `
 
 //VTK::TCoord::Dec
 
-//VTK::PositionVC::Dec
-
 //VTK::RenderEncoder::Dec
 
-[[builtin(front_facing)]] var<in> frontFacing : bool;
+//VTK::InputStruct::Dec
+
+//VTK::OutputStruct::Dec
 
 [[stage(fragment)]]
-fn main() -> void
+fn main(
+//VTK::InputStruct::Impl
+)
+//VTK::OutputStruct::Impl
 {
+  var output : fragmentOutput;
+
   var ambientColor: vec4<f32> = mapperUBO.AmbientColor;
   var diffuseColor: vec4<f32> = mapperUBO.DiffuseColor;
   var opacity: f32 = mapperUBO.Opacity;
@@ -101,6 +108,7 @@ fn main() -> void
   if (computedColor.a == 0.0) { discard; };
 
   //VTK::RenderEncoder::Impl
+  return output;
 }
 `;
 
@@ -172,6 +180,7 @@ function vtkWebGPUPolyDataMapper(publicAPI, model) {
         1.0,
       ]);
       model.UBO.setValue('Opacity', ppty.getOpacity());
+      model.UBO.setValue('PropID', model.WebGPUActor.getPropID());
 
       const device = model.WebGPURenderWindow.getDevice();
       model.UBO.sendIfNeeded(device, device.getMapperBindGroupLayout());
@@ -196,23 +205,21 @@ function vtkWebGPUPolyDataMapper(publicAPI, model) {
 
   publicAPI.generateShaderDescriptions = (hash, pipeline, vertexInput) => {
     // standard shader stuff most paths use
-    let code = vtkWebGPUPolyDataVS;
+    let code = model.vertexShaderTemplate;
     code = vtkWebGPUShaderCache.substitute(code, '//VTK::Renderer::UBO', [
       model.WebGPURenderer.getUBOCode(),
     ]).result;
     code = vtkWebGPUShaderCache.substitute(code, '//VTK::Mapper::UBO', [
       model.UBO.getShaderCode(),
     ]).result;
-    code = vtkWebGPUShaderCache.substitute(code, '//VTK::VertexInput', [
-      vertexInput.getShaderCode(),
-    ]).result;
     const vDesc = vtkWebGPUShaderDescription.newInstance({
       type: 'vertex',
       hash,
       code,
     });
+    vDesc.addBuiltinOutput('vec4<f32>', '[[builtin(position)]] Position');
 
-    code = vtkWebGPUPolyDataFS;
+    code = model.fragmentShaderTemplate;
     code = vtkWebGPUShaderCache.substitute(code, '//VTK::Renderer::UBO', [
       model.WebGPURenderer.getUBOCode(),
     ]).result;
@@ -225,6 +232,7 @@ function vtkWebGPUPolyDataMapper(publicAPI, model) {
       hash,
       code,
     });
+    fDesc.addBuiltinInput('bool', '[[builtin(front_facing)]] frontFacing');
 
     const sdrs = pipeline.getShaderDescriptions();
     sdrs.push(vDesc);
@@ -233,35 +241,42 @@ function vtkWebGPUPolyDataMapper(publicAPI, model) {
     // different things we deal with in building the shader code
     publicAPI.replaceShaderColor(hash, pipeline, vertexInput);
     publicAPI.replaceShaderNormal(hash, pipeline, vertexInput);
-    // publicAPI.replaceShaderLight(hash, pipeline);
+    publicAPI.replaceShaderLight(hash, pipeline, vertexInput);
     publicAPI.replaceShaderTCoord(hash, pipeline, vertexInput);
-    // publicAPI.replaceShaderPositionVC(hash, pipeline);
     model.renderEncoder.replaceShaderCode(pipeline);
+
+    // finally fill in the input and out blocks
+    vDesc.replaceShaderCode(null, vertexInput);
+    fDesc.replaceShaderCode(vDesc);
   };
 
   publicAPI.replaceShaderNormal = (hash, pipeline, vertexInput) => {
     if (vertexInput.hasAttribute('normalMC')) {
       const vDesc = pipeline.getShaderDescription('vertex');
+      vDesc.addOutput('vec3<f32>', 'normalVC');
       let code = vDesc.getCode();
-      code = vtkWebGPUShaderCache.substitute(code, '//VTK::Normal::Dec', [
-        vDesc.getOutputDeclaration('vec3<f32>', 'normalVC'),
-      ]).result;
-
       code = vtkWebGPUShaderCache.substitute(code, '//VTK::Normal::Impl', [
-        '  normalVC = (rendererUBO.WCVCNormals * normalMC).xyz;',
+        '  output.normalVC = (rendererUBO.WCVCNormals * normalMC).xyz;',
       ]).result;
       vDesc.setCode(code);
 
       const fDesc = pipeline.getShaderDescription('fragment');
       code = fDesc.getCode();
-
-      code = vtkWebGPUShaderCache.substitute(code, '//VTK::Normal::Dec', [
-        fDesc.getInputDeclaration(vDesc, 'normalVC'),
-      ]).result;
-
       code = vtkWebGPUShaderCache.substitute(code, '//VTK::Normal::Impl', [
-        '  var normal: vec3<f32> = normalVC;',
-        '  if (!frontFacing) { normal = -normal; }',
+        '  var normal: vec3<f32> = input.normalVC;',
+        '  if (!input.frontFacing) { normal = -normal; }',
+      ]).result;
+      fDesc.setCode(code);
+    }
+  };
+
+  // we only apply lighting when there is a "var normal" declaration in the
+  // fragment shader code. That is the lighting trigger.
+  publicAPI.replaceShaderLight = (hash, pipeline, vertexInput) => {
+    const fDesc = pipeline.getShaderDescription('fragment');
+    let code = fDesc.getCode();
+    if (code.includes('var normal')) {
+      code = vtkWebGPUShaderCache.substitute(code, '//VTK::Light::Impl', [
         '  var df: f32  = max(0.0, normal.z);',
         '  var sf: f32 = pow(df, mapperUBO.SpecularPower);',
         '  var diffuse: vec3<f32> = df * diffuseColor.rgb;',
@@ -269,9 +284,7 @@ function vtkWebGPUPolyDataMapper(publicAPI, model) {
       ]).result;
       fDesc.setCode(code);
     } else {
-      const fDesc = pipeline.getShaderDescription('fragment');
-      let code = fDesc.getCode();
-      code = vtkWebGPUShaderCache.substitute(code, '//VTK::Normal::Impl', [
+      code = vtkWebGPUShaderCache.substitute(code, '//VTK::Light::Impl', [
         '  var diffuse: vec3<f32> = diffuseColor.rgb;',
         '  var specular: vec3<f32> = mapperUBO.SpecularColor.rgb * mapperUBO.SpecularColor.a;',
       ]).result;
@@ -283,27 +296,19 @@ function vtkWebGPUPolyDataMapper(publicAPI, model) {
     if (!vertexInput.hasAttribute('colorVI')) return;
 
     const vDesc = pipeline.getShaderDescription('vertex');
-
+    vDesc.addOutput('vec4<f32>', 'color');
     let code = vDesc.getCode();
-    code = vtkWebGPUShaderCache.substitute(code, '//VTK::Color::Dec', [
-      vDesc.getOutputDeclaration('vec4<f32>', 'color'),
-    ]).result;
-
     code = vtkWebGPUShaderCache.substitute(code, '//VTK::Color::Impl', [
-      '  color = colorVI;',
+      '  output.color = colorVI;',
     ]).result;
     vDesc.setCode(code);
 
     const fDesc = pipeline.getShaderDescription('fragment');
     code = fDesc.getCode();
-    code = vtkWebGPUShaderCache.substitute(code, '//VTK::Color::Dec', [
-      fDesc.getInputDeclaration(vDesc, 'color'),
-    ]).result;
-
     code = vtkWebGPUShaderCache.substitute(code, '//VTK::Color::Impl', [
-      'ambientColor = color;',
-      'diffuseColor = color;',
-      'opacity = mapperUBO.Opacity*color.a;',
+      'ambientColor = input.color;',
+      'diffuseColor = input.color;',
+      'opacity = mapperUBO.Opacity * input.color.a;',
     ]).result;
     fDesc.setCode(code);
   };
@@ -312,20 +317,16 @@ function vtkWebGPUPolyDataMapper(publicAPI, model) {
     if (!vertexInput.hasAttribute('tcoord')) return;
 
     const vDesc = pipeline.getShaderDescription('vertex');
-
+    vDesc.addOutput('vec2<f32>', 'tcoordVS');
     let code = vDesc.getCode();
-    code = vtkWebGPUShaderCache.substitute(code, '//VTK::TCoord::Dec', [
-      vDesc.getOutputDeclaration('vec2<f32>', 'tcoordVS'),
-    ]).result;
-
     code = vtkWebGPUShaderCache.substitute(code, '//VTK::TCoord::Impl', [
-      '  tcoordVS = tcoord;',
+      '  output.tcoordVS = tcoord;',
     ]).result;
     vDesc.setCode(code);
 
     const fDesc = pipeline.getShaderDescription('fragment');
     code = fDesc.getCode();
-    const tcinput = [fDesc.getInputDeclaration(vDesc, 'tcoordVS')];
+    const tcinput = [];
 
     for (let t = 0; t < model.textures.length; t++) {
       const tcount = pipeline.getBindGroupLayoutCount(`Texture${t}`);
@@ -342,7 +343,7 @@ function vtkWebGPUPolyDataMapper(publicAPI, model) {
 
     if (model.textures.length) {
       code = vtkWebGPUShaderCache.substitute(code, '//VTK::TCoord::Impl', [
-        'var tcolor: vec4<f32> = textureSample(Texture0, Sampler0, tcoordVS);',
+        'var tcolor: vec4<f32> = textureSample(Texture0, Sampler0, input.tcoordVS);',
         'computedColor = computedColor*tcolor;',
       ]).result;
     }
@@ -459,6 +460,8 @@ function vtkWebGPUPolyDataMapper(publicAPI, model) {
       } else {
         vertexInput.removeBufferIfPresent('normalMC');
       }
+    } else {
+      vertexInput.removeBufferIfPresent('normalMC');
     }
 
     // deal with colors but only if modified
@@ -559,10 +562,14 @@ function vtkWebGPUPolyDataMapper(publicAPI, model) {
 
     for (let i = 0; i < newTextures.length; i++) {
       const srcTexture = newTextures[i];
-      const treq = {
-        source: srcTexture,
-        usage: 'vtk',
-      };
+      const treq = {};
+      if (srcTexture.getInputData()) {
+        treq.imageData = srcTexture.getInputData();
+        treq.source = treq.imageData;
+      } else if (srcTexture.getImage()) {
+        treq.image = srcTexture.getImage();
+        treq.source = treq.image;
+      }
       const newTex = model.device.getTextureManager().getTexture(treq);
       if (newTex.getReady()) {
         // is this a new texture
@@ -663,11 +670,19 @@ function vtkWebGPUPolyDataMapper(publicAPI, model) {
         const usage = publicAPI.getUsage(rep, i);
 
         const primHelper = model.primitives[i];
+
         publicAPI.buildVertexInput(model.currentInput, prims[i], i);
         const pipelineHash = publicAPI.computePipelineHash(
           primHelper.vertexInput,
           usage
         );
+
+        // default to one instance and computed number of verts
+        primHelper.numberOfInstances = 1;
+        const vbo = primHelper.vertexInput.getBuffer('vertexMC');
+        primHelper.numberOfVertices =
+          vbo.getSizeInBytes() / vbo.getStrideInBytes();
+
         let pipeline = device.getPipeline(pipelineHash);
 
         // build VBO for this primitive
@@ -723,13 +738,10 @@ const DEFAULT_VALUES = {
   textures: null,
   samplers: null,
   textureBindGroups: null,
-  VBOBuildTime: 0,
-  VBOBuildString: null,
   primitives: null,
   tmpMat4: null,
-  lightColor: [], // used internally
-  lightHalfAngle: [], // used internally
-  lightDirection: [], // used internally
+  fragmentShaderTemplate: null,
+  vertexShaderTemplate: null,
 };
 
 // ----------------------------------------------------------------------------
@@ -742,6 +754,11 @@ export function extend(publicAPI, model, initialValues = {}) {
 
   model.tmpMat3 = mat3.identity(new Float64Array(9));
   model.tmpMat4 = mat4.identity(new Float64Array(16));
+
+  model.fragmentShaderTemplate =
+    model.fragmentShaderTemplate || vtkWebGPUPolyDataFS;
+  model.vertexShaderTemplate =
+    model.vertexShaderTemplate || vtkWebGPUPolyDataVS;
 
   model.UBO = vtkWebGPUUniformBuffer.newInstance();
   model.UBO.setBinding(0);
@@ -756,6 +773,7 @@ export function extend(publicAPI, model, initialValues = {}) {
   model.UBO.addEntry('SpecularIntensity', 'f32');
   model.UBO.addEntry('Opacity', 'f32');
   model.UBO.addEntry('SpecularPower', 'f32');
+  model.UBO.addEntry('PropID', 'u32');
 
   //   [[offset(0)]] MCVCMatrix: mat4x4<f32>;
   //   [[offset(64)]] normalMatrix: mat4x4<f32>;
@@ -773,6 +791,7 @@ export function extend(publicAPI, model, initialValues = {}) {
       vertexInput: vtkWebGPUVertexInput.newInstance(),
     };
     const primHelper = model.primitives[i];
+
     model.primitives[i].renderForPipeline = (pipeline) => {
       const renderEncoder = model.WebGPURenderer.getRenderEncoder();
 
@@ -787,10 +806,9 @@ export function extend(publicAPI, model, initialValues = {}) {
 
       // bind the vertex input
       pipeline.bindVertexInput(renderEncoder, primHelper.vertexInput);
-      const vbo = primHelper.vertexInput.getBuffer('vertexMC');
       renderEncoder.draw(
-        vbo.getSizeInBytes() / vbo.getStrideInBytes(),
-        1,
+        primHelper.numberOfVertices,
+        primHelper.numberOfInstances,
         0,
         0
       );
@@ -798,10 +816,13 @@ export function extend(publicAPI, model, initialValues = {}) {
   }
 
   // Build VTK API
-  macro.setGet(publicAPI, model, ['context', 'renderEncoder', 'UBO']);
-
-  model.VBOBuildTime = {};
-  macro.obj(model.VBOBuildTime, { mtime: 0 });
+  macro.setGet(publicAPI, model, [
+    'context',
+    'fragmentShaderTemplate',
+    'vertexShaderTemplate',
+    'renderEncoder',
+    'UBO',
+  ]);
 
   // Object methods
   vtkWebGPUPolyDataMapper(publicAPI, model);

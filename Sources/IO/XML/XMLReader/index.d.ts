@@ -19,12 +19,12 @@ interface IRet {
 interface IXMLReaderInitialValues { }
 
 type vtkXMLReaderBase = VtkObject & Omit<VtkAlgorithm,
-	'getInputData' |
-	'setInputData' |
-	'setInputConnection' |
-	'getInputConnection' |
-	'addInputConnection' |
-	'addInputData'>;
+	| 'getInputData'
+	| 'setInputData'
+	| 'setInputConnection'
+	| 'getInputConnection'
+	| 'addInputConnection'
+	| 'addInputData'>;
 
 export interface vtkXMLReader extends vtkXMLReaderBase {
 
@@ -75,8 +75,8 @@ export interface vtkXMLReader extends vtkXMLReaderBase {
 
 	/**
 	 * Set the url of the object to load.
-	 * @param {String} [url] the url of the object to load.
-	 * @param {IXMLReaderOptions} option The XML reader options.
+	 * @param {String} url the url of the object to load.
+	 * @param {IXMLReaderOptions} [option] The XML reader options.
 	 */
 	setUrl(url: string, option?: IXMLReaderOptions): boolean;
 

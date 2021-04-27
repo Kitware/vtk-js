@@ -1,4 +1,5 @@
 import macro from 'vtk.js/Sources/macro';
+import vtkWebGPUShaderCache from 'vtk.js/Sources/Rendering/WebGPU/ShaderCache';
 
 // ----------------------------------------------------------------------------
 // vtkWebGPUShaderDescription methods
@@ -10,22 +11,91 @@ function vtkWebGPUShaderDescription(publicAPI, model) {
   // Set our className
   model.classHierarchy.push('vtkWebGPUShaderDescription');
 
-  publicAPI.getOutputDeclaration = (type, name) => {
-    const result = `[[location(${model.outputNames.length})]] var<out> ${name} : ${type};`;
+  publicAPI.hasOutput = (name) => model.outputNames.includes(name);
+
+  publicAPI.addOutput = (type, name) => {
     model.outputTypes.push(type);
     model.outputNames.push(name);
-    return result;
   };
 
-  publicAPI.getInputDeclaration = (sDesc, name) => {
-    const outputNames = sDesc.getOutputNamesByReference();
-    for (let i = 0; i < outputNames.length; i++) {
-      if (outputNames[i] === name) {
-        const outputTypes = sDesc.getOutputTypesByReference();
-        return `[[location(${i})]] var<in> ${name} : ${outputTypes[i]};`;
+  publicAPI.addBuiltinOutput = (type, name) => {
+    model.builtinOutputTypes.push(type);
+    model.builtinOutputNames.push(name);
+  };
+
+  publicAPI.addBuiltinInput = (type, name) => {
+    model.builtinInputTypes.push(type);
+    model.builtinInputNames.push(name);
+  };
+
+  // perform shader replacements for the input and outputs
+  // of this shader. That includes vertex inputs if specified
+  publicAPI.replaceShaderCode = (priorStage, vertexInput) => {
+    const inputImpl = [];
+    if (vertexInput) {
+      inputImpl.push(vertexInput.getShaderCode());
+    }
+    if (priorStage || model.builtinInputNames.length) {
+      const inputStruct = [];
+      inputStruct.push(`struct ${model.type}Input\n{`);
+      if (priorStage) {
+        const inputNames = priorStage.getOutputNamesByReference();
+        const inputTypes = priorStage.getOutputTypesByReference();
+        for (let i = 0; i < inputNames.length; i++) {
+          inputStruct.push(
+            `  [[location(${i})]] ${inputNames[i]} : ${inputTypes[i]};`
+          );
+        }
+      }
+      for (let i = 0; i < model.builtinInputNames.length; i++) {
+        inputStruct.push(
+          `  ${model.builtinInputNames[i]} : ${model.builtinInputTypes[i]};`
+        );
+      }
+      if (inputStruct.length > 1) {
+        inputStruct.push('};');
+        model.code = vtkWebGPUShaderCache.substitute(
+          model.code,
+          '//VTK::InputStruct::Dec',
+          inputStruct
+        ).result;
+        inputImpl[inputImpl.length - 1] += ',';
+        inputImpl.push(`input: ${model.type}Input`);
       }
     }
-    return null;
+    if (inputImpl.length) {
+      model.code = vtkWebGPUShaderCache.substitute(
+        model.code,
+        '//VTK::InputStruct::Impl',
+        inputImpl
+      ).result;
+    }
+
+    if (model.outputNames.length + model.builtinOutputNames.length) {
+      const outputStruct = [`struct ${model.type}Output\n{`];
+      for (let i = 0; i < model.outputNames.length; i++) {
+        outputStruct.push(
+          `  [[location(${i})]] ${model.outputNames[i]} : ${model.outputTypes[i]};`
+        );
+      }
+      for (let i = 0; i < model.builtinOutputNames.length; i++) {
+        outputStruct.push(
+          `  ${model.builtinOutputNames[i]} : ${model.builtinOutputTypes[i]};`
+        );
+      }
+      outputStruct.push('};');
+      model.code = vtkWebGPUShaderCache.substitute(
+        model.code,
+        '//VTK::OutputStruct::Dec',
+        outputStruct
+      ).result;
+
+      model.code = vtkWebGPUShaderCache.substitute(
+        model.code,
+        '//VTK::OutputStruct::Impl',
+        [`-> ${model.type}Output`]
+      ).result;
+    }
   };
 }
 
@@ -48,6 +118,10 @@ export function extend(publicAPI, model, initialValues = {}) {
 
   model.outputNames = [];
   model.outputTypes = [];
+  model.builtinOutputNames = [];
+  model.builtinOutputTypes = [];
+  model.builtinInputNames = [];
+  model.builtinInputTypes = [];
 
   // Build VTK API
   macro.obj(publicAPI, model);

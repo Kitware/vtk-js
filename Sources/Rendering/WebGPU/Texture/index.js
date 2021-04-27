@@ -21,6 +21,7 @@ function vtkWebGPUTexture(publicAPI, model) {
     model.width = options.width;
     model.height = options.height;
     model.depth = options.depth ? options.depth : 1;
+    const dimension = model.depth === 1 ? '2d' : '3d';
     model.format = options.format ? options.format : 'rgbaunorm';
     /* eslint-disable no-undef */
     /* eslint-disable no-bitwise */
@@ -33,6 +34,7 @@ function vtkWebGPUTexture(publicAPI, model) {
       size: [model.width, model.height, model.depth],
       format: model.format, // 'rgba8unorm',
       usage: model.usage,
+      dimension,
     });
   };
 
@@ -57,9 +59,13 @@ function vtkWebGPUTexture(publicAPI, model) {
     if (req.dataArray) {
       // create and write the buffer
       // todo specify a source
+      // todo bytesPerRow must be a multiple of 256 so
+      // we might need to rebuild the data here before passing to the
+      // buffer. If it is unorm8x4 then we need to have width be
+      // a multiple of 64
       const buffRequest = {
-        dataArray: req.dataArray.getPointData().getScalars(),
-        time: req.dataArray.getPointData().getScalars().getMTime(),
+        dataArray: req.dataArray,
+        time: req.dataArray.getMTime(),
         /* eslint-disable no-undef */
         usage: BufferUsage.Texture,
         /* eslint-enable no-undef */
@@ -67,7 +73,9 @@ function vtkWebGPUTexture(publicAPI, model) {
       };
       const buff = model.device.getBufferManager().getBuffer(buffRequest);
       model.buffer = buff;
-    } else {
+    }
+
+    if (req.image) {
       const canvas = document.createElement('canvas');
       canvas.width = req.image.width;
       canvas.height = req.image.height;
@@ -94,7 +102,7 @@ function vtkWebGPUTexture(publicAPI, model) {
 
       // create and write the buffer
       const buffRequest = {
-        address: imageData.data,
+        nativeArray: imageData.data,
         time: 0,
         /* eslint-disable no-undef */
         usage: BufferUsage.Texture,
@@ -130,6 +138,23 @@ function vtkWebGPUTexture(publicAPI, model) {
       model.width = tex.getWidth();
       model.height = tex.getHeight();
       model.depth = tex.getDepth();
+      model.handle = model.device.getHandle().createTexture({
+        size: [model.width, model.height, model.depth],
+        format: model.format,
+        usage: model.usage,
+      });
+    }
+  };
+
+  publicAPI.resize = (width, height, depth = 1) => {
+    if (
+      width !== model.width ||
+      height !== model.height ||
+      depth !== model.depth
+    ) {
+      model.width = width;
+      model.height = height;
+      model.depth = depth;
       model.handle = model.device.getHandle().createTexture({
         size: [model.width, model.height, model.depth],
         format: model.format,

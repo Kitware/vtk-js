@@ -83,9 +83,9 @@ export interface vtkImageProperty extends VtkObject {
 
 	/**
 	 * Get the currently set RGB transfer function.
-	 * @param idx 
+	 * @param {Number} idx
 	 */
-	getRGBTransferFunction(idx: any): void;
+	getRGBTransferFunction(idx: number): any;
 
 	/**
 	 * Alias to get the piecewise function (backwards compatibility)

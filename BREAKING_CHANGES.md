@@ -1,3 +1,59 @@
+## From 16.x to 17
+
+vtkBoundingBox has been redesigned to be more light weight with static methods.
+A simple class has been created for backward compatibility.
+
+## From 15.x to 16
+
+Deprecation of kw-web-suite and using a newer version of webpack for building vtk.js.
+
+## From 14.x to 15
+
+Semantic release messed up?
+
+## From 13.x to 14
+
+css-loader update means we need to change how css modules are
+configured.
+
+## From 12.x to 13
+
+manipulators: No breaking changes internally. But the CompositeMouseManipulator no longer
+receives key down and key up events. I don't know of anything that this could break, but it might.
+
+## From 11.x to 12
+
+Manipulators: manipulator lists are now actually modified by removing
+the manipulator from the list of manipulators, and not just replacing them
+by null value for a certain index. This affects the resulting size of the
+manipulator list, and users should not rely on an index that needed to
+remain constant. Getters were also removed.
+
+## From 10.x to 11
+
+vtkPlane: return result is changed if the line intersects the plane but outside of the
+provided points. Previously would return intersect:false, but now intersect:true and
+betweenPoints:false
+
+## From 9.x to 10
+
+PiecewiseGaussianWidget: The optional arguments of setDataArray have been gathered inside a single options
+object since we added to that list component and numberOfComponents
+
+## From 8.x to 9
+
+MatrixBuilder: Remove getVTKMatrix function as it had a side-effect, was poorly named, and was not
+referenced anywhere else. If the user wants to transpose the matrix, they can do it after calling
+getMatrix()
+
+## From 7.x to 8
+
+ToolChain: Webpack rules may differ with babel 7
+
+## From 6.x to 7
+
+RenderWindow: OpenGL/RenderWindow::captureNextImage returns a promise with the imageURL instead of returing it
+directly. Core/RenderWindow::captureImages returns an array of promise.
 ## From 5.x to 6
 
 This switch focuses on simplifying the interactor observers, and forwarding events data to the callbacks:
@@ -25,7 +81,7 @@ Add more consistency in Readers
 - Affected readers:
   - STLReader
   - Legacy/PolyDataReader
-  - ElevationReader 
+  - ElevationReader
   - MTLReader
   - OBJReader
   - PDBReader
@@ -97,7 +153,3 @@ const coordsAsTypedArray = dataArray.getData();
 ### vtk()
 
 Serialization model changed from { type: 'vtkPolyData', ... } to { vtkClass: 'vtkPolyData', ... }.
-
-
-
-

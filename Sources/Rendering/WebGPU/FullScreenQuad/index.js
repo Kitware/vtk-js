@@ -7,19 +7,20 @@ import vtkWebGPUVertexInput from 'vtk.js/Sources/Rendering/WebGPU/VertexInput';
 import vtkViewNode from 'vtk.js/Sources/Rendering/SceneGraph/ViewNode';
 
 const vtkWebGPUFSQVS = `
-//VTK::VertexInput
-
 //VTK::TCoord::Dec
 
-[[builtin(position)]] var<out> Position : vec4<f32>;
-[[builtin(vertex_index)]] var<in> my_index: u32;
+//VTK::OutputStruct::Dec
 
 [[stage(vertex)]]
-fn main() -> void
+fn main(
+//VTK::InputStruct::Impl
+)
+//VTK::OutputStruct::Impl
 {
-  Position = vec4<f32>(vertexMC, 1.0);
-  tcoordVS = vec2<f32>(vertexMC.x * 0.5 + 0.5, 1.0 - vertexMC.y * 0.5 - 0.5);
-  return;
+  var output: vertexOutput;
+  output.tcoordVS = vec2<f32>(vertexMC.x * 0.5 + 0.5, 1.0 - vertexMC.y * 0.5 - 0.5);
+  output.Position = vec4<f32>(vertexMC, 1.0);
+  return output;
 }
 `;
 
@@ -29,10 +30,19 @@ const vtkWebGPUFSQFS = `
 
 //VTK::RenderEncoder::Dec
 
+//VTK::InputStruct::Dec
+
+//VTK::OutputStruct::Dec
+
 [[stage(fragment)]]
-fn main() -> void
+fn main(
+//VTK::InputStruct::Impl
+)
+//VTK::OutputStruct::Impl
 {
-  var computedColor: vec4<f32> = textureSample(Texture0, Sampler0, tcoordVS);
+  var output: fragmentOutput;
+
+  var computedColor: vec4<f32> = textureSample(Texture0, Sampler0, input.tcoordVS);
 
   //VTK::RenderEncoder::Impl
 }
@@ -49,14 +59,12 @@ function vtkWebGPUFullScreenQuad(publicAPI, model) {
   publicAPI.generateShaderDescriptions = (hash, pipeline, vertexInput) => {
     // standard shader stuff most paths use
     let code = model.vertexShaderTemplate;
-    code = vtkWebGPUShaderCache.substitute(code, '//VTK::VertexInput', [
-      vertexInput.getShaderCode(),
-    ]).result;
     const vDesc = vtkWebGPUShaderDescription.newInstance({
       type: 'vertex',
       hash,
       code,
     });
+    vDesc.addBuiltinOutput('vec4<f32>', '[[builtin(position)]] Position');
 
     code = model.fragmentShaderTemplate;
     const fDesc = vtkWebGPUShaderDescription.newInstance({
@@ -71,20 +79,20 @@ function vtkWebGPUFullScreenQuad(publicAPI, model) {
 
     // different things we deal with in building the shader code
     publicAPI.replaceShaderTCoord(hash, pipeline, vertexInput);
+    model.renderEncoder.replaceShaderCode(pipeline);
+
+    // finally fill in the input and out blocks
+    vDesc.replaceShaderCode(null, vertexInput);
+    fDesc.replaceShaderCode(vDesc);
   };
 
   publicAPI.replaceShaderTCoord = (hash, pipeline, vertexInput) => {
     const vDesc = pipeline.getShaderDescription('vertex');
-
-    let code = vDesc.getCode();
-    code = vtkWebGPUShaderCache.substitute(code, '//VTK::TCoord::Dec', [
-      vDesc.getOutputDeclaration('vec2<f32>', 'tcoordVS'),
-    ]).result;
-    vDesc.setCode(code);
+    vDesc.addOutput('vec2<f32>', 'tcoordVS');
 
     const fDesc = pipeline.getShaderDescription('fragment');
-    code = fDesc.getCode();
-    const tcinput = [fDesc.getInputDeclaration(vDesc, 'tcoordVS')];
+    let code = fDesc.getCode();
+    const tcinput = [];
 
     for (let t = 0; t < model.views.length; t++) {
       const tcount = pipeline.getBindGroupLayoutCount(`Texture${t}`);
@@ -161,6 +169,7 @@ function vtkWebGPUFullScreenQuad(publicAPI, model) {
     // handle per primitive type
     const primHelper = model.triangles;
     const vertexInput = model.triangles.vertexInput;
+    model.renderEncoder = renderEncoder;
 
     const buff = device.getBufferManager().getFullScreenQuadBuffer();
     vertexInput.addBuffer(buff, ['vertexMC']);
@@ -185,7 +194,6 @@ function vtkWebGPUFullScreenQuad(publicAPI, model) {
         pipeline,
         primHelper.vertexInput
       );
-      renderEncoder.replaceShaderCode(pipeline);
       pipeline.setTopology('triangle-list');
       pipeline.setRenderEncoder(renderEncoder);
       pipeline.setVertexState(
@@ -249,8 +257,8 @@ export function extend(publicAPI, model, initialValues = {}) {
     vertexInput: vtkWebGPUVertexInput.newInstance(),
   };
 
-  model.fragmentShaderTemplate = vtkWebGPUFSQFS;
-  model.vertexShaderTemplate = vtkWebGPUFSQVS;
+  model.fragmentShaderTemplate = model.fragmentShaderTemplate || vtkWebGPUFSQFS;
+  model.vertexShaderTemplate = model.vertexShaderTemplate || vtkWebGPUFSQVS;
 
   // Build VTK API
   macro.setGet(publicAPI, model, [

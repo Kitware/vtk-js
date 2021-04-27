@@ -13,12 +13,12 @@ interface IDracoReaderOptions {
 interface IDracoReaderInitialValues { }
 
 type vtkDracoReaderBase = VtkObject & Omit<VtkAlgorithm,
-	'getInputData' |
-	'setInputData' |
-	'setInputConnection' |
-	'getInputConnection' |
-	'addInputConnection' |
-	'addInputData'>;
+	| 'getInputData'
+	| 'setInputData'
+	| 'setInputConnection'
+	| 'getInputConnection'
+	| 'addInputConnection'
+	| 'addInputData'>;
 
 export interface vtkDracoReader extends vtkDracoReaderBase {
 
@@ -69,8 +69,8 @@ export interface vtkDracoReader extends vtkDracoReaderBase {
 
 	/**
 	 * Set the url of the object to load.
-	 * @param {String} [url] the url of the object to load.
-	 * @param {IDracoReaderOptions} option The Draco reader options.
+	 * @param {String} url the url of the object to load.
+	 * @param {IDracoReaderOptions} [option] The Draco reader options.
 	 */
 	setUrl(url: string, option?: IDracoReaderOptions): boolean;
 

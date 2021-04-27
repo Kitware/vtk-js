@@ -1,5 +1,16 @@
 import vtkActor from 'vtk.js/Sources/Rendering/Core/Actor';
-import vtkProperty from 'vtk.js/Sources/Rendering/Core/Property';
+
+export interface IFaceProperty {
+	text?: string;
+	faceColor?: string;
+	faceRotation?: number;
+	fontFamily?: string;
+	fontColor?: string;
+	fontStyle?: string;
+	fontSizeScale?: (res: number) => number;
+	edgeThickness?: number;
+	edgeColor?: string;
+}
 
 /**
  * 
@@ -11,51 +22,44 @@ export interface vtkAnnotatedCubeActor extends vtkActor {
 	/**
 	 * Set the default style.
 	 * @param style
-	 * @return 
 	 */
 	setDefaultStyle(style: any): boolean;
 
 	/**
 	 * The +X face property.
-	 * @param {vtkProperty} prop face property
-	 * @return 
+	 * @param {IFaceProperty} prop +X face property
 	 */
-	setXPlusFaceProperty(prop: object): boolean;
+	setXPlusFaceProperty(prop: IFaceProperty): boolean;
 
 	/**
 	 * The -X face property.
-	 * @param {vtkProperty} prop face property
-	 * @return 
+	 * @param {IFaceProperty} prop -X  face property
 	 */
-	setXMinusFaceProperty(prop: object): boolean;
+	setXMinusFaceProperty(prop: IFaceProperty): boolean;
 
 	/**
 	 * The +Y face property.
-	 * @param {vtkProperty} prop face property
-	 * @return 
+	 * @param {IFaceProperty} prop +Y face property
 	 */
-	setYPlusFaceProperty(prop: object): boolean;
+	setYPlusFaceProperty(prop: IFaceProperty): boolean;
 
 	/**
 	 * The -Y face property.
-	 * @param {vtkProperty} prop face property
-	 * @return 
+	 * @param {IFaceProperty} prop -Y ace property
 	 */
-	setYMinusFaceProperty(prop: object): boolean;
+	setYMinusFaceProperty(prop: IFaceProperty): boolean;
 
 	/**
 	 * The +Z face property.
-	 * @param {vtkProperty} prop face property
-	 * @return 
+	 * @param {IFaceProperty} prop +Z face property
 	 */
-	setZPlusFaceProperty(prop: object): boolean;
+	setZPlusFaceProperty(prop: IFaceProperty): boolean;
 
 	/**
 	 * The -Z face property.
-	 * @param {vtkProperty} prop face property
-	 * @return 
+	 * @param {IFaceProperty} prop -Z face property
 	 */
-	setZMinusFaceProperty(prop: object): boolean;
+	setZMinusFaceProperty(prop: IFaceProperty): boolean;
 }
 
 /**
