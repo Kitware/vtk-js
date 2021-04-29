@@ -399,7 +399,7 @@ function vtkWebGPUBufferManager(publicAPI, model) {
     }
 
     // if a dataArray is provided set the nativeArray
-    if (req.dataArray) {
+    if (req.dataArray && !req.nativeArray) {
       req.nativeArray = req.dataArray.getData();
     }
 
@@ -415,6 +415,14 @@ function vtkWebGPUBufferManager(publicAPI, model) {
     if (req.usage === BufferUsage.UniformArray) {
       /* eslint-disable no-bitwise */
       gpuUsage = GPUBufferUsage.UNIFORM | GPUBufferUsage.COPY_DST;
+      /* eslint-enable no-bitwise */
+      buffer.createAndWrite(req.nativeArray, gpuUsage);
+    }
+
+    // handle storage buffers
+    if (req.usage === BufferUsage.Storage) {
+      /* eslint-disable no-bitwise */
+      gpuUsage = GPUBufferUsage.STORAGE | GPUBufferUsage.COPY_DST;
       /* eslint-enable no-bitwise */
       buffer.createAndWrite(req.nativeArray, gpuUsage);
     }

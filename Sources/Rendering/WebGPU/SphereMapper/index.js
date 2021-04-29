@@ -9,21 +9,19 @@ const { BufferUsage, PrimitiveTypes } = vtkWebGPUBufferManager;
 const { vtkErrorMacro } = macro;
 
 const vtkWebGPUSphereMapperVS = `
-//VTK::Renderer::UBO
+//VTK::Renderer::Dec
 
-//VTK::Mapper::UBO
+//VTK::Mapper::Dec
 
 //VTK::Color::Dec
 
-//VTK::InputStruct::Dec
-
-//VTK::OutputStruct::Dec
+//VTK::IOStructs::Dec
 
 [[stage(vertex)]]
 fn main(
-//VTK::InputStruct::Impl
+//VTK::IOStructs::Input
 )
-//VTK::OutputStruct::Impl
+//VTK::IOStructs::Output
 {
   var output : vertexOutput;
 
@@ -52,7 +50,9 @@ fn main(
     }
 
   output.vertexVC = vertexVC.xyz;
-  output.Position = rendererUBO.VCPCMatrix*vertexVC;
+
+  //VTK::Position::Impl
+
   return output;
 }
 `;
@@ -124,6 +124,16 @@ function vtkWebGPUSphereMapper(publicAPI, model) {
       sphereFrag,
     ]).result;
     fDesc.setCode(code);
+  };
+
+  publicAPI.replaceShaderPosition = (hash, pipeline, vertexInput) => {
+    const vDesc = pipeline.getShaderDescription('vertex');
+    vDesc.addBuiltinOutput('vec4<f32>', '[[builtin(position)]] Position');
+    let code = vDesc.getCode();
+    code = vtkWebGPUShaderCache.substitute(code, '//VTK::Position::Impl', [
+      '  output.Position = rendererUBO.VCPCMatrix*vertexVC;',
+    ]).result;
+    vDesc.setCode(code);
   };
 
   // compute a unique hash for a pipeline, this needs to be unique enough to

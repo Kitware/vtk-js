@@ -32,6 +32,7 @@ function vtkWebGPUShaderDescription(publicAPI, model) {
   // of this shader. That includes vertex inputs if specified
   publicAPI.replaceShaderCode = (priorStage, vertexInput) => {
     const inputImpl = [];
+    let iodec = [];
     if (vertexInput) {
       inputImpl.push(vertexInput.getShaderCode());
     }
@@ -54,11 +55,7 @@ function vtkWebGPUShaderDescription(publicAPI, model) {
       }
       if (inputStruct.length > 1) {
         inputStruct.push('};');
-        model.code = vtkWebGPUShaderCache.substitute(
-          model.code,
-          '//VTK::InputStruct::Dec',
-          inputStruct
-        ).result;
+        iodec = inputStruct;
         inputImpl[inputImpl.length - 1] += ',';
         inputImpl.push(`input: ${model.type}Input`);
       }
@@ -66,7 +63,7 @@ function vtkWebGPUShaderDescription(publicAPI, model) {
     if (inputImpl.length) {
       model.code = vtkWebGPUShaderCache.substitute(
         model.code,
-        '//VTK::InputStruct::Impl',
+        '//VTK::IOStructs::Input',
         inputImpl
       ).result;
     }
@@ -84,18 +81,19 @@ function vtkWebGPUShaderDescription(publicAPI, model) {
         );
       }
       outputStruct.push('};');
+      iodec = iodec.concat(outputStruct);
       model.code = vtkWebGPUShaderCache.substitute(
         model.code,
-        '//VTK::OutputStruct::Dec',
-        outputStruct
-      ).result;
-
-      model.code = vtkWebGPUShaderCache.substitute(
-        model.code,
-        '//VTK::OutputStruct::Impl',
+        '//VTK::IOStructs::Output',
         [`-> ${model.type}Output`]
       ).result;
     }
+
+    model.code = vtkWebGPUShaderCache.substitute(
+      model.code,
+      '//VTK::IOStructs::Dec',
+      iodec
+    ).result;
   };
 }
 

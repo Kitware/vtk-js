@@ -29,21 +29,19 @@ const { vtkErrorMacro } = macro;
 // 5: 111
 
 const vtkWebGPUStickMapperVS = `
-//VTK::Renderer::UBO
+//VTK::Renderer::Dec
 
-//VTK::Mapper::UBO
+//VTK::Mapper::Dec
 
 //VTK::Color::Dec
 
-//VTK::InputStruct::Dec
-
-//VTK::OutputStruct::Dec
+//VTK::IOStructs::Dec
 
 [[stage(vertex)]]
 fn main(
-//VTK::InputStruct::Impl
+//VTK::IOStructs::Input
 )
-//VTK::OutputStruct::Impl
+//VTK::IOStructs::Output
 {
   let offsetsArray: array<vec3<f32>, 12> = array<vec3<f32>, 12>(
     vec3<f32>(-1.0, -1.0, -1.0),
@@ -110,7 +108,9 @@ fn main(
     0.5 * output.lengthVC * offsets.z * output.orientVC, 1.0);
 
   output.vertexVC = vertexVC;
-  output.Position = rendererUBO.VCPCMatrix*vertexVC;
+
+  //VTK::Position::Impl
+
   return output;
 }
 `;
@@ -223,6 +223,16 @@ function vtkWebGPUStickMapper(publicAPI, model) {
       stickFrag,
     ]).result;
     fDesc.setCode(code);
+  };
+
+  publicAPI.replaceShaderPosition = (hash, pipeline, vertexInput) => {
+    const vDesc = pipeline.getShaderDescription('vertex');
+    vDesc.addBuiltinOutput('vec4<f32>', '[[builtin(position)]] Position');
+    let code = vDesc.getCode();
+    code = vtkWebGPUShaderCache.substitute(code, '//VTK::Position::Impl', [
+      '  output.Position = rendererUBO.VCPCMatrix*vertexVC;',
+    ]).result;
+    vDesc.setCode(code);
   };
 
   // compute a unique hash for a pipeline, this needs to be unique enough to

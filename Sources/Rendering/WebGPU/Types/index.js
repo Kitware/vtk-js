@@ -67,6 +67,30 @@ function getNativeTypeFromBufferFormat(format) {
   return result;
 }
 
+function getShaderTypeFromBufferFormat(format) {
+  let dataType;
+  if (format[0] === 'f' || format[1] === 'n') {
+    dataType = 'f32';
+  } else if (format[0] === 's' && format[1] === 'i') {
+    dataType = 'i32';
+  } else if (format[0] === 'u' && format[1] === 'i') {
+    dataType = 'u32';
+  } else {
+    vtkErrorMacro(`unknown format ${format}`);
+    return undefined;
+  }
+
+  // options are x2, x3, x4 or nothing
+  let numComp = 1;
+  if (format[format.length - 2] === 'x') {
+    numComp = Number(format[format.length - 1]);
+  }
+  if (numComp === 4) return `vec4<${dataType}>`;
+  if (numComp === 3) return `vec3<${dataType}>`;
+  if (numComp === 2) return `vec2<${dataType}>`;
+  return dataType;
+}
+
 function getByteStrideFromShaderFormat(format) {
   if (!format) return 0;
   let numComp = 1;
@@ -93,6 +117,7 @@ function getNativeTypeFromShaderFormat(format) {
 export default {
   getByteStrideFromBufferFormat,
   getNativeTypeFromBufferFormat,
+  getShaderTypeFromBufferFormat,
   getByteStrideFromShaderFormat,
   getNativeTypeFromShaderFormat,
 };

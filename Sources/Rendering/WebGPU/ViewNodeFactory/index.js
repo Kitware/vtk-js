@@ -3,7 +3,7 @@ import macro from 'vtk.js/Sources/macro';
 import vtkWebGPUActor from 'vtk.js/Sources/Rendering/WebGPU/Actor';
 // import vtkWebGPUActor2D from 'vtk.js/Sources/Rendering/WebGPU/Actor2D';
 import vtkWebGPUCamera from 'vtk.js/Sources/Rendering/WebGPU/Camera';
-// import vtkWebGPUGlyph3DMapper from 'vtk.js/Sources/Rendering/WebGPU/Glyph3DMapper';
+import vtkWebGPUGlyph3DMapper from 'vtk.js/Sources/Rendering/WebGPU/Glyph3DMapper';
 // import vtkWebGPUImageMapper from 'vtk.js/Sources/Rendering/WebGPU/ImageMapper';
 // import vtkWebGPUImageSlice from 'vtk.js/Sources/Rendering/WebGPU/ImageSlice';
 import vtkWebGPUPixelSpaceCallbackMapper from 'vtk.js/Sources/Rendering/WebGPU/PixelSpaceCallbackMapper';
@@ -46,10 +46,10 @@ export function extend(publicAPI, model, initialValues = {}) {
   publicAPI.registerOverride('vtkActor', vtkWebGPUActor.newInstance);
   // publicAPI.registerOverride('vtkActor2D', vtkWebGPUActor2D.newInstance);
   publicAPI.registerOverride('vtkCamera', vtkWebGPUCamera.newInstance);
-  // publicAPI.registerOverride(
-  //   'vtkGlyph3DMapper',
-  //   vtkWebGPUGlyph3DMapper.newInstance
-  // );
+  publicAPI.registerOverride(
+    'vtkGlyph3DMapper',
+    vtkWebGPUGlyph3DMapper.newInstance
+  );
   // publicAPI.registerOverride(
   //   'vtkImageMapper',
   //   vtkWebGPUImageMapper.newInstance

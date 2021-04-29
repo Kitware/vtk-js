@@ -70,6 +70,30 @@ function vtkWebGPUDevice(publicAPI, model) {
     return model.mapperBindGroupLayout;
   };
 
+  publicAPI.getStorageBindGroupLayout = () => {
+    if (!model.storageBindGroupLayout) {
+      const descriptor = {
+        entries: [
+          {
+            binding: 0,
+            /* eslint-disable no-undef */
+            visibility: GPUShaderStage.VERTEX | GPUShaderStage.FRAGMENT,
+            /* eslint-enable no-undef */
+            buffer: {
+              type: 'read-only-storage',
+              hasDynamicOffset: false,
+              minBindingSize: 0,
+            },
+          },
+        ],
+      };
+      model.storageBindGroupLayout = model.handle.createBindGroupLayout(
+        descriptor
+      );
+    }
+    return model.storageBindGroupLayout;
+  };
+
   publicAPI.getSamplerBindGroupLayout = () => {
     if (!model.samplerBindGroupLayout) {
       const descriptor = {
@@ -151,6 +175,7 @@ const DEFAULT_VALUES = {
   rendererBindGroupLayout: null,
   mapperBindGroupLayout: null,
   samplerBindGroupLayout: null,
+  storageBindGroupLayout: null,
   textureBindGroupLayout: null,
   bufferManager: null,
   textureManager: null,

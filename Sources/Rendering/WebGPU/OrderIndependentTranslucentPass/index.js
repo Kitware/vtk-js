@@ -12,15 +12,13 @@ const oitpFragTemplate = `
 
 //VTK::RenderEncoder::Dec
 
-//VTK::InputStruct::Dec
-
-//VTK::OutputStruct::Dec
+//VTK::IOStructs::Dec
 
 [[stage(fragment)]]
 fn main(
-//VTK::InputStruct::Impl
+//VTK::IOStructs::Input
 )
-//VTK::OutputStruct::Impl
+//VTK::IOStructs::Output
 {
   var output: fragmentOutput;
 

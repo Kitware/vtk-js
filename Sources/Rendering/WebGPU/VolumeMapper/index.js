@@ -19,21 +19,19 @@ import { InterpolationType } from 'vtk.js/Sources/Rendering/Core/VolumeProperty/
 // import { BlendMode } from 'vtk.js/Sources/Rendering/Core/VolumeMapper/Constants';
 
 const vtkWebGPUVolumeVS = `
-//VTK::Renderer::UBO
+//VTK::Renderer::Dec
 
-//VTK::Mapper::UBO
+//VTK::Mapper::Dec
 
 //VTK::TCoord::Dec
 
-//VTK::InputStruct::Dec
-
-//VTK::OutputStruct::Dec
+//VTK::IOStructs::Dec
 
 [[stage(vertex)]]
 fn main(
-//VTK::InputStruct::Impl
+//VTK::IOStructs::Input
 )
-//VTK::OutputStruct::Impl
+//VTK::IOStructs::Output
 {
   var output : vertexOutput;
   // position is the device coords reduced to the
@@ -55,17 +53,15 @@ fn main(
 `;
 
 const vtkWebGPUVolumeFS = `
-//VTK::Renderer::UBO
+//VTK::Renderer::Dec
 
-//VTK::Mapper::UBO
+//VTK::Mapper::Dec
 
 //VTK::TCoord::Dec
 
 //VTK::RenderEncoder::Dec
 
-//VTK::InputStruct::Dec
-
-//VTK::OutputStruct::Dec
+//VTK::IOStructs::Dec
 
 //=======================================================================
 // Compute a new start and end point for a given ray based
@@ -148,9 +144,9 @@ fn computeRayDistances(rayDir: vec3<f32>, tdims: vec3<f32>, vertexVC: vec3<f32>)
 
 [[stage(fragment)]]
 fn main(
-//VTK::InputStruct::Impl
+//VTK::IOStructs::Input
 )
-//VTK::OutputStruct::Impl
+//VTK::IOStructs::Output
 {
   var output : fragmentOutput;
 
@@ -364,10 +360,10 @@ function vtkWebGPUVolumeMapper(publicAPI, model) {
   publicAPI.generateShaderDescriptions = (hash, pipeline, vertexInput) => {
     // standard shader stuff most paths use
     let code = model.vertexShaderTemplate;
-    code = vtkWebGPUShaderCache.substitute(code, '//VTK::Renderer::UBO', [
+    code = vtkWebGPUShaderCache.substitute(code, '//VTK::Renderer::Dec', [
       model.WebGPURenderer.getUBO().getShaderCode(pipeline),
     ]).result;
-    code = vtkWebGPUShaderCache.substitute(code, '//VTK::Mapper::UBO', [
+    code = vtkWebGPUShaderCache.substitute(code, '//VTK::Mapper::Dec', [
       model.UBO.getShaderCode(pipeline),
     ]).result;
     const vDesc = vtkWebGPUShaderDescription.newInstance({
@@ -379,10 +375,10 @@ function vtkWebGPUVolumeMapper(publicAPI, model) {
     vDesc.addBuiltinOutput('vec4<f32>', '[[builtin(position)]] Position');
 
     code = model.fragmentShaderTemplate;
-    code = vtkWebGPUShaderCache.substitute(code, '//VTK::Renderer::UBO', [
+    code = vtkWebGPUShaderCache.substitute(code, '//VTK::Renderer::Dec', [
       model.WebGPURenderer.getUBO().getShaderCode(pipeline),
     ]).result;
-    code = vtkWebGPUShaderCache.substitute(code, '//VTK::Mapper::UBO', [
+    code = vtkWebGPUShaderCache.substitute(code, '//VTK::Mapper::Dec', [
       model.UBO.getShaderCode(pipeline),
     ]).result;
     const fDesc = vtkWebGPUShaderDescription.newInstance({
