@@ -287,11 +287,11 @@ function vtkWebGPUSphereMapper(publicAPI, model) {
       pipeline = vtkWebGPUPipeline.newInstance();
       pipeline.addBindGroupLayout(
         device.getRendererBindGroupLayout(),
-        `RendererUBO`
+        `rendererUBO`
       );
       pipeline.addBindGroupLayout(
         device.getMapperBindGroupLayout(),
-        `MapperUBO`
+        `mapperUBO`
       );
       publicAPI.generateShaderDescriptions(
         pipelineHash,

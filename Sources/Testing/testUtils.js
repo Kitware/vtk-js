@@ -18,11 +18,11 @@ function compareImages(
   function done() {
     tapeContext.ok(minDelta < threshold, `Matching image - delta ${minDelta}%`);
     tapeContext.ok(isSameDimensions, 'Image match resolution');
-
     if (minDelta >= threshold) {
-      tapeContext.fail(
+      tapeContext.comment(
         `new image <img src="${image}" /> vs baseline <img src="${baselines[0]}" /> === <img src="${minDiff}" />`
       );
+      tapeContext.fail(`for ${testName} the images were different`);
     }
 
     if (nextCallback) {

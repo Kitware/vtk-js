@@ -13,7 +13,7 @@ import baseline from './testColorTransferFunctionPresets.png';
 const MAX_NUMBER_OF_PRESETS = 200;
 const NUMBER_PER_LINE = 20;
 
-test.onlyIfWebGL('Test Interpolate Scalars Before Colors', (t) => {
+test('Test Interpolate Scalars Before Colors', (t) => {
   const gc = testUtils.createGarbageCollector(t);
   t.ok('rendering', 'vtkOpenGLPolyDataMapper ColorTransferFunction Presets');
 

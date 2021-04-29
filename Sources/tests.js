@@ -79,7 +79,6 @@ import './Rendering/OpenGL/VolumeMapper/test/testMaximumIntensityProjection';
 import './Rendering/OpenGL/VolumeMapper/test/testMinimumIntensityProjection';
 import './Rendering/OpenGL/VolumeMapper/test/testProportionalComponents';
 import './Rendering/OpenGL/VolumeMapper/test/testAverageIntensityProjection';
-// import './Rendering/WebGPU/RenderWindow/test/testWindow';
 import './Testing/testAlgorithm';
 import './Testing/testIf';
 import './Testing/testMacro';

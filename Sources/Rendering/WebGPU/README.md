@@ -29,7 +29,6 @@ is needed.
 ToDo
 ============
 - add glyphmapper
-- hook up testing
 - PBR lighting to replace the simple model currently coded
 - actor matrix support with auto shift
 - eventually switch to using IBOs and flat interpolation
@@ -38,9 +37,19 @@ ToDo
 
 Waiting on fixes/dev in WebGPU spec
 - 3d textures (as of April 21 2021 Dawn lacks support for 1d and 3d)
-- image display
-- volume rendering
+- image display (use 3d texture)
 - create new volume renderer built for multivolume rendering
+  - traverse all volumes and register with volume pass
+  - render all volumes hexahedra to get depth buffer near and far
+    merged with opaque pass depth buffer
+  - render all volumes in single mapper using prior near/far depth textures
+- more cross platform testing and bug fixing
+- single volume rendering (abandon)
+
+Recently ToDone
+============
+- hook up testing
+
 
 Developer Notes
 ============

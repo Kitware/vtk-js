@@ -7,6 +7,8 @@ import vtkWebGPUVertexInput from 'vtk.js/Sources/Rendering/WebGPU/VertexInput';
 import vtkViewNode from 'vtk.js/Sources/Rendering/SceneGraph/ViewNode';
 
 const vtkWebGPUFSQVS = `
+//VTK::Mapper::UBO
+
 //VTK::TCoord::Dec
 
 //VTK::OutputStruct::Dec
@@ -26,6 +28,8 @@ fn main(
 
 // default frag shader just copies texture
 const vtkWebGPUFSQFS = `
+//VTK::Mapper::UBO
+
 //VTK::TCoord::Dec
 
 //VTK::RenderEncoder::Dec
@@ -59,6 +63,11 @@ function vtkWebGPUFullScreenQuad(publicAPI, model) {
   publicAPI.generateShaderDescriptions = (hash, pipeline, vertexInput) => {
     // standard shader stuff most paths use
     let code = model.vertexShaderTemplate;
+    if (model.UBO) {
+      code = vtkWebGPUShaderCache.substitute(code, '//VTK::Mapper::UBO', [
+        model.UBO.getShaderCode(pipeline),
+      ]).result;
+    }
     const vDesc = vtkWebGPUShaderDescription.newInstance({
       type: 'vertex',
       hash,
@@ -67,11 +76,19 @@ function vtkWebGPUFullScreenQuad(publicAPI, model) {
     vDesc.addBuiltinOutput('vec4<f32>', '[[builtin(position)]] Position');
 
     code = model.fragmentShaderTemplate;
+    if (model.UBO) {
+      code = vtkWebGPUShaderCache.substitute(code, '//VTK::Mapper::UBO', [
+        model.UBO.getShaderCode(pipeline),
+      ]).result;
+    }
     const fDesc = vtkWebGPUShaderDescription.newInstance({
       type: 'fragment',
       hash,
       code,
     });
+    if (code.includes('fragDepth')) {
+      fDesc.addBuiltinOutput('f32', '[[builtin(frag_depth)]] fragDepth');
+    }
 
     const sdrs = pipeline.getShaderDescriptions();
     sdrs.push(vDesc);
@@ -182,6 +199,14 @@ function vtkWebGPUFullScreenQuad(publicAPI, model) {
     // build the pipeline if needed
     if (!pipeline) {
       pipeline = vtkWebGPUPipeline.newInstance();
+
+      if (model.UBO) {
+        pipeline.addBindGroupLayout(
+          device.getMapperBindGroupLayout(),
+          `mapperUBO`
+        );
+      }
+
       // add texture BindGroupLayouts
       for (let t = 0; t < model.views.length; t++) {
         pipeline.addBindGroupLayout(
@@ -204,6 +229,12 @@ function vtkWebGPUFullScreenQuad(publicAPI, model) {
 
     if (pipeline) {
       pipeline.bind(renderEncoder);
+
+      // bind the mapper UBO
+      if (model.UBO) {
+        const midx = pipeline.getBindGroupLayoutCount(model.UBO.getName());
+        renderEncoder.setBindGroup(midx, model.UBO.getBindGroup());
+      }
 
       // bind any textures and samplers
       for (let t = 0; t < model.views.length; t++) {
@@ -238,6 +269,7 @@ const DEFAULT_VALUES = {
   pipelineHash: null,
   fragmentShaderTemplate: null,
   vertexShaderTemplate: null,
+  UBO: null,
 };
 
 // ----------------------------------------------------------------------------
@@ -268,6 +300,7 @@ export function extend(publicAPI, model, initialValues = {}) {
     'pipelineHash',
     'fragmentShaderTemplate',
     'vertexShaderTemplate',
+    'UBO',
   ]);
 
   // Object methods

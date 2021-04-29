@@ -13,7 +13,7 @@ import baseline from './testVectorComponent.png';
 
 const { GetArray } = vtkMapper;
 
-test.onlyIfWebGL('Test VectorComponent', (t) => {
+test('Test VectorComponent', (t) => {
   const gc = testUtils.createGarbageCollector(t);
   t.ok('rendering', 'vtkMapper Vector Component');
 

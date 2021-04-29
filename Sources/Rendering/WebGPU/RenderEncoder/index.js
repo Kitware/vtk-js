@@ -103,7 +103,7 @@ export function extend(publicAPI, model, initialValues = {}) {
     colorAttachments: [
       {
         view: undefined,
-        loadValue: [0.3, 0.3, 0.3, 1],
+        loadValue: 'load',
         storeOp: 'store',
       },
     ],
@@ -132,7 +132,7 @@ export function extend(publicAPI, model, initialValues = {}) {
     primitive: { cullMode: 'none' },
     depthStencil: {
       depthWriteEnabled: true,
-      depthCompare: 'less',
+      depthCompare: 'less-equal',
       format: 'depth24plus-stencil8',
     },
     fragment: {

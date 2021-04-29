@@ -14,7 +14,7 @@ import { FieldDataTypes } from 'vtk.js/Sources/Common/DataModel/DataSet/Constant
 
 import baseline from './testDisableScalarColoring.png';
 
-test.onlyIfWebGL('Test vtkSphereMapper Rendering', (t) => {
+test('Test vtkSphereMapper Rendering', (t) => {
   const gc = testUtils.createGarbageCollector(t);
   t.ok('rendering', 'vtkSphereMapper Rendering');
 

@@ -12,7 +12,7 @@ import { mat4 } from 'gl-matrix';
 
 import baseline from './testUserMatrix.png';
 
-test.onlyIfWebGL('Test Set Actor User Matrix', (t) => {
+test('Test Set Actor User Matrix', (t) => {
   const gc = testUtils.createGarbageCollector(t);
   t.ok('rendering', 'vtkActor SetUserMatrix');
 
