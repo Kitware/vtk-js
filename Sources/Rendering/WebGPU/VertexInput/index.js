@@ -1,4 +1,5 @@
 import * as macro from 'vtk.js/Sources/macro';
+import vtkWebGPUTypes from 'vtk.js/Sources/Rendering/WebGPU/Types';
 
 function arraysEqual(a, b) {
   if (a === b) return true;
@@ -9,16 +10,6 @@ function arraysEqual(a, b) {
     if (!b.includes(a[i])) return false;
   }
   return true;
-}
-
-function getTypeFromFormat(buffer, index) {
-  const arrayInfo = buffer.getArrayInformation()[index];
-  const format = arrayInfo.format;
-  const dataType = 'f32';
-  if (format.substring(format.length - 2) === 'x4') return `vec4<${dataType}>`;
-  if (format.substring(format.length - 2) === 'x3') return `vec3<${dataType}>`;
-  if (format.substring(format.length - 2) === 'x2') return `vec2<${dataType}>`;
-  return dataType;
 }
 
 // ----------------------------------------------------------------------------
@@ -84,7 +75,10 @@ function vtkWebGPUVertexInput(publicAPI, model) {
     let nameCount = 0;
     for (let i = 0; i < model.inputs.length; i++) {
       for (let nm = 0; nm < model.inputs[i].names.length; nm++) {
-        const type = getTypeFromFormat(model.inputs[i].buffer, nm);
+        const arrayInfo = model.inputs[i].buffer.getArrayInformation()[nm];
+        const type = vtkWebGPUTypes.getShaderTypeFromBufferFormat(
+          arrayInfo.format
+        );
         if (nameCount > 0) {
           result += ',\n';
         }

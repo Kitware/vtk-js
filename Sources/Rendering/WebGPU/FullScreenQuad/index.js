@@ -7,17 +7,17 @@ import vtkWebGPUVertexInput from 'vtk.js/Sources/Rendering/WebGPU/VertexInput';
 import vtkViewNode from 'vtk.js/Sources/Rendering/SceneGraph/ViewNode';
 
 const vtkWebGPUFSQVS = `
-//VTK::Mapper::UBO
-
 //VTK::TCoord::Dec
 
-//VTK::OutputStruct::Dec
+//VTK::IOStructs::Dec
+
+//VTK::Mapper::Dec
 
 [[stage(vertex)]]
 fn main(
-//VTK::InputStruct::Impl
+//VTK::IOStructs::Input
 )
-//VTK::OutputStruct::Impl
+//VTK::IOStructs::Output
 {
   var output: vertexOutput;
   output.tcoordVS = vec2<f32>(vertexMC.x * 0.5 + 0.5, 1.0 - vertexMC.y * 0.5 - 0.5);
@@ -28,21 +28,19 @@ fn main(
 
 // default frag shader just copies texture
 const vtkWebGPUFSQFS = `
-//VTK::Mapper::UBO
-
 //VTK::TCoord::Dec
 
 //VTK::RenderEncoder::Dec
 
-//VTK::InputStruct::Dec
+//VTK::IOStructs::Dec
 
-//VTK::OutputStruct::Dec
+//VTK::Mapper::Dec
 
 [[stage(fragment)]]
 fn main(
-//VTK::InputStruct::Impl
+//VTK::IOStructs::Input
 )
-//VTK::OutputStruct::Impl
+//VTK::IOStructs::Output
 {
   var output: fragmentOutput;
 
@@ -64,7 +62,7 @@ function vtkWebGPUFullScreenQuad(publicAPI, model) {
     // standard shader stuff most paths use
     let code = model.vertexShaderTemplate;
     if (model.UBO) {
-      code = vtkWebGPUShaderCache.substitute(code, '//VTK::Mapper::UBO', [
+      code = vtkWebGPUShaderCache.substitute(code, '//VTK::Mapper::Dec', [
         model.UBO.getShaderCode(pipeline),
       ]).result;
     }
@@ -77,7 +75,7 @@ function vtkWebGPUFullScreenQuad(publicAPI, model) {
 
     code = model.fragmentShaderTemplate;
     if (model.UBO) {
-      code = vtkWebGPUShaderCache.substitute(code, '//VTK::Mapper::UBO', [
+      code = vtkWebGPUShaderCache.substitute(code, '//VTK::Mapper::Dec', [
         model.UBO.getShaderCode(pipeline),
       ]).result;
     }

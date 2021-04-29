@@ -56,13 +56,9 @@ function vtkWebGPUTexture(publicAPI, model) {
 
   // set the data
   publicAPI.writeImageData = (req) => {
+    let bufferBytesPerRow = model.width * 4;
     if (req.dataArray) {
       // create and write the buffer
-      // todo specify a source
-      // todo bytesPerRow must be a multiple of 256 so
-      // we might need to rebuild the data here before passing to the
-      // buffer. If it is unorm8x4 then we need to have width be
-      // a multiple of 64
       const buffRequest = {
         dataArray: req.dataArray,
         time: req.dataArray.getMTime(),
@@ -71,6 +67,23 @@ function vtkWebGPUTexture(publicAPI, model) {
         /* eslint-enable no-undef */
         format: 'unorm8x4',
       };
+
+      // bytesPerRow must be a multiple of 256 so we might need to rebuild
+      // the data here before passing to the buffer. If it is unorm8x4 then
+      // we need to have width be a multiple of 64
+      if (model.width % 64) {
+        const oArray = req.dataArray.getData();
+        const bufferWidth = 64 * Math.floor((model.width + 63) / 64);
+        const nArray = new Uint8Array(bufferWidth * model.height * 4);
+        for (let v = 0; v < model.height; v++) {
+          nArray.set(
+            oArray.subarray(v * 4 * model.width, (v + 1) * 4 * model.width),
+            v * 4 * bufferWidth
+          );
+        }
+        buffRequest.nativeArray = nArray;
+        bufferBytesPerRow = bufferWidth * 4;
+      }
       const buff = model.device.getBufferManager().getBuffer(buffRequest);
       model.buffer = buff;
     }
@@ -113,13 +126,13 @@ function vtkWebGPUTexture(publicAPI, model) {
       model.buffer = buff;
     }
 
-    // get a buffer for the image (todo move into texture manager)
+    // get a buffer for the image
     const cmdEnc = model.device.createCommandEncoder();
     cmdEnc.copyBufferToTexture(
       {
         buffer: model.buffer.getHandle(),
         offset: 0,
-        bytesPerRow: 4 * model.width,
+        bytesPerRow: bufferBytesPerRow,
         rowsPerImage: model.height,
       },
       { texture: model.handle },

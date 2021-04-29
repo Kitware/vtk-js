@@ -28,7 +28,6 @@ is needed.
 
 ToDo
 ============
-- add glyphmapper
 - PBR lighting to replace the simple model currently coded
 - actor matrix support with auto shift
 - eventually switch to using IBOs and flat interpolation
@@ -48,6 +47,9 @@ Waiting on fixes/dev in WebGPU spec
 
 Recently ToDone
 ============
+- make all shader replacements programatic, generate
+    publicAPI.replaceShader* invocations from shader code
+- add glyphmapper
 - hook up testing
 
 
