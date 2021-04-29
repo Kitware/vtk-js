@@ -1,4 +1,5 @@
-import { TypedArray, VtkDataArray } from "vtk.js/Sources/macro";
+import { TypedArray } from "vtk.js/Sources/macro";
+import vtkDataArray from "vtk.js/Sources/Common/Core/DataArray";
 
 
 /**
@@ -9,23 +10,23 @@ interface ICellArrayInitialValues {
 	numberOfComponents?: number;
 }
 
-export interface vtkCellArray extends VtkDataArray {
+export interface vtkCellArray extends vtkDataArray {
 
 	/**
 	 * Get the number of cells in the array.
-	 * @param {Boolean} [recompute]
+	 * @param {Boolean} [recompute] Recompute the number of cells.
 	 */
 	getNumberOfCells(recompute?: boolean): number;
 
 	/**
 	 *
-	 * @param {Boolean} [recompute]
+	 * @param {Boolean} [recompute] Recompute the cell sizes.
 	 */
 	getCellSizes(recompute?: boolean): any;
 
 	/**
 	 *
-	 * @param {TypedArray} typedArray
+	 * @param {TypedArray} typedArray The typedArray value.
 	 */
 	setData(typedArray: TypedArray): void;
 

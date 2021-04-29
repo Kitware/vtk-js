@@ -1,8 +1,10 @@
-import { mat3, vec2, vec3 } from 'gl-matrix';
+/// <reference path='../../../types.ts' />
+
+import { mat3, vec2, vec3 } from "gl-matrix";
 
 /**
  *
- * @param {Number} size 
+ * @param {Number} size The size of the array.
  */
 export function createArray(size?: number): number[];
 
@@ -13,39 +15,39 @@ export function Pi(): number;
 
 /**
  * Convert degrees to radians.
- * @param {Number} deg 
+ * @param {Number} deg The value in degrees.
  */
 export function radiansFromDegrees(deg: number): number;
 
 /**
  * Convert radians to degrees.
- * @param {Number} rad 
+ * @param {Number} rad The value in radians.
  */
 export function degreesFromRadians(rad: number): number;
 
 /**
  * Same as Math.round().
- * @param {Number} param1 
+ * @param {Number} param1 A number.
  */
 export function round(param1: number): number;
 
 /**
  * Same as Math.floor().
- * @param {Number} param1 
+ * @param {Number} param1 A number.
  */
 export function floor(param1: number): number;
 
 /**
  * Same as Math.ceil().
- * @param {Number} param1 
+ * @param {Number} param1 A number.
  */
 export function ceil(param1: number): number;
 
 /**
  * Get the minimum of the two arguments provided. If either argument is NaN,
  * the first argument will always be returned.
- * @param {Number} param1 
- * @param {Number} param2 
+ * @param {Number} param1 The first number.
+ * @param {Number} param2 The second number.
  */
 export function min(param1: number, param2: number): number;
 
