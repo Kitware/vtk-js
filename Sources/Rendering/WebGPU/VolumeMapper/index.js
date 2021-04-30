@@ -1,4 +1,4 @@
-import macro from 'vtk.js/Sources/macro';
+import * as macro from 'vtk.js/Sources/macro';
 import { vec3, mat3, mat4 } from 'gl-matrix';
 // import vtkDataArray from 'vtk.js/Sources/Common/Core/DataArray';
 // import { VtkDataTypes } from 'vtk.js/Sources/Common/Core/DataArray/Constants';
@@ -17,6 +17,8 @@ import vtkViewNode from 'vtk.js/Sources/Rendering/SceneGraph/ViewNode';
 // } from 'vtk.js/Sources/Rendering/OpenGL/Texture/Constants';
 import { InterpolationType } from 'vtk.js/Sources/Rendering/Core/VolumeProperty/Constants';
 // import { BlendMode } from 'vtk.js/Sources/Rendering/Core/VolumeMapper/Constants';
+
+import { registerOverride } from 'vtk.js/Sources/Rendering/WebGPU/ViewNodeFactory';
 
 const vtkWebGPUVolumeVS = `
 //VTK::Renderer::Dec
@@ -1721,3 +1723,6 @@ export const newInstance = macro.newInstance(extend, 'vtkWebGPUVolumeMapper');
 // ----------------------------------------------------------------------------
 
 export default { newInstance, extend };
+
+// Register ourself to WebGPU backend if imported
+registerOverride('vtkVolumeMapper', newInstance);

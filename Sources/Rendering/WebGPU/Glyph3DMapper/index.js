@@ -3,6 +3,8 @@ import vtkWebGPUPolyDataMapper from 'vtk.js/Sources/Rendering/WebGPU/PolyDataMap
 import vtkWebGPUStorageBuffer from 'vtk.js/Sources/Rendering/WebGPU/StorageBuffer';
 import vtkWebGPUShaderCache from 'vtk.js/Sources/Rendering/WebGPU/ShaderCache';
 
+import { registerOverride } from 'vtk.js/Sources/Rendering/WebGPU/ViewNodeFactory';
+
 // ----------------------------------------------------------------------------
 // vtkWebGPUSphereMapper methods
 // ----------------------------------------------------------------------------
@@ -163,3 +165,6 @@ export const newInstance = macro.newInstance(extend, 'vtkWebGPUGlyph3DMapper');
 // ----------------------------------------------------------------------------
 
 export default { newInstance, extend };
+
+// Register ourself to WebGPU backend if imported
+registerOverride('vtkGlyph3DMapper', newInstance);

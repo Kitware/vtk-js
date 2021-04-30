@@ -4,6 +4,8 @@ import vtkWebGPUBufferManager from 'vtk.js/Sources/Rendering/WebGPU/BufferManage
 import vtkWebGPUPipeline from 'vtk.js/Sources/Rendering/WebGPU/Pipeline';
 import vtkWebGPUShaderCache from 'vtk.js/Sources/Rendering/WebGPU/ShaderCache';
 
+import { registerOverride } from 'vtk.js/Sources/Rendering/WebGPU/ViewNodeFactory';
+
 const { BufferUsage, PrimitiveTypes } = vtkWebGPUBufferManager;
 const { vtkErrorMacro } = macro;
 
@@ -481,3 +483,6 @@ export const newInstance = macro.newInstance(extend, 'vtkWebGPUStickMapper');
 // ----------------------------------------------------------------------------
 
 export default { newInstance, extend };
+
+// Register ourself to WebGPU backend if imported
+registerOverride('vtkStickMapper', newInstance);

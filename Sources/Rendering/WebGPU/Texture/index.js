@@ -2,6 +2,8 @@ import macro from 'vtk.js/Sources/macro';
 import vtkWebGPUBufferManager from 'vtk.js/Sources/Rendering/WebGPU/BufferManager';
 import vtkWebGPUTextureView from 'vtk.js/Sources/Rendering/WebGPU/TextureView';
 
+import { registerOverride } from 'vtk.js/Sources/Rendering/WebGPU/ViewNodeFactory';
+
 const { BufferUsage } = vtkWebGPUBufferManager;
 
 // ----------------------------------------------------------------------------
@@ -223,3 +225,6 @@ export const newInstance = macro.newInstance(extend);
 // ----------------------------------------------------------------------------
 
 export default { newInstance, extend };
+
+// Register ourself to WebGPU backend if imported
+registerOverride('vtkTexture', newInstance);

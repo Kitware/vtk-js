@@ -1,7 +1,9 @@
 import { mat4 } from 'gl-matrix';
 
-import * as macro from '../../../macro';
-import vtkViewNode from '../../SceneGraph/ViewNode';
+import macro from 'vtk.js/Sources/macro';
+import vtkViewNode from 'vtk.js/Sources/Rendering/SceneGraph/ViewNode';
+
+import { registerOverride } from 'vtk.js/Sources/Rendering/WebGPU/ViewNodeFactory';
 
 // ----------------------------------------------------------------------------
 // vtkWebGPUCamera methods
@@ -107,3 +109,6 @@ export const newInstance = macro.newInstance(extend);
 // ----------------------------------------------------------------------------
 
 export default { newInstance, extend };
+
+// Register ourself to WebGPU backend if imported
+registerOverride('vtkCamera', newInstance);

@@ -1,6 +1,6 @@
 import { mat3, mat4 } from 'gl-matrix';
 
-import macro from 'vtk.js/Sources/macro';
+import * as macro from 'vtk.js/Sources/macro';
 import vtkMapper from 'vtk.js/Sources/Rendering/Core/Mapper';
 import vtkProperty from 'vtk.js/Sources/Rendering/Core/Property';
 import vtkTexture from 'vtk.js/Sources/Rendering/Core/Texture';
@@ -12,6 +12,8 @@ import vtkWebGPUShaderDescription from 'vtk.js/Sources/Rendering/WebGPU/ShaderDe
 import vtkWebGPUUniformBuffer from 'vtk.js/Sources/Rendering/WebGPU/UniformBuffer';
 import vtkWebGPUVertexInput from 'vtk.js/Sources/Rendering/WebGPU/VertexInput';
 import vtkViewNode from 'vtk.js/Sources/Rendering/SceneGraph/ViewNode';
+
+import { registerOverride } from 'vtk.js/Sources/Rendering/WebGPU/ViewNodeFactory';
 
 const { BufferUsage, PrimitiveTypes } = vtkWebGPUBufferManager;
 const { Representation } = vtkProperty;
@@ -920,3 +922,6 @@ export const newInstance = macro.newInstance(extend, 'vtkWebGPUPolyDataMapper');
 // ----------------------------------------------------------------------------
 
 export default { newInstance, extend };
+
+// Register ourself to WebGPU backend if imported
+registerOverride('vtkMapper', newInstance);

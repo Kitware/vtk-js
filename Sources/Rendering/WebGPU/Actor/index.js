@@ -3,6 +3,8 @@ import { mat4 } from 'gl-matrix';
 import macro from 'vtk.js/Sources/macro';
 import vtkViewNode from 'vtk.js/Sources/Rendering/SceneGraph/ViewNode';
 
+import { registerOverride } from 'vtk.js/Sources/Rendering/WebGPU/ViewNodeFactory';
+
 // ----------------------------------------------------------------------------
 // vtkWebGPUActor methods
 // ----------------------------------------------------------------------------
@@ -194,3 +196,6 @@ export const newInstance = macro.newInstance(extend);
 // ----------------------------------------------------------------------------
 
 export default { newInstance, extend };
+
+// Register ourself to WebGPU backend if imported
+registerOverride('vtkActor', newInstance);

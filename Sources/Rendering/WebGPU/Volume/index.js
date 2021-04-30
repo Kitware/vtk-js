@@ -3,6 +3,8 @@ import { mat3, mat4 } from 'gl-matrix';
 import macro from 'vtk.js/Sources/macro';
 import vtkViewNode from 'vtk.js/Sources/Rendering/SceneGraph/ViewNode';
 
+import { registerOverride } from 'vtk.js/Sources/Rendering/WebGPU/ViewNodeFactory';
+
 // ----------------------------------------------------------------------------
 // vtkWebGPUVolume methods
 // ----------------------------------------------------------------------------
@@ -116,3 +118,6 @@ export const newInstance = macro.newInstance(extend, 'vtkWebGPUVolume');
 // ----------------------------------------------------------------------------
 
 export default { newInstance, extend };
+
+// Register ourself to WebGPU backend if imported
+registerOverride('vtkVolume', newInstance);
