@@ -1,4 +1,4 @@
-git chechout --orphan gh-pages
+git checkout --orphan gh-pages
 git add -A
 git commit -am "Reset website history"
 git branch -D gh-pages
