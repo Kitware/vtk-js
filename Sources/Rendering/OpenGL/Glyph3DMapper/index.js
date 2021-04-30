@@ -1,12 +1,14 @@
 import { mat3, mat4 } from 'gl-matrix';
 
-import macro from 'vtk.js/Sources/macro';
+import * as macro from 'vtk.js/Sources/macro';
 
 import vtkBufferObject from 'vtk.js/Sources/Rendering/OpenGL/BufferObject';
 import vtkHardwareSelector from 'vtk.js/Sources/Rendering/OpenGL/HardwareSelector';
 import vtkProperty from 'vtk.js/Sources/Rendering/Core/Property';
 import vtkOpenGLPolyDataMapper from 'vtk.js/Sources/Rendering/OpenGL/PolyDataMapper';
 import vtkShaderProgram from 'vtk.js/Sources/Rendering/OpenGL/ShaderProgram';
+
+import { registerOverride } from 'vtk.js/Sources/Rendering/OpenGL/ViewNodeFactory';
 
 const { vtkErrorMacro } = macro;
 const { Representation } = vtkProperty;
@@ -702,3 +704,6 @@ export const newInstance = macro.newInstance(extend, 'vtkOpenGLGlyph3DMapper');
 // ----------------------------------------------------------------------------
 
 export default { newInstance, extend };
+
+// Register ourself to OpenGL backend if imported
+registerOverride('vtkGlyph3DMapper', newInstance);

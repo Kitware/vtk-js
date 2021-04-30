@@ -1,5 +1,7 @@
-import * as macro from '../../../macro';
-import vtkViewNode from '../../SceneGraph/ViewNode';
+import * as macro from 'vtk.js/Sources/macro';
+import vtkViewNode from 'vtk.js/Sources/Rendering/SceneGraph/ViewNode';
+
+import { registerOverride } from 'vtk.js/Sources/Rendering/OpenGL/ViewNodeFactory';
 
 // ----------------------------------------------------------------------------
 // vtkOpenGLActor methods
@@ -145,3 +147,6 @@ export const newInstance = macro.newInstance(extend);
 // ----------------------------------------------------------------------------
 
 export default { newInstance, extend };
+
+// Register ourself to OpenGL backend if imported
+registerOverride('vtkActor2D', newInstance);

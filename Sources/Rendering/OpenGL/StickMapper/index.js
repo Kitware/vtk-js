@@ -10,6 +10,8 @@ import vtkPolyDataFS from 'vtk.js/Sources/Rendering/OpenGL/glsl/vtkPolyDataFS.gl
 import vtkShaderProgram from 'vtk.js/Sources/Rendering/OpenGL/ShaderProgram';
 import vtkOpenGLPolyDataMapper from 'vtk.js/Sources/Rendering/OpenGL/PolyDataMapper';
 
+import { registerOverride } from 'vtk.js/Sources/Rendering/OpenGL/ViewNodeFactory';
+
 const { vtkErrorMacro } = macro;
 
 // ----------------------------------------------------------------------------
@@ -440,3 +442,6 @@ export const newInstance = macro.newInstance(extend, 'vtkOpenGLStickMapper');
 // ----------------------------------------------------------------------------
 
 export default { newInstance, extend };
+
+// Register ourself to OpenGL backend if imported
+registerOverride('vtkStickMapper', newInstance);

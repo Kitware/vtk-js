@@ -1,7 +1,9 @@
 import { mat4 } from 'gl-matrix';
 
-import macro from 'vtk.js/Sources/macro';
+import * as macro from 'vtk.js/Sources/macro';
 import vtkViewNode from 'vtk.js/Sources/Rendering/SceneGraph/ViewNode';
+
+import { registerOverride } from 'vtk.js/Sources/Rendering/OpenGL/ViewNodeFactory';
 
 // ----------------------------------------------------------------------------
 // vtkOpenGLImageSlice methods
@@ -158,3 +160,6 @@ export const newInstance = macro.newInstance(extend, 'vtkOpenGLImageSlice');
 // ----------------------------------------------------------------------------
 
 export default { newInstance, extend };
+
+// Register ourself to OpenGL backend if imported
+registerOverride('vtkImageSlice', newInstance);

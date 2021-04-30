@@ -1,7 +1,9 @@
 // import { mat4, vec3 }     from 'gl-matrix';
 
-import macro from 'vtk.js/Sources/macro';
+import * as macro from 'vtk.js/Sources/macro';
 import vtkViewNode from 'vtk.js/Sources/Rendering/SceneGraph/ViewNode';
+
+import { registerOverride } from 'vtk.js/Sources/Rendering/OpenGL/ViewNodeFactory';
 
 const { vtkDebugMacro } = macro;
 
@@ -113,3 +115,6 @@ export const newInstance = macro.newInstance(
 // ----------------------------------------------------------------------------
 
 export default { newInstance, extend };
+
+// Register ourself to OpenGL backend if imported
+registerOverride('vtkPixelSpaceCallbackMapper', newInstance);

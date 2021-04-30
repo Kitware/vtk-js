@@ -1,7 +1,9 @@
 import { mat3, mat4 } from 'gl-matrix';
 
-import macro from 'vtk.js/Sources/macro';
+import * as macro from 'vtk.js/Sources/macro';
 import vtkViewNode from 'vtk.js/Sources/Rendering/SceneGraph/ViewNode';
+
+import { registerOverride } from 'vtk.js/Sources/Rendering/OpenGL/ViewNodeFactory';
 
 // ----------------------------------------------------------------------------
 // vtkOpenGLVolume methods
@@ -125,3 +127,6 @@ export const newInstance = macro.newInstance(extend, 'vtkOpenGLVolume');
 // ----------------------------------------------------------------------------
 
 export default { newInstance, extend };
+
+// Register ourself to OpenGL backend if imported
+registerOverride('vtkVolume', newInstance);

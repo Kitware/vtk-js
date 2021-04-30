@@ -1,8 +1,10 @@
-import macro from 'vtk.js/Sources/macro';
+import * as macro from 'vtk.js/Sources/macro';
 import vtkOpenGLPolyDataMapper from 'vtk.js/Sources/Rendering/OpenGL/PolyDataMapper';
 import vtkShaderProgram from 'vtk.js/Sources/Rendering/OpenGL/ShaderProgram';
 import vtkOpenGLSurfaceLICInterface from 'vtk.js/Sources/Rendering/OpenGL/SurfaceLIC/SurfaceLICInterface';
 import vtkSurfaceLICInterface from 'vtk.js/Sources/Rendering/Core/SurfaceLICInterface';
+
+import { registerOverride } from 'vtk.js/Sources/Rendering/OpenGL/ViewNodeFactory';
 
 const { vtkErrorMacro } = macro;
 
@@ -258,3 +260,6 @@ export const newInstance = macro.newInstance(
 // ----------------------------------------------------------------------------
 
 export default { newInstance, extend };
+
+// Register ourself to OpenGL backend if imported
+registerOverride('vtkSurfaceLICMapper', newInstance);
