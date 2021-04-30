@@ -1,8 +1,5 @@
 import macro from 'vtk.js/Sources/macro';
 
-import vtkWebGPUVolume from 'vtk.js/Sources/Rendering/WebGPU/Volume';
-import vtkWebGPUVolumeMapper from 'vtk.js/Sources/Rendering/WebGPU/VolumeMapper';
-
 import vtkViewNodeFactory from 'vtk.js/Sources/Rendering/SceneGraph/ViewNodeFactory';
 
 const CLASS_MAPPING = Object.create(null);
