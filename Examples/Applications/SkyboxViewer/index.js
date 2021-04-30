@@ -1,5 +1,8 @@
 import 'vtk.js/Sources/favicon';
 
+// Load the rendering pieces we want to use (for both WebGL and WebGPU)
+import 'vtk.js/Sources/Rendering/Profiles/Geometry';
+
 import HttpDataAccessHelper from 'vtk.js/Sources/IO/Core/DataAccessHelper/HttpDataAccessHelper';
 import macro from 'vtk.js/Sources/macro';
 import vtkDeviceOrientationToCamera from 'vtk.js/Sources/Interaction/Misc/DeviceOrientationToCamera';

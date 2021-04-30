@@ -1,5 +1,8 @@
 import 'vtk.js/Sources/favicon';
 
+// Load the rendering pieces we want to use (for both WebGL and WebGPU)
+import 'vtk.js/Sources/Rendering/Profiles/Volume';
+
 import vtkFullScreenRenderWindow from 'vtk.js/Sources/Rendering/Misc/FullScreenRenderWindow';
 import vtkVolume from 'vtk.js/Sources/Rendering/Core/Volume';
 import vtkVolumeMapper from 'vtk.js/Sources/Rendering/Core/VolumeMapper';

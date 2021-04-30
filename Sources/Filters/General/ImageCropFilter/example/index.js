@@ -1,5 +1,11 @@
 import 'vtk.js/Sources/favicon';
 
+// Load the rendering pieces we want to use (for both WebGL and WebGPU)
+import 'vtk.js/Sources/Rendering/Profiles/Volume';
+
+// Force the loading of HttpDataAccessHelper to support gzip decompression
+import 'vtk.js/Sources/IO/Core/DataAccessHelper/HttpDataAccessHelper';
+
 import vtkColorTransferFunction from 'vtk.js/Sources/Rendering/Core/ColorTransferFunction';
 import vtkFullScreenRenderWindow from 'vtk.js/Sources/Rendering/Misc/FullScreenRenderWindow';
 import vtkHttpDataSetReader from 'vtk.js/Sources/IO/Core/HttpDataSetReader';
@@ -7,9 +13,6 @@ import vtkPiecewiseFunction from 'vtk.js/Sources/Common/DataModel/PiecewiseFunct
 import vtkVolume from 'vtk.js/Sources/Rendering/Core/Volume';
 import vtkVolumeMapper from 'vtk.js/Sources/Rendering/Core/VolumeMapper';
 import vtkImageCropFilter from 'vtk.js/Sources/Filters/General/ImageCropFilter';
-
-// Force the loading of HttpDataAccessHelper to support gzip decompression
-import 'vtk.js/Sources/IO/Core/DataAccessHelper/HttpDataAccessHelper';
 
 import controlPanel from './controlPanel.html';
 

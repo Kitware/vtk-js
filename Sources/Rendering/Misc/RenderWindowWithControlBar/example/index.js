@@ -1,3 +1,8 @@
+import 'vtk.js/Sources/favicon';
+
+// Load the rendering pieces we want to use (for both WebGL and WebGPU)
+import 'vtk.js/Sources/Rendering/Profiles/Geometry';
+
 import vtkRenderWindowWithControlBar from 'vtk.js/Sources/Rendering/Misc/RenderWindowWithControlBar';
 import vtkSlider from 'vtk.js/Sources/Interaction/UI/Slider';
 import vtkCornerAnnotation from 'vtk.js/Sources/Interaction/UI/CornerAnnotation';

@@ -1,5 +1,9 @@
 import 'vtk.js/Sources/favicon';
 
+// Load the rendering pieces we want to use (for both WebGL and WebGPU)
+import 'vtk.js/Sources/Rendering/Profiles/Geometry';
+import 'vtk.js/Sources/Rendering/Profiles/Volume';
+
 // Force DataAccessHelper to have access to various data source
 import 'vtk.js/Sources/IO/Core/DataAccessHelper/HtmlDataAccessHelper';
 import 'vtk.js/Sources/IO/Core/DataAccessHelper/HttpDataAccessHelper';
