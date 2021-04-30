@@ -41,8 +41,10 @@ function vtkWebGPUGlyph3DMapper(publicAPI, model) {
   };
 
   publicAPI.replaceShaderColor = (hash, pipeline, vertexInput) => {
-    if (!model.carray) return;
-
+    if (!model.carray) {
+      superClass.replaceShaderColor(hash, pipeline, vertexInput);
+      return;
+    }
     const vDesc = pipeline.getShaderDescription('vertex');
     vDesc.addOutput('vec4<f32>', 'color');
     let code = vDesc.getCode();

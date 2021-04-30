@@ -17,6 +17,8 @@ function vtkRenderWindowViewNode(publicAPI, model) {
   // Set our className
   model.classHierarchy.push('vtkRenderWindowViewNode');
 
+  publicAPI.getViewNodeFactory = () => null;
+
   publicAPI.getAspectRatio = () => model.size[0] / model.size[1];
 
   publicAPI.getAspectRatioForRenderer = (renderer) => {
