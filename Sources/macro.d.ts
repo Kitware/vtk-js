@@ -58,18 +58,6 @@ export enum TYPED_ARRAYS {
   Int32Array,
 }
 
-export type TypedArray =
-    | number[]
-    | Uint32Array
-    | Uint16Array
-    | Uint8Array
-    | Uint8ClampedArray
-    | Int32Array
-    | Int16Array
-    | Int8Array
-    | Float64Array
-    | Float32Array;
-
 /**
  * Capitalize provided string.
  * This is typically used to convert the name of a field into its method name.

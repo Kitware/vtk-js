@@ -1,4 +1,6 @@
-import { TypedArray, VtkObject, vtkRange } from "vtk.js/Sources/macro";
+/// <reference path='../../../types.ts' />
+
+import { VtkObject, vtkRange } from "vtk.js/Sources/macro";
 
 /**
  * Output of the rangeHelper instance

@@ -1,5 +1,6 @@
+/// <reference path='../../../types.ts' />
+
 import { mat4 } from 'gl-matrix';
-import { TypedArray } from 'vtk.js/Sources/macro';
 
 declare interface Transform {
 

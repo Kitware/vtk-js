@@ -1,4 +1,4 @@
-import { TypedArray } from "vtk.js/Sources/macro";
+/// <reference path='../../../types.ts' />
 import vtkDataArray from "vtk.js/Sources/Common/Core/DataArray";
 
 
