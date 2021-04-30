@@ -3,6 +3,9 @@ import './IO/Core/DataAccessHelper/HtmlDataAccessHelper';
 import './IO/Core/DataAccessHelper/HttpDataAccessHelper';
 import './IO/Core/DataAccessHelper/JSZipDataAccessHelper';
 
+// Load the rendering pieces we want to use (for both WebGL and WebGPU)
+import './Rendering/Profiles/All';
+
 // Test list
 import './Common/Core/CellArray/test/testCellArray';
 import './Common/Core/LookupTable/test/testCategoricalColors';
