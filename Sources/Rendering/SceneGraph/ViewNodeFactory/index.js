@@ -6,7 +6,9 @@ import macro from 'vtk.js/Sources/macro';
 
 function vtkViewNodeFactory(publicAPI, model) {
   // Make sure our overrides is just for our instance not shared with everyone...
-  model.overrides = {};
+  if (!model.overrides) {
+    model.overrides = {};
+  }
 
   // Set our className
   model.classHierarchy.push('vtkViewNodeFactory');
