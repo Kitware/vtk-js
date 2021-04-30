@@ -21,6 +21,8 @@ function vtkWebGPURenderWindow(publicAPI, model) {
   // Set our className
   model.classHierarchy.push('vtkWebGPURenderWindow');
 
+  publicAPI.getViewNodeFactory = () => model.myFactory;
+
   // Auto update style
   const previousSize = [0, 0];
   function updateWindow() {

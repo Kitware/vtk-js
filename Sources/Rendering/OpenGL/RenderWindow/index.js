@@ -72,6 +72,8 @@ function vtkOpenGLRenderWindow(publicAPI, model) {
   // Set our className
   model.classHierarchy.push('vtkOpenGLRenderWindow');
 
+  publicAPI.getViewNodeFactory = () => model.myFactory;
+
   // Auto update style
   const previousSize = [0, 0];
   function updateWindow() {
